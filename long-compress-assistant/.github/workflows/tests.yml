@@ -1,0 +1,259 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # 前端测试
+  frontend-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run unit tests
+      run: npm run test:unit
+
+    - name: Run integration tests
+      run: npm run test:integration
+
+    - name: Generate coverage report
+      run: npm run test:unit:coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/coverage-final.json
+        flags: frontend
+
+  # Rust后端测试
+  rust-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
+
+    - name: Cache cargo dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build
+      run: cd src-tauri && cargo build --verbose
+
+    - name: Run tests
+      run: cd src-tauri && cargo test --verbose
+
+    - name: Run clippy
+      run: cd src-tauri && cargo clippy -- -D warnings
+
+    - name: Run rustfmt
+      run: cd src-tauri && cargo fmt -- --check
+
+  # E2E测试
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: [frontend-tests, rust-tests]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+
+    - name: Run E2E tests
+      run: npm run test:e2e
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
+
+  # 性能测试
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: [rust-tests]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Run benchmarks
+      run: |
+        cd src-tauri
+        cargo bench --verbose
+        # 保存基准测试结果
+        mkdir -p ../benchmark-results
+        find target/criterion -name "report.json" -exec cp {} ../benchmark-results/ \;
+
+    - name: Upload benchmark results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: benchmark-results/
+        retention-days: 30
+
+  # 跨平台测试（可选）
+  cross-platform-tests:
+    runs-on: ${{ matrix.os }}
+    needs: [frontend-tests, rust-tests]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run basic tests
+      run: npm run test:unit
+
+    - name: Platform-specific checks
+      run: |
+        echo "Running on ${{ runner.os }}"
+        # 添加平台特定的测试
+
+  # 安全扫描
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Run npm audit
+      run: npm audit --audit-level=moderate
+
+    - name: Run cargo audit
+      uses: actions-rs/audit-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+  # 代码质量检查
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run TypeScript type check
+      run: npx tsc --noEmit
+
+    - name: Run ESLint
+      run: npx eslint src --ext .ts,.vue --max-warnings=0
+
+    - name: Check formatting
+      run: npx prettier --check "src/**/*.{ts,vue}"
+
+  # 发布检查
+  release-check:
+    runs-on: ubuntu-latest
+    needs: [frontend-tests, rust-tests, e2e-tests, security-scan, code-quality]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Build for production
+      run: |
+        npm run build
+        cd src-tauri && cargo build --release
+
+    - name: Create release artifacts
+      run: |
+        mkdir -p release
+        # 打包发布文件
+        tar -czf release/frontend.tar.gz dist/
+        tar -czf release/backend.tar.gz src-tauri/target/release/
+
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-artifacts
+        path: release/
+        retention-days: 7
+
+# 工作流状态汇总
+conclusion:
+  needs: [frontend-tests, rust-tests, e2e-tests, performance-tests, security-scan, code-quality]
+  runs-on: ubuntu-latest
+  if: always()
+
+  steps:
+    - name: Check workflow status
+      run: |
+        echo "Frontend Tests: ${{ needs.frontend-tests.result }}"
+        echo "Rust Tests: ${{ needs.rust-tests.result }}"
+        echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+        echo "Performance Tests: ${{ needs.performance-tests.result }}"
+        echo "Security Scan: ${{ needs.security-scan.result }}"
+        echo "Code Quality: ${{ needs.code-quality.result }}"
+
+        # 如果有测试失败，标记工作流为失败
+        if [[ "${{ needs.frontend-tests.result }}" == "failure" ]] || \
+           [[ "${{ needs.rust-tests.result }}" == "failure" ]] || \
+           [[ "${{ needs.e2e-tests.result }}" == "failure" ]]; then
+          exit 1
+        fi

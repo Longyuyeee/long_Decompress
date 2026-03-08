@@ -1,0 +1,24 @@
+# 核心依赖
+py7zr>=0.20.0          # 7z格式支持
+rarfile>=4.0           # RAR格式支持
+patool>=1.12           # 多格式统一接口
+libarchive-c>=3.0      # libarchive绑定
+python-magic>=0.4.27   # 文件类型检测
+
+# GUI框架
+PyQt5>=5.15.0          # 图形界面
+PyQt5-sip>=12.11.0     # PyQt5绑定
+
+# 功能增强
+cryptography>=3.4      # 密码加密存储
+psutil>=5.8.0          # 系统资源监控
+colorama>=0.4.4        # 控制台颜色输出
+tqdm>=4.62.0           # 进度条显示
+pyyaml>=6.0            # YAML配置文件
+
+# 开发工具（可选）
+pytest>=7.0.0          # 测试框架
+pytest-cov>=4.0.0      # 测试覆盖率
+black>=22.0.0          # 代码格式化
+flake8>=5.0.0          # 代码检查
+mypy>=0.991            # 类型检查

@@ -1,0 +1,48 @@
+{
+  "name": "long-compress-assistant",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:unit:coverage": "vitest run --coverage",
+    "test:integration": "vitest run tests/integration",
+    "test:performance": "vitest run tests/performance tests/integration/performance_integration.test.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:performance && npm run test:e2e",
+    "test:generate-data": "bash scripts/generate_performance_test_files.sh --all",
+    "test:run-performance": "bash scripts/run_performance_tests.sh",
+    "bench:rust": "cd src-tauri && cargo bench"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.5.3",
+    "primevue": "^3.47.0",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.12",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "@vitest/coverage-v8": "^1.6.0",
+    "@vue/test-utils": "^2.4.6",
+    "@testing-library/vue": "^6.6.1",
+    "@playwright/test": "^1.44.0",
+    "autoprefixer": "^10.4.19",
+    "jsdom": "^24.0.0",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4",
+    "vitest": "^1.6.0",
+    "vue-tsc": "^1.8.27"
+  }
+}

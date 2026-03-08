@@ -1,0 +1,38 @@
+# Node.js
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Rust
+target/
+**/*.rs.bk
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+ENV/
+env/
+.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+.claude/
+.gemini/
+*.log
+prototype/config.yaml
+long-compress-assistant/src-tauri/target/
+long-compress-assistant/node_modules/
+long-compress-assistant/dist/
