@@ -50,7 +50,7 @@ impl ConfigFileFormat {
 
 /// 配置文件加载器
 pub struct ConfigFileLoader {
-    config_dir: PathBuf,
+    pub config_dir: PathBuf,
     format: ConfigFileFormat,
     watcher: Option<RecommendedWatcher>,
     file_watches: Arc<RwLock<HashMap<PathBuf, FileWatchInfo>>>,
@@ -308,14 +308,13 @@ impl ConfigFileLoader {
                         for path in event.paths {
                             let file_watches = file_watches.clone();
                             tokio::spawn(async move {
-                                if let Ok(watches) = file_watches.read().await {
-                                    if let Some(info) = watches.get(&path) {
-                                        // 检查文件是否真的被修改
-                                        if let Ok(metadata) = std::fs::metadata(&path) {
-                                            if let Ok(modified) = metadata.modified() {
-                                                if modified > info.last_modified {
-                                                    (info.callback)(&path);
-                                                }
+                                let watches = file_watches.read().await;
+                                if let Some(info) = watches.get(&path) {
+                                    // 检查文件是否真的被修改
+                                    if let Ok(metadata) = std::fs::metadata(&path) {
+                                        if let Ok(modified) = metadata.modified() {
+                                            if modified > info.last_modified {
+                                                (info.callback)(&path);
                                             }
                                         }
                                     }

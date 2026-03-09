@@ -175,7 +175,7 @@ impl PasswordBookService {
             entry.name = name;
         }
         if let Some(username) = request.username {
-            entry.username = username;
+            entry.username = Some(username);
         }
         if let Some(password) = request.password {
             // 验证新密码强度
@@ -197,10 +197,10 @@ impl PasswordBookService {
             entry.strength = validation.strength;
         }
         if let Some(url) = request.url {
-            entry.url = url;
+            entry.url = Some(url);
         }
         if let Some(notes) = request.notes {
-            entry.notes = notes;
+            entry.notes = Some(notes);
         }
         if let Some(tags) = request.tags {
             entry.tags = tags;
@@ -293,7 +293,7 @@ impl PasswordBookService {
     /// 验证密码强度
     pub async fn validate_password(&self, password: &str) -> Result<PasswordValidationResult> {
         let mut issues = Vec::new();
-        let mut score = 0;
+        let mut score: i32 = 0;
 
         // 长度检查
         if password.len() < 8 {
@@ -486,13 +486,11 @@ impl PasswordBookService {
 
     /// 从数据库获取密码条目
     async fn get_password_entry(&self, pool: &SqlitePool, id: &str) -> Result<Option<PasswordBookEntry>> {
-        let row: Option<(String, String, Option<String>, String, Option<String>, Option<String>, String, String, String, String, String, i32, DateTime<Utc>, DateTime<Utc>, Option<DateTime<Utc>>, Option<DateTime<Utc>>, bool, bool, bool, String)> = sqlx::query_as(
+        use crate::database::models::PasswordEntryDb;
+
+        let db_entry: Option<PasswordEntryDb> = sqlx::query_as(
             r#"
-            SELECT
-                id, name, username, password, url, notes, tags, category, strength,
-                key_id, encryption_algorithm, encryption_version,
-                created_at, updated_at, last_used, expires_at, favorite, archived, deleted, custom_fields
-            FROM password_entries
+            SELECT * FROM password_entries
             WHERE id = ? AND deleted = FALSE
             "#
         )
@@ -501,11 +499,38 @@ impl PasswordBookService {
         .await
         .context("查询密码条目失败")?;
 
-        if let Some(row) = row {
-            let entry = self.row_to_password_entry(row)?;
-            Ok(Some(entry))
+        if let Some(db_entry) = db_entry {
+            // 这里需要将 PasswordEntryDb 转换为 PasswordBookEntry
+            // 由于 PasswordBookEntry 与 PasswordEntry 基本相同，我将重用转换逻辑
+            let entry: crate::models::password::PasswordEntry = db_entry.into();
+            Ok(Some(self.password_entry_to_book_entry(entry)))
         } else {
             Ok(None)
+        }
+    }
+
+    fn password_entry_to_book_entry(&self, entry: crate::models::password::PasswordEntry) -> PasswordBookEntry {
+        PasswordBookEntry {
+            id: entry.id,
+            name: entry.name,
+            username: entry.username,
+            password: entry.password,
+            url: entry.url,
+            notes: entry.notes,
+            tags: entry.tags,
+            category: entry.category,
+            strength: entry.strength,
+            key_id: "master_key".to_string(), // 简化
+            encryption_algorithm: "AES256GCM".to_string(),
+            encryption_version: 1,
+            created_at: entry.created_at,
+            updated_at: entry.updated_at,
+            last_used: entry.last_used,
+            expires_at: entry.expires_at,
+            favorite: entry.favorite,
+            archived: false,
+            deleted: false,
+            custom_fields: entry.custom_fields,
         }
     }
 

@@ -546,7 +546,7 @@ pub async fn compare_passwords_similarity(password1: String, password2: String) 
     let service = PasswordStrengthService::new();
 
     let similarity = service.compare_passwords(&password1, &password2);
-    Ok(similarity)
+    Ok(similarity as f64)
 }
 
 #[command]

@@ -37,7 +37,8 @@ impl AsyncExecutor {
     /// 批量执行异步任务
     pub async fn execute_batch<F, T, I>(&self, tasks: I) -> Vec<Result<T, AppError>>
     where
-        F: Future<Output = Result<T, AppError>>,
+        F: Future<Output = Result<T, AppError>> + Send + 'static,
+        T: Send + 'static,
         I: IntoIterator<Item = F>,
     {
         let mut handles = Vec::new();
@@ -420,7 +421,8 @@ where
         Fut: Future<Output = Result<(), AppError>> + Send + 'static,
     {
         let buffer = Arc::new(Mutex::new(Vec::new()));
-        let processor = Arc::new(move |items| Box::pin(processor(items)));
+        let processor: Arc<dyn Fn(Vec<T>) -> Pin<Box<dyn Future<Output = Result<(), AppError>> + Send>> + Send + Sync> = 
+            Arc::new(move |items| Box::pin(processor(items)));
 
         // 启动定时刷新任务
         let flush_buffer = buffer.clone();

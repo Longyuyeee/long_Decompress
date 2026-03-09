@@ -181,7 +181,7 @@ export const useDecompressionStore = defineStore('decompression', () => {
         selectedFile.value.path.replace(/\.[^/.]+$/, '') // 默认解压到同名目录
 
       // 调用Tauri解压API
-      const result = await invoke('decompress_file', {
+      const result = await invoke('extract_file', {
         filePath: selectedFile.value.path,
         outputPath: outputPath,
         password: decompressSettings.value.password || null,

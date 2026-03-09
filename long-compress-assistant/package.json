@@ -23,19 +23,21 @@
     "bench:rust": "cd src-tauri && cargo bench"
   },
   "dependencies": {
+    "@primevue/themes": "^4.5.4",
     "@tauri-apps/api": "^1.5.3",
-    "primevue": "^3.47.0",
     "pinia": "^2.1.7",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.4",
     "vue": "^3.4.21",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.44.0",
     "@tauri-apps/cli": "^1.5.12",
+    "@testing-library/vue": "^6.6.1",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vitest/coverage-v8": "^1.6.0",
     "@vue/test-utils": "^2.4.6",
-    "@testing-library/vue": "^6.6.1",
-    "@playwright/test": "^1.44.0",
     "autoprefixer": "^10.4.19",
     "jsdom": "^24.0.0",
     "postcss": "^8.4.38",

@@ -16,8 +16,20 @@ export default {
         '2xl': '1536px',
       },
       colors: {
-        // 主色板
+        // 基础颜色
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
         primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
           50: '#f0f9ff',
           100: '#e0f2fe',
           200: '#bae6fd',
@@ -28,12 +40,12 @@ export default {
           700: '#0369a1',
           800: '#075985',
           900: '#0c4a6e',
-          DEFAULT: '#0ea5e9',
           dark: '#0369a1',
           light: '#7dd3fc',
         },
-        // 辅助色板
         secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
           50: '#f8fafc',
           100: '#f1f5f9',
           200: '#e2e8f0',
@@ -44,10 +56,24 @@ export default {
           700: '#334155',
           800: '#1e293b',
           900: '#0f172a',
-          DEFAULT: '#64748b',
           dark: '#1e293b',
           light: '#f1f5f9',
         },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
         // 功能色
         success: {
           50: '#ecfdf5',

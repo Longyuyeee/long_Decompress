@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 /// 配置Repository
+#[derive(Debug, Clone)]
 pub struct ConfigRepository {
     pool: SqlitePool,
 }

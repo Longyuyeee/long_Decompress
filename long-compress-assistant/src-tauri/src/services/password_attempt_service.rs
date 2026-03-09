@@ -84,7 +84,7 @@ impl PasswordAttemptService {
                 Ok(true) => {
                     // 解压成功
                     log::info!("解压成功! 使用的密码来自条目: {}",
-                        entry.as_ref().map(|e| &e.name).unwrap_or("未知")
+                        entry.as_ref().map_or("未知", |e| &e.name)
                     );
 
                     // 更新密码使用记录
@@ -250,15 +250,16 @@ impl PasswordAttemptService {
         let output_dir_obj = Path::new(output_dir);
 
         // 调用实际的ZIP解压功能
-        match CompressionService::extract_zip_with_password_check(
-            zip_path_obj,
-            output_dir_obj,
+        let compression_service = CompressionService::default();
+        match compression_service.extract_zip_with_password_check(
+            zip_path,
+            output_dir,
             Some(password),
         ).await {
-            Ok(success) => Ok(success),
+            Ok(_) => Ok(true),
             Err(e) => {
                 // 检查错误类型
-                let error_msg = e.to_string();
+                let error_msg: String = e.to_string();
                 if error_msg.contains("密码错误") || error_msg.contains("InvalidPassword") {
                     Ok(false) // 密码错误，但不是致命错误
                 } else {

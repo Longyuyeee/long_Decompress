@@ -448,6 +448,28 @@ impl PlatformCompatibilityChecker {
         }
     }
 
+    /// 检查文件拖放支持
+    fn check_file_drag_drop_support(platform: PlatformType) -> PlatformFeatureCheck {
+        match platform {
+            PlatformType::Windows => PlatformFeatureCheck {
+                feature_name: "文件拖放".to_string(),
+                platform: PlatformType::Windows,
+                support_status: FeatureSupport::FullySupported,
+                description: "Windows提供完整的文件拖放支持".to_string(),
+                notes: vec!["支持从资源管理器拖放文件".to_string()],
+                workarounds: vec![],
+            },
+            _ => PlatformFeatureCheck {
+                feature_name: "文件拖放".to_string(),
+                platform,
+                support_status: FeatureSupport::PartiallySupported,
+                description: "该平台可能支持文件拖放，但尚未经过验证".to_string(),
+                notes: vec![],
+                workarounds: vec![],
+            },
+        }
+    }
+
     /// 检查剪贴板集成支持
     fn check_clipboard_integration_support(platform: PlatformType) -> PlatformFeatureCheck {
         match platform {

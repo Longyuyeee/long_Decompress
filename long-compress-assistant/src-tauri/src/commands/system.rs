@@ -4,10 +4,7 @@ use tauri::command;
 #[command]
 pub async fn get_system_info() -> Result<SystemInfo, String> {
     let mut service = SystemService::new();
-    match service.get_system_info() {
-        Ok(info) => Ok(info),
-        Err(e) => Err(format!("获取系统信息失败: {}", e)),
-    }
+    Ok(service.get_system_info())
 }
 
 #[command]

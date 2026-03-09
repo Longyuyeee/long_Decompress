@@ -186,7 +186,7 @@
               @click="applyPreset(preset)"
               class="w-full glass-button text-left px-4 py-3"
             >
-              <i :class="preset.icon" class="mr-3" :class="preset.color"></i>
+              <i :class="[preset.icon, preset.color]" class="mr-3"></i>
               <div class="flex-1">
                 <p class="font-medium">{{ preset.name }}</p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">{{ preset.description }}</p>
@@ -205,7 +205,7 @@
               class="flex items-center p-2 rounded-lg"
               :class="feature.active ? 'bg-primary/10' : 'bg-gray-50 dark:bg-gray-800'"
             >
-              <i :class="feature.icon" class="mr-3" :class="feature.color"></i>
+              <i :class="[feature.icon, feature.color]" class="mr-3"></i>
               <div class="flex-1">
                 <p class="text-sm font-medium text-gray-900 dark:text-white">{{ feature.name }}</p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">{{ feature.description }}</p>

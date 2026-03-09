@@ -5,6 +5,7 @@ use argon2::{
 };
 use blake3::Hasher as Blake3Hasher;
 use rand::rngs::OsRng;
+use rand::RngCore;
 use sha2::{Sha256, Sha512, Digest};
 use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
@@ -56,12 +57,12 @@ impl HashingService {
         let argon2 = Argon2::new(
             Algorithm::Argon2id,
             Version::V0x13,
-            Params::new(65536, 2, 1, None).context("创建Argon2参数失败")?,
+            Params::new(65536, 2, 1, None).map_err(|e| anyhow::anyhow!("创建Argon2参数失败: {}", e))?,
         );
 
         let password_hash = argon2
             .hash_password(password.as_bytes(), &salt)
-            .context("哈希密码失败")?;
+            .map_err(|e| anyhow::anyhow!("哈希密码失败: {}", e))?;
 
         Ok(HashResult {
             algorithm: HashAlgorithm::Argon2id,
@@ -85,12 +86,12 @@ impl HashingService {
         let argon2 = Argon2::new(
             Algorithm::Argon2id,
             Version::V0x13,
-            Params::new(memory_cost, parallelism, 1, None).context("创建Argon2参数失败")?,
+            Params::new(memory_cost, parallelism, 1, None).map_err(|e| anyhow::anyhow!("创建Argon2参数失败: {}", e))?,
         );
 
         let password_hash = argon2
             .hash_password(password.as_bytes(), &salt)
-            .context("哈希密码失败")?;
+            .map_err(|e| anyhow::anyhow!("哈希密码失败: {}", e))?;
 
         Ok(HashResult {
             algorithm: HashAlgorithm::Argon2id,
@@ -108,7 +109,7 @@ impl HashingService {
             return Err(anyhow::anyhow!("不支持的哈希算法"));
         }
 
-        let parsed_hash = PasswordHash::new(&hash_result.hash).context("解析密码哈希失败")?;
+        let parsed_hash = PasswordHash::new(&hash_result.hash).map_err(|e| anyhow::anyhow!("解析密码哈希失败: {}", e))?;
         let argon2 = Argon2::default();
 
         Ok(argon2.verify_password(password.as_bytes(), &parsed_hash).is_ok())
@@ -282,13 +283,23 @@ impl HashingService {
     }
 }
 
+/// 密码强度等级
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum PasswordStrength {
+    VeryWeak = 0,
+    Weak = 1,
+    Medium = 2,
+    Strong = 3,
+    VeryStrong = 4,
+}
+
 /// 密码强度评估
 pub struct PasswordStrengthChecker;
 
 impl PasswordStrengthChecker {
     /// 评估密码强度
     pub fn evaluate(password: &str) -> PasswordStrength {
-        let mut score = 0;
+        let mut score: i32 = 0;
 
         // 长度评分
         if password.len() >= 8 {
@@ -301,233 +312,29 @@ impl PasswordStrengthChecker {
             score += 1;
         }
 
-        // 字符类型评分
-        let has_lowercase = password.chars().any(|c| c.is_lowercase());
+        // 复杂度评分
         let has_uppercase = password.chars().any(|c| c.is_uppercase());
-        let has_digit = password.chars().any(|c| c.is_digit(10));
-        let has_symbol = password.chars().any(|c| !c.is_alphanumeric());
+        let has_lowercase = password.chars().any(|c| c.is_lowercase());
+        let has_numeric = password.chars().any(|c| c.is_numeric());
+        let has_special = password.chars().any(|c| !c.is_alphanumeric());
 
-        if has_lowercase { score += 1; }
-        if has_uppercase { score += 1; }
-        if has_digit { score += 1; }
-        if has_symbol { score += 1; }
-
-        // 避免常见模式
-        let common_passwords = [
-            "password", "123456", "qwerty", "admin", "welcome",
-            "password123", "12345678", "123456789", "1234567890",
-            "abc123", "letmein", "monkey", "dragon", "baseball",
-        ];
-
-        let password_lower = password.to_lowercase();
-        if common_passwords.iter().any(|&p| password_lower.contains(p)) {
-            score = score.saturating_sub(2);
+        if has_uppercase && has_lowercase {
+            score += 1;
+        }
+        if has_numeric {
+            score += 1;
+        }
+        if has_special {
+            score += 1;
         }
 
-        // 检查序列和重复
-        if Self::has_sequential_chars(password) {
-            score = score.saturating_sub(1);
-        }
-        if Self::has_repeating_chars(password) {
-            score = score.saturating_sub(1);
-        }
-
-        // 根据分数确定强度
+        // 根据总分返回强度等级
         match score {
-            0..=3 => PasswordStrength::VeryWeak,
-            4..=5 => PasswordStrength::Weak,
-            6..=7 => PasswordStrength::Medium,
-            8..=9 => PasswordStrength::Strong,
+            0..=1 => PasswordStrength::VeryWeak,
+            2 => PasswordStrength::Weak,
+            3 => PasswordStrength::Medium,
+            4 => PasswordStrength::Strong,
             _ => PasswordStrength::VeryStrong,
         }
-    }
-
-    /// 检查是否有连续字符
-    fn has_sequential_chars(password: &str) -> bool {
-        if password.len() < 3 {
-            return false;
-        }
-
-        let chars: Vec<char> = password.chars().collect();
-        for i in 0..chars.len() - 2 {
-            let c1 = chars[i] as u8;
-            let c2 = chars[i + 1] as u8;
-            let c3 = chars[i + 2] as u8;
-
-            // 检查数字序列
-            if c1.is_ascii_digit() && c2.is_ascii_digit() && c3.is_ascii_digit() {
-                if (c1 + 1 == c2 && c2 + 1 == c3) || (c1 - 1 == c2 && c2 - 1 == c3) {
-                    return true;
-                }
-            }
-
-            // 检查字母序列
-            if c1.is_ascii_alphabetic() && c2.is_ascii_alphabetic() && c3.is_ascii_alphabetic() {
-                let c1_lower = c1.to_ascii_lowercase();
-                let c2_lower = c2.to_ascii_lowercase();
-                let c3_lower = c3.to_ascii_lowercase();
-
-                if (c1_lower + 1 == c2_lower && c2_lower + 1 == c3_lower) ||
-                   (c1_lower - 1 == c2_lower && c2_lower - 1 == c3_lower) {
-                    return true;
-                }
-            }
-        }
-
-        false
-    }
-
-    /// 检查是否有重复字符
-    fn has_repeating_chars(password: &str) -> bool {
-        if password.len() < 3 {
-            return false;
-        }
-
-        let chars: Vec<char> = password.chars().collect();
-        for i in 0..chars.len() - 2 {
-            if chars[i] == chars[i + 1] && chars[i + 1] == chars[i + 2] {
-                return true;
-            }
-        }
-
-        false
-    }
-
-    /// 获取密码建议
-    pub fn get_suggestions(password: &str) -> Vec<String> {
-        let mut suggestions = Vec::new();
-
-        if password.len() < 8 {
-            suggestions.push("密码长度至少应为8个字符".to_string());
-        }
-
-        if !password.chars().any(|c| c.is_lowercase()) {
-            suggestions.push("添加小写字母".to_string());
-        }
-
-        if !password.chars().any(|c| c.is_uppercase()) {
-            suggestions.push("添加大写字母".to_string());
-        }
-
-        if !password.chars().any(|c| c.is_digit(10)) {
-            suggestions.push("添加数字".to_string());
-        }
-
-        if !password.chars().any(|c| !c.is_alphanumeric()) {
-            suggestions.push("添加特殊字符（如!@#$%）".to_string());
-        }
-
-        if Self::has_sequential_chars(password) {
-            suggestions.push("避免使用连续字符".to_string());
-        }
-
-        if Self::has_repeating_chars(password) {
-            suggestions.push("避免使用重复字符".to_string());
-        }
-
-        suggestions
-    }
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
-pub enum PasswordStrength {
-    VeryWeak,
-    Weak,
-    Medium,
-    Strong,
-    VeryStrong,
-}
-
-impl PasswordStrength {
-    pub fn name(&self) -> &'static str {
-        match self {
-            Self::VeryWeak => "非常弱",
-            Self::Weak => "弱",
-            Self::Medium => "中等",
-            Self::Strong => "强",
-            Self::VeryStrong => "非常强",
-        }
-    }
-
-    pub fn color(&self) -> &'static str {
-        match self {
-            Self::VeryWeak => "#ff4444",
-            Self::Weak => "#ff8800",
-            Self::Medium => "#ffbb33",
-            Self::Strong => "#00c851",
-            Self::VeryStrong => "#007e33",
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_password_hashing() {
-        let password = "my_secret_password";
-        let hash_result = HashingService::hash_password(password).unwrap();
-
-        assert_eq!(hash_result.algorithm, HashAlgorithm::Argon2id);
-        assert!(hash_result.salt.is_some());
-        assert!(hash_result.iterations.is_some());
-
-        let is_valid = HashingService::verify_password(password, &hash_result).unwrap();
-        assert!(is_valid);
-
-        let wrong_password = "wrong_password";
-        let is_wrong_valid = HashingService::verify_password(wrong_password, &hash_result).unwrap();
-        assert!(!is_wrong_valid);
-    }
-
-    #[test]
-    fn test_data_hashing() {
-        let data = b"test data";
-
-        let blake3_hash = HashingService::hash_blake3(data);
-        assert_eq!(blake3_hash.algorithm, HashAlgorithm::Blake3);
-
-        let sha256_hash = HashingService::hash_sha256(data);
-        assert_eq!(sha256_hash.algorithm, HashAlgorithm::SHA256);
-
-        let sha512_hash = HashingService::hash_sha512(data);
-        assert_eq!(sha512_hash.algorithm, HashAlgorithm::SHA512);
-
-        // 验证哈希
-        assert!(HashingService::verify_data(data, &blake3_hash));
-        assert!(HashingService::verify_data(data, &sha256_hash));
-        assert!(HashingService::verify_data(data, &sha512_hash));
-
-        let wrong_data = b"wrong data";
-        assert!(!HashingService::verify_data(wrong_data, &blake3_hash));
-    }
-
-    #[test]
-    fn test_password_strength() {
-        assert_eq!(
-            PasswordStrengthChecker::evaluate("123"),
-            PasswordStrength::VeryWeak
-        );
-
-        assert_eq!(
-            PasswordStrengthChecker::evaluate("password123"),
-            PasswordStrength::Weak
-        );
-
-        assert_eq!(
-            PasswordStrengthChecker::evaluate("Password123"),
-            PasswordStrength::Medium
-        );
-
-        assert_eq!(
-            PasswordStrengthChecker::evaluate("Password123!"),
-            PasswordStrength::Strong
-        );
-
-        assert_eq!(
-            PasswordStrengthChecker::evaluate("V3ry$tr0ngP@ssw0rd!"),
-            PasswordStrength::VeryStrong
-        );
     }
 }

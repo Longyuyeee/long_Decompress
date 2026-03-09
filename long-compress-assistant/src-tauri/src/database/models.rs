@@ -17,6 +17,7 @@ pub struct CompressionTaskDb {
     pub error_message: Option<String>,
     pub total_size: i64,
     pub processed_size: i64,
+    pub password: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -264,8 +265,7 @@ impl From<CompressionTaskDb> for crate::models::compression::CompressionTask {
         let options: CompressionOptions = serde_json::from_str(&db.options)
             .unwrap_or_default();
 
-        let format = CompressionFormat::from_extension(&db.format)
-            .unwrap_or(CompressionFormat::Zip);
+        let format = CompressionFormat::from_extension(&db.format);
 
         let status = match db.status.as_str() {
             "Preparing" => CompressionStatus::Preparing,
@@ -278,20 +278,21 @@ impl From<CompressionTaskDb> for crate::models::compression::CompressionTask {
             _ => CompressionStatus::Pending,
         };
 
-        Self {
+        crate::models::compression::CompressionTask {
             id: db.id,
             source_files,
             output_path: db.output_path,
             format,
             options,
             status,
-            progress: db.progress,
+            progress: db.progress as f32,
             created_at: db.created_at,
             started_at: db.started_at,
             completed_at: db.completed_at,
             error_message: db.error_message,
             total_size: db.total_size as u64,
             processed_size: db.processed_size as u64,
+            password: db.password,
         }
     }
 }
@@ -310,6 +311,7 @@ impl From<crate::models::compression::CompressionTask> for CompressionTaskDb {
             crate::models::compression::CompressionStatus::Compressing => "Compressing",
             crate::models::compression::CompressionStatus::Extracting => "Extracting",
             crate::models::compression::CompressionStatus::Finalizing => "Finalizing",
+            crate::models::compression::CompressionStatus::Running => "Running",
             crate::models::compression::CompressionStatus::Completed => "Completed",
             crate::models::compression::CompressionStatus::Failed => "Failed",
             crate::models::compression::CompressionStatus::Cancelled => "Cancelled",
@@ -329,6 +331,39 @@ impl From<crate::models::compression::CompressionTask> for CompressionTaskDb {
             error_message: task.error_message,
             total_size: task.total_size as i64,
             processed_size: task.processed_size as i64,
+            password: task.password,
+        }
+    }
+}
+
+impl From<PasswordGroupDb> for crate::models::password::PasswordGroup {
+    fn from(db: PasswordGroupDb) -> Self {
+        crate::models::password::PasswordGroup {
+            id: db.id,
+            name: db.name,
+            description: db.description,
+            entry_ids: Vec::new(),
+            created_at: db.created_at,
+            updated_at: db.updated_at,
+        }
+    }
+}
+
+impl From<crate::models::password::PasswordGroup> for PasswordGroupDb {
+    fn from(group: crate::models::password::PasswordGroup) -> Self {
+        Self {
+            id: group.id,
+            name: group.name,
+            description: group.description,
+            category: "Other".to_string(),
+            icon: None,
+            color: None,
+            require_master_password: false,
+            auto_lock_minutes: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            favorite: false,
+            archived: false,
         }
     }
 }

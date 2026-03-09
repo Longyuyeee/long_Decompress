@@ -160,13 +160,14 @@ impl IOBufferPool {
                 buffer.resize(new_size);
             }
 
+            let capacity = buffer.capacity();
             stats.buffer_hits += 1;
-            stats.total_buffer_size += buffer.capacity() as u64;
+            stats.total_buffer_size += capacity as u64;
 
             IOBufferHandle {
                 buffer: Some(buffer),
                 pool: self.clone(),
-                acquired_size: buffer.capacity(),
+                acquired_size: capacity,
             }
         } else {
             // 池中没有合适的缓冲区，创建新的
@@ -175,11 +176,12 @@ impl IOBufferPool {
             let mut total_allocated = self.total_allocated.lock().await;
             if *total_allocated < self.config.max_buffer_count {
                 *total_allocated += 1;
+                let current_total = *total_allocated;
                 drop(total_allocated);
 
                 let buffer = IOBuffer::new(buffer_size);
                 stats.total_buffer_size += buffer.capacity() as u64;
-                stats.peak_buffer_count = stats.peak_buffer_count.max(*total_allocated);
+                stats.peak_buffer_count = stats.peak_buffer_count.max(current_total);
 
                 IOBufferHandle {
                     buffer: Some(buffer),

@@ -1,8 +1,6 @@
 use crate::services::encrypted_password_service::{EncryptedPasswordService, PasswordGroupService};
-use crate::models::password::{
-    PasswordEntry, PasswordCategory, CustomField, CustomFieldType,
-    PasswordGroup, PasswordAuditResult, PasswordGeneratorOptions, PasswordImportExportOptions
-};
+use crate::models::password::{PasswordEntry, PasswordCategory, PasswordStrength, CustomField, CustomFieldType, PasswordGroup};
+use crate::services::password_strength_service::{PasswordAuditResult, PasswordGeneratorOptions, PasswordImportExportOptions};
 use tauri::{AppHandle, Manager, State};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -97,7 +95,7 @@ pub async fn lock_encrypted_password_service(app: AppHandle) -> Result<(), Strin
 
     let mut service_lock = state.service.lock().await;
     if let Some(service) = service_lock.as_mut() {
-        service.lock();
+        service.lock().await;
     }
 
     let mut group_service_lock = state.group_service.lock().await;
@@ -112,7 +110,11 @@ pub async fn is_encrypted_password_service_unlocked(app: AppHandle) -> Result<bo
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
     let service_lock = state.service.lock().await;
-    Ok(service_lock.as_ref().map_or(false, |s| s.is_unlocked()))
+    if let Some(service) = service_lock.as_ref() {
+        Ok(service.is_unlocked().await)
+    } else {
+        Ok(false)
+    }
 }
 
 /// 添加密码条目
@@ -451,12 +453,12 @@ impl From<PasswordEntryRequest> for PasswordEntry {
     fn from(req: PasswordEntryRequest) -> Self {
         let mut entry = PasswordEntry::new(
             req.name,
-            req.username,
             req.password,
-            req.url,
             req.category,
         );
 
+        entry.username = req.username;
+        entry.url = req.url;
         entry.notes = req.notes;
         entry.tags = req.tags;
         entry.custom_fields = req.custom_fields.into_iter()
@@ -478,7 +480,6 @@ impl From<PasswordGroupRequest> for PasswordGroup {
         PasswordGroup::new(
             req.name,
             req.description,
-            req.category,
         )
     }
 }

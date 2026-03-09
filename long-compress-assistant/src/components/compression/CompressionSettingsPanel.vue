@@ -23,7 +23,7 @@
               ]"
               :aria-label="`选择${format.name}格式`"
             >
-              <i :class="format.icon" class="text-lg block mb-2" :class="format.color"></i>
+              <i :class="[format.icon, format.color]" class="text-lg block mb-2"></i>
               <span class="font-medium">{{ format.name }}</span>
               <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ format.description }}</p>
             </button>

@@ -3,8 +3,11 @@ use crate::crypto::encryption::{EncryptionService, EncryptedData};
 use crate::crypto::key_management::{KeyManager, KeyEntry, KeyType, KeyAlgorithm};
 use crate::crypto::hashing::{HashingService, HashResult};
 use crate::models::password::{
-    PasswordEntry, PasswordCategory, PasswordStrength, CustomField, CustomFieldType,
-    PasswordGroup, PasswordAuditResult, PasswordIssue, PasswordIssueType, IssueSeverity,
+    PasswordEntry, PasswordCategory, PasswordStrength, CustomField, 
+    PasswordGroup
+};
+use crate::services::password_strength_service::{
+    PasswordAuditResult, PasswordIssue, PasswordIssueType, IssueSeverity,
     PasswordGeneratorOptions, PasswordImportExportOptions, ImportExportFormat
 };
 use crate::database::models::{PasswordEntryDb, PasswordGroupDb};
@@ -134,16 +137,13 @@ impl EncryptedPasswordService {
         let encryption_key = key_manager.generate_key(
             &format!("密码条目: {}", entry.name),
             KeyType::Symmetric,
-            KeyAlgorithm::AES256GCM,
-            Some(&format!("用于加密密码条目: {}", entry.id)),
-        ).await?;
+            KeyAlgorithm::Aes256Gcm,
+            ).await?;
 
-        // 获取密钥数据
-        let key_data = key_manager.get_key_data(&encryption_key.id).await?
-            .ok_or_else(|| anyhow::anyhow!("无法获取密钥数据"))?;
+            let key_data = key_manager.get_key_data(&encryption_key.id).await?;
 
         // 创建加密服务
-        let encryption_service = EncryptionService::from_base64_key(&key_data)?;
+        let encryption_service = EncryptionService::new(key_data);
 
         // 加密密码
         let encrypted_password = encryption_service.encrypt_string(&entry.password)?;
@@ -201,13 +201,12 @@ impl EncryptedPasswordService {
             // 简化处理：使用第一个AES256GCM密钥
             let keys = key_manager.list_keys().await?;
             let encryption_key = keys.iter()
-                .find(|k| k.algorithm == KeyAlgorithm::AES256GCM)
+                .find(|k| k.algorithm == KeyAlgorithm::Aes256Gcm)
                 .ok_or_else(|| anyhow::anyhow!("未找到加密密钥"))?;
 
-            let key_data = key_manager.get_key_data(&encryption_key.id).await?
-                .ok_or_else(|| anyhow::anyhow!("无法获取密钥数据"))?;
+            let key_data = key_manager.get_key_data(&encryption_key.id).await?;
 
-            let encryption_service = EncryptionService::from_base64_key(&key_data)?;
+            let encryption_service = EncryptionService::new(key_data);
             let decrypted_password = encryption_service.decrypt_string(&encrypted_password)?;
 
             entry.password = decrypted_password;
@@ -249,14 +248,12 @@ impl EncryptedPasswordService {
 
         let keys = key_manager.list_keys().await?;
         let encryption_key = keys.iter()
-            .find(|k| k.algorithm == KeyAlgorithm::AES256GCM)
+            .find(|k| k.algorithm == KeyAlgorithm::Aes256Gcm)
             .ok_or_else(|| anyhow::anyhow!("未找到加密密钥"))?;
 
-        let key_data = key_manager.get_key_data(&encryption_key.id).await?
-            .ok_or_else(|| anyhow::anyhow!("无法获取密钥数据"))?;
+        let key_data = key_manager.get_key_data(&encryption_key.id).await?;
 
-        let encryption_service = EncryptionService::from_base64_key(&key_data)?;
-
+        let encryption_service = EncryptionService::new(key_data);
         let encrypted_password = encryption_service.encrypt_string(&entry.password)?;
         let encrypted_password_json = serde_json::to_string(&encrypted_password)?;
 

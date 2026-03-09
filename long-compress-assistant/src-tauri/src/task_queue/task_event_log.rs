@@ -29,6 +29,14 @@ pub enum TaskEventType {
     TaskError,        // 任务错误
     TaskWarning,      // 任务警告
     TaskInfo,         // 任务信息
+    TaskLoaded,       // 任务加载
+    BatchTaskCreated, // 批量任务创建
+}
+
+impl std::fmt::Display for TaskEventType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 /// 任务事件
@@ -163,6 +171,7 @@ pub struct TaskEventStats {
 }
 
 /// 任务事件日志管理器
+#[derive(Clone)]
 pub struct TaskEventLogger {
     log_dir: PathBuf,
     max_events_per_file: usize,

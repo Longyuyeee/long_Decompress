@@ -1,4 +1,5 @@
 use crate::services::io_buffer_pool::IOBufferPool;
+use crate::models::password::PasswordEntry;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use std::fs::File;
@@ -42,7 +43,7 @@ impl ParallelExtractor {
     ) -> Result<()> {
         // 打开ZIP文件并读取所有条目信息
         let file = File::open(zip_path).context("打开ZIP文件失败")?;
-        let archive = ZipArchive::new(file).context("读取ZIP归档失败")?;
+        let mut archive = ZipArchive::new(file).context("读取ZIP归档失败")?;
 
         // 收集所有需要处理的文件条目
         let file_count = archive.len();

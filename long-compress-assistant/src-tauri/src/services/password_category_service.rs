@@ -40,15 +40,15 @@ pub struct UpdateCategoryRequest {
     pub sort_order: Option<i32>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct CategoryStatistics {
     pub category_id: String,
     pub category_name: String,
     pub display_name: String,
-    pub password_count: u64,
+    pub password_count: i64,
     pub average_strength: f64,
-    pub expired_count: u64,
-    pub favorite_count: u64,
+    pub expired_count: i64,
+    pub favorite_count: i64,
 }
 
 pub struct PasswordCategoryService;

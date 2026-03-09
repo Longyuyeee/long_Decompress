@@ -122,8 +122,10 @@ impl RarSupportService {
             .map_err(|e| RarError::ExtractionFailed(format!("创建输出目录失败: {}", e)))?;
 
         // 尝试使用不同的工具解压
-        let result = self.try_extract_with_unrar(rar_path, output_dir, password).await
-            .or_else(|_| self.try_extract_with_7z(rar_path, output_dir, password).await);
+        let result = match self.try_extract_with_unrar(rar_path, output_dir, password).await {
+            Ok(_) => Ok(()),
+            Err(_) => self.try_extract_with_7z(rar_path, output_dir, password).await,
+        };
 
         match result {
             Ok(_) => {

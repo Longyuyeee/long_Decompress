@@ -2,6 +2,8 @@ use anyhow::{Context, Result};
 use crate::services::encrypted_password_service::EncryptedPasswordService;
 use crate::models::password::{
     PasswordEntry, PasswordCategory, PasswordStrength, PasswordGroup,
+};
+use crate::services::password_strength_service::{
     PasswordAuditResult, PasswordIssue, PasswordIssueType, IssueSeverity
 };
 use crate::database::models::{
@@ -197,12 +199,16 @@ impl PasswordQueryService {
         let (sql, params) = self.build_query_sql(request).await?;
 
         // 执行查询
-        let entry_ids: Vec<String> = query_as(&sql)
-            .bind_all(&params)
+        let mut query = sqlx::query_as::<_, (String,)>(&sql);
+        for param in &params {
+            query = query.bind(param);
+        }
+        
+        let entry_ids: Vec<String> = query
             .fetch_all(&self.db_pool)
             .await?
             .into_iter()
-            .map(|row: (String,)| row.0)
+            .map(|row| row.0)
             .collect();
 
         // 缓存结果
@@ -401,8 +407,12 @@ impl PasswordQueryService {
     async fn get_total_count(&self, request: &PasswordQueryRequest) -> Result<u64> {
         let (sql, params) = self.build_count_sql(request).await?;
 
-        let count: (i64,) = query_as(&sql)
-            .bind_all(&params)
+        let mut query = sqlx::query_as::<_, (i64,)>(&sql);
+        for param in &params {
+            query = query.bind(param);
+        }
+
+        let count: (i64,) = query
             .fetch_one(&self.db_pool)
             .await?;
 

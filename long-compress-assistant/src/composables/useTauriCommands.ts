@@ -49,13 +49,13 @@ export const useTauriCommands = () => {
 
       for (const filePath of files) {
         try {
-          const metadata = await fs.stat(filePath)
+          const metadata = await invoke<any>('get_file_info', { path: filePath })
           fileInfos.push({
             path: filePath,
-            name: filePath.split(/[\\/]/).pop() || filePath,
+            name: metadata.name,
             size: metadata.size,
-            isDir: metadata.isDir,
-            modified: metadata.modifiedAt || metadata.createdAt || Date.now()
+            isDir: metadata.is_dir,
+            modified: metadata.modified ? new Date(metadata.modified).getTime() : Date.now()
           })
         } catch (error) {
           console.error(`Failed to get file info for ${filePath}:`, error)
@@ -109,13 +109,20 @@ export const useTauriCommands = () => {
       }
 
       // 调用Rust后端解压命令
-      const result = await invoke('decompress_file', {
+      const result = await invoke('extract_file', {
         filePath,
         outputPath: options.outputPath,
-        password: options.password || '',
-        keepStructure: options.keepStructure,
-        overwrite: options.overwrite,
-        deleteAfter: options.deleteAfter
+        password: options.password || null,
+        options: {
+          preserve_paths: options.keepStructure,
+          overwrite_existing: options.overwrite,
+          delete_after: options.deleteAfter,
+          preserve_timestamps: true,
+          skip_corrupted: false,
+          extract_only_newer: false,
+          create_subdirectory: false,
+          file_filter: null
+        }
       })
 
       console.log('Decompress result:', result)
@@ -185,13 +192,13 @@ export const useTauriCommands = () => {
    */
   const getFileInfo = async (filePath: string): Promise<FileInfo | null> => {
     try {
-      const metadata = await fs.stat(filePath)
+      const metadata = await invoke<any>('get_file_info', { path: filePath })
       return {
         path: filePath,
-        name: filePath.split(/[\\/]/).pop() || filePath,
+        name: metadata.name,
         size: metadata.size,
-        isDir: metadata.isDir,
-        modified: metadata.modifiedAt || metadata.createdAt || Date.now()
+        isDir: metadata.is_dir,
+        modified: metadata.modified ? new Date(metadata.modified).getTime() : Date.now()
       }
     } catch (error) {
       console.error('Failed to get file info:', error)
@@ -209,13 +216,13 @@ export const useTauriCommands = () => {
 
       for (const entry of entries) {
         try {
-          const metadata = await fs.stat(entry.path)
+          const metadata = await invoke<any>('get_file_info', { path: entry.path })
           fileInfos.push({
             path: entry.path,
-            name: entry.name || entry.path.split(/[\\/]/).pop() || entry.path,
+            name: entry.name || metadata.name,
             size: metadata.size,
-            isDir: metadata.isDir,
-            modified: metadata.modifiedAt || metadata.createdAt || Date.now()
+            isDir: metadata.is_dir,
+            modified: metadata.modified ? new Date(metadata.modified).getTime() : Date.now()
           })
         } catch (error) {
           console.error(`Failed to get info for ${entry.path}:`, error)
