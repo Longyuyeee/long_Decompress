@@ -9,6 +9,9 @@ pub mod queue_benchmark;
 pub mod task_scheduler;
 pub mod task_executor;
 pub mod task_manager;
+pub mod task_persistence;
+pub mod task_event_log;
+pub mod batch_task_processor;
 
 // 重新导出主要类型
 pub use models::{
@@ -16,3 +19,7 @@ pub use models::{
     QueueStatistics, QueueConfig, TaskFilter,
 };
 pub use task_manager::{TaskManager, GlobalTaskManager, TASK_MANAGER};
+pub use batch_task_processor::{
+    BatchTaskProcessor, BatchTaskConfig, BatchTaskType, BatchTaskRequest,
+    BatchTaskResult, BatchItemResult, BatchTaskProgress, BatchTaskStatus,
+};

@@ -427,7 +427,7 @@ impl DatabaseConnection {
     /// 自动备份数据库
     pub async fn auto_backup(&self) -> Result<()> {
         if !self.config.backup_config.auto_backup {
-            log::debug("自动备份已禁用");
+            log::debug!("自动备份已禁用");
             return Ok(());
         }
 
@@ -438,7 +438,7 @@ impl DatabaseConnection {
             let backup_interval = Duration::from_secs(self.config.backup_config.backup_interval_hours as u64 * 3600);
 
             if elapsed < backup_interval {
-                log::debug("未到备份时间，跳过自动备份");
+                log::debug!("未到备份时间，跳过自动备份");
                 return Ok(());
             }
         }
@@ -676,7 +676,7 @@ impl DatabaseConnection {
                 .await
                 .map_err(|e| DatabaseError::IntegrityCheckFailed(format!("执行VACUUM修复失败: {}", e)))?;
 
-            log::info("已执行VACUUM修复");
+            log::info!("已执行VACUUM修复");
 
             // 再次检查完整性
             let is_ok_after_repair = self.check_integrity().await?;
@@ -978,8 +978,6 @@ impl TableUsage {
     }
 }
 
-use std::sync::Arc;
-use tokio::sync::RwLock;
 
 /// 全局数据库连接实例
 pub struct GlobalDatabase {

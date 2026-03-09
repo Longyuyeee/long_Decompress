@@ -458,13 +458,17 @@ impl FileService {
         Option<u64>,
         Option<u64>,
     ), FileServiceError> {
-        use std::os::unix::fs::MetadataExt;
-
         let metadata = std::fs::metadata(path)
             .map_err(|e| FileServiceError::IoError(e))?;
 
         // 权限
-        let permissions = Some(format!("{:o}", metadata.permissions().mode() & 0o777));
+        #[cfg(unix)]
+        let permissions = {
+            use std::os::unix::fs::PermissionsExt;
+            Some(format!("{:o}", metadata.permissions().mode() & 0o777))
+        };
+        #[cfg(not(unix))]
+        let permissions = None;
 
         // 所有者和组（在Unix系统上）
         #[cfg(unix)]
@@ -477,6 +481,8 @@ impl FileService {
             // 暂时使用数字ID
             (Some(uid.to_string()), Some(gid.to_string()))
         };
+        #[cfg(not(unix))]
+        let (owner, group) = (None, None);
 
         #[cfg(not(unix))]
         let (owner, group) = (None, None);

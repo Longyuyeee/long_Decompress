@@ -1,0 +1,285 @@
+/**
+ * 响应式设计工具类
+ * 为胧解压项目提供的响应式设计辅助类
+ */
+
+/* 触摸目标尺寸优化 - 确保移动端有足够的点击区域 */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.touch-target-sm {
+  min-height: 36px;
+  min-width: 36px;
+}
+
+.touch-target-lg {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* 移动端优化文本截断 */
+.text-truncate-mobile {
+  @apply truncate;
+}
+
+.text-truncate-mobile-1 {
+  @apply overflow-hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.text-truncate-mobile-2 {
+  @apply overflow-hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.text-truncate-mobile-3 {
+  @apply overflow-hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* 响应式隐藏/显示工具类 */
+.show-xs-only { @apply hidden xs:block sm:hidden md:hidden lg:hidden xl:hidden 2xl:hidden; }
+.show-sm-only { @apply hidden xs:hidden sm:block md:hidden lg:hidden xl:hidden 2xl:hidden; }
+.show-md-only { @apply hidden xs:hidden sm:hidden md:block lg:hidden xl:hidden 2xl:hidden; }
+.show-lg-only { @apply hidden xs:hidden sm:hidden md:hidden lg:block xl:hidden 2xl:hidden; }
+.show-xl-only { @apply hidden xs:hidden sm:hidden md:hidden lg:hidden xl:block 2xl:hidden; }
+.show-2xl-only { @apply hidden xs:hidden sm:hidden md:hidden lg:hidden xl:hidden 2xl:block; }
+
+.hide-xs { @apply xs:hidden; }
+.hide-sm { @apply sm:hidden; }
+.hide-md { @apply md:hidden; }
+.hide-lg { @apply lg:hidden; }
+.hide-xl { @apply xl:hidden; }
+.hide-2xl { @apply 2xl:hidden; }
+
+/* 响应式间距工具类 */
+.space-y-responsive {
+  @apply space-y-3 xs:space-y-4 sm:space-y-6;
+}
+
+.space-x-responsive {
+  @apply space-x-2 xs:space-x-3 sm:space-x-4;
+}
+
+/* 响应式网格列数 */
+.grid-responsive-1-2 {
+  @apply grid grid-cols-1 xs:grid-cols-2;
+}
+
+.grid-responsive-1-2-3 {
+  @apply grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3;
+}
+
+.grid-responsive-2-3-4 {
+  @apply grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4;
+}
+
+.grid-responsive-2-3-4-5 {
+  @apply grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 lg:grid-cols-5;
+}
+
+/* 响应式文本大小 */
+.text-responsive-sm {
+  @apply text-xs xs:text-sm sm:text-base;
+}
+
+.text-responsive-base {
+  @apply text-sm xs:text-base sm:text-lg;
+}
+
+.text-responsive-lg {
+  @apply text-base xs:text-lg sm:text-xl;
+}
+
+.text-responsive-xl {
+  @apply text-lg xs:text-xl sm:text-2xl;
+}
+
+/* 响应式内边距 */
+.p-responsive {
+  @apply p-2 xs:p-3 sm:p-4;
+}
+
+.px-responsive {
+  @apply px-2 xs:px-3 sm:px-4;
+}
+
+.py-responsive {
+  @apply py-2 xs:py-3 sm:py-4;
+}
+
+/* 响应式圆角 */
+.rounded-responsive {
+  @apply rounded-md xs:rounded-lg sm:rounded-xl;
+}
+
+/* 响应式最大宽度容器 */
+.container-responsive {
+  @apply max-w-full xs:max-w-lg sm:max-w-2xl md:max-w-4xl lg:max-w-6xl xl:max-w-7xl;
+}
+
+/* 移动端优化滚动 */
+.scroll-mobile-optimized {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* 防止移动端文本选择（用于按钮等交互元素） */
+.no-text-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 移动端优化输入框 */
+.input-mobile-optimized {
+  font-size: 16px; /* 防止iOS缩放 */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* 响应式图片 */
+.img-responsive {
+  @apply max-w-full h-auto;
+}
+
+.img-responsive-cover {
+  @apply w-full h-full object-cover;
+}
+
+/* 响应式flex布局 */
+.flex-responsive {
+  @apply flex flex-col xs:flex-row;
+}
+
+.flex-responsive-reverse {
+  @apply flex flex-col-reverse xs:flex-row;
+}
+
+/* 响应式网格间隙 */
+.gap-responsive {
+  @apply gap-2 xs:gap-3 sm:gap-4;
+}
+
+/* 响应式边距 */
+.m-responsive {
+  @apply m-2 xs:m-3 sm:m-4;
+}
+
+.mx-responsive {
+  @apply mx-2 xs:mx-3 sm:mx-4;
+}
+
+.my-responsive {
+  @apply my-2 xs:my-3 sm:my-4;
+}
+
+/* 响应式宽度 */
+.w-responsive-full {
+  @apply w-full xs:w-auto;
+}
+
+.w-responsive-auto {
+  @apply w-auto xs:w-full;
+}
+
+/* 响应式高度 */
+.h-responsive-auto {
+  @apply h-auto xs:h-full;
+}
+
+/* 响应式定位 */
+.sticky-responsive {
+  @apply static xs:sticky;
+}
+
+.fixed-responsive {
+  @apply fixed bottom-0 left-0 right-0 xs:static;
+}
+
+/* 响应式z-index */
+.z-index-mobile {
+  z-index: 1000;
+}
+
+.z-index-tablet {
+  z-index: 900;
+}
+
+.z-index-desktop {
+  z-index: 800;
+}
+
+/* 响应式阴影 */
+.shadow-responsive {
+  @apply shadow-sm xs:shadow-md sm:shadow-lg;
+}
+
+/* 响应式透明度 */
+.opacity-hover-responsive {
+  @apply opacity-100 hover:opacity-90 active:opacity-80;
+}
+
+/* 响应式过渡动画 */
+.transition-responsive {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* 响应式边框 */
+.border-responsive {
+  @apply border border-gray-200 dark:border-gray-700;
+}
+
+.border-responsive-thick {
+  @apply border-2 border-gray-300 dark:border-gray-600;
+}
+
+/* 响应式背景 */
+.bg-responsive-glass {
+  @apply bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm xs:backdrop-blur-md;
+}
+
+/* 响应式溢出处理 */
+.overflow-responsive {
+  @apply overflow-auto;
+}
+
+.overflow-x-responsive {
+  @apply overflow-x-auto;
+}
+
+.overflow-y-responsive {
+  @apply overflow-y-auto;
+}
+
+/* 响应式最小高度 */
+.min-h-responsive {
+  @apply min-h-[calc(100vh-200px)] xs:min-h-[calc(100vh-150px)] sm:min-h-[calc(100vh-100px)];
+}
+
+/* 响应式最大高度 */
+.max-h-responsive {
+  @apply max-h-[50vh] xs:max-h-[60vh] sm:max-h-[70vh];
+}
+
+/* 响应式图标大小 */
+.icon-responsive {
+  @apply w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6;
+}
+
+.icon-responsive-lg {
+  @apply w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8;
+}
+
+.icon-responsive-xl {
+  @apply w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10;
+}

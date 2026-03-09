@@ -252,8 +252,8 @@ impl ConfigItem {
     }
 
     /// 获取对象值
-    pub fn as_object(&self) -> Option<&HashMap<String, Value>> {
-        self.current_value.as_object()
+    pub fn as_object(&self) -> Option<HashMap<String, Value>> {
+        self.current_value.as_object().map(|m| m.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
     }
 }
 

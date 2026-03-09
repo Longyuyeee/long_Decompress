@@ -441,7 +441,7 @@ const removeFile = (fileId: string) => {
   if (fileToRemove) {
     files.value = files.value.filter(f => f.id !== fileId)
     emit('file-removed', fileId)
-    successMessage.value = `已删除文件: ${fileToRemove.name}`
+    successMessage.value = `已删除文件 ${fileToRemove.name}`
   }
 }
 

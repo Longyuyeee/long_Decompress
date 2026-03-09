@@ -57,19 +57,43 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: '任务管理'
     }
+  },
+  {
+    path: '/passwords',
+    name: 'Passwords',
+    component: () => import('@/views/PasswordsView.vue'),
+    meta: {
+      title: '密码本管理'
+    }
+  },
+  {
+    path: '/responsive-test',
+    name: 'ResponsiveTest',
+    component: () => import('@/views/ResponsiveTestView.vue'),
+    meta: {
+      title: '响应式设计测试'
+    }
+  },
+  {
+    path: '/animation-test',
+    name: 'AnimationTest',
+    component: () => import('@/views/AnimationTestView.vue'),
+    meta: {
+      title: '动画效果测试'
+    }
   }
-]
+  ]
 
-const router = createRouter({
+  const router = createRouter({
   history: createWebHistory(),
   routes
-})
+  })
 
-// 路由守卫：更新页面标题
-router.beforeEach((to, from, next) => {
+  // 路由守卫：更新页面标题
+  router.beforeEach((to, from, next) => {
   const title = to.meta?.title as string || '胧压缩·方便助手'
   document.title = `${title} - 胧压缩·方便助手`
   next()
-})
+  })
 
 export default router

@@ -1,3 +1,4 @@
+use crate::config::file_loader::ConfigFileFormat;
 use crate::config::models::{ConfigCategory, ConfigItem, ExportFormat, ImportStrategy};
 use crate::config::service::ConfigService;
 use crate::database::connection::get_connection;
@@ -5,6 +6,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use tauri::command;
 
 /// 配置服务单例
@@ -15,7 +17,25 @@ async fn get_config_service() -> Result<&'static ConfigService> {
     unsafe {
         if CONFIG_SERVICE.is_none() {
             let pool = get_connection()?.pool().clone();
-            let service = ConfigService::new(pool);
+
+            // 创建文件加载器
+            let file_loader = match ConfigFileLoader::from_env() {
+                Ok(loader) => {
+                    log::info!("使用文件加载器，配置目录: {:?}", loader.config_dir);
+                    Some(loader)
+                }
+                Err(e) => {
+                    log::warn!("创建文件加载器失败: {}，将使用默认配置", e);
+                    None
+                }
+            };
+
+            let service = if let Some(loader) = file_loader {
+                ConfigService::with_file_loader(pool, loader)
+            } else {
+                ConfigService::new(pool)
+            };
+
             service.init().await.context("初始化配置服务失败")?;
             CONFIG_SERVICE = Some(service);
         }
@@ -72,6 +92,42 @@ pub struct ImportConfigsRequest {
     pub data: Vec<u8>,
     pub format: ExportFormat,
     pub strategy: ImportStrategy,
+}
+
+/// 导出到文件请求
+#[derive(Debug, Deserialize)]
+pub struct ExportToFileRequest {
+    pub path: String,
+    pub format: ConfigFileFormat,
+}
+
+/// 从文件导入请求
+#[derive(Debug, Deserialize)]
+pub struct ImportFromFileRequest {
+    pub path: String,
+    pub strategy: ImportStrategy,
+}
+
+/// 监视文件请求
+#[derive(Debug, Deserialize)]
+pub struct WatchFileRequest {
+    pub path: String,
+}
+
+/// 文件格式信息
+#[derive(Debug, Serialize)]
+pub struct FileFormatInfo {
+    pub name: String,
+    pub extension: String,
+    pub description: String,
+}
+
+/// 监视文件信息
+#[derive(Debug, Serialize)]
+pub struct WatchedFileInfo {
+    pub path: String,
+    pub exists: bool,
+    pub last_modified: Option<String>,
 }
 
 /// 配置项响应
@@ -573,6 +629,167 @@ pub async fn get_config_categories() -> Result<Vec<CategoryInfo>, String> {
     Ok(categories)
 }
 
+/// 导出配置到文件
+#[command]
+pub async fn export_configs_to_file(request: ExportToFileRequest) -> Result<(), String> {
+    let service = get_config_service()
+        .await
+        .map_err(|e| format!("获取配置服务失败: {}", e))?;
+
+    let format = parse_config_file_format(&request.format.to_string())?;
+    let path = PathBuf::from(&request.path);
+
+    service
+        .export_to_file(&path, format)
+        .await
+        .map_err(|e| format!("导出配置到文件失败: {}", e))
+}
+
+/// 从文件导入配置
+#[command]
+pub async fn import_configs_from_file(request: ImportFromFileRequest) -> Result<ImportResultResponse, String> {
+    let service = get_config_service()
+        .await
+        .map_err(|e| format!("获取配置服务失败: {}", e))?;
+
+    let path = PathBuf::from(&request.path);
+    let result = service
+        .import_from_file(&path, request.strategy)
+        .await
+        .map_err(|e| format!("从文件导入配置失败: {}", e))?;
+
+    Ok(ImportResultResponse {
+        total_items: result.total_items,
+        imported_items: result.imported_items,
+        skipped_items: result.skipped_items,
+        failed_items: result.failed_items,
+        errors: result.errors.into_iter().map(|e| ImportErrorResponse {
+            code: e.code,
+            message: e.message,
+            key: e.key,
+            details: e.details,
+        }).collect(),
+        warnings: result.warnings.into_iter().map(|w| ImportWarningResponse {
+            code: w.code,
+            message: w.message,
+            key: w.key,
+            details: w.details,
+        }).collect(),
+    })
+}
+
+/// 重新从文件加载配置
+#[command]
+pub async fn reload_configs_from_files() -> Result<(), String> {
+    let service = get_config_service()
+        .await
+        .map_err(|e| format!("获取配置服务失败: {}", e))?;
+
+    service
+        .reload_from_files()
+        .await
+        .map_err(|e| format!("重新从文件加载配置失败: {}", e))
+}
+
+/// 监视配置文件变化
+#[command]
+pub async fn watch_config_file(request: WatchFileRequest) -> Result<(), String> {
+    let mut service = get_config_service()
+        .await
+        .map_err(|e| format!("获取配置服务失败: {}", e))?;
+
+    let path = PathBuf::from(&request.path);
+    service
+        .watch_config_file(&path)
+        .await
+        .map_err(|e| format!("监视配置文件失败: {}", e))
+}
+
+/// 停止监视配置文件
+#[command]
+pub async fn unwatch_config_file(request: WatchFileRequest) -> Result<(), String> {
+    let mut service = get_config_service()
+        .await
+        .map_err(|e| format!("获取配置服务失败: {}", e))?;
+
+    let path = PathBuf::from(&request.path);
+    service
+        .unwatch_config_file(&path)
+        .await
+        .map_err(|e| format!("停止监视配置文件失败: {}", e))
+}
+
+/// 获取监视中的文件列表
+#[command]
+pub async fn get_watched_config_files() -> Result<Vec<WatchedFileInfo>, String> {
+    let service = get_config_service()
+        .await
+        .map_err(|e| format!("获取配置服务失败: {}", e))?;
+
+    let watched_files = service.get_watched_files().await;
+    let mut file_infos = Vec::new();
+
+    for path in watched_files {
+        let exists = path.exists();
+        let last_modified = if exists {
+            std::fs::metadata(&path)
+                .ok()
+                .and_then(|m| m.modified().ok())
+                .map(|t| {
+                    let datetime: chrono::DateTime<chrono::Utc> = t.into();
+                    datetime.to_rfc3339()
+                })
+        } else {
+            None
+        };
+
+        file_infos.push(WatchedFileInfo {
+            path: path.to_string_lossy().to_string(),
+            exists,
+            last_modified,
+        });
+    }
+
+    Ok(file_infos)
+}
+
+/// 获取支持的配置文件格式
+#[command]
+pub async fn get_supported_file_formats() -> Result<Vec<FileFormatInfo>, String> {
+    let formats = vec![
+        FileFormatInfo {
+            name: "JSON".to_string(),
+            extension: "json".to_string(),
+            description: "JavaScript Object Notation，轻量级的数据交换格式".to_string(),
+        },
+        FileFormatInfo {
+            name: "YAML".to_string(),
+            extension: "yaml".to_string(),
+            description: "YAML Ain't Markup Language，人类可读的数据序列化语言".to_string(),
+        },
+        FileFormatInfo {
+            name: "TOML".to_string(),
+            extension: "toml".to_string(),
+            description: "Tom's Obvious, Minimal Language，易于阅读的配置文件格式".to_string(),
+        },
+    ];
+
+    Ok(formats)
+}
+
+/// 生成默认配置文件
+#[command]
+pub async fn generate_default_config_file(path: String, format: String) -> Result<(), String> {
+    use crate::config::file_loader::DefaultConfigFileGenerator;
+
+    let file_format = parse_config_file_format(&format)?;
+    let path_buf = PathBuf::from(path);
+
+    DefaultConfigFileGenerator::save_default_config_file(&path_buf, file_format)
+        .await
+        .map_err(|e| format!("生成默认配置文件失败: {}", e))
+}
+
 /// 分类信息
 #[derive(Debug, Serialize)]
 pub struct CategoryInfo {
@@ -581,4 +798,15 @@ pub struct CategoryInfo {
     pub description: String,
     pub icon: String,
     pub count: usize,
+}
+
+/// 从字符串解析ConfigFileFormat
+fn parse_config_file_format(format_str: &str) -> Result<ConfigFileFormat, String> {
+    match format_str.to_lowercase().as_str() {
+        "json" => Ok(ConfigFileFormat::Json),
+        "yaml" => Ok(ConfigFileFormat::Yaml),
+        "toml" => Ok(ConfigFileFormat::Toml),
+        "auto" => Ok(ConfigFileFormat::Auto),
+        _ => Err(format!("未知的文件格式: {}", format_str)),
+    }
 }

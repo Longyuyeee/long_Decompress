@@ -546,7 +546,7 @@ impl ErrorHandler {
 
     /// 创建权限错误
     pub fn permission_denied(resource: &str) -> AppError {
-        AppError::permission(format("访问资源被拒绝: {}", resource))
+        AppError::permission(format!("访问资源被拒绝: {}", resource))
     }
 }
 

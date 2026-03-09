@@ -1,0 +1,291 @@
+/* 交互反馈动画系统 */
+
+/* 按钮动画 */
+.btn-animate {
+  @apply transition-all duration-200 ease-out;
+}
+
+.btn-animate:hover {
+  @apply transform scale-105;
+}
+
+.btn-animate:active {
+  @apply transform scale-95;
+}
+
+.btn-animate-pulse {
+  animation: btn-pulse 2s infinite;
+}
+
+@keyframes btn-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* 卡片动画 */
+.card-animate {
+  @apply transition-all duration-300 ease-out;
+}
+
+.card-animate:hover {
+  @apply transform -translate-y-1 shadow-lg;
+}
+
+.card-animate-lift {
+  @apply transition-all duration-300 ease-out;
+}
+
+.card-animate-lift:hover {
+  @apply transform -translate-y-2 shadow-xl;
+}
+
+/* 图标动画 */
+.icon-animate-spin {
+  animation: icon-spin 1s linear infinite;
+}
+
+.icon-animate-pulse {
+  animation: icon-pulse 2s ease-in-out infinite;
+}
+
+.icon-animate-bounce {
+  animation: icon-bounce 1s infinite;
+}
+
+@keyframes icon-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes icon-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes icon-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* 表单动画 */
+.form-input-animate {
+  @apply transition-all duration-200 ease-out;
+}
+
+.form-input-animate:focus {
+  @apply transform scale-[1.02];
+}
+
+.form-input-success {
+  animation: form-input-success 0.5s ease-out;
+}
+
+.form-input-error {
+  animation: form-input-error 0.5s ease-out;
+}
+
+@keyframes form-input-success {
+  0% {
+    border-color: var(--color-success);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+  100% {
+    border-color: var(--color-border);
+    box-shadow: none;
+  }
+}
+
+@keyframes form-input-error {
+  0% {
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+  100% {
+    border-color: var(--color-border);
+    box-shadow: none;
+  }
+}
+
+/* 加载动画 */
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-background) 0%,
+    var(--color-card) 50%,
+    var(--color-background) 100%
+  );
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.loading-pulse {
+  animation: loading-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes loading-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 通知动画 */
+.notification-enter-active {
+  animation: notification-slide-in 0.3s ease-out;
+}
+
+.notification-leave-active {
+  animation: notification-slide-out 0.3s ease-out;
+}
+
+@keyframes notification-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes notification-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* 模态框动画 */
+.modal-enter-active {
+  animation: modal-fade-in 0.3s ease-out;
+}
+
+.modal-leave-active {
+  animation: modal-fade-out 0.3s ease-out;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modal-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* 下拉菜单动画 */
+.dropdown-enter-active {
+  animation: dropdown-slide-down 0.2s ease-out;
+}
+
+.dropdown-leave-active {
+  animation: dropdown-slide-up 0.2s ease-out;
+}
+
+@keyframes dropdown-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdown-slide-up {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* 减少运动偏好支持 */
+@media (prefers-reduced-motion: reduce) {
+  .btn-animate,
+  .card-animate,
+  .card-animate-lift,
+  .form-input-animate,
+  .loading-shimmer,
+  .loading-pulse,
+  .btn-animate-pulse,
+  .icon-animate-spin,
+  .icon-animate-pulse,
+  .icon-animate-bounce {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .btn-animate:hover,
+  .card-animate:hover,
+  .card-animate-lift:hover,
+  .form-input-animate:focus {
+    transform: none !important;
+  }
+}
+
+/* 性能优化 */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-transform-opacity {
+  will-change: transform, opacity;
+}

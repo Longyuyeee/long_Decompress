@@ -392,3 +392,98 @@ pub async fn get_all_tasks() -> Result<Vec<TaskListItem>, String> {
 
     Ok(tasks)
 }
+
+/// 批量任务请求
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AddBatchTaskRequest {
+    pub batch_task_type: String,
+    pub source_files: Vec<String>,
+    pub output_dir: String,
+    pub compression_format: Option<String>,
+    pub compression_options: Option<CompressionOptions>,
+    pub password: Option<String>,
+}
+
+/// 批量任务响应
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AddBatchTaskResponse {
+    pub batch_task_id: String,
+    pub sub_task_count: usize,
+    pub message: String,
+}
+
+#[command]
+pub async fn add_batch_task(request: AddBatchTaskRequest) -> Result<AddBatchTaskResponse, String> {
+    let manager = TASK_MANAGER.get().await
+        .map_err(|e| format!("获取任务管理器失败: {}", e))?;
+
+    // 转换批量任务类型
+    let batch_task_type = match request.batch_task_type.to_lowercase().as_str() {
+        "batch_compress" => crate::task_queue::BatchTaskType::BatchCompress,
+        "batch_extract" => crate::task_queue::BatchTaskType::BatchExtract,
+        _ => return Err(format!("未知的批量任务类型: {}", request.batch_task_type)),
+    };
+
+    // 转换压缩格式
+    let compression_format = request.compression_format.map(|fmt| {
+        match fmt.to_lowercase().as_str() {
+            "zip" => CompressionFormat::Zip,
+            "7z" => CompressionFormat::SevenZip,
+            "tar" => CompressionFormat::Tar,
+            "tar.gz" => CompressionFormat::TarGz,
+            "tar.bz2" => CompressionFormat::TarBz2,
+            "tar.xz" => CompressionFormat::TarXz,
+            _ => CompressionFormat::Zip,
+        }
+    });
+
+    let batch_request = crate::task_queue::BatchTaskRequest {
+        batch_task_type,
+        source_files: request.source_files,
+        output_dir: request.output_dir,
+        compression_format,
+        compression_options: request.compression_options,
+        password: request.password,
+        max_concurrent_tasks: None,
+        batch_size_limit: None,
+        enable_progressive_processing: true,
+        auto_split_large_batches: true,
+        retry_failed_items: true,
+        max_retries_per_item: 3,
+    };
+
+    let batch_task_id = manager.add_batch_task(batch_request).await
+        .map_err(|e| format!("添加批量任务失败: {}", e))?;
+
+    Ok(AddBatchTaskResponse {
+        batch_task_id: batch_task_id.clone(),
+        sub_task_count: 0, // 实际应该从管理器获取
+        message: format!("批量任务 {} 已创建", batch_task_id),
+    })
+}
+
+#[command]
+pub async fn get_batch_config() -> Result<crate::task_queue::BatchTaskConfig, String> {
+    let manager = TASK_MANAGER.get().await
+        .map_err(|e| format!("获取任务管理器失败: {}", e))?;
+
+    Ok(manager.get_batch_config().await)
+}
+
+#[command]
+pub async fn update_batch_config(config: crate::task_queue::BatchTaskConfig) -> Result<(), String> {
+    let manager = TASK_MANAGER.get().await
+        .map_err(|e| format!("获取任务管理器失败: {}", e))?;
+
+    manager.update_batch_config(config).await;
+    Ok(())
+}
+
+#[command]
+pub async fn process_batch_task(batch_task_id: String) -> Result<crate::task_queue::BatchTaskResult, String> {
+    let manager = TASK_MANAGER.get().await
+        .map_err(|e| format!("获取任务管理器失败: {}", e))?;
+
+    manager.process_batch_task(&batch_task_id).await
+        .map_err(|e| format!("处理批量任务失败: {}", e))
+}

@@ -120,11 +120,11 @@ describe('GlassCard Component', () => {
 
     const card = wrapper.find('.glass-card')
 
-    // 检查样式
+    // 检查样�?
     expect(card.attributes('style')).toContain('background-color: rgba(0, 255, 0, 0.3)')
     expect(card.attributes('style')).toContain('border-color: #00ff00')
 
-    // 检查类名
+    // 检查类�?
     expect(card.classes()).toContain('backdrop-blur-sm')
     expect(card.classes()).not.toContain('backdrop-blur-md')
     expect(card.classes()).toContain('p-4')
@@ -167,7 +167,7 @@ describe('GlassCard Component', () => {
   it('maintains glass effect styling', () => {
     const card = wrapper.find('.glass-card')
 
-    // 检查玻璃效果相关类名
+    // 检查玻璃效果相关类�?
     expect(card.classes()).toContain('backdrop-blur-md')
     expect(card.classes()).toContain('border')
 

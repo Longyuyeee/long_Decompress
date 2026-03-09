@@ -4,16 +4,17 @@ use crate::models::password::{
     PasswordGroup, PasswordAuditResult, PasswordGeneratorOptions, PasswordImportExportOptions
 };
 use tauri::{AppHandle, Manager, State};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use std::path::PathBuf;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 /// 应用状态中的加密密码服务
 pub struct EncryptedPasswordServiceState {
-    service: Arc<Mutex<Option<EncryptedPasswordService>>>,
-    group_service: Arc<Mutex<Option<PasswordGroupService>>>,
-    data_dir: PathBuf,
+    pub service: Arc<Mutex<Option<EncryptedPasswordService>>>,
+    pub group_service: Arc<Mutex<Option<PasswordGroupService>>>,
+    pub data_dir: PathBuf,
 }
 
 impl EncryptedPasswordServiceState {
@@ -47,13 +48,12 @@ pub async fn init_encrypted_password_service(
 
     match service.initialize(&master_password).await {
         Ok(_) => {
-            let mut service_lock = state.service.lock().map_err(|e| e.to_string())?;
-            *service_lock = Some(service);
+            let mut service_lock = state.service.lock().await;
+            *service_lock = Some(service.clone());
 
             // 创建组服务
-            let service_ref = service_lock.as_ref().unwrap();
-            let group_service = PasswordGroupService::new(Arc::new(service_ref.clone()));
-            let mut group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+            let group_service = PasswordGroupService::new(Arc::new(service));
+            let mut group_service_lock = state.group_service.lock().await;
             *group_service_lock = Some(group_service);
 
             Ok(())
@@ -76,13 +76,12 @@ pub async fn unlock_encrypted_password_service(
     match service.unlock(&master_password).await {
         Ok(unlocked) => {
             if unlocked {
-                let mut service_lock = state.service.lock().map_err(|e| e.to_string())?;
-                *service_lock = Some(service);
+                let mut service_lock = state.service.lock().await;
+                *service_lock = Some(service.clone());
 
                 // 创建组服务
-                let service_ref = service_lock.as_ref().unwrap();
-                let group_service = PasswordGroupService::new(Arc::new(service_ref.clone()));
-                let mut group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+                let group_service = PasswordGroupService::new(Arc::new(service));
+                let mut group_service_lock = state.group_service.lock().await;
                 *group_service_lock = Some(group_service);
             }
             Ok(unlocked)
@@ -93,15 +92,15 @@ pub async fn unlock_encrypted_password_service(
 
 /// 锁定加密密码服务
 #[tauri::command]
-pub fn lock_encrypted_password_service(app: AppHandle) -> Result<(), String> {
+pub async fn lock_encrypted_password_service(app: AppHandle) -> Result<(), String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let mut service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let mut service_lock = state.service.lock().await;
     if let Some(service) = service_lock.as_mut() {
         service.lock();
     }
 
-    let mut group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+    let mut group_service_lock = state.group_service.lock().await;
     *group_service_lock = None;
 
     Ok(())
@@ -109,10 +108,10 @@ pub fn lock_encrypted_password_service(app: AppHandle) -> Result<(), String> {
 
 /// 检查服务是否已解锁
 #[tauri::command]
-pub fn is_encrypted_password_service_unlocked(app: AppHandle) -> Result<bool, String> {
+pub async fn is_encrypted_password_service_unlocked(app: AppHandle) -> Result<bool, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let service_lock = state.service.lock().await;
     Ok(service_lock.as_ref().map_or(false, |s| s.is_unlocked()))
 }
 
@@ -124,7 +123,7 @@ pub async fn add_encrypted_password(
 ) -> Result<PasswordEntry, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
     match service.add_password(entry).await {
@@ -141,7 +140,7 @@ pub async fn get_encrypted_password(
 ) -> Result<Option<PasswordEntry>, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
     match service.get_password(&id).await {
@@ -159,7 +158,7 @@ pub async fn update_encrypted_password(
 ) -> Result<PasswordEntry, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
     match service.update_password(&id, entry).await {
@@ -176,7 +175,7 @@ pub async fn delete_encrypted_password(
 ) -> Result<(), String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
     match service.delete_password(&id).await {
@@ -193,7 +192,7 @@ pub async fn search_encrypted_passwords(
 ) -> Result<Vec<PasswordEntry>, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
     match service.search_passwords(&query).await {
@@ -209,7 +208,7 @@ pub async fn list_encrypted_passwords(
 ) -> Result<Vec<PasswordEntry>, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
     match service.list_passwords().await {
@@ -233,7 +232,7 @@ pub async fn audit_encrypted_passwords(
 ) -> Result<Vec<PasswordAuditResult>, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
     match service.audit_passwords().await {
@@ -251,7 +250,7 @@ pub async fn export_encrypted_passwords(
 ) -> Result<Vec<u8>, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
     match service.export_passwords(&options, &export_password).await {
@@ -270,7 +269,7 @@ pub async fn import_encrypted_passwords(
 ) -> Result<usize, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let service_lock = state.service.lock().map_err(|e| e.to_string())?;
+    let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
     match service.import_passwords(&import_data, &options, import_password.as_deref()).await {
@@ -287,7 +286,7 @@ pub async fn create_password_group(
 ) -> Result<PasswordGroup, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+    let group_service_lock = state.group_service.lock().await;
     let group_service = group_service_lock.as_ref().ok_or("服务未初始化")?;
 
     match group_service.create_group(group).await {
@@ -304,7 +303,7 @@ pub async fn get_password_group(
 ) -> Result<Option<PasswordGroup>, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+    let group_service_lock = state.group_service.lock().await;
     let group_service = group_service_lock.as_ref().ok_or("服务未初始化")?;
 
     match group_service.get_group(&id).await {
@@ -322,7 +321,7 @@ pub async fn update_password_group(
 ) -> Result<PasswordGroup, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+    let group_service_lock = state.group_service.lock().await;
     let group_service = group_service_lock.as_ref().ok_or("服务未初始化")?;
 
     match group_service.update_group(&id, group).await {
@@ -339,7 +338,7 @@ pub async fn delete_password_group(
 ) -> Result<(), String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+    let group_service_lock = state.group_service.lock().await;
     let group_service = group_service_lock.as_ref().ok_or("服务未初始化")?;
 
     match group_service.delete_group(&id).await {
@@ -355,7 +354,7 @@ pub async fn list_password_groups(
 ) -> Result<Vec<PasswordGroup>, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+    let group_service_lock = state.group_service.lock().await;
     let group_service = group_service_lock.as_ref().ok_or("服务未初始化")?;
 
     match group_service.list_groups().await {
@@ -373,7 +372,7 @@ pub async fn add_entry_to_password_group(
 ) -> Result<(), String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+    let group_service_lock = state.group_service.lock().await;
     let group_service = group_service_lock.as_ref().ok_or("服务未初始化")?;
 
     match group_service.add_entry_to_group(&group_id, &entry_id).await {
@@ -391,7 +390,7 @@ pub async fn remove_entry_from_password_group(
 ) -> Result<(), String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+    let group_service_lock = state.group_service.lock().await;
     let group_service = group_service_lock.as_ref().ok_or("服务未初始化")?;
 
     match group_service.remove_entry_from_group(&group_id, &entry_id).await {
@@ -408,7 +407,7 @@ pub async fn get_group_entries(
 ) -> Result<Vec<PasswordEntry>, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
-    let group_service_lock = state.group_service.lock().map_err(|e| e.to_string())?;
+    let group_service_lock = state.group_service.lock().await;
     let group_service = group_service_lock.as_ref().ok_or("服务未初始化")?;
 
     match group_service.get_group_entries(&group_id).await {

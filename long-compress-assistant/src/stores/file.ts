@@ -22,7 +22,7 @@ export interface FavoriteFile {
 }
 
 export const useFileStore = defineStore('file', () => {
-  // 状态
+  // 状�?
   const files = ref<FileItem[]>([])
   const selectedFiles = ref<string[]>([]) // 存储选中的文件ID
   const fileHistory = ref<FileHistory[]>([])
@@ -31,7 +31,7 @@ export const useFileStore = defineStore('file', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // 计算属性
+  // 计算属�?
   const selectedFileItems = computed(() => {
     return files.value.filter(file => selectedFiles.value.includes(file.id))
   })
@@ -139,7 +139,7 @@ export const useFileStore = defineStore('file', () => {
 
     fileHistory.value.unshift(history)
 
-    // 保持历史记录不超过100条
+    // 保持历史记录不超�?00�?
     if (fileHistory.value.length > 100) {
       fileHistory.value = fileHistory.value.slice(0, 100)
     }
@@ -152,7 +152,7 @@ export const useFileStore = defineStore('file', () => {
     localStorage.removeItem('file-history')
   }
 
-  // 方法 - 收藏夹
+  // 方法 - 收藏�?
   const addToFavorites = (fileId: string, name: string, path: string, tags: string[] = []) => {
     const favorite: FavoriteFile = {
       id: generateId(),
@@ -260,7 +260,7 @@ export const useFileStore = defineStore('file', () => {
     return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2)
   }
 
-  // 初始化
+  // 初始�?
   const initialize = () => {
     loadHistoryFromStorage()
     loadFavoritesFromStorage()
@@ -271,11 +271,11 @@ export const useFileStore = defineStore('file', () => {
     }
   }
 
-  // 执行初始化
+  // 执行初始�?
   initialize()
 
   return {
-    // 状态
+    // 状�?
     files,
     selectedFiles,
     fileHistory,
@@ -284,7 +284,7 @@ export const useFileStore = defineStore('file', () => {
     isLoading,
     error,
 
-    // 计算属性
+    // 计算属�?
     selectedFileItems,
     totalSelectedSize,
     recentHistory,
@@ -307,7 +307,7 @@ export const useFileStore = defineStore('file', () => {
     addToHistory,
     clearHistory,
 
-    // 收藏夹方法
+    // 收藏夹方�?
     addToFavorites,
     removeFromFavorites,
     updateFavoriteTags,

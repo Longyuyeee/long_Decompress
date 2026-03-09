@@ -10,6 +10,7 @@ pub mod validation;
 pub mod export_import;
 pub mod listeners;
 pub mod commands;
+pub mod file_loader;
 
 // 重新导出常用类型
 pub use models::*;

@@ -6,6 +6,15 @@ export default {
   ],
   theme: {
     extend: {
+      // 自定义响应式断点 - 添加xs超小屏幕断点
+      screens: {
+        'xs': '475px', // 超小屏幕，介于手机和平板之间
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1280px',
+        '2xl': '1536px',
+      },
       colors: {
         // 主色板
         primary: {

@@ -88,3 +88,6 @@
            hover:bg-secondary/30;
   }
 }
+
+/* 导入交互动画 */
+@import '../../styles/interaction-animations.css';

@@ -30,7 +30,7 @@
                 v-for="item in navItems"
                 :key="item.to"
                 :to="item.to"
-                class="px-3 py-2 rounded-md text-sm font-medium transition-colors hover:scale-105 active:scale-95"
+                class="px-3 py-2 rounded-md text-sm font-medium button-interaction"
                 :class="[
                   $route.path === item.to
                     ? 'bg-primary/10 text-primary shadow-sm'
@@ -58,27 +58,21 @@
             </div>
 
             <!-- 移动端搜索按钮 -->
-            <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="搜索">
+            <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors touch-target" title="搜索">
               <i class="pi pi-search text-gray-700 dark:text-gray-300"></i>
             </button>
 
             <!-- 主题切换 -->
-            <button
-              @click="toggleTheme"
-              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hover:scale-105 active:scale-95"
-              :title="currentTheme === 'dark' ? '切换到亮色主题' : '切换到暗色主题'"
-            >
-              <i
-                :class="[
-                  'pi text-lg',
-                  currentTheme === 'dark' ? 'pi-sun text-yellow-500' : 'pi-moon text-gray-700 dark:text-gray-300'
-                ]"
-              ></i>
-            </button>
+            <ThemeToggle
+              variant="icon"
+              size="md"
+              :show-label="false"
+              class="touch-target"
+            />
 
             <!-- 通知 -->
             <button
-              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hover:scale-105 active:scale-95 relative"
+              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 button-interaction relative"
               @click="toggleNotifications"
               :title="`通知 (${unreadNotifications})`"
             >
@@ -95,7 +89,7 @@
             <div class="relative">
               <button
                 @click="toggleUserMenu"
-                class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hover:scale-105 active:scale-95"
+                class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 button-interaction"
                 :title="userName"
               >
                 <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center flex-shrink-0">
@@ -199,38 +193,44 @@
                 <i class="pi pi-bars text-gray-700 dark:text-gray-300"></i>
               </button>
 
-              <!-- 面包屑导航 -->
+              <!-- 面包屑导航 - 优化移动端显示 -->
               <nav class="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400" aria-label="面包屑导航">
-                <router-link to="/" class="hover:text-primary transition-colors p-1 rounded" aria-label="首页">
+                <!-- 首页链接 - 移动端只显示图标，桌面端显示文字 -->
+                <router-link to="/" class="hover:text-primary transition-colors p-1 rounded flex items-center" aria-label="首页">
                   <i class="pi pi-home"></i>
+                  <span class="hidden xs:inline ml-1">首页</span>
                 </router-link>
-                <i class="pi pi-chevron-right text-xs opacity-50"></i>
+                <i class="pi pi-chevron-right text-xs opacity-50 hidden xs:inline"></i>
 
-                <!-- 动态面包屑 -->
+                <!-- 动态面包屑 - 优化移动端显示 -->
                 <template v-for="(crumb, index) in breadcrumbs" :key="crumb.path">
-                  <router-link
-                    v-if="index < breadcrumbs.length - 1"
-                    :to="crumb.path"
-                    class="hover:text-primary transition-colors px-1 py-0.5 rounded truncate max-w-20 sm:max-w-none"
-                    :aria-label="`前往${crumb.title}`"
-                  >
-                    {{ crumb.title }}
-                  </router-link>
-                  <span v-else class="text-gray-900 dark:text-white font-medium px-1 py-0.5 truncate max-w-32 sm:max-w-none" aria-current="page">
-                    {{ crumb.title }}
-                  </span>
+                  <!-- 跳过首页（已经在上面显示） -->
+                  <template v-if="crumb.path !== '/'">
+                    <router-link
+                      v-if="index < breadcrumbs.length - 1"
+                      :to="crumb.path"
+                      class="hover:text-primary transition-colors px-1 py-0.5 rounded truncate max-w-16 xs:max-w-20 sm:max-w-28 md:max-w-none"
+                      :aria-label="`前往${crumb.title}`"
+                    >
+                      <span class="hidden xs:inline">{{ crumb.title }}</span>
+                      <span class="xs:hidden" v-if="index === breadcrumbs.length - 2">...</span>
+                    </router-link>
+                    <span v-else class="text-gray-900 dark:text-white font-medium px-1 py-0.5 truncate max-w-24 xs:max-w-32 sm:max-w-40 md:max-w-none" aria-current="page">
+                      {{ crumb.title }}
+                    </span>
 
-                  <i v-if="index < breadcrumbs.length - 1" class="pi pi-chevron-right text-xs opacity-50"></i>
+                    <i v-if="index < breadcrumbs.length - 1" class="pi pi-chevron-right text-xs opacity-50 hidden xs:inline"></i>
+                  </template>
                 </template>
               </nav>
             </div>
 
             <!-- 快捷操作 -->
             <div class="flex items-center space-x-1 sm:space-x-2">
-              <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hover:scale-105 active:scale-95" title="刷新" aria-label="刷新页面">
+              <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 button-interaction" title="刷新" aria-label="刷新页面">
                 <i class="pi pi-refresh text-gray-700 dark:text-gray-300"></i>
               </button>
-              <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hover:scale-105 active:scale-95" title="帮助" aria-label="打开帮助">
+              <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 button-interaction" title="帮助" aria-label="打开帮助">
                 <i class="pi pi-question-circle text-gray-700 dark:text-gray-300"></i>
               </button>
             </div>
@@ -249,7 +249,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0">
           <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center md:text-left">
-            © 2024 胧压缩·方便助手. 版本 {{ appVersion }}
+            © 2024 胧压缩·方便助手 版本 {{ appVersion }}
           </div>
           <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-6">
             <router-link to="/about" class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-primary transition-colors px-1 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
@@ -350,6 +350,7 @@ import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { formatRelativeTime } from '@/utils'
 import Sidebar from './Sidebar.vue'
+import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 
 interface NavItem {
   to: string
@@ -394,7 +395,7 @@ const currentTheme = computed(() => appStore.currentTheme)
 const breadcrumbs = computed(() => {
   const crumbs: Array<{ path: string; title: string }> = []
 
-  // 首页总是第一个
+  // 首页总是第一项
   crumbs.push({ path: '/', title: '首页' })
 
   // 根据当前路由添加面包屑
@@ -415,6 +416,9 @@ const breadcrumbs = computed(() => {
     case 'Tasks':
       crumbs.push({ path: '/tasks', title: '任务管理' })
       break
+    case 'Passwords':
+      crumbs.push({ path: '/passwords', title: '密码本管理' })
+      break
     default:
       if (route.path !== '/') {
         crumbs.push({ path: route.path, title: currentPageTitle.value })
@@ -433,6 +437,8 @@ const currentPageTitle = computed(() => {
       return '文件解压'
     case 'Tasks':
       return '任务管理'
+    case 'Passwords':
+      return '密码本管理'
     case 'Settings':
       return '设置'
     case 'About':
@@ -452,16 +458,13 @@ const appVersion = computed(() => '1.0.0')
 const navItems = computed<NavItem[]>(() => [
   { to: '/', label: '首页', icon: 'pi-home' },
   { to: '/decompress', label: '解压', icon: 'pi-file-import' },
+  { to: '/passwords', label: '密码本', icon: 'pi-lock' },
   { to: '/tasks', label: '任务', icon: 'pi-list' },
   { to: '/design-system', label: '设计系统', icon: 'pi-palette' },
   { to: '/settings', label: '设置', icon: 'pi-cog' }
 ])
 
 // 方法
-const toggleTheme = () => {
-  const newTheme = currentTheme.value === 'dark' ? 'light' : 'dark'
-  appStore.updateSettings({ theme: newTheme })
-}
 
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value

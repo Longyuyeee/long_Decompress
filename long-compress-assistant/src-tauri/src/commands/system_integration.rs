@@ -317,3 +317,491 @@ pub async fn test_notification_system() -> Result<(), String> {
     log::info!("测试通知发送成功");
     Ok(())
 }
+
+// 托盘管理命令
+
+#[command]
+pub async fn get_tray_config() -> Result<crate::system_integration::TrayConfig, String> {
+    let tray_manager = crate::system_integration::TRAY_MANAGER.get().await
+        .map_err(|e| format!("获取托盘管理器失败: {}", e))?;
+
+    Ok(tray_manager.get_config().await)
+}
+
+#[command]
+pub async fn update_tray_config(config: crate::system_integration::TrayConfig) -> Result<(), String> {
+    let tray_manager = crate::system_integration::TRAY_MANAGER.get().await
+        .map_err(|e| format!("获取托盘管理器失败: {}", e))?;
+
+    tray_manager.update_config(config).await
+        .map_err(|e| format!("更新托盘配置失败: {}", e))
+}
+
+#[command]
+pub async fn show_tray_notification(title: String, message: String) -> Result<(), String> {
+    let tray_manager = crate::system_integration::TRAY_MANAGER.get().await
+        .map_err(|e| format!("获取托盘管理器失败: {}", e))?;
+
+    tray_manager.show_tray_notification(&title, &message).await
+        .map_err(|e| format!("显示托盘通知失败: {}", e))
+}
+
+#[command]
+pub async fn update_tray_task_count(count: usize) -> Result<(), String> {
+    let tray_manager = crate::system_integration::TRAY_MANAGER.get().await
+        .map_err(|e| format!("获取托盘管理器失败: {}", e))?;
+
+    tray_manager.update_task_count(count).await
+        .map_err(|e| format!("更新托盘任务计数失败: {}", e))
+}
+
+// 文件关联命令
+
+#[command]
+pub async fn get_file_association_config() -> Result<crate::system_integration::FileAssociationConfig, String> {
+    let file_assoc_manager = crate::system_integration::FILE_ASSOCIATION_MANAGER.get().await
+        .map_err(|e| format!("获取文件关联管理器失败: {}", e))?;
+
+    Ok(file_assoc_manager.get_config().clone())
+}
+
+#[command]
+pub async fn register_file_associations() -> Result<(), String> {
+    let file_assoc_manager = crate::system_integration::FILE_ASSOCIATION_MANAGER.get().await
+        .map_err(|e| format!("获取文件关联管理器失败: {}", e))?;
+
+    file_assoc_manager.register_associations()
+        .map_err(|e| format!("注册文件关联失败: {}", e))
+}
+
+#[command]
+pub async fn unregister_file_associations() -> Result<(), String> {
+    let file_assoc_manager = crate::system_integration::FILE_ASSOCIATION_MANAGER.get().await
+        .map_err(|e| format!("获取文件关联管理器失败: {}", e))?;
+
+    file_assoc_manager.unregister_associations()
+        .map_err(|e| format!("取消注册文件关联失败: {}", e))
+}
+
+#[command]
+pub async fn check_file_association_status(extension: String) -> Result<bool, String> {
+    let file_assoc_manager = crate::system_integration::FILE_ASSOCIATION_MANAGER.get().await
+        .map_err(|e| format!("获取文件关联管理器失败: {}", e))?;
+
+    file_assoc_manager.check_association_status(&extension)
+        .map_err(|e| format!("检查文件关联状态失败: {}", e))
+}
+
+// 全局快捷键命令
+
+#[command]
+pub async fn get_shortcut_config() -> Result<crate::system_integration::ShortcutConfig, String> {
+    let shortcut_manager = crate::system_integration::GLOBAL_SHORTCUT_MANAGER.get().await
+        .map_err(|e| format!("获取快捷键管理器失败: {}", e))?;
+
+    Ok(shortcut_manager.get_config().clone())
+}
+
+#[command]
+pub async fn update_shortcut_config(config: crate::system_integration::ShortcutConfig) -> Result<(), String> {
+    let shortcut_manager = crate::system_integration::GLOBAL_SHORTCUT_MANAGER.get().await
+        .map_err(|e| format!("获取快捷键管理器失败: {}", e))?;
+
+    shortcut_manager.update_config(config)
+        .map_err(|e| format!("更新快捷键配置失败: {}", e))
+}
+
+#[command]
+pub async fn update_shortcut(shortcut_id: String, new_accelerator: String) -> Result<(), String> {
+    let shortcut_manager = crate::system_integration::GLOBAL_SHORTCUT_MANAGER.get().await
+        .map_err(|e| format!("获取快捷键管理器失败: {}", e))?;
+
+    shortcut_manager.update_shortcut(&shortcut_id, &new_accelerator)
+        .map_err(|e| format!("更新快捷键失败: {}", e))
+}
+
+#[command]
+pub async fn set_shortcut_enabled(shortcut_id: String, enabled: bool) -> Result<(), String> {
+    let shortcut_manager = crate::system_integration::GLOBAL_SHORTCUT_MANAGER.get().await
+        .map_err(|e| format!("获取快捷键管理器失败: {}", e))?;
+
+    shortcut_manager.set_shortcut_enabled(&shortcut_id, enabled)
+        .map_err(|e| format!("设置快捷键启用状态失败: {}", e))
+}
+
+#[command]
+pub async fn check_shortcut_conflicts() -> Result<Vec<crate::system_integration::ShortcutConflict>, String> {
+    let shortcut_manager = crate::system_integration::GLOBAL_SHORTCUT_MANAGER.get().await
+        .map_err(|e| format!("获取快捷键管理器失败: {}", e))?;
+
+    Ok(shortcut_manager.check_conflicts())
+}
+
+#[command]
+pub async fn validate_shortcut_accelerator(accelerator: String) -> Result<(), String> {
+    let shortcut_manager = crate::system_integration::GLOBAL_SHORTCUT_MANAGER.get().await
+        .map_err(|e| format!("获取快捷键管理器失败: {}", e))?;
+
+    shortcut_manager.validate_accelerator(&accelerator)
+        .map_err(|e| format!("验证快捷键格式失败: {}", e))
+}
+
+#[command]
+pub async fn export_shortcut_config() -> Result<String, String> {
+    let shortcut_manager = crate::system_integration::GLOBAL_SHORTCUT_MANAGER.get().await
+        .map_err(|e| format!("获取快捷键管理器失败: {}", e))?;
+
+    shortcut_manager.export_config()
+        .map_err(|e| format!("导出快捷键配置失败: {}", e))
+}
+
+#[command]
+pub async fn import_shortcut_config(config_json: String) -> Result<(), String> {
+    let shortcut_manager = crate::system_integration::GLOBAL_SHORTCUT_MANAGER.get().await
+        .map_err(|e| format!("获取快捷键管理器失败: {}", e))?;
+
+    shortcut_manager.import_config(&config_json)
+        .map_err(|e| format!("导入快捷键配置失败: {}", e))
+}
+
+// 系统集成测试命令
+
+#[command]
+pub async fn test_system_integration() -> Result<String, String> {
+    log::info!("开始系统集成测试");
+
+    // 测试通知系统
+    match test_notification_system().await {
+        Ok(_) => log::info!("通知系统测试通过"),
+        Err(e) => log::warn!("通知系统测试失败: {}", e),
+    }
+
+    // 测试托盘系统
+    let tray_manager = crate::system_integration::TRAY_MANAGER.get().await;
+    if let Ok(tray_manager) = tray_manager {
+        match tray_manager.show_tray_notification("系统集成测试", "托盘通知测试").await {
+            Ok(_) => log::info!("托盘系统测试通过"),
+            Err(e) => log::warn!("托盘系统测试失败: {}", e),
+        }
+    } else {
+        log::warn!("托盘管理器未初始化，跳过测试");
+    }
+
+    // 测试快捷键系统
+    let shortcut_manager = crate::system_integration::GLOBAL_SHORTCUT_MANAGER.get().await;
+    if let Ok(shortcut_manager) = shortcut_manager {
+        let count = shortcut_manager.get_registered_count();
+        log::info!("快捷键系统测试通过，已注册 {} 个快捷键", count);
+    } else {
+        log::warn!("快捷键管理器未初始化，跳过测试");
+    }
+
+    // 测试文件关联系统
+    let file_assoc_manager = crate::system_integration::FILE_ASSOCIATION_MANAGER.get().await;
+    if let Ok(file_assoc_manager) = file_assoc_manager {
+        match file_assoc_manager.check_association_status("zip") {
+            Ok(status) => log::info!("文件关联系统测试通过，ZIP关联状态: {}", status),
+            Err(e) => log::warn!("文件关联系统测试失败: {}", e),
+        }
+    } else {
+        log::warn!("文件关联管理器未初始化，跳过测试");
+    }
+
+    // 测试权限管理系统
+    let permission_manager = crate::system_integration::PERMISSION_MANAGER.get().await;
+    if let Ok(permission_manager) = permission_manager {
+        match permission_manager.check_permission(crate::system_integration::PermissionType::FileAssociation).await {
+            Ok(result) => log::info!("权限管理系统测试通过，文件关联权限状态: {:?}", result.status),
+            Err(e) => log::warn!("权限管理系统测试失败: {}", e),
+        }
+    } else {
+        log::warn!("权限管理器未初始化，跳过测试");
+    }
+
+    // 测试平台兼容性检查
+    log::info!("测试平台兼容性检查系统");
+    let platform = crate::system_integration::PlatformCompatibilityChecker::get_current_platform();
+    log::info!("当前平台: {:?}", platform);
+
+    let features = crate::system_integration::PlatformCompatibilityChecker::check_all_features();
+    log::info!("检查了 {} 个系统集成功能", features.len());
+
+    for feature in &features {
+        log::info!("功能 {}: {:?}", feature.feature_name, feature.support_status);
+    }
+
+    // 测试系统集成配置管理器
+    log::info!("测试系统集成配置管理器");
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+
+    // 获取配置
+    let config = config_manager.get_config().await;
+    log::info!("获取系统集成配置成功");
+
+    // 获取状态
+    let status = config_manager.get_status().await;
+    log::info!("获取系统集成状态成功，总体状态: {:?}", status.overall_status);
+
+    // 验证配置
+    match config_manager.validate_config().await {
+        Ok(warnings) => {
+            if warnings.is_empty() {
+                log::info!("系统集成配置验证通过，无警告");
+            } else {
+                log::warn!("系统集成配置验证通过，但有 {} 个警告", warnings.len());
+                for warning in warnings {
+                    log::warn!("警告: {}", warning);
+                }
+            }
+        }
+        Err(e) => log::warn!("系统集成配置验证失败: {}", e),
+    }
+
+    log::info!("系统集成测试完成");
+    Ok("系统集成测试完成".to_string())
+}
+
+// 权限管理命令
+
+#[command]
+pub async fn check_system_permission(permission_type: String) -> Result<crate::system_integration::PermissionCheckResult, String> {
+    let permission_manager = crate::system_integration::PERMISSION_MANAGER.get().await
+        .map_err(|e| format!("获取权限管理器失败: {}", e))?;
+
+    let permission_type_enum = match permission_type.to_lowercase().as_str() {
+        "file_association" => crate::system_integration::PermissionType::FileAssociation,
+        "global_shortcut" => crate::system_integration::PermissionType::GlobalShortcut,
+        "system_tray" => crate::system_integration::PermissionType::SystemTray,
+        "notification" => crate::system_integration::PermissionType::Notification,
+        "system_service" => crate::system_integration::PermissionType::SystemService,
+        _ => return Err(format!("未知的权限类型: {}", permission_type)),
+    };
+
+    permission_manager.check_permission(permission_type_enum).await
+        .map_err(|e| format!("检查权限失败: {}", e))
+}
+
+#[command]
+pub async fn request_permission(permission_type: String) -> Result<crate::system_integration::PermissionCheckResult, String> {
+    let permission_manager = crate::system_integration::PERMISSION_MANAGER.get().await
+        .map_err(|e| format!("获取权限管理器失败: {}", e))?;
+
+    let permission_type_enum = match permission_type.to_lowercase().as_str() {
+        "file_association" => crate::system_integration::PermissionType::FileAssociation,
+        "global_shortcut" => crate::system_integration::PermissionType::GlobalShortcut,
+        "system_tray" => crate::system_integration::PermissionType::SystemTray,
+        "notification" => crate::system_integration::PermissionType::Notification,
+        "system_service" => crate::system_integration::PermissionType::SystemService,
+        _ => return Err(format!("未知的权限类型: {}", permission_type)),
+    };
+
+    permission_manager.request_permission(permission_type_enum).await
+        .map_err(|e| format!("请求权限失败: {}", e))
+}
+
+#[command]
+pub async fn get_permission_config() -> Result<crate::system_integration::PermissionConfig, String> {
+    let permission_manager = crate::system_integration::PERMISSION_MANAGER.get().await
+        .map_err(|e| format!("获取权限管理器失败: {}", e))?;
+
+    Ok(permission_manager.get_config().await)
+}
+
+#[command]
+pub async fn update_permission_config(config: crate::system_integration::PermissionConfig) -> Result<(), String> {
+    let permission_manager = crate::system_integration::PERMISSION_MANAGER.get().await
+        .map_err(|e| format!("获取权限管理器失败: {}", e))?;
+
+    permission_manager.update_config(config).await;
+    Ok(())
+}
+
+#[command]
+pub async fn get_all_permission_status() -> Result<Vec<crate::system_integration::PermissionCheckResult>, String> {
+    let permission_manager = crate::system_integration::PERMISSION_MANAGER.get().await
+        .map_err(|e| format!("获取权限管理器失败: {}", e))?;
+
+    Ok(permission_manager.get_all_permission_status().await)
+}
+
+#[command]
+pub async fn check_admin_permission() -> Result<bool, String> {
+    let permission_manager = crate::system_integration::PERMISSION_MANAGER.get().await
+        .map_err(|e| format!("获取权限管理器失败: {}", e))?;
+
+    Ok(permission_manager.is_admin().await)
+}
+
+#[command]
+pub async fn clear_permission_cache() -> Result<(), String> {
+    let permission_manager = crate::system_integration::PERMISSION_MANAGER.get().await
+        .map_err(|e| format!("获取权限管理器失败: {}", e))?;
+
+    permission_manager.clear_cache().await;
+    Ok(())
+}
+
+// 平台兼容性检查命令
+
+#[command]
+pub async fn get_current_platform() -> Result<String, String> {
+    let platform = crate::system_integration::PlatformCompatibilityChecker::get_current_platform();
+    Ok(format!("{:?}", platform))
+}
+
+#[command]
+pub async fn check_feature_support(feature_name: String) -> Result<crate::system_integration::PlatformFeatureCheck, String> {
+    let feature = match feature_name.to_lowercase().as_str() {
+        "file_association" => crate::system_integration::SystemIntegrationFeature::FileAssociation,
+        "global_shortcut" => crate::system_integration::SystemIntegrationFeature::GlobalShortcut,
+        "system_tray" => crate::system_integration::SystemIntegrationFeature::SystemTray,
+        "context_menu" => crate::system_integration::SystemIntegrationFeature::ContextMenu,
+        "system_notification" => crate::system_integration::SystemIntegrationFeature::SystemNotification,
+        "auto_start" => crate::system_integration::SystemIntegrationFeature::AutoStart,
+        "file_drag_drop" => crate::system_integration::SystemIntegrationFeature::FileDragDrop,
+        "clipboard_integration" => crate::system_integration::SystemIntegrationFeature::ClipboardIntegration,
+        _ => return Err(format!("未知的系统集成功能: {}", feature_name)),
+    };
+
+    Ok(crate::system_integration::PlatformCompatibilityChecker::check_feature_support(feature))
+}
+
+#[command]
+pub async fn check_all_features_support() -> Result<Vec<crate::system_integration::PlatformFeatureCheck>, String> {
+    Ok(crate::system_integration::PlatformCompatibilityChecker::check_all_features())
+}
+
+#[command]
+pub async fn get_platform_compatibility_report() -> Result<String, String> {
+    let platform = crate::system_integration::PlatformCompatibilityChecker::get_current_platform();
+    let features = crate::system_integration::PlatformCompatibilityChecker::check_all_features();
+
+    let mut report = format!("平台兼容性报告\n");
+    report.push_str(&format!("当前平台: {:?}\n", platform));
+    report.push_str(&format!("生成时间: {}\n", chrono::Utc::now().to_rfc3339()));
+    report.push_str("\n");
+
+    for feature in features {
+        report.push_str(&format!("功能: {}\n", feature.feature_name));
+        report.push_str(&format!("  支持状态: {:?}\n", feature.support_status));
+        report.push_str(&format!("  描述: {}\n", feature.description));
+
+        if !feature.notes.is_empty() {
+            report.push_str(&format!("  注意事项:\n"));
+            for note in &feature.notes {
+                report.push_str(&format!("    - {}\n", note));
+            }
+        }
+
+        if !feature.workarounds.is_empty() {
+            report.push_str(&format!("  解决方案:\n"));
+            for workaround in &feature.workarounds {
+                report.push_str(&format!("    - {}\n", workaround));
+            }
+        }
+
+        report.push_str("\n");
+    }
+
+    Ok(report)
+}
+
+// 系统集成配置管理命令
+
+#[command]
+pub async fn get_system_integration_config() -> Result<crate::system_integration::SystemIntegrationConfig, String> {
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+    Ok(config_manager.get_config().await)
+}
+
+#[command]
+pub async fn update_system_integration_config(config: crate::system_integration::SystemIntegrationConfig) -> Result<(), String> {
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+    config_manager.update_config(config).await;
+    Ok(())
+}
+
+#[command]
+pub async fn get_system_integration_status() -> Result<crate::system_integration::SystemIntegrationStatus, String> {
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+    Ok(config_manager.get_status().await)
+}
+
+#[command]
+pub async fn update_integration_status(
+    integration_type: String,
+    status: String,
+) -> Result<(), String> {
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+
+    let integration_type_enum = match integration_type.to_lowercase().as_str() {
+        "file_association" => crate::system_integration::IntegrationType::FileAssociation,
+        "global_shortcut" => crate::system_integration::IntegrationType::GlobalShortcut,
+        "system_tray" => crate::system_integration::IntegrationType::SystemTray,
+        "notification" => crate::system_integration::IntegrationType::Notification,
+        "permission" => crate::system_integration::IntegrationType::Permission,
+        "platform_compatibility" => crate::system_integration::IntegrationType::PlatformCompatibility,
+        _ => return Err(format!("未知的集成类型: {}", integration_type)),
+    };
+
+    let status_enum = match status.to_lowercase().as_str() {
+        "not_initialized" => crate::system_integration::IntegrationStatus::NotInitialized,
+        "initializing" => crate::system_integration::IntegrationStatus::Initializing,
+        "initialized" => crate::system_integration::IntegrationStatus::Initialized,
+        "running" => crate::system_integration::IntegrationStatus::Running,
+        "stopped" => crate::system_integration::IntegrationStatus::Stopped,
+        "not_supported" => crate::system_integration::IntegrationStatus::NotSupported,
+        _ => {
+            if status.starts_with("error:") {
+                let error_msg = status.trim_start_matches("error:").trim().to_string();
+                crate::system_integration::IntegrationStatus::Error(error_msg)
+            } else {
+                return Err(format!("未知的状态: {}", status));
+            }
+        }
+    };
+
+    config_manager.update_integration_status(integration_type_enum, status_enum).await;
+    Ok(())
+}
+
+#[command]
+pub async fn get_adapted_config() -> Result<crate::system_integration::SystemIntegrationConfig, String> {
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+    Ok(config_manager.get_adapted_config().await)
+}
+
+#[command]
+pub async fn export_system_integration_config() -> Result<String, String> {
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+    config_manager.export_config().await
+        .map_err(|e| format!("导出配置失败: {}", e))
+}
+
+#[command]
+pub async fn import_system_integration_config(config_json: String) -> Result<(), String> {
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+    config_manager.import_config(&config_json).await
+        .map_err(|e| format!("导入配置失败: {}", e))
+}
+
+#[command]
+pub async fn reset_system_integration_config() -> Result<(), String> {
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+    config_manager.reset_to_default().await;
+    Ok(())
+}
+
+#[command]
+pub async fn validate_system_integration_config() -> Result<Vec<String>, String> {
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+    config_manager.validate_config().await
+        .map_err(|e| format!("验证配置失败: {}", e))
+}
+
+#[command]
+pub async fn get_platform_specific_config() -> Result<crate::system_integration::PlatformSpecificConfig, String> {
+    let config_manager = &crate::system_integration::SYSTEM_INTEGRATION_CONFIG_MANAGER;
+    config_manager.get_platform_specific_config().await
+        .map_err(|e| format!("获取平台特定配置失败: {}", e))
+}

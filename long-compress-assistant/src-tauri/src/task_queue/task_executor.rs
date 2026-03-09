@@ -283,10 +283,11 @@ impl TaskExecutor {
                     if task.status == QueueTaskStatus::Running {
                         // 这里模拟进度更新，实际应该从压缩服务获取
                         let current_progress = task.compression_task.progress;
+                        let total_size = task.compression_task.total_size;
                         let new_progress = (current_progress + 1.0).min(99.0); // 模拟进度增加
                         task.update_progress(
-                            (task.compression_task.total_size as f32 * new_progress / 100.0) as u64,
-                            task.compression_task.total_size,
+                            (total_size as f32 * new_progress / 100.0) as u64,
+                            total_size,
                         );
                     } else {
                         // 任务不再运行，停止进度跟踪

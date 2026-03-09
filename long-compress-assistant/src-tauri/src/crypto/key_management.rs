@@ -4,7 +4,8 @@ use crate::crypto::hashing::{HashingService, HashAlgorithm};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 use tokio::fs;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -134,7 +135,7 @@ impl KeyManager {
         fs::write(&hash_path, hash_json).await?;
 
         // 设置主密钥
-        let mut master_key_lock = self.master_key.write().unwrap();
+        let mut master_key_lock = self.master_key.write().await;
         *master_key_lock = Some(master_key_service);
 
         Ok(())
@@ -161,8 +162,10 @@ impl KeyManager {
         let master_key_service = EncryptionService::from_password(master_password, None)?;
 
         // 设置主密钥
-        let mut master_key_lock = self.master_key.write().unwrap();
-        *master_key_lock = Some(master_key_service);
+        {
+            let mut master_key_lock = self.master_key.write().await;
+            *master_key_lock = Some(master_key_service);
+        }
 
         // 加载密钥存储
         self.load_key_store().await?;
@@ -171,17 +174,17 @@ impl KeyManager {
     }
 
     /// 锁定密钥管理器
-    pub fn lock(&self) {
-        let mut master_key_lock = self.master_key.write().unwrap();
+    pub async fn lock(&self) {
+        let mut master_key_lock = self.master_key.write().await;
         *master_key_lock = None;
 
-        let mut key_store_lock = self.key_store.write().unwrap();
+        let mut key_store_lock = self.key_store.write().await;
         key_store_lock.clear();
     }
 
     /// 检查是否已解锁
-    pub fn is_unlocked(&self) -> bool {
-        let master_key_lock = self.master_key.read().unwrap();
+    pub async fn is_unlocked(&self) -> bool {
+        let master_key_lock = self.master_key.read().await;
         master_key_lock.is_some()
     }
 
@@ -193,11 +196,11 @@ impl KeyManager {
         algorithm: KeyAlgorithm,
         description: Option<&str>,
     ) -> Result<KeyEntry> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
-        let master_key_lock = self.master_key.read().unwrap();
+        let master_key_lock = self.master_key.read().await;
         let master_key = master_key_lock.as_ref().unwrap();
 
         // 生成密钥数据（这里简化处理，实际需要根据算法生成）
@@ -239,17 +242,17 @@ impl KeyManager {
 
     /// 获取密钥
     pub async fn get_key(&self, key_id: &str) -> Result<Option<KeyEntry>> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
-        let key_store_lock = self.key_store.read().unwrap();
+        let key_store_lock = self.key_store.read().await;
         Ok(key_store_lock.get(key_id).cloned())
     }
 
     /// 获取密钥的明文数据
     pub async fn get_key_data(&self, key_id: &str) -> Result<Option<String>> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
@@ -258,7 +261,7 @@ impl KeyManager {
             None => return Ok(None),
         };
 
-        let master_key_lock = self.master_key.read().unwrap();
+        let master_key_lock = self.master_key.read().await;
         let master_key = master_key_lock.as_ref().unwrap();
 
         // 解密密钥数据
@@ -272,11 +275,11 @@ impl KeyManager {
 
     /// 列出所有密钥
     pub async fn list_keys(&self) -> Result<Vec<KeyEntry>> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
-        let key_store_lock = self.key_store.read().unwrap();
+        let key_store_lock = self.key_store.read().await;
         let keys: Vec<KeyEntry> = key_store_lock.values().cloned().collect();
 
         // 按更新时间排序
@@ -293,11 +296,11 @@ impl KeyManager {
         key_type: Option<KeyType>,
         algorithm: Option<KeyAlgorithm>,
     ) -> Result<Vec<KeyEntry>> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
-        let key_store_lock = self.key_store.read().unwrap();
+        let key_store_lock = self.key_store.read().await;
         let query_lower = query.to_lowercase();
 
         let filtered_keys: Vec<KeyEntry> = key_store_lock
@@ -326,7 +329,7 @@ impl KeyManager {
 
     /// 更新密钥
     pub async fn update_key(&self, key_entry: &KeyEntry) -> Result<()> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
@@ -338,19 +341,21 @@ impl KeyManager {
 
     /// 删除密钥
     pub async fn delete_key(&self, key_id: &str) -> Result<()> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
-        let mut key_store_lock = self.key_store.write().unwrap();
-        key_store_lock.remove(key_id);
+        {
+            let mut key_store_lock = self.key_store.write().await;
+            key_store_lock.remove(key_id);
+        }
 
         self.save_key_store().await
     }
 
     /// 导出密钥（安全格式）
     pub async fn export_key(&self, key_id: &str, export_password: &str) -> Result<Vec<u8>> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
@@ -377,7 +382,7 @@ impl KeyManager {
         export_data: &[u8],
         export_password: &str,
     ) -> Result<KeyEntry> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
@@ -398,7 +403,7 @@ impl KeyManager {
         }
 
         // 重新加密密钥数据（使用主密钥）
-        let master_key_lock = self.master_key.read().unwrap();
+        let master_key_lock = self.master_key.read().await;
         let master_key = master_key_lock.as_ref().unwrap();
 
         // 解密原始密钥数据
@@ -421,7 +426,7 @@ impl KeyManager {
 
     /// 轮换密钥（生成新版本）
     pub async fn rotate_key(&self, key_id: &str) -> Result<KeyEntry> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
@@ -450,7 +455,7 @@ impl KeyManager {
 
     /// 备份密钥存储
     pub async fn backup(&self, backup_path: &Path, backup_password: &str) -> Result<()> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
@@ -490,22 +495,26 @@ impl KeyManager {
 
     /// 保存密钥到存储
     async fn save_key(&self, key_entry: &KeyEntry) -> Result<()> {
-        let mut key_store_lock = self.key_store.write().unwrap();
-        key_store_lock.insert(key_entry.id.clone(), key_entry.clone());
+        {
+            let mut key_store_lock = self.key_store.write().await;
+            key_store_lock.insert(key_entry.id.clone(), key_entry.clone());
+        }
 
         self.save_key_store().await
     }
 
     /// 保存密钥存储到文件
     async fn save_key_store(&self) -> Result<()> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密钥管理器未解锁"));
         }
 
-        let key_store_lock = self.key_store.read().unwrap();
-        let key_store_json = serde_json::to_string(&*key_store_lock)?;
+        let key_store_json = {
+            let key_store_lock = self.key_store.read().await;
+            serde_json::to_string(&*key_store_lock)?
+        };
 
-        let master_key_lock = self.master_key.read().unwrap();
+        let master_key_lock = self.master_key.read().await;
         let master_key = master_key_lock.as_ref().unwrap();
 
         // 加密密钥存储
@@ -524,7 +533,7 @@ impl KeyManager {
             return Ok(());
         }
 
-        let master_key_lock = self.master_key.read().unwrap();
+        let master_key_lock = self.master_key.read().await;
         let master_key = match master_key_lock.as_ref() {
             Some(key) => key,
             None => return Err(anyhow::anyhow!("主密钥未设置")),
@@ -540,7 +549,7 @@ impl KeyManager {
         let key_store: HashMap<String, KeyEntry> = serde_json::from_str(&key_store_json)?;
 
         // 更新内存中的密钥存储
-        let mut key_store_lock = self.key_store.write().unwrap();
+        let mut key_store_lock = self.key_store.write().await;
         *key_store_lock = key_store;
 
         Ok(())
@@ -637,7 +646,7 @@ mod tests {
         // 解锁
         let unlocked = key_manager.unlock(master_password).await.unwrap();
         assert!(unlocked);
-        assert!(key_manager.is_unlocked());
+        assert!(key_manager.is_unlocked().await);
 
         // 生成密钥
         let key_entry = key_manager
@@ -668,8 +677,8 @@ mod tests {
         assert_eq!(keys.len(), 1);
 
         // 锁定
-        key_manager.lock();
-        assert!(!key_manager.is_unlocked());
+        key_manager.lock().await;
+        assert!(!key_manager.is_unlocked().await);
     }
 
     #[test]

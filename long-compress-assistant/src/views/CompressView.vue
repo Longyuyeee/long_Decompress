@@ -6,16 +6,16 @@
       <p class="text-gray-600 dark:text-gray-400 text-sm sm:text-base">选择文件并配置压缩选项</p>
     </div>
 
-    <main class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
       <!-- 左侧：文件选择和配置 -->
-      <div class="lg:col-span-2 space-y-6">
+      <div class="lg:col-span-2 space-y-4 xs:space-y-6">
         <!-- 文件选择组件 -->
         <div class="glass-card">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">选择要压缩的文件</h2>
 
           <EnhancedFileDropzone
             :multiple="true"
-            :maxSize="1024 * 1024 * 1024 * 5" <!-- 5GB -->
+            :maxSize="1024 * 1024 * 1024 * 5"
             :maxFiles="100"
             :useTauriDialog="true"
             :showPreview="false"
@@ -32,14 +32,14 @@
               <button
                 @click="clearAllFiles"
                 class="text-sm text-gray-500 hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1"
-                :aria-label="`清空所有文件`"
+                aria-label="清空所有文件"
               >
                 <i class="pi pi-trash mr-1"></i>
                 清空所有
               </button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 xs:grid-cols-2 gap-2 xs:gap-3">
               <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                 <div class="flex items-center">
                   <i class="pi pi-file text-gray-500 mr-3"></i>
@@ -84,200 +84,16 @@
         </div>
 
         <!-- 压缩配置 -->
-        <div class="glass-card">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">压缩配置</h2>
-
-          <div class="space-y-6">
-            <!-- 压缩格式选择 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                压缩格式
-              </label>
-              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                <button
-                  v-for="format in compressionFormats"
-                  :key="format.value"
-                  @click="selectFormat(format.value)"
-                  :class="[
-                    'p-3 rounded-lg border-2 text-center transition-all',
-                    compressionOptions.format === format.value
-                      ? 'border-primary bg-primary/10'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-primary'
-                  ]"
-                >
-                  <i :class="format.icon" class="text-lg block mb-2" :class="format.color"></i>
-                  <span class="font-medium">{{ format.name }}</span>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ format.description }}</p>
-                </button>
-              </div>
-            </div>
-
-            <!-- 压缩级别 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                压缩级别
-                <span class="text-gray-500 dark:text-gray-400 ml-2">
-                  {{ compressionLevelLabels[compressionOptions.level] }}
-                </span>
-              </label>
-              <div class="flex items-center space-x-4">
-                <input
-                  type="range"
-                  v-model="compressionOptions.level"
-                  min="1"
-                  max="9"
-                  step="1"
-                  class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 w-8 text-center">
-                  {{ compressionOptions.level }}
-                </span>
-              </div>
-              <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
-                <span>最快</span>
-                <span>平衡</span>
-                <span>最小</span>
-              </div>
-            </div>
-
-            <!-- 输出设置 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                输出设置
-              </label>
-              <div class="space-y-3">
-                <div class="flex space-x-2">
-                  <input
-                    type="text"
-                    v-model="outputPath"
-                    class="flex-1 glass-input"
-                    placeholder="选择压缩文件保存路径"
-                  />
-                  <button
-                    @click="selectOutputPath"
-                    class="glass-button px-4"
-                    :aria-label="`选择输出路径`"
-                  >
-                    <i class="pi pi-folder-open"></i>
-                  </button>
-                </div>
-                <div class="flex space-x-2">
-                  <input
-                    type="text"
-                    v-model="compressionOptions.filename"
-                    class="flex-1 glass-input"
-                    placeholder="压缩文件名（可选）"
-                  />
-                  <span class="flex items-center px-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
-                    .{{ getCurrentFormatExtension() }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 密码保护 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                密码保护（可选）
-              </label>
-              <div class="space-y-3">
-                <div class="relative">
-                  <input
-                    :type="showPassword ? 'text' : 'password'"
-                    v-model="compressionOptions.password"
-                    class="w-full glass-input pr-10"
-                    placeholder="设置压缩密码"
-                    aria-label="压缩密码"
-                  />
-                  <button
-                    @click="showPassword = !showPassword"
-                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary rounded p-1"
-                    :aria-label="showPassword ? '隐藏密码' : '显示密码'"
-                  >
-                    <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" aria-hidden="true"></i>
-                  </button>
-                </div>
-                <div class="relative" v-if="compressionOptions.password">
-                  <input
-                    :type="showConfirmPassword ? 'text' : 'password'"
-                    v-model="confirmPassword"
-                    class="w-full glass-input pr-10"
-                    placeholder="确认密码"
-                    aria-label="确认密码"
-                  />
-                  <button
-                    @click="showConfirmPassword = !showConfirmPassword"
-                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary rounded p-1"
-                    :aria-label="showConfirmPassword ? '隐藏确认密码' : '显示确认密码'"
-                  >
-                    <i :class="showConfirmPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" aria-hidden="true"></i>
-                  </button>
-                </div>
-                <div v-if="compressionOptions.password && confirmPassword && compressionOptions.password !== confirmPassword" class="text-sm text-red-500">
-                  <i class="pi pi-exclamation-triangle mr-1"></i>
-                  两次输入的密码不一致
-                </div>
-              </div>
-            </div>
-
-            <!-- 高级选项 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                高级选项
-              </label>
-              <div class="space-y-3">
-                <label class="flex items-center">
-                  <input
-                    type="checkbox"
-                    v-model="compressionOptions.splitArchive"
-                    class="mr-3"
-                  />
-                  <span class="text-gray-700 dark:text-gray-300">分卷压缩</span>
-                  <div class="ml-2 flex-1 max-w-xs" v-if="compressionOptions.splitArchive">
-                    <select
-                      v-model="compressionOptions.splitSize"
-                      class="glass-input text-sm w-full"
-                    >
-                      <option value="100">100 MB</option>
-                      <option value="500">500 MB</option>
-                      <option value="1024">1 GB</option>
-                      <option value="2048">2 GB</option>
-                      <option value="4096">4 GB</option>
-                    </select>
-                  </div>
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="checkbox"
-                    v-model="compressionOptions.keepStructure"
-                    class="mr-3"
-                  />
-                  <span class="text-gray-700 dark:text-gray-300">保持目录结构</span>
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="checkbox"
-                    v-model="compressionOptions.deleteAfter"
-                    class="mr-3"
-                  />
-                  <span class="text-gray-700 dark:text-gray-300">压缩后删除原文件</span>
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="checkbox"
-                    v-model="compressionOptions.createSolidArchive"
-                    class="mr-3"
-                  />
-                  <span class="text-gray-700 dark:text-gray-300">创建固实压缩包（提高压缩率）</span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CompressionSettingsPanel
+          v-model="compressionOptions"
+          v-model:outputPath="outputPath"
+          @format-changed="handleFormatChanged"
+          @options-changed="handleOptionsChanged"
+        />
       </div>
 
       <!-- 右侧：操作面板 -->
-      <div class="space-y-6">
+      <div class="space-y-4 xs:space-y-6">
         <!-- 开始压缩按钮 -->
         <div class="glass-card">
           <button
@@ -323,7 +139,7 @@
               </div>
               <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
-                  class="bg-primary h-2 rounded-full transition-all duration-300"
+                  class="bg-primary h-2 rounded-full progress-loading"
                   :style="{ width: currentProgress + '%' }"
                 ></div>
               </div>
@@ -336,7 +152,7 @@
               </div>
               <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mt-2">
                 <div
-                  class="bg-primary h-3 rounded-full transition-all duration-300"
+                  class="bg-primary h-3 rounded-full progress-loading"
                   :style="{ width: totalProgress + '%' }"
                 ></div>
               </div>
@@ -428,67 +244,43 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { invoke } from '@tauri-apps/api/core'
+import { invoke } from '@tauri-apps/api/tauri'
 import { useTauriCommands } from '@/composables/useTauriCommands'
+import { useCompressionStore } from '@/stores'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
+import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import type { FileItem } from '@/components/ui/EnhancedFileDropzone.vue'
+import type { CompressionOptions } from '@/stores'
 
 const router = useRouter()
 const tauriCommands = useTauriCommands()
+const compressionStore = useCompressionStore()
 
 // 状态
 const selectedFiles = ref<FileItem[]>([])
-const outputPath = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const confirmPassword = ref('')
-const isProcessing = ref(false)
-const currentProgress = ref(0)
-const totalProgress = ref(0)
-const processedFiles = ref(0)
-const actualCompressionRatio = ref(0)
-const errorMessage = ref('')
-const successMessage = ref('')
 
-// 压缩选项
-const compressionOptions = ref({
-  format: 'zip' as 'zip' | '7z' | 'tar' | 'gz' | 'bz2',
-  level: 6,
-  password: '',
-  filename: '',
-  splitArchive: false,
-  splitSize: '1024',
-  keepStructure: true,
-  deleteAfter: false,
-  createSolidArchive: false
+// 使用存储中的状态
+const outputPath = computed({
+  get: () => compressionStore.outputPath,
+  set: (value) => compressionStore.setOutputPath(value)
 })
 
-// 压缩格式选项 - 匹配后端CompressionFormat枚举
-const compressionFormats = [
-  { value: 'zip', name: 'ZIP', icon: 'pi pi-file', color: 'text-primary', description: '通用压缩格式', extension: 'zip' },
-  { value: 'tar', name: 'TAR', icon: 'pi pi-file', color: 'text-purple-500', description: '归档格式', extension: 'tar' },
-  { value: 'gz', name: 'GZIP', icon: 'pi pi-file', color: 'text-yellow-500', description: 'Gzip压缩', extension: 'gz' },
-  { value: 'tar.gz', name: 'TAR.GZ', icon: 'pi pi-file', color: 'text-blue-500', description: 'Tar+Gzip', extension: 'tar.gz' },
-  { value: 'bz2', name: 'BZIP2', icon: 'pi pi-file', color: 'text-red-500', description: 'Bzip2压缩', extension: 'bz2' },
-  { value: 'tar.bz2', name: 'TAR.BZ2', icon: 'pi pi-file', color: 'text-orange-500', description: 'Tar+Bzip2', extension: 'tar.bz2' },
-  { value: 'xz', name: 'XZ', icon: 'pi pi-file', color: 'text-indigo-500', description: 'XZ压缩', extension: 'xz' },
-  { value: 'tar.xz', name: 'TAR.XZ', icon: 'pi pi-file', color: 'text-pink-500', description: 'Tar+XZ', extension: 'tar.xz' },
-  { value: '7z', name: '7-Zip', icon: 'pi pi-file', color: 'text-green-500', description: '高压缩率', extension: '7z' },
-  { value: 'rar', name: 'RAR', icon: 'pi pi-file', color: 'text-teal-500', description: 'RAR格式', extension: 'rar' }
-]
+const compressionOptions = computed({
+  get: () => compressionStore.compressionOptions,
+  set: (value) => compressionStore.updateCompressionOptions(value)
+})
 
-// 压缩级别标签
-const compressionLevelLabels: Record<number, string> = {
-  1: '存储（最快）',
-  2: '最快',
-  3: '快速',
-  4: '较快',
-  5: '标准',
-  6: '较好',
-  7: '最大',
-  8: '超强',
-  9: '极限'
-}
+const isProcessing = computed(() => compressionStore.isProcessing)
+const currentProgress = computed(() => compressionStore.currentProgress)
+const totalProgress = computed(() => compressionStore.totalProgress)
+const processedFiles = computed(() => compressionStore.processedFiles)
+const actualCompressionRatio = computed(() => compressionStore.estimatedCompressionRatio)
+const errorMessage = computed(() => compressionStore.errorMessage)
+const successMessage = computed(() => compressionStore.successMessage)
+
 
 // 压缩预设
 const compressionPresets = [
@@ -501,25 +293,10 @@ const compressionPresets = [
 // 计算属性
 const canStart = computed(() => {
   return selectedFiles.value.length > 0 &&
-         outputPath.value.length > 0 &&
-         (!compressionOptions.value.password || compressionOptions.value.password === confirmPassword.value)
+         outputPath.value.length > 0
 })
 
-const estimatedCompressionRatio = computed(() => {
-  // 根据压缩级别和格式估算压缩率
-  const baseRatios: Record<string, number> = {
-    zip: 0.7,
-    '7z': 0.5,
-    tar: 1.0,
-    gz: 0.6,
-    bz2: 0.55
-  }
-
-  const levelFactor = 1 - (compressionOptions.value.level / 10) * 0.3
-  const baseRatio = baseRatios[compressionOptions.value.format] || 0.7
-
-  return Math.round(baseRatio * levelFactor * 100)
-})
+const estimatedCompressionRatio = computed(() => compressionStore.estimatedCompressionRatio)
 
 const formatFeatures = computed(() => {
   const features = [
@@ -568,45 +345,28 @@ const clearAllFiles = () => {
 
 const formatTotalSize = (): string => {
   const totalBytes = selectedFiles.value.reduce((sum, file) => sum + file.size, 0)
-
-  if (totalBytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(totalBytes) / Math.log(k))
-  return parseFloat((totalBytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  return compressionStore.formatFileSize(totalBytes)
 }
 
 const formatEstimatedSize = (): string => {
   const totalBytes = selectedFiles.value.reduce((sum, file) => sum + file.size, 0)
   const estimatedBytes = totalBytes * (estimatedCompressionRatio.value / 100)
-
-  if (estimatedBytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(estimatedBytes) / Math.log(k))
-  return parseFloat((estimatedBytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  return compressionStore.formatFileSize(estimatedBytes)
 }
 
-const selectFormat = (format: string) => {
-  compressionOptions.value.format = format as any
+const handleFormatChanged = (format: string) => {
+  console.log('格式已更新', format)
 }
 
-const selectOutputPath = async () => {
-  try {
-    // 使用Tauri对话框选择输出路径
-    const result = await tauriCommands.selectDirectory()
-    if (result && typeof result === 'string') {
-      outputPath.value = result
-    }
-  } catch (error) {
-    console.error('选择输出路径失败:', error)
-    alert('选择输出路径失败，请重试')
-  }
+const handleOptionsChanged = (options: CompressionOptions) => {
+  console.log('选项已更新', options)
 }
 
 const applyPreset = (preset: any) => {
-  compressionOptions.value.format = preset.format
-  compressionOptions.value.level = preset.level
+  compressionStore.updateCompressionOptions({
+    format: preset.format,
+    level: preset.level
+  })
 }
 
 const startCompression = async () => {
@@ -614,110 +374,28 @@ const startCompression = async () => {
 
   // 密码验证
   if (compressionOptions.value.password && compressionOptions.value.password !== confirmPassword.value) {
-    errorMessage.value = '两次输入的密码不一致，请检查'
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    compressionStore.errorMessage = '两次输入的密码不一致，请检查'
+    setTimeout(() => { compressionStore.errorMessage = '' }, 5000)
     return
   }
 
-  // 清除旧消息
-  errorMessage.value = ''
-  successMessage.value = ''
-
-  isProcessing.value = true
-  currentProgress.value = 0
-  totalProgress.value = 0
-  processedFiles.value = 0
-
   try {
-    // 准备文件路径
-    const filePaths = selectedFiles.value.map(file => file.path)
+    // 添加文件到存储
+    compressionStore.addFiles(selectedFiles.value)
 
-    // 生成输出文件名
-    let outputFileName = compressionOptions.value.filename
-    if (!outputFileName) {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-      outputFileName = `压缩文件_${timestamp}`
-    }
+    // 使用存储的压缩方法
+    await compressionStore.startCompression()
 
-    // 获取当前选中格式的扩展名
-    const selectedFormat = compressionFormats.find(f => f.value === compressionOptions.value.format)
-    const extension = selectedFormat?.extension || compressionOptions.value.format
-    const fullOutputPath = `${outputPath.value}/${outputFileName}.${extension}`
-
-    // 调用Tauri压缩API
-    // 注意：需要将前端选项映射到后端CompressionOptions结构
-    const result = await invoke('compress_file', {
-      files: filePaths,
-      outputPath: fullOutputPath,
-      options: {
-        password: compressionOptions.value.password || null,
-        compression_level: compressionOptions.value.level, // 后端字段名是compression_level
-        split_size: compressionOptions.value.splitArchive && compressionOptions.value.splitSize
-          ? parseInt(compressionOptions.value.splitSize) * 1024 * 1024 // 转换为字节
-          : null,
-        preserve_paths: compressionOptions.value.keepStructure,
-        exclude_patterns: [],
-        include_patterns: [],
-        create_subdirectories: true,
-        overwrite_existing: true
-      }
-    })
-
-    console.log('压缩结果:', result)
-
-    // 模拟进度更新
-    const interval = setInterval(() => {
-      currentProgress.value = Math.min(100, currentProgress.value + Math.random() * 10)
-      totalProgress.value = Math.min(100, totalProgress.value + Math.random() * 5)
-
-      if (currentProgress.value >= 100) {
-        processedFiles.value++
-        currentProgress.value = 0
-      }
-
-      if (totalProgress.value >= 100) {
-        clearInterval(interval)
-        setTimeout(() => {
-          isProcessing.value = false
-          successMessage.value = '压缩完成！'
-          // 5秒后清除成功消息
-          setTimeout(() => { successMessage.value = '' }, 5000)
-          // 重置状态
-          selectedFiles.value = []
-          compressionOptions.value.password = ''
-          confirmPassword.value = ''
-        }, 500)
-      }
-    }, 300)
+    // 重置本地状态
+    selectedFiles.value = []
+    confirmPassword.value = ''
 
   } catch (error) {
     console.error('压缩失败:', error)
-    errorMessage.value = `压缩失败: ${error}`
-    isProcessing.value = false
-    // 5秒后清除错误消息
-    setTimeout(() => { errorMessage.value = '' }, 5000)
-  }
-
-  // 获取当前选中格式的扩展名
-  const getCurrentFormatExtension = (): string => {
-    const selectedFormat = compressionFormats.find(f => f.value === compressionOptions.value.format)
-    return selectedFormat?.extension || compressionOptions.value.format
+    // 错误消息已经在存储中设置
   }
 }
 
-// 监听压缩选项变化
-watch(() => compressionOptions.value.format, () => {
-  // 某些格式不支持某些选项
-  if (compressionOptions.value.format === 'tar') {
-    compressionOptions.value.password = ''
-    compressionOptions.value.splitArchive = false
-    compressionOptions.value.createSolidArchive = false
-  }
-
-  if (compressionOptions.value.format === 'gz' || compressionOptions.value.format === 'bz2') {
-    compressionOptions.value.splitArchive = false
-  }
-})
 </script>
 
 <style scoped>

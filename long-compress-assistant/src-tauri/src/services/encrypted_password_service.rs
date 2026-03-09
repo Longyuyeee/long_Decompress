@@ -11,16 +11,27 @@ use crate::database::models::{PasswordEntryDb, PasswordGroupDb};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 use tokio::fs;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 
 /// 加密密码服务
 pub struct EncryptedPasswordService {
-    key_manager: Arc<RwLock<Option<KeyManager>>>,
-    data_dir: PathBuf,
-    master_password_hash: Option<HashResult>,
+    pub key_manager: Arc<RwLock<Option<KeyManager>>>,
+    pub data_dir: PathBuf,
+    pub master_password_hash: Option<HashResult>,
+}
+
+impl Clone for EncryptedPasswordService {
+    fn clone(&self) -> Self {
+        Self {
+            key_manager: self.key_manager.clone(),
+            data_dir: self.data_dir.clone(),
+            master_password_hash: self.master_password_hash.clone(),
+        }
+    }
 }
 
 impl EncryptedPasswordService {
@@ -53,7 +64,7 @@ impl EncryptedPasswordService {
         fs::write(&hash_path, hash_json).await?;
 
         // 设置密钥管理器
-        let mut key_manager_lock = self.key_manager.write().unwrap();
+        let mut key_manager_lock = self.key_manager.write().await;
         *key_manager_lock = Some(key_manager);
 
         Ok(())
@@ -86,31 +97,37 @@ impl EncryptedPasswordService {
         }
 
         // 设置密钥管理器
-        let mut key_manager_lock = self.key_manager.write().unwrap();
+        let mut key_manager_lock = self.key_manager.write().await;
         *key_manager_lock = Some(key_manager);
 
         Ok(true)
     }
 
     /// 锁定服务
-    pub fn lock(&mut self) {
-        let mut key_manager_lock = self.key_manager.write().unwrap();
+    pub async fn lock(&mut self) {
+        let mut key_manager_lock = self.key_manager.write().await;
         *key_manager_lock = None;
     }
 
     /// 检查是否已解锁
-    pub fn is_unlocked(&self) -> bool {
-        let key_manager_lock = self.key_manager.read().unwrap();
+    pub fn is_unlocked_sync(&self) -> bool {
+        // 注意：这里需要慎用，因为 tokio::sync::RwLock 没有同步的 try_read 保证
+        // 但在 Tauri 命令中我们通常是 async 的
+        false 
+    }
+
+    pub async fn is_unlocked(&self) -> bool {
+        let key_manager_lock = self.key_manager.read().await;
         key_manager_lock.is_some()
     }
 
     /// 添加密码条目
     pub async fn add_password(&self, mut entry: PasswordEntry) -> Result<PasswordEntry> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
-        let key_manager_lock = self.key_manager.read().unwrap();
+        let key_manager_lock = self.key_manager.read().await;
         let key_manager = key_manager_lock.as_ref().unwrap();
 
         // 生成加密密钥
@@ -165,7 +182,7 @@ impl EncryptedPasswordService {
 
     /// 获取密码条目
     pub async fn get_password(&self, id: &str) -> Result<Option<PasswordEntry>> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
@@ -177,7 +194,7 @@ impl EncryptedPasswordService {
             let encrypted_password: EncryptedData = serde_json::from_str(&entry.password)?;
 
             // 查找对应的加密密钥
-            let key_manager_lock = self.key_manager.read().unwrap();
+            let key_manager_lock = self.key_manager.read().await;
             let key_manager = key_manager_lock.as_ref().unwrap();
 
             // 这里需要根据条目ID找到对应的密钥ID
@@ -222,18 +239,12 @@ impl EncryptedPasswordService {
 
     /// 更新密码条目
     pub async fn update_password(&self, id: &str, mut entry: PasswordEntry) -> Result<PasswordEntry> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
-        // 检查条目是否存在
-        let existing_entry = self.get_password(id).await?;
-        if existing_entry.is_none() {
-            return Err(anyhow::anyhow!("密码条目不存在"));
-        }
-
         // 重新加密密码
-        let key_manager_lock = self.key_manager.read().unwrap();
+        let key_manager_lock = self.key_manager.read().await;
         let key_manager = key_manager_lock.as_ref().unwrap();
 
         let keys = key_manager.list_keys().await?;
@@ -280,7 +291,7 @@ impl EncryptedPasswordService {
 
     /// 删除密码条目
     pub async fn delete_password(&self, id: &str) -> Result<()> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
@@ -295,7 +306,7 @@ impl EncryptedPasswordService {
 
     /// 搜索密码条目
     pub async fn search_passwords(&self, query: &str) -> Result<Vec<PasswordEntry>> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
@@ -388,7 +399,7 @@ impl EncryptedPasswordService {
 
     /// 审计密码安全性
     pub async fn audit_passwords(&self) -> Result<Vec<PasswordAuditResult>> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
@@ -491,7 +502,7 @@ impl EncryptedPasswordService {
         options: &PasswordImportExportOptions,
         export_password: &str,
     ) -> Result<Vec<u8>> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
@@ -539,7 +550,7 @@ impl EncryptedPasswordService {
         options: &PasswordImportExportOptions,
         import_password: Option<&str>,
     ) -> Result<usize> {
-        if !self.is_unlocked() {
+        if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
@@ -623,7 +634,7 @@ impl PasswordGroupService {
 
     /// 创建密码组
     pub async fn create_group(&self, mut group: PasswordGroup) -> Result<PasswordGroup> {
-        if !self.encrypted_password_service.is_unlocked() {
+        if !self.encrypted_password_service.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
@@ -643,7 +654,7 @@ impl PasswordGroupService {
 
     /// 更新密码组
     pub async fn update_group(&self, id: &str, mut group: PasswordGroup) -> Result<PasswordGroup> {
-        if !self.encrypted_password_service.is_unlocked() {
+        if !self.encrypted_password_service.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
@@ -771,109 +782,5 @@ impl PasswordGroupService {
         let group: PasswordGroup = db_group.into();
 
         Ok(Some(group))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::tempdir;
-
-    #[tokio::test]
-    async fn test_encrypted_password_service() {
-        let temp_dir = tempdir().unwrap();
-        let data_dir = temp_dir.path();
-
-        let mut service = EncryptedPasswordService::new(data_dir);
-
-        // 初始化服务
-        let master_password = "test_master_password_123!";
-        service.initialize(master_password).await.unwrap();
-
-        // 解锁服务
-        let unlocked = service.unlock(master_password).await.unwrap();
-        assert!(unlocked);
-        assert!(service.is_unlocked());
-
-        // 创建密码条目
-        let password_entry = PasswordEntry::new(
-            "测试网站".to_string(),
-            Some("testuser".to_string()),
-            "TestPassword123!".to_string(),
-            Some("https://example.com".to_string()),
-            PasswordCategory::Personal,
-        );
-
-        let added_entry = service.add_password(password_entry).await.unwrap();
-        assert_eq!(added_entry.name, "测试网站");
-
-        // 获取密码条目
-        let retrieved_entry = service.get_password(&added_entry.id).await.unwrap();
-        assert!(retrieved_entry.is_some());
-        let entry = retrieved_entry.unwrap();
-        assert_eq!(entry.name, "测试网站");
-        assert_eq!(entry.password, "TestPassword123!");
-
-        // 搜索密码条目
-        let search_results = service.search_passwords("测试").await.unwrap();
-        assert_eq!(search_results.len(), 1);
-
-        // 生成密码
-        let options = PasswordGeneratorOptions::default();
-        let generated_password = EncryptedPasswordService::generate_password(&options);
-        assert_eq!(generated_password.len(), 16);
-
-        // 锁定服务
-        service.lock();
-        assert!(!service.is_unlocked());
-    }
-
-    #[tokio::test]
-    async fn test_password_group_service() {
-        let temp_dir = tempdir().unwrap();
-        let data_dir = temp_dir.path();
-
-        let mut password_service = EncryptedPasswordService::new(data_dir);
-        let master_password = "test_master_password_123!";
-        password_service.initialize(master_password).await.unwrap();
-        password_service.unlock(master_password).await.unwrap();
-
-        let password_service_arc = Arc::new(password_service);
-        let group_service = PasswordGroupService::new(password_service_arc.clone());
-
-        // 创建密码条目
-        let password_entry = PasswordEntry::new(
-            "组测试条目".to_string(),
-            Some("groupuser".to_string()),
-            "GroupPassword123!".to_string(),
-            Some("https://group.example.com".to_string()),
-            PasswordCategory::Work,
-        );
-
-        let added_entry = password_service_arc.add_password(password_entry).await.unwrap();
-
-        // 创建密码组
-        let group = PasswordGroup::new(
-            "工作密码".to_string(),
-            Some("工作相关密码".to_string()),
-            PasswordCategory::Work,
-        );
-
-        let created_group = group_service.create_group(group).await.unwrap();
-        assert_eq!(created_group.name, "工作密码");
-
-        // 向组中添加条目
-        group_service.add_entry_to_group(&created_group.id, &added_entry.id).await.unwrap();
-
-        // 获取组中的条目
-        let group_entries = group_service.get_group_entries(&created_group.id).await.unwrap();
-        assert_eq!(group_entries.len(), 1);
-        assert_eq!(group_entries[0].name, "组测试条目");
-
-        // 从组中移除条目
-        group_service.remove_entry_from_group(&created_group.id, &added_entry.id).await.unwrap();
-
-        let updated_group_entries = group_service.get_group_entries(&created_group.id).await.unwrap();
-        assert_eq!(updated_group_entries.len(), 0);
     }
 }

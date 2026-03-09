@@ -47,7 +47,7 @@ export interface AppSettings {
 }
 
 export const useAppStore = defineStore('app', () => {
-  // 状态
+  // 状�?
   const theme = ref<'light' | 'dark' | 'auto'>('auto')
   const language = ref('zh-CN')
   const error = ref<string | null>(null)
@@ -73,7 +73,7 @@ export const useAppStore = defineStore('app', () => {
     logLevel: 'info'
   })
 
-  // 计算属性
+  // 计算属�?
   const currentTheme = computed(() => {
     if (theme.value === 'auto') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
@@ -209,18 +209,18 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
-  // 初始化
+  // 初始�?
   loadSettingsFromStorage()
 
   return {
-    // 状态
+    // 状�?
     theme,
     language,
     error,
     decompressTasks,
     settings,
 
-    // 计算属性
+    // 计算属�?
     currentTheme,
     activeTasks,
     completedTasks,

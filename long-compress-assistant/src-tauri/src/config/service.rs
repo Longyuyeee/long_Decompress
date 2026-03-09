@@ -1,3 +1,4 @@
+use crate::config::file_loader::{ConfigFileLoader, ConfigFileFormat};
 use crate::config::models::{
     ConfigCategory, ConfigItem, ConfigMetadata, DefaultConfigGenerator, ExportFormat, ImportResult,
     ImportStrategy, ValidationResult,
@@ -9,6 +10,7 @@ use chrono::Utc;
 use serde_json::{json, Value};
 use sqlx::SqlitePool;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
@@ -19,6 +21,21 @@ pub struct ConfigService {
     metadata_cache: Arc<RwLock<HashMap<String, ConfigMetadata>>>,
     config_cache: Arc<RwLock<HashMap<String, ConfigItem>>>,
     listeners: Arc<RwLock<Vec<Box<dyn ConfigChangeListener + Send + Sync>>>>,
+    file_loader: Option<ConfigFileLoader>,
+    config_files: Arc<RwLock<Vec<PathBuf>>>,
+}
+
+impl Clone for ConfigService {
+    fn clone(&self) -> Self {
+        Self {
+            repository: self.repository.clone(),
+            metadata_cache: Arc::clone(&self.metadata_cache),
+            config_cache: Arc::clone(&self.config_cache),
+            listeners: Arc::clone(&self.listeners),
+            file_loader: self.file_loader.clone(),
+            config_files: Arc::clone(&self.config_files),
+        }
+    }
 }
 
 impl ConfigService {
@@ -34,7 +51,16 @@ impl ConfigService {
             metadata_cache,
             config_cache,
             listeners,
+            file_loader: None,
+            config_files: Arc::new(RwLock::new(Vec::new())),
         }
+    }
+
+    /// 创建带有文件加载器的配置服务
+    pub fn with_file_loader(pool: SqlitePool, file_loader: ConfigFileLoader) -> Self {
+        let mut service = Self::new(pool);
+        service.file_loader = Some(file_loader);
+        service
     }
 
     /// 初始化配置服务
@@ -45,8 +71,60 @@ impl ConfigService {
         // 加载元数据缓存
         self.load_metadata_cache().await?;
 
+        // 从文件加载配置（如果配置了文件加载器）
+        self.load_configs_from_files().await?;
+
+        // 从环境变量加载配置
+        self.load_configs_from_env().await?;
+
         // 加载配置缓存
         self.load_config_cache().await?;
+
+        Ok(())
+    }
+
+    /// 从文件加载配置
+    async fn load_configs_from_files(&self) -> Result<()> {
+        if let Some(loader) = &self.file_loader {
+            let file_items = loader.load_all_config_files().await?;
+
+            for item in file_items {
+                // 验证配置值
+                let validation_result = ConfigValidator::validate(&item.metadata, &item.current_value);
+                if validation_result.is_valid {
+                    // 保存到数据库
+                    if let Err(e) = self.repository.save_config(&item).await {
+                        log::warn!("保存文件配置失败 {}: {}", item.metadata.key, e);
+                    } else {
+                        log::info!("从文件加载配置: {}", item.metadata.key);
+                    }
+                } else {
+                    log::warn!("文件配置验证失败 {}: {:?}", item.metadata.key, validation_result.errors);
+                }
+            }
+
+            // 记录加载的文件
+            let mut config_files = self.config_files.write().await;
+            // 这里可以记录实际加载的文件路径
+        }
+
+        Ok(())
+    }
+
+    /// 从环境变量加载配置
+    async fn load_configs_from_env(&self) -> Result<()> {
+        if let Some(loader) = &self.file_loader {
+            let env_items = loader.load_env_vars("APP_")?;
+
+            for item in env_items {
+                // 环境变量配置通常是只读的，直接保存到数据库
+                if let Err(e) = self.repository.save_config(&item).await {
+                    log::warn!("保存环境变量配置失败 {}: {}", item.metadata.key, e);
+                } else {
+                    log::info!("从环境变量加载配置: {}", item.metadata.key);
+                }
+            }
+        }
 
         Ok(())
     }
@@ -413,6 +491,142 @@ impl ConfigService {
             cache.clear();
         }
         Ok(())
+    }
+
+    /// 从文件重新加载配置
+    pub async fn reload_from_files(&self) -> Result<()> {
+        self.load_configs_from_files().await?;
+        self.refresh_cache().await?;
+        Ok(())
+    }
+
+    /// 导出配置到文件
+    pub async fn export_to_file(&self, path: &std::path::Path, format: ConfigFileFormat) -> Result<()> {
+        let items = self.get_all_configs().await?;
+
+        if let Some(loader) = &self.file_loader {
+            loader.save_config_file_to_path(path, &items, format).await?;
+            log::info!("配置已导出到文件: {:?}", path);
+        } else {
+            return Err(anyhow::anyhow!("文件加载器未配置"));
+        }
+
+        Ok(())
+    }
+
+    /// 从文件导入配置
+    pub async fn import_from_file(&self, path: &std::path::Path, strategy: ImportStrategy) -> Result<ImportResult> {
+        if let Some(loader) = &self.file_loader {
+            let items = loader.load_config_file_from_path(path).await?;
+
+            let mut result = ImportResult {
+                total_items: items.len(),
+                imported_items: 0,
+                skipped_items: 0,
+                failed_items: 0,
+                errors: Vec::new(),
+                warnings: Vec::new(),
+            };
+
+            for item in items {
+                // 检查是否应该导入
+                let should_import = match strategy {
+                    ImportStrategy::Merge => true,
+                    ImportStrategy::Replace => true,
+                    ImportStrategy::UpdateOnly => {
+                        self.get_config(&item.metadata.key).await?.is_some()
+                    }
+                    ImportStrategy::SkipExisting => {
+                        self.get_config(&item.metadata.key).await?.is_none()
+                    }
+                };
+
+                if !should_import {
+                    result.skipped_items += 1;
+                    continue;
+                }
+
+                // 验证并保存配置
+                let validation_result = ConfigValidator::validate(&item.metadata, &item.current_value);
+                if !validation_result.is_valid {
+                    result.failed_items += 1;
+                    result.errors.push(ImportError {
+                        code: "validation_failed".to_string(),
+                        message: format!("配置验证失败: {}", item.metadata.key),
+                        key: Some(item.metadata.key.clone()),
+                        details: Some(json!(validation_result.errors)),
+                    });
+                    continue;
+                }
+
+                if let Err(e) = self.repository.save_config(&item).await {
+                    result.failed_items += 1;
+                    result.errors.push(ImportError {
+                        code: "save_failed".to_string(),
+                        message: format!("保存配置失败: {}", e),
+                        key: Some(item.metadata.key.clone()),
+                        details: None,
+                    });
+                } else {
+                    result.imported_items += 1;
+                }
+            }
+
+            // 刷新缓存
+            self.refresh_cache().await?;
+
+            Ok(result)
+        } else {
+            Err(anyhow::anyhow!("文件加载器未配置"))
+        }
+    }
+
+    /// 监视配置文件变化
+    pub async fn watch_config_file(&mut self, path: &std::path::Path) -> Result<()> {
+        if let Some(loader) = &mut self.file_loader {
+            let service_clone = Arc::new(self.clone());
+            let path_clone = path.to_path_buf();
+
+            loader.watch_config_file_path(path, move |changed_path| {
+                let service = service_clone.clone();
+                let path = changed_path.to_path_buf();
+
+                tokio::spawn(async move {
+                    log::info!("配置文件发生变化: {:?}", path);
+                    if let Err(e) = service.reload_from_files().await {
+                        log::error!("重新加载配置文件失败: {}", e);
+                    }
+                });
+            }).await?;
+
+            // 记录监视的文件
+            let mut config_files = self.config_files.write().await;
+            config_files.push(path.to_path_buf());
+
+            log::info!("开始监视配置文件: {:?}", path);
+        }
+
+        Ok(())
+    }
+
+    /// 停止监视配置文件
+    pub async fn unwatch_config_file(&mut self, path: &std::path::Path) -> Result<()> {
+        if let Some(loader) = &mut self.file_loader {
+            loader.unwatch_config_file_path(path).await?;
+
+            // 移除记录
+            let mut config_files = self.config_files.write().await;
+            config_files.retain(|p| p != path);
+
+            log::info!("停止监视配置文件: {:?}", path);
+        }
+
+        Ok(())
+    }
+
+    /// 获取监视中的配置文件列表
+    pub async fn get_watched_files(&self) -> Vec<PathBuf> {
+        self.config_files.read().await.clone()
     }
 
     /// 添加配置变更监听器

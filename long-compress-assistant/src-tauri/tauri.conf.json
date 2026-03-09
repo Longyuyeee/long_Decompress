@@ -1,11 +1,43 @@
 {
-  "productName": "胧压缩·方便助手",
-  "version": "0.1.0",
-  "identifier": "com.longcompress.assistant",
   "build": {
-    "frontendDist": "../src"
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devPath": "http://localhost:39633",
+    "distDir": "../dist"
   },
-  "app": {
+  "package": {
+    "productName": "胧压缩·方便助手",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": true,
+      "shell": {
+        "all": false,
+        "open": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.longcompress.assistant",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "resources": [],
+      "externalBin": [],
+      "copyright": "Copyright © 2026 胧压缩·方便助手",
+      "category": "Utility",
+      "shortDescription": "智能压缩解压助手",
+      "longDescription": "支持多种格式、密码本管理、批量处理的现代化压缩解压工具"
+    },
+    "security": {
+      "csp": null
+    },
     "windows": [
       {
         "title": "胧压缩·方便助手",
@@ -19,28 +51,5 @@
         "transparent": true
       }
     ]
-  },
-  "bundle": {
-    "active": true,
-    "targets": "all",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
-    "resources": [],
-    "externalBin": [],
-    "copyright": "Copyright © 2026 胧压缩·方便助手",
-    "category": "Utility",
-    "shortDescription": "智能压缩解压助手",
-    "longDescription": "支持多种格式、密码本管理、批量处理的现代化压缩解压工具"
-  },
-  "plugins": {
-    "shell": {
-      "open": true,
-      "execute": true
-    }
   }
 }

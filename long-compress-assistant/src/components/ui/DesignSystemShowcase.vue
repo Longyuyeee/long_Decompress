@@ -10,9 +10,9 @@
     <section class="space-y-6">
       <h2 class="text-2xl font-semibold text-gray-900 dark:text-white border-b pb-2">颜色系统</h2>
 
-      <!-- 主色板 -->
+      <!-- 主色系 -->
       <div class="space-y-4">
-        <h3 class="text-xl font-medium text-gray-800 dark:text-gray-200">主色板</h3>
+        <h3 class="text-xl font-medium text-gray-800 dark:text-gray-200">主色系</h3>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div v-for="(color, key) in primaryColors" :key="key" class="space-y-2">
             <div
@@ -189,7 +189,7 @@
         <div class="p-6 rounded-lg glass-effect">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">CSS变量使用示例</h3>
           <p class="text-gray-600 dark:text-gray-400 mb-4">
-            设计系统通过CSS变量提供设计令牌，可以在任何地方使用：
+            设计系统通过CSS变量提供设计令牌，可以在任何地方使用。
           </p>
           <div class="space-y-2 font-mono text-sm">
             <code class="block p-2 bg-gray-900 text-gray-100 rounded">
@@ -241,10 +241,10 @@ const primaryColors = {
 }
 
 const functionalColors = [
-  { name: 'success', label: '成功绿', value: designTokens.colors.success.DEFAULT },
-  { name: 'warning', label: '警告黄', value: designTokens.colors.warning.DEFAULT },
-  { name: 'error', label: '错误红', value: designTokens.colors.error.DEFAULT },
-  { name: 'info', label: '信息蓝', value: designTokens.colors.info.DEFAULT },
+  { name: 'success', label: '成功', value: designTokens.colors.success.DEFAULT },
+  { name: 'warning', label: '警告', value: designTokens.colors.warning.DEFAULT },
+  { name: 'error', label: '错误', value: designTokens.colors.error.DEFAULT },
+  { name: 'info', label: '信息', value: designTokens.colors.info.DEFAULT },
 ]
 
 // 排版数据

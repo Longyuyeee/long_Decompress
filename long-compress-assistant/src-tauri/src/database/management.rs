@@ -209,7 +209,7 @@ impl DatabaseManager {
             .await
             .context("更新统计信息失败")?;
 
-        log::info("已更新数据库统计信息");
+        log::info!("已更新数据库统计信息");
         Ok(())
     }
 

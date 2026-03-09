@@ -1,6 +1,6 @@
 <template>
   <aside class="hidden lg:flex flex-col w-64 border-r border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
-    <!-- 侧边栏头部 -->
+    <!-- 侧边栏头�?-->
     <div class="p-6 border-b border-gray-200 dark:border-gray-800">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
@@ -8,7 +8,7 @@
         </div>
         <div>
           <h3 class="font-semibold text-gray-900 dark:text-white">文件管理</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400">快速访问</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">快速访�?/p>
         </div>
       </div>
     </div>
@@ -55,17 +55,17 @@
           <div class="space-y-1">
             <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <i class="pi pi-history mr-3"></i>
-              最近文件
+              最近文�?
               <span class="ml-auto text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full">12</span>
             </button>
             <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <i class="pi pi-star mr-3"></i>
-              收藏夹
+              收藏�?
               <span class="ml-auto text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full">8</span>
             </button>
             <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <i class="pi pi-trash mr-3"></i>
-              回收站
+              回收�?
             </button>
           </div>
         </div>
@@ -75,7 +75,7 @@
           <div class="space-y-1">
             <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <i class="pi pi-shield mr-3"></i>
-              安全检查
+              安全检�?
             </button>
             <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <i class="pi pi-chart-bar mr-3"></i>
@@ -90,7 +90,7 @@
       </div>
     </nav>
 
-    <!-- 侧边栏底部 -->
+    <!-- 侧边栏底�?-->
     <div class="p-4 border-t border-gray-200 dark:border-gray-800">
       <div class="space-y-3">
         <div class="px-3">
@@ -180,17 +180,17 @@
               <div class="space-y-1">
                 <button @click="closeMobileSidebar" class="w-full flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                   <i class="pi pi-history mr-3"></i>
-                  最近文件
+                  最近文�?
                   <span class="ml-auto text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full">12</span>
                 </button>
                 <button @click="closeMobileSidebar" class="w-full flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                   <i class="pi pi-star mr-3"></i>
-                  收藏夹
+                  收藏�?
                   <span class="ml-auto text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full">8</span>
                 </button>
                 <button @click="closeMobileSidebar" class="w-full flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                   <i class="pi pi-trash mr-3"></i>
-                  回收站
+                  回收�?
                 </button>
               </div>
             </div>
@@ -200,7 +200,7 @@
               <div class="space-y-1">
                 <button @click="closeMobileSidebar" class="w-full flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                   <i class="pi pi-shield mr-3"></i>
-                  安全检查
+                  安全检�?
                 </button>
                 <button @click="closeMobileSidebar" class="w-full flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                   <i class="pi pi-chart-bar mr-3"></i>

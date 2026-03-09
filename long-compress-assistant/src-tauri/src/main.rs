@@ -49,6 +49,59 @@ fn main() {
                 }
             });
 
+            // 初始化托盘管理器
+            let app_handle_for_tray = app.handle();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = system_integration::TRAY_MANAGER.initialize(app_handle_for_tray).await {
+                    log::error!("托盘管理器初始化失败: {}", e);
+                } else {
+                    log::info!("托盘管理器初始化成功");
+                }
+            });
+
+            // 初始化文件关联管理器
+            let app_handle_for_file_assoc = app.handle();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = system_integration::FILE_ASSOCIATION_MANAGER.initialize(app_handle_for_file_assoc).await {
+                    log::error!("文件关联管理器初始化失败: {}", e);
+                } else {
+                    log::info!("文件关联管理器初始化成功");
+
+                    // 如果配置为启动时注册，则注册文件关联
+                    let manager = system_integration::FILE_ASSOCIATION_MANAGER.get().await;
+                    if let Ok(manager) = manager {
+                        let config = manager.get_config();
+                        if config.register_on_startup && config.enabled {
+                            if let Err(e) = manager.register_associations() {
+                                log::error!("启动时注册文件关联失败: {}", e);
+                            } else {
+                                log::info!("启动时文件关联注册完成");
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 初始化全局快捷键管理器
+            let app_handle_for_shortcuts = app.handle();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = system_integration::GLOBAL_SHORTCUT_MANAGER.initialize(app_handle_for_shortcuts).await {
+                    log::error!("全局快捷键管理器初始化失败: {}", e);
+                } else {
+                    log::info!("全局快捷键管理器初始化成功");
+                }
+            });
+
+            // 初始化权限管理器
+            let app_handle_for_permissions = app.handle();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = system_integration::PERMISSION_MANAGER.initialize(app_handle_for_permissions).await {
+                    log::error!("权限管理器初始化失败: {}", e);
+                } else {
+                    log::info!("权限管理器初始化成功");
+                }
+            });
+
             Ok(())
         })
         .manage(EncryptedPasswordServiceState::new(
@@ -117,6 +170,15 @@ fn main() {
             config::commands::refresh_config_cache,
             config::commands::clear_config_cache,
             config::commands::get_config_categories,
+            // 配置文件命令
+            config::commands::export_configs_to_file,
+            config::commands::import_configs_from_file,
+            config::commands::reload_configs_from_files,
+            config::commands::watch_config_file,
+            config::commands::unwatch_config_file,
+            config::commands::get_watched_config_files,
+            config::commands::get_supported_file_formats,
+            config::commands::generate_default_config_file,
 
             // 任务队列命令
             commands::task_queue::add_compression_task,
@@ -134,6 +196,11 @@ fn main() {
             commands::task_queue::cleanup_completed_tasks,
             commands::task_queue::stop_all_tasks,
             commands::task_queue::get_all_tasks,
+            // 批量任务命令
+            commands::task_queue::add_batch_task,
+            commands::task_queue::get_batch_config,
+            commands::task_queue::update_batch_config,
+            commands::task_queue::process_batch_task,
 
             // 数据库命令
             database::commands::get_database_status,
@@ -162,6 +229,51 @@ fn main() {
             commands::system_integration::get_unread_notification_count,
             commands::system_integration::get_notification_stats,
             commands::system_integration::test_notification_system,
+            // 托盘管理命令
+            commands::system_integration::get_tray_config,
+            commands::system_integration::update_tray_config,
+            commands::system_integration::show_tray_notification,
+            commands::system_integration::update_tray_task_count,
+            // 文件关联命令
+            commands::system_integration::get_file_association_config,
+            commands::system_integration::register_file_associations,
+            commands::system_integration::unregister_file_associations,
+            commands::system_integration::check_file_association_status,
+            // 全局快捷键命令
+            commands::system_integration::get_shortcut_config,
+            commands::system_integration::update_shortcut_config,
+            commands::system_integration::update_shortcut,
+            commands::system_integration::set_shortcut_enabled,
+            commands::system_integration::check_shortcut_conflicts,
+            commands::system_integration::validate_shortcut_accelerator,
+            commands::system_integration::export_shortcut_config,
+            commands::system_integration::import_shortcut_config,
+            // 系统集成测试
+            commands::system_integration::test_system_integration,
+            // 权限管理命令
+            commands::system_integration::check_system_permission,
+            commands::system_integration::request_permission,
+            commands::system_integration::get_permission_config,
+            commands::system_integration::update_permission_config,
+            commands::system_integration::get_all_permission_status,
+            commands::system_integration::check_admin_permission,
+            commands::system_integration::clear_permission_cache,
+            // 平台兼容性检查命令
+            commands::system_integration::get_current_platform,
+            commands::system_integration::check_feature_support,
+            commands::system_integration::check_all_features_support,
+            commands::system_integration::get_platform_compatibility_report,
+            // 系统集成配置管理命令
+            commands::system_integration::get_system_integration_config,
+            commands::system_integration::update_system_integration_config,
+            commands::system_integration::get_system_integration_status,
+            commands::system_integration::update_integration_status,
+            commands::system_integration::get_adapted_config,
+            commands::system_integration::export_system_integration_config,
+            commands::system_integration::import_system_integration_config,
+            commands::system_integration::reset_system_integration_config,
+            commands::system_integration::validate_system_integration_config,
+            commands::system_integration::get_platform_specific_config,
         ])
         .run(tauri::generate_context!())
         .expect("运行Tauri应用时出错");

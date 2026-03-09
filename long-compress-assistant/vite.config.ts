@@ -1,13 +1,25 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  // 防止vite警告hmr端口不可用
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
+  // Vite 选项用于 Tauri 开发
+  // 1. 防止 Vite 忽略环境变量中的 TAURI_PLATFORM 等变量
+  clearScreen: false,
+  // 2. Tauri 预期使用指定的端口，若端口不可用则直接报错而不是跳过
   server: {
-    hmr: {
-      port: 443,
+    port: 39633,
+    strictPort: false,
+    watch: {
+      // 3. 告诉 Vite 忽略 src-tauri
+      ignored: ["**/src-tauri/**"],
     },
   },
 })

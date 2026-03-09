@@ -1,0 +1,479 @@
+/**
+ * 动画效果优化工具类
+ * 为胧解压项目提供的动画效果增强工具
+ */
+
+/* ==================== 页面过渡动画 ==================== */
+
+/* 路由页面过渡 */
+.page-transition-enter-active {
+  animation: pageEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-transition-leave-active {
+  animation: pageLeave 0.3s cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pageLeave {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.99);
+  }
+}
+
+/* 模态框过渡 */
+.modal-transition-enter-active {
+  animation: modalEnter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-transition-leave-active {
+  animation: modalLeave 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalLeave {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+}
+
+/* ==================== 组件交互动画 ==================== */
+
+/* 按钮交互增强 */
+.button-interaction {
+  @apply transition-all duration-200 ease-out;
+}
+
+.button-interaction:hover {
+  @apply transform -translate-y-0.5;
+}
+
+.button-interaction:active {
+  @apply transform translate-y-0.5;
+}
+
+/* 卡片悬停效果 */
+.card-hover-lift {
+  @apply transition-all duration-300 ease-out;
+}
+
+.card-hover-lift:hover {
+  @apply transform -translate-y-1 shadow-lg;
+}
+
+/* 图标交互 */
+.icon-interaction {
+  @apply transition-transform duration-200 ease-out;
+}
+
+.icon-interaction:hover {
+  @apply transform scale-110;
+}
+
+/* 输入框焦点动画 */
+.input-focus-animation {
+  @apply transition-all duration-200 ease-out;
+}
+
+.input-focus-animation:focus {
+  @apply transform scale-[1.02] shadow-md;
+}
+
+/* ==================== 加载状态动画 ==================== */
+
+/* 骨架屏加载动画 */
+.skeleton-loading {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* 进度条加载动画 */
+.progress-loading {
+  background: linear-gradient(
+    90deg,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 50%,
+    var(--color-primary) 100%
+  );
+  background-size: 200% 100%;
+  animation: progressShimmer 2s linear infinite;
+}
+
+@keyframes progressShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* 旋转加载器 */
+.spinner-smooth {
+  animation: spinSmooth 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+@keyframes spinSmooth {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 脉冲加载指示器 */
+.pulse-gentle {
+  animation: pulseGentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseGentle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+/* ==================== 微交互优化 ==================== */
+
+/* 成功反馈动画 */
+.success-feedback {
+  animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes successBounce {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 错误反馈动画 */
+.error-shake {
+  animation: errorShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes errorShake {
+  10%, 90% {
+    transform: translateX(-1px);
+  }
+  20%, 80% {
+    transform: translateX(2px);
+  }
+  30%, 50%, 70% {
+    transform: translateX(-3px);
+  }
+  40%, 60% {
+    transform: translateX(3px);
+  }
+}
+
+/* 通知出现动画 */
+.notification-slide {
+  animation: notificationSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes notificationSlide {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 列表项添加动画 */
+.list-item-add {
+  animation: listItemAdd 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes listItemAdd {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 列表项移除动画 */
+.list-item-remove {
+  animation: listItemRemove 0.3s cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes listItemRemove {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+}
+
+/* ==================== 高级动画效果 ==================== */
+
+/* 毛玻璃背景动画 */
+.glass-morph {
+  @apply transition-all duration-500 ease-out;
+}
+
+.glass-morph:hover {
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* 渐变背景动画 */
+.gradient-shift {
+  background: linear-gradient(
+    45deg,
+    var(--color-primary) 0%,
+    var(--color-accent) 50%,
+    var(--color-primary) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 3D翻转效果 */
+.flip-3d {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.flip-3d:hover {
+  transform: rotateY(10deg) rotateX(5deg);
+}
+
+/* 波纹点击效果 */
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.ripple-effect:focus:not(:active)::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(40, 40);
+    opacity: 0;
+  }
+}
+
+/* ==================== 性能优化类 ==================== */
+
+/* 减少运动偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .animation-optimized,
+  .button-interaction,
+  .card-hover-lift,
+  .icon-interaction,
+  .input-focus-animation {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 硬件加速优化 */
+.hardware-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 动画性能优化 */
+.animation-optimized {
+  will-change: transform, opacity;
+}
+
+/* ==================== 工具类组合 ==================== */
+
+/* 组合动画类 */
+.animate-combined {
+  @apply transition-all duration-300 ease-out;
+}
+
+.animate-combined:hover {
+  @apply transform -translate-y-1 scale-105 shadow-lg;
+}
+
+/* 加载状态组合 */
+.loading-combined {
+  @apply animate-pulse;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.5s ease-in-out infinite, pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 成功状态组合 */
+.success-combined {
+  animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), pulseGentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.6s;
+}
+
+/* ==================== 响应式动画 ==================== */
+
+/* 移动端优化动画 */
+@media (max-width: 768px) {
+  .mobile-optimized-animation {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.15s !important;
+  }
+
+  .mobile-reduced-motion {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* 桌面端增强动画 */
+@media (min-width: 1024px) {
+  .desktop-enhanced-animation {
+    animation-duration: 0.4s !important;
+    transition-duration: 0.3s !important;
+  }
+}
+
+/* ==================== 实用工具类 ==================== */
+
+/* 动画延迟 */
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-700 { animation-delay: 700ms; }
+.animation-delay-1000 { animation-delay: 1000ms; }
+
+/* 动画持续时间 */
+.animation-duration-fast { animation-duration: 150ms; }
+.animation-duration-normal { animation-duration: 300ms; }
+.animation-duration-slow { animation-duration: 500ms; }
+.animation-duration-slower { animation-duration: 700ms; }
+
+/* 动画时序函数 */
+.animation-ease-linear { animation-timing-function: linear; }
+.animation-ease-in { animation-timing-function: cubic-bezier(0.4, 0, 1, 1); }
+.animation-ease-out { animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+.animation-ease-in-out { animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.animation-ease-bounce { animation-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+
+/* 动画填充模式 */
+.animation-fill-none { animation-fill-mode: none; }
+.animation-fill-forwards { animation-fill-mode: forwards; }
+.animation-fill-backwards { animation-fill-mode: backwards; }
+.animation-fill-both { animation-fill-mode: both; }
+
+/* 动画迭代次数 */
+.animation-iteration-once { animation-iteration-count: 1; }
+.animation-iteration-infinite { animation-iteration-count: infinite; }
+.animation-iteration-2 { animation-iteration-count: 2; }
+.animation-iteration-3 { animation-iteration-count: 3; }
+
+/* 动画方向 */
+.animation-direction-normal { animation-direction: normal; }
+.animation-direction-reverse { animation-direction: reverse; }
+.animation-direction-alternate { animation-direction: alternate; }
+.animation-direction-alternate-reverse { animation-direction: alternate-reverse; }
+
+/* 动画播放状态 */
+.animation-play-running { animation-play-state: running; }
+.animation-play-paused { animation-play-state: paused; }
