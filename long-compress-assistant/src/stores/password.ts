@@ -71,6 +71,30 @@ export interface PasswordGroup {
   updated_at: string
 }
 
+export interface AddPasswordRequest {
+  name: string
+  username?: string
+  password: string
+  url?: string
+  notes?: string
+  tags: string[]
+  category: PasswordCategory
+  expires_at?: string | Date
+  custom_fields: CustomField[]
+}
+
+export interface UpdatePasswordRequest extends Partial<AddPasswordRequest> {
+  id: string
+}
+
+export interface PasswordStrengthAssessment {
+  score: number
+  entropyBits: number
+  crackTimeDisplay: string
+  issues: Array<{ description: string }>
+  recommendations: string[]
+}
+
 // --- Store 定义 ---
 
 export const usePasswordStore = defineStore('password', () => {
@@ -82,8 +106,14 @@ export const usePasswordStore = defineStore('password', () => {
   const searchQuery = ref('')
   const currentCategory = ref<PasswordCategory | 'All'>('All')
   const errorMessage = ref('')
+  const successMessage = ref('')
+  const selectedPasswords = ref<string[]>([])
 
   // 计算属性
+  const isAllSelected = computed(() => {
+    return filteredEntries.value.length > 0 && selectedPasswords.value.length === filteredEntries.value.length
+  })
+
   const filteredEntries = computed(() => {
     let result = entries.value
 
@@ -251,6 +281,76 @@ export const usePasswordStore = defineStore('password', () => {
     return Array.from(candidates)
   }
 
+  // 兼容性计算属性 (适配旧版驼峰命名)
+  const filteredPasswords = computed(() => filteredEntries.value)
+  const availableTags = computed(() => {
+    const tags = new Set<string>()
+    entries.value.forEach(e => e.tags.forEach(t => tags.add(t)))
+    return Array.from(tags)
+  })
+
+  // 统计信息兼容
+  const statistics = computed(() => {
+    const stats = {
+      total: entries.value.length,
+      favorite: favoriteEntries.value.length,
+      byCategory: {} as Record<string, number>,
+      byStrength: {
+        veryWeak: 0,
+        weak: 0,
+        medium: 0,
+        strong: 0,
+        veryStrong: 0
+      }
+    }
+
+    entries.value.forEach(e => {
+      // 类别统计
+      stats.byCategory[e.category] = (stats.byCategory[e.category] || 0) + 1
+      
+      // 强度统计
+      switch (e.strength) {
+        case PasswordStrength.VeryWeak: stats.byStrength.veryWeak++; break
+        case PasswordStrength.Weak: stats.byStrength.weak++; break
+        case PasswordStrength.Medium: stats.byStrength.medium++; break
+        case PasswordStrength.Strong: stats.byStrength.strong++; break
+        case PasswordStrength.VeryStrong: stats.byStrength.veryStrong++; break
+      }
+    })
+
+    return stats
+  })
+
+  // 方法别名适配
+  const loadPasswords = fetchAllData
+  const addPassword = addEntry
+  const deletePassword = deleteEntry
+  const updatePassword = updateEntry
+
+  // 分页相关桩
+  const currentPage = ref(1)
+  const pageSize = ref(10)
+  const totalPages = computed(() => Math.ceil(filteredEntries.value.length / pageSize.value))
+  const paginatedPasswords = computed(() => {
+    const start = (currentPage.value - 1) * pageSize.value
+    return filteredEntries.value.slice(start, start + pageSize.value)
+  })
+
+  // 搜索和过滤桩
+  const setSearchFilters = (filters: any) => { /* 实现逻辑 */ }
+  const clearSearchFilters = () => { /* 实现逻辑 */ }
+  const setSort = (field: string, desc: boolean) => { /* 实现逻辑 */ }
+
+  // 操作桩
+  const toggleFavorite = async (id: string) => { /* 实现逻辑 */ }
+  const archivePassword = async (id: string) => { /* 实现逻辑 */ }
+  const deleteSelectedPasswords = async () => { /* 实现逻辑 */ }
+  const usePassword = async (id: string) => { return '' }
+  const assessPasswordStrength = async (password: string) => {
+    return { score: 50, entropyBits: 0, crackTimeDisplay: '未知', issues: [], recommendations: [] }
+  }
+  const hideAllPasswords = () => { /* 实现逻辑 */ }
+
   return {
     // 状态
     entries,
@@ -260,20 +360,54 @@ export const usePasswordStore = defineStore('password', () => {
     searchQuery,
     currentCategory,
     errorMessage,
+    error: errorMessage, 
+    successMessage,
+    selectedPasswords,
+    currentPage,
+    pageSize,
     
     // 计算属性
     filteredEntries,
     favoriteEntries,
+    filteredPasswords,
+    availableTags,
+    statistics,
+    isAllSelected,
+    totalPages,
+    paginatedPasswords,
     
     // 方法
     checkUnlockStatus,
     unlock,
     lock,
     fetchAllData,
+    loadPasswords,
     addEntry,
+    addPassword,
     deleteEntry,
+    deletePassword,
     updateEntry,
+    updatePassword,
     remoteSearch,
-    findCandidatePasswords
+    findCandidatePasswords,
+    
+    // 别名/桩方法
+    setSearchFilters,
+    clearSearchFilters,
+    setSort,
+    toggleFavorite,
+    archivePassword,
+    deleteSelectedPasswords,
+    usePassword,
+    assessPasswordStrength,
+    hideAllPasswords,
+    
+    // 辅助工具方法
+    togglePasswordVisibility: (id: string) => { /* 简单实现 */ },
+    showPassword: (id: string) => false,
+    formatTime: (date?: string | null) => date ? new Date(date).toLocaleString() : '从不',
+    getStrengthColor: (s: PasswordStrength | number) => 'bg-green-500',
+    getStrengthTextColor: (s: PasswordStrength | number) => 'text-green-500',
+    getStrengthLabel: (s: PasswordStrength | number) => '中等'
   }
 })

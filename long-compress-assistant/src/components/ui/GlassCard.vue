@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div :class="[
     'glass-card',
     'rounded-xl',
@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-interface Props {
+export interface Props {
   hoverable?: boolean
   compact?: boolean
   className?: string
@@ -82,3 +82,4 @@ const style = computed(() => {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 </style>
+

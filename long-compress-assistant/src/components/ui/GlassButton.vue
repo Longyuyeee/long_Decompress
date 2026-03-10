@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <button
     :type="type"
     :disabled="disabled || loading"
@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-interface Props {
+export interface Props {
   type?: 'button' | 'submit' | 'reset'
   variant?: 'default' | 'primary' | 'secondary' | 'danger'
   size?: 'sm' | 'md' | 'lg' | 'xl'
@@ -178,3 +178,4 @@ const handleClick = (event: MouseEvent) => {
   );
 }
 </style>
+

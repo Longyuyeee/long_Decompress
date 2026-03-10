@@ -1,6 +1,6 @@
-<template>
+﻿<template>
   <div :class="['progress-bar-container', className]">
-    <!-- 标签 -->
+    <!-- 鏍囩 -->
     <div v-if="showLabel" class="flex justify-between mb-2">
       <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
         <slot name="label">{{ label }}</slot>
@@ -10,9 +10,9 @@
       </span>
     </div>
 
-    <!-- 进度�?-->
+    <!-- 杩涘害鏉?-->
     <div class="relative">
-      <!-- 背景轨道 -->
+      <!-- 鑳屾櫙杞ㄩ亾 -->
       <div
         :class="[
           'progress-bar-track',
@@ -30,7 +30,7 @@
         }"
       ></div>
 
-      <!-- 进度填充 -->
+      <!-- 杩涘害濉厖 -->
       <div
         :class="[
           'progress-bar-fill',
@@ -53,7 +53,7 @@
         }"
       ></div>
 
-      <!-- 条纹动画 -->
+      <!-- 鏉＄汗鍔ㄧ敾 -->
       <div
         v-if="striped"
         class="absolute top-0 left-0 w-full h-full rounded-full"
@@ -65,7 +65,7 @@
       ></div>
     </div>
 
-    <!-- 描述文本 -->
+    <!-- 鎻忚堪鏂囨湰 -->
     <div v-if="description || $slots.description" class="mt-2">
       <p class="text-xs text-gray-500 dark:text-gray-400">
         <slot name="description">{{ description }}</slot>
@@ -77,7 +77,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-interface Props {
+export interface Props {
   value?: number
   max?: number
   min?: number
@@ -154,7 +154,7 @@ const formattedValue = computed(() => {
   }
 
   if (props.indeterminate) {
-    return '处理�?..'
+    return '澶勭悊涓?..'
   }
 
   return `${Math.round(percentage.value)}%`
@@ -217,3 +217,4 @@ const trackColor = computed(() => {
   );
 }
 </style>
+

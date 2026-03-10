@@ -107,10 +107,10 @@ describe('CompressionSettingsPanel', () => {
     await confirmInput.setValue('different')
 
     // Error message should be visible
-    expect(wrapper.text()).toContain('两次输入的密码不一�?)
-  })
+    expect(wrapper.text()).toContain('两次输入的密码不一致')
+    })
 
-  it('toggles password visibility when eye icon is clicked', async () => {
+    it('toggles password visibility when eye icon is clicked', async () => {
     const wrapper = createWrapper()
 
     const passwordInput = wrapper.find('input[placeholder="设置压缩密码"]')
@@ -134,7 +134,7 @@ describe('CompressionSettingsPanel', () => {
     const splitArchiveCheckbox = wrapper.find('input[type="checkbox"]:not(:checked)')
     expect(splitArchiveCheckbox.attributes('disabled')).toBeUndefined()
 
-    // Change to TAR format (doesn't support split archive)
+    // Change to TAR format (doesn't support split archive)'
     await wrapper.setProps({ modelValue: { ...defaultOptions, format: 'tar' } })
 
     // Split archive checkbox should be disabled
@@ -187,7 +187,7 @@ describe('CompressionSettingsPanel', () => {
 
     validation = component.validate()
     expect(validation.valid).toBe(false)
-    expect(validation.error).toBe('两次输入的密码不一�?)
+    expect(validation.error).toBe('两次输入的密码不一�?)'
   })
 
   it('exposes getOptions and getOutputPath methods', async () => {

@@ -1,6 +1,6 @@
-<template>
+﻿<template>
   <div class="h-full flex flex-col">
-    <!-- 顶部状态栏 -->
+    <!-- 椤堕儴鐘舵€佹爮 -->
     <div class="mb-6 flex justify-between items-center">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">密码本管理</h1>
@@ -25,29 +25,29 @@
       </div>
     </div>
 
-    <!-- 未解锁状态 -->
+    <!-- 鏈В閿佺姸鎬?-->
     <div v-if="!isUnlocked" class="flex-1 flex flex-col items-center justify-center p-12">
       <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-6">
         <i class="pi pi-shield text-4xl text-primary"></i>
       </div>
-      <h2 class="text-xl font-semibold mb-2">密码库已锁定</h2>
+      <h2 class="text-xl font-semibold mb-2">瀵嗙爜搴撳凡閿佸畾</h2>
       <p class="text-gray-500 mb-8 text-center max-w-md">
-        您的密码本已使用 AES-256 加密存储在本地。请输入主密码解锁以访问您的密码库。
+        鎮ㄧ殑瀵嗙爜鏈凡浣跨敤 AES-256 鍔犲瘑瀛樺偍鍦ㄦ湰鍦般€傝杈撳叆涓诲瘑鐮佽В閿佷互璁块棶鎮ㄧ殑瀵嗙爜搴撱€?
       </p>
       <button @click="showUnlockModal = true" class="glass-button-primary px-8 py-3 text-lg font-medium">
-        立即解锁
+        绔嬪嵆瑙ｉ攣
       </button>
     </div>
 
-    <!-- 已解锁状态 -->
+    <!-- 宸茶В閿佺姸鎬?-->
     <div v-else class="flex-1 flex gap-6 overflow-hidden">
-      <!-- 左侧分类 -->
+      <!-- 宸︿晶鍒嗙被 -->
       <div class="w-64 flex flex-col gap-2">
         <div class="glass-card p-2">
           <button 
             v-for="cat in categories" 
             :key="cat.value"
-            @click="passwordStore.currentCategory = cat.value"
+            @click="passwordStore.currentCategory = cat.value as any as any"
             :class="passwordStore.currentCategory === cat.value ? 'bg-primary text-white shadow-lg' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'"
             class="w-full text-left px-4 py-2.5 rounded-xl transition-all flex items-center mb-1"
           >
@@ -58,29 +58,29 @@
         </div>
 
         <div class="glass-card p-4 mt-2">
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-2">统计</h3>
+          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-2">缁熻</h3>
           <div class="space-y-3 px-2">
             <div class="flex justify-between items-center text-sm">
-              <span class="text-gray-500">总数</span>
+              <span class="text-gray-500">鎬绘暟</span>
               <span class="font-mono">{{ entries.length }}</span>
             </div>
             <div class="flex justify-between items-center text-sm">
-              <span class="text-gray-500">安全性优</span>
+              <span class="text-gray-500">瀹夊叏鎬т紭</span>
               <span class="text-green-500 font-mono">{{ strongCount }}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 右侧列表 -->
+      <!-- 鍙充晶鍒楄〃 -->
       <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- 搜索框 -->
+        <!-- 鎼滅储妗?-->
         <div class="glass-card p-3 mb-4 flex items-center gap-3">
           <i class="pi pi-search text-gray-400 ml-2"></i>
           <input 
             v-model="passwordStore.searchQuery"
             type="text" 
-            placeholder="搜索名称、用户名、标签..."
+            placeholder="鎼滅储鍚嶇О銆佺敤鎴峰悕銆佹爣绛?.."
             class="bg-transparent border-none outline-none flex-1 text-gray-700 dark:text-gray-200"
           />
           <div class="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
@@ -89,11 +89,11 @@
           </button>
         </div>
 
-        <!-- 密码卡片容器 -->
+        <!-- 瀵嗙爜鍗＄墖瀹瑰櫒 -->
         <div class="flex-1 overflow-y-auto pr-2 space-y-4">
           <div v-if="filteredEntries.length === 0" class="h-full flex flex-col items-center justify-center opacity-40 py-20">
             <i class="pi pi-inbox text-5xl mb-4"></i>
-            <p>没有找到匹配的密码</p>
+            <p>娌℃湁鎵惧埌鍖归厤鐨勫瘑鐮?/p>
           </div>
           
           <div 
@@ -114,15 +114,15 @@
                   </button>
                 </div>
                 <div class="flex items-center gap-4 text-sm text-gray-500">
-                  <span class="flex items-center"><i class="pi pi-user mr-1.5 text-xs"></i>{{ entry.username || '无用户名' }}</span>
+                  <span class="flex items-center"><i class="pi pi-user mr-1.5 text-xs"></i>{{ entry.username || '鏃犵敤鎴峰悕' }}</span>
                   <span class="flex items-center font-mono tracking-widest bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
-                    ••••••••
+                    鈥⑩€⑩€⑩€⑩€⑩€⑩€⑩€?
                   </span>
                 </div>
               </div>
               
               <div class="flex gap-2">
-                <button @click="copyPassword(entry.password)" class="p-2.5 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" title="复制密码">
+                <button @click="copyPassword(entry.password)" class="p-2.5 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" title="澶嶅埗瀵嗙爜">
                   <i class="pi pi-copy"></i>
                 </button>
                 <button @click="editEntry(entry)" class="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
@@ -144,25 +144,25 @@
       </div>
     </div>
 
-    <!-- 解锁模态框 -->
+    <!-- 瑙ｉ攣妯℃€佹 -->
     <div v-if="showUnlockModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div class="glass-card p-8 w-full max-w-md animate-in fade-in zoom-in duration-300">
         <div class="text-center mb-6">
           <div class="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
             <i class="pi pi-unlock text-2xl text-primary"></i>
           </div>
-          <h3 class="text-xl font-bold">验证身份</h3>
-          <p class="text-gray-500 text-sm">请输入主密码以解锁加密存储</p>
+          <h3 class="text-xl font-bold">楠岃瘉韬唤</h3>
+          <p class="text-gray-500 text-sm">璇疯緭鍏ヤ富瀵嗙爜浠ヨВ閿佸姞瀵嗗瓨鍌?/p>
         </div>
         
         <div class="space-y-4">
           <div class="space-y-1">
-            <label class="text-sm font-medium text-gray-600 dark:text-gray-400">主密码</label>
+            <label class="text-sm font-medium text-gray-600 dark:text-gray-400">涓诲瘑鐮?/label>
             <input 
               v-model="unlockPassword"
               type="password" 
               class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-              placeholder="••••••••"
+              placeholder="鈥⑩€⑩€⑩€⑩€⑩€⑩€⑩€?
               @keyup.enter="handleUnlock"
             />
           </div>
@@ -170,37 +170,37 @@
             <i class="pi pi-exclamation-circle mr-1"></i> {{ unlockError }}
           </p>
           <div class="flex gap-3 pt-2">
-            <button @click="showUnlockModal = false" class="flex-1 glass-button py-3">取消</button>
+            <button @click="showUnlockModal = false" class="flex-1 glass-button py-3">鍙栨秷</button>
             <button 
               @click="handleUnlock" 
               :disabled="isUnlocking"
               class="flex-1 glass-button-primary py-3 font-bold"
             >
               <i v-if="isUnlocking" class="pi pi-spin pi-spinner mr-2"></i>
-              解锁
+              瑙ｉ攣
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 添加/编辑模态框 (TSK-201 核心部分) -->
+    <!-- 娣诲姞/缂栬緫妯℃€佹 (TSK-201 鏍稿績閮ㄥ垎) -->
     <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div class="glass-card p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h3 class="text-xl font-bold mb-6">{{ isEditing ? '编辑密码条目' : '添加新密码' }}</h3>
+        <h3 class="text-xl font-bold mb-6">{{ isEditing ? '缂栬緫瀵嗙爜鏉＄洰' : '娣诲姞鏂板瘑鐮? }}</h3>
         
         <div class="grid grid-cols-2 gap-6">
           <div class="space-y-4">
             <div class="space-y-1">
-              <label class="text-sm font-medium">显示名称 *</label>
-              <input v-model="form.name" type="text" class="form-input" placeholder="例如：我的ZIP压缩包密码" />
+              <label class="text-sm font-medium">鏄剧ず鍚嶇О *</label>
+              <input v-model="form.name" type="text" class="form-input" placeholder="渚嬪锛氭垜鐨刏IP鍘嬬缉鍖呭瘑鐮? />
             </div>
             <div class="space-y-1">
-              <label class="text-sm font-medium">用户名</label>
-              <input v-model="form.username" type="text" class="form-input" placeholder="可选" />
+              <label class="text-sm font-medium">鐢ㄦ埛鍚?/label>
+              <input v-model="form.username" type="text" class="form-input" placeholder="鍙€? />
             </div>
             <div class="space-y-1">
-              <label class="text-sm font-medium">密码 *</label>
+              <label class="text-sm font-medium">瀵嗙爜 *</label>
               <div class="relative">
                 <input v-model="form.password" :type="showFormPass ? 'text' : 'password'" class="form-input pr-10" />
                 <button @click="showFormPass = !showFormPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -212,7 +212,7 @@
           
           <div class="space-y-4">
             <div class="space-y-1">
-              <label class="text-sm font-medium">分类</label>
+              <label class="text-sm font-medium">鍒嗙被</label>
               <select v-model="form.category" class="form-input">
                 <option v-for="cat in categories.slice(1)" :key="cat.value" :value="cat.value">
                   {{ cat.label }}
@@ -220,19 +220,19 @@
               </select>
             </div>
             <div class="space-y-1">
-              <label class="text-sm font-medium">标签 (逗号分隔)</label>
-              <input v-model="tagInput" type="text" class="form-input" placeholder="例如：work, sensitive" />
+              <label class="text-sm font-medium">鏍囩 (閫楀彿鍒嗛殧)</label>
+              <input v-model="tagInput" type="text" class="form-input" placeholder="渚嬪锛歸ork, sensitive" />
             </div>
             <div class="space-y-1">
-              <label class="text-sm font-medium">备注</label>
+              <label class="text-sm font-medium">澶囨敞</label>
               <textarea v-model="form.notes" class="form-input h-20 resize-none"></textarea>
             </div>
           </div>
         </div>
 
         <div class="flex justify-end gap-3 mt-8">
-          <button @click="closeAddModal" class="px-6 py-2 glass-button">取消</button>
-          <button @click="handleSave" class="px-6 py-2 glass-button-primary font-bold">保存密码</button>
+          <button @click="closeAddModal" class="px-6 py-2 glass-button">鍙栨秷</button>
+          <button @click="handleSave" class="px-6 py-2 glass-button-primary font-bold">淇濆瓨瀵嗙爜</button>
         </div>
       </div>
     </div>
@@ -249,7 +249,7 @@ const passwordStore = usePasswordStore()
 const uiStore = useUIStore()
 const { entries, filteredEntries, isUnlocked } = storeToRefs(passwordStore)
 
-// UI 状态
+// UI 鐘舵€?
 const showUnlockModal = ref(false)
 const showAddModal = ref(false)
 const isUnlocking = ref(false)
@@ -260,13 +260,13 @@ const showFormPass = ref(false)
 const tagInput = ref('')
 
 const categories = [
-  { label: '全部密码', value: 'All', icon: 'pi pi-objects-column' },
-  { label: '个人', value: PasswordCategory.Personal, icon: 'pi pi-user' },
-  { label: '工作', value: PasswordCategory.Work, icon: 'pi pi-briefcase' },
-  { label: '金融', value: PasswordCategory.Finance, icon: 'pi pi-wallet' },
-  { label: '社交', value: PasswordCategory.Social, icon: 'pi pi-comments' },
-  { label: '购物', value: PasswordCategory.Shopping, icon: 'pi pi-shopping-cart' },
-  { label: '其他', value: PasswordCategory.Other, icon: 'pi pi-folder' },
+  { label: '鍏ㄩ儴瀵嗙爜', value: 'All', icon: 'pi pi-objects-column' },
+  { label: '涓汉', value: PasswordCategory.Personal, icon: 'pi pi-user' },
+  { label: '宸ヤ綔', value: PasswordCategory.Work, icon: 'pi pi-briefcase' },
+  { label: '閲戣瀺', value: PasswordCategory.Finance, icon: 'pi pi-wallet' },
+  { label: '绀句氦', value: PasswordCategory.Social, icon: 'pi pi-comments' },
+  { label: '璐墿', value: PasswordCategory.Shopping, icon: 'pi pi-shopping-cart' },
+  { label: '鍏朵粬', value: PasswordCategory.Other, icon: 'pi pi-folder' },
 ]
 
 const form = reactive({
@@ -291,7 +291,7 @@ const getCategoryCount = (catValue: string) => {
 
 const getCategoryIcon = (cat: PasswordCategory) => {
   const found = categories.find(c => c.value === cat)
-  return found ? found.icon.replace('pi pi-', '') : '📁'
+  return found ? found.icon.replace('pi pi-', '') : '馃搧'
 }
 
 const getStrengthColor = (strength: PasswordStrength) => {
@@ -390,3 +390,4 @@ const handleSave = async () => {
   @apply w-full px-4 py-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 outline-none focus:ring-2 focus:ring-primary/50 transition-all;
 }
 </style>
+

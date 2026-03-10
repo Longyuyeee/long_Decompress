@@ -121,7 +121,7 @@ describe('TaskList.vue', () => {
     pinia = createPinia()
     setActivePinia(pinia)
 
-    // 重置mock状�?
+    // 重置mock状?
     vi.clearAllMocks()
     mockAppStore.decompressTasks = []
     mockAppStore.activeTasks = []
@@ -153,7 +153,7 @@ describe('TaskList.vue', () => {
   })
 
   describe('渲染测试', () => {
-    it('应该正确渲染空状�?, async () => {
+    it('应该正确渲染空状?, async () => {'
       const wrapper = mount(TaskList, {
         global: {
           plugins: [pinia],
@@ -162,11 +162,11 @@ describe('TaskList.vue', () => {
 
       await flushPromises()
 
-      // 检查空状态显�?
+      // 检查空状态显?
       expect(wrapper.text()).toContain('暂无任务')
-      expect(wrapper.text()).toContain('还没有任何解压任�?)
+      expect(wrapper.text()).toContain('还没有任何解压任?)'
 
-      // 检查统计信�?
+      // 检查统计信?
       expect(wrapper.text()).toContain('总任务数')
       expect(wrapper.text()).toContain('0')
     })
@@ -185,15 +185,15 @@ describe('TaskList.vue', () => {
 
       await flushPromises()
 
-      // 检查任务显�?
+      // 检查任务显?
       expect(wrapper.text()).toContain('文件_file-1')
-      expect(wrapper.text()).toContain('等待�?)
+      expect(wrapper.text()).toContain('等待?)'
       expect(wrapper.text()).toContain('输出: /output/path')
 
-      // 检查统计信�?
+      // 检查统计信?
       expect(wrapper.text()).toContain('总任务数')
       expect(wrapper.text()).toContain('1')
-      expect(wrapper.text()).toContain('进行�?)
+      expect(wrapper.text()).toContain('进行?)'
       expect(wrapper.text()).toContain('1')
     })
 
@@ -218,26 +218,26 @@ describe('TaskList.vue', () => {
       await flushPromises()
 
       // 检查不同状态的显示
-      expect(wrapper.text()).toContain('等待�?)
+      expect(wrapper.text()).toContain('等待?)'
       expect(wrapper.text()).toContain('解压进度')
       expect(wrapper.text()).toContain('50%')
-      expect(wrapper.text()).toContain('已完�?)
+      expect(wrapper.text()).toContain('已完?)'
       expect(wrapper.text()).toContain('解压失败')
 
-      // 检查统计信�?
+      // 检查统计信?
       expect(wrapper.text()).toContain('总任务数')
       expect(wrapper.text()).toContain('4')
-      expect(wrapper.text()).toContain('进行�?)
+      expect(wrapper.text()).toContain('进行?)'
       expect(wrapper.text()).toContain('1')
-      expect(wrapper.text()).toContain('已完�?)
+      expect(wrapper.text()).toContain('已完?)'
       expect(wrapper.text()).toContain('1')
       expect(wrapper.text()).toContain('失败')
       expect(wrapper.text()).toContain('1')
     })
   })
 
-  describe('筛选功能测�?, () => {
-    it('应该支持按状态筛选任�?, async () => {
+  describe('筛选功能测?, () => {'
+    it('应该支持按状态筛选任?, async () => {'
       const tasks = [
         createMockTask({ id: 'task-1', status: 'pending' }),
         createMockTask({ id: 'task-2', status: 'processing' }),
@@ -256,22 +256,22 @@ describe('TaskList.vue', () => {
 
       await flushPromises()
 
-      // 初始应该显示所有任�?
+      // 初始应该显示所有任?
       expect(wrapper.text()).toContain('全部任务')
 
-      // 点击筛选按�?
-      const filterButton = wrapper.find('button[aria-label="筛选任�?]')
+      // 点击筛选按?
+      const filterButton = wrapper.find('button[aria-label="筛选任?]')\"
       await filterButton.trigger('click')
 
-      // 应该显示筛选菜�?
-      expect(wrapper.text()).toContain('进行�?)
-      expect(wrapper.text()).toContain('已完�?)
+      // 应该显示筛选菜?
+      expect(wrapper.text()).toContain('进行?)'
+      expect(wrapper.text()).toContain('已完?)'
       expect(wrapper.text()).toContain('失败')
     })
   })
 
   describe('排序功能测试', () => {
-    it('应该支持按时间排�?, async () => {
+    it('应该支持按时间排?, async () => {'
       const tasks = [
         createMockTask({ id: 'task-1', startTime: new Date('2024-03-08T10:00:00') }),
         createMockTask({ id: 'task-2', startTime: new Date('2024-03-08T11:00:00') }),
@@ -294,7 +294,7 @@ describe('TaskList.vue', () => {
       // 点击排序按钮
       await sortButton.trigger('click')
 
-      // 应该切换为升�?
+      // 应该切换为升?
       expect(sortButton.text()).toContain('pi-sort-amount-up')
     })
   })
@@ -314,10 +314,10 @@ describe('TaskList.vue', () => {
       await refreshButton.trigger('click')
 
       // 应该调用刷新方法
-      expect(mockUIStore.showSuccess).toHaveBeenCalledWith('任务列表已刷�?)
+      expect(mockUIStore.showSuccess).toHaveBeenCalledWith('任务列表已刷?)'
     })
 
-    it('应该支持清理已完成任�?, async () => {
+    it('应该支持清理已完成任?, async () => {'
       const tasks = [
         createMockTask({ id: 'task-1', status: 'completed' }),
         createMockTask({ id: 'task-2', status: 'processing' }),
@@ -340,7 +340,7 @@ describe('TaskList.vue', () => {
 
       // 应该调用清理方法
       expect(mockAppStore.clearCompletedTasks).toHaveBeenCalled()
-      expect(mockUIStore.showSuccess).toHaveBeenCalledWith('已完成的任务已清�?)
+      expect(mockUIStore.showSuccess).toHaveBeenCalledWith('已完成的任务已清?)'
     })
 
     it('应该支持删除单个任务', async () => {
@@ -356,11 +356,11 @@ describe('TaskList.vue', () => {
       await flushPromises()
 
       // 点击删除按钮
-      const deleteButton = wrapper.find('button[aria-label="删除此任�?]')
+      const deleteButton = wrapper.find('button[aria-label="删除此任?]')\"
       await deleteButton.trigger('click')
 
       // 应该显示成功提示
-      expect(mockUIStore.showSuccess).toHaveBeenCalledWith('任务已删�?)
+      expect(mockUIStore.showSuccess).toHaveBeenCalledWith('任务已删?)'
     })
 
     it('应该支持取消进行中的任务', async () => {
@@ -377,12 +377,12 @@ describe('TaskList.vue', () => {
       await flushPromises()
 
       // 点击取消按钮
-      const cancelButton = wrapper.find('button[aria-label="取消此任�?]')
+      const cancelButton = wrapper.find('button[aria-label="取消此任?]')\"
       await cancelButton.trigger('click')
 
       // 应该调用取消方法
-      expect(mockAppStore.markTaskAsError).toHaveBeenCalledWith('task-1', '任务已取�?)
-      expect(mockUIStore.showWarning).toHaveBeenCalledWith('任务已取�?)
+      expect(mockAppStore.markTaskAsError).toHaveBeenCalledWith('task-1', '任务已取?)'
+      expect(mockUIStore.showWarning).toHaveBeenCalledWith('任务已取?)'
     })
   })
 
@@ -406,16 +406,16 @@ describe('TaskList.vue', () => {
       // 初始不应该显示批量操作栏
       expect(wrapper.text()).not.toContain('已选择')
 
-      // 注意：实际的批量选择功能需要在组件中添加实�?
+      // 注意：实际的批量选择功能需要在组件中添加实?
       // 这里只是测试框架
     })
   })
 
   describe('错误处理测试', () => {
-    it('应该正确显示错误任务的信�?, async () => {
+    it('应该正确显示错误任务的信?, async () => {'
       const task = createMockTask({
         status: 'error',
-        error: '文件损坏，无法解�?
+        error: '文件损坏，无法解?'
       })
 
       mockAppStore.decompressTasks = [task]
@@ -428,17 +428,17 @@ describe('TaskList.vue', () => {
 
       await flushPromises()
 
-      // 检查错误信息显�?
+      // 检查错误信息显?
       expect(wrapper.text()).toContain('解压失败')
-      expect(wrapper.text()).toContain('文件损坏，无法解�?)
+      expect(wrapper.text()).toContain('文件损坏，无法解?)'
 
-      // 检查重试按�?
-      const retryButton = wrapper.find('button[aria-label="重试此任�?]')
+      // 检查重试按?
+      const retryButton = wrapper.find('button[aria-label="重试此任?]')\"
       expect(retryButton.exists()).toBe(true)
     })
   })
 
-  describe('响应式设计测�?, () => {
+  describe('响应式设计测?, () => {'
     it('应该在不同屏幕尺寸下正确渲染', async () => {
       const task = createMockTask()
       mockAppStore.decompressTasks = [task]
@@ -451,7 +451,7 @@ describe('TaskList.vue', () => {
 
       await flushPromises()
 
-      // 检查响应式类是否存�?
+      // 检查响应式类是否存?
       expect(wrapper.html()).toContain('grid grid-cols-1 sm:grid-cols-2')
       expect(wrapper.html()).toContain('grid grid-cols-1 sm:grid-cols-4')
 
@@ -460,7 +460,7 @@ describe('TaskList.vue', () => {
     })
   })
 
-  describe('可访问性测�?, () => {
+  describe('可访问性测?, () => {'
     it('应该包含必要的ARIA标签', async () => {
       const wrapper = mount(TaskList, {
         global: {
@@ -471,7 +471,7 @@ describe('TaskList.vue', () => {
       await flushPromises()
 
       // 检查ARIA标签
-      expect(wrapper.find('button[aria-label="筛选任�?]').exists()).toBe(true)
+      expect(wrapper.find('button[aria-label="筛选任?]').exists()).toBe(true)\"
       expect(wrapper.find('button[aria-label="切换排序顺序"]').exists()).toBe(true)
       expect(wrapper.find('button[aria-label="刷新任务列表"]').exists()).toBe(true)
       expect(wrapper.find('button[aria-label="清理已完成的任务"]').exists()).toBe(true)

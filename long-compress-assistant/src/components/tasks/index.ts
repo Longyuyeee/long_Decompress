@@ -1,13 +1,3 @@
-/**
- * 任务组件库导�?
- */
-
-// 导出所有任务组�?
 export { default as TaskList } from './TaskList.vue'
 export { default as TaskDetailPanel } from './TaskDetailPanel.vue'
 export { default as TaskListWithDetail } from './TaskListWithDetail.vue'
-
-// 组件类型导出
-export type { Props as TaskListProps } from './TaskList.vue'
-export type { Props as TaskDetailPanelProps } from './TaskDetailPanel.vue'
-export type { Props as TaskListWithDetailProps } from './TaskListWithDetail.vue'

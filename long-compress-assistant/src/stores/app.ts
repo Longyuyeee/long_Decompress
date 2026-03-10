@@ -15,6 +15,8 @@ export interface FileItem {
 export interface DecompressTask {
   id: string
   fileId: string
+  filePath: string
+  fileName: string
   outputPath: string
   password?: string
   options: {
@@ -27,6 +29,7 @@ export interface DecompressTask {
   startTime?: Date
   endTime?: Date
   error?: string
+  createdAt: Date
 }
 
 export interface AppSettings {
@@ -47,7 +50,7 @@ export interface AppSettings {
 }
 
 export const useAppStore = defineStore('app', () => {
-  // 状�?
+  // 状�?
   const theme = ref<'light' | 'dark' | 'auto'>('auto')
   const language = ref('zh-CN')
   const error = ref<string | null>(null)
@@ -73,7 +76,7 @@ export const useAppStore = defineStore('app', () => {
     logLevel: 'info'
   })
 
-  // 计算属�?
+  // 计算属�?
   const currentTheme = computed(() => {
     if (theme.value === 'auto') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
@@ -99,6 +102,7 @@ export const useAppStore = defineStore('app', () => {
 
   const createDecompressTask = (
     fileId: string,
+    filePath: string,
     outputPath: string,
     password?: string,
     options?: Partial<DecompressTask['options']>
@@ -106,6 +110,8 @@ export const useAppStore = defineStore('app', () => {
     const task: DecompressTask = {
       id: generateId(),
       fileId,
+      filePath,
+      fileName: filePath.split(/[\\/]/).pop() || '',
       outputPath,
       password,
       options: {
@@ -115,7 +121,8 @@ export const useAppStore = defineStore('app', () => {
       },
       status: 'pending',
       progress: 0,
-      startTime: new Date()
+      startTime: new Date(),
+      createdAt: new Date()
     }
 
     decompressTasks.value.push(task)
@@ -209,24 +216,34 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
-  // 初始�?
+  // 初始�?
   loadSettingsFromStorage()
 
+  const setError = (message: string | null) => {
+    error.value = message
+  }
+
+  const clearError = () => {
+    error.value = null
+  }
+
   return {
-    // 状�?
+    // 状态
     theme,
     language,
     error,
     decompressTasks,
     settings,
 
-    // 计算属�?
+    // 计算属性
     currentTheme,
     activeTasks,
     completedTasks,
     totalProgress,
 
     // 方法
+    setError,
+    clearError,
     createDecompressTask,
     updateTaskProgress,
     markTaskAsError,

@@ -37,7 +37,7 @@ const mockErrorTask: DecompressTask = {
   id: 'task-125',
   status: 'error',
   progress: 0,
-  error: '密码错误，解压失�?
+  error: '密码错误，解压失?'
 }
 
 describe('TaskDetailPanel组件', () => {
@@ -51,18 +51,18 @@ describe('TaskDetailPanel组件', () => {
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.find('.task-detail-panel').exists()).toBe(true)
     expect(wrapper.text()).toContain('archive.zip')
-    expect(wrapper.text()).toContain('进行�?)
+    expect(wrapper.text()).toContain('进行?)'
   })
 
-  it('显示处理中任务的状�?, () => {
+  it('显示处理中任务的状?, () => {'
     const wrapper = mount(TaskDetailPanel, {
       props: {
         task: mockTask
       }
     })
 
-    // 检查状态显�?
-    expect(wrapper.text()).toContain('进行�?)
+    // 检查状态显?
+    expect(wrapper.text()).toContain('进行?)'
     expect(wrapper.find('.pi-spin.pi-spinner').exists()).toBe(true)
 
     // 检查进度条
@@ -74,14 +74,14 @@ describe('TaskDetailPanel组件', () => {
     expect(wrapper.text()).toContain('50%')
   })
 
-  it('显示已完成任务的状�?, () => {
+  it('显示已完成任务的状?, () => {'
     const wrapper = mount(TaskDetailPanel, {
       props: {
         task: mockCompletedTask
       }
     })
 
-    expect(wrapper.text()).toContain('已完�?)
+    expect(wrapper.text()).toContain('已完?)'
     expect(wrapper.find('.pi-check').exists()).toBe(true)
     expect(wrapper.text()).toContain('解压成功')
     expect(wrapper.text()).toContain('解压时长')
@@ -96,7 +96,7 @@ describe('TaskDetailPanel组件', () => {
 
     expect(wrapper.text()).toContain('失败')
     expect(wrapper.find('.pi-times').exists()).toBe(true)
-    expect(wrapper.text()).toContain('密码错误，解压失�?)
+    expect(wrapper.text()).toContain('密码错误，解压失?)'
     expect(wrapper.text()).toContain('建议解决方案')
   })
 
@@ -110,7 +110,7 @@ describe('TaskDetailPanel组件', () => {
     expect(wrapper.text()).toContain('archive.zip')
     expect(wrapper.text()).toContain('/path/to/archive.zip')
     expect(wrapper.text()).toContain('/path/to/output')
-    expect(wrapper.text()).toContain('已设置密�?)
+    expect(wrapper.text()).toContain('已设置密?)'
   })
 
   it('显示解压选项', () => {
@@ -120,12 +120,12 @@ describe('TaskDetailPanel组件', () => {
       }
     })
 
-    expect(wrapper.text()).toContain('保持原结�?)
+    expect(wrapper.text()).toContain('保持原结?)'
     expect(wrapper.text()).toContain('询问用户')
-    expect(wrapper.text()).toContain('保留原文�?)
+    expect(wrapper.text()).toContain('保留原文?)'
   })
 
-  it('显示时间线信�?, () => {
+  it('显示时间线信?, () => {'
     const wrapper = mount(TaskDetailPanel, {
       props: {
         task: mockTask
@@ -133,11 +133,11 @@ describe('TaskDetailPanel组件', () => {
     })
 
     expect(wrapper.text()).toContain('任务创建')
-    expect(wrapper.text()).toContain('开始解�?)
-    expect(wrapper.text()).toContain('2026�?�?�?)
+    expect(wrapper.text()).toContain('开始解?)'
+    expect(wrapper.text()).toContain('2026???)'
   })
 
-  it('显示技术信�?, () => {
+  it('显示技术信?, () => {'
     const wrapper = mount(TaskDetailPanel, {
       props: {
         task: mockTask
@@ -220,14 +220,14 @@ describe('TaskDetailPanel组件', () => {
     expect(wrapper.emitted('copy-path')?.[0]?.[0]).toBe('/path/to/output')
   })
 
-  it('处理在资源管理器中显示事�?, async () => {
+  it('处理在资源管理器中显示事?, async () => {'
     const wrapper = mount(TaskDetailPanel, {
       props: {
         task: mockTask
       }
     })
 
-    const showButton = wrapper.find('button:contains("在资源管理器中显�?)')
+    const showButton = wrapper.find('button:contains("在资源管理器中显?)')\"
     await showButton.trigger('click')
 
     expect(wrapper.emitted('show-in-explorer')).toBeTruthy()
@@ -262,7 +262,7 @@ describe('TaskDetailPanel组件', () => {
     expect(wrapper.emitted('delete')?.[0]?.[0]).toBe('task-123')
   })
 
-  it('禁用状态下的按�?, () => {
+  it('禁用状态下的按?, () => {'
     const wrapper = mount(TaskDetailPanel, {
       props: {
         task: mockTask,
@@ -292,7 +292,7 @@ describe('TaskDetailPanel组件', () => {
   it('计算预计剩余时间', () => {
     const taskWithProgress: DecompressTask = {
       ...mockTask,
-      startTime: new Date(Date.now() - 30000), // 30秒前开�?
+      startTime: new Date(Date.now() - 30000), // 30秒前开?
       progress: 50
     }
 
@@ -305,18 +305,18 @@ describe('TaskDetailPanel组件', () => {
     expect(wrapper.text()).toContain('预计剩余')
   })
 
-  it('格式化时间显�?, () => {
+  it('格式化时间显?, () => {'
     const wrapper = mount(TaskDetailPanel, {
       props: {
         task: mockTask
       }
     })
 
-    expect(wrapper.text()).toContain('2026�?�?�?)
+    expect(wrapper.text()).toContain('2026???)'
     expect(wrapper.text()).toContain('10:00:00')
   })
 
-  it('格式化路径显�?, () => {
+  it('格式化路径显?, () => {'
     const longPathTask: DecompressTask = {
       ...mockTask,
       filePath: '/very/long/path/to/the/archive/file/that/is/very/long/archive.zip',
@@ -329,11 +329,11 @@ describe('TaskDetailPanel组件', () => {
       }
     })
 
-    // 应该显示缩短的路�?
+    // 应该显示缩短的路?
     expect(wrapper.text()).toContain('...')
   })
 
-  it('格式化时长显�?, () => {
+  it('格式化时长显?, () => {'
     const wrapper = mount(TaskDetailPanel, {
       props: {
         task: mockCompletedTask
@@ -343,7 +343,7 @@ describe('TaskDetailPanel组件', () => {
     expect(wrapper.text()).toContain('5分钟')
   })
 
-  describe('响应式设�?, () => {
+  describe('响应式设?, () => {'
     it('网格布局适应不同屏幕尺寸', () => {
       const wrapper = mount(TaskDetailPanel, {
         props: {
@@ -367,7 +367,7 @@ describe('TaskDetailPanel组件', () => {
     })
   })
 
-  describe('暴露的方�?, () => {
+  describe('暴露的方?, () => {'
     it('暴露getTaskInfo方法', () => {
       const wrapper = mount(TaskDetailPanel, {
         props: {
