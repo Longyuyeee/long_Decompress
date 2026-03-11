@@ -1,113 +1,128 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { invoke } from '@tauri-apps/api/tauri'
 import { listen } from '@tauri-apps/api/event'
 
-export interface TaskItem {
+export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'completed' | 'failed' | 'cancelled'
+export type LogSeverity = 'info' | 'warning' | 'error' | 'success'
+
+export interface TaskLog {
+  task_id: string
+  timestamp: string
+  message: string
+  severity: LogSeverity
+}
+
+export interface ConflictInfo {
+  taskId: string
+  fileName: string
+  sourcePath: string
+  destPath: string
+  sourceSize: number
+  destSize: number
+  sourceModified: number
+  destModified: number
+}
+
+export interface Task {
   id: string
-  task_type: 'Compress' | 'Extract'
-  status: 'Pending' | 'Running' | 'Paused' | 'Completed' | 'Failed' | 'Cancelled'
-  priority: 'Low' | 'Medium' | 'High'
+  name: string
+  type: 'compression' | 'decompression'
+  status: TaskStatus
   progress: number
-  file_name: string
-  source_path: string
-  output_path: string
+  startTime?: Date
+  endTime?: Date
   error?: string
-  start_time?: string
-  end_time?: string
+  logs: TaskLog[]
+  sourceFiles: string[]
+  outputPath: string
+  format?: string
+  conflicts: ConflictInfo[] // 新增冲突追踪
 }
 
 export const useTaskStore = defineStore('task', () => {
-  const tasks = ref<TaskItem[]>([])
-  const isLoading = ref(false)
+  const tasks = ref<Task[]>([])
+  const activeTaskCount = computed(() => tasks.value.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status)).length)
 
-  // 监听后端事件，实时同步任务状�?
-  listen<{ task_id: string, progress: number }>('task_progress', (event) => {
-    const task = tasks.value.find(t => t.id === event.payload.task_id)
+  // 初始化监听器
+  const initListeners = async () => {
+    await listen<TaskLog>('task-log', (event) => {
+      const { task_id, message, severity, timestamp } = event.payload
+      const task = tasks.value.find(t => t.id === task_id)
+      if (task) {
+        task.logs.push({
+          task_id,
+          message,
+          severity: severity.toLowerCase() as LogSeverity,
+          timestamp
+        })
+      }
+    })
+
+    await listen<{ task_id: string, progress: number }>('task-progress', (event) => {
+      const { task_id, progress } = event.payload
+      const task = tasks.value.find(t => t.id === task_id)
+      if (task) {
+        task.progress = Math.round(progress * 100)
+        if (progress >= 1.0) {
+          task.status = 'completed'
+          task.endTime = new Date()
+        }
+      }
+    })
+
+    // 监听冲突事件
+    await listen<ConflictInfo>('file-conflict', (event) => {
+      const conflict = event.payload
+      const task = tasks.value.find(t => t.id === conflict.taskId)
+      if (task) {
+        task.conflicts.push(conflict)
+      }
+    })
+  }
+
+  const addTask = (task: Omit<Task, 'logs' | 'progress' | 'status' | 'conflicts'>) => {
+    const newTask: Task = {
+      ...task,
+      status: 'pending',
+      progress: 0,
+      logs: [],
+      conflicts: []
+    }
+    tasks.value.push(newTask)
+    return newTask.id
+  }
+
+  const updateTaskStatus = (taskId: string, status: TaskStatus) => {
+    const task = tasks.value.find(t => t.id === taskId)
     if (task) {
-      task.progress = Math.round(event.payload.progress * 100)
-    }
-  })
-
-  listen<{ task_id: string, status: string }>('task_status', (event) => {
-    const task = tasks.value.find(t => t.id === event.payload.task_id)
-    if (task) {
-      // 将后端的状态字符串映射为前端枚�?
-      task.status = event.payload.status as any
-      if (task.status === 'Completed') task.progress = 100
-    } else {
-      // 如果本地没有，可能是新任务或者是刚启动，刷新一�?
-      fetchTasks()
-    }
-  })
-
-  // 获取所有任�?
-  const fetchTasks = async () => {
-    isLoading.value = true
-    try {
-      // 调用后端�?list_tasks
-      const rawTasks = await invoke<any[]>('list_tasks')
-      tasks.value = rawTasks.map(t => ({
-        id: t.id,
-        task_type: t.task_type,
-        status: t.status,
-        priority: t.priority,
-        progress: Math.round((t.progress || 0) * 100),
-        file_name: t.file_name || '未知文件',
-        source_path: t.source_path || '',
-        output_path: t.output_path || '',
-        error: t.error,
-        start_time: t.start_time,
-        end_time: t.end_time
-      }))
-    } catch (e) {
-      console.error('获取任务列表失败:', e)
-    } finally {
-      isLoading.value = false
+      task.status = status
+      if (status === 'running' && !task.startTime) {
+        task.startTime = new Date()
+      }
+      if (['completed', 'failed', 'cancelled'].includes(status)) {
+        task.endTime = new Date()
+      }
     }
   }
 
-  // 操作
-  const cancelTask = async (id: string) => {
-    try {
-      await invoke('cancel_task', { taskId: id })
-    } catch (e) {
-      console.error('取消任务失败:', e)
+  const removeTask = (taskId: string) => {
+    const index = tasks.value.findIndex(t => t.id === taskId)
+    if (index !== -1) {
+      tasks.value.splice(index, 1)
     }
   }
 
-  const pauseTask = async (id: string) => {
-    try {
-      await invoke('pause_task', { taskId: id })
-    } catch (e) {
-      console.error('暂停任务失败:', e)
-    }
-  }
-
-  const resumeTask = async (id: string) => {
-    try {
-      await invoke('resume_task', { taskId: id })
-    } catch (e) {
-      console.error('恢复任务失败:', e)
-    }
-  }
-
-  const clearCompleted = async () => {
-    try {
-      await invoke('cleanup_completed_tasks', { olderThanDays: 0 })
-      await fetchTasks()
-    } catch (e) {
-      console.error('清理任务失败:', e)
-    }
+  const clearFinishedTasks = () => {
+    tasks.value = tasks.value.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status))
   }
 
   return {
     tasks,
-    isLoading,
-    fetchTasks,
-    cancelTask,
-    pauseTask,
-    resumeTask,
-    clearCompleted
+    activeTaskCount,
+    initListeners,
+    addTask,
+    updateTaskStatus,
+    removeTask,
+    clearFinishedTasks
   }
 })

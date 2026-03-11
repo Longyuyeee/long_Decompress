@@ -2,7 +2,7 @@
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:39633",
+    "devPath": "http://localhost:1420",
     "distDir": "../dist"
   },
   "package": {
@@ -34,11 +34,11 @@
     },
     "windows": [
       {
-        "title": "胧压缩·方便助手",
-        "width": 1200,
-        "height": 800,
-        "minWidth": 800,
-        "minHeight": 600,
+        "title": "胧压缩",
+        "width": 1000,
+        "height": 700,
+        "minWidth": 600,
+        "minHeight": 500,
         "resizable": true,
         "fullscreen": false,
         "decorations": true,

@@ -56,16 +56,28 @@ impl Default for CompressionTask {
 pub enum CompressionFormat {
     Zip,
     SevenZip,
+    Rar,
     Tar,
     Gzip,
+    Bzip2,
+    Xz,
+    TarGz,
+    TarBzip2,
+    TarXz,
 }
 
 impl CompressionFormat {
     pub fn from_extension(ext: &str) -> Self {
         match ext.to_lowercase().as_str() {
             "7z" => Self::SevenZip,
+            "rar" => Self::Rar,
             "tar" => Self::Tar,
-            "gz" | "tgz" => Self::Gzip,
+            "gz" | "gzip" => Self::Gzip,
+            "bz2" | "bzip2" => Self::Bzip2,
+            "xz" => Self::Xz,
+            "tgz" | "tar.gz" => Self::TarGz,
+            "tbz2" | "tar.bz2" => Self::TarBzip2,
+            "txz" | "tar.xz" => Self::TarXz,
             _ => Self::Zip,
         }
     }
@@ -74,8 +86,14 @@ impl CompressionFormat {
         match self {
             Self::Zip => "zip",
             Self::SevenZip => "7z",
+            Self::Rar => "rar",
             Self::Tar => "tar",
             Self::Gzip => "gz",
+            Self::Bzip2 => "bz2",
+            Self::Xz => "xz",
+            Self::TarGz => "tar.gz",
+            Self::TarBzip2 => "tar.bz2",
+            Self::TarXz => "tar.xz",
         }
     }
 }
@@ -123,4 +141,32 @@ impl CompressionStatus {
     pub fn is_finished(&self) -> bool {
         matches!(self, Self::Completed | Self::Failed | Self::Cancelled)
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TaskLog {
+    pub task_id: String,
+    pub timestamp: DateTime<Utc>,
+    pub message: String,
+    pub severity: TaskLogSeverity,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum TaskLogSeverity {
+    Info,
+    Warning,
+    Error,
+    Success,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TaskConflict {
+    pub task_id: String,
+    pub file_name: String,
+    pub source_path: String,
+    pub dest_path: String,
+    pub source_size: u64,
+    pub dest_size: u64,
+    pub source_modified: u64,
+    pub dest_modified: u64,
 }

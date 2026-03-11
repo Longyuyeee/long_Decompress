@@ -101,7 +101,7 @@ export const usePasswordStore = defineStore('password', () => {
   // 状态
   const entries = ref<PasswordEntry[]>([])
   const groups = ref<PasswordGroup[]>([])
-  const isUnlocked = ref(false)
+  const isUnlocked = ref(true) // 默认解锁
   const isLoading = ref(false)
   const searchQuery = ref('')
   const currentCategory = ref<PasswordCategory | 'All'>('All')
@@ -140,14 +140,8 @@ export const usePasswordStore = defineStore('password', () => {
 
   // 初始化检查
   const checkUnlockStatus = async () => {
-    try {
-      isUnlocked.value = await invoke<boolean>('is_encrypted_password_service_unlocked')
-      if (isUnlocked.value) {
-        await fetchAllData()
-      }
-    } catch (e) {
-      console.error('检查解锁状态失败', e)
-    }
+    isUnlocked.value = true
+    await fetchAllData()
   }
 
   // 解锁

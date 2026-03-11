@@ -121,14 +121,15 @@ pub async fn is_encrypted_password_service_unlocked(app: AppHandle) -> Result<bo
 #[tauri::command]
 pub async fn add_encrypted_password(
     app: AppHandle,
-    entry: PasswordEntry,
+    entry: PasswordEntryRequest, // 使用 Request 结构
 ) -> Result<PasswordEntry, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
     let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
-    match service.add_password(entry).await {
+    let entry_model: PasswordEntry = entry.into(); // 转换为模型，自动生成 ID
+    match service.add_password(entry_model).await {
         Ok(entry) => Ok(entry),
         Err(e) => Err(format!("添加密码失败: {}", e)),
     }

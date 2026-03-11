@@ -153,7 +153,7 @@ impl SplitCompressionService {
 
     async fn compress_single_zip(&self, files: &[String], output_path: &Path, options: CompressionOptions) -> Result<SplitCompressionResult> {
         let svc = CompressionService::default();
-        svc.compress(files, output_path.to_str().unwrap_or_default(), options).await?;
+        svc.compress_zip_enhanced(files, output_path.to_str().unwrap_or_default(), options).await?;
         
         let total_size = self.calculate_total_size(files).await?;
         Ok(SplitCompressionResult {
@@ -165,7 +165,7 @@ impl SplitCompressionService {
 
     async fn compress_single_file_to_zip(&self, files: &[String], output_path: &Path, options: CompressionOptions) -> Result<()> {
         let svc = CompressionService::default();
-        svc.compress(files, output_path.to_str().unwrap_or_default(), options).await
+        svc.compress_zip_enhanced(files, output_path.to_str().unwrap_or_default(), options).await
     }
 }
 

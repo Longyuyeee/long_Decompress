@@ -32,6 +32,10 @@ Thumbs.db
 .claude/
 .gemini/
 *.log
+*.db
+*.db-journal
+*.pdb
+*.exe
 prototype/config.yaml
 long-compress-assistant/src-tauri/target/
 long-compress-assistant/node_modules/

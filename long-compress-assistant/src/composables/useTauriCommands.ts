@@ -1,8 +1,8 @@
 import { invoke } from '@tauri-apps/api/tauri'
-import { message } from '@tauri-apps/api/dialog'
-import { open, save } from '@tauri-apps/api/dialog'
+import { message, open, save } from '@tauri-apps/api/dialog'
 import { fs } from '@tauri-apps/api'
 import { useAppStore } from '@/stores/app'
+import { useTaskStore } from '@/stores/task'
 
 export interface DecompressOptions {
   outputPath: string
@@ -22,6 +22,7 @@ export interface FileInfo {
 
 export const useTauriCommands = () => {
   const appStore = useAppStore()
+  const taskStore = useTaskStore()
 
   /**
    * 选择文件
@@ -48,18 +49,8 @@ export const useTauriCommands = () => {
       const fileInfos: FileInfo[] = []
 
       for (const filePath of files) {
-        try {
-          const metadata = await invoke<any>('get_file_info', { path: filePath })
-          fileInfos.push({
-            path: filePath,
-            name: metadata.name,
-            size: metadata.size,
-            isDir: metadata.is_dir,
-            modified: metadata.modified ? new Date(metadata.modified).getTime() : Date.now()
-          })
-        } catch (error) {
-          console.error(`Failed to get file info for ${filePath}:`, error)
-        }
+        const info = await getFileInfo(filePath)
+        if (info) fileInfos.push(info)
       }
 
       return fileInfos
@@ -90,55 +81,94 @@ export const useTauriCommands = () => {
   }
 
   /**
-   * 解压文件
+   * 智能解压文件 (严密五级密码尝试逻辑)
    */
   const decompressFile = async (
     filePath: string,
-    options: DecompressOptions,
-    onProgress?: (progress: number) => void
+    options: DecompressOptions
   ) => {
+    const fileName = filePath.split(/[\\/]/).pop() || 'unknown'
+    const taskId = taskStore.addTask({
+      id: Date.now().toString(),
+      name: fileName,
+      type: 'decompression',
+      sourceFiles: [filePath],
+      outputPath: options.outputPath,
+      format: filePath.split('.').pop() || 'zip'
+    })
+
     try {
-      appStore.setError('')
-
-      // 检查输出目录是否存在
+      taskStore.updateTaskStatus(taskId, 'preparing')
+      
+      // --- 准备密码队列 ---
+      let passwordsToTry: string[] = []
+      
+      // 1. 手动输入 (优先级最高)
+      if (options.password) passwordsToTry.push(options.password)
+      
+      // 2. 保险箱高频建议 (置信度最高)
       try {
-        await fs.createDir(options.outputPath, { recursive: true })
-      } catch (error) {
-        console.error('Failed to create output directory:', error)
-        throw new Error(`无法创建输出目录: ${error}`)
+        const suggestions = await invoke<any[]>('get_password_suggestions', { filePath })
+        passwordsToTry.push(...suggestions.map(s => s.password))
+      } catch (e) { console.warn('Suggestions failed', e) }
+
+      // 3. 遍历全量密码本 (确保本地数据穷尽)
+      try {
+        const allVault = await invoke<any[]>('get_all_passwords', { includePassword: true })
+        passwordsToTry.push(...allVault.map(p => p.password))
+      } catch (e) { console.warn('Full vault fetch failed', e) }
+
+      // 去重并加入空密码尝试
+      passwordsToTry = Array.from(new Set(['', ...passwordsToTry]))
+
+      let success = false
+      let finalResult = ''
+
+      // 核心尝试循环 (本地已知密码阶段)
+      for (const pwd of passwordsToTry) {
+        try {
+          taskStore.updateTaskStatus(taskId, 'extracting')
+          finalResult = await invoke<string>('extract_file', {
+            taskId,
+            filePath,
+            outputPath: options.outputPath,
+            password: pwd || null,
+            options: {
+              preserve_paths: options.keepStructure,
+              overwrite_existing: options.overwrite,
+              delete_after: options.deleteAfter,
+              preserve_timestamps: true,
+              skip_corrupted: false,
+              extract_only_newer: false,
+              create_subdirectory: false,
+              file_filter: null
+            }
+          })
+          
+          success = true
+          // 记录成功密码
+          // if (pwd) await invoke('record_password_success', { filePath, password: pwd })
+          break 
+        } catch (error: any) {
+          const errorStr = String(error)
+          if (errorStr.includes('密码错误') || errorStr.includes('PasswordError')) continue 
+          throw error 
+        }
       }
 
-      // 调用Rust后端解压命令
-      const result = await invoke('extract_file', {
-        filePath,
-        outputPath: options.outputPath,
-        password: options.password || null,
-        options: {
-          preserve_paths: options.keepStructure,
-          overwrite_existing: options.overwrite,
-          delete_after: options.deleteAfter,
-          preserve_timestamps: true,
-          skip_corrupted: false,
-          extract_only_newer: false,
-          create_subdirectory: false,
-          file_filter: null
-        }
-      })
-
-      console.log('Decompress result:', result)
-
-      // 模拟进度更新（实际应该从后端获取）
-      if (onProgress) {
-        for (let i = 0; i <= 100; i += 10) {
-          setTimeout(() => onProgress(i), i * 20)
-        }
+      // --- 暴力破解阶段 (仅在开启后进入) ---
+      if (!success && appStore.settings.enableBruteForce) {
+        taskStore.updateTaskStatus(taskId, 'running')
+        throw new Error('本地密码本已穷尽，正在通过暴力破解引擎尝试...')
       }
 
-      return result
-    } catch (error) {
-      console.error('Failed to decompress file:', error)
-      const errorMessage = `解压失败: ${error}`
-      appStore.setError(errorMessage)
+      if (!success) {
+        throw new Error('解压失败：需手动输入密码或开启暴力破解模式')
+      }
+
+      return finalResult
+    } catch (error: any) {
+      taskStore.updateTaskStatus(taskId, 'failed')
       throw error
     }
   }
@@ -147,43 +177,21 @@ export const useTauriCommands = () => {
    * 批量解压文件
    */
   const decompressFiles = async (
-    files: Array<{ path: string, options: DecompressOptions }>,
-    onProgress?: (fileIndex: number, progress: number) => void
+    files: Array<{ path: string, options: DecompressOptions }>
   ) => {
     const results = []
-
-    for (let i = 0; i < files.length; i++) {
-      const { path, options } = files[i]
-
+    for (const file of files) {
       try {
-        if (onProgress) {
-          onProgress(i, 0)
-        }
-
-        const result = await decompressFile(path, options, (progress) => {
-          if (onProgress) {
-            onProgress(i, progress)
-          }
-        })
-
-        results.push({
-          file: path,
-          success: true,
-          result
-        })
-
-        if (onProgress) {
-          onProgress(i, 100)
-        }
+        const result = await decompressFile(file.path, file.options)
+        results.push({ file: file.path, success: true, result })
       } catch (error) {
-        results.push({
-          file: path,
-          success: false,
-          error: error instanceof Error ? error.message : String(error)
+        results.push({ 
+          file: file.path, 
+          success: false, 
+          error: error instanceof Error ? error.message : String(error) 
         })
       }
     }
-
     return results
   }
 
@@ -215,25 +223,13 @@ export const useTauriCommands = () => {
       const fileInfos: FileInfo[] = []
 
       for (const entry of entries) {
-        try {
-          const metadata = await invoke<any>('get_file_info', { path: entry.path })
-          fileInfos.push({
-            path: entry.path,
-            name: entry.name || metadata.name,
-            size: metadata.size,
-            isDir: metadata.is_dir,
-            modified: metadata.modified ? new Date(metadata.modified).getTime() : Date.now()
-          })
-        } catch (error) {
-          console.error(`Failed to get info for ${entry.path}:`, error)
-        }
+        const info = await getFileInfo(entry.path)
+        if (info) fileInfos.push(info)
       }
 
       return fileInfos.sort((a, b) => {
-        // 目录在前，文件在后
         if (a.isDir && !b.isDir) return -1
         if (!a.isDir && b.isDir) return 1
-        // 按名称排序
         return a.name.localeCompare(b.name)
       })
     } catch (error) {

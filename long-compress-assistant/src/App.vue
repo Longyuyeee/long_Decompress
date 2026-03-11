@@ -1,9 +1,11 @@
 <template>
   <div id="app" @mousemove="resetIdleTimer" @keydown="resetIdleTimer">
     <MainLayout>
-      <PageTransition>
-        <RouterView />
-      </PageTransition>
+      <RouterView v-slot="{ Component }">
+        <PageTransition>
+          <component :is="Component" />
+        </PageTransition>
+      </RouterView>
     </MainLayout>
     <ToastContainer />
   </div>
@@ -21,7 +23,7 @@ import { usePasswordStore } from '@/stores/password'
 const configStore = useConfigStore()
 const passwordStore = usePasswordStore()
 
-let idleTimer: number | null = null
+let idleTimer: any = null
 
 const resetIdleTimer = () => {
   if (idleTimer) clearTimeout(idleTimer)

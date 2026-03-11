@@ -47,18 +47,21 @@ export interface AppSettings {
   sendCrashReports: boolean
   cacheSize: number
   logLevel: 'error' | 'warn' | 'info' | 'debug' | 'trace'
+  // 增强功能
+  enableBruteForce: boolean // 暴力破解总开关
+  bruteForceCharset: string // 穷举字符集
+  bruteForceMaxLen: number // 穷举最大长度
+  autoDeleteSource: boolean // 解压成功后自动清理
+  conflictPolicy: 'ask' | 'overwrite' | 'skip' | 'rename' // 默认冲突处理策略
 }
 
 export const useAppStore = defineStore('app', () => {
-  // 状�?
+  // 核心状态
   const theme = ref<'light' | 'dark' | 'auto'>('auto')
   const language = ref('zh-CN')
   const error = ref<string | null>(null)
-
-  // 解压任务管理
   const decompressTasks = ref<DecompressTask[]>([])
 
-  // 设置
   const settings = ref<AppSettings>({
     theme: 'auto',
     language: 'zh-CN',
@@ -73,8 +76,14 @@ export const useAppStore = defineStore('app', () => {
     collectUsageData: false,
     sendCrashReports: true,
     cacheSize: 200,
-    logLevel: 'info'
+    logLevel: 'info',
+    enableBruteForce: false, // 默认关闭暴力破解
+    bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz',
+    bruteForceMaxLen: 6,
+    autoDeleteSource: false,
+    conflictPolicy: 'ask'
   })
+
 
   // 计算属�?
   const currentTheme = computed(() => {

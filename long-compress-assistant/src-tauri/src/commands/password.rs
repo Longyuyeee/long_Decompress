@@ -1,14 +1,13 @@
 use crate::services::password_book_service::{
     PasswordBookService, AddPasswordRequest, UpdatePasswordRequest, PasswordBookEntry,
-    SearchFilters, SortOption, PasswordStatistics
+    SortOption, SearchFilters, PasswordStatistics
 };
 use crate::services::password_category_service::{
     PasswordCategoryService, PasswordCategory as DbPasswordCategory,
     CreateCategoryRequest, UpdateCategoryRequest, CategoryStatistics
 };
 use crate::services::password_strength_service::{
-    PasswordStrengthService, PasswordStrengthAssessment, PasswordPolicy,
-    PasswordIssue, PasswordIssueType, IssueSeverity
+    PasswordStrengthService, PasswordStrengthAssessment, PasswordPolicy
 };
 use crate::models::password::{PasswordCategory, PasswordStrength, CustomField, CustomFieldType};
 use tauri::command;

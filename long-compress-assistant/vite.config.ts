@@ -15,8 +15,8 @@ export default defineConfig({
   clearScreen: false,
   // 2. Tauri 预期使用指定的端口，若端口不可用则直接报错而不是跳过
   server: {
-    port: 39633,
-    strictPort: false,
+    port: 1420,
+    strictPort: true,
     watch: {
       // 3. 告诉 Vite 忽略 src-tauri
       ignored: ["**/src-tauri/**"],
