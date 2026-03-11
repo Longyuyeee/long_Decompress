@@ -1,0 +1,31 @@
+﻿{
+  "metadata": {
+    "version": "1.0.0",
+    "generator": "game-data-architect",
+    "target_language": "C#"
+  },
+  "mock_data_pool": [
+    {
+      "id": 10001,
+      "name": "天丛云剑",
+      "type": "Weapon",
+      "base_damage": 55.5,
+      "growth": {
+        "atk": 1.2,
+        "crit": 0.05
+      },
+      "tags": ["mythic", "sword", "wind"]
+    },
+    {
+      "id": 10002,
+      "name": "草薙剑",
+      "type": "Weapon",
+      "base_damage": 60.0,
+      "growth": {
+        "atk": 1.5,
+        "crit": 0.02
+      },
+      "tags": ["legendary", "sword", "fire"]
+    }
+  ]
+}

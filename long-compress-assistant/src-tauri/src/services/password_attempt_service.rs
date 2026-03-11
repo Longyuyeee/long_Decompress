@@ -236,34 +236,29 @@ impl PasswordAttemptService {
             .collect())
     }
 
-    /// 尝试使用密码解压ZIP文件
-    async fn try_extract_with_password(
+    /// 尝试使用密码解压归档文件（支持所有加密格式）
+    pub async fn try_extract_with_password(
         &self,
-        zip_path: &str,
-        output_dir: &str,
+        archive_path: &str,
+        _output_dir: &str, // 实际测试密码不需要解压到目录，只是验证
         password: &str,
     ) -> Result<bool> {
         use crate::services::compression_service::CompressionService;
-        use std::path::Path;
 
-        let zip_path_obj = Path::new(zip_path);
-        let output_dir_obj = Path::new(output_dir);
-
-        // 调用实际的ZIP解压功能
+        // 调用新的通用密码测试功能
         let compression_service = CompressionService::default();
-        match compression_service.extract_zip_with_password_check(
-            zip_path,
-            output_dir,
-            Some(password),
+        match compression_service.test_archive_password(
+            archive_path,
+            password,
         ).await {
-            Ok(_) => Ok(true),
+            Ok(is_valid) => Ok(is_valid),
             Err(e) => {
-                // 检查错误类型
+                // 检查错误类型，如果是其他非密码错误则抛出
                 let error_msg: String = e.to_string();
                 if error_msg.contains("密码错误") || error_msg.contains("InvalidPassword") {
-                    Ok(false) // 密码错误，但不是致命错误
+                    Ok(false)
                 } else {
-                    Err(e) // 其他错误
+                    Err(e)
                 }
             }
         }
@@ -271,9 +266,8 @@ impl PasswordAttemptService {
 
     /// 更新密码使用记录
     async fn update_password_usage(&self, password_id: &str) -> Result<()> {
-        // 在实际实现中，应该更新密码的最后使用时间
-        // 这里只是记录日志
         log::info!("更新密码使用记录: {}", password_id);
+        self.query_service.increment_use_count(password_id).await?;
         Ok(())
     }
 

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { PasswordCategory, usePasswordStore } from '@/stores/password'
 import Modal from '@/components/ui/Modal.vue'
 
 const props = defineProps<{
-  visible: boolean
+  visible: boolean,
+  entry?: any // 新增可选属性用于编辑
 }>()
 
 const emit = defineEmits<{
@@ -16,34 +17,61 @@ const passwordStore = usePasswordStore()
 const isSaving = ref(false)
 const showPassword = ref(false)
 
+const getDefaultName = () => {
+  const now = new Date()
+  const month = now.getMonth() + 1
+  const day = now.getDate()
+  const hours = now.getHours().toString().padStart(2, '0')
+  const minutes = now.getMinutes().toString().padStart(2, '0')
+  return `解压凭证_${month}${day}_${hours}${minutes}`
+}
+
 const form = reactive({
-  name: '',
+  name: getDefaultName(),
   password: '',
-  category: PasswordCategory.Other,
-  username: '',
   notes: ''
 })
 
-const categories = Object.values(PasswordCategory)
+watch(() => props.visible, (newVal) => {
+  if (newVal) {
+    if (props.entry) {
+      // 进入编辑模式
+      form.name = props.entry.name
+      form.password = props.entry.password
+      form.notes = props.entry.notes || ''
+    } else {
+      // 进入新增模式
+      resetForm()
+    }
+  }
+})
 
 const handleSave = async () => {
   if (!form.name || !form.password) return
   
   isSaving.value = true
   try {
-    await passwordStore.addEntry({
+    const payload = {
       name: form.name,
       password: form.password,
-      category: form.category,
-      username: form.username || null,
+      category: PasswordCategory.Other,
+      username: null,
       notes: form.notes || null,
       url: null,
       tags: [],
       custom_fields: []
-    })
+    }
+
+    if (props.entry?.id) {
+      // 执行更新逻辑
+      await passwordStore.updateEntry(props.entry.id, payload)
+    } else {
+      // 执行新增逻辑
+      await passwordStore.addEntry(payload)
+    }
+    
     emit('saved')
     emit('update:visible', false)
-    resetForm()
   } catch (e) {
     console.error('Save failed', e)
   } finally {
@@ -52,10 +80,8 @@ const handleSave = async () => {
 }
 
 const resetForm = () => {
-  form.name = ''
+  form.name = getDefaultName()
   form.password = ''
-  form.category = PasswordCategory.Other
-  form.username = ''
   form.notes = ''
 }
 </script>
@@ -64,76 +90,47 @@ const resetForm = () => {
   <Modal 
     :visible="visible" 
     @update:visible="val => emit('update:visible', val)"
-    title="新增凭证"
-    icon="pi pi-shield"
+    title="添加新密码"
+    icon="pi pi-plus-circle"
     size="md"
   >
     <div class="space-y-6 py-2">
       <!-- 基础信息组 -->
-      <div class="space-y-4">
+      <div class="space-y-5">
         <div class="group">
           <label class="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 ml-1">名称</label>
           <input 
             v-model="form.name"
             type="text" 
-            placeholder="例如：我的解压通用密码"
+            placeholder="例如：通用压缩解压密码"
             class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all shadow-inner"
           >
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div class="group">
-            <label class="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 ml-1">用户名 (可选)</label>
+        <div class="group">
+          <label class="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 ml-1">密码</label>
+          <div class="relative">
             <input 
-              v-model="form.username"
-              type="text" 
-              placeholder="Admin"
-              class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-blue-500/50 transition-all"
+              v-model="form.password"
+              :type="showPassword ? 'text' : 'password'" 
+              placeholder="请输入解压密码"
+              class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-blue-500/50 transition-all font-mono tracking-wider"
             >
-          </div>
-          <div class="group">
-            <label class="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 ml-1">密码</label>
-            <div class="relative">
-              <input 
-                v-model="form.password"
-                :type="showPassword ? 'text' : 'password'" 
-                placeholder="••••••••"
-                class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-blue-500/50 transition-all font-mono tracking-wider"
-              >
-              <button @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors">
-                <i :class="['pi', showPassword ? 'pi-eye-slash' : 'pi-eye']"></i>
-              </button>
-            </div>
+            <button @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors">
+              <i :class="['pi', showPassword ? 'pi-eye-slash' : 'pi-eye']"></i>
+            </button>
           </div>
         </div>
-      </div>
 
-      <!-- 分类选择 -->
-      <div class="space-y-3">
-        <label class="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">分类</label>
-        <div class="flex flex-wrap gap-2">
-          <button 
-            v-for="cat in categories" :key="cat"
-            @click="form.category = cat"
-            class="px-4 py-1.5 rounded-full border text-[9px] font-bold uppercase tracking-widest transition-all"
-            :class="form.category === cat 
-              ? 'bg-blue-500/30 border-blue-500/50 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
-              : 'bg-white/5 border-white/10 text-white/30 hover:border-white/20 hover:text-white/60'"
-          >
-            {{ cat }}
-          </button>
+        <div class="group">
+          <label class="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 ml-1">备注</label>
+          <textarea 
+            v-model="form.notes"
+            rows="3"
+            placeholder="关于这个密码的一些额外说明..."
+            class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-blue-500/50 transition-all resize-none"
+          ></textarea>
         </div>
-      </div>
-
-      <!-- 备注 -->
-      <div class="group">
-        <label class="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 ml-1">备注</label>
-        <textarea 
-          v-model="form.notes"
-          rows="3"
-          placeholder="添加一些额外说明..."
-          class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-blue-500/50 transition-all resize-none"
-        ></textarea>
       </div>
 
       <!-- 动作按钮 -->
@@ -159,6 +156,6 @@ const resetForm = () => {
 
 <style scoped>
 input::placeholder, textarea::placeholder {
-  color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.1);
 }
 </style>

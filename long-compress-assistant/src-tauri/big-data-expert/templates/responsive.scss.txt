@@ -1,0 +1,11 @@
+﻿// --- 数字大屏响应式适配引擎 ---
+$width: 1920;
+$height: 1080;
+
+@function calcw($w) {
+  @return calc(#{$w} * 100vw / #{$width});
+}
+
+@function calch($h) {
+  @return calc(#{$h} * 100vh / #{$height});
+}

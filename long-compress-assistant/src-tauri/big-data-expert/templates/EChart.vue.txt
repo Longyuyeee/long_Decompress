@@ -1,0 +1,38 @@
+﻿<template>
+  <div ref="chartRef" :style="{ width: width, height: height }"></div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import * as echarts from 'echarts'
+
+const props = defineProps({
+  option: { type: Object, required: true },
+  width: { type: String, default: '100%' },
+  height: { type: String, default: '100%' }
+})
+
+const chartRef = ref<HTMLElement | null>(null)
+let chartInstance: echarts.ECharts | null = null
+
+const initChart = () => {
+  if (chartRef.value) {
+    chartInstance = echarts.init(chartRef.value)
+    chartInstance.setOption(props.option)
+  }
+}
+
+const handleResize = () => chartInstance?.resize()
+
+onMounted(() => {
+  initChart()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  chartInstance?.dispose()
+})
+
+watch(() => props.option, (newOpt) => chartInstance?.setOption(newOpt), { deep: true })
+</script>

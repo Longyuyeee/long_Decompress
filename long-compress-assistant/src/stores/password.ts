@@ -58,9 +58,9 @@ export interface PasswordEntry {
   last_used?: string | null
   expires_at?: string | null
   favorite: boolean
+  use_count: number
   custom_fields: CustomField[]
-}
-
+  }
 export interface PasswordGroup {
   id: string
   name: string
@@ -101,7 +101,7 @@ export const usePasswordStore = defineStore('password', () => {
   // 状态
   const entries = ref<PasswordEntry[]>([])
   const groups = ref<PasswordGroup[]>([])
-  const isUnlocked = ref(true) // 默认解锁
+  const isUnlocked = ref(false) // 默认未解锁
   const isLoading = ref(false)
   const searchQuery = ref('')
   const currentCategory = ref<PasswordCategory | 'All'>('All')
@@ -131,7 +131,15 @@ export const usePasswordStore = defineStore('password', () => {
       )
     }
 
-    return result
+    // 按调用次数从高到低排序，其次按最后使用时间
+    return result.sort((a, b) => {
+      if ((b.use_count || 0) !== (a.use_count || 0)) {
+        return (b.use_count || 0) - (a.use_count || 0)
+      }
+      const timeA = a.last_used ? new Date(a.last_used).getTime() : 0
+      const timeB = b.last_used ? new Date(b.last_used).getTime() : 0
+      return timeB - timeA
+    })
   })
 
   const favoriteEntries = computed(() => entries.value.filter(e => e.favorite))
@@ -140,8 +148,40 @@ export const usePasswordStore = defineStore('password', () => {
 
   // 初始化检查
   const checkUnlockStatus = async () => {
-    isUnlocked.value = true
-    await fetchAllData()
+    try {
+      const unlocked = await invoke<boolean>('is_encrypted_password_service_unlocked')
+      if (unlocked) {
+        isUnlocked.value = true
+        await fetchAllData()
+      } else {
+        // 尝试使用默认密码自动初始化/解锁 (为了用户体验)
+        await autoInitialize()
+      }
+    } catch (e) {
+      // 如果后端报错“服务未初始化”，说明需要 call init
+      await autoInitialize()
+    }
+  }
+
+  const autoInitialize = async () => {
+    const defaultMaster = 'long-decompress-default-key'
+    try {
+      // 先尝试解锁
+      const success = await invoke<boolean>('unlock_encrypted_password_service', { masterPassword: defaultMaster })
+      if (success) {
+        isUnlocked.value = true
+        await fetchAllData()
+      } else {
+        // 解锁失败可能是还没初始化，尝试初始化
+        await invoke('init_encrypted_password_service', { masterPassword: defaultMaster })
+        isUnlocked.value = true
+        await fetchAllData()
+      }
+    } catch (e) {
+      console.error('自动初始化密码服务失败:', e)
+      isUnlocked.value = false
+      errorMessage.value = "密码保险箱初始化失败，请检查后端状态"
+    }
   }
 
   // 解锁
@@ -203,6 +243,15 @@ export const usePasswordStore = defineStore('password', () => {
       entries.value.push(newEntry)
       return newEntry
     } catch (e) {
+      if (typeof e === 'string' && e.includes('服务未初始化')) {
+        // 尝试重新初始化并重试一次
+        await checkUnlockStatus()
+        if (isUnlocked.value) {
+          const newEntry = await invoke<PasswordEntry>('add_encrypted_password', { entry: entryRequest })
+          entries.value.push(newEntry)
+          return newEntry
+        }
+      }
       console.error('添加失败:', e)
       throw e
     }

@@ -17,6 +17,7 @@ use commands::password::{
     get_all_passwords, search_passwords
 };
 use commands::encrypted_password::{
+    init_encrypted_password_service,
     list_encrypted_passwords,
     add_encrypted_password,
     delete_encrypted_password,
@@ -25,11 +26,20 @@ use commands::encrypted_password::{
     is_encrypted_password_service_unlocked,
     unlock_encrypted_password_service,
     lock_encrypted_password_service,
-    list_password_groups
+    list_password_groups,
+    export_passwords_command,
+    import_passwords_command,
+    EncryptedPasswordServiceState
 };
 
 fn main() {
+    let data_dir = std::path::PathBuf::from("data");
+    if !data_dir.exists() {
+        std::fs::create_dir_all(&data_dir).unwrap();
+    }
+
     tauri::Builder::default()
+        .manage(EncryptedPasswordServiceState::new(data_dir))
         .setup(|app| {
             // 初始化数据库
             tauri::async_runtime::block_on(async {
@@ -64,6 +74,7 @@ fn main() {
             search_passwords,
 
             // Encrypted Password Commands
+            init_encrypted_password_service,
             list_encrypted_passwords,
             add_encrypted_password,
             delete_encrypted_password,
@@ -72,7 +83,9 @@ fn main() {
             is_encrypted_password_service_unlocked,
             unlock_encrypted_password_service,
             lock_encrypted_password_service,
-            list_password_groups
+            list_password_groups,
+            export_passwords_command,
+            import_passwords_command
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

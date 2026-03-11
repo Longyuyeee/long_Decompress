@@ -1,0 +1,53 @@
+﻿<template>
+  <div class="big-data-layout">
+    <div class="header">
+      <h1 class="title">{{ title }}</h1>
+      <div class="timer">{{ currentTime }}</div>
+    </div>
+    <div class="main-content">
+      <div class="left-side">
+        <slot name="left"></slot>
+      </div>
+      <div class="center-side">
+        <slot name="center"></slot>
+      </div>
+      <div class="right-side">
+        <slot name="right"></slot>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+defineProps({ title: String })
+const currentTime = ref('')
+const updateTime = () => {
+  currentTime.value = new Date().toLocaleString()
+}
+let timer: any = null
+onMounted(() => {
+  updateTime()
+  timer = setInterval(updateTime, 1000)
+})
+onUnmounted(() => clearInterval(timer))
+</script>
+
+<style lang="scss" scoped>
+@import '@/styles/variables.scss';
+.big-data-layout {
+  width: 100vw; height: 100vh; overflow: hidden;
+  background: #030409; color: #fff;
+  .header {
+    height: calch(80); display: flex; justify-content: center; align-items: center;
+    position: relative;
+    .title { font-size: calcw(32); font-weight: bold; letter-spacing: calcw(4); }
+    .timer { position: absolute; right: calcw(40); font-family: monospace; }
+  }
+  .main-content {
+    display: flex; height: calch(1000); padding: calcw(20); gap: calcw(20);
+    .left-side, .right-side { width: calcw(460); flex-shrink: 0; }
+    .center-side { flex: 1; min-width: 0; }
+  }
+}
+</style>

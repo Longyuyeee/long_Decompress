@@ -18,6 +18,7 @@ pub struct PasswordEntry {
     pub last_used: Option<DateTime<Utc>>,
     pub expires_at: Option<DateTime<Utc>>,
     pub favorite: bool,
+    pub use_count: u32,
     pub custom_fields: Vec<CustomField>,
 }
 
@@ -39,6 +40,7 @@ impl PasswordEntry {
             last_used: None,
             expires_at: None,
             favorite: false,
+            use_count: 0,
             custom_fields: Vec::new(),
         }
     }

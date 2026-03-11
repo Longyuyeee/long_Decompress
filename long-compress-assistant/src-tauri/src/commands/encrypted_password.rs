@@ -1,6 +1,6 @@
 use crate::services::encrypted_password_service::{EncryptedPasswordService, PasswordGroupService};
 use crate::models::password::{PasswordEntry, PasswordCategory, PasswordStrength, CustomField, CustomFieldType, PasswordGroup};
-use crate::services::password_strength_service::{PasswordAuditResult, PasswordGeneratorOptions, PasswordImportExportOptions};
+use crate::services::password_strength_service::{PasswordAuditResult, PasswordGeneratorOptions, PasswordImportExportOptions, ImportExportFormat};
 use tauri::{AppHandle, Manager, State};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -372,14 +372,14 @@ pub async fn add_entry_to_password_group(
     app: AppHandle,
     group_id: String,
     entry_id: String,
-) -> Result<(), String> {
+) -> Result<bool, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
     let group_service_lock = state.group_service.lock().await;
     let group_service = group_service_lock.as_ref().ok_or("服务未初始化")?;
 
     match group_service.add_entry_to_group(&group_id, &entry_id).await {
-        Ok(_) => Ok(()),
+        Ok(_) => Ok(true),
         Err(e) => Err(format!("向组中添加条目失败: {}", e)),
     }
 }
@@ -390,14 +390,14 @@ pub async fn remove_entry_from_password_group(
     app: AppHandle,
     group_id: String,
     entry_id: String,
-) -> Result<(), String> {
+) -> Result<bool, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
 
     let group_service_lock = state.group_service.lock().await;
     let group_service = group_service_lock.as_ref().ok_or("服务未初始化")?;
 
     match group_service.remove_entry_from_group(&group_id, &entry_id).await {
-        Ok(_) => Ok(()),
+        Ok(_) => Ok(true),
         Err(e) => Err(format!("从组中移除条目失败: {}", e)),
     }
 }
@@ -416,6 +416,56 @@ pub async fn get_group_entries(
     match group_service.get_group_entries(&group_id).await {
         Ok(entries) => Ok(entries),
         Err(e) => Err(format!("获取组条目失败: {}", e)),
+    }
+}
+
+/// 导出密码本
+#[tauri::command]
+pub async fn export_passwords_command(
+    app: AppHandle,
+    file_path: String,
+) -> Result<bool, String> {
+    let state: State<'_, EncryptedPasswordServiceState> = app.state();
+    let service_lock = state.service.lock().await;
+    let service = service_lock.as_ref().ok_or("服务未初始化")?;
+
+    let options = PasswordImportExportOptions {
+        format: ImportExportFormat::Json,
+        include_passwords: true,
+        include_metadata: true,
+        encrypt: false, // 简化处理，导出未加密JSON供手动编辑或备份
+    };
+
+    match service.export_passwords(&options, "").await {
+        Ok(data) => {
+            std::fs::write(file_path, data).map_err(|e| format!("写入文件失败: {}", e))?;
+            Ok(true)
+        }
+        Err(e) => Err(format!("导出失败: {}", e)),
+    }
+}
+
+/// 导入密码本
+#[tauri::command]
+pub async fn import_passwords_command(
+    app: AppHandle,
+    file_path: String,
+) -> Result<usize, String> {
+    let state: State<'_, EncryptedPasswordServiceState> = app.state();
+    let service_lock = state.service.lock().await;
+    let service = service_lock.as_ref().ok_or("服务未初始化")?;
+
+    let data = std::fs::read(file_path).map_err(|e| format!("读取文件失败: {}", e))?;
+    let options = PasswordImportExportOptions {
+        format: ImportExportFormat::Json,
+        include_passwords: true,
+        include_metadata: true,
+        encrypt: false,
+    };
+
+    match service.import_passwords(&data, &options, None).await {
+        Ok(count) => Ok(count),
+        Err(e) => Err(format!("导入失败: {}", e)),
     }
 }
 

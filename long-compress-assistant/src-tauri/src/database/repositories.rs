@@ -315,8 +315,8 @@ impl PasswordEntryRepository {
             INSERT INTO password_entries (
                 id, name, username, password, url, notes, tags, category,
                 strength, created_at, updated_at, last_used, expires_at,
-                favorite, custom_fields
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                favorite, use_count, custom_fields
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#
         )
             .bind(&entry.id)
@@ -333,6 +333,7 @@ impl PasswordEntryRepository {
             .bind(entry.last_used)
             .bind(entry.expires_at)
             .bind(entry.favorite)
+            .bind(entry.use_count)
             .bind(&entry.custom_fields)
             .execute(&self.pool)
             .await
@@ -361,7 +362,7 @@ impl PasswordEntryRepository {
             UPDATE password_entries SET
                 name = ?, username = ?, password = ?, url = ?, notes = ?, tags = ?,
                 category = ?, strength = ?, updated_at = ?, last_used = ?,
-                expires_at = ?, favorite = ?, custom_fields = ?
+                expires_at = ?, favorite = ?, use_count = ?, custom_fields = ?
             WHERE id = ?
             "#
         )
@@ -377,6 +378,7 @@ impl PasswordEntryRepository {
             .bind(entry.last_used)
             .bind(entry.expires_at)
             .bind(entry.favorite)
+            .bind(entry.use_count)
             .bind(&entry.custom_fields)
             .bind(&entry.id)
             .execute(&self.pool)
@@ -423,7 +425,7 @@ impl PasswordEntryRepository {
             params.push(favorite_only.to_string());
         }
 
-        sql.push_str(" ORDER BY updated_at DESC");
+        sql.push_str(" ORDER BY use_count DESC, updated_at DESC");
 
         let mut query_builder = query_as::<_, PasswordEntryDb>(&sql);
         for param in params {
@@ -440,7 +442,7 @@ impl PasswordEntryRepository {
 
     /// 获取所有密码条目
     pub async fn list(&self, limit: Option<i64>, offset: Option<i64>) -> Result<Vec<PasswordEntryDb>> {
-        let mut query_str = "SELECT * FROM password_entries ORDER BY updated_at DESC".to_string();
+        let mut query_str = "SELECT * FROM password_entries ORDER BY use_count DESC, updated_at DESC".to_string();
 
         if let Some(limit) = limit {
             query_str.push_str(&format!(" LIMIT {}", limit));

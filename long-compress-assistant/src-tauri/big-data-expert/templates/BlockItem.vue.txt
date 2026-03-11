@@ -1,0 +1,50 @@
+﻿<template>
+  <div class="block-item">
+    <div v-if="title" class="module-title">
+      <div class="title-bg">
+        <div class="title-icon"></div>
+        <span class="title-text">{{ title }}</span>
+      </div>
+    </div>
+    <slot></slot>
+  </div>
+</template>
+
+<script setup lang="ts">
+defineProps({
+  title: { type: String, default: '' }
+})
+</script>
+
+<style lang="scss" scoped>
+@import '@/styles/variables.scss';
+.block-item {
+  width: 100%;
+  .module-title {
+    margin-bottom: calcw(15);
+    .title-bg {
+      display: flex;
+      align-items: center;
+      height: calcw(36);
+      background: url('/image/block-item-title-bg.png') no-repeat left center;
+      background-size: auto 100%;
+      padding-left: calcw(40);
+      position: relative;
+      overflow: hidden;
+      &::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -100%;
+        width: 50%; height: 100%;
+        background: linear-gradient(to right, transparent, rgba(0, 204, 255, 0.3), transparent);
+        transform: skewX(-25deg);
+        animation: scan-horizontal 3s infinite linear;
+      }
+    }
+  }
+}
+@keyframes scan-horizontal {
+  0% { left: -100%; }
+  100% { left: 150%; }
+}
+</style>

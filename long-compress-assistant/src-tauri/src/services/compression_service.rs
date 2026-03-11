@@ -63,7 +63,7 @@ impl CompressionService {
         Ok(())
     }
 
-    fn emit_log(&self, window: &Window, task_id: &str, message: &str, severity: TaskLogSeverity) {
+    pub fn emit_log(&self, window: &Window, task_id: &str, message: &str, severity: TaskLogSeverity) {
         let log = TaskLog {
             task_id: task_id.to_string(),
             timestamp: Utc::now(),
@@ -73,7 +73,7 @@ impl CompressionService {
         let _ = window.emit("task-log", log);
     }
 
-    fn emit_progress(&self, window: &Window, task_id: &str, progress: f32) {
+    pub fn emit_progress(&self, window: &Window, task_id: &str, progress: f32) {
         #[derive(Clone, serde::Serialize)]
         struct ProgressPayload {
             task_id: String,
@@ -124,8 +124,14 @@ impl CompressionService {
                 },
                 "7z" | "rar" => {
                     service.emit_log(&window, &task_id, &format!("正在使用 7-Zip 引擎解压 {}...", ext.to_uppercase()), TaskLogSeverity::Info);
-                    sevenz_rust::decompress_file(&file_path, out_dir.to_str().unwrap())
-                        .map_err(|e| anyhow::anyhow!("{} 解压失败: {}", ext.to_uppercase(), e))?;
+                    if let Some(pwd) = password.as_deref() {
+                        let mut pwd_bytes = sevenz_rust::Password::from(pwd);
+                        sevenz_rust::decompress_file_with_password(&file_path, out_dir.to_str().unwrap(), pwd_bytes)
+                            .map_err(|e| anyhow::anyhow!("{} 解压失败(可能是密码错误): {}", ext.to_uppercase(), e))?;
+                    } else {
+                        sevenz_rust::decompress_file(&file_path, out_dir.to_str().unwrap())
+                            .map_err(|e| anyhow::anyhow!("{} 解压失败: {}", ext.to_uppercase(), e))?;
+                    }
                 },
                 "tar" => {
                     service.emit_log(&window, &task_id, "正在解压 TAR 归档...", TaskLogSeverity::Info);
@@ -287,6 +293,57 @@ impl CompressionService {
             self.emit_progress(window, task_id, (i + 1) as f32 / total as f32);
         }
         Ok(())
+    }
+
+    pub async fn test_archive_password(&self, file_path: &str, password: &str) -> Result<bool> {
+        let file = file_path.to_string();
+        let pwd = password.to_string();
+        
+        let path = Path::new(&file);
+        let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+
+        tokio::task::spawn_blocking(move || {
+            match ext.as_str() {
+                "zip" => {
+                    let f = File::open(&file)?;
+                    let mut archive = ZipArchive::new(f)?;
+                    if archive.len() > 0 {
+                        // 尝试解密第一个文件来验证密码
+                        match archive.by_index_decrypt(0, pwd.as_bytes()) {
+                            Ok(Ok(_)) => Ok(true), // 密码正确
+                            Ok(Err(_)) => Ok(false), // 密码错误
+                            Err(e) => Err(anyhow::anyhow!("ZIP读取错误: {}", e)),
+                        }
+                    } else {
+                        Ok(true) // 空文件
+                    }
+                },
+                "7z" | "rar" => {
+                    // 对于7z，如果密码错误通常会返回特定的错误
+                    let mut pwd_bytes = sevenz_rust::Password::from(pwd.as_str());
+                    // 提供一个临时目录进行测试（也可以只是读取 header/entries 如果API支持）
+                    // 为了可靠性，我们可以尝试读取归档内容。
+                    // sevenz_rust::Archive::read_file_with_password 也许可以用，但简单起见我们只尝试打开并读取第一个文件。
+                    let mut file = std::fs::File::open(&file)?;
+                    let len = file.metadata()?.len();
+                    match sevenz_rust::Archive::read(&mut file, len, pwd_bytes.as_slice()) {
+                        Ok(_) => Ok(true),
+                        Err(e) => {
+                            let err_str = e.to_string();
+                            if err_str.contains("Password") || err_str.contains("password") || err_str.contains("Mac") || err_str.contains("CRC") {
+                                Ok(false)
+                            } else {
+                                Err(anyhow::anyhow!("7Z读取错误: {}", e))
+                            }
+                        }
+                    }
+                },
+                _ => {
+                    // 不支持密码的格式，直接视为无需密码(或视为失败)
+                    Ok(false)
+                }
+            }
+        }).await?
     }
 
     pub async fn extract_zip_with_password_check(&self, file_path: &str, output_dir: &str, password: Option<&str>) -> Result<String> {

@@ -80,6 +80,7 @@ pub struct PasswordEntryDb {
     pub favorite: bool,
     pub archived: bool,
     pub deleted: bool,
+    pub use_count: i32,
     pub custom_fields: String, // JSON序列化的自定义字段
 }
 
@@ -415,9 +416,8 @@ impl From<PasswordEntryDb> for crate::models::password::PasswordEntry {
             last_used: db.last_used,
             expires_at: db.expires_at,
             favorite: db.favorite,
+            use_count: db.use_count as u32,
             custom_fields,
-            // 注意：新添加的字段在PasswordEntry模型中可能不存在
-            // 需要在models/password.rs中添加相应字段
         }
     }
 }
@@ -472,6 +472,7 @@ impl From<crate::models::password::PasswordEntry> for PasswordEntryDb {
             favorite: entry.favorite,
             archived: false,
             deleted: false,
+            use_count: entry.use_count as i32,
             custom_fields,
         }
     }

@@ -133,16 +133,20 @@ impl EncryptedPasswordService {
         let key_manager_lock = self.key_manager.read().await;
         let key_manager = key_manager_lock.as_ref().unwrap();
 
-        // 生成加密密钥
-        let encryption_key = key_manager.generate_key(
-            &format!("密码条目: {}", entry.name),
-            KeyType::Symmetric,
-            KeyAlgorithm::Aes256Gcm,
-            ).await?;
+        // 获取或创建一个统一的存储密钥
+        let keys = key_manager.list_keys().await?;
+        let encryption_key = match keys.iter().find(|k| k.algorithm == KeyAlgorithm::Aes256Gcm) {
+            Some(k) => k.clone(),
+            None => {
+                key_manager.generate_key(
+                    "通用密码存储密钥",
+                    KeyType::Symmetric,
+                    KeyAlgorithm::Aes256Gcm,
+                ).await?
+            }
+        };
 
-            let key_data = key_manager.get_key_data(&encryption_key.id).await?;
-
-        // 创建加密服务
+        let key_data = key_manager.get_key_data(&encryption_key.id).await?;
         let encryption_service = EncryptionService::new(key_data);
 
         // 加密密码
@@ -155,85 +159,23 @@ impl EncryptedPasswordService {
         entry.created_at = Utc::now();
         entry.updated_at = Utc::now();
 
-        // 加密自定义字段中的敏感数据
+        // 加密自定义字段
         let mut encrypted_fields = Vec::new();
         for field in &entry.custom_fields {
             if field.sensitive {
                 let encrypted_value = encryption_service.encrypt_string(&field.value)?;
                 let encrypted_value_json = serde_json::to_string(&encrypted_value)?;
-
-                encrypted_fields.push(CustomField {
-                    name: field.name.clone(),
-                    value: encrypted_value_json,
-                    field_type: field.field_type.clone(),
-                    sensitive: true,
-                });
+                let mut f = field.clone();
+                f.value = encrypted_value_json;
+                encrypted_fields.push(f);
             } else {
                 encrypted_fields.push(field.clone());
             }
         }
         entry.custom_fields = encrypted_fields;
 
-        // 保存到数据库（这里简化处理，实际应该使用数据库）
         self.save_password_entry(&entry).await?;
-
         Ok(entry)
-    }
-
-    /// 获取密码条目
-    pub async fn get_password(&self, id: &str) -> Result<Option<PasswordEntry>> {
-        if !self.is_unlocked().await {
-            return Err(anyhow::anyhow!("密码服务未解锁"));
-        }
-
-        // 从数据库加载（这里简化处理）
-        let entry = self.load_password_entry(id).await?;
-
-        if let Some(mut entry) = entry {
-            // 解密密码
-            let encrypted_password: EncryptedData = serde_json::from_str(&entry.password)?;
-
-            // 查找对应的加密密钥
-            let key_manager_lock = self.key_manager.read().await;
-            let key_manager = key_manager_lock.as_ref().unwrap();
-
-            // 这里需要根据条目ID找到对应的密钥ID
-            // 简化处理：使用第一个AES256GCM密钥
-            let keys = key_manager.list_keys().await?;
-            let encryption_key = keys.iter()
-                .find(|k| k.algorithm == KeyAlgorithm::Aes256Gcm)
-                .ok_or_else(|| anyhow::anyhow!("未找到加密密钥"))?;
-
-            let key_data = key_manager.get_key_data(&encryption_key.id).await?;
-
-            let encryption_service = EncryptionService::new(key_data);
-            let decrypted_password = encryption_service.decrypt_string(&encrypted_password)?;
-
-            entry.password = decrypted_password;
-
-            // 解密自定义字段中的敏感数据
-            let mut decrypted_fields = Vec::new();
-            for field in &entry.custom_fields {
-                if field.sensitive {
-                    let encrypted_value: EncryptedData = serde_json::from_str(&field.value)?;
-                    let decrypted_value = encryption_service.decrypt_string(&encrypted_value)?;
-
-                    decrypted_fields.push(CustomField {
-                        name: field.name.clone(),
-                        value: decrypted_value,
-                        field_type: field.field_type.clone(),
-                        sensitive: true,
-                    });
-                } else {
-                    decrypted_fields.push(field.clone());
-                }
-            }
-            entry.custom_fields = decrypted_fields;
-
-            Ok(Some(entry))
-        } else {
-            Ok(None)
-        }
     }
 
     /// 更新密码条目
@@ -242,48 +184,58 @@ impl EncryptedPasswordService {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
-        // 重新加密密码
         let key_manager_lock = self.key_manager.read().await;
         let key_manager = key_manager_lock.as_ref().unwrap();
 
         let keys = key_manager.list_keys().await?;
         let encryption_key = keys.iter()
             .find(|k| k.algorithm == KeyAlgorithm::Aes256Gcm)
-            .ok_or_else(|| anyhow::anyhow!("未找到加密密钥"))?;
+            .ok_or_else(|| anyhow::anyhow!("未找到加密密钥，请先添加一个密码以初始化密钥"))?;
 
         let key_data = key_manager.get_key_data(&encryption_key.id).await?;
-
         let encryption_service = EncryptionService::new(key_data);
+
         let encrypted_password = encryption_service.encrypt_string(&entry.password)?;
-        let encrypted_password_json = serde_json::to_string(&encrypted_password)?;
-
-        entry.password = encrypted_password_json;
+        entry.password = serde_json::to_string(&encrypted_password)?;
         entry.updated_at = Utc::now();
-        entry.id = id.to_string(); // 保持相同的ID
+        entry.id = id.to_string();
 
-        // 加密自定义字段中的敏感数据
         let mut encrypted_fields = Vec::new();
         for field in &entry.custom_fields {
             if field.sensitive {
-                let encrypted_value = encryption_service.encrypt_string(&field.value)?;
-                let encrypted_value_json = serde_json::to_string(&encrypted_value)?;
-
-                encrypted_fields.push(CustomField {
-                    name: field.name.clone(),
-                    value: encrypted_value_json,
-                    field_type: field.field_type.clone(),
-                    sensitive: true,
-                });
+                let encrypted_val = encryption_service.encrypt_string(&field.value)?;
+                let mut f = field.clone();
+                f.value = serde_json::to_string(&encrypted_val)?;
+                encrypted_fields.push(f);
             } else {
                 encrypted_fields.push(field.clone());
             }
         }
         entry.custom_fields = encrypted_fields;
 
+        self.save_password_entry(&entry).await?;
+        Ok(entry)
+    }
+
+    /// 增加密码使用次数
+    pub async fn increment_use_count(&self, id: &str) -> Result<()> {
+        if !self.is_unlocked().await {
+            return Err(anyhow::anyhow!("密码服务未解锁"));
+        }
+
+        // 获取当前条目
+        let mut entry = self.get_password(id).await?
+            .ok_or_else(|| anyhow::anyhow!("密码条目不存在: {}", id))?;
+
+        // 增加计数并更新时间
+        entry.use_count += 1;
+        entry.last_used = Some(Utc::now());
+        entry.updated_at = Utc::now();
+
         // 保存更新
         self.save_password_entry(&entry).await?;
 
-        Ok(entry)
+        Ok(())
     }
 
     /// 删除密码条目

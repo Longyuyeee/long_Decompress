@@ -168,6 +168,17 @@ impl PasswordQueryService {
         }
     }
 
+    /// 增加密码使用次数
+    pub async fn increment_use_count(&self, id: &str) -> Result<()> {
+        self.encrypted_password_service.increment_use_count(id).await?;
+        
+        // 清除缓存，因为数据已更改
+        let mut cache = self.query_cache.write().unwrap();
+        cache.clear();
+        
+        Ok(())
+    }
+
     /// 搜索密码条目
     pub async fn search_passwords(
         &self,
@@ -360,7 +371,7 @@ impl PasswordQueryService {
 
     /// 构建排序子句
     async fn build_order_clause(&self, request: &PasswordQueryRequest) -> Result<String> {
-        let sort_by = request.sort_by.as_ref().unwrap_or(&SortField::UpdatedAt);
+        let sort_by = request.sort_by.as_ref().unwrap_or(&SortField::UsageCount);
         let sort_order = request.sort_order.as_ref().unwrap_or(&SortOrder::Desc);
 
         let order_field = match sort_by {
@@ -378,10 +389,7 @@ impl PasswordQueryService {
             SortField::UpdatedAt => "pe.updated_at",
             SortField::LastUsed => "pe.last_used",
             SortField::Favorite => "pe.favorite",
-            SortField::UsageCount => {
-                // 需要子查询获取使用次数
-                return Ok("".to_string());
-            }
+            SortField::UsageCount => "pe.use_count",
         };
 
         let order_direction = match sort_order {

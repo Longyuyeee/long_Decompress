@@ -11,7 +11,7 @@ const appStore = useAppStore()
 const navItems = [
   { name: 'Decompress', icon: 'pi pi-folder-open', label: '解压' },
   { name: 'Compress', icon: 'pi pi-file-zip', label: '压缩' },
-  { name: 'Vault', icon: 'pi pi-shield', label: '保险箱' },
+  { name: 'Vault', icon: 'pi pi-shield', label: '密码本' },
   { name: 'Settings', icon: 'pi pi-cog', label: '设置' }
 ]
 
