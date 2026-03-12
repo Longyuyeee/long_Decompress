@@ -1,21 +1,14 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use crate::services::encrypted_password_service::EncryptedPasswordService;
 use crate::models::password::{
-    PasswordEntry, PasswordCategory, PasswordStrength, PasswordGroup,
+    PasswordEntry, PasswordCategory, PasswordStrength,
 };
-use crate::services::password_strength_service::{
-    PasswordAuditResult, PasswordIssue, PasswordIssueType, IssueSeverity
-};
-use crate::database::models::{
-    PasswordEntryDb, PasswordGroupDb, PasswordGroupEntryDb, PasswordAuditDb,
-    PasswordUsageHistoryDb, PasswordPolicyDb
-};
+use crate::database::models::PasswordEntryDb;
 use serde::{Deserialize, Serialize};
-use sqlx::{SqlitePool, query, query_as, FromRow};
-use std::collections::{HashMap, HashSet};
+use sqlx::{SqlitePool, query_as};
+use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use chrono::{DateTime, Utc, TimeZone};
-use uuid::Uuid;
 
 /// 密码查询请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -437,7 +430,7 @@ impl PasswordQueryService {
     }
 
     /// 构建WHERE子句
-    async fn build_where_clause(&self, request: &PasswordQueryRequest) -> Result<(String, Vec<String>)> {
+    async fn build_where_clause(&self, _request: &PasswordQueryRequest) -> Result<(String, Vec<String>)> {
         let mut conditions = Vec::new();
         let mut params = Vec::new();
 

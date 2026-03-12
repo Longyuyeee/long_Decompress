@@ -1,4 +1,11 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_assignments)]
+#![allow(unreachable_patterns)]
+#![allow(unexpected_cfgs)]
 
 mod commands;
 mod services;
@@ -26,6 +33,7 @@ use commands::encrypted_password::{
     is_encrypted_password_service_unlocked,
     unlock_encrypted_password_service,
     lock_encrypted_password_service,
+    clear_encrypted_passwords,
     list_password_groups,
     export_passwords_command,
     import_passwords_command,
@@ -33,14 +41,27 @@ use commands::encrypted_password::{
 };
 
 fn main() {
-    let data_dir = std::path::PathBuf::from("data");
+    // 关键修复：将数据目录移出 src-tauri 监控范围
+    // 在开发环境下使用项目根目录下的隐藏文件夹，在发布环境下使用 AppData
+    let data_dir = if cfg!(debug_assertions) {
+        // 获取当前工作目录（通常是项目根目录或 src-tauri）
+        let mut path = std::env::current_dir().unwrap();
+        // 确保不在 src-tauri 内部
+        if path.ends_with("src-tauri") {
+            path.pop();
+        }
+        path.join(".password_book_data")
+    } else {
+        std::path::PathBuf::from("data") // 发布版逻辑保持原样
+    };
+
     if !data_dir.exists() {
         std::fs::create_dir_all(&data_dir).unwrap();
     }
 
     tauri::Builder::default()
         .manage(EncryptedPasswordServiceState::new(data_dir))
-        .setup(|app| {
+        .setup(|_app| {
             // 初始化数据库
             tauri::async_runtime::block_on(async {
                 let db_path = std::path::PathBuf::from("data.db");
@@ -83,6 +104,7 @@ fn main() {
             is_encrypted_password_service_unlocked,
             unlock_encrypted_password_service,
             lock_encrypted_password_service,
+            clear_encrypted_passwords,
             list_password_groups,
             export_passwords_command,
             import_passwords_command

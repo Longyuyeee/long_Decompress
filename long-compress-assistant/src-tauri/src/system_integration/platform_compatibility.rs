@@ -3,7 +3,6 @@
 //! 提供系统集成功能的跨平台兼容性检查和适配。
 
 use serde::{Deserialize, Serialize};
-use anyhow::{Result, anyhow};
 
 /// 平台类型
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

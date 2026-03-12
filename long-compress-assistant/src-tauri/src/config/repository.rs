@@ -149,7 +149,7 @@ impl ConfigRepository {
             .await
             .context("获取配置失败")?;
 
-        if let Some((value_json, category_str, description, updated_at)) = row {
+        if let Some((value_json, _category_str, _description, updated_at)) = row {
             let value: Value = serde_json::from_str(&value_json)
                 .context("解析配置值失败")?;
 
@@ -186,7 +186,7 @@ impl ConfigRepository {
         category: ConfigCategory,
         metadata_list: &[ConfigMetadata],
     ) -> Result<Vec<ConfigItem>> {
-        let category_str = Self::category_to_string(&category);
+        let _category_str = Self::category_to_string(&category);
         let filtered_metadata: Vec<&ConfigMetadata> = metadata_list
             .iter()
             .filter(|m| m.category == category)
@@ -224,7 +224,7 @@ impl ConfigRepository {
     }
 
     /// 重置配置为默认值
-    pub async fn reset_to_default(&self, key: &str, metadata: &ConfigMetadata) -> Result<ConfigItem> {
+    pub async fn reset_to_default(&self, _key: &str, metadata: &ConfigMetadata) -> Result<ConfigItem> {
         let mut item = ConfigItem::new(metadata.clone());
         item.reset_to_default("system");
 
@@ -254,7 +254,7 @@ impl ConfigRepository {
     /// 验证配置值
     pub async fn validate_config(
         &self,
-        key: &str,
+        _key: &str,
         value: &Value,
         metadata: &ConfigMetadata,
     ) -> Result<ValidationResult> {
@@ -327,7 +327,7 @@ impl ConfigRepository {
             .context("搜索配置失败")?;
 
         let mut items = Vec::new();
-        for (key, value_json, category_str, updated_at) in rows {
+        for (key, value_json, _category_str, updated_at) in rows {
             // 查找对应的元数据
             if let Some(metadata) = metadata_list.iter().find(|m| m.key == key) {
                 let value: Value = serde_json::from_str(&value_json)
@@ -387,7 +387,7 @@ impl ConfigRepository {
         &self,
         import_data: &Value,
         metadata_list: &[ConfigMetadata],
-        strategy: ImportStrategy,
+        _strategy: ImportStrategy,
     ) -> Result<ImportResult> {
         // 简化实现，实际应该更复杂
         let configs = import_data.get("configs")

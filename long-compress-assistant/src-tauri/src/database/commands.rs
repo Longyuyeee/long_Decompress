@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
-use crate::database::connection::{get_connection, DatabaseStatistics, DatabaseError};
+use anyhow::Result;
+use crate::database::connection::{get_connection, DatabaseStatistics};
 use crate::database::management::DatabaseManagementService;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -96,7 +96,7 @@ pub async fn run_database_maintenance() -> Result<bool, String> {
     let connection = get_connection().await
         .map_err(|e| format!("获取数据库连接失败: {}", e))?;
 
-    let mut management_service = DatabaseManagementService::new(connection.clone());
+    let management_service = DatabaseManagementService::new(connection.clone());
     
     match management_service.run_maintenance_task().await {
         Ok(_) => Ok(true),
@@ -110,7 +110,7 @@ pub async fn get_maintenance_report() -> Result<Option<String>, String> {
     let connection = get_connection().await
         .map_err(|e| format!("获取数据库连接失败: {}", e))?;
 
-    let management_service = DatabaseManagementService::new(connection.clone());
+    let _management_service = DatabaseManagementService::new(connection.clone());
     
     // 假设有获取最新报告的方法
     Ok(None)

@@ -4,72 +4,62 @@ import { PasswordCategory, usePasswordStore } from '@/stores/password'
 import Modal from '@/components/ui/Modal.vue'
 
 const props = defineProps<{
-  visible: boolean,
-  entry?: any // 新增可选属性用于编辑
+  visible: boolean
+  entry?: any 
 }>()
 
-const emit = defineEmits<{
-  (e: 'update:visible', value: boolean): void
-  (e: 'saved'): void
-}>()
+const emit = defineEmits(['update:visible', 'saved'])
 
 const passwordStore = usePasswordStore()
 const isSaving = ref(false)
-const showPassword = ref(false)
-
-const getDefaultName = () => {
-  const now = new Date()
-  const month = now.getMonth() + 1
-  const day = now.getDate()
-  const hours = now.getHours().toString().padStart(2, '0')
-  const minutes = now.getMinutes().toString().padStart(2, '0')
-  return `解压凭证_${month}${day}_${hours}${minutes}`
-}
+const showPassword = ref(true)
 
 const form = reactive({
-  name: getDefaultName(),
+  name: '',
   password: '',
-  notes: ''
+  notes: '',
+  username: '',
+  category: PasswordCategory.Other,
+  tags: [] as string[],
+  custom_fields: []
 })
 
-watch(() => props.visible, (newVal) => {
-  if (newVal) {
+// 监听打开状态，确保重置
+watch(() => props.visible, (isOpening) => {
+  if (isOpening) {
     if (props.entry) {
-      // 进入编辑模式
-      form.name = props.entry.name
-      form.password = props.entry.password
-      form.notes = props.entry.notes || ''
+      // 编辑模式：填充数据
+      Object.assign(form, {
+        name: props.entry.name || '',
+        password: props.entry.password || '',
+        notes: props.entry.notes || '',
+        username: props.entry.username || '',
+        category: props.entry.category || PasswordCategory.Other
+      })
     } else {
-      // 进入新增模式
-      resetForm()
+      // 新增模式：彻底重置并给默认名
+      const randomId = Math.random().toString(36).substring(2, 6).toUpperCase()
+      Object.assign(form, {
+        name: `新建凭证_${randomId}`,
+        password: '',
+        notes: '',
+        username: '',
+        category: PasswordCategory.Other
+      })
     }
   }
-})
+}, { immediate: true })
 
 const handleSave = async () => {
   if (!form.name || !form.password) return
-  
+
   isSaving.value = true
   try {
-    const payload = {
-      name: form.name,
-      password: form.password,
-      category: PasswordCategory.Other,
-      username: null,
-      notes: form.notes || null,
-      url: null,
-      tags: [],
-      custom_fields: []
-    }
-
-    if (props.entry?.id) {
-      // 执行更新逻辑
-      await passwordStore.updateEntry(props.entry.id, payload)
+    if (props.entry) {
+      await passwordStore.updateEntry(props.entry.id, { ...form })
     } else {
-      // 执行新增逻辑
-      await passwordStore.addEntry(payload)
+      await passwordStore.addEntry({ ...form })
     }
-    
     emit('saved')
     emit('update:visible', false)
   } catch (e) {
@@ -78,76 +68,60 @@ const handleSave = async () => {
     isSaving.value = false
   }
 }
-
-const resetForm = () => {
-  form.name = getDefaultName()
-  form.password = ''
-  form.notes = ''
-}
 </script>
 
 <template>
   <Modal 
     :visible="visible" 
     @update:visible="val => emit('update:visible', val)"
-    title="添加新密码"
-    icon="pi pi-plus-circle"
-    size="md"
+    :title="entry ? '编辑凭证' : '添加密码'"
+    :icon="entry ? 'pi pi-pencil' : 'pi pi-plus-circle'"
+    size="sm"
   >
-    <div class="space-y-6 py-2">
-      <!-- 基础信息组 -->
-      <div class="space-y-5">
-        <div class="group">
-          <label class="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 ml-1">名称</label>
+    <div class="modal-content-compact space-y-4 p-1">
+      <div class="space-y-1.5">
+        <label class="text-[9px] font-black text-white/20 uppercase tracking-widest ml-1">凭证名称 *</label>
+        <input 
+          v-model="form.name"
+          type="text" 
+          class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-all"
+        >
+      </div>
+
+      <div class="space-y-1.5 relative">
+        <label class="text-[9px] font-black text-white/20 uppercase tracking-widest ml-1">解压密码 *</label>
+        <div class="relative">
           <input 
-            v-model="form.name"
-            type="text" 
-            placeholder="例如：通用压缩解压密码"
-            class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all shadow-inner"
+            v-model="form.password"
+            :type="showPassword ? 'text' : 'password'" 
+            placeholder="内容"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-blue-400 font-mono focus:outline-none focus:border-blue-500/50 transition-all pr-12"
           >
-        </div>
-
-        <div class="group">
-          <label class="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 ml-1">密码</label>
-          <div class="relative">
-            <input 
-              v-model="form.password"
-              :type="showPassword ? 'text' : 'password'" 
-              placeholder="请输入解压密码"
-              class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-blue-500/50 transition-all font-mono tracking-wider"
-            >
-            <button @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors">
-              <i :class="['pi', showPassword ? 'pi-eye-slash' : 'pi-eye']"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="group">
-          <label class="block text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 ml-1">备注</label>
-          <textarea 
-            v-model="form.notes"
-            rows="3"
-            placeholder="关于这个密码的一些额外说明..."
-            class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-blue-500/50 transition-all resize-none"
-          ></textarea>
+          <button @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors">
+            <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye' " class="text-xs"></i>
+          </button>
         </div>
       </div>
 
-      <!-- 动作按钮 -->
-      <div class="flex gap-4 pt-4">
-        <button 
-          @click="emit('update:visible', false)"
-          class="flex-1 py-4 rounded-2xl bg-white/5 border border-white/10 text-white/40 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white transition-all"
-        >
-          取消
-        </button>
+      <div class="space-y-1.5">
+        <label class="text-[9px] font-black text-white/20 uppercase tracking-widest ml-1">详细备注</label>
+        <textarea 
+          v-model="form.notes"
+          rows="2"
+          placeholder="补充信息..."
+          class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white/60 focus:outline-none focus:border-blue-500/50 transition-all resize-none"
+        ></textarea>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button @click="emit('update:visible', false)" class="flex-1 py-2.5 rounded-xl bg-white/5 text-white/30 text-[10px] font-bold hover:bg-white/10 transition-all">取消</button>
         <button 
           @click="handleSave"
           :disabled="isSaving || !form.name || !form.password"
-          class="flex-[2] py-4 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-500 hover:shadow-[0_10px_30px_rgba(37,99,235,0.4)] disabled:opacity-30 disabled:hover:shadow-none transition-all flex items-center justify-center gap-2"
+          class="flex-[2] py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-[10px] font-black shadow-lg shadow-blue-500/10 transition-all flex items-center justify-center gap-2"
         >
-          <i v-if="isSaving" class="pi pi-spin pi-spinner text-xs"></i>
-          <span>{{ isSaving ? '存储中...' : '安全存入' }}</span>
+          <i v-if="isSaving" class="pi pi-spin pi-spinner text-[10px]"></i>
+          <span>{{ isSaving ? '同步中' : (entry ? '保存修改' : '存入列表') }}</span>
         </button>
       </div>
     </div>
@@ -155,7 +129,9 @@ const resetForm = () => {
 </template>
 
 <style scoped>
-input::placeholder, textarea::placeholder {
-  color: rgba(255, 255, 255, 0.1);
+/* 强制适配更窄的弹窗 */
+.modal-content-compact {
+  max-width: 320px;
+  margin: 0 auto;
 }
 </style>

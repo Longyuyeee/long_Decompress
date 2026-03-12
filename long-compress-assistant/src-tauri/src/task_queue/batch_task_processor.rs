@@ -1,10 +1,10 @@
-use crate::task_queue::{TaskManager, TASK_MANAGER, models::{TaskPriority, TaskFilter, QueueTaskStatus, QueueTask, SharedQueueTask}};
-use crate::models::compression::{CompressionFormat, CompressionOptions, CompressionTask};
-use crate::services::file_service::{FileService, BatchOperationResult, BatchOperationItem, BatchItemResult};
+use crate::task_queue::models::TaskPriority;
+use crate::models::compression::CompressionOptions;
+use crate::services::file_service::{BatchOperationItem, BatchItemResult};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use anyhow::{Result, Context};
+use anyhow::Result;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

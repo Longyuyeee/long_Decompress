@@ -1,14 +1,14 @@
 use anyhow::{Context, Result};
 use crate::crypto::encryption::{EncryptionService, EncryptedData};
-use crate::crypto::key_management::{KeyManager, KeyEntry, KeyType, KeyAlgorithm};
+use crate::crypto::key_management::KeyManager;
 use crate::crypto::hashing::{HashingService, HashResult};
 use crate::models::password::{
-    PasswordEntry, PasswordCategory, PasswordStrength, CustomField, 
+    PasswordEntry, PasswordStrength, 
     PasswordGroup
 };
 use crate::services::password_strength_service::{
     PasswordAuditResult, PasswordIssue, PasswordIssueType, IssueSeverity,
-    PasswordGeneratorOptions, PasswordImportExportOptions, ImportExportFormat
+    PasswordGeneratorOptions, PasswordImportExportOptions
 };
 use crate::database::models::{PasswordEntryDb, PasswordGroupDb};
 use serde::{Deserialize, Serialize};
@@ -130,49 +130,10 @@ impl EncryptedPasswordService {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
-        let key_manager_lock = self.key_manager.read().await;
-        let key_manager = key_manager_lock.as_ref().unwrap();
-
-        // 获取或创建一个统一的存储密钥
-        let keys = key_manager.list_keys().await?;
-        let encryption_key = match keys.iter().find(|k| k.algorithm == KeyAlgorithm::Aes256Gcm) {
-            Some(k) => k.clone(),
-            None => {
-                key_manager.generate_key(
-                    "通用密码存储密钥",
-                    KeyType::Symmetric,
-                    KeyAlgorithm::Aes256Gcm,
-                ).await?
-            }
-        };
-
-        let key_data = key_manager.get_key_data(&encryption_key.id).await?;
-        let encryption_service = EncryptionService::new(key_data);
-
-        // 加密密码
-        let encrypted_password = encryption_service.encrypt_string(&entry.password)?;
-        let encrypted_password_json = serde_json::to_string(&encrypted_password)?;
-
-        // 更新条目
-        entry.password = encrypted_password_json;
+        // 直接存储，不再加密
         entry.id = Uuid::new_v4().to_string();
         entry.created_at = Utc::now();
         entry.updated_at = Utc::now();
-
-        // 加密自定义字段
-        let mut encrypted_fields = Vec::new();
-        for field in &entry.custom_fields {
-            if field.sensitive {
-                let encrypted_value = encryption_service.encrypt_string(&field.value)?;
-                let encrypted_value_json = serde_json::to_string(&encrypted_value)?;
-                let mut f = field.clone();
-                f.value = encrypted_value_json;
-                encrypted_fields.push(f);
-            } else {
-                encrypted_fields.push(field.clone());
-            }
-        }
-        entry.custom_fields = encrypted_fields;
 
         self.save_password_entry(&entry).await?;
         Ok(entry)
@@ -184,34 +145,9 @@ impl EncryptedPasswordService {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
-        let key_manager_lock = self.key_manager.read().await;
-        let key_manager = key_manager_lock.as_ref().unwrap();
-
-        let keys = key_manager.list_keys().await?;
-        let encryption_key = keys.iter()
-            .find(|k| k.algorithm == KeyAlgorithm::Aes256Gcm)
-            .ok_or_else(|| anyhow::anyhow!("未找到加密密钥，请先添加一个密码以初始化密钥"))?;
-
-        let key_data = key_manager.get_key_data(&encryption_key.id).await?;
-        let encryption_service = EncryptionService::new(key_data);
-
-        let encrypted_password = encryption_service.encrypt_string(&entry.password)?;
-        entry.password = serde_json::to_string(&encrypted_password)?;
+        // 直接存储，不再加密
         entry.updated_at = Utc::now();
         entry.id = id.to_string();
-
-        let mut encrypted_fields = Vec::new();
-        for field in &entry.custom_fields {
-            if field.sensitive {
-                let encrypted_val = encryption_service.encrypt_string(&field.value)?;
-                let mut f = field.clone();
-                f.value = serde_json::to_string(&encrypted_val)?;
-                encrypted_fields.push(f);
-            } else {
-                encrypted_fields.push(field.clone());
-            }
-        }
-        entry.custom_fields = encrypted_fields;
 
         self.save_password_entry(&entry).await?;
         Ok(entry)
@@ -229,8 +165,14 @@ impl EncryptedPasswordService {
 
         // 增加计数并更新时间
         entry.use_count += 1;
-        entry.last_used = Some(Utc::now());
-        entry.updated_at = Utc::now();
+        let now = Utc::now();
+        entry.last_used = Some(now);
+        entry.updated_at = now;
+
+        // 记录历史
+        let date_str = now.format("%Y-%m-%d").to_string();
+        let count = entry.usage_history.entry(date_str).or_insert(0);
+        *count += 1;
 
         // 保存更新
         self.save_password_entry(&entry).await?;
@@ -249,6 +191,23 @@ impl EncryptedPasswordService {
         if entry_path.exists() {
             fs::remove_file(&entry_path).await?;
         }
+
+        Ok(())
+    }
+
+    /// 清空所有密码条目
+    pub async fn clear_all_passwords(&self) -> Result<()> {
+        if !self.is_unlocked().await {
+            return Err(anyhow::anyhow!("密码服务未解锁"));
+        }
+
+        let passwords_dir = self.data_dir.join("passwords");
+        if passwords_dir.exists() {
+            fs::remove_dir_all(&passwords_dir).await.context("无法删除密码目录")?;
+        }
+        
+        // 重新创建空的密码目录
+        fs::create_dir_all(&passwords_dir).await.context("无法重新创建密码目录")?;
 
         Ok(())
     }
@@ -273,22 +232,24 @@ impl EncryptedPasswordService {
             if path.extension().map_or(false, |ext| ext == "json") {
                 let content = fs::read_to_string(&path).await?;
                 let db_entry: PasswordEntryDb = serde_json::from_str(&content)?;
-                let mut password_entry: PasswordEntry = db_entry.into();
+                let password_entry: PasswordEntry = db_entry.into();
 
                 // 解密密码用于搜索
-                let decrypted_entry = self.get_password(&password_entry.id).await?;
-                if let Some(decrypted_entry) = decrypted_entry {
-                    // 搜索条件
-                    let query_lower = query.to_lowercase();
-                    let matches = decrypted_entry.name.to_lowercase().contains(&query_lower) ||
-                        decrypted_entry.username.as_ref().map_or(false, |u| u.to_lowercase().contains(&query_lower)) ||
-                        decrypted_entry.url.as_ref().map_or(false, |u| u.to_lowercase().contains(&query_lower)) ||
-                        decrypted_entry.notes.as_ref().map_or(false, |n| n.to_lowercase().contains(&query_lower)) ||
-                        decrypted_entry.tags.iter().any(|tag| tag.to_lowercase().contains(&query_lower));
+                let decrypted_entry = match self.get_password(&password_entry.id).await {
+                    Ok(Some(de)) => de,
+                    _ => password_entry // 即使解密失败也返回原始加密条目
+                };
 
-                    if matches {
-                        entries.push(decrypted_entry);
-                    }
+                // 搜索条件
+                let query_lower = query.to_lowercase();
+                let matches = decrypted_entry.name.to_lowercase().contains(&query_lower) ||
+                    decrypted_entry.username.as_ref().map_or(false, |u| u.to_lowercase().contains(&query_lower)) ||
+                    decrypted_entry.url.as_ref().map_or(false, |u| u.to_lowercase().contains(&query_lower)) ||
+                    decrypted_entry.notes.as_ref().map_or(false, |n| n.to_lowercase().contains(&query_lower)) ||
+                    decrypted_entry.tags.iter().any(|tag| tag.to_lowercase().contains(&query_lower));
+
+                if matches {
+                    entries.push(decrypted_entry);
                 }
             }
         }
@@ -301,9 +262,18 @@ impl EncryptedPasswordService {
         self.search_passwords("").await
     }
 
+    /// 获取密码条目 (不再尝试解密)
+    pub async fn get_password(&self, id: &str) -> Result<Option<PasswordEntry>> {
+        if !self.is_unlocked().await {
+            return Err(anyhow::anyhow!("密码服务未解锁"));
+        }
+
+        self.load_password_entry(id).await
+    }
+
     /// 生成强密码
     pub fn generate_password(options: &PasswordGeneratorOptions) -> String {
-        use rand::Rng;
+        
         use rand::seq::SliceRandom;
 
         let mut charset = String::new();

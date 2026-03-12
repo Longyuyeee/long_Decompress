@@ -787,7 +787,7 @@ pub async fn backup_database(pool: &SqlitePool, backup_path: &str) -> Result<()>
 }
 
 /// 恢复数据库
-pub async fn restore_database(pool: &SqlitePool, backup_path: &str) -> Result<()> {
+pub async fn restore_database(_pool: &SqlitePool, _backup_path: &str) -> Result<()> {
     // 注意：恢复数据库需要特殊处理，这里只是示例
     // 在实际应用中，可能需要关闭当前连接，复制备份文件，然后重新连接
 

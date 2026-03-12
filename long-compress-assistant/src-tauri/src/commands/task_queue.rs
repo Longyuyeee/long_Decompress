@@ -1,11 +1,10 @@
 use crate::task_queue::{
-    TaskManager, TASK_MANAGER,
-    models::{TaskPriority, QueueTaskStatus, QueueTask, TaskType},
-    batch_task_processor::{BatchTaskRequest, BatchTaskResult, BatchTaskType, BatchTaskConfig}
+    TASK_MANAGER,
+    models::{TaskPriority, QueueTaskStatus, QueueTask},
+    batch_task_processor::{BatchTaskRequest, BatchTaskResult}
 };
-use crate::models::compression::{CompressionTask, CompressionFormat, CompressionOptions};
+use crate::models::compression::CompressionTask;
 use tauri::command;
-use serde::{Deserialize, Serialize};
 
 #[command]
 pub async fn add_compression_task(task: CompressionTask, priority: TaskPriority) -> Result<String, String> {

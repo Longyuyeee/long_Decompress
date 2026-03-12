@@ -1,7 +1,5 @@
-use crate::task_queue::models::{QueueTask, TaskPriority, SharedQueueTask, TaskType};
+use crate::task_queue::models::{QueueTask, TaskPriority, TaskType};
 use crate::models::compression::CompressionTask;
-use std::sync::Arc;
-use tokio::sync::RwLock;
 
 pub struct QueueBenchmark;
 

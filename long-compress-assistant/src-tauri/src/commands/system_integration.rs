@@ -1,11 +1,9 @@
 use crate::system_integration::{
-    NOTIFIER, NotificationRequest, NotificationConfig, NotificationHistory,
+    NOTIFIER, NotificationRequest, NotificationHistory,
     PermissionManager, PermissionType, PermissionStatus,
-    PlatformCompatibilityChecker, SystemIntegrationFeature,
-    IntegrationType, IntegrationStatus, NotificationType
+    IntegrationType, IntegrationStatus
 };
 use tauri::command;
-use serde::{Deserialize, Serialize};
 
 #[command]
 pub async fn send_notification(request: NotificationRequest) -> Result<(), String> {

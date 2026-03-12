@@ -1,6 +1,6 @@
 use crate::services::password_query_service::{PasswordQueryService, PasswordQueryRequest};
 use crate::models::password::PasswordEntry;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::sync::Arc;
 use log;
 
@@ -350,11 +350,11 @@ impl PasswordAttemptService {
     }
 
     /// 从日期猜测密码
-    async fn guess_from_date(&self, date: &str) -> Result<Vec<String>> {
+    async fn guess_from_date(&self, _date: &str) -> Result<Vec<String>> {
         let mut guesses = Vec::new();
 
         // 常见日期格式
-        let date_formats = vec![
+        let _date_formats = vec![
             "YYYYMMDD", "YYYY-MM-DD", "DDMMYYYY", "MMDDYYYY",
             "YYMMDD", "YY-MM-DD", "DDMMYY", "MMDDYY"
         ];

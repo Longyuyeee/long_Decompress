@@ -1,5 +1,5 @@
-use crate::models::compression::{CompressionOptions, CompressionFormat, TaskLog, TaskLogSeverity};
-use anyhow::{Context, Result};
+use crate::models::compression::{CompressionOptions, TaskLog, TaskLogSeverity};
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 use zip::{ZipArchive, write::FileOptions, CompressionMethod};
 use std::io::{Read, Write};
@@ -125,7 +125,7 @@ impl CompressionService {
                 "7z" | "rar" => {
                     service.emit_log(&window, &task_id, &format!("正在使用 7-Zip 引擎解压 {}...", ext.to_uppercase()), TaskLogSeverity::Info);
                     if let Some(pwd) = password.as_deref() {
-                        let mut pwd_bytes = sevenz_rust::Password::from(pwd);
+                        let pwd_bytes = sevenz_rust::Password::from(pwd);
                         sevenz_rust::decompress_file_with_password(&file_path, out_dir.to_str().unwrap(), pwd_bytes)
                             .map_err(|e| anyhow::anyhow!("{} 解压失败(可能是密码错误): {}", ext.to_uppercase(), e))?;
                     } else {
@@ -180,7 +180,7 @@ impl CompressionService {
         Ok(())
     }
 
-    fn do_extract_tar_gz(&self, window: &Window, task_id: &str, file: &str, output: &Path) -> Result<()> {
+    fn do_extract_tar_gz(&self, _window: &Window, _task_id: &str, file: &str, output: &Path) -> Result<()> {
         let f = File::open(file)?;
         let gz = flate2::read::GzDecoder::new(f);
         let mut archive = tar::Archive::new(gz);
@@ -188,7 +188,7 @@ impl CompressionService {
         Ok(())
     }
 
-    fn do_extract_tar_bz2(&self, window: &Window, task_id: &str, file: &str, output: &Path) -> Result<()> {
+    fn do_extract_tar_bz2(&self, _window: &Window, _task_id: &str, file: &str, output: &Path) -> Result<()> {
         let f = File::open(file)?;
         let bz = bzip2::read::BzDecoder::new(f);
         let mut archive = tar::Archive::new(bz);
@@ -196,7 +196,7 @@ impl CompressionService {
         Ok(())
     }
 
-    fn do_extract_tar_xz(&self, window: &Window, task_id: &str, file: &str, output: &Path) -> Result<()> {
+    fn do_extract_tar_xz(&self, _window: &Window, _task_id: &str, file: &str, output: &Path) -> Result<()> {
         let f = File::open(file)?;
         let xz = xz2::read::XzDecoder::new(f);
         let mut archive = tar::Archive::new(xz);
@@ -320,7 +320,7 @@ impl CompressionService {
                 },
                 "7z" | "rar" => {
                     // 对于7z，如果密码错误通常会返回特定的错误
-                    let mut pwd_bytes = sevenz_rust::Password::from(pwd.as_str());
+                    let pwd_bytes = sevenz_rust::Password::from(pwd.as_str());
                     // 提供一个临时目录进行测试（也可以只是读取 header/entries 如果API支持）
                     // 为了可靠性，我们可以尝试读取归档内容。
                     // sevenz_rust::Archive::read_file_with_password 也许可以用，但简单起见我们只尝试打开并读取第一个文件。
@@ -365,7 +365,7 @@ impl CompressionService {
         }).await?
     }
 
-    pub async fn compress_zip_enhanced(&self, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+    pub async fn compress_zip_enhanced(&self, sources: &[String], output: &str, _options: CompressionOptions) -> Result<()> {
         let sources = sources.to_vec();
         let output = output.to_string();
         tokio::task::spawn_blocking(move || {

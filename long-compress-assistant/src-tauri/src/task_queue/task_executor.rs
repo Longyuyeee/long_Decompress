@@ -1,8 +1,7 @@
-use crate::task_queue::models::{QueueTask, QueueTaskStatus, SharedQueueTask};
+use crate::task_queue::models::SharedQueueTask;
 use crate::task_queue::task_scheduler::TaskScheduler;
 use crate::services::compression_service::CompressionService;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,7 +31,7 @@ impl TaskExecutor {
     }
 
     pub async fn execute_task(&self, task_ref: SharedQueueTask) {
-        let task_id = {
+        let _task_id = {
             let task = task_ref.read().await;
             task.id.clone()
         };

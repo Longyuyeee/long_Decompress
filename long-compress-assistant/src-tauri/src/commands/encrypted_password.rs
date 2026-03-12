@@ -1,5 +1,6 @@
+#![allow(dead_code, unused_imports)]
 use crate::services::encrypted_password_service::{EncryptedPasswordService, PasswordGroupService};
-use crate::models::password::{PasswordEntry, PasswordCategory, PasswordStrength, CustomField, CustomFieldType, PasswordGroup};
+use crate::models::password::{PasswordEntry, PasswordCategory, CustomField, CustomFieldType, PasswordGroup};
 use crate::services::password_strength_service::{PasswordAuditResult, PasswordGeneratorOptions, PasswordImportExportOptions, ImportExportFormat};
 use tauri::{AppHandle, Manager, State};
 use std::sync::Arc;
@@ -184,6 +185,22 @@ pub async fn delete_encrypted_password(
     match service.delete_password(&id).await {
         Ok(_) => Ok(()),
         Err(e) => Err(format!("删除密码失败: {}", e)),
+    }
+}
+
+/// 清空所有密码条目
+#[tauri::command]
+pub async fn clear_encrypted_passwords(
+    app: AppHandle,
+) -> Result<(), String> {
+    let state: State<'_, EncryptedPasswordServiceState> = app.state();
+
+    let service_lock = state.service.lock().await;
+    let service = service_lock.as_ref().ok_or("服务未初始化")?;
+
+    match service.clear_all_passwords().await {
+        Ok(_) => Ok(()),
+        Err(e) => Err(format!("清空密码本失败: {}", e)),
     }
 }
 

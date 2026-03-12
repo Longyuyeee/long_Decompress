@@ -1,16 +1,13 @@
-use crate::task_queue::models::{QueueTask, QueueTaskStatus, TaskPriority, TaskFilter, SharedQueueTask, TaskType};
+use crate::task_queue::models::{QueueTask, QueueTaskStatus, TaskPriority, TaskType};
 use crate::task_queue::task_queue::TaskQueue;
 use crate::task_queue::task_scheduler::{TaskScheduler, SchedulerConfig};
 use crate::task_queue::task_executor::{TaskExecutor, ExecutorConfig};
-use crate::task_queue::batch_task_processor::{BatchTaskProcessor, BatchTaskRequest, BatchTaskResult};
-use crate::task_queue::task_persistence::{TaskPersistenceManager, PersistenceConfig};
-use crate::task_queue::task_event_log::{TaskEvent, TaskEventType, EVENT_LOGGER};
-use crate::models::compression::{CompressionFormat, CompressionOptions, CompressionTask, CompressionStatus};
+use crate::task_queue::batch_task_processor::BatchTaskProcessor;
+use crate::task_queue::task_persistence::TaskPersistenceManager;
+use crate::models::compression::{CompressionFormat, CompressionTask};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use anyhow::{Result, Context};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 pub struct QueueConfig {
     pub max_queue_size: usize,

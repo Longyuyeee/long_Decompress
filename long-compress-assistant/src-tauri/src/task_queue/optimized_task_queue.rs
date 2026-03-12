@@ -1,4 +1,4 @@
-use crate::task_queue::models::{QueueTask, QueueTaskStatus, SharedQueueTask};
+use crate::task_queue::models::SharedQueueTask;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use std::collections::HashMap;

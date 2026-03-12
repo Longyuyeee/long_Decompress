@@ -1,4 +1,3 @@
-use tauri::AppHandle;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;

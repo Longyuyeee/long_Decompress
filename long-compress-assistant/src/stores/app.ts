@@ -60,6 +60,8 @@ export const useAppStore = defineStore('app', () => {
   const theme = ref<'light' | 'dark' | 'auto'>('auto')
   const language = ref('zh-CN')
   const error = ref<string | null>(null)
+  const successMessage = ref<string | null>(null)
+  const errorMessage = ref<string | null>(null)
   const decompressTasks = ref<DecompressTask[]>([])
 
   const settings = ref<AppSettings>({
@@ -241,6 +243,8 @@ export const useAppStore = defineStore('app', () => {
     theme,
     language,
     error,
+    successMessage,
+    errorMessage,
     decompressTasks,
     settings,
 

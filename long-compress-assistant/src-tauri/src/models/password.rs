@@ -19,6 +19,8 @@ pub struct PasswordEntry {
     pub expires_at: Option<DateTime<Utc>>,
     pub favorite: bool,
     pub use_count: u32,
+    #[serde(default)]
+    pub usage_history: std::collections::HashMap<String, u32>,
     pub custom_fields: Vec<CustomField>,
 }
 
@@ -41,6 +43,7 @@ impl PasswordEntry {
             expires_at: None,
             favorite: false,
             use_count: 0,
+            usage_history: std::collections::HashMap::new(),
             custom_fields: Vec::new(),
         }
     }

@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::{SqlitePool, FromRow};
+use sqlx::FromRow;
 use uuid::Uuid;
 
 use crate::database::connection::get_connection;

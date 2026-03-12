@@ -1,3 +1,5 @@
+#![allow(dead_code, unused_imports, unexpected_cfgs)]
+
 pub mod file_association;
 pub mod global_shortcut;
 pub mod notification;
@@ -7,11 +9,9 @@ pub mod platform_compatibility;
 #[cfg(all(desktop, feature = "system-tray"))]
 pub mod tray;
 
-pub use file_association::FileAssociationManager;
-pub use tauri::GlobalShortcutManager;
-pub use notification::{NotificationManager, NOTIFIER, NotificationRequest, NotificationConfig, NotificationHistory, NotificationType};
+pub use notification::{NOTIFIER, NotificationRequest, NotificationConfig, NotificationHistory, NotificationType};
 pub use permission_manager::{PermissionManager, PermissionType, PermissionStatus};
-pub use platform_compatibility::{PlatformCompatibilityChecker, PlatformType, FeatureSupport, PlatformFeatureCheck, SystemIntegrationFeature};
+pub use platform_compatibility::{PlatformCompatibilityChecker, SystemIntegrationFeature};
 
 #[cfg(all(desktop, feature = "system-tray"))]
 pub use tray::{setup_tray, handle_tray_event};

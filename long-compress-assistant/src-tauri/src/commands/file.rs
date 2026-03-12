@@ -1,4 +1,4 @@
-use crate::services::file_service::{FileService, FileInfo, FileServiceError, HashAlgorithm};
+use crate::services::file_service::{FileService, FileInfo};
 use tauri::command;
 
 #[command]

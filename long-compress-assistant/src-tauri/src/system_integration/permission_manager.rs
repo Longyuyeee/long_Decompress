@@ -6,7 +6,7 @@ use tauri::AppHandle;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use lazy_static::lazy_static;
 
 /// 权限类型
@@ -222,7 +222,7 @@ impl PermissionManager {
     }
 
     /// 请求权限
-    pub async fn request_permission(&self, permission_type: &PermissionType) -> Result<PermissionStatus> {
+    pub async fn request_permission(&self, _permission_type: &PermissionType) -> Result<PermissionStatus> {
         Ok(PermissionStatus::Granted) // 简化实现
     }
 

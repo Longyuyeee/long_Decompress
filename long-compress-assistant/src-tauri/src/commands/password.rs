@@ -353,12 +353,12 @@ pub async fn get_password_statistics() -> Result<PasswordStatistics, String> {
 
 // 注意：导入导出功能需要更复杂的实现
 #[command]
-pub async fn import_passwords(file_path: String, format: String) -> Result<String, String> {
+pub async fn import_passwords(_file_path: String, _format: String) -> Result<String, String> {
     Err("导入功能暂未实现".to_string())
 }
 
 #[command]
-pub async fn export_passwords(file_path: String, format: String) -> Result<String, String> {
+pub async fn export_passwords(_file_path: String, _format: String) -> Result<String, String> {
     Err("导出功能暂未实现".to_string())
 }
 
@@ -566,7 +566,7 @@ pub async fn generate_password_strength_report(password: String) -> Result<Strin
 
 #[command]
 pub async fn get_password_policy() -> Result<PasswordPolicy, String> {
-    let service = PasswordStrengthService::new();
+    let _service = PasswordStrengthService::new();
 
     // 返回默认策略，实际应用中可以从数据库或配置文件中加载
     Ok(PasswordPolicy::default())

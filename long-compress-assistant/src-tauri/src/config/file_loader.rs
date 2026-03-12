@@ -3,7 +3,7 @@
 //! 提供从文件系统加载配置的功能，支持多种格式（JSON、YAML、TOML）。
 //! 支持配置文件热重载和环境变量覆盖。
 
-use crate::config::models::{ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata, ValidationRule};
+use crate::config::models::{ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata};
 use anyhow::{Context, Result};
 use chrono::Utc;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};

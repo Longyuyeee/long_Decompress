@@ -1,8 +1,7 @@
 use crate::task_queue::task_queue::TaskQueue;
-use crate::task_queue::models::{QueueTask, QueueTaskStatus, SharedQueueTask};
+use crate::task_queue::models::{QueueTask, QueueTaskStatus};
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::mpsc;
 use tokio::time::sleep;
 use serde::{Deserialize, Serialize};
 use sysinfo::System;

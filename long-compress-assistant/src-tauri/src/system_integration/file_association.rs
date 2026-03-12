@@ -1,8 +1,7 @@
-use tauri::AppHandle;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use lazy_static::lazy_static;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

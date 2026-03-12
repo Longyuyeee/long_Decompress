@@ -1,16 +1,11 @@
 use anyhow::{Context, Result};
 use argon2::{
     Algorithm, Argon2, Params, Version,
-    password_hash::{PasswordHash, PasswordHasher, SaltString},
+    password_hash::{PasswordHasher, SaltString},
 };
-use base64::{engine::general_purpose, Engine as _};
-use rand::rngs::OsRng;
-use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use crate::crypto::encryption::{EncryptionService, EncryptedData};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeyType {

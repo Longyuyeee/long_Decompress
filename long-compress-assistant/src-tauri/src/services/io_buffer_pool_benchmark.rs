@@ -1,6 +1,5 @@
 use crate::services::io_buffer_pool::{IOBufferPool, IOBufferPoolConfig};
 use std::time::{Duration, Instant};
-use tokio::runtime::Runtime;
 
 /// 缓冲区池性能基准测试
 pub struct IOBufferPoolBenchmark {
@@ -58,7 +57,7 @@ impl IOBufferPoolBenchmark {
 
         let mut tasks = Vec::new();
 
-        for task_id in 0..concurrent_tasks {
+        for _task_id in 0..concurrent_tasks {
             let pool_clone = self.pool.clone();
             let task = tokio::spawn(async move {
                 let mut task_total_size = 0;
@@ -153,7 +152,7 @@ impl IOBufferPoolBenchmark {
         for &file_size in test_cases {
             let recommended_size = self.pool.recommend_buffer_size(file_size as u64);
 
-            let mut handle = self.pool.acquire(Some(recommended_size)).await;
+            let handle = self.pool.acquire(Some(recommended_size)).await;
             let actual_size = handle.capacity();
             handle.release().await;
 

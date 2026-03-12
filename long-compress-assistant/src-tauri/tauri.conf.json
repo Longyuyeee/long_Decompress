@@ -35,14 +35,14 @@
     "windows": [
       {
         "title": "胧压缩",
-        "width": 1000,
-        "height": 700,
-        "minWidth": 600,
-        "minHeight": 500,
+        "width": 800,
+        "height": 560,
+        "minWidth": 640,
+        "minHeight": 480,
         "resizable": true,
         "fullscreen": false,
         "decorations": true,
-        "transparent": true
+        "transparent": false
       }
     ]
   }

@@ -1,17 +1,13 @@
 use anyhow::{Context, Result};
-use argon2::{Argon2, PasswordHasher, PasswordVerifier};
-use argon2::password_hash::{PasswordHash, SaltString};
-use argon2::Algorithm;
 use chrono::{DateTime, Utc};
-use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
-use sqlx::{SqlitePool, FromRow, Row};
+use sqlx::{SqlitePool, Row};
 use uuid::Uuid;
 
 use crate::crypto::encryption::{EncryptionService, EncryptedData};
 use crate::database::connection::get_connection;
 use crate::models::password::{
-    PasswordEntry, PasswordCategory, PasswordStrength, CustomField, CustomFieldType
+    PasswordCategory, PasswordStrength, CustomField
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -97,7 +93,7 @@ impl PasswordBookService {
     }
 
     /// 验证主密码
-    pub async fn verify_master_password(&self, password: &str) -> Result<bool> {
+    pub async fn verify_master_password(&self, _password: &str) -> Result<bool> {
         // 这里应该实现密码验证逻辑
         // 暂时返回true用于测试
         Ok(true)

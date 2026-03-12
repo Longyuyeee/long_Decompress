@@ -1,15 +1,14 @@
 use anyhow::{Context, Result};
 use aes_gcm::{
-    aead::{Aead, KeyInit, Payload},
+    aead::{Aead, KeyInit},
     Aes256Gcm, Nonce,
 };
 use argon2::{
     Algorithm, Argon2, Params, Version,
-    password_hash::{PasswordHash, PasswordHasher, SaltString},
+    password_hash::{PasswordHasher, SaltString},
 };
 use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
 
 const KEY_SIZE: usize = 32;
 const NONCE_SIZE: usize = 12;

@@ -81,6 +81,8 @@ pub struct PasswordEntryDb {
     pub archived: bool,
     pub deleted: bool,
     pub use_count: i32,
+    #[serde(default)]
+    pub usage_history: String, // JSON序列化的历史记录
     pub custom_fields: String, // JSON序列化的自定义字段
 }
 
@@ -379,6 +381,9 @@ impl From<PasswordEntryDb> for crate::models::password::PasswordEntry {
         let custom_fields: Vec<CustomField> = serde_json::from_str(&db.custom_fields)
             .unwrap_or_else(|_| Vec::new());
 
+        let usage_history: std::collections::HashMap<String, u32> = serde_json::from_str(&db.usage_history)
+            .unwrap_or_else(|_| std::collections::HashMap::new());
+
         let category = match db.category.as_str() {
             "Work" => PasswordCategory::Work,
             "Finance" => PasswordCategory::Finance,
@@ -417,6 +422,7 @@ impl From<PasswordEntryDb> for crate::models::password::PasswordEntry {
             expires_at: db.expires_at,
             favorite: db.favorite,
             use_count: db.use_count as u32,
+            usage_history,
             custom_fields,
         }
     }
@@ -429,6 +435,9 @@ impl From<crate::models::password::PasswordEntry> for PasswordEntryDb {
 
         let custom_fields = serde_json::to_string(&entry.custom_fields)
             .unwrap_or_else(|_| "[]".to_string());
+
+        let usage_history = serde_json::to_string(&entry.usage_history)
+            .unwrap_or_else(|_| "{}".to_string());
 
         let category = match entry.category {
             crate::models::password::PasswordCategory::Personal => "Personal",
@@ -473,7 +482,8 @@ impl From<crate::models::password::PasswordEntry> for PasswordEntryDb {
             archived: false,
             deleted: false,
             use_count: entry.use_count as i32,
+            usage_history,
             custom_fields,
-        }
-    }
-}
+            }
+            }
+            }

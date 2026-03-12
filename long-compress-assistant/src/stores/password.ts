@@ -103,6 +103,7 @@ export const usePasswordStore = defineStore('password', () => {
   const groups = ref<PasswordGroup[]>([])
   const isUnlocked = ref(false) // 默认未解锁
   const isLoading = ref(false)
+  const isSaving = ref(false)
   const searchQuery = ref('')
   const currentCategory = ref<PasswordCategory | 'All'>('All')
   const errorMessage = ref('')
@@ -237,33 +238,42 @@ export const usePasswordStore = defineStore('password', () => {
   }
 
   // 添加
+  // 新增
   const addEntry = async (entryRequest: any) => {
+    isSaving.value = true
     try {
+      console.log('Invoke: add_encrypted_password')
       const newEntry = await invoke<PasswordEntry>('add_encrypted_password', { entry: entryRequest })
-      entries.value.push(newEntry)
+      entries.value.unshift(newEntry)
       return newEntry
     } catch (e) {
-      if (typeof e === 'string' && e.includes('服务未初始化')) {
-        // 尝试重新初始化并重试一次
-        await checkUnlockStatus()
-        if (isUnlocked.value) {
-          const newEntry = await invoke<PasswordEntry>('add_encrypted_password', { entry: entryRequest })
-          entries.value.push(newEntry)
-          return newEntry
-        }
-      }
-      console.error('添加失败:', e)
+      console.error('Add failed:', e)
       throw e
+    } finally {
+      isSaving.value = false
     }
   }
 
   // 删除
   const deleteEntry = async (id: string) => {
     try {
+      console.log('Invoke: delete_encrypted_password', id)
       await invoke('delete_encrypted_password', { id })
       entries.value = entries.value.filter(e => e.id !== id)
     } catch (e) {
-      console.error('删除失败:', e)
+      console.error('Delete failed:', e)
+      throw e
+    }
+  }
+
+  // 清空
+  const clearAll = async () => {
+    try {
+      console.log('Invoke: clear_encrypted_passwords')
+      await invoke('clear_encrypted_passwords')
+      entries.value = []
+    } catch (e) {
+      console.error('Clear failed:', e)
       throw e
     }
   }
@@ -271,14 +281,22 @@ export const usePasswordStore = defineStore('password', () => {
   // 更新
   const updateEntry = async (id: string, entryRequest: any) => {
     try {
-      const updated = await invoke<PasswordEntry>('update_encrypted_password', { id, entry: entryRequest })
+      console.log('Invoke: update_encrypted_password', id)
+      // 关键修复：合并原始数据，确保 strength, usage_history 等字段不丢失
+      const originalEntry = entries.value.find(e => e.id === id)
+      if (!originalEntry) throw new Error('找不到原始条目')
+      
+      const payload = { ...originalEntry, ...entryRequest, id }
+      const updated = await invoke<PasswordEntry>('update_encrypted_password', { id, entry: payload })
+      
+      console.log('Update success:', updated)
       const index = entries.value.findIndex(e => e.id === id)
       if (index !== -1) {
         entries.value[index] = updated
       }
       return updated
     } catch (e) {
-      console.error('更新失败:', e)
+      console.error('Update failed:', e)
       throw e
     }
   }
@@ -400,6 +418,7 @@ export const usePasswordStore = defineStore('password', () => {
     groups,
     isUnlocked,
     isLoading,
+    isSaving,
     searchQuery,
     currentCategory,
     errorMessage,
@@ -429,6 +448,7 @@ export const usePasswordStore = defineStore('password', () => {
     addPassword,
     deleteEntry,
     deletePassword,
+    clearAll,
     updateEntry,
     updatePassword,
     remoteSearch,
