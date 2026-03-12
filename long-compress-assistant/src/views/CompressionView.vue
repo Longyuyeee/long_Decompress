@@ -1,106 +1,136 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useCompressionStore } from '@/stores/compression'
-import CompressionAeroTable from '@/components/tasks/CompressionAeroTable.vue'
-import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
+import { ref, computed } from 'vue'
+import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
+import CompressionSettingsPanel, { type CompressionOptions } from '@/components/compression/CompressionSettingsPanel.vue'
+import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 
-const compressionStore = useCompressionStore()
+const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
 
-const globalSettings = ref({
+const selectedFiles = ref<any[]>([])
+const outputPath = ref('')
+const compressionOptions = ref<CompressionOptions>({
   format: 'zip',
-  level: 5,
-  password: ''
+  level: 6,
+  password: '',
+  filename: '',
+  splitArchive: false,
+  splitSize: '1024',
+  keepStructure: true,
+  deleteAfter: false,
+  createSolidArchive: false
 })
 
 const onFilesSelected = (files: any[]) => {
-  const paths = files.map(f => f.path)
-  compressionStore.selectedFiles.push(...paths)
+  selectedFiles.value = [...selectedFiles.value, ...files]
+  if (selectedFiles.value.length > 0 && !compressionOptions.value.filename) {
+    const firstFile = selectedFiles.value[0].name
+    compressionOptions.value.filename = firstFile.split('.')[0] + '_compressed'
+  }
 }
 
-const startCompression = async () => {
-  // 实现批量压缩逻辑
-  console.log('开始压缩...', compressionStore.groups)
+const removeFile = (index: number) => {
+  selectedFiles.value.splice(index, 1)
 }
+
+const handleCompress = async () => {
+  if (selectedFiles.value.length === 0) return
+  
+  try {
+    const filePaths = selectedFiles.value.map(f => f.path)
+    await tauriCommands.compressFiles(filePaths, outputPath.value, compressionOptions.value)
+    appStore.successMessage = appStore.t('common.success')
+    selectedFiles.value = []
+  } catch (error) {
+    appStore.setError(`${appStore.t('common.error')}: ${error}`)
+  }
+}
+
+const totalSize = computed(() => {
+  const bytes = selectedFiles.value.reduce((sum, f) => sum + (f.size || 0), 0)
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+})
 </script>
 
 <template>
-  <div class="compression-view p-8 min-h-screen">
-    <!-- 极简页头 -->
-    <header class="mb-10 flex justify-between items-end">
+  <div class="compression-view p-responsive p-8 min-h-screen flex flex-col gap-8 transition-colors duration-700">
+    <header class="flex justify-between items-end">
       <div>
-        <h1 class="text-4xl font-black text-white tracking-tighter mb-2">压缩中心</h1>
-        <p class="text-white/40 text-sm font-medium tracking-wide uppercase">Compression Workspace v2.1</p>
+        <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('nav.compress') }}</h1>
+        <p class="text-muted text-[10px] font-bold uppercase tracking-[0.3em] ml-1">Archive Construction Kit</p>
+      </div>
+      
+      <div v-if="selectedFiles.length > 0" class="flex items-center gap-6">
+        <div class="text-right">
+          <div class="text-[8px] text-muted font-black uppercase tracking-widest">Payload</div>
+          <div class="text-sm font-black text-primary">{{ totalSize }}</div>
+        </div>
+        <button 
+          @click="handleCompress"
+          class="px-8 py-3 rounded-2xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+        >
+          Begin Compression
+        </button>
       </div>
     </header>
 
-    <div class="grid grid-cols-1 gap-8">
-      <!-- 拖拽感应区 (空状态) -->
-      <section v-if="compressionStore.selectedFiles.length === 0 && compressionStore.groups.length === 0" 
-               class="flex flex-col items-center justify-center py-20">
-        <EnhancedFileDropzone @files-selected="onFilesSelected" class="w-full max-w-2xl" />
-      </section>
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 flex-1">
+      <!-- 左侧：文件管理 (找回丢失的列表) -->
+      <div class="xl:col-span-5 flex flex-col gap-6">
+        <section class="aero-card p-8 flex-1 flex flex-col">
+          <h2 class="text-[10px] font-black text-muted uppercase tracking-[0.3em] mb-6">Source Selection</h2>
+          
+          <EnhancedFileDropzone @files-selected="onFilesSelected" class="mb-6" />
 
-      <!-- 磁吸表格区 -->
-      <section v-else class="space-y-10">
-        <CompressionAeroTable />
-        
-        <!-- 全局配置与启动 -->
-        <div class="compression-footer glass-card p-6 rounded-3xl border border-white/10 sticky bottom-8 shadow-2xl backdrop-blur-3xl bg-white/5">
-          <div class="flex items-center gap-12">
-            <!-- 格式选择 -->
-            <div class="flex-1">
-              <div class="text-[10px] text-white/30 uppercase font-black tracking-widest mb-4">目标格式</div>
-              <div class="flex gap-4">
-                <button v-for="fmt in ['ZIP', '7Z', 'TAR']" :key="fmt"
-                        @click="globalSettings.format = fmt.toLowerCase()"
-                        class="px-6 py-2 rounded-xl border text-[10px] font-bold transition-all"
-                        :class="globalSettings.format === fmt.toLowerCase() 
-                          ? 'bg-blue-500/30 border-blue-500/50 text-white' 
-                          : 'bg-white/5 border-white/10 text-white/40 hover:border-white/20'">
-                  {{ fmt }}
+          <div class="flex-1 overflow-auto custom-scrollbar pr-2">
+            <TransitionGroup name="list" tag="div" class="space-y-3">
+              <div v-for="(file, idx) in selectedFiles" :key="file.path" 
+                   class="flex items-center justify-between p-4 rounded-2xl bg-input border border-subtle group hover:border-primary/30 transition-all">
+                <div class="flex items-center gap-4 overflow-hidden">
+                  <div class="w-10 h-10 rounded-xl bg-card border border-subtle flex items-center justify-center text-primary shadow-sm">
+                    <i class="pi pi-file text-sm"></i>
+                  </div>
+                  <div class="overflow-hidden">
+                    <div class="text-xs font-bold text-content truncate max-w-[200px]" :title="file.name">{{ file.name }}</div>
+                    <div class="text-[9px] text-dim font-mono uppercase mt-1">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</div>
+                  </div>
+                </div>
+                <button @click="removeFile(idx)" class="w-8 h-8 rounded-full flex items-center justify-center text-dim hover:text-red-500 hover:bg-red-500/10 transition-all">
+                  <i class="pi pi-times text-[10px]"></i>
                 </button>
               </div>
-            </div>
-
-            <!-- 压缩等级 -->
-            <div class="flex-1">
-              <div class="flex justify-between items-center mb-4">
-                <div class="text-[10px] text-white/30 uppercase font-black tracking-widest">压缩等级</div>
-                <div class="text-xs text-blue-400 font-mono">{{ globalSettings.level }}</div>
-              </div>
-              <input type="range" min="1" max="9" v-model="globalSettings.level" 
-                     class="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-500">
-            </div>
-
-            <!-- 启动按钮 (Morphing 准备) -->
-            <div class="flex-none">
-              <button @click="startCompression" 
-                      class="px-12 py-4 rounded-2xl bg-white text-black font-black uppercase text-sm tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)]">
-                开始压缩
-              </button>
+            </TransitionGroup>
+            
+            <div v-if="selectedFiles.length === 0" class="flex flex-col items-center justify-center py-20 text-dim">
+              <i class="pi pi-inbox text-3xl mb-4 opacity-20"></i>
+              <p class="text-[10px] font-black uppercase tracking-widest">Queue Empty</p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
+
+      <!-- 右侧：高级配置 -->
+      <div class="xl:col-span-7 flex flex-col gap-6">
+        <CompressionSettingsPanel 
+          v-model="compressionOptions"
+          v-model:outputPath="outputPath"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .compression-view {
-  background: radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
-              radial-gradient(circle at 0% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+  background: radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--dynamic-accent) 4%, transparent) 0%, transparent 40%);
 }
 
-/* 简单的滑块样式 */
-input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-}
+.list-enter-active, .list-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.list-enter-from { opacity: 0; transform: translateX(-20px); }
+.list-leave-to { opacity: 0; transform: scale(0.9); }
 </style>

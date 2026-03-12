@@ -3,119 +3,121 @@ import { useAppStore } from '@/stores/app'
 
 const appStore = useAppStore()
 
-const toggleBruteForce = () => {
-  appStore.updateSettings({ enableBruteForce: !appStore.settings.enableBruteForce })
+const themeColors = {
+  azure: '#0ea5e9', indigo: '#6366f1', violet: '#8b5cf6',
+  fuchsia: '#d946ef', pink: '#ec4899', rose: '#f43f5e',
+  orange: '#f97316', amber: '#f59e0b', lime: '#84cc16',
+  emerald: '#10b981', teal: '#14b8a6', cyan: '#06b6d4',
+  slate: '#64748b'
 }
 
-const toggleAutoDelete = () => {
-  appStore.updateSettings({ autoDeleteSource: !appStore.settings.autoDeleteSource })
-}
+const themeModes = [
+  { value: 'light', icon: 'pi pi-sun', label: 'settings.theme.light' },
+  { value: 'dark', icon: 'pi pi-moon', label: 'settings.theme.dark' },
+  { value: 'cyberpunk', icon: 'pi pi-bolt', label: 'settings.theme.cyberpunk' },
+  { value: 'twilight', icon: 'pi pi-star', label: 'settings.theme.twilight' },
+  { value: 'sepia', icon: 'pi pi-book', label: 'settings.theme.sepia' },
+  { value: 'auto', icon: 'pi pi-desktop', label: 'settings.theme.auto' }
+]
+
+const toggleBruteForce = () => appStore.updateSettings({ enableBruteForce: !appStore.settings.enableBruteForce })
+const toggleAutoDelete = () => appStore.updateSettings({ autoDeleteSource: !appStore.settings.autoDeleteSource })
 </script>
 
 <template>
-  <div class="settings-view p-8 min-h-screen">
-    <header class="mb-10 flex justify-between items-end">
-      <div>
-        <h1 class="text-4xl font-black text-white tracking-tighter mb-2">全局设置</h1>
-        <p class="text-white/40 text-sm font-medium tracking-wide uppercase">Global Configuration</p>
-      </div>
+  <div class="settings-view p-responsive p-8 min-h-screen flex flex-col gap-8 transition-colors duration-700">
+    <header>
+      <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('settings.title') }}</h1>
+      <p class="text-muted text-[10px] font-bold uppercase tracking-[0.3em] ml-1">Environment Preferences</p>
     </header>
 
-    <div class="max-w-3xl space-y-8">
-      <!-- 常规设置 -->
-      <section class="p-8 rounded-3xl border border-white/10 backdrop-blur-xl bg-white/5 shadow-2xl">
-        <h2 class="text-xs font-black text-white/50 uppercase tracking-widest mb-6">常规设置</h2>
-        <div class="space-y-6">
-          <div class="flex items-center justify-between group cursor-pointer" @click="toggleAutoDelete">
-            <div>
-              <div class="text-white font-medium mb-1 group-hover:text-blue-400 transition-colors">解压后自动清理</div>
-              <div class="text-white/30 text-[10px] uppercase tracking-widest">成功后自动将源文件移至回收站</div>
-            </div>
-            <div class="w-12 h-6 rounded-full border border-white/20 transition-all p-1"
-                 :class="appStore.settings.autoDeleteSource ? 'bg-blue-500/30 border-blue-500' : 'bg-black/50'">
-              <div class="w-4 h-4 rounded-full bg-white transition-all shadow-md"
-                   :class="appStore.settings.autoDeleteSource ? 'translate-x-6' : ''"></div>
-            </div>
+    <div class="max-w-5xl space-y-6">
+      <!-- 风格大一统：外观个性化 (左右分栏布局) -->
+      <section class="aero-card p-10 overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <div class="lg:col-span-4 space-y-2">
+            <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.appearance') }}</h2>
+            <p class="text-[10px] text-muted leading-relaxed uppercase tracking-tighter">Customize your visual interface and atmospheric themes.</p>
           </div>
           
-          <div class="w-full h-px bg-white/5"></div>
-
-          <div class="flex items-center justify-between group cursor-pointer">
-            <div>
-              <div class="text-white font-medium mb-1 group-hover:text-blue-400 transition-colors">右键菜单集成</div>
-              <div class="text-white/30 text-[10px] uppercase tracking-widest">在文件管理器中显示快捷操作</div>
+          <div class="lg:col-span-8 space-y-10">
+            <!-- 模式切换 (进化版) -->
+            <div class="space-y-4">
+              <label class="text-[9px] font-black text-muted uppercase tracking-[0.2em] block ml-1">{{ appStore.t('settings.theme') }}</label>
+              <div class="grid grid-cols-2 sm:grid-cols-3 p-1 rounded-2xl bg-input border border-subtle gap-1">
+                <button 
+                  v-for="m in themeModes" :key="m.value"
+                  @click="appStore.theme = m.value as any; appStore.saveSettingsToStorage()"
+                  class="py-3 rounded-xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2"
+                  :class="appStore.theme === m.value ? 'bg-primary text-white shadow-lg' : 'text-muted hover:bg-white/5'"
+                >
+                  <i :class="m.icon"></i>
+                  {{ appStore.t(m.label) }}
+                </button>
+              </div>
             </div>
-            <button class="px-4 py-1.5 rounded-lg bg-white/10 text-white/60 text-[10px] font-bold uppercase hover:bg-white/20 transition-all">
-              配置
-            </button>
+
+            <!-- 强调色选择 -->
+            <div class="space-y-4">
+              <label class="text-[9px] font-black text-muted uppercase tracking-[0.2em] block ml-1">{{ appStore.t('settings.accent') }}</label>
+              <div class="flex flex-wrap gap-3 p-1">
+                <button 
+                  v-for="(hex, name) in themeColors" :key="name"
+                  @click="appStore.accentColor = hex; appStore.saveSettingsToStorage()"
+                  class="w-7 h-7 rounded-full border-4 transition-all hover:scale-110 shadow-sm"
+                  :style="{ backgroundColor: hex, borderColor: appStore.accentColor === hex ? 'var(--text-base)' : 'transparent' }"
+                  :title="name"
+                ></button>
+              </div>
+            </div>
+
+            <!-- 语言选择 -->
+            <div class="pt-6 border-t border-subtle flex items-center justify-between">
+              <span class="text-[10px] font-black text-content uppercase tracking-widest">{{ appStore.t('settings.language') }}</span>
+              <div class="flex gap-2">
+                <button @click="appStore.language = 'zh-CN'; appStore.saveSettingsToStorage()" 
+                        class="px-4 py-1.5 rounded-lg text-[10px] font-black transition-all border border-subtle"
+                        :class="appStore.language === 'zh-CN' ? 'bg-primary text-white border-primary' : 'bg-input text-muted'">简体中文</button>
+                <button @click="appStore.language = 'en-US'; appStore.saveSettingsToStorage()"
+                        class="px-4 py-1.5 rounded-lg text-[10px] font-black transition-all border border-subtle"
+                        :class="appStore.language === 'en-US' ? 'bg-primary text-white border-primary' : 'bg-input text-muted'">English</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- 高级安全 -->
-      <section class="p-8 rounded-3xl border border-red-500/10 backdrop-blur-xl bg-red-500/5 shadow-2xl relative overflow-hidden">
-        <div class="absolute -right-10 -top-10 text-9xl text-red-500/5 pi pi-bolt pointer-events-none"></div>
-        <h2 class="text-xs font-black text-red-400/80 uppercase tracking-widest mb-6">高级安全与破解</h2>
-        <div class="space-y-6 relative z-10">
-          <div class="flex items-center justify-between group cursor-pointer" @click="toggleBruteForce">
-            <div>
-              <div class="text-white font-medium mb-1 group-hover:text-red-400 transition-colors flex items-center gap-2">
-                暴力破解引擎
-                <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-[8px] font-black uppercase tracking-widest">Danger</span>
+      <!-- 核心功能：常规与性能 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <section class="aero-card p-8">
+          <h2 class="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-8">{{ appStore.t('settings.performance') }}</h2>
+          <div class="space-y-6">
+            <div class="flex items-center justify-between group cursor-pointer" @click="toggleAutoDelete">
+              <div>
+                <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.auto_delete') }}</div>
+                <div class="text-[9px] text-muted mt-1 uppercase tracking-tighter">Automatic source cleanup logic</div>
               </div>
-              <div class="text-white/30 text-[10px] uppercase tracking-widest">当所有已知密码失效时启动穷举算法</div>
-            </div>
-            <div class="w-12 h-6 rounded-full border transition-all p-1"
-                 :class="appStore.settings.enableBruteForce ? 'bg-red-500/30 border-red-500' : 'bg-black/50 border-white/20'">
-              <div class="w-4 h-4 rounded-full bg-white transition-all shadow-md"
-                   :class="appStore.settings.enableBruteForce ? 'translate-x-6' : ''"></div>
+              <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all" :class="appStore.settings.autoDeleteSource ? 'bg-primary/40 border-primary' : 'bg-input'">
+                <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.autoDeleteSource ? 'translate-x-5' : ''"></div>
+              </div>
             </div>
           </div>
+        </section>
 
-          <transition name="expand">
-            <div v-if="appStore.settings.enableBruteForce" class="pl-4 border-l-2 border-red-500/30 space-y-4">
-              <div class="flex justify-between items-center">
-                 <span class="text-xs text-white/60">外部字典库 (.txt)</span>
-                 <button class="text-[10px] text-blue-400 hover:text-blue-300 font-bold uppercase tracking-widest">导入字典</button>
-              </div>
-              <div class="p-3 rounded-xl bg-black/40 border border-white/5 flex justify-between items-center text-xs">
-                 <span class="text-white/40 font-mono">rockyou.txt (14.3 MB)</span>
-                 <i class="pi pi-check-circle text-green-500"></i>
-              </div>
-            </div>
-          </transition>
-        </div>
-      </section>
-
-      <!-- 数据库维护 -->
-      <section class="p-8 rounded-3xl border border-white/10 backdrop-blur-xl bg-white/5 shadow-2xl">
-        <h2 class="text-xs font-black text-white/50 uppercase tracking-widest mb-6">系统维护</h2>
-        <div class="flex gap-4">
-           <button class="flex-1 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-widest hover:bg-blue-500/20 transition-all flex items-center justify-center gap-2">
-             <i class="pi pi-database"></i> 优化数据库
-           </button>
-           <button class="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-white/60 text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2">
-             <i class="pi pi-shield"></i> 健康诊断
-           </button>
-        </div>
-      </section>
+        <section class="aero-card p-8">
+          <h2 class="text-[10px] font-black text-muted uppercase tracking-[0.3em] mb-8">System Operations</h2>
+          <div class="grid grid-cols-2 gap-3">
+            <button class="py-2.5 rounded-xl bg-input border border-subtle text-[9px] font-black uppercase text-muted hover:text-primary transition-all">Optimize DB</button>
+            <button class="py-2.5 rounded-xl bg-input border border-subtle text-[9px] font-black uppercase text-muted hover:text-primary transition-all">Health Check</button>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .settings-view {
-  background: radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
-}
-
-.expand-enter-active, .expand-leave-active {
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  max-height: 200px;
-  opacity: 1;
-}
-.expand-enter-from, .expand-leave-to {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
+  background: radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--dynamic-accent) 3%, transparent) 0%, transparent 50%);
 }
 </style>

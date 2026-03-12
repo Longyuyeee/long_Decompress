@@ -9,10 +9,10 @@ const router = useRouter()
 const appStore = useAppStore()
 
 const navItems = [
-  { name: 'Decompress', icon: 'pi pi-folder-open', label: '解压' },
-  { name: 'Compress', icon: 'pi pi-file-zip', label: '压缩' },
-  { name: 'Vault', icon: 'pi pi-shield', label: '密码本' },
-  { name: 'Settings', icon: 'pi pi-cog', label: '设置' }
+  { name: 'Decompress', icon: 'pi pi-folder-open', label: 'nav.decompress' },
+  { name: 'Compress', icon: 'pi pi-file-zip', label: 'nav.compress' },
+  { name: 'Vault', icon: 'pi pi-shield', label: 'nav.vault' },
+  { name: 'Settings', icon: 'pi pi-cog', label: 'nav.settings' }
 ]
 
 const navigateTo = (name: string) => {
@@ -21,106 +21,74 @@ const navigateTo = (name: string) => {
 </script>
 
 <template>
-  <div class="main-layout flex h-screen w-screen overflow-hidden text-white transition-colors duration-500"
-       :class="appStore.currentTheme === 'dark' ? 'bg-black' : 'bg-gray-900'">
-    
-    <!-- 极简侧边栏 -->
-    <aside class="w-20 h-full flex flex-col items-center py-8 border-r border-white/10 bg-white/5 backdrop-blur-3xl z-40">
-      <!-- Logo -->
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)] mb-12">
-        <i class="pi pi-box text-xl text-white"></i>
+  <div class="main-layout flex h-screen w-screen overflow-hidden bg-base text-content transition-colors duration-700">
+    <!-- 侧边栏 -->
+    <aside class="w-16 h-full flex flex-col items-center py-8 border-r border-subtle bg-card/50 backdrop-blur-3xl z-40 transition-all duration-700">
+      <!-- Logo (随主题变色) -->
+      <div class="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-700 mb-12 shadow-lg"
+           :style="{ background: `linear-gradient(135deg, var(--dynamic-accent), color-mix(in srgb, var(--dynamic-accent), black 20%))`, boxShadow: `0 0 20px color-mix(in srgb, var(--dynamic-accent) 40%, transparent)` }">
+        <i class="pi pi-box text-lg text-white"></i>
       </div>
 
-      <!-- 核心导航 -->
-      <nav class="flex-1 flex flex-col gap-6 w-full px-4">
+      <!-- 导航项 -->
+      <nav class="flex-1 flex flex-col gap-4 w-full px-2">
         <div v-for="item in navItems" :key="item.name"
              @click="navigateTo(item.name)"
-             class="group relative w-full aspect-square flex items-center justify-center rounded-2xl cursor-pointer transition-all duration-300"
-             :class="route.name === item.name ? 'bg-white/10 shadow-inner' : 'hover:bg-white/5'">
+             class="group relative w-full aspect-square flex items-center justify-center rounded-2xl cursor-pointer transition-all duration-500"
+             :class="route.name === item.name ? 'bg-primary/10 shadow-inner' : 'hover:bg-primary/5'">
           
-          <i :class="[item.icon, 'text-xl transition-all duration-500', 
-             route.name === item.name ? 'text-blue-400 scale-110' : 'text-white/40 group-hover:text-white/80']"></i>
+          <div class="absolute left-0 w-1 h-4 rounded-full bg-primary transition-all duration-500"
+               :class="route.name === item.name ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'"></div>
+
+          <i :class="[item.icon, 'text-lg transition-all duration-500', 
+             route.name === item.name ? 'text-primary scale-110' : 'text-muted group-hover:text-content']"></i>
              
-          <!-- 悬浮提示 -->
-          <div class="absolute left-full ml-4 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-xl border border-white/10 text-[10px] font-bold tracking-widest uppercase opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap">
-            {{ item.label }}
+          <div class="absolute left-full ml-4 px-4 py-2 rounded-xl backdrop-blur-2xl bg-card border border-subtle text-content text-[10px] font-black tracking-widest uppercase opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap shadow-2xl z-50">
+            {{ appStore.t(item.label) }}
           </div>
         </div>
       </nav>
     </aside>
 
-    <!-- 主工作区 -->
-    <main class="flex-1 relative h-full overflow-y-auto custom-scrollbar">
-      <!-- 灵动通知球 (MS5) -->
+    <!-- 主容器 (路由动画核心) -->
+    <main class="flex-1 relative h-full overflow-hidden">
       <InteractionBall />
       
-      <!-- 路由视图过渡 -->
       <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
+        <transition name="aero-page" mode="out-in">
+          <div :key="route.path" class="h-full overflow-y-auto custom-scrollbar overflow-x-hidden">
+            <component :is="Component" />
+          </div>
         </transition>
       </router-view>
     </main>
 
-    <!-- 系统负载计 (MS5) -->
     <PerformanceMeter />
-
-    <!-- 全局报错提示 -->
-    <transition name="toast">
-      <div v-if="appStore.error" 
-           class="fixed top-6 right-6 p-4 rounded-2xl bg-red-500/20 border border-red-500/30 backdrop-blur-xl flex items-start gap-4 shadow-2xl z-[999] max-w-sm">
-        <i class="pi pi-exclamation-triangle text-red-400 mt-0.5"></i>
-        <div class="flex-1 text-sm text-red-100 font-medium">{{ appStore.error }}</div>
-        <button @click="appStore.clearError" class="text-red-400/50 hover:text-red-400"><i class="pi pi-times"></i></button>
-      </div>
-    </transition>
   </div>
 </template>
 
 <style>
-/* 全局基础样式重置与排版 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
-
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: black;
+/* 苹果风强动效：Aero Page Transition */
+.aero-page-enter-active,
+.aero-page-leave-active {
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: absolute;
+  width: 100%;
 }
 
-.font-mono {
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* 路由过渡动效 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-.fade-enter-from {
+.aero-page-enter-from {
   opacity: 0;
-  transform: translateY(10px) scale(0.99);
-}
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-10px) scale(0.99);
+  transform: scale(0.94) translateY(30px);
+  filter: blur(10px);
 }
 
-/* 报错提示过渡 */
-.toast-enter-active,
-.toast-leave-active {
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.toast-enter-from,
-.toast-leave-to {
+.aero-page-leave-to {
   opacity: 0;
-  transform: translateX(50px);
+  transform: scale(1.06) translateY(-20px);
+  filter: blur(10px);
 }
 
-/* 隐形滚动条 */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
-}
+/* 统一滚动条样式 */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--dynamic-accent); opacity: 0.1; border-radius: 10px; }
 </style>
