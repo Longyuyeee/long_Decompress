@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { translations } from '../i18n'
+import { invoke } from '@tauri-apps/api/tauri'
 
 export interface DecompressTask {
   id: string
@@ -41,7 +42,8 @@ export interface AppSettings {
   enableBruteForce: boolean 
   bruteForceCharset: string 
   bruteForceMaxLen: number 
-  autoDeleteSource: boolean 
+  bruteForceWordlists: string[]
+  autoStart: boolean
   conflictPolicy: 'ask' | 'overwrite' | 'skip' | 'rename'
 }
 
@@ -79,7 +81,15 @@ export const useAppStore = defineStore('app', () => {
     savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
     sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
     bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-    autoDeleteSource: false, conflictPolicy: 'ask'
+    bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask'
+  })
+
+  watch(() => settings.value.autoStart, async (newVal) => {
+    try {
+      await invoke('set_auto_start', { enable: newVal })
+    } catch (e) {
+      console.error('Failed to set auto start:', e)
+    }
   })
 
   const activeTasks = computed(() => decompressTasks.value.filter(t => t.status === 'processing' || t.status === 'pending'))
@@ -130,7 +140,7 @@ export const useAppStore = defineStore('app', () => {
       savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-      autoDeleteSource: false, conflictPolicy: 'ask'
+      bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask'
     }
     saveSettingsToStorage()
   }
@@ -147,7 +157,11 @@ export const useAppStore = defineStore('app', () => {
   const loadSettingsFromStorage = () => {
     try {
       const savedSettings = localStorage.getItem('app-settings')
-      if (savedSettings) settings.value = JSON.parse(savedSettings)
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings)
+        // 关键修复：使用对象展开合并，确保新字段（如 bruteForceWordlists）即使在旧配置中不存在也能有默认值
+        settings.value = { ...settings.value, ...parsed }
+      }
       theme.value = (localStorage.getItem('app-theme') as any) || 'auto'
       language.value = localStorage.getItem('app-language') || 'zh-CN'
       accentColor.value = localStorage.getItem('app-accent') || '#0ea5e9'

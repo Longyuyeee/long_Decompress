@@ -305,9 +305,33 @@ export const useTauriCommands = () => {
     }
   }
 
+  /**
+   * 选择密码本 (TXT文件)
+   */
+  const selectWordlists = async () => {
+    try {
+      const selected = await open({
+        multiple: true,
+        filters: [
+          {
+            name: '密码本 (Wordlist)',
+            extensions: ['txt']
+          }
+        ]
+      })
+
+      if (!selected) return []
+      return Array.isArray(selected) ? selected : [selected]
+    } catch (error) {
+      console.error('Failed to select wordlists:', error)
+      return []
+    }
+  }
+
   return {
     selectFiles,
     selectDirectory,
+    selectWordlists,
     decompressFile,
     decompressFiles,
     getFileInfo,

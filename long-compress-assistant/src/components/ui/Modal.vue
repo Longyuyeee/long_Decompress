@@ -65,7 +65,7 @@ export interface Props {
   title?: string
   description?: string
   icon?: string
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
   showCloseButton?: boolean
   showFooter?: boolean
   cancelText?: string
@@ -89,10 +89,11 @@ const emit = defineEmits(['update:visible', 'close', 'cancel', 'confirm'])
 
 const sizeClasses = computed(() => {
   const classes: Record<string, string> = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
+    xs: 'max-w-[320px]',
+    sm: 'max-w-[380px]',
+    md: 'max-w-[460px] md:max-w-lg',
+    lg: 'max-w-[92vw] md:max-w-2xl',
+    xl: 'max-w-[95vw] md:max-w-4xl',
     full: 'max-w-full mx-4'
   }
   return classes[props.size]

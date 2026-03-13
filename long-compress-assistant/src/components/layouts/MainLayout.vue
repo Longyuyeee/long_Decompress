@@ -51,19 +51,17 @@ const navigateTo = (name: string) => {
     </aside>
 
     <!-- 主容器 (路由动画核心) -->
-    <main class="flex-1 relative h-full overflow-hidden">
+    <main class="flex-1 relative h-full overflow-hidden min-w-[320px]">
       <InteractionBall />
       
       <router-view v-slot="{ Component }">
         <transition name="aero-page" mode="out-in">
-          <div :key="route.path" class="h-full overflow-y-auto custom-scrollbar overflow-x-hidden">
+          <div :key="route.path" class="h-full overflow-hidden">
             <component :is="Component" />
           </div>
         </transition>
       </router-view>
     </main>
-
-    <PerformanceMeter />
   </div>
 </template>
 

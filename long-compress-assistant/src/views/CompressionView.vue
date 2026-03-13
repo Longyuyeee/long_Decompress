@@ -58,8 +58,8 @@ const totalSize = computed(() => {
 </script>
 
 <template>
-  <div class="compression-view p-responsive p-8 min-h-screen flex flex-col gap-8 transition-colors duration-700">
-    <header class="flex justify-between items-end">
+  <div class="compression-view p-responsive p-8 h-screen flex flex-col gap-8 transition-colors duration-700 overflow-hidden">
+    <header class="flex justify-between items-end shrink-0">
       <div>
         <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('nav.compress') }}</h1>
         <p class="text-muted text-[10px] font-bold uppercase tracking-[0.3em] ml-1">Archive Construction Kit</p>
@@ -79,47 +79,49 @@ const totalSize = computed(() => {
       </div>
     </header>
 
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 flex-1">
-      <!-- 左侧：文件管理 (找回丢失的列表) -->
-      <div class="xl:col-span-5 flex flex-col gap-6">
-        <section class="aero-card p-8 flex-1 flex flex-col">
-          <h2 class="text-[10px] font-black text-muted uppercase tracking-[0.3em] mb-6">Source Selection</h2>
-          
-          <EnhancedFileDropzone @files-selected="onFilesSelected" class="mb-6" />
-
-          <div class="flex-1 overflow-auto custom-scrollbar pr-2">
-            <TransitionGroup name="list" tag="div" class="space-y-3">
-              <div v-for="(file, idx) in selectedFiles" :key="file.path" 
-                   class="flex items-center justify-between p-4 rounded-2xl bg-input border border-subtle group hover:border-primary/30 transition-all">
-                <div class="flex items-center gap-4 overflow-hidden">
-                  <div class="w-10 h-10 rounded-xl bg-card border border-subtle flex items-center justify-center text-primary shadow-sm">
-                    <i class="pi pi-file text-sm"></i>
-                  </div>
-                  <div class="overflow-hidden">
-                    <div class="text-xs font-bold text-content truncate max-w-[200px]" :title="file.name">{{ file.name }}</div>
-                    <div class="text-[9px] text-dim font-mono uppercase mt-1">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</div>
-                  </div>
-                </div>
-                <button @click="removeFile(idx)" class="w-8 h-8 rounded-full flex items-center justify-center text-dim hover:text-red-500 hover:bg-red-500/10 transition-all">
-                  <i class="pi pi-times text-[10px]"></i>
-                </button>
-              </div>
-            </TransitionGroup>
+    <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-20">
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 min-h-full">
+        <!-- 左侧：文件管理 (找回丢失的列表) -->
+        <div class="xl:col-span-5 flex flex-col gap-6">
+          <section class="aero-card p-8 flex-1 flex flex-col">
+            <h2 class="text-[10px] font-black text-muted uppercase tracking-[0.3em] mb-6">Source Selection</h2>
             
-            <div v-if="selectedFiles.length === 0" class="flex flex-col items-center justify-center py-20 text-dim">
-              <i class="pi pi-inbox text-3xl mb-4 opacity-20"></i>
-              <p class="text-[10px] font-black uppercase tracking-widest">Queue Empty</p>
-            </div>
-          </div>
-        </section>
-      </div>
+            <EnhancedFileDropzone @files-selected="onFilesSelected" class="mb-6" />
 
-      <!-- 右侧：高级配置 -->
-      <div class="xl:col-span-7 flex flex-col gap-6">
-        <CompressionSettingsPanel 
-          v-model="compressionOptions"
-          v-model:outputPath="outputPath"
-        />
+            <div class="flex-1 overflow-auto custom-scrollbar pr-2 min-h-[200px]">
+              <TransitionGroup name="list" tag="div" class="space-y-3">
+                <div v-for="(file, idx) in selectedFiles" :key="file.path" 
+                     class="flex items-center justify-between p-4 rounded-2xl bg-input border border-subtle group hover:border-primary/30 transition-all">
+                  <div class="flex items-center gap-4 overflow-hidden">
+                    <div class="w-10 h-10 rounded-xl bg-card border border-subtle flex items-center justify-center text-primary shadow-sm">
+                      <i class="pi pi-file text-sm"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                      <div class="text-xs font-bold text-content truncate max-w-[200px]" :title="file.name">{{ file.name }}</div>
+                      <div class="text-[9px] text-dim font-mono uppercase mt-1">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</div>
+                    </div>
+                  </div>
+                  <button @click="removeFile(idx)" class="w-8 h-8 rounded-full flex items-center justify-center text-dim hover:text-red-500 hover:bg-red-500/10 transition-all">
+                    <i class="pi pi-times text-[10px]"></i>
+                  </button>
+                </div>
+              </TransitionGroup>
+              
+              <div v-if="selectedFiles.length === 0" class="flex flex-col items-center justify-center py-20 text-dim">
+                <i class="pi pi-inbox text-3xl mb-4 opacity-20"></i>
+                <p class="text-[10px] font-black uppercase tracking-widest">Queue Empty</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- 右侧：高级配置 -->
+        <div class="xl:col-span-7 flex flex-col gap-6">
+          <CompressionSettingsPanel 
+            v-model="compressionOptions"
+            v-model:outputPath="outputPath"
+          />
+        </div>
       </div>
     </div>
   </div>

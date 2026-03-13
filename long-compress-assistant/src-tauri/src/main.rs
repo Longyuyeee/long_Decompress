@@ -19,6 +19,7 @@ mod system_integration;
 
 use commands::compression::{extract_file, extract_multiple, compress_files, cancel_compression};
 use commands::file::{list_files, get_file_info};
+use commands::system::{get_system_info, get_disk_space, get_app_version, set_auto_start, check_auto_start};
 use commands::password::{
     add_password, delete_password, update_password,
     get_all_passwords, search_passwords
@@ -93,6 +94,13 @@ fn main() {
             update_password,
             get_all_passwords,
             search_passwords,
+
+            // System Commands
+            get_system_info,
+            get_disk_space,
+            get_app_version,
+            set_auto_start,
+            check_auto_start,
 
             // Encrypted Password Commands
             init_encrypted_password_service,

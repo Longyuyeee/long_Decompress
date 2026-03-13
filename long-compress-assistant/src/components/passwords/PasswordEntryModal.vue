@@ -19,10 +19,7 @@ const showPassword = ref(true)
 const form = reactive({
   name: '',
   password: '',
-  notes: '',
-  username: '',
-  category: PasswordCategory.Other,
-  tags: [] as string[]
+  notes: ''
 })
 
 watch(() => props.visible, (isOpening) => {
@@ -31,18 +28,14 @@ watch(() => props.visible, (isOpening) => {
       Object.assign(form, {
         name: props.entry.name || '',
         password: props.entry.password || '',
-        notes: props.entry.notes || '',
-        username: props.entry.username || '',
-        category: props.entry.category || PasswordCategory.Other
+        notes: props.entry.notes || ''
       })
     } else {
       const randomId = Math.random().toString(36).substring(2, 6).toUpperCase()
       Object.assign(form, {
-        name: `NEW_ENTRY_${randomId}`,
+        name: `ENTRY_${randomId}`,
         password: '',
-        notes: '',
-        username: '',
-        category: PasswordCategory.Other
+        notes: ''
       })
     }
   }
@@ -52,8 +45,32 @@ const handleSave = async () => {
   if (!form.name || !form.password) return
   isSaving.value = true
   try {
-    if (props.entry) await passwordStore.updateEntry(props.entry.id, { ...form })
-    else await passwordStore.addEntry({ ...form })
+    // 彻底修复：补全后端全量模型字段
+    const now = new Date().toISOString()
+    const payload = {
+      ...form,
+      username: '',
+      url: '',
+      category: 'Other',
+      tags: [],
+      strength: 'Medium',
+      favorite: false,
+      use_count: 0,
+      usage_history: {},
+      custom_fields: [],
+      created_at: now,
+      updated_at: now
+    }
+    if (props.entry) {
+      // 更新时保留原有的统计和 ID
+      await passwordStore.updateEntry(props.entry.id, { 
+        ...props.entry,
+        ...payload,
+        updated_at: now
+      })
+    } else {
+      await passwordStore.addEntry(payload)
+    }
     emit('saved')
     emit('update:visible', false)
   } catch (e) {
@@ -68,52 +85,38 @@ const handleSave = async () => {
   <Modal 
     :visible="visible" 
     @update:visible="val => emit('update:visible', val)"
-    :title="entry ? 'Edit Security Entry' : 'Create New Entry'"
+    :title="entry ? appStore.t('vault.edit_title') : appStore.t('vault.add_title')"
     :icon="entry ? 'pi pi-pencil' : 'pi pi-shield'"
-    size="md"
+    size="sm"
   >
-    <div class="modal-content space-y-6 bg-modal text-content">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- 找回：凭证名称 -->
-        <div class="space-y-2">
-          <label class="text-[9px] font-black text-muted uppercase tracking-widest ml-1">Entry Name *</label>
-          <input v-model="form.name" type="text" class="w-full bg-input border border-subtle rounded-xl px-4 py-3 text-sm text-content focus:border-primary transition-all">
-        </div>
-        <!-- 找回：关联账号 -->
-        <div class="space-y-2">
-          <label class="text-[9px] font-black text-muted uppercase tracking-widest ml-1">Account Identity</label>
-          <input v-model="form.username" type="text" class="w-full bg-input border border-subtle rounded-xl px-4 py-3 text-sm text-content focus:border-primary transition-all" placeholder="Optional">
+    <div class="modal-content space-y-4 bg-modal text-content p-1">
+      <!-- 凭证名称 -->
+      <div class="space-y-1.5">
+        <label class="text-[9px] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('vault.column.name') }} *</label>
+        <input v-model="form.name" type="text" :placeholder="appStore.t('vault.placeholder.name')" class="w-full bg-input border border-subtle rounded-xl px-4 py-2.5 text-xs text-content focus:border-primary transition-all shadow-sm">
+      </div>
+
+      <!-- 访问密码 -->
+      <div class="space-y-1.5 relative">
+        <label class="text-[9px] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('vault.column.password') }} *</label>
+        <div class="relative group">
+          <input v-model="form.password" :type="showPassword ? 'text' : 'password'" :placeholder="appStore.t('vault.placeholder.password')" class="w-full bg-input border border-subtle rounded-xl px-4 py-2.5 text-xs text-primary font-mono font-bold focus:border-primary transition-all pr-12 shadow-sm">
+          <button @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-dim hover:text-primary transition-colors"><i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye' " class="text-xs"></i></button>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- 找回：密码核心 -->
-        <div class="space-y-2 relative">
-          <label class="text-[9px] font-black text-muted uppercase tracking-widest ml-1">Access Secret *</label>
-          <div class="relative">
-            <input v-model="form.password" :type="showPassword ? 'text' : 'password'" class="w-full bg-input border border-subtle rounded-xl px-4 py-3 text-sm text-primary font-mono font-bold focus:border-primary transition-all pr-12">
-            <button @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-dim hover:text-primary"><i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye' " class="text-xs"></i></button>
-          </div>
-        </div>
-        <!-- 找回：所属分类 -->
-        <div class="space-y-2">
-          <label class="text-[9px] font-black text-muted uppercase tracking-widest ml-1">Classification</label>
-          <select v-model="form.category" class="w-full bg-input border border-subtle rounded-xl px-4 py-3 text-sm text-content focus:border-primary transition-all appearance-none">
-            <option v-for="cat in Object.values(PasswordCategory)" :key="cat" :value="cat">{{ cat }}</option>
-          </select>
-        </div>
+      <!-- 备注说明 -->
+      <div class="space-y-1.5">
+        <label class="text-[9px] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('vault.column.notes') }}</label>
+        <textarea v-model="form.notes" rows="2" :placeholder="appStore.t('vault.placeholder.notes')" class="w-full bg-input border border-subtle rounded-xl px-4 py-2.5 text-[10px] text-muted focus:border-primary transition-all resize-none shadow-sm"></textarea>
       </div>
 
-      <div class="space-y-2">
-        <label class="text-[9px] font-black text-muted uppercase tracking-widest ml-1">Security Notes & Metadata</label>
-        <textarea v-model="form.notes" rows="3" placeholder="Contextual information..." class="w-full bg-input border border-subtle rounded-xl px-4 py-3 text-xs text-muted focus:border-primary transition-all resize-none"></textarea>
-      </div>
-
-      <div class="pt-4 flex gap-3">
-        <button @click="emit('update:visible', false)" class="flex-1 py-3 rounded-xl bg-input border border-subtle text-muted text-[10px] font-black uppercase hover:text-content">Abort</button>
-        <button @click="handleSave" :disabled="isSaving || !form.name || !form.password" class="flex-[2] py-3 rounded-xl bg-primary text-white text-[10px] font-black shadow-lg shadow-primary/20 hover:brightness-110 flex items-center justify-center gap-2">
-          <i v-if="isSaving" class="pi pi-spin pi-spinner"></i>
-          <span>{{ isSaving ? 'SYNCHRONIZING' : 'COMMIT TO VAULT' }}</span>
+      <!-- 交互按钮 -->
+      <div class="pt-2 flex gap-2">
+        <button @click="emit('update:visible', false)" class="flex-1 py-2.5 rounded-xl bg-input border border-subtle text-muted text-[9px] font-black uppercase hover:text-content transition-all tracking-widest">{{ appStore.t('vault.confirm.cancel') }}</button>
+        <button @click="handleSave" :disabled="isSaving || !form.name || !form.password" class="flex-[2] py-2.5 rounded-xl bg-primary text-white text-[9px] font-black shadow-lg shadow-primary/20 hover:brightness-110 flex items-center justify-center gap-2 transition-all tracking-widest">
+          <i v-if="isSaving" class="pi pi-spin pi-spinner text-[8px]"></i>
+          <span>{{ isSaving ? 'SYNC' : (entry ? 'UPDATE' : 'COMMIT') }}</span>
         </button>
       </div>
     </div>

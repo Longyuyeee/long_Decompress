@@ -48,8 +48,8 @@ taskStore.$subscribe((mutation, state) => {
 </script>
 
 <template>
-  <div class="decompress-view p-responsive p-8 min-h-screen flex flex-col gap-8 transition-colors duration-700">
-    <header class="flex justify-between items-end">
+  <div class="decompress-view p-responsive p-8 h-screen flex flex-col gap-8 transition-colors duration-700 overflow-hidden">
+    <header class="flex justify-between items-end shrink-0">
       <div>
         <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('nav.decompress') }}</h1>
         <p class="text-muted text-[10px] font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('app.tagline') }}</p>
@@ -65,41 +65,43 @@ taskStore.$subscribe((mutation, state) => {
       </div>
     </header>
 
-    <div class="flex-1 min-h-0 flex flex-col gap-8">
-      <transition name="fade-morph" mode="out-in">
-        <!-- 拖拽感应区 (风格对齐：无感大背景) -->
-        <section v-if="taskStore.tasks.length === 0" class="flex-1 flex flex-col items-center justify-center py-20 bg-card border border-subtle rounded-[3rem] shadow-glass border-dashed transition-all duration-700">
-          <EnhancedFileDropzone @files-selected="onFilesSelected" class="w-full max-w-2xl" />
-          
-          <div class="mt-16 flex gap-12 items-center opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700">
-             <div class="text-center">
-               <div class="text-2xl font-black text-content tracking-tighter">7Z / ZIP / RAR</div>
-               <div class="text-[8px] font-bold text-muted uppercase tracking-[0.4em] mt-2">Core Engine</div>
-             </div>
-             <div class="w-px h-8 bg-subtle"></div>
-             <div class="text-center">
-               <div class="text-2xl font-black text-primary tracking-tighter">Smart Predict</div>
-               <div class="text-[8px] font-bold text-primary uppercase tracking-[0.4em] mt-2 opacity-50">Automation</div>
-             </div>
-          </div>
-        </section>
+    <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-20">
+      <div class="min-h-full flex flex-col gap-8">
+        <transition name="fade-morph" mode="out-in">
+          <!-- 拖拽感应区 (风格对齐：无感大背景) -->
+          <section v-if="taskStore.tasks.length === 0" class="flex-1 flex flex-col items-center justify-center py-20 bg-card border border-subtle rounded-[3rem] shadow-glass border-dashed transition-all duration-700">
+            <EnhancedFileDropzone @files-selected="onFilesSelected" class="w-full max-w-2xl" />
+            
+            <div class="mt-16 flex gap-12 items-center opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700">
+               <div class="text-center">
+                 <div class="text-2xl font-black text-content tracking-tighter">7Z / ZIP / RAR</div>
+                 <div class="text-[8px] font-bold text-muted uppercase tracking-[0.4em] mt-2">Core Engine</div>
+               </div>
+               <div class="w-px h-8 bg-subtle"></div>
+               <div class="text-center">
+                 <div class="text-2xl font-black text-primary tracking-tighter">Smart Predict</div>
+                 <div class="text-[8px] font-bold text-primary uppercase tracking-[0.4em] mt-2 opacity-50">Automation</div>
+               </div>
+            </div>
+          </section>
 
-        <!-- 智慧表格工作区 -->
-        <section v-else class="flex-1 flex flex-col gap-6">
-          <AeroTable />
-          
-          <div class="flex justify-center">
-            <button @click="() => {}" class="group flex items-center gap-4 px-10 py-4 rounded-[2rem] bg-card border border-subtle hover:border-primary/50 transition-all shadow-xl hover:shadow-glass-hover">
-              <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-all">
-                <i class="pi pi-plus text-primary group-hover:text-white transition-colors text-[10px]"></i>
-              </div>
-              <span class="text-muted text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-content transition-colors">
-                {{ appStore.language === 'zh-CN' ? '添加更多文件' : 'Add More Files' }}
-              </span>
-            </button>
-          </div>
-        </section>
-      </transition>
+          <!-- 智慧表格工作区 -->
+          <section v-else class="flex-1 flex flex-col gap-6">
+            <AeroTable />
+            
+            <div class="flex justify-center">
+              <button @click="() => {}" class="group flex items-center gap-4 px-10 py-4 rounded-[2rem] bg-card border border-subtle hover:border-primary/50 transition-all shadow-xl hover:shadow-glass-hover">
+                <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-all">
+                  <i class="pi pi-plus text-primary group-hover:text-white transition-colors text-[10px]"></i>
+                </div>
+                <span class="text-muted text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-content transition-colors">
+                  {{ appStore.language === 'zh-CN' ? '添加更多文件' : 'Add More Files' }}
+                </span>
+              </button>
+            </div>
+          </section>
+        </transition>
+      </div>
     </div>
 
     <ConflictResolutionModal 

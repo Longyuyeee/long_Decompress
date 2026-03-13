@@ -102,97 +102,114 @@ const chartData = computed(() => {
 </script>
 
 <template>
-  <div class="password-vault p-responsive p-8 min-h-screen flex flex-col gap-8 transition-colors duration-700">
-    <header class="flex flex-col md:flex-row md:justify-between md:items-end gap-6">
+  <div class="password-vault p-responsive p-8 h-screen flex flex-col gap-6 transition-colors duration-700 relative overflow-hidden">
+    <header class="flex justify-between items-center gap-6 shrink-0">
       <div class="flex items-center gap-6 shrink-0">
         <div>
-          <h1 class="text-4xl font-black text-content tracking-tighter mb-1">{{ appStore.t('nav.vault') }}</h1>
-          <p class="text-muted text-[10px] font-bold uppercase tracking-[0.2em] ml-1">{{ appStore.t('vault.usage_stats') }}</p>
+          <h1 class="text-3xl font-black text-content tracking-tighter mb-0.5">{{ appStore.t('nav.vault') }}</h1>
+          <p class="text-muted text-[9px] font-bold uppercase tracking-[0.2em] ml-0.5">{{ appStore.t('vault.usage_stats') }}</p>
         </div>
         
         <div class="flex gap-2">
-          <button @click="handleAddNew" class="w-10 h-10 rounded-2xl bg-primary text-white flex items-center justify-center hover:scale-105 transition-all shadow-lg hover:shadow-glass-hover">
-            <i class="pi pi-plus"></i>
+          <button @click="handleAddNew" class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center hover:scale-105 transition-all shadow-lg hover:shadow-primary/40">
+            <i class="pi pi-plus text-sm"></i>
           </button>
-          <div class="w-px h-6 bg-subtle my-auto mx-1"></div>
-          <button @click="handleExport" class="w-9 h-9 rounded-xl bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" title="Export">
-            <i class="pi pi-download text-xs"></i>
+          <div class="w-px h-5 bg-subtle my-auto mx-1"></div>
+          <button @click="handleExport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" title="Export">
+            <i class="pi pi-download text-[10px]"></i>
           </button>
-          <button @click="handleImport" class="w-9 h-9 rounded-xl bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" title="Import">
-            <i class="pi pi-upload text-xs"></i>
+          <button @click="handleImport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" title="Import">
+            <i class="pi pi-upload text-[10px]"></i>
           </button>
-          <button @click="showClearConfirm = true" class="w-9 h-9 rounded-xl bg-input border border-subtle text-muted flex items-center justify-center hover:text-red-500 transition-all" title="Clear All">
-            <i class="pi pi-trash text-xs"></i>
+          <button @click="showClearConfirm = true" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-red-500 transition-all" title="Clear All">
+            <i class="pi pi-trash text-[10px]"></i>
           </button>
         </div>
       </div>
 
-      <div class="flex-1 flex items-center justify-end gap-6 min-w-0">
-        <div class="relative w-full max-w-sm group">
-          <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-dim text-xs group-hover:text-primary transition-colors"></i>
-          <input v-model="searchQuery" type="text" :placeholder="appStore.t('common.search')" class="w-full bg-input border border-subtle rounded-[1.2rem] pl-12 pr-4 py-3 text-xs text-content focus:outline-none focus:border-primary transition-all shadow-sm placeholder:text-dim">
-        </div>
-        
-        <div class="flex gap-8 border-l border-subtle pl-8 hide-on-small">
-          <div class="text-center">
-            <div class="text-[8px] text-muted font-black uppercase tracking-widest mb-1">Vault Size</div>
-            <div class="text-xl font-black text-primary leading-none">{{ stats.total }}</div>
-          </div>
-          <div class="text-center">
-            <div class="text-[8px] text-muted font-black uppercase tracking-widest mb-1">Total Hits</div>
-            <div class="text-xl font-black text-content leading-none">{{ stats.totalUsage }}</div>
-          </div>
+      <div class="flex-1 flex justify-end">
+        <div class="relative w-full max-w-[280px] group">
+          <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-dim text-[10px] group-hover:text-primary transition-colors"></i>
+          <input v-model="searchQuery" type="text" :placeholder="appStore.t('common.search')" class="w-full bg-input border border-subtle rounded-xl pl-10 pr-4 py-2.5 text-[11px] text-content focus:outline-none focus:border-primary transition-all shadow-sm placeholder:text-dim">
         </div>
       </div>
     </header>
 
-    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col">
+    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col mb-12">
       <div v-if="passwordStore.isLoading" class="absolute inset-0 z-50 bg-card/80 backdrop-blur-sm flex items-center justify-center">
         <i class="pi pi-spin pi-spinner text-primary text-2xl"></i>
       </div>
 
-      <div class="flex-1 overflow-auto custom-scrollbar">
-        <table class="w-full text-left border-collapse min-w-[800px]">
+      <div class="flex-1 overflow-hidden flex flex-col relative">
+        <table class="w-full text-left border-collapse table-fixed">
           <thead class="sticky top-0 z-20 bg-input/80 backdrop-blur-xl border-b border-subtle">
             <tr>
-              <th class="px-8 py-5 text-[10px] font-black text-muted uppercase tracking-[0.2em] w-[25%]">Identifier</th>
-              <th class="px-8 py-5 text-[10px] font-black text-muted uppercase tracking-[0.2em] w-[30%]">Access Key</th>
-              <th class="px-8 py-5 text-[10px] font-black text-muted uppercase tracking-[0.2em] w-[25%] hide-on-small">Meta Notes</th>
-              <th class="px-8 py-5 text-[10px] font-black text-muted uppercase tracking-[0.2em] text-center w-[10%]">Usage</th>
-              <th class="px-8 py-5 text-[10px] font-black text-muted uppercase tracking-[0.2em] text-right w-[10%]">Actions</th>
+              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] w-[18%]">{{ appStore.t('vault.column.name') }}</th>
+              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] w-[27%]">{{ appStore.t('vault.column.password') }}</th>
+              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] w-[31%]">{{ appStore.t('vault.column.notes') }}</th>
+              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] text-center w-[12%]">{{ appStore.t('vault.column.usage') }}</th>
+              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] text-right w-[12%]">{{ appStore.t('vault.column.actions') }}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-subtle/50">
-            <tr v-for="entry in filteredAndSortedEntries" :key="entry.id" class="hover:bg-primary/[0.03] group transition-all">
-              <td class="px-8 py-5">
-                <div class="flex items-center gap-3">
-                  <div class="w-2 h-2 rounded-full bg-primary/40 group-hover:bg-primary transition-colors"></div>
-                  <span class="text-xs font-bold text-content truncate max-w-[200px]" :title="entry.name">{{ entry.name }}</span>
-                </div>
-              </td>
-              <td class="px-8 py-5">
-                <div class="flex items-center gap-3 overflow-hidden group/key">
-                  <code class="text-[11px] font-mono text-primary font-bold bg-primary/5 px-3 py-1.5 rounded-lg truncate max-w-[220px]">{{ entry.password }}</code>
-                  <i @click="copyToClipboard(entry.password)" class="pi pi-copy text-[10px] text-dim hover:text-primary cursor-pointer transition-all opacity-0 group-hover/key:opacity-100 scale-90 hover:scale-110"></i>
-                </div>
-              </td>
-              <td class="px-8 py-5 hide-on-small">
-                <span class="text-[10px] text-muted italic truncate max-w-[200px]" :title="entry.notes">{{ entry.notes || '—' }}</span>
-              </td>
-              <td class="px-8 py-5 text-center">
-                <button @click="showUsageHistory(entry)" class="text-[10px] font-black text-muted hover:text-primary bg-input w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-all shadow-sm hover:shadow-md border border-subtle">
-                  {{ entry.use_count || 0 }}
-                </button>
-              </td>
-              <td class="px-8 py-5 text-right">
-                <div class="flex justify-end gap-4 opacity-0 group-hover:opacity-100 transition-all">
-                  <button @click="handleEdit(entry)" class="text-primary/60 hover:text-primary transition-colors"><i class="pi pi-pencil text-xs"></i></button>
-                  <button @click="handleDelete(entry.id)" class="text-red-400/60 hover:text-red-500 transition-colors"><i class="pi pi-trash text-xs"></i></button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
         </table>
+        
+        <div class="flex-1 overflow-y-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse table-fixed">
+            <tbody class="divide-y divide-subtle/50">
+              <tr v-for="entry in filteredAndSortedEntries" :key="entry.id" class="hover:bg-primary/[0.03] group transition-all">
+                <td class="px-6 py-3.5 w-[18%]">
+                  <div class="flex items-center gap-2 relative group/tooltip">
+                    <div class="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors shrink-0"></div>
+                    <span class="text-[11px] font-bold text-content truncate block w-full">{{ entry.name }}</span>
+                    <!-- 自定义悬浮窗 (Aero Tooltip) - 提高 z-index 并增加下偏移防止遮挡 -->
+                    <div class="absolute left-0 bottom-[110%] mb-1 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-3xl border border-subtle shadow-2xl text-[10px] text-content whitespace-normal break-all max-w-[200px] z-[100] opacity-0 translate-y-2 group-hover/tooltip:opacity-100 group-hover/tooltip:translate-y-0 transition-all pointer-events-none font-bold">
+                      {{ entry.name }}
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-3.5 w-[27%]">
+                  <div class="flex items-center gap-2 overflow-hidden group/key w-full">
+                    <code class="text-[10px] font-mono text-primary font-bold bg-primary/5 px-2 py-1 rounded-lg truncate block flex-1">{{ entry.password }}</code>
+                    <i @click="copyToClipboard(entry.password)" class="pi pi-copy text-[10px] text-dim hover:text-primary cursor-pointer transition-all opacity-0 group-hover/key:opacity-100 scale-90 hover:scale-110 shrink-0"></i>
+                  </div>
+                </td>
+                <td class="px-6 py-3.5 w-[31%]">
+                  <div class="relative group/tooltip w-full">
+                    <span class="text-[10px] text-muted italic truncate block w-full">{{ entry.notes || '—' }}</span>
+                    <!-- 自定义悬浮窗 (Aero Tooltip) - 提高 z-index -->
+                    <div v-if="entry.notes" class="absolute left-0 bottom-[110%] mb-1 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-3xl border border-subtle shadow-2xl text-[10px] text-muted whitespace-normal break-all max-w-[240px] z-[100] opacity-0 translate-y-2 group-hover/tooltip:opacity-100 group-hover/tooltip:translate-y-0 transition-all pointer-events-none italic">
+                      {{ entry.notes }}
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-3.5 text-center w-[12%]">
+                  <button @click="showUsageHistory(entry)" class="text-[9px] font-black text-muted hover:text-primary bg-input w-6 h-6 rounded-full flex items-center justify-center mx-auto transition-all shadow-sm border border-subtle shrink-0">
+                    {{ entry.use_count || 0 }}
+                  </button>
+                </td>
+                <td class="px-6 py-3.5 text-right w-[12%]">
+                  <div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                    <button @click="handleEdit(entry)" class="text-primary/60 hover:text-primary transition-colors"><i class="pi pi-pencil text-[10px]"></i></button>
+                    <button @click="handleDelete(entry.id)" class="text-red-400/60 hover:text-red-500 transition-colors"><i class="pi pi-trash text-[10px]"></i></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据统计悬浮区 (右下角) -->
+    <div class="fixed bottom-8 right-12 z-50 flex gap-6 bg-card/60 backdrop-blur-2xl border border-subtle px-6 py-3 rounded-2xl shadow-2xl">
+      <div class="text-center">
+        <div class="text-[7px] text-muted font-black uppercase tracking-widest mb-0.5">Vault Size</div>
+        <div class="text-lg font-black text-primary leading-none">{{ stats.total }}</div>
+      </div>
+      <div class="w-px h-6 bg-subtle my-auto"></div>
+      <div class="text-center">
+        <div class="text-[7px] text-muted font-black uppercase tracking-widest mb-0.5">Total Hits</div>
+        <div class="text-lg font-black text-content leading-none">{{ stats.totalUsage }}</div>
       </div>
     </div>
 
