@@ -156,13 +156,16 @@ const chartData = computed(() => {
         <div class="flex-1 overflow-y-auto custom-scrollbar">
           <table class="w-full text-left border-collapse table-fixed">
             <tbody class="divide-y divide-subtle/50">
-              <tr v-for="entry in filteredAndSortedEntries" :key="entry.id" class="hover:bg-primary/[0.03] group transition-all">
+              <tr v-for="(entry, index) in filteredAndSortedEntries" :key="entry.id" class="hover:bg-primary/[0.03] group transition-all">
                 <td class="px-6 py-3.5 w-[18%]">
                   <div class="flex items-center gap-2 relative group/tooltip">
                     <div class="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors shrink-0"></div>
                     <span class="text-[11px] font-bold text-content truncate block w-full">{{ entry.name }}</span>
-                    <!-- 自定义悬浮窗 (Aero Tooltip) - 提高 z-index 并增加下偏移防止遮挡 -->
-                    <div class="absolute left-0 bottom-[110%] mb-1 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-3xl border border-subtle shadow-2xl text-[10px] text-content whitespace-normal break-all max-w-[200px] z-[100] opacity-0 translate-y-2 group-hover/tooltip:opacity-100 group-hover/tooltip:translate-y-0 transition-all pointer-events-none font-bold">
+                    <!-- 自定义悬浮窗 (Aero Tooltip) - 修复遮挡问题：前两行向下弹出，其余向上弹出 -->
+                    <div :class="[
+                      'absolute left-0 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-3xl border border-subtle shadow-2xl text-[10px] text-content whitespace-normal break-all max-w-[200px] z-[100] opacity-0 transition-all pointer-events-none font-bold',
+                      index < 2 ? 'top-[110%] mt-1 translate-y-[-8px] group-hover/tooltip:translate-y-0' : 'bottom-[110%] mb-1 translate-y-2 group-hover/tooltip:translate-y-0'
+                    ]" class="group-hover/tooltip:opacity-100">
                       {{ entry.name }}
                     </div>
                   </div>
@@ -176,8 +179,11 @@ const chartData = computed(() => {
                 <td class="px-6 py-3.5 w-[31%]">
                   <div class="relative group/tooltip w-full">
                     <span class="text-[10px] text-muted italic truncate block w-full">{{ entry.notes || '—' }}</span>
-                    <!-- 自定义悬浮窗 (Aero Tooltip) - 提高 z-index -->
-                    <div v-if="entry.notes" class="absolute left-0 bottom-[110%] mb-1 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-3xl border border-subtle shadow-2xl text-[10px] text-muted whitespace-normal break-all max-w-[240px] z-[100] opacity-0 translate-y-2 group-hover/tooltip:opacity-100 group-hover/tooltip:translate-y-0 transition-all pointer-events-none italic">
+                    <!-- 自定义悬浮窗 (Aero Tooltip) - 修复遮挡问题：前两行向下弹出，其余向上弹出 -->
+                    <div v-if="entry.notes" :class="[
+                      'absolute left-0 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-3xl border border-subtle shadow-2xl text-[10px] text-muted whitespace-normal break-all max-w-[240px] z-[100] opacity-0 transition-all pointer-events-none italic',
+                      index < 2 ? 'top-[110%] mt-1 translate-y-[-8px] group-hover/tooltip:translate-y-0' : 'bottom-[110%] mb-1 translate-y-2 group-hover/tooltip:translate-y-0'
+                    ]" class="group-hover/tooltip:opacity-100">
                       {{ entry.notes }}
                     </div>
                   </div>

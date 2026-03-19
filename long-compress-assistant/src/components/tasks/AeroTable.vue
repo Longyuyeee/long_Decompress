@@ -35,79 +35,67 @@ const getSeverityClass = (severity: string) => {
 </script>
 
 <template>
-  <div class="aero-table-container w-full overflow-hidden">
-    <!-- 顶部格式徽章栏 (动态高亮) -->
-    <div class="format-badges flex gap-3 mb-8 px-2 flex-wrap">
-      <div v-for="fmt in ['ZIP', '7Z', 'RAR', 'TAR', 'GZ', 'BZ2', 'XZ']" :key="fmt"
-        class="px-5 py-2 rounded-2xl border backdrop-blur-xl transition-all duration-700 text-[10px] font-black tracking-widest uppercase cursor-default select-none"
-        :class="taskStore.tasks.some(t => t.format?.toUpperCase() === fmt || (t.format === 'tar.gz' && fmt === 'GZ')) 
-          ? 'bg-primary text-white border-primary shadow-[0_0_20px_color-mix(in_srgb,var(--dynamic-accent),transparent_70%)] scale-110 -translate-y-1' 
-          : 'bg-card text-muted border-subtle hover:border-primary/50'"
-      >
-        {{ fmt }}
-      </div>
-    </div>
-
-    <!-- 智慧表格 -->
-    <div class="glass-table w-full aero-card overflow-hidden">
-      <!-- 表头 -->
-      <div class="table-header flex items-center px-10 py-6 border-b border-subtle bg-input/50 text-dim text-[9px] font-black tracking-[0.2em] uppercase">
-        <div class="w-16">Icon</div>
-        <div class="flex-1 min-w-[150px]">Archive Identification</div>
-        <div class="w-48 hidden md:block">Source Path</div>
-        <div class="w-24 text-center">Settings</div>
-        <div class="flex-1 max-w-[280px]">Status & Core Lifecycle</div>
+  <div class="aero-table-container w-full h-full flex flex-col overflow-hidden">
+    <!-- 智慧表格 (重构为极简列表模式) -->
+    <div class="glass-table w-full flex-1 flex flex-col overflow-hidden">
+      <!-- 表头 (移除图标列，重分配宽度) -->
+      <div class="table-header sticky top-0 z-20 flex items-center px-8 py-5 border-b border-subtle bg-input/80 backdrop-blur-xl text-dim text-[9px] font-black tracking-[0.2em] uppercase shrink-0">
+        <div class="flex-[1.5] min-w-[200px]">{{ appStore.t('vault.column.name') }}</div>
+        <div class="w-72 hidden lg:block">{{ appStore.t('vault.column.path') || 'Source Path' }}</div>
+        <div class="w-24 text-center">{{ appStore.t('settings.title') }}</div>
+        <div class="flex-1 min-w-[200px]">{{ appStore.t('vault.column.status') || 'Status & Execution' }}</div>
         <div class="w-10"></div>
       </div>
 
-      <!-- 表格内容 -->
-      <div class="table-body">
+      <!-- 表格内容 (扩开布局) -->
+      <div class="table-body flex-1 overflow-y-auto custom-scrollbar">
         <div v-for="task in taskStore.tasks" :key="task.id" class="task-row-container border-b border-subtle last:border-0 group/row">
           <div 
-            class="task-row flex items-center px-10 py-7 hover:bg-primary/[0.03] transition-all duration-500 cursor-pointer relative overflow-hidden"
+            class="task-row flex items-center px-8 py-5 hover:bg-primary/[0.03] transition-all duration-500 cursor-pointer relative overflow-hidden"
             @click="toggleExpand(task.id)"
           >
+            <!-- 状态指示条 -->
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary scale-y-0 group-hover/row:scale-y-100 transition-transform duration-500"></div>
 
-            <div class="w-16 flex items-center justify-start">
-              <div :class="['w-11 h-11 flex items-center justify-center rounded-2xl border transition-all duration-700 group-hover/row:rotate-6 shadow-sm', getFormatBadgeColor(task.format)]">
-                <i class="pi pi-file text-lg"></i>
-              </div>
-            </div>
-
-            <div class="flex-1 min-w-[150px] px-6 overflow-hidden">
+            <!-- 文件识别区 (扩宽) -->
+            <div class="flex-[1.5] min-w-[200px] overflow-hidden pr-6">
               <div class="text-content font-bold truncate text-sm tracking-tight group-hover/row:text-primary transition-colors">{{ task.name }}</div>
-              <div class="flex items-center gap-2 mt-2">
-                 <span class="text-dim text-[9px] uppercase font-black tracking-widest">
-                   {{ (task.sourceFiles.length > 1 ? `Batch (${task.sourceFiles.length})` : 'Single') }}
+              <div class="flex items-center gap-2 mt-1.5">
+                 <span class="text-dim text-[8px] uppercase font-black tracking-widest bg-input/50 px-1.5 py-0.5 rounded">
+                   {{ (task.sourceFiles.length > 1 ? (appStore.language === 'zh-CN' ? '批量' : 'Batch') : (appStore.language === 'zh-CN' ? '单文件' : 'Single')) }}
                  </span>
                  <div class="w-1 h-1 rounded-full bg-subtle"></div>
-                 <span class="text-dim text-[9px] font-mono">{{ task.format?.toUpperCase() }}</span>
+                 <span class="text-dim text-[9px] font-mono font-bold">{{ task.format?.toUpperCase() }}</span>
               </div>
             </div>
 
-            <div class="w-48 text-muted text-[10px] truncate italic px-2 hidden md:block font-mono font-light">
+            <!-- 物理路径 (扩宽) -->
+            <div class="w-72 text-muted text-[10px] truncate italic px-2 hidden lg:block font-mono font-light opacity-60">
               {{ task.sourceFiles[0] }}
             </div>
 
-            <div class="w-24 flex justify-center gap-4">
-              <div class="w-8 h-8 rounded-full bg-input flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all text-dim border border-subtle">
-                <i class="pi pi-key text-[10px]"></i>
+            <!-- 快捷操作 -->
+            <div class="w-24 flex justify-center gap-3">
+              <div class="w-7 h-7 rounded-lg bg-input flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all text-dim border border-subtle shadow-sm">
+                <i class="pi pi-key text-[9px]"></i>
               </div>
-              <div class="w-8 h-8 rounded-full bg-input flex items-center justify-center hover:bg-green-500/20 hover:text-green-400 transition-all text-dim border border-subtle">
-                <i class="pi pi-folder text-[10px]"></i>
+              <div class="w-7 h-7 rounded-lg bg-input flex items-center justify-center hover:bg-green-500/20 hover:text-green-400 transition-all text-dim border border-subtle shadow-sm">
+                <i class="pi pi-folder text-[9px]"></i>
               </div>
             </div>
 
-            <div class="flex-1 max-w-[280px] px-6">
-              <div class="flex justify-between items-end mb-3">
+            <!-- 状态与执行进度 (扩宽并移除限制) -->
+            <div class="flex-1 min-w-[200px] px-6">
+              <div class="flex justify-between items-end mb-2.5">
                 <span class="text-[10px] text-muted font-bold truncate pr-6 tracking-wide">
-                  {{ task.logs.length > 0 ? task.logs[task.logs.length - 1].message : 'Initializing Node...' }}
+                  {{ task.status === 'pending' 
+                    ? appStore.t('decompress.waiting')
+                    : (task.logs.length > 0 ? task.logs[task.logs.length - 1].message : 'Initializing Node...') }}
                 </span>
                 <span class="text-[10px] text-primary font-mono font-black">{{ task.progress }}%</span>
               </div>
-              <div class="h-1.5 w-full bg-input border border-subtle rounded-full overflow-hidden shadow-inner p-[1px]">
-                <div class="h-full bg-primary rounded-full transition-all duration-1000" 
+              <div class="h-1 w-full bg-input border border-subtle rounded-full overflow-hidden p-[0.5px]">
+                <div class="h-full bg-primary rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.4)]" 
                      :style="{ width: `${task.progress}%` }"></div>
               </div>
             </div>
