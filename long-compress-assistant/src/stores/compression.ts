@@ -1,10 +1,18 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
+export interface FileObject {
+  name: string
+  path: string
+  size: number
+  type: string
+  isDirectory: boolean
+}
+
 export interface CompressionGroup {
   id: string
   name: string
-  files: string[]
+  files: FileObject[]
   themeColor: string
   expanded: boolean
   settings: {
@@ -15,27 +23,30 @@ export interface CompressionGroup {
 }
 
 export const useCompressionStore = defineStore('compression', () => {
-  const selectedFiles = ref<string[]>([])
+  const selectedFiles = ref<FileObject[]>([])
   const groups = ref<CompressionGroup[]>([])
   
   // 预计体积预演数据
   const estimatedSize = ref<Record<string, number>>({})
 
   const totalOriginalSize = computed(() => {
-    // 假设我们有一个获取文件大小的逻辑
-    return 0 
+    return selectedFiles.value.reduce((acc, f) => acc + f.size, 0) + 
+           groups.value.reduce((acc, g) => acc + g.files.reduce((ga, f) => ga + f.size, 0), 0)
   })
 
   // 磁吸打组逻辑
-  const createGroup = (files: string[]) => {
+  const createGroup = (paths: string[]) => {
     const id = Date.now().toString()
     const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b']
     const themeColor = colors[groups.value.length % colors.length]
     
+    // 找到对应的 FileObject
+    const targetFiles = selectedFiles.value.filter(f => paths.includes(f.path))
+    
     groups.value.push({
       id,
       name: `新建压缩组 ${groups.value.length + 1}`,
-      files: [...files],
+      files: [...targetFiles],
       themeColor,
       expanded: true,
       settings: {
@@ -45,7 +56,7 @@ export const useCompressionStore = defineStore('compression', () => {
     })
     
     // 从未分组列表中移除
-    selectedFiles.value = selectedFiles.value.filter(f => !files.includes(f))
+    selectedFiles.value = selectedFiles.value.filter(f => !paths.includes(f.path))
     return id
   }
 

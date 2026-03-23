@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useTaskStore, type Task } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
+import { open } from '@tauri-apps/api/dialog'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -12,6 +13,30 @@ const toggleExpand = (taskId: string) => {
     expandedTasks.value.delete(taskId)
   } else {
     expandedTasks.value.add(taskId)
+  }
+}
+
+const handleSelectOutputDir = async (task: Task) => {
+  try {
+    const selected = await open({
+      directory: true,
+      multiple: false,
+      title: appStore.t('decompress.config.output_select')
+    })
+    if (selected && typeof selected === 'string') {
+      task.outputPath = selected
+    }
+  } catch (err) {
+    console.error('Failed to open directory dialog:', err)
+  }
+}
+
+const handleSetSameDir = (task: Task) => {
+  if (task.sourceFiles.length > 0) {
+    const sourcePath = task.sourceFiles[0]
+    // 提取父目录
+    const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
+    task.outputPath = parentDir
   }
 }
 
@@ -38,106 +63,121 @@ const getSeverityClass = (severity: string) => {
   <div class="aero-table-container w-full h-full flex flex-col overflow-hidden">
     <!-- 智慧表格 (重构为极简列表模式) -->
     <div class="glass-table w-full flex-1 flex flex-col overflow-hidden">
-      <!-- 表头 (移除图标列，重分配宽度) -->
-      <div class="table-header sticky top-0 z-20 flex items-center px-8 py-5 border-b border-subtle bg-input/80 backdrop-blur-xl text-dim text-[9px] font-black tracking-[0.2em] uppercase shrink-0">
-        <div class="flex-[1.5] min-w-[200px]">{{ appStore.t('vault.column.name') }}</div>
-        <div class="w-72 hidden lg:block">{{ appStore.t('vault.column.path') || 'Source Path' }}</div>
-        <div class="w-24 text-center">{{ appStore.t('settings.title') }}</div>
-        <div class="flex-1 min-w-[200px]">{{ appStore.t('vault.column.status') || 'Status & Execution' }}</div>
+      <!-- 表头 (高度压缩，字体减小) -->
+      <div class="table-header sticky top-0 z-20 flex items-center px-6 py-3 border-b border-subtle bg-input/90 backdrop-blur-xl text-dim text-[8px] font-black tracking-[0.15em] uppercase shrink-0">
+        <div class="flex-[1.5] min-w-[180px]">{{ appStore.t('decompress.column.name') }}</div>
+        <div class="w-60 hidden lg:block">{{ appStore.t('decompress.column.path') }}</div>
+        <div class="flex-1 min-w-[180px]">{{ appStore.t('decompress.column.status') }}</div>
         <div class="w-10"></div>
       </div>
 
-      <!-- 表格内容 (扩开布局) -->
-      <div class="table-body flex-1 overflow-y-auto custom-scrollbar">
-        <div v-for="task in taskStore.tasks" :key="task.id" class="task-row-container border-b border-subtle last:border-0 group/row">
+      <!-- 表格内容 (高密度布局 + 物理隔断) -->
+      <div class="table-body flex-1 overflow-y-auto custom-scrollbar p-3">
+        <div v-for="task in taskStore.tasks" :key="task.id" class="task-row-container mb-1.5 last:mb-0 group/row">
           <div 
-            class="task-row flex items-center px-8 py-5 hover:bg-primary/[0.03] transition-all duration-500 cursor-pointer relative overflow-hidden"
+            class="task-row flex items-center px-4 py-1.5 bg-card/30 border border-subtle/30 rounded-lg hover:border-primary/40 hover:bg-primary/[0.02] transition-all duration-300 cursor-pointer relative overflow-hidden shadow-sm"
             @click="toggleExpand(task.id)"
           >
-            <!-- 状态指示条 -->
-            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary scale-y-0 group-hover/row:scale-y-100 transition-transform duration-500"></div>
+            <!-- 状态指示条 (极细) -->
+            <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-primary opacity-0 group-hover/row:opacity-100 transition-opacity"></div>
 
-            <!-- 文件识别区 (扩宽) -->
-            <div class="flex-[1.5] min-w-[200px] overflow-hidden pr-6">
-              <div class="text-content font-bold truncate text-sm tracking-tight group-hover/row:text-primary transition-colors">{{ task.name }}</div>
-              <div class="flex items-center gap-2 mt-1.5">
-                 <span class="text-dim text-[8px] uppercase font-black tracking-widest bg-input/50 px-1.5 py-0.5 rounded">
-                   {{ (task.sourceFiles.length > 1 ? (appStore.language === 'zh-CN' ? '批量' : 'Batch') : (appStore.language === 'zh-CN' ? '单文件' : 'Single')) }}
-                 </span>
-                 <div class="w-1 h-1 rounded-full bg-subtle"></div>
-                 <span class="text-dim text-[9px] font-mono font-bold">{{ task.format?.toUpperCase() }}</span>
-              </div>
+            <!-- 文件识别区 (极致紧凑) -->
+            <div class="flex-[1.5] min-w-[180px] overflow-hidden flex items-center gap-3">
+              <div class="text-content font-bold truncate text-[11px] tracking-tight group-hover/row:text-primary transition-colors leading-tight">{{ task.name }}</div>
+              <span class="text-dim text-[7px] uppercase font-black tracking-widest bg-input/50 px-1 py-0 rounded border border-subtle/20 shrink-0">
+                {{ task.format?.toUpperCase() }}
+              </span>
             </div>
 
-            <!-- 物理路径 (扩宽) -->
-            <div class="w-72 text-muted text-[10px] truncate italic px-2 hidden lg:block font-mono font-light opacity-60">
+            <!-- 物理路径 -->
+            <div class="w-60 text-muted text-[9px] truncate italic px-4 hidden lg:block font-mono font-light opacity-30">
               {{ task.sourceFiles[0] }}
             </div>
 
-            <!-- 快捷操作 -->
-            <div class="w-24 flex justify-center gap-3">
-              <div class="w-7 h-7 rounded-lg bg-input flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all text-dim border border-subtle shadow-sm">
-                <i class="pi pi-key text-[9px]"></i>
-              </div>
-              <div class="w-7 h-7 rounded-lg bg-input flex items-center justify-center hover:bg-green-500/20 hover:text-green-400 transition-all text-dim border border-subtle shadow-sm">
-                <i class="pi pi-folder text-[9px]"></i>
-              </div>
-            </div>
-
-            <!-- 状态与执行进度 (扩宽并移除限制) -->
-            <div class="flex-1 min-w-[200px] px-6">
-              <div class="flex justify-between items-end mb-2.5">
-                <span class="text-[10px] text-muted font-bold truncate pr-6 tracking-wide">
-                  {{ task.status === 'pending' 
-                    ? appStore.t('decompress.waiting')
-                    : (task.logs.length > 0 ? task.logs[task.logs.length - 1].message : 'Initializing Node...') }}
-                </span>
-                <span class="text-[10px] text-primary font-mono font-black">{{ task.progress }}%</span>
-              </div>
-              <div class="h-1 w-full bg-input border border-subtle rounded-full overflow-hidden p-[0.5px]">
-                <div class="h-full bg-primary rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.4)]" 
-                     :style="{ width: `${task.progress}%` }"></div>
+            <!-- 状态与执行进度 (横向一行化) -->
+            <div class="flex-1 min-w-[180px] flex items-center gap-4 px-4">
+              <span class="text-[9px] text-muted font-bold truncate flex-1 opacity-60">
+                {{ task.status === 'pending' 
+                  ? appStore.t('decompress.waiting')
+                  : (task.logs.length > 0 ? task.logs[task.logs.length - 1].message : '...') }}
+              </span>
+              <div class="w-24 flex items-center gap-2 shrink-0">
+                <div class="h-0.5 flex-1 bg-input border border-subtle/20 rounded-full overflow-hidden">
+                  <div class="h-full bg-primary rounded-full transition-all duration-1000" 
+                       :style="{ width: `${task.progress}%` }"></div>
+                </div>
+                <span class="text-[9px] text-primary font-mono font-black w-6 text-right">{{ task.progress }}%</span>
               </div>
             </div>
 
-            <div class="w-10 flex justify-end">
-              <div :class="['w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-700', 
-                 expandedTasks.has(task.id) ? 'bg-primary border-primary shadow-lg' : 'bg-input border-subtle']">
-                <i :class="['pi text-[8px] transition-all duration-700', 
-                   expandedTasks.has(task.id) ? 'pi-chevron-up text-white' : 'pi-chevron-down text-muted']"></i>
-              </div>
+            <div class="w-6 flex justify-end">
+              <i :class="['pi text-[7px] transition-all duration-500', 
+                 expandedTasks.has(task.id) ? 'pi-chevron-up text-primary' : 'pi-chevron-down text-muted']"></i>
             </div>
           </div>
 
           <Transition name="aero-drawer">
-            <div v-if="expandedTasks.has(task.id)" class="details-drawer relative overflow-hidden bg-input/30 border-t border-subtle">
-              <div class="grid grid-cols-1 lg:grid-cols-5 gap-0">
-                <div class="lg:col-span-2 p-10 border-r border-subtle">
-                  <h4 class="text-muted text-[9px] font-black uppercase tracking-[0.3em] mb-8">Metadata Analysis</h4>
-                  <div class="space-y-6">
-                    <div class="group/meta">
-                      <div class="text-dim text-[8px] uppercase font-black mb-2 tracking-widest group-hover/meta:text-primary transition-colors">Physical Hash (SHA256)</div>
-                      <div class="p-4 rounded-2xl bg-card border border-subtle font-mono text-[10px] text-muted break-all leading-relaxed tracking-tighter">
-                        {{ task.id.repeat(4).substring(0, 64) }}...
+            <div v-if="expandedTasks.has(task.id)" class="details-drawer relative overflow-hidden px-4 pb-4">
+              <!-- 交互增强：task-detail-card 增加 hover 动效 -->
+              <div class="task-detail-card flex h-44 rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
+
+                <!-- 详情区内容布局：改为弹性分配，防止溢出 -->
+                <div class="flex w-full h-full relative z-10">
+                  <!-- 左侧：核心配置 (设置最小宽度和弹性边界) -->
+                  <div class="flex-initial min-w-[320px] max-w-[45%] p-5 border-r border-subtle/20 flex flex-col justify-center space-y-4 pl-8 transition-colors group-hover/detail:bg-primary/[0.01]">
+                    <div class="flex items-center justify-between">
+                      <h4 class="text-primary text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                        <i class="pi pi-cog text-[10px]"></i>
+                        {{ appStore.t('decompress.column.config') }}
+                      </h4>
+                    </div>
+
+                    <div class="space-y-3.5">
+                      <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
+                      <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-3">
+                          <span class="text-muted text-[8px] uppercase font-black tracking-widest opacity-60 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
+                          <div class="flex gap-1.5 flex-nowrap shrink-0 overflow-x-auto no-scrollbar">
+                            <button @click.stop="handleSetSameDir(task)" 
+                                    class="h-6 px-2.5 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-[9px] font-black whitespace-nowrap">
+                              {{ appStore.t('decompress.config.output_same') }}
+                            </button>
+                            <button @click.stop="handleSelectOutputDir(task)" 
+                                    class="h-6 px-2.5 rounded-md bg-input border border-subtle text-muted hover:text-content transition-all text-[9px] font-black whitespace-nowrap flex items-center gap-1.5">
+                              <i class="pi pi-external-link text-[8px]"></i>
+                              {{ appStore.t('decompress.config.output_select') }}
+                            </button>
+                          </div>
+                        </div>
+                        <div class="px-3 py-2 rounded-xl bg-input/50 border border-subtle/50 font-mono text-[10px] text-content/80 truncate shadow-inner">
+                          {{ task.outputPath || appStore.t('decompress.config.output_auto') }}
+                        </div>
+                      </div>
+
+                      <div class="flex items-center gap-3 cursor-pointer group/check" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
+                        <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary" 
+                             :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
+                          <i v-if="task.extractToSubfolder" class="pi pi-check text-[8px] text-white"></i>
+                        </div>
+                        <span class="text-[11px] font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
                       </div>
                     </div>
-                    <div>
-                      <div class="text-dim text-[8px] uppercase font-black mb-2 tracking-widest">Deployment Target</div>
-                      <div class="text-[11px] text-muted font-mono italic">{{ task.outputPath }}</div>
-                    </div>
                   </div>
-                </div>
 
-                <div class="lg:col-span-3 p-10 bg-card/40">
-                  <h4 class="text-muted text-[9px] font-black uppercase tracking-[0.3em] mb-8 flex items-center justify-between">
-                    Process IO Logs
-                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                  </h4>
-                  <div class="log-viewport h-48 overflow-y-auto pr-6 space-y-3 custom-scrollbar">
-                    <div v-for="(log, idx) in task.logs" :key="idx" class="flex gap-4 items-start group/log">
-                      <span class="text-dim font-mono text-[9px] mt-1">{{ new Date(log.timestamp).toLocaleTimeString() }}</span>
-                      <div class="flex-1 text-[11px] leading-relaxed transition-all group-hover/log:translate-x-1" :class="getSeverityClass(log.severity)">
-                        {{ log.message }}
+                  <!-- 右侧：执行日志 -->
+                  <div class="flex-1 p-5 flex flex-col overflow-hidden">
+                    <h4 class="text-muted text-[8px] font-black uppercase tracking-[0.2em] mb-3 flex items-center justify-between opacity-60">
+                      <span class="flex items-center gap-2">
+                        <i class="pi pi-align-left text-[9px]"></i>
+                        {{ appStore.t('decompress.config.logs_title') }}
+                      </span>
+                    </h4>
+                    <div class="log-viewport flex-1 overflow-y-auto pr-2 space-y-1.5 custom-scrollbar">
+                      <div v-for="(log, idx) in task.logs" :key="idx" class="flex gap-3 items-start group/log border-l-2 border-subtle/20 pl-3 py-0.5">
+                        <span class="text-dim font-mono text-[8px] mt-0.5 opacity-40 shrink-0">{{ new Date(log.timestamp).toLocaleTimeString([], {hour12: false}) }}</span>
+                        <div class="flex-1 text-[10px] leading-relaxed font-mono" :class="getSeverityClass(log.severity)">
+                          {{ log.message }}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -145,6 +185,7 @@ const getSeverityClass = (severity: string) => {
               </div>
             </div>
           </Transition>
+
         </div>
       </div>
     </div>
@@ -152,13 +193,85 @@ const getSeverityClass = (severity: string) => {
 </template>
 
 <style scoped>
+.aero-table-container {
+  /* 解决展开时滚动条出现导致的布局跳动 */
+  scrollbar-gutter: stable;
+}
+
+.table-body {
+  /* 确保主体区域也有稳定的间隙 */
+  scrollbar-gutter: stable;
+}
+
+.details-drawer {
+  /* 增加更有深度的内阴影和背景色差，与主行区分 */
+  background-color: transparent;
+}
+
+.task-detail-card {
+  animation: border-flow 20s linear infinite;
+  background-image: linear-gradient(to bottom, rgba(var(--color-card-rgb), 0.92), rgba(var(--color-card-rgb), 0.98));
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px dashed color-mix(in srgb, var(--dynamic-accent) 20%, transparent);
+}
+
+.task-detail-card:hover {
+  /* 彻底移除位移和缩放，保持物理位置绝对不动 */
+  border: 2px dashed var(--dynamic-accent);
+  border-style: solid; /* 悬浮时变为实线，提供强视觉反馈 */
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 15px color-mix(in srgb, var(--dynamic-accent) 30%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--dynamic-accent) 10%, transparent);
+}
+
+@keyframes border-flow {
+  from { border-color: color-mix(in srgb, var(--dynamic-accent) 20%, transparent); }
+  50% { border-color: color-mix(in srgb, var(--dynamic-accent) 40%, transparent); }
+  to { border-color: color-mix(in srgb, var(--dynamic-accent) 20%, transparent); }
+}
+
+/* 虚线流动增强层 */
+.task-detail-card::after {
+  content: '';
+  position: absolute;
+  inset: -2px; /* 稍微扩大一点，确保加粗时不被遮挡 */
+  border: 2px dashed var(--dynamic-accent);
+  border-radius: 1.1rem;
+  opacity: 0.1;
+  pointer-events: none;
+  animation: dash-slide 40s linear infinite;
+  transition: all 0.3s ease;
+}
+
+.task-detail-card:hover::after {
+  opacity: 0.6;
+  inset: -1px;
+  animation-duration: 10s; /* Hover 时动画加速 */
+}
+
+@keyframes dash-slide {
+  to { stroke-dashoffset: -1000; }
+}
+
 .aero-drawer-enter-active, .aero-drawer-leave-active {
-  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  max-height: 800px;
+  transition: all 0.4s cubic-bezier(0.32, 1, 0.2, 1);
+  max-height: 400px;
 }
 .aero-drawer-enter-from, .aero-drawer-leave-to {
   max-height: 0;
   opacity: 0;
-  transform: translateY(-20px);
+  transform: translateY(-8px);
+}
+
+.task-row {
+  /* 严格控制磁贴高度 */
+  height: 38px;
+  min-height: 38px;
+}
+
+.details-drawer {
+  /* 为展开区增加垂直物理间距 */
+  margin: 4px 0 8px 0;
 }
 </style>

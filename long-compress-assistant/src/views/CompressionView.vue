@@ -14,8 +14,15 @@ const selectedRows = ref<Set<string>>(new Set())
 
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
-    if (!compressionStore.selectedFiles.includes(f.path)) {
-      compressionStore.selectedFiles.push(f.path)
+    // 检查是否已经存在
+    if (!compressionStore.selectedFiles.some(existing => existing.path === f.path)) {
+      compressionStore.selectedFiles.push({
+        name: f.name,
+        path: f.path,
+        size: f.size || 0,
+        type: f.type || 'file',
+        isDirectory: f.isDirectory || false
+      })
     }
   })
 }
@@ -75,11 +82,11 @@ const totalPayload = computed(() => {
       </div>
     </header>
 
-    <!-- 主工作区 -->
-    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col mb-12 relative border border-subtle bg-card/40 shadow-2xl">
-      <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+    <!-- 主工作区 (减小 mb 以使区域向下延展) -->
+    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col mb-6 relative border border-subtle bg-card/40 shadow-2xl">
+      <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
         
-        <!-- 1. 压缩组列表 (每个组可独立展开配置) -->
+        <!-- 1. 压缩组列表 -->
         <div v-for="group in compressionStore.groups" :key="group.id" 
              class="group-container rounded-[2rem] border transition-all duration-500 overflow-hidden"
              :class="group.expanded ? 'bg-input/40 border-primary/30 shadow-lg' : 'bg-input/20 border-subtle hover:border-primary/20'"
@@ -122,9 +129,12 @@ const totalPayload = computed(() => {
               
               <div class="space-y-2">
                 <h4 class="text-[8px] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('compress.group_files') }}</h4>
-                <div v-for="file in group.files" :key="file" class="text-[10px] text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex justify-between">
-                  <span class="truncate pr-4">{{ file.split(/[\\/]/).pop() }}</span>
-                  <span class="opacity-30 italic shrink-0">{{ file }}</span>
+                <div v-for="file in group.files" :key="file.path" class="text-[10px] text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex items-center justify-between">
+                  <div class="flex items-center gap-2 overflow-hidden">
+                    <i :class="file.isDirectory ? 'pi pi-folder text-primary/60' : 'pi pi-file text-muted/60'" class="text-[9px]"></i>
+                    <span class="truncate">{{ file.name }}</span>
+                  </div>
+                  <span class="opacity-30 italic shrink-0 ml-4">{{ file.path }}</span>
                 </div>
               </div>
             </div>
@@ -134,42 +144,69 @@ const totalPayload = computed(() => {
         <!-- 2. 未分组文件列表 (待分配) -->
         <div v-if="compressionStore.selectedFiles.length > 0" class="space-y-3">
           <h3 class="text-[9px] font-black text-muted uppercase tracking-[0.3em] px-4">{{ appStore.t('compress.add_files') }}</h3>
-          <div v-for="file in compressionStore.selectedFiles" :key="file" 
-               @click="toggleSelection(file)"
+          <div v-for="file in compressionStore.selectedFiles" :key="file.path" 
+               @click="toggleSelection(file.path)"
                class="flex items-center justify-between px-8 py-4 rounded-2xl bg-input border border-subtle group/row hover:border-primary/30 transition-all cursor-pointer"
-               :class="{ 'border-primary/50 bg-primary/5 shadow-inner': selectedRows.has(file) }">
+               :class="{ 'border-primary/50 bg-primary/5 shadow-inner': selectedRows.has(file.path) }">
             
             <div class="w-6 flex shrink-0">
               <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all"
-                   :class="selectedRows.has(file) ? 'bg-primary border-primary' : 'bg-card'">
-                <i v-if="selectedRows.has(file)" class="pi pi-check text-[8px] text-white"></i>
+                   :class="selectedRows.has(file.path) ? 'bg-primary border-primary' : 'bg-card'">
+                <i v-if="selectedRows.has(file.path)" class="pi pi-check text-[8px] text-white"></i>
               </div>
             </div>
 
-            <div class="flex-1 min-w-[200px] overflow-hidden px-4">
-              <div class="text-content font-bold truncate text-xs tracking-tight group-hover/row:text-primary transition-colors">{{ file.split(/[\\/]/).pop() }}</div>
-              <div class="text-[9px] text-muted font-mono mt-1 opacity-60">{{ file }}</div>
+            <div class="flex-1 min-w-[200px] overflow-hidden px-4 flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-card border border-subtle flex items-center justify-center shrink-0">
+                <i :class="file.isDirectory ? 'pi pi-folder text-primary' : 'pi pi-file text-muted'" class="text-xs"></i>
+              </div>
+              <div class="overflow-hidden">
+                <div class="text-content font-bold truncate text-xs tracking-tight group-hover/row:text-primary transition-colors">{{ file.name }}</div>
+                <div class="text-[9px] text-muted font-mono mt-0.5 opacity-60 truncate">{{ file.path }}</div>
+              </div>
             </div>
 
-            <button @click.stop="compressionStore.selectedFiles = compressionStore.selectedFiles.filter(f => f !== file)" 
+            <button @click.stop="compressionStore.selectedFiles = compressionStore.selectedFiles.filter(f => f.path !== file.path)" 
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-red-500 transition-all">
               <i class="pi pi-times text-[10px]"></i>
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- 3. 空状态 -->
-        <div v-if="totalPayload === 0" class="flex-1 flex flex-col items-center justify-center py-20">
-          <EnhancedFileDropzone @files-selected="onFilesSelected" class="w-full max-w-lg shadow-sm" />
-          <div class="mt-10 flex gap-10 items-center opacity-10 grayscale transition-all duration-700">
-             <div class="text-xl font-black text-content tracking-tighter italic">LongEngine v2.7</div>
-          </div>
+      <!-- 3. 空状态 (完美垂直居中) -->
+      <div v-else class="flex-1 flex items-center justify-center p-12 overflow-hidden">
+        <div class="grid grid-cols-2 gap-8 w-full max-w-4xl">
+          <!-- 文件夹拖入区 -->
+          <EnhancedFileDropzone 
+            @files-selected="onFilesSelected" 
+            mode="folder"
+            class="shadow-sm h-full" 
+          />
+          <!-- 文件拖入区 -->
+          <EnhancedFileDropzone 
+            @files-selected="onFilesSelected" 
+            mode="file"
+            :hint="appStore.t('compress.drop_file_hint')"
+            class="shadow-sm h-full" 
+          />
         </div>
       </div>
 
       <!-- 底部辅助区 -->
-      <div v-if="totalPayload > 0" class="p-2 border-t border-subtle bg-input/10">
-        <EnhancedFileDropzone @files-selected="onFilesSelected" :compact="true" class="w-full" />
+      <div v-if="totalPayload > 0" class="p-2 border-t border-subtle bg-input/10 grid grid-cols-2 gap-2">
+        <EnhancedFileDropzone 
+          @files-selected="onFilesSelected" 
+          :compact="true" 
+          mode="folder"
+          class="w-full" 
+        />
+        <EnhancedFileDropzone 
+          @files-selected="onFilesSelected" 
+          :compact="true" 
+          mode="file"
+          class="w-full" 
+        />
       </div>
     </div>
   </div>

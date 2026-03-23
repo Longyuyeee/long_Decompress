@@ -2,6 +2,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import InteractionBall from '@/components/ui/InteractionBall.vue'
 import PerformanceMeter from '@/components/ui/PerformanceMeter.vue'
+import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
 import { useAppStore } from '@/stores/app'
 
 const route = useRoute()
@@ -21,9 +22,13 @@ const navigateTo = (name: string) => {
 </script>
 
 <template>
-  <div class="main-layout flex h-screen w-screen overflow-hidden bg-base text-content transition-colors duration-700">
-    <!-- 侧边栏 -->
-    <aside class="w-16 h-full flex flex-col items-center py-8 border-r border-subtle bg-card/50 backdrop-blur-3xl z-40 transition-all duration-700">
+  <div class="main-container flex flex-col h-screen w-screen overflow-hidden bg-base text-content transition-colors duration-700">
+    <!-- 顶部自定义标题栏 (自适应主题) -->
+    <WindowTitleBar />
+
+    <div class="main-layout flex flex-1 overflow-hidden transition-all duration-700">
+      <!-- 侧边栏 -->
+      <aside class="w-16 h-full flex flex-col items-center py-8 border-r border-subtle bg-card/50 backdrop-blur-3xl z-40 transition-all duration-700">
       <!-- Logo (随主题变色) -->
       <div class="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-700 mb-12 shadow-lg"
            :style="{ background: `linear-gradient(135deg, var(--dynamic-accent), color-mix(in srgb, var(--dynamic-accent), black 20%))`, boxShadow: `0 0 20px color-mix(in srgb, var(--dynamic-accent) 40%, transparent)` }">
@@ -63,6 +68,7 @@ const navigateTo = (name: string) => {
       </router-view>
     </main>
   </div>
+</div>
 </template>
 
 <style>

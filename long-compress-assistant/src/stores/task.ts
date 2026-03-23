@@ -37,6 +37,7 @@ export interface Task {
   outputPath: string
   format?: string
   conflicts: ConflictInfo[] // 新增冲突追踪
+  extractToSubfolder?: boolean // 是否解压到同名子文件夹
 }
 
 export const useTaskStore = defineStore('task', () => {
