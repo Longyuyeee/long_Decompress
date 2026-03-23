@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { appWindow } from '@tauri-apps/api/window'
 import InteractionBall from '@/components/ui/InteractionBall.vue'
 import PerformanceMeter from '@/components/ui/PerformanceMeter.vue'
 import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
@@ -8,6 +10,18 @@ import { useAppStore } from '@/stores/app'
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
+const isFocused = ref(true)
+let unlistenFocus: any = null
+
+onMounted(async () => {
+  unlistenFocus = await appWindow.onFocusChanged(({ payload: focused }) => {
+    isFocused.value = focused
+  })
+})
+
+onUnmounted(() => {
+  if (unlistenFocus) unlistenFocus()
+})
 
 const navItems = [
   { name: 'Decompress', icon: 'pi pi-folder-open', label: 'nav.decompress' },
@@ -22,56 +36,73 @@ const navigateTo = (name: string) => {
 </script>
 
 <template>
-  <div class="main-container flex flex-col h-screen w-screen overflow-hidden bg-base text-content transition-colors duration-700">
-    <!-- 顶部自定义标题栏 (自适应主题) -->
+  <!-- 主容器：100% 占满窗口，应用圆角和溢出隐藏。阴影由后端原生渲染 -->
+  <div 
+    class="main-container flex flex-col h-screen w-screen overflow-hidden bg-base text-content transition-all duration-500 rounded-2xl border border-subtle/30 relative"
+    :class="[isFocused ? 'opacity-100' : 'opacity-95 scale-[0.999]']"
+  >
+    <!-- 顶部自定义标题栏 -->
     <WindowTitleBar />
 
     <div class="main-layout flex flex-1 overflow-hidden transition-all duration-700">
       <!-- 侧边栏 -->
       <aside class="w-16 h-full flex flex-col items-center py-8 border-r border-subtle bg-card/50 backdrop-blur-3xl z-40 transition-all duration-700">
-      <!-- Logo (随主题变色) -->
-      <div class="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-700 mb-12 shadow-lg"
-           :style="{ background: `linear-gradient(135deg, var(--dynamic-accent), color-mix(in srgb, var(--dynamic-accent), black 20%))`, boxShadow: `0 0 20px color-mix(in srgb, var(--dynamic-accent) 40%, transparent)` }">
-        <i class="pi pi-box text-lg text-white"></i>
-      </div>
-
-      <!-- 导航项 -->
-      <nav class="flex-1 flex flex-col gap-4 w-full px-2">
-        <div v-for="item in navItems" :key="item.name"
-             @click="navigateTo(item.name)"
-             class="group relative w-full aspect-square flex items-center justify-center rounded-2xl cursor-pointer transition-all duration-500"
-             :class="route.name === item.name ? 'bg-primary/10 shadow-inner' : 'hover:bg-primary/5'">
-          
-          <div class="absolute left-0 w-1 h-4 rounded-full bg-primary transition-all duration-500"
-               :class="route.name === item.name ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'"></div>
-
-          <i :class="[item.icon, 'text-lg transition-all duration-500', 
-             route.name === item.name ? 'text-primary scale-110' : 'text-muted group-hover:text-content']"></i>
-             
-          <div class="absolute left-full ml-4 px-4 py-2 rounded-xl backdrop-blur-2xl bg-card border border-subtle text-content text-[10px] font-black tracking-widest uppercase opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap shadow-2xl z-50">
-            {{ appStore.t(item.label) }}
-          </div>
+        <!-- Logo -->
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-700 mb-12 shadow-lg"
+             :style="{ background: `linear-gradient(135deg, var(--dynamic-accent), color-mix(in srgb, var(--dynamic-accent), black 20%))`, boxShadow: `0 0 20px color-mix(in srgb, var(--dynamic-accent) 40%, transparent)` }">
+          <i class="pi pi-box text-lg text-white"></i>
         </div>
-      </nav>
-    </aside>
 
-    <!-- 主容器 (路由动画核心) -->
-    <main class="flex-1 relative h-full overflow-hidden min-w-[320px]">
-      <InteractionBall />
-      
-      <router-view v-slot="{ Component }">
-        <transition name="aero-page" mode="out-in">
-          <div :key="route.path" class="h-full overflow-hidden">
-            <component :is="Component" />
+        <!-- 导航项 -->
+        <nav class="flex-1 flex flex-col gap-4 w-full px-2">
+          <div v-for="item in navItems" :key="item.name"
+               @click="navigateTo(item.name)"
+               class="group relative w-full aspect-square flex items-center justify-center rounded-2xl cursor-pointer transition-all duration-500"
+               :class="route.name === item.name ? 'bg-primary/10 shadow-inner' : 'hover:bg-primary/5'">
+            
+            <div class="absolute left-0 w-1 h-4 rounded-full bg-primary transition-all duration-500"
+                 :class="route.name === item.name ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'"></div>
+
+            <i :class="[item.icon, 'text-lg transition-all duration-500', 
+               route.name === item.name ? 'text-primary scale-110' : 'text-muted group-hover:text-content']"></i>
+               
+            <div class="absolute left-full ml-4 px-4 py-2 rounded-xl backdrop-blur-2xl bg-card border border-subtle text-content text-[10px] font-black tracking-widest uppercase opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap shadow-2xl z-50">
+              {{ appStore.t(item.label) }}
+            </div>
           </div>
-        </transition>
-      </router-view>
-    </main>
+        </nav>
+      </aside>
+
+      <!-- 主容器 -->
+      <main class="flex-1 relative h-full overflow-hidden min-w-[320px]">
+        <InteractionBall />
+        
+        <router-view v-slot="{ Component }">
+          <transition name="aero-page" mode="out-in">
+            <div :key="route.path" class="h-full overflow-hidden">
+              <component :is="Component" />
+            </div>
+          </transition>
+        </router-view>
+      </main>
+    </div>
   </div>
-</div>
 </template>
 
 <style>
+/* 终极背景挖空，确保圆角外部 100% 透明 */
+:global(html), :global(body), :global(#app) {
+  background-color: transparent !important;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* 屏蔽系统默认的焦点边框 */
+*:focus {
+  outline: none;
+}
+
 /* 苹果风强动效：Aero Page Transition */
 .aero-page-enter-active,
 .aero-page-leave-active {

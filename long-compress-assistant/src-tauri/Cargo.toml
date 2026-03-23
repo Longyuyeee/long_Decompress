@@ -54,6 +54,7 @@ pathdiff = "0.2"
 notify = "6.1"
 rfd = "0.14"
 num_cpus = "1.17.0"
+window-shadows = "0.2"
 
 [dev-dependencies]
 tempfile = "3.10"

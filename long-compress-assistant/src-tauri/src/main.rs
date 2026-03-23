@@ -41,8 +41,11 @@ use commands::encrypted_password::{
     EncryptedPasswordServiceState
 };
 
+use tauri::Manager;
+use window_shadows::set_shadow;
+
 fn main() {
-    // 关键修复：将数据目录移出 src-tauri 监控范围
+    // ... (保持 data_dir 逻辑不变)
     // 在开发环境下使用项目根目录下的隐藏文件夹，在发布环境下使用 AppData
     let data_dir = if cfg!(debug_assertions) {
         // 获取当前工作目录（通常是项目根目录或 src-tauri）
@@ -62,7 +65,12 @@ fn main() {
 
     tauri::Builder::default()
         .manage(EncryptedPasswordServiceState::new(data_dir))
-        .setup(|_app| {
+        .setup(|app| {
+            // 开启原生窗口阴影 (Windows/macOS)
+            let window = app.get_window("main").unwrap();
+            #[cfg(any(target_os = "windows", target_os = "macos"))]
+            let _ = set_shadow(&window, true);
+
             // 初始化数据库
             tauri::async_runtime::block_on(async {
                 let db_path = std::path::PathBuf::from("data.db");

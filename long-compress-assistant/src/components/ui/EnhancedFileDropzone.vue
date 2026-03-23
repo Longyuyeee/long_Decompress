@@ -182,7 +182,7 @@ const handleFiles = (files: File[]) => {
       @change="onFileChange"
     >
     
-    <div v-if="!compact" class="flex flex-col items-center justify-center space-y-4">
+    <div v-if="!compact" class="flex flex-col items-center justify-center space-y-4 pointer-events-none">
       <div class="w-16 h-16 rounded-[1.5rem] bg-input border border-subtle flex items-center justify-center text-dim group-hover:text-primary group-hover:scale-110 transition-all duration-500 shadow-sm">
         <i :class="props.mode === 'folder' ? 'pi pi-folder-open' : 'pi pi-cloud-upload'" class="text-2xl"></i>
       </div>
@@ -199,7 +199,7 @@ const handleFiles = (files: File[]) => {
       </div>
     </div>
 
-    <div v-else class="flex items-center justify-center gap-3">
+    <div v-else class="flex items-center justify-center gap-3 pointer-events-none">
       <i class="pi pi-plus-circle text-primary text-xs"></i>
       <span class="text-[9px] font-black text-muted uppercase tracking-[0.2em] group-hover:text-content transition-colors">
         {{ displayAddLabel }}
