@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { open } from '@tauri-apps/api/dialog'
+import { listen } from '@tauri-apps/api/event'
 
 const props = defineProps({
   compact: {
@@ -30,8 +31,39 @@ const props = defineProps({
 const appStore = useAppStore()
 const isDragging = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
-
 const emit = defineEmits(['files-selected'])
+
+// Tauri 原生拖放监听
+let unlistenHover: any = null
+let unlistenDrop: any = null
+let unlistenCancel: any = null
+
+onMounted(async () => {
+  // 当文件悬停在窗口上时
+  unlistenHover = await listen('tauri://file-drop-hover', () => {
+    isDragging.value = true
+  })
+
+  // 当文件真正在窗口放下时
+  unlistenDrop = await listen<{ paths: string[] }>('tauri://file-drop', (event) => {
+    isDragging.value = false
+    const paths = event.payload
+    if (paths && paths.length > 0) {
+      handleRawPaths(paths)
+    }
+  })
+
+  // 当拖放取消或离开窗口时
+  unlistenCancel = await listen('tauri://file-drop-cancelled', () => {
+    isDragging.value = false
+  })
+})
+
+onUnmounted(() => {
+  if (unlistenHover) unlistenHover()
+  if (unlistenDrop) unlistenDrop()
+  if (unlistenCancel) unlistenCancel()
+})
 
 const displayHint = computed(() => {
   if (props.hint) return props.hint
@@ -53,6 +85,7 @@ const displayAddLabel = computed(() => {
     : appStore.t('compress.add_files')
 })
 
+// 兼容标准的 Web 拖放（作为兜底）
 const onDragOver = (e: DragEvent) => {
   e.preventDefault()
   isDragging.value = true
@@ -86,25 +119,7 @@ const triggerFileInput = async () => {
         multiple: true,
         title: appStore.t('compress.add_folders')
       })
-      
-      if (Array.isArray(selected)) {
-        const folderData = selected.map(path => ({
-          name: path.split(/[\\/]/).filter(Boolean).pop() || path,
-          path: path,
-          size: 0,
-          type: 'directory',
-          isDirectory: true
-        }))
-        emit('files-selected', folderData)
-      } else if (typeof selected === 'string') {
-        emit('files-selected', [{
-          name: selected.split(/[\\/]/).filter(Boolean).pop() || selected,
-          path: selected,
-          size: 0,
-          type: 'directory',
-          isDirectory: true
-        }])
-      }
+      if (selected) handleRawPaths(Array.isArray(selected) ? selected : [selected])
     } catch (err) {
       console.error('Failed to select folders:', err)
     }
@@ -113,48 +128,30 @@ const triggerFileInput = async () => {
   }
 }
 
+// 处理来自 Tauri 原生路径的数据
+const handleRawPaths = (paths: string[]) => {
+  const results = paths.map(path => {
+    const name = path.split(/[\\/]/).filter(Boolean).pop() || path
+    return {
+      name,
+      path,
+      size: 0,
+      type: props.mode === 'folder' ? 'directory' : 'file',
+      isDirectory: props.mode === 'folder'
+    }
+  })
+  emit('files-selected', results)
+}
+
 const handleFiles = (files: File[]) => {
-  if (props.mode === 'folder') {
-    // 文件夹模式：必须确保只返回顶级文件夹作为单个对象
-    const folderMap = new Map<string, any>()
-    
-    files.forEach(file => {
-      const fullPath = (file as any).path || file.name
-      const relativePath = (file as any).webkitRelativePath || ""
-      
-      let folderPath = fullPath
-      let folderName = file.name
-
-      // 如果是通过 webkitdirectory 选择的，relativePath 会包含 "Folder/file.txt"
-      if (relativePath) {
-        const rootFolderName = relativePath.split('/')[0]
-        folderName = rootFolderName
-        // 尝试回推根路径
-        folderPath = fullPath.substring(0, fullPath.indexOf(relativePath) + rootFolderName.length)
-      }
-
-      if (!folderMap.has(folderPath)) {
-        folderMap.set(folderPath, {
-          name: folderName,
-          path: folderPath,
-          size: 0,
-          type: 'directory',
-          isDirectory: true
-        })
-      }
-    })
-    emit('files-selected', Array.from(folderMap.values()))
-  } else {
-    // 文件模式：正常处理文件实体
-    const fileData = files.map(file => ({
-      name: file.name,
-      path: (file as any).path || file.name,
-      size: file.size,
-      type: file.type || 'file',
-      isDirectory: false
-    }))
-    emit('files-selected', fileData)
-  }
+  const fileData = files.map(file => ({
+    name: file.name,
+    path: (file as any).path || file.name,
+    size: file.size,
+    type: file.type || 'file',
+    isDirectory: false
+  }))
+  emit('files-selected', fileData)
 }
 </script>
 
@@ -177,8 +174,6 @@ const handleFiles = (files: File[]) => {
       class="hidden" 
       multiple 
       :accept="props.accept"
-      :webkitdirectory="props.mode === 'folder'"
-      :directory="props.mode === 'folder'"
       @change="onFileChange"
     >
     

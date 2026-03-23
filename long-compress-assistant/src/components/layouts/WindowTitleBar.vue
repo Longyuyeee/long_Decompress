@@ -13,8 +13,8 @@ const closeApp = () => appWindow.close()
   <div class="window-titlebar flex items-center justify-between h-8 bg-card/30 backdrop-blur-3xl border-b border-subtle select-none relative z-[100] shadow-[0_4px_12px_rgba(0,0,0,0.08)]" data-tauri-drag-region>
     <!-- 左侧标题 & 主题指示线 -->
     <div class="flex items-center gap-3 px-4 pointer-events-none" data-tauri-drag-region>
-      <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_var(--dynamic-accent)]"></div>
-      <span class="text-[10px] font-black text-content/60 uppercase tracking-[0.2em] mt-0.5">{{ appStore.t('package.productName') || 'Long Decompress' }}</span>
+      <div class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--dynamic-accent)]"></div>
+      <span class="text-[10px] font-black text-content/60 uppercase tracking-[0.2em] mt-0.5">{{ appStore.t('app.name') || 'Long解压' }}</span>
     </div>
 
     <!-- 右侧控制组 -->
@@ -30,8 +30,7 @@ const closeApp = () => appWindow.close()
       </button>
     </div>
 
-    <!-- 顶部主题色亮线 (彻底适配系统主题) -->
-    <div class="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-40 pointer-events-none"></div>
+    <!-- 移除顶部装饰线，因为它会干扰窗口边缘缩放判定 -->
   </div>
 </template>
 

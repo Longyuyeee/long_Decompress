@@ -93,8 +93,9 @@ const startDecompression = async () => {
         deleteAfter: appStore.settings.autoDeleteSource
       }
       // 真正启动后端解压
+      // 传入 task.id 避免重复生成新任务
       await tauriCommands.decompressFile(task.sourceFiles[0], options, task.id)
-    } catch (error) {
+      } catch (error) {
       taskStore.updateTaskStatus(task.id, 'failed')
       appStore.setError(`${appStore.t('common.error')}: ${error}`)
     }
@@ -102,6 +103,15 @@ const startDecompression = async () => {
 }
 
 const hasPendingTasks = computed(() => taskStore.tasks.some(t => t.status === 'pending'))
+const isRunning = computed(() => taskStore.tasks.some(t => ['running', 'extracting', 'compressing', 'preparing'].includes(t.status)))
+
+const cancelAllTasks = () => {
+  taskStore.tasks.forEach(async t => {
+    if (['running', 'extracting', 'compressing', 'preparing'].includes(t.status)) {
+      await tauriCommands.cancelCompression(t.id)
+    }
+  })
+}
 
 const handleConflict = (taskId: string) => {
   selectedConflictTaskId.value = taskId
@@ -127,6 +137,7 @@ taskStore.$subscribe((mutation, state) => {
       <!-- 合理的操作按钮分配 -->
       <div class="flex gap-3">
         <button 
+          v-if="!isRunning && taskStore.tasks.some(t => ['completed', 'failed', 'cancelled'].includes(t.status))"
           @click="taskStore.clearFinishedTasks()"
           class="h-10 px-6 rounded-xl bg-input border border-subtle text-muted text-[10px] font-black uppercase tracking-widest hover:text-red-400 transition-all shadow-sm flex items-center gap-2"
         >
@@ -134,7 +145,15 @@ taskStore.$subscribe((mutation, state) => {
           {{ appStore.t('decompress.clear_finished') }}
         </button>
         <button 
-          v-if="hasPendingTasks"
+          v-if="isRunning"
+          @click="cancelAllTasks"
+          class="h-10 px-6 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center gap-2"
+        >
+          <i class="pi pi-stop-circle"></i>
+          停止解压
+        </button>
+        <button 
+          v-if="hasPendingTasks && !isRunning"
           @click="startDecompression"
           class="h-10 px-6 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg flex items-center gap-2"
         >

@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "胧压缩·方便助手",
+    "productName": "Long解压·方便助手",
     "version": "0.1.0"
   },
   "tauri": {
@@ -24,7 +24,7 @@
       "icon": [],
       "resources": [],
       "externalBin": [],
-      "copyright": "Copyright © 2026 胧压缩·方便助手",
+      "copyright": "Copyright © 2026 Long解压·方便助手",
       "category": "Utility",
       "shortDescription": "智能压缩解压助手",
       "longDescription": "支持多种格式、密码本管理、批量处理的现代化压缩解压工具"
@@ -34,7 +34,7 @@
     },
     "windows": [
       {
-        "title": "胧压缩",
+        "title": "Long解压",
         "width": 720,
         "height": 540,
         "minWidth": 720,

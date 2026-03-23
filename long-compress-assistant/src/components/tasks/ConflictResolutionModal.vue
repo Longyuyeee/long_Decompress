@@ -45,74 +45,144 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
   <Modal
     :visible="visible"
     @update:visible="val => emit('update:visible', val)"
-    title="文件冲突检测"
+    :title="appStore.t('common.conflict_title') || '文件冲突检测'"
     icon="pi pi-exclamation-triangle"
     size="lg"
   >
-    <div v-if="currentConflict" class="space-y-8 bg-modal text-content p-1">
-      <div class="text-muted text-sm leading-relaxed">
-        目标路径已存在同名文件：<span class="text-primary font-bold font-mono">{{ currentConflict.fileName }}</span>
+    <div v-if="currentConflict" class="conflict-container space-y-8 p-2">
+      <!-- 头部提示：强化路径显示 -->
+      <div class="header-section bg-input/30 p-4 rounded-2xl border border-subtle/30 backdrop-blur-md">
+        <p class="text-muted text-[10px] font-black uppercase tracking-widest mb-2 opacity-60">Target Path Conflict</p>
+        <div class="text-content font-bold font-mono text-xs break-all leading-relaxed">
+          {{ currentConflict.dest_path }}
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- 现有文件 -->
-        <div class="p-6 rounded-[1.5rem] bg-input border border-subtle relative overflow-hidden group">
-          <div class="absolute -right-4 -top-4 w-16 h-16 bg-red-500/5 rounded-full"></div>
-          <div class="text-[9px] font-black text-muted uppercase tracking-[0.2em] mb-4">Existing Registry</div>
-          <div class="space-y-3">
-            <div class="flex justify-between text-xs items-center">
-              <span class="text-muted">Capacity</span>
-              <span class="text-content font-bold">{{ formatSize(currentConflict.destSize) }}</span>
+      <!-- 核心对比区 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+        <!-- 装饰性箭头 -->
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 hidden md:block">
+          <div class="w-10 h-10 rounded-full bg-base border border-subtle/50 flex items-center justify-center shadow-xl">
+            <i class="pi pi-arrow-right text-primary animate-pulse"></i>
+          </div>
+        </div>
+
+        <!-- 现有文件 (Existing) -->
+        <div class="compare-card existing p-6 rounded-[2rem] bg-input/40 border border-subtle/50 relative overflow-hidden group transition-all duration-500 hover:border-red-500/30">
+          <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-500/5 rounded-full blur-2xl"></div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
+              <i class="pi pi-file"></i>
             </div>
-            <div class="flex justify-between text-[10px] items-center">
-              <span class="text-dim">Last Mod</span>
-              <span class="text-muted font-mono">{{ formatDate(currentConflict.destModified) }}</span>
+            <span class="text-[10px] font-black text-muted uppercase tracking-widest">现有文件</span>
+          </div>
+          <div class="space-y-4">
+            <div class="flex flex-col">
+              <span class="text-dim text-[9px] uppercase font-bold mb-1">物理体积</span>
+              <span class="text-content font-mono font-black text-lg">{{ formatSize(currentConflict.dest_size) }}</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-dim text-[9px] uppercase font-bold mb-1">最后修改</span>
+              <span class="text-muted font-mono text-[10px]">{{ formatDate(currentConflict.dest_modified) }}</span>
             </div>
           </div>
         </div>
 
-        <!-- 新文件 -->
-        <div class="p-6 rounded-[1.5rem] bg-primary/5 border border-primary/20 relative overflow-hidden group">
-          <div class="absolute -right-4 -top-4 w-16 h-16 bg-primary/10 rounded-full"></div>
-          <div class="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-4">Incoming Data</div>
-          <div class="space-y-3">
-            <div class="flex justify-between text-xs items-center">
-              <span class="text-muted">Capacity</span>
-              <span :class="currentConflict.sourceSize > currentConflict.destSize ? 'text-green-500 font-black' : 'text-content font-bold'">
-                {{ formatSize(currentConflict.sourceSize) }}
+        <!-- 新入数据 (Incoming) -->
+        <div class="compare-card incoming p-6 rounded-[2rem] bg-primary/5 border border-primary/20 relative overflow-hidden group transition-all duration-500 hover:border-primary/50 shadow-[inset_0_0_40px_rgba(var(--primary-rgb),0.02)]">
+          <div class="absolute -right-6 -top-6 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+              <i class="pi pi-download animate-bounce"></i>
+            </div>
+            <span class="text-[10px] font-black text-primary uppercase tracking-widest">即将解压</span>
+          </div>
+          <div class="space-y-4">
+            <div class="flex flex-col">
+              <span class="text-dim text-[9px] uppercase font-bold mb-1">物理体积</span>
+              <span :class="currentConflict.source_size > currentConflict.dest_size ? 'text-green-500' : 'text-content'" class="font-mono font-black text-lg">
+                {{ formatSize(currentConflict.source_size) }}
               </span>
             </div>
-            <div class="flex justify-between text-[10px] items-center">
-              <span class="text-dim">Source Mod</span>
-              <span :class="currentConflict.sourceModified > currentConflict.destModified ? 'text-green-500 font-black' : 'text-muted font-mono'">
-                {{ formatDate(currentConflict.sourceModified) }}
+            <div class="flex flex-col">
+              <span class="text-dim text-[9px] uppercase font-bold mb-1">源修改时间</span>
+              <span :class="currentConflict.source_modified > currentConflict.dest_modified ? 'text-green-500' : 'text-muted'" class="font-mono text-[10px]">
+                {{ formatDate(currentConflict.source_modified) }}
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="flex flex-col gap-4 pt-4">
-        <div class="flex flex-wrap gap-3">
-          <button @click="resolve('overwrite')" class="flex-1 min-w-[120px] py-3.5 rounded-xl bg-red-500/80 hover:bg-red-500 text-white text-xs font-black transition-all shadow-lg shadow-red-500/20">
-            OVERWRITE
+      <!-- 操作动作区 -->
+      <div class="actions-section flex flex-col gap-5 pt-4">
+        <div class="flex flex-wrap gap-4">
+          <!-- 推荐操作：自动重命名 -->
+          <button @click="resolve('rename')" 
+                  class="flex-[1.5] min-w-[160px] group relative h-14 rounded-2xl bg-primary text-white overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/20">
+            <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            <div class="flex items-center justify-center gap-3 relative z-10">
+              <i class="pi pi-copy text-sm"></i>
+              <span class="text-[11px] font-black uppercase tracking-widest">自动重命名保留两者</span>
+            </div>
           </button>
-          <button @click="resolve('rename')" class="flex-1 min-w-[120px] py-3.5 rounded-xl bg-primary text-white text-xs font-black transition-all shadow-lg shadow-primary/20">
-            RENAME AUTO
+
+          <!-- 覆盖操作：红色警示 -->
+          <button @click="resolve('overwrite')" 
+                  class="flex-1 min-w-[120px] h-14 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 font-black text-[10px] uppercase tracking-widest">
+            替换现有文件
           </button>
-          <button @click="resolve('skip')" class="flex-1 min-w-[120px] py-3.5 rounded-xl bg-input border border-subtle text-muted text-xs font-bold hover:text-content transition-all">
-            SKIP FILE
+
+          <!-- 跳过操作：次要按钮 -->
+          <button @click="resolve('skip')" 
+                  class="flex-1 min-w-[120px] h-14 rounded-2xl bg-input border border-subtle text-muted hover:text-content transition-all duration-300 font-black text-[10px] uppercase tracking-widest">
+            放弃本次解压
           </button>
         </div>
-        <button @click="resolve('overwrite', true)" class="w-full py-2 text-[9px] text-dim hover:text-primary transition-colors uppercase font-black tracking-[0.3em]">
-          Apply To All Following Conflicts
-        </button>
+
+        <!-- 批量应用选项 -->
+        <div class="flex justify-center">
+          <button @click="resolve('rename', true)" 
+                  class="group flex items-center gap-3 px-6 py-3 rounded-full hover:bg-primary/5 transition-all text-[9px] font-black text-dim hover:text-primary uppercase tracking-[0.3em]">
+            <div class="w-4 h-4 rounded-full border border-subtle group-hover:border-primary flex items-center justify-center transition-all">
+              <div class="w-1.5 h-1.5 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform"></div>
+            </div>
+            应用到后续所有冲突项
+          </button>
+        </div>
       </div>
     </div>
-    
-    <div v-else class="py-16 text-center text-dim space-y-4">
-      <i class="pi pi-check-circle text-5xl text-primary/20"></i>
-      <p class="text-xs font-black uppercase tracking-widest">Conflict Resolution Complete</p>
+
+    <!-- 完成状态 (空槽位) -->
+    <div v-else class="py-20 text-center space-y-6">
+      <div class="relative inline-block">
+        <div class="absolute inset-0 animate-ping bg-primary/20 rounded-full"></div>
+        <i class="pi pi-check-circle text-6xl text-primary relative z-10"></i>
+      </div>
+      <div class="space-y-2">
+        <p class="text-lg font-black text-content">处理完毕</p>
+        <p class="text-[10px] text-muted uppercase tracking-[0.2em]">All conflicts have been resolved</p>
+      </div>
     </div>
   </Modal>
 </template>
+
+<style scoped>
+.compare-card {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+.compare-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.conflict-container {
+  animation: modal-fade-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+</style>

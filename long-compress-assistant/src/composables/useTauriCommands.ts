@@ -109,7 +109,7 @@ export const useTauriCommands = () => {
       // 2. 保险箱高频建议 (置信度最高)
       try {
         const suggestions = await invoke<any[]>('get_password_suggestions', { filePath })
-        passwordsToTry.push(...suggestions.map(s => s.password))
+        passwordsToTry.push(...suggestions.map(s => s.text))
       } catch (e) { console.warn('Suggestions failed', e) }
 
       // 3. 遍历全量密码本 (确保本地数据穷尽)

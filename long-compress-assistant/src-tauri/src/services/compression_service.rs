@@ -110,6 +110,35 @@ impl CompressionService {
                 path.parent().unwrap_or(Path::new(".")).to_path_buf()
             });
 
+            // 增强逻辑：文件夹防重名预检
+            if out_dir.exists() && out_dir.is_dir() {
+                let is_empty = std::fs::read_dir(&out_dir).map(|mut d| d.next().is_none()).unwrap_or(true);
+                if !is_empty {
+                    service.emit_log(&window, &task_id, &format!("目标目录已存在且非空: {:?}", out_dir), TaskLogSeverity::Warning);
+                    
+                    let meta = std::fs::metadata(&out_dir).ok();
+                    let dest_modified = meta.and_then(|m| m.modified().ok())
+                        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                        .map(|d| d.as_millis() as u64)
+                        .unwrap_or(0);
+
+                    // 触发目录级冲突
+                    let _ = window.emit("file-conflict", crate::models::compression::TaskConflict {
+                        task_id: task_id.to_string(),
+                        file_name: out_dir.file_name().and_then(|n| n.to_str()).unwrap_or("Folder").to_string(),
+                        source_path: file_path.clone(),
+                        dest_path: out_dir.to_str().unwrap_or_default().to_string(),
+                        source_size: 0,
+                        dest_size: 0, // 标记为目录冲突
+                        source_modified: 0,
+                        dest_modified,
+                    });
+                    
+                    // 注意：这里我们不直接 Return，而是依赖前端决策后再次触发（或在 do_extract 中处理后续文件冲突）
+                    // 为了简化 MVP 流程，我们先记录日志并继续，真正的拦截在具体文件写入时
+                }
+            }
+
             if !out_dir.exists() {
                 std::fs::create_dir_all(&out_dir)?;
             }

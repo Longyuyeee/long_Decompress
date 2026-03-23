@@ -57,6 +57,36 @@ const getSeverityClass = (severity: string) => {
     default: return 'text-muted'
   }
 }
+
+// 物理高度过渡钩子：解决收缩跳动
+const onBeforeEnter = (el: any) => {
+  el.style.height = '0'
+  el.style.opacity = '0'
+  el.style.marginTop = '0'
+  el.style.marginBottom = '0'
+}
+
+const onEnter = (el: any) => {
+  el.style.height = el.scrollHeight + 'px'
+  el.style.opacity = '1'
+  el.style.marginTop = '4px'
+  el.style.marginBottom = '8px'
+}
+
+const onBeforeLeave = (el: any) => {
+  el.style.height = el.scrollHeight + 'px'
+  el.style.opacity = '1'
+  el.style.marginTop = '4px'
+  el.style.marginBottom = '8px'
+}
+
+const onLeave = (el: any) => {
+  el.offsetHeight // 强制物理重绘
+  el.style.height = '0'
+  el.style.opacity = '0'
+  el.style.marginTop = '0'
+  el.style.marginBottom = '0'
+}
 </script>
 
 <template>
@@ -116,8 +146,14 @@ const getSeverityClass = (severity: string) => {
             </div>
           </div>
 
-          <Transition name="aero-drawer">
-            <div v-if="expandedTasks.has(task.id)" class="details-drawer relative overflow-hidden px-4 pb-4">
+          <Transition 
+            name="aero-drawer"
+            @before-enter="onBeforeEnter"
+            @enter="onEnter"
+            @before-leave="onBeforeLeave"
+            @leave="onLeave"
+          >
+            <div v-if="expandedTasks.has(task.id)" class="details-drawer relative px-6 pb-6 pt-2">
               <!-- 交互增强：task-detail-card 增加 hover 动效 -->
               <div class="task-detail-card flex h-44 rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
 
@@ -255,13 +291,16 @@ const getSeverityClass = (severity: string) => {
 }
 
 .aero-drawer-enter-active, .aero-drawer-leave-active {
-  transition: all 0.4s cubic-bezier(0.32, 1, 0.2, 1);
-  max-height: 400px;
+  transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.25s linear,
+              margin 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden; /* 动画期间必须裁剪 */
 }
 .aero-drawer-enter-from, .aero-drawer-leave-to {
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-8px);
+  height: 0 !important;
+  opacity: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 .task-row {
@@ -271,7 +310,7 @@ const getSeverityClass = (severity: string) => {
 }
 
 .details-drawer {
-  /* 为展开区增加垂直物理间距 */
-  margin: 4px 0 8px 0;
+  /* 移除静态 margin，由动画钩子精准控制 */
+  background-color: transparent;
 }
 </style>

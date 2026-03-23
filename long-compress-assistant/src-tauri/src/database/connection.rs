@@ -66,6 +66,60 @@ impl DatabaseConnection {
             .connect_with(connect_options)
             .await?;
 
+        // 核心修复：自动创建并升级必要的表
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS password_entries (
+                id TEXT PRIMARY KEY NOT NULL,
+                name TEXT NOT NULL,
+                username TEXT,
+                password TEXT NOT NULL,
+                url TEXT,
+                notes TEXT,
+                tags TEXT,
+                category TEXT,
+                strength TEXT,
+                key_id TEXT,
+                encryption_algorithm TEXT,
+                encryption_version INTEGER,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                last_used TEXT,
+                expires_at TEXT,
+                favorite BOOLEAN NOT NULL DEFAULT 0,
+                archived BOOLEAN NOT NULL DEFAULT 0,
+                deleted BOOLEAN NOT NULL DEFAULT 0,
+                use_count INTEGER NOT NULL DEFAULT 0,
+                custom_fields TEXT
+            )"
+        ).execute(&pool).await?;
+
+        // 容错处理：确保缺失的列被添加（针对已存在的旧数据库）
+        let columns = vec![
+            ("key_id", "TEXT"),
+            ("encryption_algorithm", "TEXT"),
+            ("encryption_version", "INTEGER"),
+            ("archived", "BOOLEAN NOT NULL DEFAULT 0"),
+            ("deleted", "BOOLEAN NOT NULL DEFAULT 0"),
+        ];
+
+        for (col_name, col_type) in columns {
+            let check_query = format!("PRAGMA table_info(password_entries)");
+            let rows = sqlx::query(&check_query).fetch_all(&pool).await?;
+            let mut exists = false;
+            for row in rows {
+                use sqlx::Row;
+                let name: String = row.get("name");
+                if name == col_name {
+                    exists = true;
+                    break;
+                }
+            }
+            if !exists {
+                let alter_query = format!("ALTER TABLE password_entries ADD COLUMN {} {}", col_name, col_type);
+                let _ = sqlx::query(&alter_query).execute(&pool).await;
+            }
+        }
+
         Ok(Self { 
             pool, 
             config: DatabaseConfig::default() 

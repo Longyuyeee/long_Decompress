@@ -5,7 +5,7 @@
 
 export const translations: Record<string, Record<string, string>> = {
   'zh-CN': {
-    'app.name': '胧压缩 · 方便助手',
+    'app.name': 'Long解压·方便助手',
     'app.tagline': '引擎强大，界面极简',
     'nav.decompress': '解压中心',
     'nav.compress': '压缩中心',

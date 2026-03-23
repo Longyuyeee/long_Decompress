@@ -10,8 +10,12 @@ use crate::services::password_strength_service::{
     PasswordStrengthService, PasswordStrengthAssessment, PasswordPolicy
 };
 use crate::models::password::{PasswordCategory, PasswordStrength, CustomField, CustomFieldType};
-use tauri::command;
+use tauri::{command, State};
 use chrono::{DateTime, Utc};
+use crate::database::connection::get_connection;
+use crate::commands::encrypted_password::EncryptedPasswordServiceState;
+use crate::services::password_query_service::PasswordQueryService;
+use std::sync::Arc;
 
 #[command]
 pub async fn add_password(
@@ -351,7 +355,6 @@ pub async fn get_password_statistics() -> Result<PasswordStatistics, String> {
     }
 }
 
-// 注意：导入导出功能需要更复杂的实现
 #[command]
 pub async fn import_passwords(_file_path: String, _format: String) -> Result<String, String> {
     Err("导入功能暂未实现".to_string())
@@ -361,8 +364,6 @@ pub async fn import_passwords(_file_path: String, _format: String) -> Result<Str
 pub async fn export_passwords(_file_path: String, _format: String) -> Result<String, String> {
     Err("导出功能暂未实现".to_string())
 }
-
-// ==================== 密码分类管理命令 ====================
 
 #[command]
 pub async fn get_all_categories() -> Result<Vec<DbPasswordCategory>, String> {
@@ -521,8 +522,6 @@ pub async fn import_categories(categories: Vec<DbPasswordCategory>) -> Result<u6
     }
 }
 
-// ==================== 密码强度评估命令 ====================
-
 #[command]
 pub async fn assess_password_strength(password: String) -> Result<PasswordStrengthAssessment, String> {
     let service = PasswordStrengthService::new();
@@ -567,8 +566,6 @@ pub async fn generate_password_strength_report(password: String) -> Result<Strin
 #[command]
 pub async fn get_password_policy() -> Result<PasswordPolicy, String> {
     let _service = PasswordStrengthService::new();
-
-    // 返回默认策略，实际应用中可以从数据库或配置文件中加载
     Ok(PasswordPolicy::default())
 }
 
@@ -605,4 +602,22 @@ pub async fn update_password_policy(
     if let Some(val) = check_date_patterns { policy.check_date_patterns = val; }
 
     Ok(policy)
+}
+
+#[command]
+pub async fn get_password_suggestions(
+    _state: State<'_, EncryptedPasswordServiceState>,
+    file_path: String
+) -> Result<Vec<crate::services::password_query_service::SearchSuggestion>, String> {
+    let db = get_connection().await.map_err(|e| e.to_string())?;
+    let pool = db.pool().clone();
+    
+    // 暂时创建一个简单的服务实例
+    let dummy_encrypted_service = crate::services::encrypted_password_service::EncryptedPasswordService::new(std::path::Path::new("."));
+    let service = PasswordQueryService::new(pool, Arc::new(dummy_encrypted_service));
+    
+    match service.get_password_suggestions(&file_path, 5).await {
+        Ok(entries) => Ok(entries),
+        Err(e) => Err(format!("获取密码建议失败: {}", e)),
+    }
 }
