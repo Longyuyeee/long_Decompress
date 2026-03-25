@@ -373,7 +373,7 @@ impl PasswordBookService {
     }
 
     /// 检查是否包含序列
-    fn contains_sequence(password: &str) -> bool {
+    pub(crate) fn contains_sequence(password: &str) -> bool {
         if password.len() < 3 {
             return false;
         }
@@ -394,7 +394,7 @@ impl PasswordBookService {
     }
 
     /// 检查是否包含重复字符
-    fn contains_repetition(password: &str) -> bool {
+    pub(crate) fn contains_repetition(password: &str) -> bool {
         if password.len() < 3 {
             return false;
         }

@@ -36,8 +36,13 @@ export interface Task {
   sourceFiles: string[]
   outputPath: string
   format?: string
-  conflicts: ConflictInfo[] // 新增冲突追踪
-  extractToSubfolder?: boolean // 是否解压到同名子文件夹
+  conflicts: ConflictInfo[]
+  extractToSubfolder?: boolean
+  // 增强字段 [FE-INT-001]
+  stage?: 'Pre-checking' | 'Extracting' | 'Finalizing'
+  currentFile?: string
+  currentPassword?: string
+  speed?: string
 }
 
 export const useTaskStore = defineStore('task', () => {
@@ -59,11 +64,23 @@ export const useTaskStore = defineStore('task', () => {
       }
     })
 
-    await listen<{ task_id: string, progress: number }>('task-progress', (event) => {
-      const { task_id, progress } = event.payload
+    await listen<{ 
+      task_id: string, 
+      progress: number,
+      stage?: string,
+      current_file?: string,
+      current_password?: string,
+      speed?: string
+    }>('task-progress', (event) => {
+      const { task_id, progress, stage, current_file, current_password, speed } = event.payload
       const task = tasks.value.find(t => t.id === task_id)
       if (task) {
         task.progress = Math.round(progress * 100)
+        task.stage = stage as any
+        task.currentFile = current_file
+        task.currentPassword = current_password
+        task.speed = speed
+
         if (progress >= 1.0) {
           task.status = 'completed'
           task.endTime = new Date()

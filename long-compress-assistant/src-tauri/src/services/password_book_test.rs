@@ -1,8 +1,12 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::password_book_service::{PasswordBookService, AddPasswordRequest};
-    use crate::models::password::{PasswordCategory, CustomField, CustomFieldType};
+    use crate::services::password_book_service::{
+        PasswordBookService, AddPasswordRequest, SearchFilters, SortOption
+    };
+    use crate::models::password::{
+        PasswordCategory, CustomField, CustomFieldType, PasswordStrength
+    };
     use chrono::{Utc, TimeZone};
 
     #[tokio::test]

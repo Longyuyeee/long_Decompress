@@ -1,3 +1,5 @@
+pub mod archive_engine;
+pub mod universal_engine;
 pub mod compression_service;
 pub mod encrypted_password_service;
 pub mod file_service;

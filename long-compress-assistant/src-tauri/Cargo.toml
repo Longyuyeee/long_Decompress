@@ -28,6 +28,8 @@ env_logger = "0.11"
 regex = "1.10"
 zip = "0.6"
 sevenz-rust = { version = "0.5", features = ["aes256"] }
+unrar = "0.5"
+memmap2 = "0.9"
 lazy_static = "1.4"
 flate2 = "1.0"
 tar = "0.4"

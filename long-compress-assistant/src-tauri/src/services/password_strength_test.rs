@@ -108,6 +108,7 @@ mod tests {
             max_length: 64,
             require_lowercase: true,
             require_uppercase: true,
+            require_numbers: true,
             require_digits: true,
             require_symbols: true,
             min_entropy_bits: 70.0,

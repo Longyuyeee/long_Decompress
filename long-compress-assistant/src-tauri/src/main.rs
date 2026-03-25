@@ -7,39 +7,16 @@
 #![allow(unreachable_patterns)]
 #![allow(unexpected_cfgs)]
 
-mod commands;
-mod services;
-mod models;
-mod database;
-mod crypto;
-mod utils;
-mod config;
-mod task_queue;
-mod system_integration;
+use long_compress_assistant::services;
+use long_compress_assistant::models;
+use long_compress_assistant::database;
+use long_compress_assistant::crypto;
+use long_compress_assistant::utils;
+use long_compress_assistant::config;
+use long_compress_assistant::task_queue;
+use long_compress_assistant::system_integration;
 
-use commands::compression::{extract_file, extract_multiple, compress_files, cancel_compression};
-use commands::file::{list_files, get_file_info};
-use commands::system::{get_system_info, get_disk_space, get_app_version, set_auto_start, check_auto_start};
-use commands::password::{
-    add_password, delete_password, update_password,
-    get_all_passwords, search_passwords, get_password_suggestions
-};
-use commands::encrypted_password::{
-    init_encrypted_password_service,
-    list_encrypted_passwords,
-    add_encrypted_password,
-    delete_encrypted_password,
-    update_encrypted_password,
-    search_encrypted_passwords,
-    is_encrypted_password_service_unlocked,
-    unlock_encrypted_password_service,
-    lock_encrypted_password_service,
-    clear_encrypted_passwords,
-    list_password_groups,
-    export_passwords_command,
-    import_passwords_command,
-    EncryptedPasswordServiceState
-};
+use long_compress_assistant::commands::encrypted_password::EncryptedPasswordServiceState;
 
 use tauri::Manager;
 use window_shadows::set_shadow;
@@ -84,36 +61,36 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            extract_file,
-            extract_multiple,
-            compress_files,
-            cancel_compression,
-            list_files,
-            get_file_info,
-            add_password,
-            delete_password,
-            update_password,
-            get_all_passwords,
-            search_passwords,
-            get_password_suggestions,
-            get_system_info,
-            get_disk_space,
-            get_app_version,
-            set_auto_start,
-            check_auto_start,
-            init_encrypted_password_service,
-            list_encrypted_passwords,
-            add_encrypted_password,
-            delete_encrypted_password,
-            update_encrypted_password,
-            search_encrypted_passwords,
-            is_encrypted_password_service_unlocked,
-            unlock_encrypted_password_service,
-            lock_encrypted_password_service,
-            clear_encrypted_passwords,
-            list_password_groups,
-            export_passwords_command,
-            import_passwords_command
+            long_compress_assistant::commands::compression::extract_file,
+            long_compress_assistant::commands::compression::extract_multiple,
+            long_compress_assistant::commands::compression::compress_files,
+            long_compress_assistant::commands::compression::cancel_compression,
+            long_compress_assistant::commands::file::list_files,
+            long_compress_assistant::commands::file::get_file_info,
+            long_compress_assistant::commands::password::add_password,
+            long_compress_assistant::commands::password::delete_password,
+            long_compress_assistant::commands::password::update_password,
+            long_compress_assistant::commands::password::get_all_passwords,
+            long_compress_assistant::commands::password::search_passwords,
+            long_compress_assistant::commands::password::get_password_suggestions,
+            long_compress_assistant::commands::system::get_system_info,
+            long_compress_assistant::commands::system::get_disk_space,
+            long_compress_assistant::commands::system::get_app_version,
+            long_compress_assistant::commands::system::set_auto_start,
+            long_compress_assistant::commands::system::check_auto_start,
+            long_compress_assistant::commands::encrypted_password::init_encrypted_password_service,
+            long_compress_assistant::commands::encrypted_password::list_encrypted_passwords,
+            long_compress_assistant::commands::encrypted_password::add_encrypted_password,
+            long_compress_assistant::commands::encrypted_password::delete_encrypted_password,
+            long_compress_assistant::commands::encrypted_password::update_encrypted_password,
+            long_compress_assistant::commands::encrypted_password::search_encrypted_passwords,
+            long_compress_assistant::commands::encrypted_password::is_encrypted_password_service_unlocked,
+            long_compress_assistant::commands::encrypted_password::unlock_encrypted_password_service,
+            long_compress_assistant::commands::encrypted_password::lock_encrypted_password_service,
+            long_compress_assistant::commands::encrypted_password::clear_encrypted_passwords,
+            long_compress_assistant::commands::encrypted_password::list_password_groups,
+            long_compress_assistant::commands::encrypted_password::export_passwords_command,
+            long_compress_assistant::commands::encrypted_password::import_passwords_command
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

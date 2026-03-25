@@ -60,7 +60,7 @@ impl TaskManager {
     }
 
     pub async fn add_compression_task(&self, task: CompressionTask, priority: TaskPriority) -> Result<String> {
-        let queue_task = QueueTask::new(TaskType::Compression, priority, task);
+        let queue_task = QueueTask::new(TaskType::Compress, priority, task);
         let task_id = queue_task.id.clone();
         self.queue.add_task(queue_task).await?;
         Ok(task_id)

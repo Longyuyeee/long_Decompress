@@ -1,7 +1,7 @@
 //! 配置文件加载器测试
 
-use crate::config::file_loader::{ConfigFileLoader, ConfigFileFormat, DefaultConfigFileGenerator};
-use crate::config::models::{ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata, ValidationRule};
+use long_compress_assistant::config::file_loader::{ConfigFileLoader, ConfigFileFormat, DefaultConfigFileGenerator};
+use long_compress_assistant::config::models::{ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata, ValidationRule};
 use chrono::Utc;
 use serde_json::json;
 use std::path::PathBuf;
@@ -294,7 +294,7 @@ fn test_config_file_format_serialization() {
 #[tokio::test]
 async fn test_config_file_loader_comprehensive() {
     println!("开始配置文件加载器全面测试...");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     test_config_file_loader_basic().await;
     test_config_file_save_and_load().await;
@@ -303,7 +303,7 @@ async fn test_config_file_loader_comprehensive() {
     test_load_all_config_files().await;
     test_config_file_format_serialization();
 
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
     println!("🎉 所有配置文件加载器测试通过！");
     println!("测试覆盖：");
     println!("  ✓ 基础文件加载");

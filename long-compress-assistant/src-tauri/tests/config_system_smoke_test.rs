@@ -2,8 +2,8 @@
 //!
 //! 验证配置管理系统的核心功能是否正常工作。
 
-use crate::config::models::{ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata, DefaultConfigGenerator};
-use crate::config::validation::ConfigValidator;
+use long_compress_assistant::config::models::{ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata, DefaultConfigGenerator};
+use long_compress_assistant::config::validation::ConfigValidator;
 use chrono::Utc;
 use serde_json::{json, Value};
 
@@ -254,7 +254,7 @@ fn test_config_category() {
 #[test]
 fn test_config_system_smoke() {
     println!("开始配置管理系统冒烟测试...");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     test_config_models_basic();
     test_config_validation_basic();
@@ -262,7 +262,7 @@ fn test_config_system_smoke() {
     test_config_data_type();
     test_config_category();
 
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
     println!("🎉 配置管理系统冒烟测试通过！");
     println!("核心功能验证：");
     println!("  ✓ 配置模型创建和操作");

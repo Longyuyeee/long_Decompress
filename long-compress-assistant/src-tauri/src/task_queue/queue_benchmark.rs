@@ -5,7 +5,7 @@ pub struct QueueBenchmark;
 
 impl QueueBenchmark {
     pub fn create_test_task(priority: TaskPriority) -> QueueTask {
-        QueueTask::new(TaskType::Compression, priority, CompressionTask::default())
+        QueueTask::new(TaskType::Compress, priority, CompressionTask::default())
     }
 
     pub async fn run_benchmark() {

@@ -107,36 +107,101 @@ impl RarSupportService {
             return Err(RarError::FileNotFound(rar_path.to_string_lossy().to_string()));
         }
 
-        // 验证是否是有效的RAR文件
-        if !self.is_valid_rar_file(rar_path).await {
-            return Err(RarError::InvalidRarFile("不是有效的RAR文件".to_string()));
-        }
-
-        // 检查RAR工具
-        if !Self::check_rar_tool_installed() {
-            return Err(RarError::ToolNotInstalled);
-        }
+        // 检测版本信息
+        let version_info = self.detect_rar_info_v2(rar_path).await?;
+        log::debug!("RAR版本信息: {:?}", version_info);
 
         // 创建输出目录
         tokio::fs::create_dir_all(output_dir).await
             .map_err(|e| RarError::ExtractionFailed(format!("创建输出目录失败: {}", e)))?;
 
-        // 尝试使用不同的工具解压
-        let result = match self.try_extract_with_unrar(rar_path, output_dir, password).await {
-            Ok(_) => Ok(()),
-            Err(_) => self.try_extract_with_7z(rar_path, output_dir, password).await,
-        };
-
-        match result {
+        // 策略 1: 尝试使用原生 unrar 库
+        match self.extract_with_native_library(rar_path, output_dir, password).await {
             Ok(_) => {
-                log::info!("RAR解压成功: {:?}", rar_path);
-                Ok(())
+                log::info!("使用原生库解压成功");
+                return Ok(());
             }
             Err(e) => {
-                log::error!("RAR解压失败: {:?}", e);
-                Err(e)
+                log::warn!("原生库解压失败，尝试退避到外部命令: {:?}", e);
+                // 如果是密码错误，直接返回，不再尝试外部命令（避免重复提示）
+                if matches!(e, RarError::PasswordError) {
+                    return Err(e);
+                }
             }
         }
+
+        // 策略 2: 尝试使用外部 unrar 命令
+        if Self::check_tool_exists("unrar") {
+            match self.try_extract_with_unrar(rar_path, output_dir, password).await {
+                Ok(_) => return Ok(()),
+                Err(e) => log::warn!("外部 unrar 命令失败: {:?}", e),
+            }
+        }
+
+        // 策略 3: 尝试使用 7z 命令 (仅支持部分 RAR4)
+        if Self::check_tool_exists("7z") {
+            return self.try_extract_with_7z(rar_path, output_dir, password).await;
+        }
+
+        Err(RarError::ToolNotInstalled)
+    }
+
+    /// 使用原生 unrar 库进行解压
+    async fn extract_with_native_library(
+        &self,
+        rar_path: &Path,
+        output_dir: &Path,
+        password: Option<&str>,
+    ) -> Result<(), RarError> {
+        use unrar::Archive;
+        
+        let path_str = rar_path.to_str().ok_or_else(|| RarError::InvalidRarFile("非法路径".to_string()))?;
+        let mut archive = if let Some(pwd) = password {
+            Archive::with_password(path_str, pwd)
+        } else {
+            Archive::new(path_str)
+        };
+
+        // 尝试打开归档并读取头部
+        let mut open_archive = archive.open_for_processing()
+            .map_err(|e| {
+                let err_msg = format!("{:?}", e);
+                if err_msg.contains("Password") {
+                    RarError::PasswordError
+                } else {
+                    RarError::ExtractionFailed(err_msg)
+                }
+            })?;
+
+        while let Some(header) = open_archive.read_header()
+            .map_err(|e| RarError::ExtractionFailed(format!("读取Header失败: {:?}", e)))? {
+            
+            let entry = header.entry();
+            let target_path = output_dir.join(entry.filename.clone());
+            
+            // 确保父目录存在
+            if let Some(parent) = target_path.parent() {
+                std::fs::create_dir_all(parent).ok();
+            }
+
+            if entry.is_directory() {
+                std::fs::create_dir_all(&target_path).ok();
+                open_archive = header.skip()
+                    .map_err(|e| RarError::ExtractionFailed(format!("跳过目录失败: {:?}", e)))?;
+            } else {
+                open_archive = header.extract_to(&target_path)
+                    .map_err(|e| {
+                        let err_msg = format!("{:?}", e);
+                        if err_msg.contains("Password") {
+                            RarError::PasswordError
+                        } else {
+                            RarError::ExtractionFailed(err_msg)
+                        }
+                    })?;
+            }
+        }
+
+        Ok(())
     }
 
     /// 尝试使用unrar解压
@@ -264,7 +329,44 @@ impl RarSupportService {
         }
     }
 
-    /// 测试RAR文件完整性
+    /// 测试 RAR 密码是否正确
+    pub async fn test_rar_password(&self, rar_path: &Path, password: &str) -> bool {
+        use unrar::Archive;
+        let path_str = match rar_path.to_str() {
+            Some(s) => s,
+            None => return false,
+        };
+
+        // 基础验证：如果连基本的 RAR 签名都没有，直接返回 false
+        if !self.is_valid_rar_file(rar_path).await {
+            return false;
+        }
+
+        let archive = Archive::with_password(path_str, password);
+        
+        match archive.open_for_processing() {
+            Ok(mut open_archive) => {
+                // 尝试读取第一个 Header
+                match open_archive.read_header() {
+                    Ok(_) => true, // 能够读取到 Header 且没报错，说明密码（针对 Header 加密）正确或未加密
+                    Err(e) => {
+                        let err_msg = format!("{:?}", e);
+                        // 只有在明确不是密码错误的情况下（如：文件意外中断），才可能返回 true 或处理
+                        // 但在密码预检阶段，任何错误都应视为不匹配
+                        log::debug!("RAR预检读取Header报错: {}", err_msg);
+                        false
+                    }
+                }
+            }
+            Err(e) => {
+                let err_msg = format!("{:?}", e);
+                log::debug!("RAR预检打开归档报错: {}", err_msg);
+                false 
+            }
+        }
+    }
+
+    /// 测试RAR文件完整性 (使用命令行工具作为备选)
     pub async fn test_rar_integrity(
         &self,
         rar_path: &Path,
@@ -272,18 +374,22 @@ impl RarSupportService {
     ) -> Result<bool, RarError> {
         log::debug!("测试RAR文件完整性: {:?}", rar_path);
 
+        // 如果是原生库支持的，优先尝试原生测试
+        if let Some(pwd) = password {
+            if self.test_rar_password(rar_path, pwd).await {
+                return Ok(true);
+            }
+        }
+
         if !Self::check_rar_tool_installed() {
             return Err(RarError::ToolNotInstalled);
         }
 
         let mut command = Command::new("unrar");
-
-        command.arg("t"); // 测试
-
+        command.arg("t"); 
         if let Some(pwd) = password {
             command.arg("-p").arg(pwd);
         }
-
         command.arg(rar_path);
 
         let output = command.output()
@@ -291,18 +397,27 @@ impl RarSupportService {
 
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
-            let is_ok = stdout.contains("All OK") || stdout.contains("All ok");
-
-            Ok(is_ok)
+            Ok(stdout.contains("All OK") || stdout.contains("All ok"))
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
-
             if stderr.contains("password") || stderr.contains("Password") {
                 Err(RarError::PasswordError)
             } else {
                 Err(RarError::ExtractionFailed(format!("测试RAR完整性失败: {}", stderr)))
             }
         }
+    }
+
+    /// 循环尝试一组密码
+    pub async fn attempt_passwords(&self, rar_path: &Path, passwords: &[String]) -> Option<String> {
+        for pwd in passwords {
+            log::debug!("正在尝试密码: {}", pwd);
+            if self.test_rar_password(rar_path, pwd).await {
+                log::info!("密码匹配成功: {}", pwd);
+                return Some(pwd.clone());
+            }
+        }
+        None
     }
 
     /// 检测文件是否是有效的RAR文件
@@ -392,32 +507,64 @@ impl RarSupportService {
         })
     }
 
-    /// 检测RAR文件版本
-    async fn detect_rar_version(&self, rar_path: &Path) -> Option<String> {
-        // 尝试从文件头检测RAR版本
-        match tokio::fs::read(rar_path).await {
-            Ok(data) if data.len() >= 10 => {
-                // RAR 5.0+ 签名
-                if data[0] == b'R' && data[1] == b'a' && data[2] == b'r' && data[3] == b'!' &&
-                   data[4] == 0x1A && data[5] == 0x07 && data[6] == 0x01 && data[7] == 0x00 {
-                    return Some("5.0+".to_string());
-                }
-                // RAR 4.x 签名
-                else if data[0] == b'R' && data[1] == b'a' && data[2] == b'r' && data[3] == b'!' &&
-                        data[4] == 0x1A && data[5] == 0x07 && data[6] == 0x00 {
-                    return Some("4.x".to_string());
-                }
-                // RAR 1.5-3.x 签名
-                else if data[0] == b'R' && data[1] == b'E' && data[2] == b'~' && data[3] == b'^' &&
-                        data[4] == 0x1A && data[5] == 0x07 && data[6] == 0x00 {
-                    return Some("1.5-3.x".to_string());
-                }
-            }
-            _ => {}
+    /// 检测RAR文件版本及加密状态
+    pub async fn detect_rar_info_v2(&self, rar_path: &Path) -> Result<RarVersionInfo, RarError> {
+        use tokio::io::AsyncReadExt;
+        let mut file = tokio::fs::File::open(rar_path).await
+            .map_err(|e| RarError::FileNotFound(rar_path.to_string_lossy().to_string()))?;
+        
+        let mut header = [0u8; 32];
+        let n = file.read(&mut header).await.map_err(RarError::IoError)?;
+        
+        if n < 7 {
+            return Err(RarError::InvalidRarFile("文件过小，无法识别".to_string()));
         }
 
-        None
+        // RAR 4.x 签名: 52 61 72 21 1A 07 00
+        if &header[0..7] == b"Rar!\x1a\x07\x00" {
+            // 在 RAR4 中，Header 是否加密通常需要读取第一个 Block
+            return Ok(RarVersionInfo {
+                version: "4.x".to_string(),
+                is_rar5: false,
+                has_encrypted_headers: false, // 4.x 通常在内容块加密
+            });
+        }
+
+        // RAR 5.0 签名: 52 61 72 21 1A 07 01 00 (8 bytes)
+        if n >= 8 && &header[0..8] == b"Rar!\x1a\x07\x01\x00" {
+            // 在 RAR5 中，主归档头紧随其后。
+            // RAR5 Header 结构: CRC32 (4), Size (VINT), Type (VINT), Flags (VINT)
+            // 这是一个变长编码，但通常紧跟在签名后的第一个字节开始。
+            
+            // 简单逻辑：如果签名后的数据无法直接通过 unrar 列出，且头部特征符合加密位
+            // 根据 RAR5 规范，如果第一个 VINT (Header Flags) 包含加密标志
+            // 这里我们预留一个位判断逻辑，但在没有完整 VINT 解析器前，我们通过后续报错捕获
+            
+            // RAR5 规范：主头 (Main Archive Header) type = 1
+            // 如果后续数据被 AES-256 加密，文件看起来将完全随机。
+            
+            return Ok(RarVersionInfo {
+                version: "5.0+".to_string(),
+                is_rar5: true,
+                has_encrypted_headers: header[8] & 0x80 != 0, // 启发式判断，RAR5 加密标志
+            });
+        }
+
+        Err(RarError::UnsupportedVersion("未知或损坏的RAR格式".to_string()))
     }
+
+    /// 检测RAR文件版本
+    async fn detect_rar_version(&self, rar_path: &Path) -> Option<String> {
+        self.detect_rar_info_v2(rar_path).await.ok().map(|info| info.version)
+    }
+}
+
+/// RAR 版本信息
+#[derive(Debug, Clone)]
+pub struct RarVersionInfo {
+    pub version: String,
+    pub is_rar5: bool,
+    pub has_encrypted_headers: bool,
 }
 
 /// RAR文件信息

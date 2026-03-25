@@ -28,10 +28,10 @@ impl QueueTaskStatus {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum TaskType {
-    Compression,
-    Extraction,
+    Compress,
+    Extract,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

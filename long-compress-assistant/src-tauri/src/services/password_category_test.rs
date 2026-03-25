@@ -2,9 +2,11 @@
 mod tests {
     use super::*;
     use crate::services::password_category_service::{
-        PasswordCategoryService, CreateCategoryRequest, UpdateCategoryRequest
+        PasswordCategoryService, CreateCategoryRequest, UpdateCategoryRequest,
+        CategoryStatistics
     };
     use chrono::{Utc, TimeZone};
+    use crate::models::password::PasswordCategory;
 
     #[tokio::test]
     async fn test_category_creation() {
@@ -148,7 +150,7 @@ mod tests {
         let service = PasswordCategoryService::new();
 
         let categories = vec![
-            DbPasswordCategory {
+            PasswordCategory {
                 id: "cat1".to_string(),
                 name: "Category1".to_string(),
                 display_name: "分类1".to_string(),
@@ -159,7 +161,7 @@ mod tests {
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
             },
-            DbPasswordCategory {
+            PasswordCategory {
                 id: "cat2".to_string(),
                 name: "Category2".to_string(),
                 display_name: "分类2".to_string(),

@@ -137,6 +137,7 @@ pub struct PasswordStrengthAssessment {
     pub score: u8,
     pub strength: PasswordStrength,
     pub entropy: f64,
+    pub entropy_bits: f64,
     pub crack_time_seconds: f64,
     pub issues: Vec<PasswordIssue>,
     pub recommendations: Vec<String>,
@@ -147,6 +148,40 @@ pub struct PasswordStrengthService;
 impl PasswordStrengthService {
     pub fn new() -> Self {
         Self
+    }
+
+    pub fn format_crack_time(&self, seconds: f64) -> String {
+        if seconds < 60.0 {
+            format!("{:.1} 秒", seconds)
+        } else if seconds < 3600.0 {
+            format!("{:.1} 分钟", seconds / 60.0)
+        } else if seconds < 86400.0 {
+            format!("{:.1} 小时", seconds / 3600.0)
+        } else {
+            format!("{:.1} 天", seconds / 86400.0)
+        }
+    }
+
+    pub fn levenshtein_distance(&self, s1: &str, s2: &str) -> usize {
+        let v1: Vec<char> = s1.chars().collect();
+        let v2: Vec<char> = s2.chars().collect();
+        let n = v1.len();
+        let m = v2.len();
+        if n == 0 { return m; }
+        if m == 0 { return n; }
+        let mut matrix = vec![vec![0; m + 1]; n + 1];
+        for i in 0..=n { matrix[i][0] = i; }
+        for j in 0..=m { matrix[0][j] = j; }
+        for i in 1..=n {
+            for j in 1..=m {
+                let cost = if v1[i-1] == v2[j-1] { 0 } else { 1 };
+                matrix[i][j] = std::cmp::min(
+                    std::cmp::min(matrix[i-1][j] + 1, matrix[i][j-1] + 1),
+                    matrix[i-1][j-1] + cost
+                );
+            }
+        }
+        matrix[n][m]
     }
 
     pub fn evaluate(&self, password: &str) -> PasswordStrength {
@@ -166,6 +201,7 @@ impl PasswordStrengthService {
             score: 3,
             strength,
             entropy: 40.0,
+            entropy_bits: 40.0,
             crack_time_seconds: 3600.0,
             issues: Vec::new(),
             recommendations: Vec::new(),

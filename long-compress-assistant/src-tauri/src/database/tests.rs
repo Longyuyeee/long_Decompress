@@ -3,6 +3,11 @@ mod tests {
     use super::*;
     use tempfile::TempDir;
     use std::path::PathBuf;
+    use crate::database::connection::{
+        DatabaseConnection, DatabaseConfig, PoolConfig, PerformanceConfig, BackupConfig,
+        init, shutdown, is_initialized, get_connection
+    };
+    use sqlx::SqlitePool;
 
     async fn create_test_database() -> (DatabaseConnection, TempDir) {
         let temp_dir = TempDir::new().unwrap();
@@ -47,7 +52,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_database_creation() {
-        let (db, _temp_dir) = create_test_database().await;
+        let (db, _temp_dir): (DatabaseConnection, TempDir) = create_test_database().await;
 
         // 验证数据库文件存在
         assert!(db.database_path().exists());
@@ -57,7 +62,7 @@ mod tests {
         assert_eq!(pool.status().size(), 1); // 最小连接数
 
         // 验证可以执行查询
-        let result: Result<(i64,), _> = sqlx::query_as("SELECT 1")
+        let result: Result<(i64,), sqlx::Error> = sqlx::query_as("SELECT 1")
             .fetch_one(pool)
             .await;
 
@@ -67,7 +72,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_migrations() {
-        let (db, _temp_dir) = create_test_database().await;
+        let (db, _temp_dir): (DatabaseConnection, TempDir) = create_test_database().await;
 
         // 运行迁移
         db.run_migrations().await.expect("迁移失败");
@@ -76,7 +81,7 @@ mod tests {
         let pool = db.pool();
 
         // 检查压缩任务表
-        let result: Result<(i64,), _> = sqlx::query_as(
+        let result: Result<(i64,), sqlx::Error> = sqlx::query_as(
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='compression_tasks'"
         )
         .fetch_one(pool)
@@ -86,7 +91,7 @@ mod tests {
         assert_eq!(result.unwrap().0, 1);
 
         // 检查密码条目表
-        let result: Result<(i64,), _> = sqlx::query_as(
+        let result: Result<(i64,), sqlx::Error> = sqlx::query_as(
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='password_entries'"
         )
         .fetch_one(pool)

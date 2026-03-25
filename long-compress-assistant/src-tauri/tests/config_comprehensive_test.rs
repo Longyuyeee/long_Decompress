@@ -2,13 +2,13 @@
 //!
 //! 包含单元测试、集成测试、边界测试和性能测试。
 
-use crate::config::models::{
+use long_compress_assistant::config::models::{
     ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata, DefaultConfigGenerator,
     ExportFormat, ImportStrategy, ValidationRule,
 };
-use crate::config::validation::{ConfigValidator, ConfigValueConverter};
-use crate::config::repository::ConfigRepository;
-use crate::config::service::ConfigService;
+use long_compress_assistant::config::validation::{ConfigValidator, ConfigValueConverter};
+use long_compress_assistant::config::repository::ConfigRepository;
+use long_compress_assistant::config::service::ConfigService;
 use chrono::Utc;
 use serde_json::{json, Value};
 use sqlx::SqlitePool;
@@ -501,7 +501,7 @@ async fn create_test_service() -> ConfigService {
 #[tokio::test]
 async fn test_config_system_comprehensive() {
     println!("开始配置管理系统全面测试...");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // 单元测试
     test_config_validator_comprehensive().await;
@@ -517,7 +517,7 @@ async fn test_config_system_comprehensive() {
     // 性能测试
     test_config_cache_performance().await;
 
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
     println!("🎉 所有配置管理系统测试通过！");
     println!("测试覆盖：");
     println!("  ✓ 单元测试（验证器、转换器）");
