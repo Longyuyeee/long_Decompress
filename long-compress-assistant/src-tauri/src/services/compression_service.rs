@@ -100,11 +100,13 @@ impl ArchiveFormat {
 #[derive(Clone, Serialize)]
 pub struct TaskProgress {
     pub task_id: String,
-    pub stage: String, // "Pre-checking" | "Extracting" | "Finalizing"
+    pub stage: Option<String>, // "Pre-checking" | "Extracting" | "Finalizing"
     pub current_password: Option<String>,
     pub progress: f32,
     pub speed: Option<String>,
     pub current_file: Option<String>,
+    pub processed_bytes: u64,
+    pub total_bytes: u64,
 }
 
 #[derive(Clone, Serialize)]
@@ -190,6 +192,8 @@ impl CompressionService {
     pub fn emit_progress(&self, window: &Window, task_id: &str, progress: f32, current_file: Option<String>, processed_bytes: u64, total_bytes: u64) {
         let payload = TaskProgress {
             task_id: task_id.to_string(),
+            stage: None,
+            current_password: None,
             progress,
             current_file,
             processed_bytes,
@@ -280,6 +284,7 @@ impl CompressionService {
         }
 
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+        let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("未知文件").to_string();
         service.emit_log(&window, &task_id, &format!("识别到格式: {:?} (后缀: {})", format, ext), TaskLogSeverity::Info);
 
         let mut final_password = password.clone();
@@ -302,7 +307,7 @@ impl CompressionService {
                     let _ = window.emit("password-required", PasswordRequiredPayload {
                         task_id: task_id.clone(),
                         file_path: file_path.clone(),
-                        file_name: file_name.clone(),
+                        file_name: file_name,
                         format: format!("{:?}", format),
                     });
                     
@@ -498,7 +503,7 @@ impl CompressionService {
         Ok(())
     }
 
-    pub fn do_extract_7z(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>) -> Result<()> {
+    pub fn do_extract_7z(&self, _window: &Window, _task_id: &str, file: &str, output: &str, password: Option<&str>) -> Result<()> {
         let path = Path::new(file);
         let pwd_bytes = password.map(|p| sevenz_rust::Password::from(p));
         let mut f = File::open(path)?;
@@ -509,7 +514,7 @@ impl CompressionService {
             sevenz_rust::Archive::read(&mut f, len, &[])
         };
         match archive_res {
-            Ok(archive) => {
+            Ok(_archive) => {
                 if let Some(p) = pwd_bytes {
                     sevenz_rust::decompress_file_with_password(file, output, p)
                         .map_err(|e| {
@@ -547,7 +552,7 @@ impl CompressionService {
         Ok(())
     }
 
-    fn do_extract_tar(&self, window: &Window, task_id: &str, file: &str, output: &Path, decoder: Option<Box<dyn Read + Send>>) -> Result<()> {
+    fn do_extract_tar(&self, _window: &Window, _task_id: &str, file: &str, output: &Path, decoder: Option<Box<dyn Read + Send>>) -> Result<()> {
         let f = File::open(file)?;
         let mut archive = if let Some(d) = decoder {
             tar::Archive::new(d)
@@ -558,7 +563,7 @@ impl CompressionService {
         for entry in entries {
             self.check_cancellation()?;
             let mut entry = entry?;
-            let path = entry.path()?.to_path_buf();
+            let _path = entry.path()?.to_path_buf();
             entry.unpack_in(output)?;
         }
         Ok(())

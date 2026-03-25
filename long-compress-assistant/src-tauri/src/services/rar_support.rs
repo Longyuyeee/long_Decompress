@@ -156,7 +156,7 @@ impl RarSupportService {
         use unrar::Archive;
         
         let path_str = rar_path.to_str().ok_or_else(|| RarError::InvalidRarFile("非法路径".to_string()))?;
-        let mut archive = if let Some(pwd) = password {
+        let archive = if let Some(pwd) = password {
             Archive::with_password(path_str, pwd)
         } else {
             Archive::new(path_str)
@@ -345,7 +345,7 @@ impl RarSupportService {
         let archive = Archive::with_password(path_str, password);
         
         match archive.open_for_processing() {
-            Ok(mut open_archive) => {
+            Ok(open_archive) => {
                 // 尝试读取第一个 Header
                 match open_archive.read_header() {
                     Ok(_) => true, // 能够读取到 Header 且没报错，说明密码（针对 Header 加密）正确或未加密
@@ -511,7 +511,7 @@ impl RarSupportService {
     pub async fn detect_rar_info_v2(&self, rar_path: &Path) -> Result<RarVersionInfo, RarError> {
         use tokio::io::AsyncReadExt;
         let mut file = tokio::fs::File::open(rar_path).await
-            .map_err(|e| RarError::FileNotFound(rar_path.to_string_lossy().to_string()))?;
+            .map_err(|_e| RarError::FileNotFound(rar_path.to_string_lossy().to_string()))?;
         
         let mut header = [0u8; 32];
         let n = file.read(&mut header).await.map_err(RarError::IoError)?;

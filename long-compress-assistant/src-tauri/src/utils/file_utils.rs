@@ -30,7 +30,7 @@ pub fn is_compressed_file(path: &Path) -> bool {
         matches!(
             extension.as_str(),
             "zip" | "rar" | "7z" | "tar" | "gz" | "tgz" | "bz2" | "tbz2" | "xz" | "txz" |
-            "tar.gz" | "tar.bz2" | "tar.xz" | "z" | "lz" | "lzma" | "lzo" | "rz" | "sz" | "xz"
+            "tar.gz" | "tar.bz2" | "tar.xz" | "z" | "lz" | "lzma" | "lzo" | "rz" | "sz"
         )
     } else {
         false

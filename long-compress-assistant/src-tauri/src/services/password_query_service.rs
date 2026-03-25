@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{SqlitePool, query_as};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use chrono::{DateTime, Utc, TimeZone};
+use chrono::{DateTime, Utc};
 
 /// 密码查询请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
