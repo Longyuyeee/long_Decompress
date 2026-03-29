@@ -85,10 +85,11 @@ export const useTauriCommands = () => {
    */
   const decompressFile = async (
     filePath: string,
-    options: DecompressOptions
+    options: DecompressOptions,
+    existingTaskId?: string
   ) => {
     const fileName = filePath.split(/[\\/]/).pop() || 'unknown'
-    const taskId = taskStore.addTask({
+    const taskId = existingTaskId || taskStore.addTask({
       id: Date.now().toString(),
       name: fileName,
       type: 'decompression',
@@ -99,6 +100,9 @@ export const useTauriCommands = () => {
 
     try {
       taskStore.updateTaskStatus(taskId, 'preparing')
+      // ... (rest of the method logic)
+      // Note: I'm only replacing a part but the tool requires the exact literal text.
+      // I'll replace the whole method to be safe.
       
       // --- 准备密码队列 ---
       let passwordsToTry: string[] = []
@@ -328,6 +332,18 @@ export const useTauriCommands = () => {
     }
   }
 
+  /**
+   * 取消压缩/解压任务
+   */
+  const cancelCompression = async (taskId: string) => {
+    try {
+      await invoke('cancel_compression', { taskId })
+      taskStore.updateTaskStatus(taskId, 'cancelled')
+    } catch (error) {
+      console.error('Failed to cancel task:', error)
+    }
+  }
+
   return {
     selectFiles,
     selectDirectory,
@@ -339,6 +355,7 @@ export const useTauriCommands = () => {
     checkFileFormat,
     getSystemInfo,
     showMessage,
-    saveFile
+    saveFile,
+    cancelCompression
   }
 }

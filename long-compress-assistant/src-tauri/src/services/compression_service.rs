@@ -131,6 +131,34 @@ pub struct CompressionService {
 }
 
 impl CompressionService {
+    /// 自动凑齐所有默认依赖并创建实例 (推荐在 Command 层使用)
+    pub async fn new_with_defaults() -> Self {
+        let pool = match crate::database::connection::get_connection().await {
+            Ok(conn) => conn.pool().clone(),
+            Err(_) => {
+                panic!("Failed to get global database connection for CompressionService");
+            }
+        };
+
+        // 动态计算数据目录，确保与 main.rs 逻辑一致
+        let mut data_dir = std::env::current_dir().unwrap();
+        if data_dir.ends_with("src-tauri") {
+            data_dir.pop();
+        }
+        let data_dir = data_dir.join(".password_book_data");
+        
+        let enc_service = Arc::new(crate::services::encrypted_password_service::EncryptedPasswordService::new(&data_dir));
+        let query_service = Arc::new(PasswordQueryService::new(pool, enc_service));
+
+        Self::new(
+            CompressionServiceConfig::default(),
+            Arc::new(IOBufferPool::default()),
+            Arc::new(RarSupportService::new()),
+            Arc::new(UniversalCliEngine::new()),
+            query_service,
+        )
+    }
+
     pub fn new(
         config: CompressionServiceConfig,
         buffer_pool: Arc<IOBufferPool>,
@@ -285,9 +313,28 @@ impl CompressionService {
 
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("未知文件").to_string();
-        service.emit_log(&window, &task_id, &format!("识别到格式: {:?} (后缀: {})", format, ext), TaskLogSeverity::Info);
+
+        // 托底识别：如果 magic 识别失败，尝试根据后缀识别
+        if format == ArchiveFormat::Unknown {
+            format = match ext.as_str() {
+                "zip" => ArchiveFormat::Zip,
+                "7z" => ArchiveFormat::SevenZip,
+                "rar" => ArchiveFormat::Rar,
+                "tar" => ArchiveFormat::Tar,
+                "gz" | "tgz" => ArchiveFormat::Gzip,
+                "bz2" => ArchiveFormat::Bzip2,
+                "xz" => ArchiveFormat::Xz,
+                _ => ArchiveFormat::Unknown,
+            };
+            if format != ArchiveFormat::Unknown {
+                service.emit_log(&window, &task_id, &format!("Magic匹配失败，根据后缀识别为: {:?}", format), TaskLogSeverity::Warning);
+            }
+        }
+
+        service.emit_log(&window, &task_id, &format!("确定解压格式: {:?} (后缀: {})", format, ext), TaskLogSeverity::Info);
 
         let mut final_password = password.clone();
+        // ... (省略部分代码以便定位)
         if final_password.is_none() && format.supports_password() {
             // 首先探测是否真的加密
             let needs_pwd = match service.test_archive_password(&file_path, "").await {
@@ -624,10 +671,29 @@ impl CompressionService {
                     let f = File::open(&file)?;
                     let mut archive = ZipArchive::new(f)?;
                     if archive.len() > 0 {
-                        match archive.by_index_decrypt(0, pwd.as_bytes()) {
-                            Ok(Ok(_)) => Ok(true),
-                            _ => Ok(false),
+                        // 1. 首先尝试普通读取（判断是否未加密）
+                        // 借用 A 开始
+                        let can_read_normally = if let Ok(mut zip_file) = archive.by_index(0) {
+                            let mut probe = [0u8; 1];
+                            zip_file.read(&mut probe).is_ok()
+                        } else {
+                            false
+                        };
+                        // 借用 A 结束（zip_file 已 drop）
+
+                        if can_read_normally {
+                            return Ok(true);
                         }
+
+                        // 2. 如果普通读取失败，说明可能加密，尝试解密读取
+                        // 借用 B 开始
+                        if let Ok(Ok(mut reader)) = archive.by_index_decrypt(0, pwd.as_bytes()) {
+                            let mut probe = [0u8; 4];
+                            return Ok(reader.read(&mut probe).is_ok());
+                        }
+                        // 借用 B 结束
+
+                        Ok(false)
                     } else { Ok(true) }
                 },
                 "7z" | "rar" => {

@@ -45,7 +45,7 @@ onMounted(async () => {
   })
 
   // 当文件真正在窗口放下时
-  unlistenDrop = await listen<{ paths: string[] }>('tauri://file-drop', (event) => {
+  unlistenDrop = await listen<string[]>('tauri://file-drop', (event) => {
     isDragging.value = false
     const paths = event.payload
     if (paths && paths.length > 0) {

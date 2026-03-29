@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useAppStore } from '@/stores/app'
+import type { CompressionOptions } from '@/stores/compression'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
@@ -22,18 +23,6 @@ interface Emits {
 }
 
 const emit = defineEmits<Emits>()
-
-export interface CompressionOptions {
-  format: 'zip' | '7z' | 'tar' | 'gz' | 'bz2' | 'tar.gz' | 'tar.bz2' | 'xz' | 'tar.xz' | 'rar'
-  level: number
-  password: string
-  filename: string
-  splitArchive: boolean
-  splitSize: string
-  keepStructure: boolean
-  deleteAfter: boolean
-  createSolidArchive: boolean
-}
 
 const compressionOptions = ref<CompressionOptions>(props.modelValue || {
   format: 'zip',
@@ -171,9 +160,9 @@ watch(outputPath, (newPath) => {
             { key: 'keepStructure', icon: 'pi pi-sitemap' },
             { key: 'deleteAfter', icon: 'pi pi-trash' }
           ]" :key="opt.key" 
-          @click="compressionOptions[opt.key as keyof CompressionOptions] = !compressionOptions[opt.key as keyof CompressionOptions]"
+          @click="(compressionOptions[opt.key as 'keepStructure' | 'deleteAfter'] as boolean) = !compressionOptions[opt.key as 'keepStructure' | 'deleteAfter']"
           class="w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer transition-all"
-          :class="compressionOptions[opt.key as keyof CompressionOptions] ? 'bg-primary/20 border-primary text-primary' : 'bg-input border-subtle text-dim hover:text-muted'"
+          :class="compressionOptions[opt.key as 'keepStructure' | 'deleteAfter'] ? 'bg-primary/20 border-primary text-primary' : 'bg-input border-subtle text-dim hover:text-muted'"
           :title="opt.key">
             <i :class="[opt.icon, 'text-xs']"></i>
           </div>

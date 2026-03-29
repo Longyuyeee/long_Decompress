@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { listen } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/tauri'
 
 export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'completed' | 'failed' | 'cancelled'
 export type LogSeverity = 'info' | 'warning' | 'error' | 'success'
@@ -134,6 +135,20 @@ export const useTaskStore = defineStore('task', () => {
     tasks.value = tasks.value.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status))
   }
 
+  const cancelTask = async (taskId: string) => {
+    try {
+      await invoke('cancel_compression', { taskId })
+      updateTaskStatus(taskId, 'cancelled')
+    } catch (e) {
+      console.error('Failed to cancel task:', e)
+    }
+  }
+
+  const fetchTasks = async () => {
+    // 这是一个占位符，如果后端支持获取历史任务，可以在此实现
+    console.log('Fetching tasks...')
+  }
+
   return {
     tasks,
     activeTaskCount,
@@ -141,6 +156,8 @@ export const useTaskStore = defineStore('task', () => {
     addTask,
     updateTaskStatus,
     removeTask,
-    clearFinishedTasks
+    clearFinishedTasks,
+    cancelTask,
+    fetchTasks
   }
 })

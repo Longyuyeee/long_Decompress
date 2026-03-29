@@ -61,7 +61,7 @@ pub async fn extract_file(
     password: Option<String>, 
     _options: Option<DecompressOptions>
 ) -> Result<String, String> {
-    let service = CompressionService::default();
+    let service = CompressionService::new_with_defaults().await;
     service.reset_cancellation();
     
     let actual_password = resolve_password(&app, &service, &window, &task_id, &file_path, password).await;
@@ -81,7 +81,7 @@ pub async fn extract_multiple(
     password: Option<String>, 
     _options: Option<DecompressOptions>
 ) -> Result<Vec<String>, String> {
-    let service = CompressionService::default();
+    let service = CompressionService::new_with_defaults().await;
     service.reset_cancellation();
     let mut results = Vec::new();
     
@@ -106,7 +106,7 @@ pub async fn compress_files(
     output_path: String, 
     options: Option<CompressionOptions>
 ) -> Result<String, String> {
-    let service = CompressionService::default();
+    let service = CompressionService::new_with_defaults().await;
     service.reset_cancellation();
     let opts = options.unwrap_or_default();
 
@@ -118,7 +118,7 @@ pub async fn compress_files(
 
 #[command]
 pub async fn cancel_compression() -> Result<(), String> {
-    let service = CompressionService::default();
+    let service = CompressionService::new_with_defaults().await;
     service.cancel();
     Ok(())
 }

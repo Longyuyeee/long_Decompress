@@ -15,7 +15,7 @@ export {
 } from './password'
 
 // 类型导出
-export type { FileItem, DecompressTask, AppSettings } from './app'
+export type { FileItem, DecompressTask, AppSettings } from '../types'
 export type { FileHistory, FavoriteFile } from './file'
 export type { Notification, ModalState, Toast } from './ui'
 export type { CompressionOptions, CompressionTask, CompressionHistory } from './compression'

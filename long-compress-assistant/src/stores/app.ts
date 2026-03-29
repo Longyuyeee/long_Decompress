@@ -45,6 +45,7 @@ export interface AppSettings {
   bruteForceWordlists: string[]
   autoStart: boolean
   conflictPolicy: 'ask' | 'overwrite' | 'skip' | 'rename'
+  autoDeleteSource: boolean
 }
 
 export const useAppStore = defineStore('app', () => {
@@ -81,7 +82,7 @@ export const useAppStore = defineStore('app', () => {
     savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
     sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
     bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-    bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask'
+    bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask', autoDeleteSource: false
   })
 
   watch(() => settings.value.autoStart, async (newVal) => {
@@ -140,7 +141,7 @@ export const useAppStore = defineStore('app', () => {
       savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-      bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask'
+      bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask', autoDeleteSource: false
     }
     saveSettingsToStorage()
   }

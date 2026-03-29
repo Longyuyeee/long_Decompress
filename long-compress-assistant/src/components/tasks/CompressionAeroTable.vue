@@ -72,27 +72,27 @@ const formatSize = (size?: number) => {
         </div>
         
         <div v-if="group.expanded" class="group-files px-12 py-2 space-y-1 bg-black/10">
-          <div v-for="file in group.files" :key="file" class="text-[10px] text-white/40 font-mono py-1 flex justify-between">
-            <span>{{ file.split(/[\\/]/).pop() }}</span>
-            <span class="text-white/10 italic">{{ file }}</span>
+          <div v-for="file in group.files" :key="file.path" class="text-[10px] text-white/40 font-mono py-1 flex justify-between">
+            <span>{{ file.name }}</span>
+            <span class="text-white/10 italic">{{ file.path }}</span>
           </div>
         </div>
       </div>
 
       <!-- 未分组文件展示 -->
-      <div v-for="file in compressionStore.selectedFiles" :key="file" 
+      <div v-for="file in compressionStore.selectedFiles" :key="file.path" 
            class="file-row flex items-center px-6 py-4 border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer"
-           :class="{ 'bg-blue-500/10 border-blue-500/20': selectedRows.has(file) }"
-           @click="toggleSelection(file)">
+           :class="{ 'bg-blue-500/10 border-blue-500/20': selectedRows.has(file.path) }"
+           @click="toggleSelection(file.path)">
         <div class="w-8">
            <div class="w-4 h-4 rounded border border-white/20 flex items-center justify-center transition-all"
-                :class="{ 'bg-blue-500 border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]': selectedRows.has(file) }">
-             <i v-if="selectedRows.has(file)" class="pi pi-check text-[8px] text-white"></i>
+                :class="{ 'bg-blue-500 border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]': selectedRows.has(file.path) }">
+             <i v-if="selectedRows.has(file.path)" class="pi pi-check text-[8px] text-white"></i>
            </div>
         </div>
         <i class="pi pi-file text-white/20 mr-4"></i>
-        <span class="text-white/70 text-sm flex-1">{{ file.split(/[\\/]/).pop() }}</span>
-        <span class="text-white/20 text-[10px] font-mono italic mr-6">{{ file }}</span>
+        <span class="text-white/70 text-sm flex-1">{{ file.name }}</span>
+        <span class="text-white/20 text-[10px] font-mono italic mr-6">{{ file.path }}</span>
         <span class="text-white/40 text-xs font-mono">---</span>
       </div>
     </div>

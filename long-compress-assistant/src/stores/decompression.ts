@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
-import type { FileItem } from './app'
+import type { FileItem } from '../types'
 
 export interface DecompressSettings {
   outputPath: string

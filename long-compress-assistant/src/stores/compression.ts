@@ -9,17 +9,43 @@ export interface FileObject {
   isDirectory: boolean
 }
 
+export interface CompressionOptions {
+  format: 'zip' | '7z' | 'tar' | 'gz' | 'bz2' | 'tar.gz' | 'tar.bz2' | 'xz' | 'tar.xz' | 'rar'
+  level: number
+  password: string
+  filename: string
+  splitArchive: boolean
+  splitSize: string
+  keepStructure: boolean
+  deleteAfter: boolean
+  createSolidArchive: boolean
+}
+
 export interface CompressionGroup {
   id: string
   name: string
   files: FileObject[]
   themeColor: string
   expanded: boolean
-  settings: {
-    format: 'zip' | '7z' | 'tar'
-    level: number
-    password?: string
-  }
+  settings: CompressionOptions
+}
+
+export interface CompressionTask {
+  id: string
+  name: string
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+  progress: number
+  startTime?: Date
+  endTime?: Date
+  error?: string
+}
+
+export interface CompressionHistory {
+  id: string
+  name: string
+  timestamp: Date
+  status: 'success' | 'error'
+  size: number
 }
 
 export const useCompressionStore = defineStore('compression', () => {
@@ -51,7 +77,14 @@ export const useCompressionStore = defineStore('compression', () => {
       expanded: true,
       settings: {
         format: 'zip',
-        level: 5
+        level: 6,
+        password: '',
+        filename: `新建压缩组 ${groups.value.length + 1}`,
+        splitArchive: false,
+        splitSize: '1024',
+        keepStructure: true,
+        deleteAfter: false,
+        createSolidArchive: false
       }
     })
     

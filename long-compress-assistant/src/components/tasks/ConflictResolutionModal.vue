@@ -54,7 +54,7 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
       <div class="header-section bg-input/30 p-4 rounded-2xl border border-subtle/30 backdrop-blur-md">
         <p class="text-muted text-[10px] font-black uppercase tracking-widest mb-2 opacity-60">Target Path Conflict</p>
         <div class="text-content font-bold font-mono text-xs break-all leading-relaxed">
-          {{ currentConflict.dest_path }}
+          {{ currentConflict.destPath }}
         </div>
       </div>
 
@@ -79,11 +79,11 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
           <div class="space-y-4">
             <div class="flex flex-col">
               <span class="text-dim text-[9px] uppercase font-bold mb-1">物理体积</span>
-              <span class="text-content font-mono font-black text-lg">{{ formatSize(currentConflict.dest_size) }}</span>
+              <span class="text-content font-mono font-black text-lg">{{ formatSize(currentConflict.destSize) }}</span>
             </div>
             <div class="flex flex-col">
               <span class="text-dim text-[9px] uppercase font-bold mb-1">最后修改</span>
-              <span class="text-muted font-mono text-[10px]">{{ formatDate(currentConflict.dest_modified) }}</span>
+              <span class="text-muted font-mono text-[10px]">{{ formatDate(currentConflict.destModified) }}</span>
             </div>
           </div>
         </div>
@@ -100,14 +100,14 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
           <div class="space-y-4">
             <div class="flex flex-col">
               <span class="text-dim text-[9px] uppercase font-bold mb-1">物理体积</span>
-              <span :class="currentConflict.source_size > currentConflict.dest_size ? 'text-green-500' : 'text-content'" class="font-mono font-black text-lg">
-                {{ formatSize(currentConflict.source_size) }}
+              <span :class="currentConflict.sourceSize > currentConflict.destSize ? 'text-green-500' : 'text-content'" class="font-mono font-black text-lg">
+                {{ formatSize(currentConflict.sourceSize) }}
               </span>
             </div>
             <div class="flex flex-col">
               <span class="text-dim text-[9px] uppercase font-bold mb-1">源修改时间</span>
-              <span :class="currentConflict.source_modified > currentConflict.dest_modified ? 'text-green-500' : 'text-muted'" class="font-mono text-[10px]">
-                {{ formatDate(currentConflict.source_modified) }}
+              <span :class="currentConflict.sourceModified > currentConflict.destModified ? 'text-green-500' : 'text-muted'" class="font-mono text-[10px]">
+                {{ formatDate(currentConflict.sourceModified) }}
               </span>
             </div>
           </div>

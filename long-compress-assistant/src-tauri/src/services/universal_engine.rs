@@ -17,14 +17,29 @@ impl UniversalCliEngine {
     }
 
     /// 检查系统中是否安装了 7z 或 7za
-    fn get_7z_command() -> Option<&'static str> {
+    fn get_7z_command() -> Option<String> {
+        // 1. 尝试环境变量中的 7z
         if std::process::Command::new("7z").arg("--help").output().is_ok() {
-            Some("7z")
-        } else if std::process::Command::new("7za").arg("--help").output().is_ok() {
-            Some("7za")
-        } else {
-            None
+            return Some("7z".to_string());
         }
+        // 2. 尝试环境变量中的 7za
+        if std::process::Command::new("7za").arg("--help").output().is_ok() {
+            return Some("7za".to_string());
+        }
+        // 3. 尝试 Windows 默认安装路径
+        #[cfg(target_os = "windows")]
+        {
+            let common_paths = [
+                "C:\\Program Files\\7-Zip\\7z.exe",
+                "C:\\Program Files (x86)\\7-Zip\\7z.exe",
+            ];
+            for path in common_paths {
+                if std::path::Path::new(path).exists() {
+                    return Some(path.to_string());
+                }
+            }
+        }
+        None
     }
 
     /// 解析 7z -bsp1 的进度行
