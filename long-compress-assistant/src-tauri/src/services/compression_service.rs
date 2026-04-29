@@ -640,21 +640,56 @@ impl CompressionService {
         Ok(())
     }
 
-    fn do_compress_zip(&self, window: &Window, task_id: &str, sources: &[String], output: &str, _options: CompressionOptions) -> Result<()> {
+    fn do_compress_zip(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
+            return Err(CompressionError::UnsupportedEncryption.into());
+        }
+
+        if let Some(parent) = Path::new(output).parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
         let file = File::create(output)?;
         let mut zip = zip::ZipWriter::new(file);
-        let zip_options = FileOptions::default().compression_method(CompressionMethod::Deflated);
-        let total = sources.len();
-        for (i, source) in sources.iter().enumerate() {
-            self.check_cancellation()?;
+        let level = options.level.clamp(1, 9) as i32;
+        let zip_options = FileOptions::default()
+            .compression_method(CompressionMethod::Deflated)
+            .compression_level(Some(level));
+
+        let mut entries: Vec<(PathBuf, String)> = Vec::new();
+        for source in sources {
             let path = Path::new(source);
             if path.is_file() {
-                let file_name = path.file_name().unwrap().to_str().unwrap();
-                zip.start_file(file_name, zip_options)?;
-                let mut f = File::open(path)?;
-                std::io::copy(&mut f, &mut zip)?;
-                self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(file_name.to_string()), 0, 0);
+                let file_name = path.file_name()
+                    .and_then(|name| name.to_str())
+                    .ok_or_else(|| CompressionError::CompressionFailed(format!("Invalid file name: {}", source)))?;
+                entries.push((path.to_path_buf(), file_name.to_string()));
+            } else if path.is_dir() {
+                let root_name = path.file_name()
+                    .and_then(|name| name.to_str())
+                    .unwrap_or("folder")
+                    .to_string();
+                for entry in walkdir::WalkDir::new(path).into_iter().filter_map(|item| item.ok()) {
+                    let entry_path = entry.path();
+                    if entry_path.is_file() {
+                        let relative = entry_path.strip_prefix(path)
+                            .map_err(|e| CompressionError::CompressionFailed(e.to_string()))?;
+                        let archive_name = Path::new(&root_name).join(relative)
+                            .to_string_lossy()
+                            .replace('\\', "/");
+                        entries.push((entry_path.to_path_buf(), archive_name));
+                    }
+                }
             }
+        }
+
+        let total = entries.len().max(1);
+        for (i, (path, archive_name)) in entries.iter().enumerate() {
+            self.check_cancellation()?;
+            zip.start_file(archive_name, zip_options)?;
+            let mut f = File::open(path)?;
+            std::io::copy(&mut f, &mut zip)?;
+            self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(archive_name.clone()), 0, 0);
         }
         zip.finish()?;
         Ok(())

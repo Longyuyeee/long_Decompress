@@ -246,7 +246,7 @@ impl PasswordAttemptService {
         use crate::services::compression_service::CompressionService;
 
         // 调用新的通用密码测试功能
-        let compression_service = CompressionService::default();
+        let compression_service = CompressionService::new_with_defaults().await;
         match compression_service.test_archive_password(
             archive_path,
             password,

@@ -7,6 +7,9 @@ export interface FileObject {
   size: number
   type: string
   isDirectory: boolean
+  expanded?: boolean
+  settings?: CompressionOptions
+  outputPath?: string
 }
 
 export interface CompressionOptions {
@@ -27,7 +30,8 @@ export interface CompressionGroup {
   files: FileObject[]
   themeColor: string
   expanded: boolean
-  settings: CompressionOptions
+  settings?: CompressionOptions
+  outputPath?: string
 }
 
 export interface CompressionTask {
@@ -51,6 +55,18 @@ export interface CompressionHistory {
 export const useCompressionStore = defineStore('compression', () => {
   const selectedFiles = ref<FileObject[]>([])
   const groups = ref<CompressionGroup[]>([])
+  const globalSettings = ref<CompressionOptions>({
+    format: 'zip',
+    level: 6,
+    password: '',
+    filename: '',
+    splitArchive: false,
+    splitSize: '1024',
+    keepStructure: true,
+    deleteAfter: false,
+    createSolidArchive: false
+  })
+  const globalOutputPath = ref('')
   
   // 预计体积预演数据
   const estimatedSize = ref<Record<string, number>>({})
@@ -61,6 +77,44 @@ export const useCompressionStore = defineStore('compression', () => {
   })
 
   // 磁吸打组逻辑
+  const cloneSettings = (settings: CompressionOptions): CompressionOptions => ({ ...settings })
+
+  const getEffectiveSettings = (settings?: CompressionOptions): CompressionOptions => {
+    return settings || globalSettings.value
+  }
+
+  const getEffectiveOutputPath = (outputPath?: string): string => {
+    return outputPath || globalOutputPath.value
+  }
+
+  const addFile = (file: FileObject) => {
+    if (selectedFiles.value.some(existing => existing.path === file.path)) return
+    selectedFiles.value.push({
+      ...file,
+      expanded: false
+    })
+  }
+
+  const updateFileSettings = (path: string, settings: CompressionOptions) => {
+    const file = selectedFiles.value.find(item => item.path === path)
+    if (file) file.settings = cloneSettings(settings)
+  }
+
+  const updateFileOutputPath = (path: string, outputPath: string) => {
+    const file = selectedFiles.value.find(item => item.path === path)
+    if (file) file.outputPath = outputPath
+  }
+
+  const updateGroupSettings = (groupId: string, settings: CompressionOptions) => {
+    const group = groups.value.find(item => item.id === groupId)
+    if (group) group.settings = cloneSettings(settings)
+  }
+
+  const updateGroupOutputPath = (groupId: string, outputPath: string) => {
+    const group = groups.value.find(item => item.id === groupId)
+    if (group) group.outputPath = outputPath
+  }
+
   const createGroup = (paths: string[]) => {
     const id = Date.now().toString()
     const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b']
@@ -74,18 +128,7 @@ export const useCompressionStore = defineStore('compression', () => {
       name: `新建压缩组 ${groups.value.length + 1}`,
       files: [...targetFiles],
       themeColor,
-      expanded: true,
-      settings: {
-        format: 'zip',
-        level: 6,
-        password: '',
-        filename: `新建压缩组 ${groups.value.length + 1}`,
-        splitArchive: false,
-        splitSize: '1024',
-        keepStructure: true,
-        deleteAfter: false,
-        createSolidArchive: false
-      }
+      expanded: true
     })
     
     // 从未分组列表中移除
@@ -105,8 +148,18 @@ export const useCompressionStore = defineStore('compression', () => {
   return {
     selectedFiles,
     groups,
+    globalSettings,
+    globalOutputPath,
     estimatedSize,
     totalOriginalSize,
+    cloneSettings,
+    getEffectiveSettings,
+    getEffectiveOutputPath,
+    addFile,
+    updateFileSettings,
+    updateFileOutputPath,
+    updateGroupSettings,
+    updateGroupOutputPath,
     createGroup,
     dissolveGroup
   }

@@ -38,6 +38,7 @@ const compressionOptions = ref<CompressionOptions>(props.modelValue || {
 
 const outputPath = ref(props.outputPath)
 const showAdvanced = ref(false)
+let syncingFromProps = false
 
 const compressionFormats = [
   { value: 'zip', name: 'ZIP' },
@@ -60,11 +61,30 @@ const selectOutputPath = async () => {
 }
 
 watch(compressionOptions, (newOptions) => {
+  if (syncingFromProps) return
   emit('update:modelValue', newOptions)
 }, { deep: true })
 
 watch(outputPath, (newPath) => {
+  if (syncingFromProps) return
   emit('update:outputPath', newPath)
+})
+
+watch(() => props.modelValue, (newOptions) => {
+  if (!newOptions) return
+  syncingFromProps = true
+  compressionOptions.value = { ...newOptions }
+  Promise.resolve().then(() => {
+    syncingFromProps = false
+  })
+}, { deep: true })
+
+watch(() => props.outputPath, (newPath) => {
+  syncingFromProps = true
+  outputPath.value = newPath || ''
+  Promise.resolve().then(() => {
+    syncingFromProps = false
+  })
 })
 </script>
 

@@ -20,6 +20,12 @@ export interface FileInfo {
   modified: number
 }
 
+export interface CompressOptions {
+  level: number
+  password?: string
+  split_size?: number | null
+}
+
 export const useTauriCommands = () => {
   const appStore = useAppStore()
   const taskStore = useTaskStore()
@@ -199,6 +205,20 @@ export const useTauriCommands = () => {
     return results
   }
 
+  const compressFiles = async (
+    taskId: string,
+    files: string[],
+    outputPath: string,
+    options: CompressOptions
+  ) => {
+    return await invoke<string>('compress_files', {
+      taskId,
+      files,
+      outputPath,
+      options
+    })
+  }
+
   /**
    * 获取文件信息
    */
@@ -350,6 +370,7 @@ export const useTauriCommands = () => {
     selectWordlists,
     decompressFile,
     decompressFiles,
+    compressFiles,
     getFileInfo,
     listDirectory,
     checkFileFormat,

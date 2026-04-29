@@ -5,6 +5,40 @@ use crate::services::password_query_service::PasswordQueryService;
 use crate::commands::encrypted_password::EncryptedPasswordServiceState;
 use tauri::{command, Window, AppHandle, Manager};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use dashmap::DashMap;
+use once_cell::sync::Lazy;
+
+static CANCELLATION_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
+
+async fn service_for_task(task_id: &str) -> CompressionService {
+    let cancellation_flag = Arc::new(AtomicBool::new(false));
+    CANCELLATION_FLAGS.insert(task_id.to_string(), cancellation_flag.clone());
+
+    let mut service = CompressionService::new_with_defaults().await;
+    service.cancellation_flag = cancellation_flag;
+    service
+}
+
+fn cleanup_task(task_id: &str) {
+    CANCELLATION_FLAGS.remove(task_id);
+}
+
+struct TaskCancellationGuard {
+    task_id: String,
+}
+
+impl TaskCancellationGuard {
+    fn new(task_id: &str) -> Self {
+        Self { task_id: task_id.to_string() }
+    }
+}
+
+impl Drop for TaskCancellationGuard {
+    fn drop(&mut self) {
+        cleanup_task(&self.task_id);
+    }
+}
 
 async fn resolve_password(
     app: &AppHandle,
@@ -61,14 +95,17 @@ pub async fn extract_file(
     password: Option<String>, 
     _options: Option<DecompressOptions>
 ) -> Result<String, String> {
-    let service = CompressionService::new_with_defaults().await;
-    service.reset_cancellation();
+    let service = service_for_task(&task_id).await;
+    let _task_guard = TaskCancellationGuard::new(&task_id);
     
     let actual_password = resolve_password(&app, &service, &window, &task_id, &file_path, password).await;
 
-    service.extract(window, task_id, file_path, output_path, actual_password)
+    let result = service.extract(window, task_id.clone(), file_path, output_path, actual_password)
         .await
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string());
+
+    cleanup_task(&task_id);
+    result
 }
 
 #[command]
@@ -81,17 +118,20 @@ pub async fn extract_multiple(
     password: Option<String>, 
     _options: Option<DecompressOptions>
 ) -> Result<Vec<String>, String> {
-    let service = CompressionService::new_with_defaults().await;
-    service.reset_cancellation();
     let mut results = Vec::new();
     
     for (i, file) in files.iter().enumerate() {
         let task_id = task_ids.get(i).cloned().unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
         
+        let service = service_for_task(&task_id).await;
+        let _task_guard = TaskCancellationGuard::new(&task_id);
         let actual_password = resolve_password(&app, &service, &window, &task_id, file, password.clone()).await;
 
-        match service.extract(window.clone(), task_id, file.clone(), output_path.clone(), actual_password).await {
-            Ok(path) => results.push(path),
+        match service.extract(window.clone(), task_id.clone(), file.clone(), output_path.clone(), actual_password).await {
+            Ok(path) => {
+                cleanup_task(&task_id);
+                results.push(path);
+            },
             Err(e) => return Err(format!("解压文件 {} 失败: {}", file, e)),
         }
     }
@@ -106,19 +146,23 @@ pub async fn compress_files(
     output_path: String, 
     options: Option<CompressionOptions>
 ) -> Result<String, String> {
-    let service = CompressionService::new_with_defaults().await;
-    service.reset_cancellation();
+    let service = service_for_task(&task_id).await;
+    let _task_guard = TaskCancellationGuard::new(&task_id);
     let opts = options.unwrap_or_default();
 
-    match service.compress(window, task_id, files, output_path.clone(), opts).await {
+    let result = match service.compress(window, task_id.clone(), files, output_path.clone(), opts).await {
         Ok(_) => Ok(format!("压缩成功: {}", output_path)),
         Err(e) => Err(format!("压缩失败: {}", e)),
-    }
+    };
+
+    cleanup_task(&task_id);
+    result
 }
 
 #[command]
-pub async fn cancel_compression() -> Result<(), String> {
-    let service = CompressionService::new_with_defaults().await;
-    service.cancel();
+pub async fn cancel_compression(task_id: String) -> Result<(), String> {
+    if let Some(flag) = CANCELLATION_FLAGS.get(&task_id) {
+        flag.store(true, Ordering::SeqCst);
+    }
     Ok(())
 }

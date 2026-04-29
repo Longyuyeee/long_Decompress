@@ -3,27 +3,27 @@ import { ref, computed } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
+import { useTaskStore } from '@/stores/task'
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 
 const appStore = useAppStore()
 const compressionStore = useCompressionStore()
 const tauriCommands = useTauriCommands()
+const taskStore = useTaskStore()
 
 const selectedRows = ref<Set<string>>(new Set())
 
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
     // 检查是否已经存在
-    if (!compressionStore.selectedFiles.some(existing => existing.path === f.path)) {
-      compressionStore.selectedFiles.push({
-        name: f.name,
-        path: f.path,
-        size: f.size || 0,
-        type: f.type || 'file',
-        isDirectory: f.isDirectory || false
-      })
-    }
+    compressionStore.addFile({
+      name: f.name,
+      path: f.path,
+      size: f.size || 0,
+      type: f.type || 'file',
+      isDirectory: f.isDirectory || false
+    })
   })
 }
 
@@ -39,11 +39,97 @@ const handleCreateGroup = () => {
   }
 }
 
+const getParentDir = (path: string) => {
+  const index = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
+  return index >= 0 ? path.substring(0, index) : '.'
+}
+
+const getBaseName = (path: string) => {
+  const fileName = path.split(/[\\/]/).pop() || 'archive'
+  return fileName.replace(/\.[^/.]+$/, '') || fileName
+}
+
+const joinPath = (dir: string, fileName: string) => {
+  const separator = dir.includes('\\') ? '\\' : '/'
+  return dir.endsWith('/') || dir.endsWith('\\') ? `${dir}${fileName}` : `${dir}${separator}${fileName}`
+}
+
+const extensionForFormat = (format: string) => format === 'tar.gz' ? 'tar.gz' : format
+
+const buildOutputPath = (baseOutputPath: string, fallbackSourcePath: string, archiveName: string, format: string) => {
+  const outputDir = baseOutputPath || appStore.settings.defaultOutputPath || getParentDir(fallbackSourcePath)
+  const extension = extensionForFormat(format)
+  const cleanName = archiveName.trim() || getBaseName(fallbackSourcePath)
+  return joinPath(outputDir, cleanName.endsWith(`.${extension}`) ? cleanName : `${cleanName}.${extension}`)
+}
+
 const handleCompress = async () => {
   if (compressionStore.groups.length === 0 && compressionStore.selectedFiles.length === 0) return
+
+  const jobs = [
+    ...compressionStore.groups.map(group => {
+      const settings = compressionStore.getEffectiveSettings(group.settings)
+      return {
+        id: group.id,
+        name: group.name,
+        files: group.files,
+        settings,
+        outputPath: buildOutputPath(
+          compressionStore.getEffectiveOutputPath(group.outputPath),
+          group.files[0]?.path || group.name,
+          settings.filename || group.name,
+          settings.format
+        )
+      }
+    }),
+    ...compressionStore.selectedFiles.map(file => {
+      const settings = compressionStore.getEffectiveSettings(file.settings)
+      return {
+        id: file.path,
+        name: file.name,
+        files: [file],
+        settings,
+        outputPath: buildOutputPath(
+          compressionStore.getEffectiveOutputPath(file.outputPath),
+          file.path,
+          settings.filename || getBaseName(file.path),
+          settings.format
+        )
+      }
+    })
+  ]
+
+  for (const job of jobs) {
+    const taskId = taskStore.addTask({
+      id: Math.random().toString(36).substr(2, 9),
+      name: job.name,
+      type: 'compression',
+      sourceFiles: job.files.map(file => file.path),
+      outputPath: job.outputPath,
+      format: job.settings.format
+    })
+
+    try {
+      taskStore.updateTaskStatus(taskId, 'compressing')
+      await tauriCommands.compressFiles(
+        taskId,
+        job.files.map(file => file.path),
+        job.outputPath,
+        {
+          level: job.settings.level,
+          password: job.settings.password || undefined,
+          split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null
+        }
+      )
+      taskStore.updateTaskStatus(taskId, 'completed')
+    } catch (error) {
+      taskStore.updateTaskStatus(taskId, 'failed')
+      appStore.setError(`${appStore.t('common.error')}: ${error}`)
+      return
+    }
+  }
   
   appStore.successMessage = appStore.t('common.success')
-  // 实际压缩逻辑对接后端...
 }
 
 const totalPayload = computed(() => {
@@ -85,6 +171,13 @@ const totalPayload = computed(() => {
     <!-- 主工作区 (减小 mb 以使区域向下延展) -->
     <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col mb-6 relative border border-subtle bg-card/40 shadow-2xl">
       <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+        <div class="rounded-2xl border border-subtle bg-input/20 p-6">
+          <h4 class="text-[8px] font-black text-muted uppercase tracking-widest mb-4">{{ appStore.t('compress.settings') }}</h4>
+          <CompressionSettingsPanel
+            v-model="compressionStore.globalSettings"
+            v-model:outputPath="compressionStore.globalOutputPath"
+          />
+        </div>
         
         <!-- 1. 压缩组列表 -->
         <div v-for="group in compressionStore.groups" :key="group.id" 
@@ -104,7 +197,7 @@ const totalPayload = computed(() => {
               <div class="flex items-center gap-2 mt-1">
                 <span class="text-[9px] font-bold text-muted uppercase tracking-widest">{{ group.files.length }} {{ appStore.t('compress.group_count') }}</span>
                 <div class="w-1 h-1 rounded-full bg-subtle"></div>
-                <span class="text-[9px] font-mono text-primary font-black uppercase">{{ group.settings.format }}</span>
+                <span class="text-[9px] font-mono text-primary font-black uppercase">{{ compressionStore.getEffectiveSettings(group.settings).format }}</span>
               </div>
             </div>
 
@@ -123,7 +216,10 @@ const totalPayload = computed(() => {
                 <h4 class="text-[8px] font-black text-muted uppercase tracking-widest mb-4">{{ appStore.t('compress.settings') }}</h4>
                 <!-- 使用横向配置组件，适配该组 -->
                 <CompressionSettingsPanel 
-                  v-model="group.settings"
+                  :modelValue="compressionStore.getEffectiveSettings(group.settings)"
+                  :outputPath="compressionStore.getEffectiveOutputPath(group.outputPath)"
+                  @update:modelValue="compressionStore.updateGroupSettings(group.id, $event)"
+                  @update:outputPath="compressionStore.updateGroupOutputPath(group.id, $event)"
                 />
               </div>
               
@@ -146,7 +242,7 @@ const totalPayload = computed(() => {
           <h3 class="text-[9px] font-black text-muted uppercase tracking-[0.3em] px-4">{{ appStore.t('compress.add_files') }}</h3>
           <div v-for="file in compressionStore.selectedFiles" :key="file.path" 
                @click="toggleSelection(file.path)"
-               class="flex items-center justify-between px-8 py-4 rounded-2xl bg-input border border-subtle group/row hover:border-primary/30 transition-all cursor-pointer"
+                class="flex flex-wrap items-center justify-between px-8 py-4 rounded-2xl bg-input border border-subtle group/row hover:border-primary/30 transition-all cursor-pointer"
                :class="{ 'border-primary/50 bg-primary/5 shadow-inner': selectedRows.has(file.path) }">
             
             <div class="w-6 flex shrink-0">
@@ -170,6 +266,21 @@ const totalPayload = computed(() => {
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-red-500 transition-all">
               <i class="pi pi-times text-[10px]"></i>
             </button>
+            <button @click.stop="file.expanded = !file.expanded"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-primary transition-all">
+              <i class="pi pi-cog text-[10px]"></i>
+            </button>
+
+            <transition name="slide-down">
+              <div v-if="file.expanded" class="w-full mt-4 pt-4 border-t border-subtle/30" @click.stop>
+                <CompressionSettingsPanel
+                  :modelValue="compressionStore.getEffectiveSettings(file.settings)"
+                  :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"
+                  @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
+                  @update:outputPath="compressionStore.updateFileOutputPath(file.path, $event)"
+                />
+              </div>
+            </transition>
           </div>
         </div>
       </div>
