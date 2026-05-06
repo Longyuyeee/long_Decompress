@@ -182,6 +182,7 @@ export const useDecompressionStore = defineStore('decompression', () => {
 
       // 调用Tauri解压API
       const result = await invoke('extract_file', {
+        taskId,
         filePath: selectedFile.value.path,
         outputPath: outputPath,
         password: decompressSettings.value.password || null,

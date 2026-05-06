@@ -1,6 +1,6 @@
-use crate::models::compression::{CompressionOptions, TaskLog, TaskLogSeverity};
+use crate::models::compression::{CompressionOptions, DecompressOptions, TaskLog, TaskLogSeverity};
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use zip::{ZipArchive, write::FileOptions, CompressionMethod};
 use std::io::{Read, Write};
 use std::fs::File;
@@ -292,12 +292,15 @@ impl CompressionService {
         None
     }
 
-    pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>) -> Result<String> {
+    pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, options: DecompressOptions) -> Result<String> {
         let service = self.clone();
         let path = Path::new(&file_path);
-        let out_dir = output_dir.map(PathBuf::from).unwrap_or_else(|| {
+        let mut out_dir = output_dir.map(PathBuf::from).unwrap_or_else(|| {
             path.parent().unwrap_or(Path::new(".")).to_path_buf()
         });
+        if options.create_subdirectory {
+            out_dir = out_dir.join(Self::archive_output_dir_name(path));
+        }
 
         if !out_dir.exists() {
             std::fs::create_dir_all(&out_dir)?;
@@ -383,10 +386,11 @@ impl CompressionService {
                 let f_path = file_path.clone();
                 let o_dir = out_dir.clone();
                 let pwd = final_password.clone();
+                let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
                 tokio::task::spawn_blocking(move || {
-                    srv.do_extract_zip(&w, &t_id, &f_path, o_dir.to_str().unwrap(), pwd.as_deref())
+                    srv.do_extract_zip(&w, &t_id, &f_path, o_dir.to_str().unwrap(), pwd.as_deref(), &opts)
                 }).await?
             },
             ArchiveFormat::Rar => {
@@ -401,43 +405,48 @@ impl CompressionService {
                 let f_path = file_path.clone();
                 let o_dir = out_dir.clone();
                 let pwd = final_password.clone();
+                let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
                 tokio::task::spawn_blocking(move || {
-                    srv.do_extract_7z(&w, &t_id, &f_path, o_dir.to_str().unwrap(), pwd.as_deref())
+                    srv.do_extract_7z(&w, &t_id, &f_path, o_dir.to_str().unwrap(), pwd.as_deref(), &opts)
                 }).await?
             },
             ArchiveFormat::Tar => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
                 let o_dir = out_dir.clone();
+                let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                tokio::task::spawn_blocking(move || srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, None)).await?
+                tokio::task::spawn_blocking(move || srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, None, &opts)).await?
             },
             ArchiveFormat::Gzip => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
                 let o_dir = out_dir.clone();
+                let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                tokio::task::spawn_blocking(move || srv.do_extract_tar_gz(&w, &t_id, &f_path, &o_dir)).await?
+                tokio::task::spawn_blocking(move || srv.do_extract_tar_gz(&w, &t_id, &f_path, &o_dir, &opts)).await?
             },
             ArchiveFormat::Bzip2 => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
                 let o_dir = out_dir.clone();
+                let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                tokio::task::spawn_blocking(move || srv.do_extract_tar_bz2(&w, &t_id, &f_path, &o_dir)).await?
+                tokio::task::spawn_blocking(move || srv.do_extract_tar_bz2(&w, &t_id, &f_path, &o_dir, &opts)).await?
             },
             ArchiveFormat::Xz => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
                 let o_dir = out_dir.clone();
+                let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                tokio::task::spawn_blocking(move || srv.do_extract_tar_xz(&w, &t_id, &f_path, &o_dir)).await?
+                tokio::task::spawn_blocking(move || srv.do_extract_tar_xz(&w, &t_id, &f_path, &o_dir, &opts)).await?
             },
             ArchiveFormat::Unknown => {
                 match ext.as_str() {
@@ -445,9 +454,10 @@ impl CompressionService {
                         let srv = service.clone();
                         let f_path = file_path.clone();
                         let o_dir = out_dir.clone();
+                        let opts = options.clone();
                         let t_id = task_id.clone();
                         let w = window.clone();
-                        tokio::task::spawn_blocking(move || srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, None)).await?
+                        tokio::task::spawn_blocking(move || srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, None, &opts)).await?
                     },
                     _ => {
                         service.universal_engine.extract_with_progress(
@@ -464,12 +474,103 @@ impl CompressionService {
         };
 
         result?;
+        if options.delete_after {
+            std::fs::remove_file(&file_path)?;
+        }
         service.emit_log(&window, &task_id, "全部解压任务已完成", TaskLogSeverity::Success);
         service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
         Ok(out_dir.to_str().unwrap().to_string())
     }
 
-    pub fn do_extract_zip(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>) -> Result<()> {
+    fn archive_output_dir_name(path: &Path) -> String {
+        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("archive");
+        for suffix in [".tar.gz", ".tar.bz2", ".tar.xz"] {
+            if file_name.to_lowercase().ends_with(suffix) {
+                return file_name[..file_name.len() - suffix.len()].to_string();
+            }
+        }
+        path.file_stem()
+            .and_then(|name| name.to_str())
+            .unwrap_or("archive")
+            .to_string()
+    }
+
+    fn normalized_archive_path(path: &Path, preserve_paths: bool) -> Option<PathBuf> {
+        let source = if preserve_paths {
+            path.to_path_buf()
+        } else {
+            path.file_name().map(PathBuf::from)?
+        };
+
+        let mut safe_path = PathBuf::new();
+        for component in source.components() {
+            if let Component::Normal(part) = component {
+                safe_path.push(part);
+            }
+        }
+
+        if safe_path.as_os_str().is_empty() {
+            None
+        } else {
+            Some(safe_path)
+        }
+    }
+
+    fn matches_file_filter(path: &Path, filter: Option<&str>) -> bool {
+        let Some(filter) = filter.map(str::trim).filter(|value| !value.is_empty()) else {
+            return true;
+        };
+
+        let normalized = path.to_string_lossy().replace('\\', "/");
+        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("");
+
+        filter
+            .split([',', ';'])
+            .map(str::trim)
+            .filter(|pattern| !pattern.is_empty())
+            .any(|pattern| {
+                Self::wildcard_match(pattern, &normalized)
+                    || Self::wildcard_match(pattern, file_name)
+            })
+    }
+
+    fn wildcard_match(pattern: &str, value: &str) -> bool {
+        let escaped = regex::escape(pattern)
+            .replace("\\*", ".*")
+            .replace("\\?", ".");
+        let regex = format!("(?i)^{}$", escaped);
+        regex::Regex::new(&regex)
+            .map(|compiled| compiled.is_match(value))
+            .unwrap_or(false)
+    }
+
+    fn resolve_extract_path(target: &Path, options: &DecompressOptions) -> Result<PathBuf> {
+        if options.overwrite_existing || !target.exists() {
+            return Ok(target.to_path_buf());
+        }
+
+        let parent = target.parent().unwrap_or_else(|| Path::new(""));
+        let stem = target.file_stem().and_then(|name| name.to_str()).unwrap_or("file");
+        let extension = target.extension().and_then(|name| name.to_str());
+
+        for index in 1..10_000 {
+            let file_name = match extension {
+                Some(ext) if !ext.is_empty() => format!("{} ({}).{}", stem, index, ext),
+                _ => format!("{} ({})", stem, index),
+            };
+            let candidate = parent.join(file_name);
+            if !candidate.exists() {
+                return Ok(candidate);
+            }
+        }
+
+        Err(CompressionError::ExtractionFailed(format!(
+            "Unable to find available output name for {}",
+            target.display()
+        )).into())
+    }
+
+    pub fn do_extract_zip(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
         use crate::utils::io_utils::SmartFileReader;
         let f = SmartFileReader::open(file)?;
         let mut archive = ZipArchive::new(f)?;
@@ -516,13 +617,28 @@ impl CompressionService {
             let (file_name, outpath, is_dir, source_size) = {
                 let zip_file = archive.by_index(i)?;
                 let file_name = zip_file.name().to_string();
-                let outpath = Path::new(output).join(zip_file.mangled_name());
-                (file_name, outpath, zip_file.is_dir(), zip_file.size())
+                let is_dir = zip_file.is_dir();
+                let relative = match Self::normalized_archive_path(&zip_file.mangled_name(), options.preserve_paths) {
+                    Some(path) => path,
+                    None => continue,
+                };
+                if !Self::matches_file_filter(&relative, options.file_filter.as_deref()) {
+                    continue;
+                }
+                let target = Path::new(output).join(relative);
+                let outpath = if is_dir {
+                    target
+                } else {
+                    Self::resolve_extract_path(&target, options)?
+                };
+                (file_name, outpath, is_dir, zip_file.size())
             };
 
-            if is_dir {
-                std::fs::create_dir_all(&outpath)?;
-            } else {
+            let entry_result = (|| -> Result<()> {
+                if is_dir {
+                    std::fs::create_dir_all(&outpath)?;
+                    return Ok(());
+                }
                 if let Some(p) = outpath.parent() {
                     std::fs::create_dir_all(p)?;
                 }
@@ -541,16 +657,30 @@ impl CompressionService {
                     let n = progress_reader.read(buffer)?;
                     if n == 0 { break; }
                     outfile.write_all(&buffer[..n])?;
-                    let file_progress = (i as f32 / total_files as f32) + (progress_reader.current_pos() as f32 / source_size as f32 / total_files as f32);
+                    let entry_progress = if source_size == 0 {
+                        1.0
+                    } else {
+                        progress_reader.current_pos() as f32 / source_size as f32
+                    };
+                    let file_progress = (i as f32 / total_files as f32) + (entry_progress / total_files as f32);
                     self.emit_progress(window, task_id, file_progress, Some(file_name.clone()), progress_reader.current_pos(), source_size);
                 }
+                Ok(())
+            })();
+
+            if let Err(err) = entry_result {
+                if options.skip_corrupted {
+                    self.emit_log(window, task_id, &format!("Skipped entry {}: {}", file_name, err), TaskLogSeverity::Warning);
+                    continue;
+                }
+                return Err(err);
             }
             self.emit_progress(window, task_id, (i + 1) as f32 / total_files as f32, Some(file_name), source_size, source_size);
         }
         Ok(())
     }
 
-    pub fn do_extract_7z(&self, _window: &Window, _task_id: &str, file: &str, output: &str, password: Option<&str>) -> Result<()> {
+    pub fn do_extract_7z(&self, _window: &Window, _task_id: &str, file: &str, output: &str, password: Option<&str>, _options: &DecompressOptions) -> Result<()> {
         let path = Path::new(file);
         let pwd_bytes = password.map(|p| sevenz_rust::Password::from(p));
         let mut f = File::open(path)?;
@@ -599,7 +729,7 @@ impl CompressionService {
         Ok(())
     }
 
-    fn do_extract_tar(&self, _window: &Window, _task_id: &str, file: &str, output: &Path, decoder: Option<Box<dyn Read + Send>>) -> Result<()> {
+    fn do_extract_tar(&self, window: &Window, task_id: &str, file: &str, output: &Path, decoder: Option<Box<dyn Read + Send>>, options: &DecompressOptions) -> Result<()> {
         let f = File::open(file)?;
         let mut archive = if let Some(d) = decoder {
             tar::Archive::new(d)
@@ -609,35 +739,56 @@ impl CompressionService {
         let entries = archive.entries()?;
         for entry in entries {
             self.check_cancellation()?;
-            let mut entry = entry?;
-            let _path = entry.path()?.to_path_buf();
-            entry.unpack_in(output)?;
+            let entry_result = (|| -> Result<()> {
+                let mut entry = entry?;
+                let relative = match Self::normalized_archive_path(&entry.path()?, options.preserve_paths) {
+                    Some(path) => path,
+                    None => return Ok(()),
+                };
+                if !Self::matches_file_filter(&relative, options.file_filter.as_deref()) {
+                    return Ok(());
+                }
+
+                if entry.header().entry_type().is_dir() {
+                    let target = output.join(relative);
+                    std::fs::create_dir_all(&target)?;
+                    return Ok(());
+                }
+                let target = Self::resolve_extract_path(&output.join(relative), options)?;
+                if let Some(parent) = target.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                entry.unpack(&target)?;
+                Ok(())
+            })();
+
+            if let Err(err) = entry_result {
+                if options.skip_corrupted {
+                    self.emit_log(window, task_id, &format!("Skipped tar entry: {}", err), TaskLogSeverity::Warning);
+                    continue;
+                }
+                return Err(err);
+            }
         }
         Ok(())
     }
 
-    fn do_extract_tar_gz(&self, _w: &Window, _tid: &str, file: &str, output: &Path) -> Result<()> {
+    fn do_extract_tar_gz(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
         let f = File::open(file)?;
         let gz = flate2::read::GzDecoder::new(f);
-        let mut archive = tar::Archive::new(gz);
-        archive.unpack(output)?;
-        Ok(())
+        self.do_extract_tar(w, tid, file, output, Some(Box::new(gz)), options)
     }
 
-    fn do_extract_tar_bz2(&self, _w: &Window, _tid: &str, file: &str, output: &Path) -> Result<()> {
+    fn do_extract_tar_bz2(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
         let f = File::open(file)?;
         let bz = bzip2::read::BzDecoder::new(f);
-        let mut archive = tar::Archive::new(bz);
-        archive.unpack(output)?;
-        Ok(())
+        self.do_extract_tar(w, tid, file, output, Some(Box::new(bz)), options)
     }
 
-    fn do_extract_tar_xz(&self, _w: &Window, _tid: &str, file: &str, output: &Path) -> Result<()> {
+    fn do_extract_tar_xz(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
         let f = File::open(file)?;
         let xz = xz2::read::XzDecoder::new(f);
-        let mut archive = tar::Archive::new(xz);
-        archive.unpack(output)?;
-        Ok(())
+        self.do_extract_tar(w, tid, file, output, Some(Box::new(xz)), options)
     }
 
     fn do_compress_zip(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {

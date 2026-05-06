@@ -93,14 +93,14 @@ pub async fn extract_file(
     file_path: String, 
     output_path: Option<String>, 
     password: Option<String>, 
-    _options: Option<DecompressOptions>
+    options: Option<DecompressOptions>
 ) -> Result<String, String> {
     let service = service_for_task(&task_id).await;
     let _task_guard = TaskCancellationGuard::new(&task_id);
     
     let actual_password = resolve_password(&app, &service, &window, &task_id, &file_path, password).await;
 
-    let result = service.extract(window, task_id.clone(), file_path, output_path, actual_password)
+    let result = service.extract(window, task_id.clone(), file_path, output_path, actual_password, options.unwrap_or_default())
         .await
         .map_err(|e| e.to_string());
 
@@ -116,7 +116,7 @@ pub async fn extract_multiple(
     files: Vec<String>, 
     output_path: Option<String>, 
     password: Option<String>, 
-    _options: Option<DecompressOptions>
+    options: Option<DecompressOptions>
 ) -> Result<Vec<String>, String> {
     let mut results = Vec::new();
     
@@ -127,7 +127,7 @@ pub async fn extract_multiple(
         let _task_guard = TaskCancellationGuard::new(&task_id);
         let actual_password = resolve_password(&app, &service, &window, &task_id, file, password.clone()).await;
 
-        match service.extract(window.clone(), task_id.clone(), file.clone(), output_path.clone(), actual_password).await {
+        match service.extract(window.clone(), task_id.clone(), file.clone(), output_path.clone(), actual_password, options.clone().unwrap_or_default()).await {
             Ok(path) => {
                 cleanup_task(&task_id);
                 results.push(path);

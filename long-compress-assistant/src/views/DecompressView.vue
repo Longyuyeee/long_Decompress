@@ -90,7 +90,8 @@ const startDecompression = async () => {
         outputPath: task.outputPath,
         keepStructure: true,
         overwrite: false,
-        deleteAfter: appStore.settings.autoDeleteSource
+        deleteAfter: appStore.settings.autoDeleteSource,
+        createSubdirectory: task.extractToSubfolder ?? false
       }
       // 真正启动后端解压
       // 传入 task.id 避免重复生成新任务

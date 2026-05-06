@@ -1,6 +1,5 @@
 use crate::task_queue::models::SharedQueueTask;
 use crate::task_queue::task_scheduler::TaskScheduler;
-use crate::services::compression_service::CompressionService;
 use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +17,6 @@ impl Default for ExecutorConfig {
 pub struct TaskExecutor {
     scheduler: Arc<TaskScheduler>,
     config: ExecutorConfig,
-    compression_service: CompressionService,
 }
 
 impl TaskExecutor {
@@ -26,7 +24,6 @@ impl TaskExecutor {
         Self {
             scheduler,
             config,
-            compression_service: CompressionService::default(),
         }
     }
 

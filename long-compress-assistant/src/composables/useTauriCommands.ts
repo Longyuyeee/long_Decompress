@@ -10,6 +10,11 @@ export interface DecompressOptions {
   keepStructure: boolean
   overwrite: boolean
   deleteAfter: boolean
+  preserveTimestamps?: boolean
+  skipCorrupted?: boolean
+  extractOnlyNewer?: boolean
+  createSubdirectory?: boolean
+  fileFilter?: string | null
 }
 
 export interface FileInfo {
@@ -147,11 +152,11 @@ export const useTauriCommands = () => {
               preserve_paths: options.keepStructure,
               overwrite_existing: options.overwrite,
               delete_after: options.deleteAfter,
-              preserve_timestamps: true,
-              skip_corrupted: false,
-              extract_only_newer: false,
-              create_subdirectory: false,
-              file_filter: null
+              preserve_timestamps: options.preserveTimestamps ?? true,
+              skip_corrupted: options.skipCorrupted ?? false,
+              extract_only_newer: options.extractOnlyNewer ?? false,
+              create_subdirectory: options.createSubdirectory ?? false,
+              file_filter: options.fileFilter || null
             }
           })
           
