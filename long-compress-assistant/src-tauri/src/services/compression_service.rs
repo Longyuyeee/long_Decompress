@@ -118,6 +118,13 @@ pub struct PasswordRequiredPayload {
     pub format: String,
 }
 
+#[derive(Clone, Serialize)]
+pub struct RarCompressionSupport {
+    pub available: bool,
+    pub encoder_path: Option<String>,
+    pub message: String,
+}
+
 use tokio::sync::Semaphore;
 
 #[derive(Clone)]
@@ -235,8 +242,39 @@ impl CompressionService {
     pub async fn compress(&self, window: Window, task_id: String, source_files: Vec<String>, output_path: String, options: CompressionOptions) -> Result<()> {
         let service = self.clone();
         tokio::task::spawn_blocking(move || {
+            let requested_format = options.format.as_deref().unwrap_or_else(|| {
+                if output_path.to_lowercase().ends_with(".zip") {
+                    "zip"
+                } else {
+                    "unknown"
+                }
+            }).to_lowercase();
+            if matches!(requested_format.as_str(), "gz" | "bz2" | "xz") {
+                let single_regular_file = source_files.len() == 1 && Path::new(&source_files[0]).is_file();
+                if !single_regular_file {
+                    return Err(CompressionError::CompressionFailed(format!(
+                        "{} compression only supports one regular file. Please use a TAR-based format for folders or multiple files.",
+                        requested_format
+                    )).into());
+                }
+            }
             service.emit_log(&window, &task_id, &format!("开始压缩到: {}", output_path), TaskLogSeverity::Info);
-            let res = service.do_compress_zip(&window, &task_id, &source_files, &output_path, options);
+            let res = match requested_format.as_str() {
+                "zip" => service.do_compress_zip(&window, &task_id, &source_files, &output_path, options),
+                "tar" => service.do_compress_tar(&window, &task_id, &source_files, &output_path, options),
+                "tar.gz" | "tgz" => service.do_compress_tar_gz(&window, &task_id, &source_files, &output_path, options),
+                "tar.bz2" | "tbz" | "tbz2" => service.do_compress_tar_bz2(&window, &task_id, &source_files, &output_path, options),
+                "tar.xz" | "txz" => service.do_compress_tar_xz(&window, &task_id, &source_files, &output_path, options),
+                "7z" => service.do_compress_7z(&window, &task_id, &source_files, &output_path, options),
+                "rar" => service.do_compress_rar(&window, &task_id, &source_files, &output_path, options),
+                "gz" => service.do_compress_gz(&window, &task_id, &source_files, &output_path, options),
+                "bz2" => service.do_compress_bz2(&window, &task_id, &source_files, &output_path, options),
+                "xz" => service.do_compress_xz(&window, &task_id, &source_files, &output_path, options),
+                _ => Err(CompressionError::CompressionFailed(format!(
+                    "Unsupported compression format '{}'.",
+                    requested_format
+                )).into()),
+            };
             if res.is_ok() {
                 service.emit_log(&window, &task_id, "压缩完成", TaskLogSeverity::Success);
                 service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
@@ -757,52 +795,114 @@ impl CompressionService {
         Ok(())
     }
 
-    pub fn do_extract_7z(&self, _window: &Window, _task_id: &str, file: &str, output: &str, password: Option<&str>, _options: &DecompressOptions) -> Result<()> {
-        let path = Path::new(file);
-        let pwd_bytes = password.map(|p| sevenz_rust::Password::from(p));
-        let mut f = File::open(path)?;
-        let len = f.metadata()?.len();
-        let archive_res = if let Some(ref p) = pwd_bytes {
-            sevenz_rust::Archive::read(&mut f, len, p.as_slice())
-        } else {
-            sevenz_rust::Archive::read(&mut f, len, &[])
-        };
-        match archive_res {
-            Ok(_archive) => {
-                if let Some(p) = pwd_bytes {
-                    sevenz_rust::decompress_file_with_password(file, output, p)
-                        .map_err(|e| {
-                            let err_msg = e.to_string();
-                            if err_msg.contains("Password") || err_msg.contains("CRC") {
-                                CompressionError::InvalidPassword
-                            } else {
-                                CompressionError::ExtractionFailed(err_msg)
-                            }
-                        })?;
-                } else {
-                    sevenz_rust::decompress_file(file, output)
-                        .map_err(|e| {
-                            let err_msg = e.to_string();
-                            if err_msg.contains("password") || err_msg.contains("Password") {
-                                CompressionError::PasswordRequired
-                            } else {
-                                CompressionError::ExtractionFailed(err_msg)
-                            }
-                        })?;
-                }
-            },
-            Err(e) => {
-                let err_msg = e.to_string();
-                if err_msg.contains("Password") || err_msg.contains("CRC") {
-                    if password.is_none() {
-                        return Err(CompressionError::PasswordRequired.into());
+    pub fn do_extract_7z(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
+        let output_root = PathBuf::from(output);
+        let opts = options.clone();
+        let mut processed = 0usize;
+        let total_entries = {
+            let archive_file = File::open(file);
+            archive_file
+                .and_then(|mut archive_file| {
+                    let len = archive_file.metadata()?.len();
+                    let archive = if let Some(pwd) = password {
+                        let password = sevenz_rust::Password::from(pwd);
+                        sevenz_rust::Archive::read(&mut archive_file, len, password.as_slice())
+                            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string()))
                     } else {
-                        return Err(CompressionError::InvalidPassword.into());
-                    }
+                        sevenz_rust::Archive::read(&mut archive_file, len, &[])
+                            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string()))
+                    }?;
+                    Ok(archive.files.iter()
+                        .filter(|entry| !entry.is_directory())
+                        .filter(|entry| {
+                            Self::normalized_archive_path(Path::new(entry.name()), opts.preserve_paths)
+                                .map(|path| Self::matches_file_filter(&path, opts.file_filter.as_deref()))
+                                .unwrap_or(false)
+                        })
+                        .count()
+                        .max(1))
+                })
+                .unwrap_or(1)
+        };
+
+        let mut extract_entry = |entry: &sevenz_rust::SevenZArchiveEntry, reader: &mut dyn Read, _default_dest: &PathBuf| -> Result<bool, sevenz_rust::Error> {
+            self.check_cancellation()
+                .map_err(|err| sevenz_rust::Error::other(err.to_string()))?;
+
+            let relative = match Self::normalized_archive_path(Path::new(entry.name()), opts.preserve_paths) {
+                Some(path) => path,
+                None => {
+                    std::io::copy(reader, &mut std::io::sink()).map_err(sevenz_rust::Error::io)?;
+                    return Ok(true);
                 }
-                return Err(CompressionError::ExtractionFailed(err_msg).into());
+            };
+
+            if !Self::matches_file_filter(&relative, opts.file_filter.as_deref()) {
+                std::io::copy(reader, &mut std::io::sink()).map_err(sevenz_rust::Error::io)?;
+                return Ok(true);
             }
+
+            let entry_result = (|| -> Result<()> {
+                let target = output_root.join(&relative);
+
+                if entry.is_directory() {
+                    std::fs::create_dir_all(&target)?;
+                    return Ok(());
+                }
+
+                let target = Self::resolve_extract_path(&target, &opts)?;
+                if let Some(parent) = target.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+
+                let mut outfile = File::create(&target)?;
+                std::io::copy(reader, &mut outfile)?;
+                processed += 1;
+                let progress = (processed as f32 / total_entries as f32).min(1.0);
+                self.emit_progress(window, task_id, progress, Some(relative.to_string_lossy().to_string()), entry.size(), entry.size());
+                Ok(())
+            })();
+
+            if let Err(err) = entry_result {
+                std::io::copy(reader, &mut std::io::sink()).map_err(sevenz_rust::Error::io)?;
+                if opts.skip_corrupted {
+                    self.emit_log(window, task_id, &format!("Skipped 7z entry {}: {}", entry.name(), err), TaskLogSeverity::Warning);
+                    return Ok(true);
+                }
+                return Err(sevenz_rust::Error::other(err.to_string()));
+            }
+
+            Ok(true)
+        };
+
+        let result = if let Some(pwd) = password {
+            sevenz_rust::decompress_with_extract_fn_and_password(
+                File::open(file)?,
+                output,
+                sevenz_rust::Password::from(pwd),
+                &mut extract_entry,
+            )
+        } else {
+            sevenz_rust::decompress_file_with_extract_fn(file, output, &mut extract_entry)
+        };
+
+        result.map_err(|err| {
+            let err_msg = err.to_string();
+            if err_msg.contains("password") || err_msg.contains("Password") || err_msg.contains("CRC") {
+                if password.is_none() {
+                    CompressionError::PasswordRequired
+                } else {
+                    CompressionError::InvalidPassword
+                }
+            } else {
+                CompressionError::ExtractionFailed(err_msg)
+            }
+        })?;
+
+        if processed == 0 {
+            self.emit_log(window, task_id, "No 7z entries matched the current extraction options.", TaskLogSeverity::Warning);
         }
+
         Ok(())
     }
 
@@ -868,9 +968,99 @@ impl CompressionService {
         self.do_extract_tar(w, tid, file, output, Some(Box::new(xz)), options)
     }
 
+    fn unique_archive_name(used_archive_names: &mut HashSet<String>, raw_name: String) -> String {
+        let normalized = raw_name.replace('\\', "/");
+        if used_archive_names.insert(normalized.clone()) {
+            return normalized;
+        }
+
+        let path = Path::new(&normalized);
+        let parent = path.parent().filter(|value| !value.as_os_str().is_empty());
+        let stem = path.file_stem().and_then(|name| name.to_str()).unwrap_or("file");
+        let extension = path.extension().and_then(|name| name.to_str());
+
+        for index in 1..10_000 {
+            let file_name = match extension {
+                Some(ext) if !ext.is_empty() => format!("{} ({}).{}", stem, index, ext),
+                _ => format!("{} ({})", stem, index),
+            };
+            let candidate = parent
+                .map(|dir| dir.join(&file_name))
+                .unwrap_or_else(|| PathBuf::from(&file_name))
+                .to_string_lossy()
+                .replace('\\', "/");
+            if used_archive_names.insert(candidate.clone()) {
+                return candidate;
+            }
+        }
+
+        normalized
+    }
+
+    fn collect_compression_entries(sources: &[String], preserve_paths: bool, include_dirs: bool) -> Result<Vec<(PathBuf, String, bool)>> {
+        let mut used_archive_names = HashSet::new();
+        let mut entries = Vec::new();
+
+        for source in sources {
+            let path = Path::new(source);
+            if path.is_file() {
+                let file_name = path.file_name()
+                    .and_then(|name| name.to_str())
+                    .ok_or_else(|| CompressionError::CompressionFailed(format!("Invalid file name: {}", source)))?;
+                entries.push((path.to_path_buf(), Self::unique_archive_name(&mut used_archive_names, file_name.to_string()), false));
+            } else if path.is_dir() {
+                let root_name = path.file_name()
+                    .and_then(|name| name.to_str())
+                    .unwrap_or("folder")
+                    .to_string();
+
+                for entry in walkdir::WalkDir::new(path).into_iter().filter_map(|item| item.ok()) {
+                    let entry_path = entry.path();
+                    let is_dir = entry_path.is_dir();
+                    if is_dir && !include_dirs {
+                        continue;
+                    }
+                    if !is_dir && !entry_path.is_file() {
+                        continue;
+                    }
+
+                    let relative = entry_path.strip_prefix(path)
+                        .map_err(|e| CompressionError::CompressionFailed(e.to_string()))?;
+                    if relative.as_os_str().is_empty() {
+                        continue;
+                    }
+
+                    let archive_name = if preserve_paths {
+                        Path::new(&root_name).join(relative)
+                            .to_string_lossy()
+                            .replace('\\', "/")
+                    } else {
+                        entry_path.file_name()
+                            .and_then(|name| name.to_str())
+                            .unwrap_or(if is_dir { "folder" } else { "file" })
+                            .to_string()
+                    };
+                    entries.push((
+                        entry_path.to_path_buf(),
+                        Self::unique_archive_name(&mut used_archive_names, archive_name),
+                        is_dir,
+                    ));
+                }
+            }
+        }
+
+        Ok(entries)
+    }
+
     fn do_compress_zip(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
             return Err(CompressionError::UnsupportedEncryption.into());
+        }
+
+        if !output.to_lowercase().ends_with(".zip") {
+            return Err(CompressionError::CompressionFailed(
+                "ZIP compression output path must end with .zip".to_string()
+            ).into());
         }
 
         if let Some(parent) = Path::new(output).parent() {
@@ -884,35 +1074,11 @@ impl CompressionService {
             .compression_method(CompressionMethod::Deflated)
             .compression_level(Some(level));
 
-        let mut entries: Vec<(PathBuf, String)> = Vec::new();
-        for source in sources {
-            let path = Path::new(source);
-            if path.is_file() {
-                let file_name = path.file_name()
-                    .and_then(|name| name.to_str())
-                    .ok_or_else(|| CompressionError::CompressionFailed(format!("Invalid file name: {}", source)))?;
-                entries.push((path.to_path_buf(), file_name.to_string()));
-            } else if path.is_dir() {
-                let root_name = path.file_name()
-                    .and_then(|name| name.to_str())
-                    .unwrap_or("folder")
-                    .to_string();
-                for entry in walkdir::WalkDir::new(path).into_iter().filter_map(|item| item.ok()) {
-                    let entry_path = entry.path();
-                    if entry_path.is_file() {
-                        let relative = entry_path.strip_prefix(path)
-                            .map_err(|e| CompressionError::CompressionFailed(e.to_string()))?;
-                        let archive_name = Path::new(&root_name).join(relative)
-                            .to_string_lossy()
-                            .replace('\\', "/");
-                        entries.push((entry_path.to_path_buf(), archive_name));
-                    }
-                }
-            }
-        }
+        let preserve_paths = options.preserve_paths.unwrap_or(true);
+        let entries = Self::collect_compression_entries(sources, preserve_paths, false)?;
 
         let total = entries.len().max(1);
-        for (i, (path, archive_name)) in entries.iter().enumerate() {
+        for (i, (path, archive_name, _is_dir)) in entries.iter().enumerate() {
             self.check_cancellation()?;
             zip.start_file(archive_name, zip_options)?;
             let mut f = File::open(path)?;
@@ -920,6 +1086,309 @@ impl CompressionService {
             self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(archive_name.clone()), 0, 0);
         }
         zip.finish()?;
+        Ok(())
+    }
+
+    fn ensure_tar_compression_supported(output: &str, options: &CompressionOptions, extensions: &[&str]) -> Result<()> {
+        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
+            return Err(CompressionError::UnsupportedEncryption.into());
+        }
+
+        let output_lower = output.to_lowercase();
+        if !extensions.iter().any(|extension| output_lower.ends_with(extension)) {
+            return Err(CompressionError::CompressionFailed(format!(
+                "Output path must end with one of: {}",
+                extensions.join(", ")
+            )).into());
+        }
+
+        if let Some(parent) = Path::new(output).parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        Ok(())
+    }
+
+    fn write_tar_entries<W: Write>(&self, window: &Window, task_id: &str, sources: &[String], options: &CompressionOptions, builder: &mut tar::Builder<W>) -> Result<()> {
+        let preserve_paths = options.preserve_paths.unwrap_or(true);
+        let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
+        let total = entries.len().max(1);
+
+        for (i, (path, archive_name, is_dir)) in entries.iter().enumerate() {
+            self.check_cancellation()?;
+            if *is_dir {
+                builder.append_dir(archive_name, path)?;
+            } else {
+                builder.append_path_with_name(path, archive_name)?;
+            }
+            self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(archive_name.clone()), 0, 0);
+        }
+
+        Ok(())
+    }
+
+    fn do_compress_tar(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        Self::ensure_tar_compression_supported(output, &options, &[".tar"])?;
+        let file = File::create(output)?;
+        let mut builder = tar::Builder::new(file);
+        self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
+        builder.finish()?;
+        Ok(())
+    }
+
+    fn do_compress_tar_gz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        Self::ensure_tar_compression_supported(output, &options, &[".tar.gz", ".tgz"])?;
+        let file = File::create(output)?;
+        let level = flate2::Compression::new(options.level.clamp(1, 9));
+        let encoder = flate2::write::GzEncoder::new(file, level);
+        let mut builder = tar::Builder::new(encoder);
+        self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
+        let encoder = builder.into_inner()?;
+        encoder.finish()?;
+        Ok(())
+    }
+
+    fn do_compress_tar_bz2(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        Self::ensure_tar_compression_supported(output, &options, &[".tar.bz2", ".tbz", ".tbz2"])?;
+        let file = File::create(output)?;
+        let level = bzip2::Compression::new(options.level.clamp(1, 9));
+        let encoder = bzip2::write::BzEncoder::new(file, level);
+        let mut builder = tar::Builder::new(encoder);
+        self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
+        let encoder = builder.into_inner()?;
+        encoder.finish()?;
+        Ok(())
+    }
+
+    fn do_compress_tar_xz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        Self::ensure_tar_compression_supported(output, &options, &[".tar.xz", ".txz"])?;
+        let file = File::create(output)?;
+        let encoder = xz2::write::XzEncoder::new(file, options.level.clamp(1, 9));
+        let mut builder = tar::Builder::new(encoder);
+        self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
+        let encoder = builder.into_inner()?;
+        encoder.finish()?;
+        Ok(())
+    }
+
+    fn ensure_single_file_stream_supported<'a>(sources: &'a [String], output: &str, options: &CompressionOptions, extension: &str) -> Result<&'a Path> {
+        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
+            return Err(CompressionError::UnsupportedEncryption.into());
+        }
+
+        if sources.len() != 1 {
+            return Err(CompressionError::CompressionFailed(format!(
+                "{} compression only supports one regular file.",
+                extension
+            )).into());
+        }
+
+        let source = Path::new(&sources[0]);
+        if !source.is_file() {
+            return Err(CompressionError::CompressionFailed(format!(
+                "{} compression only supports one regular file.",
+                extension
+            )).into());
+        }
+
+        if !output.to_lowercase().ends_with(extension) {
+            return Err(CompressionError::CompressionFailed(format!(
+                "Output path must end with {}",
+                extension
+            )).into());
+        }
+
+        if let Some(parent) = Path::new(output).parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        Ok(source)
+    }
+
+    fn do_compress_gz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".gz")?;
+        let mut input = File::open(source)?;
+        let file = File::create(output)?;
+        let level = flate2::Compression::new(options.level.clamp(1, 9));
+        let mut encoder = flate2::write::GzEncoder::new(file, level);
+        std::io::copy(&mut input, &mut encoder)?;
+        encoder.finish()?;
+        self.emit_progress(window, task_id, 1.0, source.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()), 0, 0);
+        Ok(())
+    }
+
+    fn do_compress_bz2(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".bz2")?;
+        let mut input = File::open(source)?;
+        let file = File::create(output)?;
+        let level = bzip2::Compression::new(options.level.clamp(1, 9));
+        let mut encoder = bzip2::write::BzEncoder::new(file, level);
+        std::io::copy(&mut input, &mut encoder)?;
+        encoder.finish()?;
+        self.emit_progress(window, task_id, 1.0, source.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()), 0, 0);
+        Ok(())
+    }
+
+    fn do_compress_xz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".xz")?;
+        let mut input = File::open(source)?;
+        let file = File::create(output)?;
+        let mut encoder = xz2::write::XzEncoder::new(file, options.level.clamp(1, 9));
+        std::io::copy(&mut input, &mut encoder)?;
+        encoder.finish()?;
+        self.emit_progress(window, task_id, 1.0, source.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()), 0, 0);
+        Ok(())
+    }
+
+    fn do_compress_7z(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if !output.to_lowercase().ends_with(".7z") {
+            return Err(CompressionError::CompressionFailed(
+                "7z compression output path must end with .7z".to_string()
+            ).into());
+        }
+
+        if let Some(parent) = Path::new(output).parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        let preserve_paths = options.preserve_paths.unwrap_or(true);
+        let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
+        let total = entries.len().max(1);
+        let mut writer = sevenz_rust::SevenZWriter::create(output)
+            .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
+
+        let level = options.level.clamp(1, 9);
+        let lzma_options = sevenz_rust::lzma::LZMA2Options::with_preset(level);
+        let mut methods = Vec::new();
+        if let Some(password) = options.password.as_deref().filter(|password| !password.is_empty()) {
+            methods.push(sevenz_rust::AesEncoderOptions::new(sevenz_rust::Password::from(password)).into());
+        }
+        methods.push(lzma_options.into());
+        writer.set_content_methods(methods);
+
+        for (i, (path, archive_name, is_dir)) in entries.iter().enumerate() {
+            self.check_cancellation()?;
+            let entry = sevenz_rust::SevenZArchiveEntry::from_path(path, archive_name.clone());
+            if *is_dir {
+                writer.push_archive_entry::<&[u8]>(entry, None)
+                    .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
+            } else {
+                let file = File::open(path)?;
+                writer.push_archive_entry(entry, Some(file))
+                    .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
+            }
+            self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(archive_name.clone()), 0, 0);
+        }
+
+        writer.finish()
+            .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
+        Ok(())
+    }
+
+    pub fn find_rar_encoder() -> Option<String> {
+        for command in ["rar", "WinRAR"] {
+            let exists = if cfg!(target_os = "windows") {
+                std::process::Command::new("where")
+                    .arg(command)
+                    .stdout(std::process::Stdio::null())
+                    .stderr(std::process::Stdio::null())
+                    .status()
+                    .map(|status| status.success())
+                    .unwrap_or(false)
+            } else {
+                std::process::Command::new("which")
+                    .arg(command)
+                    .stdout(std::process::Stdio::null())
+                    .stderr(std::process::Stdio::null())
+                    .status()
+                    .map(|status| status.success())
+                    .unwrap_or(false)
+            };
+            if exists {
+                return Some(command.to_string());
+            }
+        }
+
+        #[cfg(target_os = "windows")]
+        {
+            for path in [
+                "C:\\Program Files\\WinRAR\\Rar.exe",
+                "C:\\Program Files\\WinRAR\\WinRAR.exe",
+                "C:\\Program Files (x86)\\WinRAR\\Rar.exe",
+                "C:\\Program Files (x86)\\WinRAR\\WinRAR.exe",
+            ] {
+                if Path::new(path).exists() {
+                    return Some(path.to_string());
+                }
+            }
+        }
+
+        None
+    }
+
+    pub fn check_rar_compression_support() -> RarCompressionSupport {
+        match Self::find_rar_encoder() {
+            Some(encoder_path) => RarCompressionSupport {
+                available: true,
+                message: format!("RAR encoder detected: {}", encoder_path),
+                encoder_path: Some(encoder_path),
+            },
+            None => RarCompressionSupport {
+                available: false,
+                encoder_path: None,
+                message: "RAR compression requires WinRAR/RAR command line tools. Please install WinRAR or add Rar.exe to PATH.".to_string(),
+            },
+        }
+    }
+
+    fn do_compress_rar(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if !output.to_lowercase().ends_with(".rar") {
+            return Err(CompressionError::CompressionFailed(
+                "RAR compression output path must end with .rar".to_string()
+            ).into());
+        }
+
+        if let Some(parent) = Path::new(output).parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        let encoder = Self::find_rar_encoder().ok_or_else(|| {
+            CompressionError::CompressionFailed(
+                "RAR compression requires WinRAR/RAR command line tools. Please install WinRAR or add Rar.exe to PATH.".to_string()
+            )
+        })?;
+
+        let mut command = std::process::Command::new(encoder);
+        command.arg("a");
+        command.arg("-idq");
+        command.arg("-y");
+        command.arg(format!("-m{}", options.level.clamp(1, 5)));
+
+        if options.preserve_paths == Some(false) {
+            command.arg("-ep");
+        }
+
+        if let Some(password) = options.password.as_deref().filter(|password| !password.is_empty()) {
+            command.arg(format!("-p{}", password));
+        }
+
+        command.arg(output);
+        for source in sources {
+            self.check_cancellation()?;
+            command.arg(source);
+        }
+
+        let output_result = command.output()
+            .map_err(|err| CompressionError::CompressionFailed(format!("Failed to run RAR encoder: {}", err)))?;
+
+        if !output_result.status.success() {
+            let stderr = String::from_utf8_lossy(&output_result.stderr);
+            let stdout = String::from_utf8_lossy(&output_result.stdout);
+            let message = if stderr.trim().is_empty() { stdout.trim() } else { stderr.trim() };
+            return Err(CompressionError::CompressionFailed(format!("RAR compression failed: {}", message)).into());
+        }
+
+        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
         Ok(())
     }
 

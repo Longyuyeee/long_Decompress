@@ -65,6 +65,7 @@ fn main() {
             long_compress_assistant::commands::compression::extract_multiple,
             long_compress_assistant::commands::compression::compress_files,
             long_compress_assistant::commands::compression::cancel_compression,
+            long_compress_assistant::commands::compression::check_rar_compression_support,
             long_compress_assistant::commands::file::list_files,
             long_compress_assistant::commands::file::get_file_info,
             long_compress_assistant::commands::file::validate_wordlists,

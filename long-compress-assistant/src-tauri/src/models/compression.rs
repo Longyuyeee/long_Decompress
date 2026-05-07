@@ -99,9 +99,13 @@ impl CompressionFormat {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CompressionOptions {
+    #[serde(default)]
+    pub format: Option<String>,
     pub level: u32,
     pub password: Option<String>,
     pub split_size: Option<u64>,
+    #[serde(default)]
+    pub preserve_paths: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -13,6 +13,8 @@ const tauriCommands = useTauriCommands()
 const taskStore = useTaskStore()
 
 const selectedRows = ref<Set<string>>(new Set())
+const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
+const checkingRarSupport = ref(false)
 
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
@@ -54,7 +56,49 @@ const joinPath = (dir: string, fileName: string) => {
   return dir.endsWith('/') || dir.endsWith('\\') ? `${dir}${fileName}` : `${dir}${separator}${fileName}`
 }
 
-const extensionForFormat = (format: string) => format === 'tar.gz' ? 'tar.gz' : format
+const extensionForFormat = (format: string) => {
+  if (['tar.gz', 'tar.bz2', 'tar.xz'].includes(format)) return format
+  return format
+}
+
+const singleFileStreamFormats = new Set(['gz', 'bz2', 'xz'])
+
+const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {
+  return files.length === 1 && !files[0]?.isDirectory
+}
+
+const canGlobalUseSingleFileFormats = computed(() => {
+  return compressionStore.groups.every(group => canUseSingleFileFormats(group.files)) &&
+    compressionStore.selectedFiles.every(file => canUseSingleFileFormats([file]))
+})
+
+const usesRarFormat = computed(() => {
+  return compressionStore.globalSettings.format === 'rar' ||
+    compressionStore.groups.some(group => compressionStore.getEffectiveSettings(group.settings).format === 'rar') ||
+    compressionStore.selectedFiles.some(file => compressionStore.getEffectiveSettings(file.settings).format === 'rar')
+})
+
+const ensureRarSupport = async () => {
+  if (rarSupport.value || checkingRarSupport.value) return rarSupport.value
+  checkingRarSupport.value = true
+  try {
+    rarSupport.value = await tauriCommands.checkRarCompressionSupport()
+  } catch (error) {
+    rarSupport.value = {
+      available: false,
+      message: `Unable to check RAR support: ${error}`
+    }
+  } finally {
+    checkingRarSupport.value = false
+  }
+  return rarSupport.value
+}
+
+watch(usesRarFormat, (usesRar) => {
+  if (usesRar) {
+    void ensureRarSupport()
+  }
+}, { immediate: true })
 
 const buildOutputPath = (baseOutputPath: string, fallbackSourcePath: string, archiveName: string, format: string) => {
   const outputDir = baseOutputPath || appStore.settings.defaultOutputPath || getParentDir(fallbackSourcePath)
@@ -100,6 +144,19 @@ const handleCompress = async () => {
   ]
 
   for (const job of jobs) {
+    if (singleFileStreamFormats.has(job.settings.format) && !canUseSingleFileFormats(job.files)) {
+      appStore.setError(`${job.settings.format.toUpperCase()} only supports one regular file. Please use TAR formats for folders or multiple files.`)
+      return
+    }
+
+    if (job.settings.format === 'rar') {
+      const support = await ensureRarSupport()
+      if (!support?.available) {
+        appStore.setError(support?.message || 'RAR compression requires WinRAR/RAR command line tools.')
+        return
+      }
+    }
+
     const taskId = taskStore.addTask({
       id: Math.random().toString(36).substr(2, 9),
       name: job.name,
@@ -116,9 +173,11 @@ const handleCompress = async () => {
         job.files.map(file => file.path),
         job.outputPath,
         {
+          format: job.settings.format,
           level: job.settings.level,
           password: job.settings.password || undefined,
-          split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null
+          split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
+          preserve_paths: job.settings.keepStructure
         }
       )
       taskStore.updateTaskStatus(taskId, 'completed')
@@ -176,7 +235,20 @@ const totalPayload = computed(() => {
           <CompressionSettingsPanel
             v-model="compressionStore.globalSettings"
             v-model:outputPath="compressionStore.globalOutputPath"
+            :allow-single-file-formats="canGlobalUseSingleFileFormats"
           />
+          <div
+            v-if="usesRarFormat && rarSupport && !rarSupport.available"
+            class="mt-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-[10px] font-bold text-yellow-600"
+          >
+            {{ rarSupport.message }}
+          </div>
+          <div
+            v-else-if="usesRarFormat && rarSupport?.available"
+            class="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-[10px] font-bold text-emerald-600"
+          >
+            {{ rarSupport.message }}
+          </div>
         </div>
         
         <!-- 1. 压缩组列表 -->
@@ -218,6 +290,7 @@ const totalPayload = computed(() => {
                 <CompressionSettingsPanel 
                   :modelValue="compressionStore.getEffectiveSettings(group.settings)"
                   :outputPath="compressionStore.getEffectiveOutputPath(group.outputPath)"
+                  :allow-single-file-formats="canUseSingleFileFormats(group.files)"
                   @update:modelValue="compressionStore.updateGroupSettings(group.id, $event)"
                   @update:outputPath="compressionStore.updateGroupOutputPath(group.id, $event)"
                 />
@@ -276,6 +349,7 @@ const totalPayload = computed(() => {
                 <CompressionSettingsPanel
                   :modelValue="compressionStore.getEffectiveSettings(file.settings)"
                   :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"
+                  :allow-single-file-formats="canUseSingleFileFormats([file])"
                   @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
                   @update:outputPath="compressionStore.updateFileOutputPath(file.path, $event)"
                 />

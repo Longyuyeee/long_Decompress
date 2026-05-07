@@ -26,9 +26,17 @@ export interface FileInfo {
 }
 
 export interface CompressOptions {
+  format?: string
   level: number
   password?: string
   split_size?: number | null
+  preserve_paths?: boolean
+}
+
+export interface RarCompressionSupport {
+  available: boolean
+  encoder_path?: string | null
+  message: string
 }
 
 interface WordlistValidationResult {
@@ -178,6 +186,10 @@ export const useTauriCommands = () => {
       outputPath,
       options
     })
+  }
+
+  const checkRarCompressionSupport = async (): Promise<RarCompressionSupport> => {
+    return await invoke<RarCompressionSupport>('check_rar_compression_support')
   }
 
   /**
@@ -358,6 +370,7 @@ export const useTauriCommands = () => {
     decompressFile,
     decompressFiles,
     compressFiles,
+    checkRarCompressionSupport,
     getFileInfo,
     listDirectory,
     checkFileFormat,

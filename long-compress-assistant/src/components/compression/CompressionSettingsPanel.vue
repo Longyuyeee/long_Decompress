@@ -10,11 +10,13 @@ const tauriCommands = useTauriCommands()
 interface Props {
   modelValue?: CompressionOptions
   outputPath?: string
+  allowSingleFileFormats?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: undefined,
-  outputPath: ''
+  outputPath: '',
+  allowSingleFileFormats: true
 })
 
 interface Emits {
@@ -44,9 +46,23 @@ const compressionFormats = [
   { value: 'zip', name: 'ZIP' },
   { value: '7z', name: '7Z' },
   { value: 'rar', name: 'RAR' },
+  { value: 'tar', name: 'TAR' },
   { value: 'tar.gz', name: 'TGZ' },
-  { value: 'xz', name: 'XZ' }
+  { value: 'tar.bz2', name: 'TBZ' },
+  { value: 'tar.xz', name: 'TXZ' },
+  { value: 'gz', name: 'GZ', singleFileOnly: true },
+  { value: 'bz2', name: 'BZ2', singleFileOnly: true },
+  { value: 'xz', name: 'XZ', singleFileOnly: true }
 ]
+
+const isFormatDisabled = (format: { singleFileOnly?: boolean }) => {
+  return Boolean(format.singleFileOnly && !props.allowSingleFileFormats)
+}
+
+const selectFormat = (format: typeof compressionFormats[number]) => {
+  if (isFormatDisabled(format)) return
+  compressionOptions.value.format = format.value as CompressionOptions['format']
+}
 
 const selectOutputPath = async () => {
   try {
@@ -86,6 +102,14 @@ watch(() => props.outputPath, (newPath) => {
     syncingFromProps = false
   })
 })
+
+watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
+  if (allowSingleFileFormats) return
+  const currentFormat = compressionFormats.find(format => format.value === compressionOptions.value.format)
+  if (currentFormat && isFormatDisabled(currentFormat)) {
+    compressionOptions.value.format = 'zip'
+  }
+})
 </script>
 
 <template>
@@ -98,9 +122,14 @@ watch(() => props.outputPath, (newPath) => {
         <div class="flex p-1 rounded-xl bg-input border border-subtle gap-1">
           <button 
             v-for="fmt in compressionFormats" :key="fmt.value"
-            @click="compressionOptions.format = fmt.value as any"
+            @click="selectFormat(fmt)"
+            :disabled="isFormatDisabled(fmt)"
             class="px-3 py-1.5 rounded-lg text-[9px] font-black transition-all"
-            :class="compressionOptions.format === fmt.value ? 'bg-primary text-white shadow-sm' : 'text-dim hover:bg-white/5'"
+            :class="[
+              compressionOptions.format === fmt.value ? 'bg-primary text-white shadow-sm' : 'text-dim hover:bg-white/5',
+              isFormatDisabled(fmt) ? 'opacity-30 cursor-not-allowed hover:bg-transparent' : ''
+            ]"
+            :title="isFormatDisabled(fmt) ? 'Single file only' : fmt.name"
           >
             {{ fmt.name }}
           </button>
