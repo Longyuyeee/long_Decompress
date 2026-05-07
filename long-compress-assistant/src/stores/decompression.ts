@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
+import { useAppStore } from './app'
 import type { FileItem } from '../types'
 
 export interface DecompressSettings {
@@ -51,6 +52,7 @@ export interface DecompressHistory {
 }
 
 export const useDecompressionStore = defineStore('decompression', () => {
+  const appStore = useAppStore()
   // 状态
   const selectedFile = ref<FileItem | null>(null)
   const decompressSettings = ref<DecompressSettings>({
@@ -194,7 +196,9 @@ export const useDecompressionStore = defineStore('decompression', () => {
           skip_corrupted: decompressSettings.value.options.skipCorrupted,
           extract_only_newer: decompressSettings.value.options.extractOnlyNewer,
           create_subdirectory: decompressSettings.value.options.createSubdirectory,
-          file_filter: decompressSettings.value.options.fileFilter || null
+          file_filter: decompressSettings.value.options.fileFilter || null,
+          enable_bruteforce: appStore.settings.enableBruteForce,
+          bruteforce_wordlists: appStore.settings.bruteForceWordlists
         }
       })
 

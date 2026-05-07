@@ -1,8 +1,9 @@
 use crate::models::compression::{CompressionOptions, DecompressOptions, TaskLog, TaskLogSeverity};
 use anyhow::Result;
+use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
 use zip::{ZipArchive, write::FileOptions, CompressionMethod};
-use std::io::{Read, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::fs::File;
 use sevenz_rust;
 use thiserror::Error;
@@ -247,6 +248,18 @@ impl CompressionService {
     }
 
     /// 智能尝试密码本中的密码
+    async fn resolve_archive_password(&self, window: &Window, task_id: &str, file_path: &str, options: &DecompressOptions) -> Option<String> {
+        if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path).await {
+            return Some(password);
+        }
+
+        if options.enable_bruteforce && !options.bruteforce_wordlists.is_empty() {
+            return self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists).await;
+        }
+
+        None
+    }
+
     async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
         use crate::services::password_query_service::{PasswordQueryRequest, SortField, SortOrder};
         
@@ -255,7 +268,7 @@ impl CompressionService {
         let request = PasswordQueryRequest {
             sort_by: Some(SortField::UsageCount),
             sort_order: Some(SortOrder::Desc),
-            page_size: Some(10),
+            page_size: Some(1000),
             include_decrypted: true,
             ..Default::default()
         };
@@ -289,6 +302,70 @@ impl CompressionService {
         }
         
         self.emit_log(window, task_id, "所有已知密码均匹配失败", TaskLogSeverity::Warning);
+        None
+    }
+
+    async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String]) -> Option<String> {
+        self.emit_log(window, task_id, "Starting imported wordlist password attempts...", TaskLogSeverity::Info);
+
+        let mut tested = HashSet::new();
+        let mut attempted = 0usize;
+
+        for wordlist in wordlists {
+            if self.cancellation_flag.load(Ordering::SeqCst) {
+                self.emit_log(window, task_id, "Wordlist password attempts cancelled.", TaskLogSeverity::Warning);
+                return None;
+            }
+
+            let path = Path::new(wordlist);
+            let file = match File::open(path) {
+                Ok(file) => file,
+                Err(err) => {
+                    self.emit_log(window, task_id, &format!("Unable to read wordlist {}: {}", path.display(), err), TaskLogSeverity::Warning);
+                    continue;
+                }
+            };
+
+            self.emit_log(
+                window,
+                task_id,
+                &format!("Trying imported wordlist: {}", path.file_name().and_then(|name| name.to_str()).unwrap_or("wordlist")),
+                TaskLogSeverity::Info,
+            );
+
+            for line in BufReader::new(file).lines() {
+                if self.cancellation_flag.load(Ordering::SeqCst) {
+                    self.emit_log(window, task_id, "Wordlist password attempts cancelled.", TaskLogSeverity::Warning);
+                    return None;
+                }
+
+                let password = match line {
+                    Ok(value) => value.trim().trim_end_matches('\u{feff}').to_string(),
+                    Err(err) => {
+                        self.emit_log(window, task_id, &format!("Skipped unreadable wordlist line in {}: {}", path.display(), err), TaskLogSeverity::Warning);
+                        continue;
+                    }
+                };
+
+                if password.is_empty() || !tested.insert(password.clone()) {
+                    continue;
+                }
+
+                attempted += 1;
+                match self.test_archive_password(file_path, &password).await {
+                    Ok(true) => {
+                        self.emit_log(window, task_id, &format!("Imported wordlist matched after {} attempts.", attempted), TaskLogSeverity::Success);
+                        return Some(password);
+                    }
+                    Ok(false) => {}
+                    Err(err) => {
+                        self.emit_log(window, task_id, &format!("Wordlist password test failed: {}", err), TaskLogSeverity::Warning);
+                    }
+                }
+            }
+        }
+
+        self.emit_log(window, task_id, &format!("Imported wordlists exhausted after {} attempts.", attempted), TaskLogSeverity::Warning);
         None
     }
 
@@ -347,7 +424,7 @@ impl CompressionService {
 
             if needs_pwd {
                 service.emit_log(&window, &task_id, "检测到加密格式，正在尝试静默解锁...", TaskLogSeverity::Info);
-                if let Some(smart_pwd) = service.attempt_passwords_smartly(&window, &task_id, &file_path).await {
+                if let Some(smart_pwd) = service.resolve_archive_password(&window, &task_id, &file_path, &options).await {
                     service.emit_log(&window, &task_id, "密码本匹配成功", TaskLogSeverity::Success);
                     final_password = Some(smart_pwd);
                 } else {

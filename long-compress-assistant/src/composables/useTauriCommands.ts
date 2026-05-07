@@ -31,6 +31,13 @@ export interface CompressOptions {
   split_size?: number | null
 }
 
+interface WordlistValidationResult {
+  path: string
+  valid: boolean
+  valid_password_count: number
+  error?: string | null
+}
+
 export const useTauriCommands = () => {
   const appStore = useAppStore()
   const taskStore = useTaskStore()
@@ -111,77 +118,26 @@ export const useTauriCommands = () => {
 
     try {
       taskStore.updateTaskStatus(taskId, 'preparing')
-      // ... (rest of the method logic)
-      // Note: I'm only replacing a part but the tool requires the exact literal text.
-      // I'll replace the whole method to be safe.
-      
-      // --- 准备密码队列 ---
-      let passwordsToTry: string[] = []
-      
-      // 1. 手动输入 (优先级最高)
-      if (options.password) passwordsToTry.push(options.password)
-      
-      // 2. 保险箱高频建议 (置信度最高)
-      try {
-        const suggestions = await invoke<any[]>('get_password_suggestions', { filePath })
-        passwordsToTry.push(...suggestions.map(s => s.text))
-      } catch (e) { console.warn('Suggestions failed', e) }
+      taskStore.updateTaskStatus(taskId, 'extracting')
 
-      // 3. 遍历全量密码本 (确保本地数据穷尽)
-      try {
-        const allVault = await invoke<any[]>('get_all_passwords', { includePassword: true })
-        passwordsToTry.push(...allVault.map(p => p.password))
-      } catch (e) { console.warn('Full vault fetch failed', e) }
-
-      // 去重并加入空密码尝试
-      passwordsToTry = Array.from(new Set(['', ...passwordsToTry]))
-
-      let success = false
-      let finalResult = ''
-
-      // 核心尝试循环 (本地已知密码阶段)
-      for (const pwd of passwordsToTry) {
-        try {
-          taskStore.updateTaskStatus(taskId, 'extracting')
-          finalResult = await invoke<string>('extract_file', {
-            taskId,
-            filePath,
-            outputPath: options.outputPath,
-            password: pwd || null,
-            options: {
-              preserve_paths: options.keepStructure,
-              overwrite_existing: options.overwrite,
-              delete_after: options.deleteAfter,
-              preserve_timestamps: options.preserveTimestamps ?? true,
-              skip_corrupted: options.skipCorrupted ?? false,
-              extract_only_newer: options.extractOnlyNewer ?? false,
-              create_subdirectory: options.createSubdirectory ?? false,
-              file_filter: options.fileFilter || null
-            }
-          })
-          
-          success = true
-          // 记录成功密码
-          // if (pwd) await invoke('record_password_success', { filePath, password: pwd })
-          break 
-        } catch (error: any) {
-          const errorStr = String(error)
-          if (errorStr.includes('密码错误') || errorStr.includes('PasswordError')) continue 
-          throw error 
+      return await invoke<string>('extract_file', {
+        taskId,
+        filePath,
+        outputPath: options.outputPath,
+        password: options.password || null,
+        options: {
+          preserve_paths: options.keepStructure,
+          overwrite_existing: options.overwrite,
+          delete_after: options.deleteAfter,
+          preserve_timestamps: options.preserveTimestamps ?? true,
+          skip_corrupted: options.skipCorrupted ?? false,
+          extract_only_newer: options.extractOnlyNewer ?? false,
+          create_subdirectory: options.createSubdirectory ?? false,
+          file_filter: options.fileFilter || null,
+          enable_bruteforce: appStore.settings.enableBruteForce,
+          bruteforce_wordlists: appStore.settings.bruteForceWordlists
         }
-      }
-
-      // --- 暴力破解阶段 (仅在开启后进入) ---
-      if (!success && appStore.settings.enableBruteForce) {
-        taskStore.updateTaskStatus(taskId, 'running')
-        throw new Error('本地密码本已穷尽，正在通过暴力破解引擎尝试...')
-      }
-
-      if (!success) {
-        throw new Error('解压失败：需手动输入密码或开启暴力破解模式')
-      }
-
-      return finalResult
+      })
     } catch (error: any) {
       taskStore.updateTaskStatus(taskId, 'failed')
       throw error
@@ -350,9 +306,35 @@ export const useTauriCommands = () => {
       })
 
       if (!selected) return []
-      return Array.isArray(selected) ? selected : [selected]
+      const selectedPaths = Array.from(new Set(Array.isArray(selected) ? selected : [selected]))
+      const validation = await invoke<WordlistValidationResult[]>('validate_wordlists', {
+        paths: selectedPaths
+      })
+
+      const validPaths = validation
+        .filter(result => result.valid)
+        .map(result => result.path)
+      const invalidResults = validation.filter(result => !result.valid)
+
+      if (invalidResults.length > 0) {
+        const details = invalidResults
+          .slice(0, 5)
+          .map(result => `${result.path.split(/[\\/]/).pop() || result.path}: ${result.error || 'Invalid wordlist'}`)
+          .join('\n')
+        const suffix = invalidResults.length > 5 ? `\n...and ${invalidResults.length - 5} more` : ''
+        await message(`Skipped ${invalidResults.length} invalid wordlist file(s):\n${details}${suffix}`, {
+          title: 'Wordlist validation',
+          type: 'warning'
+        })
+      }
+
+      return validPaths
     } catch (error) {
       console.error('Failed to select wordlists:', error)
+      await message(`Failed to validate wordlists: ${error}`, {
+        title: 'Wordlist validation',
+        type: 'error'
+      })
       return []
     }
   }

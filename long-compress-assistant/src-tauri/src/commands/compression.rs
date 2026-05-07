@@ -1,9 +1,6 @@
 use crate::services::compression_service::CompressionService;
-use crate::models::compression::{CompressionOptions, DecompressOptions, TaskLogSeverity};
-use crate::services::password_attempt_service::{PasswordAttemptService, PasswordAttemptStrategy};
-use crate::services::password_query_service::PasswordQueryService;
-use crate::commands::encrypted_password::EncryptedPasswordServiceState;
-use tauri::{command, Window, AppHandle, Manager};
+use crate::models::compression::{CompressionOptions, DecompressOptions};
+use tauri::{command, AppHandle, Window};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use dashmap::DashMap;
@@ -40,54 +37,9 @@ impl Drop for TaskCancellationGuard {
     }
 }
 
-async fn resolve_password(
-    app: &AppHandle,
-    service: &CompressionService,
-    window: &Window,
-    task_id: &str,
-    file_path: &str,
-    password: Option<String>
-) -> Option<String> {
-    if password.is_some() {
-        return password;
-    }
-
-    if let Some(state) = app.try_state::<EncryptedPasswordServiceState>() {
-        let service_lock = state.service.lock().await;
-        if let Some(enc_service) = service_lock.as_ref() {
-            if let Ok(conn) = crate::database::connection::get_connection().await {
-                let query_service = Arc::new(PasswordQueryService::new(
-                    conn.pool().clone(),
-                    Arc::new(enc_service.clone())
-                ));
-                let attempt_service = PasswordAttemptService::new(query_service);
-                
-                let _ = service.emit_log(window, task_id, "正在密码本中智能寻找匹配密码...", TaskLogSeverity::Info);
-                
-                let strategy = PasswordAttemptStrategy::All;
-                match attempt_service.attempt_extract_with_passwords(file_path, ".", strategy).await {
-                    Ok(result) => {
-                        if result.success && result.password.is_some() {
-                            let entry_name = result.matched_entry.map(|e| e.name).unwrap_or_else(|| "未知条目".to_string());
-                            let _ = service.emit_log(window, task_id, &format!("自动匹配成功! 使用密码本条目: {}", entry_name), TaskLogSeverity::Success);
-                            return result.password;
-                        } else {
-                            let _ = service.emit_log(window, task_id, "未能自动匹配到密码，请手动输入", TaskLogSeverity::Warning);
-                        }
-                    },
-                    Err(e) => {
-                        let _ = service.emit_log(window, task_id, &format!("密码搜索出错: {}", e), TaskLogSeverity::Warning);
-                    }
-                }
-            }
-        }
-    }
-    None
-}
-
 #[command]
 pub async fn extract_file(
-    app: AppHandle,
+    _app: AppHandle,
     window: Window,
     task_id: String,
     file_path: String, 
@@ -97,10 +49,9 @@ pub async fn extract_file(
 ) -> Result<String, String> {
     let service = service_for_task(&task_id).await;
     let _task_guard = TaskCancellationGuard::new(&task_id);
+    let opts = options.unwrap_or_default();
     
-    let actual_password = resolve_password(&app, &service, &window, &task_id, &file_path, password).await;
-
-    let result = service.extract(window, task_id.clone(), file_path, output_path, actual_password, options.unwrap_or_default())
+    let result = service.extract(window, task_id.clone(), file_path, output_path, password, opts)
         .await
         .map_err(|e| e.to_string());
 
@@ -110,7 +61,7 @@ pub async fn extract_file(
 
 #[command]
 pub async fn extract_multiple(
-    app: AppHandle,
+    _app: AppHandle,
     window: Window,
     task_ids: Vec<String>,
     files: Vec<String>, 
@@ -122,12 +73,11 @@ pub async fn extract_multiple(
     
     for (i, file) in files.iter().enumerate() {
         let task_id = task_ids.get(i).cloned().unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+        let opts = options.clone().unwrap_or_default();
         
         let service = service_for_task(&task_id).await;
         let _task_guard = TaskCancellationGuard::new(&task_id);
-        let actual_password = resolve_password(&app, &service, &window, &task_id, file, password.clone()).await;
-
-        match service.extract(window.clone(), task_id.clone(), file.clone(), output_path.clone(), actual_password, options.clone().unwrap_or_default()).await {
+        match service.extract(window.clone(), task_id.clone(), file.clone(), output_path.clone(), password.clone(), opts).await {
             Ok(path) => {
                 cleanup_task(&task_id);
                 results.push(path);

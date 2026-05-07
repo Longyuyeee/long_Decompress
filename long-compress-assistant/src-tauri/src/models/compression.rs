@@ -114,6 +114,10 @@ pub struct DecompressOptions {
     pub extract_only_newer: bool,
     pub create_subdirectory: bool,
     pub file_filter: Option<String>,
+    #[serde(default)]
+    pub enable_bruteforce: bool,
+    #[serde(default)]
+    pub bruteforce_wordlists: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

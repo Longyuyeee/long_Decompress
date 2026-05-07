@@ -67,6 +67,7 @@ fn main() {
             long_compress_assistant::commands::compression::cancel_compression,
             long_compress_assistant::commands::file::list_files,
             long_compress_assistant::commands::file::get_file_info,
+            long_compress_assistant::commands::file::validate_wordlists,
             long_compress_assistant::commands::password::add_password,
             long_compress_assistant::commands::password::delete_password,
             long_compress_assistant::commands::password::update_password,
