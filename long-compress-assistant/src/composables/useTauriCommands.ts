@@ -31,6 +31,7 @@ export interface CompressOptions {
   password?: string
   split_size?: number | null
   preserve_paths?: boolean
+  delete_after?: boolean
 }
 
 export interface RarCompressionSupport {

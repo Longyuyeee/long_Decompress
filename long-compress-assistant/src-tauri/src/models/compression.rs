@@ -106,6 +106,8 @@ pub struct CompressionOptions {
     pub split_size: Option<u64>,
     #[serde(default)]
     pub preserve_paths: Option<bool>,
+    #[serde(default)]
+    pub delete_after: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

@@ -12,6 +12,7 @@ fn compression_options(format: Option<&str>) -> CompressionOptions {
         password: None,
         split_size: None,
         preserve_paths: Some(true),
+        delete_after: false,
     }
 }
 
@@ -146,4 +147,46 @@ fn infers_zip_from_output_path_when_format_missing() {
 fn universal_engine_uses_auto_rename_when_overwrite_is_disabled() {
     assert_eq!(UniversalCliEngine::overwrite_mode_arg(false), "-aou");
     assert_eq!(UniversalCliEngine::overwrite_mode_arg(true), "-aoa");
+}
+
+#[test]
+fn source_cleanup_only_targets_files_after_distinct_output_exists() {
+    let temp = tempdir().expect("temp dir");
+    let source_file = temp.path().join("source.txt");
+    let second_file = temp.path().join("second.txt");
+    let output_file = temp.path().join("archive.zip");
+    fs::write(&source_file, b"source").expect("source fixture");
+    fs::write(&second_file, b"second").expect("second fixture");
+    fs::write(&output_file, b"archive").expect("output fixture");
+
+    let removable = CompressionService::removable_compressed_sources(
+        &[
+            source_file.to_string_lossy().to_string(),
+            temp.path().to_string_lossy().to_string(),
+            output_file.to_string_lossy().to_string(),
+            second_file.to_string_lossy().to_string(),
+        ],
+        &output_file.to_string_lossy(),
+    )
+    .expect("cleanup candidates");
+
+    assert_eq!(removable.len(), 2);
+    assert!(removable.contains(&source_file.canonicalize().expect("source canonical")));
+    assert!(removable.contains(&second_file.canonicalize().expect("second canonical")));
+}
+
+#[test]
+fn source_cleanup_waits_for_existing_output() {
+    let temp = tempdir().expect("temp dir");
+    let source_file = temp.path().join("source.txt");
+    let missing_output = temp.path().join("archive.zip");
+    fs::write(&source_file, b"source").expect("source fixture");
+
+    let removable = CompressionService::removable_compressed_sources(
+        &[source_file.to_string_lossy().to_string()],
+        &missing_output.to_string_lossy(),
+    )
+    .expect("cleanup candidates");
+
+    assert!(removable.is_empty());
 }

@@ -273,10 +273,57 @@ impl CompressionService {
         Ok(requested_format)
     }
 
+    pub fn removable_compressed_sources(source_files: &[String], output_path: &str) -> Result<Vec<PathBuf>> {
+        let output = Path::new(output_path);
+        if !output.is_file() {
+            return Ok(Vec::new());
+        }
+
+        let output_canonical = match output.canonicalize() {
+            Ok(path) => path,
+            Err(_) => return Ok(Vec::new()),
+        };
+
+        let mut removable = Vec::new();
+        for source in source_files {
+            let source_path = Path::new(source);
+            if !source_path.is_file() {
+                continue;
+            }
+
+            let source_canonical = match source_path.canonicalize() {
+                Ok(path) => path,
+                Err(_) => continue,
+            };
+
+            if source_canonical != output_canonical {
+                removable.push(source_canonical);
+            }
+        }
+
+        Ok(removable)
+    }
+
+    fn delete_sources_after_success(&self, window: &Window, task_id: &str, source_files: &[String], output_path: &str) {
+        match Self::removable_compressed_sources(source_files, output_path) {
+            Ok(paths) => {
+                for path in paths {
+                    if let Err(err) = std::fs::remove_file(&path) {
+                        self.emit_log(window, task_id, &format!("Unable to delete source file {}: {}", path.display(), err), TaskLogSeverity::Warning);
+                    }
+                }
+            },
+            Err(err) => {
+                self.emit_log(window, task_id, &format!("Unable to prepare source cleanup: {}", err), TaskLogSeverity::Warning);
+            }
+        }
+    }
+
     pub async fn compress(&self, window: Window, task_id: String, source_files: Vec<String>, output_path: String, options: CompressionOptions) -> Result<()> {
         let service = self.clone();
         tokio::task::spawn_blocking(move || {
             let requested_format = Self::validate_compression_request(&source_files, &output_path, &options)?;
+            let delete_after = options.delete_after;
             service.emit_log(&window, &task_id, &format!("开始压缩到: {}", output_path), TaskLogSeverity::Info);
             let res = match requested_format.as_str() {
                 "zip" => service.do_compress_zip(&window, &task_id, &source_files, &output_path, options),
@@ -295,6 +342,9 @@ impl CompressionService {
                 )).into()),
             };
             if res.is_ok() {
+                if delete_after {
+                    service.delete_sources_after_success(&window, &task_id, &source_files, &output_path);
+                }
                 service.emit_log(&window, &task_id, "压缩完成", TaskLogSeverity::Success);
                 service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
             } else {

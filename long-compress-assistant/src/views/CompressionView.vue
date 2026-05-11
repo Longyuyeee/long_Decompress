@@ -201,7 +201,8 @@ const handleCompress = async () => {
           level: job.settings.level,
           password: job.settings.password || undefined,
           split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
-          preserve_paths: job.settings.keepStructure
+          preserve_paths: job.settings.keepStructure,
+          delete_after: job.settings.deleteAfter
         }
       )
       taskStore.updateTaskStatus(taskId, 'completed')
