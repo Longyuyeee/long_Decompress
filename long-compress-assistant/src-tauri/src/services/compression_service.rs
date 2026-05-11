@@ -239,30 +239,44 @@ impl CompressionService {
         let _ = window.emit("task-progress", payload);
     }
 
+    pub fn validate_compression_request(source_files: &[String], output_path: &str, options: &CompressionOptions) -> Result<String> {
+        let requested_format = options.format.as_deref().unwrap_or_else(|| {
+            if output_path.to_lowercase().ends_with(".zip") {
+                "zip"
+            } else {
+                "unknown"
+            }
+        }).to_lowercase();
+
+        if options.split_size.is_some_and(|size| size > 0) {
+            return Err(CompressionError::CompressionFailed(
+                "Split archive output is not supported yet.".to_string()
+            ).into());
+        }
+
+        if options.password.as_deref().is_some_and(|password| !password.is_empty())
+            && !matches!(requested_format.as_str(), "7z" | "rar")
+        {
+            return Err(CompressionError::UnsupportedEncryption.into());
+        }
+
+        if matches!(requested_format.as_str(), "gz" | "bz2" | "xz") {
+            let single_regular_file = source_files.len() == 1 && Path::new(&source_files[0]).is_file();
+            if !single_regular_file {
+                return Err(CompressionError::CompressionFailed(format!(
+                    "{} compression only supports one regular file. Please use a TAR-based format for folders or multiple files.",
+                    requested_format
+                )).into());
+            }
+        }
+
+        Ok(requested_format)
+    }
+
     pub async fn compress(&self, window: Window, task_id: String, source_files: Vec<String>, output_path: String, options: CompressionOptions) -> Result<()> {
         let service = self.clone();
         tokio::task::spawn_blocking(move || {
-            let requested_format = options.format.as_deref().unwrap_or_else(|| {
-                if output_path.to_lowercase().ends_with(".zip") {
-                    "zip"
-                } else {
-                    "unknown"
-                }
-            }).to_lowercase();
-            if options.split_size.is_some_and(|size| size > 0) {
-                return Err(CompressionError::CompressionFailed(
-                    "Split archive output is not supported yet.".to_string()
-                ).into());
-            }
-            if matches!(requested_format.as_str(), "gz" | "bz2" | "xz") {
-                let single_regular_file = source_files.len() == 1 && Path::new(&source_files[0]).is_file();
-                if !single_regular_file {
-                    return Err(CompressionError::CompressionFailed(format!(
-                        "{} compression only supports one regular file. Please use a TAR-based format for folders or multiple files.",
-                        requested_format
-                    )).into());
-                }
-            }
+            let requested_format = Self::validate_compression_request(&source_files, &output_path, &options)?;
             service.emit_log(&window, &task_id, &format!("开始压缩到: {}", output_path), TaskLogSeverity::Info);
             let res = match requested_format.as_str() {
                 "zip" => service.do_compress_zip(&window, &task_id, &source_files, &output_path, options),
