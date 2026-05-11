@@ -249,6 +249,11 @@ impl CompressionService {
                     "unknown"
                 }
             }).to_lowercase();
+            if options.split_size.is_some_and(|size| size > 0) {
+                return Err(CompressionError::CompressionFailed(
+                    "Split archive output is not supported yet.".to_string()
+                ).into());
+            }
             if matches!(requested_format.as_str(), "gz" | "bz2" | "xz") {
                 let single_regular_file = source_files.len() == 1 && Path::new(&source_files[0]).is_file();
                 if !single_regular_file {
