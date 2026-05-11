@@ -14,6 +14,8 @@ const tauriCommands = useTauriCommands()
 
 const selectedConflictTaskId = ref<string | null>(null)
 const showConflictModal = ref(false)
+const supportedArchiveAccept = '.zip,.7z,.rar,.tar,.tar.gz,.tgz,.tar.bz2,.tbz,.tbz2,.tar.xz,.txz,.gz,.bz2,.xz,.iso'
+const supportedArchiveHint = 'ZIP, 7Z, RAR, TAR, TAR.GZ, TAR.BZ2, TAR.XZ'
 
 // 全局配置状态
 const globalOutputPath = ref('')
@@ -173,7 +175,8 @@ taskStore.$subscribe((mutation, state) => {
         <div v-else class="flex-1 flex flex-col items-center justify-center p-20">
           <EnhancedFileDropzone 
             @files-selected="onFilesSelected" 
-            accept=".zip,.7z,.rar,.tar,.gz,.bz2,.xz,.iso"
+            :accept="supportedArchiveAccept"
+            :sub-hint="supportedArchiveHint"
             class="w-full max-w-lg shadow-sm" 
           />
         </div>
@@ -185,7 +188,7 @@ taskStore.$subscribe((mutation, state) => {
           <EnhancedFileDropzone 
             @files-selected="onFilesSelected" 
             :compact="true" 
-            accept=".zip,.7z,.rar,.tar,.gz,.bz2,.xz,.iso"
+            :accept="supportedArchiveAccept"
             class="w-full h-10" 
           />
         </div>
