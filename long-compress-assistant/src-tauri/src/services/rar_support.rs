@@ -1,6 +1,9 @@
+use crate::models::compression::DecompressOptions;
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use log;
 
 /// RAR解压错误
@@ -99,6 +102,8 @@ impl RarSupportService {
         rar_path: &Path,
         output_dir: &Path,
         password: Option<&str>,
+        options: &DecompressOptions,
+        cancellation_flag: Arc<AtomicBool>,
     ) -> Result<(), RarError> {
         log::info!("开始解压RAR文件: {:?} -> {:?}", rar_path, output_dir);
 
@@ -116,7 +121,7 @@ impl RarSupportService {
             .map_err(|e| RarError::ExtractionFailed(format!("创建输出目录失败: {}", e)))?;
 
         // 策略 1: 尝试使用原生 unrar 库
-        match self.extract_with_native_library(rar_path, output_dir, password).await {
+        match self.extract_with_native_library(rar_path, output_dir, password, options, cancellation_flag.clone()).await {
             Ok(_) => {
                 log::info!("使用原生库解压成功");
                 return Ok(());
@@ -131,8 +136,18 @@ impl RarSupportService {
         }
 
         // 策略 2: 尝试使用外部 unrar 命令
+        if !options.preserve_paths || options
+            .file_filter
+            .as_deref()
+            .is_some_and(|filter| !filter.trim().is_empty())
+        {
+            return Err(RarError::ExtractionFailed(
+                "RAR CLI fallback is not used when filters or flat extraction are active".to_string(),
+            ));
+        }
+
         if Self::check_tool_exists("unrar") {
-            match self.try_extract_with_unrar(rar_path, output_dir, password).await {
+            match self.try_extract_with_unrar(rar_path, output_dir, password, options).await {
                 Ok(_) => return Ok(()),
                 Err(e) => log::warn!("外部 unrar 命令失败: {:?}", e),
             }
@@ -140,7 +155,7 @@ impl RarSupportService {
 
         // 策略 3: 尝试使用 7z 命令 (仅支持部分 RAR4)
         if Self::check_tool_exists("7z") {
-            return self.try_extract_with_7z(rar_path, output_dir, password).await;
+            return self.try_extract_with_7z(rar_path, output_dir, password, options).await;
         }
 
         Err(RarError::ToolNotInstalled)
@@ -152,6 +167,8 @@ impl RarSupportService {
         rar_path: &Path,
         output_dir: &Path,
         password: Option<&str>,
+        options: &DecompressOptions,
+        cancellation_flag: Arc<AtomicBool>,
     ) -> Result<(), RarError> {
         use unrar::Archive;
         
@@ -176,8 +193,25 @@ impl RarSupportService {
         while let Some(header) = open_archive.read_header()
             .map_err(|e| RarError::ExtractionFailed(format!("读取Header失败: {:?}", e)))? {
             
+            if cancellation_flag.load(Ordering::SeqCst) {
+                return Err(RarError::CommandFailed("RAR extraction cancelled".to_string()));
+            }
+
             let entry = header.entry();
-            let target_path = output_dir.join(entry.filename.clone());
+            let relative = match Self::normalized_archive_path(&entry.filename, options.preserve_paths) {
+                Some(path) => path,
+                None => {
+                    open_archive = header.skip()
+                        .map_err(|e| RarError::ExtractionFailed(format!("Failed to skip unsafe RAR entry: {:?}", e)))?;
+                    continue;
+                }
+            };
+            if !Self::matches_file_filter(&relative, options.file_filter.as_deref()) {
+                open_archive = header.skip()
+                    .map_err(|e| RarError::ExtractionFailed(format!("Failed to skip filtered RAR entry: {:?}", e)))?;
+                continue;
+            }
+            let target_path = output_dir.join(relative);
             
             // 确保父目录存在
             if let Some(parent) = target_path.parent() {
@@ -189,6 +223,10 @@ impl RarSupportService {
                 open_archive = header.skip()
                     .map_err(|e| RarError::ExtractionFailed(format!("跳过目录失败: {:?}", e)))?;
             } else {
+                let target_path = Self::resolve_extract_path(&target_path, options)?;
+                if let Some(parent) = target_path.parent() {
+                    std::fs::create_dir_all(parent).ok();
+                }
                 open_archive = header.extract_to(&target_path)
                     .map_err(|e| {
                         let err_msg = format!("{:?}", e);
@@ -205,11 +243,87 @@ impl RarSupportService {
     }
 
     /// 尝试使用unrar解压
+    fn normalized_archive_path(path: &Path, preserve_paths: bool) -> Option<PathBuf> {
+        let source = if preserve_paths {
+            path.to_path_buf()
+        } else {
+            path.file_name().map(PathBuf::from)?
+        };
+
+        let mut safe_path = PathBuf::new();
+        for component in source.components() {
+            if let Component::Normal(part) = component {
+                safe_path.push(part);
+            }
+        }
+
+        if safe_path.as_os_str().is_empty() {
+            None
+        } else {
+            Some(safe_path)
+        }
+    }
+
+    fn matches_file_filter(path: &Path, filter: Option<&str>) -> bool {
+        let Some(filter) = filter.map(str::trim).filter(|value| !value.is_empty()) else {
+            return true;
+        };
+
+        let normalized = path.to_string_lossy().replace('\\', "/");
+        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("");
+
+        filter
+            .split([',', ';'])
+            .map(str::trim)
+            .filter(|pattern| !pattern.is_empty())
+            .any(|pattern| {
+                Self::wildcard_match(pattern, &normalized)
+                    || Self::wildcard_match(pattern, file_name)
+            })
+    }
+
+    fn wildcard_match(pattern: &str, value: &str) -> bool {
+        let escaped = regex::escape(pattern)
+            .replace("\\*", ".*")
+            .replace("\\?", ".");
+        let regex = format!("(?i)^{}$", escaped);
+        regex::Regex::new(&regex)
+            .map(|compiled| compiled.is_match(value))
+            .unwrap_or(false)
+    }
+
+    fn resolve_extract_path(target: &Path, options: &DecompressOptions) -> Result<PathBuf, RarError> {
+        if options.overwrite_existing || !target.exists() {
+            return Ok(target.to_path_buf());
+        }
+
+        let parent = target.parent().unwrap_or_else(|| Path::new(""));
+        let stem = target.file_stem().and_then(|name| name.to_str()).unwrap_or("file");
+        let extension = target.extension().and_then(|name| name.to_str());
+
+        for index in 1..10_000 {
+            let file_name = match extension {
+                Some(ext) if !ext.is_empty() => format!("{} ({}).{}", stem, index, ext),
+                _ => format!("{} ({})", stem, index),
+            };
+            let candidate = parent.join(file_name);
+            if !candidate.exists() {
+                return Ok(candidate);
+            }
+        }
+
+        Err(RarError::ExtractionFailed(format!(
+            "Unable to find available output name for {}",
+            target.display()
+        )))
+    }
+
     async fn try_extract_with_unrar(
         &self,
         rar_path: &Path,
         output_dir: &Path,
         password: Option<&str>,
+        options: &DecompressOptions,
     ) -> Result<(), RarError> {
         log::debug!("尝试使用unrar解压");
 
@@ -224,6 +338,7 @@ impl RarSupportService {
         }
 
         command.arg("-y"); // 全部回答Yes
+        command.arg(if options.overwrite_existing { "-o+" } else { "-or" });
         command.arg(rar_path);
         command.arg(output_dir);
 
@@ -251,6 +366,7 @@ impl RarSupportService {
         rar_path: &Path,
         output_dir: &Path,
         password: Option<&str>,
+        options: &DecompressOptions,
     ) -> Result<(), RarError> {
         log::debug!("尝试使用7z解压");
 
@@ -264,6 +380,7 @@ impl RarSupportService {
 
         command.arg("-y"); // 全部回答Yes
         command.arg("-o").arg(output_dir);
+        command.arg(if options.overwrite_existing { "-aoa" } else { "-aou" });
         command.arg(rar_path);
 
         log::debug!("执行命令: {:?}", command);

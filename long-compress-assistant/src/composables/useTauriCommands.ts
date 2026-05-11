@@ -60,7 +60,7 @@ export const useTauriCommands = () => {
         filters: filters || [
           {
             name: '压缩文件',
-            extensions: ['zip', 'rar', '7z', 'tar', 'gz', 'bz2']
+            extensions: ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz', 'tbz', 'tbz2', 'txz']
           },
           {
             name: '所有文件',
@@ -190,6 +190,10 @@ export const useTauriCommands = () => {
 
   const checkRarCompressionSupport = async (): Promise<RarCompressionSupport> => {
     return await invoke<RarCompressionSupport>('check_rar_compression_support')
+  }
+
+  const openRarDownloadPage = async (): Promise<void> => {
+    await invoke<void>('open_rar_download_page')
   }
 
   /**
@@ -371,6 +375,7 @@ export const useTauriCommands = () => {
     decompressFiles,
     compressFiles,
     checkRarCompressionSupport,
+    openRarDownloadPage,
     getFileInfo,
     listDirectory,
     checkFileFormat,

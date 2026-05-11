@@ -1,7 +1,7 @@
 use crate::services::compression_service::CompressionService;
 use crate::services::compression_service::RarCompressionSupport;
 use crate::models::compression::{CompressionOptions, DecompressOptions};
-use tauri::{command, AppHandle, Window};
+use tauri::{command, AppHandle, Manager, Window};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use dashmap::DashMap;
@@ -121,4 +121,14 @@ pub async fn cancel_compression(task_id: String) -> Result<(), String> {
 #[command]
 pub async fn check_rar_compression_support() -> Result<RarCompressionSupport, String> {
     Ok(CompressionService::check_rar_compression_support())
+}
+
+#[command]
+pub async fn open_rar_download_page(app: AppHandle) -> Result<(), String> {
+    tauri::api::shell::open(
+        &app.shell_scope(),
+        "https://www.rarlab.com/download.htm",
+        None,
+    )
+    .map_err(|err| err.to_string())
 }

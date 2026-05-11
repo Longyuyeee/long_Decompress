@@ -94,6 +94,19 @@ const ensureRarSupport = async () => {
   return rarSupport.value
 }
 
+const refreshRarSupport = async () => {
+  rarSupport.value = null
+  await ensureRarSupport()
+}
+
+const openRarDownloadPage = async () => {
+  try {
+    await tauriCommands.openRarDownloadPage()
+  } catch (error) {
+    appStore.setError(`Unable to open RAR download page: ${error}`)
+  }
+}
+
 watch(usesRarFormat, (usesRar) => {
   if (usesRar) {
     void ensureRarSupport()
@@ -239,15 +252,38 @@ const totalPayload = computed(() => {
           />
           <div
             v-if="usesRarFormat && rarSupport && !rarSupport.available"
-            class="mt-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-[10px] font-bold text-yellow-600"
+            class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-[10px] font-bold text-yellow-600"
           >
-            {{ rarSupport.message }}
+            <span class="min-w-0 flex-1">{{ rarSupport.message }}</span>
+            <button
+              type="button"
+              class="h-7 rounded-lg border border-yellow-500/30 px-3 text-[9px] font-black uppercase tracking-widest transition-colors hover:bg-yellow-500/10"
+              @click="openRarDownloadPage"
+            >
+              Download
+            </button>
+            <button
+              type="button"
+              class="h-7 rounded-lg border border-yellow-500/30 px-3 text-[9px] font-black uppercase tracking-widest transition-colors hover:bg-yellow-500/10 disabled:opacity-50"
+              :disabled="checkingRarSupport"
+              @click="refreshRarSupport"
+            >
+              Recheck
+            </button>
           </div>
           <div
             v-else-if="usesRarFormat && rarSupport?.available"
-            class="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-[10px] font-bold text-emerald-600"
+            class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-[10px] font-bold text-emerald-600"
           >
-            {{ rarSupport.message }}
+            <span class="min-w-0 flex-1">{{ rarSupport.message }}</span>
+            <button
+              type="button"
+              class="h-7 rounded-lg border border-emerald-500/30 px-3 text-[9px] font-black uppercase tracking-widest transition-colors hover:bg-emerald-500/10 disabled:opacity-50"
+              :disabled="checkingRarSupport"
+              @click="refreshRarSupport"
+            >
+              Recheck
+            </button>
           </div>
         </div>
         

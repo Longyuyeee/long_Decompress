@@ -512,7 +512,9 @@ impl CompressionService {
                 service.rar_service.extract_rar(
                     Path::new(&file_path),
                     &out_dir,
-                    final_password.as_deref()
+                    final_password.as_deref(),
+                    &options,
+                    service.cancellation_flag.clone()
                 ).await.map_err(|e| anyhow::anyhow!("RAR 解压失败: {}", e))
             },
             ArchiveFormat::SevenZip => {
@@ -543,7 +545,13 @@ impl CompressionService {
                 let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                tokio::task::spawn_blocking(move || srv.do_extract_tar_gz(&w, &t_id, &f_path, &o_dir, &opts)).await?
+                tokio::task::spawn_blocking(move || {
+                    if Self::is_tar_wrapped_archive(Path::new(&f_path), &[".tar.gz", ".tgz"]) {
+                        srv.do_extract_tar_gz(&w, &t_id, &f_path, &o_dir, &opts)
+                    } else {
+                        srv.do_extract_gz(&w, &t_id, &f_path, &o_dir, &opts)
+                    }
+                }).await?
             },
             ArchiveFormat::Bzip2 => {
                 let srv = service.clone();
@@ -552,7 +560,13 @@ impl CompressionService {
                 let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                tokio::task::spawn_blocking(move || srv.do_extract_tar_bz2(&w, &t_id, &f_path, &o_dir, &opts)).await?
+                tokio::task::spawn_blocking(move || {
+                    if Self::is_tar_wrapped_archive(Path::new(&f_path), &[".tar.bz2", ".tbz", ".tbz2"]) {
+                        srv.do_extract_tar_bz2(&w, &t_id, &f_path, &o_dir, &opts)
+                    } else {
+                        srv.do_extract_bz2(&w, &t_id, &f_path, &o_dir, &opts)
+                    }
+                }).await?
             },
             ArchiveFormat::Xz => {
                 let srv = service.clone();
@@ -561,7 +575,13 @@ impl CompressionService {
                 let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                tokio::task::spawn_blocking(move || srv.do_extract_tar_xz(&w, &t_id, &f_path, &o_dir, &opts)).await?
+                tokio::task::spawn_blocking(move || {
+                    if Self::is_tar_wrapped_archive(Path::new(&f_path), &[".tar.xz", ".txz"]) {
+                        srv.do_extract_tar_xz(&w, &t_id, &f_path, &o_dir, &opts)
+                    } else {
+                        srv.do_extract_xz(&w, &t_id, &f_path, &o_dir, &opts)
+                    }
+                }).await?
             },
             ArchiveFormat::Unknown => {
                 match ext.as_str() {
@@ -607,6 +627,27 @@ impl CompressionService {
         path.file_stem()
             .and_then(|name| name.to_str())
             .unwrap_or("archive")
+            .to_string()
+    }
+
+    fn is_tar_wrapped_archive(path: &Path, suffixes: &[&str]) -> bool {
+        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("");
+        let lower_name = file_name.to_lowercase();
+        suffixes.iter().any(|suffix| lower_name.ends_with(suffix))
+    }
+
+    fn single_stream_output_name(path: &Path, suffixes: &[&str]) -> String {
+        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("output");
+        let lower_name = file_name.to_lowercase();
+        for suffix in suffixes {
+            if lower_name.ends_with(suffix) && file_name.len() > suffix.len() {
+                return file_name[..file_name.len() - suffix.len()].to_string();
+            }
+        }
+        path.file_stem()
+            .and_then(|name| name.to_str())
+            .filter(|name| !name.is_empty())
+            .unwrap_or("output")
             .to_string()
     }
 
@@ -966,6 +1007,57 @@ impl CompressionService {
         let f = File::open(file)?;
         let xz = xz2::read::XzDecoder::new(f);
         self.do_extract_tar(w, tid, file, output, Some(Box::new(xz)), options)
+    }
+
+    fn do_extract_single_stream<R: Read>(&self, window: &Window, task_id: &str, mut reader: R, output: &Path, output_name: String, options: &DecompressOptions) -> Result<()> {
+        let relative = PathBuf::from(output_name);
+        if !Self::matches_file_filter(&relative, options.file_filter.as_deref()) {
+            self.emit_log(window, task_id, "Single-file archive skipped by current file filter.", TaskLogSeverity::Warning);
+            return Ok(());
+        }
+
+        let target = Self::resolve_extract_path(&output.join(relative), options)?;
+        if let Some(parent) = target.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        let mut outfile = File::create(&target)?;
+        let mut buffer = vec![0u8; self.config.buffer_size.max(64 * 1024)];
+        let mut processed = 0u64;
+        loop {
+            self.check_cancellation()?;
+            let read = reader.read(&mut buffer)?;
+            if read == 0 {
+                break;
+            }
+            outfile.write_all(&buffer[..read])?;
+            processed += read as u64;
+            self.emit_progress(window, task_id, 0.5, None, processed, 0);
+        }
+
+        self.emit_log(window, task_id, &format!("Extracted single-file stream to {}", target.display()), TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    fn do_extract_gz(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
+        let f = File::open(file)?;
+        let gz = flate2::read::GzDecoder::new(f);
+        let output_name = Self::single_stream_output_name(Path::new(file), &[".gz"]);
+        self.do_extract_single_stream(w, tid, gz, output, output_name, options)
+    }
+
+    fn do_extract_bz2(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
+        let f = File::open(file)?;
+        let bz = bzip2::read::BzDecoder::new(f);
+        let output_name = Self::single_stream_output_name(Path::new(file), &[".bz2"]);
+        self.do_extract_single_stream(w, tid, bz, output, output_name, options)
+    }
+
+    fn do_extract_xz(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
+        let f = File::open(file)?;
+        let xz = xz2::read::XzDecoder::new(f);
+        let output_name = Self::single_stream_output_name(Path::new(file), &[".xz"]);
+        self.do_extract_single_stream(w, tid, xz, output, output_name, options)
     }
 
     fn unique_archive_name(used_archive_names: &mut HashSet<String>, raw_name: String) -> String {
