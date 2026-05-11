@@ -62,6 +62,7 @@ const extensionForFormat = (format: string) => {
 }
 
 const singleFileStreamFormats = new Set(['gz', 'bz2', 'xz'])
+const passwordSupportedFormats = new Set(['7z', 'rar'])
 
 const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {
   return files.length === 1 && !files[0]?.isDirectory
@@ -159,6 +160,16 @@ const handleCompress = async () => {
   for (const job of jobs) {
     if (singleFileStreamFormats.has(job.settings.format) && !canUseSingleFileFormats(job.files)) {
       appStore.setError(`${job.settings.format.toUpperCase()} only supports one regular file. Please use TAR formats for folders or multiple files.`)
+      return
+    }
+
+    if (job.settings.password && !passwordSupportedFormats.has(job.settings.format)) {
+      appStore.setError(`${job.settings.format.toUpperCase()} does not support password compression in the current engine. Please use 7Z or RAR.`)
+      return
+    }
+
+    if (job.settings.splitArchive) {
+      appStore.setError('Split archive output is not supported yet.')
       return
     }
 
