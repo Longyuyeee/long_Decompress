@@ -2,6 +2,7 @@ use std::fs;
 
 use long_compress_assistant::models::compression::CompressionOptions;
 use long_compress_assistant::services::compression_service::CompressionService;
+use long_compress_assistant::services::universal_engine::UniversalCliEngine;
 use tempfile::tempdir;
 
 fn compression_options(format: Option<&str>) -> CompressionOptions {
@@ -139,4 +140,10 @@ fn infers_zip_from_output_path_when_format_missing() {
     .expect("zip output extension should infer zip format");
 
     assert_eq!(format, "zip");
+}
+
+#[test]
+fn universal_engine_uses_auto_rename_when_overwrite_is_disabled() {
+    assert_eq!(UniversalCliEngine::overwrite_mode_arg(false), "-aou");
+    assert_eq!(UniversalCliEngine::overwrite_mode_arg(true), "-aoa");
 }

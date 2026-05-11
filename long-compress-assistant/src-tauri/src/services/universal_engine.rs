@@ -16,6 +16,10 @@ impl UniversalCliEngine {
         Self
     }
 
+    pub fn overwrite_mode_arg(overwrite_existing: bool) -> &'static str {
+        if overwrite_existing { "-aoa" } else { "-aou" }
+    }
+
     /// 检查系统中是否安装了 7z 或 7za
     fn get_7z_command() -> Option<String> {
         // 1. 尝试环境变量中的 7z
@@ -139,6 +143,7 @@ impl ArchiveEngine for UniversalCliEngine {
         file_path: &Path,
         output_dir: &Path,
         password: Option<&str>,
+        overwrite_existing: bool,
         on_progress: Arc<dyn Fn(f32) + Send + Sync>,
         on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
         is_cancelled: Arc<AtomicBool>,
@@ -150,6 +155,7 @@ impl ArchiveEngine for UniversalCliEngine {
         let mut command = Command::new(cmd);
         command.arg("x"); // extract with full paths
         command.arg("-y"); // yes to all
+        command.arg(Self::overwrite_mode_arg(overwrite_existing));
         
         if let Some(pwd) = password {
             command.arg(format!("-p{}", pwd));

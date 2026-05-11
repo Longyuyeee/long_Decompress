@@ -618,6 +618,7 @@ impl CompressionService {
                             Path::new(&file_path),
                             &out_dir,
                             final_password.as_deref(),
+                            options.overwrite_existing,
                             on_progress,
                             on_log,
                             service.cancellation_flag.clone()

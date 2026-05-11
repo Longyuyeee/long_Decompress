@@ -46,6 +46,7 @@ pub trait ArchiveEngine: Send + Sync {
         file_path: &Path,
         output_dir: &Path,
         password: Option<&str>,
+        overwrite_existing: bool,
         on_progress: Arc<dyn Fn(f32) + Send + Sync>,
         on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
         is_cancelled: Arc<AtomicBool>,
