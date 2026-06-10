@@ -10,6 +10,8 @@ const appStore = useAppStore()
 const showAddModal = ref(false)
 const showHistoryModal = ref(false)
 const showClearConfirm = ref(false)
+const showDeleteConfirm = ref(false)
+const deleteTargetId = ref<string | null>(null)
 const selectedEntryForHistory = ref<any>(null)
 const searchQuery = ref('')
 
@@ -48,13 +50,21 @@ const handleAddNew = () => {
   showAddModal.value = true
 }
 
-const handleDelete = async (id: string) => {
+const handleDelete = (id: string) => {
+  deleteTargetId.value = id
+  showDeleteConfirm.value = true
+}
+
+const confirmDelete = async () => {
+  showDeleteConfirm.value = false
+  if (!deleteTargetId.value) return
   try {
-    await passwordStore.deleteEntry(id)
+    await passwordStore.deleteEntry(deleteTargetId.value)
     appStore.successMessage = appStore.t('common.success')
   } catch (e) {
     appStore.errorMessage = appStore.t('common.error')
   }
+  deleteTargetId.value = null
 }
 
 const handleExport = async () => {
@@ -154,7 +164,12 @@ const chartData = computed(() => {
         </table>
         
         <div class="flex-1 overflow-y-auto custom-scrollbar">
-          <table class="w-full text-left border-collapse table-fixed">
+          <!-- 空状态提示 -->
+          <div v-if="filteredAndSortedEntries.length === 0 && !passwordStore.isLoading" class="flex flex-col items-center justify-center h-full text-center gap-4">
+            <i class="pi pi-shield text-4xl text-muted/30"></i>
+            <p class="text-muted text-xs font-bold">{{ appStore.t('vault.empty') }}</p>
+          </div>
+          <table v-else class="w-full text-left border-collapse table-fixed">
             <tbody class="divide-y divide-subtle/50">
               <tr v-for="(entry, index) in filteredAndSortedEntries" :key="entry.id" class="hover:bg-primary/[0.03] group transition-all">
                 <td class="px-6 py-3.5 w-[18%]">
@@ -247,11 +262,25 @@ const chartData = computed(() => {
     <transition name="pop">
       <div v-if="showClearConfirm" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4">
         <div class="modal-no-glass rounded-3xl p-10 w-full max-w-xs text-center shadow-2xl text-content">
-          <h3 class="text-sm font-black mb-2 uppercase tracking-widest">确认清空?</h3>
-          <p class="text-[10px] text-muted mb-8">此操作不可撤销。</p>
+          <h3 class="text-sm font-black mb-2 uppercase tracking-widest">{{ appStore.t('vault.confirm.clear_title') }}</h3>
+          <p class="text-[10px] text-muted mb-8">{{ appStore.t('vault.confirm.clear_desc') }}</p>
           <div class="flex flex-col gap-2">
-            <button @click="confirmClearAll" class="w-full py-3 bg-red-500 text-white rounded-xl text-xs font-black">彻底清空</button>
-            <button @click="showClearConfirm = false" class="w-full py-3 bg-input text-muted rounded-xl text-xs font-bold border border-subtle hover:text-content transition-colors">取消</button>
+            <button @click="confirmClearAll" class="w-full py-3 bg-red-500 text-white rounded-xl text-xs font-black">{{ appStore.t('vault.confirm.clear_btn') }}</button>
+            <button @click="showClearConfirm = false" class="w-full py-3 bg-input text-muted rounded-xl text-xs font-bold border border-subtle hover:text-content transition-colors">{{ appStore.t('vault.confirm.cancel') }}</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- 删除单条目确认弹窗 -->
+    <transition name="pop">
+      <div v-if="showDeleteConfirm" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4">
+        <div class="modal-no-glass rounded-3xl p-10 w-full max-w-xs text-center shadow-2xl text-content">
+          <h3 class="text-sm font-black mb-2 uppercase tracking-widest">{{ appStore.t('vault.confirm.delete_title') }}</h3>
+          <p class="text-[10px] text-muted mb-8">{{ appStore.t('vault.confirm.delete_desc') }}</p>
+          <div class="flex flex-col gap-2">
+            <button @click="confirmDelete" class="w-full py-3 bg-red-500 text-white rounded-xl text-xs font-black">{{ appStore.t('vault.confirm.delete_btn') }}</button>
+            <button @click="showDeleteConfirm = false" class="w-full py-3 bg-input text-muted rounded-xl text-xs font-bold border border-subtle hover:text-content transition-colors">{{ appStore.t('vault.confirm.cancel') }}</button>
           </div>
         </div>
       </div>
