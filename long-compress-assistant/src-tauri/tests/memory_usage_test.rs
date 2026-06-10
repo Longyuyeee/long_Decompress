@@ -1,12 +1,10 @@
-#[cfg(test)]
-mod tests {
-    use crate::services::compression_service::CompressionService;
-    use crate::models::compression::CompressionOptions;
-    use tempfile::tempdir;
-    use std::fs::{self, File};
-    use std::io::Write;
-    use std::path::Path;
-    use std::time::Instant;
+use long_compress_assistant::services::compression_service::CompressionService;
+use long_compress_assistant::models::compression::CompressionOptions;
+use tempfile::tempdir;
+use std::fs::{self, File};
+use std::io::Write;
+use std::path::Path;
+use std::time::Instant;
 
     /// 内存使用监控工具（简化版）
     struct MemoryMonitor {
@@ -301,4 +299,3 @@ mod tests {
         // 验证没有创建输出文件
         assert!(!output_zip.exists(), "错误情况下不应该创建输出文件");
     }
-}
