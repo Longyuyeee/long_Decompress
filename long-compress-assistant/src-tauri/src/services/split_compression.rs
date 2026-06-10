@@ -1,9 +1,10 @@
 use crate::models::compression::CompressionOptions;
 use crate::services::compression_service::CompressionService;
 use anyhow::{Context, Result};
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::fs::File;
-use zip::ZipWriter;
+use zip::{ZipWriter, write::FileOptions, CompressionMethod};
 use log;
 
 /// 分卷压缩结果
@@ -106,6 +107,22 @@ impl SplitCompressionService {
                     let file = File::create(&part_path).context("创建分卷文件失败")?;
                     current_zip = Some(ZipWriter::new(file));
                     part_files.push(part_path);
+                }
+
+                // 将文件写入当前分卷
+                if let Some(ref mut zip) = current_zip {
+                    let file_name = path.file_name()
+                        .and_then(|name| name.to_str())
+                        .unwrap_or("unknown");
+                    let zip_options = FileOptions::default()
+                        .compression_method(CompressionMethod::Deflated)
+                        .compression_level(Some(options.level.clamp(1, 9) as i32));
+                    zip.start_file(file_name, zip_options)
+                        .context(format!("在分卷中创建条目失败: {}", file_name))?;
+                    let mut source_file = File::open(path)
+                        .context(format!("打开源文件失败: {}", file_path))?;
+                    std::io::copy(&mut source_file, &mut *zip)
+                        .context(format!("写入文件内容失败: {}", file_path))?;
                 }
 
                 current_part_size += file_size;
