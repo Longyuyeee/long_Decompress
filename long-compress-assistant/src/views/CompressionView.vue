@@ -58,11 +58,11 @@ const joinPath = (dir: string, fileName: string) => {
 }
 
 const extensionForFormat = (format: string) => {
-  if (['tar.gz', 'tar.bz2', 'tar.xz'].includes(format)) return format
+  if (['tar.gz', 'tar.bz2', 'tar.xz', 'tar.zst'].includes(format)) return format
   return format
 }
 
-const singleFileStreamFormats = new Set(['gz', 'bz2', 'xz'])
+const singleFileStreamFormats = new Set(['gz', 'bz2', 'xz', 'zst', 'zstd'])
 const passwordSupportedFormats = new Set(['zip', '7z', 'rar'])
 
 const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {

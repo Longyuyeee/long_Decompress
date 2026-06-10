@@ -50,12 +50,14 @@ const compressionFormats = [
   { value: 'tar.gz', name: 'TGZ' },
   { value: 'tar.bz2', name: 'TBZ' },
   { value: 'tar.xz', name: 'TXZ' },
+  { value: 'tar.zst', name: 'TZST' },
   { value: 'gz', name: 'GZ', singleFileOnly: true },
   { value: 'bz2', name: 'BZ2', singleFileOnly: true },
-  { value: 'xz', name: 'XZ', singleFileOnly: true }
+  { value: 'xz', name: 'XZ', singleFileOnly: true },
+  { value: 'zst', name: 'ZST', singleFileOnly: true }
 ]
 
-const passwordSupportedFormats = new Set<CompressionOptions['format']>(['7z', 'rar'])
+const passwordSupportedFormats = new Set<CompressionOptions['format']>(['zip', '7z', 'rar'])
 const supportsPassword = computed(() => passwordSupportedFormats.has(compressionOptions.value.format))
 
 const isFormatDisabled = (format: { singleFileOnly?: boolean }) => {

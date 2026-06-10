@@ -13,7 +13,7 @@ export interface FileObject {
 }
 
 export interface CompressionOptions {
-  format: 'zip' | '7z' | 'tar' | 'gz' | 'bz2' | 'tar.gz' | 'tar.bz2' | 'xz' | 'tar.xz' | 'rar'
+  format: 'zip' | '7z' | 'tar' | 'gz' | 'bz2' | 'tar.gz' | 'tar.bz2' | 'xz' | 'tar.xz' | 'rar' | 'zst' | 'tar.zst'
   level: number
   password: string
   filename: string
