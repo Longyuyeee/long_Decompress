@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useTaskStore } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
-import { extractErrorMessage } from '@/utils'
+import { extractErrorMessage, generateId } from '@/utils'
 import { open } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
@@ -33,7 +33,7 @@ const onFilesSelected = async (files: any[]) => {
     const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
     
     taskStore.addTask({
-      id: Math.random().toString(36).substr(2, 9),
+      id: generateId(),
       name: file.name || sourcePath.split(/[\\/]/).pop() || 'Unknown',
       type: 'decompression',
       sourceFiles: [sourcePath],

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { generateId } from '@/utils'
 
 export interface Notification {
   id: string
@@ -8,7 +9,7 @@ export interface Notification {
   message: string
   timestamp: Date
   read: boolean
-  duration?: number // 自动消失时间（毫秒），undefined表示不自动消�?
+  duration?: number // 自动消失时间（毫秒），undefined表示不自动消�?
 }
 
 export interface ModalState {
@@ -26,7 +27,7 @@ export interface Toast {
 }
 
 export const useUIStore = defineStore('ui', () => {
-  // 状�?
+  // 状�?
   const sidebarOpen = ref(true)
   const notifications = ref<Notification[]>([])
   const modals = ref<ModalState[]>([])
@@ -36,7 +37,7 @@ export const useUIStore = defineStore('ui', () => {
   const darkMode = ref(false)
   const currentView = ref('home')
 
-  // 计算属�?
+  // 计算属�?
   const unreadNotifications = computed(() => {
     return notifications.value.filter(notification => !notification.read).length
   })
@@ -53,7 +54,7 @@ export const useUIStore = defineStore('ui', () => {
     return loading.value
   })
 
-  // 方法 - 侧边�?
+  // 方法 - 侧边�?
   const toggleSidebar = () => {
     sidebarOpen.value = !sidebarOpen.value
     localStorage.setItem('sidebar-open', sidebarOpen.value.toString())
@@ -88,7 +89,7 @@ export const useUIStore = defineStore('ui', () => {
 
     notifications.value.unshift(notification)
 
-    // 保持通知不超�?0�?
+    // 保持通知不超�?0�?
     if (notifications.value.length > 50) {
       notifications.value = notifications.value.slice(0, 50)
     }
@@ -175,7 +176,7 @@ export const useUIStore = defineStore('ui', () => {
       removeToast(toast.id)
     }, duration)
 
-    // 保持Toast不超�?�?
+    // 保持Toast不超�?�?
     if (toasts.value.length > 5) {
       toasts.value = toasts.value.slice(1)
     }
@@ -189,8 +190,8 @@ export const useUIStore = defineStore('ui', () => {
     toasts.value = []
   }
 
-  // 方法 - 加载状�?
-  const startLoading = (text: string = '加载�?..') => {
+  // 方法 - 加载状�?
+  const startLoading = (text: string = '加载�?..') => {
     loading.value = true
     loadingText.value = text
   }
@@ -254,11 +255,6 @@ export const useUIStore = defineStore('ui', () => {
     }
   }
 
-  // 辅助函数
-  const generateId = () => {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2)
-  }
-
   // 工具方法
   const showSuccess = (message: string, title: string = '成功') => {
     addNotification('success', title, message, 5000)
@@ -280,12 +276,12 @@ export const useUIStore = defineStore('ui', () => {
     showToast('info', message)
   }
 
-  // 初始�?
+  // 初始�?
   const initialize = () => {
     // 加载通知
     loadNotificationsFromStorage()
 
-    // 加载侧边栏状�?
+    // 加载侧边栏状�?
     const savedSidebarState = localStorage.getItem('sidebar-open')
     if (savedSidebarState !== null) {
       sidebarOpen.value = savedSidebarState === 'true'
@@ -297,7 +293,7 @@ export const useUIStore = defineStore('ui', () => {
       darkMode.value = savedDarkMode === 'true'
       updateThemeClass()
     } else {
-      // 检查系统主题偏�?
+      // 检查系统主题偏�?
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       darkMode.value = prefersDark
       updateThemeClass()
@@ -314,11 +310,11 @@ export const useUIStore = defineStore('ui', () => {
     })
   }
 
-  // 执行初始�?
+  // 执行初始�?
   initialize()
 
   return {
-    // 状�?
+    // 状�?
     sidebarOpen,
     notifications,
     modals,
@@ -328,13 +324,13 @@ export const useUIStore = defineStore('ui', () => {
     darkMode,
     currentView,
 
-    // 计算属�?
+    // 计算属�?
     unreadNotifications,
     activeModals,
     hasActiveModals,
     isLoading,
 
-    // 侧边栏方�?
+    // 侧边栏方�?
     toggleSidebar,
     openSidebar,
     closeSidebar,
@@ -357,7 +353,7 @@ export const useUIStore = defineStore('ui', () => {
     removeToast,
     clearToasts,
 
-    // 加载状态方�?
+    // 加载状态方�?
     startLoading,
     stopLoading,
 

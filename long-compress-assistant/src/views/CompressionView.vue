@@ -4,7 +4,7 @@ import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useTaskStore } from '@/stores/task'
-import { extractErrorMessage } from '@/utils'
+import { extractErrorMessage, generateId } from '@/utils'
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 
@@ -191,7 +191,7 @@ const handleCompress = async () => {
     }
 
     const taskId = taskStore.addTask({
-      id: Math.random().toString(36).substr(2, 9),
+      id: generateId(),
       name: job.name,
       type: 'compression',
       sourceFiles: job.files.map(file => file.path),
