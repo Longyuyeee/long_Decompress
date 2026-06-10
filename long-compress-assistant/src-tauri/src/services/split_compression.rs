@@ -1,7 +1,6 @@
 use crate::models::compression::CompressionOptions;
 use crate::services::compression_service::CompressionService;
 use anyhow::{Context, Result};
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use zip::{ZipWriter, write::FileOptions, CompressionMethod};

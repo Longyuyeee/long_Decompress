@@ -1,5 +1,5 @@
 use crate::services::system_service::{SystemService, SystemInfo};
-use tauri::{command, AppHandle, Manager};
+use tauri::{command, AppHandle};
 
 #[cfg(target_os = "windows")]
 use winreg::enums::*;
