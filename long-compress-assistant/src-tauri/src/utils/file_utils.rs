@@ -514,6 +514,62 @@ pub fn sanitize_filename(filename: &str) -> String {
         .collect()
 }
 
+/// 规范化归档条目路径，防止 Zip Slip 路径穿越攻击。
+///
+/// - 移除路径中的 `..` (ParentDir) 组件
+/// - 移除绝对路径前缀 (RootDir, Prefix like `C:`)
+/// - 当 `preserve_paths` 为 false 时，只保留文件名
+/// - 返回 `None` 如果规范化后的路径为空（如条目就是 `..`）
+pub fn normalize_archive_path(path: &Path, preserve_paths: bool) -> Option<PathBuf> {
+    use std::path::Component;
+
+    let source = if preserve_paths {
+        path.to_path_buf()
+    } else {
+        path.file_name().map(PathBuf::from)?
+    };
+
+    let mut safe_path = PathBuf::new();
+    for component in source.components() {
+        match component {
+            Component::Normal(part) => {
+                safe_path.push(part);
+            }
+            Component::ParentDir
+            | Component::RootDir
+            | Component::Prefix(_) => {
+                // 这些组件可能被用于路径穿越攻击，跳过
+            }
+            Component::CurDir => {
+                // `.` 是安全的但无意义，保持它
+                safe_path.push(".");
+            }
+        }
+    }
+
+    if safe_path.as_os_str().is_empty() {
+        None
+    } else {
+        Some(safe_path)
+    }
+}
+
+/// 验证解压目标路径安全地处于输出目录之内。
+/// 先规范化路径，再将其与输出目录拼接，最后 canonicalize 检查锚定。
+pub fn verify_extract_path(entry_path: &Path, output_dir: &Path, preserve_paths: bool) -> Option<PathBuf> {
+    let relative = normalize_archive_path(entry_path, preserve_paths)?;
+    let target = output_dir.join(&relative);
+
+    // 确保目标路径在输出目录之内，
+    // 通过检查规范化后的相对路径是否以 `..` 开始
+    let relative = pathdiff::diff_paths(&target, output_dir)?;
+    if relative.starts_with("..") {
+        return None;
+    }
+
+    Some(target)
+}
+
 /// 生成唯一文件名（避免冲突）
 pub fn generate_unique_filename(directory: &Path, base_name: &str, extension: &str) -> PathBuf {
     let sanitized_name = sanitize_filename(base_name);

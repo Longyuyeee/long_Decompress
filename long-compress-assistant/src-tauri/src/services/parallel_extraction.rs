@@ -1,4 +1,5 @@
 use crate::services::io_buffer_pool::IOBufferPool;
+use crate::utils::file_utils::verify_extract_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use std::fs::File;
@@ -51,7 +52,17 @@ impl ParallelExtractor {
         for i in 0..file_count {
             let entry = archive.by_index(i).context("获取ZIP文件条目失败")?;
             let is_dir = entry.name().ends_with('/');
-            let outpath = output_dir.join(entry.mangled_name());
+
+            // 使用安全路径规范函数防止 Zip Slip 攻击
+            let entry_path = Path::new(entry.name());
+            let outpath = verify_extract_path(entry_path, output_dir, true)
+                .unwrap_or_else(|| {
+                    // 路径不安全时，只提取文件名到输出目录根
+                    output_dir.join(
+                        entry_path.file_name()
+                            .unwrap_or_else(|| std::ffi::OsStr::new("unknown_file"))
+                    )
+                });
 
             file_entries.push(ZipEntryInfo {
                 index: i,
