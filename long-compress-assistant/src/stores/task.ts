@@ -79,7 +79,10 @@ export const useTaskStore = defineStore('task', () => {
       const { task_id, progress, stage, current_file, current_password, speed } = event.payload
       const task = tasks.value.find(t => t.id === task_id)
       if (task) {
-        task.progress = Math.round(progress * 100)
+        // 使用 floor 确保进度不会跳变；活跃任务至少显示 1%
+        task.progress = progress > 0 && progress < 1.0
+          ? Math.max(1, Math.floor(progress * 100))
+          : Math.round(progress * 100)
         task.stage = stage as any
         task.currentFile = current_file
         task.currentPassword = current_password

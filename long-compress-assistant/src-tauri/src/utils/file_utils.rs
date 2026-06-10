@@ -303,30 +303,26 @@ pub async fn copy_file_safe(src: &Path, dst: &Path) -> Result<(), AppError> {
         .map(|_| ())
 }
 
-/// 获取目录大小（递归）
-pub async fn get_directory_size(path: &Path) -> Result<u64, AppError> {
+/// 通用目录遍历：对每个文件调用 `on_file(metadata)`，对每个目录调用 `on_dir()`。
+/// 使用 BFS 避免栈溢出。
+async fn walk_directory<F, D>(path: &Path, mut on_file: F, mut on_dir: D) -> Result<(), AppError>
+where
+    F: FnMut(&std::fs::Metadata),
+    D: FnMut(),
+{
     if !path.exists() {
-        return Err(AppError::file(format!(
-            "目录不存在: {}",
-            path.display()
-        )));
+        return Err(AppError::file(format!("目录不存在: {}", path.display())));
     }
-
     if !path.is_dir() {
-        return Err(AppError::file(format!(
-            "路径不是目录: {}",
-            path.display()
-        )));
+        return Err(AppError::file(format!("路径不是目录: {}", path.display())));
     }
 
-    let mut total_size = 0;
     let mut dirs_to_process = vec![path.to_path_buf()];
-
     while let Some(current_dir) = dirs_to_process.pop() {
+        on_dir();
         let mut entries = tokio_fs::read_dir(&current_dir)
             .await
             .map_err(|e| AppError::file(format!("读取目录失败: {}: {}", current_dir.display(), e)))?;
-
         while let Some(entry) = entries.next_entry()
             .await
             .map_err(|e| AppError::file(format!("读取目录条目失败: {}: {}", current_dir.display(), e)))?
@@ -334,101 +330,34 @@ pub async fn get_directory_size(path: &Path) -> Result<u64, AppError> {
             let metadata = entry.metadata()
                 .await
                 .map_err(|e| AppError::file(format!("获取文件元数据失败: {}: {}", current_dir.display(), e)))?;
-
             if metadata.is_dir() {
                 dirs_to_process.push(entry.path());
             } else {
-                total_size += metadata.len();
+                on_file(&metadata);
             }
         }
     }
+    Ok(())
+}
 
+/// 获取目录大小（递归）
+pub async fn get_directory_size(path: &Path) -> Result<u64, AppError> {
+    let mut total_size = 0u64;
+    walk_directory(path, |meta| total_size += meta.len(), || {}).await?;
     Ok(total_size)
 }
 
 /// 获取文件数量（递归）
 pub async fn get_file_count(path: &Path) -> Result<u64, AppError> {
-    if !path.exists() {
-        return Err(AppError::file(format!(
-            "目录不存在: {}",
-            path.display()
-        )));
-    }
-
-    if !path.is_dir() {
-        return Err(AppError::file(format!(
-            "路径不是目录: {}",
-            path.display()
-        )));
-    }
-
-    let mut file_count = 0;
-    let mut dirs_to_process = vec![path.to_path_buf()];
-
-    while let Some(current_dir) = dirs_to_process.pop() {
-        let mut entries = tokio_fs::read_dir(&current_dir)
-            .await
-            .map_err(|e| AppError::file(format!("读取目录失败: {}: {}", current_dir.display(), e)))?;
-
-        while let Some(entry) = entries.next_entry()
-            .await
-            .map_err(|e| AppError::file(format!("读取目录条目失败: {}: {}", current_dir.display(), e)))?
-        {
-            let metadata = entry.metadata()
-                .await
-                .map_err(|e| AppError::file(format!("获取文件元数据失败: {}: {}", current_dir.display(), e)))?;
-
-            if metadata.is_dir() {
-                dirs_to_process.push(entry.path());
-            } else {
-                file_count += 1;
-            }
-        }
-    }
-
+    let mut file_count = 0u64;
+    walk_directory(path, |_| file_count += 1, || {}).await?;
     Ok(file_count)
 }
 
 /// 获取目录数量（递归）
 pub async fn get_directory_count(path: &Path) -> Result<u64, AppError> {
-    if !path.exists() {
-        return Err(AppError::file(format!(
-            "目录不存在: {}",
-            path.display()
-        )));
-    }
-
-    if !path.is_dir() {
-        return Err(AppError::file(format!(
-            "路径不是目录: {}",
-            path.display()
-        )));
-    }
-
-    let mut dir_count = 0;
-    let mut dirs_to_process = vec![path.to_path_buf()];
-
-    while let Some(current_dir) = dirs_to_process.pop() {
-        dir_count += 1; // 当前目录
-
-        let mut entries = tokio_fs::read_dir(&current_dir)
-            .await
-            .map_err(|e| AppError::file(format!("读取目录失败: {}: {}", current_dir.display(), e)))?;
-
-        while let Some(entry) = entries.next_entry()
-            .await
-            .map_err(|e| AppError::file(format!("读取目录条目失败: {}: {}", current_dir.display(), e)))?
-        {
-            let metadata = entry.metadata()
-                .await
-                .map_err(|e| AppError::file(format!("获取文件元数据失败: {}: {}", current_dir.display(), e)))?;
-
-            if metadata.is_dir() {
-                dirs_to_process.push(entry.path());
-            }
-        }
-    }
-
+    let mut dir_count = 0u64;
+    walk_directory(path, |_| {}, || dir_count += 1).await?;
     Ok(dir_count)
 }
 
