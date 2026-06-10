@@ -54,7 +54,8 @@ const compressionFormats = [
   { value: 'gz', name: 'GZ', singleFileOnly: true },
   { value: 'bz2', name: 'BZ2', singleFileOnly: true },
   { value: 'xz', name: 'XZ', singleFileOnly: true },
-  { value: 'zst', name: 'ZST', singleFileOnly: true }
+  { value: 'zst', name: 'ZST', singleFileOnly: true },
+  { value: 'lzma', name: 'LZMA', singleFileOnly: true }
 ]
 
 const passwordSupportedFormats = new Set<CompressionOptions['format']>(['zip', '7z', 'rar'])

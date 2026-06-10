@@ -61,6 +61,7 @@ pub enum CompressionFormat {
     Bzip2,
     Xz,
     Zstd,
+    Lzma,
     TarGz,
     TarBzip2,
     TarXz,
@@ -81,6 +82,7 @@ impl CompressionFormat {
             "txz" | "tar.xz" => Self::TarXz,
             "zst" | "zstd" => Self::Zstd,
             "tzst" | "tar.zst" => Self::TarZstd,
+            "lzma" => Self::Lzma,
             _ => Self::Zip,
         }
     }
@@ -99,6 +101,7 @@ impl CompressionFormat {
             Self::TarXz => "tar.xz",
             Self::Zstd => "zst",
             Self::TarZstd => "tar.zst",
+            Self::Lzma => "lzma",
         }
     }
 }

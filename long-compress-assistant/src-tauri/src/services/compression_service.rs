@@ -360,6 +360,7 @@ impl CompressionService {
                 "xz" => service.do_compress_xz(&window, &task_id, &source_files, &output_path, options),
                 "zst" | "zstd" => service.do_compress_zstd(&window, &task_id, &source_files, &output_path, options),
                 "tar.zst" | "tzst" => service.do_compress_tar_zstd(&window, &task_id, &source_files, &output_path, options),
+                "lzma" => service.do_compress_lzma(&window, &task_id, &source_files, &output_path, options),
                 _ => Err(CompressionError::CompressionFailed(format!(
                     "Unsupported compression format '{}'.",
                     requested_format
@@ -1439,6 +1440,31 @@ impl CompressionService {
 
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
         self.emit_log(window, task_id, "tar.zst 压缩完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    /// 使用 7z CLI 进行 LZMA 压缩
+    fn do_compress_lzma(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".lzma")?;
+        self.emit_log(window, task_id, "使用 7z 进行 LZMA 压缩...", TaskLogSeverity::Info);
+
+        let mut cmd = std::process::Command::new("7z");
+        cmd.arg("a");
+        cmd.arg("-tlzma");
+        cmd.arg(format!("-mx{}", options.level.clamp(1, 9)));
+        cmd.arg("-y");
+        cmd.arg(output);
+        cmd.arg(source);
+
+        let output_result = cmd.output()
+            .map_err(|err| CompressionError::CompressionFailed(format!("Failed to run 7z for LZMA: {}", err)))?;
+        if !output_result.status.success() {
+            let stderr = String::from_utf8_lossy(&output_result.stderr);
+            return Err(CompressionError::CompressionFailed(format!("LZMA compression failed: {}", stderr)).into());
+        }
+
+        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
+        self.emit_log(window, task_id, "LZMA 压缩完成", TaskLogSeverity::Success);
         Ok(())
     }
 

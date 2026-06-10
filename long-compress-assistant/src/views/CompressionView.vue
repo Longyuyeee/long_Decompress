@@ -62,7 +62,7 @@ const extensionForFormat = (format: string) => {
   return format
 }
 
-const singleFileStreamFormats = new Set(['gz', 'bz2', 'xz', 'zst', 'zstd'])
+const singleFileStreamFormats = new Set(['gz', 'bz2', 'xz', 'zst', 'zstd', 'lzma'])
 const passwordSupportedFormats = new Set(['zip', '7z', 'rar'])
 
 const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {
