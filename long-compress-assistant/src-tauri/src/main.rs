@@ -3,8 +3,6 @@
 #![allow(unused_variables)]
 #![allow(unused_imports)]
 #![allow(unused_mut)]
-#![allow(unused_assignments)]
-#![allow(unreachable_patterns)]
 #![allow(unexpected_cfgs)]
 
 use long_compress_assistant::services;
