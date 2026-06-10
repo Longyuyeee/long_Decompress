@@ -115,12 +115,18 @@ const startDecompression = async () => {
 const hasPendingTasks = computed(() => taskStore.tasks.some(t => t.status === 'pending'))
 const isRunning = computed(() => taskStore.tasks.some(t => ['running', 'extracting', 'compressing', 'preparing'].includes(t.status)))
 
-const cancelAllTasks = () => {
-  taskStore.tasks.forEach(async t => {
+const cancelAllTasks = async () => {
+  let cancelled = 0
+  let failed = 0
+  for (const t of taskStore.tasks) {
     if (['running', 'extracting', 'compressing', 'preparing'].includes(t.status)) {
-      await tauriCommands.cancelCompression(t.id)
+      const ok = await taskStore.cancelTask(t.id)
+      if (ok) cancelled++; else failed++
     }
-  })
+  }
+  if (failed > 0) {
+    appStore.setError(`${cancelled} task(s) cancelled, ${failed} failed`)
+  }
 }
 
 const handleConflict = (taskId: string) => {

@@ -163,8 +163,20 @@ export const useTaskStore = defineStore('task', () => {
     try {
       await invoke('cancel_compression', { taskId })
       updateTaskStatus(taskId, 'cancelled')
+      return true
     } catch (e) {
       console.error('Failed to cancel task:', e)
+      // 将错误信息记录到任务的日志中
+      const task = tasks.value.find(t => t.id === taskId)
+      if (task) {
+        task.logs.push({
+          task_id: taskId,
+          message: `Cancel failed: ${e}`,
+          severity: 'error',
+          timestamp: new Date().toISOString()
+        })
+      }
+      return false
     }
   }
 
