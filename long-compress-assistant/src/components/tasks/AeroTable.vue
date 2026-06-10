@@ -127,17 +127,41 @@ const onLeave = (el: any) => {
 
             <!-- 状态与执行进度 (横向一行化) -->
             <div class="flex-1 min-w-[180px] flex items-center gap-4 px-4">
-              <span class="text-[9px] text-muted font-bold truncate flex-1 opacity-60">
-                {{ task.status === 'pending' 
+              <!-- 活动任务旋转图标 -->
+              <i v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
+                 class="pi pi-spin pi-spinner text-primary text-[10px] shrink-0"></i>
+              <i v-else-if="task.status === 'completed'"
+                 class="pi pi-check-circle text-green-400 text-[10px] shrink-0"></i>
+              <i v-else-if="task.status === 'failed'"
+                 class="pi pi-exclamation-circle text-red-400 text-[10px] shrink-0"></i>
+              <i v-else-if="task.status === 'cancelled'"
+                 class="pi pi-ban text-muted text-[10px] shrink-0"></i>
+              <span class="text-[9px] font-bold truncate flex-1"
+                    :class="{
+                      'text-primary': ['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status),
+                      'text-muted opacity-60': task.status === 'pending',
+                      'text-green-400': task.status === 'completed',
+                      'text-red-400': task.status === 'failed',
+                      'text-muted line-through': task.status === 'cancelled'
+                    }">
+                {{ task.status === 'pending'
                   ? appStore.t('decompress.waiting')
-                  : (task.logs.length > 0 ? task.logs[task.logs.length - 1].message : '...') }}
+                  : task.status === 'preparing' ? 'Preparing...'
+                  : task.status === 'completed' ? 'Completed'
+                  : task.status === 'failed' ? 'Failed'
+                  : task.status === 'cancelled' ? 'Cancelled'
+                  : (task.logs.length > 0 ? task.logs[task.logs.length - 1].message : 'Processing...') }}
               </span>
               <div class="w-24 flex items-center gap-2 shrink-0">
                 <div class="h-0.5 flex-1 bg-input border border-subtle/20 rounded-full overflow-hidden">
-                  <div class="h-full bg-primary rounded-full transition-all duration-1000" 
+                  <div class="h-full rounded-full transition-all duration-1000"
+                       :class="task.status === 'failed' ? 'bg-red-400' : task.status === 'completed' ? 'bg-green-400' : 'bg-primary'"
                        :style="{ width: `${task.progress}%` }"></div>
                 </div>
-                <span class="text-[9px] text-primary font-mono font-black w-6 text-right">{{ task.progress }}%</span>
+                <span class="text-[9px] font-mono font-black w-6 text-right"
+                      :class="task.status === 'failed' ? 'text-red-400' : task.status === 'completed' ? 'text-green-400' : 'text-primary'">
+                  {{ task.progress }}%
+                </span>
               </div>
             </div>
 
