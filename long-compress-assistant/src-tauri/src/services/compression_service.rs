@@ -539,6 +539,9 @@ impl CompressionService {
                 "iso" | "img" => ArchiveFormat::Iso,
                 // 7z CLI 原生支持的杂项格式
                 "cab" | "lzh" | "lha" | "arj" | "dmg" | "wim" | "vhd" | "vhdx" | "chm"
+                | "deb" | "rpm" | "sfs" | "squashfs" | "nsis" | "msi" | "xar"
+                | "cpio" | "udf" | "fat" | "ntfs" | "hfs" | "lzma"
+                | "alz" | "arc" | "apfs" | "ext2" | "ext3" | "ext4" | "hfsx"
                     => ArchiveFormat::Universal,
                 _ => ArchiveFormat::Unknown,
             };

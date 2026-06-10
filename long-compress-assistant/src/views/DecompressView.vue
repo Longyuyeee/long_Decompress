@@ -16,8 +16,8 @@ const tauriCommands = useTauriCommands()
 const selectedConflictTaskId = ref<string | null>(null)
 const showConflictModal = ref(false)
 const selectedTaskIds = ref<Set<string>>(new Set())
-const supportedArchiveAccept = '.zip,.7z,.rar,.tar,.tar.gz,.tgz,.tar.bz2,.tbz,.tbz2,.tar.xz,.txz,.gz,.bz2,.xz,.iso,.img,.cab,.lzh,.lha,.arj,.dmg,.wim,.vhd,.vhdx,.chm'
-const supportedArchiveHint = 'ZIP, 7Z, RAR, TAR, GZ, BZ2, XZ, ISO, CAB, LZH, ARJ, DMG, WIM + more'
+const supportedArchiveAccept = '.zip,.7z,.rar,.tar,.tar.gz,.tgz,.tar.bz2,.tbz,.tbz2,.tar.xz,.txz,.gz,.bz2,.xz,.zst,.zstd,.tzst,.iso,.img,.cab,.lzh,.lha,.arj,.dmg,.wim,.vhd,.vhdx,.chm,.deb,.rpm,.squashfs,.sfs,.msi,.nsis,.xar,.lzma,.cpio,.udf,.fat,.ntfs'
+const supportedArchiveHint = 'ZIP, 7Z, RAR, TAR, Zstd, ISO, CAB, DEB, RPM, DMG, MSI + 30 more'
 
 // 全局配置状态
 const globalOutputPath = ref('')
