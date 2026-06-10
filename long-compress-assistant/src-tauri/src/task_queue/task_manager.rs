@@ -34,11 +34,11 @@ pub struct TaskManager {
 }
 
 impl TaskManager {
-    pub fn new() -> Self {
+    pub fn new(app_handle: tauri::AppHandle) -> Self {
         let config = QueueConfig::default();
         let queue = Arc::new(TaskQueue::new(config.max_queue_size));
         let scheduler = Arc::new(TaskScheduler::new(queue.clone(), SchedulerConfig::default()));
-        let executor = Arc::new(TaskExecutor::new(scheduler.clone(), ExecutorConfig::default()));
+        let executor = Arc::new(TaskExecutor::new(scheduler.clone(), ExecutorConfig::default(), app_handle.clone()));
 
         Self {
             queue,
@@ -47,7 +47,7 @@ impl TaskManager {
             batch_processor: RwLock::new(None),
             persistence_manager: Arc::new(RwLock::new(None)),
             config: Arc::new(RwLock::new(config)),
-            app_handle: None,
+            app_handle: Some(app_handle),
         }
     }
 
@@ -55,8 +55,9 @@ impl TaskManager {
         self.app_handle = Some(app_handle);
     }
 
+    /// 初始化并启动调度器
     pub async fn initialize(&self) -> Result<()> {
-        Ok(())
+        self.scheduler.start(self.executor.clone()).await
     }
 
     pub async fn add_compression_task(&self, task: CompressionTask, priority: TaskPriority) -> Result<String> {
@@ -97,5 +98,16 @@ impl TaskManager {
 }
 
 lazy_static::lazy_static! {
-    pub static ref TASK_MANAGER: Arc<TaskManager> = Arc::new(TaskManager::new());
+    /// 共享任务管理器实例。
+    /// 警告：此实例不应在生产中使用——必须通过 init_task_manager() 初始化。
+    pub static ref TASK_MANAGER: tokio::sync::RwLock<Option<Arc<TaskManager>>> = tokio::sync::RwLock::new(None);
+}
+
+/// 从 main.rs 调用以初始化全局任务管理器
+pub async fn init_task_manager(app_handle: tauri::AppHandle) -> Result<Arc<TaskManager>> {
+    let manager = Arc::new(TaskManager::new(app_handle));
+    manager.initialize().await?;
+    let mut guard = TASK_MANAGER.write().await;
+    *guard = Some(manager.clone());
+    Ok(manager)
 }

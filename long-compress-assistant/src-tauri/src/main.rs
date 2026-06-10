@@ -58,6 +58,13 @@ fn main() {
                     Err(e) => eprintln!("Failed to initialize database at {:?}: {}", db_path, e),
                 }
             });
+
+            // 初始化任务队列管理器（后台调度和执行）
+            tauri::async_runtime::block_on(async {
+                if let Err(e) = long_compress_assistant::task_queue::init_task_manager(app.handle()).await {
+                    eprintln!("Failed to initialize task queue manager: {}", e);
+                }
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

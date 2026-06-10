@@ -77,21 +77,76 @@ impl BatchTaskProcessor {
 
     pub async fn process_batch_task(&self, request: BatchTaskRequest) -> Result<BatchTaskResult> {
         let task_id = Uuid::new_v4().to_string();
-        
+
         let mut item_results = Vec::new();
         for item in &request.items {
-            item_results.push(BatchItemResult {
-                source: item.source.clone(),
-                success: true,
-                error: None,
-            });
+            let result = self.process_item(&request.task_type, item).await;
+            item_results.push(result);
         }
 
+        let all_success = item_results.iter().all(|r| r.success);
+        let success_count = item_results.iter().filter(|r| r.success).count();
         Ok(BatchTaskResult {
             task_id,
-            success: true,
-            message: "批量处理完成".to_string(),
+            success: all_success,
+            message: if all_success {
+                format!("批量处理完成，共 {} 项", item_results.len())
+            } else {
+                format!("批量处理完成，{}/{} 项成功", success_count, item_results.len())
+            },
             items: item_results,
         })
+    }
+
+    async fn process_item(&self, task_type: &BatchTaskType, item: &BatchOperationItem) -> BatchItemResult {
+        match task_type {
+            BatchTaskType::BatchCompress | BatchTaskType::BatchExtract => {
+                // 压缩/解压类操作应通过 add_compression_task / add_extraction_task 提交到任务队列
+                // 批量处理器仅处理直接的文件操作
+                BatchItemResult {
+                    source: item.source.clone(),
+                    success: false,
+                    error: Some(format!(
+                        "{:?} 操作请通过任务队列提交 (add_{}_task)",
+                        task_type,
+                        if matches!(task_type, BatchTaskType::BatchCompress) { "compression" } else { "extraction" }
+                    )),
+                }
+            }
+            BatchTaskType::BatchCopy => {
+                let dest = format!("{}_copy", item.source);
+                match std::fs::copy(&item.source, &dest) {
+                    Ok(bytes) => BatchItemResult {
+                        source: item.source.clone(),
+                        success: true,
+                        error: None,
+                    },
+                    Err(e) => BatchItemResult {
+                        source: item.source.clone(),
+                        success: false,
+                        error: Some(e.to_string()),
+                    },
+                }
+            }
+            BatchTaskType::BatchDelete => {
+                match std::fs::remove_file(&item.source) {
+                    Ok(_) => BatchItemResult {
+                        source: item.source.clone(),
+                        success: true,
+                        error: None,
+                    },
+                    Err(e) => BatchItemResult {
+                        source: item.source.clone(),
+                        success: false,
+                        error: Some(e.to_string()),
+                    },
+                }
+            }
+            _ => BatchItemResult {
+                source: item.source.clone(),
+                success: false,
+                error: Some(format!("不支持的批量操作类型: {:?}", task_type)),
+            },
+        }
     }
 }

@@ -11,4 +11,4 @@ pub mod batch_task_processor;
 pub mod optimized_task_queue;
 pub mod queue_benchmark;
 
-pub use task_manager::{TaskManager, TASK_MANAGER};
+pub use task_manager::{TaskManager, TASK_MANAGER, init_task_manager};

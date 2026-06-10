@@ -1,5 +1,6 @@
 use crate::task_queue::task_queue::TaskQueue;
-use crate::task_queue::models::{QueueTask, QueueTaskStatus};
+use crate::task_queue::models::{QueueTask, QueueTaskStatus, SharedQueueTask};
+use crate::task_queue::task_executor::TaskExecutor;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -60,7 +61,7 @@ impl TaskScheduler {
     }
 
     /// 启动调度器
-    pub async fn start(&self) -> anyhow::Result<()> {
+    pub async fn start(&self, executor: Arc<TaskExecutor>) -> anyhow::Result<()> {
         let mut status = self.status.write().await;
         if status.is_running {
             return Ok(());
@@ -72,20 +73,20 @@ impl TaskScheduler {
 
         tokio::spawn(async move {
             let mut system = System::new_all();
-            
+
             loop {
                 sleep(Duration::from_millis(config.check_interval_ms)).await;
-                
+
                 // 更新系统信息
                 system.refresh_all();
-                
+
                 // 检查资源
                 let cpu_usage = system.global_cpu_info().cpu_usage();
                 let total_mem = system.total_memory() as f32;
                 let used_mem = system.used_memory() as f32;
                 let memory_usage_pct = if total_mem > 0.0 { (used_mem / total_mem) * 100.0 } else { 0.0 };
 
-                if config.resource_check_enabled && 
+                if config.resource_check_enabled &&
                     (cpu_usage > config.cpu_usage_threshold || memory_usage_pct > config.memory_usage_threshold) {
                     log::debug!("系统资源紧张，跳过本次调度: CPU={:.1}%, MEM={:.1}%", cpu_usage, memory_usage_pct);
                     continue;
@@ -99,9 +100,9 @@ impl TaskScheduler {
                             let task = task_ref.read().await;
                             task.id.clone()
                         };
-                        
+
                         log::info!("调度任务: {}", task_id);
-                        
+
                         // 更新任务状态
                         if let Err(e) = queue.update_task_status(&task_id, QueueTaskStatus::Running).await {
                             log::error!("更新任务状态失败: {}", e);
@@ -111,6 +112,13 @@ impl TaskScheduler {
                         status.concurrent_tasks += 1;
                         status.total_scheduled += 1;
                         status.last_check_time = chrono::Utc::now();
+
+                        // 派发任务到执行器
+                        let executor = executor.clone();
+                        let task_ref_clone = task_ref.clone();
+                        tokio::spawn(async move {
+                            executor.execute_task(task_ref_clone).await;
+                        });
                     }
                 }
             }
