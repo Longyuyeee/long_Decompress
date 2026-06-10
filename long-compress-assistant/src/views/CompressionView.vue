@@ -175,12 +175,6 @@ const handleCompress = async () => {
       continue
     }
 
-    if (job.settings.splitArchive) {
-      appStore.setError('Split archive output is not supported yet.')
-      failed++
-      continue
-    }
-
     if (job.settings.format === 'rar') {
       const support = await ensureRarSupport()
       if (!support?.available) {

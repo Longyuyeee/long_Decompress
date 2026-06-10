@@ -103,7 +103,7 @@ fn validates_password_support_per_format() {
 }
 
 #[test]
-fn rejects_split_archives_until_implemented() {
+fn validates_split_archive_support() {
     let temp = tempdir().expect("temp dir");
     let source_file = temp.path().join("source.txt");
     fs::write(&source_file, b"source").expect("source fixture");
@@ -118,8 +118,9 @@ fn rejects_split_archives_until_implemented() {
     let mut options = compression_options(Some("zip"));
     options.split_size = Some(1024);
 
+    // 分卷压缩现在被支持
     assert!(
-        CompressionService::validate_compression_request(&[source], &output, &options).is_err()
+        CompressionService::validate_compression_request(&[source], &output, &options).is_ok()
     );
 }
 

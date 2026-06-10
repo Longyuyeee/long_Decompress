@@ -269,11 +269,7 @@ impl CompressionService {
             }
         }).to_lowercase();
 
-        if options.split_size.is_some_and(|size| size > 0) {
-            return Err(CompressionError::CompressionFailed(
-                "Split archive output is not supported yet.".to_string()
-            ).into());
-        }
+        // 分卷压缩通过 SplitCompressionService 实现
 
         if options.password.as_deref().is_some_and(|password| !password.is_empty())
             && !matches!(requested_format.as_str(), "zip" | "7z" | "rar")
@@ -1262,6 +1258,20 @@ impl CompressionService {
 
         if let Some(parent) = Path::new(output).parent() {
             std::fs::create_dir_all(parent)?;
+        }
+
+        // 分卷压缩：委托给 SplitCompressionService
+        if options.split_size.is_some_and(|size| size > 0) {
+            let split_svc = crate::services::split_compression::SplitCompressionService::new();
+            let rt = tokio::runtime::Handle::current();
+            let result = rt.block_on(async {
+                split_svc.compress_to_split_zips(sources, Path::new(output), options.clone()).await
+            })?;
+            self.emit_log(window, task_id,
+                &format!("分卷压缩完成：{} 个分卷", result.part_count),
+                TaskLogSeverity::Success);
+            self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
+            return Ok(());
         }
 
         // 密码 ZIP：使用 7z CLI（zip crate 0.6 不支持 AES 加密写入）
