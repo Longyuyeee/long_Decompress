@@ -432,21 +432,23 @@ const totalPayload = computed(() => {
         </div>
       </div>
 
-      <!-- 3. 空状态 (完美垂直居中) -->
-      <div v-else class="flex-1 flex items-center justify-center p-12 overflow-hidden">
+      <!-- 3. 空状态 (引导式双列布局) -->
+      <div v-else class="flex-1 flex flex-col items-center justify-center p-12 overflow-hidden gap-8">
+        <div class="text-center space-y-2">
+          <h2 class="text-xl font-black text-content tracking-tight">{{ appStore.t('compress.start') }}</h2>
+          <p class="text-[10px] text-muted font-bold uppercase tracking-widest">Select folders or files to begin</p>
+        </div>
         <div class="grid grid-cols-2 gap-8 w-full max-w-4xl">
-          <!-- 文件夹拖入区 -->
-          <EnhancedFileDropzone 
-            @files-selected="onFilesSelected" 
+          <EnhancedFileDropzone
+            @files-selected="onFilesSelected"
             mode="folder"
-            class="shadow-sm h-full" 
+            class="shadow-sm h-full"
           />
-          <!-- 文件拖入区 -->
-          <EnhancedFileDropzone 
-            @files-selected="onFilesSelected" 
+          <EnhancedFileDropzone
+            @files-selected="onFilesSelected"
             mode="file"
             :hint="appStore.t('compress.drop_file_hint')"
-            class="shadow-sm h-full" 
+            class="shadow-sm h-full"
           />
         </div>
       </div>

@@ -215,13 +215,28 @@ taskStore.$subscribe((mutation, state) => {
           @deselect-all="deselectAll"
         />
 
-        <!-- 空状态：极简居中引导 -->
-        <div v-else class="flex-1 flex flex-col items-center justify-center p-20">
-          <EnhancedFileDropzone 
-            @files-selected="onFilesSelected" 
+        <!-- 空状态：引导式居中布局 -->
+        <div v-else class="flex-1 flex flex-col items-center justify-center p-20 gap-8">
+          <div class="text-center space-y-3">
+            <div class="w-20 h-20 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto shadow-lg shadow-primary/5">
+              <i class="pi pi-box text-3xl text-primary"></i>
+            </div>
+            <h2 class="text-2xl font-black text-content tracking-tight">{{ appStore.t('app.name') }}</h2>
+            <p class="text-xs text-muted font-bold uppercase tracking-[0.3em] max-w-md leading-relaxed">
+              {{ appStore.t('app.tagline') }}
+            </p>
+            <div class="flex flex-wrap justify-center gap-2 pt-2">
+              <span v-for="fmt in ['ZIP', '7Z', 'RAR', 'TAR.GZ', 'BZ2', 'XZ', 'ISO']" :key="fmt"
+                    class="text-[9px] font-mono font-bold text-dim bg-input/50 border border-subtle/30 rounded-md px-2 py-0.5">
+                {{ fmt }}
+              </span>
+            </div>
+          </div>
+          <EnhancedFileDropzone
+            @files-selected="onFilesSelected"
             :accept="supportedArchiveAccept"
             :sub-hint="supportedArchiveHint"
-            class="w-full max-w-lg shadow-sm" 
+            class="w-full max-w-lg shadow-sm"
           />
         </div>
       </div>
