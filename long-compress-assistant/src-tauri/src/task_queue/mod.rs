@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_imports)]
-
 pub mod models;
 pub mod task_queue;
 pub mod task_scheduler;
