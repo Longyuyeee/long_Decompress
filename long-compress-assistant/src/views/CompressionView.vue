@@ -230,23 +230,24 @@ const totalPayload = computed(() => {
       </div>
       
       <div class="flex items-center gap-4">
-        <!-- 磁吸成组按钮 (浮现式) -->
+        <!-- 磁吸成组按钮 (浮现式，次要操作) -->
         <transition name="pop">
-          <button 
+          <button
             v-if="selectedRows.size > 0"
             @click="handleCreateGroup"
-            class="h-10 px-6 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+            class="h-10 px-6 rounded-xl bg-input border border-subtle text-content text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm flex items-center gap-2"
           >
-            <i class="pi pi-box animate-bounce"></i>
+            <i class="pi pi-box"></i>
             {{ appStore.t('compress.create_group') }} ({{ selectedRows.size }})
           </button>
         </transition>
 
-        <button 
+        <button
           v-if="totalPayload > 0"
           @click="handleCompress"
-          class="h-10 px-8 rounded-xl bg-input border border-subtle text-content text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm flex items-center gap-2"
+          class="h-10 px-8 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:brightness-110 hover:scale-105 transition-all flex items-center gap-2"
         >
+          <i class="pi pi-play-circle animate-pulse text-[11px]"></i>
           {{ appStore.t('compress.start') }}
         </button>
       </div>
