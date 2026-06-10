@@ -409,7 +409,84 @@ export const usePasswordStore = defineStore('password', () => {
   const deleteSelectedPasswords = async () => { /* 实现逻辑 */ }
   const usePassword = async (id: string) => { return '' }
   const assessPasswordStrength = async (password: string) => {
-    return { score: 50, entropyBits: 0, crackTimeDisplay: '未知', issues: [], recommendations: [] }
+    const issues: string[] = []
+    const recommendations: string[] = []
+
+    if (!password) {
+      return { score: 0, entropyBits: 0, crackTimeDisplay: 'N/A', issues: ['密码为空'], recommendations: ['请输入密码'] }
+    }
+
+    // 字符集分析
+    const hasLower = /[a-z]/.test(password)
+    const hasUpper = /[A-Z]/.test(password)
+    const hasDigit = /\d/.test(password)
+    const hasSpecial = /[^a-zA-Z0-9]/.test(password)
+    const charsetSize =
+      (hasLower ? 26 : 0) +
+      (hasUpper ? 26 : 0) +
+      (hasDigit ? 10 : 0) +
+      (hasSpecial ? 32 : 0)
+
+    // 估算熵 (bits)
+    const entropyBits = password.length * Math.log2(charsetSize || 1)
+
+    // 评分 0-100
+    let score = 0
+    score += Math.min(password.length * 6, 40) // length contribution
+    score += hasLower && hasUpper ? 15 : (hasLower || hasUpper ? 8 : 0) // case diversity
+    score += hasDigit ? 10 : 0
+    score += hasSpecial ? 15 : 0
+    score += password.length >= 12 ? 20 : password.length >= 8 ? 10 : 0 // bonus for length
+
+    // 检测弱模式
+    const commonPatterns = [
+      /^12345/, /^password/i, /^qwerty/i, /^abc/i, /^111/, /^000/,
+      /(.)\1{3,}/, // 重复字符
+    ]
+    for (const pattern of commonPatterns) {
+      if (pattern.test(password)) {
+        score = Math.max(0, score - 25)
+        issues.push('包含常见弱密码模式')
+        recommendations.push('避免使用常见序列或重复字符')
+        break
+      }
+    }
+
+    if (password.length < 8) {
+      issues.push('密码长度不足8位')
+      recommendations.push('建议至少使用8个字符')
+    }
+    if (!hasSpecial) {
+      issues.push('缺少特殊字符')
+      recommendations.push('建议添加特殊字符如 !@#$%')
+    }
+    if (charsetSize <= 26) {
+      issues.push('字符集单一')
+      recommendations.push('混合使用大小写字母、数字和特殊字符')
+    }
+
+    // 估算破解时间
+    const guessesPerSecond = 1e9 // 假设 1 billion guesses/second
+    const totalCombinations = Math.pow(charsetSize || 1, password.length)
+    const secondsToCrack = totalCombinations / guessesPerSecond
+
+    let crackTimeDisplay: string
+    if (secondsToCrack < 60) crackTimeDisplay = '瞬间'
+    else if (secondsToCrack < 3600) crackTimeDisplay = '< 1 小时'
+    else if (secondsToCrack < 86400) crackTimeDisplay = '< 1 天'
+    else if (secondsToCrack < 86400 * 365) crackTimeDisplay = '< 1 年'
+    else if (secondsToCrack < 86400 * 365 * 100) crackTimeDisplay = '数百年'
+    else crackTimeDisplay = '数千年以上'
+
+    score = Math.min(100, Math.max(0, Math.round(score)))
+
+    return {
+      score,
+      entropyBits: Math.round(entropyBits * 10) / 10,
+      crackTimeDisplay,
+      issues,
+      recommendations,
+    }
   }
   const hideAllPasswords = () => { /* 实现逻辑 */ }
 
