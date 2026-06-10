@@ -158,27 +158,35 @@ const handleCompress = async () => {
     })
   ]
 
+  let succeeded = 0
+  let failed = 0
+
   for (const job of jobs) {
+    // 校验失败：跳过当前任务继续处理下一个
     if (singleFileStreamFormats.has(job.settings.format) && !canUseSingleFileFormats(job.files)) {
       appStore.setError(`${job.settings.format.toUpperCase()} only supports one regular file. Please use TAR formats for folders or multiple files.`)
-      return
+      failed++
+      continue
     }
 
     if (job.settings.password && !passwordSupportedFormats.has(job.settings.format)) {
       appStore.setError(`${job.settings.format.toUpperCase()} does not support password compression in the current engine. Please use 7Z or RAR.`)
-      return
+      failed++
+      continue
     }
 
     if (job.settings.splitArchive) {
       appStore.setError('Split archive output is not supported yet.')
-      return
+      failed++
+      continue
     }
 
     if (job.settings.format === 'rar') {
       const support = await ensureRarSupport()
       if (!support?.available) {
         appStore.setError(support?.message || 'RAR compression requires WinRAR/RAR command line tools.')
-        return
+        failed++
+        continue
       }
     }
 
@@ -207,14 +215,20 @@ const handleCompress = async () => {
         }
       )
       taskStore.updateTaskStatus(taskId, 'completed')
+      succeeded++
     } catch (error) {
       taskStore.updateTaskStatus(taskId, 'failed')
       appStore.setError(`${appStore.t('common.error')}: ${extractErrorMessage(error)}`)
-      return
+      failed++
+      // 继续处理下一个任务，不中断整个批次
     }
   }
-  
-  appStore.successMessage = appStore.t('common.success')
+
+  if (succeeded > 0 && failed === 0) {
+    appStore.successMessage = `${appStore.t('common.success')} (${succeeded} ${succeeded === 1 ? 'job' : 'jobs'})`
+  } else if (succeeded > 0) {
+    appStore.successMessage = `${succeeded} succeeded, ${failed} failed`
+  }
 }
 
 const totalPayload = computed(() => {
