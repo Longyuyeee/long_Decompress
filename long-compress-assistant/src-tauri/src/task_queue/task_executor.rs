@@ -17,6 +17,7 @@ impl Default for ExecutorConfig {
     }
 }
 
+#[allow(dead_code)]
 pub struct TaskExecutor {
     scheduler: Arc<TaskScheduler>,
     config: ExecutorConfig,

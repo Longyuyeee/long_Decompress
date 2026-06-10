@@ -23,6 +23,7 @@ impl Default for QueueConfig {
     }
 }
 
+#[allow(dead_code)]
 pub struct TaskManager {
     queue: Arc<TaskQueue>,
     scheduler: Arc<TaskScheduler>,
