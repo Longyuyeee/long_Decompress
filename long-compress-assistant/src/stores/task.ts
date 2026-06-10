@@ -44,6 +44,9 @@ export interface Task {
   currentFile?: string
   currentPassword?: string
   speed?: string
+  // 密码相关
+  password?: string
+  passwordRequired?: boolean
 }
 
 export const useTaskStore = defineStore('task', () => {
@@ -86,6 +89,27 @@ export const useTaskStore = defineStore('task', () => {
           task.status = 'completed'
           task.endTime = new Date()
         }
+      }
+    })
+
+    // 监听密码需求事件 - 后端检测到加密文件但密码为空时发送
+    await listen<{
+      task_id: string
+      file_path: string
+      file_name: string
+      format: string
+    }>('password-required', (event) => {
+      const { task_id, file_path, file_name, format } = event.payload
+      const task = tasks.value.find(t => t.id === task_id)
+      if (task) {
+        task.passwordRequired = true
+        task.status = 'pending'
+        task.logs.push({
+          task_id,
+          message: `需要密码: ${file_name} (${format})`,
+          severity: 'warning',
+          timestamp: new Date().toISOString()
+        })
       }
     })
 

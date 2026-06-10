@@ -88,19 +88,25 @@ const startDecompression = async () => {
   for (const task of pendingTasks) {
     try {
       taskStore.updateTaskStatus(task.id, 'preparing')
+      // 清除上一次的密码需求标记（如果是重试）
+      task.passwordRequired = false
       const options = {
         outputPath: task.outputPath,
         keepStructure: true,
         overwrite: false,
         deleteAfter: appStore.settings.autoDeleteSource,
-        createSubdirectory: task.extractToSubfolder ?? false
+        createSubdirectory: task.extractToSubfolder ?? false,
+        password: task.password || undefined
       }
       // 真正启动后端解压
       // 传入 task.id 避免重复生成新任务
       await tauriCommands.decompressFile(task.sourceFiles[0], options, task.id)
       } catch (error) {
-      taskStore.updateTaskStatus(task.id, 'failed')
-      appStore.setError(`${appStore.t('common.error')}: ${error}`)
+      // 如果任务已被 password-required 事件标记为待输入密码，不覆盖状态
+      if (!task.passwordRequired) {
+        taskStore.updateTaskStatus(task.id, 'failed')
+        appStore.setError(`${appStore.t('common.error')}: ${error}`)
+      }
     }
   }
 }

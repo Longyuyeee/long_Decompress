@@ -7,6 +7,7 @@ import { open } from '@tauri-apps/api/dialog'
 const taskStore = useTaskStore()
 const appStore = useAppStore()
 const expandedTasks = ref<Set<string>>(new Set())
+const showPasswordInput = ref<string | null>(null)
 
 const toggleExpand = (taskId: string) => {
   if (expandedTasks.value.has(taskId)) {
@@ -191,11 +192,37 @@ const onLeave = (el: any) => {
                       </div>
 
                       <div class="flex items-center gap-3 cursor-pointer group/check" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
-                        <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary" 
+                        <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
                              :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
                           <i v-if="task.extractToSubfolder" class="pi pi-check text-[8px] text-white"></i>
                         </div>
                         <span class="text-[11px] font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
+                      </div>
+
+                      <!-- 密码输入区 -->
+                      <div class="space-y-1.5">
+                        <div class="flex items-center gap-2">
+                          <i class="pi pi-lock text-[10px]" :class="task.passwordRequired ? 'text-yellow-400' : 'text-muted'"></i>
+                          <span class="text-muted text-[8px] uppercase font-black tracking-widest opacity-60">{{ appStore.t('decompress.password') || 'Password' }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <input
+                            :type="showPasswordInput === task.id ? 'text' : 'password'"
+                            :value="task.password || ''"
+                            @input="(e: Event) => { task.password = (e.target as HTMLInputElement).value; task.passwordRequired = false; }"
+                            @click.stop
+                            :placeholder="task.passwordRequired ? 'Encrypted - enter password' : 'Optional'"
+                            class="flex-1 h-7 rounded-lg bg-input/50 border text-[10px] px-3 font-mono outline-none transition-all focus:border-primary"
+                            :class="task.passwordRequired ? 'border-yellow-500/50 text-yellow-400 placeholder-yellow-500/50' : 'border-subtle/50 text-content placeholder:text-dim'"
+                          />
+                          <button
+                            @click.stop="showPasswordInput === task.id ? (showPasswordInput = null) : (showPasswordInput = task.id)"
+                            class="h-7 w-7 rounded-lg border border-subtle/50 bg-input/50 flex items-center justify-center text-muted hover:text-content transition-colors shrink-0"
+                            :title="showPasswordInput === task.id ? 'Hide' : 'Show'"
+                          >
+                            <i :class="showPasswordInput === task.id ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-[10px]"></i>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
