@@ -116,7 +116,7 @@ impl BatchTaskProcessor {
             BatchTaskType::BatchCopy => {
                 let dest = format!("{}_copy", item.source);
                 match std::fs::copy(&item.source, &dest) {
-                    Ok(bytes) => BatchItemResult {
+                    Ok(_bytes) => BatchItemResult {
                         source: item.source.clone(),
                         success: true,
                         error: None,

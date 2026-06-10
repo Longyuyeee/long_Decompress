@@ -1,7 +1,7 @@
-use crate::task_queue::models::{QueueTask, QueueTaskStatus, SharedQueueTask, TaskType};
+use crate::task_queue::models::{QueueTaskStatus, SharedQueueTask, TaskType};
 use crate::task_queue::task_scheduler::TaskScheduler;
 use crate::services::compression_service::CompressionService;
-use crate::models::compression::{CompressionOptions, DecompressOptions};
+use crate::models::compression::DecompressOptions;
 use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};

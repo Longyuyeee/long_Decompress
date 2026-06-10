@@ -1,5 +1,5 @@
 use crate::task_queue::task_queue::TaskQueue;
-use crate::task_queue::models::{QueueTask, QueueTaskStatus, SharedQueueTask};
+use crate::task_queue::models::{QueueTask, QueueTaskStatus};
 use crate::task_queue::task_executor::TaskExecutor;
 use std::sync::Arc;
 use std::time::Duration;
