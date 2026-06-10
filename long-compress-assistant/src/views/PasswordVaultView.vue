@@ -16,6 +16,7 @@ const showDeleteConfirm = ref(false)
 const deleteTargetId = ref<string | null>(null)
 const selectedEntryForHistory = ref<any>(null)
 const searchQuery = ref('')
+const showAllPasswords = ref(false)
 
 onMounted(async () => {
   await passwordStore.checkUnlockStatus()
@@ -93,6 +94,16 @@ const showUsageHistory = (entry: any) => {
   showHistoryModal.value = true
 }
 
+const maskPassword = (password: string) => {
+  if (showAllPasswords.value) return password
+  if (!password) return '——'
+  return '•'.repeat(Math.min(password.length, 16))
+}
+
+const togglePasswordVisibility = () => {
+  showAllPasswords.value = !showAllPasswords.value
+}
+
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text)
   appStore.successMessage = appStore.language === 'zh-CN' ? '已安全复制' : 'Copied'
@@ -158,7 +169,12 @@ const chartData = computed(() => {
           <thead class="sticky top-0 z-20 bg-input/80 backdrop-blur-xl border-b border-subtle">
             <tr>
               <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] w-[18%]">{{ appStore.t('vault.column.name') }}</th>
-              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] w-[27%]">{{ appStore.t('vault.column.password') }}</th>
+              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] w-[27%]">
+                <button @click="togglePasswordVisibility" class="flex items-center gap-1.5 hover:text-primary transition-colors">
+                  {{ appStore.t('vault.column.password') }}
+                  <i :class="showAllPasswords ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-[10px]"></i>
+                </button>
+              </th>
               <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] w-[31%]">{{ appStore.t('vault.column.notes') }}</th>
               <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] text-center w-[12%]">{{ appStore.t('vault.column.usage') }}</th>
               <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] text-right w-[12%]">{{ appStore.t('vault.column.actions') }}</th>
@@ -190,7 +206,7 @@ const chartData = computed(() => {
                 </td>
                 <td class="px-6 py-3.5 w-[27%]">
                   <div class="flex items-center gap-2 overflow-hidden group/key w-full">
-                    <code class="text-[10px] font-mono text-primary font-bold bg-primary/5 px-2 py-1 rounded-lg truncate block flex-1">{{ entry.password }}</code>
+                    <code class="text-[10px] font-mono text-primary font-bold bg-primary/5 px-2 py-1 rounded-lg truncate block flex-1 select-none" :class="{ 'tracking-widest': !showAllPasswords }">{{ maskPassword(entry.password) }}</code>
                     <i @click="copyToClipboard(entry.password)" class="pi pi-copy text-[10px] text-dim hover:text-primary cursor-pointer transition-all opacity-0 group-hover/key:opacity-100 scale-90 hover:scale-110 shrink-0"></i>
                   </div>
                 </td>
