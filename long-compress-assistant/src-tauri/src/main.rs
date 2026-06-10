@@ -24,7 +24,7 @@ use window_shadows::set_shadow;
 fn main() {
     // 在开发环境下使用项目根目录下的隐藏文件夹，在发布环境下使用 AppData
     let data_dir = if cfg!(debug_assertions) {
-        let mut path = std::env::current_dir().unwrap();
+        let mut path = std::env::current_dir().unwrap_or_default();
         if path.ends_with("src-tauri") {
             path.pop();
         }
@@ -34,7 +34,9 @@ fn main() {
     };
 
     if !data_dir.exists() {
-        std::fs::create_dir_all(&data_dir).unwrap();
+        if let Err(e) = std::fs::create_dir_all(&data_dir) {
+            eprintln!("Failed to create data directory at {:?}: {}", data_dir, e);
+        }
     }
 
     // 数据库路径指向 data_dir
@@ -43,7 +45,13 @@ fn main() {
     tauri::Builder::default()
         .manage(EncryptedPasswordServiceState::new(data_dir.clone()))
         .setup(move |app| {
-            let window = app.get_window("main").unwrap();
+            let window = match app.get_window("main") {
+                Some(w) => w,
+                None => {
+                    eprintln!("Main window not available during setup");
+                    return Ok(());
+                }
+            };
             #[cfg(any(target_os = "windows", target_os = "macos"))]
             let _ = set_shadow(&window, true);
 

@@ -143,18 +143,21 @@ impl CompressionService {
     pub async fn new_with_defaults() -> Self {
         let pool = match crate::database::connection::get_connection().await {
             Ok(conn) => conn.pool().clone(),
-            Err(_) => {
-                panic!("Failed to get global database connection for CompressionService");
+            Err(e) => {
+                log::warn!("无法获取数据库连接，密码本功能将不启用: {}", e);
+                sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:").unwrap_or_else(|_| {
+                    sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:").unwrap()
+                })
             }
         };
 
         // 动态计算数据目录，确保与 main.rs 逻辑一致
-        let mut data_dir = std::env::current_dir().unwrap();
+        let mut data_dir = std::env::current_dir().unwrap_or_default();
         if data_dir.ends_with("src-tauri") {
             data_dir.pop();
         }
         let data_dir = data_dir.join(".password_book_data");
-        
+
         let enc_service = Arc::new(crate::services::encrypted_password_service::EncryptedPasswordService::new(&data_dir));
         let query_service = Arc::new(PasswordQueryService::new(pool, enc_service));
 
@@ -195,9 +198,24 @@ impl CompressionService {
     }
 
     pub fn default() -> Self {
-        // 警告：此默认实现仅用于兼容性，PasswordQueryService 必须在实际运行时被正确注入
-        // 在命令层，我们应优先使用注入的 Service 实例
-        panic!("CompressionService::default() 仅用于满足编译占位，不应在实际逻辑中调用。请使用依赖注入。");
+        // 此默认实现使用内存数据库作为密码本后端，仅用于兼容性和测试场景。
+        // 在生产代码中请使用 new_with_defaults() 以接入真实的数据库连接。
+        log::warn!("CompressionService::default() called - password book features will be unavailable. Use new_with_defaults() instead.");
+        let pool = sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:")
+            .unwrap_or_else(|_| sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:").unwrap());
+        let data_dir = std::env::current_dir().unwrap_or_default().join(".password_book_data");
+        let enc_service = Arc::new(crate::services::encrypted_password_service::EncryptedPasswordService::new(&data_dir));
+        let query_service = Arc::new(PasswordQueryService::new(pool, enc_service));
+
+        Self {
+            config: CompressionServiceConfig::default(),
+            cancellation_flag: Arc::new(AtomicBool::new(false)),
+            buffer_pool: Arc::new(IOBufferPool::default()),
+            rar_service: Arc::new(RarSupportService::new()),
+            universal_engine: Arc::new(UniversalCliEngine::new()),
+            password_query_service: query_service,
+            semaphore: Arc::new(Semaphore::new(2)),
+        }
     }
 
     pub fn cancel(&self) {
@@ -573,8 +591,9 @@ impl CompressionService {
                 let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
+                let o_dir_str = o_dir.to_string_lossy().to_string();
                 tokio::task::spawn_blocking(move || {
-                    srv.do_extract_zip(&w, &t_id, &f_path, o_dir.to_str().unwrap(), pwd.as_deref(), &opts)
+                    srv.do_extract_zip(&w, &t_id, &f_path, &o_dir_str, pwd.as_deref(), &opts)
                 }).await?
             },
             ArchiveFormat::Rar => {
@@ -594,8 +613,9 @@ impl CompressionService {
                 let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
+                let o_dir_str = o_dir.to_string_lossy().to_string();
                 tokio::task::spawn_blocking(move || {
-                    srv.do_extract_7z(&w, &t_id, &f_path, o_dir.to_str().unwrap(), pwd.as_deref(), &opts)
+                    srv.do_extract_7z(&w, &t_id, &f_path, &o_dir_str, pwd.as_deref(), &opts)
                 }).await?
             },
             ArchiveFormat::Tar => {
@@ -684,7 +704,7 @@ impl CompressionService {
         }
         service.emit_log(&window, &task_id, "全部解压任务已完成", TaskLogSeverity::Success);
         service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
-        Ok(out_dir.to_str().unwrap().to_string())
+        Ok(out_dir.to_string_lossy().to_string())
     }
 
     fn archive_output_dir_name(path: &Path) -> String {
@@ -1614,7 +1634,10 @@ impl CompressionService {
             for source in sources {
                 let path = Path::new(&source);
                 if path.is_file() {
-                    zip.start_file(path.file_name().unwrap().to_str().unwrap(), zip_options)?;
+                    let entry_name = path.file_name()
+                        .and_then(|name| name.to_str())
+                        .unwrap_or("unknown");
+                    zip.start_file(entry_name, zip_options)?;
                     let mut f = File::open(path)?;
                     std::io::copy(&mut f, &mut zip)?;
                 }

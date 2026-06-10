@@ -173,8 +173,10 @@ impl ArchiveEngine for UniversalCliEngine {
 
         let mut child = command.spawn()?;
 
-        let stdout = child.stdout.take().expect("未能获取 stdout");
-        let stderr = child.stderr.take().expect("未能获取 stderr");
+        let stdout = child.stdout.take()
+            .ok_or_else(|| anyhow::anyhow!("Failed to capture 7z stdout"))?;
+        let stderr = child.stderr.take()
+            .ok_or_else(|| anyhow::anyhow!("Failed to capture 7z stderr"))?;
 
         let mut reader = BufReader::new(stdout).lines();
         let mut err_reader = BufReader::new(stderr).lines();
