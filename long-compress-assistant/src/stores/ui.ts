@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { generateId } from '@/utils'
+import { useAppStore } from '@/stores/app'
 
 export interface Notification {
   id: string
@@ -201,25 +202,21 @@ export const useUIStore = defineStore('ui', () => {
     loadingText.value = ''
   }
 
-  // 方法 - 主题
+  // 方法 - 主题（委托给 appStore 作为唯一主题管理源）
   const toggleDarkMode = () => {
+    const appStore = useAppStore()
+    appStore.theme = appStore.theme === 'dark' ? 'light' : 'dark'
     darkMode.value = !darkMode.value
-    updateThemeClass()
-    localStorage.setItem('dark-mode', darkMode.value.toString())
   }
 
   const setDarkMode = (enabled: boolean) => {
+    const appStore = useAppStore()
+    appStore.theme = enabled ? 'dark' : 'light'
     darkMode.value = enabled
-    updateThemeClass()
-    localStorage.setItem('dark-mode', enabled.toString())
   }
 
   const updateThemeClass = () => {
-    if (darkMode.value) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
+    // 不再直接操作 DOM — 由 appStore 的 theme watcher 统一管理 CSS class
   }
 
   // 方法 - 视图管理
