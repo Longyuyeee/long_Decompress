@@ -63,9 +63,9 @@ const confirmDelete = async () => {
   if (!deleteTargetId.value) return
   try {
     await passwordStore.deleteEntry(deleteTargetId.value)
-    appStore.successMessage = appStore.t('common.success')
+    appStore.setSuccess(appStore.t('common.success'))
   } catch (e) {
-    appStore.errorMessage = appStore.t('common.error')
+    appStore.setError(appStore.t('common.error'))
   }
   deleteTargetId.value = null
 }
@@ -83,9 +83,9 @@ const confirmClearAll = async () => {
   showClearConfirm.value = false
   try {
     await passwordStore.clearAll()
-    appStore.successMessage = appStore.t('common.success')
+    appStore.setSuccess(appStore.t('common.success'))
   } catch (e) {
-    appStore.errorMessage = appStore.t('common.error')
+    appStore.setError(appStore.t('common.error'))
   }
 }
 
@@ -106,7 +106,7 @@ const togglePasswordVisibility = () => {
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text)
-  appStore.successMessage = appStore.language === 'zh-CN' ? '已安全复制' : 'Copied'
+  appStore.setSuccess(appStore.language === 'zh-CN' ? '已安全复制' : 'Copied')
 }
 
 const chartData = computed(() => {

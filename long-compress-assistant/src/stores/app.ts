@@ -56,6 +56,8 @@ export const useAppStore = defineStore('app', () => {
   const successMessage = ref<string | null>(null)
   const errorMessage = ref<string | null>(null)
   const decompressTasks = ref<DecompressTask[]>([])
+  let errorTimer: ReturnType<typeof setTimeout> | null = null
+  let successTimer: ReturnType<typeof setTimeout> | null = null
 
   const t = (key: string): string => translations[language.value]?.[key] || translations['zh-CN']?.[key] || key
 
@@ -174,8 +176,17 @@ export const useAppStore = defineStore('app', () => {
   return {
     theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings,
     currentTheme, activeTasks, completedTasks, totalProgress, t,
-    setError: (m: string | null) => error.value = m,
-    clearError: () => error.value = null,
+    setError: (msg: string | null) => {
+      error.value = msg
+      if (errorTimer) clearTimeout(errorTimer)
+      if (msg) errorTimer = setTimeout(() => { error.value = null }, 5000)
+    },
+    setSuccess: (msg: string | null) => {
+      successMessage.value = msg
+      if (successTimer) clearTimeout(successTimer)
+      if (msg) successTimer = setTimeout(() => { successMessage.value = null }, 3000)
+    },
+    clearError: () => { error.value = null; if (errorTimer) clearTimeout(errorTimer) },
     createDecompressTask, updateTaskProgress, markTaskAsError, clearCompletedTasks, updateSettings, resetSettings, saveSettingsToStorage
   }
 })

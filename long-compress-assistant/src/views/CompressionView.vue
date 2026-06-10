@@ -225,9 +225,9 @@ const handleCompress = async () => {
   }
 
   if (succeeded > 0 && failed === 0) {
-    appStore.successMessage = `${appStore.t('common.success')} (${succeeded} ${succeeded === 1 ? 'job' : 'jobs'})`
+    appStore.setSuccess(`${appStore.t('common.success')} (${succeeded} ${succeeded === 1 ? 'job' : 'jobs'})`)
   } else if (succeeded > 0) {
-    appStore.successMessage = `${succeeded} succeeded, ${failed} failed`
+    appStore.setSuccess(`${succeeded} succeeded, ${failed} failed`)
   }
 }
 

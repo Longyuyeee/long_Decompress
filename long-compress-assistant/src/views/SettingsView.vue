@@ -31,7 +31,7 @@ const addWordlist = async () => {
     const current = new Set(appStore.settings.bruteForceWordlists)
     paths.forEach(p => current.add(p))
     appStore.updateSettings({ bruteForceWordlists: Array.from(current) })
-    appStore.successMessage = appStore.t('common.success')
+    appStore.setSuccess(appStore.t('common.success'))
   }
 }
 
