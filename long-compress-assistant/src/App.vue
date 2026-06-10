@@ -11,11 +11,39 @@ import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useConfigStore } from '@/stores/config'
 import { usePasswordStore } from '@/stores/password'
+import { appWindow } from '@tauri-apps/api/window'
 
 const configStore = useConfigStore()
 const passwordStore = usePasswordStore()
 
 let idleTimer: any = null
+let saveWindowTimer: any = null
+
+const WINDOW_STATE_KEY = 'window-state'
+
+const saveWindowState = async () => {
+  try {
+    const pos = await appWindow.outerPosition()
+    const size = await appWindow.outerSize()
+    localStorage.setItem(WINDOW_STATE_KEY, JSON.stringify({
+      x: pos.x, y: pos.y,
+      width: size.width, height: size.height
+    }))
+  } catch { /* ignore if window not available */ }
+}
+
+const restoreWindowState = async () => {
+  try {
+    const saved = localStorage.getItem(WINDOW_STATE_KEY)
+    if (!saved) return
+    const { x, y, width, height } = JSON.parse(saved)
+    // 仅在坐标有意义时恢复（避免多显示器场景下窗口跑到屏幕外）
+    if (x > -1000 && y > -1000 && width >= 720 && height >= 540) {
+      await appWindow.setPosition({ x, y })
+      await appWindow.setSize({ width, height })
+    }
+  } catch { /* ignore on first launch */ }
+}
 
 const resetIdleTimer = () => {
   if (idleTimer) clearTimeout(idleTimer)
@@ -31,8 +59,21 @@ const resetIdleTimer = () => {
   }, lockTimeMs)
 }
 
-onMounted(() => resetIdleTimer())
-onUnmounted(() => { if (idleTimer) clearTimeout(idleTimer) })
+onMounted(async () => {
+  resetIdleTimer()
+  await restoreWindowState()
+  // 延迟保存窗口状态（debounce）
+  window.addEventListener('resize', () => {
+    if (saveWindowTimer) clearTimeout(saveWindowTimer)
+    saveWindowTimer = setTimeout(saveWindowState, 1000)
+  })
+})
+
+onUnmounted(() => {
+  if (idleTimer) clearTimeout(idleTimer)
+  if (saveWindowTimer) clearTimeout(saveWindowTimer)
+  saveWindowState()
+})
 </script>
 
 <style>
