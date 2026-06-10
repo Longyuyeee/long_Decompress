@@ -145,6 +145,16 @@ export const useCompressionStore = defineStore('compression', () => {
     }
   }
 
+  const removeFileFromGroup = (groupId: string, filePath: string) => {
+    const group = groups.value.find(g => g.id === groupId)
+    if (!group) return
+    group.files = group.files.filter(f => f.path !== filePath)
+    // 如果组内没有文件了，自动解散
+    if (group.files.length === 0) {
+      groups.value = groups.value.filter(g => g.id !== groupId)
+    }
+  }
+
   return {
     selectedFiles,
     groups,
@@ -161,6 +171,7 @@ export const useCompressionStore = defineStore('compression', () => {
     updateGroupSettings,
     updateGroupOutputPath,
     createGroup,
-    dissolveGroup
+    dissolveGroup,
+    removeFileFromGroup
   }
 })

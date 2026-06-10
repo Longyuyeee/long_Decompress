@@ -362,12 +362,21 @@ const totalPayload = computed(() => {
               
               <div class="space-y-2">
                 <h4 class="text-[8px] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('compress.group_files') }}</h4>
-                <div v-for="file in group.files" :key="file.path" class="text-[10px] text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex items-center justify-between">
-                  <div class="flex items-center gap-2 overflow-hidden">
-                    <i :class="file.isDirectory ? 'pi pi-folder text-primary/60' : 'pi pi-file text-muted/60'" class="text-[9px]"></i>
+                <div v-for="file in group.files" :key="file.path" class="text-[10px] text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex items-center justify-between group/file">
+                  <div class="flex items-center gap-2 overflow-hidden min-w-0">
+                    <i :class="file.isDirectory ? 'pi pi-folder text-primary/60' : 'pi pi-file text-muted/60'" class="text-[9px] shrink-0"></i>
                     <span class="truncate">{{ file.name }}</span>
                   </div>
-                  <span class="opacity-30 italic shrink-0 ml-4">{{ file.path }}</span>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span class="opacity-30 italic ml-2">{{ file.path }}</span>
+                    <button
+                      @click.stop="compressionStore.removeFileFromGroup(group.id, file.path)"
+                      class="w-5 h-5 rounded-md flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover/file:opacity-100 transition-all shrink-0"
+                      title="Remove from group"
+                    >
+                      <i class="pi pi-times text-[9px]"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
