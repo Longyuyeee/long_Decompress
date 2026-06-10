@@ -15,6 +15,7 @@ const tauriCommands = useTauriCommands()
 
 const selectedConflictTaskId = ref<string | null>(null)
 const showConflictModal = ref(false)
+const selectedTaskIds = ref<Set<string>>(new Set())
 const supportedArchiveAccept = '.zip,.7z,.rar,.tar,.tar.gz,.tgz,.tar.bz2,.tbz,.tbz2,.tar.xz,.txz,.gz,.bz2,.xz,.iso'
 const supportedArchiveHint = 'ZIP, 7Z, RAR, TAR, TAR.GZ, TAR.BZ2, TAR.XZ'
 
@@ -82,9 +83,34 @@ const toggleGlobalSubfolder = () => {
   })
 }
 
+const toggleTaskSelection = (taskId: string) => {
+  if (selectedTaskIds.value.has(taskId)) {
+    selectedTaskIds.value.delete(taskId)
+  } else {
+    selectedTaskIds.value.add(taskId)
+  }
+  // trigger reactivity
+  selectedTaskIds.value = new Set(selectedTaskIds.value)
+}
+
+const selectAllPending = () => {
+  const ids = taskStore.tasks.filter(t => t.status === 'pending').map(t => t.id)
+  selectedTaskIds.value = new Set(ids)
+}
+
+const deselectAll = () => {
+  selectedTaskIds.value = new Set()
+}
+
 const startDecompression = async () => {
-  const pendingTasks = taskStore.tasks.filter(t => t.status === 'pending')
+  // 如果有选中的任务，优先处理选中的；否则处理所有 pending 任务
+  const pendingTasks = selectedTaskIds.value.size > 0
+    ? taskStore.tasks.filter(t => selectedTaskIds.value.has(t.id) && t.status === 'pending')
+    : taskStore.tasks.filter(t => t.status === 'pending')
   if (pendingTasks.length === 0) return
+
+  // 启动后清除选择
+  selectedTaskIds.value = new Set()
 
   for (const task of pendingTasks) {
     try {
@@ -182,7 +208,12 @@ taskStore.$subscribe((mutation, state) => {
     <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col mb-6 relative border border-subtle bg-card/40 shadow-2xl">
       <div class="flex-1 overflow-hidden flex flex-col relative">
         <!-- 核心逻辑：有内容时 100% 空间给表格 -->
-        <AeroTable v-if="taskStore.tasks.length > 0" class="flex-1" />
+        <AeroTable v-if="taskStore.tasks.length > 0" class="flex-1"
+          :selectedTaskIds="selectedTaskIds"
+          @toggle-task="toggleTaskSelection"
+          @select-all-pending="selectAllPending"
+          @deselect-all="deselectAll"
+        />
 
         <!-- 空状态：极简居中引导 -->
         <div v-else class="flex-1 flex flex-col items-center justify-center p-20">

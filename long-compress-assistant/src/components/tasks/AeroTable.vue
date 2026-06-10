@@ -4,10 +4,22 @@ import { useTaskStore, type Task } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { open } from '@tauri-apps/api/dialog'
 
+const props = defineProps<{
+  selectedTaskIds?: Set<string>
+}>()
+
+const emit = defineEmits<{
+  'toggle-task': [taskId: string]
+  'select-all-pending': []
+  'deselect-all': []
+}>()
+
 const taskStore = useTaskStore()
 const appStore = useAppStore()
 const expandedTasks = ref<Set<string>>(new Set())
 const showPasswordInput = ref<string | null>(null)
+
+const isSelected = (taskId: string) => props.selectedTaskIds?.has(taskId) ?? false
 
 const toggleExpand = (taskId: string) => {
   if (expandedTasks.value.has(taskId)) {
@@ -96,6 +108,18 @@ const onLeave = (el: any) => {
     <div class="glass-table w-full flex-1 flex flex-col overflow-hidden">
       <!-- 表头 (高度压缩，字体减小) -->
       <div class="table-header sticky top-0 z-20 flex items-center px-6 py-3 border-b border-subtle bg-input/90 backdrop-blur-xl text-dim text-[8px] font-black tracking-[0.15em] uppercase shrink-0">
+        <!-- 复选框列 -->
+        <div class="w-8 shrink-0 flex items-center justify-center">
+          <button
+            v-if="taskStore.tasks.some(t => t.status === 'pending')"
+            class="w-4 h-4 rounded border border-subtle/50 flex items-center justify-center hover:border-primary transition-colors"
+            :class="taskStore.tasks.filter(t => t.status === 'pending').every(t => isSelected(t.id)) ? 'bg-primary border-primary' : 'bg-input/50'"
+            @click.stop="taskStore.tasks.filter(t => t.status === 'pending').every(t => isSelected(t.id)) ? emit('deselect-all') : emit('select-all-pending')"
+            title="Toggle all pending"
+          >
+            <i v-if="taskStore.tasks.filter(t => t.status === 'pending').every(t => isSelected(t.id))" class="pi pi-check text-[7px] text-white"></i>
+          </button>
+        </div>
         <div class="flex-[1.5] min-w-[180px]">{{ appStore.t('decompress.column.name') }}</div>
         <div class="w-60 hidden lg:block">{{ appStore.t('decompress.column.path') }}</div>
         <div class="flex-1 min-w-[180px]">{{ appStore.t('decompress.column.status') }}</div>
@@ -111,6 +135,22 @@ const onLeave = (el: any) => {
           >
             <!-- 状态指示条 (极细) -->
             <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-primary opacity-0 group-hover/row:opacity-100 transition-opacity"></div>
+
+            <!-- 复选框 -->
+            <div class="w-8 shrink-0 flex items-center justify-center" @click.stop>
+              <button
+                v-if="task.status === 'pending'"
+                class="w-4 h-4 rounded border flex items-center justify-center transition-all"
+                :class="isSelected(task.id) ? 'bg-primary border-primary' : 'border-subtle/50 bg-input/50 hover:border-primary'"
+                @click="emit('toggle-task', task.id)"
+              >
+                <i v-if="isSelected(task.id)" class="pi pi-check text-[7px] text-white"></i>
+              </button>
+              <i v-else-if="task.status === 'completed'" class="pi pi-check-circle text-green-400/50 text-[11px]"></i>
+              <i v-else-if="task.status === 'failed'" class="pi pi-exclamation-circle text-red-400/50 text-[11px]"></i>
+              <i v-else-if="task.status === 'cancelled'" class="pi pi-ban text-muted/30 text-[11px]"></i>
+              <div v-else class="w-4 h-4"></div>
+            </div>
 
             <!-- 文件识别区 (极致紧凑) -->
             <div class="flex-[1.5] min-w-[180px] overflow-hidden flex items-center gap-3">
