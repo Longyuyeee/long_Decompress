@@ -1,5 +1,5 @@
 use crate::services::system_service::{SystemService, SystemInfo};
-use tauri::{command, AppHandle};
+use tauri::{command, AppHandle, Manager};
 
 #[cfg(target_os = "windows")]
 use winreg::enums::*;
@@ -79,4 +79,31 @@ pub async fn check_auto_start(app_handle: AppHandle) -> Result<bool, String> {
     {
         Ok(false)
     }
+}
+
+/// 从数据目录加载持久化的应用设置 (JSON)
+#[command]
+pub async fn load_app_settings(app: AppHandle) -> Result<String, String> {
+    let resolver = app.path_resolver();
+    let data_dir = resolver.app_data_dir()
+        .ok_or_else(|| "无法获取数据目录".to_string())?;
+    let settings_path = data_dir.join("app_settings.json");
+    if !settings_path.exists() {
+        return Ok("{}".to_string());
+    }
+    std::fs::read_to_string(&settings_path)
+        .map_err(|e| format!("读取设置文件失败: {}", e))
+}
+
+/// 将应用设置持久化到数据目录 (JSON)
+#[command]
+pub async fn save_app_settings(app: AppHandle, settings_json: String) -> Result<(), String> {
+    let resolver = app.path_resolver();
+    let data_dir = resolver.app_data_dir()
+        .ok_or_else(|| "无法获取数据目录".to_string())?;
+    std::fs::create_dir_all(&data_dir)
+        .map_err(|e| format!("创建数据目录失败: {}", e))?;
+    let settings_path = data_dir.join("app_settings.json");
+    std::fs::write(&settings_path, &settings_json)
+        .map_err(|e| format!("保存设置文件失败: {}", e))
 }

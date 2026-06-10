@@ -96,6 +96,8 @@ fn main() {
             long_compress_assistant::commands::system::get_app_version,
             long_compress_assistant::commands::system::set_auto_start,
             long_compress_assistant::commands::system::check_auto_start,
+            long_compress_assistant::commands::system::load_app_settings,
+            long_compress_assistant::commands::system::save_app_settings,
             long_compress_assistant::commands::system_integration::open_in_explorer,
             long_compress_assistant::commands::encrypted_password::init_encrypted_password_service,
             long_compress_assistant::commands::encrypted_password::list_encrypted_passwords,

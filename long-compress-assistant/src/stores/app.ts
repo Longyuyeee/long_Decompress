@@ -150,10 +150,13 @@ export const useAppStore = defineStore('app', () => {
 
   const saveSettingsToStorage = () => {
     try {
-      localStorage.setItem('app-settings', JSON.stringify(settings.value))
+      const json = JSON.stringify(settings.value)
+      localStorage.setItem('app-settings', json)
       localStorage.setItem('app-theme', theme.value)
       localStorage.setItem('app-language', language.value)
       localStorage.setItem('app-accent', accentColor.value)
+      // 同时持久化到后端数据目录
+      invoke('save_app_settings', { settingsJson: json }).catch(() => {})
     } catch (e) { console.error(e) }
   }
 
@@ -162,13 +165,22 @@ export const useAppStore = defineStore('app', () => {
       const savedSettings = localStorage.getItem('app-settings')
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings)
-        // 关键修复：使用对象展开合并，确保新字段（如 bruteForceWordlists）即使在旧配置中不存在也能有默认值
         settings.value = { ...settings.value, ...parsed }
       }
       theme.value = (localStorage.getItem('app-theme') as any) || 'auto'
       language.value = localStorage.getItem('app-language') || 'zh-CN'
       accentColor.value = localStorage.getItem('app-accent') || '#0ea5e9'
     } catch (e) { console.error(e) }
+    // 如果 localStorage 为空，尝试从后端恢复
+    if (!localStorage.getItem('app-settings')) {
+      invoke<string>('load_app_settings').then(json => {
+        if (json && json !== '{}') {
+          const parsed = JSON.parse(json)
+          settings.value = { ...settings.value, ...parsed }
+          saveSettingsToStorage()
+        }
+      }).catch(() => {})
+    }
   }
 
   loadSettingsFromStorage()
