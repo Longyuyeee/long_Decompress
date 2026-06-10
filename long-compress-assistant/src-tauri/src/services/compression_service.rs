@@ -276,7 +276,7 @@ impl CompressionService {
         }
 
         if options.password.as_deref().is_some_and(|password| !password.is_empty())
-            && !matches!(requested_format.as_str(), "7z" | "rar")
+            && !matches!(requested_format.as_str(), "zip" | "7z" | "rar")
         {
             return Err(CompressionError::UnsupportedEncryption.into());
         }
@@ -1254,10 +1254,6 @@ impl CompressionService {
     }
 
     fn do_compress_zip(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
-            return Err(CompressionError::UnsupportedEncryption.into());
-        }
-
         if !output.to_lowercase().ends_with(".zip") {
             return Err(CompressionError::CompressionFailed(
                 "ZIP compression output path must end with .zip".to_string()
@@ -1266,6 +1262,11 @@ impl CompressionService {
 
         if let Some(parent) = Path::new(output).parent() {
             std::fs::create_dir_all(parent)?;
+        }
+
+        // 密码 ZIP：使用 7z CLI（zip crate 0.6 不支持 AES 加密写入）
+        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
+            return self.do_compress_zip_with_password(window, task_id, sources, output, &options);
         }
 
         let file = File::create(output)?;
@@ -1325,6 +1326,45 @@ impl CompressionService {
             self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(archive_name.clone()), 0, 0);
         }
 
+        Ok(())
+    }
+
+    /// 使用 7z CLI 创建密码保护的 ZIP（zip crate 0.6 不支持 AES 加密写入）
+    fn do_compress_zip_with_password(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: &CompressionOptions) -> Result<()> {
+        let pwd = options.password.as_deref().unwrap_or("");
+        let level = options.level.clamp(1, 9);
+
+        let mut cmd = std::process::Command::new("7z");
+        cmd.arg("a");
+        cmd.arg("-tzip");
+        cmd.arg(format!("-mx{}", level));
+        cmd.arg(format!("-p{}", pwd));
+        cmd.arg("-y");
+        cmd.arg(output);
+
+        for source in sources {
+            self.check_cancellation()?;
+            cmd.arg(source);
+        }
+
+        self.emit_log(window, task_id, "使用 7z 创建加密 ZIP...", TaskLogSeverity::Info);
+
+        let output_result = cmd.output()
+            .map_err(|err| CompressionError::CompressionFailed(
+                format!("Failed to run 7z for encrypted ZIP: {}", err)
+            ))?;
+
+        if !output_result.status.success() {
+            let stderr = String::from_utf8_lossy(&output_result.stderr);
+            let stdout = String::from_utf8_lossy(&output_result.stdout);
+            let message = if stderr.trim().is_empty() { stdout.trim() } else { stderr.trim() };
+            return Err(CompressionError::CompressionFailed(
+                format!("7z encrypted ZIP compression failed: {}", message)
+            ).into());
+        }
+
+        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
+        self.emit_log(window, task_id, "加密 ZIP 创建完成", TaskLogSeverity::Success);
         Ok(())
     }
 

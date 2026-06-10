@@ -94,13 +94,13 @@ fn test_compression_validation_rules() {
     );
     assert!(multi.is_err(), "多文件 gzip 应被拒绝");
 
-    // ZIP 不支持密码压缩
+    // ZIP 现在支持密码压缩（通过 7z CLI）
     let zip_pwd = CompressionService::validate_compression_request(
         &["a.txt".to_string()],
         "out.zip",
         &CompressionOptions { format: Some("zip".to_string()), password: Some("secret".to_string()), ..Default::default() }
     );
-    assert!(zip_pwd.is_err(), "ZIP 密码压缩应被拒绝");
+    assert!(zip_pwd.is_ok(), "ZIP 密码压缩应被支持（通过 7z CLI）");
 
     // 7Z 应支持密码压缩
     let sevenz_pwd = CompressionService::validate_compression_request(

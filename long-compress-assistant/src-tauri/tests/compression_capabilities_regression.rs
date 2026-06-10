@@ -57,7 +57,7 @@ fn validates_single_file_stream_formats_need_one_regular_file() {
 }
 
 #[test]
-fn rejects_unsupported_password_formats_before_compression() {
+fn validates_password_support_per_format() {
     let temp = tempdir().expect("temp dir");
     let source_file = temp.path().join("source.txt");
     fs::write(&source_file, b"source").expect("source fixture");
@@ -71,12 +71,15 @@ fn rejects_unsupported_password_formats_before_compression() {
 
     let mut zip_options = compression_options(Some("zip"));
     zip_options.password = Some("secret".to_string());
-    assert!(CompressionService::validate_compression_request(
-        &[source.clone()],
-        &output,
-        &zip_options
-    )
-    .is_err());
+    // ZIP 现在支持密码（通过 7z CLI）
+    assert_eq!(
+        CompressionService::validate_compression_request(
+            &[source.clone()],
+            &output,
+            &zip_options
+        ).expect("ZIP 密码压缩应被支持"),
+        "zip"
+    );
 
     let mut seven_zip_options = compression_options(Some("7z"));
     seven_zip_options.password = Some("secret".to_string());

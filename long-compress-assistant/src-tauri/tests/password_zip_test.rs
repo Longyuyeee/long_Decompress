@@ -35,7 +35,7 @@ fn test_zip_rejects_password_compression() {
         "output.zip",
         &options,
     );
-    assert!(result.is_err(), "ZIP 不支持密码压缩");
+    assert!(result.is_ok(), "ZIP 现在支持密码压缩（通过 7z CLI）");
 }
 
 /// 验证 validate_compression_request 允许 7Z 密码压缩

@@ -63,7 +63,7 @@ const extensionForFormat = (format: string) => {
 }
 
 const singleFileStreamFormats = new Set(['gz', 'bz2', 'xz'])
-const passwordSupportedFormats = new Set(['7z', 'rar'])
+const passwordSupportedFormats = new Set(['zip', '7z', 'rar'])
 
 const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {
   return files.length === 1 && !files[0]?.isDirectory
