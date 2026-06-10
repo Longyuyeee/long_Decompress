@@ -61,6 +61,7 @@ pub enum ArchiveFormat {
     Gzip,
     Bzip2,
     Xz,
+    Zstd,
     Iso,
     /// 7z CLI 支持的杂项格式（CAB, LZH, ARJ, DMG, WIM, VHD, IMG 等）
     Universal,
@@ -89,6 +90,10 @@ impl ArchiveFormat {
         }
         if header.len() >= 6 && &header[0..6] == b"\xFD7zXZ\x00" {
             return ArchiveFormat::Xz;
+        }
+        // Zstandard: 0x28 0xB5 0x2F 0xFD
+        if header.len() >= 4 && &header[0..4] == &[0x28, 0xB5, 0x2F, 0xFD] {
+            return ArchiveFormat::Zstd;
         }
         ArchiveFormat::Unknown
     }
@@ -353,6 +358,8 @@ impl CompressionService {
                 "gz" => service.do_compress_gz(&window, &task_id, &source_files, &output_path, options),
                 "bz2" => service.do_compress_bz2(&window, &task_id, &source_files, &output_path, options),
                 "xz" => service.do_compress_xz(&window, &task_id, &source_files, &output_path, options),
+                "zst" | "zstd" => service.do_compress_zstd(&window, &task_id, &source_files, &output_path, options),
+                "tar.zst" | "tzst" => service.do_compress_tar_zstd(&window, &task_id, &source_files, &output_path, options),
                 _ => Err(CompressionError::CompressionFailed(format!(
                     "Unsupported compression format '{}'.",
                     requested_format
@@ -528,6 +535,7 @@ impl CompressionService {
                 "gz" | "tgz" => ArchiveFormat::Gzip,
                 "bz2" => ArchiveFormat::Bzip2,
                 "xz" => ArchiveFormat::Xz,
+                "zst" | "zstd" | "tzst" => ArchiveFormat::Zstd,
                 "iso" | "img" => ArchiveFormat::Iso,
                 // 7z CLI 原生支持的杂项格式
                 "cab" | "lzh" | "lha" | "arj" | "dmg" | "wim" | "vhd" | "vhdx" | "chm"
@@ -675,7 +683,7 @@ impl CompressionService {
                     }
                 }).await?
             },
-            ArchiveFormat::Iso | ArchiveFormat::Universal => {
+            ArchiveFormat::Zstd | ArchiveFormat::Iso | ArchiveFormat::Universal => {
                 let fmt_name = format!("{:?}", format);
                 service.universal_engine.extract_with_progress(
                     Path::new(&file_path),
@@ -1375,6 +1383,59 @@ impl CompressionService {
 
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
         self.emit_log(window, task_id, "加密 ZIP 创建完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    /// 使用 7z CLI 进行 Zstd 压缩
+    fn do_compress_zstd(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".zst")?;
+        self.emit_log(window, task_id, "使用 7z 进行 Zstd 压缩...", TaskLogSeverity::Info);
+
+        let mut cmd = std::process::Command::new("7z");
+        cmd.arg("a");
+        cmd.arg("-tzstd");
+        cmd.arg(format!("-mx{}", options.level.clamp(1, 9)));
+        cmd.arg("-y");
+        cmd.arg(output);
+        cmd.arg(source);
+
+        let output_result = cmd.output()
+            .map_err(|err| CompressionError::CompressionFailed(format!("Failed to run 7z for Zstd: {}", err)))?;
+        if !output_result.status.success() {
+            let stderr = String::from_utf8_lossy(&output_result.stderr);
+            return Err(CompressionError::CompressionFailed(format!("Zstd compression failed: {}", stderr)).into());
+        }
+
+        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
+        self.emit_log(window, task_id, "Zstd 压缩完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    /// 使用 7z CLI 进行 tar.zst 压缩
+    fn do_compress_tar_zstd(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        Self::ensure_tar_compression_supported(output, &options, &[".tar.zst", ".tzst"])?;
+        self.emit_log(window, task_id, "使用 7z 进行 tar.zst 压缩...", TaskLogSeverity::Info);
+
+        let mut cmd = std::process::Command::new("7z");
+        cmd.arg("a");
+        cmd.arg("-ttar");
+        cmd.arg(format!("-mx{}", options.level.clamp(1, 9)));
+        cmd.arg("-y");
+        cmd.arg(output);
+        for source in sources {
+            self.check_cancellation()?;
+            cmd.arg(source);
+        }
+
+        let output_result = cmd.output()
+            .map_err(|err| CompressionError::CompressionFailed(format!("Failed to run 7z for tar.zst: {}", err)))?;
+        if !output_result.status.success() {
+            let stderr = String::from_utf8_lossy(&output_result.stderr);
+            return Err(CompressionError::CompressionFailed(format!("tar.zst compression failed: {}", stderr)).into());
+        }
+
+        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
+        self.emit_log(window, task_id, "tar.zst 压缩完成", TaskLogSeverity::Success);
         Ok(())
     }
 
