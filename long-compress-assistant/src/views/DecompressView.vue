@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useTaskStore } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
+import { extractErrorMessage } from '@/utils'
 import { open } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
@@ -105,7 +106,7 @@ const startDecompression = async () => {
       // 如果任务已被 password-required 事件标记为待输入密码，不覆盖状态
       if (!task.passwordRequired) {
         taskStore.updateTaskStatus(task.id, 'failed')
-        appStore.setError(`${appStore.t('common.error')}: ${error}`)
+        appStore.setError(`${appStore.t('common.error')}: ${extractErrorMessage(error)}`)
       }
     }
   }

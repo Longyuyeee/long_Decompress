@@ -50,6 +50,18 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 /**
+ * 从任意错误对象提取可读消息
+ */
+export const extractErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message)
+  }
+  return String(error)
+}
+
+/**
  * 生成唯一ID
  */
 export const generateId = (): string => {

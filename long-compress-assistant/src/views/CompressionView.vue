@@ -4,6 +4,7 @@ import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useTaskStore } from '@/stores/task'
+import { extractErrorMessage } from '@/utils'
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 
@@ -208,7 +209,7 @@ const handleCompress = async () => {
       taskStore.updateTaskStatus(taskId, 'completed')
     } catch (error) {
       taskStore.updateTaskStatus(taskId, 'failed')
-      appStore.setError(`${appStore.t('common.error')}: ${error}`)
+      appStore.setError(`${appStore.t('common.error')}: ${extractErrorMessage(error)}`)
       return
     }
   }
