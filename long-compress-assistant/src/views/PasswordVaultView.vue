@@ -2,10 +2,12 @@
 import { ref, onMounted, computed } from 'vue'
 import { usePasswordStore } from '@/stores/password'
 import { useAppStore } from '@/stores/app'
+import { useTauriCommands } from '@/composables/useTauriCommands'
 import PasswordEntryModal from '@/components/passwords/PasswordEntryModal.vue'
 
 const passwordStore = usePasswordStore()
 const appStore = useAppStore()
+const tauriCommands = useTauriCommands()
 
 const showAddModal = ref(false)
 const showHistoryModal = ref(false)
@@ -68,11 +70,12 @@ const confirmDelete = async () => {
 }
 
 const handleExport = async () => {
-  console.log('Exporting passwords...')
+  await tauriCommands.exportPasswords()
 }
 
 const handleImport = async () => {
-  console.log('Importing passwords...')
+  await tauriCommands.importPasswords()
+  await passwordStore.fetchAllData()
 }
 
 const confirmClearAll = async () => {

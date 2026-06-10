@@ -190,8 +190,11 @@ const formatDate = (dateStr?: string) => {
 }
 
 const openInExplorer = async (path: string) => {
-  // TODO: 调用 Tauri 开启资源管理器命令
-  console.log('Opening in explorer:', path)
+  try {
+    await invoke('open_in_explorer', { path })
+  } catch (e) {
+    console.error('Failed to open in explorer:', e)
+  }
 }
 </script>
 

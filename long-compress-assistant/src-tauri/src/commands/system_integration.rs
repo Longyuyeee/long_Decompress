@@ -3,7 +3,7 @@ use crate::system_integration::{
     PermissionManager, PermissionType, PermissionStatus,
     IntegrationType, IntegrationStatus
 };
-use tauri::command;
+use tauri::{command, AppHandle, Manager};
 
 #[command]
 pub async fn send_notification(request: NotificationRequest) -> Result<(), String> {
@@ -37,4 +37,19 @@ pub async fn check_system_integration() -> Result<Vec<(IntegrationType, Integrat
         (IntegrationType::Notification, IntegrationStatus::Running),
         (IntegrationType::Permission, IntegrationStatus::Initialized),
     ])
+}
+
+/// 在系统文件管理器中打开指定路径
+#[command]
+pub fn open_in_explorer(app: AppHandle, path: String) -> Result<(), String> {
+    let path = if std::path::Path::new(&path).is_file() {
+        std::path::Path::new(&path)
+            .parent()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or(path)
+    } else {
+        path
+    };
+    tauri::api::shell::open(&app.shell_scope(), &path, None)
+        .map_err(|e| e.to_string())
 }

@@ -3,6 +3,7 @@ import { message, open, save } from '@tauri-apps/api/dialog'
 import { fs } from '@tauri-apps/api'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
+import { extractErrorMessage } from '@/utils'
 
 export interface DecompressOptions {
   outputPath: string
@@ -359,6 +360,72 @@ export const useTauriCommands = () => {
   /**
    * 取消压缩/解压任务
    */
+  /**
+   * 在系统文件管理器中打开路径
+   */
+  /**
+   * 导出密码到JSON文件
+   */
+  const exportPasswords = async () => {
+    try {
+      const encrypted = await invoke<any[]>('list_encrypted_passwords', {})
+      if (!encrypted || encrypted.length === 0) {
+        await message('No passwords to export', { title: 'Export', type: 'info' })
+        return
+      }
+      const savePath = await save({
+        defaultPath: 'password_vault_export.json',
+        filters: [{ name: 'JSON', extensions: ['json'] }]
+      })
+      if (!savePath) return
+      const json = JSON.stringify(encrypted, null, 2)
+      await fs.writeTextFile(savePath, json)
+      await message(`Exported ${encrypted.length} passwords`, { title: 'Export', type: 'info' })
+    } catch (error) {
+      await message(`Export failed: ${extractErrorMessage(error)}`, { type: 'error' })
+    }
+  }
+
+  /**
+   * 从JSON文件导入密码
+   */
+  const importPasswords = async () => {
+    try {
+      const selectedPath = await open({
+        multiple: false,
+        filters: [{ name: 'JSON文件', extensions: ['json'] }]
+      })
+      if (!selectedPath) return
+      const filePath = Array.isArray(selectedPath) ? selectedPath[0] : selectedPath
+      const content = await fs.readTextFile(filePath)
+      const entries = JSON.parse(content)
+      if (!Array.isArray(entries)) throw new Error('Invalid format: expected array of entries')
+      let imported = 0
+      for (const entry of entries) {
+        if (!entry.name || !entry.password) continue
+        await invoke('add_encrypted_password', {
+          name: entry.name,
+          password: entry.password,
+          notes: entry.notes || '',
+          category: entry.category || 'Other',
+          tags: entry.tags || []
+        })
+        imported++
+      }
+      await message(`Imported ${imported} passwords`, { title: 'Import', type: 'info' })
+    } catch (error) {
+      await message(`Import failed: ${extractErrorMessage(error)}`, { type: 'error' })
+    }
+  }
+
+  const openInExplorer = async (path: string) => {
+    try {
+      await invoke('open_in_explorer', { path })
+    } catch (error) {
+      console.error('Failed to open in explorer:', error)
+    }
+  }
+
   const cancelCompression = async (taskId: string) => {
     try {
       await invoke('cancel_compression', { taskId })
@@ -383,6 +450,9 @@ export const useTauriCommands = () => {
     getSystemInfo,
     showMessage,
     saveFile,
+    exportPasswords,
+    importPasswords,
+    openInExplorer,
     cancelCompression
   }
 }
