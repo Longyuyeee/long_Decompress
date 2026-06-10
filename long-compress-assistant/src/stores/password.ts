@@ -165,16 +165,17 @@ export const usePasswordStore = defineStore('password', () => {
   }
 
   const autoInitialize = async () => {
-    const defaultMaster = 'long-decompress-default-key'
     try {
+      // 获取或创建每安装实例的随机主密钥（不再使用硬编码默认密码）
+      const masterKey = await invoke<string>('get_or_create_master_key')
       // 先尝试解锁
-      const success = await invoke<boolean>('unlock_encrypted_password_service', { masterPassword: defaultMaster })
+      const success = await invoke<boolean>('unlock_encrypted_password_service', { masterPassword: masterKey })
       if (success) {
         isUnlocked.value = true
         await fetchAllData()
       } else {
         // 解锁失败可能是还没初始化，尝试初始化
-        await invoke('init_encrypted_password_service', { masterPassword: defaultMaster })
+        await invoke('init_encrypted_password_service', { masterPassword: masterKey })
         isUnlocked.value = true
         await fetchAllData()
       }

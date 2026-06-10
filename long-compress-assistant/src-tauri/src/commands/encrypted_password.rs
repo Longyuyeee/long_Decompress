@@ -2,7 +2,7 @@
 use crate::services::encrypted_password_service::{EncryptedPasswordService, PasswordGroupService};
 use crate::models::password::{PasswordEntry, PasswordCategory, CustomField, CustomFieldType, PasswordGroup};
 use crate::services::password_strength_service::{PasswordAuditResult, PasswordGeneratorOptions, PasswordImportExportOptions, ImportExportFormat};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Manager, State, command};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use std::path::PathBuf;
@@ -540,6 +540,18 @@ impl From<PasswordEntryRequest> for PasswordEntry {
 
         entry
     }
+}
+
+/// 获取或创建每安装实例的随机主密钥。
+/// 第一次调用时生成一个新密钥并存储到 data_dir/installation.key。
+/// 后续调用返回已存储的密钥。
+/// 这取代了硬编码的默认密码。
+#[command]
+pub async fn get_or_create_master_key(app: AppHandle) -> Result<String, String> {
+    let state: State<'_, EncryptedPasswordServiceState> = app.state();
+    EncryptedPasswordService::get_or_create_master_key(&state.data_dir)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 /// 从请求创建密码组

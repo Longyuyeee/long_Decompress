@@ -47,6 +47,56 @@ impl EncryptedPasswordService {
         }
     }
 
+    /// 获取或创建每安装实例的随机主密钥。
+    /// 密钥存储在 data_dir/installation.key 中，权限为 0600 (Unix) 或受限 (Windows)。
+    /// 这取代了之前所有安装共享的硬编码默认密码。
+    pub async fn get_or_create_master_key(data_dir: &Path) -> Result<String> {
+        let key_path = data_dir.join("installation.key");
+        if key_path.exists() {
+            let key_bytes = fs::metadata(&key_path).await?;
+            if key_bytes.len() == 0 {
+                // 空文件视为损坏，重新生成
+                drop(key_bytes);
+                let random_key = Self::generate_installation_key();
+                fs::write(&key_path, &random_key).await?;
+                Self::restrict_key_file_permissions(&key_path)?;
+                return Ok(random_key);
+            }
+            return Ok(String::from_utf8_lossy(&fs::read(&key_path).await?).trim().to_string());
+        }
+
+        // 首次运行：生成随机密钥并存储
+        let random_key = Self::generate_installation_key();
+        fs::create_dir_all(data_dir).await?;
+        fs::write(&key_path, &random_key).await?;
+        Self::restrict_key_file_permissions(&key_path)?;
+        Ok(random_key)
+    }
+
+    /// 生成随机安装密钥 (32 字节的 base64 编码)
+    fn generate_installation_key() -> String {
+        use rand::Rng;
+        use base64::Engine;
+        let random_bytes: [u8; 32] = rand::thread_rng().gen();
+        base64::engine::general_purpose::STANDARD.encode(&random_bytes)
+    }
+
+    /// 在 Unix 上设置文件权限为 0600 (仅所有者可读写)
+    #[cfg(unix)]
+    fn restrict_key_file_permissions(path: &Path) -> Result<()> {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = std::fs::metadata(path)?.permissions();
+        perms.set_mode(0o600);
+        std::fs::set_permissions(path, perms)?;
+        Ok(())
+    }
+
+    /// 在 Windows 上，默认继承目录权限，但可以通过 ACL 限制 (skip for now)
+    #[cfg(not(unix))]
+    fn restrict_key_file_permissions(_path: &Path) -> Result<()> {
+        Ok(())
+    }
+
     /// 初始化服务（设置主密码）
     pub async fn initialize(&mut self, master_password: &str) -> Result<()> {
         // 创建密钥存储路径

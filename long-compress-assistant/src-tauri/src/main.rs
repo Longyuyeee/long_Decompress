@@ -105,6 +105,7 @@ fn main() {
             long_compress_assistant::commands::encrypted_password::search_encrypted_passwords,
             long_compress_assistant::commands::encrypted_password::is_encrypted_password_service_unlocked,
             long_compress_assistant::commands::encrypted_password::unlock_encrypted_password_service,
+            long_compress_assistant::commands::encrypted_password::get_or_create_master_key,
             long_compress_assistant::commands::encrypted_password::lock_encrypted_password_service,
             long_compress_assistant::commands::encrypted_password::clear_encrypted_passwords,
             long_compress_assistant::commands::encrypted_password::list_password_groups,
