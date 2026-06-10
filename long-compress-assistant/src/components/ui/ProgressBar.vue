@@ -1,6 +1,11 @@
 ﻿<template>
-  <div :class="['progress-bar-container', className]">
-    <!-- 鏍囩 -->
+  <div :class="['progress-bar-container', className]"
+       role="progressbar"
+       :aria-valuenow="value"
+       aria-valuemin="0"
+       aria-valuemax="100"
+       :aria-label="label || 'Progress'">
+    <!-- 标签 -->
     <div v-if="showLabel" class="flex justify-between mb-2">
       <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
         <slot name="label">{{ label }}</slot>
@@ -10,9 +15,9 @@
       </span>
     </div>
 
-    <!-- 杩涘害鏉?-->
+    <!-- 进度条 -->
     <div class="relative">
-      <!-- 鑳屾櫙杞ㄩ亾 -->
+      <!-- 背景轨道 -->
       <div
         :class="[
           'progress-bar-track',

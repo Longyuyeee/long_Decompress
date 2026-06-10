@@ -156,23 +156,29 @@ const handleFiles = (files: File[]) => {
 </script>
 
 <template>
-  <div 
+  <div
     class="drop-area group"
-    :class="{ 
-      'is-dragging': isDragging, 
-      'p-12 rounded-[2.5rem]': !compact, 
-      'p-3 rounded-xl border-dashed opacity-40 hover:opacity-100': compact 
+    :class="{
+      'is-dragging': isDragging,
+      'p-12 rounded-[2.5rem]': !compact,
+      'p-3 rounded-xl border-dashed opacity-40 hover:opacity-100': compact
     }"
+    role="button"
+    :aria-label="`Drop ${props.mode === 'folder' ? 'folder' : 'files'} here or click to browse`"
+    tabindex="0"
     @dragover="onDragOver"
     @dragleave="onDragLeave"
     @drop="onDrop"
     @click="triggerFileInput"
+    @keydown.enter="triggerFileInput"
+    @keydown.space.prevent="triggerFileInput"
   >
-    <input 
-      type="file" 
-      ref="fileInput" 
-      class="hidden" 
-      multiple 
+    <input
+      type="file"
+      ref="fileInput"
+      class="hidden"
+      aria-hidden="true"
+      multiple
       :accept="props.accept"
       @change="onFileChange"
     >

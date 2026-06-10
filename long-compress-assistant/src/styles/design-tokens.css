@@ -47,8 +47,8 @@
   --bg-modal: #1a0836;
   --border-subtle: rgba(255, 0, 255, 0.1); /* 霓虹边框 */
   --text-base: #00f2ff; /* 荧光青 */
-  --text-muted: #ff00ff; /* 荧光粉 */
-  --text-dim: #4e1a77;
+  --text-muted: #f0abfc; /* 浅粉 - 提高对比度至 WCAG AA */
+  --text-dim: #a78bfa; /* 浅紫 - 提高可读性 */
   --shadow-base: 0 0 30px rgba(0, 242, 255, 0.1);
   --dynamic-accent: #ff00ff !important; /* 强制强调色为粉色 */
 }

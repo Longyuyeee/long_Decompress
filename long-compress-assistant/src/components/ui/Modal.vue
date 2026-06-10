@@ -1,13 +1,15 @@
 <template>
   <Transition name="fade">
-    <div v-if="visible" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+    <div v-if="visible" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" :aria-labelledby="title ? 'modal-title' : undefined">
       <div class="fixed inset-0 bg-black/60 transition-opacity" @click="handleBackdropClick"></div>
 
       <div class="flex min-h-full items-center justify-center p-4 text-center">
         <Transition name="pop">
           <div
-            class="relative w-full transform overflow-hidden rounded-[2rem] bg-modal border border-subtle text-left shadow-2xl transition-all"
+            ref="modalContent"
+            class="relative w-full transform overflow-hidden rounded-[2rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
             :class="sizeClasses"
+            tabindex="-1"
           >
             <button
               v-if="showCloseButton"
@@ -23,7 +25,7 @@
                    <i :class="[icon, 'text-primary']"></i>
                 </div>
                 <div>
-                  <h3 class="text-lg font-black text-content tracking-tight leading-none mb-1">
+                  <h3 id="modal-title" class="text-lg font-black text-content tracking-tight leading-none mb-1">
                     <slot name="title">{{ title }}</slot>
                   </h3>
                   <p v-if="description" class="text-[10px] text-muted font-bold uppercase tracking-widest">
@@ -58,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 
 export interface Props {
   visible: boolean
@@ -86,6 +88,16 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits(['update:visible', 'close', 'cancel', 'confirm'])
+const modalContent = ref<HTMLElement | null>(null)
+
+// 打开模态时自动聚焦到内容区域
+watch(() => props.visible, (isVisible) => {
+  if (isVisible) {
+    setTimeout(() => {
+      modalContent.value?.focus()
+    }, 100)
+  }
+})
 
 const sizeClasses = computed(() => {
   const classes: Record<string, string> = {
