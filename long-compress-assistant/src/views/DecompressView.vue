@@ -16,8 +16,8 @@ const tauriCommands = useTauriCommands()
 const selectedConflictTaskId = ref<string | null>(null)
 const showConflictModal = ref(false)
 const selectedTaskIds = ref<Set<string>>(new Set())
-const supportedArchiveAccept = '.zip,.7z,.rar,.tar,.tar.gz,.tgz,.tar.bz2,.tbz,.tbz2,.tar.xz,.txz,.gz,.bz2,.xz,.iso'
-const supportedArchiveHint = 'ZIP, 7Z, RAR, TAR, TAR.GZ, TAR.BZ2, TAR.XZ'
+const supportedArchiveAccept = '.zip,.7z,.rar,.tar,.tar.gz,.tgz,.tar.bz2,.tbz,.tbz2,.tar.xz,.txz,.gz,.bz2,.xz,.iso,.img,.cab,.lzh,.lha,.arj,.dmg,.wim,.vhd,.vhdx,.chm'
+const supportedArchiveHint = 'ZIP, 7Z, RAR, TAR, GZ, BZ2, XZ, ISO, CAB, LZH, ARJ, DMG, WIM + more'
 
 // 全局配置状态
 const globalOutputPath = ref('')
@@ -226,7 +226,7 @@ taskStore.$subscribe((mutation, state) => {
               {{ appStore.t('app.tagline') }}
             </p>
             <div class="flex flex-wrap justify-center gap-2 pt-2">
-              <span v-for="fmt in ['ZIP', '7Z', 'RAR', 'TAR.GZ', 'BZ2', 'XZ', 'ISO']" :key="fmt"
+              <span v-for="fmt in ['ZIP', '7Z', 'RAR', 'TAR', 'TAR.GZ', 'ISO', 'CAB', 'DMG']" :key="fmt"
                     class="text-[9px] font-mono font-bold text-dim bg-input/50 border border-subtle/30 rounded-md px-2 py-0.5">
                 {{ fmt }}
               </span>

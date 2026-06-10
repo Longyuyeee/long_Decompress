@@ -61,6 +61,9 @@ pub enum ArchiveFormat {
     Gzip,
     Bzip2,
     Xz,
+    Iso,
+    /// 7z CLI 支持的杂项格式（CAB, LZH, ARJ, DMG, WIM, VHD, IMG 等）
+    Universal,
     Unknown,
 }
 
@@ -529,6 +532,10 @@ impl CompressionService {
                 "gz" | "tgz" => ArchiveFormat::Gzip,
                 "bz2" => ArchiveFormat::Bzip2,
                 "xz" => ArchiveFormat::Xz,
+                "iso" | "img" => ArchiveFormat::Iso,
+                // 7z CLI 原生支持的杂项格式
+                "cab" | "lzh" | "lha" | "arj" | "dmg" | "wim" | "vhd" | "vhdx" | "chm"
+                    => ArchiveFormat::Universal,
                 _ => ArchiveFormat::Unknown,
             };
             if format != ArchiveFormat::Unknown {
@@ -671,6 +678,18 @@ impl CompressionService {
                         srv.do_extract_xz(&w, &t_id, &f_path, &o_dir, &opts)
                     }
                 }).await?
+            },
+            ArchiveFormat::Iso | ArchiveFormat::Universal => {
+                let fmt_name = format!("{:?}", format);
+                service.universal_engine.extract_with_progress(
+                    Path::new(&file_path),
+                    &out_dir,
+                    final_password.as_deref(),
+                    options.overwrite_existing,
+                    on_progress,
+                    on_log,
+                    service.cancellation_flag.clone()
+                ).await.map_err(|e| anyhow::anyhow!("{}提取失败: {}", fmt_name, e))
             },
             ArchiveFormat::Unknown => {
                 match ext.as_str() {

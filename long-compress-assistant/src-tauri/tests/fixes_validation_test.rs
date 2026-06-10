@@ -118,6 +118,30 @@ fn test_universal_engine_overwrite_modes() {
     assert_eq!(UniversalCliEngine::overwrite_mode_arg(true), "-aoa");
 }
 
+/// 验证新扩展格式的魔术字节检测
+#[test]
+fn test_format_detection_from_magic() {
+    use long_compress_assistant::services::compression_service::ArchiveFormat;
+
+    // ZIP: PK\x03\x04
+    assert_eq!(ArchiveFormat::from_magic(b"PK\x03\x04"), ArchiveFormat::Zip);
+    // 7Z: 7z\xBC\xAF\x27\x1C
+    let sevenz_header = [0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C];
+    assert_eq!(ArchiveFormat::from_magic(&sevenz_header), ArchiveFormat::SevenZip);
+    // RAR 4: Rar!\x1a\x07\x00
+    let rar4_header = [b'R', b'a', b'r', b'!', 0x1A, 0x07, 0x00];
+    assert_eq!(ArchiveFormat::from_magic(&rar4_header), ArchiveFormat::Rar);
+    // GZ: \x1F\x8B
+    assert_eq!(ArchiveFormat::from_magic(b"\x1F\x8B"), ArchiveFormat::Gzip);
+    // BZ2: BZh
+    assert_eq!(ArchiveFormat::from_magic(b"BZh"), ArchiveFormat::Bzip2);
+    // XZ: \xFD7zXZ\x00
+    let xz_header = [0xFD, b'7', b'z', b'X', b'Z', 0x00];
+    assert_eq!(ArchiveFormat::from_magic(&xz_header), ArchiveFormat::Xz);
+    // Random data → Unknown
+    assert_eq!(ArchiveFormat::from_magic(b"hello world"), ArchiveFormat::Unknown);
+}
+
 /// 验证压缩完成后源文件的清理逻辑
 #[test]
 fn test_removable_sources_logic() {
