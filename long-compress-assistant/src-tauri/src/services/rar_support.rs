@@ -527,10 +527,10 @@ impl RarSupportService {
 
     /// 循环尝试一组密码
     pub async fn attempt_passwords(&self, rar_path: &Path, passwords: &[String]) -> Option<String> {
-        for pwd in passwords {
-            log::debug!("正在尝试密码: {}", pwd);
+        for (idx, pwd) in passwords.iter().enumerate() {
+            log::debug!("尝试密码本第 {} 个密码 (长度: {} 字符)", idx + 1, pwd.len());
             if self.test_rar_password(rar_path, pwd).await {
-                log::info!("密码匹配成功: {}", pwd);
+                log::info!("密码匹配成功 (第 {} 个, 长度: {} 字符)", idx + 1, pwd.len());
                 return Some(pwd.clone());
             }
         }

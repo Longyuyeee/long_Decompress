@@ -68,13 +68,7 @@ impl PasswordAttemptService {
 
         // 尝试每个密码
         for (index, (password, entry)) in passwords.iter().enumerate() {
-            log::debug!("尝试第 {} 个密码: {}...", index + 1,
-                if password.len() > 3 {
-                    format!("{}...", &password[0..3])
-                } else {
-                    "***".to_string()
-                }
-            );
+            log::debug!("尝试第 {} 个密码 (长度: {} 字符)", index + 1, password.len());
 
             // 这里应该调用实际的ZIP解压功能
             // 暂时模拟解压尝试
