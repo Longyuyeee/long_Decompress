@@ -20,6 +20,17 @@ impl UniversalCliEngine {
         if overwrite_existing { "-aoa" } else { "-aou" }
     }
 
+    /// 共享辅助：运行 7z 命令并返回输出
+    async fn run_7z_command(args: &[String]) -> Result<std::process::Output> {
+        let cmd = Self::get_7z_command()
+            .ok_or_else(|| anyhow::anyhow!("7z not found"))?;
+        Command::new(&cmd)
+            .args(args)
+            .output()
+            .await
+            .map_err(|e| anyhow::anyhow!("7z command failed: {}", e))
+    }
+
     /// 检查系统中是否安装了 7z 或 7za
     fn get_7z_command() -> Option<String> {
         // 1. 尝试环境变量中的 7z
@@ -64,86 +75,72 @@ impl UniversalCliEngine {
 
     /// 列出归档文件中的内容条目（通过 7z CLI 的 l 命令）
     pub async fn list_contents(file_path: &Path, password: Option<&str>) -> Result<Vec<String>> {
-        let cmd = Self::get_7z_command()
-            .ok_or_else(|| anyhow::anyhow!("7z not found"))?;
-
-        let mut command = Command::new(&cmd);
-        command.arg("l").arg("-slt").arg("-ba");
+        let mut args = vec!["l".to_string(), "-slt".to_string(), "-ba".to_string()];
         if let Some(pwd) = password {
-            command.arg(format!("-p{}", pwd));
+            args.push(format!("-p{}", pwd));
         }
-        command.arg(file_path);
+        args.push(file_path.to_string_lossy().to_string());
 
-        let output = command.output().await
-            .map_err(|e| anyhow::anyhow!("Failed to list archive contents: {}", e))?;
+        let output = Self::run_7z_command(&args).await?;
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let mut entries = Vec::new();
+        let entries: Vec<String> = stdout.lines()
+            .filter_map(|line| {
+                line.strip_prefix("Path = ")
+                    .map(|p| p.trim().to_string())
+                    .filter(|p| !p.is_empty())
+            })
+            .collect();
 
-        for line in stdout.lines() {
-            if let Some(path) = line.strip_prefix("Path = ") {
-                if !path.trim().is_empty() {
-                    entries.push(path.trim().to_string());
-                }
-            }
+        if !entries.is_empty() {
+            return Ok(entries);
         }
 
-        if entries.is_empty() {
-            for line in stdout.lines() {
-                let trimmed = line.trim();
-                if trimmed.starts_with("---") || trimmed.starts_with("Date") || trimmed.is_empty() || trimmed.contains("files, ") {
-                    continue;
-                }
-                let parts: Vec<&str> = trimmed.split_whitespace().collect();
-                if parts.len() >= 6 {
-                    let name = parts[parts.len() - 1];
-                    if !name.starts_with("---") && name != "Name" {
-                        entries.push(name.to_string());
-                    }
-                }
-            }
-        }
-
-        Ok(entries)
+        // 回退：解析普通列表模式的最后列
+        Ok(stdout.lines()
+            .filter(|line| {
+                let t = line.trim();
+                !t.starts_with("---") && !t.starts_with("Date") && !t.is_empty() && !t.contains("files, ")
+            })
+            .filter_map(|line| {
+                let parts: Vec<&str> = line.trim().split_whitespace().collect();
+                (parts.len() >= 6).then(|| {
+                    let name = parts.last().unwrap();
+                    name.to_string()
+                })
+            })
+            .filter(|name| !name.starts_with("---") && name != "Name")
+            .collect())
     }
 
     /// 检测归档文件的完整性（通过 7z CLI 的 t 命令）
     pub async fn test_integrity(file_path: &Path, password: Option<&str>) -> Result<()> {
-        let cmd = Self::get_7z_command()
-            .ok_or_else(|| anyhow::anyhow!("7z not found"))?;
-
-        let mut command = Command::new(&cmd);
-        command.arg("t");
+        let mut args = vec!["t".to_string()];
         if let Some(pwd) = password {
-            command.arg(format!("-p{}", pwd));
+            args.push(format!("-p{}", pwd));
         }
-        command.arg(file_path);
+        args.push(file_path.to_string_lossy().to_string());
 
-        let output = command.output().await
-            .map_err(|e| anyhow::anyhow!("Failed to test archive integrity: {}", e))?;
+        let output = Self::run_7z_command(&args).await?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             return Err(anyhow::anyhow!("Archive integrity test failed: {}", stderr.trim()));
         }
-
         Ok(())
     }
 
     /// 尝试修复损坏的 ZIP 文件（通过 7z CLI）
     pub async fn repair_zip(file_path: &Path) -> Result<String> {
-        let cmd = Self::get_7z_command()
-            .ok_or_else(|| anyhow::anyhow!("7z not found"))?;
-
         let repaired = file_path.with_extension("repaired.zip");
-        let mut command = Command::new(&cmd);
-        command.arg("r");
-        command.arg(file_path);
-        command.arg("-o");
-        command.arg(repaired.parent().unwrap_or(Path::new(".")));
+        let args = vec![
+            "r".to_string(),
+            file_path.to_string_lossy().to_string(),
+            "-o".to_string(),
+            repaired.parent().unwrap_or(Path::new(".")).to_string_lossy().to_string(),
+        ];
 
-        let output = command.output().await
-            .map_err(|e| anyhow::anyhow!("Failed to repair ZIP: {}", e))?;
+        let output = Self::run_7z_command(&args).await?;
 
         if output.status.success() && repaired.exists() {
             Ok(repaired.to_string_lossy().to_string())

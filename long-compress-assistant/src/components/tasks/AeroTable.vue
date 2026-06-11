@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useTaskStore, type Task } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
+import Modal from '@/components/ui/Modal.vue'
 import { open } from '@tauri-apps/api/dialog'
 
 const props = defineProps<{
@@ -392,43 +393,25 @@ const onLeave = (el: any) => {
   </div>
 
   <!-- 归档内容预览弹窗 -->
-  <transition name="fade">
-    <div v-if="showContentsModal" class="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" @click.self="showContentsModal = false">
-      <div class="w-full max-w-md rounded-2xl bg-card border border-subtle shadow-2xl overflow-hidden">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-subtle/50">
-          <div class="flex items-center gap-2">
-            <i class="pi pi-list text-primary text-sm"></i>
-            <h3 class="text-xs font-black text-content uppercase tracking-widest">{{ contentsFile }}</h3>
-          </div>
-          <button @click="showContentsModal = false" class="w-7 h-7 rounded-lg flex items-center justify-center text-muted hover:text-content hover:bg-input transition-colors">
-            <i class="pi pi-times text-[10px]"></i>
-          </button>
-        </div>
-        <div class="px-6 py-4 max-h-80 overflow-y-auto custom-scrollbar">
-          <div v-if="contentsLoading" class="flex items-center justify-center py-8">
-            <i class="pi pi-spin pi-spinner text-primary text-lg"></i>
-          </div>
-          <div v-else-if="contentsList.length === 0" class="text-center py-8 text-muted text-xs">
-            <i class="pi pi-info-circle text-2xl mb-2 block opacity-30"></i>
-            Unable to list contents (7z may not be installed or archive is unsupported)
-          </div>
-          <div v-else class="space-y-1">
-            <div class="text-[9px] font-bold text-muted mb-2 uppercase tracking-widest">
-              {{ contentsList.length }} file(s)
-            </div>
-            <div v-for="(item, idx) in contentsList" :key="idx"
-                 class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-input/30 text-[10px] font-mono text-content/80 hover:bg-primary/10 transition-colors">
-              <i :class="item.endsWith('/') ? 'pi pi-folder text-yellow-400/70' : 'pi pi-file text-muted/50'" class="text-[9px] shrink-0"></i>
-              <span class="truncate">{{ item }}</span>
-            </div>
-          </div>
-        </div>
-        <div class="px-6 py-3 border-t border-subtle/50 bg-input/20">
-          <button @click="showContentsModal = false" class="w-full py-2 rounded-lg bg-input border border-subtle text-xs font-bold text-muted hover:text-content transition-colors">Close</button>
-        </div>
+  <Modal :visible="showContentsModal" :title="contentsFile" icon="pi pi-list" @update:visible="showContentsModal = $event">
+    <div v-if="contentsLoading" class="flex items-center justify-center py-8">
+      <i class="pi pi-spin pi-spinner text-primary text-lg"></i>
+    </div>
+    <div v-else-if="contentsList.length === 0" class="text-center py-8 text-muted text-xs">
+      <i class="pi pi-info-circle text-2xl mb-2 block opacity-30"></i>
+      Unable to list contents (7z may not be installed or archive is unsupported)
+    </div>
+    <div v-else class="space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
+      <div class="text-[9px] font-bold text-muted mb-2 uppercase tracking-widest">
+        {{ contentsList.length }} file(s)
+      </div>
+      <div v-for="(item, idx) in contentsList" :key="idx"
+           class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-input/30 text-[10px] font-mono text-content/80 hover:bg-primary/10 transition-colors">
+        <i :class="item.endsWith('/') ? 'pi pi-folder text-yellow-400/70' : 'pi pi-file text-muted/50'" class="text-[9px] shrink-0"></i>
+        <span class="truncate">{{ item }}</span>
       </div>
     </div>
-  </transition>
+  </Modal>
 </template>
 
 <style scoped>
