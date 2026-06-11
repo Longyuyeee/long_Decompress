@@ -44,6 +44,21 @@ const previewContents = async (task: Task) => {
   }
 }
 
+const testIntegrity = async (task: Task) => {
+  contentsLoading.value = true
+  try {
+    const result = await tauriCommands.testArchiveIntegrity(
+      task.sourceFiles[0],
+      task.password || undefined
+    )
+    appStore.setSuccess(result)
+  } catch (e: any) {
+    appStore.setError(`Integrity check failed: ${e}`)
+  } finally {
+    contentsLoading.value = false
+  }
+}
+
 const toggleExpand = (taskId: string) => {
   if (expandedTasks.value.has(taskId)) {
     expandedTasks.value.delete(taskId)
@@ -286,7 +301,7 @@ const onLeave = (el: any) => {
                         <span class="text-[11px] font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
                       </div>
 
-                      <!-- 预览内容按钮 -->
+                      <!-- 预览/检测按钮 -->
                       <div class="flex items-center gap-2 mt-2 pt-2 border-t border-subtle/20">
                         <button
                           @click.stop="previewContents(task)"
@@ -294,7 +309,15 @@ const onLeave = (el: any) => {
                           class="h-6 px-2.5 rounded-md bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-white transition-all text-[9px] font-black whitespace-nowrap flex items-center gap-1.5 disabled:opacity-50"
                         >
                           <i :class="contentsLoading ? 'pi pi-spin pi-spinner' : 'pi pi-list'" class="text-[8px]"></i>
-                          Preview Contents
+                          Preview
+                        </button>
+                        <button
+                          @click.stop="testIntegrity(task)"
+                          :disabled="contentsLoading"
+                          class="h-6 px-2.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all text-[9px] font-black whitespace-nowrap flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          <i :class="contentsLoading ? 'pi pi-spin pi-spinner' : 'pi pi-shield'" class="text-[8px]"></i>
+                          Test
                         </button>
                       </div>
 
