@@ -1314,7 +1314,7 @@ impl CompressionService {
         Ok(())
     }
 
-    fn ensure_tar_compression_supported(output: &str, options: &CompressionOptions, extensions: &[&str]) -> Result<()> {
+    fn ensure_tar_compression_supported(output: &str, extensions: &[&str]) -> Result<()> {
         // 注意：密码检查已移至调用者，调用者将委托给 do_compress_7z (AES-256)
         let output_lower = output.to_lowercase();
         if !extensions.iter().any(|extension| output_lower.ends_with(extension)) {
@@ -1409,7 +1409,7 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "Zstd")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".zst")?;
+        let source = Self::ensure_single_file_stream_supported(sources, output, ".zst")?;
         self.emit_log(window, task_id, "使用 7z 进行 Zstd 压缩...", TaskLogSeverity::Info);
 
         let mut cmd = std::process::Command::new("7z");
@@ -1437,7 +1437,7 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.Zst")? {
             return Ok(());
         }
-        Self::ensure_tar_compression_supported(output, &options, &[".tar.zst", ".tzst"])?;
+        Self::ensure_tar_compression_supported(output, &[".tar.zst", ".tzst"])?;
         self.emit_log(window, task_id, "使用 7z 进行 tar.zst 压缩...", TaskLogSeverity::Info);
 
         let mut cmd = std::process::Command::new("7z");
@@ -1468,7 +1468,7 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "LZMA")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".lzma")?;
+        let source = Self::ensure_single_file_stream_supported(sources, output, ".lzma")?;
         self.emit_log(window, task_id, "使用 7z 进行 LZMA 压缩...", TaskLogSeverity::Info);
 
         let mut cmd = std::process::Command::new("7z");
@@ -1495,7 +1495,7 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR")? {
             return Ok(());
         }
-        Self::ensure_tar_compression_supported(output, &options, &[".tar"])?;
+        Self::ensure_tar_compression_supported(output, &[".tar"])?;
         let file = File::create(output)?;
         let mut builder = tar::Builder::new(file);
         self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
@@ -1507,7 +1507,7 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.GZ")? {
             return Ok(());
         }
-        Self::ensure_tar_compression_supported(output, &options, &[".tar.gz", ".tgz"])?;
+        Self::ensure_tar_compression_supported(output, &[".tar.gz", ".tgz"])?;
         let file = File::create(output)?;
         let level = flate2::Compression::new(options.level.clamp(1, 9));
         let encoder = flate2::write::GzEncoder::new(file, level);
@@ -1522,7 +1522,7 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.BZ2")? {
             return Ok(());
         }
-        Self::ensure_tar_compression_supported(output, &options, &[".tar.bz2", ".tbz", ".tbz2"])?;
+        Self::ensure_tar_compression_supported(output, &[".tar.bz2", ".tbz", ".tbz2"])?;
         let file = File::create(output)?;
         let level = bzip2::Compression::new(options.level.clamp(1, 9));
         let encoder = bzip2::write::BzEncoder::new(file, level);
@@ -1537,7 +1537,7 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.XZ")? {
             return Ok(());
         }
-        Self::ensure_tar_compression_supported(output, &options, &[".tar.xz", ".txz"])?;
+        Self::ensure_tar_compression_supported(output, &[".tar.xz", ".txz"])?;
         let file = File::create(output)?;
         let encoder = xz2::write::XzEncoder::new(file, options.level.clamp(1, 9));
         let mut builder = tar::Builder::new(encoder);
@@ -1547,8 +1547,7 @@ impl CompressionService {
         Ok(())
     }
 
-    fn ensure_single_file_stream_supported<'a>(sources: &'a [String], output: &str, options: &CompressionOptions, extension: &str) -> Result<&'a Path> {
-        // 注意：密码检查已移至调用者，调用者将委托给 do_compress_7z (AES-256)
+    fn ensure_single_file_stream_supported<'a>(sources: &'a [String], output: &str, extension: &str) -> Result<&'a Path> {
 
         if sources.len() != 1 {
             return Err(CompressionError::CompressionFailed(format!(
@@ -1583,7 +1582,7 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "GZ")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".gz")?;
+        let source = Self::ensure_single_file_stream_supported(sources, output, ".gz")?;
         let mut input = File::open(source)?;
         let file = File::create(output)?;
         let level = flate2::Compression::new(options.level.clamp(1, 9));
@@ -1598,7 +1597,7 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "BZ2")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".bz2")?;
+        let source = Self::ensure_single_file_stream_supported(sources, output, ".bz2")?;
         let mut input = File::open(source)?;
         let file = File::create(output)?;
         let level = bzip2::Compression::new(options.level.clamp(1, 9));
@@ -1613,7 +1612,7 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "XZ")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".xz")?;
+        let source = Self::ensure_single_file_stream_supported(sources, output, ".xz")?;
         let mut input = File::open(source)?;
         let file = File::create(output)?;
         let mut encoder = xz2::write::XzEncoder::new(file, options.level.clamp(1, 9));

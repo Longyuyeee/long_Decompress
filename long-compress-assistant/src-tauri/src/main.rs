@@ -80,6 +80,8 @@ fn main() {
             long_compress_assistant::commands::compression::cancel_compression,
             long_compress_assistant::commands::compression::check_rar_compression_support,
             long_compress_assistant::commands::compression::open_rar_download_page,
+            long_compress_assistant::commands::compression::list_archive_contents,
+            long_compress_assistant::commands::compression::test_archive_integrity,
             long_compress_assistant::commands::file::list_files,
             long_compress_assistant::commands::file::get_file_info,
             long_compress_assistant::commands::file::validate_wordlists,

@@ -426,6 +426,14 @@ export const useTauriCommands = () => {
     }
   }
 
+  const listArchiveContents = async (filePath: string, password?: string) => {
+    return await invoke<string[]>('list_archive_contents', { filePath, password: password || null })
+  }
+
+  const testArchiveIntegrity = async (filePath: string, password?: string) => {
+    return await invoke<string>('test_archive_integrity', { filePath, password: password || null })
+  }
+
   const cancelCompression = async (taskId: string) => {
     try {
       await invoke('cancel_compression', { taskId })
@@ -453,6 +461,8 @@ export const useTauriCommands = () => {
     exportPasswords,
     importPasswords,
     openInExplorer,
+    listArchiveContents,
+    testArchiveIntegrity,
     cancelCompression
   }
 }

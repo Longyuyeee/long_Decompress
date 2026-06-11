@@ -132,3 +132,26 @@ pub async fn open_rar_download_page(app: AppHandle) -> Result<(), String> {
     )
     .map_err(|err| err.to_string())
 }
+
+/// 列出归档文件内容条目（通过 7z CLI）
+#[command]
+pub async fn list_archive_contents(file_path: String, password: Option<String>) -> Result<Vec<String>, String> {
+    use crate::services::universal_engine::UniversalCliEngine;
+
+    let path = std::path::Path::new(&file_path);
+    UniversalCliEngine::list_contents(path, password.as_deref())
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 检测归档文件完整性（通过 7z CLI 的 t 命令）
+#[command]
+pub async fn test_archive_integrity(file_path: String, password: Option<String>) -> Result<String, String> {
+    use crate::services::universal_engine::UniversalCliEngine;
+
+    let path = std::path::Path::new(&file_path);
+    UniversalCliEngine::test_integrity(path, password.as_deref())
+        .await
+        .map(|_| "Archive integrity verified".to_string())
+        .map_err(|e| e.to_string())
+}

@@ -61,6 +61,74 @@ impl UniversalCliEngine {
         }
         None
     }
+
+    /// 列出归档文件中的内容条目（通过 7z CLI 的 l 命令）
+    pub async fn list_contents(file_path: &Path, password: Option<&str>) -> Result<Vec<String>> {
+        let cmd = Self::get_7z_command()
+            .ok_or_else(|| anyhow::anyhow!("7z not found"))?;
+
+        let mut command = Command::new(&cmd);
+        command.arg("l").arg("-slt").arg("-ba");
+        if let Some(pwd) = password {
+            command.arg(format!("-p{}", pwd));
+        }
+        command.arg(file_path);
+
+        let output = command.output().await
+            .map_err(|e| anyhow::anyhow!("Failed to list archive contents: {}", e))?;
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let mut entries = Vec::new();
+
+        for line in stdout.lines() {
+            if let Some(path) = line.strip_prefix("Path = ") {
+                if !path.trim().is_empty() {
+                    entries.push(path.trim().to_string());
+                }
+            }
+        }
+
+        if entries.is_empty() {
+            for line in stdout.lines() {
+                let trimmed = line.trim();
+                if trimmed.starts_with("---") || trimmed.starts_with("Date") || trimmed.is_empty() || trimmed.contains("files, ") {
+                    continue;
+                }
+                let parts: Vec<&str> = trimmed.split_whitespace().collect();
+                if parts.len() >= 6 {
+                    let name = parts[parts.len() - 1];
+                    if !name.starts_with("---") && name != "Name" {
+                        entries.push(name.to_string());
+                    }
+                }
+            }
+        }
+
+        Ok(entries)
+    }
+
+    /// 检测归档文件的完整性（通过 7z CLI 的 t 命令）
+    pub async fn test_integrity(file_path: &Path, password: Option<&str>) -> Result<()> {
+        let cmd = Self::get_7z_command()
+            .ok_or_else(|| anyhow::anyhow!("7z not found"))?;
+
+        let mut command = Command::new(&cmd);
+        command.arg("t");
+        if let Some(pwd) = password {
+            command.arg(format!("-p{}", pwd));
+        }
+        command.arg(file_path);
+
+        let output = command.output().await
+            .map_err(|e| anyhow::anyhow!("Failed to test archive integrity: {}", e))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(anyhow::anyhow!("Archive integrity test failed: {}", stderr.trim()));
+        }
+
+        Ok(())
+    }
 }
 
 #[async_trait::async_trait]
