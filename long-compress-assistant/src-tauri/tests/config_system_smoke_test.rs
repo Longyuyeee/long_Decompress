@@ -1,3 +1,4 @@
+//! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 //! 配置管理系统冒烟测试
 //!
 //! 验证配置管理系统的核心功能是否正常工作。

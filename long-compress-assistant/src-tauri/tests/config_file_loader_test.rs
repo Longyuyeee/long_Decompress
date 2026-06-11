@@ -1,3 +1,4 @@
+//! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 //! 配置文件加载器测试
 
 use long_compress_assistant::config::file_loader::{ConfigFileLoader, ConfigFileFormat, DefaultConfigFileGenerator};

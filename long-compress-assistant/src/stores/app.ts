@@ -133,7 +133,12 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const updateSettings = (newSettings: Partial<AppSettings>) => {
-    settings.value = { ...settings.value, ...newSettings }
+    const merged = { ...settings.value, ...newSettings }
+    // 输入校验：防止非法值
+    merged.maxConcurrentTasks = Math.max(1, Math.min(16, merged.maxConcurrentTasks || 4))
+    merged.cacheSize = Math.max(50, Math.min(1000, merged.cacheSize || 200))
+    merged.bruteForceMaxLen = Math.max(1, Math.min(20, merged.bruteForceMaxLen || 6))
+    settings.value = merged
     saveSettingsToStorage()
   }
 

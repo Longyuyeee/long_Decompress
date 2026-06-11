@@ -1,3 +1,4 @@
+//! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 //! 配置管理系统全面测试
 //!
 //! 包含单元测试、集成测试、边界测试和性能测试。

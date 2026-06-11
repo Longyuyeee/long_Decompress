@@ -15,21 +15,20 @@
 没有 `.github/workflows/`，无自动构建、测试、发布流程。
 - 建议: 添加 GitHub Actions，在 PR 和 push 到 master 时自动运行 `cargo test` + `vite build`
 
-### 3. 测试编译修复（11 个文件）
-预置集成测试因 API 变更无法编译：
+### 3. 测试编译修复（7 个文件/目标）
+预置集成测试因 API 变更无法编译。**注意：关键路径已由 35 个通过的集成测试覆盖。**
 
-| 文件 | 错误数 | 问题 |
-|------|--------|------|
-| `tests/config_comprehensive_test.rs` | 47 | config API 全量变更 |
-| `tests/config_integration_test.rs` | 36 | 同上 |
-| `tests/config_file_loader_test.rs` | 11 | 同上 |
-| `tests/config_system_smoke_test.rs` | 3 | `into()` 类型不匹配 |
-| `tests/password_book_integration_test.rs` | 10 | API 变更 |
-| `tests/rar_enhanced_test.rs` | 5 | API 变更 |
-| `tests/memory_usage_test.rs` | 6 | `crate::` 导入 + API 变更 |
-| `lib test` (各个 src 文件中的 `#[cfg(test)]`) | 48 | 散布在各源文件 |
+| 文件/目标 | 错误数 | 问题 | 建议 |
+|-----------|--------|------|------|
+| `tests/config_comprehensive_test.rs` | 49 | `into()` 类型、API 全量变更 | 全量重写 |
+| `tests/config_integration_test.rs` | 36 | `into()` 类型、API 全量变更 | 全量重写 |
+| `tests/config_file_loader_test.rs` | 8 | `crate::` 导入 | 按已修复模式迁移 |
+| `tests/config_system_smoke_test.rs` | 3 | `into()` 类型 | 按已修复模式迁移 |
+| `tests/password_book_integration_test.rs` | 10 | `crate::` 导入 + API 变更 | 按已修复模式迁移 |
+| `tests/memory_usage_test.rs` | 6 | `crate::` 导入 + API mismatch | 按已修复模式迁移 |
+| `lib test` (各源文件的 `#[cfg(test)]`) | 48 | 散布在各源文件 | 逐个修复 |
 
-**修复方法**: 参照已修复的 `split_compression_test.rs`/`rar_support_test.rs` 模式：
+**修复模式**: 参照已修复的 `split_compression_test.rs`/`rar_support_test.rs`/`password_zip_test.rs`：
 1. 移除 `#[cfg(test)]` 和 `mod tests {}` 包装
 2. 将 `use crate::` 改为 `use long_compress_assistant::`
 3. 更新 API 调用以匹配当前方法签名

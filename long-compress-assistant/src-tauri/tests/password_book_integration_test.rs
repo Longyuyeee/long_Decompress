@@ -1,3 +1,4 @@
+//! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 #[cfg(test)]
 mod tests {
     use crate::services::compression_service::CompressionService;

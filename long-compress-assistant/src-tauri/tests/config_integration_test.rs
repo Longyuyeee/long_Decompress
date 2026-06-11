@@ -1,3 +1,4 @@
+//! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 //! 配置系统集成测试
 
 use crate::config::models::{ConfigCategory, ConfigDataType, ConfigMetadata, DefaultConfigGenerator, ValidationRule};
