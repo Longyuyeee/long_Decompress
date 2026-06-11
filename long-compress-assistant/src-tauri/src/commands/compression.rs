@@ -155,3 +155,14 @@ pub async fn test_archive_integrity(file_path: String, password: Option<String>)
         .map(|_| "Archive integrity verified".to_string())
         .map_err(|e| e.to_string())
 }
+
+/// 尝试修复损坏的 ZIP 文件
+#[command]
+pub async fn repair_zip(file_path: String) -> Result<String, String> {
+    use crate::services::universal_engine::UniversalCliEngine;
+
+    let path = std::path::Path::new(&file_path);
+    UniversalCliEngine::repair_zip(path)
+        .await
+        .map_err(|e| e.to_string())
+}

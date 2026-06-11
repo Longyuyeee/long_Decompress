@@ -434,6 +434,10 @@ export const useTauriCommands = () => {
     return await invoke<string>('test_archive_integrity', { filePath, password: password || null })
   }
 
+  const repairZip = async (filePath: string) => {
+    return await invoke<string>('repair_zip', { filePath })
+  }
+
   const cancelCompression = async (taskId: string) => {
     try {
       await invoke('cancel_compression', { taskId })
@@ -463,6 +467,7 @@ export const useTauriCommands = () => {
     openInExplorer,
     listArchiveContents,
     testArchiveIntegrity,
+    repairZip,
     cancelCompression
   }
 }

@@ -129,6 +129,29 @@ impl UniversalCliEngine {
 
         Ok(())
     }
+
+    /// 尝试修复损坏的 ZIP 文件（通过 7z CLI）
+    pub async fn repair_zip(file_path: &Path) -> Result<String> {
+        let cmd = Self::get_7z_command()
+            .ok_or_else(|| anyhow::anyhow!("7z not found"))?;
+
+        let repaired = file_path.with_extension("repaired.zip");
+        let mut command = Command::new(&cmd);
+        command.arg("r");
+        command.arg(file_path);
+        command.arg("-o");
+        command.arg(repaired.parent().unwrap_or(Path::new(".")));
+
+        let output = command.output().await
+            .map_err(|e| anyhow::anyhow!("Failed to repair ZIP: {}", e))?;
+
+        if output.status.success() && repaired.exists() {
+            Ok(repaired.to_string_lossy().to_string())
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(anyhow::anyhow!("ZIP repair failed: {}", stderr.trim()))
+        }
+    }
 }
 
 #[async_trait::async_trait]
