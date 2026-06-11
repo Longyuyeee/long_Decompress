@@ -54,6 +54,7 @@ export const useAppStore = defineStore('app', () => {
   const accentColor = ref('#0ea5e9')
   const error = ref<string | null>(null)
   const successMessage = ref<string | null>(null)
+  const recentFiles = ref<string[]>([])
   const errorMessage = ref<string | null>(null)
   const decompressTasks = ref<DecompressTask[]>([])
   let errorTimer: ReturnType<typeof setTimeout> | null = null
@@ -183,10 +184,21 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
+  const addRecentFile = (path: string) => {
+    recentFiles.value = [path, ...recentFiles.value.filter(f => f !== path)].slice(0, 10)
+    try { localStorage.setItem('recent-files', JSON.stringify(recentFiles.value)) } catch { }
+  }
+
+  try {
+    const saved = localStorage.getItem('recent-files')
+    if (saved) recentFiles.value = JSON.parse(saved)
+  } catch { }
+
   loadSettingsFromStorage()
 
   return {
     theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings,
+    recentFiles, addRecentFile,
     currentTheme, activeTasks, completedTasks, totalProgress, t,
     setError: (msg: string | null) => {
       error.value = msg

@@ -41,6 +41,7 @@ const onFilesSelected = async (files: any[]) => {
       outputPath: isGlobalSameDir.value ? parentDir : globalOutputPath.value,
       extractToSubfolder: globalExtractToSubfolder.value
     })
+    appStore.addRecentFile(sourcePath)
   }
 }
 
