@@ -39,6 +39,7 @@ export interface Task {
   format?: string
   conflicts: ConflictInfo[]
   extractToSubfolder?: boolean
+  fileFilter?: string
   // 增强字段 [FE-INT-001]
   stage?: 'Pre-checking' | 'Extracting' | 'Finalizing'
   currentFile?: string

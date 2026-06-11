@@ -346,6 +346,21 @@ const onLeave = (el: any) => {
                           </button>
                         </div>
                       </div>
+
+                      <!-- 文件过滤器 -->
+                      <div class="space-y-1.5">
+                        <div class="flex items-center gap-2">
+                          <i class="pi pi-filter text-[10px] text-muted"></i>
+                          <span class="text-muted text-[8px] uppercase font-black tracking-widest opacity-60">File Filter</span>
+                        </div>
+                        <input
+                          :value="task.fileFilter || ''"
+                          @input="(e: Event) => { task.fileFilter = (e.target as HTMLInputElement).value || undefined }"
+                          @click.stop
+                          placeholder="e.g. *.txt, *.jpg (leave empty for all)"
+                          class="w-full h-7 rounded-lg bg-input/50 border border-subtle/50 text-[10px] px-3 font-mono outline-none transition-all focus:border-primary text-content placeholder:text-dim/50"
+                        />
+                      </div>
                     </div>
                   </div>
 
