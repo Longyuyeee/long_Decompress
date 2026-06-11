@@ -276,8 +276,9 @@ impl CompressionService {
 
         // 分卷压缩通过 SplitCompressionService 实现
 
+        // 全部压缩格式均支持密码：原生格式直接支持，其他通过 7z CLI 创建 .7z 加密容器
         if options.password.as_deref().is_some_and(|password| !password.is_empty())
-            && !matches!(requested_format.as_str(), "zip" | "7z" | "rar")
+            && !matches!(requested_format.as_str(), "zip" | "7z" | "rar" | "tar" | "tar.gz" | "tar.bz2" | "tar.xz" | "tar.zst" | "gz" | "bz2" | "xz" | "zst" | "zstd" | "lzma" | "tgz" | "tbz" | "tbz2" | "txz" | "tzst")
         {
             return Err(CompressionError::UnsupportedEncryption.into());
         }
@@ -1314,10 +1315,7 @@ impl CompressionService {
     }
 
     fn ensure_tar_compression_supported(output: &str, options: &CompressionOptions, extensions: &[&str]) -> Result<()> {
-        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
-            return Err(CompressionError::UnsupportedEncryption.into());
-        }
-
+        // 注意：密码检查已移至调用者，调用者将委托给 do_compress_7z (AES-256)
         let output_lower = output.to_lowercase();
         if !extensions.iter().any(|extension| output_lower.ends_with(extension)) {
             return Err(CompressionError::CompressionFailed(format!(
@@ -1391,7 +1389,26 @@ impl CompressionService {
     }
 
     /// 使用 7z CLI 进行 Zstd 压缩
+    /// 当需要密码时，使用 7z 作为加密容器（AES-256）。
+    /// 对于不支持原生加密的格式（TAR, GZ, BZ2, XZ, Zstd, LZMA 等），
+    /// 自动路由到 do_compress_7z 并将输出扩展名改为 .7z。
+    fn maybe_delegate_to_7z_for_password(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: &CompressionOptions, format_label: &str) -> Result<bool> {
+        if options.password.as_deref().is_some_and(|p| !p.is_empty()) {
+            let base = output.rsplit_once('.').map(|(b, _)| b).unwrap_or(output);
+            let output_7z = format!("{}.7z", base);
+            self.emit_log(window, task_id,
+                &format!("{} 不支持原生加密; 自动切换为 7z 格式 (AES-256)", format_label),
+                TaskLogSeverity::Info);
+            self.do_compress_7z(window, task_id, sources, &output_7z, options.clone())?;
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
     fn do_compress_zstd(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "Zstd")? {
+            return Ok(());
+        }
         let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".zst")?;
         self.emit_log(window, task_id, "使用 7z 进行 Zstd 压缩...", TaskLogSeverity::Info);
 
@@ -1417,6 +1434,9 @@ impl CompressionService {
 
     /// 使用 7z CLI 进行 tar.zst 压缩
     fn do_compress_tar_zstd(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.Zst")? {
+            return Ok(());
+        }
         Self::ensure_tar_compression_supported(output, &options, &[".tar.zst", ".tzst"])?;
         self.emit_log(window, task_id, "使用 7z 进行 tar.zst 压缩...", TaskLogSeverity::Info);
 
@@ -1445,6 +1465,9 @@ impl CompressionService {
 
     /// 使用 7z CLI 进行 LZMA 压缩
     fn do_compress_lzma(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "LZMA")? {
+            return Ok(());
+        }
         let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".lzma")?;
         self.emit_log(window, task_id, "使用 7z 进行 LZMA 压缩...", TaskLogSeverity::Info);
 
@@ -1469,6 +1492,9 @@ impl CompressionService {
     }
 
     fn do_compress_tar(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR")? {
+            return Ok(());
+        }
         Self::ensure_tar_compression_supported(output, &options, &[".tar"])?;
         let file = File::create(output)?;
         let mut builder = tar::Builder::new(file);
@@ -1478,6 +1504,9 @@ impl CompressionService {
     }
 
     fn do_compress_tar_gz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.GZ")? {
+            return Ok(());
+        }
         Self::ensure_tar_compression_supported(output, &options, &[".tar.gz", ".tgz"])?;
         let file = File::create(output)?;
         let level = flate2::Compression::new(options.level.clamp(1, 9));
@@ -1490,6 +1519,9 @@ impl CompressionService {
     }
 
     fn do_compress_tar_bz2(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.BZ2")? {
+            return Ok(());
+        }
         Self::ensure_tar_compression_supported(output, &options, &[".tar.bz2", ".tbz", ".tbz2"])?;
         let file = File::create(output)?;
         let level = bzip2::Compression::new(options.level.clamp(1, 9));
@@ -1502,6 +1534,9 @@ impl CompressionService {
     }
 
     fn do_compress_tar_xz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.XZ")? {
+            return Ok(());
+        }
         Self::ensure_tar_compression_supported(output, &options, &[".tar.xz", ".txz"])?;
         let file = File::create(output)?;
         let encoder = xz2::write::XzEncoder::new(file, options.level.clamp(1, 9));
@@ -1513,9 +1548,7 @@ impl CompressionService {
     }
 
     fn ensure_single_file_stream_supported<'a>(sources: &'a [String], output: &str, options: &CompressionOptions, extension: &str) -> Result<&'a Path> {
-        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
-            return Err(CompressionError::UnsupportedEncryption.into());
-        }
+        // 注意：密码检查已移至调用者，调用者将委托给 do_compress_7z (AES-256)
 
         if sources.len() != 1 {
             return Err(CompressionError::CompressionFailed(format!(
@@ -1547,6 +1580,9 @@ impl CompressionService {
     }
 
     fn do_compress_gz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "GZ")? {
+            return Ok(());
+        }
         let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".gz")?;
         let mut input = File::open(source)?;
         let file = File::create(output)?;
@@ -1559,6 +1595,9 @@ impl CompressionService {
     }
 
     fn do_compress_bz2(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "BZ2")? {
+            return Ok(());
+        }
         let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".bz2")?;
         let mut input = File::open(source)?;
         let file = File::create(output)?;
@@ -1571,6 +1610,9 @@ impl CompressionService {
     }
 
     fn do_compress_xz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "XZ")? {
+            return Ok(());
+        }
         let source = Self::ensure_single_file_stream_supported(sources, output, &options, ".xz")?;
         let mut input = File::open(source)?;
         let file = File::create(output)?;

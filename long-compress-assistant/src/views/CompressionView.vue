@@ -170,7 +170,7 @@ const handleCompress = async () => {
     }
 
     if (job.settings.password && !passwordSupportedFormats.has(job.settings.format)) {
-      appStore.setError(`${job.settings.format.toUpperCase()} does not support password compression in the current engine. Please use 7Z or RAR.`)
+      appStore.setError(`${job.settings.format.toUpperCase()} does not support password encryption. All formats now support passwords — please report this bug.`)
       failed++
       continue
     }

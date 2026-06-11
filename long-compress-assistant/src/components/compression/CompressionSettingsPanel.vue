@@ -58,7 +58,8 @@ const compressionFormats = [
   { value: 'lzma', name: 'LZMA', singleFileOnly: true }
 ]
 
-const passwordSupportedFormats = new Set<CompressionOptions['format']>(['zip', '7z', 'rar'])
+// 全部格式支持密码：ZIP/7Z/RAR 原生支持，其他格式通过 7z CLI 自动创建 .7z 加密容器
+const passwordSupportedFormats = new Set<CompressionOptions['format']>(['zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz', 'tar.zst', 'gz', 'bz2', 'xz', 'zst', 'lzma'])
 const supportsPassword = computed(() => passwordSupportedFormats.has(compressionOptions.value.format))
 
 const isFormatDisabled = (format: { singleFileOnly?: boolean }) => {
