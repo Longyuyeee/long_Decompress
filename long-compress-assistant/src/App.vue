@@ -1,5 +1,5 @@
 <template>
-  <div id="app" @mousemove="resetIdleTimer" @keydown="resetIdleTimer">
+  <div id="app" @mousemove="resetIdleTimer" @keydown="handleKeydown">
     <MainLayout />
     <ToastContainer />
   </div>
@@ -7,12 +7,14 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useConfigStore } from '@/stores/config'
 import { usePasswordStore } from '@/stores/password'
 import { appWindow } from '@tauri-apps/api/window'
 
+const router = useRouter()
 const configStore = useConfigStore()
 const passwordStore = usePasswordStore()
 
@@ -43,6 +45,22 @@ const restoreWindowState = async () => {
       await appWindow.setSize({ width, height })
     }
   } catch { /* ignore on first launch */ }
+}
+
+const handleKeydown = (e: KeyboardEvent) => {
+  resetIdleTimer()
+  // 全局快捷键
+  if (e.ctrlKey || e.metaKey) {
+    switch (e.key.toLowerCase()) {
+      case 'o': e.preventDefault(); router.push('/decompress'); break  // Ctrl+O → 解压
+      case 'n': e.preventDefault(); router.push('/compress'); break   // Ctrl+N → 压缩
+      case 'v': e.preventDefault(); router.push('/vault'); break     // Ctrl+V → 密码本
+      case ',': e.preventDefault(); router.push('/settings'); break  // Ctrl+, → 设置
+    }
+  }
+  if (e.key === 'Escape') {
+    // Esc 关闭当前聚焦的弹窗由各组件自行处理
+  }
 }
 
 const resetIdleTimer = () => {
