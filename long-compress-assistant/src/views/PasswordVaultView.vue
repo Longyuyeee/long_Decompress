@@ -228,7 +228,7 @@ const chartData = computed(() => {
                   </button>
                 </td>
                 <td class="px-6 py-3.5 text-right w-[12%]">
-                  <div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                  <div class="flex justify-end gap-3 sm:opacity-0 sm:group-hover:opacity-100 transition-all shrink-0">
                     <button @click="handleEdit(entry)" class="text-primary/60 hover:text-primary transition-colors"><i class="pi pi-pencil text-[10px]"></i></button>
                     <button @click="handleDelete(entry.id)" class="text-red-400/60 hover:text-red-500 transition-colors"><i class="pi pi-trash text-[10px]"></i></button>
                   </div>

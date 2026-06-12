@@ -154,7 +154,7 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
         </div>
 
         <label class="text-[8px] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.format') }}</label>
-        <div class="flex p-1 rounded-xl bg-input border border-subtle gap-1">
+        <div class="flex flex-wrap p-1 rounded-xl bg-input border border-subtle gap-1">
           <button 
             v-for="fmt in compressionFormats" :key="fmt.value"
             @click="selectFormat(fmt)"
