@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useTaskStore, type Task } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
+import { usePasswordStore } from '@/stores/password'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import Modal from '@/components/ui/Modal.vue'
 import { open } from '@tauri-apps/api/dialog'
@@ -18,6 +19,7 @@ const emit = defineEmits<{
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
+const passwordStore = usePasswordStore()
 const tauriCommands = useTauriCommands()
 const expandedTasks = ref<Set<string>>(new Set())
 const showPasswordInput = ref<string | null>(null)
@@ -338,6 +340,12 @@ const onLeave = (el: any) => {
                             class="flex-1 h-7 rounded-lg bg-input/50 border text-[10px] px-3 font-mono outline-none transition-all focus:border-primary"
                             :class="task.passwordRequired ? 'border-yellow-500/50 text-yellow-400 placeholder-yellow-500/50' : 'border-subtle/50 text-content placeholder:text-dim'"
                           />
+                          <button
+                            @click.stop="task.password = passwordStore.entries[0]?.password || task.password; task.passwordRequired = false"
+                            class="h-7 w-7 rounded-lg border border-subtle/50 bg-input/50 flex items-center justify-center text-dim hover:text-primary transition-colors shrink-0"
+                            title="Fill from vault">
+                            <i class="pi pi-key text-[8px]"></i>
+                          </button>
                           <button
                             @click.stop="showPasswordInput === task.id ? (showPasswordInput = null) : (showPasswordInput = task.id)"
                             class="h-7 w-7 rounded-lg border border-subtle/50 bg-input/50 flex items-center justify-center text-muted hover:text-content transition-colors shrink-0"
