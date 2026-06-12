@@ -194,7 +194,7 @@ taskStore.$subscribe((mutation, state) => {
           class="h-10 px-6 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center gap-2"
         >
           <i class="pi pi-stop-circle"></i>
-          停止解压
+          {{ appStore.t('common.cancel') || 'Stop' }}
         </button>
         <button 
           v-if="hasPendingTasks && !isRunning"

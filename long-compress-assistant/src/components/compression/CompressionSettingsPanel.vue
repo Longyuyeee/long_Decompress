@@ -250,6 +250,22 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
           :title="opt.key">
             <i :class="[opt.icon, 'text-xs']"></i>
           </div>
+
+          <!-- 分卷开关 -->
+          <div
+            @click="compressionOptions.splitArchive = !compressionOptions.splitArchive"
+            class="w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer transition-all"
+            :class="compressionOptions.splitArchive ? 'bg-primary/20 border-primary text-primary' : 'bg-input border-subtle text-dim hover:text-muted'"
+            title="Split Archive">
+            <i class="pi pi-clone text-xs"></i>
+          </div>
+          <input
+            v-if="compressionOptions.splitArchive"
+            v-model.number="compressionOptions.splitSize"
+            type="number" min="1" step="1"
+            class="w-16 px-2 py-2 rounded-xl bg-input border border-subtle text-[10px] text-content outline-none focus:border-primary transition-all font-mono"
+            placeholder="MB"
+          />
         </div>
       </div>
     </transition>
