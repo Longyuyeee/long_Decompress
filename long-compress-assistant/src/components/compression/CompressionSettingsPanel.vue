@@ -62,6 +62,19 @@ const compressionFormats = [
 const passwordSupportedFormats = new Set<CompressionOptions['format']>(['zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz', 'tar.zst', 'gz', 'bz2', 'xz', 'zst', 'lzma'])
 const supportsPassword = computed(() => passwordSupportedFormats.has(compressionOptions.value.format))
 
+const presets = computed(() => appStore.compressionPresets)
+
+const applyPreset = (preset: { name: string; format: string; level: number; password?: string }) => {
+  compressionOptions.value.format = preset.format as any
+  compressionOptions.value.level = preset.level
+  if (preset.password) compressionOptions.value.password = preset.password
+}
+
+const savePreset = () => {
+  const name = prompt('Preset name:', `${compressionOptions.value.format.toUpperCase()}-L${compressionOptions.value.level}`)
+  if (name) appStore.saveCompressionPreset(name, compressionOptions.value.format, compressionOptions.value.level, compressionOptions.value.password)
+}
+
 const isFormatDisabled = (format: { singleFileOnly?: boolean }) => {
   return Boolean(format.singleFileOnly && !props.allowSingleFileFormats)
 }
@@ -131,6 +144,14 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
     <div class="flex items-center gap-6 flex-wrap lg:flex-nowrap">
       <!-- 格式选择 -->
       <div class="flex flex-col gap-1.5 shrink-0">
+        <!-- 预设 -->
+        <div v-if="presets.length > 0" class="flex items-center gap-1 mb-1">
+          <span class="text-[7px] text-dim uppercase font-black tracking-widest shrink-0">Presets:</span>
+          <button v-for="(p, i) in presets" :key="i" @click="applyPreset(p)"
+                  class="px-2 py-0.5 rounded text-[8px] font-bold bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors"
+                  :title="`${p.format} L${p.level}${p.password ? ' PWD' : ''}`">{{ p.name }}</button>
+        </div>
+
         <label class="text-[8px] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.format') }}</label>
         <div class="flex p-1 rounded-xl bg-input border border-subtle gap-1">
           <button 

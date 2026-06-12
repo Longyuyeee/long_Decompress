@@ -194,6 +194,22 @@ export const useAppStore = defineStore('app', () => {
     try { localStorage.setItem('recent-files', JSON.stringify(recentFiles.value)) } catch { }
   }
 
+  // 压缩预设
+  const compressionPresets = ref<Array<{ name: string; format: string; level: number; password?: string }>>([])
+  const saveCompressionPreset = (name: string, format: string, level: number, password?: string) => {
+    compressionPresets.value = [{ name, format, level, password }, ...compressionPresets.value].slice(0, 8)
+    try { localStorage.setItem('compression-presets', JSON.stringify(compressionPresets.value)) } catch { }
+  }
+  const deleteCompressionPreset = (index: number) => {
+    compressionPresets.value.splice(index, 1)
+    try { localStorage.setItem('compression-presets', JSON.stringify(compressionPresets.value)) } catch { }
+  }
+
+  try {
+    const saved = localStorage.getItem('compression-presets')
+    if (saved) compressionPresets.value = JSON.parse(saved)
+  } catch { }
+
   try {
     const saved = localStorage.getItem('recent-files')
     if (saved) recentFiles.value = JSON.parse(saved)
@@ -204,6 +220,7 @@ export const useAppStore = defineStore('app', () => {
   return {
     theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings,
     recentFiles, addRecentFile,
+    compressionPresets, saveCompressionPreset, deleteCompressionPreset,
     currentTheme, activeTasks, completedTasks, totalProgress, t,
     setError: (msg: string | null) => {
       error.value = msg
