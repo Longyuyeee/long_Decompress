@@ -92,6 +92,15 @@ export const useTaskStore = defineStore('task', () => {
         if (progress >= 1.0) {
           task.status = 'completed'
           task.endTime = new Date()
+          // 后台发送系统通知（仅在页面不可见时）
+          if (document.visibilityState !== 'visible' && 'Notification' in window && Notification.permission === 'granted') {
+            try {
+              new Notification(`Task Complete: ${task.name}`, {
+                body: `Extracted to ${task.outputPath || 'output'}`,
+                icon: '/icon.png'
+              })
+            } catch { /* ignore */ }
+          }
         }
       }
     })

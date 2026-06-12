@@ -62,6 +62,10 @@ const resetIdleTimer = () => {
 onMounted(async () => {
   resetIdleTimer()
   await restoreWindowState()
+  // 请求浏览器通知权限（后台任务完成时通知用户）
+  if ('Notification' in window && Notification.permission === 'default') {
+    try { await Notification.requestPermission() } catch { /* ignore */ }
+  }
   // 延迟保存窗口状态（debounce）
   window.addEventListener('resize', () => {
     if (saveWindowTimer) clearTimeout(saveWindowTimer)
