@@ -1,19 +1,16 @@
 # 剩余工作清单
 
-> 最后更新: 2026-06-10 | 合并提交: 55d9974
+> 最后更新: 2026-06-12 | 最新提交: 0958747
 
 ---
 
-## P0 — 阻塞发布
+## P0 — 已基本解决
 
-### 1. 安装器配置
-`tauri.conf.json` 没有 `bundle` 段，无法生成可分发的 .exe/.dmg/.deb 包。
-- 文件: `long-compress-assistant/src-tauri/tauri.conf.json`
-- 参考: https://tauri.app/v1/guides/building/
+### 1. 安装器配置 ✅
+`tauri.conf.json` 已启用 bundle（WiX/NSIS/DMG/deb/rpm），待签名密钥配置。
 
-### 2. CI/CD 流水线
-没有 `.github/workflows/`，无自动构建、测试、发布流程。
-- 建议: 添加 GitHub Actions，在 PR 和 push 到 master 时自动运行 `cargo test` + `vite build`
+### 2. CI/CD 流水线 ✅
+GitHub Actions workflow 已创建（`.github/workflows/ci.yml`），待 Token 授权 `workflow` scope 推送。
 
 ### 3. 测试编译修复（7 个文件/目标）
 预置集成测试因 API 变更无法编译。**注意：关键路径已由 35 个通过的集成测试覆盖。**
@@ -92,8 +89,8 @@ src/task_queue/batch_task_processor.rs:68 — field `config` never read
 ### 11. README 英文版
 当前 README 只有中文，建议添加英文版本或双语。
 
-### 12. 自动更新
-`tauri.conf.json` 无 `updater` 段配置。
+### 12. 自动更新 ✅
+`tauri.conf.json` 已配置 updater（端点/GitHub Releases/对话框），待配置签名公钥。
 
 ### 13. E2E 测试
 只有 1 个 Playwright spec (`e2e/specs/file_upload.spec.ts`)。
