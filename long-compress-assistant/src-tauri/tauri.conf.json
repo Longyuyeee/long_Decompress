@@ -58,6 +58,14 @@
     "security": {
       "csp": null
     },
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/Longyuyeee/long_Decompress/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "pubkey": ""
+    },
     "windows": [
       {
         "title": "Long解压",
