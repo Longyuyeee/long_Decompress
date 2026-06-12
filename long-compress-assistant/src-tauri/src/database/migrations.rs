@@ -1,8 +1,48 @@
 use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
-/// 初始化数据库表
+/// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
+const CURRENT_VERSION: i32 = 1;
+
+/// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
+    // 1. 确保 schema_version 表存在
+    query(
+        "CREATE TABLE IF NOT EXISTS schema_version (
+            version INTEGER PRIMARY KEY,
+            applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )"
+    )
+        .execute(pool)
+        .await
+        .context("创建 schema_version 表失败")?;
+
+    // 2. 获取当前版本
+    let current: i32 = query_as::<_, (i32,)>("SELECT COALESCE(MAX(version), 0) FROM schema_version")
+        .fetch_one(pool)
+        .await
+        .map(|r| r.0)
+        .unwrap_or(0);
+
+    // 3. 按版本号顺序应用迁移
+    if current < 1 {
+        migrate_v1(pool).await?;
+        query("INSERT INTO schema_version (version) VALUES (1)")
+            .execute(pool)
+            .await?;
+    }
+
+    // 未来版本在此处添加:
+    // if current < 2 {
+    //     migrate_v2(pool).await?;
+    //     query("INSERT INTO schema_version (version) VALUES (2)").execute(pool).await?;
+    // }
+
+    Ok(())
+}
+
+/// V1: 初始 schema
+async fn migrate_v1(pool: &SqlitePool) -> Result<()> {
     // 创建压缩任务表
     query(
         r#"
