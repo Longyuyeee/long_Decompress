@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
+const showResetConfirm = ref(false)
 
 const themeColors = {
   azure: '#0ea5e9', indigo: '#6366f1', violet: '#8b5cf6',
@@ -177,8 +179,31 @@ const removeWordlist = (index: number) => {
             </div>
           </section>
         </div>
+        <!-- 重置按钮 -->
+        <div class="pt-8 border-t border-subtle flex justify-end">
+          <button @click="showResetConfirm = true"
+                  class="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest">
+            Reset to Defaults
+          </button>
+        </div>
       </div>
     </div>
+
+    <!-- 重置确认弹窗 -->
+    <transition name="pop">
+      <div v-if="showResetConfirm" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4" @click.self="showResetConfirm = false">
+        <div class="modal-no-glass rounded-3xl p-10 w-full max-w-xs text-center shadow-2xl text-content">
+          <h3 class="text-sm font-black mb-2 uppercase tracking-widest">Reset Settings?</h3>
+          <p class="text-[10px] text-muted mb-8">This will restore all preferences to defaults.</p>
+          <div class="flex flex-col gap-2">
+            <button @click="appStore.resetSettings(); showResetConfirm = false; appStore.setSuccess('Settings reset to defaults')"
+                    class="w-full py-3 bg-red-500 text-white rounded-xl text-xs font-black">Reset All</button>
+            <button @click="showResetConfirm = false"
+                    class="w-full py-3 bg-input text-muted rounded-xl text-xs font-bold border border-subtle hover:text-content transition-colors">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
