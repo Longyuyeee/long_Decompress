@@ -2,6 +2,10 @@
 
 一款基于 **Rust + Tauri 1.5 + Vue 3** 构建的桌面压缩/解压工具。支持 37+ 种解压格式和 16 种压缩格式，提供密码管理、批量处理、智能密码尝试等功能，界面采用苹果毛玻璃设计风格。
 
+> **English**: A desktop compression/decompression tool built with Rust + Tauri 1.5 + Vue 3. Supports 37+ extraction formats and 16 compression formats with password management, batch processing, and a frosted-glass UI.
+>
+> **Key highlights**: ZIP/7Z/RAR password extraction, AES-256 encrypted vault, split archives, content preview, integrity testing, ZIP repair, 35 integration tests passing, zero Rust warnings.
+
 ---
 
 ## 目录
