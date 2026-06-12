@@ -46,6 +46,7 @@ pub struct DatabaseMetrics {
 pub use crate::database::config::DatabaseConfig;
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct DatabaseConnection {
     pool: SqlitePool,
     config: DatabaseConfig,

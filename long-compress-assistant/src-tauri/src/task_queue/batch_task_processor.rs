@@ -64,6 +64,7 @@ impl Default for BatchTaskConfig {
     }
 }
 
+#[allow(dead_code)]
 pub struct BatchTaskProcessor {
     config: Arc<RwLock<BatchTaskConfig>>,
 }

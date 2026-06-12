@@ -596,6 +596,7 @@ impl PasswordBookService {
     }
 
     /// 将数据库行转换为密码条目
+    #[allow(dead_code)]
     fn row_to_password_entry(&self, row: (String, String, Option<String>, String, Option<String>, Option<String>, String, String, String, String, String, i32, DateTime<Utc>, DateTime<Utc>, Option<DateTime<Utc>>, Option<DateTime<Utc>>, bool, bool, bool, String)) -> Result<PasswordBookEntry> {
         let (
             id, name, username, password, url, notes, tags_json, category_str, strength_str,

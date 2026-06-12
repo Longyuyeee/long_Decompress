@@ -31,6 +31,7 @@ pub struct KeyEntry {
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
+#[allow(dead_code)]
 pub struct KeyManager {
     keys_dir: PathBuf,
 }

@@ -338,6 +338,7 @@ struct CacheEntry<V> {
 }
 
 /// 异步限流器
+#[allow(dead_code)]
 pub struct RateLimiter {
     semaphore: Arc<Semaphore>,
     refill_interval: Duration,
@@ -398,6 +399,7 @@ impl RateLimiter {
 }
 
 /// 异步批处理器
+#[allow(dead_code)]
 pub struct BatchProcessor<T> {
     batch_size: usize,
     batch_timeout: Duration,

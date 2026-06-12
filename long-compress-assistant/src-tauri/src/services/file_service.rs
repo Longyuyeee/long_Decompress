@@ -49,6 +49,7 @@ impl Default for FileServiceConfig {
 }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct FileService {
     config: FileServiceConfig,
 }
