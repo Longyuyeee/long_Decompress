@@ -139,13 +139,13 @@ const chartData = computed(() => {
             <i class="pi pi-plus text-sm"></i>
           </button>
           <div class="w-px h-5 bg-subtle my-auto mx-1"></div>
-          <button @click="handleExport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" title="Export">
+          <button @click="handleExport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" title="Export" aria-label="Export passwords">
             <i class="pi pi-download text-[10px]"></i>
           </button>
-          <button @click="handleImport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" title="Import">
+          <button @click="handleImport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" title="Import" aria-label="Import passwords">
             <i class="pi pi-upload text-[10px]"></i>
           </button>
-          <button @click="showClearConfirm = true" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-red-500 transition-all" title="Clear All">
+          <button @click="showClearConfirm = true" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-red-500 transition-all" title="Clear All" aria-label="Clear all passwords">
             <i class="pi pi-trash text-[10px]"></i>
           </button>
         </div>

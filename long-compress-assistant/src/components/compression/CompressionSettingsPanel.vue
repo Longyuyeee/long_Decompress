@@ -145,11 +145,12 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
       <!-- 格式选择 -->
       <div class="flex flex-col gap-1.5 shrink-0">
         <!-- 预设 -->
-        <div v-if="presets.length > 0" class="flex items-center gap-1 mb-1">
+        <div v-if="presets.length > 0" class="flex items-center gap-1 mb-1 flex-wrap">
           <span class="text-[7px] text-dim uppercase font-black tracking-widest shrink-0">Presets:</span>
-          <button v-for="(p, i) in presets" :key="i" @click="applyPreset(p)"
-                  class="px-2 py-0.5 rounded text-[8px] font-bold bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors"
-                  :title="`${p.format} L${p.level}${p.password ? ' PWD' : ''}`">{{ p.name }}</button>
+          <span v-for="(p, i) in presets" :key="i" class="group/preset inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-[8px] font-bold bg-primary/10 border border-primary/20 text-primary">
+            <button @click="applyPreset(p)" :title="`${p.format} L${p.level}${p.password ? ' PWD' : ''}`" class="hover:underline">{{ p.name }}</button>
+            <button @click="appStore.deleteCompressionPreset(i)" class="ml-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] text-dim hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover/preset:opacity-100 transition-opacity" title="Delete preset">&times;</button>
+          </span>
         </div>
 
         <label class="text-[8px] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.format') }}</label>
