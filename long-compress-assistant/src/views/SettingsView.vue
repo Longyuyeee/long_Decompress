@@ -178,6 +178,30 @@ const removeWordlist = (index: number) => {
               </div>
             </div>
           </section>
+          <!-- 行为设置 -->
+          <section class="aero-card p-8">
+            <h2 class="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-6">Behavior</h2>
+            <div class="space-y-5">
+              <div class="flex items-center justify-between group cursor-pointer" @click="appStore.updateSettings({ autoDeleteSource: !appStore.settings.autoDeleteSource })">
+                <div>
+                  <div class="text-xs font-bold text-content">Auto-delete source</div>
+                  <div class="text-[9px] text-muted mt-1 uppercase tracking-tighter">Delete original files after successful decompression</div>
+                </div>
+                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.autoDeleteSource ? 'bg-primary/40 border-primary' : 'bg-input'">
+                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.autoDeleteSource ? 'translate-x-5' : ''"></div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between group cursor-pointer" @click="appStore.updateSettings({ savePasswords: !appStore.settings.savePasswords })">
+                <div>
+                  <div class="text-xs font-bold text-content">Save successful passwords</div>
+                  <div class="text-[9px] text-muted mt-1 uppercase tracking-tighter">Auto-save working passwords to vault after extraction</div>
+                </div>
+                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.savePasswords ? 'bg-primary/40 border-primary' : 'bg-input'">
+                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.savePasswords ? 'translate-x-5' : ''"></div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
         <!-- 重置按钮 -->
         <div class="pt-8 border-t border-subtle flex justify-end">
