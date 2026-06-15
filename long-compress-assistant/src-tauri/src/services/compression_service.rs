@@ -526,6 +526,23 @@ impl CompressionService {
 
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("未知文件").to_string();
+        let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+
+        // 分卷压缩包检测：扩展名为数字编号(.001, .002...)或 .z01/.z02 后缀
+        // 这些文件即使 magic bytes 匹配了 ZIP/7Z，也必须走 7z CLI 才能正确合并解压
+        let is_split_archive = {
+            let ext_is_numeric = ext.len() == 3 && ext.chars().all(|c| c.is_ascii_digit());
+            let ext_is_zsplit = ext.len() == 3 && ext.starts_with('z') && ext[1..].chars().all(|c| c.is_ascii_digit());
+            // 也检查 stem 是否以 .zip / .7z / .rar 结尾（如 test_split.zip.001）
+            let stem_has_archive_ext = file_stem.ends_with(".zip") || file_stem.ends_with(".7z") || file_stem.ends_with(".rar");
+            ext_is_numeric || ext_is_zsplit || (ext_is_numeric && stem_has_archive_ext) || ext_is_numeric
+        };
+
+        // 分卷文件强制走 7z CLI 通用引擎
+        if is_split_archive && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
+            service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
+            format = ArchiveFormat::Universal;
+        }
 
         // 托底识别：如果 magic 识别失败，尝试根据后缀识别
         if format == ArchiveFormat::Unknown {
@@ -539,6 +556,10 @@ impl CompressionService {
                 "xz" => ArchiveFormat::Xz,
                 "zst" | "zstd" | "tzst" => ArchiveFormat::Zstd,
                 "iso" | "img" => ArchiveFormat::Iso,
+                // 分卷压缩包后缀 → 7z CLI 处理
+                "001" | "002" | "003" | "004" | "005"
+                | "z01" | "z02" | "z03" | "z04" | "z05"
+                    => ArchiveFormat::Universal,
                 // 7z CLI 原生支持的杂项格式
                 "cab" | "lzh" | "lha" | "arj" | "dmg" | "wim" | "vhd" | "vhdx" | "chm"
                 | "deb" | "rpm" | "sfs" | "squashfs" | "nsis" | "msi" | "xar"
@@ -598,7 +619,15 @@ impl CompressionService {
             srv_log.emit_log(&win_log, &tid_log, &msg, severity);
         });
 
-        let result = match format {
+        // 若有密码且格式为 ZIP，rust zip crate 0.6 不支持 AES-256，改走 7z CLI
+        let effective_format = if format == ArchiveFormat::Zip && final_password.is_some() {
+            service.emit_log(&window, &task_id, "加密ZIP使用7z CLI解压（支持AES-256）", TaskLogSeverity::Info);
+            ArchiveFormat::Universal
+        } else {
+            format
+        };
+
+        let result = match effective_format {
             ArchiveFormat::Zip => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
@@ -689,7 +718,7 @@ impl CompressionService {
                 }).await?
             },
             ArchiveFormat::Zstd | ArchiveFormat::Iso | ArchiveFormat::Universal => {
-                let fmt_name = format!("{:?}", format);
+                let fmt_name = format!("{:?}", effective_format);
                 service.universal_engine.extract_with_progress(
                     Path::new(&file_path),
                     &out_dir,

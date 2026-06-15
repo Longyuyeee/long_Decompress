@@ -41,15 +41,48 @@ pub async fn check_system_integration() -> Result<Vec<(IntegrationType, Integrat
 
 /// 在系统文件管理器中打开指定路径
 #[command]
-pub fn open_in_explorer(app: AppHandle, path: String) -> Result<(), String> {
-    let path = if std::path::Path::new(&path).is_file() {
-        std::path::Path::new(&path)
-            .parent()
-            .map(|p| p.to_string_lossy().to_string())
-            .unwrap_or(path)
-    } else {
-        path
-    };
-    tauri::api::shell::open(&app.shell_scope(), &path, None)
-        .map_err(|e| e.to_string())
+pub fn open_in_explorer(_app: AppHandle, path: String) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        let target = if std::path::Path::new(&path).is_file() {
+            format!("/select,\"{}\"", path)
+        } else {
+            path
+        };
+        std::process::Command::new("explorer")
+            .arg(&target)
+            .spawn()
+            .map_err(|e| format!("Failed to open explorer: {}", e))?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let target = if std::path::Path::new(&path).is_file() {
+            std::path::Path::new(&path)
+                .parent()
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or(path)
+        } else {
+            path
+        };
+        std::process::Command::new("open")
+            .arg(&target)
+            .spawn()
+            .map_err(|e| format!("Failed to open finder: {}", e))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let target = if std::path::Path::new(&path).is_file() {
+            std::path::Path::new(&path)
+                .parent()
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or(path)
+        } else {
+            path
+        };
+        std::process::Command::new("xdg-open")
+            .arg(&target)
+            .spawn()
+            .map_err(|e| format!("Failed to open file manager: {}", e))?;
+    }
+    Ok(())
 }

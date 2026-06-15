@@ -20,6 +20,7 @@ const passwordStore = usePasswordStore()
 
 let idleTimer: any = null
 let saveWindowTimer: any = null
+let unlistenResize: any = null
 
 const WINDOW_STATE_KEY = 'window-state'
 
@@ -84,8 +85,8 @@ onMounted(async () => {
   if ('Notification' in window && Notification.permission === 'default') {
     try { await Notification.requestPermission() } catch { /* ignore */ }
   }
-  // 延迟保存窗口状态（debounce）
-  window.addEventListener('resize', () => {
+  // 使用 Tauri 原生窗口 resize 事件（避免 zoom 触发的 resize 循环）
+  unlistenResize = await appWindow.onResized(() => {
     if (saveWindowTimer) clearTimeout(saveWindowTimer)
     saveWindowTimer = setTimeout(saveWindowState, 1000)
   })
@@ -94,6 +95,7 @@ onMounted(async () => {
 onUnmounted(() => {
   if (idleTimer) clearTimeout(idleTimer)
   if (saveWindowTimer) clearTimeout(saveWindowTimer)
+  if (unlistenResize) unlistenResize()
   saveWindowState()
 })
 </script>
@@ -102,5 +104,6 @@ onUnmounted(() => {
 #app {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transform-origin: top left;
 }
 </style>

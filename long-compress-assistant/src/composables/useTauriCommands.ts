@@ -250,15 +250,17 @@ export const useTauriCommands = () => {
     encrypted: boolean
     error?: string
   }> => {
+    // 通过后端 list_archive_contents 检测格式是否可解压
     try {
-      const result = await invoke('check_file_format', { filePath })
-      return result as any
+      await invoke<string[]>('list_archive_contents', { filePath, password: null })
+      const ext = filePath.split('.').pop()?.toLowerCase() || 'unknown'
+      return { supported: true, format: ext, encrypted: false }
     } catch (error) {
-      console.error('Failed to check file format:', error)
+      const errMsg = error instanceof Error ? error.message : String(error)
       return {
         supported: false,
-        encrypted: false,
-        error: error instanceof Error ? error.message : String(error)
+        encrypted: errMsg.toLowerCase().includes('password') || errMsg.toLowerCase().includes('encrypted'),
+        error: errMsg
       }
     }
   }
@@ -404,11 +406,13 @@ export const useTauriCommands = () => {
       for (const entry of entries) {
         if (!entry.name || !entry.password) continue
         await invoke('add_encrypted_password', {
-          name: entry.name,
-          password: entry.password,
-          notes: entry.notes || '',
-          category: entry.category || 'Other',
-          tags: entry.tags || []
+          entry: {
+            name: entry.name,
+            password: entry.password,
+            notes: entry.notes || '',
+            category: entry.category || 'Other',
+            tags: entry.tags || []
+          }
         })
         imported++
       }

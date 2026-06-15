@@ -46,6 +46,7 @@ export interface AppSettings {
   autoStart: boolean
   conflictPolicy: 'ask' | 'overwrite' | 'skip' | 'rename'
   autoDeleteSource: boolean
+  uiScale: number
 }
 
 export const useAppStore = defineStore('app', () => {
@@ -85,8 +86,17 @@ export const useAppStore = defineStore('app', () => {
     savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
     sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
     bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-    bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask', autoDeleteSource: false
+    bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask', autoDeleteSource: false,
+    uiScale: 100
   })
+
+  // UI 缩放 - 应用到 #app 容器而非 documentElement，避免干扰窗口 resize
+  watch(() => settings.value.uiScale, (scale) => {
+    const app = document.getElementById('app')
+    if (app) {
+      app.style.zoom = `${scale}%`
+    }
+  }, { immediate: true })
 
   watch(() => settings.value.autoStart, async (newVal) => {
     try {
@@ -138,6 +148,7 @@ export const useAppStore = defineStore('app', () => {
     merged.maxConcurrentTasks = Math.max(1, Math.min(16, merged.maxConcurrentTasks || 4))
     merged.cacheSize = Math.max(50, Math.min(1000, merged.cacheSize || 200))
     merged.bruteForceMaxLen = Math.max(1, Math.min(20, merged.bruteForceMaxLen || 6))
+    merged.uiScale = Math.max(60, Math.min(200, merged.uiScale || 100))
     settings.value = merged
     saveSettingsToStorage()
   }
@@ -149,7 +160,8 @@ export const useAppStore = defineStore('app', () => {
       savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-      bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask', autoDeleteSource: false
+      bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask', autoDeleteSource: false,
+      uiScale: 100
     }
     saveSettingsToStorage()
   }

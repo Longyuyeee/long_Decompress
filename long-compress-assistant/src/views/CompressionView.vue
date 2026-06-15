@@ -231,14 +231,13 @@ const totalPayload = computed(() => {
 </script>
 
 <template>
-  <div class="compression-view p-responsive p-8 h-screen flex flex-col gap-8 transition-colors duration-700 overflow-hidden relative">
+  <div class="compression-view p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative">
     <header class="flex justify-between items-center shrink-0">
       <div>
-        <h1 class="text-4xl font-black text-content tracking-tighter mb-1">{{ appStore.t('nav.compress') }}</h1>
-        <p class="text-muted text-[10px] font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('app.tagline') }}</p>
+        <h1 class="text-3xl font-black text-content tracking-tighter mb-0.5">{{ appStore.t('nav.compress') }}</h1>
+        <p class="text-muted text-[9px] font-bold uppercase tracking-[0.2em] ml-0.5">{{ appStore.t('compress.start') }}</p>
       </div>
-      
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
         <!-- 磁吸成组按钮 (浮现式，次要操作) -->
         <transition name="pop">
           <button
@@ -263,7 +262,7 @@ const totalPayload = computed(() => {
     </header>
 
     <!-- 主工作区 (减小 mb 以使区域向下延展) -->
-    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col mb-6 relative border border-subtle bg-card/40 shadow-2xl">
+    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
         <div class="rounded-2xl border border-subtle bg-input/20 p-6">
           <h4 class="text-[8px] font-black text-muted uppercase tracking-widest mb-4">{{ appStore.t('compress.settings') }}</h4>
@@ -448,18 +447,18 @@ const totalPayload = computed(() => {
       </div>
 
       <!-- 底部辅助区 -->
-      <div v-if="totalPayload > 0" class="p-2 border-t border-subtle bg-input/10 grid grid-cols-2 gap-2">
-        <EnhancedFileDropzone 
-          @files-selected="onFilesSelected" 
-          :compact="true" 
+      <div v-if="totalPayload > 0" class="px-3 py-2 border-t border-subtle bg-input/10 grid grid-cols-2 gap-2 shrink-0">
+        <EnhancedFileDropzone
+          @files-selected="onFilesSelected"
+          :compact="true"
           mode="folder"
-          class="w-full" 
+          class="w-full h-7"
         />
-        <EnhancedFileDropzone 
-          @files-selected="onFilesSelected" 
-          :compact="true" 
+        <EnhancedFileDropzone
+          @files-selected="onFilesSelected"
+          :compact="true"
           mode="file"
-          class="w-full" 
+          class="w-full h-7"
         />
       </div>
     </div>

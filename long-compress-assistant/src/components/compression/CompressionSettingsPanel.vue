@@ -196,6 +196,28 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
         </div>
       </div>
 
+      <!-- 密码保护 (主行可见) -->
+      <div class="flex flex-col gap-1.5 w-32 shrink-0">
+        <label class="text-[8px] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('decompress.password') || 'Password' }}</label>
+        <div class="relative">
+          <input
+            v-model="compressionOptions.password" type="password"
+            class="w-full px-3 py-2 rounded-xl bg-input border text-[10px] outline-none focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            :class="compressionOptions.password ? 'border-primary/50' : 'border-subtle'"
+            :disabled="!supportsPassword"
+            :placeholder="supportsPassword ? (compressionOptions.password ? 'Set' : 'Optional') : 'N/A'"
+          />
+          <button
+            v-if="compressionOptions.password"
+            @click="compressionOptions.password = ''"
+            class="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full flex items-center justify-center text-dim hover:text-red-400 transition-colors"
+          >
+            <i class="pi pi-times text-[7px]"></i>
+          </button>
+          <i v-else-if="supportsPassword" class="pi pi-lock absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-dim"></i>
+        </div>
+      </div>
+
       <!-- 高级开关按钮 -->
       <button 
         @click="showAdvanced = !showAdvanced"
@@ -222,20 +244,6 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
             <button @click="selectOutputPath" class="w-9 h-9 rounded-xl bg-input border border-subtle flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all">
               <i class="pi pi-folder text-xs"></i>
             </button>
-          </div>
-        </div>
-
-        <!-- 密码保护 (极简版) -->
-        <div class="flex flex-col gap-1.5 w-48 shrink-0">
-          <label class="text-[8px] font-black text-muted uppercase tracking-widest ml-1">Encryption</label>
-          <div class="relative">
-            <input 
-              v-model="compressionOptions.password" type="password"
-              class="w-full px-4 py-2 rounded-xl bg-input border border-subtle text-[10px] outline-none focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="!supportsPassword"
-              :placeholder="supportsPassword ? 'Set Password' : 'Not supported'"
-            />
-            <i class="pi pi-shield absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-dim"></i>
           </div>
         </div>
 

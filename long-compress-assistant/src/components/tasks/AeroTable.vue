@@ -9,6 +9,7 @@ import { open } from '@tauri-apps/api/dialog'
 
 const props = defineProps<{
   selectedTaskIds?: Set<string>
+  statusFilter?: string | string[]
 }>()
 
 const emit = defineEmits<{
@@ -20,6 +21,12 @@ const emit = defineEmits<{
 const taskStore = useTaskStore()
 const appStore = useAppStore()
 const passwordStore = usePasswordStore()
+
+const displayTasks = computed(() => {
+  if (!props.statusFilter || props.statusFilter.length === 0) return taskStore.tasks
+  const filters = Array.isArray(props.statusFilter) ? props.statusFilter : [props.statusFilter]
+  return taskStore.tasks.filter(t => filters.includes(t.status))
+})
 const tauriCommands = useTauriCommands()
 const expandedTasks = ref<Set<string>>(new Set())
 const showPasswordInput = ref<string | null>(null)
@@ -144,9 +151,9 @@ const onLeave = (el: any) => {
 </script>
 
 <template>
-  <div class="aero-table-container w-full h-full flex flex-col overflow-hidden">
+  <div class="aero-table-container w-full h-full flex flex-col">
     <!-- 智慧表格 (重构为极简列表模式) -->
-    <div class="glass-table w-full flex-1 flex flex-col overflow-hidden">
+    <div class="glass-table w-full flex-1 flex flex-col min-h-0">
       <!-- 表头 (高度压缩，字体减小) -->
       <div class="table-header sticky top-0 z-20 flex items-center px-6 py-3 border-b border-subtle bg-input/90 backdrop-blur-xl text-dim text-[8px] font-black tracking-[0.15em] uppercase shrink-0">
         <!-- 复选框列 -->
@@ -169,7 +176,8 @@ const onLeave = (el: any) => {
 
       <!-- 表格内容 (高密度布局 + 物理隔断) -->
       <div class="table-body flex-1 overflow-y-auto custom-scrollbar p-3">
-        <div v-for="task in taskStore.tasks" :key="task.id" class="task-row-container mb-1.5 last:mb-0 group/row">
+        <TransitionGroup name="task-depart">
+        <div v-for="task in displayTasks" :key="task.id" class="task-row-container mb-1.5 last:mb-0 group/row">
           <div 
             class="task-row flex items-center px-4 py-1.5 bg-card/30 border border-subtle/30 rounded-lg hover:border-primary/40 hover:bg-primary/[0.02] transition-all duration-300 cursor-pointer relative overflow-hidden shadow-sm"
             @click="toggleExpand(task.id)"
@@ -246,8 +254,19 @@ const onLeave = (el: any) => {
               </div>
             </div>
 
+            <!-- 删除按钮 (仅 pending 状态可见) -->
+            <div class="w-6 flex justify-end" @click.stop>
+              <button
+                v-if="task.status === 'pending'"
+                @click="taskStore.removeTask(task.id)"
+                class="w-5 h-5 rounded-md flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 transition-all"
+                title="Remove">
+                <i class="pi pi-times text-[9px]"></i>
+              </button>
+            </div>
+
             <div class="w-6 flex justify-end">
-              <i :class="['pi text-[7px] transition-all duration-500', 
+              <i :class="['pi text-[7px] transition-all duration-500',
                  expandedTasks.has(task.id) ? 'pi-chevron-up text-primary' : 'pi-chevron-down text-muted']"></i>
             </div>
           </div>
@@ -261,12 +280,12 @@ const onLeave = (el: any) => {
           >
             <div v-if="expandedTasks.has(task.id)" class="details-drawer relative px-6 pb-6 pt-2">
               <!-- 交互增强：task-detail-card 增加 hover 动效 -->
-              <div class="task-detail-card flex h-44 rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
+              <div class="task-detail-card flex rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
 
                 <!-- 详情区内容布局：改为弹性分配，防止溢出 -->
-                <div class="flex w-full h-full relative z-10">
-                  <!-- 左侧：核心配置 (设置最小宽度和弹性边界) -->
-                  <div class="flex-initial min-w-[320px] max-w-[45%] p-5 border-r border-subtle/20 flex flex-col justify-center space-y-4 pl-8 transition-colors group-hover/detail:bg-primary/[0.01]">
+                <div class="flex w-full relative z-10">
+                  <!-- 左侧：核心配置 -->
+                  <div class="flex-initial min-w-[320px] max-w-[45%] p-5 border-r border-subtle/20 flex flex-col space-y-3 pl-8 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto custom-scrollbar max-h-56">
                     <div class="flex items-center justify-between">
                       <h4 class="text-primary text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
                         <i class="pi pi-cog text-[10px]"></i>
@@ -284,9 +303,9 @@ const onLeave = (el: any) => {
                                     class="h-6 px-2.5 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-[9px] font-black whitespace-nowrap">
                               {{ appStore.t('decompress.config.output_same') }}
                             </button>
-                            <button @click.stop="handleSelectOutputDir(task)" 
-                                    class="h-6 px-2.5 rounded-md bg-input border border-subtle text-muted hover:text-content transition-all text-[9px] font-black whitespace-nowrap flex items-center gap-1.5">
-                              <i class="pi pi-external-link text-[8px]"></i>
+                            <button @click.stop="handleSelectOutputDir(task)"
+                                    class="h-7 px-3 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-[9px] font-black whitespace-nowrap flex items-center gap-1.5 shadow-sm">
+                              <i class="pi pi-folder-open text-[9px]"></i>
                               {{ appStore.t('decompress.config.output_select') }}
                             </button>
                           </div>
@@ -304,31 +323,11 @@ const onLeave = (el: any) => {
                         <span class="text-[11px] font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
                       </div>
 
-                      <!-- 预览/检测按钮 -->
-                      <div class="flex items-center gap-2 mt-2 pt-2 border-t border-subtle/20">
-                        <button
-                          @click.stop="previewContents(task)"
-                          :disabled="contentsLoading"
-                          class="h-6 px-2.5 rounded-md bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-white transition-all text-[9px] font-black whitespace-nowrap flex items-center gap-1.5 disabled:opacity-50"
-                        >
-                          <i :class="contentsLoading ? 'pi pi-spin pi-spinner' : 'pi pi-list'" class="text-[8px]"></i>
-                          Preview
-                        </button>
-                        <button
-                          @click.stop="testIntegrity(task)"
-                          :disabled="contentsLoading"
-                          class="h-6 px-2.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all text-[9px] font-black whitespace-nowrap flex items-center gap-1.5 disabled:opacity-50"
-                        >
-                          <i :class="contentsLoading ? 'pi pi-spin pi-spinner' : 'pi pi-shield'" class="text-[8px]"></i>
-                          Test
-                        </button>
-                      </div>
-
-                      <!-- 密码输入区 -->
-                      <div class="space-y-1.5">
+                      <!-- 密码输入区 (仅在自动破解失败时显示) -->
+                      <div v-if="task.passwordRequired" class="space-y-1.5 p-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5">
                         <div class="flex items-center gap-2">
-                          <i class="pi pi-lock text-[10px]" :class="task.passwordRequired ? 'text-yellow-400' : 'text-muted'"></i>
-                          <span class="text-muted text-[8px] uppercase font-black tracking-widest opacity-60">{{ appStore.t('decompress.password') || 'Password' }}</span>
+                          <i class="pi pi-lock text-[10px] text-yellow-400"></i>
+                          <span class="text-yellow-400 text-[9px] font-black uppercase tracking-widest">Auto-crack failed — Enter password</span>
                         </div>
                         <div class="flex items-center gap-2">
                           <input
@@ -336,40 +335,18 @@ const onLeave = (el: any) => {
                             :value="task.password || ''"
                             @input="(e: Event) => { task.password = (e.target as HTMLInputElement).value; task.passwordRequired = false; }"
                             @click.stop
-                            :placeholder="task.passwordRequired ? 'Encrypted - enter password' : 'Optional'"
-                            class="flex-1 h-7 rounded-lg bg-input/50 border text-[10px] px-3 font-mono outline-none transition-all focus:border-primary"
-                            :class="task.passwordRequired ? 'border-yellow-500/50 text-yellow-400 placeholder-yellow-500/50' : 'border-subtle/50 text-content placeholder:text-dim'"
+                            placeholder="Enter password to retry..."
+                            class="flex-1 h-7 rounded-lg bg-input/50 border border-yellow-500/50 text-[10px] px-3 font-mono outline-none focus:border-yellow-400 text-yellow-400 placeholder:text-yellow-500/50"
                           />
                           <button
-                            @click.stop="task.password = passwordStore.entries[0]?.password || task.password; task.passwordRequired = false"
-                            class="h-7 w-7 rounded-lg border border-subtle/50 bg-input/50 flex items-center justify-center text-dim hover:text-primary transition-colors shrink-0"
+                            @click.stop="() => { const candidates = passwordStore.findCandidatePasswords(task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''); if (candidates.length > 0) { task.password = candidates[0]; task.passwordRequired = false; } }"
+                            class="h-7 w-7 rounded-lg border border-yellow-500/50 bg-yellow-500/10 flex items-center justify-center text-yellow-400 hover:bg-yellow-500/20 transition-colors shrink-0"
                             title="Fill from vault">
-                            <i class="pi pi-key text-[8px]"></i>
-                          </button>
-                          <button
-                            @click.stop="showPasswordInput === task.id ? (showPasswordInput = null) : (showPasswordInput = task.id)"
-                            class="h-7 w-7 rounded-lg border border-subtle/50 bg-input/50 flex items-center justify-center text-muted hover:text-content transition-colors shrink-0"
-                            :title="showPasswordInput === task.id ? 'Hide' : 'Show'"
-                          >
-                            <i :class="showPasswordInput === task.id ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-[10px]"></i>
+                            <i class="pi pi-key text-[9px]"></i>
                           </button>
                         </div>
                       </div>
 
-                      <!-- 文件过滤器 -->
-                      <div class="space-y-1.5">
-                        <div class="flex items-center gap-2">
-                          <i class="pi pi-filter text-[10px] text-muted"></i>
-                          <span class="text-muted text-[8px] uppercase font-black tracking-widest opacity-60">File Filter</span>
-                        </div>
-                        <input
-                          :value="task.fileFilter || ''"
-                          @input="(e: Event) => { task.fileFilter = (e.target as HTMLInputElement).value || undefined }"
-                          @click.stop
-                          placeholder="e.g. *.txt, *.jpg (leave empty for all)"
-                          class="w-full h-7 rounded-lg bg-input/50 border border-subtle/50 text-[10px] px-3 font-mono outline-none transition-all focus:border-primary text-content placeholder:text-dim/50"
-                        />
-                      </div>
                     </div>
                   </div>
 
@@ -396,6 +373,7 @@ const onLeave = (el: any) => {
           </Transition>
 
         </div>
+        </TransitionGroup>
       </div>
     </div>
   </div>
@@ -426,6 +404,25 @@ const onLeave = (el: any) => {
 .aero-table-container {
   /* 解决展开时滚动条出现导致的布局跳动 */
   scrollbar-gutter: stable;
+}
+
+/* 任务离开动画 - 向左下角斜飞消失 */
+.task-depart-leave-active {
+  transition: all 0.4s cubic-bezier(0.55, 0, 1, 0.45);
+  overflow: hidden;
+}
+
+.task-depart-leave-to {
+  opacity: 0;
+  transform: translateX(-40px) translateY(10px) scale(0.9);
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.task-depart-move {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .table-body {

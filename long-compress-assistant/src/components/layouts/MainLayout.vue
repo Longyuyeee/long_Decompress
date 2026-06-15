@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { appWindow } from '@tauri-apps/api/window'
 import InteractionBall from '@/components/ui/InteractionBall.vue'
 import PerformanceMeter from '@/components/ui/PerformanceMeter.vue'
+import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
 import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
 import { useAppStore } from '@/stores/app'
 
@@ -59,14 +60,7 @@ const navigateTo = (name: string) => {
 
       <div class="main-layout flex flex-1 overflow-hidden relative">
         <!-- 侧边栏 -->
-        <aside class="w-16 h-full flex flex-col items-center py-6 border-r border-subtle bg-card/40 backdrop-blur-2xl z-50 shrink-0 overflow-visible relative">
-          <div class="mb-10 mt-2 shrink-0">
-            <div class="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg"
-                 :style="{ background: `linear-gradient(135deg, var(--dynamic-accent), color-mix(in srgb, var(--dynamic-accent), black 20%))`, boxShadow: `0 0 20px color-mix(in srgb, var(--dynamic-accent) 40%, transparent)` }">
-              <i class="pi pi-box text-lg text-white"></i>
-            </div>
-          </div>
-
+        <aside class="w-16 h-full flex flex-col items-center pt-6 pb-6 border-r border-subtle bg-card/40 backdrop-blur-2xl z-50 shrink-0 overflow-visible relative">
           <nav class="flex-1 flex flex-col gap-4 w-full px-2 overflow-visible">
             <div v-for="item in navItems" :key="item.name"
                  @click="navigateTo(item.name)"
@@ -97,6 +91,9 @@ const navigateTo = (name: string) => {
               </div>
             </transition>
           </router-view>
+
+          <!-- 全局进度指示器 -->
+          <GlobalProgressBar />
         </main>
       </div>
     </div>

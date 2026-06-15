@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useTaskStore } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
+import { usePasswordStore } from '@/stores/password'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage, generateId } from '@/utils'
 import { open } from '@tauri-apps/api/dialog'
@@ -11,6 +12,7 @@ import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
+const passwordStore = usePasswordStore()
 const tauriCommands = useTauriCommands()
 
 const selectedConflictTaskId = ref<string | null>(null)
@@ -21,7 +23,7 @@ const supportedArchiveHint = 'ZIP, 7Z, RAR, TAR, Zstd, ISO, CAB, DEB, RPM, DMG, 
 
 // 全局配置状态
 const globalOutputPath = ref('')
-const isGlobalSameDir = ref(true) // 默认开启同目录
+const isGlobalSameDir = ref(true) // 默认同目录，用户可通过按钮手动选择
 const globalExtractToSubfolder = ref(false)
 
 onMounted(async () => {
@@ -31,8 +33,11 @@ onMounted(async () => {
 const onFilesSelected = async (files: any[]) => {
   for (const file of files) {
     const sourcePath = file.path
+    // 去重：如果任务列表中已有相同文件，跳过
+    if (taskStore.tasks.some(t => t.sourceFiles.includes(sourcePath))) continue
+
     const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
-    
+
     taskStore.addTask({
       id: generateId(),
       name: file.name || sourcePath.split(/[\\/]/).pop() || 'Unknown',
@@ -114,27 +119,87 @@ const startDecompression = async () => {
   selectedTaskIds.value = new Set()
 
   for (const task of pendingTasks) {
+    const options = {
+      outputPath: task.outputPath,
+      keepStructure: true,
+      overwrite: false,
+      deleteAfter: appStore.settings.autoDeleteSource,
+      createSubdirectory: task.extractToSubfolder ?? false,
+      password: task.password || undefined,
+      fileFilter: task.fileFilter || null
+    }
     try {
       taskStore.updateTaskStatus(task.id, 'preparing')
-      // 清除上一次的密码需求标记（如果是重试）
       task.passwordRequired = false
-      const options = {
-        outputPath: task.outputPath,
-        keepStructure: true,
-        overwrite: false,
-        deleteAfter: appStore.settings.autoDeleteSource,
-        createSubdirectory: task.extractToSubfolder ?? false,
-        password: task.password || undefined,
-        fileFilter: task.fileFilter || null
-      }
-      // 真正启动后端解压
-      // 传入 task.id 避免重复生成新任务
       await tauriCommands.decompressFile(task.sourceFiles[0], options, task.id)
-      } catch (error) {
-      // 如果任务已被 password-required 事件标记为待输入密码，不覆盖状态
-      if (!task.passwordRequired) {
+    } catch (error) {
+      // 如果任务被 password-required 事件标记，自动尝试密码保险箱
+      if (task.passwordRequired) {
+        const fileName = task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''
+        const candidates = passwordStore.findCandidatePasswords(fileName)
+
+        if (candidates.length > 0) {
+          taskStore.updateTaskStatus(task.id, 'extracting')
+          task.logs.push({
+            task_id: task.id,
+            message: `Auto-trying ${candidates.length} password(s) from vault...`,
+            severity: 'info',
+            timestamp: new Date().toISOString()
+          })
+
+          let succeeded = false
+          for (const candidatePassword of candidates) {
+            if (succeeded) break
+            try {
+              task.password = candidatePassword
+              task.passwordRequired = false
+              task.currentPassword = candidatePassword
+              await tauriCommands.decompressFile(
+                task.sourceFiles[0],
+                { ...options, password: candidatePassword },
+                task.id
+              )
+              succeeded = true
+
+              // 递增保险箱中匹配密码的 use_count
+              const matchedEntry = passwordStore.entries.find(e => e.password === candidatePassword)
+              if (matchedEntry) {
+                try {
+                  await passwordStore.updateEntry(matchedEntry.id, { use_count: (matchedEntry.use_count || 0) + 1 })
+                } catch { /* 非关键操作 */ }
+              }
+            } catch {
+              // 尝试下一个候选密码
+              continue
+            }
+          }
+
+          if (!succeeded) {
+            // 所有候选密码均失败，标记为失败并记录错误
+            taskStore.updateTaskStatus(task.id, 'failed')
+            task.error = `All ${candidates.length} vault password(s) tried and failed. The password may not be in vault, or the archive uses unsupported encryption (e.g., ZIP AES-256 requires 7z CLI).`
+            task.logs.push({
+              task_id: task.id,
+              message: task.error!,
+              severity: 'error',
+              timestamp: new Date().toISOString()
+            })
+          }
+        } else {
+          // 保险箱中没有候选密码
+          taskStore.updateTaskStatus(task.id, 'failed')
+          task.error = extractErrorMessage(error) || 'Encrypted archive detected but no passwords in vault. Add the password to vault first.'
+          task.logs.push({
+            task_id: task.id,
+            message: task.error!,
+            severity: 'error',
+            timestamp: new Date().toISOString()
+          })
+        }
+      } else {
         taskStore.updateTaskStatus(task.id, 'failed')
-        appStore.setError(`${appStore.t('common.error')}: ${extractErrorMessage(error)}`)
+        task.error = extractErrorMessage(error) || String(error)
+        appStore.setError(`${appStore.t('common.error')}: ${task.error}`)
       }
     }
   }
@@ -171,16 +236,14 @@ taskStore.$subscribe((mutation, state) => {
 </script>
 
 <template>
-  <div class="decompress-view p-responsive p-8 h-screen flex flex-col gap-8 transition-colors duration-700 relative overflow-hidden">
+  <div class="decompress-view p-6 h-full flex flex-col gap-4 transition-colors duration-700 relative overflow-hidden">
     <header class="flex justify-between items-center shrink-0">
       <div>
-        <h1 class="text-4xl font-black text-content tracking-tighter mb-1">{{ appStore.t('nav.decompress') }}</h1>
-        <p class="text-muted text-[10px] font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('app.tagline') }}</p>
+        <h1 class="text-3xl font-black text-content tracking-tighter mb-0.5">{{ appStore.t('nav.decompress') }}</h1>
+        <p class="text-muted text-[9px] font-bold uppercase tracking-[0.2em] ml-0.5">{{ appStore.t('decompress.add_files') }}</p>
       </div>
-      
-      <!-- 合理的操作按钮分配 -->
       <div class="flex gap-3">
-        <button 
+        <button
           v-if="!isRunning && taskStore.tasks.some(t => ['completed', 'failed', 'cancelled'].includes(t.status))"
           @click="taskStore.clearFinishedTasks()"
           class="h-10 px-6 rounded-xl bg-input border border-subtle text-muted text-[10px] font-black uppercase tracking-widest hover:text-red-400 transition-all shadow-sm flex items-center gap-2"
@@ -207,33 +270,21 @@ taskStore.$subscribe((mutation, state) => {
       </div>
     </header>
 
-    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col mb-6 relative border border-subtle bg-card/40 shadow-2xl">
+    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div class="flex-1 overflow-hidden flex flex-col relative">
         <!-- 核心逻辑：有内容时 100% 空间给表格 -->
-        <AeroTable v-if="taskStore.tasks.length > 0" class="flex-1"
+        <div v-if="taskStore.tasks.some(t => t.status === 'pending')" class="flex-1 min-h-0">
+          <AeroTable
           :selectedTaskIds="selectedTaskIds"
+          statusFilter="pending"
           @toggle-task="toggleTaskSelection"
           @select-all-pending="selectAllPending"
           @deselect-all="deselectAll"
         />
+        </div>
 
-        <!-- 空状态：引导式居中布局 -->
-        <div v-else class="flex-1 flex flex-col items-center justify-center p-20 gap-8">
-          <div class="text-center space-y-3">
-            <div class="w-20 h-20 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto shadow-lg shadow-primary/5">
-              <i class="pi pi-box text-3xl text-primary"></i>
-            </div>
-            <h2 class="text-2xl font-black text-content tracking-tight">{{ appStore.t('app.name') }}</h2>
-            <p class="text-xs text-muted font-bold uppercase tracking-[0.3em] max-w-md leading-relaxed">
-              {{ appStore.t('app.tagline') }}
-            </p>
-            <div class="flex flex-wrap justify-center gap-2 pt-2">
-              <span v-for="fmt in ['ZIP', '7Z', 'RAR', 'TAR', 'TAR.GZ', 'ISO', 'CAB', 'DMG']" :key="fmt"
-                    class="text-[9px] font-mono font-bold text-dim bg-input/50 border border-subtle/30 rounded-md px-2 py-0.5">
-                {{ fmt }}
-              </span>
-            </div>
-          </div>
+        <!-- 空状态 -->
+        <div v-else class="flex-1 flex flex-col items-center justify-center p-8">
           <EnhancedFileDropzone
             @files-selected="onFilesSelected"
             :accept="supportedArchiveAccept"
@@ -243,65 +294,42 @@ taskStore.$subscribe((mutation, state) => {
         </div>
       </div>
 
-      <!-- 底部辅助操作区 (收缩至左侧，避让右侧悬浮面板) -->
-      <div v-if="taskStore.tasks.length > 0" class="p-3 border-t border-subtle bg-input/10 flex justify-start">
-        <div class="w-1/4 min-w-[200px] max-w-[320px]">
-          <EnhancedFileDropzone 
-            @files-selected="onFilesSelected" 
-            :compact="true" 
-            :accept="supportedArchiveAccept"
-            class="w-full h-10" 
-          />
-        </div>
-      </div>
-    </div>
+      <!-- 底部操作区 -->
+      <div v-if="taskStore.tasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
+        <span class="text-[8px] font-black text-primary uppercase tracking-widest opacity-80 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
 
-    <!-- 全局配置悬浮控制台 (极致通透悬浮风格) -->
-    <div v-if="taskStore.tasks.length > 0" class="fixed bottom-6 right-6 z-50 bg-card/40 backdrop-blur-2xl border border-subtle/50 p-4 rounded-2xl shadow-2xl flex flex-col gap-3 group/float">
-      <!-- 装饰性微光 -->
-      <div class="absolute inset-0 rounded-2xl bg-primary/[0.02] opacity-0 group-hover/float:opacity-100 transition-opacity pointer-events-none"></div>
-      
-      <div class="flex items-center gap-5 relative z-10">
-        <!-- 路径核心区 (左侧) -->
-        <div class="flex flex-col min-w-[120px] max-w-[240px]">
-          <span class="text-[8px] font-black text-primary uppercase tracking-widest mb-1 opacity-80">{{ appStore.t('decompress.config.output') }}</span>
-          <div class="text-[11px] font-mono text-content font-bold truncate leading-tight tracking-tight">
-            {{ isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto')) }}
-          </div>
-        </div>
+        <button @click="handleGlobalSelectDir"
+                class="h-6 px-2.5 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-[9px] font-black flex items-center gap-1 shadow-sm shadow-primary/20">
+          <i class="pi pi-folder-open text-[9px]"></i>
+          {{ appStore.t('decompress.config.output_select') }}
+        </button>
 
-        <!-- 垂直分隔线 -->
-        <div class="w-px h-8 bg-subtle/20 shrink-0"></div>
+        <button @click="handleGlobalSetSameDir"
+                :class="isGlobalSameDir ? 'bg-primary/10 text-primary border-primary/20 shadow-inner' : 'bg-input/30 text-muted border-subtle/50'"
+                class="h-6 px-2.5 rounded-lg border text-[9px] font-bold transition-all hover:bg-primary/5">
+          {{ appStore.t('decompress.config.output_same') }}
+        </button>
 
-        <!-- 操作区 (右侧) -->
-        <div class="flex gap-2 shrink-0">
-          <!-- 选择目录：作为核心主按钮 -->
-          <button @click="handleGlobalSelectDir" 
-                  class="h-7 px-3.5 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-[10px] font-black flex items-center gap-2 shadow-sm shadow-primary/20">
-            <i class="pi pi-folder-open text-[11px]"></i>
-            {{ appStore.t('decompress.config.output_select') }}
-          </button>
-          
-          <!-- 同目录：浅色通透风格 -->
-          <button @click="handleGlobalSetSameDir" 
-                  :class="isGlobalSameDir ? 'bg-primary/10 text-primary border-primary/20 shadow-inner' : 'bg-input/30 text-muted border-subtle/50'"
-                  class="h-7 px-3 rounded-lg border text-[10px] font-bold transition-all hover:bg-primary/5">
-            {{ appStore.t('decompress.config.output_same') }}
-          </button>
-        </div>
-      </div>
+        <span class="text-[9px] font-mono text-content font-bold truncate flex-1 min-w-[100px] max-w-[240px]">
+          {{ isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto')) }}
+        </span>
 
-      <!-- 底部辅助区 (极细分隔线 + 复选框) -->
-      <div class="pt-2 border-t border-subtle/10 flex justify-end relative z-10">
-        <div class="flex items-center gap-2.5 cursor-pointer group/subcheck transition-all" @click="toggleGlobalSubfolder">
-          <div class="w-3.5 h-3.5 rounded border border-primary/30 flex items-center justify-center transition-all group-hover/subcheck:border-primary" 
+        <div class="flex items-center gap-2 cursor-pointer" @click="toggleGlobalSubfolder">
+          <div class="w-3 h-3 rounded border border-primary/30 flex items-center justify-center"
                :class="globalExtractToSubfolder ? 'bg-primary border-primary' : 'bg-transparent'">
-            <i v-if="globalExtractToSubfolder" class="pi pi-check text-[7px] text-white"></i>
+            <i v-if="globalExtractToSubfolder" class="pi pi-check text-[6px] text-white"></i>
           </div>
-          <span class="text-[9px] font-black text-muted group-hover/subcheck:text-primary transition-colors uppercase tracking-widest">
-            {{ appStore.t('decompress.config.output_sub') }}
-          </span>
+          <span class="text-[8px] font-black text-muted uppercase tracking-widest">{{ appStore.t('decompress.config.output_sub') }}</span>
         </div>
+
+        <div class="w-px h-5 bg-subtle/20 mx-1"></div>
+
+        <EnhancedFileDropzone
+          @files-selected="onFilesSelected"
+          :compact="true"
+          :accept="supportedArchiveAccept"
+          class="flex-1 min-w-[140px] max-w-[240px] h-7"
+        />
       </div>
     </div>
 
