@@ -3,7 +3,7 @@ use crate::system_integration::{
     PermissionManager, PermissionType, PermissionStatus,
     IntegrationType, IntegrationStatus
 };
-use tauri::{command, AppHandle, Manager};
+use tauri::{command, AppHandle};
 
 #[command]
 pub async fn send_notification(request: NotificationRequest) -> Result<(), String> {

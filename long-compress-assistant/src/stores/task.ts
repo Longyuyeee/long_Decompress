@@ -2,6 +2,10 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
+import { translations } from '@/i18n'
+
+const lang = () => localStorage.getItem('app-language') || 'zh-CN'
+const t = (key: string) => translations[lang()]?.[key] || translations['zh-CN']?.[key] || key
 
 export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'completed' | 'failed' | 'cancelled'
 export type LogSeverity = 'info' | 'warning' | 'error' | 'success'
@@ -95,8 +99,8 @@ export const useTaskStore = defineStore('task', () => {
           // 后台发送系统通知（仅在页面不可见时）
           if (document.visibilityState !== 'visible' && 'Notification' in window && Notification.permission === 'granted') {
             try {
-              new Notification(`Task Complete: ${task.name}`, {
-                body: `Extracted to ${task.outputPath || 'output'}`,
+              new Notification(`${t('notify.task_complete')}: ${task.name}`, {
+                body: t('notify.extracted_to').replace('{0}', task.outputPath || 'output'),
                 icon: '/icon.png'
               })
             } catch { /* ignore */ }

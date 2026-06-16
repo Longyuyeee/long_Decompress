@@ -342,7 +342,7 @@ impl RarSupportService {
         command.arg(rar_path);
         command.arg(output_dir);
 
-        log::debug!("执行命令: {:?}", command);
+        log::debug!("执行 RAR 命令 ({} 个参数)", command.get_args().len());
 
         let output = command.output()
             .map_err(|e| RarError::CommandFailed(format!("执行unrar命令失败: {}", e)))?;
@@ -383,7 +383,7 @@ impl RarSupportService {
         command.arg(if options.overwrite_existing { "-aoa" } else { "-aou" });
         command.arg(rar_path);
 
-        log::debug!("执行命令: {:?}", command);
+        log::debug!("执行 RAR 命令 ({} 个参数)", command.get_args().len());
 
         let output = command.output()
             .map_err(|e| RarError::CommandFailed(format!("执行7z命令失败: {}", e)))?;

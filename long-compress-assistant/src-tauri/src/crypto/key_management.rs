@@ -46,28 +46,19 @@ impl KeyManager {
     }
 
     pub async fn initialize(&self, _password: &str) -> Result<()> {
-        Ok(())
+        Err(anyhow::anyhow!("KeyManager::initialize 尚未实现 — 请使用 EncryptedPasswordService::unlock"))
     }
 
     pub async fn unlock(&self, _password: &str) -> Result<bool> {
-        Ok(true)
+        Err(anyhow::anyhow!("KeyManager::unlock 尚未实现 — 请使用 EncryptedPasswordService::unlock"))
     }
 
-    pub async fn generate_key(&self, name: &str, key_type: KeyType, algorithm: KeyAlgorithm) -> Result<KeyEntry> {
-        Ok(KeyEntry {
-            id: uuid::Uuid::new_v4().to_string(),
-            name: name.to_string(),
-            key_type,
-            algorithm,
-            encrypted_key: String::new(),
-            nonce: String::new(),
-            salt: String::new(),
-            created_at: chrono::Utc::now(),
-        })
+    pub async fn generate_key(&self, _name: &str, _key_type: KeyType, _algorithm: KeyAlgorithm) -> Result<KeyEntry> {
+        Err(anyhow::anyhow!("KeyManager::generate_key 尚未实现"))
     }
 
     pub async fn get_key_data(&self, _id: &str) -> Result<Vec<u8>> {
-        Ok(vec![0u8; 32])
+        Err(anyhow::anyhow!("KeyManager::get_key_data 尚未实现 — 请使用 EncryptionService"))
     }
 
     pub async fn list_keys(&self) -> Result<Vec<KeyEntry>> {

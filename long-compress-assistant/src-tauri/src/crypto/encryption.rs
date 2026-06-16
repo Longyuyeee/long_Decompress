@@ -41,9 +41,24 @@ impl EncryptionService {
         Ok(Self::new(key))
     }
 
-    pub fn from_password(password: &str, salt: Option<&[u8]>) -> Result<Self> {
-        let salt_bytes = salt.unwrap_or(b"default_salt_123");
-        let key = Self::derive_key(password, salt_bytes)?;
+    /// 从密码派生密钥。如果未提供盐值，生成随机盐值并返回。
+    /// 调用者负责保存返回的盐值以便后续验证。
+    pub fn from_password(password: &str, salt: Option<&[u8]>) -> Result<(Self, Vec<u8>)> {
+        let salt_bytes: Vec<u8> = if let Some(s) = salt {
+            s.to_vec()
+        } else {
+            use rand::RngCore;
+            let mut s = vec![0u8; 16];
+            rand::thread_rng().fill_bytes(&mut s);
+            s
+        };
+        let key = Self::derive_key(password, &salt_bytes)?;
+        Ok((Self::new(key), salt_bytes))
+    }
+
+    /// 从密码和盐值派生密钥（不生成随机盐值，保持向后兼容内部场景）
+    pub fn from_password_with_salt(password: &str, salt: &[u8]) -> Result<Self> {
+        let key = Self::derive_key(password, salt)?;
         Ok(Self::new(key))
     }
 

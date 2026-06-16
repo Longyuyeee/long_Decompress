@@ -226,8 +226,10 @@ impl IOBufferPool {
 
     /// 获取统计信息
     pub async fn get_statistics(&self) -> BufferPoolStatistics {
-        let stats = self.statistics.lock().await;
+        // 锁序与 acquire() 保持一致：buffers → statistics → total_allocated
+        // 避免 acquire() 的 buffers→statistics 与此处的 statistics→buffers 形成死锁
         let buffers = self.buffers.lock().await;
+        let stats = self.statistics.lock().await;
         let total_allocated = self.total_allocated.lock().await;
 
         let mut result = stats.clone();

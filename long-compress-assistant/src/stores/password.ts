@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
+import { translations } from '@/i18n'
+
+const lang = () => localStorage.getItem('app-language') || 'zh-CN'
+const t = (key: string) => translations[lang()]?.[key] || translations['zh-CN']?.[key] || key
 
 // --- 类型定义 ---
 
@@ -182,7 +186,7 @@ export const usePasswordStore = defineStore('password', () => {
     } catch (e) {
       console.error('自动初始化密码服务失败:', e)
       isUnlocked.value = false
-      errorMessage.value = "密码保险箱初始化失败，请检查后端状态"
+      errorMessage.value = t('vault.init_failed')
     }
   }
 
@@ -196,11 +200,11 @@ export const usePasswordStore = defineStore('password', () => {
         isUnlocked.value = true
         await fetchAllData()
       } else {
-        errorMessage.value = '主密码错误'
+        errorMessage.value = t('vault.wrong_password')
       }
       return success
     } catch (e) {
-      errorMessage.value = `解锁失败: ${e}`
+      errorMessage.value = t('vault.unlock_failed').replace('{0}', String(e))
       return false
     } finally {
       isLoading.value = false
@@ -232,7 +236,7 @@ export const usePasswordStore = defineStore('password', () => {
       groups.value = allGroups
     } catch (e) {
       console.error('获取密码本数据失败', e)
-      errorMessage.value = `获取数据失败: ${e}`
+      errorMessage.value = t('vault.fetch_failed').replace('{0}', String(e))
     } finally {
       isLoading.value = false
     }

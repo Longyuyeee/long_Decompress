@@ -73,6 +73,8 @@ pub struct PasswordValidationResult {
 pub struct PasswordBookService {
     master_key: Option<EncryptionService>,
     session_key: Option<EncryptionService>,
+    master_salt: Option<Vec<u8>>,
+    verification_token: Option<String>,
 }
 
 impl PasswordBookService {
@@ -80,23 +82,47 @@ impl PasswordBookService {
         Self {
             master_key: None,
             session_key: None,
+            master_salt: None,
+            verification_token: None,
         }
     }
 
     /// 设置主密钥（从密码派生）
     pub async fn set_master_key(&mut self, password: &str) -> Result<()> {
-        let key_service = EncryptionService::from_password(password, None)
+        let (key_service, salt) = EncryptionService::from_password(password, None)
             .context("创建主密钥失败")?;
 
+        // 生成验证令牌：加密一个已知字符串，用于后续密码验证
+        let token = key_service.encrypt_string("MASTER_KEY_VERIFY_TOKEN")
+            .context("创建验证令牌失败")?;
+
         self.master_key = Some(key_service);
+        self.master_salt = Some(salt);
+        self.verification_token = Some(serde_json::to_string(&token).context("序列化验证令牌失败")?);
         Ok(())
     }
 
-    /// 验证主密码
-    pub async fn verify_master_password(&self, _password: &str) -> Result<bool> {
-        // 这里应该实现密码验证逻辑
-        // 暂时返回true用于测试
-        Ok(true)
+    /// 验证主密码 — 通过尝试解密验证令牌来检验密码正确性
+    pub async fn verify_master_password(&self, password: &str) -> Result<bool> {
+        let salt = match &self.master_salt {
+            Some(s) => s.clone(),
+            None => return Err(anyhow::anyhow!("主密钥尚未初始化")),
+        };
+
+        let key_service = EncryptionService::from_password_with_salt(password, &salt)?;
+
+        let token_str = match &self.verification_token {
+            Some(t) => t,
+            None => return Err(anyhow::anyhow!("验证令牌缺失")),
+        };
+
+        let token: EncryptedData = serde_json::from_str(token_str)
+            .context("解析验证令牌失败")?;
+
+        match key_service.decrypt_string(&token) {
+            Ok(plaintext) => Ok(plaintext == "MASTER_KEY_VERIFY_TOKEN"),
+            Err(_) => Ok(false), // 解密失败 = 密码错误
+        }
     }
 
     /// 创建会话密钥

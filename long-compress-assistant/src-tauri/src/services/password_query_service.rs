@@ -454,13 +454,18 @@ impl PasswordQueryService {
         let mut entries = Vec::new();
 
         for chunk in entry_ids.chunks(50) {
-            let ids_param = chunk.join("','");
+            // 使用参数化查询防止 SQL 注入
+            let placeholders: Vec<&str> = vec!["?"; chunk.len()];
             let sql = format!(
-                "SELECT * FROM password_entries WHERE id IN ('{}')",
-                ids_param
+                "SELECT * FROM password_entries WHERE id IN ({})",
+                placeholders.join(",")
             );
 
-            let db_entries: Vec<PasswordEntryDb> = query_as(&sql)
+            let mut query = sqlx::query_as::<_, PasswordEntryDb>(&sql);
+            for id in chunk {
+                query = query.bind(id);
+            }
+            let db_entries: Vec<PasswordEntryDb> = query
                 .fetch_all(&self.db_pool)
                 .await?;
 

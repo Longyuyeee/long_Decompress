@@ -45,11 +45,17 @@ impl TaskExecutor {
             (task.task_type.clone(), task.compression_task.clone())
         };
 
+        let window = match self.app_handle.get_window("main") {
+            Some(w) => w,
+            None => {
+                log::error!("任务 {} 执行失败: 主窗口不可用", task_id);
+                return;
+            }
+        };
+
         let result = match task_type {
             TaskType::Compress => {
                 let service = CompressionService::new_with_defaults().await;
-                let window = self.app_handle.get_window("main")
-                    .unwrap_or_else(|| panic!("main window not found for task executor"));
                 let options = compression_task.options.clone();
                 service.compress(
                     window,
@@ -61,8 +67,6 @@ impl TaskExecutor {
             }
             TaskType::Extract => {
                 let service = CompressionService::new_with_defaults().await;
-                let window = self.app_handle.get_window("main")
-                    .unwrap_or_else(|| panic!("main window not found for task executor"));
                 let file_path = compression_task.source_files
                     .first()
                     .cloned()

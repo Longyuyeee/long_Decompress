@@ -1,18 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_imports)]
-#![allow(unused_mut)]
 #![allow(unexpected_cfgs)]
 
-use long_compress_assistant::services;
-use long_compress_assistant::models;
 use long_compress_assistant::database;
-use long_compress_assistant::crypto;
-use long_compress_assistant::utils;
-use long_compress_assistant::config;
-use long_compress_assistant::task_queue;
-use long_compress_assistant::system_integration;
 
 use long_compress_assistant::commands::encrypted_password::EncryptedPasswordServiceState;
 

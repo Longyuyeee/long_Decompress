@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use crate::crypto::encryption::{EncryptionService, EncryptedData};
 use crate::crypto::key_management::KeyManager;
+use base64::Engine as _;
 use crate::crypto::hashing::{HashingService, HashResult};
 use crate::models::password::{
     PasswordEntry, PasswordStrength, 
@@ -504,8 +505,10 @@ impl EncryptedPasswordService {
         let export_json = serde_json::to_vec(&export_data)?;
 
         if options.encrypt {
-            let encryption_service = EncryptionService::from_password(export_password, None)?;
-            let encrypted_data = encryption_service.encrypt(&export_json)?;
+            let (encryption_service, salt) = EncryptionService::from_password(export_password, None)?;
+            let mut encrypted_data = encryption_service.encrypt(&export_json)?;
+            // 将盐值保存到导出数据中，以便导入时可以还原密钥
+            encrypted_data.salt = Some(base64::engine::general_purpose::STANDARD.encode(&salt));
             Ok(serde_json::to_vec(&encrypted_data)?)
         } else {
             Ok(export_json)
@@ -525,8 +528,17 @@ impl EncryptedPasswordService {
 
         let data = if options.encrypt {
             let password = import_password.ok_or_else(|| anyhow::anyhow!("需要导入密码"))?;
-            let encryption_service = EncryptionService::from_password(password, None)?;
             let encrypted_data: EncryptedData = serde_json::from_slice(import_data)?;
+            // 从导出数据中恢复盐值，若无则使用空盐值（向后兼容）
+            let salt_bytes = encrypted_data.salt.as_deref().map(|s| {
+                base64::engine::general_purpose::STANDARD.decode(s).unwrap_or_default()
+            });
+            let encryption_service = if let Some(ref salt) = salt_bytes {
+                EncryptionService::from_password_with_salt(password, salt)?
+            } else {
+                let (svc, _) = EncryptionService::from_password(password, None)?;
+                svc
+            };
             encryption_service.decrypt(&encrypted_data)?
         } else {
             import_data.to_vec()
