@@ -90,12 +90,13 @@ export const useAppStore = defineStore('app', () => {
     uiScale: 100
   })
 
-  // UI 缩放 - 应用到 #app 容器而非 documentElement，避免干扰窗口 resize
+  // UI 缩放 - 通过调整根字体大小实现真正的字体/界面缩放（非僵硬 CSS zoom）
+  // rem 单位基于 html font-size，修改它会让所有 rem 值（Tailwind 间距、标准字号等）等比缩放
   watch(() => settings.value.uiScale, (scale) => {
-    const app = document.getElementById('app')
-    if (app) {
-      app.style.zoom = `${scale}%`
-    }
+    const root = document.documentElement
+    const factor = scale / 100
+    root.style.setProperty('--ui-scale-factor', String(factor))
+    root.style.fontSize = `${scale}%`
   }, { immediate: true })
 
   watch(() => settings.value.autoStart, async (newVal) => {

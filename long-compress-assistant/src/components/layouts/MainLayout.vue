@@ -73,7 +73,7 @@ const navigateTo = (name: string) => {
               <i :class="[item.icon, 'text-lg transition-all duration-500', 
                  route.name === item.name ? 'text-primary scale-110' : 'text-muted group-hover:text-content']"></i>
                  
-              <div class="absolute left-full ml-4 px-4 py-2 rounded-xl backdrop-blur-3xl bg-card/90 border border-subtle text-content text-[10px] font-black tracking-widest uppercase opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap shadow-2xl z-[100]">
+              <div class="absolute left-full ml-4 px-4 py-2 rounded-xl backdrop-blur-3xl bg-card/90 border border-subtle text-content text-[0.625rem] font-black tracking-widest uppercase opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap shadow-2xl z-[100]">
                 {{ appStore.t(item.label) }}
               </div>
             </div>

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useAppStore } from '@/stores/app'
+
+const appStore = useAppStore()
 
 const props = defineProps<{
   status: 'pending' | 'running' | 'paused'
@@ -27,9 +30,9 @@ const emit = defineEmits<{
       <div class="flex items-center gap-3">
         <i :class="['pi text-sm transition-all duration-500', 
                    status === 'running' ? 'pi-pause text-white' : 'pi-play text-black']"></i>
-        <span class="text-[10px] uppercase font-black tracking-[0.2em] transition-all duration-500"
+        <span class="text-[0.625rem] uppercase font-black tracking-[0.2em] transition-all duration-500"
               :class="status === 'running' ? 'text-white' : 'text-black'">
-          {{ status === 'running' ? '暂停任务' : '开始处理' }}
+          {{ status === 'running' ? appStore.t('action.pause') : appStore.t('action.start') }}
         </span>
       </div>
     </button>

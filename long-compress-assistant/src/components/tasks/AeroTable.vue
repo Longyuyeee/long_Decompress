@@ -155,7 +155,7 @@ const onLeave = (el: any) => {
     <!-- 智慧表格 (重构为极简列表模式) -->
     <div class="glass-table w-full flex-1 flex flex-col min-h-0">
       <!-- 表头 (高度压缩，字体减小) -->
-      <div class="table-header sticky top-0 z-20 flex items-center px-6 py-3 border-b border-subtle bg-input/90 backdrop-blur-xl text-dim text-[8px] font-black tracking-[0.15em] uppercase shrink-0">
+      <div class="table-header sticky top-0 z-20 flex items-center px-6 py-3 border-b border-subtle bg-input/90 backdrop-blur-xl text-dim text-[0.5rem] font-black tracking-[0.15em] uppercase shrink-0">
         <!-- 复选框列 -->
         <div class="w-8 shrink-0 flex items-center justify-center">
           <button
@@ -163,9 +163,9 @@ const onLeave = (el: any) => {
             class="w-4 h-4 rounded border border-subtle/50 flex items-center justify-center hover:border-primary transition-colors"
             :class="taskStore.tasks.filter(t => t.status === 'pending').every(t => isSelected(t.id)) ? 'bg-primary border-primary' : 'bg-input/50'"
             @click.stop="taskStore.tasks.filter(t => t.status === 'pending').every(t => isSelected(t.id)) ? emit('deselect-all') : emit('select-all-pending')"
-            title="Toggle all pending"
+            :title="appStore.t('tasks.toggle_all')"
           >
-            <i v-if="taskStore.tasks.filter(t => t.status === 'pending').every(t => isSelected(t.id))" class="pi pi-check text-[7px] text-white"></i>
+            <i v-if="taskStore.tasks.filter(t => t.status === 'pending').every(t => isSelected(t.id))" class="pi pi-check text-[0.4375rem] text-white"></i>
           </button>
         </div>
         <div class="flex-[1.5] min-w-[180px]">{{ appStore.t('decompress.column.name') }}</div>
@@ -193,24 +193,24 @@ const onLeave = (el: any) => {
                 :class="isSelected(task.id) ? 'bg-primary border-primary' : 'border-subtle/50 bg-input/50 hover:border-primary'"
                 @click="emit('toggle-task', task.id)"
               >
-                <i v-if="isSelected(task.id)" class="pi pi-check text-[7px] text-white"></i>
+                <i v-if="isSelected(task.id)" class="pi pi-check text-[0.4375rem] text-white"></i>
               </button>
-              <i v-else-if="task.status === 'completed'" class="pi pi-check-circle text-green-400/50 text-[11px]"></i>
-              <i v-else-if="task.status === 'failed'" class="pi pi-exclamation-circle text-red-400/50 text-[11px]"></i>
-              <i v-else-if="task.status === 'cancelled'" class="pi pi-ban text-muted/30 text-[11px]"></i>
+              <i v-else-if="task.status === 'completed'" class="pi pi-check-circle text-green-400/50 text-[0.6875rem]"></i>
+              <i v-else-if="task.status === 'failed'" class="pi pi-exclamation-circle text-red-400/50 text-[0.6875rem]"></i>
+              <i v-else-if="task.status === 'cancelled'" class="pi pi-ban text-muted/30 text-[0.6875rem]"></i>
               <div v-else class="w-4 h-4"></div>
             </div>
 
             <!-- 文件识别区 (极致紧凑) -->
             <div class="flex-[1.5] min-w-[180px] overflow-hidden flex items-center gap-3">
-              <div class="text-content font-bold truncate text-[11px] tracking-tight group-hover/row:text-primary transition-colors leading-tight">{{ task.name }}</div>
-              <span class="text-dim text-[7px] uppercase font-black tracking-widest bg-input/50 px-1 py-0 rounded border border-subtle/20 shrink-0">
+              <div class="text-content font-bold truncate text-[0.6875rem] tracking-tight group-hover/row:text-primary transition-colors leading-tight">{{ task.name }}</div>
+              <span class="text-dim text-[0.4375rem] uppercase font-black tracking-widest bg-input/50 px-1 py-0 rounded border border-subtle/20 shrink-0">
                 {{ task.format?.toUpperCase() }}
               </span>
             </div>
 
             <!-- 物理路径 -->
-            <div class="w-60 text-muted text-[9px] truncate italic px-4 hidden lg:block font-mono font-light opacity-30">
+            <div class="w-60 text-muted text-[0.5625rem] truncate italic px-4 hidden lg:block font-mono font-light opacity-30">
               {{ task.sourceFiles[0] }}
             </div>
 
@@ -218,14 +218,14 @@ const onLeave = (el: any) => {
             <div class="flex-1 min-w-[180px] flex items-center gap-4 px-4">
               <!-- 活动任务旋转图标 -->
               <i v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
-                 class="pi pi-spin pi-spinner text-primary text-[10px] shrink-0"></i>
+                 class="pi pi-spin pi-spinner text-primary text-[0.625rem] shrink-0"></i>
               <i v-else-if="task.status === 'completed'"
-                 class="pi pi-check-circle text-green-400 text-[10px] shrink-0"></i>
+                 class="pi pi-check-circle text-green-400 text-[0.625rem] shrink-0"></i>
               <i v-else-if="task.status === 'failed'"
-                 class="pi pi-exclamation-circle text-red-400 text-[10px] shrink-0"></i>
+                 class="pi pi-exclamation-circle text-red-400 text-[0.625rem] shrink-0"></i>
               <i v-else-if="task.status === 'cancelled'"
-                 class="pi pi-ban text-muted text-[10px] shrink-0"></i>
-              <span class="text-[9px] font-bold truncate flex-1"
+                 class="pi pi-ban text-muted text-[0.625rem] shrink-0"></i>
+              <span class="text-[0.5625rem] font-bold truncate flex-1"
                     :class="{
                       'text-primary': ['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status),
                       'text-muted opacity-60': task.status === 'pending',
@@ -235,11 +235,11 @@ const onLeave = (el: any) => {
                     }">
                 {{ task.status === 'pending'
                   ? appStore.t('decompress.waiting')
-                  : task.status === 'preparing' ? 'Preparing...'
-                  : task.status === 'completed' ? 'Completed'
-                  : task.status === 'failed' ? 'Failed'
-                  : task.status === 'cancelled' ? 'Cancelled'
-                  : (task.logs.length > 0 ? task.logs[task.logs.length - 1].message : 'Processing...') }}
+                  : task.status === 'preparing' ? appStore.t('tasks.status.preparing_short')
+                  : task.status === 'completed' ? appStore.t('tasks.status.completed_short')
+                  : task.status === 'failed' ? appStore.t('tasks.status.failed_short')
+                  : task.status === 'cancelled' ? appStore.t('tasks.status.cancelled_short')
+                  : (task.logs.length > 0 ? task.logs[task.logs.length - 1].message : appStore.t('tasks.status.processing_short')) }}
               </span>
               <div class="w-24 flex items-center gap-2 shrink-0">
                 <div class="h-0.5 flex-1 bg-input border border-subtle/20 rounded-full overflow-hidden">
@@ -247,7 +247,7 @@ const onLeave = (el: any) => {
                        :class="task.status === 'failed' ? 'bg-red-400' : task.status === 'completed' ? 'bg-green-400' : 'bg-primary'"
                        :style="{ width: `${task.progress}%` }"></div>
                 </div>
-                <span class="text-[9px] font-mono font-black w-6 text-right"
+                <span class="text-[0.5625rem] font-mono font-black w-6 text-right"
                       :class="task.status === 'failed' ? 'text-red-400' : task.status === 'completed' ? 'text-green-400' : 'text-primary'">
                   {{ task.progress }}%
                 </span>
@@ -260,13 +260,13 @@ const onLeave = (el: any) => {
                 v-if="task.status === 'pending'"
                 @click="taskStore.removeTask(task.id)"
                 class="w-5 h-5 rounded-md flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 transition-all"
-                title="Remove">
-                <i class="pi pi-times text-[9px]"></i>
+                :title="appStore.t('tasks.remove')">
+                <i class="pi pi-times text-[0.5625rem]"></i>
               </button>
             </div>
 
             <div class="w-6 flex justify-end">
-              <i :class="['pi text-[7px] transition-all duration-500',
+              <i :class="['pi text-[0.4375rem] transition-all duration-500',
                  expandedTasks.has(task.id) ? 'pi-chevron-up text-primary' : 'pi-chevron-down text-muted']"></i>
             </div>
           </div>
@@ -287,8 +287,8 @@ const onLeave = (el: any) => {
                   <!-- 左侧：核心配置 -->
                   <div class="flex-initial min-w-[320px] max-w-[45%] p-5 border-r border-subtle/20 flex flex-col space-y-3 pl-8 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto custom-scrollbar max-h-56">
                     <div class="flex items-center justify-between">
-                      <h4 class="text-primary text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                        <i class="pi pi-cog text-[10px]"></i>
+                      <h4 class="text-primary text-[0.5625rem] font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                        <i class="pi pi-cog text-[0.625rem]"></i>
                         {{ appStore.t('decompress.column.config') }}
                       </h4>
                     </div>
@@ -297,20 +297,20 @@ const onLeave = (el: any) => {
                       <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
                       <div class="space-y-2">
                         <div class="flex items-center justify-between gap-3">
-                          <span class="text-muted text-[8px] uppercase font-black tracking-widest opacity-60 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
+                          <span class="text-muted text-[0.5rem] uppercase font-black tracking-widest opacity-60 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
                           <div class="flex gap-1.5 flex-nowrap shrink-0 overflow-x-auto no-scrollbar">
                             <button @click.stop="handleSetSameDir(task)" 
-                                    class="h-6 px-2.5 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-[9px] font-black whitespace-nowrap">
+                                    class="h-6 px-2.5 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-[0.5625rem] font-black whitespace-nowrap">
                               {{ appStore.t('decompress.config.output_same') }}
                             </button>
                             <button @click.stop="handleSelectOutputDir(task)"
-                                    class="h-7 px-3 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-[9px] font-black whitespace-nowrap flex items-center gap-1.5 shadow-sm">
-                              <i class="pi pi-folder-open text-[9px]"></i>
+                                    class="h-7 px-3 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-[0.5625rem] font-black whitespace-nowrap flex items-center gap-1.5 shadow-sm">
+                              <i class="pi pi-folder-open text-[0.5625rem]"></i>
                               {{ appStore.t('decompress.config.output_select') }}
                             </button>
                           </div>
                         </div>
-                        <div class="px-3 py-2 rounded-xl bg-input/50 border border-subtle/50 font-mono text-[10px] text-content/80 truncate shadow-inner">
+                        <div class="px-3 py-2 rounded-xl bg-input/50 border border-subtle/50 font-mono text-[0.625rem] text-content/80 truncate shadow-inner">
                           {{ task.outputPath || appStore.t('decompress.config.output_auto') }}
                         </div>
                       </div>
@@ -318,16 +318,16 @@ const onLeave = (el: any) => {
                       <div class="flex items-center gap-3 cursor-pointer group/check" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
                         <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
                              :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
-                          <i v-if="task.extractToSubfolder" class="pi pi-check text-[8px] text-white"></i>
+                          <i v-if="task.extractToSubfolder" class="pi pi-check text-[0.5rem] text-white"></i>
                         </div>
-                        <span class="text-[11px] font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
+                        <span class="text-[0.6875rem] font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
                       </div>
 
                       <!-- 密码输入区 (仅在自动破解失败时显示) -->
                       <div v-if="task.passwordRequired" class="space-y-1.5 p-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5">
                         <div class="flex items-center gap-2">
-                          <i class="pi pi-lock text-[10px] text-yellow-400"></i>
-                          <span class="text-yellow-400 text-[9px] font-black uppercase tracking-widest">Auto-crack failed — Enter password</span>
+                          <i class="pi pi-lock text-[0.625rem] text-yellow-400"></i>
+                          <span class="text-yellow-400 text-[0.5625rem] font-black uppercase tracking-widest">{{ appStore.t('tasks.password.crack_failed') }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                           <input
@@ -335,14 +335,14 @@ const onLeave = (el: any) => {
                             :value="task.password || ''"
                             @input="(e: Event) => { task.password = (e.target as HTMLInputElement).value; task.passwordRequired = false; }"
                             @click.stop
-                            placeholder="Enter password to retry..."
-                            class="flex-1 h-7 rounded-lg bg-input/50 border border-yellow-500/50 text-[10px] px-3 font-mono outline-none focus:border-yellow-400 text-yellow-400 placeholder:text-yellow-500/50"
+                            :placeholder="appStore.t('tasks.password.placeholder')"
+                            class="flex-1 h-7 rounded-lg bg-input/50 border border-yellow-500/50 text-[0.625rem] px-3 font-mono outline-none focus:border-yellow-400 text-yellow-400 placeholder:text-yellow-500/50"
                           />
                           <button
                             @click.stop="() => { const candidates = passwordStore.findCandidatePasswords(task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''); if (candidates.length > 0) { task.password = candidates[0]; task.passwordRequired = false; } }"
                             class="h-7 w-7 rounded-lg border border-yellow-500/50 bg-yellow-500/10 flex items-center justify-center text-yellow-400 hover:bg-yellow-500/20 transition-colors shrink-0"
-                            title="Fill from vault">
-                            <i class="pi pi-key text-[9px]"></i>
+                            :title="appStore.t('tasks.password.fill_vault')">
+                            <i class="pi pi-key text-[0.5625rem]"></i>
                           </button>
                         </div>
                       </div>
@@ -352,16 +352,16 @@ const onLeave = (el: any) => {
 
                   <!-- 右侧：执行日志 -->
                   <div class="flex-1 p-5 flex flex-col overflow-hidden">
-                    <h4 class="text-muted text-[8px] font-black uppercase tracking-[0.2em] mb-3 flex items-center justify-between opacity-60">
+                    <h4 class="text-muted text-[0.5rem] font-black uppercase tracking-[0.2em] mb-3 flex items-center justify-between opacity-60">
                       <span class="flex items-center gap-2">
-                        <i class="pi pi-align-left text-[9px]"></i>
+                        <i class="pi pi-align-left text-[0.5625rem]"></i>
                         {{ appStore.t('decompress.config.logs_title') }}
                       </span>
                     </h4>
                     <div class="log-viewport flex-1 overflow-y-auto pr-2 space-y-1.5 custom-scrollbar">
                       <div v-for="(log, idx) in task.logs" :key="idx" class="flex gap-3 items-start group/log border-l-2 border-subtle/20 pl-3 py-0.5">
-                        <span class="text-dim font-mono text-[8px] mt-0.5 opacity-40 shrink-0">{{ new Date(log.timestamp).toLocaleTimeString([], {hour12: false}) }}</span>
-                        <div class="flex-1 text-[10px] leading-relaxed font-mono" :class="getSeverityClass(log.severity)">
+                        <span class="text-dim font-mono text-[0.5rem] mt-0.5 opacity-40 shrink-0">{{ new Date(log.timestamp).toLocaleTimeString([], {hour12: false}) }}</span>
+                        <div class="flex-1 text-[0.625rem] leading-relaxed font-mono" :class="getSeverityClass(log.severity)">
                           {{ log.message }}
                         </div>
                       </div>
@@ -385,15 +385,15 @@ const onLeave = (el: any) => {
     </div>
     <div v-else-if="contentsList.length === 0" class="text-center py-8 text-muted text-xs">
       <i class="pi pi-info-circle text-2xl mb-2 block opacity-30"></i>
-      Unable to list contents (7z may not be installed or archive is unsupported)
+      {{ appStore.t('tasks.contents.unable') }}
     </div>
     <div v-else class="space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
-      <div class="text-[9px] font-bold text-muted mb-2 uppercase tracking-widest">
-        {{ contentsList.length }} file(s)
+      <div class="text-[0.5625rem] font-bold text-muted mb-2 uppercase tracking-widest">
+        {{ contentsList.length }} {{ appStore.t('tasks.contents.files') }}
       </div>
       <div v-for="(item, idx) in contentsList" :key="idx"
-           class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-input/30 text-[10px] font-mono text-content/80 hover:bg-primary/10 transition-colors">
-        <i :class="item.endsWith('/') ? 'pi pi-folder text-yellow-400/70' : 'pi pi-file text-muted/50'" class="text-[9px] shrink-0"></i>
+           class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-input/30 text-[0.625rem] font-mono text-content/80 hover:bg-primary/10 transition-colors">
+        <i :class="item.endsWith('/') ? 'pi pi-folder text-yellow-400/70' : 'pi pi-file text-muted/50'" class="text-[0.5625rem] shrink-0"></i>
         <span class="truncate">{{ item }}</span>
       </div>
     </div>

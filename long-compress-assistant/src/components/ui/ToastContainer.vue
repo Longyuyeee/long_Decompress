@@ -14,12 +14,12 @@
         </div>
         
         <div class="flex-1 pr-8">
-          <div class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">{{ toast.type }}</div>
+          <div class="text-[0.5625rem] font-black uppercase tracking-widest opacity-30 mb-1">{{ toast.type }}</div>
           <p class="text-xs font-bold leading-relaxed">{{ toast.message }}</p>
         </div>
 
         <button @click="uiStore.removeToast(toast.id)" class="absolute right-4 top-1/2 -translate-y-1/2 text-dim hover:text-content transition-colors">
-          <i class="pi pi-times text-[10px]"></i>
+          <i class="pi pi-times text-[0.625rem]"></i>
         </button>
       </div>
     </transition-group>

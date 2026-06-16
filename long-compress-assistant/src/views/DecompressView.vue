@@ -142,7 +142,7 @@ const startDecompression = async () => {
           taskStore.updateTaskStatus(task.id, 'extracting')
           task.logs.push({
             task_id: task.id,
-            message: `Auto-trying ${candidates.length} password(s) from vault...`,
+            message: appStore.t('decompress.auto_trying').replace('{0}', String(candidates.length)),
             severity: 'info',
             timestamp: new Date().toISOString()
           })
@@ -177,7 +177,7 @@ const startDecompression = async () => {
           if (!succeeded) {
             // 所有候选密码均失败，标记为失败并记录错误
             taskStore.updateTaskStatus(task.id, 'failed')
-            task.error = `All ${candidates.length} vault password(s) tried and failed. The password may not be in vault, or the archive uses unsupported encryption (e.g., ZIP AES-256 requires 7z CLI).`
+            task.error = appStore.t('decompress.all_failed').replace('{0}', String(candidates.length))
             task.logs.push({
               task_id: task.id,
               message: task.error!,
@@ -188,7 +188,7 @@ const startDecompression = async () => {
         } else {
           // 保险箱中没有候选密码
           taskStore.updateTaskStatus(task.id, 'failed')
-          task.error = extractErrorMessage(error) || 'Encrypted archive detected but no passwords in vault. Add the password to vault first.'
+          task.error = extractErrorMessage(error) || appStore.t('decompress.no_vault_passwords')
           task.logs.push({
             task_id: task.id,
             message: task.error!,
@@ -218,7 +218,7 @@ const cancelAllTasks = async () => {
     }
   }
   if (failed > 0) {
-    appStore.setError(`${cancelled} task(s) cancelled, ${failed} failed`)
+    appStore.setError(appStore.t('decompress.cancel_status').replace('{0}', String(cancelled)).replace('{1}', String(failed)))
   }
 }
 
@@ -240,13 +240,13 @@ taskStore.$subscribe((mutation, state) => {
     <header class="flex justify-between items-center shrink-0">
       <div>
         <h1 class="text-3xl font-black text-content tracking-tighter mb-0.5">{{ appStore.t('nav.decompress') }}</h1>
-        <p class="text-muted text-[9px] font-bold uppercase tracking-[0.2em] ml-0.5">{{ appStore.t('decompress.add_files') }}</p>
+        <p class="text-muted text-[0.5625rem] font-bold uppercase tracking-[0.2em] ml-0.5">{{ appStore.t('decompress.add_files') }}</p>
       </div>
       <div class="flex gap-3">
         <button
           v-if="!isRunning && taskStore.tasks.some(t => ['completed', 'failed', 'cancelled'].includes(t.status))"
           @click="taskStore.clearFinishedTasks()"
-          class="h-10 px-6 rounded-xl bg-input border border-subtle text-muted text-[10px] font-black uppercase tracking-widest hover:text-red-400 transition-all shadow-sm flex items-center gap-2"
+          class="h-10 px-6 rounded-xl bg-input border border-subtle text-muted text-[0.625rem] font-black uppercase tracking-widest hover:text-red-400 transition-all shadow-sm flex items-center gap-2"
         >
           <i class="pi pi-trash"></i>
           {{ appStore.t('decompress.clear_finished') }}
@@ -254,15 +254,15 @@ taskStore.$subscribe((mutation, state) => {
         <button 
           v-if="isRunning"
           @click="cancelAllTasks"
-          class="h-10 px-6 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center gap-2"
+          class="h-10 px-6 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-[0.625rem] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center gap-2"
         >
           <i class="pi pi-stop-circle"></i>
-          {{ appStore.t('common.cancel') || 'Stop' }}
+          {{ appStore.t('common.cancel') }}
         </button>
         <button 
           v-if="hasPendingTasks && !isRunning"
           @click="startDecompression"
-          class="h-10 px-6 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg flex items-center gap-2"
+          class="h-10 px-6 rounded-xl bg-primary text-white text-[0.625rem] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg flex items-center gap-2"
         >
           <i class="pi pi-play-circle animate-pulse"></i>
           {{ appStore.t('decompress.start_queue') }}
@@ -296,30 +296,30 @@ taskStore.$subscribe((mutation, state) => {
 
       <!-- 底部操作区 -->
       <div v-if="taskStore.tasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
-        <span class="text-[8px] font-black text-primary uppercase tracking-widest opacity-80 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
+        <span class="text-[0.5rem] font-black text-primary uppercase tracking-widest opacity-80 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
 
         <button @click="handleGlobalSelectDir"
-                class="h-6 px-2.5 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-[9px] font-black flex items-center gap-1 shadow-sm shadow-primary/20">
-          <i class="pi pi-folder-open text-[9px]"></i>
+                class="h-6 px-2.5 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-[0.5625rem] font-black flex items-center gap-1 shadow-sm shadow-primary/20">
+          <i class="pi pi-folder-open text-[0.5625rem]"></i>
           {{ appStore.t('decompress.config.output_select') }}
         </button>
 
         <button @click="handleGlobalSetSameDir"
                 :class="isGlobalSameDir ? 'bg-primary/10 text-primary border-primary/20 shadow-inner' : 'bg-input/30 text-muted border-subtle/50'"
-                class="h-6 px-2.5 rounded-lg border text-[9px] font-bold transition-all hover:bg-primary/5">
+                class="h-6 px-2.5 rounded-lg border text-[0.5625rem] font-bold transition-all hover:bg-primary/5">
           {{ appStore.t('decompress.config.output_same') }}
         </button>
 
-        <span class="text-[9px] font-mono text-content font-bold truncate flex-1 min-w-[100px] max-w-[240px]">
+        <span class="text-[0.5625rem] font-mono text-content font-bold truncate flex-1 min-w-[100px] max-w-[240px]">
           {{ isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto')) }}
         </span>
 
         <div class="flex items-center gap-2 cursor-pointer" @click="toggleGlobalSubfolder">
           <div class="w-3 h-3 rounded border border-primary/30 flex items-center justify-center"
                :class="globalExtractToSubfolder ? 'bg-primary border-primary' : 'bg-transparent'">
-            <i v-if="globalExtractToSubfolder" class="pi pi-check text-[6px] text-white"></i>
+            <i v-if="globalExtractToSubfolder" class="pi pi-check text-[0.375rem] text-white"></i>
           </div>
-          <span class="text-[8px] font-black text-muted uppercase tracking-widest">{{ appStore.t('decompress.config.output_sub') }}</span>
+          <span class="text-[0.5rem] font-black text-muted uppercase tracking-widest">{{ appStore.t('decompress.config.output_sub') }}</span>
         </div>
 
         <div class="w-px h-5 bg-subtle/20 mx-1"></div>

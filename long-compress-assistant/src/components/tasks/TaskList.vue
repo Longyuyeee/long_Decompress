@@ -64,17 +64,17 @@
                 <span v-if="configStore.privacyMode" class="font-mono tracking-widest text-gray-400">•••••••.{{ task.name.split('.').pop() }}</span>
                 <span v-else>{{ task.name }}</span>
               </h3>
-              <span class="text-[10px] font-mono opacity-40">{{ task.id.substring(0, 8) }}</span>
+              <span class="text-[0.625rem] font-mono opacity-40">{{ task.id.substring(0, 8) }}</span>
             </div>
             
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 mb-3">
-              <span class="flex items-center"><i class="pi pi-clock mr-1.5 text-[10px]"></i>{{ formatDate(task.startTime?.toISOString()) }}</span>
-              <span class="flex items-center"><i class="pi pi-tag mr-1.5 text-[10px]"></i>{{ task.type === 'decompression' ? '解压' : '压缩' }}</span>
+              <span class="flex items-center"><i class="pi pi-clock mr-1.5 text-[0.625rem]"></i>{{ formatDate(task.startTime?.toISOString()) }}</span>
+              <span class="flex items-center"><i class="pi pi-tag mr-1.5 text-[0.625rem]"></i>{{ task.type === 'decompression' ? '解压' : '压缩' }}</span>
             </div>
 
             <!-- 进度条 -->
             <div v-if="isRunningStatus(task.status)" class="space-y-1.5">
-              <div class="flex justify-between text-[10px]">
+              <div class="flex justify-between text-[0.625rem]">
                 <span class="text-primary font-bold">正在执行</span>
                 <span class="font-mono">{{ task.progress }}%</span>
               </div>
@@ -85,7 +85,7 @@
 
             <!-- 错误提示 -->
             <div v-if="task.status === 'failed'" class="mt-2 p-2 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900/20">
-              <p class="text-[10px] text-red-500 flex items-center">
+              <p class="text-[0.625rem] text-red-500 flex items-center">
                 <i class="pi pi-exclamation-circle mr-1.5"></i> {{ task.error || '原因未知' }}
               </p>
             </div>

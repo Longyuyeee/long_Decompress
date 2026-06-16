@@ -106,7 +106,7 @@ const togglePasswordVisibility = () => {
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text)
-  appStore.setSuccess(appStore.language === 'zh-CN' ? '已安全复制' : 'Copied')
+  appStore.setSuccess(appStore.t('vault.action.copy'))
 }
 
 const chartData = computed(() => {
@@ -131,7 +131,7 @@ const chartData = computed(() => {
       <div class="flex items-center gap-6 shrink-0">
         <div>
           <h1 class="text-3xl font-black text-content tracking-tighter mb-0.5">{{ appStore.t('nav.vault') }}</h1>
-          <p class="text-muted text-[9px] font-bold uppercase tracking-[0.2em] ml-0.5">{{ appStore.t('vault.usage_stats') }}</p>
+          <p class="text-muted text-[0.5625rem] font-bold uppercase tracking-[0.2em] ml-0.5">{{ appStore.t('vault.usage_stats') }}</p>
         </div>
         
         <div class="flex gap-2">
@@ -139,22 +139,22 @@ const chartData = computed(() => {
             <i class="pi pi-plus text-sm"></i>
           </button>
           <div class="w-px h-5 bg-subtle my-auto mx-1"></div>
-          <button @click="handleExport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" title="Export" aria-label="Export passwords">
-            <i class="pi pi-download text-[10px]"></i>
+          <button @click="handleExport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" :title="appStore.t('vault.export')" aria-label="Export passwords">
+            <i class="pi pi-download text-[0.625rem]"></i>
           </button>
-          <button @click="handleImport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" title="Import" aria-label="Import passwords">
-            <i class="pi pi-upload text-[10px]"></i>
+          <button @click="handleImport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" :title="appStore.t('vault.import')" aria-label="Import passwords">
+            <i class="pi pi-upload text-[0.625rem]"></i>
           </button>
-          <button @click="showClearConfirm = true" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-red-500 transition-all" title="Clear All" aria-label="Clear all passwords">
-            <i class="pi pi-trash text-[10px]"></i>
+          <button @click="showClearConfirm = true" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-red-500 transition-all" :title="appStore.t('vault.clear_all')" aria-label="Clear all passwords">
+            <i class="pi pi-trash text-[0.625rem]"></i>
           </button>
         </div>
       </div>
 
       <div class="flex-1 flex justify-end">
         <div class="relative w-full max-w-[280px] group">
-          <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-dim text-[10px] group-hover:text-primary transition-colors"></i>
-          <input v-model="searchQuery" type="text" :placeholder="appStore.t('common.search')" class="w-full bg-input border border-subtle rounded-xl pl-10 pr-4 py-2.5 text-[11px] text-content focus:outline-none focus:border-primary transition-all shadow-sm placeholder:text-dim">
+          <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-dim text-[0.625rem] group-hover:text-primary transition-colors"></i>
+          <input v-model="searchQuery" type="text" :placeholder="appStore.t('common.search')" class="w-full bg-input border border-subtle rounded-xl pl-10 pr-4 py-2.5 text-[0.6875rem] text-content focus:outline-none focus:border-primary transition-all shadow-sm placeholder:text-dim">
         </div>
       </div>
     </header>
@@ -168,16 +168,16 @@ const chartData = computed(() => {
         <table class="w-full text-left border-collapse table-fixed">
           <thead class="sticky top-0 z-20 bg-input/80 backdrop-blur-xl border-b border-subtle">
             <tr>
-              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] w-[18%]">{{ appStore.t('vault.column.name') }}</th>
-              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] w-[27%]">
+              <th class="px-6 py-4 text-[0.5625rem] font-black text-muted uppercase tracking-[0.2em] w-[18%]">{{ appStore.t('vault.column.name') }}</th>
+              <th class="px-6 py-4 text-[0.5625rem] font-black text-muted uppercase tracking-[0.2em] w-[27%]">
                 <button @click="togglePasswordVisibility" class="flex items-center gap-1.5 hover:text-primary transition-colors">
                   {{ appStore.t('vault.column.password') }}
-                  <i :class="showAllPasswords ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-[10px]"></i>
+                  <i :class="showAllPasswords ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-[0.625rem]"></i>
                 </button>
               </th>
-              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] w-[31%]">{{ appStore.t('vault.column.notes') }}</th>
-              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] text-center w-[12%]">{{ appStore.t('vault.column.usage') }}</th>
-              <th class="px-6 py-4 text-[9px] font-black text-muted uppercase tracking-[0.2em] text-right w-[12%]">{{ appStore.t('vault.column.actions') }}</th>
+              <th class="px-6 py-4 text-[0.5625rem] font-black text-muted uppercase tracking-[0.2em] w-[31%]">{{ appStore.t('vault.column.notes') }}</th>
+              <th class="px-6 py-4 text-[0.5625rem] font-black text-muted uppercase tracking-[0.2em] text-center w-[12%]">{{ appStore.t('vault.column.usage') }}</th>
+              <th class="px-6 py-4 text-[0.5625rem] font-black text-muted uppercase tracking-[0.2em] text-right w-[12%]">{{ appStore.t('vault.column.actions') }}</th>
             </tr>
           </thead>
         </table>
@@ -194,10 +194,10 @@ const chartData = computed(() => {
                 <td class="px-6 py-3.5 w-[18%]">
                   <div class="flex items-center gap-2 relative group/tooltip">
                     <div class="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors shrink-0"></div>
-                    <span class="text-[11px] font-bold text-content truncate block w-full">{{ entry.name }}</span>
+                    <span class="text-[0.6875rem] font-bold text-content truncate block w-full">{{ entry.name }}</span>
                     <!-- 自定义悬浮窗 (Aero Tooltip) - 修复遮挡问题：前两行向下弹出，其余向上弹出 -->
                     <div :class="[
-                      'absolute left-0 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-3xl border border-subtle shadow-2xl text-[10px] text-content whitespace-normal break-all max-w-[200px] z-[100] opacity-0 transition-all pointer-events-none font-bold',
+                      'absolute left-0 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-3xl border border-subtle shadow-2xl text-[0.625rem] text-content whitespace-normal break-all max-w-[200px] z-[100] opacity-0 transition-all pointer-events-none font-bold',
                       index < 2 ? 'top-[110%] mt-1 translate-y-[-8px] group-hover/tooltip:translate-y-0' : 'bottom-[110%] mb-1 translate-y-2 group-hover/tooltip:translate-y-0'
                     ]" class="group-hover/tooltip:opacity-100">
                       {{ entry.name }}
@@ -206,16 +206,16 @@ const chartData = computed(() => {
                 </td>
                 <td class="px-6 py-3.5 w-[27%]">
                   <div class="flex items-center gap-2 overflow-hidden group/key w-full">
-                    <code class="text-[10px] font-mono text-primary font-bold bg-primary/5 px-2 py-1 rounded-lg truncate block flex-1 select-none" :class="{ 'tracking-widest': !showAllPasswords }">{{ maskPassword(entry.password) }}</code>
-                    <i @click="copyToClipboard(entry.password)" class="pi pi-copy text-[10px] text-dim hover:text-primary cursor-pointer transition-all opacity-0 group-hover/key:opacity-100 scale-90 hover:scale-110 shrink-0"></i>
+                    <code class="text-[0.625rem] font-mono text-primary font-bold bg-primary/5 px-2 py-1 rounded-lg truncate block flex-1 select-none" :class="{ 'tracking-widest': !showAllPasswords }">{{ maskPassword(entry.password) }}</code>
+                    <i @click="copyToClipboard(entry.password)" class="pi pi-copy text-[0.625rem] text-dim hover:text-primary cursor-pointer transition-all opacity-0 group-hover/key:opacity-100 scale-90 hover:scale-110 shrink-0"></i>
                   </div>
                 </td>
                 <td class="px-6 py-3.5 w-[31%]">
                   <div class="relative group/tooltip w-full">
-                    <span class="text-[10px] text-muted italic truncate block w-full">{{ entry.notes || '—' }}</span>
+                    <span class="text-[0.625rem] text-muted italic truncate block w-full">{{ entry.notes || '—' }}</span>
                     <!-- 自定义悬浮窗 (Aero Tooltip) - 修复遮挡问题：前两行向下弹出，其余向上弹出 -->
                     <div v-if="entry.notes" :class="[
-                      'absolute left-0 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-3xl border border-subtle shadow-2xl text-[10px] text-muted whitespace-normal break-all max-w-[240px] z-[100] opacity-0 transition-all pointer-events-none italic',
+                      'absolute left-0 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-3xl border border-subtle shadow-2xl text-[0.625rem] text-muted whitespace-normal break-all max-w-[240px] z-[100] opacity-0 transition-all pointer-events-none italic',
                       index < 2 ? 'top-[110%] mt-1 translate-y-[-8px] group-hover/tooltip:translate-y-0' : 'bottom-[110%] mb-1 translate-y-2 group-hover/tooltip:translate-y-0'
                     ]" class="group-hover/tooltip:opacity-100">
                       {{ entry.notes }}
@@ -223,14 +223,14 @@ const chartData = computed(() => {
                   </div>
                 </td>
                 <td class="px-6 py-3.5 text-center w-[12%]">
-                  <button @click="showUsageHistory(entry)" class="text-[9px] font-black text-muted hover:text-primary bg-input w-6 h-6 rounded-full flex items-center justify-center mx-auto transition-all shadow-sm border border-subtle shrink-0">
+                  <button @click="showUsageHistory(entry)" class="text-[0.5625rem] font-black text-muted hover:text-primary bg-input w-6 h-6 rounded-full flex items-center justify-center mx-auto transition-all shadow-sm border border-subtle shrink-0">
                     {{ entry.use_count || 0 }}
                   </button>
                 </td>
                 <td class="px-6 py-3.5 text-right w-[12%]">
                   <div class="flex justify-end gap-3 sm:opacity-0 sm:group-hover:opacity-100 transition-all shrink-0">
-                    <button @click="handleEdit(entry)" class="text-primary/60 hover:text-primary transition-colors"><i class="pi pi-pencil text-[10px]"></i></button>
-                    <button @click="handleDelete(entry.id)" class="text-red-400/60 hover:text-red-500 transition-colors"><i class="pi pi-trash text-[10px]"></i></button>
+                    <button @click="handleEdit(entry)" class="text-primary/60 hover:text-primary transition-colors"><i class="pi pi-pencil text-[0.625rem]"></i></button>
+                    <button @click="handleDelete(entry.id)" class="text-red-400/60 hover:text-red-500 transition-colors"><i class="pi pi-trash text-[0.625rem]"></i></button>
                   </div>
                 </td>
               </tr>
@@ -243,12 +243,12 @@ const chartData = computed(() => {
     <!-- 数据统计悬浮区 (右下角) -->
     <div class="fixed bottom-8 right-12 z-50 flex gap-6 bg-card/60 backdrop-blur-2xl border border-subtle px-6 py-3 rounded-2xl shadow-2xl">
       <div class="text-center">
-        <div class="text-[7px] text-muted font-black uppercase tracking-widest mb-0.5">Vault Size</div>
+        <div class="text-[0.4375rem] text-muted font-black uppercase tracking-widest mb-0.5">{{ appStore.t('vault.vault_size') }}</div>
         <div class="text-lg font-black text-primary leading-none">{{ stats.total }}</div>
       </div>
       <div class="w-px h-6 bg-subtle my-auto"></div>
       <div class="text-center">
-        <div class="text-[7px] text-muted font-black uppercase tracking-widest mb-0.5">Total Hits</div>
+        <div class="text-[0.4375rem] text-muted font-black uppercase tracking-widest mb-0.5">{{ appStore.t('vault.total_hits') }}</div>
         <div class="text-lg font-black text-content leading-none">{{ stats.totalUsage }}</div>
       </div>
     </div>
@@ -257,23 +257,23 @@ const chartData = computed(() => {
       <div v-if="showHistoryModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
         <div class="modal-no-glass rounded-[2.5rem] p-10 w-full max-w-[420px] shadow-2xl scale-in-center text-content">
           <h3 class="text-xs font-black mb-10 flex justify-between items-center text-muted uppercase tracking-[0.3em]">
-            Lifecycle Analysis
+            {{ appStore.t('vault.lifecycle') }}
             <i @click="showHistoryModal = false" class="pi pi-times cursor-pointer hover:text-primary"></i>
           </h3>
           <div class="flex justify-between items-end mb-12">
             <div>
-              <div class="text-[9px] text-muted font-black uppercase mb-2">Total Access</div>
+              <div class="text-[0.5625rem] text-muted font-black uppercase mb-2">{{ appStore.t('vault.total_access') }}</div>
               <div class="text-5xl font-black text-primary tracking-tighter">{{ selectedEntryForHistory?.use_count || 0 }}</div>
             </div>
-            <div class="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] font-black text-green-500">SECURE</div>
+            <div class="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[0.625rem] font-black text-green-500">{{ appStore.t('vault.secure') }}</div>
           </div>
           <div class="h-32 flex items-end justify-between gap-3 mb-8">
             <div v-for="day in chartData" :key="day.date" class="flex-1 flex flex-col items-center gap-3">
               <div class="w-full bg-primary/20 rounded-xl relative transition-all hover:bg-primary/40" :style="{ height: day.height + '%' }"></div>
-              <span class="text-[8px] text-muted font-bold">{{ day.date }}</span>
+              <span class="text-[0.5rem] text-muted font-bold">{{ day.date }}</span>
             </div>
           </div>
-          <button @click="showHistoryModal = false" class="w-full py-4 rounded-2xl bg-input border border-subtle text-content text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all">Dismiss</button>
+          <button @click="showHistoryModal = false" class="w-full py-4 rounded-2xl bg-input border border-subtle text-content text-[0.625rem] font-black uppercase tracking-widest hover:brightness-110 transition-all">{{ appStore.t('vault.dismiss') }}</button>
         </div>
       </div>
     </transition>
@@ -282,7 +282,7 @@ const chartData = computed(() => {
       <div v-if="showClearConfirm" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4">
         <div class="modal-no-glass rounded-3xl p-10 w-full max-w-xs text-center shadow-2xl text-content">
           <h3 class="text-sm font-black mb-2 uppercase tracking-widest">{{ appStore.t('vault.confirm.clear_title') }}</h3>
-          <p class="text-[10px] text-muted mb-8">{{ appStore.t('vault.confirm.clear_desc') }}</p>
+          <p class="text-[0.625rem] text-muted mb-8">{{ appStore.t('vault.confirm.clear_desc') }}</p>
           <div class="flex flex-col gap-2">
             <button @click="confirmClearAll" class="w-full py-3 bg-red-500 text-white rounded-xl text-xs font-black">{{ appStore.t('vault.confirm.clear_btn') }}</button>
             <button @click="showClearConfirm = false" class="w-full py-3 bg-input text-muted rounded-xl text-xs font-bold border border-subtle hover:text-content transition-colors">{{ appStore.t('vault.confirm.cancel') }}</button>
@@ -296,7 +296,7 @@ const chartData = computed(() => {
       <div v-if="showDeleteConfirm" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4">
         <div class="modal-no-glass rounded-3xl p-10 w-full max-w-xs text-center shadow-2xl text-content">
           <h3 class="text-sm font-black mb-2 uppercase tracking-widest">{{ appStore.t('vault.confirm.delete_title') }}</h3>
-          <p class="text-[10px] text-muted mb-8">{{ appStore.t('vault.confirm.delete_desc') }}</p>
+          <p class="text-[0.625rem] text-muted mb-8">{{ appStore.t('vault.confirm.delete_desc') }}</p>
           <div class="flex flex-col gap-2">
             <button @click="confirmDelete" class="w-full py-3 bg-red-500 text-white rounded-xl text-xs font-black">{{ appStore.t('vault.confirm.delete_btn') }}</button>
             <button @click="showDeleteConfirm = false" class="w-full py-3 bg-input text-muted rounded-xl text-xs font-bold border border-subtle hover:text-content transition-colors">{{ appStore.t('vault.confirm.cancel') }}</button>

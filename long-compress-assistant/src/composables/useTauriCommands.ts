@@ -61,11 +61,11 @@ export const useTauriCommands = () => {
         multiple,
         filters: filters || [
           {
-            name: '压缩文件',
+            name: appStore.t('dialog.compress_files'),
             extensions: ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz', 'tbz', 'tbz2', 'txz']
           },
           {
-            name: '所有文件',
+            name: appStore.t('dialog.all_files'),
             extensions: ['*']
           }
         ]
@@ -84,7 +84,7 @@ export const useTauriCommands = () => {
       return fileInfos
     } catch (error) {
       console.error('Failed to select files:', error)
-      await message(`选择文件失败: ${error}`, { type: 'error' })
+      await message(appStore.t('dialog.select_file_error').replace('{0}', String(error)), { type: 'error' })
       return []
     }
   }
@@ -103,7 +103,7 @@ export const useTauriCommands = () => {
       return selected || null
     } catch (error) {
       console.error('Failed to select directory:', error)
-      await message(`选择目录失败: ${error}`, { type: 'error' })
+      await message(appStore.t('dialog.select_dir_error').replace('{0}', String(error)), { type: 'error' })
       return null
     }
   }
@@ -298,7 +298,7 @@ export const useTauriCommands = () => {
         defaultPath,
         filters: filters || [
           {
-            name: '文本文件',
+            name: appStore.t('dialog.text_files'),
             extensions: ['txt', 'md', 'json']
           }
         ]
@@ -319,7 +319,7 @@ export const useTauriCommands = () => {
         multiple: true,
         filters: [
           {
-            name: '密码本 (Wordlist)',
+            name: appStore.t('dialog.wordlist'),
             extensions: ['txt']
           }
         ]
@@ -342,10 +342,10 @@ export const useTauriCommands = () => {
           .map(result => `${result.path.split(/[\\/]/).pop() || result.path}: ${result.error || 'Invalid wordlist'}`)
           .join('\n')
         const suffix = invalidResults.length > 5 ? `\n...and ${invalidResults.length - 5} more` : ''
-        await message(`Skipped ${invalidResults.length} invalid wordlist file(s):\n${details}${suffix}`, {
-          title: 'Wordlist validation',
-          type: 'warning'
-        })
+        await message(
+          appStore.t('dialog.wordlist_skipped').replace('{0}', String(invalidResults.length)) + '\n' + details + suffix,
+          { title: appStore.t('dialog.wordlist_validation'), type: 'warning' }
+        )
       }
 
       return validPaths
@@ -372,19 +372,19 @@ export const useTauriCommands = () => {
     try {
       const encrypted = await invoke<any[]>('list_encrypted_passwords', {})
       if (!encrypted || encrypted.length === 0) {
-        await message('No passwords to export', { title: 'Export', type: 'info' })
+        await message(appStore.t('dialog.no_passwords_export'), { title: appStore.t('vault.export'), type: 'info' })
         return
       }
       const savePath = await save({
         defaultPath: 'password_vault_export.json',
-        filters: [{ name: 'JSON', extensions: ['json'] }]
+        filters: [{ name: appStore.t('dialog.json_files'), extensions: ['json'] }]
       })
       if (!savePath) return
       const json = JSON.stringify(encrypted, null, 2)
       await fs.writeTextFile(savePath, json)
-      await message(`Exported ${encrypted.length} passwords`, { title: 'Export', type: 'info' })
+      await message(appStore.t('dialog.export_success').replace('{0}', String(encrypted.length)), { title: appStore.t('vault.export'), type: 'info' })
     } catch (error) {
-      await message(`Export failed: ${extractErrorMessage(error)}`, { type: 'error' })
+      await message(appStore.t('dialog.export_failed').replace('{0}', extractErrorMessage(error)), { type: 'error' })
     }
   }
 
@@ -395,13 +395,13 @@ export const useTauriCommands = () => {
     try {
       const selectedPath = await open({
         multiple: false,
-        filters: [{ name: 'JSON文件', extensions: ['json'] }]
+        filters: [{ name: appStore.t('dialog.json_files'), extensions: ['json'] }]
       })
       if (!selectedPath) return
       const filePath = Array.isArray(selectedPath) ? selectedPath[0] : selectedPath
       const content = await fs.readTextFile(filePath)
       const entries = JSON.parse(content)
-      if (!Array.isArray(entries)) throw new Error('Invalid format: expected array of entries')
+      if (!Array.isArray(entries)) throw new Error(appStore.t('dialog.invalid_format'))
       let imported = 0
       for (const entry of entries) {
         if (!entry.name || !entry.password) continue
@@ -416,9 +416,9 @@ export const useTauriCommands = () => {
         })
         imported++
       }
-      await message(`Imported ${imported} passwords`, { title: 'Import', type: 'info' })
+      await message(appStore.t('dialog.import_success').replace('{0}', String(imported)), { title: appStore.t('vault.import'), type: 'info' })
     } catch (error) {
-      await message(`Import failed: ${extractErrorMessage(error)}`, { type: 'error' })
+      await message(appStore.t('dialog.import_failed').replace('{0}', extractErrorMessage(error)), { type: 'error' })
     }
   }
 

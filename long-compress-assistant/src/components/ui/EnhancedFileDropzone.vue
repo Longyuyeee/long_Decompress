@@ -76,7 +76,7 @@ const displaySubHint = computed(() => {
   if (props.subHint) return props.subHint
   return props.mode === 'folder'
     ? appStore.t('compress.drop_subhint')
-    : 'ZIP, 7Z, RAR, TAR'
+    : 'ZIP, 7Z, RAR, TAR, GZ, BZ2, XZ, Zstd, ISO + 30 more'
 })
 
 const displayAddLabel = computed(() => {
@@ -164,7 +164,7 @@ const handleFiles = (files: File[]) => {
       'p-3 rounded-xl border-dashed opacity-40 hover:opacity-100': compact
     }"
     role="button"
-    :aria-label="`Drop ${props.mode === 'folder' ? 'folder' : 'files'} here or click to browse`"
+    :aria-label="appStore.t('dropzone.hint')"
     tabindex="0"
     @dragover="onDragOver"
     @dragleave="onDragLeave"
@@ -190,19 +190,19 @@ const handleFiles = (files: File[]) => {
       
       <div class="text-center">
         <p class="text-xs font-black text-content tracking-tight mb-0.5">{{ displayHint }}</p>
-        <p class="text-[8px] text-muted font-bold uppercase tracking-widest opacity-40">{{ displaySubHint }}</p>
+        <p class="text-[0.5rem] text-muted font-bold uppercase tracking-widest opacity-40">{{ displaySubHint }}</p>
       </div>
 
       <div class="pt-1">
-        <span class="px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[8px] font-black uppercase tracking-widest group-hover:bg-primary group-hover:text-white transition-all">
-          Browse Files
+        <span class="px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[0.5rem] font-black uppercase tracking-widest group-hover:bg-primary group-hover:text-white transition-all">
+          {{ appStore.t('dropzone.browse') }}
         </span>
       </div>
     </div>
 
     <div v-else class="flex items-center justify-center gap-3 pointer-events-none">
       <i class="pi pi-plus-circle text-primary text-xs"></i>
-      <span class="text-[9px] font-black text-muted uppercase tracking-[0.2em] group-hover:text-content transition-colors">
+      <span class="text-[0.5625rem] font-black text-muted uppercase tracking-[0.2em] group-hover:text-content transition-colors">
         {{ displayAddLabel }}
       </span>
     </div>

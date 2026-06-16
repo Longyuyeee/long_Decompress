@@ -14,19 +14,19 @@ const closeApp = () => appWindow.close()
     <!-- 左侧标题 & 主题指示线 -->
     <div class="flex items-center gap-3 px-4 pointer-events-none" data-tauri-drag-region>
       <div class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--dynamic-accent)]"></div>
-      <span class="text-[10px] font-black text-content/60 uppercase tracking-[0.2em] mt-0.5">{{ appStore.t('app.name') || 'Long解压' }}</span>
+      <span class="text-[0.625rem] font-black text-content/60 uppercase tracking-[0.2em] mt-0.5">{{ appStore.t('app.name') }}</span>
     </div>
 
     <!-- 右侧控制组 -->
     <div class="flex h-full items-center">
       <button @click="minimize" class="control-btn hover:bg-content/5">
-        <i class="pi pi-minus text-[8px]"></i>
+        <i class="pi pi-minus text-[0.5rem]"></i>
       </button>
       <button @click="toggleMaximize" class="control-btn hover:bg-content/5">
-        <i class="pi pi-stop text-[8px]"></i>
+        <i class="pi pi-stop text-[0.5rem]"></i>
       </button>
       <button @click="closeApp" class="control-btn hover:bg-red-500 hover:text-white group">
-        <i class="pi pi-times text-[8px] group-hover:scale-110 transition-transform"></i>
+        <i class="pi pi-times text-[0.5rem] group-hover:scale-110 transition-transform"></i>
       </button>
     </div>
 
