@@ -34,6 +34,7 @@ const showContentsModal = ref(false)
 const contentsList = ref<string[]>([])
 const contentsFile = ref('')
 const contentsLoading = ref(false)
+const taskToRemove = ref<string | null>(null)
 
 const isSelected = (taskId: string) => props.selectedTaskIds?.has(taskId) ?? false
 
@@ -66,6 +67,16 @@ const testIntegrity = async (task: Task) => {
     appStore.setError(`Integrity check failed: ${e}`)
   } finally {
     contentsLoading.value = false
+  }
+}
+
+const handleRemoveTask = (taskId: string) => {
+  taskToRemove.value = taskId
+}
+const confirmRemoveTask = () => {
+  if (taskToRemove.value) {
+    taskStore.removeTask(taskToRemove.value)
+    taskToRemove.value = null
   }
 }
 
@@ -254,11 +265,27 @@ const onLeave = (el: any) => {
               </div>
             </div>
 
+            <!-- 密码内联输入 (自动破解失败时在行内显示) -->
+            <div v-if="task.passwordRequired" class="flex items-center gap-1 shrink-0 px-2" @click.stop>
+              <input
+                :type="showPasswordInput === task.id ? 'text' : 'password'"
+                :value="task.password || ''"
+                @input="(e: Event) => { task.password = (e.target as HTMLInputElement).value; task.passwordRequired = false }"
+                :placeholder="appStore.t('tasks.password.placeholder')"
+                class="h-7 w-36 rounded-lg bg-yellow-500/5 border border-yellow-500/50 text-[0.5625rem] px-2 font-mono outline-none focus:border-yellow-400 text-yellow-400 placeholder:text-yellow-500/50"
+              />
+              <button @click.stop="() => { const candidates = passwordStore.findCandidatePasswords(task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''); if (candidates.length > 0) { task.password = candidates[0]; task.passwordRequired = false } }"
+                class="h-7 w-7 rounded-lg border border-yellow-500/50 bg-yellow-500/10 flex items-center justify-center text-yellow-400 hover:bg-yellow-500/20 transition-colors shrink-0"
+                :title="appStore.t('tasks.password.fill_vault')">
+                <i class="pi pi-key text-[0.5rem]"></i>
+              </button>
+            </div>
+
             <!-- 删除按钮 (仅 pending 状态可见) -->
             <div class="w-6 flex justify-end" @click.stop>
               <button
                 v-if="task.status === 'pending'"
-                @click="taskStore.removeTask(task.id)"
+                @click="handleRemoveTask(task.id)"
                 class="w-5 h-5 rounded-md flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 transition-all"
                 :title="appStore.t('tasks.remove')">
                 <i class="pi pi-times text-[0.5625rem]"></i>
@@ -398,6 +425,19 @@ const onLeave = (el: any) => {
       </div>
     </div>
   </Modal>
+
+  <!-- 删除确认弹窗 -->
+  <transition name="pop">
+    <div v-if="taskToRemove" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm" @click.self="taskToRemove = null">
+      <div class="modal-no-glass rounded-2xl p-6 w-full max-w-xs text-center shadow-2xl text-content">
+        <p class="text-xs font-black mb-4 uppercase tracking-widest">{{ appStore.t('tasks.confirm_delete') }}</p>
+        <div class="flex gap-2">
+          <button @click="taskToRemove = null" class="flex-1 py-2 rounded-xl bg-input text-muted text-[0.5625rem] font-bold border border-subtle">{{ appStore.t('vault.confirm.cancel') }}</button>
+          <button @click="confirmRemoveTask" class="flex-1 py-2 rounded-xl bg-red-500 text-white text-[0.5625rem] font-black">{{ appStore.t('vault.confirm.delete_btn') }}</button>
+        </div>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <style scoped>
@@ -504,4 +544,7 @@ const onLeave = (el: any) => {
   /* 移除静态 margin，由动画钩子精准控制 */
   background-color: transparent;
 }
+
+.pop-enter-active, .pop-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.95) translateY(10px); }
 </style>

@@ -135,6 +135,9 @@ const chartData = computed(() => {
         </div>
         
         <div class="flex gap-2">
+          <button v-if="passwordStore.isUnlocked" @click="passwordStore.lock()" class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all" :title="appStore.t('vault.lock')">
+            <i class="pi pi-lock text-[0.625rem]"></i>
+          </button>
           <button @click="handleAddNew" class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center hover:scale-105 transition-all shadow-lg hover:shadow-primary/40">
             <i class="pi pi-plus text-sm"></i>
           </button>

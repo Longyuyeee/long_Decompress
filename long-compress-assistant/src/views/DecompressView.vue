@@ -295,8 +295,8 @@ taskStore.$subscribe((mutation, state) => {
       </div>
 
       <!-- 底部操作区 -->
-      <div v-if="taskStore.tasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
-        <span class="text-[0.5rem] font-black text-primary uppercase tracking-widest opacity-80 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
+      <div v-if="taskStore.tasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-3 flex items-center gap-4 flex-wrap shrink-0">
+        <span class="text-[0.5625rem] font-black text-primary uppercase tracking-widest opacity-80 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
 
         <button @click="handleGlobalSelectDir"
                 class="h-6 px-2.5 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-[0.5625rem] font-black flex items-center gap-1 shadow-sm shadow-primary/20">
@@ -319,7 +319,7 @@ taskStore.$subscribe((mutation, state) => {
                :class="globalExtractToSubfolder ? 'bg-primary border-primary' : 'bg-transparent'">
             <i v-if="globalExtractToSubfolder" class="pi pi-check text-[0.375rem] text-white"></i>
           </div>
-          <span class="text-[0.5rem] font-black text-muted uppercase tracking-widest">{{ appStore.t('decompress.config.output_sub') }}</span>
+          <span class="text-[0.5625rem] font-black text-muted uppercase tracking-widest">{{ appStore.t('decompress.config.output_sub') }}</span>
         </div>
 
         <div class="w-px h-5 bg-subtle/20 mx-1"></div>

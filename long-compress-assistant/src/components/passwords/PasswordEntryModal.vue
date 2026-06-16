@@ -14,7 +14,7 @@ const emit = defineEmits(['update:visible', 'saved'])
 const passwordStore = usePasswordStore()
 const appStore = useAppStore()
 const isSaving = ref(false)
-const showPassword = ref(true)
+const showPassword = ref(false)
 
 const form = reactive({
   name: '',

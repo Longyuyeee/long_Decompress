@@ -2,7 +2,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { appWindow } from '@tauri-apps/api/window'
-import InteractionBall from '@/components/ui/InteractionBall.vue'
 import PerformanceMeter from '@/components/ui/PerformanceMeter.vue'
 import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
 import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
@@ -25,10 +24,10 @@ onUnmounted(() => {
 })
 
 const navItems = [
-  { name: 'Decompress', icon: 'pi pi-folder-open', label: 'nav.decompress' },
-  { name: 'Compress', icon: 'pi pi-box', label: 'nav.compress' },
-  { name: 'Vault', icon: 'pi pi-shield', label: 'nav.vault' },
-  { name: 'Settings', icon: 'pi pi-cog', label: 'nav.settings' }
+  { name: 'Decompress', icon: 'pi pi-folder-open', label: 'nav.decompress', shortcut: 'Ctrl+O' },
+  { name: 'Compress', icon: 'pi pi-box', label: 'nav.compress', shortcut: 'Ctrl+N' },
+  { name: 'Vault', icon: 'pi pi-shield', label: 'nav.vault', shortcut: 'Ctrl+V' },
+  { name: 'Settings', icon: 'pi pi-cog', label: 'nav.settings', shortcut: 'Ctrl+,' }
 ]
 
 const navigateTo = (name: string) => {
@@ -75,6 +74,7 @@ const navigateTo = (name: string) => {
                  
               <div class="absolute left-full ml-4 px-4 py-2 rounded-xl backdrop-blur-3xl bg-card/90 border border-subtle text-content text-[0.625rem] font-black tracking-widest uppercase opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap shadow-2xl z-[100]">
                 {{ appStore.t(item.label) }}
+                <span class="text-[0.375rem] text-dim ml-2 font-mono">({{ item.shortcut }})</span>
               </div>
             </div>
           </nav>
@@ -82,8 +82,6 @@ const navigateTo = (name: string) => {
 
         <!-- 主内容区 -->
         <main class="flex-1 relative h-full overflow-hidden min-w-0 z-10">
-          <InteractionBall />
-          
           <router-view v-slot="{ Component }">
             <transition name="aero-page" mode="out-in">
               <div :key="route.path" class="h-full w-full overflow-hidden absolute inset-0">

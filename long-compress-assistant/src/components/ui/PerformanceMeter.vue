@@ -68,12 +68,12 @@ onUnmounted(() => {
              <span class="text-white/30">{{ appStore.t('perf.thread_limit') }}</span>
              <span class="text-blue-400 font-mono">{{ threadLimit }} Threads</span>
            </div>
-           <input type="range" min="1" max="16" v-model="threadLimit"
+           <input type="range" min="1" max="16" v-model="threadLimit" @change="appStore.updateSettings({ maxConcurrentTasks: threadLimit })"
                   class="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-400">
 
            <div class="grid grid-cols-2 gap-2">
-             <button class="py-2 rounded-lg bg-white/5 border border-white/5 text-[0.5rem] text-white/40 uppercase hover:text-white transition-all">{{ appStore.t('perf.silent_mode') }}</button>
-             <button class="py-2 rounded-lg bg-blue-500/20 border border-blue-500/20 text-[0.5rem] text-blue-400 uppercase font-bold">{{ appStore.t('perf.full_speed') }}</button>
+             <button @click="threadLimit = 2; appStore.updateSettings({ maxConcurrentTasks: 2 })" class="py-2 rounded-lg bg-white/5 border border-white/5 text-[0.5rem] text-white/40 uppercase hover:text-white transition-all">{{ appStore.t('perf.silent_mode') }}</button>
+             <button @click="threadLimit = 16; appStore.updateSettings({ maxConcurrentTasks: 16 })" class="py-2 rounded-lg bg-blue-500/20 border border-blue-500/20 text-[0.5rem] text-blue-400 uppercase font-bold">{{ appStore.t('perf.full_speed') }}</button>
            </div>
         </div>
       </div>

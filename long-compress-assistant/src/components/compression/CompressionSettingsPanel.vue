@@ -41,6 +41,8 @@ const compressionOptions = ref<CompressionOptions>(props.modelValue || {
 const outputPath = ref(props.outputPath)
 const showAdvanced = ref(false)
 let syncingFromProps = false
+const showPresetModal = ref(false)
+const presetNameInput = ref('')
 
 const compressionFormats = [
   { value: 'zip', name: 'ZIP' },
@@ -71,8 +73,14 @@ const applyPreset = (preset: { name: string; format: string; level: number; pass
 }
 
 const savePreset = () => {
-  const name = prompt(appStore.t('preset.name_prompt'), `${compressionOptions.value.format.toUpperCase()}-L${compressionOptions.value.level}`)
-  if (name) appStore.saveCompressionPreset(name, compressionOptions.value.format, compressionOptions.value.level, compressionOptions.value.password)
+  presetNameInput.value = `${compressionOptions.value.format.toUpperCase()}-L${compressionOptions.value.level}`
+  showPresetModal.value = true
+}
+const confirmSavePreset = () => {
+  if (presetNameInput.value.trim()) {
+    appStore.saveCompressionPreset(presetNameInput.value.trim(), compressionOptions.value.format, compressionOptions.value.level, compressionOptions.value.password)
+  }
+  showPresetModal.value = false
 }
 
 const isFormatDisabled = (format: { singleFileOnly?: boolean }) => {
@@ -169,6 +177,13 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
             {{ fmt.name }}
           </button>
         </div>
+        <!-- 格式帮助提示 -->
+        <div class="text-[0.4375rem] text-dim mt-1 leading-relaxed">
+          <span class="text-primary font-bold">ZIP</span> Universal &middot;
+          <span class="text-purple-400 font-bold">7Z</span> Best compression &middot;
+          <span class="text-amber-400 font-bold">TAR.*</span> Linux archives &middot;
+          <span class="font-bold">GZ/BZ2/XZ</span> Single file
+        </div>
       </div>
 
       <!-- 压缩强度 (精致 Range) -->
@@ -256,7 +271,7 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
           @click="(compressionOptions[opt.key as 'keepStructure' | 'deleteAfter'] as boolean) = !compressionOptions[opt.key as 'keepStructure' | 'deleteAfter']"
           class="w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer transition-all"
           :class="compressionOptions[opt.key as 'keepStructure' | 'deleteAfter'] ? 'bg-primary/20 border-primary text-primary' : 'bg-input border-subtle text-dim hover:text-muted'"
-          :title="opt.key">
+          :title="opt.key === 'keepStructure' ? appStore.t('preset.keep_structure') : appStore.t('preset.delete_after')">
             <i :class="[opt.icon, 'text-xs']"></i>
           </div>
 
@@ -279,6 +294,19 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
       </div>
     </transition>
   </div>
+<!-- 预设名称弹窗 -->
+<transition name="pop">
+  <div v-if="showPresetModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" @click.self="showPresetModal = false">
+    <div class="modal-no-glass rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-content">
+      <h3 class="text-sm font-black mb-4 uppercase tracking-widest">{{ appStore.t('preset.name_prompt') }}</h3>
+      <input v-model="presetNameInput" @keyup.enter="confirmSavePreset" class="w-full h-10 rounded-xl bg-input border border-subtle px-4 text-[0.625rem] font-mono text-content outline-none focus:border-primary transition-all mb-4" autofocus />
+      <div class="flex gap-2">
+        <button @click="showPresetModal = false" class="flex-1 py-2.5 rounded-xl bg-input border border-subtle text-muted text-[0.5625rem] font-black uppercase tracking-widest hover:text-content transition-all">{{ appStore.t('vault.confirm.cancel') }}</button>
+        <button @click="confirmSavePreset" class="flex-1 py-2.5 rounded-xl bg-primary text-white text-[0.5625rem] font-black uppercase tracking-widest hover:brightness-110 transition-all">{{ appStore.t('preset.name_prompt') }}</button>
+      </div>
+    </div>
+  </div>
+</transition>
 </template>
 
 <style scoped>
@@ -292,4 +320,7 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.pop-enter-active, .pop-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.95) translateY(10px); }
 </style>
