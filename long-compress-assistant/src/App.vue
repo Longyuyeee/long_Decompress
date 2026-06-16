@@ -12,7 +12,7 @@ import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useConfigStore } from '@/stores/config'
 import { usePasswordStore } from '@/stores/password'
-import { appWindow } from '@tauri-apps/api/window'
+import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
 
 const router = useRouter()
 const configStore = useConfigStore()
@@ -42,8 +42,8 @@ const restoreWindowState = async () => {
     const { x, y, width, height } = JSON.parse(saved)
     // 仅在坐标有意义时恢复（避免多显示器场景下窗口跑到屏幕外）
     if (x > -1000 && y > -1000 && width >= 720 && height >= 540) {
-      await appWindow.setPosition({ x, y })
-      await appWindow.setSize({ width, height })
+      await appWindow.setPosition(new LogicalPosition(x, y))
+      await appWindow.setSize(new LogicalSize(width, height))
     }
   } catch { /* ignore on first launch */ }
 }

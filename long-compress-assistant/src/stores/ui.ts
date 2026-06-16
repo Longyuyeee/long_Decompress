@@ -185,7 +185,7 @@ export const useUIStore = defineStore('ui', () => {
     // 自动移除
     setTimeout(() => {
       removeToast(toast.id)
-    }, duration)
+    }, _duration)
 
     // 保持Toast不超�?�?
     if (toasts.value.length > 5) {
