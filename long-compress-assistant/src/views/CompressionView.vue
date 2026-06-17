@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { listen } from '@tauri-apps/api/event'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -16,6 +18,47 @@ const taskStore = useTaskStore()
 const selectedRows = ref<Set<string>>(new Set())
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
 const checkingRarSupport = ref(false)
+const router = useRouter()
+
+onMounted(async () => {
+  // 右键菜单：添加文件到压缩
+  await listen<string[]>('context-compress-custom', (event) => {
+    const files = event.payload.filter(f => f && !f.startsWith('%'))
+    if (files.length > 0) {
+      router.push('/compress')
+      files.forEach(f => {
+        const name = f.split(/[\\/]/).pop() || f
+        compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
+      })
+    }
+  })
+
+  // 右键菜单：快速压缩为 ZIP
+  await listen<string[]>('context-compress-zip', (event) => {
+    const files = event.payload.filter(f => f && !f.startsWith('%'))
+    if (files.length > 0) {
+      router.push('/compress')
+      files.forEach(f => {
+        const name = f.split(/[\\/]/).pop() || f
+        compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
+      })
+      compressionStore.globalSettings.format = 'zip'
+    }
+  })
+
+  // 右键菜单：快速压缩为 7Z
+  await listen<string[]>('context-compress-7z', (event) => {
+    const files = event.payload.filter(f => f && !f.startsWith('%'))
+    if (files.length > 0) {
+      router.push('/compress')
+      files.forEach(f => {
+        const name = f.split(/[\\/]/).pop() || f
+        compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
+      })
+      compressionStore.globalSettings.format = '7z'
+    }
+  })
+})
 
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
