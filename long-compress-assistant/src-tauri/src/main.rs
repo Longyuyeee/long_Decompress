@@ -98,8 +98,13 @@ fn main() {
 
             if let Some(action) = launch_action {
                 let files = launch_files;
+                // 右键菜单触发：聚焦窗口并发送事件
+                let window_handle = window.clone();
                 tauri::async_runtime::spawn(async move {
-                    tokio::time::sleep(tokio::time::Duration::from_millis(800)).await;
+                    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                    // 恢复并聚焦窗口（如果最小化）
+                    let _ = window_handle.unminimize();
+                    let _ = window_handle.set_focus();
                     let _ = handle.emit_all(&action, files);
                 });
             }

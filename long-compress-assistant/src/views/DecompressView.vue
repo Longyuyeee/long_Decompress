@@ -42,7 +42,7 @@ onMounted(async () => {
     const fileObjs = files.map(f => ({ path: f }))
     if (fileObjs.length > 0) {
       onFilesSelected(fileObjs as any)
-      // 稍后自动开始（等待任务准备就绪）
+      appStore.setSuccess(`右键菜单 → 解压到此处 (${fileObjs.length} 个文件)`)
       setTimeout(() => {
         const pending = taskStore.tasks.filter(t => t.status === 'pending')
         if (pending.length > 0) {
@@ -59,6 +59,7 @@ onMounted(async () => {
     const fileObjs = files.map(f => ({ path: f }))
     if (fileObjs.length > 0) {
       onFilesSelected(fileObjs as any)
+      appStore.setSuccess(`右键菜单 → 解压到文件夹 (${fileObjs.length} 个文件)`)
       setTimeout(() => {
         const pending = taskStore.tasks.filter(t => t.status === 'pending')
         if (pending.length > 0) {
