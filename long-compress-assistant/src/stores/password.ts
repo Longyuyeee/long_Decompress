@@ -247,7 +247,7 @@ export const usePasswordStore = defineStore('password', () => {
   const addEntry = async (entryRequest: any) => {
     isSaving.value = true
     try {
-      console.log('Invoke: add_encrypted_password')
+      // console.log('Invoke: add_encrypted_password')
       const newEntry = await invoke<PasswordEntry>('add_encrypted_password', { entry: entryRequest })
       entries.value.unshift(newEntry)
       return newEntry
@@ -262,7 +262,7 @@ export const usePasswordStore = defineStore('password', () => {
   // 删除
   const deleteEntry = async (id: string) => {
     try {
-      console.log('Invoke: delete_encrypted_password', id)
+      // console.log('Invoke: delete_encrypted_password', id)
       await invoke('delete_encrypted_password', { id })
       entries.value = entries.value.filter(e => e.id !== id)
     } catch (e) {
@@ -274,7 +274,7 @@ export const usePasswordStore = defineStore('password', () => {
   // 清空
   const clearAll = async () => {
     try {
-      console.log('Invoke: clear_encrypted_passwords')
+      // console.log('Invoke: clear_encrypted_passwords')
       await invoke('clear_encrypted_passwords')
       entries.value = []
     } catch (e) {
@@ -286,7 +286,7 @@ export const usePasswordStore = defineStore('password', () => {
   // 更新
   const updateEntry = async (id: string, entryRequest: any) => {
     try {
-      console.log('Invoke: update_encrypted_password', id)
+      // console.log('Invoke: update_encrypted_password', id)
       // 关键修复：合并原始数据，确保 strength, usage_history 等字段不丢失
       const originalEntry = entries.value.find(e => e.id === id)
       if (!originalEntry) throw new Error('找不到原始条目')
@@ -294,7 +294,7 @@ export const usePasswordStore = defineStore('password', () => {
       const payload = { ...originalEntry, ...entryRequest, id }
       const updated = await invoke<PasswordEntry>('update_encrypted_password', { id, entry: payload })
       
-      console.log('Update success:', updated)
+      // console.log('Update success:', updated)
       const index = entries.value.findIndex(e => e.id === id)
       if (index !== -1) {
         entries.value[index] = updated

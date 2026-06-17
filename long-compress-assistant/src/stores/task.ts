@@ -199,7 +199,7 @@ export const useTaskStore = defineStore('task', () => {
 
   const fetchTasks = async () => {
     // 这是一个占位符，如果后端支持获取历史任务，可以在此实现
-    console.log('Fetching tasks...')
+    // console.log('Fetching tasks...')
   }
 
   return {
