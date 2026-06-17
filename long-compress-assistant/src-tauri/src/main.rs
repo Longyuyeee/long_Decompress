@@ -61,17 +61,47 @@ fn main() {
                 }
             });
 
-            // 处理右键菜单传递的文件路径 (--context-menu)
+            // 处理右键菜单 / CLI 传入的文件和动作
             let args: Vec<String> = std::env::args().collect();
-            if let Some(pos) = args.iter().position(|a| a == "--context-menu") {
-                if let Some(file_path) = args.get(pos + 1) {
-                    let file_path = file_path.clone();
-                    let handle = app.handle().clone();
-                    tauri::async_runtime::spawn(async move {
-                        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-                        let _ = handle.emit_all("context-menu-open", file_path);
-                    });
+            let handle = app.handle().clone();
+
+            // 提取动作和文件路径
+            let actions = [
+                ("--extract-here",   "context-extract-here"),
+                ("--extract-to",     "context-extract-to"),
+                ("--test-archive",   "context-test-archive"),
+                ("--compress-zip",   "context-compress-zip"),
+                ("--compress-7z",    "context-compress-7z"),
+                ("--compress-custom","context-compress-custom"),
+                ("--open",           "context-open"),
+                ("--context-menu",   "context-open"), // 向后兼容旧版
+            ];
+
+            let mut launch_action: Option<String> = None;
+            let mut launch_files: Vec<String> = Vec::new();
+
+            for (flag, event) in &actions {
+                if let Some(pos) = args.iter().position(|a| a == flag) {
+                    launch_action = Some(event.to_string());
+                    // 收集该 flag 后面的文件路径参数（直到下一个 flag 或结束）
+                    let mut i = pos + 1;
+                    while i < args.len() && !args[i].starts_with("--") && !args[i].starts_with("%") {
+                        // 排除 %V (当前目录占位符)
+                        if args[i] != "%V" {
+                            launch_files.push(args[i].clone());
+                        }
+                        i += 1;
+                    }
+                    break; // 只处理第一个匹配的动作
                 }
+            }
+
+            if let Some(action) = launch_action {
+                let files = launch_files;
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(tokio::time::Duration::from_millis(800)).await;
+                    let _ = handle.emit_all(&action, files);
+                });
             }
             Ok(())
         })

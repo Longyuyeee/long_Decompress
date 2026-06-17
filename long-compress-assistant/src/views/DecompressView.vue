@@ -29,11 +29,62 @@ const globalExtractToSubfolder = ref(false)
 
 onMounted(async () => {
   await taskStore.initListeners()
-  // 监听右键菜单传入的文件路径
-  await listen<string>('context-menu-open', (event) => {
-    const filePath = event.payload
-    const files = [{ path: filePath }]
-    onFilesSelected(files as any)
+
+  // 右键菜单 / CLI：添加文件到解压队列
+  const handleContextFiles = (files: string[]) => {
+    const fileObjs = files.filter(f => f && !f.startsWith('%')).map(f => ({ path: f }))
+    if (fileObjs.length > 0) onFilesSelected(fileObjs as any)
+  }
+
+  // 右键菜单：直接解压到此处
+  await listen<string[]>('context-extract-here', (event) => {
+    const files = event.payload.filter(f => f && !f.startsWith('%'))
+    const fileObjs = files.map(f => ({ path: f }))
+    if (fileObjs.length > 0) {
+      onFilesSelected(fileObjs as any)
+      // 稍后自动开始（等待任务准备就绪）
+      setTimeout(() => {
+        const pending = taskStore.tasks.filter(t => t.status === 'pending')
+        if (pending.length > 0) {
+          pending.forEach(t => { t.extractToSubfolder = false })
+          setTimeout(() => startDecompression(), 300)
+        }
+      }, 600)
+    }
+  })
+
+  // 右键菜单：解压到同名文件夹
+  await listen<string[]>('context-extract-to', (event) => {
+    const files = event.payload.filter(f => f && !f.startsWith('%'))
+    const fileObjs = files.map(f => ({ path: f }))
+    if (fileObjs.length > 0) {
+      onFilesSelected(fileObjs as any)
+      setTimeout(() => {
+        const pending = taskStore.tasks.filter(t => t.status === 'pending')
+        if (pending.length > 0) {
+          pending.forEach(t => { t.extractToSubfolder = true })
+          setTimeout(() => startDecompression(), 300)
+        }
+      }, 600)
+    }
+  })
+
+  // 右键菜单：测试完整性
+  await listen<string[]>('context-test-archive', (event) => {
+    const files = event.payload.filter(f => f && !f.startsWith('%'))
+    files.forEach(async (path) => {
+      try {
+        const result = await tauriCommands.testArchiveIntegrity(path)
+        appStore.setSuccess(result)
+      } catch (e: any) {
+        appStore.setError(`Integrity test: ${e}`)
+      }
+    })
+  })
+
+  // 向后兼容旧版
+  await listen<string>('context-open', (event) => {
+    handleContextFiles([event.payload])
   })
 })
 
