@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { listen } from '@tauri-apps/api/event'
 import { useAppStore } from '@/stores/app'
@@ -20,9 +20,11 @@ const rarSupport = ref<{ available: boolean; encoder_path?: string | null; messa
 const checkingRarSupport = ref(false)
 const router = useRouter()
 
+const compUnlisteners: Array<() => void> = []
+
 onMounted(async () => {
   // 右键菜单 → 打开压缩对话框（用户手动配置）
-  await listen<string[]>('context-compress-custom', (event) => {
+  const u1 = await listen<string[]>('context-compress-custom', (event) => {
     const files = event.payload.filter(f => f && !f.startsWith('%'))
     if (files.length > 0) {
       router.push('/compress')
@@ -33,9 +35,10 @@ onMounted(async () => {
       appStore.setSuccess(`已添加 ${files.length} 个文件 — 选择压缩格式后开始`)
     }
   })
+  compUnlisteners.push(u1)
 
   // 右键菜单 → 直接压缩为 ZIP
-  await listen<string[]>('context-compress-zip', (event) => {
+  const u2 = await listen<string[]>('context-compress-zip', (event) => {
     const files = event.payload.filter(f => f && !f.startsWith('%'))
     if (files.length > 0) {
       router.push('/compress')
@@ -49,9 +52,10 @@ onMounted(async () => {
       setTimeout(() => handleCompress(), 500)
     }
   })
+  compUnlisteners.push(u2)
 
   // 右键菜单 → 直接压缩为 7Z
-  await listen<string[]>('context-compress-7z', (event) => {
+  const u3 = await listen<string[]>('context-compress-7z', (event) => {
     const files = event.payload.filter(f => f && !f.startsWith('%'))
     if (files.length > 0) {
       router.push('/compress')
@@ -65,6 +69,11 @@ onMounted(async () => {
       setTimeout(() => handleCompress(), 500)
     }
   })
+  compUnlisteners.push(u3)
+})
+
+onUnmounted(() => {
+  compUnlisteners.forEach(fn => fn())
 })
 
 const onFilesSelected = (files: any[]) => {

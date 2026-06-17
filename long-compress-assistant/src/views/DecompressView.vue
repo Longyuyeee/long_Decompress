@@ -191,12 +191,18 @@ const deselectAll = () => {
   selectedTaskIds.value = new Set()
 }
 
+const isProcessing = ref(false)
+
 const startDecompression = async () => {
+  // 防止重复点击
+  if (isProcessing.value) return
   // 如果有选中的任务，优先处理选中的；否则处理所有 pending 任务
   const pendingTasks = selectedTaskIds.value.size > 0
     ? taskStore.tasks.filter(t => selectedTaskIds.value.has(t.id) && t.status === 'pending')
     : taskStore.tasks.filter(t => t.status === 'pending')
   if (pendingTasks.length === 0) return
+
+  isProcessing.value = true
 
   // 启动后清除选择
   selectedTaskIds.value = new Set()
@@ -286,6 +292,8 @@ const startDecompression = async () => {
       }
     }
   }
+
+  isProcessing.value = false
 }
 
 const hasPendingTasks = computed(() => taskStore.tasks.some(t => t.status === 'pending'))

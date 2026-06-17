@@ -7,6 +7,7 @@ const appStore = useAppStore()
 const cpuUsage = ref(0)
 const memoryUsage = ref(0)
 const isExpanded = ref(false)
+const isAvailable = ref(false)
 const threadLimit = ref(8)
 
 let interval: any = null
@@ -16,10 +17,9 @@ const updateStats = async () => {
     const stats = await invoke<any>('get_resource_usage')
     cpuUsage.value = Math.round(stats.cpu_usage)
     memoryUsage.value = Math.round(stats.memory_usage)
+    isAvailable.value = true
   } catch (e) {
-    // 降级模拟数据 (开发环境)
-    cpuUsage.value = Math.floor(Math.random() * 30) + 10
-    memoryUsage.value = 45
+    isAvailable.value = false
   }
 }
 
@@ -34,7 +34,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="performance-meter fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+  <div v-if="isAvailable" class="performance-meter fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
     <div
       @click="isExpanded = !isExpanded"
       class="meter-pill flex items-center gap-6 px-6 py-2.5 rounded-full border border-white/10 backdrop-blur-3xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer shadow-2xl"

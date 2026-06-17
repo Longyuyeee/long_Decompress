@@ -48,6 +48,8 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
     :title="appStore.t('common.conflict_title')"
     icon="pi pi-exclamation-triangle"
     size="lg"
+    :closeOnBackdrop="false"
+    :closeOnEscape="false"
   >
     <div v-if="currentConflict" class="conflict-container space-y-8 p-2">
       <!-- 头部提示：强化路径显示 -->
