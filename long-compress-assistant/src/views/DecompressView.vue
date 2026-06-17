@@ -36,7 +36,12 @@ onMounted(async () => {
   // 右键菜单 / CLI：添加文件到解压队列
   const handleContextFiles = (files: string[]) => {
     const fileObjs = files.filter(f => f && !f.startsWith('%')).map(f => ({ path: f }))
-    if (fileObjs.length > 0) onFilesSelected(fileObjs as any)
+    if (fileObjs.length > 0) {
+      onFilesSelected(fileObjs as any)
+    } else if (files.length > 0) {
+      // 所有文件都被过滤掉（均为 %V 占位符等）
+      appStore.setError('无法识别文件路径，请通过文件管理器右键菜单操作')
+    }
   }
 
   // 右键菜单：直接解压到此处

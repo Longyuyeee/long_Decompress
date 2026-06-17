@@ -33,13 +33,15 @@ const showPasswordInput = ref<string | null>(null)
 const showContentsModal = ref(false)
 const contentsList = ref<string[]>([])
 const contentsFile = ref('')
-const contentsLoading = ref(false)
+// contentsLoading now computed above
 const taskToRemove = ref<string | null>(null)
+const loadingCounter = ref(0)
+const contentsLoading = computed(() => loadingCounter.value > 0)
 
 const isSelected = (taskId: string) => props.selectedTaskIds?.has(taskId) ?? false
 
 const previewContents = async (task: Task) => {
-  contentsLoading.value = true
+  loadingCounter.value++
   contentsFile.value = task.name || task.sourceFiles[0] || 'Archive'
   try {
     contentsList.value = await tauriCommands.listArchiveContents(
@@ -51,12 +53,12 @@ const previewContents = async (task: Task) => {
     contentsList.value = []
     showContentsModal.value = true
   } finally {
-    contentsLoading.value = false
+    loadingCounter.value--
   }
 }
 
 const testIntegrity = async (task: Task) => {
-  contentsLoading.value = true
+  loadingCounter.value++
   try {
     const result = await tauriCommands.testArchiveIntegrity(
       task.sourceFiles[0],
@@ -66,7 +68,7 @@ const testIntegrity = async (task: Task) => {
   } catch (e: any) {
     appStore.setError(`Integrity check failed: ${e}`)
   } finally {
-    contentsLoading.value = false
+    loadingCounter.value--
   }
 }
 
@@ -99,7 +101,7 @@ const handleSelectOutputDir = async (task: Task) => {
       task.outputPath = selected
     }
   } catch (err) {
-    console.error('Failed to open directory dialog:', err)
+    appStore.setError(`${appStore.t('common.error')}: ${err}`)
   }
 }
 

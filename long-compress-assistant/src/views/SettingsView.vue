@@ -28,8 +28,11 @@ const contextMenuEnabled = ref(false)
 const toggleBruteForce = () => appStore.updateSettings({ enableBruteForce: !appStore.settings.enableBruteForce })
 const toggleAutoStart = () => appStore.updateSettings({ autoStart: !appStore.settings.autoStart })
 
+const contextMenuSupported = ref(navigator.platform.toLowerCase().includes('win'))
+
 const checkContextMenu = async () => {
-  try { contextMenuEnabled.value = await tauriCommands.isContextMenuRegistered() } catch { /* not Windows */ }
+  if (!contextMenuSupported.value) return
+  try { contextMenuEnabled.value = await tauriCommands.isContextMenuRegistered() } catch { /* ignore */ }
 }
 const toggleContextMenu = async () => {
   try {
@@ -241,7 +244,7 @@ const removeWordlist = (index: number) => {
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.savePasswords ? 'translate-x-5' : ''"></div>
                 </div>
               </div>
-              <div class="flex items-center justify-between group cursor-pointer" @click="toggleContextMenu">
+              <div v-if="contextMenuSupported" class="flex items-center justify-between group cursor-pointer" @click="toggleContextMenu">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.context_menu') }}</div>
                   <div class="text-[0.5625rem] text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.context_menu.desc') }}</div>
