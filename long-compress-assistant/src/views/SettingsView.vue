@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 
@@ -24,8 +24,26 @@ const themeModes = [
   { value: 'auto', icon: 'pi pi-desktop', label: 'settings.theme.auto' }
 ]
 
+const contextMenuEnabled = ref(false)
 const toggleBruteForce = () => appStore.updateSettings({ enableBruteForce: !appStore.settings.enableBruteForce })
 const toggleAutoStart = () => appStore.updateSettings({ autoStart: !appStore.settings.autoStart })
+
+const checkContextMenu = async () => {
+  try { contextMenuEnabled.value = await tauriCommands.isContextMenuRegistered() } catch { /* not Windows */ }
+}
+const toggleContextMenu = async () => {
+  try {
+    if (contextMenuEnabled.value) {
+      await tauriCommands.unregisterContextMenu()
+      contextMenuEnabled.value = false
+    } else {
+      await tauriCommands.registerContextMenu()
+      contextMenuEnabled.value = true
+    }
+  } catch (e: any) {
+    appStore.setError(String(e))
+  }
+}
 
 const addWordlist = async () => {
   const paths = await tauriCommands.selectWordlists()
@@ -221,6 +239,15 @@ const removeWordlist = (index: number) => {
                 </div>
                 <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.savePasswords ? 'bg-primary/40 border-primary' : 'bg-input'">
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.savePasswords ? 'translate-x-5' : ''"></div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between group cursor-pointer" @click="toggleContextMenu">
+                <div>
+                  <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.context_menu') }}</div>
+                  <div class="text-[0.5625rem] text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.context_menu.desc') }}</div>
+                </div>
+                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="contextMenuEnabled ? 'bg-primary/40 border-primary' : 'bg-input'">
+                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="contextMenuEnabled ? 'translate-x-5' : ''"></div>
                 </div>
               </div>
             </div>

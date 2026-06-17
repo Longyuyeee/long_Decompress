@@ -472,6 +472,9 @@ export const useTauriCommands = () => {
     listArchiveContents,
     testArchiveIntegrity,
     repairZip,
-    cancelCompression
+    cancelCompression,
+    registerContextMenu: () => invoke<boolean>('register_context_menu'),
+    unregisterContextMenu: () => invoke<boolean>('unregister_context_menu'),
+    isContextMenuRegistered: () => invoke<boolean>('is_context_menu_registered')
   }
 }

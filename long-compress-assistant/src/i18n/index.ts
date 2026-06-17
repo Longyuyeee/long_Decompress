@@ -58,6 +58,8 @@ export const translations: Record<string, Record<string, string>> = {
     'settings.behavior': '行为设置',
     'settings.behavior.auto_delete': '自动删除源文件',
     'settings.behavior.auto_delete.desc': '解压成功后自动删除原始压缩包',
+    'settings.behavior.context_menu': '右键菜单集成',
+    'settings.behavior.context_menu.desc': '在资源管理器右键菜单中添加解压/压缩快捷入口',
     'settings.behavior.save_passwords': '自动保存成功密码',
     'settings.behavior.save_passwords.desc': '解压成功后自动将工作密码保存到保险箱',
     // 重置
@@ -322,6 +324,8 @@ export const translations: Record<string, Record<string, string>> = {
     'settings.behavior': 'Behavior',
     'settings.behavior.auto_delete': 'Auto-delete source',
     'settings.behavior.auto_delete.desc': 'Delete original files after successful decompression',
+    'settings.behavior.context_menu': 'Context Menu Integration',
+    'settings.behavior.context_menu.desc': 'Add decompress/compress shortcuts to Explorer right-click menu',
     'settings.behavior.save_passwords': 'Save successful passwords',
     'settings.behavior.save_passwords.desc': 'Auto-save working passwords to vault after extraction',
     // Reset
