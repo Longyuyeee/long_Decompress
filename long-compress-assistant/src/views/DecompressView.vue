@@ -132,8 +132,9 @@ const onFilesSelected = async (files: any[]) => {
       } else if (rootEntries === 1) {
         task.extractToSubfolder = false
       }
-    }).catch(() => {
-      // Cannot read contents (encrypted, unsupported format) — keep default behavior
+    }).catch((e) => {
+      // Archiving listing failed (encrypted/unsupported format) — keep default behavior
+      console.debug('Smart extract skipped (unable to list contents):', sourcePath, e)
     })
   }
 }
