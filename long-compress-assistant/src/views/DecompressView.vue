@@ -40,7 +40,7 @@ onMounted(async () => {
       onFilesSelected(fileObjs as any)
     } else if (files.length > 0) {
       // 所有文件都被过滤掉（均为 %V 占位符等）
-      appStore.setError('无法识别文件路径，请通过文件管理器右键菜单操作')
+      appStore.setError(appStore.t('decompress.no_file_paths'))
     }
   }
 
@@ -50,7 +50,7 @@ onMounted(async () => {
     const fileObjs = files.map(f => ({ path: f }))
     if (fileObjs.length > 0) {
       onFilesSelected(fileObjs as any)
-      appStore.setSuccess(`右键菜单 → 解压到此处 (${fileObjs.length} 个文件)`)
+      appStore.setSuccess(appStore.t('decompress.context_menu_added').replace('{0}', String(fileObjs.length)))
       setTimeout(() => {
         const pending = taskStore.tasks.filter(t => t.status === 'pending')
         if (pending.length > 0) {
@@ -67,7 +67,7 @@ onMounted(async () => {
     const fileObjs = files.map(f => ({ path: f }))
     if (fileObjs.length > 0) {
       onFilesSelected(fileObjs as any)
-      appStore.setSuccess(`右键菜单 → 解压到文件夹 (${fileObjs.length} 个文件)`)
+      appStore.setSuccess(appStore.t('decompress.context_menu_folder').replace('{0}', String(fileObjs.length)))
       setTimeout(() => {
         const pending = taskStore.tasks.filter(t => t.status === 'pending')
         if (pending.length > 0) {
@@ -84,9 +84,9 @@ onMounted(async () => {
     files.forEach(async (path) => {
       try {
         const result = await tauriCommands.testArchiveIntegrity(path)
-        appStore.setSuccess(result)
+        appStore.setSuccess(appStore.t('decompress.integrity_passed').replace('{0}', result))
       } catch (e: any) {
-        appStore.setError(`Integrity test: ${e}`)
+        appStore.setError(appStore.t('decompress.integrity_failed').replace('{0}', String(e)))
       }
     })
   })

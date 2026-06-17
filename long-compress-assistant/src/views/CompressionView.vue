@@ -32,7 +32,7 @@ onMounted(async () => {
         const name = f.split(/[\\/]/).pop() || f
         compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
       })
-      appStore.setSuccess(`已添加 ${files.length} 个文件 — 选择压缩格式后开始`)
+      appStore.setSuccess(appStore.t('compress.context_menu_custom').replace('{0}', String(files.length)))
     }
   })
   compUnlisteners.push(u1)
@@ -47,7 +47,7 @@ onMounted(async () => {
         compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
       })
       compressionStore.globalSettings.format = 'zip'
-      appStore.setSuccess(`正在压缩 ${files.length} 个文件为 ZIP...`)
+      appStore.setSuccess(appStore.t('compress.context_menu_zip').replace('{0}', String(files.length)))
       // 自动开始压缩
       setTimeout(() => handleCompress(), 500)
     }
@@ -64,7 +64,7 @@ onMounted(async () => {
         compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
       })
       compressionStore.globalSettings.format = '7z'
-      appStore.setSuccess(`正在压缩 ${files.length} 个文件为 7Z...`)
+      appStore.setSuccess(appStore.t('compress.context_menu_7z').replace('{0}', String(files.length)))
       // 自动开始压缩
       setTimeout(() => handleCompress(), 500)
     }
@@ -280,7 +280,7 @@ const handleCompress = async () => {
   if (succeeded > 0 && failed === 0) {
     appStore.setSuccess(appStore.t('compress.status_success').replace('{0}', String(succeeded)).replace('{1}', succeeded === 1 ? '' : 's'))
   } else if (succeeded > 0) {
-    appStore.setSuccess(`${succeeded} succeeded, ${failed} failed`)
+    appStore.setSuccess(appStore.t('compress.status_result').replace('{0}', String(succeeded)).replace('{1}', String(failed)))
   }
 }
 
