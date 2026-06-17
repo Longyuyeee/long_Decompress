@@ -1,6 +1,7 @@
 #![allow(dead_code, unused_imports, unexpected_cfgs)]
 
 pub mod file_association;
+pub mod context_menu;
 pub mod global_shortcut;
 pub mod notification;
 pub mod permission_manager;

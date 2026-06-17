@@ -60,6 +60,19 @@ fn main() {
                     eprintln!("Failed to initialize task queue manager: {}", e);
                 }
             });
+
+            // 处理右键菜单传递的文件路径 (--context-menu)
+            let args: Vec<String> = std::env::args().collect();
+            if let Some(pos) = args.iter().position(|a| a == "--context-menu") {
+                if let Some(file_path) = args.get(pos + 1) {
+                    let file_path = file_path.clone();
+                    let handle = app.handle().clone();
+                    tauri::async_runtime::spawn(async move {
+                        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                        let _ = handle.emit_all("context-menu-open", file_path);
+                    });
+                }
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -89,6 +102,9 @@ fn main() {
             long_compress_assistant::commands::system::load_app_settings,
             long_compress_assistant::commands::system::save_app_settings,
             long_compress_assistant::commands::system_integration::open_in_explorer,
+            long_compress_assistant::commands::system_integration::register_context_menu,
+            long_compress_assistant::commands::system_integration::unregister_context_menu,
+            long_compress_assistant::commands::system_integration::is_context_menu_registered,
             long_compress_assistant::commands::encrypted_password::init_encrypted_password_service,
             long_compress_assistant::commands::encrypted_password::list_encrypted_passwords,
             long_compress_assistant::commands::encrypted_password::add_encrypted_password,

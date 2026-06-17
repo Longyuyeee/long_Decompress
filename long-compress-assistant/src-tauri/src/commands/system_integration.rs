@@ -86,3 +86,28 @@ pub fn open_in_explorer(_app: AppHandle, path: String) -> Result<(), String> {
     }
     Ok(())
 }
+
+/// 注册 Windows 右键上下文菜单
+#[tauri::command]
+pub async fn register_context_menu() -> Result<bool, String> {
+    let exe_path = std::env::current_exe()
+        .map_err(|e| format!("无法获取应用路径: {}", e))?;
+    let app_path = exe_path.to_string_lossy().to_string();
+    crate::system_integration::context_menu::register_context_menu(&app_path)
+        .map_err(|e| format!("注册右键菜单失败: {}", e))?;
+    Ok(true)
+}
+
+/// 移除 Windows 右键上下文菜单
+#[tauri::command]
+pub async fn unregister_context_menu() -> Result<bool, String> {
+    crate::system_integration::context_menu::unregister_context_menu()
+        .map_err(|e| format!("移除右键菜单失败: {}", e))?;
+    Ok(true)
+}
+
+/// 检查右键菜单是否已注册
+#[tauri::command]
+pub async fn is_context_menu_registered() -> Result<bool, String> {
+    Ok(crate::system_integration::context_menu::is_context_menu_registered())
+}

@@ -91,6 +91,7 @@ export const translations: Record<string, Record<string, string>> = {
     'decompress.no_vault_passwords': '检测到加密归档但保险箱中无密码。请先将密码添加到保险箱。',
     'decompress.cancel_status': '{0} 个任务已取消，{1} 个失败',
     'decompress.status_success': '{0} 个成功',
+    'decompress.smart_extract': '智能解压：检测到多文件归档，自动创建子文件夹',
     // ===== 压缩 =====
     'compress.start': '开始压缩',
     'compress.add_files': '添加文件',
@@ -354,6 +355,7 @@ export const translations: Record<string, Record<string, string>> = {
     'decompress.no_vault_passwords': 'Encrypted archive detected but no passwords in vault. Add password to vault first.',
     'decompress.cancel_status': '{0} cancelled, {1} failed',
     'decompress.status_success': '{0} succeeded',
+    'decompress.smart_extract': 'Smart Extract: multi-file archive detected, auto-creating subfolder',
     // ===== Compression =====
     'compress.start': 'Start Compression',
     'compress.add_files': 'Add Source Files',

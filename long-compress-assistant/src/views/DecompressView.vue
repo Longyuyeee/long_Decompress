@@ -5,6 +5,7 @@ import { useAppStore } from '@/stores/app'
 import { usePasswordStore } from '@/stores/password'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage, generateId } from '@/utils'
+import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
@@ -28,6 +29,12 @@ const globalExtractToSubfolder = ref(false)
 
 onMounted(async () => {
   await taskStore.initListeners()
+  // 监听右键菜单传入的文件路径
+  await listen<string>('context-menu-open', (event) => {
+    const filePath = event.payload
+    const files = [{ path: filePath }]
+    onFilesSelected(files as any)
+  })
 })
 
 const onFilesSelected = async (files: any[]) => {
@@ -38,7 +45,7 @@ const onFilesSelected = async (files: any[]) => {
 
     const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
 
-    taskStore.addTask({
+    const taskId = taskStore.addTask({
       id: generateId(),
       name: file.name || sourcePath.split(/[\\/]/).pop() || 'Unknown',
       type: 'decompression',
@@ -47,6 +54,21 @@ const onFilesSelected = async (files: any[]) => {
       extractToSubfolder: globalExtractToSubfolder.value
     })
     appStore.addRecentFile(sourcePath)
+
+    // Smart extraction: auto-detect if subfolder is needed
+    tauriCommands.listArchiveContents(sourcePath).then((contents: string[]) => {
+      const task = taskStore.tasks.find(t => t.id === taskId)
+      if (!task || task.status !== 'pending') return
+      const rootEntries = contents.filter(item => !item.includes('/')).length
+      if (rootEntries > 1) {
+        task.extractToSubfolder = true
+        appStore.setSuccess(appStore.t('decompress.smart_extract'))
+      } else if (rootEntries === 1) {
+        task.extractToSubfolder = false
+      }
+    }).catch(() => {
+      // Cannot read contents (encrypted, unsupported format) — keep default behavior
+    })
   }
 }
 
@@ -251,7 +273,7 @@ taskStore.$subscribe((mutation, state) => {
           <i class="pi pi-trash"></i>
           {{ appStore.t('decompress.clear_finished') }}
         </button>
-        <button 
+        <button
           v-if="isRunning"
           @click="cancelAllTasks"
           class="h-10 px-6 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-[0.625rem] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center gap-2"
@@ -259,7 +281,7 @@ taskStore.$subscribe((mutation, state) => {
           <i class="pi pi-stop-circle"></i>
           {{ appStore.t('common.cancel') }}
         </button>
-        <button 
+        <button
           v-if="hasPendingTasks && !isRunning"
           @click="startDecompression"
           class="h-10 px-6 rounded-xl bg-primary text-white text-[0.625rem] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg flex items-center gap-2"
@@ -333,7 +355,7 @@ taskStore.$subscribe((mutation, state) => {
       </div>
     </div>
 
-    <ConflictResolutionModal 
+    <ConflictResolutionModal
       v-if="selectedConflictTaskId"
       v-model:visible="showConflictModal"
       :taskId="selectedConflictTaskId"
