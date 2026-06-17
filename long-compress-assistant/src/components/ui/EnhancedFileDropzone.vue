@@ -144,14 +144,25 @@ const handleRawPaths = (paths: string[]) => {
 }
 
 const handleFiles = (files: File[]) => {
-  const fileData = files.map(file => ({
-    name: file.name,
-    path: (file as any).path || file.name,
-    size: file.size,
-    type: file.type || 'file',
-    isDirectory: false
-  }))
-  emit('files-selected', fileData)
+  const missingPaths: string[] = []
+  const fileData = files.map(file => {
+    const hasPath = !!(file as any).path
+    if (!hasPath) missingPaths.push(file.name)
+    return {
+      name: file.name,
+      path: (file as any).path || '',
+      size: file.size,
+      type: file.type || 'file',
+      isDirectory: false
+    }
+  }).filter(f => f.path) // 过滤掉没有路径的文件
+
+  if (fileData.length > 0) {
+    emit('files-selected', fileData)
+  }
+  if (missingPaths.length > 0) {
+    appStore.setError(`部分文件无法添加 (缺少路径): ${missingPaths.slice(0, 3).join(', ')}${missingPaths.length > 3 ? '...' : ''}。请使用浏览按钮选择文件。`)
+  }
 }
 </script>
 

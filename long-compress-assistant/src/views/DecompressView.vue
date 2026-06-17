@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useTaskStore } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { usePasswordStore } from '@/stores/password'
@@ -27,8 +27,11 @@ const globalOutputPath = ref('')
 const isGlobalSameDir = ref(true) // 默认同目录，用户可通过按钮手动选择
 const globalExtractToSubfolder = ref(false)
 
+const unlisteners: Array<() => void> = []
+
 onMounted(async () => {
   await taskStore.initListeners()
+  // taskStore listeners are auto-managed by Pinia
 
   // 右键菜单 / CLI：添加文件到解压队列
   const handleContextFiles = (files: string[]) => {
@@ -84,9 +87,15 @@ onMounted(async () => {
   })
 
   // 向后兼容旧版
-  await listen<string>('context-open', (event) => {
+  const unlistenOpen = await listen<string>('context-open', (event) => {
     handleContextFiles([event.payload])
   })
+  unlisteners.push(unlistenOpen)
+})
+
+onUnmounted(() => {
+  unlisteners.forEach(fn => fn())
+  unsubConflict()
 })
 
 const onFilesSelected = async (files: any[]) => {
@@ -301,7 +310,43 @@ const handleConflict = (taskId: string) => {
   showConflictModal.value = true
 }
 
-taskStore.$subscribe((mutation, state) => {
+// 处理冲突解决：取消当前任务并用新策略重试
+const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean) => {
+  const taskId = selectedConflictTaskId.value
+  if (!taskId) return
+  const task = taskStore.tasks.find(t => t.id === taskId)
+  if (!task) return
+
+  // 应用冲突策略
+  if (applyToAll) {
+    appStore.updateSettings({ conflictPolicy: action })
+  }
+  showConflictModal.value = false
+  selectedConflictTaskId.value = null
+
+  // 取消当前任务并用新策略重试
+  try {
+    await taskStore.cancelTask(taskId)
+  } catch { /* ignore cancel errors */ }
+
+  const options = {
+    outputPath: task.outputPath,
+    keepStructure: true,
+    overwrite: action === 'overwrite',
+    deleteAfter: appStore.settings.autoDeleteSource,
+    createSubdirectory: task.extractToSubfolder ?? false,
+    password: task.password || undefined,
+    fileFilter: task.fileFilter || null
+  }
+  try {
+    await tauriCommands.decompressFile(task.sourceFiles[0], options, taskId)
+  } catch (e: any) {
+    appStore.setError(`解压失败: ${e}`)
+  }
+}
+
+// 监听冲突事件（仅当无弹窗显示时才打开，避免重复）
+const unsubConflict = taskStore.$subscribe((_mutation, state) => {
   const taskWithConflict = state.tasks.find(t => t.conflicts.length > 0)
   if (taskWithConflict && !showConflictModal.value) {
     handleConflict(taskWithConflict.id)
@@ -411,6 +456,7 @@ taskStore.$subscribe((mutation, state) => {
       v-if="selectedConflictTaskId"
       v-model:visible="showConflictModal"
       :taskId="selectedConflictTaskId"
+      @resolve="handleConflictResolve"
     />
   </div>
 </template>

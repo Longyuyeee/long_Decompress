@@ -12,6 +12,7 @@ const tauriCommands = useTauriCommands()
 const showAddModal = ref(false)
 const showHistoryModal = ref(false)
 const showClearConfirm = ref(false)
+const showUnlockModal = ref(false)
 const showDeleteConfirm = ref(false)
 const deleteTargetId = ref<string | null>(null)
 const selectedEntryForHistory = ref<any>(null)
@@ -138,17 +139,17 @@ const chartData = computed(() => {
           <button v-if="passwordStore.isUnlocked" @click="passwordStore.lock()" class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all" :title="appStore.t('vault.lock')">
             <i class="pi pi-lock text-[0.625rem]"></i>
           </button>
-          <button @click="handleAddNew" class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center hover:scale-105 transition-all shadow-lg hover:shadow-primary/40">
+          <button v-if="passwordStore.isUnlocked" @click="handleAddNew" class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center hover:scale-105 transition-all shadow-lg hover:shadow-primary/40">
             <i class="pi pi-plus text-sm"></i>
           </button>
           <div class="w-px h-5 bg-subtle my-auto mx-1"></div>
-          <button @click="handleExport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" :title="appStore.t('vault.export')" aria-label="Export passwords">
+          <button v-if="passwordStore.isUnlocked" @click="handleExport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" :title="appStore.t('vault.export')" aria-label="Export passwords">
             <i class="pi pi-download text-[0.625rem]"></i>
           </button>
-          <button @click="handleImport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" :title="appStore.t('vault.import')" aria-label="Import passwords">
+          <button v-if="passwordStore.isUnlocked" @click="handleImport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" :title="appStore.t('vault.import')" aria-label="Import passwords">
             <i class="pi pi-upload text-[0.625rem]"></i>
           </button>
-          <button @click="showClearConfirm = true" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-red-500 transition-all" :title="appStore.t('vault.clear_all')" aria-label="Clear all passwords">
+          <button v-if="passwordStore.isUnlocked" @click="showClearConfirm = true" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-red-500 transition-all" :title="appStore.t('vault.clear_all')" aria-label="Clear all passwords">
             <i class="pi pi-trash text-[0.625rem]"></i>
           </button>
         </div>
@@ -167,7 +168,23 @@ const chartData = computed(() => {
         <i class="pi pi-spin pi-spinner text-primary text-2xl"></i>
       </div>
 
-      <div class="flex-1 overflow-hidden flex flex-col relative">
+      <!-- 保险箱锁定状态 -->
+      <div v-if="!passwordStore.isUnlocked && !passwordStore.isLoading" class="flex-1 flex items-center justify-center">
+        <div class="text-center space-y-5">
+          <div class="w-16 h-16 mx-auto rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+            <i class="pi pi-lock text-2xl text-amber-400"></i>
+          </div>
+          <div>
+            <p class="text-sm font-black text-content">{{ appStore.t('vault.locked') }}</p>
+            <p class="text-[0.5625rem] text-muted mt-1">{{ appStore.t('vault.locked.desc') }}</p>
+          </div>
+          <button @click="showUnlockModal = true" class="px-6 py-2.5 rounded-xl bg-primary text-white text-[0.625rem] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg">
+            <i class="pi pi-unlock mr-2 text-[0.5625rem]"></i>{{ appStore.t('vault.unlock') }}
+          </button>
+        </div>
+      </div>
+
+      <div v-else class="flex-1 overflow-hidden flex flex-col relative">
         <table class="w-full text-left border-collapse table-fixed">
           <thead class="sticky top-0 z-20 bg-input/80 backdrop-blur-xl border-b border-subtle">
             <tr>
