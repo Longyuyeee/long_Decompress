@@ -21,7 +21,7 @@ const checkingRarSupport = ref(false)
 const router = useRouter()
 
 onMounted(async () => {
-  // 右键菜单：添加文件到压缩
+  // 右键菜单 → 打开压缩对话框（用户手动配置）
   await listen<string[]>('context-compress-custom', (event) => {
     const files = event.payload.filter(f => f && !f.startsWith('%'))
     if (files.length > 0) {
@@ -30,10 +30,11 @@ onMounted(async () => {
         const name = f.split(/[\\/]/).pop() || f
         compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
       })
+      appStore.setSuccess(`已添加 ${files.length} 个文件 — 选择压缩格式后开始`)
     }
   })
 
-  // 右键菜单：快速压缩为 ZIP
+  // 右键菜单 → 直接压缩为 ZIP
   await listen<string[]>('context-compress-zip', (event) => {
     const files = event.payload.filter(f => f && !f.startsWith('%'))
     if (files.length > 0) {
@@ -43,10 +44,13 @@ onMounted(async () => {
         compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
       })
       compressionStore.globalSettings.format = 'zip'
+      appStore.setSuccess(`正在压缩 ${files.length} 个文件为 ZIP...`)
+      // 自动开始压缩
+      setTimeout(() => handleCompress(), 500)
     }
   })
 
-  // 右键菜单：快速压缩为 7Z
+  // 右键菜单 → 直接压缩为 7Z
   await listen<string[]>('context-compress-7z', (event) => {
     const files = event.payload.filter(f => f && !f.startsWith('%'))
     if (files.length > 0) {
@@ -56,6 +60,9 @@ onMounted(async () => {
         compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
       })
       compressionStore.globalSettings.format = '7z'
+      appStore.setSuccess(`正在压缩 ${files.length} 个文件为 7Z...`)
+      // 自动开始压缩
+      setTimeout(() => handleCompress(), 500)
     }
   })
 })
