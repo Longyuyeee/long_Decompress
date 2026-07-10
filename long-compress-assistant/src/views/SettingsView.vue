@@ -30,6 +30,20 @@ const toggleAutoStart = () => appStore.updateSettings({ autoStart: !appStore.set
 
 const contextMenuSupported = ref(navigator.platform.toLowerCase().includes('win'))
 
+// 验证并更新线程数
+const validateAndUpdateThreads = (value: number) => {
+  const validated = Math.max(1, Math.min(16, Math.floor(value)))
+  appStore.updateSettings({ maxConcurrentTasks: validated })
+  appStore.saveSettingsToStorage()
+}
+
+// 验证并更新 UI 缩放
+const validateAndUpdateUIScale = (value: number) => {
+  const validated = Math.max(60, Math.min(200, Math.floor(value)))
+  appStore.updateSettings({ uiScale: validated })
+  appStore.saveSettingsToStorage()
+}
+
 const checkContextMenu = async () => {
   if (!contextMenuSupported.value) return
   try { contextMenuEnabled.value = await tauriCommands.isContextMenuRegistered() } catch { /* ignore */ }
@@ -141,7 +155,7 @@ const removeWordlist = (index: number) => {
                   type="range"
                   v-model.number="appStore.settings.uiScale"
                   min="60" max="200" step="5"
-                  @change="appStore.saveSettingsToStorage()"
+                  @change="validateAndUpdateUIScale(appStore.settings.uiScale)"
                   class="w-full h-1.5 bg-input border border-subtle rounded-full appearance-none cursor-pointer accent-primary"
                 />
                 <div class="flex justify-between text-[0.5rem] text-dim font-mono">
@@ -180,7 +194,7 @@ const removeWordlist = (index: number) => {
                   type="range"
                   v-model.number="appStore.settings.maxConcurrentTasks"
                   min="1" max="16" step="1"
-                  @input="appStore.saveSettingsToStorage()"
+                  @change="validateAndUpdateThreads(appStore.settings.maxConcurrentTasks)"
                   class="w-full h-1.5 bg-input border border-subtle rounded-full appearance-none cursor-pointer accent-primary"
                 />
                 <div class="text-[0.5rem] text-muted uppercase tracking-tighter">{{ appStore.t('settings.performance.threads.desc') }}</div>
