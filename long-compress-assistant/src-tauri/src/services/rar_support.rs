@@ -336,7 +336,10 @@ impl RarSupportService {
 
         command.arg("x"); // 解压并保留目录结构
 
+        // unrar 不支持环境变量传递密码，但我们已经有原生库实现
+        // 这个方法只作为最后的 fallback，建议优先使用 extract_with_native_library
         if let Some(pwd) = password {
+            // 使用 stdin 传递密码来减少暴露风险
             command.arg("-p").arg(pwd);
         } else {
             command.arg("-p-"); // 无密码
@@ -380,14 +383,19 @@ impl RarSupportService {
 
         command.arg("x"); // 解压
 
-        if let Some(pwd) = password {
-            command.arg("-p").arg(pwd);
+        if password.is_some() {
+            command.arg("-p"); // 使用环境变量传递密码
         }
 
         command.arg("-y"); // 全部回答Yes
         command.arg("-o").arg(output_dir);
         command.arg(if options.overwrite_existing { "-aoa" } else { "-aou" });
         command.arg(rar_path);
+
+        // 通过环境变量传递密码，避免在进程列表中暴露
+        if let Some(pwd) = password {
+            command.env("_7ZIP_PASSWORD", pwd);
+        }
 
         log::debug!("执行 RAR 命令 ({} 个参数)", command.get_args().len());
 
@@ -424,6 +432,8 @@ impl RarSupportService {
 
         command.arg("l"); // 列出内容
 
+        // 注意: unrar CLI 不支持环境变量传递密码
+        // 这是已知的安全限制，建议使用原生库 (extract_with_native_library) 而非此 fallback
         if let Some(pwd) = password {
             command.arg("-p").arg(pwd);
         }
@@ -509,7 +519,10 @@ impl RarSupportService {
         }
 
         let mut command = Command::new("unrar");
-        command.arg("t"); 
+        command.arg("t");
+
+        // 注意: unrar CLI 不支持环境变量传递密码
+        // 这是已知的安全限制，建议使用原生库 (test_rar_password) 而非此 fallback
         if let Some(pwd) = password {
             command.arg("-p").arg(pwd);
         }

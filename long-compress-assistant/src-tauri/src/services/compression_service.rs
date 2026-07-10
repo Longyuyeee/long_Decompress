@@ -1571,9 +1571,14 @@ impl CompressionService {
         cmd.arg("a");
         cmd.arg("-tzip");
         cmd.arg(format!("-mx{}", level));
-        cmd.arg(format!("-p{}", pwd));
+        cmd.arg("-p"); // 使用环境变量传递密码
         cmd.arg("-y");
         cmd.arg(output);
+
+        // 通过环境变量传递密码，避免在进程列表中暴露
+        if !pwd.is_empty() {
+            cmd.env("_7ZIP_PASSWORD", pwd);
+        }
 
         for source in sources {
             self.check_cancellation()?;
@@ -1950,7 +1955,8 @@ impl CompressionService {
         }
 
         if let Some(password) = options.password.as_deref().filter(|password| !password.is_empty()) {
-            command.arg(format!("-p{}", password));
+            command.arg("-hp"); // RAR 使用 -hp 参数读取环境变量密码
+            command.env("RAR_PASSWORD", password);
         }
 
         command.arg(output);

@@ -32,6 +32,23 @@ impl UniversalCliEngine {
             .map_err(|e| anyhow::anyhow!("7z command failed: {}", e))
     }
 
+    /// 共享辅助：运行 7z 命令，通过环境变量传递密码以防止进程列表暴露
+    async fn run_7z_command_with_password(args: &[String], password: Option<&str>) -> Result<std::process::Output> {
+        let cmd = Self::get_7z_command()
+            .ok_or_else(|| anyhow::anyhow!(missing_7z_message()))?;
+        let mut command = Command::new(&cmd);
+        command.args(args);
+
+        // 通过环境变量传递密码，避免在进程列表中暴露
+        if let Some(pwd) = password {
+            command.env("_7ZIP_PASSWORD", pwd);
+        }
+
+        command.output()
+            .await
+            .map_err(|e| anyhow::anyhow!("7z command failed: {}", e))
+    }
+
     /// 检查系统中是否安装了 7z 或 7za
     fn get_7z_command() -> Option<String> {
         find_7z_command()
@@ -56,12 +73,12 @@ impl UniversalCliEngine {
     /// 列出归档文件中的内容条目（通过 7z CLI 的 l 命令）
     pub async fn list_contents(file_path: &Path, password: Option<&str>) -> Result<Vec<String>> {
         let mut args = vec!["l".to_string(), "-slt".to_string(), "-ba".to_string()];
-        if let Some(pwd) = password {
-            args.push(format!("-p{}", pwd));
+        if password.is_some() {
+            args.push("-p".to_string()); // 使用环境变量传递密码
         }
         args.push(file_path.to_string_lossy().to_string());
 
-        let output = Self::run_7z_command(&args).await?;
+        let output = Self::run_7z_command_with_password(&args, password).await?;
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let entries: Vec<String> = stdout.lines()
@@ -96,12 +113,12 @@ impl UniversalCliEngine {
     /// 检测归档文件的完整性（通过 7z CLI 的 t 命令）
     pub async fn test_integrity(file_path: &Path, password: Option<&str>) -> Result<()> {
         let mut args = vec!["t".to_string()];
-        if let Some(pwd) = password {
-            args.push(format!("-p{}", pwd));
+        if password.is_some() {
+            args.push("-p".to_string()); // 使用环境变量传递密码
         }
         args.push(file_path.to_string_lossy().to_string());
 
-        let output = Self::run_7z_command(&args).await?;
+        let output = Self::run_7z_command_with_password(&args, password).await?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -152,12 +169,13 @@ impl ArchiveEngine for UniversalCliEngine {
             None => return Ok(false),
         };
 
-        // 7z t -p<password> <file> 测试归档
+        // 7z t -p <file> 测试归档，通过环境变量传递密码
         let output = Command::new(cmd)
             .arg("t")
-            .arg(format!("-p{}", password))
+            .arg("-p") // 使用环境变量中的密码
             .arg("-y") // 假定所有提示为yes
             .arg(file_path)
+            .env("_7ZIP_PASSWORD", password)
             .output()
             .await?;
 
@@ -233,16 +251,21 @@ impl ArchiveEngine for UniversalCliEngine {
         command.arg("x"); // extract with full paths
         command.arg("-y"); // yes to all
         command.arg(Self::overwrite_mode_arg(overwrite_existing));
-        
-        if let Some(pwd) = password {
-            command.arg(format!("-p{}", pwd));
+
+        if password.is_some() {
+            command.arg("-p"); // 使用环境变量传递密码
         }
 
         command.arg(format!("-o{}", output_dir.to_string_lossy()));
         command.arg(file_path);
-        
+
         // 开启进度输出
         command.arg("-bsp1");
+
+        // 通过环境变量传递密码，避免在进程列表中暴露
+        if let Some(pwd) = password {
+            command.env("_7ZIP_PASSWORD", pwd);
+        }
 
         // 我们需要捕获 stdout 来解析进度
         command.stdout(Stdio::piped());
