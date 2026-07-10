@@ -140,7 +140,9 @@ impl IOBufferPoolBenchmark {
             pool_total_memory,
             direct_total_memory,
             speedup: direct_duration.as_secs_f64() / pool_duration.as_secs_f64(),
-            memory_saving: (direct_total_memory - pool_total_memory) as f64 / direct_total_memory as f64 * 100.0,
+            memory_saving: direct_total_memory.saturating_sub(pool_total_memory) as f64
+                / direct_total_memory as f64
+                * 100.0,
         }
     }
 

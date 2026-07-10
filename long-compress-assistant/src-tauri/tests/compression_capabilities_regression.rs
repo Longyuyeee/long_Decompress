@@ -1,8 +1,10 @@
 use std::fs;
 
 use long_compress_assistant::models::compression::CompressionOptions;
+use long_compress_assistant::services::archive_engine::ArchiveEngine;
 use long_compress_assistant::services::compression_service::CompressionService;
 use long_compress_assistant::services::universal_engine::UniversalCliEngine;
+use long_compress_assistant::utils::archive_tools::find_7z_command;
 use tempfile::tempdir;
 
 fn compression_options(format: Option<&str>) -> CompressionOptions {
@@ -148,6 +150,70 @@ fn infers_zip_from_output_path_when_format_missing() {
 }
 
 #[test]
+fn infers_common_compression_formats_from_output_path() {
+    let temp = tempdir().expect("temp dir");
+    let source_file = temp.path().join("source.txt");
+    fs::write(&source_file, b"source").expect("source fixture");
+    let source = source_file.to_string_lossy().to_string();
+
+    for (file_name, expected) in [
+        ("archive.7z", "7z"),
+        ("archive.tar.gz", "tar.gz"),
+        ("archive.tgz", "tar.gz"),
+        ("archive.tar.bz2", "tar.bz2"),
+        ("archive.tbz2", "tar.bz2"),
+        ("archive.tar.xz", "tar.xz"),
+        ("archive.txz", "tar.xz"),
+        ("archive.tar.zst", "tar.zst"),
+        ("archive.tzst", "tar.zst"),
+        ("archive.zstd", "zst"),
+        ("archive.lzma", "lzma"),
+    ] {
+        let output = temp.path().join(file_name).to_string_lossy().to_string();
+        let format = CompressionService::validate_compression_request(
+            &[source.clone()],
+            &output,
+            &compression_options(None),
+        )
+        .unwrap_or_else(|err| panic!("{} should infer as {}: {}", file_name, expected, err));
+        assert_eq!(format, expected);
+    }
+}
+
+#[test]
+fn exposes_backend_compression_capability_matrix() {
+    let capabilities = CompressionService::compression_format_capabilities();
+
+    assert!(capabilities.iter().any(|capability| capability.format == "tar.zst"));
+    assert!(capabilities.iter().any(|capability| capability.format == "lzma" && capability.requires_7za));
+    assert!(capabilities.iter().any(|capability| capability.format == "rar" && capability.requires_winrar));
+    assert!(capabilities.iter().any(|capability| capability.format == "zip" && capability.supports_split));
+    assert!(capabilities.iter().any(|capability| capability.format == "7z" && capability.supports_split));
+}
+
+#[test]
+fn every_backend_compressible_format_can_be_explicitly_validated() {
+    let temp = tempdir().expect("temp dir");
+    let source_file = temp.path().join("source.txt");
+    fs::write(&source_file, b"source").expect("source fixture");
+    let source = source_file.to_string_lossy().to_string();
+
+    for capability in CompressionService::compression_format_capabilities() {
+        if !capability.can_compress {
+            continue;
+        }
+        let format = CompressionService::validate_compression_request(
+            &[source.clone()],
+            &temp.path().join(format!("archive.{}", capability.extensions[0])).to_string_lossy(),
+            &compression_options(Some(capability.format)),
+        )
+        .unwrap_or_else(|err| panic!("{} should validate: {}", capability.format, err));
+
+        assert_eq!(format, capability.format);
+    }
+}
+
+#[test]
 fn universal_engine_uses_auto_rename_when_overwrite_is_disabled() {
     assert_eq!(UniversalCliEngine::overwrite_mode_arg(false), "-aou");
     assert_eq!(UniversalCliEngine::overwrite_mode_arg(true), "-aoa");
@@ -193,4 +259,34 @@ fn source_cleanup_waits_for_existing_output() {
     .expect("cleanup candidates");
 
     assert!(removable.is_empty());
+}
+
+#[tokio::test]
+async fn universal_engine_detects_password_zip_created_by_bundled_7za() {
+    let Some(seven_zip) = find_7z_command() else {
+        eprintln!("Skipping password ZIP test because 7za is unavailable");
+        return;
+    };
+
+    let temp = tempdir().expect("temp dir");
+    let source_file = temp.path().join("secret.txt");
+    let archive = temp.path().join("secret.zip");
+    fs::write(&source_file, b"top secret").expect("secret fixture");
+
+    let output = std::process::Command::new(seven_zip)
+        .arg("a")
+        .arg("-tzip")
+        .arg("-popen-sesame")
+        .arg("-y")
+        .arg(&archive)
+        .arg(&source_file)
+        .output()
+        .expect("7za should run");
+
+    assert!(output.status.success(), "7za failed: {}", String::from_utf8_lossy(&output.stderr));
+
+    let engine = UniversalCliEngine::new();
+    assert!(engine.requires_password(&archive).await.expect("password detection"));
+    assert!(engine.try_password(&archive, "open-sesame").await.expect("correct password"));
+    assert!(!engine.try_password(&archive, "wrong-password").await.expect("wrong password"));
 }

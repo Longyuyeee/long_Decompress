@@ -291,6 +291,57 @@ async fn test_xz_roundtrip() {
     assert_eq!(buf, original, "XZ content mismatch");
 }
 
+#[tokio::test]
+async fn test_zstd_roundtrip() {
+    let temp = tempdir().unwrap();
+    let (_source, original) = create_test_file(temp.path(), "input.txt");
+    let archive = temp.path().join("input.txt.zst");
+
+    let input = File::open(temp.path().join("input.txt")).unwrap();
+    let output = File::create(&archive).unwrap();
+    let mut encoder = zstd::stream::write::Encoder::new(output, 6).unwrap();
+    std::io::copy(&mut &input, &mut encoder).unwrap();
+    encoder.finish().unwrap();
+
+    assert!(archive.exists(), "Zstd archive not created");
+    assert_eq!(&fs::read(&archive).unwrap()[0..4], &[0x28, 0xB5, 0x2F, 0xFD], "Invalid Zstd magic");
+
+    let compressed = File::open(&archive).unwrap();
+    let mut decoder = zstd::stream::read::Decoder::new(compressed).unwrap();
+    let mut buf = Vec::new();
+    decoder.read_to_end(&mut buf).unwrap();
+    assert_eq!(buf, original, "Zstd content mismatch");
+}
+
+#[tokio::test]
+async fn test_tar_zstd_roundtrip() {
+    let temp = tempdir().unwrap();
+    let (source, original) = create_test_file(temp.path(), "entry.txt");
+    let archive = temp.path().join("test.tar.zst");
+
+    let output = File::create(&archive).unwrap();
+    let encoder = zstd::stream::write::Encoder::new(output, 6).unwrap();
+    let mut builder = tar::Builder::new(encoder);
+    let mut src_file = File::open(&source).unwrap();
+    let mut header = tar::Header::new_gnu();
+    header.set_path("entry.txt").unwrap();
+    header.set_size(original.len() as u64);
+    header.set_cksum();
+    builder.append(&header, &mut src_file).unwrap();
+    let encoder = builder.into_inner().unwrap();
+    encoder.finish().unwrap();
+
+    let input = File::open(&archive).unwrap();
+    let decoder = zstd::stream::read::Decoder::new(input).unwrap();
+    let mut archive_reader = tar::Archive::new(decoder);
+    let out_dir = temp.path().join("zstd-extracted");
+    fs::create_dir(&out_dir).unwrap();
+    archive_reader.unpack(&out_dir).unwrap();
+
+    let extracted = fs::read(out_dir.join("entry.txt")).unwrap();
+    assert_eq!(extracted, original, "tar.zst content mismatch");
+}
+
 // ──────────────── Password Format Tests ────────────────
 
 #[test]
@@ -432,6 +483,7 @@ fn test_extension_based_format_inference() {
         ("archive.bz2", "bz2"),
         ("archive.xz", "xz"),
         ("archive.zst", "zst"),
+        ("archive.zstd", "zst"),
         ("archive.lzma", "lzma"),
     ];
 

@@ -100,14 +100,8 @@ impl EncryptedPasswordService {
 
     /// 初始化服务（设置主密码）
     pub async fn initialize(&mut self, master_password: &str) -> Result<()> {
-        // 创建密钥存储路径
-        let key_store_path = self.data_dir.join("password_vault.dat");
-
-        // 创建密钥管理器
-        let key_manager = KeyManager::new(&key_store_path);
-
-        // 初始化密钥管理器
-        key_manager.initialize(master_password).await?;
+        fs::create_dir_all(&self.data_dir).await?;
+        let key_manager = KeyManager::new(&self.data_dir);
 
         // 保存主密码哈希
         self.master_password_hash = Some(HashingService::hash_password(master_password)?);
@@ -140,15 +134,7 @@ impl EncryptedPasswordService {
             return Ok(false);
         }
 
-        // 创建密钥存储路径
-        let key_store_path = self.data_dir.join("password_vault.dat");
-        let key_manager = KeyManager::new(&key_store_path);
-
-        // 解锁密钥管理器
-        let unlocked = key_manager.unlock(master_password).await?;
-        if !unlocked {
-            return Ok(false);
-        }
+        let key_manager = KeyManager::new(&self.data_dir);
 
         // 设置密钥管理器
         let mut key_manager_lock = self.key_manager.write().await;

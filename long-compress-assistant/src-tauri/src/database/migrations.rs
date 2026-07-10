@@ -142,6 +142,7 @@ async fn migrate_v1(pool: &SqlitePool) -> Result<()> {
             created_at DATETIME NOT NULL,
             updated_at DATETIME NOT NULL,
             last_used DATETIME,
+            use_count INTEGER NOT NULL DEFAULT 0,
             expires_at DATETIME,
             favorite BOOLEAN NOT NULL DEFAULT FALSE,
             archived BOOLEAN NOT NULL DEFAULT FALSE,
@@ -461,6 +462,10 @@ async fn create_indexes(pool: &SqlitePool) -> Result<()> {
         .await
         .context("创建密码条目收藏索引失败")?;
 
+    query("CREATE INDEX IF NOT EXISTS idx_password_entries_use_count ON password_entries(use_count DESC)")
+        .execute(pool)
+        .await
+        .context("failed to create password use count index")?;
     query("CREATE INDEX IF NOT EXISTS idx_password_entries_deleted ON password_entries(deleted)")
         .execute(pool)
         .await

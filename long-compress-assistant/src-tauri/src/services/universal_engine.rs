@@ -8,6 +8,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use crate::models::compression::TaskLogSeverity;
 use super::archive_engine::ArchiveEngine;
 use crate::services::compression_service::CompressionError;
+use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 
 pub struct UniversalCliEngine;
 
@@ -23,7 +24,7 @@ impl UniversalCliEngine {
     /// 共享辅助：运行 7z 命令并返回输出
     async fn run_7z_command(args: &[String]) -> Result<std::process::Output> {
         let cmd = Self::get_7z_command()
-            .ok_or_else(|| anyhow::anyhow!("7z not found"))?;
+            .ok_or_else(|| anyhow::anyhow!(missing_7z_message()))?;
         Command::new(&cmd)
             .args(args)
             .output()
@@ -33,28 +34,7 @@ impl UniversalCliEngine {
 
     /// 检查系统中是否安装了 7z 或 7za
     fn get_7z_command() -> Option<String> {
-        // 1. 尝试环境变量中的 7z
-        if std::process::Command::new("7z").arg("--help").output().is_ok() {
-            return Some("7z".to_string());
-        }
-        // 2. 尝试环境变量中的 7za
-        if std::process::Command::new("7za").arg("--help").output().is_ok() {
-            return Some("7za".to_string());
-        }
-        // 3. 尝试 Windows 默认安装路径
-        #[cfg(target_os = "windows")]
-        {
-            let common_paths = [
-                "C:\\Program Files\\7-Zip\\7z.exe",
-                "C:\\Program Files (x86)\\7-Zip\\7z.exe",
-            ];
-            for path in common_paths {
-                if std::path::Path::new(path).exists() {
-                    return Some(path.to_string());
-                }
-            }
-        }
-        None
+        find_7z_command()
     }
 
     /// 解析 7z -bsp1 的进度行
@@ -183,14 +163,20 @@ impl ArchiveEngine for UniversalCliEngine {
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
+        let combined = format!("{}\n{}", stdout, stderr);
 
         // 如果包含 "Everything is Ok"，则密码正确
-        if stdout.contains("Everything is Ok") {
+        if output.status.success() || combined.contains("Everything is Ok") {
             return Ok(true);
         }
 
         // 如果报错包含密码相关，则说明密码错误
-        if stderr.contains("Wrong password") || stderr.contains("Data Error in encrypted file") {
+        if combined.contains("Wrong password")
+            || combined.contains("Data Error in encrypted file")
+            || combined.contains("Can not open encrypted archive")
+            || combined.contains("Cannot open encrypted archive")
+            || combined.contains("Headers Error")
+        {
             return Ok(false);
         }
 
@@ -214,12 +200,15 @@ impl ArchiveEngine for UniversalCliEngine {
 
         let stderr = String::from_utf8_lossy(&output.stderr);
         let stdout = String::from_utf8_lossy(&output.stdout);
+        let combined = format!("{}\n{}", stdout, stderr);
 
         // 7z CLI 会在遇到需要密码的归档时提示 Enter password (在终端) 
         // 并在带 -y 参数时报错 "Cannot open encrypted archive" 或 "Data Error in encrypted file"
-        if stderr.contains("Cannot open encrypted archive") 
-            || stdout.contains("Enter password")
-            || stderr.contains("Data Error in encrypted file") {
+        if combined.contains("Cannot open encrypted archive")
+            || combined.contains("Can not open encrypted archive")
+            || combined.contains("Enter password")
+            || combined.contains("Data Error in encrypted file")
+            || combined.contains("Wrong password") {
             return Ok(true);
         }
 
@@ -237,7 +226,7 @@ impl ArchiveEngine for UniversalCliEngine {
         is_cancelled: Arc<AtomicBool>,
     ) -> Result<()> {
         let cmd = Self::get_7z_command().ok_or_else(|| {
-            anyhow::anyhow!("系统中未找到 7z 命令行工具，通用格式解压不可用。")
+            anyhow::anyhow!(missing_7z_message())
         })?;
 
         let mut command = Command::new(cmd);

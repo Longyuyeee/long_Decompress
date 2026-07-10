@@ -10,6 +10,7 @@ import { open } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
+import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT } from '@/utils/compressionFormat'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -19,8 +20,8 @@ const tauriCommands = useTauriCommands()
 const selectedConflictTaskId = ref<string | null>(null)
 const showConflictModal = ref(false)
 const selectedTaskIds = ref<Set<string>>(new Set())
-const supportedArchiveAccept = '.zip,.7z,.rar,.tar,.tar.gz,.tgz,.tar.bz2,.tbz,.tbz2,.tar.xz,.txz,.gz,.bz2,.xz,.zst,.zstd,.tzst,.iso,.img,.cab,.lzh,.lha,.arj,.dmg,.wim,.vhd,.vhdx,.chm,.deb,.rpm,.squashfs,.sfs,.msi,.nsis,.xar,.lzma,.cpio,.udf,.fat,.ntfs'
-const supportedArchiveHint = 'ZIP, 7Z, RAR, TAR, Zstd, ISO, CAB, DEB, RPM, DMG, MSI + 30 more'
+const supportedArchiveAccept = DECOMPRESS_ARCHIVE_ACCEPT
+const supportedArchiveHint = DECOMPRESS_ARCHIVE_HINT
 
 // 全局配置状态
 const globalOutputPath = ref('')

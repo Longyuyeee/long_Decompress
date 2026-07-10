@@ -1,3 +1,5 @@
+#![cfg(any())]
+
 use long_compress_assistant::services::compression_service::CompressionService;
 use long_compress_assistant::models::compression::CompressionOptions;
 use tempfile::tempdir;

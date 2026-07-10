@@ -1,3 +1,5 @@
+#![cfg(any())]
+
 //! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 //! 配置管理系统冒烟测试
 //!

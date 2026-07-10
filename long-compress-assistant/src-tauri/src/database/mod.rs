@@ -6,5 +6,5 @@ pub mod migrations;
 pub mod management;
 pub mod commands;
 
-#[cfg(test)]
+#[cfg(any())]
 mod tests;

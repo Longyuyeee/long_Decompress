@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import type { CompressionFormatId } from '@/utils/compressionFormat'
 
 export interface FileObject {
   name: string
@@ -13,7 +14,7 @@ export interface FileObject {
 }
 
 export interface CompressionOptions {
-  format: 'zip' | '7z' | 'tar' | 'gz' | 'bz2' | 'tar.gz' | 'tar.bz2' | 'xz' | 'tar.xz' | 'rar' | 'zst' | 'tar.zst' | 'lzma'
+  format: CompressionFormatId
   level: number
   password: string
   filename: string

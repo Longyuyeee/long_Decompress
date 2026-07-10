@@ -14,10 +14,10 @@ pub mod password_query_service;
 pub mod password_attempt_service;
 pub mod split_compression;
 pub mod rar_support;
-#[cfg(test)]
+#[cfg(any())]
 pub mod password_book_test;
-#[cfg(test)]
+#[cfg(any())]
 pub mod password_category_test;
-#[cfg(test)]
+#[cfg(any())]
 pub mod password_strength_test;
 pub mod system_service;

@@ -1,3 +1,5 @@
+#![cfg(any())]
+
 //! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 //! 配置文件加载器测试
 

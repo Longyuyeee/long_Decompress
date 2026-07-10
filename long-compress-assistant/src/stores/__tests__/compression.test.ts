@@ -1,209 +1,118 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
-import { useCompressionStore } from '../compression'
-import { createMockFile, createMockZipFile } from '../../../tests/setup'
+﻿import { beforeEach, describe, expect, it } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { useCompressionStore, type CompressionOptions, type FileObject } from '../compression'
 
-// Mock Tauri API
-vi.mock('@tauri-apps/api', () => ({
-  invoke: vi.fn(),
-}))
+const defaultOptions = (): CompressionOptions => ({
+  format: 'zip',
+  level: 6,
+  password: '',
+  filename: '',
+  splitArchive: false,
+  splitSize: '1024',
+  keepStructure: true,
+  deleteAfter: false,
+  createSolidArchive: false
+})
+
+const mockFile = (name: string, size: number): FileObject => ({
+  name,
+  path: `C:/archives/${name}`,
+  size,
+  type: 'file',
+  isDirectory: false
+})
 
 describe('Compression Store', () => {
-  let store: any
-
   beforeEach(() => {
     setActivePinia(createPinia())
-    store = useCompressionStore()
   })
 
-  it('initializes with default state', () => {
+  it('initializes with current default state', () => {
+    const store = useCompressionStore()
+
     expect(store.selectedFiles).toEqual([])
-    expect(store.compressionOptions).toEqual({
-      password: '',
-      compressionLevel: 6,
-      createSubdirectories: true,
+    expect(store.groups).toEqual([])
+    expect(store.globalSettings).toEqual(defaultOptions())
+    expect(store.globalOutputPath).toBe('')
+    expect(store.totalOriginalSize).toBe(0)
+  })
+
+  it('adds files and ignores duplicate paths', () => {
+    const store = useCompressionStore()
+    const file = mockFile('sample.zip', 1024)
+
+    store.addFile(file)
+    store.addFile(file)
+
+    expect(store.selectedFiles).toHaveLength(1)
+    expect(store.selectedFiles[0]).toMatchObject({
+      name: 'sample.zip',
+      path: 'C:/archives/sample.zip',
+      expanded: false
     })
-    expect(store.isCompressing).toBe(false)
-    expect(store.compressionHistory).toEqual([])
   })
 
-  it('adds files to selection', () => {
-    const mockFile = createMockFile('test.txt', 1024)
-    store.addFile(mockFile)
+  it('calculates total size across loose files and groups', () => {
+    const store = useCompressionStore()
 
-    expect(store.selectedFiles).toHaveLength(1)
-    expect(store.selectedFiles[0].name).toBe('test.txt')
+    store.addFile(mockFile('one.txt', 100))
+    store.addFile(mockFile('two.txt', 200))
+    store.addFile(mockFile('three.txt', 300))
+
+    store.createGroup(['C:/archives/one.txt', 'C:/archives/two.txt'])
+
+    expect(store.selectedFiles.map(file => file.name)).toEqual(['three.txt'])
+    expect(store.groups).toHaveLength(1)
+    expect(store.totalOriginalSize).toBe(600)
   })
 
-  it('removes files from selection', () => {
-    const file1 = createMockFile('file1.txt', 1024)
-    const file2 = createMockFile('file2.txt', 2048)
+  it('stores per-file settings and output path', () => {
+    const store = useCompressionStore()
+    const options = { ...defaultOptions(), format: '7z' as const, password: 'archive-pass' }
 
-    store.addFile(file1)
-    store.addFile(file2)
-    expect(store.selectedFiles).toHaveLength(2)
+    store.addFile(mockFile('private.7z', 512))
+    store.updateFileSettings('C:/archives/private.7z', options)
+    store.updateFileOutputPath('C:/archives/private.7z', 'D:/output')
 
-    store.removeFile(0)
-    expect(store.selectedFiles).toHaveLength(1)
-    expect(store.selectedFiles[0].name).toBe('file2.txt')
+    expect(store.selectedFiles[0].settings).toEqual(options)
+    expect(store.selectedFiles[0].outputPath).toBe('D:/output')
+    expect(store.getEffectiveSettings(store.selectedFiles[0].settings)).toEqual(options)
+    expect(store.getEffectiveOutputPath(store.selectedFiles[0].outputPath)).toBe('D:/output')
   })
 
-  it('clears all files', () => {
-    const file1 = createMockFile('file1.txt', 1024)
-    const file2 = createMockFile('file2.txt', 2048)
+  it('creates, updates, dissolves, and removes groups', () => {
+    const store = useCompressionStore()
+    const groupOptions = { ...defaultOptions(), format: 'tar.gz' as const, level: 9 }
 
-    store.addFile(file1)
-    store.addFile(file2)
-    expect(store.selectedFiles).toHaveLength(2)
+    store.addFile(mockFile('a.txt', 100))
+    store.addFile(mockFile('b.txt', 200))
 
-    store.clearFiles()
+    const groupId = store.createGroup(['C:/archives/a.txt', 'C:/archives/b.txt'])
+    store.updateGroupSettings(groupId, groupOptions)
+    store.updateGroupOutputPath(groupId, 'D:/group-output')
+
     expect(store.selectedFiles).toHaveLength(0)
-  })
-
-  it('updates compression options', () => {
-    const newOptions = {
-      password: 'secret123',
-      compressionLevel: 9,
-      createSubdirectories: false,
-    }
-
-    store.updateOptions(newOptions)
-
-    expect(store.compressionOptions).toEqual(newOptions)
-  })
-
-  it('calculates total file size', () => {
-    const file1 = createMockFile('file1.txt', 1024)
-    const file2 = createMockFile('file2.txt', 2048)
-    const file3 = createMockFile('file3.txt', 3072)
-
-    store.addFile(file1)
-    store.addFile(file2)
-    store.addFile(file3)
-
-    expect(store.totalFileSize).toBe(6144) // 1024 + 2048 + 3072
-  })
-
-  it('formats file size for display', () => {
-    expect(store.formatFileSize(1024)).toBe('1 KB')
-    expect(store.formatFileSize(1048576)).toBe('1 MB')
-    expect(store.formatFileSize(1073741824)).toBe('1 GB')
-    expect(store.formatFileSize(500)).toBe('500 B')
-  })
-
-  it('validates compression options', () => {
-    // 测试有效选项
-    store.updateOptions({
-      password: 'valid123',
-      compressionLevel: 6,
-      createSubdirectories: true,
+    expect(store.groups[0]).toMatchObject({
+      id: groupId,
+      files: expect.any(Array),
+      settings: groupOptions,
+      outputPath: 'D:/group-output'
     })
 
-    expect(store.isValidOptions).toBe(true)
+    store.removeFileFromGroup(groupId, 'C:/archives/a.txt')
+    expect(store.groups[0].files.map(file => file.name)).toEqual(['b.txt'])
 
-    // 测试无效压缩级别
-    store.updateOptions({
-      password: '',
-      compressionLevel: 12, // 超出范围
-      createSubdirectories: true,
-    })
-
-    expect(store.isValidOptions).toBe(false)
+    store.dissolveGroup(groupId)
+    expect(store.groups).toHaveLength(0)
+    expect(store.selectedFiles.map(file => file.name)).toEqual(['b.txt'])
   })
 
-  it('handles compression process', async () => {
-    const mockFile = createMockFile('test.txt', 1024)
-    store.addFile(mockFile)
+  it('falls back to global settings and output path', () => {
+    const store = useCompressionStore()
+    store.globalOutputPath = 'D:/global-output'
+    store.globalSettings = { ...defaultOptions(), format: 'xz', level: 3 }
 
-    // Mock Tauri invoke response
-    const mockInvoke = vi.fn().mockResolvedValue('压缩成功: output.zip')
-    vi.mocked(require('@tauri-apps/api').invoke).mockImplementation(mockInvoke)
-
-    await store.compressFiles('output.zip')
-
-    expect(store.isCompressing).toBe(false)
-    expect(store.compressionHistory).toHaveLength(1)
-    expect(store.compressionHistory[0].status).toBe('success')
-  })
-
-  it('handles compression failure', async () => {
-    const mockFile = createMockFile('test.txt', 1024)
-    store.addFile(mockFile)
-
-    // Mock Tauri invoke error
-    const mockInvoke = vi.fn().mockRejectedValue(new Error('压缩失败'))
-    vi.mocked(require('@tauri-apps/api').invoke).mockImplementation(mockInvoke)
-
-    await store.compressFiles('output.zip')
-
-    expect(store.isCompressing).toBe(false)
-    expect(store.compressionHistory).toHaveLength(1)
-    expect(store.compressionHistory[0].status).toBe('error')
-  })
-
-  it('handles extraction process', async () => {
-    const mockZipFile = createMockZipFile()
-
-    // Mock Tauri invoke response
-    const mockInvoke = vi.fn().mockResolvedValue('解压成功: /output/path')
-    vi.mocked(require('@tauri-apps/api').invoke).mockImplementation(mockInvoke)
-
-    const result = await store.extractFile('test.zip', '/output/path', 'password123')
-
-    expect(result).toBe('解压成功: /output/path')
-    expect(store.compressionHistory).toHaveLength(1)
-  })
-
-  it('filters files by type', () => {
-    const files = [
-      createMockFile('test.txt', 1024, 'text/plain'),
-      createMockFile('test.zip', 2048, 'application/zip'),
-      createMockFile('test.pdf', 3072, 'application/pdf'),
-    ]
-
-    files.forEach(file => store.addFile(file))
-
-    const zipFiles = store.getFilesByType('application/zip')
-    expect(zipFiles).toHaveLength(1)
-    expect(zipFiles[0].name).toBe('test.zip')
-
-    const textFiles = store.getFilesByType('text/plain')
-    expect(textFiles).toHaveLength(1)
-    expect(textFiles[0].name).toBe('test.txt')
-  })
-
-  it('manages compression history', () => {
-    const historyItem = {
-      id: '1',
-      timestamp: new Date().toISOString(),
-      operation: 'compress',
-      files: ['test.txt'],
-      output: 'output.zip',
-      status: 'success',
-      size: 1024,
-    }
-
-    store.addToHistory(historyItem)
-    expect(store.compressionHistory).toHaveLength(1)
-    expect(store.compressionHistory[0].id).toBe('1')
-
-    store.clearHistory()
-    expect(store.compressionHistory).toHaveLength(0)
-  })
-
-  it('persists state to localStorage', () => {
-    const mockFile = createMockFile('test.txt', 1024)
-    store.addFile(mockFile)
-
-    store.updateOptions({
-      password: 'test123',
-      compressionLevel: 8,
-      createSubdirectories: false,
-    })
-
-    // 验证状态可以被序列�?
-    const serialized = JSON.stringify(store.$state)
-    expect(serialized).toContain('test.txt')
-    expect(serialized).toContain('test123')
+    expect(store.getEffectiveSettings()).toEqual(store.globalSettings)
+    expect(store.getEffectiveOutputPath()).toBe('D:/global-output')
   })
 })

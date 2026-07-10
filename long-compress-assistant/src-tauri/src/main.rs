@@ -2,6 +2,7 @@
 #![allow(unexpected_cfgs)]
 
 use long_compress_assistant::database;
+use long_compress_assistant::utils::app_paths::app_data_dir;
 
 use long_compress_assistant::commands::encrypted_password::EncryptedPasswordServiceState;
 
@@ -9,16 +10,7 @@ use tauri::Manager;
 use window_shadows::set_shadow;
 
 fn main() {
-    // 在开发环境下使用项目根目录下的隐藏文件夹，在发布环境下使用 AppData
-    let data_dir = if cfg!(debug_assertions) {
-        let mut path = std::env::current_dir().unwrap_or_default();
-        if path.ends_with("src-tauri") {
-            path.pop();
-        }
-        path.join(".password_book_data")
-    } else {
-        std::path::PathBuf::from("data")
-    };
+    let data_dir = app_data_dir();
 
     if !data_dir.exists() {
         if let Err(e) = std::fs::create_dir_all(&data_dir) {
@@ -122,6 +114,8 @@ fn main() {
             long_compress_assistant::commands::compression::repair_zip,
             long_compress_assistant::commands::file::list_files,
             long_compress_assistant::commands::file::get_file_info,
+            long_compress_assistant::commands::file::read_text_file,
+            long_compress_assistant::commands::file::write_text_file,
             long_compress_assistant::commands::file::validate_wordlists,
             long_compress_assistant::commands::password::add_password,
             long_compress_assistant::commands::password::delete_password,

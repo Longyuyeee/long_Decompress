@@ -249,7 +249,7 @@ impl PasswordQueryService {
 
         // 基本条件：非删除条目
         conditions.push("pe.deleted = ?".to_string());
-        params.push("FALSE".to_string());
+        params.push("0".to_string());
 
         // 查询条件
         if let Some(query) = &request.query {
@@ -321,12 +321,12 @@ impl PasswordQueryService {
         // 状态条件
         if let Some(favorite) = request.favorite {
             conditions.push("pe.favorite = ?".to_string());
-            params.push(favorite.to_string());
+            params.push(if favorite { "1" } else { "0" }.to_string());
         }
 
         if let Some(archived) = request.archived {
             conditions.push("pe.archived = ?".to_string());
-            params.push(archived.to_string());
+            params.push(if archived { "1" } else { "0" }.to_string());
         }
 
         // 构建WHERE子句
@@ -435,7 +435,7 @@ impl PasswordQueryService {
         let mut params = Vec::new();
 
         conditions.push("pe.deleted = ?".to_string());
-        params.push("FALSE".to_string());
+        params.push("0".to_string());
 
         // 这里可以添加更多条件，与build_query_sql类似
         // 为了简化，只添加基本条件
@@ -1026,10 +1026,7 @@ mod tests {
     async fn test_password_query_service() {
         // 创建临时数据库
         let temp_dir = tempdir().unwrap();
-        let db_path = temp_dir.path().join("test.db");
-        let db_url = format!("sqlite:{}", db_path.display());
-
-        let pool = SqlitePool::connect(&db_url).await.unwrap();
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
 
         // 初始化数据库表
         crate::database::migrations::init_tables(&pool).await.unwrap();

@@ -6,20 +6,35 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "Long解压·方便助手",
+    "productName": "胧解压·方便助手",
     "version": "0.1.0"
   },
   "tauri": {
     "allowlist": {
-      "all": true,
+      "all": false,
+      "dialog": {
+        "all": false,
+        "open": true,
+        "save": true,
+        "message": true
+      },
       "shell": {
         "all": false,
         "open": true
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "maximize": true,
+        "minimize": true,
+        "setPosition": true,
+        "setSize": true,
+        "unmaximize": true
       }
     },
     "bundle": {
       "active": true,
-      "targets": "all",
+      "targets": ["nsis"],
       "identifier": "com.longcompress.assistant",
       "icon": [
         "icons/32x32.png",
@@ -28,12 +43,14 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "resources": [],
+      "resources": [
+        "../node_modules/7zip-bin/win/x64/7za.exe"
+      ],
       "externalBin": [],
-      "copyright": "Copyright © 2026 Long解压·方便助手",
+      "copyright": "Copyright © 2026 胧解压·方便助手",
       "category": "Utility",
       "shortDescription": "智能压缩解压助手",
-      "longDescription": "支持多种格式、密码本管理、批量处理的现代化压缩解压工具 - ZIP/7Z/RAR/TAR/Zstd 等37+格式",
+      "longDescription": "支持多格式、密码本管理、批量任务处理的现代化压缩解压工具。",
       "windows": {
         "wix": {
           "language": "zh-CN"
@@ -56,10 +73,10 @@
       }
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; img-src 'self' asset: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
     },
     "updater": {
-      "active": true,
+      "active": false,
       "endpoints": [
         "https://github.com/Longyuyeee/long_Decompress/releases/latest/download/latest.json"
       ],
@@ -68,7 +85,7 @@
     },
     "windows": [
       {
-        "title": "Long解压",
+        "title": "胧解压",
         "width": 720,
         "height": 540,
         "minWidth": 720,

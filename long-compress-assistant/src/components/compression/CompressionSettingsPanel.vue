@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useAppStore } from '@/stores/app'
 import type { CompressionOptions } from '@/stores/compression'
+import { COMPRESSIBLE_FORMATS, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
@@ -44,25 +45,10 @@ let syncingFromProps = false
 const showPresetModal = ref(false)
 const presetNameInput = ref('')
 
-const compressionFormats = [
-  { value: 'zip', name: 'ZIP' },
-  { value: '7z', name: '7Z' },
-  { value: 'rar', name: 'RAR' },
-  { value: 'tar', name: 'TAR' },
-  { value: 'tar.gz', name: 'TGZ' },
-  { value: 'tar.bz2', name: 'TBZ' },
-  { value: 'tar.xz', name: 'TXZ' },
-  { value: 'tar.zst', name: 'TZST' },
-  { value: 'gz', name: 'GZ', singleFileOnly: true },
-  { value: 'bz2', name: 'BZ2', singleFileOnly: true },
-  { value: 'xz', name: 'XZ', singleFileOnly: true },
-  { value: 'zst', name: 'ZST', singleFileOnly: true },
-  { value: 'lzma', name: 'LZMA', singleFileOnly: true }
-]
+const compressionFormats = COMPRESSIBLE_FORMATS
 
 // 全部格式支持密码：ZIP/7Z/RAR 原生支持，其他格式通过 7z CLI 自动创建 .7z 加密容器
-const passwordSupportedFormats = new Set<CompressionOptions['format']>(['zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz', 'tar.zst', 'gz', 'bz2', 'xz', 'zst', 'lzma'])
-const supportsPassword = computed(() => passwordSupportedFormats.has(compressionOptions.value.format))
+const supportsPassword = computed(() => isPasswordSupportedFormat(compressionOptions.value.format))
 
 const presets = computed(() => appStore.compressionPresets)
 

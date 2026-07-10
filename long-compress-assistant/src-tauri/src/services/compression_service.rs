@@ -19,6 +19,7 @@ use crate::services::rar_support::RarSupportService;
 use crate::services::universal_engine::UniversalCliEngine;
 use crate::services::archive_engine::ArchiveEngine;
 use crate::services::password_query_service::PasswordQueryService;
+use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 
 #[derive(Debug, Error)]
 pub enum CompressionError {
@@ -91,7 +92,6 @@ impl ArchiveFormat {
         if header.len() >= 6 && &header[0..6] == b"\xFD7zXZ\x00" {
             return ArchiveFormat::Xz;
         }
-        // Zstandard: 0x28 0xB5 0x2F 0xFD
         if header.len() >= 4 && &header[0..4] == &[0x28, 0xB5, 0x2F, 0xFD] {
             return ArchiveFormat::Zstd;
         }
@@ -100,7 +100,7 @@ impl ArchiveFormat {
 
     pub fn supports_password(&self) -> bool {
         match self {
-            ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar => true,
+            ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Universal => true,
             _ => false,
         }
     }
@@ -109,7 +109,7 @@ impl ArchiveFormat {
 #[derive(Clone, Serialize)]
 pub struct TaskProgress {
     pub task_id: String,
-    pub stage: Option<String>, // "Pre-checking" | "Extracting" | "Finalizing"
+    pub stage: Option<String>,
     pub current_password: Option<String>,
     pub progress: f32,
     pub speed: Option<String>,
@@ -133,6 +133,36 @@ pub struct RarCompressionSupport {
     pub message: String,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct CompressionFormatCapability {
+    pub format: &'static str,
+    pub extensions: &'static [&'static str],
+    pub can_compress: bool,
+    pub can_extract: bool,
+    pub supports_password_compress: bool,
+    pub supports_password_extract: bool,
+    pub single_file_only: bool,
+    pub supports_split: bool,
+    pub requires_7za: bool,
+    pub requires_winrar: bool,
+}
+
+pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
+    CompressionFormatCapability { format: "tar.bz2", extensions: &["tar.bz2", "tbz2", "tbz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.gz", extensions: &["tar.gz", "tgz", "tpz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.xz", extensions: &["tar.xz", "txz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.zst", extensions: &["tar.zst", "tzst"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "zip", extensions: &["zip", "zipx"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "7z", extensions: &["7z"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "rar", extensions: &["rar"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: true },
+    CompressionFormatCapability { format: "tar", extensions: &["tar", "ova"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "gz", extensions: &["gz", "gzip"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "bz2", extensions: &["bz2", "bzip2"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "xz", extensions: &["xz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "zst", extensions: &["zst", "zstd"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "lzma", extensions: &["lzma"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: true, requires_winrar: false },
+];
+
 use tokio::sync::Semaphore;
 
 #[derive(Clone)]
@@ -147,25 +177,18 @@ pub struct CompressionService {
 }
 
 impl CompressionService {
-    /// 自动凑齐所有默认依赖并创建实例 (推荐在 Command 层使用)
     pub async fn new_with_defaults() -> Self {
         let pool = match crate::database::connection::get_connection().await {
             Ok(conn) => conn.pool().clone(),
             Err(e) => {
-                log::warn!("无法获取数据库连接，密码本功能将不启用: {}", e);
+                log::warn!("Database connection unavailable; password book features will be limited: {}", e);
                 sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:").unwrap_or_else(|_| {
                     sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:").unwrap()
                 })
             }
         };
 
-        // 动态计算数据目录，确保与 main.rs 逻辑一致
-        let mut data_dir = std::env::current_dir().unwrap_or_default();
-        if data_dir.ends_with("src-tauri") {
-            data_dir.pop();
-        }
-        let data_dir = data_dir.join(".password_book_data");
-
+        let data_dir = crate::utils::app_paths::app_data_dir();
         let enc_service = Arc::new(crate::services::encrypted_password_service::EncryptedPasswordService::new(&data_dir));
         let query_service = Arc::new(PasswordQueryService::new(pool, enc_service));
 
@@ -177,7 +200,6 @@ impl CompressionService {
             query_service,
         )
     }
-
     pub fn new(
         config: CompressionServiceConfig,
         buffer_pool: Arc<IOBufferPool>,
@@ -211,7 +233,7 @@ impl CompressionService {
         log::warn!("CompressionService::default() called - password book features will be unavailable. Use new_with_defaults() instead.");
         let pool = sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:")
             .unwrap_or_else(|_| sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:").unwrap());
-        let data_dir = std::env::current_dir().unwrap_or_default().join(".password_book_data");
+        let data_dir = crate::utils::app_paths::app_data_dir();
         let enc_service = Arc::new(crate::services::encrypted_password_service::EncryptedPasswordService::new(&data_dir));
         let query_service = Arc::new(PasswordQueryService::new(pool, enc_service));
 
@@ -265,25 +287,61 @@ impl CompressionService {
         let _ = window.emit("task-progress", payload);
     }
 
-    pub fn validate_compression_request(source_files: &[String], output_path: &str, options: &CompressionOptions) -> Result<String> {
-        let requested_format = options.format.as_deref().unwrap_or_else(|| {
-            if output_path.to_lowercase().ends_with(".zip") {
-                "zip"
-            } else {
-                "unknown"
+    pub fn infer_compression_format(output_path: &str, explicit_format: Option<&str>) -> String {
+        if let Some(format) = explicit_format.map(str::trim).filter(|format| !format.is_empty()) {
+            return Self::normalize_compression_format(format);
+        }
+
+        let output_lower = output_path.to_lowercase();
+        for capability in COMPRESSION_FORMAT_CAPABILITIES {
+            for extension in capability.extensions {
+                if output_lower.ends_with(&format!(".{}", extension)) {
+                    return capability.format.to_string();
+                }
             }
-        }).to_lowercase();
+        }
+
+        "unknown".to_string()
+    }
+
+    fn normalize_compression_format(format: &str) -> String {
+        match format.to_ascii_lowercase().as_str() {
+            "gzip" => "gz".to_string(),
+            "bzip2" => "bz2".to_string(),
+            "zstd" => "zst".to_string(),
+            "tgz" => "tar.gz".to_string(),
+            "tbz" | "tbz2" => "tar.bz2".to_string(),
+            "txz" => "tar.xz".to_string(),
+            "tzst" => "tar.zst".to_string(),
+            other => other.to_string(),
+        }
+    }
+
+    pub fn compression_format_capabilities() -> &'static [CompressionFormatCapability] {
+        COMPRESSION_FORMAT_CAPABILITIES
+    }
+
+    pub fn find_compression_format_capability(format: &str) -> Option<&'static CompressionFormatCapability> {
+        let normalized = Self::normalize_compression_format(format);
+        COMPRESSION_FORMAT_CAPABILITIES
+            .iter()
+            .find(|capability| capability.format == normalized)
+    }
+
+    pub fn validate_compression_request(source_files: &[String], output_path: &str, options: &CompressionOptions) -> Result<String> {
+        let requested_format = Self::infer_compression_format(output_path, options.format.as_deref());
+        let capability = Self::find_compression_format_capability(&requested_format);
 
         // 分卷压缩通过 SplitCompressionService 实现
 
         // 全部压缩格式均支持密码：原生格式直接支持，其他通过 7z CLI 创建 .7z 加密容器
         if options.password.as_deref().is_some_and(|password| !password.is_empty())
-            && !matches!(requested_format.as_str(), "zip" | "7z" | "rar" | "tar" | "tar.gz" | "tar.bz2" | "tar.xz" | "tar.zst" | "gz" | "bz2" | "xz" | "zst" | "zstd" | "lzma" | "tgz" | "tbz" | "tbz2" | "txz" | "tzst")
+            && !capability.is_some_and(|capability| capability.supports_password_compress)
         {
             return Err(CompressionError::UnsupportedEncryption.into());
         }
 
-        if matches!(requested_format.as_str(), "gz" | "bz2" | "xz") {
+        if capability.is_some_and(|capability| capability.single_file_only) {
             let single_regular_file = source_files.len() == 1 && Path::new(&source_files[0]).is_file();
             if !single_regular_file {
                 return Err(CompressionError::CompressionFailed(format!(
@@ -393,10 +451,20 @@ impl CompressionService {
         None
     }
 
-    async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
+    pub async fn resolve_archive_password_silent(&self, file_path: &str, options: &DecompressOptions) -> Option<String> {
+        if let Some(password) = self.attempt_password_book_candidates(file_path).await {
+            return Some(password);
+        }
+
+        if options.enable_bruteforce && !options.bruteforce_wordlists.is_empty() {
+            return self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists).await;
+        }
+
+        None
+    }
+
+    async fn password_book_candidates(&self) -> Result<Vec<(String, String, String)>> {
         use crate::services::password_query_service::{PasswordQueryRequest, SortField, SortOrder};
-        
-        self.emit_log(window, task_id, "正在检索高频密码本...", TaskLogSeverity::Info);
 
         let request = PasswordQueryRequest {
             sort_by: Some(SortField::UsageCount),
@@ -406,8 +474,41 @@ impl CompressionService {
             ..Default::default()
         };
 
-        let passwords = match self.password_query_service.search_passwords(&request).await {
-            Ok(res) => res.data,
+        let response = self.password_query_service.search_passwords(&request).await?;
+        Ok(response
+            .data
+            .into_iter()
+            .map(|entry| (entry.id, entry.name, entry.password))
+            .collect())
+    }
+
+    async fn attempt_password_book_candidates(&self, file_path: &str) -> Option<String> {
+        let passwords = match self.password_book_candidates().await {
+            Ok(passwords) => passwords,
+            Err(err) => {
+                log::error!("Failed to read password book candidates: {}", err);
+                return None;
+            }
+        };
+
+        for (entry_id, _entry_name, password) in passwords {
+            match self.test_archive_password(file_path, &password).await {
+                Ok(true) => {
+                    let _ = self.password_query_service.increment_use_count(&entry_id).await;
+                    return Some(password);
+                }
+                _ => continue,
+            }
+        }
+
+        None
+    }
+
+    async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
+        self.emit_log(window, task_id, "正在检索高频密码本...", TaskLogSeverity::Info);
+
+        let passwords = match self.password_book_candidates().await {
+            Ok(res) => res,
             Err(e) => {
                 log::error!("获取密码本失败: {}", e);
                 return None;
@@ -420,14 +521,13 @@ impl CompressionService {
             return None;
         }
 
-        for (idx, entry) in passwords.iter().enumerate() {
-            let pwd = &entry.password;
-            self.emit_log(window, task_id, &format!("正在尝试已知密码 [{}/{}]: {}...", idx + 1, total, entry.name), TaskLogSeverity::Info);
+        for (idx, (entry_id, entry_name, pwd)) in passwords.iter().enumerate() {
+            self.emit_log(window, task_id, &format!("正在尝试已知密码 [{}/{}]: {}...", idx + 1, total, entry_name), TaskLogSeverity::Info);
             
             match self.test_archive_password(file_path, pwd).await {
                 Ok(true) => {
-                    self.emit_log(window, task_id, &format!("密码匹配成功 ({})", entry.name), TaskLogSeverity::Success);
-                    let _ = self.password_query_service.increment_use_count(&entry.id).await;
+                    self.emit_log(window, task_id, &format!("密码匹配成功 ({})", entry_name), TaskLogSeverity::Success);
+                    let _ = self.password_query_service.increment_use_count(entry_id).await;
                     return Some(pwd.clone());
                 },
                 _ => continue,
@@ -435,6 +535,42 @@ impl CompressionService {
         }
         
         self.emit_log(window, task_id, "所有已知密码均匹配失败", TaskLogSeverity::Warning);
+        None
+    }
+
+    async fn attempt_bruteforce_wordlists_silent(&self, file_path: &str, wordlists: &[String]) -> Option<String> {
+        let mut tested = HashSet::new();
+
+        for wordlist in wordlists {
+            if self.cancellation_flag.load(Ordering::SeqCst) {
+                return None;
+            }
+
+            let file = match File::open(Path::new(wordlist)) {
+                Ok(file) => file,
+                Err(_) => continue,
+            };
+
+            for line in BufReader::new(file).lines() {
+                if self.cancellation_flag.load(Ordering::SeqCst) {
+                    return None;
+                }
+
+                let password = match line {
+                    Ok(value) => value.trim().trim_end_matches('\u{feff}').to_string(),
+                    Err(_) => continue,
+                };
+
+                if password.is_empty() || !tested.insert(password.clone()) {
+                    continue;
+                }
+
+                if matches!(self.test_archive_password(file_path, &password).await, Ok(true)) {
+                    return Some(password);
+                }
+            }
+        }
+
         None
     }
 
@@ -502,6 +638,22 @@ impl CompressionService {
         None
     }
 
+    async fn archive_requires_password(&self, file_path: &str, format: ArchiveFormat) -> Result<bool> {
+        match format {
+            ArchiveFormat::Universal | ArchiveFormat::Iso => {
+                self.universal_engine.requires_password(Path::new(file_path)).await
+            }
+            ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar => {
+                match self.test_archive_password(file_path, "").await {
+                    Ok(true) => Ok(false),
+                    Ok(false) => Ok(true),
+                    Err(_) => Ok(true),
+                }
+            }
+            _ => Ok(false),
+        }
+    }
+
     pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, options: DecompressOptions) -> Result<String> {
         let service = self.clone();
         let path = Path::new(&file_path);
@@ -547,21 +699,21 @@ impl CompressionService {
         // 托底识别：如果 magic 识别失败，尝试根据后缀识别
         if format == ArchiveFormat::Unknown {
             format = match ext.as_str() {
-                "zip" => ArchiveFormat::Zip,
+                "zip" | "zipx" | "jar" | "xpi" | "odt" | "ods" | "docx" | "xlsx" | "pptx" | "epub" | "ipa" | "apk" | "appx" => ArchiveFormat::Zip,
                 "7z" => ArchiveFormat::SevenZip,
                 "rar" => ArchiveFormat::Rar,
-                "tar" => ArchiveFormat::Tar,
-                "gz" | "tgz" => ArchiveFormat::Gzip,
-                "bz2" => ArchiveFormat::Bzip2,
-                "xz" => ArchiveFormat::Xz,
+                "tar" | "ova" => ArchiveFormat::Tar,
+                "gz" | "gzip" | "tgz" | "tpz" => ArchiveFormat::Gzip,
+                "bz2" | "bzip2" | "tbz" | "tbz2" => ArchiveFormat::Bzip2,
+                "xz" | "txz" => ArchiveFormat::Xz,
                 "zst" | "zstd" | "tzst" => ArchiveFormat::Zstd,
-                "iso" | "img" => ArchiveFormat::Iso,
+                "iso" | "img" | "vhd" | "vhdx" | "wim" | "dmg" => ArchiveFormat::Iso,
                 // 分卷压缩包后缀 → 7z CLI 处理
                 "001" | "002" | "003" | "004" | "005"
                 | "z01" | "z02" | "z03" | "z04" | "z05"
                     => ArchiveFormat::Universal,
                 // 7z CLI 原生支持的杂项格式
-                "cab" | "lzh" | "lha" | "arj" | "dmg" | "wim" | "vhd" | "vhdx" | "chm"
+                "cab" | "lzh" | "lha" | "arj" | "chm"
                 | "deb" | "rpm" | "sfs" | "squashfs" | "nsis" | "msi" | "xar"
                 | "cpio" | "udf" | "fat" | "ntfs" | "hfs" | "lzma"
                 | "alz" | "arc" | "apfs" | "ext2" | "ext3" | "ext4" | "hfsx"
@@ -578,10 +730,12 @@ impl CompressionService {
         let mut final_password = password.clone();
         // ... (省略部分代码以便定位)
         if final_password.is_none() && format.supports_password() {
-            // 首先探测是否真的加密
-            let needs_pwd = match service.test_archive_password(&file_path, "").await {
-                Ok(true) => false,
-                _ => true,
+            let needs_pwd = match service.archive_requires_password(&file_path, format.clone()).await {
+                Ok(value) => value,
+                Err(err) => {
+                    service.emit_log(&window, &task_id, &format!("密码需求检测失败，按需尝试密码: {}", err), TaskLogSeverity::Warning);
+                    true
+                }
             };
 
             if needs_pwd {
@@ -717,7 +871,22 @@ impl CompressionService {
                     }
                 }).await?
             },
-            ArchiveFormat::Zstd | ArchiveFormat::Iso | ArchiveFormat::Universal => {
+            ArchiveFormat::Zstd => {
+                let srv = service.clone();
+                let f_path = file_path.clone();
+                let o_dir = out_dir.clone();
+                let opts = options.clone();
+                let t_id = task_id.clone();
+                let w = window.clone();
+                tokio::task::spawn_blocking(move || {
+                    if Self::is_tar_wrapped_archive(Path::new(&f_path), &[".tar.zst", ".tzst"]) {
+                        srv.do_extract_tar_zstd(&w, &t_id, &f_path, &o_dir, &opts)
+                    } else {
+                        srv.do_extract_zstd(&w, &t_id, &f_path, &o_dir, &opts)
+                    }
+                }).await?
+            },
+            ArchiveFormat::Iso | ArchiveFormat::Universal => {
                 let fmt_name = format!("{:?}", effective_format);
                 service.universal_engine.extract_with_progress(
                     Path::new(&file_path),
@@ -766,7 +935,7 @@ impl CompressionService {
 
     fn archive_output_dir_name(path: &Path) -> String {
         let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("archive");
-        for suffix in [".tar.gz", ".tar.bz2", ".tar.xz"] {
+        for suffix in [".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst"] {
             if file_name.to_lowercase().ends_with(suffix) {
                 return file_name[..file_name.len() - suffix.len()].to_string();
             }
@@ -1207,6 +1376,19 @@ impl CompressionService {
         self.do_extract_single_stream(w, tid, xz, output, output_name, options)
     }
 
+    fn do_extract_zstd(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
+        let f = File::open(file)?;
+        let zst = zstd::stream::read::Decoder::new(f)?;
+        let output_name = Self::single_stream_output_name(Path::new(file), &[".zst", ".zstd"]);
+        self.do_extract_single_stream(w, tid, zst, output, output_name, options)
+    }
+
+    fn do_extract_tar_zstd(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
+        let f = File::open(file)?;
+        let zst = zstd::stream::read::Decoder::new(f)?;
+        self.do_extract_tar(w, tid, file, output, Some(Box::new(zst)), options)
+    }
+
     fn unique_archive_name(used_archive_names: &mut HashSet<String>, raw_name: String) -> String {
         let normalized = raw_name.replace('\\', "/");
         if used_archive_names.insert(normalized.clone()) {
@@ -1383,7 +1565,9 @@ impl CompressionService {
         let pwd = options.password.as_deref().unwrap_or("");
         let level = options.level.clamp(1, 9);
 
-        let mut cmd = std::process::Command::new("7z");
+        let seven_zip = find_7z_command()
+            .ok_or_else(|| CompressionError::CompressionFailed(missing_7z_message()))?;
+        let mut cmd = std::process::Command::new(seven_zip);
         cmd.arg("a");
         cmd.arg("-tzip");
         cmd.arg(format!("-mx{}", level));
@@ -1417,7 +1601,7 @@ impl CompressionService {
         Ok(())
     }
 
-    /// 使用 7z CLI 进行 Zstd 压缩
+    /// 使用原生 zstd 进行 Zstd 压缩。
     /// 当需要密码时，使用 7z 作为加密容器（AES-256）。
     /// 对于不支持原生加密的格式（TAR, GZ, BZ2, XZ, Zstd, LZMA 等），
     /// 自动路由到 do_compress_7z 并将输出扩展名改为 .7z。
@@ -1438,54 +1622,34 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "Zstd")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported(sources, output, ".zst")?;
-        self.emit_log(window, task_id, "使用 7z 进行 Zstd 压缩...", TaskLogSeverity::Info);
+        let source = Self::ensure_single_file_stream_supported_any(sources, output, &[".zst", ".zstd"])?;
+        self.emit_log(window, task_id, "使用原生 Zstd 压缩...", TaskLogSeverity::Info);
 
-        let mut cmd = std::process::Command::new("7z");
-        cmd.arg("a");
-        cmd.arg("-tzstd");
-        cmd.arg(format!("-mx{}", options.level.clamp(1, 9)));
-        cmd.arg("-y");
-        cmd.arg(output);
-        cmd.arg(source);
-
-        let output_result = cmd.output()
-            .map_err(|err| CompressionError::CompressionFailed(format!("Failed to run 7z for Zstd: {}", err)))?;
-        if !output_result.status.success() {
-            let stderr = String::from_utf8_lossy(&output_result.stderr);
-            return Err(CompressionError::CompressionFailed(format!("Zstd compression failed: {}", stderr)).into());
-        }
+        let mut input = File::open(source)?;
+        let file = File::create(output)?;
+        let mut encoder = zstd::stream::write::Encoder::new(file, options.level.clamp(1, 21) as i32)?;
+        std::io::copy(&mut input, &mut encoder)?;
+        encoder.finish()?;
 
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
         self.emit_log(window, task_id, "Zstd 压缩完成", TaskLogSeverity::Success);
         Ok(())
     }
 
-    /// 使用 7z CLI 进行 tar.zst 压缩
+    /// 使用原生 tar + zstd 进行 tar.zst 压缩
     fn do_compress_tar_zstd(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.Zst")? {
             return Ok(());
         }
         Self::ensure_tar_compression_supported(output, &[".tar.zst", ".tzst"])?;
-        self.emit_log(window, task_id, "使用 7z 进行 tar.zst 压缩...", TaskLogSeverity::Info);
+        self.emit_log(window, task_id, "使用原生 tar.zst 压缩...", TaskLogSeverity::Info);
 
-        let mut cmd = std::process::Command::new("7z");
-        cmd.arg("a");
-        cmd.arg("-ttar");
-        cmd.arg(format!("-mx{}", options.level.clamp(1, 9)));
-        cmd.arg("-y");
-        cmd.arg(output);
-        for source in sources {
-            self.check_cancellation()?;
-            cmd.arg(source);
-        }
-
-        let output_result = cmd.output()
-            .map_err(|err| CompressionError::CompressionFailed(format!("Failed to run 7z for tar.zst: {}", err)))?;
-        if !output_result.status.success() {
-            let stderr = String::from_utf8_lossy(&output_result.stderr);
-            return Err(CompressionError::CompressionFailed(format!("tar.zst compression failed: {}", stderr)).into());
-        }
+        let file = File::create(output)?;
+        let encoder = zstd::stream::write::Encoder::new(file, options.level.clamp(1, 21) as i32)?;
+        let mut builder = tar::Builder::new(encoder);
+        self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
+        let encoder = builder.into_inner()?;
+        encoder.finish()?;
 
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
         self.emit_log(window, task_id, "tar.zst 压缩完成", TaskLogSeverity::Success);
@@ -1500,7 +1664,9 @@ impl CompressionService {
         let source = Self::ensure_single_file_stream_supported(sources, output, ".lzma")?;
         self.emit_log(window, task_id, "使用 7z 进行 LZMA 压缩...", TaskLogSeverity::Info);
 
-        let mut cmd = std::process::Command::new("7z");
+        let seven_zip = find_7z_command()
+            .ok_or_else(|| CompressionError::CompressionFailed(missing_7z_message()))?;
+        let mut cmd = std::process::Command::new(seven_zip);
         cmd.arg("a");
         cmd.arg("-tlzma");
         cmd.arg(format!("-mx{}", options.level.clamp(1, 9)));
@@ -1577,11 +1743,14 @@ impl CompressionService {
     }
 
     fn ensure_single_file_stream_supported<'a>(sources: &'a [String], output: &str, extension: &str) -> Result<&'a Path> {
+        Self::ensure_single_file_stream_supported_any(sources, output, &[extension])
+    }
 
+    fn ensure_single_file_stream_supported_any<'a>(sources: &'a [String], output: &str, extensions: &[&str]) -> Result<&'a Path> {
         if sources.len() != 1 {
             return Err(CompressionError::CompressionFailed(format!(
                 "{} compression only supports one regular file.",
-                extension
+                extensions.join("/")
             )).into());
         }
 
@@ -1589,14 +1758,15 @@ impl CompressionService {
         if !source.is_file() {
             return Err(CompressionError::CompressionFailed(format!(
                 "{} compression only supports one regular file.",
-                extension
+                extensions.join("/")
             )).into());
         }
 
-        if !output.to_lowercase().ends_with(extension) {
+        let output_lower = output.to_lowercase();
+        if !extensions.iter().any(|extension| output_lower.ends_with(extension)) {
             return Err(CompressionError::CompressionFailed(format!(
-                "Output path must end with {}",
-                extension
+                "Output path must end with one of: {}",
+                extensions.join(", ")
             )).into());
         }
 
@@ -1808,6 +1978,11 @@ impl CompressionService {
         let pwd = password.to_string();
         let path = Path::new(&file);
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+
+        if let Ok(result) = self.universal_engine.try_password(path, password).await {
+            return Ok(result);
+        }
+
         tokio::task::spawn_blocking(move || {
             match ext.as_str() {
                 "zip" => {

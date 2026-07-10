@@ -21,6 +21,38 @@ pub async fn get_file_info(path: String) -> Result<FileInfo, String> {
         .map_err(|e| e.to_string())
 }
 
+#[command]
+pub async fn read_text_file(path: String) -> Result<String, String> {
+    let source = Path::new(&path);
+    validate_text_file_extension(source)?;
+
+    let metadata = std::fs::metadata(source)
+        .map_err(|err| format!("File is not readable: {}", err))?;
+    if !metadata.is_file() {
+        return Err("Selected path is not a file.".to_string());
+    }
+    if metadata.len() > 10 * 1024 * 1024 {
+        return Err("Selected text file is larger than 10 MB.".to_string());
+    }
+
+    std::fs::read_to_string(source)
+        .map_err(|err| format!("Failed to read text file: {}", err))
+}
+
+#[command]
+pub async fn write_text_file(path: String, content: String) -> Result<(), String> {
+    let target = Path::new(&path);
+    validate_text_file_extension(target)?;
+
+    if let Some(parent) = target.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|err| format!("Failed to create output directory: {}", err))?;
+    }
+
+    std::fs::write(target, content)
+        .map_err(|err| format!("Failed to write text file: {}", err))
+}
+
 #[derive(Debug, Serialize)]
 pub struct WordlistValidationResult {
     pub path: String,
@@ -95,5 +127,20 @@ fn invalid_wordlist(path: String, error: &str) -> WordlistValidationResult {
         valid: false,
         valid_password_count: 0,
         error: Some(error.to_string()),
+    }
+}
+
+fn validate_text_file_extension(path: &Path) -> Result<(), String> {
+    let allowed = ["json", "txt", "md"];
+    let extension = path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.to_ascii_lowercase())
+        .ok_or_else(|| "Only .json, .txt and .md files are supported.".to_string())?;
+
+    if allowed.iter().any(|allowed_ext| *allowed_ext == extension) {
+        Ok(())
+    } else {
+        Err("Only .json, .txt and .md files are supported.".to_string())
     }
 }

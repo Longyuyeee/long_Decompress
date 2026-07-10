@@ -537,12 +537,9 @@ mod tests {
     use super::*;
     use crate::config::models::{ConfigDataType, DefaultConfigGenerator, ValidationRule};
     use sqlx::SqlitePool;
-    use tempfile::tempdir;
 
     async fn create_test_pool() -> SqlitePool {
-        let dir = tempdir().unwrap();
-        let db_path = dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite:{}", db_path.display()))
+        let pool = SqlitePool::connect("sqlite::memory:")
             .await
             .unwrap();
         pool

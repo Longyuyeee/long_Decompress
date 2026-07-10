@@ -7,6 +7,7 @@ import { useCompressionStore } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage, generateId } from '@/utils'
+import { extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 
@@ -116,14 +117,6 @@ const joinPath = (dir: string, fileName: string) => {
   return dir.endsWith('/') || dir.endsWith('\\') ? `${dir}${fileName}` : `${dir}${separator}${fileName}`
 }
 
-const extensionForFormat = (format: string) => {
-  if (['tar.gz', 'tar.bz2', 'tar.xz', 'tar.zst'].includes(format)) return format
-  return format
-}
-
-const singleFileStreamFormats = new Set(['gz', 'bz2', 'xz', 'zst', 'zstd', 'lzma'])
-const passwordSupportedFormats = new Set(['zip', '7z', 'rar'])
-
 const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {
   return files.length === 1 && !files[0]?.isDirectory
 }
@@ -174,9 +167,9 @@ watch(usesRarFormat, (usesRar) => {
   }
 }, { immediate: true })
 
-const buildOutputPath = (baseOutputPath: string, fallbackSourcePath: string, archiveName: string, format: string) => {
+const buildOutputPath = (baseOutputPath: string, fallbackSourcePath: string, archiveName: string, format: string, password?: string) => {
   const outputDir = baseOutputPath || appStore.settings.defaultOutputPath || getParentDir(fallbackSourcePath)
-  const extension = extensionForFormat(format)
+  const extension = extensionForFormat(format, password)
   const cleanName = archiveName.trim() || getBaseName(fallbackSourcePath)
   return joinPath(outputDir, cleanName.endsWith(`.${extension}`) ? cleanName : `${cleanName}.${extension}`)
 }
@@ -196,7 +189,8 @@ const handleCompress = async () => {
           compressionStore.getEffectiveOutputPath(group.outputPath),
           group.files[0]?.path || group.name,
           settings.filename || group.name,
-          settings.format
+          settings.format,
+          settings.password
         )
       }
     }),
@@ -211,7 +205,8 @@ const handleCompress = async () => {
           compressionStore.getEffectiveOutputPath(file.outputPath),
           file.path,
           settings.filename || getBaseName(file.path),
-          settings.format
+          settings.format,
+          settings.password
         )
       }
     })
@@ -222,13 +217,13 @@ const handleCompress = async () => {
 
   for (const job of jobs) {
     // 校验失败：跳过当前任务继续处理下一个
-    if (singleFileStreamFormats.has(job.settings.format) && !canUseSingleFileFormats(job.files)) {
+    if (isSingleFileStreamFormat(job.settings.format) && !canUseSingleFileFormats(job.files)) {
       appStore.setError(appStore.t('compress.error.single_file').replace('{0}', job.settings.format.toUpperCase()))
       failed++
       continue
     }
 
-    if (job.settings.password && !passwordSupportedFormats.has(job.settings.format)) {
+    if (job.settings.password && !isPasswordSupportedFormat(job.settings.format)) {
       appStore.setError(appStore.t('compress.error.no_password').replace('{0}', job.settings.format.toUpperCase()))
       failed++
       continue

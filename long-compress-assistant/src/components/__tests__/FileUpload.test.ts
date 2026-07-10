@@ -1,166 +1,136 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import FileUpload from '../FileUpload.vue'
-import { createMockFile } from '../../../tests/setup'
+import EnhancedFileDropzone from '../ui/EnhancedFileDropzone.vue'
 
-// Mock Tauri API
-vi.mock('@tauri-apps/api', () => ({
-  invoke: vi.fn(),
+const mocks = vi.hoisted(() => ({
+  open: vi.fn(),
+  listen: vi.fn(async () => vi.fn()),
+  setError: vi.fn(),
+  t: vi.fn((key: string) => key)
 }))
 
-describe('FileUpload Component', () => {
-  let wrapper: any
+vi.mock('@tauri-apps/api/dialog', () => ({
+  open: mocks.open
+}))
 
+vi.mock('@tauri-apps/api/event', () => ({
+  listen: mocks.listen
+}))
+
+vi.mock('@/stores/app', () => ({
+  useAppStore: () => ({
+    setError: mocks.setError,
+    t: mocks.t
+  })
+}))
+
+const fileWithPath = (name: string, path: string, size = 1024, type = 'text/plain') => {
+  const file = new File(['content'], name, { type })
+  Object.defineProperty(file, 'size', { value: size })
+  Object.defineProperty(file, 'path', { value: path })
+  return file
+}
+
+describe('EnhancedFileDropzone', () => {
   beforeEach(() => {
-    wrapper = mount(FileUpload)
+    vi.clearAllMocks()
   })
 
-  it('renders correctly', () => {
-    expect(wrapper.exists()).toBe(true)
+  it('renders as an accessible file dropzone', () => {
+    const wrapper = mount(EnhancedFileDropzone)
+
+    expect(wrapper.attributes('role')).toBe('button')
+    expect(wrapper.attributes('tabindex')).toBe('0')
     expect(wrapper.find('input[type="file"]').exists()).toBe(true)
-    expect(wrapper.find('button').exists()).toBe(true)
+    expect(wrapper.find('.pi-cloud-upload').exists()).toBe(true)
   })
 
-  it('accepts file selection', async () => {
-    const fileInput = wrapper.find('input[type="file"]')
-    const mockFile = createMockFile('test.txt', 1024)
+  it('emits selected files from the hidden file input', async () => {
+    const wrapper = mount(EnhancedFileDropzone)
+    const input = wrapper.find('input[type="file"]')
 
-    // 模拟文件选择
-    Object.defineProperty(fileInput.element, 'files', {
-      value: [mockFile],
+    Object.defineProperty(input.element, 'files', {
+      value: [fileWithPath('archive.zip', 'C:/archives/archive.zip', 2048, 'application/zip')]
     })
 
-    await fileInput.trigger('change')
+    await input.trigger('change')
 
-    // 验证文件被接�?
-    expect(wrapper.vm.selectedFiles).toHaveLength(1)
+    expect(wrapper.emitted('files-selected')?.[0][0]).toEqual([
+      {
+        name: 'archive.zip',
+        path: 'C:/archives/archive.zip',
+        size: 2048,
+        type: 'application/zip',
+        isDirectory: false
+      }
+    ])
   })
 
-  it('rejects files that are too large', async () => {
-    const fileInput = wrapper.find('input[type="file"]')
-    const largeFile = createMockFile('large.txt', 1024 * 1024 * 101) // 101MB
+  it('shows an error when browser files do not expose a native path', async () => {
+    const wrapper = mount(EnhancedFileDropzone)
+    const input = wrapper.find('input[type="file"]')
 
-    Object.defineProperty(fileInput.element, 'files', {
-      value: [largeFile],
+    Object.defineProperty(input.element, 'files', {
+      value: [new File(['content'], 'browser-only.zip', { type: 'application/zip' })]
     })
 
-    await fileInput.trigger('change')
+    await input.trigger('change')
 
-    // 验证大文件被拒绝
-    expect(wrapper.vm.selectedFiles).toHaveLength(0)
-    // 应该显示错误消息
-    expect(wrapper.text()).toContain('文件大小超过限制')
+    expect(wrapper.emitted('files-selected')).toBeUndefined()
+    expect(mocks.setError).toHaveBeenCalledOnce()
   })
 
-  it('handles multiple file selection', async () => {
-    const fileInput = wrapper.find('input[type="file"]')
-    const files = [
-      createMockFile('file1.txt', 1024),
-      createMockFile('file2.txt', 2048),
-      createMockFile('file3.txt', 3072),
-    ]
+  it('emits dropped files with native paths', async () => {
+    const wrapper = mount(EnhancedFileDropzone)
+    const dropEvent = new Event('drop') as DragEvent
 
-    Object.defineProperty(fileInput.element, 'multiple', { value: true })
-    Object.defineProperty(fileInput.element, 'files', {
-      value: files,
+    Object.defineProperty(dropEvent, 'dataTransfer', {
+      value: {
+        files: [fileWithPath('drop.7z', 'C:/archives/drop.7z', 4096, 'application/x-7z-compressed')]
+      }
     })
 
-    await fileInput.trigger('change')
+    await wrapper.element.dispatchEvent(dropEvent)
 
-    expect(wrapper.vm.selectedFiles).toHaveLength(3)
+    expect(wrapper.emitted('files-selected')?.[0][0]).toEqual([
+      {
+        name: 'drop.7z',
+        path: 'C:/archives/drop.7z',
+        size: 4096,
+        type: 'application/x-7z-compressed',
+        isDirectory: false
+      }
+    ])
   })
 
-  it('clears selected files', async () => {
-    // 先选择文件
-    const fileInput = wrapper.find('input[type="file"]')
-    const mockFile = createMockFile('test.txt', 1024)
-
-    Object.defineProperty(fileInput.element, 'files', {
-      value: [mockFile],
+  it('uses the native folder picker in folder mode', async () => {
+    mocks.open.mockResolvedValueOnce(['C:/work/source', 'D:/assets'])
+    const wrapper = mount(EnhancedFileDropzone, {
+      props: { mode: 'folder' }
     })
 
-    await fileInput.trigger('change')
-    expect(wrapper.vm.selectedFiles).toHaveLength(1)
+    await wrapper.trigger('click')
 
-    // 清除文件
-    await wrapper.find('.clear-button').trigger('click')
-    expect(wrapper.vm.selectedFiles).toHaveLength(0)
-  })
-
-  it('emits upload event with files', async () => {
-    const fileInput = wrapper.find('input[type="file"]')
-    const mockFile = createMockFile('test.txt', 1024)
-
-    Object.defineProperty(fileInput.element, 'files', {
-      value: [mockFile],
+    expect(mocks.open).toHaveBeenCalledWith({
+      directory: true,
+      multiple: true,
+      title: 'compress.add_folders'
     })
-
-    await fileInput.trigger('change')
-    await wrapper.find('button').trigger('click')
-
-    // 验证emit事件
-    expect(wrapper.emitted('upload')).toBeTruthy()
-    expect(wrapper.emitted('upload')[0][0]).toHaveLength(1)
-  })
-
-  it('shows file information', async () => {
-    const fileInput = wrapper.find('input[type="file"]')
-    const mockFile = createMockFile('document.pdf', 2048, 'application/pdf')
-
-    Object.defineProperty(fileInput.element, 'files', {
-      value: [mockFile],
-    })
-
-    await fileInput.trigger('change')
-
-    // 验证文件信息显示
-    expect(wrapper.text()).toContain('document.pdf')
-    expect(wrapper.text()).toContain('2 KB')
-  })
-
-  it('handles drag and drop', async () => {
-    const dropZone = wrapper.find('.drop-zone')
-    const mockFile = createMockFile('dropped.txt', 1024)
-
-    const dataTransfer = {
-      files: [mockFile],
-      items: [
-        {
-          kind: 'file',
-          getAsFile: () => mockFile,
-        },
-      ],
-      types: ['Files'],
-    }
-
-    // 模拟拖放事件
-    const dropEvent = new Event('drop')
-    Object.defineProperty(dropEvent, 'dataTransfer', { value: dataTransfer })
-
-    await dropZone.element.dispatchEvent(dropEvent)
-
-    expect(wrapper.vm.selectedFiles).toHaveLength(1)
-  })
-
-  it('validates file types', async () => {
-    const fileInput = wrapper.find('input[type="file"]')
-
-    // 设置只接受特定类�?
-    await wrapper.setProps({
-      accept: '.txt,.pdf',
-    })
-
-    const validFile = createMockFile('test.txt', 1024, 'text/plain')
-    const invalidFile = createMockFile('test.exe', 1024, 'application/x-msdownload')
-
-    Object.defineProperty(fileInput.element, 'files', {
-      value: [validFile, invalidFile],
-    })
-
-    await fileInput.trigger('change')
-
-    // 只应该接受有效文�?
-    expect(wrapper.vm.selectedFiles).toHaveLength(1)
-    expect(wrapper.vm.selectedFiles[0].name).toBe('test.txt')
+    expect(wrapper.emitted('files-selected')?.[0][0]).toEqual([
+      {
+        name: 'source',
+        path: 'C:/work/source',
+        size: 0,
+        type: 'directory',
+        isDirectory: true
+      },
+      {
+        name: 'assets',
+        path: 'D:/assets',
+        size: 0,
+        type: 'directory',
+        isDirectory: true
+      }
+    ])
   })
 })

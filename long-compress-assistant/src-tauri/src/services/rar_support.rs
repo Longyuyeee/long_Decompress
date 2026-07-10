@@ -5,6 +5,7 @@ use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use log;
+use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 
 /// RAR解压错误
 #[derive(Debug, thiserror::Error)]
@@ -61,7 +62,11 @@ impl RarSupportService {
     /// 检查系统是否安装了RAR解压工具
     pub fn check_rar_tool_installed() -> bool {
         // 检查常见的RAR解压工具
-        let tools = ["unrar", "rar", "7z"];
+        if find_7z_command().is_some() {
+            return true;
+        }
+
+        let tools = ["unrar", "rar"];
 
         for tool in tools.iter() {
             if Self::check_tool_exists(tool) {
@@ -154,7 +159,7 @@ impl RarSupportService {
         }
 
         // 策略 3: 尝试使用 7z 命令 (仅支持部分 RAR4)
-        if Self::check_tool_exists("7z") {
+        if find_7z_command().is_some() {
             return self.try_extract_with_7z(rar_path, output_dir, password, options).await;
         }
 
@@ -370,7 +375,8 @@ impl RarSupportService {
     ) -> Result<(), RarError> {
         log::debug!("尝试使用7z解压");
 
-        let mut command = Command::new("7z");
+        let seven_zip = find_7z_command().ok_or_else(|| RarError::CommandFailed(missing_7z_message()))?;
+        let mut command = Command::new(seven_zip);
 
         command.arg("x"); // 解压
 

@@ -1,6 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { message, open, save } from '@tauri-apps/api/dialog'
-import { fs } from '@tauri-apps/api'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage } from '@/utils'
@@ -62,7 +61,14 @@ export const useTauriCommands = () => {
         filters: filters || [
           {
             name: appStore.t('dialog.compress_files'),
-            extensions: ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz', 'tbz', 'tbz2', 'txz']
+            extensions: [
+              'zip', 'zipx', 'rar', '7z',
+              'tar', 'gz', 'gzip', 'bz2', 'bzip2', 'xz', 'zst', 'zstd', 'lzma',
+              'tgz', 'tpz', 'tbz', 'tbz2', 'txz', 'tzst',
+              'jar', 'xpi', 'odt', 'ods', 'docx', 'xlsx', 'pptx', 'epub', 'ipa', 'apk', 'appx',
+              'iso', 'img', 'cab', 'lzh', 'lha', 'arj', 'dmg', 'wim', 'vhd', 'vhdx', 'chm',
+              'deb', 'rpm', 'squashfs', 'sfs', 'msi', 'nsis', 'xar', 'cpio'
+            ]
           },
           {
             name: appStore.t('dialog.all_files'),
@@ -222,13 +228,7 @@ export const useTauriCommands = () => {
    */
   const listDirectory = async (dirPath: string): Promise<FileInfo[]> => {
     try {
-      const entries = await fs.readDir(dirPath)
-      const fileInfos: FileInfo[] = []
-
-      for (const entry of entries) {
-        const info = await getFileInfo(entry.path)
-        if (info) fileInfos.push(info)
-      }
+      const fileInfos = await invoke<FileInfo[]>('list_files', { path: dirPath })
 
       return fileInfos.sort((a, b) => {
         if (a.isDir && !b.isDir) return -1
@@ -381,7 +381,7 @@ export const useTauriCommands = () => {
       })
       if (!savePath) return
       const json = JSON.stringify(encrypted, null, 2)
-      await fs.writeTextFile(savePath, json)
+      await invoke('write_text_file', { path: savePath, content: json })
       await message(appStore.t('dialog.export_success').replace('{0}', String(encrypted.length)), { title: appStore.t('vault.export'), type: 'info' })
     } catch (error) {
       await message(appStore.t('dialog.export_failed').replace('{0}', extractErrorMessage(error)), { type: 'error' })
@@ -399,7 +399,7 @@ export const useTauriCommands = () => {
       })
       if (!selectedPath) return
       const filePath = Array.isArray(selectedPath) ? selectedPath[0] : selectedPath
-      const content = await fs.readTextFile(filePath)
+      const content = await invoke<string>('read_text_file', { path: filePath })
       const entries = JSON.parse(content)
       if (!Array.isArray(entries)) throw new Error(appStore.t('dialog.invalid_format'))
       let imported = 0

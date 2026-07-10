@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::time::SystemTime;
 use thiserror::Error;
-use walkdir::WalkDir;
 
 #[derive(Debug, Error)]
 pub enum FileServiceError {
@@ -61,15 +60,19 @@ impl FileService {
 
     pub async fn list_files(&self, path: &str, recursive: bool) -> Result<Vec<FileInfo>, FileServiceError> {
         let mut files = Vec::new();
-        let walker = WalkDir::new(path);
-        
-        for entry in walker {
-            let entry = entry.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-            files.push(self.get_file_info_sync(entry.path())?);
-            if !recursive && files.len() > 0 && entry.depth() > 0 {
-                // 简化的非递归实现
+
+        if recursive {
+            for entry in walkdir::WalkDir::new(path).min_depth(1) {
+                let entry = entry.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+                files.push(self.get_file_info_sync(entry.path())?);
+            }
+        } else {
+            for entry in std::fs::read_dir(path)? {
+                let entry = entry?;
+                files.push(self.get_file_info_sync(&entry.path())?);
             }
         }
+
         Ok(files)
     }
 
