@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri'
-import { message, open, save } from '@tauri-apps/api/dialog'
+import { message, open, save, ask } from '@tauri-apps/api/dialog'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage } from '@/utils'
@@ -375,14 +375,45 @@ export const useTauriCommands = () => {
         await message(appStore.t('dialog.no_passwords_export'), { title: appStore.t('vault.export'), type: 'info' })
         return
       }
+
+      // 询问是否加密导出
+      const shouldEncrypt = await ask(
+        appStore.t('dialog.export_encrypt_prompt') || '是否使用密码加密导出文件？\n\n选择"是"将需要输入密码来加密导出；\n选择"否"将导出为未加密的JSON文件。',
+        { title: appStore.t('vault.export'), type: 'info' }
+      )
+
+      let exportPassword: string | undefined
+      if (shouldEncrypt) {
+        // 使用浏览器原生 prompt 作为临时方案
+        exportPassword = window.prompt(appStore.t('dialog.export_password_prompt') || '请输入导出密码：') || undefined
+        if (!exportPassword) {
+          await message(appStore.t('dialog.export_cancelled') || '已取消导出', { type: 'info' })
+          return
+        }
+      }
+
       const savePath = await save({
         defaultPath: 'password_vault_export.json',
         filters: [{ name: appStore.t('dialog.json_files'), extensions: ['json'] }]
       })
       if (!savePath) return
-      const json = JSON.stringify(encrypted, null, 2)
-      await invoke('write_text_file', { path: savePath, content: json })
-      await message(appStore.t('dialog.export_success').replace('{0}', String(encrypted.length)), { title: appStore.t('vault.export'), type: 'info' })
+
+      // 调用后端的导出命令
+      const success = await invoke<boolean>('export_passwords_command', {
+        filePath: savePath,
+        exportPassword: exportPassword || null,
+        encrypt: shouldEncrypt,
+        includePasswords: true,
+        includeMetadata: true,
+        format: 'Json'
+      })
+
+      if (success) {
+        await message(
+          appStore.t('dialog.export_success').replace('{0}', String(encrypted.length)),
+          { title: appStore.t('vault.export'), type: 'info' }
+        )
+      }
     } catch (error) {
       await message(appStore.t('dialog.export_failed').replace('{0}', extractErrorMessage(error)), { type: 'error' })
     }
@@ -399,23 +430,30 @@ export const useTauriCommands = () => {
       })
       if (!selectedPath) return
       const filePath = Array.isArray(selectedPath) ? selectedPath[0] : selectedPath
-      const content = await invoke<string>('read_text_file', { path: filePath })
-      const entries = JSON.parse(content)
-      if (!Array.isArray(entries)) throw new Error(appStore.t('dialog.invalid_format'))
-      let imported = 0
-      for (const entry of entries) {
-        if (!entry.name || !entry.password) continue
-        await invoke('add_encrypted_password', {
-          entry: {
-            name: entry.name,
-            password: entry.password,
-            notes: entry.notes || '',
-            category: entry.category || 'Other',
-            tags: entry.tags || []
-          }
-        })
-        imported++
+
+      // 询问是否加密文件
+      const isEncrypted = await ask(
+        appStore.t('dialog.import_encrypted_prompt') || '导入文件是否使用密码加密？\n\n选择"是"将需要输入解密密码；\n选择"否"将作为未加密JSON文件导入。',
+        { title: appStore.t('vault.import'), type: 'info' }
+      )
+
+      let importPassword: string | undefined
+      if (isEncrypted) {
+        importPassword = window.prompt(appStore.t('dialog.import_password_prompt') || '请输入导入密码：') || undefined
+        if (!importPassword) {
+          await message(appStore.t('dialog.import_cancelled') || '已取消导入', { type: 'info' })
+          return
+        }
       }
+
+      // 调用后端的导入命令
+      const imported = await invoke<number>('import_passwords_command', {
+        filePath: filePath,
+        importPassword: importPassword || null,
+        encrypt: isEncrypted,
+        format: 'Json'
+      })
+
       await message(appStore.t('dialog.import_success').replace('{0}', String(imported)), { title: appStore.t('vault.import'), type: 'info' })
     } catch (error) {
       await message(appStore.t('dialog.import_failed').replace('{0}', extractErrorMessage(error)), { type: 'error' })
