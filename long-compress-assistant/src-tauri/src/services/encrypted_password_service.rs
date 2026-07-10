@@ -79,7 +79,7 @@ impl EncryptedPasswordService {
         use rand::Rng;
         use base64::Engine;
         let random_bytes: [u8; 32] = rand::thread_rng().gen();
-        base64::engine::general_purpose::STANDARD.encode(&random_bytes)
+        base64::engine::general_purpose::STANDARD.encode(random_bytes)
     }
 
     /// 在 Unix 上设置文件权限为 0600 (仅所有者可读写)
@@ -266,7 +266,7 @@ impl EncryptedPasswordService {
 
         while let Some(entry) = dir.next_entry().await? {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "json") {
+            if path.extension().is_some_and(|ext| ext == "json") {
                 let content = fs::read_to_string(&path).await?;
                 let db_entry: PasswordEntryDb = serde_json::from_str(&content)?;
                 let password_entry: PasswordEntry = db_entry.into();
@@ -280,9 +280,9 @@ impl EncryptedPasswordService {
                 // 搜索条件
                 let query_lower = query.to_lowercase();
                 let matches = decrypted_entry.name.to_lowercase().contains(&query_lower) ||
-                    decrypted_entry.username.as_ref().map_or(false, |u| u.to_lowercase().contains(&query_lower)) ||
-                    decrypted_entry.url.as_ref().map_or(false, |u| u.to_lowercase().contains(&query_lower)) ||
-                    decrypted_entry.notes.as_ref().map_or(false, |n| n.to_lowercase().contains(&query_lower)) ||
+                    decrypted_entry.username.as_ref().is_some_and(|u| u.to_lowercase().contains(&query_lower)) ||
+                    decrypted_entry.url.as_ref().is_some_and(|u| u.to_lowercase().contains(&query_lower)) ||
+                    decrypted_entry.notes.as_ref().is_some_and(|n| n.to_lowercase().contains(&query_lower)) ||
                     decrypted_entry.tags.iter().any(|tag| tag.to_lowercase().contains(&query_lower));
 
                 if matches {
@@ -658,7 +658,7 @@ impl PasswordGroupService {
 
         while let Some(entry) = dir.next_entry().await? {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "json") {
+            if path.extension().is_some_and(|ext| ext == "json") {
                 let content = fs::read_to_string(&path).await?;
                 let db_group: PasswordGroupDb = serde_json::from_str(&content)?;
                 let group: PasswordGroup = db_group.into();

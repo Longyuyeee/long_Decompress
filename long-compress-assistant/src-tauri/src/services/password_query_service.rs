@@ -12,6 +12,7 @@ use chrono::{DateTime, Utc};
 
 /// 密码查询请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct PasswordQueryRequest {
     // 搜索条件
     pub query: Option<String>,
@@ -342,7 +343,7 @@ impl PasswordQueryService {
         // 构建分页子句
         let (limit, offset) = self.calculate_limit_offset(request).await?;
         let limit_clause = if limit > 0 {
-            format!("LIMIT ? OFFSET ?")
+            "LIMIT ? OFFSET ?".to_string()
         } else {
             "".to_string()
         };
@@ -875,33 +876,6 @@ impl PasswordQueryService {
     }
 }
 
-impl Default for PasswordQueryRequest {
-    fn default() -> Self {
-        Self {
-            query: None,
-            category: None,
-            strength: None,
-            tags: None,
-            group_id: None,
-            created_after: None,
-            created_before: None,
-            updated_after: None,
-            updated_before: None,
-            expires_after: None,
-            expires_before: None,
-            favorite: None,
-            archived: None,
-            deleted: None,
-            sort_by: None,
-            sort_order: None,
-            page: None,
-            page_size: None,
-            include_decrypted: false,
-            include_audit_info: false,
-            include_usage_stats: false,
-        }
-    }
-}
 
 impl Clone for CachedQueryResult {
     fn clone(&self) -> Self {

@@ -34,6 +34,12 @@ pub struct SystemService {
     system: System,
 }
 
+impl Default for SystemService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SystemService {
     pub fn new() -> Self {
         Self {

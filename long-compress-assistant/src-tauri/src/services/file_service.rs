@@ -63,7 +63,7 @@ impl FileService {
 
         if recursive {
             for entry in walkdir::WalkDir::new(path).min_depth(1) {
-                let entry = entry.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+                let entry = entry.map_err(|e| std::io::Error::other(e.to_string()))?;
                 files.push(self.get_file_info_sync(entry.path())?);
             }
         } else {

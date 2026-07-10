@@ -92,7 +92,7 @@ impl ArchiveFormat {
         if header.len() >= 6 && &header[0..6] == b"\xFD7zXZ\x00" {
             return ArchiveFormat::Xz;
         }
-        if header.len() >= 4 && &header[0..4] == &[0x28, 0xB5, 0x2F, 0xFD] {
+        if header.len() >= 4 && header[0..4] == [0x28, 0xB5, 0x2F, 0xFD] {
             return ArchiveFormat::Zstd;
         }
         ArchiveFormat::Unknown
@@ -752,7 +752,7 @@ impl CompressionService {
                     let _ = window.emit("password-required", PasswordRequiredPayload {
                         task_id: task_id.clone(),
                         file_path: file_path.clone(),
-                        file_name: file_name,
+                        file_name,
                         format: format!("{:?}", format),
                     });
                     
@@ -1076,10 +1076,7 @@ impl CompressionService {
                         zip_file.is_file()
                     };
                     if is_file {
-                        match archive.by_index_decrypt(i, b"") {
-                            Ok(Err(_)) => return Err(CompressionError::PasswordRequired.into()),
-                            _ => {}
-                        }
+                        if let Ok(Err(_)) = archive.by_index_decrypt(i, b"") { return Err(CompressionError::PasswordRequired.into()) }
                     }
                     if i > 5 { break; } 
                 }
@@ -1166,10 +1163,10 @@ impl CompressionService {
                     let archive = if let Some(pwd) = password {
                         let password = sevenz_rust::Password::from(pwd);
                         sevenz_rust::Archive::read(&mut archive_file, len, password.as_slice())
-                            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string()))
+                            .map_err(|err| std::io::Error::other(err.to_string()))
                     } else {
                         sevenz_rust::Archive::read(&mut archive_file, len, &[])
-                            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string()))
+                            .map_err(|err| std::io::Error::other(err.to_string()))
                     }?;
                     Ok(archive.files.iter()
                         .filter(|entry| !entry.is_directory())
@@ -1996,7 +1993,7 @@ impl CompressionService {
                 "zip" => {
                     let f = File::open(&file)?;
                     let mut archive = ZipArchive::new(f)?;
-                    if archive.len() > 0 {
+                    if !archive.is_empty() {
                         // 1. 首先尝试普通读取（判断是否未加密）
                         // 借用 A 开始
                         let can_read_normally = if let Ok(mut zip_file) = archive.by_index(0) {

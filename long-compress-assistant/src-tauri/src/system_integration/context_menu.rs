@@ -78,7 +78,7 @@ pub fn unregister_context_menu() -> Result<()> {
     let store_base = r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell";
     for v in verbs() {
         let p = format!("{}\\{}", store_base, v.verb);
-        let _ = hkcu.delete_subkey_all(&format!("{}\\command", p));
+        let _ = hkcu.delete_subkey_all(format!("{}\\command", p));
         let _ = hkcu.delete_subkey_all(&p);
     }
     for entry in [r"Software\Classes\*\shell\LongDecompress",
@@ -87,7 +87,7 @@ pub fn unregister_context_menu() -> Result<()> {
         let _ = hkcu.delete_subkey_all(entry);
     }
     for ext in ARCHIVE_EXTENSIONS {
-        let _ = hkcu.delete_subkey_all(&format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", ext));
+        let _ = hkcu.delete_subkey_all(format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", ext));
     }
     Ok(())
 }

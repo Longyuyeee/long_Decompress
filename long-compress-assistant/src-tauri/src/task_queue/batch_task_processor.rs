@@ -69,6 +69,12 @@ pub struct BatchTaskProcessor {
     config: Arc<RwLock<BatchTaskConfig>>,
 }
 
+impl Default for BatchTaskProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BatchTaskProcessor {
     pub fn new() -> Self {
         Self {

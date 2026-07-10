@@ -429,7 +429,7 @@ impl AppShortcutManager {
             if shortcut.enabled {
                 accelerator_map
                     .entry(shortcut.accelerator.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(shortcut.id.clone());
             }
         }

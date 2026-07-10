@@ -12,6 +12,12 @@ use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 
 pub struct UniversalCliEngine;
 
+impl Default for UniversalCliEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UniversalCliEngine {
     pub fn new() -> Self {
         Self
@@ -100,7 +106,7 @@ impl UniversalCliEngine {
                 !t.starts_with("---") && !t.starts_with("Date") && !t.is_empty() && !t.contains("files, ")
             })
             .filter_map(|line| {
-                let parts: Vec<&str> = line.trim().split_whitespace().collect();
+                let parts: Vec<&str> = line.split_whitespace().collect();
                 (parts.len() >= 6).then(|| {
                     let name = parts.last().unwrap();
                     name.to_string()

@@ -334,7 +334,7 @@ impl PasswordBookService {
         // 字符类型检查
         let has_lowercase = password.chars().any(|c| c.is_lowercase());
         let has_uppercase = password.chars().any(|c| c.is_uppercase());
-        let has_digit = password.chars().any(|c| c.is_digit(10));
+        let has_digit = password.chars().any(|c| c.is_ascii_digit());
         let has_symbol = password.chars().any(|c| !c.is_alphanumeric());
 
         if !has_lowercase {
@@ -1164,10 +1164,12 @@ pub struct SearchFilters {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum SortOption {
     NameAsc,
     NameDesc,
     UpdatedAtAsc,
+    #[default]
     UpdatedAtDesc,
     CreatedAtAsc,
     CreatedAtDesc,
@@ -1177,11 +1179,6 @@ pub enum SortOption {
     ExpiresAtDesc,
 }
 
-impl Default for SortOption {
-    fn default() -> Self {
-        Self::UpdatedAtDesc
-    }
-}
 
 impl SortOption {
     fn to_sql(&self) -> String {

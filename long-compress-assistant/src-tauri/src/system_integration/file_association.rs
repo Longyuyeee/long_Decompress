@@ -16,6 +16,12 @@ pub struct FileAssociationManager {
     associations: Arc<RwLock<Vec<FileAssociation>>>,
 }
 
+impl Default for FileAssociationManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FileAssociationManager {
     pub fn new() -> Self {
         Self {
@@ -32,6 +38,12 @@ impl FileAssociationManager {
 
 pub struct GlobalFileAssociationManager {
     manager: Arc<RwLock<Option<FileAssociationManager>>>,
+}
+
+impl Default for GlobalFileAssociationManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl GlobalFileAssociationManager {

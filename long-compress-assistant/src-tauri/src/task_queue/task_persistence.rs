@@ -213,7 +213,7 @@ impl TaskPersistenceManager {
                 let entry = entry?;
                 let path = entry.path();
 
-                if path.is_file() && path.extension().map_or(false, |ext| ext == "json") {
+                if path.is_file() && path.extension().is_some_and(|ext| ext == "json") {
                     if let Some(file_name) = path.file_stem() {
                         if let Some(task_id) = file_name.to_str() {
                             task_ids.push(task_id.to_string());

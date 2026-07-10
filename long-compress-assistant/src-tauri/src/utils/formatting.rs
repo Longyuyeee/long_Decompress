@@ -97,7 +97,7 @@ pub fn format_number_with_commas(number: i64) -> String {
     let len = number_str.len();
 
     for (i, c) in number_str.chars().enumerate() {
-        if i > 0 && (len - i) % 3 == 0 {
+        if i > 0 && (len - i).is_multiple_of(3) {
             result.push(',');
         }
         result.push(c);

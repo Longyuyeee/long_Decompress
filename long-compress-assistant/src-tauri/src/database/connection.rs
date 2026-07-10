@@ -104,7 +104,7 @@ impl DatabaseConnection {
         ];
 
         for (col_name, col_type) in columns {
-            let check_query = format!("PRAGMA table_info(password_entries)");
+            let check_query = "PRAGMA table_info(password_entries)".to_string();
             let rows = sqlx::query(&check_query).fetch_all(&pool).await?;
             let mut exists = false;
             for row in rows {

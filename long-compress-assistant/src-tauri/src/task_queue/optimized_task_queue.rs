@@ -7,6 +7,12 @@ pub struct OptimizedTaskQueue {
     tasks: Arc<RwLock<HashMap<String, SharedQueueTask>>>,
 }
 
+impl Default for OptimizedTaskQueue {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OptimizedTaskQueue {
     pub fn new() -> Self {
         Self {

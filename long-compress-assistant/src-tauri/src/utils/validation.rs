@@ -82,7 +82,7 @@ pub fn validate_password(password: &str) -> Result<(), AppError> {
     // 检查字符类型
     let has_lowercase = password.chars().any(|c| c.is_lowercase());
     let has_uppercase = password.chars().any(|c| c.is_uppercase());
-    let has_digit = password.chars().any(|c| c.is_digit(10));
+    let has_digit = password.chars().any(|c| c.is_ascii_digit());
     let has_special = password.chars().any(|c| !c.is_alphanumeric());
 
     let mut missing = Vec::new();
@@ -280,6 +280,12 @@ pub fn validate_file_extension(filename: &str, allowed_extensions: &[&str]) -> R
 /// 批量验证
 pub struct Validator {
     errors: Vec<String>,
+}
+
+impl Default for Validator {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Validator {

@@ -288,7 +288,7 @@ impl From<CompressionTaskDb> for crate::models::compression::CompressionTask {
             format,
             options,
             status,
-            progress: db.progress as f32,
+            progress: db.progress,
             created_at: db.created_at,
             started_at: db.started_at,
             completed_at: db.completed_at,

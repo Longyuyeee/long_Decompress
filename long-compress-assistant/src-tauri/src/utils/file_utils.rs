@@ -377,7 +377,7 @@ pub fn is_file_writable(path: &Path) -> bool {
     if !path.exists() {
         // 检查父目录是否可写
         return path.parent()
-            .map(|parent| is_directory_writable(parent))
+            .map(is_directory_writable)
             .unwrap_or(false);
     }
 
@@ -406,7 +406,7 @@ pub fn is_directory_writable(path: &Path) -> bool {
     if !path.exists() {
         // 递归检查父目录
         return path.parent()
-            .map(|parent| is_directory_writable(parent))
+            .map(is_directory_writable)
             .unwrap_or(false);
     }
 

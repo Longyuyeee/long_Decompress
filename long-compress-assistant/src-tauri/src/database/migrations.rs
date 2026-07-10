@@ -25,8 +25,8 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
         .unwrap_or(0);
 
     // 3. 按版本号顺序应用迁移
-    if current < CURRENT_VERSION {
-        if current < 1 {
+    if current < CURRENT_VERSION
+        && current < 1 {
             migrate_v1(pool).await?;
             query("INSERT INTO schema_version (version) VALUES (1)")
                 .execute(pool)
@@ -38,7 +38,6 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
         //     migrate_v2(pool).await?;
         //     query("INSERT INTO schema_version (version) VALUES (2)").execute(pool).await?;
         // }
-    }
 
     Ok(())
 }

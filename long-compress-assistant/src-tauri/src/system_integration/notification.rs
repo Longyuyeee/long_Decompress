@@ -42,6 +42,12 @@ pub struct SystemNotifier {
     history: Arc<RwLock<VecDeque<NotificationHistory>>>,
 }
 
+impl Default for SystemNotifier {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SystemNotifier {
     pub fn new() -> Self {
         Self {
@@ -68,6 +74,12 @@ impl SystemNotifier {
 
 pub struct GlobalNotifier {
     notifier: Arc<RwLock<Option<SystemNotifier>>>,
+}
+
+impl Default for GlobalNotifier {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl GlobalNotifier {
@@ -109,6 +121,12 @@ lazy_static! {
 }
 
 pub struct NotificationManager;
+impl Default for NotificationManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NotificationManager {
     pub fn new() -> Self { Self }
 }

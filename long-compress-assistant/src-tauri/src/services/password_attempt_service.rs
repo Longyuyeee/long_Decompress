@@ -348,10 +348,8 @@ impl PasswordAttemptService {
         let mut guesses = Vec::new();
 
         // 常见日期格式
-        let _date_formats = vec![
-            "YYYYMMDD", "YYYY-MM-DD", "DDMMYYYY", "MMDDYYYY",
-            "YYMMDD", "YY-MM-DD", "DDMMYY", "MMDDYY"
-        ];
+        let _date_formats = ["YYYYMMDD", "YYYY-MM-DD", "DDMMYYYY", "MMDDYYYY",
+            "YYMMDD", "YY-MM-DD", "DDMMYY", "MMDDYY"];
 
         // 这里应该解析日期并生成各种格式
         // 暂时添加一些常见日期密码
@@ -366,6 +364,7 @@ impl PasswordAttemptService {
 
 /// 密码猜测上下文
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct PasswordGuessContext {
     pub filename: Option<String>,
     pub filepath: Option<String>,
@@ -375,18 +374,6 @@ pub struct PasswordGuessContext {
     pub tags: Vec<String>,
 }
 
-impl Default for PasswordGuessContext {
-    fn default() -> Self {
-        Self {
-            filename: None,
-            filepath: None,
-            creation_date: None,
-            file_size: None,
-            file_type: None,
-            tags: Vec::new(),
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

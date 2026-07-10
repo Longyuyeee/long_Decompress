@@ -295,7 +295,7 @@ impl ConfigValueConverter {
             Value::Array(arr) => {
                 let items: Vec<String> = arr
                     .iter()
-                    .map(|v| Self::to_string(v))
+                    .map(Self::to_string)
                     .collect();
                 items.join(",")
             }

@@ -366,7 +366,7 @@ impl PasswordCategoryService {
 
         for (category_name, date, count) in usage {
             result.entry(category_name)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push((date, count));
         }
 

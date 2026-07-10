@@ -36,7 +36,7 @@ pub async fn get_database_status() -> Result<DatabaseStatus, String> {
         .unwrap_or(0);
 
     let stats = connection.get_statistics().await
-        .unwrap_or_else(|_| DatabaseStatistics {
+        .unwrap_or(DatabaseStatistics {
             page_size: 4096,
             page_count: 0,
             freelist_count: 0,
