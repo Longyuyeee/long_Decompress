@@ -357,12 +357,12 @@ pub async fn get_password_statistics() -> Result<PasswordStatistics, String> {
 
 #[command]
 pub async fn import_passwords(_file_path: String, _format: String) -> Result<String, String> {
-    Err("导入功能暂未实现".to_string())
+    Err("已废弃，请使用 import_passwords_command".to_string())
 }
 
 #[command]
 pub async fn export_passwords(_file_path: String, _format: String) -> Result<String, String> {
-    Err("导出功能暂未实现".to_string())
+    Err("已废弃，请使用 export_passwords_command".to_string())
 }
 
 #[command]

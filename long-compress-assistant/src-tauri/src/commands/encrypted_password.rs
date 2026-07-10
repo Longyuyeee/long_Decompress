@@ -441,19 +441,34 @@ pub async fn get_group_entries(
 pub async fn export_passwords_command(
     app: AppHandle,
     file_path: String,
+    export_password: Option<String>,
+    encrypt: Option<bool>,
+    include_passwords: Option<bool>,
+    include_metadata: Option<bool>,
+    format: Option<String>,
 ) -> Result<bool, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
     let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
-    let options = PasswordImportExportOptions {
-        format: ImportExportFormat::Json,
-        include_passwords: true,
-        include_metadata: true,
-        encrypt: false, // 简化处理，导出未加密JSON供手动编辑或备份
+    // 解析格式
+    let format_enum = match format.as_deref().unwrap_or("Json") {
+        "Json" => ImportExportFormat::Json,
+        "Csv" => ImportExportFormat::Csv,
+        "KeePass" => ImportExportFormat::KeePass,
+        _ => ImportExportFormat::Json,
     };
 
-    match service.export_passwords(&options, "").await {
+    let options = PasswordImportExportOptions {
+        format: format_enum,
+        include_passwords: include_passwords.unwrap_or(true),
+        include_metadata: include_metadata.unwrap_or(true),
+        encrypt: encrypt.unwrap_or(false),
+    };
+
+    let password = export_password.as_deref().unwrap_or("");
+
+    match service.export_passwords(&options, password).await {
         Ok(data) => {
             std::fs::write(file_path, data).map_err(|e| format!("写入文件失败: {}", e))?;
             Ok(true)
@@ -467,20 +482,32 @@ pub async fn export_passwords_command(
 pub async fn import_passwords_command(
     app: AppHandle,
     file_path: String,
+    import_password: Option<String>,
+    encrypt: Option<bool>,
+    format: Option<String>,
 ) -> Result<usize, String> {
     let state: State<'_, EncryptedPasswordServiceState> = app.state();
     let service_lock = state.service.lock().await;
     let service = service_lock.as_ref().ok_or("服务未初始化")?;
 
     let data = std::fs::read(file_path).map_err(|e| format!("读取文件失败: {}", e))?;
-    let options = PasswordImportExportOptions {
-        format: ImportExportFormat::Json,
-        include_passwords: true,
-        include_metadata: true,
-        encrypt: false,
+
+    // 解析格式
+    let format_enum = match format.as_deref().unwrap_or("Json") {
+        "Json" => ImportExportFormat::Json,
+        "Csv" => ImportExportFormat::Csv,
+        "KeePass" => ImportExportFormat::KeePass,
+        _ => ImportExportFormat::Json,
     };
 
-    match service.import_passwords(&data, &options, None).await {
+    let options = PasswordImportExportOptions {
+        format: format_enum,
+        include_passwords: true,
+        include_metadata: true,
+        encrypt: encrypt.unwrap_or(false),
+    };
+
+    match service.import_passwords(&data, &options, import_password.as_deref()).await {
         Ok(count) => Ok(count),
         Err(e) => Err(format!("导入失败: {}", e)),
     }
