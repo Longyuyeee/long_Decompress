@@ -671,8 +671,10 @@ impl CompressionService {
         let mut format = ArchiveFormat::Unknown;
         if let Ok(mut f) = File::open(&file_path) {
             let mut header = [0u8; 32];
-            if let Ok(_) = f.read(&mut header) {
-                format = ArchiveFormat::from_magic(&header);
+            if let Ok(bytes_read) = f.read(&mut header) {
+                if bytes_read > 0 {
+                    format = ArchiveFormat::from_magic(&header);
+                }
             }
         }
 
@@ -687,7 +689,7 @@ impl CompressionService {
             let ext_is_zsplit = ext.len() == 3 && ext.starts_with('z') && ext[1..].chars().all(|c| c.is_ascii_digit());
             // 也检查 stem 是否以 .zip / .7z / .rar 结尾（如 test_split.zip.001）
             let stem_has_archive_ext = file_stem.ends_with(".zip") || file_stem.ends_with(".7z") || file_stem.ends_with(".rar");
-            ext_is_numeric || ext_is_zsplit || (ext_is_numeric && stem_has_archive_ext) || ext_is_numeric
+            ext_is_numeric || ext_is_zsplit || stem_has_archive_ext
         };
 
         // 分卷文件强制走 7z CLI 通用引擎
