@@ -1,4 +1,5 @@
 pub mod compression;
+pub mod compression_profile;
 pub mod encrypted_password;
 pub mod password;
 pub mod file;

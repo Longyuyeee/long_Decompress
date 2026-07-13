@@ -5,6 +5,7 @@ use long_compress_assistant::database;
 use long_compress_assistant::utils::app_paths::app_data_dir;
 
 use long_compress_assistant::commands::encrypted_password::EncryptedPasswordServiceState;
+use long_compress_assistant::commands::compression_profile::CompressionProfileServiceState;
 
 use tauri::Manager;
 use window_shadows::set_shadow;
@@ -23,6 +24,7 @@ fn main() {
 
     tauri::Builder::default()
         .manage(EncryptedPasswordServiceState::new(data_dir.clone()))
+        .manage(CompressionProfileServiceState::new())
         .setup(move |app| {
             let window = match app.get_window("main") {
                 Some(w) => w,
@@ -40,6 +42,22 @@ fn main() {
                     Ok(conn) => {
                         if let Err(e) = database::connection::set_global_connection(conn).await {
                             eprintln!("Failed to set global database connection: {}", e);
+                        } else {
+                            // 初始化配置组服务
+                            if let Ok(pool) = database::connection::get_pool().await {
+                                use long_compress_assistant::services::compression_profile_service::CompressionProfileService;
+                                let profile_service = CompressionProfileService::new(pool.clone());
+
+                                // 初始化默认配置组
+                                if let Err(e) = profile_service.init_default_profiles().await {
+                                    eprintln!("Failed to initialize default profiles: {}", e);
+                                }
+
+                                // 设置到应用状态
+                                let state: tauri::State<CompressionProfileServiceState> = app.state();
+                                let mut service_lock = state.service.lock().await;
+                                *service_lock = Some(profile_service);
+                            }
                         }
                     }
                     Err(e) => eprintln!("Failed to initialize database at {:?}: {}", db_path, e),
@@ -147,7 +165,15 @@ fn main() {
             long_compress_assistant::commands::encrypted_password::clear_encrypted_passwords,
             long_compress_assistant::commands::encrypted_password::list_password_groups,
             long_compress_assistant::commands::encrypted_password::export_passwords_command,
-            long_compress_assistant::commands::encrypted_password::import_passwords_command
+            long_compress_assistant::commands::encrypted_password::import_passwords_command,
+            long_compress_assistant::commands::compression_profile::get_compression_profiles,
+            long_compress_assistant::commands::compression_profile::get_compression_profile,
+            long_compress_assistant::commands::compression_profile::create_compression_profile,
+            long_compress_assistant::commands::compression_profile::update_compression_profile,
+            long_compress_assistant::commands::compression_profile::delete_compression_profile,
+            long_compress_assistant::commands::compression_profile::reorder_compression_profiles,
+            long_compress_assistant::commands::compression_profile::apply_compression_profile,
+            long_compress_assistant::commands::compression_profile::suggest_compression_profile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

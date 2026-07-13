@@ -162,4 +162,9 @@ pub async fn get_connection() -> Result<&'static DatabaseConnection> {
     DATABASE_INSTANCE.get().ok_or_else(|| anyhow::anyhow!("数据库未初始化"))
 }
 
+pub async fn get_pool() -> Result<SqlitePool> {
+    let conn = get_connection().await?;
+    Ok(conn.pool.clone())
+}
+
 pub async fn reinitialize() -> Result<()> { Ok(()) }
