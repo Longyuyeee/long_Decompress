@@ -5,6 +5,7 @@
 export { useAppStore } from './app'
 export { useUIStore } from './ui'
 export { useCompressionStore } from './compression'
+export { useCompressionProfileStore } from './compressionProfile'
 export {
   usePasswordStore,
   PasswordCategory,
