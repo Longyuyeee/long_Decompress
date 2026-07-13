@@ -170,7 +170,9 @@ impl PasswordStrengthService {
         if n == 0 { return m; }
         if m == 0 { return n; }
         let mut matrix = vec![vec![0; m + 1]; n + 1];
-        for i in 0..=n { matrix[i][0] = i; }
+        for (i, row) in matrix.iter_mut().enumerate().take(n + 1) {
+            row[0] = i;
+        }
         for j in 0..=m { matrix[0][j] = j; }
         for i in 1..=n {
             for j in 1..=m {

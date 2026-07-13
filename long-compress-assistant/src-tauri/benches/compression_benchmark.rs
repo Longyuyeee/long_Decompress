@@ -22,7 +22,7 @@ mod compression_service {
         let mut file_entries = Vec::with_capacity(file_count);
 
         for i in 0..file_count {
-            let entry = archive.by_index(i)?;
+            let mut entry = archive.by_index(i)?;
             let is_dir = entry.name().ends_with('/');
             let outpath = output_dir.join(entry.mangled_name());
 
@@ -30,7 +30,7 @@ mod compression_service {
         }
 
         // 先创建目录
-        for (_, name, outpath, is_dir) in &file_entries {
+        for (_, _name, outpath, is_dir) in &file_entries {
             if *is_dir {
                 fs::create_dir_all(outpath)?;
             }
@@ -43,7 +43,7 @@ mod compression_service {
 
         if !file_entries.is_empty() {
             let results: Vec<std::io::Result<()>> = file_entries.par_iter()
-                .map(|(index, name, outpath, _)| {
+                .map(|(index, _name, outpath, _)| {
                     process_zip_entry_independent(zip_path, *index, outpath)
                 })
                 .collect();
@@ -346,7 +346,7 @@ fn benchmark_buffer_sizes(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("extraction", format!("{}KB", buffer_size / 1024)),
             &buffer_size,
-            |b, &buffer_size| {
+            |b, &_buffer_size| {
                 b.iter(|| {
                     // 这里可以测试不同缓冲区大小的影响
                     // 由于时间限制，我们只模拟测试

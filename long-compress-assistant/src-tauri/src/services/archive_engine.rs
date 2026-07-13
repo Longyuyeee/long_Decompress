@@ -41,6 +41,7 @@ pub trait ArchiveEngine: Send + Sync {
     }
 
     /// 执行解压操作，并支持进度反馈和中断信号
+    #[allow(clippy::too_many_arguments)]
     async fn extract_with_progress(
         &self,
         file_path: &Path,

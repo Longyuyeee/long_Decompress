@@ -18,6 +18,7 @@ use crate::services::password_query_service::PasswordQueryService;
 use std::sync::Arc;
 
 #[command]
+#[allow(clippy::too_many_arguments)]
 pub async fn add_password(
     name: String,
     username: Option<String>,
@@ -89,6 +90,7 @@ pub async fn add_password(
 }
 
 #[command]
+#[allow(clippy::too_many_arguments)]
 pub async fn update_password(
     id: String,
     name: Option<String>,
@@ -221,6 +223,7 @@ pub async fn validate_password(password: String) -> Result<String, String> {
 }
 
 #[command]
+#[allow(clippy::too_many_arguments)]
 pub async fn search_passwords(
     query: String,
     categories: Option<Vec<String>>,
@@ -570,6 +573,7 @@ pub async fn get_password_policy() -> Result<PasswordPolicy, String> {
 }
 
 #[command]
+#[allow(clippy::too_many_arguments)]
 pub async fn update_password_policy(
     min_length: Option<usize>,
     max_length: Option<usize>,
