@@ -173,14 +173,14 @@ impl CompressionProfile {
 
     /// 更新使用统计
     pub fn record_usage(&mut self, success: bool, files_count: u64, bytes_processed: u64) {
-        self.use_count += 1;
+        self.stats.use_count += 1;
         if success {
-            self.success_count += 1;
+            self.stats.success_count += 1;
         } else {
-            self.failure_count += 1;
+            self.stats.failure_count += 1;
         }
-        self.total_files_processed += files_count;
-        self.total_bytes_processed += bytes_processed;
+        self.stats.total_files_processed += files_count;
+        self.stats.total_bytes_processed += bytes_processed;
         self.last_used_at = Some(chrono::Utc::now().timestamp());
     }
 

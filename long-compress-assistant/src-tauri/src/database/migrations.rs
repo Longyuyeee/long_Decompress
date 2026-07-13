@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const CURRENT_VERSION: i32 = 1;
+const CURRENT_VERSION: i32 = 2;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -33,11 +33,11 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
                 .await?;
         }
 
-        // 未来版本在此处添加:
-        // if current < 2 {
-        //     migrate_v2(pool).await?;
-        //     query("INSERT INTO schema_version (version) VALUES (2)").execute(pool).await?;
-        // }
+        // V2: 配置组系统
+        if current < 2 {
+            migrate_v2(pool).await?;
+            query("INSERT INTO schema_version (version) VALUES (2)").execute(pool).await?;
+        }
 
     Ok(())
 }
@@ -417,6 +417,69 @@ async fn migrate_v1(pool: &SqlitePool) -> Result<()> {
 
     // 创建索引以提高查询性能
     create_indexes(pool).await?;
+
+    Ok(())
+}
+
+/// V2: 配置组系统
+async fn migrate_v2(pool: &SqlitePool) -> Result<()> {
+    // 创建压缩配置组表
+    query(
+        r#"
+        CREATE TABLE IF NOT EXISTS compression_profiles (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            icon TEXT NOT NULL,
+            description TEXT NOT NULL,
+            config_format TEXT NOT NULL,
+            config_level INTEGER NOT NULL,
+            config_password TEXT,
+            config_split_archive BOOLEAN NOT NULL DEFAULT FALSE,
+            config_split_size INTEGER,
+            config_keep_structure BOOLEAN NOT NULL DEFAULT TRUE,
+            config_delete_after BOOLEAN NOT NULL DEFAULT FALSE,
+            config_create_solid_archive BOOLEAN NOT NULL DEFAULT FALSE,
+            config_filename_template TEXT,
+            config_extra_params TEXT NOT NULL DEFAULT '{}',
+            auto_apply_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+            auto_apply_mode TEXT NOT NULL DEFAULT 'none',
+            auto_apply_file_patterns TEXT NOT NULL DEFAULT '[]',
+            auto_apply_size_range_min INTEGER,
+            auto_apply_size_range_max INTEGER,
+            password_strategy TEXT NOT NULL DEFAULT 'none',
+            password_strategy_category_id TEXT,
+            password_strategy_length INTEGER,
+            password_strategy_save_to_vault BOOLEAN,
+            stats_use_count INTEGER NOT NULL DEFAULT 0,
+            stats_success_count INTEGER NOT NULL DEFAULT 0,
+            stats_failure_count INTEGER NOT NULL DEFAULT 0,
+            stats_total_files_processed INTEGER NOT NULL DEFAULT 0,
+            stats_total_bytes_processed INTEGER NOT NULL DEFAULT 0,
+            display_order INTEGER NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL,
+            last_used_at DATETIME
+        )
+        "#
+    )
+        .execute(pool)
+        .await
+        .context("创建压缩配置组表失败")?;
+
+    // 创建配置组索引
+    query("CREATE INDEX IF NOT EXISTS idx_compression_profiles_order ON compression_profiles(display_order)")
+        .execute(pool)
+        .await
+        .context("创建配置组排序索引失败")?;
+
+    query("CREATE INDEX IF NOT EXISTS idx_compression_profiles_use_count ON compression_profiles(stats_use_count DESC)")
+        .execute(pool)
+        .await
+        .context("创建配置组使用次数索引失败")?;
+
+    query("CREATE INDEX IF NOT EXISTS idx_compression_profiles_last_used ON compression_profiles(last_used_at DESC)")
+        .execute(pool)
+        .await
+        .context("创建配置组最后使用索引失败")?;
 
     Ok(())
 }

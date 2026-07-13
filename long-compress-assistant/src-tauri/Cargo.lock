@@ -2856,6 +2856,7 @@ dependencies = [
  "dirs",
  "env_logger",
  "flate2",
+ "glob",
  "lazy_static",
  "log",
  "md5",
