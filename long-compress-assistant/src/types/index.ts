@@ -312,3 +312,6 @@ export interface ShortcutConfig {
   action: () => void
   enabled: boolean
 }
+
+// Export profile types
+export * from './profile'
