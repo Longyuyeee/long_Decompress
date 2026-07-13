@@ -69,12 +69,14 @@ impl TaskManager {
     }
 
     pub async fn add_extraction_task(&self, file_path: String, output_dir: Option<String>, password: Option<String>, priority: TaskPriority) -> Result<String> {
-        let mut task = CompressionTask::default();
-        task.source_files = vec![file_path];
-        task.output_path = output_dir.unwrap_or_default();
-        task.password = password;
-        task.format = CompressionFormat::Zip;
-        
+        let task = CompressionTask {
+            source_files: vec![file_path],
+            output_path: output_dir.unwrap_or_default(),
+            password,
+            format: CompressionFormat::Zip,
+            ..Default::default()
+        };
+
         self.add_compression_task(task, priority).await
     }
 

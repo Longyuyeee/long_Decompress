@@ -120,6 +120,7 @@ pub enum PasswordStrategy {
 
 /// 配置组统计信息
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct ProfileStats {
     /// 使用次数
     pub use_count: u64,
@@ -137,17 +138,6 @@ pub struct ProfileStats {
     pub total_bytes_processed: u64,
 }
 
-impl Default for ProfileStats {
-    fn default() -> Self {
-        Self {
-            use_count: 0,
-            success_count: 0,
-            failure_count: 0,
-            total_files_processed: 0,
-            total_bytes_processed: 0,
-        }
-    }
-}
 
 impl CompressionProfile {
     /// 创建新的配置组

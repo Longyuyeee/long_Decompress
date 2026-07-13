@@ -378,7 +378,6 @@ pub struct PasswordGuessContext {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
 
     #[tokio::test]
     async fn test_password_attempt_service() {
@@ -386,7 +385,6 @@ mod tests {
         // 在实际测试中，应该使用真实的或模拟的服务
 
         println!("密码尝试服务测试框架就绪");
-        assert!(true);
     }
 
     #[test]

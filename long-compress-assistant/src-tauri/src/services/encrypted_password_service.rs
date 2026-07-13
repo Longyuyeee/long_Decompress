@@ -54,10 +54,9 @@ impl EncryptedPasswordService {
     pub async fn get_or_create_master_key(data_dir: &Path) -> Result<String> {
         let key_path = data_dir.join("installation.key");
         if key_path.exists() {
-            let key_bytes = fs::metadata(&key_path).await?;
-            if key_bytes.len() == 0 {
+            let key_metadata = fs::metadata(&key_path).await?;
+            if key_metadata.len() == 0 {
                 // 空文件视为损坏，重新生成
-                drop(key_bytes);
                 let random_key = Self::generate_installation_key();
                 fs::write(&key_path, &random_key).await?;
                 Self::restrict_key_file_permissions(&key_path)?;

@@ -304,8 +304,8 @@ impl ArchiveEngine for UniversalCliEngine {
                                 on_progress(progress);
                             }
                             // 同时记录提取的文件
-                            if text.starts_with("- ") {
-                                on_log(text[2..].to_string(), TaskLogSeverity::Info);
+                            if let Some(stripped) = text.strip_prefix("- ") {
+                                on_log(stripped.to_string(), TaskLogSeverity::Info);
                             }
                         },
                         Ok(None) => break, // EOF

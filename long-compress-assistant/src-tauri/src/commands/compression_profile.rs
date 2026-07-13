@@ -10,6 +10,12 @@ pub struct CompressionProfileServiceState {
     pub service: Arc<Mutex<Option<CompressionProfileService>>>,
 }
 
+impl Default for CompressionProfileServiceState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CompressionProfileServiceState {
     pub fn new() -> Self {
         Self {

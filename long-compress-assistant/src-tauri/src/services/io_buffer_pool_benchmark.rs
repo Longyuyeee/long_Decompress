@@ -13,11 +13,6 @@ impl IOBufferPoolBenchmark {
         Self { pool }
     }
 
-    /// 使用默认配置创建性能基准测试
-    pub fn default() -> Self {
-        Self::new(IOBufferPoolConfig::default())
-    }
-
     /// 运行单线程获取和释放测试
     pub async fn run_single_thread_test(&self, iterations: usize) -> BenchmarkResult {
         let start_time = Instant::now();
@@ -354,11 +349,17 @@ fn format_file_size(size: u64) -> String {
     let base = 1024_f64;
     let size_f64 = size as f64;
     let exponent = (size_f64.log10() / base.log10()).floor() as i32;
-    let unit_index = exponent.min(4).max(0) as usize;
+    let unit_index = exponent.clamp(0, 4) as usize;
 
     let formatted_size = size_f64 / base.powi(exponent);
 
     format!("{:.1} {}", formatted_size, UNITS[unit_index])
+}
+
+impl Default for IOBufferPoolBenchmark {
+    fn default() -> Self {
+        Self::new(IOBufferPoolConfig::default())
+    }
 }
 
 #[cfg(test)]

@@ -133,11 +133,6 @@ impl IOBufferPool {
         }
     }
 
-    /// 使用默认配置创建缓冲区池
-    pub fn default() -> Self {
-        Self::new(IOBufferPoolConfig::default())
-    }
-
     /// 获取一个缓冲区
     pub async fn acquire(&self, preferred_size: Option<usize>) -> IOBufferHandle {
         let mut buffers = self.buffers.lock().await;
@@ -350,10 +345,15 @@ impl Drop for IOBufferHandle {
     }
 }
 
+impl Default for IOBufferPool {
+    fn default() -> Self {
+        Self::new(IOBufferPoolConfig::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::runtime::Runtime;
 
     #[test]
     fn test_buffer_pool_creation() {
@@ -367,10 +367,7 @@ mod tests {
             shrink_factor: 0.75,
         };
 
-        let pool = IOBufferPool::new(config);
-
-        // 验证池已创建
-        assert!(true); // 简单验证对象已创建
+        let _pool = IOBufferPool::new(config);
     }
 
     #[test]

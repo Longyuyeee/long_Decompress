@@ -12,7 +12,7 @@ pub fn format_file_size(size: u64) -> String {
     let base = 1024_f64;
     let size_f64 = size as f64;
     let exponent = (size_f64.log10() / base.log10()).floor() as i32;
-    let unit_index = exponent.min(5).max(0) as usize;
+    let unit_index = exponent.clamp(0, 5) as usize;
 
     let formatted = size_f64 / base.powi(exponent);
 

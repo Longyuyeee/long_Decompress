@@ -99,10 +99,7 @@ impl ArchiveFormat {
     }
 
     pub fn supports_password(&self) -> bool {
-        match self {
-            ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Universal => true,
-            _ => false,
-        }
+        matches!(self, ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Universal)
     }
 }
 
@@ -227,10 +224,10 @@ impl CompressionService {
         }
     }
 
-    pub fn default() -> Self {
-        // 此默认实现使用内存数据库作为密码本后端，仅用于兼容性和测试场景。
+    pub fn for_testing() -> Self {
+        // 此实现使用内存数据库作为密码本后端，仅用于兼容性和测试场景。
         // 在生产代码中请使用 new_with_defaults() 以接入真实的数据库连接。
-        log::warn!("CompressionService::default() called - password book features will be unavailable. Use new_with_defaults() instead.");
+        log::warn!("CompressionService::for_testing() called - password book features will be unavailable. Use new_with_defaults() instead.");
         let pool = sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:")
             .unwrap_or_else(|_| sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:").unwrap());
         let data_dir = crate::utils::app_paths::app_data_dir();

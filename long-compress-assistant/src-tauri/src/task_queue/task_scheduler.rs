@@ -194,14 +194,14 @@ impl ResourceAwarePolicy {
         };
 
         // 考虑当前系统负载
-        let cpu_score = 1.0f32 - (current_usage.cpu_usage / 100.0).max(0.0).min(1.0);
-        let memory_score = 1.0f32 - (current_usage.memory_usage_mb / 8192.0).max(0.0).min(1.0); // 假设8GB内存
+        let cpu_score = 1.0f32 - (current_usage.cpu_usage / 100.0).clamp(0.0, 1.0);
+        let memory_score = 1.0f32 - (current_usage.memory_usage_mb / 8192.0).clamp(0.0, 1.0); // 假设8GB内存
 
         // 综合评分
         let score = (cpu_score * self.cpu_weight + memory_score * self.memory_weight)
             / (cpu_demand + memory_demand).max(0.1);
 
-        score.max(0.0).min(1.0)
+        score.clamp(0.0, 1.0)
     }
 
     /// 检查是否应该调度任务
