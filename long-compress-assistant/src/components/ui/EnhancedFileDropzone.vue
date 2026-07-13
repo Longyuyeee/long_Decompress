@@ -194,26 +194,32 @@ const handleFiles = (files: File[]) => {
       @change="onFileChange"
     >
     
-    <div v-if="!compact" class="flex flex-col items-center justify-center space-y-4 pointer-events-none">
-      <div class="w-16 h-16 rounded-[1.5rem] bg-input border border-subtle flex items-center justify-center text-dim group-hover:text-primary group-hover:scale-110 transition-all duration-500 shadow-sm">
-        <i :class="props.mode === 'folder' ? 'pi pi-folder-open' : 'pi pi-cloud-upload'" class="text-2xl"></i>
-      </div>
-      
-      <div class="text-center">
-        <p class="text-xs font-black text-content tracking-tight mb-0.5">{{ displayHint }}</p>
-        <p class="text-[0.5rem] text-muted font-bold uppercase tracking-widest opacity-40">{{ displaySubHint }}</p>
+    <div v-if="!compact" class="flex flex-col items-center justify-center space-y-5 pointer-events-none">
+      <div class="relative">
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300">
+          <i :class="props.mode === 'folder' ? 'pi pi-folder-open' : 'pi pi-cloud-upload'" class="text-3xl"></i>
+        </div>
+        <div class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse">
+          <i class="pi pi-plus text-white text-xs"></i>
+        </div>
       </div>
 
-      <div class="pt-1">
-        <span class="px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[0.5rem] font-black uppercase tracking-widest group-hover:bg-primary group-hover:text-white transition-all">
+      <div class="text-center space-y-1">
+        <p class="text-sm font-bold text-content tracking-tight">{{ displayHint }}</p>
+        <p class="text-[0.5625rem] text-muted font-medium tracking-wide">{{ displaySubHint }}</p>
+      </div>
+
+      <div class="pt-2">
+        <span class="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-primary/10 border border-primary/30 text-primary text-[0.5625rem] font-bold uppercase tracking-wide group-hover:bg-primary group-hover:text-white group-hover:shadow-md transition-all">
+          <i class="pi pi-folder-open text-xs"></i>
           {{ appStore.t('dropzone.browse') }}
         </span>
       </div>
     </div>
 
-    <div v-else class="flex items-center justify-center gap-3 pointer-events-none">
-      <i class="pi pi-plus-circle text-primary text-xs"></i>
-      <span class="text-[0.5625rem] font-black text-muted uppercase tracking-[0.2em] group-hover:text-content transition-colors">
+    <div v-else class="flex items-center justify-center gap-2 pointer-events-none">
+      <i class="pi pi-plus text-primary text-[0.5625rem]"></i>
+      <span class="text-[0.5625rem] font-bold text-muted uppercase tracking-wider group-hover:text-content transition-colors">
         {{ displayAddLabel }}
       </span>
     </div>
@@ -222,18 +228,19 @@ const handleFiles = (files: File[]) => {
 
 <style scoped>
 .drop-area {
-  @apply relative border-2 border-dashed border-subtle cursor-pointer transition-all duration-500;
+  @apply relative border-2 border-dashed border-subtle cursor-pointer transition-all duration-300;
   background-color: transparent;
 }
 
 .drop-area:hover {
   border-color: var(--dynamic-accent);
-  background-color: color-mix(in srgb, var(--dynamic-accent) 2%, transparent);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--dynamic-accent) 3%, transparent) 0%, transparent 70%);
 }
 
 .is-dragging {
   border-color: var(--dynamic-accent);
-  background-color: color-mix(in srgb, var(--dynamic-accent) 8%, transparent);
-  transform: scale(1.01);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--dynamic-accent) 8%, transparent) 0%, transparent 70%);
+  transform: scale(1.005);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dynamic-accent) 5%, transparent);
 }
 </style>

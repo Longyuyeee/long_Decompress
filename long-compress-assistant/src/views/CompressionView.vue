@@ -288,8 +288,8 @@ const totalPayload = computed(() => {
   <div class="compression-view p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative">
     <header class="flex justify-between items-center shrink-0">
       <div>
-        <h1 class="text-3xl font-black text-content tracking-tighter mb-0.5">{{ appStore.t('nav.compress') }}</h1>
-        <p class="text-muted text-[0.5625rem] font-bold uppercase tracking-[0.2em] ml-0.5">{{ appStore.t('compress.start') }}</p>
+        <h1 class="text-2xl font-extrabold text-content tracking-tight mb-1">{{ appStore.t('nav.compress') }}</h1>
+        <p class="text-dim text-[0.5rem] font-semibold uppercase tracking-[0.15em]">{{ appStore.t('compress.start') }}</p>
       </div>
       <div class="flex items-center gap-3">
         <!-- 磁吸成组按钮 (浮现式，次要操作) -->
@@ -297,9 +297,9 @@ const totalPayload = computed(() => {
           <button
             v-if="selectedRows.size > 0"
             @click="handleCreateGroup"
-            class="h-10 px-6 rounded-xl bg-input border border-subtle text-content text-[0.625rem] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm flex items-center gap-2"
+            class="h-9 px-5 rounded-lg bg-input border border-subtle text-content text-[0.5625rem] font-bold uppercase tracking-wider hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-2"
           >
-            <i class="pi pi-box"></i>
+            <i class="pi pi-box text-xs"></i>
             {{ appStore.t('compress.create_group') }} ({{ selectedRows.size }})
           </button>
         </transition>
@@ -307,9 +307,9 @@ const totalPayload = computed(() => {
         <button
           v-if="totalPayload > 0"
           @click="handleCompress"
-          class="h-10 px-8 rounded-xl bg-primary text-white text-[0.625rem] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:brightness-110 hover:scale-105 transition-all flex items-center gap-2"
+          class="h-9 px-6 rounded-lg bg-primary text-white text-[0.5625rem] font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2"
         >
-          <i class="pi pi-play-circle animate-pulse text-[0.6875rem]"></i>
+          <i class="pi pi-play-circle text-xs"></i>
           {{ appStore.t('compress.start') }}
         </button>
       </div>

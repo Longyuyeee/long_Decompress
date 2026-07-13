@@ -168,7 +168,7 @@ const onLeave = (el: any) => {
     <!-- 智慧表格 (重构为极简列表模式) -->
     <div class="glass-table w-full flex-1 flex flex-col min-h-0">
       <!-- 表头 (高度压缩，字体减小) -->
-      <div class="table-header sticky top-0 z-20 flex items-center px-6 py-3 border-b border-subtle bg-input/90 backdrop-blur-xl text-dim text-[0.5rem] font-black tracking-[0.15em] uppercase shrink-0">
+      <div class="table-header sticky top-0 z-20 flex items-center px-6 py-2.5 border-b border-subtle bg-card/95 backdrop-blur-xl text-dim text-[0.5rem] font-bold tracking-[0.1em] uppercase shrink-0">
         <!-- 复选框列 -->
         <div class="w-8 shrink-0 flex items-center justify-center">
           <button
@@ -191,12 +191,12 @@ const onLeave = (el: any) => {
       <div class="table-body flex-1 overflow-y-auto custom-scrollbar p-3">
         <TransitionGroup name="task-depart">
         <div v-for="task in displayTasks" :key="task.id" class="task-row-container mb-1.5 last:mb-0 group/row">
-          <div 
-            class="task-row flex items-center px-4 py-1.5 bg-card/30 border border-subtle/30 rounded-lg hover:border-primary/40 hover:bg-primary/[0.02] transition-all duration-300 cursor-pointer relative overflow-hidden shadow-sm"
+          <div
+            class="task-row flex items-center px-4 py-2 bg-card/40 border border-subtle/40 rounded-lg hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden shadow-sm"
             @click="toggleExpand(task.id)"
           >
-            <!-- 状态指示条 (极细) -->
-            <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-primary opacity-0 group-hover/row:opacity-100 transition-opacity"></div>
+            <!-- 状态指示条 -->
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover/row:opacity-100 transition-opacity duration-200"></div>
 
             <!-- 复选框 -->
             <div class="w-8 shrink-0 flex items-center justify-center" @click.stop>

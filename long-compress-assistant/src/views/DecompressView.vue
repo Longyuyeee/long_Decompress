@@ -373,32 +373,32 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
   <div class="decompress-view p-6 h-full flex flex-col gap-4 transition-colors duration-700 relative overflow-hidden">
     <header class="flex justify-between items-center shrink-0">
       <div>
-        <h1 class="text-3xl font-black text-content tracking-tighter mb-0.5">{{ appStore.t('nav.decompress') }}</h1>
-        <p class="text-muted text-[0.5625rem] font-bold uppercase tracking-[0.2em] ml-0.5">{{ appStore.t('decompress.add_files') }}</p>
+        <h1 class="text-2xl font-extrabold text-content tracking-tight mb-1">{{ appStore.t('nav.decompress') }}</h1>
+        <p class="text-dim text-[0.5rem] font-semibold uppercase tracking-[0.15em]">{{ appStore.t('decompress.add_files') }}</p>
       </div>
       <div class="flex gap-3">
         <button
           v-if="!isRunning && taskStore.tasks.some(t => ['completed', 'failed', 'cancelled'].includes(t.status))"
           @click="taskStore.clearFinishedTasks()"
-          class="h-10 px-6 rounded-xl bg-input border border-subtle text-muted text-[0.625rem] font-black uppercase tracking-widest hover:text-red-400 transition-all shadow-sm flex items-center gap-2"
+          class="h-9 px-5 rounded-lg bg-input border border-subtle text-muted text-[0.5625rem] font-bold uppercase tracking-wider hover:text-red-500 hover:border-red-500/30 transition-all flex items-center gap-2"
         >
-          <i class="pi pi-trash"></i>
+          <i class="pi pi-trash text-xs"></i>
           {{ appStore.t('decompress.clear_finished') }}
         </button>
         <button
           v-if="isRunning"
           @click="cancelAllTasks"
-          class="h-10 px-6 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-[0.625rem] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center gap-2"
+          class="h-9 px-5 rounded-lg bg-red-500/10 text-red-500 border border-red-500/30 text-[0.5625rem] font-bold uppercase tracking-wider hover:bg-red-500 hover:text-white transition-all flex items-center gap-2"
         >
-          <i class="pi pi-stop-circle"></i>
+          <i class="pi pi-stop-circle text-xs"></i>
           {{ appStore.t('common.cancel') }}
         </button>
         <button
           v-if="hasPendingTasks && !isRunning"
           @click="startDecompression"
-          class="h-10 px-6 rounded-xl bg-primary text-white text-[0.625rem] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg flex items-center gap-2"
+          class="h-9 px-6 rounded-lg bg-primary text-white text-[0.5625rem] font-bold uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-primary/25 flex items-center gap-2"
         >
-          <i class="pi pi-play-circle animate-pulse"></i>
+          <i class="pi pi-play-circle text-xs"></i>
           {{ appStore.t('decompress.start_queue') }}
         </button>
       </div>

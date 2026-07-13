@@ -1,42 +1,45 @@
 /**
- * 设计系统CSS变量 - V3.5 (Atmospheric Themes)
- * 重新定义主题模式：引入赛博、极光与纸质模式
+ * 设计系统CSS变量 - V4.0 (Professional Interface)
+ * 专业工具级配色 + 精准信息层级
  */
 
 :root {
-  /* 全量主题色预设 */
-  --theme-azure: #0ea5e9; --theme-indigo: #6366f1; --theme-violet: #8b5cf6;
-  --theme-rose: #f43f5e; --theme-orange: #f97316; --theme-amber: #f59e0b;
-  --theme-emerald: #10b981; --theme-teal: #14b8a6; --theme-cyan: #06b6d4;
-  --theme-slate: #64748b; --theme-pink: #ec4899;
+  /* 主题色预设 - 生产级调色板 */
+  --theme-sky: #38bdf8; --theme-cyan: #22d3ee; --theme-teal: #2dd4bf;
+  --theme-indigo: #6366f1; --theme-violet: #8b5cf6; --theme-purple: #a855f7;
+  --theme-orange: #f97316; --theme-amber: #f59e0b; --theme-brass: #c9a24b;
+  --theme-emerald: #10b981; --theme-green: #22c55e;
+  --theme-rose: #f43f5e; --theme-pink: #ec4899;
 
-  --dynamic-accent: var(--theme-azure);
+  --dynamic-accent: var(--theme-sky);
 }
 
-/* 1. Dark (深邃磨砂) */
+/* 1. Dark - 深海军蓝基调 (Production Slate) */
 .dark {
-  --bg-main: #0a0a0a;
-  --bg-card: rgba(255, 255, 255, 0.02);
-  --bg-input: #111111;
-  --bg-modal: #161616;
-  --border-subtle: rgba(255, 255, 255, 0.04);
-  --text-base: #eeeeee;
-  --text-muted: #888888;
-  --text-dim: #444444;
-  --shadow-base: 0 20px 50px rgba(0,0,0,0.5);
+  --bg-main: #0b0e14;
+  --bg-card: #151922;
+  --bg-input: #1a1f2b;
+  --bg-modal: #191d28;
+  --border-subtle: rgba(100, 116, 139, 0.12);
+  --text-base: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #475569;
+  --shadow-base: 0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02);
+  --shadow-elevated: 0 25px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03);
 }
 
-/* 2. Light (纯净果冻) */
+/* 2. Light - 锐利灰白对比 (Sharp Contrast) */
 .light {
-  --bg-main: #f8fafc;
-  --bg-card: #ffffff;
+  --bg-main: #ffffff;
+  --bg-card: #f8fafc;
   --bg-input: #f1f5f9;
   --bg-modal: #ffffff;
-  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-subtle: rgba(15, 23, 42, 0.08);
   --text-base: #0f172a;
-  --text-muted: #64748b;
+  --text-muted: #475569;
   --text-dim: #94a3b8;
-  --shadow-base: 0 10px 30px rgba(0,0,0,0.03);
+  --shadow-base: 0 10px 30px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  --shadow-elevated: 0 20px 40px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
 /* 3. Cyberpunk (赛博霓虹 - 粉蓝基调) */
@@ -82,17 +85,36 @@
 }
 
 /* 工具类应用 */
-body { background-color: var(--bg-main); color: var(--text-base); transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
+body {
+  background-color: var(--bg-main);
+  color: var(--text-base);
+  transition: background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1), color 0.35s ease;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
 .aero-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: 1.5rem;
+  border-radius: 1rem;
   box-shadow: var(--shadow-base);
-  transition: all 0.5s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.aero-card:hover {
+  box-shadow: var(--shadow-elevated);
+  border-color: color-mix(in srgb, var(--dynamic-accent) 20%, var(--border-subtle));
+}
+
 .modal-no-glass {
   background: var(--bg-modal) !important;
   backdrop-filter: none !important;
   border: 1px solid var(--border-subtle) !important;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px var(--border-subtle);
 }
+
+/* 文字层级增强 */
+.text-content { color: var(--text-base); }
+.text-muted { color: var(--text-muted); }
+.text-dim { color: var(--text-dim); }

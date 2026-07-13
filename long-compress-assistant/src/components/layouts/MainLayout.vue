@@ -41,8 +41,8 @@ const navigateTo = (name: string) => {
     class="main-container flex flex-col h-screen w-screen bg-transparent p-[1px] overflow-hidden"
     style="box-sizing: border-box;"
   >
-    <div class="flex-1 flex flex-col overflow-hidden bg-base text-content rounded-xl relative border border-white/5 transition-[border-color] duration-500"
-         :class="[isFocused ? 'border-primary/30 shadow-[0_8px_32px_rgba(0,0,0,0.15)]' : 'border-white/5 shadow-none']">
+    <div class="flex-1 flex flex-col overflow-hidden bg-base text-content rounded-xl relative border transition-all duration-300"
+         :class="[isFocused ? 'border-primary/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]' : 'border-subtle shadow-sm']">
       
       <!-- 绝杀闪烁：8个隐形游标同步区 -->
       <div class="absolute top-0 left-0 right-0 h-[6px] cursor-n-resize z-[9999]"></div>
@@ -58,23 +58,23 @@ const navigateTo = (name: string) => {
       <WindowTitleBar class="shrink-0" />
 
       <div class="main-layout flex flex-1 overflow-hidden relative">
-        <!-- 侧边栏 -->
-        <aside class="w-16 h-full flex flex-col items-center pt-6 pb-6 border-r border-subtle bg-card/40 backdrop-blur-2xl z-50 shrink-0 overflow-visible relative">
-          <nav class="flex-1 flex flex-col gap-4 w-full px-2 overflow-visible">
+        <!-- 侧边栏 - 精简专业版 -->
+        <aside class="w-14 h-full flex flex-col items-center pt-4 pb-4 border-r border-subtle bg-card/60 backdrop-blur-xl z-50 shrink-0 overflow-visible relative">
+          <nav class="flex-1 flex flex-col gap-2 w-full px-1.5 overflow-visible">
             <div v-for="item in navItems" :key="item.name"
                  @click="navigateTo(item.name)"
-                 class="group relative w-full aspect-square flex items-center justify-center rounded-2xl cursor-pointer transition-colors duration-300"
-                 :class="route.name === item.name ? 'bg-primary/10' : 'hover:bg-primary/5'">
-              
-              <div class="absolute left-0 w-1 h-4 rounded-full bg-primary transition-all duration-500"
+                 class="group relative w-full aspect-square flex items-center justify-center rounded-lg cursor-pointer transition-all duration-200"
+                 :class="route.name === item.name ? 'bg-primary/15 shadow-sm' : 'hover:bg-primary/5'">
+
+              <div class="absolute left-0 w-0.5 h-5 rounded-full bg-primary transition-all duration-200"
                    :class="route.name === item.name ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'"></div>
 
-              <i :class="[item.icon, 'text-lg transition-all duration-500', 
-                 route.name === item.name ? 'text-primary scale-110' : 'text-muted group-hover:text-content']"></i>
-                 
-              <div class="absolute left-full ml-4 px-4 py-2 rounded-xl backdrop-blur-3xl bg-card/90 border border-subtle text-content text-[0.625rem] font-black tracking-widest uppercase opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap shadow-2xl z-[100]">
+              <i :class="[item.icon, 'text-base transition-all duration-200',
+                 route.name === item.name ? 'text-primary' : 'text-muted group-hover:text-content']"></i>
+
+              <div class="absolute left-full ml-3 px-3 py-1.5 rounded-lg backdrop-blur-xl bg-card/95 border border-subtle text-content text-[0.625rem] font-bold tracking-wide uppercase opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap shadow-xl z-[100]">
                 {{ appStore.t(item.label) }}
-                <span class="text-[0.375rem] text-dim ml-2 font-mono">({{ item.shortcut }})</span>
+                <span class="text-[0.4375rem] text-dim ml-1.5 font-mono opacity-60">({{ item.shortcut }})</span>
               </div>
             </div>
           </nav>
