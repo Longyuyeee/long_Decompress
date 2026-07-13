@@ -24,7 +24,7 @@ export const useCompressionProfiles = () => {
    */
   const getAllProfiles = async (): Promise<CompressionProfile[]> => {
     try {
-      return await invoke<CompressionProfile[]>('get_all_profiles')
+      return await invoke<CompressionProfile[]>('get_compression_profiles')
     } catch (error) {
       console.error('[useCompressionProfiles] Failed to get all profiles:', error)
       throw new Error(extractErrorMessage(error))
@@ -34,9 +34,9 @@ export const useCompressionProfiles = () => {
   /**
    * 根据 ID 获取配置组
    */
-  const getProfileById = async (id: string): Promise<CompressionProfile> => {
+  const getProfileById = async (id: string): Promise<CompressionProfile | null> => {
     try {
-      return await invoke<CompressionProfile>('get_profile_by_id', { id })
+      return await invoke<CompressionProfile | null>('get_compression_profile', { id })
     } catch (error) {
       console.error(`[useCompressionProfiles] Failed to get profile ${id}:`, error)
       throw new Error(extractErrorMessage(error))
@@ -46,9 +46,9 @@ export const useCompressionProfiles = () => {
   /**
    * 创建新配置组
    */
-  const createProfile = async (input: CreateProfileRequest): Promise<CompressionProfile> => {
+  const createProfile = async (input: CreateProfileRequest): Promise<string> => {
     try {
-      return await invoke<CompressionProfile>('create_profile', { input })
+      return await invoke<string>('create_compression_profile', { profile: input })
     } catch (error) {
       console.error('[useCompressionProfiles] Failed to create profile:', error)
       throw new Error(extractErrorMessage(error))
@@ -58,9 +58,9 @@ export const useCompressionProfiles = () => {
   /**
    * 更新配置组
    */
-  const updateProfile = async (profile: CompressionProfile): Promise<CompressionProfile> => {
+  const updateProfile = async (profile: CompressionProfile): Promise<void> => {
     try {
-      return await invoke<CompressionProfile>('update_profile', { profile })
+      await invoke<void>('update_compression_profile', { id: profile.id, profile })
     } catch (error) {
       console.error(`[useCompressionProfiles] Failed to update profile ${profile.id}:`, error)
       throw new Error(extractErrorMessage(error))
@@ -72,7 +72,7 @@ export const useCompressionProfiles = () => {
    */
   const deleteProfile = async (id: string): Promise<void> => {
     try {
-      await invoke<void>('delete_profile', { id })
+      await invoke<void>('delete_compression_profile', { id })
     } catch (error) {
       console.error(`[useCompressionProfiles] Failed to delete profile ${id}:`, error)
       throw new Error(extractErrorMessage(error))
@@ -84,7 +84,7 @@ export const useCompressionProfiles = () => {
    */
   const recordProfileUsage = async (params: ApplyProfileParams): Promise<void> => {
     try {
-      await invoke<void>('record_profile_usage', {
+      await invoke<void>('apply_compression_profile', {
         profileId: params.profile_id,
         success: params.success,
         filesCount: params.files_count,
@@ -106,7 +106,7 @@ export const useCompressionProfiles = () => {
     params: SuggestProfileParams
   ): Promise<CompressionProfile | null> => {
     try {
-      return await invoke<CompressionProfile | null>('suggest_profile', {
+      return await invoke<CompressionProfile | null>('suggest_compression_profile', {
         filePath: params.file_path,
         fileSize: params.file_size,
       })
@@ -120,15 +120,12 @@ export const useCompressionProfiles = () => {
   }
 
   /**
-   * 初始化默认配置组（5 个预设配置）
+   * 初始化默认配置组（应用启动时自动执行，无需手动调用）
    */
   const initializeDefaultProfiles = async (): Promise<void> => {
-    try {
-      await invoke<void>('initialize_default_profiles')
-    } catch (error) {
-      console.error('[useCompressionProfiles] Failed to initialize default profiles:', error)
-      throw new Error(extractErrorMessage(error))
-    }
+    // 后端在 main.rs 中自动初始化，前端无需调用
+    // 保留此方法以兼容现有代码
+    console.warn('[useCompressionProfiles] initializeDefaultProfiles is deprecated - profiles are auto-initialized on app startup')
   }
 
   return {

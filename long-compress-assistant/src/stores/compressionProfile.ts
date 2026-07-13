@@ -57,8 +57,11 @@ export const useCompressionProfileStore = defineStore('compressionProfile', () =
     error.value = null
     try {
       const profile = await getProfileById(id)
-      currentProfile.value = profile
-      return profile
+      if (profile) {
+        currentProfile.value = profile
+        return profile
+      }
+      return null
     } catch (err) {
       error.value = err instanceof Error ? err.message : String(err)
       throw err
@@ -71,9 +74,10 @@ export const useCompressionProfileStore = defineStore('compressionProfile', () =
     loading.value = true
     error.value = null
     try {
-      const newProfile = await createProfile(input)
-      profiles.value.push(newProfile)
-      return newProfile
+      const newProfileId = await createProfile(input)
+      // 创建成功后重新加载配置组列表
+      await loadAllProfiles()
+      return newProfileId
     } catch (err) {
       error.value = err instanceof Error ? err.message : String(err)
       throw err
@@ -86,15 +90,12 @@ export const useCompressionProfileStore = defineStore('compressionProfile', () =
     loading.value = true
     error.value = null
     try {
-      const updatedProfile = await updateProfile(profile)
-      const index = profiles.value.findIndex(p => p.id === profile.id)
-      if (index !== -1) {
-        profiles.value[index] = updatedProfile
-      }
+      await updateProfile(profile)
+      // 更新成功后重新加载配置组列表
+      await loadAllProfiles()
       if (currentProfile.value?.id === profile.id) {
-        currentProfile.value = updatedProfile
+        currentProfile.value = profile
       }
-      return updatedProfile
     } catch (err) {
       error.value = err instanceof Error ? err.message : String(err)
       throw err
@@ -123,13 +124,8 @@ export const useCompressionProfileStore = defineStore('compressionProfile', () =
   const applyProfile = async (profileId: string, success: boolean, filesCount: number, bytesProcessed: number) => {
     try {
       await recordProfileUsage({ profile_id: profileId, success, files_count: filesCount, bytes_processed: bytesProcessed })
-      // 重新加载该配置组以更新统计
-      await loadProfileById(profileId)
-      // 更新列表中的配置组
-      const index = profiles.value.findIndex(p => p.id === profileId)
-      if (index !== -1 && currentProfile.value) {
-        profiles.value[index] = currentProfile.value
-      }
+      // 重新加载配置组列表以更新统计
+      await loadAllProfiles()
     } catch (err) {
       console.error('[compressionProfileStore] Failed to apply profile:', err)
       throw err
