@@ -66,11 +66,14 @@
 
 #### A4. 前端状态管理
 - ✅ **已完成** - `stores/compressionProfile.ts`
-  - 基础 Store 框架
-- ⏳ **待实现**:
-  - [ ] 本地缓存 + 远程同步逻辑
-  - [ ] 配置组排序状态管理
-  - [ ] 统计信息实时更新
+  - 完整 CRUD 操作封装（loadAllProfiles, addProfile, modifyProfile, removeProfile）
+  - 配置组排序逻辑（按最后使用时间、使用次数排序）
+  - 统计信息实时更新（applyProfile 后自动重载）
+  - 智能推荐接口（getSuggestedProfile）
+  - 错误处理和加载状态管理
+- ✅ **已完成** - `composables/useCompressionProfiles.ts`
+  - 所有 Tauri 命令调用已对齐后端 API
+  - 统一错误处理和日志记录
 
 #### A5. 前端组件
 - ✅ **已完成** - `components/profiles/ProfileSelector.vue` (基础框架)
