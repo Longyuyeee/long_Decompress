@@ -48,20 +48,21 @@
 
 #### A2. 服务层
 - ✅ **已完成** - `services/compression_profile_service.rs`
-  - 基础 CRUD 框架
-- ⏳ **待实现**:
-  - [ ] 配置组 JSON 持久化（`{APP_DATA}/profiles/profiles.json`）
-  - [ ] 初始化默认配置组到数据库
-  - [ ] 统计信息更新（使用次数、成功率、处理量）
-  - [ ] 自动匹配逻辑（根据文件类型/大小推荐配置组）
-  - [ ] 配置组排序持久化
+  - 完整 CRUD 实现（创建、读取、更新、删除）
+  - 初始化默认配置组到数据库（5 个内置配置组）
+  - 统计信息更新（使用次数、成功率、处理量）
+  - 自动匹配逻辑（根据文件类型/大小推荐配置组，按成功率/使用次数排序）
+  - 配置组排序持久化（display_order 字段）
+  - SQLite 数据库持久化（完全替代 JSON 文件方案）
 
 #### A3. Tauri 命令层
 - ✅ **已完成** - `commands/compression_profile.rs`
-  - 8 个命令已定义（get/create/update/delete/reorder/apply/suggest）
-- ⏳ **待实现**:
-  - [ ] 连接到服务层实现
-  - [ ] 错误处理完善
+  - 8 个 Tauri 命令完整实现（get/create/update/delete/reorder/apply/suggest）
+  - 已连接到服务层
+  - 错误处理完善（统一 Result<T, String> 错误格式）
+  - 已在 main.rs 中注册所有命令
+  - 服务状态管理（CompressionProfileServiceState + Arc<Mutex>）
+  - 应用启动时自动初始化默认配置组
 
 #### A4. 前端状态管理
 - ✅ **已完成** - `stores/compressionProfile.ts`
