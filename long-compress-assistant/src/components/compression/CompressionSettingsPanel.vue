@@ -2,11 +2,15 @@
 import { ref, computed, watch } from 'vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useAppStore } from '@/stores/app'
+import { useCompressionProfileStore } from '@/stores/compressionProfile'
 import type { CompressionOptions } from '@/stores/compression'
+import type { CompressionProfile } from '@/types/profile'
 import { COMPRESSIBLE_FORMATS, isPasswordSupportedFormat } from '@/utils/compressionFormat'
+import ProfileSelector from '@/components/profiles/ProfileSelector.vue'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
+const profileStore = useCompressionProfileStore()
 
 interface Props {
   modelValue?: CompressionOptions
@@ -41,6 +45,7 @@ const compressionOptions = ref<CompressionOptions>(props.modelValue || {
 
 const outputPath = ref(props.outputPath)
 const showAdvanced = ref(false)
+const showProfileSelector = ref(false)
 let syncingFromProps = false
 const showPresetModal = ref(false)
 const presetNameInput = ref('')
@@ -130,6 +135,20 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
     compressionOptions.value.format = 'zip'
   }
 })
+
+const applyProfile = (profile: CompressionProfile) => {
+  compressionOptions.value.format = profile.config.format as any
+  compressionOptions.value.level = profile.config.level
+  compressionOptions.value.password = profile.config.password || ''
+  compressionOptions.value.splitArchive = profile.config.splitArchive
+  compressionOptions.value.splitSize = profile.config.splitSize?.toString() || '1024'
+  compressionOptions.value.keepStructure = profile.config.keepStructure
+  compressionOptions.value.deleteAfter = profile.config.deleteAfter
+  compressionOptions.value.createSolidArchive = profile.config.createSolidArchive
+  showProfileSelector.value = false
+  appStore.setSuccess(`已应用配置组: ${profile.name}`)
+}
+
 </script>
 
 <template>
@@ -220,13 +239,23 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
       </div>
 
       <!-- 高级开关按钮 -->
-      <button 
+      <button
         @click="showAdvanced = !showAdvanced"
         class="mt-auto h-9 px-4 rounded-xl border border-subtle text-[0.5625rem] font-black uppercase tracking-widest transition-all"
         :class="showAdvanced ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-input text-muted hover:text-content'"
       >
         <i class="pi pi-cog mr-2" :class="{ 'animate-spin-slow': showAdvanced }"></i>
         {{ appStore.t('preset.options') }}
+      </button>
+
+      <!-- 配置组选择按钮 -->
+      <button
+        @click="showProfileSelector = !showProfileSelector"
+        class="mt-auto h-9 px-4 rounded-xl border border-subtle text-[0.5625rem] font-black uppercase tracking-widest transition-all"
+        :class="showProfileSelector ? 'bg-sky-500/10 border-sky-500/30 text-sky-400' : 'bg-input text-muted hover:text-content'"
+      >
+        <i class="pi pi-bookmark mr-2"></i>
+        配置组
       </button>
     </div>
 
@@ -277,6 +306,17 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
             :placeholder="appStore.t('preset.mb')"
           />
         </div>
+      </div>
+    </transition>
+
+    <!-- 配置组选择器 (条件展开) -->
+    <transition name="slide-down">
+      <div v-if="showProfileSelector" class="pt-4 border-t border-subtle/30">
+        <ProfileSelector
+          :show-manage-button="true"
+          @apply="applyProfile"
+          @manage="$router.push('/settings')"
+        />
       </div>
     </transition>
   </div>
