@@ -318,8 +318,16 @@ const totalPayload = computed(() => {
     <!-- 主工作区 (减小 mb 以使区域向下延展) -->
     <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-        <div class="rounded-2xl border border-subtle bg-input/20 p-6">
-          <h4 class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-4">{{ appStore.t('compress.settings') }}</h4>
+        <div class="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+              <i class="pi pi-cog text-primary text-xs"></i>
+            </div>
+            <div>
+              <h4 class="text-[0.625rem] font-black text-primary uppercase tracking-widest">{{ appStore.t('compress.global_settings') }}</h4>
+              <p class="text-[0.5rem] text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('compress.global_settings.desc') }}</p>
+            </div>
+          </div>
           <CompressionSettingsPanel
             v-model="compressionStore.globalSettings"
             v-model:outputPath="compressionStore.globalOutputPath"

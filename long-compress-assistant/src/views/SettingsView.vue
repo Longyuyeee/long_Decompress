@@ -270,6 +270,122 @@ const removeWordlist = (index: number) => {
             </div>
           </section>
         </div>
+
+        <!-- 格式支持统计 -->
+        <section class="aero-card p-10 overflow-hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div class="lg:col-span-4 space-y-2">
+              <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.formats.title') }}</h2>
+              <p class="text-[0.625rem] text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.formats.desc') }}</p>
+            </div>
+
+            <div class="lg:col-span-8 space-y-8">
+              <!-- 统计卡片组 -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
+                  <div class="text-3xl font-black text-emerald-500 mb-1">37+</div>
+                  <div class="text-[0.5625rem] font-black text-emerald-600/80 uppercase tracking-widest">{{ appStore.t('settings.formats.decompress') }}</div>
+                </div>
+                <div class="p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+                  <div class="text-3xl font-black text-primary mb-1">16</div>
+                  <div class="text-[0.5625rem] font-black text-primary/80 uppercase tracking-widest">{{ appStore.t('settings.formats.compress') }}</div>
+                </div>
+                <div class="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20">
+                  <div class="text-3xl font-black text-amber-500 mb-1">3</div>
+                  <div class="text-[0.5625rem] font-black text-amber-600/80 uppercase tracking-widest">{{ appStore.t('settings.formats.password') }}</div>
+                </div>
+              </div>
+
+              <!-- 解压格式详细列表 -->
+              <div class="space-y-3">
+                <h3 class="text-[0.5625rem] font-black text-primary uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.decompress_list') }}</h3>
+                <div class="p-5 rounded-xl bg-input/30 border border-subtle space-y-3">
+                  <div>
+                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.archives') }}</div>
+                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                      ZIP · ZIPX · 7Z · RAR · TAR · TAR.GZ · TGZ · TAR.BZ2 · TBZ · TAR.XZ · TXZ · TAR.ZST · TZST · GZ · GZIP · BZ2 · BZIP2 · XZ · ZST · ZSTD · LZMA · OVA
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.containers') }}</div>
+                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                      JAR · XPI · ODT · ODS · DOCX · XLSX · PPTX · EPUB · IPA · APK · APPX
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.disk_images') }}</div>
+                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                      ISO · IMG · DMG · WIM · VHD · VHDX
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.installers') }}</div>
+                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                      CAB · DEB · RPM · MSI · NSIS
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.legacy') }}</div>
+                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                      LZH · LHA · ARJ · CHM · SQUASHFS · SFS · XAR · CPIO · UDF · FAT · NTFS · HFS · APFS · EXT2 · EXT3 · EXT4 · ALZ · ARC
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 压缩格式详细列表 -->
+              <div class="space-y-3">
+                <h3 class="text-[0.5625rem] font-black text-primary uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.compress_list') }}</h3>
+                <div class="p-5 rounded-xl bg-input/30 border border-subtle space-y-3">
+                  <div>
+                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.native_rust') }}</div>
+                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                      ZIP · 7Z · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · GZ · BZ2 · XZ
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.via_7z') }}</div>
+                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                      TAR.ZST · ZST · ZSTD · LZMA
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.via_winrar') }}</div>
+                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                      RAR ({{ appStore.t('settings.formats.requires_winrar') }})
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.split') }}</div>
+                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                      ZIP ({{ appStore.t('settings.formats.multipart') }})
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 密码支持说明 -->
+              <div class="space-y-3">
+                <h3 class="text-[0.5625rem] font-black text-amber-600 uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.password_support') }}</h3>
+                <div class="p-5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2">
+                  <div class="flex items-start gap-3">
+                    <i class="pi pi-lock text-amber-500 text-xs mt-0.5 shrink-0"></i>
+                    <div class="text-[0.5625rem] text-amber-700 leading-relaxed">
+                      <span class="font-black">{{ appStore.t('settings.formats.password_compress') }}:</span> ZIP · 7Z · RAR
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <i class="pi pi-unlock text-amber-500 text-xs mt-0.5 shrink-0"></i>
+                    <div class="text-[0.5625rem] text-amber-700 leading-relaxed">
+                      <span class="font-black">{{ appStore.t('settings.formats.password_decompress') }}:</span> ZIP · 7Z · RAR
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- 重置按钮 -->
         <div class="pt-8 border-t border-subtle flex justify-end">
           <button @click="showResetConfirm = true"
