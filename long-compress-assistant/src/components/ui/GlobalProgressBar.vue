@@ -9,6 +9,7 @@ const taskStore = useTaskStore()
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
 const isExpanded = ref(false)
+const isMinimized = ref(false)
 const retryingTaskId = ref<string | null>(null)
 
 const activeTasks = computed(() =>
@@ -148,8 +149,8 @@ const copyToClipboard = async (text: string) => {
 
 <template>
   <transition name="progress-slide">
-    <div v-if="isVisible"
-         class="global-progress-bar fixed bottom-4 left-4 z-[600] select-none">
+    <div v-if="isVisible && !isMinimized"
+         class="global-progress-bar fixed bottom-4 left-20 z-[600] select-none">
 
       <!-- 紧凑指示器：点击展开 -->
       <div
@@ -200,6 +201,14 @@ const copyToClipboard = async (text: string) => {
         </div>
 
         <i :class="isExpanded ? 'pi pi-chevron-down' : 'pi pi-chevron-up'" class="text-[0.625rem] text-dim shrink-0"></i>
+
+        <!-- 最小化按钮 -->
+        <button
+          @click.stop="isMinimized = true"
+          class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-content hover:bg-primary/10 transition-all shrink-0"
+          :title="appStore.t('common.minimize')">
+          <i class="pi pi-minus text-[0.625rem]"></i>
+        </button>
       </div>
 
       <!-- 展开的任务列表面板 -->
@@ -340,6 +349,17 @@ const copyToClipboard = async (text: string) => {
       </transition>
     </div>
   </transition>
+
+  <!-- 最小化状态：显示一个小圆点指示器 -->
+  <transition name="dot-fade">
+    <button
+      v-if="isVisible && isMinimized"
+      @click="isMinimized = false"
+      class="fixed bottom-4 left-20 z-[600] w-3 h-3 rounded-full bg-primary shadow-[0_0_12px_rgba(14,165,233,0.6)] hover:scale-125 hover:shadow-[0_0_20px_rgba(14,165,233,0.8)] transition-all duration-300 cursor-pointer"
+      :class="{ 'animate-pulse': hasActiveTasks }"
+      :title="appStore.t('tasks.show_progress')">
+    </button>
+  </transition>
 </template>
 
 <style scoped>
@@ -424,5 +444,17 @@ const copyToClipboard = async (text: string) => {
   50% {
     filter: drop-shadow(0 0 12px rgba(14, 165, 233, 0.9));
   }
+}
+
+/* 最小化圆点淡入淡出 */
+.dot-fade-enter-active,
+.dot-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.dot-fade-enter-from,
+.dot-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.5);
 }
 </style>

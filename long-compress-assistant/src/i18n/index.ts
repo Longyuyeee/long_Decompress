@@ -23,6 +23,7 @@ export const translations: Record<string, Record<string, string>> = {
     'common.cancel': '取消',
     'common.stop': '停止',
     'common.close': '关闭',
+    'common.minimize': '最小化',
     'common.conflict_title': '文件冲突检测',
     // ===== 设置 =====
     'settings.title': '设置中心',
@@ -207,6 +208,7 @@ export const translations: Record<string, Record<string, string>> = {
     'tasks.active': '个进行中',
     'tasks.all_done': '全部完成',
     'tasks.monitor': '任务监控',
+    'tasks.show_progress': '显示进度',
     'tasks.clear_done': '清理已完成',
     'tasks.open_folder': '打开文件夹',
     'tasks.retry': '重试',
@@ -392,6 +394,7 @@ export const translations: Record<string, Record<string, string>> = {
     'common.cancel': 'Cancel',
     'common.stop': 'Stop',
     'common.close': 'Close',
+    'common.minimize': 'Minimize',
     'common.conflict_title': 'File Conflict',
     // ===== Settings =====
     'settings.title': 'Settings Center',
@@ -576,6 +579,7 @@ export const translations: Record<string, Record<string, string>> = {
     'tasks.active': 'active',
     'tasks.all_done': 'All done',
     'tasks.monitor': 'Task Monitor',
+    'tasks.show_progress': 'Show Progress',
     'tasks.clear_done': 'Clear done',
     'tasks.open_folder': 'Open folder',
     'tasks.retry': 'Retry',

@@ -215,6 +215,22 @@ const startDecompression = async () => {
   selectedTaskIds.value = new Set()
 
   for (const task of pendingTasks) {
+    const fileName = task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''
+
+    // 如果任务没有密码，先尝试从保险箱获取候选密码
+    if (!task.password) {
+      const candidates = passwordStore.findCandidatePasswords(fileName)
+      if (candidates.length > 0) {
+        task.password = candidates[0] // 使用优先级最高的密码
+        task.logs.push({
+          task_id: task.id,
+          message: appStore.t('decompress.auto_trying').replace('{0}', String(candidates.length)),
+          severity: 'info',
+          timestamp: new Date().toISOString()
+        })
+      }
+    }
+
     const options = {
       outputPath: task.outputPath,
       keepStructure: true,
@@ -224,67 +240,66 @@ const startDecompression = async () => {
       password: task.password || undefined,
       fileFilter: task.fileFilter || null
     }
+
     try {
       taskStore.updateTaskStatus(task.id, 'preparing')
       task.passwordRequired = false
       await tauriCommands.decompressFile(task.sourceFiles[0], options, task.id)
+
+      // 解压成功，递增保险箱中匹配密码的 use_count
+      if (task.password) {
+        const matchedEntry = passwordStore.entries.find(e => e.password === task.password)
+        if (matchedEntry) {
+          try {
+            await passwordStore.updateEntry(matchedEntry.id, { use_count: (matchedEntry.use_count || 0) + 1 })
+          } catch { /* 非关键操作 */ }
+        }
+      }
     } catch (error) {
-      // 如果任务被 password-required 事件标记，自动尝试密码保险箱
-      if (task.passwordRequired) {
-        const fileName = task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''
-        const candidates = passwordStore.findCandidatePasswords(fileName)
+      // 第一次尝试失败，尝试保险箱中的其他候选密码
+      const candidates = passwordStore.findCandidatePasswords(fileName)
+      const remainingCandidates = candidates.filter(pwd => pwd !== task.password)
 
-        if (candidates.length > 0) {
-          taskStore.updateTaskStatus(task.id, 'extracting')
-          task.logs.push({
-            task_id: task.id,
-            message: appStore.t('decompress.auto_trying').replace('{0}', String(candidates.length)),
-            severity: 'info',
-            timestamp: new Date().toISOString()
-          })
+      if (remainingCandidates.length > 0) {
+        taskStore.updateTaskStatus(task.id, 'extracting')
+        task.logs.push({
+          task_id: task.id,
+          message: appStore.t('decompress.auto_trying').replace('{0}', String(remainingCandidates.length)),
+          severity: 'info',
+          timestamp: new Date().toISOString()
+        })
 
-          let succeeded = false
-          for (const candidatePassword of candidates) {
-            if (succeeded) break
-            try {
-              task.password = candidatePassword
-              task.passwordRequired = false
-              task.currentPassword = candidatePassword
-              await tauriCommands.decompressFile(
-                task.sourceFiles[0],
-                { ...options, password: candidatePassword },
-                task.id
-              )
-              succeeded = true
+        let succeeded = false
+        for (const candidatePassword of remainingCandidates) {
+          if (succeeded) break
+          try {
+            task.password = candidatePassword
+            task.passwordRequired = false
+            task.currentPassword = candidatePassword
+            await tauriCommands.decompressFile(
+              task.sourceFiles[0],
+              { ...options, password: candidatePassword },
+              task.id
+            )
+            succeeded = true
 
-              // 递增保险箱中匹配密码的 use_count
-              const matchedEntry = passwordStore.entries.find(e => e.password === candidatePassword)
-              if (matchedEntry) {
-                try {
-                  await passwordStore.updateEntry(matchedEntry.id, { use_count: (matchedEntry.use_count || 0) + 1 })
-                } catch { /* 非关键操作 */ }
-              }
-            } catch {
-              // 尝试下一个候选密码
-              continue
+            // 递增保险箱中匹配密码的 use_count
+            const matchedEntry = passwordStore.entries.find(e => e.password === candidatePassword)
+            if (matchedEntry) {
+              try {
+                await passwordStore.updateEntry(matchedEntry.id, { use_count: (matchedEntry.use_count || 0) + 1 })
+              } catch { /* 非关键操作 */ }
             }
+          } catch {
+            // 尝试下一个候选密码
+            continue
           }
+        }
 
-          if (!succeeded) {
-            // 所有候选密码均失败，标记为失败并记录错误
-            taskStore.updateTaskStatus(task.id, 'failed')
-            task.error = appStore.t('decompress.all_failed').replace('{0}', String(candidates.length))
-            task.logs.push({
-              task_id: task.id,
-              message: task.error!,
-              severity: 'error',
-              timestamp: new Date().toISOString()
-            })
-          }
-        } else {
-          // 保险箱中没有候选密码
+        if (!succeeded) {
+          // 所有候选密码均失败
           taskStore.updateTaskStatus(task.id, 'failed')
-          task.error = extractErrorMessage(error) || appStore.t('decompress.no_vault_passwords')
+          task.error = appStore.t('decompress.all_failed').replace('{0}', String(candidates.length))
           task.logs.push({
             task_id: task.id,
             message: task.error!,
@@ -292,6 +307,17 @@ const startDecompression = async () => {
             timestamp: new Date().toISOString()
           })
         }
+      } else {
+        // 没有其他候选密码可尝试
+        taskStore.updateTaskStatus(task.id, 'failed')
+        task.error = extractErrorMessage(error) || appStore.t('decompress.no_vault_passwords')
+        task.logs.push({
+          task_id: task.id,
+          message: task.error!,
+          severity: 'error',
+          timestamp: new Date().toISOString()
+        })
+      }
       } else {
         taskStore.updateTaskStatus(task.id, 'failed')
         task.error = extractErrorMessage(error) || String(error)
@@ -421,47 +447,48 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           <EnhancedFileDropzone
             @files-selected="onFilesSelected"
             :accept="supportedArchiveAccept"
-            :sub-hint="supportedArchiveHint"
             class="w-full max-w-lg shadow-sm"
           />
         </div>
       </div>
 
       <!-- 底部操作区 -->
-      <div v-if="taskStore.tasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-3 flex items-center gap-4 flex-wrap shrink-0">
-        <span class="text-[0.5625rem] font-black text-primary uppercase tracking-widest opacity-80 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
+      <div v-if="taskStore.tasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-3 flex items-center gap-3 flex-wrap shrink-0">
+        <span class="text-[0.5625rem] font-black text-primary uppercase tracking-widest opacity-80 shrink-0 w-12">{{ appStore.t('decompress.config.output') }}</span>
 
         <button @click="handleGlobalSelectDir"
-                class="h-6 px-2.5 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-[0.5625rem] font-black flex items-center gap-1 shadow-sm shadow-primary/20">
-          <i class="pi pi-folder-open text-[0.5625rem]"></i>
-          {{ appStore.t('decompress.config.output_select') }}
+                class="h-6 px-2.5 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-[0.5rem] font-black flex items-center gap-1 shadow-sm shadow-primary/20 shrink-0">
+          <i class="pi pi-folder-open text-[0.5rem]"></i>
+          <span class="hidden sm:inline">{{ appStore.t('decompress.config.output_select') }}</span>
+          <span class="sm:hidden">选择</span>
         </button>
 
         <button @click="handleGlobalSetSameDir"
                 :class="isGlobalSameDir ? 'bg-primary/10 text-primary border-primary/20 shadow-inner' : 'bg-input/30 text-muted border-subtle/50'"
-                class="h-6 px-2.5 rounded-lg border text-[0.5625rem] font-bold transition-all hover:bg-primary/5">
-          {{ appStore.t('decompress.config.output_same') }}
+                class="h-6 px-2.5 rounded-lg border text-[0.5rem] font-bold transition-all hover:bg-primary/5 shrink-0">
+          <span class="hidden sm:inline">{{ appStore.t('decompress.config.output_same') }}</span>
+          <span class="sm:hidden">同目录</span>
         </button>
 
-        <span class="text-[0.5625rem] font-mono text-content font-bold truncate flex-1 min-w-[100px] max-w-[240px]">
+        <span class="text-[0.5rem] font-mono text-content font-bold truncate flex-1 min-w-0">
           {{ isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto')) }}
         </span>
 
-        <div class="flex items-center gap-2 cursor-pointer" @click="toggleGlobalSubfolder">
+        <div class="flex items-center gap-2 cursor-pointer shrink-0" @click="toggleGlobalSubfolder">
           <div class="w-3 h-3 rounded border border-primary/30 flex items-center justify-center"
                :class="globalExtractToSubfolder ? 'bg-primary border-primary' : 'bg-transparent'">
             <i v-if="globalExtractToSubfolder" class="pi pi-check text-[0.375rem] text-white"></i>
           </div>
-          <span class="text-[0.5625rem] font-black text-muted uppercase tracking-widest">{{ appStore.t('decompress.config.output_sub') }}</span>
+          <span class="text-[0.5rem] font-black text-muted uppercase tracking-widest">{{ appStore.t('decompress.config.output_sub') }}</span>
         </div>
 
-        <div class="w-px h-5 bg-subtle/20 mx-1"></div>
+        <div class="w-px h-5 bg-subtle/20 mx-1 hidden md:block"></div>
 
         <EnhancedFileDropzone
           @files-selected="onFilesSelected"
           :compact="true"
           :accept="supportedArchiveAccept"
-          class="flex-1 min-w-[140px] max-w-[240px] h-7"
+          class="flex-1 min-w-[100px] h-7"
         />
       </div>
     </div>
