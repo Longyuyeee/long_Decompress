@@ -150,7 +150,7 @@ const applyProfile = (profile: CompressionProfile) => {
   compressionOptions.value.deleteAfter = profile.config.deleteAfter
   compressionOptions.value.createSolidArchive = profile.config.createSolidArchive
   showProfileSelector.value = false
-  appStore.setSuccess(`已应用配置组: ${profile.name}`)
+  appStore.setSuccess(appStore.t('profiles.applied_success').replace('{0}', profile.name))
 }
 
 const openSaveProfileModal = () => {
@@ -162,7 +162,7 @@ const openSaveProfileModal = () => {
 
 const saveAsNewProfile = async () => {
   if (!newProfileName.value.trim()) {
-    appStore.setError('请输入配置组名称')
+    appStore.setError(appStore.t('profiles.name_required'))
     return
   }
 
@@ -185,9 +185,9 @@ const saveAsNewProfile = async () => {
       }
     })
     showSaveProfileModal.value = false
-    appStore.setSuccess('配置组保存成功')
+    appStore.setSuccess(appStore.t('profiles.save_success'))
   } catch (error) {
-    appStore.setError('保存配置组失败')
+    appStore.setError(appStore.t('profiles.save_failed'))
   }
 }
 
@@ -299,7 +299,7 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
         :class="showProfileSelector ? 'bg-sky-500/10 border-sky-500/30 text-sky-400' : 'bg-input text-muted hover:text-content'"
       >
         <i class="pi pi-bookmark mr-2"></i>
-        配置组
+        {{ appStore.t('profiles.manage') }}
       </button>
 
       <!-- 保存为配置组按钮 -->
@@ -309,7 +309,7 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
         :title="appStore.t('profiles.save_as_new')"
       >
         <i class="pi pi-save mr-2"></i>
-        保存配置
+        {{ appStore.t('profiles.save') }}
       </button>
     </div>
 
@@ -392,11 +392,11 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
 <transition name="pop">
   <div v-if="showSaveProfileModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" @click.self="showSaveProfileModal = false">
     <div class="modal-no-glass rounded-[2rem] p-8 w-full max-w-md shadow-2xl text-content">
-      <h3 class="text-sm font-black mb-4 uppercase tracking-widest">保存为配置组</h3>
+      <h3 class="text-sm font-black mb-4 uppercase tracking-widest">{{ appStore.t('profiles.save_as_profile') }}</h3>
 
       <!-- 图标选择 -->
       <div class="mb-4">
-        <label class="block text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">图标</label>
+        <label class="block text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.icon_label') }}</label>
         <div class="flex gap-2 flex-wrap">
           <button
             v-for="icon in iconOptions"
@@ -412,7 +412,7 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
 
       <!-- 名称 -->
       <div class="mb-4">
-        <label class="block text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">名称</label>
+        <label class="block text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.name_label') }}</label>
         <input
           v-model="newProfileName"
           @keyup.enter="saveAsNewProfile"
@@ -423,30 +423,30 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
 
       <!-- 描述 -->
       <div class="mb-4">
-        <label class="block text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">描述（可选）</label>
+        <label class="block text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.desc_optional') }}</label>
         <textarea
           v-model="newProfileDescription"
           rows="2"
           class="w-full rounded-xl bg-input border border-subtle px-4 py-2 text-[0.625rem] text-content outline-none focus:border-primary transition-all resize-none"
-          placeholder="说明该配置组的用途和特点"
+          :placeholder="appStore.t('profiles.desc_placeholder')"
         ></textarea>
       </div>
 
       <!-- 当前配置预览 -->
       <div class="mb-4 p-3 rounded-xl bg-slate-700/30 border border-slate-600/30">
-        <p class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">当前配置</p>
+        <p class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.current_config') }}</p>
         <div class="flex flex-wrap gap-2 text-[0.5625rem]">
           <span class="px-2 py-1 bg-slate-700/50 rounded text-slate-300">{{ compressionOptions.format.toUpperCase() }}</span>
           <span class="px-2 py-1 bg-slate-700/50 rounded text-slate-300">L{{ compressionOptions.level }}</span>
-          <span v-if="compressionOptions.password" class="px-2 py-1 bg-sky-500/10 text-sky-400 rounded">🔐 加密</span>
-          <span v-if="compressionOptions.splitArchive" class="px-2 py-1 bg-purple-500/10 text-purple-400 rounded">📦 分卷</span>
-          <span v-if="compressionOptions.createSolidArchive" class="px-2 py-1 bg-amber-500/10 text-amber-400 rounded">固实</span>
+          <span v-if="compressionOptions.password" class="px-2 py-1 bg-sky-500/10 text-sky-400 rounded">{{ appStore.t('profiles.badge_encrypted') }}</span>
+          <span v-if="compressionOptions.splitArchive" class="px-2 py-1 bg-purple-500/10 text-purple-400 rounded">{{ appStore.t('profiles.badge_split') }}</span>
+          <span v-if="compressionOptions.createSolidArchive" class="px-2 py-1 bg-amber-500/10 text-amber-400 rounded">{{ appStore.t('profiles.badge_solid') }}</span>
         </div>
       </div>
 
       <div class="flex gap-2">
         <button @click="showSaveProfileModal = false" class="flex-1 py-2.5 rounded-xl bg-input border border-subtle text-muted text-[0.5625rem] font-black uppercase tracking-widest hover:text-content transition-all">{{ appStore.t('vault.confirm.cancel') }}</button>
-        <button @click="saveAsNewProfile" class="flex-1 py-2.5 rounded-xl bg-sky-500 text-white text-[0.5625rem] font-black uppercase tracking-widest hover:brightness-110 transition-all">保存</button>
+        <button @click="saveAsNewProfile" class="flex-1 py-2.5 rounded-xl bg-sky-500 text-white text-[0.5625rem] font-black uppercase tracking-widest hover:brightness-110 transition-all">{{ appStore.t('profiles.save_button') }}</button>
       </div>
     </div>
   </div>

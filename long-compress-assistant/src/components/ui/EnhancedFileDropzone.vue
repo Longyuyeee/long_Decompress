@@ -161,7 +161,11 @@ const handleFiles = (files: File[]) => {
     emit('files-selected', fileData)
   }
   if (missingPaths.length > 0) {
-    appStore.setError(`部分文件无法添加 (缺少路径): ${missingPaths.slice(0, 3).join(', ')}${missingPaths.length > 3 ? '...' : ''}。请使用浏览按钮选择文件。`)
+    appStore.setError(
+      appStore.t('dropzone.missing_paths')
+        .replace('{0}', missingPaths.slice(0, 3).join(', '))
+        .replace('{1}', missingPaths.length > 3 ? '...' : '')
+    )
   }
 }
 </script>

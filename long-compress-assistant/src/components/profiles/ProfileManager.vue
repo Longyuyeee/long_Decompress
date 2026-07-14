@@ -148,7 +148,7 @@ const formatDate = (timestamp: number | null): string => {
     <div class="flex items-center justify-between mb-6">
       <div>
         <h2 class="text-2xl font-bold text-slate-100">{{ appStore.t('profiles.title') }}</h2>
-        <p class="text-sm text-slate-400 mt-1">管理压缩配置组，快速应用预设方案</p>
+        <p class="text-sm text-slate-400 mt-1">{{ appStore.t('profiles.description') }}</p>
       </div>
       <button
         @click="openCreateModal"
@@ -194,20 +194,20 @@ const formatDate = (timestamp: number | null): string => {
               <!-- Config Details -->
               <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div class="text-xs">
-                  <span class="text-slate-500">格式:</span>
+                  <span class="text-slate-500">{{ appStore.t('profiles.details_format') }}</span>
                   <span class="ml-2 text-slate-200 font-medium">{{ profile.config.format.toUpperCase() }}</span>
                 </div>
                 <div class="text-xs">
-                  <span class="text-slate-500">压缩级别:</span>
+                  <span class="text-slate-500">{{ appStore.t('profiles.details_level') }}</span>
                   <span class="ml-2 text-slate-200 font-medium">{{ profile.config.level }}</span>
                 </div>
                 <div class="text-xs">
-                  <span class="text-slate-500">固实归档:</span>
-                  <span class="ml-2 text-slate-200">{{ profile.config.createSolidArchive ? '是' : '否' }}</span>
+                  <span class="text-slate-500">{{ appStore.t('profiles.details_solid') }}</span>
+                  <span class="ml-2 text-slate-200">{{ profile.config.createSolidArchive ? appStore.t('profiles.details_yes') : appStore.t('profiles.details_no') }}</span>
                 </div>
                 <div class="text-xs">
-                  <span class="text-slate-500">分卷压缩:</span>
-                  <span class="ml-2 text-slate-200">{{ profile.config.splitArchive ? '是' : '否' }}</span>
+                  <span class="text-slate-500">{{ appStore.t('profiles.details_split') }}</span>
+                  <span class="ml-2 text-slate-200">{{ profile.config.splitArchive ? appStore.t('profiles.details_yes') : appStore.t('profiles.details_no') }}</span>
                 </div>
               </div>
 
@@ -218,15 +218,15 @@ const formatDate = (timestamp: number | null): string => {
                   <span class="ml-2 text-sky-400 font-medium">{{ profile.stats.useCount }}</span>
                 </div>
                 <div class="px-3 py-1.5 bg-slate-700/50 rounded-lg">
-                  <span class="text-slate-400">成功:</span>
+                  <span class="text-slate-400">{{ appStore.t('profiles.stats_success') }}</span>
                   <span class="ml-2 text-green-400 font-medium">{{ profile.stats.successCount }}</span>
                 </div>
                 <div class="px-3 py-1.5 bg-slate-700/50 rounded-lg">
-                  <span class="text-slate-400">失败:</span>
+                  <span class="text-slate-400">{{ appStore.t('profiles.stats_failed') }}</span>
                   <span class="ml-2 text-red-400 font-medium">{{ profile.stats.failureCount }}</span>
                 </div>
                 <div class="px-3 py-1.5 bg-slate-700/50 rounded-lg">
-                  <span class="text-slate-400">处理量:</span>
+                  <span class="text-slate-400">{{ appStore.t('profiles.stats_processed') }}</span>
                   <span class="ml-2 text-slate-200 font-medium">{{ formatBytes(profile.stats.totalBytesProcessed) }}</span>
                 </div>
                 <div class="px-3 py-1.5 bg-slate-700/50 rounded-lg">
@@ -270,7 +270,7 @@ const formatDate = (timestamp: number | null): string => {
         <div class="space-y-4">
           <!-- Icon Selection -->
           <div>
-            <label class="block text-sm text-slate-300 mb-2">图标</label>
+            <label class="block text-sm text-slate-300 mb-2">{{ appStore.t('profiles.icon_label') }}</label>
             <div class="flex gap-2 flex-wrap">
               <button
                 v-for="icon in iconOptions"
@@ -286,29 +286,29 @@ const formatDate = (timestamp: number | null): string => {
 
           <!-- Name -->
           <div>
-            <label class="block text-sm text-slate-300 mb-2">名称 *</label>
+            <label class="block text-sm text-slate-300 mb-2">{{ appStore.t('profiles.name_required_mark') }}</label>
             <input
               v-model="formData.name"
               type="text"
-              placeholder="例如：快速压缩、最大压缩"
+              :placeholder="appStore.t('profiles.name_placeholder')"
               class="w-full px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
             />
           </div>
 
           <!-- Description -->
           <div>
-            <label class="block text-sm text-slate-300 mb-2">描述</label>
+            <label class="block text-sm text-slate-300 mb-2">{{ appStore.t('profiles.desc_label') }}</label>
             <textarea
               v-model="formData.description"
               rows="2"
-              placeholder="说明该配置组的用途和特点"
+              :placeholder="appStore.t('profiles.desc_placeholder')"
               class="w-full px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
             ></textarea>
           </div>
 
           <!-- Format -->
           <div>
-            <label class="block text-sm text-slate-300 mb-2">压缩格式 *</label>
+            <label class="block text-sm text-slate-300 mb-2">{{ appStore.t('profiles.format_label') }}</label>
             <select
               v-model="formData.config.format"
               class="w-full px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-sky-500"
@@ -324,7 +324,7 @@ const formatDate = (timestamp: number | null): string => {
 
           <!-- Compression Level -->
           <div>
-            <label class="block text-sm text-slate-300 mb-2">压缩级别: {{ formData.config.level }}</label>
+            <label class="block text-sm text-slate-300 mb-2">{{ appStore.t('profiles.level_label') }}: {{ formData.config.level }}</label>
             <input
               v-model.number="formData.config.level"
               type="range"
@@ -333,8 +333,8 @@ const formatDate = (timestamp: number | null): string => {
               class="w-full"
             />
             <div class="flex justify-between text-xs text-slate-500 mt-1">
-              <span>0 (无压缩)</span>
-              <span>9 (最大压缩)</span>
+              <span>{{ appStore.t('profiles.level_range_min') }}</span>
+              <span>{{ appStore.t('profiles.level_range_max') }}</span>
             </div>
           </div>
 
@@ -354,7 +354,7 @@ const formatDate = (timestamp: number | null): string => {
                 type="checkbox"
                 class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
               />
-              <span class="text-sm text-slate-300">分卷压缩</span>
+              <span class="text-sm text-slate-300">{{ appStore.t('profiles.split_label') }}</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input
@@ -362,7 +362,7 @@ const formatDate = (timestamp: number | null): string => {
                 type="checkbox"
                 class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
               />
-              <span class="text-sm text-slate-300">保持目录结构</span>
+              <span class="text-sm text-slate-300">{{ appStore.t('profiles.keep_structure_label') }}</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input
@@ -370,7 +370,7 @@ const formatDate = (timestamp: number | null): string => {
                 type="checkbox"
                 class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
               />
-              <span class="text-sm text-slate-300">完成后删除源文件</span>
+              <span class="text-sm text-slate-300">{{ appStore.t('profiles.delete_after_label') }}</span>
             </label>
           </div>
         </div>
@@ -401,7 +401,7 @@ const formatDate = (timestamp: number | null): string => {
     >
       <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full mx-4">
         <h3 class="text-xl font-semibold text-slate-100 mb-4">{{ appStore.t('profiles.confirm_delete') }}</h3>
-        <p class="text-slate-400 mb-6">此操作不可撤销，配置组将被永久删除。</p>
+        <p class="text-slate-400 mb-6">{{ appStore.t('profiles.confirm_delete_desc') }}</p>
         <div class="flex gap-3">
           <button
             @click="handleDelete"

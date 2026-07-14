@@ -356,7 +356,7 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
   try {
     await tauriCommands.decompressFile(task.sourceFiles[0], options, taskId)
   } catch (e: any) {
-    appStore.setError(`解压失败: ${e}`)
+    appStore.setError(appStore.t('decompress.extract_failed').replace('{0}', e))
   }
 }
 

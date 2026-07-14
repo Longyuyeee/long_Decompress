@@ -37,11 +37,11 @@ const formatLastUsed = (timestamp: number | null): string => {
   const diffMs = now.getTime() - date.getTime()
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffDays === 0) return appStore.t('profiles.last_used') + ': ' + '今天'
-  if (diffDays === 1) return appStore.t('profiles.last_used') + ': ' + '昨天'
-  if (diffDays < 7) return appStore.t('profiles.last_used') + ': ' + `${diffDays}天前`
-  if (diffDays < 30) return appStore.t('profiles.last_used') + ': ' + `${Math.floor(diffDays / 7)}周前`
-  return appStore.t('profiles.last_used') + ': ' + `${Math.floor(diffDays / 30)}月前`
+  if (diffDays === 0) return appStore.t('profiles.last_used') + ': ' + appStore.t('profiles.time_today')
+  if (diffDays === 1) return appStore.t('profiles.last_used') + ': ' + appStore.t('profiles.time_yesterday')
+  if (diffDays < 7) return appStore.t('profiles.last_used') + ': ' + appStore.t('profiles.time_days_ago').replace('{0}', diffDays.toString())
+  if (diffDays < 30) return appStore.t('profiles.last_used') + ': ' + appStore.t('profiles.time_weeks_ago').replace('{0}', Math.floor(diffDays / 7).toString())
+  return appStore.t('profiles.last_used') + ': ' + appStore.t('profiles.time_months_ago').replace('{0}', Math.floor(diffDays / 30).toString())
 }
 
 const formatSuccessRate = (stats: CompressionProfile['stats']): string => {
@@ -72,7 +72,7 @@ const openManage = () => {
         @click="openManage"
         class="px-4 py-2 text-sm bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-colors"
       >
-        管理配置组
+        {{ appStore.t('profiles.manage') }}
       </button>
     </div>
 
@@ -144,24 +144,24 @@ const openManage = () => {
           >
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <span class="text-slate-400">格式:</span>
+                <span class="text-slate-400">{{ appStore.t('profiles.details_format') }}</span>
                 <span class="ml-2 text-slate-200">{{ profile.config.format }}</span>
               </div>
               <div>
-                <span class="text-slate-400">压缩级别:</span>
+                <span class="text-slate-400">{{ appStore.t('profiles.details_level') }}</span>
                 <span class="ml-2 text-slate-200">{{ profile.config.level }}</span>
               </div>
               <div>
-                <span class="text-slate-400">固实归档:</span>
-                <span class="ml-2 text-slate-200">{{ profile.config.createSolidArchive ? '是' : '否' }}</span>
+                <span class="text-slate-400">{{ appStore.t('profiles.details_solid') }}</span>
+                <span class="ml-2 text-slate-200">{{ profile.config.createSolidArchive ? appStore.t('profiles.details_yes') : appStore.t('profiles.details_no') }}</span>
               </div>
               <div>
-                <span class="text-slate-400">分卷:</span>
-                <span class="ml-2 text-slate-200">{{ profile.config.splitArchive ? '是' : '否' }}</span>
+                <span class="text-slate-400">{{ appStore.t('profiles.details_split') }}</span>
+                <span class="ml-2 text-slate-200">{{ profile.config.splitArchive ? appStore.t('profiles.details_yes') : appStore.t('profiles.details_no') }}</span>
               </div>
             </div>
             <div v-if="profile.autoApply.enabled" class="pt-2 border-t border-slate-700">
-              <span class="text-sky-400">🎯 自动应用: {{ profile.autoApply.mode }}</span>
+              <span class="text-sky-400">{{ appStore.t('profiles.auto_apply_label') }} {{ profile.autoApply.mode }}</span>
             </div>
           </div>
 
