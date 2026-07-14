@@ -194,8 +194,8 @@ const handleFiles = (files: File[]) => {
       @change="onFileChange"
     >
     
-    <div v-if="!compact" class="flex flex-col items-center justify-center space-y-6 pointer-events-none">
-      <div class="relative">
+    <div v-if="!compact" class="flex flex-col items-center justify-center space-y-6">
+      <div class="relative pointer-events-none">
         <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-primary/25 transition-all duration-400">
           <i :class="props.mode === 'folder' ? 'pi pi-folder-open' : 'pi pi-cloud-upload'" class="text-4xl"></i>
         </div>
@@ -204,12 +204,12 @@ const handleFiles = (files: File[]) => {
         </div>
       </div>
 
-      <div class="text-center space-y-2">
+      <div class="text-center space-y-2 pointer-events-none">
         <p class="text-lg font-bold text-content tracking-tight">{{ displayHint }}</p>
         <p class="text-sm text-muted/90 font-medium tracking-wide leading-relaxed">{{ displaySubHint }}</p>
       </div>
 
-      <div class="pt-3">
+      <div class="pt-3 pointer-events-none">
         <span class="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary/15 to-primary/10 border border-primary/30 text-primary text-sm font-bold tracking-wide group-hover:from-primary group-hover:to-primary/90 group-hover:text-white group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
           <i class="pi pi-folder-open text-base"></i>
           {{ appStore.t('dropzone.browse') }}
@@ -217,9 +217,9 @@ const handleFiles = (files: File[]) => {
       </div>
     </div>
 
-    <div v-else class="flex items-center justify-center gap-2.5 pointer-events-none">
-      <i class="pi pi-plus text-primary text-sm"></i>
-      <span class="text-sm font-bold text-muted uppercase tracking-wider group-hover:text-content transition-colors duration-300">
+    <div v-else class="flex items-center justify-center gap-2.5">
+      <i class="pi pi-plus text-primary text-sm pointer-events-none"></i>
+      <span class="text-sm font-bold text-muted uppercase tracking-wider group-hover:text-content transition-colors duration-300 pointer-events-none">
         {{ displayAddLabel }}
       </span>
     </div>

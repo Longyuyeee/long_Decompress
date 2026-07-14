@@ -12,7 +12,7 @@ const closeApp = () => appWindow.close()
 <template>
   <div class="window-titlebar flex items-center justify-between h-11 bg-gradient-to-r from-card/40 via-card/30 to-card/40 backdrop-blur-2xl border-b border-subtle/50 select-none relative z-[100] shadow-sm" data-tauri-drag-region>
     <!-- 左侧标题 & 动态指示点 -->
-    <div class="flex items-center gap-3.5 px-5 pointer-events-none" data-tauri-drag-region>
+    <div class="flex items-center gap-3.5 px-5" data-tauri-drag-region>
       <div class="relative">
         <div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_var(--dynamic-accent)] animate-pulse"></div>
         <div class="absolute inset-0 w-2 h-2 rounded-full bg-primary/30 animate-ping"></div>
