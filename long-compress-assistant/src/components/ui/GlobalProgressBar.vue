@@ -149,19 +149,19 @@ const copyToClipboard = async (text: string) => {
 <template>
   <transition name="progress-slide">
     <div v-if="isVisible"
-         class="global-progress-bar fixed bottom-4 left-4 z-[300] select-none">
+         class="global-progress-bar fixed bottom-4 left-4 z-[600] select-none">
 
       <!-- 紧凑指示器：点击展开 -->
       <div
            @click="isExpanded = !isExpanded"
-           class="flex items-center gap-4 px-5 py-3 rounded-2xl bg-card/90 backdrop-blur-2xl border-2 border-primary/30 shadow-2xl cursor-pointer hover:border-primary/60 hover:shadow-primary/20 transition-all min-w-[200px]">
+           class="flex items-center gap-4 px-5 py-3 rounded-2xl bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-3xl border-2 border-primary/50 shadow-[0_8px_32px_rgba(14,165,233,0.25)] cursor-pointer hover:border-primary/80 hover:shadow-[0_12px_48px_rgba(14,165,233,0.35)] hover:scale-[1.02] transition-all duration-300 min-w-[200px] ring-2 ring-primary/10">
         <!-- 环形进度 -->
         <div class="relative w-10 h-10 shrink-0">
           <svg class="w-10 h-10 -rotate-90" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" class="text-input opacity-30"/>
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-dasharray="62.83"
                     :stroke-dashoffset="62.83 - (62.83 * overallProgress) / 100"
-                    class="text-primary transition-all duration-1000"/>
+                    class="text-primary transition-all duration-1000 progress-ring"/>
           </svg>
           <span class="absolute inset-0 flex items-center justify-center text-[0.625rem] font-black font-mono text-content">
             {{ overallProgress }}%
@@ -205,7 +205,7 @@ const copyToClipboard = async (text: string) => {
       <!-- 展开的任务列表面板 -->
       <transition name="panel-slide">
         <div v-if="isExpanded"
-             class="absolute bottom-full left-0 mb-2 w-[30rem] max-h-[65vh] rounded-2xl bg-card/95 backdrop-blur-2xl border-2 border-primary/30 shadow-2xl overflow-hidden flex flex-col">
+             class="absolute bottom-full left-0 mb-2 w-[30rem] max-h-[65vh] rounded-2xl bg-gradient-to-br from-card via-card/98 to-card/95 backdrop-blur-3xl border-2 border-primary/40 shadow-[0_16px_64px_rgba(14,165,233,0.2)] overflow-hidden flex flex-col ring-2 ring-primary/10">
           <!-- 面板头部 -->
           <div class="px-5 py-3.5 border-b border-subtle/20 shrink-0">
             <div class="flex items-center justify-between mb-2">
@@ -221,9 +221,10 @@ const copyToClipboard = async (text: string) => {
               </div>
             </div>
             <!-- 总进度条 -->
-            <div class="h-2 bg-input rounded-full overflow-hidden">
-              <div class="h-full bg-primary rounded-full transition-all duration-1000"
+            <div class="h-2 bg-input rounded-full overflow-hidden relative">
+              <div class="h-full bg-primary rounded-full transition-all duration-1000 progress-bar-fill"
                    :style="{ width: `${overallProgress}%` }"></div>
+              <div v-if="hasActiveTasks" class="absolute inset-0 shimmer-overlay"></div>
             </div>
             <!-- 实时信息摘要栏 -->
             <div v-if="runningTask" class="flex items-center gap-4 mt-2 text-[0.5625rem] text-dim">
@@ -272,9 +273,10 @@ const copyToClipboard = async (text: string) => {
                   </div>
                   <!-- 进度条 -->
                   <div v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
-                       class="h-1 bg-input rounded-full mt-1.5 overflow-hidden">
-                    <div class="h-full bg-primary rounded-full transition-all duration-700"
+                       class="h-1 bg-input rounded-full mt-1.5 overflow-hidden relative">
+                    <div class="h-full bg-primary rounded-full transition-all duration-700 progress-bar-fill"
                          :style="{ width: `${Math.max(task.progress, 1)}%` }"></div>
+                    <div class="absolute inset-0 shimmer-overlay"></div>
                   </div>
                   <!-- 当前处理文件 + 阶段 -->
                   <div v-if="task.currentFile" class="text-[0.5625rem] text-dim font-mono mt-1 truncate opacity-60" :title="task.currentFile">
@@ -365,5 +367,62 @@ const copyToClipboard = async (text: string) => {
 .panel-slide-leave-to {
   opacity: 0;
   transform: translateY(10px) scale(0.97);
+}
+
+/* 进度条流光动效 */
+.progress-bar-fill {
+  position: relative;
+  background: linear-gradient(90deg,
+    rgb(14, 165, 233) 0%,
+    rgb(59, 130, 246) 50%,
+    rgb(14, 165, 233) 100%);
+  background-size: 200% 100%;
+  animation: progress-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes progress-shimmer {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* 流光遮罩 */
+.shimmer-overlay {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-move 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer-move {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 环形进度脉冲 */
+.progress-ring {
+  filter: drop-shadow(0 0 6px rgba(14, 165, 233, 0.6));
+  animation: ring-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ring-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(14, 165, 233, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(14, 165, 233, 0.9));
+  }
 }
 </style>
