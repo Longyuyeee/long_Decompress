@@ -10,42 +10,58 @@ const closeApp = () => appWindow.close()
 </script>
 
 <template>
-  <div class="window-titlebar flex items-center justify-between h-8 bg-card/30 backdrop-blur-3xl border-b border-subtle select-none relative z-[100] shadow-[0_4px_12px_rgba(0,0,0,0.08)]" data-tauri-drag-region>
-    <!-- 左侧标题 & 主题指示线 -->
-    <div class="flex items-center gap-3 px-4 pointer-events-none" data-tauri-drag-region>
-      <div class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--dynamic-accent)]"></div>
-      <span class="text-[0.625rem] font-black text-content/60 uppercase tracking-[0.2em] mt-0.5">{{ appStore.t('app.name') }}</span>
+  <div class="window-titlebar flex items-center justify-between h-11 bg-gradient-to-r from-card/40 via-card/30 to-card/40 backdrop-blur-2xl border-b border-subtle/50 select-none relative z-[100] shadow-sm" data-tauri-drag-region>
+    <!-- 左侧标题 & 动态指示点 -->
+    <div class="flex items-center gap-3.5 px-5 pointer-events-none" data-tauri-drag-region>
+      <div class="relative">
+        <div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_var(--dynamic-accent)] animate-pulse"></div>
+        <div class="absolute inset-0 w-2 h-2 rounded-full bg-primary/30 animate-ping"></div>
+      </div>
+      <span class="text-sm font-bold text-content/70 tracking-wide">{{ appStore.t('app.name') }}</span>
     </div>
 
     <!-- 右侧控制组 -->
     <div class="flex h-full items-center">
-      <button @click="minimize" class="control-btn hover:bg-content/5">
-        <i class="pi pi-minus text-[0.5rem]"></i>
+      <button @click="minimize" class="control-btn hover:bg-content/8 active:bg-content/12">
+        <i class="pi pi-minus text-xs"></i>
       </button>
-      <button @click="toggleMaximize" class="control-btn hover:bg-content/5">
-        <i class="pi pi-stop text-[0.5rem]"></i>
+      <button @click="toggleMaximize" class="control-btn hover:bg-content/8 active:bg-content/12">
+        <i class="pi pi-stop text-xs"></i>
       </button>
-      <button @click="closeApp" class="control-btn hover:bg-red-500 hover:text-white group">
-        <i class="pi pi-times text-[0.5rem] group-hover:scale-110 transition-transform"></i>
+      <button @click="closeApp" class="control-btn hover:bg-red-500/90 hover:text-white active:bg-red-600 group">
+        <i class="pi pi-times text-xs group-hover:scale-110 transition-transform duration-200"></i>
       </button>
     </div>
-
-    <!-- 移除顶部装饰线，因为它会干扰窗口边缘缩放判定 -->
   </div>
 </template>
 
 <style scoped>
 .window-titlebar {
-  /* 确保标题栏不会被内容遮挡 */
   -webkit-app-region: drag;
 }
 
 .control-btn {
-  @apply w-10 h-full flex items-center justify-center text-muted transition-all duration-200 cursor-default;
+  @apply w-12 h-full flex items-center justify-center text-muted transition-all duration-300 cursor-default;
   -webkit-app-region: no-drag;
+}
+
+.control-btn:active {
+  transform: scale(0.95);
 }
 
 .control-btn i {
   pointer-events: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
 </style>

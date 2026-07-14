@@ -58,23 +58,23 @@ const navigateTo = (name: string) => {
       <WindowTitleBar class="shrink-0" />
 
       <div class="main-layout flex flex-1 overflow-hidden relative">
-        <!-- 侧边栏 - 精简专业版 -->
-        <aside class="w-14 h-full flex flex-col items-center pt-4 pb-4 border-r border-subtle bg-card/60 backdrop-blur-xl z-50 shrink-0 overflow-visible relative">
-          <nav class="flex-1 flex flex-col gap-2 w-full px-1.5 overflow-visible">
+        <!-- 侧边栏 - 华丽扁平版 -->
+        <aside class="w-16 h-full flex flex-col items-center pt-6 pb-6 border-r border-subtle/50 bg-gradient-to-b from-card/70 via-card/60 to-card/50 backdrop-blur-xl z-50 shrink-0 overflow-visible relative">
+          <nav class="flex-1 flex flex-col gap-3 w-full px-2 overflow-visible">
             <div v-for="item in navItems" :key="item.name"
                  @click="navigateTo(item.name)"
-                 class="group relative w-full aspect-square flex items-center justify-center rounded-lg cursor-pointer transition-all duration-200"
-                 :class="route.name === item.name ? 'bg-primary/15 shadow-sm' : 'hover:bg-primary/5'">
+                 class="group relative w-full aspect-square flex items-center justify-center rounded-xl cursor-pointer transition-all duration-300"
+                 :class="route.name === item.name ? 'bg-primary/20 shadow-lg scale-105' : 'hover:bg-primary/8 hover:scale-102'">
 
-              <div class="absolute left-0 w-0.5 h-5 rounded-full bg-primary transition-all duration-200"
+              <div class="absolute left-0 w-1 h-7 rounded-full bg-gradient-to-b from-primary to-primary/50 transition-all duration-300 shadow-[0_0_8px_var(--dynamic-accent)]"
                    :class="route.name === item.name ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'"></div>
 
-              <i :class="[item.icon, 'text-base transition-all duration-200',
-                 route.name === item.name ? 'text-primary' : 'text-muted group-hover:text-content']"></i>
+              <i :class="[item.icon, 'text-lg transition-all duration-300',
+                 route.name === item.name ? 'text-primary scale-110' : 'text-muted group-hover:text-content group-hover:scale-105']"></i>
 
-              <div class="absolute left-full ml-3 px-3 py-1.5 rounded-lg backdrop-blur-xl bg-card/95 border border-subtle text-content text-[0.625rem] font-bold tracking-wide uppercase opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap shadow-xl z-[100]">
+              <div class="absolute left-full ml-4 px-4 py-2 rounded-xl backdrop-blur-2xl bg-card/98 border border-subtle/80 text-content text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 -translate-x-3 group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-2xl z-[100]">
                 {{ appStore.t(item.label) }}
-                <span class="text-[0.4375rem] text-dim ml-1.5 font-mono opacity-60">({{ item.shortcut }})</span>
+                <span class="text-[0.625rem] text-muted ml-2 font-mono opacity-70">({{ item.shortcut }})</span>
               </div>
             </div>
           </nav>
@@ -109,23 +109,35 @@ const navigateTo = (name: string) => {
 }
 
 .aero-page-enter-active {
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .aero-page-leave-active {
-  transition: opacity 0.15s ease-in, transform 0.15s ease-in;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 1, 1), transform 0.25s cubic-bezier(0.4, 0, 1, 1);
 }
 
 .aero-page-enter-from {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(12px) scale(0.98);
 }
 
 .aero-page-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-8px) scale(1.01);
 }
 
-.custom-scrollbar::-webkit-scrollbar { width: 4px; background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--dynamic-accent); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--dynamic-accent);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--dynamic-accent-alt);
+}
 </style>

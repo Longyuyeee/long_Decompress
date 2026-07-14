@@ -3,11 +3,23 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-size: 16px;
+  }
+
   body {
     @apply bg-base text-content;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "tnum" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    font-weight: 600;
   }
 
   /* 基础边框颜色大一统 */
@@ -16,14 +28,48 @@
   }
 }
 
-/* 
- * 胧压缩·大一统全局样式
- * 核心组件样式已迁移至 design-tokens.css 或业务组件内
+/*
+ * 胧解压·华丽扁平化样式系统
+ * 优雅动效 + 精致间距 + 视觉层次
  */
 
 @layer components {
-  /* 如果有全局通用的非业务组件类，可以在此定义 */
+  /* 平滑过渡系统 */
   .transition-standard {
-    @apply transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1);
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .transition-smooth {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-bounce {
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* 悬停提升效果 */
+  .hover-lift {
+    @apply transition-all duration-300;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  /* 玻璃态卡片 */
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl border border-subtle/50 rounded-xl shadow-lg;
+  }
+
+  /* 渐变按钮 */
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--dynamic-accent), var(--dynamic-accent-alt));
+    @apply shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+
+  .gradient-primary:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
   }
 }

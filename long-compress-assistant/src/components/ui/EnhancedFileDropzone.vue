@@ -194,32 +194,32 @@ const handleFiles = (files: File[]) => {
       @change="onFileChange"
     >
     
-    <div v-if="!compact" class="flex flex-col items-center justify-center space-y-5 pointer-events-none">
+    <div v-if="!compact" class="flex flex-col items-center justify-center space-y-6 pointer-events-none">
       <div class="relative">
-        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300">
-          <i :class="props.mode === 'folder' ? 'pi pi-folder-open' : 'pi pi-cloud-upload'" class="text-3xl"></i>
+        <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-primary/25 transition-all duration-400">
+          <i :class="props.mode === 'folder' ? 'pi pi-folder-open' : 'pi pi-cloud-upload'" class="text-4xl"></i>
         </div>
-        <div class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse">
-          <i class="pi pi-plus text-white text-xs"></i>
+        <div class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg animate-pulse">
+          <i class="pi pi-plus text-white text-sm"></i>
         </div>
       </div>
 
-      <div class="text-center space-y-1">
-        <p class="text-sm font-bold text-content tracking-tight">{{ displayHint }}</p>
-        <p class="text-[0.5625rem] text-muted font-medium tracking-wide">{{ displaySubHint }}</p>
+      <div class="text-center space-y-2">
+        <p class="text-lg font-bold text-content tracking-tight">{{ displayHint }}</p>
+        <p class="text-sm text-muted/90 font-medium tracking-wide leading-relaxed">{{ displaySubHint }}</p>
       </div>
 
-      <div class="pt-2">
-        <span class="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-primary/10 border border-primary/30 text-primary text-[0.5625rem] font-bold uppercase tracking-wide group-hover:bg-primary group-hover:text-white group-hover:shadow-md transition-all">
-          <i class="pi pi-folder-open text-xs"></i>
+      <div class="pt-3">
+        <span class="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary/15 to-primary/10 border border-primary/30 text-primary text-sm font-bold tracking-wide group-hover:from-primary group-hover:to-primary/90 group-hover:text-white group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
+          <i class="pi pi-folder-open text-base"></i>
           {{ appStore.t('dropzone.browse') }}
         </span>
       </div>
     </div>
 
-    <div v-else class="flex items-center justify-center gap-2 pointer-events-none">
-      <i class="pi pi-plus text-primary text-[0.5625rem]"></i>
-      <span class="text-[0.5625rem] font-bold text-muted uppercase tracking-wider group-hover:text-content transition-colors">
+    <div v-else class="flex items-center justify-center gap-2.5 pointer-events-none">
+      <i class="pi pi-plus text-primary text-sm"></i>
+      <span class="text-sm font-bold text-muted uppercase tracking-wider group-hover:text-content transition-colors duration-300">
         {{ displayAddLabel }}
       </span>
     </div>
@@ -228,19 +228,27 @@ const handleFiles = (files: File[]) => {
 
 <style scoped>
 .drop-area {
-  @apply relative border-2 border-dashed border-subtle cursor-pointer transition-all duration-300;
+  @apply relative border-2 border-dashed border-subtle cursor-pointer;
   background-color: transparent;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .drop-area:hover {
   border-color: var(--dynamic-accent);
-  background: radial-gradient(circle at center, color-mix(in srgb, var(--dynamic-accent) 3%, transparent) 0%, transparent 70%);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--dynamic-accent) 5%, transparent) 0%, transparent 70%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .is-dragging {
   border-color: var(--dynamic-accent);
-  background: radial-gradient(circle at center, color-mix(in srgb, var(--dynamic-accent) 8%, transparent) 0%, transparent 70%);
-  transform: scale(1.005);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dynamic-accent) 5%, transparent);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--dynamic-accent) 12%, transparent) 0%, transparent 70%);
+  transform: scale(1.02);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 0 0 4px color-mix(in srgb, var(--dynamic-accent) 10%, transparent);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 </style>
