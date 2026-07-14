@@ -311,12 +311,12 @@ impl PasswordAttemptService {
         }
     }
 
-    /// 根据策略获取密码列表
+    /// 根据策略获取密码列表（带智能排序）
     async fn get_passwords_for_strategy(
         &self,
         strategy: &PasswordAttemptStrategy,
     ) -> Result<Vec<(String, Option<PasswordEntry>)>> {
-        match strategy {
+        let mut passwords = match strategy {
             PasswordAttemptStrategy::All => {
                 self.get_all_passwords().await
             }
@@ -334,6 +334,83 @@ impl PasswordAttemptService {
                     .map(|p| (p.clone(), None))
                     .collect())
             }
+        }?;
+
+        // 对密码进行智能排序（除了自定义策略）
+        if !matches!(strategy, PasswordAttemptStrategy::Custom(_)) {
+            self.sort_passwords_by_priority(&mut passwords);
+        }
+
+        Ok(passwords)
+    }
+
+    /// 按优先级对密码排序
+    /// 排序规则：
+    /// 1. 使用频率高的优先
+    /// 2. 最近使用的优先
+    /// 3. 收藏的优先
+    /// 4. 密码强度高的优先（可能更常用）
+    fn sort_passwords_by_priority(&self, passwords: &mut [(String, Option<PasswordEntry>)]) {
+        passwords.sort_by(|a, b| {
+            let entry_a = a.1.as_ref();
+            let entry_b = b.1.as_ref();
+
+            // 如果没有条目信息，保持原顺序
+            if entry_a.is_none() || entry_b.is_none() {
+                return std::cmp::Ordering::Equal;
+            }
+
+            let ea = entry_a.unwrap();
+            let eb = entry_b.unwrap();
+
+            // 1. 优先按使用次数排序（降序）
+            let use_count_cmp = eb.use_count.cmp(&ea.use_count);
+            if use_count_cmp != std::cmp::Ordering::Equal {
+                return use_count_cmp;
+            }
+
+            // 2. 按最后使用时间排序（降序，最近的优先）
+            if let (Some(last_a), Some(last_b)) = (&ea.last_used, &eb.last_used) {
+                let last_used_cmp = last_b.cmp(last_a);
+                if last_used_cmp != std::cmp::Ordering::Equal {
+                    return last_used_cmp;
+                }
+            }
+
+            // 3. 收藏的优先
+            let fav_cmp = eb.favorite.cmp(&ea.favorite);
+            if fav_cmp != std::cmp::Ordering::Equal {
+                return fav_cmp;
+            }
+
+            // 4. 按密码强度排序（强度高的可能更常用）
+            let strength_a = Self::strength_score(&ea.strength);
+            let strength_b = Self::strength_score(&eb.strength);
+            let strength_cmp = strength_b.cmp(&strength_a);
+            if strength_cmp != std::cmp::Ordering::Equal {
+                return strength_cmp;
+            }
+
+            // 5. 最后按创建时间排序（新的优先）
+            eb.created_at.cmp(&ea.created_at)
+        });
+
+        log::debug!("密码优先级排序完成，前5个密码使用次数: {:?}",
+            passwords.iter().take(5).map(|(_, e)| {
+                e.as_ref().map(|entry| entry.use_count).unwrap_or(0)
+            }).collect::<Vec<_>>()
+        );
+    }
+
+    /// 将密码强度转换为分数
+    fn strength_score(strength: &crate::models::password::PasswordStrength) -> u8 {
+        use crate::models::password::PasswordStrength;
+        match strength {
+            PasswordStrength::VeryWeak => 1,
+            PasswordStrength::Weak => 2,
+            PasswordStrength::Medium => 3,
+            PasswordStrength::Strong => 4,
+            PasswordStrength::VeryStrong => 5,
         }
     }
 
