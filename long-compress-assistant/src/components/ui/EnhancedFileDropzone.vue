@@ -74,9 +74,7 @@ const displayHint = computed(() => {
 
 const displaySubHint = computed(() => {
   if (props.subHint) return props.subHint
-  return props.mode === 'folder'
-    ? appStore.t('compress.drop_subhint')
-    : 'ZIP, 7Z, RAR, TAR, GZ, BZ2, XZ, Zstd, ISO + 30 more'
+  return appStore.t('compress.drop_subhint')
 })
 
 const displayAddLabel = computed(() => {
@@ -124,7 +122,21 @@ const triggerFileInput = async () => {
       console.error('Failed to select folders:', err)
     }
   } else {
-    fileInput.value?.click()
+    // 使用 Tauri 对话框而不是 HTML input，确保获得文件路径
+    try {
+      const selected = await open({
+        directory: false,
+        multiple: true,
+        title: appStore.t('decompress.drop_hint'),
+        filters: props.accept !== '*' ? [{
+          name: 'Archives',
+          extensions: props.accept.split(',').map(e => e.trim().replace('*.', ''))
+        }] : []
+      })
+      if (selected) handleRawPaths(Array.isArray(selected) ? selected : [selected])
+    } catch (err) {
+      console.error('Failed to select files:', err)
+    }
   }
 }
 

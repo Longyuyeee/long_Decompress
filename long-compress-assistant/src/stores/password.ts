@@ -322,28 +322,33 @@ export const usePasswordStore = defineStore('password', () => {
   // 为解压寻找候选密码(TSK-103)
   const findCandidatePasswords = (fileName: string): string[] => {
     const candidates = new Set<string>()
-    
+
     // 1. 提取文件名中的关键词 (排除常见后缀)
     const stem = fileName.split('.')[0].toLowerCase()
-    
-    // 2. 匹配名称或标签中包含文件名的条目
+
+    // 2. 匹配名称或标签中包含文件名的条目 (优先级最高)
+    const matched: PasswordEntry[] = []
+    const unmatched: PasswordEntry[] = []
+
     entries.value.forEach(e => {
       if (e.name.toLowerCase().includes(stem) || e.tags.some(t => t.toLowerCase().includes(stem))) {
-        candidates.add(e.password)
+        matched.push(e)
+      } else {
+        unmatched.push(e)
       }
     })
-    
-    // 3. 兜底：添加最近使用的 5 个密码
-    const recent = [...entries.value]
-      .sort((a, b) => {
-        const timeA = a.last_used ? new Date(a.last_used).getTime() : 0
-        const timeB = b.last_used ? new Date(b.last_used).getTime() : 0
-        return timeB - timeA
-      })
-      .slice(0, 5)
-    
-    recent.forEach(e => candidates.add(e.password))
-    
+
+    // 3. 按优先级排序：匹配的按使用次数排序，未匹配的按最后使用时间排序
+    const sortedMatched = matched.sort((a, b) => (b.use_count || 0) - (a.use_count || 0))
+    const sortedUnmatched = unmatched.sort((a, b) => {
+      const timeA = a.last_used ? new Date(a.last_used).getTime() : 0
+      const timeB = b.last_used ? new Date(b.last_used).getTime() : 0
+      return timeB - timeA
+    })
+
+    // 4. 先添加匹配的密码，再添加所有未匹配的密码（确保尝试所有密码）
+    ;[...sortedMatched, ...sortedUnmatched].forEach(e => candidates.add(e.password))
+
     return Array.from(candidates)
   }
 
