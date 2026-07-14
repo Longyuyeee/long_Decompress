@@ -86,14 +86,15 @@
     "windows": [
       {
         "title": "胧解压",
-        "width": 720,
-        "height": 540,
+        "width": 1000,
+        "height": 680,
         "minWidth": 720,
         "minHeight": 540,
         "resizable": true,
         "fullscreen": false,
-        "decorations": false,
-        "transparent": true
+        "decorations": true,
+        "transparent": false,
+        "center": true
       }
     ]
   }

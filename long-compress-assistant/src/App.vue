@@ -40,12 +40,29 @@ const restoreWindowState = async () => {
     const saved = localStorage.getItem(WINDOW_STATE_KEY)
     if (!saved) return
     const { x, y, width, height } = JSON.parse(saved)
-    // 仅在坐标有意义时恢复（避免多显示器场景下窗口跑到屏幕外）
-    if (x > -1000 && y > -1000 && width >= 720 && height >= 540) {
+
+    // 严格的屏幕边界验证：确保窗口至少有 100px 可见区域在主屏幕内
+    // 获取主屏幕尺寸（简化假设：1920x1080，实际可用 screen API）
+    const screenWidth = window.screen.availWidth
+    const screenHeight = window.screen.availHeight
+
+    const isValid =
+      x >= -100 && y >= -100 &&  // 左上角不能完全超出屏幕
+      x < screenWidth && y < screenHeight &&  // 至少有部分可见
+      width >= 720 && width <= screenWidth + 100 &&
+      height >= 540 && height <= screenHeight + 100
+
+    if (isValid) {
       await appWindow.setPosition(new LogicalPosition(x, y))
       await appWindow.setSize(new LogicalSize(width, height))
+    } else {
+      // 无效坐标时清除保存的状态，使用默认居中
+      localStorage.removeItem(WINDOW_STATE_KEY)
     }
-  } catch { /* ignore on first launch */ }
+  } catch {
+    // 出错时清除可能损坏的状态
+    localStorage.removeItem(WINDOW_STATE_KEY)
+  }
 }
 
 const handleKeydown = (e: KeyboardEvent) => {

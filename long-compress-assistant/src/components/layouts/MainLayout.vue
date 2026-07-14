@@ -81,10 +81,10 @@ const navigateTo = (name: string) => {
         </aside>
 
         <!-- 主内容区 -->
-        <main class="flex-1 relative h-full overflow-hidden min-w-0 z-10">
+        <main class="flex-1 relative h-full overflow-hidden min-w-0 z-10 bg-base">
           <router-view v-slot="{ Component }">
             <transition name="aero-page" mode="out-in">
-              <div :key="route.path" class="h-full w-full overflow-hidden absolute inset-0">
+              <div :key="route.path" class="h-full w-full overflow-hidden">
                 <component :is="Component" />
               </div>
             </transition>
@@ -108,24 +108,22 @@ const navigateTo = (name: string) => {
   width: 100vw;
 }
 
-.aero-page-enter-active,
+.aero-page-enter-active {
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
 .aero-page-leave-active {
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: absolute;
-  width: 100%;
-  height: 100%;
+  transition: opacity 0.15s ease-in, transform 0.15s ease-in;
 }
 
-.aero-page-enter-from { 
-  opacity: 0; 
-  transform: scale(0.98) translateY(10px); 
-  filter: blur(8px); 
+.aero-page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
 }
 
-.aero-page-leave-to { 
-  opacity: 0; 
-  transform: scale(1.02) translateY(-10px); 
-  filter: blur(8px); 
+.aero-page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .custom-scrollbar::-webkit-scrollbar { width: 4px; background: transparent; }

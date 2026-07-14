@@ -12,6 +12,18 @@
   --theme-rose: #f43f5e; --theme-pink: #ec4899;
 
   --dynamic-accent: var(--theme-sky);
+
+  /* 默认浅色主题变量 - 防止未初始化闪烁 */
+  --bg-main: #ffffff;
+  --bg-card: #f8fafc;
+  --bg-input: #f1f5f9;
+  --bg-modal: #ffffff;
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --text-base: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #94a3b8;
+  --shadow-base: 0 10px 30px rgba(15, 23, 42, 0.06);
+  --shadow-elevated: 0 20px 40px rgba(15, 23, 42, 0.1);
 }
 
 /* 1. Dark - 深海军蓝基调 (Production Slate) */
