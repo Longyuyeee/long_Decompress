@@ -6,6 +6,7 @@ use long_compress_assistant::utils::app_paths::app_data_dir;
 
 use long_compress_assistant::commands::encrypted_password::EncryptedPasswordServiceState;
 use long_compress_assistant::commands::compression_profile::CompressionProfileServiceState;
+use long_compress_assistant::services::decompression_profile_service::DecompressionProfileService;
 
 use tauri::Manager;
 use window_shadows::set_shadow;
@@ -57,6 +58,20 @@ fn main() {
                                 let state: tauri::State<CompressionProfileServiceState> = app.state();
                                 let mut service_lock = state.service.lock().await;
                                 *service_lock = Some(profile_service);
+
+                                // 初始化解压配置组服务
+                                let decompression_service = DecompressionProfileService::new(pool.clone());
+
+                                // 创建表并初始化默认配置组
+                                if let Err(e) = decompression_service.init_table().await {
+                                    eprintln!("Failed to initialize decompression profiles table: {}", e);
+                                }
+                                if let Err(e) = decompression_service.init_default_profiles().await {
+                                    eprintln!("Failed to initialize default decompression profiles: {}", e);
+                                }
+
+                                // 注册到应用状态
+                                app.manage(decompression_service);
                             }
                         }
                     }
@@ -173,7 +188,13 @@ fn main() {
             long_compress_assistant::commands::compression_profile::delete_compression_profile,
             long_compress_assistant::commands::compression_profile::reorder_compression_profiles,
             long_compress_assistant::commands::compression_profile::apply_compression_profile,
-            long_compress_assistant::commands::compression_profile::suggest_compression_profile
+            long_compress_assistant::commands::compression_profile::suggest_compression_profile,
+            long_compress_assistant::commands::decompression_profile::get_all_decompression_profiles,
+            long_compress_assistant::commands::decompression_profile::get_decompression_profile_by_id,
+            long_compress_assistant::commands::decompression_profile::create_decompression_profile,
+            long_compress_assistant::commands::decompression_profile::update_decompression_profile,
+            long_compress_assistant::commands::decompression_profile::delete_decompression_profile,
+            long_compress_assistant::commands::decompression_profile::update_decompression_profile_stats
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
