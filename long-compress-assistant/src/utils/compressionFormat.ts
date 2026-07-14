@@ -79,7 +79,9 @@ export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_EXTENSIONS
   .map(extension => `.${extension}`)
   .join(',')
 
-export const DECOMPRESS_ARCHIVE_HINT = 'ZIP, 7Z, RAR, TAR, Zstd, ISO, CAB, DEB, RPM, DMG, MSI + 30 more'
+export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · DOCX · XLSX · PPTX · APK · IPA · EPUB · LZH · ARJ · CHM · CPIO · XAR + 更多'
+
+export const COMPRESSION_FORMAT_HINT = 'ZIP · 7Z · RAR · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZMA'
 
 const TAR_FORMATS = new Set(
   FORMAT_CAPABILITIES
