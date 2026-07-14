@@ -1,120 +1,83 @@
 @echo off
-chcp 936 >nul 2>&1
-title Long Decompress - Build Release
+title Long Decompress Build
 
 cd /d "%~dp0"
 
-echo ========================================
-echo   Long Decompress - Production Build
-echo ========================================
+echo ======================================
+echo  Long Decompress - Build Release
+echo ======================================
 echo.
-echo Current Dir: %CD%
+echo Directory: %CD%
 echo.
 
-if not exist "package.json" (
-    echo [ERROR] package.json not found
-    echo Please run this script in project root
-    echo.
-    pause
-    exit /b 1
-)
+if not exist "package.json" goto :no_package
 
-echo [1/5] Checking Node.js...
 where node >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ERROR] Node.js not found
-    echo Download: https://nodejs.org/
-    echo.
-    pause
-    exit /b 1
-)
-node --version
-echo Node.js OK
-echo.
+if errorlevel 1 goto :no_node
 
-echo [2/5] Checking npm...
 where npm >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ERROR] npm not found
-    echo.
-    pause
-    exit /b 1
-)
-npm --version
-echo npm OK
-echo.
+if errorlevel 1 goto :no_npm
 
-echo [3/5] Checking Rust...
 where cargo >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ERROR] Rust not found
-    echo Download: https://www.rust-lang.org/tools/install
-    echo.
-    pause
-    exit /b 1
-)
-rustc --version
-cargo --version
-echo Rust OK
-echo.
+if errorlevel 1 goto :no_cargo
 
-echo [4/5] Installing dependencies...
+echo Installing dependencies...
 call npm install
-if %errorlevel% neq 0 (
-    echo [ERROR] npm install failed
-    echo.
-    pause
-    exit /b 1
-)
-echo Dependencies installed
-echo.
+if errorlevel 1 goto :install_failed
 
-echo [5/5] Building...
 echo.
-echo ========================================
-echo   IMPORTANT:
-echo   - Build may take 10-20 minutes
-echo   - First build downloads Rust deps
-echo   - Installer will be in bundle folder
-echo   - Please wait, do NOT close window
-echo ========================================
-echo.
-echo Building...
+echo Building release...
+echo This may take 10-20 minutes
+echo Please wait...
 echo.
 
 call npm run tauri build
 
-if %errorlevel% neq 0 (
-    echo.
-    echo ========================================
-    echo [ERROR] Build failed (code: %errorlevel%)
-    echo ========================================
-    echo.
-    echo Common issues:
-    echo   1. Rust compile error - check src-tauri/src
-    echo   2. Disk space low - need ~2GB free
-    echo   3. Dependency conflict - delete node_modules and target
-    echo.
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto :build_failed
 
 echo.
-echo ========================================
-echo   Build Success!
-echo ========================================
+echo ======================================
+echo  Build Success!
+echo ======================================
 echo.
 echo Installer location:
-echo   src-tauri\target\release\bundle\msi\
-echo   src-tauri\target\release\bundle\nsis\
+echo   src-tauri\target\release\bundle\
 echo.
-echo Opening bundle folder...
 
 if exist "src-tauri\target\release\bundle\" (
     explorer "src-tauri\target\release\bundle"
-) else (
-    echo [WARN] Bundle folder not found, but build completed
 )
 
+goto :end
+
+:no_package
+echo ERROR: package.json not found
+echo Run this script in project root
+goto :end
+
+:no_node
+echo ERROR: Node.js not found
+echo Download from https://nodejs.org/
+goto :end
+
+:no_npm
+echo ERROR: npm not found
+goto :end
+
+:no_cargo
+echo ERROR: Rust not found
+echo Download from https://www.rust-lang.org/
+goto :end
+
+:install_failed
+echo ERROR: npm install failed
+goto :end
+
+:build_failed
+echo ERROR: Build failed
+echo Check the error message above
+goto :end
+
+:end
 echo.
 pause

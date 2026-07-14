@@ -1,107 +1,74 @@
 @echo off
-chcp 936 >nul 2>&1
-title Long Decompress - Dev Mode
+title Long Decompress Dev
 
 cd /d "%~dp0"
 
-echo ========================================
-echo   Long Decompress - Development Server
-echo ========================================
+echo ======================================
+echo  Long Decompress - Dev Server
+echo ======================================
 echo.
-echo Current Dir: %CD%
+echo Directory: %CD%
 echo.
 
-if not exist "package.json" (
-    echo [ERROR] package.json not found
-    echo Please run this script in project root
-    echo.
-    pause
-    exit /b 1
-)
+if not exist "package.json" goto :no_package
 
-echo [1/4] Checking Node.js...
 where node >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ERROR] Node.js not found
-    echo Download: https://nodejs.org/
-    echo.
-    pause
-    exit /b 1
-)
-node --version
-echo Node.js OK
-echo.
+if errorlevel 1 goto :no_node
 
-echo [2/4] Checking npm...
 where npm >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ERROR] npm not found
-    echo.
-    pause
-    exit /b 1
-)
-npm --version
-echo npm OK
-echo.
+if errorlevel 1 goto :no_npm
 
-echo [3/4] Checking Rust...
 where cargo >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ERROR] Rust not found
-    echo Download: https://www.rust-lang.org/tools/install
-    echo.
-    pause
-    exit /b 1
-)
-rustc --version
-cargo --version
-echo Rust OK
-echo.
+if errorlevel 1 goto :no_cargo
 
 if not exist "node_modules" (
-    echo [WARN] node_modules not found
     echo Installing dependencies...
-    echo.
     call npm install
-    if %errorlevel% neq 0 (
-        echo [ERROR] npm install failed
-        echo.
-        pause
-        exit /b 1
-    )
-    echo.
+    if errorlevel 1 goto :install_failed
 )
 
-echo [4/4] Starting dev server...
 echo.
-echo ========================================
-echo   IMPORTANT:
-echo   - First build may take 5-10 minutes
-echo   - Window will open when ready
-echo   - DO NOT close this terminal
-echo   - Press Ctrl+C to stop server
-echo ========================================
-echo.
-echo Starting...
+echo Starting dev server...
+echo First build may take 5-10 minutes
+echo Press Ctrl+C to stop
 echo.
 
 call npm run tauri dev
 
-if %errorlevel% neq 0 (
-    echo.
-    echo ========================================
-    echo [ERROR] Dev server failed (code: %errorlevel%)
-    echo ========================================
-    echo.
-    echo Common issues:
-    echo   1. Rust compile error - check syntax
-    echo   2. Port 1420 occupied - check other apps
-    echo   3. Missing deps - delete node_modules and retry
-    echo.
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto :dev_failed
 
 echo.
-echo Dev server stopped
+echo Server stopped
+goto :end
+
+:no_package
+echo ERROR: package.json not found
+echo Run this script in project root
+goto :end
+
+:no_node
+echo ERROR: Node.js not found
+echo Download from https://nodejs.org/
+goto :end
+
+:no_npm
+echo ERROR: npm not found
+goto :end
+
+:no_cargo
+echo ERROR: Rust not found
+echo Download from https://www.rust-lang.org/
+goto :end
+
+:install_failed
+echo ERROR: npm install failed
+goto :end
+
+:dev_failed
+echo ERROR: Dev server failed
+echo Check the error message above
+goto :end
+
+:end
+echo.
 pause
