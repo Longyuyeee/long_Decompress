@@ -130,7 +130,7 @@ const triggerFileInput = async () => {
         title: appStore.t('decompress.drop_hint'),
         filters: props.accept !== '*' ? [{
           name: 'Archives',
-          extensions: props.accept.split(',').map(e => e.trim().replace('*.', ''))
+          extensions: props.accept.split(',').map(e => e.trim().replace(/^[*.]*/, ''))
         }] : []
       })
       if (selected) handleRawPaths(Array.isArray(selected) ? selected : [selected])
