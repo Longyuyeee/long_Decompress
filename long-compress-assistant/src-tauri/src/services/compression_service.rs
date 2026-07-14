@@ -63,43 +63,138 @@ pub enum ArchiveFormat {
     Bzip2,
     Xz,
     Zstd,
+    Lzma,
     Iso,
-    /// 7z CLI 支持的杂项格式（CAB, LZH, ARJ, DMG, WIM, VHD, IMG 等）
+    Cab,
+    Lzh,
+    Arj,
+    Dmg,
+    Wim,
+    Vhd,
+    Chm,
+    Deb,
+    Rpm,
+    SquashFs,
+    Nsis,
+    Msi,
+    Xar,
+    Cpio,
+    Udf,
+    Fat,
+    Ntfs,
+    Hfs,
+    Alz,
+    Arc,
+    Apfs,
+    Ext,
+    /// 7z CLI 支持的其他杂项格式
     Universal,
     Unknown,
 }
 
 impl ArchiveFormat {
     pub fn from_magic(header: &[u8]) -> Self {
+        // ZIP (PK\x03\x04)
         if header.len() >= 4 && &header[0..4] == b"PK\x03\x04" {
             return ArchiveFormat::Zip;
         }
+        // 7z (37 7A BC AF 27 1C)
         if header.len() >= 6 && &header[0..6] == b"7z\xBC\xAF\x27\x1C" {
             return ArchiveFormat::SevenZip;
         }
+        // RAR v4 (Rar!\x1a\x07\x00)
         if header.len() >= 7 && &header[0..7] == b"Rar!\x1a\x07\x00" {
             return ArchiveFormat::Rar;
         }
+        // RAR v5 (Rar!\x1a\x07\x01\x00)
         if header.len() >= 8 && &header[0..8] == b"Rar!\x1a\x07\x01\x00" {
             return ArchiveFormat::Rar;
         }
+        // GZIP (1F 8B)
         if header.len() >= 2 && &header[0..2] == b"\x1F\x8B" {
             return ArchiveFormat::Gzip;
         }
+        // BZIP2 (BZh)
         if header.len() >= 3 && &header[0..3] == b"BZh" {
             return ArchiveFormat::Bzip2;
         }
+        // XZ (FD 37 7A 58 5A 00)
         if header.len() >= 6 && &header[0..6] == b"\xFD7zXZ\x00" {
             return ArchiveFormat::Xz;
         }
+        // ZSTD (28 B5 2F FD)
         if header.len() >= 4 && header[0..4] == [0x28, 0xB5, 0x2F, 0xFD] {
             return ArchiveFormat::Zstd;
         }
+        // LZMA (5D 00 00)
+        if header.len() >= 3 && &header[0..3] == b"\x5D\x00\x00" {
+            return ArchiveFormat::Lzma;
+        }
+        // ISO 9660 (CD001 at offset 32769)
+        if header.len() >= 32 && header.len() >= 32773 {
+            // Not practical to check in initial header read, fall back to extension
+        }
+        // CAB (MSCF)
+        if header.len() >= 4 && &header[0..4] == b"MSCF" {
+            return ArchiveFormat::Cab;
+        }
+        // LZH/LHA (xx-lh or xx-lz)
+        if header.len() >= 4 && header[2] == b'-' &&
+           ((header[3] == b'l' && (header[4] == b'h' || header[4] == b'z')) ||
+            (header[3] == b'l' && header[4] == b'h')) {
+            return ArchiveFormat::Lzh;
+        }
+        // ARJ (60 EA)
+        if header.len() >= 2 && &header[0..2] == b"\x60\xEA" {
+            return ArchiveFormat::Arj;
+        }
+        // DMG (koly signature at end, or various headers)
+        if header.len() >= 4 && &header[0..4] == b"\x78\x01\x73\x0D" {
+            return ArchiveFormat::Dmg;
+        }
+        // WIM (MSWIM)
+        if header.len() >= 8 && &header[0..8] == b"MSWIM\x00\x00\x00" {
+            return ArchiveFormat::Wim;
+        }
+        // VHD (conectix)
+        if header.len() >= 8 && &header[0..8] == b"conectix" {
+            return ArchiveFormat::Vhd;
+        }
+        // CHM (ITSF)
+        if header.len() >= 4 && &header[0..4] == b"ITSF" {
+            return ArchiveFormat::Chm;
+        }
+        // DEB (ar archive with debian-binary)
+        if header.len() >= 8 && &header[0..8] == b"!<arch>\n" {
+            return ArchiveFormat::Deb;
+        }
+        // RPM (ED AB EE DB)
+        if header.len() >= 4 && header[0..4] == [0xED, 0xAB, 0xEE, 0xDB] {
+            return ArchiveFormat::Rpm;
+        }
+        // SquashFS (hsqs or sqsh)
+        if header.len() >= 4 && (&header[0..4] == b"hsqs" || &header[0..4] == b"sqsh") {
+            return ArchiveFormat::SquashFs;
+        }
+        // CPIO (070707 or 070701 or 070702)
+        if header.len() >= 6 && (&header[0..6] == b"070707" || &header[0..6] == b"070701" || &header[0..6] == b"070702") {
+            return ArchiveFormat::Cpio;
+        }
+        // TAR (ustar at offset 257)
+        if header.len() >= 262 && &header[257..262] == b"ustar" {
+            return ArchiveFormat::Tar;
+        }
+
         ArchiveFormat::Unknown
     }
 
     pub fn supports_password(&self) -> bool {
-        matches!(self, ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Universal)
+        matches!(self,
+            ArchiveFormat::Zip |
+            ArchiveFormat::SevenZip |
+            ArchiveFormat::Rar |
+            ArchiveFormat::Universal
+        )
     }
 }
 
@@ -637,9 +732,18 @@ impl CompressionService {
 
     async fn archive_requires_password(&self, file_path: &str, format: ArchiveFormat) -> Result<bool> {
         match format {
-            ArchiveFormat::Universal | ArchiveFormat::Iso => {
+            // 通过 7z CLI 处理的格式
+            ArchiveFormat::Universal | ArchiveFormat::Iso | ArchiveFormat::Cab |
+            ArchiveFormat::Lzh | ArchiveFormat::Arj | ArchiveFormat::Dmg |
+            ArchiveFormat::Wim | ArchiveFormat::Vhd | ArchiveFormat::Chm |
+            ArchiveFormat::Deb | ArchiveFormat::Rpm | ArchiveFormat::SquashFs |
+            ArchiveFormat::Nsis | ArchiveFormat::Msi | ArchiveFormat::Xar |
+            ArchiveFormat::Cpio | ArchiveFormat::Udf | ArchiveFormat::Fat |
+            ArchiveFormat::Ntfs | ArchiveFormat::Hfs | ArchiveFormat::Alz |
+            ArchiveFormat::Arc | ArchiveFormat::Apfs | ArchiveFormat::Ext => {
                 self.universal_engine.requires_password(Path::new(file_path)).await
             }
+            // 原生支持密码检测的格式
             ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar => {
                 match self.test_archive_password(file_path, "").await {
                     Ok(true) => Ok(false),
@@ -706,16 +810,33 @@ impl CompressionService {
                 "bz2" | "bzip2" | "tbz" | "tbz2" => ArchiveFormat::Bzip2,
                 "xz" | "txz" => ArchiveFormat::Xz,
                 "zst" | "zstd" | "tzst" => ArchiveFormat::Zstd,
-                "iso" | "img" | "vhd" | "vhdx" | "wim" | "dmg" => ArchiveFormat::Iso,
+                "lzma" => ArchiveFormat::Lzma,
+                "iso" | "img" => ArchiveFormat::Iso,
+                "cab" => ArchiveFormat::Cab,
+                "lzh" | "lha" => ArchiveFormat::Lzh,
+                "arj" => ArchiveFormat::Arj,
+                "dmg" => ArchiveFormat::Dmg,
+                "wim" => ArchiveFormat::Wim,
+                "vhd" | "vhdx" => ArchiveFormat::Vhd,
+                "chm" => ArchiveFormat::Chm,
+                "deb" => ArchiveFormat::Deb,
+                "rpm" => ArchiveFormat::Rpm,
+                "sfs" | "squashfs" => ArchiveFormat::SquashFs,
+                "nsis" => ArchiveFormat::Nsis,
+                "msi" => ArchiveFormat::Msi,
+                "xar" => ArchiveFormat::Xar,
+                "cpio" => ArchiveFormat::Cpio,
+                "udf" => ArchiveFormat::Udf,
+                "fat" => ArchiveFormat::Fat,
+                "ntfs" => ArchiveFormat::Ntfs,
+                "hfs" | "hfsx" => ArchiveFormat::Hfs,
+                "alz" => ArchiveFormat::Alz,
+                "arc" => ArchiveFormat::Arc,
+                "apfs" => ArchiveFormat::Apfs,
+                "ext2" | "ext3" | "ext4" => ArchiveFormat::Ext,
                 // 分卷压缩包后缀 → 7z CLI 处理
-                "001" | "002" | "003" | "004" | "005"
-                | "z01" | "z02" | "z03" | "z04" | "z05"
-                    => ArchiveFormat::Universal,
-                // 7z CLI 原生支持的杂项格式
-                "cab" | "lzh" | "lha" | "arj" | "chm"
-                | "deb" | "rpm" | "sfs" | "squashfs" | "nsis" | "msi" | "xar"
-                | "cpio" | "udf" | "fat" | "ntfs" | "hfs" | "lzma"
-                | "alz" | "arc" | "apfs" | "ext2" | "ext3" | "ext4" | "hfsx"
+                "001" | "002" | "003" | "004" | "005" | "006" | "007" | "008" | "009"
+                | "z01" | "z02" | "z03" | "z04" | "z05" | "z06" | "z07" | "z08" | "z09"
                     => ArchiveFormat::Universal,
                 _ => ArchiveFormat::Unknown,
             };
@@ -885,7 +1006,16 @@ impl CompressionService {
                     }
                 }).await?
             },
-            ArchiveFormat::Iso | ArchiveFormat::Universal => {
+            // 所有通过 7z CLI 处理的格式
+            ArchiveFormat::Lzma | ArchiveFormat::Iso | ArchiveFormat::Cab |
+            ArchiveFormat::Lzh | ArchiveFormat::Arj | ArchiveFormat::Dmg |
+            ArchiveFormat::Wim | ArchiveFormat::Vhd | ArchiveFormat::Chm |
+            ArchiveFormat::Deb | ArchiveFormat::Rpm | ArchiveFormat::SquashFs |
+            ArchiveFormat::Nsis | ArchiveFormat::Msi | ArchiveFormat::Xar |
+            ArchiveFormat::Cpio | ArchiveFormat::Udf | ArchiveFormat::Fat |
+            ArchiveFormat::Ntfs | ArchiveFormat::Hfs | ArchiveFormat::Alz |
+            ArchiveFormat::Arc | ArchiveFormat::Apfs | ArchiveFormat::Ext |
+            ArchiveFormat::Universal => {
                 let fmt_name = format!("{:?}", effective_format);
                 service.universal_engine.extract_with_progress(
                     Path::new(&file_path),
