@@ -67,6 +67,9 @@ impl DatabaseConnection {
             .connect_with(connect_options)
             .await?;
 
+        // 运行数据库迁移以创建所有必要的表
+        crate::database::migrations::init_tables(&pool).await?;
+
         // 核心修复：自动创建并升级必要的表
         sqlx::query(
             "CREATE TABLE IF NOT EXISTS password_entries (
