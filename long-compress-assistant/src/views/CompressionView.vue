@@ -212,11 +212,12 @@ const handleCompress = async () => {
     })
   ]
 
-  let succeeded = 0
+  // 第一阶段：预校验并添加所有任务到列表（status: pending）
+  const validJobs: Array<{ job: typeof jobs[0], taskId: string }> = []
   let failed = 0
 
   for (const job of jobs) {
-    // 校验失败：跳过当前任务继续处理下一个
+    // 校验失败：跳过当前任务
     if (isSingleFileStreamFormat(job.settings.format) && !canUseSingleFileFormats(job.files)) {
       appStore.setError(appStore.t('compress.error.single_file').replace('{0}', job.settings.format.toUpperCase()))
       failed++
@@ -238,6 +239,7 @@ const handleCompress = async () => {
       }
     }
 
+    // 添加任务到列表（pending 状态）
     const taskId = taskStore.addTask({
       id: generateId(),
       name: job.name,
@@ -247,6 +249,13 @@ const handleCompress = async () => {
       format: job.settings.format
     })
 
+    validJobs.push({ job, taskId })
+  }
+
+  // 第二阶段：依次执行所有任务
+  let succeeded = 0
+
+  for (const { job, taskId } of validJobs) {
     try {
       taskStore.updateTaskStatus(taskId, 'compressing')
       await tauriCommands.compressFiles(
@@ -266,6 +275,10 @@ const handleCompress = async () => {
       succeeded++
     } catch (error) {
       taskStore.updateTaskStatus(taskId, 'failed')
+      const task = taskStore.tasks.find(t => t.id === taskId)
+      if (task) {
+        task.error = extractErrorMessage(error)
+      }
       appStore.setError(`${appStore.t('common.error')}: ${extractErrorMessage(error)}`)
       failed++
       // 继续处理下一个任务，不中断整个批次
@@ -285,38 +298,40 @@ const totalPayload = computed(() => {
 </script>
 
 <template>
-  <div class="compression-view p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative">
-    <header class="flex justify-between items-center shrink-0">
+  <div class="compression-view p-4 md:p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative">
+    <header class="flex flex-wrap justify-between items-center gap-3 shrink-0">
       <div>
-        <h1 class="text-2xl font-extrabold text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
+        <h1 class="text-xl md:text-2xl font-extrabold text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 md:gap-3">
         <!-- 磁吸成组按钮 (浮现式，次要操作) -->
         <transition name="pop">
           <button
             v-if="selectedRows.size > 0"
             @click="handleCreateGroup"
-            class="h-9 px-5 rounded-lg bg-input border border-subtle text-content text-[0.5625rem] font-bold uppercase tracking-wider hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-2"
+            class="h-8 md:h-9 px-3 md:px-5 rounded-lg bg-input border border-subtle text-content text-[0.5rem] md:text-[0.5625rem] font-bold uppercase tracking-wider hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-2"
           >
             <i class="pi pi-box text-xs"></i>
-            {{ appStore.t('compress.create_group') }} ({{ selectedRows.size }})
+            <span class="hidden sm:inline">{{ appStore.t('compress.create_group') }} ({{ selectedRows.size }})</span>
+            <span class="sm:hidden">({{ selectedRows.size }})</span>
           </button>
         </transition>
 
         <button
           v-if="totalPayload > 0"
           @click="handleCompress"
-          class="h-9 px-6 rounded-lg bg-primary text-white text-[0.5625rem] font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2"
+          class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-[0.5rem] md:text-[0.5625rem] font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2"
         >
           <i class="pi pi-play-circle text-xs"></i>
-          {{ appStore.t('compress.start') }}
+          <span class="hidden sm:inline">{{ appStore.t('compress.start') }}</span>
+          <span class="sm:hidden">开始</span>
         </button>
       </div>
     </header>
 
     <!-- 主工作区 (减小 mb 以使区域向下延展) -->
     <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
-      <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+      <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-3 md:p-6 space-y-4 md:space-y-6">
         <div class="rounded-2xl border border-primary/20 bg-primary/5 p-6">
           <div class="flex items-start gap-3 mb-4">
             <div class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
@@ -487,28 +502,27 @@ const totalPayload = computed(() => {
       </div>
 
       <!-- 3. 空状态 (引导式双列布局) -->
-      <div v-else class="flex-1 flex flex-col items-center justify-center p-12 overflow-hidden gap-8">
-        <div class="text-center space-y-2">
-          <h2 class="text-xl font-black text-content tracking-tight">{{ appStore.t('compress.start') }}</h2>
-          <p class="text-[0.625rem] text-muted font-bold uppercase tracking-widest">{{ appStore.t('compress.select_to_begin') }}</p>
+      <div v-else class="flex-1 min-h-0 flex flex-col items-center justify-center p-2 sm:p-3 gap-2 sm:gap-3">
+        <div class="text-center space-y-1 shrink-0">
+          <h2 class="text-sm sm:text-base md:text-xl font-black text-content tracking-tight">{{ appStore.t('compress.start') }}</h2>
+          <p class="text-[0.5rem] md:text-[0.625rem] text-muted font-bold uppercase tracking-widest">{{ appStore.t('compress.select_to_begin') }}</p>
         </div>
-        <div class="grid grid-cols-2 gap-8 w-full max-w-4xl">
+        <div class="flex-1 min-h-0 w-full max-w-4xl flex flex-col sm:flex-row gap-2 sm:gap-3 px-2">
           <EnhancedFileDropzone
             @files-selected="onFilesSelected"
             mode="folder"
-            class="shadow-sm h-full"
+            class="shadow-sm flex-1 min-h-[160px] sm:min-h-0"
           />
           <EnhancedFileDropzone
             @files-selected="onFilesSelected"
             mode="file"
-            :hint="appStore.t('compress.drop_file_hint')"
-            class="shadow-sm h-full"
+            class="shadow-sm flex-1 min-h-[160px] sm:min-h-0"
           />
         </div>
       </div>
 
       <!-- 底部辅助区 -->
-      <div v-if="totalPayload > 0" class="px-3 py-2 border-t border-subtle bg-input/10 grid grid-cols-2 gap-2 shrink-0">
+      <div v-if="totalPayload > 0" class="px-3 py-2 border-t border-subtle bg-input/10 grid grid-cols-1 sm:grid-cols-2 gap-2 shrink-0">
         <EnhancedFileDropzone
           @files-selected="onFilesSelected"
           :compact="true"
