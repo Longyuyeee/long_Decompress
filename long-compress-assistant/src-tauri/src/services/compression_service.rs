@@ -208,6 +208,9 @@ pub struct TaskProgress {
     pub current_file: Option<String>,
     pub processed_bytes: u64,
     pub total_bytes: u64,
+    // 密码尝试进度
+    pub password_attempt_current: Option<usize>,
+    pub password_attempt_total: Option<usize>,
 }
 
 #[derive(Clone, Serialize)]
@@ -375,6 +378,8 @@ impl CompressionService {
             processed_bytes,
             total_bytes,
             speed: None,
+            password_attempt_current: None,
+            password_attempt_total: None,
         };
         let _ = window.emit("task-progress", payload);
     }
@@ -614,8 +619,24 @@ impl CompressionService {
         }
 
         for (idx, (entry_id, entry_name, pwd)) in passwords.iter().enumerate() {
-            self.emit_log(window, task_id, &format!("正在尝试已知密码 [{}/{}]: {}...", idx + 1, total, entry_name), TaskLogSeverity::Info);
-            
+            let current = idx + 1;
+
+            // 发送密码尝试进度事件
+            let _ = window.emit("task-progress", TaskProgress {
+                task_id: task_id.to_string(),
+                stage: Some("password-attempt".to_string()),
+                current_password: Some(entry_name.clone()),
+                progress: (current as f32 / total as f32) * 100.0,
+                speed: None,
+                current_file: None,
+                processed_bytes: 0,
+                total_bytes: 0,
+                password_attempt_current: Some(current),
+                password_attempt_total: Some(total),
+            });
+
+            self.emit_log(window, task_id, &format!("正在尝试已知密码 [{}/{}]: {}...", current, total, entry_name), TaskLogSeverity::Info);
+
             match self.test_archive_password(file_path, pwd).await {
                 Ok(true) => {
                     self.emit_log(window, task_id, &format!("密码匹配成功 ({})", entry_name), TaskLogSeverity::Success);
