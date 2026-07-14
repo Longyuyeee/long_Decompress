@@ -373,8 +373,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
   <div class="decompress-view p-6 h-full flex flex-col gap-4 transition-colors duration-700 relative overflow-hidden">
     <header class="flex justify-between items-center shrink-0">
       <div>
-        <h1 class="text-2xl font-extrabold text-content tracking-tight mb-1">{{ appStore.t('nav.decompress') }}</h1>
-        <p class="text-dim text-[0.5rem] font-semibold uppercase tracking-[0.15em] leading-relaxed">ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · DOCX · XLSX · PPTX · APK · IPA · EPUB · LZH · ARJ · CHM · CPIO · XAR + 更多</p>
+        <h1 class="text-2xl font-extrabold text-content tracking-tight">{{ appStore.t('nav.decompress') }}</h1>
       </div>
       <div class="flex gap-3">
         <button

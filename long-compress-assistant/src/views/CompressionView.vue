@@ -288,8 +288,7 @@ const totalPayload = computed(() => {
   <div class="compression-view p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative">
     <header class="flex justify-between items-center shrink-0">
       <div>
-        <h1 class="text-2xl font-extrabold text-content tracking-tight mb-1">{{ appStore.t('nav.compress') }}</h1>
-        <p class="text-dim text-[0.5rem] font-semibold uppercase tracking-[0.15em] leading-relaxed">ZIP · 7Z · RAR · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZMA</p>
+        <h1 class="text-2xl font-extrabold text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
       </div>
       <div class="flex items-center gap-3">
         <!-- 磁吸成组按钮 (浮现式，次要操作) -->
