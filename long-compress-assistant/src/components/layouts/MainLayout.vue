@@ -72,9 +72,9 @@ const navigateTo = (name: string) => {
               <i :class="[item.icon, 'text-lg transition-all duration-300',
                  route.name === item.name ? 'text-primary scale-110' : 'text-muted group-hover:text-content group-hover:scale-105']"></i>
 
-              <div class="absolute left-full ml-4 px-4 py-2 rounded-xl backdrop-blur-2xl bg-card/98 border border-subtle/80 text-content text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 -translate-x-3 group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-2xl z-[100]">
+              <div class="absolute left-full ml-4 px-4 py-2 rounded-xl backdrop-blur-3xl bg-card border border-subtle shadow-[0_8px_32px_rgba(0,0,0,0.24)] text-content text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 -translate-x-3 group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap z-[100]">
                 {{ appStore.t(item.label) }}
-                <span class="text-[0.625rem] text-muted ml-2 font-mono opacity-70">({{ item.shortcut }})</span>
+                <span class="text-[0.625rem] text-muted ml-2 font-mono">({{ item.shortcut }})</span>
               </div>
             </div>
           </nav>
