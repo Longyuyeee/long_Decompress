@@ -2,7 +2,9 @@ use crate::services::password_query_service::{PasswordQueryService, PasswordQuer
 use crate::models::password::PasswordEntry;
 use anyhow::Result;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use log;
+use tokio::sync::Semaphore;
 
 /// 密码尝试策略
 #[derive(Debug, Clone)]
@@ -30,6 +32,30 @@ pub struct PasswordAttemptResult {
     pub error_message: Option<String>,
 }
 
+/// 密码尝试进度回调
+pub type ProgressCallback = Arc<dyn Fn(usize, usize) + Send + Sync>;
+
+/// 密码尝试配置
+#[derive(Clone)]
+pub struct PasswordAttemptConfig {
+    /// 是否启用并行尝试
+    pub enable_parallel: bool,
+    /// 并行度（同时尝试的密码数量）
+    pub parallelism: usize,
+    /// 进度回调
+    pub on_progress: Option<ProgressCallback>,
+}
+
+impl Default for PasswordAttemptConfig {
+    fn default() -> Self {
+        Self {
+            enable_parallel: true,
+            parallelism: 4, // 默认4个并行任务
+            on_progress: None,
+        }
+    }
+}
+
 /// 密码尝试服务
 pub struct PasswordAttemptService {
     query_service: Arc<PasswordQueryService>,
@@ -48,7 +74,24 @@ impl PasswordAttemptService {
         output_dir: &str,
         strategy: PasswordAttemptStrategy,
     ) -> Result<PasswordAttemptResult> {
-        log::info!("开始尝试解压ZIP文件: {}, 策略: {:?}", zip_path, strategy);
+        self.attempt_extract_with_passwords_config(
+            zip_path,
+            output_dir,
+            strategy,
+            PasswordAttemptConfig::default(),
+        ).await
+    }
+
+    /// 尝试解压ZIP文件，支持并行化和进度回调
+    pub async fn attempt_extract_with_passwords_config(
+        &self,
+        zip_path: &str,
+        output_dir: &str,
+        strategy: PasswordAttemptStrategy,
+        config: PasswordAttemptConfig,
+    ) -> Result<PasswordAttemptResult> {
+        log::info!("开始尝试解压归档文件: {}, 策略: {:?}, 并行: {}",
+            zip_path, strategy, config.enable_parallel);
 
         // 获取要尝试的密码列表
         let passwords = self.get_passwords_for_strategy(&strategy).await?;
@@ -64,49 +107,63 @@ impl PasswordAttemptService {
             });
         }
 
-        log::debug!("获取到 {} 个密码进行尝试", passwords.len());
+        log::info!("获取到 {} 个密码进行尝试", passwords.len());
+        let total = passwords.len();
 
-        // 尝试每个密码
+        // 如果启用并行尝试
+        if config.enable_parallel && passwords.len() > 1 {
+            self.attempt_parallel(zip_path, output_dir, passwords, config).await
+        } else {
+            self.attempt_sequential(zip_path, output_dir, passwords, config.on_progress, total).await
+        }
+    }
+
+    /// 顺序尝试密码
+    async fn attempt_sequential(
+        &self,
+        zip_path: &str,
+        output_dir: &str,
+        passwords: Vec<(String, Option<PasswordEntry>)>,
+        on_progress: Option<ProgressCallback>,
+        total: usize,
+    ) -> Result<PasswordAttemptResult> {
         for (index, (password, entry)) in passwords.iter().enumerate() {
             log::debug!("尝试第 {} 个密码 (长度: {} 字符)", index + 1, password.len());
 
-            // 这里应该调用实际的ZIP解压功能
-            // 暂时模拟解压尝试
+            // 调用进度回调
+            if let Some(ref callback) = on_progress {
+                callback(index + 1, total);
+            }
+
             let attempt_result = self.try_extract_with_password(zip_path, output_dir, password).await;
 
             match attempt_result {
                 Ok(true) => {
-                    // 解压成功
                     log::info!("解压成功! 使用的密码来自条目: {}",
                         entry.as_ref().map_or("未知", |e| &e.name)
                     );
 
-                    // 更新密码使用记录
                     if let Some(entry) = entry {
-                        self.update_password_usage(&entry.id).await?;
+                        let _ = self.update_password_usage(&entry.id).await;
                     }
 
                     return Ok(PasswordAttemptResult {
                         success: true,
                         password: Some(password.clone()),
                         attempts: index + 1,
-                        total_passwords: passwords.len(),
+                        total_passwords: total,
                         matched_entry: entry.clone(),
                         error_message: None,
                     });
                 }
-                Ok(false) => {
-                    // 密码错误，继续尝试下一个
-                    continue;
-                }
+                Ok(false) => continue,
                 Err(e) => {
-                    // 其他错误
                     log::warn!("解压尝试出错: {}", e);
                     return Ok(PasswordAttemptResult {
                         success: false,
                         password: None,
                         attempts: index + 1,
-                        total_passwords: passwords.len(),
+                        total_passwords: total,
                         matched_entry: None,
                         error_message: Some(format!("解压过程出错: {}", e)),
                     });
@@ -114,16 +171,144 @@ impl PasswordAttemptService {
             }
         }
 
-        // 所有密码都尝试失败
-        log::warn!("所有 {} 个密码尝试失败", passwords.len());
+        log::warn!("所有 {} 个密码尝试失败", total);
         Ok(PasswordAttemptResult {
             success: false,
             password: None,
-            attempts: passwords.len(),
-            total_passwords: passwords.len(),
+            attempts: total,
+            total_passwords: total,
             matched_entry: None,
-            error_message: Some(format!("尝试了 {} 个密码，全部失败", passwords.len())),
+            error_message: Some(format!("尝试了 {} 个密码，全部失败", total)),
         })
+    }
+
+    /// 并行尝试密码
+    async fn attempt_parallel(
+        &self,
+        zip_path: &str,
+        output_dir: &str,
+        passwords: Vec<(String, Option<PasswordEntry>)>,
+        config: PasswordAttemptConfig,
+    ) -> Result<PasswordAttemptResult> {
+        let total = passwords.len();
+        let parallelism = config.parallelism.min(total).max(1);
+
+        log::info!("并行密码尝试: {} 个密码, 并行度: {}", total, parallelism);
+
+        // 共享状态
+        let success = Arc::new(AtomicBool::new(false));
+        let attempts = Arc::new(AtomicUsize::new(0));
+        let semaphore = Arc::new(Semaphore::new(parallelism));
+
+        // 结果存储
+        let result_password = Arc::new(tokio::sync::Mutex::new(None::<String>));
+        let result_entry = Arc::new(tokio::sync::Mutex::new(None::<PasswordEntry>));
+        let result_attempts = Arc::new(tokio::sync::Mutex::new(0usize));
+
+        let mut tasks = Vec::new();
+
+        for (index, (password, entry)) in passwords.into_iter().enumerate() {
+            let zip_path = zip_path.to_string();
+            let _output_dir = output_dir.to_string();
+            let success_flag = success.clone();
+            let attempts_counter = attempts.clone();
+            let semaphore = semaphore.clone();
+            let result_password = result_password.clone();
+            let result_entry = result_entry.clone();
+            let result_attempts = result_attempts.clone();
+            let on_progress = config.on_progress.clone();
+            let query_service = self.query_service.clone();
+
+            let task = tokio::spawn(async move {
+                // 如果已经找到正确密码，直接返回
+                if success_flag.load(Ordering::SeqCst) {
+                    return;
+                }
+
+                // 获取信号量许可
+                let _permit = semaphore.acquire().await.unwrap();
+
+                // 再次检查是否已经成功
+                if success_flag.load(Ordering::SeqCst) {
+                    return;
+                }
+
+                let current_attempt = attempts_counter.fetch_add(1, Ordering::SeqCst) + 1;
+
+                // 调用进度回调
+                if let Some(ref callback) = on_progress {
+                    callback(current_attempt, total);
+                }
+
+                log::debug!("并行尝试第 {} 个密码 (索引: {}, 长度: {} 字符)",
+                    current_attempt, index, password.len());
+
+                // 创建临时服务实例进行密码测试
+                let compression_service = match crate::services::compression_service::CompressionService::new_with_defaults().await {
+                    srv => srv,
+                };
+
+                match compression_service.test_archive_password(&zip_path, &password).await {
+                    Ok(true) => {
+                        // 找到正确密码
+                        if !success_flag.swap(true, Ordering::SeqCst) {
+                            log::info!("并行尝试成功! 第 {} 次尝试, 密码来自: {}",
+                                current_attempt,
+                                entry.as_ref().map_or("未知", |e| &e.name)
+                            );
+
+                            *result_password.lock().await = Some(password.clone());
+                            *result_entry.lock().await = entry.clone();
+                            *result_attempts.lock().await = current_attempt;
+
+                            // 更新密码使用记录
+                            if let Some(ref e) = entry {
+                                let _ = query_service.increment_use_count(&e.id).await;
+                            }
+                        }
+                    }
+                    Ok(false) => {
+                        // 密码错误，继续
+                    }
+                    Err(e) => {
+                        log::warn!("密码测试出错: {}", e);
+                    }
+                }
+            });
+
+            tasks.push(task);
+        }
+
+        // 等待所有任务完成
+        for task in tasks {
+            let _ = task.await;
+        }
+
+        // 检查结果
+        if success.load(Ordering::SeqCst) {
+            let final_password = result_password.lock().await.clone();
+            let final_entry = result_entry.lock().await.clone();
+            let final_attempts = *result_attempts.lock().await;
+
+            Ok(PasswordAttemptResult {
+                success: true,
+                password: final_password,
+                attempts: final_attempts,
+                total_passwords: total,
+                matched_entry: final_entry,
+                error_message: None,
+            })
+        } else {
+            log::warn!("并行尝试: 所有 {} 个密码失败", total);
+            Ok(PasswordAttemptResult {
+                success: false,
+                password: None,
+                attempts: total,
+                total_passwords: total,
+                matched_entry: None,
+                error_message: Some(format!("尝试了 {} 个密码，全部失败", total)),
+            })
+        }
     }
 
     /// 根据策略获取密码列表
