@@ -20,6 +20,7 @@ use crate::services::universal_engine::UniversalCliEngine;
 use crate::services::archive_engine::ArchiveEngine;
 use crate::services::password_query_service::PasswordQueryService;
 use crate::services::tar_aes_engine::TarAesEngine;
+use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 
 #[derive(Debug, Error)]
@@ -245,6 +246,10 @@ pub struct CompressionFormatCapability {
 
 pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
     CompressionFormatCapability { format: "tar.aes", extensions: &["tar.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.gz.aes", extensions: &["tar.gz.aes", "tgz.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.bz2.aes", extensions: &["tar.bz2.aes", "tbz2.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.xz.aes", extensions: &["tar.xz.aes", "txz.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.zst.aes", extensions: &["tar.zst.aes", "tzst.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.bz2", extensions: &["tar.bz2", "tbz2", "tbz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.gz", extensions: &["tar.gz", "tgz", "tpz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.xz", extensions: &["tar.xz", "txz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
@@ -507,6 +512,10 @@ impl CompressionService {
             service.emit_log(&window, &task_id, &format!("开始压缩到: {}", output_path), TaskLogSeverity::Info);
             let res = match requested_format.as_str() {
                 "tar.aes" => service.do_compress_tar_aes(&window, &task_id, &source_files, &output_path, options),
+                "tar.gz.aes" | "tgz.aes" => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &output_path, options),
+                "tar.bz2.aes" | "tbz2.aes" => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &output_path, options),
+                "tar.xz.aes" | "txz.aes" => service.do_compress_tar_xz_aes(&window, &task_id, &source_files, &output_path, options),
+                "tar.zst.aes" | "tzst.aes" => service.do_compress_tar_zst_aes(&window, &task_id, &source_files, &output_path, options),
                 "zip" => service.do_compress_zip(&window, &task_id, &source_files, &output_path, options),
                 "tar" => service.do_compress_tar(&window, &task_id, &source_files, &output_path, options),
                 "tar.gz" | "tgz" => service.do_compress_tar_gz(&window, &task_id, &source_files, &output_path, options),
@@ -1942,6 +1951,77 @@ impl CompressionService {
         })?;
 
         self.emit_log(window, task_id, "TAR.AES 压缩完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    fn do_compress_tar_gz_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        self.emit_log(window, task_id, "使用 TAR.GZ.AES 格式压缩", TaskLogSeverity::Info);
+        let password = options.password.as_deref()
+            .ok_or_else(|| CompressionError::CompressionFailed("TAR.GZ.AES 格式需要密码".to_string()))?;
+
+        // 1. 创建临时 TAR.GZ 文件
+        let temp_tar_gz = std::env::temp_dir().join(format!("temp_{}.tar.gz", uuid::Uuid::new_v4()));
+        self.do_compress_tar_gz(window, task_id, sources, temp_tar_gz.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+
+        // 2. 加密 TAR.GZ 为 TAR.GZ.AES
+        AesWrapper::encrypt_file(&temp_tar_gz, Path::new(output), password)
+            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
+
+        // 3. 清理临时文件
+        let _ = std::fs::remove_file(temp_tar_gz);
+
+        self.emit_log(window, task_id, "TAR.GZ.AES 压缩完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    fn do_compress_tar_bz2_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        self.emit_log(window, task_id, "使用 TAR.BZ2.AES 格式压缩", TaskLogSeverity::Info);
+        let password = options.password.as_deref()
+            .ok_or_else(|| CompressionError::CompressionFailed("TAR.BZ2.AES 格式需要密码".to_string()))?;
+
+        let temp_tar_bz2 = std::env::temp_dir().join(format!("temp_{}.tar.bz2", uuid::Uuid::new_v4()));
+        self.do_compress_tar_bz2(window, task_id, sources, temp_tar_bz2.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+
+        AesWrapper::encrypt_file(&temp_tar_bz2, Path::new(output), password)
+            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
+
+        let _ = std::fs::remove_file(temp_tar_bz2);
+
+        self.emit_log(window, task_id, "TAR.BZ2.AES 压缩完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    fn do_compress_tar_xz_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        self.emit_log(window, task_id, "使用 TAR.XZ.AES 格式压缩", TaskLogSeverity::Info);
+        let password = options.password.as_deref()
+            .ok_or_else(|| CompressionError::CompressionFailed("TAR.XZ.AES 格式需要密码".to_string()))?;
+
+        let temp_tar_xz = std::env::temp_dir().join(format!("temp_{}.tar.xz", uuid::Uuid::new_v4()));
+        self.do_compress_tar_xz(window, task_id, sources, temp_tar_xz.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+
+        AesWrapper::encrypt_file(&temp_tar_xz, Path::new(output), password)
+            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
+
+        let _ = std::fs::remove_file(temp_tar_xz);
+
+        self.emit_log(window, task_id, "TAR.XZ.AES 压缩完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    fn do_compress_tar_zst_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        self.emit_log(window, task_id, "使用 TAR.ZST.AES 格式压缩", TaskLogSeverity::Info);
+        let password = options.password.as_deref()
+            .ok_or_else(|| CompressionError::CompressionFailed("TAR.ZST.AES 格式需要密码".to_string()))?;
+
+        let temp_tar_zst = std::env::temp_dir().join(format!("temp_{}.tar.zst", uuid::Uuid::new_v4()));
+        self.do_compress_tar_zstd(window, task_id, sources, temp_tar_zst.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+
+        AesWrapper::encrypt_file(&temp_tar_zst, Path::new(output), password)
+            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
+
+        let _ = std::fs::remove_file(temp_tar_zst);
+
+        self.emit_log(window, task_id, "TAR.ZST.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
     }
 
