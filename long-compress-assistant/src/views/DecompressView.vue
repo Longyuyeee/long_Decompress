@@ -7,6 +7,7 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage, generateId } from '@/utils'
 import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/api/dialog'
+import { confirm } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
@@ -109,6 +110,43 @@ const onFilesSelected = async (files: any[]) => {
     const sourcePath = file.path
     // 去重：如果任务列表中已有相同文件，跳过
     if (taskStore.tasks.some(t => t.sourceFiles.includes(sourcePath))) continue
+
+    // 检测是否为分卷文件
+    try {
+      const splitInfo = await tauriCommands.invoke<any>('detect_split_archive', { path: sourcePath })
+
+      if (splitInfo && splitInfo.is_split) {
+        // 检测到分卷文件
+        const totalSizeMB = (splitInfo.total_size / 1024 / 1024).toFixed(2)
+        const confirmed = await confirm(
+          appStore.t('decompress.split.detected', `检测到分卷压缩文件！\n\n分卷数量: ${splitInfo.parts.length}\n总大小: ${totalSizeMB} MB\n\n是否自动添加所有分卷？`),
+          { title: appStore.t('decompress.split.title', '分卷检测'), type: 'info' }
+        )
+
+        if (confirmed) {
+          // 用户确认，添加所有分卷（作为单个任务，使用第一个分卷）
+          const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
+
+          const taskId = taskStore.addTask({
+            id: generateId(),
+            name: (file.name || sourcePath.split(/[\\/]/).pop() || 'Unknown') + ` (${splitInfo.parts.length} 个分卷)`,
+            type: 'decompression',
+            sourceFiles: [splitInfo.first_part], // 使用第一个分卷
+            outputPath: isGlobalSameDir.value ? parentDir : globalOutputPath.value,
+            extractToSubfolder: globalExtractToSubfolder.value
+          })
+
+          appStore.setSuccess(
+            appStore.t('decompress.split.added', `已添加分卷文件（${splitInfo.parts.length} 个分卷，总计 ${totalSizeMB} MB）`)
+          )
+          appStore.addRecentFile(splitInfo.first_part)
+          continue // 跳过普通处理
+        }
+      }
+    } catch (e) {
+      // 分卷检测失败或不是分卷文件，继续普通处理
+      console.debug('Split archive detection skipped:', e)
+    }
 
     const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
 
