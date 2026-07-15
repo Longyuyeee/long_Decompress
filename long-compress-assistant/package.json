@@ -7,6 +7,8 @@
     "dev": "vite --port 1420 --strictPort",
     "build": "vue-tsc && vite build",
     "build:check": "vue-tsc && vite build",
+    "type-check": "vue-tsc --noEmit",
+    "lint": "vue-tsc --noEmit",
     "preview": "vite preview",
     "tauri": "tauri",
     "test:unit": "vitest run",
