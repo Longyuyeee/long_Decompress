@@ -5,6 +5,7 @@ pub mod compression_profile_service;
 pub mod decompression_profile_service;
 pub mod encrypted_password_service;
 pub mod file_service;
+pub mod file_integrity_service;
 pub mod io_buffer_pool;
 pub mod io_buffer_pool_benchmark;
 pub mod parallel_extraction;
