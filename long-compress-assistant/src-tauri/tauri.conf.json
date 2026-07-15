@@ -44,7 +44,7 @@
         "icons/icon.ico"
       ],
       "resources": [
-        "../node_modules/7zip-bin/win/x64/7za.exe"
+        "resources/7za.exe"
       ],
       "externalBin": [],
       "copyright": "Copyright © 2026 胧解压·方便助手",
