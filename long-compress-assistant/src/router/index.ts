@@ -39,6 +39,14 @@ const routes: Array<RouteRecordRaw> = [
     }
   },
   {
+    path: '/integrity',
+    name: 'FileIntegrity',
+    component: () => import('@/views/FileIntegrityView.vue'),
+    meta: {
+      title: '文件完整性校验'
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     redirect: '/decompress'
