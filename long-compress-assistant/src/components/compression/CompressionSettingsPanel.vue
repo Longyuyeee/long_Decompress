@@ -263,25 +263,35 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
         </div>
       </div>
 
-      <!-- 密码保护 (主行可见) -->
-      <div class="flex flex-col gap-1.5 w-32 shrink-0">
+      <!-- 密码保护 (主行可见) 带生成器按钮 -->
+      <div class="flex flex-col gap-1.5 w-44 shrink-0">
         <label class="text-[0.5rem] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('decompress.password') }}</label>
-        <div class="relative">
-          <input
-            v-model="compressionOptions.password" type="password"
-            class="w-full px-3 py-2 rounded-xl bg-input border text-[0.625rem] outline-none focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            :class="compressionOptions.password ? 'border-primary/50' : 'border-subtle'"
-            :disabled="!supportsPassword"
-            :placeholder="supportsPassword ? (compressionOptions.password ? appStore.t('preset.password_set') : appStore.t('preset.password_optional')) : appStore.t('preset.password_na')"
-          />
+        <div class="flex gap-1">
+          <div class="relative flex-1">
+            <input
+              v-model="compressionOptions.password" type="password"
+              class="w-full px-3 py-2 rounded-xl bg-input border text-[0.625rem] outline-none focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              :class="compressionOptions.password ? 'border-primary/50' : 'border-subtle'"
+              :disabled="!supportsPassword"
+              :placeholder="supportsPassword ? (compressionOptions.password ? appStore.t('preset.password_set') : appStore.t('preset.password_optional')) : appStore.t('preset.password_na')"
+            />
+            <button
+              v-if="compressionOptions.password"
+              @click="compressionOptions.password = ''"
+              class="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full flex items-center justify-center text-dim hover:text-red-400 transition-colors"
+            >
+              <i class="pi pi-times text-[0.4375rem]"></i>
+            </button>
+            <i v-else-if="supportsPassword" class="pi pi-lock absolute right-2.5 top-1/2 -translate-y-1/2 text-[0.5625rem] text-dim"></i>
+          </div>
           <button
-            v-if="compressionOptions.password"
-            @click="compressionOptions.password = ''"
-            class="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full flex items-center justify-center text-dim hover:text-red-400 transition-colors"
+            v-if="supportsPassword"
+            @click="showPasswordGenerator = true"
+            class="w-9 h-9 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary transition-colors flex items-center justify-center"
+            :title="appStore.t('password.generator.title', '密码生成器')"
           >
-            <i class="pi pi-times text-[0.4375rem]"></i>
+            <span class="text-base">🎲</span>
           </button>
-          <i v-else-if="supportsPassword" class="pi pi-lock absolute right-2.5 top-1/2 -translate-y-1/2 text-[0.5625rem] text-dim"></i>
         </div>
       </div>
 
