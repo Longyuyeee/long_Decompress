@@ -16,6 +16,7 @@ pub mod password_query_service;
 pub mod password_attempt_service;
 pub mod split_compression;
 pub mod rar_support;
+pub mod tar_aes_engine;
 #[cfg(any())]
 pub mod password_book_test;
 #[cfg(any())]

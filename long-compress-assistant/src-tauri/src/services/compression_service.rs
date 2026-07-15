@@ -19,6 +19,7 @@ use crate::services::rar_support::RarSupportService;
 use crate::services::universal_engine::UniversalCliEngine;
 use crate::services::archive_engine::ArchiveEngine;
 use crate::services::password_query_service::PasswordQueryService;
+use crate::services::tar_aes_engine::TarAesEngine;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 
 #[derive(Debug, Error)]
@@ -243,6 +244,7 @@ pub struct CompressionFormatCapability {
 }
 
 pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
+    CompressionFormatCapability { format: "tar.aes", extensions: &["tar.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.bz2", extensions: &["tar.bz2", "tbz2", "tbz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.gz", extensions: &["tar.gz", "tgz", "tpz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.xz", extensions: &["tar.xz", "txz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
@@ -504,6 +506,7 @@ impl CompressionService {
             let delete_after = options.delete_after;
             service.emit_log(&window, &task_id, &format!("开始压缩到: {}", output_path), TaskLogSeverity::Info);
             let res = match requested_format.as_str() {
+                "tar.aes" => service.do_compress_tar_aes(&window, &task_id, &source_files, &output_path, options),
                 "zip" => service.do_compress_zip(&window, &task_id, &source_files, &output_path, options),
                 "tar" => service.do_compress_tar(&window, &task_id, &source_files, &output_path, options),
                 "tar.gz" | "tgz" => service.do_compress_tar_gz(&window, &task_id, &source_files, &output_path, options),
@@ -1536,6 +1539,16 @@ impl CompressionService {
         self.do_extract_tar(w, tid, file, output, Some(Box::new(zst)), options)
     }
 
+    fn do_extract_tar_aes(&self, window: &Window, task_id: &str, file: &str, output: &Path, _options: &DecompressOptions) -> Result<()> {
+        self.emit_log(window, task_id, "检测到 TAR.AES 加密文件", TaskLogSeverity::Info);
+
+        // TAR.AES 需要密码，但 DecompressOptions 不包含密码字段
+        // 密码通过事件系统从前端获取，此处返回 PasswordRequired 错误
+        // 让上层处理密码获取逻辑
+
+        return Err(CompressionError::PasswordRequired.into());
+    }
+
     fn unique_archive_name(used_archive_names: &mut HashSet<String>, raw_name: String) -> String {
         let normalized = raw_name.replace('\\', "/");
         if used_archive_names.insert(normalized.clone()) {
@@ -1891,6 +1904,44 @@ impl CompressionService {
         self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
         let encoder = builder.into_inner()?;
         encoder.finish()?;
+        Ok(())
+    }
+
+    fn do_compress_tar_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        self.emit_log(window, task_id, "使用 TAR.AES 格式压缩", TaskLogSeverity::Info);
+
+        // 检查密码
+        let password = options.password.as_deref()
+            .ok_or_else(|| CompressionError::CompressionFailed("TAR.AES 格式需要密码".to_string()))?;
+
+        if password.is_empty() {
+            return Err(CompressionError::CompressionFailed("密码不能为空".to_string()).into());
+        }
+
+        // 转换源文件路径
+        let source_paths: Vec<PathBuf> = sources.iter()
+            .map(|s| PathBuf::from(s))
+            .collect();
+
+        // 确定基础目录
+        let base_dir = if sources.len() == 1 {
+            Path::new(&sources[0]).parent()
+        } else {
+            None
+        };
+
+        // 执行压缩
+        TarAesEngine::compress_tar_aes(
+            &source_paths,
+            Path::new(output),
+            password,
+            base_dir,
+        ).map_err(|e| {
+            self.emit_log(window, task_id, &format!("TAR.AES 压缩失败: {}", e), TaskLogSeverity::Error);
+            CompressionError::CompressionFailed(format!("TAR.AES 压缩失败: {}", e))
+        })?;
+
+        self.emit_log(window, task_id, "TAR.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
     }
 
