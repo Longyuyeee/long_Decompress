@@ -250,6 +250,10 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
     CompressionFormatCapability { format: "tar.bz2.aes", extensions: &["tar.bz2.aes", "tbz2.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.xz.aes", extensions: &["tar.xz.aes", "txz.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.zst.aes", extensions: &["tar.zst.aes", "tzst.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "gz.aes", extensions: &["gz.aes", "gzip.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "bz2.aes", extensions: &["bz2.aes", "bzip2.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "xz.aes", extensions: &["xz.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "zst.aes", extensions: &["zst.aes", "zstd.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.bz2", extensions: &["tar.bz2", "tbz2", "tbz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.gz", extensions: &["tar.gz", "tgz", "tpz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.xz", extensions: &["tar.xz", "txz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
@@ -516,6 +520,10 @@ impl CompressionService {
                 "tar.bz2.aes" | "tbz2.aes" => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &output_path, options),
                 "tar.xz.aes" | "txz.aes" => service.do_compress_tar_xz_aes(&window, &task_id, &source_files, &output_path, options),
                 "tar.zst.aes" | "tzst.aes" => service.do_compress_tar_zst_aes(&window, &task_id, &source_files, &output_path, options),
+                "gz.aes" | "gzip.aes" => service.do_compress_gz_aes(&window, &task_id, &source_files, &output_path, options),
+                "bz2.aes" | "bzip2.aes" => service.do_compress_bz2_aes(&window, &task_id, &source_files, &output_path, options),
+                "xz.aes" => service.do_compress_xz_aes(&window, &task_id, &source_files, &output_path, options),
+                "zst.aes" | "zstd.aes" => service.do_compress_zst_aes(&window, &task_id, &source_files, &output_path, options),
                 "zip" => service.do_compress_zip(&window, &task_id, &source_files, &output_path, options),
                 "tar" => service.do_compress_tar(&window, &task_id, &source_files, &output_path, options),
                 "tar.gz" | "tgz" => service.do_compress_tar_gz(&window, &task_id, &source_files, &output_path, options),
@@ -2022,6 +2030,70 @@ impl CompressionService {
         let _ = std::fs::remove_file(temp_tar_zst);
 
         self.emit_log(window, task_id, "TAR.ZST.AES 压缩完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    fn do_compress_gz_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        self.emit_log(window, task_id, "使用 GZ.AES 格式压缩", TaskLogSeverity::Info);
+        let password = options.password.as_deref()
+            .ok_or_else(|| CompressionError::CompressionFailed("GZ.AES 格式需要密码".to_string()))?;
+
+        let temp_gz = std::env::temp_dir().join(format!("temp_{}.gz", uuid::Uuid::new_v4()));
+        self.do_compress_gz(window, task_id, sources, temp_gz.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+
+        AesWrapper::encrypt_file(&temp_gz, Path::new(output), password)
+            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
+
+        let _ = std::fs::remove_file(temp_gz);
+        self.emit_log(window, task_id, "GZ.AES 压缩完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    fn do_compress_bz2_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        self.emit_log(window, task_id, "使用 BZ2.AES 格式压缩", TaskLogSeverity::Info);
+        let password = options.password.as_deref()
+            .ok_or_else(|| CompressionError::CompressionFailed("BZ2.AES 格式需要密码".to_string()))?;
+
+        let temp_bz2 = std::env::temp_dir().join(format!("temp_{}.bz2", uuid::Uuid::new_v4()));
+        self.do_compress_bz2(window, task_id, sources, temp_bz2.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+
+        AesWrapper::encrypt_file(&temp_bz2, Path::new(output), password)
+            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
+
+        let _ = std::fs::remove_file(temp_bz2);
+        self.emit_log(window, task_id, "BZ2.AES 压缩完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    fn do_compress_xz_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        self.emit_log(window, task_id, "使用 XZ.AES 格式压缩", TaskLogSeverity::Info);
+        let password = options.password.as_deref()
+            .ok_or_else(|| CompressionError::CompressionFailed("XZ.AES 格式需要密码".to_string()))?;
+
+        let temp_xz = std::env::temp_dir().join(format!("temp_{}.xz", uuid::Uuid::new_v4()));
+        self.do_compress_xz(window, task_id, sources, temp_xz.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+
+        AesWrapper::encrypt_file(&temp_xz, Path::new(output), password)
+            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
+
+        let _ = std::fs::remove_file(temp_xz);
+        self.emit_log(window, task_id, "XZ.AES 压缩完成", TaskLogSeverity::Success);
+        Ok(())
+    }
+
+    fn do_compress_zst_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        self.emit_log(window, task_id, "使用 ZST.AES 格式压缩", TaskLogSeverity::Info);
+        let password = options.password.as_deref()
+            .ok_or_else(|| CompressionError::CompressionFailed("ZST.AES 格式需要密码".to_string()))?;
+
+        let temp_zst = std::env::temp_dir().join(format!("temp_{}.zst", uuid::Uuid::new_v4()));
+        self.do_compress_zstd(window, task_id, sources, temp_zst.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+
+        AesWrapper::encrypt_file(&temp_zst, Path::new(output), password)
+            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
+
+        let _ = std::fs::remove_file(temp_zst);
+        self.emit_log(window, task_id, "ZST.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
     }
 
