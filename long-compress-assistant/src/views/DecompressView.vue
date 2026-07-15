@@ -256,50 +256,66 @@ const startDecompression = async () => {
         }
       }
     } catch (error) {
-      // 第一次尝试失败，尝试保险箱中的其他候选密码
-      const candidates = passwordStore.findCandidatePasswords(fileName)
-      const remainingCandidates = candidates.filter(pwd => pwd !== task.password)
+      // 检查是否为密码错误
+      const errorMsg = extractErrorMessage(error) || String(error)
+      const isPasswordError = errorMsg.includes('password') || errorMsg.includes('密码') || errorMsg.includes('Wrong password')
 
-      if (remainingCandidates.length > 0) {
-        taskStore.updateTaskStatus(task.id, 'extracting')
-        task.logs.push({
-          task_id: task.id,
-          message: appStore.t('decompress.auto_trying').replace('{0}', String(remainingCandidates.length)),
-          severity: 'info',
-          timestamp: new Date().toISOString()
-        })
+      if (isPasswordError) {
+        // 第一次尝试失败，尝试保险箱中的其他候选密码
+        const candidates = passwordStore.findCandidatePasswords(fileName)
+        const remainingCandidates = candidates.filter(pwd => pwd !== task.password)
 
-        let succeeded = false
-        for (const candidatePassword of remainingCandidates) {
-          if (succeeded) break
-          try {
-            task.password = candidatePassword
-            task.passwordRequired = false
-            task.currentPassword = candidatePassword
-            await tauriCommands.decompressFile(
-              task.sourceFiles[0],
-              { ...options, password: candidatePassword },
-              task.id
-            )
-            succeeded = true
+        if (remainingCandidates.length > 0) {
+          taskStore.updateTaskStatus(task.id, 'extracting')
+          task.logs.push({
+            task_id: task.id,
+            message: appStore.t('decompress.auto_trying').replace('{0}', String(remainingCandidates.length)),
+            severity: 'info',
+            timestamp: new Date().toISOString()
+          })
 
-            // 递增保险箱中匹配密码的 use_count
-            const matchedEntry = passwordStore.entries.find(e => e.password === candidatePassword)
-            if (matchedEntry) {
-              try {
-                await passwordStore.updateEntry(matchedEntry.id, { use_count: (matchedEntry.use_count || 0) + 1 })
-              } catch { /* 非关键操作 */ }
+          let succeeded = false
+          for (const candidatePassword of remainingCandidates) {
+            if (succeeded) break
+            try {
+              task.password = candidatePassword
+              task.passwordRequired = false
+              task.currentPassword = candidatePassword
+              await tauriCommands.decompressFile(
+                task.sourceFiles[0],
+                { ...options, password: candidatePassword },
+                task.id
+              )
+              succeeded = true
+
+              // 递增保险箱中匹配密码的 use_count
+              const matchedEntry = passwordStore.entries.find(e => e.password === candidatePassword)
+              if (matchedEntry) {
+                try {
+                  await passwordStore.updateEntry(matchedEntry.id, { use_count: (matchedEntry.use_count || 0) + 1 })
+                } catch { /* 非关键操作 */ }
+              }
+            } catch {
+              // 尝试下一个候选密码
+              continue
             }
-          } catch {
-            // 尝试下一个候选密码
-            continue
           }
-        }
 
-        if (!succeeded) {
-          // 所有候选密码均失败
+          if (!succeeded) {
+            // 所有候选密码均失败
+            taskStore.updateTaskStatus(task.id, 'failed')
+            task.error = appStore.t('decompress.all_failed').replace('{0}', String(candidates.length))
+            task.logs.push({
+              task_id: task.id,
+              message: task.error!,
+              severity: 'error',
+              timestamp: new Date().toISOString()
+            })
+          }
+        } else {
+          // 没有其他候选密码可尝试
           taskStore.updateTaskStatus(task.id, 'failed')
-          task.error = appStore.t('decompress.all_failed').replace('{0}', String(candidates.length))
+          task.error = extractErrorMessage(error) || appStore.t('decompress.no_vault_passwords')
           task.logs.push({
             task_id: task.id,
             message: task.error!,
@@ -308,19 +324,9 @@ const startDecompression = async () => {
           })
         }
       } else {
-        // 没有其他候选密码可尝试
+        // 非密码错误，直接失败
         taskStore.updateTaskStatus(task.id, 'failed')
-        task.error = extractErrorMessage(error) || appStore.t('decompress.no_vault_passwords')
-        task.logs.push({
-          task_id: task.id,
-          message: task.error!,
-          severity: 'error',
-          timestamp: new Date().toISOString()
-        })
-      }
-      } else {
-        taskStore.updateTaskStatus(task.id, 'failed')
-        task.error = extractErrorMessage(error) || String(error)
+        task.error = errorMsg
         appStore.setError(`${appStore.t('common.error')}: ${task.error}`)
       }
     }

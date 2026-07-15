@@ -253,7 +253,7 @@ impl DecompressionProfileService {
             .fetch_optional(&self.pool)
             .await?;
 
-        let next_order = max_order.and_then(|r| Some(r.0)).unwrap_or(-1) + 1;
+        let next_order = max_order.map(|r| r.0).unwrap_or(-1) + 1;
         self.create_profile_internal(profile, next_order).await
     }
 

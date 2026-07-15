@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { appWindow } from '@tauri-apps/api/window'
 import PerformanceMeter from '@/components/ui/PerformanceMeter.vue'
 import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
-import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
 import { useAppStore } from '@/stores/app'
 
 const route = useRoute()
@@ -43,19 +42,6 @@ const navigateTo = (name: string) => {
   >
     <div class="flex-1 flex flex-col overflow-hidden bg-base text-content rounded-xl relative border transition-all duration-300"
          :class="[isFocused ? 'border-primary/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]' : 'border-subtle shadow-sm']">
-      
-      <!-- 绝杀闪烁：8个隐形游标同步区 -->
-      <div class="absolute top-0 left-0 right-0 h-[6px] cursor-n-resize z-[9999]"></div>
-      <div class="absolute bottom-0 left-0 right-0 h-[6px] cursor-s-resize z-[9999]"></div>
-      <div class="absolute top-0 bottom-0 left-0 w-[6px] cursor-w-resize z-[9999]"></div>
-      <div class="absolute top-0 bottom-0 right-0 w-[6px] cursor-e-resize z-[9999]"></div>
-      <div class="absolute top-0 left-0 w-[8px] h-[8px] cursor-nw-resize z-[10000]"></div>
-      <div class="absolute top-0 right-0 w-[8px] h-[8px] cursor-ne-resize z-[10000]"></div>
-      <div class="absolute bottom-0 left-0 w-[8px] h-[8px] cursor-sw-resize z-[10000]"></div>
-      <div class="absolute bottom-0 right-0 w-[8px] h-[8px] cursor-se-resize z-[10000]"></div>
-
-      <!-- 顶部自定义标题栏 -->
-      <WindowTitleBar class="shrink-0" />
 
       <div class="main-layout flex flex-1 overflow-hidden relative">
         <!-- 侧边栏 - 华丽扁平版 -->

@@ -199,6 +199,7 @@ pub enum PasswordStrategyType {
 
 /// 配置组统计信息
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct ProfileStats {
     /// 使用次数
     pub use_count: u32,
@@ -219,18 +220,6 @@ pub struct ProfileStats {
     pub avg_extraction_time: Option<f64>,
 }
 
-impl Default for ProfileStats {
-    fn default() -> Self {
-        Self {
-            use_count: 0,
-            success_count: 0,
-            failure_count: 0,
-            total_files_processed: 0,
-            total_bytes_processed: 0,
-            avg_extraction_time: None,
-        }
-    }
-}
 
 /// 创建默认解压配置组
 pub fn create_default_profiles() -> Vec<DecompressionProfile> {
