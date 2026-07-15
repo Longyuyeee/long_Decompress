@@ -71,13 +71,36 @@ const confirmDelete = async () => {
   deleteTargetId.value = null
 }
 
+const isExporting = ref(false)
+const isImporting = ref(false)
+
 const handleExport = async () => {
-  await tauriCommands.exportPasswords()
+  if (passwordStore.entries.length === 0) {
+    appStore.setError(appStore.t('vault.export.empty'))
+    return
+  }
+
+  try {
+    isExporting.value = true
+    await tauriCommands.exportPasswords()
+  } catch (error) {
+    appStore.setError(appStore.t('vault.export.failed'))
+  } finally {
+    isExporting.value = false
+  }
 }
 
 const handleImport = async () => {
-  await tauriCommands.importPasswords()
-  await passwordStore.fetchAllData()
+  try {
+    isImporting.value = true
+    await tauriCommands.importPasswords()
+    await passwordStore.fetchAllData()
+    appStore.setSuccess(appStore.t('vault.import.success'))
+  } catch (error) {
+    appStore.setError(appStore.t('vault.import.failed'))
+  } finally {
+    isImporting.value = false
+  }
 }
 
 const confirmClearAll = async () => {
@@ -143,11 +166,13 @@ const chartData = computed(() => {
             <i class="pi pi-plus text-sm"></i>
           </button>
           <div class="w-px h-5 bg-subtle my-auto mx-1"></div>
-          <button v-if="passwordStore.isUnlocked" @click="handleExport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" :title="appStore.t('vault.export')" aria-label="Export passwords">
-            <i class="pi pi-download text-[0.625rem]"></i>
+          <button v-if="passwordStore.isUnlocked" @click="handleExport" :disabled="isExporting || passwordStore.entries.length === 0" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed" :title="appStore.t('vault.export')" aria-label="Export passwords">
+            <i v-if="!isExporting" class="pi pi-download text-[0.625rem]"></i>
+            <i v-else class="pi pi-spin pi-spinner text-[0.625rem]"></i>
           </button>
-          <button v-if="passwordStore.isUnlocked" @click="handleImport" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all" :title="appStore.t('vault.import')" aria-label="Import passwords">
-            <i class="pi pi-upload text-[0.625rem]"></i>
+          <button v-if="passwordStore.isUnlocked" @click="handleImport" :disabled="isImporting" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed" :title="appStore.t('vault.import')" aria-label="Import passwords">
+            <i v-if="!isImporting" class="pi pi-upload text-[0.625rem]"></i>
+            <i v-else class="pi pi-spin pi-spinner text-[0.625rem]"></i>
           </button>
           <button v-if="passwordStore.isUnlocked" @click="showClearConfirm = true" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-red-500 transition-all" :title="appStore.t('vault.clear_all')" aria-label="Clear all passwords">
             <i class="pi pi-trash text-[0.625rem]"></i>
