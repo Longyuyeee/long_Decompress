@@ -175,13 +175,12 @@ impl ArchiveEngine for UniversalCliEngine {
             None => return Ok(false),
         };
 
-        // 7z t -p <file> 测试归档，通过环境变量传递密码
+        // 7z t -p<password> <file> 测试归档
         let output = Command::new(cmd)
             .arg("t")
-            .arg("-p") // 使用环境变量中的密码
+            .arg(format!("-p{}", password))
             .arg("-y") // 假定所有提示为yes
             .arg(file_path)
-            .env("_7ZIP_PASSWORD", password)
             .output()
             .await?;
 
@@ -258,8 +257,11 @@ impl ArchiveEngine for UniversalCliEngine {
         command.arg("-y"); // yes to all
         command.arg(Self::overwrite_mode_arg(overwrite_existing));
 
-        if password.is_some() {
-            command.arg("-p"); // 使用环境变量传递密码
+        // 7z 密码传递：使用 -p<password> 格式
+        // 注意：密码会出现在命令行参数中，但这是 7z CLI 唯一支持的方式
+        // 为了减少暴露时间，我们使用非交互模式，进程会快速结束
+        if let Some(pwd) = password {
+            command.arg(format!("-p{}", pwd));
         }
 
         command.arg(format!("-o{}", output_dir.to_string_lossy()));
@@ -267,11 +269,6 @@ impl ArchiveEngine for UniversalCliEngine {
 
         // 开启进度输出
         command.arg("-bsp1");
-
-        // 通过环境变量传递密码，避免在进程列表中暴露
-        if let Some(pwd) = password {
-            command.env("_7ZIP_PASSWORD", pwd);
-        }
 
         // 我们需要捕获 stdout 来解析进度
         command.stdout(Stdio::piped());
@@ -288,7 +285,7 @@ impl ArchiveEngine for UniversalCliEngine {
         let mut err_reader = BufReader::new(stderr).lines();
 
         let cancel_flag = is_cancelled.clone();
-        
+
         // 解析标准输出流以提取进度
         loop {
             if cancel_flag.load(Ordering::SeqCst) {

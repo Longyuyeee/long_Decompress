@@ -2306,8 +2306,8 @@ impl CompressionService {
         }
 
         if let Some(password) = options.password.as_deref().filter(|password| !password.is_empty()) {
-            command.arg("-hp"); // RAR 使用 -hp 参数读取环境变量密码
-            command.env("RAR_PASSWORD", password);
+            // RAR 密码格式：-p<password> 用于加密内容，-hp<password> 还会加密文件名
+            command.arg(format!("-hp{}", password)); // 使用 -hp 同时加密内容和文件名
         }
 
         command.arg(output);
