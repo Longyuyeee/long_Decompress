@@ -7,10 +7,13 @@ import type { CompressionOptions } from '@/stores/compression'
 import type { CompressionProfile } from '@/types/profile'
 import { COMPRESSIBLE_FORMATS, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 import ProfileSelector from '@/components/profiles/ProfileSelector.vue'
+import PasswordGeneratorDialog from '@/components/password/PasswordGeneratorDialog.vue'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
 const profileStore = useCompressionProfileStore()
+
+const showPasswordGenerator = ref(false)
 
 interface Props {
   modelValue?: CompressionOptions
