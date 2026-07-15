@@ -3,7 +3,6 @@ use std::path::Path;
 use std::fs::File;
 use std::io::{Read, BufReader};
 use sha2::{Sha256, Digest};
-use md5::Md5;
 
 /// 文件完整性校验服务
 /// 支持 CRC32, MD5, SHA256 校验算法
@@ -83,7 +82,7 @@ impl FileIntegrityService {
 
     /// 计算 MD5 校验和
     fn calculate_md5<R: Read>(reader: &mut R) -> Result<String> {
-        let mut hasher = Md5::new();
+        let mut context = md5::Context::new();
         let mut buffer = [0u8; 8192];
 
         loop {
@@ -91,10 +90,10 @@ impl FileIntegrityService {
             if bytes_read == 0 {
                 break;
             }
-            hasher.update(&buffer[..bytes_read]);
+            context.consume(&buffer[..bytes_read]);
         }
 
-        Ok(format!("{:x}", hasher.finalize()))
+        Ok(format!("{:x}", context.compute()))
     }
 
     /// 计算 SHA256 校验和
