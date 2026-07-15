@@ -1556,7 +1556,8 @@ impl CompressionService {
         self.do_extract_tar(w, tid, file, output, Some(Box::new(zst)), options)
     }
 
-    fn do_extract_tar_aes(&self, window: &Window, task_id: &str, file: &str, output: &Path, _options: &DecompressOptions) -> Result<()> {
+    #[allow(dead_code)]
+    fn do_extract_tar_aes(&self, window: &Window, task_id: &str, _file: &str, _output: &Path, _options: &DecompressOptions) -> Result<()> {
         self.emit_log(window, task_id, "检测到 TAR.AES 加密文件", TaskLogSeverity::Info);
 
         // TAR.AES 需要密码，但 DecompressOptions 不包含密码字段

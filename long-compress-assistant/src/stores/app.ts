@@ -61,7 +61,9 @@ export const useAppStore = defineStore('app', () => {
   let errorTimer: ReturnType<typeof setTimeout> | null = null
   let successTimer: ReturnType<typeof setTimeout> | null = null
 
-  const t = (key: string): string => translations[language.value]?.[key] || translations['zh-CN']?.[key] || key
+  const t = (key: string, fallback?: string): string => {
+    return translations[language.value]?.[key] || translations['zh-CN']?.[key] || fallback || key
+  }
 
   const currentTheme = computed(() => {
     if (theme.value === 'auto') return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'

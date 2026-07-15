@@ -490,6 +490,7 @@ export const useTauriCommands = () => {
   }
 
   return {
+    invoke, // Export raw invoke for custom commands
     selectFiles,
     selectDirectory,
     selectWordlists,

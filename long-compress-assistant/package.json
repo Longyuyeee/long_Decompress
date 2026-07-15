@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 1420 --strictPort",
-    "build": "vite build",
+    "build": "vue-tsc && vite build",
     "build:check": "vue-tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",

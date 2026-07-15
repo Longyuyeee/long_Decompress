@@ -1,4 +1,4 @@
-use anyhow::{Result, Context, anyhow};
+use anyhow::{Result, anyhow};
 use std::path::{Path, PathBuf};
 use std::fs;
 use regex::Regex;

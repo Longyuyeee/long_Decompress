@@ -1,6 +1,4 @@
-use anyhow::Result;
 use rand::{thread_rng, Rng};
-use rand::distributions::Alphanumeric;
 
 /// 密码生成器服务
 /// 生成安全、随机的密码

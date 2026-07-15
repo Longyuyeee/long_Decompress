@@ -169,8 +169,11 @@
 import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { useAppStore } from '@/stores/app'
+import { getCurrentInstance } from 'vue'
 
 const appStore = useAppStore()
+const instance = getCurrentInstance()
+const $t = instance?.appContext.config.globalProperties.$t || ((key: string, fallback?: string) => fallback || key)
 
 const props = defineProps<{
   isOpen: boolean

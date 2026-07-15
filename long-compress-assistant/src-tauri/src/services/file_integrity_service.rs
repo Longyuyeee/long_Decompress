@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::path::Path;
 use std::fs::File;
 use std::io::{Read, BufReader};
