@@ -256,9 +256,16 @@ const startDecompression = async () => {
         }
       }
     } catch (error) {
-      // 检查是否为密码错误
+      // 检查是否为密码错误（包含所有可能的密码相关错误消息）
       const errorMsg = extractErrorMessage(error) || String(error)
-      const isPasswordError = errorMsg.includes('password') || errorMsg.includes('密码') || errorMsg.includes('Wrong password')
+      const isPasswordError = errorMsg.includes('password') ||
+                              errorMsg.includes('密码') ||
+                              errorMsg.includes('Wrong password') ||
+                              errorMsg.includes('Data Error in encrypted') ||
+                              errorMsg.includes('encrypted archive') ||
+                              errorMsg.includes('InvalidPassword') ||
+                              errorMsg.includes('PasswordRequired') ||
+                              errorMsg.includes('PasswordError')
 
       if (isPasswordError) {
         // 第一次尝试失败，尝试保险箱中的其他候选密码
