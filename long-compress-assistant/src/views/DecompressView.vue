@@ -347,9 +347,205 @@ const startDecompression = async () => {
           }
 
           if (!succeeded) {
-            // 所有候选密码均失败
+            // 保险箱密码全部失败，尝试密码字典攻击
+            taskStore.updateTaskStatus(task.id, 'extracting')
+            task.logs.push({
+              task_id: task.id,
+              message: appStore.t('decompress.dictionary.trying', '正在尝试常用密码字典...'),
+              severity: 'info',
+              timestamp: new Date().toISOString()
+            })
+
+            try {
+              // 调用密码字典服务
+              const dictionaryPasswords = await tauriCommands.invoke<string[]>('get_dictionary_passwords', {
+                fileName: fileName,
+                strategy: 'recommended'
+              })
+
+              if (dictionaryPasswords && dictionaryPasswords.length > 0) {
+                task.logs.push({
+                  task_id: task.id,
+                  message: appStore.t('decompress.dictionary.found', `字典中找到 ${dictionaryPasswords.length} 个候选密码，开始尝试...`),
+                  severity: 'info',
+                  timestamp: new Date().toISOString()
+                })
+
+                let dictSucceeded = false
+                for (let i = 0; i < dictionaryPasswords.length; i++) {
+                  if (dictSucceeded) break
+                  const dictPassword = dictionaryPasswords[i]
+
+                  // 每10个密码更新一次进度
+                  if (i % 10 === 0) {
+                    task.logs.push({
+                      task_id: task.id,
+                      message: appStore.t('decompress.dictionary.progress', `字典攻击进度: ${i}/${dictionaryPasswords.length}`),
+                      severity: 'info',
+                      timestamp: new Date().toISOString()
+                    })
+                  }
+
+                  try {
+                    task.password = dictPassword
+                    task.passwordRequired = false
+                    task.currentPassword = dictPassword
+                    await tauriCommands.decompressFile(
+                      task.sourceFiles[0],
+                      { ...options, password: dictPassword },
+                      task.id
+                    )
+                    dictSucceeded = true
+
+                    // 成功后保存到密码保险箱
+                    task.logs.push({
+                      task_id: task.id,
+                      message: appStore.t('decompress.dictionary.success', `✓ 密码破解成功！使用密码: ${dictPassword}`),
+                      severity: 'success',
+                      timestamp: new Date().toISOString()
+                    })
+
+                    // 保存到保险箱
+                    try {
+                      await passwordStore.addEntry({
+                        password: dictPassword,
+                        hint: `字典破解 - ${fileName}`,
+                        tags: ['auto-cracked']
+                      })
+                    } catch { /* 非关键操作 */ }
+                  } catch {
+                    // 尝试下一个字典密码
+                    continue
+                  }
+                }
+
+                if (!dictSucceeded) {
+                  // 字典攻击也失败
+                  taskStore.updateTaskStatus(task.id, 'failed')
+                  task.error = appStore.t('decompress.dictionary.all_failed', `所有密码尝试失败（保险箱: ${candidates.length}, 字典: ${dictionaryPasswords.length}）`)
+                  task.logs.push({
+                    task_id: task.id,
+                    message: task.error!,
+                    severity: 'error',
+                    timestamp: new Date().toISOString()
+                  })
+                }
+              } else {
+                // 字典服务未返回密码
+                taskStore.updateTaskStatus(task.id, 'failed')
+                task.error = appStore.t('decompress.all_failed').replace('{0}', String(candidates.length))
+                task.logs.push({
+                  task_id: task.id,
+                  message: task.error!,
+                  severity: 'error',
+                  timestamp: new Date().toISOString()
+                })
+              }
+            } catch (dictError) {
+              // 字典服务调用失败
+              console.error('Dictionary attack failed:', dictError)
+              taskStore.updateTaskStatus(task.id, 'failed')
+              task.error = appStore.t('decompress.all_failed').replace('{0}', String(candidates.length))
+              task.logs.push({
+                task_id: task.id,
+                message: task.error!,
+                severity: 'error',
+                timestamp: new Date().toISOString()
+              })
+            }
+          }
+        } else {
+          // 没有保险箱候选密码，直接尝试字典攻击
+          taskStore.updateTaskStatus(task.id, 'extracting')
+          task.logs.push({
+            task_id: task.id,
+            message: appStore.t('decompress.dictionary.trying', '正在尝试常用密码字典...'),
+            severity: 'info',
+            timestamp: new Date().toISOString()
+          })
+
+          try {
+            const dictionaryPasswords = await tauriCommands.invoke<string[]>('get_dictionary_passwords', {
+              fileName: fileName,
+              strategy: 'recommended'
+            })
+
+            if (dictionaryPasswords && dictionaryPasswords.length > 0) {
+              task.logs.push({
+                task_id: task.id,
+                message: appStore.t('decompress.dictionary.found', `字典中找到 ${dictionaryPasswords.length} 个候选密码，开始尝试...`),
+                severity: 'info',
+                timestamp: new Date().toISOString()
+              })
+
+              let dictSucceeded = false
+              for (let i = 0; i < dictionaryPasswords.length; i++) {
+                if (dictSucceeded) break
+                const dictPassword = dictionaryPasswords[i]
+
+                if (i % 10 === 0) {
+                  task.logs.push({
+                    task_id: task.id,
+                    message: appStore.t('decompress.dictionary.progress', `字典攻击进度: ${i}/${dictionaryPasswords.length}`),
+                    severity: 'info',
+                    timestamp: new Date().toISOString()
+                  })
+                }
+
+                try {
+                  task.password = dictPassword
+                  task.passwordRequired = false
+                  task.currentPassword = dictPassword
+                  await tauriCommands.decompressFile(
+                    task.sourceFiles[0],
+                    { ...options, password: dictPassword },
+                    task.id
+                  )
+                  dictSucceeded = true
+
+                  task.logs.push({
+                    task_id: task.id,
+                    message: appStore.t('decompress.dictionary.success', `✓ 密码破解成功！使用密码: ${dictPassword}`),
+                    severity: 'success',
+                    timestamp: new Date().toISOString()
+                  })
+
+                  try {
+                    await passwordStore.addEntry({
+                      password: dictPassword,
+                      hint: `字典破解 - ${fileName}`,
+                      tags: ['auto-cracked']
+                    })
+                  } catch { /* 非关键操作 */ }
+                } catch {
+                  continue
+                }
+              }
+
+              if (!dictSucceeded) {
+                taskStore.updateTaskStatus(task.id, 'failed')
+                task.error = appStore.t('decompress.dictionary.all_failed', `所有字典密码尝试失败（${dictionaryPasswords.length} 个）`)
+                task.logs.push({
+                  task_id: task.id,
+                  message: task.error!,
+                  severity: 'error',
+                  timestamp: new Date().toISOString()
+                })
+              }
+            } else {
+              taskStore.updateTaskStatus(task.id, 'failed')
+              task.error = extractErrorMessage(error) || appStore.t('decompress.no_vault_passwords')
+              task.logs.push({
+                task_id: task.id,
+                message: task.error!,
+                severity: 'error',
+                timestamp: new Date().toISOString()
+              })
+            }
+          } catch (dictError) {
+            console.error('Dictionary attack failed:', dictError)
             taskStore.updateTaskStatus(task.id, 'failed')
-            task.error = appStore.t('decompress.all_failed').replace('{0}', String(candidates.length))
+            task.error = extractErrorMessage(error) || appStore.t('decompress.no_vault_passwords')
             task.logs.push({
               task_id: task.id,
               message: task.error!,
@@ -357,16 +553,6 @@ const startDecompression = async () => {
               timestamp: new Date().toISOString()
             })
           }
-        } else {
-          // 没有其他候选密码可尝试
-          taskStore.updateTaskStatus(task.id, 'failed')
-          task.error = extractErrorMessage(error) || appStore.t('decompress.no_vault_passwords')
-          task.logs.push({
-            task_id: task.id,
-            message: task.error!,
-            severity: 'error',
-            timestamp: new Date().toISOString()
-          })
         }
       } else {
         // 非密码错误，直接失败
