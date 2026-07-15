@@ -14,6 +14,7 @@ pub mod password_category_service;
 pub mod password_strength_service;
 pub mod password_query_service;
 pub mod password_attempt_service;
+pub mod password_dictionary_service;
 pub mod split_compression;
 pub mod rar_support;
 pub mod tar_aes_engine;
