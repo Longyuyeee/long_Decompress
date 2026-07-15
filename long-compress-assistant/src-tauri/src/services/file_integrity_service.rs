@@ -2,8 +2,8 @@ use anyhow::{Result, anyhow};
 use std::path::Path;
 use std::fs::File;
 use std::io::{Read, BufReader};
-use sha2::{Sha256, Digest as Sha2Digest};
-use md5::{Md5, Digest as Md5Digest};
+use sha2::{Sha256, Digest};
+use md5::Md5;
 
 /// 文件完整性校验服务
 /// 支持 CRC32, MD5, SHA256 校验算法
