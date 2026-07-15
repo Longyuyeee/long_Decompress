@@ -26,13 +26,13 @@
         <!-- 生成的密码显示 -->
         <div class="relative">
           <div class="flex items-center gap-2 p-4 bg-input/30 rounded-xl border border-subtle font-mono text-sm break-all select-all">
-            <span class="flex-1 text-primary">{{ generatedPassword || $t('password.generator.placeholder', '点击生成密码...') }}</span>
+            <span class="flex-1 text-primary">{{ generatedPassword || appStore.t('password.generator.placeholder', '点击生成密码...') }}</span>
             <button
               v-if="generatedPassword"
               @click="copyPassword"
               class="shrink-0 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
             >
-              {{ copied ? '✓' : $t('password.generator.copy', '复制') }}
+              {{ copied ? '✓' : appStore.t('password.generator.copy', '复制') }}
             </button>
           </div>
 
@@ -54,7 +54,7 @@
         <!-- 生成模式 -->
         <div class="space-y-3">
           <label class="text-xs font-bold text-primary uppercase tracking-wider">
-            {{ $t('password.generator.mode', '生成模式') }}
+            {{ appStore.t('password.generator.mode', '生成模式') }}
           </label>
           <div class="grid grid-cols-2 gap-2">
             <button
@@ -79,7 +79,7 @@
           <!-- 强度选择 -->
           <div class="space-y-2">
             <label class="text-xs font-bold text-primary uppercase tracking-wider">
-              {{ $t('password.generator.strength', '强度级别') }}
+              {{ appStore.t('password.generator.strength', '强度级别') }}
             </label>
             <div class="grid grid-cols-4 gap-2">
               <button
@@ -99,7 +99,7 @@
           <!-- 字符集选项 -->
           <div class="space-y-2">
             <label class="text-xs font-bold text-primary uppercase tracking-wider">
-              {{ $t('password.generator.charset', '字符集') }}
+              {{ appStore.t('password.generator.charset', '字符集') }}
             </label>
             <div class="space-y-2">
               <label v-for="option in charsetOptions" :key="option.key" class="flex items-center gap-2 cursor-pointer">
@@ -117,7 +117,7 @@
         <!-- 易记模式选项 -->
         <div v-if="selectedMode === 'memorable'" class="space-y-2">
           <label class="text-xs font-bold text-primary uppercase tracking-wider">
-            {{ $t('password.generator.word_count', '单词数量') }}
+            {{ appStore.t('password.generator.word_count', '单词数量') }}
           </label>
           <input
             v-model.number="wordCount"
@@ -132,7 +132,7 @@
         <!-- PIN 模式选项 -->
         <div v-if="selectedMode === 'pin'" class="space-y-2">
           <label class="text-xs font-bold text-primary uppercase tracking-wider">
-            {{ $t('password.generator.pin_length', 'PIN 长度') }}
+            {{ appStore.t('password.generator.pin_length', 'PIN 长度') }}
           </label>
           <input
             v-model.number="pinLength"
@@ -151,14 +151,14 @@
           @click="generatePassword"
           class="flex-1 px-4 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors"
         >
-          {{ $t('password.generator.generate', '生成密码') }}
+          {{ appStore.t('password.generator.generate', '生成密码') }}
         </button>
         <button
           v-if="generatedPassword"
           @click="usePassword"
           class="flex-1 px-4 py-3 rounded-xl bg-input/30 border border-subtle text-primary font-bold hover:border-primary transition-colors"
         >
-          {{ $t('password.generator.use', '使用此密码') }}
+          {{ appStore.t('password.generator.use', '使用此密码') }}
         </button>
       </div>
     </div>
@@ -166,8 +166,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
+import { useAppStore } from '@/stores/app'
+
+const appStore = useAppStore()
 
 const props = defineProps<{
   isOpen: boolean
@@ -178,8 +181,11 @@ const emit = defineEmits<{
   select: [password: string]
 }>()
 
-const selectedMode = ref<'standard' | 'memorable' | 'pin'>('standard')
-const selectedStrength = ref<'weak' | 'medium' | 'strong' | 'very_strong'>('strong')
+type ModeType = 'standard' | 'memorable' | 'pin'
+type StrengthType = 'weak' | 'medium' | 'strong' | 'very_strong'
+
+const selectedMode = ref<ModeType>('standard')
+const selectedStrength = ref<StrengthType>('strong')
 const generatedPassword = ref('')
 const copied = ref(false)
 const wordCount = ref(3)
@@ -193,20 +199,22 @@ const charset = ref({
   excludeAmbiguous: true,
 })
 
-const modes = [
+const modes: Array<{ value: ModeType; label: string; icon: string }> = [
   { value: 'standard', label: '标准', icon: '🔑' },
   { value: 'memorable', label: '易记', icon: '💭' },
   { value: 'pin', label: 'PIN', icon: '🔢' },
 ]
 
-const strengths = [
+const strengths: Array<{ value: StrengthType; label: string }> = [
   { value: 'weak', label: '弱' },
   { value: 'medium', label: '中' },
   { value: 'strong', label: '强' },
   { value: 'very_strong', label: '超强' },
 ]
 
-const charsetOptions = [
+type CharsetKey = 'lowercase' | 'uppercase' | 'numbers' | 'symbols' | 'excludeAmbiguous'
+
+const charsetOptions: Array<{ key: CharsetKey; label: string }> = [
   { key: 'lowercase', label: '小写字母 (a-z)' },
   { key: 'uppercase', label: '大写字母 (A-Z)' },
   { key: 'numbers', label: '数字 (0-9)' },
@@ -318,8 +326,10 @@ const closeDialog = () => {
   emit('close')
 }
 
-// 自动生成一个初始密码
-if (props.isOpen && !generatedPassword.value) {
-  generatePassword()
-}
+// 当对话框打开时自动生成密码
+watch(() => props.isOpen, (isOpen) => {
+  if (isOpen && !generatedPassword.value) {
+    generatePassword()
+  }
+})
 </script>
