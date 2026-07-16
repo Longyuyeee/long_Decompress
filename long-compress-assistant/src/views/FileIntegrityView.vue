@@ -273,7 +273,8 @@ const clearResults = () => {
             <h2 class="text-sm font-black text-content uppercase tracking-[0.3em] mb-6">
               {{ appStore.t('integrity.results') }}
             </h2>
-            <div class="space-y-3">
+            <!-- 添加滚动容器，限制高度 -->
+            <div class="max-h-[400px] overflow-y-auto custom-scrollbar space-y-3">
               <div
                 v-for="result in checksumResults"
                 :key="result.path"
@@ -281,10 +282,12 @@ const clearResults = () => {
               >
                 <div class="flex items-start justify-between gap-4">
                   <div class="flex-1 min-w-0">
-                    <div class="text-sm font-black text-content truncate uppercase tracking-widest">{{ result.fileName }}</div>
-                    <div class="mt-3 flex items-center gap-3">
-                      <span class="text-xs text-muted uppercase tracking-widest font-bold">{{ result.algorithm }}:</span>
-                      <code class="text-xs font-mono text-primary">{{ result.checksum || '计算中...' }}</code>
+                    <!-- 使用 break-all 允许长文件名换行 -->
+                    <div class="text-sm font-black text-content break-all uppercase tracking-widest">{{ result.fileName }}</div>
+                    <div class="mt-3 flex items-start gap-3">
+                      <span class="text-xs text-muted uppercase tracking-widest font-bold shrink-0">{{ result.algorithm }}:</span>
+                      <!-- 校验和允许换行 -->
+                      <code class="text-xs font-mono text-primary break-all">{{ result.checksum || '计算中...' }}</code>
                     </div>
                   </div>
                   <div class="flex items-center gap-3 shrink-0">
@@ -305,7 +308,7 @@ const clearResults = () => {
                     </button>
                   </div>
                 </div>
-                <div v-if="result.error" class="mt-3 text-xs text-red-500 uppercase tracking-tighter">
+                <div v-if="result.error" class="mt-3 text-xs text-red-500 uppercase tracking-tighter break-all">
                   {{ result.error }}
                 </div>
               </div>

@@ -23,7 +23,7 @@ const appStore = useAppStore()
 const passwordStore = usePasswordStore()
 
 const displayTasks = computed(() => {
-  if (!props.statusFilter || props.statusFilter.length === 0) return taskStore.tasks
+  if (!props.statusFilter || props.statusFilter === 'all') return taskStore.tasks
   const filters = Array.isArray(props.statusFilter) ? props.statusFilter : [props.statusFilter]
   return taskStore.tasks.filter(t => filters.includes(t.status))
 })
@@ -112,6 +112,38 @@ const handleSetSameDir = (task: Task) => {
     const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
     task.outputPath = parentDir
   }
+}
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'pending': return '⏸️'
+    case 'preparing': return '⚙️'
+    case 'running': return '▶️'
+    case 'extracting': return '📦'
+    case 'compressing': return '🗜️'
+    case 'completed': return '✅'
+    case 'failed': return '❌'
+    case 'cancelled': return '⛔'
+    default: return '❓'
+  }
+}
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'pending': return 'text-gray-500'
+    case 'preparing': return 'text-blue-400'
+    case 'running': return 'text-blue-500 animate-pulse'
+    case 'extracting': return 'text-blue-500 animate-pulse'
+    case 'compressing': return 'text-blue-500 animate-pulse'
+    case 'completed': return 'text-green-500'
+    case 'failed': return 'text-red-500'
+    case 'cancelled': return 'text-orange-500'
+    default: return 'text-muted'
+  }
+}
+
+const getStatusText = (status: string) => {
+  return appStore.t(`decompress.status.${status}`) || status
 }
 
 const getFormatBadgeColor = (format?: string) => {
@@ -227,19 +259,40 @@ const onLeave = (el: any) => {
               {{ task.sourceFiles[0] }}
             </div>
 
-            <!-- 状态与执行进度 (横向一行化) -->
-            <div class="flex-1 min-w-[180px] flex items-center gap-4 px-4">
-              <!-- 活动任务旋转图标 -->
-              <i v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
-                 class="pi pi-spin pi-spinner text-primary text-sm shrink-0"></i>
-              <i v-else-if="task.status === 'completed'"
-                 class="pi pi-check-circle text-green-400 text-sm shrink-0"></i>
-              <i v-else-if="task.status === 'failed'"
-                 class="pi pi-exclamation-circle text-red-400 text-sm shrink-0"></i>
-              <i v-else-if="task.status === 'cancelled'"
-                 class="pi pi-ban text-muted text-sm shrink-0"></i>
-              <span class="text-xs font-bold truncate flex-1"
-                    :class="{
+            <!-- 状态与执行进度 -->
+            <div class="flex-1 min-w-[180px] flex items-center gap-3">
+              <!-- 状态图标和文字 -->
+              <div class="flex items-center gap-2">
+                <span class="text-lg">{{ getStatusIcon(task.status) }}</span>
+                <span
+                  class="text-xs font-black uppercase tracking-widest transition-all"
+                  :class="getStatusColor(task.status)"
+                >
+                  {{ getStatusText(task.status) }}
+                </span>
+              </div>
+
+              <!-- 进度条（仅运行时显示） -->
+              <div
+                v-if="['running', 'extracting', 'compressing', 'preparing'].includes(task.status)"
+                class="flex-1 h-1.5 bg-input/50 rounded-full overflow-hidden"
+              >
+                <div
+                  class="h-full bg-primary transition-all duration-300 rounded-full"
+                  :style="{ width: `${task.progress || 0}%` }"
+                ></div>
+              </div>
+
+              <!-- 进度百分比 -->
+              <span
+                v-if="['running', 'extracting', 'compressing', 'preparing'].includes(task.status)"
+                class="text-xs font-mono text-primary font-bold"
+              >
+                {{ task.progress || 0 }}%
+              </span>
+            </div>
+
+            <!-- 操作按钮 -->
                       'text-primary': ['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status),
                       'text-muted opacity-90': task.status === 'pending',
                       'text-green-400': task.status === 'completed',

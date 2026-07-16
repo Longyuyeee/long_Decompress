@@ -172,10 +172,6 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
-  const clearFinishedTasks = () => {
-    tasks.value = tasks.value.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status))
-  }
-
   const cancelTask = async (taskId: string) => {
     try {
       await invoke('cancel_compression', { taskId })
@@ -200,6 +196,10 @@ export const useTaskStore = defineStore('task', () => {
   const fetchTasks = async () => {
     // 这是一个占位符，如果后端支持获取历史任务，可以在此实现
     // console.log('Fetching tasks...')
+  }
+
+  const clearFinishedTasks = () => {
+    tasks.value = tasks.value.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status))
   }
 
   return {

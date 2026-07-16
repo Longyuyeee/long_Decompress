@@ -255,27 +255,14 @@ const startDecompression = async () => {
   for (const task of pendingTasks) {
     const fileName = task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''
 
-    // 如果任务没有密码，先尝试从保险箱获取候选密码
-    if (!task.password) {
-      const candidates = passwordStore.findCandidatePasswords(fileName)
-      if (candidates.length > 0) {
-        task.password = candidates[0] // 使用优先级最高的密码
-        task.logs.push({
-          task_id: task.id,
-          message: appStore.t('decompress.auto_trying').replace('{0}', String(candidates.length)),
-          severity: 'info',
-          timestamp: new Date().toISOString()
-        })
-      }
-    }
-
+    // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
       outputPath: task.outputPath,
       keepStructure: true,
       overwrite: false,
       deleteAfter: appStore.settings.autoDeleteSource,
       createSubdirectory: task.extractToSubfolder ?? false,
-      password: task.password || undefined,
+      password: task.password || undefined, // 只使用用户手动输入的密码
       fileFilter: task.fileFilter || null
     }
 
@@ -294,22 +281,27 @@ const startDecompression = async () => {
         }
       }
     } catch (error) {
-      // 检查是否为密码错误（包含所有可能的密码相关错误消息）
+      // 只在后端明确返回密码相关错误时才尝试密码破解
       const errorMsg = extractErrorMessage(error) || String(error)
-      const isPasswordError = errorMsg.includes('password') ||
-                              errorMsg.includes('密码') ||
+      const isPasswordError = errorMsg.includes('PasswordRequired') ||
                               errorMsg.includes('Wrong password') ||
-                              errorMsg.includes('Data Error in encrypted') ||
-                              errorMsg.includes('encrypted archive') ||
                               errorMsg.includes('InvalidPassword') ||
-                              errorMsg.includes('PasswordRequired') ||
                               errorMsg.includes('PasswordError')
 
-      if (isPasswordError) {
-        // 第一次尝试失败，尝试保险箱中的其他候选密码
+      if (isPasswordError && !task.password) {
+        // 密码错误且用户未输入密码，现在尝试保险箱和字典攻击
         const candidates = passwordStore.findCandidatePasswords(fileName)
-        const remainingCandidates = candidates.filter(pwd => pwd !== task.password)
 
+        if (candidates.length > 0) {
+          task.logs.push({
+            task_id: task.id,
+            message: appStore.t('decompress.auto_trying').replace('{0}', String(candidates.length)),
+            severity: 'info',
+            timestamp: new Date().toISOString()
+          })
+        }
+
+        const remainingCandidates = candidates
         if (remainingCandidates.length > 0) {
           taskStore.updateTaskStatus(task.id, 'extracting')
           task.logs.push({
@@ -668,11 +660,11 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
 
     <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div class="flex-1 overflow-hidden flex flex-col relative">
-        <!-- 核心逻辑：有内容时 100% 空间给表格 -->
-        <div v-if="taskStore.tasks.some(t => t.status === 'pending')" class="flex-1 min-h-0">
+        <!-- 显示所有任务，不再过滤只显示 pending -->
+        <div v-if="taskStore.tasks.length > 0" class="flex-1 min-h-0">
           <AeroTable
           :selectedTaskIds="selectedTaskIds"
-          statusFilter="pending"
+          statusFilter="all"
           @toggle-task="toggleTaskSelection"
           @select-all-pending="selectAllPending"
           @deselect-all="deselectAll"
