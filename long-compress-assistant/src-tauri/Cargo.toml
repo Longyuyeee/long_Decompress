@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "0.1.0"
+version = "1.0.1"
 description = "智能压缩解压助手"
 authors = ["Your Name"]
 license = "MIT"
