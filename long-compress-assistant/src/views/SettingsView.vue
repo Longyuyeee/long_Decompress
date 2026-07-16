@@ -26,7 +26,16 @@ const themeModes = [
 
 const contextMenuEnabled = ref(false)
 const toggleBruteForce = () => appStore.updateSettings({ enableBruteForce: !appStore.settings.enableBruteForce })
-const toggleAutoStart = () => appStore.updateSettings({ autoStart: !appStore.settings.autoStart })
+const toggleAutoStart = async () => {
+  const newValue = !appStore.settings.autoStart
+  try {
+    await tauriCommands.invoke('set_auto_start', { enable: newValue })
+    appStore.updateSettings({ autoStart: newValue })
+    appStore.setSuccess(appStore.t('common.success'))
+  } catch (e: any) {
+    appStore.setError(String(e))
+  }
+}
 
 const contextMenuSupported = ref(navigator.platform.toLowerCase().includes('win'))
 
@@ -48,6 +57,17 @@ const checkContextMenu = async () => {
   if (!contextMenuSupported.value) return
   try { contextMenuEnabled.value = await tauriCommands.isContextMenuRegistered() } catch { /* ignore */ }
 }
+
+const checkAutoStart = async () => {
+  try {
+    const enabled = await tauriCommands.invoke<boolean>('check_auto_start')
+    appStore.updateSettings({ autoStart: enabled })
+  } catch { /* ignore */ }
+}
+
+onMounted(() => {
+  checkAutoStart()
+})
 const toggleContextMenu = async () => {
   try {
     if (contextMenuEnabled.value) {
@@ -83,7 +103,7 @@ const removeWordlist = (index: number) => {
   <div class="settings-view p-responsive p-8 h-screen flex flex-col gap-8 transition-colors duration-700 overflow-hidden">
     <header class="shrink-0">
       <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('settings.title') }}</h1>
-      <p class="text-muted text-[0.625rem] font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('settings.subtitle') }}</p>
+      <p class="text-muted text-sm font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('settings.subtitle') }}</p>
     </header>
 
     <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-20">
@@ -92,19 +112,19 @@ const removeWordlist = (index: number) => {
         <section class="aero-card p-10 overflow-hidden">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
             <div class="lg:col-span-4 space-y-2">
-              <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.appearance') }}</h2>
-              <p class="text-[0.625rem] text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.appearance.desc') }}</p>
+              <h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('settings.appearance') }}</h2>
+              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.appearance.desc') }}</p>
             </div>
             
             <div class="lg:col-span-8 space-y-10">
               <!-- 模式切换 (进化版) -->
               <div class="space-y-4">
-                <label class="text-[0.5625rem] font-black text-muted uppercase tracking-[0.2em] block ml-1">{{ appStore.t('settings.theme') }}</label>
+                <label class="text-xs font-black text-muted uppercase tracking-[0.2em] block ml-1">{{ appStore.t('settings.theme') }}</label>
                 <div class="grid grid-cols-2 sm:grid-cols-3 p-1 rounded-2xl bg-input border border-subtle gap-1">
-                  <button 
+                  <button
                     v-for="m in themeModes" :key="m.value"
                     @click="appStore.theme = m.value as any; appStore.saveSettingsToStorage()"
-                    class="py-3 rounded-xl text-[0.5625rem] font-black uppercase transition-all flex items-center justify-center gap-2"
+                    class="py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2"
                     :class="appStore.theme === m.value ? 'bg-primary text-white shadow-lg' : 'text-muted hover:bg-white/5'"
                   >
                     <i :class="m.icon"></i>
@@ -115,7 +135,7 @@ const removeWordlist = (index: number) => {
 
               <!-- 强调色选择 -->
               <div class="space-y-4">
-                <label class="text-[0.5625rem] font-black text-muted uppercase tracking-[0.2em] block ml-1">{{ appStore.t('settings.accent') }}</label>
+                <label class="text-xs font-black text-muted uppercase tracking-[0.2em] block ml-1">{{ appStore.t('settings.accent') }}</label>
                 <div class="flex flex-wrap gap-3 p-1">
                   <button 
                     v-for="(hex, name) in themeColors" :key="name"

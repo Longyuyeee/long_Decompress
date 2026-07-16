@@ -177,175 +177,170 @@ const clearResults = () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-background text-primary">
+  <div class="flex flex-col h-full p-responsive p-8 transition-colors duration-700">
     <!-- 顶部标题栏 -->
-    <div class="px-6 py-5 border-b border-subtle">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl">🔐</span>
-        <div>
-          <h1 class="text-lg font-bold">{{ appStore.t('integrity.title', '文件完整性校验') }}</h1>
-          <p class="text-xs text-muted mt-1">{{ appStore.t('integrity.subtitle', '计算和验证文件校验和') }}</p>
-        </div>
-      </div>
-    </div>
+    <header class="shrink-0 mb-8">
+      <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('integrity.title') }}</h1>
+      <p class="text-muted text-[0.625rem] font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('integrity.subtitle') }}</p>
+    </header>
 
     <!-- 主内容区 -->
-    <div class="flex-1 overflow-auto p-6">
-      <div class="max-w-4xl mx-auto space-y-6">
+    <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-20">
+      <div class="max-w-5xl space-y-8">
         <!-- 模式切换 -->
-        <div class="flex gap-3">
+        <div class="grid grid-cols-2 gap-4">
           <button
             @click="verifyMode = false; clearResults()"
-            class="flex-1 px-6 py-4 rounded-xl border transition-all"
-            :class="!verifyMode
-              ? 'bg-primary/10 border-primary text-primary'
-              : 'bg-input/30 border-subtle text-muted hover:border-primary/50'"
+            class="aero-card p-8 text-left transition-all hover:scale-[1.02]"
+            :class="!verifyMode ? 'ring-2 ring-primary' : ''"
           >
-            <div class="text-2xl mb-2">🔢</div>
-            <div class="text-sm font-bold">{{ appStore.t('integrity.mode.calculate', '计算校验和') }}</div>
+            <div class="text-4xl mb-3">🔢</div>
+            <div class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('integrity.mode.calculate') }}</div>
+            <div class="text-[0.5625rem] text-muted mt-2 uppercase tracking-tighter">计算文件的校验和</div>
           </button>
           <button
             @click="verifyMode = true; clearResults()"
-            class="flex-1 px-6 py-4 rounded-xl border transition-all"
-            :class="verifyMode
-              ? 'bg-primary/10 border-primary text-primary'
-              : 'bg-input/30 border-subtle text-muted hover:border-primary/50'"
+            class="aero-card p-8 text-left transition-all hover:scale-[1.02]"
+            :class="verifyMode ? 'ring-2 ring-primary' : ''"
           >
-            <div class="text-2xl mb-2">✓</div>
-            <div class="text-sm font-bold">{{ appStore.t('integrity.mode.verify', '验证校验文件') }}</div>
+            <div class="text-4xl mb-3">✓</div>
+            <div class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('integrity.mode.verify') }}</div>
+            <div class="text-[0.5625rem] text-muted mt-2 uppercase tracking-tighter">验证校验文件的正确性</div>
           </button>
         </div>
 
         <!-- 计算模式 -->
-        <div v-if="!verifyMode" class="space-y-6">
+        <div v-if="!verifyMode" class="space-y-8">
           <!-- 选择算法 -->
-          <div class="space-y-3">
-            <label class="text-xs font-bold text-primary uppercase tracking-wider">
-              {{ appStore.t('integrity.algorithm', '校验算法') }}
-            </label>
-            <div class="grid grid-cols-3 gap-3">
+          <section class="aero-card p-10">
+            <h2 class="text-[0.625rem] font-black text-content uppercase tracking-[0.3em] mb-6">
+              {{ appStore.t('integrity.algorithm') }}
+            </h2>
+            <div class="grid grid-cols-3 gap-4">
               <button
                 v-for="algo in algorithms"
                 :key="algo.value"
                 @click="selectedAlgorithm = algo.value as any"
-                class="px-4 py-3 rounded-xl border transition-all text-left"
+                class="p-6 rounded-2xl border-2 transition-all text-left hover:scale-[1.02]"
                 :class="selectedAlgorithm === algo.value
-                  ? 'bg-primary/10 border-primary text-primary'
-                  : 'bg-input/30 border-subtle text-muted hover:border-primary/50'"
+                  ? 'bg-primary/10 border-primary shadow-lg'
+                  : 'bg-input/30 border-subtle hover:border-primary/50'"
               >
-                <div class="text-sm font-bold">{{ algo.label }}</div>
-                <div class="text-xs text-muted mt-1">{{ algo.description }}</div>
+                <div class="text-sm font-black text-content uppercase tracking-widest">{{ algo.label }}</div>
+                <div class="text-[0.5625rem] text-muted mt-2 uppercase tracking-tighter">{{ algo.description }}</div>
               </button>
             </div>
-          </div>
+          </section>
 
           <!-- 选择文件 -->
-          <div class="space-y-3">
-            <label class="text-xs font-bold text-primary uppercase tracking-wider">
-              {{ appStore.t('integrity.files', '文件') }}
-            </label>
+          <section class="aero-card p-10">
+            <h2 class="text-[0.625rem] font-black text-content uppercase tracking-[0.3em] mb-6">
+              {{ appStore.t('integrity.files') }}
+            </h2>
             <button
               @click="selectFiles"
-              class="w-full px-6 py-4 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-all text-center"
+              class="w-full px-10 py-12 rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-all text-center group"
             >
-              <div class="text-3xl mb-2">📁</div>
-              <div class="text-sm font-bold text-primary">
+              <div class="text-5xl mb-4 group-hover:scale-110 transition-transform">📁</div>
+              <div class="text-sm font-black text-content uppercase tracking-widest">
                 {{ selectedFiles.length > 0
                   ? `已选择 ${selectedFiles.length} 个文件`
-                  : appStore.t('integrity.select_files', '点击选择文件') }}
+                  : appStore.t('integrity.select_files') }}
               </div>
             </button>
-          </div>
 
-          <!-- 操作按钮 -->
-          <div class="flex gap-3">
-            <button
-              @click="calculateChecksums"
-              :disabled="selectedFiles.length === 0 || isCalculating"
-              class="flex-1 px-6 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {{ isCalculating ? '计算中...' : appStore.t('integrity.calculate', '计算校验和') }}
-            </button>
-            <button
-              v-if="checksumResults.length > 0"
-              @click="exportChecksumFile"
-              class="px-6 py-3 rounded-xl bg-input/30 border border-subtle text-primary font-bold hover:border-primary transition-colors"
-            >
-              {{ appStore.t('integrity.export', '导出') }}
-            </button>
-          </div>
+            <!-- 操作按钮 -->
+            <div class="flex gap-4 mt-6">
+              <button
+                @click="calculateChecksums"
+                :disabled="selectedFiles.length === 0 || isCalculating"
+                class="flex-1 px-8 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-sm hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none"
+              >
+                {{ isCalculating ? appStore.t('integrity.calculating') : appStore.t('integrity.calculate') }}
+              </button>
+              <button
+                v-if="checksumResults.length > 0"
+                @click="exportChecksumFile"
+                class="px-8 py-4 rounded-2xl bg-input/30 border-2 border-subtle text-content font-black uppercase tracking-widest text-sm hover:border-primary transition-all"
+              >
+                {{ appStore.t('integrity.export') }}
+              </button>
+            </div>
+          </section>
 
           <!-- 结果列表 -->
-          <div v-if="checksumResults.length > 0" class="space-y-3">
-            <label class="text-xs font-bold text-primary uppercase tracking-wider">
-              {{ appStore.t('integrity.results', '结果') }}
-            </label>
-            <div class="space-y-2">
+          <section v-if="checksumResults.length > 0" class="aero-card p-10">
+            <h2 class="text-[0.625rem] font-black text-content uppercase tracking-[0.3em] mb-6">
+              {{ appStore.t('integrity.results') }}
+            </h2>
+            <div class="space-y-3">
               <div
                 v-for="result in checksumResults"
                 :key="result.path"
-                class="p-4 rounded-xl bg-input/30 border border-subtle"
+                class="p-6 rounded-2xl bg-input/30 border border-subtle hover:border-primary/50 transition-all"
               >
-                <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start justify-between gap-4">
                   <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-primary truncate">{{ result.fileName }}</div>
-                    <div class="mt-2 flex items-center gap-2">
-                      <span class="text-xs text-muted">{{ result.algorithm }}:</span>
+                    <div class="text-sm font-black text-content truncate uppercase tracking-widest">{{ result.fileName }}</div>
+                    <div class="mt-3 flex items-center gap-3">
+                      <span class="text-[0.5625rem] text-muted uppercase tracking-widest font-bold">{{ result.algorithm }}:</span>
                       <code class="text-xs font-mono text-primary">{{ result.checksum || '计算中...' }}</code>
                     </div>
                   </div>
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-3 shrink-0">
                     <span
                       v-if="result.status === 'success'"
-                      class="text-green-500 text-xl"
+                      class="text-green-500 text-2xl"
                     >✓</span>
                     <span
                       v-else-if="result.status === 'error'"
-                      class="text-red-500 text-xl"
+                      class="text-red-500 text-2xl"
                     >✗</span>
                     <button
                       v-if="result.status === 'success'"
                       @click="copyChecksum(result.checksum)"
-                      class="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
+                      class="px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-[0.625rem] font-black uppercase tracking-widest transition-all"
                     >
-                      {{ appStore.t('integrity.copy', '复制') }}
+                      {{ appStore.t('integrity.copy') }}
                     </button>
                   </div>
                 </div>
-                <div v-if="result.error" class="mt-2 text-xs text-red-500">
+                <div v-if="result.error" class="mt-3 text-[0.5625rem] text-red-500 uppercase tracking-tighter">
                   {{ result.error }}
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
 
         <!-- 验证模式 -->
-        <div v-else class="space-y-6">
-          <button
-            @click="selectChecksumFile"
-            :disabled="isCalculating"
-            class="w-full px-6 py-8 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-all text-center"
-          >
-            <div class="text-4xl mb-3">✓</div>
-            <div class="text-base font-bold text-primary">
-              {{ appStore.t('integrity.select_checksum', '选择校验文件进行验证') }}
-            </div>
-            <div class="text-xs text-muted mt-2">
-              支持 .md5, .sha256, .sfv 格式
-            </div>
-          </button>
+        <div v-else class="space-y-8">
+          <section class="aero-card p-10">
+            <button
+              @click="selectChecksumFile"
+              :disabled="isCalculating"
+              class="w-full px-10 py-16 rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-all text-center group"
+            >
+              <div class="text-6xl mb-6 group-hover:scale-110 transition-transform">✓</div>
+              <div class="text-base font-black text-content uppercase tracking-widest">
+                {{ appStore.t('integrity.select_checksum') }}
+              </div>
+              <div class="text-[0.5625rem] text-muted mt-3 uppercase tracking-tighter">
+                支持 .md5, .sha256, .sfv 格式
+              </div>
+            </button>
+          </section>
 
           <!-- 验证结果 -->
-          <div v-if="verifyResult" class="p-6 rounded-xl border"
+          <section v-if="verifyResult" class="aero-card p-10 border-2"
             :class="verifyResult.valid
-              ? 'bg-green-500/10 border-green-500'
-              : 'bg-red-500/10 border-red-500'"
+              ? 'bg-green-500/5 border-green-500'
+              : 'bg-red-500/5 border-red-500'"
           >
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">{{ verifyResult.valid ? '✓' : '✗' }}</span>
+            <div class="flex items-center gap-6">
+              <span class="text-6xl shrink-0">{{ verifyResult.valid ? '✓' : '✗' }}</span>
               <div class="flex-1">
-                <div class="text-base font-bold"
+                <div class="text-lg font-black uppercase tracking-widest"
                   :class="verifyResult.valid ? 'text-green-500' : 'text-red-500'"
                 >
                   {{ verifyResult.valid ? appStore.t('integrity.verify_success', '校验通过') : appStore.t('integrity.verify_failed', '校验失败') }}
