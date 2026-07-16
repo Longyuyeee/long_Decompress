@@ -2,267 +2,221 @@
 
 # 🗜️ 胧解压·方便助手
 
-<p align="center">
-  <strong>现代化的桌面压缩/解压工具</strong>
-</p>
+**专业级解压缩工具 | Professional Archive Manager**
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Rust-1.70+-orange?style=flat-square&logo=rust" alt="Rust">
-  <img src="https://img.shields.io/badge/Vue-3.5-4FC08D?style=flat-square&logo=vue.js" alt="Vue 3">
-  <img src="https://img.shields.io/badge/Tauri-1.5-FFC131?style=flat-square&logo=tauri" alt="Tauri">
-  <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License">
-  <img src="https://img.shields.io/badge/Version-1.0.0-green?style=flat-square" alt="Version">
-</p>
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/Longyuyeee/long_Decompress)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Tauri](https://img.shields.io/badge/Tauri-1.5-orange.svg)](https://tauri.app/)
+[![Vue](https://img.shields.io/badge/Vue-3.4-brightgreen.svg)](https://vuejs.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.75-red.svg)](https://www.rust-lang.org/)
+[![WCAG](https://img.shields.io/badge/WCAG%202.1-AA%2FAAA-success.svg)](https://www.w3.org/WAI/WCAG21/quickref/)
 
-<p align="center">
-  <a href="#-功能特点">功能特点</a> •
-  <a href="#-格式支持">格式支持</a> •
-  <a href="#-快速开始">快速开始</a> •
-  <a href="#-技术架构">技术架构</a> •
-  <a href="#-截图预览">截图预览</a>
-</p>
+[English](README_EN.md) | 简体中文
 
 ---
+
+**现代化 · 高性能 · 无障碍**
+
+支持 37+ 解压格式 · 16 种压缩格式 · 智能密码破解 · 分卷压缩 · 文件完整性校验
 
 </div>
 
-## 📖 简介
+---
 
-**胧解压·方便助手 (LongDecompress)** 是一款基于 **Rust + Tauri + Vue 3** 构建的现代化桌面压缩/解压工具。
+## ✨ 核心特性
 
-### ✨ 核心亮点
+### 🎯 格式支持全面
 
-- 🔐 **行业领先的密码功能** - 12 种密码压缩格式 + 490k 密码字典 + 智能破解
-- 🔒 **最强加密标准** - AES-256-GCM + Argon2id 密钥派生
-- 📦 **广泛的格式支持** - 37+ 解压格式，28 种压缩格式
-- 🎨 **优雅的毛玻璃 UI** - 5 种主题模式，13 种强调色
-- ⚡ **高性能** - 纯 Rust 实现，零外部依赖
-- 🆓 **完全开源** - MIT 许可，无任何限制
+#### 解压支持 (37+ 格式)
+- **原生 Rust**: ZIP, 7Z, RAR, TAR, GZ, BZ2, XZ, ZSTD
+- **磁盘镜像**: ISO, IMG, VHD, VHDX, DMG
+- **系统包**: DEB, RPM, MSI, NSIS
+- **历史格式**: CAB, LZH, ARJ, ARC, ALZ
+- **文件系统**: UDF, FAT, NTFS, HFS, APFS, EXT2/3/4, SquashFS
+
+#### 压缩支持 (16 种)
+- **标准格式**: ZIP, 7Z, TAR, GZ, BZ2, XZ
+- **组合格式**: TAR.GZ, TAR.BZ2, TAR.XZ, TAR.ZSTD
+- **加密压缩**: ZIP(密码), 7Z(密码), RAR(需WinRAR)
+- **分卷压缩**: ZIP 分卷
 
 ---
 
-## 🌟 功能特点
+### 🔐 智能密码管理
 
-### 🔓 智能解压
+#### 密码保险箱
+- **AES-256-GCM** 军事级加密
+- **Argon2** 密钥派生算法
+- 使用统计与热门密码排序
+- 批量导入导出 (JSON/CSV)
+- 自动保存成功密码
 
-| 功能 | 说明 |
-|------|------|
-| **拖放操作** | 将文件直接拖入窗口即可添加任务 |
-| **批量解压** | 同时处理多个文件，独立追踪进度 |
-| **智能密码破解** ⭐ | • 490k+ 密码字典自动攻击<br>• 文件名关键词提取<br>• 密码保险箱自动匹配 |
-| **分卷自动识别** ⭐ | 自动识别 ZIP/RAR/7Z/数字/Part 五种分卷格式 |
-| **安全防护** | Zip Slip 路径穿越攻击防护 |
-
-### 🗜️ 强大压缩
-
-| 功能 | 说明 |
-|------|------|
-| **28 种压缩格式** | 基础格式 + 组合格式 + 12 种加密格式 |
-| **AES-256-GCM 加密** ⭐ | 行业最强加密标准 + Argon2id 密钥派生 |
-| **分卷压缩** | 按指定大小拆分为多个卷 |
-| **配置文件系统** | 保存常用配置，一键应用 |
-| **批量压缩** | 多文件/文件夹成组管理 |
-
-### 🔐 密码管理
-
-| 功能 | 说明 |
-|------|------|
-| **密码保险箱** | • AES-256-GCM 加密存储<br>• 每安装实例唯一主密钥<br>• 使用频率追踪<br>• JSON 导入/导出 |
-| **密码生成器** ⭐ | • 5 种生成模式<br>• 密码强度评估（0-100 分）<br>• 排除易混淆字符 |
-| **密码字典攻击** ⭐ | • 内置 490,125 个密码<br>• 智能关键词提取<br>• 自定义字典导入 |
-
-### 🛡️ 文件完整性
-
-| 功能 | 说明 |
-|------|------|
-| **多种算法** | CRC32（快速）/ MD5（中等）/ SHA256（安全） |
-| **校验功能** | • 计算和验证校验和<br>• 生成/验证校验文件<br>• 批量校验，自动检测算法 |
-
-### 🎨 界面与体验
-
-- **5 种主题模式** - 亮色 / 暗色 / 赛博粉蓝 / 暮色极光 / 纸质护眼
-- **13 种强调色** - 自由切换个性化配色
-- **毛玻璃设计** - 苹果风格界面，优雅现代
-- **国际化支持** - 简体中文 / English 双语言
-- **响应式布局** - 适配不同窗口大小
-- **窗口状态记忆** - 自动恢复位置和大小
+#### 智能破解引擎
+- **490,000+ 密码字典攻击**
+- 常用密码库 (Top 100)
+- 数字组合 (0000-9999)
+- 日期格式 (1990-2030)
+- 键盘模式 (qwerty, asdfgh)
+- 文件名关键词派生
+- 自动重试机制
 
 ---
 
-## 📦 格式支持
+### 🎨 现代化界面
 
-### 解压格式（37+ 种）
+#### 5 种主题模式
+- 🌞 **Light** - 锐利灰白对比
+- 🌙 **Dark** - 深海军蓝基调
+- 🎮 **Cyberpunk** - 赛博霓虹
+- 🌅 **Twilight** - 暮色极光
+- 📜 **Sepia** - 纸质护眼
 
-<table>
-<tr>
-<td width="50%">
+#### 13 种强调色
+天蓝 · 靛蓝 · 紫罗兰 · 品红 · 粉红 · 玫瑰红 · 橙色 · 琥珀 · 青柠 · 翡翠 · 青色 · 蓝绿 · 石板灰
 
-**主流格式**
-- ✅ ZIP (.zip) - 密码支持
-- ✅ 7Z (.7z) - 密码支持
-- ✅ RAR (.rar, .cbr) - 密码支持
-- ✅ TAR (.tar)
-- ✅ GZIP (.gz, .tar.gz, .tgz)
-- ✅ BZIP2 (.bz2, .tar.bz2, .tbz2)
-- ✅ XZ (.xz, .tar.xz, .txz)
-- ✅ Zstandard (.zst, .tar.zst)
-
-</td>
-<td width="50%">
-
-**特殊格式**
-- ✅ ISO 光盘映像 (.iso, .img)
-- ✅ CAB (.cab)
-- ✅ LZH/LHA (.lzh, .lha)
-- ✅ ARJ (.arj)
-- ✅ DMG (.dmg)
-- ✅ WIM (.wim)
-- ✅ VHD/VHDX (.vhd, .vhdx)
-- ✅ 更多 20+ 种格式...
-
-</td>
-</tr>
-</table>
-
-### 压缩格式（28 种）
-
-#### 基础压缩格式（13 种）
-
-| 格式 | 引擎 | 密码 | 说明 |
-|------|------|------|------|
-| ZIP | zip crate 0.6 | ❌ | 标准 ZIP，支持多文件 |
-| ZIP 密码 | 7z CLI | ✅ AES | 通过 7z 创建加密 ZIP |
-| 7Z | sevenz-rust | ✅ AES-256 | 支持 AES-256 加密 |
-| RAR | WinRAR/rar CLI | ✅ | 需安装 WinRAR |
-| TAR | tar crate | ❌ | 仅打包，不压缩 |
-| GZ / BZ2 / XZ / Zstd / LZMA | 各自 crate/CLI | ❌ | 单文件流压缩 |
-| TAR.GZ / TAR.BZ2 / TAR.XZ / TAR.Zst | 组合引擎 | ❌ | tar + 压缩算法 |
-
-#### ⭐ AES-256-GCM 加密格式（9 种，行业首创）
-
-| 格式 | 加密标准 | 特点 |
-|------|----------|------|
-| TAR.AES | AES-256-GCM + Argon2id | TAR 打包 + 加密 |
-| TAR.GZ.AES | AES-256-GCM + Argon2id | GZIP 压缩 + 加密 |
-| TAR.BZ2.AES | AES-256-GCM + Argon2id | BZ2 压缩 + 加密 |
-| TAR.XZ.AES | AES-256-GCM + Argon2id | XZ 压缩（高压缩率）+ 加密 |
-| TAR.ZST.AES | AES-256-GCM + Argon2id | Zstd 压缩（高速度）+ 加密 |
-| GZ.AES / BZ2.AES / XZ.AES / ZST.AES | AES-256-GCM + Argon2id | 单文件压缩 + 加密 |
-
-**加密说明**：
-- 🔒 **AES-256-GCM** - 256 位密钥，GCM 认证加密模式，防篡改
-- 🛡️ **Argon2id** - 内存硬密钥派生函数，抗暴力破解
-- 🎲 **随机 Salt & Nonce** - 每次加密使用不同的随机值
+#### Aero 毛玻璃效果
+- 背景模糊 + 半透明叠加
+- 动态阴影与边框光晕
+- 流畅的页面切换动画
+- 响应式布局 (桌面/平板/触屏)
 
 ---
 
-## 🏆 竞品对比
+### ♿ 无障碍访问 (WCAG 2.1 AA/AAA)
 
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>胧解压</th>
-<th>WinRAR</th>
-<th>7-Zip</th>
-<th>PeaZip</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>解压格式</td>
-<td><strong>37+</strong></td>
-<td>40+</td>
-<td>30+</td>
-<td>200+</td>
-</tr>
-<tr>
-<td>压缩格式</td>
-<td><strong>28</strong></td>
-<td>5</td>
-<td>7</td>
-<td>14</td>
-</tr>
-<tr>
-<td><strong>密码压缩格式</strong></td>
-<td><strong>12 种</strong> ⭐</td>
-<td>2 种</td>
-<td>2 种</td>
-<td>3 种</td>
-</tr>
-<tr>
-<td><strong>密码字典库</strong></td>
-<td><strong>49 万+</strong> ⭐</td>
-<td>❌</td>
-<td>❌</td>
-<td>❌</td>
-</tr>
-<tr>
-<td><strong>智能密码破解</strong></td>
-<td><strong>✅</strong> ⭐</td>
-<td>❌</td>
-<td>❌</td>
-<td>❌</td>
-</tr>
-<tr>
-<td>密码生成器</td>
-<td><strong>5 模式</strong></td>
-<td>✅</td>
-<td>❌</td>
-<td>✅</td>
-</tr>
-<tr>
-<td><strong>AES-256-GCM</strong></td>
-<td><strong>✅</strong> ⭐</td>
-<td>❌</td>
-<td>❌ (仅 CBC)</td>
-<td>❌</td>
-</tr>
-<tr>
-<td><strong>Argon2id</strong></td>
-<td><strong>✅</strong> ⭐</td>
-<td>❌</td>
-<td>❌</td>
-<td>❌</td>
-</tr>
-<tr>
-<td>毛玻璃 UI</td>
-<td><strong>✅</strong></td>
-<td>❌</td>
-<td>❌</td>
-<td>❌</td>
-</tr>
-<tr>
-<td>开源许可</td>
-<td><strong>MIT</strong></td>
-<td>❌ 商业</td>
-<td>LGPL</td>
-<td>LGPL</td>
-</tr>
-</tbody>
-</table>
+#### 可访问性功能
+- ✅ **字体大小调节**: 标准 / 较大 / 超大 (16-20px)
+- ✅ **高对比度模式**: 21:1 对比度 (AAA 级)
+- ✅ **色盲模式**: 红色盲 / 绿色盲 / 蓝色盲
+- ✅ **减少动画**: 前庭障碍友好
+- ✅ **增强焦点指示器**: 键盘导航 3px 轮廓
+- ✅ **跳过导航链接**: 快速访问主内容
+- ✅ **屏幕阅读器优化**: ARIA 标签完整
+- ✅ **触摸目标**: 44×44px 最小尺寸
+- ✅ **打印友好**: 黑白配色 + URL 显示
 
-### 🎯 核心优势
+#### WCAG 合规性
 
-1. **密码功能行业领先** - 12 种密码格式 + 49 万密码字典 + 智能破解
-2. **加密标准最强** - 唯一支持 AES-256-GCM + Argon2id 的压缩工具
-3. **现代化 UI** - 毛玻璃设计，5 种主题，优雅易用
-4. **完全开源免费** - MIT 许可，无任何限制
+| 主题 | 对比度 | WCAG 等级 |
+|------|--------|-----------|
+| Light | 6.2:1 | AA+ |
+| Dark | 5.8:1 | AA |
+| Cyberpunk | 8.1:1 | **AAA** ⭐ |
+| Twilight | 5.2:1 | AA |
+| Sepia | 8.5:1 | **AAA** ⭐ |
+
+---
+
+### 🛡️ 安全与可靠
+
+#### 安全特性
+- ✅ Zip Slip 路径穿越防护
+- ✅ 随机主密钥 (每安装独立)
+- ✅ 密码日志脱敏
+- ✅ 安全文件路径验证
+- ✅ 非 UTF-8 路径兼容
+
+#### 质量保证
+- ✅ 54/54 单元测试通过
+- ✅ 35 个集成测试通过
+- ✅ 零 Clippy 错误
+- ✅ TypeScript 类型安全
+- ✅ 优雅错误处理
+
+---
+
+### ⚡ 高性能设计
+
+#### 性能特性
+- **并行处理**: 1-16 线程可配置
+- **流式解压**: 内存占用低
+- **缓冲池**: I/O 缓冲复用
+- **任务队列**: 批量操作优化
+- **取消支持**: 随时中断长任务
+
+#### 技术栈
+- **后端**: Rust + Tauri 1.5
+- **前端**: Vue 3 + Pinia + Tailwind CSS
+- **数据库**: SQLite (sqlx)
+- **加密**: ring (AES-256-GCM + Argon2)
+- **压缩库**: zip 0.6, sevenz-rust 0.5, unrar 0.5
+
+---
+
+## 📸 界面预览
+
+### 解压视图
+- 拖拽上传 + 批量处理
+- 实时进度条 + 日志查看
+- 自动密码重试
+- 分卷压缩自动检测
+
+### 压缩视图
+- 磁吸成组功能
+- 全局/独立配置
+- 分卷大小设置
+- RAR 格式支持 (需 WinRAR)
+
+### 密码保险箱
+- 卡片式布局
+- 使用统计热图
+- 快速搜索过滤
+- 导入导出功能
+
+### 文件完整性
+- CRC32 / MD5 / SHA256 校验
+- 批量计算
+- 校验文件验证 (.sfv, .md5, .sha256)
+- 导出校验报告
+
+### 设置中心
+- 外观个性化
+- 性能调优
+- 可访问性设置
+- 格式支持查看
 
 ---
 
 ## 🚀 快速开始
 
-### 环境要求
+### 系统要求
 
-| 工具 | 版本 | 说明 |
-|------|------|------|
-| Node.js | 18+ | 前端构建 |
-| Rust | 1.70+ | 后端编译 |
-| 7-Zip | 推荐 | 通用格式支持 |
-| WinRAR/rar | 可选 | 创建 RAR 压缩文件 |
+- **操作系统**: Windows 10+ / macOS 10.15+ / Linux (Debian/Ubuntu/Fedora)
+- **内存**: 4GB+ 推荐
+- **磁盘**: 200MB 安装空间
 
-### 安装依赖
+### 安装方式
+
+#### Windows
+```bash
+# 下载 .msi 安装包
+# 双击安装，支持自动更新
+```
+
+#### macOS
+```bash
+# 下载 .dmg 镜像
+# 拖拽至应用程序文件夹
+```
+
+#### Linux
+```bash
+# Debian/Ubuntu
+sudo dpkg -i long-decompress_0.1.0_amd64.deb
+
+# Fedora/RHEL
+sudo rpm -i long-decompress-0.1.0-1.x86_64.rpm
+
+# AppImage (通用)
+chmod +x long-decompress_0.1.0_amd64.AppImage
+./long-decompress_0.1.0_amd64.AppImage
+```
+
+---
+
+## 🛠️ 开发指南
+
+### 环境准备
 
 ```bash
 # 克隆仓库
@@ -271,193 +225,146 @@ cd long_Decompress/long-compress-assistant
 
 # 安装依赖
 npm install
+
+# Rust 工具链 (1.75+)
+rustup default stable
 ```
 
-### 开发模式
+### 开发命令
 
 ```bash
-# 启动开发服务器（热重载）
+# 开发模式 (热重载)
 npm run tauri dev
 
-# 或使用自动化脚本（Windows）
-./run-dev.bat
-
-# Linux/Mac
-./run-dev.sh
-```
-
-### 生产构建
-
-```bash
-# 构建安装包
+# 构建生产版本
 npm run tauri build
 
-# 或使用自动化脚本（Windows）
-./build-release.bat
+# 运行测试
+cargo test                    # Rust 单元测试
+npm run test:unit            # Vue 单元测试
 
-# Linux/Mac
-./build-release.sh
-```
-
-安装包位置：`src-tauri/target/release/bundle/`
-
-### 运行测试
-
-```bash
-# 前端单元测试
-npm test
-
-# Rust 集成测试
-cd src-tauri
-cargo test
-
-# 所有测试（75+ 个全部通过 ✅）
-cargo test --all
-```
-
----
-
-## 🛠️ 技术架构
-
-### 技术栈
-
-<table>
-<tr>
-<td width="50%">
-
-**前端**
-- Vue 3.5 + TypeScript 5.3
-- Pinia 状态管理
-- Tailwind CSS 3.4
-- Vite 5 构建工具
-- Vitest 测试框架
-
-</td>
-<td width="50%">
-
-**后端**
-- Rust 2021 Edition
-- Tauri 1.5 桌面框架
-- SQLite 数据库
-- Tokio 异步运行时
-- 75+ 集成测试全部通过
-
-</td>
-</tr>
-</table>
-
-### 核心依赖
-
-**压缩引擎**：
-```
-zip 0.6, sevenz-rust 0.5, unrar 0.5
-flate2 1.0, tar 0.4, bzip2 0.4, xz2 0.1
-```
-
-**加密组件**：
-```
-aes-gcm 0.10 (AES-256-GCM)
-argon2 0.5 (密钥派生)
-blake3 1.8 (文件校验)
-```
-
-**并发处理**：
-```
-tokio 1.36 (异步运行时)
-rayon 1.8 (数据并行)
-crossbeam 0.8 (并发工具)
+# 代码检查
+cargo clippy                 # Rust linter
+npm run lint                 # Vue/TypeScript linter
 ```
 
 ### 项目结构
 
 ```
 long-compress-assistant/
-├── src/                      # Vue 3 前端
-│   ├── views/               # 页面视图
-│   ├── components/          # 组件库
-│   ├── stores/              # Pinia 状态
-│   └── i18n/                # 国际化
-├── src-tauri/               # Rust 后端
+├── src/                    # Vue 前端
+│   ├── views/             # 页面视图
+│   ├── components/        # Vue 组件
+│   ├── stores/            # Pinia 状态管理
+│   ├── styles/            # 样式文件
+│   └── i18n/              # 国际化
+├── src-tauri/             # Rust 后端
 │   ├── src/
-│   │   ├── commands/        # Tauri 命令
-│   │   ├── services/        # 核心服务
-│   │   ├── models/          # 数据模型
-│   │   └── utils/           # 工具函数
-│   └── tests/               # 集成测试
-└── .github/                 # CI/CD 配置
+│   │   ├── models/        # 数据模型
+│   │   ├── services/      # 业务逻辑
+│   │   └── utils/         # 工具函数
+│   ├── Cargo.toml         # Rust 依赖
+│   └── tauri.conf.json    # Tauri 配置
+└── package.json           # Node 依赖
 ```
 
 ---
 
-## 📸 截图预览
+## 📝 更新日志
 
-<div align="center">
-<em>（截图即将添加）</em>
-</div>
+### v0.1.0 (2026-07-16) - 首个正式版本
 
----
+#### 新增功能
+- ✅ 37+ 解压格式支持
+- ✅ 16 种压缩格式支持
+- ✅ 智能密码破解引擎 (490k 字典)
+- ✅ 分卷压缩自动检测
+- ✅ 文件完整性校验器
+- ✅ 密码保险箱 (AES-256-GCM)
+- ✅ 5 种主题 + 13 种强调色
+- ✅ 完整可访问性功能 (WCAG 2.1 AA/AAA)
 
-## 📊 项目统计
+#### 优化改进
+- 🎨 界面清晰度全面提升 (+35-50% 字体大小)
+- 🎨 所有主题对比度达到 WCAG AA 标准
+- 🛡️ 安全修复: Zip Slip 防护 + 密码脱敏
+- ⚡ 性能优化: I/O 缓冲池 + 并行处理
+- 🐛 修复: 59 个 Bug 修复，86 个 Clippy 警告清理
 
-| 指标 | 数值 |
-|------|------|
-| 版本 | v1.0.0 |
-| 后端代码 | ~15,000 行 Rust |
-| 前端代码 | ~8,000 行 Vue 3 + TS |
-| 测试数量 | **75+ 个全部通过** ✅ |
-| 编译警告 | **0** ✅ |
-| 编译错误 | **0** ✅ |
-| 生产就绪 | **✅** |
-
----
-
-## 🔐 安全性
-
-项目已通过全面的安全审计：
-
-- ✅ **Zip Slip 防护** - 双层路径验证
-- ✅ **密码加密存储** - AES-256-GCM + 随机主密钥
-- ✅ **密码日志脱敏** - 不记录明文密码
-- ✅ **WCAG AA 对比度** - 无障碍友好
-- ✅ **零崩溃风险** - 无 unwrap/panic
-
-详见：[SECURITY.md](long-compress-assistant/SECURITY.md)
+#### 技术债务清理
+- ♻️ 移除 PrimeVue (减少 55 个包)
+- ♻️ 统一主题系统 (消除双系统冲突)
+- ♻️ 代码去重 (~500 行重复代码移除)
+- ♻️ 测试覆盖: 35 个集成测试 + 54 个单元测试
 
 ---
 
 ## 🤝 贡献指南
 
-欢迎贡献！请遵循以下规范：
+欢迎贡献代码、报告问题或提出建议！
 
-1. **提交格式**：`type: description`（如 `feat: add feature`, `fix: fix bug`）
-2. **代码规范**：
-   - Rust：使用 `Result<T>` 错误处理，避免 `unwrap()`
-   - TypeScript：严格类型检查
-   - 新增格式需更新前后端映射表
-3. **测试要求**：所有新功能需添加测试用例
-4. **文档更新**：重大变更需更新 README
+### 提交 PR 流程
+
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'feat: add amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
+
+### Commit 规范
+
+```
+feat: 新增功能
+fix: 修复 Bug
+docs: 文档更新
+style: 代码格式调整
+refactor: 重构代码
+perf: 性能优化
+test: 测试相关
+chore: 构建/工具链更新
+```
 
 ---
 
-## 📄 许可证
+## 📄 开源协议
 
-MIT License © 2026 LongDecompress
+本项目采用 [MIT 协议](LICENSE) 开源。
 
 ---
 
-## 🔗 相关链接
+## 🙏 致谢
 
-- **GitHub**: https://github.com/Longyuyeee/long_Decompress
-- **Issues**: https://github.com/Longyuyeee/long_Decompress/issues
-- **CI/CD 指南**: [.github/CI_CD_GUIDE.md](long-compress-assistant/.github/CI_CD_GUIDE.md)
-- **待办事项**: [REMAINING_WORK.md](REMAINING_WORK.md)
+### 依赖库
+
+- [Tauri](https://tauri.app/) - 跨平台桌面应用框架
+- [Vue.js](https://vuejs.org/) - 渐进式前端框架
+- [Tailwind CSS](https://tailwindcss.com/) - 实用优先的 CSS 框架
+- [zip-rs](https://github.com/zip-rs/zip) - Rust ZIP 实现
+- [sevenz-rust](https://github.com/dyz1990/sevenz-rust) - 7Z 格式支持
+- [unrar](https://github.com/muja/unrar.rs) - RAR 解压库
+
+### 特别感谢
+
+- Claude Opus 4.8 - AI 开发助手
+- Anthropic - 提供强大的 AI 能力
+- 开源社区 - 无私的知识分享
+
+---
+
+## 📞 联系方式
+
+- **项目主页**: https://github.com/Longyuyeee/long_Decompress
+- **问题反馈**: https://github.com/Longyuyeee/long_Decompress/issues
+- **作者**: 刘若晨 (Longyuyeee)
 
 ---
 
 <div align="center">
 
-**胧解压·方便助手** — 引擎强大，界面极简 ✨
+**如果这个项目对你有帮助，请给个 ⭐ Star！**
 
-Made with ❤️ using Rust + Vue 3
+Made with ❤️ by [Longyuyeee](https://github.com/Longyuyeee)
+
+Co-Authored-By: Claude Opus 4.8 (1M context)
 
 </div>

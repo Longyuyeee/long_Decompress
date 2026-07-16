@@ -187,6 +187,20 @@ const removeWordlist = (index: number) => {
           </div>
         </section>
 
+        <!-- 可访问性设置 -->
+        <section class="aero-card p-10 overflow-hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div class="lg:col-span-4 space-y-2">
+              <h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('accessibility.title') }}</h2>
+              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('accessibility.subtitle') }}</p>
+            </div>
+
+            <div class="lg:col-span-8">
+              <AccessibilitySettings />
+            </div>
+          </div>
+        </section>
+
         <!-- 核心功能：常规与性能 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <section class="aero-card p-8">
