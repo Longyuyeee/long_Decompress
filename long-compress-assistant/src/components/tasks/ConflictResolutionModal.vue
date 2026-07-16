@@ -54,7 +54,7 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
     <div v-if="currentConflict" class="conflict-container space-y-8 p-2">
       <!-- 头部提示：强化路径显示 -->
       <div class="header-section bg-input/30 p-4 rounded-2xl border border-subtle/30 backdrop-blur-md">
-        <p class="text-muted text-[0.625rem] font-black uppercase tracking-widest mb-2 opacity-60">{{ appStore.t('conflict.target_path') }}</p>
+        <p class="text-muted text-sm font-black uppercase tracking-widest mb-2 opacity-90">{{ appStore.t('conflict.target_path') }}</p>
         <div class="text-content font-bold font-mono text-xs break-all leading-relaxed">
           {{ currentConflict.destPath }}
         </div>
@@ -76,16 +76,16 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
             <div class="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
               <i class="pi pi-file"></i>
             </div>
-            <span class="text-[0.625rem] font-black text-muted uppercase tracking-widest">{{ appStore.t('conflict.existing_file') }}</span>
+            <span class="text-sm font-black text-muted uppercase tracking-widest">{{ appStore.t('conflict.existing_file') }}</span>
           </div>
           <div class="space-y-4">
             <div class="flex flex-col">
-              <span class="text-dim text-[0.5625rem] uppercase font-bold mb-1">{{ appStore.t('conflict.physical_size') }}</span>
+              <span class="text-dim text-xs uppercase font-bold mb-1">{{ appStore.t('conflict.physical_size') }}</span>
               <span class="text-content font-mono font-black text-lg">{{ formatSize(currentConflict.destSize) }}</span>
             </div>
             <div class="flex flex-col">
-              <span class="text-dim text-[0.5625rem] uppercase font-bold mb-1">{{ appStore.t('conflict.last_modified') }}</span>
-              <span class="text-muted font-mono text-[0.625rem]">{{ formatDate(currentConflict.destModified) }}</span>
+              <span class="text-dim text-xs uppercase font-bold mb-1">{{ appStore.t('conflict.last_modified') }}</span>
+              <span class="text-muted font-mono text-sm">{{ formatDate(currentConflict.destModified) }}</span>
             </div>
           </div>
         </div>
@@ -97,18 +97,18 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
             <div class="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
               <i class="pi pi-download animate-bounce"></i>
             </div>
-            <span class="text-[0.625rem] font-black text-primary uppercase tracking-widest">{{ appStore.t('conflict.new_file') }}</span>
+            <span class="text-sm font-black text-primary uppercase tracking-widest">{{ appStore.t('conflict.new_file') }}</span>
           </div>
           <div class="space-y-4">
             <div class="flex flex-col">
-              <span class="text-dim text-[0.5625rem] uppercase font-bold mb-1">{{ appStore.t('conflict.physical_size') }}</span>
+              <span class="text-dim text-xs uppercase font-bold mb-1">{{ appStore.t('conflict.physical_size') }}</span>
               <span :class="currentConflict.sourceSize > currentConflict.destSize ? 'text-green-500' : 'text-content'" class="font-mono font-black text-lg">
                 {{ formatSize(currentConflict.sourceSize) }}
               </span>
             </div>
             <div class="flex flex-col">
-              <span class="text-dim text-[0.5625rem] uppercase font-bold mb-1">{{ appStore.t('conflict.source_modified') }}</span>
-              <span :class="currentConflict.sourceModified > currentConflict.destModified ? 'text-green-500' : 'text-muted'" class="font-mono text-[0.625rem]">
+              <span class="text-dim text-xs uppercase font-bold mb-1">{{ appStore.t('conflict.source_modified') }}</span>
+              <span :class="currentConflict.sourceModified > currentConflict.destModified ? 'text-green-500' : 'text-muted'" class="font-mono text-sm">
                 {{ formatDate(currentConflict.sourceModified) }}
               </span>
             </div>
@@ -125,19 +125,19 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
             <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             <div class="flex items-center justify-center gap-3 relative z-10">
               <i class="pi pi-copy text-sm"></i>
-              <span class="text-[0.6875rem] font-black uppercase tracking-widest">{{ appStore.t('conflict.rename_both') }}</span>
+              <span class="text-sm font-black uppercase tracking-widest">{{ appStore.t('conflict.rename_both') }}</span>
             </div>
           </button>
 
           <!-- 覆盖操作：红色警示 -->
           <button @click="resolve('overwrite')" 
-                  class="flex-1 min-w-[120px] h-14 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 font-black text-[0.625rem] uppercase tracking-widest">
+                  class="flex-1 min-w-[120px] h-14 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 font-black text-sm uppercase tracking-widest">
             {{ appStore.t('conflict.replace') }}
           </button>
 
           <!-- 跳过操作：次要按钮 -->
           <button @click="resolve('skip')" 
-                  class="flex-1 min-w-[120px] h-14 rounded-2xl bg-input border border-subtle text-muted hover:text-content transition-all duration-300 font-black text-[0.625rem] uppercase tracking-widest">
+                  class="flex-1 min-w-[120px] h-14 rounded-2xl bg-input border border-subtle text-muted hover:text-content transition-all duration-300 font-black text-sm uppercase tracking-widest">
             {{ appStore.t('conflict.skip') }}
           </button>
         </div>
@@ -145,7 +145,7 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
         <!-- 批量应用选项 -->
         <div class="flex justify-center">
           <button @click="resolve('rename', true)" 
-                  class="group flex items-center gap-3 px-6 py-3 rounded-full hover:bg-primary/5 transition-all text-[0.5625rem] font-black text-dim hover:text-primary uppercase tracking-[0.3em]">
+                  class="group flex items-center gap-3 px-6 py-3 rounded-full hover:bg-primary/5 transition-all text-xs font-black text-dim hover:text-primary uppercase tracking-[0.3em]">
             <div class="w-4 h-4 rounded-full border border-subtle group-hover:border-primary flex items-center justify-center transition-all">
               <div class="w-1.5 h-1.5 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform"></div>
             </div>
@@ -163,7 +163,7 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
       </div>
       <div class="space-y-2">
         <p class="text-lg font-black text-content">{{ appStore.t('conflict.all_resolved') }}</p>
-        <p class="text-[0.625rem] text-muted uppercase tracking-[0.2em]">{{ appStore.t('conflict.all_resolved_desc') }}</p>
+        <p class="text-sm text-muted uppercase tracking-[0.2em]">{{ appStore.t('conflict.all_resolved_desc') }}</p>
       </div>
     </div>
   </Modal>

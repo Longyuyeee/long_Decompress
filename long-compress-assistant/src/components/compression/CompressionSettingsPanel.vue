@@ -206,23 +206,23 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
       <div class="flex flex-col gap-1.5 shrink-0">
         <!-- 预设 -->
         <div v-if="presets.length > 0" class="flex items-center gap-1 mb-1 flex-wrap">
-          <span class="text-[0.4375rem] text-dim uppercase font-black tracking-widest shrink-0">{{ appStore.t('preset.label') }}</span>
-          <span v-for="(p, i) in presets" :key="i" class="group/preset inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-[0.5rem] font-bold bg-primary/10 border border-primary/20 text-primary">
+          <span class="text-sm text-dim uppercase font-black tracking-widest shrink-0">{{ appStore.t('preset.label') }}</span>
+          <span v-for="(p, i) in presets" :key="i" class="group/preset inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-xs font-bold bg-primary/10 border border-primary/20 text-primary">
             <button @click="applyPreset(p)" :title="`${p.format} L${p.level}${p.password ? ' ' + appStore.t('preset.pwd') : ''}`" class="hover:underline">{{ p.name }}</button>
             <button @click="appStore.deleteCompressionPreset(i)" class="ml-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[0.375rem] text-dim hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover/preset:opacity-100 transition-opacity" :title="appStore.t('preset.delete')">&times;</button>
           </span>
         </div>
 
-        <label class="text-[0.5rem] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.format') }}</label>
+        <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.format') }}</label>
         <div class="flex flex-wrap p-1 rounded-xl bg-input border border-subtle gap-1">
           <button 
             v-for="fmt in compressionFormats" :key="fmt.value"
             @click="selectFormat(fmt)"
             :disabled="isFormatDisabled(fmt)"
-            class="px-3 py-1.5 rounded-lg text-[0.5625rem] font-black transition-all"
+            class="px-3 py-1.5 rounded-lg text-xs font-black transition-all"
             :class="[
               compressionOptions.format === fmt.value ? 'bg-primary text-white shadow-sm' : 'text-dim hover:bg-white/5',
-              isFormatDisabled(fmt) ? 'opacity-30 cursor-not-allowed hover:bg-transparent' : ''
+              isFormatDisabled(fmt) ? 'opacity-75 cursor-not-allowed hover:bg-transparent' : ''
             ]"
             :title="isFormatDisabled(fmt) ? appStore.t('preset.single_file_only') : fmt.name"
           >
@@ -230,7 +230,7 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
           </button>
         </div>
         <!-- 格式帮助提示 -->
-        <div class="text-[0.4375rem] text-dim mt-1 leading-relaxed">
+        <div class="text-sm text-dim mt-1 leading-relaxed">
           <span class="text-primary font-bold">ZIP</span> Universal &middot;
           <span class="text-purple-400 font-bold">7Z</span> Best compression &middot;
           <span class="text-amber-400 font-bold">TAR.*</span> Linux archives &middot;
@@ -241,8 +241,8 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
       <!-- 压缩强度 (精致 Range) -->
       <div class="flex flex-col gap-1.5 flex-1 min-w-[150px]">
         <div class="flex justify-between items-center px-1">
-          <label class="text-[0.5rem] font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.level') }}</label>
-          <span class="text-[0.5625rem] font-mono text-primary font-black">{{ compressionOptions.level }} / 9</span>
+          <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.level') }}</label>
+          <span class="text-xs font-mono text-primary font-black">{{ compressionOptions.level }} / 9</span>
         </div>
         <input
           type="range" v-model.number="compressionOptions.level" min="1" max="9" step="1"
@@ -252,25 +252,25 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
 
       <!-- 文件名输入 -->
       <div class="flex flex-col gap-1.5 flex-[1.5] min-w-[200px]">
-        <label class="text-[0.5rem] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.filename') }}</label>
+        <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.filename') }}</label>
         <div class="relative">
           <input 
             v-model="compressionOptions.filename" 
-            class="w-full px-4 py-2 rounded-xl bg-input border border-subtle text-[0.6875rem] text-content outline-none focus:border-primary transition-all placeholder:text-dim"
+            class="w-full px-4 py-2 rounded-xl bg-input border border-subtle text-sm text-content outline-none focus:border-primary transition-all placeholder:text-dim"
             :placeholder="appStore.t('vault.placeholder.name')"
           />
-          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[0.5625rem] font-mono text-dim uppercase">.{{ compressionOptions.format }}</span>
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-dim uppercase">.{{ compressionOptions.format }}</span>
         </div>
       </div>
 
       <!-- 密码保护 (主行可见) 带生成器按钮 -->
       <div class="flex flex-col gap-1.5 w-44 shrink-0">
-        <label class="text-[0.5rem] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('decompress.password') }}</label>
+        <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('decompress.password') }}</label>
         <div class="flex gap-1">
           <div class="relative flex-1">
             <input
               v-model="compressionOptions.password" type="password"
-              class="w-full px-3 py-2 rounded-xl bg-input border text-[0.625rem] outline-none focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full px-3 py-2 rounded-xl bg-input border text-sm outline-none focus:border-primary transition-all disabled:opacity-85 disabled:cursor-not-allowed"
               :class="compressionOptions.password ? 'border-primary/50' : 'border-subtle'"
               :disabled="!supportsPassword"
               :placeholder="supportsPassword ? (compressionOptions.password ? appStore.t('preset.password_set') : appStore.t('preset.password_optional')) : appStore.t('preset.password_na')"
@@ -280,9 +280,9 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
               @click="compressionOptions.password = ''"
               class="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full flex items-center justify-center text-dim hover:text-red-400 transition-colors"
             >
-              <i class="pi pi-times text-[0.4375rem]"></i>
+              <i class="pi pi-times text-sm"></i>
             </button>
-            <i v-else-if="supportsPassword" class="pi pi-lock absolute right-2.5 top-1/2 -translate-y-1/2 text-[0.5625rem] text-dim"></i>
+            <i v-else-if="supportsPassword" class="pi pi-lock absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-dim"></i>
           </div>
           <button
             v-if="supportsPassword"
@@ -298,7 +298,7 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
       <!-- 高级开关按钮 -->
       <button
         @click="showAdvanced = !showAdvanced"
-        class="mt-auto h-9 px-4 rounded-xl border border-subtle text-[0.5625rem] font-black uppercase tracking-widest transition-all"
+        class="mt-auto h-9 px-4 rounded-xl border border-subtle text-xs font-black uppercase tracking-widest transition-all"
         :class="showAdvanced ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-input text-muted hover:text-content'"
       >
         <i class="pi pi-cog mr-2" :class="{ 'animate-spin-slow': showAdvanced }"></i>
@@ -308,7 +308,7 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
       <!-- 配置组选择按钮 -->
       <button
         @click="showProfileSelector = !showProfileSelector"
-        class="mt-auto h-9 px-4 rounded-xl border border-subtle text-[0.5625rem] font-black uppercase tracking-widest transition-all"
+        class="mt-auto h-9 px-4 rounded-xl border border-subtle text-xs font-black uppercase tracking-widest transition-all"
         :class="showProfileSelector ? 'bg-sky-500/10 border-sky-500/30 text-sky-400' : 'bg-input text-muted hover:text-content'"
       >
         <i class="pi pi-bookmark mr-2"></i>
@@ -318,7 +318,7 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
       <!-- 保存为配置组按钮 -->
       <button
         @click="openSaveProfileModal"
-        class="mt-auto h-9 px-4 rounded-xl border border-subtle text-[0.5625rem] font-black uppercase tracking-widest transition-all bg-input text-muted hover:text-content hover:border-sky-500/30"
+        class="mt-auto h-9 px-4 rounded-xl border border-subtle text-xs font-black uppercase tracking-widest transition-all bg-input text-muted hover:text-content hover:border-sky-500/30"
         :title="appStore.t('profiles.save_as_new')"
       >
         <i class="pi pi-save mr-2"></i>
@@ -331,11 +331,11 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
       <div v-if="showAdvanced" class="flex flex-wrap lg:flex-nowrap items-end gap-6 pt-4 border-t border-subtle/30">
         <!-- 目标路径 -->
         <div class="flex flex-col gap-1.5 flex-1 min-w-[300px]">
-          <label class="text-[0.5rem] font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.output_path') }}</label>
+          <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.output_path') }}</label>
           <div class="flex gap-2">
             <input 
               v-model="outputPath" 
-              class="flex-1 px-4 py-2 rounded-xl bg-input border border-subtle text-[0.625rem] text-muted outline-none focus:border-primary transition-all font-mono"
+              class="flex-1 px-4 py-2 rounded-xl bg-input border border-subtle text-sm text-muted outline-none focus:border-primary transition-all font-mono"
               :placeholder="appStore.t('preset.default_path')"
             />
             <button @click="selectOutputPath" class="w-9 h-9 rounded-xl bg-input border border-subtle flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all">
@@ -369,7 +369,7 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
             v-if="compressionOptions.splitArchive"
             v-model.number="compressionOptions.splitSize"
             type="number" min="1" step="1"
-            class="w-16 px-2 py-2 rounded-xl bg-input border border-subtle text-[0.625rem] text-content outline-none focus:border-primary transition-all font-mono"
+            class="w-16 px-2 py-2 rounded-xl bg-input border border-subtle text-sm text-content outline-none focus:border-primary transition-all font-mono"
             :placeholder="appStore.t('preset.mb')"
           />
         </div>
@@ -392,10 +392,10 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
   <div v-if="showPresetModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" @click.self="showPresetModal = false">
     <div class="modal-no-glass rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-content">
       <h3 class="text-sm font-black mb-4 uppercase tracking-widest">{{ appStore.t('preset.name_prompt') }}</h3>
-      <input v-model="presetNameInput" @keyup.enter="confirmSavePreset" class="w-full h-10 rounded-xl bg-input border border-subtle px-4 text-[0.625rem] font-mono text-content outline-none focus:border-primary transition-all mb-4" autofocus />
+      <input v-model="presetNameInput" @keyup.enter="confirmSavePreset" class="w-full h-10 rounded-xl bg-input border border-subtle px-4 text-sm font-mono text-content outline-none focus:border-primary transition-all mb-4" autofocus />
       <div class="flex gap-2">
-        <button @click="showPresetModal = false" class="flex-1 py-2.5 rounded-xl bg-input border border-subtle text-muted text-[0.5625rem] font-black uppercase tracking-widest hover:text-content transition-all">{{ appStore.t('vault.confirm.cancel') }}</button>
-        <button @click="confirmSavePreset" class="flex-1 py-2.5 rounded-xl bg-primary text-white text-[0.5625rem] font-black uppercase tracking-widest hover:brightness-110 transition-all">{{ appStore.t('preset.name_prompt') }}</button>
+        <button @click="showPresetModal = false" class="flex-1 py-2.5 rounded-xl bg-input border border-subtle text-muted text-xs font-black uppercase tracking-widest hover:text-content transition-all">{{ appStore.t('vault.confirm.cancel') }}</button>
+        <button @click="confirmSavePreset" class="flex-1 py-2.5 rounded-xl bg-primary text-white text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all">{{ appStore.t('preset.name_prompt') }}</button>
       </div>
     </div>
   </div>
@@ -409,7 +409,7 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
 
       <!-- 图标选择 -->
       <div class="mb-4">
-        <label class="block text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.icon_label') }}</label>
+        <label class="block text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.icon_label') }}</label>
         <div class="flex gap-2 flex-wrap">
           <button
             v-for="icon in iconOptions"
@@ -425,30 +425,30 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
 
       <!-- 名称 -->
       <div class="mb-4">
-        <label class="block text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.name_label') }}</label>
+        <label class="block text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.name_label') }}</label>
         <input
           v-model="newProfileName"
           @keyup.enter="saveAsNewProfile"
-          class="w-full h-10 rounded-xl bg-input border border-subtle px-4 text-[0.625rem] font-mono text-content outline-none focus:border-primary transition-all"
+          class="w-full h-10 rounded-xl bg-input border border-subtle px-4 text-sm font-mono text-content outline-none focus:border-primary transition-all"
           autofocus
         />
       </div>
 
       <!-- 描述 -->
       <div class="mb-4">
-        <label class="block text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.desc_optional') }}</label>
+        <label class="block text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.desc_optional') }}</label>
         <textarea
           v-model="newProfileDescription"
           rows="2"
-          class="w-full rounded-xl bg-input border border-subtle px-4 py-2 text-[0.625rem] text-content outline-none focus:border-primary transition-all resize-none"
+          class="w-full rounded-xl bg-input border border-subtle px-4 py-2 text-sm text-content outline-none focus:border-primary transition-all resize-none"
           :placeholder="appStore.t('profiles.desc_placeholder')"
         ></textarea>
       </div>
 
       <!-- 当前配置预览 -->
       <div class="mb-4 p-3 rounded-xl bg-slate-700/30 border border-slate-600/30">
-        <p class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.current_config') }}</p>
-        <div class="flex flex-wrap gap-2 text-[0.5625rem]">
+        <p class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.current_config') }}</p>
+        <div class="flex flex-wrap gap-2 text-xs">
           <span class="px-2 py-1 bg-slate-700/50 rounded text-slate-300">{{ compressionOptions.format.toUpperCase() }}</span>
           <span class="px-2 py-1 bg-slate-700/50 rounded text-slate-300">L{{ compressionOptions.level }}</span>
           <span v-if="compressionOptions.password" class="px-2 py-1 bg-sky-500/10 text-sky-400 rounded">{{ appStore.t('profiles.badge_encrypted') }}</span>
@@ -458,8 +458,8 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
       </div>
 
       <div class="flex gap-2">
-        <button @click="showSaveProfileModal = false" class="flex-1 py-2.5 rounded-xl bg-input border border-subtle text-muted text-[0.5625rem] font-black uppercase tracking-widest hover:text-content transition-all">{{ appStore.t('vault.confirm.cancel') }}</button>
-        <button @click="saveAsNewProfile" class="flex-1 py-2.5 rounded-xl bg-sky-500 text-white text-[0.5625rem] font-black uppercase tracking-widest hover:brightness-110 transition-all">{{ appStore.t('profiles.save_button') }}</button>
+        <button @click="showSaveProfileModal = false" class="flex-1 py-2.5 rounded-xl bg-input border border-subtle text-muted text-xs font-black uppercase tracking-widest hover:text-content transition-all">{{ appStore.t('vault.confirm.cancel') }}</button>
+        <button @click="saveAsNewProfile" class="flex-1 py-2.5 rounded-xl bg-sky-500 text-white text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all">{{ appStore.t('profiles.save_button') }}</button>
       </div>
     </div>
   </div>

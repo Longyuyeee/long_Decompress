@@ -181,7 +181,7 @@ const clearResults = () => {
     <!-- 顶部标题栏 -->
     <header class="shrink-0 mb-8">
       <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('integrity.title') }}</h1>
-      <p class="text-muted text-[0.625rem] font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('integrity.subtitle') }}</p>
+      <p class="text-muted text-sm font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('integrity.subtitle') }}</p>
     </header>
 
     <!-- 主内容区 -->
@@ -196,7 +196,7 @@ const clearResults = () => {
           >
             <div class="text-4xl mb-3">🔢</div>
             <div class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('integrity.mode.calculate') }}</div>
-            <div class="text-[0.5625rem] text-muted mt-2 uppercase tracking-tighter">计算文件的校验和</div>
+            <div class="text-xs text-muted mt-2 uppercase tracking-tighter">计算文件的校验和</div>
           </button>
           <button
             @click="verifyMode = true; clearResults()"
@@ -205,7 +205,7 @@ const clearResults = () => {
           >
             <div class="text-4xl mb-3">✓</div>
             <div class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('integrity.mode.verify') }}</div>
-            <div class="text-[0.5625rem] text-muted mt-2 uppercase tracking-tighter">验证校验文件的正确性</div>
+            <div class="text-xs text-muted mt-2 uppercase tracking-tighter">验证校验文件的正确性</div>
           </button>
         </div>
 
@@ -213,7 +213,7 @@ const clearResults = () => {
         <div v-if="!verifyMode" class="space-y-8">
           <!-- 选择算法 -->
           <section class="aero-card p-10">
-            <h2 class="text-[0.625rem] font-black text-content uppercase tracking-[0.3em] mb-6">
+            <h2 class="text-sm font-black text-content uppercase tracking-[0.3em] mb-6">
               {{ appStore.t('integrity.algorithm') }}
             </h2>
             <div class="grid grid-cols-3 gap-4">
@@ -227,14 +227,14 @@ const clearResults = () => {
                   : 'bg-input/30 border-subtle hover:border-primary/50'"
               >
                 <div class="text-sm font-black text-content uppercase tracking-widest">{{ algo.label }}</div>
-                <div class="text-[0.5625rem] text-muted mt-2 uppercase tracking-tighter">{{ algo.description }}</div>
+                <div class="text-xs text-muted mt-2 uppercase tracking-tighter">{{ algo.description }}</div>
               </button>
             </div>
           </section>
 
           <!-- 选择文件 -->
           <section class="aero-card p-10">
-            <h2 class="text-[0.625rem] font-black text-content uppercase tracking-[0.3em] mb-6">
+            <h2 class="text-sm font-black text-content uppercase tracking-[0.3em] mb-6">
               {{ appStore.t('integrity.files') }}
             </h2>
             <button
@@ -254,7 +254,7 @@ const clearResults = () => {
               <button
                 @click="calculateChecksums"
                 :disabled="selectedFiles.length === 0 || isCalculating"
-                class="flex-1 px-8 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-sm hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none"
+                class="flex-1 px-8 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-sm hover:bg-primary/90 disabled:opacity-80 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none"
               >
                 {{ isCalculating ? appStore.t('integrity.calculating') : appStore.t('integrity.calculate') }}
               </button>
@@ -270,7 +270,7 @@ const clearResults = () => {
 
           <!-- 结果列表 -->
           <section v-if="checksumResults.length > 0" class="aero-card p-10">
-            <h2 class="text-[0.625rem] font-black text-content uppercase tracking-[0.3em] mb-6">
+            <h2 class="text-sm font-black text-content uppercase tracking-[0.3em] mb-6">
               {{ appStore.t('integrity.results') }}
             </h2>
             <div class="space-y-3">
@@ -283,7 +283,7 @@ const clearResults = () => {
                   <div class="flex-1 min-w-0">
                     <div class="text-sm font-black text-content truncate uppercase tracking-widest">{{ result.fileName }}</div>
                     <div class="mt-3 flex items-center gap-3">
-                      <span class="text-[0.5625rem] text-muted uppercase tracking-widest font-bold">{{ result.algorithm }}:</span>
+                      <span class="text-xs text-muted uppercase tracking-widest font-bold">{{ result.algorithm }}:</span>
                       <code class="text-xs font-mono text-primary">{{ result.checksum || '计算中...' }}</code>
                     </div>
                   </div>
@@ -299,13 +299,13 @@ const clearResults = () => {
                     <button
                       v-if="result.status === 'success'"
                       @click="copyChecksum(result.checksum)"
-                      class="px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-[0.625rem] font-black uppercase tracking-widest transition-all"
+                      class="px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-sm font-black uppercase tracking-widest transition-all"
                     >
                       {{ appStore.t('integrity.copy') }}
                     </button>
                   </div>
                 </div>
-                <div v-if="result.error" class="mt-3 text-[0.5625rem] text-red-500 uppercase tracking-tighter">
+                <div v-if="result.error" class="mt-3 text-xs text-red-500 uppercase tracking-tighter">
                   {{ result.error }}
                 </div>
               </div>
@@ -325,7 +325,7 @@ const clearResults = () => {
               <div class="text-base font-black text-content uppercase tracking-widest">
                 {{ appStore.t('integrity.select_checksum') }}
               </div>
-              <div class="text-[0.5625rem] text-muted mt-3 uppercase tracking-tighter">
+              <div class="text-xs text-muted mt-3 uppercase tracking-tighter">
                 支持 .md5, .sha256, .sfv 格式
               </div>
             </button>
@@ -343,12 +343,12 @@ const clearResults = () => {
                 <div class="text-lg font-black uppercase tracking-widest"
                   :class="verifyResult.valid ? 'text-green-500' : 'text-red-500'"
                 >
-                  {{ verifyResult.valid ? appStore.t('integrity.verify_success', '校验通过') : appStore.t('integrity.verify_failed', '校验失败') }}
+                  {{ verifyResult.valid ? appStore.t('integrity.verify_success') : appStore.t('integrity.verify_failed') }}
                 </div>
-                <div class="text-sm text-muted mt-1">{{ verifyResult.message }}</div>
+                <div class="text-xs text-muted mt-2 uppercase tracking-tighter">{{ verifyResult.message }}</div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </div>

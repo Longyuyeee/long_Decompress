@@ -188,7 +188,7 @@ const handleFiles = (files: File[]) => {
     :class="{
       'is-dragging': isDragging,
       'p-12 rounded-[2.5rem]': !compact,
-      'p-3 rounded-xl border-dashed opacity-40 hover:opacity-100': compact
+      'p-3 rounded-xl border-dashed opacity-80 hover:opacity-100': compact
     }"
     role="button"
     :aria-label="appStore.t('dropzone.hint')"

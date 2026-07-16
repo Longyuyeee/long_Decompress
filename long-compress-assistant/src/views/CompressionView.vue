@@ -309,7 +309,7 @@ const totalPayload = computed(() => {
           <button
             v-if="selectedRows.size > 0"
             @click="handleCreateGroup"
-            class="h-8 md:h-9 px-3 md:px-5 rounded-lg bg-input border border-subtle text-content text-[0.5rem] md:text-[0.5625rem] font-bold uppercase tracking-wider hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-2"
+            class="h-8 md:h-9 px-3 md:px-5 rounded-lg bg-input border border-subtle text-content text-xs md:text-xs font-bold uppercase tracking-wider hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-2"
           >
             <i class="pi pi-box text-xs"></i>
             <span class="hidden sm:inline">{{ appStore.t('compress.create_group') }} ({{ selectedRows.size }})</span>
@@ -320,7 +320,7 @@ const totalPayload = computed(() => {
         <button
           v-if="totalPayload > 0"
           @click="handleCompress"
-          class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-[0.5rem] md:text-[0.5625rem] font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2"
+          class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-xs md:text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2"
         >
           <i class="pi pi-play-circle text-xs"></i>
           <span class="hidden sm:inline">{{ appStore.t('compress.start') }}</span>
@@ -338,8 +338,8 @@ const totalPayload = computed(() => {
               <i class="pi pi-cog text-primary text-xs"></i>
             </div>
             <div>
-              <h4 class="text-[0.625rem] font-black text-primary uppercase tracking-widest">{{ appStore.t('compress.global_settings') }}</h4>
-              <p class="text-[0.5rem] text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('compress.global_settings.desc') }}</p>
+              <h4 class="text-sm font-black text-primary uppercase tracking-widest">{{ appStore.t('compress.global_settings') }}</h4>
+              <p class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('compress.global_settings.desc') }}</p>
             </div>
           </div>
           <CompressionSettingsPanel
@@ -349,19 +349,19 @@ const totalPayload = computed(() => {
           />
           <div
             v-if="usesRarFormat && rarSupport && !rarSupport.available"
-            class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-[0.625rem] font-bold text-yellow-600"
+            class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm font-bold text-yellow-600"
           >
             <span class="min-w-0 flex-1">{{ rarSupport.message }}</span>
             <button
               type="button"
-              class="h-7 rounded-lg border border-yellow-500/30 px-3 text-[0.5625rem] font-black uppercase tracking-widest transition-colors hover:bg-yellow-500/10"
+              class="h-7 rounded-lg border border-yellow-500/30 px-3 text-xs font-black uppercase tracking-widest transition-colors hover:bg-yellow-500/10"
               @click="openRarDownloadPage"
             >
               {{ appStore.t('compress.download') }}
             </button>
             <button
               type="button"
-              class="h-7 rounded-lg border border-yellow-500/30 px-3 text-[0.5625rem] font-black uppercase tracking-widest transition-colors hover:bg-yellow-500/10 disabled:opacity-50"
+              class="h-7 rounded-lg border border-yellow-500/30 px-3 text-xs font-black uppercase tracking-widest transition-colors hover:bg-yellow-500/10 disabled:opacity-85"
               :disabled="checkingRarSupport"
               @click="refreshRarSupport"
             >
@@ -370,12 +370,12 @@ const totalPayload = computed(() => {
           </div>
           <div
             v-else-if="usesRarFormat && rarSupport?.available"
-            class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-[0.625rem] font-bold text-emerald-600"
+            class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-600"
           >
             <span class="min-w-0 flex-1">{{ rarSupport.message }}</span>
             <button
               type="button"
-              class="h-7 rounded-lg border border-emerald-500/30 px-3 text-[0.5625rem] font-black uppercase tracking-widest transition-colors hover:bg-emerald-500/10 disabled:opacity-50"
+              class="h-7 rounded-lg border border-emerald-500/30 px-3 text-xs font-black uppercase tracking-widest transition-colors hover:bg-emerald-500/10 disabled:opacity-85"
               :disabled="checkingRarSupport"
               @click="refreshRarSupport"
             >
@@ -400,9 +400,9 @@ const totalPayload = computed(() => {
             <div class="flex-1">
               <div class="text-sm font-black text-content tracking-tight">{{ group.name }}</div>
               <div class="flex items-center gap-2 mt-1">
-                <span class="text-[0.5625rem] font-bold text-muted uppercase tracking-widest">{{ group.files.length }} {{ appStore.t('compress.group_count') }}</span>
+                <span class="text-xs font-bold text-muted uppercase tracking-widest">{{ group.files.length }} {{ appStore.t('compress.group_count') }}</span>
                 <div class="w-1 h-1 rounded-full bg-subtle"></div>
-                <span class="text-[0.5625rem] font-mono text-primary font-black uppercase">{{ compressionStore.getEffectiveSettings(group.settings).format }}</span>
+                <span class="text-xs font-mono text-primary font-black uppercase">{{ compressionStore.getEffectiveSettings(group.settings).format }}</span>
               </div>
             </div>
 
@@ -410,7 +410,7 @@ const totalPayload = computed(() => {
               <button @click.stop="compressionStore.dissolveGroup(group.id)" class="text-muted hover:text-red-500 transition-colors">
                 <i class="pi pi-trash text-xs"></i>
               </button>
-              <i class="pi transition-transform duration-500 text-muted text-[0.625rem]" :class="group.expanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+              <i class="pi transition-transform duration-500 text-muted text-sm" :class="group.expanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
             </div>
           </div>
 
@@ -418,7 +418,7 @@ const totalPayload = computed(() => {
           <transition name="slide-down">
             <div v-if="group.expanded" class="px-8 pb-8 pt-4 border-t border-subtle/30">
               <div class="mb-6">
-                <h4 class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-4">{{ appStore.t('compress.settings') }}</h4>
+                <h4 class="text-xs font-black text-muted uppercase tracking-widest mb-4">{{ appStore.t('compress.settings') }}</h4>
                 <!-- 使用横向配置组件，适配该组 -->
                 <CompressionSettingsPanel 
                   :modelValue="compressionStore.getEffectiveSettings(group.settings)"
@@ -430,20 +430,20 @@ const totalPayload = computed(() => {
               </div>
               
               <div class="space-y-2">
-                <h4 class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('compress.group_files') }}</h4>
-                <div v-for="file in group.files" :key="file.path" class="text-[0.625rem] text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex items-center justify-between group/file">
+                <h4 class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('compress.group_files') }}</h4>
+                <div v-for="file in group.files" :key="file.path" class="text-sm text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex items-center justify-between group/file">
                   <div class="flex items-center gap-2 overflow-hidden min-w-0">
-                    <i :class="file.isDirectory ? 'pi pi-folder text-primary/60' : 'pi pi-file text-muted/60'" class="text-[0.5625rem] shrink-0"></i>
+                    <i :class="file.isDirectory ? 'pi pi-folder text-primary/60' : 'pi pi-file text-muted/60'" class="text-xs shrink-0"></i>
                     <span class="truncate">{{ file.name }}</span>
                   </div>
                   <div class="flex items-center gap-2 shrink-0">
-                    <span class="opacity-30 italic ml-2">{{ file.path }}</span>
+                    <span class="opacity-75 italic ml-2">{{ file.path }}</span>
                     <button
                       @click.stop="compressionStore.removeFileFromGroup(group.id, file.path)"
                       class="w-5 h-5 rounded-md flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover/file:opacity-100 transition-all shrink-0"
                       :title="appStore.t('compress.remove_from_group')"
                     >
-                      <i class="pi pi-times text-[0.5625rem]"></i>
+                      <i class="pi pi-times text-xs"></i>
                     </button>
                   </div>
                 </div>
@@ -454,7 +454,7 @@ const totalPayload = computed(() => {
 
         <!-- 2. 未分组文件列表 (待分配) -->
         <div v-if="compressionStore.selectedFiles.length > 0" class="space-y-3">
-          <h3 class="text-[0.5625rem] font-black text-muted uppercase tracking-[0.3em] px-4">{{ appStore.t('compress.add_files') }}</h3>
+          <h3 class="text-xs font-black text-muted uppercase tracking-[0.3em] px-4">{{ appStore.t('compress.add_files') }}</h3>
           <div v-for="file in compressionStore.selectedFiles" :key="file.path" 
                @click="toggleSelection(file.path)"
                 class="flex flex-wrap items-center justify-between px-8 py-4 rounded-2xl bg-input border border-subtle group/row hover:border-primary/30 transition-all cursor-pointer"
@@ -463,7 +463,7 @@ const totalPayload = computed(() => {
             <div class="w-6 flex shrink-0">
               <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all"
                    :class="selectedRows.has(file.path) ? 'bg-primary border-primary' : 'bg-card'">
-                <i v-if="selectedRows.has(file.path)" class="pi pi-check text-[0.5rem] text-white"></i>
+                <i v-if="selectedRows.has(file.path)" class="pi pi-check text-xs text-white"></i>
               </div>
             </div>
 
@@ -473,17 +473,17 @@ const totalPayload = computed(() => {
               </div>
               <div class="overflow-hidden">
                 <div class="text-content font-bold truncate text-xs tracking-tight group-hover/row:text-primary transition-colors">{{ file.name }}</div>
-                <div class="text-[0.5625rem] text-muted font-mono mt-0.5 opacity-60 truncate">{{ file.path }}</div>
+                <div class="text-xs text-muted font-mono mt-0.5 opacity-90 truncate">{{ file.path }}</div>
               </div>
             </div>
 
             <button @click.stop="compressionStore.selectedFiles = compressionStore.selectedFiles.filter(f => f.path !== file.path)" 
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-red-500 transition-all">
-              <i class="pi pi-times text-[0.625rem]"></i>
+              <i class="pi pi-times text-sm"></i>
             </button>
             <button @click.stop="file.expanded = !file.expanded"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-primary transition-all">
-              <i class="pi pi-cog text-[0.625rem]"></i>
+              <i class="pi pi-cog text-sm"></i>
             </button>
 
             <transition name="slide-down">
@@ -505,7 +505,7 @@ const totalPayload = computed(() => {
       <div v-else class="flex-1 min-h-0 flex flex-col items-center justify-center p-2 sm:p-3 gap-2 sm:gap-3">
         <div class="text-center space-y-1 shrink-0">
           <h2 class="text-sm sm:text-base md:text-xl font-black text-content tracking-tight">{{ appStore.t('compress.start') }}</h2>
-          <p class="text-[0.5rem] md:text-[0.625rem] text-muted font-bold uppercase tracking-widest">{{ appStore.t('compress.select_to_begin') }}</p>
+          <p class="text-xs md:text-sm text-muted font-bold uppercase tracking-widest">{{ appStore.t('compress.select_to_begin') }}</p>
         </div>
         <div class="flex-1 min-h-0 w-full max-w-4xl flex flex-col sm:flex-row gap-2 sm:gap-3 px-2">
           <EnhancedFileDropzone

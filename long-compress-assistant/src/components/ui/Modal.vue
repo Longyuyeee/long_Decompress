@@ -28,7 +28,7 @@
                   <h3 id="modal-title" class="text-lg font-black text-content tracking-tight leading-none mb-1">
                     <slot name="title">{{ title }}</slot>
                   </h3>
-                  <p v-if="description" class="text-[0.625rem] text-muted font-bold uppercase tracking-widest">
+                  <p v-if="description" class="text-sm text-muted font-bold uppercase tracking-widest">
                     {{ description }}
                   </p>
                 </div>

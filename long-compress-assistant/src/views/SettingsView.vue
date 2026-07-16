@@ -149,13 +149,13 @@ const removeWordlist = (index: number) => {
 
               <!-- 语言选择 -->
               <div class="pt-6 border-t border-subtle flex items-center justify-between">
-                <span class="text-[0.625rem] font-black text-content uppercase tracking-widest">{{ appStore.t('settings.language') }}</span>
+                <span class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.language') }}</span>
                 <div class="flex gap-2">
                   <button @click="appStore.language = 'zh-CN'; appStore.saveSettingsToStorage()" 
-                          class="px-4 py-1.5 rounded-lg text-[0.625rem] font-black transition-all border border-subtle"
+                          class="px-4 py-1.5 rounded-lg text-sm font-black transition-all border border-subtle"
                           :class="appStore.language === 'zh-CN' ? 'bg-primary text-white border-primary' : 'bg-input text-muted'">{{ appStore.t('settings.lang.zh') }}</button>
                   <button @click="appStore.language = 'en-US'; appStore.saveSettingsToStorage()"
-                          class="px-4 py-1.5 rounded-lg text-[0.625rem] font-black transition-all border border-subtle"
+                          class="px-4 py-1.5 rounded-lg text-sm font-black transition-all border border-subtle"
                           :class="appStore.language === 'en-US' ? 'bg-primary text-white border-primary' : 'bg-input text-muted'">{{ appStore.t('settings.lang.en') }}</button>
                 </div>
               </div>
@@ -164,10 +164,10 @@ const removeWordlist = (index: number) => {
               <div class="pt-6 border-t border-subtle space-y-3">
                 <div class="flex justify-between items-center">
                   <div>
-                    <span class="text-[0.625rem] font-black text-content uppercase tracking-widest">{{ appStore.t('settings.ui_scale') }}</span>
-                    <div class="text-[0.5rem] text-muted mt-0.5">{{ appStore.t('settings.ui_scale.desc') }}</div>
+                    <span class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.ui_scale') }}</span>
+                    <div class="text-xs text-muted mt-0.5">{{ appStore.t('settings.ui_scale.desc') }}</div>
                   </div>
-                  <span class="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[0.625rem] font-black font-mono">
+                  <span class="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-black font-mono">
                     {{ appStore.settings.uiScale }}%
                   </span>
                 </div>
@@ -178,7 +178,7 @@ const removeWordlist = (index: number) => {
                   @change="validateAndUpdateUIScale(appStore.settings.uiScale)"
                   class="w-full h-1.5 bg-input border border-subtle rounded-full appearance-none cursor-pointer accent-primary"
                 />
-                <div class="flex justify-between text-[0.5rem] text-dim font-mono">
+                <div class="flex justify-between text-xs text-dim font-mono">
                   <span>60%</span><span>100%</span><span>200%</span>
                 </div>
               </div>
@@ -189,13 +189,13 @@ const removeWordlist = (index: number) => {
         <!-- 核心功能：常规与性能 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <section class="aero-card p-8">
-            <h2 class="text-[0.625rem] font-black text-primary uppercase tracking-[0.3em] mb-8">{{ appStore.t('settings.performance') }}</h2>
+            <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-8">{{ appStore.t('settings.performance') }}</h2>
             <div class="space-y-6">
               <!-- 自启动开关 -->
               <div class="flex items-center justify-between group cursor-pointer" @click="toggleAutoStart">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.auto_start') }}</div>
-                  <div class="text-[0.5625rem] text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.performance.auto_start.desc') }}</div>
+                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.performance.auto_start.desc') }}</div>
                 </div>
                 <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all" :class="appStore.settings.autoStart ? 'bg-primary/40 border-primary' : 'bg-input'">
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.autoStart ? 'translate-x-5' : ''"></div>
@@ -206,7 +206,7 @@ const removeWordlist = (index: number) => {
               <div class="space-y-4 pt-6 border-t border-subtle">
                 <div class="flex justify-between items-center">
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.threads') }}</div>
-                  <span class="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[0.625rem] font-black font-mono">
+                  <span class="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-black font-mono">
                     {{ appStore.settings.maxConcurrentTasks }}
                   </span>
                 </div>
@@ -217,7 +217,7 @@ const removeWordlist = (index: number) => {
                   @change="validateAndUpdateThreads(appStore.settings.maxConcurrentTasks)"
                   class="w-full h-1.5 bg-input border border-subtle rounded-full appearance-none cursor-pointer accent-primary"
                 />
-                <div class="text-[0.5rem] text-muted uppercase tracking-tighter">{{ appStore.t('settings.performance.threads.desc') }}</div>
+                <div class="text-xs text-muted uppercase tracking-tighter">{{ appStore.t('settings.performance.threads.desc') }}</div>
               </div>
             </div>
           </section>
@@ -225,7 +225,7 @@ const removeWordlist = (index: number) => {
           <!-- 暴力破解引擎设置 -->
           <section class="aero-card p-8">
             <div class="flex justify-between items-center mb-8">
-              <h2 class="text-[0.625rem] font-black text-muted uppercase tracking-[0.3em]">{{ appStore.t('settings.bruteforce') }}</h2>
+              <h2 class="text-sm font-black text-muted uppercase tracking-[0.3em]">{{ appStore.t('settings.bruteforce') }}</h2>
               <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all cursor-pointer" 
                    :class="appStore.settings.enableBruteForce ? 'bg-primary/40 border-primary' : 'bg-input'"
                    @click="toggleBruteForce">
@@ -233,12 +233,12 @@ const removeWordlist = (index: number) => {
               </div>
             </div>
 
-            <div class="space-y-6" :class="{ 'opacity-40 pointer-events-none': !appStore.settings.enableBruteForce }">
+            <div class="space-y-6" :class="{ 'opacity-80 pointer-events-none': !appStore.settings.enableBruteForce }">
               <div class="space-y-3">
                 <div class="flex justify-between items-center">
-                  <span class="text-[0.5625rem] font-black text-muted uppercase tracking-widest">{{ appStore.t('settings.bruteforce.wordlists') }}</span>
-                  <button @click="addWordlist" class="text-[0.5625rem] font-black text-primary uppercase tracking-widest hover:brightness-110 transition-all flex items-center gap-1">
-                    <i class="pi pi-plus text-[0.5rem]"></i>
+                  <span class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('settings.bruteforce.wordlists') }}</span>
+                  <button @click="addWordlist" class="text-xs font-black text-primary uppercase tracking-widest hover:brightness-110 transition-all flex items-center gap-1">
+                    <i class="pi pi-plus text-xs"></i>
                     {{ appStore.t('settings.bruteforce.add') }}
                   </button>
                 </div>
@@ -246,11 +246,11 @@ const removeWordlist = (index: number) => {
                 <div class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
                   <div v-for="(path, index) in appStore.settings.bruteForceWordlists" :key="path" 
                        class="flex items-center justify-between p-3 rounded-xl bg-input border border-subtle group hover:border-primary/30 transition-all">
-                    <span class="text-[0.625rem] text-content truncate max-w-[200px] font-mono" :title="path">{{ path.split(/[\\/]/).pop() }}</span>
-                    <i @click="removeWordlist(index)" class="pi pi-times text-[0.625rem] text-muted hover:text-red-500 cursor-pointer transition-colors"></i>
+                    <span class="text-sm text-content truncate max-w-[200px] font-mono" :title="path">{{ path.split(/[\\/]/).pop() }}</span>
+                    <i @click="removeWordlist(index)" class="pi pi-times text-sm text-muted hover:text-red-500 cursor-pointer transition-colors"></i>
                   </div>
                   <div v-if="appStore.settings.bruteForceWordlists.length === 0" class="py-6 text-center border border-dashed border-subtle rounded-xl">
-                    <span class="text-[0.5625rem] text-dim uppercase tracking-widest font-bold">{{ appStore.t('settings.bruteforce.empty') }}</span>
+                    <span class="text-xs text-dim uppercase tracking-widest font-bold">{{ appStore.t('settings.bruteforce.empty') }}</span>
                   </div>
                 </div>
               </div>
@@ -258,12 +258,12 @@ const removeWordlist = (index: number) => {
           </section>
           <!-- 行为设置 -->
           <section class="aero-card p-8">
-            <h2 class="text-[0.625rem] font-black text-primary uppercase tracking-[0.3em] mb-6">{{ appStore.t('settings.behavior') }}</h2>
+            <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">{{ appStore.t('settings.behavior') }}</h2>
             <div class="space-y-5">
               <div class="flex items-center justify-between group cursor-pointer" @click="appStore.updateSettings({ autoDeleteSource: !appStore.settings.autoDeleteSource })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.auto_delete') }}</div>
-                  <div class="text-[0.5625rem] text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.auto_delete.desc') }}</div>
+                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.auto_delete.desc') }}</div>
                 </div>
                 <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.autoDeleteSource ? 'bg-primary/40 border-primary' : 'bg-input'">
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.autoDeleteSource ? 'translate-x-5' : ''"></div>
@@ -272,7 +272,7 @@ const removeWordlist = (index: number) => {
               <div class="flex items-center justify-between group cursor-pointer" @click="appStore.updateSettings({ savePasswords: !appStore.settings.savePasswords })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.save_passwords') }}</div>
-                  <div class="text-[0.5625rem] text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.save_passwords.desc') }}</div>
+                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.save_passwords.desc') }}</div>
                 </div>
                 <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.savePasswords ? 'bg-primary/40 border-primary' : 'bg-input'">
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.savePasswords ? 'translate-x-5' : ''"></div>
@@ -281,7 +281,7 @@ const removeWordlist = (index: number) => {
               <div v-if="contextMenuSupported" class="flex items-center justify-between group cursor-pointer" @click="toggleContextMenu">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.context_menu') }}</div>
-                  <div class="text-[0.5625rem] text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.context_menu.desc') }}</div>
+                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.context_menu.desc') }}</div>
                 </div>
                 <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="contextMenuEnabled ? 'bg-primary/40 border-primary' : 'bg-input'">
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="contextMenuEnabled ? 'translate-x-5' : ''"></div>
@@ -296,7 +296,7 @@ const removeWordlist = (index: number) => {
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
             <div class="lg:col-span-4 space-y-2">
               <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.formats.title') }}</h2>
-              <p class="text-[0.625rem] text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.formats.desc') }}</p>
+              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.formats.desc') }}</p>
             </div>
 
             <div class="lg:col-span-8 space-y-8">
@@ -304,49 +304,49 @@ const removeWordlist = (index: number) => {
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
                   <div class="text-3xl font-black text-emerald-500 mb-1">37+</div>
-                  <div class="text-[0.5625rem] font-black text-emerald-600/80 uppercase tracking-widest">{{ appStore.t('settings.formats.decompress') }}</div>
+                  <div class="text-xs font-black text-emerald-600/80 uppercase tracking-widest">{{ appStore.t('settings.formats.decompress') }}</div>
                 </div>
                 <div class="p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
                   <div class="text-3xl font-black text-primary mb-1">16</div>
-                  <div class="text-[0.5625rem] font-black text-primary/80 uppercase tracking-widest">{{ appStore.t('settings.formats.compress') }}</div>
+                  <div class="text-xs font-black text-primary/80 uppercase tracking-widest">{{ appStore.t('settings.formats.compress') }}</div>
                 </div>
                 <div class="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20">
                   <div class="text-3xl font-black text-amber-500 mb-1">3</div>
-                  <div class="text-[0.5625rem] font-black text-amber-600/80 uppercase tracking-widest">{{ appStore.t('settings.formats.password') }}</div>
+                  <div class="text-xs font-black text-amber-600/80 uppercase tracking-widest">{{ appStore.t('settings.formats.password') }}</div>
                 </div>
               </div>
 
               <!-- 解压格式详细列表 -->
               <div class="space-y-3">
-                <h3 class="text-[0.5625rem] font-black text-primary uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.decompress_list') }}</h3>
+                <h3 class="text-xs font-black text-primary uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.decompress_list') }}</h3>
                 <div class="p-5 rounded-xl bg-input/30 border border-subtle space-y-3">
                   <div>
-                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.archives') }}</div>
-                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.archives') }}</div>
+                    <div class="text-xs text-content leading-relaxed font-mono">
                       ZIP · ZIPX · 7Z · RAR · TAR · TAR.GZ · TGZ · TAR.BZ2 · TBZ · TAR.XZ · TXZ · TAR.ZST · TZST · GZ · GZIP · BZ2 · BZIP2 · XZ · ZST · ZSTD · LZMA · OVA
                     </div>
                   </div>
                   <div>
-                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.containers') }}</div>
-                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.containers') }}</div>
+                    <div class="text-xs text-content leading-relaxed font-mono">
                       JAR · XPI · ODT · ODS · DOCX · XLSX · PPTX · EPUB · IPA · APK · APPX
                     </div>
                   </div>
                   <div>
-                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.disk_images') }}</div>
-                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.disk_images') }}</div>
+                    <div class="text-xs text-content leading-relaxed font-mono">
                       ISO · IMG · DMG · WIM · VHD · VHDX
                     </div>
                   </div>
                   <div>
-                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.installers') }}</div>
-                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.installers') }}</div>
+                    <div class="text-xs text-content leading-relaxed font-mono">
                       CAB · DEB · RPM · MSI · NSIS
                     </div>
                   </div>
                   <div>
-                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.legacy') }}</div>
-                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.legacy') }}</div>
+                    <div class="text-xs text-content leading-relaxed font-mono">
                       LZH · LHA · ARJ · CHM · SQUASHFS · SFS · XAR · CPIO · UDF · FAT · NTFS · HFS · APFS · EXT2 · EXT3 · EXT4 · ALZ · ARC
                     </div>
                   </div>
@@ -355,29 +355,29 @@ const removeWordlist = (index: number) => {
 
               <!-- 压缩格式详细列表 -->
               <div class="space-y-3">
-                <h3 class="text-[0.5625rem] font-black text-primary uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.compress_list') }}</h3>
+                <h3 class="text-xs font-black text-primary uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.compress_list') }}</h3>
                 <div class="p-5 rounded-xl bg-input/30 border border-subtle space-y-3">
                   <div>
-                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.native_rust') }}</div>
-                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.native_rust') }}</div>
+                    <div class="text-xs text-content leading-relaxed font-mono">
                       ZIP · 7Z · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · GZ · BZ2 · XZ
                     </div>
                   </div>
                   <div>
-                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.via_7z') }}</div>
-                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.via_7z') }}</div>
+                    <div class="text-xs text-content leading-relaxed font-mono">
                       TAR.ZST · ZST · ZSTD · LZMA
                     </div>
                   </div>
                   <div>
-                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.via_winrar') }}</div>
-                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.via_winrar') }}</div>
+                    <div class="text-xs text-content leading-relaxed font-mono">
                       RAR ({{ appStore.t('settings.formats.requires_winrar') }})
                     </div>
                   </div>
                   <div>
-                    <div class="text-[0.5rem] font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.split') }}</div>
-                    <div class="text-[0.5625rem] text-content leading-relaxed font-mono">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.split') }}</div>
+                    <div class="text-xs text-content leading-relaxed font-mono">
                       ZIP ({{ appStore.t('settings.formats.multipart') }})
                     </div>
                   </div>
@@ -386,17 +386,17 @@ const removeWordlist = (index: number) => {
 
               <!-- 密码支持说明 -->
               <div class="space-y-3">
-                <h3 class="text-[0.5625rem] font-black text-amber-600 uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.password_support') }}</h3>
+                <h3 class="text-xs font-black text-amber-600 uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.password_support') }}</h3>
                 <div class="p-5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2">
                   <div class="flex items-start gap-3">
                     <i class="pi pi-lock text-amber-500 text-xs mt-0.5 shrink-0"></i>
-                    <div class="text-[0.5625rem] text-amber-700 leading-relaxed">
+                    <div class="text-xs text-amber-700 leading-relaxed">
                       <span class="font-black">{{ appStore.t('settings.formats.password_compress') }}:</span> ZIP · 7Z · RAR
                     </div>
                   </div>
                   <div class="flex items-start gap-3">
                     <i class="pi pi-unlock text-amber-500 text-xs mt-0.5 shrink-0"></i>
-                    <div class="text-[0.5625rem] text-amber-700 leading-relaxed">
+                    <div class="text-xs text-amber-700 leading-relaxed">
                       <span class="font-black">{{ appStore.t('settings.formats.password_decompress') }}:</span> ZIP · 7Z · RAR
                     </div>
                   </div>
@@ -409,7 +409,7 @@ const removeWordlist = (index: number) => {
         <!-- 重置按钮 -->
         <div class="pt-8 border-t border-subtle flex justify-end">
           <button @click="showResetConfirm = true"
-                  class="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all text-[0.625rem] font-black uppercase tracking-widest">
+                  class="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all text-sm font-black uppercase tracking-widest">
             {{ appStore.t('settings.reset.button') }}
           </button>
         </div>
@@ -421,7 +421,7 @@ const removeWordlist = (index: number) => {
       <div v-if="showResetConfirm" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4" @click.self="showResetConfirm = false">
         <div class="modal-no-glass rounded-3xl p-10 w-full max-w-xs text-center shadow-2xl text-content">
           <h3 class="text-sm font-black mb-2 uppercase tracking-widest">{{ appStore.t('settings.reset.title') }}</h3>
-          <p class="text-[0.625rem] text-muted mb-8">{{ appStore.t('settings.reset.desc') }}</p>
+          <p class="text-sm text-muted mb-8">{{ appStore.t('settings.reset.desc') }}</p>
           <div class="flex flex-col gap-2">
             <button @click="appStore.resetSettings(); showResetConfirm = false; appStore.setSuccess(appStore.t('settings.reset.success'))"
                     class="w-full py-3 bg-red-500 text-white rounded-xl text-xs font-black">{{ appStore.t('settings.reset.confirm') }}</button>

@@ -159,12 +159,12 @@ const copyToClipboard = async (text: string) => {
         <!-- 环形进度 -->
         <div class="relative w-10 h-10 shrink-0">
           <svg class="w-10 h-10 -rotate-90" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" class="text-input opacity-30"/>
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" class="text-input opacity-75"/>
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-dasharray="62.83"
                     :stroke-dashoffset="62.83 - (62.83 * overallProgress) / 100"
                     class="text-primary transition-all duration-1000 progress-ring"/>
           </svg>
-          <span class="absolute inset-0 flex items-center justify-center text-[0.625rem] font-black font-mono text-content">
+          <span class="absolute inset-0 flex items-center justify-center text-sm font-black font-mono text-content">
             {{ overallProgress }}%
           </span>
         </div>
@@ -180,34 +180,34 @@ const copyToClipboard = async (text: string) => {
           </div>
           <!-- 当前任务名 + 速度 -->
           <div class="flex items-center gap-2 mt-1">
-            <span v-if="currentTaskName" class="text-[0.625rem] text-muted truncate max-w-[120px]">{{ currentTaskName }}</span>
-            <span v-if="runningTask?.speed" class="text-[0.5625rem] font-mono text-primary/70 whitespace-nowrap">{{ runningTask!.speed }}</span>
+            <span v-if="currentTaskName" class="text-sm text-muted truncate max-w-[120px]">{{ currentTaskName }}</span>
+            <span v-if="runningTask?.speed" class="text-xs font-mono text-primary/70 whitespace-nowrap">{{ runningTask!.speed }}</span>
           </div>
           <!-- 阶段 + 密码状态 -->
           <div v-if="runningTask" class="flex items-center gap-2 mt-1">
-            <span v-if="runningTask.stage" class="text-[0.5625rem] text-dim uppercase tracking-tight">{{ stageLabel(runningTask.stage) }}</span>
-            <span v-if="runningTask.currentFile" class="text-[0.5625rem] text-dim truncate max-w-[130px]" :title="runningTask.currentFile">
+            <span v-if="runningTask.stage" class="text-xs text-dim uppercase tracking-tight">{{ stageLabel(runningTask.stage) }}</span>
+            <span v-if="runningTask.currentFile" class="text-xs text-dim truncate max-w-[130px]" :title="runningTask.currentFile">
               · {{ runningTask.currentFile.split(/[\\/]/).pop() }}
             </span>
-            <i v-if="runningTask.password" class="pi pi-lock text-[0.5625rem] text-amber-400" :title="appStore.t('progress.password_used')"></i>
-            <i v-if="runningTask.passwordRequired" class="pi pi-exclamation-triangle text-[0.5625rem] text-rose-400" :title="appStore.t('progress.password_needed')"></i>
+            <i v-if="runningTask.password" class="pi pi-lock text-xs text-amber-400" :title="appStore.t('progress.password_used')"></i>
+            <i v-if="runningTask.passwordRequired" class="pi pi-exclamation-triangle text-xs text-rose-400" :title="appStore.t('progress.password_needed')"></i>
           </div>
         </div>
 
         <!-- 完成计数 -->
         <div class="flex flex-col items-end shrink-0">
           <span class="text-[0.75rem] font-mono text-primary font-black">{{ completedCount }}/{{ totalCount }}</span>
-          <span v-if="failedCount > 0" class="text-[0.5625rem] font-mono text-red-400 font-bold">{{ failedCount }} {{ appStore.t('tasks.status.failed') }}</span>
+          <span v-if="failedCount > 0" class="text-xs font-mono text-red-400 font-bold">{{ failedCount }} {{ appStore.t('tasks.status.failed') }}</span>
         </div>
 
-        <i :class="isExpanded ? 'pi pi-chevron-down' : 'pi pi-chevron-up'" class="text-[0.625rem] text-dim shrink-0"></i>
+        <i :class="isExpanded ? 'pi pi-chevron-down' : 'pi pi-chevron-up'" class="text-sm text-dim shrink-0"></i>
 
         <!-- 最小化按钮 -->
         <button
           @click.stop="isMinimized = true"
           class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-content hover:bg-primary/10 transition-all shrink-0"
           :title="appStore.t('common.minimize')">
-          <i class="pi pi-minus text-[0.625rem]"></i>
+          <i class="pi pi-minus text-sm"></i>
         </button>
       </div>
 
@@ -218,13 +218,13 @@ const copyToClipboard = async (text: string) => {
           <!-- 面板头部 -->
           <div class="px-5 py-3.5 border-b border-subtle/20 shrink-0">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-[0.6875rem] font-black text-content uppercase tracking-widest">{{ appStore.t('tasks.monitor') }}</span>
+              <span class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('tasks.monitor') }}</span>
               <div class="flex items-center gap-3">
-                <span class="text-[0.625rem] font-mono text-primary font-black">{{ completedCount }}/{{ totalCount }}</span>
+                <span class="text-sm font-mono text-primary font-black">{{ completedCount }}/{{ totalCount }}</span>
                 <button
                   v-if="taskStore.tasks.some(t => ['completed', 'failed', 'cancelled'].includes(t.status))"
                   @click.stop="taskStore.clearFinishedTasks()"
-                  class="text-[0.625rem] text-dim hover:text-red-400 transition-colors font-bold uppercase tracking-wider">
+                  class="text-sm text-dim hover:text-red-400 transition-colors font-bold uppercase tracking-wider">
                   {{ appStore.t('tasks.clear_done') }}
                 </button>
               </div>
@@ -236,7 +236,7 @@ const copyToClipboard = async (text: string) => {
               <div v-if="hasActiveTasks" class="absolute inset-0 shimmer-overlay"></div>
             </div>
             <!-- 实时信息摘要栏 -->
-            <div v-if="runningTask" class="flex items-center gap-4 mt-2 text-[0.5625rem] text-dim">
+            <div v-if="runningTask" class="flex items-center gap-4 mt-2 text-xs text-dim">
               <span v-if="runningTask.stage">{{ appStore.t('progress.stage') }}: {{ stageLabel(runningTask.stage) }}</span>
               <span v-if="runningTask.speed">{{ appStore.t('progress.speed') }}: {{ runningTask.speed }}</span>
               <span v-if="runningTask.currentFile" class="truncate flex-1" :title="runningTask.currentFile">
@@ -262,23 +262,23 @@ const copyToClipboard = async (text: string) => {
                 <div class="flex-1 min-w-0">
                   <!-- 名称 + 类型标签 -->
                   <div class="flex items-center gap-2">
-                    <span class="text-[0.6875rem] font-bold text-content truncate">{{ task.name }}</span>
-                    <span class="text-[0.5625rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shrink-0"
+                    <span class="text-sm font-bold text-content truncate">{{ task.name }}</span>
+                    <span class="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-md shrink-0"
                           :class="[
                             task.type === 'decompression' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
                           ]">
                       {{ task.type === 'decompression' ? appStore.t('tasks.type.decompress') : appStore.t('tasks.type.compress') }}
                     </span>
                     <!-- 密码/锁图标 -->
-                    <i v-if="task.password" class="pi pi-lock text-[0.5625rem] text-amber-400 shrink-0" :title="appStore.t('progress.password_used')"></i>
-                    <i v-if="task.passwordRequired" class="pi pi-exclamation-triangle text-[0.625rem] text-rose-400 shrink-0 animate-pulse" :title="appStore.t('progress.password_needed')"></i>
+                    <i v-if="task.password" class="pi pi-lock text-xs text-amber-400 shrink-0" :title="appStore.t('progress.password_used')"></i>
+                    <i v-if="task.passwordRequired" class="pi pi-exclamation-triangle text-sm text-rose-400 shrink-0 animate-pulse" :title="appStore.t('progress.password_needed')"></i>
                   </div>
                   <!-- 状态 + 进度 -->
                   <div class="flex items-center gap-2 mt-1">
-                    <span class="text-[0.625rem] text-dim uppercase tracking-tight">{{ statusLabel(task.status) }}</span>
+                    <span class="text-sm text-dim uppercase tracking-tight">{{ statusLabel(task.status) }}</span>
                     <span v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
-                          class="text-[0.625rem] font-mono text-primary font-bold">{{ task.progress }}%</span>
-                    <span v-if="task.speed" class="text-[0.5625rem] font-mono text-dim ml-1">{{ task.speed }}</span>
+                          class="text-sm font-mono text-primary font-bold">{{ task.progress }}%</span>
+                    <span v-if="task.speed" class="text-xs font-mono text-dim ml-1">{{ task.speed }}</span>
                   </div>
                   <!-- 进度条 -->
                   <div v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
@@ -288,11 +288,11 @@ const copyToClipboard = async (text: string) => {
                     <div class="absolute inset-0 shimmer-overlay"></div>
                   </div>
                   <!-- 当前处理文件 + 阶段 -->
-                  <div v-if="task.currentFile" class="text-[0.5625rem] text-dim font-mono mt-1 truncate opacity-60" :title="task.currentFile">
+                  <div v-if="task.currentFile" class="text-xs text-dim font-mono mt-1 truncate opacity-90" :title="task.currentFile">
                     {{ task.currentFile.split(/[\\/]/).pop() }}
                   </div>
                   <!-- 输出路径 -->
-                  <div class="text-[0.5625rem] text-dim font-mono mt-1 truncate opacity-50" :title="task.outputPath">
+                  <div class="text-xs text-dim font-mono mt-1 truncate opacity-85" :title="task.outputPath">
                     → {{ task.outputPath || appStore.t('decompress.config.output_auto') }}
                   </div>
                 </div>
@@ -311,7 +311,7 @@ const copyToClipboard = async (text: string) => {
                     v-if="['failed', 'cancelled'].includes(task.status)"
                     @click.stop="retryTask(task)"
                     :disabled="retryingTaskId === task.id"
-                    class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all disabled:opacity-50"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all disabled:opacity-85"
                     :title="appStore.t('tasks.retry')">
                     <i :class="retryingTaskId === task.id ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'" class="text-[0.75rem]"></i>
                   </button>
@@ -328,20 +328,20 @@ const copyToClipboard = async (text: string) => {
 
               <!-- 失败详情 -->
               <div v-if="task.status === 'failed' && task.error"
-                   class="px-3.5 pb-2.5 text-[0.625rem] text-red-400/80 font-mono break-all">
+                   class="px-3.5 pb-2.5 text-sm text-red-400/80 font-mono break-all">
                 <div class="flex items-start gap-2">
                   <span class="flex-1">{{ task.error }}</span>
                   <button
                     @click.stop="copyToClipboard(task.error || '')"
                     class="w-6 h-6 rounded flex items-center justify-center text-dim hover:text-content hover:bg-red-500/10 transition-colors shrink-0"
                     :title="appStore.t('common.copy')">
-                    <i class="pi pi-copy text-[0.6875rem]"></i>
+                    <i class="pi pi-copy text-sm"></i>
                   </button>
                 </div>
               </div>
             </div>
 
-            <div v-if="sortedTasks.length === 0" class="py-8 text-center text-[0.6875rem] text-dim">
+            <div v-if="sortedTasks.length === 0" class="py-8 text-center text-sm text-dim">
               {{ appStore.t('tasks.empty') }}
             </div>
           </div>

@@ -44,14 +44,14 @@ onUnmounted(() => {
       <div v-if="!isExpanded" class="flex items-center gap-6">
         <div class="flex items-center gap-3">
           <div class="w-1.5 h-1.5 rounded-full" :class="cpuUsage > 80 ? 'bg-red-500 animate-pulse' : 'bg-blue-400'"></div>
-          <span class="text-[0.625rem] text-white/40 font-black uppercase tracking-widest">CPU</span>
+          <span class="text-sm text-white/40 font-black uppercase tracking-widest">CPU</span>
           <span class="text-xs text-white/80 font-mono w-8">{{ cpuUsage }}%</span>
         </div>
 
         <div class="w-px h-3 bg-white/10"></div>
 
         <div class="flex items-center gap-3">
-          <span class="text-[0.625rem] text-white/40 font-black uppercase tracking-widest">MEM</span>
+          <span class="text-sm text-white/40 font-black uppercase tracking-widest">MEM</span>
           <span class="text-xs text-white/80 font-mono w-8">{{ memoryUsage }}%</span>
         </div>
       </div>
@@ -59,12 +59,12 @@ onUnmounted(() => {
       <!-- 展开设置 (面板态) -->
       <div v-else class="w-64 space-y-6">
         <div class="flex justify-between items-center">
-          <h4 class="text-[0.625rem] text-white/60 font-black uppercase tracking-widest">{{ appStore.t('perf.title') }}</h4>
+          <h4 class="text-sm text-white/60 font-black uppercase tracking-widest">{{ appStore.t('perf.title') }}</h4>
           <i class="pi pi-sliders-h text-blue-400"></i>
         </div>
 
         <div class="space-y-4">
-           <div class="flex justify-between text-[0.625rem]">
+           <div class="flex justify-between text-sm">
              <span class="text-white/30">{{ appStore.t('perf.thread_limit') }}</span>
              <span class="text-blue-400 font-mono">{{ threadLimit }} Threads</span>
            </div>
@@ -72,8 +72,8 @@ onUnmounted(() => {
                   class="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-400">
 
            <div class="grid grid-cols-2 gap-2">
-             <button @click="threadLimit = 2; appStore.updateSettings({ maxConcurrentTasks: 2 })" class="py-2 rounded-lg bg-white/5 border border-white/5 text-[0.5rem] text-white/40 uppercase hover:text-white transition-all">{{ appStore.t('perf.silent_mode') }}</button>
-             <button @click="threadLimit = 16; appStore.updateSettings({ maxConcurrentTasks: 16 })" class="py-2 rounded-lg bg-blue-500/20 border border-blue-500/20 text-[0.5rem] text-blue-400 uppercase font-bold">{{ appStore.t('perf.full_speed') }}</button>
+             <button @click="threadLimit = 2; appStore.updateSettings({ maxConcurrentTasks: 2 })" class="py-2 rounded-lg bg-white/5 border border-white/5 text-xs text-white/40 uppercase hover:text-white transition-all">{{ appStore.t('perf.silent_mode') }}</button>
+             <button @click="threadLimit = 16; appStore.updateSettings({ maxConcurrentTasks: 16 })" class="py-2 rounded-lg bg-blue-500/20 border border-blue-500/20 text-xs text-blue-400 uppercase font-bold">{{ appStore.t('perf.full_speed') }}</button>
            </div>
         </div>
       </div>

@@ -20,8 +20,9 @@
   --bg-modal: #ffffff;
   --border-subtle: rgba(15, 23, 42, 0.08);
   --text-base: #0f172a;
-  --text-muted: #475569;
-  --text-dim: #94a3b8;
+  --text-secondary: #334155;  /* 新增：深灰色，对比度更高 */
+  --text-muted: #475569;      /* 提升：从 #64748b 加深 */
+  --text-dim: #64748b;        /* 提升：从 #94a3b8 加深 */
   --shadow-base: 0 10px 30px rgba(15, 23, 42, 0.06);
   --shadow-elevated: 0 20px 40px rgba(15, 23, 42, 0.1);
 }
@@ -32,10 +33,11 @@
   --bg-card: #151922;
   --bg-input: #1a1f2b;
   --bg-modal: #191d28;
-  --border-subtle: rgba(100, 116, 139, 0.12);
+  --border-subtle: rgba(100, 116, 139, 0.15);
   --text-base: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #475569;
+  --text-secondary: #e2e8f0;  /* 新增：略暗的白色 */
+  --text-muted: #cbd5e1;      /* 提升：从 #94a3b8 提亮 */
+  --text-dim: #94a3b8;        /* 提升：从 #475569 提亮 */
   --shadow-base: 0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02);
   --shadow-elevated: 0 25px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03);
 }
@@ -46,10 +48,11 @@
   --bg-card: #f8fafc;
   --bg-input: #f1f5f9;
   --bg-modal: #ffffff;
-  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-subtle: rgba(15, 23, 42, 0.10);
   --text-base: #0f172a;
-  --text-muted: #475569;
-  --text-dim: #94a3b8;
+  --text-secondary: #1e293b;  /* 新增：深灰色 */
+  --text-muted: #475569;      /* 提升：对比度更高 */
+  --text-dim: #64748b;        /* 提升：从 #94a3b8 加深 */
   --shadow-base: 0 10px 30px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.04);
   --shadow-elevated: 0 20px 40px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
@@ -60,11 +63,12 @@
   --bg-card: rgba(36, 11, 54, 0.6);
   --bg-input: #1a0836;
   --bg-modal: #1a0836;
-  --border-subtle: rgba(255, 0, 255, 0.1); /* 霓虹边框 */
+  --border-subtle: rgba(255, 0, 255, 0.15); /* 霓虹边框 */
   --text-base: #00f2ff; /* 荧光青 */
-  --text-muted: #f0abfc; /* 浅粉 - 提高对比度至 WCAG AA */
-  --text-dim: #a78bfa; /* 浅紫 - 提高可读性 */
-  --shadow-base: 0 0 30px rgba(0, 242, 255, 0.1);
+  --text-secondary: #7dd3fc; /* 新增：浅蓝 */
+  --text-muted: #fbbf24; /* 提升：改为金色，对比度更高 */
+  --text-dim: #c084fc; /* 提升：浅紫，更亮 */
+  --shadow-base: 0 0 30px rgba(0, 242, 255, 0.15);
   --dynamic-accent: #ff00ff !important; /* 强制强调色为粉色 */
 }
 
@@ -74,10 +78,11 @@
   --bg-card: #24273a;
   --bg-input: #181926;
   --bg-modal: #24273a;
-  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.08);
   --text-base: #cad3f5;
-  --text-muted: #b8c0e0;
-  --text-dim: #5b6078;
+  --text-secondary: #b8c0e0;  /* 新增 */
+  --text-muted: #a5adcb;      /* 提升：更亮 */
+  --text-dim: #8087a2;        /* 提升：从 #5b6078 提亮 */
   --shadow-base: 0 15px 40px rgba(0,0,0,0.3);
   --dynamic-accent: #f5bde6 !important; /* 柔粉强调 */
 }
@@ -88,10 +93,11 @@
   --bg-card: #fdf6e3;
   --bg-input: #eee8d5;
   --bg-modal: #fdf6e3;
-  --border-subtle: rgba(181, 137, 0, 0.1);
-  --text-base: #586e75;
-  --text-muted: #839496;
-  --text-dim: #93a1a1;
+  --border-subtle: rgba(181, 137, 0, 0.12);
+  --text-base: #073642;       /* 提升：更深的蓝灰 */
+  --text-secondary: #586e75;  /* 新增 */
+  --text-muted: #657b83;      /* 提升：从 #839496 加深 */
+  --text-dim: #93a1a1;        /* 保持不变 */
   --shadow-base: 0 8px 20px rgba(0,0,0,0.05);
   --dynamic-accent: #b58900 !important; /* 琥珀色强调 */
 }
@@ -126,7 +132,35 @@ body {
   box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px var(--border-subtle);
 }
 
-/* 文字层级增强 */
-.text-content { color: var(--text-base); }
-.text-muted { color: var(--text-muted); }
-.text-dim { color: var(--text-dim); }
+/* 文字层级增强 - 4级清晰度系统 */
+.text-content {
+  color: var(--text-base);
+  font-weight: 600;
+}
+.text-secondary {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.text-muted {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.text-dim {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+/* 禁止使用过低的不透明度 */
+.opacity-40, .opacity-50, .opacity-60 {
+  opacity: 0.75 !important; /* 最低不透明度 */
+}
+
+/* 增强对比度的辅助类 */
+.text-contrast-high {
+  color: var(--text-base);
+  font-weight: 600;
+}
+.text-contrast-medium {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
