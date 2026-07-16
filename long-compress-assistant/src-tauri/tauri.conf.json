@@ -43,9 +43,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "resources": [
-        "resources/7za.exe"
-      ],
+      "resources": [],
       "externalBin": [],
       "copyright": "Copyright © 2026 胧解压·方便助手",
       "category": "Utility",
