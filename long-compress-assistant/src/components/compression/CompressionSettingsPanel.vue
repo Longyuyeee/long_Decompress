@@ -196,6 +196,11 @@ const saveAsNewProfile = async () => {
 
 const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '🎨', '🔧', '⭐']
 
+const handlePasswordGenerated = (password: string) => {
+  compressionOptions.value.password = password
+  showPasswordGenerator.value = false
+}
+
 </script>
 
 <template>
@@ -286,8 +291,9 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
           </div>
           <button
             v-if="supportsPassword"
-            @click="showPasswordGenerator = true"
-            class="w-9 h-9 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary transition-colors flex items-center justify-center"
+            @click.stop="showPasswordGenerator = true"
+            type="button"
+            class="w-9 h-9 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary transition-colors flex items-center justify-center shrink-0"
             :title="appStore.t('password.generator.title', '密码生成器')"
           >
             <span class="text-base">🎲</span>
@@ -464,6 +470,13 @@ const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '
     </div>
   </div>
 </transition>
+
+<!-- 密码生成器对话框 -->
+<PasswordGeneratorDialog
+  :is-open="showPasswordGenerator"
+  @close="showPasswordGenerator = false"
+  @select="handlePasswordGenerated"
+/>
 </template>
 
 <style scoped>
