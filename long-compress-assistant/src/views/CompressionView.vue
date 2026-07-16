@@ -9,6 +9,7 @@ import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage, generateId } from '@/utils'
 import { extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
+import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 
 const appStore = useAppStore()
@@ -17,6 +18,7 @@ const tauriCommands = useTauriCommands()
 const taskStore = useTaskStore()
 
 const selectedRows = ref<Set<string>>(new Set())
+const showGlobalSettingsModal = ref(false)
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
 const checkingRarSupport = ref(false)
 const router = useRouter()
@@ -304,12 +306,21 @@ const totalPayload = computed(() => {
         <h1 class="text-xl md:text-2xl font-extrabold text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
       </div>
       <div class="flex items-center gap-2 md:gap-3">
-        <!-- 磁吸成组按钮 (浮现式，次要操作) -->
+        <!-- 全局设置按钮 -->
+        <button
+          @click="showGlobalSettingsModal = true"
+          class="h-8 md:h-9 px-3 md:px-5 rounded-lg bg-input border border-subtle text-content text-xs font-bold uppercase tracking-wider hover:bg-primary/10 hover:border-primary transition-all flex items-center gap-2"
+        >
+          <i class="pi pi-cog text-xs"></i>
+          <span class="hidden sm:inline">全局设置</span>
+        </button>
+
+        <!-- 磁吸成组按钮 -->
         <transition name="pop">
           <button
             v-if="selectedRows.size > 0"
             @click="handleCreateGroup"
-            class="h-8 md:h-9 px-3 md:px-5 rounded-lg bg-input border border-subtle text-content text-xs md:text-xs font-bold uppercase tracking-wider hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-2"
+            class="h-8 md:h-9 px-3 md:px-5 rounded-lg bg-input border border-subtle text-content text-xs font-bold uppercase tracking-wider hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-2"
           >
             <i class="pi pi-box text-xs"></i>
             <span class="hidden sm:inline">{{ appStore.t('compress.create_group') }} ({{ selectedRows.size }})</span>
@@ -317,10 +328,11 @@ const totalPayload = computed(() => {
           </button>
         </transition>
 
+        <!-- 开始压缩按钮 -->
         <button
           v-if="totalPayload > 0"
           @click="handleCompress"
-          class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-xs md:text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2"
+          class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2"
         >
           <i class="pi pi-play-circle text-xs"></i>
           <span class="hidden sm:inline">{{ appStore.t('compress.start') }}</span>
@@ -329,61 +341,9 @@ const totalPayload = computed(() => {
       </div>
     </header>
 
-    <!-- 主工作区 (减小 mb 以使区域向下延展) -->
+    <!-- 主工作区 -->
     <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-3 md:p-6 space-y-4 md:space-y-6">
-        <div class="rounded-2xl border border-primary/20 bg-primary/5 p-6">
-          <div class="flex items-start gap-3 mb-4">
-            <div class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-              <i class="pi pi-cog text-primary text-xs"></i>
-            </div>
-            <div>
-              <h4 class="text-sm font-black text-primary uppercase tracking-widest">{{ appStore.t('compress.global_settings') }}</h4>
-              <p class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('compress.global_settings.desc') }}</p>
-            </div>
-          </div>
-          <CompressionSettingsPanel
-            v-model="compressionStore.globalSettings"
-            v-model:outputPath="compressionStore.globalOutputPath"
-            :allow-single-file-formats="canGlobalUseSingleFileFormats"
-          />
-          <div
-            v-if="usesRarFormat && rarSupport && !rarSupport.available"
-            class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm font-bold text-yellow-600"
-          >
-            <span class="min-w-0 flex-1">{{ rarSupport.message }}</span>
-            <button
-              type="button"
-              class="h-7 rounded-lg border border-yellow-500/30 px-3 text-xs font-black uppercase tracking-widest transition-colors hover:bg-yellow-500/10"
-              @click="openRarDownloadPage"
-            >
-              {{ appStore.t('compress.download') }}
-            </button>
-            <button
-              type="button"
-              class="h-7 rounded-lg border border-yellow-500/30 px-3 text-xs font-black uppercase tracking-widest transition-colors hover:bg-yellow-500/10 disabled:opacity-85"
-              :disabled="checkingRarSupport"
-              @click="refreshRarSupport"
-            >
-              {{ appStore.t('compress.recheck') }}
-            </button>
-          </div>
-          <div
-            v-else-if="usesRarFormat && rarSupport?.available"
-            class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-600"
-          >
-            <span class="min-w-0 flex-1">{{ rarSupport.message }}</span>
-            <button
-              type="button"
-              class="h-7 rounded-lg border border-emerald-500/30 px-3 text-xs font-black uppercase tracking-widest transition-colors hover:bg-emerald-500/10 disabled:opacity-85"
-              :disabled="checkingRarSupport"
-              @click="refreshRarSupport"
-            >
-              {{ appStore.t('compress.recheck') }}
-            </button>
-          </div>
-        </div>
-        
         <!-- 1. 压缩组列表 -->
         <div v-for="group in compressionStore.groups" :key="group.id" 
              class="group-container rounded-[2rem] border transition-all duration-500 overflow-hidden"
@@ -537,6 +497,17 @@ const totalPayload = computed(() => {
         />
       </div>
     </div>
+
+    <!-- 全局设置弹窗 -->
+    <GlobalSettingsModal
+      :visible="showGlobalSettingsModal"
+      @update:visible="showGlobalSettingsModal = $event"
+      :settings="compressionStore.globalSettings"
+      @update:settings="compressionStore.globalSettings = $event"
+      :outputPath="compressionStore.globalOutputPath"
+      @update:outputPath="compressionStore.globalOutputPath = $event"
+      :allow-single-file-formats="canGlobalUseSingleFileFormats"
+    />
   </div>
 </template>
 
