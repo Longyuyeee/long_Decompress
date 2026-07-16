@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
+import AccessibilitySettings from '@/components/settings/AccessibilitySettings.vue'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()

@@ -39,14 +39,21 @@ export interface AppSettings {
   sendCrashReports: boolean
   cacheSize: number
   logLevel: 'error' | 'warn' | 'info' | 'debug' | 'trace'
-  enableBruteForce: boolean 
-  bruteForceCharset: string 
-  bruteForceMaxLen: number 
+  enableBruteForce: boolean
+  bruteForceCharset: string
+  bruteForceMaxLen: number
   bruteForceWordlists: string[]
   autoStart: boolean
   conflictPolicy: 'ask' | 'overwrite' | 'skip' | 'rename'
   autoDeleteSource: boolean
   uiScale: number
+  accessibility?: {
+    fontSize: 'normal' | 'large' | 'x-large'
+    highContrast: boolean
+    colorBlindMode: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia'
+    reduceMotion: boolean
+    focusIndicator: boolean
+  }
 }
 
 export const useAppStore = defineStore('app', () => {
@@ -89,7 +96,14 @@ export const useAppStore = defineStore('app', () => {
     sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
     bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
     bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask', autoDeleteSource: false,
-    uiScale: 100
+    uiScale: 100,
+    accessibility: {
+      fontSize: 'normal',
+      highContrast: false,
+      colorBlindMode: 'none',
+      reduceMotion: false,
+      focusIndicator: true,
+    }
   })
 
   // UI 缩放 - 通过调整根字体大小实现真正的字体/界面缩放（非僵硬 CSS zoom）
@@ -164,7 +178,14 @@ export const useAppStore = defineStore('app', () => {
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
       bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask', autoDeleteSource: false,
-      uiScale: 100
+      uiScale: 100,
+      accessibility: {
+        fontSize: 'normal',
+        highContrast: false,
+        colorBlindMode: 'none',
+        reduceMotion: false,
+        focusIndicator: true,
+      }
     }
     saveSettingsToStorage()
   }

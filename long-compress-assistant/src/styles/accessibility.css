@@ -1,0 +1,300 @@
+/**
+ * 可访问性增强样式
+ * 提供高对比度、色盲模式、减少动画等功能
+ */
+
+/* ========================================
+   1. 高对比度模式
+   ======================================== */
+.high-contrast {
+  /* 增强文字对比度 */
+  --text-base: #000000 !important;
+  --text-secondary: #1a1a1a !important;
+  --text-muted: #333333 !important;
+  --text-dim: #555555 !important;
+
+  /* 增强边框对比度 */
+  --border-subtle: rgba(0, 0, 0, 0.3) !important;
+
+  /* 增强背景对比度 */
+  --bg-card: #ffffff !important;
+  --bg-input: #f5f5f5 !important;
+}
+
+.high-contrast.dark {
+  --text-base: #ffffff !important;
+  --text-secondary: #f0f0f0 !important;
+  --text-muted: #d0d0d0 !important;
+  --text-dim: #b0b0b0 !important;
+
+  --border-subtle: rgba(255, 255, 255, 0.3) !important;
+
+  --bg-card: #000000 !important;
+  --bg-input: #1a1a1a !important;
+}
+
+/* ========================================
+   2. 色盲模式滤镜
+   ======================================== */
+
+/* 红色盲（Protanopia）- 红色感知缺失 */
+.protanopia {
+  filter: url(#protanopia-filter);
+}
+
+/* SVG 滤镜矩阵 - 模拟红色盲视觉 */
+.protanopia::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  mix-blend-mode: multiply;
+  filter:
+    sepia(10%)
+    saturate(110%)
+    hue-rotate(-10deg);
+}
+
+/* 绿色盲（Deuteranopia）- 绿色感知缺失 */
+.deuteranopia {
+  filter:
+    sepia(10%)
+    saturate(90%)
+    hue-rotate(5deg);
+}
+
+/* 蓝色盲（Tritanopia）- 蓝色感知缺失 */
+.tritanopia {
+  filter:
+    sepia(5%)
+    saturate(95%)
+    hue-rotate(-5deg)
+    brightness(1.05);
+}
+
+/* 色盲模式下的颜色调整 */
+.protanopia .text-primary,
+.deuteranopia .text-primary {
+  /* 使用更高对比度的蓝色 */
+  color: #0066cc !important;
+}
+
+.tritanopia .text-primary {
+  /* 使用更高对比度的绿色 */
+  color: #00aa00 !important;
+}
+
+/* ========================================
+   3. 减少动画模式
+   ======================================== */
+.reduce-motion,
+.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* 保留必要的视觉反馈 */
+.reduce-motion button:active,
+.reduce-motion .clickable:active {
+  transform: scale(0.98);
+  transition: transform 0.05s ease !important;
+}
+
+/* ========================================
+   4. 增强焦点指示器
+   ======================================== */
+.enhanced-focus *:focus {
+  outline: 3px solid var(--dynamic-accent) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+.enhanced-focus *:focus-visible {
+  outline: 3px solid var(--dynamic-accent) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px rgba(var(--dynamic-accent-rgb, 14, 165, 233), 0.2) !important;
+}
+
+/* 按钮焦点增强 */
+.enhanced-focus button:focus-visible,
+.enhanced-focus .btn:focus-visible {
+  outline: 3px solid var(--dynamic-accent) !important;
+  outline-offset: 3px !important;
+  transform: scale(1.02);
+}
+
+/* 输入框焦点增强 */
+.enhanced-focus input:focus,
+.enhanced-focus textarea:focus,
+.enhanced-focus select:focus {
+  outline: 3px solid var(--dynamic-accent) !important;
+  outline-offset: 2px !important;
+  border-color: var(--dynamic-accent) !important;
+}
+
+/* ========================================
+   5. 字体大小响应式调整
+   ======================================== */
+
+/* 这些规则由 JavaScript 动态应用 fontSize 设置 */
+/* 通过修改 html { font-size } 实现全局缩放 */
+
+/* 确保最小可读性 */
+html {
+  font-size: 100%; /* 16px baseline */
+}
+
+/* Large 模式: 18px base */
+html[style*="112.5%"] {
+  /* 由 useAccessibility 应用 */
+}
+
+/* X-Large 模式: 20px base */
+html[style*="125%"] {
+  /* 由 useAccessibility 应用 */
+}
+
+/* ========================================
+   6. 打印样式优化
+   ======================================== */
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* 确保文字清晰 */
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  h1 { font-size: 24pt; }
+  h2 { font-size: 20pt; }
+  h3 { font-size: 16pt; }
+
+  /* 避免分页打断 */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  p, li {
+    page-break-inside: avoid;
+  }
+
+  /* 显示链接 URL */
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 10pt;
+    color: #666;
+  }
+
+  /* 隐藏不必要的元素 */
+  nav, .no-print, button, .sidebar {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   7. 跳过链接（键盘导航优化）
+   ======================================== */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--dynamic-accent);
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 0 0 4px 0;
+  z-index: 10000;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid white;
+  outline-offset: 2px;
+}
+
+/* ========================================
+   8. 屏幕阅读器辅助类
+   ======================================== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* ========================================
+   9. 触摸目标最小尺寸（移动端）
+   ======================================== */
+@media (pointer: coarse) {
+  button,
+  a,
+  input[type="checkbox"],
+  input[type="radio"],
+  .clickable {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+}
+
+/* ========================================
+   10. 响应系统偏好设置
+   ======================================== */
+
+/* 系统深色模式 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    /* 自动应用暗色主题变量 */
+  }
+}
+
+/* 系统减少动画 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 系统高对比度 */
+@media (prefers-contrast: high) {
+  :root {
+    --border-subtle: rgba(0, 0, 0, 0.3);
+  }
+
+  :root.dark {
+    --border-subtle: rgba(255, 255, 255, 0.3);
+  }
+}

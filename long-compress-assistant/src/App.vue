@@ -12,11 +12,13 @@ import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useConfigStore } from '@/stores/config'
 import { usePasswordStore } from '@/stores/password'
+import { useAccessibility } from '@/composables/useAccessibility'
 import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
 
 const router = useRouter()
 const configStore = useConfigStore()
 const passwordStore = usePasswordStore()
+const { initAccessibility, setupWatchers, watchSystemPreferences } = useAccessibility()
 
 let idleTimer: any = null
 let saveWindowTimer: any = null
@@ -96,6 +98,11 @@ const resetIdleTimer = () => {
 }
 
 onMounted(async () => {
+  // 初始化可访问性设置
+  initAccessibility()
+  setupWatchers()
+  const cleanupSystemWatcher = watchSystemPreferences()
+
   resetIdleTimer()
   await restoreWindowState()
   // 请求浏览器通知权限（后台任务完成时通知用户）
