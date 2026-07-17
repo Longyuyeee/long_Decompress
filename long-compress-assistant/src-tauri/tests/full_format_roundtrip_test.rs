@@ -199,21 +199,28 @@ async fn test_tar_roundtrip() {
 }
 
 #[test]
-fn test_tar_rejects_password() {
+fn test_tar_password_requires_explicit_7z_output() {
     let temp = tempdir().unwrap();
     File::create(temp.path().join("a.txt")).unwrap();
     let tarball = temp.path().join("test.tar");
     let tarball_str = tarball.to_string_lossy().to_string();
     let src_str = temp.path().join("a.txt").to_string_lossy().to_string();
 
-    // TAR with password → redirects to 7z (creates .7z instead)
     let options = CompressionOptions {
         format: Some("tar".to_string()),
         password: Some("pwd".to_string()),
         ..Default::default()
     };
     let result = CompressionService::validate_compression_request(&[src_str], &tarball_str, &options);
-    assert!(result.is_ok(), "TAR with password should be accepted (delegated to 7z)");
+    assert!(result.is_err(), "TAR encryption must not silently change the output path");
+
+    let encrypted_output = temp.path().join("test.7z").to_string_lossy().to_string();
+    let result = CompressionService::validate_compression_request(
+        &[temp.path().join("a.txt").to_string_lossy().to_string()],
+        &encrypted_output,
+        &options,
+    );
+    assert_eq!(result.expect("explicit 7z output should be accepted"), "7z");
 }
 
 // ──────────────── GZ/BZ2/XZ Stream Round-Trip ────────────────
@@ -350,27 +357,37 @@ fn test_all_formats_password_validation() {
     File::create(temp.path().join("f.txt")).unwrap();
     let src = vec![temp.path().join("f.txt").to_string_lossy().to_string()];
 
-    // Formats that support password natively or via 7z delegation
-    let password_formats = [
-        ("zip", true),  ("7z", true),   ("rar", true),
-        ("tar", true),  ("tar.gz", true), ("tar.bz2", true), ("tar.xz", true),
-        ("tar.zst", true), ("gz", true), ("bz2", true), ("xz", true),
-        ("zst", true), ("lzma", true),
+    let native_password_formats = ["zip", "7z", "rar"];
+    let delegated_password_formats = [
+        "tar", "tar.gz", "tar.bz2", "tar.xz", "tar.zst",
+        "gz", "bz2", "xz", "zst", "lzma",
     ];
 
-    for (format, expected_ok) in &password_formats {
-        let out = format!("test.{}", if *format == "tar.gz" { "tar.gz" } else if *format == "tar.zst" { "tar.zst" } else { format });
+    for format in native_password_formats {
         let options = CompressionOptions {
             format: Some(format.to_string()),
             password: Some("test-pwd".to_string()),
             ..Default::default()
         };
-        let result = CompressionService::validate_compression_request(&src, &out, &options);
-        if *expected_ok {
-            assert!(result.is_ok(), "Password should be supported for format '{}'", format);
-        } else {
-            assert!(result.is_err(), "Password should NOT be supported for format '{}'", format);
-        }
+        let out = format!("test.{}", format);
+        assert_eq!(
+            CompressionService::validate_compression_request(&src, &out, &options)
+                .expect("native password format"),
+            format
+        );
+    }
+
+    for format in delegated_password_formats {
+        let options = CompressionOptions {
+            format: Some(format.to_string()),
+            password: Some("test-pwd".to_string()),
+            ..Default::default()
+        };
+        assert_eq!(
+            CompressionService::validate_compression_request(&src, "test.7z", &options)
+                .expect("explicit 7z fallback"),
+            "7z"
+        );
     }
 }
 

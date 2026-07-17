@@ -1,370 +1,180 @@
 <div align="center">
 
-# 🗜️ 胧解压·方便助手
+<img src="icon.png" width="112" alt="胧解压图标">
 
-**专业级解压缩工具 | Professional Archive Manager**
+# 胧解压·方便助手
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/Longyuyeee/long_Decompress)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tauri](https://img.shields.io/badge/Tauri-1.5-orange.svg)](https://tauri.app/)
-[![Vue](https://img.shields.io/badge/Vue-3.4-brightgreen.svg)](https://vuejs.org/)
-[![Rust](https://img.shields.io/badge/Rust-1.75-red.svg)](https://www.rust-lang.org/)
-[![WCAG](https://img.shields.io/badge/WCAG%202.1-AA%2FAAA-success.svg)](https://www.w3.org/WAI/WCAG21/quickref/)
+一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[English](README_EN.md) | 简体中文
+[![Version](https://img.shields.io/badge/version-1.0.2-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
+[![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
 
----
-
-**现代化 · 高性能 · 无障碍**
-
-支持 37+ 解压格式 · 16 种压缩格式 · 智能密码破解 · 分卷压缩 · 文件完整性校验
+[下载最新版](https://github.com/Longyuyeee/long_Decompress/releases/latest) ·
+[使用说明](#使用说明) ·
+[格式支持](#格式支持) ·
+[问题反馈](https://github.com/Longyuyeee/long_Decompress/issues)
 
 </div>
 
 ---
 
-## ✨ 核心特性
+## 为什么选择胧解压
 
-### 🎯 格式支持全面
+| 能力 | 说明 |
+| --- | --- |
+| 压缩与解压 | 支持 ZIP、7Z、RAR、TAR、GZ、BZ2、XZ、Zstandard 等常见格式 |
+| 批量任务 | 多文件排队处理，实时显示进度、阶段、速度和结果 |
+| 加密归档 | 支持 ZIP、7Z、RAR 以及专用 AES-256-GCM 格式 |
+| 密码保险箱 | 本地保存常用密码，遇到加密压缩包时自动匹配 |
+| 文件完整性 | 计算与验证 CRC32、MD5、SHA256，支持导入、导出校验文件 |
+| Windows 集成 | 支持文件拖放、快捷键、资源管理器右键菜单和开机启动 |
+| 个性化 | 深浅主题、强调色、界面缩放、减少动效和无障碍选项 |
 
-#### 解压支持 (37+ 格式)
-- **原生 Rust**: ZIP, 7Z, RAR, TAR, GZ, BZ2, XZ, ZSTD
-- **磁盘镜像**: ISO, IMG, VHD, VHDX, DMG
-- **系统包**: DEB, RPM, MSI, NSIS
-- **历史格式**: CAB, LZH, ARJ, ARC, ALZ
-- **文件系统**: UDF, FAT, NTFS, HFS, APFS, EXT2/3/4, SquashFS
+## 下载与安装
 
-#### 压缩支持 (16 种)
-- **标准格式**: ZIP, 7Z, TAR, GZ, BZ2, XZ
-- **组合格式**: TAR.GZ, TAR.BZ2, TAR.XZ, TAR.ZSTD
-- **加密压缩**: ZIP(密码), 7Z(密码), RAR(需WinRAR)
-- **分卷压缩**: ZIP 分卷
+1. 前往 [GitHub Releases](https://github.com/Longyuyeee/long_Decompress/releases/latest)。
+2. 下载名称以 `x64-setup.exe` 结尾的安装程序。
+3. 双击安装，完成后从开始菜单启动“胧解压·方便助手”。
 
----
+系统要求：
 
-### 🔐 智能密码管理
+- Windows 10 1809 或更高版本、Windows 11
+- x64 处理器
+- 至少 4 GB 内存，建议 8 GB
+- 建议预留 200 MB 磁盘空间
 
-#### 密码保险箱
-- **AES-256-GCM** 军事级加密
-- **Argon2** 密钥派生算法
-- 使用统计与热门密码排序
-- 批量导入导出 (JSON/CSV)
-- 自动保存成功密码
+> 当前安装包尚未进行商业代码签名。如果 Windows SmartScreen 显示保护提示，请确认文件来自本项目 Releases 页面，再选择“更多信息”继续运行。
 
-#### 智能破解引擎
-- **490,000+ 密码字典攻击**
-- 常用密码库 (Top 100)
-- 数字组合 (0000-9999)
-- 日期格式 (1990-2030)
-- 键盘模式 (qwerty, asdfgh)
-- 文件名关键词派生
-- 自动重试机制
+应用已经内置 7-Zip 命令行组件，无需额外安装 7-Zip。只有创建 RAR 文件时需要安装 [WinRAR](https://www.rarlab.com/download.htm)；解压 RAR 不受影响。
 
----
+## 使用说明
 
-### 🎨 现代化界面
+### 解压文件
 
-#### 5 种主题模式
-- 🌞 **Light** - 锐利灰白对比
-- 🌙 **Dark** - 深海军蓝基调
-- 🎮 **Cyberpunk** - 赛博霓虹
-- 🌅 **Twilight** - 暮色极光
-- 📜 **Sepia** - 纸质护眼
+1. 打开左侧“解压中心”。
+2. 拖入一个或多个压缩包，或点击浏览文件。
+3. 选择输出目录、目录结构和文件冲突处理方式。
+4. 点击开始解压，在任务列表中查看进度与日志。
 
-#### 13 种强调色
-天蓝 · 靛蓝 · 紫罗兰 · 品红 · 粉红 · 玫瑰红 · 橙色 · 琥珀 · 青柠 · 翡翠 · 青色 · 蓝绿 · 石板灰
+遇到加密文件时，应用会先尝试密码保险箱中的密码；无法匹配时会提示手动输入。
 
-#### Aero 毛玻璃效果
-- 背景模糊 + 半透明叠加
-- 动态阴影与边框光晕
-- 流畅的页面切换动画
-- 响应式布局 (桌面/平板/触屏)
+### 压缩文件
 
----
+1. 打开“压缩中心”。
+2. 添加文件或文件夹，可为不同任务单独设置参数。
+3. 选择格式、压缩级别、输出目录及是否分卷。
+4. 如需加密，填写密码或使用密码生成器。
+5. 点击开始压缩。
 
-### ♿ 无障碍访问 (WCAG 2.1 AA/AAA)
-
-#### 可访问性功能
-- ✅ **字体大小调节**: 标准 / 较大 / 超大 (16-20px)
-- ✅ **高对比度模式**: 21:1 对比度 (AAA 级)
-- ✅ **色盲模式**: 红色盲 / 绿色盲 / 蓝色盲
-- ✅ **减少动画**: 前庭障碍友好
-- ✅ **增强焦点指示器**: 键盘导航 3px 轮廓
-- ✅ **跳过导航链接**: 快速访问主内容
-- ✅ **屏幕阅读器优化**: ARIA 标签完整
-- ✅ **触摸目标**: 44×44px 最小尺寸
-- ✅ **打印友好**: 黑白配色 + URL 显示
-
-#### WCAG 合规性
-
-| 主题 | 对比度 | WCAG 等级 |
-|------|--------|-----------|
-| Light | 6.2:1 | AA+ |
-| Dark | 5.8:1 | AA |
-| Cyberpunk | 8.1:1 | **AAA** ⭐ |
-| Twilight | 5.2:1 | AA |
-| Sepia | 8.5:1 | **AAA** ⭐ |
-
----
-
-### 🛡️ 安全与可靠
-
-#### 安全特性
-- ✅ Zip Slip 路径穿越防护
-- ✅ 随机主密钥 (每安装独立)
-- ✅ 密码日志脱敏
-- ✅ 安全文件路径验证
-- ✅ 非 UTF-8 路径兼容
-
-#### 质量保证
-- ✅ 54/54 单元测试通过
-- ✅ 35 个集成测试通过
-- ✅ 零 Clippy 错误
-- ✅ TypeScript 类型安全
-- ✅ 优雅错误处理
-
----
-
-### ⚡ 高性能设计
-
-#### 性能特性
-- **并行处理**: 1-16 线程可配置
-- **流式解压**: 内存占用低
-- **缓冲池**: I/O 缓冲复用
-- **任务队列**: 批量操作优化
-- **取消支持**: 随时中断长任务
-
-#### 技术栈
-- **后端**: Rust + Tauri 1.5
-- **前端**: Vue 3 + Pinia + Tailwind CSS
-- **数据库**: SQLite (sqlx)
-- **加密**: ring (AES-256-GCM + Argon2)
-- **压缩库**: zip 0.6, sevenz-rust 0.5, unrar 0.5
-
----
-
-## 📸 界面预览
-
-### 解压视图
-- 拖拽上传 + 批量处理
-- 实时进度条 + 日志查看
-- 自动密码重试
-- 分卷压缩自动检测
-
-### 压缩视图
-- 磁吸成组功能
-- 全局/独立配置
-- 分卷大小设置
-- RAR 格式支持 (需 WinRAR)
+普通 TAR、GZ、BZ2、XZ、Zstandard 或 LZMA 格式本身不支持密码。为这些格式设置密码时，应用会明确创建加密的 `.7z` 文件；如需保留原压缩算法，可选择对应的 `.aes` 格式。
 
 ### 密码保险箱
-- 卡片式布局
-- 使用统计热图
-- 快速搜索过滤
-- 导入导出功能
+
+1. 使用 `Ctrl+Shift+V` 打开密码保险箱。
+2. 首次使用时完成保险箱初始化。
+3. 添加常用密码并按名称或分组管理。
+4. 解压加密文件时，应用会在本地自动尝试匹配。
+
+密码数据保存在本机应用数据目录中，不会上传到网络。
 
 ### 文件完整性
-- CRC32 / MD5 / SHA256 校验
-- 批量计算
-- 校验文件验证 (.sfv, .md5, .sha256)
-- 导出校验报告
 
-### 设置中心
-- 外观个性化
-- 性能调优
-- 可访问性设置
-- 格式支持查看
+使用 `Ctrl+I` 打开“文件完整性”：
 
----
+- 选择文件后计算 CRC32、MD5 或 SHA256
+- 导出 `.sfv`、`.md5`、`.sha256` 校验文件
+- 导入已有校验文件并批量验证
 
-## 🚀 快速开始
+### 右键菜单
 
-### 系统要求
+在设置中心启用资源管理器右键菜单后，可以直接：
 
-- **操作系统**: Windows 10+ / macOS 10.15+ / Linux (Debian/Ubuntu/Fedora)
-- **内存**: 4GB+ 推荐
-- **磁盘**: 200MB 安装空间
+- 解压到当前目录
+- 解压到同名文件夹
+- 压缩为 ZIP 或 7Z
+- 测试压缩包完整性
 
-### 安装方式
+## 常用快捷键
 
-#### Windows
-```bash
-# 下载 .msi 安装包
-# 双击安装，支持自动更新
-```
+| 快捷键 | 功能 |
+| --- | --- |
+| `Ctrl+O` | 解压中心 |
+| `Ctrl+N` | 压缩中心 |
+| `Ctrl+Shift+V` | 密码保险箱 |
+| `Ctrl+I` | 文件完整性 |
+| `Ctrl+,` | 设置中心 |
+| `Esc` | 关闭当前弹窗 |
 
-#### macOS
-```bash
-# 下载 .dmg 镜像
-# 拖拽至应用程序文件夹
-```
+## 格式支持
 
-#### Linux
-```bash
-# Debian/Ubuntu
-sudo dpkg -i long-decompress_0.1.0_amd64.deb
+| 操作 | 格式 |
+| --- | --- |
+| 常用压缩 | ZIP、7Z、TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST、GZ、BZ2、XZ、ZST、LZMA |
+| 加密压缩 | ZIP、7Z、RAR、TAR.AES、TGZ.AES、TBZ.AES、TXZ.AES、TZST.AES、GZ.AES、BZ2.AES、XZ.AES、ZST.AES |
+| 常用解压 | ZIP、ZIPX、7Z、RAR、TAR、GZ、BZ2、XZ、ZST、LZMA |
+| 兼容归档 | CAB、ISO、WIM、DMG、VHD/VHDX、DEB、RPM、MSI、ARJ、LZH、XAR、CPIO 等 |
+| Office 与应用包 | DOCX、XLSX、PPTX、ODT、ODS、EPUB、APK、IPA、APPX、JAR 等 |
 
-# Fedora/RHEL
-sudo rpm -i long-decompress-0.1.0-1.x86_64.rpm
+具体能力会受到文件本身、加密方式以及系统环境影响。RAR 创建需要 WinRAR。
 
-# AppImage (通用)
-chmod +x long-decompress_0.1.0_amd64.AppImage
-./long-decompress_0.1.0_amd64.AppImage
-```
+## 常见问题
 
----
+<details>
+<summary><strong>为什么创建 RAR 时提示缺少编码器？</strong></summary>
 
-## 🛠️ 开发指南
+RAR 是专有格式。请安装 WinRAR，重启应用后再创建 RAR；也可以改用 7Z。
 
-### 环境准备
+</details>
 
-```bash
-# 克隆仓库
+<details>
+<summary><strong>升级会删除密码和设置吗？</strong></summary>
+
+不会。直接安装新版本即可，应用数据会继续保留。建议在重要升级前导出密码保险箱备份。
+
+</details>
+
+<details>
+<summary><strong>任务失败后如何处理？</strong></summary>
+
+展开任务日志查看具体原因。常见原因包括输出目录无写入权限、磁盘空间不足、密码错误、压缩包损坏或分卷不完整。
+
+</details>
+
+<details>
+<summary><strong>如何恢复默认设置？</strong></summary>
+
+前往设置中心逐项恢复；如果应用无法启动，可先备份应用数据，再清理配置目录后重新运行。
+
+</details>
+
+## 开发
+
+<details>
+<summary><strong>本地构建</strong></summary>
+
+```powershell
 git clone https://github.com/Longyuyeee/long_Decompress.git
-cd long_Decompress/long-compress-assistant
-
-# 安装依赖
+cd long_Decompress\long-compress-assistant
 npm install
-
-# Rust 工具链 (1.75+)
-rustup default stable
-```
-
-### 开发命令
-
-```bash
-# 开发模式 (热重载)
 npm run tauri dev
+```
 
-# 构建生产版本
+发布构建：
+
+```powershell
 npm run tauri build
-
-# 运行测试
-cargo test                    # Rust 单元测试
-npm run test:unit            # Vue 单元测试
-
-# 代码检查
-cargo clippy                 # Rust linter
-npm run lint                 # Vue/TypeScript linter
 ```
 
-### 项目结构
+主要技术栈：Vue 3、TypeScript、Pinia、Tauri 1.5、Rust。
 
-```
-long-compress-assistant/
-├── src/                    # Vue 前端
-│   ├── views/             # 页面视图
-│   ├── components/        # Vue 组件
-│   ├── stores/            # Pinia 状态管理
-│   ├── styles/            # 样式文件
-│   └── i18n/              # 国际化
-├── src-tauri/             # Rust 后端
-│   ├── src/
-│   │   ├── models/        # 数据模型
-│   │   ├── services/      # 业务逻辑
-│   │   └── utils/         # 工具函数
-│   ├── Cargo.toml         # Rust 依赖
-│   └── tauri.conf.json    # Tauri 配置
-└── package.json           # Node 依赖
-```
+</details>
 
----
+## 反馈与许可
 
-## 📝 更新日志
+- 使用问题或功能建议：[提交 Issue](https://github.com/Longyuyeee/long_Decompress/issues/new)
+- 项目主页：[Longyuyeee/long_Decompress](https://github.com/Longyuyeee/long_Decompress)
+- 开源许可：[MIT License](LICENSE)
 
-### v0.1.0 (2026-07-16) - 首个正式版本
-
-#### 新增功能
-- ✅ 37+ 解压格式支持
-- ✅ 16 种压缩格式支持
-- ✅ 智能密码破解引擎 (490k 字典)
-- ✅ 分卷压缩自动检测
-- ✅ 文件完整性校验器
-- ✅ 密码保险箱 (AES-256-GCM)
-- ✅ 5 种主题 + 13 种强调色
-- ✅ 完整可访问性功能 (WCAG 2.1 AA/AAA)
-
-#### 优化改进
-- 🎨 界面清晰度全面提升 (+35-50% 字体大小)
-- 🎨 所有主题对比度达到 WCAG AA 标准
-- 🛡️ 安全修复: Zip Slip 防护 + 密码脱敏
-- ⚡ 性能优化: I/O 缓冲池 + 并行处理
-- 🐛 修复: 59 个 Bug 修复，86 个 Clippy 警告清理
-
-#### 技术债务清理
-- ♻️ 移除 PrimeVue (减少 55 个包)
-- ♻️ 统一主题系统 (消除双系统冲突)
-- ♻️ 代码去重 (~500 行重复代码移除)
-- ♻️ 测试覆盖: 35 个集成测试 + 54 个单元测试
-
----
-
-## 🤝 贡献指南
-
-欢迎贡献代码、报告问题或提出建议！
-
-### 提交 PR 流程
-
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'feat: add amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建 Pull Request
-
-### Commit 规范
-
-```
-feat: 新增功能
-fix: 修复 Bug
-docs: 文档更新
-style: 代码格式调整
-refactor: 重构代码
-perf: 性能优化
-test: 测试相关
-chore: 构建/工具链更新
-```
-
----
-
-## 📄 开源协议
-
-本项目采用 [MIT 协议](LICENSE) 开源。
-
----
-
-## 🙏 致谢
-
-### 依赖库
-
-- [Tauri](https://tauri.app/) - 跨平台桌面应用框架
-- [Vue.js](https://vuejs.org/) - 渐进式前端框架
-- [Tailwind CSS](https://tailwindcss.com/) - 实用优先的 CSS 框架
-- [zip-rs](https://github.com/zip-rs/zip) - Rust ZIP 实现
-- [sevenz-rust](https://github.com/dyz1990/sevenz-rust) - 7Z 格式支持
-- [unrar](https://github.com/muja/unrar.rs) - RAR 解压库
-
-### 特别感谢
-
-- Claude Opus 4.8 - AI 开发助手
-- Anthropic - 提供强大的 AI 能力
-- 开源社区 - 无私的知识分享
-
----
-
-## 📞 联系方式
-
-- **项目主页**: https://github.com/Longyuyeee/long_Decompress
-- **问题反馈**: https://github.com/Longyuyeee/long_Decompress/issues
-- **作者**: 刘若晨 (Longyuyeee)
-
----
-
-<div align="center">
-
-**如果这个项目对你有帮助，请给个 ⭐ Star！**
-
-Made with ❤️ by [Longyuyeee](https://github.com/Longyuyeee)
-
-Co-Authored-By: Claude Opus 4.8 (1M context)
-
-</div>
+本项目包含按各自许可证分发的第三方组件，包括 Tauri、Vue、Rust crates 与 7-Zip 命令行工具。

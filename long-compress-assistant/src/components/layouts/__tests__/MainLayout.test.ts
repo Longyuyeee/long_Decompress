@@ -37,6 +37,7 @@ const routes = [
   { path: '/decompress', name: 'Decompress', component: { template: '<div>Decompress</div>' } },
   { path: '/compress', name: 'Compress', component: { template: '<div>Compress</div>' } },
   { path: '/vault', name: 'Vault', component: { template: '<div>Vault</div>' } },
+  { path: '/integrity', name: 'FileIntegrity', component: { template: '<div>Integrity</div>' } },
   { path: '/settings', name: 'Settings', component: { template: '<div>Settings</div>' } }
 ]
 
@@ -70,40 +71,56 @@ describe('MainLayout', () => {
     expect(wrapper.find('.main-container').exists()).toBe(true)
     expect(wrapper.find('aside nav').exists()).toBe(true)
     expect(wrapper.find('main').exists()).toBe(true)
-    expect(wrapper.find('[data-test="titlebar"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="global-progress"]').exists()).toBe(true)
     expect(mocks.onFocusChanged).toHaveBeenCalledOnce()
   })
 
-  it('renders the four product navigation entries', async () => {
+  it('renders the five product navigation entries', async () => {
     const { wrapper } = await mountLayout()
 
     expect(wrapper.find('.pi-folder-open').exists()).toBe(true)
     expect(wrapper.find('.pi-box').exists()).toBe(true)
     expect(wrapper.find('.pi-shield').exists()).toBe(true)
+    expect(wrapper.find('.pi-verified').exists()).toBe(true)
     expect(wrapper.find('.pi-cog').exists()).toBe(true)
     expect(mocks.t).toHaveBeenCalledWith('nav.decompress')
     expect(mocks.t).toHaveBeenCalledWith('nav.compress')
     expect(mocks.t).toHaveBeenCalledWith('nav.vault')
+    expect(mocks.t).toHaveBeenCalledWith('nav.integrity')
     expect(mocks.t).toHaveBeenCalledWith('nav.settings')
   })
 
   it('highlights the active route', async () => {
     const { wrapper } = await mountLayout('/compress')
 
-    const navButtons = wrapper.findAll('aside nav > div')
-    expect(navButtons).toHaveLength(4)
-    expect(navButtons[1].classes()).toContain('bg-primary/10')
-    expect(navButtons[0].classes()).toContain('hover:bg-primary/5')
+    const navButtons = wrapper.findAll('aside nav > button')
+    expect(navButtons).toHaveLength(5)
+    expect(navButtons[1].classes()).toContain('bg-primary/20')
+    expect(navButtons[0].classes()).toContain('hover:bg-primary/8')
+    expect(navButtons[1].attributes('aria-current')).toBe('page')
   })
 
   it('navigates when a sidebar item is clicked', async () => {
     const { wrapper, router } = await mountLayout('/decompress')
 
-    const navButtons = wrapper.findAll('aside nav > div')
+    const navButtons = wrapper.findAll('aside nav > button')
     await navButtons[2].trigger('click')
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('Vault')
+  })
+
+  it('keeps rendering when the native focus listener is unavailable', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mocks.onFocusChanged.mockRejectedValueOnce(new Error('not running in Tauri'))
+
+    const { wrapper } = await mountLayout()
+
+    expect(wrapper.find('main').exists()).toBe(true)
+    expect(warning).toHaveBeenCalledWith(
+      'Window focus listener is unavailable:',
+      expect.any(Error)
+    )
+    warning.mockRestore()
   })
 })

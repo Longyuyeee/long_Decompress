@@ -119,7 +119,7 @@ pub struct CompressionOptions {
     pub delete_after: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecompressOptions {
     pub preserve_paths: bool,
     pub overwrite_existing: bool,
@@ -129,10 +129,34 @@ pub struct DecompressOptions {
     pub extract_only_newer: bool,
     pub create_subdirectory: bool,
     pub file_filter: Option<String>,
+    #[serde(default = "default_conflict_policy")]
+    pub conflict_policy: String,
     #[serde(default)]
     pub enable_bruteforce: bool,
     #[serde(default)]
     pub bruteforce_wordlists: Vec<String>,
+}
+
+fn default_conflict_policy() -> String {
+    "rename".to_string()
+}
+
+impl Default for DecompressOptions {
+    fn default() -> Self {
+        Self {
+            preserve_paths: false,
+            overwrite_existing: false,
+            delete_after: false,
+            preserve_timestamps: false,
+            skip_corrupted: false,
+            extract_only_newer: false,
+            create_subdirectory: false,
+            file_filter: None,
+            conflict_policy: default_conflict_policy(),
+            enable_bruteforce: false,
+            bruteforce_wordlists: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

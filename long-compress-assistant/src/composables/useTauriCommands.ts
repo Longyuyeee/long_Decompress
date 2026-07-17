@@ -15,6 +15,7 @@ export interface DecompressOptions {
   extractOnlyNewer?: boolean
   createSubdirectory?: boolean
   fileFilter?: string | null
+  conflictPolicy?: 'ask' | 'overwrite' | 'skip' | 'rename'
 }
 
 export interface FileInfo {
@@ -136,7 +137,7 @@ export const useTauriCommands = () => {
       taskStore.updateTaskStatus(taskId, 'preparing')
       taskStore.updateTaskStatus(taskId, 'extracting')
 
-      return await invoke<string>('extract_file', {
+      const result = await invoke<string>('extract_file', {
         taskId,
         filePath,
         outputPath: options.outputPath,
@@ -150,10 +151,15 @@ export const useTauriCommands = () => {
           extract_only_newer: options.extractOnlyNewer ?? false,
           create_subdirectory: options.createSubdirectory ?? false,
           file_filter: options.fileFilter || null,
+          conflict_policy: options.conflictPolicy || 'rename',
           enable_bruteforce: appStore.settings.enableBruteForce,
           bruteforce_wordlists: appStore.settings.bruteForceWordlists
         }
       })
+      const task = taskStore.tasks.find(item => item.id === taskId)
+      if (task) task.progress = 100
+      taskStore.updateTaskStatus(taskId, 'completed')
+      return result
     } catch (error: any) {
       taskStore.updateTaskStatus(taskId, 'failed')
       throw error

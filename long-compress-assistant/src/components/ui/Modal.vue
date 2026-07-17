@@ -14,6 +14,7 @@
             <button
               v-if="showCloseButton"
               @click="handleClose"
+              :aria-label="cancelText || 'Close dialog'"
               class="absolute right-6 top-6 z-10 rounded-full p-2 hover:bg-input transition-all"
             >
               <i class="pi pi-times text-muted hover:text-content text-xs"></i>
@@ -45,7 +46,7 @@
                   <button v-if="cancelText" @click="handleCancel" class="px-6 py-2.5 rounded-xl bg-input border border-subtle text-muted text-xs font-bold hover:text-content transition-all">
                     {{ cancelText }}
                   </button>
-                  <button v-if="confirmText" @click="handleConfirm" class="px-6 py-2.5 rounded-xl bg-primary text-white text-xs font-black shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                   <button v-if="confirmText" @click="handleConfirm" :disabled="loading" class="px-6 py-2.5 rounded-xl bg-primary text-white text-xs font-black shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait">
                     <i v-if="loading" class="pi pi-spin pi-spinner"></i>
                     {{ confirmText }}
                   </button>
@@ -60,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
 export interface Props {
   visible: boolean
@@ -89,13 +90,17 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits(['update:visible', 'close', 'cancel', 'confirm'])
 const modalContent = ref<HTMLElement | null>(null)
+let previouslyFocused: HTMLElement | null = null
 
 // 打开模态时自动聚焦到内容区域
 watch(() => props.visible, (isVisible) => {
   if (isVisible) {
-    setTimeout(() => {
-      modalContent.value?.focus()
-    }, 100)
+    previouslyFocused = document.activeElement as HTMLElement | null
+    void nextTick(() => modalContent.value?.focus())
+  } else if (previouslyFocused) {
+    const target = previouslyFocused
+    previouslyFocused = null
+    void nextTick(() => target.focus())
   }
 })
 
@@ -118,6 +123,26 @@ const handleBackdropClick = () => { if (props.closeOnBackdrop) handleClose(); }
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (props.closeOnEscape && e.key === 'Escape' && props.visible) handleClose();
+  if (e.key !== 'Tab' || !props.visible || !modalContent.value) return
+
+  const focusable = Array.from(modalContent.value.querySelectorAll<HTMLElement>(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+  )).filter(element => !element.hasAttribute('aria-hidden'))
+  if (focusable.length === 0) {
+    e.preventDefault()
+    modalContent.value.focus()
+    return
+  }
+
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault()
+    first.focus()
+  }
 }
 
 window.addEventListener('keydown', handleKeydown)

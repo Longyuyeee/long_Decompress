@@ -111,8 +111,10 @@ export const useAppStore = defineStore('app', () => {
   watch(() => settings.value.uiScale, (scale) => {
     const root = document.documentElement
     const factor = scale / 100
+    const fontSize = settings.value.accessibility?.fontSize || 'normal'
+    const accessibilityFactor = fontSize === 'x-large' ? 1.25 : fontSize === 'large' ? 1.125 : 1
     root.style.setProperty('--ui-scale-factor', String(factor))
-    root.style.fontSize = `${scale}%`
+    root.style.fontSize = `${scale * accessibilityFactor}%`
   }, { immediate: true })
 
   watch(() => settings.value.autoStart, async (newVal) => {

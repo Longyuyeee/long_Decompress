@@ -7,3 +7,6 @@ pub mod file;
 pub mod system;
 pub mod task_queue;
 pub mod system_integration;
+pub mod file_integrity;
+pub mod password_generator;
+pub mod archive_helpers;

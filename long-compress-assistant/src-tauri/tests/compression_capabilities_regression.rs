@@ -150,6 +150,27 @@ fn infers_zip_from_output_path_when_format_missing() {
 }
 
 #[test]
+fn non_native_password_formats_require_an_explicit_7z_output() {
+    let temp = tempdir().expect("temp dir");
+    let source_file = temp.path().join("source.txt");
+    fs::write(&source_file, b"source").expect("source fixture");
+    let source = source_file.to_string_lossy().to_string();
+
+    let mut options = compression_options(Some("tar.gz"));
+    options.password = Some("secret".to_string());
+
+    let wrong_output = temp.path().join("archive.tar.gz").to_string_lossy().to_string();
+    assert!(CompressionService::validate_compression_request(&[source.clone()], &wrong_output, &options).is_err());
+
+    let encrypted_output = temp.path().join("archive.7z").to_string_lossy().to_string();
+    assert_eq!(
+        CompressionService::validate_compression_request(&[source], &encrypted_output, &options)
+            .expect("7z fallback should be explicit"),
+        "7z"
+    );
+}
+
+#[test]
 fn infers_common_compression_formats_from_output_path() {
     let temp = tempdir().expect("temp dir");
     let source_file = temp.path().join("source.txt");

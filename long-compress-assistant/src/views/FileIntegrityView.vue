@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
-import { open } from '@tauri-apps/api/dialog'
+import { open, save } from '@tauri-apps/api/dialog'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
@@ -76,7 +76,12 @@ const calculateChecksums = async () => {
   }
 
   isCalculating.value = false
-  appStore.setSuccess(appStore.t('integrity.calc_complete', '校验和计算完成'))
+  const successCount = checksumResults.value.filter(result => result.status === 'success').length
+  if (successCount > 0) {
+    appStore.setSuccess(appStore.t('integrity.calc_complete', '校验和计算完成'))
+  } else {
+    appStore.setError(appStore.t('integrity.verify_error', '校验出错'))
+  }
 }
 
 const copyChecksum = async (checksum: string) => {
@@ -99,21 +104,19 @@ const exportChecksumFile = async () => {
     const dir = firstFile.substring(0, Math.max(firstFile.lastIndexOf('/'), firstFile.lastIndexOf('\\')))
     const ext = selectedAlgorithm.value === 'crc32' ? '.sfv' : `.${selectedAlgorithm.value}`
 
-    const savePath = await open({
-      directory: false,
-      multiple: false,
+    const savePath = await save({
       title: appStore.t('integrity.export', '导出校验文件'),
       defaultPath: `${dir}/checksums${ext}`,
       filters: [{
         name: `${selectedAlgorithm.value.toUpperCase()} Checksum File`,
-        extensions: [selectedAlgorithm.value]
+        extensions: [ext.slice(1)]
       }]
     }) as string | null
 
     if (savePath) {
       await tauriCommands.invoke('export_checksum_file', {
         path: savePath,
-        results: checksumResults.value.map(r => ({
+        results: checksumResults.value.filter(r => r.status === 'success').map(r => ({
           file_name: r.fileName,
           checksum: r.checksum
         })),

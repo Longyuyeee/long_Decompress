@@ -3,6 +3,7 @@ import {
   COMPRESSIBLE_FORMATS,
   DECOMPRESS_ARCHIVE_ACCEPT,
   FORMAT_CAPABILITIES,
+  effectiveFormatForPassword,
   extensionForFormat,
   isPasswordSupportedFormat,
   isSingleFileStreamFormat,
@@ -20,6 +21,9 @@ describe('compression format helpers', () => {
     expect(extensionForFormat('tar.zst', 'secret')).toBe('7z')
     expect(extensionForFormat('zst', 'secret')).toBe('7z')
     expect(extensionForFormat('lzma', 'secret')).toBe('7z')
+    expect(effectiveFormatForPassword('tar.gz', 'secret')).toBe('7z')
+    expect(effectiveFormatForPassword('zstd', 'secret')).toBe('7z')
+    expect(effectiveFormatForPassword('tar.gz')).toBe('tar.gz')
   })
 
   it('uses natural extensions when password is empty', () => {

@@ -12,17 +12,8 @@ export function useAccessibility() {
   // 应用字体大小
   const applyFontSize = (size: 'normal' | 'large' | 'x-large') => {
     const root = document.documentElement
-
-    switch (size) {
-      case 'large':
-        root.style.fontSize = '112.5%' // 18px base (was 16px)
-        break
-      case 'x-large':
-        root.style.fontSize = '125%' // 20px base (was 16px)
-        break
-      default:
-        root.style.fontSize = '100%' // 16px base
-    }
+    const accessibilityFactor = size === 'x-large' ? 1.25 : size === 'large' ? 1.125 : 1
+    root.style.fontSize = `${appStore.settings.uiScale * accessibilityFactor}%`
   }
 
   // 应用高对比度模式

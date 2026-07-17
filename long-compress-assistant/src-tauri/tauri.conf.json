@@ -43,7 +43,10 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "resources": [],
+      "resources": [
+        "../node_modules/7zip-bin/win/x64/7za.exe",
+        "../node_modules/7zip-bin/LICENSE.txt"
+      ],
       "externalBin": [],
       "copyright": "Copyright © 2026 胧解压·方便助手",
       "category": "Utility",
@@ -67,7 +70,7 @@
       "macOS": {
         "frameworks": [],
         "minimumSystemVersion": "10.15",
-        "license": "LICENSE"
+        "license": "../LICENSE"
       }
     },
     "security": {

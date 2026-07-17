@@ -143,17 +143,37 @@ impl FileIntegrityService {
         let mut results = Vec::new();
 
         // 自动检测算法（根据校验和长度）
+        let is_sfv = checksum_file
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("sfv"));
+
         for line in reader.lines() {
             let line = line?;
-            let parts: Vec<&str> = line.split_whitespace().collect();
-
-            if parts.len() < 2 {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with(';') || line.starts_with('#') {
                 continue;
             }
 
-            let expected_checksum = parts[0];
-            let file_name = parts[1];
-            let file_path = base_dir.join(file_name);
+            let parsed = if is_sfv {
+                line.rsplit_once(char::is_whitespace)
+                    .map(|(name, checksum)| (checksum.trim(), name.trim()))
+            } else {
+                line.split_once(char::is_whitespace)
+                    .map(|(checksum, name)| (checksum.trim(), name.trim_start_matches([' ', '*'])))
+            };
+            let Some((expected_checksum, file_name)) = parsed else {
+                continue;
+            };
+
+            let relative_path = Path::new(file_name);
+            if relative_path.is_absolute()
+                || relative_path.components().any(|component| matches!(component, std::path::Component::ParentDir))
+            {
+                results.push((file_name.to_string(), false));
+                continue;
+            }
+            let file_path = base_dir.join(relative_path);
 
             if !file_path.exists() {
                 results.push((file_name.to_string(), false));

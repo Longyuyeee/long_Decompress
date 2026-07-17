@@ -68,6 +68,7 @@ export const useCompressionStore = defineStore('compression', () => {
     createSolidArchive: false
   })
   const globalOutputPath = ref('')
+  const autoStartRequested = ref(false)
   
   // 预计体积预演数据
   const estimatedSize = ref<Record<string, number>>({})
@@ -156,11 +157,22 @@ export const useCompressionStore = defineStore('compression', () => {
     }
   }
 
+  const requestAutoStart = () => {
+    autoStartRequested.value = true
+  }
+
+  const consumeAutoStart = () => {
+    const requested = autoStartRequested.value
+    autoStartRequested.value = false
+    return requested
+  }
+
   return {
     selectedFiles,
     groups,
     globalSettings,
     globalOutputPath,
+    autoStartRequested,
     estimatedSize,
     totalOriginalSize,
     cloneSettings,
@@ -173,6 +185,8 @@ export const useCompressionStore = defineStore('compression', () => {
     updateGroupOutputPath,
     createGroup,
     dissolveGroup,
-    removeFileFromGroup
+    removeFileFromGroup,
+    requestAutoStart,
+    consumeAutoStart
   }
 })

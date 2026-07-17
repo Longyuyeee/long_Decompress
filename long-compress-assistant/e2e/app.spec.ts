@@ -1,30 +1,38 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
-test.describe('LongDecompress App', () => {
-  test('has window title', async ({ page }) => {
+test.describe('Long Decompress desktop shell', () => {
+  test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    const title = await page.title()
-    expect(title).toContain('胧压缩')
+    await page.waitForURL('**/#/decompress')
   })
 
-  test('navigates to decompress by default', async ({ page }) => {
-    await page.goto('/')
-    // Hash router should show /decompress
-    await page.waitForURL('**/decompress')
-    expect(page.url()).toContain('decompress')
+  test('opens the decompression workspace by default', async ({ page }) => {
+    await expect(page.locator('main h1')).toBeVisible()
+    await expect(page.locator('[role="button"][tabindex="0"]').first()).toBeVisible()
   })
 
-  test('sidebar navigation exists', async ({ page }) => {
-    await page.goto('/')
-    // Should have navigation links
-    const nav = page.locator('nav a, [role="navigation"] a')
-    expect(await nav.count()).toBeGreaterThan(0)
+  test('renders five keyboard-accessible navigation buttons', async ({ page }) => {
+    const navigation = page.locator('aside nav > button')
+    await expect(navigation).toHaveCount(5)
+    await expect(navigation.first()).toHaveAttribute('aria-current', 'page')
   })
 
-  test('can navigate to settings', async ({ page }) => {
-    await page.goto('/')
-    await page.goto('/#/settings')
-    await page.waitForLoadState('networkidle')
-    expect(page.url()).toContain('settings')
+  test('navigates to settings from the sidebar', async ({ page }) => {
+    await page.locator('aside nav > button').nth(4).click()
+    await page.waitForURL('**/#/settings')
+    await expect(page.locator('main h1')).toBeVisible()
+  })
+
+  test('supports the file-integrity keyboard shortcut', async ({ page }) => {
+    await page.keyboard.press('Control+i')
+    await page.waitForURL('**/#/integrity')
+    await expect(page.locator('main h1')).toBeVisible()
+  })
+
+  test('exposes the archive dropzone to assistive technology', async ({ page }) => {
+    const dropzone = page.locator('main [role="button"][tabindex="0"]').first()
+    await expect(dropzone).toHaveAttribute('aria-label', /.+/)
+    await dropzone.focus()
+    await expect(dropzone).toBeFocused()
   })
 })

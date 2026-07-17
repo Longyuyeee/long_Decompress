@@ -2,6 +2,8 @@
   "name": "long-compress-assistant",
   "private": true,
   "version": "1.0.2",
+  "author": "Longyuyeee",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite --port 1420 --strictPort",
@@ -11,7 +13,7 @@
     "lint": "vue-tsc --noEmit",
     "preview": "vite preview",
     "tauri": "tauri",
-    "test:unit": "vitest run",
+    "test:unit": "vitest run src tests/fixtures",
     "test:unit:watch": "vitest",
     "test:unit:coverage": "vitest run --coverage",
     "test:integration": "vitest run tests/integration",

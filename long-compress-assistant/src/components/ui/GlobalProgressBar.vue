@@ -113,22 +113,25 @@ const retryTask = async (task: Task) => {
         createSubdirectory: task.extractToSubfolder ?? false,
         password: task.password || undefined,
         fileFilter: task.fileFilter || null
+        ,conflictPolicy: appStore.settings.conflictPolicy
       }
       taskStore.updateTaskStatus(task.id, 'preparing')
       await tauriCommands.decompressFile(task.sourceFiles[0], options, task.id)
     } else if (task.type === 'compression') {
       taskStore.updateTaskStatus(task.id, 'pending')
       taskStore.updateTaskStatus(task.id, 'compressing')
+      const options = task.compressionOptions || {
+        format: task.format || 'zip',
+        level: 6,
+        password: task.password || undefined
+      }
       await tauriCommands.compressFiles(
         task.id,
         task.sourceFiles,
         task.outputPath,
-        {
-          format: task.format || 'zip',
-          level: 6,
-          password: task.password || undefined
-        }
+        options
       )
+      taskStore.updateTaskStatus(task.id, 'completed')
     }
   } catch (error) {
     taskStore.updateTaskStatus(task.id, 'failed')

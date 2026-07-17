@@ -295,17 +295,9 @@ const generatePassword = async () => {
     copied.value = false
   } catch (error) {
     console.error('Failed to generate password:', error)
-    // Fallback: 生成简单密码
-    generatedPassword.value = generateFallbackPassword()
+    generatedPassword.value = ''
+    appStore.setError(`${appStore.t('common.error')}: ${String(error)}`)
   }
-}
-
-const generateFallbackPassword = () => {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
-  const length = selectedStrength.value === 'weak' ? 10 :
-                 selectedStrength.value === 'medium' ? 14 :
-                 selectedStrength.value === 'strong' ? 18 : 28
-  return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
 }
 
 const copyPassword = async () => {

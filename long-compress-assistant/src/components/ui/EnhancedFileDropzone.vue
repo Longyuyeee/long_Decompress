@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { open } from '@tauri-apps/api/dialog'
 import { listen } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/tauri'
 
 const props = defineProps({
   compact: {
@@ -25,6 +26,10 @@ const props = defineProps({
   subHint: {
     type: String,
     default: ''
+  },
+  nativeDrop: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -37,29 +42,39 @@ const emit = defineEmits(['files-selected'])
 let unlistenHover: any = null
 let unlistenDrop: any = null
 let unlistenCancel: any = null
+let isUnmounted = false
 
-onMounted(async () => {
-  // 当文件悬停在窗口上时
-  unlistenHover = await listen('tauri://file-drop-hover', () => {
-    isDragging.value = true
-  })
+const keepListener = (unlisten: () => void, target: 'hover' | 'drop' | 'cancel') => {
+  if (isUnmounted) {
+    unlisten()
+    return
+  }
+  if (target === 'hover') unlistenHover = unlisten
+  else if (target === 'drop') unlistenDrop = unlisten
+  else unlistenCancel = unlisten
+}
 
-  // 当文件真正在窗口放下时
-  unlistenDrop = await listen<string[]>('tauri://file-drop', (event) => {
-    isDragging.value = false
-    const paths = event.payload
-    if (paths && paths.length > 0) {
-      handleRawPaths(paths)
-    }
-  })
-
-  // 当拖放取消或离开窗口时
-  unlistenCancel = await listen('tauri://file-drop-cancelled', () => {
-    isDragging.value = false
+onMounted(() => {
+  if (!props.nativeDrop) return
+  void Promise.all([
+    listen('tauri://file-drop-hover', () => {
+      isDragging.value = true
+    }).then(unlisten => keepListener(unlisten, 'hover')),
+    listen<string[]>('tauri://file-drop', (event) => {
+      isDragging.value = false
+      const paths = event.payload
+      if (paths && paths.length > 0) void handleRawPaths(paths, true)
+    }).then(unlisten => keepListener(unlisten, 'drop')),
+    listen('tauri://file-drop-cancelled', () => {
+      isDragging.value = false
+    }).then(unlisten => keepListener(unlisten, 'cancel')),
+  ]).catch(error => {
+    console.warn('Native file-drop listeners are unavailable:', error)
   })
 })
 
 onUnmounted(() => {
+  isUnmounted = true
   if (unlistenHover) unlistenHover()
   if (unlistenDrop) unlistenDrop()
   if (unlistenCancel) unlistenCancel()
@@ -117,7 +132,7 @@ const triggerFileInput = async () => {
         multiple: true,
         title: appStore.t('compress.add_folders')
       })
-      if (selected) handleRawPaths(Array.isArray(selected) ? selected : [selected])
+      if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected])
     } catch (err) {
       console.error('Failed to select folders:', err)
     }
@@ -133,7 +148,7 @@ const triggerFileInput = async () => {
           extensions: props.accept.split(',').map(e => e.trim().replace(/^[*.]*/, ''))
         }] : []
       })
-      if (selected) handleRawPaths(Array.isArray(selected) ? selected : [selected])
+      if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected])
     } catch (err) {
       console.error('Failed to select files:', err)
     }
@@ -141,17 +156,26 @@ const triggerFileInput = async () => {
 }
 
 // 处理来自 Tauri 原生路径的数据
-const handleRawPaths = (paths: string[]) => {
-  const results = paths.map(path => {
+const handleRawPaths = async (paths: string[], inspectPaths = false) => {
+  const results = await Promise.all(paths.map(async path => {
     const name = path.split(/[\\/]/).filter(Boolean).pop() || path
+    let isDirectory = props.mode === 'folder'
+    let size = 0
+    if (inspectPaths) {
+      try {
+        const metadata = await invoke<{ is_dir: boolean; size: number }>('get_file_info', { path })
+        isDirectory = metadata.is_dir
+        size = metadata.size
+      } catch { /* fall back to the picker mode */ }
+    }
     return {
       name,
       path,
-      size: 0,
-      type: props.mode === 'folder' ? 'directory' : 'file',
-      isDirectory: props.mode === 'folder'
+      size,
+      type: isDirectory ? 'directory' : 'file',
+      isDirectory
     }
-  })
+  }))
   emit('files-selected', results)
 }
 
@@ -191,7 +215,7 @@ const handleFiles = (files: File[]) => {
       'p-3 rounded-xl border-dashed opacity-80 hover:opacity-100': compact
     }"
     role="button"
-    :aria-label="appStore.t('dropzone.hint')"
+    :aria-label="`${displayAddLabel}: ${displayHint}`"
     tabindex="0"
     @dragover="onDragOver"
     @dragleave="onDragLeave"

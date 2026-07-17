@@ -315,16 +315,17 @@ describe('测试辅助函数', () => {
       const mock1 = vi.fn()
       const mock2 = vi.fn()
 
-      // 设置一些模拟
-      vi.mock('test-module', () => ({ mock1 }))
-      vi.mock('another-module', () => ({ mock2 }))
+      mock1('first call')
+      mock2.mockReturnValue('configured value')
+      mock2()
 
       // 调用清理
       cleanupTestEnvironment()
 
-      // 验证模拟被清理
-      expect(vi.isMockFunction(mock1)).toBe(false)
-      expect(vi.isMockFunction(mock2)).toBe(false)
+      // 模拟函数仍可复用，但调用记录和自定义实现均已重置。
+      expect(mock1).not.toHaveBeenCalled()
+      expect(mock2).not.toHaveBeenCalled()
+      expect(mock2()).toBeUndefined()
     })
   })
 })

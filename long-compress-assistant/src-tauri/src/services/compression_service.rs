@@ -224,6 +224,19 @@ pub struct PasswordRequiredPayload {
 }
 
 #[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FileConflictPayload {
+    pub task_id: String,
+    pub file_name: String,
+    pub source_path: String,
+    pub dest_path: String,
+    pub source_size: u64,
+    pub dest_size: u64,
+    pub source_modified: u64,
+    pub dest_modified: u64,
+}
+
+#[derive(Clone, Serialize)]
 pub struct RarCompressionSupport {
     pub available: bool,
     pub encoder_path: Option<String>,
@@ -436,17 +449,39 @@ impl CompressionService {
             .find(|capability| capability.format == normalized)
     }
 
+    fn has_native_password_container(format: &str) -> bool {
+        matches!(
+            Self::normalize_compression_format(format).as_str(),
+            "zip" | "7z" | "rar" |
+            "tar.aes" | "tar.gz.aes" | "tar.bz2.aes" | "tar.xz.aes" | "tar.zst.aes" |
+            "gz.aes" | "bz2.aes" | "xz.aes" | "zst.aes"
+        )
+    }
+
     pub fn validate_compression_request(source_files: &[String], output_path: &str, options: &CompressionOptions) -> Result<String> {
         let requested_format = Self::infer_compression_format(output_path, options.format.as_deref());
         let capability = Self::find_compression_format_capability(&requested_format);
+        let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
 
         // 分卷压缩通过 SplitCompressionService 实现
 
         // 全部压缩格式均支持密码：原生格式直接支持，其他通过 7z CLI 创建 .7z 加密容器
-        if options.password.as_deref().is_some_and(|password| !password.is_empty())
+        if has_password
             && !capability.is_some_and(|capability| capability.supports_password_compress)
         {
             return Err(CompressionError::UnsupportedEncryption.into());
+        }
+
+        if has_password && !Self::has_native_password_container(&requested_format) {
+            if !output_path.to_ascii_lowercase().ends_with(".7z") {
+                return Err(CompressionError::CompressionFailed(
+                    format!(
+                        "{} does not support native encryption. Use a .7z output path or choose an .aes format.",
+                        requested_format
+                    )
+                ).into());
+            }
+            return Ok("7z".to_string());
         }
 
         if capability.is_some_and(|capability| capability.single_file_only) {
@@ -916,6 +951,48 @@ impl CompressionService {
                     });
                     
                     return Err(CompressionError::PasswordRequired.into());
+                }
+            }
+        }
+
+        if options.conflict_policy == "ask" && !options.overwrite_existing {
+            if let Ok(entries) = UniversalCliEngine::list_contents(path, final_password.as_deref()).await {
+                for entry in entries {
+                    let entry = entry.trim_end_matches(['/', '\\']);
+                    if entry.is_empty() {
+                        continue;
+                    }
+                    let relative = Path::new(entry);
+                    if relative.is_absolute()
+                        || relative.components().any(|component| matches!(component, std::path::Component::ParentDir))
+                    {
+                        continue;
+                    }
+                    let relative = if options.preserve_paths {
+                        relative.to_path_buf()
+                    } else {
+                        relative.file_name().map(PathBuf::from).unwrap_or_default()
+                    };
+                    let destination = out_dir.join(relative);
+                    if destination.is_file() {
+                        let metadata = std::fs::metadata(&destination).ok();
+                        let modified = metadata.as_ref()
+                            .and_then(|value| value.modified().ok())
+                            .and_then(|value| value.duration_since(std::time::UNIX_EPOCH).ok())
+                            .map(|value| value.as_millis() as u64)
+                            .unwrap_or(0);
+                        let _ = window.emit("file-conflict", FileConflictPayload {
+                            task_id: task_id.clone(),
+                            file_name: destination.file_name().and_then(|name| name.to_str()).unwrap_or(entry).to_string(),
+                            source_path: file_path.clone(),
+                            dest_path: destination.to_string_lossy().into_owned(),
+                            source_size: 0,
+                            dest_size: metadata.map(|value| value.len()).unwrap_or(0),
+                            source_modified: 0,
+                            dest_modified: modified,
+                        });
+                        return Err(CompressionError::ExtractionFailed("File conflict requires resolution".to_string()).into());
+                    }
                 }
             }
         }
@@ -1739,36 +1816,29 @@ impl CompressionService {
     }
 
     /// 使用 7z CLI 创建密码保护的 ZIP（zip crate 0.6 不支持 AES 加密写入）
-    fn do_compress_zip_with_password(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: &CompressionOptions) -> Result<()> {
-        let pwd = options.password.as_deref().unwrap_or("");
-        let level = options.level.clamp(1, 9);
-
-        let seven_zip = find_7z_command()
-            .ok_or_else(|| CompressionError::CompressionFailed(missing_7z_message()))?;
+    fn create_encrypted_zip_with_7z(
+        seven_zip: &str,
+        password: &str,
+        level: u32,
+        sources: &[String],
+        output: &str,
+    ) -> Result<()> {
         let mut cmd = std::process::Command::new(seven_zip);
-        cmd.arg("a");
-        cmd.arg("-tzip");
-        cmd.arg(format!("-mx{}", level));
-        cmd.arg("-p"); // 使用环境变量传递密码
-        cmd.arg("-y");
-        cmd.arg(output);
-
-        // 通过环境变量传递密码，避免在进程列表中暴露
-        if !pwd.is_empty() {
-            cmd.env("_7ZIP_PASSWORD", pwd);
-        }
+        cmd.arg("a")
+            .arg("-tzip")
+            .arg(format!("-mx{}", level.clamp(1, 9)))
+            .arg("-mem=AES256")
+            .arg(format!("-p{}", password))
+            .arg("-y")
+            .arg(output);
 
         for source in sources {
-            self.check_cancellation()?;
             cmd.arg(source);
         }
 
-        self.emit_log(window, task_id, "使用 7z 创建加密 ZIP...", TaskLogSeverity::Info);
-
-        let output_result = cmd.output()
-            .map_err(|err| CompressionError::CompressionFailed(
-                format!("Failed to run 7z for encrypted ZIP: {}", err)
-            ))?;
+        let output_result = cmd.output().map_err(|err| {
+            CompressionError::CompressionFailed(format!("Failed to run 7z for encrypted ZIP: {}", err))
+        })?;
 
         if !output_result.status.success() {
             let stderr = String::from_utf8_lossy(&output_result.stderr);
@@ -1778,6 +1848,22 @@ impl CompressionService {
                 format!("7z encrypted ZIP compression failed: {}", message)
             ).into());
         }
+
+        Ok(())
+    }
+
+    fn do_compress_zip_with_password(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: &CompressionOptions) -> Result<()> {
+        let pwd = options.password.as_deref().unwrap_or("");
+        let level = options.level.clamp(1, 9);
+
+        let seven_zip = find_7z_command()
+            .ok_or_else(|| CompressionError::CompressionFailed(missing_7z_message()))?;
+        for _ in sources {
+            self.check_cancellation()?;
+        }
+
+        self.emit_log(window, task_id, "使用 7z 创建加密 ZIP...", TaskLogSeverity::Info);
+        Self::create_encrypted_zip_with_7z(&seven_zip, pwd, level, sources, output)?;
 
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
         self.emit_log(window, task_id, "加密 ZIP 创建完成", TaskLogSeverity::Success);
@@ -2416,5 +2502,29 @@ mod tests {
     fn test_refined_error_variants() {
         let err1 = CompressionError::PasswordRequired;
         assert_eq!(err1.to_string(), "需要输入密码才能解压");
+    }
+
+    #[tokio::test]
+    async fn encrypted_zip_uses_the_requested_password() {
+        let Some(seven_zip) = find_7z_command() else {
+            eprintln!("Skipping encrypted ZIP test because 7za is unavailable");
+            return;
+        };
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("secret.txt");
+        let archive = temp.path().join("secret.zip");
+        std::fs::write(&source, b"top secret").expect("source fixture");
+
+        CompressionService::create_encrypted_zip_with_7z(
+            &seven_zip,
+            "open-sesame",
+            6,
+            &[source.to_string_lossy().to_string()],
+            &archive.to_string_lossy(),
+        ).expect("encrypted ZIP creation");
+
+        let engine = UniversalCliEngine::new();
+        assert!(engine.try_password(&archive, "open-sesame").await.expect("correct password"));
+        assert!(!engine.try_password(&archive, "wrong-password").await.expect("wrong password"));
     }
 }

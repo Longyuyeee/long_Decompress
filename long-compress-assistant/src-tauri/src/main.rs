@@ -157,6 +157,7 @@ fn main() {
             long_compress_assistant::commands::password::search_passwords,
             long_compress_assistant::commands::password::get_password_suggestions,
             long_compress_assistant::commands::system::get_system_info,
+            long_compress_assistant::commands::system::get_resource_usage,
             long_compress_assistant::commands::system::get_disk_space,
             long_compress_assistant::commands::system::get_app_version,
             long_compress_assistant::commands::system::set_auto_start,
@@ -194,7 +195,15 @@ fn main() {
             long_compress_assistant::commands::decompression_profile::create_decompression_profile,
             long_compress_assistant::commands::decompression_profile::update_decompression_profile,
             long_compress_assistant::commands::decompression_profile::delete_decompression_profile,
-            long_compress_assistant::commands::decompression_profile::update_decompression_profile_stats
+            long_compress_assistant::commands::decompression_profile::update_decompression_profile_stats,
+            long_compress_assistant::commands::file_integrity::calculate_checksum,
+            long_compress_assistant::commands::file_integrity::export_checksum_file,
+            long_compress_assistant::commands::file_integrity::verify_checksum_file,
+            long_compress_assistant::commands::password_generator::generate_password,
+            long_compress_assistant::commands::password_generator::generate_memorable_password,
+            long_compress_assistant::commands::password_generator::generate_pin,
+            long_compress_assistant::commands::archive_helpers::detect_split_archive,
+            long_compress_assistant::commands::archive_helpers::get_dictionary_passwords
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

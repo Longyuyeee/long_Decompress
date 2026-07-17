@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { listen } from '@tauri-apps/api/event'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage, generateId } from '@/utils'
-import { extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
+import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
@@ -21,62 +19,11 @@ const selectedRows = ref<Set<string>>(new Set())
 const showGlobalSettingsModal = ref(false)
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
 const checkingRarSupport = ref(false)
-const router = useRouter()
-
-const compUnlisteners: Array<() => void> = []
-
-onMounted(async () => {
-  // 右键菜单 → 打开压缩对话框（用户手动配置）
-  const u1 = await listen<string[]>('context-compress-custom', (event) => {
-    const files = event.payload.filter(f => f && !f.startsWith('%'))
-    if (files.length > 0) {
-      router.push('/compress')
-      files.forEach(f => {
-        const name = f.split(/[\\/]/).pop() || f
-        compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
-      })
-      appStore.setSuccess(appStore.t('compress.context_menu_custom').replace('{0}', String(files.length)))
-    }
-  })
-  compUnlisteners.push(u1)
-
-  // 右键菜单 → 直接压缩为 ZIP
-  const u2 = await listen<string[]>('context-compress-zip', (event) => {
-    const files = event.payload.filter(f => f && !f.startsWith('%'))
-    if (files.length > 0) {
-      router.push('/compress')
-      files.forEach(f => {
-        const name = f.split(/[\\/]/).pop() || f
-        compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
-      })
-      compressionStore.globalSettings.format = 'zip'
-      appStore.setSuccess(appStore.t('compress.context_menu_zip').replace('{0}', String(files.length)))
-      // 自动开始压缩
-      setTimeout(() => handleCompress(), 500)
-    }
-  })
-  compUnlisteners.push(u2)
-
-  // 右键菜单 → 直接压缩为 7Z
-  const u3 = await listen<string[]>('context-compress-7z', (event) => {
-    const files = event.payload.filter(f => f && !f.startsWith('%'))
-    if (files.length > 0) {
-      router.push('/compress')
-      files.forEach(f => {
-        const name = f.split(/[\\/]/).pop() || f
-        compressionStore.addFile({ name, path: f, size: 0, type: 'file', isDirectory: false })
-      })
-      compressionStore.globalSettings.format = '7z'
-      appStore.setSuccess(appStore.t('compress.context_menu_7z').replace('{0}', String(files.length)))
-      // 自动开始压缩
-      setTimeout(() => handleCompress(), 500)
-    }
-  })
-  compUnlisteners.push(u3)
-})
-
-onUnmounted(() => {
-  compUnlisteners.forEach(fn => fn())
+const isCompressing = ref(false)
+onMounted(() => {
+  if (compressionStore.consumeAutoStart()) {
+    setTimeout(() => void handleCompress(), 100)
+  }
 })
 
 const onFilesSelected = (files: any[]) => {
@@ -176,7 +123,7 @@ const buildOutputPath = (baseOutputPath: string, fallbackSourcePath: string, arc
   return joinPath(outputDir, cleanName.endsWith(`.${extension}`) ? cleanName : `${cleanName}.${extension}`)
 }
 
-const handleCompress = async () => {
+const runCompression = async () => {
   if (compressionStore.groups.length === 0 && compressionStore.selectedFiles.length === 0) return
 
   const jobs = [
@@ -215,10 +162,20 @@ const handleCompress = async () => {
   ]
 
   // 第一阶段：预校验并添加所有任务到列表（status: pending）
-  const validJobs: Array<{ job: typeof jobs[0], taskId: string }> = []
+  const validJobs: Array<{ job: typeof jobs[0], taskId: string, effectiveFormat: string }> = []
   let failed = 0
+  const outputPaths = new Set<string>()
 
   for (const job of jobs) {
+    const effectiveFormat = effectiveFormatForPassword(job.settings.format, job.settings.password)
+    const normalizedOutputPath = job.outputPath.toLocaleLowerCase()
+    if (outputPaths.has(normalizedOutputPath)) {
+      appStore.setError(`${appStore.t('common.error')}: Duplicate output path: ${job.outputPath}`)
+      failed++
+      continue
+    }
+    outputPaths.add(normalizedOutputPath)
+
     // 校验失败：跳过当前任务
     if (isSingleFileStreamFormat(job.settings.format) && !canUseSingleFileFormats(job.files)) {
       appStore.setError(appStore.t('compress.error.single_file').replace('{0}', job.settings.format.toUpperCase()))
@@ -226,13 +183,13 @@ const handleCompress = async () => {
       continue
     }
 
-    if (job.settings.password && !isPasswordSupportedFormat(job.settings.format)) {
+    if (job.settings.password && !isPasswordSupportedFormat(effectiveFormat)) {
       appStore.setError(appStore.t('compress.error.no_password').replace('{0}', job.settings.format.toUpperCase()))
       failed++
       continue
     }
 
-    if (job.settings.format === 'rar') {
+    if (effectiveFormat === 'rar') {
       const support = await ensureRarSupport()
       if (!support?.available) {
         appStore.setError(support?.message || appStore.t('compress.error.rar_requires'))
@@ -248,16 +205,25 @@ const handleCompress = async () => {
       type: 'compression',
       sourceFiles: job.files.map(file => file.path),
       outputPath: job.outputPath,
-      format: job.settings.format
+      format: effectiveFormat,
+      password: job.settings.password || undefined,
+      compressionOptions: {
+        format: effectiveFormat,
+        level: job.settings.level,
+        password: job.settings.password || undefined,
+        split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
+        preserve_paths: job.settings.keepStructure,
+        delete_after: job.settings.deleteAfter
+      }
     })
 
-    validJobs.push({ job, taskId })
+    validJobs.push({ job, taskId, effectiveFormat })
   }
 
   // 第二阶段：依次执行所有任务
   let succeeded = 0
 
-  for (const { job, taskId } of validJobs) {
+  for (const { job, taskId, effectiveFormat } of validJobs) {
     try {
       taskStore.updateTaskStatus(taskId, 'compressing')
       await tauriCommands.compressFiles(
@@ -265,7 +231,7 @@ const handleCompress = async () => {
         job.files.map(file => file.path),
         job.outputPath,
         {
-          format: job.settings.format,
+          format: effectiveFormat,
           level: job.settings.level,
           password: job.settings.password || undefined,
           split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
@@ -291,6 +257,16 @@ const handleCompress = async () => {
     appStore.setSuccess(appStore.t('compress.status_success').replace('{0}', String(succeeded)).replace('{1}', succeeded === 1 ? '' : 's'))
   } else if (succeeded > 0) {
     appStore.setSuccess(appStore.t('compress.status_result').replace('{0}', String(succeeded)).replace('{1}', String(failed)))
+  }
+}
+
+const handleCompress = async () => {
+  if (isCompressing.value) return
+  isCompressing.value = true
+  try {
+    await runCompression()
+  } finally {
+    isCompressing.value = false
   }
 }
 
@@ -332,9 +308,10 @@ const totalPayload = computed(() => {
         <button
           v-if="totalPayload > 0"
           @click="handleCompress"
-          class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2"
+          :disabled="isCompressing"
+          class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait"
         >
-          <i class="pi pi-play-circle text-xs"></i>
+          <i :class="isCompressing ? 'pi pi-spin pi-spinner' : 'pi pi-play-circle'" class="text-xs"></i>
           <span class="hidden sm:inline">{{ appStore.t('compress.start') }}</span>
           <span class="sm:hidden">开始</span>
         </button>
@@ -351,7 +328,11 @@ const totalPayload = computed(() => {
              :style="{ borderColor: group.expanded ? group.themeColor : '' }">
           
           <!-- 组头部 -->
-          <div class="flex items-center px-8 py-5 cursor-pointer group/header" @click="group.expanded = !group.expanded">
+          <div class="flex items-center px-8 py-5 cursor-pointer group/header"
+               role="button" tabindex="0" :aria-expanded="group.expanded"
+               @click="group.expanded = !group.expanded"
+               @keydown.enter="group.expanded = !group.expanded"
+               @keydown.space.prevent="group.expanded = !group.expanded">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center mr-6 shadow-sm transition-transform group-hover/header:rotate-6"
                  :style="{ backgroundColor: `${group.themeColor}20`, color: group.themeColor, border: `1px solid ${group.themeColor}40` }">
               <i class="pi pi-briefcase text-sm"></i>
@@ -476,6 +457,7 @@ const totalPayload = computed(() => {
           <EnhancedFileDropzone
             @files-selected="onFilesSelected"
             mode="file"
+            :nativeDrop="false"
             class="shadow-sm flex-1 min-h-[160px] sm:min-h-0"
           />
         </div>
@@ -493,6 +475,7 @@ const totalPayload = computed(() => {
           @files-selected="onFilesSelected"
           :compact="true"
           mode="file"
+          :nativeDrop="false"
           class="w-full h-7"
         />
       </div>

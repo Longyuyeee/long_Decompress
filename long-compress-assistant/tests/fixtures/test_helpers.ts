@@ -4,7 +4,6 @@
  */
 
 import { vi } from 'vitest'
-import { File } from '@tauri-apps/api/fs'
 
 /**
  * 创建模拟文件对象

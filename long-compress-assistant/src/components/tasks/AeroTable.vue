@@ -226,6 +226,11 @@ const onLeave = (el: any) => {
           <div
             class="task-row flex items-center px-4 py-2 bg-card/40 border border-subtle/40 rounded-lg hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden shadow-sm"
             @click="toggleExpand(task.id)"
+            role="button"
+            tabindex="0"
+            :aria-expanded="expandedTasks.has(task.id)"
+            @keydown.enter="toggleExpand(task.id)"
+            @keydown.space.prevent="toggleExpand(task.id)"
           >
             <!-- 状态指示条 -->
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover/row:opacity-100 transition-opacity duration-200"></div>
@@ -292,44 +297,16 @@ const onLeave = (el: any) => {
               </span>
             </div>
 
-            <!-- 操作按钮 -->
-                      'text-primary': ['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status),
-                      'text-muted opacity-90': task.status === 'pending',
-                      'text-green-400': task.status === 'completed',
-                      'text-red-400': task.status === 'failed',
-                      'text-muted line-through': task.status === 'cancelled'
-                    }">
-                {{ task.status === 'pending'
-                  ? appStore.t('decompress.waiting')
-                  : task.status === 'preparing' ? appStore.t('tasks.status.preparing_short')
-                  : task.status === 'completed' ? appStore.t('tasks.status.completed_short')
-                  : task.status === 'failed' ? appStore.t('tasks.status.failed_short')
-                  : task.status === 'cancelled' ? appStore.t('tasks.status.cancelled_short')
-                  : (task.logs.length > 0 ? task.logs[task.logs.length - 1].message : appStore.t('tasks.status.processing_short')) }}
-              </span>
-              <div class="w-24 flex items-center gap-2 shrink-0">
-                <div class="h-0.5 flex-1 bg-input border border-subtle/20 rounded-full overflow-hidden">
-                  <div class="h-full rounded-full transition-all duration-1000"
-                       :class="task.status === 'failed' ? 'bg-red-400' : task.status === 'completed' ? 'bg-green-400' : 'bg-primary'"
-                       :style="{ width: `${task.progress}%` }"></div>
-                </div>
-                <span class="text-xs font-mono font-black w-6 text-right"
-                      :class="task.status === 'failed' ? 'text-red-400' : task.status === 'completed' ? 'text-green-400' : 'text-primary'">
-                  {{ task.progress }}%
-                </span>
-              </div>
-            </div>
-
             <!-- 密码内联输入 (自动破解失败时在行内显示) -->
             <div v-if="task.passwordRequired" class="flex items-center gap-1 shrink-0 px-2" @click.stop>
               <input
                 :type="showPasswordInput === task.id ? 'text' : 'password'"
                 :value="task.password || ''"
-                @input="(e: Event) => { task.password = (e.target as HTMLInputElement).value; task.passwordRequired = false }"
+                @input="(e: Event) => { task.password = (e.target as HTMLInputElement).value }"
                 :placeholder="appStore.t('tasks.password.placeholder')"
                 class="h-7 w-36 rounded-lg bg-yellow-500/5 border border-yellow-500/50 text-xs px-2 font-mono outline-none focus:border-yellow-400 text-yellow-400 placeholder:text-yellow-500/50"
               />
-              <button @click.stop="() => { const candidates = passwordStore.findCandidatePasswords(task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''); if (candidates.length > 0) { task.password = candidates[0]; task.passwordRequired = false } }"
+              <button @click.stop="() => { const candidates = passwordStore.findCandidatePasswords(task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''); if (candidates.length > 0) { task.password = candidates[0] } }"
                 class="h-7 w-7 rounded-lg border border-yellow-500/50 bg-yellow-500/10 flex items-center justify-center text-yellow-400 hover:bg-yellow-500/20 transition-colors shrink-0"
                 :title="appStore.t('tasks.password.fill_vault')">
                 <i class="pi pi-key text-xs"></i>
@@ -415,13 +392,13 @@ const onLeave = (el: any) => {
                           <input
                             :type="showPasswordInput === task.id ? 'text' : 'password'"
                             :value="task.password || ''"
-                            @input="(e: Event) => { task.password = (e.target as HTMLInputElement).value; task.passwordRequired = false; }"
+                            @input="(e: Event) => { task.password = (e.target as HTMLInputElement).value }"
                             @click.stop
                             :placeholder="appStore.t('tasks.password.placeholder')"
                             class="flex-1 h-7 rounded-lg bg-input/50 border border-yellow-500/50 text-sm px-3 font-mono outline-none focus:border-yellow-400 text-yellow-400 placeholder:text-yellow-500/50"
                           />
                           <button
-                            @click.stop="() => { const candidates = passwordStore.findCandidatePasswords(task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''); if (candidates.length > 0) { task.password = candidates[0]; task.passwordRequired = false; } }"
+                            @click.stop="() => { const candidates = passwordStore.findCandidatePasswords(task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''); if (candidates.length > 0) { task.password = candidates[0] } }"
                             class="h-7 w-7 rounded-lg border border-yellow-500/50 bg-yellow-500/10 flex items-center justify-center text-yellow-400 hover:bg-yellow-500/20 transition-colors shrink-0"
                             :title="appStore.t('tasks.password.fill_vault')">
                             <i class="pi pi-key text-xs"></i>
@@ -531,7 +508,6 @@ const onLeave = (el: any) => {
 }
 
 .task-detail-card {
-  animation: border-flow 20s linear infinite;
   background-image: linear-gradient(to bottom, rgba(var(--color-card-rgb), 0.92), rgba(var(--color-card-rgb), 0.98));
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   border: 1px dashed color-mix(in srgb, var(--dynamic-accent) 20%, transparent);
@@ -547,12 +523,6 @@ const onLeave = (el: any) => {
     inset 0 0 20px color-mix(in srgb, var(--dynamic-accent) 10%, transparent);
 }
 
-@keyframes border-flow {
-  from { border-color: color-mix(in srgb, var(--dynamic-accent) 20%, transparent); }
-  50% { border-color: color-mix(in srgb, var(--dynamic-accent) 40%, transparent); }
-  to { border-color: color-mix(in srgb, var(--dynamic-accent) 20%, transparent); }
-}
-
 /* 虚线流动增强层 */
 .task-detail-card::after {
   content: '';
@@ -562,18 +532,12 @@ const onLeave = (el: any) => {
   border-radius: 1.1rem;
   opacity: 0.1;
   pointer-events: none;
-  animation: dash-slide 40s linear infinite;
   transition: all 0.3s ease;
 }
 
 .task-detail-card:hover::after {
   opacity: 0.6;
   inset: -1px;
-  animation-duration: 10s; /* Hover 时动画加速 */
-}
-
-@keyframes dash-slide {
-  to { stroke-dashoffset: -1000; }
 }
 
 .aero-drawer-enter-active, .aero-drawer-leave-active {

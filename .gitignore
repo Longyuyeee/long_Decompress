@@ -40,5 +40,7 @@ prototype/config.yaml
 long-compress-assistant/src-tauri/target/
 long-compress-assistant/node_modules/
 long-compress-assistant/dist/
+long-compress-assistant/playwright-report/
+long-compress-assistant/test-results/
 long-compress-assistant/.password_book_data/
 long-compress-assistant/src-tauri/data/

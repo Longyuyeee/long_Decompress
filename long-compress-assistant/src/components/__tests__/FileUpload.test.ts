@@ -45,6 +45,14 @@ describe('EnhancedFileDropzone', () => {
     expect(wrapper.find('.pi-cloud-upload').exists()).toBe(true)
   })
 
+  it('gives file and folder dropzones distinct accessible names', () => {
+    const fileDropzone = mount(EnhancedFileDropzone)
+    const folderDropzone = mount(EnhancedFileDropzone, { props: { mode: 'folder' } })
+
+    expect(fileDropzone.attributes('aria-label')).toBe('compress.add_files: decompress.drop_hint')
+    expect(folderDropzone.attributes('aria-label')).toBe('compress.add_folders: compress.drop_folder_hint')
+  })
+
   it('emits selected files from the hidden file input', async () => {
     const wrapper = mount(EnhancedFileDropzone)
     const input = wrapper.find('input[type="file"]')

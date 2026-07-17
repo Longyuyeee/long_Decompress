@@ -145,11 +145,15 @@ impl PasswordGeneratorService {
             score += 10;
         }
 
-        let strength = match score {
-            0..=30 => PasswordStrength::Weak,
-            31..=60 => PasswordStrength::Medium,
-            61..=85 => PasswordStrength::Strong,
-            _ => PasswordStrength::VeryStrong,
+        let strength = if len < 12 {
+            PasswordStrength::Weak
+        } else {
+            match score {
+                0..=40 => PasswordStrength::Weak,
+                41..=60 => PasswordStrength::Medium,
+                61..=85 => PasswordStrength::Strong,
+                _ => PasswordStrength::VeryStrong,
+            }
         };
 
         (strength, score)

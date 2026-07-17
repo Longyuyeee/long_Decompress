@@ -114,8 +114,13 @@ const normalizeFormatId = (format: string): CompressionFormatId | null => {
   return FORMAT_BY_ID.has(format as CompressionFormatId) ? format as CompressionFormatId : null
 }
 
+export const effectiveFormatForPassword = (format: string, password?: string) => {
+  const normalized = normalizeFormatId(format) || format
+  return password && !NATIVE_PASSWORD_FORMATS.has(normalized) ? '7z' : normalized
+}
+
 export const extensionForFormat = (format: string, password?: string) => {
-  if (password && !NATIVE_PASSWORD_FORMATS.has(format)) return '7z'
+  if (effectiveFormatForPassword(format, password) === '7z') return '7z'
   if (TAR_FORMATS.has(format as CompressionFormatId)) return format
   if (format === 'zstd') return 'zst'
   return format

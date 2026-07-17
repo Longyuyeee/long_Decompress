@@ -52,14 +52,26 @@ export interface Task {
   // 密码相关
   password?: string
   passwordRequired?: boolean
+  compressionOptions?: {
+    format?: string
+    level: number
+    password?: string
+    split_size?: number | null
+    preserve_paths?: boolean
+    delete_after?: boolean
+  }
 }
 
 export const useTaskStore = defineStore('task', () => {
   const tasks = ref<Task[]>([])
   const activeTaskCount = computed(() => tasks.value.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status)).length)
+  let listenerInitialization: Promise<void> | null = null
 
   // 初始化监听器
-  const initListeners = async () => {
+  const initListeners = () => {
+    if (listenerInitialization) return listenerInitialization
+
+    listenerInitialization = (async () => {
     await listen<TaskLog>('task-log', (event) => {
       const { task_id, message, severity, timestamp } = event.payload
       const task = tasks.value.find(t => t.id === task_id)
@@ -138,6 +150,12 @@ export const useTaskStore = defineStore('task', () => {
         task.conflicts.push(conflict)
       }
     })
+    })().catch((error) => {
+      listenerInitialization = null
+      throw error
+    })
+
+    return listenerInitialization
   }
 
   const addTask = (task: Omit<Task, 'logs' | 'progress' | 'status' | 'conflicts'>) => {

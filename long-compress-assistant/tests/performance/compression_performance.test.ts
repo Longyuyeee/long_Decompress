@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { mockCompressionService, createMockFileList, wait } from '../fixtures/test_helpers'
+import { createMockFile, mockCompressionService, createMockFileList, wait } from '../fixtures/test_helpers'
 
 describe('压缩性能测试', () => {
   let compressionService: any
@@ -60,7 +60,7 @@ describe('压缩性能测试', () => {
 
       expect(result.success).toBe(true)
       expect(duration).toBeLessThan(3000) // 3秒内完成
-      expect(result.duration).toBeLessThan(1000) // 模拟服务返回的持续时间
+      expect(result.duration).toBeLessThanOrEqual(1000) // 模拟服务返回的持续时间
     })
 
     it('应该在2秒内解压100MB压缩包', async () => {

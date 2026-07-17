@@ -30,11 +30,22 @@ const isGlobalSameDir = ref(true) // 默认同目录，用户可通过按钮手�
 const globalExtractToSubfolder = ref(false)
 
 const unlisteners: Array<() => void> = []
+let isUnmounted = false
+
+const registerListener = async <T>(
+  eventName: string,
+  callback: (event: { payload: T }) => void
+) => {
+  try {
+    const unlisten = await listen<T>(eventName, callback)
+    if (isUnmounted) unlisten()
+    else unlisteners.push(unlisten)
+  } catch (error) {
+    console.warn(`Listener ${eventName} is unavailable:`, error)
+  }
+}
 
 onMounted(async () => {
-  await taskStore.initListeners()
-  // taskStore listeners are auto-managed by Pinia
-
   // 右键菜单 / CLI：添加文件到解压队列
   const handleContextFiles = (files: string[]) => {
     const fileObjs = files.filter(f => f && !f.startsWith('%')).map(f => ({ path: f }))
@@ -47,7 +58,7 @@ onMounted(async () => {
   }
 
   // 右键菜单：直接解压到此处
-  await listen<string[]>('context-extract-here', (event) => {
+  await registerListener<string[]>('context-extract-here', (event) => {
     const files = event.payload.filter(f => f && !f.startsWith('%'))
     const fileObjs = files.map(f => ({ path: f }))
     if (fileObjs.length > 0) {
@@ -64,7 +75,7 @@ onMounted(async () => {
   })
 
   // 右键菜单：解压到同名文件夹
-  await listen<string[]>('context-extract-to', (event) => {
+  await registerListener<string[]>('context-extract-to', (event) => {
     const files = event.payload.filter(f => f && !f.startsWith('%'))
     const fileObjs = files.map(f => ({ path: f }))
     if (fileObjs.length > 0) {
@@ -81,7 +92,7 @@ onMounted(async () => {
   })
 
   // 右键菜单：测试完整性
-  await listen<string[]>('context-test-archive', (event) => {
+  await registerListener<string[]>('context-test-archive', (event) => {
     const files = event.payload.filter(f => f && !f.startsWith('%'))
     files.forEach(async (path) => {
       try {
@@ -94,13 +105,13 @@ onMounted(async () => {
   })
 
   // 向后兼容旧版
-  const unlistenOpen = await listen<string>('context-open', (event) => {
-    handleContextFiles([event.payload])
+  await registerListener<string[] | string>('context-open', (event) => {
+    handleContextFiles(Array.isArray(event.payload) ? event.payload : [event.payload])
   })
-  unlisteners.push(unlistenOpen)
 })
 
 onUnmounted(() => {
+  isUnmounted = true
   unlisteners.forEach(fn => fn())
   unsubConflict()
 })
@@ -264,6 +275,7 @@ const startDecompression = async () => {
       createSubdirectory: task.extractToSubfolder ?? false,
       password: task.password || undefined, // 只使用用户手动输入的密码
       fileFilter: task.fileFilter || null
+      ,conflictPolicy: appStore.settings.conflictPolicy
     }
 
     try {
@@ -594,6 +606,12 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
   showConflictModal.value = false
   selectedConflictTaskId.value = null
 
+  if (action === 'skip') {
+    task.conflicts = []
+    taskStore.updateTaskStatus(taskId, 'cancelled')
+    return
+  }
+
   // 取消当前任务并用新策略重试
   try {
     await taskStore.cancelTask(taskId)
@@ -607,6 +625,7 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
     createSubdirectory: task.extractToSubfolder ?? false,
     password: task.password || undefined,
     fileFilter: task.fileFilter || null
+    ,conflictPolicy: action
   }
   try {
     await tauriCommands.decompressFile(task.sourceFiles[0], options, taskId)

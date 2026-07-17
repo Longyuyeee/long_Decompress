@@ -1,5 +1,7 @@
 use crate::services::system_service::{SystemService, SystemInfo};
 use tauri::{command, AppHandle};
+use serde::Serialize;
+use sysinfo::System;
 
 #[cfg(target_os = "windows")]
 use winreg::enums::*;
@@ -10,6 +12,33 @@ use winreg::RegKey;
 pub async fn get_system_info() -> Result<SystemInfo, String> {
     let mut service = SystemService::new();
     Ok(service.get_system_info())
+}
+
+#[derive(Debug, Serialize)]
+pub struct ResourceUsage {
+    pub cpu_usage: f32,
+    pub memory_usage: f32,
+}
+
+#[command]
+pub async fn get_resource_usage() -> Result<ResourceUsage, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let mut system = System::new_all();
+        system.refresh_cpu();
+        system.refresh_memory();
+        let total_memory = system.total_memory();
+        let memory_usage = if total_memory == 0 {
+            0.0
+        } else {
+            system.used_memory() as f32 / total_memory as f32 * 100.0
+        };
+        ResourceUsage {
+            cpu_usage: system.global_cpu_info().cpu_usage(),
+            memory_usage,
+        }
+    })
+    .await
+    .map_err(|error| error.to_string())
 }
 
 #[command]
