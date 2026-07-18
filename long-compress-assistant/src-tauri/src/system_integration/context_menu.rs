@@ -114,6 +114,27 @@ fn verbs() -> Vec<VerbDef> {
 pub fn register_context_menu(app_path: &str) -> Result<()> {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
 
+    // Windows 11 uses a dynamic IExplorerCommand menu. Registering the legacy
+    // CommandStore cascade at the same time makes Explorer merge two menu
+    // providers and can produce duplicated or malformed "Show more options"
+    // entries. Always clean both implementations first, then install exactly
+    // one implementation for the current Windows version.
+    unregister_legacy_menu(&hkcu)?;
+    unregister_native_menu(&hkcu)?;
+
+    if is_windows_11_or_newer() {
+        register_native_menu(&hkcu, app_path)?;
+    } else {
+        register_legacy_menu(&hkcu, app_path)?;
+    }
+
+    notify_shell_associations_changed();
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
+
     // 1. 注册所有操作动词到 CommandStore
     let store_base = r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell";
     for v in verbs() {
@@ -137,13 +158,13 @@ pub fn register_context_menu(app_path: &str) -> Result<()> {
         "LongDecompress.compressZip;LongDecompress.compress7z;LongDecompress.compressCustom";
     let archive_verbs = "LongDecompress.open;LongDecompress.quickExtract;LongDecompress.extractHere;LongDecompress.extractTo;LongDecompress.testArchive;LongDecompress.compressZip;LongDecompress.compress7z;LongDecompress.compressCustom";
     reg_shell_entry(
-        &hkcu,
+        hkcu,
         r"Software\Classes\*\shell\LongDecompress",
         compress_verbs,
     )?;
     for ext in ARCHIVE_EXTENSIONS {
         reg_shell_entry(
-            &hkcu,
+            hkcu,
             &format!(
                 r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress",
                 ext
@@ -154,24 +175,17 @@ pub fn register_context_menu(app_path: &str) -> Result<()> {
 
     // 3. 文件夹和文件夹空白处压缩菜单
     reg_shell_entry(
-        &hkcu,
+        hkcu,
         r"Software\Classes\directory\shell\LongDecompress",
         compress_verbs,
     )?;
     let background_verbs = "LongDecompress.compressZipHere;LongDecompress.compress7zHere;LongDecompress.compressCustomHere";
     reg_shell_entry(
-        &hkcu,
+        hkcu,
         r"Software\Classes\directory\Background\shell\LongDecompress",
         background_verbs,
     )?;
 
-    if is_windows_11_or_newer() {
-        register_native_menu(&hkcu, app_path)?;
-    } else {
-        unregister_native_menu(&hkcu)?;
-    }
-
-    notify_shell_associations_changed();
     Ok(())
 }
 
@@ -271,6 +285,31 @@ fn unregister_native_menu(hkcu: &RegKey) -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
+fn unregister_legacy_menu(hkcu: &RegKey) -> Result<()> {
+    let store_base = r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell";
+    for verb in verbs() {
+        delete_tree_if_present(hkcu, &format!("{}\\{}", store_base, verb.verb))?;
+    }
+    for entry in [
+        r"Software\Classes\*\shell\LongDecompress",
+        r"Software\Classes\directory\shell\LongDecompress",
+        r"Software\Classes\directory\Background\shell\LongDecompress",
+    ] {
+        delete_tree_if_present(hkcu, entry)?;
+    }
+    for extension in ARCHIVE_EXTENSIONS {
+        delete_tree_if_present(
+            hkcu,
+            &format!(
+                r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress",
+                extension
+            ),
+        )?;
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
 fn reg_shell_entry(hkcu: &RegKey, path: &str, sub_commands: &str) -> Result<()> {
     let (key, _) = hkcu.create_subkey(path)?;
     key.set_value("MUIVerb", &"胧解压")?;
@@ -282,10 +321,16 @@ fn reg_shell_entry(hkcu: &RegKey, path: &str, sub_commands: &str) -> Result<()> 
 #[cfg(target_os = "windows")]
 pub fn refresh_context_menu_if_present(app_path: &str) -> Result<bool> {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-    if hkcu
+    let legacy_present = hkcu
         .open_subkey(r"Software\Classes\*\shell\LongDecompress")
-        .is_err()
-    {
+        .is_ok();
+    let native_present = hkcu
+        .open_subkey(format!(
+            r"Software\Classes\*\shell\{}",
+            NATIVE_COMMAND_VERB
+        ))
+        .is_ok();
+    if !legacy_present && !native_present {
         return Ok(false);
     }
     register_context_menu(app_path)?;
@@ -296,27 +341,7 @@ pub fn refresh_context_menu_if_present(app_path: &str) -> Result<bool> {
 #[cfg(target_os = "windows")]
 pub fn unregister_context_menu() -> Result<()> {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-    let store_base = r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell";
-    for v in verbs() {
-        let p = format!("{}\\{}", store_base, v.verb);
-        delete_tree_if_present(&hkcu, &p)?;
-    }
-    for entry in [
-        r"Software\Classes\*\shell\LongDecompress",
-        r"Software\Classes\directory\shell\LongDecompress",
-        r"Software\Classes\directory\Background\shell\LongDecompress",
-    ] {
-        delete_tree_if_present(&hkcu, entry)?;
-    }
-    for ext in ARCHIVE_EXTENSIONS {
-        delete_tree_if_present(
-            &hkcu,
-            &format!(
-                r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress",
-                ext
-            ),
-        )?;
-    }
+    unregister_legacy_menu(&hkcu)?;
     unregister_native_menu(&hkcu)?;
     notify_shell_associations_changed();
     Ok(())
@@ -334,23 +359,13 @@ fn delete_tree_if_present(hkcu: &RegKey, path: &str) -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn is_context_menu_registered() -> bool {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-    let required_keys = [
-        r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.open",
-        r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.quickExtract",
-        r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.compressZip",
-        r"Software\Classes\*\shell\LongDecompress",
-        r"Software\Classes\directory\shell\LongDecompress",
-        r"Software\Classes\directory\Background\shell\LongDecompress",
-    ];
-    if !required_keys.iter().all(|path| hkcu.open_subkey(path).is_ok()) {
-        return false;
-    }
     let Ok(exe_path) = std::env::current_exe() else { return false };
     let exe_string = exe_path.to_string_lossy();
+
     if is_windows_11_or_newer() {
         let clsid_path = format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID);
         let expected_dll = shell_extension_path(&exe_string).to_string_lossy().into_owned();
-        let native_paths_are_current = hkcu
+        return hkcu
             .open_subkey(&clsid_path)
             .and_then(|key| key.get_value::<String, _>("ApplicationPath"))
             .map(|path| path.eq_ignore_ascii_case(&exe_string))
@@ -369,11 +384,19 @@ pub fn is_context_menu_registered() -> bool {
                 .map(|handler| handler == NATIVE_COMMAND_CLSID)
                 .unwrap_or(false)
             });
-        if !native_paths_are_current {
-            return false;
-        }
     }
 
+    let required_keys = [
+        r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.open",
+        r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.quickExtract",
+        r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.compressZip",
+        r"Software\Classes\*\shell\LongDecompress",
+        r"Software\Classes\directory\shell\LongDecompress",
+        r"Software\Classes\directory\Background\shell\LongDecompress",
+    ];
+    if !required_keys.iter().all(|path| hkcu.open_subkey(path).is_ok()) {
+        return false;
+    }
     let expected = format!(r#""{}""#, exe_path.to_string_lossy());
     ["LongDecompress.open", "LongDecompress.quickExtract", "LongDecompress.compressZip"]
         .iter()
@@ -415,6 +438,15 @@ mod tests {
 
     const INSTALLER_TEMPLATE: &str = include_str!("../../installer.nsi");
     const SHELL_EXTENSION_SOURCE: &str = include_str!("../../shell-extension/src/lib.rs");
+    const CONTEXT_MENU_SOURCE: &str = include_str!("context_menu.rs");
+
+    #[test]
+    fn windows_11_uses_one_menu_provider_at_a_time() {
+        assert!(CONTEXT_MENU_SOURCE.contains("unregister_legacy_menu(&hkcu)?;"));
+        assert!(CONTEXT_MENU_SOURCE.contains("unregister_native_menu(&hkcu)?;"));
+        assert!(CONTEXT_MENU_SOURCE.contains("register_native_menu(&hkcu, app_path)?;"));
+        assert!(CONTEXT_MENU_SOURCE.contains("register_legacy_menu(&hkcu, app_path)?;"));
+    }
 
     #[test]
     fn shell_commands_quote_paths_and_include_quick_extract() {

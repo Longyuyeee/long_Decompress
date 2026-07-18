@@ -25,7 +25,7 @@ const themeModes = [
   { value: 'auto', icon: 'pi pi-desktop', label: 'settings.theme.auto' }
 ]
 
-const contextMenuEnabled = ref(false)
+const contextMenuBusy = ref(false)
 const toggleBruteForce = () => appStore.updateSettings({ enableBruteForce: !appStore.settings.enableBruteForce })
 const toggleAutoStart = async () => {
   const newValue = !appStore.settings.autoStart
@@ -56,7 +56,9 @@ const validateAndUpdateUIScale = (value: number) => {
 
 const checkContextMenu = async () => {
   if (!contextMenuSupported.value) return
-  try { contextMenuEnabled.value = await tauriCommands.isContextMenuRegistered() } catch { /* ignore */ }
+  try {
+    await appStore.synchronizeContextMenu()
+  } catch { /* ignore */ }
 }
 
 const checkAutoStart = async () => {
@@ -71,16 +73,16 @@ onMounted(() => {
   checkContextMenu()
 })
 const toggleContextMenu = async () => {
+  if (contextMenuBusy.value) return
+  contextMenuBusy.value = true
+  const enable = !appStore.settings.contextMenuEnabled
   try {
-    if (contextMenuEnabled.value) {
-      await tauriCommands.unregisterContextMenu()
-      contextMenuEnabled.value = false
-    } else {
-      await tauriCommands.registerContextMenu()
-      contextMenuEnabled.value = true
-    }
+    await appStore.setContextMenuEnabled(enable)
+    appStore.setSuccess(appStore.t('common.success'))
   } catch (e: any) {
     appStore.setError(String(e))
+  } finally {
+    contextMenuBusy.value = false
   }
 }
 
@@ -305,13 +307,13 @@ const removeWordlist = (index: number) => {
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.savePasswords ? 'translate-x-5' : ''"></div>
                 </div>
               </button>
-              <button v-if="contextMenuSupported" type="button" role="switch" :aria-checked="contextMenuEnabled" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="toggleContextMenu">
+              <button v-if="contextMenuSupported" type="button" role="switch" :aria-checked="appStore.settings.contextMenuEnabled" :disabled="contextMenuBusy" class="w-full flex items-center justify-between group cursor-pointer text-left disabled:opacity-60" @click="toggleContextMenu">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.context_menu') }}</div>
                   <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.context_menu.desc') }}</div>
                 </div>
-                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="contextMenuEnabled ? 'bg-primary/40 border-primary' : 'bg-input'">
-                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="contextMenuEnabled ? 'translate-x-5' : ''"></div>
+                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.contextMenuEnabled ? 'bg-primary/40 border-primary' : 'bg-input'">
+                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.contextMenuEnabled ? 'translate-x-5' : ''"></div>
                 </div>
               </button>
             </div>

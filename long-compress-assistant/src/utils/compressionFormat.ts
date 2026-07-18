@@ -42,7 +42,7 @@ export interface CompressionFormatCapability {
 export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
   { format: 'zip', displayName: 'ZIP', extensions: ['zip', 'zipx'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: '7z', displayName: '7Z', extensions: ['7z'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
-  { format: 'rar', displayName: 'RAR', extensions: ['rar'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: true, fallbackEngine: 'winrar', knownLimitations: 'RAR creation requires WinRAR/RAR command line tools.' },
+  { format: 'rar', displayName: 'RAR', extensions: ['rar'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: true, fallbackEngine: 'winrar', knownLimitations: 'RAR creation requires WinRAR/RAR command line tools. Encrypted RAR creation is not supported.' },
   { format: 'tar', displayName: 'TAR', extensions: ['tar', 'ova'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.gz', displayName: 'TGZ', extensions: ['tar.gz', 'tgz', 'tpz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.bz2', displayName: 'TBZ', extensions: ['tar.bz2', 'tbz', 'tbz2'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
@@ -106,6 +106,8 @@ const TAR_FORMATS = new Set(
     .filter(format => format.format.startsWith('tar.'))
     .map(format => format.format)
 )
+// RAR stays in this set so a stale RAR+password configuration is rejected as
+// unsupported instead of silently changing the requested output format to 7Z.
 const NATIVE_PASSWORD_FORMATS = new Set(['zip', '7z', 'rar', 'tar.aes', 'tar.gz.aes', 'tar.bz2.aes', 'tar.xz.aes', 'tar.zst.aes', 'gz.aes', 'bz2.aes', 'xz.aes', 'zst.aes'])
 const FORMAT_BY_ID = new Map(FORMAT_CAPABILITIES.map(format => [format.format, format]))
 

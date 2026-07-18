@@ -51,6 +51,7 @@ export interface AppSettings {
   startMinimized: boolean
   autoCheckUpdates: boolean
   showWelcome: boolean
+  contextMenuEnabled: boolean
   closeToTray: boolean
 
   // 解压设置

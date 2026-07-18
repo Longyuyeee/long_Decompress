@@ -376,11 +376,11 @@ const handlePasswordGenerated = (password: string) => {
   <!-- 配置组管理弹窗 -->
   <Teleport to="body">
     <transition name="pop">
-      <div v-if="showProfileSelector" class="fixed inset-0 z-[320] flex items-center justify-center bg-black/55 p-4" @click.self="showProfileSelector = false">
+      <div v-if="showProfileSelector" class="fixed inset-0 z-[320] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="profile-dialog-title" @click.self="showProfileSelector = false">
         <div class="modal-no-glass w-full max-w-3xl max-h-[82vh] overflow-y-auto rounded-2xl p-6 text-content shadow-2xl">
           <div class="flex items-center justify-between mb-5">
             <div>
-              <h3 class="text-base font-black">{{ profileDialogMode === 'select' ? '选择压缩配置' : '管理压缩配置组' }}</h3>
+              <h3 id="profile-dialog-title" class="text-base font-black">{{ profileDialogMode === 'select' ? '选择压缩配置' : '管理压缩配置组' }}</h3>
               <p class="text-xs text-muted mt-1">{{ profileDialogMode === 'select' ? '选择后会立即应用格式、压缩级别和高级选项' : '创建、修改或删除可重复使用的配置组' }}</p>
             </div>
             <button type="button" class="w-8 h-8 rounded-lg bg-input text-muted hover:text-content" @click="showProfileSelector = false"><i class="pi pi-times"></i></button>

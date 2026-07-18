@@ -1,24 +1,20 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useCompressionProfileStore } from '@/stores/compressionProfile'
 import { useAppStore } from '@/stores/app'
 import type { CompressionProfile } from '@/types/profile'
+import { extractErrorMessage } from '@/utils'
 
-const profileStore = useCompressionProfileStore()
-const appStore = useAppStore()
-
-const props = defineProps<{
-  showManageButton?: boolean
-}>()
+defineProps<{ showManageButton?: boolean }>()
 
 const emit = defineEmits<{
   apply: [profile: CompressionProfile]
   manage: []
 }>()
 
-const hoveredProfileId = ref<string | null>(null)
-const selectedProfileId = ref<string | null>(null)
-
+const profileStore = useCompressionProfileStore()
+const appStore = useAppStore()
+const applyingId = ref<string | null>(null)
 const profiles = computed(() => profileStore.sortedProfiles)
 const loading = computed(() => profileStore.loading)
 
@@ -26,178 +22,90 @@ onMounted(async () => {
   try {
     await profileStore.loadAllProfiles()
   } catch (error) {
-    appStore.setError(appStore.t('common.error'))
+    appStore.setError(extractErrorMessage(error))
   }
 })
 
-const formatLastUsed = (timestamp: number | null): string => {
-  if (!timestamp) return appStore.t('profiles.last_used') + ': --'
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) return appStore.t('profiles.last_used') + ': ' + appStore.t('profiles.time_today')
-  if (diffDays === 1) return appStore.t('profiles.last_used') + ': ' + appStore.t('profiles.time_yesterday')
-  if (diffDays < 7) return appStore.t('profiles.last_used') + ': ' + appStore.t('profiles.time_days_ago').replace('{0}', diffDays.toString())
-  if (diffDays < 30) return appStore.t('profiles.last_used') + ': ' + appStore.t('profiles.time_weeks_ago').replace('{0}', Math.floor(diffDays / 7).toString())
-  return appStore.t('profiles.last_used') + ': ' + appStore.t('profiles.time_months_ago').replace('{0}', Math.floor(diffDays / 30).toString())
-}
-
-const formatSuccessRate = (stats: CompressionProfile['stats']): string => {
-  if (stats.useCount === 0) return '0%'
-  const rate = (stats.successCount / stats.useCount) * 100
-  return `${Math.round(rate)}%`
+const formatLastUsed = (timestamp: number | null) => {
+  if (!timestamp) return '从未使用'
+  const days = Math.floor((Date.now() - timestamp) / 86_400_000)
+  if (days <= 0) return '今天'
+  if (days === 1) return '昨天'
+  if (days < 30) return `${days} 天前`
+  return new Date(timestamp).toLocaleDateString()
 }
 
 const applyProfile = (profile: CompressionProfile) => {
-  selectedProfileId.value = profile.id
+  applyingId.value = profile.id
   emit('apply', profile)
-}
-
-const openManage = () => {
-  emit('manage')
 }
 </script>
 
 <template>
-  <div class="profile-selector">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-      <h3 class="text-lg font-semibold text-slate-100">
-        {{ appStore.t('profiles.title') }}
-      </h3>
-      <button
-        v-if="showManageButton"
-        @click="openManage"
-        class="px-4 py-2 text-sm bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-colors"
-      >
-        {{ appStore.t('profiles.manage') }}
+  <div class="profile-selector min-w-0">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-subtle bg-input/25 px-4 py-3">
+      <div>
+        <p class="text-sm font-black text-content">选择一个配置组</p>
+        <p class="mt-0.5 text-xs text-muted">点击卡片后立即应用，当前任务中的设置会被替换</p>
+      </div>
+      <button v-if="showManageButton" type="button" class="h-9 rounded-lg border border-subtle bg-input px-4 text-xs font-black text-muted hover:border-primary/30 hover:text-content" @click="emit('manage')">
+        <i class="pi pi-cog mr-2"></i>{{ appStore.t('profiles.manage') }}
       </button>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-400"></div>
+    <div v-if="loading" class="flex min-h-48 items-center justify-center text-primary">
+      <i class="pi pi-spin pi-spinner text-xl"></i>
     </div>
 
-    <!-- Empty State -->
-    <div v-else-if="profiles.length === 0" class="text-center py-12">
-      <p class="text-slate-400 mb-4">{{ appStore.t('profiles.empty') }}</p>
+    <div v-else-if="profiles.length === 0" class="flex min-h-52 flex-col items-center justify-center rounded-2xl border border-dashed border-subtle bg-input/15 px-6 text-center">
+      <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-2xl">📦</div>
+      <p class="font-black text-content">还没有可用配置组</p>
+      <p class="mt-1 text-xs text-muted">先创建一个配置组，再回来快速应用。</p>
+      <button type="button" class="mt-4 h-9 rounded-lg bg-primary px-4 text-xs font-black text-white" @click="emit('manage')">创建配置组</button>
+    </div>
+
+    <div v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <button
-        @click="openManage"
-        class="px-4 py-2 bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 rounded-lg transition-colors"
-      >
-        {{ appStore.t('profiles.add_new') }}
-      </button>
-    </div>
-
-    <!-- Profile Grid -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div
         v-for="profile in profiles"
         :key="profile.id"
-        @mouseenter="hoveredProfileId = profile.id"
-        @mouseleave="hoveredProfileId = null"
+        type="button"
+        class="group min-w-0 rounded-2xl border bg-card/60 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-lg hover:shadow-primary/5"
+        :class="applyingId === profile.id ? 'border-primary ring-2 ring-primary/15' : 'border-subtle'"
         @click="applyProfile(profile)"
-        class="profile-card group cursor-pointer"
-        :class="{ 'profile-card-selected': selectedProfileId === profile.id }"
       >
-        <!-- Card Content -->
-        <div class="relative p-4 bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-xl transition-all duration-200 hover:bg-slate-700/40 hover:border-slate-600/50 hover:shadow-lg hover:shadow-sky-500/10 hover:-translate-y-1">
-          <!-- Icon & Name -->
-          <div class="flex items-start gap-3 mb-3">
-            <div class="text-3xl">{{ profile.icon }}</div>
-            <div class="flex-1">
-              <h4 class="font-medium text-slate-100 group-hover:text-sky-400 transition-colors">
-                {{ profile.name }}
-              </h4>
-              <p class="text-xs text-slate-400 mt-1 line-clamp-2">
-                {{ profile.description }}
-              </p>
+        <div class="flex min-w-0 items-start gap-3">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-subtle bg-input/40 text-2xl">{{ profile.icon }}</div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-2">
+              <h4 class="truncate text-sm font-black text-content group-hover:text-primary">{{ profile.name }}</h4>
+              <i class="pi pi-arrow-right shrink-0 text-xs text-muted opacity-0 transition group-hover:translate-x-0.5 group-hover:text-primary group-hover:opacity-100"></i>
             </div>
-          </div>
-
-          <!-- Stats Badges -->
-          <div class="flex flex-wrap gap-2 mb-3">
-            <span class="px-2 py-1 text-xs bg-slate-700/50 rounded text-slate-300">
-              {{ profile.config.format.toUpperCase() }} · L{{ profile.config.level }}
-            </span>
-            <span
-              v-if="profile.stats.useCount > 0"
-              class="px-2 py-1 text-xs bg-sky-500/10 text-sky-400 rounded"
-            >
-              {{ appStore.t('profiles.use_count') }}: {{ profile.stats.useCount }}
-            </span>
-          </div>
-
-          <!-- Statistics -->
-          <div class="flex items-center justify-between text-xs text-slate-400">
-            <span>{{ appStore.t('profiles.success_rate') }}: {{ formatSuccessRate(profile.stats) }}</span>
-            <span>{{ formatLastUsed(profile.lastUsedAt) }}</span>
-          </div>
-
-          <!-- Hover Preview Tooltip -->
-          <div
-            v-if="hoveredProfileId === profile.id"
-            class="absolute left-0 right-0 top-full mt-2 p-3 bg-slate-800/95 backdrop-blur-md border border-slate-600/50 rounded-lg shadow-xl z-10 text-xs space-y-2"
-          >
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <span class="text-slate-400">{{ appStore.t('profiles.details_format') }}</span>
-                <span class="ml-2 text-slate-200">{{ profile.config.format }}</span>
-              </div>
-              <div>
-                <span class="text-slate-400">{{ appStore.t('profiles.details_level') }}</span>
-                <span class="ml-2 text-slate-200">{{ profile.config.level }}</span>
-              </div>
-              <div>
-                <span class="text-slate-400">{{ appStore.t('profiles.details_solid') }}</span>
-                <span class="ml-2 text-slate-200">{{ profile.config.createSolidArchive ? appStore.t('profiles.details_yes') : appStore.t('profiles.details_no') }}</span>
-              </div>
-              <div>
-                <span class="text-slate-400">{{ appStore.t('profiles.details_split') }}</span>
-                <span class="ml-2 text-slate-200">{{ profile.config.splitArchive ? appStore.t('profiles.details_yes') : appStore.t('profiles.details_no') }}</span>
-              </div>
-            </div>
-            <div v-if="profile.autoApply.enabled" class="pt-2 border-t border-slate-700">
-              <span class="text-sky-400">{{ appStore.t('profiles.auto_apply_label') }} {{ profile.autoApply.mode }}</span>
-            </div>
-          </div>
-
-          <!-- Selected Indicator -->
-          <div
-            v-if="selectedProfileId === profile.id"
-            class="absolute -top-2 -right-2 w-6 h-6 bg-sky-500 rounded-full flex items-center justify-center shadow-lg"
-          >
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+            <p class="mt-1 line-clamp-2 min-h-8 text-xs leading-4 text-muted">{{ profile.description || '未填写说明' }}</p>
           </div>
         </div>
-      </div>
+
+        <div class="mt-3 flex flex-wrap gap-1.5 text-xs font-bold">
+          <span class="rounded-md bg-primary/10 px-2 py-1 text-primary">{{ profile.config.format.toUpperCase() }}</span>
+          <span class="rounded-md bg-input px-2 py-1 text-muted">等级 {{ profile.config.level }}</span>
+          <span v-if="profile.config.password" class="rounded-md bg-amber-500/10 px-2 py-1 text-amber-400"><i class="pi pi-lock mr-1"></i>加密</span>
+          <span v-if="profile.config.splitArchive" class="rounded-md bg-violet-500/10 px-2 py-1 text-violet-400">分卷</span>
+          <span v-if="profile.config.createSolidArchive" class="rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-400">固实</span>
+        </div>
+
+        <div class="mt-3 flex items-center justify-between border-t border-subtle/60 pt-3 text-xs text-muted">
+          <span>使用 {{ profile.stats.useCount }} 次</span>
+          <span>{{ formatLastUsed(profile.lastUsedAt) }}</span>
+        </div>
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.profile-card-selected {
-  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
 .line-clamp-2 {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
 }
 </style>

@@ -1,0 +1,63 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { useAppStore } from '../app'
+
+const mocks = vi.hoisted(() => ({ invoke: vi.fn() }))
+
+vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
+
+describe('App Store Explorer context menu synchronization', () => {
+  let registered = false
+
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+    registered = false
+    mocks.invoke.mockReset()
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'is_context_menu_registered') return registered
+      if (command === 'register_context_menu') registered = true
+      if (command === 'unregister_context_menu') registered = false
+      if (command === 'load_app_settings') return '{}'
+      return undefined
+    })
+  })
+
+  it('uses the persisted preference as startup source of truth', async () => {
+    registered = true
+    localStorage.setItem('app-settings', JSON.stringify({ contextMenuEnabled: false }))
+
+    const store = useAppStore()
+    await store.synchronizeContextMenu()
+
+    expect(store.settings.contextMenuEnabled).toBe(false)
+    expect(mocks.invoke).not.toHaveBeenCalledWith('register_context_menu')
+    expect(mocks.invoke).toHaveBeenCalledWith('unregister_context_menu')
+  })
+
+  it('changes registration once and persists only after success', async () => {
+    const store = useAppStore()
+    await store.synchronizeContextMenu()
+    mocks.invoke.mockClear()
+
+    await store.setContextMenuEnabled(false)
+
+    expect(store.settings.contextMenuEnabled).toBe(false)
+    expect(mocks.invoke.mock.calls.filter(([command]) => command === 'unregister_context_menu')).toHaveLength(1)
+    expect(mocks.invoke.mock.calls.filter(([command]) => command === 'register_context_menu')).toHaveLength(0)
+  })
+
+  it('keeps the saved preference when registration changes fail', async () => {
+    const store = useAppStore()
+    await store.synchronizeContextMenu()
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'is_context_menu_registered') return true
+      if (command === 'unregister_context_menu') throw new Error('registry denied')
+      return undefined
+    })
+
+    await expect(store.setContextMenuEnabled(false)).rejects.toThrow('registry denied')
+
+    expect(store.settings.contextMenuEnabled).toBe(true)
+  })
+})

@@ -1,14 +1,14 @@
 <template>
   <Teleport to="body">
   <Transition name="fade">
-    <div v-if="visible" class="fixed inset-0 z-[300] overflow-y-auto" role="dialog" aria-modal="true" :aria-labelledby="title ? 'modal-title' : undefined">
+    <div v-if="visible" class="fixed inset-0 overflow-y-auto" :class="layerClass" role="dialog" aria-modal="true" :aria-labelledby="title ? modalTitleId : undefined">
       <div class="fixed inset-0 bg-black/60 transition-opacity" @click="handleBackdropClick"></div>
 
       <div class="flex min-h-full items-center justify-center p-4 text-center">
         <Transition name="pop">
           <div
             ref="modalContent"
-            class="relative w-full transform overflow-hidden rounded-[2rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
+            class="relative flex max-h-[calc(100vh-2rem)] w-full transform flex-col overflow-hidden rounded-[2rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
             :class="sizeClasses"
             tabindex="-1"
           >
@@ -21,13 +21,13 @@
               <i class="pi pi-times text-muted hover:text-content text-xs"></i>
             </button>
 
-            <div v-if="title || $slots.title" class="px-8 pt-8 pb-4">
+            <div v-if="title || $slots.title" class="shrink-0 px-8 pt-8 pb-4">
               <div class="flex items-center gap-4">
                 <div v-if="icon" class="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
                    <i :class="[icon, 'text-primary']"></i>
                 </div>
                 <div>
-                  <h3 id="modal-title" class="text-lg font-black text-content tracking-tight leading-none mb-1">
+                  <h3 :id="modalTitleId" class="text-lg font-black text-content tracking-tight leading-none mb-1">
                     <slot name="title">{{ title }}</slot>
                   </h3>
                   <p v-if="description" class="text-sm text-muted font-bold uppercase tracking-widest">
@@ -37,11 +37,11 @@
               </div>
             </div>
 
-            <div class="px-8 py-6 text-content">
+            <div class="min-h-0 overflow-y-auto px-8 py-6 text-content custom-scrollbar">
               <slot></slot>
             </div>
 
-            <div v-if="showFooter || $slots.footer" class="px-8 pb-8">
+            <div v-if="showFooter || $slots.footer" class="shrink-0 px-8 pb-8">
               <div class="flex items-center justify-end gap-3">
                 <slot name="footer">
                   <button v-if="cancelText" @click="handleCancel" class="px-6 py-2.5 rounded-xl bg-input border border-subtle text-muted text-xs font-bold hover:text-content transition-all">
@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, useId, watch } from 'vue'
 
 export interface Props {
   visible: boolean
@@ -78,6 +78,7 @@ export interface Props {
   loading?: boolean
   closeOnBackdrop?: boolean
   closeOnEscape?: boolean
+  layer?: 'default' | 'nested'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -87,11 +88,13 @@ const props = withDefaults(defineProps<Props>(), {
   showFooter: false, 
   closeOnBackdrop: true,
   closeOnEscape: true,
+  layer: 'default',
   loading: false
 })
 
 const emit = defineEmits(['update:visible', 'close', 'cancel', 'confirm'])
 const modalContent = ref<HTMLElement | null>(null)
+const modalTitleId = `modal-title-${useId()}`
 let previouslyFocused: HTMLElement | null = null
 
 // 打开模态时自动聚焦到内容区域
@@ -117,6 +120,8 @@ const sizeClasses = computed(() => {
   }
   return classes[props.size]
 })
+
+const layerClass = computed(() => props.layer === 'nested' ? 'z-[400]' : 'z-[300]')
 
 const handleClose = () => { emit('update:visible', false); emit('close'); }
 const handleCancel = () => { emit('cancel'); handleClose(); }

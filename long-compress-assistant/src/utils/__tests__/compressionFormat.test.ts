@@ -34,6 +34,7 @@ describe('compression format helpers', () => {
 
   it('reports supported password and single-file stream formats', () => {
     expect(isPasswordSupportedFormat('tar.zst')).toBe(true)
+    expect(isPasswordSupportedFormat('rar')).toBe(false)
     expect(isPasswordSupportedFormat('exe')).toBe(false)
     expect(isSingleFileStreamFormat('zstd')).toBe(true)
     expect(isSingleFileStreamFormat('tar.zst')).toBe(false)

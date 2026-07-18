@@ -44,6 +44,7 @@ export interface AppSettings {
   bruteForceMaxLen: number
   bruteForceWordlists: string[]
   autoStart: boolean
+  contextMenuEnabled: boolean
   closeToTray: boolean
   conflictPolicy: 'ask' | 'overwrite' | 'skip' | 'rename'
   autoDeleteSource: boolean
@@ -97,7 +98,7 @@ export const useAppStore = defineStore('app', () => {
     savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
     sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
     bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-    bruteForceWordlists: [], autoStart: false, closeToTray: true, conflictPolicy: 'ask', autoDeleteSource: false,
+    bruteForceWordlists: [], autoStart: false, contextMenuEnabled: true, closeToTray: true, conflictPolicy: 'ask', autoDeleteSource: false,
     uiScale: 100,
     accessibility: {
       fontSize: 'normal',
@@ -134,6 +135,26 @@ export const useAppStore = defineStore('app', () => {
       console.warn('Failed to update close-to-tray behavior:', e)
     }
   }, { immediate: true })
+
+  // Serialize Explorer menu updates so startup repair and user toggles cannot
+  // overwrite each other. The saved preference is the desired state; registry
+  // inspection is only used to repair drift and never changes that preference.
+  let contextMenuSyncQueue: Promise<void> = Promise.resolve()
+  const synchronizeContextMenu = (enabled = settings.value.contextMenuEnabled) => {
+    const operation = contextMenuSyncQueue.then(async () => {
+      const registered = await invoke<boolean>('is_context_menu_registered')
+      if (registered !== enabled) {
+        await invoke(enabled ? 'register_context_menu' : 'unregister_context_menu')
+      }
+    })
+    contextMenuSyncQueue = operation.catch(() => {})
+    return operation
+  }
+
+  const setContextMenuEnabled = async (enabled: boolean) => {
+    await synchronizeContextMenu(enabled)
+    updateSettings({ contextMenuEnabled: enabled })
+  }
 
   const activeTasks = computed(() => decompressTasks.value.filter(t => t.status === 'processing' || t.status === 'pending'))
   const completedTasks = computed(() => decompressTasks.value.filter(t => t.status === 'completed'))
@@ -189,7 +210,7 @@ export const useAppStore = defineStore('app', () => {
       savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-      bruteForceWordlists: [], autoStart: false, closeToTray: true, conflictPolicy: 'ask', autoDeleteSource: false,
+      bruteForceWordlists: [], autoStart: false, contextMenuEnabled: true, closeToTray: true, conflictPolicy: 'ask', autoDeleteSource: false,
       uiScale: 100,
       accessibility: {
         fontSize: 'normal',
@@ -200,6 +221,9 @@ export const useAppStore = defineStore('app', () => {
       }
     }
     saveSettingsToStorage()
+    void synchronizeContextMenu(settings.value.contextMenuEnabled).catch(e => {
+      console.warn('Failed to synchronize Explorer context menu after reset:', e)
+    })
   }
 
   const saveSettingsToStorage = () => {
@@ -232,6 +256,9 @@ export const useAppStore = defineStore('app', () => {
           const parsed = JSON.parse(json)
           settings.value = { ...settings.value, ...parsed }
           saveSettingsToStorage()
+          void synchronizeContextMenu(settings.value.contextMenuEnabled).catch(e => {
+            console.warn('Failed to synchronize Explorer context menu:', e)
+          })
         }
       }).catch(() => {})
     }
@@ -264,6 +291,9 @@ export const useAppStore = defineStore('app', () => {
   } catch { }
 
   loadSettingsFromStorage()
+  void synchronizeContextMenu(settings.value.contextMenuEnabled).catch(e => {
+    console.warn('Failed to synchronize Explorer context menu:', e)
+  })
 
   return {
     theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings,
@@ -284,6 +314,7 @@ export const useAppStore = defineStore('app', () => {
     clearError: () => { error.value = null; if (errorTimer) clearTimeout(errorTimer) },
     enqueueContextAction: (action: { action: string; files: string[] }) => pendingContextActions.value.push(action),
     takeContextActions: () => pendingContextActions.value.splice(0),
-    createDecompressTask, updateTaskProgress, markTaskAsError, clearCompletedTasks, updateSettings, resetSettings, saveSettingsToStorage
+    createDecompressTask, updateTaskProgress, markTaskAsError, clearCompletedTasks, updateSettings, resetSettings, saveSettingsToStorage,
+    synchronizeContextMenu, setContextMenuEnabled
   }
 })
