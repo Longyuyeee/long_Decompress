@@ -647,7 +647,8 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
   <div class="decompress-view p-6 h-full flex flex-col gap-4 transition-colors duration-700 relative overflow-hidden">
     <header class="flex justify-between items-center shrink-0">
       <div>
-        <h1 class="text-2xl font-extrabold text-content tracking-tight">{{ appStore.t('nav.decompress') }}</h1>
+        <h1 class="text-2xl md:text-3xl font-black text-content tracking-tight">{{ appStore.t('nav.decompress') }}</h1>
+        <p class="text-xs md:text-sm text-muted font-semibold mt-1">{{ appStore.t('decompress.subtitle') }}</p>
       </div>
       <div class="flex gap-3">
         <button

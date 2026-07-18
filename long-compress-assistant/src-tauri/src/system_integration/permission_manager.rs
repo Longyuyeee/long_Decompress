@@ -106,7 +106,7 @@ pub struct PermissionCheckResult {
 }
 
 /// 权限管理器
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct PermissionManager {
     config: Arc<RwLock<PermissionConfig>>,
     app_handle: Option<AppHandle>,
@@ -262,6 +262,7 @@ impl PermissionManager {
 }
 
 /// 全局权限管理器包装器
+#[derive(Default)]
 pub struct GlobalPermissionManager {
     manager: Arc<RwLock<Option<PermissionManager>>>,
 }

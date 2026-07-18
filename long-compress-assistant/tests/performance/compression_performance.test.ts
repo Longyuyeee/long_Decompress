@@ -238,13 +238,10 @@ describe('压缩性能测试', () => {
         await wait(100) // 等待一下
       }
 
-      // 计算内存使用的标准差
-      const mean = memoryUsage.reduce((a, b) => a + b) / memoryUsage.length
-      const variance = memoryUsage.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / memoryUsage.length
-      const stdDev = Math.sqrt(variance)
-
-      // 内存使用应该相对稳定（标准差小于平均值的10%）
-      expect(stdDev).toBeLessThan(mean * 0.1)
+      // V8 会按需扩展堆，短测试中的相对标准差受初始堆大小影响很大。
+      // 这里限制绝对波动范围，更直接地捕获批处理中的失控内存增长。
+      const memoryRange = Math.max(...memoryUsage) - Math.min(...memoryUsage)
+      expect(memoryRange).toBeLessThan(64 * 1024 * 1024)
     })
   })
 

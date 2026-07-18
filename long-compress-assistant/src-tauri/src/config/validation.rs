@@ -17,7 +17,17 @@ impl ConfigValidator {
     ) -> ValidationResult {
         let mut result = ValidationResult::valid();
 
-        // 1. 检查数据类型
+        // 1. 必填空值优先报告明确错误，避免被泛化成类型错误。
+        if value.is_null() && metadata.is_required {
+            result.add_error(ValidationError::new(
+                "required_field",
+                "此配置项为必填项",
+                &metadata.key,
+            ));
+            return result;
+        }
+
+        // 2. 检查数据类型
         if !metadata.data_type.validate_value(value) {
             result.add_error(ValidationError::new(
                 "invalid_data_type",
@@ -28,15 +38,6 @@ impl ConfigValidator {
                 &metadata.key,
             ));
             return result;
-        }
-
-        // 2. 检查必填项
-        if metadata.is_required && value.is_null() {
-            result.add_error(ValidationError::new(
-                "required_field",
-                "此配置项为必填项",
-                &metadata.key,
-            ));
         }
 
         // 3. 应用验证规则

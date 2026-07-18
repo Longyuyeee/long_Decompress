@@ -6,7 +6,7 @@
 use long_compress_assistant::services::compression_service::CompressionService;
 use long_compress_assistant::models::compression::CompressionOptions;
 use tempfile::tempdir;
-use std::io::{Write, Read};
+use std::io::{Read, Write};
 use std::fs::{self, File};
 use std::path::Path;
 
@@ -24,13 +24,6 @@ fn create_test_file(dir: &Path, name: &str) -> (String, Vec<u8>) {
     (path.to_string_lossy().to_string(), content)
 }
 
-fn read_file(path: &Path) -> Vec<u8> {
-    let mut f = File::open(path).unwrap();
-    let mut buf = Vec::new();
-    f.read_to_end(&mut buf).unwrap();
-    buf
-}
-
 // ──────────────── ZIP Round-Trip ────────────────
 
 #[tokio::test]
@@ -45,7 +38,7 @@ async fn test_zip_roundtrip_no_password() {
     // 1. Compress
     let service = CompressionService::new_with_defaults().await;
     let result = service.compress_zip_enhanced(
-        &[source.clone()],
+        std::slice::from_ref(&source),
         &archive_str,
         CompressionOptions::default(),
     ).await;
@@ -97,16 +90,16 @@ fn test_zip_validation_rejects_multi_gz() {
 #[tokio::test]
 async fn test_7z_roundtrip_no_password() {
     let temp = tempdir().unwrap();
-    let (source, original) = create_test_file(temp.path(), "data.bin");
+    let (source, _original) = create_test_file(temp.path(), "data.bin");
     let archive = temp.path().join("test.7z");
     let archive_str = archive.to_string_lossy().to_string();
-    let out_dir = temp.path().join("extracted");
+    let _out_dir = temp.path().join("extracted");
 
-    let service = CompressionService::new_with_defaults().await;
+    let _service = CompressionService::new_with_defaults().await;
     let options = CompressionOptions { format: Some("7z".to_string()), level: 5, ..Default::default() };
 
     // 1. Validate
-    let fmt = CompressionService::validate_compression_request(&[source.clone()], &archive_str, &options)
+    let fmt = CompressionService::validate_compression_request(std::slice::from_ref(&source), &archive_str, &options)
         .expect("7z validation should pass");
     assert_eq!(fmt, "7z");
 
@@ -157,7 +150,7 @@ async fn test_tar_roundtrip() {
     let temp = tempdir().unwrap();
     let (source, original) = create_test_file(temp.path(), "entry.txt");
     let archive = temp.path().join("test.tar");
-    let archive_str = archive.to_string_lossy().to_string();
+    let _archive_str = archive.to_string_lossy().to_string();
 
     // Compress TAR
     let file = File::create(&archive).unwrap();
@@ -357,7 +350,7 @@ fn test_all_formats_password_validation() {
     File::create(temp.path().join("f.txt")).unwrap();
     let src = vec![temp.path().join("f.txt").to_string_lossy().to_string()];
 
-    let native_password_formats = ["zip", "7z", "rar"];
+    let native_password_formats = ["zip", "7z"];
     let delegated_password_formats = [
         "tar", "tar.gz", "tar.bz2", "tar.xz", "tar.zst",
         "gz", "bz2", "xz", "zst", "lzma",
@@ -400,7 +393,7 @@ fn test_split_archive_validation_by_format() {
     let src = vec![temp.path().join("f.txt").to_string_lossy().to_string()];
 
     // Split archives only make sense for ZIP (our implementation)
-    let mut options = CompressionOptions {
+    let options = CompressionOptions {
         format: Some("zip".to_string()),
         split_size: Some(1024 * 1024),
         ..Default::default()
@@ -453,7 +446,7 @@ fn test_source_cleanup_after_compression() {
             out.to_string_lossy().to_string(),
             other.to_string_lossy().to_string(),
         ],
-        &out.to_string_lossy().to_string(),
+        out.to_string_lossy().as_ref(),
     ).expect("cleanup candidates");
 
     // source.txt should be removable; output.zip should NOT; keep.txt should be removable
@@ -471,7 +464,7 @@ fn test_source_cleanup_skips_when_output_missing() {
 
     let removable = CompressionService::removable_compressed_sources(
         &[src.to_string_lossy().to_string()],
-        &missing.to_string_lossy().to_string(),
+        missing.to_string_lossy().as_ref(),
     ).expect("cleanup candidates");
 
     assert!(removable.is_empty(), "no cleanup when output doesn't exist");

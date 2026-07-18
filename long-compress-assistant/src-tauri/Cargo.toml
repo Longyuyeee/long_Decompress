@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.0.2"
+version = "1.0.3"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -39,6 +39,7 @@ log = "0.4"
 env_logger = "0.11"
 regex = "1.10"
 zip = "0.6"
+zip_aes = { package = "zip", version = "8.6", default-features = false, features = ["aes-crypto", "deflate-flate2"] }
 sevenz-rust = { version = "0.5", features = ["aes256"] }
 unrar = "0.5"
 memmap2 = "0.9"

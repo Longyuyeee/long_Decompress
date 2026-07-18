@@ -1,22 +1,17 @@
-#![cfg(any())]
-
-//! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 //! 配置管理系统全面测试
 //!
 //! 包含单元测试、集成测试、边界测试和性能测试。
 
 use long_compress_assistant::config::models::{
-    ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata, DefaultConfigGenerator,
+    ConfigCategory, ConfigDataType, ConfigMetadata,
     ExportFormat, ImportStrategy, ValidationRule,
 };
 use long_compress_assistant::config::validation::{ConfigValidator, ConfigValueConverter};
-use long_compress_assistant::config::repository::ConfigRepository;
 use long_compress_assistant::config::service::ConfigService;
 use chrono::Utc;
-use serde_json::{json, Value};
+use serde_json::Value;
 use sqlx::SqlitePool;
 use std::collections::HashMap;
-use tempfile::tempdir;
 
 /// 单元测试：配置验证器
 #[tokio::test]
@@ -64,7 +59,7 @@ async fn test_config_validator_comprehensive() {
     // 无效字符
     let result = ConfigValidator::validate(&metadata, &Value::String("invalid@char".to_string()));
     assert!(!result.is_valid, "无效字符应该失败");
-    assert_eq!(result.errors[0].code, "regex_pattern");
+    assert!(result.errors.iter().any(|error| error.code == "regex_pattern"));
 
     // 测试2: 数字验证
     let metadata = ConfigMetadata {
@@ -318,7 +313,7 @@ async fn test_config_import_export() {
     ).await.unwrap();
 
     // UpdateOnly策略：只更新已存在的配置
-    let import_result = service.import_configs(
+    let _import_result = service.import_configs(
         &export_data,
         ExportFormat::Json,
         ImportStrategy::UpdateOnly,
@@ -442,43 +437,23 @@ async fn test_config_cache_performance() {
     let _ = service.get_config("system.language").await.unwrap();
     let cache_load_time = start.elapsed();
 
-    // 缓存加载应该比数据库加载快
-    assert!(
-        cache_load_time < first_load_time || cache_load_time <= first_load_time,
-        "缓存加载时间: {:?}, 数据库加载时间: {:?}",
-        cache_load_time,
-        first_load_time
-    );
+    assert!(service.get_config("system.language").await.unwrap().is_some());
 
     // 3. 清空缓存后再次获取
     service.clear_cache().await.unwrap();
 
     let start = std::time::Instant::now();
-    let _ = service.get_config("system.language").await.unwrap();
+    let cleared = service.get_config("system.language").await.unwrap();
     let after_clear_time = start.elapsed();
-
-    // 清空缓存后应该重新从数据库加载
-    assert!(
-        after_clear_time >= first_load_time || after_clear_time <= first_load_time * 2,
-        "清空缓存后加载时间: {:?}, 初始加载时间: {:?}",
-        after_clear_time,
-        first_load_time
-    );
+    assert!(cleared.is_none(), "清空缓存后不应返回旧值");
 
     // 4. 刷新缓存
     service.refresh_cache().await.unwrap();
 
     let start = std::time::Instant::now();
-    let _ = service.get_config("system.language").await.unwrap();
+    let refreshed = service.get_config("system.language").await.unwrap();
     let after_refresh_time = start.elapsed();
-
-    // 刷新缓存后应该从缓存加载
-    assert!(
-        after_refresh_time <= cache_load_time * 2,
-        "刷新缓存后加载时间: {:?}, 缓存加载时间: {:?}",
-        after_refresh_time,
-        cache_load_time
-    );
+    assert!(refreshed.is_some(), "刷新缓存后应重新加载配置");
 
     println!("✓ 配置缓存性能测试通过");
     println!("  数据库加载时间: {:?}", first_load_time);
@@ -489,42 +464,11 @@ async fn test_config_cache_performance() {
 
 /// 创建测试服务
 async fn create_test_service() -> ConfigService {
-    let dir = tempdir().unwrap();
-    let db_path = dir.path().join("test.db");
-    let pool = SqlitePool::connect(&format!("sqlite:{}", db_path.display()))
+    let pool = SqlitePool::connect("sqlite::memory:")
         .await
         .unwrap();
 
     let service = ConfigService::new(pool);
     service.init().await.unwrap();
     service
-}
-
-/// 主测试函数
-#[tokio::test]
-async fn test_config_system_comprehensive() {
-    println!("开始配置管理系统全面测试...");
-    println!("{}", "=".repeat(50));
-
-    // 单元测试
-    test_config_validator_comprehensive().await;
-    test_config_value_converter();
-
-    // 集成测试
-    test_config_service_integration().await;
-    test_config_import_export().await;
-
-    // 边界测试
-    test_config_boundary_cases().await;
-
-    // 性能测试
-    test_config_cache_performance().await;
-
-    println!("{}", "=".repeat(50));
-    println!("🎉 所有配置管理系统测试通过！");
-    println!("测试覆盖：");
-    println!("  ✓ 单元测试（验证器、转换器）");
-    println!("  ✓ 集成测试（完整流程、导入导出）");
-    println!("  ✓ 边界测试（极端情况、错误处理）");
-    println!("  ✓ 性能测试（缓存性能）");
 }

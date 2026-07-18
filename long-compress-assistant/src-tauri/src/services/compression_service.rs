@@ -141,9 +141,11 @@ impl ArchiveFormat {
             return ArchiveFormat::Cab;
         }
         // LZH/LHA (xx-lh or xx-lz)
-        if header.len() >= 4 && header[2] == b'-' &&
-           ((header[3] == b'l' && (header[4] == b'h' || header[4] == b'z')) ||
-            (header[3] == b'l' && header[4] == b'h')) {
+        if header.len() >= 5
+            && header[2] == b'-'
+            && header[3] == b'l'
+            && matches!(header[4], b'h' | b'z')
+        {
             return ArchiveFormat::Lzh;
         }
         // ARJ (60 EA)
@@ -273,7 +275,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
     CompressionFormatCapability { format: "tar.zst", extensions: &["tar.zst", "tzst"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "zip", extensions: &["zip", "zipx"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "7z", extensions: &["7z"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "rar", extensions: &["rar"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: true },
+    CompressionFormatCapability { format: "rar", extensions: &["rar"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: true },
     CompressionFormatCapability { format: "tar", extensions: &["tar", "ova"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "gz", extensions: &["gz", "gzip"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "bz2", extensions: &["bz2", "bzip2"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
@@ -452,7 +454,7 @@ impl CompressionService {
     fn has_native_password_container(format: &str) -> bool {
         matches!(
             Self::normalize_compression_format(format).as_str(),
-            "zip" | "7z" | "rar" |
+            "zip" | "7z" |
             "tar.aes" | "tar.gz.aes" | "tar.bz2.aes" | "tar.xz.aes" | "tar.zst.aes" |
             "gz.aes" | "bz2.aes" | "xz.aes" | "zst.aes"
         )
@@ -465,7 +467,7 @@ impl CompressionService {
 
         // 分卷压缩通过 SplitCompressionService 实现
 
-        // 全部压缩格式均支持密码：原生格式直接支持，其他通过 7z CLI 创建 .7z 加密容器
+        // 原生格式直接支持密码；其余格式仅允许显式创建 .7z 加密容器。
         if has_password
             && !capability.is_some_and(|capability| capability.supports_password_compress)
         {
@@ -1013,7 +1015,7 @@ impl CompressionService {
 
         // 若有密码且格式为 ZIP，rust zip crate 0.6 不支持 AES-256，改走 7z CLI
         let effective_format = if format == ArchiveFormat::Zip && final_password.is_some() {
-            service.emit_log(&window, &task_id, "加密ZIP使用7z CLI解压（支持AES-256）", TaskLogSeverity::Info);
+            service.emit_log(&window, &task_id, "加密ZIP使用原生AES-256引擎解压", TaskLogSeverity::Info);
             ArchiveFormat::Universal
         } else {
             format
@@ -1641,7 +1643,7 @@ impl CompressionService {
         // 密码通过事件系统从前端获取，此处返回 PasswordRequired 错误
         // 让上层处理密码获取逻辑
 
-        return Err(CompressionError::PasswordRequired.into());
+        Err(CompressionError::PasswordRequired.into())
     }
 
     fn unique_archive_name(used_archive_names: &mut HashSet<String>, raw_name: String) -> String {
@@ -1753,7 +1755,7 @@ impl CompressionService {
             return Ok(());
         }
 
-        // 密码 ZIP：使用 7z CLI（zip crate 0.6 不支持 AES 加密写入）
+        // 密码 ZIP：使用原生 AES-256 ZIP 写入器，避免在进程参数中暴露密码。
         if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
             return self.do_compress_zip_with_password(window, task_id, sources, output, &options);
         }
@@ -1815,40 +1817,33 @@ impl CompressionService {
         Ok(())
     }
 
-    /// 使用 7z CLI 创建密码保护的 ZIP（zip crate 0.6 不支持 AES 加密写入）
-    fn create_encrypted_zip_with_7z(
-        seven_zip: &str,
+    /// 在进程内创建 AES-256 密码保护 ZIP。
+    fn create_encrypted_zip(
         password: &str,
         level: u32,
         sources: &[String],
         output: &str,
+        preserve_paths: bool,
     ) -> Result<()> {
-        let mut cmd = std::process::Command::new(seven_zip);
-        cmd.arg("a")
-            .arg("-tzip")
-            .arg(format!("-mx{}", level.clamp(1, 9)))
-            .arg("-mem=AES256")
-            .arg(format!("-p{}", password))
-            .arg("-y")
-            .arg(output);
+        let file = File::create(output)?;
+        let mut writer = zip_aes::ZipWriter::new(file);
+        let options = zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Deflated)
+            .compression_level(Some(level.clamp(1, 9) as i64))
+            .with_aes_encryption(zip_aes::AesMode::Aes256, password);
+        let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
 
-        for source in sources {
-            cmd.arg(source);
+        for (path, archive_name, is_dir) in entries {
+            let archive_name = archive_name.replace('\\', "/");
+            if is_dir {
+                writer.add_directory(archive_name, options)?;
+            } else {
+                writer.start_file(archive_name, options)?;
+                let mut source = File::open(path)?;
+                std::io::copy(&mut source, &mut writer)?;
+            }
         }
-
-        let output_result = cmd.output().map_err(|err| {
-            CompressionError::CompressionFailed(format!("Failed to run 7z for encrypted ZIP: {}", err))
-        })?;
-
-        if !output_result.status.success() {
-            let stderr = String::from_utf8_lossy(&output_result.stderr);
-            let stdout = String::from_utf8_lossy(&output_result.stdout);
-            let message = if stderr.trim().is_empty() { stdout.trim() } else { stderr.trim() };
-            return Err(CompressionError::CompressionFailed(
-                format!("7z encrypted ZIP compression failed: {}", message)
-            ).into());
-        }
-
+        writer.finish()?;
         Ok(())
     }
 
@@ -1856,14 +1851,18 @@ impl CompressionService {
         let pwd = options.password.as_deref().unwrap_or("");
         let level = options.level.clamp(1, 9);
 
-        let seven_zip = find_7z_command()
-            .ok_or_else(|| CompressionError::CompressionFailed(missing_7z_message()))?;
         for _ in sources {
             self.check_cancellation()?;
         }
 
-        self.emit_log(window, task_id, "使用 7z 创建加密 ZIP...", TaskLogSeverity::Info);
-        Self::create_encrypted_zip_with_7z(&seven_zip, pwd, level, sources, output)?;
+        self.emit_log(window, task_id, "使用原生引擎创建 AES-256 加密 ZIP...", TaskLogSeverity::Info);
+        Self::create_encrypted_zip(
+            pwd,
+            level,
+            sources,
+            output,
+            options.preserve_paths.unwrap_or(true),
+        )?;
 
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
         self.emit_log(window, task_id, "加密 ZIP 创建完成", TaskLogSeverity::Success);
@@ -2024,7 +2023,7 @@ impl CompressionService {
 
         // 转换源文件路径
         let source_paths: Vec<PathBuf> = sources.iter()
-            .map(|s| PathBuf::from(s))
+            .map(PathBuf::from)
             .collect();
 
         // 确定基础目录
@@ -2391,9 +2390,8 @@ impl CompressionService {
             command.arg("-ep");
         }
 
-        if let Some(password) = options.password.as_deref().filter(|password| !password.is_empty()) {
-            // RAR 密码格式：-p<password> 用于加密内容，-hp<password> 还会加密文件名
-            command.arg(format!("-hp{}", password)); // 使用 -hp 同时加密内容和文件名
+        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
+            return Err(CompressionError::UnsupportedEncryption.into());
         }
 
         command.arg(output);
@@ -2475,6 +2473,26 @@ impl CompressionService {
         let sources = sources.to_vec();
         let output = output.to_string();
         tokio::task::spawn_blocking(move || {
+            if sources.is_empty() {
+                return Err(CompressionError::CompressionFailed(
+                    "At least one source file is required".to_string(),
+                )
+                .into());
+            }
+            for source in &sources {
+                let path = Path::new(source);
+                if !path.exists() {
+                    return Err(CompressionError::FileNotFound(source.clone()).into());
+                }
+                if !path.is_file() {
+                    return Err(CompressionError::CompressionFailed(format!(
+                        "Enhanced ZIP compression requires regular files: {}",
+                        source
+                    ))
+                    .into());
+                }
+            }
+
             let file = File::create(&output)?;
             let mut zip = zip::ZipWriter::new(file);
             let zip_options = FileOptions::default().compression_method(CompressionMethod::Deflated);
@@ -2506,25 +2524,39 @@ mod tests {
 
     #[tokio::test]
     async fn encrypted_zip_uses_the_requested_password() {
-        let Some(seven_zip) = find_7z_command() else {
-            eprintln!("Skipping encrypted ZIP test because 7za is unavailable");
-            return;
-        };
         let temp = tempfile::tempdir().expect("temp dir");
         let source = temp.path().join("secret.txt");
         let archive = temp.path().join("secret.zip");
         std::fs::write(&source, b"top secret").expect("source fixture");
 
-        CompressionService::create_encrypted_zip_with_7z(
-            &seven_zip,
+        CompressionService::create_encrypted_zip(
             "open-sesame",
             6,
             &[source.to_string_lossy().to_string()],
             &archive.to_string_lossy(),
+            true,
         ).expect("encrypted ZIP creation");
 
         let engine = UniversalCliEngine::new();
         assert!(engine.try_password(&archive, "open-sesame").await.expect("correct password"));
         assert!(!engine.try_password(&archive, "wrong-password").await.expect("wrong password"));
+
+        let output_dir = temp.path().join("extracted");
+        engine
+            .extract_with_progress(
+                &archive,
+                &output_dir,
+                Some("open-sesame"),
+                true,
+                Arc::new(|_| {}),
+                Arc::new(|_, _| {}),
+                Arc::new(AtomicBool::new(false)),
+            )
+            .await
+            .expect("encrypted ZIP extraction");
+        assert_eq!(
+            std::fs::read(output_dir.join("secret.txt")).expect("extracted file"),
+            b"top secret"
+        );
     }
 }

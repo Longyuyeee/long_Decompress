@@ -6,7 +6,6 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 use zip::{ZipArchive, ZipWriter};
 use zip::write::FileOptions;
-use std::sync::Arc;
 use rayon::prelude::*;
 
 // 压缩服务模拟（简化版）
@@ -16,13 +15,13 @@ mod compression_service {
     pub fn extract_zip_parallel(zip_path: &Path, output_dir: &Path) -> std::io::Result<()> {
         // 模拟并行解压逻辑
         let file = File::open(zip_path)?;
-        let archive = ZipArchive::new(file)?;
+        let mut archive = ZipArchive::new(file)?;
 
         let file_count = archive.len();
         let mut file_entries = Vec::with_capacity(file_count);
 
         for i in 0..file_count {
-            let mut entry = archive.by_index(i)?;
+            let entry = archive.by_index(i)?;
             let is_dir = entry.name().ends_with('/');
             let outpath = output_dir.join(entry.mangled_name());
 
@@ -110,33 +109,6 @@ mod compression_service {
 
         Ok(())
     }
-}
-
-// 创建测试ZIP文件
-fn create_test_zip(zip_path: &Path, file_count: usize, file_size_kb: usize) -> std::io::Result<()> {
-    let file = File::create(zip_path)?;
-    let mut zip = ZipWriter::new(file);
-
-    let options = FileOptions::default()
-        .compression_method(zip::CompressionMethod::Stored);
-
-    // 创建一些目录
-    for i in 0..3 {
-        let dir_name = format!("dir_{}/", i);
-        zip.add_directory(dir_name, options)?;
-    }
-
-    // 创建文件
-    for i in 0..file_count {
-        let file_name = format!("file_{}.txt", i);
-        let content = vec![b'A'; file_size_kb * 1024];
-
-        zip.start_file(file_name, options)?;
-        zip.write_all(&content)?;
-    }
-
-    zip.finish()?;
-    Ok(())
 }
 
 // 创建大测试ZIP文件（用于性能测试）
@@ -357,10 +329,8 @@ fn benchmark_buffer_sizes(c: &mut Criterion) {
                     // 使用模拟的缓冲区大小
                     let start = Instant::now();
                     compression_service::extract_zip_parallel(&zip_path, &output_dir).unwrap();
-                    let duration = start.elapsed();
-
                     // 记录结果（实际测试中会使用不同的缓冲区大小）
-                    duration
+                    start.elapsed()
                 });
             },
         );

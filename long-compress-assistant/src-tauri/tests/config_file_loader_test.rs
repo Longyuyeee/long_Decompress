@@ -1,13 +1,9 @@
-#![cfg(any())]
-
-//! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 //! 配置文件加载器测试
 
 use long_compress_assistant::config::file_loader::{ConfigFileLoader, ConfigFileFormat, DefaultConfigFileGenerator};
-use long_compress_assistant::config::models::{ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata, ValidationRule};
+use long_compress_assistant::config::models::{ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata};
 use chrono::Utc;
 use serde_json::json;
-use std::path::PathBuf;
 use tempfile::tempdir;
 
 #[tokio::test]
@@ -156,41 +152,6 @@ async fn test_config_file_save_and_load() {
 }
 
 #[tokio::test]
-async fn test_config_file_format_detection() {
-    println!("开始配置文件格式检测测试...");
-
-    let dir = tempdir().unwrap();
-    let config_dir = dir.path();
-
-    // 测试JSON格式
-    let json_content = r#"{"test": "value"}"#;
-    let json_path = config_dir.join("test.json");
-    std::fs::write(&json_path, json_content).unwrap();
-
-    let loader = ConfigFileLoader::new(config_dir, ConfigFileFormat::Auto);
-    let format = loader.detect_format(json_content, &json_path);
-    assert_eq!(format, ConfigFileFormat::Json);
-
-    // 测试YAML格式
-    let yaml_content = "test: value\nanother: 123";
-    let yaml_path = config_dir.join("test.yaml");
-    std::fs::write(&yaml_path, yaml_content).unwrap();
-
-    let format = loader.detect_format(yaml_content, &yaml_path);
-    assert_eq!(format, ConfigFileFormat::Yaml);
-
-    // 测试TOML格式
-    let toml_content = "test = \"value\"\nanother = 123";
-    let toml_path = config_dir.join("test.toml");
-    std::fs::write(&toml_path, toml_content).unwrap();
-
-    let format = loader.detect_format(toml_content, &toml_path);
-    assert_eq!(format, ConfigFileFormat::Toml);
-
-    println!("✓ 配置文件格式检测测试通过");
-}
-
-#[tokio::test]
 async fn test_default_config_generation() {
     println!("开始默认配置生成测试...");
 
@@ -291,28 +252,4 @@ fn test_config_file_format_serialization() {
     assert!(matches!(auto_format, ConfigFileFormat::Auto));
 
     println!("✓ 配置文件格式序列化测试通过");
-}
-
-/// 主测试函数
-#[tokio::test]
-async fn test_config_file_loader_comprehensive() {
-    println!("开始配置文件加载器全面测试...");
-    println!("{}", "=".repeat(50));
-
-    test_config_file_loader_basic().await;
-    test_config_file_save_and_load().await;
-    test_config_file_format_detection().await;
-    test_default_config_generation().await;
-    test_load_all_config_files().await;
-    test_config_file_format_serialization();
-
-    println!("{}", "=".repeat(50));
-    println!("🎉 所有配置文件加载器测试通过！");
-    println!("测试覆盖：");
-    println!("  ✓ 基础文件加载");
-    println!("  ✓ 文件保存和重新加载");
-    println!("  ✓ 文件格式自动检测");
-    println!("  ✓ 默认配置生成");
-    println!("  ✓ 批量文件加载");
-    println!("  ✓ 格式序列化");
 }

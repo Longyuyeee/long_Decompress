@@ -177,9 +177,12 @@ impl TimeoutExecutor {
     }
 }
 
+type ProgressTask<T> =
+    Box<dyn FnMut(ProgressReporter) -> Pin<Box<dyn Future<Output = Result<T, AppError>> + Send>> + Send>;
+
 /// 带进度的异步执行
 pub struct ProgressExecutor<T> {
-    task: Box<dyn FnMut(ProgressReporter) -> Pin<Box<dyn Future<Output = Result<T, AppError>> + Send>> + Send>,
+    task: ProgressTask<T>,
 }
 
 impl<T> ProgressExecutor<T> {
@@ -246,6 +249,12 @@ impl ProgressReporter {
     pub async fn cancel(&self) {
         let mut progress = self.progress.lock().await;
         progress.cancelled = true;
+    }
+}
+
+impl Default for ProgressReporter {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -398,13 +407,16 @@ impl RateLimiter {
     }
 }
 
+type BatchFuture = Pin<Box<dyn Future<Output = Result<(), AppError>> + Send>>;
+type BatchHandler<T> = Arc<dyn Fn(Vec<T>) -> BatchFuture + Send + Sync>;
+
 /// 异步批处理器
 #[allow(dead_code)]
 pub struct BatchProcessor<T> {
     batch_size: usize,
     batch_timeout: Duration,
     buffer: Arc<Mutex<Vec<T>>>,
-    processor: Arc<dyn Fn(Vec<T>) -> Pin<Box<dyn Future<Output = Result<(), AppError>> + Send>> + Send + Sync>,
+    processor: BatchHandler<T>,
     flush_task: Option<tokio::task::JoinHandle<()>>,
 }
 
@@ -423,7 +435,7 @@ where
         Fut: Future<Output = Result<(), AppError>> + Send + 'static,
     {
         let buffer = Arc::new(Mutex::new(Vec::new()));
-        let processor: Arc<dyn Fn(Vec<T>) -> Pin<Box<dyn Future<Output = Result<(), AppError>> + Send>> + Send + Sync> = 
+        let processor: BatchHandler<T> =
             Arc::new(move |items| Box::pin(processor(items)));
 
         // 启动定时刷新任务

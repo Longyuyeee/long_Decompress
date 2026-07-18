@@ -38,21 +38,124 @@ impl UniversalCliEngine {
             .map_err(|e| anyhow::anyhow!("7z command failed: {}", e))
     }
 
-    /// 共享辅助：运行 7z 命令，通过环境变量传递密码以防止进程列表暴露
+    /// 共享辅助：仅运行不含密码的 7z 命令。
     async fn run_7z_command_with_password(args: &[String], password: Option<&str>) -> Result<std::process::Output> {
+        if password.is_some() {
+            return Err(anyhow::anyhow!(
+                "Password-protected CLI operations are disabled because 7z has no reliable non-argv password channel"
+            ));
+        }
         let cmd = Self::get_7z_command()
             .ok_or_else(|| anyhow::anyhow!(missing_7z_message()))?;
-        let mut command = Command::new(&cmd);
-        command.args(args);
-
-        // 通过环境变量传递密码，避免在进程列表中暴露
-        if let Some(pwd) = password {
-            command.env("_7ZIP_PASSWORD", pwd);
-        }
-
-        command.output()
+        Command::new(&cmd)
+            .args(args)
+            .output()
             .await
             .map_err(|e| anyhow::anyhow!("7z command failed: {}", e))
+    }
+
+    fn try_zip_password(file_path: &Path, password: &str) -> Result<bool> {
+        let file = std::fs::File::open(file_path)?;
+        let mut archive = zip_aes::ZipArchive::new(file)?;
+
+        for index in 0..archive.len() {
+            let encrypted = archive.by_index_raw(index)?.encrypted();
+            if !encrypted {
+                continue;
+            }
+            match archive.by_index_decrypt(index, password.as_bytes()) {
+                Ok(mut entry) => {
+                    if entry.is_dir() {
+                        continue;
+                    }
+                    let mut sink = std::io::sink();
+                    return Ok(std::io::copy(&mut entry, &mut sink).is_ok());
+                }
+                Err(zip_aes::result::ZipError::InvalidPassword) => return Ok(false),
+                Err(error) => return Err(error.into()),
+            }
+        }
+
+        Ok(false)
+    }
+
+    fn available_output_path(target: &Path, overwrite_existing: bool) -> Result<std::path::PathBuf> {
+        if overwrite_existing || !target.exists() {
+            return Ok(target.to_path_buf());
+        }
+
+        let parent = target.parent().unwrap_or_else(|| Path::new(""));
+        let stem = target.file_stem().and_then(|name| name.to_str()).unwrap_or("file");
+        let extension = target.extension().and_then(|name| name.to_str());
+        for index in 1..10_000 {
+            let name = match extension {
+                Some(extension) if !extension.is_empty() => {
+                    format!("{} ({}).{}", stem, index, extension)
+                }
+                _ => format!("{} ({})", stem, index),
+            };
+            let candidate = parent.join(name);
+            if !candidate.exists() {
+                return Ok(candidate);
+            }
+        }
+
+        Err(anyhow::anyhow!("Unable to find an available output name for {}", target.display()))
+    }
+
+    fn extract_zip_with_password(
+        file_path: &Path,
+        output_dir: &Path,
+        password: &str,
+        overwrite_existing: bool,
+        on_progress: &Arc<dyn Fn(f32) + Send + Sync>,
+        on_log: &Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
+        is_cancelled: &Arc<AtomicBool>,
+    ) -> Result<()> {
+        let file = std::fs::File::open(file_path)?;
+        let mut archive = zip_aes::ZipArchive::new(file)?;
+        let total = archive.len().max(1);
+        std::fs::create_dir_all(output_dir)?;
+
+        for index in 0..archive.len() {
+            if is_cancelled.load(Ordering::SeqCst) {
+                return Err(CompressionError::Cancelled.into());
+            }
+
+            let mut entry = match archive.by_index_decrypt(index, password.as_bytes()) {
+                Ok(entry) => entry,
+                Err(zip_aes::result::ZipError::InvalidPassword) => {
+                    return Err(CompressionError::InvalidPassword.into());
+                }
+                Err(error) => return Err(error.into()),
+            };
+            let Some(target) = crate::utils::file_utils::verify_extract_path(
+                Path::new(entry.name()),
+                output_dir,
+                true,
+            ) else {
+                on_log(
+                    format!("Skipped unsafe ZIP entry: {}", entry.name()),
+                    TaskLogSeverity::Warning,
+                );
+                continue;
+            };
+
+            if entry.is_dir() {
+                std::fs::create_dir_all(&target)?;
+            } else {
+                let target = Self::available_output_path(&target, overwrite_existing)?;
+                if let Some(parent) = target.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                let mut output = std::fs::File::create(&target)?;
+                std::io::copy(&mut entry, &mut output)?;
+                on_log(target.to_string_lossy().to_string(), TaskLogSeverity::Info);
+            }
+            on_progress((index + 1) as f32 / total as f32);
+        }
+
+        Ok(())
     }
 
     /// 检查系统中是否安装了 7z 或 7za
@@ -170,41 +273,17 @@ impl ArchiveEngine for UniversalCliEngine {
     }
 
     async fn try_password(&self, file_path: &Path, password: &str) -> Result<bool> {
-        let cmd = match Self::get_7z_command() {
-            Some(c) => c,
-            None => return Ok(false),
-        };
-
-        // 7z t -p<password> <file> 测试归档
-        let output = Command::new(cmd)
-            .arg("t")
-            .arg(format!("-p{}", password))
-            .arg("-y") // 假定所有提示为yes
-            .arg(file_path)
-            .output()
-            .await?;
-
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let combined = format!("{}\n{}", stdout, stderr);
-
-        // 如果包含 "Everything is Ok"，则密码正确
-        if output.status.success() || combined.contains("Everything is Ok") {
-            return Ok(true);
-        }
-
-        // 如果报错包含密码相关，则说明密码错误
-        if combined.contains("Wrong password")
-            || combined.contains("Data Error in encrypted file")
-            || combined.contains("Can not open encrypted archive")
-            || combined.contains("Cannot open encrypted archive")
-            || combined.contains("Headers Error")
+        if file_path
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("zip"))
         {
-            return Ok(false);
+            return Self::try_zip_password(file_path, password);
         }
 
-        // 无法识别的错误，或者不是密码问题（例如格式根本不支持）
-        Ok(false)
+        Err(anyhow::anyhow!(
+            "Password validation for this format requires a native archive engine"
+        ))
     }
 
     async fn requires_password(&self, file_path: &Path) -> Result<bool> {
@@ -248,6 +327,24 @@ impl ArchiveEngine for UniversalCliEngine {
         on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
         is_cancelled: Arc<AtomicBool>,
     ) -> Result<()> {
+        if let Some(password) = password {
+            if file_path
+                .extension()
+                .and_then(|extension| extension.to_str())
+                .is_some_and(|extension| extension.eq_ignore_ascii_case("zip"))
+            {
+                return Self::extract_zip_with_password(
+                    file_path,
+                    output_dir,
+                    password,
+                    overwrite_existing,
+                    &on_progress,
+                    &on_log,
+                    &is_cancelled,
+                );
+            }
+            return Err(CompressionError::UnsupportedEncryption.into());
+        }
         let cmd = Self::get_7z_command().ok_or_else(|| {
             anyhow::anyhow!(missing_7z_message())
         })?;
@@ -260,10 +357,6 @@ impl ArchiveEngine for UniversalCliEngine {
         // 7z 密码传递：使用 -p<password> 格式
         // 注意：密码会出现在命令行参数中，但这是 7z CLI 唯一支持的方式
         // 为了减少暴露时间，我们使用非交互模式，进程会快速结束
-        if let Some(pwd) = password {
-            command.arg(format!("-p{}", pwd));
-        }
-
         command.arg(format!("-o{}", output_dir.to_string_lossy()));
         command.arg(file_path);
 

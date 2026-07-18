@@ -42,6 +42,7 @@ pub enum ChangeSource {
 }
 
 /// 配置变更监听器管理器
+#[derive(Default)]
 pub struct ConfigChangeListenerManager {
     listeners: Arc<RwLock<Vec<Box<dyn ConfigChangeListener + Send + Sync>>>>,
 }
@@ -272,6 +273,7 @@ impl AuditLogger for FileAuditLogger {
 }
 
 /// 内存配置缓存
+#[derive(Default)]
 pub struct MemoryConfigCache {
     cache: std::collections::HashMap<String, Value>,
 }

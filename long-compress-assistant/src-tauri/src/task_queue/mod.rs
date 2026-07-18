@@ -1,4 +1,5 @@
 pub mod models;
+#[allow(clippy::module_inception)]
 pub mod task_queue;
 pub mod task_scheduler;
 pub mod task_executor;

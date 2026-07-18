@@ -173,7 +173,9 @@ impl PasswordStrengthService {
         for (i, row) in matrix.iter_mut().enumerate().take(n + 1) {
             row[0] = i;
         }
-        for j in 0..=m { matrix[0][j] = j; }
+        for (j, cell) in matrix[0].iter_mut().enumerate().take(m + 1) {
+            *cell = j;
+        }
         for i in 1..=n {
             for j in 1..=m {
                 let cost = if v1[i-1] == v2[j-1] { 0 } else { 1 };

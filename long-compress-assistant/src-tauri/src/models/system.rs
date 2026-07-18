@@ -319,7 +319,7 @@ impl ProcessInfo {
         let base = 1024_f64;
         let bytes_f64 = self.memory_usage as f64;
         let exponent = (bytes_f64.log10() / base.log10()).floor() as i32;
-        let unit_index = exponent.min(5).max(0) as usize;
+        let unit_index = exponent.clamp(0, 5) as usize;
 
         let formatted = bytes_f64 / base.powi(exponent);
 

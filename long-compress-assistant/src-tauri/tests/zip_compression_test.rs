@@ -56,7 +56,7 @@ fn test_compression_options_defaults() {
     assert_eq!(options.password, None);
     assert_eq!(options.split_size, None);
     assert_eq!(options.format, None);
-    assert_eq!(options.delete_after, false);
+    assert!(!options.delete_after);
 }
 
 /// 验证 removeable_compressed_sources 逻辑
@@ -70,7 +70,7 @@ fn test_removable_source_detection() {
 
     let result = CompressionService::removable_compressed_sources(
         &[src.to_string_lossy().to_string()],
-        &out.to_string_lossy().to_string(),
+        out.to_string_lossy().as_ref(),
     ).unwrap();
 
     assert!(!result.is_empty(), "源文件应该在清理列表中");
@@ -87,7 +87,7 @@ fn test_removable_waits_for_output() {
 
     let result = CompressionService::removable_compressed_sources(
         &[src.to_string_lossy().to_string()],
-        &out.to_string_lossy().to_string(),
+        out.to_string_lossy().as_ref(),
     ).unwrap();
 
     assert!(result.is_empty(), "输出文件不存在时不应返回可删除项");

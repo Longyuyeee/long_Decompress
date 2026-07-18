@@ -248,7 +248,7 @@ mod tests {
 
         // 压缩加密
         TarAesEngine::compress_tar_aes(
-            &[test_file.clone()],
+            std::slice::from_ref(&test_file),
             &output,
             "test_password",
             Some(temp_dir.path()),

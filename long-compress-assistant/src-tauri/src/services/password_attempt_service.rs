@@ -244,9 +244,8 @@ impl PasswordAttemptService {
                     current_attempt, index, password.len());
 
                 // 创建临时服务实例进行密码测试
-                let compression_service = match crate::services::compression_service::CompressionService::new_with_defaults().await {
-                    srv => srv,
-                };
+                let compression_service =
+                    crate::services::compression_service::CompressionService::new_with_defaults().await;
 
                 match compression_service.test_archive_password(&zip_path, &password).await {
                     Ok(true) => {

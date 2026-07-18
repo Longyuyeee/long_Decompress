@@ -113,6 +113,9 @@ export const usePasswordStore = defineStore('password', () => {
   const errorMessage = ref('')
   const successMessage = ref('')
   const selectedPasswords = ref<string[]>([])
+  const favoritesOnly = ref(false)
+  const sortField = ref<'use_count' | 'name' | 'updated_at' | 'last_used'>('use_count')
+  const sortDescending = ref(true)
 
   // 计算属性
   const isAllSelected = computed(() => {
@@ -120,7 +123,7 @@ export const usePasswordStore = defineStore('password', () => {
   })
 
   const filteredEntries = computed(() => {
-    let result = entries.value
+    let result = [...entries.value]
 
     if (currentCategory.value !== 'All') {
       result = result.filter(e => e.category === currentCategory.value)
@@ -136,14 +139,23 @@ export const usePasswordStore = defineStore('password', () => {
       )
     }
 
-    // 按调用次数从高到低排序，其次按最后使用时间
+    if (favoritesOnly.value) {
+      result = result.filter(e => e.favorite)
+    }
+
     return result.sort((a, b) => {
-      if ((b.use_count || 0) !== (a.use_count || 0)) {
-        return (b.use_count || 0) - (a.use_count || 0)
+      let comparison = 0
+      if (sortField.value === 'name') {
+        comparison = a.name.localeCompare(b.name)
+      } else if (sortField.value === 'updated_at') {
+        comparison = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
+      } else if (sortField.value === 'last_used') {
+        comparison = (a.last_used ? new Date(a.last_used).getTime() : 0) -
+          (b.last_used ? new Date(b.last_used).getTime() : 0)
+      } else {
+        comparison = (a.use_count || 0) - (b.use_count || 0)
       }
-      const timeA = a.last_used ? new Date(a.last_used).getTime() : 0
-      const timeB = b.last_used ? new Date(b.last_used).getTime() : 0
-      return timeB - timeA
+      return sortDescending.value ? -comparison : comparison
     })
   })
 
@@ -408,15 +420,48 @@ export const usePasswordStore = defineStore('password', () => {
   })
 
   // 搜索和过滤桩
-  const setSearchFilters = (filters: any) => { /* 实现逻辑 */ }
-  const clearSearchFilters = () => { /* 实现逻辑 */ }
-  const setSort = (field: string, desc: boolean) => { /* 实现逻辑 */ }
+  const setSearchFilters = (filters: { query?: string, category?: PasswordCategory | 'All', favoritesOnly?: boolean }) => {
+    if (filters.query !== undefined) searchQuery.value = filters.query
+    if (filters.category !== undefined) currentCategory.value = filters.category
+    if (filters.favoritesOnly !== undefined) favoritesOnly.value = filters.favoritesOnly
+    currentPage.value = 1
+  }
+  const clearSearchFilters = () => {
+    searchQuery.value = ''
+    currentCategory.value = 'All'
+    favoritesOnly.value = false
+    currentPage.value = 1
+  }
+  const setSort = (field: string, desc: boolean) => {
+    if (['use_count', 'name', 'updated_at', 'last_used'].includes(field)) {
+      sortField.value = field as typeof sortField.value
+      sortDescending.value = desc
+    }
+  }
 
   // 操作桩
-  const toggleFavorite = async (id: string) => { /* 实现逻辑 */ }
-  const archivePassword = async (id: string) => { /* 实现逻辑 */ }
-  const deleteSelectedPasswords = async () => { /* 实现逻辑 */ }
-  const usePassword = async (id: string) => { return '' }
+  const toggleFavorite = async (id: string) => {
+    const entry = entries.value.find(e => e.id === id)
+    if (!entry) throw new Error(`Password entry not found: ${id}`)
+    return updateEntry(id, { favorite: !entry.favorite })
+  }
+  const archivePassword = async (id: string) => {
+    throw new Error(`Password archive is not supported by the encrypted vault: ${id}`)
+  }
+  const deleteSelectedPasswords = async () => {
+    const ids = [...selectedPasswords.value]
+    await Promise.all(ids.map(id => deleteEntry(id)))
+    selectedPasswords.value = []
+  }
+  const usePassword = async (id: string) => {
+    const entry = entries.value.find(e => e.id === id)
+    if (!entry) return ''
+    await updateEntry(id, {
+      use_count: (entry.use_count || 0) + 1,
+      last_used: new Date().toISOString(),
+    })
+    return entry.password
+  }
   const assessPasswordStrength = async (password: string) => {
     const issues: string[] = []
     const recommendations: string[] = []
@@ -512,6 +557,9 @@ export const usePasswordStore = defineStore('password', () => {
     error: errorMessage, 
     successMessage,
     selectedPasswords,
+    favoritesOnly,
+    sortField,
+    sortDescending,
     currentPage,
     pageSize,
     

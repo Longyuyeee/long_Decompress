@@ -510,6 +510,7 @@ impl AppShortcutManager {
 }
 
 /// 全局快捷键管理器包装
+#[derive(Default)]
 pub struct AppShortcutManagerWrapper {
     manager: Arc<RwLock<Option<AppShortcutManager>>>,
 }

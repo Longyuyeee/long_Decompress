@@ -122,6 +122,7 @@ const onFileChange = (e: Event) => {
   if (target.files && target.files.length > 0) {
     handleFiles(Array.from(target.files))
   }
+  target.value = ''
 }
 
 const triggerFileInput = async () => {
@@ -135,6 +136,7 @@ const triggerFileInput = async () => {
       if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected])
     } catch (err) {
       console.error('Failed to select folders:', err)
+      appStore.setError(`${appStore.t('common.error')}: ${String(err)}`)
     }
   } else {
     // 使用 Tauri 对话框而不是 HTML input，确保获得文件路径
@@ -151,6 +153,7 @@ const triggerFileInput = async () => {
       if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected])
     } catch (err) {
       console.error('Failed to select files:', err)
+      appStore.setError(`${appStore.t('common.error')}: ${String(err)}`)
     }
   }
 }
@@ -269,8 +272,24 @@ const handleFiles = (files: File[]) => {
 <style scoped>
 .drop-area {
   @apply relative border-2 border-dashed border-subtle cursor-pointer;
-  background-color: transparent;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--bg-input) 55%, transparent), color-mix(in srgb, var(--bg-card) 82%, transparent));
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.drop-area::before {
+  content: '';
+  position: absolute;
+  width: 14rem;
+  height: 14rem;
+  right: -6rem;
+  top: -7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dynamic-accent) 8%, transparent);
+  filter: blur(12px);
+  z-index: -1;
 }
 
 .drop-area:hover {

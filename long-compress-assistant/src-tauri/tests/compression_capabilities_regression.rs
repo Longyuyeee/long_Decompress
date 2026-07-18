@@ -35,7 +35,7 @@ fn validates_single_file_stream_formats_need_one_regular_file() {
         .to_string();
 
     let valid_format = CompressionService::validate_compression_request(
-        &[first_source.clone()],
+        std::slice::from_ref(&first_source),
         &output,
         &compression_options(Some("gz")),
     )
@@ -76,7 +76,7 @@ fn validates_password_support_per_format() {
     // ZIP 现在支持密码（通过 7z CLI）
     assert_eq!(
         CompressionService::validate_compression_request(
-            &[source.clone()],
+            std::slice::from_ref(&source),
             &output,
             &zip_options
         ).expect("ZIP 密码压缩应被支持"),
@@ -87,7 +87,7 @@ fn validates_password_support_per_format() {
     seven_zip_options.password = Some("secret".to_string());
     assert_eq!(
         CompressionService::validate_compression_request(
-            &[source.clone()],
+            std::slice::from_ref(&source),
             &output,
             &seven_zip_options
         )
@@ -97,10 +97,10 @@ fn validates_password_support_per_format() {
 
     let mut rar_options = compression_options(Some("rar"));
     rar_options.password = Some("secret".to_string());
-    assert_eq!(
+    assert!(
         CompressionService::validate_compression_request(&[source], &output, &rar_options)
-            .expect("rar password is supported"),
-        "rar"
+            .is_err(),
+        "RAR password compression must be rejected when no safe password channel is available"
     );
 }
 
@@ -160,7 +160,7 @@ fn non_native_password_formats_require_an_explicit_7z_output() {
     options.password = Some("secret".to_string());
 
     let wrong_output = temp.path().join("archive.tar.gz").to_string_lossy().to_string();
-    assert!(CompressionService::validate_compression_request(&[source.clone()], &wrong_output, &options).is_err());
+    assert!(CompressionService::validate_compression_request(std::slice::from_ref(&source), &wrong_output, &options).is_err());
 
     let encrypted_output = temp.path().join("archive.7z").to_string_lossy().to_string();
     assert_eq!(
@@ -192,7 +192,7 @@ fn infers_common_compression_formats_from_output_path() {
     ] {
         let output = temp.path().join(file_name).to_string_lossy().to_string();
         let format = CompressionService::validate_compression_request(
-            &[source.clone()],
+            std::slice::from_ref(&source),
             &output,
             &compression_options(None),
         )
@@ -224,7 +224,7 @@ fn every_backend_compressible_format_can_be_explicitly_validated() {
             continue;
         }
         let format = CompressionService::validate_compression_request(
-            &[source.clone()],
+            std::slice::from_ref(&source),
             &temp.path().join(format!("archive.{}", capability.extensions[0])).to_string_lossy(),
             &compression_options(Some(capability.format)),
         )

@@ -207,7 +207,7 @@ const removeWordlist = (index: number) => {
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-8">{{ appStore.t('settings.performance') }}</h2>
             <div class="space-y-6">
               <!-- 自启动开关 -->
-              <div class="flex items-center justify-between group cursor-pointer" @click="toggleAutoStart">
+              <button type="button" role="switch" :aria-checked="appStore.settings.autoStart" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="toggleAutoStart">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.auto_start') }}</div>
                   <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.performance.auto_start.desc') }}</div>
@@ -215,7 +215,7 @@ const removeWordlist = (index: number) => {
                 <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all" :class="appStore.settings.autoStart ? 'bg-primary/40 border-primary' : 'bg-input'">
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.autoStart ? 'translate-x-5' : ''"></div>
                 </div>
-              </div>
+              </button>
 
               <!-- 并行线程设置 -->
               <div class="space-y-4 pt-6 border-t border-subtle">
@@ -241,11 +241,11 @@ const removeWordlist = (index: number) => {
           <section class="aero-card p-8">
             <div class="flex justify-between items-center mb-8">
               <h2 class="text-sm font-black text-muted uppercase tracking-[0.3em]">{{ appStore.t('settings.bruteforce') }}</h2>
-              <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all cursor-pointer" 
+              <button type="button" role="switch" :aria-checked="appStore.settings.enableBruteForce" :aria-label="appStore.t('settings.bruteforce')" class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all cursor-pointer"
                    :class="appStore.settings.enableBruteForce ? 'bg-primary/40 border-primary' : 'bg-input'"
                    @click="toggleBruteForce">
                 <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.enableBruteForce ? 'translate-x-5' : ''"></div>
-              </div>
+              </button>
             </div>
 
             <div class="space-y-6" :class="{ 'opacity-80 pointer-events-none': !appStore.settings.enableBruteForce }">
@@ -262,7 +262,9 @@ const removeWordlist = (index: number) => {
                   <div v-for="(path, index) in appStore.settings.bruteForceWordlists" :key="path" 
                        class="flex items-center justify-between p-3 rounded-xl bg-input border border-subtle group hover:border-primary/30 transition-all">
                     <span class="text-sm text-content truncate max-w-[200px] font-mono" :title="path">{{ path.split(/[\\/]/).pop() }}</span>
-                    <i @click="removeWordlist(index)" class="pi pi-times text-sm text-muted hover:text-red-500 cursor-pointer transition-colors"></i>
+                    <button type="button" @click="removeWordlist(index)" :aria-label="`${appStore.t('common.delete')}: ${path.split(/[\\/]/).pop()}`" class="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors">
+                      <i class="pi pi-times text-sm"></i>
+                    </button>
                   </div>
                   <div v-if="appStore.settings.bruteForceWordlists.length === 0" class="py-6 text-center border border-dashed border-subtle rounded-xl">
                     <span class="text-xs text-dim uppercase tracking-widest font-bold">{{ appStore.t('settings.bruteforce.empty') }}</span>
@@ -275,7 +277,7 @@ const removeWordlist = (index: number) => {
           <section class="aero-card p-8">
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">{{ appStore.t('settings.behavior') }}</h2>
             <div class="space-y-5">
-              <div class="flex items-center justify-between group cursor-pointer" @click="appStore.updateSettings({ autoDeleteSource: !appStore.settings.autoDeleteSource })">
+              <button type="button" role="switch" :aria-checked="appStore.settings.autoDeleteSource" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ autoDeleteSource: !appStore.settings.autoDeleteSource })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.auto_delete') }}</div>
                   <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.auto_delete.desc') }}</div>
@@ -283,8 +285,8 @@ const removeWordlist = (index: number) => {
                 <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.autoDeleteSource ? 'bg-primary/40 border-primary' : 'bg-input'">
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.autoDeleteSource ? 'translate-x-5' : ''"></div>
                 </div>
-              </div>
-              <div class="flex items-center justify-between group cursor-pointer" @click="appStore.updateSettings({ savePasswords: !appStore.settings.savePasswords })">
+              </button>
+              <button type="button" role="switch" :aria-checked="appStore.settings.savePasswords" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ savePasswords: !appStore.settings.savePasswords })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.save_passwords') }}</div>
                   <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.save_passwords.desc') }}</div>
@@ -292,8 +294,8 @@ const removeWordlist = (index: number) => {
                 <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.savePasswords ? 'bg-primary/40 border-primary' : 'bg-input'">
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.savePasswords ? 'translate-x-5' : ''"></div>
                 </div>
-              </div>
-              <div v-if="contextMenuSupported" class="flex items-center justify-between group cursor-pointer" @click="toggleContextMenu">
+              </button>
+              <button v-if="contextMenuSupported" type="button" role="switch" :aria-checked="contextMenuEnabled" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="toggleContextMenu">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.context_menu') }}</div>
                   <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.context_menu.desc') }}</div>
@@ -301,7 +303,7 @@ const removeWordlist = (index: number) => {
                 <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="contextMenuEnabled ? 'bg-primary/40 border-primary' : 'bg-input'">
                   <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="contextMenuEnabled ? 'translate-x-5' : ''"></div>
                 </div>
-              </div>
+              </button>
             </div>
           </section>
         </div>
@@ -406,7 +408,7 @@ const removeWordlist = (index: number) => {
                   <div class="flex items-start gap-3">
                     <i class="pi pi-lock text-amber-500 text-xs mt-0.5 shrink-0"></i>
                     <div class="text-xs text-amber-700 leading-relaxed">
-                      <span class="font-black">{{ appStore.t('settings.formats.password_compress') }}:</span> ZIP · 7Z · RAR
+                      <span class="font-black">{{ appStore.t('settings.formats.password_compress') }}:</span> ZIP · 7Z · TAR.*.AES
                     </div>
                   </div>
                   <div class="flex items-start gap-3">

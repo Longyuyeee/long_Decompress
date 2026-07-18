@@ -64,7 +64,7 @@ impl PasswordDictionaryService {
         ].iter().map(|s| s.to_string()).collect());
 
         // 5. 键盘模式
-        dictionaries.insert("keyboard_patterns".to_string(), vec![
+        dictionaries.insert("keyboard_patterns".to_string(), [
             "qwerty", "qwertyui", "asdfghjk", "zxcvbnm", "1qaz2wsx",
             "qazwsx", "qazwsxedc", "1qazxsw2", "qweasd", "qweasdzxc",
         ].iter().map(|s| s.to_string()).collect());
@@ -247,7 +247,7 @@ mod tests {
     #[test]
     fn test_custom_dictionary() {
         let service = PasswordDictionaryService::new();
-        let custom = service.generate_custom_dictionary(&vec!["test".to_string()]);
+        let custom = service.generate_custom_dictionary(&["test".to_string()]);
 
         assert!(custom.contains(&"test".to_string()));
         assert!(custom.contains(&"test123".to_string()));

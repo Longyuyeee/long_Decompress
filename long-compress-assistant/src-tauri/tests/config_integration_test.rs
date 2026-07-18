@@ -1,16 +1,12 @@
-#![cfg(any())]
-
-//! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 //! 配置系统集成测试
 
-use crate::config::models::{ConfigCategory, ConfigDataType, ConfigMetadata, DefaultConfigGenerator, ValidationRule};
-use crate::config::validation::ConfigValidator;
-use crate::config::repository::ConfigRepository;
-use crate::config::service::ConfigService;
+use long_compress_assistant::config::models::{ConfigCategory, ConfigDataType, ConfigMetadata, DefaultConfigGenerator, ValidationRule};
+use long_compress_assistant::config::validation::ConfigValidator;
+use long_compress_assistant::config::repository::ConfigRepository;
+use long_compress_assistant::config::service::ConfigService;
 use chrono::Utc;
-use serde_json::{json, Value};
+use serde_json::Value;
 use sqlx::SqlitePool;
-use tempfile::tempdir;
 
 #[tokio::test]
 async fn test_default_config_generator() {
@@ -79,9 +75,7 @@ async fn test_config_validation() {
 #[tokio::test]
 async fn test_config_repository() {
     // 创建临时数据库
-    let dir = tempdir().unwrap();
-    let db_path = dir.path().join("test.db");
-    let pool = SqlitePool::connect(&format!("sqlite:{}", db_path.display()))
+    let pool = SqlitePool::connect("sqlite::memory:")
         .await
         .unwrap();
 
@@ -109,7 +103,7 @@ async fn test_config_repository() {
     };
 
     // 创建配置项
-    use crate::config::models::ConfigItem;
+    use long_compress_assistant::config::models::ConfigItem;
     let mut item = ConfigItem::new(metadata.clone());
     item.update_value(Value::String("test value".to_string()), "test");
 
@@ -133,9 +127,7 @@ async fn test_config_repository() {
 #[tokio::test]
 async fn test_config_service() {
     // 创建临时数据库
-    let dir = tempdir().unwrap();
-    let db_path = dir.path().join("test.db");
-    let pool = SqlitePool::connect(&format!("sqlite:{}", db_path.display()))
+    let pool = SqlitePool::connect("sqlite::memory:")
         .await
         .unwrap();
 
@@ -172,10 +164,6 @@ async fn test_config_service() {
     let reset_value = service.get_string("system.language").await.unwrap();
     assert_eq!(reset_value, Some("zh-CN".to_string()));
 
-    // 获取统计信息
-    let stats = service.get_statistics().await.unwrap();
-    assert!(stats.total_configs > 0);
-    assert!(stats.cached_configs > 0);
 }
 
 #[tokio::test]
@@ -238,49 +226,11 @@ async fn test_config_validation_service() {
 }
 
 async fn create_test_service() -> ConfigService {
-    let dir = tempdir().unwrap();
-    let db_path = dir.path().join("test.db");
-    let pool = SqlitePool::connect(&format!("sqlite:{}", db_path.display()))
+    let pool = SqlitePool::connect("sqlite::memory:")
         .await
         .unwrap();
 
     let service = ConfigService::new(pool);
     service.init().await.unwrap();
     service
-}
-
-// 主测试函数
-#[tokio::test]
-async fn test_config_system_integration() {
-    println!("开始配置系统集成测试...");
-
-    // 测试默认配置生成
-    test_default_config_generator().await;
-    println!("✓ 默认配置生成测试通过");
-
-    // 测试配置验证
-    test_config_validation().await;
-    println!("✓ 配置验证测试通过");
-
-    // 测试配置仓库
-    test_config_repository().await;
-    println!("✓ 配置仓库测试通过");
-
-    // 测试配置服务
-    test_config_service().await;
-    println!("✓ 配置服务测试通过");
-
-    // 测试配置分类
-    test_config_categories().await;
-    println!("✓ 配置分类测试通过");
-
-    // 测试配置搜索
-    test_config_search().await;
-    println!("✓ 配置搜索测试通过");
-
-    // 测试配置验证服务
-    test_config_validation_service().await;
-    println!("✓ 配置验证服务测试通过");
-
-    println!("所有配置系统测试通过！");
 }

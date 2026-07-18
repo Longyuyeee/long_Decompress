@@ -94,13 +94,13 @@ fn test_compression_validation_rules() {
     );
     assert!(multi.is_err(), "多文件 gzip 应被拒绝");
 
-    // ZIP 现在支持密码压缩（通过 7z CLI）
+    // ZIP 现在通过进程内 AES-256 实现支持密码压缩。
     let zip_pwd = CompressionService::validate_compression_request(
         &["a.txt".to_string()],
         "out.zip",
         &CompressionOptions { format: Some("zip".to_string()), password: Some("secret".to_string()), ..Default::default() }
     );
-    assert!(zip_pwd.is_ok(), "ZIP 密码压缩应被支持（通过 7z CLI）");
+    assert!(zip_pwd.is_ok(), "ZIP 密码压缩应被支持");
 
     // 7Z 应支持密码压缩
     let sevenz_pwd = CompressionService::validate_compression_request(
@@ -142,6 +142,15 @@ fn test_format_detection_from_magic() {
     assert_eq!(ArchiveFormat::from_magic(b"hello world"), ArchiveFormat::Unknown);
 }
 
+#[test]
+fn test_short_lzh_header_is_safe() {
+    use long_compress_assistant::services::compression_service::ArchiveFormat;
+
+    assert_eq!(ArchiveFormat::from_magic(b"00-l"), ArchiveFormat::Unknown);
+    assert_eq!(ArchiveFormat::from_magic(b"00-lh"), ArchiveFormat::Lzh);
+    assert_eq!(ArchiveFormat::from_magic(b"00-lz"), ArchiveFormat::Lzh);
+}
+
 /// 验证压缩完成后源文件的清理逻辑
 #[test]
 fn test_removable_sources_logic() {
@@ -160,7 +169,7 @@ fn test_removable_sources_logic() {
             output.to_string_lossy().to_string(),       // same as output: skipped
             extra.to_string_lossy().to_string(),
         ],
-        &output.to_string_lossy().to_string(),
+        output.to_string_lossy().as_ref(),
     );
     assert!(removable.is_ok());
     let removable = removable.unwrap();

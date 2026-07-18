@@ -121,7 +121,7 @@ pub fn format_byte_rate(bytes_per_second: u64) -> String {
     let base = 1024_f64;
     let rate_f64 = bytes_per_second as f64;
     let exponent = (rate_f64.log10() / base.log10()).floor() as i32;
-    let unit_index = exponent.min(5).max(0) as usize;
+    let unit_index = exponent.clamp(0, 5) as usize;
 
     let formatted = rate_f64 / base.powi(exponent);
 

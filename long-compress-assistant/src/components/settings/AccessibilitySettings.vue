@@ -33,7 +33,9 @@
             {{ appStore.t('accessibility.highContrast.desc') }}
           </p>
         </div>
-        <div
+        <button type="button" role="switch"
+          :aria-checked="appStore.settings.accessibility?.highContrast"
+          :aria-label="appStore.t('accessibility.highContrast')"
           @click="updateAccessibility({ highContrast: !appStore.settings.accessibility?.highContrast })"
           class="w-12 h-6 rounded-full border border-subtle p-0.5 transition-all cursor-pointer"
           :class="appStore.settings.accessibility?.highContrast ? 'bg-primary/40 border-primary' : 'bg-input'"
@@ -42,7 +44,7 @@
             class="w-5 h-5 rounded-full bg-white shadow-sm transition-all"
             :class="appStore.settings.accessibility?.highContrast ? 'translate-x-6' : ''"
           ></div>
-        </div>
+        </button>
       </div>
     </section>
 
@@ -79,7 +81,9 @@
             {{ appStore.t('accessibility.reduceMotion.desc') }}
           </p>
         </div>
-        <div
+        <button type="button" role="switch"
+          :aria-checked="appStore.settings.accessibility?.reduceMotion"
+          :aria-label="appStore.t('accessibility.reduceMotion')"
           @click="updateAccessibility({ reduceMotion: !appStore.settings.accessibility?.reduceMotion })"
           class="w-12 h-6 rounded-full border border-subtle p-0.5 transition-all cursor-pointer"
           :class="appStore.settings.accessibility?.reduceMotion ? 'bg-primary/40 border-primary' : 'bg-input'"
@@ -88,7 +92,7 @@
             class="w-5 h-5 rounded-full bg-white shadow-sm transition-all"
             :class="appStore.settings.accessibility?.reduceMotion ? 'translate-x-6' : ''"
           ></div>
-        </div>
+        </button>
       </div>
     </section>
 
@@ -103,7 +107,9 @@
             {{ appStore.t('accessibility.focusIndicator.desc') }}
           </p>
         </div>
-        <div
+        <button type="button" role="switch"
+          :aria-checked="appStore.settings.accessibility?.focusIndicator"
+          :aria-label="appStore.t('accessibility.focusIndicator')"
           @click="updateAccessibility({ focusIndicator: !appStore.settings.accessibility?.focusIndicator })"
           class="w-12 h-6 rounded-full border border-subtle p-0.5 transition-all cursor-pointer"
           :class="appStore.settings.accessibility?.focusIndicator ? 'bg-primary/40 border-primary' : 'bg-input'"
@@ -112,7 +118,7 @@
             class="w-5 h-5 rounded-full bg-white shadow-sm transition-all"
             :class="appStore.settings.accessibility?.focusIndicator ? 'translate-x-6' : ''"
           ></div>
-        </div>
+        </button>
       </div>
     </section>
   </div>

@@ -15,12 +15,22 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      all: true,
+      include: ['src/**/*.{ts,vue}'],
+      thresholds: {
+        statements: 45,
+        branches: 60,
+        functions: 38,
+        lines: 45,
+      },
       exclude: [
         'coverage/**',
         'dist/**',
         '**/[.]**',
         'packages/*/test?(s)/**',
         '**/*.d.ts',
+        'src/main.ts',
+        'src/router/**',
         '**/virtual:*',
         '**/__x00__*',
         '**/\x00*',

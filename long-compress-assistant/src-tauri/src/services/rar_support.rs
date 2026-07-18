@@ -332,18 +332,19 @@ impl RarSupportService {
     ) -> Result<(), RarError> {
         log::debug!("尝试使用unrar解压");
 
+        if password.is_some() {
+            return Err(RarError::CommandFailed(
+                "Refusing to expose the RAR password through command-line arguments".to_string(),
+            ));
+        }
+
         let mut command = Command::new("unrar");
 
         command.arg("x"); // 解压并保留目录结构
 
         // unrar 不支持环境变量传递密码，但我们已经有原生库实现
         // 这个方法只作为最后的 fallback，建议优先使用 extract_with_native_library
-        if let Some(pwd) = password {
-            // 使用 stdin 传递密码来减少暴露风险
-            command.arg("-p").arg(pwd);
-        } else {
-            command.arg("-p-"); // 无密码
-        }
+        command.arg("-p-"); // 无密码
 
         command.arg("-y"); // 全部回答Yes
         command.arg(if options.overwrite_existing { "-o+" } else { "-or" });
@@ -378,24 +379,21 @@ impl RarSupportService {
     ) -> Result<(), RarError> {
         log::debug!("尝试使用7z解压");
 
+        if password.is_some() {
+            return Err(RarError::CommandFailed(
+                "Refusing to expose the RAR password through command-line arguments".to_string(),
+            ));
+        }
+
         let seven_zip = find_7z_command().ok_or_else(|| RarError::CommandFailed(missing_7z_message()))?;
         let mut command = Command::new(seven_zip);
 
         command.arg("x"); // 解压
 
-        if password.is_some() {
-            command.arg("-p"); // 使用环境变量传递密码
-        }
-
         command.arg("-y"); // 全部回答Yes
         command.arg("-o").arg(output_dir);
         command.arg(if options.overwrite_existing { "-aoa" } else { "-aou" });
         command.arg(rar_path);
-
-        // 通过环境变量传递密码，避免在进程列表中暴露
-        if let Some(pwd) = password {
-            command.env("_7ZIP_PASSWORD", pwd);
-        }
 
         log::debug!("执行 RAR 命令 ({} 个参数)", command.get_args().len());
 
@@ -424,6 +422,12 @@ impl RarSupportService {
     ) -> Result<Vec<String>, RarError> {
         log::debug!("列出RAR文件内容: {:?}", rar_path);
 
+        if password.is_some() {
+            return Err(RarError::CommandFailed(
+                "Encrypted RAR listing requires the native RAR engine".to_string(),
+            ));
+        }
+
         if !Self::check_rar_tool_installed() {
             return Err(RarError::ToolNotInstalled);
         }
@@ -434,10 +438,6 @@ impl RarSupportService {
 
         // 注意: unrar CLI 不支持环境变量传递密码
         // 这是已知的安全限制，建议使用原生库 (extract_with_native_library) 而非此 fallback
-        if let Some(pwd) = password {
-            command.arg("-p").arg(pwd);
-        }
-
         command.arg(rar_path);
 
         let output = command.output()
@@ -512,6 +512,7 @@ impl RarSupportService {
             if self.test_rar_password(rar_path, pwd).await {
                 return Ok(true);
             }
+            return Err(RarError::PasswordError);
         }
 
         if !Self::check_rar_tool_installed() {
@@ -523,9 +524,6 @@ impl RarSupportService {
 
         // 注意: unrar CLI 不支持环境变量传递密码
         // 这是已知的安全限制，建议使用原生库 (test_rar_password) 而非此 fallback
-        if let Some(pwd) = password {
-            command.arg("-p").arg(pwd);
-        }
         command.arg(rar_path);
 
         let output = command.output()

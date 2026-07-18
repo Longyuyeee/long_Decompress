@@ -106,7 +106,7 @@ impl SplitArchiveDetector {
         } else {
             // .z01, .z02 格式
             Regex::new(r"\.z\d{2}$").unwrap()
-                .replace(&file_name, "")
+                .replace(file_name, "")
                 .to_string()
         };
 
@@ -168,7 +168,7 @@ impl SplitArchiveDetector {
             (file_name.trim_end_matches(".rar").trim_end_matches(".RAR").to_string(), false)
         } else {
             // .r00, .r01 格式
-            (Regex::new(r"\.r\d{2}$").unwrap().replace(&file_name, "").to_string(), false)
+            (Regex::new(r"\.r\d{2}$").unwrap().replace(file_name, "").to_string(), false)
         };
 
         let mut parts = Vec::new();
@@ -230,7 +230,7 @@ impl SplitArchiveDetector {
 
         // 提取基础名称
         let base_name = Regex::new(r"\.7z\.\d{3}$").unwrap()
-            .replace(&file_name, "")
+            .replace(file_name, "")
             .to_string();
 
         let mut parts = Vec::new();
@@ -273,7 +273,7 @@ impl SplitArchiveDetector {
         let file_name = path.file_name().unwrap().to_str().unwrap();
 
         let base_name = Regex::new(r"\.\d{3}$").unwrap()
-            .replace(&file_name, "")
+            .replace(file_name, "")
             .to_string();
 
         let mut parts = Vec::new();

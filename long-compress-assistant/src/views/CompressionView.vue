@@ -279,7 +279,8 @@ const totalPayload = computed(() => {
   <div class="compression-view p-4 md:p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative">
     <header class="flex flex-wrap justify-between items-center gap-3 shrink-0">
       <div>
-        <h1 class="text-xl md:text-2xl font-extrabold text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
+        <h1 class="text-2xl md:text-3xl font-black text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
+        <p class="text-xs md:text-sm text-muted font-semibold mt-1">{{ appStore.t('compress.subtitle') }}</p>
       </div>
       <div class="flex items-center gap-2 md:gap-3">
         <!-- 全局设置按钮 -->
@@ -457,6 +458,7 @@ const totalPayload = computed(() => {
           <EnhancedFileDropzone
             @files-selected="onFilesSelected"
             mode="file"
+            :hint="appStore.t('compress.drop_file_hint')"
             :nativeDrop="false"
             class="shadow-sm flex-1 min-h-[160px] sm:min-h-0"
           />
@@ -475,6 +477,7 @@ const totalPayload = computed(() => {
           @files-selected="onFilesSelected"
           :compact="true"
           mode="file"
+          :hint="appStore.t('compress.drop_file_hint')"
           :nativeDrop="false"
           class="w-full h-7"
         />

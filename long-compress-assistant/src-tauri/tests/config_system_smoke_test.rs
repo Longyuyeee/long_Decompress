@@ -1,11 +1,8 @@
-#![cfg(any())]
-
-//! NOTE: This test file needs API migration (see REMAINING_WORK.md P0-3).
 //! 配置管理系统冒烟测试
 //!
 //! 验证配置管理系统的核心功能是否正常工作。
 
-use long_compress_assistant::config::models::{ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata, DefaultConfigGenerator};
+use long_compress_assistant::config::models::{ConfigCategory, ConfigDataType, ConfigItem, ConfigMetadata, DefaultConfigGenerator, ValidationRule};
 use long_compress_assistant::config::validation::ConfigValidator;
 use chrono::Utc;
 use serde_json::{json, Value};
@@ -66,8 +63,8 @@ fn test_config_validation_basic() {
         data_type: ConfigDataType::Integer,
         default_value: Value::Number(50.into()),
         validation_rules: vec![
-            crate::config::models::ValidationRule::MinValue { value: 0.0 },
-            crate::config::models::ValidationRule::MaxValue { value: 100.0 },
+            ValidationRule::MinValue { value: 0.0 },
+            ValidationRule::MaxValue { value: 100.0 },
         ],
         is_required: false,
         is_sensitive: false,
@@ -192,7 +189,7 @@ fn test_config_data_type() {
     assert!(ConfigDataType::Boolean.validate_value(&Value::Bool(true)));
     assert!(!ConfigDataType::Boolean.validate_value(&Value::String("true".to_string())));
 
-    assert!(ConfigDataType::Float.validate_value(&Value::Number(123.45.into())));
+    assert!(ConfigDataType::Float.validate_value(&json!(123.45)));
     assert!(ConfigDataType::Float.validate_value(&Value::Number(123.into())));
 
     assert!(ConfigDataType::Array.validate_value(&Value::Array(vec![])));
@@ -251,33 +248,4 @@ fn test_config_category() {
     }
 
     println!("✓ 配置分类测试通过");
-}
-
-/// 主测试函数
-#[test]
-fn test_config_system_smoke() {
-    println!("开始配置管理系统冒烟测试...");
-    println!("{}", "=".repeat(50));
-
-    test_config_models_basic();
-    test_config_validation_basic();
-    test_default_config_generator();
-    test_config_data_type();
-    test_config_category();
-
-    println!("{}", "=".repeat(50));
-    println!("🎉 配置管理系统冒烟测试通过！");
-    println!("核心功能验证：");
-    println!("  ✓ 配置模型创建和操作");
-    println!("  ✓ 配置验证规则");
-    println!("  ✓ 默认配置生成");
-    println!("  ✓ 数据类型支持");
-    println!("  ✓ 配置分类管理");
-    println!();
-    println!("配置管理系统已具备基本功能，可以支持：");
-    println!("  • 配置项的创建、读取、更新、删除");
-    println!("  • 配置值的验证和类型检查");
-    println!("  • 默认配置的生成和管理");
-    println!("  • 按分类组织配置");
-    println!("  • 支持多种数据类型（字符串、整数、布尔值等）");
 }

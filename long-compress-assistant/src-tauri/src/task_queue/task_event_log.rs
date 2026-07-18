@@ -526,6 +526,7 @@ impl TaskEventLogger {
 }
 
 /// 全局事件日志管理器
+#[derive(Default)]
 pub struct GlobalEventLogger {
     logger: std::sync::Arc<tokio::sync::RwLock<Option<TaskEventLogger>>>,
 }

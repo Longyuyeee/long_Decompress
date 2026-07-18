@@ -1,11 +1,8 @@
-#![cfg(any())]
-
 use long_compress_assistant::services::compression_service::CompressionService;
 use long_compress_assistant::models::compression::CompressionOptions;
 use tempfile::tempdir;
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::Path;
 use std::time::Instant;
 
     /// 内存使用监控工具（简化版）
@@ -63,7 +60,7 @@ use std::time::Instant;
         }
 
         let output_zip = temp_dir.path().join("small_files.zip");
-        let service = CompressionService::default();
+        let service = CompressionService::for_testing();
         let options = CompressionOptions::default();
 
         // 开始内存监控
@@ -72,9 +69,8 @@ use std::time::Instant;
         let start_time = Instant::now();
         let result = service.compress_zip_enhanced(
             &file_paths,
-            &output_zip,
+            output_zip.to_str().unwrap(),
             options,
-            None,
         ).await;
 
         let duration = start_time.elapsed();
@@ -111,7 +107,7 @@ use std::time::Instant;
         }
 
         let output_zip = temp_dir.path().join("large_file.zip");
-        let service = CompressionService::default();
+        let service = CompressionService::for_testing();
         let options = CompressionOptions::default();
 
         let files = vec![large_file.to_string_lossy().to_string()];
@@ -122,31 +118,18 @@ use std::time::Instant;
         let start_time = Instant::now();
         let result = service.compress_zip_enhanced(
             &files,
-            &output_zip,
+            output_zip.to_str().unwrap(),
             options,
-            None,
         ).await;
 
         let duration = start_time.elapsed();
 
-        // 大文件压缩可能成功或失败（取决于内存限制）
-        // 这里主要测试接口是否工作
-        match result {
-            Ok(_) => {
-                println!("大文件压缩成功，耗时: {:?}", duration);
-
-                if let Some(memory_change) = monitor.get_usage_change() {
-                    println!("大文件压缩内存变化: {} bytes", memory_change);
-                }
-            }
-            Err(e) => {
-                println!("大文件压缩失败（可能内存不足）: {:?}", e);
-                println!("压缩耗时: {:?}", duration);
-            }
+        assert!(result.is_ok(), "大文件压缩失败: {:?}", result.err());
+        assert!(output_zip.exists(), "大文件压缩未生成输出");
+        println!("大文件压缩成功，耗时: {:?}", duration);
+        if let Some(memory_change) = monitor.get_usage_change() {
+            println!("大文件压缩内存变化: {} bytes", memory_change);
         }
-
-        // 这个测试总是通过，因为我们主要测试接口
-        assert!(true, "大文件压缩内存测试完成");
     }
 
     #[tokio::test]
@@ -169,7 +152,7 @@ use std::time::Instant;
         }
 
         let output_zip = temp_dir.path().join("concurrent.zip");
-        let service = CompressionService::default();
+        let service = CompressionService::for_testing();
         let options = CompressionOptions::default();
 
         // 开始内存监控
@@ -178,9 +161,8 @@ use std::time::Instant;
         let start_time = Instant::now();
         let result = service.compress_zip_enhanced(
             &file_paths,
-            &output_zip,
+            output_zip.to_str().unwrap(),
             options,
-            None,
         ).await;
 
         let duration = start_time.elapsed();
@@ -211,7 +193,7 @@ use std::time::Instant;
         file.write_all(&data).unwrap();
 
         let files = vec![test_file.to_string_lossy().to_string()];
-        let service = CompressionService::default();
+        let service = CompressionService::for_testing();
 
         let mut results = Vec::new();
 
@@ -221,7 +203,7 @@ use std::time::Instant;
             let mut monitor = MemoryMonitor::new();
 
             let options = CompressionOptions {
-                compression_level: *level,
+                level: *level,
                 ..Default::default()
             };
 
@@ -231,9 +213,8 @@ use std::time::Instant;
             let start_time = Instant::now();
             let result = service.compress_zip_enhanced(
                 &files,
-                &output_zip,
+                output_zip.to_str().unwrap(),
                 options,
-                None,
             ).await;
 
             let duration = start_time.elapsed();
@@ -272,7 +253,7 @@ use std::time::Instant;
         let nonexistent_file = temp_dir.path().join("nonexistent.txt");
         let output_zip = temp_dir.path().join("error_test.zip");
 
-        let service = CompressionService::default();
+        let service = CompressionService::for_testing();
         let options = CompressionOptions::default();
 
         let files = vec![nonexistent_file.to_string_lossy().to_string()];
@@ -282,9 +263,8 @@ use std::time::Instant;
 
         let result = service.compress_zip_enhanced(
             &files,
-            &output_zip,
+            output_zip.to_str().unwrap(),
             options,
-            None,
         ).await;
 
         // 应该失败

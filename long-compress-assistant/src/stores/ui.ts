@@ -163,16 +163,6 @@ export const useUIStore = defineStore('ui', () => {
 
   // 方法 - Toast提示（委托给 appStore 统一消息系统）
   const showToast = (type: Toast['type'], message: string, _duration: number = 3000) => {
-    // 委托给统一的 appStore 消息系统
-    const appStore = useAppStore()
-    if (type === 'error') {
-      appStore.setError(message)
-    } else if (type === 'success') {
-      appStore.setSuccess(message)
-    } else {
-      appStore.setSuccess(message)
-    }
-
     const toast: Toast = {
       id: generateId(),
       type,

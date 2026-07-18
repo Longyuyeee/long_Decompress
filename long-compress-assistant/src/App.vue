@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
@@ -15,6 +15,7 @@ import { usePasswordStore } from '@/stores/password'
 import { useTaskStore } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
 import { useAppStore } from '@/stores/app'
+import { useUIStore } from '@/stores/ui'
 import { useAccessibility } from '@/composables/useAccessibility'
 import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
@@ -25,6 +26,7 @@ const passwordStore = usePasswordStore()
 const taskStore = useTaskStore()
 const compressionStore = useCompressionStore()
 const appStore = useAppStore()
+const uiStore = useUIStore()
 const { initAccessibility, setupWatchers, watchSystemPreferences } = useAccessibility()
 
 let idleTimer: any = null
@@ -33,6 +35,14 @@ let unlistenResize: any = null
 let cleanupSystemWatcher: (() => void) | null = null
 const appUnlisteners: Array<() => void> = []
 let isUnmounted = false
+
+watch(() => appStore.error, message => {
+  if (message) uiStore.showToast('error', message, 5000)
+})
+
+watch(() => appStore.successMessage, message => {
+  if (message) uiStore.showToast('success', message)
+})
 
 const keepAppListener = (unlisten: () => void) => {
   if (isUnmounted) unlisten()
@@ -160,9 +170,6 @@ onMounted(async () => {
   resetIdleTimer()
   await restoreWindowState()
   // 请求浏览器通知权限（后台任务完成时通知用户）
-  if ('Notification' in window && Notification.permission === 'default') {
-    try { await Notification.requestPermission() } catch { /* ignore */ }
-  }
   // 使用 Tauri 原生窗口 resize 事件（避免 zoom 触发的 resize 循环）
   try {
     const unlisten = await appWindow.onResized(() => {

@@ -6,15 +6,12 @@ use tempfile::tempdir;
 fn test_check_rar_tool_installed() {
     let is_installed = RarSupportService::check_rar_tool_installed();
     println!("系统RAR工具安装状态: {}", is_installed);
-    assert!(true, "接口测试通过");
 }
 
 #[tokio::test]
 async fn test_rar_service_creation() {
-    let _service = RarSupportService::new();
-    assert!(true, "RAR服务创建成功");
-    let _default_service = RarSupportService::default();
-    assert!(true, "RAR服务默认实现成功");
+    let service = RarSupportService::new();
+    assert_eq!(std::mem::size_of_val(&service), 0);
 }
 
 #[tokio::test]
@@ -80,7 +77,8 @@ async fn test_rar_list_and_test_functions() {
 
     let test_result = service.test_rar_integrity(&test_rar, None).await;
     println!("RAR完整性测试结果: {:?}", test_result);
-    assert!(true, "列表和测试功能接口测试完成");
+    assert!(list_result.is_err());
+    assert!(test_result.is_err());
 }
 
 #[tokio::test]
@@ -92,5 +90,5 @@ async fn test_rar_password_attempt() {
 
     let result = service.test_rar_password(&test_rar, "test123").await;
     println!("RAR密码测试结果: {}", result);
-    assert!(true, "密码尝试接口测试完成");
+    assert!(!result);
 }

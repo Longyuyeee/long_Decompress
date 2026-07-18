@@ -24,7 +24,7 @@ fn test_zip_rejects_password_compression() {
     let source = temp.path().join("test.txt");
     File::create(&source).unwrap();
 
-    let mut options = CompressionOptions {
+    let options = CompressionOptions {
         format: Some("zip".to_string()),
         password: Some("secret".to_string()),
         ..Default::default()
@@ -45,7 +45,7 @@ fn test_7z_accepts_password_compression() {
     let source = temp.path().join("test.txt");
     File::create(&source).unwrap();
 
-    let mut options = CompressionOptions {
+    let options = CompressionOptions {
         format: Some("7z".to_string()),
         password: Some("secret".to_string()),
         ..Default::default()
