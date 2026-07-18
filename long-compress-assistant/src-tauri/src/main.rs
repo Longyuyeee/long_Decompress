@@ -264,6 +264,8 @@ fn main() {
             long_compress_assistant::commands::compression::cancel_compression,
             long_compress_assistant::commands::compression::cancel_tasks_and_wait,
             long_compress_assistant::commands::compression::check_rar_compression_support,
+            long_compress_assistant::commands::compression::get_archive_engine_capabilities,
+            long_compress_assistant::commands::compression::install_winrar_with_winget,
             long_compress_assistant::commands::compression::open_rar_download_page,
             long_compress_assistant::commands::compression::list_archive_contents,
             long_compress_assistant::commands::compression::test_archive_integrity,

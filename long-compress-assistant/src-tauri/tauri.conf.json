@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "胧解压·方便助手",
-    "version": "1.0.5"
+    "version": "1.0.6"
   },
   "tauri": {
     "systemTray": {
@@ -49,8 +49,10 @@
       ],
       "resources": [
         "resources/long_compress_shell_extension_*.dll",
-        "../node_modules/7zip-bin/win/x64/7za.exe",
-        "../node_modules/7zip-bin/LICENSE.txt"
+        "resources/archive-engine/7z.exe",
+        "resources/archive-engine/7z.dll",
+        "resources/archive-engine/7-Zip-License.txt",
+        "resources/archive-engine/7-Zip-Readme.txt"
       ],
       "externalBin": [],
       "copyright": "Copyright © 2026 胧解压·方便助手",

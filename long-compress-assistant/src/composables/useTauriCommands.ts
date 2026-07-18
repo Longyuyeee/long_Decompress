@@ -41,6 +41,21 @@ export interface RarCompressionSupport {
   message: string
 }
 
+export interface ArchiveEngineFormatCapability {
+  name: string
+  extensions: string[]
+  canCreate: boolean
+}
+
+export interface ArchiveEngineCapabilities {
+  available: boolean
+  command?: string | null
+  version?: string | null
+  fullEngine: boolean
+  formats: ArchiveEngineFormatCapability[]
+  message: string
+}
+
 interface WordlistValidationResult {
   path: string
   valid: boolean
@@ -204,6 +219,14 @@ export const useTauriCommands = () => {
 
   const checkRarCompressionSupport = async (): Promise<RarCompressionSupport> => {
     return await invoke<RarCompressionSupport>('check_rar_compression_support')
+  }
+
+  const installWinRarWithWinget = async (): Promise<RarCompressionSupport> => {
+    return await invoke<RarCompressionSupport>('install_winrar_with_winget')
+  }
+
+  const getArchiveEngineCapabilities = async (): Promise<ArchiveEngineCapabilities> => {
+    return await invoke<ArchiveEngineCapabilities>('get_archive_engine_capabilities')
   }
 
   const openRarDownloadPage = async (): Promise<void> => {
@@ -504,6 +527,8 @@ export const useTauriCommands = () => {
     decompressFiles,
     compressFiles,
     checkRarCompressionSupport,
+    installWinRarWithWinget,
+    getArchiveEngineCapabilities,
     openRarDownloadPage,
     getFileInfo,
     listDirectory,

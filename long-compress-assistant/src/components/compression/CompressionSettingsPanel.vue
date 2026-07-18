@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useAppStore } from '@/stores/app'
 import { useCompressionProfileStore } from '@/stores/compressionProfile'
@@ -10,10 +10,12 @@ import ProfileSelector from '@/components/profiles/ProfileSelector.vue'
 import ProfileManager from '@/components/profiles/ProfileManager.vue'
 import PasswordGeneratorDialog from '@/components/password/PasswordGeneratorDialog.vue'
 import { extractErrorMessage } from '@/utils'
+import { useArchiveEngine } from '@/composables/useArchiveEngine'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
 const profileStore = useCompressionProfileStore()
+const archiveEngine = useArchiveEngine()
 
 const showPasswordGenerator = ref(false)
 
@@ -60,8 +62,12 @@ const newProfileName = ref('')
 const newProfileIcon = ref('📦')
 const newProfileDescription = ref('')
 
-const compressionFormats = COMPRESSIBLE_FORMATS
-const selectedFormat = computed(() => compressionFormats.find(format => format.value === compressionOptions.value.format))
+const compressionFormats = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
+const selectedFormat = computed(() => compressionFormats.value.find(format => format.value === compressionOptions.value.format))
+
+onMounted(() => {
+  void archiveEngine.refresh()
+})
 
 // 全部格式支持密码：ZIP/7Z/RAR 原生支持，其他格式通过 7z CLI 自动创建 .7z 加密容器
 const supportsPassword = computed(() => isPasswordSupportedFormat(compressionOptions.value.format))
@@ -136,7 +142,7 @@ watch(() => props.outputPath, (newPath) => {
 
 watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
   if (allowSingleFileFormats) return
-  const currentFormat = compressionFormats.find(format => format.value === compressionOptions.value.format)
+  const currentFormat = compressionFormats.value.find(format => format.value === compressionOptions.value.format)
   if (currentFormat && isFormatDisabled(currentFormat)) {
     compressionOptions.value.format = 'zip'
   }

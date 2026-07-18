@@ -283,7 +283,8 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
     CompressionFormatCapability { format: "tar.zst", extensions: &["tar.zst", "tzst"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "zip", extensions: &["zip", "zipx"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "7z", extensions: &["7z"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "rar", extensions: &["rar"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: true },
+    CompressionFormatCapability { format: "rar", extensions: &["rar"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: true },
+    CompressionFormatCapability { format: "wim", extensions: &["wim"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: true, requires_winrar: false },
     CompressionFormatCapability { format: "tar", extensions: &["tar", "ova"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "gz", extensions: &["gz", "gzip"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "bz2", extensions: &["bz2", "bzip2"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
@@ -462,7 +463,7 @@ impl CompressionService {
     fn has_native_password_container(format: &str) -> bool {
         matches!(
             Self::normalize_compression_format(format).as_str(),
-            "zip" | "7z" |
+            "zip" | "7z" | "rar" |
             "tar.aes" | "tar.gz.aes" | "tar.bz2.aes" | "tar.xz.aes" | "tar.zst.aes" |
             "gz.aes" | "bz2.aes" | "xz.aes" | "zst.aes"
         )
@@ -576,6 +577,7 @@ impl CompressionService {
                 "tar.xz" | "txz" => service.do_compress_tar_xz(&window, &task_id, &source_files, &output_path, options),
                 "7z" => service.do_compress_7z(&window, &task_id, &source_files, &output_path, options),
                 "rar" => service.do_compress_rar(&window, &task_id, &source_files, &output_path, options),
+                "wim" => service.do_compress_wim(&window, &task_id, &source_files, &output_path, options),
                 "gz" => service.do_compress_gz(&window, &task_id, &source_files, &output_path, options),
                 "bz2" => service.do_compress_bz2(&window, &task_id, &source_files, &output_path, options),
                 "xz" => service.do_compress_xz(&window, &task_id, &source_files, &output_path, options),
@@ -921,7 +923,11 @@ impl CompressionService {
                 "alz" => ArchiveFormat::Alz,
                 "arc" => ArchiveFormat::Arc,
                 "apfs" => ArchiveFormat::Apfs,
-                "ext2" | "ext3" | "ext4" => ArchiveFormat::Ext,
+                "ext" | "ext2" | "ext3" | "ext4" => ArchiveFormat::Ext,
+                "apm" | "ar" | "a" | "cramfs" | "gpt" | "mbr" | "ihex" |
+                "qcow" | "qcow2" | "qcow2c" | "scap" | "uefif" | "vdi" | "vmdk" |
+                "z" | "taz" | "swm" | "esd" | "ppkg" | "msp" | "msm" | "udeb"
+                    => ArchiveFormat::Universal,
                 // 分卷压缩包后缀 → 7z CLI 处理
                 "001" | "002" | "003" | "004" | "005" | "006" | "007" | "008" | "009"
                 | "z01" | "z02" | "z03" | "z04" | "z05" | "z06" | "z07" | "z08" | "z09"
@@ -2503,8 +2509,8 @@ impl CompressionService {
             command.arg("-ep");
         }
 
-        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
-            return Err(CompressionError::UnsupportedEncryption.into());
+        if let Some(password) = options.password.as_deref().filter(|password| !password.is_empty()) {
+            command.arg(format!("-hp{}", password));
         }
 
         command.arg(output);
@@ -2523,6 +2529,35 @@ impl CompressionService {
             return Err(CompressionError::CompressionFailed(format!("RAR compression failed: {}", message)).into());
         }
 
+        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
+        Ok(())
+    }
+
+    fn do_compress_wim(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if !output.to_ascii_lowercase().ends_with(".wim") {
+            return Err(CompressionError::CompressionFailed("WIM compression output path must end with .wim".to_string()).into());
+        }
+        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
+            return Err(CompressionError::UnsupportedEncryption.into());
+        }
+        if options.split_size.is_some_and(|size| size > 0) {
+            return Err(CompressionError::CompressionFailed("WIM split creation is not supported yet.".to_string()).into());
+        }
+        if !crate::utils::archive_tools::archive_engine_can_create("wim") {
+            return Err(CompressionError::CompressionFailed("The active archive engine cannot create WIM files.".to_string()).into());
+        }
+        if let Some(parent) = Path::new(output).parent() { std::fs::create_dir_all(parent)?; }
+        let engine = find_7z_command().ok_or_else(|| CompressionError::CompressionFailed(missing_7z_message()))?;
+        let mut command = crate::utils::process::command(engine);
+        command.arg("a").arg("-twim").arg("-y").arg(format!("-mx{}", options.level.clamp(1, 9))).arg(output);
+        for source in sources { self.check_cancellation()?; command.arg(source); }
+        let result = command.output().map_err(|err| CompressionError::CompressionFailed(format!("Failed to run the WIM encoder: {err}")))?;
+        if !result.status.success() {
+            let stderr = String::from_utf8_lossy(&result.stderr);
+            let stdout = String::from_utf8_lossy(&result.stdout);
+            let detail = if stderr.trim().is_empty() { stdout.trim() } else { stderr.trim() };
+            return Err(CompressionError::CompressionFailed(format!("WIM compression failed: {detail}")).into());
+        }
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
         Ok(())
     }

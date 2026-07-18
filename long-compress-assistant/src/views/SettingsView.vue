@@ -1,12 +1,27 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
+import { useArchiveEngine } from '@/composables/useArchiveEngine'
 import AccessibilitySettings from '@/components/settings/AccessibilitySettings.vue'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
+const { capabilities: archiveEngine, loading: archiveEngineLoading, refresh: refreshArchiveEngine } = useArchiveEngine()
 const showResetConfirm = ref(false)
+const rarEncoder = ref<{ available: boolean; message: string } | null>(null)
+const diagnosticsLoading = computed(() => archiveEngineLoading.value)
+const readableExtensionCount = computed(() => new Set(archiveEngine.value?.formats.flatMap(format => format.extensions) || []).size)
+const creatableFormatCount = computed(() => archiveEngine.value?.formats.filter(format => format.canCreate).length || 0)
+
+const refreshEngineDiagnostics = async () => {
+  await refreshArchiveEngine()
+  try {
+    rarEncoder.value = await tauriCommands.checkRarCompressionSupport()
+  } catch (error) {
+    rarEncoder.value = { available: false, message: String(error) }
+  }
+}
 
 const themeColors = {
   azure: '#0ea5e9', indigo: '#6366f1', violet: '#8b5cf6',
@@ -71,6 +86,7 @@ const checkAutoStart = async () => {
 onMounted(() => {
   checkAutoStart()
   checkContextMenu()
+  void refreshEngineDiagnostics()
 })
 const toggleContextMenu = async () => {
   if (contextMenuBusy.value) return
@@ -329,6 +345,31 @@ const removeWordlist = (index: number) => {
             </div>
 
             <div class="lg:col-span-8 space-y-8">
+              <div class="rounded-2xl border border-subtle bg-input/30 p-5">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 text-sm font-black text-content">
+                      <span class="h-2.5 w-2.5 rounded-full" :class="archiveEngine?.fullEngine ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,.7)]' : 'bg-amber-500'"></span>
+                      {{ appStore.t('settings.engine.title') }}
+                    </div>
+                    <div class="mt-2 text-xs leading-5 text-muted">
+                      {{ archiveEngine?.version ? `7-Zip ${archiveEngine.version}` : appStore.t('settings.engine.unavailable') }}
+                      · {{ archiveEngine?.message || appStore.t('settings.engine.detecting') }}
+                    </div>
+                  </div>
+                  <button type="button" class="h-9 shrink-0 rounded-xl border border-subtle bg-input px-4 text-xs font-black text-content transition hover:border-primary disabled:opacity-60" :disabled="diagnosticsLoading" @click="refreshEngineDiagnostics">
+                    <i class="pi mr-2" :class="diagnosticsLoading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>{{ appStore.t('settings.engine.refresh') }}
+                  </button>
+                </div>
+                <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <div class="rounded-xl border border-subtle px-3 py-2 text-xs text-muted"><span class="font-black text-content">{{ readableExtensionCount }}</span> {{ appStore.t('settings.engine.readable') }}</div>
+                  <div class="rounded-xl border border-subtle px-3 py-2 text-xs text-muted"><span class="font-black text-content">{{ creatableFormatCount }}</span> {{ appStore.t('settings.engine.creatable') }}</div>
+                  <div class="rounded-xl border px-3 py-2 text-xs" :class="rarEncoder?.available ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500' : 'border-amber-500/30 bg-amber-500/10 text-amber-500'">
+                    RAR {{ rarEncoder?.available ? appStore.t('settings.engine.ready') : appStore.t('settings.engine.external') }}
+                  </div>
+                </div>
+              </div>
+
               <!-- 统计卡片组 -->
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
@@ -364,19 +405,19 @@ const removeWordlist = (index: number) => {
                   <div>
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.disk_images') }}</div>
                     <div class="text-xs text-content leading-relaxed font-mono">
-                      ISO · IMG · DMG · WIM · VHD · VHDX
+                      ISO · IMG · DMG · WIM · VHD · VHDX · QCOW · QCOW2 · VDI · VMDK
                     </div>
                   </div>
                   <div>
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.installers') }}</div>
                     <div class="text-xs text-content leading-relaxed font-mono">
-                      CAB · DEB · RPM · MSI · NSIS
+                      CAB · DEB · UDEB · RPM · MSI · MSP · MSM · NSIS · PPKG
                     </div>
                   </div>
                   <div>
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.legacy') }}</div>
                     <div class="text-xs text-content leading-relaxed font-mono">
-                      LZH · LHA · ARJ · CHM · SQUASHFS · SFS · XAR · CPIO · UDF · FAT · NTFS · HFS · APFS · EXT2 · EXT3 · EXT4 · ALZ · ARC
+                      AR · A · LZH · LHA · ARJ · CHM · SQUASHFS · SFS · XAR · CPIO · UDF · FAT · NTFS · HFS · APFS · EXT2 · EXT3 · EXT4 · GPT · MBR · CRAMFS · ALZ · ARC
                     </div>
                   </div>
                 </div>
@@ -395,7 +436,7 @@ const removeWordlist = (index: number) => {
                   <div>
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.via_7z') }}</div>
                     <div class="text-xs text-content leading-relaxed font-mono">
-                      TAR.ZST · ZST · ZSTD · LZMA
+                      TAR.ZST · ZST · ZSTD · LZMA · WIM
                     </div>
                   </div>
                   <div>
@@ -420,7 +461,7 @@ const removeWordlist = (index: number) => {
                   <div class="flex items-start gap-3">
                     <i class="pi pi-lock text-amber-500 text-xs mt-0.5 shrink-0"></i>
                     <div class="text-xs text-amber-700 leading-relaxed">
-                      <span class="font-black">{{ appStore.t('settings.formats.password_compress') }}:</span> ZIP · 7Z · TAR.*.AES
+                      <span class="font-black">{{ appStore.t('settings.formats.password_compress') }}:</span> ZIP · 7Z · RAR · TAR.*.AES · GZ/BZ2/XZ/ZST.AES
                     </div>
                   </div>
                   <div class="flex items-start gap-3">

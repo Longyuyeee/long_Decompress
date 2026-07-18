@@ -1,143 +1,103 @@
-# 胧压缩·方便助手 - Vue3前端
+# 胧解压 · 方便助手
 
-现代化的文件解压工具前端应用，采用Vue3 + TypeScript + Tailwind CSS + PrimeVue构建，具有苹果毛玻璃设计风格。
+面向 Windows 的本地压缩与解压工具，使用 Vue 3、TypeScript、Tauri 和 Rust 构建。支持批量任务、密码本、智能密码尝试、托盘运行、资源管理器右键菜单与一键解压。
 
-## 技术栈
+## v1.0.6 更新
 
-- **Vue 3** - 渐进式JavaScript框架
-- **TypeScript** - 类型安全的JavaScript超集
-- **Tailwind CSS** - 实用优先的CSS框架
-- **PrimeVue** - Vue UI组件库
-- **Pinia** - Vue状态管理
-- **Vite** - 下一代前端构建工具
-- **Tauri** - 构建小型、快速的桌面应用程序
+- 内置完整 7-Zip 26.02 引擎，并根据运行时能力动态开放格式。
+- 新增 WIM 创建，以及 QCOW2、VDI、VMDK、APFS、EXT、GPT、AR、PPKG 等首批扩展格式读取。
+- 创建 RAR 缺少编码器时，可选择改用 7Z、通过 winget 安装 WinRAR、打开官方下载页或取消；已安装 WinRAR 时支持密码 RAR 创建。
+- 设置中心新增引擎版本、读取/创建格式数量、RAR 编码器状态和重新检测入口。
+- 新增真实 7Z、ZIP、TAR、WIM、密码 7Z 与 AR 样本回归矩阵。
 
-## 项目结构
+## 归档能力
 
+应用内置完整的 7-Zip 26.02 Windows x64 引擎，并在运行时读取引擎实际报告的格式能力。需要完整引擎的格式只会在当前环境确实可用时出现，避免界面宣称支持、实际机器却无法处理。
+
+设置中心会显示当前引擎版本、可读取后缀数、可创建格式数和 RAR 编码器状态，并支持手动重新检测。
+
+### 创建归档
+
+- 常用格式：ZIP、7Z、TAR、TGZ、TBZ、TXZ、TZST
+- 单文件流格式：GZ、BZ2、XZ、Zstd、LZMA
+- Windows 映像：WIM（由动态能力检测决定是否显示）
+- 密码格式：加密 ZIP、7Z、RAR，以及 TAR/GZ/BZ2/XZ/Zstd 的 `.aes` 安全封装
+- RAR：必须使用用户安装的 WinRAR/Rar.exe；支持普通与密码 RAR，不随应用分发专有编码器
+
+### 解压与浏览
+
+除上述格式外，第一批完整引擎扩展覆盖：
+
+- 镜像与虚拟磁盘：ISO、IMG、DMG、VHD/VHDX、QCOW/QCOW2、VDI、VMDK
+- 安装包与容器：CAB、DEB、RPM、MSI/MSP/MSM、NSIS、PPKG
+- 文件系统与固件：APFS、EXT2/3/4、FAT、NTFS、HFS/HFSX、GPT、MBR、UEFI、UDF、CramFS
+- 传统归档：AR/A、ARJ、LZH/LHA、CHM、CPIO、SquashFS、XAR、Unix Z
+- ZIP 容器：JAR、EPUB、APK、APPX、DOCX、XLSX、PPTX 等
+
+具体能力以当前引擎动态检测结果为准。某些镜像或文件系统格式只支持读取和解压，不支持创建。
+
+## RAR 创建策略
+
+选择 RAR 后，如果系统没有可用的 Rar.exe，应用会暂停当前任务并提供以下选择：
+
+1. 将本次 RAR 任务改为 7Z，并继续原任务；
+2. 通过 winget 安装官方 WinRAR，安装完成后重新检测并继续；
+3. 打开 WinRAR 官方下载页；
+4. 取消本次任务。
+
+应用不会静默安装第三方软件，也不会拆分或转售 RAR 编码器。WinRAR 的试用期与商业许可由 RARLAB 管理。
+
+## 真实样本回归矩阵
+
+Rust 集成测试会调用实际随包引擎，而不是 mock：
+
+| 场景 | 创建 | 解压/验证 | 内容比对 |
+| --- | --- | --- | --- |
+| 7Z | 是 | 是 | 是 |
+| ZIP | 是 | 是 | 是 |
+| TAR | 是 | 是 | 是 |
+| WIM | 是 | 是 | 是 |
+| 密码 7Z | 是 | 密码测试 | 是 |
+| AR | 手工生成真实样本 | 是 | 是 |
+
+运行矩阵：
+
+```powershell
+cd src-tauri
+cargo test --test archive_engine_matrix_test
 ```
-long-compress-assistant/
-├── src/
-│   ├── assets/           # 静态资源
-│   │   └── css/         # 样式文件
-│   ├── components/       # Vue组件
-│   │   ├── layouts/     # 布局组件
-│   │   ├── ui/          # UI基础组件
-│   │   └── views/       # 页面组件
-│   ├── composables/     # 组合式函数
-│   ├── router/          # 路由配置
-│   ├── stores/          # Pinia状态存储
-│   ├── types/           # TypeScript类型定义
-│   ├── utils/           # 工具函数
-│   ├── App.vue          # 根组件
-│   └── main.ts          # 应用入口
-├── public/              # 公共资源
-├── index.html           # HTML模板
-└── package.json         # 项目依赖
-```
 
-## 设计系统
+## 开发与验证
 
-### 颜色主题
+环境要求：Node.js、npm、稳定版 Rust 与 Windows WebView2。
 
-- **主色 (Primary)**: `#0ea5e9` - 用于主要操作和重要元素
-- **次要色 (Secondary)**: `#64748b` - 用于次要操作和文本
-- **强调色 (Accent)**: `#d946ef` - 用于强调和特殊状态
-- **成功色 (Success)**: `#10b981` - 用于成功状态
-- **警告色 (Warning)**: `#f59e0b` - 用于警告状态
-- **危险色 (Danger)**: `#ef4444` - 用于错误和危险状态
-
-### 字体
-
-- **主要字体**: Inter - 用于界面文本
-- **等宽字体**: JetBrains Mono - 用于代码和文件路径
-
-### 玻璃效果
-
-项目采用苹果风格的毛玻璃效果，通过以下CSS类实现：
-
-- `.glass-effect` - 基础玻璃效果
-- `.glass-card` - 玻璃卡片
-- `.glass-button` - 玻璃按钮
-- `.glass-input` - 玻璃输入框
-
-## 核心组件
-
-### 1. GlassCard
-可复用的玻璃效果卡片组件，支持悬停效果和自定义样式。
-
-### 2. GlassButton
-玻璃效果按钮组件，支持多种变体、尺寸和加载状态。
-
-### 3. FileDropzone
-文件拖放区域组件，支持多文件选择、格式验证和大小限制。
-
-### 4. ProgressBar
-进度条组件，支持多种变体、条纹效果和不确定状态。
-
-## 页面路由
-
-- `/` - 首页：应用概览和快速操作
-- `/decompress` - 解压页面：文件选择和配置
-- `/settings` - 设置页面：应用配置选项
-- `/about` - 关于页面：应用信息和许可
-
-## 开发指南
-
-### 安装依赖
-
-```bash
+```powershell
 npm install
-```
-
-### 开发模式
-
-```bash
 npm run dev
-```
-
-### 构建生产版本
-
-```bash
+npm run type-check
+npm run test:unit
 npm run build
+cd src-tauri
+cargo test
 ```
 
-### 预览生产版本
+Tauri 开发模式：
 
-```bash
-npm run preview
-```
-
-### Tauri开发
-
-```bash
+```powershell
 npm run tauri dev
 ```
 
-## 代码规范
+## 项目结构
 
-### Vue组件
-- 使用组合式API (`<script setup>`)
-- 使用TypeScript进行类型检查
-- 组件名使用PascalCase
-- 单文件组件结构：template → script → style
-
-### 样式
-- 优先使用Tailwind CSS工具类
-- 自定义样式放在`@layer components`中
-- 响应式设计使用Tailwind断点
-
-### 状态管理
-- 全局状态使用Pinia
-- 组件状态使用ref/reactive
-- 复杂逻辑使用组合式函数
-
-## 浏览器支持
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
+```text
+src/                         Vue 前端与交互
+src-tauri/src/               Rust 后端与 Tauri 命令
+src-tauri/resources/         随包归档引擎及第三方许可
+src-tauri/tests/             后端能力与真实样本回归
+scripts/                     构建和系统集成脚本
+tests/                       前端集成与性能测试
+```
 
 ## 许可证
 
-MIT License
+项目代码使用 MIT License。随包 7-Zip 组件适用其自身的 LGPL/BSD 与 unRAR restriction 条款，原始许可和说明位于 `src-tauri/resources/archive-engine/`。WinRAR 不包含在本项目中。

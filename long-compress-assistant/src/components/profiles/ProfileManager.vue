@@ -6,9 +6,11 @@ import type { CompressionProfile, CreateProfileRequest } from '@/types/profile'
 import { COMPRESSIBLE_FORMATS, FORMAT_CAPABILITIES, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 import { extractErrorMessage } from '@/utils'
 import Modal from '@/components/ui/Modal.vue'
+import { useArchiveEngine } from '@/composables/useArchiveEngine'
 
 const profileStore = useCompressionProfileStore()
 const appStore = useAppStore()
+const archiveEngine = useArchiveEngine()
 
 type DialogMode = 'create' | 'edit' | null
 
@@ -21,7 +23,7 @@ const formError = ref('')
 const showPassword = ref(false)
 
 const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '🎨', '🔧', '⭐']
-const formatOptions = COMPRESSIBLE_FORMATS
+const formatOptions = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
 
 const createEmptyForm = (): CreateProfileRequest => ({
   name: '',
@@ -69,6 +71,7 @@ watch(() => formData.value.config.splitArchive, enabled => {
 })
 
 onMounted(async () => {
+  void archiveEngine.refresh()
   try {
     await profileStore.loadAllProfiles()
   } catch (error) {

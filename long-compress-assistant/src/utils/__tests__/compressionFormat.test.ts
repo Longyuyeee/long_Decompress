@@ -34,7 +34,8 @@ describe('compression format helpers', () => {
 
   it('reports supported password and single-file stream formats', () => {
     expect(isPasswordSupportedFormat('tar.zst')).toBe(true)
-    expect(isPasswordSupportedFormat('rar')).toBe(false)
+    expect(isPasswordSupportedFormat('rar')).toBe(true)
+    expect(isPasswordSupportedFormat('wim')).toBe(false)
     expect(isPasswordSupportedFormat('exe')).toBe(false)
     expect(isSingleFileStreamFormat('zstd')).toBe(true)
     expect(isSingleFileStreamFormat('tar.zst')).toBe(false)
@@ -48,6 +49,7 @@ describe('compression format helpers', () => {
     )
     expect(COMPRESSIBLE_FORMATS.some(format => format.value === 'tar.zst')).toBe(true)
     expect(COMPRESSIBLE_FORMATS.some(format => format.value === 'lzma' && format.requires7za)).toBe(true)
+    expect(COMPRESSIBLE_FORMATS.some(format => format.value === 'wim' && format.engineFormat === 'wim')).toBe(true)
   })
 
   it('builds decompression accept list from supported extensions', () => {
@@ -56,5 +58,8 @@ describe('compression format helpers', () => {
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.docx')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.iso')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.rpm')
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.qcow2')
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.vmdk')
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.apfs')
   })
 })

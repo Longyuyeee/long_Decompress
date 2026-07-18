@@ -2,6 +2,7 @@ export type CompressionFormatId =
   | 'zip'
   | '7z'
   | 'rar'
+  | 'wim'
   | 'tar'
   | 'tar.gz'
   | 'tar.bz2'
@@ -37,12 +38,14 @@ export interface CompressionFormatCapability {
   requiresWinRar: boolean
   fallbackEngine: 'native' | '7za' | 'winrar' | 'container-7z'
   knownLimitations?: string
+  engineFormat?: string
 }
 
 export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
   { format: 'zip', displayName: 'ZIP', extensions: ['zip', 'zipx'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: '7z', displayName: '7Z', extensions: ['7z'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
-  { format: 'rar', displayName: 'RAR', extensions: ['rar'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: true, fallbackEngine: 'winrar', knownLimitations: 'RAR creation requires WinRAR/RAR command line tools. Encrypted RAR creation is not supported.' },
+  { format: 'rar', displayName: 'RAR', extensions: ['rar'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: true, fallbackEngine: 'winrar', knownLimitations: 'RAR creation, including encrypted RAR, requires user-installed WinRAR/RAR command line tools.' },
+  { format: 'wim', displayName: 'WIM', extensions: ['wim'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: true, requiresWinRar: false, fallbackEngine: '7za', engineFormat: 'wim', knownLimitations: 'WIM creation requires the bundled full 7-Zip engine and does not support password encryption.' },
   { format: 'tar', displayName: 'TAR', extensions: ['tar', 'ova'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.gz', displayName: 'TGZ', extensions: ['tar.gz', 'tgz', 'tpz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.bz2', displayName: 'TBZ', extensions: ['tar.bz2', 'tbz', 'tbz2'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
@@ -72,9 +75,10 @@ export interface ExtractOnlyFormatCapability {
 
 export const EXTRACT_ONLY_FORMATS: ExtractOnlyFormatCapability[] = [
   { displayName: 'ZIP containers', extensions: ['jar', 'xpi', 'odt', 'ods', 'docx', 'xlsx', 'pptx', 'epub', 'ipa', 'apk', 'appx'], requires7za: false },
-  { displayName: 'Disk images', extensions: ['iso', 'img', 'dmg', 'wim', 'vhd', 'vhdx'], requires7za: true },
-  { displayName: 'Installers and packages', extensions: ['cab', 'deb', 'rpm', 'msi', 'nsis'], requires7za: true },
-  { displayName: 'Legacy and filesystem archives', extensions: ['lzh', 'lha', 'arj', 'chm', 'squashfs', 'sfs', 'xar', 'cpio', 'udf', 'fat', 'ntfs', 'hfs'], requires7za: true },
+  { displayName: 'Disk images', extensions: ['iso', 'img', 'dmg', 'vhd', 'vhdx', 'qcow', 'qcow2', 'qcow2c', 'vdi', 'vmdk'], requires7za: true },
+  { displayName: 'Installers and packages', extensions: ['cab', 'deb', 'udeb', 'rpm', 'msi', 'msp', 'msm', 'nsis', 'ppkg'], requires7za: true },
+  { displayName: 'Filesystems and firmware', extensions: ['apfs', 'apm', 'ext', 'ext2', 'ext3', 'ext4', 'gpt', 'mbr', 'uefif', 'scap', 'cramfs', 'udf', 'fat', 'ntfs', 'hfs', 'hfsx'], requires7za: true },
+  { displayName: 'Legacy archives', extensions: ['ar', 'a', 'lzh', 'lha', 'arj', 'chm', 'squashfs', 'sfs', 'xar', 'cpio', 'ihex', 'z', 'taz'], requires7za: true },
 ]
 
 export const COMPRESSIBLE_FORMATS = FORMAT_CAPABILITIES
@@ -85,6 +89,7 @@ export const COMPRESSIBLE_FORMATS = FORMAT_CAPABILITIES
     singleFileOnly: format.singleFileOnly,
     requires7za: format.requires7za,
     requiresWinRar: format.requiresWinRar,
+    engineFormat: format.engineFormat,
     knownLimitations: format.knownLimitations,
   }))
 
@@ -99,7 +104,7 @@ export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_EXTENSIONS
 
 export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · DOCX · XLSX · PPTX · APK · IPA · EPUB · LZH · ARJ · CHM · CPIO · XAR + 更多'
 
-export const COMPRESSION_FORMAT_HINT = 'ZIP · 7Z · RAR · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZMA · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
+export const COMPRESSION_FORMAT_HINT = 'ZIP · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZMA · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
 
 const TAR_FORMATS = new Set(
   FORMAT_CAPABILITIES

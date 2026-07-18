@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import CompressionView from '../CompressionView.vue'
 import { useAppStore } from '@/stores/app'
@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   compressFiles: vi.fn(),
   checkRarCompressionSupport: vi.fn(),
   openRarDownloadPage: vi.fn(),
+  installWinRarWithWinget: vi.fn(),
   invoke: vi.fn(),
 }))
 
@@ -21,6 +22,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
     compressFiles: mocks.compressFiles,
     checkRarCompressionSupport: mocks.checkRarCompressionSupport,
     openRarDownloadPage: mocks.openRarDownloadPage,
+    installWinRarWithWinget: mocks.installWinRarWithWinget,
   }),
 }))
 
@@ -38,6 +40,7 @@ const mountView = () => mount(CompressionView, {
       CompressionSettingsPanel: true,
       GlobalSettingsModal: true,
       Transition: false,
+      Teleport: true,
     },
   },
 })
@@ -57,6 +60,7 @@ describe('CompressionView', () => {
     mocks.invoke.mockResolvedValue('{}')
     mocks.compressFiles.mockResolvedValue(undefined)
     mocks.checkRarCompressionSupport.mockResolvedValue({ available: true, message: 'ready' })
+    mocks.installWinRarWithWinget.mockResolvedValue({ available: true, encoder_path: 'C:/Program Files/WinRAR/Rar.exe', message: 'ready' })
   })
 
   it('accepts a selected file and runs a complete compression job', async () => {
@@ -121,5 +125,34 @@ describe('CompressionView', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('pauses missing RAR creation and can resume the same job as 7Z', async () => {
+    mocks.checkRarCompressionSupport.mockResolvedValue({ available: false, message: 'RAR encoder missing' })
+    const wrapper = mountView()
+    const compressionStore = useCompressionStore()
+    compressionStore.globalSettings.format = 'rar'
+    compressionStore.globalSettings.password = 'keep-this-password'
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+
+    const startButton = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('compress.start')))
+    const pendingStart = startButton!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('创建 RAR 需要编码器')
+    expect(wrapper.text()).toContain('RAR encoder missing')
+    const use7z = wrapper.findAll('button').find(button => button.text().includes('改用 7Z'))
+    expect(use7z).toBeTruthy()
+    await use7z!.trigger('click')
+    await pendingStart
+    await flushPromises()
+
+    expect(mocks.compressFiles).toHaveBeenCalledWith(
+      expect.any(String),
+      ['C:/input/sample.txt'],
+      'C:/input/sample.7z',
+      expect.objectContaining({ format: '7z', password: 'keep-this-password' }),
+    )
   })
 })

@@ -142,6 +142,31 @@ pub async fn check_rar_compression_support() -> Result<RarCompressionSupport, St
 }
 
 #[command]
+pub async fn get_archive_engine_capabilities() -> Result<crate::utils::archive_tools::ArchiveEngineCapabilities, String> {
+    Ok(crate::utils::archive_tools::detect_archive_engine_capabilities())
+}
+
+#[command]
+pub async fn install_winrar_with_winget() -> Result<RarCompressionSupport, String> {
+    let output = crate::utils::process::async_command("winget")
+        .args([
+            "install", "--id", "RARLab.WinRAR", "--exact", "--source", "winget",
+            "--accept-source-agreements", "--accept-package-agreements", "--silent",
+        ])
+        .output()
+        .await
+        .map_err(|err| format!("Unable to start winget: {err}"))?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let detail = if stderr.trim().is_empty() { stdout.trim() } else { stderr.trim() };
+        return Err(format!("WinRAR installation failed: {detail}"));
+    }
+    let support = CompressionService::check_rar_compression_support();
+    if support.available { Ok(support) } else { Err("WinRAR installation finished, but Rar.exe was not detected. Restart the application and retry.".to_string()) }
+}
+
+#[command]
 pub async fn open_rar_download_page(app: AppHandle) -> Result<(), String> {
     tauri::api::shell::open(
         &app.shell_scope(),

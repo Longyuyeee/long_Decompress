@@ -9,6 +9,7 @@ import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedForm
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
+import Modal from '@/components/ui/Modal.vue'
 
 const appStore = useAppStore()
 const compressionStore = useCompressionStore()
@@ -20,6 +21,11 @@ const showGlobalSettingsModal = ref(false)
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
 const checkingRarSupport = ref(false)
 const isCompressing = ref(false)
+const showRarResolution = ref(false)
+const installingWinRar = ref(false)
+const rarResolutionMessage = ref('')
+type RarResolution = 'retry' | 'use-7z' | 'cancel'
+let resolveRarResolution: ((choice: RarResolution) => void) | null = null
 
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
@@ -121,7 +127,7 @@ const buildOutputPath = (baseOutputPath: string, fallbackSourcePath: string, arc
 const runCompression = async () => {
   if (compressionStore.groups.length === 0 && compressionStore.selectedFiles.length === 0) return
 
-  const jobs = [
+  let jobs = [
     ...compressionStore.groups.map(group => {
       const settings = compressionStore.getEffectiveSettings(group.settings)
       return {
@@ -156,6 +162,21 @@ const runCompression = async () => {
     })
   ]
 
+  if (jobs.some(job => job.settings.format === 'rar')) {
+    const support = await ensureRarSupport()
+    if (!support?.available) {
+      const resolution = await requestRarResolution(support?.message || appStore.t('compress.error.rar_requires'))
+      if (resolution === 'cancel') return
+      if (resolution === 'use-7z') {
+        jobs = jobs.map(job => job.settings.format === 'rar' ? {
+          ...job,
+          settings: { ...job.settings, format: '7z' },
+          outputPath: job.outputPath.replace(/\.rar$/i, '.7z'),
+        } : job)
+      }
+    }
+  }
+
   // 第一阶段：预校验并添加所有任务到列表（status: pending）
   const validJobs: Array<{ job: typeof jobs[0], taskId: string, effectiveFormat: string }> = []
   let failed = 0
@@ -182,15 +203,6 @@ const runCompression = async () => {
       appStore.setError(appStore.t('compress.error.no_password').replace('{0}', job.settings.format.toUpperCase()))
       failed++
       continue
-    }
-
-    if (effectiveFormat === 'rar') {
-      const support = await ensureRarSupport()
-      if (!support?.available) {
-        appStore.setError(support?.message || appStore.t('compress.error.rar_requires'))
-        failed++
-        continue
-      }
     }
 
     // 添加任务到列表（pending 状态）
@@ -263,6 +275,39 @@ const handleCompress = async () => {
   } finally {
     isCompressing.value = false
   }
+}
+
+const finishRarResolution = (choice: RarResolution) => {
+  showRarResolution.value = false
+  resolveRarResolution?.(choice)
+  resolveRarResolution = null
+}
+
+const requestRarResolution = (message: string) => {
+  rarResolutionMessage.value = message
+  showRarResolution.value = true
+  return new Promise<RarResolution>(resolve => {
+    resolveRarResolution = resolve
+  })
+}
+
+const installWinRar = async () => {
+  if (installingWinRar.value) return
+  installingWinRar.value = true
+  try {
+    rarSupport.value = await tauriCommands.installWinRarWithWinget()
+    finishRarResolution('retry')
+  } catch (error) {
+    rarResolutionMessage.value = extractErrorMessage(error)
+  } finally {
+    installingWinRar.value = false
+  }
+}
+
+const retryRarDetection = async () => {
+  await refreshRarSupport()
+  if (rarSupport.value?.available) finishRarResolution('retry')
+  else rarResolutionMessage.value = rarSupport.value?.message || appStore.t('compress.error.rar_requires')
 }
 
 const consumePendingAutoStart = () => {
@@ -493,6 +538,41 @@ const totalPayload = computed(() => {
         />
       </div>
     </div>
+
+    <Modal
+      :visible="showRarResolution"
+      title="创建 RAR 需要编码器"
+      size="md"
+      @close="finishRarResolution('cancel')"
+    >
+      <div class="space-y-4">
+        <div class="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-content">
+          <div class="mb-2 flex items-center gap-2 font-black">
+            <i class="pi pi-info-circle text-amber-400"></i>
+            RAR 是专有格式
+          </div>
+          <p class="text-xs leading-6 text-muted">{{ rarResolutionMessage }}</p>
+        </div>
+
+        <button type="button" class="w-full rounded-2xl border border-primary/30 bg-primary/10 p-4 text-left transition hover:border-primary" @click="finishRarResolution('use-7z')">
+          <div class="font-black text-content"><i class="pi pi-star mr-2 text-primary"></i>改用 7Z（推荐）</div>
+          <div class="mt-1 text-xs leading-5 text-muted">无需安装额外软件，支持 AES-256 密码、固实压缩和分卷。</div>
+        </button>
+
+        <button type="button" class="w-full rounded-2xl border border-subtle bg-input p-4 text-left transition hover:border-primary disabled:opacity-60" :disabled="installingWinRar" @click="installWinRar">
+          <div class="font-black text-content"><i :class="installingWinRar ? 'pi pi-spin pi-spinner' : 'pi pi-download'" class="mr-2 text-primary"></i>使用 winget 安装 WinRAR</div>
+          <div class="mt-1 text-xs leading-5 text-muted">从 RARLAB 官方地址安装专有试用软件（试用期最多 40 天）。点击即表示你同意查看并接受其许可条款。</div>
+        </button>
+
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <button type="button" class="h-10 rounded-xl border border-subtle bg-input text-xs font-bold text-content hover:border-primary" @click="openRarDownloadPage">打开官方下载页</button>
+          <button type="button" class="h-10 rounded-xl border border-subtle bg-input text-xs font-bold text-content hover:border-primary" @click="retryRarDetection">已安装，重新检测</button>
+        </div>
+      </div>
+      <template #footer>
+        <button type="button" class="h-10 rounded-xl border border-subtle px-5 text-xs font-bold text-muted hover:text-content" @click="finishRarResolution('cancel')">取消本次压缩</button>
+      </template>
+    </Modal>
 
     <!-- 全局设置弹窗 -->
     <GlobalSettingsModal

@@ -69,7 +69,7 @@ describe('ProfileManager', () => {
     await wrapper.get('input[placeholder="例如：日常 ZIP、最大压缩"]').setValue('日常 TAR')
     expect(wrapper.find('input[type="password"]').exists()).toBe(true)
     await wrapper.get('select').setValue('rar')
-    expect(wrapper.find('input[type="password"]').exists()).toBe(false)
+    expect(wrapper.find('input[type="password"]').exists()).toBe(true)
 
     await wrapper.get('select').setValue('tar')
     expect(wrapper.text()).not.toContain('将压缩包拆分为多个文件')

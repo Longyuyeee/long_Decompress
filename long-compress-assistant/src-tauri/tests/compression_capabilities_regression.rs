@@ -97,10 +97,10 @@ fn validates_password_support_per_format() {
 
     let mut rar_options = compression_options(Some("rar"));
     rar_options.password = Some("secret".to_string());
-    assert!(
+    assert_eq!(
         CompressionService::validate_compression_request(&[source], &output, &rar_options)
-            .is_err(),
-        "RAR password compression must be rejected when no safe password channel is available"
+            .expect("RAR password is supported by the user-installed encoder"),
+        "rar"
     );
 }
 
@@ -210,6 +210,7 @@ fn exposes_backend_compression_capability_matrix() {
     assert!(capabilities.iter().any(|capability| capability.format == "rar" && capability.requires_winrar));
     assert!(capabilities.iter().any(|capability| capability.format == "zip" && capability.supports_split));
     assert!(capabilities.iter().any(|capability| capability.format == "7z" && capability.supports_split));
+    assert!(capabilities.iter().any(|capability| capability.format == "wim" && capability.requires_7za));
 }
 
 #[test]
