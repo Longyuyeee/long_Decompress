@@ -68,6 +68,7 @@ const checkAutoStart = async () => {
 
 onMounted(() => {
   checkAutoStart()
+  checkContextMenu()
 })
 const toggleContextMenu = async () => {
   try {
@@ -277,6 +278,15 @@ const removeWordlist = (index: number) => {
           <section class="aero-card p-8">
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">{{ appStore.t('settings.behavior') }}</h2>
             <div class="space-y-5">
+              <button type="button" role="switch" :aria-checked="appStore.settings.closeToTray" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ closeToTray: !appStore.settings.closeToTray })">
+                <div>
+                  <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.close_to_tray') }}</div>
+                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.close_to_tray.desc') }}</div>
+                </div>
+                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.closeToTray ? 'bg-primary/40 border-primary' : 'bg-input'">
+                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.closeToTray ? 'translate-x-5' : ''"></div>
+                </div>
+              </button>
               <button type="button" role="switch" :aria-checked="appStore.settings.autoDeleteSource" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ autoDeleteSource: !appStore.settings.autoDeleteSource })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.auto_delete') }}</div>

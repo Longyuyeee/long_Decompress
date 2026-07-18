@@ -1,9 +1,53 @@
-use crate::models::compression_profile::CompressionProfile;
+use crate::models::compression_profile::{CompressionConfig, CompressionProfile};
 use crate::services::compression_profile_service::CompressionProfileService;
-use tauri::{command, State};
-use std::sync::Arc;
-use tokio::sync::Mutex;
 use anyhow::Result;
+use serde::Deserialize;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tauri::{command, State};
+use tokio::sync::Mutex;
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateCompressionProfileRequest {
+    name: String,
+    icon: String,
+    description: String,
+    config: CreateCompressionConfig,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CreateCompressionConfig {
+    format: String,
+    level: u8,
+    password: Option<String>,
+    split_archive: bool,
+    split_size: Option<u32>,
+    keep_structure: bool,
+    delete_after: bool,
+    create_solid_archive: bool,
+    filename_template: Option<String>,
+    #[serde(default)]
+    extra_params: HashMap<String, String>,
+}
+
+impl From<CreateCompressionConfig> for CompressionConfig {
+    fn from(config: CreateCompressionConfig) -> Self {
+        Self {
+            format: config.format,
+            level: config.level,
+            password: config.password,
+            split_archive: config.split_archive,
+            split_size: config.split_size,
+            keep_structure: config.keep_structure,
+            delete_after: config.delete_after,
+            create_solid_archive: config.create_solid_archive,
+            filename_template: config.filename_template,
+            extra_params: config.extra_params,
+        }
+    }
+}
 
 /// 应用状态中的配置组服务
 pub struct CompressionProfileServiceState {
@@ -61,12 +105,19 @@ pub async fn get_compression_profile(
 #[command]
 pub async fn create_compression_profile(
     state: State<'_, CompressionProfileServiceState>,
-    profile: CompressionProfile,
+    profile: CreateCompressionProfileRequest,
 ) -> Result<String, String> {
     let service_lock = state.service.lock().await;
     let service = service_lock
         .as_ref()
         .ok_or_else(|| "配置组服务未初始化".to_string())?;
+
+    let profile = CompressionProfile::new(
+        profile.name,
+        profile.icon,
+        profile.description,
+        profile.config.into(),
+    );
 
     service
         .create_profile(profile)
@@ -162,4 +213,35 @@ pub async fn suggest_compression_profile(
         .suggest_profile_for_file(&file_path, file_size)
         .await
         .map_err(|e| format!("推荐配置组失败: {}", e))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CreateCompressionProfileRequest;
+
+    #[test]
+    fn create_profile_request_accepts_frontend_camel_case_payload() {
+        let request: CreateCompressionProfileRequest = serde_json::from_value(serde_json::json!({
+            "name": "快速归档",
+            "icon": "📦",
+            "description": "test",
+            "config": {
+                "format": "zip",
+                "level": 6,
+                "password": null,
+                "splitArchive": false,
+                "splitSize": null,
+                "keepStructure": true,
+                "deleteAfter": false,
+                "createSolidArchive": false,
+                "filenameTemplate": null,
+                "extraParams": {}
+            }
+        }))
+        .expect("frontend profile payload should deserialize");
+
+        assert_eq!(request.name, "快速归档");
+        assert_eq!(request.config.format, "zip");
+        assert!(request.config.keep_structure);
+    }
 }

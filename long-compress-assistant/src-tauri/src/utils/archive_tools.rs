@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 fn command_exists(command: &str) -> bool {
-    std::process::Command::new(command)
+    crate::utils::process::command(command)
         .arg("--help")
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())

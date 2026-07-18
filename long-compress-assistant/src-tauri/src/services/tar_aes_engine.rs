@@ -229,6 +229,14 @@ impl TarAesEngine {
 
         Ok(&magic == MAGIC)
     }
+
+    /// Validate a password without writing extracted files.
+    pub fn verify_password(path: &Path, password: &str) -> Result<bool> {
+        if !Self::is_tar_aes(path)? {
+            return Ok(false);
+        }
+        Ok(Self::decrypt_with_aes(path, password).is_ok())
+    }
 }
 
 #[cfg(test)]
@@ -256,6 +264,8 @@ mod tests {
 
         assert!(output.exists());
         assert!(TarAesEngine::is_tar_aes(&output)?);
+        assert!(TarAesEngine::verify_password(&output, "test_password")?);
+        assert!(!TarAesEngine::verify_password(&output, "wrong_password")?);
 
         // 解压解密
         TarAesEngine::decompress_tar_aes(

@@ -14,6 +14,79 @@ interface SuggestProfileParams {
   file_size: number
 }
 
+const normalizeProfile = (raw: any): CompressionProfile => {
+  const autoApply = raw.autoApply ?? raw.auto_apply ?? {}
+  return ({
+  id: raw.id,
+  name: raw.name,
+  icon: raw.icon,
+  description: raw.description,
+  config: {
+    format: raw.config.format,
+    level: raw.config.level,
+    password: raw.config.password ?? null,
+    splitArchive: raw.config.splitArchive ?? raw.config.split_archive ?? false,
+    splitSize: raw.config.splitSize ?? raw.config.split_size ?? null,
+    keepStructure: raw.config.keepStructure ?? raw.config.keep_structure ?? true,
+    deleteAfter: raw.config.deleteAfter ?? raw.config.delete_after ?? false,
+    createSolidArchive: raw.config.createSolidArchive ?? raw.config.create_solid_archive ?? false,
+    filenameTemplate: raw.config.filenameTemplate ?? raw.config.filename_template ?? null,
+    extraParams: raw.config.extraParams ?? raw.config.extra_params ?? {},
+  },
+  autoApply: {
+    enabled: autoApply.enabled ?? false,
+    mode: autoApply.mode ?? 'none',
+    filePatterns: autoApply.filePatterns ?? autoApply.file_patterns ?? [],
+    sizeRange: autoApply.sizeRange ?? autoApply.size_range ?? null,
+  },
+  passwordStrategy: raw.passwordStrategy ?? raw.password_strategy ?? 'none',
+  stats: {
+    useCount: raw.stats?.useCount ?? raw.stats?.use_count ?? 0,
+    successCount: raw.stats?.successCount ?? raw.stats?.success_count ?? 0,
+    failureCount: raw.stats?.failureCount ?? raw.stats?.failure_count ?? 0,
+    totalFilesProcessed: raw.stats?.totalFilesProcessed ?? raw.stats?.total_files_processed ?? 0,
+    totalBytesProcessed: raw.stats?.totalBytesProcessed ?? raw.stats?.total_bytes_processed ?? 0,
+  },
+  createdAt: raw.createdAt ?? raw.created_at ?? 0,
+  lastUsedAt: raw.lastUsedAt ?? raw.last_used_at ?? null,
+  })
+}
+
+const toBackendProfile = (profile: CompressionProfile) => ({
+  id: profile.id,
+  name: profile.name,
+  icon: profile.icon,
+  description: profile.description,
+  config: {
+    format: profile.config.format,
+    level: profile.config.level,
+    password: profile.config.password,
+    split_archive: profile.config.splitArchive,
+    split_size: profile.config.splitSize,
+    keep_structure: profile.config.keepStructure,
+    delete_after: profile.config.deleteAfter,
+    create_solid_archive: profile.config.createSolidArchive,
+    filename_template: profile.config.filenameTemplate,
+    extra_params: profile.config.extraParams,
+  },
+  auto_apply: {
+    enabled: profile.autoApply.enabled,
+    mode: profile.autoApply.mode,
+    file_patterns: profile.autoApply.filePatterns,
+    size_range: profile.autoApply.sizeRange,
+  },
+  password_strategy: profile.passwordStrategy,
+  stats: {
+    use_count: profile.stats.useCount,
+    success_count: profile.stats.successCount,
+    failure_count: profile.stats.failureCount,
+    total_files_processed: profile.stats.totalFilesProcessed,
+    total_bytes_processed: profile.stats.totalBytesProcessed,
+  },
+  created_at: profile.createdAt,
+  last_used_at: profile.lastUsedAt,
+})
+
 /**
  * 压缩配置组 Composable
  * 封装所有与配置组相关的 Tauri 命令调用
@@ -24,7 +97,8 @@ export const useCompressionProfiles = () => {
    */
   const getAllProfiles = async (): Promise<CompressionProfile[]> => {
     try {
-      return await invoke<CompressionProfile[]>('get_compression_profiles')
+      const profiles = await invoke<any[]>('get_compression_profiles')
+      return profiles.map(normalizeProfile)
     } catch (error) {
       console.error('[useCompressionProfiles] Failed to get all profiles:', error)
       throw new Error(extractErrorMessage(error))
@@ -36,7 +110,8 @@ export const useCompressionProfiles = () => {
    */
   const getProfileById = async (id: string): Promise<CompressionProfile | null> => {
     try {
-      return await invoke<CompressionProfile | null>('get_compression_profile', { id })
+      const profile = await invoke<any | null>('get_compression_profile', { id })
+      return profile ? normalizeProfile(profile) : null
     } catch (error) {
       console.error(`[useCompressionProfiles] Failed to get profile ${id}:`, error)
       throw new Error(extractErrorMessage(error))
@@ -60,7 +135,7 @@ export const useCompressionProfiles = () => {
    */
   const updateProfile = async (profile: CompressionProfile): Promise<void> => {
     try {
-      await invoke<void>('update_compression_profile', { id: profile.id, profile })
+      await invoke<void>('update_compression_profile', { id: profile.id, profile: toBackendProfile(profile) })
     } catch (error) {
       console.error(`[useCompressionProfiles] Failed to update profile ${profile.id}:`, error)
       throw new Error(extractErrorMessage(error))

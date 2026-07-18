@@ -20,11 +20,6 @@ const showGlobalSettingsModal = ref(false)
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
 const checkingRarSupport = ref(false)
 const isCompressing = ref(false)
-onMounted(() => {
-  if (compressionStore.consumeAutoStart()) {
-    setTimeout(() => void handleCompress(), 100)
-  }
-})
 
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
@@ -270,6 +265,21 @@ const handleCompress = async () => {
   }
 }
 
+const consumePendingAutoStart = () => {
+  if (!isCompressing.value && compressionStore.consumeAutoStart()) {
+    setTimeout(() => void handleCompress(), 100)
+  }
+}
+
+onMounted(consumePendingAutoStart)
+
+watch(
+  [() => compressionStore.autoStartRequested, isCompressing],
+  ([requested, compressing]) => {
+    if (requested && !compressing) consumePendingAutoStart()
+  }
+)
+
 const totalPayload = computed(() => {
   return compressionStore.selectedFiles.length + compressionStore.groups.reduce((acc, g) => acc + g.files.length, 0)
 })
@@ -471,7 +481,7 @@ const totalPayload = computed(() => {
           @files-selected="onFilesSelected"
           :compact="true"
           mode="folder"
-          class="w-full h-7"
+          class="w-full min-w-0 h-9"
         />
         <EnhancedFileDropzone
           @files-selected="onFilesSelected"
@@ -479,7 +489,7 @@ const totalPayload = computed(() => {
           mode="file"
           :hint="appStore.t('compress.drop_file_hint')"
           :nativeDrop="false"
-          class="w-full h-7"
+          class="w-full min-w-0 h-9"
         />
       </div>
     </div>

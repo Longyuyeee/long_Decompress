@@ -1,13 +1,14 @@
 {
   "name": "long-compress-assistant",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Longyuyeee",
   "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite --port 1420 --strictPort",
     "build": "vue-tsc && vite build",
+    "build:shell-extension": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-shell-extension.ps1",
     "build:check": "vue-tsc && vite build",
     "type-check": "vue-tsc --noEmit",
     "lint": "vue-tsc --noEmit",

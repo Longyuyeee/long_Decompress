@@ -16,6 +16,7 @@ const emit = defineEmits<{
   'toggle-task': [taskId: string]
   'select-all-pending': []
   'deselect-all': []
+  'retry-with-password': [taskId: string]
 }>()
 
 const taskStore = useTaskStore()
@@ -311,6 +312,12 @@ const onLeave = (el: any) => {
                 :title="appStore.t('tasks.password.fill_vault')">
                 <i class="pi pi-key text-xs"></i>
               </button>
+              <button
+                @click.stop="emit('retry-with-password', task.id)"
+                :disabled="!task.password"
+                class="h-7 w-7 rounded-lg bg-yellow-500 text-white flex items-center justify-center hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                :title="appStore.t('tasks.password.retry')"
+              ><i class="pi pi-play text-xs"></i></button>
             </div>
 
             <!-- 删除按钮 (仅 pending 状态可见) -->
@@ -403,6 +410,11 @@ const onLeave = (el: any) => {
                             :title="appStore.t('tasks.password.fill_vault')">
                             <i class="pi pi-key text-xs"></i>
                           </button>
+                          <button
+                            @click.stop="emit('retry-with-password', task.id)"
+                            :disabled="!task.password"
+                            class="h-7 px-3 rounded-lg bg-yellow-500 text-white text-xs font-bold hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                          >{{ appStore.t('tasks.password.retry') }}</button>
                         </div>
                       </div>
 

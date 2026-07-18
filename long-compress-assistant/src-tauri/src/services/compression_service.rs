@@ -60,6 +60,7 @@ pub enum ArchiveFormat {
     Zip,
     SevenZip,
     Rar,
+    AesEncrypted,
     Tar,
     Gzip,
     Bzip2,
@@ -111,6 +112,12 @@ impl ArchiveFormat {
         // RAR v5 (Rar!\x1a\x07\x01\x00)
         if header.len() >= 8 && &header[0..8] == b"Rar!\x1a\x07\x01\x00" {
             return ArchiveFormat::Rar;
+        }
+        // Application-native encrypted containers.
+        if header.len() >= 8
+            && (&header[0..8] == b"TARAES01" || &header[0..8] == b"AESENC01")
+        {
+            return ArchiveFormat::AesEncrypted;
         }
         // GZIP (1F 8B)
         if header.len() >= 2 && &header[0..2] == b"\x1F\x8B" {
@@ -197,6 +204,7 @@ impl ArchiveFormat {
             ArchiveFormat::Zip |
             ArchiveFormat::SevenZip |
             ArchiveFormat::Rar |
+            ArchiveFormat::AesEncrypted |
             ArchiveFormat::Universal
         )
     }
@@ -829,6 +837,7 @@ impl CompressionService {
                     Err(_) => Ok(true),
                 }
             }
+            ArchiveFormat::AesEncrypted => Ok(true),
             _ => Ok(false),
         }
     }
@@ -883,6 +892,7 @@ impl CompressionService {
                 "zip" | "zipx" | "jar" | "xpi" | "odt" | "ods" | "docx" | "xlsx" | "pptx" | "epub" | "ipa" | "apk" | "appx" => ArchiveFormat::Zip,
                 "7z" => ArchiveFormat::SevenZip,
                 "rar" => ArchiveFormat::Rar,
+                "aes" => ArchiveFormat::AesEncrypted,
                 "tar" | "ova" => ArchiveFormat::Tar,
                 "gz" | "gzip" | "tgz" | "tpz" => ArchiveFormat::Gzip,
                 "bz2" | "bzip2" | "tbz" | "tbz2" => ArchiveFormat::Bzip2,
@@ -1056,6 +1066,26 @@ impl CompressionService {
                 tokio::task::spawn_blocking(move || {
                     srv.do_extract_7z(&w, &t_id, &f_path, &o_dir_str, pwd.as_deref(), &opts)
                 }).await?
+            },
+            ArchiveFormat::AesEncrypted => {
+                let srv = service.clone();
+                let f_path = file_path.clone();
+                let o_dir = out_dir.clone();
+                let pwd = final_password.clone();
+                let opts = options.clone();
+                let t_id = task_id.clone();
+                let w = window.clone();
+                tokio::task::spawn_blocking(move || {
+                    srv.do_extract_aes(
+                        &w,
+                        &t_id,
+                        &f_path,
+                        &o_dir,
+                        pwd.as_deref(),
+                        &opts,
+                    )
+                })
+                .await?
             },
             ArchiveFormat::Tar => {
                 let srv = service.clone();
@@ -1635,15 +1665,99 @@ impl CompressionService {
         self.do_extract_tar(w, tid, file, output, Some(Box::new(zst)), options)
     }
 
-    #[allow(dead_code)]
-    fn do_extract_tar_aes(&self, window: &Window, task_id: &str, _file: &str, _output: &Path, _options: &DecompressOptions) -> Result<()> {
-        self.emit_log(window, task_id, "检测到 TAR.AES 加密文件", TaskLogSeverity::Info);
+    fn do_extract_aes(
+        &self,
+        window: &Window,
+        task_id: &str,
+        file: &str,
+        output: &Path,
+        password: Option<&str>,
+        options: &DecompressOptions,
+    ) -> Result<()> {
+        let password = password.ok_or(CompressionError::PasswordRequired)?;
+        let source = Path::new(file);
 
-        // TAR.AES 需要密码，但 DecompressOptions 不包含密码字段
-        // 密码通过事件系统从前端获取，此处返回 PasswordRequired 错误
-        // 让上层处理密码获取逻辑
+        if TarAesEngine::is_tar_aes(source).unwrap_or(false) {
+            self.emit_log(window, task_id, "正在解密并解压 TAR.AES", TaskLogSeverity::Info);
+            return TarAesEngine::decompress_tar_aes(source, output, password).map_err(|error| {
+                let message = error.to_string();
+                if message.contains("密码错误") || message.contains("解密失败") {
+                    anyhow::Error::new(CompressionError::InvalidPassword)
+                } else {
+                    anyhow::Error::new(CompressionError::ExtractionFailed(message))
+                }
+            });
+        }
 
-        Err(CompressionError::PasswordRequired.into())
+        if !AesWrapper::is_aes_encrypted(source).unwrap_or(false) {
+            return Err(CompressionError::ExtractionFailed(
+                "无法识别的 AES 加密归档".to_string(),
+            )
+            .into());
+        }
+
+        let source_name = source
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("archive.aes");
+        let inner_name = source_name
+            .strip_suffix(".aes")
+            .or_else(|| source_name.strip_suffix(".AES"))
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| {
+                CompressionError::ExtractionFailed(
+                    "AES 归档文件名缺少内层格式，例如 .tar.gz.aes".to_string(),
+                )
+            })?;
+        let temporary_root = std::env::temp_dir().join(format!(
+            "long-compress-aes-{}",
+            uuid::Uuid::new_v4()
+        ));
+        std::fs::create_dir_all(&temporary_root)?;
+        let decrypted = temporary_root.join(inner_name);
+
+        let result = (|| -> Result<()> {
+            AesWrapper::decrypt_file(source, &decrypted, password).map_err(|error| {
+                let message = error.to_string();
+                if message.contains("密码错误") || message.contains("解密失败") {
+                    anyhow::Error::new(CompressionError::InvalidPassword)
+                } else {
+                    anyhow::Error::new(CompressionError::ExtractionFailed(message))
+                }
+            })?;
+
+            let lower_name = inner_name.to_lowercase();
+            let decrypted_path = decrypted.to_string_lossy();
+            if lower_name.ends_with(".tar.gz") || lower_name.ends_with(".tgz") {
+                self.do_extract_tar_gz(window, task_id, &decrypted_path, output, options)
+            } else if lower_name.ends_with(".tar.bz2")
+                || lower_name.ends_with(".tbz")
+                || lower_name.ends_with(".tbz2")
+            {
+                self.do_extract_tar_bz2(window, task_id, &decrypted_path, output, options)
+            } else if lower_name.ends_with(".tar.xz") || lower_name.ends_with(".txz") {
+                self.do_extract_tar_xz(window, task_id, &decrypted_path, output, options)
+            } else if lower_name.ends_with(".tar.zst") || lower_name.ends_with(".tzst") {
+                self.do_extract_tar_zstd(window, task_id, &decrypted_path, output, options)
+            } else if lower_name.ends_with(".gz") || lower_name.ends_with(".gzip") {
+                self.do_extract_gz(window, task_id, &decrypted_path, output, options)
+            } else if lower_name.ends_with(".bz2") || lower_name.ends_with(".bzip2") {
+                self.do_extract_bz2(window, task_id, &decrypted_path, output, options)
+            } else if lower_name.ends_with(".xz") {
+                self.do_extract_xz(window, task_id, &decrypted_path, output, options)
+            } else if lower_name.ends_with(".zst") || lower_name.ends_with(".zstd") {
+                self.do_extract_zstd(window, task_id, &decrypted_path, output, options)
+            } else {
+                Err(CompressionError::ExtractionFailed(format!(
+                    "不支持的 AES 内层格式: {}",
+                    inner_name
+                ))
+                .into())
+            }
+        })();
+
+        let _ = std::fs::remove_dir_all(&temporary_root);
+        result
     }
 
     fn unique_archive_name(used_archive_names: &mut HashSet<String>, raw_name: String) -> String {
@@ -1934,7 +2048,7 @@ impl CompressionService {
 
         let seven_zip = find_7z_command()
             .ok_or_else(|| CompressionError::CompressionFailed(missing_7z_message()))?;
-        let mut cmd = std::process::Command::new(seven_zip);
+        let mut cmd = crate::utils::process::command(seven_zip);
         cmd.arg("a");
         cmd.arg("-tlzma");
         cmd.arg(format!("-mx{}", options.level.clamp(1, 9)));
@@ -2308,36 +2422,35 @@ impl CompressionService {
     }
 
     pub fn find_rar_encoder() -> Option<String> {
-        for command in ["rar", "WinRAR"] {
-            let exists = if cfg!(target_os = "windows") {
-                std::process::Command::new("where")
-                    .arg(command)
-                    .stdout(std::process::Stdio::null())
-                    .stderr(std::process::Stdio::null())
-                    .status()
-                    .map(|status| status.success())
-                    .unwrap_or(false)
-            } else {
-                std::process::Command::new("which")
-                    .arg(command)
-                    .stdout(std::process::Stdio::null())
-                    .stderr(std::process::Stdio::null())
-                    .status()
-                    .map(|status| status.success())
-                    .unwrap_or(false)
-            };
-            if exists {
-                return Some(command.to_string());
-            }
+        // Only use the console encoder. WinRAR.exe is a GUI application and may
+        // display windows or modal errors even when the child console is hidden.
+        let command = "rar";
+        let exists = if cfg!(target_os = "windows") {
+            crate::utils::process::command("where")
+                .arg(command)
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .status()
+                .map(|status| status.success())
+                .unwrap_or(false)
+        } else {
+            crate::utils::process::command("which")
+                .arg(command)
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .status()
+                .map(|status| status.success())
+                .unwrap_or(false)
+        };
+        if exists {
+            return Some(command.to_string());
         }
 
         #[cfg(target_os = "windows")]
         {
             for path in [
                 "C:\\Program Files\\WinRAR\\Rar.exe",
-                "C:\\Program Files\\WinRAR\\WinRAR.exe",
                 "C:\\Program Files (x86)\\WinRAR\\Rar.exe",
-                "C:\\Program Files (x86)\\WinRAR\\WinRAR.exe",
             ] {
                 if Path::new(path).exists() {
                     return Some(path.to_string());
@@ -2380,7 +2493,7 @@ impl CompressionService {
             )
         })?;
 
-        let mut command = std::process::Command::new(encoder);
+        let mut command = crate::utils::process::command(encoder);
         command.arg("a");
         command.arg("-idq");
         command.arg("-y");
@@ -2419,6 +2532,13 @@ impl CompressionService {
         let pwd = password.to_string();
         let path = Path::new(&file);
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+
+        if TarAesEngine::is_tar_aes(path).unwrap_or(false) {
+            return TarAesEngine::verify_password(path, password);
+        }
+        if AesWrapper::is_aes_encrypted(path).unwrap_or(false) {
+            return Ok(AesWrapper::decrypt_data(path, password).is_ok());
+        }
 
         if let Ok(result) = self.universal_engine.try_password(path, password).await {
             return Ok(result);
@@ -2516,6 +2636,38 @@ impl CompressionService {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn recognizes_application_native_aes_headers() {
+        assert_eq!(
+            ArchiveFormat::from_magic(b"TARAES01payload"),
+            ArchiveFormat::AesEncrypted
+        );
+        assert_eq!(
+            ArchiveFormat::from_magic(b"AESENC01payload"),
+            ArchiveFormat::AesEncrypted
+        );
+        assert!(ArchiveFormat::AesEncrypted.supports_password());
+    }
+
+    #[tokio::test]
+    async fn validates_application_native_aes_passwords() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let encrypted = temp.path().join("payload.gz.aes");
+        AesWrapper::encrypt_data(b"compressed payload", &encrypted, "correct-password")
+            .expect("encrypt fixture");
+        let service = CompressionService::new_with_defaults().await;
+
+        assert!(service
+            .test_archive_password(&encrypted.to_string_lossy(), "correct-password")
+            .await
+            .expect("correct password check"));
+        assert!(!service
+            .test_archive_password(&encrypted.to_string_lossy(), "wrong-password")
+            .await
+            .expect("wrong password check"));
+    }
+
     #[test]
     fn test_refined_error_variants() {
         let err1 = CompressionError::PasswordRequired;

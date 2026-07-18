@@ -1,7 +1,7 @@
 use crate::models::compression::DecompressOptions;
 use anyhow::Result;
 use std::path::{Component, Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use log;
@@ -82,13 +82,13 @@ impl RarSupportService {
     /// 检查特定工具是否存在
     fn check_tool_exists(tool: &str) -> bool {
         let output = if cfg!(target_os = "windows") {
-            Command::new("where")
+            crate::utils::process::command("where")
                 .arg(tool)
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())
                 .status()
         } else {
-            Command::new("which")
+            crate::utils::process::command("which")
                 .arg(tool)
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())
@@ -338,7 +338,7 @@ impl RarSupportService {
             ));
         }
 
-        let mut command = Command::new("unrar");
+        let mut command = crate::utils::process::command("unrar");
 
         command.arg("x"); // 解压并保留目录结构
 
@@ -386,7 +386,7 @@ impl RarSupportService {
         }
 
         let seven_zip = find_7z_command().ok_or_else(|| RarError::CommandFailed(missing_7z_message()))?;
-        let mut command = Command::new(seven_zip);
+        let mut command = crate::utils::process::command(seven_zip);
 
         command.arg("x"); // 解压
 
@@ -432,7 +432,7 @@ impl RarSupportService {
             return Err(RarError::ToolNotInstalled);
         }
 
-        let mut command = Command::new("unrar");
+        let mut command = crate::utils::process::command("unrar");
 
         command.arg("l"); // 列出内容
 
@@ -519,7 +519,7 @@ impl RarSupportService {
             return Err(RarError::ToolNotInstalled);
         }
 
-        let mut command = Command::new("unrar");
+        let mut command = crate::utils::process::command("unrar");
         command.arg("t");
 
         // 注意: unrar CLI 不支持环境变量传递密码

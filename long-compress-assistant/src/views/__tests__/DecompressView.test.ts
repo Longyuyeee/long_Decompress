@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import DecompressView from '../DecompressView.vue'
 import { useAppStore } from '@/stores/app'
@@ -100,6 +100,115 @@ describe('DecompressView', () => {
       }),
       expect.any(String),
     )
+    wrapper.unmount()
+  })
+
+  it('runs a queued one-click extraction in a safe same-name folder', async () => {
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    const existingTaskId = taskStore.addTask({
+      id: 'existing-pending-task',
+      name: 'existing.zip',
+      type: 'decompression',
+      sourceFiles: ['C:/archives/existing.zip'],
+      outputPath: 'C:/archives',
+      extractToSubfolder: false,
+    })
+    useAppStore().enqueueContextAction({
+      action: 'context-quick-extract',
+      files: ['C:/archives/quick.zip'],
+    })
+    await flushPromises()
+    await nextTick()
+
+    expect(mocks.decompressFile).toHaveBeenCalledWith(
+      'C:/archives/quick.zip',
+      expect.objectContaining({
+        outputPath: 'C:/archives',
+        createSubdirectory: true,
+      }),
+      expect.any(String),
+    )
+    expect(mocks.decompressFile).not.toHaveBeenCalledWith(
+      'C:/archives/existing.zip',
+      expect.anything(),
+      existingTaskId,
+    )
+    expect(taskStore.tasks.find(task => task.id === existingTaskId)?.status).toBe('pending')
+    wrapper.unmount()
+  })
+
+  it('serially consumes every queued context action without dropping files', async () => {
+    const wrapper = mountView()
+    const appStore = useAppStore()
+    appStore.enqueueContextAction({ action: 'context-quick-extract', files: ['C:/archives/first.zip'] })
+    appStore.enqueueContextAction({ action: 'context-quick-extract', files: ['C:/archives/second.zip'] })
+    await flushPromises()
+    await nextTick()
+
+    expect(mocks.decompressFile).toHaveBeenCalledTimes(2)
+    expect(mocks.decompressFile.mock.calls.map(call => call[0])).toEqual([
+      'C:/archives/first.zip',
+      'C:/archives/second.zip',
+    ])
+    wrapper.unmount()
+  })
+
+  it('retries a failed encrypted archive with the password entered by the user', async () => {
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    const taskId = taskStore.addTask({
+      id: 'encrypted-task',
+      name: 'encrypted.7z',
+      type: 'decompression',
+      sourceFiles: ['C:/archives/encrypted.7z'],
+      outputPath: 'C:/archives/output',
+      extractToSubfolder: true,
+      password: 'correct-password',
+      passwordRequired: true,
+    })
+    taskStore.updateTaskStatus(taskId, 'failed')
+    await nextTick()
+
+    wrapper.findComponent({ name: 'AeroTable' }).vm.$emit('retry-with-password', taskId)
+    await nextTick()
+    await nextTick()
+
+    expect(mocks.decompressFile).toHaveBeenCalledWith(
+      'C:/archives/encrypted.7z',
+      expect.objectContaining({
+        password: 'correct-password',
+        outputPath: 'C:/archives/output',
+        createSubdirectory: true,
+      }),
+      taskId,
+    )
+    wrapper.unmount()
+  })
+
+  it('keeps password entry available after a localized wrong-password failure', async () => {
+    mocks.decompressFile.mockRejectedValueOnce('提供的密码不正确')
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    const taskId = taskStore.addTask({
+      id: 'wrong-password-task',
+      name: 'encrypted.7z',
+      type: 'decompression',
+      sourceFiles: ['C:/archives/encrypted.7z'],
+      outputPath: 'C:/archives/output',
+      password: 'wrong-password',
+      passwordRequired: true,
+    })
+    taskStore.updateTaskStatus(taskId, 'failed')
+    await nextTick()
+
+    wrapper.findComponent({ name: 'AeroTable' }).vm.$emit('retry-with-password', taskId)
+    await flushPromises()
+
+    expect(taskStore.tasks.find(task => task.id === taskId)).toMatchObject({
+      status: 'failed',
+      passwordRequired: true,
+    })
     wrapper.unmount()
   })
 })

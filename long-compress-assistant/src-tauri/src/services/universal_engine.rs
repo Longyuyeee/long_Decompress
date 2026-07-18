@@ -2,7 +2,6 @@ use anyhow::Result;
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tokio::process::Command;
 use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use crate::models::compression::TaskLogSeverity;
@@ -31,7 +30,7 @@ impl UniversalCliEngine {
     async fn run_7z_command(args: &[String]) -> Result<std::process::Output> {
         let cmd = Self::get_7z_command()
             .ok_or_else(|| anyhow::anyhow!(missing_7z_message()))?;
-        Command::new(&cmd)
+        crate::utils::process::async_command(&cmd)
             .args(args)
             .output()
             .await
@@ -47,7 +46,7 @@ impl UniversalCliEngine {
         }
         let cmd = Self::get_7z_command()
             .ok_or_else(|| anyhow::anyhow!(missing_7z_message()))?;
-        Command::new(&cmd)
+        crate::utils::process::async_command(&cmd)
             .args(args)
             .output()
             .await
@@ -293,7 +292,7 @@ impl ArchiveEngine for UniversalCliEngine {
         };
 
         // 无密码尝试列出内容或测试
-        let output = Command::new(cmd)
+        let output = crate::utils::process::async_command(cmd)
             .arg("t")
             .arg("-y")
             .arg(file_path)
@@ -349,7 +348,7 @@ impl ArchiveEngine for UniversalCliEngine {
             anyhow::anyhow!(missing_7z_message())
         })?;
 
-        let mut command = Command::new(cmd);
+        let mut command = crate::utils::process::async_command(cmd);
         command.arg("x"); // extract with full paths
         command.arg("-y"); // yes to all
         command.arg(Self::overwrite_mode_arg(overwrite_existing));

@@ -2,14 +2,40 @@
   <div id="app" @mousemove="resetIdleTimer">
     <MainLayout />
     <ToastContainer />
+    <Modal
+      :visible="showExitConfirmation"
+      :title="appStore.t('exit.confirm.title')"
+      :description="appStore.t('exit.confirm.desc').replace('{0}', String(taskStore.activeTaskCount))"
+      icon="pi pi-exclamation-triangle"
+      size="sm"
+      :show-close-button="false"
+      :show-footer="true"
+      :close-on-backdrop="false"
+      :close-on-escape="false"
+    >
+      <p class="text-sm text-muted leading-relaxed">{{ appStore.t('exit.confirm.warning') }}</p>
+      <template #footer>
+        <button type="button" class="px-4 py-2.5 rounded-xl bg-input border border-subtle text-muted text-xs font-bold hover:text-content transition-all" @click="showExitConfirmation = false">
+          {{ appStore.t('common.cancel') }}
+        </button>
+        <button type="button" class="px-4 py-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary text-xs font-bold hover:bg-primary/20 transition-all" @click="continueInBackground">
+          {{ appStore.t('exit.confirm.background') }}
+        </button>
+        <button type="button" :disabled="exitInProgress" class="px-4 py-2.5 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 disabled:opacity-60 transition-all flex items-center gap-2" @click="cancelTasksAndExit">
+          <i v-if="exitInProgress" class="pi pi-spin pi-spinner"></i>
+          {{ appStore.t('exit.confirm.stop_and_exit') }}
+        </button>
+      </template>
+    </Modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
+import Modal from '@/components/ui/Modal.vue'
 import { useConfigStore } from '@/stores/config'
 import { usePasswordStore } from '@/stores/password'
 import { useTaskStore } from '@/stores/task'
@@ -19,6 +45,8 @@ import { useUIStore } from '@/stores/ui'
 import { useAccessibility } from '@/composables/useAccessibility'
 import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/tauri'
+import { createContextCompressionEntry, groupContextActions, type ContextAction } from '@/utils/contextActions'
 
 const router = useRouter()
 const configStore = useConfigStore()
@@ -33,8 +61,34 @@ let idleTimer: any = null
 let saveWindowTimer: any = null
 let unlistenResize: any = null
 let cleanupSystemWatcher: (() => void) | null = null
+let contextDrainTimer: ReturnType<typeof setTimeout> | null = null
+let contextDrainPromise: Promise<void> | null = null
+let contextDrainAgain = false
 const appUnlisteners: Array<() => void> = []
 let isUnmounted = false
+const showExitConfirmation = ref(false)
+const exitInProgress = ref(false)
+
+const continueInBackground = async () => {
+  showExitConfirmation.value = false
+  await appWindow.hide()
+}
+
+const cancelTasksAndExit = async () => {
+  if (exitInProgress.value) return
+  exitInProgress.value = true
+  const unfinished = taskStore.tasks.filter(
+    task => !['completed', 'failed', 'cancelled'].includes(task.status)
+  )
+  try {
+    await invoke('cancel_tasks_and_wait', { taskIds: unfinished.map(task => task.id) })
+    unfinished.forEach(task => taskStore.updateTaskStatus(task.id, 'cancelled'))
+    await invoke('exit_app')
+  } catch (error) {
+    exitInProgress.value = false
+    appStore.setError(String(error))
+  }
+}
 
 watch(() => appStore.error, message => {
   if (message) uiStore.showToast('error', message, 5000)
@@ -44,12 +98,19 @@ watch(() => appStore.successMessage, message => {
   if (message) uiStore.showToast('success', message)
 })
 
+watch(
+  () => taskStore.activeTaskCount,
+  count => { void invoke('set_has_active_tasks', { active: count > 0 }).catch(() => {}) },
+  { immediate: true }
+)
+
 const keepAppListener = (unlisten: () => void) => {
   if (isUnmounted) unlisten()
   else appUnlisteners.push(unlisten)
 }
 
-const WINDOW_STATE_KEY = 'window-state'
+// v2 intentionally resets the oversized window state saved by earlier releases.
+const WINDOW_STATE_KEY = 'window-state-v2'
 
 const saveWindowState = async () => {
   try {
@@ -76,8 +137,8 @@ const restoreWindowState = async () => {
     const isValid =
       x >= -100 && y >= -100 &&  // 左上角不能完全超出屏幕
       x < screenWidth && y < screenHeight &&  // 至少有部分可见
-      width >= 720 && width <= screenWidth + 100 &&
-      height >= 540 && height <= screenHeight + 100
+      width >= 760 && width <= screenWidth + 100 &&
+      height >= 520 && height <= screenHeight + 100
 
     if (isValid) {
       await appWindow.setPosition(new LogicalPosition(x, y))
@@ -138,34 +199,82 @@ onMounted(async () => {
     console.warn('Task listeners are unavailable:', error)
   }
 
-  const registerCompressionAction = async (
-    eventName: string,
-    format?: 'zip' | '7z',
-    autoStart = false
-  ) => {
-    try {
-      const unlisten = await listen<string[]>(eventName, (event) => {
-        const files = event.payload.filter(file => file && !file.startsWith('%'))
-        if (files.length === 0) return
+  const handleContextAction = async (request: ContextAction) => {
+    const files = request.files.filter(file => file && !file.startsWith('%'))
+    if (files.length === 0) return
 
-        files.forEach(path => {
-          const name = path.split(/[\\/]/).pop() || path
-          compressionStore.addFile({ name, path, size: 0, type: 'file', isDirectory: false })
-        })
-        if (format) compressionStore.globalSettings.format = format
-        if (autoStart) compressionStore.requestAutoStart()
-        void router.push('/compress')
-        appStore.setSuccess(appStore.t('compress.context_menu_custom').replace('{0}', String(files.length)))
+    if (request.action.startsWith('context-compress-')) {
+      const metadata = await Promise.all(files.map(path =>
+        invoke<{ size: number; is_dir: boolean }>('get_file_info', { path }).catch(() => null)
+      ))
+      files.forEach((path, index) => {
+        compressionStore.addFile(createContextCompressionEntry(path, metadata[index]))
       })
-      keepAppListener(unlisten)
-    } catch (error) {
-      console.warn(`Listener ${eventName} is unavailable:`, error)
+      if (request.action === 'context-compress-zip') {
+        compressionStore.globalSettings.format = 'zip'
+        compressionStore.requestAutoStart()
+      } else if (request.action === 'context-compress-7z') {
+        compressionStore.globalSettings.format = '7z'
+        compressionStore.requestAutoStart()
+      }
+      void router.push('/compress')
+      appStore.setSuccess(appStore.t('compress.context_menu_custom').replace('{0}', String(files.length)))
+      return
     }
+
+    appStore.enqueueContextAction({ ...request, files })
+    void router.push('/decompress')
   }
 
-  await registerCompressionAction('context-compress-custom')
-  await registerCompressionAction('context-compress-zip', 'zip', true)
-  await registerCompressionAction('context-compress-7z', '7z', true)
+  try {
+    const unlisten = await listen('exit-confirmation-requested', () => {
+      showExitConfirmation.value = true
+    })
+    keepAppListener(unlisten)
+  } catch (error) {
+    console.warn('Exit confirmation listener is unavailable:', error)
+  }
+
+  const drainContextActions = () => {
+    if (contextDrainPromise) return contextDrainPromise
+    contextDrainPromise = (async () => {
+      try {
+        const actions = await invoke<ContextAction[]>('take_pending_context_actions')
+        for (const action of groupContextActions(actions)) {
+          await handleContextAction(action)
+        }
+      } catch (error) {
+        console.warn('Unable to read context menu actions:', error)
+      }
+    })().finally(() => {
+      contextDrainPromise = null
+      if (contextDrainAgain) {
+        contextDrainAgain = false
+        scheduleContextDrain()
+      }
+    })
+    return contextDrainPromise
+  }
+
+  const scheduleContextDrain = () => {
+    if (contextDrainPromise) {
+      contextDrainAgain = true
+      return
+    }
+    if (contextDrainTimer) clearTimeout(contextDrainTimer)
+    contextDrainTimer = setTimeout(() => {
+      contextDrainTimer = null
+      void drainContextActions()
+    }, 150)
+  }
+
+  try {
+    const unlisten = await listen('context-actions-available', scheduleContextDrain)
+    keepAppListener(unlisten)
+    await drainContextActions()
+  } catch (error) {
+    console.warn('Context menu listener is unavailable:', error)
+  }
 
   resetIdleTimer()
   await restoreWindowState()
@@ -188,6 +297,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
   if (idleTimer) clearTimeout(idleTimer)
   if (saveWindowTimer) clearTimeout(saveWindowTimer)
+  if (contextDrainTimer) clearTimeout(contextDrainTimer)
   if (unlistenResize) unlistenResize()
   if (cleanupSystemWatcher) cleanupSystemWatcher()
   appUnlisteners.forEach(unlisten => unlisten())

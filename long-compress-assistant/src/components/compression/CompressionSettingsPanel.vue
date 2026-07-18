@@ -7,7 +7,9 @@ import type { CompressionOptions } from '@/stores/compression'
 import type { CompressionProfile } from '@/types/profile'
 import { COMPRESSIBLE_FORMATS, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 import ProfileSelector from '@/components/profiles/ProfileSelector.vue'
+import ProfileManager from '@/components/profiles/ProfileManager.vue'
 import PasswordGeneratorDialog from '@/components/password/PasswordGeneratorDialog.vue'
+import { extractErrorMessage } from '@/utils'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
@@ -49,6 +51,7 @@ const compressionOptions = ref<CompressionOptions>(props.modelValue || {
 const outputPath = ref(props.outputPath)
 const showAdvanced = ref(false)
 const showProfileSelector = ref(false)
+const profileDialogMode = ref<'select' | 'manage'>('select')
 let syncingFromProps = false
 const showPresetModal = ref(false)
 const presetNameInput = ref('')
@@ -58,6 +61,7 @@ const newProfileIcon = ref('📦')
 const newProfileDescription = ref('')
 
 const compressionFormats = COMPRESSIBLE_FORMATS
+const selectedFormat = computed(() => compressionFormats.find(format => format.value === compressionOptions.value.format))
 
 // 全部格式支持密码：ZIP/7Z/RAR 原生支持，其他格式通过 7z CLI 自动创建 .7z 加密容器
 const supportsPassword = computed(() => isPasswordSupportedFormat(compressionOptions.value.format))
@@ -83,11 +87,6 @@ const confirmSavePreset = () => {
 
 const isFormatDisabled = (format: { singleFileOnly?: boolean }) => {
   return Boolean(format.singleFileOnly && !props.allowSingleFileFormats)
-}
-
-const selectFormat = (format: typeof compressionFormats[number]) => {
-  if (isFormatDisabled(format)) return
-  compressionOptions.value.format = format.value as CompressionOptions['format']
 }
 
 const selectOutputPath = async () => {
@@ -190,7 +189,7 @@ const saveAsNewProfile = async () => {
     showSaveProfileModal.value = false
     appStore.setSuccess(appStore.t('profiles.save_success'))
   } catch (error) {
-    appStore.setError(appStore.t('profiles.save_failed'))
+    appStore.setError(`${appStore.t('profiles.save_failed')}: ${extractErrorMessage(error)}`)
   }
 }
 
@@ -206,9 +205,9 @@ const handlePasswordGenerated = (password: string) => {
 <template>
   <div class="horizontal-settings flex flex-col gap-4">
     <!-- 第一行：核心必填参数 -->
-    <div class="flex items-center gap-6 flex-wrap lg:flex-nowrap">
+    <div class="settings-core-grid">
       <!-- 格式选择 -->
-      <div class="flex flex-col gap-1.5 shrink-0">
+      <div class="flex flex-col gap-1.5 min-w-0">
         <!-- 预设 -->
         <div v-if="presets.length > 0" class="flex items-center gap-1 mb-1 flex-wrap">
           <span class="text-sm text-dim uppercase font-black tracking-widest shrink-0">{{ appStore.t('preset.label') }}</span>
@@ -219,32 +218,27 @@ const handlePasswordGenerated = (password: string) => {
         </div>
 
         <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.format') }}</label>
-        <div class="flex flex-wrap p-1 rounded-xl bg-input border border-subtle gap-1">
-          <button 
-            v-for="fmt in compressionFormats" :key="fmt.value"
-            @click="selectFormat(fmt)"
-            :disabled="isFormatDisabled(fmt)"
-            class="px-3 py-1.5 rounded-lg text-xs font-black transition-all"
-            :class="[
-              compressionOptions.format === fmt.value ? 'bg-primary text-white shadow-sm' : 'text-dim hover:bg-white/5',
-              isFormatDisabled(fmt) ? 'opacity-75 cursor-not-allowed hover:bg-transparent' : ''
-            ]"
-            :title="isFormatDisabled(fmt) ? appStore.t('preset.single_file_only') : fmt.name"
+        <div class="relative">
+          <select
+            v-model="compressionOptions.format"
+            class="w-full h-10 appearance-none rounded-xl bg-input border border-subtle pl-4 pr-10 text-sm font-black text-content outline-none focus:border-primary"
           >
-            {{ fmt.name }}
-          </button>
+            <option
+              v-for="fmt in compressionFormats"
+              :key="fmt.value"
+              :value="fmt.value"
+              :disabled="isFormatDisabled(fmt)"
+            >{{ fmt.name }}{{ fmt.singleFileOnly ? ` · ${appStore.t('preset.single_file_only')}` : '' }}</option>
+          </select>
+          <i class="pi pi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted pointer-events-none"></i>
         </div>
-        <!-- 格式帮助提示 -->
-        <div class="text-sm text-dim mt-1 leading-relaxed">
-          <span class="text-primary font-bold">ZIP</span> Universal &middot;
-          <span class="text-purple-400 font-bold">7Z</span> Best compression &middot;
-          <span class="text-amber-400 font-bold">TAR.*</span> Linux archives &middot;
-          <span class="font-bold">GZ/BZ2/XZ</span> Single file
-        </div>
+        <p class="text-xs text-dim leading-relaxed truncate" :title="selectedFormat?.name">
+          {{ compressionOptions.format === 'zip' ? '兼容性最好，适合分享' : compressionOptions.format === '7z' ? '压缩率更高，适合归档' : compressionOptions.format.startsWith('tar') ? '适合 Linux / Unix 环境' : '仅适合单个文件' }}
+        </p>
       </div>
 
       <!-- 压缩强度 (精致 Range) -->
-      <div class="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+      <div class="flex flex-col gap-1.5 min-w-0">
         <div class="flex justify-between items-center px-1">
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.level') }}</label>
           <span class="text-xs font-mono text-primary font-black">{{ compressionOptions.level }} / 9</span>
@@ -256,7 +250,7 @@ const handlePasswordGenerated = (password: string) => {
       </div>
 
       <!-- 文件名输入 -->
-      <div class="flex flex-col gap-1.5 flex-[1.5] min-w-[200px]">
+      <div class="flex flex-col gap-1.5 min-w-0">
         <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.filename') }}</label>
         <div class="relative">
           <input 
@@ -269,7 +263,7 @@ const handlePasswordGenerated = (password: string) => {
       </div>
 
       <!-- 密码保护 (主行可见) 带生成器按钮 -->
-      <div class="flex flex-col gap-1.5 w-44 shrink-0">
+      <div class="flex flex-col gap-1.5 min-w-0">
         <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('decompress.password') }}</label>
         <div class="flex gap-1">
           <div class="relative flex-1">
@@ -301,20 +295,23 @@ const handlePasswordGenerated = (password: string) => {
         </div>
       </div>
 
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
       <!-- 高级开关按钮 -->
       <button
         @click="showAdvanced = !showAdvanced"
-        class="mt-auto h-9 px-4 rounded-xl border border-subtle text-xs font-black uppercase tracking-widest transition-all"
+        class="h-9 px-4 rounded-xl border border-subtle text-xs font-black transition-all whitespace-nowrap"
         :class="showAdvanced ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-input text-muted hover:text-content'"
       >
         <i class="pi pi-cog mr-2" :class="{ 'animate-spin-slow': showAdvanced }"></i>
-        {{ appStore.t('preset.options') }}
+        {{ appStore.t('preset.advanced_options', '输出与高级选项') }}
       </button>
 
       <!-- 配置组选择按钮 -->
       <button
-        @click="showProfileSelector = !showProfileSelector"
-        class="mt-auto h-9 px-4 rounded-xl border border-subtle text-xs font-black uppercase tracking-widest transition-all"
+        @click="profileDialogMode = 'manage'; showProfileSelector = true"
+        class="h-9 px-4 rounded-xl border border-subtle text-xs font-black transition-all whitespace-nowrap"
         :class="showProfileSelector ? 'bg-sky-500/10 border-sky-500/30 text-sky-400' : 'bg-input text-muted hover:text-content'"
       >
         <i class="pi pi-bookmark mr-2"></i>
@@ -324,7 +321,7 @@ const handlePasswordGenerated = (password: string) => {
       <!-- 保存为配置组按钮 -->
       <button
         @click="openSaveProfileModal"
-        class="mt-auto h-9 px-4 rounded-xl border border-subtle text-xs font-black uppercase tracking-widest transition-all bg-input text-muted hover:text-content hover:border-sky-500/30"
+        class="h-9 px-4 rounded-xl border border-subtle text-xs font-black transition-all bg-input text-muted hover:text-content hover:border-sky-500/30 whitespace-nowrap"
         :title="appStore.t('profiles.save_as_new')"
       >
         <i class="pi pi-save mr-2"></i>
@@ -334,9 +331,9 @@ const handlePasswordGenerated = (password: string) => {
 
     <!-- 第二行：高级/路径设置 (条件展开) -->
     <transition name="slide-down">
-      <div v-if="showAdvanced" class="flex flex-wrap lg:flex-nowrap items-end gap-6 pt-4 border-t border-subtle/30">
+      <div v-if="showAdvanced" class="space-y-4 pt-4 border-t border-subtle/30">
         <!-- 目标路径 -->
-        <div class="flex flex-col gap-1.5 flex-1 min-w-[300px]">
+        <div class="flex flex-col gap-1.5 min-w-0">
           <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.output_path') }}</label>
           <div class="flex gap-2">
             <input 
@@ -350,52 +347,57 @@ const handlePasswordGenerated = (password: string) => {
           </div>
         </div>
 
-        <!-- 标记开关 -->
-        <div class="flex gap-4 mb-1 shrink-0">
-          <div v-for="opt in [
-            { key: 'keepStructure', icon: 'pi pi-sitemap' },
-            { key: 'deleteAfter', icon: 'pi pi-trash' }
-          ]" :key="opt.key" 
-          @click="(compressionOptions[opt.key as 'keepStructure' | 'deleteAfter'] as boolean) = !compressionOptions[opt.key as 'keepStructure' | 'deleteAfter']"
-          class="w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer transition-all"
-          :class="compressionOptions[opt.key as 'keepStructure' | 'deleteAfter'] ? 'bg-primary/20 border-primary text-primary' : 'bg-input border-subtle text-dim hover:text-muted'"
-          :title="opt.key === 'keepStructure' ? appStore.t('preset.keep_structure') : appStore.t('preset.delete_after')">
-            <i :class="[opt.icon, 'text-xs']"></i>
-          </div>
-
-          <!-- 分卷开关 -->
-          <div
-            @click="compressionOptions.splitArchive = !compressionOptions.splitArchive"
-            class="w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer transition-all"
-            :class="compressionOptions.splitArchive ? 'bg-primary/20 border-primary text-primary' : 'bg-input border-subtle text-dim hover:text-muted'"
-            :title="appStore.t('preset.split_archive')">
-            <i class="pi pi-clone text-xs"></i>
-          </div>
-          <input
-            v-if="compressionOptions.splitArchive"
-            v-model.number="compressionOptions.splitSize"
-            type="number" min="1" step="1"
-            class="w-16 px-2 py-2 rounded-xl bg-input border border-subtle text-sm text-content outline-none focus:border-primary transition-all font-mono"
-            :placeholder="appStore.t('preset.mb')"
-          />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <label class="advanced-option">
+            <input v-model="compressionOptions.keepStructure" type="checkbox" />
+            <span><strong>{{ appStore.t('preset.keep_structure') }}</strong><small>保留源文件夹的层级关系</small></span>
+          </label>
+          <label class="advanced-option advanced-option-danger">
+            <input v-model="compressionOptions.deleteAfter" type="checkbox" />
+            <span><strong>{{ appStore.t('preset.delete_after') }}</strong><small>仅压缩成功后删除原始文件，请谨慎启用</small></span>
+          </label>
+          <label class="advanced-option">
+            <input v-model="compressionOptions.splitArchive" type="checkbox" />
+            <span><strong>{{ appStore.t('preset.split_archive') }}</strong><small>把大压缩包拆成多个便于传输的分卷</small></span>
+          </label>
+          <label v-if="compressionOptions.format === '7z'" class="advanced-option">
+            <input v-model="compressionOptions.createSolidArchive" type="checkbox" />
+            <span><strong>固实压缩</strong><small>提高同类文件压缩率，但单文件提取更慢</small></span>
+          </label>
+          <label v-if="compressionOptions.splitArchive" class="advanced-option">
+            <span class="w-full"><strong>每个分卷大小</strong><small>单位：MB</small></span>
+            <input v-model.number="compressionOptions.splitSize" type="number" min="1" step="1" class="w-24 h-9 px-3 rounded-lg bg-input border border-subtle text-sm text-content outline-none focus:border-primary" />
+          </label>
         </div>
       </div>
     </transition>
+  </div>
 
-    <!-- 配置组选择器 (条件展开) -->
-    <transition name="slide-down">
-      <div v-if="showProfileSelector" class="pt-4 border-t border-subtle/30">
-        <ProfileSelector
-          :show-manage-button="true"
-          @apply="applyProfile"
-          @manage="$router.push('/settings')"
-        />
+  <!-- 配置组管理弹窗 -->
+  <Teleport to="body">
+    <transition name="pop">
+      <div v-if="showProfileSelector" class="fixed inset-0 z-[320] flex items-center justify-center bg-black/55 p-4" @click.self="showProfileSelector = false">
+        <div class="modal-no-glass w-full max-w-3xl max-h-[82vh] overflow-y-auto rounded-2xl p-6 text-content shadow-2xl">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h3 class="text-base font-black">{{ profileDialogMode === 'select' ? '选择压缩配置' : '管理压缩配置组' }}</h3>
+              <p class="text-xs text-muted mt-1">{{ profileDialogMode === 'select' ? '选择后会立即应用格式、压缩级别和高级选项' : '创建、修改或删除可重复使用的配置组' }}</p>
+            </div>
+            <button type="button" class="w-8 h-8 rounded-lg bg-input text-muted hover:text-content" @click="showProfileSelector = false"><i class="pi pi-times"></i></button>
+          </div>
+          <ProfileSelector v-if="profileDialogMode === 'select'" :show-manage-button="true" @apply="applyProfile" @manage="profileDialogMode = 'manage'" />
+          <div v-else>
+            <button type="button" class="mb-4 h-9 px-4 rounded-lg bg-input border border-subtle text-xs font-bold text-muted hover:text-content" @click="profileDialogMode = 'select'"><i class="pi pi-arrow-left mr-2"></i>返回选择配置</button>
+            <ProfileManager />
+          </div>
+        </div>
       </div>
     </transition>
-  </div>
+  </Teleport>
+<Teleport to="body">
 <!-- 预设名称弹窗 -->
 <transition name="pop">
-  <div v-if="showPresetModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" @click.self="showPresetModal = false">
+  <div v-if="showPresetModal" class="fixed inset-0 z-[330] flex items-center justify-center bg-black/65 p-4" @click.self="showPresetModal = false">
     <div class="modal-no-glass rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-content">
       <h3 class="text-sm font-black mb-4 uppercase tracking-widest">{{ appStore.t('preset.name_prompt') }}</h3>
       <input v-model="presetNameInput" @keyup.enter="confirmSavePreset" class="w-full h-10 rounded-xl bg-input border border-subtle px-4 text-sm font-mono text-content outline-none focus:border-primary transition-all mb-4" autofocus />
@@ -409,7 +411,7 @@ const handlePasswordGenerated = (password: string) => {
 
 <!-- 保存为配置组弹窗 -->
 <transition name="pop">
-  <div v-if="showSaveProfileModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" @click.self="showSaveProfileModal = false">
+  <div v-if="showSaveProfileModal" class="fixed inset-0 z-[330] flex items-center justify-center bg-black/65 p-4" @click.self="showSaveProfileModal = false">
     <div class="modal-no-glass rounded-[2rem] p-8 w-full max-w-md shadow-2xl text-content">
       <h3 class="text-sm font-black mb-4 uppercase tracking-widest">{{ appStore.t('profiles.save_as_profile') }}</h3>
 
@@ -470,6 +472,7 @@ const handlePasswordGenerated = (password: string) => {
     </div>
   </div>
 </transition>
+</Teleport>
 
 <!-- 密码生成器对话框 -->
 <PasswordGeneratorDialog
@@ -478,6 +481,65 @@ const handlePasswordGenerated = (password: string) => {
   @select="handlePasswordGenerated"
 />
 </template>
+
+<style scoped>
+.settings-core-grid {
+  display: grid;
+  grid-template-columns: minmax(11rem, 1.05fr) minmax(9rem, 0.75fr) minmax(11rem, 1fr) minmax(11rem, 1fr);
+  gap: 1rem;
+  align-items: end;
+}
+
+.advanced-option {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--bg-input) 55%, transparent);
+  cursor: pointer;
+}
+
+.advanced-option input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  accent-color: var(--dynamic-accent);
+}
+
+.advanced-option span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.advanced-option strong {
+  color: var(--text-base);
+  font-size: 0.75rem;
+}
+
+.advanced-option small {
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+.advanced-option-danger:has(input:checked) {
+  border-color: rgb(239 68 68 / 0.45);
+  background: rgb(239 68 68 / 0.06);
+}
+
+@media (max-width: 1100px) {
+  .settings-core-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 680px) {
+  .settings-core-grid { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
 
 <style scoped>
 .slide-down-enter-active, .slide-down-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }

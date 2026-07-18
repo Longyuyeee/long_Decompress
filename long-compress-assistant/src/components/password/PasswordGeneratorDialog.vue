@@ -1,12 +1,13 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+  <Teleport to="body">
+  <div v-if="isOpen" class="fixed inset-0 z-[400] flex items-center justify-center p-4">
     <!-- 背景遮罩 -->
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="closeDialog"></div>
+    <div class="absolute inset-0 bg-black/65" @click="closeDialog"></div>
 
     <!-- 对话框 -->
-    <div class="relative w-full max-w-md mx-4 bg-surface rounded-2xl shadow-2xl border border-subtle">
+    <div class="password-generator-dialog relative w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl shadow-2xl border border-subtle text-content">
       <!-- 头部 -->
-      <div class="px-6 py-5 border-b border-subtle">
+      <div class="px-5 py-4 border-b border-subtle">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="text-2xl">🎲</span>
@@ -22,7 +23,7 @@
       </div>
 
       <!-- 内容 -->
-      <div class="p-6 space-y-6">
+      <div class="p-5 space-y-4">
         <!-- 生成的密码显示 -->
         <div class="relative">
           <div class="flex items-center gap-2 p-4 bg-input/30 rounded-xl border border-subtle font-mono text-sm break-all select-all">
@@ -61,7 +62,7 @@
               v-for="mode in modes"
               :key="mode.value"
               @click="selectedMode = mode.value"
-              class="px-4 py-3 rounded-xl border transition-all text-left"
+                class="px-4 py-2 rounded-xl border transition-all text-left"
               :class="selectedMode === mode.value
                 ? 'bg-primary/10 border-primary text-primary'
                 : 'bg-input/30 border-subtle text-muted hover:border-primary/50'"
@@ -101,7 +102,7 @@
             <label class="text-xs font-bold text-primary uppercase tracking-wider">
               {{ appStore.t('password.generator.charset', '字符集') }}
             </label>
-            <div class="space-y-2">
+            <div class="space-y-1.5">
               <label v-for="option in charsetOptions" :key="option.key" class="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -146,23 +147,24 @@
       </div>
 
       <!-- 底部操作 -->
-      <div class="px-6 py-4 border-t border-subtle flex gap-3">
+      <div class="px-5 py-3 border-t border-subtle flex gap-3">
         <button
           @click="generatePassword"
-          class="flex-1 px-4 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors"
+          class="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors"
         >
           {{ appStore.t('password.generator.generate', '生成密码') }}
         </button>
         <button
           v-if="generatedPassword"
           @click="usePassword"
-          class="flex-1 px-4 py-3 rounded-xl bg-input/30 border border-subtle text-primary font-bold hover:border-primary transition-colors"
+          class="flex-1 px-4 py-2.5 rounded-xl bg-input/30 border border-subtle text-primary font-bold hover:border-primary transition-colors"
         >
           {{ appStore.t('password.generator.use', '使用此密码') }}
         </button>
       </div>
     </div>
   </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -328,3 +330,11 @@ watch(() => props.isOpen, (isOpen) => {
   }
 })
 </script>
+
+<style scoped>
+.password-generator-dialog {
+  background: var(--bg-modal);
+  box-shadow: 0 28px 80px rgb(0 0 0 / 0.55), 0 0 0 1px var(--border-subtle);
+  isolation: isolate;
+}
+</style>

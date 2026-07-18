@@ -1,0 +1,19 @@
+[package]
+name = "long-compress-shell-extension"
+version = "1.0.4"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+windows = { version = "0.62.2", features = [
+  "Win32_Foundation",
+  "Win32_System_Com",
+  "Win32_System_LibraryLoader",
+  "Win32_UI_Shell",
+] }
+windows-core = "0.62.2"
+winreg = "0.52"

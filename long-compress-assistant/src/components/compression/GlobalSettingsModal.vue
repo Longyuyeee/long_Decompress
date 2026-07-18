@@ -45,20 +45,11 @@ const handleCancel = () => {
   <Modal
     :visible="visible"
     @close="handleCancel"
-    :width="700"
+    size="xl"
+    title="全局压缩设置"
+    description="应用到所有未单独配置的文件和组"
+    icon="pi pi-cog"
   >
-    <template #header>
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-          <i class="pi pi-cog text-primary text-lg"></i>
-        </div>
-        <div>
-          <h3 class="text-lg font-black text-content uppercase tracking-wider">全局压缩设置</h3>
-          <p class="text-xs text-muted uppercase tracking-widest mt-1">应用到所有未单独配置的文件和组</p>
-        </div>
-      </div>
-    </template>
-
     <div class="p-6 space-y-6">
       <!-- 复用设置面板组件 -->
       <CompressionSettingsPanel

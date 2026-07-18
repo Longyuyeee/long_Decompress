@@ -103,4 +103,23 @@ describe('CompressionView', () => {
     expect(appStore.error).toContain('disk full')
     expect(appStore.successMessage).toBeTruthy()
   })
+
+  it('starts a compression request that arrives after the view is already mounted', async () => {
+    vi.useFakeTimers()
+    try {
+      const wrapper = mountView()
+      const compressionStore = useCompressionStore()
+      wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+      await nextTick()
+
+      compressionStore.requestAutoStart()
+      await nextTick()
+      await vi.runAllTimersAsync()
+
+      expect(mocks.compressFiles).toHaveBeenCalledTimes(1)
+      expect(compressionStore.autoStartRequested).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

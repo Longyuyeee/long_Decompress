@@ -153,27 +153,27 @@ const copyToClipboard = async (text: string) => {
 <template>
   <transition name="progress-slide">
     <div v-if="isVisible && !isMinimized"
-         class="global-progress-bar fixed bottom-4 left-20 z-[600] select-none">
+         class="global-progress-bar relative z-[600] select-none w-full">
 
       <!-- 紧凑指示器：点击展开 -->
       <div
            @click="isExpanded = !isExpanded"
-           class="flex items-center gap-4 px-5 py-3 rounded-2xl bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-3xl border-2 border-primary/50 shadow-[0_8px_32px_rgba(14,165,233,0.25)] cursor-pointer hover:border-primary/80 hover:shadow-[0_12px_48px_rgba(14,165,233,0.35)] hover:scale-[1.02] transition-all duration-300 min-w-[200px] ring-2 ring-primary/10">
+           class="progress-summary flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-3xl border border-primary/40 shadow-lg cursor-pointer hover:border-primary/70 transition-all duration-300 w-full min-w-0">
         <!-- 环形进度 -->
-        <div class="relative w-10 h-10 shrink-0">
-          <svg class="w-10 h-10 -rotate-90" viewBox="0 0 24 24">
+        <div class="progress-ring-wrap relative w-9 h-9 shrink-0">
+          <svg class="w-9 h-9 -rotate-90" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" class="text-input opacity-75"/>
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-dasharray="62.83"
                     :stroke-dashoffset="62.83 - (62.83 * overallProgress) / 100"
                     class="text-primary transition-all duration-1000 progress-ring"/>
           </svg>
-          <span class="absolute inset-0 flex items-center justify-center text-sm font-black font-mono text-content">
+          <span class="absolute inset-0 flex items-center justify-center text-xs font-black font-mono text-content">
             {{ overallProgress }}%
           </span>
         </div>
 
         <!-- 摘要信息 -->
-        <div class="flex flex-col min-w-0 flex-1">
+        <div class="progress-copy flex flex-col min-w-0 flex-1">
           <div class="flex items-center gap-2">
             <i v-if="hasActiveTasks" class="pi pi-spin pi-spinner text-[0.75rem] text-primary"></i>
             <i v-else class="pi pi-check-circle text-[0.75rem] text-green-400"></i>
@@ -198,12 +198,12 @@ const copyToClipboard = async (text: string) => {
         </div>
 
         <!-- 完成计数 -->
-        <div class="flex flex-col items-end shrink-0">
+        <div class="progress-count flex flex-col items-end shrink-0">
           <span class="text-[0.75rem] font-mono text-primary font-black">{{ completedCount }}/{{ totalCount }}</span>
           <span v-if="failedCount > 0" class="text-xs font-mono text-red-400 font-bold">{{ failedCount }} {{ appStore.t('tasks.status.failed') }}</span>
         </div>
 
-        <i :class="isExpanded ? 'pi pi-chevron-down' : 'pi pi-chevron-up'" class="text-sm text-dim shrink-0"></i>
+        <i :class="isExpanded ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" class="progress-chevron text-xs text-dim shrink-0"></i>
 
         <!-- 最小化按钮 -->
         <button
@@ -217,7 +217,7 @@ const copyToClipboard = async (text: string) => {
       <!-- 展开的任务列表面板 -->
       <transition name="panel-slide">
         <div v-if="isExpanded"
-             class="absolute bottom-full left-0 mb-2 w-[30rem] max-h-[65vh] rounded-2xl bg-gradient-to-br from-card via-card/98 to-card/95 backdrop-blur-3xl border-2 border-primary/40 shadow-[0_16px_64px_rgba(14,165,233,0.2)] overflow-hidden flex flex-col ring-2 ring-primary/10">
+              class="progress-panel absolute rounded-2xl bg-card border border-primary/40 shadow-2xl overflow-hidden flex flex-col">
           <!-- 面板头部 -->
           <div class="px-5 py-3.5 border-b border-subtle/20 shrink-0">
             <div class="flex items-center justify-between mb-2">
@@ -358,7 +358,7 @@ const copyToClipboard = async (text: string) => {
     <button
       v-if="isVisible && isMinimized"
       @click="isMinimized = false"
-      class="fixed bottom-4 left-20 z-[600] w-3 h-3 rounded-full bg-primary shadow-[0_0_12px_rgba(14,165,233,0.6)] hover:scale-125 hover:shadow-[0_0_20px_rgba(14,165,233,0.8)] transition-all duration-300 cursor-pointer"
+      class="relative z-[600] mx-auto block w-3 h-3 rounded-full bg-primary shadow-[0_0_12px_rgba(14,165,233,0.6)] hover:scale-125 hover:shadow-[0_0_20px_rgba(14,165,233,0.8)] transition-all duration-300 cursor-pointer"
       :class="{ 'animate-pulse': hasActiveTasks }"
       :title="appStore.t('tasks.show_progress')">
     </button>
@@ -368,6 +368,31 @@ const copyToClipboard = async (text: string) => {
 <style scoped>
 .global-progress-bar {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.progress-panel {
+  left: calc(100% + 0.75rem);
+  bottom: 0;
+  width: min(30rem, calc(100vw - 16rem));
+  min-width: 20rem;
+  max-height: min(65vh, 32rem);
+}
+
+@media (max-width: 840px) {
+  .progress-summary {
+    justify-content: center;
+    padding: 0.35rem;
+  }
+  .progress-copy,
+  .progress-count,
+  .progress-chevron,
+  .progress-summary > button {
+    display: none;
+  }
+  .progress-panel {
+    width: calc(100vw - 7rem);
+    min-width: 18rem;
+  }
 }
 
 .progress-slide-enter-active,

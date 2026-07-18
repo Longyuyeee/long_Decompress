@@ -44,6 +44,7 @@ export interface AppSettings {
   bruteForceMaxLen: number
   bruteForceWordlists: string[]
   autoStart: boolean
+  closeToTray: boolean
   conflictPolicy: 'ask' | 'overwrite' | 'skip' | 'rename'
   autoDeleteSource: boolean
   uiScale: number
@@ -65,6 +66,7 @@ export const useAppStore = defineStore('app', () => {
   const recentFiles = ref<string[]>([])
   const errorMessage = ref<string | null>(null)
   const decompressTasks = ref<DecompressTask[]>([])
+  const pendingContextActions = ref<Array<{ action: string; files: string[] }>>([])
   let errorTimer: ReturnType<typeof setTimeout> | null = null
   let successTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -95,7 +97,7 @@ export const useAppStore = defineStore('app', () => {
     savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
     sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
     bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-    bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask', autoDeleteSource: false,
+    bruteForceWordlists: [], autoStart: false, closeToTray: true, conflictPolicy: 'ask', autoDeleteSource: false,
     uiScale: 100,
     accessibility: {
       fontSize: 'normal',
@@ -124,6 +126,14 @@ export const useAppStore = defineStore('app', () => {
       console.error('Failed to set auto start:', e)
     }
   })
+
+  watch(() => settings.value.closeToTray, async (enabled) => {
+    try {
+      await invoke('set_close_to_tray', { enabled })
+    } catch (e) {
+      console.warn('Failed to update close-to-tray behavior:', e)
+    }
+  }, { immediate: true })
 
   const activeTasks = computed(() => decompressTasks.value.filter(t => t.status === 'processing' || t.status === 'pending'))
   const completedTasks = computed(() => decompressTasks.value.filter(t => t.status === 'completed'))
@@ -179,7 +189,7 @@ export const useAppStore = defineStore('app', () => {
       savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-      bruteForceWordlists: [], autoStart: false, conflictPolicy: 'ask', autoDeleteSource: false,
+      bruteForceWordlists: [], autoStart: false, closeToTray: true, conflictPolicy: 'ask', autoDeleteSource: false,
       uiScale: 100,
       accessibility: {
         fontSize: 'normal',
@@ -257,6 +267,7 @@ export const useAppStore = defineStore('app', () => {
 
   return {
     theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings,
+    pendingContextActions,
     recentFiles, addRecentFile,
     compressionPresets, saveCompressionPreset, deleteCompressionPreset,
     currentTheme, activeTasks, completedTasks, totalProgress, t,
@@ -271,6 +282,8 @@ export const useAppStore = defineStore('app', () => {
       if (msg) successTimer = setTimeout(() => { successMessage.value = null }, 3000)
     },
     clearError: () => { error.value = null; if (errorTimer) clearTimeout(errorTimer) },
+    enqueueContextAction: (action: { action: string; files: string[] }) => pendingContextActions.value.push(action),
+    takeContextActions: () => pendingContextActions.value.splice(0),
     createDecompressTask, updateTaskProgress, markTaskAsError, clearCompletedTasks, updateSettings, resetSettings, saveSettingsToStorage
   }
 })

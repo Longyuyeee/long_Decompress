@@ -119,6 +119,24 @@ pub async fn cancel_compression(task_id: String) -> Result<(), String> {
 }
 
 #[command]
+pub async fn cancel_tasks_and_wait(task_ids: Vec<String>) -> Result<(), String> {
+    for task_id in &task_ids {
+        if let Some(flag) = CANCELLATION_FLAGS.get(task_id) {
+            flag.store(true, Ordering::SeqCst);
+        }
+    }
+
+    for _ in 0..200 {
+        if task_ids.iter().all(|task_id| !CANCELLATION_FLAGS.contains_key(task_id)) {
+            return Ok(());
+        }
+        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    }
+
+    Err("等待任务安全停止超时，应用未退出".to_string())
+}
+
+#[command]
 pub async fn check_rar_compression_support() -> Result<RarCompressionSupport, String> {
     Ok(CompressionService::check_rar_compression_support())
 }
@@ -165,4 +183,32 @@ pub async fn repair_zip(file_path: String) -> Result<String, String> {
     UniversalCliEngine::repair_zip(path)
         .await
         .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod cancellation_tests {
+    use super::{cancel_tasks_and_wait, CANCELLATION_FLAGS};
+    use std::sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    };
+
+    #[tokio::test]
+    async fn cancel_and_wait_signals_then_observes_task_cleanup() {
+        let task_id = "cancel-and-wait-test".to_string();
+        let flag = Arc::new(AtomicBool::new(false));
+        CANCELLATION_FLAGS.insert(task_id.clone(), flag.clone());
+
+        let cleanup_id = task_id.clone();
+        let cleanup_flag = flag.clone();
+        tokio::spawn(async move {
+            while !cleanup_flag.load(Ordering::SeqCst) {
+                tokio::task::yield_now().await;
+            }
+            CANCELLATION_FLAGS.remove(&cleanup_id);
+        });
+
+        cancel_tasks_and_wait(vec![task_id]).await.unwrap();
+        assert!(flag.load(Ordering::SeqCst));
+    }
 }

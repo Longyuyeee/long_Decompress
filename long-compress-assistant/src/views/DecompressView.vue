@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useTaskStore } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { usePasswordStore } from '@/stores/password'
 import { useTauriCommands } from '@/composables/useTauriCommands'
-import { extractErrorMessage, generateId } from '@/utils'
-import { listen } from '@tauri-apps/api/event'
+import { extractErrorMessage, generateId, isPasswordRelatedError } from '@/utils'
 import { open } from '@tauri-apps/api/dialog'
 import { confirm } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
@@ -29,94 +28,69 @@ const globalOutputPath = ref('')
 const isGlobalSameDir = ref(true) // 默认同目录，用户可通过按钮手动选择
 const globalExtractToSubfolder = ref(false)
 
-const unlisteners: Array<() => void> = []
-let isUnmounted = false
+let contextActionDrain: Promise<void> | null = null
 
-const registerListener = async <T>(
-  eventName: string,
-  callback: (event: { payload: T }) => void
-) => {
-  try {
-    const unlisten = await listen<T>(eventName, callback)
-    if (isUnmounted) unlisten()
-    else unlisteners.push(unlisten)
-  } catch (error) {
-    console.warn(`Listener ${eventName} is unavailable:`, error)
-  }
+const drainPendingContextActions = () => {
+  if (contextActionDrain) return contextActionDrain
+  contextActionDrain = (async () => {
+    while (appStore.pendingContextActions.length > 0) {
+      const requests = appStore.takeContextActions()
+      for (const request of requests) {
+        const files = request.files.filter(file => file && !file.startsWith('%'))
+        if (files.length === 0) continue
+
+        if (request.action === 'context-test-archive') {
+          for (const path of files) {
+            try {
+              const result = await tauriCommands.testArchiveIntegrity(path)
+              appStore.setSuccess(appStore.t('decompress.integrity_passed').replace('{0}', result))
+            } catch (e: any) {
+              appStore.setError(appStore.t('decompress.integrity_failed').replace('{0}', String(e)))
+            }
+          }
+          continue
+        }
+
+        const createdTaskIds = await onFilesSelected(files.map(path => ({ path })) as any)
+        if (request.action === 'context-open') continue
+
+        const createdTasks = taskStore.tasks.filter(
+          task => createdTaskIds.includes(task.id) && task.status === 'pending'
+        )
+        const extractToSubfolder = request.action !== 'context-extract-here'
+        createdTasks.forEach(task => { task.extractToSubfolder = extractToSubfolder })
+        if (createdTasks.length > 0) {
+          appStore.setSuccess(
+            request.action === 'context-quick-extract'
+              ? appStore.t('decompress.quick_extract_started').replace('{0}', String(createdTasks.length))
+              : appStore.t('decompress.context_menu_added').replace('{0}', String(createdTasks.length))
+          )
+          await startDecompression(createdTaskIds)
+        }
+      }
+    }
+  })().finally(() => {
+    contextActionDrain = null
+    if (appStore.pendingContextActions.length > 0) void drainPendingContextActions()
+  })
+  return contextActionDrain
 }
 
-onMounted(async () => {
-  // 右键菜单 / CLI：添加文件到解压队列
-  const handleContextFiles = (files: string[]) => {
-    const fileObjs = files.filter(f => f && !f.startsWith('%')).map(f => ({ path: f }))
-    if (fileObjs.length > 0) {
-      onFilesSelected(fileObjs as any)
-    } else if (files.length > 0) {
-      // 所有文件都被过滤掉（均为 %V 占位符等）
-      appStore.setError(appStore.t('decompress.no_file_paths'))
-    }
-  }
+watch(
+  () => appStore.pendingContextActions.length,
+  count => { if (count > 0) void drainPendingContextActions() }
+)
 
-  // 右键菜单：直接解压到此处
-  await registerListener<string[]>('context-extract-here', (event) => {
-    const files = event.payload.filter(f => f && !f.startsWith('%'))
-    const fileObjs = files.map(f => ({ path: f }))
-    if (fileObjs.length > 0) {
-      onFilesSelected(fileObjs as any)
-      appStore.setSuccess(appStore.t('decompress.context_menu_added').replace('{0}', String(fileObjs.length)))
-      setTimeout(() => {
-        const pending = taskStore.tasks.filter(t => t.status === 'pending')
-        if (pending.length > 0) {
-          pending.forEach(t => { t.extractToSubfolder = false })
-          setTimeout(() => startDecompression(), 300)
-        }
-      }, 600)
-    }
-  })
-
-  // 右键菜单：解压到同名文件夹
-  await registerListener<string[]>('context-extract-to', (event) => {
-    const files = event.payload.filter(f => f && !f.startsWith('%'))
-    const fileObjs = files.map(f => ({ path: f }))
-    if (fileObjs.length > 0) {
-      onFilesSelected(fileObjs as any)
-      appStore.setSuccess(appStore.t('decompress.context_menu_folder').replace('{0}', String(fileObjs.length)))
-      setTimeout(() => {
-        const pending = taskStore.tasks.filter(t => t.status === 'pending')
-        if (pending.length > 0) {
-          pending.forEach(t => { t.extractToSubfolder = true })
-          setTimeout(() => startDecompression(), 300)
-        }
-      }, 600)
-    }
-  })
-
-  // 右键菜单：测试完整性
-  await registerListener<string[]>('context-test-archive', (event) => {
-    const files = event.payload.filter(f => f && !f.startsWith('%'))
-    files.forEach(async (path) => {
-      try {
-        const result = await tauriCommands.testArchiveIntegrity(path)
-        appStore.setSuccess(appStore.t('decompress.integrity_passed').replace('{0}', result))
-      } catch (e: any) {
-        appStore.setError(appStore.t('decompress.integrity_failed').replace('{0}', String(e)))
-      }
-    })
-  })
-
-  // 向后兼容旧版
-  await registerListener<string[] | string>('context-open', (event) => {
-    handleContextFiles(Array.isArray(event.payload) ? event.payload : [event.payload])
-  })
+onMounted(() => {
+  void drainPendingContextActions()
 })
 
 onUnmounted(() => {
-  isUnmounted = true
-  unlisteners.forEach(fn => fn())
   unsubConflict()
 })
 
 const onFilesSelected = async (files: any[]) => {
+  const createdTaskIds: string[] = []
   for (const file of files) {
     const sourcePath = file.path
     // 去重：如果任务列表中已有相同文件，跳过
@@ -146,6 +120,7 @@ const onFilesSelected = async (files: any[]) => {
             outputPath: isGlobalSameDir.value ? parentDir : globalOutputPath.value,
             extractToSubfolder: globalExtractToSubfolder.value
           })
+          createdTaskIds.push(taskId)
 
           appStore.setSuccess(
             appStore.t('decompress.split.added', `已添加分卷文件（${splitInfo.parts.length} 个分卷，总计 ${totalSizeMB} MB）`)
@@ -169,6 +144,7 @@ const onFilesSelected = async (files: any[]) => {
       outputPath: isGlobalSameDir.value ? parentDir : globalOutputPath.value,
       extractToSubfolder: globalExtractToSubfolder.value
     })
+    createdTaskIds.push(taskId)
     appStore.addRecentFile(sourcePath)
 
     // Smart extraction: auto-detect if subfolder is needed
@@ -187,6 +163,7 @@ const onFilesSelected = async (files: any[]) => {
       console.debug('Smart extract skipped (unable to list contents):', sourcePath, e)
     })
   }
+  return createdTaskIds
 }
 
 const handleGlobalSelectDir = async () => {
@@ -249,11 +226,13 @@ const deselectAll = () => {
 
 const isProcessing = ref(false)
 
-const startDecompression = async () => {
+const startDecompression = async (onlyTaskIds?: string[]) => {
   // 防止重复点击
   if (isProcessing.value) return
   // 如果有选中的任务，优先处理选中的；否则处理所有 pending 任务
-  const pendingTasks = selectedTaskIds.value.size > 0
+  const pendingTasks = onlyTaskIds
+    ? taskStore.tasks.filter(t => onlyTaskIds.includes(t.id) && t.status === 'pending')
+    : selectedTaskIds.value.size > 0
     ? taskStore.tasks.filter(t => selectedTaskIds.value.has(t.id) && t.status === 'pending')
     : taskStore.tasks.filter(t => t.status === 'pending')
   if (pendingTasks.length === 0) return
@@ -295,10 +274,7 @@ const startDecompression = async () => {
     } catch (error) {
       // 只在后端明确返回密码相关错误时才尝试密码破解
       const errorMsg = extractErrorMessage(error) || String(error)
-      const isPasswordError = errorMsg.includes('PasswordRequired') ||
-                              errorMsg.includes('Wrong password') ||
-                              errorMsg.includes('InvalidPassword') ||
-                              errorMsg.includes('PasswordError')
+      const isPasswordError = isPasswordRelatedError(error)
 
       if (isPasswordError && !task.password) {
         // 密码错误且用户未输入密码，现在尝试保险箱和字典攻击
@@ -558,6 +534,21 @@ const startDecompression = async () => {
             })
           }
         }
+        if (task.status === 'failed') {
+          task.passwordRequired = true
+          task.password = ''
+          task.currentPassword = undefined
+        }
+      } else if (isPasswordError) {
+        taskStore.updateTaskStatus(task.id, 'failed')
+        task.passwordRequired = true
+        task.error = appStore.t('tasks.password.wrong')
+        task.logs.push({
+          task_id: task.id,
+          message: task.error,
+          severity: 'error',
+          timestamp: new Date().toISOString()
+        })
       } else {
         // 非密码错误，直接失败
         taskStore.updateTaskStatus(task.id, 'failed')
@@ -572,6 +563,19 @@ const startDecompression = async () => {
 
 const hasPendingTasks = computed(() => taskStore.tasks.some(t => t.status === 'pending'))
 const isRunning = computed(() => taskStore.tasks.some(t => ['running', 'extracting', 'compressing', 'preparing'].includes(t.status)))
+
+const retryWithPassword = async (taskId: string) => {
+  const task = taskStore.tasks.find(item => item.id === taskId)
+  if (!task?.password) {
+    appStore.setError(appStore.t('tasks.password.required'))
+    return
+  }
+  task.error = undefined
+  task.passwordRequired = false
+  taskStore.updateTaskStatus(task.id, 'pending')
+  selectedTaskIds.value = new Set([task.id])
+  await startDecompression()
+}
 
 const cancelAllTasks = async () => {
   let cancelled = 0
@@ -669,7 +673,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
         </button>
         <button
           v-if="hasPendingTasks && !isRunning"
-          @click="startDecompression"
+          @click="startDecompression()"
           class="h-9 px-6 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-primary/25 flex items-center gap-2"
         >
           <i class="pi pi-play-circle text-xs"></i>
@@ -688,6 +692,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           @toggle-task="toggleTaskSelection"
           @select-all-pending="selectAllPending"
           @deselect-all="deselectAll"
+          @retry-with-password="retryWithPassword"
         />
         </div>
 
@@ -737,7 +742,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           @files-selected="onFilesSelected"
           :compact="true"
           :accept="supportedArchiveAccept"
-          class="flex-1 min-w-[100px] h-7"
+          class="flex-1 min-w-[8rem] h-9"
         />
       </div>
     </div>

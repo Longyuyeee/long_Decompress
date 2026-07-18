@@ -215,7 +215,7 @@ const handleFiles = (files: File[]) => {
     :class="{
       'is-dragging': isDragging,
       'p-12 rounded-[2.5rem]': !compact,
-      'p-3 rounded-xl border-dashed opacity-80 hover:opacity-100': compact
+      'compact-drop px-3 py-1.5 rounded-xl border-dashed opacity-80 hover:opacity-100': compact
     }"
     role="button"
     :aria-label="`${displayAddLabel}: ${displayHint}`"
@@ -260,9 +260,9 @@ const handleFiles = (files: File[]) => {
       </div>
     </div>
 
-    <div v-else class="flex items-center justify-center gap-2.5">
-      <i class="pi pi-plus text-primary text-sm pointer-events-none"></i>
-      <span class="text-sm font-bold text-muted uppercase tracking-wider group-hover:text-content transition-colors duration-300 pointer-events-none">
+    <div v-else class="flex min-w-0 items-center justify-center gap-2">
+      <i class="pi pi-plus text-primary text-xs pointer-events-none shrink-0"></i>
+      <span class="min-w-0 truncate whitespace-nowrap text-xs font-bold text-muted tracking-wide group-hover:text-content transition-colors duration-300 pointer-events-none">
         {{ displayAddLabel }}
       </span>
     </div>
@@ -290,6 +290,10 @@ const handleFiles = (files: File[]) => {
   background: color-mix(in srgb, var(--dynamic-accent) 8%, transparent);
   filter: blur(12px);
   z-index: -1;
+}
+
+.compact-drop {
+  min-height: 2.25rem;
 }
 
 .drop-area:hover {

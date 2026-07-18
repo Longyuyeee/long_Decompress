@@ -62,6 +62,31 @@ export const extractErrorMessage = (error: unknown): string => {
 }
 
 /**
+ * 判断后端错误是否表示归档需要密码或密码不正确。
+ * Tauri commands currently return localized display messages, so the UI must
+ * recognize both stable English variants and the Chinese messages emitted by
+ * the Rust extraction engines.
+ */
+export const isPasswordRelatedError = (error: unknown): boolean => {
+  const message = extractErrorMessage(error).toLowerCase()
+  return [
+    'passwordrequired',
+    'password required',
+    'passworderror',
+    'invalidpassword',
+    'invalid password',
+    'wrong password',
+    'encrypted archive',
+    '需要输入密码',
+    '需要密码',
+    '密码错误',
+    '密码不正确',
+    '加密归档',
+    '解密失败',
+  ].some(fragment => message.includes(fragment))
+}
+
+/**
  * 生成唯一ID
  */
 export const generateId = (): string => {

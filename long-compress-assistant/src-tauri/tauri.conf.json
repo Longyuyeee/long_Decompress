@@ -1,15 +1,19 @@
 {
   "build": {
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "npm run build && npm run build:shell-extension",
     "devPath": "http://localhost:1420",
     "distDir": "../dist"
   },
   "package": {
     "productName": "胧解压·方便助手",
-    "version": "1.0.3"
+    "version": "1.0.4"
   },
   "tauri": {
+    "systemTray": {
+      "iconPath": "icons/icon.ico",
+      "iconAsTemplate": false
+    },
     "allowlist": {
       "all": false,
       "dialog": {
@@ -44,6 +48,7 @@
         "icons/icon.ico"
       ],
       "resources": [
+        "resources/long_compress_shell_extension_*.dll",
         "../node_modules/7zip-bin/win/x64/7za.exe",
         "../node_modules/7zip-bin/LICENSE.txt"
       ],
@@ -57,6 +62,7 @@
           "language": "zh-CN"
         },
         "nsis": {
+          "template": "installer.nsi",
           "languages": ["SimpChinese", "English"],
           "installMode": "currentUser"
         }
@@ -87,10 +93,10 @@
     "windows": [
       {
         "title": "胧解压",
-        "width": 1000,
-        "height": 680,
-        "minWidth": 720,
-        "minHeight": 540,
+        "width": 920,
+        "height": 620,
+        "minWidth": 760,
+        "minHeight": 520,
         "resizable": true,
         "fullscreen": false,
         "decorations": true,

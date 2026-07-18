@@ -85,6 +85,9 @@ const navigateTo = (name: string) => {
               </div>
             </button>
           </nav>
+          <div class="sidebar-task-area px-3 pb-2 shrink-0">
+            <GlobalProgressBar />
+          </div>
           <div class="sidebar-copy mx-3 mb-3 p-3 rounded-xl bg-input/45 border border-subtle/60">
             <div class="flex items-center gap-2 text-xs font-bold text-muted">
               <i class="pi pi-sparkles text-primary"></i>
@@ -103,8 +106,6 @@ const navigateTo = (name: string) => {
             </transition>
           </router-view>
 
-          <!-- 全局进度指示器 -->
-          <GlobalProgressBar />
         </main>
       </div>
     </div>
@@ -176,10 +177,11 @@ const navigateTo = (name: string) => {
   z-index: -1;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 840px) {
   .app-sidebar { width: 4.75rem; }
   .sidebar-copy { display: none; }
   .sidebar-brand { justify-content: center; padding-inline: 0.75rem; }
   .nav-entry { justify-content: center; padding-inline: 0.5rem; }
+  .sidebar-task-area { padding-inline: 1rem; }
 }
 </style>

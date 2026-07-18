@@ -1,6 +1,7 @@
 <template>
+  <Teleport to="body">
   <Transition name="fade">
-    <div v-if="visible" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" :aria-labelledby="title ? 'modal-title' : undefined">
+    <div v-if="visible" class="fixed inset-0 z-[300] overflow-y-auto" role="dialog" aria-modal="true" :aria-labelledby="title ? 'modal-title' : undefined">
       <div class="fixed inset-0 bg-black/60 transition-opacity" @click="handleBackdropClick"></div>
 
       <div class="flex min-h-full items-center justify-center p-4 text-center">
@@ -58,6 +59,7 @@
       </div>
     </div>
   </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">

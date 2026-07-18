@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.3-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.4-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,17 +20,18 @@
 
 ---
 
-## v1.0.3 更新亮点
+## v1.0.4 更新亮点
 
-- 原生支持 AES-256 加密 ZIP 的创建、密码校验与解压闭环。
-- 修复短 LZH 文件头越界、缺失输入仍创建空归档等稳定性问题。
-- 阻止密码通过 RAR/通用命令行回退泄漏到进程参数。
-- 恢复并升级配置、内存、格式能力和真实 ZIP 往返测试，Rust Release 测试达到 171 项。
-- 重做响应式侧栏、工作区标题、文件投放区与 Toast，完善小窗口体验。
-- 修复密码保险箱解锁按钮无响应，补齐主密码表单、筛选排序、收藏、批量删除与使用计数。
-- 前端覆盖率提升至 52.32%，并建立持续集成防倒退门槛。
+- 缩小默认窗口并优化小窗口布局，修复全局任务栏、文件按钮和目标格式区域的遮挡与文字溢出。
+- 重新整理压缩设置名称与说明，配置组管理、保存和错误反馈改为完整弹窗流程。
+- 统一密码生成与解压密码交互；中英文密码错误均可进入重新输入、继续解压的闭环。
+- 新增关闭到系统托盘设置，默认关闭窗口时最小化到托盘，并提供明确的退出入口。
+- 完善 Windows 资源管理器右键菜单，支持一键解压、解压到此处/同名目录、压缩为 ZIP/7Z 和测试归档。
+- 通过 Windows 11 原生 Shell Extension 支持现代右键菜单，并补齐安装、升级和卸载清理流程。
+- 隐藏后台压缩工具的控制台窗口，避免操作过程中黑色命令行窗口闪现。
+- 接通原生 AES 格式识别、验密和解压链路，覆盖 TAR/GZ/BZ2/XZ/Zstandard 的 `.aes` 变体。
 
-完整变更请查看 [v1.0.3 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.3)。
+完整变更请查看 [v1.0.4 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.4)。
 
 ## 为什么选择胧解压
 
@@ -41,7 +42,7 @@
 | 加密归档 | 支持加密 ZIP、7Z、RAR 解压，以及 ZIP、7Z 和专用 AES-256-GCM 格式加密压缩 |
 | 密码保险箱 | 本地保存常用密码，遇到加密压缩包时自动匹配 |
 | 文件完整性 | 计算与验证 CRC32、MD5、SHA256，支持导入、导出校验文件 |
-| Windows 集成 | 支持文件拖放、快捷键、资源管理器右键菜单和开机启动 |
+| Windows 集成 | 支持文件拖放、快捷键、系统托盘、资源管理器现代右键菜单和开机启动 |
 | 个性化 | 深浅主题、强调色、界面缩放、减少动效和无障碍选项 |
 
 ## 下载与安装
