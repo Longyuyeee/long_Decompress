@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.7-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.8-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,16 +20,18 @@
 
 ---
 
-## v1.0.7 更新亮点
+## v1.0.8 更新亮点
 
-- 重构加密状态判定：只有引擎明确确认密码有效时才报告解锁成功，未加密归档不再误入密码破解流程。
-- 解压改为事务式暂存与提交，失败或取消时自动回滚；统一覆盖、跳过、重命名、筛选和扁平化规则。
-- 增加磁盘空间、解压体积、文件数量、压缩比、符号链接与 Windows 重解析点防护，异常归档会在写入前阻断。
-- 分卷 ZIP 改为标准 `.zip.001` 格式，并加强外部引擎、密码字典和批量任务的取消与超时处理。
-- 压缩输出使用原子提交，旧式 AES 封装增加资源上限；RAR 密码创建会在执行前明确提示命令行参数风险。
-- 完成前后端、真实归档样本、端到端、类型检查、生产构建和 Clippy 全目标回归。
+- 新增应用内更新：启动后每天最多静默检查一次，也可在设置中心手动检查。
+- 提供更新说明、稍后提醒、跳过版本、失败重试和中英文自定义更新弹窗。
+- 更新包安装前必须通过 Tauri 数字签名验证，无法验证或被篡改的包会被拒绝。
+- 压缩或解压任务运行期间禁止安装更新，避免退出覆盖程序时造成任务中断或数据损坏。
+- GitHub Release 流水线自动生成 NSIS 安装包、更新 ZIP、签名和 `latest.json` 更新清单。
+- 主程序与 Windows 11 右键扩展统一升级至 1.0.8，并完成单元、端到端、Rust 全目标和签名构建回归。
 
-完整变更请查看 [v1.0.7 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.7)。
+> 1.0.7 及更早版本尚未内置更新公钥，需要手动安装一次 1.0.8；以后即可在软件内完成更新。
+
+完整变更请查看 [v1.0.8 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.8)。
 
 ## 为什么选择胧解压
 
@@ -40,7 +42,7 @@
 | 加密归档 | 支持加密 ZIP、7Z、RAR 等格式解压，以及 ZIP、7Z、RAR 和专用 AES-256-GCM 格式加密压缩 |
 | 密码保险箱 | 本地保存常用密码，遇到加密压缩包时自动匹配 |
 | 文件完整性 | 计算与验证 CRC32、MD5、SHA256，支持导入、导出校验文件 |
-| Windows 集成 | 支持文件拖放、快捷键、系统托盘、资源管理器现代右键菜单和开机启动 |
+| Windows 集成 | 支持文件拖放、快捷键、系统托盘、资源管理器现代右键菜单、开机启动和签名应用内更新 |
 | 个性化 | 深浅主题、强调色、界面缩放、减少动效和无障碍选项 |
 
 ## 下载与安装
@@ -97,6 +99,13 @@
 - 选择文件后计算 CRC32、MD5 或 SHA256
 - 导出 `.sfv`、`.md5`、`.sha256` 校验文件
 - 导入已有校验文件并批量验证
+
+### 软件更新
+
+- 软件启动后会按设置静默检查正式版本，每 24 小时最多一次。
+- 在设置中心的“软件更新”区域可以查看当前版本并立即检查。
+- 发现更新后可查看更新内容、稍后提醒、跳过当前版本或下载并安装。
+- 更新包必须通过应用内置公钥验证；任务运行期间不会执行安装。
 
 ### 右键菜单
 

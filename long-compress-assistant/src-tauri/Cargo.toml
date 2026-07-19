@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.0.7"
+version = "1.0.8"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -17,6 +17,7 @@ tauri = { version = "1.5", features = [
     "global-shortcut",
     "shell-open",
     "system-tray",
+    "updater",
     "window-close",
     "window-maximize",
     "window-minimize",

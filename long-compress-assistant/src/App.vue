@@ -2,6 +2,7 @@
   <div id="app" @mousemove="resetIdleTimer">
     <MainLayout />
     <ToastContainer />
+    <UpdateDialog />
     <Modal
       :visible="showExitConfirmation"
       :title="appStore.t('exit.confirm.title')"
@@ -36,12 +37,14 @@ import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import Modal from '@/components/ui/Modal.vue'
+import UpdateDialog from '@/components/update/UpdateDialog.vue'
 import { useConfigStore } from '@/stores/config'
 import { usePasswordStore } from '@/stores/password'
 import { useTaskStore } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
 import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
+import { useUpdateStore } from '@/stores/update'
 import { useAccessibility } from '@/composables/useAccessibility'
 import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
@@ -55,6 +58,7 @@ const taskStore = useTaskStore()
 const compressionStore = useCompressionStore()
 const appStore = useAppStore()
 const uiStore = useUIStore()
+const updateStore = useUpdateStore()
 const { initAccessibility, setupWatchers, watchSystemPreferences } = useAccessibility()
 
 let idleTimer: any = null
@@ -103,6 +107,10 @@ watch(
   count => { void invoke('set_has_active_tasks', { active: count > 0 }).catch(() => {}) },
   { immediate: true }
 )
+
+watch(() => appStore.settings.autoCheckUpdates, enabled => {
+  updateStore.scheduleAutoCheck(enabled)
+})
 
 const keepAppListener = (unlisten: () => void) => {
   if (isUnmounted) unlisten()
@@ -225,6 +233,8 @@ onMounted(async () => {
     appStore.enqueueContextAction({ ...request, files })
     void router.push('/decompress')
   }
+  await updateStore.initialize()
+  updateStore.scheduleAutoCheck(appStore.settings.autoCheckUpdates)
 
   try {
     const unlisten = await listen('exit-confirmation-requested', () => {
@@ -301,6 +311,7 @@ onUnmounted(() => {
   if (unlistenResize) unlistenResize()
   if (cleanupSystemWatcher) cleanupSystemWatcher()
   appUnlisteners.forEach(unlisten => unlisten())
+  updateStore.cleanup()
   saveWindowState()
 })
 </script>

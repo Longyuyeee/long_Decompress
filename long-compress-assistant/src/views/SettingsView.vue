@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
+import { getVersion } from '@tauri-apps/api/app'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
 import { FORMAT_CAPABILITIES } from '@/utils/compressionFormat'
 import AccessibilitySettings from '@/components/settings/AccessibilitySettings.vue'
+import { useUpdateStore } from '@/stores/update'
 
 const appStore = useAppStore()
+const updateStore = useUpdateStore()
 const tauriCommands = useTauriCommands()
 const { capabilities: archiveEngine, loading: archiveEngineLoading, refresh: refreshArchiveEngine } = useArchiveEngine()
 const showResetConfirm = ref(false)
 const rarEncoder = ref<{ available: boolean; message: string } | null>(null)
+const currentVersion = ref('—')
 const diagnosticsLoading = computed(() => archiveEngineLoading.value)
 const readableExtensionCount = computed(() => new Set(archiveEngine.value?.formats.flatMap(format => format.extensions) || []).size)
 const creatableFormatCount = computed(() => archiveEngine.value?.formats.filter(format => format.canCreate).length || 0)
@@ -92,11 +96,22 @@ const checkAutoStart = async () => {
   } catch { /* ignore */ }
 }
 
-onMounted(() => {
+onMounted(async () => {
   checkAutoStart()
   checkContextMenu()
   void refreshEngineDiagnostics()
+  try {
+    currentVersion.value = await getVersion()
+  } catch { /* browser preview */ }
 })
+
+const toggleAutoCheckUpdates = () => {
+  const enabled = !appStore.settings.autoCheckUpdates
+  appStore.updateSettings({ autoCheckUpdates: enabled })
+  updateStore.scheduleAutoCheck(enabled)
+}
+
+const checkForUpdatesNow = () => updateStore.checkForUpdates(true)
 const toggleContextMenu = async () => {
   if (contextMenuBusy.value) return
   contextMenuBusy.value = true
@@ -344,6 +359,43 @@ const removeWordlist = (index: number) => {
             </div>
           </section>
         </div>
+
+        <!-- 软件更新 -->
+        <section class="aero-card p-10 overflow-hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div class="lg:col-span-4 space-y-2">
+              <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.update.title') }}</h2>
+              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.update.desc') }}</p>
+            </div>
+            <div class="lg:col-span-8 space-y-5">
+              <div class="flex flex-col gap-4 rounded-2xl border border-subtle bg-input/30 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div class="text-xs font-black uppercase tracking-widest text-muted">{{ appStore.t('settings.update.current') }}</div>
+                  <div class="mt-2 flex items-center gap-2 text-lg font-black text-content">
+                    <span>v{{ currentVersion }}</span>
+                    <span class="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-500">Stable</span>
+                  </div>
+                </div>
+                <button type="button" class="h-10 shrink-0 rounded-xl bg-primary px-5 text-xs font-black text-white shadow-lg shadow-primary/20 disabled:cursor-wait disabled:opacity-60" :disabled="updateStore.busy" @click="checkForUpdatesNow">
+                  <i class="pi mr-2" :class="updateStore.status === 'checking' ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>{{ appStore.t('settings.update.check') }}
+                </button>
+              </div>
+              <button type="button" role="switch" :aria-checked="appStore.settings.autoCheckUpdates" class="w-full flex items-center justify-between gap-4 text-left" @click="toggleAutoCheckUpdates">
+                <div>
+                  <div class="text-xs font-bold text-content">{{ appStore.t('settings.update.auto') }}</div>
+                  <div class="mt-1 text-xs text-muted uppercase tracking-tighter">{{ appStore.t('settings.update.auto.desc') }}</div>
+                </div>
+                <div class="w-10 h-5 shrink-0 rounded-full border border-subtle p-0.5 transition-all" :class="appStore.settings.autoCheckUpdates ? 'bg-primary/40 border-primary' : 'bg-input'">
+                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.autoCheckUpdates ? 'translate-x-5' : ''"></div>
+                </div>
+              </button>
+              <div class="flex items-start gap-3 rounded-xl border border-primary/15 bg-primary/5 p-4 text-xs leading-5 text-muted">
+                <i class="pi pi-shield mt-0.5 text-primary"></i>
+                <span>{{ appStore.t('settings.update.security') }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <!-- 格式支持统计 -->
         <section class="aero-card p-10 overflow-hidden">

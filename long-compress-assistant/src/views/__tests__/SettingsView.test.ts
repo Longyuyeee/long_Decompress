@@ -46,6 +46,9 @@ describe('SettingsView archive engine diagnostics', () => {
     expect(wrapper.text()).toContain('密码解压: ZIP · 7Z · RAR · TAR.AES')
     expect(wrapper.text()).toContain('TGZ.AES')
     expect(wrapper.text()).toContain('ZST.AES')
+    expect(wrapper.text()).toContain('软件更新')
+    expect(wrapper.text()).toContain('立即检查更新')
+    expect(wrapper.text()).toContain('更新包安装前会验证 Tauri 数字签名')
 
     const refresh = wrapper.findAll('button').find(button => button.text().includes('重新检测'))
     expect(refresh).toBeTruthy()
