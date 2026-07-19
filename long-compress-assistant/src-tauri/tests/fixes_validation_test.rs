@@ -63,6 +63,7 @@ async fn test_split_compression_writes_content() {
     let source = temp.path().join("data.txt");
     let mut f = File::create(&source).unwrap();
     f.write_all(b"Hello, split compression! This is test content.").unwrap();
+    drop(f);
 
     let output = temp.path().join("archive.zip");
     let service = SplitCompressionService::new();

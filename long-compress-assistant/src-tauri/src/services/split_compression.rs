@@ -1,12 +1,12 @@
 use crate::models::compression::CompressionOptions;
-use crate::services::compression_service::CompressionService;
+use crate::services::compression_service::{CompressionError, CompressionService};
+use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
-use std::fs::File;
-use zip::{ZipWriter, write::FileOptions, CompressionMethod};
-use log;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use tokio::io::AsyncReadExt;
 
-/// 分卷压缩结果
 #[derive(Debug, Clone)]
 pub struct SplitCompressionResult {
     pub part_files: Vec<PathBuf>,
@@ -14,174 +14,184 @@ pub struct SplitCompressionResult {
     pub part_count: usize,
 }
 
-/// 分卷压缩服务
 pub struct SplitCompressionService;
 
 impl SplitCompressionService {
-    /// 创建新的分卷压缩服务
     pub fn new() -> Self {
         Self
     }
 
-    /// 压缩文件为分卷ZIP
     pub async fn compress_to_split_zips(
         &self,
         files: &[String],
         output_path: &Path,
         options: CompressionOptions,
     ) -> Result<SplitCompressionResult> {
-        log::info!("开始分卷压缩: {:?} -> {:?}", files, output_path);
+        self.compress_to_split_zips_cancellable(
+            files,
+            output_path,
+            options,
+            Arc::new(AtomicBool::new(false)),
+        )
+        .await
+    }
 
-        // 检查是否需要分卷
-        let split_size = match options.split_size {
-            Some(size) if size > 0 => size,
-            _ => {
-                // 不需要分卷，使用普通压缩
-                log::debug!("分卷大小未设置或为0，使用普通压缩");
-                return self.compress_single_zip(files, output_path, options).await;
+    pub async fn compress_to_split_zips_cancellable(
+        &self,
+        files: &[String],
+        output_path: &Path,
+        options: CompressionOptions,
+        cancellation: Arc<AtomicBool>,
+    ) -> Result<SplitCompressionResult> {
+        if options.password.as_deref().is_some_and(|value| !value.is_empty()) {
+            return Err(anyhow::anyhow!(
+                "Encrypted split ZIP creation is not supported safely"
+            ));
+        }
+        if files.is_empty() {
+            return Err(anyhow::anyhow!("At least one source file is required"));
+        }
+
+        let mut total_size = 0u64;
+        for source in files {
+            let path = Path::new(source);
+            if !path.is_file() {
+                return Err(anyhow::anyhow!(
+                    "Split ZIP creation supports regular files only: {}",
+                    path.display()
+                ));
             }
+            total_size = total_size.checked_add(path.metadata()?.len()).ok_or_else(|| {
+                anyhow::anyhow!("Source size overflowed the supported range")
+            })?;
+        }
+
+        let Some(split_size) = options.split_size.filter(|size| *size > 0) else {
+            let service = CompressionService::new_with_defaults().await;
+            service
+                .compress_zip_enhanced(files, output_path.to_string_lossy().as_ref(), options)
+                .await?;
+            return Ok(SplitCompressionResult {
+                part_files: vec![output_path.to_path_buf()],
+                total_size,
+                part_count: 1,
+            });
         };
 
-        log::debug!("分卷大小: {} 字节", split_size);
-
-        // 计算总大小
-        let total_size = self.calculate_total_size(files).await?;
-        log::debug!("总文件大小: {} 字节", total_size);
-
-        // 计算需要的分卷数量
-        let part_count = ((total_size as f64 / split_size as f64).ceil() as usize).max(1);
-        log::info!("预计需要 {} 个分卷", part_count);
-
-        // 如果只有一个分卷，使用普通压缩
-        if part_count == 1 {
-            log::debug!("只需要一个分卷，使用普通压缩");
-            return self.compress_single_zip(files, output_path, options).await;
+        let engine = find_7z_command().ok_or_else(|| anyhow::anyhow!(missing_7z_message()))?;
+        if let Some(parent) = output_path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let existing_parts = Self::discover_parts(output_path)?;
+        if output_path.exists() || !existing_parts.is_empty() {
+            return Err(anyhow::anyhow!(
+                "Split archive output already exists: {}",
+                output_path.display()
+            ));
         }
 
-        // 创建分卷文件
-        let mut part_files = Vec::new();
-        let mut current_part_size = 0u64;
-        let mut current_part_index = 1;
-        let mut current_zip: Option<ZipWriter<File>> = None;
+        let mut command = crate::utils::process::async_command(engine);
+        command
+            .arg("a")
+            .arg("-tzip")
+            .arg("-y")
+            .arg(format!("-mx{}", options.level.clamp(1, 9)))
+            .arg(format!("-v{}b", split_size))
+            .arg(output_path);
+        for source in files {
+            command.arg(source);
+        }
+        command.stdout(std::process::Stdio::piped());
+        command.stderr(std::process::Stdio::piped());
+        command.kill_on_drop(true);
+        let mut child = command.spawn().context("Unable to start the standard split ZIP engine")?;
+        let mut stdout = child.stdout.take().context("Unable to capture split-engine output")?;
+        let mut stderr = child.stderr.take().context("Unable to capture split-engine errors")?;
+        let stdout_reader = tokio::spawn(async move {
+            let mut bytes = Vec::new();
+            let _ = stdout.read_to_end(&mut bytes).await;
+            bytes
+        });
+        let stderr_reader = tokio::spawn(async move {
+            let mut bytes = Vec::new();
+            let _ = stderr.read_to_end(&mut bytes).await;
+            bytes
+        });
 
-        for file_path in files {
-            let path = Path::new(file_path);
-
-            if !path.exists() {
-                return Err(anyhow::anyhow!("文件不存在: {}", file_path));
+        let status = loop {
+            tokio::select! {
+                result = child.wait() => break result?,
+                _ = tokio::time::sleep(std::time::Duration::from_millis(50)) => {
+                    if cancellation.load(Ordering::SeqCst) {
+                        let _ = child.kill().await;
+                        Self::cleanup_parts(output_path);
+                        return Err(CompressionError::Cancelled.into());
+                    }
+                }
             }
-
-            if path.is_file() {
-                let file_size = std::fs::metadata(path)?.len();
-
-                // 如果单个文件就超过分卷大小，需要特殊处理
-                if file_size > split_size {
-                    log::warn!("文件 {} 大小 {} 超过分卷大小 {}，将单独压缩",
-                        file_path, file_size, split_size);
-
-                    let part_path = self.create_part_path(output_path, current_part_index, part_count);
-                    self.compress_single_file_to_zip(
-                        &[file_path.to_string()],
-                        &part_path,
-                        options.clone(),
-                    ).await?;
-
-                    part_files.push(part_path);
-                    current_part_index += 1;
-                    continue;
-                }
-
-                // 检查当前分卷是否有足够空间
-                if current_part_size + file_size > split_size && current_zip.is_some() {
-                    self.finish_current_zip(&mut current_zip).await?;
-                    current_part_size = 0;
-                    current_part_index += 1;
-                }
-
-                // 创建新的分卷（如果需要）
-                if current_zip.is_none() {
-                    let part_path = self.create_part_path(output_path, current_part_index, part_count);
-                    log::debug!("创建分卷 {}: {:?}", current_part_index, part_path);
-
-                    let file = File::create(&part_path).context("创建分卷文件失败")?;
-                    current_zip = Some(ZipWriter::new(file));
-                    part_files.push(part_path);
-                }
-
-                // 将文件写入当前分卷
-                if let Some(ref mut zip) = current_zip {
-                    let file_name = path.file_name()
-                        .and_then(|name| name.to_str())
-                        .unwrap_or("unknown");
-                    let zip_options = FileOptions::default()
-                        .compression_method(CompressionMethod::Deflated)
-                        .compression_level(Some(options.level.clamp(1, 9) as i32));
-                    zip.start_file(file_name, zip_options)
-                        .context(format!("在分卷中创建条目失败: {}", file_name))?;
-                    let mut source_file = File::open(path)
-                        .context(format!("打开源文件失败: {}", file_path))?;
-                    std::io::copy(&mut source_file, &mut *zip)
-                        .context(format!("写入文件内容失败: {}", file_path))?;
-                }
-
-                current_part_size += file_size;
-            }
+        };
+        let stdout = stdout_reader.await.unwrap_or_default();
+        let stderr = stderr_reader.await.unwrap_or_default();
+        if !status.success() {
+            Self::cleanup_parts(output_path);
+            let detail = if stderr.is_empty() {
+                String::from_utf8_lossy(&stdout).trim().to_string()
+            } else {
+                String::from_utf8_lossy(&stderr).trim().to_string()
+            };
+            return Err(anyhow::anyhow!(
+                "Standard split ZIP creation failed with status {}: {}",
+                status,
+                detail
+            ));
         }
 
-        // 完成最后一个分卷
-        if current_zip.is_some() {
-            self.finish_current_zip(&mut current_zip).await?;
+        let part_files = Self::discover_parts(output_path)?;
+        if part_files.is_empty() {
+            Self::cleanup_parts(output_path);
+            return Err(anyhow::anyhow!("Split engine completed without producing volume files"));
         }
-
         Ok(SplitCompressionResult {
-            part_files: part_files.clone(),
-            total_size,
             part_count: part_files.len(),
-        })
-    }
-
-    async fn calculate_total_size(&self, files: &[String]) -> Result<u64> {
-        let mut total = 0;
-        for file in files {
-            total += std::fs::metadata(file)?.len();
-        }
-        Ok(total)
-    }
-
-    fn create_part_path(&self, base_path: &Path, part_index: usize, total_parts: usize) -> PathBuf {
-        let base_name = base_path.file_stem().and_then(|s| s.to_str()).unwrap_or("archive");
-        let extension = base_path.extension().and_then(|s| s.to_str()).unwrap_or("zip");
-        let parent = base_path.parent().unwrap_or_else(|| Path::new("."));
-
-        if part_index < total_parts {
-            parent.join(format!("{}.z{:02}", base_name, part_index))
-        } else {
-            parent.join(format!("{}.{}", base_name, extension))
-        }
-    }
-
-    async fn finish_current_zip(&self, zip_writer: &mut Option<ZipWriter<File>>) -> Result<()> {
-        if let Some(mut writer) = zip_writer.take() {
-            writer.finish().context("完成ZIP文件失败")?;
-        }
-        Ok(())
-    }
-
-    async fn compress_single_zip(&self, files: &[String], output_path: &Path, options: CompressionOptions) -> Result<SplitCompressionResult> {
-        let svc = CompressionService::new_with_defaults().await;
-        svc.compress_zip_enhanced(files, output_path.to_str().unwrap_or_default(), options).await?;
-        
-        let total_size = self.calculate_total_size(files).await?;
-        Ok(SplitCompressionResult {
-            part_files: vec![output_path.to_path_buf()],
+            part_files,
             total_size,
-            part_count: 1,
         })
     }
 
-    async fn compress_single_file_to_zip(&self, files: &[String], output_path: &Path, options: CompressionOptions) -> Result<()> {
-        let svc = CompressionService::new_with_defaults().await;
-        svc.compress_zip_enhanced(files, output_path.to_str().unwrap_or_default(), options).await
+    fn discover_parts(output_path: &Path) -> Result<Vec<PathBuf>> {
+        let parent = output_path.parent().unwrap_or_else(|| Path::new("."));
+        let base = output_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| anyhow::anyhow!("Split archive output name is invalid"))?;
+        let prefix = format!("{}.", base);
+        let mut parts = Vec::new();
+        if !parent.exists() {
+            return Ok(parts);
+        }
+        for entry in std::fs::read_dir(parent)? {
+            let path = entry?.path();
+            let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+                continue;
+            };
+            let Some(suffix) = name.strip_prefix(&prefix) else {
+                continue;
+            };
+            if suffix.len() >= 3 && suffix.chars().all(|value| value.is_ascii_digit()) {
+                parts.push(path);
+            }
+        }
+        parts.sort();
+        Ok(parts)
+    }
+
+    fn cleanup_parts(output_path: &Path) {
+        if let Ok(parts) = Self::discover_parts(output_path) {
+            for part in parts {
+                let _ = std::fs::remove_file(part);
+            }
+        }
+        let _ = std::fs::remove_file(output_path);
     }
 }
 

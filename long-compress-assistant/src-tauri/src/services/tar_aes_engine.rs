@@ -19,6 +19,7 @@ pub struct TarAesEngine;
 const MAGIC: &[u8; 8] = b"TARAES01";
 const SALT_SIZE: usize = 32;
 const NONCE_SIZE: usize = 12;
+const MAX_LEGACY_TAR_AES_BYTES: u64 = 512 * 1024 * 1024;
 
 impl TarAesEngine {
     /// 压缩并加密文件到 TAR.AES 格式
@@ -34,6 +35,22 @@ impl TarAesEngine {
         password: &str,
         base_dir: Option<&Path>,
     ) -> Result<()> {
+        let mut total = 0u64;
+        for source in files {
+            for entry in walkdir::WalkDir::new(source).follow_links(false) {
+                let entry = entry?;
+                if entry.file_type().is_symlink() {
+                    return Err(anyhow!("Symbolic links are not accepted in encrypted archive sources"));
+                }
+                if entry.file_type().is_file() {
+                    total = total.checked_add(entry.metadata()?.len())
+                        .ok_or_else(|| anyhow!("Source size overflow"))?;
+                    if total > MAX_LEGACY_TAR_AES_BYTES {
+                        return Err(anyhow!("Legacy TAR.AES containers are limited to 512 MiB; use encrypted ZIP or 7Z for large archives"));
+                    }
+                }
+            }
+        }
         // 步骤 1: 创建 TAR 归档到内存缓冲区
         let tar_data = Self::create_tar_archive(files, base_dir)
             .context("创建 TAR 归档失败")?;
@@ -142,6 +159,9 @@ impl TarAesEngine {
 
     /// 使用 AES-256-GCM 解密数据
     fn decrypt_with_aes(archive_path: &Path, password: &str) -> Result<Vec<u8>> {
+        if archive_path.metadata()?.len() > MAX_LEGACY_TAR_AES_BYTES + 128 {
+            return Err(anyhow!("Legacy TAR.AES container exceeds the safe 512 MiB in-memory limit"));
+        }
         // 读取加密文件
         let mut file = File::open(archive_path)
             .with_context(|| format!("打开加密文件失败: {:?}", archive_path))?;

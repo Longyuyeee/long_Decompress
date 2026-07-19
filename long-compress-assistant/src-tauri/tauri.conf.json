@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "胧解压·方便助手",
-    "version": "1.0.6"
+    "version": "1.0.7"
   },
   "tauri": {
     "systemTray": {

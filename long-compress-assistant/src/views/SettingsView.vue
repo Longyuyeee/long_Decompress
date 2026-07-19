@@ -3,6 +3,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
+import { FORMAT_CAPABILITIES } from '@/utils/compressionFormat'
 import AccessibilitySettings from '@/components/settings/AccessibilitySettings.vue'
 
 const appStore = useAppStore()
@@ -13,6 +14,14 @@ const rarEncoder = ref<{ available: boolean; message: string } | null>(null)
 const diagnosticsLoading = computed(() => archiveEngineLoading.value)
 const readableExtensionCount = computed(() => new Set(archiveEngine.value?.formats.flatMap(format => format.extensions) || []).size)
 const creatableFormatCount = computed(() => archiveEngine.value?.formats.filter(format => format.canCreate).length || 0)
+const passwordCompressionFormats = computed(() => FORMAT_CAPABILITIES
+  .filter(format => format.supportsPasswordCompress)
+  .map(format => format.displayName)
+  .join(' · '))
+const passwordExtractionFormats = computed(() => FORMAT_CAPABILITIES
+  .filter(format => format.supportsPasswordExtract)
+  .map(format => format.displayName)
+  .join(' · '))
 
 const refreshEngineDiagnostics = async () => {
   await refreshArchiveEngine()
@@ -461,13 +470,13 @@ const removeWordlist = (index: number) => {
                   <div class="flex items-start gap-3">
                     <i class="pi pi-lock text-amber-500 text-xs mt-0.5 shrink-0"></i>
                     <div class="text-xs text-amber-700 leading-relaxed">
-                      <span class="font-black">{{ appStore.t('settings.formats.password_compress') }}:</span> ZIP · 7Z · RAR · TAR.*.AES · GZ/BZ2/XZ/ZST.AES
+                      <span class="font-black">{{ appStore.t('settings.formats.password_compress') }}:</span> {{ passwordCompressionFormats }}
                     </div>
                   </div>
                   <div class="flex items-start gap-3">
                     <i class="pi pi-unlock text-amber-500 text-xs mt-0.5 shrink-0"></i>
                     <div class="text-xs text-amber-700 leading-relaxed">
-                      <span class="font-black">{{ appStore.t('settings.formats.password_decompress') }}:</span> ZIP · 7Z · RAR
+                      <span class="font-black">{{ appStore.t('settings.formats.password_decompress') }}:</span> {{ passwordExtractionFormats }}
                     </div>
                   </div>
                 </div>

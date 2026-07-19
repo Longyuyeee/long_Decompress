@@ -15,6 +15,8 @@ async fn test_split_compression_basic() {
     file1.write_all(b"This is test file 1 content").unwrap();
     let mut file2 = File::create(&test_file2).unwrap();
     file2.write_all(b"This is test file 2 content with more data").unwrap();
+    drop(file1);
+    drop(file2);
 
     let output_zip = temp_dir.path().join("split_test.zip");
     let service = SplitCompressionService::new();
@@ -46,6 +48,7 @@ async fn test_split_compression_no_split() {
     let test_file = temp_dir.path().join("test.txt");
     let mut file = File::create(&test_file).unwrap();
     file.write_all(b"Small test file").unwrap();
+    drop(file);
 
     let output_zip = temp_dir.path().join("no_split.zip");
     let service = SplitCompressionService::new();
@@ -69,6 +72,7 @@ async fn test_split_compression_zero_split_size() {
     let test_file = temp_dir.path().join("test.txt");
     let mut file = File::create(&test_file).unwrap();
     file.write_all(b"Test file").unwrap();
+    drop(file);
 
     let output_zip = temp_dir.path().join("zero_split.zip");
     let service = SplitCompressionService::new();
@@ -91,6 +95,7 @@ async fn test_split_compression_large_file() {
     let mut file = File::create(&test_file).unwrap();
     let data = vec![b'X'; 1024];
     file.write_all(&data).unwrap();
+    drop(file);
 
     let output_zip = temp_dir.path().join("large_split.zip");
     let service = SplitCompressionService::new();
@@ -119,4 +124,60 @@ async fn test_split_compression_nonexistent_file() {
 
     let result: Result<_> = service.compress_to_split_zips(&files, &output_zip, options).await;
     assert!(result.is_err(), "不存在的文件应该失败");
+}
+
+#[tokio::test]
+async fn standard_split_zip_roundtrips_from_first_volume() {
+    let temp = tempdir().unwrap();
+    let source = temp.path().join("payload.txt");
+    fs::write(&source, b"standard split payload").unwrap();
+    let output = temp.path().join("standard.zip");
+    let service = SplitCompressionService::new();
+    let result = service
+        .compress_to_split_zips(
+            &[source.to_string_lossy().to_string()],
+            &output,
+            CompressionOptions {
+                split_size: Some(10),
+                ..Default::default()
+            },
+        )
+        .await
+        .expect("create standard split ZIP");
+
+    assert!(result.part_files[0].to_string_lossy().ends_with(".zip.001"));
+    let extracted = temp.path().join("extracted");
+    let engine = long_compress_assistant::utils::archive_tools::find_7z_command()
+        .expect("bundled archive engine");
+    let status = long_compress_assistant::utils::process::command(engine)
+        .arg("x")
+        .arg("-y")
+        .arg(format!("-o{}", extracted.display()))
+        .arg(&result.part_files[0])
+        .status()
+        .expect("extract standard split ZIP");
+    assert!(status.success());
+    assert_eq!(fs::read(extracted.join("payload.txt")).unwrap(), b"standard split payload");
+}
+
+#[tokio::test]
+async fn preexisting_split_volumes_are_never_deleted_on_validation_failure() {
+    let temp = tempdir().unwrap();
+    let source = temp.path().join("payload.txt");
+    fs::write(&source, b"payload").unwrap();
+    let output = temp.path().join("existing.zip");
+    let existing = temp.path().join("existing.zip.001");
+    fs::write(&existing, b"user data").unwrap();
+    let result = SplitCompressionService::new()
+        .compress_to_split_zips(
+            &[source.to_string_lossy().to_string()],
+            &output,
+            CompressionOptions {
+                split_size: Some(10),
+                ..Default::default()
+            },
+        )
+        .await;
+    assert!(result.is_err());
+    assert_eq!(fs::read(existing).unwrap(), b"user data");
 }

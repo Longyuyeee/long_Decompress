@@ -171,6 +171,77 @@ fn create_encrypted_7z(root: &Path, password: &str) -> std::path::PathBuf {
     archive
 }
 
+fn create_plain_7z(root: &Path) -> std::path::PathBuf {
+    let seven_zip = find_7z_command().expect("7za command available");
+    let source = root.join("plain.txt");
+    fs::write(&source, "plain archive").expect("fixture");
+    let archive = root.join("plain.7z");
+
+    let output = Command::new(seven_zip)
+        .arg("a")
+        .arg("-t7z")
+        .arg("-y")
+        .arg(&archive)
+        .arg(&source)
+        .output()
+        .expect("run 7za");
+    assert!(output.status.success(), "plain 7z creation failed");
+    archive
+}
+
+fn create_content_encrypted_7z(root: &Path, password: &str) -> std::path::PathBuf {
+    let seven_zip = find_7z_command().expect("7za command available");
+    let source = root.join("content-secret.txt");
+    fs::write(&source, "encrypted content with visible headers").expect("fixture");
+    let archive = root.join("content-secret.7z");
+    let output = Command::new(seven_zip)
+        .arg("a")
+        .arg("-t7z")
+        .arg(format!("-p{}", password))
+        .arg("-mhe=off")
+        .arg("-y")
+        .arg(&archive)
+        .arg(&source)
+        .output()
+        .expect("run 7za");
+    assert!(output.status.success(), "content-encrypted 7z creation failed");
+    archive
+}
+
+#[tokio::test]
+async fn rejects_arbitrary_passwords_for_unencrypted_7z() {
+    let harness = build_harness().await;
+    let archive = create_plain_7z(harness._temp.path());
+
+    assert!(!harness
+        .service
+        .verify_archive_password_candidate(archive.to_str().unwrap(), "!@#$%^&*")
+        .await
+        .expect("plain 7z encryption check"));
+    assert!(!harness
+        .service
+        .test_archive_password(archive.to_str().unwrap(), "!@#$%^&*")
+        .await
+        .expect("plain 7z password test"));
+}
+
+#[tokio::test]
+async fn validates_7z_content_when_headers_are_not_encrypted() {
+    let harness = build_harness().await;
+    let archive = create_content_encrypted_7z(harness._temp.path(), "content-password");
+
+    assert!(!harness
+        .service
+        .test_archive_password(archive.to_str().unwrap(), "wrong-password")
+        .await
+        .expect("wrong content password"));
+    assert!(harness
+        .service
+        .test_archive_password(archive.to_str().unwrap(), "content-password")
+        .await
+        .expect("correct content password"));
+}
+
 #[tokio::test]
 async fn resolves_encrypted_archive_password_from_password_book() {
     let harness = build_harness().await;

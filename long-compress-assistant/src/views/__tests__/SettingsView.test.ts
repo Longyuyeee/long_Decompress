@@ -43,6 +43,9 @@ describe('SettingsView archive engine diagnostics', () => {
     expect(wrapper.text()).toContain('Full engine ready')
     expect(wrapper.text()).toContain('RAR')
     expect(wrapper.text()).toContain('WIM')
+    expect(wrapper.text()).toContain('密码解压: ZIP · 7Z · RAR · TAR.AES')
+    expect(wrapper.text()).toContain('TGZ.AES')
+    expect(wrapper.text()).toContain('ZST.AES')
 
     const refresh = wrapper.findAll('button').find(button => button.text().includes('重新检测'))
     expect(refresh).toBeTruthy()

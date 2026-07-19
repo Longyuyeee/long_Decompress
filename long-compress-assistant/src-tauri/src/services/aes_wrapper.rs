@@ -15,6 +15,7 @@ pub struct AesWrapper;
 const MAGIC: &[u8; 8] = b"AESENC01";
 const SALT_SIZE: usize = 32;
 const NONCE_SIZE: usize = 12;
+const MAX_LEGACY_AES_BYTES: u64 = 512 * 1024 * 1024;
 
 impl AesWrapper {
     /// 加密文件
@@ -24,6 +25,9 @@ impl AesWrapper {
     /// * `output` - 输出文件路径（加密后）
     /// * `password` - 加密密码
     pub fn encrypt_file(input: &Path, output: &Path, password: &str) -> Result<()> {
+        if input.metadata()?.len() > MAX_LEGACY_AES_BYTES {
+            return Err(anyhow!("Legacy AES containers are limited to 512 MiB; use encrypted ZIP or 7Z for large files"));
+        }
         // 读取输入文件
         let mut input_file = File::open(input)
             .with_context(|| format!("打开输入文件失败: {:?}", input))?;
@@ -58,6 +62,9 @@ impl AesWrapper {
 
     /// 加密数据到文件
     pub fn encrypt_data(data: &[u8], output: &Path, password: &str) -> Result<()> {
+        if data.len() as u64 > MAX_LEGACY_AES_BYTES {
+            return Err(anyhow!("Legacy AES containers are limited to 512 MiB; use encrypted ZIP or 7Z for large files"));
+        }
         // 生成随机盐
         let mut salt = [0u8; SALT_SIZE];
         use rand::RngCore;
@@ -92,6 +99,9 @@ impl AesWrapper {
 
     /// 从文件解密数据
     pub fn decrypt_data(input: &Path, password: &str) -> Result<Vec<u8>> {
+        if input.metadata()?.len() > MAX_LEGACY_AES_BYTES + 128 {
+            return Err(anyhow!("Legacy AES container exceeds the safe 512 MiB in-memory limit"));
+        }
         // 读取加密文件
         let mut file = File::open(input)
             .with_context(|| format!("打开加密文件失败: {:?}", input))?;

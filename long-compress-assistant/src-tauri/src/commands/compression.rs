@@ -61,6 +61,20 @@ pub async fn extract_file(
 }
 
 #[command]
+pub async fn verify_archive_password(
+    task_id: String,
+    file_path: String,
+    password: String,
+) -> Result<bool, String> {
+    let service = service_for_task(&task_id).await;
+    let _task_guard = TaskCancellationGuard::new(&task_id);
+    service
+        .verify_archive_password_candidate(&file_path, &password)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[command]
 pub async fn extract_multiple(
     _app: AppHandle,
     window: Window,

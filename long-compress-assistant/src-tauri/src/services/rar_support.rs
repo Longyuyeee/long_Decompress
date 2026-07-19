@@ -6,6 +6,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use log;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
+use tokio::io::AsyncReadExt;
 
 /// RAR解压错误
 #[derive(Debug, thiserror::Error)]
@@ -54,6 +55,46 @@ pub enum RarError {
 pub struct RarSupportService;
 
 impl RarSupportService {
+    async fn run_command_cancellable(
+        mut command: tokio::process::Command,
+        cancellation: Arc<AtomicBool>,
+    ) -> Result<std::process::Output, RarError> {
+        command.stdout(Stdio::piped());
+        command.stderr(Stdio::piped());
+        command.kill_on_drop(true);
+        let mut child = command.spawn()
+            .map_err(|error| RarError::CommandFailed(error.to_string()))?;
+        let mut stdout = child.stdout.take()
+            .ok_or_else(|| RarError::CommandFailed("Unable to capture command output".to_string()))?;
+        let mut stderr = child.stderr.take()
+            .ok_or_else(|| RarError::CommandFailed("Unable to capture command errors".to_string()))?;
+        let stdout_reader = tokio::spawn(async move {
+            let mut bytes = Vec::new();
+            let _ = stdout.read_to_end(&mut bytes).await;
+            bytes
+        });
+        let stderr_reader = tokio::spawn(async move {
+            let mut bytes = Vec::new();
+            let _ = stderr.read_to_end(&mut bytes).await;
+            bytes
+        });
+        let status = loop {
+            tokio::select! {
+                result = child.wait() => break result.map_err(|error| RarError::CommandFailed(error.to_string()))?,
+                _ = tokio::time::sleep(std::time::Duration::from_millis(50)) => {
+                    if cancellation.load(Ordering::SeqCst) {
+                        let _ = child.kill().await;
+                        return Err(RarError::CommandFailed("RAR extraction cancelled".to_string()));
+                    }
+                }
+            }
+        };
+        Ok(std::process::Output {
+            status,
+            stdout: stdout_reader.await.unwrap_or_default(),
+            stderr: stderr_reader.await.unwrap_or_default(),
+        })
+    }
     /// 创建新的RAR支持服务
     pub fn new() -> Self {
         Self
@@ -134,7 +175,7 @@ impl RarSupportService {
             Err(e) => {
                 log::warn!("原生库解压失败，尝试退避到外部命令: {:?}", e);
                 // 如果是密码错误，直接返回，不再尝试外部命令（避免重复提示）
-                if matches!(e, RarError::PasswordError) {
+                if password.is_some() || matches!(e, RarError::PasswordError) {
                     return Err(e);
                 }
             }
@@ -152,7 +193,7 @@ impl RarSupportService {
         }
 
         if Self::check_tool_exists("unrar") {
-            match self.try_extract_with_unrar(rar_path, output_dir, password, options).await {
+            match self.try_extract_with_unrar(rar_path, output_dir, password, options, cancellation_flag.clone()).await {
                 Ok(_) => return Ok(()),
                 Err(e) => log::warn!("外部 unrar 命令失败: {:?}", e),
             }
@@ -160,7 +201,7 @@ impl RarSupportService {
 
         // 策略 3: 尝试使用 7z 命令 (仅支持部分 RAR4)
         if find_7z_command().is_some() {
-            return self.try_extract_with_7z(rar_path, output_dir, password, options).await;
+            return self.try_extract_with_7z(rar_path, output_dir, password, options, cancellation_flag).await;
         }
 
         Err(RarError::ToolNotInstalled)
@@ -329,6 +370,7 @@ impl RarSupportService {
         output_dir: &Path,
         password: Option<&str>,
         options: &DecompressOptions,
+        cancellation: Arc<AtomicBool>,
     ) -> Result<(), RarError> {
         log::debug!("尝试使用unrar解压");
 
@@ -353,8 +395,10 @@ impl RarSupportService {
 
         log::debug!("执行 RAR 命令 ({} 个参数)", command.get_args().len());
 
-        let output = command.output()
-            .map_err(|e| RarError::CommandFailed(format!("执行unrar命令失败: {}", e)))?;
+        let output = Self::run_command_cancellable(
+            tokio::process::Command::from(command),
+            cancellation,
+        ).await?;
 
         if output.status.success() {
             Ok(())
@@ -376,6 +420,7 @@ impl RarSupportService {
         output_dir: &Path,
         password: Option<&str>,
         options: &DecompressOptions,
+        cancellation: Arc<AtomicBool>,
     ) -> Result<(), RarError> {
         log::debug!("尝试使用7z解压");
 
@@ -397,8 +442,10 @@ impl RarSupportService {
 
         log::debug!("执行 RAR 命令 ({} 个参数)", command.get_args().len());
 
-        let output = command.output()
-            .map_err(|e| RarError::CommandFailed(format!("执行7z命令失败: {}", e)))?;
+        let output = Self::run_command_cancellable(
+            tokio::process::Command::from(command),
+            cancellation,
+        ).await?;
 
         if output.status.success() {
             Ok(())
@@ -475,28 +522,47 @@ impl RarSupportService {
             return false;
         }
 
-        let archive = Archive::with_password(path_str, password);
-        
-        match archive.open_for_processing() {
-            Ok(open_archive) => {
-                // 尝试读取第一个 Header
-                match open_archive.read_header() {
-                    Ok(_) => true, // 能够读取到 Header 且没报错，说明密码（针对 Header 加密）正确或未加密
-                    Err(e) => {
-                        let err_msg = format!("{:?}", e);
-                        // 只有在明确不是密码错误的情况下（如：文件意外中断），才可能返回 true 或处理
-                        // 但在密码预检阶段，任何错误都应视为不匹配
-                        log::debug!("RAR预检读取Header报错: {}", err_msg);
-                        false
-                    }
+        let mut open_archive = match Archive::with_password(path_str, password).open_for_processing() {
+            Ok(archive) => archive,
+            Err(error) => {
+                log::debug!("RAR 密码验证无法打开归档: {:?}", error);
+                return false;
+            }
+        };
+        let mut tested_file = false;
+
+        loop {
+            let header = match open_archive.read_header() {
+                Ok(Some(header)) => header,
+                Ok(None) => break,
+                Err(error) => {
+                    log::debug!("RAR 密码验证无法读取文件头: {:?}", error);
+                    return false;
                 }
+            };
+
+            if header.entry().is_directory() {
+                open_archive = match header.skip() {
+                    Ok(archive) => archive,
+                    Err(error) => {
+                        log::debug!("RAR 密码验证无法跳过目录: {:?}", error);
+                        return false;
+                    }
+                };
+                continue;
             }
-            Err(e) => {
-                let err_msg = format!("{:?}", e);
-                log::debug!("RAR预检打开归档报错: {}", err_msg);
-                false 
-            }
+
+            tested_file = true;
+            open_archive = match header.test() {
+                Ok(archive) => archive,
+                Err(error) => {
+                    log::debug!("RAR 密码验证内容测试失败: {:?}", error);
+                    return false;
+                }
+            };
         }
+
+        tested_file
     }
 
     /// 测试RAR文件完整性 (使用命令行工具作为备选)

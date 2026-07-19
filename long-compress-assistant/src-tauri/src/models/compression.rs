@@ -117,6 +117,10 @@ pub struct CompressionOptions {
     pub preserve_paths: Option<bool>,
     #[serde(default)]
     pub delete_after: bool,
+    /// RAR.exe has no stdin or environment-variable password channel. This must
+    /// be explicitly approved by the UI before a password is placed in argv.
+    #[serde(default)]
+    pub allow_insecure_password_cli: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

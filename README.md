@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.5-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.7-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,16 +20,16 @@
 
 ---
 
-## v1.0.5 更新亮点
+## v1.0.7 更新亮点
 
-- Win11 只启用原生现代右键菜单，自动清理旧式级联菜单，修复“显示更多选项”布局混乱。
-- 右键菜单注册改为串行同步，以用户设置作为目标状态，避免首次启动和快速切换时菜单意外消失。
-- 重做压缩配置组管理与选择弹窗，统一主题、层级、滚动、校验、保存、编辑和删除交互。
-- 配置组选项根据目标格式动态收敛；不支持分卷、固实或密码的格式不再显示无效设置。
-- 对齐前后端 RAR 能力：支持加密 RAR 解压，但不再允许创建或保存带密码的 RAR 压缩配置。
-- 继续优化 920×620 小窗口下的压缩设置布局，修复嵌套弹窗遮挡、标题关联和内容溢出。
+- 重构加密状态判定：只有引擎明确确认密码有效时才报告解锁成功，未加密归档不再误入密码破解流程。
+- 解压改为事务式暂存与提交，失败或取消时自动回滚；统一覆盖、跳过、重命名、筛选和扁平化规则。
+- 增加磁盘空间、解压体积、文件数量、压缩比、符号链接与 Windows 重解析点防护，异常归档会在写入前阻断。
+- 分卷 ZIP 改为标准 `.zip.001` 格式，并加强外部引擎、密码字典和批量任务的取消与超时处理。
+- 压缩输出使用原子提交，旧式 AES 封装增加资源上限；RAR 密码创建会在执行前明确提示命令行参数风险。
+- 完成前后端、真实归档样本、端到端、类型检查、生产构建和 Clippy 全目标回归。
 
-完整变更请查看 [v1.0.5 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.5)。
+完整变更请查看 [v1.0.7 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.7)。
 
 ## 为什么选择胧解压
 
@@ -37,7 +37,7 @@
 | --- | --- |
 | 压缩与解压 | 支持 ZIP、7Z、RAR、TAR、GZ、BZ2、XZ、Zstandard 等常见格式 |
 | 批量任务 | 多文件排队处理，实时显示进度、阶段、速度和结果 |
-| 加密归档 | 支持加密 ZIP、7Z、RAR 解压，以及 ZIP、7Z 和专用 AES-256-GCM 格式加密压缩 |
+| 加密归档 | 支持加密 ZIP、7Z、RAR 等格式解压，以及 ZIP、7Z、RAR 和专用 AES-256-GCM 格式加密压缩 |
 | 密码保险箱 | 本地保存常用密码，遇到加密压缩包时自动匹配 |
 | 文件完整性 | 计算与验证 CRC32、MD5、SHA256，支持导入、导出校验文件 |
 | Windows 集成 | 支持文件拖放、快捷键、系统托盘、资源管理器现代右键菜单和开机启动 |
@@ -122,12 +122,12 @@
 | 操作 | 格式 |
 | --- | --- |
 | 常用压缩 | ZIP、7Z、TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST、GZ、BZ2、XZ、ZST、LZMA |
-| 加密压缩 | ZIP、7Z、TAR.AES、TGZ.AES、TBZ.AES、TXZ.AES、TZST.AES、GZ.AES、BZ2.AES、XZ.AES、ZST.AES |
+| 加密压缩 | ZIP、7Z、RAR、TAR.AES、TGZ.AES、TBZ.AES、TXZ.AES、TZST.AES、GZ.AES、BZ2.AES、XZ.AES、ZST.AES |
 | 常用解压 | ZIP、ZIPX、7Z、RAR、TAR、GZ、BZ2、XZ、ZST、LZMA |
 | 兼容归档 | CAB、ISO、WIM、DMG、VHD/VHDX、DEB、RPM、MSI、ARJ、LZH、XAR、CPIO 等 |
 | Office 与应用包 | DOCX、XLSX、PPTX、ODT、ODS、EPUB、APK、IPA、APPX、JAR 等 |
 
-具体能力会受到文件本身、加密方式以及系统环境影响。RAR 创建需要 WinRAR；为避免密码出现在进程参数中，当前不提供加密 RAR 创建，但支持加密 RAR 解压。
+具体能力会受到文件本身、加密方式以及系统环境影响。RAR 创建需要 WinRAR；创建加密 RAR 时，应用会在执行前明确说明密码会短暂出现在本机进程参数中，并由用户确认是否继续。
 
 ## 常见问题
 

@@ -33,7 +33,7 @@ fn write_ar_sample(path: &Path, name: &str, content: &[u8]) {
     assert_eq!(header.len(), 60);
     bytes.extend_from_slice(header.as_bytes());
     bytes.extend_from_slice(content);
-    if content.len() % 2 != 0 {
+    if !content.len().is_multiple_of(2) {
         bytes.push(b'\n');
     }
     fs::write(path, bytes).expect("AR sample should be written");

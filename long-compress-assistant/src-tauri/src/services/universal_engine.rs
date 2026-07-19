@@ -53,29 +53,46 @@ impl UniversalCliEngine {
             .map_err(|e| anyhow::anyhow!("7z command failed: {}", e))
     }
 
-    fn try_zip_password(file_path: &Path, password: &str) -> Result<bool> {
+    pub(crate) fn zip_requires_password(file_path: &Path) -> Result<bool> {
         let file = std::fs::File::open(file_path)?;
         let mut archive = zip_aes::ZipArchive::new(file)?;
+
+        for index in 0..archive.len() {
+            if archive.by_index_raw(index)?.encrypted() {
+                return Ok(true);
+            }
+        }
+
+        Ok(false)
+    }
+
+    pub(crate) fn try_zip_password(file_path: &Path, password: &str) -> Result<bool> {
+        let file = std::fs::File::open(file_path)?;
+        let mut archive = zip_aes::ZipArchive::new(file)?;
+        let mut found_encrypted_entry = false;
 
         for index in 0..archive.len() {
             let encrypted = archive.by_index_raw(index)?.encrypted();
             if !encrypted {
                 continue;
             }
+            found_encrypted_entry = true;
             match archive.by_index_decrypt(index, password.as_bytes()) {
                 Ok(mut entry) => {
                     if entry.is_dir() {
                         continue;
                     }
                     let mut sink = std::io::sink();
-                    return Ok(std::io::copy(&mut entry, &mut sink).is_ok());
+                    if std::io::copy(&mut entry, &mut sink).is_err() {
+                        return Ok(false);
+                    }
                 }
                 Err(zip_aes::result::ZipError::InvalidPassword) => return Ok(false),
                 Err(error) => return Err(error.into()),
             }
         }
 
-        Ok(false)
+        Ok(found_encrypted_entry)
     }
 
     fn available_output_path(target: &Path, overwrite_existing: bool) -> Result<std::path::PathBuf> {
@@ -143,12 +160,29 @@ impl UniversalCliEngine {
             if entry.is_dir() {
                 std::fs::create_dir_all(&target)?;
             } else {
+                let modified = entry.last_modified().and_then(|value| {
+                    crate::services::compression_service::CompressionService::zip_system_time(
+                        value.year(),
+                        value.month(),
+                        value.day(),
+                        value.hour(),
+                        value.minute(),
+                        value.second(),
+                    )
+                });
                 let target = Self::available_output_path(&target, overwrite_existing)?;
                 if let Some(parent) = target.parent() {
                     std::fs::create_dir_all(parent)?;
                 }
                 let mut output = std::fs::File::create(&target)?;
                 std::io::copy(&mut entry, &mut output)?;
+                drop(output);
+                if let Some(modified) = modified {
+                    filetime::set_file_mtime(
+                        &target,
+                        filetime::FileTime::from_system_time(modified),
+                    )?;
+                }
                 on_log(target.to_string_lossy().to_string(), TaskLogSeverity::Info);
             }
             on_progress((index + 1) as f32 / total as f32);
@@ -216,6 +250,40 @@ impl UniversalCliEngine {
             })
             .filter(|name| !name.starts_with("---") && name != "Name")
             .collect())
+    }
+
+    /// Read declared entry count and expanded size without extracting data.
+    /// Passwords are deliberately not accepted here because 7z can only receive
+    /// them through process arguments.
+    pub async fn archive_uncompressed_stats(file_path: &Path) -> Result<(usize, u64)> {
+        let args = vec![
+            "l".to_string(),
+            "-slt".to_string(),
+            "-ba".to_string(),
+            "-p-".to_string(),
+            file_path.to_string_lossy().to_string(),
+        ];
+        let output = Self::run_7z_command(&args).await?;
+        if !output.status.success() {
+            return Err(anyhow::anyhow!("Unable to read archive metadata safely"));
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let mut entries = 0usize;
+        let mut total_size = 0u64;
+        for line in stdout.lines() {
+            if line.starts_with("Path = ") {
+                entries = entries.saturating_add(1);
+            } else if let Some(size) = line.strip_prefix("Size = ") {
+                let value = size.trim().parse::<u64>().map_err(|_| {
+                    anyhow::anyhow!("Archive contains an invalid expanded-size field")
+                })?;
+                total_size = total_size.checked_add(value).ok_or_else(|| {
+                    anyhow::anyhow!("Archive expanded size overflowed the supported range")
+                })?;
+            }
+        }
+        Ok((entries, total_size))
     }
 
     /// 检测归档文件的完整性（通过 7z CLI 的 t 命令）
@@ -378,7 +446,9 @@ impl ArchiveEngine for UniversalCliEngine {
 
         let cancel_flag = is_cancelled.clone();
 
-        // 解析标准输出流以提取进度
+        let mut last_resource_check = std::time::Instant::now();
+        // 解析标准输出流以提取进度。定时分支保证即使子进程没有
+        // 输出新行，取消和资源配额仍会被及时检查。
         loop {
             if cancel_flag.load(Ordering::SeqCst) {
                 let _ = child.kill().await;
@@ -399,6 +469,15 @@ impl ArchiveEngine for UniversalCliEngine {
                         },
                         Ok(None) => break, // EOF
                         Err(_) => break,
+                    }
+                },
+                _ = tokio::time::sleep(std::time::Duration::from_millis(100)) => {
+                    if last_resource_check.elapsed() >= std::time::Duration::from_secs(1) {
+                        if let Err(error) = crate::services::compression_service::CompressionService::validate_staged_resources(file_path, output_dir) {
+                            let _ = child.kill().await;
+                            return Err(error);
+                        }
+                        last_resource_check = std::time::Instant::now();
                     }
                 }
             }

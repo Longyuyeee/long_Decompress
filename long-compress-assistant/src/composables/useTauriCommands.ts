@@ -33,6 +33,7 @@ export interface CompressOptions {
   split_size?: number | null
   preserve_paths?: boolean
   delete_after?: boolean
+  allow_insecure_password_cli?: boolean
 }
 
 export interface RarCompressionSupport {
@@ -176,7 +177,10 @@ export const useTauriCommands = () => {
       taskStore.updateTaskStatus(taskId, 'completed')
       return result
     } catch (error: any) {
-      taskStore.updateTaskStatus(taskId, 'failed')
+      const task = taskStore.tasks.find(item => item.id === taskId)
+      if (task?.status !== 'cancelled') {
+        taskStore.updateTaskStatus(taskId, 'failed')
+      }
       throw error
     }
   }

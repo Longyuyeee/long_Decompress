@@ -10,6 +10,7 @@ import CompressionSettingsPanel from '@/components/compression/CompressionSettin
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import Modal from '@/components/ui/Modal.vue'
+import { ask } from '@tauri-apps/api/dialog'
 
 const appStore = useAppStore()
 const compressionStore = useCompressionStore()
@@ -177,6 +178,15 @@ const runCompression = async () => {
     }
   }
 
+  let allowRarPasswordCli = false
+  if (jobs.some(job => job.settings.format === 'rar' && Boolean(job.settings.password))) {
+    allowRarPasswordCli = await ask(
+      'WinRAR 的命令行编码器没有安全的密码输入通道。继续创建加密 RAR 时，密码会在本机进程参数中短暂可见。建议改用加密 ZIP 或 7Z。是否仍要继续？',
+      { title: '加密 RAR 安全提示', type: 'warning' }
+    )
+    if (!allowRarPasswordCli) return
+  }
+
   // 第一阶段：预校验并添加所有任务到列表（status: pending）
   const validJobs: Array<{ job: typeof jobs[0], taskId: string, effectiveFormat: string }> = []
   let failed = 0
@@ -220,7 +230,8 @@ const runCompression = async () => {
         password: job.settings.password || undefined,
         split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
         preserve_paths: job.settings.keepStructure,
-        delete_after: job.settings.deleteAfter
+        delete_after: job.settings.deleteAfter,
+        allow_insecure_password_cli: effectiveFormat === 'rar' && allowRarPasswordCli
       }
     })
 
@@ -243,14 +254,17 @@ const runCompression = async () => {
           password: job.settings.password || undefined,
           split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
           preserve_paths: job.settings.keepStructure,
-          delete_after: job.settings.deleteAfter
+          delete_after: job.settings.deleteAfter,
+          allow_insecure_password_cli: effectiveFormat === 'rar' && allowRarPasswordCli
         }
       )
       taskStore.updateTaskStatus(taskId, 'completed')
       succeeded++
     } catch (error) {
-      taskStore.updateTaskStatus(taskId, 'failed')
       const task = taskStore.tasks.find(t => t.id === taskId)
+      if (task?.status !== 'cancelled') {
+        taskStore.updateTaskStatus(taskId, 'failed')
+      }
       if (task) {
         task.error = extractErrorMessage(error)
       }

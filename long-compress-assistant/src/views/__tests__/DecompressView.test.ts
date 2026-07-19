@@ -211,4 +211,36 @@ describe('DecompressView', () => {
     })
     wrapper.unmount()
   })
+
+  it('does not report a dictionary password when backend validation rejects it', async () => {
+    mocks.decompressFile.mockRejectedValueOnce('PasswordRequired')
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'detect_split_archive') return null
+      if (command === 'load_app_settings') return '{}'
+      if (command === 'get_dictionary_passwords') return ['!@#$%^&*']
+      if (command === 'verify_archive_password') return false
+      return []
+    })
+
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'plain.zip',
+      path: 'C:/archives/plain.zip',
+    }])
+    await flushPromises()
+
+    const appStore = useAppStore()
+    const startButton = wrapper.findAll('button').find(button => button.text().includes(appStore.t('decompress.start_queue')))
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(mocks.invoke).toHaveBeenCalledWith('verify_archive_password', {
+      taskId: useTaskStore().tasks[0].id,
+      filePath: 'C:/archives/plain.zip',
+      password: '!@#$%^&*',
+    })
+    expect(mocks.decompressFile).toHaveBeenCalledTimes(1)
+    expect(useTaskStore().tasks[0].logs.some(log => log.message.includes('密码破解成功'))).toBe(false)
+    wrapper.unmount()
+  })
 })

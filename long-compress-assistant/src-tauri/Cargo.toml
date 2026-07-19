@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.0.6"
+version = "1.0.7"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -69,6 +69,7 @@ bzip2 = "0.4"
 xz2 = "0.1"
 zstd = "0.13"
 walkdir = "2.5"
+filetime = "0.2"
 pathdiff = "0.2"
 notify = "6.1"
 rfd = "0.14"

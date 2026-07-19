@@ -83,6 +83,12 @@ async fn test_zip_password_detection() {
     if result.is_ok() && output_zip.exists() {
         // 测试密码检测 — 无密码 ZIP 应该可以通过空字符串验证
         let password_ok = service.test_archive_password(&output_str, "").await;
-        assert!(password_ok.is_ok(), "无密码 ZIP 应该可以通过验证");
+        assert!(!password_ok.unwrap(), "未加密 ZIP 不应把任何字符串识别为正确密码");
+
+        let arbitrary_password = service
+            .verify_archive_password_candidate(&output_str, "!@#$%^&*")
+            .await
+            .expect("未加密 ZIP 检测");
+        assert!(!arbitrary_password, "未加密 ZIP 不得触发密码破解成功");
     }
 }

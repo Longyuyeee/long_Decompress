@@ -1,7 +1,7 @@
 use crate::services::system_service::{SystemService, SystemInfo};
 use tauri::{command, AppHandle};
 use serde::Serialize;
-use sysinfo::System;
+use sysinfo::{Disks, System};
 
 #[cfg(target_os = "windows")]
 use winreg::enums::*;
@@ -43,15 +43,15 @@ pub async fn get_resource_usage() -> Result<ResourceUsage, String> {
 
 #[command]
 pub async fn get_disk_space(path: String) -> Result<(u64, u64), String> {
-    match std::fs::metadata(&path) {
-        Ok(_) => {
-            // 简化实现，实际应该使用更精确的磁盘空间检查
-            let total = 1024 * 1024 * 1024 * 100; // 假设100GB
-            let free = 1024 * 1024 * 1024 * 50;   // 假设50GB空闲
-            Ok((total, free))
-        }
-        Err(e) => Err(format!("获取磁盘空间失败: {}", e)),
-    }
+    let requested = std::path::PathBuf::from(path);
+    let disks = Disks::new_with_refreshed_list();
+    disks
+        .list()
+        .iter()
+        .filter(|disk| requested.starts_with(disk.mount_point()))
+        .max_by_key(|disk| disk.mount_point().components().count())
+        .map(|disk| (disk.total_space(), disk.available_space()))
+        .ok_or_else(|| "Unable to determine disk space for the selected path".to_string())
 }
 
 #[command]

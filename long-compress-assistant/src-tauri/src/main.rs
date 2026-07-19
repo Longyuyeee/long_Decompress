@@ -259,6 +259,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             long_compress_assistant::commands::compression::extract_file,
+            long_compress_assistant::commands::compression::verify_archive_password,
             long_compress_assistant::commands::compression::extract_multiple,
             long_compress_assistant::commands::compression::compress_files,
             long_compress_assistant::commands::compression::cancel_compression,

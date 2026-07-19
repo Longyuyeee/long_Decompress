@@ -10,7 +10,7 @@ use thiserror::Error;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::Window;
-use chrono::Utc;
+use chrono::{Local, TimeZone, Utc};
 use serde::Serialize;
 
 use crate::utils::io_utils::ProgressReader;
@@ -307,6 +307,11 @@ pub struct CompressionService {
 }
 
 impl CompressionService {
+    const MAX_EXTRACTED_FILES: usize = 250_000;
+    const MAX_EXTRACTED_BYTES: u64 = 512 * 1024 * 1024 * 1024;
+    const MAX_EXPANSION_RATIO: u64 = 10_000;
+    const DISK_SAFETY_RESERVE: u64 = 128 * 1024 * 1024;
+
     pub async fn new_with_defaults() -> Self {
         let pool = match crate::database::connection::get_connection().await {
             Ok(conn) => conn.pool().clone(),
@@ -508,6 +513,179 @@ impl CompressionService {
         Ok(requested_format)
     }
 
+    fn run_command_cancellable(
+        &self,
+        mut command: std::process::Command,
+    ) -> Result<std::process::Output> {
+        command.stdout(std::process::Stdio::piped());
+        command.stderr(std::process::Stdio::piped());
+        let mut child = command.spawn()?;
+        let mut stdout = child.stdout.take().ok_or_else(|| {
+            CompressionError::CompressionFailed("Unable to capture encoder output".to_string())
+        })?;
+        let mut stderr = child.stderr.take().ok_or_else(|| {
+            CompressionError::CompressionFailed("Unable to capture encoder errors".to_string())
+        })?;
+        let stdout_reader = std::thread::spawn(move || {
+            let mut bytes = Vec::new();
+            let _ = stdout.read_to_end(&mut bytes);
+            bytes
+        });
+        let stderr_reader = std::thread::spawn(move || {
+            let mut bytes = Vec::new();
+            let _ = stderr.read_to_end(&mut bytes);
+            bytes
+        });
+
+        let status = loop {
+            if self.cancellation_flag.load(Ordering::SeqCst) {
+                let _ = child.kill();
+                let _ = child.wait();
+                let _ = stdout_reader.join();
+                let _ = stderr_reader.join();
+                return Err(CompressionError::Cancelled.into());
+            }
+            if let Some(status) = child.try_wait()? {
+                break status;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        };
+        Ok(std::process::Output {
+            status,
+            stdout: stdout_reader.join().unwrap_or_default(),
+            stderr: stderr_reader.join().unwrap_or_default(),
+        })
+    }
+
+    fn canonicalize_with_missing_tail(path: &Path) -> Result<PathBuf> {
+        let absolute = std::path::absolute(path)?;
+        let mut existing = absolute.as_path();
+        let mut tail = Vec::new();
+        while !existing.exists() {
+            let name = existing.file_name().ok_or_else(|| {
+                CompressionError::CompressionFailed(format!("Invalid path: {}", path.display()))
+            })?;
+            tail.push(name.to_os_string());
+            existing = existing.parent().ok_or_else(|| {
+                CompressionError::CompressionFailed(format!("Invalid path: {}", path.display()))
+            })?;
+        }
+        let mut resolved = existing.canonicalize()?;
+        for component in tail.into_iter().rev() {
+            resolved.push(component);
+        }
+        Ok(resolved)
+    }
+
+    fn validate_compression_io_paths(source_files: &[String], output_path: &str, options: &CompressionOptions) -> Result<()> {
+        if source_files.is_empty() {
+            return Err(CompressionError::CompressionFailed("At least one source file or folder is required".to_string()).into());
+        }
+        if output_path.trim().is_empty() {
+            return Err(CompressionError::CompressionFailed("Output path is required".to_string()).into());
+        }
+
+        let output = Path::new(output_path);
+        if output.exists() {
+            return Err(CompressionError::CompressionFailed(format!(
+                "Output already exists; choose a new path to avoid overwriting data: {}",
+                output.display()
+            )).into());
+        }
+        let resolved_output = Self::canonicalize_with_missing_tail(output)?;
+        let split_requested = options.split_size.is_some_and(|size| size > 0);
+        let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
+        if split_requested && has_password {
+            return Err(CompressionError::CompressionFailed(
+                "Encrypted split archives are not supported safely; disable splitting or remove the password".to_string()
+            ).into());
+        }
+
+        for source in source_files {
+            let source_path = Path::new(source);
+            if !source_path.exists() {
+                return Err(CompressionError::FileNotFound(source.clone()).into());
+            }
+            if !source_path.is_file() && !source_path.is_dir() {
+                return Err(CompressionError::CompressionFailed(format!("Unsupported source type: {}", source)).into());
+            }
+            if std::fs::symlink_metadata(source_path)?.file_type().is_symlink() {
+                return Err(CompressionError::CompressionFailed(format!(
+                    "Symbolic links or reparse points are not accepted as archive sources: {}",
+                    source_path.display()
+                )).into());
+            }
+            if source_path.is_dir() {
+                for entry in walkdir::WalkDir::new(source_path).follow_links(false) {
+                    let entry = entry.map_err(|error| {
+                        CompressionError::CompressionFailed(format!(
+                            "Unable to inspect source tree safely: {}",
+                            error
+                        ))
+                    })?;
+                    if entry.file_type().is_symlink() {
+                        return Err(CompressionError::CompressionFailed(format!(
+                            "Source tree contains a symbolic link or reparse point: {}",
+                            entry.path().display()
+                        )).into());
+                    }
+                }
+            }
+            if split_requested && source_path.is_dir() {
+                return Err(CompressionError::CompressionFailed(
+                    "Split ZIP creation currently supports regular files only".to_string()
+                ).into());
+            }
+
+            let resolved_source = source_path.canonicalize()?;
+            if resolved_source == resolved_output
+                || (source_path.is_dir() && resolved_output.starts_with(&resolved_source))
+            {
+                return Err(CompressionError::CompressionFailed(format!(
+                    "Output must not replace a source or be created inside a source folder: {}",
+                    output.display()
+                )).into());
+            }
+        }
+        Ok(())
+    }
+
+    fn temporary_compression_output(output: &Path) -> Result<PathBuf> {
+        let parent = output.parent().unwrap_or_else(|| Path::new("."));
+        let file_name = output.file_name().and_then(|name| name.to_str()).ok_or_else(|| {
+            CompressionError::CompressionFailed(format!("Invalid output file name: {}", output.display()))
+        })?;
+        Ok(parent.join(format!(".long-compress-{}.{}", uuid::Uuid::new_v4(), file_name)))
+    }
+
+    fn cleanup_failed_compression_outputs(path: &Path, split_requested: bool) {
+        // Standard split creation owns and cleans only the volumes it created.
+        // Never glob-clean a user-visible prefix here: pre-existing .001 files
+        // may belong to another archive and must survive a validation failure.
+        if split_requested {
+            return;
+        }
+        let _ = std::fs::remove_file(path);
+        let Some(parent) = path.parent() else { return; };
+        let Some(file_name) = path.file_name().and_then(|name| name.to_str()) else { return; };
+        let unique_temp_prefix = if file_name.starts_with(".long-compress-") {
+            file_name.split('.').nth(1).map(|id| format!(".{}.", id))
+        } else {
+            None
+        };
+        if let Ok(entries) = std::fs::read_dir(parent) {
+            for entry in entries.flatten() {
+                let candidate = entry.path();
+                let name = candidate.file_name().and_then(|value| value.to_str()).unwrap_or("");
+                let is_temp_sidecar = name.starts_with(file_name)
+                    || unique_temp_prefix.as_ref().is_some_and(|prefix| name.starts_with(prefix));
+                if is_temp_sidecar {
+                    let _ = std::fs::remove_file(candidate);
+                }
+            }
+        }
+    }
+
     pub fn removable_compressed_sources(source_files: &[String], output_path: &str) -> Result<Vec<PathBuf>> {
         let output = Path::new(output_path);
         if !output.is_file() {
@@ -558,44 +736,71 @@ impl CompressionService {
         let service = self.clone();
         tokio::task::spawn_blocking(move || {
             let requested_format = Self::validate_compression_request(&source_files, &output_path, &options)?;
+            Self::validate_compression_io_paths(&source_files, &output_path, &options)?;
             let delete_after = options.delete_after;
+            let split_requested = options.split_size.is_some_and(|size| size > 0);
+            let final_output = PathBuf::from(&output_path);
+            let working_output = if split_requested {
+                final_output.clone()
+            } else {
+                Self::temporary_compression_output(&final_output)?
+            };
+            let working_output_string = working_output.to_string_lossy().to_string();
             service.emit_log(&window, &task_id, &format!("开始压缩到: {}", output_path), TaskLogSeverity::Info);
             let res = match requested_format.as_str() {
-                "tar.aes" => service.do_compress_tar_aes(&window, &task_id, &source_files, &output_path, options),
-                "tar.gz.aes" | "tgz.aes" => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &output_path, options),
-                "tar.bz2.aes" | "tbz2.aes" => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &output_path, options),
-                "tar.xz.aes" | "txz.aes" => service.do_compress_tar_xz_aes(&window, &task_id, &source_files, &output_path, options),
-                "tar.zst.aes" | "tzst.aes" => service.do_compress_tar_zst_aes(&window, &task_id, &source_files, &output_path, options),
-                "gz.aes" | "gzip.aes" => service.do_compress_gz_aes(&window, &task_id, &source_files, &output_path, options),
-                "bz2.aes" | "bzip2.aes" => service.do_compress_bz2_aes(&window, &task_id, &source_files, &output_path, options),
-                "xz.aes" => service.do_compress_xz_aes(&window, &task_id, &source_files, &output_path, options),
-                "zst.aes" | "zstd.aes" => service.do_compress_zst_aes(&window, &task_id, &source_files, &output_path, options),
-                "zip" => service.do_compress_zip(&window, &task_id, &source_files, &output_path, options),
-                "tar" => service.do_compress_tar(&window, &task_id, &source_files, &output_path, options),
-                "tar.gz" | "tgz" => service.do_compress_tar_gz(&window, &task_id, &source_files, &output_path, options),
-                "tar.bz2" | "tbz" | "tbz2" => service.do_compress_tar_bz2(&window, &task_id, &source_files, &output_path, options),
-                "tar.xz" | "txz" => service.do_compress_tar_xz(&window, &task_id, &source_files, &output_path, options),
-                "7z" => service.do_compress_7z(&window, &task_id, &source_files, &output_path, options),
-                "rar" => service.do_compress_rar(&window, &task_id, &source_files, &output_path, options),
-                "wim" => service.do_compress_wim(&window, &task_id, &source_files, &output_path, options),
-                "gz" => service.do_compress_gz(&window, &task_id, &source_files, &output_path, options),
-                "bz2" => service.do_compress_bz2(&window, &task_id, &source_files, &output_path, options),
-                "xz" => service.do_compress_xz(&window, &task_id, &source_files, &output_path, options),
-                "zst" | "zstd" => service.do_compress_zstd(&window, &task_id, &source_files, &output_path, options),
-                "tar.zst" | "tzst" => service.do_compress_tar_zstd(&window, &task_id, &source_files, &output_path, options),
-                "lzma" => service.do_compress_lzma(&window, &task_id, &source_files, &output_path, options),
+                "tar.aes" => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
+                "tar.gz.aes" | "tgz.aes" => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                "tar.bz2.aes" | "tbz2.aes" => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
+                "tar.xz.aes" | "txz.aes" => service.do_compress_tar_xz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                "tar.zst.aes" | "tzst.aes" => service.do_compress_tar_zst_aes(&window, &task_id, &source_files, &working_output_string, options),
+                "gz.aes" | "gzip.aes" => service.do_compress_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                "bz2.aes" | "bzip2.aes" => service.do_compress_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
+                "xz.aes" => service.do_compress_xz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                "zst.aes" | "zstd.aes" => service.do_compress_zst_aes(&window, &task_id, &source_files, &working_output_string, options),
+                "zip" => service.do_compress_zip(&window, &task_id, &source_files, &working_output_string, options),
+                "tar" => service.do_compress_tar(&window, &task_id, &source_files, &working_output_string, options),
+                "tar.gz" | "tgz" => service.do_compress_tar_gz(&window, &task_id, &source_files, &working_output_string, options),
+                "tar.bz2" | "tbz" | "tbz2" => service.do_compress_tar_bz2(&window, &task_id, &source_files, &working_output_string, options),
+                "tar.xz" | "txz" => service.do_compress_tar_xz(&window, &task_id, &source_files, &working_output_string, options),
+                "7z" => service.do_compress_7z(&window, &task_id, &source_files, &working_output_string, options),
+                "rar" => service.do_compress_rar(&window, &task_id, &source_files, &working_output_string, options),
+                "wim" => service.do_compress_wim(&window, &task_id, &source_files, &working_output_string, options),
+                "gz" => service.do_compress_gz(&window, &task_id, &source_files, &working_output_string, options),
+                "bz2" => service.do_compress_bz2(&window, &task_id, &source_files, &working_output_string, options),
+                "xz" => service.do_compress_xz(&window, &task_id, &source_files, &working_output_string, options),
+                "zst" | "zstd" => service.do_compress_zstd(&window, &task_id, &source_files, &working_output_string, options),
+                "tar.zst" | "tzst" => service.do_compress_tar_zstd(&window, &task_id, &source_files, &working_output_string, options),
+                "lzma" => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
                 _ => Err(CompressionError::CompressionFailed(format!(
                     "Unsupported compression format '{}'.",
                     requested_format
                 )).into()),
             };
+            let res = res.and_then(|_| {
+                if !split_requested {
+                    if final_output.exists() {
+                        return Err(CompressionError::CompressionFailed(format!(
+                            "Output appeared while compression was running; it was not overwritten: {}",
+                            final_output.display()
+                        )).into());
+                    }
+                    std::fs::rename(&working_output, &final_output)?;
+                }
+                Ok(())
+            });
             if res.is_ok() {
                 if delete_after {
-                    service.delete_sources_after_success(&window, &task_id, &source_files, &output_path);
+                    let verified_output = if split_requested {
+                        format!("{}.001", output_path)
+                    } else {
+                        output_path.clone()
+                    };
+                    service.delete_sources_after_success(&window, &task_id, &source_files, &verified_output);
                 }
                 service.emit_log(&window, &task_id, "压缩完成", TaskLogSeverity::Success);
                 service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
             } else {
+                Self::cleanup_failed_compression_outputs(&working_output, split_requested);
                 service.emit_log(&window, &task_id, &format!("压缩失败: {:?}", res.as_ref().err()), TaskLogSeverity::Error);
             }
             res
@@ -831,33 +1036,99 @@ impl CompressionService {
             ArchiveFormat::Arc | ArchiveFormat::Apfs | ArchiveFormat::Ext => {
                 self.universal_engine.requires_password(Path::new(file_path)).await
             }
-            // 原生支持密码检测的格式
-            ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar => {
-                match self.test_archive_password(file_path, "").await {
-                    Ok(true) => Ok(false),
-                    Ok(false) => Ok(true),
-                    Err(_) => Ok(true),
-                }
+            ArchiveFormat::Zip => {
+                UniversalCliEngine::zip_requires_password(Path::new(file_path))
             }
-            ArchiveFormat::AesEncrypted => Ok(true),
+            // 7Z/RAR 交由完整引擎做无密码测试，不再用“空密码是否有效”反推加密状态。
+            ArchiveFormat::SevenZip | ArchiveFormat::Rar => {
+                self.universal_engine.requires_password(Path::new(file_path)).await
+            }
+            ArchiveFormat::AesEncrypted => {
+                let path = Path::new(file_path);
+                if TarAesEngine::is_tar_aes(path).unwrap_or(false)
+                    || AesWrapper::is_aes_encrypted(path).unwrap_or(false)
+                {
+                    Ok(true)
+                } else {
+                    Err(anyhow::anyhow!("File has an .aes extension but no supported encrypted-container header"))
+                }
+            },
             _ => Ok(false),
         }
+    }
+
+    fn detect_password_format(file_path: &str) -> Result<ArchiveFormat> {
+        let path = Path::new(file_path);
+        let mut file = File::open(path)?;
+        let mut header = [0u8; 512];
+        let bytes_read = file.read(&mut header)?;
+        let detected = ArchiveFormat::from_magic(&header[..bytes_read]);
+        if detected != ArchiveFormat::Unknown {
+            return Ok(detected);
+        }
+
+        let ext = path.extension().and_then(|value| value.to_str()).unwrap_or("").to_ascii_lowercase();
+        Ok(match ext.as_str() {
+            "zip" | "zipx" | "jar" | "xpi" | "odt" | "ods" | "docx" | "xlsx" | "pptx" | "epub" | "ipa" | "apk" | "appx" => ArchiveFormat::Zip,
+            "7z" => ArchiveFormat::SevenZip,
+            "rar" => ArchiveFormat::Rar,
+            "aes" => ArchiveFormat::AesEncrypted,
+            _ => ArchiveFormat::Universal,
+        })
+    }
+
+    pub async fn verify_archive_password_candidate(&self, file_path: &str, password: &str) -> Result<bool> {
+        self.check_cancellation()?;
+        let format = Self::detect_password_format(file_path)?;
+
+        if !self.archive_requires_password(file_path, format).await? {
+            return Ok(false);
+        }
+
+        self.test_archive_password(file_path, password).await
     }
 
     pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, options: DecompressOptions) -> Result<String> {
         let service = self.clone();
         let path = Path::new(&file_path);
-        let mut out_dir = output_dir.map(PathBuf::from).unwrap_or_else(|| {
+        if !path.is_file() {
+            return Err(CompressionError::FileNotFound(file_path).into());
+        }
+        if !matches!(options.conflict_policy.as_str(), "ask" | "overwrite" | "skip" | "rename") {
+            return Err(CompressionError::ExtractionFailed(format!(
+                "Unsupported conflict policy: {}",
+                options.conflict_policy
+            )).into());
+        }
+        if options.delete_after
+            && (options.skip_corrupted
+                || options.file_filter.as_deref().is_some_and(|filter| !filter.trim().is_empty()))
+        {
+            return Err(CompressionError::ExtractionFailed(
+                "The source archive cannot be deleted after a partial or corruption-tolerant extraction".to_string()
+            ).into());
+        }
+        let mut final_out_dir = output_dir.map(PathBuf::from).unwrap_or_else(|| {
             path.parent().unwrap_or(Path::new(".")).to_path_buf()
         });
         if options.create_subdirectory {
-            out_dir = out_dir.join(Self::archive_output_dir_name(path));
+            final_out_dir = final_out_dir.join(Self::archive_output_dir_name(path));
         }
 
-        if !out_dir.exists() {
-            std::fs::create_dir_all(&out_dir)?;
+        if final_out_dir.exists() && !final_out_dir.is_dir() {
+            return Err(CompressionError::ExtractionFailed(format!(
+                "Extraction output is not a directory: {}",
+                final_out_dir.display()
+            )).into());
         }
-
+        if std::fs::symlink_metadata(&final_out_dir)
+            .map(|metadata| metadata.file_type().is_symlink())
+            .unwrap_or(false)
+        {
+            return Err(CompressionError::ExtractionFailed(
+                "Extraction output cannot be a symbolic link or reparse point".to_string()
+            ).into());
+        }
         let mut format = ArchiveFormat::Unknown;
         if let Ok(mut f) = File::open(&file_path) {
             let mut header = [0u8; 32];
@@ -942,15 +1213,24 @@ impl CompressionService {
         service.emit_log(&window, &task_id, &format!("确定解压格式: {:?} (后缀: {})", format, ext), TaskLogSeverity::Info);
 
         let mut final_password = password.clone();
-        // ... (省略部分代码以便定位)
-        if final_password.is_none() && format.supports_password() {
-            let needs_pwd = match service.archive_requires_password(&file_path, format.clone()).await {
-                Ok(value) => value,
-                Err(err) => {
-                    service.emit_log(&window, &task_id, &format!("密码需求检测失败，按需尝试密码: {}", err), TaskLogSeverity::Warning);
-                    true
-                }
-            };
+        let password_required = if format.supports_password() {
+            Some(service.archive_requires_password(&file_path, format.clone()).await.map_err(|err| {
+                CompressionError::ExtractionFailed(format!(
+                    "Unable to determine archive encryption state safely: {}",
+                    err
+                ))
+            })?)
+        } else {
+            None
+        };
+
+        if password_required == Some(false) && final_password.is_some() {
+            service.emit_log(&window, &task_id, "归档未加密，已忽略多余的密码参数", TaskLogSeverity::Info);
+            final_password = None;
+        }
+
+        if final_password.is_none() && password_required == Some(true) {
+            let needs_pwd = true;
 
             if needs_pwd {
                 service.emit_log(&window, &task_id, "检测到加密格式，正在尝试静默解锁...", TaskLogSeverity::Info);
@@ -973,47 +1253,15 @@ impl CompressionService {
             }
         }
 
-        if options.conflict_policy == "ask" && !options.overwrite_existing {
-            if let Ok(entries) = UniversalCliEngine::list_contents(path, final_password.as_deref()).await {
-                for entry in entries {
-                    let entry = entry.trim_end_matches(['/', '\\']);
-                    if entry.is_empty() {
-                        continue;
-                    }
-                    let relative = Path::new(entry);
-                    if relative.is_absolute()
-                        || relative.components().any(|component| matches!(component, std::path::Component::ParentDir))
-                    {
-                        continue;
-                    }
-                    let relative = if options.preserve_paths {
-                        relative.to_path_buf()
-                    } else {
-                        relative.file_name().map(PathBuf::from).unwrap_or_default()
-                    };
-                    let destination = out_dir.join(relative);
-                    if destination.is_file() {
-                        let metadata = std::fs::metadata(&destination).ok();
-                        let modified = metadata.as_ref()
-                            .and_then(|value| value.modified().ok())
-                            .and_then(|value| value.duration_since(std::time::UNIX_EPOCH).ok())
-                            .map(|value| value.as_millis() as u64)
-                            .unwrap_or(0);
-                        let _ = window.emit("file-conflict", FileConflictPayload {
-                            task_id: task_id.clone(),
-                            file_name: destination.file_name().and_then(|name| name.to_str()).unwrap_or(entry).to_string(),
-                            source_path: file_path.clone(),
-                            dest_path: destination.to_string_lossy().into_owned(),
-                            source_size: 0,
-                            dest_size: metadata.map(|value| value.len()).unwrap_or(0),
-                            source_modified: 0,
-                            dest_modified: modified,
-                        });
-                        return Err(CompressionError::ExtractionFailed("File conflict requires resolution".to_string()).into());
-                    }
-                }
-            }
-        }
+        service
+            .preflight_extraction(path, &format, final_password.as_deref(), &final_out_dir)
+            .await?;
+        self.check_cancellation()?;
+        Self::ensure_no_link_ancestors(&final_out_dir)?;
+        let staging_parent = final_out_dir.parent().unwrap_or_else(|| Path::new("."));
+        std::fs::create_dir_all(staging_parent)?;
+        let out_dir = staging_parent.join(format!(".long-extract-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir(&out_dir)?;
 
         let win_progress = window.clone();
         let tid_progress = task_id.clone();
@@ -1029,9 +1277,8 @@ impl CompressionService {
             srv_log.emit_log(&win_log, &tid_log, &msg, severity);
         });
 
-        // 若有密码且格式为 ZIP，rust zip crate 0.6 不支持 AES-256，改走 7z CLI
         let effective_format = if format == ArchiveFormat::Zip && final_password.is_some() {
-            service.emit_log(&window, &task_id, "加密ZIP使用原生AES-256引擎解压", TaskLogSeverity::Info);
+            service.emit_log(&window, &task_id, "检测到加密 ZIP，使用内置加密 ZIP 兼容引擎解压", TaskLogSeverity::Info);
             ArchiveFormat::Universal
         } else {
             format
@@ -1209,13 +1456,312 @@ impl CompressionService {
             },
         };
 
-        result?;
+        if let Err(error) = result {
+            if let Err(cleanup_error) = std::fs::remove_dir_all(&out_dir) {
+                service.emit_log(
+                    &window,
+                    &task_id,
+                    &format!("Unable to clean incomplete extraction output: {}", cleanup_error),
+                    TaskLogSeverity::Warning,
+                );
+            }
+            return Err(error);
+        }
+        if let Err(error) = service.prepare_staging_layout(&out_dir, &options) {
+            let _ = std::fs::remove_dir_all(&out_dir);
+            return Err(error);
+        }
+        if let Err(error) = Self::validate_staged_resources(path, &out_dir) {
+            let _ = std::fs::remove_dir_all(&out_dir);
+            return Err(error);
+        }
+        if let Err(error) = service.commit_staged_extraction(
+            Some(&window),
+            &task_id,
+            &file_path,
+            &out_dir,
+            &final_out_dir,
+            &options,
+        ) {
+            let _ = std::fs::remove_dir_all(&out_dir);
+            return Err(error);
+        }
+        let _ = std::fs::remove_dir_all(&out_dir);
         if options.delete_after {
-            std::fs::remove_file(&file_path)?;
+            if let Err(error) = std::fs::remove_file(&file_path) {
+                service.emit_log(
+                    &window,
+                    &task_id,
+                    &format!("Extraction succeeded, but the source archive could not be deleted: {}", error),
+                    TaskLogSeverity::Warning,
+                );
+            }
         }
         service.emit_log(&window, &task_id, "全部解压任务已完成", TaskLogSeverity::Success);
         service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
-        Ok(out_dir.to_string_lossy().to_string())
+        Ok(final_out_dir.to_string_lossy().to_string())
+    }
+
+    fn validate_resource_limits(
+        archive_path: &Path,
+        entry_count: usize,
+        expanded_bytes: u64,
+    ) -> Result<()> {
+        if entry_count > Self::MAX_EXTRACTED_FILES {
+            return Err(CompressionError::ExtractionFailed(format!(
+                "Archive contains too many entries ({} > {})",
+                entry_count,
+                Self::MAX_EXTRACTED_FILES
+            )).into());
+        }
+        if expanded_bytes > Self::MAX_EXTRACTED_BYTES {
+            return Err(CompressionError::ExtractionFailed(format!(
+                "Archive expands beyond the safety limit ({} bytes)",
+                Self::MAX_EXTRACTED_BYTES
+            )).into());
+        }
+        let compressed_bytes = std::fs::metadata(archive_path)?.len().max(1);
+        if expanded_bytes >= 1024 * 1024 * 1024
+            && expanded_bytes / compressed_bytes > Self::MAX_EXPANSION_RATIO
+        {
+            return Err(CompressionError::ExtractionFailed(format!(
+                "Archive expansion ratio exceeds the safety limit ({}:1)",
+                Self::MAX_EXPANSION_RATIO
+            )).into());
+        }
+        Ok(())
+    }
+
+    fn available_disk_space(path: &Path) -> Option<u64> {
+        let disks = sysinfo::Disks::new_with_refreshed_list();
+        disks
+            .list()
+            .iter()
+            .filter(|disk| path.starts_with(disk.mount_point()))
+            .max_by_key(|disk| disk.mount_point().components().count())
+            .map(|disk| disk.available_space())
+    }
+
+    fn ensure_no_link_ancestors(path: &Path) -> Result<()> {
+        let mut current = Some(path);
+        while let Some(candidate) = current {
+            if let Ok(metadata) = std::fs::symlink_metadata(candidate) {
+                if metadata.file_type().is_symlink() {
+                    return Err(CompressionError::ExtractionFailed(format!(
+                        "Extraction path contains a symbolic link or reparse point: {}",
+                        candidate.display()
+                    )).into());
+                }
+            }
+            current = candidate.parent();
+        }
+        Ok(())
+    }
+
+    async fn preflight_extraction(
+        &self,
+        archive_path: &Path,
+        format: &ArchiveFormat,
+        password: Option<&str>,
+        output: &Path,
+    ) -> Result<()> {
+        let stats = match format {
+            ArchiveFormat::Zip => {
+                let file = File::open(archive_path)?;
+                let mut archive = zip_aes::ZipArchive::new(file)?;
+                let mut expanded = 0u64;
+                for index in 0..archive.len() {
+                    expanded = expanded
+                        .checked_add(archive.by_index_raw(index)?.size())
+                        .ok_or_else(|| CompressionError::ExtractionFailed(
+                            "Archive expanded size overflowed the supported range".to_string(),
+                        ))?;
+                }
+                Some((archive.len(), expanded))
+            }
+            ArchiveFormat::SevenZip => {
+                let reader = sevenz_rust::SevenZReader::open(
+                    archive_path,
+                    sevenz_rust::Password::from(password.unwrap_or("")),
+                )?;
+                let mut expanded = 0u64;
+                for entry in &reader.archive().files {
+                    expanded = expanded.checked_add(entry.size).ok_or_else(|| {
+                        CompressionError::ExtractionFailed(
+                            "Archive expanded size overflowed the supported range".to_string(),
+                        )
+                    })?;
+                }
+                Some((reader.archive().files.len(), expanded))
+            }
+            ArchiveFormat::Rar => {
+                let path = archive_path.to_str().ok_or_else(|| {
+                    CompressionError::ExtractionFailed("RAR path is not valid Unicode".to_string())
+                })?;
+                let archive = if let Some(password) = password {
+                    unrar::Archive::with_password(path, password)
+                } else {
+                    unrar::Archive::new(path)
+                };
+                let mut archive = archive.open_for_processing().map_err(|error| {
+                    CompressionError::ExtractionFailed(format!(
+                        "Unable to inspect RAR metadata safely: {:?}",
+                        error
+                    ))
+                })?;
+                let mut entries = 0usize;
+                let mut expanded = 0u64;
+                while let Some(header) = archive.read_header().map_err(|error| {
+                    CompressionError::ExtractionFailed(format!(
+                        "Unable to inspect RAR entry metadata: {:?}",
+                        error
+                    ))
+                })? {
+                    entries = entries.saturating_add(1);
+                    expanded = expanded.checked_add(header.entry().unpacked_size).ok_or_else(|| {
+                        CompressionError::ExtractionFailed(
+                            "RAR expanded size overflowed the supported range".to_string(),
+                        )
+                    })?;
+                    archive = header.skip().map_err(|error| {
+                        CompressionError::ExtractionFailed(format!(
+                            "Unable to continue RAR metadata inspection: {:?}",
+                            error
+                        ))
+                    })?;
+                }
+                Some((entries, expanded))
+            }
+            _ if password.is_none() => {
+                UniversalCliEngine::archive_uncompressed_stats(archive_path).await.ok()
+            }
+            _ => None,
+        };
+
+        if let Some((entry_count, expanded_bytes)) = stats {
+            Self::validate_resource_limits(archive_path, entry_count, expanded_bytes)?;
+            let disk_probe = output.parent().unwrap_or(output);
+            if let Some(available) = Self::available_disk_space(disk_probe) {
+                let required = expanded_bytes.saturating_add(Self::DISK_SAFETY_RESERVE);
+                if available < required {
+                    return Err(CompressionError::DiskFull.into());
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) fn validate_staged_resources(archive_path: &Path, staging: &Path) -> Result<()> {
+        let mut entry_count = 0usize;
+        let mut expanded_bytes = 0u64;
+        for entry in walkdir::WalkDir::new(staging).follow_links(false) {
+            let entry = entry.map_err(|error| {
+                CompressionError::ExtractionFailed(format!(
+                    "Unable to inspect extracted output: {}",
+                    error
+                ))
+            })?;
+            if entry.path() == staging {
+                continue;
+            }
+            let metadata = std::fs::symlink_metadata(entry.path())?;
+            if metadata.file_type().is_symlink() || (!metadata.is_file() && !metadata.is_dir()) {
+                return Err(CompressionError::ExtractionFailed(format!(
+                    "Unsafe link or special entry was rejected: {}",
+                    entry.path().display()
+                )).into());
+            }
+            if metadata.is_file() {
+                entry_count = entry_count.saturating_add(1);
+                expanded_bytes = expanded_bytes.checked_add(metadata.len()).ok_or_else(|| {
+                    CompressionError::ExtractionFailed(
+                        "Extracted size overflowed the supported range".to_string(),
+                    )
+                })?;
+            }
+        }
+        Self::validate_resource_limits(archive_path, entry_count, expanded_bytes)?;
+        if let Some(available) = Self::available_disk_space(staging) {
+            if available < Self::DISK_SAFETY_RESERVE {
+                return Err(CompressionError::DiskFull.into());
+            }
+        }
+        Ok(())
+    }
+
+    fn prepare_staging_layout(&self, staging: &Path, options: &DecompressOptions) -> Result<()> {
+        let mut files = Vec::new();
+        let mut directories = Vec::new();
+        for entry in walkdir::WalkDir::new(staging).follow_links(false) {
+            let entry = entry.map_err(|error| {
+                CompressionError::ExtractionFailed(format!(
+                    "Unable to normalize extracted output: {}",
+                    error
+                ))
+            })?;
+            if entry.path() == staging {
+                continue;
+            }
+            let metadata = std::fs::symlink_metadata(entry.path())?;
+            if metadata.file_type().is_symlink() || (!metadata.is_file() && !metadata.is_dir()) {
+                return Err(CompressionError::ExtractionFailed(format!(
+                    "Unsafe link or special entry was rejected: {}",
+                    entry.path().display()
+                )).into());
+            }
+            if metadata.is_dir() {
+                directories.push(entry.path().to_path_buf());
+            } else {
+                files.push(entry.path().to_path_buf());
+            }
+        }
+        files.sort();
+
+        for source in files {
+            let relative = source.strip_prefix(staging)?;
+            if !Self::matches_file_filter(relative, options.file_filter.as_deref()) {
+                std::fs::remove_file(&source)?;
+                continue;
+            }
+            if options.preserve_paths || source.parent() == Some(staging) {
+                continue;
+            }
+            let file_name = source.file_name().ok_or_else(|| {
+                CompressionError::ExtractionFailed("Extracted file has no valid name".to_string())
+            })?;
+            let requested = staging.join(file_name);
+            let destination = if requested.exists() {
+                let stem = requested.file_stem().and_then(|value| value.to_str()).unwrap_or("file");
+                let extension = requested.extension().and_then(|value| value.to_str());
+                let mut available = None;
+                for index in 1..10_000 {
+                    let name = match extension {
+                        Some(extension) if !extension.is_empty() => format!("{} ({}).{}", stem, index, extension),
+                        _ => format!("{} ({})", stem, index),
+                    };
+                    let candidate = staging.join(name);
+                    if !candidate.exists() {
+                        available = Some(candidate);
+                        break;
+                    }
+                }
+                available.ok_or_else(|| {
+                    CompressionError::ExtractionFailed(format!(
+                        "Unable to flatten duplicate archive entry: {}",
+                        relative.display()
+                    ))
+                })?
+            } else {
+                requested
+            };
+            std::fs::rename(&source, destination)?;
+        }
+
+        directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
+        for directory in directories {
+            let _ = std::fs::remove_dir(&directory);
+        }
+        Ok(())
     }
 
     fn archive_output_dir_name(path: &Path) -> String {
@@ -1327,6 +1873,23 @@ impl CompressionService {
         )).into())
     }
 
+    pub(crate) fn zip_system_time(
+        year: u16,
+        month: u8,
+        day: u8,
+        hour: u8,
+        minute: u8,
+        second: u8,
+    ) -> Option<std::time::SystemTime> {
+        let naive = chrono::NaiveDate::from_ymd_opt(year as i32, month as u32, day as u32)?
+            .and_hms_opt(hour as u32, minute as u32, second.min(59) as u32)?;
+        Local
+            .from_local_datetime(&naive)
+            .single()
+            .or_else(|| Local.from_local_datetime(&naive).earliest())
+            .map(std::time::SystemTime::from)
+    }
+
     pub fn do_extract_zip(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
         use crate::utils::io_utils::SmartFileReader;
         let f = SmartFileReader::open(file)?;
@@ -1368,7 +1931,7 @@ impl CompressionService {
 
         for i in 0..total_files {
             self.check_cancellation()?;
-            let (file_name, outpath, is_dir, source_size) = {
+            let (file_name, outpath, is_dir, source_size, source_modified) = {
                 let zip_file = archive.by_index(i)?;
                 let file_name = zip_file.name().to_string();
                 let is_dir = zip_file.is_dir();
@@ -1385,7 +1948,16 @@ impl CompressionService {
                 } else {
                     Self::resolve_extract_path(&target, options)?
                 };
-                (file_name, outpath, is_dir, zip_file.size())
+                let modified = zip_file.last_modified();
+                let source_modified = Self::zip_system_time(
+                    modified.year(),
+                    modified.month(),
+                    modified.day(),
+                    modified.hour(),
+                    modified.minute(),
+                    modified.second(),
+                );
+                (file_name, outpath, is_dir, zip_file.size(), source_modified)
             };
 
             let entry_result = (|| -> Result<()> {
@@ -1418,6 +1990,15 @@ impl CompressionService {
                     };
                     let file_progress = (i as f32 / total_files as f32) + (entry_progress / total_files as f32);
                     self.emit_progress(window, task_id, file_progress, Some(file_name.clone()), progress_reader.current_pos(), source_size);
+                }
+                drop(outfile);
+                if options.preserve_timestamps || options.extract_only_newer {
+                    if let Some(source_modified) = source_modified {
+                    filetime::set_file_mtime(
+                        &outpath,
+                            filetime::FileTime::from_system_time(source_modified),
+                    )?;
+                    }
                 }
                 Ok(())
             })();
@@ -1570,6 +2151,15 @@ impl CompressionService {
                     std::fs::create_dir_all(&target)?;
                     return Ok(());
                 }
+                if !entry.header().entry_type().is_file() {
+                    self.emit_log(
+                        window,
+                        task_id,
+                        "Skipped non-regular TAR entry (links and device entries are not extracted)",
+                        TaskLogSeverity::Warning,
+                    );
+                    return Ok(());
+                }
                 let target = Self::resolve_extract_path(&output.join(relative), options)?;
                 if let Some(parent) = target.parent() {
                     std::fs::create_dir_all(parent)?;
@@ -1628,8 +2218,24 @@ impl CompressionService {
             if read == 0 {
                 break;
             }
+            processed = processed.checked_add(read as u64).ok_or_else(|| {
+                CompressionError::ExtractionFailed(
+                    "Extracted stream size overflowed the supported range".to_string(),
+                )
+            })?;
+            if processed > Self::MAX_EXTRACTED_BYTES {
+                return Err(CompressionError::ExtractionFailed(format!(
+                    "Extracted stream exceeds the safety limit ({} bytes)",
+                    Self::MAX_EXTRACTED_BYTES
+                )).into());
+            }
+            if processed % (16 * 1024 * 1024) < read as u64
+                && Self::available_disk_space(output)
+                    .is_some_and(|available| available < Self::DISK_SAFETY_RESERVE)
+            {
+                return Err(CompressionError::DiskFull.into());
+            }
             outfile.write_all(&buffer[..read])?;
-            processed += read as u64;
             self.emit_progress(window, task_id, 0.5, None, processed, 0);
         }
 
@@ -1812,13 +2418,19 @@ impl CompressionService {
                     .unwrap_or("folder")
                     .to_string();
 
-                for entry in walkdir::WalkDir::new(path).into_iter().filter_map(|item| item.ok()) {
+                for entry in walkdir::WalkDir::new(path) {
+                    let entry = entry.map_err(|error| {
+                        CompressionError::CompressionFailed(format!(
+                            "Unable to read source tree {}: {}",
+                            path.display(), error
+                        ))
+                    })?;
                     let entry_path = entry.path();
-                    let is_dir = entry_path.is_dir();
+                    let is_dir = entry.file_type().is_dir();
                     if is_dir && !include_dirs {
                         continue;
                     }
-                    if !is_dir && !entry_path.is_file() {
+                    if !is_dir && !entry.file_type().is_file() {
                         continue;
                     }
 
@@ -1866,7 +2478,12 @@ impl CompressionService {
             let split_svc = crate::services::split_compression::SplitCompressionService::new();
             let rt = tokio::runtime::Handle::current();
             let result = rt.block_on(async {
-                split_svc.compress_to_split_zips(sources, Path::new(output), options.clone()).await
+                split_svc.compress_to_split_zips_cancellable(
+                    sources,
+                    Path::new(output),
+                    options.clone(),
+                    self.cancellation_flag.clone(),
+                ).await
             })?;
             self.emit_log(window, task_id,
                 &format!("分卷压缩完成：{} 个分卷", result.part_count),
@@ -2510,6 +3127,11 @@ impl CompressionService {
         }
 
         if let Some(password) = options.password.as_deref().filter(|password| !password.is_empty()) {
+            if !options.allow_insecure_password_cli {
+                return Err(CompressionError::CompressionFailed(
+                    "Password-protected RAR creation requires explicit approval because RAR.exe exposes the password briefly in local process arguments. Use encrypted ZIP or 7Z to avoid this risk.".to_string()
+                ).into());
+            }
             command.arg(format!("-hp{}", password));
         }
 
@@ -2519,8 +3141,7 @@ impl CompressionService {
             command.arg(source);
         }
 
-        let output_result = command.output()
-            .map_err(|err| CompressionError::CompressionFailed(format!("Failed to run RAR encoder: {}", err)))?;
+        let output_result = self.run_command_cancellable(command)?;
 
         if !output_result.status.success() {
             let stderr = String::from_utf8_lossy(&output_result.stderr);
@@ -2551,7 +3172,7 @@ impl CompressionService {
         let mut command = crate::utils::process::command(engine);
         command.arg("a").arg("-twim").arg("-y").arg(format!("-mx{}", options.level.clamp(1, 9))).arg(output);
         for source in sources { self.check_cancellation()?; command.arg(source); }
-        let result = command.output().map_err(|err| CompressionError::CompressionFailed(format!("Failed to run the WIM encoder: {err}")))?;
+        let result = self.run_command_cancellable(command)?;
         if !result.status.success() {
             let stderr = String::from_utf8_lossy(&result.stderr);
             let stdout = String::from_utf8_lossy(&result.stdout);
@@ -2563,10 +3184,17 @@ impl CompressionService {
     }
 
     pub async fn test_archive_password(&self, file_path: &str, password: &str) -> Result<bool> {
+        self.check_cancellation()?;
         let file = file_path.to_string();
         let pwd = password.to_string();
         let path = Path::new(&file);
-        let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+        let format = Self::detect_password_format(file_path)?;
+
+        // 该接口的 true 只能表示“文件确实加密且密码正确”。
+        // 未加密归档即使携带任意密码也能读取，仍必须返回 false。
+        if !self.archive_requires_password(file_path, format.clone()).await? {
+            return Ok(false);
+        }
 
         if TarAesEngine::is_tar_aes(path).unwrap_or(false) {
             return TarAesEngine::verify_password(path, password);
@@ -2575,49 +3203,45 @@ impl CompressionService {
             return Ok(AesWrapper::decrypt_data(path, password).is_ok());
         }
 
-        if let Ok(result) = self.universal_engine.try_password(path, password).await {
-            return Ok(result);
+        if format == ArchiveFormat::Zip {
+            return UniversalCliEngine::try_zip_password(path, password);
+        }
+        if format == ArchiveFormat::Rar {
+            return Ok(self.rar_service.test_rar_password(path, password).await);
         }
 
+        let cancellation_flag = self.cancellation_flag.clone();
         tokio::task::spawn_blocking(move || {
-            match ext.as_str() {
-                "zip" => {
-                    let f = File::open(&file)?;
-                    let mut archive = ZipArchive::new(f)?;
-                    if !archive.is_empty() {
-                        // 1. 首先尝试普通读取（判断是否未加密）
-                        // 借用 A 开始
-                        let can_read_normally = if let Ok(mut zip_file) = archive.by_index(0) {
-                            let mut probe = [0u8; 1];
-                            zip_file.read(&mut probe).is_ok()
-                        } else {
-                            false
-                        };
-                        // 借用 A 结束（zip_file 已 drop）
-
-                        if can_read_normally {
-                            return Ok(true);
+            match format {
+                ArchiveFormat::SevenZip => {
+                    let scratch = std::env::temp_dir().join(format!(
+                        "long-compress-password-check-{}",
+                        uuid::Uuid::new_v4()
+                    ));
+                    std::fs::create_dir_all(&scratch)?;
+                    let mut tested_file = false;
+                    let mut verify_entry = |entry: &sevenz_rust::SevenZArchiveEntry,
+                                            reader: &mut dyn Read,
+                                            _destination: &PathBuf|
+                     -> Result<bool, sevenz_rust::Error> {
+                        if !entry.is_directory() {
+                            if cancellation_flag.load(Ordering::SeqCst) {
+                                return Err(sevenz_rust::Error::other("Password verification cancelled"));
+                            }
+                            std::io::copy(reader, &mut std::io::sink())
+                                .map_err(sevenz_rust::Error::io)?;
+                            tested_file = true;
                         }
-
-                        // 2. 如果普通读取失败，说明可能加密，尝试解密读取
-                        // 借用 B 开始
-                        if let Ok(Ok(mut reader)) = archive.by_index_decrypt(0, pwd.as_bytes()) {
-                            let mut probe = [0u8; 4];
-                            return Ok(reader.read(&mut probe).is_ok());
-                        }
-                        // 借用 B 结束
-
-                        Ok(false)
-                    } else { Ok(true) }
-                },
-                "7z" | "rar" => {
-                    let pwd_bytes = sevenz_rust::Password::from(pwd.as_str());
-                    let mut file = std::fs::File::open(&file)?;
-                    let len = file.metadata()?.len();
-                    match sevenz_rust::Archive::read(&mut file, len, pwd_bytes.as_slice()) {
-                        Ok(_) => Ok(true),
-                        _ => Ok(false)
-                    }
+                        Ok(true)
+                    };
+                    let result = sevenz_rust::decompress_with_extract_fn_and_password(
+                        File::open(&file)?,
+                        &scratch,
+                        sevenz_rust::Password::from(pwd.as_str()),
+                        &mut verify_entry,
+                    );
+                    let _ = std::fs::remove_dir_all(&scratch);
+                    Ok(result.is_ok() && tested_file)
                 },
                 _ => Ok(false)
             }
@@ -2703,6 +3327,304 @@ mod tests {
             .expect("wrong password check"));
     }
 
+}
+
+impl CompressionService {
+    fn ensure_commit_target_safe(root: &Path, target: &Path) -> Result<()> {
+        Self::ensure_no_link_ancestors(root)?;
+        let relative = target.strip_prefix(root).map_err(|_| {
+            CompressionError::ExtractionFailed(format!(
+                "Extraction target escaped the output directory: {}",
+                target.display()
+            ))
+        })?;
+        let mut current = root.to_path_buf();
+        for component in relative.components() {
+            current.push(component.as_os_str());
+            if let Ok(metadata) = std::fs::symlink_metadata(&current) {
+                if metadata.file_type().is_symlink() {
+                    return Err(CompressionError::ExtractionFailed(format!(
+                        "Extraction target contains a symbolic link or reparse point: {}",
+                        current.display()
+                    )).into());
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn rollback_extraction_commit(
+        created_files: &[PathBuf],
+        created_dirs: &[PathBuf],
+        backups: &[(PathBuf, PathBuf)],
+    ) {
+        for path in created_files.iter().rev() {
+            let _ = std::fs::remove_file(path);
+        }
+        for (destination, backup) in backups.iter().rev() {
+            let _ = std::fs::remove_file(destination);
+            let _ = std::fs::rename(backup, destination);
+        }
+        for path in created_dirs.iter().rev() {
+            let _ = std::fs::remove_dir(path);
+        }
+    }
+
+    fn staged_file_is_not_newer(source: &Path, destination: &Path) -> bool {
+        let source_modified = std::fs::metadata(source).and_then(|value| value.modified());
+        let destination_modified = std::fs::metadata(destination).and_then(|value| value.modified());
+        matches!((source_modified, destination_modified), (Ok(source), Ok(destination)) if source <= destination)
+    }
+
+    fn commit_staged_extraction(
+        &self,
+        window: Option<&Window>,
+        task_id: &str,
+        source_archive: &str,
+        staging: &Path,
+        output: &Path,
+        options: &DecompressOptions,
+    ) -> Result<()> {
+        Self::ensure_no_link_ancestors(output)?;
+        let mut directories = Vec::new();
+        let mut files = Vec::new();
+        for item in walkdir::WalkDir::new(staging).follow_links(false) {
+            let item = item.map_err(|error| {
+                CompressionError::ExtractionFailed(format!("Unable to inspect staged output: {}", error))
+            })?;
+            if item.path() == staging {
+                continue;
+            }
+            let metadata = std::fs::symlink_metadata(item.path())?;
+            if metadata.file_type().is_symlink() || (!metadata.is_file() && !metadata.is_dir()) {
+                return Err(CompressionError::ExtractionFailed(format!(
+                    "Unsafe link or special entry was rejected: {}",
+                    item.path().display()
+                )).into());
+            }
+            let relative = item.path().strip_prefix(staging)?.to_path_buf();
+            if metadata.is_dir() {
+                directories.push(relative);
+            } else {
+                files.push(relative);
+            }
+        }
+        directories.sort_by_key(|path| path.components().count());
+        files.sort();
+
+        if options.conflict_policy == "ask" && !options.overwrite_existing {
+            if let Some(relative) = files.iter().find(|relative| {
+                let destination = output.join(relative);
+                destination.exists()
+                    && !(options.extract_only_newer
+                        && Self::staged_file_is_not_newer(&staging.join(relative), &destination))
+            }) {
+                let destination = output.join(relative);
+                let metadata = std::fs::metadata(&destination).ok();
+                if let Some(window) = window {
+                    let _ = window.emit("file-conflict", FileConflictPayload {
+                        task_id: task_id.to_string(),
+                        file_name: destination.file_name().and_then(|name| name.to_str()).unwrap_or("file").to_string(),
+                        source_path: source_archive.to_string(),
+                        dest_path: destination.to_string_lossy().into_owned(),
+                        source_size: std::fs::metadata(staging.join(relative)).map(|value| value.len()).unwrap_or(0),
+                        dest_size: metadata.as_ref().map(|value| value.len()).unwrap_or(0),
+                        source_modified: 0,
+                        dest_modified: metadata
+                            .and_then(|value| value.modified().ok())
+                            .and_then(|value| value.duration_since(std::time::UNIX_EPOCH).ok())
+                            .map(|value| value.as_millis() as u64)
+                            .unwrap_or(0),
+                    });
+                }
+                return Err(CompressionError::ExtractionFailed("File conflict requires resolution".to_string()).into());
+            }
+        }
+
+        let rollback_root = staging.join(".rollback");
+        let mut created_files = Vec::new();
+        let mut created_dirs = Vec::new();
+        let mut backups = Vec::new();
+        let commit_result = (|| -> Result<()> {
+            if !output.exists() {
+                std::fs::create_dir_all(output)?;
+                created_dirs.push(output.to_path_buf());
+            }
+            for relative in directories {
+                let destination = output.join(&relative);
+                Self::ensure_commit_target_safe(output, &destination)?;
+                if !destination.exists() {
+                    std::fs::create_dir_all(&destination)?;
+                    created_dirs.push(destination);
+                }
+            }
+            for relative in files {
+                let source = staging.join(&relative);
+                let requested = output.join(&relative);
+                Self::ensure_commit_target_safe(output, &requested)?;
+
+                if options.extract_only_newer
+                    && requested.exists()
+                    && Self::staged_file_is_not_newer(&source, &requested)
+                {
+                    continue;
+                }
+
+                if requested.exists() && options.conflict_policy == "skip" {
+                    continue;
+                }
+                let destination = if requested.exists()
+                    && !options.overwrite_existing
+                    && options.conflict_policy != "overwrite"
+                {
+                    Self::resolve_extract_path(&requested, options)?
+                } else {
+                    requested
+                };
+                Self::ensure_commit_target_safe(output, &destination)?;
+                if let Some(parent) = destination.parent() {
+                    if !parent.exists() {
+                        std::fs::create_dir_all(parent)?;
+                        created_dirs.push(parent.to_path_buf());
+                    }
+                }
+
+                if destination.exists() {
+                    std::fs::create_dir_all(&rollback_root)?;
+                    let backup = rollback_root.join(format!("{}.bak", uuid::Uuid::new_v4()));
+                    std::fs::rename(&destination, &backup)?;
+                    backups.push((destination.clone(), backup));
+                } else {
+                    created_files.push(destination.clone());
+                }
+                std::fs::rename(&source, &destination)?;
+            }
+            Ok(())
+        })();
+
+        if let Err(error) = commit_result {
+            Self::rollback_extraction_commit(&created_files, &created_dirs, &backups);
+            return Err(error);
+        }
+        let _ = std::fs::remove_dir_all(&rollback_root);
+        Ok(())
+    }
+
+}
+
+#[cfg(test)]
+mod tests_continued {
+    use super::*;
+
+    #[test]
+    fn extraction_resource_limits_reject_oversized_archives() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let archive = temp.path().join("archive.bin");
+        std::fs::write(&archive, [0u8; 1]).expect("archive fixture");
+
+        assert!(CompressionService::validate_resource_limits(
+            &archive,
+            CompressionService::MAX_EXTRACTED_FILES + 1,
+            1,
+        ).is_err());
+        assert!(CompressionService::validate_resource_limits(
+            &archive,
+            1,
+            CompressionService::MAX_EXTRACTED_BYTES + 1,
+        ).is_err());
+        assert!(CompressionService::validate_resource_limits(
+            &archive,
+            1,
+            2 * 1024 * 1024 * 1024,
+        ).is_err());
+    }
+
+    #[test]
+    fn extract_only_newer_compares_staged_and_destination_timestamps() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let staged = temp.path().join("staged.txt");
+        let destination = temp.path().join("destination.txt");
+        std::fs::write(&staged, b"staged").expect("staged fixture");
+        std::fs::write(&destination, b"destination").expect("destination fixture");
+        filetime::set_file_mtime(&staged, filetime::FileTime::from_unix_time(1_000, 0))
+            .expect("staged timestamp");
+        filetime::set_file_mtime(&destination, filetime::FileTime::from_unix_time(2_000, 0))
+            .expect("destination timestamp");
+        assert!(CompressionService::staged_file_is_not_newer(&staged, &destination));
+
+        filetime::set_file_mtime(&staged, filetime::FileTime::from_unix_time(3_000, 0))
+            .expect("new staged timestamp");
+        assert!(!CompressionService::staged_file_is_not_newer(&staged, &destination));
+    }
+
+    #[tokio::test]
+    async fn transactional_commit_rolls_back_overwrites_after_a_later_failure() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let staging = temp.path().join("staging");
+        let output = temp.path().join("output");
+        std::fs::create_dir_all(staging.join("z")).expect("staging tree");
+        std::fs::create_dir_all(&output).expect("output tree");
+        std::fs::write(staging.join("a.txt"), b"new").expect("new staged file");
+        std::fs::write(staging.join("z/child.txt"), b"child").expect("later staged file");
+        std::fs::write(output.join("a.txt"), b"old").expect("old destination");
+        std::fs::write(output.join("z"), b"blocks directory creation").expect("blocking file");
+        let service = CompressionService::new_with_defaults().await;
+        let options = DecompressOptions {
+            overwrite_existing: true,
+            conflict_policy: "overwrite".to_string(),
+            ..Default::default()
+        };
+
+        let result = service.commit_staged_extraction(
+            None,
+            "task",
+            "archive.zip",
+            &staging,
+            &output,
+            &options,
+        );
+        assert!(result.is_err());
+        assert_eq!(std::fs::read(output.join("a.txt")).unwrap(), b"old");
+        assert!(!output.join("z/child.txt").exists());
+    }
+
+    #[tokio::test]
+    async fn staging_normalization_flattens_duplicates_and_applies_filters() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let staging = temp.path().join("staging");
+        std::fs::create_dir_all(staging.join("one")).expect("first folder");
+        std::fs::create_dir_all(staging.join("two")).expect("second folder");
+        std::fs::write(staging.join("one/same.txt"), b"one").expect("first file");
+        std::fs::write(staging.join("two/same.txt"), b"two").expect("second file");
+        std::fs::write(staging.join("two/drop.bin"), b"drop").expect("filtered file");
+        let service = CompressionService::new_with_defaults().await;
+        let options = DecompressOptions {
+            preserve_paths: false,
+            file_filter: Some("*.txt".to_string()),
+            ..Default::default()
+        };
+
+        service.prepare_staging_layout(&staging, &options).expect("normalize staging");
+        assert_eq!(std::fs::read(staging.join("same.txt")).unwrap(), b"one");
+        assert_eq!(std::fs::read(staging.join("same (1).txt")).unwrap(), b"two");
+        assert!(!staging.join("drop.bin").exists());
+        assert!(!staging.join("one").exists());
+        assert!(!staging.join("two").exists());
+    }
+
+    #[tokio::test]
+    async fn rejects_fake_aes_extensions_instead_of_requesting_a_password() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let fake = temp.path().join("plain.txt.aes");
+        std::fs::write(&fake, b"not an encrypted container").expect("fake fixture");
+        let service = CompressionService::new_with_defaults().await;
+
+        assert!(service
+            .verify_archive_password_candidate(&fake.to_string_lossy(), "anything")
+            .await
+            .is_err());
+    }
+
     #[test]
     fn test_refined_error_variants() {
         let err1 = CompressionError::PasswordRequired;
@@ -2728,6 +3650,27 @@ mod tests {
         assert!(engine.try_password(&archive, "open-sesame").await.expect("correct password"));
         assert!(!engine.try_password(&archive, "wrong-password").await.expect("wrong password"));
 
+        let service = CompressionService::new_with_defaults().await;
+        assert!(service
+            .archive_requires_password(&archive.to_string_lossy(), ArchiveFormat::Zip)
+            .await
+            .expect("encrypted state"));
+        assert!(service
+            .verify_archive_password_candidate(&archive.to_string_lossy(), "open-sesame")
+            .await
+            .expect("correct candidate"));
+        assert!(!service
+            .verify_archive_password_candidate(&archive.to_string_lossy(), "wrong-password")
+            .await
+            .expect("wrong candidate"));
+
+        let renamed_archive = temp.path().join("secret-without-extension.bin");
+        std::fs::copy(&archive, &renamed_archive).expect("renamed encrypted ZIP fixture");
+        assert!(service
+            .verify_archive_password_candidate(&renamed_archive.to_string_lossy(), "open-sesame")
+            .await
+            .expect("magic-based password validation"));
+
         let output_dir = temp.path().join("extracted");
         engine
             .extract_with_progress(
@@ -2745,5 +3688,58 @@ mod tests {
             std::fs::read(output_dir.join("secret.txt")).expect("extracted file"),
             b"top secret"
         );
+    }
+
+    #[test]
+    fn rejects_dangerous_compression_output_paths() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("source.txt");
+        std::fs::write(&source, b"must survive").expect("source fixture");
+
+        assert!(CompressionService::validate_compression_io_paths(
+            &[source.to_string_lossy().to_string()],
+            &source.to_string_lossy(),
+            &CompressionOptions::default(),
+        ).is_err());
+
+        let folder = temp.path().join("folder");
+        std::fs::create_dir_all(&folder).expect("source folder");
+        let nested_output = folder.join("archive.zip");
+        assert!(CompressionService::validate_compression_io_paths(
+            &[folder.to_string_lossy().to_string()],
+            &nested_output.to_string_lossy(),
+            &CompressionOptions::default(),
+        ).is_err());
+    }
+
+    #[test]
+    fn rejects_encrypted_or_directory_split_creation() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("source.txt");
+        std::fs::write(&source, b"split fixture").expect("source fixture");
+        let output = temp.path().join("archive.zip");
+
+        let encrypted_split = CompressionOptions {
+            password: Some("secret".to_string()),
+            split_size: Some(1024),
+            ..Default::default()
+        };
+        assert!(CompressionService::validate_compression_io_paths(
+            &[source.to_string_lossy().to_string()],
+            &output.to_string_lossy(),
+            &encrypted_split,
+        ).is_err());
+
+        let folder = temp.path().join("folder");
+        std::fs::create_dir_all(&folder).expect("source folder");
+        let directory_split = CompressionOptions {
+            split_size: Some(1024),
+            ..Default::default()
+        };
+        assert!(CompressionService::validate_compression_io_paths(
+            &[folder.to_string_lossy().to_string()],
+            &output.to_string_lossy(),
+            &directory_split,
+        ).is_err());
     }
 }

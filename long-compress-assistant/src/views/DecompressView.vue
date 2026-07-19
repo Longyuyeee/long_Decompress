@@ -244,6 +244,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
 
   for (const task of pendingTasks) {
     const fileName = task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''
+    const isTaskCancelled = () => taskStore.tasks.find(item => item.id === task.id)?.status === 'cancelled'
 
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
@@ -271,6 +272,8 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
           } catch { /* 非关键操作 */ }
         }
       }
+      task.password = undefined
+      task.currentPassword = undefined
     } catch (error) {
       // 只在后端明确返回密码相关错误时才尝试密码破解
       const errorMsg = extractErrorMessage(error) || String(error)
@@ -301,11 +304,17 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
 
           let succeeded = false
           for (const candidatePassword of remainingCandidates) {
-            if (succeeded) break
+            if (succeeded || isTaskCancelled()) break
             try {
+              const passwordMatches = await tauriCommands.invoke<boolean>('verify_archive_password', {
+                taskId: task.id,
+                filePath: task.sourceFiles[0],
+                password: candidatePassword
+              })
+              if (passwordMatches !== true) continue
+
               task.password = candidatePassword
               task.passwordRequired = false
-              task.currentPassword = candidatePassword
               await tauriCommands.decompressFile(
                 task.sourceFiles[0],
                 { ...options, password: candidatePassword },
@@ -320,13 +329,17 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
                   await passwordStore.updateEntry(matchedEntry.id, { use_count: (matchedEntry.use_count || 0) + 1 })
                 } catch { /* 非关键操作 */ }
               }
+              task.password = undefined
+              task.currentPassword = undefined
             } catch {
               // 尝试下一个候选密码
+              task.password = undefined
+              task.currentPassword = undefined
               continue
             }
           }
 
-          if (!succeeded) {
+          if (!succeeded && !isTaskCancelled()) {
             // 保险箱密码全部失败，尝试密码字典攻击
             taskStore.updateTaskStatus(task.id, 'extracting')
             task.logs.push({
@@ -353,7 +366,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
 
                 let dictSucceeded = false
                 for (let i = 0; i < dictionaryPasswords.length; i++) {
-                  if (dictSucceeded) break
+                  if (dictSucceeded || isTaskCancelled()) break
                   const dictPassword = dictionaryPasswords[i]
 
                   // 每10个密码更新一次进度
@@ -367,9 +380,15 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
                   }
 
                   try {
+                    const passwordMatches = await tauriCommands.invoke<boolean>('verify_archive_password', {
+                      taskId: task.id,
+                      filePath: task.sourceFiles[0],
+                      password: dictPassword
+                    })
+                    if (passwordMatches !== true) continue
+
                     task.password = dictPassword
                     task.passwordRequired = false
-                    task.currentPassword = dictPassword
                     await tauriCommands.decompressFile(
                       task.sourceFiles[0],
                       { ...options, password: dictPassword },
@@ -380,7 +399,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
                     // 成功后保存到密码保险箱
                     task.logs.push({
                       task_id: task.id,
-                      message: appStore.t('decompress.dictionary.success', `✓ 密码破解成功！使用密码: ${dictPassword}`),
+                      message: appStore.t('decompress.dictionary.success', '✓ 密码验证成功，已安全解压'),
                       severity: 'success',
                       timestamp: new Date().toISOString()
                     })
@@ -393,13 +412,17 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
                         tags: ['auto-cracked']
                       })
                     } catch { /* 非关键操作 */ }
+                    task.password = undefined
+                    task.currentPassword = undefined
                   } catch {
                     // 尝试下一个字典密码
+                    task.password = undefined
+                    task.currentPassword = undefined
                     continue
                   }
                 }
 
-                if (!dictSucceeded) {
+                if (!dictSucceeded && !isTaskCancelled()) {
                   // 字典攻击也失败
                   taskStore.updateTaskStatus(task.id, 'failed')
                   task.error = appStore.t('decompress.dictionary.all_failed', `所有密码尝试失败（保险箱: ${candidates.length}, 字典: ${dictionaryPasswords.length}）`)
@@ -460,7 +483,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
 
               let dictSucceeded = false
               for (let i = 0; i < dictionaryPasswords.length; i++) {
-                if (dictSucceeded) break
+                if (dictSucceeded || isTaskCancelled()) break
                 const dictPassword = dictionaryPasswords[i]
 
                 if (i % 10 === 0) {
@@ -473,9 +496,15 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
                 }
 
                 try {
+                  const passwordMatches = await tauriCommands.invoke<boolean>('verify_archive_password', {
+                    taskId: task.id,
+                    filePath: task.sourceFiles[0],
+                    password: dictPassword
+                  })
+                  if (passwordMatches !== true) continue
+
                   task.password = dictPassword
                   task.passwordRequired = false
-                  task.currentPassword = dictPassword
                   await tauriCommands.decompressFile(
                     task.sourceFiles[0],
                     { ...options, password: dictPassword },
@@ -485,7 +514,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
 
                   task.logs.push({
                     task_id: task.id,
-                    message: appStore.t('decompress.dictionary.success', `✓ 密码破解成功！使用密码: ${dictPassword}`),
+                    message: appStore.t('decompress.dictionary.success', '✓ 密码验证成功，已安全解压'),
                     severity: 'success',
                     timestamp: new Date().toISOString()
                   })
@@ -497,12 +526,16 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
                       tags: ['auto-cracked']
                     })
                   } catch { /* 非关键操作 */ }
+                  task.password = undefined
+                  task.currentPassword = undefined
                 } catch {
+                  task.password = undefined
+                  task.currentPassword = undefined
                   continue
                 }
               }
 
-              if (!dictSucceeded) {
+              if (!dictSucceeded && !isTaskCancelled()) {
                 taskStore.updateTaskStatus(task.id, 'failed')
                 task.error = appStore.t('decompress.dictionary.all_failed', `所有字典密码尝试失败（${dictionaryPasswords.length} 个）`)
                 task.logs.push({
@@ -609,12 +642,6 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
   }
   showConflictModal.value = false
   selectedConflictTaskId.value = null
-
-  if (action === 'skip') {
-    task.conflicts = []
-    taskStore.updateTaskStatus(taskId, 'cancelled')
-    return
-  }
 
   // 取消当前任务并用新策略重试
   try {
