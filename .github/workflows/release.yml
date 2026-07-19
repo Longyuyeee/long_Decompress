@@ -30,6 +30,7 @@ jobs:
       - run: npm run test:unit
       - run: cargo test --release --manifest-path src-tauri/Cargo.toml
       - uses: tauri-apps/tauri-action@v0
+        id: tauri
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
@@ -43,4 +44,46 @@ jobs:
           prerelease: false
           includeUpdaterJson: true
           updaterJsonPreferNsis: true
+          assetNamePattern: Long-Decompress_[version]_[arch][setup][ext]
           args: --bundles nsis,updater
+      - name: Verify and publish updater manifest
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $config = Get-Content -LiteralPath 'src-tauri/tauri.conf.json' -Raw | ConvertFrom-Json
+          $version = $config.package.version
+          $tag = "v$version"
+          $release = gh api "repos/${{ github.repository }}/releases/tags/$tag" | ConvertFrom-Json
+          $zipAsset = $release.assets | Where-Object { $_.name -like '*.nsis.zip' } | Select-Object -First 1
+          $signatureFile = Get-ChildItem -LiteralPath 'src-tauri/target/release/bundle/nsis' -Filter '*.nsis.zip.sig' | Select-Object -First 1
+          if (-not $zipAsset -or -not $signatureFile) {
+            throw 'Updater ZIP or signature was not produced.'
+          }
+
+          $signature = (Get-Content -LiteralPath $signatureFile.FullName -Raw).Trim()
+          $notes = if ($release.body) { $release.body } else { "胧解压 $version 更新" }
+          $manifest = [ordered]@{
+            version = $version
+            notes = $notes
+            pub_date = $release.published_at
+            platforms = [ordered]@{
+              'windows-x86_64' = [ordered]@{
+                signature = $signature
+                url = $zipAsset.browser_download_url
+              }
+            }
+          }
+          $manifestPath = Join-Path $env:RUNNER_TEMP 'latest.json'
+          [IO.File]::WriteAllText(
+            $manifestPath,
+            ($manifest | ConvertTo-Json -Depth 5),
+            [Text.UTF8Encoding]::new($false)
+          )
+          gh release upload $tag $manifestPath --clobber
+
+          $published = Invoke-RestMethod "https://github.com/${{ github.repository }}/releases/download/$tag/latest.json"
+          if ($published.version -ne $version -or -not $published.platforms.'windows-x86_64'.signature) {
+            throw 'Published updater manifest failed validation.'
+          }
