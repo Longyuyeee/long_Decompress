@@ -37,12 +37,11 @@ pub struct KeyManager {
 }
 
 impl KeyManager {
-    pub fn new(data_dir: &Path) -> Self {
+    pub fn new(data_dir: &Path) -> Result<Self> {
         let keys_dir = data_dir.join("keys");
-        if !keys_dir.exists() {
-            fs::create_dir_all(&keys_dir).unwrap();
-        }
-        Self { keys_dir }
+        fs::create_dir_all(&keys_dir)
+            .with_context(|| format!("创建密钥目录失败: {}", keys_dir.display()))?;
+        Ok(Self { keys_dir })
     }
 
     pub async fn initialize(&self, _password: &str) -> Result<()> {
@@ -80,5 +79,23 @@ impl KeyManager {
 
         let hash = password_hash.hash.context("获取哈希字节失败")?;
         Ok(hash.as_bytes().to_vec())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn key_manager_reports_an_unusable_data_directory() -> Result<()> {
+        let temp = tempfile::tempdir()?;
+        let file_path = temp.path().join("not-a-directory");
+        fs::write(&file_path, b"occupied")?;
+
+        let error = KeyManager::new(&file_path).err()
+            .context("a file-backed data path must be rejected")?;
+
+        assert!(error.to_string().contains("创建密钥目录失败"));
+        Ok(())
     }
 }
