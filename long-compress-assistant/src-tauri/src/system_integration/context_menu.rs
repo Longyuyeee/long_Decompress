@@ -761,7 +761,13 @@ mod tests {
         assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("LongDecompressQuickPack"));
         assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("LongCompressAssistant.ContextMenu.QuickExtract"));
         assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("LongCompressAssistant.ContextMenu.QuickPack"));
-        assert_eq!(IDENTITY_PACKAGE_MANIFEST.matches("<Application\n").count(), 1);
+        assert_eq!(
+            IDENTITY_PACKAGE_MANIFEST
+                .lines()
+                .filter(|line| line.trim() == "<Application")
+                .count(),
+            1
+        );
         assert_eq!(IDENTITY_PACKAGE_MANIFEST.matches("__APP_EXECUTABLE__").count(), 1);
         assert!(IDENTITY_PACKAGE_MANIFEST.contains("__PACKAGE_NAME__"));
         assert!(IDENTITY_PACKAGE_MANIFEST.contains("__CONTEXT_MENU_ITEMS__"));
