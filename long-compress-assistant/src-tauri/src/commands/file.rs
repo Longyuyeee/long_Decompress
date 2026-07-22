@@ -22,6 +22,11 @@ pub async fn get_file_info(path: String) -> Result<FileInfo, String> {
 }
 
 #[command]
+pub async fn path_exists(path: String) -> bool {
+    Path::new(&path).exists()
+}
+
+#[command]
 pub async fn read_text_file(path: String) -> Result<String, String> {
     let source = Path::new(&path);
     validate_text_file_extension(source)?;

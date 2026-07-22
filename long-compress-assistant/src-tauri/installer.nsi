@@ -664,16 +664,26 @@ FunctionEnd
 !macroend
 
 !macro RemoveLongDecompressContextMenu
+  ; Remove the sparse package before deleting its externally referenced DLL.
+  IfFileExists "$INSTDIR\resources\long_compress_context_menu_registration.ps1" 0 context_menu_identity_removed
+    ExecWait '$"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe$" -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File $"$INSTDIR\resources\long_compress_context_menu_registration.ps1$" -Action Uninstall' $0
+  context_menu_identity_removed:
+
   ; Remove the three cascade roots.
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompress"
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompressQuickExtract"
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompressNative"
+  DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompressNativeQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompressNativeQuickPack"
   DeleteRegKey HKCU "Software\Classes\directory\shell\LongDecompress"
   DeleteRegKey HKCU "Software\Classes\Directory\shell\LongDecompressNative"
+  DeleteRegKey HKCU "Software\Classes\Directory\shell\LongDecompressNativeQuickPack"
   DeleteRegKey HKCU "Software\Classes\directory\Background\shell\LongDecompress"
 
   ; Remove the Windows 11 IExplorerCommand COM registration.
   DeleteRegKey HKCU "Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A}"
+  DeleteRegKey HKCU "Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4B}"
+  DeleteRegKey HKCU "Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4C}"
 
   ; Remove all CommandStore verbs owned by the application.
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.open"

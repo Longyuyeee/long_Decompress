@@ -35,6 +35,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          WINDOWS_CODE_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_CODE_SIGNING_PFX_BASE64 }}
+          WINDOWS_CODE_SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_PFX_PASSWORD }}
+          WINDOWS_CODE_SIGNING_PUBLISHER: ${{ secrets.WINDOWS_CODE_SIGNING_PUBLISHER }}
+          REQUIRE_WINDOWS_CONTEXT_MENU_PACKAGE: 'true'
         with:
           projectPath: long-compress-assistant
           tagName: v__VERSION__
@@ -46,6 +50,27 @@ jobs:
           updaterJsonPreferNsis: true
           assetNamePattern: Long-Decompress_[version]_[arch][setup][ext]
           args: --bundles nsis,updater
+      - name: Verify Windows 11 context-menu package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $packages = @(
+            'src-tauri/resources/long_compress_context_menu_extract.msix',
+            'src-tauri/resources/long_compress_context_menu_pack.msix'
+          )
+          if (@($packages | Where-Object { -not (Test-Path -LiteralPath $_) }).Count -gt 0) {
+            throw 'Both signed Windows 11 context-menu identity packages were not produced.'
+          }
+          $signtool = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Directory |
+            Sort-Object Name -Descending |
+            ForEach-Object { Join-Path $_.FullName 'x64\signtool.exe' } |
+            Where-Object { Test-Path -LiteralPath $_ } |
+            Select-Object -First 1
+          if (-not $signtool) { throw 'SignTool.exe was not found on the release runner.' }
+          foreach ($package in $packages) {
+            & $signtool verify /pa /all $package
+            if ($LASTEXITCODE -ne 0) { throw "Context-menu MSIX signature verification failed: $package" }
+          }
       - name: Verify and publish updater manifest
         shell: pwsh
         env:

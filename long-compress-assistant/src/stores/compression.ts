@@ -138,6 +138,34 @@ export const useCompressionStore = defineStore('compression', () => {
     return id
   }
 
+  const prepareQuickPacks = () => {
+    selectedFiles.value = []
+    groups.value = []
+  }
+
+  const addQuickPack = (files: FileObject[], name: string, outputPath: string) => {
+    groups.value.push({
+      id: `quick-pack-${Date.now()}-${groups.value.length}`,
+      name,
+      files: files.map(file => ({ ...file, expanded: false })),
+      themeColor: '#3b82f6',
+      expanded: true,
+      outputPath,
+      settings: {
+        ...cloneSettings(globalSettings.value),
+        format: 'zip',
+        filename: name,
+      },
+    })
+    globalSettings.value.format = 'zip'
+    autoStartRequested.value = true
+  }
+
+  const replaceWithQuickPack = (files: FileObject[], name: string, outputPath: string) => {
+    prepareQuickPacks()
+    addQuickPack(files, name, outputPath)
+  }
+
   const dissolveGroup = (groupId: string) => {
     const index = groups.value.findIndex(g => g.id === groupId)
     if (index !== -1) {
@@ -184,6 +212,9 @@ export const useCompressionStore = defineStore('compression', () => {
     updateGroupSettings,
     updateGroupOutputPath,
     createGroup,
+    prepareQuickPacks,
+    addQuickPack,
+    replaceWithQuickPack,
     dissolveGroup,
     removeFileFromGroup,
     requestAutoStart,

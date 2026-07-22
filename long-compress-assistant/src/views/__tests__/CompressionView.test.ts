@@ -127,6 +127,52 @@ describe('CompressionView', () => {
     }
   })
 
+  it('packs a multi-selection into one ZIP in its current directory', async () => {
+    vi.useFakeTimers()
+    try {
+      mountView()
+      const compressionStore = useCompressionStore()
+      compressionStore.replaceWithQuickPack(
+        [source('C:/work/one.txt'), source('C:/work/two.txt')],
+        'work',
+        'C:/work',
+      )
+      await nextTick()
+      await vi.runAllTimersAsync()
+
+      expect(mocks.compressFiles).toHaveBeenCalledTimes(1)
+      expect(mocks.compressFiles).toHaveBeenCalledWith(
+        expect.any(String),
+        ['C:/work/one.txt', 'C:/work/two.txt'],
+        'C:/work/work.zip',
+        expect.objectContaining({ format: 'zip' }),
+      )
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps quick packs from different Explorer directories as separate archives', async () => {
+    vi.useFakeTimers()
+    try {
+      mountView()
+      const compressionStore = useCompressionStore()
+      compressionStore.prepareQuickPacks()
+      compressionStore.addQuickPack([source('C:/work/one.txt')], 'one', 'C:/work')
+      compressionStore.addQuickPack([source('D:/other/two.txt')], 'two', 'D:/other')
+      await nextTick()
+      await vi.runAllTimersAsync()
+
+      expect(mocks.compressFiles).toHaveBeenCalledTimes(2)
+      expect(mocks.compressFiles.mock.calls.map(call => call[2])).toEqual([
+        'C:/work/one.zip',
+        'D:/other/two.zip',
+      ])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('pauses missing RAR creation and can resume the same job as 7Z', async () => {
     mocks.checkRarCompressionSupport.mockResolvedValue({ available: false, message: 'RAR encoder missing' })
     const wrapper = mountView()

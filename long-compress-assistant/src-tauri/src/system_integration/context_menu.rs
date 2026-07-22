@@ -8,6 +8,10 @@ use winreg::RegKey;
 
 #[cfg(target_os = "windows")]
 use std::ffi::c_void;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+#[cfg(target_os = "windows")]
+use std::process::Command;
 
 #[cfg(target_os = "windows")]
 const SHCNE_ASSOCCHANGED: i32 = 0x0800_0000;
@@ -30,7 +34,38 @@ const NATIVE_COMMAND_CLSID: &str = "{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A}";
 #[cfg(target_os = "windows")]
 const NATIVE_COMMAND_VERB: &str = "LongDecompressNative";
 #[cfg(target_os = "windows")]
+const QUICK_EXTRACT_COMMAND_CLSID: &str = "{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4B}";
+#[cfg(target_os = "windows")]
+const QUICK_EXTRACT_COMMAND_VERB: &str = "LongDecompressNativeQuickExtract";
+#[cfg(target_os = "windows")]
+const QUICK_PACK_COMMAND_CLSID: &str = "{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4C}";
+#[cfg(target_os = "windows")]
+const QUICK_PACK_COMMAND_VERB: &str = "LongDecompressNativeQuickPack";
+#[cfg(target_os = "windows")]
 const SHELL_EXTENSION_DLL_PREFIX: &str = "long_compress_shell_extension";
+#[cfg(target_os = "windows")]
+const CONTEXT_MENU_QUICK_EXTRACT_PACKAGE_NAME: &str =
+    "long_compress_context_menu_extract.msix";
+#[cfg(target_os = "windows")]
+const CONTEXT_MENU_QUICK_PACK_PACKAGE_NAME: &str = "long_compress_context_menu_pack.msix";
+#[cfg(target_os = "windows")]
+const CONTEXT_MENU_REGISTRATION_SCRIPT: &str = "long_compress_context_menu_registration.ps1";
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
+#[cfg(target_os = "windows")]
+fn context_menu_package_version() -> String {
+    let mut components = env!("CARGO_PKG_VERSION").split('.');
+    let major = components.next().unwrap_or("0");
+    let minor = components.next().unwrap_or("0");
+    let patch = components
+        .next()
+        .unwrap_or("0")
+        .split(|character: char| !character.is_ascii_digit())
+        .next()
+        .unwrap_or("0");
+    format!("{major}.{minor}.{patch}.0")
+}
 
 const ARCHIVE_EXTENSIONS: &[&str] = &[
     ".zip", ".zipx", ".7z", ".rar", ".tar", ".gz", ".gzip", ".bz2", ".bzip2", ".xz",
@@ -124,6 +159,20 @@ pub fn register_context_menu(app_path: &str) -> Result<()> {
 
     if is_windows_11_or_newer() {
         register_native_menu(&hkcu, app_path)?;
+        match register_sparse_identity_package(app_path) {
+            Ok(true) => {
+                let clsid_path = format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID);
+                let clsid_key = hkcu.open_subkey_with_flags(clsid_path, KEY_SET_VALUE)?;
+                clsid_key.set_value("SparsePackageRegistered", &1u32)?;
+            }
+            Ok(false) => {}
+            Err(error) => {
+                // The registry-backed classic menu remains functional, so a
+                // package-signing or deployment issue must not disable all
+                // Explorer integration.
+                log::warn!("Windows 11 primary context-menu registration failed: {error}");
+            }
+        }
     } else {
         register_legacy_menu(&hkcu, app_path)?;
     }
@@ -243,13 +292,21 @@ fn register_native_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
         );
     }
 
-    let clsid_path = format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID);
-    let (clsid_key, _) = hkcu.create_subkey(&clsid_path)?;
-    clsid_key.set_value("", &"胧解压 Windows 11 原生菜单")?;
-    clsid_key.set_value("ApplicationPath", &app_path)?;
-    let (server_key, _) = hkcu.create_subkey(format!(r"{}\InprocServer32", clsid_path))?;
-    server_key.set_value("", &dll_path.to_string_lossy().as_ref())?;
-    server_key.set_value("ThreadingModel", &"Apartment")?;
+    for (clsid, label) in [
+        (NATIVE_COMMAND_CLSID, "胧解压 Windows 11 原生菜单"),
+        (QUICK_EXTRACT_COMMAND_CLSID, "胧解压一键解压"),
+        (QUICK_PACK_COMMAND_CLSID, "胧解压一键打包"),
+    ] {
+        let clsid_path = format!(r"Software\Classes\CLSID\{}", clsid);
+        let (clsid_key, _) = hkcu.create_subkey(&clsid_path)?;
+        clsid_key.set_value("", &label)?;
+        // Every class can be activated independently. Keeping the application
+        // path on each registration also makes repair/migration self-contained.
+        clsid_key.set_value("ApplicationPath", &app_path)?;
+        let (server_key, _) = hkcu.create_subkey(format!(r"{}\InprocServer32", clsid_path))?;
+        server_key.set_value("", &dll_path.to_string_lossy().as_ref())?;
+        server_key.set_value("ThreadingModel", &"Apartment")?;
+    }
 
     for class in ["*", "Directory"] {
         let verb_path = format!(
@@ -262,6 +319,124 @@ fn register_native_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
         verb_key.set_value("ExplorerCommandHandler", &NATIVE_COMMAND_CLSID)?;
         verb_key.set_value("MultiSelectModel", &"Player")?;
     }
+
+    register_native_verb(
+        hkcu,
+        "*",
+        QUICK_EXTRACT_COMMAND_VERB,
+        "一键解压到同名文件夹",
+        QUICK_EXTRACT_COMMAND_CLSID,
+        app_path,
+    )?;
+    for class in ["*", "Directory"] {
+        register_native_verb(
+            hkcu,
+            class,
+            QUICK_PACK_COMMAND_VERB,
+            "一键打包为 ZIP",
+            QUICK_PACK_COMMAND_CLSID,
+            app_path,
+        )?;
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn context_menu_resource_path(app_path: &str, file_name: &str) -> std::path::PathBuf {
+    let executable = std::path::Path::new(app_path);
+    let installed = executable
+        .parent()
+        .unwrap_or_else(|| std::path::Path::new("."))
+        .join("resources")
+        .join(file_name);
+    if installed.exists() {
+        installed
+    } else {
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("resources")
+            .join(file_name)
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn invoke_sparse_package_script(action: &str, app_path: Option<&str>) -> Result<bool> {
+    let lookup_path = app_path
+        .map(std::borrow::ToOwned::to_owned)
+        .or_else(|| std::env::current_exe().ok().map(|path| path.to_string_lossy().into_owned()))
+        .unwrap_or_default();
+    let script = context_menu_resource_path(&lookup_path, CONTEXT_MENU_REGISTRATION_SCRIPT);
+    if !script.is_file() {
+        return Ok(false);
+    }
+
+    let mut command = Command::new("powershell.exe");
+    command.args([
+        "-NoLogo",
+        "-NoProfile",
+        "-NonInteractive",
+        "-WindowStyle",
+        "Hidden",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+    ]);
+    command.arg(&script).args(["-Action", action]);
+    if action == "Install" {
+        let Some(app_path) = app_path else {
+            anyhow::bail!("Application path is required to register the identity package");
+        };
+        let quick_extract_package =
+            context_menu_resource_path(app_path, CONTEXT_MENU_QUICK_EXTRACT_PACKAGE_NAME);
+        let quick_pack_package =
+            context_menu_resource_path(app_path, CONTEXT_MENU_QUICK_PACK_PACKAGE_NAME);
+        if !quick_extract_package.is_file() || !quick_pack_package.is_file() {
+            return Ok(false);
+        }
+        let external_location = std::path::Path::new(app_path)
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("."));
+        command
+            .arg("-QuickExtractPackagePath")
+            .arg(quick_extract_package)
+            .arg("-QuickPackPackagePath")
+            .arg(quick_pack_package)
+            .arg("-ExternalLocation")
+            .arg(external_location)
+            .arg("-PackageVersion")
+            .arg(context_menu_package_version());
+    }
+    let status = command.creation_flags(CREATE_NO_WINDOW).status()?;
+    if !status.success() {
+        anyhow::bail!("identity package script exited with status {status}");
+    }
+    Ok(true)
+}
+
+#[cfg(target_os = "windows")]
+fn register_sparse_identity_package(app_path: &str) -> Result<bool> {
+    invoke_sparse_package_script("Install", Some(app_path))
+}
+
+#[cfg(target_os = "windows")]
+fn unregister_sparse_identity_package() -> Result<bool> {
+    invoke_sparse_package_script("Uninstall", None)
+}
+
+#[cfg(target_os = "windows")]
+fn register_native_verb(
+    hkcu: &RegKey,
+    class: &str,
+    verb: &str,
+    label: &str,
+    clsid: &str,
+    app_path: &str,
+) -> Result<()> {
+    let verb_path = format!(r"Software\Classes\{}\shell\{}", class, verb);
+    let (verb_key, _) = hkcu.create_subkey(verb_path)?;
+    verb_key.set_value("MUIVerb", &label)?;
+    verb_key.set_value("Icon", &format!(r#""{}""#, app_path))?;
+    verb_key.set_value("ExplorerCommandHandler", &clsid)?;
+    verb_key.set_value("MultiSelectModel", &"Player")?;
     Ok(())
 }
 
@@ -277,11 +452,26 @@ fn unregister_native_menu(hkcu: &RegKey) -> Result<()> {
             hkcu,
             &format!(r"Software\Classes\{}\shell\{}", class, NATIVE_COMMAND_VERB),
         )?;
+        delete_tree_if_present(
+            hkcu,
+            &format!(r"Software\Classes\{}\shell\{}", class, QUICK_PACK_COMMAND_VERB),
+        )?;
     }
     delete_tree_if_present(
         hkcu,
-        &format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID),
-    )
+        &format!(r"Software\Classes\*\shell\{}", QUICK_EXTRACT_COMMAND_VERB),
+    )?;
+    for clsid in [
+        NATIVE_COMMAND_CLSID,
+        QUICK_EXTRACT_COMMAND_CLSID,
+        QUICK_PACK_COMMAND_CLSID,
+    ] {
+        delete_tree_if_present(
+            hkcu,
+            &format!(r"Software\Classes\CLSID\{}", clsid),
+        )?;
+    }
+    Ok(())
 }
 
 #[cfg(target_os = "windows")]
@@ -341,6 +531,9 @@ pub fn refresh_context_menu_if_present(app_path: &str) -> Result<bool> {
 #[cfg(target_os = "windows")]
 pub fn unregister_context_menu() -> Result<()> {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    if is_windows_11_or_newer() {
+        unregister_sparse_identity_package()?;
+    }
     unregister_legacy_menu(&hkcu)?;
     unregister_native_menu(&hkcu)?;
     notify_shell_associations_changed();
@@ -365,7 +558,7 @@ pub fn is_context_menu_registered() -> bool {
     if is_windows_11_or_newer() {
         let clsid_path = format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID);
         let expected_dll = shell_extension_path(&exe_string).to_string_lossy().into_owned();
-        return hkcu
+        let root_registered = hkcu
             .open_subkey(&clsid_path)
             .and_then(|key| key.get_value::<String, _>("ApplicationPath"))
             .map(|path| path.eq_ignore_ascii_case(&exe_string))
@@ -384,6 +577,39 @@ pub fn is_context_menu_registered() -> bool {
                 .map(|handler| handler == NATIVE_COMMAND_CLSID)
                 .unwrap_or(false)
             });
+        let quick_extract_registered = hkcu
+            .open_subkey(format!(
+                r"Software\Classes\*\shell\{}",
+                QUICK_EXTRACT_COMMAND_VERB
+            ))
+            .and_then(|key| key.get_value::<String, _>("ExplorerCommandHandler"))
+            .map(|handler| handler == QUICK_EXTRACT_COMMAND_CLSID)
+            .unwrap_or(false);
+        let quick_pack_registered = ["*", "Directory"].iter().all(|class| {
+            hkcu.open_subkey(format!(
+                r"Software\Classes\{}\shell\{}",
+                class, QUICK_PACK_COMMAND_VERB
+            ))
+            .and_then(|key| key.get_value::<String, _>("ExplorerCommandHandler"))
+            .map(|handler| handler == QUICK_PACK_COMMAND_CLSID)
+            .unwrap_or(false)
+        });
+        let signed_packages_present = [
+            CONTEXT_MENU_QUICK_EXTRACT_PACKAGE_NAME,
+            CONTEXT_MENU_QUICK_PACK_PACKAGE_NAME,
+        ]
+        .iter()
+        .all(|name| context_menu_resource_path(&exe_string, name).is_file());
+        let package_registration_is_current = !signed_packages_present
+            || hkcu
+                .open_subkey(&clsid_path)
+                .and_then(|key| key.get_value::<u32, _>("SparsePackageRegistered"))
+                .map(|registered| registered == 1)
+                .unwrap_or(false);
+        return root_registered
+            && quick_extract_registered
+            && quick_pack_registered
+            && package_registration_is_current;
     }
 
     let required_keys = [
@@ -434,10 +660,16 @@ pub fn refresh_context_menu_if_present(_app_path: &str) -> Result<bool> {
 mod tests {
     use super::{
         verbs, ARCHIVE_EXTENSIONS, NATIVE_COMMAND_CLSID, NATIVE_COMMAND_VERB,
+        QUICK_EXTRACT_COMMAND_CLSID, QUICK_EXTRACT_COMMAND_VERB,
+        QUICK_PACK_COMMAND_CLSID, QUICK_PACK_COMMAND_VERB,
     };
 
     const INSTALLER_TEMPLATE: &str = include_str!("../../installer.nsi");
     const SHELL_EXTENSION_SOURCE: &str = include_str!("../../shell-extension/src/lib.rs");
+    const IDENTITY_PACKAGE_MANIFEST: &str =
+        include_str!("../../windows-context-menu/AppxManifest.xml.template");
+    const IDENTITY_PACKAGE_BUILD_SCRIPT: &str =
+        include_str!("../../../scripts/build-context-menu-package.ps1");
     const CONTEXT_MENU_SOURCE: &str = include_str!("context_menu.rs");
 
     #[test]
@@ -487,6 +719,10 @@ mod tests {
         }
         assert!(INSTALLER_TEMPLATE.contains(NATIVE_COMMAND_CLSID));
         assert!(INSTALLER_TEMPLATE.contains(NATIVE_COMMAND_VERB));
+        assert!(INSTALLER_TEMPLATE.contains(QUICK_EXTRACT_COMMAND_CLSID));
+        assert!(INSTALLER_TEMPLATE.contains(QUICK_EXTRACT_COMMAND_VERB));
+        assert!(INSTALLER_TEMPLATE.contains(QUICK_PACK_COMMAND_CLSID));
+        assert!(INSTALLER_TEMPLATE.contains(QUICK_PACK_COMMAND_VERB));
         assert!(INSTALLER_TEMPLATE.contains("SHChangeNotify(i 0x08000000"));
         assert!(SHELL_EXTENSION_SOURCE.contains(NATIVE_COMMAND_CLSID));
     }
@@ -498,6 +734,7 @@ mod tests {
             "--extract-here",
             "--extract-to",
             "--test-archive",
+            "--quick-pack",
             "--compress-zip",
             "--compress-7z",
             "--compress-custom",
@@ -511,5 +748,30 @@ mod tests {
                 "native menu archive detection is missing {extension}"
             );
         }
+    }
+
+    #[test]
+    fn identity_package_exposes_dedicated_primary_commands() {
+        for clsid in [QUICK_EXTRACT_COMMAND_CLSID, QUICK_PACK_COMMAND_CLSID] {
+            let without_braces = clsid.trim_matches(['{', '}']);
+            assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains(without_braces));
+            assert!(SHELL_EXTENSION_SOURCE.contains(clsid));
+        }
+        assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("LongDecompressQuickExtract"));
+        assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("LongDecompressQuickPack"));
+        assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("LongCompressAssistant.ContextMenu.QuickExtract"));
+        assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("LongCompressAssistant.ContextMenu.QuickPack"));
+        assert_eq!(IDENTITY_PACKAGE_MANIFEST.matches("<Application\n").count(), 1);
+        assert_eq!(IDENTITY_PACKAGE_MANIFEST.matches("__APP_EXECUTABLE__").count(), 1);
+        assert!(IDENTITY_PACKAGE_MANIFEST.contains("__PACKAGE_NAME__"));
+        assert!(IDENTITY_PACKAGE_MANIFEST.contains("__CONTEXT_MENU_ITEMS__"));
+        assert!(IDENTITY_PACKAGE_MANIFEST.contains("windows.fileExplorerContextMenus"));
+        assert!(IDENTITY_PACKAGE_MANIFEST.contains("ProcessorArchitecture=\"x64\""));
+        assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("$stagedResourceDirectory"));
+        assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("Copy-Item -LiteralPath $shellDll.FullName"));
+        assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains(".Replace('__APP_EXECUTABLE__'"));
+        assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("long_compress_context_menu_extract.msix"));
+        assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("long_compress_context_menu_pack.msix"));
+        assert!(super::context_menu_package_version().ends_with(".0"));
     }
 }
