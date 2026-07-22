@@ -244,13 +244,22 @@ describe('测试辅助函数', () => {
 
   describe('wait', () => {
     it('应该等待指定时间', async () => {
-      const startTime = Date.now()
-      await wait(100)
-      const endTime = Date.now()
-      const duration = endTime - startTime
+      vi.useFakeTimers()
+      try {
+        let resolved = false
+        const pendingWait = wait(100).then(() => {
+          resolved = true
+        })
 
-      expect(duration).toBeGreaterThanOrEqual(90)
-      expect(duration).toBeLessThan(150)
+        await vi.advanceTimersByTimeAsync(99)
+        expect(resolved).toBe(false)
+
+        await vi.advanceTimersByTimeAsync(1)
+        await pendingWait
+        expect(resolved).toBe(true)
+      } finally {
+        vi.useRealTimers()
+      }
     })
   })
 

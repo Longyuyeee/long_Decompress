@@ -49,7 +49,7 @@ import { useAccessibility } from '@/composables/useAccessibility'
 import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
-import { createContextCompressionEntry, groupContextActions, type ContextAction } from '@/utils/contextActions'
+import { createContextCompressionEntry, createQuickPackCandidate, createQuickPackPlan, groupContextActions, type ContextAction } from '@/utils/contextActions'
 
 const router = useRouter()
 const configStore = useConfigStore()
@@ -215,9 +215,23 @@ onMounted(async () => {
       const metadata = await Promise.all(files.map(path =>
         invoke<{ size: number; is_dir: boolean }>('get_file_info', { path }).catch(() => null)
       ))
-      files.forEach((path, index) => {
-        compressionStore.addFile(createContextCompressionEntry(path, metadata[index]))
-      })
+      const entries = files.map((path, index) => createContextCompressionEntry(path, metadata[index]))
+      if (request.action === 'context-quick-pack') {
+        const plan = createQuickPackPlan(files)
+        let candidate = createQuickPackCandidate(plan)
+        let available = false
+        for (let collisionIndex = 0; collisionIndex < 1000; collisionIndex++) {
+          candidate = createQuickPackCandidate(plan, collisionIndex)
+          if (!await invoke<boolean>('path_exists', { path: candidate.outputPath })) {
+            available = true
+            break
+          }
+        }
+        if (!available) candidate = createQuickPackCandidate(plan, Date.now())
+        compressionStore.addQuickPack(entries, candidate.archiveName, plan.outputDirectory)
+      } else {
+        entries.forEach(entry => compressionStore.addFile(entry))
+      }
       if (request.action === 'context-compress-zip') {
         compressionStore.globalSettings.format = 'zip'
         compressionStore.requestAutoStart()
@@ -249,8 +263,11 @@ onMounted(async () => {
     if (contextDrainPromise) return contextDrainPromise
     contextDrainPromise = (async () => {
       try {
-        const actions = await invoke<ContextAction[]>('take_pending_context_actions')
-        for (const action of groupContextActions(actions)) {
+        const actions = groupContextActions(await invoke<ContextAction[]>('take_pending_context_actions'))
+        if (actions.some(action => action.action === 'context-quick-pack')) {
+          compressionStore.prepareQuickPacks()
+        }
+        for (const action of actions) {
           await handleContextAction(action)
         }
       } catch (error) {

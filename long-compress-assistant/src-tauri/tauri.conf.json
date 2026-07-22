@@ -1,13 +1,13 @@
 {
   "build": {
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build && npm run build:shell-extension",
+    "beforeBuildCommand": "npm run build && npm run build:shell-extension && npm run build:context-menu-package",
     "devPath": "http://localhost:1420",
     "distDir": "../dist"
   },
   "package": {
     "productName": "胧解压·方便助手",
-    "version": "1.0.8"
+    "version": "1.0.9"
   },
   "tauri": {
     "systemTray": {
@@ -49,6 +49,7 @@
       ],
       "resources": [
         "resources/long_compress_shell_extension_*.dll",
+        "resources/long_compress_context_menu*",
         "resources/archive-engine/7z.exe",
         "resources/archive-engine/7z.dll",
         "resources/archive-engine/7-Zip-License.txt",
