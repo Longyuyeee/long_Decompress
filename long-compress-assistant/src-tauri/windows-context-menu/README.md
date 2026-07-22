@@ -4,17 +4,18 @@ Windows 11 only places third-party `IExplorerCommand` actions in the primary
 context menu when they are registered through an app identity. This project
 keeps its NSIS installer and supplies that identity with a signed sparse MSIX.
 
-Release builds read these secrets:
+The package builder supports these optional variables:
 
 - `WINDOWS_CODE_SIGNING_PFX_BASE64`: base64-encoded production code-signing PFX
 - `WINDOWS_CODE_SIGNING_PFX_PASSWORD`: PFX password
 - `WINDOWS_CODE_SIGNING_PUBLISHER`: certificate subject, for example `CN=...`
 
 The publisher must exactly match the signing certificate subject; the build
-checks this before packaging. Local builds skip the identity package and retain
-the classic Explorer menu fallback when these variables are absent. Release
-builds set `REQUIRE_WINDOWS_CONTEXT_MENU_PACKAGE=true`, so a missing or invalid
-certificate fails the release instead of silently shipping the fallback.
+checks this before packaging. Builds without these variables skip the identity
+package and retain the classic Explorer menu fallback. The public release
+workflow currently uses this unsigned fallback because the project does not
+have a production Windows code-signing certificate. Set all three variables
+and `REQUIRE_WINDOWS_CONTEXT_MENU_PACKAGE=true` when trusted signing is added.
 
 Two sparse package manifests expose separate top-level COM commands. Each
 command uses a distinct package identity because Windows groups multiple verbs
