@@ -6,8 +6,8 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "胧解压·方便助手",
-    "version": "1.0.9"
+    "productName": "Long解压",
+    "version": "1.0.10"
   },
   "tauri": {
     "systemTray": {
@@ -56,7 +56,7 @@
         "resources/archive-engine/7-Zip-Readme.txt"
       ],
       "externalBin": [],
-      "copyright": "Copyright © 2026 胧解压·方便助手",
+      "copyright": "Copyright © 2026 Long解压",
       "category": "Utility",
       "shortDescription": "智能压缩解压助手",
       "longDescription": "支持多格式、密码本管理、批量任务处理的现代化压缩解压工具。",
@@ -98,7 +98,7 @@
     },
     "windows": [
       {
-        "title": "胧解压",
+        "title": "Long解压",
         "width": 920,
         "height": 620,
         "minWidth": 760,

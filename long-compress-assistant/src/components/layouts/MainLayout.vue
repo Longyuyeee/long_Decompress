@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { appWindow } from '@tauri-apps/api/window'
 import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
 import { useAppStore } from '@/stores/app'
+import brandIcon from '@/assets/long-jieya-icon.png'
 
 const route = useRoute()
 const router = useRouter()
@@ -56,10 +57,10 @@ const navigateTo = (name: string) => {
         <aside class="app-sidebar h-full flex flex-col border-r border-subtle/60 bg-card/75 backdrop-blur-2xl z-50 shrink-0 relative">
           <div class="sidebar-brand flex items-center gap-3 px-4 h-20 border-b border-subtle/50 shrink-0">
             <div class="brand-mark w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20 shrink-0">
-              <i class="pi pi-bolt text-base"></i>
+              <img :src="brandIcon" alt="" class="w-8 h-8 object-contain" aria-hidden="true">
             </div>
             <div class="sidebar-copy min-w-0">
-              <div class="text-sm font-black text-content tracking-tight">胧压缩</div>
+              <div class="text-sm font-black text-content tracking-tight">Long解压</div>
               <div class="text-xs text-muted tracking-wider mt-0.5">Archive Studio</div>
             </div>
           </div>

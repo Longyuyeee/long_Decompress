@@ -59,8 +59,8 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const title = to.meta?.title as string || '胧压缩'
-  document.title = `${title} - 胧压缩`
+  const title = to.meta?.title as string || 'Long解压'
+  document.title = `${title} - Long解压`
   next()
 })
 

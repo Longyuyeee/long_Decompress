@@ -1,10 +1,10 @@
 /**
- * 胧压缩·方便助手 - 极简国际化翻译包
+ * Long解压 - 极简国际化翻译包
  */
 export const translations: Record<string, Record<string, string>> = {
   'zh-CN': {
     // 应用
-    'app.name': 'Long解压·方便助手',
+    'app.name': 'Long解压',
     'app.tagline': '引擎强大，界面极简',
     // 导航
     'nav.decompress': '解压中心',
@@ -484,7 +484,7 @@ export const translations: Record<string, Record<string, string>> = {
   },
   'en-US': {
     // App
-    'app.name': 'LongDecompress Assistant',
+    'app.name': 'Long解压',
     'app.tagline': 'Powerful Engine, Minimalist UI',
     // Nav
     'nav.decompress': 'Extraction',

@@ -89,7 +89,7 @@ fn main() {
     if !instance.is_single() {
         if !forward_to_running_instance(&args) {
             rfd::MessageDialog::new()
-                .set_title("胧解压")
+                .set_title("Long解压")
                 .set_description("软件已经在运行，但无法将本次操作发送到现有窗口。请从托盘打开软件后重试。")
                 .set_level(rfd::MessageLevel::Error)
                 .show();
@@ -100,7 +100,7 @@ fn main() {
         .and_then(|name| ListenerOptions::new().name(name).try_overwrite(true).create_sync())
         .map_err(|error| {
             rfd::MessageDialog::new()
-                .set_title("胧解压")
+                .set_title("Long解压")
                 .set_description(format!("单实例通信初始化失败：{}\n右键操作可能无法唤醒当前窗口。", error))
                 .set_level(rfd::MessageLevel::Warning)
                 .show();

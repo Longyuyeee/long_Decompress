@@ -1,10 +1,10 @@
 @echo off
-title Long Decompress Build
+title Long解压 Build
 
 cd /d "%~dp0"
 
 echo ======================================
-echo  Long Decompress - Build Release
+echo  Long解压 - Build Release
 echo ======================================
 echo.
 echo Directory: %CD%

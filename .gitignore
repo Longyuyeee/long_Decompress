@@ -45,6 +45,8 @@ long-compress-assistant/test-results/
 long-compress-assistant/coverage/
 long-compress-assistant/.password_book_data/
 long-compress-assistant/src-tauri/data/
+long-compress-assistant/design/brand/concept-*
+long-compress-assistant/design/brand/*-source.png
 
 # Local updater signing backups (private, never commit)
 long-compress-assistant/.local-secrets/

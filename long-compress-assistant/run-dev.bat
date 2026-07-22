@@ -1,11 +1,11 @@
 @echo off
-title Long Decompress Dev Server
+title Long解压 Dev Server
 setlocal enabledelayedexpansion
 
 cd /d "%~dp0"
 
 echo ======================================
-echo  Long Decompress - Dev Server
+echo  Long解压 - Dev Server
 echo ======================================
 echo.
 echo Directory: %CD%

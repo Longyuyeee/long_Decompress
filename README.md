@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="icon.png" width="112" alt="胧解压图标">
+<img src="icon.png" width="112" alt="Long解压图标">
 
-# 胧解压·方便助手
+# Long解压
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.8-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.10-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,20 +20,17 @@
 
 ---
 
-## v1.0.8 更新亮点
+## v1.0.10 更新亮点
 
-- 新增应用内更新：启动后每天最多静默检查一次，也可在设置中心手动检查。
-- 提供更新说明、稍后提醒、跳过版本、失败重试和中英文自定义更新弹窗。
-- 更新包安装前必须通过 Tauri 数字签名验证，无法验证或被篡改的包会被拒绝。
-- 压缩或解压任务运行期间禁止安装更新，避免退出覆盖程序时造成任务中断或数据损坏。
-- GitHub Release 流水线自动生成 NSIS 安装包、更新 ZIP、签名和 `latest.json` 更新清单。
-- 主程序与 Windows 11 右键扩展统一升级至 1.0.8，并完成单元、端到端、Rust 全目标和签名构建回归。
+- 软件品牌正式升级为“Long解压”，统一窗口、托盘、安装器、开始菜单、右键菜单与发布名称。
+- 启用全新的 L 形拉链图标：以清晰的字母 L 结合解压语义，采用克制、扁平的蓝紫视觉风格。
+- 更新 PNG、ICO、ICNS、Windows Appx 全尺寸图标、网页图标和应用内品牌标识。
+- 保留原有应用标识符、配置目录和更新公钥，确保现有用户数据与应用内更新链路保持兼容。
+- 延续一键解压到同名文件夹、一键打包为 ZIP 和传统资源管理器右键菜单能力。
 
-> 1.0.7 及更早版本尚未内置更新公钥，需要手动安装一次 1.0.8；以后即可在软件内完成更新。
+完整变更请查看 [v1.0.10 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.10)。
 
-完整变更请查看 [v1.0.8 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.8)。
-
-## 为什么选择胧解压
+## 为什么选择 Long解压
 
 | 能力 | 说明 |
 | --- | --- |
@@ -49,7 +46,7 @@
 
 1. 前往 [GitHub Releases](https://github.com/Longyuyeee/long_Decompress/releases/latest)。
 2. 下载名称以 `x64-setup.exe` 结尾的安装程序。
-3. 双击安装，完成后从开始菜单启动“胧解压·方便助手”。
+3. 双击安装，完成后从开始菜单启动“Long解压”。
 
 系统要求：
 

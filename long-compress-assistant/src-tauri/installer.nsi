@@ -22,6 +22,7 @@ ${StrLoc}
 
 !define MANUFACTURER "{{manufacturer}}"
 !define PRODUCTNAME "{{product_name}}"
+!define LEGACY_PRODUCTNAME "胧解压·方便助手"
 !define VERSION "{{version}}"
 !define VERSIONWITHBUILD "{{version_with_build}}"
 !define INSTALLMODE "{{install_mode}}"
@@ -44,6 +45,8 @@ ${StrLoc}
 !define WEBVIEW2INSTALLERPATH "{{webview2_installer_path}}"
 !define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCTNAME}"
 !define MANUPRODUCTKEY "Software\${MANUFACTURER}\${PRODUCTNAME}"
+!define LEGACY_UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${LEGACY_PRODUCTNAME}"
+!define LEGACY_MANUPRODUCTKEY "Software\${MANUFACTURER}\${LEGACY_PRODUCTNAME}"
 !define UNINSTALLERSIGNCOMMAND "{{uninstaller_sign_cmd}}"
 !define ESTIMATEDSIZE "{{estimated_size}}"
 
@@ -588,6 +591,14 @@ Section Install
   WriteRegDWORD SHCTX "${UNINSTKEY}" "NoRepair" "1"
   WriteRegDWORD SHCTX "${UNINSTKEY}" "EstimatedSize" "${ESTIMATEDSIZE}"
 
+  ; Migrate the v1.0.9 and earlier brand identity without touching user data.
+  Delete "$INSTDIR\${LEGACY_PRODUCTNAME}.exe"
+  Delete "$DESKTOP\${LEGACY_PRODUCTNAME}.lnk"
+  Delete "$SMPROGRAMS\${LEGACY_PRODUCTNAME}\${LEGACY_PRODUCTNAME}.lnk"
+  RmDir "$SMPROGRAMS\${LEGACY_PRODUCTNAME}"
+  DeleteRegKey SHCTX "${LEGACY_UNINSTKEY}"
+  DeleteRegKey SHCTX "${LEGACY_MANUPRODUCTKEY}"
+
   ; Create start menu shortcut (GUI)
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     Call CreateStartMenuShortcut
@@ -818,8 +829,12 @@ SectionEnd
 
 Function RestorePreviousInstallLocation
   ReadRegStr $4 SHCTX "${MANUPRODUCTKEY}" ""
-  StrCmp $4 "" +2 0
-    StrCpy $INSTDIR $4
+  StrCmp $4 "" 0 restore_install_location
+  ReadRegStr $4 SHCTX "${LEGACY_MANUPRODUCTKEY}" ""
+  restore_install_location:
+  StrCmp $4 "" restore_install_location_done 0
+  StrCpy $INSTDIR $4
+  restore_install_location_done:
 FunctionEnd
 
 Function SkipIfPassive

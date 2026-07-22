@@ -82,7 +82,7 @@ const SUBCOMMANDS: &[CommandKind] = &[
 impl CommandKind {
     fn title(self) -> &'static str {
         match self {
-            Self::Root => "胧解压",
+            Self::Root => "Long解压",
             Self::QuickExtract => "一键解压到同名文件夹",
             Self::ExtractHere => "解压到此处",
             Self::ExtractTo => "解压到同名文件夹",

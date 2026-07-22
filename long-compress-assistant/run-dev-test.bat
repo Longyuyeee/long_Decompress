@@ -1,11 +1,11 @@
 @echo off
 chcp 936 >nul 2>&1
-title Long Decompress - Dev Mode
+title Long解压 - Dev Mode
 
 cd /d "%~dp0"
 
 echo ========================================
-echo   Long Decompress - Development Server
+echo   Long解压 - Development Server
 echo ========================================
 echo.
 echo Current Dir: %CD%

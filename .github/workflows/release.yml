@@ -38,7 +38,7 @@ jobs:
         with:
           projectPath: long-compress-assistant
           tagName: v__VERSION__
-          releaseName: 胧解压 v__VERSION__
+          releaseName: Long解压 v__VERSION__
           generateReleaseNotes: true
           releaseDraft: false
           prerelease: false
@@ -75,7 +75,7 @@ jobs:
           }
 
           $signature = (Get-Content -LiteralPath $signatureFile.FullName -Raw).Trim()
-          $notes = if ($release.body) { $release.body } else { "胧解压 $version 更新" }
+          $notes = if ($release.body) { $release.body } else { "Long解压 $version 更新" }
           $manifest = [ordered]@{
             version = $version
             notes = $notes

@@ -88,7 +88,7 @@ fn verbs() -> Vec<VerbDef> {
     vec![
         VerbDef {
             verb: "LongDecompress.open",
-            label: "用 胧解压 打开",
+            label: "用 Long解压 打开",
             cli: "--open \"%1\"",
         },
         VerbDef {
@@ -293,9 +293,9 @@ fn register_native_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
     }
 
     for (clsid, label) in [
-        (NATIVE_COMMAND_CLSID, "胧解压 Windows 11 原生菜单"),
-        (QUICK_EXTRACT_COMMAND_CLSID, "胧解压一键解压"),
-        (QUICK_PACK_COMMAND_CLSID, "胧解压一键打包"),
+        (NATIVE_COMMAND_CLSID, "Long解压 Windows 11 原生菜单"),
+        (QUICK_EXTRACT_COMMAND_CLSID, "Long解压一键解压"),
+        (QUICK_PACK_COMMAND_CLSID, "Long解压一键打包"),
     ] {
         let clsid_path = format!(r"Software\Classes\CLSID\{}", clsid);
         let (clsid_key, _) = hkcu.create_subkey(&clsid_path)?;
@@ -314,7 +314,7 @@ fn register_native_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
             class, NATIVE_COMMAND_VERB
         );
         let (verb_key, _) = hkcu.create_subkey(&verb_path)?;
-        verb_key.set_value("MUIVerb", &"胧解压")?;
+        verb_key.set_value("MUIVerb", &"Long解压")?;
         verb_key.set_value("Icon", &format!(r#""{}""#, app_path))?;
         verb_key.set_value("ExplorerCommandHandler", &NATIVE_COMMAND_CLSID)?;
         verb_key.set_value("MultiSelectModel", &"Player")?;
@@ -502,7 +502,7 @@ fn unregister_legacy_menu(hkcu: &RegKey) -> Result<()> {
 #[cfg(target_os = "windows")]
 fn reg_shell_entry(hkcu: &RegKey, path: &str, sub_commands: &str) -> Result<()> {
     let (key, _) = hkcu.create_subkey(path)?;
-    key.set_value("MUIVerb", &"胧解压")?;
+    key.set_value("MUIVerb", &"Long解压")?;
     key.set_value("SubCommands", &sub_commands)?;
     key.set_value("MultiSelectModel", &"Document")?;
     Ok(())
@@ -725,6 +725,20 @@ mod tests {
         assert!(INSTALLER_TEMPLATE.contains(QUICK_PACK_COMMAND_VERB));
         assert!(INSTALLER_TEMPLATE.contains("SHChangeNotify(i 0x08000000"));
         assert!(SHELL_EXTENSION_SOURCE.contains(NATIVE_COMMAND_CLSID));
+    }
+
+    #[test]
+    fn nsis_installer_migrates_legacy_brand_identity() {
+        assert!(INSTALLER_TEMPLATE.contains(
+            r#"!define LEGACY_PRODUCTNAME "胧解压·方便助手""#
+        ));
+        assert!(INSTALLER_TEMPLATE.contains("LEGACY_MANUPRODUCTKEY"));
+        assert!(INSTALLER_TEMPLATE.contains(
+            r#"Delete "$INSTDIR\${LEGACY_PRODUCTNAME}.exe""#
+        ));
+        assert!(INSTALLER_TEMPLATE.contains(
+            r#"DeleteRegKey SHCTX "${LEGACY_UNINSTKEY}""#
+        ));
     }
 
     #[test]
