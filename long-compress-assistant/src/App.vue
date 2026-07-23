@@ -259,6 +259,17 @@ onMounted(async () => {
     console.warn('Exit confirmation listener is unavailable:', error)
   }
 
+  try {
+    const unlisten = await listen<string>('tray-navigate', event => {
+      if (event.payload === '/decompress' || event.payload === '/compress') {
+        void router.push(event.payload)
+      }
+    })
+    keepAppListener(unlisten)
+  } catch (error) {
+    console.warn('Tray navigation listener is unavailable:', error)
+  }
+
   const drainContextActions = () => {
     if (contextDrainPromise) return contextDrainPromise
     contextDrainPromise = (async () => {

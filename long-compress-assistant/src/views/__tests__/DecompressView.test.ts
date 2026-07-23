@@ -78,6 +78,23 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
+  it('rejects Office document containers before creating extraction tasks', async () => {
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'report.docx',
+      path: 'C:/documents/report.docx',
+    }, {
+      name: 'budget.xlsx',
+      path: 'C:/documents/budget.xlsx',
+    }])
+    await nextTick()
+
+    expect(useTaskStore().tasks).toHaveLength(0)
+    expect(useAppStore().error).toContain('2')
+    expect(mocks.invoke).not.toHaveBeenCalledWith('detect_split_archive', expect.anything())
+    wrapper.unmount()
+  })
+
   it('starts pending archive tasks with the configured extraction options', async () => {
     const wrapper = mountView()
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{

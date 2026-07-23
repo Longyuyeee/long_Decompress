@@ -2,6 +2,14 @@
 
 面向 Windows 的本地压缩与解压工具，使用 Vue 3、TypeScript、Tauri 和 Rust 构建。支持批量任务、密码本、智能密码尝试、托盘运行、资源管理器右键菜单与一键解压。
 
+## v1.0.11 更新
+
+- 托盘悬停提示统一显示“Long解压”，右键菜单新增打开主窗口、解压中心、压缩中心、显示/隐藏和退出快捷入口。
+- 解压中心收紧归档过滤：DOCX、XLSX、PPTX、ODT、ODS、EPUB 等文档容器不再作为压缩包导入，并对选择、拖放和右键任务入口统一校验。
+- 简化左下角全局进度区，只保留清晰的“X 个进行中”状态，移除与其重叠的完成数显示。
+- 压缩中心新增“使用同名压缩包”选项，适用于单文件、文件组和全局压缩设置。
+- 优化批量文件元数据读取和任务统计，采用受控并行读取并减少重复遍历。
+
 ## v1.0.10 更新
 
 - 软件名称统一升级为“Long解压”，覆盖窗口标题、托盘、安装器、开始菜单、资源管理器右键菜单和 GitHub Release。
@@ -67,7 +75,7 @@
 - 安装包与容器：CAB、DEB、RPM、MSI/MSP/MSM、NSIS、PPKG
 - 文件系统与固件：APFS、EXT2/3/4、FAT、NTFS、HFS/HFSX、GPT、MBR、UEFI、UDF、CramFS
 - 传统归档：AR/A、ARJ、LZH/LHA、CHM、CPIO、SquashFS、XAR、Unix Z
-- ZIP 容器：JAR、EPUB、APK、APPX、DOCX、XLSX、PPTX 等
+- 应用归档与安装容器：JAR、APK、APPX 等；Office/OpenDocument/EPUB 文档容器不在解压中心中作为压缩包导入
 
 具体能力以当前引擎动态检测结果为准。某些镜像或文件系统格式只支持读取和解压，不支持创建。
 

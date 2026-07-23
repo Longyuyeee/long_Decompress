@@ -10,7 +10,7 @@ import { confirm } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
-import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT } from '@/utils/compressionFormat'
+import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath } from '@/utils/compressionFormat'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -91,7 +91,13 @@ onUnmounted(() => {
 
 const onFilesSelected = async (files: any[]) => {
   const createdTaskIds: string[] = []
-  for (const file of files) {
+  const supportedFiles = files.filter(file => typeof file?.path === 'string' && isDecompressArchivePath(file.path))
+  const rejectedCount = files.length - supportedFiles.length
+  if (rejectedCount > 0) {
+    appStore.setError(appStore.t('decompress.unsupported_files').replace('{0}', String(rejectedCount)))
+  }
+
+  for (const file of supportedFiles) {
     const sourcePath = file.path
     // 去重：如果任务列表中已有相同文件，跳过
     if (taskStore.tasks.some(t => t.sourceFiles.includes(sourcePath))) continue

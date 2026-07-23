@@ -23,12 +23,14 @@ interface Props {
   modelValue?: CompressionOptions
   outputPath?: string
   allowSingleFileFormats?: boolean
+  suggestedFilename?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: undefined,
   outputPath: '',
-  allowSingleFileFormats: true
+  allowSingleFileFormats: true,
+  suggestedFilename: ''
 })
 
 interface Emits {
@@ -105,6 +107,10 @@ const selectOutputPath = async () => {
   } catch (error) {
     appStore.setError(appStore.t('common.error'))
   }
+}
+
+const useSuggestedFilename = () => {
+  compressionOptions.value.filename = props.suggestedFilename.trim()
 }
 
 watch(compressionOptions, (newOptions) => {
@@ -257,7 +263,14 @@ const handlePasswordGenerated = (password: string) => {
 
       <!-- 文件名输入 -->
       <div class="flex flex-col gap-1.5 min-w-0">
-        <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.filename') }}</label>
+        <div class="flex items-center justify-between gap-2 ml-1">
+          <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.filename') }}</label>
+          <button
+            type="button"
+            class="text-xs font-bold text-primary hover:underline whitespace-nowrap"
+            @click="useSuggestedFilename"
+          >{{ appStore.t('compress.use_same_name') }}</button>
+        </div>
         <div class="relative">
           <input 
             v-model="compressionOptions.filename" 

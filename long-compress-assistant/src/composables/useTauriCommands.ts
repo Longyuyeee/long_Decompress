@@ -82,7 +82,7 @@ export const useTauriCommands = () => {
               'zip', 'zipx', 'rar', '7z',
               'tar', 'gz', 'gzip', 'bz2', 'bzip2', 'xz', 'zst', 'zstd', 'lzma',
               'tgz', 'tpz', 'tbz', 'tbz2', 'txz', 'tzst',
-              'jar', 'xpi', 'odt', 'ods', 'docx', 'xlsx', 'pptx', 'epub', 'ipa', 'apk', 'appx',
+              'jar', 'xpi', 'ipa', 'apk', 'appx',
               'iso', 'img', 'cab', 'lzh', 'lha', 'arj', 'dmg', 'wim', 'vhd', 'vhdx', 'chm',
               'deb', 'rpm', 'squashfs', 'sfs', 'msi', 'nsis', 'xar', 'cpio'
             ]
@@ -98,12 +98,13 @@ export const useTauriCommands = () => {
 
       const files = Array.isArray(selected) ? selected : [selected]
       const fileInfos: FileInfo[] = []
-
-      for (const filePath of files) {
-        const info = await getFileInfo(filePath)
-        if (info) fileInfos.push(info)
+      const metadataBatchSize = 16
+      for (let start = 0; start < files.length; start += metadataBatchSize) {
+        const batch = await Promise.all(
+          files.slice(start, start + metadataBatchSize).map(filePath => getFileInfo(filePath))
+        )
+        fileInfos.push(...batch.filter((info): info is FileInfo => info !== null))
       }
-
       return fileInfos
     } catch (error) {
       console.error('Failed to select files:', error)

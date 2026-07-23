@@ -12,34 +12,42 @@ const isExpanded = ref(false)
 const isMinimized = ref(false)
 const retryingTaskId = ref<string | null>(null)
 
-const activeTasks = computed(() =>
-  taskStore.tasks.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status))
-)
+const ACTIVE_STATUSES = new Set(['preparing', 'running', 'extracting', 'compressing', 'finalizing'])
+const FINISHED_STATUSES = new Set(['completed', 'failed', 'cancelled'])
+const STATUS_ORDER: Record<string, number> = {
+  preparing: 0, running: 0, extracting: 0, compressing: 0, finalizing: 0,
+  pending: 1, failed: 2, completed: 3, cancelled: 4
+}
 
-const hasActiveTasks = computed(() => activeTasks.value.length > 0)
+const taskStats = computed(() => {
+  let activeCount = 0
+  let completedCount = 0
+  let progressTotal = 0
+  let runningTask: Task | undefined
 
-const completedCount = computed(() =>
-  taskStore.tasks.filter(t => t.status === 'completed').length
-)
+  for (const task of taskStore.tasks) {
+    progressTotal += task.progress
+    if (!FINISHED_STATUSES.has(task.status)) activeCount++
+    if (task.status === 'completed') completedCount++
+    if (!runningTask && ACTIVE_STATUSES.has(task.status)) runningTask = task
+  }
 
-const failedCount = computed(() =>
-  taskStore.tasks.filter(t => t.status === 'failed').length
-)
-
-const totalCount = computed(() => taskStore.tasks.length)
-
-const overallProgress = computed(() => {
-  if (totalCount.value === 0) return 0
-  const total = taskStore.tasks.reduce((sum, t) => sum + t.progress, 0)
-  return Math.round(total / totalCount.value)
+  const totalCount = taskStore.tasks.length
+  return {
+    activeCount,
+    completedCount,
+    totalCount,
+    overallProgress: totalCount === 0 ? 0 : Math.round(progressTotal / totalCount),
+    runningTask
+  }
 })
 
-// 当前正在运行的任务（取第一个活跃中任务）
-const runningTask = computed(() =>
-  taskStore.tasks.find(t =>
-    ['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(t.status)
-  )
-)
+const activeCount = computed(() => taskStats.value.activeCount)
+const hasActiveTasks = computed(() => activeCount.value > 0)
+const completedCount = computed(() => taskStats.value.completedCount)
+const totalCount = computed(() => taskStats.value.totalCount)
+const overallProgress = computed(() => taskStats.value.overallProgress)
+const runningTask = computed(() => taskStats.value.runningTask)
 
 const currentTaskName = computed(() => runningTask.value?.name || '')
 
@@ -47,15 +55,7 @@ const isVisible = computed(() => taskStore.tasks.length > 0)
 
 const sortedTasks = computed(() =>
   [...taskStore.tasks].sort((a, b) => {
-    const order = (s: string) => {
-      if (['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(s)) return 0
-      if (s === 'pending') return 1
-      if (s === 'failed') return 2
-      if (s === 'completed') return 3
-      if (s === 'cancelled') return 4
-      return 5
-    }
-    return order(a.status) - order(b.status)
+    return (STATUS_ORDER[a.status] ?? 5) - (STATUS_ORDER[b.status] ?? 5)
   })
 )
 
@@ -178,7 +178,7 @@ const copyToClipboard = async (text: string) => {
             <i v-if="hasActiveTasks" class="pi pi-spin pi-spinner text-[0.75rem] text-primary"></i>
             <i v-else class="pi pi-check-circle text-[0.75rem] text-green-400"></i>
             <span class="text-[0.75rem] font-bold text-content whitespace-nowrap">
-              {{ hasActiveTasks ? `${activeTasks.length} ${appStore.t('tasks.active')}` : appStore.t('tasks.all_done') }}
+              {{ hasActiveTasks ? `${activeCount} ${appStore.t('tasks.active')}` : appStore.t('tasks.all_done') }}
             </span>
           </div>
           <!-- 当前任务名 + 速度 -->
@@ -195,12 +195,6 @@ const copyToClipboard = async (text: string) => {
             <i v-if="runningTask.password" class="pi pi-lock text-xs text-amber-400" :title="appStore.t('progress.password_used')"></i>
             <i v-if="runningTask.passwordRequired" class="pi pi-exclamation-triangle text-xs text-rose-400" :title="appStore.t('progress.password_needed')"></i>
           </div>
-        </div>
-
-        <!-- 完成计数 -->
-        <div class="progress-count flex flex-col items-end shrink-0">
-          <span class="text-[0.75rem] font-mono text-primary font-black">{{ completedCount }}/{{ totalCount }}</span>
-          <span v-if="failedCount > 0" class="text-xs font-mono text-red-400 font-bold">{{ failedCount }} {{ appStore.t('tasks.status.failed') }}</span>
         </div>
 
         <i :class="isExpanded ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" class="progress-chevron text-xs text-dim shrink-0"></i>
@@ -384,7 +378,6 @@ const copyToClipboard = async (text: string) => {
     padding: 0.35rem;
   }
   .progress-copy,
-  .progress-count,
   .progress-chevron,
   .progress-summary > button {
     display: none;

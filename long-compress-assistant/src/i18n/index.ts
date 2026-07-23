@@ -215,6 +215,7 @@ export const translations: Record<string, Record<string, string>> = {
     'compress.global_settings.desc': '应用到所有未单独配置的文件和组',
     'compress.output_path': '目标保存路径',
     'compress.filename': '压缩包名称',
+    'compress.use_same_name': '使用同名压缩包',
     'compress.payload': '总负载数据量',
     'compress.format': '目标格式',
     'compress.level': '压缩强度',
@@ -311,6 +312,7 @@ export const translations: Record<string, Record<string, string>> = {
     'vault.confirm.delete_btn': '确认删除',
     // ===== 任务 =====
     'tasks.active': '个进行中',
+    'decompress.unsupported_files': '已忽略 {0} 个不受支持的文件；解压中心只接收压缩包和归档文件',
     'tasks.all_done': '全部完成',
     'tasks.monitor': '任务监控',
     'tasks.show_progress': '显示进度',
@@ -666,6 +668,7 @@ export const translations: Record<string, Record<string, string>> = {
     'compress.global_settings.desc': 'Applied to all files and groups without custom settings',
     'compress.output_path': 'Output Path',
     'compress.filename': 'Archive Name',
+    'compress.use_same_name': 'Use matching archive name',
     'compress.payload': 'Payload',
     'compress.format': 'Format',
     'compress.level': 'Level',
@@ -738,6 +741,7 @@ export const translations: Record<string, Record<string, string>> = {
     'vault.confirm.delete_btn': 'Delete',
     // ===== Tasks =====
     'tasks.active': 'active',
+    'decompress.unsupported_files': 'Ignored {0} unsupported file(s); the extraction center only accepts archives',
     'tasks.all_done': 'All done',
     'tasks.monitor': 'Task Monitor',
     'tasks.show_progress': 'Show Progress',

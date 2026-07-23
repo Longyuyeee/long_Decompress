@@ -435,6 +435,7 @@ const totalPayload = computed(() => {
                   :modelValue="compressionStore.getEffectiveSettings(group.settings)"
                   :outputPath="compressionStore.getEffectiveOutputPath(group.outputPath)"
                   :allow-single-file-formats="canUseSingleFileFormats(group.files)"
+                  :suggested-filename="group.name"
                   @update:modelValue="compressionStore.updateGroupSettings(group.id, $event)"
                   @update:outputPath="compressionStore.updateGroupOutputPath(group.id, $event)"
                 />
@@ -503,6 +504,7 @@ const totalPayload = computed(() => {
                   :modelValue="compressionStore.getEffectiveSettings(file.settings)"
                   :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"
                   :allow-single-file-formats="canUseSingleFileFormats([file])"
+                  :suggested-filename="getBaseName(file.path)"
                   @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
                   @update:outputPath="compressionStore.updateFileOutputPath(file.path, $event)"
                 />

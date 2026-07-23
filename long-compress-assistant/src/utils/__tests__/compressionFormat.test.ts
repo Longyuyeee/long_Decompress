@@ -5,6 +5,7 @@ import {
   FORMAT_CAPABILITIES,
   effectiveFormatForPassword,
   extensionForFormat,
+  isDecompressArchivePath,
   isPasswordSupportedFormat,
   isSingleFileStreamFormat,
 } from '../compressionFormat'
@@ -55,11 +56,19 @@ describe('compression format helpers', () => {
   it('builds decompression accept list from supported extensions', () => {
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.zip')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.tar.zst')
-    expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.docx')
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).not.toContain('.docx')
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).not.toContain('.xlsx')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.iso')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.rpm')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.qcow2')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.vmdk')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.apfs')
+  })
+
+  it('accepts archives case-insensitively and rejects document containers', () => {
+    expect(isDecompressArchivePath('C:/downloads/BACKUP.TAR.GZ')).toBe(true)
+    expect(isDecompressArchivePath('C:/downloads/app.apk')).toBe(true)
+    expect(isDecompressArchivePath('C:/documents/report.docx')).toBe(false)
+    expect(isDecompressArchivePath('C:/documents/budget.xlsx')).toBe(false)
   })
 })
