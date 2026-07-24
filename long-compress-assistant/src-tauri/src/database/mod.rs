@@ -5,6 +5,3 @@ pub mod repositories;
 pub mod migrations;
 pub mod management;
 pub mod commands;
-
-#[cfg(any())]
-mod tests;

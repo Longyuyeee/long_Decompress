@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref, useId, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, useId, watch } from 'vue'
 
 export interface Props {
   visible: boolean
@@ -119,6 +119,12 @@ const sizeClasses = computed(() => {
     full: 'max-w-full mx-4'
   }
   return classes[props.size]
+})
+
+onMounted(() => {
+  if (!props.visible) return
+  previouslyFocused = document.activeElement as HTMLElement | null
+  void nextTick(() => modalContent.value?.focus())
 })
 
 const layerClass = computed(() => props.layer === 'nested' ? 'z-[400]' : 'z-[300]')

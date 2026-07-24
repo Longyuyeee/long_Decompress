@@ -425,9 +425,6 @@ export const usePasswordStore = defineStore('password', () => {
     if (!entry) throw new Error(`Password entry not found: ${id}`)
     return updateEntry(id, { favorite: !entry.favorite })
   }
-  const archivePassword = async (id: string) => {
-    throw new Error(`Password archive is not supported by the encrypted vault: ${id}`)
-  }
   const deleteSelectedPasswords = async () => {
     const ids = [...selectedPasswords.value]
     await Promise.all(ids.map(id => deleteEntry(id)))
@@ -574,7 +571,6 @@ export const usePasswordStore = defineStore('password', () => {
     clearSearchFilters,
     setSort,
     toggleFavorite,
-    archivePassword,
     deleteSelectedPasswords,
     usePassword,
     assessPasswordStrength,

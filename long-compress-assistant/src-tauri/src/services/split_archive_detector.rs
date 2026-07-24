@@ -41,6 +41,12 @@ pub struct SplitArchiveInfo {
 }
 
 impl SplitArchiveDetector {
+    fn file_name(path: &Path) -> Result<&str> {
+        path.file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| anyhow!("无效或无法转换为 Unicode 的文件名: {}", path.display()))
+    }
+
     /// 检测文件是否为分卷压缩包
     pub fn is_split_archive(path: &Path) -> bool {
         if !path.exists() || !path.is_file() {
@@ -66,9 +72,7 @@ impl SplitArchiveDetector {
             return Ok(None);
         }
 
-        let file_name = path.file_name()
-            .and_then(|n| n.to_str())
-            .ok_or_else(|| anyhow!("无效的文件名"))?;
+        let file_name = Self::file_name(path)?;
 
         let parent_dir = path.parent()
             .ok_or_else(|| anyhow!("无法获取父目录"))?;
@@ -97,7 +101,7 @@ impl SplitArchiveDetector {
     }
 
     fn detect_zip_split(path: &Path, parent_dir: &Path) -> Result<Option<SplitArchiveInfo>> {
-        let file_name = path.file_name().unwrap().to_str().unwrap();
+        let file_name = Self::file_name(path)?;
         let lower = file_name.to_lowercase();
 
         // 提取基础名称
@@ -158,7 +162,7 @@ impl SplitArchiveDetector {
     }
 
     fn detect_rar_split(path: &Path, parent_dir: &Path) -> Result<Option<SplitArchiveInfo>> {
-        let file_name = path.file_name().unwrap().to_str().unwrap();
+        let file_name = Self::file_name(path)?;
         let lower = file_name.to_lowercase();
 
         let (base_name, is_part_format) = if let Some(caps) = Regex::new(r"(.+)\.part\d+\.rar$").unwrap().captures(&lower) {
@@ -226,7 +230,7 @@ impl SplitArchiveDetector {
     }
 
     fn detect_7z_split(path: &Path, parent_dir: &Path) -> Result<Option<SplitArchiveInfo>> {
-        let file_name = path.file_name().unwrap().to_str().unwrap();
+        let file_name = Self::file_name(path)?;
 
         // 提取基础名称
         let base_name = Regex::new(r"\.7z\.\d{3}$").unwrap()
@@ -270,7 +274,7 @@ impl SplitArchiveDetector {
     }
 
     fn detect_generic_numeric_split(path: &Path, parent_dir: &Path) -> Result<Option<SplitArchiveInfo>> {
-        let file_name = path.file_name().unwrap().to_str().unwrap();
+        let file_name = Self::file_name(path)?;
 
         let base_name = Regex::new(r"\.\d{3}$").unwrap()
             .replace(file_name, "")
@@ -312,7 +316,7 @@ impl SplitArchiveDetector {
     }
 
     fn detect_generic_part_split(path: &Path, parent_dir: &Path) -> Result<Option<SplitArchiveInfo>> {
-        let file_name = path.file_name().unwrap().to_str().unwrap();
+        let file_name = Self::file_name(path)?;
 
         let base_name = Regex::new(r"\.part\d+$").unwrap()
             .replace(&file_name.to_lowercase(), "")
@@ -374,5 +378,10 @@ mod tests {
         assert!(SplitArchiveDetector::is_7z_split("archive.7z.001"));
         assert!(SplitArchiveDetector::is_7z_split("archive.7z.999"));
         assert!(!SplitArchiveDetector::is_7z_split("archive.7z"));
+    }
+
+    #[test]
+    fn invalid_file_names_return_an_error_instead_of_panicking() {
+        assert!(SplitArchiveDetector::file_name(Path::new("/")).is_err());
     }
 }

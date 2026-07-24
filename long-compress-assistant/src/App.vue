@@ -157,8 +157,9 @@ const restoreWindowState = async () => {
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
-  const target = e.target as HTMLElement | null
-  const isEditable = target?.matches('input, textarea, select, [contenteditable="true"]') ?? false
+  const target = e.target
+  const isEditable = target instanceof Element &&
+    target.matches('input, textarea, select, [contenteditable="true"]')
   if (isEditable) return
   // 全局快捷键
   if (e.ctrlKey || e.metaKey) {
@@ -191,7 +192,7 @@ onMounted(async () => {
     const files = request.files.filter(file => file && !file.startsWith('%'))
     if (files.length === 0) return
 
-    if (request.action.startsWith('context-compress-')) {
+    if (request.action === 'context-quick-pack' || request.action.startsWith('context-compress-')) {
       const metadata = await Promise.all(files.map(path =>
         invoke<{ size: number; is_dir: boolean }>('get_file_info', { path }).catch(() => null)
       ))
