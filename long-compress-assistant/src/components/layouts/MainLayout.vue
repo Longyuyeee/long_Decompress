@@ -56,8 +56,8 @@ const navigateTo = (name: string) => {
         <!-- 侧边栏 - 华丽扁平版 -->
         <aside class="app-sidebar h-full flex flex-col border-r border-subtle/60 bg-card/75 backdrop-blur-2xl z-50 shrink-0 relative">
           <div class="sidebar-brand flex items-center gap-3 px-4 h-20 border-b border-subtle/50 shrink-0">
-            <div class="brand-mark w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20 shrink-0">
-              <img :src="brandIcon" alt="" class="w-8 h-8 object-contain" aria-hidden="true">
+            <div class="w-10 h-10 flex items-center justify-center shrink-0">
+              <img :src="brandIcon" alt="" class="w-10 h-10 object-contain" aria-hidden="true">
             </div>
             <div class="sidebar-copy min-w-0">
               <div class="text-sm font-black text-content tracking-tight">Long解压</div>
@@ -161,10 +161,6 @@ const navigateTo = (name: string) => {
 .app-sidebar {
   width: 13.5rem;
   transition: width 0.25s ease;
-}
-
-.brand-mark {
-  background: linear-gradient(145deg, var(--dynamic-accent), color-mix(in srgb, var(--dynamic-accent) 65%, #6366f1));
 }
 
 .app-main::before {

@@ -69,7 +69,6 @@
   --text-muted: #fbbf24; /* 提升：改为金色，对比度更高 */
   --text-dim: #c084fc; /* 提升：浅紫，更亮 */
   --shadow-base: 0 0 30px rgba(0, 242, 255, 0.15);
-  --dynamic-accent: #ff00ff !important; /* 强制强调色为粉色 */
 }
 
 /* 4. Twilight (暮色极光) */
@@ -84,7 +83,6 @@
   --text-muted: #a5adcb;      /* 提升：更亮 */
   --text-dim: #8087a2;        /* 提升：从 #5b6078 提亮 */
   --shadow-base: 0 15px 40px rgba(0,0,0,0.3);
-  --dynamic-accent: #f5bde6 !important; /* 柔粉强调 */
 }
 
 /* 5. Sepia (纸质护眼 - 名字纠正为 Eye-Care) */
@@ -99,7 +97,6 @@
   --text-muted: #657b83;      /* 提升：从 #839496 加深 */
   --text-dim: #93a1a1;        /* 保持不变 */
   --shadow-base: 0 8px 20px rgba(0,0,0,0.05);
-  --dynamic-accent: #b58900 !important; /* 琥珀色强调 */
 }
 
 /* 工具类应用 */
@@ -123,6 +120,40 @@ body {
 .aero-card:hover {
   box-shadow: var(--shadow-elevated);
   border-color: color-mix(in srgb, var(--dynamic-accent) 20%, var(--border-subtle));
+}
+
+.settings-toggle-track {
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  padding: 0.1875rem;
+  border: 1px solid color-mix(in srgb, #64748b 68%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, #64748b 38%, var(--bg-input));
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.22);
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.settings-toggle-track.is-on {
+  border-color: var(--dynamic-accent);
+  background: var(--dynamic-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dynamic-accent) 20%, transparent), 0 4px 12px color-mix(in srgb, var(--dynamic-accent) 24%, transparent);
+}
+
+.settings-toggle-knob {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: #64748b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background-color 180ms ease;
+}
+
+.settings-toggle-track.is-on .settings-toggle-knob {
+  transform: translateX(1.25rem);
+  background: #ffffff;
 }
 
 .modal-no-glass {

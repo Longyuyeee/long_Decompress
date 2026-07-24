@@ -1,5 +1,5 @@
 <template>
-  <div id="app" @mousemove="resetIdleTimer">
+  <div id="app">
     <MainLayout />
     <ToastContainer />
     <UpdateDialog />
@@ -38,8 +38,6 @@ import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import Modal from '@/components/ui/Modal.vue'
 import UpdateDialog from '@/components/update/UpdateDialog.vue'
-import { useConfigStore } from '@/stores/config'
-import { usePasswordStore } from '@/stores/password'
 import { useTaskStore } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
 import { useAppStore } from '@/stores/app'
@@ -52,8 +50,6 @@ import { invoke } from '@tauri-apps/api/tauri'
 import { createContextCompressionEntry, createQuickPackCandidate, createQuickPackPlan, groupContextActions, type ContextAction } from '@/utils/contextActions'
 
 const router = useRouter()
-const configStore = useConfigStore()
-const passwordStore = usePasswordStore()
 const taskStore = useTaskStore()
 const compressionStore = useCompressionStore()
 const appStore = useAppStore()
@@ -61,7 +57,6 @@ const uiStore = useUIStore()
 const updateStore = useUpdateStore()
 const { initAccessibility, setupWatchers, watchSystemPreferences } = useAccessibility()
 
-let idleTimer: any = null
 let saveWindowTimer: any = null
 let unlistenResize: any = null
 let cleanupSystemWatcher: (() => void) | null = null
@@ -162,7 +157,6 @@ const restoreWindowState = async () => {
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
-  resetIdleTimer()
   const target = e.target as HTMLElement | null
   const isEditable = target?.matches('input, textarea, select, [contenteditable="true"]') ?? false
   if (isEditable) return
@@ -179,20 +173,6 @@ const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Escape') {
     // Esc 关闭当前聚焦的弹窗由各组件自行处理
   }
-}
-
-const resetIdleTimer = () => {
-  if (idleTimer) clearTimeout(idleTimer)
-  const lockTimeStr = configStore.configs['security.auto_lock']
-  if (!lockTimeStr || lockTimeStr === '0') return
-  const lockTimeMs = parseInt(lockTimeStr) * 60 * 1000
-  if (isNaN(lockTimeMs) || lockTimeMs <= 0) return
-
-  idleTimer = window.setTimeout(() => {
-    if (passwordStore.isUnlocked) {
-      passwordStore.lock()
-    }
-  }, lockTimeMs)
 }
 
 onMounted(async () => {
@@ -314,7 +294,6 @@ onMounted(async () => {
     console.warn('Context menu listener is unavailable:', error)
   }
 
-  resetIdleTimer()
   await restoreWindowState()
   // 请求浏览器通知权限（后台任务完成时通知用户）
   // 使用 Tauri 原生窗口 resize 事件（避免 zoom 触发的 resize 循环）
@@ -333,7 +312,6 @@ onMounted(async () => {
 onUnmounted(() => {
   isUnmounted = true
   window.removeEventListener('keydown', handleKeydown)
-  if (idleTimer) clearTimeout(idleTimer)
   if (saveWindowTimer) clearTimeout(saveWindowTimer)
   if (contextDrainTimer) clearTimeout(contextDrainTimer)
   if (unlistenResize) unlistenResize()

@@ -107,6 +107,7 @@ export const usePasswordStore = defineStore('password', () => {
   const groups = ref<PasswordGroup[]>([])
   const isUnlocked = ref(false) // 默认未解锁
   const isLoading = ref(false)
+  const isInitialized = ref(false)
   const isSaving = ref(false)
   const searchQuery = ref('')
   const currentCategory = ref<PasswordCategory | 'All'>('All')
@@ -165,6 +166,8 @@ export const usePasswordStore = defineStore('password', () => {
 
   // 初始化检查
   const checkUnlockStatus = async () => {
+    if (isInitialized.value) return
+    isLoading.value = true
     try {
       const unlocked = await invoke<boolean>('is_encrypted_password_service_unlocked')
       if (unlocked) {
@@ -177,6 +180,9 @@ export const usePasswordStore = defineStore('password', () => {
     } catch (e) {
       // 如果后端报错“服务未初始化”，说明需要 call init
       await autoInitialize()
+    } finally {
+      isLoading.value = false
+      isInitialized.value = true
     }
   }
 
@@ -202,37 +208,11 @@ export const usePasswordStore = defineStore('password', () => {
     }
   }
 
-  // 解锁
-  const unlock = async (password: string) => {
-    isLoading.value = true
+  const retryInitialization = async () => {
+    isInitialized.value = false
+    isUnlocked.value = false
     errorMessage.value = ''
-    try {
-      const success = await invoke<boolean>('unlock_encrypted_password_service', { masterPassword: password })
-      if (success) {
-        isUnlocked.value = true
-        await fetchAllData()
-      } else {
-        errorMessage.value = t('vault.wrong_password')
-      }
-      return success
-    } catch (e) {
-      errorMessage.value = t('vault.unlock_failed').replace('{0}', String(e))
-      return false
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  // 锁定
-  const lock = async () => {
-    try {
-      await invoke('lock_encrypted_password_service')
-      isUnlocked.value = false
-      entries.value = []
-      groups.value = []
-    } catch (e) {
-      console.error('锁定失败:', e)
-    }
+    await checkUnlockStatus()
   }
 
   // 获取数据
@@ -550,6 +530,7 @@ export const usePasswordStore = defineStore('password', () => {
     groups,
     isUnlocked,
     isLoading,
+    isInitialized,
     isSaving,
     searchQuery,
     currentCategory,
@@ -575,8 +556,7 @@ export const usePasswordStore = defineStore('password', () => {
     
     // 方法
     checkUnlockStatus,
-    unlock,
-    lock,
+    retryInitialization,
     fetchAllData,
     loadPasswords,
     addEntry,

@@ -53,6 +53,10 @@ const themeModes = [
   { value: 'auto', icon: 'pi pi-desktop', label: 'settings.theme.auto' }
 ]
 
+const selectedAccentName = computed(() =>
+  Object.entries(themeColors).find(([, hex]) => hex === appStore.accentColor)?.[0] || 'custom'
+)
+
 const contextMenuBusy = ref(false)
 const toggleBruteForce = () => appStore.updateSettings({ enableBruteForce: !appStore.settings.enableBruteForce })
 const toggleAutoStart = async () => {
@@ -179,15 +183,20 @@ const removeWordlist = (index: number) => {
 
               <!-- 强调色选择 -->
               <div class="space-y-4">
-                <label class="text-xs font-black text-muted uppercase tracking-[0.2em] block ml-1">{{ appStore.t('settings.accent') }}</label>
-                <div class="flex flex-wrap gap-3 p-1">
+                <div class="flex items-center justify-between gap-4 ml-1">
+                  <label class="text-xs font-black text-muted uppercase tracking-[0.2em]">{{ appStore.t('settings.accent') }}</label>
+                  <span class="rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-primary">{{ selectedAccentName }}</span>
+                </div>
+                <div class="flex flex-wrap gap-3 rounded-2xl border border-subtle bg-input/35 p-3">
                   <button 
                     v-for="(hex, name) in themeColors" :key="name"
                     @click="appStore.accentColor = hex; appStore.saveSettingsToStorage()"
-                    class="w-7 h-7 rounded-full border-4 transition-all hover:scale-110 shadow-sm"
-                    :style="{ backgroundColor: hex, borderColor: appStore.accentColor === hex ? 'var(--text-base)' : 'transparent' }"
+                    class="relative flex h-9 w-9 items-center justify-center rounded-xl border-2 transition-all hover:scale-110"
+                    :class="appStore.accentColor === hex ? 'scale-110 border-content shadow-lg ring-2 ring-primary/35 ring-offset-2 ring-offset-card' : 'border-transparent opacity-75 hover:opacity-100'"
+                    :style="{ backgroundColor: hex }"
+                    :aria-pressed="appStore.accentColor === hex"
                     :title="name"
-                  ></button>
+                  ><i v-if="appStore.accentColor === hex" class="pi pi-check text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,.8)]"></i></button>
                 </div>
               </div>
 
@@ -255,8 +264,8 @@ const removeWordlist = (index: number) => {
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.auto_start') }}</div>
                   <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.performance.auto_start.desc') }}</div>
                 </div>
-                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all" :class="appStore.settings.autoStart ? 'bg-primary/40 border-primary' : 'bg-input'">
-                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.autoStart ? 'translate-x-5' : ''"></div>
+                <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.autoStart }">
+                  <span class="settings-toggle-knob"></span>
                 </div>
               </button>
 
@@ -284,10 +293,10 @@ const removeWordlist = (index: number) => {
           <section class="aero-card p-8">
             <div class="flex justify-between items-center mb-8">
               <h2 class="text-sm font-black text-muted uppercase tracking-[0.3em]">{{ appStore.t('settings.bruteforce') }}</h2>
-              <button type="button" role="switch" :aria-checked="appStore.settings.enableBruteForce" :aria-label="appStore.t('settings.bruteforce')" class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all cursor-pointer"
-                   :class="appStore.settings.enableBruteForce ? 'bg-primary/40 border-primary' : 'bg-input'"
+              <button type="button" role="switch" :aria-checked="appStore.settings.enableBruteForce" :aria-label="appStore.t('settings.bruteforce')" class="settings-toggle-track cursor-pointer"
+                   :class="{ 'is-on': appStore.settings.enableBruteForce }"
                    @click="toggleBruteForce">
-                <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.enableBruteForce ? 'translate-x-5' : ''"></div>
+                <span class="settings-toggle-knob"></span>
               </button>
             </div>
 
@@ -325,8 +334,8 @@ const removeWordlist = (index: number) => {
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.close_to_tray') }}</div>
                   <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.close_to_tray.desc') }}</div>
                 </div>
-                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.closeToTray ? 'bg-primary/40 border-primary' : 'bg-input'">
-                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.closeToTray ? 'translate-x-5' : ''"></div>
+                <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.closeToTray }">
+                  <span class="settings-toggle-knob"></span>
                 </div>
               </button>
               <button type="button" role="switch" :aria-checked="appStore.settings.autoDeleteSource" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ autoDeleteSource: !appStore.settings.autoDeleteSource })">
@@ -334,8 +343,8 @@ const removeWordlist = (index: number) => {
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.auto_delete') }}</div>
                   <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.auto_delete.desc') }}</div>
                 </div>
-                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.autoDeleteSource ? 'bg-primary/40 border-primary' : 'bg-input'">
-                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.autoDeleteSource ? 'translate-x-5' : ''"></div>
+                <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.autoDeleteSource }">
+                  <span class="settings-toggle-knob"></span>
                 </div>
               </button>
               <button type="button" role="switch" :aria-checked="appStore.settings.savePasswords" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ savePasswords: !appStore.settings.savePasswords })">
@@ -343,8 +352,8 @@ const removeWordlist = (index: number) => {
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.save_passwords') }}</div>
                   <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.save_passwords.desc') }}</div>
                 </div>
-                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.savePasswords ? 'bg-primary/40 border-primary' : 'bg-input'">
-                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.savePasswords ? 'translate-x-5' : ''"></div>
+                <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.savePasswords }">
+                  <span class="settings-toggle-knob"></span>
                 </div>
               </button>
               <button v-if="contextMenuSupported" type="button" role="switch" :aria-checked="appStore.settings.contextMenuEnabled" :disabled="contextMenuBusy" class="w-full flex items-center justify-between group cursor-pointer text-left disabled:opacity-60" @click="toggleContextMenu">
@@ -352,8 +361,8 @@ const removeWordlist = (index: number) => {
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.context_menu') }}</div>
                   <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.context_menu.desc') }}</div>
                 </div>
-                <div class="w-10 h-5 rounded-full border border-subtle p-0.5 transition-all shrink-0" :class="appStore.settings.contextMenuEnabled ? 'bg-primary/40 border-primary' : 'bg-input'">
-                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.contextMenuEnabled ? 'translate-x-5' : ''"></div>
+                <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.contextMenuEnabled }">
+                  <span class="settings-toggle-knob"></span>
                 </div>
               </button>
             </div>
@@ -385,8 +394,8 @@ const removeWordlist = (index: number) => {
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.update.auto') }}</div>
                   <div class="mt-1 text-xs text-muted uppercase tracking-tighter">{{ appStore.t('settings.update.auto.desc') }}</div>
                 </div>
-                <div class="w-10 h-5 shrink-0 rounded-full border border-subtle p-0.5 transition-all" :class="appStore.settings.autoCheckUpdates ? 'bg-primary/40 border-primary' : 'bg-input'">
-                  <div class="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all" :class="appStore.settings.autoCheckUpdates ? 'translate-x-5' : ''"></div>
+                <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.autoCheckUpdates }">
+                  <span class="settings-toggle-knob"></span>
                 </div>
               </button>
               <div class="flex items-start gap-3 rounded-xl border border-primary/15 bg-primary/5 p-4 text-xs leading-5 text-muted">

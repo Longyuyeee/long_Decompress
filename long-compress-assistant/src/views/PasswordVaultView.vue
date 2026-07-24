@@ -12,13 +12,12 @@ const tauriCommands = useTauriCommands()
 const showAddModal = ref(false)
 const showHistoryModal = ref(false)
 const showClearConfirm = ref(false)
-const showUnlockModal = ref(false)
 const showDeleteConfirm = ref(false)
 const deleteTargetId = ref<string | null>(null)
 const selectedEntryForHistory = ref<any>(null)
 const searchQuery = ref('')
 const showAllPasswords = ref(false)
-const unlockPassword = ref('')
+const visiblePasswordIds = ref<Set<string>>(new Set())
 
 onMounted(async () => {
   await passwordStore.checkUnlockStatus()
@@ -119,24 +118,26 @@ const showUsageHistory = (entry: any) => {
   showHistoryModal.value = true
 }
 
-const maskPassword = (password: string) => {
-  if (showAllPasswords.value) return password
-  if (!password) return '——'
-  return '•'.repeat(Math.min(password.length, 16))
+const isPasswordVisible = (id: string) => {
+  return showAllPasswords.value || visiblePasswordIds.value.has(id)
+}
+
+const maskPassword = (entry: { id: string; password: string }) => {
+  if (isPasswordVisible(entry.id)) return entry.password
+  if (!entry.password) return '——'
+  return '•'.repeat(Math.min(entry.password.length, 16))
 }
 
 const togglePasswordVisibility = () => {
   showAllPasswords.value = !showAllPasswords.value
+  if (showAllPasswords.value) visiblePasswordIds.value = new Set()
 }
 
-const handleUnlock = async () => {
-  if (!unlockPassword.value) return
-  const success = await passwordStore.unlock(unlockPassword.value)
-  if (success) {
-    unlockPassword.value = ''
-    showUnlockModal.value = false
-    appStore.setSuccess(appStore.t('common.success'))
-  }
+const toggleEntryPasswordVisibility = (id: string) => {
+  const next = new Set(visiblePasswordIds.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  visiblePasswordIds.value = next
 }
 
 const copyToClipboard = (text: string) => {
@@ -170,9 +171,6 @@ const chartData = computed(() => {
         </div>
         
         <div class="flex gap-2">
-          <button v-if="passwordStore.isUnlocked" @click="passwordStore.lock()" class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all" :title="appStore.t('vault.lock')">
-            <i class="pi pi-lock text-sm"></i>
-          </button>
           <button v-if="passwordStore.isUnlocked" @click="handleAddNew" :aria-label="appStore.t('common.add')" class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center hover:scale-105 transition-all shadow-lg hover:shadow-primary/40">
             <i class="pi pi-plus text-sm"></i>
           </button>
@@ -199,23 +197,32 @@ const chartData = computed(() => {
       </div>
     </header>
 
-    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col mb-12">
-      <div v-if="passwordStore.isLoading" class="absolute inset-0 z-50 bg-card/80 backdrop-blur-sm flex items-center justify-center">
+    <div class="relative flex-1 min-h-0 aero-card overflow-hidden flex flex-col mb-12">
+      <div v-if="passwordStore.isInitialized && passwordStore.isLoading" class="absolute inset-0 z-50 bg-card/80 backdrop-blur-sm flex items-center justify-center">
         <i class="pi pi-spin pi-spinner text-primary text-2xl"></i>
       </div>
 
-      <!-- 保险箱锁定状态 -->
-      <div v-if="!passwordStore.isUnlocked && !passwordStore.isLoading" class="flex-1 flex items-center justify-center">
+      <div v-if="!passwordStore.isInitialized" class="flex-1 p-6" aria-busy="true" aria-label="Loading password vault">
+        <div class="grid grid-cols-[26%_26%_26%_10%_12%] gap-4 border-b border-subtle pb-4">
+          <div v-for="index in 5" :key="`vault-head-${index}`" class="h-3 rounded-full bg-input animate-pulse"></div>
+        </div>
+        <div v-for="row in 5" :key="`vault-row-${row}`" class="grid grid-cols-[26%_26%_26%_10%_12%] gap-4 border-b border-subtle/50 py-5">
+          <div v-for="column in 5" :key="`vault-cell-${row}-${column}`" class="h-4 rounded-lg bg-input/80 animate-pulse" :style="{ opacity: 1 - row * 0.12 }"></div>
+        </div>
+      </div>
+
+      <!-- 自动初始化失败状态：保留本机加密，但不再要求用户设置或输入主密码 -->
+      <div v-else-if="!passwordStore.isUnlocked" class="flex-1 flex items-center justify-center">
         <div class="text-center space-y-5">
-          <div class="w-16 h-16 mx-auto rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <i class="pi pi-lock text-2xl text-amber-400"></i>
+          <div class="w-16 h-16 mx-auto rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+            <i class="pi pi-exclamation-circle text-2xl text-red-400"></i>
           </div>
           <div>
-            <p class="text-sm font-black text-content">{{ appStore.t('vault.locked') }}</p>
-            <p class="text-xs text-muted mt-1">{{ appStore.t('vault.locked.desc') }}</p>
+            <p class="text-sm font-black text-content">{{ appStore.t('vault.unavailable') }}</p>
+            <p class="text-xs text-muted mt-1">{{ passwordStore.errorMessage || appStore.t('vault.init_failed') }}</p>
           </div>
-          <button @click="passwordStore.errorMessage = ''; showUnlockModal = true" class="px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg">
-            <i class="pi pi-unlock mr-2 text-xs"></i>{{ appStore.t('vault.unlock') }}
+          <button @click="passwordStore.retryInitialization()" class="px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg">
+            <i class="pi pi-refresh mr-2 text-xs"></i>{{ appStore.t('vault.retry_init') }}
           </button>
         </div>
       </div>
@@ -224,15 +231,15 @@ const chartData = computed(() => {
         <table class="w-full text-left border-collapse table-fixed">
           <thead class="sticky top-0 z-20 bg-input/80 backdrop-blur-xl border-b border-subtle">
             <tr>
-              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] w-[18%]">{{ appStore.t('vault.column.name') }}</th>
-              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] w-[27%]">
+              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] w-[26%]">{{ appStore.t('vault.column.name') }}</th>
+              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] w-[26%]">
                 <button @click="togglePasswordVisibility" class="flex items-center gap-1.5 hover:text-primary transition-colors">
                   {{ appStore.t('vault.column.password') }}
                   <i :class="showAllPasswords ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm"></i>
                 </button>
               </th>
-              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] w-[31%]">{{ appStore.t('vault.column.notes') }}</th>
-              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] text-center w-[12%]">{{ appStore.t('vault.column.usage') }}</th>
+              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] w-[26%]">{{ appStore.t('vault.column.notes') }}</th>
+              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] text-center w-[10%]">{{ appStore.t('vault.column.usage') }}</th>
               <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] text-right w-[12%]">{{ appStore.t('vault.column.actions') }}</th>
             </tr>
           </thead>
@@ -247,7 +254,7 @@ const chartData = computed(() => {
           <table v-else class="w-full text-left border-collapse table-fixed">
             <tbody class="divide-y divide-subtle/50">
               <tr v-for="(entry, index) in filteredAndSortedEntries" :key="entry.id" class="hover:bg-primary/[0.03] group transition-all">
-                <td class="px-6 py-3.5 w-[18%]">
+                <td class="px-6 py-3.5 w-[26%]">
                   <div class="flex items-center gap-2 relative group/tooltip">
                     <div class="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors shrink-0"></div>
                     <span class="text-sm font-bold text-content truncate block w-full">{{ entry.name }}</span>
@@ -260,13 +267,16 @@ const chartData = computed(() => {
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-3.5 w-[27%]">
+                <td class="px-6 py-3.5 w-[26%]">
                   <div class="flex items-center gap-2 overflow-hidden group/key w-full">
-                    <code class="text-sm font-mono text-primary font-bold bg-primary/5 px-2 py-1 rounded-lg truncate block flex-1 select-none" :class="{ 'tracking-widest': !showAllPasswords }">{{ maskPassword(entry.password) }}</code>
-                    <button type="button" @click="copyToClipboard(entry.password)" :aria-label="appStore.t('vault.action.copy')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all sm:opacity-0 sm:group-hover/key:opacity-100 shrink-0"><i class="pi pi-copy text-sm"></i></button>
+                    <code class="text-sm font-mono text-primary font-bold bg-primary/5 px-2 py-1 rounded-lg truncate block flex-1 select-none" :class="{ 'tracking-widest': !isPasswordVisible(entry.id) }">{{ maskPassword(entry) }}</code>
+                    <button type="button" @click="toggleEntryPasswordVisibility(entry.id)" :aria-label="isPasswordVisible(entry.id) ? appStore.t('vault.action.hide') : appStore.t('vault.action.show')" :title="isPasswordVisible(entry.id) ? appStore.t('vault.action.hide') : appStore.t('vault.action.show')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0">
+                      <i :class="isPasswordVisible(entry.id) ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm"></i>
+                    </button>
+                    <button type="button" @click="copyToClipboard(entry.password)" :aria-label="appStore.t('vault.action.copy_password')" :title="appStore.t('vault.action.copy_password')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0"><i class="pi pi-copy text-sm"></i></button>
                   </div>
                 </td>
-                <td class="px-6 py-3.5 w-[31%]">
+                <td class="px-6 py-3.5 w-[26%]">
                   <div class="relative group/tooltip w-full">
                     <span class="text-sm text-muted italic truncate block w-full">{{ entry.notes || '—' }}</span>
                     <!-- 自定义悬浮窗 (Aero Tooltip) - 修复遮挡问题：前两行向下弹出，其余向上弹出 -->
@@ -278,7 +288,7 @@ const chartData = computed(() => {
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-3.5 text-center w-[12%]">
+                <td class="px-6 py-3.5 text-center w-[10%]">
                   <button @click="showUsageHistory(entry)" class="text-xs font-black text-muted hover:text-primary bg-input w-6 h-6 rounded-full flex items-center justify-center mx-auto transition-all shadow-sm border border-subtle shrink-0">
                     {{ entry.use_count || 0 }}
                   </button>
@@ -297,7 +307,7 @@ const chartData = computed(() => {
     </div>
 
     <!-- 数据统计悬浮区 (右下角) -->
-    <div class="fixed bottom-8 right-12 z-50 flex gap-6 bg-card/60 backdrop-blur-2xl border border-subtle px-6 py-3 rounded-2xl shadow-2xl">
+    <div v-if="passwordStore.isInitialized && passwordStore.isUnlocked" class="fixed bottom-8 right-12 z-50 flex gap-6 bg-card/60 backdrop-blur-2xl border border-subtle px-6 py-3 rounded-2xl shadow-2xl">
       <div class="text-center">
         <div class="text-sm text-muted font-black uppercase tracking-widest mb-0.5">{{ appStore.t('vault.vault_size') }}</div>
         <div class="text-lg font-black text-primary leading-none">{{ stats.total }}</div>
@@ -362,27 +372,6 @@ const chartData = computed(() => {
     </transition>
 
     <PasswordEntryModal v-model:visible="showAddModal" :entry="editingEntry" @saved="passwordStore.fetchAllData" />
-
-    <transition name="pop">
-      <div v-if="showUnlockModal" class="fixed inset-0 z-[180] flex items-center justify-center bg-black/65 backdrop-blur-xl p-4" @click.self="showUnlockModal = false">
-        <form class="modal-no-glass rounded-3xl p-8 w-full max-w-sm shadow-2xl text-content" role="dialog" aria-modal="true" aria-labelledby="vault-unlock-title" @submit.prevent="handleUnlock">
-          <div class="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center mb-6">
-            <i class="pi pi-unlock text-lg"></i>
-          </div>
-          <h2 id="vault-unlock-title" class="text-xl font-black tracking-tight">{{ appStore.t('vault.unlock') }}</h2>
-          <p class="text-sm text-muted mt-2 mb-6">{{ appStore.t('vault.master_password_hint') }}</p>
-          <label for="vault-master-password" class="text-xs font-black text-muted uppercase tracking-widest block mb-2">{{ appStore.t('vault.master_password') }}</label>
-          <input id="vault-master-password" v-model="unlockPassword" type="password" autocomplete="current-password" autofocus class="w-full bg-input border border-subtle rounded-xl px-4 py-3 text-content focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all">
-          <p v-if="passwordStore.errorMessage" role="alert" class="text-xs font-bold text-red-400 mt-3">{{ passwordStore.errorMessage }}</p>
-          <div class="grid grid-cols-2 gap-3 mt-7">
-            <button type="button" class="py-3 rounded-xl bg-input border border-subtle text-muted font-bold hover:text-content transition-colors" @click="showUnlockModal = false; unlockPassword = ''; passwordStore.errorMessage = ''">{{ appStore.t('vault.confirm.cancel') }}</button>
-            <button type="submit" :disabled="!unlockPassword || passwordStore.isLoading" class="py-3 rounded-xl bg-primary text-white font-black hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed transition-all">
-              <i v-if="passwordStore.isLoading" class="pi pi-spin pi-spinner mr-2"></i>{{ appStore.t('vault.unlock') }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </transition>
   </div>
 </template>
 

@@ -37,12 +37,11 @@
           :aria-checked="appStore.settings.accessibility?.highContrast"
           :aria-label="appStore.t('accessibility.highContrast')"
           @click="updateAccessibility({ highContrast: !appStore.settings.accessibility?.highContrast })"
-          class="w-12 h-6 rounded-full border border-subtle p-0.5 transition-all cursor-pointer"
-          :class="appStore.settings.accessibility?.highContrast ? 'bg-primary/40 border-primary' : 'bg-input'"
+          class="settings-toggle-track cursor-pointer"
+          :class="{ 'is-on': appStore.settings.accessibility?.highContrast }"
         >
           <div
-            class="w-5 h-5 rounded-full bg-white shadow-sm transition-all"
-            :class="appStore.settings.accessibility?.highContrast ? 'translate-x-6' : ''"
+            class="settings-toggle-knob"
           ></div>
         </button>
       </div>
@@ -85,12 +84,11 @@
           :aria-checked="appStore.settings.accessibility?.reduceMotion"
           :aria-label="appStore.t('accessibility.reduceMotion')"
           @click="updateAccessibility({ reduceMotion: !appStore.settings.accessibility?.reduceMotion })"
-          class="w-12 h-6 rounded-full border border-subtle p-0.5 transition-all cursor-pointer"
-          :class="appStore.settings.accessibility?.reduceMotion ? 'bg-primary/40 border-primary' : 'bg-input'"
+          class="settings-toggle-track cursor-pointer"
+          :class="{ 'is-on': appStore.settings.accessibility?.reduceMotion }"
         >
           <div
-            class="w-5 h-5 rounded-full bg-white shadow-sm transition-all"
-            :class="appStore.settings.accessibility?.reduceMotion ? 'translate-x-6' : ''"
+            class="settings-toggle-knob"
           ></div>
         </button>
       </div>
@@ -111,12 +109,11 @@
           :aria-checked="appStore.settings.accessibility?.focusIndicator"
           :aria-label="appStore.t('accessibility.focusIndicator')"
           @click="updateAccessibility({ focusIndicator: !appStore.settings.accessibility?.focusIndicator })"
-          class="w-12 h-6 rounded-full border border-subtle p-0.5 transition-all cursor-pointer"
-          :class="appStore.settings.accessibility?.focusIndicator ? 'bg-primary/40 border-primary' : 'bg-input'"
+          class="settings-toggle-track cursor-pointer"
+          :class="{ 'is-on': appStore.settings.accessibility?.focusIndicator }"
         >
           <div
-            class="w-5 h-5 rounded-full bg-white shadow-sm transition-all"
-            :class="appStore.settings.accessibility?.focusIndicator ? 'translate-x-6' : ''"
+            class="settings-toggle-knob"
           ></div>
         </button>
       </div>

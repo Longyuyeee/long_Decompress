@@ -32,27 +32,92 @@ describe('PasswordVaultView', () => {
     })
   })
 
-  it('opens an accessible master-password dialog from the locked state', async () => {
+  it('shows a stable skeleton until the first vault check finishes', async () => {
+    let resolveStatus: ((value: boolean) => void) | undefined
+    mocks.invoke.mockImplementation((command: string) => {
+      if (command === 'load_app_settings') return Promise.resolve('{}')
+      if (command === 'is_encrypted_password_service_unlocked') {
+        return new Promise<boolean>(resolve => { resolveStatus = resolve })
+      }
+      if (command === 'list_encrypted_passwords' || command === 'list_password_groups') return Promise.resolve([])
+      if (command === 'get_or_create_master_key') {
+        return Promise.reject(new Error('not initialized'))
+      }
+      return Promise.resolve(undefined)
+    })
+    const wrapper = mountView()
+
+    expect(wrapper.find('[aria-busy="true"]').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('保险箱为空')
+    resolveStatus?.(true)
+    await flushPromises()
+
+    expect(wrapper.find('[aria-busy="true"]').exists()).toBe(false)
+  })
+
+  it('does not expose manual lock or master-password controls when initialization fails', async () => {
     const wrapper = mountView()
     await flushPromises()
 
     expect(wrapper.find('input[type="text"]').attributes('disabled')).toBeDefined()
-    await wrapper.findAll('button').find(button => button.text().includes('解锁保险箱'))!.trigger('click')
-
-    expect(wrapper.find('[role="dialog"]').exists()).toBe(true)
-    expect(wrapper.find('input[autocomplete="current-password"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('密码保险箱暂时不可用')
+    expect(wrapper.text()).toContain('重新加载')
+    expect(wrapper.text()).not.toContain('锁定保险箱')
+    expect(wrapper.text()).not.toContain('解锁保险箱')
+    expect(wrapper.find('input[autocomplete="current-password"]').exists()).toBe(false)
   })
 
-  it('unlocks the vault through the dialog form', async () => {
+  it('retries automatic initialization with the installation key', async () => {
     const wrapper = mountView()
     await flushPromises()
-    await wrapper.findAll('button').find(button => button.text().includes('解锁保险箱'))!.trigger('click')
-    await wrapper.find('input[autocomplete="current-password"]').setValue('correct-password')
-    await wrapper.find('form').trigger('submit')
+
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'is_encrypted_password_service_unlocked') return false
+      if (command === 'get_or_create_master_key') return 'installation-key'
+      if (command === 'unlock_encrypted_password_service') return true
+      if (command === 'list_encrypted_passwords' || command === 'list_password_groups') return []
+      return undefined
+    })
+    await wrapper.findAll('button').find(button => button.text().includes('重新加载'))!.trigger('click')
     await flushPromises()
 
-    expect(mocks.invoke).toHaveBeenCalledWith('unlock_encrypted_password_service', { masterPassword: 'correct-password' })
-    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+    expect(mocks.invoke).toHaveBeenCalledWith('unlock_encrypted_password_service', { masterPassword: 'installation-key' })
+    expect(wrapper.text()).not.toContain('密码保险箱暂时不可用')
+  })
+
+  it('shows and hides an individual password beside its copy action', async () => {
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'load_app_settings') return '{}'
+      if (command === 'is_encrypted_password_service_unlocked') return true
+      if (command === 'list_encrypted_passwords') {
+        return [{
+          id: 'entry-1',
+          name: '测试密码',
+          password: 'Secret!123',
+          notes: '测试备注',
+          tags: [],
+          category: 'Other',
+          strength: 'Medium',
+          created_at: '2026-01-01T00:00:00.000Z',
+          updated_at: '2026-01-01T00:00:00.000Z',
+          favorite: false,
+          use_count: 0,
+          custom_fields: [],
+        }]
+      }
+      if (command === 'list_password_groups') return []
+      return undefined
+    })
+    const wrapper = mountView()
+    await flushPromises()
+
+    const headers = wrapper.findAll('th')
+    expect(headers.slice(0, 3).every(header => header.classes().includes('w-[26%]'))).toBe(true)
+    expect(wrapper.text()).not.toContain('Secret!123')
+    expect(wrapper.find('[aria-label="复制密码"]').exists()).toBe(true)
+    await wrapper.find('[aria-label="显示密码"]').trigger('click')
+    expect(wrapper.text()).toContain('Secret!123')
+    expect(wrapper.find('[aria-label="隐藏密码"]').exists()).toBe(true)
   })
 })
 

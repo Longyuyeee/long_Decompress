@@ -55,6 +55,7 @@ describe('Password Store', () => {
     expect(store.isUnlocked).toBe(true)
     expect(store.entries).toEqual([loaded])
     expect(store.isLoading).toBe(false)
+    expect(store.isInitialized).toBe(true)
   })
 
   it('filters, sorts, paginates, and clears local search state without mutating entries', () => {

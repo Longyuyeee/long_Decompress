@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
-import { PasswordCategory, usePasswordStore } from '@/stores/password'
+import { usePasswordStore } from '@/stores/password'
 import { useAppStore } from '@/stores/app'
 import Modal from '@/components/ui/Modal.vue'
 
@@ -31,9 +31,8 @@ watch(() => props.visible, (isOpening) => {
         notes: props.entry.notes || ''
       })
     } else {
-      const randomId = Math.random().toString(36).substring(2, 6).toUpperCase()
       Object.assign(form, {
-        name: `ENTRY_${randomId}`,
+        name: '',
         password: '',
         notes: ''
       })
@@ -90,18 +89,18 @@ const handleSave = async () => {
     size="sm"
   >
     <div class="modal-content space-y-4 bg-modal text-content p-1">
-      <!-- 凭证名称 -->
+      <!-- 密码名称 -->
       <div class="space-y-1.5">
         <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('vault.column.name') }} *</label>
         <input v-model="form.name" type="text" :placeholder="appStore.t('vault.placeholder.name')" class="w-full bg-input border border-subtle rounded-xl px-4 py-2.5 text-xs text-content focus:border-primary transition-all shadow-sm">
       </div>
 
-      <!-- 访问密码 -->
+      <!-- 密码正文 -->
       <div class="space-y-1.5 relative">
         <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('vault.column.password') }} *</label>
         <div class="relative group">
           <input v-model="form.password" :type="showPassword ? 'text' : 'password'" :placeholder="appStore.t('vault.placeholder.password')" class="w-full bg-input border border-subtle rounded-xl px-4 py-2.5 text-xs text-primary font-mono font-bold focus:border-primary transition-all pr-12 shadow-sm">
-          <button @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-dim hover:text-primary transition-colors"><i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye' " class="text-xs"></i></button>
+          <button type="button" @click="showPassword = !showPassword" :aria-label="showPassword ? appStore.t('vault.action.hide') : appStore.t('vault.action.show')" class="absolute right-4 top-1/2 -translate-y-1/2 text-dim hover:text-primary transition-colors"><i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye' " class="text-xs"></i></button>
         </div>
       </div>
 

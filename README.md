@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.10-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.12-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,15 +20,16 @@
 
 ---
 
-## v1.0.10 更新亮点
+## v1.0.12 更新亮点
 
-- 软件品牌正式升级为“Long解压”，统一窗口、托盘、安装器、开始菜单、右键菜单与发布名称。
-- 启用全新的 L 形拉链图标：以清晰的字母 L 结合解压语义，采用克制、扁平的蓝紫视觉风格。
-- 更新 PNG、ICO、ICNS、Windows Appx 全尺寸图标、网页图标和应用内品牌标识。
-- 保留原有应用标识符、配置目录和更新公钥，确保现有用户数据与应用内更新链路保持兼容。
-- 延续一键解压到同名文件夹、一键打包为 ZIP 和传统资源管理器右键菜单能力。
+- 放大 L 形拉链品牌图标的有效内容区域，减少透明留白，并同步更新应用、安装器和系统图标资源。
+- 清理应用左上角图标的额外描边与阴影容器，品牌展示更加简洁。
+- 强调色在全部主题中均可清晰生效，颜色选择增加名称、勾选、描边与光环；设置开关增强开启/关闭状态对比。
+- 密码保险箱首次进入改用稳定骨架屏，避免先显示空数据再闪烁更新。
+- 密码名称、密码正文和备注三列统一宽度；每条密码均提供独立显示/隐藏和复制按钮。
+- 创建表单改为“创建新密码”“密码名称”“密码正文”等直观文案，并移除未实际设置过的主密码锁定入口。
 
-完整变更请查看 [v1.0.10 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.10)。
+完整变更请查看 [v1.0.12 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.12)。
 
 ## 为什么选择 Long解压
 
@@ -39,7 +40,7 @@
 | 加密归档 | 支持加密 ZIP、7Z、RAR 等格式解压，以及 ZIP、7Z、RAR 和专用 AES-256-GCM 格式加密压缩 |
 | 密码保险箱 | 本地保存常用密码，遇到加密压缩包时自动匹配 |
 | 文件完整性 | 计算与验证 CRC32、MD5、SHA256，支持导入、导出校验文件 |
-| Windows 集成 | 支持文件拖放、快捷键、系统托盘、资源管理器现代右键菜单、开机启动和签名应用内更新 |
+| Windows 集成 | 支持文件拖放、快捷键、系统托盘、资源管理器右键菜单、开机启动和签名应用内更新 |
 | 个性化 | 深浅主题、强调色、界面缩放、减少动效和无障碍选项 |
 
 ## 下载与安装
@@ -83,8 +84,8 @@
 ### 密码保险箱
 
 1. 使用 `Ctrl+Shift+V` 打开密码保险箱。
-2. 首次使用时完成保险箱初始化。
-3. 添加常用密码并按名称或分组管理。
+2. 首次使用时由应用自动初始化本机加密存储，无需设置或输入主密码。
+3. 添加常用密码并按名称管理，可逐条显示、隐藏或复制密码正文。
 4. 解压加密文件时，应用会在本地自动尝试匹配。
 
 密码数据保存在本机应用数据目录中，不会上传到网络。
@@ -113,6 +114,8 @@
 - 压缩为 ZIP 或 7Z
 - 测试压缩包完整性
 
+当前公开安装包没有 Windows 商业代码签名证书，因此 Windows 11 新式顶层菜单身份包不会随安装器分发；快捷操作位于“显示更多选项”的传统菜单中。项目已保留新式菜单实现，未来具备可信代码签名证书后可启用。
+
 ## 常用快捷键
 
 | 快捷键 | 功能 |
@@ -131,7 +134,7 @@
 | 加密压缩 | ZIP、7Z、RAR、TAR.AES、TGZ.AES、TBZ.AES、TXZ.AES、TZST.AES、GZ.AES、BZ2.AES、XZ.AES、ZST.AES |
 | 常用解压 | ZIP、ZIPX、7Z、RAR、TAR、GZ、BZ2、XZ、ZST、LZMA |
 | 兼容归档 | CAB、ISO、WIM、DMG、VHD/VHDX、DEB、RPM、MSI、ARJ、LZH、XAR、CPIO 等 |
-| Office 与应用包 | DOCX、XLSX、PPTX、ODT、ODS、EPUB、APK、IPA、APPX、JAR 等 |
+| 应用包与文档容器 | APK、IPA、APPX、JAR 等可导入；DOCX、XLSX、PPTX、ODT、ODS、EPUB 虽为容器格式，但会在解压中心默认过滤 |
 
 具体能力会受到文件本身、加密方式以及系统环境影响。RAR 创建需要 WinRAR；创建加密 RAR 时，应用会在执行前明确说明密码会短暂出现在本机进程参数中，并由用户确认是否继续。
 
