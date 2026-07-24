@@ -100,7 +100,7 @@ impl EncryptedPasswordService {
     /// 初始化服务（设置主密码）
     pub async fn initialize(&mut self, master_password: &str) -> Result<()> {
         fs::create_dir_all(&self.data_dir).await?;
-        let key_manager = KeyManager::new(&self.data_dir);
+        let key_manager = KeyManager::new(&self.data_dir)?;
 
         // 保存主密码哈希
         self.master_password_hash = Some(HashingService::hash_password(master_password)?);
@@ -133,7 +133,7 @@ impl EncryptedPasswordService {
             return Ok(false);
         }
 
-        let key_manager = KeyManager::new(&self.data_dir);
+        let key_manager = KeyManager::new(&self.data_dir)?;
 
         // 设置密钥管理器
         let mut key_manager_lock = self.key_manager.write().await;
