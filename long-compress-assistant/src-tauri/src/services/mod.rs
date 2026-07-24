@@ -22,10 +22,4 @@ pub mod split_archive_detector;
 pub mod rar_support;
 pub mod tar_aes_engine;
 pub mod aes_wrapper;
-#[cfg(any())]
-pub mod password_book_test;
-#[cfg(any())]
-pub mod password_category_test;
-#[cfg(any())]
-pub mod password_strength_test;
 pub mod system_service;
