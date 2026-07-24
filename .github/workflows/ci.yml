@@ -94,9 +94,28 @@ jobs:
           cache: npm
           cache-dependency-path: long-compress-assistant/package-lock.json
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            long-compress-assistant/src-tauri -> target
+            long-compress-assistant/src-tauri/shell-extension -> target
       - run: npm ci
       - name: Build unsigned NSIS installer
-        run: npm run tauri build -- --bundles nsis
+        run: |
+          $exitCode = 1
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            npm run tauri build -- --bundles nsis
+            $exitCode = $LASTEXITCODE
+            if ($exitCode -eq 0) {
+              exit 0
+            }
+            if ($attempt -lt 3) {
+              $delay = 15 * $attempt
+              Write-Warning "NSIS build attempt $attempt failed; retrying in $delay seconds."
+              Start-Sleep -Seconds $delay
+            }
+          }
+          exit $exitCode
       - uses: actions/upload-artifact@v4
         with:
           name: windows-nsis-installer
