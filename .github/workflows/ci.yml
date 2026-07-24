@@ -25,10 +25,10 @@ jobs:
       run:
         working-directory: long-compress-assistant
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: long-compress-assistant/package-lock.json
       - run: npm ci
@@ -40,7 +40,7 @@ jobs:
     name: Rust and shell-extension checks
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -69,10 +69,10 @@ jobs:
       run:
         working-directory: long-compress-assistant
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: long-compress-assistant/package-lock.json
       - run: npm ci
@@ -87,10 +87,10 @@ jobs:
       run:
         working-directory: long-compress-assistant
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: long-compress-assistant/package-lock.json
       - uses: dtolnay/rust-toolchain@stable
