@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.12-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.13-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,16 +20,16 @@
 
 ---
 
-## v1.0.12 更新亮点
+## v1.0.13 更新亮点
 
-- 放大 L 形拉链品牌图标的有效内容区域，减少透明留白，并同步更新应用、安装器和系统图标资源。
-- 清理应用左上角图标的额外描边与阴影容器，品牌展示更加简洁。
-- 强调色在全部主题中均可清晰生效，颜色选择增加名称、勾选、描边与光环；设置开关增强开启/关闭状态对比。
-- 密码保险箱首次进入改用稳定骨架屏，避免先显示空数据再闪烁更新。
-- 密码名称、密码正文和备注三列统一宽度；每条密码均提供独立显示/隐藏和复制按钮。
-- 创建表单改为“创建新密码”“密码名称”“密码正文”等直观文案，并移除未实际设置过的主密码锁定入口。
+- ZIP、7Z、GZ、BZ2、XZ、Zstandard 与密码 ZIP 的核心复制路径统一使用 256 KiB 流式缓冲，减少分配和小块 I/O。
+- 原生 ZIP 解压按 4 MiB 节流字节级进度事件，避免大文件产生大量前后端 IPC。
+- 优化缓冲池复用、通用引擎资源扫描和解压暂存目录遍历，同时保留磁盘、压缩比、链接与事务回滚保护。
+- 文件筛选通配符改为每个任务只编译一次，改善大量归档条目的筛选性能。
+- 压缩、解压和密码 ZIP/7Z 的单个大文件内部均可及时响应取消。
+- 新增 100 MiB、1 GiB 和 10,000 个小文件的真实性能回归，校验 CRC32 与峰值工作集。
 
-完整变更请查看 [v1.0.12 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.12)。
+完整变更请查看 [v1.0.13 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.13)。
 
 ## 为什么选择 Long解压
 

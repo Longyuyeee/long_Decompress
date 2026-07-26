@@ -311,6 +311,8 @@ impl CompressionService {
     const MAX_EXTRACTED_BYTES: u64 = 512 * 1024 * 1024 * 1024;
     const MAX_EXPANSION_RATIO: u64 = 10_000;
     const DISK_SAFETY_RESERVE: u64 = 128 * 1024 * 1024;
+    const COPY_BUFFER_SIZE: usize = 256 * 1024;
+    const PROGRESS_EMIT_INTERVAL_BYTES: u64 = 4 * 1024 * 1024;
 
     pub async fn new_with_defaults() -> Self {
         let pool = match crate::database::connection::get_connection().await {
@@ -392,10 +394,37 @@ impl CompressionService {
     }
 
     fn check_cancellation(&self) -> Result<()> {
-        if self.cancellation_flag.load(Ordering::SeqCst) {
+        if self.cancellation_flag.load(Ordering::Relaxed) {
             return Err(CompressionError::Cancelled.into());
         }
         Ok(())
+    }
+
+    fn should_emit_byte_progress(last_emitted: u64, processed: u64) -> bool {
+        processed.saturating_sub(last_emitted) >= Self::PROGRESS_EMIT_INTERVAL_BYTES
+    }
+
+    fn copy_cancellable<R: Read + ?Sized, W: Write + ?Sized>(
+        &self,
+        reader: &mut R,
+        writer: &mut W,
+        buffer: &mut [u8],
+    ) -> Result<u64> {
+        let mut copied = 0u64;
+        loop {
+            self.check_cancellation()?;
+            let read = reader.read(buffer)?;
+            if read == 0 {
+                break;
+            }
+            writer.write_all(&buffer[..read])?;
+            copied = copied.checked_add(read as u64).ok_or_else(|| {
+                CompressionError::CompressionFailed(
+                    "Copied byte count overflowed the supported range".to_string(),
+                )
+            })?;
+        }
+        Ok(copied)
     }
 
     pub fn emit_log(&self, window: &Window, task_id: &str, message: &str, severity: TaskLogSeverity) {
@@ -1467,11 +1496,7 @@ impl CompressionService {
             }
             return Err(error);
         }
-        if let Err(error) = service.prepare_staging_layout(&out_dir, &options) {
-            let _ = std::fs::remove_dir_all(&out_dir);
-            return Err(error);
-        }
-        if let Err(error) = Self::validate_staged_resources(path, &out_dir) {
+        if let Err(error) = service.prepare_staging_layout(path, &out_dir, &options) {
             let _ = std::fs::remove_dir_all(&out_dir);
             return Err(error);
         }
@@ -1540,6 +1565,15 @@ impl CompressionService {
             .filter(|disk| path.starts_with(disk.mount_point()))
             .max_by_key(|disk| disk.mount_point().components().count())
             .map(|disk| disk.available_space())
+    }
+
+    pub(crate) fn validate_staging_disk_reserve(staging: &Path) -> Result<()> {
+        if Self::available_disk_space(staging)
+            .is_some_and(|available| available < Self::DISK_SAFETY_RESERVE)
+        {
+            return Err(CompressionError::DiskFull.into());
+        }
+        Ok(())
     }
 
     fn ensure_no_link_ancestors(path: &Path) -> Result<()> {
@@ -1681,15 +1715,16 @@ impl CompressionService {
             }
         }
         Self::validate_resource_limits(archive_path, entry_count, expanded_bytes)?;
-        if let Some(available) = Self::available_disk_space(staging) {
-            if available < Self::DISK_SAFETY_RESERVE {
-                return Err(CompressionError::DiskFull.into());
-            }
-        }
-        Ok(())
+        Self::validate_staging_disk_reserve(staging)
     }
 
-    fn prepare_staging_layout(&self, staging: &Path, options: &DecompressOptions) -> Result<()> {
+    fn prepare_staging_layout(
+        &self,
+        archive_path: &Path,
+        staging: &Path,
+        options: &DecompressOptions,
+    ) -> Result<()> {
+        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
         let mut files = Vec::new();
         let mut directories = Vec::new();
         for entry in walkdir::WalkDir::new(staging).follow_links(false) {
@@ -1717,12 +1752,21 @@ impl CompressionService {
         }
         files.sort();
 
+        let mut entry_count = 0usize;
+        let mut expanded_bytes = 0u64;
         for source in files {
             let relative = source.strip_prefix(staging)?;
-            if !Self::matches_file_filter(relative, options.file_filter.as_deref()) {
+            if !Self::matches_compiled_file_filter(relative, &file_filter) {
                 std::fs::remove_file(&source)?;
                 continue;
             }
+            let source_size = std::fs::metadata(&source)?.len();
+            entry_count = entry_count.saturating_add(1);
+            expanded_bytes = expanded_bytes.checked_add(source_size).ok_or_else(|| {
+                CompressionError::ExtractionFailed(
+                    "Extracted size overflowed the supported range".to_string(),
+                )
+            })?;
             if options.preserve_paths || source.parent() == Some(staging) {
                 continue;
             }
@@ -1761,7 +1805,8 @@ impl CompressionService {
         for directory in directories {
             let _ = std::fs::remove_dir(&directory);
         }
-        Ok(())
+        Self::validate_resource_limits(archive_path, entry_count, expanded_bytes)?;
+        Self::validate_staging_disk_reserve(staging)
     }
 
     fn archive_output_dir_name(path: &Path) -> String {
@@ -1819,32 +1864,32 @@ impl CompressionService {
         }
     }
 
-    fn matches_file_filter(path: &Path, filter: Option<&str>) -> bool {
+    fn compile_file_filter(filter: Option<&str>) -> Vec<regex::Regex> {
         let Some(filter) = filter.map(str::trim).filter(|value| !value.is_empty()) else {
-            return true;
+            return Vec::new();
         };
-
-        let normalized = path.to_string_lossy().replace('\\', "/");
-        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("");
-
         filter
             .split([',', ';'])
             .map(str::trim)
             .filter(|pattern| !pattern.is_empty())
-            .any(|pattern| {
-                Self::wildcard_match(pattern, &normalized)
-                    || Self::wildcard_match(pattern, file_name)
+            .filter_map(|pattern| {
+                let escaped = regex::escape(pattern)
+                    .replace("\\*", ".*")
+                    .replace("\\?", ".");
+                regex::Regex::new(&format!("(?i)^{}$", escaped)).ok()
             })
+            .collect()
     }
 
-    fn wildcard_match(pattern: &str, value: &str) -> bool {
-        let escaped = regex::escape(pattern)
-            .replace("\\*", ".*")
-            .replace("\\?", ".");
-        let regex = format!("(?i)^{}$", escaped);
-        regex::Regex::new(&regex)
-            .map(|compiled| compiled.is_match(value))
-            .unwrap_or(false)
+    fn matches_compiled_file_filter(path: &Path, filter: &[regex::Regex]) -> bool {
+        if filter.is_empty() {
+            return true;
+        }
+        let normalized = path.to_string_lossy().replace('\\', "/");
+        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("");
+        filter
+            .iter()
+            .any(|pattern| pattern.is_match(&normalized) || pattern.is_match(file_name))
     }
 
     fn resolve_extract_path(target: &Path, options: &DecompressOptions) -> Result<PathBuf> {
@@ -1895,6 +1940,7 @@ impl CompressionService {
         let f = SmartFileReader::open(file)?;
         let mut archive = ZipArchive::new(f)?;
         let total_files = archive.len();
+        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
 
         if total_files > 0 {
             if let Some(pwd) = password {
@@ -1939,7 +1985,7 @@ impl CompressionService {
                     Some(path) => path,
                     None => continue,
                 };
-                if !Self::matches_file_filter(&relative, options.file_filter.as_deref()) {
+                if !Self::matches_compiled_file_filter(&relative, &file_filter) {
                     continue;
                 }
                 let target = Path::new(output).join(relative);
@@ -1976,22 +2022,42 @@ impl CompressionService {
                 let mut outfile = File::create(&outpath)?;
                 let buf_size = self.buffer_pool.recommend_buffer_size(source_size);
                 let mut handle = tauri::async_runtime::block_on(self.buffer_pool.acquire(Some(buf_size)));
-                let buffer = handle.buffer_mut().as_mut_slice();
                 let mut progress_reader = ProgressReader::new(reader, source_size, Arc::new(|_, _| {}));
-                loop {
-                    self.check_cancellation()?;
-                    let n = progress_reader.read(buffer)?;
-                    if n == 0 { break; }
-                    outfile.write_all(&buffer[..n])?;
-                    let entry_progress = if source_size == 0 {
-                        1.0
-                    } else {
-                        progress_reader.current_pos() as f32 / source_size as f32
-                    };
-                    let file_progress = (i as f32 / total_files as f32) + (entry_progress / total_files as f32);
-                    self.emit_progress(window, task_id, file_progress, Some(file_name.clone()), progress_reader.current_pos(), source_size);
+                let mut last_emitted = 0u64;
+                {
+                    let buffer = handle.buffer_mut().as_mut_slice();
+                    loop {
+                        self.check_cancellation()?;
+                        let n = progress_reader.read(buffer)?;
+                        if n == 0 {
+                            break;
+                        }
+                        outfile.write_all(&buffer[..n])?;
+                        let processed = progress_reader.current_pos();
+                        if processed < source_size
+                            && Self::should_emit_byte_progress(last_emitted, processed)
+                        {
+                            last_emitted = processed;
+                            let entry_progress = if source_size == 0 {
+                                1.0
+                            } else {
+                                processed as f32 / source_size as f32
+                            };
+                            let file_progress = (i as f32 / total_files as f32)
+                                + (entry_progress / total_files as f32);
+                            self.emit_progress(
+                                window,
+                                task_id,
+                                file_progress,
+                                Some(file_name.clone()),
+                                processed,
+                                source_size,
+                            );
+                        }
+                    }
                 }
-                drop(outfile);
+                outfile.flush()?;
+                tauri::async_runtime::block_on(handle.release());
                 if options.preserve_timestamps || options.extract_only_newer {
                     if let Some(source_modified) = source_modified {
                     filetime::set_file_mtime(
@@ -2018,6 +2084,8 @@ impl CompressionService {
     pub fn do_extract_7z(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
         let output_root = PathBuf::from(output);
         let opts = options.clone();
+        let file_filter = Self::compile_file_filter(opts.file_filter.as_deref());
+        let mut copy_buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
         let mut processed = 0usize;
         let total_entries = {
             let archive_file = File::open(file);
@@ -2036,7 +2104,7 @@ impl CompressionService {
                         .filter(|entry| !entry.is_directory())
                         .filter(|entry| {
                             Self::normalized_archive_path(Path::new(entry.name()), opts.preserve_paths)
-                                .map(|path| Self::matches_file_filter(&path, opts.file_filter.as_deref()))
+                                .map(|path| Self::matches_compiled_file_filter(&path, &file_filter))
                                 .unwrap_or(false)
                         })
                         .count()
@@ -2052,13 +2120,15 @@ impl CompressionService {
             let relative = match Self::normalized_archive_path(Path::new(entry.name()), opts.preserve_paths) {
                 Some(path) => path,
                 None => {
-                    std::io::copy(reader, &mut std::io::sink()).map_err(sevenz_rust::Error::io)?;
+                    self.copy_cancellable(reader, &mut std::io::sink(), &mut copy_buffer)
+                        .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
                     return Ok(true);
                 }
             };
 
-            if !Self::matches_file_filter(&relative, opts.file_filter.as_deref()) {
-                std::io::copy(reader, &mut std::io::sink()).map_err(sevenz_rust::Error::io)?;
+            if !Self::matches_compiled_file_filter(&relative, &file_filter) {
+                self.copy_cancellable(reader, &mut std::io::sink(), &mut copy_buffer)
+                    .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
                 return Ok(true);
             }
 
@@ -2076,7 +2146,8 @@ impl CompressionService {
                 }
 
                 let mut outfile = File::create(&target)?;
-                std::io::copy(reader, &mut outfile)?;
+                self.copy_cancellable(reader, &mut outfile, &mut copy_buffer)?;
+                outfile.flush()?;
                 processed += 1;
                 let progress = (processed as f32 / total_entries as f32).min(1.0);
                 self.emit_progress(window, task_id, progress, Some(relative.to_string_lossy().to_string()), entry.size(), entry.size());
@@ -2084,7 +2155,8 @@ impl CompressionService {
             })();
 
             if let Err(err) = entry_result {
-                std::io::copy(reader, &mut std::io::sink()).map_err(sevenz_rust::Error::io)?;
+                self.copy_cancellable(reader, &mut std::io::sink(), &mut copy_buffer)
+                    .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
                 if opts.skip_corrupted {
                     self.emit_log(window, task_id, &format!("Skipped 7z entry {}: {}", entry.name(), err), TaskLogSeverity::Warning);
                     return Ok(true);
@@ -2128,6 +2200,7 @@ impl CompressionService {
 
     fn do_extract_tar(&self, window: &Window, task_id: &str, file: &str, output: &Path, decoder: Option<Box<dyn Read + Send>>, options: &DecompressOptions) -> Result<()> {
         let f = File::open(file)?;
+        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
         let mut archive = if let Some(d) = decoder {
             tar::Archive::new(d)
         } else {
@@ -2142,7 +2215,7 @@ impl CompressionService {
                     Some(path) => path,
                     None => return Ok(()),
                 };
-                if !Self::matches_file_filter(&relative, options.file_filter.as_deref()) {
+                if !Self::matches_compiled_file_filter(&relative, &file_filter) {
                     return Ok(());
                 }
 
@@ -2199,7 +2272,8 @@ impl CompressionService {
 
     fn do_extract_single_stream<R: Read>(&self, window: &Window, task_id: &str, mut reader: R, output: &Path, output_name: String, options: &DecompressOptions) -> Result<()> {
         let relative = PathBuf::from(output_name);
-        if !Self::matches_file_filter(&relative, options.file_filter.as_deref()) {
+        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
+        if !Self::matches_compiled_file_filter(&relative, &file_filter) {
             self.emit_log(window, task_id, "Single-file archive skipped by current file filter.", TaskLogSeverity::Warning);
             return Ok(());
         }
@@ -2210,8 +2284,9 @@ impl CompressionService {
         }
 
         let mut outfile = File::create(&target)?;
-        let mut buffer = vec![0u8; self.config.buffer_size.max(64 * 1024)];
+        let mut buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
         let mut processed = 0u64;
+        let mut last_emitted = 0u64;
         loop {
             self.check_cancellation()?;
             let read = reader.read(&mut buffer)?;
@@ -2236,8 +2311,12 @@ impl CompressionService {
                 return Err(CompressionError::DiskFull.into());
             }
             outfile.write_all(&buffer[..read])?;
-            self.emit_progress(window, task_id, 0.5, None, processed, 0);
+            if Self::should_emit_byte_progress(last_emitted, processed) {
+                last_emitted = processed;
+                self.emit_progress(window, task_id, 0.5, None, processed, 0);
+            }
         }
+        outfile.flush()?;
 
         self.emit_log(window, task_id, &format!("Extracted single-file stream to {}", target.display()), TaskLogSeverity::Success);
         Ok(())
@@ -2508,11 +2587,12 @@ impl CompressionService {
         let entries = Self::collect_compression_entries(sources, preserve_paths, false)?;
 
         let total = entries.len().max(1);
+        let mut copy_buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
         for (i, (path, archive_name, _is_dir)) in entries.iter().enumerate() {
             self.check_cancellation()?;
             zip.start_file(archive_name, zip_options)?;
             let mut f = File::open(path)?;
-            std::io::copy(&mut f, &mut zip)?;
+            self.copy_cancellable(&mut f, &mut zip, &mut copy_buffer)?;
             self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(archive_name.clone()), 0, 0);
         }
         zip.finish()?;
@@ -2561,6 +2641,7 @@ impl CompressionService {
         sources: &[String],
         output: &str,
         preserve_paths: bool,
+        cancellation_flag: &AtomicBool,
     ) -> Result<()> {
         let file = File::create(output)?;
         let mut writer = zip_aes::ZipWriter::new(file);
@@ -2569,15 +2650,28 @@ impl CompressionService {
             .compression_level(Some(level.clamp(1, 9) as i64))
             .with_aes_encryption(zip_aes::AesMode::Aes256, password);
         let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
+        let mut copy_buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
 
         for (path, archive_name, is_dir) in entries {
+            if cancellation_flag.load(Ordering::Relaxed) {
+                return Err(CompressionError::Cancelled.into());
+            }
             let archive_name = archive_name.replace('\\', "/");
             if is_dir {
                 writer.add_directory(archive_name, options)?;
             } else {
                 writer.start_file(archive_name, options)?;
                 let mut source = File::open(path)?;
-                std::io::copy(&mut source, &mut writer)?;
+                loop {
+                    if cancellation_flag.load(Ordering::Relaxed) {
+                        return Err(CompressionError::Cancelled.into());
+                    }
+                    let read = source.read(&mut copy_buffer)?;
+                    if read == 0 {
+                        break;
+                    }
+                    writer.write_all(&copy_buffer[..read])?;
+                }
             }
         }
         writer.finish()?;
@@ -2599,6 +2693,7 @@ impl CompressionService {
             sources,
             output,
             options.preserve_paths.unwrap_or(true),
+            &self.cancellation_flag,
         )?;
 
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
@@ -2633,7 +2728,8 @@ impl CompressionService {
         let mut input = File::open(source)?;
         let file = File::create(output)?;
         let mut encoder = zstd::stream::write::Encoder::new(file, options.level.clamp(1, 21) as i32)?;
-        std::io::copy(&mut input, &mut encoder)?;
+        let mut buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
+        self.copy_cancellable(&mut input, &mut encoder, &mut buffer)?;
         encoder.finish()?;
 
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
@@ -2964,7 +3060,8 @@ impl CompressionService {
         let file = File::create(output)?;
         let level = flate2::Compression::new(options.level.clamp(1, 9));
         let mut encoder = flate2::write::GzEncoder::new(file, level);
-        std::io::copy(&mut input, &mut encoder)?;
+        let mut buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
+        self.copy_cancellable(&mut input, &mut encoder, &mut buffer)?;
         encoder.finish()?;
         self.emit_progress(window, task_id, 1.0, source.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()), 0, 0);
         Ok(())
@@ -2979,7 +3076,8 @@ impl CompressionService {
         let file = File::create(output)?;
         let level = bzip2::Compression::new(options.level.clamp(1, 9));
         let mut encoder = bzip2::write::BzEncoder::new(file, level);
-        std::io::copy(&mut input, &mut encoder)?;
+        let mut buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
+        self.copy_cancellable(&mut input, &mut encoder, &mut buffer)?;
         encoder.finish()?;
         self.emit_progress(window, task_id, 1.0, source.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()), 0, 0);
         Ok(())
@@ -2993,7 +3091,8 @@ impl CompressionService {
         let mut input = File::open(source)?;
         let file = File::create(output)?;
         let mut encoder = xz2::write::XzEncoder::new(file, options.level.clamp(1, 9));
-        std::io::copy(&mut input, &mut encoder)?;
+        let mut buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
+        self.copy_cancellable(&mut input, &mut encoder, &mut buffer)?;
         encoder.finish()?;
         self.emit_progress(window, task_id, 1.0, source.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()), 0, 0);
         Ok(())
@@ -3251,6 +3350,7 @@ impl CompressionService {
     pub async fn compress_zip_enhanced(&self, sources: &[String], output: &str, _options: CompressionOptions) -> Result<()> {
         let sources = sources.to_vec();
         let output = output.to_string();
+        let cancellation_flag = self.cancellation_flag.clone();
         tokio::task::spawn_blocking(move || {
             if sources.is_empty() {
                 return Err(CompressionError::CompressionFailed(
@@ -3275,6 +3375,7 @@ impl CompressionService {
             let file = File::create(&output)?;
             let mut zip = zip::ZipWriter::new(file);
             let zip_options = FileOptions::default().compression_method(CompressionMethod::Deflated);
+            let mut buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
             for source in sources {
                 let path = Path::new(&source);
                 if path.is_file() {
@@ -3283,7 +3384,16 @@ impl CompressionService {
                         .unwrap_or("unknown");
                     zip.start_file(entry_name, zip_options)?;
                     let mut f = File::open(path)?;
-                    std::io::copy(&mut f, &mut zip)?;
+                    loop {
+                        if cancellation_flag.load(Ordering::Relaxed) {
+                            return Err(CompressionError::Cancelled.into());
+                        }
+                        let read = f.read(&mut buffer)?;
+                        if read == 0 {
+                            break;
+                        }
+                        zip.write_all(&buffer[..read])?;
+                    }
                 }
             }
             zip.finish()?;
@@ -3295,6 +3405,45 @@ impl CompressionService {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn byte_progress_is_throttled_to_multi_megabyte_intervals() {
+        assert!(!CompressionService::should_emit_byte_progress(0, 64 * 1024));
+        assert!(!CompressionService::should_emit_byte_progress(
+            0,
+            CompressionService::PROGRESS_EMIT_INTERVAL_BYTES - 1,
+        ));
+        assert!(CompressionService::should_emit_byte_progress(
+            0,
+            CompressionService::PROGRESS_EMIT_INTERVAL_BYTES,
+        ));
+        assert!(!CompressionService::should_emit_byte_progress(
+            CompressionService::PROGRESS_EMIT_INTERVAL_BYTES,
+            CompressionService::PROGRESS_EMIT_INTERVAL_BYTES + 1024,
+        ));
+    }
+
+    #[test]
+    fn compiled_file_filter_preserves_multi_pattern_matching() {
+        let filter = CompressionService::compile_file_filter(Some("*.txt; assets/*.PNG"));
+
+        assert!(CompressionService::matches_compiled_file_filter(
+            Path::new("notes/readme.TXT"),
+            &filter,
+        ));
+        assert!(CompressionService::matches_compiled_file_filter(
+            Path::new("assets/logo.png"),
+            &filter,
+        ));
+        assert!(!CompressionService::matches_compiled_file_filter(
+            Path::new("assets/logo.svg"),
+            &filter,
+        ));
+        assert!(CompressionService::matches_compiled_file_filter(
+            Path::new("anything.bin"),
+            &[],
+        ));
+    }
 
     #[test]
     fn recognizes_application_native_aes_headers() {
@@ -3592,6 +3741,8 @@ mod tests_continued {
     async fn staging_normalization_flattens_duplicates_and_applies_filters() {
         let temp = tempfile::tempdir().expect("temp dir");
         let staging = temp.path().join("staging");
+        let archive_path = temp.path().join("fixture.zip");
+        std::fs::write(&archive_path, b"fixture").expect("archive fixture");
         std::fs::create_dir_all(staging.join("one")).expect("first folder");
         std::fs::create_dir_all(staging.join("two")).expect("second folder");
         std::fs::write(staging.join("one/same.txt"), b"one").expect("first file");
@@ -3604,7 +3755,9 @@ mod tests_continued {
             ..Default::default()
         };
 
-        service.prepare_staging_layout(&staging, &options).expect("normalize staging");
+        service
+            .prepare_staging_layout(&archive_path, &staging, &options)
+            .expect("normalize staging");
         assert_eq!(std::fs::read(staging.join("same.txt")).unwrap(), b"one");
         assert_eq!(std::fs::read(staging.join("same (1).txt")).unwrap(), b"two");
         assert!(!staging.join("drop.bin").exists());
@@ -3644,6 +3797,7 @@ mod tests_continued {
             &[source.to_string_lossy().to_string()],
             &archive.to_string_lossy(),
             true,
+            &AtomicBool::new(false),
         ).expect("encrypted ZIP creation");
 
         let engine = UniversalCliEngine::new();
