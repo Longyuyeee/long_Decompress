@@ -18,6 +18,8 @@ impl Default for UniversalCliEngine {
 }
 
 impl UniversalCliEngine {
+    const RESOURCE_SCAN_INTERVAL: std::time::Duration = std::time::Duration::from_secs(5);
+
     pub fn new() -> Self {
         Self
     }
@@ -447,6 +449,7 @@ impl ArchiveEngine for UniversalCliEngine {
         let cancel_flag = is_cancelled.clone();
 
         let mut last_resource_check = std::time::Instant::now();
+        let mut last_disk_check = std::time::Instant::now();
         // 解析标准输出流以提取进度。定时分支保证即使子进程没有
         // 输出新行，取消和资源配额仍会被及时检查。
         loop {
@@ -472,7 +475,14 @@ impl ArchiveEngine for UniversalCliEngine {
                     }
                 },
                 _ = tokio::time::sleep(std::time::Duration::from_millis(100)) => {
-                    if last_resource_check.elapsed() >= std::time::Duration::from_secs(1) {
+                    if last_disk_check.elapsed() >= std::time::Duration::from_secs(1) {
+                        if let Err(error) = crate::services::compression_service::CompressionService::validate_staging_disk_reserve(output_dir) {
+                            let _ = child.kill().await;
+                            return Err(error);
+                        }
+                        last_disk_check = std::time::Instant::now();
+                    }
+                    if last_resource_check.elapsed() >= Self::RESOURCE_SCAN_INTERVAL {
                         if let Err(error) = crate::services::compression_service::CompressionService::validate_staged_resources(file_path, output_dir) {
                             let _ = child.kill().await;
                             return Err(error);

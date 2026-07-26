@@ -266,11 +266,9 @@ impl IOBufferPool {
         buffer.clear();
 
         // 如果缓冲区太大且允许收缩，调整大小
-        if self.config.enable_dynamic_sizing && buffer.capacity() > self.config.min_buffer_size * 2 {
-            let new_size = (buffer.capacity() as f32 * self.config.shrink_factor) as usize;
-            let new_size = new_size.clamp(self.config.min_buffer_size, self.config.max_buffer_size);
-            buffer.resize(new_size);
-        }
+        // Keep the acquired capacity so the next similarly-sized archive
+        // entry can reuse this allocation. Pool limits already bound retained
+        // memory, while cleanup() remains the explicit shrink point.
 
         // 如果池已满，丢弃缓冲区
         if buffers.len() >= self.config.max_buffer_count {
@@ -407,6 +405,24 @@ mod tests {
         let stats = pool.get_statistics().await;
         assert_eq!(stats.total_allocations, 1);
         assert_eq!(stats.total_releases, 1);
+    }
+
+    #[tokio::test]
+    async fn reuses_large_buffers_without_shrinking_between_entries() {
+        let pool = IOBufferPool::default();
+        let requested = 1024 * 1024;
+
+        let first = pool.acquire(Some(requested)).await;
+        assert_eq!(first.capacity(), requested);
+        first.release().await;
+
+        let second = pool.acquire(Some(requested)).await;
+        assert_eq!(second.capacity(), requested);
+        second.release().await;
+
+        let stats = pool.get_statistics().await;
+        assert_eq!(stats.buffer_misses, 1);
+        assert_eq!(stats.buffer_hits, 1);
     }
 
     #[tokio::test]
