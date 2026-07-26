@@ -404,7 +404,7 @@ impl CompressionService {
         processed.saturating_sub(last_emitted) >= Self::PROGRESS_EMIT_INTERVAL_BYTES
     }
 
-    fn copy_cancellable<R: Read, W: Write>(
+    fn copy_cancellable<R: Read + ?Sized, W: Write + ?Sized>(
         &self,
         reader: &mut R,
         writer: &mut W,
@@ -1724,6 +1724,7 @@ impl CompressionService {
         staging: &Path,
         options: &DecompressOptions,
     ) -> Result<()> {
+        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
         let mut files = Vec::new();
         let mut directories = Vec::new();
         for entry in walkdir::WalkDir::new(staging).follow_links(false) {
@@ -1755,7 +1756,7 @@ impl CompressionService {
         let mut expanded_bytes = 0u64;
         for source in files {
             let relative = source.strip_prefix(staging)?;
-            if !Self::matches_file_filter(relative, options.file_filter.as_deref()) {
+            if !Self::matches_compiled_file_filter(relative, &file_filter) {
                 std::fs::remove_file(&source)?;
                 continue;
             }
@@ -1863,32 +1864,32 @@ impl CompressionService {
         }
     }
 
-    fn matches_file_filter(path: &Path, filter: Option<&str>) -> bool {
+    fn compile_file_filter(filter: Option<&str>) -> Vec<regex::Regex> {
         let Some(filter) = filter.map(str::trim).filter(|value| !value.is_empty()) else {
-            return true;
+            return Vec::new();
         };
-
-        let normalized = path.to_string_lossy().replace('\\', "/");
-        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("");
-
         filter
             .split([',', ';'])
             .map(str::trim)
             .filter(|pattern| !pattern.is_empty())
-            .any(|pattern| {
-                Self::wildcard_match(pattern, &normalized)
-                    || Self::wildcard_match(pattern, file_name)
+            .filter_map(|pattern| {
+                let escaped = regex::escape(pattern)
+                    .replace("\\*", ".*")
+                    .replace("\\?", ".");
+                regex::Regex::new(&format!("(?i)^{}$", escaped)).ok()
             })
+            .collect()
     }
 
-    fn wildcard_match(pattern: &str, value: &str) -> bool {
-        let escaped = regex::escape(pattern)
-            .replace("\\*", ".*")
-            .replace("\\?", ".");
-        let regex = format!("(?i)^{}$", escaped);
-        regex::Regex::new(&regex)
-            .map(|compiled| compiled.is_match(value))
-            .unwrap_or(false)
+    fn matches_compiled_file_filter(path: &Path, filter: &[regex::Regex]) -> bool {
+        if filter.is_empty() {
+            return true;
+        }
+        let normalized = path.to_string_lossy().replace('\\', "/");
+        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("");
+        filter
+            .iter()
+            .any(|pattern| pattern.is_match(&normalized) || pattern.is_match(file_name))
     }
 
     fn resolve_extract_path(target: &Path, options: &DecompressOptions) -> Result<PathBuf> {
@@ -1939,6 +1940,7 @@ impl CompressionService {
         let f = SmartFileReader::open(file)?;
         let mut archive = ZipArchive::new(f)?;
         let total_files = archive.len();
+        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
 
         if total_files > 0 {
             if let Some(pwd) = password {
@@ -1983,7 +1985,7 @@ impl CompressionService {
                     Some(path) => path,
                     None => continue,
                 };
-                if !Self::matches_file_filter(&relative, options.file_filter.as_deref()) {
+                if !Self::matches_compiled_file_filter(&relative, &file_filter) {
                     continue;
                 }
                 let target = Path::new(output).join(relative);
@@ -2082,6 +2084,8 @@ impl CompressionService {
     pub fn do_extract_7z(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
         let output_root = PathBuf::from(output);
         let opts = options.clone();
+        let file_filter = Self::compile_file_filter(opts.file_filter.as_deref());
+        let mut copy_buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
         let mut processed = 0usize;
         let total_entries = {
             let archive_file = File::open(file);
@@ -2100,7 +2104,7 @@ impl CompressionService {
                         .filter(|entry| !entry.is_directory())
                         .filter(|entry| {
                             Self::normalized_archive_path(Path::new(entry.name()), opts.preserve_paths)
-                                .map(|path| Self::matches_file_filter(&path, opts.file_filter.as_deref()))
+                                .map(|path| Self::matches_compiled_file_filter(&path, &file_filter))
                                 .unwrap_or(false)
                         })
                         .count()
@@ -2116,13 +2120,15 @@ impl CompressionService {
             let relative = match Self::normalized_archive_path(Path::new(entry.name()), opts.preserve_paths) {
                 Some(path) => path,
                 None => {
-                    std::io::copy(reader, &mut std::io::sink()).map_err(sevenz_rust::Error::io)?;
+                    self.copy_cancellable(reader, &mut std::io::sink(), &mut copy_buffer)
+                        .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
                     return Ok(true);
                 }
             };
 
-            if !Self::matches_file_filter(&relative, opts.file_filter.as_deref()) {
-                std::io::copy(reader, &mut std::io::sink()).map_err(sevenz_rust::Error::io)?;
+            if !Self::matches_compiled_file_filter(&relative, &file_filter) {
+                self.copy_cancellable(reader, &mut std::io::sink(), &mut copy_buffer)
+                    .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
                 return Ok(true);
             }
 
@@ -2140,7 +2146,8 @@ impl CompressionService {
                 }
 
                 let mut outfile = File::create(&target)?;
-                std::io::copy(reader, &mut outfile)?;
+                self.copy_cancellable(reader, &mut outfile, &mut copy_buffer)?;
+                outfile.flush()?;
                 processed += 1;
                 let progress = (processed as f32 / total_entries as f32).min(1.0);
                 self.emit_progress(window, task_id, progress, Some(relative.to_string_lossy().to_string()), entry.size(), entry.size());
@@ -2148,7 +2155,8 @@ impl CompressionService {
             })();
 
             if let Err(err) = entry_result {
-                std::io::copy(reader, &mut std::io::sink()).map_err(sevenz_rust::Error::io)?;
+                self.copy_cancellable(reader, &mut std::io::sink(), &mut copy_buffer)
+                    .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
                 if opts.skip_corrupted {
                     self.emit_log(window, task_id, &format!("Skipped 7z entry {}: {}", entry.name(), err), TaskLogSeverity::Warning);
                     return Ok(true);
@@ -2192,6 +2200,7 @@ impl CompressionService {
 
     fn do_extract_tar(&self, window: &Window, task_id: &str, file: &str, output: &Path, decoder: Option<Box<dyn Read + Send>>, options: &DecompressOptions) -> Result<()> {
         let f = File::open(file)?;
+        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
         let mut archive = if let Some(d) = decoder {
             tar::Archive::new(d)
         } else {
@@ -2206,7 +2215,7 @@ impl CompressionService {
                     Some(path) => path,
                     None => return Ok(()),
                 };
-                if !Self::matches_file_filter(&relative, options.file_filter.as_deref()) {
+                if !Self::matches_compiled_file_filter(&relative, &file_filter) {
                     return Ok(());
                 }
 
@@ -2263,7 +2272,8 @@ impl CompressionService {
 
     fn do_extract_single_stream<R: Read>(&self, window: &Window, task_id: &str, mut reader: R, output: &Path, output_name: String, options: &DecompressOptions) -> Result<()> {
         let relative = PathBuf::from(output_name);
-        if !Self::matches_file_filter(&relative, options.file_filter.as_deref()) {
+        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
+        if !Self::matches_compiled_file_filter(&relative, &file_filter) {
             self.emit_log(window, task_id, "Single-file archive skipped by current file filter.", TaskLogSeverity::Warning);
             return Ok(());
         }
@@ -2631,6 +2641,7 @@ impl CompressionService {
         sources: &[String],
         output: &str,
         preserve_paths: bool,
+        cancellation_flag: &AtomicBool,
     ) -> Result<()> {
         let file = File::create(output)?;
         let mut writer = zip_aes::ZipWriter::new(file);
@@ -2639,15 +2650,28 @@ impl CompressionService {
             .compression_level(Some(level.clamp(1, 9) as i64))
             .with_aes_encryption(zip_aes::AesMode::Aes256, password);
         let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
+        let mut copy_buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
 
         for (path, archive_name, is_dir) in entries {
+            if cancellation_flag.load(Ordering::Relaxed) {
+                return Err(CompressionError::Cancelled.into());
+            }
             let archive_name = archive_name.replace('\\', "/");
             if is_dir {
                 writer.add_directory(archive_name, options)?;
             } else {
                 writer.start_file(archive_name, options)?;
                 let mut source = File::open(path)?;
-                std::io::copy(&mut source, &mut writer)?;
+                loop {
+                    if cancellation_flag.load(Ordering::Relaxed) {
+                        return Err(CompressionError::Cancelled.into());
+                    }
+                    let read = source.read(&mut copy_buffer)?;
+                    if read == 0 {
+                        break;
+                    }
+                    writer.write_all(&copy_buffer[..read])?;
+                }
             }
         }
         writer.finish()?;
@@ -2669,6 +2693,7 @@ impl CompressionService {
             sources,
             output,
             options.preserve_paths.unwrap_or(true),
+            &self.cancellation_flag,
         )?;
 
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
@@ -3399,6 +3424,28 @@ mod tests {
     }
 
     #[test]
+    fn compiled_file_filter_preserves_multi_pattern_matching() {
+        let filter = CompressionService::compile_file_filter(Some("*.txt; assets/*.PNG"));
+
+        assert!(CompressionService::matches_compiled_file_filter(
+            Path::new("notes/readme.TXT"),
+            &filter,
+        ));
+        assert!(CompressionService::matches_compiled_file_filter(
+            Path::new("assets/logo.png"),
+            &filter,
+        ));
+        assert!(!CompressionService::matches_compiled_file_filter(
+            Path::new("assets/logo.svg"),
+            &filter,
+        ));
+        assert!(CompressionService::matches_compiled_file_filter(
+            Path::new("anything.bin"),
+            &[],
+        ));
+    }
+
+    #[test]
     fn recognizes_application_native_aes_headers() {
         assert_eq!(
             ArchiveFormat::from_magic(b"TARAES01payload"),
@@ -3750,6 +3797,7 @@ mod tests_continued {
             &[source.to_string_lossy().to_string()],
             &archive.to_string_lossy(),
             true,
+            &AtomicBool::new(false),
         ).expect("encrypted ZIP creation");
 
         let engine = UniversalCliEngine::new();

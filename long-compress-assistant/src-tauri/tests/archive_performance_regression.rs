@@ -171,3 +171,103 @@ async fn real_zip_compress_extract_baseline() {
         "streaming ZIP path used more than 256 MiB of additional working set"
     );
 }
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "real many-small-files benchmark; run explicitly before performance releases"]
+async fn real_zip_many_small_files_baseline() {
+    let file_count = std::env::var("LONG_DECOMPRESS_PERF_FILE_COUNT")
+        .ok()
+        .and_then(|value| value.parse::<usize>().ok())
+        .unwrap_or(10_000)
+        .clamp(1_000, 50_000);
+    let temp = tempdir().expect("small-files performance temp dir");
+    let source_dir = temp.path().join("source");
+    let output_dir = temp.path().join("output");
+    let archive = temp.path().join("small-files.zip");
+    std::fs::create_dir_all(&source_dir).expect("create small-files source dir");
+    std::fs::create_dir_all(&output_dir).expect("create small-files output dir");
+
+    let mut sources = Vec::with_capacity(file_count);
+    let mut expected_hasher = crc32fast::Hasher::new();
+    let mut state = 0xA341_316Cu32;
+    let mut contents = vec![0u8; 4 * 1024];
+    for index in 0..file_count {
+        for byte in &mut contents {
+            state ^= state << 13;
+            state ^= state >> 17;
+            state ^= state << 5;
+            *byte = state as u8;
+        }
+        let source = source_dir.join(format!("file_{index:05}.bin"));
+        std::fs::write(&source, &contents).expect("write small-files fixture");
+        expected_hasher.update(&contents);
+        sources.push(source.to_string_lossy().into_owned());
+    }
+    let expected_crc = expected_hasher.finalize();
+
+    let baseline_memory = current_process_memory();
+    let (running, peak_memory, sampler) = start_memory_sampler();
+    let service = CompressionService::for_testing();
+    let compression_started = Instant::now();
+    service
+        .compress_zip_enhanced(
+            &sources,
+            archive.to_string_lossy().as_ref(),
+            CompressionOptions::default(),
+        )
+        .await
+        .expect("compress small-files fixture");
+    let compression_time = compression_started.elapsed();
+
+    let archive_file = File::open(&archive).expect("open small-files archive");
+    let mut zip = zip::ZipArchive::new(archive_file).expect("read small-files archive");
+    assert_eq!(zip.len(), file_count);
+    let mut observed_hasher = crc32fast::Hasher::new();
+    let mut buffer = vec![0u8; COPY_BUFFER_SIZE];
+    let extraction_started = Instant::now();
+    for index in 0..zip.len() {
+        let mut entry = zip.by_index(index).expect("small-files archive entry");
+        let output = output_dir.join(entry.name());
+        let mut file = File::create(output).expect("create extracted small file");
+        loop {
+            let read = entry.read(&mut buffer).expect("read small-files entry");
+            if read == 0 {
+                break;
+            }
+            observed_hasher.update(&buffer[..read]);
+            file.write_all(&buffer[..read])
+                .expect("write extracted small file");
+        }
+    }
+    let extraction_time = extraction_started.elapsed();
+    running.store(false, Ordering::Relaxed);
+    sampler.join().expect("join small-files memory sampler");
+
+    assert_eq!(observed_hasher.finalize(), expected_crc);
+    assert_eq!(
+        std::fs::read_dir(&output_dir)
+            .expect("read extracted small-files dir")
+            .count(),
+        file_count,
+    );
+
+    let peak_delta = peak_memory
+        .load(Ordering::Relaxed)
+        .saturating_sub(baseline_memory);
+    println!(
+        "PERF small_files={} compression={:.0}files/s extraction={:.0}files/s \
+         compression_ms={} extraction_ms={} peak_working_set_delta={:.2}MiB archive_bytes={}",
+        file_count,
+        file_count as f64 / compression_time.as_secs_f64(),
+        file_count as f64 / extraction_time.as_secs_f64(),
+        compression_time.as_millis(),
+        extraction_time.as_millis(),
+        peak_delta as f64 / MIB as f64,
+        std::fs::metadata(&archive).expect("small-files archive metadata").len(),
+    );
+
+    assert!(
+        peak_delta < 256 * MIB,
+        "many-small-files ZIP path used more than 256 MiB of additional working set"
+    );
+}

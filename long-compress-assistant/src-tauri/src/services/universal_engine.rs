@@ -1,4 +1,5 @@
 use anyhow::Result;
+use std::io::{Read, Write};
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -18,6 +19,7 @@ impl Default for UniversalCliEngine {
 }
 
 impl UniversalCliEngine {
+    const COPY_BUFFER_SIZE: usize = 256 * 1024;
     const RESOURCE_SCAN_INTERVAL: std::time::Duration = std::time::Duration::from_secs(5);
 
     pub fn new() -> Self {
@@ -71,6 +73,7 @@ impl UniversalCliEngine {
     pub(crate) fn try_zip_password(file_path: &Path, password: &str) -> Result<bool> {
         let file = std::fs::File::open(file_path)?;
         let mut archive = zip_aes::ZipArchive::new(file)?;
+        let mut buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
         let mut found_encrypted_entry = false;
 
         for index in 0..archive.len() {
@@ -85,8 +88,15 @@ impl UniversalCliEngine {
                         continue;
                     }
                     let mut sink = std::io::sink();
-                    if std::io::copy(&mut entry, &mut sink).is_err() {
-                        return Ok(false);
+                    loop {
+                        let read = match entry.read(&mut buffer) {
+                            Ok(read) => read,
+                            Err(_) => return Ok(false),
+                        };
+                        if read == 0 {
+                            break;
+                        }
+                        sink.write_all(&buffer[..read])?;
                     }
                 }
                 Err(zip_aes::result::ZipError::InvalidPassword) => return Ok(false),
@@ -133,10 +143,11 @@ impl UniversalCliEngine {
         let file = std::fs::File::open(file_path)?;
         let mut archive = zip_aes::ZipArchive::new(file)?;
         let total = archive.len().max(1);
+        let mut buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
         std::fs::create_dir_all(output_dir)?;
 
         for index in 0..archive.len() {
-            if is_cancelled.load(Ordering::SeqCst) {
+            if is_cancelled.load(Ordering::Relaxed) {
                 return Err(CompressionError::Cancelled.into());
             }
 
@@ -177,8 +188,17 @@ impl UniversalCliEngine {
                     std::fs::create_dir_all(parent)?;
                 }
                 let mut output = std::fs::File::create(&target)?;
-                std::io::copy(&mut entry, &mut output)?;
-                drop(output);
+                loop {
+                    if is_cancelled.load(Ordering::Relaxed) {
+                        return Err(CompressionError::Cancelled.into());
+                    }
+                    let read = entry.read(&mut buffer)?;
+                    if read == 0 {
+                        break;
+                    }
+                    output.write_all(&buffer[..read])?;
+                }
+                output.flush()?;
                 if let Some(modified) = modified {
                     filetime::set_file_mtime(
                         &target,
