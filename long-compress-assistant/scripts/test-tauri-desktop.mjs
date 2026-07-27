@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
-import { homedir } from 'node:os'
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Builder, By, Capabilities } from 'selenium-webdriver'
@@ -39,6 +48,8 @@ let driver
 let tauriDriverProcess
 let devToolsPortMirror
 let driverOutput = ''
+let fixtureDirectory
+let completedSuccessfully = false
 
 function appendDriverOutput(chunk) {
   driverOutput = `${driverOutput}${chunk}`.slice(-32_768)
@@ -70,6 +81,51 @@ function terminateProcessTree(processId) {
   })
 }
 
+function forwardContextAction(flag, files) {
+  const result = spawnSync(application, [flag, ...files], {
+    cwd: root,
+    env: {
+      ...process.env,
+      LONG_DECOMPRESS_E2E_DATA_DIR: e2eDataDirectory,
+    },
+    encoding: 'utf8',
+    timeout: 30_000,
+    windowsHide: true,
+  })
+  assert.ifError(result.error)
+  assert.equal(
+    result.status,
+    0,
+    `the second application instance failed to forward ${flag}: ${result.stderr || result.stdout}`,
+  )
+}
+
+async function waitForStableFile(filePath, timeoutMs = 60_000) {
+  let lastSize = -1
+  let stablePolls = 0
+  await driver.wait(() => {
+    try {
+      if (!existsSync(filePath)) return false
+      const currentSize = statSync(filePath).size
+      stablePolls = currentSize > 0 && currentSize === lastSize ? stablePolls + 1 : 0
+      lastSize = currentSize
+      return stablePolls >= 3
+    } catch {
+      return false
+    }
+  }, timeoutMs)
+}
+
+async function waitForFileContent(filePath, expectedContent, timeoutMs = 60_000) {
+  await driver.wait(() => {
+    try {
+      return readFileSync(filePath, 'utf8') === expectedContent
+    } catch {
+      return false
+    }
+  }, timeoutMs)
+}
+
 async function waitForNonEmptyText(selector, timeoutMs = 30_000) {
   return driver.wait(async () => {
     try {
@@ -90,6 +146,9 @@ async function captureFailure() {
   driverOutput +=
     `\nDevToolsActivePort: nested=${existsSync(nestedDevToolsPort)}` +
     ` mirrored=${existsSync(mirroredDevToolsPort)}\n`
+  if (fixtureDirectory) {
+    driverOutput += `Fixture directory retained at: ${fixtureDirectory}\n`
+  }
   mkdirSync(artifactDirectory, { recursive: true })
   writeFileSync(path.join(artifactDirectory, 'tauri-driver.log'), driverOutput, 'utf8')
   if (driver) {
@@ -153,7 +212,7 @@ try {
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 60_000)
   assert.ok(await waitForNonEmptyText('main h1'), 'the decompression workspace heading is empty')
 
-  const navigation = await driver.findElements(By.css('aside nav > button'))
+  let navigation = await driver.findElements(By.css('aside nav > button'))
   assert.equal(navigation.length, 5, 'the real desktop shell must expose five navigation buttons')
   assert.equal(
     await navigation[0].getAttribute('aria-current'),
@@ -161,10 +220,40 @@ try {
     'the decompression workspace must be selected by default',
   )
 
+  fixtureDirectory = mkdtempSync(path.join(tmpdir(), 'long-decompress-desktop-e2e-'))
+  const sourcePath = path.join(fixtureDirectory, 'roundtrip-payload.txt')
+  const archivePath = path.join(fixtureDirectory, 'roundtrip-payload.zip')
+  const extractedPath = path.join(
+    fixtureDirectory,
+    'roundtrip-payload',
+    'roundtrip-payload.txt',
+  )
+  const payload = `Long解压 real desktop round-trip ${new Date().toISOString()}\n`
+  writeFileSync(sourcePath, payload, 'utf8')
+
+  forwardContextAction('--quick-pack', [sourcePath])
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await waitForStableFile(archivePath)
+  assert.ok(
+    readFileSync(archivePath).length > 0,
+    'the real compression command must create a non-empty ZIP archive',
+  )
+
+  forwardContextAction('--quick-extract', [archivePath])
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 30_000)
+  await waitForFileContent(extractedPath, payload)
+  assert.equal(
+    readFileSync(extractedPath, 'utf8'),
+    payload,
+    'the extracted file must match the source payload byte-for-byte',
+  )
+
+  navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[4].click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/settings'), 30_000)
   assert.ok(await waitForNonEmptyText('main h1'), 'the settings heading is empty')
-  console.log('Real Windows Tauri desktop smoke test passed.')
+  completedSuccessfully = true
+  console.log('Real Windows Tauri desktop archive round-trip test passed.')
 } catch (error) {
   await captureFailure()
   throw error
@@ -178,4 +267,11 @@ try {
     }
   }
   terminateProcessTree(tauriDriverProcess?.pid)
+  if (completedSuccessfully && fixtureDirectory) {
+    const expectedPrefix = `${path.resolve(tmpdir())}${path.sep}`
+    const resolvedFixtureDirectory = path.resolve(fixtureDirectory)
+    if (resolvedFixtureDirectory.startsWith(expectedPrefix)) {
+      rmSync(resolvedFixtureDirectory, { recursive: true, force: true })
+    }
+  }
 }
