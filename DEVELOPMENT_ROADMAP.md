@@ -60,7 +60,7 @@ Long解压已经从“功能补齐”进入“发布治理、真实桌面验收�
 | 已完成 | `master` 分支保护 | 已要求 PR、四项 CI 和对话解决，并禁止强推和删除 | 持续核验 GitHub 配置；管理员紧急绕过必须留下记录 |
 | P0 | 已安装应用的发布验收仍依赖人工 | 已建立 `RELEASE_CHECKLIST.md` 和验收 Issue 表单 | 每版保存验收结果并从 Release 回链；逐步自动化 |
 | P1 | AESENC01/TARAES01 整文件占用内存 | 加密与解密路径使用 `read_to_end` | 设计流式 v2 容器，保持 v1 只读兼容，禁止直接改坏旧文件 |
-| P1 | 缺少真实 Tauri 桌面 E2E | Playwright 当前只覆盖 Chromium 壳层 | 覆盖启动、拖放/选取、任务执行、取消、托盘和更新阻断 |
+| P1 | 真实 Tauri 桌面 E2E 尚未进入托管 CI | Windows WebView2 启动、默认工作区和导航已在交互式 Windows 本机通过；GitHub 托管 runner 无法创建 WebView2 调试端口 | 接入交互式 self-hosted Windows runner 后设为合入门禁，再覆盖拖放/选取、任务执行、取消、托盘和更新阻断 |
 | P1 | 性能基线没有持续趋势 | 真实基准默认被忽略 | 在固定 Windows runner 上记录多次样本，再设置回归阈值 |
 | P1 | 关键前端桥接层覆盖偏低 | `useTauriCommands` 28.57% 行；解压中心约 50% 行 | 优先覆盖失败、取消、权限、磁盘不足和部分成功分支 |
 | P2 | 实验性并行解压器未进入生产 | `ParallelExtractor` 仅在自身模块和测试中使用 | 先对齐密码、冲突、时间戳、回滚和路径安全，再决定接入或删除 |
@@ -106,6 +106,13 @@ Long解压已经从“功能补齐”进入“发布治理、真实桌面验收�
 ### 阶段 C：真实桌面 E2E 与关键覆盖率
 
 目标：让自动化覆盖真实 Tauri 命令和 Windows 生命周期。
+
+当前进度：已建立真实 Windows 桌面 E2E，通过 `tauri-driver` 和匹配 WebView2 Runtime
+的 EdgeDriver 启动隔离的 Release Tauri 二进制，验证后端初始化、默认解压工作区和设置导航；
+交互式 Windows 本机已通过。GitHub 托管 Windows runner 无法创建 WebView2 调试端口，因此 CI
+当前只执行 `Windows desktop E2E build`，验证隔离二进制、脚本和驱动匹配，安装包 job 依赖该门禁。
+下一步接入交互式 self-hosted Windows runner，再覆盖真实压缩/解压命令、任务取消、第二实例转发
+和托盘生命周期。
 
 1. 建立可启动真实桌面后端的 Windows E2E。
 2. 优先覆盖：

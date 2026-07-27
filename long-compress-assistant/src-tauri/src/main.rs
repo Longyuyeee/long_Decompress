@@ -18,8 +18,14 @@ use window_shadows::set_shadow;
 
 use long_compress_assistant::commands::system_integration::{ContextAction, DesktopBehaviorState};
 
+#[cfg(not(feature = "desktop-e2e"))]
 const INSTANCE_NAME: &str = "com.longcompress.assistant.desktop";
+#[cfg(feature = "desktop-e2e")]
+const INSTANCE_NAME: &str = "com.longcompress.assistant.desktop.e2e";
+#[cfg(not(feature = "desktop-e2e"))]
 const INSTANCE_SOCKET_NAME: &str = "com.longcompress.assistant.desktop.sock";
+#[cfg(feature = "desktop-e2e")]
+const INSTANCE_SOCKET_NAME: &str = "com.longcompress.assistant.desktop.e2e.sock";
 
 fn parse_context_action(args: &[String]) -> Option<ContextAction> {
     let actions = [

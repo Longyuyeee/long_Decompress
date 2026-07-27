@@ -79,9 +79,49 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --project=chromium
 
+  desktop-e2e-build:
+    name: Windows desktop E2E build
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: long-compress-assistant
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: long-compress-assistant/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: long-compress-assistant/src-tauri -> target
+      - run: npm ci
+      - name: Build frontend
+        run: npm run build
+      - name: Build real Tauri application
+        working-directory: long-compress-assistant/src-tauri
+        run: cargo build --release --features custom-protocol,desktop-e2e
+      - name: Validate desktop E2E scripts
+        run: |
+          node --check scripts/test-tauri-desktop.mjs
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path "scripts/install-edge-driver.ps1"),
+            [ref]$null,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+      - name: Validate matching Microsoft EdgeDriver
+        run: .\scripts\install-edge-driver.ps1 -Destination (Join-Path $env:RUNNER_TEMP "edge-driver")
+
   installer:
     name: Windows installer
-    needs: [frontend, rust, e2e]
+    needs: [frontend, rust, e2e, desktop-e2e-build]
     runs-on: windows-latest
     defaults:
       run:

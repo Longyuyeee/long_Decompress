@@ -3,6 +3,11 @@ use std::path::PathBuf;
 const APP_DATA_FOLDER: &str = "LongDecompress";
 
 pub fn app_data_dir() -> PathBuf {
+    #[cfg(feature = "desktop-e2e")]
+    if let Some(path) = std::env::var_os("LONG_DECOMPRESS_E2E_DATA_DIR") {
+        return PathBuf::from(path);
+    }
+
     if cfg!(debug_assertions) {
         let mut path = std::env::current_dir().unwrap_or_default();
         if path.ends_with("src-tauri") {
