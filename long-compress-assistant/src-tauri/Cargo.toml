@@ -19,10 +19,12 @@ tauri = { version = "1.5", features = [
     "system-tray",
     "updater",
     "window-close",
+    "window-hide",
     "window-maximize",
     "window-minimize",
     "window-set-position",
     "window-set-size",
+    "window-show",
     "window-unmaximize"
 ] }
 serde = { version = "1.0", features = ["derive"] }

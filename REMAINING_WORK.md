@@ -25,8 +25,8 @@
 ## 后续工程工作
 
 1. 在固定 Windows 环境积累 AES v2 性能趋势；`AESENC01/TARAES01` 保持受限的只读兼容。
-2. 真实 Tauri Windows 桌面 E2E 已覆盖第二实例转发和 ZIP 压缩/解压逐字节闭环；阶段 C 还剩真实取消/托盘/更新阻断 E2E，以及交互式 self-hosted Windows 门禁两步。Playwright 继续承担快速浏览器壳层验证。
-3. 前端覆盖率已提升至 75.93% 行、72.79% 分支、56.07% 函数，达到阶段 C 的首个函数覆盖率门槛；`useTauriCommands`、`WindowTitleBar`、无障碍设置、解压磁盘失败和部分取消已有直接回归。
+2. 真实 Tauri Windows 桌面 E2E 已覆盖第二实例转发、ZIP 压缩/解压逐字节闭环、长任务取消及残留清理、活动任务退出确认、更新阻断和托盘隐藏/恢复。阶段 C 的代码工作已经收口，只剩把该套件接入交互式 self-hosted Windows runner 这一项外部基础设施工作。Playwright 继续承担快速浏览器壳层验证。
+3. 前端覆盖率为 75.93% 行、72.68% 分支、56.07% 函数，达到阶段 C 的函数覆盖率门槛；`useTauriCommands`、`WindowTitleBar`、无障碍设置、解压磁盘失败和部分取消已有直接回归。
 4. 将 100MiB/1GiB ZIP、小文件和后续加密基准放入固定 Windows 环境做趋势采样，再制定性能回归阈值。
 5. 评估实验性 `ParallelExtractor`：必须先对齐密码、冲突、时间戳、回滚和路径安全，否则不进入生产路径。
 6. 拆分过大的 `compression_service.rs`，但必须以现有真实归档矩阵为行为保护。

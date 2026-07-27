@@ -31,6 +31,7 @@ export default defineConfig({
         '**/*.d.ts',
         'src/main.ts',
         'src/router/**',
+        'src/testing/**',
         '**/virtual:*',
         '**/__x00__*',
         '**/\x00*',

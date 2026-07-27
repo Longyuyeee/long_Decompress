@@ -29,10 +29,12 @@
       "window": {
         "all": false,
         "close": true,
+        "hide": true,
         "maximize": true,
         "minimize": true,
         "setPosition": true,
         "setSize": true,
+        "show": true,
         "unmaximize": true
       }
     },

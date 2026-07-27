@@ -316,8 +316,10 @@ const copyToClipboard = async (text: string) => {
                   <button
                     v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
                     @click.stop="cancelTask(task)"
+                    data-testid="cancel-task"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 transition-all"
-                    :title="appStore.t('tasks.cancel')">
+                    :title="appStore.t('tasks.cancel')"
+                    :aria-label="appStore.t('tasks.cancel')">
                     <i class="pi pi-stop-circle text-[0.75rem]"></i>
                   </button>
                 </div>

@@ -44,6 +44,7 @@ import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
 import { useUpdateStore } from '@/stores/update'
 import { useAccessibility } from '@/composables/useAccessibility'
+import { installDesktopE2EBridge } from '@/testing/desktopE2EBridge'
 import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -60,6 +61,7 @@ const { initAccessibility, setupWatchers, watchSystemPreferences } = useAccessib
 let saveWindowTimer: any = null
 let unlistenResize: any = null
 let cleanupSystemWatcher: (() => void) | null = null
+let cleanupDesktopE2EBridge: (() => void) | null = null
 let contextDrainTimer: ReturnType<typeof setTimeout> | null = null
 let contextDrainPromise: Promise<void> | null = null
 let contextDrainAgain = false
@@ -178,6 +180,9 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 onMounted(async () => {
   window.addEventListener('keydown', handleKeydown)
+  if (import.meta.env.VITE_DESKTOP_E2E === '1') {
+    cleanupDesktopE2EBridge = installDesktopE2EBridge()
+  }
   // 初始化可访问性设置
   initAccessibility()
   setupWatchers()
@@ -317,6 +322,7 @@ onUnmounted(() => {
   if (contextDrainTimer) clearTimeout(contextDrainTimer)
   if (unlistenResize) unlistenResize()
   if (cleanupSystemWatcher) cleanupSystemWatcher()
+  cleanupDesktopE2EBridge?.()
   appUnlisteners.forEach(unlisten => unlisten())
   updateStore.cleanup()
   saveWindowState()

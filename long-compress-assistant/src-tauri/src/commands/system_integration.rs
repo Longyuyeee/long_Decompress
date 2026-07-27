@@ -7,7 +7,9 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
     Mutex,
 };
-use tauri::{command, AppHandle, State};
+use tauri::{command, AppHandle, State, Window};
+#[cfg(feature = "desktop-e2e")]
+use tauri::Manager;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContextAction {
@@ -39,6 +41,81 @@ pub fn set_close_to_tray(state: State<'_, DesktopBehaviorState>, enabled: bool) 
 #[command]
 pub fn set_has_active_tasks(state: State<'_, DesktopBehaviorState>, active: bool) {
     state.has_active_tasks.store(active, Ordering::SeqCst);
+}
+
+pub fn should_confirm_exit(state: &DesktopBehaviorState) -> bool {
+    !state.close_to_tray.load(Ordering::SeqCst)
+        && state.has_active_tasks.load(Ordering::SeqCst)
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DesktopE2EBehaviorState {
+    pub close_to_tray: bool,
+    pub has_active_tasks: bool,
+}
+
+#[command]
+pub fn desktop_e2e_get_behavior_state(
+    state: State<'_, DesktopBehaviorState>,
+) -> Result<DesktopE2EBehaviorState, String> {
+    #[cfg(not(feature = "desktop-e2e"))]
+    {
+        let _ = state;
+        Err("desktop E2E support is not enabled".to_string())
+    }
+
+    #[cfg(feature = "desktop-e2e")]
+    {
+        Ok(DesktopE2EBehaviorState {
+            close_to_tray: state.close_to_tray.load(Ordering::SeqCst),
+            has_active_tasks: state.has_active_tasks.load(Ordering::SeqCst),
+        })
+    }
+}
+
+#[command]
+pub fn desktop_e2e_request_exit_confirmation(
+    app: AppHandle,
+    state: State<'_, DesktopBehaviorState>,
+) -> Result<bool, String> {
+    #[cfg(not(feature = "desktop-e2e"))]
+    {
+        let _ = (app, state);
+        Err("desktop E2E support is not enabled".to_string())
+    }
+
+    #[cfg(feature = "desktop-e2e")]
+    {
+        let should_confirm = should_confirm_exit(&state);
+        if should_confirm {
+            app.emit_all("exit-confirmation-requested", ())
+                .map_err(|error| error.to_string())?;
+        }
+        Ok(should_confirm)
+    }
+}
+
+#[command]
+pub fn desktop_e2e_hide_window(
+    window: Window,
+    marker_path: String,
+) -> Result<(), String> {
+    #[cfg(not(feature = "desktop-e2e"))]
+    {
+        let _ = (window, marker_path);
+        Err("desktop E2E support is not enabled".to_string())
+    }
+
+    #[cfg(feature = "desktop-e2e")]
+    {
+        window.hide().map_err(|error| error.to_string())?;
+        let visibility = if window.is_visible().map_err(|error| error.to_string())? {
+            "visible"
+        } else {
+            "hidden"
+        };
+        std::fs::write(marker_path, visibility).map_err(|error| error.to_string())
+    }
 }
 
 #[command]
@@ -171,4 +248,25 @@ pub async fn unregister_context_menu() -> Result<bool, String> {
 #[tauri::command]
 pub async fn is_context_menu_registered() -> Result<bool, String> {
     Ok(crate::system_integration::context_menu::is_context_menu_registered())
+}
+
+#[cfg(test)]
+mod desktop_behavior_tests {
+    use super::{should_confirm_exit, DesktopBehaviorState};
+    use std::sync::atomic::Ordering;
+
+    #[test]
+    fn only_active_tasks_without_close_to_tray_require_exit_confirmation() {
+        let state = DesktopBehaviorState::default();
+        assert!(!should_confirm_exit(&state));
+
+        state.close_to_tray.store(false, Ordering::SeqCst);
+        assert!(!should_confirm_exit(&state));
+
+        state.has_active_tasks.store(true, Ordering::SeqCst);
+        assert!(should_confirm_exit(&state));
+
+        state.close_to_tray.store(true, Ordering::SeqCst);
+        assert!(!should_confirm_exit(&state));
+    }
 }

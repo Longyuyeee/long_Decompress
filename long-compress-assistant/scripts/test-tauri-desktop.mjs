@@ -140,6 +140,62 @@ async function waitForNonEmptyText(selector, timeoutMs = 30_000) {
   }, timeoutMs)
 }
 
+async function waitForNonEmptyFile(filePath, timeoutMs = 30_000) {
+  await driver.wait(() => {
+    try {
+      return existsSync(filePath) && statSync(filePath).size > 0
+    } catch {
+      return false
+    }
+  }, timeoutMs)
+}
+
+async function callDesktopBridge(method, ...args) {
+  const result = await driver.executeAsyncScript(
+    (bridgeMethod, bridgeArgs, done) => {
+      const bridge = window.__LONG_DECOMPRESS_DESKTOP_E2E__
+      if (!bridge || typeof bridge[bridgeMethod] !== 'function') {
+        done({ ok: false, error: `Desktop E2E bridge method is unavailable: ${bridgeMethod}` })
+        return
+      }
+      Promise.resolve(bridge[bridgeMethod](...bridgeArgs))
+        .then((value) => done({ ok: true, value }))
+        .catch((error) => done({ ok: false, error: String(error) }))
+    },
+    method,
+    args,
+  )
+  assert.equal(result?.ok, true, result?.error || `Desktop E2E bridge call failed: ${method}`)
+  return result.value
+}
+
+async function waitForElement(selector, timeoutMs = 30_000) {
+  return driver.wait(async () => {
+    const elements = await driver.findElements(By.css(selector))
+    return elements[0] || false
+  }, timeoutMs)
+}
+
+async function waitForLocalFileContent(filePath, expectedContent, timeoutMs = 30_000) {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    try {
+      if (readFileSync(filePath, 'utf8') === expectedContent) return
+    } catch {
+      // The desktop process has not written the visibility marker yet.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250))
+  }
+  throw new Error(`Timed out waiting for ${filePath} to contain ${expectedContent}.`)
+}
+
+async function hideDesktopWindow(markerPath) {
+  await driver.executeScript(
+    'void window.__LONG_DECOMPRESS_DESKTOP_E2E__?.hideWindow(arguments[0]); return true',
+    markerPath,
+  )
+}
+
 async function captureFailure() {
   const nestedDevToolsPort = path.join(webviewUserDataDirectory, 'EBWebView', 'DevToolsActivePort')
   const mirroredDevToolsPort = path.join(webviewUserDataDirectory, 'DevToolsActivePort')
@@ -211,6 +267,10 @@ try {
 
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 60_000)
   assert.ok(await waitForNonEmptyText('main h1'), 'the decompression workspace heading is empty')
+  await driver.wait(
+    () => driver.executeScript('return Boolean(window.__LONG_DECOMPRESS_DESKTOP_E2E__)'),
+    30_000,
+  )
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
   assert.equal(navigation.length, 5, 'the real desktop shell must expose five navigation buttons')
@@ -252,8 +312,86 @@ try {
   await navigation[4].click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/settings'), 30_000)
   assert.ok(await waitForNonEmptyText('main h1'), 'the settings heading is empty')
+
+  const cancellableOutput = path.join(fixtureDirectory, 'cancelled-task.partial')
+  console.log('[desktop-e2e] verifying cancellable task cleanup')
+  const cancellableTaskId = await callDesktopBridge('startCancellableTask', cancellableOutput)
+  await waitForNonEmptyFile(cancellableOutput)
+  console.log('[desktop-e2e] cancellable output is active')
+  await driver.executeScript("document.querySelector('.progress-summary')?.click()")
+  await waitForElement('.progress-panel button[data-testid="cancel-task"]')
+  console.log('[desktop-e2e] cancel action is visible')
+  await driver.executeScript(
+    "document.querySelector('.progress-panel button[data-testid=\"cancel-task\"]')?.click()",
+  )
+  await driver.wait(
+    async () => (await callDesktopBridge('taskStatus', cancellableTaskId)) === 'cancelled',
+    30_000,
+  )
+  console.log('[desktop-e2e] task store observed cancellation')
+  await driver.wait(() => !existsSync(cancellableOutput), 30_000)
+  console.log('[desktop-e2e] partial output was removed')
+  await callDesktopBridge('clearTasks')
+
+  console.log('[desktop-e2e] verifying active-task exit confirmation')
+  await callDesktopBridge('setCloseToTray', false)
+  await callDesktopBridge('seedActiveTask')
+  assert.deepEqual(
+    await callDesktopBridge('desktopBehaviorState'),
+    { close_to_tray: false, has_active_tasks: true },
+    'the native close handler must observe the active task before a close request',
+  )
+  assert.equal(
+    await callDesktopBridge('requestExitConfirmation'),
+    true,
+    'the native close decision must request confirmation for an active task',
+  )
+  const exitDialog = await waitForElement('[role="dialog"]')
+  assert.ok(
+    (await exitDialog.findElements(By.css('button'))).length >= 3,
+    'active-task exit confirmation must provide cancel, background, and stop-and-exit actions',
+  )
+  assert.equal(
+    await callDesktopBridge('isWindowVisible'),
+    true,
+    'the window must remain visible while active-task exit confirmation is open',
+  )
+  const exitButtons = await exitDialog.findElements(By.css('button'))
+  await exitButtons[0].click()
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 30_000)
+  await callDesktopBridge('clearTasks')
+
+  console.log('[desktop-e2e] verifying update blocking while a task is active')
+  await callDesktopBridge('seedActiveTask')
+  await callDesktopBridge('showAvailableUpdate')
+  const updateDialog = await waitForElement('[role="dialog"]')
+  assert.ok(
+    (await updateDialog.findElements(By.css('button:disabled'))).length > 0,
+    'the install action must be disabled while a desktop task is active',
+  )
+  await callDesktopBridge('clearTasks')
+  await driver.wait(
+    async () => (await updateDialog.findElements(By.css('button:disabled'))).length === 0,
+    30_000,
+  )
+  await callDesktopBridge('reset')
+  await callDesktopBridge('setCloseToTray', true)
+
+  console.log('[desktop-e2e] verifying close-to-tray and second-instance restore')
+  assert.deepEqual(
+    await callDesktopBridge('desktopBehaviorState'),
+    { close_to_tray: true, has_active_tasks: false },
+    'the native close handler must be configured to hide an idle window to the tray',
+  )
+  const hiddenMarker = path.join(fixtureDirectory, 'window-hidden.marker')
+  const restoredMarker = path.join(fixtureDirectory, 'window-restored.marker')
+  await hideDesktopWindow(hiddenMarker)
+  await waitForLocalFileContent(hiddenMarker, 'hidden')
+  forwardContextAction('--desktop-e2e-restore', [restoredMarker])
+  await waitForLocalFileContent(restoredMarker, 'visible')
+
   completedSuccessfully = true
-  console.log('Real Windows Tauri desktop archive round-trip test passed.')
+  console.log('Real Windows Tauri desktop archive and lifecycle tests passed.')
 } catch (error) {
   await captureFailure()
   throw error
