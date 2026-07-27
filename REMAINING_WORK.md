@@ -10,7 +10,7 @@
 
 ## 合入前质量门
 
-1. Draft PR 的 Windows 前端、Rust、Shell Extension、Chromium E2E 和 NSIS 安装包任务全部通过。
+1. Draft PR 的 Windows 前端、Rust、Shell Extension、Chromium E2E、真实 Windows 桌面 E2E 和 NSIS 安装包任务全部通过。
 2. 在已安装的 Windows 应用中执行人工冒烟：ZIP/7Z 压缩、加密 ZIP/7Z、RAR 解压、密码保险箱、托盘关闭行为、传统右键菜单、卸载和应用内更新。
 3. 使用管理员 PowerShell 执行 `npm run test:context-menu-package`，验证测试身份包安装、COM 激活、资源管理器菜单和清理回滚。
 4. `master` 已要求通过 PR 合入、四项 CI 成功、解决对话，并禁止强制推送和删除；管理员仅保留紧急绕过能力。
@@ -25,7 +25,7 @@
 ## 后续工程工作
 
 1. 在固定 Windows 环境积累 AES v2 性能趋势；`AESENC01/TARAES01` 保持受限的只读兼容。
-2. 增加能够启动真实 Tauri 后端的 Windows 桌面 E2E；当前 Playwright 验证的是浏览器壳层。
+2. 扩展真实 Tauri Windows 桌面 E2E，继续覆盖压缩/解压、取消、第二实例转发、托盘和更新阻断；Playwright 继续承担快速浏览器壳层验证。
 3. 前端覆盖率为 71.33% 行、71.17% 分支、47.14% 函数；优先补 `useTauriCommands`、解压失败分支、主题、无障碍和窗口标题栏。
 4. 将 100MiB/1GiB ZIP、小文件和后续加密基准放入固定 Windows 环境做趋势采样，再制定性能回归阈值。
 5. 评估实验性 `ParallelExtractor`：必须先对齐密码、冲突、时间戳、回滚和路径安全，否则不进入生产路径。
@@ -39,7 +39,7 @@
 - 完成首批归档性能优化：复用 256KiB 复制缓冲、按 4MiB 节流原生解压进度、避免缓冲池反复收缩、降低通用引擎全目录扫描频率，并合并暂存布局整理与资源计数；新增 100MiB/1GiB 真实文件 CRC32 与峰值工作集回归。
 - 密码保险箱密钥目录创建失败改为返回可诊断错误，不再直接 panic。
 - 分卷归档文件名无法转换时返回错误，不再通过 `unwrap` 终止进程。
-- 新增持续集成质量门：类型检查、覆盖率、生产构建、Rust 全目标测试、Clippy、Shell Extension、Chromium E2E 和无签名 NSIS 构建。
+- 新增持续集成质量门：类型检查、覆盖率、生产构建、Rust 全目标测试、Clippy、Shell Extension、Chromium E2E、真实 Windows 桌面 E2E 和无签名 NSIS 构建。
 - 删除 4 个长期通过 `cfg(any())` 隐藏、且依赖已移除 API 的腐化测试文件；对应能力由当前数据库/配置集成测试、密码流程测试和服务单测覆盖。
 - 本机无 updater、无代码签名证书的 NSIS 构建成功，确认普通 CI 不依赖更新私钥。
 - 更新弹窗和全局任务进度条新增关键交互回归；更新安装会在活动任务结束前保持禁用，安装中弹窗不可被关闭。

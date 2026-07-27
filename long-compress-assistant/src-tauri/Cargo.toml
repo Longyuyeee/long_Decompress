@@ -92,3 +92,4 @@ proptest = "1.4"
 [features]
 default = []
 custom-protocol = ["tauri/custom-protocol"]
+desktop-e2e = []
