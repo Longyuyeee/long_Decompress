@@ -193,6 +193,7 @@ npm run tauri build
 - [开发状态与路线图](DEVELOPMENT_ROADMAP.md)
 - [Release 发布验收清单](RELEASE_CHECKLIST.md)
 - [开发收口清单](REMAINING_WORK.md)
+- [AES 流式容器 v2 规范](long-compress-assistant/docs/AES_STREAM_V2.md)
 - [归档性能基线](long-compress-assistant/docs/PERFORMANCE_BASELINE.md)
 
 </details>
