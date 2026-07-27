@@ -191,6 +191,7 @@ npm run tauri build
 项目状态与后续开发方向：
 
 - [开发状态与路线图](DEVELOPMENT_ROADMAP.md)
+- [Release 发布验收清单](RELEASE_CHECKLIST.md)
 - [开发收口清单](REMAINING_WORK.md)
 - [归档性能基线](long-compress-assistant/docs/PERFORMANCE_BASELINE.md)
 
