@@ -1,0 +1,108 @@
+name: 发布验收记录
+description: 记录正式版本的自动化门禁、Windows 已安装应用验收和发布判定
+title: "[Release validation] v"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请完成仓库根目录的 `RELEASE_CHECKLIST.md`。失败项必须关联阻断 Issue；
+        此记录需要在对应 GitHub Release 中回链。
+  - type: input
+    id: version
+    attributes:
+      label: 候选版本
+      description: 使用 vX.Y.Z 格式。
+      placeholder: v1.0.14
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: 候选提交
+      description: 填写完整 commit SHA。
+    validations:
+      required: true
+  - type: input
+    id: previous
+    attributes:
+      label: 上一正式版本
+      placeholder: v1.0.13
+    validations:
+      required: true
+  - type: input
+    id: ci
+    attributes:
+      label: CI 运行链接
+      placeholder: https://github.com/Longyuyeee/long_Decompress/actions/runs/...
+    validations:
+      required: true
+  - type: input
+    id: release_run
+    attributes:
+      label: Release 工作流链接
+      description: 发布前可填写候选构建链接，发布后更新为正式 Release 工作流。
+      placeholder: https://github.com/Longyuyeee/long_Decompress/actions/runs/...
+    validations:
+      required: true
+  - type: input
+    id: installer_sha256
+    attributes:
+      label: 安装器 SHA-256
+      description: 对公开发布的 NSIS 安装器计算 SHA-256。
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 验收环境
+      description: Windows 版本、系统内部版本、架构及与本次验收相关的环境信息。
+    validations:
+      required: true
+  - type: checkboxes
+    id: automated
+    attributes:
+      label: 自动化门禁
+      options:
+        - label: Frontend checks 通过
+          required: true
+        - label: Rust and shell-extension checks 通过
+          required: true
+        - label: Browser shell E2E 通过
+          required: true
+        - label: Windows installer 通过
+          required: true
+  - type: textarea
+    id: manual_results
+    attributes:
+      label: 人工验收结果
+      description: |
+        按 RELEASE_CHECKLIST.md 的章节记录 PASS、FAIL 或 N/A，并附日志、截图或其他证据。
+      placeholder: |
+        安装、升级和卸载：PASS
+        压缩与解压矩阵：PASS
+        失败、取消与事务安全：PASS
+        桌面与资源管理器集成：PASS（Windows 11 顶层菜单 N/A：无可信证书）
+        密码保险箱与界面回归：PASS
+        发布资产核验：PASS
+    validations:
+      required: true
+  - type: textarea
+    id: blockers
+    attributes:
+      label: 失败项与阻断 Issue
+      description: 没有失败项时填写“无”。
+    validations:
+      required: true
+  - type: checkboxes
+    id: decision
+    attributes:
+      label: 发布判定
+      options:
+        - label: 已完成 RELEASE_CHECKLIST.md 的全部必需项目
+          required: true
+        - label: 所有 N/A 均已说明理由
+          required: true
+        - label: 当前没有未解决的发布阻断 Issue
+          required: true
+        - label: 我确认该候选版本可以发布
+          required: true

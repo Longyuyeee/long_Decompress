@@ -6,32 +6,32 @@
 
 ## 当前结论
 
-核心压缩、解压、密码识别、分卷、取消、事务式输出和更新签名流程已有自动化回归，v1.0.13 Release 与最新 `master` CI 均成功，当前没有已知的发布阻断级代码故障。主要缺口分为三类：`master` 尚未启用分支保护；真实 Tauri 桌面 E2E 与 AES 流式容器仍待建设；Windows 11 顶层右键菜单仍依赖可信代码签名证书。
+核心压缩、解压、密码识别、分卷、取消、事务式输出和更新签名流程已有自动化回归，v1.0.13 Release 与最新 `master` CI 均成功，当前没有已知的发布阻断级代码故障。`master` 已启用 PR、四项 CI、对话解决、禁止强推和禁止删除保护；发布验收流程已沉淀到 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 和发布验收 Issue 表单。主要工程缺口是真实 Tauri 桌面 E2E 与 AES 流式容器；Windows 11 顶层右键菜单依赖可信代码签名证书，当前明确暂缓。
 
 ## 合入前质量门
 
 1. Draft PR 的 Windows 前端、Rust、Shell Extension、Chromium E2E 和 NSIS 安装包任务全部通过。
 2. 在已安装的 Windows 应用中执行人工冒烟：ZIP/7Z 压缩、加密 ZIP/7Z、RAR 解压、密码保险箱、托盘关闭行为、传统右键菜单、卸载和应用内更新。
 3. 使用管理员 PowerShell 执行 `npm run test:context-menu-package`，验证测试身份包安装、COM 激活、资源管理器菜单和清理回滚。
-4. `master` 当前尚未配置分支保护；应要求通过 PR 合入、CI 成功，并禁止强制推送和删除。
+4. `master` 已要求通过 PR 合入、四项 CI 成功、解决对话，并禁止强制推送和删除；管理员仅保留紧急绕过能力。
+5. 每次正式发布按 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 创建发布验收记录，并从 Release 回链。
 
 ## 尚未对齐的外部依赖
 
-1. 获取可信的 Windows 代码签名证书，并通过 GitHub Actions Secrets 配置证书、密码和时间戳服务。
-2. 有可信证书后启用并发布 Windows 11 新式右键菜单身份包；当前公开版本只保证“显示更多选项”中的传统菜单。
-3. 代码签名同时用于降低安装包的 SmartScreen 警告。此项无法仅靠仓库代码完全解决。
+1. 当前没有可信 Windows 代码签名证书，证书采购与 Actions Secrets 配置暂缓。
+2. 在获得可信证书前不发布 Windows 11 新式右键菜单身份包；公开版本只保证“显示更多选项”中的传统菜单。
+3. 无商业代码签名时 SmartScreen 仍可能警告；Release 必须明确提示用户核对下载来源。
 
 ## 后续工程工作
 
-1. 启用 `master` 分支保护，并建立可关联到 Release 的已安装应用验收清单。
-2. 为 AESENC01/TARAES01 设计向后兼容的流式 v2 容器；现有实现会将密文整体读入内存。
-3. 增加能够启动真实 Tauri 后端的 Windows 桌面 E2E；当前 Playwright 验证的是浏览器壳层。
-4. 前端覆盖率为 71.33% 行、71.17% 分支、47.14% 函数；优先补 `useTauriCommands`、解压失败分支、主题、无障碍和窗口标题栏。
-5. 将 100MiB/1GiB ZIP、小文件和后续加密基准放入固定 Windows 环境做趋势采样，再制定性能回归阈值。
-6. 评估实验性 `ParallelExtractor`：必须先对齐密码、冲突、时间戳、回滚和路径安全，否则不进入生产路径。
-7. 拆分过大的 `compression_service.rs`，但必须以现有真实归档矩阵为行为保护。
-8. 分批清理 Rust 历史格式化欠账；不与可靠性修复混合。
-9. Tauri 2、Vite/Vitest、Pinia 等主版本升级在独立迁移分支评估。
+1. 为 AESENC01/TARAES01 设计向后兼容的流式 v2 容器；现有实现会将密文整体读入内存。
+2. 增加能够启动真实 Tauri 后端的 Windows 桌面 E2E；当前 Playwright 验证的是浏览器壳层。
+3. 前端覆盖率为 71.33% 行、71.17% 分支、47.14% 函数；优先补 `useTauriCommands`、解压失败分支、主题、无障碍和窗口标题栏。
+4. 将 100MiB/1GiB ZIP、小文件和后续加密基准放入固定 Windows 环境做趋势采样，再制定性能回归阈值。
+5. 评估实验性 `ParallelExtractor`：必须先对齐密码、冲突、时间戳、回滚和路径安全，否则不进入生产路径。
+6. 拆分过大的 `compression_service.rs`，但必须以现有真实归档矩阵为行为保护。
+7. 分批清理 Rust 历史格式化欠账；不与可靠性修复混合。
+8. Tauri 2、Vite/Vitest、Pinia 等主版本升级在独立迁移分支评估。
 
 ## v1.0.13 已完成
 
