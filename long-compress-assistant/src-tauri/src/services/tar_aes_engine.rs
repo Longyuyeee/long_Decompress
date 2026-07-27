@@ -51,15 +51,31 @@ impl TarAesEngine {
         password: &str,
         base_dir: Option<&Path>,
     ) -> Result<()> {
-        Self::validate_sources(files)?;
+        Self::compress_tar_aes_cancellable(files, output, password, base_dir, || Ok(()))
+    }
+
+    pub fn compress_tar_aes_cancellable(
+        files: &[PathBuf],
+        output: &Path,
+        password: &str,
+        base_dir: Option<&Path>,
+        mut check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<()> {
+        Self::validate_sources(files, &mut check_cancellation)?;
         let temporary_tar = TemporaryPath::near(output, "tar");
-        Self::create_tar_archive(files, base_dir, temporary_tar.as_path())
-            .context("创建 TAR 归档失败")?;
-        AesStreamV2::encrypt_file(
+        Self::create_tar_archive(
+            files,
+            base_dir,
+            temporary_tar.as_path(),
+            &mut check_cancellation,
+        )
+        .context("创建 TAR 归档失败")?;
+        AesStreamV2::encrypt_file_cancellable(
             temporary_tar.as_path(),
             output,
             password,
             AesStreamKind::Tar,
+            check_cancellation,
         )
         .context("AES v2 加密失败")
     }
@@ -69,26 +85,46 @@ impl TarAesEngine {
         output_dir: &Path,
         password: &str,
     ) -> Result<()> {
+        Self::decompress_tar_aes_cancellable(archive_path, output_dir, password, || Ok(()))
+    }
+
+    pub fn decompress_tar_aes_cancellable(
+        archive_path: &Path,
+        output_dir: &Path,
+        password: &str,
+        mut check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<()> {
         if AesStreamV2::is_kind(archive_path, AesStreamKind::Tar)? {
             let temporary_tar = TemporaryPath::near(output_dir, "decrypted.tar");
-            AesStreamV2::decrypt_file(
+            AesStreamV2::decrypt_file_cancellable(
                 archive_path,
                 temporary_tar.as_path(),
                 password,
                 AesStreamKind::Tar,
+                &mut check_cancellation,
             )
             .context("AES v2 解密失败")?;
-            return Self::extract_tar_file(temporary_tar.as_path(), output_dir)
-                .context("解压 TAR 归档失败");
+            return Self::extract_tar_file(
+                temporary_tar.as_path(),
+                output_dir,
+                &mut check_cancellation,
+            )
+            .context("解压 TAR 归档失败");
         }
 
-        let tar_data = Self::decrypt_legacy_data(archive_path, password).context("AES 解密失败")?;
-        Self::extract_tar_reader(tar_data.as_slice(), output_dir).context("解压 TAR 归档失败")
+        let tar_data = Self::decrypt_legacy_data(archive_path, password, &mut check_cancellation)
+            .context("AES 解密失败")?;
+        Self::extract_tar_reader(tar_data.as_slice(), output_dir, &mut check_cancellation)
+            .context("解压 TAR 归档失败")
     }
 
-    fn validate_sources(files: &[PathBuf]) -> Result<()> {
+    fn validate_sources(
+        files: &[PathBuf],
+        check_cancellation: &mut impl FnMut() -> Result<()>,
+    ) -> Result<()> {
         for source in files {
             for entry in walkdir::WalkDir::new(source).follow_links(false) {
+                check_cancellation()?;
                 let entry = entry?;
                 if entry.file_type().is_symlink() {
                     return Err(anyhow!(
@@ -100,7 +136,12 @@ impl TarAesEngine {
         Ok(())
     }
 
-    fn create_tar_archive(files: &[PathBuf], base_dir: Option<&Path>, output: &Path) -> Result<()> {
+    fn create_tar_archive(
+        files: &[PathBuf],
+        base_dir: Option<&Path>,
+        output: &Path,
+        check_cancellation: &mut impl FnMut() -> Result<()>,
+    ) -> Result<()> {
         let file = OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -109,6 +150,7 @@ impl TarAesEngine {
         let mut archive = Builder::new(file);
 
         for file_path in files {
+            check_cancellation()?;
             if file_path.is_file() {
                 let archive_path = if let Some(base) = base_dir {
                     file_path.strip_prefix(base).unwrap_or(file_path)
@@ -131,12 +173,18 @@ impl TarAesEngine {
         }
 
         archive.finish().context("完成 TAR 归档失败")?;
+        check_cancellation()?;
         let file = archive.into_inner().context("关闭 TAR 归档失败")?;
         file.sync_all()?;
         Ok(())
     }
 
-    fn decrypt_legacy_data(archive_path: &Path, password: &str) -> Result<Zeroizing<Vec<u8>>> {
+    fn decrypt_legacy_data(
+        archive_path: &Path,
+        password: &str,
+        check_cancellation: &mut impl FnMut() -> Result<()>,
+    ) -> Result<Zeroizing<Vec<u8>>> {
+        check_cancellation()?;
         if archive_path.metadata()?.len() > MAX_LEGACY_TAR_AES_BYTES + 128 {
             return Err(anyhow!(
                 "Legacy TAR.AES container exceeds the safe 512 MiB in-memory limit"
@@ -158,13 +206,16 @@ impl TarAesEngine {
         let mut ciphertext = Vec::new();
         file.read_to_end(&mut ciphertext)
             .context("读取旧版加密数据失败")?;
+        check_cancellation()?;
 
         let key = Self::derive_legacy_key(password, &salt)?;
         let cipher = Aes256Gcm::new(&key);
-        cipher
+        let plaintext = cipher
             .decrypt(Nonce::from_slice(&nonce_bytes), ciphertext.as_ref())
             .map(Zeroizing::new)
-            .map_err(|_| anyhow!("解密失败: 密码错误或文件已损坏"))
+            .map_err(|_| anyhow!("解密失败: 密码错误或文件已损坏"))?;
+        check_cancellation()?;
+        Ok(plaintext)
     }
 
     fn derive_legacy_key(password: &str, salt: &[u8]) -> Result<Key<Aes256Gcm>> {
@@ -180,16 +231,31 @@ impl TarAesEngine {
         Ok(key)
     }
 
-    fn extract_tar_file(tar_path: &Path, output_dir: &Path) -> Result<()> {
+    fn extract_tar_file(
+        tar_path: &Path,
+        output_dir: &Path,
+        check_cancellation: &mut impl FnMut() -> Result<()>,
+    ) -> Result<()> {
         let file = File::open(tar_path)?;
-        Self::extract_tar_reader(file, output_dir)
+        Self::extract_tar_reader(file, output_dir, check_cancellation)
     }
 
-    fn extract_tar_reader(reader: impl Read, output_dir: &Path) -> Result<()> {
+    fn extract_tar_reader(
+        reader: impl Read,
+        output_dir: &Path,
+        check_cancellation: &mut impl FnMut() -> Result<()>,
+    ) -> Result<()> {
         std::fs::create_dir_all(output_dir)
             .with_context(|| format!("创建输出目录失败: {:?}", output_dir))?;
         let mut archive = tar::Archive::new(reader);
-        archive.unpack(output_dir).context("解压归档失败")
+        for entry in archive.entries().context("读取 TAR 条目失败")? {
+            check_cancellation()?;
+            let mut entry = entry.context("读取 TAR 条目失败")?;
+            if !entry.unpack_in(output_dir).context("解压 TAR 条目失败")? {
+                return Err(anyhow!("TAR 条目试图逃逸输出目录"));
+            }
+        }
+        Ok(())
     }
 
     pub fn is_tar_aes(path: &Path) -> Result<bool> {
@@ -202,13 +268,30 @@ impl TarAesEngine {
     }
 
     pub fn verify_password(path: &Path, password: &str) -> Result<bool> {
+        Self::verify_password_cancellable(path, password, || Ok(()))
+    }
+
+    pub fn verify_password_cancellable(
+        path: &Path,
+        password: &str,
+        mut check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<bool> {
         if AesStreamV2::is_kind(path, AesStreamKind::Tar)? {
-            return AesStreamV2::verify_password(path, password, AesStreamKind::Tar);
+            return AesStreamV2::verify_password_cancellable(
+                path,
+                password,
+                AesStreamKind::Tar,
+                check_cancellation,
+            );
         }
         if !Self::has_legacy_magic(path)? {
             return Ok(false);
         }
-        Ok(Self::decrypt_legacy_data(path, password).is_ok())
+        match Self::decrypt_legacy_data(path, password, &mut check_cancellation) {
+            Ok(_) => Ok(true),
+            Err(error) if error.to_string().contains("密码错误或文件已损坏") => Ok(false),
+            Err(error) => Err(error),
+        }
     }
 
     fn has_legacy_magic(path: &Path) -> Result<bool> {

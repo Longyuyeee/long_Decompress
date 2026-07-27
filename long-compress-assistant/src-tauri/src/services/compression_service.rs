@@ -309,6 +309,28 @@ pub struct CompressionService {
     pub semaphore: Arc<Semaphore>,
 }
 
+struct TemporaryAesInput(PathBuf);
+
+impl TemporaryAesInput {
+    fn new(extension: &str) -> Self {
+        Self(std::env::temp_dir().join(format!(
+            "long-compress-aes-input-{}.{}",
+            uuid::Uuid::new_v4(),
+            extension,
+        )))
+    }
+
+    fn path(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl Drop for TemporaryAesInput {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.0);
+    }
+}
+
 impl CompressionService {
     const MAX_EXTRACTED_FILES: usize = 250_000;
     const MAX_EXTRACTED_BYTES: u64 = 512 * 1024 * 1024 * 1024;
@@ -2359,6 +2381,38 @@ impl CompressionService {
         self.do_extract_tar(w, tid, file, output, Some(Box::new(zst)), options)
     }
 
+    fn map_aes_extraction_error(error: anyhow::Error) -> anyhow::Error {
+        if matches!(
+            error.downcast_ref::<CompressionError>(),
+            Some(CompressionError::Cancelled)
+        ) {
+            return CompressionError::Cancelled.into();
+        }
+        let message = error.to_string();
+        if message.contains("密码错误") || message.contains("解密失败") {
+            CompressionError::InvalidPassword.into()
+        } else {
+            CompressionError::ExtractionFailed(message).into()
+        }
+    }
+
+    fn encrypt_aes_file(&self, input: &Path, output: &Path, password: &str) -> Result<()> {
+        AesWrapper::encrypt_file_cancellable(input, output, password, || {
+            self.check_cancellation()
+        })
+        .map_err(|error| {
+            if matches!(
+                error.downcast_ref::<CompressionError>(),
+                Some(CompressionError::Cancelled)
+            ) {
+                CompressionError::Cancelled
+            } else {
+                CompressionError::CompressionFailed(format!("加密失败: {}", error))
+            }
+        })
+        .map_err(Into::into)
+    }
+
     fn do_extract_aes(
         &self,
         window: &Window,
@@ -2373,14 +2427,13 @@ impl CompressionService {
 
         if TarAesEngine::is_tar_aes(source).unwrap_or(false) {
             self.emit_log(window, task_id, "正在解密并解压 TAR.AES", TaskLogSeverity::Info);
-            return TarAesEngine::decompress_tar_aes(source, output, password).map_err(|error| {
-                let message = error.to_string();
-                if message.contains("密码错误") || message.contains("解密失败") {
-                    anyhow::Error::new(CompressionError::InvalidPassword)
-                } else {
-                    anyhow::Error::new(CompressionError::ExtractionFailed(message))
-                }
-            });
+            return TarAesEngine::decompress_tar_aes_cancellable(
+                source,
+                output,
+                password,
+                || self.check_cancellation(),
+            )
+            .map_err(Self::map_aes_extraction_error);
         }
 
         if !AesWrapper::is_aes_encrypted(source).unwrap_or(false) {
@@ -2411,14 +2464,13 @@ impl CompressionService {
         let decrypted = temporary_root.join(inner_name);
 
         let result = (|| -> Result<()> {
-            AesWrapper::decrypt_file(source, &decrypted, password).map_err(|error| {
-                let message = error.to_string();
-                if message.contains("密码错误") || message.contains("解密失败") {
-                    anyhow::Error::new(CompressionError::InvalidPassword)
-                } else {
-                    anyhow::Error::new(CompressionError::ExtractionFailed(message))
-                }
-            })?;
+            AesWrapper::decrypt_file_cancellable(
+                source,
+                &decrypted,
+                password,
+                || self.check_cancellation(),
+            )
+            .map_err(Self::map_aes_extraction_error)?;
 
             let lower_name = inner_name.to_lowercase();
             let decrypted_path = decrypted.to_string_lossy();
@@ -2870,12 +2922,19 @@ impl CompressionService {
         };
 
         // 执行压缩
-        TarAesEngine::compress_tar_aes(
+        TarAesEngine::compress_tar_aes_cancellable(
             &source_paths,
             Path::new(output),
             password,
             base_dir,
+            || self.check_cancellation(),
         ).map_err(|e| {
+            if matches!(
+                e.downcast_ref::<CompressionError>(),
+                Some(CompressionError::Cancelled)
+            ) {
+                return CompressionError::Cancelled;
+            }
             self.emit_log(window, task_id, &format!("TAR.AES 压缩失败: {}", e), TaskLogSeverity::Error);
             CompressionError::CompressionFailed(format!("TAR.AES 压缩失败: {}", e))
         })?;
@@ -2890,15 +2949,11 @@ impl CompressionService {
             .ok_or_else(|| CompressionError::CompressionFailed("TAR.GZ.AES 格式需要密码".to_string()))?;
 
         // 1. 创建临时 TAR.GZ 文件
-        let temp_tar_gz = std::env::temp_dir().join(format!("temp_{}.tar.gz", uuid::Uuid::new_v4()));
-        self.do_compress_tar_gz(window, task_id, sources, temp_tar_gz.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+        let temp_tar_gz = TemporaryAesInput::new("tar.gz");
+        self.do_compress_tar_gz(window, task_id, sources, temp_tar_gz.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
 
         // 2. 加密 TAR.GZ 为 TAR.GZ.AES
-        AesWrapper::encrypt_file(&temp_tar_gz, Path::new(output), password)
-            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
-
-        // 3. 清理临时文件
-        let _ = std::fs::remove_file(temp_tar_gz);
+        self.encrypt_aes_file(temp_tar_gz.path(), Path::new(output), password)?;
 
         self.emit_log(window, task_id, "TAR.GZ.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
@@ -2909,13 +2964,10 @@ impl CompressionService {
         let password = options.password.as_deref()
             .ok_or_else(|| CompressionError::CompressionFailed("TAR.BZ2.AES 格式需要密码".to_string()))?;
 
-        let temp_tar_bz2 = std::env::temp_dir().join(format!("temp_{}.tar.bz2", uuid::Uuid::new_v4()));
-        self.do_compress_tar_bz2(window, task_id, sources, temp_tar_bz2.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+        let temp_tar_bz2 = TemporaryAesInput::new("tar.bz2");
+        self.do_compress_tar_bz2(window, task_id, sources, temp_tar_bz2.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
 
-        AesWrapper::encrypt_file(&temp_tar_bz2, Path::new(output), password)
-            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
-
-        let _ = std::fs::remove_file(temp_tar_bz2);
+        self.encrypt_aes_file(temp_tar_bz2.path(), Path::new(output), password)?;
 
         self.emit_log(window, task_id, "TAR.BZ2.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
@@ -2926,13 +2978,10 @@ impl CompressionService {
         let password = options.password.as_deref()
             .ok_or_else(|| CompressionError::CompressionFailed("TAR.XZ.AES 格式需要密码".to_string()))?;
 
-        let temp_tar_xz = std::env::temp_dir().join(format!("temp_{}.tar.xz", uuid::Uuid::new_v4()));
-        self.do_compress_tar_xz(window, task_id, sources, temp_tar_xz.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+        let temp_tar_xz = TemporaryAesInput::new("tar.xz");
+        self.do_compress_tar_xz(window, task_id, sources, temp_tar_xz.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
 
-        AesWrapper::encrypt_file(&temp_tar_xz, Path::new(output), password)
-            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
-
-        let _ = std::fs::remove_file(temp_tar_xz);
+        self.encrypt_aes_file(temp_tar_xz.path(), Path::new(output), password)?;
 
         self.emit_log(window, task_id, "TAR.XZ.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
@@ -2943,13 +2992,10 @@ impl CompressionService {
         let password = options.password.as_deref()
             .ok_or_else(|| CompressionError::CompressionFailed("TAR.ZST.AES 格式需要密码".to_string()))?;
 
-        let temp_tar_zst = std::env::temp_dir().join(format!("temp_{}.tar.zst", uuid::Uuid::new_v4()));
-        self.do_compress_tar_zstd(window, task_id, sources, temp_tar_zst.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+        let temp_tar_zst = TemporaryAesInput::new("tar.zst");
+        self.do_compress_tar_zstd(window, task_id, sources, temp_tar_zst.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
 
-        AesWrapper::encrypt_file(&temp_tar_zst, Path::new(output), password)
-            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
-
-        let _ = std::fs::remove_file(temp_tar_zst);
+        self.encrypt_aes_file(temp_tar_zst.path(), Path::new(output), password)?;
 
         self.emit_log(window, task_id, "TAR.ZST.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
@@ -2960,13 +3006,10 @@ impl CompressionService {
         let password = options.password.as_deref()
             .ok_or_else(|| CompressionError::CompressionFailed("GZ.AES 格式需要密码".to_string()))?;
 
-        let temp_gz = std::env::temp_dir().join(format!("temp_{}.gz", uuid::Uuid::new_v4()));
-        self.do_compress_gz(window, task_id, sources, temp_gz.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+        let temp_gz = TemporaryAesInput::new("gz");
+        self.do_compress_gz(window, task_id, sources, temp_gz.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
 
-        AesWrapper::encrypt_file(&temp_gz, Path::new(output), password)
-            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
-
-        let _ = std::fs::remove_file(temp_gz);
+        self.encrypt_aes_file(temp_gz.path(), Path::new(output), password)?;
         self.emit_log(window, task_id, "GZ.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
     }
@@ -2976,13 +3019,10 @@ impl CompressionService {
         let password = options.password.as_deref()
             .ok_or_else(|| CompressionError::CompressionFailed("BZ2.AES 格式需要密码".to_string()))?;
 
-        let temp_bz2 = std::env::temp_dir().join(format!("temp_{}.bz2", uuid::Uuid::new_v4()));
-        self.do_compress_bz2(window, task_id, sources, temp_bz2.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+        let temp_bz2 = TemporaryAesInput::new("bz2");
+        self.do_compress_bz2(window, task_id, sources, temp_bz2.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
 
-        AesWrapper::encrypt_file(&temp_bz2, Path::new(output), password)
-            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
-
-        let _ = std::fs::remove_file(temp_bz2);
+        self.encrypt_aes_file(temp_bz2.path(), Path::new(output), password)?;
         self.emit_log(window, task_id, "BZ2.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
     }
@@ -2992,13 +3032,10 @@ impl CompressionService {
         let password = options.password.as_deref()
             .ok_or_else(|| CompressionError::CompressionFailed("XZ.AES 格式需要密码".to_string()))?;
 
-        let temp_xz = std::env::temp_dir().join(format!("temp_{}.xz", uuid::Uuid::new_v4()));
-        self.do_compress_xz(window, task_id, sources, temp_xz.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+        let temp_xz = TemporaryAesInput::new("xz");
+        self.do_compress_xz(window, task_id, sources, temp_xz.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
 
-        AesWrapper::encrypt_file(&temp_xz, Path::new(output), password)
-            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
-
-        let _ = std::fs::remove_file(temp_xz);
+        self.encrypt_aes_file(temp_xz.path(), Path::new(output), password)?;
         self.emit_log(window, task_id, "XZ.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
     }
@@ -3008,13 +3045,10 @@ impl CompressionService {
         let password = options.password.as_deref()
             .ok_or_else(|| CompressionError::CompressionFailed("ZST.AES 格式需要密码".to_string()))?;
 
-        let temp_zst = std::env::temp_dir().join(format!("temp_{}.zst", uuid::Uuid::new_v4()));
-        self.do_compress_zstd(window, task_id, sources, temp_zst.to_str().unwrap(), CompressionOptions { password: None, ..options })?;
+        let temp_zst = TemporaryAesInput::new("zst");
+        self.do_compress_zstd(window, task_id, sources, temp_zst.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
 
-        AesWrapper::encrypt_file(&temp_zst, Path::new(output), password)
-            .map_err(|e| CompressionError::CompressionFailed(format!("加密失败: {}", e)))?;
-
-        let _ = std::fs::remove_file(temp_zst);
+        self.encrypt_aes_file(temp_zst.path(), Path::new(output), password)?;
         self.emit_log(window, task_id, "ZST.AES 压缩完成", TaskLogSeverity::Success);
         Ok(())
     }
@@ -3299,10 +3333,14 @@ impl CompressionService {
         }
 
         if TarAesEngine::is_tar_aes(path).unwrap_or(false) {
-            return TarAesEngine::verify_password(path, password);
+            return TarAesEngine::verify_password_cancellable(path, password, || {
+                self.check_cancellation()
+            });
         }
         if AesWrapper::is_aes_encrypted(path).unwrap_or(false) {
-            return AesWrapper::verify_password(path, password);
+            return AesWrapper::verify_password_cancellable(path, password, || {
+                self.check_cancellation()
+            });
         }
 
         if format == ArchiveFormat::Zip {
@@ -3489,6 +3527,37 @@ mod tests {
             .expect("wrong password check"));
     }
 
+    #[tokio::test]
+    async fn aes_cancellation_remains_a_cancelled_task_and_cleans_output() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let input = temp.path().join("payload.bin");
+        let output = temp.path().join("payload.bin.aes");
+        std::fs::write(&input, vec![3u8; 2 * 1024 * 1024]).expect("write fixture");
+        let service = CompressionService::for_testing();
+        service.cancel();
+
+        let error = service
+            .encrypt_aes_file(&input, &output, "password")
+            .expect_err("pre-cancelled AES task must fail");
+        assert!(matches!(
+            error.downcast_ref::<CompressionError>(),
+            Some(CompressionError::Cancelled)
+        ));
+        assert!(!output.exists());
+    }
+
+    #[test]
+    fn temporary_aes_input_is_removed_on_drop() {
+        let path;
+        {
+            let input = TemporaryAesInput::new("bin");
+            path = input.path().to_path_buf();
+            std::fs::write(&path, b"temporary compressed payload").expect("write temp input");
+            assert!(path.exists());
+        }
+
+        assert!(!path.exists());
+    }
 }
 
 impl CompressionService {
