@@ -22,15 +22,46 @@ const MAX_LEGACY_AES_BYTES: u64 = 512 * 1024 * 1024;
 
 impl AesWrapper {
     pub fn encrypt_file(input: &Path, output: &Path, password: &str) -> Result<()> {
-        AesStreamV2::encrypt_file(input, output, password, AesStreamKind::Generic)
+        Self::encrypt_file_cancellable(input, output, password, || Ok(()))
+    }
+
+    pub fn encrypt_file_cancellable(
+        input: &Path,
+        output: &Path,
+        password: &str,
+        check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<()> {
+        AesStreamV2::encrypt_file_cancellable(
+            input,
+            output,
+            password,
+            AesStreamKind::Generic,
+            check_cancellation,
+        )
     }
 
     pub fn decrypt_file(input: &Path, output: &Path, password: &str) -> Result<()> {
+        Self::decrypt_file_cancellable(input, output, password, || Ok(()))
+    }
+
+    pub fn decrypt_file_cancellable(
+        input: &Path,
+        output: &Path,
+        password: &str,
+        mut check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<()> {
         if AesStreamV2::is_kind(input, AesStreamKind::Generic)? {
-            return AesStreamV2::decrypt_file(input, output, password, AesStreamKind::Generic);
+            return AesStreamV2::decrypt_file_cancellable(
+                input,
+                output,
+                password,
+                AesStreamKind::Generic,
+                check_cancellation,
+            );
         }
 
-        let decrypted_data = Self::decrypt_legacy_data(input, password)?;
+        let decrypted_data = Self::decrypt_legacy_data(input, password, &mut check_cancellation)?;
+        check_cancellation()?;
         let mut output_file = OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -44,16 +75,38 @@ impl AesWrapper {
     }
 
     pub fn verify_password(input: &Path, password: &str) -> Result<bool> {
+        Self::verify_password_cancellable(input, password, || Ok(()))
+    }
+
+    pub fn verify_password_cancellable(
+        input: &Path,
+        password: &str,
+        mut check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<bool> {
         if AesStreamV2::is_kind(input, AesStreamKind::Generic)? {
-            return AesStreamV2::verify_password(input, password, AesStreamKind::Generic);
+            return AesStreamV2::verify_password_cancellable(
+                input,
+                password,
+                AesStreamKind::Generic,
+                check_cancellation,
+            );
         }
         if !Self::has_magic(input, LEGACY_MAGIC)? {
             return Ok(false);
         }
-        Ok(Self::decrypt_legacy_data(input, password).is_ok())
+        match Self::decrypt_legacy_data(input, password, &mut check_cancellation) {
+            Ok(_) => Ok(true),
+            Err(error) if error.to_string().contains("密码错误或文件已损坏") => Ok(false),
+            Err(error) => Err(error),
+        }
     }
 
-    fn decrypt_legacy_data(input: &Path, password: &str) -> Result<Zeroizing<Vec<u8>>> {
+    fn decrypt_legacy_data(
+        input: &Path,
+        password: &str,
+        check_cancellation: &mut impl FnMut() -> Result<()>,
+    ) -> Result<Zeroizing<Vec<u8>>> {
+        check_cancellation()?;
         if input.metadata()?.len() > MAX_LEGACY_AES_BYTES + 128 {
             return Err(anyhow!(
                 "Legacy AES container exceeds the safe 512 MiB in-memory limit"
@@ -77,12 +130,15 @@ impl AesWrapper {
         let mut ciphertext = Vec::new();
         file.read_to_end(&mut ciphertext)
             .context("读取旧版加密数据失败")?;
+        check_cancellation()?;
         let key = Self::derive_legacy_key(password, &salt)?;
         let cipher = Aes256Gcm::new(&key);
-        cipher
+        let plaintext = cipher
             .decrypt(Nonce::from_slice(&nonce_bytes), ciphertext.as_ref())
             .map(Zeroizing::new)
-            .map_err(|_| anyhow!("解密失败: 密码错误或文件已损坏"))
+            .map_err(|_| anyhow!("解密失败: 密码错误或文件已损坏"))?;
+        check_cancellation()?;
+        Ok(plaintext)
     }
 
     fn derive_legacy_key(password: &str, salt: &[u8]) -> Result<Key<Aes256Gcm>> {

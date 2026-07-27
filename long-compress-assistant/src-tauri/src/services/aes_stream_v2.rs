@@ -208,9 +208,27 @@ impl AesStreamV2 {
         password: &str,
         kind: AesStreamKind,
     ) -> Result<()> {
-        Self::encrypt_file_with_chunk_size(input, output, password, kind, DEFAULT_CHUNK_SIZE)
+        Self::encrypt_file_cancellable(input, output, password, kind, || Ok(()))
     }
 
+    pub fn encrypt_file_cancellable(
+        input: &Path,
+        output: &Path,
+        password: &str,
+        kind: AesStreamKind,
+        mut check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<()> {
+        Self::encrypt_file_with_chunk_size_cancellable(
+            input,
+            output,
+            password,
+            kind,
+            DEFAULT_CHUNK_SIZE,
+            &mut check_cancellation,
+        )
+    }
+
+    #[cfg(test)]
     fn encrypt_file_with_chunk_size(
         input: &Path,
         output: &Path,
@@ -218,11 +236,31 @@ impl AesStreamV2 {
         kind: AesStreamKind,
         chunk_size: usize,
     ) -> Result<()> {
+        Self::encrypt_file_with_chunk_size_cancellable(
+            input,
+            output,
+            password,
+            kind,
+            chunk_size,
+            &mut || Ok(()),
+        )
+    }
+
+    fn encrypt_file_with_chunk_size_cancellable(
+        input: &Path,
+        output: &Path,
+        password: &str,
+        kind: AesStreamKind,
+        chunk_size: usize,
+        check_cancellation: &mut impl FnMut() -> Result<()>,
+    ) -> Result<()> {
+        check_cancellation()?;
         let input_file =
             File::open(input).with_context(|| format!("打开输入文件失败: {}", input.display()))?;
         let plaintext_len = input_file.metadata()?.len();
         let header = Header::new(kind, plaintext_len, chunk_size)?;
         let cipher = derive_cipher(password, &header.salt)?;
+        check_cancellation()?;
 
         let output_file = OpenOptions::new()
             .write(true)
@@ -236,6 +274,7 @@ impl AesStreamV2 {
 
         let mut plaintext = Zeroizing::new(vec![0u8; header.chunk_size]);
         for index in 0..header.chunk_count() {
+            check_cancellation()?;
             let length = header.plaintext_chunk_len(index)?;
             if length > 0 {
                 reader
@@ -255,6 +294,7 @@ impl AesStreamV2 {
                 .map_err(|_| anyhow!("AES v2 分块加密失败"))?;
             writer.write_all(&ciphertext)?;
         }
+        check_cancellation()?;
         writer.flush()?;
         writer.get_ref().sync_all()?;
         cleanup.committed = true;
@@ -267,6 +307,16 @@ impl AesStreamV2 {
         password: &str,
         kind: AesStreamKind,
     ) -> Result<()> {
+        Self::decrypt_file_cancellable(input, output, password, kind, || Ok(()))
+    }
+
+    pub fn decrypt_file_cancellable(
+        input: &Path,
+        output: &Path,
+        password: &str,
+        kind: AesStreamKind,
+        mut check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<()> {
         let output_file = OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -274,7 +324,8 @@ impl AesStreamV2 {
             .with_context(|| format!("创建 AES v2 解密输出失败: {}", output.display()))?;
         let mut cleanup = IncompleteOutput::new(output);
         let mut writer = BufWriter::new(output_file);
-        Self::decrypt_to_writer(input, password, kind, &mut writer)?;
+        Self::decrypt_to_writer(input, password, kind, &mut writer, &mut check_cancellation)?;
+        check_cancellation()?;
         writer.flush()?;
         writer.get_ref().sync_all()?;
         cleanup.committed = true;
@@ -282,7 +333,22 @@ impl AesStreamV2 {
     }
 
     pub fn verify_password(input: &Path, password: &str, kind: AesStreamKind) -> Result<bool> {
-        match Self::decrypt_to_writer(input, password, kind, &mut std::io::sink()) {
+        Self::verify_password_cancellable(input, password, kind, || Ok(()))
+    }
+
+    pub fn verify_password_cancellable(
+        input: &Path,
+        password: &str,
+        kind: AesStreamKind,
+        mut check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<bool> {
+        match Self::decrypt_to_writer(
+            input,
+            password,
+            kind,
+            &mut std::io::sink(),
+            &mut check_cancellation,
+        ) {
             Ok(()) => Ok(true),
             Err(error) if error.to_string().contains("密码错误或文件已损坏") => Ok(false),
             Err(error) => Err(error),
@@ -303,7 +369,9 @@ impl AesStreamV2 {
         password: &str,
         kind: AesStreamKind,
         writer: &mut impl Write,
+        check_cancellation: &mut impl FnMut() -> Result<()>,
     ) -> Result<()> {
+        check_cancellation()?;
         let input_file = File::open(input)
             .with_context(|| format!("打开 AES v2 文件失败: {}", input.display()))?;
         let actual_len = input_file.metadata()?.len();
@@ -313,9 +381,11 @@ impl AesStreamV2 {
             return Err(anyhow!("AES v2 文件长度不匹配，文件可能被截断或附加了数据"));
         }
         let cipher = derive_cipher(password, &header.salt)?;
+        check_cancellation()?;
 
         let mut ciphertext = vec![0u8; header.chunk_size + TAG_SIZE as usize];
         for index in 0..header.chunk_count() {
+            check_cancellation()?;
             let plaintext_len = header.plaintext_chunk_len(index)?;
             let ciphertext_len = plaintext_len + TAG_SIZE as usize;
             reader
@@ -336,6 +406,7 @@ impl AesStreamV2 {
             );
             writer.write_all(&plaintext)?;
         }
+        check_cancellation()?;
         ciphertext.zeroize();
         Ok(())
     }
@@ -468,6 +539,63 @@ mod tests {
             AesStreamV2::verify_password(&truncated_path, "password", AesStreamKind::Generic)
                 .unwrap_err();
         assert!(error.to_string().contains("长度不匹配"));
+        Ok(())
+    }
+
+    #[test]
+    fn cancellation_removes_partial_encrypted_and_decrypted_outputs() -> Result<()> {
+        let temp = TempDir::new()?;
+        let input = temp.path().join("input.bin");
+        let encrypted = temp.path().join("encrypted.aes");
+        let cancelled_encrypted = temp.path().join("cancelled.aes");
+        let cancelled_decrypted = temp.path().join("cancelled.bin");
+        fs::write(&input, vec![9u8; MIN_CHUNK_SIZE * 3])?;
+
+        let mut encrypt_checks = 0usize;
+        let encrypt_error = AesStreamV2::encrypt_file_with_chunk_size_cancellable(
+            &input,
+            &cancelled_encrypted,
+            "password",
+            AesStreamKind::Generic,
+            MIN_CHUNK_SIZE,
+            &mut || {
+                encrypt_checks += 1;
+                if encrypt_checks == 4 {
+                    Err(anyhow!("test cancellation"))
+                } else {
+                    Ok(())
+                }
+            },
+        )
+        .unwrap_err();
+        assert!(encrypt_error.to_string().contains("cancellation"));
+        assert!(!cancelled_encrypted.exists());
+
+        AesStreamV2::encrypt_file_with_chunk_size(
+            &input,
+            &encrypted,
+            "password",
+            AesStreamKind::Generic,
+            MIN_CHUNK_SIZE,
+        )?;
+        let mut decrypt_checks = 0usize;
+        let decrypt_error = AesStreamV2::decrypt_file_cancellable(
+            &encrypted,
+            &cancelled_decrypted,
+            "password",
+            AesStreamKind::Generic,
+            || {
+                decrypt_checks += 1;
+                if decrypt_checks == 4 {
+                    Err(anyhow!("test cancellation"))
+                } else {
+                    Ok(())
+                }
+            },
+        )
+        .unwrap_err();
+        assert!(decrypt_error.to_string().contains("cancellation"));
+        assert!(!cancelled_decrypted.exists());
         Ok(())
     }
 }
