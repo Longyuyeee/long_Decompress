@@ -20,6 +20,7 @@ const artifactDirectory = path.join(root, 'test-results', 'desktop-e2e')
 const e2eDataDirectory =
   process.env.LONG_DECOMPRESS_E2E_DATA_DIR ||
   path.join(root, 'test-results', 'desktop-e2e-data')
+const webviewUserDataDirectory = path.join(e2eDataDirectory, 'webview2')
 
 if (process.platform !== 'win32') {
   throw new Error('The real desktop smoke test currently targets Windows WebView2.')
@@ -85,6 +86,7 @@ async function captureFailure() {
 }
 
 try {
+  mkdirSync(webviewUserDataDirectory, { recursive: true })
   tauriDriverProcess = spawn(
     tauriDriver,
     ['--native-driver', edgeDriver],
@@ -104,13 +106,22 @@ try {
 
   const capabilities = new Capabilities()
   capabilities.setBrowserName('wry')
-  capabilities.set('tauri:options', { application })
+  const webviewOptions = {
+    userDataFolder: webviewUserDataDirectory,
+  }
+  if (process.env.CI) {
+    webviewOptions.additionalBrowserArguments = ['--headless=new', '--disable-gpu']
+  }
+  capabilities.set('tauri:options', { application, webviewOptions })
   driver = await new Builder().usingServer(webdriverUrl).withCapabilities(capabilities).build()
   await driver.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 30_000 })
 
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 60_000)
   const heading = await driver.wait(until.elementLocated(By.css('main h1')), 30_000)
-  assert.ok((await heading.getText()).trim(), 'the decompression workspace heading is empty')
+  assert.ok(
+    (await heading.getAttribute('textContent')).trim(),
+    'the decompression workspace heading is empty',
+  )
 
   const navigation = await driver.findElements(By.css('aside nav > button'))
   assert.equal(navigation.length, 5, 'the real desktop shell must expose five navigation buttons')
@@ -123,7 +134,7 @@ try {
   await navigation[4].click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/settings'), 30_000)
   const settingsHeading = await driver.wait(until.elementLocated(By.css('main h1')), 30_000)
-  assert.ok((await settingsHeading.getText()).trim(), 'the settings heading is empty')
+  assert.ok((await settingsHeading.getAttribute('textContent')).trim(), 'the settings heading is empty')
   console.log('Real Windows Tauri desktop smoke test passed.')
 } catch (error) {
   await captureFailure()

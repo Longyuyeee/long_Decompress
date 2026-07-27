@@ -46,8 +46,9 @@ GitHub Actions 的 `Windows desktop E2E` job 会：
 1. 构建前端和启用隔离 feature 的 Release Tauri 二进制；
 2. 安装固定版本的 `tauri-driver`；
 3. 读取 runner 上的 Edge 完整版本并下载完全匹配的 EdgeDriver；
-4. 执行真实桌面冒烟；
-5. 失败时上传日志和截图。
+4. 使用隔离的 WebView2 用户数据目录，并在无交互桌面的 runner 上启用 headless WebView2；
+5. 执行真实桌面冒烟；
+6. 失败时上传日志和截图。
 
 `Windows installer` 依赖该 job，因此真实桌面冒烟失败时不会继续生成可发布安装包。
 
