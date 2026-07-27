@@ -1,359 +1,322 @@
-use anyhow::{Context, Result, anyhow};
+use crate::services::aes_stream_v2::{AesStreamKind, AesStreamV2, TAR_AES_MAGIC_V2};
 use aes_gcm::{
     aead::{Aead, KeyInit},
-    Aes256Gcm, Nonce, Key
+    Aes256Gcm, Key, Nonce,
 };
-use argon2::{Argon2, Algorithm, Params, Version};
-use std::fs::File;
-use std::io::{Read, Write};
+use anyhow::{anyhow, Context, Result};
+use argon2::{Algorithm, Argon2, Params, Version};
+use std::fs::{File, OpenOptions};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use tar::Builder;
+use zeroize::{Zeroize, Zeroizing};
 
-/// TAR.AES 加密引擎
-/// 提供 TAR 归档 + AES-256-GCM 加密的组合功能
+/// TAR + AES-256-GCM 引擎。
 ///
-/// 文件格式:
-/// [Magic: 8 bytes]["TARAES01"][Salt: 32 bytes][Nonce: 12 bytes][Encrypted Data][Auth Tag: 16 bytes]
+/// 新文件使用分块的 TARAES02；TARAES01 仅保留受限的只读兼容。
 pub struct TarAesEngine;
 
-const MAGIC: &[u8; 8] = b"TARAES01";
+const LEGACY_MAGIC: &[u8; 8] = b"TARAES01";
 const SALT_SIZE: usize = 32;
 const NONCE_SIZE: usize = 12;
 const MAX_LEGACY_TAR_AES_BYTES: u64 = 512 * 1024 * 1024;
 
+struct TemporaryPath(PathBuf);
+
+impl TemporaryPath {
+    fn near(destination: &Path, extension: &str) -> Self {
+        let parent = destination.parent().unwrap_or_else(|| Path::new("."));
+        Self(parent.join(format!(
+            "long-compress-{}.{}",
+            uuid::Uuid::new_v4(),
+            extension
+        )))
+    }
+
+    fn as_path(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl Drop for TemporaryPath {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.0);
+    }
+}
+
 impl TarAesEngine {
-    /// 压缩并加密文件到 TAR.AES 格式
-    ///
-    /// # 参数
-    /// * `files` - 要压缩的文件/目录列表
-    /// * `output` - 输出文件路径（.tar.aes）
-    /// * `password` - 加密密码
-    /// * `base_dir` - 可选的基础目录，用于计算相对路径
     pub fn compress_tar_aes(
         files: &[PathBuf],
         output: &Path,
         password: &str,
         base_dir: Option<&Path>,
     ) -> Result<()> {
-        let mut total = 0u64;
-        for source in files {
-            for entry in walkdir::WalkDir::new(source).follow_links(false) {
-                let entry = entry?;
-                if entry.file_type().is_symlink() {
-                    return Err(anyhow!("Symbolic links are not accepted in encrypted archive sources"));
-                }
-                if entry.file_type().is_file() {
-                    total = total.checked_add(entry.metadata()?.len())
-                        .ok_or_else(|| anyhow!("Source size overflow"))?;
-                    if total > MAX_LEGACY_TAR_AES_BYTES {
-                        return Err(anyhow!("Legacy TAR.AES containers are limited to 512 MiB; use encrypted ZIP or 7Z for large archives"));
-                    }
-                }
-            }
-        }
-        // 步骤 1: 创建 TAR 归档到内存缓冲区
-        let tar_data = Self::create_tar_archive(files, base_dir)
+        Self::validate_sources(files)?;
+        let temporary_tar = TemporaryPath::near(output, "tar");
+        Self::create_tar_archive(files, base_dir, temporary_tar.as_path())
             .context("创建 TAR 归档失败")?;
-
-        // 步骤 2: 使用 AES-256-GCM 加密
-        Self::encrypt_with_aes(&tar_data, output, password)
-            .context("AES 加密失败")?;
-
-        Ok(())
+        AesStreamV2::encrypt_file(
+            temporary_tar.as_path(),
+            output,
+            password,
+            AesStreamKind::Tar,
+        )
+        .context("AES v2 加密失败")
     }
 
-    /// 解密并解压 TAR.AES 文件
-    ///
-    /// # 参数
-    /// * `archive_path` - TAR.AES 文件路径
-    /// * `output_dir` - 解压目标目录
-    /// * `password` - 解密密码
     pub fn decompress_tar_aes(
         archive_path: &Path,
         output_dir: &Path,
         password: &str,
     ) -> Result<()> {
-        // 步骤 1: AES 解密到内存
-        let tar_data = Self::decrypt_with_aes(archive_path, password)
-            .context("AES 解密失败")?;
+        if AesStreamV2::is_kind(archive_path, AesStreamKind::Tar)? {
+            let temporary_tar = TemporaryPath::near(output_dir, "decrypted.tar");
+            AesStreamV2::decrypt_file(
+                archive_path,
+                temporary_tar.as_path(),
+                password,
+                AesStreamKind::Tar,
+            )
+            .context("AES v2 解密失败")?;
+            return Self::extract_tar_file(temporary_tar.as_path(), output_dir)
+                .context("解压 TAR 归档失败");
+        }
 
-        // 步骤 2: 解压 TAR 归档
-        Self::extract_tar_archive(&tar_data, output_dir)
-            .context("解压 TAR 归档失败")?;
-
-        Ok(())
+        let tar_data = Self::decrypt_legacy_data(archive_path, password).context("AES 解密失败")?;
+        Self::extract_tar_reader(tar_data.as_slice(), output_dir).context("解压 TAR 归档失败")
     }
 
-    /// 创建 TAR 归档到内存
-    fn create_tar_archive(files: &[PathBuf], base_dir: Option<&Path>) -> Result<Vec<u8>> {
-        let mut buffer = Vec::new();
-        {
-            let mut archive = Builder::new(&mut buffer);
-
-            for file_path in files {
-                if file_path.is_file() {
-                    let archive_path = if let Some(base) = base_dir {
-                        file_path.strip_prefix(base)
-                            .unwrap_or(file_path)
-                    } else {
-                        file_path.file_name()
-                            .map(Path::new)
-                            .unwrap_or(file_path)
-                    };
-
-                    archive.append_path_with_name(file_path, archive_path)
-                        .with_context(|| format!("添加文件失败: {:?}", file_path))?;
-                } else if file_path.is_dir() {
-                    let archive_path = if let Some(base) = base_dir {
-                        file_path.strip_prefix(base)
-                            .unwrap_or(file_path)
-                    } else {
-                        file_path
-                    };
-
-                    archive.append_dir_all(archive_path, file_path)
-                        .with_context(|| format!("添加目录失败: {:?}", file_path))?;
+    fn validate_sources(files: &[PathBuf]) -> Result<()> {
+        for source in files {
+            for entry in walkdir::WalkDir::new(source).follow_links(false) {
+                let entry = entry?;
+                if entry.file_type().is_symlink() {
+                    return Err(anyhow!(
+                        "Symbolic links are not accepted in encrypted archive sources"
+                    ));
                 }
             }
-
-            archive.finish()
-                .context("完成 TAR 归档失败")?;
         }
-
-        Ok(buffer)
-    }
-
-    /// 使用 AES-256-GCM 加密数据
-    fn encrypt_with_aes(data: &[u8], output: &Path, password: &str) -> Result<()> {
-        // 生成随机盐
-        let mut salt = [0u8; SALT_SIZE];
-        use rand::RngCore;
-        rand::thread_rng().fill_bytes(&mut salt);
-
-        // 从密码派生密钥
-        let key = Self::derive_key(password, &salt)?;
-
-        // 生成随机 nonce
-        let mut nonce_bytes = [0u8; NONCE_SIZE];
-        rand::thread_rng().fill_bytes(&mut nonce_bytes);
-        let nonce = Nonce::from_slice(&nonce_bytes);
-
-        // 创建加密器
-        let cipher = Aes256Gcm::new(&key);
-
-        // 加密数据
-        let ciphertext = cipher.encrypt(nonce, data)
-            .map_err(|e| anyhow!("加密失败: {:?}", e))?;
-
-        // 写入文件：Magic + Salt + Nonce + Encrypted Data
-        let mut output_file = File::create(output)
-            .with_context(|| format!("创建输出文件失败: {:?}", output))?;
-
-        output_file.write_all(MAGIC)?;
-        output_file.write_all(&salt)?;
-        output_file.write_all(&nonce_bytes)?;
-        output_file.write_all(&ciphertext)?;
-
         Ok(())
     }
 
-    /// 使用 AES-256-GCM 解密数据
-    fn decrypt_with_aes(archive_path: &Path, password: &str) -> Result<Vec<u8>> {
-        if archive_path.metadata()?.len() > MAX_LEGACY_TAR_AES_BYTES + 128 {
-            return Err(anyhow!("Legacy TAR.AES container exceeds the safe 512 MiB in-memory limit"));
+    fn create_tar_archive(files: &[PathBuf], base_dir: Option<&Path>, output: &Path) -> Result<()> {
+        let file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(output)
+            .with_context(|| format!("创建临时 TAR 失败: {}", output.display()))?;
+        let mut archive = Builder::new(file);
+
+        for file_path in files {
+            if file_path.is_file() {
+                let archive_path = if let Some(base) = base_dir {
+                    file_path.strip_prefix(base).unwrap_or(file_path)
+                } else {
+                    file_path.file_name().map(Path::new).unwrap_or(file_path)
+                };
+                archive
+                    .append_path_with_name(file_path, archive_path)
+                    .with_context(|| format!("添加文件失败: {:?}", file_path))?;
+            } else if file_path.is_dir() {
+                let archive_path = if let Some(base) = base_dir {
+                    file_path.strip_prefix(base).unwrap_or(file_path)
+                } else {
+                    file_path.as_path()
+                };
+                archive
+                    .append_dir_all(archive_path, file_path)
+                    .with_context(|| format!("添加目录失败: {:?}", file_path))?;
+            }
         }
-        // 读取加密文件
+
+        archive.finish().context("完成 TAR 归档失败")?;
+        let file = archive.into_inner().context("关闭 TAR 归档失败")?;
+        file.sync_all()?;
+        Ok(())
+    }
+
+    fn decrypt_legacy_data(archive_path: &Path, password: &str) -> Result<Zeroizing<Vec<u8>>> {
+        if archive_path.metadata()?.len() > MAX_LEGACY_TAR_AES_BYTES + 128 {
+            return Err(anyhow!(
+                "Legacy TAR.AES container exceeds the safe 512 MiB in-memory limit"
+            ));
+        }
         let mut file = File::open(archive_path)
             .with_context(|| format!("打开加密文件失败: {:?}", archive_path))?;
-
-        // 读取 Magic
         let mut magic = [0u8; 8];
-        file.read_exact(&mut magic)
-            .context("读取文件头失败")?;
-
-        if &magic != MAGIC {
+        file.read_exact(&mut magic).context("读取文件头失败")?;
+        if &magic != LEGACY_MAGIC {
             return Err(anyhow!("无效的文件格式"));
         }
 
-        // 读取 Salt
         let mut salt = [0u8; SALT_SIZE];
-        file.read_exact(&mut salt)
-            .context("读取盐值失败")?;
-
-        // 读取 Nonce
+        file.read_exact(&mut salt).context("读取盐值失败")?;
         let mut nonce_bytes = [0u8; NONCE_SIZE];
         file.read_exact(&mut nonce_bytes)
             .context("读取 nonce 失败")?;
-        let nonce = Nonce::from_slice(&nonce_bytes);
-
-        // 读取加密数据
         let mut ciphertext = Vec::new();
         file.read_to_end(&mut ciphertext)
-            .context("读取加密数据失败")?;
+            .context("读取旧版加密数据失败")?;
 
-        // 从密码派生密钥
-        let key = Self::derive_key(password, &salt)?;
-
-        // 创建解密器
+        let key = Self::derive_legacy_key(password, &salt)?;
         let cipher = Aes256Gcm::new(&key);
-
-        // 解密数据
-        let plaintext = cipher.decrypt(nonce, ciphertext.as_ref())
-            .map_err(|_| anyhow!("解密失败: 密码错误或文件已损坏"))?;
-
-        Ok(plaintext)
+        cipher
+            .decrypt(Nonce::from_slice(&nonce_bytes), ciphertext.as_ref())
+            .map(Zeroizing::new)
+            .map_err(|_| anyhow!("解密失败: 密码错误或文件已损坏"))
     }
 
-    /// 从密码派生密钥（使用 Argon2）
-    fn derive_key(password: &str, salt: &[u8]) -> Result<Key<Aes256Gcm>> {
+    fn derive_legacy_key(password: &str, salt: &[u8]) -> Result<Key<Aes256Gcm>> {
         let mut key_bytes = [0u8; 32];
-
-        let params = Params::new(65536, 3, 1, Some(32))
-            .map_err(|e| anyhow!("创建 Argon2 参数失败: {:?}", e))?;
-
-        let argon2 = Argon2::new(
-            Algorithm::Argon2id,
-            Version::V0x13,
-            params,
-        );
-
-        argon2.hash_password_into(password.as_bytes(), salt, &mut key_bytes)
-            .map_err(|e| anyhow!("密钥派生失败: {:?}", e))?;
-
-        Ok(*Key::<Aes256Gcm>::from_slice(&key_bytes))
+        let params = Params::new(65_536, 3, 1, Some(32))
+            .map_err(|error| anyhow!("创建 Argon2 参数失败: {error:?}"))?;
+        let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
+        argon2
+            .hash_password_into(password.as_bytes(), salt, &mut key_bytes)
+            .map_err(|error| anyhow!("密钥派生失败: {error:?}"))?;
+        let key = *Key::<Aes256Gcm>::from_slice(&key_bytes);
+        key_bytes.zeroize();
+        Ok(key)
     }
 
-    /// 从内存解压 TAR 归档
-    fn extract_tar_archive(data: &[u8], output_dir: &Path) -> Result<()> {
-        let mut archive = tar::Archive::new(data);
+    fn extract_tar_file(tar_path: &Path, output_dir: &Path) -> Result<()> {
+        let file = File::open(tar_path)?;
+        Self::extract_tar_reader(file, output_dir)
+    }
 
-        // 创建输出目录
+    fn extract_tar_reader(reader: impl Read, output_dir: &Path) -> Result<()> {
         std::fs::create_dir_all(output_dir)
             .with_context(|| format!("创建输出目录失败: {:?}", output_dir))?;
-
-        // 解压所有条目
-        archive.unpack(output_dir)
-            .context("解压归档失败")?;
-
-        Ok(())
+        let mut archive = tar::Archive::new(reader);
+        archive.unpack(output_dir).context("解压归档失败")
     }
 
-    /// 检测文件是否为 TAR.AES 加密格式
     pub fn is_tar_aes(path: &Path) -> Result<bool> {
         let mut file = File::open(path)?;
         let mut magic = [0u8; 8];
-
         if file.read_exact(&mut magic).is_err() {
             return Ok(false);
         }
-
-        Ok(&magic == MAGIC)
+        Ok(&magic == LEGACY_MAGIC || &magic == TAR_AES_MAGIC_V2)
     }
 
-    /// Validate a password without writing extracted files.
     pub fn verify_password(path: &Path, password: &str) -> Result<bool> {
-        if !Self::is_tar_aes(path)? {
+        if AesStreamV2::is_kind(path, AesStreamKind::Tar)? {
+            return AesStreamV2::verify_password(path, password, AesStreamKind::Tar);
+        }
+        if !Self::has_legacy_magic(path)? {
             return Ok(false);
         }
-        Ok(Self::decrypt_with_aes(path, password).is_ok())
+        Ok(Self::decrypt_legacy_data(path, password).is_ok())
+    }
+
+    fn has_legacy_magic(path: &Path) -> Result<bool> {
+        let mut file = File::open(path)?;
+        let mut magic = [0u8; 8];
+        if file.read_exact(&mut magic).is_err() {
+            return Ok(false);
+        }
+        Ok(&magic == LEGACY_MAGIC)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::RngCore;
     use std::fs;
+    use std::io::Write;
     use tempfile::TempDir;
 
+    fn write_legacy_fixture(tar_data: &[u8], output: &Path, password: &str) -> Result<()> {
+        let mut salt = [0u8; SALT_SIZE];
+        let mut nonce_bytes = [0u8; NONCE_SIZE];
+        rand::thread_rng().fill_bytes(&mut salt);
+        rand::thread_rng().fill_bytes(&mut nonce_bytes);
+        let key = TarAesEngine::derive_legacy_key(password, &salt)?;
+        let cipher = Aes256Gcm::new(&key);
+        let ciphertext = cipher
+            .encrypt(Nonce::from_slice(&nonce_bytes), tar_data)
+            .map_err(|_| anyhow!("legacy fixture encryption failed"))?;
+        let mut file = File::create(output)?;
+        file.write_all(LEGACY_MAGIC)?;
+        file.write_all(&salt)?;
+        file.write_all(&nonce_bytes)?;
+        file.write_all(&ciphertext)?;
+        Ok(())
+    }
+
+    fn tar_bytes(source: &Path, archive_name: &Path) -> Result<Vec<u8>> {
+        let mut buffer = Vec::new();
+        {
+            let mut builder = Builder::new(&mut buffer);
+            builder.append_path_with_name(source, archive_name)?;
+            builder.finish()?;
+        }
+        Ok(buffer)
+    }
+
     #[test]
-    fn test_tar_aes_roundtrip() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let test_file = temp_dir.path().join("test.txt");
+    fn new_tar_aes_files_use_v2_and_roundtrip() -> Result<()> {
+        let temp = TempDir::new()?;
+        let test_file = temp.path().join("test.txt");
         fs::write(&test_file, b"Test content for AES encryption")?;
+        let output = temp.path().join("test.tar.aes");
+        let extract_dir = temp.path().join("extracted");
 
-        let output = temp_dir.path().join("test.tar.aes");
-        let extract_dir = temp_dir.path().join("extracted");
-
-        // 压缩加密
         TarAesEngine::compress_tar_aes(
             std::slice::from_ref(&test_file),
             &output,
             "test_password",
-            Some(temp_dir.path()),
+            Some(temp.path()),
         )?;
-
-        assert!(output.exists());
-        assert!(TarAesEngine::is_tar_aes(&output)?);
+        assert_eq!(&fs::read(&output)?[..8], TAR_AES_MAGIC_V2);
         assert!(TarAesEngine::verify_password(&output, "test_password")?);
         assert!(!TarAesEngine::verify_password(&output, "wrong_password")?);
-
-        // 解压解密
-        TarAesEngine::decompress_tar_aes(
-            &output,
-            &extract_dir,
-            "test_password",
-        )?;
-
-        let extracted_file = extract_dir.join("test.txt");
-        assert!(extracted_file.exists());
-
-        let content = fs::read_to_string(extracted_file)?;
-        assert_eq!(content, "Test content for AES encryption");
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_wrong_password() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let test_file = temp_dir.path().join("test.txt");
-        fs::write(&test_file, b"Test content")?;
-
-        let output = temp_dir.path().join("test.tar.aes");
-        let extract_dir = temp_dir.path().join("extracted");
-
-        TarAesEngine::compress_tar_aes(
-            &[test_file],
-            &output,
-            "correct_password",
-            Some(temp_dir.path()),
-        )?;
-
-        let result = TarAesEngine::decompress_tar_aes(
-            &output,
-            &extract_dir,
-            "wrong_password",
+        TarAesEngine::decompress_tar_aes(&output, &extract_dir, "test_password")?;
+        assert_eq!(
+            fs::read_to_string(extract_dir.join("test.txt"))?,
+            "Test content for AES encryption"
         );
-
-        assert!(result.is_err());
-        let err_msg = result.unwrap_err().to_string();
-        assert!(err_msg.contains("密码错误") || err_msg.contains("解密失败"));
         Ok(())
     }
 
     #[test]
-    fn test_multiple_files() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let file1 = temp_dir.path().join("file1.txt");
-        let file2 = temp_dir.path().join("file2.txt");
+    fn legacy_v1_tar_aes_remains_readable() -> Result<()> {
+        let temp = TempDir::new()?;
+        let source = temp.path().join("legacy.txt");
+        let archive = temp.path().join("legacy.tar.aes");
+        let output = temp.path().join("output");
+        fs::write(&source, b"legacy tar data")?;
+        let data = tar_bytes(&source, Path::new("legacy.txt"))?;
+        write_legacy_fixture(&data, &archive, "password")?;
+
+        assert!(TarAesEngine::verify_password(&archive, "password")?);
+        TarAesEngine::decompress_tar_aes(&archive, &output, "password")?;
+        assert_eq!(fs::read(output.join("legacy.txt"))?, b"legacy tar data");
+        Ok(())
+    }
+
+    #[test]
+    fn multiple_files_roundtrip() -> Result<()> {
+        let temp = TempDir::new()?;
+        let file1 = temp.path().join("file1.txt");
+        let file2 = temp.path().join("file2.txt");
         fs::write(&file1, b"Content 1")?;
         fs::write(&file2, b"Content 2")?;
-
-        let output = temp_dir.path().join("test.tar.aes");
-        let extract_dir = temp_dir.path().join("extracted");
+        let archive = temp.path().join("test.tar.aes");
+        let output = temp.path().join("extracted");
 
         TarAesEngine::compress_tar_aes(
             &[file1, file2],
-            &output,
+            &archive,
             "password123",
-            Some(temp_dir.path()),
+            Some(temp.path()),
         )?;
-
-        TarAesEngine::decompress_tar_aes(&output, &extract_dir, "password123")?;
-
-        assert!(extract_dir.join("file1.txt").exists());
-        assert!(extract_dir.join("file2.txt").exists());
-
+        TarAesEngine::decompress_tar_aes(&archive, &output, "password123")?;
+        assert_eq!(fs::read(output.join("file1.txt"))?, b"Content 1");
+        assert_eq!(fs::read(output.join("file2.txt"))?, b"Content 2");
         Ok(())
     }
 }

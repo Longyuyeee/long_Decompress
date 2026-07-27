@@ -22,4 +22,5 @@ pub mod split_archive_detector;
 pub mod rar_support;
 pub mod tar_aes_engine;
 pub mod aes_wrapper;
+pub mod aes_stream_v2;
 pub mod system_service;

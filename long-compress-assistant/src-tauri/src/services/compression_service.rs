@@ -115,7 +115,10 @@ impl ArchiveFormat {
         }
         // Application-native encrypted containers.
         if header.len() >= 8
-            && (&header[0..8] == b"TARAES01" || &header[0..8] == b"AESENC01")
+            && (&header[0..8] == b"TARAES01"
+                || &header[0..8] == b"AESENC01"
+                || &header[0..8] == b"TARAES02"
+                || &header[0..8] == b"AESENC02")
         {
             return ArchiveFormat::AesEncrypted;
         }
@@ -3299,7 +3302,7 @@ impl CompressionService {
             return TarAesEngine::verify_password(path, password);
         }
         if AesWrapper::is_aes_encrypted(path).unwrap_or(false) {
-            return Ok(AesWrapper::decrypt_data(path, password).is_ok());
+            return AesWrapper::verify_password(path, password);
         }
 
         if format == ArchiveFormat::Zip {
@@ -3455,14 +3458,24 @@ mod tests {
             ArchiveFormat::from_magic(b"AESENC01payload"),
             ArchiveFormat::AesEncrypted
         );
+        assert_eq!(
+            ArchiveFormat::from_magic(b"TARAES02payload"),
+            ArchiveFormat::AesEncrypted
+        );
+        assert_eq!(
+            ArchiveFormat::from_magic(b"AESENC02payload"),
+            ArchiveFormat::AesEncrypted
+        );
         assert!(ArchiveFormat::AesEncrypted.supports_password());
     }
 
     #[tokio::test]
     async fn validates_application_native_aes_passwords() {
         let temp = tempfile::tempdir().expect("temp dir");
+        let input = temp.path().join("payload.gz");
         let encrypted = temp.path().join("payload.gz.aes");
-        AesWrapper::encrypt_data(b"compressed payload", &encrypted, "correct-password")
+        std::fs::write(&input, b"compressed payload").expect("write fixture");
+        AesWrapper::encrypt_file(&input, &encrypted, "correct-password")
             .expect("encrypt fixture");
         let service = CompressionService::new_with_defaults().await;
 
