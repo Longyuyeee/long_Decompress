@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.13-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.14-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,16 +20,16 @@
 
 ---
 
-## v1.0.13 更新亮点
+## v1.0.14 更新亮点
 
-- ZIP、7Z、GZ、BZ2、XZ、Zstandard 与密码 ZIP 的核心复制路径统一使用 256 KiB 流式缓冲，减少分配和小块 I/O。
-- 原生 ZIP 解压按 4 MiB 节流字节级进度事件，避免大文件产生大量前后端 IPC。
-- 优化缓冲池复用、通用引擎资源扫描和解压暂存目录遍历，同时保留磁盘、压缩比、链接与事务回滚保护。
-- 文件筛选通配符改为每个任务只编译一次，改善大量归档条目的筛选性能。
-- 压缩、解压和密码 ZIP/7Z 的单个大文件内部均可及时响应取消。
-- 新增 100 MiB、1 GiB 和 10,000 个小文件的真实性能回归，校验 CRC32 与峰值工作集。
+- 新增 `AESENC02/TARAES02` 流式加密容器，大文件加密和解密保持有界内存，同时继续只读兼容受限大小的旧格式。
+- 加密流程补齐错误密码、篡改、截断、任务取消和磁盘写满清理回归，失败时不会提交不完整输出。
+- 建立真实 Windows Tauri 桌面测试，覆盖第二实例右键任务转发、ZIP 压缩解压闭环、托盘隐藏与恢复。
+- 长任务取消、活动任务退出确认和更新安装阻断进入桌面生命周期发布门禁。
+- 前端覆盖率提升至 75.93% 行、72.68% 分支和 56.07% 函数，并对关键 Tauri 桥接错误建立直接回归。
+- `master` 启用强制 PR、必需 CI、对话解决、禁止强推和禁止删除保护，发布验收流程可追溯。
 
-完整变更请查看 [v1.0.13 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.13)。
+完整变更请查看 [v1.0.14 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.14)。
 
 ## 为什么选择 Long解压
 

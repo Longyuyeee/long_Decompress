@@ -1,16 +1,16 @@
 # 开发收口清单
 
-> 最后更新：2026-07-27 | 当前发布版本：v1.0.13
+> 最后更新：2026-07-27 | 当前发布版本：v1.0.14
 
 完整审计、风险分级和阶段验收标准见 [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md)。
 
 ## 当前结论
 
-核心压缩、解压、密码识别、分卷、取消、事务式输出和更新签名流程已有自动化回归，v1.0.13 Release 与最新 `master` CI 均成功，当前没有已知的发布阻断级代码故障。`master` 已启用 PR、四项必需 CI、对话解决、禁止强推和禁止删除保护；发布验收流程已沉淀到 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 和发布验收 Issue 表单。AES 流式 v2 已完成格式规范、统一分块内核、v1 只读兼容、任务取消、磁盘写满清理和 100MiB/1GiB 基准。PR [#13](https://github.com/Longyuyeee/long_Decompress/pull/13) 的 5 项 CI 已全部通过，代码已达到合并、升至 v1.0.14 并生成候选安装包的条件。Windows 11 顶层右键菜单依赖可信代码签名证书，当前明确暂缓。
+核心压缩、解压、密码识别、分卷、取消、事务式输出和更新签名流程已有自动化回归，v1.0.14 已完成代码收口，当前没有已知的发布阻断级代码故障。`master` 已启用 PR、四项必需 CI、对话解决、禁止强推和禁止删除保护；发布验收流程已沉淀到 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 和发布验收 Issue 表单。AES 流式 v2 已完成格式规范、统一分块内核、v1 只读兼容、任务取消、磁盘写满清理和 100MiB/1GiB 基准。PR [#13](https://github.com/Longyuyeee/long_Decompress/pull/13) 已合并，真实桌面生命周期发布门禁收口。Windows 11 顶层右键菜单依赖可信代码签名证书，当前明确暂缓。
 
-## 合入前质量门
+## v1.0.14 质量门
 
-1. PR #13 的 Windows 前端、Rust、Shell Extension、Chromium E2E、Windows 桌面 E2E 构建和 NSIS 安装包任务已全部通过。
+1. PR #13 已合并，Windows 前端、Rust、Shell Extension、Chromium E2E、Windows 桌面 E2E 构建和 NSIS 安装包任务已全部通过。
 2. 在交互式 Windows 中执行真实桌面 E2E，并在已安装应用中人工冒烟：ZIP/7Z 压缩、加密 ZIP/7Z、RAR 解压、密码保险箱、托盘关闭行为、传统右键菜单、卸载和应用内更新。
 3. 使用管理员 PowerShell 执行 `npm run test:context-menu-package`，验证测试身份包安装、COM 激活、资源管理器菜单和清理回滚。
 4. `master` 已要求通过 PR 合入、四项 CI 成功、解决对话，并禁止强制推送和删除；管理员仅保留紧急绕过能力。
@@ -35,11 +35,10 @@
 
 ## 下一步执行顺序
 
-1. 合并 PR #13。
-2. 将 `package.json`、`package-lock.json`、`Cargo.toml` 和 `tauri.conf.json` 统一提升到 v1.0.14。
-3. 更新 README、Release notes 和发布验收记录，生成正式候选安装包。
-4. 按 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 完成已安装应用的升级、卸载、归档矩阵、托盘和传统右键菜单验收。
-5. 发布收口后进入阶段 D：先积累固定环境性能趋势，再按行为测试保护拆分 `compression_service.rs`。
+1. 完成 v1.0.14 Release 资产与在线更新清单复核。
+2. 按 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 持续记录已安装应用的升级、卸载、归档矩阵、托盘和传统右键菜单人工验收。
+3. 进入阶段 D：先积累固定环境性能趋势，再按行为测试保护拆分 `compression_service.rs`。
+4. 有固定交互式 Windows 主机后接入 self-hosted 桌面 E2E。
 
 ## v1.0.13 已完成
 
