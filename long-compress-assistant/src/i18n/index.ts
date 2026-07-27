@@ -32,6 +32,7 @@ export const translations: Record<string, Record<string, string>> = {
     'common.stop': '停止',
     'common.close': '关闭',
     'common.minimize': '最小化',
+    'common.maximize': '最大化',
     'common.conflict_title': '文件冲突检测',
     // ===== 设置 =====
     'settings.title': '设置中心',
@@ -511,6 +512,7 @@ export const translations: Record<string, Record<string, string>> = {
     'common.stop': 'Stop',
     'common.close': 'Close',
     'common.minimize': 'Minimize',
+    'common.maximize': 'Maximize',
     'common.conflict_title': 'File Conflict',
     // ===== Settings =====
     'settings.title': 'Settings Center',

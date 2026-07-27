@@ -260,4 +260,60 @@ describe('DecompressView', () => {
     expect(useTaskStore().tasks[0].logs.some(log => log.message.includes('密码破解成功'))).toBe(false)
     wrapper.unmount()
   })
+
+  it('keeps a non-password backend failure visible on both the task and workspace', async () => {
+    mocks.decompressFile.mockRejectedValueOnce({ message: 'disk full' })
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'large.zip',
+      path: 'C:/archives/large.zip',
+    }])
+    await flushPromises()
+
+    const appStore = useAppStore()
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(appStore.t('decompress.start_queue')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(useTaskStore().tasks[0]).toMatchObject({
+      status: 'failed',
+      error: 'disk full',
+      passwordRequired: false,
+    })
+    expect(appStore.error).toContain('disk full')
+    wrapper.unmount()
+  })
+
+  it('reports partial cancellation when one active task cannot be stopped', async () => {
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    for (const [id, status] of [['running-task', 'extracting'], ['blocked-task', 'preparing']] as const) {
+      taskStore.addTask({
+        id,
+        name: `${id}.zip`,
+        type: 'decompression',
+        sourceFiles: [`C:/archives/${id}.zip`],
+        outputPath: 'C:/archives',
+      })
+      taskStore.updateTaskStatus(id, status)
+    }
+    const cancelTask = vi.spyOn(taskStore, 'cancelTask')
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false)
+    await nextTick()
+
+    const appStore = useAppStore()
+    const cancelButton = wrapper.findAll('button').find(
+      button => button.text().includes(appStore.t('common.cancel')),
+    )
+    await cancelButton!.trigger('click')
+    await flushPromises()
+
+    expect(cancelTask).toHaveBeenNthCalledWith(1, 'running-task')
+    expect(cancelTask).toHaveBeenNthCalledWith(2, 'blocked-task')
+    expect(appStore.error).toContain('1')
+    wrapper.unmount()
+  })
 })
