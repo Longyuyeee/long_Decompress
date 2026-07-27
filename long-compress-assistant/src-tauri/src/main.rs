@@ -88,6 +88,22 @@ fn forward_to_running_instance(args: &[String]) -> bool {
     false
 }
 
+#[cfg(feature = "desktop-e2e")]
+fn write_restore_visibility_probe(args: &[String], window: &tauri::Window) {
+    let Some(position) = args.iter().position(|arg| arg == "--desktop-e2e-restore") else {
+        return;
+    };
+    let Some(marker_path) = args.get(position + 1) else {
+        return;
+    };
+    let visibility = if window.is_visible().unwrap_or(false) {
+        "visible"
+    } else {
+        "hidden"
+    };
+    let _ = std::fs::write(marker_path, visibility);
+}
+
 fn main() {
     let instance = single_instance::SingleInstance::new(INSTANCE_NAME)
         .expect("failed to create application instance guard");
@@ -137,7 +153,7 @@ fn main() {
                 if state.close_to_tray.load(Ordering::SeqCst) {
                     api.prevent_close();
                     let _ = event.window().hide();
-                } else if state.has_active_tasks.load(Ordering::SeqCst) {
+                } else if long_compress_assistant::commands::system_integration::should_confirm_exit(&state) {
                     api.prevent_close();
                     let _ = event.window().show();
                     let _ = event.window().unminimize();
@@ -255,6 +271,8 @@ fn main() {
                                 let _ = window.show();
                                 let _ = window.unminimize();
                                 let _ = window.set_focus();
+                                #[cfg(feature = "desktop-e2e")]
+                                write_restore_visibility_probe(&args, &window);
                             }
                             let _ = reader.get_mut().write_all(b"ok\n");
                             let _ = reader.get_mut().flush();
@@ -271,6 +289,7 @@ fn main() {
             long_compress_assistant::commands::compression::compress_files,
             long_compress_assistant::commands::compression::cancel_compression,
             long_compress_assistant::commands::compression::cancel_tasks_and_wait,
+            long_compress_assistant::commands::compression::desktop_e2e_run_cancellable_task,
             long_compress_assistant::commands::compression::check_rar_compression_support,
             long_compress_assistant::commands::compression::get_archive_engine_capabilities,
             long_compress_assistant::commands::compression::install_winrar_with_winget,
@@ -304,6 +323,9 @@ fn main() {
             long_compress_assistant::commands::system_integration::is_context_menu_registered,
             long_compress_assistant::commands::system_integration::set_close_to_tray,
             long_compress_assistant::commands::system_integration::set_has_active_tasks,
+            long_compress_assistant::commands::system_integration::desktop_e2e_get_behavior_state,
+            long_compress_assistant::commands::system_integration::desktop_e2e_request_exit_confirmation,
+            long_compress_assistant::commands::system_integration::desktop_e2e_hide_window,
             long_compress_assistant::commands::system_integration::exit_app,
             long_compress_assistant::commands::system_integration::take_pending_context_actions,
             long_compress_assistant::commands::encrypted_password::init_encrypted_password_service,

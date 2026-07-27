@@ -132,6 +132,49 @@ pub async fn cancel_compression(task_id: String) -> Result<(), String> {
     Ok(())
 }
 
+/// Runs a deterministic, cancellable file-writing task for the real desktop E2E suite.
+///
+/// The executable task body is compiled only for desktop E2E builds; production
+/// builds reject the command. The test exercises the same cancellation registry
+/// used by compression and decompression commands while remaining deterministic.
+#[command]
+pub async fn desktop_e2e_run_cancellable_task(
+    task_id: String,
+    output_path: String,
+) -> Result<(), String> {
+    #[cfg(not(feature = "desktop-e2e"))]
+    {
+        let _ = (task_id, output_path);
+        Err("desktop E2E support is not enabled".to_string())
+    }
+
+    #[cfg(feature = "desktop-e2e")]
+    {
+    use std::io::Write;
+    use std::path::PathBuf;
+
+    let cancellation_flag = Arc::new(AtomicBool::new(false));
+    CANCELLATION_FLAGS.insert(task_id.clone(), cancellation_flag.clone());
+    let _task_guard = TaskCancellationGuard::new(&task_id);
+    let output = PathBuf::from(output_path);
+    let mut file = std::fs::File::create(&output).map_err(|error| error.to_string())?;
+    let chunk = vec![0x5a; 256 * 1024];
+
+    for _ in 0..6_000 {
+        if cancellation_flag.load(Ordering::SeqCst) {
+            drop(file);
+            let _ = std::fs::remove_file(&output);
+            return Err("desktop E2E task cancelled".to_string());
+        }
+        file.write_all(&chunk).map_err(|error| error.to_string())?;
+        file.flush().map_err(|error| error.to_string())?;
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    }
+
+        Ok(())
+    }
+}
+
 #[command]
 pub async fn cancel_tasks_and_wait(task_ids: Vec<String>) -> Result<(), String> {
     for task_id in &task_ids {

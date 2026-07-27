@@ -99,6 +99,8 @@ jobs:
           workspaces: long-compress-assistant/src-tauri -> target
       - run: npm ci
       - name: Build frontend
+        env:
+          VITE_DESKTOP_E2E: "1"
         run: npm run build
       - name: Build real Tauri application
         working-directory: long-compress-assistant/src-tauri
