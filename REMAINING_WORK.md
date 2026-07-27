@@ -6,11 +6,11 @@
 
 ## 当前结论
 
-核心压缩、解压、密码识别、分卷、取消、事务式输出和更新签名流程已有自动化回归，v1.0.13 Release 与最新 `master` CI 均成功，当前没有已知的发布阻断级代码故障。`master` 已启用 PR、四项 CI、对话解决、禁止强推和禁止删除保护；发布验收流程已沉淀到 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 和发布验收 Issue 表单。AES 流式 v2 已完成格式规范、统一分块内核、v1 只读兼容、任务取消、磁盘写满清理和 100MiB/1GiB 基准，后续只需固定环境趋势采样。Windows 11 顶层右键菜单依赖可信代码签名证书，当前明确暂缓。
+核心压缩、解压、密码识别、分卷、取消、事务式输出和更新签名流程已有自动化回归，v1.0.13 Release 与最新 `master` CI 均成功，当前没有已知的发布阻断级代码故障。`master` 已启用 PR、四项必需 CI、对话解决、禁止强推和禁止删除保护；发布验收流程已沉淀到 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 和发布验收 Issue 表单。AES 流式 v2 已完成格式规范、统一分块内核、v1 只读兼容、任务取消、磁盘写满清理和 100MiB/1GiB 基准。PR [#13](https://github.com/Longyuyeee/long_Decompress/pull/13) 的 5 项 CI 已全部通过，代码已达到合并、升至 v1.0.14 并生成候选安装包的条件。Windows 11 顶层右键菜单依赖可信代码签名证书，当前明确暂缓。
 
 ## 合入前质量门
 
-1. Draft PR 的 Windows 前端、Rust、Shell Extension、Chromium E2E、Windows 桌面 E2E 构建和 NSIS 安装包任务全部通过。
+1. PR #13 的 Windows 前端、Rust、Shell Extension、Chromium E2E、Windows 桌面 E2E 构建和 NSIS 安装包任务已全部通过。
 2. 在交互式 Windows 中执行真实桌面 E2E，并在已安装应用中人工冒烟：ZIP/7Z 压缩、加密 ZIP/7Z、RAR 解压、密码保险箱、托盘关闭行为、传统右键菜单、卸载和应用内更新。
 3. 使用管理员 PowerShell 执行 `npm run test:context-menu-package`，验证测试身份包安装、COM 激活、资源管理器菜单和清理回滚。
 4. `master` 已要求通过 PR 合入、四项 CI 成功、解决对话，并禁止强制推送和删除；管理员仅保留紧急绕过能力。
@@ -25,13 +25,21 @@
 ## 后续工程工作
 
 1. 在固定 Windows 环境积累 AES v2 性能趋势；`AESENC01/TARAES01` 保持受限的只读兼容。
-2. 真实 Tauri Windows 桌面 E2E 已覆盖第二实例转发、ZIP 压缩/解压逐字节闭环、长任务取消及残留清理、活动任务退出确认、更新阻断和托盘隐藏/恢复。阶段 C 的代码工作已经收口，只剩把该套件接入交互式 self-hosted Windows runner 这一项外部基础设施工作。Playwright 继续承担快速浏览器壳层验证。
+2. 真实 Tauri Windows 桌面 E2E 已覆盖第二实例转发、ZIP 压缩/解压逐字节闭环、长任务取消及残留清理、活动任务退出确认、更新阻断和托盘隐藏/恢复。阶段 C 的代码工作已经收口；接入交互式 self-hosted Windows runner 属于后续基础设施增强，不阻塞 v1.0.14。Playwright 继续承担快速浏览器壳层验证。
 3. 前端覆盖率为 75.93% 行、72.68% 分支、56.07% 函数，达到阶段 C 的函数覆盖率门槛；`useTauriCommands`、`WindowTitleBar`、无障碍设置、解压磁盘失败和部分取消已有直接回归。
 4. 将 100MiB/1GiB ZIP、小文件和后续加密基准放入固定 Windows 环境做趋势采样，再制定性能回归阈值。
 5. 评估实验性 `ParallelExtractor`：必须先对齐密码、冲突、时间戳、回滚和路径安全，否则不进入生产路径。
 6. 拆分过大的 `compression_service.rs`，但必须以现有真实归档矩阵为行为保护。
 7. 分批清理 Rust 历史格式化欠账；不与可靠性修复混合。
 8. Tauri 2、Vite/Vitest、Pinia 等主版本升级在独立迁移分支评估。
+
+## 下一步执行顺序
+
+1. 合并 PR #13。
+2. 将 `package.json`、`package-lock.json`、`Cargo.toml` 和 `tauri.conf.json` 统一提升到 v1.0.14。
+3. 更新 README、Release notes 和发布验收记录，生成正式候选安装包。
+4. 按 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 完成已安装应用的升级、卸载、归档矩阵、托盘和传统右键菜单验收。
+5. 发布收口后进入阶段 D：先积累固定环境性能趋势，再按行为测试保护拆分 `compression_service.rs`。
 
 ## v1.0.13 已完成
 

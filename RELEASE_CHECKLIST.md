@@ -29,6 +29,7 @@
 - [ ] PR 的 `Frontend checks` 通过。
 - [ ] PR 的 `Rust and shell-extension checks` 通过。
 - [ ] PR 的 `Browser shell E2E` 通过。
+- [ ] PR 的 `Windows desktop E2E build` 通过。
 - [ ] PR 的 `Windows installer` 通过。
 - [ ] 版本号已在 `package.json`、`package-lock.json`、`Cargo.toml` 和
       `tauri.conf.json` 中保持一致。
