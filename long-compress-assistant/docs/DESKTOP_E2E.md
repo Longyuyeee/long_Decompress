@@ -39,19 +39,18 @@ Remove-Item Env:EDGE_DRIVER_PATH
 也可以通过 `TAURI_APP_BINARY`、`TAURI_DRIVER_PATH` 和
 `LONG_DECOMPRESS_E2E_DATA_DIR` 覆盖默认路径。
 
-## CI
+## CI 与运行环境限制
 
-GitHub Actions 的 `Windows desktop E2E` job 会：
+GitHub Actions 的 `Windows desktop E2E build` job 会：
 
 1. 构建前端和启用隔离 feature 的 Release Tauri 二进制；
-2. 安装固定版本的 `tauri-driver`；
-3. 读取 runner 上的 WebView2 Runtime 完整版本并下载完全匹配的 EdgeDriver；
-4. 使用隔离的 WebView2 用户数据目录，在无交互桌面的 runner 上启用 headless WebView2，并兼容
-   EdgeDriver 对 `DevToolsActivePort` 父目录布局的要求；
-5. 执行真实桌面冒烟；
-6. 失败时上传日志和截图。
+2. 校验 Node 和 PowerShell 测试脚本语法；
+3. 读取 runner 上的 WebView2 Runtime 完整版本，下载并验证完全匹配的 EdgeDriver。
 
-`Windows installer` 依赖该 job，因此真实桌面冒烟失败时不会继续生成可发布安装包。
+GitHub 托管 Windows runner 运行在非交互会话中，Tauri/WebView2 无法创建
+`DevToolsActivePort`，因此不能把真实 GUI 冒烟伪装成可靠的托管 CI 门禁。真实桌面 E2E
+必须在本机或具有交互桌面的 self-hosted Windows runner 上执行。`Windows installer`
+当前依赖桌面 E2E 构建 job；接入交互式 runner 后，再让安装器依赖真实桌面执行结果。
 
 ## 后续覆盖
 
