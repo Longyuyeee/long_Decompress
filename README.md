@@ -188,6 +188,12 @@ npm run tauri build
 
 主要技术栈：Vue 3、TypeScript、Pinia、Tauri 1.5、Rust。
 
+项目状态与后续开发方向：
+
+- [开发状态与路线图](DEVELOPMENT_ROADMAP.md)
+- [开发收口清单](REMAINING_WORK.md)
+- [归档性能基线](long-compress-assistant/docs/PERFORMANCE_BASELINE.md)
+
 </details>
 
 ## 反馈与许可
