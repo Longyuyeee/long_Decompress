@@ -22,13 +22,31 @@ const closeApp = () => appWindow.close()
 
     <!-- 右侧控制组 -->
     <div class="flex h-full items-center">
-      <button @click="minimize" class="control-btn hover:bg-content/8 active:bg-content/12">
+      <button
+        type="button"
+        @click="minimize"
+        class="control-btn hover:bg-content/8 active:bg-content/12"
+        :title="appStore.t('common.minimize')"
+        :aria-label="appStore.t('common.minimize')"
+      >
         <i class="pi pi-minus text-xs"></i>
       </button>
-      <button @click="toggleMaximize" class="control-btn hover:bg-content/8 active:bg-content/12">
+      <button
+        type="button"
+        @click="toggleMaximize"
+        class="control-btn hover:bg-content/8 active:bg-content/12"
+        :title="appStore.t('common.maximize')"
+        :aria-label="appStore.t('common.maximize')"
+      >
         <i class="pi pi-stop text-xs"></i>
       </button>
-      <button @click="closeApp" class="control-btn hover:bg-red-500/90 hover:text-white active:bg-red-600 group">
+      <button
+        type="button"
+        @click="closeApp"
+        class="control-btn hover:bg-red-500/90 hover:text-white active:bg-red-600 group"
+        :title="appStore.t('common.close')"
+        :aria-label="appStore.t('common.close')"
+      >
         <i class="pi pi-times text-xs group-hover:scale-110 transition-transform duration-200"></i>
       </button>
     </div>
