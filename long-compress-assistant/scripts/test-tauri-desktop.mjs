@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Builder, By, Capabilities, until } from 'selenium-webdriver'
+import { Builder, By, Capabilities } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const executableSuffix = process.platform === 'win32' ? '.exe' : ''
@@ -37,6 +37,7 @@ for (const [label, target] of [
 
 let driver
 let tauriDriverProcess
+let devToolsPortMirror
 let driverOutput = ''
 
 function appendDriverOutput(chunk) {
@@ -69,7 +70,26 @@ function terminateProcessTree(processId) {
   })
 }
 
+async function waitForNonEmptyText(selector, timeoutMs = 30_000) {
+  return driver.wait(async () => {
+    try {
+      const elements = await driver.findElements(By.css(selector))
+      if (elements.length === 0) return false
+      const text = (await elements[0].getAttribute('textContent')).trim()
+      return text || false
+    } catch {
+      // Vue may replace the matched element while a route is rendering.
+      return false
+    }
+  }, timeoutMs)
+}
+
 async function captureFailure() {
+  const nestedDevToolsPort = path.join(webviewUserDataDirectory, 'EBWebView', 'DevToolsActivePort')
+  const mirroredDevToolsPort = path.join(webviewUserDataDirectory, 'DevToolsActivePort')
+  driverOutput +=
+    `\nDevToolsActivePort: nested=${existsSync(nestedDevToolsPort)}` +
+    ` mirrored=${existsSync(mirroredDevToolsPort)}\n`
   mkdirSync(artifactDirectory, { recursive: true })
   writeFileSync(path.join(artifactDirectory, 'tauri-driver.log'), driverOutput, 'utf8')
   if (driver) {
@@ -82,6 +102,17 @@ async function captureFailure() {
     } catch {
       // The session may already be unavailable.
     }
+  }
+}
+
+function mirrorDevToolsActivePort() {
+  const source = path.join(webviewUserDataDirectory, 'EBWebView', 'DevToolsActivePort')
+  const destination = path.join(webviewUserDataDirectory, 'DevToolsActivePort')
+  if (!existsSync(source)) return
+  try {
+    copyFileSync(source, destination)
+  } catch {
+    // EdgeDriver may be reading or removing the compatibility copy concurrently.
   }
 }
 
@@ -113,15 +144,14 @@ try {
     webviewOptions.additionalBrowserArguments = ['--headless=new', '--disable-gpu']
   }
   capabilities.set('tauri:options', { application, webviewOptions })
+  devToolsPortMirror = setInterval(mirrorDevToolsActivePort, 50)
   driver = await new Builder().usingServer(webdriverUrl).withCapabilities(capabilities).build()
+  clearInterval(devToolsPortMirror)
+  devToolsPortMirror = undefined
   await driver.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 30_000 })
 
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 60_000)
-  const heading = await driver.wait(until.elementLocated(By.css('main h1')), 30_000)
-  assert.ok(
-    (await heading.getAttribute('textContent')).trim(),
-    'the decompression workspace heading is empty',
-  )
+  assert.ok(await waitForNonEmptyText('main h1'), 'the decompression workspace heading is empty')
 
   const navigation = await driver.findElements(By.css('aside nav > button'))
   assert.equal(navigation.length, 5, 'the real desktop shell must expose five navigation buttons')
@@ -133,13 +163,13 @@ try {
 
   await navigation[4].click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/settings'), 30_000)
-  const settingsHeading = await driver.wait(until.elementLocated(By.css('main h1')), 30_000)
-  assert.ok((await settingsHeading.getAttribute('textContent')).trim(), 'the settings heading is empty')
+  assert.ok(await waitForNonEmptyText('main h1'), 'the settings heading is empty')
   console.log('Real Windows Tauri desktop smoke test passed.')
 } catch (error) {
   await captureFailure()
   throw error
 } finally {
+  if (devToolsPortMirror) clearInterval(devToolsPortMirror)
   if (driver) {
     try {
       await driver.quit()
