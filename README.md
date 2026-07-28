@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.14-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.15-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,16 +20,16 @@
 
 ---
 
-## v1.0.14 更新亮点
+## v1.0.15 更新亮点
 
-- 新增 `AESENC02/TARAES02` 流式加密容器，大文件加密和解密保持有界内存，同时继续只读兼容受限大小的旧格式。
-- 加密流程补齐错误密码、篡改、截断、任务取消和磁盘写满清理回归，失败时不会提交不完整输出。
-- 建立真实 Windows Tauri 桌面测试，覆盖第二实例右键任务转发、ZIP 压缩解压闭环、托盘隐藏与恢复。
-- 长任务取消、活动任务退出确认和更新安装阻断进入桌面生命周期发布门禁。
-- 前端覆盖率提升至 75.93% 行、72.68% 分支和 56.07% 函数，并对关键 Tauri 桥接错误建立直接回归。
-- `master` 启用强制 PR、必需 CI、对话解决、禁止强推和禁止删除保护，发布验收流程可追溯。
+- 修复同一输出路径被重复提交的问题：前后端共同占用规范化目标路径，避免一个任务成功、另一个任务随后报错。
+- 压缩与解压任务在列表、统计、启动和清理流程中完全隔离，拖入压缩中心的文件不会再出现在解压中心。
+- 压缩中心改为与解压中心一致的任务模式，支持展开配置与实时详情、进度、日志、取消及一键清理已完成任务。
+- 7Z 改用真实字节进度与可取消读写，大文件不再长时间停留在 0%；加密判断改为读取归档元数据，移除无反馈的完整预检。
+- 修复 LZMA 压缩依赖外部 7-Zip 时的“不支持”失败，改由内置流式编码器完成。
+- 真实 Windows 桌面矩阵已验证 ZIP、7Z、TAR 及 GZ/BZ2/XZ/Zstandard/LZMA 组合，并覆盖加密 ZIP、加密 7Z、取消和逐字节一致性。
 
-完整变更请查看 [v1.0.14 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.14)。
+完整变更请查看 [v1.0.15 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.15)。
 
 ## 为什么选择 Long解压
 
@@ -191,6 +191,7 @@ npm run tauri build
 项目状态与后续开发方向：
 
 - [开发状态与路线图](DEVELOPMENT_ROADMAP.md)
+- [核心压缩与解压流程稳定化计划](CORE_WORKFLOW_STABILIZATION.md)
 - [Release 发布验收清单](RELEASE_CHECKLIST.md)
 - [开发收口清单](REMAINING_WORK.md)
 - [AES 流式容器 v2 规范](long-compress-assistant/docs/AES_STREAM_V2.md)

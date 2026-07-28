@@ -23,6 +23,38 @@ use crate::services::tar_aes_engine::TarAesEngine;
 use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 
+struct CancellableProgressReader<R, F> {
+    inner: R,
+    cancellation_flag: Arc<AtomicBool>,
+    on_read: F,
+}
+
+impl<R, F> CancellableProgressReader<R, F> {
+    fn new(inner: R, cancellation_flag: Arc<AtomicBool>, on_read: F) -> Self {
+        Self {
+            inner,
+            cancellation_flag,
+            on_read,
+        }
+    }
+}
+
+impl<R: Read, F: FnMut(u64)> Read for CancellableProgressReader<R, F> {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        if self.cancellation_flag.load(Ordering::Relaxed) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Interrupted,
+                "compression cancelled",
+            ));
+        }
+        let read = self.inner.read(buffer)?;
+        if read > 0 {
+            (self.on_read)(read as u64);
+        }
+        Ok(read)
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum CompressionError {
     #[error("文件不存在: {0}")]
@@ -448,6 +480,36 @@ impl CompressionService {
                     "Copied byte count overflowed the supported range".to_string(),
                 )
             })?;
+        }
+        Ok(copied)
+    }
+
+    fn copy_cancellable_with_progress<
+        R: Read + ?Sized,
+        W: Write + ?Sized,
+        F: FnMut(u64),
+    >(
+        &self,
+        reader: &mut R,
+        writer: &mut W,
+        buffer: &mut [u8],
+        mut on_chunk: F,
+    ) -> Result<u64> {
+        let mut copied = 0u64;
+        loop {
+            self.check_cancellation()?;
+            let read = reader.read(buffer)?;
+            if read == 0 {
+                break;
+            }
+            writer.write_all(&buffer[..read])?;
+            let read = read as u64;
+            copied = copied.checked_add(read).ok_or_else(|| {
+                CompressionError::CompressionFailed(
+                    "Copied byte count overflowed the supported range".to_string(),
+                )
+            })?;
+            on_chunk(read);
         }
         Ok(copied)
     }
@@ -1077,6 +1139,33 @@ impl CompressionService {
         None
     }
 
+    fn seven_zip_requires_password(file_path: &Path) -> Result<bool> {
+        let mut archive_file = File::open(file_path)?;
+        let len = archive_file.metadata()?.len();
+        match sevenz_rust::Archive::read(&mut archive_file, len, &[]) {
+            Ok(archive) => Ok(archive.folders.iter().any(|folder| {
+                folder.coders.iter().any(|coder| {
+                    coder.decompression_method_id()
+                        == sevenz_rust::SevenZMethod::ID_AES256SHA256
+                })
+            })),
+            Err(error) => {
+                let message = error.to_string().to_ascii_lowercase();
+                if message.contains("password")
+                    || message.contains("encrypted")
+                    || message.contains("aes")
+                {
+                    Ok(true)
+                } else {
+                    Err(CompressionError::ExtractionFailed(format!(
+                        "Unable to inspect 7z encryption metadata: {error}"
+                    ))
+                    .into())
+                }
+            }
+        }
+    }
+
     async fn archive_requires_password(&self, file_path: &str, format: ArchiveFormat) -> Result<bool> {
         match format {
             // 通过 7z CLI 处理的格式
@@ -1093,8 +1182,9 @@ impl CompressionService {
             ArchiveFormat::Zip => {
                 UniversalCliEngine::zip_requires_password(Path::new(file_path))
             }
-            // 7Z/RAR 交由完整引擎做无密码测试，不再用“空密码是否有效”反推加密状态。
-            ArchiveFormat::SevenZip | ArchiveFormat::Rar => {
+            ArchiveFormat::SevenZip => Self::seven_zip_requires_password(Path::new(file_path)),
+            // RAR 仍交由完整引擎做无密码测试；7Z 可以直接读取 coder 元数据。
+            ArchiveFormat::Rar => {
                 self.universal_engine.requires_password(Path::new(file_path)).await
             }
             ArchiveFormat::AesEncrypted => {
@@ -1268,6 +1358,12 @@ impl CompressionService {
 
         let mut final_password = password.clone();
         let password_required = if format.supports_password() {
+            service.emit_log(
+                &window,
+                &task_id,
+                "正在检测归档加密状态...",
+                TaskLogSeverity::Info,
+            );
             Some(service.archive_requires_password(&file_path, format.clone()).await.map_err(|err| {
                 CompressionError::ExtractionFailed(format!(
                     "Unable to determine archive encryption state safely: {}",
@@ -2112,7 +2208,7 @@ impl CompressionService {
         let file_filter = Self::compile_file_filter(opts.file_filter.as_deref());
         let mut copy_buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
         let mut processed = 0usize;
-        let total_entries = {
+        let total_uncompressed_bytes = {
             let archive_file = File::open(file);
             archive_file
                 .and_then(|mut archive_file| {
@@ -2127,16 +2223,13 @@ impl CompressionService {
                     }?;
                     Ok(archive.files.iter()
                         .filter(|entry| !entry.is_directory())
-                        .filter(|entry| {
-                            Self::normalized_archive_path(Path::new(entry.name()), opts.preserve_paths)
-                                .map(|path| Self::matches_compiled_file_filter(&path, &file_filter))
-                                .unwrap_or(false)
-                        })
-                        .count()
+                        .fold(0u64, |total, entry| total.saturating_add(entry.size()))
                         .max(1))
                 })
                 .unwrap_or(1)
         };
+        let mut processed_bytes = 0u64;
+        let mut last_emitted_bytes = 0u64;
 
         let mut extract_entry = |entry: &sevenz_rust::SevenZArchiveEntry, reader: &mut dyn Read, _default_dest: &PathBuf| -> Result<bool, sevenz_rust::Error> {
             self.check_cancellation()
@@ -2145,14 +2238,55 @@ impl CompressionService {
             let relative = match Self::normalized_archive_path(Path::new(entry.name()), opts.preserve_paths) {
                 Some(path) => path,
                 None => {
-                    self.copy_cancellable(reader, &mut std::io::sink(), &mut copy_buffer)
+                    self.copy_cancellable_with_progress(
+                        reader,
+                        &mut std::io::sink(),
+                        &mut copy_buffer,
+                        |read| {
+                            processed_bytes = processed_bytes.saturating_add(read);
+                            if Self::should_emit_byte_progress(last_emitted_bytes, processed_bytes)
+                                || processed_bytes >= total_uncompressed_bytes
+                            {
+                                self.emit_progress(
+                                    window,
+                                    task_id,
+                                    processed_bytes as f32 / total_uncompressed_bytes as f32,
+                                    Some(entry.name().to_string()),
+                                    processed_bytes,
+                                    total_uncompressed_bytes,
+                                );
+                                last_emitted_bytes = processed_bytes;
+                            }
+                        },
+                    )
                         .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
                     return Ok(true);
                 }
             };
 
             if !Self::matches_compiled_file_filter(&relative, &file_filter) {
-                self.copy_cancellable(reader, &mut std::io::sink(), &mut copy_buffer)
+                let current_file = relative.to_string_lossy().to_string();
+                self.copy_cancellable_with_progress(
+                    reader,
+                    &mut std::io::sink(),
+                    &mut copy_buffer,
+                    |read| {
+                        processed_bytes = processed_bytes.saturating_add(read);
+                        if Self::should_emit_byte_progress(last_emitted_bytes, processed_bytes)
+                            || processed_bytes >= total_uncompressed_bytes
+                        {
+                            self.emit_progress(
+                                window,
+                                task_id,
+                                processed_bytes as f32 / total_uncompressed_bytes as f32,
+                                Some(current_file.clone()),
+                                processed_bytes,
+                                total_uncompressed_bytes,
+                            );
+                            last_emitted_bytes = processed_bytes;
+                        }
+                    },
+                )
                     .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
                 return Ok(true);
             }
@@ -2171,11 +2305,30 @@ impl CompressionService {
                 }
 
                 let mut outfile = File::create(&target)?;
-                self.copy_cancellable(reader, &mut outfile, &mut copy_buffer)?;
+                let current_file = relative.to_string_lossy().to_string();
+                self.copy_cancellable_with_progress(
+                    reader,
+                    &mut outfile,
+                    &mut copy_buffer,
+                    |read| {
+                        processed_bytes = processed_bytes.saturating_add(read);
+                        if Self::should_emit_byte_progress(last_emitted_bytes, processed_bytes)
+                            || processed_bytes >= total_uncompressed_bytes
+                        {
+                            self.emit_progress(
+                                window,
+                                task_id,
+                                processed_bytes as f32 / total_uncompressed_bytes as f32,
+                                Some(current_file.clone()),
+                                processed_bytes,
+                                total_uncompressed_bytes,
+                            );
+                            last_emitted_bytes = processed_bytes;
+                        }
+                    },
+                )?;
                 outfile.flush()?;
                 processed += 1;
-                let progress = (processed as f32 / total_entries as f32).min(1.0);
-                self.emit_progress(window, task_id, progress, Some(relative.to_string_lossy().to_string()), entry.size(), entry.size());
                 Ok(())
             })();
 
@@ -2818,24 +2971,52 @@ impl CompressionService {
             return Ok(());
         }
         let source = Self::ensure_single_file_stream_supported(sources, output, ".lzma")?;
-        self.emit_log(window, task_id, "使用 7z 进行 LZMA 压缩...", TaskLogSeverity::Info);
+        self.emit_log(window, task_id, "正在使用原生 LZMA 编码器压缩...", TaskLogSeverity::Info);
 
-        let seven_zip = find_7z_command()
-            .ok_or_else(|| CompressionError::CompressionFailed(missing_7z_message()))?;
-        let mut cmd = crate::utils::process::command(seven_zip);
-        cmd.arg("a");
-        cmd.arg("-tlzma");
-        cmd.arg(format!("-mx{}", options.level.clamp(1, 9)));
-        cmd.arg("-y");
-        cmd.arg(output);
-        cmd.arg(source);
-
-        let output_result = cmd.output()
-            .map_err(|err| CompressionError::CompressionFailed(format!("Failed to run 7z for LZMA: {}", err)))?;
-        if !output_result.status.success() {
-            let stderr = String::from_utf8_lossy(&output_result.stderr);
-            return Err(CompressionError::CompressionFailed(format!("LZMA compression failed: {}", stderr)).into());
+        let lzma_options = xz2::stream::LzmaOptions::new_preset(options.level.clamp(1, 9))
+            .map_err(|error| CompressionError::CompressionFailed(format!(
+                "Unable to configure LZMA encoder: {error}"
+            )))?;
+        let stream = xz2::stream::Stream::new_lzma_encoder(&lzma_options)
+            .map_err(|error| CompressionError::CompressionFailed(format!(
+                "Unable to initialize LZMA encoder: {error}"
+            )))?;
+        let output_file = File::create(output)?;
+        let mut encoder = xz2::write::XzEncoder::new_stream(output_file, stream);
+        let input_file = File::open(source)?;
+        let total_bytes = input_file.metadata()?.len();
+        let cancellation_flag = self.cancellation_flag.clone();
+        let mut processed_bytes = 0u64;
+        let mut last_emitted = 0u64;
+        let mut reader = CancellableProgressReader::new(
+            input_file,
+            cancellation_flag.clone(),
+            |read| {
+                processed_bytes = processed_bytes.saturating_add(read);
+                if Self::should_emit_byte_progress(last_emitted, processed_bytes) {
+                    last_emitted = processed_bytes;
+                    let progress = if total_bytes == 0 {
+                        1.0
+                    } else {
+                        processed_bytes as f32 / total_bytes as f32
+                    };
+                    self.emit_progress(
+                        window,
+                        task_id,
+                        progress.min(0.99),
+                        Some(source.to_string_lossy().into_owned()),
+                        processed_bytes,
+                        total_bytes,
+                    );
+                }
+            },
+        );
+        let copied = std::io::copy(&mut reader, &mut encoder);
+        if cancellation_flag.load(Ordering::SeqCst) {
+            return Err(CompressionError::Cancelled.into());
         }
+        copied?;
+        encoder.finish()?;
 
         self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
         self.emit_log(window, task_id, "LZMA 压缩完成", TaskLogSeverity::Success);
@@ -3148,7 +3329,14 @@ impl CompressionService {
 
         let preserve_paths = options.preserve_paths.unwrap_or(true);
         let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
-        let total = entries.len().max(1);
+        let total_bytes = entries
+            .iter()
+            .filter(|(_, _, is_dir)| !*is_dir)
+            .try_fold(0u64, |total, (path, _, _)| {
+                Ok::<_, std::io::Error>(total.saturating_add(path.metadata()?.len()))
+            })?
+            .max(1);
+        let mut processed_bytes = 0u64;
         let mut writer = sevenz_rust::SevenZWriter::create(output)
             .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
 
@@ -3169,10 +3357,45 @@ impl CompressionService {
                     .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
             } else {
                 let file = File::open(path)?;
-                writer.push_archive_entry(entry, Some(file))
-                    .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
+                let current_name = archive_name.clone();
+                let mut last_emitted = processed_bytes;
+                let progress_reader = CancellableProgressReader::new(
+                    file,
+                    self.cancellation_flag.clone(),
+                    |read| {
+                        processed_bytes = processed_bytes.saturating_add(read);
+                        if Self::should_emit_byte_progress(last_emitted, processed_bytes)
+                            || processed_bytes >= total_bytes
+                        {
+                            self.emit_progress(
+                                window,
+                                task_id,
+                                processed_bytes as f32 / total_bytes as f32,
+                                Some(current_name.clone()),
+                                processed_bytes,
+                                total_bytes,
+                            );
+                            last_emitted = processed_bytes;
+                        }
+                    },
+                );
+                if let Err(error) = writer.push_archive_entry(entry, Some(progress_reader)) {
+                    if self.cancellation_flag.load(Ordering::Relaxed) {
+                        return Err(CompressionError::Cancelled.into());
+                    }
+                    return Err(CompressionError::CompressionFailed(error.to_string()).into());
+                }
             }
-            self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(archive_name.clone()), 0, 0);
+            if processed_bytes == 0 {
+                self.emit_progress(
+                    window,
+                    task_id,
+                    (i + 1) as f32 / entries.len().max(1) as f32,
+                    Some(archive_name.clone()),
+                    0,
+                    0,
+                );
+            }
         }
 
         writer.finish()
@@ -3446,6 +3669,7 @@ impl CompressionService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Cursor;
 
     #[test]
     fn byte_progress_is_throttled_to_multi_megabyte_intervals() {
@@ -3462,6 +3686,56 @@ mod tests {
             CompressionService::PROGRESS_EMIT_INTERVAL_BYTES,
             CompressionService::PROGRESS_EMIT_INTERVAL_BYTES + 1024,
         ));
+    }
+
+    #[test]
+    fn cancellable_progress_reader_reports_bytes_and_stops_on_cancel() {
+        let flag = Arc::new(AtomicBool::new(false));
+        let mut reported = Vec::new();
+        let mut output = Vec::new();
+        {
+            let mut reader = CancellableProgressReader::new(
+                Cursor::new(vec![7u8; 32 * 1024]),
+                flag.clone(),
+                |read| reported.push(read),
+            );
+            reader.read_to_end(&mut output).expect("copy fixture");
+        }
+        assert_eq!(output.len(), 32 * 1024);
+        assert_eq!(reported.iter().sum::<u64>(), 32 * 1024);
+
+        flag.store(true, Ordering::SeqCst);
+        let mut cancelled = CancellableProgressReader::new(
+            Cursor::new(vec![9u8; 16]),
+            flag,
+            |_| {},
+        );
+        let error = cancelled
+            .read(&mut [0u8; 8])
+            .expect_err("cancelled reader must stop");
+        assert_eq!(error.kind(), std::io::ErrorKind::Interrupted);
+    }
+
+    #[test]
+    fn seven_zip_encryption_detection_reads_metadata_without_testing_payload() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("payload.bin");
+        let plain = temp.path().join("plain.7z");
+        let encrypted = temp.path().join("encrypted.7z");
+        std::fs::write(&source, vec![5u8; 64 * 1024]).expect("write fixture");
+
+        sevenz_rust::compress_to_path(&source, &plain).expect("plain 7z");
+        sevenz_rust::compress_to_path_encrypted(
+            &source,
+            &encrypted,
+            sevenz_rust::Password::from("correct-password"),
+        )
+        .expect("encrypted 7z");
+
+        assert!(!CompressionService::seven_zip_requires_password(&plain)
+            .expect("inspect plain 7z"));
+        assert!(CompressionService::seven_zip_requires_password(&encrypted)
+            .expect("inspect encrypted 7z"));
     }
 
     #[test]

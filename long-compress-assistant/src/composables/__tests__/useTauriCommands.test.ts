@@ -375,6 +375,33 @@ describe('useTauriCommands', () => {
     expect(tasks.tasks[1].status).toBe('pending')
   })
 
+  it('shows cancelling until the backend confirms cleanup', async () => {
+    let finishCancellation!: () => void
+    mocks.invoke.mockImplementation((command: string) => {
+      if (command === 'cancel_compression') {
+        return new Promise<void>(resolve => { finishCancellation = resolve })
+      }
+      return Promise.resolve(undefined)
+    })
+    const tasks = useTaskStore()
+    tasks.addTask({
+      id: 'slow-cancel',
+      name: 'large.7z',
+      type: 'compression',
+      sourceFiles: ['large.bin'],
+      outputPath: 'large.7z',
+    })
+    tasks.updateTaskStatus('slow-cancel', 'compressing')
+
+    const pending = useTauriCommands().cancelCompression('slow-cancel')
+    await Promise.resolve()
+    expect(tasks.tasks[0].status).toBe('cancelling')
+
+    finishCancellation()
+    await pending
+    expect(tasks.tasks[0].status).toBe('cancelled')
+  })
+
   it('forwards archive and desktop integration commands without changing payloads', async () => {
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'check_rar_compression_support') {

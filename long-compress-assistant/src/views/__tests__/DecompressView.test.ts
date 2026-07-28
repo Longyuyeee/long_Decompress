@@ -120,6 +120,68 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
+  it('never displays or starts pending compression tasks from the decompression workspace', async () => {
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    const compressionTaskId = taskStore.addTask({
+      id: 'pending-compression',
+      name: 'source-folder',
+      type: 'compression',
+      sourceFiles: ['C:/input/source-folder'],
+      outputPath: 'C:/input/source-folder.7z',
+    })
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'bundle.zip',
+      path: 'C:/archives/bundle.zip',
+    }])
+    await nextTick()
+    await nextTick()
+
+    const table = wrapper.findComponent({ name: 'AeroTable' })
+    expect(table.attributes('tasktype')).toBe('decompression')
+
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(useAppStore().t('decompress.start_queue')),
+    )
+    await startButton!.trigger('click')
+
+    expect(mocks.decompressFile).toHaveBeenCalledTimes(1)
+    expect(mocks.decompressFile).toHaveBeenCalledWith(
+      'C:/archives/bundle.zip',
+      expect.anything(),
+      expect.any(String),
+    )
+    expect(taskStore.tasks.find(task => task.id === compressionTaskId)?.status).toBe('pending')
+    wrapper.unmount()
+  })
+
+  it('clears only finished decompression tasks', async () => {
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    for (const [id, type] of [
+      ['finished-compression', 'compression'],
+      ['finished-decompression', 'decompression'],
+    ] as const) {
+      taskStore.addTask({
+        id,
+        name: id,
+        type,
+        sourceFiles: [`C:/input/${id}`],
+        outputPath: 'C:/output',
+      })
+      taskStore.updateTaskStatus(id, 'completed')
+    }
+    await nextTick()
+
+    const clearButton = wrapper.findAll('button').find(
+      button => button.text().includes(useAppStore().t('decompress.clear_finished')),
+    )
+    await clearButton!.trigger('click')
+
+    expect(taskStore.tasks.map(task => task.id)).toEqual(['finished-compression'])
+    wrapper.unmount()
+  })
+
   it('runs a queued one-click extraction in a safe same-name folder', async () => {
     const wrapper = mountView()
     const taskStore = useTaskStore()

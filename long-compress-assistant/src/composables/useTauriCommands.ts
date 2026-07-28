@@ -179,7 +179,7 @@ export const useTauriCommands = () => {
       return result
     } catch (error: any) {
       const task = taskStore.tasks.find(item => item.id === taskId)
-      if (task?.status !== 'cancelled') {
+      if (task && !['cancelled', 'cancelling'].includes(task.status)) {
         taskStore.updateTaskStatus(taskId, 'failed')
       }
       throw error
@@ -515,10 +515,15 @@ export const useTauriCommands = () => {
   }
 
   const cancelCompression = async (taskId: string) => {
+    const task = taskStore.tasks.find(item => item.id === taskId)
+    if (!task || ['completed', 'failed', 'cancelled', 'cancelling'].includes(task.status)) return
+    const previousStatus = task.status
+    taskStore.updateTaskStatus(taskId, 'cancelling')
     try {
       await invoke('cancel_compression', { taskId })
       taskStore.updateTaskStatus(taskId, 'cancelled')
     } catch (error) {
+      taskStore.updateTaskStatus(taskId, previousStatus)
       console.error('Failed to cancel task:', error)
     }
   }

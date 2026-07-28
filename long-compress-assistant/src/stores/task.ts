@@ -3,8 +3,9 @@ import { ref, computed } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
 
-export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'completed' | 'failed' | 'cancelled'
+export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'cancelling' | 'completed' | 'failed' | 'cancelled'
 export type LogSeverity = 'info' | 'warning' | 'error' | 'success'
+export type TaskType = 'compression' | 'decompression'
 
 export interface TaskLog {
   task_id: string
@@ -27,7 +28,7 @@ export interface ConflictInfo {
 export interface Task {
   id: string
   name: string
-  type: 'compression' | 'decompression'
+  type: TaskType
   status: TaskStatus
   progress: number
   startTime?: Date
@@ -62,6 +63,7 @@ export interface Task {
 export const useTaskStore = defineStore('task', () => {
   const tasks = ref<Task[]>([])
   const activeTaskCount = computed(() => tasks.value.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status)).length)
+  const tasksFor = (type: TaskType) => tasks.value.filter(task => task.type === type)
   let listenerInitialization: Promise<void> | null = null
 
   // 初始化监听器
@@ -178,14 +180,20 @@ export const useTaskStore = defineStore('task', () => {
   }
 
   const cancelTask = async (taskId: string) => {
+    const task = tasks.value.find(item => item.id === taskId)
+    if (!task || ['completed', 'failed', 'cancelled', 'cancelling'].includes(task.status)) {
+      return false
+    }
+    const previousStatus = task.status
+    updateTaskStatus(taskId, 'cancelling')
     try {
       await invoke('cancel_compression', { taskId })
       updateTaskStatus(taskId, 'cancelled')
       return true
     } catch (e) {
       console.error('Failed to cancel task:', e)
+      updateTaskStatus(taskId, previousStatus)
       // 将错误信息记录到任务的日志中
-      const task = tasks.value.find(t => t.id === taskId)
       if (task) {
         task.logs.push({
           task_id: taskId,
@@ -203,13 +211,17 @@ export const useTaskStore = defineStore('task', () => {
     // console.log('Fetching tasks...')
   }
 
-  const clearFinishedTasks = () => {
-    tasks.value = tasks.value.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status))
+  const clearFinishedTasks = (type?: TaskType) => {
+    tasks.value = tasks.value.filter(task => {
+      const isFinished = ['completed', 'failed', 'cancelled'].includes(task.status)
+      return !isFinished || (type !== undefined && task.type !== type)
+    })
   }
 
   return {
     tasks,
     activeTaskCount,
+    tasksFor,
     initListeners,
     addTask,
     updateTaskStatus,

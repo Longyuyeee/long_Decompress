@@ -9,6 +9,7 @@ import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedForm
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
+import AeroTable from '@/components/tasks/AeroTable.vue'
 import Modal from '@/components/ui/Modal.vue'
 import { ask } from '@tauri-apps/api/dialog'
 
@@ -27,6 +28,14 @@ const installingWinRar = ref(false)
 const rarResolutionMessage = ref('')
 type RarResolution = 'retry' | 'use-7z' | 'cancel'
 let resolveRarResolution: ((choice: RarResolution) => void) | null = null
+
+const compressionTasks = computed(() => taskStore.tasksFor('compression'))
+const activeCompressionTasks = computed(() =>
+  compressionTasks.value.filter(task => !['completed', 'failed', 'cancelled'].includes(task.status))
+)
+const hasFinishedCompressionTasks = computed(() =>
+  compressionTasks.value.some(task => ['completed', 'failed', 'cancelled'].includes(task.status))
+)
 
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
@@ -67,6 +76,8 @@ const joinPath = (dir: string, fileName: string) => {
   const separator = dir.includes('\\') ? '\\' : '/'
   return dir.endsWith('/') || dir.endsWith('\\') ? `${dir}${fileName}` : `${dir}${separator}${fileName}`
 }
+
+const normalizeOutputPath = (path: string) => path.replace(/\//g, '\\').toLocaleLowerCase()
 
 const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {
   return files.length === 1 && !files[0]?.isDirectory
@@ -191,16 +202,30 @@ const runCompression = async () => {
   const validJobs: Array<{ job: typeof jobs[0], taskId: string, effectiveFormat: string }> = []
   let failed = 0
   const outputPaths = new Set<string>()
+  const activeOutputPaths = new Set(
+    taskStore.tasks
+      .filter(task =>
+        task.type === 'compression' &&
+        !['completed', 'failed', 'cancelled'].includes(task.status)
+      )
+      .map(task => normalizeOutputPath(task.outputPath))
+  )
 
   for (const job of jobs) {
     const effectiveFormat = effectiveFormatForPassword(job.settings.format, job.settings.password)
-    const normalizedOutputPath = job.outputPath.toLocaleLowerCase()
+    const normalizedOutputPath = normalizeOutputPath(job.outputPath)
     if (outputPaths.has(normalizedOutputPath)) {
       appStore.setError(`${appStore.t('common.error')}: Duplicate output path: ${job.outputPath}`)
       failed++
       continue
     }
+    if (activeOutputPaths.has(normalizedOutputPath)) {
+      appStore.setError(`${appStore.t('common.error')}: Another compression task is already writing this output: ${job.outputPath}`)
+      failed++
+      continue
+    }
     outputPaths.add(normalizedOutputPath)
+    activeOutputPaths.add(normalizedOutputPath)
 
     // 校验失败：跳过当前任务
     if (isSingleFileStreamFormat(job.settings.format) && !canUseSingleFileFormats(job.files)) {
@@ -238,10 +263,19 @@ const runCompression = async () => {
     validJobs.push({ job, taskId, effectiveFormat })
   }
 
+  // A validated draft becomes a task exactly once. Keeping it in the draft area
+  // allowed a second click to submit the same output while the first run was active.
+  compressionStore.removeSubmittedJobs(validJobs.map(({ job }) => job.id))
+  validJobs.forEach(({ job }) => selectedRows.value.delete(job.id))
+
   // 第二阶段：依次执行所有任务
   let succeeded = 0
 
   for (const { job, taskId, effectiveFormat } of validJobs) {
+    const queuedTask = taskStore.tasks.find(task => task.id === taskId)
+    if (!queuedTask || queuedTask.status === 'cancelled') {
+      continue
+    }
     try {
       taskStore.updateTaskStatus(taskId, 'compressing')
       await tauriCommands.compressFiles(
@@ -262,14 +296,14 @@ const runCompression = async () => {
       succeeded++
     } catch (error) {
       const task = taskStore.tasks.find(t => t.id === taskId)
-      if (task?.status !== 'cancelled') {
+      if (task && !['cancelled', 'cancelling'].includes(task.status)) {
         taskStore.updateTaskStatus(taskId, 'failed')
       }
-      if (task) {
+      if (task && !['cancelled', 'cancelling'].includes(task.status)) {
         task.error = extractErrorMessage(error)
+        appStore.setError(`${appStore.t('common.error')}: ${extractErrorMessage(error)}`)
+        failed++
       }
-      appStore.setError(`${appStore.t('common.error')}: ${extractErrorMessage(error)}`)
-      failed++
       // 继续处理下一个任务，不中断整个批次
     }
   }
@@ -342,6 +376,28 @@ watch(
 const totalPayload = computed(() => {
   return compressionStore.selectedFiles.length + compressionStore.groups.reduce((acc, g) => acc + g.files.length, 0)
 })
+
+const cancelCompressionTask = async (taskId: string) => {
+  const task = taskStore.tasks.find(item => item.id === taskId)
+  if (task?.status === 'pending') {
+    taskStore.updateTaskStatus(taskId, 'cancelled')
+    return
+  }
+  const cancelled = await taskStore.cancelTask(taskId)
+  if (!cancelled) {
+    appStore.setError('取消压缩失败，请查看任务日志。')
+  }
+}
+
+const cancelAllCompressionTasks = async () => {
+  for (const task of activeCompressionTasks.value) {
+    await cancelCompressionTask(task.id)
+  }
+}
+
+const clearFinishedCompressionTasks = () => {
+  taskStore.clearFinishedTasks('compression')
+}
 </script>
 
 <template>
@@ -352,6 +408,22 @@ const totalPayload = computed(() => {
         <p class="text-xs md:text-sm text-muted font-semibold mt-1">{{ appStore.t('compress.subtitle') }}</p>
       </div>
       <div class="flex items-center gap-2 md:gap-3">
+        <button
+          v-if="hasFinishedCompressionTasks"
+          @click="clearFinishedCompressionTasks"
+          class="h-8 md:h-9 px-3 rounded-lg bg-input border border-subtle text-muted text-xs font-bold hover:text-content hover:border-primary transition-all flex items-center gap-2"
+        >
+          <i class="pi pi-trash text-xs"></i>
+          <span class="hidden md:inline">清除已结束</span>
+        </button>
+        <button
+          v-if="activeCompressionTasks.length > 0"
+          @click="cancelAllCompressionTasks"
+          class="h-8 md:h-9 px-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold hover:bg-red-500/20 transition-all flex items-center gap-2"
+        >
+          <i class="pi pi-stop-circle text-xs"></i>
+          <span class="hidden md:inline">取消进行中</span>
+        </button>
         <!-- 全局设置按钮 -->
         <button
           @click="showGlobalSettingsModal = true"
@@ -468,16 +540,23 @@ const totalPayload = computed(() => {
         <div v-if="compressionStore.selectedFiles.length > 0" class="space-y-3">
           <h3 class="text-xs font-black text-muted uppercase tracking-[0.3em] px-4">{{ appStore.t('compress.add_files') }}</h3>
           <div v-for="file in compressionStore.selectedFiles" :key="file.path" 
-               @click="toggleSelection(file.path)"
+               data-testid="compression-draft-row"
+               @click="file.expanded = !file.expanded"
                 class="flex flex-wrap items-center justify-between px-8 py-4 rounded-2xl bg-input border border-subtle group/row hover:border-primary/30 transition-all cursor-pointer"
-               :class="{ 'border-primary/50 bg-primary/5 shadow-inner': selectedRows.has(file.path) }">
+               :class="{ 'border-primary/50 bg-primary/5 shadow-inner': file.expanded }">
             
-            <div class="w-6 flex shrink-0">
+            <button
+              type="button"
+              data-testid="compression-group-checkbox"
+              class="w-6 flex shrink-0"
+              :aria-label="`选择 ${file.name} 用于打组`"
+              @click.stop="toggleSelection(file.path)"
+            >
               <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all"
                    :class="selectedRows.has(file.path) ? 'bg-primary border-primary' : 'bg-card'">
                 <i v-if="selectedRows.has(file.path)" class="pi pi-check text-xs text-white"></i>
               </div>
-            </div>
+            </button>
 
             <div class="flex-1 min-w-[200px] overflow-hidden px-4 flex items-center gap-3">
               <div class="w-8 h-8 rounded-lg bg-card border border-subtle flex items-center justify-center shrink-0">
@@ -495,7 +574,7 @@ const totalPayload = computed(() => {
             </button>
             <button @click.stop="file.expanded = !file.expanded"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-primary transition-all">
-              <i class="pi pi-cog text-sm"></i>
+              <i class="pi text-sm transition-transform" :class="file.expanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
             </button>
 
             <transition name="slide-down">
@@ -512,10 +591,26 @@ const totalPayload = computed(() => {
             </transition>
           </div>
         </div>
+
+        <section v-if="compressionTasks.length > 0" class="min-h-[260px] flex-1 rounded-2xl border border-subtle bg-card/30 overflow-hidden">
+          <div class="px-5 py-3 border-b border-subtle flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-black text-content uppercase tracking-[0.2em]">压缩任务</h3>
+              <p class="text-xs text-muted mt-1">点击任务展开左侧配置与右侧实时进度日志</p>
+            </div>
+            <span class="text-xs font-mono text-primary">{{ activeCompressionTasks.length }} 进行中</span>
+          </div>
+          <div class="h-[320px]">
+            <AeroTable
+              task-type="compression"
+              @cancel-task="cancelCompressionTask"
+            />
+          </div>
+        </section>
       </div>
 
       <!-- 3. 空状态 (引导式双列布局) -->
-      <div v-else class="flex-1 min-h-0 flex flex-col items-center justify-center p-2 sm:p-3 gap-2 sm:gap-3">
+      <div v-else-if="compressionTasks.length === 0" class="flex-1 min-h-0 flex flex-col items-center justify-center p-2 sm:p-3 gap-2 sm:gap-3">
         <div class="text-center space-y-1 shrink-0">
           <h2 class="text-sm sm:text-base md:text-xl font-black text-content tracking-tight">{{ appStore.t('compress.start') }}</h2>
           <p class="text-xs md:text-sm text-muted font-bold uppercase tracking-widest">{{ appStore.t('compress.select_to_begin') }}</p>
@@ -534,6 +629,13 @@ const totalPayload = computed(() => {
             class="shadow-sm flex-1 min-h-[160px] sm:min-h-0"
           />
         </div>
+      </div>
+
+      <div v-else class="flex-1 min-h-0">
+        <AeroTable
+          task-type="compression"
+          @cancel-task="cancelCompressionTask"
+        />
       </div>
 
       <!-- 底部辅助区 -->
