@@ -1,5 +1,6 @@
 import { appWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/tauri'
+import { listen } from '@tauri-apps/api/event'
 import type { UpdateManifest } from '@tauri-apps/api/updater'
 import { useTaskStore, type TaskStatus } from '@/stores/task'
 import { useUpdateStore } from '@/stores/update'
@@ -13,6 +14,20 @@ export interface DesktopE2EBridge {
   clearTasks: () => Promise<void>
   reset: () => Promise<void>
   taskStatus: (taskId: string) => TaskStatus | null
+  taskProgress: (taskId: string) => number | null
+  runSevenZipRoundTrip: (
+    sourcePath: string,
+    archivePath: string,
+    outputPath: string,
+  ) => Promise<{ compressionProgress: number[]; extractionProgress: number[]; extractedPath: string }>
+  runArchiveRoundTrip: (
+    sourcePath: string,
+    archivePath: string,
+    outputPath: string,
+    format: string,
+    password?: string | null,
+  ) => Promise<string>
+  startSevenZipCompression: (sourcePath: string, archivePath: string) => Promise<string>
   showAvailableUpdate: () => void
   setCloseToTray: (enabled: boolean) => Promise<void>
   hideWindow: (markerPath: string) => Promise<void>
@@ -48,6 +63,46 @@ export const installDesktopE2EBridge = () => {
   const syncActiveState = () =>
     invoke('set_has_active_tasks', { active: taskStore.activeTaskCount > 0 })
 
+  const addArchiveTask = (
+    taskId: string,
+    type: 'compression' | 'decompression',
+    sourcePath: string,
+    outputPath: string,
+  ) => {
+    taskStore.addTask({
+      id: taskId,
+      name: sourcePath.split(/[\\/]/).pop() || taskId,
+      type,
+      sourceFiles: [sourcePath],
+      outputPath,
+      format: '7z',
+    })
+  }
+
+  const sevenZipOptions = {
+    format: '7z',
+    level: 3,
+    password: null,
+    split_size: null,
+    preserve_paths: true,
+    delete_after: false,
+    allow_insecure_password_cli: false,
+  }
+
+  const extractionOptions = {
+    preserve_paths: true,
+    overwrite_existing: false,
+    delete_after: false,
+    preserve_timestamps: true,
+    skip_corrupted: false,
+    extract_only_newer: false,
+    create_subdirectory: false,
+    file_filter: null,
+    conflict_policy: 'rename',
+    enable_bruteforce: false,
+    bruteforce_wordlists: [],
+  }
+
   const bridge: DesktopE2EBridge = {
     async startCancellableTask(outputPath) {
       const taskId = addActiveTask()
@@ -56,13 +111,13 @@ export const installDesktopE2EBridge = () => {
       await syncActiveState()
       void invoke('desktop_e2e_run_cancellable_task', { taskId, outputPath })
         .then(() => {
-          if (taskStore.tasks.find(item => item.id === taskId)?.status !== 'cancelled') {
+          if (!['cancelled', 'cancelling'].includes(taskStore.tasks.find(item => item.id === taskId)?.status || '')) {
             taskStore.updateTaskStatus(taskId, 'completed')
           }
         })
         .catch(error => {
           const current = taskStore.tasks.find(item => item.id === taskId)
-          if (current && current.status !== 'cancelled') {
+          if (current && !['cancelled', 'cancelling'].includes(current.status)) {
             current.error = String(error)
             taskStore.updateTaskStatus(taskId, 'failed')
           }
@@ -98,6 +153,117 @@ export const installDesktopE2EBridge = () => {
 
     taskStatus(taskId) {
       return taskStore.tasks.find(item => item.id === taskId)?.status ?? null
+    },
+
+    taskProgress(taskId) {
+      return taskStore.tasks.find(item => item.id === taskId)?.progress ?? null
+    },
+
+    async runSevenZipRoundTrip(sourcePath, archivePath, outputPath) {
+      const compressionTaskId = `desktop-e2e-7z-compress-${Date.now()}`
+      const extractionTaskId = `desktop-e2e-7z-extract-${Date.now()}`
+      const compressionProgress: number[] = []
+      const extractionProgress: number[] = []
+      const unlisten = await listen<{ task_id: string; progress: number }>('task-progress', event => {
+        const percentage = Math.round(event.payload.progress * 100)
+        if (event.payload.task_id === compressionTaskId) compressionProgress.push(percentage)
+        if (event.payload.task_id === extractionTaskId) extractionProgress.push(percentage)
+      })
+
+      try {
+        addArchiveTask(compressionTaskId, 'compression', sourcePath, archivePath)
+        taskStore.updateTaskStatus(compressionTaskId, 'compressing')
+        await syncActiveState()
+        await invoke('compress_files', {
+          taskId: compressionTaskId,
+          files: [sourcePath],
+          outputPath: archivePath,
+          options: sevenZipOptions,
+        })
+        taskStore.updateTaskStatus(compressionTaskId, 'completed')
+
+        addArchiveTask(extractionTaskId, 'decompression', archivePath, outputPath)
+        taskStore.updateTaskStatus(extractionTaskId, 'extracting')
+        await syncActiveState()
+        const extractedPath = await invoke<string>('extract_file', {
+          taskId: extractionTaskId,
+          filePath: archivePath,
+          outputPath,
+          password: null,
+          options: extractionOptions,
+        })
+        taskStore.updateTaskStatus(extractionTaskId, 'completed')
+        return { compressionProgress, extractionProgress, extractedPath }
+      } finally {
+        unlisten()
+        await syncActiveState()
+      }
+    },
+
+    async runArchiveRoundTrip(sourcePath, archivePath, outputPath, format, password = null) {
+      const nonce = `${format.replaceAll('.', '-')}-${Date.now()}-${Math.random().toString(16).slice(2)}`
+      const compressionTaskId = `desktop-e2e-matrix-compress-${nonce}`
+      const extractionTaskId = `desktop-e2e-matrix-extract-${nonce}`
+      addArchiveTask(compressionTaskId, 'compression', sourcePath, archivePath)
+      const compressionTask = taskStore.tasks.find(item => item.id === compressionTaskId)
+      if (compressionTask) compressionTask.format = format
+      taskStore.updateTaskStatus(compressionTaskId, 'compressing')
+      await syncActiveState()
+      await invoke('compress_files', {
+        taskId: compressionTaskId,
+        files: [sourcePath],
+        outputPath: archivePath,
+        options: {
+          ...sevenZipOptions,
+          format,
+          password,
+        },
+      })
+      taskStore.updateTaskStatus(compressionTaskId, 'completed')
+
+      addArchiveTask(extractionTaskId, 'decompression', archivePath, outputPath)
+      const extractionTask = taskStore.tasks.find(item => item.id === extractionTaskId)
+      if (extractionTask) extractionTask.format = format
+      taskStore.updateTaskStatus(extractionTaskId, 'extracting')
+      await syncActiveState()
+      const extractedPath = await invoke<string>('extract_file', {
+        taskId: extractionTaskId,
+        filePath: archivePath,
+        outputPath,
+        password,
+        options: extractionOptions,
+      })
+      taskStore.updateTaskStatus(extractionTaskId, 'completed')
+      await syncActiveState()
+      return extractedPath
+    },
+
+    async startSevenZipCompression(sourcePath, archivePath) {
+      const taskId = `desktop-e2e-7z-cancel-${Date.now()}`
+      addArchiveTask(taskId, 'compression', sourcePath, archivePath)
+      taskStore.updateTaskStatus(taskId, 'compressing')
+      await syncActiveState()
+      void invoke('compress_files', {
+        taskId,
+        files: [sourcePath],
+        outputPath: archivePath,
+        options: { ...sevenZipOptions, level: 1 },
+      })
+        .then(() => {
+          const task = taskStore.tasks.find(item => item.id === taskId)
+          if (task && !['cancelled', 'cancelling'].includes(task.status)) {
+            taskStore.updateTaskStatus(taskId, 'completed')
+          }
+        })
+        .catch(error => {
+          const task = taskStore.tasks.find(item => item.id === taskId)
+          if (task && !['cancelled', 'cancelling'].includes(task.status)) {
+            task.error = String(error)
+            taskStore.updateTaskStatus(taskId, 'failed')
+          }
+        })
+        .finally(() => void syncActiveState())
+      return taskId
     },
 
     showAvailableUpdate() {

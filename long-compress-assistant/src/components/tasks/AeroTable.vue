@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useTaskStore, type Task } from '@/stores/task'
+import { useTaskStore, type Task, type TaskType } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { usePasswordStore } from '@/stores/password'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -10,6 +10,7 @@ import { open } from '@tauri-apps/api/dialog'
 const props = defineProps<{
   selectedTaskIds?: Set<string>
   statusFilter?: string | string[]
+  taskType?: TaskType
 }>()
 
 const emit = defineEmits<{
@@ -17,6 +18,7 @@ const emit = defineEmits<{
   'select-all-pending': []
   'deselect-all': []
   'retry-with-password': [taskId: string]
+  'cancel-task': [taskId: string]
 }>()
 
 const taskStore = useTaskStore()
@@ -24,10 +26,14 @@ const appStore = useAppStore()
 const passwordStore = usePasswordStore()
 
 const displayTasks = computed(() => {
-  if (!props.statusFilter || props.statusFilter === 'all') return taskStore.tasks
+  const typedTasks = props.taskType
+    ? taskStore.tasks.filter(task => task.type === props.taskType)
+    : taskStore.tasks
+  if (!props.statusFilter || props.statusFilter === 'all') return typedTasks
   const filters = Array.isArray(props.statusFilter) ? props.statusFilter : [props.statusFilter]
-  return taskStore.tasks.filter(t => filters.includes(t.status))
+  return typedTasks.filter(t => filters.includes(t.status))
 })
+const pendingDisplayTasks = computed(() => displayTasks.value.filter(task => task.status === 'pending'))
 const tauriCommands = useTauriCommands()
 const expandedTasks = ref<Set<string>>(new Set())
 const showPasswordInput = ref<string | null>(null)
@@ -122,6 +128,7 @@ const getStatusIcon = (status: string) => {
     case 'running': return '▶️'
     case 'extracting': return '📦'
     case 'compressing': return '🗜️'
+    case 'cancelling': return '⏳'
     case 'completed': return '✅'
     case 'failed': return '❌'
     case 'cancelled': return '⛔'
@@ -136,6 +143,7 @@ const getStatusColor = (status: string) => {
     case 'running': return 'text-blue-500 animate-pulse'
     case 'extracting': return 'text-blue-500 animate-pulse'
     case 'compressing': return 'text-blue-500 animate-pulse'
+    case 'cancelling': return 'text-orange-400 animate-pulse'
     case 'completed': return 'text-green-500'
     case 'failed': return 'text-red-500'
     case 'cancelled': return 'text-orange-500'
@@ -205,13 +213,13 @@ const onLeave = (el: any) => {
         <!-- 复选框列 -->
         <div class="w-8 shrink-0 flex items-center justify-center">
           <button
-            v-if="taskStore.tasks.some(t => t.status === 'pending')"
+            v-if="props.selectedTaskIds && pendingDisplayTasks.length > 0"
             class="w-4 h-4 rounded border border-subtle/50 flex items-center justify-center hover:border-primary transition-colors"
-            :class="taskStore.tasks.filter(t => t.status === 'pending').every(t => isSelected(t.id)) ? 'bg-primary border-primary' : 'bg-input/50'"
-            @click.stop="taskStore.tasks.filter(t => t.status === 'pending').every(t => isSelected(t.id)) ? emit('deselect-all') : emit('select-all-pending')"
+            :class="pendingDisplayTasks.every(t => isSelected(t.id)) ? 'bg-primary border-primary' : 'bg-input/50'"
+            @click.stop="pendingDisplayTasks.every(t => isSelected(t.id)) ? emit('deselect-all') : emit('select-all-pending')"
             :title="appStore.t('tasks.toggle_all')"
           >
-            <i v-if="taskStore.tasks.filter(t => t.status === 'pending').every(t => isSelected(t.id))" class="pi pi-check text-sm text-white"></i>
+            <i v-if="pendingDisplayTasks.every(t => isSelected(t.id))" class="pi pi-check text-sm text-white"></i>
           </button>
         </div>
         <div class="flex-[1.5] min-w-[180px]">{{ appStore.t('decompress.column.name') }}</div>
@@ -239,7 +247,7 @@ const onLeave = (el: any) => {
             <!-- 复选框 -->
             <div class="w-8 shrink-0 flex items-center justify-center" @click.stop>
               <button
-                v-if="task.status === 'pending'"
+                v-if="props.selectedTaskIds && task.status === 'pending'"
                 class="w-4 h-4 rounded border flex items-center justify-center transition-all"
                 :class="isSelected(task.id) ? 'bg-primary border-primary' : 'border-subtle/50 bg-input/50 hover:border-primary'"
                 @click="emit('toggle-task', task.id)"
@@ -249,6 +257,7 @@ const onLeave = (el: any) => {
               <i v-else-if="task.status === 'completed'" class="pi pi-check-circle text-green-400/50 text-sm"></i>
               <i v-else-if="task.status === 'failed'" class="pi pi-exclamation-circle text-red-400/50 text-sm"></i>
               <i v-else-if="task.status === 'cancelled'" class="pi pi-ban text-muted/30 text-sm"></i>
+              <i v-else-if="task.status === 'pending'" class="pi pi-clock text-muted/40 text-sm"></i>
               <div v-else class="w-4 h-4"></div>
             </div>
 
@@ -280,7 +289,7 @@ const onLeave = (el: any) => {
 
               <!-- 进度条（仅运行时显示） -->
               <div
-                v-if="['running', 'extracting', 'compressing', 'preparing'].includes(task.status)"
+                v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)"
                 class="flex-1 h-1.5 bg-input/50 rounded-full overflow-hidden"
               >
                 <div
@@ -291,7 +300,7 @@ const onLeave = (el: any) => {
 
               <!-- 进度百分比 -->
               <span
-                v-if="['running', 'extracting', 'compressing', 'preparing'].includes(task.status)"
+                v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)"
                 class="text-xs font-mono text-primary font-bold"
               >
                 {{ task.progress || 0 }}%
@@ -324,10 +333,17 @@ const onLeave = (el: any) => {
             <div class="w-6 flex justify-end" @click.stop>
               <button
                 v-if="task.status === 'pending'"
-                @click="handleRemoveTask(task.id)"
+                @click="task.type === 'compression' ? emit('cancel-task', task.id) : handleRemoveTask(task.id)"
                 class="w-5 h-5 rounded-md flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 transition-all"
-                :title="appStore.t('tasks.remove')">
-                <i class="pi pi-times text-xs"></i>
+                :title="task.type === 'compression' ? '取消排队任务' : appStore.t('tasks.remove')">
+                <i :class="task.type === 'compression' ? 'pi pi-stop-circle' : 'pi pi-times'" class="text-xs"></i>
+              </button>
+              <button
+                v-else-if="['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(task.status)"
+                @click="emit('cancel-task', task.id)"
+                class="w-5 h-5 rounded-md flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-all"
+                title="取消任务">
+                <i class="pi pi-stop-circle text-xs"></i>
               </button>
             </div>
 
@@ -359,7 +375,7 @@ const onLeave = (el: any) => {
                       </h4>
                     </div>
 
-                    <div class="space-y-3.5">
+                    <div v-if="task.type === 'decompression'" class="space-y-3.5">
                       <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
                       <div class="space-y-2">
                         <div class="flex items-center justify-between gap-3">
@@ -419,10 +435,42 @@ const onLeave = (el: any) => {
                       </div>
 
                     </div>
+
+                    <div v-else class="space-y-3 text-xs">
+                      <div class="grid grid-cols-[90px_1fr] gap-x-3 gap-y-2">
+                        <span class="text-muted font-black uppercase">输出文件</span>
+                        <span class="font-mono text-content truncate" :title="task.outputPath">{{ task.outputPath }}</span>
+                        <span class="text-muted font-black uppercase">压缩格式</span>
+                        <span class="font-mono text-primary font-black">{{ task.format?.toUpperCase() }}</span>
+                        <span class="text-muted font-black uppercase">压缩等级</span>
+                        <span class="font-mono text-content">{{ task.compressionOptions?.level ?? '—' }}</span>
+                        <span class="text-muted font-black uppercase">源文件</span>
+                        <span class="font-mono text-content">{{ task.sourceFiles.length }} 项</span>
+                        <span class="text-muted font-black uppercase">保留路径</span>
+                        <span class="text-content">{{ task.compressionOptions?.preserve_paths ? '是' : '否' }}</span>
+                        <span class="text-muted font-black uppercase">分卷</span>
+                        <span class="text-content">{{ task.compressionOptions?.split_size ? `${task.compressionOptions.split_size} MB` : '关闭' }}</span>
+                        <span class="text-muted font-black uppercase">加密</span>
+                        <span class="text-content">{{ task.compressionOptions?.password ? '已启用' : '关闭' }}</span>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- 右侧：执行日志 -->
                   <div class="flex-1 p-5 flex flex-col overflow-hidden">
+                    <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
+                      <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
+                        <span class="text-muted">阶段</span>
+                        <div class="font-black text-content truncate mt-0.5">{{ task.stage || getStatusText(task.status) }}</div>
+                      </div>
+                      <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
+                        <span class="text-muted">进度</span>
+                        <div class="font-mono font-black text-primary mt-0.5">{{ task.progress || 0 }}%<span v-if="task.speed" class="ml-2 text-muted">{{ task.speed }}</span></div>
+                      </div>
+                      <div v-if="task.currentFile" class="col-span-2 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 truncate font-mono text-content" :title="task.currentFile">
+                        {{ task.currentFile }}
+                      </div>
+                    </div>
                     <h4 class="text-muted text-xs font-black uppercase tracking-[0.2em] mb-3 flex items-center justify-between opacity-90">
                       <span class="flex items-center gap-2">
                         <i class="pi pi-align-left text-xs"></i>

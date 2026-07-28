@@ -86,7 +86,53 @@ describe('CompressionView', () => {
     )
     expect(taskStore.tasks).toHaveLength(1)
     expect(taskStore.tasks[0].status).toBe('completed')
+    expect(compressionStore.selectedFiles).toHaveLength(0)
+    expect(wrapper.text()).toContain('sample.txt')
+    expect(wrapper.text()).toContain(appStore.t('tasks.status.completed'))
     expect(appStore.successMessage).toBeTruthy()
+  })
+
+  it('opens file details from the row while the leading checkbox only selects grouping', async () => {
+    const wrapper = mountView()
+    const compressionStore = useCompressionStore()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+
+    expect(compressionStore.selectedFiles[0].expanded).toBe(false)
+    await wrapper.get('[data-testid="compression-draft-row"]').trigger('click')
+    expect(compressionStore.selectedFiles[0].expanded).toBe(true)
+
+    await wrapper.get('[data-testid="compression-group-checkbox"]').trigger('click')
+    expect(compressionStore.selectedFiles[0].expanded).toBe(true)
+    expect(wrapper.text()).toContain('(1)')
+  })
+
+  it('clears only finished compression tasks from the compression center', async () => {
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    taskStore.addTask({
+      id: 'finished-compression',
+      name: 'done.zip',
+      type: 'compression',
+      sourceFiles: ['C:/done.txt'],
+      outputPath: 'C:/done.zip',
+    })
+    taskStore.updateTaskStatus('finished-compression', 'completed')
+    taskStore.addTask({
+      id: 'finished-decompression',
+      name: 'other.zip',
+      type: 'decompression',
+      sourceFiles: ['C:/other.zip'],
+      outputPath: 'C:/other',
+    })
+    taskStore.updateTaskStatus('finished-decompression', 'completed')
+    await nextTick()
+
+    const clear = wrapper.findAll('button').find(button => button.text().includes('清除已结束'))
+    expect(clear).toBeTruthy()
+    await clear!.trigger('click')
+
+    expect(taskStore.tasks.map(task => task.id)).toEqual(['finished-decompression'])
   })
 
   it('continues the batch after one compression fails', async () => {
@@ -106,6 +152,60 @@ describe('CompressionView', () => {
     expect(useTaskStore().tasks.map(task => task.status)).toEqual(['failed', 'completed'])
     expect(appStore.error).toContain('disk full')
     expect(appStore.successMessage).toBeTruthy()
+  })
+
+  it('cancels the active job and never starts queued compression jobs', async () => {
+    let rejectActive!: (error: Error) => void
+    mocks.compressFiles.mockImplementationOnce(() => new Promise((_, reject) => {
+      rejectActive = reject
+    }))
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit(
+      'files-selected',
+      [source('C:/one/first.txt'), source('C:/two/second.txt')],
+    )
+    await nextTick()
+
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(useAppStore().t('compress.start')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+    expect(useTaskStore().tasks.map(task => task.status)).toEqual(['compressing', 'pending'])
+
+    const cancelAll = wrapper.findAll('button').find(button => button.text().includes('取消进行中'))
+    expect(cancelAll).toBeTruthy()
+    await cancelAll!.trigger('click')
+    await flushPromises()
+    rejectActive(new Error('compression cancelled'))
+    await flushPromises()
+
+    expect(mocks.compressFiles).toHaveBeenCalledTimes(1)
+    expect(useTaskStore().tasks.map(task => task.status)).toEqual(['cancelled', 'cancelled'])
+  })
+
+  it('does not start another active compression for the same output path', async () => {
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    taskStore.addTask({
+      id: 'existing-compression',
+      name: 'sample.txt',
+      type: 'compression',
+      sourceFiles: ['C:/input/sample.txt'],
+      outputPath: 'C:\\input\\sample.zip',
+    })
+    taskStore.updateTaskStatus('existing-compression', 'compressing')
+
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(useAppStore().t('compress.start')),
+    )
+    await startButton!.trigger('click')
+
+    expect(mocks.compressFiles).not.toHaveBeenCalled()
+    expect(taskStore.tasks).toHaveLength(1)
+    expect(useAppStore().error).toContain('already writing this output')
   })
 
   it('starts a compression request that arrives after the view is already mounted', async () => {

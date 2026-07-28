@@ -22,6 +22,7 @@ const showConflictModal = ref(false)
 const selectedTaskIds = ref<Set<string>>(new Set())
 const supportedArchiveAccept = DECOMPRESS_ARCHIVE_ACCEPT
 const supportedArchiveHint = DECOMPRESS_ARCHIVE_HINT
+const decompressionTasks = computed(() => taskStore.tasksFor('decompression'))
 
 // 全局配置状态
 const globalOutputPath = ref('')
@@ -54,7 +55,7 @@ const drainPendingContextActions = () => {
         const createdTaskIds = await onFilesSelected(files.map(path => ({ path })) as any)
         if (request.action === 'context-open') continue
 
-        const createdTasks = taskStore.tasks.filter(
+        const createdTasks = decompressionTasks.value.filter(
           task => createdTaskIds.includes(task.id) && task.status === 'pending'
         )
         const extractToSubfolder = request.action !== 'context-extract-here'
@@ -100,7 +101,7 @@ const onFilesSelected = async (files: any[]) => {
   for (const file of supportedFiles) {
     const sourcePath = file.path
     // 去重：如果任务列表中已有相同文件，跳过
-    if (taskStore.tasks.some(t => t.sourceFiles.includes(sourcePath))) continue
+    if (decompressionTasks.value.some(t => t.sourceFiles.includes(sourcePath))) continue
 
     // 检测是否为分卷文件
     try {
@@ -183,7 +184,7 @@ const handleGlobalSelectDir = async () => {
       globalOutputPath.value = selected
       isGlobalSameDir.value = false
       // 同步到所有待处理任务
-      taskStore.tasks.forEach(t => {
+      decompressionTasks.value.forEach(t => {
         if (t.status === 'pending') t.outputPath = selected
       })
     }
@@ -196,7 +197,7 @@ const handleGlobalSetSameDir = () => {
   isGlobalSameDir.value = true
   globalOutputPath.value = ''
   // 同步到所有待处理任务：设置各自的父目录
-  taskStore.tasks.forEach(t => {
+  decompressionTasks.value.forEach(t => {
     if (t.status === 'pending' && t.sourceFiles.length > 0) {
       const sp = t.sourceFiles[0]
       t.outputPath = sp.substring(0, Math.max(sp.lastIndexOf('/'), sp.lastIndexOf('\\')))
@@ -206,7 +207,7 @@ const handleGlobalSetSameDir = () => {
 
 const toggleGlobalSubfolder = () => {
   globalExtractToSubfolder.value = !globalExtractToSubfolder.value
-  taskStore.tasks.forEach(t => {
+  decompressionTasks.value.forEach(t => {
     if (t.status === 'pending') t.extractToSubfolder = globalExtractToSubfolder.value
   })
 }
@@ -222,7 +223,7 @@ const toggleTaskSelection = (taskId: string) => {
 }
 
 const selectAllPending = () => {
-  const ids = taskStore.tasks.filter(t => t.status === 'pending').map(t => t.id)
+  const ids = decompressionTasks.value.filter(t => t.status === 'pending').map(t => t.id)
   selectedTaskIds.value = new Set(ids)
 }
 
@@ -237,10 +238,10 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
   if (isProcessing.value) return
   // 如果有选中的任务，优先处理选中的；否则处理所有 pending 任务
   const pendingTasks = onlyTaskIds
-    ? taskStore.tasks.filter(t => onlyTaskIds.includes(t.id) && t.status === 'pending')
+    ? decompressionTasks.value.filter(t => onlyTaskIds.includes(t.id) && t.status === 'pending')
     : selectedTaskIds.value.size > 0
-    ? taskStore.tasks.filter(t => selectedTaskIds.value.has(t.id) && t.status === 'pending')
-    : taskStore.tasks.filter(t => t.status === 'pending')
+    ? decompressionTasks.value.filter(t => selectedTaskIds.value.has(t.id) && t.status === 'pending')
+    : decompressionTasks.value.filter(t => t.status === 'pending')
   if (pendingTasks.length === 0) return
 
   isProcessing.value = true
@@ -250,7 +251,10 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
 
   for (const task of pendingTasks) {
     const fileName = task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''
-    const isTaskCancelled = () => taskStore.tasks.find(item => item.id === task.id)?.status === 'cancelled'
+    const isTaskCancelled = () => {
+      const status = taskStore.tasks.find(item => item.id === task.id)?.status
+      return status === 'cancelled' || status === 'cancelling'
+    }
 
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
@@ -600,8 +604,8 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
   isProcessing.value = false
 }
 
-const hasPendingTasks = computed(() => taskStore.tasks.some(t => t.status === 'pending'))
-const isRunning = computed(() => taskStore.tasks.some(t => ['running', 'extracting', 'compressing', 'preparing'].includes(t.status)))
+const hasPendingTasks = computed(() => decompressionTasks.value.some(t => t.status === 'pending'))
+const isRunning = computed(() => decompressionTasks.value.some(t => ['running', 'extracting', 'preparing', 'finalizing', 'cancelling'].includes(t.status)))
 
 const retryWithPassword = async (taskId: string) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
@@ -619,8 +623,8 @@ const retryWithPassword = async (taskId: string) => {
 const cancelAllTasks = async () => {
   let cancelled = 0
   let failed = 0
-  for (const t of taskStore.tasks) {
-    if (['running', 'extracting', 'compressing', 'preparing'].includes(t.status)) {
+  for (const t of decompressionTasks.value) {
+    if (['running', 'extracting', 'preparing', 'finalizing'].includes(t.status)) {
       const ok = await taskStore.cancelTask(t.id)
       if (ok) cancelled++; else failed++
     }
@@ -673,7 +677,7 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
 
 // 监听冲突事件（仅当无弹窗显示时才打开，避免重复）
 const unsubConflict = taskStore.$subscribe((_mutation, state) => {
-  const taskWithConflict = state.tasks.find(t => t.conflicts.length > 0)
+  const taskWithConflict = state.tasks.find(t => t.type === 'decompression' && t.conflicts.length > 0)
   if (taskWithConflict && !showConflictModal.value) {
     handleConflict(taskWithConflict.id)
   }
@@ -689,8 +693,8 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
       </div>
       <div class="flex gap-3">
         <button
-          v-if="!isRunning && taskStore.tasks.some(t => ['completed', 'failed', 'cancelled'].includes(t.status))"
-          @click="taskStore.clearFinishedTasks()"
+          v-if="!isRunning && decompressionTasks.some(t => ['completed', 'failed', 'cancelled'].includes(t.status))"
+          @click="taskStore.clearFinishedTasks('decompression')"
           class="h-9 px-5 rounded-lg bg-input border border-subtle text-muted text-xs font-bold uppercase tracking-wider hover:text-red-500 hover:border-red-500/30 transition-all flex items-center gap-2"
         >
           <i class="pi pi-trash text-xs"></i>
@@ -718,10 +722,11 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
     <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div class="flex-1 overflow-hidden flex flex-col relative">
         <!-- 显示所有任务，不再过滤只显示 pending -->
-        <div v-if="taskStore.tasks.length > 0" class="flex-1 min-h-0">
+        <div v-if="decompressionTasks.length > 0" class="flex-1 min-h-0">
           <AeroTable
           :selectedTaskIds="selectedTaskIds"
           statusFilter="all"
+          taskType="decompression"
           @toggle-task="toggleTaskSelection"
           @select-all-pending="selectAllPending"
           @deselect-all="deselectAll"
@@ -740,7 +745,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
       </div>
 
       <!-- 底部操作区 -->
-      <div v-if="taskStore.tasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-3 flex items-center gap-3 flex-wrap shrink-0">
+      <div v-if="decompressionTasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-3 flex items-center gap-3 flex-wrap shrink-0">
         <span class="text-xs font-black text-primary uppercase tracking-widest opacity-80 shrink-0 w-12">{{ appStore.t('decompress.config.output') }}</span>
 
         <button @click="handleGlobalSelectDir"

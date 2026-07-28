@@ -185,6 +185,12 @@ export const useCompressionStore = defineStore('compression', () => {
     }
   }
 
+  const removeSubmittedJobs = (jobIds: string[]) => {
+    const submitted = new Set(jobIds)
+    groups.value = groups.value.filter(group => !submitted.has(group.id))
+    selectedFiles.value = selectedFiles.value.filter(file => !submitted.has(file.path))
+  }
+
   const requestAutoStart = () => {
     autoStartRequested.value = true
   }
@@ -217,6 +223,7 @@ export const useCompressionStore = defineStore('compression', () => {
     replaceWithQuickPack,
     dissolveGroup,
     removeFileFromGroup,
+    removeSubmittedJobs,
     requestAutoStart,
     consumeAutoStart
   }

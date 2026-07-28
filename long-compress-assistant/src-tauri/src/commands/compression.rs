@@ -4,18 +4,28 @@ use crate::models::compression::{CompressionOptions, DecompressOptions};
 use tauri::{command, AppHandle, Manager, Window};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::path::{Component, PathBuf};
 use dashmap::DashMap;
+use dashmap::mapref::entry::Entry;
 use once_cell::sync::Lazy;
 
 static CANCELLATION_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
+static ACTIVE_COMPRESSION_OUTPUTS: Lazy<DashMap<String, String>> = Lazy::new(DashMap::new);
 
-async fn service_for_task(task_id: &str) -> CompressionService {
+async fn service_for_task(task_id: &str) -> Result<CompressionService, String> {
     let cancellation_flag = Arc::new(AtomicBool::new(false));
-    CANCELLATION_FLAGS.insert(task_id.to_string(), cancellation_flag.clone());
+    match CANCELLATION_FLAGS.entry(task_id.to_string()) {
+        Entry::Vacant(entry) => {
+            entry.insert(cancellation_flag.clone());
+        }
+        Entry::Occupied(_) => {
+            return Err(format!("Task is already running: {task_id}"));
+        }
+    }
 
     let mut service = CompressionService::new_with_defaults().await;
     service.cancellation_flag = cancellation_flag;
-    service
+    Ok(service)
 }
 
 fn cleanup_task(task_id: &str) {
@@ -38,6 +48,61 @@ impl Drop for TaskCancellationGuard {
     }
 }
 
+fn normalized_output_key(output_path: &str) -> Result<String, String> {
+    let path = PathBuf::from(output_path);
+    let absolute = if path.is_absolute() {
+        path
+    } else {
+        std::env::current_dir()
+            .map_err(|error| format!("Unable to resolve compression output path: {error}"))?
+            .join(path)
+    };
+
+    let mut normalized = PathBuf::new();
+    for component in absolute.components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                normalized.pop();
+            }
+            _ => normalized.push(component.as_os_str()),
+        }
+    }
+
+    let key = normalized.to_string_lossy().replace('/', "\\");
+    #[cfg(target_os = "windows")]
+    let key = key.to_lowercase();
+    Ok(key)
+}
+
+#[derive(Debug)]
+struct CompressionOutputGuard {
+    key: String,
+}
+
+impl CompressionOutputGuard {
+    fn acquire(task_id: &str, output_path: &str) -> Result<Self, String> {
+        let key = normalized_output_key(output_path)?;
+        match ACTIVE_COMPRESSION_OUTPUTS.entry(key.clone()) {
+            Entry::Vacant(entry) => {
+                entry.insert(task_id.to_string());
+                Ok(Self { key })
+            }
+            Entry::Occupied(entry) => Err(format!(
+                "Another compression task ({}) is already writing this output: {}",
+                entry.get(),
+                output_path
+            )),
+        }
+    }
+}
+
+impl Drop for CompressionOutputGuard {
+    fn drop(&mut self) {
+        ACTIVE_COMPRESSION_OUTPUTS.remove(&self.key);
+    }
+}
+
 #[command]
 pub async fn extract_file(
     _app: AppHandle,
@@ -48,7 +113,7 @@ pub async fn extract_file(
     password: Option<String>, 
     options: Option<DecompressOptions>
 ) -> Result<String, String> {
-    let service = service_for_task(&task_id).await;
+    let service = service_for_task(&task_id).await?;
     let _task_guard = TaskCancellationGuard::new(&task_id);
     let opts = options.unwrap_or_default();
     
@@ -66,7 +131,7 @@ pub async fn verify_archive_password(
     file_path: String,
     password: String,
 ) -> Result<bool, String> {
-    let service = service_for_task(&task_id).await;
+    let service = service_for_task(&task_id).await?;
     let _task_guard = TaskCancellationGuard::new(&task_id);
     service
         .verify_archive_password_candidate(&file_path, &password)
@@ -90,7 +155,7 @@ pub async fn extract_multiple(
         let task_id = task_ids.get(i).cloned().unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
         let opts = options.clone().unwrap_or_default();
         
-        let service = service_for_task(&task_id).await;
+        let service = service_for_task(&task_id).await?;
         let _task_guard = TaskCancellationGuard::new(&task_id);
         match service.extract(window.clone(), task_id.clone(), file.clone(), output_path.clone(), password.clone(), opts).await {
             Ok(path) => {
@@ -111,7 +176,8 @@ pub async fn compress_files(
     output_path: String, 
     options: Option<CompressionOptions>
 ) -> Result<String, String> {
-    let service = service_for_task(&task_id).await;
+    let _output_guard = CompressionOutputGuard::acquire(&task_id, &output_path)?;
+    let service = service_for_task(&task_id).await?;
     let _task_guard = TaskCancellationGuard::new(&task_id);
     let opts = options.unwrap_or_default();
 
@@ -126,10 +192,20 @@ pub async fn compress_files(
 
 #[command]
 pub async fn cancel_compression(task_id: String) -> Result<(), String> {
-    if let Some(flag) = CANCELLATION_FLAGS.get(&task_id) {
-        flag.store(true, Ordering::SeqCst);
+    let Some(flag) = CANCELLATION_FLAGS.get(&task_id) else {
+        return Err(format!("Task is not active: {task_id}"));
+    };
+    flag.store(true, Ordering::SeqCst);
+    drop(flag);
+
+    for _ in 0..200 {
+        if !CANCELLATION_FLAGS.contains_key(&task_id) {
+            return Ok(());
+        }
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
     }
-    Ok(())
+
+    Err(format!("Timed out waiting for task cancellation: {task_id}"))
 }
 
 /// Runs a deterministic, cancellable file-writing task for the real desktop E2E suite.
@@ -269,7 +345,10 @@ pub async fn repair_zip(file_path: String) -> Result<String, String> {
 
 #[cfg(test)]
 mod cancellation_tests {
-    use super::{cancel_tasks_and_wait, CANCELLATION_FLAGS};
+    use super::{
+        cancel_compression, cancel_tasks_and_wait, normalized_output_key, CompressionOutputGuard,
+        ACTIVE_COMPRESSION_OUTPUTS, CANCELLATION_FLAGS,
+    };
     use std::sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
@@ -292,5 +371,73 @@ mod cancellation_tests {
 
         cancel_tasks_and_wait(vec![task_id]).await.unwrap();
         assert!(flag.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn single_task_cancellation_waits_for_backend_cleanup() {
+        let task_id = format!("cancel-single-{}", uuid::Uuid::new_v4());
+        let flag = Arc::new(AtomicBool::new(false));
+        CANCELLATION_FLAGS.insert(task_id.clone(), flag.clone());
+
+        let cleanup_id = task_id.clone();
+        let cleanup_flag = flag.clone();
+        tokio::spawn(async move {
+            while !cleanup_flag.load(Ordering::SeqCst) {
+                tokio::task::yield_now().await;
+            }
+            tokio::time::sleep(tokio::time::Duration::from_millis(25)).await;
+            CANCELLATION_FLAGS.remove(&cleanup_id);
+        });
+
+        cancel_compression(task_id.clone()).await.unwrap();
+        assert!(flag.load(Ordering::SeqCst));
+        assert!(!CANCELLATION_FLAGS.contains_key(&task_id));
+    }
+
+    #[test]
+    fn equivalent_output_paths_share_one_active_reservation() {
+        let task_id = format!("output-owner-{}", uuid::Uuid::new_v4());
+        let output = std::env::temp_dir()
+            .join(format!("long-compress-output-{}.7z", uuid::Uuid::new_v4()));
+        let equivalent = output
+            .parent()
+            .unwrap()
+            .join(".")
+            .join(output.file_name().unwrap());
+
+        let guard = CompressionOutputGuard::acquire(&task_id, &output.to_string_lossy()).unwrap();
+        let duplicate = CompressionOutputGuard::acquire(
+            "duplicate-output-owner",
+            &equivalent.to_string_lossy(),
+        );
+
+        assert!(duplicate.unwrap_err().contains("already writing this output"));
+        drop(guard);
+        assert!(CompressionOutputGuard::acquire(
+            "replacement-output-owner",
+            &output.to_string_lossy(),
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn output_reservation_is_removed_when_guard_drops() {
+        let task_id = format!("output-cleanup-{}", uuid::Uuid::new_v4());
+        let output = std::env::temp_dir()
+            .join(format!("long-compress-cleanup-{}.zip", uuid::Uuid::new_v4()));
+        let key = normalized_output_key(&output.to_string_lossy()).unwrap();
+
+        {
+            let _guard =
+                CompressionOutputGuard::acquire(&task_id, &output.to_string_lossy()).unwrap();
+            assert_eq!(
+                ACTIVE_COMPRESSION_OUTPUTS
+                    .get(&key)
+                    .map(|owner| owner.value().clone()),
+                Some(task_id)
+            );
+        }
+
+        assert!(!ACTIVE_COMPRESSION_OUTPUTS.contains_key(&key));
     }
 }

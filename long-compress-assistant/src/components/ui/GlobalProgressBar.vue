@@ -12,10 +12,10 @@ const isExpanded = ref(false)
 const isMinimized = ref(false)
 const retryingTaskId = ref<string | null>(null)
 
-const ACTIVE_STATUSES = new Set(['preparing', 'running', 'extracting', 'compressing', 'finalizing'])
+const ACTIVE_STATUSES = new Set(['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'])
 const FINISHED_STATUSES = new Set(['completed', 'failed', 'cancelled'])
 const STATUS_ORDER: Record<string, number> = {
-  preparing: 0, running: 0, extracting: 0, compressing: 0, finalizing: 0,
+  preparing: 0, running: 0, extracting: 0, compressing: 0, finalizing: 0, cancelling: 0,
   pending: 1, failed: 2, completed: 3, cancelled: 4
 }
 
@@ -63,7 +63,7 @@ const statusIcon = (status: string) => {
   if (status === 'completed') return 'pi pi-check-circle text-green-400'
   if (status === 'failed') return 'pi pi-exclamation-circle text-red-400'
   if (status === 'cancelled') return 'pi pi-ban text-muted'
-  if (['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(status)) return 'pi pi-spin pi-spinner text-primary'
+  if (['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(status)) return 'pi pi-spin pi-spinner text-primary'
   return 'pi pi-clock text-muted'
 }
 
@@ -73,6 +73,7 @@ const statusLabel = (status: string) => {
     case 'preparing': return appStore.t('tasks.status.preparing')
     case 'running': case 'extracting': case 'compressing': return appStore.t('tasks.status.running')
     case 'finalizing': return appStore.t('tasks.status.finalizing')
+    case 'cancelling': return appStore.t('tasks.status.cancelling')
     case 'completed': return appStore.t('tasks.status.completed')
     case 'failed': return appStore.t('tasks.status.failed')
     case 'cancelled': return appStore.t('tasks.status.cancelled')
@@ -273,12 +274,12 @@ const copyToClipboard = async (text: string) => {
                   <!-- 状态 + 进度 -->
                   <div class="flex items-center gap-2 mt-1">
                     <span class="text-sm text-dim uppercase tracking-tight">{{ statusLabel(task.status) }}</span>
-                    <span v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
+                    <span v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"
                           class="text-sm font-mono text-primary font-bold">{{ task.progress }}%</span>
                     <span v-if="task.speed" class="text-xs font-mono text-dim ml-1">{{ task.speed }}</span>
                   </div>
                   <!-- 进度条 -->
-                  <div v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
+                  <div v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"
                        class="h-1 bg-input rounded-full mt-1.5 overflow-hidden relative">
                     <div class="h-full bg-primary rounded-full transition-all duration-700 progress-bar-fill"
                          :style="{ width: `${Math.max(task.progress, 1)}%` }"></div>
@@ -314,7 +315,7 @@ const copyToClipboard = async (text: string) => {
                   </button>
 
                   <button
-                    v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
+                    v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"
                     @click.stop="cancelTask(task)"
                     data-testid="cancel-task"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 transition-all"

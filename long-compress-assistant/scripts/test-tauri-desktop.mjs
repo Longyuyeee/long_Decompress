@@ -11,6 +11,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
+import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Builder, By, Capabilities } from 'selenium-webdriver'
@@ -307,6 +308,106 @@ try {
     payload,
     'the extracted file must match the source payload byte-for-byte',
   )
+
+  console.log('[desktop-e2e] verifying native 7Z progress and byte-for-byte round-trip')
+  const sevenZipSource = path.join(fixtureDirectory, 'sevenzip-payload.bin')
+  const sevenZipArchive = path.join(fixtureDirectory, 'sevenzip-payload.7z')
+  const sevenZipOutput = path.join(fixtureDirectory, 'sevenzip-output')
+  const sevenZipPayload = randomBytes(24 * 1024 * 1024)
+  writeFileSync(sevenZipSource, sevenZipPayload)
+  const sevenZipResult = await callDesktopBridge(
+    'runSevenZipRoundTrip',
+    sevenZipSource,
+    sevenZipArchive,
+    sevenZipOutput,
+  )
+  const sevenZipExtracted = path.join(sevenZipOutput, 'sevenzip-payload.bin')
+  assert.deepEqual(
+    readFileSync(sevenZipExtracted),
+    sevenZipPayload,
+    'native 7Z extraction must reproduce the source byte-for-byte',
+  )
+  assert.ok(
+    sevenZipResult.compressionProgress.some(progress => progress > 0 && progress < 100),
+    `native 7Z compression must emit intermediate byte progress: ${sevenZipResult.compressionProgress}`,
+  )
+  assert.ok(
+    sevenZipResult.extractionProgress.some(progress => progress > 0 && progress < 100),
+    `native 7Z extraction must emit intermediate byte progress: ${sevenZipResult.extractionProgress}`,
+  )
+
+  console.log('[desktop-e2e] verifying cancellation of a real native 7Z compression')
+  const cancelSource = path.join(fixtureDirectory, 'sevenzip-cancel-source.bin')
+  const cancelArchive = path.join(fixtureDirectory, 'sevenzip-cancelled.7z')
+  writeFileSync(cancelSource, randomBytes(96 * 1024 * 1024))
+  const realCancelTaskId = await callDesktopBridge(
+    'startSevenZipCompression',
+    cancelSource,
+    cancelArchive,
+  )
+  await driver.wait(
+    async () => {
+      const progress = await callDesktopBridge('taskProgress', realCancelTaskId)
+      const status = await callDesktopBridge('taskStatus', realCancelTaskId)
+      return (progress ?? 0) > 0 || status === 'completed'
+    },
+    30_000,
+  )
+  assert.notEqual(
+    await callDesktopBridge('taskStatus', realCancelTaskId),
+    'completed',
+    'real 7Z fixture completed before cancellation could be exercised',
+  )
+  assert.equal(await callDesktopBridge('cancelTask', realCancelTaskId), true)
+  await driver.wait(
+    async () => (await callDesktopBridge('taskStatus', realCancelTaskId)) === 'cancelled',
+    30_000,
+  )
+  assert.equal(existsSync(cancelArchive), false, 'cancelled native 7Z must not leave a final archive')
+  await callDesktopBridge('clearTasks')
+
+  console.log('[desktop-e2e] verifying common archive extraction matrix')
+  const matrixSource = path.join(fixtureDirectory, 'matrix-payload.txt')
+  const matrixPayload = Buffer.from(`Long解压 archive matrix ${new Date().toISOString()}\n`, 'utf8')
+  writeFileSync(matrixSource, matrixPayload)
+  const archiveMatrix = [
+    ['zip', 'zip', null],
+    ['7z', '7z', null],
+    ['tar', 'tar', null],
+    ['tar.gz', 'tar.gz', null],
+    ['tar.bz2', 'tar.bz2', null],
+    ['tar.xz', 'tar.xz', null],
+    ['gz', 'txt.gz', null],
+    ['bz2', 'txt.bz2', null],
+    ['xz', 'txt.xz', null],
+    ['zst', 'txt.zst', null],
+    ['tar.zst', 'tar.zst', null],
+    ['lzma', 'txt.lzma', null],
+    ['zip-password', 'zip', 'desktop-e2e-password'],
+    ['7z-password', '7z', 'desktop-e2e-password'],
+  ]
+  for (const [label, extension, password] of archiveMatrix) {
+    const format = label.replace('-password', '')
+    const caseRoot = path.join(fixtureDirectory, `matrix-${label}`)
+    mkdirSync(caseRoot, { recursive: true })
+    const archive = path.join(caseRoot, `matrix-payload.${extension}`)
+    const output = path.join(caseRoot, 'output')
+    await callDesktopBridge(
+      'runArchiveRoundTrip',
+      matrixSource,
+      archive,
+      output,
+      format,
+      password,
+    )
+    const extracted = path.join(output, 'matrix-payload.txt')
+    assert.deepEqual(
+      readFileSync(extracted),
+      matrixPayload,
+      `${label} extraction must reproduce the source byte-for-byte`,
+    )
+  }
+  await callDesktopBridge('clearTasks')
 
   navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[4].click()
