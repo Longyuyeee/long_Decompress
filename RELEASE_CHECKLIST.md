@@ -26,6 +26,8 @@
 
 ## 2. 自动化门禁
 
+- [ ] 正式版本号未用于另一个已安装、已交付或已公开分发的构建。
+- [ ] 开发构建使用 `-dev`，候选构建使用 `-rc.N`，正式版本号只对应最终发布提交。
 - [ ] PR 的 `Frontend checks` 通过。
 - [ ] PR 的 `Rust and shell-extension checks` 通过。
 - [ ] PR 的 `Browser shell E2E` 通过。
@@ -33,6 +35,7 @@
 - [ ] PR 的 `Windows installer` 通过。
 - [ ] 版本号已在 `package.json`、`package-lock.json`、`Cargo.toml` 和
       `tauri.conf.json` 中保持一致。
+- [ ] Git 标签、应用版本、Release 名称、安装包名称和 `latest.json` 版本完全一致。
 - [ ] Release notes 已描述用户可见变化、修复和已知限制。
 - [ ] 候选提交位于受保护的 `master`，且本地工作区干净。
 
@@ -97,6 +100,7 @@
 - [ ] Release 中存在 `Long-Decompress_<version>_x64-setup.exe`。
 - [ ] Release 中存在 `.nsis.zip`、`.nsis.zip.sig` 和 `latest.json`。
 - [ ] `latest.json` 的版本、下载地址和签名与当前 Release 一致。
+- [ ] `latest.json` 的版本严格高于上一正式安装版本，能够触发 updater 的语义版本比较。
 - [ ] 在干净环境下载并安装公开 Release 资产，而不是本地构建产物。
 - [ ] 安装器 SHA-256 已写入发布验收记录。
 - [ ] Release 说明已链接发布验收记录，并明确无商业代码签名及 SmartScreen 提示。
