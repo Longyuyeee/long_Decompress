@@ -115,4 +115,35 @@ describe('Compression Store', () => {
     expect(store.getEffectiveSettings()).toEqual(store.globalSettings)
     expect(store.getEffectiveOutputPath()).toBe('D:/global-output')
   })
+
+  it('binds submitted files and groups to immutable task snapshots and removes them together', () => {
+    const store = useCompressionStore()
+    const submittedOptions = { ...defaultOptions(), format: '7z' as const, level: 8 }
+
+    store.addFile(mockFile('loose.txt', 100))
+    store.addFile(mockFile('grouped.txt', 200))
+    const groupId = store.createGroup(['C:/archives/grouped.txt'])
+
+    store.bindJobTask('C:/archives/loose.txt', 'file-task', submittedOptions, 'D:/loose.7z')
+    store.bindJobTask(groupId, 'group-task', submittedOptions, 'D:/group.7z')
+    submittedOptions.level = 1
+
+    expect(store.selectedFiles[0]).toMatchObject({
+      taskId: 'file-task',
+      outputPath: 'D:/loose.7z',
+      settings: { format: '7z', level: 8 },
+    })
+    expect(store.groups[0]).toMatchObject({
+      taskId: 'group-task',
+      outputPath: 'D:/group.7z',
+      settings: { format: '7z', level: 8 },
+    })
+
+    store.removeJobsByTaskIds(['file-task'])
+    expect(store.selectedFiles).toHaveLength(0)
+    expect(store.groups).toHaveLength(1)
+
+    store.removeJobsByTaskIds(['group-task'])
+    expect(store.groups).toHaveLength(0)
+  })
 })

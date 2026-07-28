@@ -11,6 +11,7 @@ export interface FileObject {
   expanded?: boolean
   settings?: CompressionOptions
   outputPath?: string
+  taskId?: string
 }
 
 export interface CompressionOptions {
@@ -33,6 +34,7 @@ export interface CompressionGroup {
   expanded: boolean
   settings?: CompressionOptions
   outputPath?: string
+  taskId?: string
 }
 
 export interface CompressionTask {
@@ -117,6 +119,28 @@ export const useCompressionStore = defineStore('compression', () => {
     if (group) group.outputPath = outputPath
   }
 
+  const bindJobTask = (
+    jobId: string,
+    taskId: string,
+    settings: CompressionOptions,
+    outputPath: string,
+  ) => {
+    const group = groups.value.find(item => item.id === jobId)
+    if (group) {
+      group.taskId = taskId
+      group.settings = cloneSettings(settings)
+      group.outputPath = outputPath
+      return
+    }
+
+    const file = selectedFiles.value.find(item => item.path === jobId)
+    if (file) {
+      file.taskId = taskId
+      file.settings = cloneSettings(settings)
+      file.outputPath = outputPath
+    }
+  }
+
   const createGroup = (paths: string[]) => {
     const id = Date.now().toString()
     const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b']
@@ -185,10 +209,10 @@ export const useCompressionStore = defineStore('compression', () => {
     }
   }
 
-  const removeSubmittedJobs = (jobIds: string[]) => {
-    const submitted = new Set(jobIds)
-    groups.value = groups.value.filter(group => !submitted.has(group.id))
-    selectedFiles.value = selectedFiles.value.filter(file => !submitted.has(file.path))
+  const removeJobsByTaskIds = (taskIds: string[]) => {
+    const removed = new Set(taskIds)
+    groups.value = groups.value.filter(group => !group.taskId || !removed.has(group.taskId))
+    selectedFiles.value = selectedFiles.value.filter(file => !file.taskId || !removed.has(file.taskId))
   }
 
   const requestAutoStart = () => {
@@ -217,13 +241,14 @@ export const useCompressionStore = defineStore('compression', () => {
     updateFileOutputPath,
     updateGroupSettings,
     updateGroupOutputPath,
+    bindJobTask,
     createGroup,
     prepareQuickPacks,
     addQuickPack,
     replaceWithQuickPack,
     dissolveGroup,
     removeFileFromGroup,
-    removeSubmittedJobs,
+    removeJobsByTaskIds,
     requestAutoStart,
     consumeAutoStart
   }

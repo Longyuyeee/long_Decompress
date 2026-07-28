@@ -163,7 +163,7 @@ export const useTaskStore = defineStore('task', () => {
     const task = tasks.value.find(t => t.id === taskId)
     if (task) {
       task.status = status
-      if (status === 'running' && !task.startTime) {
+      if (['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(status) && !task.startTime) {
         task.startTime = new Date()
       }
       if (['completed', 'failed', 'cancelled'].includes(status)) {

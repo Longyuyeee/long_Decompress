@@ -3,13 +3,12 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
-import { useTaskStore } from '@/stores/task'
+import { useTaskStore, type Task, type TaskStatus } from '@/stores/task'
 import { extractErrorMessage, generateId } from '@/utils'
 import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
-import AeroTable from '@/components/tasks/AeroTable.vue'
 import Modal from '@/components/ui/Modal.vue'
 import { ask } from '@tauri-apps/api/dialog'
 
@@ -36,6 +35,56 @@ const activeCompressionTasks = computed(() =>
 const hasFinishedCompressionTasks = computed(() =>
   compressionTasks.value.some(task => ['completed', 'failed', 'cancelled'].includes(task.status))
 )
+const compressionTaskById = computed(() =>
+  new Map(compressionTasks.value.map(task => [task.id, task]))
+)
+const taskForJob = (taskId?: string) => taskId ? compressionTaskById.value.get(taskId) : undefined
+const isFinishedStatus = (status?: TaskStatus) =>
+  Boolean(status && ['completed', 'failed', 'cancelled'].includes(status))
+const isActiveStatus = (status?: TaskStatus) =>
+  Boolean(status && !['completed', 'failed', 'cancelled'].includes(status))
+
+const getCompressionStatusText = (status: TaskStatus = 'pending') =>
+  appStore.t(`compress.status.${status}`)
+
+const getCompressionStage = (task?: Task) => {
+  if (!task?.stage) return getCompressionStatusText(task?.status || 'pending')
+  const normalized = String(task.stage).toLowerCase()
+  if (normalized.includes('final')) return appStore.t('compress.status.finalizing')
+  if (normalized.includes('compress') || normalized.includes('write')) return appStore.t('compress.status.compressing')
+  if (normalized.includes('pre') || normalized.includes('check')) return appStore.t('compress.status.preparing')
+  return getCompressionStatusText(task.status)
+}
+
+const getTaskSeverityClass = (severity: string) => {
+  switch (severity) {
+    case 'error': return 'text-red-400'
+    case 'warning': return 'text-yellow-400'
+    case 'success': return 'text-green-400'
+    default: return 'text-muted'
+  }
+}
+
+const getEmptyCompressionLogText = (task?: Task) =>
+  !task || task.status === 'pending'
+    ? appStore.t('compress.pending_log')
+    : appStore.t('compress.no_logs')
+
+const getTaskStatusClass = (status?: TaskStatus) => {
+  switch (status) {
+    case 'completed': return 'text-green-500'
+    case 'failed': return 'text-red-500'
+    case 'cancelled': return 'text-orange-500'
+    case 'cancelling': return 'text-orange-400'
+    case 'compressing':
+    case 'preparing':
+    case 'running':
+    case 'finalizing':
+      return 'text-primary'
+    default:
+      return 'text-muted'
+  }
+}
 
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
@@ -140,7 +189,7 @@ const runCompression = async () => {
   if (compressionStore.groups.length === 0 && compressionStore.selectedFiles.length === 0) return
 
   let jobs = [
-    ...compressionStore.groups.map(group => {
+    ...compressionStore.groups.filter(group => !group.taskId).map(group => {
       const settings = compressionStore.getEffectiveSettings(group.settings)
       return {
         id: group.id,
@@ -156,7 +205,7 @@ const runCompression = async () => {
         )
       }
     }),
-    ...compressionStore.selectedFiles.map(file => {
+    ...compressionStore.selectedFiles.filter(file => !file.taskId).map(file => {
       const settings = compressionStore.getEffectiveSettings(file.settings)
       return {
         id: file.path,
@@ -173,6 +222,8 @@ const runCompression = async () => {
       }
     })
   ]
+
+  if (jobs.length === 0) return
 
   if (jobs.some(job => job.settings.format === 'rar')) {
     const support = await ensureRarSupport()
@@ -260,12 +311,13 @@ const runCompression = async () => {
       }
     })
 
+    compressionStore.bindJobTask(job.id, taskId, job.settings, job.outputPath)
     validJobs.push({ job, taskId, effectiveFormat })
   }
 
-  // A validated draft becomes a task exactly once. Keeping it in the draft area
-  // allowed a second click to submit the same output while the first run was active.
-  compressionStore.removeSubmittedJobs(validJobs.map(({ job }) => job.id))
+  // A validated draft becomes a task exactly once while remaining in the same
+  // visible row. The taskId binding prevents a second submission and drives the
+  // row's real status, progress and logs for its entire lifecycle.
   validJobs.forEach(({ job }) => selectedRows.value.delete(job.id))
 
   // 第二阶段：依次执行所有任务
@@ -292,8 +344,11 @@ const runCompression = async () => {
           allow_insecure_password_cli: effectiveFormat === 'rar' && allowRarPasswordCli
         }
       )
-      taskStore.updateTaskStatus(taskId, 'completed')
-      succeeded++
+      const finishedTask = taskStore.tasks.find(task => task.id === taskId)
+      if (finishedTask && !['cancelled', 'cancelling'].includes(finishedTask.status)) {
+        taskStore.updateTaskStatus(taskId, 'completed')
+        succeeded++
+      }
     } catch (error) {
       const task = taskStore.tasks.find(t => t.id === taskId)
       if (task && !['cancelled', 'cancelling'].includes(task.status)) {
@@ -377,6 +432,14 @@ const totalPayload = computed(() => {
   return compressionStore.selectedFiles.length + compressionStore.groups.reduce((acc, g) => acc + g.files.length, 0)
 })
 
+const pendingPayload = computed(() => {
+  const files = compressionStore.selectedFiles.filter(file => !file.taskId).length
+  const groupedFiles = compressionStore.groups
+    .filter(group => !group.taskId)
+    .reduce((total, group) => total + group.files.length, 0)
+  return files + groupedFiles
+})
+
 const cancelCompressionTask = async (taskId: string) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
   if (task?.status === 'pending') {
@@ -396,18 +459,67 @@ const cancelAllCompressionTasks = async () => {
 }
 
 const clearFinishedCompressionTasks = () => {
+  const finishedTaskIds = compressionTasks.value
+    .filter(task => isFinishedStatus(task.status))
+    .map(task => task.id)
+  compressionStore.removeJobsByTaskIds(finishedTaskIds)
   taskStore.clearFinishedTasks('compression')
+}
+
+const removeFinishedCompressionJob = (taskId: string) => {
+  const task = compressionTaskById.value.get(taskId)
+  if (!task || !isFinishedStatus(task.status)) return
+  compressionStore.removeJobsByTaskIds([taskId])
+  taskStore.removeTask(taskId)
+}
+
+const onBeforeDetailEnter = (element: Element) => {
+  const el = element as HTMLElement
+  el.style.height = '0'
+  el.style.opacity = '0'
+  el.style.marginTop = '0'
+  el.style.marginBottom = '0'
+}
+
+const onDetailEnter = (element: Element) => {
+  const el = element as HTMLElement
+  el.style.height = `${el.scrollHeight}px`
+  el.style.opacity = '1'
+  el.style.marginTop = '0.25rem'
+  el.style.marginBottom = '0.5rem'
+}
+
+const onAfterDetailEnter = (element: Element) => {
+  const el = element as HTMLElement
+  el.style.height = 'auto'
+}
+
+const onBeforeDetailLeave = (element: Element) => {
+  const el = element as HTMLElement
+  el.style.height = `${el.scrollHeight}px`
+  el.style.opacity = '1'
+  el.style.marginTop = '0.25rem'
+  el.style.marginBottom = '0.5rem'
+}
+
+const onDetailLeave = (element: Element) => {
+  const el = element as HTMLElement
+  void el.offsetHeight
+  el.style.height = '0'
+  el.style.opacity = '0'
+  el.style.marginTop = '0'
+  el.style.marginBottom = '0'
 }
 </script>
 
 <template>
   <div class="compression-view p-4 md:p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative">
-    <header class="flex flex-wrap justify-between items-center gap-3 shrink-0">
-      <div>
+    <header class="flex justify-between items-center gap-3 shrink-0">
+      <div class="min-w-0">
         <h1 class="text-2xl md:text-3xl font-black text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
         <p class="text-xs md:text-sm text-muted font-semibold mt-1">{{ appStore.t('compress.subtitle') }}</p>
       </div>
-      <div class="flex items-center gap-2 md:gap-3">
+      <div data-testid="compression-top-actions" class="flex items-center gap-2 md:gap-3 shrink-0">
         <button
           v-if="hasFinishedCompressionTasks"
           @click="clearFinishedCompressionTasks"
@@ -433,22 +545,9 @@ const clearFinishedCompressionTasks = () => {
           <span class="hidden sm:inline">全局设置</span>
         </button>
 
-        <!-- 磁吸成组按钮 -->
-        <transition name="pop">
-          <button
-            v-if="selectedRows.size > 0"
-            @click="handleCreateGroup"
-            class="h-8 md:h-9 px-3 md:px-5 rounded-lg bg-input border border-subtle text-content text-xs font-bold uppercase tracking-wider hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-2"
-          >
-            <i class="pi pi-box text-xs"></i>
-            <span class="hidden sm:inline">{{ appStore.t('compress.create_group') }} ({{ selectedRows.size }})</span>
-            <span class="sm:hidden">({{ selectedRows.size }})</span>
-          </button>
-        </transition>
-
         <!-- 开始压缩按钮 -->
         <button
-          v-if="totalPayload > 0"
+          v-if="pendingPayload > 0"
           @click="handleCompress"
           :disabled="isCompressing"
           class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait"
@@ -462,35 +561,66 @@ const clearFinishedCompressionTasks = () => {
 
     <!-- 主工作区 -->
     <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
-      <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-3 md:p-6 space-y-4 md:space-y-6">
+      <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
         <!-- 1. 压缩组列表 -->
         <div v-for="group in compressionStore.groups" :key="group.id" 
-             class="group-container rounded-[2rem] border transition-all duration-500 overflow-hidden"
-             :class="group.expanded ? 'bg-input/40 border-primary/30 shadow-lg' : 'bg-input/20 border-subtle hover:border-primary/20'"
+             data-testid="compression-group-row"
+             class="compression-job-card group-container rounded-lg border transition-all duration-200 overflow-hidden"
+             :class="group.expanded ? 'bg-card/60 border-primary/30 shadow-lg' : 'bg-card/40 border-subtle/40 hover:border-primary/30 hover:bg-card/60'"
              :style="{ borderColor: group.expanded ? group.themeColor : '' }">
           
           <!-- 组头部 -->
-          <div class="flex items-center px-8 py-5 cursor-pointer group/header"
+          <div class="compression-job-row flex items-center px-4 py-2.5 cursor-pointer group/header relative"
                role="button" tabindex="0" :aria-expanded="group.expanded"
                @click="group.expanded = !group.expanded"
                @keydown.enter="group.expanded = !group.expanded"
                @keydown.space.prevent="group.expanded = !group.expanded">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center mr-6 shadow-sm transition-transform group-hover/header:rotate-6"
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover/header:opacity-100 transition-opacity duration-200"></div>
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 shadow-sm transition-transform group-hover/header:rotate-6"
                  :style="{ backgroundColor: `${group.themeColor}20`, color: group.themeColor, border: `1px solid ${group.themeColor}40` }">
               <i class="pi pi-briefcase text-sm"></i>
             </div>
             
             <div class="flex-1">
-              <div class="text-sm font-black text-content tracking-tight">{{ group.name }}</div>
-              <div class="flex items-center gap-2 mt-1">
+              <div class="text-sm font-black text-content tracking-tight group-hover/header:text-primary transition-colors">{{ group.name }}</div>
+              <div class="flex items-center gap-2 mt-0.5">
                 <span class="text-xs font-bold text-muted uppercase tracking-widest">{{ group.files.length }} {{ appStore.t('compress.group_count') }}</span>
                 <div class="w-1 h-1 rounded-full bg-subtle"></div>
                 <span class="text-xs font-mono text-primary font-black uppercase">{{ compressionStore.getEffectiveSettings(group.settings).format }}</span>
+                <template v-if="taskForJob(group.taskId)">
+                  <div class="w-1 h-1 rounded-full bg-subtle"></div>
+                  <span class="text-xs font-black" :class="getTaskStatusClass(taskForJob(group.taskId)?.status)">
+                    {{ getCompressionStatusText(taskForJob(group.taskId)?.status) }}
+                  </span>
+                  <span class="text-xs font-mono text-primary font-black">{{ taskForJob(group.taskId)?.progress || 0 }}%</span>
+                </template>
               </div>
             </div>
 
-            <div class="flex items-center gap-4">
-              <button @click.stop="compressionStore.dissolveGroup(group.id)" class="text-muted hover:text-red-500 transition-colors">
+            <div class="flex items-center gap-3">
+              <button
+                v-if="!group.taskId"
+                @click.stop="compressionStore.dissolveGroup(group.id)"
+                class="text-muted hover:text-red-500 transition-colors"
+                title="解散分组"
+              >
+                <i class="pi pi-trash text-xs"></i>
+              </button>
+              <button
+                v-else-if="isActiveStatus(taskForJob(group.taskId)?.status)"
+                data-testid="compression-job-cancel"
+                @click.stop="cancelCompressionTask(group.taskId)"
+                class="text-red-400 hover:text-red-500 transition-colors"
+                title="取消压缩"
+              >
+                <i class="pi pi-stop-circle text-xs"></i>
+              </button>
+              <button
+                v-else-if="isFinishedStatus(taskForJob(group.taskId)?.status)"
+                @click.stop="removeFinishedCompressionJob(group.taskId)"
+                class="text-muted hover:text-red-500 transition-colors"
+                title="清除任务"
+              >
                 <i class="pi pi-trash text-xs"></i>
               </button>
               <i class="pi transition-transform duration-500 text-muted text-sm" :class="group.expanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
@@ -498,54 +628,141 @@ const clearFinishedCompressionTasks = () => {
           </div>
 
           <!-- 组展开：独立配置面板 -->
-          <transition name="slide-down">
-            <div v-if="group.expanded" class="px-8 pb-8 pt-4 border-t border-subtle/30">
-              <div class="mb-6">
-                <h4 class="text-xs font-black text-muted uppercase tracking-widest mb-4">{{ appStore.t('compress.settings') }}</h4>
-                <!-- 使用横向配置组件，适配该组 -->
-                <CompressionSettingsPanel 
-                  :modelValue="compressionStore.getEffectiveSettings(group.settings)"
-                  :outputPath="compressionStore.getEffectiveOutputPath(group.outputPath)"
-                  :allow-single-file-formats="canUseSingleFileFormats(group.files)"
-                  :suggested-filename="group.name"
-                  @update:modelValue="compressionStore.updateGroupSettings(group.id, $event)"
-                  @update:outputPath="compressionStore.updateGroupOutputPath(group.id, $event)"
-                />
-              </div>
-              
-              <div class="space-y-2">
-                <h4 class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('compress.group_files') }}</h4>
-                <div v-for="file in group.files" :key="file.path" class="text-sm text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex items-center justify-between group/file">
-                  <div class="flex items-center gap-2 overflow-hidden min-w-0">
-                    <i :class="file.isDirectory ? 'pi pi-folder text-primary/60' : 'pi pi-file text-muted/60'" class="text-xs shrink-0"></i>
-                    <span class="truncate">{{ file.name }}</span>
+          <Transition
+            name="aero-drawer"
+            @before-enter="onBeforeDetailEnter"
+            @enter="onDetailEnter"
+            @after-enter="onAfterDetailEnter"
+            @before-leave="onBeforeDetailLeave"
+            @leave="onDetailLeave"
+          >
+            <div v-if="group.expanded" class="details-drawer px-3 md:px-6 pb-5 pt-2">
+              <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
+                <div
+                  data-testid="compression-draft-config"
+                  class="compression-config-panel min-w-0 space-y-5"
+                  :class="{ 'pointer-events-none opacity-80': Boolean(group.taskId) }"
+                >
+                  <div>
+                    <h4 class="detail-heading justify-between">
+                      <span class="flex items-center gap-2">
+                        <i class="pi pi-cog text-sm"></i>
+                        {{ appStore.t('decompress.column.config') }}
+                      </span>
+                      <span v-if="group.taskId" class="text-xs font-bold text-muted tracking-normal">
+                        {{ appStore.t('compress.config_submitted') }}
+                      </span>
+                    </h4>
+                    <CompressionSettingsPanel
+                      :modelValue="compressionStore.getEffectiveSettings(group.settings)"
+                      :outputPath="compressionStore.getEffectiveOutputPath(group.outputPath)"
+                      :allow-single-file-formats="canUseSingleFileFormats(group.files)"
+                      :suggested-filename="group.name"
+                      @update:modelValue="compressionStore.updateGroupSettings(group.id, $event)"
+                      @update:outputPath="compressionStore.updateGroupOutputPath(group.id, $event)"
+                    />
                   </div>
-                  <div class="flex items-center gap-2 shrink-0">
-                    <span class="opacity-75 italic ml-2">{{ file.path }}</span>
-                    <button
-                      @click.stop="compressionStore.removeFileFromGroup(group.id, file.path)"
-                      class="w-5 h-5 rounded-md flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover/file:opacity-100 transition-all shrink-0"
-                      :title="appStore.t('compress.remove_from_group')"
+
+                  <div class="space-y-2">
+                    <h4 class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('compress.group_files') }}</h4>
+                    <div v-for="file in group.files" :key="file.path" class="text-sm text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex items-center justify-between group/file">
+                      <div class="flex items-center gap-2 overflow-hidden min-w-0">
+                        <i :class="file.isDirectory ? 'pi pi-folder text-primary/60' : 'pi pi-file text-muted/60'" class="text-xs shrink-0"></i>
+                        <span class="truncate">{{ file.name }}</span>
+                      </div>
+                      <div class="flex items-center gap-2 shrink-0 min-w-0">
+                        <span class="opacity-75 italic ml-2 truncate">{{ file.path }}</span>
+                        <button
+                          @click.stop="compressionStore.removeFileFromGroup(group.id, file.path)"
+                          class="w-5 h-5 rounded-md flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover/file:opacity-100 transition-all shrink-0"
+                          :title="appStore.t('compress.remove_from_group')"
+                        >
+                          <i class="pi pi-times text-xs"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div data-testid="compression-draft-execution" class="pending-execution-panel compression-execution-panel">
+                  <div class="grid grid-cols-2 gap-2">
+                    <div class="pending-stat-card">
+                      <span class="text-muted">{{ appStore.t('progress.stage') }}</span>
+                      <div
+                        class="font-black mt-0.5"
+                        :class="getTaskStatusClass(taskForJob(group.taskId)?.status)"
+                      >
+                        {{ getCompressionStage(taskForJob(group.taskId)) }}
+                      </div>
+                    </div>
+                    <div class="pending-stat-card">
+                      <span class="text-muted">{{ appStore.t('progress.percent') }}</span>
+                      <div class="font-mono font-black text-primary mt-0.5">
+                        {{ taskForJob(group.taskId)?.progress || 0 }}%
+                        <span v-if="taskForJob(group.taskId)?.speed" class="ml-2 text-muted">
+                          {{ taskForJob(group.taskId)?.speed }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    v-if="taskForJob(group.taskId)?.currentFile"
+                    class="mt-2 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 truncate font-mono text-xs text-content"
+                    :title="taskForJob(group.taskId)?.currentFile"
+                  >
+                    {{ taskForJob(group.taskId)?.currentFile }}
+                  </div>
+                  <h4 class="detail-heading mt-5">
+                    <i class="pi pi-align-left text-xs"></i>
+                    {{ appStore.t('decompress.config.logs_title') }}
+                  </h4>
+                  <div class="pending-log custom-scrollbar overflow-y-auto space-y-1.5">
+                    <div
+                      v-for="(log, index) in taskForJob(group.taskId)?.logs || []"
+                      :key="`${log.timestamp}-${index}`"
+                      class="flex gap-3 items-start border-l-2 border-subtle/20 pl-3 py-0.5"
                     >
-                      <i class="pi pi-times text-xs"></i>
-                    </button>
+                      <span class="text-dim font-mono text-xs shrink-0">
+                        {{ new Date(log.timestamp).toLocaleTimeString([], { hour12: false }) }}
+                      </span>
+                      <span class="font-mono text-xs leading-relaxed" :class="getTaskSeverityClass(log.severity)">
+                        {{ log.message }}
+                      </span>
+                    </div>
+                    <span v-if="!taskForJob(group.taskId)?.logs.length" class="font-mono text-dim">
+                      {{ getEmptyCompressionLogText(taskForJob(group.taskId)) }}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
-          </transition>
+          </Transition>
         </div>
 
         <!-- 2. 未分组文件列表 (待分配) -->
         <div v-if="compressionStore.selectedFiles.length > 0" class="space-y-3">
-          <h3 class="text-xs font-black text-muted uppercase tracking-[0.3em] px-4">{{ appStore.t('compress.add_files') }}</h3>
+          <div data-testid="compression-grouping-actions" class="flex items-center justify-between gap-3 px-4">
+            <h3 class="text-xs font-black text-muted uppercase tracking-[0.3em]">{{ appStore.t('compress.add_files') }}</h3>
+            <transition name="pop">
+              <button
+                v-if="selectedRows.size > 0"
+                @click="handleCreateGroup"
+                class="h-8 px-3 rounded-lg bg-primary text-white text-xs font-bold tracking-wider shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 shrink-0"
+              >
+                <i class="pi pi-box text-xs"></i>
+                <span>{{ appStore.t('compress.create_group') }}（{{ selectedRows.size }}）</span>
+              </button>
+            </transition>
+          </div>
           <div v-for="file in compressionStore.selectedFiles" :key="file.path" 
                data-testid="compression-draft-row"
                @click="file.expanded = !file.expanded"
-                class="flex flex-wrap items-center justify-between px-8 py-4 rounded-2xl bg-input border border-subtle group/row hover:border-primary/30 transition-all cursor-pointer"
-               :class="{ 'border-primary/50 bg-primary/5 shadow-inner': file.expanded }">
+               class="compression-job-card compression-job-row flex flex-wrap items-center justify-between px-4 py-2.5 rounded-lg bg-card/40 border border-subtle/40 group/row hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden"
+               :class="{ 'border-primary/30 bg-card/60 shadow-lg': file.expanded }">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover/row:opacity-100 transition-opacity duration-200"></div>
             
             <button
+              v-if="!file.taskId"
               type="button"
               data-testid="compression-group-checkbox"
               class="w-6 flex shrink-0"
@@ -557,60 +774,157 @@ const clearFinishedCompressionTasks = () => {
                 <i v-if="selectedRows.has(file.path)" class="pi pi-check text-xs text-white"></i>
               </div>
             </button>
+            <div v-else class="w-6 flex shrink-0 items-center justify-center">
+              <i
+                class="pi text-xs"
+                :class="isFinishedStatus(taskForJob(file.taskId)?.status)
+                  ? 'pi-check-circle'
+                  : isActiveStatus(taskForJob(file.taskId)?.status)
+                    ? 'pi-spin pi-spinner'
+                    : 'pi-circle'"
+              ></i>
+            </div>
 
             <div class="flex-1 min-w-[200px] overflow-hidden px-4 flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-card border border-subtle flex items-center justify-center shrink-0">
+              <div class="w-7 h-7 rounded-lg bg-input/60 border border-subtle/50 flex items-center justify-center shrink-0">
                 <i :class="file.isDirectory ? 'pi pi-folder text-primary' : 'pi pi-file text-muted'" class="text-xs"></i>
               </div>
               <div class="overflow-hidden">
                 <div class="text-content font-bold truncate text-xs tracking-tight group-hover/row:text-primary transition-colors">{{ file.name }}</div>
-                <div class="text-xs text-muted font-mono mt-0.5 opacity-90 truncate">{{ file.path }}</div>
+                <div class="text-xs text-muted font-mono opacity-80 truncate">{{ file.path }}</div>
+                <div v-if="taskForJob(file.taskId)" class="flex items-center gap-2 mt-1">
+                  <span class="text-xs font-black" :class="getTaskStatusClass(taskForJob(file.taskId)?.status)">
+                    {{ getCompressionStatusText(taskForJob(file.taskId)?.status) }}
+                  </span>
+                  <span class="text-xs font-mono text-primary font-black">{{ taskForJob(file.taskId)?.progress || 0 }}%</span>
+                </div>
               </div>
             </div>
 
-            <button @click.stop="compressionStore.selectedFiles = compressionStore.selectedFiles.filter(f => f.path !== file.path)" 
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-red-500 transition-all">
+            <button
+              v-if="!file.taskId"
+              @click.stop="compressionStore.selectedFiles = compressionStore.selectedFiles.filter(f => f.path !== file.path)"
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-red-500 transition-all"
+              title="移除文件"
+            >
               <i class="pi pi-times text-sm"></i>
+            </button>
+            <button
+              v-else-if="isActiveStatus(taskForJob(file.taskId)?.status)"
+              data-testid="compression-job-cancel"
+              @click.stop="cancelCompressionTask(file.taskId)"
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:text-red-500 transition-all"
+              title="取消压缩"
+            >
+              <i class="pi pi-stop-circle text-sm"></i>
+            </button>
+            <button
+              v-else-if="isFinishedStatus(taskForJob(file.taskId)?.status)"
+              @click.stop="removeFinishedCompressionJob(file.taskId)"
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-red-500 transition-all"
+              title="清除任务"
+            >
+              <i class="pi pi-trash text-sm"></i>
             </button>
             <button @click.stop="file.expanded = !file.expanded"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-primary transition-all">
               <i class="pi text-sm transition-transform" :class="file.expanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
             </button>
 
-            <transition name="slide-down">
-              <div v-if="file.expanded" class="w-full mt-4 pt-4 border-t border-subtle/30" @click.stop>
-                <CompressionSettingsPanel
-                  :modelValue="compressionStore.getEffectiveSettings(file.settings)"
-                  :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"
-                  :allow-single-file-formats="canUseSingleFileFormats([file])"
-                  :suggested-filename="getBaseName(file.path)"
-                  @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
-                  @update:outputPath="compressionStore.updateFileOutputPath(file.path, $event)"
-                />
+            <Transition
+              name="aero-drawer"
+              @before-enter="onBeforeDetailEnter"
+              @enter="onDetailEnter"
+              @after-enter="onAfterDetailEnter"
+              @before-leave="onBeforeDetailLeave"
+              @leave="onDetailLeave"
+            >
+              <div v-if="file.expanded" class="details-drawer w-full px-2 md:px-5 pb-4 pt-2" @click.stop>
+                <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
+                  <div
+                    data-testid="compression-draft-config"
+                    class="compression-config-panel min-w-0"
+                    :class="{ 'pointer-events-none opacity-80': Boolean(file.taskId) }"
+                  >
+                    <h4 class="detail-heading justify-between">
+                      <span class="flex items-center gap-2">
+                        <i class="pi pi-cog text-sm"></i>
+                        {{ appStore.t('decompress.column.config') }}
+                      </span>
+                      <span v-if="file.taskId" class="text-xs font-bold text-muted tracking-normal">
+                        {{ appStore.t('compress.config_submitted') }}
+                      </span>
+                    </h4>
+                    <CompressionSettingsPanel
+                      :modelValue="compressionStore.getEffectiveSettings(file.settings)"
+                      :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"
+                      :allow-single-file-formats="canUseSingleFileFormats([file])"
+                      :suggested-filename="getBaseName(file.path)"
+                      @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
+                      @update:outputPath="compressionStore.updateFileOutputPath(file.path, $event)"
+                    />
+                  </div>
+
+                  <div data-testid="compression-draft-execution" class="pending-execution-panel compression-execution-panel">
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="pending-stat-card">
+                        <span class="text-muted">{{ appStore.t('progress.stage') }}</span>
+                        <div
+                          class="font-black mt-0.5"
+                          :class="getTaskStatusClass(taskForJob(file.taskId)?.status)"
+                        >
+                          {{ getCompressionStage(taskForJob(file.taskId)) }}
+                        </div>
+                      </div>
+                      <div class="pending-stat-card">
+                        <span class="text-muted">{{ appStore.t('progress.percent') }}</span>
+                        <div class="font-mono font-black text-primary mt-0.5">
+                          {{ taskForJob(file.taskId)?.progress || 0 }}%
+                          <span v-if="taskForJob(file.taskId)?.speed" class="ml-2 text-muted">
+                            {{ taskForJob(file.taskId)?.speed }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      v-if="taskForJob(file.taskId)?.currentFile"
+                      class="mt-2 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 truncate font-mono text-xs text-content"
+                      :title="taskForJob(file.taskId)?.currentFile"
+                    >
+                      {{ taskForJob(file.taskId)?.currentFile }}
+                    </div>
+                    <h4 class="detail-heading mt-5">
+                      <i class="pi pi-align-left text-xs"></i>
+                      {{ appStore.t('decompress.config.logs_title') }}
+                    </h4>
+                    <div class="pending-log custom-scrollbar overflow-y-auto space-y-1.5">
+                      <div
+                        v-for="(log, index) in taskForJob(file.taskId)?.logs || []"
+                        :key="`${log.timestamp}-${index}`"
+                        class="flex gap-3 items-start border-l-2 border-subtle/20 pl-3 py-0.5"
+                      >
+                        <span class="text-dim font-mono text-xs shrink-0">
+                          {{ new Date(log.timestamp).toLocaleTimeString([], { hour12: false }) }}
+                        </span>
+                        <span class="font-mono text-xs leading-relaxed" :class="getTaskSeverityClass(log.severity)">
+                          {{ log.message }}
+                        </span>
+                      </div>
+                      <span v-if="!taskForJob(file.taskId)?.logs.length" class="font-mono text-dim">
+                        {{ getEmptyCompressionLogText(taskForJob(file.taskId)) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </transition>
+            </Transition>
           </div>
         </div>
 
-        <section v-if="compressionTasks.length > 0" class="min-h-[260px] flex-1 rounded-2xl border border-subtle bg-card/30 overflow-hidden">
-          <div class="px-5 py-3 border-b border-subtle flex items-center justify-between">
-            <div>
-              <h3 class="text-xs font-black text-content uppercase tracking-[0.2em]">压缩任务</h3>
-              <p class="text-xs text-muted mt-1">点击任务展开左侧配置与右侧实时进度日志</p>
-            </div>
-            <span class="text-xs font-mono text-primary">{{ activeCompressionTasks.length }} 进行中</span>
-          </div>
-          <div class="h-[320px]">
-            <AeroTable
-              task-type="compression"
-              @cancel-task="cancelCompressionTask"
-            />
-          </div>
-        </section>
       </div>
 
       <!-- 3. 空状态 (引导式双列布局) -->
-      <div v-else-if="compressionTasks.length === 0" class="flex-1 min-h-0 flex flex-col items-center justify-center p-2 sm:p-3 gap-2 sm:gap-3">
+      <div v-else class="flex-1 min-h-0 flex flex-col items-center justify-center p-2 sm:p-3 gap-2 sm:gap-3">
         <div class="text-center space-y-1 shrink-0">
           <h2 class="text-sm sm:text-base md:text-xl font-black text-content tracking-tight">{{ appStore.t('compress.start') }}</h2>
           <p class="text-xs md:text-sm text-muted font-bold uppercase tracking-widest">{{ appStore.t('compress.select_to_begin') }}</p>
@@ -629,13 +943,6 @@ const clearFinishedCompressionTasks = () => {
             class="shadow-sm flex-1 min-h-[160px] sm:min-h-0"
           />
         </div>
-      </div>
-
-      <div v-else class="flex-1 min-h-0">
-        <AeroTable
-          task-type="compression"
-          @cancel-task="cancelCompressionTask"
-        />
       </div>
 
       <!-- 底部辅助区 -->
@@ -710,9 +1017,146 @@ const clearFinishedCompressionTasks = () => {
   background: radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--dynamic-accent) 4%, transparent) 0%, transparent 40%);
 }
 
-.slide-down-enter-active, .slide-down-leave-active { transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.slide-down-enter-from, .slide-down-leave-to { opacity: 0; transform: translateY(-10px); }
-
 .pop-enter-active, .pop-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.8) translateY(20px); }
+
+.compression-job-card {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.compression-job-row {
+  min-height: 46px;
+}
+
+.details-drawer {
+  background-color: transparent;
+}
+
+.compression-detail-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px dashed color-mix(in srgb, var(--dynamic-accent) 24%, transparent);
+  border-radius: 1rem;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--bg-card) 92%, transparent),
+    color-mix(in srgb, var(--bg-card) 98%, transparent)
+  );
+  box-shadow: 0 20px 45px -25px rgb(0 0 0 / 0.55);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.compression-detail-card:hover {
+  border-color: color-mix(in srgb, var(--dynamic-accent) 70%, transparent);
+  box-shadow:
+    0 24px 48px -24px rgb(0 0 0 / 0.55),
+    0 0 18px color-mix(in srgb, var(--dynamic-accent) 12%, transparent);
+}
+
+.aero-drawer-enter-active,
+.aero-drawer-leave-active {
+  overflow: hidden;
+  transition:
+    height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s linear,
+    margin 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.aero-drawer-enter-from,
+.aero-drawer-leave-to {
+  height: 0 !important;
+  opacity: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.compression-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 45%) minmax(0, 1fr);
+  gap: 0;
+  align-items: stretch;
+}
+
+.compression-config-panel {
+  max-height: 26rem;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+  border-right: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+  scrollbar-gutter: stable;
+}
+
+.compression-config-panel :deep(.horizontal-settings) {
+  gap: 0.875rem;
+}
+
+.compression-config-panel :deep(.settings-core-grid) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.compression-config-panel :deep(.advanced-option) {
+  padding: 0.625rem;
+}
+
+.detail-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--dynamic-accent);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.pending-execution-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--bg-input) 18%, transparent);
+}
+
+.compression-execution-panel {
+  min-height: 17rem;
+  max-height: 26rem;
+  padding: 1.25rem;
+}
+
+.pending-stat-card {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--bg-input) 55%, transparent);
+  font-size: 0.75rem;
+}
+
+.pending-log {
+  flex: 1;
+  min-height: 8rem;
+  max-height: 16rem;
+  padding: 0.75rem;
+  border-left: 2px solid color-mix(in srgb, var(--dynamic-accent) 28%, transparent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--bg-input) 35%, transparent);
+  font-size: 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .compression-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .compression-config-panel {
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+  }
+
+  .compression-config-panel :deep(.settings-core-grid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 </style>

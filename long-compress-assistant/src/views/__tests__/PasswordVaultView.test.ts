@@ -111,8 +111,15 @@ describe('PasswordVaultView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    const headers = wrapper.findAll('th')
-    expect(headers.slice(0, 3).every(header => header.classes().includes('w-[26%]'))).toBe(true)
+    const columns = wrapper.findAll('colgroup').at(0)!.findAll('col')
+    expect(columns.map(column => column.classes()[0])).toEqual([
+      'vault-col-name',
+      'vault-col-password',
+      'vault-col-notes',
+      'vault-col-usage',
+      'vault-col-actions',
+    ])
+    expect(wrapper.get('[data-testid="vault-usage-header"]').classes()).toContain('whitespace-nowrap')
     expect(wrapper.text()).not.toContain('Secret!123')
     expect(wrapper.find('[aria-label="复制密码"]').exists()).toBe(true)
     await wrapper.find('[aria-label="显示密码"]').trigger('click')

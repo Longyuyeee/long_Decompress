@@ -229,18 +229,25 @@ const chartData = computed(() => {
 
       <div v-else class="flex-1 overflow-hidden flex flex-col relative">
         <table class="w-full text-left border-collapse table-fixed">
+          <colgroup>
+            <col class="vault-col-name">
+            <col class="vault-col-password">
+            <col class="vault-col-notes">
+            <col class="vault-col-usage">
+            <col class="vault-col-actions">
+          </colgroup>
           <thead class="sticky top-0 z-20 bg-input/80 backdrop-blur-xl border-b border-subtle">
             <tr>
-              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] w-[26%]">{{ appStore.t('vault.column.name') }}</th>
-              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] w-[26%]">
+              <th data-testid="vault-name-header" class="px-4 py-4 text-xs font-black text-muted uppercase tracking-[0.16em] whitespace-nowrap">{{ appStore.t('vault.column.name') }}</th>
+              <th data-testid="vault-password-header" class="px-4 py-4 text-xs font-black text-muted uppercase tracking-[0.16em]">
                 <button @click="togglePasswordVisibility" class="flex items-center gap-1.5 hover:text-primary transition-colors">
                   {{ appStore.t('vault.column.password') }}
                   <i :class="showAllPasswords ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm"></i>
                 </button>
               </th>
-              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] w-[26%]">{{ appStore.t('vault.column.notes') }}</th>
-              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] text-center w-[10%]">{{ appStore.t('vault.column.usage') }}</th>
-              <th class="px-6 py-4 text-xs font-black text-muted uppercase tracking-[0.2em] text-right w-[12%]">{{ appStore.t('vault.column.actions') }}</th>
+              <th data-testid="vault-notes-header" class="px-4 py-4 text-xs font-black text-muted uppercase tracking-[0.16em] whitespace-nowrap">{{ appStore.t('vault.column.notes') }}</th>
+              <th data-testid="vault-usage-header" class="px-2 py-4 text-xs font-black text-muted uppercase tracking-[0.08em] text-center whitespace-nowrap">{{ appStore.t('vault.column.usage') }}</th>
+              <th class="px-3 py-4 text-xs font-black text-muted uppercase tracking-[0.12em] text-right whitespace-nowrap">{{ appStore.t('vault.column.actions') }}</th>
             </tr>
           </thead>
         </table>
@@ -252,9 +259,16 @@ const chartData = computed(() => {
             <p class="text-muted text-xs font-bold">{{ appStore.t('vault.empty') }}</p>
           </div>
           <table v-else class="w-full text-left border-collapse table-fixed">
+            <colgroup>
+              <col class="vault-col-name">
+              <col class="vault-col-password">
+              <col class="vault-col-notes">
+              <col class="vault-col-usage">
+              <col class="vault-col-actions">
+            </colgroup>
             <tbody class="divide-y divide-subtle/50">
               <tr v-for="(entry, index) in filteredAndSortedEntries" :key="entry.id" class="hover:bg-primary/[0.03] group transition-all">
-                <td class="px-6 py-3.5 w-[26%]">
+                <td class="px-4 py-3.5">
                   <div class="flex items-center gap-2 relative group/tooltip">
                     <div class="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors shrink-0"></div>
                     <span class="text-sm font-bold text-content truncate block w-full">{{ entry.name }}</span>
@@ -267,7 +281,7 @@ const chartData = computed(() => {
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-3.5 w-[26%]">
+                <td class="px-4 py-3.5">
                   <div class="flex items-center gap-2 overflow-hidden group/key w-full">
                     <code class="text-sm font-mono text-primary font-bold bg-primary/5 px-2 py-1 rounded-lg truncate block flex-1 select-none" :class="{ 'tracking-widest': !isPasswordVisible(entry.id) }">{{ maskPassword(entry) }}</code>
                     <button type="button" @click="toggleEntryPasswordVisibility(entry.id)" :aria-label="isPasswordVisible(entry.id) ? appStore.t('vault.action.hide') : appStore.t('vault.action.show')" :title="isPasswordVisible(entry.id) ? appStore.t('vault.action.hide') : appStore.t('vault.action.show')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0">
@@ -276,7 +290,7 @@ const chartData = computed(() => {
                     <button type="button" @click="copyToClipboard(entry.password)" :aria-label="appStore.t('vault.action.copy_password')" :title="appStore.t('vault.action.copy_password')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0"><i class="pi pi-copy text-sm"></i></button>
                   </div>
                 </td>
-                <td class="px-6 py-3.5 w-[26%]">
+                <td class="px-4 py-3.5">
                   <div class="relative group/tooltip w-full">
                     <span class="text-sm text-muted italic truncate block w-full">{{ entry.notes || '—' }}</span>
                     <!-- 自定义悬浮窗 (Aero Tooltip) - 修复遮挡问题：前两行向下弹出，其余向上弹出 -->
@@ -288,12 +302,12 @@ const chartData = computed(() => {
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-3.5 text-center w-[10%]">
+                <td class="px-2 py-3.5 text-center">
                   <button @click="showUsageHistory(entry)" class="text-xs font-black text-muted hover:text-primary bg-input w-6 h-6 rounded-full flex items-center justify-center mx-auto transition-all shadow-sm border border-subtle shrink-0">
                     {{ entry.use_count || 0 }}
                   </button>
                 </td>
-                <td class="px-6 py-3.5 text-right w-[12%]">
+                <td class="px-3 py-3.5 text-right">
                   <div class="flex justify-end gap-3 sm:opacity-0 sm:group-hover:opacity-100 transition-all shrink-0">
                     <button @click="handleEdit(entry)" :aria-label="`${appStore.t('common.edit')}: ${entry.name}`" class="w-7 h-7 rounded-lg text-primary/60 hover:text-primary hover:bg-primary/10 transition-colors"><i class="pi pi-pencil text-sm"></i></button>
                     <button @click="handleDelete(entry.id)" :aria-label="`${appStore.t('common.delete')}: ${entry.name}`" class="w-7 h-7 rounded-lg text-red-400/60 hover:text-red-500 hover:bg-red-500/10 transition-colors"><i class="pi pi-trash text-sm"></i></button>
@@ -379,6 +393,12 @@ const chartData = computed(() => {
 .password-vault {
   background: radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--dynamic-accent) 5%, transparent) 0%, transparent 40%);
 }
+
+.vault-col-name { width: 19%; }
+.vault-col-password { width: 37%; }
+.vault-col-notes { width: 18%; }
+.vault-col-usage { width: 13%; }
+.vault-col-actions { width: 13%; }
 
 .pop-enter-active, .pop-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.95) translateY(10px); }
