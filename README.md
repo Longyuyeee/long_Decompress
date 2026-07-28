@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.15-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.16-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,16 +20,16 @@
 
 ---
 
-## v1.0.15 更新亮点
+## v1.0.16 更新亮点
 
-- 修复同一输出路径被重复提交的问题：前后端共同占用规范化目标路径，避免一个任务成功、另一个任务随后报错。
-- 压缩与解压任务在列表、统计、启动和清理流程中完全隔离，拖入压缩中心的文件不会再出现在解压中心。
-- 压缩中心改为与解压中心一致的任务模式，支持展开配置与实时详情、进度、日志、取消及一键清理已完成任务。
-- 7Z 改用真实字节进度与可取消读写，大文件不再长时间停留在 0%；加密判断改为读取归档元数据，移除无反馈的完整预检。
-- 修复 LZMA 压缩依赖外部 7-Zip 时的“不支持”失败，改由内置流式编码器完成。
-- 真实 Windows 桌面矩阵已验证 ZIP、7Z、TAR 及 GZ/BZ2/XZ/Zstandard/LZMA 组合，并覆盖加密 ZIP、加密 7Z、取消和逐字节一致性。
+- 压缩条目从等待、执行到完成、失败或取消始终保留在同一位置，不再从配置列表跳转到独立任务列表。
+- 展开压缩条目后，左侧集中显示配置，右侧实时显示阶段、进度、速度、当前文件和执行日志。
+- 配置提交后自动冻结并与任务绑定，避免重复点击再次提交；取消过程中也不会被迟到的后端结果错误改回“已完成”。
+- 磁吸成组入口移动到待分组文件区域旁，选择文件时不再挤压全局设置和开始压缩按钮，并移除多余英文标记。
+- 单文件、磁吸分组和批量队列统一支持逐项取消、全部取消、清除单项及一键清理已完成任务。
+- 前端 24 个测试文件共 141 项测试、类型检查和生产构建通过；Chromium 与移动端 Chrome 交互测试 10 项全部通过。
 
-完整变更请查看 [v1.0.15 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.15)。
+完整变更请查看 [v1.0.16 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.16)。
 
 ## 为什么选择 Long解压
 

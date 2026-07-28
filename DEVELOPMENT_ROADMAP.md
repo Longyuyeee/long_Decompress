@@ -1,14 +1,14 @@
 # Long解压开发状态与路线图
 
 > 审计日期：2026-07-28
-> 当前发布准备版本：v1.0.15
+> 当前发布准备版本：v1.0.16
 > 默认分支：`master`
 
 ## 1. 当前结论
 
 Long解压已经从“功能补齐”进入“核心流程稳定化、真实桌面验收和架构演进”阶段。
 
-- v1.0.15 已完成核心压缩与解压稳定化收口，NSIS 安装器、updater ZIP、签名文件和 `latest.json` 由 Release 工作流生成。
+- v1.0.16 已完成压缩中心单条目生命周期与交互收口；NSIS 安装器、updater ZIP、签名文件和 `latest.json` 由 Release 工作流生成。
 - PR [#13](https://github.com/Longyuyeee/long_Decompress/pull/13) 已合并，真实桌面生命周期发布门禁完成；
   前端、浏览器 E2E、Rust/Shell Extension、Windows 桌面构建和无签名 NSIS 安装包共 5 项 CI 全部通过。
 - 核心压缩、解压、密码判断、密码候选、分卷、取消、事务式提交、托盘、传统右键菜单和应用内更新均有自动化回归。
@@ -41,7 +41,7 @@ Long解压已经从“功能补齐”进入“核心流程稳定化、真实桌�
 
 - PR CI 包含前端类型检查、覆盖率、生产构建、Rust 全目标测试、Clippy、Shell Extension、Chromium E2E、
   Windows 桌面 E2E 构建和无签名 NSIS 构建。
-- v1.0.15 Release 工作流继续验证安装器、updater ZIP、`.sig` 和在线更新清单。
+- v1.0.16 Release 工作流继续验证安装器、updater ZIP、`.sig` 和在线更新清单。
 - 前端覆盖率为 75.93% 行、72.68% 分支、56.07% 函数，共 150 个覆盖率测试通过。
 - Rust 归档测试覆盖真实格式矩阵、密码识别、分卷、事务回滚、路径安全和资源上限。
 
@@ -68,7 +68,7 @@ Long解压已经从“功能补齐”进入“核心流程稳定化、真实桌�
 | 已完成 | `master` 分支保护 | 已要求 PR、四项 CI 和对话解决，并禁止强推和删除 | 持续核验 GitHub 配置；管理员紧急绕过必须留下记录 |
 | P0 | 已安装应用的发布验收仍依赖人工 | 已建立 `RELEASE_CHECKLIST.md` 和验收 Issue 表单 | 每版保存验收结果并从 Release 回链；逐步自动化 |
 | 已完成 | AESENC01/TARAES01 整文件占用内存 | 新写入已切换到流式 `AESENC02/TARAES02`；v1 仅在 512 MiB 上限内只读兼容 | 保持 v1 兼容边界；在固定环境持续采集 v2 性能趋势 |
-| P1 | 真实 Tauri 桌面 E2E 尚未进入无人值守运行 | Windows WebView2 启动、归档闭环、取消清理、退出确认、更新阻断和托盘恢复已在交互式 Windows 本机通过；GitHub CI 已验证相同 E2E 二进制、脚本和驱动匹配，但托管 runner 无法创建 WebView2 调试端口 | 有固定交互式 Windows 主机后接入 self-hosted runner；在此之前保留本机发布验收，不阻塞 v1.0.15 |
+| P1 | 真实 Tauri 桌面 E2E 尚未进入无人值守运行 | Windows WebView2 启动、归档闭环、取消清理、退出确认、更新阻断和托盘恢复已在交互式 Windows 本机通过；GitHub CI 已验证相同 E2E 二进制、脚本和驱动匹配，但托管 runner 无法创建 WebView2 调试端口 | 有固定交互式 Windows 主机后接入 self-hosted runner；在此之前保留本机发布验收，不阻塞 v1.0.16 |
 | P1 | 性能基线没有持续趋势 | 真实基准默认被忽略 | 在固定 Windows runner 上记录多次样本，再设置回归阈值 |
 | 已完成 | 真实桌面生命周期自动化 | 真实可取消任务及残留清理、托盘隐藏/第二实例恢复、活动任务退出确认和更新阻断均已在隔离 Release Tauri 中通过 | 持续在交互式 Windows 运行，并接入 self-hosted 门禁 |
 | P2 | 实验性并行解压器未进入生产 | `ParallelExtractor` 仅在自身模块和测试中使用 | 先对齐密码、冲突、时间戳、回滚和路径安全，再决定接入或删除 |
@@ -127,7 +127,7 @@ Long解压已经从“功能补齐”进入“核心流程稳定化、真实桌�
 交互式 Windows 本机已通过。GitHub 托管 Windows runner 无法创建 WebView2 调试端口，因此 CI
 当前只执行 `Windows desktop E2E build`，验证隔离二进制、脚本和驱动匹配，安装包 job 依赖该门禁。
 下一步只需在具备固定交互式 Windows 主机时接入 self-hosted runner，再补文件选择与拖放夹具；
-这属于测试基础设施增强，不是 v1.0.15 的代码发布阻断项。
+这属于测试基础设施增强，不是 v1.0.16 的代码发布阻断项。
 
 1. 建立可启动真实桌面后端的 Windows E2E。
 2. 优先覆盖：
