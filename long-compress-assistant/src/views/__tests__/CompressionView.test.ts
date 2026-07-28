@@ -168,6 +168,8 @@ describe('CompressionView', () => {
     await wrapper.get('[data-testid="compression-draft-row"]').trigger('click')
 
     const details = wrapper.get('[data-testid="compression-draft-details"]')
+    expect(wrapper.get('[data-testid="compression-draft-row"]').classes()).toContain('compression-job-row')
+    expect(details.classes()).toContain('compression-detail-card')
     expect(details.find('[data-testid="compression-draft-config"]').exists()).toBe(true)
     const execution = details.get('[data-testid="compression-draft-execution"]')
     expect(execution.text()).toContain('阶段')

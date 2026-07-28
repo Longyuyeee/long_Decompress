@@ -472,6 +472,44 @@ const removeFinishedCompressionJob = (taskId: string) => {
   compressionStore.removeJobsByTaskIds([taskId])
   taskStore.removeTask(taskId)
 }
+
+const onBeforeDetailEnter = (element: Element) => {
+  const el = element as HTMLElement
+  el.style.height = '0'
+  el.style.opacity = '0'
+  el.style.marginTop = '0'
+  el.style.marginBottom = '0'
+}
+
+const onDetailEnter = (element: Element) => {
+  const el = element as HTMLElement
+  el.style.height = `${el.scrollHeight}px`
+  el.style.opacity = '1'
+  el.style.marginTop = '0.25rem'
+  el.style.marginBottom = '0.5rem'
+}
+
+const onAfterDetailEnter = (element: Element) => {
+  const el = element as HTMLElement
+  el.style.height = 'auto'
+}
+
+const onBeforeDetailLeave = (element: Element) => {
+  const el = element as HTMLElement
+  el.style.height = `${el.scrollHeight}px`
+  el.style.opacity = '1'
+  el.style.marginTop = '0.25rem'
+  el.style.marginBottom = '0.5rem'
+}
+
+const onDetailLeave = (element: Element) => {
+  const el = element as HTMLElement
+  void el.offsetHeight
+  el.style.height = '0'
+  el.style.opacity = '0'
+  el.style.marginTop = '0'
+  el.style.marginBottom = '0'
+}
 </script>
 
 <template>
@@ -523,28 +561,29 @@ const removeFinishedCompressionJob = (taskId: string) => {
 
     <!-- 主工作区 -->
     <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
-      <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-3 md:p-6 space-y-4 md:space-y-6">
+      <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
         <!-- 1. 压缩组列表 -->
         <div v-for="group in compressionStore.groups" :key="group.id" 
              data-testid="compression-group-row"
-             class="group-container rounded-[2rem] border transition-all duration-500 overflow-hidden"
-             :class="group.expanded ? 'bg-input/40 border-primary/30 shadow-lg' : 'bg-input/20 border-subtle hover:border-primary/20'"
+             class="compression-job-card group-container rounded-lg border transition-all duration-200 overflow-hidden"
+             :class="group.expanded ? 'bg-card/60 border-primary/30 shadow-lg' : 'bg-card/40 border-subtle/40 hover:border-primary/30 hover:bg-card/60'"
              :style="{ borderColor: group.expanded ? group.themeColor : '' }">
           
           <!-- 组头部 -->
-          <div class="flex items-center px-8 py-5 cursor-pointer group/header"
+          <div class="compression-job-row flex items-center px-4 py-2.5 cursor-pointer group/header relative"
                role="button" tabindex="0" :aria-expanded="group.expanded"
                @click="group.expanded = !group.expanded"
                @keydown.enter="group.expanded = !group.expanded"
                @keydown.space.prevent="group.expanded = !group.expanded">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center mr-6 shadow-sm transition-transform group-hover/header:rotate-6"
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover/header:opacity-100 transition-opacity duration-200"></div>
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 shadow-sm transition-transform group-hover/header:rotate-6"
                  :style="{ backgroundColor: `${group.themeColor}20`, color: group.themeColor, border: `1px solid ${group.themeColor}40` }">
               <i class="pi pi-briefcase text-sm"></i>
             </div>
             
             <div class="flex-1">
-              <div class="text-sm font-black text-content tracking-tight">{{ group.name }}</div>
-              <div class="flex items-center gap-2 mt-1">
+              <div class="text-sm font-black text-content tracking-tight group-hover/header:text-primary transition-colors">{{ group.name }}</div>
+              <div class="flex items-center gap-2 mt-0.5">
                 <span class="text-xs font-bold text-muted uppercase tracking-widest">{{ group.files.length }} {{ appStore.t('compress.group_count') }}</span>
                 <div class="w-1 h-1 rounded-full bg-subtle"></div>
                 <span class="text-xs font-mono text-primary font-black uppercase">{{ compressionStore.getEffectiveSettings(group.settings).format }}</span>
@@ -558,7 +597,7 @@ const removeFinishedCompressionJob = (taskId: string) => {
               </div>
             </div>
 
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
               <button
                 v-if="!group.taskId"
                 @click.stop="compressionStore.dissolveGroup(group.id)"
@@ -589,12 +628,19 @@ const removeFinishedCompressionJob = (taskId: string) => {
           </div>
 
           <!-- 组展开：独立配置面板 -->
-          <transition name="slide-down">
-            <div v-if="group.expanded" class="px-4 md:px-8 pb-8 pt-4 border-t border-subtle/30">
-              <div data-testid="compression-draft-details" class="compression-detail-grid">
+          <Transition
+            name="aero-drawer"
+            @before-enter="onBeforeDetailEnter"
+            @enter="onDetailEnter"
+            @after-enter="onAfterDetailEnter"
+            @before-leave="onBeforeDetailLeave"
+            @leave="onDetailLeave"
+          >
+            <div v-if="group.expanded" class="details-drawer px-3 md:px-6 pb-5 pt-2">
+              <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
                 <div
                   data-testid="compression-draft-config"
-                  class="min-w-0 space-y-6"
+                  class="compression-config-panel min-w-0 space-y-5"
                   :class="{ 'pointer-events-none opacity-80': Boolean(group.taskId) }"
                 >
                   <div>
@@ -638,7 +684,7 @@ const removeFinishedCompressionJob = (taskId: string) => {
                   </div>
                 </div>
 
-                <div data-testid="compression-draft-execution" class="pending-execution-panel">
+                <div data-testid="compression-draft-execution" class="pending-execution-panel compression-execution-panel">
                   <div class="grid grid-cols-2 gap-2">
                     <div class="pending-stat-card">
                       <span class="text-muted">{{ appStore.t('progress.stage') }}</span>
@@ -690,7 +736,7 @@ const removeFinishedCompressionJob = (taskId: string) => {
                 </div>
               </div>
             </div>
-          </transition>
+          </Transition>
         </div>
 
         <!-- 2. 未分组文件列表 (待分配) -->
@@ -711,8 +757,9 @@ const removeFinishedCompressionJob = (taskId: string) => {
           <div v-for="file in compressionStore.selectedFiles" :key="file.path" 
                data-testid="compression-draft-row"
                @click="file.expanded = !file.expanded"
-                class="flex flex-wrap items-center justify-between px-8 py-4 rounded-2xl bg-input border border-subtle group/row hover:border-primary/30 transition-all cursor-pointer"
-               :class="{ 'border-primary/50 bg-primary/5 shadow-inner': file.expanded }">
+               class="compression-job-card compression-job-row flex flex-wrap items-center justify-between px-4 py-2.5 rounded-lg bg-card/40 border border-subtle/40 group/row hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden"
+               :class="{ 'border-primary/30 bg-card/60 shadow-lg': file.expanded }">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover/row:opacity-100 transition-opacity duration-200"></div>
             
             <button
               v-if="!file.taskId"
@@ -739,12 +786,12 @@ const removeFinishedCompressionJob = (taskId: string) => {
             </div>
 
             <div class="flex-1 min-w-[200px] overflow-hidden px-4 flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-card border border-subtle flex items-center justify-center shrink-0">
+              <div class="w-7 h-7 rounded-lg bg-input/60 border border-subtle/50 flex items-center justify-center shrink-0">
                 <i :class="file.isDirectory ? 'pi pi-folder text-primary' : 'pi pi-file text-muted'" class="text-xs"></i>
               </div>
               <div class="overflow-hidden">
                 <div class="text-content font-bold truncate text-xs tracking-tight group-hover/row:text-primary transition-colors">{{ file.name }}</div>
-                <div class="text-xs text-muted font-mono mt-0.5 opacity-90 truncate">{{ file.path }}</div>
+                <div class="text-xs text-muted font-mono opacity-80 truncate">{{ file.path }}</div>
                 <div v-if="taskForJob(file.taskId)" class="flex items-center gap-2 mt-1">
                   <span class="text-xs font-black" :class="getTaskStatusClass(taskForJob(file.taskId)?.status)">
                     {{ getCompressionStatusText(taskForJob(file.taskId)?.status) }}
@@ -784,12 +831,19 @@ const removeFinishedCompressionJob = (taskId: string) => {
               <i class="pi text-sm transition-transform" :class="file.expanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
             </button>
 
-            <transition name="slide-down">
-              <div v-if="file.expanded" class="w-full mt-4 pt-4 border-t border-subtle/30" @click.stop>
-                <div data-testid="compression-draft-details" class="compression-detail-grid">
+            <Transition
+              name="aero-drawer"
+              @before-enter="onBeforeDetailEnter"
+              @enter="onDetailEnter"
+              @after-enter="onAfterDetailEnter"
+              @before-leave="onBeforeDetailLeave"
+              @leave="onDetailLeave"
+            >
+              <div v-if="file.expanded" class="details-drawer w-full px-2 md:px-5 pb-4 pt-2" @click.stop>
+                <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
                   <div
                     data-testid="compression-draft-config"
-                    class="min-w-0"
+                    class="compression-config-panel min-w-0"
                     :class="{ 'pointer-events-none opacity-80': Boolean(file.taskId) }"
                   >
                     <h4 class="detail-heading justify-between">
@@ -811,7 +865,7 @@ const removeFinishedCompressionJob = (taskId: string) => {
                     />
                   </div>
 
-                  <div data-testid="compression-draft-execution" class="pending-execution-panel">
+                  <div data-testid="compression-draft-execution" class="pending-execution-panel compression-execution-panel">
                     <div class="grid grid-cols-2 gap-2">
                       <div class="pending-stat-card">
                         <span class="text-muted">{{ appStore.t('progress.stage') }}</span>
@@ -863,7 +917,7 @@ const removeFinishedCompressionJob = (taskId: string) => {
                   </div>
                 </div>
               </div>
-            </transition>
+            </Transition>
           </div>
         </div>
 
@@ -963,17 +1017,85 @@ const removeFinishedCompressionJob = (taskId: string) => {
   background: radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--dynamic-accent) 4%, transparent) 0%, transparent 40%);
 }
 
-.slide-down-enter-active, .slide-down-leave-active { transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.slide-down-enter-from, .slide-down-leave-to { opacity: 0; transform: translateY(-10px); }
-
 .pop-enter-active, .pop-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.8) translateY(20px); }
+
+.compression-job-card {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.compression-job-row {
+  min-height: 46px;
+}
+
+.details-drawer {
+  background-color: transparent;
+}
+
+.compression-detail-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px dashed color-mix(in srgb, var(--dynamic-accent) 24%, transparent);
+  border-radius: 1rem;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--bg-card) 92%, transparent),
+    color-mix(in srgb, var(--bg-card) 98%, transparent)
+  );
+  box-shadow: 0 20px 45px -25px rgb(0 0 0 / 0.55);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.compression-detail-card:hover {
+  border-color: color-mix(in srgb, var(--dynamic-accent) 70%, transparent);
+  box-shadow:
+    0 24px 48px -24px rgb(0 0 0 / 0.55),
+    0 0 18px color-mix(in srgb, var(--dynamic-accent) 12%, transparent);
+}
+
+.aero-drawer-enter-active,
+.aero-drawer-leave-active {
+  overflow: hidden;
+  transition:
+    height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s linear,
+    margin 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.aero-drawer-enter-from,
+.aero-drawer-leave-to {
+  height: 0 !important;
+  opacity: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
 
 .compression-detail-grid {
   display: grid;
   grid-template-columns: minmax(320px, 45%) minmax(0, 1fr);
-  gap: 1rem;
+  gap: 0;
   align-items: stretch;
+}
+
+.compression-config-panel {
+  max-height: 26rem;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+  border-right: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+  scrollbar-gutter: stable;
+}
+
+.compression-config-panel :deep(.horizontal-settings) {
+  gap: 0.875rem;
+}
+
+.compression-config-panel :deep(.settings-core-grid) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.compression-config-panel :deep(.advanced-option) {
+  padding: 0.625rem;
 }
 
 .detail-heading {
@@ -991,10 +1113,15 @@ const removeFinishedCompressionJob = (taskId: string) => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  border: 1px solid color-mix(in srgb, var(--dynamic-accent) 24%, var(--border-subtle));
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--bg-card) 78%, transparent);
+  border: 0;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--bg-input) 18%, transparent);
+}
+
+.compression-execution-panel {
+  min-height: 17rem;
+  max-height: 26rem;
+  padding: 1.25rem;
 }
 
 .pending-stat-card {
@@ -1007,12 +1134,29 @@ const removeFinishedCompressionJob = (taskId: string) => {
 
 .pending-log {
   flex: 1;
-  min-height: 7rem;
+  min-height: 8rem;
+  max-height: 16rem;
   padding: 0.75rem;
   border-left: 2px solid color-mix(in srgb, var(--dynamic-accent) 28%, transparent);
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--bg-input) 35%, transparent);
   font-size: 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .compression-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .compression-config-panel {
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+  }
+
+  .compression-config-panel :deep(.settings-core-grid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 </style>
