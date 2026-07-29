@@ -15,8 +15,8 @@
 
 - 读取公开 `latest.json` 并验证目标版本、Windows 下载地址和签名；
 - 备份并计算两个用户数据目录的 SHA-256 指纹；
-- 使用真实 Tauri/WebView2 设置页检查更新并点击安装；
-- 保持驱动作业存活直到 NSIS 完成，避免测试工具误杀 updater；
+- 将已安装应用作为独立进程启动，通过页面级 CDP 连接真实 Tauri/WebView2 设置页检查并安装更新；
+- 自动化进程不再成为应用的父作业，避免 WebDriver 的 Windows Job Object 误杀 updater 或重启后的应用；
 - 验证注册表与主程序版本、原安装目录、自动重启、数据指纹、单一版本化 Shell DLL、
   传统右键菜单和无签名 MSIX 残留；
 - 失败时保留用户数据备份和 JSON/截图/驱动日志证据。
@@ -30,7 +30,18 @@
 - Rust release 主程序 119 项及全部集成矩阵通过，Clippy `-D warnings` 通过。
 - 生产依赖审计为 0 个漏洞，版本一致性与 NSIS 生产打包通过。
 
-## 发布后门禁
+## 正式发布验收
 
-v1.0.19 正式资产生成后，必须从保留的公开 v1.0.18 环境执行 `test:public-update`。
-只有自动重启、用户数据、原安装目录、Shell DLL 和传统菜单全部通过后，Issue #25 才能关闭。
+v1.0.19 正式资产已由 Release 工作流生成，安装器 SHA-256 为
+`8DEEEAF6EEFD3C76F5C9CC1B17DEE50085CF823B901F65D890FAC4AAB8322737`。
+
+公开 v1.0.18 → v1.0.19 的真实应用内更新最终 18 项全部通过：
+
+- 设置页发现 v1.0.19，签名更新包下载并安装成功；
+- 应用自动重启，版本与原安装目录正确；
+- 两个用户数据目录 SHA-256 指纹完全不变；
+- 传统右键菜单正常，仅保留 `long_compress_shell_extension_1_0_19.dll`；
+- 不存在无签名 Windows 11 identity MSIX 残留。
+
+正式验收记录见 [Issue #27](https://github.com/Longyuyeee/long_Decompress/issues/27)，
+v1.0.18 未重启问题由 [Issue #25](https://github.com/Longyuyeee/long_Decompress/issues/25) 收口。

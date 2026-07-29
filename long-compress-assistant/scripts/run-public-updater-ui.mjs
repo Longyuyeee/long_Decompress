@@ -1,42 +1,30 @@
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  writeFileSync,
-} from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { createServer } from 'node:net'
 import path from 'node:path'
-import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
+import { chromium } from '@playwright/test'
 
 const application = process.env.PUBLIC_UPDATER_APP
 const expectedVersion = process.env.PUBLIC_UPDATER_EXPECTED_VERSION
-const tauriDriver = process.env.TAURI_DRIVER_PATH
-const edgeDriver = process.env.EDGE_DRIVER_PATH
-const webdriverUrl = 'http://127.0.0.1:4444/'
-const artifactDirectory = path.resolve('test-results', 'public-updater-ui')
-const webviewUserDataDirectory = mkdtempSync(
-  path.join(tmpdir(), 'long-decompress-public-updater-webview-'),
+const artifactDirectory = path.resolve(
+  process.env.PUBLIC_UPDATER_ARTIFACT_DIR ||
+    path.join('test-results', 'public-updater-ui'),
 )
 
 for (const [label, target] of [
   ['installed application', application],
   ['expected version', expectedVersion],
-  ['tauri-driver', tauriDriver],
-  ['Microsoft EdgeDriver', edgeDriver],
 ]) {
   if (!target || (label !== 'expected version' && !existsSync(target))) {
     throw new Error(`${label} was not found: ${target || '<unset>'}`)
   }
 }
 
-let driver
-let tauriDriverProcess
-let devToolsPortMirror
-let driverOutput = ''
-let completedSuccessfully = false
+let browser
+let page
+let applicationProcess
+let handedOff = false
 
 function terminateProcessTree(processId) {
   if (!processId) return
@@ -46,45 +34,41 @@ function terminateProcessTree(processId) {
   })
 }
 
-function appendDriverOutput(chunk) {
-  driverOutput = `${driverOutput}${chunk}`.slice(-32_768)
+async function reserveLoopbackPort() {
+  const server = createServer()
+  await new Promise((resolve, reject) => {
+    server.once('error', reject)
+    server.listen(0, '127.0.0.1', resolve)
+  })
+  const address = server.address()
+  const port = typeof address === 'object' && address ? address.port : 0
+  await new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()))
+  })
+  assert.ok(port > 0, 'failed to reserve a WebView2 debugging port')
+  return port
 }
 
-async function waitForWebDriver(timeoutMs = 30_000) {
+async function waitForCdpEndpoint(endpoint, timeoutMs = 30_000) {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    if (tauriDriverProcess.exitCode !== null) {
-      throw new Error(`tauri-driver exited early with code ${tauriDriverProcess.exitCode}`)
+    if (applicationProcess.exitCode !== null) {
+      throw new Error(
+        `installed application exited before WebView2 was ready: ${applicationProcess.exitCode}`,
+      )
     }
     try {
-      const response = await fetch(`${webdriverUrl}status`)
-      if (response.ok) return
+      const response = await fetch(`${endpoint}/json/version`)
+      if (response.ok) {
+        const version = await response.json()
+        if (version.webSocketDebuggerUrl) return version.webSocketDebuggerUrl
+      }
     } catch {
-      // The driver has not opened its socket yet.
+      // WebView2 has not opened the debugging endpoint yet.
     }
     await new Promise((resolve) => setTimeout(resolve, 250))
   }
-  throw new Error('Timed out waiting for tauri-driver to become ready.')
-}
-
-function mirrorDevToolsActivePort() {
-  const source = path.join(webviewUserDataDirectory, 'EBWebView', 'DevToolsActivePort')
-  const destination = path.join(webviewUserDataDirectory, 'DevToolsActivePort')
-  if (!existsSync(source)) return
-  try {
-    copyFileSync(source, destination)
-  } catch {
-    // EdgeDriver may be reading or replacing the compatibility copy.
-  }
-}
-
-async function sessionIsAlive() {
-  try {
-    await driver.getCurrentUrl()
-    return true
-  } catch {
-    return false
-  }
+  throw new Error('Timed out waiting for the independent WebView2 process.')
 }
 
 async function waitForInstalledVersion(timeoutMs = 240_000) {
@@ -103,115 +87,98 @@ async function waitForInstalledVersion(timeoutMs = 240_000) {
   throw new Error(`Timed out waiting for installed version ${expectedVersion}.`)
 }
 
-async function waitForVisibleDialog(timeoutMs = 60_000) {
-  return driver.wait(async () => {
-    const dialogs = await driver.findElements(By.css('[role="dialog"]'))
-    for (const dialog of dialogs) {
-      if (await dialog.isDisplayed()) return dialog
-    }
-    return false
-  }, timeoutMs)
-}
-
 try {
   mkdirSync(artifactDirectory, { recursive: true })
-  tauriDriverProcess = spawn(tauriDriver, ['--native-driver', edgeDriver], {
-    cwd: process.cwd(),
-    stdio: ['ignore', 'pipe', 'pipe'],
+  const debuggingPort = await reserveLoopbackPort()
+  const endpoint = `http://127.0.0.1:${debuggingPort}`
+  const existingBrowserArguments =
+    process.env.WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS?.trim()
+  const browserArguments = [
+    existingBrowserArguments,
+    `--remote-debugging-port=${debuggingPort}`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  applicationProcess = spawn(application, [], {
+    detached: true,
+    env: {
+      ...process.env,
+      WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: browserArguments,
+    },
+    stdio: 'ignore',
     windowsHide: true,
   })
-  tauriDriverProcess.stdout.on('data', appendDriverOutput)
-  tauriDriverProcess.stderr.on('data', appendDriverOutput)
-  await waitForWebDriver()
+  applicationProcess.unref()
+  writeFileSync(
+    path.join(artifactDirectory, 'independent-application.json'),
+    JSON.stringify(
+      {
+        processId: applicationProcess.pid,
+        debuggingPort,
+        launchedAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    ),
+    'utf8',
+  )
 
-  const capabilities = new Capabilities()
-  capabilities.setBrowserName('wry')
-  capabilities.set('tauri:options', {
-    application,
-    webviewOptions: { userDataFolder: webviewUserDataDirectory },
-  })
-  devToolsPortMirror = setInterval(mirrorDevToolsActivePort, 50)
-  driver = await new Builder().usingServer(webdriverUrl).withCapabilities(capabilities).build()
-  clearInterval(devToolsPortMirror)
-  devToolsPortMirror = undefined
-  await driver.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 30_000 })
+  const browserWebSocketUrl = await waitForCdpEndpoint(endpoint)
+  browser = await chromium.connectOverCDP(browserWebSocketUrl)
+  const context = browser.contexts()[0]
+  assert.ok(context, 'WebView2 did not expose a browser context')
+  page = context.pages()[0] || (await context.waitForEvent('page'))
+  await page.waitForURL(/#\/decompress/, { timeout: 60_000 })
 
-  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 60_000)
-  await driver.actions().keyDown(Key.CONTROL).sendKeys(',').keyUp(Key.CONTROL).perform()
-  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/settings'), 30_000)
+  await page.keyboard.press('Control+,')
+  await page.waitForURL(/#\/settings/, { timeout: 30_000 })
+  await page.locator('main button:has(.pi-refresh)').first().click()
 
-  const refreshIcon = await driver.findElement(By.css('main button .pi-refresh'))
-  await refreshIcon.findElement(By.xpath('..')).click()
-  const dialog = await waitForVisibleDialog()
-  await driver.wait(async () => (await dialog.getText()).includes(expectedVersion), 60_000)
+  const dialog = page.locator('[role="dialog"]:visible')
+  await dialog.waitFor({ state: 'visible', timeout: 60_000 })
+  await assert.doesNotReject(
+    dialog.getByText(expectedVersion, { exact: true }).waitFor({
+      state: 'visible',
+      timeout: 60_000,
+    }),
+  )
 
-  const buttons = await dialog.findElements(By.css('button'))
-  const installButtons = []
-  for (const button of buttons) {
-    if ((await button.isDisplayed()) && (await button.isEnabled())) installButtons.push(button)
-  }
-  assert.ok(installButtons.length >= 3, 'the signed update dialog must expose its actions')
-  await installButtons.at(-1).click()
+  const installButtons = dialog.locator('button:visible:enabled')
+  const buttonCount = await installButtons.count()
+  assert.ok(
+    buttonCount >= 3,
+    'the signed update dialog must expose its actions',
+  )
+  await installButtons.nth(buttonCount - 1).click()
 
-  const deadline = Date.now() + 180_000
-  while (Date.now() < deadline && (await sessionIsAlive())) {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-  }
-  assert.equal(await sessionIsAlive(), false, 'the application did not hand off to the updater')
+  await page.waitForEvent('close', { timeout: 180_000 })
+  handedOff = true
   await waitForInstalledVersion()
-  completedSuccessfully = true
 } catch (error) {
   mkdirSync(artifactDirectory, { recursive: true })
-  if (driver && (await sessionIsAlive())) {
+  if (page && !page.isClosed()) {
     try {
-      const screenshot = await driver.takeScreenshot()
-      writeFileSync(
-        path.join(artifactDirectory, 'public-updater-failure.png'),
-        Buffer.from(screenshot, 'base64'),
-      )
+      await page.screenshot({
+        path: path.join(artifactDirectory, 'public-updater-failure.png'),
+        fullPage: true,
+      })
     } catch {
-      // The WebDriver session may disappear while the updater takes over.
+      // The WebView may disappear while the updater takes over.
     }
   }
   throw error
 } finally {
-  if (devToolsPortMirror) clearInterval(devToolsPortMirror)
-  if (driver) {
+  if (browser) {
     try {
-      await driver.quit()
+      await browser.close()
     } catch {
-      // A successful updater hand-off terminates the WebDriver session.
+      // The successful updater hand-off closes the CDP connection itself.
     }
   }
-  if (completedSuccessfully && tauriDriverProcess) {
-    // Keep the driver job alive until the outer validator has observed the updater's
-    // restart. Closing the Windows job earlier also terminates the spawned installer.
-    tauriDriverProcess.stdout.destroy()
-    tauriDriverProcess.stderr.destroy()
-    tauriDriverProcess.unref()
-    writeFileSync(
-      path.join(artifactDirectory, 'tauri-driver.pid'),
-      String(tauriDriverProcess.pid),
-      'utf8',
-    )
-  } else {
-    terminateProcessTree(tauriDriverProcess?.pid)
-  }
-  mkdirSync(artifactDirectory, { recursive: true })
-  writeFileSync(path.join(artifactDirectory, 'tauri-driver.log'), driverOutput, 'utf8')
-  if (completedSuccessfully) {
-    writeFileSync(
-      path.join(artifactDirectory, 'active-webview-profile.txt'),
-      webviewUserDataDirectory,
-      'utf8',
-    )
-  } else {
-    writeFileSync(
-      path.join(artifactDirectory, 'retained-webview-profile.txt'),
-      webviewUserDataDirectory,
-      'utf8',
-    )
-  }
+  if (!handedOff) terminateProcessTree(applicationProcess?.pid)
 }
 
-console.log(`Public updater UI handed off v${expectedVersion} successfully.`)
+console.log(
+  `Independent WebView2 updater UI handed off v${expectedVersion} successfully.`,
+)
