@@ -23,6 +23,7 @@ use crate::services::tar_aes_engine::TarAesEngine;
 use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 use crate::services::compression_format::{self, CompressionRoute};
+use crate::services::extraction_transaction::{self, ExtractionStaging};
 
 pub use crate::services::archive_format::ArchiveFormat;
 pub use crate::services::compression_format::{
@@ -172,10 +173,9 @@ impl Drop for TemporaryAesInput {
 }
 
 impl CompressionService {
-    const MAX_EXTRACTED_FILES: usize = 250_000;
-    const MAX_EXTRACTED_BYTES: u64 = 512 * 1024 * 1024 * 1024;
-    const MAX_EXPANSION_RATIO: u64 = 10_000;
-    const DISK_SAFETY_RESERVE: u64 = 128 * 1024 * 1024;
+    #[cfg(test)]
+    const MAX_EXTRACTED_FILES: usize = extraction_transaction::MAX_EXTRACTED_ENTRIES;
+    const MAX_EXTRACTED_BYTES: u64 = extraction_transaction::MAX_EXTRACTED_BYTES;
     const COPY_BUFFER_SIZE: usize = 256 * 1024;
     const PROGRESS_EMIT_INTERVAL_BYTES: u64 = 4 * 1024 * 1024;
 
@@ -1094,10 +1094,8 @@ impl CompressionService {
             .await?;
         self.check_cancellation()?;
         Self::ensure_no_link_ancestors(&final_out_dir)?;
-        let staging_parent = final_out_dir.parent().unwrap_or_else(|| Path::new("."));
-        std::fs::create_dir_all(staging_parent)?;
-        let out_dir = staging_parent.join(format!(".long-extract-{}", uuid::Uuid::new_v4()));
-        std::fs::create_dir(&out_dir)?;
+        let mut staging = ExtractionStaging::create_for(&final_out_dir)?;
+        let out_dir = staging.path().to_path_buf();
 
         let win_progress = window.clone();
         let tid_progress = task_id.clone();
@@ -1319,7 +1317,7 @@ impl CompressionService {
         };
 
         if let Err(error) = result {
-            if let Err(cleanup_error) = std::fs::remove_dir_all(&out_dir) {
+            if let Err(cleanup_error) = staging.cleanup() {
                 service.emit_log(
                     &window,
                     &task_id,
@@ -1330,7 +1328,7 @@ impl CompressionService {
             return Err(error);
         }
         if let Err(error) = service.prepare_staging_layout(path, &out_dir, &options) {
-            let _ = std::fs::remove_dir_all(&out_dir);
+            let _ = staging.cleanup();
             return Err(error);
         }
         if let Err(error) = service.commit_staged_extraction(
@@ -1341,10 +1339,20 @@ impl CompressionService {
             &final_out_dir,
             &options,
         ) {
-            let _ = std::fs::remove_dir_all(&out_dir);
+            let _ = staging.cleanup();
             return Err(error);
         }
-        let _ = std::fs::remove_dir_all(&out_dir);
+        if let Err(error) = staging.cleanup() {
+            service.emit_log(
+                &window,
+                &task_id,
+                &format!(
+                    "Extraction completed, but the temporary staging directory could not be removed: {}",
+                    error
+                ),
+                TaskLogSeverity::Warning,
+            );
+        }
         if options.delete_after {
             if let Err(error) = std::fs::remove_file(&file_path) {
                 service.emit_log(
@@ -1365,64 +1373,15 @@ impl CompressionService {
         entry_count: usize,
         expanded_bytes: u64,
     ) -> Result<()> {
-        if entry_count > Self::MAX_EXTRACTED_FILES {
-            return Err(CompressionError::ExtractionFailed(format!(
-                "Archive contains too many entries ({} > {})",
-                entry_count,
-                Self::MAX_EXTRACTED_FILES
-            )).into());
-        }
-        if expanded_bytes > Self::MAX_EXTRACTED_BYTES {
-            return Err(CompressionError::ExtractionFailed(format!(
-                "Archive expands beyond the safety limit ({} bytes)",
-                Self::MAX_EXTRACTED_BYTES
-            )).into());
-        }
-        let compressed_bytes = std::fs::metadata(archive_path)?.len().max(1);
-        if expanded_bytes >= 1024 * 1024 * 1024
-            && expanded_bytes / compressed_bytes > Self::MAX_EXPANSION_RATIO
-        {
-            return Err(CompressionError::ExtractionFailed(format!(
-                "Archive expansion ratio exceeds the safety limit ({}:1)",
-                Self::MAX_EXPANSION_RATIO
-            )).into());
-        }
-        Ok(())
-    }
-
-    fn available_disk_space(path: &Path) -> Option<u64> {
-        let disks = sysinfo::Disks::new_with_refreshed_list();
-        disks
-            .list()
-            .iter()
-            .filter(|disk| path.starts_with(disk.mount_point()))
-            .max_by_key(|disk| disk.mount_point().components().count())
-            .map(|disk| disk.available_space())
-    }
-
-    pub(crate) fn validate_staging_disk_reserve(staging: &Path) -> Result<()> {
-        if Self::available_disk_space(staging)
-            .is_some_and(|available| available < Self::DISK_SAFETY_RESERVE)
-        {
-            return Err(CompressionError::DiskFull.into());
-        }
-        Ok(())
+        extraction_transaction::validate_resource_limits(
+            archive_path,
+            entry_count,
+            expanded_bytes,
+        )
     }
 
     fn ensure_no_link_ancestors(path: &Path) -> Result<()> {
-        let mut current = Some(path);
-        while let Some(candidate) = current {
-            if let Ok(metadata) = std::fs::symlink_metadata(candidate) {
-                if metadata.file_type().is_symlink() {
-                    return Err(CompressionError::ExtractionFailed(format!(
-                        "Extraction path contains a symbolic link or reparse point: {}",
-                        candidate.display()
-                    )).into());
-                }
-            }
-            current = candidate.parent();
-        }
-        Ok(())
+        extraction_transaction::ensure_no_link_ancestors(path)
     }
 
     async fn preflight_extraction(
@@ -1508,47 +1467,9 @@ impl CompressionService {
         if let Some((entry_count, expanded_bytes)) = stats {
             Self::validate_resource_limits(archive_path, entry_count, expanded_bytes)?;
             let disk_probe = output.parent().unwrap_or(output);
-            if let Some(available) = Self::available_disk_space(disk_probe) {
-                let required = expanded_bytes.saturating_add(Self::DISK_SAFETY_RESERVE);
-                if available < required {
-                    return Err(CompressionError::DiskFull.into());
-                }
-            }
+            extraction_transaction::validate_disk_capacity(disk_probe, expanded_bytes)?;
         }
         Ok(())
-    }
-
-    pub(crate) fn validate_staged_resources(archive_path: &Path, staging: &Path) -> Result<()> {
-        let mut entry_count = 0usize;
-        let mut expanded_bytes = 0u64;
-        for entry in walkdir::WalkDir::new(staging).follow_links(false) {
-            let entry = entry.map_err(|error| {
-                CompressionError::ExtractionFailed(format!(
-                    "Unable to inspect extracted output: {}",
-                    error
-                ))
-            })?;
-            if entry.path() == staging {
-                continue;
-            }
-            let metadata = std::fs::symlink_metadata(entry.path())?;
-            if metadata.file_type().is_symlink() || (!metadata.is_file() && !metadata.is_dir()) {
-                return Err(CompressionError::ExtractionFailed(format!(
-                    "Unsafe link or special entry was rejected: {}",
-                    entry.path().display()
-                )).into());
-            }
-            if metadata.is_file() {
-                entry_count = entry_count.saturating_add(1);
-                expanded_bytes = expanded_bytes.checked_add(metadata.len()).ok_or_else(|| {
-                    CompressionError::ExtractionFailed(
-                        "Extracted size overflowed the supported range".to_string(),
-                    )
-                })?;
-            }
-        }
-        Self::validate_resource_limits(archive_path, entry_count, expanded_bytes)?;
-        Self::validate_staging_disk_reserve(staging)
     }
 
     fn prepare_staging_layout(
@@ -1557,89 +1478,7 @@ impl CompressionService {
         staging: &Path,
         options: &DecompressOptions,
     ) -> Result<()> {
-        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
-        let mut files = Vec::new();
-        let mut directories = Vec::new();
-        for entry in walkdir::WalkDir::new(staging).follow_links(false) {
-            let entry = entry.map_err(|error| {
-                CompressionError::ExtractionFailed(format!(
-                    "Unable to normalize extracted output: {}",
-                    error
-                ))
-            })?;
-            if entry.path() == staging {
-                continue;
-            }
-            let metadata = std::fs::symlink_metadata(entry.path())?;
-            if metadata.file_type().is_symlink() || (!metadata.is_file() && !metadata.is_dir()) {
-                return Err(CompressionError::ExtractionFailed(format!(
-                    "Unsafe link or special entry was rejected: {}",
-                    entry.path().display()
-                )).into());
-            }
-            if metadata.is_dir() {
-                directories.push(entry.path().to_path_buf());
-            } else {
-                files.push(entry.path().to_path_buf());
-            }
-        }
-        files.sort();
-
-        let mut entry_count = 0usize;
-        let mut expanded_bytes = 0u64;
-        for source in files {
-            let relative = source.strip_prefix(staging)?;
-            if !Self::matches_compiled_file_filter(relative, &file_filter) {
-                std::fs::remove_file(&source)?;
-                continue;
-            }
-            let source_size = std::fs::metadata(&source)?.len();
-            entry_count = entry_count.saturating_add(1);
-            expanded_bytes = expanded_bytes.checked_add(source_size).ok_or_else(|| {
-                CompressionError::ExtractionFailed(
-                    "Extracted size overflowed the supported range".to_string(),
-                )
-            })?;
-            if options.preserve_paths || source.parent() == Some(staging) {
-                continue;
-            }
-            let file_name = source.file_name().ok_or_else(|| {
-                CompressionError::ExtractionFailed("Extracted file has no valid name".to_string())
-            })?;
-            let requested = staging.join(file_name);
-            let destination = if requested.exists() {
-                let stem = requested.file_stem().and_then(|value| value.to_str()).unwrap_or("file");
-                let extension = requested.extension().and_then(|value| value.to_str());
-                let mut available = None;
-                for index in 1..10_000 {
-                    let name = match extension {
-                        Some(extension) if !extension.is_empty() => format!("{} ({}).{}", stem, index, extension),
-                        _ => format!("{} ({})", stem, index),
-                    };
-                    let candidate = staging.join(name);
-                    if !candidate.exists() {
-                        available = Some(candidate);
-                        break;
-                    }
-                }
-                available.ok_or_else(|| {
-                    CompressionError::ExtractionFailed(format!(
-                        "Unable to flatten duplicate archive entry: {}",
-                        relative.display()
-                    ))
-                })?
-            } else {
-                requested
-            };
-            std::fs::rename(&source, destination)?;
-        }
-
-        directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
-        for directory in directories {
-            let _ = std::fs::remove_dir(&directory);
-        }
-        Self::validate_resource_limits(archive_path, entry_count, expanded_bytes)?;
-        Self::validate_staging_disk_reserve(staging)
+        extraction_transaction::prepare_staging_layout(archive_path, staging, options)
     }
 
     fn archive_output_dir_name(path: &Path) -> String {
@@ -1692,57 +1531,15 @@ impl CompressionService {
     }
 
     fn compile_file_filter(filter: Option<&str>) -> Vec<regex::Regex> {
-        let Some(filter) = filter.map(str::trim).filter(|value| !value.is_empty()) else {
-            return Vec::new();
-        };
-        filter
-            .split([',', ';'])
-            .map(str::trim)
-            .filter(|pattern| !pattern.is_empty())
-            .filter_map(|pattern| {
-                let escaped = regex::escape(pattern)
-                    .replace("\\*", ".*")
-                    .replace("\\?", ".");
-                regex::Regex::new(&format!("(?i)^{}$", escaped)).ok()
-            })
-            .collect()
+        extraction_transaction::compile_file_filter(filter)
     }
 
     fn matches_compiled_file_filter(path: &Path, filter: &[regex::Regex]) -> bool {
-        if filter.is_empty() {
-            return true;
-        }
-        let normalized = path.to_string_lossy().replace('\\', "/");
-        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("");
-        filter
-            .iter()
-            .any(|pattern| pattern.is_match(&normalized) || pattern.is_match(file_name))
+        extraction_transaction::matches_compiled_file_filter(path, filter)
     }
 
     fn resolve_extract_path(target: &Path, options: &DecompressOptions) -> Result<PathBuf> {
-        if options.overwrite_existing || !target.exists() {
-            return Ok(target.to_path_buf());
-        }
-
-        let parent = target.parent().unwrap_or_else(|| Path::new(""));
-        let stem = target.file_stem().and_then(|name| name.to_str()).unwrap_or("file");
-        let extension = target.extension().and_then(|name| name.to_str());
-
-        for index in 1..10_000 {
-            let file_name = match extension {
-                Some(ext) if !ext.is_empty() => format!("{} ({}).{}", stem, index, ext),
-                _ => format!("{} ({})", stem, index),
-            };
-            let candidate = parent.join(file_name);
-            if !candidate.exists() {
-                return Ok(candidate);
-            }
-        }
-
-        Err(CompressionError::ExtractionFailed(format!(
-            "Unable to find available output name for {}",
-            target.display()
-        )).into())
+        extraction_transaction::resolve_extract_path(target, options)
     }
 
     pub(crate) fn zip_system_time(
@@ -2188,11 +1985,8 @@ impl CompressionService {
                     Self::MAX_EXTRACTED_BYTES
                 )).into());
             }
-            if processed % (16 * 1024 * 1024) < read as u64
-                && Self::available_disk_space(output)
-                    .is_some_and(|available| available < Self::DISK_SAFETY_RESERVE)
-            {
-                return Err(CompressionError::DiskFull.into());
+            if processed % (16 * 1024 * 1024) < read as u64 {
+                extraction_transaction::validate_staging_disk_reserve(output)?;
             }
             outfile.write_all(&buffer[..read])?;
             if Self::should_emit_byte_progress(last_emitted, processed) {
@@ -3541,50 +3335,9 @@ mod tests {
 }
 
 impl CompressionService {
-    fn ensure_commit_target_safe(root: &Path, target: &Path) -> Result<()> {
-        Self::ensure_no_link_ancestors(root)?;
-        let relative = target.strip_prefix(root).map_err(|_| {
-            CompressionError::ExtractionFailed(format!(
-                "Extraction target escaped the output directory: {}",
-                target.display()
-            ))
-        })?;
-        let mut current = root.to_path_buf();
-        for component in relative.components() {
-            current.push(component.as_os_str());
-            if let Ok(metadata) = std::fs::symlink_metadata(&current) {
-                if metadata.file_type().is_symlink() {
-                    return Err(CompressionError::ExtractionFailed(format!(
-                        "Extraction target contains a symbolic link or reparse point: {}",
-                        current.display()
-                    )).into());
-                }
-            }
-        }
-        Ok(())
-    }
-
-    fn rollback_extraction_commit(
-        created_files: &[PathBuf],
-        created_dirs: &[PathBuf],
-        backups: &[(PathBuf, PathBuf)],
-    ) {
-        for path in created_files.iter().rev() {
-            let _ = std::fs::remove_file(path);
-        }
-        for (destination, backup) in backups.iter().rev() {
-            let _ = std::fs::remove_file(destination);
-            let _ = std::fs::rename(backup, destination);
-        }
-        for path in created_dirs.iter().rev() {
-            let _ = std::fs::remove_dir(path);
-        }
-    }
-
+    #[cfg(test)]
     fn staged_file_is_not_newer(source: &Path, destination: &Path) -> bool {
-        let source_modified = std::fs::metadata(source).and_then(|value| value.modified());
-        let destination_modified = std::fs::metadata(destination).and_then(|value| value.modified());
-        matches!((source_modified, destination_modified), (Ok(source), Ok(destination)) if source <= destination)
+        extraction_transaction::staged_file_is_not_newer(source, destination)
     }
 
     fn commit_staged_extraction(
@@ -3596,131 +3349,30 @@ impl CompressionService {
         output: &Path,
         options: &DecompressOptions,
     ) -> Result<()> {
-        Self::ensure_no_link_ancestors(output)?;
-        let mut directories = Vec::new();
-        let mut files = Vec::new();
-        for item in walkdir::WalkDir::new(staging).follow_links(false) {
-            let item = item.map_err(|error| {
-                CompressionError::ExtractionFailed(format!("Unable to inspect staged output: {}", error))
-            })?;
-            if item.path() == staging {
-                continue;
-            }
-            let metadata = std::fs::symlink_metadata(item.path())?;
-            if metadata.file_type().is_symlink() || (!metadata.is_file() && !metadata.is_dir()) {
-                return Err(CompressionError::ExtractionFailed(format!(
-                    "Unsafe link or special entry was rejected: {}",
-                    item.path().display()
-                )).into());
-            }
-            let relative = item.path().strip_prefix(staging)?.to_path_buf();
-            if metadata.is_dir() {
-                directories.push(relative);
-            } else {
-                files.push(relative);
-            }
-        }
-        directories.sort_by_key(|path| path.components().count());
-        files.sort();
-
-        if options.conflict_policy == "ask" && !options.overwrite_existing {
-            if let Some(relative) = files.iter().find(|relative| {
-                let destination = output.join(relative);
-                destination.exists()
-                    && !(options.extract_only_newer
-                        && Self::staged_file_is_not_newer(&staging.join(relative), &destination))
-            }) {
-                let destination = output.join(relative);
-                let metadata = std::fs::metadata(&destination).ok();
+        extraction_transaction::commit_staged_extraction(
+            source_archive,
+            staging,
+            output,
+            options,
+            |conflict| {
                 if let Some(window) = window {
-                    let _ = window.emit("file-conflict", FileConflictPayload {
-                        task_id: task_id.to_string(),
-                        file_name: destination.file_name().and_then(|name| name.to_str()).unwrap_or("file").to_string(),
-                        source_path: source_archive.to_string(),
-                        dest_path: destination.to_string_lossy().into_owned(),
-                        source_size: std::fs::metadata(staging.join(relative)).map(|value| value.len()).unwrap_or(0),
-                        dest_size: metadata.as_ref().map(|value| value.len()).unwrap_or(0),
-                        source_modified: 0,
-                        dest_modified: metadata
-                            .and_then(|value| value.modified().ok())
-                            .and_then(|value| value.duration_since(std::time::UNIX_EPOCH).ok())
-                            .map(|value| value.as_millis() as u64)
-                            .unwrap_or(0),
-                    });
+                    let _ = window.emit(
+                        "file-conflict",
+                        FileConflictPayload {
+                            task_id: task_id.to_string(),
+                            file_name: conflict.file_name,
+                            source_path: conflict.source_path,
+                            dest_path: conflict.dest_path,
+                            source_size: conflict.source_size,
+                            dest_size: conflict.dest_size,
+                            source_modified: conflict.source_modified,
+                            dest_modified: conflict.dest_modified,
+                        },
+                    );
                 }
-                return Err(CompressionError::ExtractionFailed("File conflict requires resolution".to_string()).into());
-            }
-        }
-
-        let rollback_root = staging.join(".rollback");
-        let mut created_files = Vec::new();
-        let mut created_dirs = Vec::new();
-        let mut backups = Vec::new();
-        let commit_result = (|| -> Result<()> {
-            if !output.exists() {
-                std::fs::create_dir_all(output)?;
-                created_dirs.push(output.to_path_buf());
-            }
-            for relative in directories {
-                let destination = output.join(&relative);
-                Self::ensure_commit_target_safe(output, &destination)?;
-                if !destination.exists() {
-                    std::fs::create_dir_all(&destination)?;
-                    created_dirs.push(destination);
-                }
-            }
-            for relative in files {
-                let source = staging.join(&relative);
-                let requested = output.join(&relative);
-                Self::ensure_commit_target_safe(output, &requested)?;
-
-                if options.extract_only_newer
-                    && requested.exists()
-                    && Self::staged_file_is_not_newer(&source, &requested)
-                {
-                    continue;
-                }
-
-                if requested.exists() && options.conflict_policy == "skip" {
-                    continue;
-                }
-                let destination = if requested.exists()
-                    && !options.overwrite_existing
-                    && options.conflict_policy != "overwrite"
-                {
-                    Self::resolve_extract_path(&requested, options)?
-                } else {
-                    requested
-                };
-                Self::ensure_commit_target_safe(output, &destination)?;
-                if let Some(parent) = destination.parent() {
-                    if !parent.exists() {
-                        std::fs::create_dir_all(parent)?;
-                        created_dirs.push(parent.to_path_buf());
-                    }
-                }
-
-                if destination.exists() {
-                    std::fs::create_dir_all(&rollback_root)?;
-                    let backup = rollback_root.join(format!("{}.bak", uuid::Uuid::new_v4()));
-                    std::fs::rename(&destination, &backup)?;
-                    backups.push((destination.clone(), backup));
-                } else {
-                    created_files.push(destination.clone());
-                }
-                std::fs::rename(&source, &destination)?;
-            }
-            Ok(())
-        })();
-
-        if let Err(error) = commit_result {
-            Self::rollback_extraction_commit(&created_files, &created_dirs, &backups);
-            return Err(error);
-        }
-        let _ = std::fs::remove_dir_all(&rollback_root);
-        Ok(())
+            },
+        )
     }
-
 }
 
 #[cfg(test)]
