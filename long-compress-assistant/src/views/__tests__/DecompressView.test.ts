@@ -120,6 +120,38 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
+  it('keeps a file-conflict task resumable without showing a false failure', async () => {
+    mocks.decompressFile.mockRejectedValueOnce(
+      new Error('Extraction failed: File conflict requires resolution'),
+    )
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'bundle.zip',
+      path: 'C:/archives/bundle.zip',
+    }])
+    await nextTick()
+    await nextTick()
+
+    const appStore = useAppStore()
+    const taskStore = useTaskStore()
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(appStore.t('decompress.start_queue')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(taskStore.tasks[0]).toMatchObject({
+      status: 'pending',
+      error: undefined,
+    })
+    expect(taskStore.tasks[0].logs.at(-1)).toMatchObject({
+      message: appStore.t('decompress.conflict_waiting'),
+      severity: 'warning',
+    })
+    expect(appStore.error).toBeNull()
+    wrapper.unmount()
+  })
+
   it('never displays or starts pending compression tasks from the decompression workspace', async () => {
     const wrapper = mountView()
     const taskStore = useTaskStore()

@@ -32,6 +32,12 @@ const e2eDataDirectory =
   path.join(root, 'test-results', 'desktop-e2e-data')
 const webviewUserDataDirectory = path.join(e2eDataDirectory, 'webview2')
 const bundledSevenZip = path.join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
+const qemuImg =
+  process.env.QEMU_IMG_PATH ||
+  path.join(root, 'test-results', 'qemu-img-tool', 'qemu-img.exe')
+const wslFsToolRoot =
+  process.env.WSL_FS_TOOL_ROOT ||
+  path.join(root, 'test-results', 'wsl-fs-tools', 'root')
 const externalFixtureDirectory =
   process.env.LONG_DECOMPRESS_EXTERNAL_FIXTURE_DIR ||
   path.join(root, 'test-results', 'external-archive-fixtures')
@@ -615,6 +621,142 @@ try {
     }
   } else {
     console.log('[desktop-e2e] WSL mkfs.ext tools unavailable; skipping generated EXT2/3/4 images')
+  }
+  const qemuImgProbe = existsSync(qemuImg)
+    ? spawnSync(qemuImg, ['--version'], {
+        encoding: 'utf8',
+        timeout: 30_000,
+        windowsHide: true,
+      })
+    : null
+  if (wslExtProbe.status === 0 && qemuImgProbe?.status === 0) {
+    const virtualDiskSourceDirectory = path.join(fixtureDirectory, 'virtual-disk-source')
+    mkdirSync(virtualDiskSourceDirectory, { recursive: true })
+    copyFileSync(
+      extractOnlySource,
+      path.join(virtualDiskSourceDirectory, 'extract-only-payload.txt'),
+    )
+    const rawDiskImage = path.join(fixtureDirectory, 'virtual-disk-base.raw')
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        '-d',
+        'Ubuntu',
+        '--',
+        '/sbin/mkfs.ext4',
+        '-q',
+        '-F',
+        '-d',
+        toWslMountPath(virtualDiskSourceDirectory),
+        toWslMountPath(rawDiskImage),
+        '16M',
+      ],
+      'virtual-disk EXT4 payload',
+    )
+    for (const [format, extension] of [
+      ['qcow2', 'qcow2'],
+      ['vdi', 'vdi'],
+      ['vmdk', 'vmdk'],
+      ['vpc', 'vhd'],
+      ['vhdx', 'vhdx'],
+    ]) {
+      const image = path.join(fixtureDirectory, `extract-only.${extension}`)
+      runFixtureCommand(
+        qemuImg,
+        ['convert', '-f', 'raw', '-O', format, rawDiskImage, image],
+        format.toUpperCase(),
+      )
+      extractOnlyMatrix.push([extension, image, 'extract-only-payload.txt'])
+    }
+    console.log(
+      '[desktop-e2e] generated QCOW2, VDI, VMDK, VHD and VHDX images with known payloads',
+    )
+  } else {
+    console.log(
+      '[desktop-e2e] qemu-img or WSL mkfs.ext4 unavailable; skipping generated virtual disks',
+    )
+  }
+  const mkfsFat = path.join(wslFsToolRoot, 'usr', 'sbin', 'mkfs.fat')
+  const mcopy = path.join(wslFsToolRoot, 'usr', 'bin', 'mcopy')
+  const mtools = path.join(wslFsToolRoot, 'usr', 'bin', 'mtools')
+  const mkntfs = path.join(wslFsToolRoot, 'sbin', 'mkntfs')
+  const ntfscp = path.join(wslFsToolRoot, 'sbin', 'ntfscp')
+  const wslFsLibraryPath = path.join(wslFsToolRoot, 'lib', 'x86_64-linux-gnu')
+  // mcopy is a package symlink that Windows Node cannot stat reliably on DrvFs.
+  const hasWslFsTools = [mkfsFat, mtools, mkntfs, ntfscp].every(existsSync)
+  if (qemuImgProbe?.status === 0 && hasWslFsTools) {
+    const fatImage = path.join(fixtureDirectory, 'extract-only.fat')
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        '-d',
+        'Ubuntu',
+        '--',
+        toWslMountPath(mkfsFat),
+        '-C',
+        '-F',
+        '16',
+        '--invariant',
+        toWslMountPath(fatImage),
+        '16384',
+      ],
+      'FAT16',
+    )
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        '-d',
+        'Ubuntu',
+        '--',
+        toWslMountPath(mcopy),
+        '-i',
+        toWslMountPath(fatImage),
+        toWslMountPath(extractOnlySource),
+        '::extract-only-payload.txt',
+      ],
+      'FAT16 payload copy',
+    )
+    extractOnlyMatrix.push(['fat', fatImage, 'extract-only-payload.txt'])
+
+    const ntfsImage = path.join(fixtureDirectory, 'extract-only.ntfs')
+    runFixtureCommand(qemuImg, ['create', '-f', 'raw', ntfsImage, '32M'], 'NTFS raw image')
+    const ntfsEnvironment = [
+      '-d',
+      'Ubuntu',
+      '--',
+      '/usr/bin/env',
+      `LD_LIBRARY_PATH=${toWslMountPath(wslFsLibraryPath)}`,
+    ]
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        ...ntfsEnvironment,
+        toWslMountPath(mkntfs),
+        '-F',
+        '-Q',
+        '-L',
+        'LONGTEST',
+        toWslMountPath(ntfsImage),
+      ],
+      'NTFS',
+    )
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        ...ntfsEnvironment,
+        toWslMountPath(ntfscp),
+        toWslMountPath(ntfsImage),
+        toWslMountPath(extractOnlySource),
+        '/extract-only-payload.txt',
+      ],
+      'NTFS payload copy',
+    )
+    extractOnlyMatrix.push(['ntfs', ntfsImage, 'extract-only-payload.txt'])
+    console.log('[desktop-e2e] generated FAT16 and NTFS images with known payloads')
+  } else {
+    console.log(
+      '[desktop-e2e] extracted WSL filesystem tools unavailable; skipping FAT16 and NTFS images',
+    )
   }
   const wslSquashFsProbe = spawnSync(
     'wsl.exe',

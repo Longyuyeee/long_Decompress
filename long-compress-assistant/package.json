@@ -24,6 +24,8 @@
     "test:e2e": "playwright test",
     "test:e2e:desktop": "node scripts/test-tauri-desktop.mjs",
     "test:fixtures:archives": "node scripts/fetch-archive-test-fixtures.mjs",
+    "test:tools:qemu-img": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-qemu-img-test-tool.ps1",
+    "test:tools:wsl-fs": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-wsl-fs-test-tools.ps1",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
     "test": "npm run test:unit && npm run test:e2e",

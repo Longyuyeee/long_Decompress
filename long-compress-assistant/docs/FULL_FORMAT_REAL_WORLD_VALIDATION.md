@@ -95,4 +95,31 @@ npm.cmd run test:fixtures:archives
 
 同时审查了 QEMU 官方 VHD、VHDX 与 VMDK 小型回归样本。部分样本可以识别容器结构，但没有可供逐文件核验的文件系统载荷，另有样本本身是模糊测试或错误路径，因此不计入“真实解压通过”。本机尝试准备 `qemu-img` 生成带已知载荷的转换矩阵时，Ubuntu 软件源连接超时；测试环境已恢复，项目与用户运行环境没有新增依赖。
 
-尚待真实载荷样本覆盖：VHD/VHDX、QCOW/QCOW2、VDI、VMDK、APFS、FAT、NTFS、HFS/HFSX、固件镜像以及 MSI/MSP/MSM。它们仍只能记录为“随包引擎声明具备处理器”或“容器结构可识别”，不能标记为逐文件验收完成。
+## 2026-07-29 第四阶段增量
+
+新增并通过七种真实载荷镜像：
+
+- 使用固定版本 QEMU `qemu-img 11.0.0`，将包含已知文件的 EXT4 原始镜像转换为 QCOW2、VDI、VMDK、VHD 和 VHDX；
+- 使用 Ubuntu 官方 `dosfstools` 与 `mtools` 生成 FAT16 镜像并写入已知文件；
+- 使用 Ubuntu 官方 `ntfs-3g` 生成 NTFS 镜像并写入已知文件；
+- 七种镜像全部通过 Release Tauri 的真实 `extract_file` 后端解压，最终文件与测试运行时源文件逐字节一致。
+
+QEMU Windows 工具来自 QEMU 官方下载页指向的 Windows 构建渠道，固定安装器 `qemu-w64-setup-20260422.exe`，SHA-512 为 `64A43C0D39ACDDC9D30D290935A312A2B5C4FA62CFFE6C27090F2A45CA6C8DE0F0E8673E1E5117FB116A8742F86DF92163531AFC23F34758AADFC6D82C1F41A5`。准备脚本只提取 `qemu-img.exe` 及其运行库到忽略提交的测试目录，不执行安装器：
+
+```powershell
+npm.cmd run test:tools:qemu-img
+```
+
+FAT/NTFS 工具使用 Ubuntu 24.04 官方仓库的固定版本 DEB 包，并对四个包分别校验固定 SHA-256。脚本通过 `apt-get download` 和 `dpkg-deb -x` 下载、解包到测试目录，不使用 `sudo`、不安装系统包：
+
+```powershell
+npm.cmd run test:tools:wsl-fs
+```
+
+曾检查的 QEMU 小型 VHD/VHDX/VMDK 空壳样本仍不计入通过；第四阶段通过的是本地生成、包含已知 EXT4 载荷的新镜像。
+
+正式安装版还通过 Windows 原生文件选择器同时导入 QCOW2 与 NTFS 镜像，点击“开始解压队列”后两项均最终显示“已完成”。两个镜像具有相同主文件名，因而真实触发输出文件冲突；选择“自动重命名保留两者”后生成 `known-payload.json` 与 `known-payload (1).json`，两者 SHA-256 均为 `6A4C0E4D1F63D73BDAA4940C97839839FE1CA054123BA292D80441C58E3976E8`，与镜像内源文件一致。
+
+该路径同时暴露并修复了冲突状态误报：后端发出冲突事件、等待用户选择期间，任务现在保持可恢复的“等待中”，写入“等待冲突处理”警告日志，不再短暂标记失败或弹出普通失败提示；用户选择策略后任务进入“准备中”并继续执行。
+
+尚待真实载荷样本覆盖：APFS、HFSX、固件镜像以及 MSI/MSP/MSM。它们仍只能记录为“随包引擎声明具备处理器”，不能标记为逐文件验收完成。
