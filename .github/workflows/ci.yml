@@ -32,6 +32,7 @@ jobs:
           cache: npm
           cache-dependency-path: long-compress-assistant/package-lock.json
       - run: npm ci
+      - run: npm run test:release-identity
       - run: npm run type-check
       - run: npm run test:unit:coverage
       - run: npm run build

@@ -11,6 +11,7 @@
     "build:shell-extension": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-shell-extension.ps1",
     "build:context-menu-package": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-context-menu-package.ps1",
     "test:context-menu-package": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-context-menu-package.ps1",
+    "test:release-identity": "node scripts/check-release-identity.mjs",
     "build:check": "vue-tsc && vite build",
     "type-check": "vue-tsc --noEmit",
     "lint": "vue-tsc --noEmit",

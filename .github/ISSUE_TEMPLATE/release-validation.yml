@@ -69,6 +69,8 @@ body:
           required: true
         - label: Browser shell E2E 通过
           required: true
+        - label: Windows desktop E2E build 通过
+          required: true
         - label: Windows installer 通过
           required: true
   - type: textarea
