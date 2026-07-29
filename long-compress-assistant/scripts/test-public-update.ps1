@@ -10,8 +10,6 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $resultsRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot 'test-results\public-update-validation'))
 $uiArtifactDirectory = Join-Path $projectRoot 'test-results\public-updater-ui'
-$driverPidPath = Join-Path $uiArtifactDirectory 'tauri-driver.pid'
-$activeWebviewProfilePath = Join-Path $uiArtifactDirectory 'active-webview-profile.txt'
 $runId = Get-Date -Format 'yyyyMMdd-HHmmss'
 $evidenceDirectory = Join-Path $resultsRoot $runId
 $backupRoot = Join-Path ([IO.Path]::GetTempPath()) "long-decompress-public-update-$([guid]::NewGuid().ToString('N'))"
@@ -158,25 +156,9 @@ try {
     contextMenuMode = Get-ContextMenuMode
   }
 
-  $edgeDriver = if ($env:EDGE_DRIVER_PATH) {
-    $env:EDGE_DRIVER_PATH
-  } else {
-    Join-Path $env:TEMP 'long-compress-edge-driver\msedgedriver.exe'
-  }
-  $tauriDriver = if ($env:TAURI_DRIVER_PATH) {
-    $env:TAURI_DRIVER_PATH
-  } else {
-    Join-Path $env:USERPROFILE '.cargo\bin\tauri-driver.exe'
-  }
-  Add-Check 'Microsoft EdgeDriver exists' (Test-Path -LiteralPath $edgeDriver) $edgeDriver
-  Add-Check 'tauri-driver exists' (Test-Path -LiteralPath $tauriDriver) $tauriDriver
-
   $env:PUBLIC_UPDATER_APP = $initialState.executable
   $env:PUBLIC_UPDATER_EXPECTED_VERSION = $TargetVersion
-  $env:EDGE_DRIVER_PATH = $edgeDriver
-  $env:TAURI_DRIVER_PATH = $tauriDriver
-  Remove-Item -LiteralPath $driverPidPath,$activeWebviewProfilePath `
-    -Force -ErrorAction SilentlyContinue
+  $env:PUBLIC_UPDATER_ARTIFACT_DIR = $uiArtifactDirectory
   & node.exe (Join-Path $PSScriptRoot 'run-public-updater-ui.mjs')
   Add-Check 'desktop updater UI completed its hand-off' ($LASTEXITCODE -eq 0) "exitCode=$LASTEXITCODE"
 
@@ -233,18 +215,19 @@ try {
   Add-Check 'updated release registers the legacy context menu' (
     $contextMenuMode -eq 'legacy'
   ) "actual=$contextMenuMode"
+  $resourceDirectory = Join-Path $updatedState.installLocation 'resources'
   $shellDlls = @(
-    Get-ChildItem -LiteralPath $updatedState.installLocation `
+    Get-ChildItem -LiteralPath $resourceDirectory `
       -Filter 'long_compress_shell_extension_*.dll' -File -ErrorAction SilentlyContinue
   )
   Add-Check 'only the target shell extension remains' (
     $shellDlls.Count -eq 1 -and
     $shellDlls[0].Name -eq "long_compress_shell_extension_$($TargetVersion.Replace('.', '_')).dll"
-  ) (($shellDlls | ForEach-Object Name) -join ',')
+  ) "resourceDirectory=$resourceDirectory; found=$(($shellDlls | ForEach-Object Name) -join ',')"
   Add-Check 'unsigned release contains no context-menu identity package' (
-    @(Get-ChildItem -LiteralPath $updatedState.installLocation `
+    @(Get-ChildItem -LiteralPath $resourceDirectory `
       -Filter 'long_compress_context_menu*.msix' -File -ErrorAction SilentlyContinue).Count -eq 0
-  ) $updatedState.installLocation
+  ) $resourceDirectory
 
   $evidence.updated = [ordered]@{
     installedState = $updatedState
@@ -256,27 +239,7 @@ try {
 } finally {
   Remove-Item Env:PUBLIC_UPDATER_APP -ErrorAction SilentlyContinue
   Remove-Item Env:PUBLIC_UPDATER_EXPECTED_VERSION -ErrorAction SilentlyContinue
-  if (Test-Path -LiteralPath $driverPidPath) {
-    $driverPid = [int](Get-Content -Raw -LiteralPath $driverPidPath)
-    Stop-Process -Id $driverPid -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Milliseconds 500
-  }
-  if ($validationSucceeded -and (Test-Path -LiteralPath $activeWebviewProfilePath)) {
-    $webviewProfile = (Get-Content -Raw -LiteralPath $activeWebviewProfilePath).Trim()
-    if (
-      $webviewProfile -and
-      [IO.Path]::GetFullPath($webviewProfile).StartsWith(
-        [IO.Path]::GetFullPath([IO.Path]::GetTempPath()),
-        [StringComparison]::OrdinalIgnoreCase
-      ) -and
-      [IO.Path]::GetFileName($webviewProfile).StartsWith(
-        'long-decompress-public-updater-webview-',
-        [StringComparison]::Ordinal
-      )
-    ) {
-      Remove-Item -LiteralPath $webviewProfile -Recurse -Force -ErrorAction SilentlyContinue
-    }
-  }
+  Remove-Item Env:PUBLIC_UPDATER_ARTIFACT_DIR -ErrorAction SilentlyContinue
   Save-Evidence
   if ($validationSucceeded) {
     Remove-Item -LiteralPath $backupRoot -Recurse -Force
