@@ -34,6 +34,11 @@ FAT16/NTFS/APFS/SquashFS、MSI/MSM/MSP、UEFI、固定上游只读样本，以�
 发现草稿或预发布候选版。v1.0.18 正式资产生成后，必须立即从保留的 v1.0.17 环境执行
 真实应用内更新，并将结果回填发布验收记录。
 
+发布后真实验证确认：版本发现、签名校验、下载、解包、原目录覆盖安装和用户数据保持均成功，
+但被动安装完成后应用没有自动重启。该项未标记为通过，验收记录见
+[Issue #24](https://github.com/Longyuyeee/long_Decompress/issues/24)，补丁修复见
+[Issue #25](https://github.com/Longyuyeee/long_Decompress/issues/25) 与 v1.0.19。
+
 ## 已知限制
 
 - 当前没有可信 Windows 代码签名证书，安装器可能触发 SmartScreen；Windows 11 顶层菜单

@@ -3108,7 +3108,7 @@ checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
 name = "long-compress-assistant"
-version = "1.0.18"
+version = "1.0.19"
 dependencies = [
  "aes-gcm",
  "anyhow",
