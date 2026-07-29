@@ -549,6 +549,18 @@ Section Install
 
   !insertmacro CheckIfAppIsRunning
 
+  ; Remove versioned Explorer integration from the previous installation
+  ; before copying this release. Otherwise every overlay upgrade leaves an
+  ; obsolete shell DLL behind, and an unsigned build can accidentally reuse
+  ; stale signed identity packages.
+  IfFileExists "$INSTDIR\resources\long_compress_context_menu_registration.ps1" 0 context_menu_upgrade_identity_removed
+    ExecWait '$"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe$" -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File $"$INSTDIR\resources\long_compress_context_menu_registration.ps1$" -Action Uninstall' $0
+  context_menu_upgrade_identity_removed:
+  Delete "$INSTDIR\resources\long_compress_shell_extension_*.dll"
+  Delete "$INSTDIR\resources\long_compress_context_menu_extract.msix"
+  Delete "$INSTDIR\resources\long_compress_context_menu_pack.msix"
+  Delete "$INSTDIR\resources\long_compress_context_menu.msix"
+
   ; Copy main executable
   File "${MAINBINARYSRCPATH}"
 
