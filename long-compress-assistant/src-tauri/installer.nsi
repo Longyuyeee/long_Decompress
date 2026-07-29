@@ -634,11 +634,19 @@ Section Install
 SectionEnd
 
 Function .onInstSuccess
-  ; Check for `/R` flag only in silent and passive installers because
-  ; GUI installer has a toggle for the user to (re)start the app
-  IfSilent check_r_flag 0
-  ${IfThen} $PassiveMode == 1 ${|} Goto check_r_flag ${|}
-  Goto run_done
+  ; The Tauri updater uses passive mode without adding `/R`. Restart by
+  ; default after a passive update, while allowing validation and maintenance
+  ; installs to opt out explicitly with `/NR`.
+  ${If} $PassiveMode == 1
+    ${GetOptions} $CMDLINE "/NR" $R0
+    IfErrors restart_passive run_done
+    restart_passive:
+      nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" ""
+      Goto run_done
+  ${EndIf}
+
+  ; Silent installs retain their explicit `/R` opt-in behavior.
+  IfSilent check_r_flag run_done
   check_r_flag:
     ${GetOptions} $CMDLINE "/R" $R0
     IfErrors run_done 0

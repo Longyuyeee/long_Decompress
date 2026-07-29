@@ -186,7 +186,7 @@ function Restore-ContextMenuMode {
 
 function Invoke-Installer {
   param([string]$Path)
-  $process = Start-Process -FilePath $Path -ArgumentList @('/P', '/NS') -PassThru -WindowStyle Hidden
+  $process = Start-Process -FilePath $Path -ArgumentList @('/P', '/NS', '/NR') -PassThru -WindowStyle Hidden
   if (-not $process.WaitForExit(90000)) {
     Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
     throw "Installer timed out after 90 seconds: $Path"

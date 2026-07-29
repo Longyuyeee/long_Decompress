@@ -567,6 +567,14 @@ fn delete_tree_if_present(hkcu: &RegKey, path: &str) -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
+fn native_package_registration_is_current(
+    signed_packages_present: bool,
+    sparse_package_registered: bool,
+) -> bool {
+    signed_packages_present && sparse_package_registered
+}
+
+#[cfg(target_os = "windows")]
 pub fn is_context_menu_registered() -> bool {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let Ok(exe_path) = std::env::current_exe() else { return false };
@@ -617,12 +625,15 @@ pub fn is_context_menu_registered() -> bool {
         ]
         .iter()
         .all(|name| context_menu_resource_path(&exe_string, name).is_file());
-        let package_registration_is_current = !signed_packages_present
-            || hkcu
-                .open_subkey(&clsid_path)
-                .and_then(|key| key.get_value::<u32, _>("SparsePackageRegistered"))
-                .map(|registered| registered == 1)
-                .unwrap_or(false);
+        let sparse_package_registered = hkcu
+            .open_subkey(&clsid_path)
+            .and_then(|key| key.get_value::<u32, _>("SparsePackageRegistered"))
+            .map(|registered| registered == 1)
+            .unwrap_or(false);
+        let package_registration_is_current = native_package_registration_is_current(
+            signed_packages_present,
+            sparse_package_registered,
+        );
         if root_registered
             && quick_extract_registered
             && quick_pack_registered
@@ -679,7 +690,8 @@ pub fn refresh_context_menu_if_present(_app_path: &str) -> Result<bool> {
 #[cfg(all(test, target_os = "windows"))]
 mod tests {
     use super::{
-        verbs, ARCHIVE_EXTENSIONS, NATIVE_COMMAND_CLSID, NATIVE_COMMAND_VERB,
+        native_package_registration_is_current, verbs, ARCHIVE_EXTENSIONS, NATIVE_COMMAND_CLSID,
+        NATIVE_COMMAND_VERB,
         QUICK_EXTRACT_COMMAND_CLSID, QUICK_EXTRACT_COMMAND_VERB,
         QUICK_PACK_COMMAND_CLSID, QUICK_PACK_COMMAND_VERB,
     };
@@ -786,6 +798,23 @@ mod tests {
                 "overlay cleanup is missing {package}"
             );
         }
+    }
+
+    #[test]
+    fn unsigned_native_menu_is_never_treated_as_current() {
+        assert!(!native_package_registration_is_current(false, false));
+        assert!(!native_package_registration_is_current(false, true));
+        assert!(!native_package_registration_is_current(true, false));
+        assert!(native_package_registration_is_current(true, true));
+    }
+
+    #[test]
+    fn passive_updater_restarts_unless_validation_opts_out() {
+        assert!(INSTALLER_TEMPLATE.contains(r#""/NR""#));
+        assert!(INSTALLER_TEMPLATE.contains("restart_passive:"));
+        assert!(INSTALLER_TEMPLATE.contains(
+            r#"nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" """#
+        ));
     }
 
     #[test]
