@@ -3,10 +3,19 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore, type CompressionGroup, type FileObject } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
-import { useTaskStore, type Task, type TaskStatus } from '@/stores/task'
+import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage, generateId } from '@/utils'
 import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
+import {
+  compressionStatusClass,
+  compressionStatusIcon,
+  isActiveCompressionStatus,
+  isFinishedCompressionStatus,
+} from '@/utils/compressionTaskPresentation'
+import CompressionExecutionPanel from '@/components/compression/CompressionExecutionPanel.vue'
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
+import CompressionStatusCell from '@/components/compression/CompressionStatusCell.vue'
+import CompressionToolbar from '@/components/compression/CompressionToolbar.vue'
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import Modal from '@/components/ui/Modal.vue'
@@ -39,71 +48,6 @@ const compressionTaskById = computed(() =>
   new Map(compressionTasks.value.map(task => [task.id, task]))
 )
 const taskForJob = (taskId?: string) => taskId ? compressionTaskById.value.get(taskId) : undefined
-const isFinishedStatus = (status?: TaskStatus) =>
-  Boolean(status && ['completed', 'failed', 'cancelled'].includes(status))
-const isActiveStatus = (status?: TaskStatus) =>
-  Boolean(status && !['completed', 'failed', 'cancelled'].includes(status))
-
-const getCompressionStatusText = (status: TaskStatus = 'pending') =>
-  appStore.t(`compress.status.${status}`)
-
-const getCompressionStage = (task?: Task) => {
-  if (!task?.stage) return getCompressionStatusText(task?.status || 'pending')
-  const normalized = String(task.stage).toLowerCase()
-  if (normalized.includes('final')) return appStore.t('compress.status.finalizing')
-  if (normalized.includes('compress') || normalized.includes('write')) return appStore.t('compress.status.compressing')
-  if (normalized.includes('pre') || normalized.includes('check')) return appStore.t('compress.status.preparing')
-  return getCompressionStatusText(task.status)
-}
-
-const getTaskSeverityClass = (severity: string) => {
-  switch (severity) {
-    case 'error': return 'text-red-400'
-    case 'warning': return 'text-yellow-400'
-    case 'success': return 'text-green-400'
-    default: return 'text-muted'
-  }
-}
-
-const getEmptyCompressionLogText = (task?: Task) =>
-  !task || task.status === 'pending'
-    ? appStore.t('compress.pending_log')
-    : appStore.t('compress.no_logs')
-
-const getTaskStatusClass = (status?: TaskStatus) => {
-  switch (status) {
-    case 'completed': return 'text-green-500'
-    case 'failed': return 'text-red-500'
-    case 'cancelled': return 'text-orange-500'
-    case 'cancelling': return 'text-orange-400'
-    case 'compressing':
-    case 'preparing':
-    case 'running':
-    case 'finalizing':
-      return 'text-primary'
-    default:
-      return 'text-muted'
-  }
-}
-
-const getCompressionStatusIcon = (status?: TaskStatus) => {
-  switch (status) {
-    case 'completed': return 'pi-check-circle'
-    case 'failed': return 'pi-exclamation-circle'
-    case 'cancelled': return 'pi-ban'
-    case 'cancelling': return 'pi-spin pi-spinner'
-    case 'compressing':
-    case 'preparing':
-    case 'running':
-    case 'finalizing':
-      return 'pi-spin pi-spinner'
-    default:
-      return 'pi-clock'
-  }
-}
-
-const showsCompressionProgress = (status?: TaskStatus) =>
-  Boolean(status && ['running', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(status))
 
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
@@ -509,7 +453,7 @@ const cancelAllCompressionTasks = async () => {
 
 const clearFinishedCompressionTasks = () => {
   const finishedTaskIds = compressionTasks.value
-    .filter(task => isFinishedStatus(task.status))
+    .filter(task => isFinishedCompressionStatus(task.status))
     .map(task => task.id)
   compressionStore.removeJobsByTaskIds(finishedTaskIds)
   taskStore.clearFinishedTasks('compression')
@@ -517,7 +461,7 @@ const clearFinishedCompressionTasks = () => {
 
 const removeFinishedCompressionJob = (taskId: string) => {
   const task = compressionTaskById.value.get(taskId)
-  if (!task || !isFinishedStatus(task.status)) return
+  if (!task || !isFinishedCompressionStatus(task.status)) return
   compressionStore.removeJobsByTaskIds([taskId])
   taskStore.removeTask(taskId)
 }
@@ -568,44 +512,16 @@ const onDetailLeave = (element: Element) => {
         <h1 class="text-2xl md:text-3xl font-black text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
         <p class="text-xs md:text-sm text-muted font-semibold mt-1">{{ appStore.t('compress.subtitle') }}</p>
       </div>
-      <div data-testid="compression-top-actions" class="flex items-center gap-2 md:gap-3 shrink-0">
-        <button
-          v-if="hasFinishedCompressionTasks"
-          @click="clearFinishedCompressionTasks"
-          class="h-8 md:h-9 px-3 rounded-lg bg-input border border-subtle text-muted text-xs font-bold hover:text-content hover:border-primary transition-all flex items-center gap-2"
-        >
-          <i class="pi pi-trash text-xs"></i>
-          <span class="hidden md:inline">清除已结束</span>
-        </button>
-        <button
-          v-if="activeCompressionTasks.length > 0"
-          @click="cancelAllCompressionTasks"
-          class="h-8 md:h-9 px-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold hover:bg-red-500/20 transition-all flex items-center gap-2"
-        >
-          <i class="pi pi-stop-circle text-xs"></i>
-          <span class="hidden md:inline">取消进行中</span>
-        </button>
-        <!-- 全局设置按钮 -->
-        <button
-          @click="showGlobalSettingsModal = true"
-          class="h-8 md:h-9 px-3 md:px-5 rounded-lg bg-input border border-subtle text-content text-xs font-bold uppercase tracking-wider hover:bg-primary/10 hover:border-primary transition-all flex items-center gap-2"
-        >
-          <i class="pi pi-cog text-xs"></i>
-          <span class="hidden sm:inline">全局设置</span>
-        </button>
-
-        <!-- 开始压缩按钮 -->
-        <button
-          v-if="pendingPayload > 0"
-          @click="handleCompress"
-          :disabled="isCompressing"
-          class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait"
-        >
-          <i :class="isCompressing ? 'pi pi-spin pi-spinner' : 'pi pi-play-circle'" class="text-xs"></i>
-          <span class="hidden sm:inline">{{ appStore.t('compress.start') }}</span>
-          <span class="sm:hidden">开始</span>
-        </button>
-      </div>
+      <CompressionToolbar
+        :has-finished="hasFinishedCompressionTasks"
+        :active-count="activeCompressionTasks.length"
+        :pending-count="pendingPayload"
+        :busy="isCompressing"
+        @clear-finished="clearFinishedCompressionTasks"
+        @cancel-active="cancelAllCompressionTasks"
+        @open-settings="showGlobalSettingsModal = true"
+        @start="handleCompress"
+      />
     </header>
 
     <!-- 主工作区 -->
@@ -670,32 +586,7 @@ const onDetailLeave = (element: Element) => {
               <span v-if="group.files.length > 1" class="shrink-0 text-primary font-bold">+{{ group.files.length - 1 }}</span>
             </div>
 
-            <div data-testid="compression-status-progress" class="flex-1 min-w-[160px] flex items-center gap-3">
-              <div class="flex items-center gap-2 shrink-0">
-                <i
-                  class="pi text-sm"
-                  :class="[getCompressionStatusIcon(taskForJob(group.taskId)?.status), getTaskStatusClass(taskForJob(group.taskId)?.status)]"
-                ></i>
-                <span class="text-xs font-black tracking-wider" :class="getTaskStatusClass(taskForJob(group.taskId)?.status)">
-                  {{ getCompressionStatusText(taskForJob(group.taskId)?.status) }}
-                </span>
-              </div>
-              <div
-                v-if="showsCompressionProgress(taskForJob(group.taskId)?.status)"
-                class="flex-1 h-1.5 bg-input/50 rounded-full overflow-hidden"
-              >
-                <div
-                  class="h-full bg-primary transition-all duration-300 rounded-full"
-                  :style="{ width: `${taskForJob(group.taskId)?.progress || 0}%` }"
-                ></div>
-              </div>
-              <span
-                v-if="showsCompressionProgress(taskForJob(group.taskId)?.status)"
-                class="text-xs font-mono text-primary font-bold"
-              >
-                {{ taskForJob(group.taskId)?.progress || 0 }}%
-              </span>
-            </div>
+            <CompressionStatusCell :task="taskForJob(group.taskId)" />
 
             <div class="w-20 shrink-0 flex items-center justify-end gap-3">
               <button
@@ -707,7 +598,7 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-trash text-xs"></i>
               </button>
               <button
-                v-else-if="isActiveStatus(taskForJob(group.taskId)?.status)"
+                v-else-if="isActiveCompressionStatus(taskForJob(group.taskId)?.status)"
                 data-testid="compression-job-cancel"
                 @click.stop="cancelCompressionTask(group.taskId)"
                 class="text-red-400 hover:text-red-500 transition-colors"
@@ -716,7 +607,7 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-stop-circle text-xs"></i>
               </button>
               <button
-                v-else-if="isFinishedStatus(taskForJob(group.taskId)?.status)"
+                v-else-if="isFinishedCompressionStatus(taskForJob(group.taskId)?.status)"
                 @click.stop="removeFinishedCompressionJob(group.taskId)"
                 class="text-muted hover:text-red-500 transition-colors"
                 title="清除任务"
@@ -784,56 +675,7 @@ const onDetailLeave = (element: Element) => {
                   </div>
                 </div>
 
-                <div data-testid="compression-draft-execution" class="pending-execution-panel compression-execution-panel">
-                  <div class="grid grid-cols-2 gap-2">
-                    <div class="pending-stat-card">
-                      <span class="text-muted">{{ appStore.t('progress.stage') }}</span>
-                      <div
-                        class="font-black mt-0.5"
-                        :class="getTaskStatusClass(taskForJob(group.taskId)?.status)"
-                      >
-                        {{ getCompressionStage(taskForJob(group.taskId)) }}
-                      </div>
-                    </div>
-                    <div class="pending-stat-card">
-                      <span class="text-muted">{{ appStore.t('progress.percent') }}</span>
-                      <div class="font-mono font-black text-primary mt-0.5">
-                        {{ taskForJob(group.taskId)?.progress || 0 }}%
-                        <span v-if="taskForJob(group.taskId)?.speed" class="ml-2 text-muted">
-                          {{ taskForJob(group.taskId)?.speed }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    v-if="taskForJob(group.taskId)?.currentFile"
-                    class="mt-2 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 truncate font-mono text-xs text-content"
-                    :title="taskForJob(group.taskId)?.currentFile"
-                  >
-                    {{ taskForJob(group.taskId)?.currentFile }}
-                  </div>
-                  <h4 class="detail-heading mt-5">
-                    <i class="pi pi-align-left text-xs"></i>
-                    {{ appStore.t('decompress.config.logs_title') }}
-                  </h4>
-                  <div class="pending-log custom-scrollbar overflow-y-auto space-y-1.5">
-                    <div
-                      v-for="(log, index) in taskForJob(group.taskId)?.logs || []"
-                      :key="`${log.timestamp}-${index}`"
-                      class="flex gap-3 items-start border-l-2 border-subtle/20 pl-3 py-0.5"
-                    >
-                      <span class="text-dim font-mono text-xs shrink-0">
-                        {{ new Date(log.timestamp).toLocaleTimeString([], { hour12: false }) }}
-                      </span>
-                      <span class="font-mono text-xs leading-relaxed" :class="getTaskSeverityClass(log.severity)">
-                        {{ log.message }}
-                      </span>
-                    </div>
-                    <span v-if="!taskForJob(group.taskId)?.logs.length" class="font-mono text-dim">
-                      {{ getEmptyCompressionLogText(taskForJob(group.taskId)) }}
-                    </span>
-                  </div>
-                </div>
+                <CompressionExecutionPanel :task="taskForJob(group.taskId)" />
               </div>
             </div>
           </Transition>
@@ -877,7 +719,7 @@ const onDetailLeave = (element: Element) => {
             <div v-else class="w-8 flex shrink-0 items-center justify-center">
               <i
                 class="pi text-sm"
-                :class="[getCompressionStatusIcon(taskForJob(file.taskId)?.status), getTaskStatusClass(taskForJob(file.taskId)?.status)]"
+                :class="[compressionStatusIcon(taskForJob(file.taskId)?.status), compressionStatusClass(taskForJob(file.taskId)?.status)]"
               ></i>
             </div>
 
@@ -909,32 +751,7 @@ const onDetailLeave = (element: Element) => {
               {{ file.path }}
             </div>
 
-            <div data-testid="compression-status-progress" class="flex-1 min-w-[160px] flex items-center gap-3">
-              <div class="flex items-center gap-2 shrink-0">
-                <i
-                  class="pi text-sm"
-                  :class="[getCompressionStatusIcon(taskForJob(file.taskId)?.status), getTaskStatusClass(taskForJob(file.taskId)?.status)]"
-                ></i>
-                <span class="text-xs font-black tracking-wider" :class="getTaskStatusClass(taskForJob(file.taskId)?.status)">
-                  {{ getCompressionStatusText(taskForJob(file.taskId)?.status) }}
-                </span>
-              </div>
-              <div
-                v-if="showsCompressionProgress(taskForJob(file.taskId)?.status)"
-                class="flex-1 h-1.5 bg-input/50 rounded-full overflow-hidden"
-              >
-                <div
-                  class="h-full bg-primary transition-all duration-300 rounded-full"
-                  :style="{ width: `${taskForJob(file.taskId)?.progress || 0}%` }"
-                ></div>
-              </div>
-              <span
-                v-if="showsCompressionProgress(taskForJob(file.taskId)?.status)"
-                class="text-xs font-mono text-primary font-bold"
-              >
-                {{ taskForJob(file.taskId)?.progress || 0 }}%
-              </span>
-            </div>
+            <CompressionStatusCell :task="taskForJob(file.taskId)" />
 
             <div class="w-20 shrink-0 flex items-center justify-end">
               <button
@@ -946,7 +763,7 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-times text-sm"></i>
               </button>
               <button
-                v-else-if="isActiveStatus(taskForJob(file.taskId)?.status)"
+                v-else-if="isActiveCompressionStatus(taskForJob(file.taskId)?.status)"
                 data-testid="compression-job-cancel"
                 @click.stop="cancelCompressionTask(file.taskId)"
                 class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:text-red-500 transition-all"
@@ -955,7 +772,7 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-stop-circle text-sm"></i>
               </button>
               <button
-                v-else-if="isFinishedStatus(taskForJob(file.taskId)?.status)"
+                v-else-if="isFinishedCompressionStatus(taskForJob(file.taskId)?.status)"
                 @click.stop="removeFinishedCompressionJob(file.taskId)"
                 class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-red-500 transition-all"
                 title="清除任务"
@@ -1005,56 +822,7 @@ const onDetailLeave = (element: Element) => {
                     />
                   </div>
 
-                  <div data-testid="compression-draft-execution" class="pending-execution-panel compression-execution-panel">
-                    <div class="grid grid-cols-2 gap-2">
-                      <div class="pending-stat-card">
-                        <span class="text-muted">{{ appStore.t('progress.stage') }}</span>
-                        <div
-                          class="font-black mt-0.5"
-                          :class="getTaskStatusClass(taskForJob(file.taskId)?.status)"
-                        >
-                          {{ getCompressionStage(taskForJob(file.taskId)) }}
-                        </div>
-                      </div>
-                      <div class="pending-stat-card">
-                        <span class="text-muted">{{ appStore.t('progress.percent') }}</span>
-                        <div class="font-mono font-black text-primary mt-0.5">
-                          {{ taskForJob(file.taskId)?.progress || 0 }}%
-                          <span v-if="taskForJob(file.taskId)?.speed" class="ml-2 text-muted">
-                            {{ taskForJob(file.taskId)?.speed }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      v-if="taskForJob(file.taskId)?.currentFile"
-                      class="mt-2 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 truncate font-mono text-xs text-content"
-                      :title="taskForJob(file.taskId)?.currentFile"
-                    >
-                      {{ taskForJob(file.taskId)?.currentFile }}
-                    </div>
-                    <h4 class="detail-heading mt-5">
-                      <i class="pi pi-align-left text-xs"></i>
-                      {{ appStore.t('decompress.config.logs_title') }}
-                    </h4>
-                    <div class="pending-log custom-scrollbar overflow-y-auto space-y-1.5">
-                      <div
-                        v-for="(log, index) in taskForJob(file.taskId)?.logs || []"
-                        :key="`${log.timestamp}-${index}`"
-                        class="flex gap-3 items-start border-l-2 border-subtle/20 pl-3 py-0.5"
-                      >
-                        <span class="text-dim font-mono text-xs shrink-0">
-                          {{ new Date(log.timestamp).toLocaleTimeString([], { hour12: false }) }}
-                        </span>
-                        <span class="font-mono text-xs leading-relaxed" :class="getTaskSeverityClass(log.severity)">
-                          {{ log.message }}
-                        </span>
-                      </div>
-                      <span v-if="!taskForJob(file.taskId)?.logs.length" class="font-mono text-dim">
-                        {{ getEmptyCompressionLogText(taskForJob(file.taskId)) }}
-                      </span>
-                    </div>
-                  </div>
+                  <CompressionExecutionPanel :task="taskForJob(file.taskId)" />
                 </div>
               </div>
             </Transition>
@@ -1247,40 +1015,6 @@ const onDetailLeave = (element: Element) => {
   font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 0.16em;
-}
-
-.pending-execution-panel {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  border: 0;
-  border-radius: 0;
-  background: color-mix(in srgb, var(--bg-input) 18%, transparent);
-}
-
-.compression-execution-panel {
-  min-height: 17rem;
-  max-height: 26rem;
-  padding: 1.25rem;
-}
-
-.pending-stat-card {
-  padding: 0.625rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
-  border-radius: 0.625rem;
-  background: color-mix(in srgb, var(--bg-input) 55%, transparent);
-  font-size: 0.75rem;
-}
-
-.pending-log {
-  flex: 1;
-  min-height: 8rem;
-  max-height: 16rem;
-  padding: 0.75rem;
-  border-left: 2px solid color-mix(in srgb, var(--dynamic-accent) 28%, transparent);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--bg-input) 35%, transparent);
-  font-size: 0.75rem;
 }
 
 @media (max-width: 760px) {

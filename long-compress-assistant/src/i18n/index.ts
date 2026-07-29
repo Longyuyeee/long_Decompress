@@ -215,6 +215,10 @@ export const translations: Record<string, Record<string, string>> = {
     'decompress.extract_failed': '解压失败: {0}',
     // ===== 压缩 =====
     'compress.start': '开始压缩',
+    'compress.start_short': '开始',
+    'compress.clear_finished': '清除已结束',
+    'compress.cancel_active': '取消进行中',
+    'compress.open_global_settings': '全局设置',
     'compress.add_files': '添加文件',
     'compress.add_folders': '添加文件夹',
     'compress.drop_file_hint': '拖入文件至此...',
@@ -747,6 +751,10 @@ export const translations: Record<string, Record<string, string>> = {
     'decompress.extract_failed': 'Extraction failed: {0}',
     // ===== Compression =====
     'compress.start': 'Start Compression',
+    'compress.start_short': 'Start',
+    'compress.clear_finished': 'Clear Finished',
+    'compress.cancel_active': 'Cancel Active',
+    'compress.open_global_settings': 'Global Settings',
     'compress.add_files': 'Add Source Files',
     'compress.add_folders': 'Add Folders',
     'compress.drop_file_hint': 'Drop files here...',
