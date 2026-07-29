@@ -18,13 +18,54 @@ jobs:
       run:
         working-directory: long-compress-assistant
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: long-compress-assistant/package-lock.json
       - uses: dtolnay/rust-toolchain@stable
+      - name: Verify release version identity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $nodeVersions = node -e "const p=require('./package.json');const l=require('./package-lock.json');const t=require('./src-tauri/tauri.conf.json');process.stdout.write(JSON.stringify([p.version,l.version,l.packages[''].version,t.package.version]))" | ConvertFrom-Json
+          $cargo = Get-Content -LiteralPath 'src-tauri/Cargo.toml' -Raw
+          $cargoLock = Get-Content -LiteralPath 'src-tauri/Cargo.lock' -Raw
+          $shellCargo = Get-Content -LiteralPath 'src-tauri/shell-extension/Cargo.toml' -Raw
+          $shellCargoLock = Get-Content -LiteralPath 'src-tauri/shell-extension/Cargo.lock' -Raw
+          $cargoVersion = [regex]::Match($cargo, '(?m)^version\s*=\s*"([^"]+)"').Groups[1].Value
+          $cargoLockVersion = [regex]::Match(
+            $cargoLock,
+            '(?ms)\[\[package\]\]\s+name = "long-compress-assistant"\s+version = "([^"]+)"'
+          ).Groups[1].Value
+          $shellVersion = [regex]::Match($shellCargo, '(?m)^version\s*=\s*"([^"]+)"').Groups[1].Value
+          $shellLockVersion = [regex]::Match(
+            $shellCargoLock,
+            '(?ms)\[\[package\]\]\s+name = "long-compress-shell-extension"\s+version = "([^"]+)"'
+          ).Groups[1].Value
+          $versions = @(
+            $nodeVersions[0],
+            $nodeVersions[1],
+            $nodeVersions[2],
+            $nodeVersions[3],
+            $cargoVersion,
+            $cargoLockVersion,
+            $shellVersion,
+            $shellLockVersion
+          )
+          if (@($versions | Select-Object -Unique).Count -ne 1) {
+            throw "Release version sources disagree: $($versions -join ', ')"
+          }
+          $expectedTag = "v$($nodeVersions[0])"
+          if ($env:GITHUB_REF_NAME -ne $expectedTag) {
+            throw "Tag $env:GITHUB_REF_NAME does not match application version $expectedTag."
+          }
+          $shellResource = "src-tauri/resources/long_compress_shell_extension_$($nodeVersions[0].Replace('.', '_')).dll"
+          if (-not (Test-Path -LiteralPath $shellResource)) {
+            throw "Versioned shell extension is missing: $shellResource"
+          }
+          Write-Host "Release identity verified: $expectedTag"
       - run: npm ci
       - run: npm run type-check
       - run: npm run test:unit

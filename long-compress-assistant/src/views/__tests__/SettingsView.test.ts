@@ -48,6 +48,10 @@ describe('SettingsView archive engine diagnostics', () => {
     expect(wrapper.text()).toContain('ZST.AES')
     expect(wrapper.text()).toContain('软件更新')
     expect(wrapper.text()).toContain('立即检查更新')
+    expect(wrapper.text()).toContain('线上最新版本')
+    expect(wrapper.text()).toContain('最近尝试检查')
+    expect(wrapper.text()).toContain('最近成功检查')
+    expect(wrapper.text()).toContain('尚未检查')
     expect(wrapper.text()).toContain('更新包安装前会验证 Tauri 数字签名')
 
     const refresh = wrapper.findAll('button').find(button => button.text().includes('重新检测'))

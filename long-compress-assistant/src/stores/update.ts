@@ -4,17 +4,28 @@ import { checkUpdate, installUpdate, onUpdaterEvent, type UpdateManifest } from 
 
 export type UpdateStatus = 'idle' | 'checking' | 'available' | 'up-to-date' | 'installing' | 'error'
 
-const LAST_CHECK_KEY = 'updater-last-check-at'
+const LEGACY_LAST_CHECK_KEY = 'updater-last-check-at'
+const LAST_ATTEMPT_KEY = 'updater-last-attempt-at'
+const LAST_SUCCESS_KEY = 'updater-last-success-at'
 const SKIPPED_VERSION_KEY = 'updater-skipped-version'
 const AUTO_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
 
 const isTauriRuntime = () => typeof window !== 'undefined' && '__TAURI_IPC__' in window
+const readStoredTimestamp = (...keys: string[]) => {
+  for (const key of keys) {
+    const value = Number(localStorage.getItem(key) || 0)
+    if (Number.isFinite(value) && value > 0) return value
+  }
+  return null
+}
 
 export const useUpdateStore = defineStore('update', () => {
   const status = ref<UpdateStatus>('idle')
   const manifest = ref<UpdateManifest | null>(null)
   const errorMessage = ref('')
   const dialogVisible = ref(false)
+  const lastAttemptAt = ref<number | null>(readStoredTimestamp(LAST_ATTEMPT_KEY, LEGACY_LAST_CHECK_KEY))
+  const lastSuccessAt = ref<number | null>(readStoredTimestamp(LAST_SUCCESS_KEY))
   let autoCheckTimer: ReturnType<typeof setTimeout> | null = null
   let unlistenUpdater: (() => void) | null = null
 
@@ -37,6 +48,8 @@ export const useUpdateStore = defineStore('update', () => {
 
   const checkForUpdates = async (manual = false) => {
     if (busy.value) return
+    lastAttemptAt.value = Date.now()
+    localStorage.setItem(LAST_ATTEMPT_KEY, String(lastAttemptAt.value))
     errorMessage.value = ''
     manifest.value = null
     status.value = 'checking'
@@ -50,6 +63,8 @@ export const useUpdateStore = defineStore('update', () => {
 
     try {
       const result = await checkUpdate()
+      lastSuccessAt.value = Date.now()
+      localStorage.setItem(LAST_SUCCESS_KEY, String(lastSuccessAt.value))
       if (result.shouldUpdate && result.manifest) {
         manifest.value = result.manifest
         status.value = 'available'
@@ -70,11 +85,9 @@ export const useUpdateStore = defineStore('update', () => {
     autoCheckTimer = null
     if (!enabled || !isTauriRuntime()) return
 
-    const lastCheck = Number(localStorage.getItem(LAST_CHECK_KEY) || 0)
-    if (Number.isFinite(lastCheck) && Date.now() - lastCheck < AUTO_CHECK_INTERVAL_MS) return
+    if (lastSuccessAt.value && Date.now() - lastSuccessAt.value < AUTO_CHECK_INTERVAL_MS) return
 
     autoCheckTimer = setTimeout(() => {
-      localStorage.setItem(LAST_CHECK_KEY, String(Date.now()))
       void checkForUpdates(false)
     }, 2500)
   }
@@ -117,6 +130,7 @@ export const useUpdateStore = defineStore('update', () => {
 
   return {
     status, manifest, errorMessage, dialogVisible, busy, availableVersion,
+    lastAttemptAt, lastSuccessAt,
     initialize, checkForUpdates, scheduleAutoCheck, install,
     remindLater, skipCurrentVersion, cleanup,
   }
