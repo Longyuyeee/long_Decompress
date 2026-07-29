@@ -215,6 +215,30 @@ fn exposes_backend_compression_capability_matrix() {
 }
 
 #[test]
+fn every_declared_alias_resolves_through_the_public_service_facade() {
+    for capability in CompressionService::compression_format_capabilities() {
+        for extension in capability.extensions {
+            let resolved = CompressionService::find_compression_format_capability(extension)
+                .unwrap_or_else(|| panic!("{} alias should resolve", extension));
+            assert_eq!(
+                resolved.format,
+                capability.format,
+                "{} should resolve to {}",
+                extension,
+                capability.format
+            );
+            assert_eq!(
+                CompressionService::infer_compression_format(
+                    "ignored.output",
+                    Some(extension)
+                ),
+                capability.format
+            );
+        }
+    }
+}
+
+#[test]
 fn every_backend_compressible_format_can_be_explicitly_validated() {
     let temp = tempdir().expect("temp dir");
     let source_file = temp.path().join("source.txt");
