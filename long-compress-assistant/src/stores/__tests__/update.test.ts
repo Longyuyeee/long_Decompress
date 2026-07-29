@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useUpdateStore } from '../update'
 
@@ -31,6 +31,10 @@ describe('update store', () => {
     })
     mocks.onUpdaterEvent.mockResolvedValue(vi.fn())
     mocks.installUpdate.mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('shows a signed update returned by the updater endpoint', async () => {
@@ -81,6 +85,8 @@ describe('update store', () => {
   })
 
   it('keeps the current version usable when update checks fail', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-30T00:00:00Z'))
     mocks.checkUpdate.mockRejectedValue(new Error('network unavailable'))
     const store = useUpdateStore()
 
@@ -88,5 +94,50 @@ describe('update store', () => {
 
     expect(store.status).toBe('error')
     expect(store.errorMessage).toContain('network unavailable')
+    expect(store.lastAttemptAt).toBe(Date.now())
+    expect(store.lastSuccessAt).toBeNull()
+    expect(localStorage.getItem('updater-last-attempt-at')).toBe(String(Date.now()))
+    expect(localStorage.getItem('updater-last-success-at')).toBeNull()
+  })
+
+  it('records successful checks separately from attempts', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-30T01:00:00Z'))
+    mocks.checkUpdate.mockResolvedValue({ shouldUpdate: false })
+    const store = useUpdateStore()
+
+    await store.checkForUpdates(true)
+
+    expect(store.status).toBe('up-to-date')
+    expect(store.lastAttemptAt).toBe(Date.now())
+    expect(store.lastSuccessAt).toBe(Date.now())
+    expect(localStorage.getItem('updater-last-success-at')).toBe(String(Date.now()))
+  })
+
+  it('retries automatically when the previous attempt failed', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-30T02:00:00Z'))
+    localStorage.setItem('updater-last-attempt-at', String(Date.now() - 1_000))
+    mocks.checkUpdate.mockRejectedValue(new Error('temporary network failure'))
+    const store = useUpdateStore()
+
+    store.scheduleAutoCheck(true)
+    await vi.advanceTimersByTimeAsync(2_500)
+
+    expect(mocks.checkUpdate).toHaveBeenCalledOnce()
+    expect(store.status).toBe('error')
+    expect(store.lastSuccessAt).toBeNull()
+  })
+
+  it('does not repeat automatic checks within a day of success', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-30T03:00:00Z'))
+    localStorage.setItem('updater-last-success-at', String(Date.now() - 1_000))
+    const store = useUpdateStore()
+
+    store.scheduleAutoCheck(true)
+    await vi.advanceTimersByTimeAsync(3_000)
+
+    expect(mocks.checkUpdate).not.toHaveBeenCalled()
   })
 })
