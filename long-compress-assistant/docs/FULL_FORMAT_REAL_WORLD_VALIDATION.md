@@ -64,3 +64,24 @@ npm.cmd run test:e2e:desktop
 ## 下一阶段
 
 建立经过授权、可再分发、带 SHA-256 的只读样本库，逐步覆盖 ISO、DMG、虚拟磁盘、Linux 软件包、文件系统和固件镜像。每个样本必须至少包含一个已知文件及其哈希；测试完成后逐字节核验，损坏样本和空壳文件不计为通过。
+
+## 2026-07-29 第二阶段增量
+
+新增并通过以下真实解压场景：
+
+- Windows `tar.exe` 离线生成：ISO9660、XAR、CPIO；
+- 手工构造标准 Debian AR 容器，并继续解压其中的 `data.tar` 核验最终载荷；
+- WSL `mke2fs` 离线生成：EXT2、EXT3、EXT4，每个镜像均包含已知文件；
+- libarchive 官方测试仓库固定提交样本：RAR5、LHA/LZH、RPM。
+
+上游样本锁定提交 `19ff56da4f4790064346579a1a7f18a0230b0ac6`。下载器同时校验 UUencoded 源文件 SHA-256 与解码后归档 SHA-256；桌面解压完成后再次校验已知输出文件 SHA-256。缓存位于忽略提交的 `test-results/external-archive-fixtures`。
+
+正式安装版还通过 Windows 原生文件选择器导入固定哈希 RAR5 样本，点击“开始解压队列”后界面从“等待中 / 0%”变为“已完成 / 100%”。输出 `helloworld.txt` 的 SHA-256 为 `FEF9AD8CF601B43F76C6320075F62267C6E5C0A526D750A70B80C919A4A0AAD8`，与上游已知值一致。
+
+新增样本准备命令：
+
+```powershell
+npm.cmd run test:fixtures:archives
+```
+
+尚待真实载荷样本覆盖：DMG、VHD/VHDX、QCOW/QCOW2、VDI、VMDK、APFS、FAT、NTFS、HFS/HFSX、SquashFS、固件镜像以及 MSI/MSP/MSM。它们仍只能记录为“随包引擎声明具备处理器”，不能标记为逐文件验收完成。

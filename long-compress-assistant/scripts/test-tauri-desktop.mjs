@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Builder, By, Capabilities } from 'selenium-webdriver'
@@ -32,6 +32,9 @@ const e2eDataDirectory =
   path.join(root, 'test-results', 'desktop-e2e-data')
 const webviewUserDataDirectory = path.join(e2eDataDirectory, 'webview2')
 const bundledSevenZip = path.join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
+const externalFixtureDirectory =
+  process.env.LONG_DECOMPRESS_EXTERNAL_FIXTURE_DIR ||
+  path.join(root, 'test-results', 'external-archive-fixtures')
 
 if (process.platform !== 'win32') {
   throw new Error('The real desktop smoke test currently targets Windows WebView2.')
@@ -126,15 +129,37 @@ function createZipCompatibleFixture(outputPath, sourcePath) {
 }
 
 function createArFixture(outputPath, entryName, payload) {
-  const identifier = `${entryName}/`.padEnd(16, ' ')
-  const timestamp = '0'.padEnd(12, ' ')
-  const owner = '0'.padEnd(6, ' ')
-  const group = '0'.padEnd(6, ' ')
-  const mode = '100644'.padEnd(8, ' ')
-  const size = String(payload.length).padEnd(10, ' ')
-  const header = Buffer.from(`${identifier}${timestamp}${owner}${group}${mode}${size}\x60\n`, 'ascii')
-  const padding = payload.length % 2 === 0 ? Buffer.alloc(0) : Buffer.from('\n')
-  writeFileSync(outputPath, Buffer.concat([Buffer.from('!<arch>\n', 'ascii'), header, payload, padding]))
+  createArEntries(outputPath, [[entryName, payload]])
+}
+
+function createArEntries(outputPath, entries) {
+  const chunks = [Buffer.from('!<arch>\n', 'ascii')]
+  for (const [entryName, payload] of entries) {
+    assert.ok(entryName.length <= 15, `AR fixture entry name is too long: ${entryName}`)
+    const identifier = `${entryName}/`.padEnd(16, ' ')
+    const timestamp = '0'.padEnd(12, ' ')
+    const owner = '0'.padEnd(6, ' ')
+    const group = '0'.padEnd(6, ' ')
+    const mode = '100644'.padEnd(8, ' ')
+    const size = String(payload.length).padEnd(10, ' ')
+    chunks.push(
+      Buffer.from(`${identifier}${timestamp}${owner}${group}${mode}${size}\x60\n`, 'ascii'),
+      payload,
+    )
+    if (payload.length % 2 !== 0) chunks.push(Buffer.from('\n'))
+  }
+  writeFileSync(outputPath, Buffer.concat(chunks))
+}
+
+function fileSha256(filePath) {
+  return createHash('sha256').update(readFileSync(filePath)).digest('hex')
+}
+
+function toWslMountPath(windowsPath) {
+  const resolved = path.resolve(windowsPath)
+  const match = /^([a-zA-Z]):[\\/](.*)$/.exec(resolved)
+  assert.ok(match, `cannot map path into WSL: ${windowsPath}`)
+  return `/mnt/${match[1].toLowerCase()}/${match[2].replaceAll('\\', '/')}`
 }
 
 async function waitForStableFile(filePath, timeoutMs = 60_000) {
@@ -549,6 +574,48 @@ try {
   const arArchive = path.join(fixtureDirectory, 'extract-only.ar')
   createArFixture(arArchive, 'payload.txt', extractOnlyPayload)
   extractOnlyMatrix.push(['ar', arArchive, 'payload.txt'])
+  for (const format of ['iso9660', 'xar', 'cpio']) {
+    const extension = format === 'iso9660' ? 'iso' : format
+    const archive = path.join(fixtureDirectory, `extract-only.${extension}`)
+    runFixtureCommand(
+      'tar.exe',
+      ['-cf', archive, '--format', format, path.basename(extractOnlySource)],
+      format.toUpperCase(),
+    )
+    extractOnlyMatrix.push([extension, archive, 'extract-only-payload.txt'])
+  }
+  const wslExtProbe = spawnSync(
+    'wsl.exe',
+    ['-d', 'Ubuntu', '--', 'test', '-x', '/sbin/mkfs.ext4'],
+    { encoding: 'utf8', timeout: 30_000, windowsHide: true },
+  )
+  if (wslExtProbe.status === 0) {
+    const extSourceDirectory = path.join(fixtureDirectory, 'ext-source')
+    mkdirSync(extSourceDirectory, { recursive: true })
+    copyFileSync(extractOnlySource, path.join(extSourceDirectory, 'extract-only-payload.txt'))
+    for (const version of ['2', '3', '4']) {
+      const archive = path.join(fixtureDirectory, `extract-only.ext${version}`)
+      runFixtureCommand(
+        'wsl.exe',
+        [
+          '-d',
+          'Ubuntu',
+          '--',
+          `/sbin/mkfs.ext${version}`,
+          '-q',
+          '-F',
+          '-d',
+          toWslMountPath(extSourceDirectory),
+          toWslMountPath(archive),
+          '16M',
+        ],
+        `EXT${version}`,
+      )
+      extractOnlyMatrix.push([`ext${version}`, archive, 'extract-only-payload.txt'])
+    }
+  } else {
+    console.log('[desktop-e2e] WSL mkfs.ext tools unavailable; skipping generated EXT2/3/4 images')
+  }
 
   for (const [label, archive, extractedName] of extractOnlyMatrix) {
     const output = path.join(fixtureDirectory, `extract-only-${label}-output`)
@@ -557,6 +624,77 @@ try {
       readFileSync(path.join(output, extractedName)),
       extractOnlyPayload,
       `${label} extraction must reproduce the real sample byte-for-byte`,
+    )
+  }
+  await callDesktopBridge('clearTasks')
+
+  console.log('[desktop-e2e] verifying a real Debian package container')
+  const debianBinary = Buffer.from('2.0\n', 'ascii')
+  const controlSource = path.join(fixtureDirectory, 'control.txt')
+  const controlTar = path.join(fixtureDirectory, 'control.tar')
+  const dataTar = path.join(fixtureDirectory, 'data.tar')
+  writeFileSync(controlSource, 'Package: long-decompress-e2e\nVersion: 1.0\n', 'utf8')
+  runFixtureCommand(
+    'tar.exe',
+    ['-cf', controlTar, '--format', 'pax', path.basename(controlSource)],
+    'DEB control.tar',
+  )
+  runFixtureCommand(
+    'tar.exe',
+    ['-cf', dataTar, '--format', 'pax', path.basename(extractOnlySource)],
+    'DEB data.tar',
+  )
+  const debArchive = path.join(fixtureDirectory, 'extract-only.deb')
+  createArEntries(debArchive, [
+    ['debian-binary', debianBinary],
+    ['control.tar', readFileSync(controlTar)],
+    ['data.tar', readFileSync(dataTar)],
+  ])
+  const debOutput = path.join(fixtureDirectory, 'extract-only-deb-output')
+  await callDesktopBridge('extractArchive', debArchive, debOutput)
+  const debPayloadOutput = path.join(fixtureDirectory, 'extract-only-deb-payload-output')
+  await callDesktopBridge('extractArchive', path.join(debOutput, 'data.tar'), debPayloadOutput)
+  assert.deepEqual(
+    readFileSync(path.join(debPayloadOutput, 'extract-only-payload.txt')),
+    extractOnlyPayload,
+    'DEB data archive must reproduce the package payload byte-for-byte',
+  )
+  await callDesktopBridge('clearTasks')
+
+  console.log('[desktop-e2e] verifying pinned upstream RAR, LHA and RPM samples')
+  runFixtureCommand(
+    process.execPath,
+    [path.join(root, 'scripts', 'fetch-archive-test-fixtures.mjs')],
+    'external archive',
+  )
+  const upstreamMatrix = [
+    [
+      'rar5',
+      'libarchive-rar5-stored.rar',
+      'helloworld.txt',
+      'fef9ad8cf601b43f76c6320075f62267c6e5c0a526d750a70b80c919a4a0aad8',
+    ],
+    [
+      'lha',
+      'libarchive-lha-lh0.lzh',
+      'file1',
+      'd0c504f06bbd64d183524eb35e5482ee5d966d456b905a24147165b2904d301b',
+    ],
+    [
+      'rpm',
+      'libarchive-cpio-svr4-gzip.rpm',
+      'rpmsample-1.0.0-1.noarch.cpio',
+      '0e74cd48811782ad214e89ddeb478ebdcd17f2274f2a86e580fc6d1ac0e6d67d',
+    ],
+  ]
+  for (const [label, fixtureName, extractedName, expectedSha256] of upstreamMatrix) {
+    const archive = path.join(externalFixtureDirectory, fixtureName)
+    const output = path.join(fixtureDirectory, `upstream-${label}-output`)
+    await callDesktopBridge('extractArchive', archive, output)
+    assert.equal(
+      fileSha256(path.join(output, extractedName)),
+      expectedSha256.toLowerCase(),
+      `${label} upstream sample output must match its known SHA-256`,
     )
   }
   await callDesktopBridge('clearTasks')
