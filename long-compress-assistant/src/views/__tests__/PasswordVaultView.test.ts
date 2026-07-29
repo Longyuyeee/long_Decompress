@@ -126,6 +126,107 @@ describe('PasswordVaultView', () => {
     expect(wrapper.text()).toContain('Secret!123')
     expect(wrapper.find('[aria-label="隐藏密码"]').exists()).toBe(true)
   })
+
+  it('opens the vault panorama and switches to entry lifecycle analytics', async () => {
+    const today = new Date().toISOString()
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'load_app_settings') return '{}'
+      if (command === 'is_encrypted_password_service_unlocked') return true
+      if (command === 'list_encrypted_passwords') {
+        return [
+          {
+            id: 'entry-analytics-1',
+            name: '生产环境密码',
+            password: 'Secure!Password123',
+            notes: '核心服务',
+            tags: ['production'],
+            category: 'Work',
+            strength: 'Strong',
+            created_at: '2025-01-01T00:00:00.000Z',
+            updated_at: '2026-07-01T00:00:00.000Z',
+            last_used: '2026-07-28T00:00:00.000Z',
+            favorite: true,
+            use_count: 12,
+            custom_fields: [],
+            usage_history: { '2026-07-28': 3 },
+          },
+          {
+            id: 'entry-analytics-2',
+            name: '备用密码',
+            password: 'short',
+            notes: '',
+            tags: [],
+            category: 'Other',
+            strength: 'Weak',
+            created_at: '2024-01-01T00:00:00.000Z',
+            updated_at: '2024-01-01T00:00:00.000Z',
+            last_used: null,
+            favorite: false,
+            use_count: 0,
+            custom_fields: [],
+          },
+          {
+            id: 'entry-analytics-3',
+            name: '旧历史兼容密码',
+            password: 'Legacy!Password123',
+            notes: '',
+            tags: [],
+            category: 'Personal',
+            strength: 'Strong',
+            created_at: '2026-01-01T00:00:00.000Z',
+            updated_at: today,
+            last_used: today,
+            favorite: false,
+            use_count: 3,
+            usage_history: {},
+            custom_fields: [],
+          },
+        ]
+      }
+      if (command === 'list_password_groups') return []
+      return undefined
+    })
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper.get('[data-testid="vault-analytics-trigger"]').trigger('click')
+    await flushPromises()
+
+    let modal = document.querySelector('[data-testid="vault-analytics-modal"]')
+    expect(modal?.textContent).toContain('密码保险箱数据全景')
+    expect(modal?.textContent).toContain('密码强度分布')
+    expect(modal?.textContent).toContain('使用趋势')
+    expect(modal?.textContent).toContain('风险雷达')
+    expect(modal?.textContent).toContain('长期使用画像')
+    expect(modal?.textContent).toContain('保险箱使用时长')
+    expect(modal?.textContent).toContain('历史月均使用')
+    expect(modal?.querySelector('[data-testid="vault-range-7d"]')).toBeTruthy()
+    expect(modal?.querySelector('[data-testid="vault-range-30d"]')).toBeTruthy()
+    expect(modal?.querySelector('[data-testid="vault-range-90d"]')).toBeTruthy()
+    const sevenDayButton = modal?.querySelector('[data-testid="vault-range-7d"]') as HTMLButtonElement
+    sevenDayButton.click()
+    await flushPromises()
+    modal = document.querySelector('[data-testid="vault-analytics-modal"]')
+    const usageCounts = Array.from(modal?.querySelectorAll('[data-testid="vault-usage-day-count"]') || [])
+    expect(usageCounts[usageCounts.length - 1]?.textContent).toBe('1')
+    const allRangeButton = modal?.querySelector('[data-testid="vault-range-all"]') as HTMLButtonElement
+    allRangeButton.click()
+    await flushPromises()
+    modal = document.querySelector('[data-testid="vault-analytics-modal"]')
+    expect(modal?.querySelector('[data-testid="vault-range-usage-total"]')?.textContent).toContain('4')
+    expect(modal?.querySelector('[data-testid="vault-attention-count"]')?.textContent).toBe('1')
+
+    ;(modal?.querySelector('[aria-label="关闭"]') as HTMLButtonElement)?.click()
+    await flushPromises()
+    await wrapper.get('[data-testid="vault-entry-usage"]').trigger('click')
+    await flushPromises()
+
+    modal = document.querySelector('[data-testid="vault-analytics-modal"]')
+    expect(modal?.textContent).toContain('生产环境密码')
+    expect(modal?.querySelector('[data-testid="vault-entry-lifecycle"]')).toBeTruthy()
+    expect(modal?.textContent).toContain('保管天数')
+    expect(modal?.textContent).toContain('正文长度')
+  })
 })
 
 void consoleError

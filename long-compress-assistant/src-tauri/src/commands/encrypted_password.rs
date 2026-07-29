@@ -523,6 +523,7 @@ pub struct PasswordEntryRequest {
     pub notes: Option<String>,
     pub category: PasswordCategory,
     pub tags: Vec<String>,
+    pub strength: Option<crate::models::password::PasswordStrength>,
     pub custom_fields: Vec<CustomFieldRequest>,
 }
 
@@ -556,6 +557,9 @@ impl From<PasswordEntryRequest> for PasswordEntry {
         entry.url = req.url;
         entry.notes = req.notes;
         entry.tags = req.tags;
+        if let Some(strength) = req.strength {
+            entry.strength = strength;
+        }
         entry.custom_fields = req.custom_fields.into_iter()
             .map(|cf| CustomField {
                 name: cf.name,
@@ -566,6 +570,31 @@ impl From<PasswordEntryRequest> for PasswordEntry {
             .collect();
 
         entry
+    }
+}
+
+#[cfg(test)]
+mod password_entry_request_tests {
+    use super::*;
+    use crate::models::password::PasswordStrength;
+
+    #[test]
+    fn preserves_the_assessed_password_strength() {
+        let request = PasswordEntryRequest {
+            name: "Strong password".to_string(),
+            username: None,
+            password: "Long!Secure#Password123".to_string(),
+            url: None,
+            notes: None,
+            category: PasswordCategory::Other,
+            tags: Vec::new(),
+            strength: Some(PasswordStrength::VeryStrong),
+            custom_fields: Vec::new(),
+        };
+
+        let entry: PasswordEntry = request.into();
+
+        assert_eq!(entry.strength, PasswordStrength::VeryStrong);
     }
 }
 

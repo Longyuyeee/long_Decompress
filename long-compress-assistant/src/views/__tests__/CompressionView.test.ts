@@ -99,6 +99,24 @@ describe('CompressionView', () => {
     expect(taskStore.tasks).toHaveLength(0)
   })
 
+  it('aligns each draft row into archive name, source path, and status-progress columns', async () => {
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+
+    const header = wrapper.get('[data-testid="compression-table-header"]')
+    expect(header.get('[data-testid="compression-name-header"]').text()).toBe('压缩包名称')
+    expect(header.get('[data-testid="compression-source-header"]').text()).toBe('源文件路径')
+    expect(header.get('[data-testid="compression-status-header"]').text()).toBe('压缩状态与进度')
+
+    const row = wrapper.get('[data-testid="compression-draft-row"]')
+    expect(row.get('[data-testid="compression-archive-name"]').text()).toContain('sample.zip')
+    expect(row.get('[data-testid="compression-source-path"]').text()).toContain('C:/input/sample.txt')
+    expect(row.get('[data-testid="compression-status-progress"]').text()).toContain(
+      useAppStore().t('compress.status.pending'),
+    )
+  })
+
   it('keeps one row and updates real progress and logs in place for the full lifecycle', async () => {
     let resolveCompression!: () => void
     mocks.compressFiles.mockImplementationOnce(() => new Promise<void>(resolve => {
@@ -199,6 +217,12 @@ describe('CompressionView', () => {
     expect(compressionStore.selectedFiles).toHaveLength(0)
     expect(compressionStore.groups).toHaveLength(1)
     expect(wrapper.findAll('[data-testid="compression-group-row"]')).toHaveLength(1)
+    const groupRow = wrapper.get('[data-testid="compression-group-row"]')
+    expect(groupRow.get('[data-testid="compression-archive-name"]').text()).toContain('.zip')
+    expect(groupRow.get('[data-testid="compression-source-path"]').text()).toContain('C:/input/one.txt')
+    expect(groupRow.get('[data-testid="compression-status-progress"]').text()).toContain(
+      useAppStore().t('compress.status.pending'),
+    )
 
     const startButton = wrapper.findAll('button').find(
       button => button.text().includes(useAppStore().t('compress.start')),
