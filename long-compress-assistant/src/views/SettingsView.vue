@@ -116,6 +116,19 @@ const toggleAutoCheckUpdates = () => {
 }
 
 const checkForUpdatesNow = () => updateStore.checkForUpdates(true)
+const formatUpdateTime = (value: number | null) => {
+  if (!value) return appStore.t('settings.update.never')
+  return new Intl.DateTimeFormat(appStore.language === 'en-US' ? 'en-US' : 'zh-CN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value))
+}
+const onlineVersion = computed(() => {
+  if (updateStore.availableVersion) return `v${updateStore.availableVersion}`
+  if (updateStore.status === 'up-to-date' && currentVersion.value !== '—') return `v${currentVersion.value}`
+  return appStore.t('settings.update.unknown')
+})
+const updateStatusText = computed(() => appStore.t(`settings.update.status.${updateStore.status}`))
 const toggleContextMenu = async () => {
   if (contextMenuBusy.value) return
   contextMenuBusy.value = true
@@ -388,6 +401,27 @@ const removeWordlist = (index: number) => {
                 <button type="button" class="h-10 shrink-0 rounded-xl bg-primary px-5 text-xs font-black text-white shadow-lg shadow-primary/20 disabled:cursor-wait disabled:opacity-60" :disabled="updateStore.busy" @click="checkForUpdatesNow">
                   <i class="pi mr-2" :class="updateStore.status === 'checking' ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>{{ appStore.t('settings.update.check') }}
                 </button>
+              </div>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="rounded-xl border border-subtle bg-input/20 p-4">
+                  <div class="text-xs font-black uppercase tracking-widest text-muted">{{ appStore.t('settings.update.online') }}</div>
+                  <div class="mt-2 text-sm font-black text-content">{{ onlineVersion }}</div>
+                </div>
+                <div class="rounded-xl border border-subtle bg-input/20 p-4">
+                  <div class="text-xs font-black uppercase tracking-widest text-muted">{{ appStore.t('settings.update.result') }}</div>
+                  <div class="mt-2 text-sm font-black text-content">{{ updateStatusText }}</div>
+                </div>
+                <div class="rounded-xl border border-subtle bg-input/20 p-4">
+                  <div class="text-xs font-black uppercase tracking-widest text-muted">{{ appStore.t('settings.update.last_attempt') }}</div>
+                  <div class="mt-2 text-xs font-bold text-content">{{ formatUpdateTime(updateStore.lastAttemptAt) }}</div>
+                </div>
+                <div class="rounded-xl border border-subtle bg-input/20 p-4">
+                  <div class="text-xs font-black uppercase tracking-widest text-muted">{{ appStore.t('settings.update.last_success') }}</div>
+                  <div class="mt-2 text-xs font-bold text-content">{{ formatUpdateTime(updateStore.lastSuccessAt) }}</div>
+                </div>
+              </div>
+              <div v-if="updateStore.status === 'error' && updateStore.errorMessage" class="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-xs leading-5 text-red-500">
+                {{ updateStore.errorMessage }}
               </div>
               <button type="button" role="switch" :aria-checked="appStore.settings.autoCheckUpdates" class="w-full flex items-center justify-between gap-4 text-left" @click="toggleAutoCheckUpdates">
                 <div>
