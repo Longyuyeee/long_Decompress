@@ -24,6 +24,7 @@ use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 use crate::services::compression_format::{self, CompressionRoute};
 use crate::services::extraction_transaction::{self, ExtractionStaging};
+use crate::services::native_extraction::{self, ExtractionRuntime};
 
 pub use crate::services::archive_format::ArchiveFormat;
 pub use crate::services::compression_format::{
@@ -172,9 +173,32 @@ impl Drop for TemporaryAesInput {
     }
 }
 
+impl ExtractionRuntime for CompressionService {
+    fn check_cancellation(&self) -> Result<()> {
+        CompressionService::check_cancellation(self)
+    }
+
+    fn copy_buffer_size(&self) -> usize {
+        self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)
+    }
+
+    fn normalized_archive_path(&self, path: &Path, preserve_paths: bool) -> Option<PathBuf> {
+        CompressionService::normalized_archive_path(path, preserve_paths)
+    }
+
+    fn emit_log(&self, window: &Window, task_id: &str, message: &str, severity: TaskLogSeverity) {
+        CompressionService::emit_log(self, window, task_id, message, severity);
+    }
+
+    fn emit_progress(&self, window: &Window, task_id: &str, progress: f32, current_file: Option<String>, processed_bytes: u64, total_bytes: u64) {
+        CompressionService::emit_progress(self, window, task_id, progress, current_file, processed_bytes, total_bytes);
+    }
+}
+
 impl CompressionService {
     #[cfg(test)]
     const MAX_EXTRACTED_FILES: usize = extraction_transaction::MAX_EXTRACTED_ENTRIES;
+    #[cfg(test)]
     const MAX_EXTRACTED_BYTES: u64 = extraction_transaction::MAX_EXTRACTED_BYTES;
     const COPY_BUFFER_SIZE: usize = 256 * 1024;
     const PROGRESS_EMIT_INTERVAL_BYTES: u64 = 4 * 1024 * 1024;
@@ -1494,21 +1518,6 @@ impl CompressionService {
             .to_string()
     }
 
-    fn single_stream_output_name(path: &Path, suffixes: &[&str]) -> String {
-        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("output");
-        let lower_name = file_name.to_lowercase();
-        for suffix in suffixes {
-            if lower_name.ends_with(suffix) && file_name.len() > suffix.len() {
-                return file_name[..file_name.len() - suffix.len()].to_string();
-            }
-        }
-        path.file_stem()
-            .and_then(|name| name.to_str())
-            .filter(|name| !name.is_empty())
-            .unwrap_or("output")
-            .to_string()
-    }
-
     fn normalized_archive_path(path: &Path, preserve_paths: bool) -> Option<PathBuf> {
         let source = if preserve_paths {
             path.to_path_buf()
@@ -1880,158 +1889,39 @@ impl CompressionService {
     }
 
     fn do_extract_tar(&self, window: &Window, task_id: &str, file: &str, output: &Path, decoder: Option<Box<dyn Read + Send>>, options: &DecompressOptions) -> Result<()> {
-        let f = File::open(file)?;
-        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
-        let mut archive = if let Some(d) = decoder {
-            tar::Archive::new(d)
-        } else {
-            tar::Archive::new(Box::new(f) as Box<dyn Read + Send>)
-        };
-        let entries = archive.entries()?;
-        for entry in entries {
-            self.check_cancellation()?;
-            let entry_result = (|| -> Result<()> {
-                let mut entry = entry?;
-                let relative = match Self::normalized_archive_path(&entry.path()?, options.preserve_paths) {
-                    Some(path) => path,
-                    None => return Ok(()),
-                };
-                if !Self::matches_compiled_file_filter(&relative, &file_filter) {
-                    return Ok(());
-                }
-
-                if entry.header().entry_type().is_dir() {
-                    let target = output.join(relative);
-                    std::fs::create_dir_all(&target)?;
-                    return Ok(());
-                }
-                if !entry.header().entry_type().is_file() {
-                    self.emit_log(
-                        window,
-                        task_id,
-                        "Skipped non-regular TAR entry (links and device entries are not extracted)",
-                        TaskLogSeverity::Warning,
-                    );
-                    return Ok(());
-                }
-                let target = Self::resolve_extract_path(&output.join(relative), options)?;
-                if let Some(parent) = target.parent() {
-                    std::fs::create_dir_all(parent)?;
-                }
-                entry.unpack(&target)?;
-                Ok(())
-            })();
-
-            if let Err(err) = entry_result {
-                if options.skip_corrupted {
-                    self.emit_log(window, task_id, &format!("Skipped tar entry: {}", err), TaskLogSeverity::Warning);
-                    continue;
-                }
-                return Err(err);
-            }
-        }
-        Ok(())
+        native_extraction::tar::extract(self, window, task_id, file, output, decoder, options)
     }
 
     fn do_extract_tar_gz(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
-        let f = File::open(file)?;
-        let gz = flate2::read::GzDecoder::new(f);
-        self.do_extract_tar(w, tid, file, output, Some(Box::new(gz)), options)
+        native_extraction::tar::extract_gzip(self, w, tid, file, output, options)
     }
 
     fn do_extract_tar_bz2(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
-        let f = File::open(file)?;
-        let bz = bzip2::read::BzDecoder::new(f);
-        self.do_extract_tar(w, tid, file, output, Some(Box::new(bz)), options)
+        native_extraction::tar::extract_bzip2(self, w, tid, file, output, options)
     }
 
     fn do_extract_tar_xz(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
-        let f = File::open(file)?;
-        let xz = xz2::read::XzDecoder::new(f);
-        self.do_extract_tar(w, tid, file, output, Some(Box::new(xz)), options)
-    }
-
-    fn do_extract_single_stream<R: Read>(&self, window: &Window, task_id: &str, mut reader: R, output: &Path, output_name: String, options: &DecompressOptions) -> Result<()> {
-        let relative = PathBuf::from(output_name);
-        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
-        if !Self::matches_compiled_file_filter(&relative, &file_filter) {
-            self.emit_log(window, task_id, "Single-file archive skipped by current file filter.", TaskLogSeverity::Warning);
-            return Ok(());
-        }
-
-        let target = Self::resolve_extract_path(&output.join(relative), options)?;
-        if let Some(parent) = target.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        let mut outfile = File::create(&target)?;
-        let mut buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
-        let mut processed = 0u64;
-        let mut last_emitted = 0u64;
-        loop {
-            self.check_cancellation()?;
-            let read = reader.read(&mut buffer)?;
-            if read == 0 {
-                break;
-            }
-            processed = processed.checked_add(read as u64).ok_or_else(|| {
-                CompressionError::ExtractionFailed(
-                    "Extracted stream size overflowed the supported range".to_string(),
-                )
-            })?;
-            if processed > Self::MAX_EXTRACTED_BYTES {
-                return Err(CompressionError::ExtractionFailed(format!(
-                    "Extracted stream exceeds the safety limit ({} bytes)",
-                    Self::MAX_EXTRACTED_BYTES
-                )).into());
-            }
-            if processed % (16 * 1024 * 1024) < read as u64 {
-                extraction_transaction::validate_staging_disk_reserve(output)?;
-            }
-            outfile.write_all(&buffer[..read])?;
-            if Self::should_emit_byte_progress(last_emitted, processed) {
-                last_emitted = processed;
-                self.emit_progress(window, task_id, 0.5, None, processed, 0);
-            }
-        }
-        outfile.flush()?;
-
-        self.emit_log(window, task_id, &format!("Extracted single-file stream to {}", target.display()), TaskLogSeverity::Success);
-        Ok(())
+        native_extraction::tar::extract_xz(self, w, tid, file, output, options)
     }
 
     fn do_extract_gz(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
-        let f = File::open(file)?;
-        let gz = flate2::read::GzDecoder::new(f);
-        let output_name = Self::single_stream_output_name(Path::new(file), &[".gz"]);
-        self.do_extract_single_stream(w, tid, gz, output, output_name, options)
+        native_extraction::single_stream::extract_gzip(self, w, tid, file, output, options)
     }
 
     fn do_extract_bz2(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
-        let f = File::open(file)?;
-        let bz = bzip2::read::BzDecoder::new(f);
-        let output_name = Self::single_stream_output_name(Path::new(file), &[".bz2"]);
-        self.do_extract_single_stream(w, tid, bz, output, output_name, options)
+        native_extraction::single_stream::extract_bzip2(self, w, tid, file, output, options)
     }
 
     fn do_extract_xz(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
-        let f = File::open(file)?;
-        let xz = xz2::read::XzDecoder::new(f);
-        let output_name = Self::single_stream_output_name(Path::new(file), &[".xz"]);
-        self.do_extract_single_stream(w, tid, xz, output, output_name, options)
+        native_extraction::single_stream::extract_xz(self, w, tid, file, output, options)
     }
 
     fn do_extract_zstd(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
-        let f = File::open(file)?;
-        let zst = zstd::stream::read::Decoder::new(f)?;
-        let output_name = Self::single_stream_output_name(Path::new(file), &[".zst", ".zstd"]);
-        self.do_extract_single_stream(w, tid, zst, output, output_name, options)
+        native_extraction::single_stream::extract_zstandard(self, w, tid, file, output, options)
     }
 
     fn do_extract_tar_zstd(&self, w: &Window, tid: &str, file: &str, output: &Path, options: &DecompressOptions) -> Result<()> {
-        let f = File::open(file)?;
-        let zst = zstd::stream::read::Decoder::new(f)?;
-        self.do_extract_tar(w, tid, file, output, Some(Box::new(zst)), options)
+        native_extraction::tar::extract_zstandard(self, w, tid, file, output, options)
     }
 
     fn map_aes_extraction_error(error: anyhow::Error) -> anyhow::Error {
