@@ -11,9 +11,10 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { deflateSync } from 'node:zlib'
 import { Builder, By, Capabilities } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -31,6 +32,41 @@ const e2eDataDirectory =
   process.env.LONG_DECOMPRESS_E2E_DATA_DIR ||
   path.join(root, 'test-results', 'desktop-e2e-data')
 const webviewUserDataDirectory = path.join(e2eDataDirectory, 'webview2')
+const bundledSevenZip = path.join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
+const qemuImg =
+  process.env.QEMU_IMG_PATH ||
+  path.join(root, 'test-results', 'qemu-img-tool', 'root', 'qemu-img.exe')
+const wslFsToolRoot =
+  process.env.WSL_FS_TOOL_ROOT ||
+  path.join(root, 'test-results', 'wsl-fs-tools', 'root')
+const wix3ToolRoot =
+  process.env.WIX3_TOOL_ROOT ||
+  path.join(root, 'test-results', 'wix3-tool', 'root')
+const apfsToolRoot =
+  process.env.APFS_TOOL_ROOT ||
+  path.join(root, 'test-results', 'apfs-tool')
+const ovmfFirmware =
+  process.env.OVMF_FIRMWARE_PATH ||
+  path.join(root, 'test-results', 'ovmf-fixture', 'root', 'usr', 'share', 'OVMF', 'OVMF_CODE_4M.fd')
+const externalFixtureDirectory =
+  process.env.LONG_DECOMPRESS_EXTERNAL_FIXTURE_DIR ||
+  path.join(root, 'test-results', 'external-archive-fixtures')
+const requireFullFormatMatrix =
+  process.argv.includes('--require-full-format-matrix') ||
+  process.env.LONG_DECOMPRESS_REQUIRE_FULL_FORMAT_MATRIX === '1'
+const missingFullFormatCapabilities = new Set()
+
+function recordMissingFullFormatCapability(capability, preparation) {
+  missingFullFormatCapabilities.add(`${capability} — ${preparation}`)
+  console.log(`[desktop-e2e] ${capability} unavailable; prepare with: ${preparation}`)
+}
+
+function assertFullFormatMatrixReady() {
+  if (!requireFullFormatMatrix || missingFullFormatCapabilities.size === 0) return
+  throw new Error(
+    `Full-format matrix is incomplete:\n- ${[...missingFullFormatCapabilities].join('\n- ')}`,
+  )
+}
 
 if (process.platform !== 'win32') {
   throw new Error('The real desktop smoke test currently targets Windows WebView2.')
@@ -101,6 +137,84 @@ function forwardContextAction(flag, files) {
   )
 }
 
+function runFixtureCommand(command, args, label, options = {}) {
+  const result = spawnSync(command, args, {
+    cwd: options.cwd || fixtureDirectory,
+    env: options.env || process.env,
+    encoding: 'utf8',
+    timeout: options.timeout || 30_000,
+    windowsHide: true,
+  })
+  assert.ifError(result.error)
+  assert.equal(
+    result.status,
+    0,
+    `${label} fixture creation failed: ${result.stderr || result.stdout}`,
+  )
+}
+
+function createZipCompatibleFixture(outputPath, sourcePath) {
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-tzip', '-y', outputPath, sourcePath],
+    path.extname(outputPath).slice(1).toUpperCase(),
+  )
+}
+
+function createArFixture(outputPath, entryName, payload) {
+  createArEntries(outputPath, [[entryName, payload]])
+}
+
+function createArEntries(outputPath, entries) {
+  const chunks = [Buffer.from('!<arch>\n', 'ascii')]
+  for (const [entryName, payload] of entries) {
+    assert.ok(entryName.length <= 15, `AR fixture entry name is too long: ${entryName}`)
+    const identifier = `${entryName}/`.padEnd(16, ' ')
+    const timestamp = '0'.padEnd(12, ' ')
+    const owner = '0'.padEnd(6, ' ')
+    const group = '0'.padEnd(6, ' ')
+    const mode = '100644'.padEnd(8, ' ')
+    const size = String(payload.length).padEnd(10, ' ')
+    chunks.push(
+      Buffer.from(`${identifier}${timestamp}${owner}${group}${mode}${size}\x60\n`, 'ascii'),
+      payload,
+    )
+    if (payload.length % 2 !== 0) chunks.push(Buffer.from('\n'))
+  }
+  writeFileSync(outputPath, Buffer.concat(chunks))
+}
+
+function createXarFixture(outputPath, entryName, payload) {
+  const toc = Buffer.from(
+    `<?xml version="1.0" encoding="UTF-8"?>` +
+      `<xar><toc><creation-time>1970-01-01T00:00:00Z</creation-time>` +
+      `<file id="1"><name>${entryName}</name><type>file</type><mode>0644</mode>` +
+      `<data><length>${payload.length}</length><offset>0</offset><size>${payload.length}</size>` +
+      `<encoding style="application/octet-stream"/></data></file></toc></xar>`,
+    'utf8',
+  )
+  const compressedToc = deflateSync(toc)
+  const header = Buffer.alloc(28)
+  header.write('xar!', 0, 'ascii')
+  header.writeUInt16BE(header.length, 4)
+  header.writeUInt16BE(1, 6)
+  header.writeBigUInt64BE(BigInt(compressedToc.length), 8)
+  header.writeBigUInt64BE(BigInt(toc.length), 16)
+  header.writeUInt32BE(0, 24)
+  writeFileSync(outputPath, Buffer.concat([header, compressedToc, payload]))
+}
+
+function fileSha256(filePath) {
+  return createHash('sha256').update(readFileSync(filePath)).digest('hex')
+}
+
+function toWslMountPath(windowsPath) {
+  const resolved = path.resolve(windowsPath)
+  const match = /^([a-zA-Z]):[\\/](.*)$/.exec(resolved)
+  assert.ok(match, `cannot map path into WSL: ${windowsPath}`)
+  return `/mnt/${match[1].toLowerCase()}/${match[2].replaceAll('\\', '/')}`
+}
+
 async function waitForStableFile(filePath, timeoutMs = 60_000) {
   let lastSize = -1
   let stablePolls = 0
@@ -168,6 +282,25 @@ async function callDesktopBridge(method, ...args) {
   )
   assert.equal(result?.ok, true, result?.error || `Desktop E2E bridge call failed: ${method}`)
   return result.value
+}
+
+async function callDesktopBridgeFailure(method, ...args) {
+  const result = await driver.executeAsyncScript(
+    (bridgeMethod, bridgeArgs, done) => {
+      const bridge = window.__LONG_DECOMPRESS_DESKTOP_E2E__
+      if (!bridge || typeof bridge[bridgeMethod] !== 'function') {
+        done({ ok: false, error: `Desktop E2E bridge method is unavailable: ${bridgeMethod}` })
+        return
+      }
+      Promise.resolve(bridge[bridgeMethod](...bridgeArgs))
+        .then((value) => done({ ok: true, value }))
+        .catch((error) => done({ ok: false, error: String(error) }))
+    },
+    method,
+    args,
+  )
+  assert.equal(result?.ok, false, `${method} unexpectedly succeeded`)
+  return result.error || ''
 }
 
 async function waitForElement(selector, timeoutMs = 30_000) {
@@ -366,28 +499,63 @@ try {
   assert.equal(existsSync(cancelArchive), false, 'cancelled native 7Z must not leave a final archive')
   await callDesktopBridge('clearTasks')
 
-  console.log('[desktop-e2e] verifying common archive extraction matrix')
+  console.log('[desktop-e2e] verifying every user-creatable archive format')
   const matrixSource = path.join(fixtureDirectory, 'matrix-payload.txt')
   const matrixPayload = Buffer.from(`Long解压 archive matrix ${new Date().toISOString()}\n`, 'utf8')
   writeFileSync(matrixSource, matrixPayload)
   const archiveMatrix = [
     ['zip', 'zip', null],
     ['7z', '7z', null],
+    ['wim', 'wim', null],
     ['tar', 'tar', null],
     ['tar.gz', 'tar.gz', null],
     ['tar.bz2', 'tar.bz2', null],
     ['tar.xz', 'tar.xz', null],
+    ['tar.zst', 'tar.zst', null],
     ['gz', 'txt.gz', null],
     ['bz2', 'txt.bz2', null],
     ['xz', 'txt.xz', null],
     ['zst', 'txt.zst', null],
-    ['tar.zst', 'tar.zst', null],
+    ['zstd', 'txt.zstd', null],
     ['lzma', 'txt.lzma', null],
     ['zip-password', 'zip', 'desktop-e2e-password'],
     ['7z-password', '7z', 'desktop-e2e-password'],
+    ['tar.aes', 'tar.aes', 'desktop-e2e-password'],
+    ['tar.gz.aes', 'tar.gz.aes', 'desktop-e2e-password'],
+    ['tar.bz2.aes', 'tar.bz2.aes', 'desktop-e2e-password'],
+    ['tar.xz.aes', 'tar.xz.aes', 'desktop-e2e-password'],
+    ['tar.zst.aes', 'tar.zst.aes', 'desktop-e2e-password'],
+    ['gz.aes', 'txt.gz.aes', 'desktop-e2e-password'],
+    ['bz2.aes', 'txt.bz2.aes', 'desktop-e2e-password'],
+    ['xz.aes', 'txt.xz.aes', 'desktop-e2e-password'],
+    ['zst.aes', 'txt.zst.aes', 'desktop-e2e-password'],
   ]
+  const capabilitySource = readFileSync(
+    path.join(root, 'src', 'utils', 'compressionFormat.ts'),
+    'utf8',
+  )
+  const capabilityBlock = capabilitySource
+    .split('export const FORMAT_CAPABILITIES')[1]
+    ?.split('export interface ExtractOnlyFormatCapability')[0] || ''
+  const declaredCreatableFormats = [
+    ...capabilityBlock.matchAll(/format:\s*'([^']+)'[^\r\n]*canCompress:\s*true/g),
+  ].map(match => match[1])
+  const exercisedFormats = new Set(
+    archiveMatrix.map(([label]) =>
+      label.endsWith('-password') ? label.slice(0, -'-password'.length) : label,
+    ),
+  )
+  exercisedFormats.add('rar')
+  const missingCreatableFormats = declaredCreatableFormats
+    .filter(format => !exercisedFormats.has(format))
+    .sort()
+  assert.deepEqual(
+    missingCreatableFormats,
+    [],
+    'every format advertised as creatable must have a real desktop scenario',
+  )
   for (const [label, extension, password] of archiveMatrix) {
-    const format = label.replace('-password', '')
+    const format = label.endsWith('-password') ? label.slice(0, -'-password'.length) : label
     const caseRoot = path.join(fixtureDirectory, `matrix-${label}`)
     mkdirSync(caseRoot, { recursive: true })
     const archive = path.join(caseRoot, `matrix-payload.${extension}`)
@@ -408,6 +576,563 @@ try {
     )
   }
   await callDesktopBridge('clearTasks')
+
+  const rarCommand = spawnSync(
+    'where.exe',
+    ['Rar.exe'],
+    { encoding: 'utf8', timeout: 10_000, windowsHide: true },
+  )
+  if (rarCommand.status !== 0) {
+    console.log('[desktop-e2e] verifying RAR creation fails clearly when WinRAR is unavailable')
+    const rarCaseRoot = path.join(fixtureDirectory, 'matrix-rar-without-encoder')
+    mkdirSync(rarCaseRoot, { recursive: true })
+    const rarArchive = path.join(rarCaseRoot, 'matrix-payload.rar')
+    const rarError = await callDesktopBridgeFailure(
+      'runArchiveRoundTrip',
+      matrixSource,
+      rarArchive,
+      path.join(rarCaseRoot, 'output'),
+      'rar',
+      null,
+    )
+    assert.match(
+      rarError,
+      /WinRAR|Rar\.exe|RAR command/i,
+      `RAR encoder failure must tell the user which dependency is missing: ${rarError}`,
+    )
+    assert.equal(existsSync(rarArchive), false, 'failed RAR creation must not leave an output archive')
+    await callDesktopBridge('clearTasks')
+  }
+
+  console.log('[desktop-e2e] verifying real extract-only package and legacy archive samples')
+  const extractOnlyPayload = Buffer.from(
+    `Long Decompress extract-only matrix ${new Date().toISOString()}\n`,
+    'utf8',
+  )
+  const extractOnlySource = path.join(fixtureDirectory, 'extract-only-payload.txt')
+  writeFileSync(extractOnlySource, extractOnlyPayload)
+  const extractOnlyMatrix = []
+  for (const extension of ['jar', 'xpi', 'ipa', 'apk', 'appx']) {
+    const archive = path.join(fixtureDirectory, `extract-only.${extension}`)
+    createZipCompatibleFixture(archive, extractOnlySource)
+    extractOnlyMatrix.push([extension, archive, 'extract-only-payload.txt'])
+  }
+  const cabArchive = path.join(fixtureDirectory, 'extract-only.cab')
+  runFixtureCommand(
+    'makecab.exe',
+    ['/D', 'CompressionType=LZX', extractOnlySource, cabArchive],
+    'CAB',
+  )
+  extractOnlyMatrix.push(['cab', cabArchive, 'extract-only-payload.txt'])
+  const arArchive = path.join(fixtureDirectory, 'extract-only.ar')
+  createArFixture(arArchive, 'payload.txt', extractOnlyPayload)
+  extractOnlyMatrix.push(['ar', arArchive, 'payload.txt'])
+  for (const format of ['iso9660', 'cpio']) {
+    const extension = format === 'iso9660' ? 'iso' : format
+    const archive = path.join(fixtureDirectory, `extract-only.${extension}`)
+    runFixtureCommand(
+      'tar.exe',
+      ['-cf', archive, '--format', format, path.basename(extractOnlySource)],
+      format.toUpperCase(),
+    )
+    extractOnlyMatrix.push([extension, archive, 'extract-only-payload.txt'])
+  }
+  const xarArchive = path.join(fixtureDirectory, 'extract-only.xar')
+  createXarFixture(xarArchive, 'extract-only-payload.txt', extractOnlyPayload)
+  extractOnlyMatrix.push(['xar', xarArchive, 'extract-only-payload.txt'])
+  const wslExtProbe = spawnSync(
+    'wsl.exe',
+    ['-d', 'Ubuntu', '--', 'test', '-x', '/sbin/mkfs.ext4'],
+    { encoding: 'utf8', timeout: 30_000, windowsHide: true },
+  )
+  if (wslExtProbe.status === 0) {
+    const extSourceDirectory = path.join(fixtureDirectory, 'ext-source')
+    mkdirSync(extSourceDirectory, { recursive: true })
+    copyFileSync(extractOnlySource, path.join(extSourceDirectory, 'extract-only-payload.txt'))
+    for (const version of ['2', '3', '4']) {
+      const archive = path.join(fixtureDirectory, `extract-only.ext${version}`)
+      runFixtureCommand(
+        'wsl.exe',
+        [
+          '-d',
+          'Ubuntu',
+          '--',
+          `/sbin/mkfs.ext${version}`,
+          '-q',
+          '-F',
+          '-d',
+          toWslMountPath(extSourceDirectory),
+          toWslMountPath(archive),
+          '16M',
+        ],
+        `EXT${version}`,
+      )
+      extractOnlyMatrix.push([`ext${version}`, archive, 'extract-only-payload.txt'])
+    }
+  } else {
+    recordMissingFullFormatCapability(
+      'WSL EXT2/3/4 generators',
+      'install mke2fs in the Ubuntu WSL distribution',
+    )
+  }
+  const qemuImgProbe = existsSync(qemuImg)
+    ? spawnSync(qemuImg, ['--version'], {
+        encoding: 'utf8',
+        timeout: 30_000,
+        windowsHide: true,
+      })
+    : null
+  if (wslExtProbe.status === 0 && qemuImgProbe?.status === 0) {
+    const virtualDiskSourceDirectory = path.join(fixtureDirectory, 'virtual-disk-source')
+    mkdirSync(virtualDiskSourceDirectory, { recursive: true })
+    copyFileSync(
+      extractOnlySource,
+      path.join(virtualDiskSourceDirectory, 'extract-only-payload.txt'),
+    )
+    const rawDiskImage = path.join(fixtureDirectory, 'virtual-disk-base.raw')
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        '-d',
+        'Ubuntu',
+        '--',
+        '/sbin/mkfs.ext4',
+        '-q',
+        '-F',
+        '-d',
+        toWslMountPath(virtualDiskSourceDirectory),
+        toWslMountPath(rawDiskImage),
+        '16M',
+      ],
+      'virtual-disk EXT4 payload',
+    )
+    for (const [format, extension] of [
+      ['qcow2', 'qcow2'],
+      ['vdi', 'vdi'],
+      ['vmdk', 'vmdk'],
+      ['vpc', 'vhd'],
+      ['vhdx', 'vhdx'],
+    ]) {
+      const image = path.join(fixtureDirectory, `extract-only.${extension}`)
+      runFixtureCommand(
+        qemuImg,
+        ['convert', '-f', 'raw', '-O', format, rawDiskImage, image],
+        format.toUpperCase(),
+      )
+      extractOnlyMatrix.push([extension, image, 'extract-only-payload.txt'])
+    }
+    console.log(
+      '[desktop-e2e] generated QCOW2, VDI, VMDK, VHD and VHDX images with known payloads',
+    )
+  } else {
+    recordMissingFullFormatCapability(
+      'QCOW2/VDI/VMDK/VHD/VHDX generators',
+      'npm run test:tools:qemu-img and install mke2fs in Ubuntu WSL',
+    )
+  }
+  const mkfsFat = path.join(wslFsToolRoot, 'usr', 'sbin', 'mkfs.fat')
+  const mcopy = path.join(wslFsToolRoot, 'usr', 'bin', 'mcopy')
+  const mtools = path.join(wslFsToolRoot, 'usr', 'bin', 'mtools')
+  const mkntfs = path.join(wslFsToolRoot, 'sbin', 'mkntfs')
+  const ntfscp = path.join(wslFsToolRoot, 'sbin', 'ntfscp')
+  const wslFsLibraryPath = path.join(wslFsToolRoot, 'lib', 'x86_64-linux-gnu')
+  // mcopy is a package symlink that Windows Node cannot stat reliably on DrvFs.
+  const hasWslFsTools = [mkfsFat, mtools, mkntfs, ntfscp].every(existsSync)
+  if (qemuImgProbe?.status === 0 && hasWslFsTools) {
+    const fatImage = path.join(fixtureDirectory, 'extract-only.fat')
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        '-d',
+        'Ubuntu',
+        '--',
+        toWslMountPath(mkfsFat),
+        '-C',
+        '-F',
+        '16',
+        '--invariant',
+        toWslMountPath(fatImage),
+        '16384',
+      ],
+      'FAT16',
+    )
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        '-d',
+        'Ubuntu',
+        '--',
+        toWslMountPath(mcopy),
+        '-i',
+        toWslMountPath(fatImage),
+        toWslMountPath(extractOnlySource),
+        '::extract-only-payload.txt',
+      ],
+      'FAT16 payload copy',
+    )
+    extractOnlyMatrix.push(['fat', fatImage, 'extract-only-payload.txt'])
+
+    const ntfsImage = path.join(fixtureDirectory, 'extract-only.ntfs')
+    runFixtureCommand(qemuImg, ['create', '-f', 'raw', ntfsImage, '32M'], 'NTFS raw image')
+    const ntfsEnvironment = [
+      '-d',
+      'Ubuntu',
+      '--',
+      '/usr/bin/env',
+      `LD_LIBRARY_PATH=${toWslMountPath(wslFsLibraryPath)}`,
+    ]
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        ...ntfsEnvironment,
+        toWslMountPath(mkntfs),
+        '-F',
+        '-Q',
+        '-L',
+        'LONGTEST',
+        toWslMountPath(ntfsImage),
+      ],
+      'NTFS',
+    )
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        ...ntfsEnvironment,
+        toWslMountPath(ntfscp),
+        toWslMountPath(ntfsImage),
+        toWslMountPath(extractOnlySource),
+        '/extract-only-payload.txt',
+      ],
+      'NTFS payload copy',
+    )
+    extractOnlyMatrix.push(['ntfs', ntfsImage, 'extract-only-payload.txt'])
+    console.log('[desktop-e2e] generated FAT16 and NTFS images with known payloads')
+  } else {
+    recordMissingFullFormatCapability(
+      'FAT16/NTFS generators',
+      'npm run test:tools:qemu-img && npm run test:tools:wsl-fs',
+    )
+  }
+  const wslSquashFsProbe = spawnSync(
+    'wsl.exe',
+    ['-d', 'Ubuntu', '--', 'test', '-x', '/usr/bin/mksquashfs'],
+    { encoding: 'utf8', timeout: 30_000, windowsHide: true },
+  )
+  if (wslSquashFsProbe.status === 0) {
+    const squashFsSourceDirectory = path.join(fixtureDirectory, 'squashfs-source')
+    mkdirSync(squashFsSourceDirectory, { recursive: true })
+    copyFileSync(
+      extractOnlySource,
+      path.join(squashFsSourceDirectory, 'extract-only-payload.txt'),
+    )
+    const squashFsArchive = path.join(fixtureDirectory, 'extract-only.squashfs')
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        '-d',
+        'Ubuntu',
+        '--',
+        '/usr/bin/mksquashfs',
+        toWslMountPath(squashFsSourceDirectory),
+        toWslMountPath(squashFsArchive),
+        '-noappend',
+        '-quiet',
+        '-no-progress',
+      ],
+      'SquashFS',
+    )
+    console.log('[desktop-e2e] generated a real SquashFS image with a known payload')
+    extractOnlyMatrix.push(['squashfs', squashFsArchive, 'extract-only-payload.txt'])
+  } else {
+    recordMissingFullFormatCapability(
+      'SquashFS generator',
+      'install squashfs-tools in the Ubuntu WSL distribution',
+    )
+  }
+
+  const apfsGo = path.join(apfsToolRoot, 'go-sdk', 'go', 'bin', 'go.exe')
+  const apfsSource = path.join(apfsToolRoot, 'source', 'go.mod')
+  const apfsGenerator = path.join(root, 'tests', 'fixtures', 'apfs-generator')
+  if (existsSync(apfsGo) && existsSync(apfsSource)) {
+    const apfsArchive = path.join(fixtureDirectory, 'extract-only.apfs')
+    runFixtureCommand(
+      apfsGo,
+      ['run', '.', apfsArchive, extractOnlySource],
+      'APFS',
+      {
+        cwd: apfsGenerator,
+        env: {
+          ...process.env,
+          GOTOOLCHAIN: 'local',
+          GOMODCACHE: path.join(apfsToolRoot, 'mod-cache'),
+          GOCACHE: path.join(apfsToolRoot, 'build-cache'),
+        },
+        timeout: 180_000,
+      },
+    )
+    extractOnlyMatrix.push(['apfs', apfsArchive, 'extract-only-payload.txt'])
+    console.log('[desktop-e2e] generated a real APFS image with a known payload')
+  } else {
+    recordMissingFullFormatCapability('APFS generator', 'npm run test:tools:apfs')
+  }
+
+  const wix3Tools = Object.fromEntries(
+    ['candle', 'light', 'torch', 'pyro'].map((tool) => [
+      tool,
+      path.join(wix3ToolRoot, `${tool}.exe`),
+    ]),
+  )
+  if (Object.values(wix3Tools).every(existsSync)) {
+    const installerFixtureRoot = path.join(fixtureDirectory, 'windows-installer-fixtures')
+    const productV1Root = path.join(installerFixtureRoot, 'v1')
+    const productV2Root = path.join(installerFixtureRoot, 'v2')
+    mkdirSync(productV1Root, { recursive: true })
+    mkdirSync(productV2Root, { recursive: true })
+    const productV1Payload = path.join(productV1Root, 'extract-only-payload.txt')
+    const productV2Payload = path.join(productV2Root, 'extract-only-payload.txt')
+    const updatedInstallerPayload = Buffer.from(
+      `Long Decompress updated MSP payload ${new Date().toISOString()}\n`,
+      'utf8',
+    )
+    writeFileSync(productV1Payload, extractOnlyPayload)
+    writeFileSync(productV2Payload, updatedInstallerPayload)
+    const productSource = path.join(root, 'tests', 'fixtures', 'minimal-product.wxs')
+    const moduleSource = path.join(root, 'tests', 'fixtures', 'minimal-module.wxs')
+    const patchSource = path.join(root, 'tests', 'fixtures', 'minimal-patch.wxs')
+
+    for (const [version, source] of [
+      ['1', productV1Payload],
+      ['2', productV2Payload],
+    ]) {
+      const productVersion = version === '1' ? '1.0.0' : '1.0.1'
+      runFixtureCommand(
+        wix3Tools.candle,
+        [
+          '-nologo',
+          `-dSourceFile=${source}`,
+          `-dProductVersion=${productVersion}`,
+          '-out',
+          path.join(installerFixtureRoot, `product-v${version}.wixobj`),
+          productSource,
+        ],
+        `MSI v${version} compile`,
+      )
+      runFixtureCommand(
+        wix3Tools.light,
+        [
+          '-nologo',
+          '-sval',
+          '-out',
+          path.join(installerFixtureRoot, `product-v${version}.msi`),
+          path.join(installerFixtureRoot, `product-v${version}.wixobj`),
+        ],
+        `MSI v${version}`,
+      )
+    }
+
+    runFixtureCommand(
+      wix3Tools.candle,
+      [
+        '-nologo',
+        `-dSourceFile=${productV1Payload}`,
+        '-out',
+        path.join(installerFixtureRoot, 'module.wixobj'),
+        moduleSource,
+      ],
+      'MSM compile',
+    )
+    runFixtureCommand(
+      wix3Tools.light,
+      [
+        '-nologo',
+        '-sval',
+        '-out',
+        path.join(installerFixtureRoot, 'fixture.msm'),
+        path.join(installerFixtureRoot, 'module.wixobj'),
+      ],
+      'MSM',
+    )
+    runFixtureCommand(
+      wix3Tools.torch,
+      [
+        '-nologo',
+        '-p',
+        '-xi',
+        path.join(installerFixtureRoot, 'product-v1.wixpdb'),
+        path.join(installerFixtureRoot, 'product-v2.wixpdb'),
+        '-out',
+        path.join(installerFixtureRoot, 'fixture.wixmst'),
+      ],
+      'MSP transform',
+    )
+    runFixtureCommand(
+      wix3Tools.candle,
+      [
+        '-nologo',
+        '-out',
+        path.join(installerFixtureRoot, 'patch.wixobj'),
+        patchSource,
+      ],
+      'MSP compile',
+    )
+    runFixtureCommand(
+      wix3Tools.light,
+      [
+        '-nologo',
+        '-sval',
+        '-out',
+        path.join(installerFixtureRoot, 'patch.wixmsp'),
+        path.join(installerFixtureRoot, 'patch.wixobj'),
+      ],
+      'MSP link',
+    )
+    runFixtureCommand(
+      wix3Tools.pyro,
+      [
+        '-nologo',
+        path.join(installerFixtureRoot, 'patch.wixmsp'),
+        '-out',
+        path.join(installerFixtureRoot, 'fixture.msp'),
+        '-t',
+        'RTM',
+        path.join(installerFixtureRoot, 'fixture.wixmst'),
+      ],
+      'MSP',
+    )
+
+    extractOnlyMatrix.push([
+      'msi',
+      path.join(installerFixtureRoot, 'product-v1.msi'),
+      'PayloadFile',
+    ])
+    extractOnlyMatrix.push([
+      'msm',
+      path.join(installerFixtureRoot, 'fixture.msm'),
+      'PayloadFile.719C727A_2D5C_4ED6_A487_F2BEA6D8094F',
+    ])
+    extractOnlyMatrix.push([
+      'msp',
+      path.join(installerFixtureRoot, 'fixture.msp'),
+      'PayloadFile',
+      updatedInstallerPayload,
+    ])
+    console.log('[desktop-e2e] generated real MSI, MSM and MSP containers with known payloads')
+  } else {
+    recordMissingFullFormatCapability('MSI/MSM/MSP generators', 'npm run test:tools:wix3')
+  }
+
+  for (const [label, archive, extractedName, expectedPayload = extractOnlyPayload] of extractOnlyMatrix) {
+    const output = path.join(fixtureDirectory, `extract-only-${label}-output`)
+    await callDesktopBridge('extractArchive', archive, output)
+    assert.deepEqual(
+      readFileSync(path.join(output, extractedName)),
+      expectedPayload,
+      `${label} extraction must reproduce the real sample byte-for-byte`,
+    )
+  }
+  await callDesktopBridge('clearTasks')
+
+  if (existsSync(ovmfFirmware)) {
+    console.log('[desktop-e2e] verifying a pinned Ubuntu OVMF UEFI firmware image')
+    const firmwareFixture = path.join(fixtureDirectory, 'extract-only.uefif')
+    copyFileSync(ovmfFirmware, firmwareFixture)
+    const firmwareOutput = path.join(fixtureDirectory, 'uefi-firmware-output')
+    await callDesktopBridge('extractArchive', firmwareFixture, firmwareOutput)
+    const peiCore = path.join(
+      firmwareOutput,
+      '9E21FD93',
+      'EE4E5898',
+      'VOLUME',
+      'PeiCore',
+      '1.efi',
+    )
+    assert.equal(
+      fileSha256(peiCore),
+      'bb229cf4e15c4d96e67dff30770f5ca47e2e513f496b5d09c0daf96a53c12e9d',
+      'UEFI firmware extraction must reproduce the pinned PeiCore module',
+    )
+    await callDesktopBridge('clearTasks')
+  } else {
+    recordMissingFullFormatCapability('UEFI firmware fixture', 'npm run test:fixtures:ovmf')
+  }
+
+  console.log('[desktop-e2e] verifying a real Debian package container')
+  const debianBinary = Buffer.from('2.0\n', 'ascii')
+  const controlSource = path.join(fixtureDirectory, 'control.txt')
+  const controlTar = path.join(fixtureDirectory, 'control.tar')
+  const dataTar = path.join(fixtureDirectory, 'data.tar')
+  writeFileSync(controlSource, 'Package: long-decompress-e2e\nVersion: 1.0\n', 'utf8')
+  runFixtureCommand(
+    'tar.exe',
+    ['-cf', controlTar, '--format', 'pax', path.basename(controlSource)],
+    'DEB control.tar',
+  )
+  runFixtureCommand(
+    'tar.exe',
+    ['-cf', dataTar, '--format', 'pax', path.basename(extractOnlySource)],
+    'DEB data.tar',
+  )
+  const debArchive = path.join(fixtureDirectory, 'extract-only.deb')
+  createArEntries(debArchive, [
+    ['debian-binary', debianBinary],
+    ['control.tar', readFileSync(controlTar)],
+    ['data.tar', readFileSync(dataTar)],
+  ])
+  const debOutput = path.join(fixtureDirectory, 'extract-only-deb-output')
+  await callDesktopBridge('extractArchive', debArchive, debOutput)
+  const debPayloadOutput = path.join(fixtureDirectory, 'extract-only-deb-payload-output')
+  await callDesktopBridge('extractArchive', path.join(debOutput, 'data.tar'), debPayloadOutput)
+  assert.deepEqual(
+    readFileSync(path.join(debPayloadOutput, 'extract-only-payload.txt')),
+    extractOnlyPayload,
+    'DEB data archive must reproduce the package payload byte-for-byte',
+  )
+  await callDesktopBridge('clearTasks')
+
+  console.log('[desktop-e2e] verifying pinned upstream RAR, LHA, RPM and DMG/HFS samples')
+  runFixtureCommand(
+    process.execPath,
+    [path.join(root, 'scripts', 'fetch-archive-test-fixtures.mjs')],
+    'external archive',
+  )
+  const upstreamMatrix = [
+    [
+      'rar5',
+      'libarchive-rar5-stored.rar',
+      'helloworld.txt',
+      'fef9ad8cf601b43f76c6320075f62267c6e5c0a526d750a70b80c919a4a0aad8',
+    ],
+    [
+      'lha',
+      'libarchive-lha-lh0.lzh',
+      'file1',
+      'd0c504f06bbd64d183524eb35e5482ee5d966d456b905a24147165b2904d301b',
+    ],
+    [
+      'rpm',
+      'libarchive-cpio-svr4-gzip.rpm',
+      'rpmsample-1.0.0-1.noarch.cpio',
+      '0e74cd48811782ad214e89ddeb478ebdcd17f2274f2a86e580fc6d1ac0e6d67d',
+    ],
+    [
+      'dmg-hfs',
+      'qemu-simple-hfs.dmg',
+      path.join('qemu-iotest', 'simple'),
+      '42eb54fc42befa10ed033996f1c15295751f22993c18dd0a7e4bf7c75b6acae3',
+    ],
+  ]
+  for (const [label, fixtureName, extractedName, expectedSha256] of upstreamMatrix) {
+    const archive = path.join(externalFixtureDirectory, fixtureName)
+    const output = path.join(fixtureDirectory, `upstream-${label}-output`)
+    await callDesktopBridge('extractArchive', archive, output)
+    assert.equal(
+      fileSha256(path.join(output, extractedName)),
+      expectedSha256.toLowerCase(),
+      `${label} upstream sample output must match its known SHA-256`,
+    )
+  }
+  await callDesktopBridge('clearTasks')
+  assertFullFormatMatrixReady()
 
   navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[4].click()

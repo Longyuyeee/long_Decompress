@@ -288,8 +288,20 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       // 只在后端明确返回密码相关错误时才尝试密码破解
       const errorMsg = extractErrorMessage(error) || String(error)
       const isPasswordError = isPasswordRelatedError(error)
+      const isConflictResolutionRequired = /File conflict requires resolution/i.test(errorMsg)
 
-      if (isPasswordError && !task.password) {
+      if (isConflictResolutionRequired) {
+        // The backend has staged the extraction and emitted file-conflict.
+        // Keep the task resumable while the modal collects the user's policy.
+        taskStore.updateTaskStatus(task.id, 'pending')
+        task.error = undefined
+        task.logs.push({
+          task_id: task.id,
+          message: appStore.t('decompress.conflict_waiting'),
+          severity: 'warning',
+          timestamp: new Date().toISOString()
+        })
+      } else if (isPasswordError && !task.password) {
         // 密码错误且用户未输入密码，现在尝试保险箱和字典攻击
         const candidates = passwordStore.findCandidatePasswords(fileName)
 
@@ -669,6 +681,8 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
     ,conflictPolicy: action
   }
   try {
+    task.error = undefined
+    taskStore.updateTaskStatus(task.id, 'preparing')
     await tauriCommands.decompressFile(task.sourceFiles[0], options, taskId)
   } catch (e: any) {
     appStore.setError(appStore.t('decompress.extract_failed').replace('{0}', e))

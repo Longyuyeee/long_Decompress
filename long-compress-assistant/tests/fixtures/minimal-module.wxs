@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Module
+    Id="LongDecompressE2EFixture"
+    Language="1033"
+    Version="1.0.0"
+  >
+    <Package
+      Id="{719C727A-2D5C-4ED6-A487-F2BEA6D8094F}"
+      Manufacturer="Long Decompress"
+      InstallerVersion="200"
+    />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="MergeRedirectFolder">
+        <Component Id="PayloadComponent" Guid="{D27422BB-69BE-4B59-AB9E-8688FE1DF786}">
+          <File Id="PayloadFile" Source="$(var.SourceFile)" KeyPath="yes" />
+        </Component>
+      </Directory>
+    </Directory>
+  </Module>
+</Wix>

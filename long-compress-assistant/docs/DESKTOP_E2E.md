@@ -41,7 +41,15 @@ $driver = powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File scripts/install-edge-driver.ps1 `
   -Destination (Join-Path $env:TEMP "long-compress-edge-driver")
 $env:EDGE_DRIVER_PATH = $driver
+
+# 可选：启用虚拟磁盘、FAT 和 NTFS 真实载荷矩阵
+npm.cmd run test:tools:qemu-img
+npm.cmd run test:tools:wsl-fs
+
 npm run test:e2e:desktop
+# 发布前全格式验收会强制检查所有生成器，不允许静默跳过
+npm.cmd run test:prepare:full-format
+npm.cmd run test:e2e:desktop:full-format
 Remove-Item Env:EDGE_DRIVER_PATH
 ```
 

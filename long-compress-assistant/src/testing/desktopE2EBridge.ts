@@ -27,6 +27,11 @@ export interface DesktopE2EBridge {
     format: string,
     password?: string | null,
   ) => Promise<string>
+  extractArchive: (
+    archivePath: string,
+    outputPath: string,
+    password?: string | null,
+  ) => Promise<string>
   startSevenZipCompression: (sourcePath: string, archivePath: string) => Promise<string>
   showAvailableUpdate: () => void
   setCloseToTray: (enabled: boolean) => Promise<void>
@@ -236,6 +241,32 @@ export const installDesktopE2EBridge = () => {
       taskStore.updateTaskStatus(extractionTaskId, 'completed')
       await syncActiveState()
       return extractedPath
+    },
+
+    async extractArchive(archivePath, outputPath, password = null) {
+      const nonce = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+      const taskId = `desktop-e2e-extract-only-${nonce}`
+      addArchiveTask(taskId, 'decompression', archivePath, outputPath)
+      taskStore.updateTaskStatus(taskId, 'extracting')
+      await syncActiveState()
+      try {
+        const extractedPath = await invoke<string>('extract_file', {
+          taskId,
+          filePath: archivePath,
+          outputPath,
+          password,
+          options: extractionOptions,
+        })
+        taskStore.updateTaskStatus(taskId, 'completed')
+        return extractedPath
+      } catch (error) {
+        const task = taskStore.tasks.find(item => item.id === taskId)
+        if (task) task.error = String(error)
+        taskStore.updateTaskStatus(taskId, 'failed')
+        throw error
+      } finally {
+        await syncActiveState()
+      }
     },
 
     async startSevenZipCompression(sourcePath, archivePath) {
