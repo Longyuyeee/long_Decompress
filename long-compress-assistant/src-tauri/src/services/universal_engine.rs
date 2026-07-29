@@ -496,14 +496,14 @@ impl ArchiveEngine for UniversalCliEngine {
                 },
                 _ = tokio::time::sleep(std::time::Duration::from_millis(100)) => {
                     if last_disk_check.elapsed() >= std::time::Duration::from_secs(1) {
-                        if let Err(error) = crate::services::compression_service::CompressionService::validate_staging_disk_reserve(output_dir) {
+                        if let Err(error) = crate::services::extraction_transaction::validate_staging_disk_reserve(output_dir) {
                             let _ = child.kill().await;
                             return Err(error);
                         }
                         last_disk_check = std::time::Instant::now();
                     }
                     if last_resource_check.elapsed() >= Self::RESOURCE_SCAN_INTERVAL {
-                        if let Err(error) = crate::services::compression_service::CompressionService::validate_staged_resources(file_path, output_dir) {
+                        if let Err(error) = crate::services::extraction_transaction::validate_staged_resources(file_path, output_dir) {
                             let _ = child.kill().await;
                             return Err(error);
                         }

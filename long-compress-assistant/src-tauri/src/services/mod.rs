@@ -3,6 +3,7 @@ pub mod universal_engine;
 pub mod compression_service;
 pub mod archive_format;
 pub mod compression_format;
+pub mod extraction_transaction;
 pub mod compression_profile_service;
 pub mod decompression_profile_service;
 pub mod encrypted_password_service;
