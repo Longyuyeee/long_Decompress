@@ -31,6 +31,7 @@ const e2eDataDirectory =
   process.env.LONG_DECOMPRESS_E2E_DATA_DIR ||
   path.join(root, 'test-results', 'desktop-e2e-data')
 const webviewUserDataDirectory = path.join(e2eDataDirectory, 'webview2')
+const bundledSevenZip = path.join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
 
 if (process.platform !== 'win32') {
   throw new Error('The real desktop smoke test currently targets Windows WebView2.')
@@ -101,6 +102,41 @@ function forwardContextAction(flag, files) {
   )
 }
 
+function runFixtureCommand(command, args, label) {
+  const result = spawnSync(command, args, {
+    cwd: fixtureDirectory,
+    encoding: 'utf8',
+    timeout: 30_000,
+    windowsHide: true,
+  })
+  assert.ifError(result.error)
+  assert.equal(
+    result.status,
+    0,
+    `${label} fixture creation failed: ${result.stderr || result.stdout}`,
+  )
+}
+
+function createZipCompatibleFixture(outputPath, sourcePath) {
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-tzip', '-y', outputPath, sourcePath],
+    path.extname(outputPath).slice(1).toUpperCase(),
+  )
+}
+
+function createArFixture(outputPath, entryName, payload) {
+  const identifier = `${entryName}/`.padEnd(16, ' ')
+  const timestamp = '0'.padEnd(12, ' ')
+  const owner = '0'.padEnd(6, ' ')
+  const group = '0'.padEnd(6, ' ')
+  const mode = '100644'.padEnd(8, ' ')
+  const size = String(payload.length).padEnd(10, ' ')
+  const header = Buffer.from(`${identifier}${timestamp}${owner}${group}${mode}${size}\x60\n`, 'ascii')
+  const padding = payload.length % 2 === 0 ? Buffer.alloc(0) : Buffer.from('\n')
+  writeFileSync(outputPath, Buffer.concat([Buffer.from('!<arch>\n', 'ascii'), header, payload, padding]))
+}
+
 async function waitForStableFile(filePath, timeoutMs = 60_000) {
   let lastSize = -1
   let stablePolls = 0
@@ -168,6 +204,25 @@ async function callDesktopBridge(method, ...args) {
   )
   assert.equal(result?.ok, true, result?.error || `Desktop E2E bridge call failed: ${method}`)
   return result.value
+}
+
+async function callDesktopBridgeFailure(method, ...args) {
+  const result = await driver.executeAsyncScript(
+    (bridgeMethod, bridgeArgs, done) => {
+      const bridge = window.__LONG_DECOMPRESS_DESKTOP_E2E__
+      if (!bridge || typeof bridge[bridgeMethod] !== 'function') {
+        done({ ok: false, error: `Desktop E2E bridge method is unavailable: ${bridgeMethod}` })
+        return
+      }
+      Promise.resolve(bridge[bridgeMethod](...bridgeArgs))
+        .then((value) => done({ ok: true, value }))
+        .catch((error) => done({ ok: false, error: String(error) }))
+    },
+    method,
+    args,
+  )
+  assert.equal(result?.ok, false, `${method} unexpectedly succeeded`)
+  return result.error || ''
 }
 
 async function waitForElement(selector, timeoutMs = 30_000) {
@@ -366,28 +421,63 @@ try {
   assert.equal(existsSync(cancelArchive), false, 'cancelled native 7Z must not leave a final archive')
   await callDesktopBridge('clearTasks')
 
-  console.log('[desktop-e2e] verifying common archive extraction matrix')
+  console.log('[desktop-e2e] verifying every user-creatable archive format')
   const matrixSource = path.join(fixtureDirectory, 'matrix-payload.txt')
   const matrixPayload = Buffer.from(`Long解压 archive matrix ${new Date().toISOString()}\n`, 'utf8')
   writeFileSync(matrixSource, matrixPayload)
   const archiveMatrix = [
     ['zip', 'zip', null],
     ['7z', '7z', null],
+    ['wim', 'wim', null],
     ['tar', 'tar', null],
     ['tar.gz', 'tar.gz', null],
     ['tar.bz2', 'tar.bz2', null],
     ['tar.xz', 'tar.xz', null],
+    ['tar.zst', 'tar.zst', null],
     ['gz', 'txt.gz', null],
     ['bz2', 'txt.bz2', null],
     ['xz', 'txt.xz', null],
     ['zst', 'txt.zst', null],
-    ['tar.zst', 'tar.zst', null],
+    ['zstd', 'txt.zstd', null],
     ['lzma', 'txt.lzma', null],
     ['zip-password', 'zip', 'desktop-e2e-password'],
     ['7z-password', '7z', 'desktop-e2e-password'],
+    ['tar.aes', 'tar.aes', 'desktop-e2e-password'],
+    ['tar.gz.aes', 'tar.gz.aes', 'desktop-e2e-password'],
+    ['tar.bz2.aes', 'tar.bz2.aes', 'desktop-e2e-password'],
+    ['tar.xz.aes', 'tar.xz.aes', 'desktop-e2e-password'],
+    ['tar.zst.aes', 'tar.zst.aes', 'desktop-e2e-password'],
+    ['gz.aes', 'txt.gz.aes', 'desktop-e2e-password'],
+    ['bz2.aes', 'txt.bz2.aes', 'desktop-e2e-password'],
+    ['xz.aes', 'txt.xz.aes', 'desktop-e2e-password'],
+    ['zst.aes', 'txt.zst.aes', 'desktop-e2e-password'],
   ]
+  const capabilitySource = readFileSync(
+    path.join(root, 'src', 'utils', 'compressionFormat.ts'),
+    'utf8',
+  )
+  const capabilityBlock = capabilitySource
+    .split('export const FORMAT_CAPABILITIES')[1]
+    ?.split('export interface ExtractOnlyFormatCapability')[0] || ''
+  const declaredCreatableFormats = [
+    ...capabilityBlock.matchAll(/format:\s*'([^']+)'[^\r\n]*canCompress:\s*true/g),
+  ].map(match => match[1])
+  const exercisedFormats = new Set(
+    archiveMatrix.map(([label]) =>
+      label.endsWith('-password') ? label.slice(0, -'-password'.length) : label,
+    ),
+  )
+  exercisedFormats.add('rar')
+  const missingCreatableFormats = declaredCreatableFormats
+    .filter(format => !exercisedFormats.has(format))
+    .sort()
+  assert.deepEqual(
+    missingCreatableFormats,
+    [],
+    'every format advertised as creatable must have a real desktop scenario',
+  )
   for (const [label, extension, password] of archiveMatrix) {
-    const format = label.replace('-password', '')
+    const format = label.endsWith('-password') ? label.slice(0, -'-password'.length) : label
     const caseRoot = path.join(fixtureDirectory, `matrix-${label}`)
     mkdirSync(caseRoot, { recursive: true })
     const archive = path.join(caseRoot, `matrix-payload.${extension}`)
@@ -405,6 +495,68 @@ try {
       readFileSync(extracted),
       matrixPayload,
       `${label} extraction must reproduce the source byte-for-byte`,
+    )
+  }
+  await callDesktopBridge('clearTasks')
+
+  const rarCommand = spawnSync(
+    'where.exe',
+    ['Rar.exe'],
+    { encoding: 'utf8', timeout: 10_000, windowsHide: true },
+  )
+  if (rarCommand.status !== 0) {
+    console.log('[desktop-e2e] verifying RAR creation fails clearly when WinRAR is unavailable')
+    const rarCaseRoot = path.join(fixtureDirectory, 'matrix-rar-without-encoder')
+    mkdirSync(rarCaseRoot, { recursive: true })
+    const rarArchive = path.join(rarCaseRoot, 'matrix-payload.rar')
+    const rarError = await callDesktopBridgeFailure(
+      'runArchiveRoundTrip',
+      matrixSource,
+      rarArchive,
+      path.join(rarCaseRoot, 'output'),
+      'rar',
+      null,
+    )
+    assert.match(
+      rarError,
+      /WinRAR|Rar\.exe|RAR command/i,
+      `RAR encoder failure must tell the user which dependency is missing: ${rarError}`,
+    )
+    assert.equal(existsSync(rarArchive), false, 'failed RAR creation must not leave an output archive')
+    await callDesktopBridge('clearTasks')
+  }
+
+  console.log('[desktop-e2e] verifying real extract-only package and legacy archive samples')
+  const extractOnlyPayload = Buffer.from(
+    `Long Decompress extract-only matrix ${new Date().toISOString()}\n`,
+    'utf8',
+  )
+  const extractOnlySource = path.join(fixtureDirectory, 'extract-only-payload.txt')
+  writeFileSync(extractOnlySource, extractOnlyPayload)
+  const extractOnlyMatrix = []
+  for (const extension of ['jar', 'xpi', 'ipa', 'apk', 'appx']) {
+    const archive = path.join(fixtureDirectory, `extract-only.${extension}`)
+    createZipCompatibleFixture(archive, extractOnlySource)
+    extractOnlyMatrix.push([extension, archive, 'extract-only-payload.txt'])
+  }
+  const cabArchive = path.join(fixtureDirectory, 'extract-only.cab')
+  runFixtureCommand(
+    'makecab.exe',
+    ['/D', 'CompressionType=LZX', extractOnlySource, cabArchive],
+    'CAB',
+  )
+  extractOnlyMatrix.push(['cab', cabArchive, 'extract-only-payload.txt'])
+  const arArchive = path.join(fixtureDirectory, 'extract-only.ar')
+  createArFixture(arArchive, 'payload.txt', extractOnlyPayload)
+  extractOnlyMatrix.push(['ar', arArchive, 'payload.txt'])
+
+  for (const [label, archive, extractedName] of extractOnlyMatrix) {
+    const output = path.join(fixtureDirectory, `extract-only-${label}-output`)
+    await callDesktopBridge('extractArchive', archive, output)
+    assert.deepEqual(
+      readFileSync(path.join(output, extractedName)),
+      extractOnlyPayload,
+      `${label} extraction must reproduce the real sample byte-for-byte`,
     )
   }
   await callDesktopBridge('clearTasks')
