@@ -63,6 +63,7 @@ export interface PasswordEntry {
   expires_at?: string | null
   favorite: boolean
   use_count: number
+  usage_history: Record<string, number>
   custom_fields: CustomField[]
   }
 export interface PasswordGroup {

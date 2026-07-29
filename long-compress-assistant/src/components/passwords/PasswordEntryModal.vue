@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
-import { usePasswordStore } from '@/stores/password'
+import { PasswordStrength, usePasswordStore } from '@/stores/password'
 import { useAppStore } from '@/stores/app'
 import Modal from '@/components/ui/Modal.vue'
 
@@ -21,6 +21,14 @@ const form = reactive({
   password: '',
   notes: ''
 })
+
+const strengthFromScore = (score: number): PasswordStrength => {
+  if (score >= 80) return PasswordStrength.VeryStrong
+  if (score >= 60) return PasswordStrength.Strong
+  if (score >= 40) return PasswordStrength.Medium
+  if (score >= 20) return PasswordStrength.Weak
+  return PasswordStrength.VeryWeak
+}
 
 watch(() => props.visible, (isOpening) => {
   if (isOpening) {
@@ -44,31 +52,30 @@ const handleSave = async () => {
   if (!form.name || !form.password) return
   isSaving.value = true
   try {
-    // 彻底修复：补全后端全量模型字段
     const now = new Date().toISOString()
-    const payload = {
-      ...form,
-      username: '',
-      url: '',
-      category: 'Other',
-      tags: [],
-      strength: 'Medium',
-      favorite: false,
-      use_count: 0,
-      usage_history: {},
-      custom_fields: [],
-      created_at: now,
-      updated_at: now
-    }
+    const assessment = await passwordStore.assessPasswordStrength(form.password)
+    const strength = strengthFromScore(assessment.score)
+
     if (props.entry) {
-      // 更新时保留原有的统计和 ID
-      await passwordStore.updateEntry(props.entry.id, { 
-        ...props.entry,
-        ...payload,
-        updated_at: now
+      await passwordStore.updateEntry(props.entry.id, {
+        name: form.name,
+        password: form.password,
+        notes: form.notes,
+        strength,
+        updated_at: now,
       })
     } else {
-      await passwordStore.addEntry(payload)
+      await passwordStore.addEntry({
+        name: form.name,
+        password: form.password,
+        notes: form.notes,
+        username: '',
+        url: '',
+        category: 'Other',
+        tags: [],
+        strength,
+        custom_fields: [],
+      })
     }
     emit('saved')
     emit('update:visible', false)
@@ -113,7 +120,7 @@ const handleSave = async () => {
       <!-- 交互按钮 -->
       <div class="pt-2 flex gap-2">
         <button @click="emit('update:visible', false)" class="flex-1 py-2.5 rounded-xl bg-input border border-subtle text-muted text-xs font-black uppercase hover:text-content transition-all tracking-widest">{{ appStore.t('vault.confirm.cancel') }}</button>
-        <button @click="handleSave" :disabled="isSaving || !form.name || !form.password" class="flex-[2] py-2.5 rounded-xl bg-primary text-white text-xs font-black shadow-lg shadow-primary/20 hover:brightness-110 flex items-center justify-center gap-2 transition-all tracking-widest">
+        <button data-testid="password-entry-save" @click="handleSave" :disabled="isSaving || !form.name || !form.password" class="flex-[2] py-2.5 rounded-xl bg-primary text-white text-xs font-black shadow-lg shadow-primary/20 hover:brightness-110 flex items-center justify-center gap-2 transition-all tracking-widest">
           <i v-if="isSaving" class="pi pi-spin pi-spinner text-xs"></i>
           <span>{{ isSaving ? appStore.t('form.sync') : (entry ? appStore.t('form.update') : appStore.t('form.commit')) }}</span>
         </button>

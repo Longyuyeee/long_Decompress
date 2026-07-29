@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.16-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.17-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,17 +20,16 @@
 
 ---
 
-## v1.0.16 更新亮点
+## v1.0.17 更新亮点
 
-- 压缩条目从等待、执行到完成、失败或取消始终保留在同一位置，不再从配置列表跳转到独立任务列表。
-- 展开压缩条目后，左侧集中显示配置，右侧实时显示阶段、进度、速度、当前文件和执行日志。
-- 配置提交后自动冻结并与任务绑定，避免重复点击再次提交；取消过程中也不会被迟到的后端结果错误改回“已完成”。
-- 磁吸成组入口移动到待分组文件区域旁，选择文件时不再挤压全局设置和开始压缩按钮，并移除多余英文标记。
-- 单文件、磁吸分组和批量队列统一支持逐项取消、全部取消、清除单项及一键清理已完成任务。
-- 压缩中心的紧凑任务行、抽屉动效与详情卡视觉对齐解压中心；密码保险箱扩大密码正文列并修复“使用频率”表头竖排。
-- 前端 24 个测试文件共 141 项测试、类型检查和生产构建通过；Chromium 与移动端 Chrome 交互测试 10 项全部通过。
+- 压缩中心进一步对齐解压中心，任务行固定显示压缩包名称、源文件路径以及压缩状态与进度，展开后保持左侧配置、右侧运行详情。
+- 密码保险箱保存真实密码强度，编辑已有密码时保留创建时间、使用次数、最后使用时间和历史使用记录。
+- 新增密码保险箱数据全景，集中展示安全指数、密码强度、风险项目、分类、常用密码排行和单条密码生命周期。
+- 使用趋势支持 7 天、30 天、90 天与全部历史；长期画像展示保险箱使用时长、最早创建日期、历史月均使用和峰值月份。
+- 统计图表增加折线绘制、面积渐显、节点弹出、环图轨道、分类流光和卡片错峰入场，并遵循系统“减少动态效果”设置。
+- 前端 24 个测试文件共 145 项测试、类型检查、生产构建和实际页面视觉验收通过；Rust release 全套测试及真实归档矩阵通过。
 
-完整变更请查看 [v1.0.16 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.16)。
+完整变更请查看 [v1.0.17 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.17)。
 
 ## 为什么选择 Long解压
 
