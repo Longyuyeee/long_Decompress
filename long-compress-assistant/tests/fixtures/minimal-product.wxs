@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product
+    Id="{A8444951-758C-4DE4-B900-ED93B6A166B2}"
+    Name="Long Decompress E2E Fixture"
+    Language="1033"
+    Version="$(var.ProductVersion)"
+    Manufacturer="Long Decompress"
+    UpgradeCode="{7E5A601C-2AD2-4E8E-9CB5-A66BC6657415}"
+  >
+    <Package InstallerVersion="200" Compressed="yes" />
+    <Media Id="1" Cabinet="payload.cab" EmbedCab="yes" />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLDIR" Name="LongDecompressFixture">
+          <Component Id="PayloadComponent" Guid="{B739686A-FE0A-40E3-8A27-F64DC528F1A8}">
+            <File Id="PayloadFile" Source="$(var.SourceFile)" KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+    </Directory>
+    <Feature Id="Complete" Title="Complete" Level="1">
+      <ComponentRef Id="PayloadComponent" />
+    </Feature>
+  </Product>
+</Wix>

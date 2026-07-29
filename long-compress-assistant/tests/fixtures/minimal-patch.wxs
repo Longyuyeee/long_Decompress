@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Patch
+    AllowRemoval="yes"
+    Classification="Update"
+    Description="Long Decompress E2E payload update"
+    DisplayName="Long Decompress E2E Fixture Update"
+    Manufacturer="Long Decompress"
+    MoreInfoURL="https://github.com/long-compress-assistant"
+    TargetProductName="Long Decompress E2E Fixture"
+  >
+    <Media Id="5000" Cabinet="payload.cab" EmbedCab="yes">
+      <PatchBaseline Id="RTM" />
+    </Media>
+    <PatchFamily
+      Id="LongDecompressE2EFixturePatch"
+      Version="1.0.1.0"
+      Supersede="yes"
+    >
+      <ComponentRef Id="PayloadComponent" />
+    </PatchFamily>
+  </Patch>
+</Wix>

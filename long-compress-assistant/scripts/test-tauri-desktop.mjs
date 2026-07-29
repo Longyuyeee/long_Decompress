@@ -38,6 +38,15 @@ const qemuImg =
 const wslFsToolRoot =
   process.env.WSL_FS_TOOL_ROOT ||
   path.join(root, 'test-results', 'wsl-fs-tools', 'root')
+const wix3ToolRoot =
+  process.env.WIX3_TOOL_ROOT ||
+  path.join(root, 'test-results', 'wix3-tool', 'root')
+const apfsToolRoot =
+  process.env.APFS_TOOL_ROOT ||
+  path.join(root, 'test-results', 'apfs-tool')
+const ovmfFirmware =
+  process.env.OVMF_FIRMWARE_PATH ||
+  path.join(root, 'test-results', 'ovmf-fixture', 'root', 'usr', 'share', 'OVMF', 'OVMF_CODE_4M.fd')
 const externalFixtureDirectory =
   process.env.LONG_DECOMPRESS_EXTERNAL_FIXTURE_DIR ||
   path.join(root, 'test-results', 'external-archive-fixtures')
@@ -111,11 +120,12 @@ function forwardContextAction(flag, files) {
   )
 }
 
-function runFixtureCommand(command, args, label) {
+function runFixtureCommand(command, args, label, options = {}) {
   const result = spawnSync(command, args, {
-    cwd: fixtureDirectory,
+    cwd: options.cwd || fixtureDirectory,
+    env: options.env || process.env,
     encoding: 'utf8',
-    timeout: 30_000,
+    timeout: options.timeout || 30_000,
     windowsHide: true,
   })
   assert.ifError(result.error)
@@ -792,16 +802,211 @@ try {
     console.log('[desktop-e2e] WSL mksquashfs unavailable; skipping generated SquashFS image')
   }
 
-  for (const [label, archive, extractedName] of extractOnlyMatrix) {
+  const apfsGo = path.join(apfsToolRoot, 'go-sdk', 'go', 'bin', 'go.exe')
+  const apfsSource = path.join(apfsToolRoot, 'source', 'go.mod')
+  const apfsGenerator = path.join(root, 'tests', 'fixtures', 'apfs-generator')
+  if (existsSync(apfsGo) && existsSync(apfsSource)) {
+    const apfsArchive = path.join(fixtureDirectory, 'extract-only.apfs')
+    runFixtureCommand(
+      apfsGo,
+      ['run', '.', apfsArchive, extractOnlySource],
+      'APFS',
+      {
+        cwd: apfsGenerator,
+        env: {
+          ...process.env,
+          GOTOOLCHAIN: 'local',
+          GOMODCACHE: path.join(apfsToolRoot, 'mod-cache'),
+          GOCACHE: path.join(apfsToolRoot, 'build-cache'),
+        },
+        timeout: 180_000,
+      },
+    )
+    extractOnlyMatrix.push(['apfs', apfsArchive, 'extract-only-payload.txt'])
+    console.log('[desktop-e2e] generated a real APFS image with a known payload')
+  } else {
+    console.log('[desktop-e2e] APFS test tools unavailable; skipping generated APFS image')
+  }
+
+  const wix3Tools = Object.fromEntries(
+    ['candle', 'light', 'torch', 'pyro'].map((tool) => [
+      tool,
+      path.join(wix3ToolRoot, `${tool}.exe`),
+    ]),
+  )
+  if (Object.values(wix3Tools).every(existsSync)) {
+    const installerFixtureRoot = path.join(fixtureDirectory, 'windows-installer-fixtures')
+    const productV1Root = path.join(installerFixtureRoot, 'v1')
+    const productV2Root = path.join(installerFixtureRoot, 'v2')
+    mkdirSync(productV1Root, { recursive: true })
+    mkdirSync(productV2Root, { recursive: true })
+    const productV1Payload = path.join(productV1Root, 'extract-only-payload.txt')
+    const productV2Payload = path.join(productV2Root, 'extract-only-payload.txt')
+    const updatedInstallerPayload = Buffer.from(
+      `Long Decompress updated MSP payload ${new Date().toISOString()}\n`,
+      'utf8',
+    )
+    writeFileSync(productV1Payload, extractOnlyPayload)
+    writeFileSync(productV2Payload, updatedInstallerPayload)
+    const productSource = path.join(root, 'tests', 'fixtures', 'minimal-product.wxs')
+    const moduleSource = path.join(root, 'tests', 'fixtures', 'minimal-module.wxs')
+    const patchSource = path.join(root, 'tests', 'fixtures', 'minimal-patch.wxs')
+
+    for (const [version, source] of [
+      ['1', productV1Payload],
+      ['2', productV2Payload],
+    ]) {
+      const productVersion = version === '1' ? '1.0.0' : '1.0.1'
+      runFixtureCommand(
+        wix3Tools.candle,
+        [
+          '-nologo',
+          `-dSourceFile=${source}`,
+          `-dProductVersion=${productVersion}`,
+          '-out',
+          path.join(installerFixtureRoot, `product-v${version}.wixobj`),
+          productSource,
+        ],
+        `MSI v${version} compile`,
+      )
+      runFixtureCommand(
+        wix3Tools.light,
+        [
+          '-nologo',
+          '-sval',
+          '-out',
+          path.join(installerFixtureRoot, `product-v${version}.msi`),
+          path.join(installerFixtureRoot, `product-v${version}.wixobj`),
+        ],
+        `MSI v${version}`,
+      )
+    }
+
+    runFixtureCommand(
+      wix3Tools.candle,
+      [
+        '-nologo',
+        `-dSourceFile=${productV1Payload}`,
+        '-out',
+        path.join(installerFixtureRoot, 'module.wixobj'),
+        moduleSource,
+      ],
+      'MSM compile',
+    )
+    runFixtureCommand(
+      wix3Tools.light,
+      [
+        '-nologo',
+        '-sval',
+        '-out',
+        path.join(installerFixtureRoot, 'fixture.msm'),
+        path.join(installerFixtureRoot, 'module.wixobj'),
+      ],
+      'MSM',
+    )
+    runFixtureCommand(
+      wix3Tools.torch,
+      [
+        '-nologo',
+        '-p',
+        '-xi',
+        path.join(installerFixtureRoot, 'product-v1.wixpdb'),
+        path.join(installerFixtureRoot, 'product-v2.wixpdb'),
+        '-out',
+        path.join(installerFixtureRoot, 'fixture.wixmst'),
+      ],
+      'MSP transform',
+    )
+    runFixtureCommand(
+      wix3Tools.candle,
+      [
+        '-nologo',
+        '-out',
+        path.join(installerFixtureRoot, 'patch.wixobj'),
+        patchSource,
+      ],
+      'MSP compile',
+    )
+    runFixtureCommand(
+      wix3Tools.light,
+      [
+        '-nologo',
+        '-sval',
+        '-out',
+        path.join(installerFixtureRoot, 'patch.wixmsp'),
+        path.join(installerFixtureRoot, 'patch.wixobj'),
+      ],
+      'MSP link',
+    )
+    runFixtureCommand(
+      wix3Tools.pyro,
+      [
+        '-nologo',
+        path.join(installerFixtureRoot, 'patch.wixmsp'),
+        '-out',
+        path.join(installerFixtureRoot, 'fixture.msp'),
+        '-t',
+        'RTM',
+        path.join(installerFixtureRoot, 'fixture.wixmst'),
+      ],
+      'MSP',
+    )
+
+    extractOnlyMatrix.push([
+      'msi',
+      path.join(installerFixtureRoot, 'product-v1.msi'),
+      'PayloadFile',
+    ])
+    extractOnlyMatrix.push([
+      'msm',
+      path.join(installerFixtureRoot, 'fixture.msm'),
+      'PayloadFile.719C727A_2D5C_4ED6_A487_F2BEA6D8094F',
+    ])
+    extractOnlyMatrix.push([
+      'msp',
+      path.join(installerFixtureRoot, 'fixture.msp'),
+      'PayloadFile',
+      updatedInstallerPayload,
+    ])
+    console.log('[desktop-e2e] generated real MSI, MSM and MSP containers with known payloads')
+  } else {
+    console.log('[desktop-e2e] WiX 3 test tools unavailable; skipping generated MSI/MSM/MSP')
+  }
+
+  for (const [label, archive, extractedName, expectedPayload = extractOnlyPayload] of extractOnlyMatrix) {
     const output = path.join(fixtureDirectory, `extract-only-${label}-output`)
     await callDesktopBridge('extractArchive', archive, output)
     assert.deepEqual(
       readFileSync(path.join(output, extractedName)),
-      extractOnlyPayload,
+      expectedPayload,
       `${label} extraction must reproduce the real sample byte-for-byte`,
     )
   }
   await callDesktopBridge('clearTasks')
+
+  if (existsSync(ovmfFirmware)) {
+    console.log('[desktop-e2e] verifying a pinned Ubuntu OVMF UEFI firmware image')
+    const firmwareFixture = path.join(fixtureDirectory, 'extract-only.uefif')
+    copyFileSync(ovmfFirmware, firmwareFixture)
+    const firmwareOutput = path.join(fixtureDirectory, 'uefi-firmware-output')
+    await callDesktopBridge('extractArchive', firmwareFixture, firmwareOutput)
+    const peiCore = path.join(
+      firmwareOutput,
+      '9E21FD93',
+      'EE4E5898',
+      'VOLUME',
+      'PeiCore',
+      '1.efi',
+    )
+    assert.equal(
+      fileSha256(peiCore),
+      '4ebf6a4fb4f2bcd541d2c7d9e8ce48e0d4207ee1ae3c90c3a127975b7b9236ef',
+      'UEFI firmware extraction must reproduce the pinned PeiCore module',
+    )
+    await callDesktopBridge('clearTasks')
+  } else {
+    console.log('[desktop-e2e] pinned OVMF firmware unavailable; skipping UEFI firmware')
+  }
 
   console.log('[desktop-e2e] verifying a real Debian package container')
   const debianBinary = Buffer.from('2.0\n', 'ascii')

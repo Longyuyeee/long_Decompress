@@ -1570,15 +1570,41 @@ impl CompressionService {
             ArchiveFormat::Arc | ArchiveFormat::Apfs | ArchiveFormat::Ext |
             ArchiveFormat::Universal => {
                 let fmt_name = format!("{:?}", effective_format);
-                service.universal_engine.extract_with_progress(
+                let extraction_result = service.universal_engine.extract_with_progress(
                     Path::new(&file_path),
                     &out_dir,
                     final_password.as_deref(),
                     options.overwrite_existing,
-                    on_progress,
-                    on_log,
+                    on_progress.clone(),
+                    on_log.clone(),
                     service.cancellation_flag.clone()
-                ).await.map_err(|e| anyhow::anyhow!("{}提取失败: {}", fmt_name, e))
+                ).await.map_err(|e| anyhow::anyhow!("{}提取失败: {}", fmt_name, e));
+
+                if extraction_result.is_ok() && ext == "msm" {
+                    let merge_module_cabinet = out_dir.join("MergeModule.CABinet");
+                    if merge_module_cabinet.is_file() {
+                        service.emit_log(
+                            &window,
+                            &task_id,
+                            "检测到 MSM 内嵌 CAB，正在继续提取真实载荷",
+                            TaskLogSeverity::Info,
+                        );
+                        service.universal_engine.extract_with_progress(
+                            &merge_module_cabinet,
+                            &out_dir,
+                            None,
+                            true,
+                            on_progress,
+                            on_log,
+                            service.cancellation_flag.clone(),
+                        ).await.map_err(|e| anyhow::anyhow!(
+                            "MSM 内嵌 CAB 提取失败: {}",
+                            e
+                        ))?;
+                    }
+                }
+
+                extraction_result
             },
             ArchiveFormat::Unknown => {
                 match ext.as_str() {
