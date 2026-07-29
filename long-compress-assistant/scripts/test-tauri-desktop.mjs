@@ -19,9 +19,26 @@ import { Builder, By, Capabilities } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const executableSuffix = process.platform === 'win32' ? '.exe' : ''
+const tauriConfig = JSON.parse(
+  readFileSync(path.join(root, 'src-tauri', 'tauri.conf.json'), 'utf8'),
+)
+const packagedApplication = path.join(
+  root,
+  'src-tauri',
+  'target',
+  'release',
+  `${tauriConfig.package.productName}${executableSuffix}`,
+)
+const cargoApplication = path.join(
+  root,
+  'src-tauri',
+  'target',
+  'release',
+  `long-compress-assistant${executableSuffix}`,
+)
 const application =
   process.env.TAURI_APP_BINARY ||
-  path.join(root, 'src-tauri', 'target', 'release', `long-compress-assistant${executableSuffix}`)
+  (existsSync(cargoApplication) ? cargoApplication : packagedApplication)
 const tauriDriver =
   process.env.TAURI_DRIVER_PATH ||
   path.join(homedir(), '.cargo', 'bin', `tauri-driver${executableSuffix}`)

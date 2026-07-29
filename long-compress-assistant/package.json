@@ -1,7 +1,7 @@
 {
   "name": "long-compress-assistant",
   "private": true,
-  "version": "1.0.17",
+  "version": "1.0.18",
   "author": "Longyuyeee",
   "license": "MIT",
   "type": "module",
@@ -11,6 +11,8 @@
     "build:shell-extension": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-shell-extension.ps1",
     "build:context-menu-package": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-context-menu-package.ps1",
     "test:context-menu-package": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-context-menu-package.ps1",
+    "test:release-identity": "node scripts/check-release-identity.mjs",
+    "test:installed-release": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-installed-release.ps1",
     "build:check": "vue-tsc && vite build",
     "type-check": "vue-tsc --noEmit",
     "lint": "vue-tsc --noEmit",

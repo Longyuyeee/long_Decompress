@@ -158,19 +158,36 @@ pub fn register_context_menu(app_path: &str) -> Result<()> {
     unregister_native_menu(&hkcu)?;
 
     if is_windows_11_or_newer() {
-        register_native_menu(&hkcu, app_path)?;
-        match register_sparse_identity_package(app_path) {
-            Ok(true) => {
+        let native_result = (|| -> Result<bool> {
+            if !register_sparse_identity_package(app_path)? {
+                return Ok(false);
+            }
+            register_native_menu(&hkcu, app_path)?;
+            {
                 let clsid_path = format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID);
                 let clsid_key = hkcu.open_subkey_with_flags(clsid_path, KEY_SET_VALUE)?;
                 clsid_key.set_value("SparsePackageRegistered", &1u32)?;
             }
-            Ok(false) => {}
+            Ok(true)
+        })();
+        match native_result {
+            Ok(true) => {}
+            Ok(false) => {
+                unregister_native_menu(&hkcu)?;
+                register_legacy_menu(&hkcu, app_path)?;
+            }
             Err(error) => {
-                // The registry-backed classic menu remains functional, so a
-                // package-signing or deployment issue must not disable all
-                // Explorer integration.
+                // Public unsigned builds cannot deploy the Windows 11 sparse
+                // identity package. Remove every partial native registration
+                // before falling back to the classic "Show more options" menu.
                 log::warn!("Windows 11 primary context-menu registration failed: {error}");
+                if let Err(cleanup_error) = unregister_sparse_identity_package() {
+                    log::warn!(
+                        "Windows 11 identity-package cleanup after fallback failed: {cleanup_error}"
+                    );
+                }
+                unregister_native_menu(&hkcu)?;
+                register_legacy_menu(&hkcu, app_path)?;
             }
         }
     } else {
@@ -606,10 +623,13 @@ pub fn is_context_menu_registered() -> bool {
                 .and_then(|key| key.get_value::<u32, _>("SparsePackageRegistered"))
                 .map(|registered| registered == 1)
                 .unwrap_or(false);
-        return root_registered
+        if root_registered
             && quick_extract_registered
             && quick_pack_registered
-            && package_registration_is_current;
+            && package_registration_is_current
+        {
+            return true;
+        }
     }
 
     let required_keys = [
@@ -678,6 +698,12 @@ mod tests {
         assert!(CONTEXT_MENU_SOURCE.contains("unregister_native_menu(&hkcu)?;"));
         assert!(CONTEXT_MENU_SOURCE.contains("register_native_menu(&hkcu, app_path)?;"));
         assert!(CONTEXT_MENU_SOURCE.contains("register_legacy_menu(&hkcu, app_path)?;"));
+        assert!(CONTEXT_MENU_SOURCE.contains(
+            "if !register_sparse_identity_package(app_path)?"
+        ));
+        assert!(CONTEXT_MENU_SOURCE.contains(
+            "Windows 11 primary context-menu registration failed"
+        ));
     }
 
     #[test]
@@ -739,6 +765,27 @@ mod tests {
         assert!(INSTALLER_TEMPLATE.contains(
             r#"DeleteRegKey SHCTX "${LEGACY_UNINSTKEY}""#
         ));
+    }
+
+    #[test]
+    fn nsis_overlay_upgrade_removes_stale_context_menu_binaries() {
+        assert!(INSTALLER_TEMPLATE.contains(
+            r#"Delete "$INSTDIR\resources\long_compress_shell_extension_*.dll""#
+        ));
+        assert!(INSTALLER_TEMPLATE.contains(r#"-Action Uninstall' $0"#));
+        for package in [
+            "long_compress_context_menu_extract.msix",
+            "long_compress_context_menu_pack.msix",
+            "long_compress_context_menu.msix",
+        ] {
+            assert!(
+                INSTALLER_TEMPLATE.contains(&format!(
+                    r#"Delete "$INSTDIR\resources\{}""#,
+                    package
+                )),
+                "overlay cleanup is missing {package}"
+            );
+        }
     }
 
     #[test]
