@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.17-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.19-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,16 +20,15 @@
 
 ---
 
-## v1.0.17 更新亮点
+## v1.0.19 更新亮点
 
-- 压缩中心进一步对齐解压中心，任务行固定显示压缩包名称、源文件路径以及压缩状态与进度，展开后保持左侧配置、右侧运行详情。
-- 密码保险箱保存真实密码强度，编辑已有密码时保留创建时间、使用次数、最后使用时间和历史使用记录。
-- 新增密码保险箱数据全景，集中展示安全指数、密码强度、风险项目、分类、常用密码排行和单条密码生命周期。
-- 使用趋势支持 7 天、30 天、90 天与全部历史；长期画像展示保险箱使用时长、最早创建日期、历史月均使用和峰值月份。
-- 统计图表增加折线绘制、面积渐显、节点弹出、环图轨道、分类流光和卡片错峰入场，并遵循系统“减少动态效果”设置。
-- 前端 24 个测试文件共 145 项测试、类型检查、生产构建和实际页面视觉验收通过；Rust release 全套测试及真实归档矩阵通过。
+- 修复应用内更新完成后没有自动重启的问题，并保留维护安装显式禁止重启的能力。
+- 无可信签名身份包时会可靠降级到“显示更多选项”中的传统右键菜单，不再误用残留的 Windows 11 原生菜单。
+- 公开 v1.0.18 → v1.0.19 应用内更新已完成 18 项真实验收，覆盖签名交接、自动重启、安装目录、用户数据、Shell DLL 和右键菜单。
+- 严格全格式桌面矩阵覆盖 25 种可创建格式，以及虚拟磁盘、文件系统、安装包、固件和固定上游只读样本。
+- 覆盖安装、卸载、用户数据保持和基线恢复共 41 项检查通过。
 
-完整变更请查看 [v1.0.17 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.17)。
+完整变更请查看 [v1.0.19 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.19)。
 
 ## 为什么选择 Long解压
 

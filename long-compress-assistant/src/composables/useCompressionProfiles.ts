@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { extractErrorMessage } from '@/utils'
-import type { CompressionProfile, CreateProfileRequest } from '@/types'
+import type { CompressionProfile, CreateProfileRequest, PasswordStrategy } from '@/types'
 
 interface ApplyProfileParams {
   profile_id: string
@@ -12,6 +12,48 @@ interface ApplyProfileParams {
 interface SuggestProfileParams {
   file_path: string
   file_size: number
+}
+
+const normalizePasswordStrategy = (raw: any): PasswordStrategy => {
+  if (!raw || raw === 'none' || raw.type === 'none') return { type: 'none' }
+  if (raw === 'fixed' || raw.type === 'fixed') return { type: 'fixed' }
+
+  const fromVault = raw.from_vault ?? raw.fromVault
+  if (fromVault || raw.type === 'from_vault') {
+    return {
+      type: 'from_vault',
+      categoryId: fromVault?.category_id ?? fromVault?.categoryId ?? raw.categoryId ?? null,
+    }
+  }
+
+  const autoGenerate = raw.auto_generate ?? raw.autoGenerate
+  if (autoGenerate || raw.type === 'auto_generate') {
+    return {
+      type: 'auto_generate',
+      length: autoGenerate?.length ?? raw.length ?? 16,
+      saveToVault: autoGenerate?.save_to_vault ?? autoGenerate?.saveToVault ?? raw.saveToVault ?? false,
+    }
+  }
+
+  return { type: 'none' }
+}
+
+const toBackendPasswordStrategy = (strategy: PasswordStrategy) => {
+  switch (strategy.type) {
+    case 'fixed':
+      return 'fixed'
+    case 'from_vault':
+      return { from_vault: { category_id: strategy.categoryId } }
+    case 'auto_generate':
+      return {
+        auto_generate: {
+          length: strategy.length,
+          save_to_vault: strategy.saveToVault,
+        },
+      }
+    default:
+      return 'none'
+  }
 }
 
 const normalizeProfile = (raw: any): CompressionProfile => {
@@ -39,7 +81,7 @@ const normalizeProfile = (raw: any): CompressionProfile => {
     filePatterns: autoApply.filePatterns ?? autoApply.file_patterns ?? [],
     sizeRange: autoApply.sizeRange ?? autoApply.size_range ?? null,
   },
-  passwordStrategy: raw.passwordStrategy ?? raw.password_strategy ?? 'none',
+  passwordStrategy: normalizePasswordStrategy(raw.passwordStrategy ?? raw.password_strategy),
   stats: {
     useCount: raw.stats?.useCount ?? raw.stats?.use_count ?? 0,
     successCount: raw.stats?.successCount ?? raw.stats?.success_count ?? 0,
@@ -75,7 +117,7 @@ const toBackendProfile = (profile: CompressionProfile) => ({
     file_patterns: profile.autoApply.filePatterns,
     size_range: profile.autoApply.sizeRange,
   },
-  password_strategy: profile.passwordStrategy,
+  password_strategy: toBackendPasswordStrategy(profile.passwordStrategy),
   stats: {
     use_count: profile.stats.useCount,
     success_count: profile.stats.successCount,
@@ -181,10 +223,11 @@ export const useCompressionProfiles = () => {
     params: SuggestProfileParams
   ): Promise<CompressionProfile | null> => {
     try {
-      return await invoke<CompressionProfile | null>('suggest_compression_profile', {
+      const profile = await invoke<any | null>('suggest_compression_profile', {
         filePath: params.file_path,
         fileSize: params.file_size,
       })
+      return profile ? normalizeProfile(profile) : null
     } catch (error) {
       console.error(
         `[useCompressionProfiles] Failed to suggest profile for ${params.file_path}:`,
