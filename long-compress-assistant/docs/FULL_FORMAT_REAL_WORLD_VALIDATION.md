@@ -69,7 +69,7 @@ npm.cmd run test:e2e:desktop
 
 新增并通过以下真实解压场景：
 
-- Windows `tar.exe` 离线生成：ISO9660、XAR、CPIO；
+- Windows `tar.exe` 离线生成 ISO9660 与 CPIO；内置确定性生成器按 XAR 1.0 结构写入压缩 TOC 和已知载荷，避免依赖不同 Windows 版本的 `tar.exe` 可选写入能力；
 - 手工构造标准 Debian AR 容器，并继续解压其中的 `data.tar` 核验最终载荷；
 - WSL `mke2fs` 离线生成：EXT2、EXT3、EXT4，每个镜像均包含已知文件；
 - libarchive 官方测试仓库固定提交样本：RAR5、LHA/LZH、RPM。
@@ -104,7 +104,7 @@ npm.cmd run test:fixtures:archives
 - 使用 Ubuntu 官方 `ntfs-3g` 生成 NTFS 镜像并写入已知文件；
 - 七种镜像全部通过 Release Tauri 的真实 `extract_file` 后端解压，最终文件与测试运行时源文件逐字节一致。
 
-QEMU Windows 工具来自 QEMU 官方下载页指向的 Windows 构建渠道，固定安装器 `qemu-w64-setup-20260422.exe`，SHA-512 为 `64A43C0D39ACDDC9D30D290935A312A2B5C4FA62CFFE6C27090F2A45CA6C8DE0F0E8673E1E5117FB116A8742F86DF92163531AFC23F34758AADFC6D82C1F41A5`。准备脚本只提取 `qemu-img.exe` 及其运行库到忽略提交的测试目录，不执行安装器：
+QEMU Windows 工具来自 QEMU 官方下载页指向的 Windows 构建渠道，并使用该站点按年份保留的归档地址固定安装器 `qemu-w64-setup-20260422.exe`；SHA-512 为 `64A43C0D39ACDDC9D30D290935A312A2B5C4FA62CFFE6C27090F2A45CA6C8DE0F0E8673E1E5117FB116A8742F86DF92163531AFC23F34758AADFC6D82C1F41A5`。准备脚本只提取 `qemu-img.exe` 及其运行库到忽略提交的测试目录，不执行安装器：
 
 ```powershell
 npm.cmd run test:tools:qemu-img
@@ -122,4 +122,24 @@ npm.cmd run test:tools:wsl-fs
 
 该路径同时暴露并修复了冲突状态误报：后端发出冲突事件、等待用户选择期间，任务现在保持可恢复的“等待中”，写入“等待冲突处理”警告日志，不再短暂标记失败或弹出普通失败提示；用户选择策略后任务进入“准备中”并继续执行。
 
-尚待真实载荷样本覆盖：APFS、HFSX、固件镜像以及 MSI/MSP/MSM。它们仍只能记录为“随包引擎声明具备处理器”，不能标记为逐文件验收完成。
+## 2026-07-29 第五阶段增量
+
+新增并通过以下可复现真实样本：
+
+- WiX Toolset 3.14.1 离线生成 MSI、MSM 与 MSP；工具 ZIP 固定 SHA-256，MSP 验证升级后载荷，MSM 会继续解开内嵌 CAB 并核验最终文件；
+- Go 1.26.5 官方 Windows SDK与固定提交 `001fcf26671c6d457a2291c5abc2535f54f06ea4` 的 APFS 实现生成非空 APFS 镜像，SDK、提交、模块校验和及源码工作区状态均在使用前验证；
+- Ubuntu 24.04 主仓库固定 OVMF `2024.02-2` 包生成 UEFI 固件样本，DEB、完整固件与提取后的已知 PeiCore 模块分别固定 SHA-256；
+- 工具下载目录限制在仓库内已忽略的 `test-results`；WiX 与 QEMU 每次从已校验归档重新构造干净运行目录，避免缓存残留 DLL 影响结果。
+
+HFSX 仍缺少能够写入已知载荷的可信生成方案，因此继续标记为未完成；空镜像、仅识别文件头或损坏样本均不计为真实解压通过。
+
+## 严格矩阵模式
+
+普通桌面 E2E 可以在缺少外部样本生成器时继续验证已有能力，但必须明确打印缺失项。阶段收口和发布前验收使用严格模式：
+
+```powershell
+npm.cmd run test:prepare:full-format
+npm.cmd run test:e2e:desktop:full-format
+```
+
+严格模式要求 EXT2/3/4、QCOW2、VDI、VMDK、VHD、VHDX、FAT16、NTFS、SquashFS、APFS、MSI、MSM、MSP 与 UEFI 固件样本生成能力全部存在；任何工具缺失都会在已准备场景执行后汇总失败，禁止把静默跳过误记为全格式通过。所有下载器均限制输出在仓库内已忽略的 `test-results`，并在使用前校验固定版本、提交与哈希。

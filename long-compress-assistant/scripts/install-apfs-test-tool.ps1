@@ -45,6 +45,10 @@ if (
         throw "Could not extract the pinned Go SDK."
     }
 }
+$goVersionOutput = (& $goExecutable version) -join " "
+if ($LASTEXITCODE -ne 0 -or $goVersionOutput -notmatch "\bgo1\.26\.5\b") {
+    throw "Go SDK validation failed: $goVersionOutput"
+}
 
 if (-not (Test-Path -LiteralPath (Join-Path $apfsSource ".git"))) {
     & git clone https://github.com/go-filesystems/apfs.git $apfsSource
@@ -63,6 +67,10 @@ if ($LASTEXITCODE -ne 0) {
 $actualCommit = (& git -C $apfsSource rev-parse HEAD).Trim()
 if ($actualCommit -ne $apfsCommit) {
     throw "APFS implementation commit mismatch."
+}
+$sourceStatus = (& git -C $apfsSource status --porcelain --untracked-files=all) -join "`n"
+if ($LASTEXITCODE -ne 0 -or -not [string]::IsNullOrWhiteSpace($sourceStatus)) {
+    throw "APFS implementation checkout contains modified or untracked files."
 }
 
 $previousGoToolchain = $env:GOTOOLCHAIN

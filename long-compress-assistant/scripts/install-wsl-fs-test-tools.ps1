@@ -16,6 +16,12 @@ function Convert-ToWslPath {
 }
 
 $destinationPath = [System.IO.Path]::GetFullPath($Destination)
+$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+$allowedPrefix = $repositoryRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar) +
+    [System.IO.Path]::DirectorySeparatorChar
+if (-not $destinationPath.StartsWith($allowedPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "WSL filesystem test-tool destination must stay inside the repository: $destinationPath"
+}
 $wslDestination = Convert-ToWslPath $destinationPath
 $extractPath = Join-Path $destinationPath "root"
 $wslExtractPath = "$wslDestination/root"
@@ -31,18 +37,21 @@ $packages = @(
         Sha256 = "deb50411c17b001c2400dd8a0146f39d12070a2fe5e92d734b1c6d0e73119262"
     },
     @{
-        Spec = "libntfs-3g89t64=1:2022.10.3-1.2ubuntu3.2"
-        File = "libntfs-3g89t64_1%3a2022.10.3-1.2ubuntu3.2_amd64.deb"
-        Sha256 = "4ae668265884cbccb44d01a389cee7909343916627d21b04a7f202719d916071"
+        Spec = "libntfs-3g89t64=1:2022.10.3-1.2ubuntu3"
+        File = "libntfs-3g89t64_1%3a2022.10.3-1.2ubuntu3_amd64.deb"
+        Sha256 = "37dcdf2bfad2f88ebc0ed62de0e26b5afdc6e8f31790da138adcd23c749a5956"
     },
     @{
-        Spec = "ntfs-3g=1:2022.10.3-1.2ubuntu3.2"
-        File = "ntfs-3g_1%3a2022.10.3-1.2ubuntu3.2_amd64.deb"
-        Sha256 = "3a34223b68b55596eb91768b9c879b8a740b16467f56673ea2b1c0e8093d678e"
+        Spec = "ntfs-3g=1:2022.10.3-1.2ubuntu3"
+        File = "ntfs-3g_1%3a2022.10.3-1.2ubuntu3_amd64.deb"
+        Sha256 = "440c02fce744c0ff808772aa4b68b852c82d3a090cd0e9f86a5fe53aaa8867ce"
     }
 )
 
 New-Item -ItemType Directory -Path $destinationPath -Force | Out-Null
+if (Test-Path -LiteralPath $extractPath) {
+    Remove-Item -LiteralPath $extractPath -Recurse -Force
+}
 New-Item -ItemType Directory -Path $extractPath -Force | Out-Null
 
 foreach ($package in $packages) {

@@ -23,9 +23,10 @@ if (-not $destinationPath.StartsWith($allowedPrefix, [System.StringComparison]::
     throw "OVMF fixture destination must stay inside the repository: $destinationPath"
 }
 
-$packageSpec = "ovmf=2024.02-2ubuntu0.9"
-$packageFile = "ovmf_2024.02-2ubuntu0.9_all.deb"
-$packageSha256 = "a094c13d06f2740691ff57d108dff32aa087179363ddb0de42d463b4f7f9bc13"
+$packageSpec = "ovmf=2024.02-2"
+$packageFile = "ovmf_2024.02-2_all.deb"
+$packageSha256 = "f266d23604c4ca119f3dde83f2d7a65dad6cc2b93f0a8e07ee7b9eea1f64b217"
+$firmwareSha256 = "b44425a582c7ca4f92662942c63d4ed94cbb365d04f62b7428e048cc88cfc22d"
 $extractPath = Join-Path $destinationPath "root"
 $firmwarePath = Join-Path $extractPath "usr\share\OVMF\OVMF_CODE_4M.fd"
 $wslDestination = Convert-ToWslPath $destinationPath
@@ -51,6 +52,9 @@ if ($LASTEXITCODE -ne 0) {
 }
 if (-not (Test-Path -LiteralPath $firmwarePath)) {
     throw "Expected OVMF firmware fixture was not extracted: $firmwarePath"
+}
+if ((Get-FileHash -LiteralPath $firmwarePath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $firmwareSha256) {
+    throw "Extracted OVMF firmware SHA-256 mismatch."
 }
 
 Write-Output $firmwarePath

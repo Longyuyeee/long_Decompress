@@ -47,6 +47,9 @@ npm.cmd run test:tools:qemu-img
 npm.cmd run test:tools:wsl-fs
 
 npm run test:e2e:desktop
+# 发布前全格式验收会强制检查所有生成器，不允许静默跳过
+npm.cmd run test:prepare:full-format
+npm.cmd run test:e2e:desktop:full-format
 Remove-Item Env:EDGE_DRIVER_PATH
 ```
 

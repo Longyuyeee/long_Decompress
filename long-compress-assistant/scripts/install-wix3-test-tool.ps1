@@ -34,17 +34,10 @@ if ($actualHash -ne $expectedSha256) {
 }
 
 $requiredTools = @("candle.exe", "light.exe", "torch.exe", "pyro.exe")
-$missingTools = @(
-    $requiredTools | Where-Object {
-        -not (Test-Path -LiteralPath (Join-Path $extractPath $_))
-    }
-)
-if ($missingTools.Count -gt 0) {
-    if (Test-Path -LiteralPath $extractPath) {
-        Remove-Item -LiteralPath $extractPath -Recurse -Force
-    }
-    Expand-Archive -LiteralPath $archivePath -DestinationPath $extractPath -Force
+if (Test-Path -LiteralPath $extractPath) {
+    Remove-Item -LiteralPath $extractPath -Recurse -Force
 }
+Expand-Archive -LiteralPath $archivePath -DestinationPath $extractPath -Force
 
 foreach ($tool in $requiredTools) {
     $toolPath = Join-Path $extractPath $tool

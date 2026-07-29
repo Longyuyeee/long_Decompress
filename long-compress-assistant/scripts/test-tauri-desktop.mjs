@@ -14,6 +14,7 @@ import { homedir, tmpdir } from 'node:os'
 import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { deflateSync } from 'node:zlib'
 import { Builder, By, Capabilities } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -34,7 +35,7 @@ const webviewUserDataDirectory = path.join(e2eDataDirectory, 'webview2')
 const bundledSevenZip = path.join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
 const qemuImg =
   process.env.QEMU_IMG_PATH ||
-  path.join(root, 'test-results', 'qemu-img-tool', 'qemu-img.exe')
+  path.join(root, 'test-results', 'qemu-img-tool', 'root', 'qemu-img.exe')
 const wslFsToolRoot =
   process.env.WSL_FS_TOOL_ROOT ||
   path.join(root, 'test-results', 'wsl-fs-tools', 'root')
@@ -50,6 +51,22 @@ const ovmfFirmware =
 const externalFixtureDirectory =
   process.env.LONG_DECOMPRESS_EXTERNAL_FIXTURE_DIR ||
   path.join(root, 'test-results', 'external-archive-fixtures')
+const requireFullFormatMatrix =
+  process.argv.includes('--require-full-format-matrix') ||
+  process.env.LONG_DECOMPRESS_REQUIRE_FULL_FORMAT_MATRIX === '1'
+const missingFullFormatCapabilities = new Set()
+
+function recordMissingFullFormatCapability(capability, preparation) {
+  missingFullFormatCapabilities.add(`${capability} — ${preparation}`)
+  console.log(`[desktop-e2e] ${capability} unavailable; prepare with: ${preparation}`)
+}
+
+function assertFullFormatMatrixReady() {
+  if (!requireFullFormatMatrix || missingFullFormatCapabilities.size === 0) return
+  throw new Error(
+    `Full-format matrix is incomplete:\n- ${[...missingFullFormatCapabilities].join('\n- ')}`,
+  )
+}
 
 if (process.platform !== 'win32') {
   throw new Error('The real desktop smoke test currently targets Windows WebView2.')
@@ -165,6 +182,26 @@ function createArEntries(outputPath, entries) {
     if (payload.length % 2 !== 0) chunks.push(Buffer.from('\n'))
   }
   writeFileSync(outputPath, Buffer.concat(chunks))
+}
+
+function createXarFixture(outputPath, entryName, payload) {
+  const toc = Buffer.from(
+    `<?xml version="1.0" encoding="UTF-8"?>` +
+      `<xar><toc><creation-time>1970-01-01T00:00:00Z</creation-time>` +
+      `<file id="1"><name>${entryName}</name><type>file</type><mode>0644</mode>` +
+      `<data><length>${payload.length}</length><offset>0</offset><size>${payload.length}</size>` +
+      `<encoding style="application/octet-stream"/></data></file></toc></xar>`,
+    'utf8',
+  )
+  const compressedToc = deflateSync(toc)
+  const header = Buffer.alloc(28)
+  header.write('xar!', 0, 'ascii')
+  header.writeUInt16BE(header.length, 4)
+  header.writeUInt16BE(1, 6)
+  header.writeBigUInt64BE(BigInt(compressedToc.length), 8)
+  header.writeBigUInt64BE(BigInt(toc.length), 16)
+  header.writeUInt32BE(0, 24)
+  writeFileSync(outputPath, Buffer.concat([header, compressedToc, payload]))
 }
 
 function fileSha256(filePath) {
@@ -590,7 +627,7 @@ try {
   const arArchive = path.join(fixtureDirectory, 'extract-only.ar')
   createArFixture(arArchive, 'payload.txt', extractOnlyPayload)
   extractOnlyMatrix.push(['ar', arArchive, 'payload.txt'])
-  for (const format of ['iso9660', 'xar', 'cpio']) {
+  for (const format of ['iso9660', 'cpio']) {
     const extension = format === 'iso9660' ? 'iso' : format
     const archive = path.join(fixtureDirectory, `extract-only.${extension}`)
     runFixtureCommand(
@@ -600,6 +637,9 @@ try {
     )
     extractOnlyMatrix.push([extension, archive, 'extract-only-payload.txt'])
   }
+  const xarArchive = path.join(fixtureDirectory, 'extract-only.xar')
+  createXarFixture(xarArchive, 'extract-only-payload.txt', extractOnlyPayload)
+  extractOnlyMatrix.push(['xar', xarArchive, 'extract-only-payload.txt'])
   const wslExtProbe = spawnSync(
     'wsl.exe',
     ['-d', 'Ubuntu', '--', 'test', '-x', '/sbin/mkfs.ext4'],
@@ -630,7 +670,10 @@ try {
       extractOnlyMatrix.push([`ext${version}`, archive, 'extract-only-payload.txt'])
     }
   } else {
-    console.log('[desktop-e2e] WSL mkfs.ext tools unavailable; skipping generated EXT2/3/4 images')
+    recordMissingFullFormatCapability(
+      'WSL EXT2/3/4 generators',
+      'install mke2fs in the Ubuntu WSL distribution',
+    )
   }
   const qemuImgProbe = existsSync(qemuImg)
     ? spawnSync(qemuImg, ['--version'], {
@@ -682,8 +725,9 @@ try {
       '[desktop-e2e] generated QCOW2, VDI, VMDK, VHD and VHDX images with known payloads',
     )
   } else {
-    console.log(
-      '[desktop-e2e] qemu-img or WSL mkfs.ext4 unavailable; skipping generated virtual disks',
+    recordMissingFullFormatCapability(
+      'QCOW2/VDI/VMDK/VHD/VHDX generators',
+      'npm run test:tools:qemu-img and install mke2fs in Ubuntu WSL',
     )
   }
   const mkfsFat = path.join(wslFsToolRoot, 'usr', 'sbin', 'mkfs.fat')
@@ -764,8 +808,9 @@ try {
     extractOnlyMatrix.push(['ntfs', ntfsImage, 'extract-only-payload.txt'])
     console.log('[desktop-e2e] generated FAT16 and NTFS images with known payloads')
   } else {
-    console.log(
-      '[desktop-e2e] extracted WSL filesystem tools unavailable; skipping FAT16 and NTFS images',
+    recordMissingFullFormatCapability(
+      'FAT16/NTFS generators',
+      'npm run test:tools:qemu-img && npm run test:tools:wsl-fs',
     )
   }
   const wslSquashFsProbe = spawnSync(
@@ -799,7 +844,10 @@ try {
     console.log('[desktop-e2e] generated a real SquashFS image with a known payload')
     extractOnlyMatrix.push(['squashfs', squashFsArchive, 'extract-only-payload.txt'])
   } else {
-    console.log('[desktop-e2e] WSL mksquashfs unavailable; skipping generated SquashFS image')
+    recordMissingFullFormatCapability(
+      'SquashFS generator',
+      'install squashfs-tools in the Ubuntu WSL distribution',
+    )
   }
 
   const apfsGo = path.join(apfsToolRoot, 'go-sdk', 'go', 'bin', 'go.exe')
@@ -825,7 +873,7 @@ try {
     extractOnlyMatrix.push(['apfs', apfsArchive, 'extract-only-payload.txt'])
     console.log('[desktop-e2e] generated a real APFS image with a known payload')
   } else {
-    console.log('[desktop-e2e] APFS test tools unavailable; skipping generated APFS image')
+    recordMissingFullFormatCapability('APFS generator', 'npm run test:tools:apfs')
   }
 
   const wix3Tools = Object.fromEntries(
@@ -970,7 +1018,7 @@ try {
     ])
     console.log('[desktop-e2e] generated real MSI, MSM and MSP containers with known payloads')
   } else {
-    console.log('[desktop-e2e] WiX 3 test tools unavailable; skipping generated MSI/MSM/MSP')
+    recordMissingFullFormatCapability('MSI/MSM/MSP generators', 'npm run test:tools:wix3')
   }
 
   for (const [label, archive, extractedName, expectedPayload = extractOnlyPayload] of extractOnlyMatrix) {
@@ -1000,12 +1048,12 @@ try {
     )
     assert.equal(
       fileSha256(peiCore),
-      '4ebf6a4fb4f2bcd541d2c7d9e8ce48e0d4207ee1ae3c90c3a127975b7b9236ef',
+      'bb229cf4e15c4d96e67dff30770f5ca47e2e513f496b5d09c0daf96a53c12e9d',
       'UEFI firmware extraction must reproduce the pinned PeiCore module',
     )
     await callDesktopBridge('clearTasks')
   } else {
-    console.log('[desktop-e2e] pinned OVMF firmware unavailable; skipping UEFI firmware')
+    recordMissingFullFormatCapability('UEFI firmware fixture', 'npm run test:fixtures:ovmf')
   }
 
   console.log('[desktop-e2e] verifying a real Debian package container')
@@ -1084,6 +1132,7 @@ try {
     )
   }
   await callDesktopBridge('clearTasks')
+  assertFullFormatMatrixReady()
 
   navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[4].click()
