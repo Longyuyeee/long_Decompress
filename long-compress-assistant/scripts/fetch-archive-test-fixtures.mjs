@@ -10,28 +10,53 @@ const outputDirectory =
   process.env.LONG_DECOMPRESS_EXTERNAL_FIXTURE_DIR ||
   path.join(root, 'test-results', 'external-archive-fixtures')
 const libarchiveCommit = '19ff56da4f4790064346579a1a7f18a0230b0ac6'
-const rawBase =
+const libarchiveRawBase =
   `https://raw.githubusercontent.com/libarchive/libarchive/${libarchiveCommit}` +
   '/libarchive/test'
+const qemuCommit = '9f4d05a21f1d3a01c136979f4b60b7b02c60e821'
+const qemuRawBase =
+  `https://raw.githubusercontent.com/qemu/qemu/${qemuCommit}` +
+  '/tests/qemu-iotests/sample_images'
+const bundledSevenZip = path.join(
+  root,
+  'src-tauri',
+  'resources',
+  'archive-engine',
+  process.platform === 'win32' ? '7z.exe' : '7zz',
+)
 
 const fixtures = [
   {
+    url: `${libarchiveRawBase}/test_read_format_rar5_stored.rar.uu`,
     source: 'test_read_format_rar5_stored.rar.uu',
     sourceSha256: 'ec73ba623a8e8eee4909dcdf45f0526ff9adc1d856d054ce742e6c1ba1fb5fa8',
     output: 'libarchive-rar5-stored.rar',
     outputSha256: '35d75e315d164d2e329afc28f7d844f013271b4fcffd4ddd78efcdd114a383a7',
+    encoding: 'uu',
   },
   {
+    url: `${libarchiveRawBase}/test_read_format_lha_lh0.lzh.uu`,
     source: 'test_read_format_lha_lh0.lzh.uu',
     sourceSha256: '1dcf4ffdc72f02985edcbdcd93ac1098cee403dc2a8a53837ba8f6d581d11a62',
     output: 'libarchive-lha-lh0.lzh',
     outputSha256: '35fa46a93d8fb0c1697afcc8c0aea0ad355e37296cfda8e87e36d6f61ea8f4cd',
+    encoding: 'uu',
   },
   {
+    url: `${libarchiveRawBase}/test_read_format_cpio_svr4_gzip_rpm.rpm.uu`,
     source: 'test_read_format_cpio_svr4_gzip_rpm.rpm.uu',
     sourceSha256: 'a43cb0e4957a961afbe6b11675437bcd5b6dfc6a740fa9afdc18bfd4835b57fc',
     output: 'libarchive-cpio-svr4-gzip.rpm',
     outputSha256: 'dcc4f3ab933335bf3822d94079fdf4f0b7ac4c65773ca8e9a973a1cec7c553d6',
+    encoding: 'uu',
+  },
+  {
+    url: `${qemuRawBase}/simple-dmg.dmg.bz2`,
+    source: 'simple-dmg.dmg.bz2',
+    sourceSha256: '13447673c3efdf90465fcda5866bc46aa621e0cf78326b685aec22350d6ad111',
+    output: 'qemu-simple-hfs.dmg',
+    outputSha256: 'a1b8b5a17fb487dcc77e9aced334ba5e3d6fba7f11c9e0df85b6171ed57e60e7',
+    encoding: 'bzip2',
   },
 ]
 
@@ -76,6 +101,27 @@ function decodeUuencoded(source) {
   return Buffer.concat(chunks)
 }
 
+function decodeBzip2(sourcePath, outputName) {
+  assert.equal(existsSync(bundledSevenZip), true, `bundled 7-Zip was not found: ${bundledSevenZip}`)
+  const decodeDirectory = `${sourcePath}.decoded`
+  rmSync(decodeDirectory, { recursive: true, force: true })
+  mkdirSync(decodeDirectory, { recursive: true })
+  try {
+    const result = spawnSync(
+      bundledSevenZip,
+      ['x', sourcePath, `-o${decodeDirectory}`, '-y'],
+      { encoding: 'utf8', timeout: 60_000, windowsHide: true },
+    )
+    assert.ifError(result.error)
+    assert.equal(result.status, 0, `7-Zip bzip2 decode failed: ${result.stderr || result.stdout}`)
+    const decodedPath = path.join(decodeDirectory, outputName)
+    assert.equal(existsSync(decodedPath), true, `decoded fixture was not found: ${decodedPath}`)
+    return readFileSync(decodedPath)
+  } finally {
+    rmSync(decodeDirectory, { recursive: true, force: true })
+  }
+}
+
 mkdirSync(outputDirectory, { recursive: true })
 for (const fixture of fixtures) {
   const outputPath = path.join(outputDirectory, fixture.output)
@@ -85,20 +131,26 @@ for (const fixture of fixtures) {
   }
 
   const temporaryPath = `${outputPath}.download`
-  const encoded = await downloadBytes(`${rawBase}/${fixture.source}`, temporaryPath)
-  rmSync(temporaryPath, { force: true })
-  assert.equal(
-    sha256(encoded),
-    fixture.sourceSha256,
-    `${fixture.source} does not match the pinned source hash`,
-  )
-  const decoded = decodeUuencoded(encoded)
-  assert.equal(
-    sha256(decoded),
-    fixture.outputSha256,
-    `${fixture.output} does not match the pinned decoded hash`,
-  )
-  writeFileSync(outputPath, decoded)
+  const encoded = await downloadBytes(fixture.url, temporaryPath)
+  try {
+    assert.equal(
+      sha256(encoded),
+      fixture.sourceSha256,
+      `${fixture.source} does not match the pinned source hash`,
+    )
+    const decoded =
+      fixture.encoding === 'uu'
+        ? decodeUuencoded(encoded)
+        : decodeBzip2(temporaryPath, fixture.output)
+    assert.equal(
+      sha256(decoded),
+      fixture.outputSha256,
+      `${fixture.output} does not match the pinned decoded hash`,
+    )
+    writeFileSync(outputPath, decoded)
+  } finally {
+    rmSync(temporaryPath, { force: true })
+  }
   console.log(`[fixtures] downloaded and verified ${fixture.output}`)
 }
 

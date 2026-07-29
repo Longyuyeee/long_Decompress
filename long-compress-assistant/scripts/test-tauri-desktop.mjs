@@ -616,6 +616,39 @@ try {
   } else {
     console.log('[desktop-e2e] WSL mkfs.ext tools unavailable; skipping generated EXT2/3/4 images')
   }
+  const wslSquashFsProbe = spawnSync(
+    'wsl.exe',
+    ['-d', 'Ubuntu', '--', 'test', '-x', '/usr/bin/mksquashfs'],
+    { encoding: 'utf8', timeout: 30_000, windowsHide: true },
+  )
+  if (wslSquashFsProbe.status === 0) {
+    const squashFsSourceDirectory = path.join(fixtureDirectory, 'squashfs-source')
+    mkdirSync(squashFsSourceDirectory, { recursive: true })
+    copyFileSync(
+      extractOnlySource,
+      path.join(squashFsSourceDirectory, 'extract-only-payload.txt'),
+    )
+    const squashFsArchive = path.join(fixtureDirectory, 'extract-only.squashfs')
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        '-d',
+        'Ubuntu',
+        '--',
+        '/usr/bin/mksquashfs',
+        toWslMountPath(squashFsSourceDirectory),
+        toWslMountPath(squashFsArchive),
+        '-noappend',
+        '-quiet',
+        '-no-progress',
+      ],
+      'SquashFS',
+    )
+    console.log('[desktop-e2e] generated a real SquashFS image with a known payload')
+    extractOnlyMatrix.push(['squashfs', squashFsArchive, 'extract-only-payload.txt'])
+  } else {
+    console.log('[desktop-e2e] WSL mksquashfs unavailable; skipping generated SquashFS image')
+  }
 
   for (const [label, archive, extractedName] of extractOnlyMatrix) {
     const output = path.join(fixtureDirectory, `extract-only-${label}-output`)
@@ -661,7 +694,7 @@ try {
   )
   await callDesktopBridge('clearTasks')
 
-  console.log('[desktop-e2e] verifying pinned upstream RAR, LHA and RPM samples')
+  console.log('[desktop-e2e] verifying pinned upstream RAR, LHA, RPM and DMG/HFS samples')
   runFixtureCommand(
     process.execPath,
     [path.join(root, 'scripts', 'fetch-archive-test-fixtures.mjs')],
@@ -685,6 +718,12 @@ try {
       'libarchive-cpio-svr4-gzip.rpm',
       'rpmsample-1.0.0-1.noarch.cpio',
       '0e74cd48811782ad214e89ddeb478ebdcd17f2274f2a86e580fc6d1ac0e6d67d',
+    ],
+    [
+      'dmg-hfs',
+      'qemu-simple-hfs.dmg',
+      path.join('qemu-iotest', 'simple'),
+      '42eb54fc42befa10ed033996f1c15295751f22993c18dd0a7e4bf7c75b6acae3',
     ],
   ]
   for (const [label, fixtureName, extractedName, expectedSha256] of upstreamMatrix) {

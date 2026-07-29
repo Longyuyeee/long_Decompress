@@ -61,9 +61,9 @@ npm.cmd run test:e2e:desktop
 - RAR 无编码器的明确失败路径；
 - 取消后残留清理、退出确认、更新阻塞、托盘与第二实例恢复。
 
-## 下一阶段
+## 后续阶段
 
-建立经过授权、可再分发、带 SHA-256 的只读样本库，逐步覆盖 ISO、DMG、虚拟磁盘、Linux 软件包、文件系统和固件镜像。每个样本必须至少包含一个已知文件及其哈希；测试完成后逐字节核验，损坏样本和空壳文件不计为通过。
+继续扩展经过授权、可再分发、带 SHA-256 的只读样本库，覆盖剩余虚拟磁盘、文件系统、固件镜像和 Windows Installer 家族。每个样本必须至少包含一个已知文件及其哈希；测试完成后逐字节核验，损坏样本和空壳文件不计为通过。
 
 ## 2026-07-29 第二阶段增量
 
@@ -84,4 +84,15 @@ npm.cmd run test:e2e:desktop
 npm.cmd run test:fixtures:archives
 ```
 
-尚待真实载荷样本覆盖：DMG、VHD/VHDX、QCOW/QCOW2、VDI、VMDK、APFS、FAT、NTFS、HFS/HFSX、SquashFS、固件镜像以及 MSI/MSP/MSM。它们仍只能记录为“随包引擎声明具备处理器”，不能标记为逐文件验收完成。
+## 2026-07-29 第三阶段增量
+
+新增并通过以下真实解压场景：
+
+- WSL `mksquashfs` 离线生成 SquashFS，镜像包含测试运行时生成的已知文件，Release Tauri 解压后逐字节核验；
+- QEMU 官方测试仓库固定提交 `9f4d05a21f1d3a01c136979f4b60b7b02c60e821` 的 `simple-dmg.dmg.bz2`；
+- 下载器校验 QEMU BZip2 源文件 SHA-256 `13447673C3EFDF90465FCDA5866BC46AA621E0CF78326B685AEC22350D6AD111`，解码后 DMG SHA-256 `A1B8B5A17FB487DCC77E9ACED334BA5E3D6FBA7F11C9E0DF85B6171ED57E60E7`；
+- Release Tauri 穿透 DMG 与内层 HFS+ 文件系统，提取 `qemu-iotest/simple`，最终文件 SHA-256 为 `42EB54FC42BEFA10ED033996F1C15295751F22993C18DD0A7E4BF7C75B6ACAE3`。
+
+同时审查了 QEMU 官方 VHD、VHDX 与 VMDK 小型回归样本。部分样本可以识别容器结构，但没有可供逐文件核验的文件系统载荷，另有样本本身是模糊测试或错误路径，因此不计入“真实解压通过”。本机尝试准备 `qemu-img` 生成带已知载荷的转换矩阵时，Ubuntu 软件源连接超时；测试环境已恢复，项目与用户运行环境没有新增依赖。
+
+尚待真实载荷样本覆盖：VHD/VHDX、QCOW/QCOW2、VDI、VMDK、APFS、FAT、NTFS、HFS/HFSX、固件镜像以及 MSI/MSP/MSM。它们仍只能记录为“随包引擎声明具备处理器”或“容器结构可识别”，不能标记为逐文件验收完成。
