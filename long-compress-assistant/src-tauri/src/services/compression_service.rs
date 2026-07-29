@@ -22,6 +22,12 @@ use crate::services::password_query_service::PasswordQueryService;
 use crate::services::tar_aes_engine::TarAesEngine;
 use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
+use crate::services::compression_format::{self, CompressionRoute};
+
+pub use crate::services::archive_format::ArchiveFormat;
+pub use crate::services::compression_format::{
+    CompressionFormatCapability, COMPRESSION_FORMAT_CAPABILITIES,
+};
 
 struct CancellableProgressReader<R, F> {
     inner: R,
@@ -87,164 +93,6 @@ pub struct CompressionServiceConfig {
     pub buffer_size: usize,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum ArchiveFormat {
-    Zip,
-    SevenZip,
-    Rar,
-    AesEncrypted,
-    Tar,
-    Gzip,
-    Bzip2,
-    Xz,
-    Zstd,
-    Lzma,
-    Iso,
-    Cab,
-    Lzh,
-    Arj,
-    Dmg,
-    Wim,
-    Vhd,
-    Chm,
-    Deb,
-    Rpm,
-    SquashFs,
-    Nsis,
-    Msi,
-    Xar,
-    Cpio,
-    Udf,
-    Fat,
-    Ntfs,
-    Hfs,
-    Alz,
-    Arc,
-    Apfs,
-    Ext,
-    /// 7z CLI 支持的其他杂项格式
-    Universal,
-    Unknown,
-}
-
-impl ArchiveFormat {
-    pub fn from_magic(header: &[u8]) -> Self {
-        // ZIP (PK\x03\x04)
-        if header.len() >= 4 && &header[0..4] == b"PK\x03\x04" {
-            return ArchiveFormat::Zip;
-        }
-        // 7z (37 7A BC AF 27 1C)
-        if header.len() >= 6 && &header[0..6] == b"7z\xBC\xAF\x27\x1C" {
-            return ArchiveFormat::SevenZip;
-        }
-        // RAR v4 (Rar!\x1a\x07\x00)
-        if header.len() >= 7 && &header[0..7] == b"Rar!\x1a\x07\x00" {
-            return ArchiveFormat::Rar;
-        }
-        // RAR v5 (Rar!\x1a\x07\x01\x00)
-        if header.len() >= 8 && &header[0..8] == b"Rar!\x1a\x07\x01\x00" {
-            return ArchiveFormat::Rar;
-        }
-        // Application-native encrypted containers.
-        if header.len() >= 8
-            && (&header[0..8] == b"TARAES01"
-                || &header[0..8] == b"AESENC01"
-                || &header[0..8] == b"TARAES02"
-                || &header[0..8] == b"AESENC02")
-        {
-            return ArchiveFormat::AesEncrypted;
-        }
-        // GZIP (1F 8B)
-        if header.len() >= 2 && &header[0..2] == b"\x1F\x8B" {
-            return ArchiveFormat::Gzip;
-        }
-        // BZIP2 (BZh)
-        if header.len() >= 3 && &header[0..3] == b"BZh" {
-            return ArchiveFormat::Bzip2;
-        }
-        // XZ (FD 37 7A 58 5A 00)
-        if header.len() >= 6 && &header[0..6] == b"\xFD7zXZ\x00" {
-            return ArchiveFormat::Xz;
-        }
-        // ZSTD (28 B5 2F FD)
-        if header.len() >= 4 && header[0..4] == [0x28, 0xB5, 0x2F, 0xFD] {
-            return ArchiveFormat::Zstd;
-        }
-        // LZMA (5D 00 00)
-        if header.len() >= 3 && &header[0..3] == b"\x5D\x00\x00" {
-            return ArchiveFormat::Lzma;
-        }
-        // ISO 9660 (CD001 at offset 32769)
-        if header.len() >= 32 && header.len() >= 32773 {
-            // Not practical to check in initial header read, fall back to extension
-        }
-        // CAB (MSCF)
-        if header.len() >= 4 && &header[0..4] == b"MSCF" {
-            return ArchiveFormat::Cab;
-        }
-        // LZH/LHA (xx-lh or xx-lz)
-        if header.len() >= 5
-            && header[2] == b'-'
-            && header[3] == b'l'
-            && matches!(header[4], b'h' | b'z')
-        {
-            return ArchiveFormat::Lzh;
-        }
-        // ARJ (60 EA)
-        if header.len() >= 2 && &header[0..2] == b"\x60\xEA" {
-            return ArchiveFormat::Arj;
-        }
-        // DMG (koly signature at end, or various headers)
-        if header.len() >= 4 && &header[0..4] == b"\x78\x01\x73\x0D" {
-            return ArchiveFormat::Dmg;
-        }
-        // WIM (MSWIM)
-        if header.len() >= 8 && &header[0..8] == b"MSWIM\x00\x00\x00" {
-            return ArchiveFormat::Wim;
-        }
-        // VHD (conectix)
-        if header.len() >= 8 && &header[0..8] == b"conectix" {
-            return ArchiveFormat::Vhd;
-        }
-        // CHM (ITSF)
-        if header.len() >= 4 && &header[0..4] == b"ITSF" {
-            return ArchiveFormat::Chm;
-        }
-        // DEB (ar archive with debian-binary)
-        if header.len() >= 8 && &header[0..8] == b"!<arch>\n" {
-            return ArchiveFormat::Deb;
-        }
-        // RPM (ED AB EE DB)
-        if header.len() >= 4 && header[0..4] == [0xED, 0xAB, 0xEE, 0xDB] {
-            return ArchiveFormat::Rpm;
-        }
-        // SquashFS (hsqs or sqsh)
-        if header.len() >= 4 && (&header[0..4] == b"hsqs" || &header[0..4] == b"sqsh") {
-            return ArchiveFormat::SquashFs;
-        }
-        // CPIO (070707 or 070701 or 070702)
-        if header.len() >= 6 && (&header[0..6] == b"070707" || &header[0..6] == b"070701" || &header[0..6] == b"070702") {
-            return ArchiveFormat::Cpio;
-        }
-        // TAR (ustar at offset 257)
-        if header.len() >= 262 && &header[257..262] == b"ustar" {
-            return ArchiveFormat::Tar;
-        }
-
-        ArchiveFormat::Unknown
-    }
-
-    pub fn supports_password(&self) -> bool {
-        matches!(self,
-            ArchiveFormat::Zip |
-            ArchiveFormat::SevenZip |
-            ArchiveFormat::Rar |
-            ArchiveFormat::AesEncrypted |
-            ArchiveFormat::Universal
-        )
-    }
-}
-
 #[derive(Clone, Serialize)]
 pub struct TaskProgress {
     pub task_id: String,
@@ -287,46 +135,6 @@ pub struct RarCompressionSupport {
     pub encoder_path: Option<String>,
     pub message: String,
 }
-
-#[derive(Clone, Copy, Debug)]
-pub struct CompressionFormatCapability {
-    pub format: &'static str,
-    pub extensions: &'static [&'static str],
-    pub can_compress: bool,
-    pub can_extract: bool,
-    pub supports_password_compress: bool,
-    pub supports_password_extract: bool,
-    pub single_file_only: bool,
-    pub supports_split: bool,
-    pub requires_7za: bool,
-    pub requires_winrar: bool,
-}
-
-pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
-    CompressionFormatCapability { format: "tar.aes", extensions: &["tar.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "tar.gz.aes", extensions: &["tar.gz.aes", "tgz.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "tar.bz2.aes", extensions: &["tar.bz2.aes", "tbz2.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "tar.xz.aes", extensions: &["tar.xz.aes", "txz.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "tar.zst.aes", extensions: &["tar.zst.aes", "tzst.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "gz.aes", extensions: &["gz.aes", "gzip.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "bz2.aes", extensions: &["bz2.aes", "bzip2.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "xz.aes", extensions: &["xz.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "zst.aes", extensions: &["zst.aes", "zstd.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "tar.bz2", extensions: &["tar.bz2", "tbz2", "tbz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "tar.gz", extensions: &["tar.gz", "tgz", "tpz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "tar.xz", extensions: &["tar.xz", "txz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "tar.zst", extensions: &["tar.zst", "tzst"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "zip", extensions: &["zip", "zipx"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "7z", extensions: &["7z"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "rar", extensions: &["rar"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: true },
-    CompressionFormatCapability { format: "wim", extensions: &["wim"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: true, requires_winrar: false },
-    CompressionFormatCapability { format: "tar", extensions: &["tar", "ova"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "gz", extensions: &["gz", "gzip"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "bz2", extensions: &["bz2", "bzip2"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "xz", extensions: &["xz"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "zst", extensions: &["zst", "zstd"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "lzma", extensions: &["lzma"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: true, requires_winrar: false },
-];
 
 use tokio::sync::Semaphore;
 
@@ -541,92 +349,19 @@ impl CompressionService {
     }
 
     pub fn infer_compression_format(output_path: &str, explicit_format: Option<&str>) -> String {
-        if let Some(format) = explicit_format.map(str::trim).filter(|format| !format.is_empty()) {
-            return Self::normalize_compression_format(format);
-        }
-
-        let output_lower = output_path.to_lowercase();
-        for capability in COMPRESSION_FORMAT_CAPABILITIES {
-            for extension in capability.extensions {
-                if output_lower.ends_with(&format!(".{}", extension)) {
-                    return capability.format.to_string();
-                }
-            }
-        }
-
-        "unknown".to_string()
-    }
-
-    fn normalize_compression_format(format: &str) -> String {
-        match format.to_ascii_lowercase().as_str() {
-            "gzip" => "gz".to_string(),
-            "bzip2" => "bz2".to_string(),
-            "zstd" => "zst".to_string(),
-            "tgz" => "tar.gz".to_string(),
-            "tbz" | "tbz2" => "tar.bz2".to_string(),
-            "txz" => "tar.xz".to_string(),
-            "tzst" => "tar.zst".to_string(),
-            other => other.to_string(),
-        }
+        compression_format::infer_compression_format(output_path, explicit_format)
     }
 
     pub fn compression_format_capabilities() -> &'static [CompressionFormatCapability] {
-        COMPRESSION_FORMAT_CAPABILITIES
+        compression_format::compression_format_capabilities()
     }
 
     pub fn find_compression_format_capability(format: &str) -> Option<&'static CompressionFormatCapability> {
-        let normalized = Self::normalize_compression_format(format);
-        COMPRESSION_FORMAT_CAPABILITIES
-            .iter()
-            .find(|capability| capability.format == normalized)
-    }
-
-    fn has_native_password_container(format: &str) -> bool {
-        matches!(
-            Self::normalize_compression_format(format).as_str(),
-            "zip" | "7z" | "rar" |
-            "tar.aes" | "tar.gz.aes" | "tar.bz2.aes" | "tar.xz.aes" | "tar.zst.aes" |
-            "gz.aes" | "bz2.aes" | "xz.aes" | "zst.aes"
-        )
+        compression_format::find_compression_format_capability(format)
     }
 
     pub fn validate_compression_request(source_files: &[String], output_path: &str, options: &CompressionOptions) -> Result<String> {
-        let requested_format = Self::infer_compression_format(output_path, options.format.as_deref());
-        let capability = Self::find_compression_format_capability(&requested_format);
-        let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
-
-        // 分卷压缩通过 SplitCompressionService 实现
-
-        // 原生格式直接支持密码；其余格式仅允许显式创建 .7z 加密容器。
-        if has_password
-            && !capability.is_some_and(|capability| capability.supports_password_compress)
-        {
-            return Err(CompressionError::UnsupportedEncryption.into());
-        }
-
-        if has_password && !Self::has_native_password_container(&requested_format) {
-            if !output_path.to_ascii_lowercase().ends_with(".7z") {
-                return Err(CompressionError::CompressionFailed(
-                    format!(
-                        "{} does not support native encryption. Use a .7z output path or choose an .aes format.",
-                        requested_format
-                    )
-                ).into());
-            }
-            return Ok("7z".to_string());
-        }
-
-        if capability.is_some_and(|capability| capability.single_file_only) {
-            let single_regular_file = source_files.len() == 1 && Path::new(&source_files[0]).is_file();
-            if !single_regular_file {
-                return Err(CompressionError::CompressionFailed(format!(
-                    "{} compression only supports one regular file. Please use a TAR-based format for folders or multiple files.",
-                    requested_format
-                )).into());
-            }
-        }
-
-        Ok(requested_format)
+        compression_format::validate_compression_request(source_files, output_path, options)
     }
 
     fn run_command_cancellable(
@@ -863,31 +598,31 @@ impl CompressionService {
             };
             let working_output_string = working_output.to_string_lossy().to_string();
             service.emit_log(&window, &task_id, &format!("开始压缩到: {}", output_path), TaskLogSeverity::Info);
-            let res = match requested_format.as_str() {
-                "tar.aes" => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
-                "tar.gz.aes" | "tgz.aes" => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
-                "tar.bz2.aes" | "tbz2.aes" => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
-                "tar.xz.aes" | "txz.aes" => service.do_compress_tar_xz_aes(&window, &task_id, &source_files, &working_output_string, options),
-                "tar.zst.aes" | "tzst.aes" => service.do_compress_tar_zst_aes(&window, &task_id, &source_files, &working_output_string, options),
-                "gz.aes" | "gzip.aes" => service.do_compress_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
-                "bz2.aes" | "bzip2.aes" => service.do_compress_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
-                "xz.aes" => service.do_compress_xz_aes(&window, &task_id, &source_files, &working_output_string, options),
-                "zst.aes" | "zstd.aes" => service.do_compress_zst_aes(&window, &task_id, &source_files, &working_output_string, options),
-                "zip" => service.do_compress_zip(&window, &task_id, &source_files, &working_output_string, options),
-                "tar" => service.do_compress_tar(&window, &task_id, &source_files, &working_output_string, options),
-                "tar.gz" | "tgz" => service.do_compress_tar_gz(&window, &task_id, &source_files, &working_output_string, options),
-                "tar.bz2" | "tbz" | "tbz2" => service.do_compress_tar_bz2(&window, &task_id, &source_files, &working_output_string, options),
-                "tar.xz" | "txz" => service.do_compress_tar_xz(&window, &task_id, &source_files, &working_output_string, options),
-                "7z" => service.do_compress_7z(&window, &task_id, &source_files, &working_output_string, options),
-                "rar" => service.do_compress_rar(&window, &task_id, &source_files, &working_output_string, options),
-                "wim" => service.do_compress_wim(&window, &task_id, &source_files, &working_output_string, options),
-                "gz" => service.do_compress_gz(&window, &task_id, &source_files, &working_output_string, options),
-                "bz2" => service.do_compress_bz2(&window, &task_id, &source_files, &working_output_string, options),
-                "xz" => service.do_compress_xz(&window, &task_id, &source_files, &working_output_string, options),
-                "zst" | "zstd" => service.do_compress_zstd(&window, &task_id, &source_files, &working_output_string, options),
-                "tar.zst" | "tzst" => service.do_compress_tar_zstd(&window, &task_id, &source_files, &working_output_string, options),
-                "lzma" => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
-                _ => Err(CompressionError::CompressionFailed(format!(
+            let res = match compression_format::compression_route(&requested_format) {
+                Some(CompressionRoute::TarAes) => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::TarGzipAes) => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::TarBzip2Aes) => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::TarXzAes) => service.do_compress_tar_xz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::TarZstdAes) => service.do_compress_tar_zst_aes(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::GzipAes) => service.do_compress_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::Bzip2Aes) => service.do_compress_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::XzAes) => service.do_compress_xz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::ZstdAes) => service.do_compress_zst_aes(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::Zip) => service.do_compress_zip(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::Tar) => service.do_compress_tar(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::TarGzip) => service.do_compress_tar_gz(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::TarBzip2) => service.do_compress_tar_bz2(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::TarXz) => service.do_compress_tar_xz(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::SevenZip) => service.do_compress_7z(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::Rar) => service.do_compress_rar(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::Wim) => service.do_compress_wim(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::Gzip) => service.do_compress_gz(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::Bzip2) => service.do_compress_bz2(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::Xz) => service.do_compress_xz(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::Zstd) => service.do_compress_zstd(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::TarZstd) => service.do_compress_tar_zstd(&window, &task_id, &source_files, &working_output_string, options),
+                Some(CompressionRoute::Lzma) => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
+                None => Err(CompressionError::CompressionFailed(format!(
                     "Unsupported compression format '{}'.",
                     requested_format
                 )).into()),
@@ -1212,13 +947,7 @@ impl CompressionService {
         }
 
         let ext = path.extension().and_then(|value| value.to_str()).unwrap_or("").to_ascii_lowercase();
-        Ok(match ext.as_str() {
-            "zip" | "zipx" | "jar" | "xpi" | "odt" | "ods" | "docx" | "xlsx" | "pptx" | "epub" | "ipa" | "apk" | "appx" => ArchiveFormat::Zip,
-            "7z" => ArchiveFormat::SevenZip,
-            "rar" => ArchiveFormat::Rar,
-            "aes" => ArchiveFormat::AesEncrypted,
-            _ => ArchiveFormat::Universal,
-        })
+        Ok(ArchiveFormat::from_password_extension(&ext))
     }
 
     pub async fn verify_archive_password_candidate(&self, file_path: &str, password: &str) -> Result<bool> {
@@ -1305,50 +1034,7 @@ impl CompressionService {
 
         // 托底识别：如果 magic 识别失败，尝试根据后缀识别
         if format == ArchiveFormat::Unknown {
-            format = match ext.as_str() {
-                "zip" | "zipx" | "jar" | "xpi" | "odt" | "ods" | "docx" | "xlsx" | "pptx" | "epub" | "ipa" | "apk" | "appx" => ArchiveFormat::Zip,
-                "7z" => ArchiveFormat::SevenZip,
-                "rar" => ArchiveFormat::Rar,
-                "aes" => ArchiveFormat::AesEncrypted,
-                "tar" | "ova" => ArchiveFormat::Tar,
-                "gz" | "gzip" | "tgz" | "tpz" => ArchiveFormat::Gzip,
-                "bz2" | "bzip2" | "tbz" | "tbz2" => ArchiveFormat::Bzip2,
-                "xz" | "txz" => ArchiveFormat::Xz,
-                "zst" | "zstd" | "tzst" => ArchiveFormat::Zstd,
-                "lzma" => ArchiveFormat::Lzma,
-                "iso" | "img" => ArchiveFormat::Iso,
-                "cab" => ArchiveFormat::Cab,
-                "lzh" | "lha" => ArchiveFormat::Lzh,
-                "arj" => ArchiveFormat::Arj,
-                "dmg" => ArchiveFormat::Dmg,
-                "wim" => ArchiveFormat::Wim,
-                "vhd" | "vhdx" => ArchiveFormat::Vhd,
-                "chm" => ArchiveFormat::Chm,
-                "deb" => ArchiveFormat::Deb,
-                "rpm" => ArchiveFormat::Rpm,
-                "sfs" | "squashfs" => ArchiveFormat::SquashFs,
-                "nsis" => ArchiveFormat::Nsis,
-                "msi" => ArchiveFormat::Msi,
-                "xar" => ArchiveFormat::Xar,
-                "cpio" => ArchiveFormat::Cpio,
-                "udf" => ArchiveFormat::Udf,
-                "fat" => ArchiveFormat::Fat,
-                "ntfs" => ArchiveFormat::Ntfs,
-                "hfs" | "hfsx" => ArchiveFormat::Hfs,
-                "alz" => ArchiveFormat::Alz,
-                "arc" => ArchiveFormat::Arc,
-                "apfs" => ArchiveFormat::Apfs,
-                "ext" | "ext2" | "ext3" | "ext4" => ArchiveFormat::Ext,
-                "apm" | "ar" | "a" | "cramfs" | "gpt" | "mbr" | "ihex" |
-                "qcow" | "qcow2" | "qcow2c" | "scap" | "uefif" | "vdi" | "vmdk" |
-                "z" | "taz" | "swm" | "esd" | "ppkg" | "msp" | "msm" | "udeb"
-                    => ArchiveFormat::Universal,
-                // 分卷压缩包后缀 → 7z CLI 处理
-                "001" | "002" | "003" | "004" | "005" | "006" | "007" | "008" | "009"
-                | "z01" | "z02" | "z03" | "z04" | "z05" | "z06" | "z07" | "z08" | "z09"
-                    => ArchiveFormat::Universal,
-                _ => ArchiveFormat::Unknown,
-            };
+            format = ArchiveFormat::from_extension(&ext);
             if format != ArchiveFormat::Unknown {
                 service.emit_log(&window, &task_id, &format!("Magic匹配失败，根据后缀识别为: {:?}", format), TaskLogSeverity::Warning);
             }
@@ -1507,7 +1193,7 @@ impl CompressionService {
                 let t_id = task_id.clone();
                 let w = window.clone();
                 tokio::task::spawn_blocking(move || {
-                    if Self::is_tar_wrapped_archive(Path::new(&f_path), &[".tar.gz", ".tgz"]) {
+                    if compression_format::is_tar_wrapped_archive(Path::new(&f_path), "tar.gz") {
                         srv.do_extract_tar_gz(&w, &t_id, &f_path, &o_dir, &opts)
                     } else {
                         srv.do_extract_gz(&w, &t_id, &f_path, &o_dir, &opts)
@@ -1522,7 +1208,7 @@ impl CompressionService {
                 let t_id = task_id.clone();
                 let w = window.clone();
                 tokio::task::spawn_blocking(move || {
-                    if Self::is_tar_wrapped_archive(Path::new(&f_path), &[".tar.bz2", ".tbz", ".tbz2"]) {
+                    if compression_format::is_tar_wrapped_archive(Path::new(&f_path), "tar.bz2") {
                         srv.do_extract_tar_bz2(&w, &t_id, &f_path, &o_dir, &opts)
                     } else {
                         srv.do_extract_bz2(&w, &t_id, &f_path, &o_dir, &opts)
@@ -1537,7 +1223,7 @@ impl CompressionService {
                 let t_id = task_id.clone();
                 let w = window.clone();
                 tokio::task::spawn_blocking(move || {
-                    if Self::is_tar_wrapped_archive(Path::new(&f_path), &[".tar.xz", ".txz"]) {
+                    if compression_format::is_tar_wrapped_archive(Path::new(&f_path), "tar.xz") {
                         srv.do_extract_tar_xz(&w, &t_id, &f_path, &o_dir, &opts)
                     } else {
                         srv.do_extract_xz(&w, &t_id, &f_path, &o_dir, &opts)
@@ -1552,7 +1238,7 @@ impl CompressionService {
                 let t_id = task_id.clone();
                 let w = window.clone();
                 tokio::task::spawn_blocking(move || {
-                    if Self::is_tar_wrapped_archive(Path::new(&f_path), &[".tar.zst", ".tzst"]) {
+                    if compression_format::is_tar_wrapped_archive(Path::new(&f_path), "tar.zst") {
                         srv.do_extract_tar_zstd(&w, &t_id, &f_path, &o_dir, &opts)
                     } else {
                         srv.do_extract_zstd(&w, &t_id, &f_path, &o_dir, &opts)
@@ -1967,12 +1653,6 @@ impl CompressionService {
             .and_then(|name| name.to_str())
             .unwrap_or("archive")
             .to_string()
-    }
-
-    fn is_tar_wrapped_archive(path: &Path, suffixes: &[&str]) -> bool {
-        let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("");
-        let lower_name = file_name.to_lowercase();
-        suffixes.iter().any(|suffix| lower_name.ends_with(suffix))
     }
 
     fn single_stream_output_name(path: &Path, suffixes: &[&str]) -> String {
