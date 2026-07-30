@@ -76,9 +76,9 @@ export interface ExtractOnlyFormatCapability {
 export const EXTRACT_ONLY_FORMATS: ExtractOnlyFormatCapability[] = [
   { displayName: 'Application packages', extensions: ['jar', 'xpi', 'ipa', 'apk', 'appx'], requires7za: false },
   { displayName: 'Disk images', extensions: ['iso', 'img', 'dmg', 'vhd', 'vhdx', 'qcow', 'qcow2', 'qcow2c', 'vdi', 'vmdk'], requires7za: true },
-  { displayName: 'Installers and packages', extensions: ['cab', 'deb', 'udeb', 'rpm', 'msi', 'msp', 'msm', 'nsis', 'ppkg'], requires7za: true },
-  { displayName: 'Filesystems and firmware', extensions: ['apfs', 'apm', 'ext', 'ext2', 'ext3', 'ext4', 'gpt', 'mbr', 'uefif', 'scap', 'cramfs', 'udf', 'fat', 'ntfs', 'hfs', 'hfsx'], requires7za: true },
-  { displayName: 'Legacy archives', extensions: ['ar', 'a', 'lzh', 'lha', 'arj', 'chm', 'squashfs', 'sfs', 'xar', 'cpio', 'ihex', 'z', 'taz'], requires7za: true },
+  { displayName: 'Installers and packages', extensions: ['cab', 'deb', 'udeb', 'rpm', 'msi', 'msp', 'msm', 'nsis'], requires7za: true },
+  { displayName: 'Filesystems and firmware', extensions: ['apfs', 'ext', 'ext2', 'ext3', 'ext4', 'gpt', 'mbr', 'uefif', 'cramfs', 'fat', 'ntfs', 'hfs', 'hfsx'], requires7za: true },
+  { displayName: 'Legacy archives', extensions: ['ar', 'a', 'lzh', 'lha', 'squashfs', 'sfs', 'xar', 'cpio', 'ihex'], requires7za: true },
 ]
 
 export const COMPRESSIBLE_FORMATS = FORMAT_CAPABILITIES
@@ -111,7 +111,7 @@ export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_EXTENSIONS
   .map(extension => `.${extension}`)
   .join(',')
 
-export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · APK · IPA · LZH · ARJ · CHM · CPIO · XAR + 更多'
+export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · APK · IPA · LZH · CPIO · XAR + 更多'
 
 export const COMPRESSION_FORMAT_HINT = 'ZIP · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZMA · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
 
