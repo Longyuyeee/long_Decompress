@@ -23,6 +23,7 @@ use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 use crate::services::compression_format::{self, CompressionRoute};
 use crate::services::extraction_transaction::{self, ExtractionStaging};
+use crate::services::native_compression::{self, CompressionRuntime};
 use crate::services::native_extraction::{self, ExtractionRuntime};
 
 pub use crate::services::archive_format::ArchiveFormat;
@@ -187,6 +188,28 @@ impl ExtractionRuntime for CompressionService {
 
     fn normalized_archive_path(&self, path: &Path, preserve_paths: bool) -> Option<PathBuf> {
         CompressionService::normalized_archive_path(path, preserve_paths)
+    }
+
+    fn emit_log(&self, window: &Window, task_id: &str, message: &str, severity: TaskLogSeverity) {
+        CompressionService::emit_log(self, window, task_id, message, severity);
+    }
+
+    fn emit_progress(&self, window: &Window, task_id: &str, progress: f32, current_file: Option<String>, processed_bytes: u64, total_bytes: u64) {
+        CompressionService::emit_progress(self, window, task_id, progress, current_file, processed_bytes, total_bytes);
+    }
+}
+
+impl CompressionRuntime for CompressionService {
+    fn check_cancellation(&self) -> Result<()> {
+        CompressionService::check_cancellation(self)
+    }
+
+    fn cancellation_flag(&self) -> Arc<AtomicBool> {
+        self.cancellation_flag.clone()
+    }
+
+    fn copy_buffer_size(&self) -> usize {
+        self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)
     }
 
     fn emit_log(&self, window: &Window, task_id: &str, message: &str, severity: TaskLogSeverity) {
@@ -1755,61 +1778,7 @@ impl CompressionService {
     }
 
     fn do_compress_zip(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        if !output.to_lowercase().ends_with(".zip") {
-            return Err(CompressionError::CompressionFailed(
-                "ZIP compression output path must end with .zip".to_string()
-            ).into());
-        }
-
-        if let Some(parent) = Path::new(output).parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        // 分卷压缩：委托给 SplitCompressionService
-        if options.split_size.is_some_and(|size| size > 0) {
-            let split_svc = crate::services::split_compression::SplitCompressionService::new();
-            let rt = tokio::runtime::Handle::current();
-            let result = rt.block_on(async {
-                split_svc.compress_to_split_zips_cancellable(
-                    sources,
-                    Path::new(output),
-                    options.clone(),
-                    self.cancellation_flag.clone(),
-                ).await
-            })?;
-            self.emit_log(window, task_id,
-                &format!("分卷压缩完成：{} 个分卷", result.part_count),
-                TaskLogSeverity::Success);
-            self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
-            return Ok(());
-        }
-
-        // 密码 ZIP：使用原生 AES-256 ZIP 写入器，避免在进程参数中暴露密码。
-        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
-            return self.do_compress_zip_with_password(window, task_id, sources, output, &options);
-        }
-
-        let file = File::create(output)?;
-        let mut zip = zip::ZipWriter::new(file);
-        let level = options.level.clamp(1, 9) as i32;
-        let zip_options = FileOptions::default()
-            .compression_method(CompressionMethod::Deflated)
-            .compression_level(Some(level));
-
-        let preserve_paths = options.preserve_paths.unwrap_or(true);
-        let entries = Self::collect_compression_entries(sources, preserve_paths, false)?;
-
-        let total = entries.len().max(1);
-        let mut copy_buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
-        for (i, (path, archive_name, _is_dir)) in entries.iter().enumerate() {
-            self.check_cancellation()?;
-            zip.start_file(archive_name, zip_options)?;
-            let mut f = File::open(path)?;
-            self.copy_cancellable(&mut f, &mut zip, &mut copy_buffer)?;
-            self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(archive_name.clone()), 0, 0);
-        }
-        zip.finish()?;
-        Ok(())
+        native_compression::zip::compress(self, Some(window), task_id, sources, output, options)
     }
 
     fn ensure_tar_compression_supported(output: &str, extensions: &[&str]) -> Result<()> {
@@ -1847,72 +1816,6 @@ impl CompressionService {
         Ok(())
     }
 
-    /// 在进程内创建 AES-256 密码保护 ZIP。
-    fn create_encrypted_zip(
-        password: &str,
-        level: u32,
-        sources: &[String],
-        output: &str,
-        preserve_paths: bool,
-        cancellation_flag: &AtomicBool,
-    ) -> Result<()> {
-        let file = File::create(output)?;
-        let mut writer = zip_aes::ZipWriter::new(file);
-        let options = zip_aes::write::SimpleFileOptions::default()
-            .compression_method(zip_aes::CompressionMethod::Deflated)
-            .compression_level(Some(level.clamp(1, 9) as i64))
-            .with_aes_encryption(zip_aes::AesMode::Aes256, password);
-        let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
-        let mut copy_buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
-
-        for (path, archive_name, is_dir) in entries {
-            if cancellation_flag.load(Ordering::Relaxed) {
-                return Err(CompressionError::Cancelled.into());
-            }
-            let archive_name = archive_name.replace('\\', "/");
-            if is_dir {
-                writer.add_directory(archive_name, options)?;
-            } else {
-                writer.start_file(archive_name, options)?;
-                let mut source = File::open(path)?;
-                loop {
-                    if cancellation_flag.load(Ordering::Relaxed) {
-                        return Err(CompressionError::Cancelled.into());
-                    }
-                    let read = source.read(&mut copy_buffer)?;
-                    if read == 0 {
-                        break;
-                    }
-                    writer.write_all(&copy_buffer[..read])?;
-                }
-            }
-        }
-        writer.finish()?;
-        Ok(())
-    }
-
-    fn do_compress_zip_with_password(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: &CompressionOptions) -> Result<()> {
-        let pwd = options.password.as_deref().unwrap_or("");
-        let level = options.level.clamp(1, 9);
-
-        for _ in sources {
-            self.check_cancellation()?;
-        }
-
-        self.emit_log(window, task_id, "使用原生引擎创建 AES-256 加密 ZIP...", TaskLogSeverity::Info);
-        Self::create_encrypted_zip(
-            pwd,
-            level,
-            sources,
-            output,
-            options.preserve_paths.unwrap_or(true),
-            &self.cancellation_flag,
-        )?;
-
-        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
-        self.emit_log(window, task_id, "加密 ZIP 创建完成", TaskLogSeverity::Success);
-        Ok(())
-    }
 
     /// 使用原生 zstd 进行 Zstd 压缩。
     /// 当需要密码时，使用 7z 作为加密容器（AES-256）。
@@ -2966,20 +2869,20 @@ mod tests_continued {
         let archive = temp.path().join("secret.zip");
         std::fs::write(&source, b"top secret").expect("source fixture");
 
-        CompressionService::create_encrypted_zip(
+        let service = CompressionService::for_testing();
+        native_compression::zip::create_encrypted_zip(
+            &service,
             "open-sesame",
             6,
             &[source.to_string_lossy().to_string()],
             &archive.to_string_lossy(),
             true,
-            &AtomicBool::new(false),
         ).expect("encrypted ZIP creation");
 
         let engine = UniversalCliEngine::new();
         assert!(engine.try_password(&archive, "open-sesame").await.expect("correct password"));
         assert!(!engine.try_password(&archive, "wrong-password").await.expect("wrong password"));
 
-        let service = CompressionService::new_with_defaults().await;
         assert!(service
             .archive_requires_password(&archive.to_string_lossy(), ArchiveFormat::Zip)
             .await
