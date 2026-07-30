@@ -2225,90 +2225,14 @@ impl CompressionService {
     }
 
     fn do_compress_7z(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        if !output.to_lowercase().ends_with(".7z") {
-            return Err(CompressionError::CompressionFailed(
-                "7z compression output path must end with .7z".to_string()
-            ).into());
-        }
-
-        if let Some(parent) = Path::new(output).parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        let preserve_paths = options.preserve_paths.unwrap_or(true);
-        let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
-        let total_bytes = entries
-            .iter()
-            .filter(|(_, _, is_dir)| !*is_dir)
-            .try_fold(0u64, |total, (path, _, _)| {
-                Ok::<_, std::io::Error>(total.saturating_add(path.metadata()?.len()))
-            })?
-            .max(1);
-        let mut processed_bytes = 0u64;
-        let mut writer = sevenz_rust::SevenZWriter::create(output)
-            .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
-
-        let level = options.level.clamp(1, 9);
-        let lzma_options = sevenz_rust::lzma::LZMA2Options::with_preset(level);
-        let mut methods = Vec::new();
-        if let Some(password) = options.password.as_deref().filter(|password| !password.is_empty()) {
-            methods.push(sevenz_rust::AesEncoderOptions::new(sevenz_rust::Password::from(password)).into());
-        }
-        methods.push(lzma_options.into());
-        writer.set_content_methods(methods);
-
-        for (i, (path, archive_name, is_dir)) in entries.iter().enumerate() {
-            self.check_cancellation()?;
-            let entry = sevenz_rust::SevenZArchiveEntry::from_path(path, archive_name.clone());
-            if *is_dir {
-                writer.push_archive_entry::<&[u8]>(entry, None)
-                    .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
-            } else {
-                let file = File::open(path)?;
-                let current_name = archive_name.clone();
-                let mut last_emitted = processed_bytes;
-                let progress_reader = CancellableProgressReader::new(
-                    file,
-                    self.cancellation_flag.clone(),
-                    |read| {
-                        processed_bytes = processed_bytes.saturating_add(read);
-                        if Self::should_emit_byte_progress(last_emitted, processed_bytes)
-                            || processed_bytes >= total_bytes
-                        {
-                            self.emit_progress(
-                                window,
-                                task_id,
-                                processed_bytes as f32 / total_bytes as f32,
-                                Some(current_name.clone()),
-                                processed_bytes,
-                                total_bytes,
-                            );
-                            last_emitted = processed_bytes;
-                        }
-                    },
-                );
-                if let Err(error) = writer.push_archive_entry(entry, Some(progress_reader)) {
-                    if self.cancellation_flag.load(Ordering::Relaxed) {
-                        return Err(CompressionError::Cancelled.into());
-                    }
-                    return Err(CompressionError::CompressionFailed(error.to_string()).into());
-                }
-            }
-            if processed_bytes == 0 {
-                self.emit_progress(
-                    window,
-                    task_id,
-                    (i + 1) as f32 / entries.len().max(1) as f32,
-                    Some(archive_name.clone()),
-                    0,
-                    0,
-                );
-            }
-        }
-
-        writer.finish()
-            .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
-        Ok(())
+        native_compression::seven_zip::compress(
+            self,
+            Some(window),
+            task_id,
+            sources,
+            output,
+            options,
+        )
     }
 
     pub fn find_rar_encoder() -> Option<String> {

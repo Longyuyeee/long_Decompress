@@ -3,6 +3,7 @@ use anyhow::Result;
 use std::sync::{atomic::AtomicBool, Arc};
 use tauri::Window;
 
+pub(crate) mod seven_zip;
 pub(crate) mod zip;
 
 pub(crate) trait CompressionRuntime {
