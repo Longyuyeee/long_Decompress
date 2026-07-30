@@ -190,6 +190,7 @@ npm run tauri build
 项目状态与后续开发方向：
 
 - [开发状态与路线图](DEVELOPMENT_ROADMAP.md)
+- [2026-07-31 发布后开发审计](DEVELOPMENT_AUDIT_2026-07-31.md)
 - [核心压缩与解压流程稳定化计划](CORE_WORKFLOW_STABILIZATION.md)
 - [Release 发布验收清单](RELEASE_CHECKLIST.md)
 - [开发收口清单](REMAINING_WORK.md)
