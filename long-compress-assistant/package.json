@@ -1,7 +1,7 @@
 {
   "name": "long-compress-assistant",
   "private": true,
-  "version": "1.0.19",
+  "version": "1.0.20-rc.2",
   "author": "Longyuyeee",
   "license": "MIT",
   "type": "module",

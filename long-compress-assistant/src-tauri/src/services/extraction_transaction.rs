@@ -641,4 +641,74 @@ mod tests {
                 && error.contains(&missing_backup.to_string_lossy().to_string())
         }));
     }
+
+    #[test]
+    fn extract_only_newer_handles_older_equal_and_newer_staged_files() {
+        let scenarios = [
+            ("older", 1_000, 2_000, b"destination".as_slice()),
+            ("equal", 2_000, 2_000, b"destination".as_slice()),
+            ("newer", 3_000, 2_000, b"staged".as_slice()),
+        ];
+
+        for (name, staged_seconds, destination_seconds, expected) in scenarios {
+            let temp = tempfile::tempdir().expect("temp dir");
+            let staging = temp.path().join("staging");
+            let output = temp.path().join("output");
+            std::fs::create_dir_all(&staging).expect("staging");
+            std::fs::create_dir_all(&output).expect("output");
+            let staged = staging.join("same.txt");
+            let destination = output.join("same.txt");
+            std::fs::write(&staged, b"staged").expect("staged fixture");
+            std::fs::write(&destination, b"destination").expect("destination fixture");
+            filetime::set_file_mtime(
+                &staged,
+                filetime::FileTime::from_unix_time(staged_seconds, 0),
+            )
+            .expect("staged timestamp");
+            filetime::set_file_mtime(
+                &destination,
+                filetime::FileTime::from_unix_time(destination_seconds, 0),
+            )
+            .expect("destination timestamp");
+
+            commit_staged_extraction(
+                "archive.7z",
+                &staging,
+                &output,
+                &DecompressOptions {
+                    extract_only_newer: true,
+                    overwrite_existing: true,
+                    conflict_policy: "overwrite".to_string(),
+                    ..Default::default()
+                },
+                |_| panic!("extract-only-newer must not request conflict resolution"),
+            )
+            .unwrap_or_else(|error| panic!("{name} scenario failed: {error}"));
+
+            assert_eq!(
+                std::fs::read(&destination).expect("committed destination"),
+                expected,
+                "{name} scenario"
+            );
+        }
+    }
+
+    #[test]
+    fn compiled_file_filter_preserves_multi_pattern_matching() {
+        let filter = compile_file_filter(Some("*.txt; assets/*.PNG"));
+
+        assert!(matches_compiled_file_filter(
+            Path::new("notes/readme.TXT"),
+            &filter,
+        ));
+        assert!(matches_compiled_file_filter(
+            Path::new("assets/logo.png"),
+            &filter,
+        ));
+        assert!(!matches_compiled_file_filter(
+            Path::new("assets/logo.svg"),
+            &filter,
+        ));
+        assert!(matches_compiled_file_filter(Path::new("anything.bin"), &[]));
+    }
 }

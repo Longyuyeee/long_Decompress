@@ -8,11 +8,11 @@ use long_compress_assistant::commands::compression_profile::CompressionProfileSe
 use long_compress_assistant::commands::encrypted_password::EncryptedPasswordServiceState;
 use long_compress_assistant::services::decompression_profile_service::DecompressionProfileService;
 
-use std::io::{BufRead, BufReader, Read, Write};
-use std::sync::atomic::Ordering;
 use interprocess::local_socket::{
     prelude::*, GenericFilePath, GenericNamespaced, ListenerOptions, Stream,
 };
+use std::io::{BufRead, BufReader, Read, Write};
+use std::sync::atomic::Ordering;
 use tauri::Manager;
 use window_shadows::set_shadow;
 
@@ -21,11 +21,49 @@ use long_compress_assistant::commands::system_integration::{ContextAction, Deskt
 #[cfg(not(feature = "desktop-e2e"))]
 const INSTANCE_NAME: &str = "com.longcompress.assistant.desktop";
 #[cfg(feature = "desktop-e2e")]
-const INSTANCE_NAME: &str = "com.longcompress.assistant.desktop.e2e";
+const INSTANCE_NAME_PREFIX: &str = "com.longcompress.assistant.desktop.e2e";
 #[cfg(not(feature = "desktop-e2e"))]
 const INSTANCE_SOCKET_NAME: &str = "com.longcompress.assistant.desktop.sock";
 #[cfg(feature = "desktop-e2e")]
-const INSTANCE_SOCKET_NAME: &str = "com.longcompress.assistant.desktop.e2e.sock";
+const INSTANCE_SOCKET_NAME_PREFIX: &str = "com.longcompress.assistant.desktop.e2e";
+
+#[cfg(not(feature = "desktop-e2e"))]
+fn instance_name() -> String {
+    INSTANCE_NAME.to_string()
+}
+
+#[cfg(feature = "desktop-e2e")]
+fn desktop_e2e_instance_id() -> String {
+    let id: String = std::env::var("LONG_DECOMPRESS_E2E_INSTANCE_ID")
+        .unwrap_or_else(|_| "default".to_string())
+        .chars()
+        .filter(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+        .take(48)
+        .collect();
+    if id.is_empty() {
+        "default".to_string()
+    } else {
+        id
+    }
+}
+
+#[cfg(feature = "desktop-e2e")]
+fn instance_name() -> String {
+    format!("{INSTANCE_NAME_PREFIX}.{}", desktop_e2e_instance_id())
+}
+
+#[cfg(not(feature = "desktop-e2e"))]
+fn instance_socket_name_value() -> String {
+    INSTANCE_SOCKET_NAME.to_string()
+}
+
+#[cfg(feature = "desktop-e2e")]
+fn instance_socket_name_value() -> String {
+    format!(
+        "{INSTANCE_SOCKET_NAME_PREFIX}.{}.sock",
+        desktop_e2e_instance_id()
+    )
+}
 
 fn parse_context_action(args: &[String]) -> Option<ContextAction> {
     let actions = [
@@ -60,10 +98,18 @@ fn parse_context_action(args: &[String]) -> Option<ContextAction> {
 }
 
 fn instance_socket_name() -> std::io::Result<interprocess::local_socket::Name<'static>> {
+    let socket_name = instance_socket_name_value();
     if GenericNamespaced::is_supported() {
-        INSTANCE_SOCKET_NAME.to_ns_name::<GenericNamespaced>()
+        socket_name.to_ns_name::<GenericNamespaced>()
     } else {
-        "/tmp/long-compress-assistant.sock".to_fs_name::<GenericFilePath>()
+        #[cfg(not(feature = "desktop-e2e"))]
+        {
+            "/tmp/long-compress-assistant.sock".to_fs_name::<GenericFilePath>()
+        }
+        #[cfg(feature = "desktop-e2e")]
+        {
+            format!("/tmp/{socket_name}").to_fs_name::<GenericFilePath>()
+        }
     }
 }
 
@@ -77,7 +123,10 @@ fn forward_to_running_instance(args: &[String]) -> bool {
                     && stream.flush().is_ok()
                 {
                     let mut acknowledgement = String::new();
-                    if BufReader::new(stream).read_line(&mut acknowledgement).is_ok() {
+                    if BufReader::new(stream)
+                        .read_line(&mut acknowledgement)
+                        .is_ok()
+                    {
                         return acknowledgement.trim() == "ok";
                     }
                 }
@@ -105,25 +154,36 @@ fn write_restore_visibility_probe(args: &[String], window: &tauri::Window) {
 }
 
 fn main() {
-    let instance = single_instance::SingleInstance::new(INSTANCE_NAME)
+    let instance_name = instance_name();
+    let instance = single_instance::SingleInstance::new(&instance_name)
         .expect("failed to create application instance guard");
     let args: Vec<String> = std::env::args().collect();
     if !instance.is_single() {
         if !forward_to_running_instance(&args) {
             rfd::MessageDialog::new()
                 .set_title("Long解压")
-                .set_description("软件已经在运行，但无法将本次操作发送到现有窗口。请从托盘打开软件后重试。")
+                .set_description(
+                    "软件已经在运行，但无法将本次操作发送到现有窗口。请从托盘打开软件后重试。",
+                )
                 .set_level(rfd::MessageLevel::Error)
                 .show();
         }
         return;
     }
     let mut ipc_listener = instance_socket_name()
-        .and_then(|name| ListenerOptions::new().name(name).try_overwrite(true).create_sync())
+        .and_then(|name| {
+            ListenerOptions::new()
+                .name(name)
+                .try_overwrite(true)
+                .create_sync()
+        })
         .map_err(|error| {
             rfd::MessageDialog::new()
                 .set_title("Long解压")
-                .set_description(format!("单实例通信初始化失败：{}\n右键操作可能无法唤醒当前窗口。", error))
+                .set_description(format!(
+                    "单实例通信初始化失败：{}\n右键操作可能无法唤醒当前窗口。",
+                    error
+                ))
                 .set_level(rfd::MessageLevel::Warning)
                 .show();
             error

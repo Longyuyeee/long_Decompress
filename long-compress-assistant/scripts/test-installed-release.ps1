@@ -33,6 +33,7 @@ $applicationName = "$productName.exe"
 $restoreRequired = $false
 $validationSucceeded = $false
 $baselineContextMenuMode = 'none'
+$contextMenuRegistryBackups = @()
 $evidence = [ordered]@{
   schemaVersion = 1
   startedAt = (Get-Date).ToUniversalTime().ToString('o')
@@ -156,32 +157,94 @@ function Get-ContextMenuMode {
   return 'none'
 }
 
+function Get-ClassicContextMenuCommand {
+  $commandKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.open\command'
+  if (-not (Test-Path -LiteralPath $commandKey)) {
+    return ''
+  }
+  return [string](Get-Item -LiteralPath $commandKey).GetValue('')
+}
+
+function Test-ClassicContextMenuTarget {
+  param([string]$ExpectedExecutable)
+  $command = Get-ClassicContextMenuCommand
+  return $command -like "`"$ExpectedExecutable`"*"
+}
+
+function Get-OwnedContextMenuRegistryPaths {
+  $template = Get-Content -Raw -Encoding utf8 -LiteralPath $installerTemplate
+  $paths = [regex]::Matches(
+    $template,
+    'DeleteRegKey HKCU "([^"]*LongDecompress[^"]*)"'
+  ) | ForEach-Object { $_.Groups[1].Value }
+  $paths += @(
+    'Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A}',
+    'Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4B}',
+    'Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4C}'
+  )
+  return @($paths | Sort-Object -Unique)
+}
+
+function Backup-ContextMenuRegistry {
+  $registryBackupDirectory = Join-Path $backupRoot 'context-menu-registry'
+  New-Item -ItemType Directory -Path $registryBackupDirectory -Force | Out-Null
+  $index = 0
+  foreach ($path in Get-OwnedContextMenuRegistryPaths) {
+    $providerPath = "HKCU:\$path"
+    if (-not (Test-Path -LiteralPath $providerPath)) {
+      continue
+    }
+    $backup = Join-Path $registryBackupDirectory "$index.reg"
+    & reg.exe export "HKCU\$path" $backup /y | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to back up context-menu registry path: HKCU\$path"
+    }
+    $script:contextMenuRegistryBackups += $backup
+    $index += 1
+  }
+}
+
+function Restore-ContextMenuRegistry {
+  foreach ($path in Get-OwnedContextMenuRegistryPaths) {
+    $providerPath = "HKCU:\$path"
+    if (Test-Path -LiteralPath $providerPath) {
+      Remove-Item -LiteralPath $providerPath -Recurse -Force
+    }
+  }
+  foreach ($backup in $contextMenuRegistryBackups) {
+    & reg.exe import $backup | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to restore context-menu registry backup: $backup"
+    }
+  }
+}
+
 function Restore-ContextMenuMode {
   param($InstalledState, [string]$ExpectedMode)
-  if ($ExpectedMode -eq 'none') {
-    Add-Check 'baseline context-menu absence is restored' (
-      (Get-ContextMenuMode) -eq 'none'
-    ) "actual=$(Get-ContextMenuMode)"
-    return
-  }
-
-  $process = Start-Process -FilePath $InstalledState.executable -PassThru -WindowStyle Hidden
-  try {
-    $deadline = (Get-Date).AddSeconds(20)
-    do {
-      $actualMode = Get-ContextMenuMode
-      if ($actualMode -eq $ExpectedMode) { break }
-      Start-Sleep -Milliseconds 250
-    } while ((Get-Date) -lt $deadline)
-  } finally {
-    Stop-InstalledApplication $InstalledState.installLocation
-    if (-not $process.HasExited) {
-      $process.WaitForExit(5000) | Out-Null
+  Restore-ContextMenuRegistry
+  if ($ExpectedMode -eq 'native') {
+    $process = Start-Process -FilePath $InstalledState.executable -PassThru -WindowStyle Hidden
+    try {
+      $deadline = (Get-Date).AddSeconds(20)
+      do {
+        if ((Get-ContextMenuMode) -eq 'native') { break }
+        Start-Sleep -Milliseconds 250
+      } while ((Get-Date) -lt $deadline)
+    } finally {
+      Stop-InstalledApplication $InstalledState.installLocation
+      if (-not $process.HasExited) {
+        $process.WaitForExit(5000) | Out-Null
+      }
     }
   }
   Add-Check 'baseline context-menu mode is restored' (
     (Get-ContextMenuMode) -eq $ExpectedMode
   ) "expected=$ExpectedMode; actual=$(Get-ContextMenuMode)"
+  if ($ExpectedMode -eq 'legacy') {
+    Add-Check 'baseline context-menu target is restored' (
+      Test-ClassicContextMenuTarget $InstalledState.executable
+    ) "expected=$($InstalledState.executable); actual=$(Get-ClassicContextMenuCommand)"
+  }
 }
 
 function Invoke-Installer {
@@ -228,7 +291,8 @@ function Assert-Installed {
   Add-Check 'executable product version matches' ($productVersion.StartsWith($ExpectedVersion)) (
     "expected=$ExpectedVersion; actual=$productVersion"
   )
-  $expectedDll = "long_compress_shell_extension_$($ExpectedVersion.Replace('.', '_')).dll"
+  $expectedVersionSuffix = $ExpectedVersion -replace '[^0-9A-Za-z]', '_'
+  $expectedDll = "long_compress_shell_extension_$expectedVersionSuffix.dll"
   $shellDlls = @(
     Get-ChildItem -LiteralPath (Join-Path $state.installLocation 'resources') `
       -Filter 'long_compress_shell_extension_*.dll' -File -ErrorAction SilentlyContinue
@@ -250,12 +314,9 @@ function Assert-ClassicContextMenu {
   Add-Check 'classic context-menu root is registered' (Test-Path -LiteralPath $legacyRoot) $legacyRoot
   Add-Check 'classic context-menu command is registered' (Test-Path -LiteralPath $legacyCommand) $legacyCommand
   Add-Check 'unsigned native context-menu root is absent' (-not (Test-Path -LiteralPath $nativeRoot)) $nativeRoot
-  $command = (Get-ItemProperty -LiteralPath $legacyCommand).'(default)'
-  if (-not $command) {
-    $command = (Get-Item -LiteralPath $legacyCommand).GetValue('')
-  }
+  $command = Get-ClassicContextMenuCommand
   Add-Check 'classic context-menu targets current executable' (
-    [string]$command -like "`"$ExpectedExecutable`"*"
+    Test-ClassicContextMenuTarget $ExpectedExecutable
   ) "command=$command"
 }
 
@@ -306,6 +367,7 @@ try {
 
   New-Item -ItemType Directory -Path $evidenceDirectory -Force | Out-Null
   Backup-UserData
+  Backup-ContextMenuRegistry
   $baselineFingerprints = Get-DataFingerprints
   $evidence.baselineDataFingerprints = $baselineFingerprints
   $restoreRequired = $true
@@ -318,7 +380,12 @@ try {
   try {
     $deadline = (Get-Date).AddSeconds(20)
     do {
-      if (Test-Path -LiteralPath 'HKCU:\Software\Classes\*\shell\LongDecompress') { break }
+      if (
+        (Test-Path -LiteralPath 'HKCU:\Software\Classes\*\shell\LongDecompress') -and
+        (Test-ClassicContextMenuTarget $candidateState.executable)
+      ) {
+        break
+      }
       Start-Sleep -Milliseconds 250
     } while ((Get-Date) -lt $deadline)
     Assert-ClassicContextMenu $candidateState.executable
@@ -378,7 +445,7 @@ try {
       $evidence.recovery = 'Previous installer and user-data backup restored after failure.'
     } catch {
       $evidence.recovery = "Automatic recovery failed; backup retained at $backupRoot. Error: $_"
-      Write-Error $evidence.recovery
+      Write-Warning $evidence.recovery
     }
   }
 

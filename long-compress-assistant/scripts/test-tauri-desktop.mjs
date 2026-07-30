@@ -45,9 +45,11 @@ const tauriDriver =
 const edgeDriver = process.env.EDGE_DRIVER_PATH
 const webdriverUrl = 'http://127.0.0.1:4444/'
 const artifactDirectory = path.join(root, 'test-results', 'desktop-e2e')
+const e2eInstanceId =
+  process.env.LONG_DECOMPRESS_E2E_INSTANCE_ID || randomBytes(12).toString('hex')
 const e2eDataDirectory =
   process.env.LONG_DECOMPRESS_E2E_DATA_DIR ||
-  path.join(root, 'test-results', 'desktop-e2e-data')
+  path.join(root, 'test-results', `desktop-e2e-data-${e2eInstanceId}`)
 const webviewUserDataDirectory = path.join(e2eDataDirectory, 'webview2')
 const bundledSevenZip = path.join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
 const qemuImg =
@@ -141,6 +143,7 @@ function forwardContextAction(flag, files) {
     env: {
       ...process.env,
       LONG_DECOMPRESS_E2E_DATA_DIR: e2eDataDirectory,
+      LONG_DECOMPRESS_E2E_INSTANCE_ID: e2eInstanceId,
     },
     encoding: 'utf8',
     timeout: 30_000,
@@ -392,6 +395,7 @@ try {
       env: {
         ...process.env,
         LONG_DECOMPRESS_E2E_DATA_DIR: e2eDataDirectory,
+        LONG_DECOMPRESS_E2E_INSTANCE_ID: e2eInstanceId,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,

@@ -23,44 +23,13 @@ use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 use crate::services::compression_format::{self, CompressionRoute};
 use crate::services::extraction_transaction::{self, ExtractionStaging};
+use crate::services::native_compression::{self, CompressionRuntime};
 use crate::services::native_extraction::{self, ExtractionRuntime};
 
 pub use crate::services::archive_format::ArchiveFormat;
 pub use crate::services::compression_format::{
     CompressionFormatCapability, COMPRESSION_FORMAT_CAPABILITIES,
 };
-
-struct CancellableProgressReader<R, F> {
-    inner: R,
-    cancellation_flag: Arc<AtomicBool>,
-    on_read: F,
-}
-
-impl<R, F> CancellableProgressReader<R, F> {
-    fn new(inner: R, cancellation_flag: Arc<AtomicBool>, on_read: F) -> Self {
-        Self {
-            inner,
-            cancellation_flag,
-            on_read,
-        }
-    }
-}
-
-impl<R: Read, F: FnMut(u64)> Read for CancellableProgressReader<R, F> {
-    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
-        if self.cancellation_flag.load(Ordering::Relaxed) {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Interrupted,
-                "compression cancelled",
-            ));
-        }
-        let read = self.inner.read(buffer)?;
-        if read > 0 {
-            (self.on_read)(read as u64);
-        }
-        Ok(read)
-    }
-}
 
 #[derive(Debug, Error)]
 pub enum CompressionError {
@@ -150,28 +119,6 @@ pub struct CompressionService {
     pub semaphore: Arc<Semaphore>,
 }
 
-struct TemporaryAesInput(PathBuf);
-
-impl TemporaryAesInput {
-    fn new(extension: &str) -> Self {
-        Self(std::env::temp_dir().join(format!(
-            "long-compress-aes-input-{}.{}",
-            uuid::Uuid::new_v4(),
-            extension,
-        )))
-    }
-
-    fn path(&self) -> &Path {
-        &self.0
-    }
-}
-
-impl Drop for TemporaryAesInput {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_file(&self.0);
-    }
-}
-
 impl ExtractionRuntime for CompressionService {
     fn check_cancellation(&self) -> Result<()> {
         CompressionService::check_cancellation(self)
@@ -198,13 +145,34 @@ impl ExtractionRuntime for CompressionService {
     }
 }
 
+impl CompressionRuntime for CompressionService {
+    fn check_cancellation(&self) -> Result<()> {
+        CompressionService::check_cancellation(self)
+    }
+
+    fn cancellation_flag(&self) -> Arc<AtomicBool> {
+        self.cancellation_flag.clone()
+    }
+
+    fn copy_buffer_size(&self) -> usize {
+        self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)
+    }
+
+    fn emit_log(&self, window: &Window, task_id: &str, message: &str, severity: TaskLogSeverity) {
+        CompressionService::emit_log(self, window, task_id, message, severity);
+    }
+
+    fn emit_progress(&self, window: &Window, task_id: &str, progress: f32, current_file: Option<String>, processed_bytes: u64, total_bytes: u64) {
+        CompressionService::emit_progress(self, window, task_id, progress, current_file, processed_bytes, total_bytes);
+    }
+}
+
 impl CompressionService {
     #[cfg(test)]
     const MAX_EXTRACTED_FILES: usize = extraction_transaction::MAX_EXTRACTED_ENTRIES;
     #[cfg(test)]
     const MAX_EXTRACTED_BYTES: u64 = extraction_transaction::MAX_EXTRACTED_BYTES;
     const COPY_BUFFER_SIZE: usize = 256 * 1024;
-    const PROGRESS_EMIT_INTERVAL_BYTES: u64 = 4 * 1024 * 1024;
 
     pub async fn new_with_defaults() -> Self {
         let pool = match crate::database::connection::get_connection().await {
@@ -290,63 +258,6 @@ impl CompressionService {
             return Err(CompressionError::Cancelled.into());
         }
         Ok(())
-    }
-
-    fn should_emit_byte_progress(last_emitted: u64, processed: u64) -> bool {
-        processed.saturating_sub(last_emitted) >= Self::PROGRESS_EMIT_INTERVAL_BYTES
-    }
-
-    fn copy_cancellable<R: Read + ?Sized, W: Write + ?Sized>(
-        &self,
-        reader: &mut R,
-        writer: &mut W,
-        buffer: &mut [u8],
-    ) -> Result<u64> {
-        let mut copied = 0u64;
-        loop {
-            self.check_cancellation()?;
-            let read = reader.read(buffer)?;
-            if read == 0 {
-                break;
-            }
-            writer.write_all(&buffer[..read])?;
-            copied = copied.checked_add(read as u64).ok_or_else(|| {
-                CompressionError::CompressionFailed(
-                    "Copied byte count overflowed the supported range".to_string(),
-                )
-            })?;
-        }
-        Ok(copied)
-    }
-
-    fn copy_cancellable_with_progress<
-        R: Read + ?Sized,
-        W: Write + ?Sized,
-        F: FnMut(u64),
-    >(
-        &self,
-        reader: &mut R,
-        writer: &mut W,
-        buffer: &mut [u8],
-        mut on_chunk: F,
-    ) -> Result<u64> {
-        let mut copied = 0u64;
-        loop {
-            self.check_cancellation()?;
-            let read = reader.read(buffer)?;
-            if read == 0 {
-                break;
-            }
-            writer.write_all(&buffer[..read])?;
-            let read = read as u64;
-            copied = copied.checked_add(read).ok_or_else(|| {
-                CompressionError::CompressionFailed(
-                    "Copied byte count overflowed the supported range".to_string(),
-                )
-            })?;
-            on_chunk(read);
-        }
-        Ok(copied)
     }
 
     pub fn emit_log(&self, window: &Window, task_id: &str, message: &str, severity: TaskLogSeverity) {
@@ -564,6 +475,48 @@ impl CompressionService {
         }
     }
 
+    fn normalize_storage_full_error(error: anyhow::Error) -> anyhow::Error {
+        let storage_full = error.chain().any(|cause| {
+            cause
+                .downcast_ref::<std::io::Error>()
+                .is_some_and(|io_error| io_error.kind() == std::io::ErrorKind::StorageFull)
+        });
+        if storage_full {
+            CompressionError::DiskFull.into()
+        } else {
+            error
+        }
+    }
+
+    fn finalize_compression_output(
+        route_result: Result<()>,
+        working_output: &Path,
+        final_output: &Path,
+        split_requested: bool,
+    ) -> Result<()> {
+        let result = route_result
+            .map_err(Self::normalize_storage_full_error)
+            .and_then(|_| {
+                if !split_requested {
+                    if final_output.exists() {
+                        return Err(CompressionError::CompressionFailed(format!(
+                            "Output appeared while compression was running; it was not overwritten: {}",
+                            final_output.display()
+                        ))
+                        .into());
+                    }
+                    std::fs::rename(working_output, final_output)?;
+                }
+                Ok(())
+            })
+            .map_err(Self::normalize_storage_full_error);
+
+        if result.is_err() {
+            Self::cleanup_failed_compression_outputs(working_output, split_requested);
+        }
+        result
+    }
+
     pub fn removable_compressed_sources(source_files: &[String], output_path: &str) -> Result<Vec<PathBuf>> {
         let output = Path::new(output_path);
         if !output.is_file() {
@@ -654,18 +607,12 @@ impl CompressionService {
                     requested_format
                 )).into()),
             };
-            let res = res.and_then(|_| {
-                if !split_requested {
-                    if final_output.exists() {
-                        return Err(CompressionError::CompressionFailed(format!(
-                            "Output appeared while compression was running; it was not overwritten: {}",
-                            final_output.display()
-                        )).into());
-                    }
-                    std::fs::rename(&working_output, &final_output)?;
-                }
-                Ok(())
-            });
+            let res = Self::finalize_compression_output(
+                res,
+                &working_output,
+                &final_output,
+                split_requested,
+            );
             if res.is_ok() {
                 if delete_after {
                     let verified_output = if split_requested {
@@ -678,7 +625,6 @@ impl CompressionService {
                 service.emit_log(&window, &task_id, "压缩完成", TaskLogSeverity::Success);
                 service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
             } else {
-                Self::cleanup_failed_compression_outputs(&working_output, split_requested);
                 service.emit_log(&window, &task_id, &format!("压缩失败: {:?}", res.as_ref().err()), TaskLogSeverity::Error);
             }
             res
@@ -901,33 +847,6 @@ impl CompressionService {
         None
     }
 
-    fn seven_zip_requires_password(file_path: &Path) -> Result<bool> {
-        let mut archive_file = File::open(file_path)?;
-        let len = archive_file.metadata()?.len();
-        match sevenz_rust::Archive::read(&mut archive_file, len, &[]) {
-            Ok(archive) => Ok(archive.folders.iter().any(|folder| {
-                folder.coders.iter().any(|coder| {
-                    coder.decompression_method_id()
-                        == sevenz_rust::SevenZMethod::ID_AES256SHA256
-                })
-            })),
-            Err(error) => {
-                let message = error.to_string().to_ascii_lowercase();
-                if message.contains("password")
-                    || message.contains("encrypted")
-                    || message.contains("aes")
-                {
-                    Ok(true)
-                } else {
-                    Err(CompressionError::ExtractionFailed(format!(
-                        "Unable to inspect 7z encryption metadata: {error}"
-                    ))
-                    .into())
-                }
-            }
-        }
-    }
-
     async fn archive_requires_password(&self, file_path: &str, format: ArchiveFormat) -> Result<bool> {
         match format {
             // 通过 7z CLI 处理的格式
@@ -944,7 +863,9 @@ impl CompressionService {
             ArchiveFormat::Zip => {
                 UniversalCliEngine::zip_requires_password(Path::new(file_path))
             }
-            ArchiveFormat::SevenZip => Self::seven_zip_requires_password(Path::new(file_path)),
+            ArchiveFormat::SevenZip => {
+                native_extraction::seven_zip::requires_password(Path::new(file_path))
+            }
             // RAR 仍交由完整引擎做无密码测试；7Z 可以直接读取 coder 元数据。
             ArchiveFormat::Rar => {
                 self.universal_engine.requires_password(Path::new(file_path)).await
@@ -1343,7 +1264,7 @@ impl CompressionService {
             },
         };
 
-        if let Err(error) = result {
+        if let Err(error) = result.map_err(Self::normalize_storage_full_error) {
             if let Err(cleanup_error) = staging.cleanup() {
                 service.emit_log(
                     &window,
@@ -1542,194 +1463,20 @@ impl CompressionService {
         }
     }
 
-    fn compile_file_filter(filter: Option<&str>) -> Vec<regex::Regex> {
-        extraction_transaction::compile_file_filter(filter)
-    }
-
-    fn matches_compiled_file_filter(path: &Path, filter: &[regex::Regex]) -> bool {
-        extraction_transaction::matches_compiled_file_filter(path, filter)
-    }
-
-    fn resolve_extract_path(target: &Path, options: &DecompressOptions) -> Result<PathBuf> {
-        extraction_transaction::resolve_extract_path(target, options)
-    }
-
     pub fn do_extract_zip(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
         native_extraction::zip::extract(self, window, task_id, file, output, password, options)
     }
 
     pub fn do_extract_7z(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
-        let output_root = PathBuf::from(output);
-        let opts = options.clone();
-        let file_filter = Self::compile_file_filter(opts.file_filter.as_deref());
-        let mut copy_buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
-        let mut processed = 0usize;
-        let total_uncompressed_bytes = {
-            let archive_file = File::open(file);
-            archive_file
-                .and_then(|mut archive_file| {
-                    let len = archive_file.metadata()?.len();
-                    let archive = if let Some(pwd) = password {
-                        let password = sevenz_rust::Password::from(pwd);
-                        sevenz_rust::Archive::read(&mut archive_file, len, password.as_slice())
-                            .map_err(|err| std::io::Error::other(err.to_string()))
-                    } else {
-                        sevenz_rust::Archive::read(&mut archive_file, len, &[])
-                            .map_err(|err| std::io::Error::other(err.to_string()))
-                    }?;
-                    Ok(archive.files.iter()
-                        .filter(|entry| !entry.is_directory())
-                        .fold(0u64, |total, entry| total.saturating_add(entry.size()))
-                        .max(1))
-                })
-                .unwrap_or(1)
-        };
-        let mut processed_bytes = 0u64;
-        let mut last_emitted_bytes = 0u64;
-
-        let mut extract_entry = |entry: &sevenz_rust::SevenZArchiveEntry, reader: &mut dyn Read, _default_dest: &PathBuf| -> Result<bool, sevenz_rust::Error> {
-            self.check_cancellation()
-                .map_err(|err| sevenz_rust::Error::other(err.to_string()))?;
-
-            let relative = match Self::normalized_archive_path(Path::new(entry.name()), opts.preserve_paths) {
-                Some(path) => path,
-                None => {
-                    self.copy_cancellable_with_progress(
-                        reader,
-                        &mut std::io::sink(),
-                        &mut copy_buffer,
-                        |read| {
-                            processed_bytes = processed_bytes.saturating_add(read);
-                            if Self::should_emit_byte_progress(last_emitted_bytes, processed_bytes)
-                                || processed_bytes >= total_uncompressed_bytes
-                            {
-                                self.emit_progress(
-                                    window,
-                                    task_id,
-                                    processed_bytes as f32 / total_uncompressed_bytes as f32,
-                                    Some(entry.name().to_string()),
-                                    processed_bytes,
-                                    total_uncompressed_bytes,
-                                );
-                                last_emitted_bytes = processed_bytes;
-                            }
-                        },
-                    )
-                        .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
-                    return Ok(true);
-                }
-            };
-
-            if !Self::matches_compiled_file_filter(&relative, &file_filter) {
-                let current_file = relative.to_string_lossy().to_string();
-                self.copy_cancellable_with_progress(
-                    reader,
-                    &mut std::io::sink(),
-                    &mut copy_buffer,
-                    |read| {
-                        processed_bytes = processed_bytes.saturating_add(read);
-                        if Self::should_emit_byte_progress(last_emitted_bytes, processed_bytes)
-                            || processed_bytes >= total_uncompressed_bytes
-                        {
-                            self.emit_progress(
-                                window,
-                                task_id,
-                                processed_bytes as f32 / total_uncompressed_bytes as f32,
-                                Some(current_file.clone()),
-                                processed_bytes,
-                                total_uncompressed_bytes,
-                            );
-                            last_emitted_bytes = processed_bytes;
-                        }
-                    },
-                )
-                    .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
-                return Ok(true);
-            }
-
-            let entry_result = (|| -> Result<()> {
-                let target = output_root.join(&relative);
-
-                if entry.is_directory() {
-                    std::fs::create_dir_all(&target)?;
-                    return Ok(());
-                }
-
-                let target = Self::resolve_extract_path(&target, &opts)?;
-                if let Some(parent) = target.parent() {
-                    std::fs::create_dir_all(parent)?;
-                }
-
-                let mut outfile = File::create(&target)?;
-                let current_file = relative.to_string_lossy().to_string();
-                self.copy_cancellable_with_progress(
-                    reader,
-                    &mut outfile,
-                    &mut copy_buffer,
-                    |read| {
-                        processed_bytes = processed_bytes.saturating_add(read);
-                        if Self::should_emit_byte_progress(last_emitted_bytes, processed_bytes)
-                            || processed_bytes >= total_uncompressed_bytes
-                        {
-                            self.emit_progress(
-                                window,
-                                task_id,
-                                processed_bytes as f32 / total_uncompressed_bytes as f32,
-                                Some(current_file.clone()),
-                                processed_bytes,
-                                total_uncompressed_bytes,
-                            );
-                            last_emitted_bytes = processed_bytes;
-                        }
-                    },
-                )?;
-                outfile.flush()?;
-                processed += 1;
-                Ok(())
-            })();
-
-            if let Err(err) = entry_result {
-                self.copy_cancellable(reader, &mut std::io::sink(), &mut copy_buffer)
-                    .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
-                if opts.skip_corrupted {
-                    self.emit_log(window, task_id, &format!("Skipped 7z entry {}: {}", entry.name(), err), TaskLogSeverity::Warning);
-                    return Ok(true);
-                }
-                return Err(sevenz_rust::Error::other(err.to_string()));
-            }
-
-            Ok(true)
-        };
-
-        let result = if let Some(pwd) = password {
-            sevenz_rust::decompress_with_extract_fn_and_password(
-                File::open(file)?,
-                output,
-                sevenz_rust::Password::from(pwd),
-                &mut extract_entry,
-            )
-        } else {
-            sevenz_rust::decompress_file_with_extract_fn(file, output, &mut extract_entry)
-        };
-
-        result.map_err(|err| {
-            let err_msg = err.to_string();
-            if err_msg.contains("password") || err_msg.contains("Password") || err_msg.contains("CRC") {
-                if password.is_none() {
-                    CompressionError::PasswordRequired
-                } else {
-                    CompressionError::InvalidPassword
-                }
-            } else {
-                CompressionError::ExtractionFailed(err_msg)
-            }
-        })?;
-
-        if processed == 0 {
-            self.emit_log(window, task_id, "No 7z entries matched the current extraction options.", TaskLogSeverity::Warning);
-        }
-
-        Ok(())
+        native_extraction::seven_zip::extract(
+            self,
+            Some(window),
+            task_id,
+            file,
+            output,
+            password,
+            options,
+        )
     }
 
     fn do_extract_tar(&self, window: &Window, task_id: &str, file: &str, output: &Path, decoder: Option<Box<dyn Read + Send>>, options: &DecompressOptions) -> Result<()> {
@@ -1781,23 +1528,6 @@ impl CompressionService {
         } else {
             CompressionError::ExtractionFailed(message).into()
         }
-    }
-
-    fn encrypt_aes_file(&self, input: &Path, output: &Path, password: &str) -> Result<()> {
-        AesWrapper::encrypt_file_cancellable(input, output, password, || {
-            self.check_cancellation()
-        })
-        .map_err(|error| {
-            if matches!(
-                error.downcast_ref::<CompressionError>(),
-                Some(CompressionError::Cancelled)
-            ) {
-                CompressionError::Cancelled
-            } else {
-                CompressionError::CompressionFailed(format!("加密失败: {}", error))
-            }
-        })
-        .map_err(Into::into)
     }
 
     fn do_extract_aes(
@@ -1893,254 +1623,8 @@ impl CompressionService {
         result
     }
 
-    fn unique_archive_name(used_archive_names: &mut HashSet<String>, raw_name: String) -> String {
-        let normalized = raw_name.replace('\\', "/");
-        if used_archive_names.insert(normalized.clone()) {
-            return normalized;
-        }
-
-        let path = Path::new(&normalized);
-        let parent = path.parent().filter(|value| !value.as_os_str().is_empty());
-        let stem = path.file_stem().and_then(|name| name.to_str()).unwrap_or("file");
-        let extension = path.extension().and_then(|name| name.to_str());
-
-        for index in 1..10_000 {
-            let file_name = match extension {
-                Some(ext) if !ext.is_empty() => format!("{} ({}).{}", stem, index, ext),
-                _ => format!("{} ({})", stem, index),
-            };
-            let candidate = parent
-                .map(|dir| dir.join(&file_name))
-                .unwrap_or_else(|| PathBuf::from(&file_name))
-                .to_string_lossy()
-                .replace('\\', "/");
-            if used_archive_names.insert(candidate.clone()) {
-                return candidate;
-            }
-        }
-
-        normalized
-    }
-
-    fn collect_compression_entries(sources: &[String], preserve_paths: bool, include_dirs: bool) -> Result<Vec<(PathBuf, String, bool)>> {
-        let mut used_archive_names = HashSet::new();
-        let mut entries = Vec::new();
-
-        for source in sources {
-            let path = Path::new(source);
-            if path.is_file() {
-                let file_name = path.file_name()
-                    .and_then(|name| name.to_str())
-                    .ok_or_else(|| CompressionError::CompressionFailed(format!("Invalid file name: {}", source)))?;
-                entries.push((path.to_path_buf(), Self::unique_archive_name(&mut used_archive_names, file_name.to_string()), false));
-            } else if path.is_dir() {
-                let root_name = path.file_name()
-                    .and_then(|name| name.to_str())
-                    .unwrap_or("folder")
-                    .to_string();
-
-                for entry in walkdir::WalkDir::new(path) {
-                    let entry = entry.map_err(|error| {
-                        CompressionError::CompressionFailed(format!(
-                            "Unable to read source tree {}: {}",
-                            path.display(), error
-                        ))
-                    })?;
-                    let entry_path = entry.path();
-                    let is_dir = entry.file_type().is_dir();
-                    if is_dir && !include_dirs {
-                        continue;
-                    }
-                    if !is_dir && !entry.file_type().is_file() {
-                        continue;
-                    }
-
-                    let relative = entry_path.strip_prefix(path)
-                        .map_err(|e| CompressionError::CompressionFailed(e.to_string()))?;
-                    if relative.as_os_str().is_empty() {
-                        continue;
-                    }
-
-                    let archive_name = if preserve_paths {
-                        Path::new(&root_name).join(relative)
-                            .to_string_lossy()
-                            .replace('\\', "/")
-                    } else {
-                        entry_path.file_name()
-                            .and_then(|name| name.to_str())
-                            .unwrap_or(if is_dir { "folder" } else { "file" })
-                            .to_string()
-                    };
-                    entries.push((
-                        entry_path.to_path_buf(),
-                        Self::unique_archive_name(&mut used_archive_names, archive_name),
-                        is_dir,
-                    ));
-                }
-            }
-        }
-
-        Ok(entries)
-    }
-
     fn do_compress_zip(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        if !output.to_lowercase().ends_with(".zip") {
-            return Err(CompressionError::CompressionFailed(
-                "ZIP compression output path must end with .zip".to_string()
-            ).into());
-        }
-
-        if let Some(parent) = Path::new(output).parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        // 分卷压缩：委托给 SplitCompressionService
-        if options.split_size.is_some_and(|size| size > 0) {
-            let split_svc = crate::services::split_compression::SplitCompressionService::new();
-            let rt = tokio::runtime::Handle::current();
-            let result = rt.block_on(async {
-                split_svc.compress_to_split_zips_cancellable(
-                    sources,
-                    Path::new(output),
-                    options.clone(),
-                    self.cancellation_flag.clone(),
-                ).await
-            })?;
-            self.emit_log(window, task_id,
-                &format!("分卷压缩完成：{} 个分卷", result.part_count),
-                TaskLogSeverity::Success);
-            self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
-            return Ok(());
-        }
-
-        // 密码 ZIP：使用原生 AES-256 ZIP 写入器，避免在进程参数中暴露密码。
-        if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
-            return self.do_compress_zip_with_password(window, task_id, sources, output, &options);
-        }
-
-        let file = File::create(output)?;
-        let mut zip = zip::ZipWriter::new(file);
-        let level = options.level.clamp(1, 9) as i32;
-        let zip_options = FileOptions::default()
-            .compression_method(CompressionMethod::Deflated)
-            .compression_level(Some(level));
-
-        let preserve_paths = options.preserve_paths.unwrap_or(true);
-        let entries = Self::collect_compression_entries(sources, preserve_paths, false)?;
-
-        let total = entries.len().max(1);
-        let mut copy_buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
-        for (i, (path, archive_name, _is_dir)) in entries.iter().enumerate() {
-            self.check_cancellation()?;
-            zip.start_file(archive_name, zip_options)?;
-            let mut f = File::open(path)?;
-            self.copy_cancellable(&mut f, &mut zip, &mut copy_buffer)?;
-            self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(archive_name.clone()), 0, 0);
-        }
-        zip.finish()?;
-        Ok(())
-    }
-
-    fn ensure_tar_compression_supported(output: &str, extensions: &[&str]) -> Result<()> {
-        // 注意：密码检查已移至调用者，调用者将委托给 do_compress_7z (AES-256)
-        let output_lower = output.to_lowercase();
-        if !extensions.iter().any(|extension| output_lower.ends_with(extension)) {
-            return Err(CompressionError::CompressionFailed(format!(
-                "Output path must end with one of: {}",
-                extensions.join(", ")
-            )).into());
-        }
-
-        if let Some(parent) = Path::new(output).parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        Ok(())
-    }
-
-    fn write_tar_entries<W: Write>(&self, window: &Window, task_id: &str, sources: &[String], options: &CompressionOptions, builder: &mut tar::Builder<W>) -> Result<()> {
-        let preserve_paths = options.preserve_paths.unwrap_or(true);
-        let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
-        let total = entries.len().max(1);
-
-        for (i, (path, archive_name, is_dir)) in entries.iter().enumerate() {
-            self.check_cancellation()?;
-            if *is_dir {
-                builder.append_dir(archive_name, path)?;
-            } else {
-                builder.append_path_with_name(path, archive_name)?;
-            }
-            self.emit_progress(window, task_id, (i + 1) as f32 / total as f32, Some(archive_name.clone()), 0, 0);
-        }
-
-        Ok(())
-    }
-
-    /// 在进程内创建 AES-256 密码保护 ZIP。
-    fn create_encrypted_zip(
-        password: &str,
-        level: u32,
-        sources: &[String],
-        output: &str,
-        preserve_paths: bool,
-        cancellation_flag: &AtomicBool,
-    ) -> Result<()> {
-        let file = File::create(output)?;
-        let mut writer = zip_aes::ZipWriter::new(file);
-        let options = zip_aes::write::SimpleFileOptions::default()
-            .compression_method(zip_aes::CompressionMethod::Deflated)
-            .compression_level(Some(level.clamp(1, 9) as i64))
-            .with_aes_encryption(zip_aes::AesMode::Aes256, password);
-        let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
-        let mut copy_buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
-
-        for (path, archive_name, is_dir) in entries {
-            if cancellation_flag.load(Ordering::Relaxed) {
-                return Err(CompressionError::Cancelled.into());
-            }
-            let archive_name = archive_name.replace('\\', "/");
-            if is_dir {
-                writer.add_directory(archive_name, options)?;
-            } else {
-                writer.start_file(archive_name, options)?;
-                let mut source = File::open(path)?;
-                loop {
-                    if cancellation_flag.load(Ordering::Relaxed) {
-                        return Err(CompressionError::Cancelled.into());
-                    }
-                    let read = source.read(&mut copy_buffer)?;
-                    if read == 0 {
-                        break;
-                    }
-                    writer.write_all(&copy_buffer[..read])?;
-                }
-            }
-        }
-        writer.finish()?;
-        Ok(())
-    }
-
-    fn do_compress_zip_with_password(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: &CompressionOptions) -> Result<()> {
-        let pwd = options.password.as_deref().unwrap_or("");
-        let level = options.level.clamp(1, 9);
-
-        for _ in sources {
-            self.check_cancellation()?;
-        }
-
-        self.emit_log(window, task_id, "使用原生引擎创建 AES-256 加密 ZIP...", TaskLogSeverity::Info);
-        Self::create_encrypted_zip(
-            pwd,
-            level,
-            sources,
-            output,
-            options.preserve_paths.unwrap_or(true),
-            &self.cancellation_flag,
-        )?;
-
-        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
-        self.emit_log(window, task_id, "加密 ZIP 创建完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::zip::compress(self, Some(window), task_id, sources, output, options)
     }
 
     /// 使用原生 zstd 进行 Zstd 压缩。
@@ -2164,19 +1648,9 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "Zstd")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported_any(sources, output, &[".zst", ".zstd"])?;
-        self.emit_log(window, task_id, "使用原生 Zstd 压缩...", TaskLogSeverity::Info);
-
-        let mut input = File::open(source)?;
-        let file = File::create(output)?;
-        let mut encoder = zstd::stream::write::Encoder::new(file, options.level.clamp(1, 21) as i32)?;
-        let mut buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
-        self.copy_cancellable(&mut input, &mut encoder, &mut buffer)?;
-        encoder.finish()?;
-
-        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
-        self.emit_log(window, task_id, "Zstd 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::single_stream::compress_zstd(
+            self, Some(window), task_id, sources, output, options,
+        )
     }
 
     /// 使用原生 tar + zstd 进行 tar.zst 压缩
@@ -2184,19 +1658,9 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.Zst")? {
             return Ok(());
         }
-        Self::ensure_tar_compression_supported(output, &[".tar.zst", ".tzst"])?;
-        self.emit_log(window, task_id, "使用原生 tar.zst 压缩...", TaskLogSeverity::Info);
-
-        let file = File::create(output)?;
-        let encoder = zstd::stream::write::Encoder::new(file, options.level.clamp(1, 21) as i32)?;
-        let mut builder = tar::Builder::new(encoder);
-        self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
-        let encoder = builder.into_inner()?;
-        encoder.finish()?;
-
-        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
-        self.emit_log(window, task_id, "tar.zst 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::tar::compress_zstd(
+            self, Some(window), task_id, sources, output, options,
+        )
     }
 
     /// 使用 7z CLI 进行 LZMA 压缩
@@ -2204,437 +1668,146 @@ impl CompressionService {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "LZMA")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported(sources, output, ".lzma")?;
-        self.emit_log(window, task_id, "正在使用原生 LZMA 编码器压缩...", TaskLogSeverity::Info);
-
-        let lzma_options = xz2::stream::LzmaOptions::new_preset(options.level.clamp(1, 9))
-            .map_err(|error| CompressionError::CompressionFailed(format!(
-                "Unable to configure LZMA encoder: {error}"
-            )))?;
-        let stream = xz2::stream::Stream::new_lzma_encoder(&lzma_options)
-            .map_err(|error| CompressionError::CompressionFailed(format!(
-                "Unable to initialize LZMA encoder: {error}"
-            )))?;
-        let output_file = File::create(output)?;
-        let mut encoder = xz2::write::XzEncoder::new_stream(output_file, stream);
-        let input_file = File::open(source)?;
-        let total_bytes = input_file.metadata()?.len();
-        let cancellation_flag = self.cancellation_flag.clone();
-        let mut processed_bytes = 0u64;
-        let mut last_emitted = 0u64;
-        let mut reader = CancellableProgressReader::new(
-            input_file,
-            cancellation_flag.clone(),
-            |read| {
-                processed_bytes = processed_bytes.saturating_add(read);
-                if Self::should_emit_byte_progress(last_emitted, processed_bytes) {
-                    last_emitted = processed_bytes;
-                    let progress = if total_bytes == 0 {
-                        1.0
-                    } else {
-                        processed_bytes as f32 / total_bytes as f32
-                    };
-                    self.emit_progress(
-                        window,
-                        task_id,
-                        progress.min(0.99),
-                        Some(source.to_string_lossy().into_owned()),
-                        processed_bytes,
-                        total_bytes,
-                    );
-                }
-            },
-        );
-        let copied = std::io::copy(&mut reader, &mut encoder);
-        if cancellation_flag.load(Ordering::SeqCst) {
-            return Err(CompressionError::Cancelled.into());
-        }
-        copied?;
-        encoder.finish()?;
-
-        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
-        self.emit_log(window, task_id, "LZMA 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::single_stream::compress_lzma(
+            self, Some(window), task_id, sources, output, options,
+        )
     }
 
     fn do_compress_tar(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR")? {
             return Ok(());
         }
-        Self::ensure_tar_compression_supported(output, &[".tar"])?;
-        let file = File::create(output)?;
-        let mut builder = tar::Builder::new(file);
-        self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
-        builder.finish()?;
-        Ok(())
+        native_compression::tar::compress_tar(
+            self, Some(window), task_id, sources, output, options,
+        )
     }
 
     fn do_compress_tar_gz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.GZ")? {
             return Ok(());
         }
-        Self::ensure_tar_compression_supported(output, &[".tar.gz", ".tgz"])?;
-        let file = File::create(output)?;
-        let level = flate2::Compression::new(options.level.clamp(1, 9));
-        let encoder = flate2::write::GzEncoder::new(file, level);
-        let mut builder = tar::Builder::new(encoder);
-        self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
-        let encoder = builder.into_inner()?;
-        encoder.finish()?;
-        Ok(())
+        native_compression::tar::compress_gzip(
+            self, Some(window), task_id, sources, output, options,
+        )
     }
 
     fn do_compress_tar_bz2(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.BZ2")? {
             return Ok(());
         }
-        Self::ensure_tar_compression_supported(output, &[".tar.bz2", ".tbz", ".tbz2"])?;
-        let file = File::create(output)?;
-        let level = bzip2::Compression::new(options.level.clamp(1, 9));
-        let encoder = bzip2::write::BzEncoder::new(file, level);
-        let mut builder = tar::Builder::new(encoder);
-        self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
-        let encoder = builder.into_inner()?;
-        encoder.finish()?;
-        Ok(())
+        native_compression::tar::compress_bzip2(
+            self, Some(window), task_id, sources, output, options,
+        )
     }
 
     fn do_compress_tar_xz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "TAR.XZ")? {
             return Ok(());
         }
-        Self::ensure_tar_compression_supported(output, &[".tar.xz", ".txz"])?;
-        let file = File::create(output)?;
-        let encoder = xz2::write::XzEncoder::new(file, options.level.clamp(1, 9));
-        let mut builder = tar::Builder::new(encoder);
-        self.write_tar_entries(window, task_id, sources, &options, &mut builder)?;
-        let encoder = builder.into_inner()?;
-        encoder.finish()?;
-        Ok(())
+        native_compression::tar::compress_xz(
+            self, Some(window), task_id, sources, output, options,
+        )
     }
 
     fn do_compress_tar_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        self.emit_log(window, task_id, "使用 TAR.AES 格式压缩", TaskLogSeverity::Info);
-
-        // 检查密码
-        let password = options.password.as_deref()
-            .ok_or_else(|| CompressionError::CompressionFailed("TAR.AES 格式需要密码".to_string()))?;
-
-        if password.is_empty() {
-            return Err(CompressionError::CompressionFailed("密码不能为空".to_string()).into());
-        }
-
-        // 转换源文件路径
-        let source_paths: Vec<PathBuf> = sources.iter()
-            .map(PathBuf::from)
-            .collect();
-
-        // 确定基础目录
-        let base_dir = if sources.len() == 1 {
-            Path::new(&sources[0]).parent()
-        } else {
-            None
-        };
-
-        // 执行压缩
-        TarAesEngine::compress_tar_aes_cancellable(
-            &source_paths,
-            Path::new(output),
-            password,
-            base_dir,
-            || self.check_cancellation(),
-        ).map_err(|e| {
-            if matches!(
-                e.downcast_ref::<CompressionError>(),
-                Some(CompressionError::Cancelled)
-            ) {
-                return CompressionError::Cancelled;
-            }
-            self.emit_log(window, task_id, &format!("TAR.AES 压缩失败: {}", e), TaskLogSeverity::Error);
-            CompressionError::CompressionFailed(format!("TAR.AES 压缩失败: {}", e))
-        })?;
-
-        self.emit_log(window, task_id, "TAR.AES 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::aes::compress(
+            self, Some(window), task_id, sources, output, options,
+            native_compression::aes::AesCompressionKind::Tar,
+        )
     }
 
     fn do_compress_tar_gz_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        self.emit_log(window, task_id, "使用 TAR.GZ.AES 格式压缩", TaskLogSeverity::Info);
-        let password = options.password.as_deref()
-            .ok_or_else(|| CompressionError::CompressionFailed("TAR.GZ.AES 格式需要密码".to_string()))?;
-
-        // 1. 创建临时 TAR.GZ 文件
-        let temp_tar_gz = TemporaryAesInput::new("tar.gz");
-        self.do_compress_tar_gz(window, task_id, sources, temp_tar_gz.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
-
-        // 2. 加密 TAR.GZ 为 TAR.GZ.AES
-        self.encrypt_aes_file(temp_tar_gz.path(), Path::new(output), password)?;
-
-        self.emit_log(window, task_id, "TAR.GZ.AES 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::aes::compress(
+            self, Some(window), task_id, sources, output, options,
+            native_compression::aes::AesCompressionKind::TarGzip,
+        )
     }
 
     fn do_compress_tar_bz2_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        self.emit_log(window, task_id, "使用 TAR.BZ2.AES 格式压缩", TaskLogSeverity::Info);
-        let password = options.password.as_deref()
-            .ok_or_else(|| CompressionError::CompressionFailed("TAR.BZ2.AES 格式需要密码".to_string()))?;
-
-        let temp_tar_bz2 = TemporaryAesInput::new("tar.bz2");
-        self.do_compress_tar_bz2(window, task_id, sources, temp_tar_bz2.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
-
-        self.encrypt_aes_file(temp_tar_bz2.path(), Path::new(output), password)?;
-
-        self.emit_log(window, task_id, "TAR.BZ2.AES 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::aes::compress(
+            self, Some(window), task_id, sources, output, options,
+            native_compression::aes::AesCompressionKind::TarBzip2,
+        )
     }
 
     fn do_compress_tar_xz_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        self.emit_log(window, task_id, "使用 TAR.XZ.AES 格式压缩", TaskLogSeverity::Info);
-        let password = options.password.as_deref()
-            .ok_or_else(|| CompressionError::CompressionFailed("TAR.XZ.AES 格式需要密码".to_string()))?;
-
-        let temp_tar_xz = TemporaryAesInput::new("tar.xz");
-        self.do_compress_tar_xz(window, task_id, sources, temp_tar_xz.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
-
-        self.encrypt_aes_file(temp_tar_xz.path(), Path::new(output), password)?;
-
-        self.emit_log(window, task_id, "TAR.XZ.AES 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::aes::compress(
+            self, Some(window), task_id, sources, output, options,
+            native_compression::aes::AesCompressionKind::TarXz,
+        )
     }
 
     fn do_compress_tar_zst_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        self.emit_log(window, task_id, "使用 TAR.ZST.AES 格式压缩", TaskLogSeverity::Info);
-        let password = options.password.as_deref()
-            .ok_or_else(|| CompressionError::CompressionFailed("TAR.ZST.AES 格式需要密码".to_string()))?;
-
-        let temp_tar_zst = TemporaryAesInput::new("tar.zst");
-        self.do_compress_tar_zstd(window, task_id, sources, temp_tar_zst.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
-
-        self.encrypt_aes_file(temp_tar_zst.path(), Path::new(output), password)?;
-
-        self.emit_log(window, task_id, "TAR.ZST.AES 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::aes::compress(
+            self, Some(window), task_id, sources, output, options,
+            native_compression::aes::AesCompressionKind::TarZstd,
+        )
     }
 
     fn do_compress_gz_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        self.emit_log(window, task_id, "使用 GZ.AES 格式压缩", TaskLogSeverity::Info);
-        let password = options.password.as_deref()
-            .ok_or_else(|| CompressionError::CompressionFailed("GZ.AES 格式需要密码".to_string()))?;
-
-        let temp_gz = TemporaryAesInput::new("gz");
-        self.do_compress_gz(window, task_id, sources, temp_gz.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
-
-        self.encrypt_aes_file(temp_gz.path(), Path::new(output), password)?;
-        self.emit_log(window, task_id, "GZ.AES 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::aes::compress(
+            self, Some(window), task_id, sources, output, options,
+            native_compression::aes::AesCompressionKind::Gzip,
+        )
     }
 
     fn do_compress_bz2_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        self.emit_log(window, task_id, "使用 BZ2.AES 格式压缩", TaskLogSeverity::Info);
-        let password = options.password.as_deref()
-            .ok_or_else(|| CompressionError::CompressionFailed("BZ2.AES 格式需要密码".to_string()))?;
-
-        let temp_bz2 = TemporaryAesInput::new("bz2");
-        self.do_compress_bz2(window, task_id, sources, temp_bz2.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
-
-        self.encrypt_aes_file(temp_bz2.path(), Path::new(output), password)?;
-        self.emit_log(window, task_id, "BZ2.AES 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::aes::compress(
+            self, Some(window), task_id, sources, output, options,
+            native_compression::aes::AesCompressionKind::Bzip2,
+        )
     }
 
     fn do_compress_xz_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        self.emit_log(window, task_id, "使用 XZ.AES 格式压缩", TaskLogSeverity::Info);
-        let password = options.password.as_deref()
-            .ok_or_else(|| CompressionError::CompressionFailed("XZ.AES 格式需要密码".to_string()))?;
-
-        let temp_xz = TemporaryAesInput::new("xz");
-        self.do_compress_xz(window, task_id, sources, temp_xz.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
-
-        self.encrypt_aes_file(temp_xz.path(), Path::new(output), password)?;
-        self.emit_log(window, task_id, "XZ.AES 压缩完成", TaskLogSeverity::Success);
-        Ok(())
+        native_compression::aes::compress(
+            self, Some(window), task_id, sources, output, options,
+            native_compression::aes::AesCompressionKind::Xz,
+        )
     }
 
     fn do_compress_zst_aes(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        self.emit_log(window, task_id, "使用 ZST.AES 格式压缩", TaskLogSeverity::Info);
-        let password = options.password.as_deref()
-            .ok_or_else(|| CompressionError::CompressionFailed("ZST.AES 格式需要密码".to_string()))?;
-
-        let temp_zst = TemporaryAesInput::new("zst");
-        self.do_compress_zstd(window, task_id, sources, temp_zst.path().to_str().unwrap(), CompressionOptions { password: None, ..options })?;
-
-        self.encrypt_aes_file(temp_zst.path(), Path::new(output), password)?;
-        self.emit_log(window, task_id, "ZST.AES 压缩完成", TaskLogSeverity::Success);
-        Ok(())
-    }
-
-    fn ensure_single_file_stream_supported<'a>(sources: &'a [String], output: &str, extension: &str) -> Result<&'a Path> {
-        Self::ensure_single_file_stream_supported_any(sources, output, &[extension])
-    }
-
-    fn ensure_single_file_stream_supported_any<'a>(sources: &'a [String], output: &str, extensions: &[&str]) -> Result<&'a Path> {
-        if sources.len() != 1 {
-            return Err(CompressionError::CompressionFailed(format!(
-                "{} compression only supports one regular file.",
-                extensions.join("/")
-            )).into());
-        }
-
-        let source = Path::new(&sources[0]);
-        if !source.is_file() {
-            return Err(CompressionError::CompressionFailed(format!(
-                "{} compression only supports one regular file.",
-                extensions.join("/")
-            )).into());
-        }
-
-        let output_lower = output.to_lowercase();
-        if !extensions.iter().any(|extension| output_lower.ends_with(extension)) {
-            return Err(CompressionError::CompressionFailed(format!(
-                "Output path must end with one of: {}",
-                extensions.join(", ")
-            )).into());
-        }
-
-        if let Some(parent) = Path::new(output).parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        Ok(source)
+        native_compression::aes::compress(
+            self, Some(window), task_id, sources, output, options,
+            native_compression::aes::AesCompressionKind::Zstd,
+        )
     }
 
     fn do_compress_gz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "GZ")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported(sources, output, ".gz")?;
-        let mut input = File::open(source)?;
-        let file = File::create(output)?;
-        let level = flate2::Compression::new(options.level.clamp(1, 9));
-        let mut encoder = flate2::write::GzEncoder::new(file, level);
-        let mut buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
-        self.copy_cancellable(&mut input, &mut encoder, &mut buffer)?;
-        encoder.finish()?;
-        self.emit_progress(window, task_id, 1.0, source.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()), 0, 0);
-        Ok(())
+        native_compression::single_stream::compress_gzip(
+            self, Some(window), task_id, sources, output, options,
+        )
     }
 
     fn do_compress_bz2(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "BZ2")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported(sources, output, ".bz2")?;
-        let mut input = File::open(source)?;
-        let file = File::create(output)?;
-        let level = bzip2::Compression::new(options.level.clamp(1, 9));
-        let mut encoder = bzip2::write::BzEncoder::new(file, level);
-        let mut buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
-        self.copy_cancellable(&mut input, &mut encoder, &mut buffer)?;
-        encoder.finish()?;
-        self.emit_progress(window, task_id, 1.0, source.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()), 0, 0);
-        Ok(())
+        native_compression::single_stream::compress_bzip2(
+            self, Some(window), task_id, sources, output, options,
+        )
     }
 
     fn do_compress_xz(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "XZ")? {
             return Ok(());
         }
-        let source = Self::ensure_single_file_stream_supported(sources, output, ".xz")?;
-        let mut input = File::open(source)?;
-        let file = File::create(output)?;
-        let mut encoder = xz2::write::XzEncoder::new(file, options.level.clamp(1, 9));
-        let mut buffer = vec![0u8; self.config.buffer_size.max(Self::COPY_BUFFER_SIZE)];
-        self.copy_cancellable(&mut input, &mut encoder, &mut buffer)?;
-        encoder.finish()?;
-        self.emit_progress(window, task_id, 1.0, source.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()), 0, 0);
-        Ok(())
+        native_compression::single_stream::compress_xz(
+            self, Some(window), task_id, sources, output, options,
+        )
     }
 
     fn do_compress_7z(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        if !output.to_lowercase().ends_with(".7z") {
-            return Err(CompressionError::CompressionFailed(
-                "7z compression output path must end with .7z".to_string()
-            ).into());
-        }
-
-        if let Some(parent) = Path::new(output).parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        let preserve_paths = options.preserve_paths.unwrap_or(true);
-        let entries = Self::collect_compression_entries(sources, preserve_paths, true)?;
-        let total_bytes = entries
-            .iter()
-            .filter(|(_, _, is_dir)| !*is_dir)
-            .try_fold(0u64, |total, (path, _, _)| {
-                Ok::<_, std::io::Error>(total.saturating_add(path.metadata()?.len()))
-            })?
-            .max(1);
-        let mut processed_bytes = 0u64;
-        let mut writer = sevenz_rust::SevenZWriter::create(output)
-            .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
-
-        let level = options.level.clamp(1, 9);
-        let lzma_options = sevenz_rust::lzma::LZMA2Options::with_preset(level);
-        let mut methods = Vec::new();
-        if let Some(password) = options.password.as_deref().filter(|password| !password.is_empty()) {
-            methods.push(sevenz_rust::AesEncoderOptions::new(sevenz_rust::Password::from(password)).into());
-        }
-        methods.push(lzma_options.into());
-        writer.set_content_methods(methods);
-
-        for (i, (path, archive_name, is_dir)) in entries.iter().enumerate() {
-            self.check_cancellation()?;
-            let entry = sevenz_rust::SevenZArchiveEntry::from_path(path, archive_name.clone());
-            if *is_dir {
-                writer.push_archive_entry::<&[u8]>(entry, None)
-                    .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
-            } else {
-                let file = File::open(path)?;
-                let current_name = archive_name.clone();
-                let mut last_emitted = processed_bytes;
-                let progress_reader = CancellableProgressReader::new(
-                    file,
-                    self.cancellation_flag.clone(),
-                    |read| {
-                        processed_bytes = processed_bytes.saturating_add(read);
-                        if Self::should_emit_byte_progress(last_emitted, processed_bytes)
-                            || processed_bytes >= total_bytes
-                        {
-                            self.emit_progress(
-                                window,
-                                task_id,
-                                processed_bytes as f32 / total_bytes as f32,
-                                Some(current_name.clone()),
-                                processed_bytes,
-                                total_bytes,
-                            );
-                            last_emitted = processed_bytes;
-                        }
-                    },
-                );
-                if let Err(error) = writer.push_archive_entry(entry, Some(progress_reader)) {
-                    if self.cancellation_flag.load(Ordering::Relaxed) {
-                        return Err(CompressionError::Cancelled.into());
-                    }
-                    return Err(CompressionError::CompressionFailed(error.to_string()).into());
-                }
-            }
-            if processed_bytes == 0 {
-                self.emit_progress(
-                    window,
-                    task_id,
-                    (i + 1) as f32 / entries.len().max(1) as f32,
-                    Some(archive_name.clone()),
-                    0,
-                    0,
-                );
-            }
-        }
-
-        writer.finish()
-            .map_err(|err| CompressionError::CompressionFailed(err.to_string()))?;
-        Ok(())
+        native_compression::seven_zip::compress(
+            self,
+            Some(window),
+            task_id,
+            sources,
+            output,
+            options,
+        )
     }
 
     pub fn find_rar_encoder() -> Option<String> {
@@ -2903,96 +2076,6 @@ impl CompressionService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Cursor;
-
-    #[test]
-    fn byte_progress_is_throttled_to_multi_megabyte_intervals() {
-        assert!(!CompressionService::should_emit_byte_progress(0, 64 * 1024));
-        assert!(!CompressionService::should_emit_byte_progress(
-            0,
-            CompressionService::PROGRESS_EMIT_INTERVAL_BYTES - 1,
-        ));
-        assert!(CompressionService::should_emit_byte_progress(
-            0,
-            CompressionService::PROGRESS_EMIT_INTERVAL_BYTES,
-        ));
-        assert!(!CompressionService::should_emit_byte_progress(
-            CompressionService::PROGRESS_EMIT_INTERVAL_BYTES,
-            CompressionService::PROGRESS_EMIT_INTERVAL_BYTES + 1024,
-        ));
-    }
-
-    #[test]
-    fn cancellable_progress_reader_reports_bytes_and_stops_on_cancel() {
-        let flag = Arc::new(AtomicBool::new(false));
-        let mut reported = Vec::new();
-        let mut output = Vec::new();
-        {
-            let mut reader = CancellableProgressReader::new(
-                Cursor::new(vec![7u8; 32 * 1024]),
-                flag.clone(),
-                |read| reported.push(read),
-            );
-            reader.read_to_end(&mut output).expect("copy fixture");
-        }
-        assert_eq!(output.len(), 32 * 1024);
-        assert_eq!(reported.iter().sum::<u64>(), 32 * 1024);
-
-        flag.store(true, Ordering::SeqCst);
-        let mut cancelled = CancellableProgressReader::new(
-            Cursor::new(vec![9u8; 16]),
-            flag,
-            |_| {},
-        );
-        let error = cancelled
-            .read(&mut [0u8; 8])
-            .expect_err("cancelled reader must stop");
-        assert_eq!(error.kind(), std::io::ErrorKind::Interrupted);
-    }
-
-    #[test]
-    fn seven_zip_encryption_detection_reads_metadata_without_testing_payload() {
-        let temp = tempfile::tempdir().expect("temp dir");
-        let source = temp.path().join("payload.bin");
-        let plain = temp.path().join("plain.7z");
-        let encrypted = temp.path().join("encrypted.7z");
-        std::fs::write(&source, vec![5u8; 64 * 1024]).expect("write fixture");
-
-        sevenz_rust::compress_to_path(&source, &plain).expect("plain 7z");
-        sevenz_rust::compress_to_path_encrypted(
-            &source,
-            &encrypted,
-            sevenz_rust::Password::from("correct-password"),
-        )
-        .expect("encrypted 7z");
-
-        assert!(!CompressionService::seven_zip_requires_password(&plain)
-            .expect("inspect plain 7z"));
-        assert!(CompressionService::seven_zip_requires_password(&encrypted)
-            .expect("inspect encrypted 7z"));
-    }
-
-    #[test]
-    fn compiled_file_filter_preserves_multi_pattern_matching() {
-        let filter = CompressionService::compile_file_filter(Some("*.txt; assets/*.PNG"));
-
-        assert!(CompressionService::matches_compiled_file_filter(
-            Path::new("notes/readme.TXT"),
-            &filter,
-        ));
-        assert!(CompressionService::matches_compiled_file_filter(
-            Path::new("assets/logo.png"),
-            &filter,
-        ));
-        assert!(!CompressionService::matches_compiled_file_filter(
-            Path::new("assets/logo.svg"),
-            &filter,
-        ));
-        assert!(CompressionService::matches_compiled_file_filter(
-            Path::new("anything.bin"),
-            &[],
-        ));
-    }
 
     #[test]
     fn recognizes_application_native_aes_headers() {
@@ -3035,37 +2118,43 @@ mod tests {
             .expect("wrong password check"));
     }
 
-    #[tokio::test]
-    async fn aes_cancellation_remains_a_cancelled_task_and_cleans_output() {
+    #[test]
+    fn injected_storage_full_cleans_unpublished_compression_outputs() {
         let temp = tempfile::tempdir().expect("temp dir");
-        let input = temp.path().join("payload.bin");
-        let output = temp.path().join("payload.bin.aes");
-        std::fs::write(&input, vec![3u8; 2 * 1024 * 1024]).expect("write fixture");
-        let service = CompressionService::for_testing();
-        service.cancel();
+        let final_output = temp.path().join("archive.zip");
+        let working_output =
+            CompressionService::temporary_compression_output(&final_output).expect("working path");
+        let sidecar = working_output.with_file_name(format!(
+            "{}.sidecar",
+            working_output
+                .file_name()
+                .and_then(|name| name.to_str())
+                .expect("working file name")
+        ));
+        std::fs::write(&working_output, b"partial archive").expect("partial output");
+        std::fs::write(&sidecar, b"partial sidecar").expect("partial sidecar");
 
-        let error = service
-            .encrypt_aes_file(&input, &output, "password")
-            .expect_err("pre-cancelled AES task must fail");
+        let error = CompressionService::finalize_compression_output(
+            Err(std::io::Error::new(
+                std::io::ErrorKind::StorageFull,
+                "simulated compression storage full",
+            )
+            .into()),
+            &working_output,
+            &final_output,
+            false,
+        )
+        .expect_err("storage-full compression must fail");
+
         assert!(matches!(
             error.downcast_ref::<CompressionError>(),
-            Some(CompressionError::Cancelled)
+            Some(CompressionError::DiskFull)
         ));
-        assert!(!output.exists());
+        assert!(!working_output.exists());
+        assert!(!sidecar.exists());
+        assert!(!final_output.exists());
     }
 
-    #[test]
-    fn temporary_aes_input_is_removed_on_drop() {
-        let path;
-        {
-            let input = TemporaryAesInput::new("bin");
-            path = input.path().to_path_buf();
-            std::fs::write(&path, b"temporary compressed payload").expect("write temp input");
-            assert!(path.exists());
-        }
-
-        assert!(!path.exists());
-    }
 }
 
 impl CompressionService {
@@ -3239,20 +2328,20 @@ mod tests_continued {
         let archive = temp.path().join("secret.zip");
         std::fs::write(&source, b"top secret").expect("source fixture");
 
-        CompressionService::create_encrypted_zip(
+        let service = CompressionService::for_testing();
+        native_compression::zip::create_encrypted_zip(
+            &service,
             "open-sesame",
             6,
             &[source.to_string_lossy().to_string()],
             &archive.to_string_lossy(),
             true,
-            &AtomicBool::new(false),
         ).expect("encrypted ZIP creation");
 
         let engine = UniversalCliEngine::new();
         assert!(engine.try_password(&archive, "open-sesame").await.expect("correct password"));
         assert!(!engine.try_password(&archive, "wrong-password").await.expect("wrong password"));
 
-        let service = CompressionService::new_with_defaults().await;
         assert!(service
             .archive_requires_password(&archive.to_string_lossy(), ArchiveFormat::Zip)
             .await

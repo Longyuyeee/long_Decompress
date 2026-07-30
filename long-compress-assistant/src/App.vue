@@ -202,6 +202,7 @@ onMounted(async () => {
         invoke<{ size: number; is_dir: boolean }>('get_file_info', { path }).catch(() => null)
       ))
       const entries = files.map((path, index) => createContextCompressionEntry(path, metadata[index]))
+      let acceptedCount = entries.length
       if (request.action === 'context-quick-pack') {
         const plan = createQuickPackPlan(files)
         let candidate = createQuickPackCandidate(plan)
@@ -216,7 +217,49 @@ onMounted(async () => {
         if (!available) candidate = createQuickPackCandidate(plan, Date.now())
         compressionStore.addQuickPack(entries, candidate.archiveName, plan.outputDirectory)
       } else {
-        entries.forEach(entry => compressionStore.addFile(entry))
+        const requestedPaths = new Set(files.map(path => path.replace(/\//g, '\\').toLowerCase()))
+        const finishedTaskIds = new Set(
+          taskStore.tasks
+            .filter(task =>
+              task.type === 'compression' &&
+              ['completed', 'failed', 'cancelled'].includes(task.status)
+            )
+            .map(task => task.id)
+        )
+        const replaceableTaskIds = new Set<string>()
+        compressionStore.selectedFiles.forEach(file => {
+          if (
+            file.taskId &&
+            finishedTaskIds.has(file.taskId) &&
+            requestedPaths.has(file.path.replace(/\//g, '\\').toLowerCase())
+          ) {
+            replaceableTaskIds.add(file.taskId)
+          }
+        })
+        compressionStore.groups.forEach(group => {
+          if (
+            group.taskId &&
+            finishedTaskIds.has(group.taskId) &&
+            group.files.some(file => requestedPaths.has(file.path.replace(/\//g, '\\').toLowerCase()))
+          ) {
+            replaceableTaskIds.add(group.taskId)
+          }
+        })
+        if (replaceableTaskIds.size > 0) {
+          const taskIds = [...replaceableTaskIds]
+          compressionStore.removeJobsByTaskIds(taskIds)
+          taskIds.forEach(taskId => taskStore.removeTask(taskId))
+        }
+
+        acceptedCount = entries.reduce(
+          (count, entry) => count + (compressionStore.addFile(entry) ? 1 : 0),
+          0
+        )
+        if (acceptedCount === 0) {
+          void router.push('/compress')
+          appStore.setError(appStore.t('compress.context_menu_duplicate'))
+          return
+        }
       }
       if (request.action === 'context-compress-zip') {
         compressionStore.globalSettings.format = 'zip'
@@ -226,7 +269,7 @@ onMounted(async () => {
         compressionStore.requestAutoStart()
       }
       void router.push('/compress')
-      appStore.setSuccess(appStore.t('compress.context_menu_custom').replace('{0}', String(files.length)))
+      appStore.setSuccess(appStore.t('compress.context_menu_custom').replace('{0}', String(acceptedCount)))
       return
     }
 
