@@ -63,6 +63,10 @@ describe('compression format helpers', () => {
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.qcow2')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.vmdk')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.apfs')
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.hfsx')
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.cramfs')
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).not.toContain('.ppkg')
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).not.toContain('.arj')
   })
 
   it('accepts archives case-insensitively and rejects document containers', () => {

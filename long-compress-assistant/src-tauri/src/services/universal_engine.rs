@@ -382,12 +382,26 @@ impl ArchiveEngine for UniversalCliEngine {
         };
 
         // 无密码尝试列出内容或测试
-        let output = crate::utils::process::async_command(cmd)
+        let mut command = crate::utils::process::async_command(cmd);
+        command
             .arg("t")
             .arg("-y")
+            .arg("-p-")
             .arg(file_path)
-            .output()
-            .await?;
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true);
+        let child = command.spawn()?;
+        let output = match tokio::time::timeout(
+            std::time::Duration::from_secs(15),
+            child.wait_with_output(),
+        ).await {
+            Ok(result) => result?,
+            Err(_) => {
+                return Ok(true);
+            }
+        };
 
         let stderr = String::from_utf8_lossy(&output.stderr);
         let stdout = String::from_utf8_lossy(&output.stdout);

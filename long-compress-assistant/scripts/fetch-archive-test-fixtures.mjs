@@ -35,6 +35,14 @@ const fixtures = [
     encoding: 'uu',
   },
   {
+    url: `${libarchiveRawBase}/test_read_format_rar_encryption_data.rar.uu`,
+    source: 'test_read_format_rar_encryption_data.rar.uu',
+    sourceSha256: 'be268313b305b8bb048621d657e76b4f32289cd3ab59a99805698ad03b39b587',
+    output: 'libarchive-rar-encrypted.rar',
+    outputSha256: '84ba9afcf0673aab0d1421d931e76a19294b12117483879c4b58598d3d71e83e',
+    encoding: 'uu',
+  },
+  {
     url: `${libarchiveRawBase}/test_read_format_lha_lh0.lzh.uu`,
     source: 'test_read_format_lha_lh0.lzh.uu',
     sourceSha256: '1dcf4ffdc72f02985edcbdcd93ac1098cee403dc2a8a53837ba8f6d581d11a62',

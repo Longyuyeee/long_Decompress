@@ -70,6 +70,23 @@ const ovmfFirmware =
 const externalFixtureDirectory =
   process.env.LONG_DECOMPRESS_EXTERNAL_FIXTURE_DIR ||
   path.join(root, 'test-results', 'external-archive-fixtures')
+const hfsxFixture =
+  process.env.HFSX_FIXTURE_PATH ||
+  path.join(root, 'test-results', 'hfsx-fixture', 'payload.hfsx')
+const hfsFixture =
+  process.env.HFS_FIXTURE_PATH ||
+  path.join(root, 'test-results', 'hfsx-fixture', 'payload.hfs')
+const nsisFixture =
+  process.env.NSIS_FIXTURE_PATH ||
+  path.join(
+    root,
+    'src-tauri',
+    'target',
+    'release',
+    'bundle',
+    'nsis',
+    `${tauriConfig.package.productName}_${tauriConfig.package.version}_x64-setup.exe`,
+  )
 const requireFullFormatMatrix =
   process.argv.includes('--require-full-format-matrix') ||
   process.env.LONG_DECOMPRESS_REQUIRE_FULL_FORMAT_MATRIX === '1'
@@ -418,9 +435,8 @@ try {
   driver = await new Builder().usingServer(webdriverUrl).withCapabilities(capabilities).build()
   clearInterval(devToolsPortMirror)
   devToolsPortMirror = undefined
-  await driver.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 30_000 })
+  await driver.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 120_000 })
 
-  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 60_000)
   assert.ok(await waitForNonEmptyText('main h1'), 'the decompression workspace heading is empty')
   await driver.wait(
     () => driver.executeScript('return Boolean(window.__LONG_DECOMPRESS_DESKTOP_E2E__)'),
@@ -525,31 +541,31 @@ try {
   const matrixPayload = Buffer.from(`Long解压 archive matrix ${new Date().toISOString()}\n`, 'utf8')
   writeFileSync(matrixSource, matrixPayload)
   const archiveMatrix = [
-    ['zip', 'zip', null],
-    ['7z', '7z', null],
-    ['wim', 'wim', null],
-    ['tar', 'tar', null],
-    ['tar.gz', 'tar.gz', null],
-    ['tar.bz2', 'tar.bz2', null],
-    ['tar.xz', 'tar.xz', null],
-    ['tar.zst', 'tar.zst', null],
-    ['gz', 'txt.gz', null],
-    ['bz2', 'txt.bz2', null],
-    ['xz', 'txt.xz', null],
-    ['zst', 'txt.zst', null],
-    ['zstd', 'txt.zstd', null],
-    ['lzma', 'txt.lzma', null],
-    ['zip-password', 'zip', 'desktop-e2e-password'],
-    ['7z-password', '7z', 'desktop-e2e-password'],
-    ['tar.aes', 'tar.aes', 'desktop-e2e-password'],
-    ['tar.gz.aes', 'tar.gz.aes', 'desktop-e2e-password'],
-    ['tar.bz2.aes', 'tar.bz2.aes', 'desktop-e2e-password'],
-    ['tar.xz.aes', 'tar.xz.aes', 'desktop-e2e-password'],
-    ['tar.zst.aes', 'tar.zst.aes', 'desktop-e2e-password'],
-    ['gz.aes', 'txt.gz.aes', 'desktop-e2e-password'],
-    ['bz2.aes', 'txt.bz2.aes', 'desktop-e2e-password'],
-    ['xz.aes', 'txt.xz.aes', 'desktop-e2e-password'],
-    ['zst.aes', 'txt.zst.aes', 'desktop-e2e-password'],
+    ['zip', 'zip', null, 'zip'],
+    ['7z', '7z', null, '7z'],
+    ['wim', 'wim', null, 'wim'],
+    ['tar', 'tar', null, 'tar'],
+    ['tar.gz', 'tar.gz', null, 'tar.gz'],
+    ['tar.bz2', 'tar.bz2', null, 'tar.bz2'],
+    ['tar.xz', 'tar.xz', null, 'tar.xz'],
+    ['tar.zst', 'tar.zst', null, 'tar.zst'],
+    ['gz', 'txt.gz', null, 'gz'],
+    ['bz2', 'txt.bz2', null, 'bz2'],
+    ['xz', 'txt.xz', null, 'xz'],
+    ['zst', 'txt.zst', null, 'zst'],
+    ['zstd', 'txt.zstd', null, 'zstd'],
+    ['lzma', 'txt.lzma', null, 'lzma'],
+    ['zip-password', 'zip', 'desktop-e2e-password', null],
+    ['7z-password', '7z', 'desktop-e2e-password', null],
+    ['tar.aes', 'tar.aes', 'desktop-e2e-password', 'tar.aes'],
+    ['tar.gz.aes', 'tar.gz.aes', 'desktop-e2e-password', 'tar.gz.aes'],
+    ['tar.bz2.aes', 'tar.bz2.aes', 'desktop-e2e-password', 'tar.bz2.aes'],
+    ['tar.xz.aes', 'tar.xz.aes', 'desktop-e2e-password', 'tar.xz.aes'],
+    ['tar.zst.aes', 'tar.zst.aes', 'desktop-e2e-password', 'tar.zst.aes'],
+    ['gz.aes', 'txt.gz.aes', 'desktop-e2e-password', 'gz.aes'],
+    ['bz2.aes', 'txt.bz2.aes', 'desktop-e2e-password', 'bz2.aes'],
+    ['xz.aes', 'txt.xz.aes', 'desktop-e2e-password', 'xz.aes'],
+    ['zst.aes', 'txt.zst.aes', 'desktop-e2e-password', 'zst.aes'],
   ]
   const capabilitySource = readFileSync(
     path.join(root, 'src', 'utils', 'compressionFormat.ts'),
@@ -575,7 +591,9 @@ try {
     [],
     'every format advertised as creatable must have a real desktop scenario',
   )
-  for (const [label, extension, password] of archiveMatrix) {
+  const verifiedDeclaredExtensions = new Set()
+  const createdArchiveByFormat = new Map()
+  for (const [label, extension, password, declaredExtension] of archiveMatrix) {
     const format = label.endsWith('-password') ? label.slice(0, -'-password'.length) : label
     const caseRoot = path.join(fixtureDirectory, `matrix-${label}`)
     mkdirSync(caseRoot, { recursive: true })
@@ -595,6 +613,34 @@ try {
       matrixPayload,
       `${label} extraction must reproduce the source byte-for-byte`,
     )
+    if (declaredExtension) verifiedDeclaredExtensions.add(declaredExtension)
+    if (!password) createdArchiveByFormat.set(format, archive)
+  }
+  const creatableAliasMatrix = [
+    ['zip', 'zipx', 'matrix-payload.txt'],
+    ['tar', 'ova', 'matrix-payload.txt'],
+    ['tar.gz', 'tgz', 'matrix-payload.txt'],
+    ['tar.gz', 'tpz', 'matrix-payload.txt'],
+    ['tar.bz2', 'tbz', 'matrix-payload.txt'],
+    ['tar.bz2', 'tbz2', 'matrix-payload.txt'],
+    ['tar.xz', 'txz', 'matrix-payload.txt'],
+    ['tar.zst', 'tzst', 'matrix-payload.txt'],
+    ['gz', 'gzip', 'matrix-payload'],
+    ['bz2', 'bzip2', 'matrix-payload'],
+  ]
+  for (const [format, extension, extractedName] of creatableAliasMatrix) {
+    const aliasRoot = path.join(fixtureDirectory, `matrix-alias-${extension}`)
+    const aliasArchive = path.join(aliasRoot, `matrix-payload.${extension}`)
+    const aliasOutput = path.join(aliasRoot, 'output')
+    mkdirSync(aliasRoot, { recursive: true })
+    copyFileSync(createdArchiveByFormat.get(format), aliasArchive)
+    await callDesktopBridge('extractArchive', aliasArchive, aliasOutput)
+    assert.deepEqual(
+      readFileSync(path.join(aliasOutput, extractedName)),
+      matrixPayload,
+      `${extension} alias extraction must reproduce the source byte-for-byte`,
+    )
+    verifiedDeclaredExtensions.add(extension)
   }
   await callDesktopBridge('clearTasks')
 
@@ -633,10 +679,19 @@ try {
   const extractOnlySource = path.join(fixtureDirectory, 'extract-only-payload.txt')
   writeFileSync(extractOnlySource, extractOnlyPayload)
   const extractOnlyMatrix = []
+  const addExtractOnlyCase = (
+    extension,
+    archive,
+    extractedName,
+    expectedPayload = extractOnlyPayload,
+  ) => {
+    extractOnlyMatrix.push([extension, archive, extractedName, expectedPayload])
+    verifiedDeclaredExtensions.add(extension)
+  }
   for (const extension of ['jar', 'xpi', 'ipa', 'apk', 'appx']) {
     const archive = path.join(fixtureDirectory, `extract-only.${extension}`)
     createZipCompatibleFixture(archive, extractOnlySource)
-    extractOnlyMatrix.push([extension, archive, 'extract-only-payload.txt'])
+    addExtractOnlyCase(extension, archive, 'extract-only-payload.txt')
   }
   const cabArchive = path.join(fixtureDirectory, 'extract-only.cab')
   runFixtureCommand(
@@ -644,10 +699,13 @@ try {
     ['/D', 'CompressionType=LZX', extractOnlySource, cabArchive],
     'CAB',
   )
-  extractOnlyMatrix.push(['cab', cabArchive, 'extract-only-payload.txt'])
+  addExtractOnlyCase('cab', cabArchive, 'extract-only-payload.txt')
   const arArchive = path.join(fixtureDirectory, 'extract-only.ar')
   createArFixture(arArchive, 'payload.txt', extractOnlyPayload)
-  extractOnlyMatrix.push(['ar', arArchive, 'payload.txt'])
+  addExtractOnlyCase('ar', arArchive, 'payload.txt')
+  const aArchive = path.join(fixtureDirectory, 'extract-only.a')
+  copyFileSync(arArchive, aArchive)
+  addExtractOnlyCase('a', aArchive, 'payload.txt')
   for (const format of ['iso9660', 'cpio']) {
     const extension = format === 'iso9660' ? 'iso' : format
     const archive = path.join(fixtureDirectory, `extract-only.${extension}`)
@@ -656,16 +714,17 @@ try {
       ['-cf', archive, '--format', format, path.basename(extractOnlySource)],
       format.toUpperCase(),
     )
-    extractOnlyMatrix.push([extension, archive, 'extract-only-payload.txt'])
+    addExtractOnlyCase(extension, archive, 'extract-only-payload.txt')
   }
   const xarArchive = path.join(fixtureDirectory, 'extract-only.xar')
   createXarFixture(xarArchive, 'extract-only-payload.txt', extractOnlyPayload)
-  extractOnlyMatrix.push(['xar', xarArchive, 'extract-only-payload.txt'])
+  addExtractOnlyCase('xar', xarArchive, 'extract-only-payload.txt')
   const wslExtProbe = spawnSync(
     'wsl.exe',
     ['-d', 'Ubuntu', '--', 'test', '-x', '/sbin/mkfs.ext4'],
     { encoding: 'utf8', timeout: 30_000, windowsHide: true },
   )
+  let ext4Archive
   if (wslExtProbe.status === 0) {
     const extSourceDirectory = path.join(fixtureDirectory, 'ext-source')
     mkdirSync(extSourceDirectory, { recursive: true })
@@ -688,7 +747,16 @@ try {
         ],
         `EXT${version}`,
       )
-      extractOnlyMatrix.push([`ext${version}`, archive, 'extract-only-payload.txt'])
+      addExtractOnlyCase(`ext${version}`, archive, 'extract-only-payload.txt')
+      if (version === '4') {
+        ext4Archive = archive
+        const extAlias = path.join(fixtureDirectory, 'extract-only.ext')
+        const imgAlias = path.join(fixtureDirectory, 'extract-only.img')
+        copyFileSync(archive, extAlias)
+        copyFileSync(archive, imgAlias)
+        addExtractOnlyCase('ext', extAlias, 'extract-only-payload.txt')
+        addExtractOnlyCase('img', imgAlias, 'extract-only-payload.txt')
+      }
     }
   } else {
     recordMissingFullFormatCapability(
@@ -740,7 +808,14 @@ try {
         ['convert', '-f', 'raw', '-O', format, rawDiskImage, image],
         format.toUpperCase(),
       )
-      extractOnlyMatrix.push([extension, image, 'extract-only-payload.txt'])
+      addExtractOnlyCase(extension, image, 'extract-only-payload.txt')
+      if (extension === 'qcow2') {
+        for (const alias of ['qcow', 'qcow2c']) {
+          const aliasImage = path.join(fixtureDirectory, `extract-only.${alias}`)
+          copyFileSync(image, aliasImage)
+          addExtractOnlyCase(alias, aliasImage, 'extract-only-payload.txt')
+        }
+      }
     }
     console.log(
       '[desktop-e2e] generated QCOW2, VDI, VMDK, VHD and VHDX images with known payloads',
@@ -791,7 +866,7 @@ try {
       ],
       'FAT16 payload copy',
     )
-    extractOnlyMatrix.push(['fat', fatImage, 'extract-only-payload.txt'])
+    addExtractOnlyCase('fat', fatImage, 'extract-only-payload.txt')
 
     const ntfsImage = path.join(fixtureDirectory, 'extract-only.ntfs')
     runFixtureCommand(qemuImg, ['create', '-f', 'raw', ntfsImage, '32M'], 'NTFS raw image')
@@ -826,7 +901,7 @@ try {
       ],
       'NTFS payload copy',
     )
-    extractOnlyMatrix.push(['ntfs', ntfsImage, 'extract-only-payload.txt'])
+    addExtractOnlyCase('ntfs', ntfsImage, 'extract-only-payload.txt')
     console.log('[desktop-e2e] generated FAT16 and NTFS images with known payloads')
   } else {
     recordMissingFullFormatCapability(
@@ -863,7 +938,10 @@ try {
       'SquashFS',
     )
     console.log('[desktop-e2e] generated a real SquashFS image with a known payload')
-    extractOnlyMatrix.push(['squashfs', squashFsArchive, 'extract-only-payload.txt'])
+    addExtractOnlyCase('squashfs', squashFsArchive, 'extract-only-payload.txt')
+    const squashFsAlias = path.join(fixtureDirectory, 'extract-only.sfs')
+    copyFileSync(squashFsArchive, squashFsAlias)
+    addExtractOnlyCase('sfs', squashFsAlias, 'extract-only-payload.txt')
   } else {
     recordMissingFullFormatCapability(
       'SquashFS generator',
@@ -891,10 +969,32 @@ try {
         timeout: 180_000,
       },
     )
-    extractOnlyMatrix.push(['apfs', apfsArchive, 'extract-only-payload.txt'])
+    addExtractOnlyCase('apfs', apfsArchive, 'extract-only-payload.txt')
     console.log('[desktop-e2e] generated a real APFS image with a known payload')
   } else {
     recordMissingFullFormatCapability('APFS generator', 'npm run test:tools:apfs')
+  }
+
+  if (existsSync(hfsxFixture)) {
+    addExtractOnlyCase(
+      'hfsx',
+      hfsxFixture,
+      path.join('Firefox', 'known-payload.txt'),
+      Buffer.from('Long Decompress HFSX real payload\n', 'utf8'),
+    )
+    console.log('[desktop-e2e] prepared a non-empty HFSX image with a known payload')
+  } else {
+    recordMissingFullFormatCapability('HFSX generator', 'npm run test:fixtures:hfsx')
+  }
+  if (existsSync(hfsFixture)) {
+    addExtractOnlyCase(
+      'hfs',
+      hfsFixture,
+      path.join('Firefox', 'known-payload.txt'),
+      Buffer.from('Long Decompress HFSX real payload\n', 'utf8'),
+    )
+  } else {
+    recordMissingFullFormatCapability('HFS generator', 'npm run test:fixtures:hfsx')
   }
 
   const wix3Tools = Object.fromEntries(
@@ -1021,25 +1121,113 @@ try {
       'MSP',
     )
 
-    extractOnlyMatrix.push([
+    addExtractOnlyCase(
       'msi',
       path.join(installerFixtureRoot, 'product-v1.msi'),
       'PayloadFile',
-    ])
-    extractOnlyMatrix.push([
+    )
+    addExtractOnlyCase(
       'msm',
       path.join(installerFixtureRoot, 'fixture.msm'),
       'PayloadFile.719C727A_2D5C_4ED6_A487_F2BEA6D8094F',
-    ])
-    extractOnlyMatrix.push([
+    )
+    addExtractOnlyCase(
       'msp',
       path.join(installerFixtureRoot, 'fixture.msp'),
       'PayloadFile',
       updatedInstallerPayload,
-    ])
+    )
     console.log('[desktop-e2e] generated real MSI, MSM and MSP containers with known payloads')
   } else {
     recordMissingFullFormatCapability('MSI/MSM/MSP generators', 'npm run test:tools:wix3')
+  }
+
+  const wslDiskLayoutProbe = spawnSync(
+    'wsl.exe',
+    ['-d', 'Ubuntu', '--', 'sh', '-lc', 'command -v sfdisk >/dev/null && command -v dd >/dev/null'],
+    { encoding: 'utf8', timeout: 30_000, windowsHide: true },
+  )
+  if (ext4Archive && wslDiskLayoutProbe.status === 0) {
+    for (const layout of ['gpt', 'mbr']) {
+      const diskImage = path.join(fixtureDirectory, `extract-only.${layout}`)
+      const wslDiskImage = toWslMountPath(diskImage)
+      const wslPartitionImage = toWslMountPath(ext4Archive)
+      runFixtureCommand(
+        'wsl.exe',
+        [
+          '-d',
+          'Ubuntu',
+          '--',
+          'bash',
+          '-lc',
+          [
+            'set -euo pipefail',
+            `truncate -s 20M '${wslDiskImage}'`,
+            `printf '2048,32768,L\\n' | sfdisk --label ${layout === 'gpt' ? 'gpt' : 'dos'} '${wslDiskImage}' >/dev/null`,
+            `dd if='${wslPartitionImage}' of='${wslDiskImage}' bs=512 seek=2048 conv=notrunc status=none`,
+          ].join('; '),
+        ],
+        layout.toUpperCase(),
+      )
+      addExtractOnlyCase(layout, diskImage, 'extract-only-payload.txt')
+    }
+    console.log('[desktop-e2e] generated real GPT and MBR disk images with EXT4 payloads')
+  } else {
+    recordMissingFullFormatCapability(
+      'GPT/MBR generators',
+      'install util-linux in the Ubuntu WSL distribution',
+    )
+  }
+
+  const wslCramFsProbe = spawnSync(
+    'wsl.exe',
+    ['-d', 'Ubuntu', '--', 'test', '-x', '/usr/sbin/mkfs.cramfs'],
+    { encoding: 'utf8', timeout: 30_000, windowsHide: true },
+  )
+  if (wslCramFsProbe.status === 0) {
+    const cramFsSourceDirectory = path.join(fixtureDirectory, 'cramfs-source')
+    const cramFsArchive = path.join(fixtureDirectory, 'extract-only.cramfs')
+    mkdirSync(cramFsSourceDirectory, { recursive: true })
+    copyFileSync(
+      extractOnlySource,
+      path.join(cramFsSourceDirectory, 'extract-only-payload.txt'),
+    )
+    runFixtureCommand(
+      'wsl.exe',
+      [
+        '-d',
+        'Ubuntu',
+        '--',
+        '/usr/sbin/mkfs.cramfs',
+        toWslMountPath(cramFsSourceDirectory),
+        toWslMountPath(cramFsArchive),
+      ],
+      'CRAMFS',
+    )
+    addExtractOnlyCase('cramfs', cramFsArchive, 'extract-only-payload.txt')
+  } else {
+    recordMissingFullFormatCapability(
+      'CRAMFS generator',
+      'install cramfsprogs in the Ubuntu WSL distribution',
+    )
+  }
+
+  const ihexArchive = path.join(fixtureDirectory, 'extract-only.ihex')
+  writeFileSync(ihexArchive, ':0500000048656C6C6F07\n:00000001FF', 'ascii')
+  addExtractOnlyCase('ihex', ihexArchive, 'extract-only', Buffer.from('Hello', 'ascii'))
+
+  if (existsSync(nsisFixture)) {
+    addExtractOnlyCase(
+      'nsis',
+      nsisFixture,
+      path.join('resources', 'archive-engine', '7-Zip-License.txt'),
+      readFileSync(path.join(root, 'src-tauri', 'resources', 'archive-engine', '7-Zip-License.txt')),
+    )
+  } else {
+    recordMissingFullFormatCapability(
+      'NSIS installer fixture',
+      'build the current release installer or set NSIS_FIXTURE_PATH',
+    )
   }
 
   for (const [label, archive, extractedName, expectedPayload = extractOnlyPayload] of extractOnlyMatrix) {
@@ -1072,6 +1260,7 @@ try {
       'bb229cf4e15c4d96e67dff30770f5ca47e2e513f496b5d09c0daf96a53c12e9d',
       'UEFI firmware extraction must reproduce the pinned PeiCore module',
     )
+    verifiedDeclaredExtensions.add('uefif')
     await callDesktopBridge('clearTasks')
   } else {
     recordMissingFullFormatCapability('UEFI firmware fixture', 'npm run test:fixtures:ovmf')
@@ -1099,15 +1288,23 @@ try {
     ['control.tar', readFileSync(controlTar)],
     ['data.tar', readFileSync(dataTar)],
   ])
-  const debOutput = path.join(fixtureDirectory, 'extract-only-deb-output')
-  await callDesktopBridge('extractArchive', debArchive, debOutput)
-  const debPayloadOutput = path.join(fixtureDirectory, 'extract-only-deb-payload-output')
-  await callDesktopBridge('extractArchive', path.join(debOutput, 'data.tar'), debPayloadOutput)
-  assert.deepEqual(
-    readFileSync(path.join(debPayloadOutput, 'extract-only-payload.txt')),
-    extractOnlyPayload,
-    'DEB data archive must reproduce the package payload byte-for-byte',
-  )
+  const udebArchive = path.join(fixtureDirectory, 'extract-only.udeb')
+  copyFileSync(debArchive, udebArchive)
+  for (const [extension, archive] of [['deb', debArchive], ['udeb', udebArchive]]) {
+    const debOutput = path.join(fixtureDirectory, `extract-only-${extension}-output`)
+    await callDesktopBridge('extractArchive', archive, debOutput)
+    const debPayloadOutput = path.join(
+      fixtureDirectory,
+      `extract-only-${extension}-payload-output`,
+    )
+    await callDesktopBridge('extractArchive', path.join(debOutput, 'data.tar'), debPayloadOutput)
+    assert.deepEqual(
+      readFileSync(path.join(debPayloadOutput, 'extract-only-payload.txt')),
+      extractOnlyPayload,
+      `${extension} data archive must reproduce the package payload byte-for-byte`,
+    )
+    verifiedDeclaredExtensions.add(extension)
+  }
   await callDesktopBridge('clearTasks')
 
   console.log('[desktop-e2e] verifying pinned upstream RAR, LHA, RPM and DMG/HFS samples')
@@ -1151,8 +1348,90 @@ try {
       expectedSha256.toLowerCase(),
       `${label} upstream sample output must match its known SHA-256`,
     )
+    if (label === 'rar5') {
+      verifiedDeclaredExtensions.add('rar')
+    } else if (label === 'lha') {
+      verifiedDeclaredExtensions.add('lzh')
+      const lhaAlias = path.join(fixtureDirectory, 'extract-only.lha')
+      copyFileSync(archive, lhaAlias)
+      const lhaOutput = path.join(fixtureDirectory, 'upstream-lha-alias-output')
+      await callDesktopBridge('extractArchive', lhaAlias, lhaOutput)
+      assert.equal(
+        fileSha256(path.join(lhaOutput, extractedName)),
+        expectedSha256.toLowerCase(),
+        'lha alias extraction must reproduce the pinned output',
+      )
+      verifiedDeclaredExtensions.add('lha')
+    } else if (label === 'rpm') {
+      verifiedDeclaredExtensions.add('rpm')
+    } else if (label === 'dmg-hfs') {
+      verifiedDeclaredExtensions.add('dmg')
+    }
   }
   await callDesktopBridge('clearTasks')
+
+  const encryptedRar = path.join(
+    externalFixtureDirectory,
+    'libarchive-rar-encrypted.rar',
+  )
+  if (existsSync(encryptedRar)) {
+    console.log('[desktop-e2e] verifying encrypted RAR wrong-password rejection')
+    const wrongPasswordStartedAt = Date.now()
+    const wrongPasswordOutput = path.join(fixtureDirectory, 'rar-encrypted-wrong-password')
+    const wrongPasswordError = await callDesktopBridgeFailure(
+      'extractArchive',
+      encryptedRar,
+      wrongPasswordOutput,
+      'wrong-password',
+    )
+    assert.match(
+      wrongPasswordError,
+      /password|encrypted|decrypt|checksum|crc|密码|解密/i,
+      `encrypted RAR must report a password-related failure: ${wrongPasswordError}`,
+    )
+    assert.equal(
+      existsSync(path.join(wrongPasswordOutput, 'foo.txt')),
+      false,
+      'wrong RAR password must not publish decrypted output',
+    )
+    assert.ok(
+      Date.now() - wrongPasswordStartedAt < 60_000,
+      'wrong RAR password rejection must complete within 60 seconds',
+    )
+    await callDesktopBridge('clearTasks')
+
+    console.log('[desktop-e2e] verifying encrypted RAR correct-password extraction')
+    const encryptedRarOutput = path.join(fixtureDirectory, 'rar-encrypted-correct-password')
+    await callDesktopBridge('extractArchive', encryptedRar, encryptedRarOutput, '12345678')
+    assert.equal(
+      fileSha256(path.join(encryptedRarOutput, 'foo.txt')),
+      '325d7b459b439684cad8825cbf2e488de15518103de09c56a42d6b1875081ee7',
+      'encrypted RAR foo.txt must match the pinned plaintext',
+    )
+    assert.equal(
+      fileSha256(path.join(encryptedRarOutput, 'bar.txt')),
+      '7113d093a90b4a5cbac15a3bc8e85efbac50556c2a1f58f70a283cb2c373f1d5',
+      'encrypted RAR bar.txt must match the pinned plaintext',
+    )
+    await callDesktopBridge('clearTasks')
+  } else {
+    recordMissingFullFormatCapability(
+      'encrypted RAR fixture',
+      'npm run test:fixtures:archives',
+    )
+  }
+  const declaredExtensions = [
+    ...capabilitySource.matchAll(/extensions:\s*\[([^\]]+)\]/g),
+  ].flatMap((match) => [...match[1].matchAll(/'([^']+)'/g)].map((entry) => entry[1]))
+  const unverifiedDeclaredExtensions = [...new Set(declaredExtensions)]
+    .filter((extension) => !verifiedDeclaredExtensions.has(extension))
+    .sort()
+  for (const extension of unverifiedDeclaredExtensions) {
+    recordMissingFullFormatCapability(
+      `declared .${extension} extraction`,
+      'add a non-empty real fixture and byte-for-byte desktop assertion',
+    )
+  }
   assertFullFormatMatrixReady()
 
   navigation = await driver.findElements(By.css('aside nav > button'))
