@@ -8,6 +8,8 @@ use log;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 use tokio::io::AsyncReadExt;
 
+const RAR_PASSWORD_TEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+
 /// RAR解压错误
 #[derive(Debug, thiserror::Error)]
 pub enum RarError {
@@ -165,6 +167,19 @@ impl RarSupportService {
         // 创建输出目录
         tokio::fs::create_dir_all(output_dir).await
             .map_err(|e| RarError::ExtractionFailed(format!("创建输出目录失败: {}", e)))?;
+
+        if let Some(pwd) = password {
+            match self.test_rar_password_with_timeout(rar_path, pwd).await {
+                Ok(true) => {}
+                Ok(false) => return Err(RarError::PasswordError),
+                Err(RarError::OperationTimeout) => {
+                    return Err(RarError::ExtractionFailed(
+                        "RAR password verification timed out before extraction".to_string(),
+                    ));
+                }
+                Err(error) => return Err(error),
+            }
+        }
 
         // 策略 1: 尝试使用原生 unrar 库
         match self.extract_with_native_library(rar_path, output_dir, password, options, cancellation_flag.clone()).await {
@@ -511,6 +526,39 @@ impl RarSupportService {
 
     /// 测试 RAR 密码是否正确
     pub async fn test_rar_password(&self, rar_path: &Path, password: &str) -> bool {
+        self.test_rar_password_with_timeout(rar_path, password)
+            .await
+            .unwrap_or(false)
+    }
+
+    async fn test_rar_password_with_timeout(
+        &self,
+        rar_path: &Path,
+        password: &str,
+    ) -> Result<bool, RarError> {
+        let path = rar_path.to_path_buf();
+        let password = password.to_string();
+        let task = tokio::task::spawn_blocking(move || {
+            Self::test_rar_password_blocking(&path, &password)
+        });
+
+        match tokio::time::timeout(RAR_PASSWORD_TEST_TIMEOUT, task).await {
+            Ok(Ok(result)) => Ok(result),
+            Ok(Err(error)) => Err(RarError::CommandFailed(format!(
+                "RAR password verification task failed: {}",
+                error
+            ))),
+            Err(_) => {
+                log::warn!(
+                    "RAR password verification exceeded {} seconds",
+                    RAR_PASSWORD_TEST_TIMEOUT.as_secs()
+                );
+                Err(RarError::OperationTimeout)
+            }
+        }
+    }
+
+    fn test_rar_password_blocking(rar_path: &Path, password: &str) -> bool {
         use unrar::Archive;
         let path_str = match rar_path.to_str() {
             Some(s) => s,
@@ -518,7 +566,7 @@ impl RarSupportService {
         };
 
         // 基础验证：如果连基本的 RAR 签名都没有，直接返回 false
-        if !self.is_valid_rar_file(rar_path).await {
+        if !Self::is_valid_rar_file_sync(rar_path) {
             return false;
         }
 
@@ -563,6 +611,46 @@ impl RarSupportService {
         }
 
         tested_file
+    }
+
+    fn is_valid_rar_file_sync(file_path: &Path) -> bool {
+        let extension = file_path.extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("")
+            .to_lowercase();
+
+        if extension != "rar" && extension != "cbr" {
+            return false;
+        }
+
+        let Ok(metadata) = std::fs::metadata(file_path) else {
+            return false;
+        };
+        if metadata.len() == 0 {
+            return false;
+        }
+
+        let Ok(data) = std::fs::read(file_path) else {
+            return false;
+        };
+        if data.len() < 7 {
+            return false;
+        }
+
+        (data[0] == b'R'
+            && data[1] == b'a'
+            && data[2] == b'r'
+            && data[3] == b'!'
+            && data[4] == 0x1A
+            && data[5] == 0x07
+            && (data[6] == 0x00 || data[6] == 0x01))
+            || (data[0] == b'R'
+                && data[1] == b'E'
+                && data[2] == b'~'
+                && data[3] == b'^'
+                && data[4] == 0x1A
+                && data[5] == 0x07
+                && data[6] == 0x00)
     }
 
     /// 测试RAR文件完整性 (使用命令行工具作为备选)
@@ -781,5 +869,26 @@ pub struct RarFileInfo {
 impl Default for RarSupportService {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::RarSupportService;
+
+    #[test]
+    fn rar_signature_validation_accepts_rar4_and_rar5() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let rar4 = temp.path().join("sample.rar");
+        let rar5 = temp.path().join("sample5.rar");
+        let invalid = temp.path().join("sample.txt");
+
+        std::fs::write(&rar4, b"Rar!\x1a\x07\x00payload").expect("rar4 fixture");
+        std::fs::write(&rar5, b"Rar!\x1a\x07\x01\x00payload").expect("rar5 fixture");
+        std::fs::write(&invalid, b"Rar!\x1a\x07\x00payload").expect("invalid extension fixture");
+
+        assert!(RarSupportService::is_valid_rar_file_sync(&rar4));
+        assert!(RarSupportService::is_valid_rar_file_sync(&rar5));
+        assert!(!RarSupportService::is_valid_rar_file_sync(&invalid));
     }
 }

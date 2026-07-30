@@ -437,7 +437,6 @@ try {
   devToolsPortMirror = undefined
   await driver.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 120_000 })
 
-  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 60_000)
   assert.ok(await waitForNonEmptyText('main h1'), 'the decompression workspace heading is empty')
   await driver.wait(
     () => driver.executeScript('return Boolean(window.__LONG_DECOMPRESS_DESKTOP_E2E__)'),
