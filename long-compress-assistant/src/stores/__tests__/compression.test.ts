@@ -41,8 +41,8 @@ describe('Compression Store', () => {
     const store = useCompressionStore()
     const file = mockFile('sample.zip', 1024)
 
-    store.addFile(file)
-    store.addFile(file)
+    expect(store.addFile(file)).toBe(true)
+    expect(store.addFile(file)).toBe(false)
 
     expect(store.selectedFiles).toHaveLength(1)
     expect(store.selectedFiles[0]).toMatchObject({
@@ -105,6 +105,18 @@ describe('Compression Store', () => {
     store.dissolveGroup(groupId)
     expect(store.groups).toHaveLength(0)
     expect(store.selectedFiles.map(file => file.name)).toEqual(['b.txt'])
+  })
+
+  it('does not add a loose duplicate of a file that is already grouped', () => {
+    const store = useCompressionStore()
+    const file = mockFile('grouped-once.txt', 100)
+
+    store.addFile(file)
+    store.createGroup([file.path])
+
+    expect(store.addFile(file)).toBe(false)
+    expect(store.selectedFiles).toHaveLength(0)
+    expect(store.groups[0].files).toHaveLength(1)
   })
 
   it('falls back to global settings and output path', () => {

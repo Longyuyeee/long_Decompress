@@ -92,11 +92,14 @@ export const useCompressionStore = defineStore('compression', () => {
   }
 
   const addFile = (file: FileObject) => {
-    if (selectedFiles.value.some(existing => existing.path === file.path)) return
+    const alreadySelected = selectedFiles.value.some(existing => existing.path === file.path) ||
+      groups.value.some(group => group.files.some(existing => existing.path === file.path))
+    if (alreadySelected) return false
     selectedFiles.value.push({
       ...file,
       expanded: false
     })
+    return true
   }
 
   const updateFileSettings = (path: string, settings: CompressionOptions) => {

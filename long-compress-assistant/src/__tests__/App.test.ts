@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import App from '../App.vue'
 import { useAppStore } from '@/stores/app'
+import { useCompressionStore } from '@/stores/compression'
 import { useTaskStore } from '@/stores/task'
 
 const mocks = vi.hoisted(() => {
@@ -26,6 +27,7 @@ const mocks = vi.hoisted(() => {
     setupWatchers: vi.fn(),
     cleanupSystemWatcher: vi.fn(),
     updaterCleanup: vi.fn(),
+    contextActions: [] as Array<{ action: string; files: string[] }>,
   }
 })
 
@@ -95,16 +97,17 @@ describe('App orchestration', () => {
     mocks.setupWatchers.mockReset()
     mocks.cleanupSystemWatcher.mockReset()
 
+    mocks.contextActions = [{
+      action: 'context-quick-pack',
+      files: ['C:\\input\\alpha.txt', 'C:\\input\\beta.txt'],
+    }]
     let contextActionsRead = false
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'load_app_settings') return '{}'
       if (command === 'take_pending_context_actions') {
         if (contextActionsRead) return []
         contextActionsRead = true
-        return [{
-          action: 'context-quick-pack',
-          files: ['C:\\input\\alpha.txt', 'C:\\input\\beta.txt'],
-        }]
+        return mocks.contextActions
       }
       if (command === 'get_file_info') return { size: 10, is_dir: false }
       if (command === 'path_exists') return false
@@ -178,5 +181,61 @@ describe('App orchestration', () => {
 
     wrapper.unmount()
     expect(mocks.cleanupSystemWatcher).toHaveBeenCalledOnce()
+  })
+
+  it('replaces a finished source row when Explorer requests another compression format', async () => {
+    mocks.contextActions = [{
+      action: 'context-compress-7z',
+      files: ['C:\\input\\alpha.txt'],
+    }]
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const compressionStore = useCompressionStore()
+    const taskStore = useTaskStore()
+    compressionStore.addFile({
+      name: 'alpha.txt',
+      path: 'C:\\input\\alpha.txt',
+      size: 10,
+      type: 'file',
+      isDirectory: false,
+    })
+    compressionStore.bindJobTask(
+      'C:\\input\\alpha.txt',
+      'finished-zip',
+      { ...compressionStore.globalSettings, format: 'zip' },
+      'C:\\input\\alpha.zip',
+    )
+    taskStore.addTask({
+      id: 'finished-zip',
+      name: 'alpha.txt',
+      type: 'compression',
+      sourceFiles: ['C:\\input\\alpha.txt'],
+      outputPath: 'C:\\input\\alpha.zip',
+      format: 'zip',
+    })
+    taskStore.updateTaskStatus('finished-zip', 'completed')
+
+    const wrapper = mount(App, {
+      global: {
+        plugins: [pinia],
+        stubs: {
+          MainLayout: true,
+          ToastContainer: true,
+          UpdateDialog: true,
+          Modal: modalStub,
+        },
+      },
+    })
+    await flushPromises()
+
+    expect(taskStore.tasks).toHaveLength(0)
+    expect(compressionStore.selectedFiles).toHaveLength(1)
+    expect(compressionStore.selectedFiles[0].path).toBe('C:\\input\\alpha.txt')
+    expect(compressionStore.selectedFiles[0]).not.toHaveProperty('taskId')
+    expect(compressionStore.globalSettings.format).toBe('7z')
+    expect(compressionStore.autoStartRequested).toBe(true)
+    expect(mocks.routerPush).toHaveBeenCalledWith('/compress')
+
+    wrapper.unmount()
   })
 })
