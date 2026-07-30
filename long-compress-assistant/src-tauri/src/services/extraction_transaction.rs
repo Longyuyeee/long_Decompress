@@ -692,4 +692,23 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn compiled_file_filter_preserves_multi_pattern_matching() {
+        let filter = compile_file_filter(Some("*.txt; assets/*.PNG"));
+
+        assert!(matches_compiled_file_filter(
+            Path::new("notes/readme.TXT"),
+            &filter,
+        ));
+        assert!(matches_compiled_file_filter(
+            Path::new("assets/logo.png"),
+            &filter,
+        ));
+        assert!(!matches_compiled_file_filter(
+            Path::new("assets/logo.svg"),
+            &filter,
+        ));
+        assert!(matches_compiled_file_filter(Path::new("anything.bin"), &[]));
+    }
 }

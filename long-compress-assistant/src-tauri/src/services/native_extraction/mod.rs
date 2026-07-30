@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use tauri::Window;
 
 pub(crate) mod single_stream;
+pub(crate) mod seven_zip;
 pub(crate) mod tar;
 pub(crate) mod zip;
 
