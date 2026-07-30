@@ -928,6 +928,48 @@ impl CompressionService {
         }
     }
 
+    fn classify_seven_zip_error(
+        error: sevenz_rust::Error,
+        archive_encrypted: bool,
+        password_provided: bool,
+    ) -> CompressionError {
+        if archive_encrypted {
+            if !password_provided {
+                return CompressionError::PasswordRequired;
+            }
+
+            let error_message = error.to_string().to_ascii_lowercase();
+            let password_failure = matches!(
+                &error,
+                sevenz_rust::Error::PasswordRequired
+                    | sevenz_rust::Error::ChecksumVerificationFailed
+            ) || error_message.contains("checksumverificationfailed")
+                || error_message.contains("corrupted input data");
+            if password_failure {
+                return CompressionError::InvalidPassword;
+            }
+        }
+
+        CompressionError::ExtractionFailed(error.to_string())
+    }
+
+    fn apply_seven_zip_entry_mtime(
+        target: &Path,
+        entry: &sevenz_rust::SevenZArchiveEntry,
+        options: &DecompressOptions,
+    ) -> Result<()> {
+        if (options.preserve_timestamps || options.extract_only_newer)
+            && entry.has_last_modified_date
+        {
+            let modified: std::time::SystemTime = entry.last_modified_date().into();
+            filetime::set_file_mtime(
+                target,
+                filetime::FileTime::from_system_time(modified),
+            )?;
+        }
+        Ok(())
+    }
+
     async fn archive_requires_password(&self, file_path: &str, format: ArchiveFormat) -> Result<bool> {
         match format {
             // 通过 7z CLI 处理的格式
@@ -1559,6 +1601,7 @@ impl CompressionService {
     }
 
     pub fn do_extract_7z(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
+        let archive_encrypted = Self::seven_zip_requires_password(Path::new(file))?;
         let output_root = PathBuf::from(output);
         let opts = options.clone();
         let file_filter = Self::compile_file_filter(opts.file_filter.as_deref());
@@ -1684,6 +1727,8 @@ impl CompressionService {
                     },
                 )?;
                 outfile.flush()?;
+                drop(outfile);
+                Self::apply_seven_zip_entry_mtime(&target, entry, &opts)?;
                 processed += 1;
                 Ok(())
             })();
@@ -1712,17 +1757,8 @@ impl CompressionService {
             sevenz_rust::decompress_file_with_extract_fn(file, output, &mut extract_entry)
         };
 
-        result.map_err(|err| {
-            let err_msg = err.to_string();
-            if err_msg.contains("password") || err_msg.contains("Password") || err_msg.contains("CRC") {
-                if password.is_none() {
-                    CompressionError::PasswordRequired
-                } else {
-                    CompressionError::InvalidPassword
-                }
-            } else {
-                CompressionError::ExtractionFailed(err_msg)
-            }
+        result.map_err(|error| {
+            Self::classify_seven_zip_error(error, archive_encrypted, password.is_some())
         })?;
 
         if processed == 0 {
@@ -2970,6 +3006,247 @@ mod tests {
             .expect("inspect plain 7z"));
         assert!(CompressionService::seven_zip_requires_password(&encrypted)
             .expect("inspect encrypted 7z"));
+    }
+
+    #[test]
+    fn corrupt_plain_seven_zip_crc_is_not_classified_as_a_password_failure() {
+        let errors = [
+            sevenz_rust::Error::ChecksumVerificationFailed,
+            sevenz_rust::Error::NextHeaderCrcMismatch,
+            sevenz_rust::Error::other("CRC mismatch"),
+        ];
+
+        for error in errors {
+            assert!(matches!(
+                CompressionService::classify_seven_zip_error(error, false, false),
+                CompressionError::ExtractionFailed(_)
+            ));
+        }
+    }
+
+    #[test]
+    fn real_corrupt_plain_seven_zip_does_not_enter_password_flow() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("plain-payload.bin");
+        let archive = temp.path().join("corrupt-plain.7z");
+        let payload: Vec<u8> = (0..256 * 1024)
+            .map(|index| ((index * 31 + index / 251) % 256) as u8)
+            .collect();
+        std::fs::write(&source, payload).expect("write source");
+        sevenz_rust::compress_to_path(&source, &archive).expect("create plain 7z");
+
+        let mut archive_file = File::open(&archive).expect("open plain 7z");
+        let archive_len = archive_file.metadata().expect("archive metadata").len();
+        let metadata = sevenz_rust::Archive::read(&mut archive_file, archive_len, &[])
+            .expect("read archive metadata");
+        assert!(!CompressionService::seven_zip_requires_password(&archive)
+            .expect("plain archive encryption state"));
+        let packed_size = *metadata.pack_sizes.first().expect("packed stream");
+        let corrupt_offset = 32 + metadata.pack_pos + packed_size / 2;
+        let mut bytes = std::fs::read(&archive).expect("read archive bytes");
+        bytes[corrupt_offset as usize] ^= 0x5a;
+        std::fs::write(&archive, bytes).expect("corrupt packed payload");
+
+        let mut drain_entry = |_entry: &sevenz_rust::SevenZArchiveEntry,
+                               reader: &mut dyn Read,
+                               _destination: &PathBuf|
+         -> Result<bool, sevenz_rust::Error> {
+            std::io::copy(reader, &mut std::io::sink()).map_err(sevenz_rust::Error::io)?;
+            Ok(true)
+        };
+        let error = sevenz_rust::decompress_file_with_extract_fn(
+            &archive,
+            temp.path().join("corrupt-output"),
+            &mut drain_entry,
+        )
+        .expect_err("corrupt plain archive must fail");
+
+        assert!(matches!(
+            CompressionService::classify_seven_zip_error(error, false, false),
+            CompressionError::ExtractionFailed(_)
+        ));
+    }
+
+    #[test]
+    fn encrypted_seven_zip_password_failures_are_classified_from_archive_metadata() {
+        assert!(matches!(
+            CompressionService::classify_seven_zip_error(
+                sevenz_rust::Error::PasswordRequired,
+                true,
+                false,
+            ),
+            CompressionError::PasswordRequired
+        ));
+        assert!(matches!(
+            CompressionService::classify_seven_zip_error(
+                sevenz_rust::Error::ChecksumVerificationFailed,
+                true,
+                true,
+            ),
+            CompressionError::InvalidPassword
+        ));
+        assert!(matches!(
+            CompressionService::classify_seven_zip_error(
+                sevenz_rust::Error::io(std::io::Error::other(
+                    sevenz_rust::Error::ChecksumVerificationFailed,
+                )),
+                true,
+                true,
+            ),
+            CompressionError::InvalidPassword
+        ));
+    }
+
+    #[test]
+    fn real_encrypted_seven_zip_covers_missing_wrong_and_correct_passwords() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("secret.txt");
+        let archive = temp.path().join("secret.7z");
+        std::fs::write(&source, b"real encrypted seven zip fixture").expect("write source");
+        sevenz_rust::compress_to_path_encrypted(
+            &source,
+            &archive,
+            sevenz_rust::Password::from("correct-password"),
+        )
+        .expect("create encrypted 7z");
+        assert!(CompressionService::seven_zip_requires_password(&archive)
+            .expect("encrypted archive state"));
+
+        let drain = || {
+            |_entry: &sevenz_rust::SevenZArchiveEntry,
+             reader: &mut dyn Read,
+             _destination: &PathBuf|
+             -> Result<bool, sevenz_rust::Error> {
+                std::io::copy(reader, &mut std::io::sink())
+                    .map_err(sevenz_rust::Error::io)?;
+                Ok(true)
+            }
+        };
+
+        let mut missing_password_entry = drain();
+        let missing_password = sevenz_rust::decompress_file_with_extract_fn(
+            &archive,
+            temp.path().join("missing-password"),
+            &mut missing_password_entry,
+        )
+        .expect_err("missing password must fail");
+        assert!(matches!(
+            CompressionService::classify_seven_zip_error(
+                missing_password,
+                true,
+                false,
+            ),
+            CompressionError::PasswordRequired
+        ));
+
+        let mut wrong_password_entry = drain();
+        let wrong_password = sevenz_rust::decompress_with_extract_fn_and_password(
+            File::open(&archive).expect("open encrypted fixture"),
+            temp.path().join("wrong-password"),
+            sevenz_rust::Password::from("wrong-password"),
+            &mut wrong_password_entry,
+        )
+        .expect_err("wrong password must fail");
+        assert!(matches!(
+            CompressionService::classify_seven_zip_error(wrong_password, true, true),
+            CompressionError::InvalidPassword
+        ));
+
+        let mut correct_password_entry = drain();
+        sevenz_rust::decompress_with_extract_fn_and_password(
+            File::open(&archive).expect("open encrypted fixture"),
+            temp.path().join("correct-password"),
+            sevenz_rust::Password::from("correct-password"),
+            &mut correct_password_entry,
+        )
+        .expect("correct password must extract");
+    }
+
+    #[test]
+    fn seven_zip_entry_timestamp_is_restored_for_preserve_and_newer_modes() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("timestamp-source.txt");
+        let archive = temp.path().join("timestamp.7z");
+        let output = temp.path().join("timestamp-output.txt");
+        let expected = filetime::FileTime::from_unix_time(1_700_000_000, 0);
+        std::fs::write(&source, b"timestamp fixture").expect("write source");
+        filetime::set_file_mtime(&source, expected).expect("set source timestamp");
+        sevenz_rust::compress_to_path(&source, &archive).expect("create 7z fixture");
+
+        let mut archive_file = File::open(&archive).expect("open 7z fixture");
+        let archive_len = archive_file.metadata().expect("archive metadata").len();
+        let metadata = sevenz_rust::Archive::read(&mut archive_file, archive_len, &[])
+            .expect("read 7z metadata");
+        let entry = metadata
+            .files
+            .iter()
+            .find(|entry| !entry.is_directory())
+            .expect("file entry");
+        std::fs::write(&output, b"output").expect("write output");
+
+        CompressionService::apply_seven_zip_entry_mtime(
+            &output,
+            entry,
+            &DecompressOptions {
+                preserve_timestamps: true,
+                ..Default::default()
+            },
+        )
+        .expect("restore preserved timestamp");
+        let restored = filetime::FileTime::from_last_modification_time(
+            &std::fs::metadata(&output).expect("output metadata"),
+        );
+        assert_eq!(restored.unix_seconds(), expected.unix_seconds());
+
+        filetime::set_file_mtime(&output, filetime::FileTime::from_unix_time(2_000, 0))
+            .expect("reset output timestamp");
+        CompressionService::apply_seven_zip_entry_mtime(
+            &output,
+            entry,
+            &DecompressOptions {
+                extract_only_newer: true,
+                ..Default::default()
+            },
+        )
+        .expect("restore timestamp for newer comparison");
+        let restored_for_newer = filetime::FileTime::from_last_modification_time(
+            &std::fs::metadata(&output).expect("output metadata"),
+        );
+        assert_eq!(
+            restored_for_newer.unix_seconds(),
+            expected.unix_seconds()
+        );
+    }
+
+    #[test]
+    fn seven_zip_timestamp_is_unchanged_when_timestamp_options_are_disabled() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("source.txt");
+        let output = temp.path().join("output.txt");
+        std::fs::write(&source, b"source").expect("write source");
+        std::fs::write(&output, b"output").expect("write output");
+        filetime::set_file_mtime(
+            &source,
+            filetime::FileTime::from_unix_time(1_700_000_000, 0),
+        )
+        .expect("source timestamp");
+        let unchanged = filetime::FileTime::from_unix_time(2_000, 0);
+        filetime::set_file_mtime(&output, unchanged).expect("output timestamp");
+        let entry = sevenz_rust::SevenZArchiveEntry::from_path(
+            &source,
+            "source.txt".to_string(),
+        );
+
+        CompressionService::apply_seven_zip_entry_mtime(
+            &output,
+            &entry,
+            &DecompressOptions::default(),
+        )
+        .expect("leave timestamp unchanged");
+        let actual = filetime::FileTime::from_last_modification_time(
+            &std::fs::metadata(&output).expect("output metadata"),
+        );
+        assert_eq!(actual.unix_seconds(), unchanged.unix_seconds());
     }
 
     #[test]
