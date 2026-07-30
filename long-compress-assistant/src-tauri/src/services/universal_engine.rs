@@ -174,7 +174,7 @@ impl UniversalCliEngine {
                 std::fs::create_dir_all(&target)?;
             } else {
                 let modified = entry.last_modified().and_then(|value| {
-                    crate::services::compression_service::CompressionService::zip_system_time(
+                    crate::services::native_extraction::zip::system_time(
                         value.year(),
                         value.month(),
                         value.day(),

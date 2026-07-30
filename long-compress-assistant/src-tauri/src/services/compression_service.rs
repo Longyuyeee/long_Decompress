@@ -2,7 +2,7 @@ use crate::models::compression::{CompressionOptions, DecompressOptions, TaskLog,
 use anyhow::Result;
 use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
-use zip::{ZipArchive, write::FileOptions, CompressionMethod};
+use zip::{write::FileOptions, CompressionMethod};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::fs::File;
 use sevenz_rust;
@@ -10,10 +10,9 @@ use thiserror::Error;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::Window;
-use chrono::{Local, TimeZone, Utc};
+use chrono::Utc;
 use serde::Serialize;
 
-use crate::utils::io_utils::ProgressReader;
 use crate::services::io_buffer_pool::IOBufferPool;
 use crate::services::rar_support::RarSupportService;
 use crate::services::universal_engine::UniversalCliEngine;
@@ -176,6 +175,10 @@ impl Drop for TemporaryAesInput {
 impl ExtractionRuntime for CompressionService {
     fn check_cancellation(&self) -> Result<()> {
         CompressionService::check_cancellation(self)
+    }
+
+    fn buffer_pool(&self) -> &IOBufferPool {
+        &self.buffer_pool
     }
 
     fn copy_buffer_size(&self) -> usize {
@@ -1551,167 +1554,8 @@ impl CompressionService {
         extraction_transaction::resolve_extract_path(target, options)
     }
 
-    pub(crate) fn zip_system_time(
-        year: u16,
-        month: u8,
-        day: u8,
-        hour: u8,
-        minute: u8,
-        second: u8,
-    ) -> Option<std::time::SystemTime> {
-        let naive = chrono::NaiveDate::from_ymd_opt(year as i32, month as u32, day as u32)?
-            .and_hms_opt(hour as u32, minute as u32, second.min(59) as u32)?;
-        Local
-            .from_local_datetime(&naive)
-            .single()
-            .or_else(|| Local.from_local_datetime(&naive).earliest())
-            .map(std::time::SystemTime::from)
-    }
-
     pub fn do_extract_zip(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
-        use crate::utils::io_utils::SmartFileReader;
-        let f = SmartFileReader::open(file)?;
-        let mut archive = ZipArchive::new(f)?;
-        let total_files = archive.len();
-        let file_filter = Self::compile_file_filter(options.file_filter.as_deref());
-
-        if total_files > 0 {
-            if let Some(pwd) = password {
-                for i in 0..total_files {
-                    let is_file = {
-                        let zip_file = archive.by_index(i)?;
-                        zip_file.is_file()
-                    };
-                    if is_file {
-                        match archive.by_index_decrypt(i, pwd.as_bytes()) {
-                            Ok(Ok(mut reader)) => {
-                                let mut probe = [0u8; 4];
-                                let _ = reader.read(&mut probe); 
-                                drop(reader);
-                                break;
-                            },
-                            Ok(Err(_)) | Err(_) => return Err(CompressionError::InvalidPassword.into()),
-                        }
-                    }
-                }
-            } else {
-                for i in 0..total_files {
-                    let is_file = {
-                        let zip_file = archive.by_index(i)?;
-                        zip_file.is_file()
-                    };
-                    if is_file {
-                        if let Ok(Err(_)) = archive.by_index_decrypt(i, b"") { return Err(CompressionError::PasswordRequired.into()) }
-                    }
-                    if i > 5 { break; } 
-                }
-            }
-        }
-
-        for i in 0..total_files {
-            self.check_cancellation()?;
-            let (file_name, outpath, is_dir, source_size, source_modified) = {
-                let zip_file = archive.by_index(i)?;
-                let file_name = zip_file.name().to_string();
-                let is_dir = zip_file.is_dir();
-                let relative = match Self::normalized_archive_path(&zip_file.mangled_name(), options.preserve_paths) {
-                    Some(path) => path,
-                    None => continue,
-                };
-                if !Self::matches_compiled_file_filter(&relative, &file_filter) {
-                    continue;
-                }
-                let target = Path::new(output).join(relative);
-                let outpath = if is_dir {
-                    target
-                } else {
-                    Self::resolve_extract_path(&target, options)?
-                };
-                let modified = zip_file.last_modified();
-                let source_modified = Self::zip_system_time(
-                    modified.year(),
-                    modified.month(),
-                    modified.day(),
-                    modified.hour(),
-                    modified.minute(),
-                    modified.second(),
-                );
-                (file_name, outpath, is_dir, zip_file.size(), source_modified)
-            };
-
-            let entry_result = (|| -> Result<()> {
-                if is_dir {
-                    std::fs::create_dir_all(&outpath)?;
-                    return Ok(());
-                }
-                if let Some(p) = outpath.parent() {
-                    std::fs::create_dir_all(p)?;
-                }
-                let reader = if let Some(pwd) = password {
-                    archive.by_index_decrypt(i, pwd.as_bytes())??
-                } else {
-                    archive.by_index(i)?
-                };
-                let mut outfile = File::create(&outpath)?;
-                let buf_size = self.buffer_pool.recommend_buffer_size(source_size);
-                let mut handle = tauri::async_runtime::block_on(self.buffer_pool.acquire(Some(buf_size)));
-                let mut progress_reader = ProgressReader::new(reader, source_size, Arc::new(|_, _| {}));
-                let mut last_emitted = 0u64;
-                {
-                    let buffer = handle.buffer_mut().as_mut_slice();
-                    loop {
-                        self.check_cancellation()?;
-                        let n = progress_reader.read(buffer)?;
-                        if n == 0 {
-                            break;
-                        }
-                        outfile.write_all(&buffer[..n])?;
-                        let processed = progress_reader.current_pos();
-                        if processed < source_size
-                            && Self::should_emit_byte_progress(last_emitted, processed)
-                        {
-                            last_emitted = processed;
-                            let entry_progress = if source_size == 0 {
-                                1.0
-                            } else {
-                                processed as f32 / source_size as f32
-                            };
-                            let file_progress = (i as f32 / total_files as f32)
-                                + (entry_progress / total_files as f32);
-                            self.emit_progress(
-                                window,
-                                task_id,
-                                file_progress,
-                                Some(file_name.clone()),
-                                processed,
-                                source_size,
-                            );
-                        }
-                    }
-                }
-                outfile.flush()?;
-                tauri::async_runtime::block_on(handle.release());
-                if options.preserve_timestamps || options.extract_only_newer {
-                    if let Some(source_modified) = source_modified {
-                    filetime::set_file_mtime(
-                        &outpath,
-                            filetime::FileTime::from_system_time(source_modified),
-                    )?;
-                    }
-                }
-                Ok(())
-            })();
-
-            if let Err(err) = entry_result {
-                if options.skip_corrupted {
-                    self.emit_log(window, task_id, &format!("Skipped entry {}: {}", file_name, err), TaskLogSeverity::Warning);
-                    continue;
-                }
-                return Err(err);
-            }
-            self.emit_progress(window, task_id, (i + 1) as f32 / total_files as f32, Some(file_name), source_size, source_size);
-        }
-        Ok(())
+        native_extraction::zip::extract(self, window, task_id, file, output, password, options)
     }
 
     pub fn do_extract_7z(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
