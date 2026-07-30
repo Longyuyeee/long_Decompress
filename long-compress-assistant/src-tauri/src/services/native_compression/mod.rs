@@ -4,6 +4,8 @@ use std::sync::{atomic::AtomicBool, Arc};
 use tauri::Window;
 
 pub(crate) mod seven_zip;
+pub(crate) mod single_stream;
+pub(crate) mod tar;
 pub(crate) mod zip;
 
 pub(crate) trait CompressionRuntime {

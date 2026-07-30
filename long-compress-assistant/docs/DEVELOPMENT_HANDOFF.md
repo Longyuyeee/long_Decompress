@@ -44,6 +44,10 @@
 - 普通及 AES 加密 7Z 写入已迁移到 `native_compression/seven_zip.rs`，复用相同运行时与条目收集边界；
   字节进度、中途取消、密码归档和输出清理由直接回归及重新构建的严格桌面矩阵保护。
   `compression_service.rs` 已降至 2,901 行；157 项 Rust 测试和 Clippy 通过。
+- TAR/TAR.GZ/BZ2/XZ/Zstandard 写入已迁移到 `native_compression/tar.rs`，
+  GZ/BZ2/XZ/Zstandard/LZMA 单文件流写入已迁移到 `native_compression/single_stream.rs`。
+  密码回退和 AES 包装调用链保持不变；核心文件降至 2,526 行，158 项 Rust 测试、Clippy 和重新构建的
+  严格全格式桌面矩阵通过。
 - 前端 30 个测试文件、182 项通过，覆盖率达到 75.22% 行/语句、78.03% 分支和 63.68% 函数；
   防倒退门槛提高到 75% 行/语句、75% 分支和 60% 函数。
 - 生产 npm 依赖审计为 0；完整审计报告的 15 个漏洞均来自开发工具链，自动修复要求跨主版本升级
@@ -52,8 +56,8 @@
 ## 接手后要做什么
 
 1. 找到可再分发、非空的 HFSX 样本或可靠写入工具，补齐 HFSX 真实载荷验证。
-2. ZIP 与 7Z 写入已经提取，严格全格式桌面回归已重新通过；下一步拆分非加密 TAR 系列及
-   GZ/BZ2/XZ/Zstandard/LZMA 单文件流写入，最后处理项目自有 AES 容器，并补磁盘写满验收。
+2. ZIP、7Z、TAR 系列与单文件流写入已经提取，严格全格式桌面回归已重新通过；下一步拆分项目自有
+   AES 容器编排，并在可注入写入失败的环境补磁盘写满验收。
 3. 后续改动继续使用 `npm.cmd run test:e2e:desktop:full-format` 作为严格回归；只识别文件头、空镜像或损坏样本不算通过。
 4. 每次正式发布后继续用 `test:public-update` 从上一正式版本执行独立 WebView2 更新验收。
 5. 安装、升级与全量回归通过后再提升版本、打安装包并更新 README 与 Release。
