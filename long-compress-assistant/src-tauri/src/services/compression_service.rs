@@ -475,6 +475,48 @@ impl CompressionService {
         }
     }
 
+    fn normalize_storage_full_error(error: anyhow::Error) -> anyhow::Error {
+        let storage_full = error.chain().any(|cause| {
+            cause
+                .downcast_ref::<std::io::Error>()
+                .is_some_and(|io_error| io_error.kind() == std::io::ErrorKind::StorageFull)
+        });
+        if storage_full {
+            CompressionError::DiskFull.into()
+        } else {
+            error
+        }
+    }
+
+    fn finalize_compression_output(
+        route_result: Result<()>,
+        working_output: &Path,
+        final_output: &Path,
+        split_requested: bool,
+    ) -> Result<()> {
+        let result = route_result
+            .map_err(Self::normalize_storage_full_error)
+            .and_then(|_| {
+                if !split_requested {
+                    if final_output.exists() {
+                        return Err(CompressionError::CompressionFailed(format!(
+                            "Output appeared while compression was running; it was not overwritten: {}",
+                            final_output.display()
+                        ))
+                        .into());
+                    }
+                    std::fs::rename(working_output, final_output)?;
+                }
+                Ok(())
+            })
+            .map_err(Self::normalize_storage_full_error);
+
+        if result.is_err() {
+            Self::cleanup_failed_compression_outputs(working_output, split_requested);
+        }
+        result
+    }
+
     pub fn removable_compressed_sources(source_files: &[String], output_path: &str) -> Result<Vec<PathBuf>> {
         let output = Path::new(output_path);
         if !output.is_file() {
@@ -565,18 +607,12 @@ impl CompressionService {
                     requested_format
                 )).into()),
             };
-            let res = res.and_then(|_| {
-                if !split_requested {
-                    if final_output.exists() {
-                        return Err(CompressionError::CompressionFailed(format!(
-                            "Output appeared while compression was running; it was not overwritten: {}",
-                            final_output.display()
-                        )).into());
-                    }
-                    std::fs::rename(&working_output, &final_output)?;
-                }
-                Ok(())
-            });
+            let res = Self::finalize_compression_output(
+                res,
+                &working_output,
+                &final_output,
+                split_requested,
+            );
             if res.is_ok() {
                 if delete_after {
                     let verified_output = if split_requested {
@@ -589,7 +625,6 @@ impl CompressionService {
                 service.emit_log(&window, &task_id, "压缩完成", TaskLogSeverity::Success);
                 service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
             } else {
-                Self::cleanup_failed_compression_outputs(&working_output, split_requested);
                 service.emit_log(&window, &task_id, &format!("压缩失败: {:?}", res.as_ref().err()), TaskLogSeverity::Error);
             }
             res
@@ -1229,7 +1264,7 @@ impl CompressionService {
             },
         };
 
-        if let Err(error) = result {
+        if let Err(error) = result.map_err(Self::normalize_storage_full_error) {
             if let Err(cleanup_error) = staging.cleanup() {
                 service.emit_log(
                     &window,
@@ -2081,6 +2116,43 @@ mod tests {
             .test_archive_password(&encrypted.to_string_lossy(), "wrong-password")
             .await
             .expect("wrong password check"));
+    }
+
+    #[test]
+    fn injected_storage_full_cleans_unpublished_compression_outputs() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let final_output = temp.path().join("archive.zip");
+        let working_output =
+            CompressionService::temporary_compression_output(&final_output).expect("working path");
+        let sidecar = working_output.with_file_name(format!(
+            "{}.sidecar",
+            working_output
+                .file_name()
+                .and_then(|name| name.to_str())
+                .expect("working file name")
+        ));
+        std::fs::write(&working_output, b"partial archive").expect("partial output");
+        std::fs::write(&sidecar, b"partial sidecar").expect("partial sidecar");
+
+        let error = CompressionService::finalize_compression_output(
+            Err(std::io::Error::new(
+                std::io::ErrorKind::StorageFull,
+                "simulated compression storage full",
+            )
+            .into()),
+            &working_output,
+            &final_output,
+            false,
+        )
+        .expect_err("storage-full compression must fail");
+
+        assert!(matches!(
+            error.downcast_ref::<CompressionError>(),
+            Some(CompressionError::DiskFull)
+        ));
+        assert!(!working_output.exists());
+        assert!(!sidecar.exists());
+        assert!(!final_output.exists());
     }
 
 }

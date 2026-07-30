@@ -67,6 +67,14 @@ fn classify_error(
     archive_encrypted: bool,
     password_provided: bool,
 ) -> CompressionError {
+    if matches!(
+        &error,
+        sevenz_rust::Error::Io(io_error, _)
+            if io_error.kind() == std::io::ErrorKind::StorageFull
+    ) {
+        return CompressionError::DiskFull;
+    }
+
     if archive_encrypted {
         if !password_provided {
             return CompressionError::PasswordRequired;
@@ -90,6 +98,19 @@ fn classify_error(
     }
 
     CompressionError::ExtractionFailed(error.to_string())
+}
+
+fn into_sevenz_error(error: anyhow::Error) -> sevenz_rust::Error {
+    if let Some(io_error) = error
+        .chain()
+        .find_map(|cause| cause.downcast_ref::<std::io::Error>())
+    {
+        return sevenz_rust::Error::io(std::io::Error::new(
+            io_error.kind(),
+            error.to_string(),
+        ));
+    }
+    sevenz_rust::Error::other(error.to_string())
 }
 
 fn is_data_corruption(error: &sevenz_rust::Error) -> bool {
@@ -129,7 +150,7 @@ fn copy_with_progress<Rt, Rd, Wr, F>(
 where
     Rt: ExtractionRuntime,
     Rd: Read + ?Sized,
-    Wr: Write + ?Sized,
+    Wr: Write,
     F: FnMut(u64),
 {
     let mut copied = 0u64;
@@ -139,7 +160,7 @@ where
         if read == 0 {
             break;
         }
-        writer.write_all(&buffer[..read])?;
+        runtime.write_extracted_chunk(writer, &buffer[..read])?;
         let read = read as u64;
         copied = copied.checked_add(read).ok_or_else(|| {
             CompressionError::ExtractionFailed(
@@ -228,7 +249,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
                             }
                         },
                     )
-                    .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
+                    .map_err(into_sevenz_error)?;
                     return Ok(true);
                 }
             };
@@ -260,7 +281,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
                     }
                 },
             )
-            .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
+            .map_err(into_sevenz_error)?;
             return Ok(true);
         }
 
@@ -314,7 +335,14 @@ pub(crate) fn extract<R: ExtractionRuntime>(
                 &mut copy_buffer,
                 |_| {},
             )
-            .map_err(|copy_error| sevenz_rust::Error::other(copy_error.to_string()))?;
+            .map_err(into_sevenz_error)?;
+            if error.chain().any(|cause| {
+                cause
+                    .downcast_ref::<std::io::Error>()
+                    .is_some_and(|io_error| io_error.kind() == std::io::ErrorKind::StorageFull)
+            }) {
+                return Err(into_sevenz_error(error));
+            }
             if opts.skip_corrupted {
                 if let Some(window) = window {
                     runtime.emit_log(
@@ -326,7 +354,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
                 }
                 return Ok(true);
             }
-            return Err(sevenz_rust::Error::other(error.to_string()));
+            return Err(into_sevenz_error(error));
         }
 
         Ok(true)
@@ -382,10 +410,12 @@ mod tests {
     use crate::services::io_buffer_pool::IOBufferPool;
     use std::path::Component;
     use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Mutex;
 
     struct TestRuntime {
         cancelled: AtomicBool,
         buffer_pool: IOBufferPool,
+        storage_bytes_remaining: Mutex<Option<usize>>,
     }
 
     impl Default for TestRuntime {
@@ -393,6 +423,7 @@ mod tests {
             Self {
                 cancelled: AtomicBool::new(false),
                 buffer_pool: IOBufferPool::default(),
+                storage_bytes_remaining: Mutex::new(None),
             }
         }
     }
@@ -400,6 +431,13 @@ mod tests {
     impl TestRuntime {
         fn cancel(&self) {
             self.cancelled.store(true, Ordering::SeqCst);
+        }
+
+        fn storage_full_after(bytes: usize) -> Self {
+            Self {
+                storage_bytes_remaining: Mutex::new(Some(bytes)),
+                ..Self::default()
+            }
         }
     }
 
@@ -410,6 +448,30 @@ mod tests {
             } else {
                 Ok(())
             }
+        }
+
+        fn write_extracted_chunk(&self, writer: &mut dyn Write, bytes: &[u8]) -> Result<()> {
+            let mut remaining = self
+                .storage_bytes_remaining
+                .lock()
+                .expect("storage fault lock");
+            let Some(available) = *remaining else {
+                writer.write_all(bytes)?;
+                return Ok(());
+            };
+            let writable = available.min(bytes.len());
+            if writable > 0 {
+                writer.write_all(&bytes[..writable])?;
+            }
+            *remaining = Some(available.saturating_sub(writable));
+            if writable < bytes.len() {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::StorageFull,
+                    "injected extraction storage exhaustion",
+                )
+                .into());
+            }
+            Ok(())
         }
 
         fn buffer_pool(&self) -> &IOBufferPool {
@@ -767,6 +829,46 @@ mod tests {
             Some(CompressionError::Cancelled)
         ));
         assert!(!output.join("large.bin").exists());
+    }
+
+    #[test]
+    fn real_storage_full_is_classified_and_staging_is_removed() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("disk-full.bin");
+        let archive = temp.path().join("disk-full.7z");
+        let destination = temp.path().join("disk-full-output");
+        std::fs::write(&source, vec![13u8; 2 * 1024 * 1024]).expect("write source");
+        sevenz_rust::compress_to_path(&source, &archive).expect("create 7z fixture");
+        std::fs::create_dir_all(&destination).expect("create destination");
+        std::fs::write(destination.join("existing.txt"), b"original")
+            .expect("write destination fixture");
+
+        let staging_path;
+        {
+            let staging = ExtractionStaging::create_for(&destination).expect("create staging");
+            staging_path = staging.path().to_path_buf();
+            let error = extract(
+                &TestRuntime::storage_full_after(64 * 1024),
+                None,
+                "disk-full-task",
+                archive.to_string_lossy().as_ref(),
+                staging.path().to_string_lossy().as_ref(),
+                None,
+                &DecompressOptions::default(),
+            )
+            .expect_err("injected storage exhaustion must fail");
+            assert!(matches!(
+                error.downcast_ref::<CompressionError>(),
+                Some(CompressionError::DiskFull)
+            ));
+            assert!(!staging.path().join("disk-full.bin").exists());
+        }
+
+        assert!(!staging_path.exists());
+        assert_eq!(
+            std::fs::read(destination.join("existing.txt")).expect("original destination"),
+            b"original"
+        );
     }
 
     #[test]

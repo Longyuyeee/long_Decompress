@@ -1,6 +1,7 @@
 use crate::models::compression::TaskLogSeverity;
 use crate::services::io_buffer_pool::IOBufferPool;
 use anyhow::Result;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use tauri::Window;
 
@@ -11,6 +12,10 @@ pub(crate) mod zip;
 
 pub(crate) trait ExtractionRuntime {
     fn check_cancellation(&self) -> Result<()>;
+    fn write_extracted_chunk(&self, writer: &mut dyn Write, bytes: &[u8]) -> Result<()> {
+        writer.write_all(bytes)?;
+        Ok(())
+    }
     fn buffer_pool(&self) -> &IOBufferPool;
     fn copy_buffer_size(&self) -> usize;
     fn normalized_archive_path(&self, path: &Path, preserve_paths: bool) -> Option<PathBuf>;
