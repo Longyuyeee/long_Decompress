@@ -172,6 +172,32 @@ impl Drop for TemporaryAesInput {
     }
 }
 
+struct IncompleteExtractedFile {
+    path: PathBuf,
+    complete: bool,
+}
+
+impl IncompleteExtractedFile {
+    fn new(path: PathBuf) -> Self {
+        Self {
+            path,
+            complete: false,
+        }
+    }
+
+    fn complete(&mut self) {
+        self.complete = true;
+    }
+}
+
+impl Drop for IncompleteExtractedFile {
+    fn drop(&mut self) {
+        if !self.complete {
+            let _ = std::fs::remove_file(&self.path);
+        }
+    }
+}
+
 impl ExtractionRuntime for CompressionService {
     fn check_cancellation(&self) -> Result<()> {
         CompressionService::check_cancellation(self)
@@ -939,11 +965,17 @@ impl CompressionService {
             }
 
             let error_message = error.to_string().to_ascii_lowercase();
+            let invalid_decoder_input = matches!(
+                &error,
+                sevenz_rust::Error::Io(io_error, _)
+                    if io_error.kind() == std::io::ErrorKind::InvalidInput
+            );
             let password_failure = matches!(
                 &error,
                 sevenz_rust::Error::PasswordRequired
                     | sevenz_rust::Error::ChecksumVerificationFailed
-            ) || error_message.contains("checksumverificationfailed")
+            ) || invalid_decoder_input
+                || error_message.contains("checksumverificationfailed")
                 || error_message.contains("corrupted input data");
             if password_failure {
                 return CompressionError::InvalidPassword;
@@ -951,6 +983,22 @@ impl CompressionService {
         }
 
         CompressionError::ExtractionFailed(error.to_string())
+    }
+
+    fn is_seven_zip_data_corruption(error: &sevenz_rust::Error) -> bool {
+        let message = error.to_string().to_ascii_lowercase();
+        matches!(
+            error,
+            sevenz_rust::Error::ChecksumVerificationFailed
+                | sevenz_rust::Error::NextHeaderCrcMismatch
+        ) || matches!(
+            error,
+            sevenz_rust::Error::Io(io_error, _)
+                if io_error.kind() == std::io::ErrorKind::InvalidInput
+        ) || message.contains("checksumverificationfailed")
+            || message.contains("corrupted input data")
+            || message.contains("dist overflow")
+            || message.contains("crc mismatch")
     }
 
     fn apply_seven_zip_entry_mtime(
@@ -1601,6 +1649,25 @@ impl CompressionService {
     }
 
     pub fn do_extract_7z(&self, window: &Window, task_id: &str, file: &str, output: &str, password: Option<&str>, options: &DecompressOptions) -> Result<()> {
+        self.extract_7z_internal(
+            Some(window),
+            task_id,
+            file,
+            output,
+            password,
+            options,
+        )
+    }
+
+    fn extract_7z_internal(
+        &self,
+        window: Option<&Window>,
+        task_id: &str,
+        file: &str,
+        output: &str,
+        password: Option<&str>,
+        options: &DecompressOptions,
+    ) -> Result<()> {
         let archive_encrypted = Self::seven_zip_requires_password(Path::new(file))?;
         let output_root = PathBuf::from(output);
         let opts = options.clone();
@@ -1646,14 +1713,17 @@ impl CompressionService {
                             if Self::should_emit_byte_progress(last_emitted_bytes, processed_bytes)
                                 || processed_bytes >= total_uncompressed_bytes
                             {
-                                self.emit_progress(
-                                    window,
-                                    task_id,
-                                    processed_bytes as f32 / total_uncompressed_bytes as f32,
-                                    Some(entry.name().to_string()),
-                                    processed_bytes,
-                                    total_uncompressed_bytes,
-                                );
+                                if let Some(window) = window {
+                                    self.emit_progress(
+                                        window,
+                                        task_id,
+                                        processed_bytes as f32
+                                            / total_uncompressed_bytes as f32,
+                                        Some(entry.name().to_string()),
+                                        processed_bytes,
+                                        total_uncompressed_bytes,
+                                    );
+                                }
                                 last_emitted_bytes = processed_bytes;
                             }
                         },
@@ -1674,14 +1744,17 @@ impl CompressionService {
                         if Self::should_emit_byte_progress(last_emitted_bytes, processed_bytes)
                             || processed_bytes >= total_uncompressed_bytes
                         {
-                            self.emit_progress(
-                                window,
-                                task_id,
-                                processed_bytes as f32 / total_uncompressed_bytes as f32,
-                                Some(current_file.clone()),
-                                processed_bytes,
-                                total_uncompressed_bytes,
-                            );
+                            if let Some(window) = window {
+                                self.emit_progress(
+                                    window,
+                                    task_id,
+                                    processed_bytes as f32
+                                        / total_uncompressed_bytes as f32,
+                                    Some(current_file.clone()),
+                                    processed_bytes,
+                                    total_uncompressed_bytes,
+                                );
+                            }
                             last_emitted_bytes = processed_bytes;
                         }
                     },
@@ -1703,6 +1776,7 @@ impl CompressionService {
                     std::fs::create_dir_all(parent)?;
                 }
 
+                let mut incomplete_file = IncompleteExtractedFile::new(target.clone());
                 let mut outfile = File::create(&target)?;
                 let current_file = relative.to_string_lossy().to_string();
                 self.copy_cancellable_with_progress(
@@ -1714,14 +1788,17 @@ impl CompressionService {
                         if Self::should_emit_byte_progress(last_emitted_bytes, processed_bytes)
                             || processed_bytes >= total_uncompressed_bytes
                         {
-                            self.emit_progress(
-                                window,
-                                task_id,
-                                processed_bytes as f32 / total_uncompressed_bytes as f32,
-                                Some(current_file.clone()),
-                                processed_bytes,
-                                total_uncompressed_bytes,
-                            );
+                                if let Some(window) = window {
+                                    self.emit_progress(
+                                        window,
+                                        task_id,
+                                        processed_bytes as f32
+                                            / total_uncompressed_bytes as f32,
+                                        Some(current_file.clone()),
+                                        processed_bytes,
+                                        total_uncompressed_bytes,
+                                    );
+                                }
                             last_emitted_bytes = processed_bytes;
                         }
                     },
@@ -1729,6 +1806,7 @@ impl CompressionService {
                 outfile.flush()?;
                 drop(outfile);
                 Self::apply_seven_zip_entry_mtime(&target, entry, &opts)?;
+                incomplete_file.complete();
                 processed += 1;
                 Ok(())
             })();
@@ -1737,7 +1815,14 @@ impl CompressionService {
                 self.copy_cancellable(reader, &mut std::io::sink(), &mut copy_buffer)
                     .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
                 if opts.skip_corrupted {
-                    self.emit_log(window, task_id, &format!("Skipped 7z entry {}: {}", entry.name(), err), TaskLogSeverity::Warning);
+                    if let Some(window) = window {
+                        self.emit_log(
+                            window,
+                            task_id,
+                            &format!("Skipped 7z entry {}: {}", entry.name(), err),
+                            TaskLogSeverity::Warning,
+                        );
+                    }
                     return Ok(true);
                 }
                 return Err(sevenz_rust::Error::other(err.to_string()));
@@ -1757,12 +1842,39 @@ impl CompressionService {
             sevenz_rust::decompress_file_with_extract_fn(file, output, &mut extract_entry)
         };
 
-        result.map_err(|error| {
-            Self::classify_seven_zip_error(error, archive_encrypted, password.is_some())
-        })?;
+        if let Err(error) = result {
+            if self.cancellation_flag.load(Ordering::Relaxed) {
+                return Err(CompressionError::Cancelled.into());
+            }
+            if opts.skip_corrupted
+                && !archive_encrypted
+                && Self::is_seven_zip_data_corruption(&error)
+            {
+                if let Some(window) = window {
+                    self.emit_log(
+                        window,
+                        task_id,
+                        &format!("Skipped corrupted 7z data stream: {error}"),
+                        TaskLogSeverity::Warning,
+                    );
+                }
+            } else {
+                return Err(
+                    Self::classify_seven_zip_error(error, archive_encrypted, password.is_some())
+                        .into(),
+                );
+            }
+        }
 
         if processed == 0 {
-            self.emit_log(window, task_id, "No 7z entries matched the current extraction options.", TaskLogSeverity::Warning);
+            if let Some(window) = window {
+                self.emit_log(
+                    window,
+                    task_id,
+                    "No 7z entries matched the current extraction options.",
+                    TaskLogSeverity::Warning,
+                );
+            }
         }
 
         Ok(())
@@ -2941,6 +3053,30 @@ mod tests {
     use super::*;
     use std::io::Cursor;
 
+    fn create_seven_zip_fixture(archive: &Path, entries: &[(&Path, &str)]) {
+        let mut writer = sevenz_rust::SevenZWriter::create(archive).expect("create 7z writer");
+        for (source, name) in entries {
+            let entry =
+                sevenz_rust::SevenZArchiveEntry::from_path(source, (*name).to_string());
+            writer
+                .push_archive_entry(entry, Some(File::open(source).expect("open fixture entry")))
+                .expect("write fixture entry");
+        }
+        writer.finish().expect("finish 7z fixture");
+    }
+
+    fn corrupt_first_seven_zip_packed_stream(archive: &Path) {
+        let mut archive_file = File::open(archive).expect("open 7z fixture");
+        let archive_len = archive_file.metadata().expect("archive metadata").len();
+        let metadata = sevenz_rust::Archive::read(&mut archive_file, archive_len, &[])
+            .expect("read archive metadata");
+        let packed_size = *metadata.pack_sizes.first().expect("packed stream");
+        let corrupt_offset = 32 + metadata.pack_pos + packed_size / 2;
+        let mut bytes = std::fs::read(archive).expect("read archive bytes");
+        bytes[corrupt_offset as usize] ^= 0x5a;
+        std::fs::write(archive, bytes).expect("corrupt packed payload");
+    }
+
     #[test]
     fn byte_progress_is_throttled_to_multi_megabyte_intervals() {
         assert!(!CompressionService::should_emit_byte_progress(0, 64 * 1024));
@@ -3035,17 +3171,9 @@ mod tests {
         std::fs::write(&source, payload).expect("write source");
         sevenz_rust::compress_to_path(&source, &archive).expect("create plain 7z");
 
-        let mut archive_file = File::open(&archive).expect("open plain 7z");
-        let archive_len = archive_file.metadata().expect("archive metadata").len();
-        let metadata = sevenz_rust::Archive::read(&mut archive_file, archive_len, &[])
-            .expect("read archive metadata");
         assert!(!CompressionService::seven_zip_requires_password(&archive)
             .expect("plain archive encryption state"));
-        let packed_size = *metadata.pack_sizes.first().expect("packed stream");
-        let corrupt_offset = 32 + metadata.pack_pos + packed_size / 2;
-        let mut bytes = std::fs::read(&archive).expect("read archive bytes");
-        bytes[corrupt_offset as usize] ^= 0x5a;
-        std::fs::write(&archive, bytes).expect("corrupt packed payload");
+        corrupt_first_seven_zip_packed_stream(&archive);
 
         let mut drain_entry = |_entry: &sevenz_rust::SevenZArchiveEntry,
                                reader: &mut dyn Read,
@@ -3147,10 +3275,11 @@ mod tests {
             &mut wrong_password_entry,
         )
         .expect_err("wrong password must fail");
+        let wrong_password_debug = format!("{wrong_password:?}");
         assert!(matches!(
             CompressionService::classify_seven_zip_error(wrong_password, true, true),
             CompressionError::InvalidPassword
-        ));
+        ), "unexpected wrong-password error: {wrong_password_debug}");
 
         let mut correct_password_entry = drain();
         sevenz_rust::decompress_with_extract_fn_and_password(
@@ -3247,6 +3376,133 @@ mod tests {
             &std::fs::metadata(&output).expect("output metadata"),
         );
         assert_eq!(actual.unix_seconds(), unchanged.unix_seconds());
+    }
+
+    #[tokio::test]
+    async fn real_seven_zip_filter_extracts_only_matching_entries() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let keep = temp.path().join("keep.txt");
+        let drop = temp.path().join("drop.bin");
+        let archive = temp.path().join("filter.7z");
+        let output = temp.path().join("filter-output");
+        std::fs::write(&keep, b"keep").expect("write matching entry");
+        std::fs::write(&drop, b"drop").expect("write filtered entry");
+        create_seven_zip_fixture(
+            &archive,
+            &[(&keep, "nested/keep.txt"), (&drop, "nested/drop.bin")],
+        );
+        let service = CompressionService::for_testing();
+
+        service
+            .extract_7z_internal(
+                None,
+                "filter-task",
+                archive.to_string_lossy().as_ref(),
+                output.to_string_lossy().as_ref(),
+                None,
+                &DecompressOptions {
+                    preserve_paths: true,
+                    file_filter: Some("*.txt".to_string()),
+                    ..Default::default()
+                },
+            )
+            .expect("filtered extraction");
+
+        assert_eq!(
+            std::fs::read(output.join("nested/keep.txt")).expect("matching output"),
+            b"keep"
+        );
+        assert!(!output.join("nested/drop.bin").exists());
+    }
+
+    #[tokio::test]
+    async fn real_seven_zip_cancellation_stays_cancelled_and_writes_no_file() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("large.bin");
+        let archive = temp.path().join("cancel.7z");
+        let output = temp.path().join("cancel-output");
+        std::fs::write(&source, vec![7u8; 2 * 1024 * 1024]).expect("write source");
+        sevenz_rust::compress_to_path(&source, &archive).expect("create 7z fixture");
+        let service = CompressionService::for_testing();
+        service.cancel();
+
+        let error = service
+            .extract_7z_internal(
+                None,
+                "cancel-task",
+                archive.to_string_lossy().as_ref(),
+                output.to_string_lossy().as_ref(),
+                None,
+                &DecompressOptions::default(),
+            )
+            .expect_err("cancelled extraction must fail");
+        assert!(matches!(
+            error.downcast_ref::<CompressionError>(),
+            Some(CompressionError::Cancelled)
+        ));
+        assert!(!output.join("large.bin").exists());
+    }
+
+    #[tokio::test]
+    async fn corrupt_seven_zip_staging_is_removed_without_mutating_destination() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("payload.bin");
+        let archive = temp.path().join("rollback.7z");
+        let output = temp.path().join("rollback-output");
+        std::fs::write(&source, vec![3u8; 256 * 1024]).expect("write source");
+        sevenz_rust::compress_to_path(&source, &archive).expect("create 7z fixture");
+        corrupt_first_seven_zip_packed_stream(&archive);
+        std::fs::create_dir_all(&output).expect("create destination");
+        std::fs::write(output.join("existing.txt"), b"original").expect("destination fixture");
+        let service = CompressionService::for_testing();
+        let staging_path;
+        {
+            let staging = ExtractionStaging::create_for(&output).expect("create staging");
+            staging_path = staging.path().to_path_buf();
+            service
+                .extract_7z_internal(
+                    None,
+                    "rollback-task",
+                    archive.to_string_lossy().as_ref(),
+                    staging.path().to_string_lossy().as_ref(),
+                    None,
+                    &DecompressOptions::default(),
+                )
+                .expect_err("corrupt extraction must fail");
+        }
+
+        assert!(!staging_path.exists());
+        assert_eq!(
+            std::fs::read(output.join("existing.txt")).expect("original destination"),
+            b"original"
+        );
+    }
+
+    #[tokio::test]
+    async fn real_corrupt_seven_zip_can_be_skipped_without_committing_partial_output() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("payload.bin");
+        let archive = temp.path().join("skip-corrupt.7z");
+        let output = temp.path().join("skip-corrupt-output");
+        std::fs::write(&source, vec![11u8; 256 * 1024]).expect("write source");
+        sevenz_rust::compress_to_path(&source, &archive).expect("create 7z fixture");
+        corrupt_first_seven_zip_packed_stream(&archive);
+        let service = CompressionService::for_testing();
+
+        service
+            .extract_7z_internal(
+                None,
+                "skip-corrupt-task",
+                archive.to_string_lossy().as_ref(),
+                output.to_string_lossy().as_ref(),
+                None,
+                &DecompressOptions {
+                    skip_corrupted: true,
+                    ..Default::default()
+                },
+            )
+            .expect("skip corrupted entry");
+        assert!(!output.join("payload.bin").exists());
     }
 
     #[test]
