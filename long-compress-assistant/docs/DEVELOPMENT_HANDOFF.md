@@ -3,6 +3,19 @@
 > 2026-07-30 详细代码审计见仓库根目录
 > [DEVELOPMENT_AUDIT_2026-07-30.md](../../DEVELOPMENT_AUDIT_2026-07-30.md)。
 
+> 2026-07-31 发布后审计见仓库根目录
+> [DEVELOPMENT_AUDIT_2026-07-31.md](../../DEVELOPMENT_AUDIT_2026-07-31.md)。
+
+## 2026-07-31 交接点
+
+- 当前稳定基线为 `master` / `5f4505686a8ea0770b5de5178d9ad6433967fb4e`，正式版本为 `v1.0.20`。
+- `v1.0.20` GitHub Release 已发布，包含 NSIS 安装器、updater ZIP、签名文件和 `latest.json`。
+- 已从公开安装的 v1.0.19 通过应用内更新升级到 v1.0.20，`test:public-update` 验证安装、签名下载、自动重启、安装路径保持、用户数据保持、传统右键菜单资源和版本化 Shell DLL 均通过。
+- 当前 GitHub 无开放 PR、无开放 Issue；生产依赖审计为 0。
+- 完整 npm audit 仍有 15 项开发工具链漏洞，修复需要 Vite/Vitest/vue-tsc/@vue/test-utils 等主版本迁移，必须放到独立迁移分支。
+- 下一阶段优先顺序：发布验收记录回链、固定 Windows 性能趋势、self-hosted 桌面 E2E、HFSX/扩展格式真实样本补齐、依赖与平台现代化。
+- 不要再按 2026-07-30 的旧步骤创建 `v1.0.20` 标签或等待发布 PR；这些动作已经完成。
+
 ## 2026-07-30 阶段暂停点
 
 - 当前工作分支为 `agent/release-1.0.20` 的收口修复分支，版本仍为 `1.0.20`；本阶段不升版本、不创建标签、不发布 Release。
