@@ -4,6 +4,9 @@
 > 发布版本：v1.0.13
 > 平台：Windows x64，Rust `release` 配置
 
+> 2026-08-01 起，本页的历史数字继续保留作参考；新增的结构化采样工具负责后续版本趋势，
+> 不再依赖人工复制控制台输出。
+
 ## 本轮优化
 
 - ZIP 与单文件流复制统一使用可复用的 256 KiB 缓冲，并在每个块之间响应取消。
@@ -41,6 +44,31 @@
 
 ## 运行方法
 
+推荐从项目目录运行结构化基线：
+
+```powershell
+# 日常烟雾检查：只验证三条真实路径和结果格式，不作为性能门禁
+npm.cmd run performance:baseline -- -Iterations 1 -LargeFileMiB 16 -SmallFileCount 1000
+
+# 固定机器的正式基线：每个场景至少 10 个样本
+npm.cmd run performance:baseline -- -Iterations 10 -LargeFileMiB 100 -SmallFileCount 10000 `
+  -OutputPath test-results\performance-baseline\v1.0.20\result.json
+
+# 同机比较；只有基线自身达到 10 次样本资格时才应用回归阈值
+npm.cmd run performance:baseline -- -Iterations 10 -LargeFileMiB 100 -SmallFileCount 10000 `
+  -BaselinePath test-results\performance-baseline\v1.0.20\result.json `
+  -RegressionThresholdPercent 25
+```
+
+结果 JSON 包含 Git 提交及工作区状态、Windows/CPU/内存/架构组成的机器指纹、活动电源计划、
+Rust 工具链、逐次样本、中位数/最小值/最大值和基线比较结果。大文件 ZIP、小文件 ZIP 与 AES v2
+均由真实写入、读取和内容校验路径产生 `PERF_JSON`，脚本不会解析易变化的展示文本。
+
+同一基线周期必须保持机器、存储设备、电源计划、实时防护策略和输入规模不变。脚本会拒绝跨机器指纹比较；
+少于 10 次的结果会明确标记 `threshold_eligible=false`，只能用于烟雾观察，不能阻断发布。
+
+底层测试仍可单独运行：
+
 ```powershell
 cd src-tauri
 cargo test --release --test archive_performance_regression -- --ignored --nocapture
@@ -61,5 +89,5 @@ cargo test --release --test aes_stream_performance real_aes_stream_1_gib_baselin
 
 ## 后续优化顺序
 
-1. 在固定 Windows 环境周期运行 ZIP 与 AES 基准，积累至少 10 次样本后再设置吞吐告警阈值。
+1. 在固定 Windows 环境周期运行 `performance:baseline`；首份合格结果至少包含每场景 10 个样本，之后才启用同机趋势告警。
 2. 在保持密码、冲突策略、时间戳、事务回滚和路径安全语义一致的前提下，再评估受控并行解压；当前未启用尚未覆盖这些语义的实验性并行提取器。
