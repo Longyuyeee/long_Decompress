@@ -49,6 +49,8 @@
 - [ ] 正式 Release 发布后，从仍保留的上一正式版本执行应用内更新，下载、校验、安装和重启流程正常。
 - [ ] 使用 `test:public-update` 保存真实 UI 更新证据，确认版本、原安装目录、用户数据指纹、
       自动重启、单一 Shell DLL、传统右键菜单和无签名 MSIX 残留检查全部通过。
+- [ ] 公开更新证据包含 `contextMenuCascade.valid=true` 和 `commandCount=17`；只检查传统菜单顶层键
+      或单个 CommandStore 命令不能标记为通过。
 - [ ] 卸载后主程序、开始菜单项和传统资源管理器右键菜单被清理。
 - [ ] 卸载不会误删用户主动选择保留的数据。
 
@@ -108,6 +110,8 @@
 - [ ] 在干净环境下载并安装公开 Release 资产，而不是本地构建产物。
 - [ ] 安装器 SHA-256 已写入发布验收记录。
 - [ ] Release 说明已链接发布验收记录，并明确无商业代码签名及 SmartScreen 提示。
+- [ ] 使用 `npm.cmd run release:validation-report -- ...` 生成发布摘要，结果为 `PASS`；摘要能够回链
+      Release、Actions、验收 Issue、四项正式资产和公开更新证据。
 
 ## 9. 发布判定
 

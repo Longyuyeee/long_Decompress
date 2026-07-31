@@ -14,6 +14,7 @@
     "test:release-identity": "node scripts/check-release-identity.mjs",
     "test:installed-release": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-installed-release.ps1",
     "test:public-update": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-public-update.ps1",
+    "release:validation-report": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/generate-release-validation.ps1",
     "build:check": "vue-tsc && vite build",
     "type-check": "vue-tsc --noEmit",
     "lint": "vue-tsc --noEmit",
