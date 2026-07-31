@@ -8,10 +8,10 @@
 
 ## 2026-08-01 性能趋势工具
 
-- `npm.cmd run performance:baseline` 会以 Rust Release 配置运行大文件 ZIP、小文件 ZIP 和 AES v2 真实往返，并生成结构化 JSON。
+- `npm.cmd run performance:baseline` 会以 Rust Release 配置运行大文件 ZIP、小文件 ZIP、原生 7Z 和 AES v2 真实往返，并生成结构化 JSON。
 - 结果包含机器指纹、活动电源计划、Git/工具链、逐次指标及中位数/极值；跨机器基线会被拒绝。
 - 少于 10 次样本只用于烟雾检查，不应用回归阈值；固定机器首份 10 次结果建立后，才可用 `-BaselinePath` 做版本趋势门禁。
-- 操作方法和约束见 [PERFORMANCE_BASELINE.md](PERFORMANCE_BASELINE.md)。下一批性能场景为 7Z 与扩展格式真实样本。
+- 操作方法和约束见 [PERFORMANCE_BASELINE.md](PERFORMANCE_BASELINE.md)。下一批只在有稳定真实样本和可比指标时扩展 TAR 包装或只读格式，避免用模拟数据充数。
 
 ## 2026-08-01 右键菜单与发布追溯更正
 
