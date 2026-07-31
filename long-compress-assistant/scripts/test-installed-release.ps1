@@ -158,17 +158,71 @@ function Get-ContextMenuMode {
 }
 
 function Get-ClassicContextMenuCommand {
-  $commandKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.open\command'
-  if (-not (Test-Path -LiteralPath $commandKey)) {
-    return ''
+  $commandKeys = @(
+    'HKCU:\Software\Classes\SystemFileAssociations\.zip\shell\LongDecompress\ExtendedSubCommandsKey\shell\01.LongDecompress.open\command',
+    'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.open\command'
+  )
+  foreach ($commandKey in $commandKeys) {
+    if (Test-Path -LiteralPath $commandKey) {
+      return [string](Get-Item -LiteralPath $commandKey).GetValue('')
+    }
   }
-  return [string](Get-Item -LiteralPath $commandKey).GetValue('')
+  return ''
 }
 
 function Test-ClassicContextMenuTarget {
   param([string]$ExpectedExecutable)
   $command = Get-ClassicContextMenuCommand
   return $command -like "`"$ExpectedExecutable`"*"
+}
+
+function Get-ClassicContextMenuCascadeStatus {
+  param([string]$ExpectedExecutable)
+  $definitions = @(
+    @{ path = 'HKCU:\Software\Classes\*\shell\LongDecompress'; count = 3 },
+    @{ path = 'HKCU:\Software\Classes\SystemFileAssociations\.zip\shell\LongDecompress'; count = 8 },
+    @{ path = 'HKCU:\Software\Classes\directory\shell\LongDecompress'; count = 3 },
+    @{ path = 'HKCU:\Software\Classes\directory\Background\shell\LongDecompress'; count = 3 }
+  )
+  $errors = [Collections.Generic.List[string]]::new()
+  $commandCount = 0
+  foreach ($definition in $definitions) {
+    $root = $definition.path
+    if (-not (Test-Path -LiteralPath $root)) {
+      [void]$errors.Add("missing root: $root")
+      continue
+    }
+    $rootProperties = Get-ItemProperty -LiteralPath $root
+    if ($rootProperties.PSObject.Properties.Name -contains 'SubCommands') {
+      [void]$errors.Add("obsolete SubCommands value: $root")
+    }
+    $submenu = Join-Path $root 'ExtendedSubCommandsKey\shell'
+    $children = if (Test-Path -LiteralPath $submenu) {
+      @(Get-ChildItem -LiteralPath $submenu | Sort-Object PSChildName)
+    } else {
+      @()
+    }
+    if ($children.Count -ne $definition.count) {
+      [void]$errors.Add("submenu count $($children.Count)/$($definition.count): $root")
+    }
+    foreach ($child in $children) {
+      $commandKey = Join-Path $child.PSPath 'command'
+      if (-not (Test-Path -LiteralPath $commandKey)) {
+        [void]$errors.Add("missing command: $($child.PSChildName)")
+        continue
+      }
+      $command = [string](Get-Item -LiteralPath $commandKey).GetValue('')
+      $commandCount += 1
+      if (-not $command.StartsWith("`"$ExpectedExecutable`" ", [StringComparison]::OrdinalIgnoreCase)) {
+        [void]$errors.Add("wrong target: $command")
+      }
+    }
+  }
+  return [pscustomobject]@{
+    valid = $errors.Count -eq 0
+    commandCount = $commandCount
+    detail = if ($errors.Count -eq 0) { "roots=4; commands=$commandCount" } else { $errors -join '; ' }
+  }
 }
 
 function Get-OwnedContextMenuRegistryPaths {
@@ -309,15 +363,13 @@ function Assert-Installed {
 function Assert-ClassicContextMenu {
   param([string]$ExpectedExecutable)
   $legacyRoot = 'HKCU:\Software\Classes\*\shell\LongDecompress'
-  $legacyCommand = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.open\command'
   $nativeRoot = 'HKCU:\Software\Classes\*\shell\LongDecompressNative'
   Add-Check 'classic context-menu root is registered' (Test-Path -LiteralPath $legacyRoot) $legacyRoot
-  Add-Check 'classic context-menu command is registered' (Test-Path -LiteralPath $legacyCommand) $legacyCommand
   Add-Check 'unsigned native context-menu root is absent' (-not (Test-Path -LiteralPath $nativeRoot)) $nativeRoot
-  $command = Get-ClassicContextMenuCommand
-  Add-Check 'classic context-menu targets current executable' (
-    Test-ClassicContextMenuTarget $ExpectedExecutable
-  ) "command=$command"
+  $cascade = Get-ClassicContextMenuCascadeStatus $ExpectedExecutable
+  Add-Check 'classic context-menu submenus are complete and target current executable' (
+    $cascade.valid
+  ) $cascade.detail
 }
 
 function Assert-Uninstalled {
