@@ -46,11 +46,13 @@ function Invoke-PerformanceScenario {
     [int]$Iteration
   )
   Write-Host "[performance] iteration=$Iteration target=$TestTarget test=$TestName"
-  $arguments = @(
-    'test', '--release', '--manifest-path', $manifestPath,
-    '--test', $TestTarget, $TestName,
-    '--', '--ignored', '--exact', '--nocapture'
-  )
+  $targetArguments = if ($TestTarget -eq 'lib') {
+    @('--lib')
+  } else {
+    @('--test', $TestTarget)
+  }
+  $arguments = @('test', '--release', '--manifest-path', $manifestPath) +
+    $targetArguments + @($TestName, '--', '--ignored', '--exact', '--nocapture')
   # Cargo writes normal compilation progress to stderr. Windows PowerShell 5.1
   # turns redirected native stderr into error records when the global policy is
   # Stop, so judge the command by its process exit code instead.
@@ -122,6 +124,9 @@ function Get-Aggregates {
       }
       'aes_v2_large_file' {
         @('encryption_mib_s', 'decryption_mib_s', 'encryption_ms', 'decryption_ms', 'peak_working_set_delta_mib')
+      }
+      'seven_zip_large_file' {
+        @('compression_mib_s', 'extraction_mib_s', 'compression_ms', 'extraction_ms', 'peak_working_set_delta_mib')
       }
       default { @() }
     }
@@ -232,6 +237,8 @@ try {
       'archive_performance_regression' 'real_zip_compress_extract_baseline' $iteration))
     [void]$samples.Add((Invoke-PerformanceScenario `
       'archive_performance_regression' 'real_zip_many_small_files_baseline' $iteration))
+    [void]$samples.Add((Invoke-PerformanceScenario `
+      'lib' 'services::performance_regression::real_7z_large_file_baseline' $iteration))
     if (-not $SkipAes) {
       [void]$samples.Add((Invoke-PerformanceScenario `
         'aes_stream_performance' 'real_aes_stream_100_mib_baseline' $iteration))

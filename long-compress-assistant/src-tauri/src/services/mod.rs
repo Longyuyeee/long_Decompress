@@ -23,6 +23,8 @@ pub mod password_query_service;
 pub mod password_attempt_service;
 pub mod password_dictionary_service;
 pub mod password_generator_service;
+#[cfg(test)]
+mod performance_regression;
 pub mod split_compression;
 pub mod split_archive_detector;
 pub mod rar_support;

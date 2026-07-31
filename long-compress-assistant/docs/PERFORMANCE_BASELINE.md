@@ -61,7 +61,7 @@ npm.cmd run performance:baseline -- -Iterations 10 -LargeFileMiB 100 -SmallFileC
 ```
 
 结果 JSON 包含 Git 提交及工作区状态、Windows/CPU/内存/架构组成的机器指纹、活动电源计划、
-Rust 工具链、逐次样本、中位数/最小值/最大值和基线比较结果。大文件 ZIP、小文件 ZIP 与 AES v2
+Rust 工具链、逐次样本、中位数/最小值/最大值和基线比较结果。大文件 ZIP、小文件 ZIP、原生 7Z 与 AES v2
 均由真实写入、读取和内容校验路径产生 `PERF_JSON`，脚本不会解析易变化的展示文本。
 
 同一基线周期必须保持机器、存储设备、电源计划、实时防护策略和输入规模不变。脚本会拒绝跨机器指纹比较；
@@ -89,5 +89,5 @@ cargo test --release --test aes_stream_performance real_aes_stream_1_gib_baselin
 
 ## 后续优化顺序
 
-1. 在固定 Windows 环境周期运行 `performance:baseline`；首份合格结果至少包含每场景 10 个样本，之后才启用同机趋势告警。
+1. 在固定 Windows 环境周期运行 `performance:baseline`；首份合格结果至少包含 ZIP 大文件、ZIP 小文件、7Z 大文件和 AES v2 每场景 10 个样本，之后才启用同机趋势告警。
 2. 在保持密码、冲突策略、时间戳、事务回滚和路径安全语义一致的前提下，再评估受控并行解压；当前未启用尚未覆盖这些语义的实验性并行提取器。
