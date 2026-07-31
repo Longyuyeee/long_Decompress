@@ -142,6 +142,21 @@ fn run_aes_stream_baseline(size_mib: u64) {
             .expect("encrypted metadata")
             .len(),
     );
+    println!(
+        "PERF_JSON {}",
+        serde_json::json!({
+            "scenario": "aes_v2_large_file",
+            "fixture_mib": size_mib,
+            "encryption_mib_s": size_mib as f64 / encryption_time.as_secs_f64(),
+            "decryption_mib_s": size_mib as f64 / decryption_time.as_secs_f64(),
+            "encryption_ms": encryption_time.as_millis(),
+            "decryption_ms": decryption_time.as_millis(),
+            "peak_working_set_delta_mib": peak_delta as f64 / MIB as f64,
+            "container_bytes": std::fs::metadata(&encrypted)
+                .expect("encrypted metadata")
+                .len(),
+        })
+    );
     assert!(
         peak_delta < MAX_PEAK_DELTA_MIB * MIB,
         "AES v2 used more than {MAX_PEAK_DELTA_MIB} MiB of additional working set"
@@ -151,7 +166,12 @@ fn run_aes_stream_baseline(size_mib: u64) {
 #[test]
 #[ignore = "real 100 MiB AES benchmark; run explicitly before performance releases"]
 fn real_aes_stream_100_mib_baseline() {
-    run_aes_stream_baseline(100);
+    let size_mib = std::env::var("LONG_DECOMPRESS_PERF_AES_SIZE_MIB")
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .unwrap_or(100)
+        .clamp(16, 2048);
+    run_aes_stream_baseline(size_mib);
 }
 
 #[test]

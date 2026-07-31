@@ -14,12 +14,7 @@ const COPY_BUFFER_SIZE: usize = 256 * 1024;
 fn update_peak(peak: &AtomicU64, value: u64) {
     let mut current = peak.load(Ordering::Relaxed);
     while value > current {
-        match peak.compare_exchange_weak(
-            current,
-            value,
-            Ordering::Relaxed,
-            Ordering::Relaxed,
-        ) {
+        match peak.compare_exchange_weak(current, value, Ordering::Relaxed, Ordering::Relaxed) {
             Ok(_) => break,
             Err(observed) => current = observed,
         }
@@ -130,7 +125,9 @@ async fn real_zip_compress_extract_baseline() {
     let mut buffer = vec![0u8; COPY_BUFFER_SIZE];
     let extraction_started = Instant::now();
     loop {
-        let read = entry.read(&mut buffer).expect("decompress performance fixture");
+        let read = entry
+            .read(&mut buffer)
+            .expect("decompress performance fixture");
         if read == 0 {
             break;
         }
@@ -144,7 +141,9 @@ async fn real_zip_compress_extract_baseline() {
     sampler.join().expect("join memory sampler");
 
     assert_eq!(
-        std::fs::metadata(&extracted).expect("extracted metadata").len(),
+        std::fs::metadata(&extracted)
+            .expect("extracted metadata")
+            .len(),
         source_bytes,
     );
     assert_eq!(crc32_file(&extracted), expected_crc);
@@ -164,6 +163,19 @@ async fn real_zip_compress_extract_baseline() {
         extraction_time.as_millis(),
         peak_delta as f64 / MIB as f64,
         std::fs::metadata(&archive).expect("archive metadata").len(),
+    );
+    println!(
+        "PERF_JSON {}",
+        serde_json::json!({
+            "scenario": "zip_large_file",
+            "fixture_mib": size_mib,
+            "compression_mib_s": compression_mib_s,
+            "extraction_mib_s": extraction_mib_s,
+            "compression_ms": compression_time.as_millis(),
+            "extraction_ms": extraction_time.as_millis(),
+            "peak_working_set_delta_mib": peak_delta as f64 / MIB as f64,
+            "archive_bytes": std::fs::metadata(&archive).expect("archive metadata").len(),
+        })
     );
 
     assert!(
@@ -263,7 +275,23 @@ async fn real_zip_many_small_files_baseline() {
         compression_time.as_millis(),
         extraction_time.as_millis(),
         peak_delta as f64 / MIB as f64,
-        std::fs::metadata(&archive).expect("small-files archive metadata").len(),
+        std::fs::metadata(&archive)
+            .expect("small-files archive metadata")
+            .len(),
+    );
+    println!(
+        "PERF_JSON {}",
+        serde_json::json!({
+            "scenario": "zip_many_small_files",
+            "file_count": file_count,
+            "file_size_bytes": contents.len(),
+            "compression_files_s": file_count as f64 / compression_time.as_secs_f64(),
+            "extraction_files_s": file_count as f64 / extraction_time.as_secs_f64(),
+            "compression_ms": compression_time.as_millis(),
+            "extraction_ms": extraction_time.as_millis(),
+            "peak_working_set_delta_mib": peak_delta as f64 / MIB as f64,
+            "archive_bytes": std::fs::metadata(&archive).expect("small-files archive metadata").len(),
+        })
     );
 
     assert!(
