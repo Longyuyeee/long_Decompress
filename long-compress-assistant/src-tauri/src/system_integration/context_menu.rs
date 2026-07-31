@@ -84,6 +84,32 @@ struct VerbDef {
 }
 
 #[cfg(target_os = "windows")]
+const COMPRESS_VERBS: &[&str] = &[
+    "LongDecompress.compressZip",
+    "LongDecompress.compress7z",
+    "LongDecompress.compressCustom",
+];
+
+#[cfg(target_os = "windows")]
+const ARCHIVE_VERBS: &[&str] = &[
+    "LongDecompress.open",
+    "LongDecompress.quickExtract",
+    "LongDecompress.extractHere",
+    "LongDecompress.extractTo",
+    "LongDecompress.testArchive",
+    "LongDecompress.compressZip",
+    "LongDecompress.compress7z",
+    "LongDecompress.compressCustom",
+];
+
+#[cfg(target_os = "windows")]
+const BACKGROUND_VERBS: &[&str] = &[
+    "LongDecompress.compressZipHere",
+    "LongDecompress.compress7zHere",
+    "LongDecompress.compressCustomHere",
+];
+
+#[cfg(target_os = "windows")]
 fn verbs() -> Vec<VerbDef> {
     vec![
         VerbDef {
@@ -200,33 +226,19 @@ pub fn register_context_menu(app_path: &str) -> Result<()> {
 
 #[cfg(target_os = "windows")]
 fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
+    let all_verbs = verbs();
 
-    // 1. 注册所有操作动词到 CommandStore
-    let store_base = r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell";
-    for v in verbs() {
-        let verb_path = format!("{}\\{}", store_base, v.verb);
-        let (verb_key, _) = hkcu.create_subkey(&verb_path)?;
-        verb_key.set_value("", &v.label)?;
-        // Explorer invokes legacy static verbs once per selected item. The app's
-        // single-instance action queue combines those invocations safely.
-        verb_key.set_value("MultiSelectModel", &"Document")?;
-        let icon = format!(r#""{}""#, app_path);
-        verb_key.set_value("Icon", &icon.as_str())?;
-
-        let cmd_path = format!("{}\\command", verb_path);
-        let (cmd_key, _) = hkcu.create_subkey(&cmd_path)?;
-        let cmd_line = format!(r#""{}" {}"#, app_path, v.cli);
-        cmd_key.set_value("", &cmd_line.as_str())?;
-    }
-
-    // 2. 普通文件只显示压缩操作；已支持的归档文件同时显示解压和压缩操作。
-    let compress_verbs =
-        "LongDecompress.compressZip;LongDecompress.compress7z;LongDecompress.compressCustom";
-    let archive_verbs = "LongDecompress.open;LongDecompress.quickExtract;LongDecompress.extractHere;LongDecompress.extractTo;LongDecompress.testArchive;LongDecompress.compressZip;LongDecompress.compress7z;LongDecompress.compressCustom";
+    // CommandStore custom verbs are documented under HKLM. Putting them under
+    // HKCU leaves the cascade root visible while Explorer silently drops its
+    // children on current Windows 11 builds. ExtendedSubCommandsKey supports
+    // inline per-user verbs under HKCU\Software\Classes, so it works without
+    // elevation and keeps every submenu self-contained.
     reg_shell_entry(
         hkcu,
         r"Software\Classes\*\shell\LongDecompress",
-        compress_verbs,
+        &all_verbs,
+        COMPRESS_VERBS,
+        app_path,
     )?;
     for ext in ARCHIVE_EXTENSIONS {
         reg_shell_entry(
@@ -235,21 +247,26 @@ fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
                 r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress",
                 ext
             ),
-            archive_verbs,
+            &all_verbs,
+            ARCHIVE_VERBS,
+            app_path,
         )?;
     }
 
-    // 3. 文件夹和文件夹空白处压缩菜单
+    // 文件夹和文件夹空白处压缩菜单。
     reg_shell_entry(
         hkcu,
         r"Software\Classes\directory\shell\LongDecompress",
-        compress_verbs,
+        &all_verbs,
+        COMPRESS_VERBS,
+        app_path,
     )?;
-    let background_verbs = "LongDecompress.compressZipHere;LongDecompress.compress7zHere;LongDecompress.compressCustomHere";
     reg_shell_entry(
         hkcu,
         r"Software\Classes\directory\Background\shell\LongDecompress",
-        background_verbs,
+        &all_verbs,
+        BACKGROUND_VERBS,
+        app_path,
     )?;
 
     Ok(())
@@ -517,11 +534,35 @@ fn unregister_legacy_menu(hkcu: &RegKey) -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
-fn reg_shell_entry(hkcu: &RegKey, path: &str, sub_commands: &str) -> Result<()> {
+fn reg_shell_entry(
+    hkcu: &RegKey,
+    path: &str,
+    all_verbs: &[VerbDef],
+    selected_verbs: &[&str],
+    app_path: &str,
+) -> Result<()> {
     let (key, _) = hkcu.create_subkey(path)?;
     key.set_value("MUIVerb", &"Long解压")?;
-    key.set_value("SubCommands", &sub_commands)?;
+    key.set_value("Icon", &format!(r#""{}""#, app_path))?;
     key.set_value("MultiSelectModel", &"Document")?;
+
+    let submenu_path = format!(r"{}\ExtendedSubCommandsKey\shell", path);
+    for (index, verb_name) in selected_verbs.iter().enumerate() {
+        let verb = all_verbs
+            .iter()
+            .find(|candidate| candidate.verb == *verb_name)
+            .ok_or_else(|| anyhow::anyhow!("unknown Explorer context-menu verb: {verb_name}"))?;
+        // Prefixes make Explorer's registry enumeration deterministic while
+        // the stable verb name remains available for diagnostics.
+        let verb_path = format!(r"{}\{:02}.{}", submenu_path, index + 1, verb.verb);
+        let (verb_key, _) = hkcu.create_subkey(&verb_path)?;
+        verb_key.set_value("MUIVerb", &verb.label)?;
+        verb_key.set_value("Icon", &format!(r#""{}""#, app_path))?;
+        verb_key.set_value("MultiSelectModel", &"Document")?;
+
+        let (command_key, _) = hkcu.create_subkey(format!(r"{}\command", verb_path))?;
+        command_key.set_value("", &format!(r#""{}" {}"#, app_path, verb.cli))?;
+    }
     Ok(())
 }
 
@@ -572,6 +613,47 @@ fn native_package_registration_is_current(
     sparse_package_registered: bool,
 ) -> bool {
     signed_packages_present && sparse_package_registered
+}
+
+#[cfg(target_os = "windows")]
+fn legacy_shell_entry_is_current(
+    hkcu: &RegKey,
+    path: &str,
+    all_verbs: &[VerbDef],
+    selected_verbs: &[&str],
+    app_path: &str,
+) -> bool {
+    let Ok(root) = hkcu.open_subkey(path) else {
+        return false;
+    };
+    if root
+        .get_value::<String, _>("MUIVerb")
+        .map(|label| label != "Long解压")
+        .unwrap_or(true)
+        || root.get_value::<String, _>("SubCommands").is_ok()
+    {
+        return false;
+    }
+
+    selected_verbs.iter().enumerate().all(|(index, verb_name)| {
+        let Some(verb) = all_verbs
+            .iter()
+            .find(|candidate| candidate.verb == *verb_name)
+        else {
+            return false;
+        };
+        let command_path = format!(
+            r"{}\ExtendedSubCommandsKey\shell\{:02}.{}\command",
+            path,
+            index + 1,
+            verb.verb
+        );
+        let expected_command = format!(r#""{}" {}"#, app_path, verb.cli);
+        hkcu.open_subkey(command_path)
+            .and_then(|key| key.get_value::<String, _>(""))
+            .map(|command| command.eq_ignore_ascii_case(&expected_command))
+            .unwrap_or(false)
+    })
 }
 
 #[cfg(target_os = "windows")]
@@ -643,30 +725,38 @@ pub fn is_context_menu_registered() -> bool {
         }
     }
 
-    let required_keys = [
-        r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.open",
-        r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.quickExtract",
-        r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.compressZip",
+    let all_verbs = verbs();
+    let app_path = exe_path.to_string_lossy();
+    legacy_shell_entry_is_current(
+        &hkcu,
         r"Software\Classes\*\shell\LongDecompress",
+        &all_verbs,
+        COMPRESS_VERBS,
+        &app_path,
+    ) && legacy_shell_entry_is_current(
+        &hkcu,
         r"Software\Classes\directory\shell\LongDecompress",
+        &all_verbs,
+        COMPRESS_VERBS,
+        &app_path,
+    ) && legacy_shell_entry_is_current(
+        &hkcu,
         r"Software\Classes\directory\Background\shell\LongDecompress",
-    ];
-    if !required_keys.iter().all(|path| hkcu.open_subkey(path).is_ok()) {
-        return false;
-    }
-    let expected = format!(r#""{}""#, exe_path.to_string_lossy());
-    ["LongDecompress.open", "LongDecompress.quickExtract", "LongDecompress.compressZip"]
-        .iter()
-        .all(|verb| {
-            let path = format!(
-                r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\{}\command",
-                verb
-            );
-            hkcu.open_subkey(path)
-                .and_then(|key| key.get_value::<String, _>(""))
-                .map(|command| command.starts_with(&expected))
-                .unwrap_or(false)
-        })
+        &all_verbs,
+        BACKGROUND_VERBS,
+        &app_path,
+    ) && ARCHIVE_EXTENSIONS.iter().all(|extension| {
+        legacy_shell_entry_is_current(
+            &hkcu,
+            &format!(
+                r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress",
+                extension
+            ),
+            &all_verbs,
+            ARCHIVE_VERBS,
+            &app_path,
+        )
+    })
 }
 
 // 非 Windows 空实现
@@ -690,10 +780,10 @@ pub fn refresh_context_menu_if_present(_app_path: &str) -> Result<bool> {
 #[cfg(all(test, target_os = "windows"))]
 mod tests {
     use super::{
-        native_package_registration_is_current, verbs, ARCHIVE_EXTENSIONS, NATIVE_COMMAND_CLSID,
-        NATIVE_COMMAND_VERB,
-        QUICK_EXTRACT_COMMAND_CLSID, QUICK_EXTRACT_COMMAND_VERB,
-        QUICK_PACK_COMMAND_CLSID, QUICK_PACK_COMMAND_VERB,
+        legacy_shell_entry_is_current, native_package_registration_is_current, reg_shell_entry,
+        verbs, RegKey, ARCHIVE_EXTENSIONS, ARCHIVE_VERBS, BACKGROUND_VERBS, COMPRESS_VERBS,
+        HKEY_CURRENT_USER, NATIVE_COMMAND_CLSID, NATIVE_COMMAND_VERB, QUICK_EXTRACT_COMMAND_CLSID,
+        QUICK_EXTRACT_COMMAND_VERB, QUICK_PACK_COMMAND_CLSID, QUICK_PACK_COMMAND_VERB,
     };
 
     const INSTALLER_TEMPLATE: &str = include_str!("../../installer.nsi");
@@ -727,6 +817,77 @@ mod tests {
         assert!(verbs.iter().any(|verb| {
             verb.verb == "LongDecompress.quickExtract" && verb.cli == "--quick-extract \"%1\""
         }));
+    }
+
+    #[test]
+    fn legacy_menu_uses_per_user_inline_subcommands() {
+        let all_verbs = verbs();
+        for selected in [COMPRESS_VERBS, ARCHIVE_VERBS, BACKGROUND_VERBS] {
+            assert!(!selected.is_empty());
+            assert!(selected.iter().all(|name| {
+                all_verbs.iter().any(|candidate| candidate.verb == *name)
+            }));
+        }
+        assert!(CONTEXT_MENU_SOURCE
+            .matches("ExtendedSubCommandsKey\\shell")
+            .count()
+            >= 2);
+        assert_eq!(
+            CONTEXT_MENU_SOURCE
+                .matches("let store_base = r\"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CommandStore")
+                .count(),
+            1
+        );
+        assert!(CONTEXT_MENU_SOURCE.contains(
+            "root.get_value::<String, _>(\"SubCommands\").is_ok()"
+        ));
+    }
+
+    #[test]
+    fn legacy_menu_registry_roundtrip_contains_real_subcommands() {
+        struct RegistryCleanup(String);
+        impl Drop for RegistryCleanup {
+            fn drop(&mut self) {
+                let _ = RegKey::predef(HKEY_CURRENT_USER).delete_subkey_all(&self.0);
+            }
+        }
+
+        let test_root = format!(
+            r"Software\Classes\LongDecompress.ContextMenuTest.{}",
+            std::process::id()
+        );
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        let _cleanup = RegistryCleanup(test_root.clone());
+        let _ = hkcu.delete_subkey_all(&test_root);
+        let menu_path = format!(r"{}\shell\LongDecompress", test_root);
+        let app_path = r"C:\Program Files\LongDecompress\Long解压.exe";
+        let all_verbs = verbs();
+
+        reg_shell_entry(
+            &hkcu,
+            &menu_path,
+            &all_verbs,
+            ARCHIVE_VERBS,
+            app_path,
+        )
+        .expect("register test cascade");
+
+        assert!(legacy_shell_entry_is_current(
+            &hkcu,
+            &menu_path,
+            &all_verbs,
+            ARCHIVE_VERBS,
+            app_path,
+        ));
+        let root = hkcu.open_subkey(&menu_path).expect("open cascade root");
+        assert!(root.get_value::<String, _>("SubCommands").is_err());
+        let submenu = hkcu
+            .open_subkey(format!(r"{}\ExtendedSubCommandsKey\shell", menu_path))
+            .expect("open inline submenu");
+        assert_eq!(
+            submenu.enum_keys().filter_map(Result::ok).count(),
+            ARCHIVE_VERBS.len()
+        );
     }
 
     #[test]
