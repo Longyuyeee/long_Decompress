@@ -84,6 +84,41 @@ function Get-InstalledState {
   }
 }
 
+function Stop-InstalledApplication {
+  param([string]$Executable)
+  $normalizedExecutable = [IO.Path]::GetFullPath($Executable)
+  $processes = @(
+    Get-CimInstance Win32_Process -Filter "Name = '$applicationName'" -ErrorAction SilentlyContinue |
+      Where-Object {
+        $_.ExecutablePath -and
+        [IO.Path]::GetFullPath($_.ExecutablePath).Equals(
+          $normalizedExecutable,
+          [StringComparison]::OrdinalIgnoreCase
+        )
+      }
+  )
+  foreach ($process in $processes) {
+    Stop-Process -Id $process.ProcessId -Force -ErrorAction Stop
+  }
+
+  $deadline = (Get-Date).AddSeconds(10)
+  do {
+    $remaining = @(
+      Get-CimInstance Win32_Process -Filter "Name = '$applicationName'" -ErrorAction SilentlyContinue |
+        Where-Object {
+          $_.ExecutablePath -and
+          [IO.Path]::GetFullPath($_.ExecutablePath).Equals(
+            $normalizedExecutable,
+            [StringComparison]::OrdinalIgnoreCase
+          )
+        }
+    )
+    if ($remaining.Count -eq 0) { return $true }
+    Start-Sleep -Milliseconds 250
+  } while ((Get-Date) -lt $deadline)
+  return $false
+}
+
 function Get-ContextMenuMode {
   $legacy = Test-Path -LiteralPath 'HKCU:\Software\Classes\*\shell\LongDecompress'
   $native = Test-Path -LiteralPath 'HKCU:\Software\Classes\*\shell\LongDecompressNative'
@@ -208,8 +243,22 @@ try {
   $env:PUBLIC_UPDATER_APP = $initialState.executable
   $env:PUBLIC_UPDATER_EXPECTED_VERSION = $TargetVersion
   $env:PUBLIC_UPDATER_ARTIFACT_DIR = $uiArtifactDirectory
+  $applicationArtifact = Join-Path $uiArtifactDirectory 'independent-application.json'
+  Remove-Item -LiteralPath $applicationArtifact -Force -ErrorAction SilentlyContinue
   & node.exe (Join-Path $PSScriptRoot 'run-public-updater-ui.mjs')
   Add-Check 'desktop updater UI completed its hand-off' ($LASTEXITCODE -eq 0) "exitCode=$LASTEXITCODE"
+
+  $launchedApplication = Get-Content -Raw -LiteralPath $applicationArtifact | ConvertFrom-Json
+  $originalProcessId = [int]$launchedApplication.processId
+  $exitDeadline = (Get-Date).AddSeconds(60)
+  do {
+    $originalProcess = Get-Process -Id $originalProcessId -ErrorAction SilentlyContinue
+    if ($null -eq $originalProcess) { break }
+    Start-Sleep -Milliseconds 250
+  } while ((Get-Date) -lt $exitDeadline)
+  Add-Check 'pre-update application process exits' ($null -eq $originalProcess) (
+    "processId=$originalProcessId"
+  )
 
   $updateDeadline = (Get-Date).AddMinutes(4)
   do {
@@ -240,6 +289,7 @@ try {
     $running = @(
       Get-CimInstance Win32_Process -Filter "Name = '$applicationName'" -ErrorAction SilentlyContinue |
         Where-Object {
+          $_.ProcessId -ne $originalProcessId -and
           $_.ExecutablePath -and
           [IO.Path]::GetFullPath($_.ExecutablePath).Equals(
             $updatedState.executable,
@@ -254,7 +304,8 @@ try {
     "processCount=$($running.Count)"
   )
 
-  Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints)
+  # Startup refreshes existing Explorer integration to the current registry
+  # schema. Wait for that setup hook before stopping the restarted process.
   $contextMenuDeadline = (Get-Date).AddSeconds(20)
   do {
     $contextMenuMode = Get-ContextMenuMode
@@ -268,6 +319,14 @@ try {
   Add-Check 'updated release registers complete legacy submenus' (
     $contextMenuCascade.valid
   ) $contextMenuCascade.detail
+
+  # The restarted application keeps its SQLite database open. Prove the restart
+  # first, then quiesce this exact installation before hashing persistent data.
+  Add-Check 'updated application quiesces for data validation' (
+    Stop-InstalledApplication $updatedState.executable
+  ) $updatedState.executable
+
+  Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints)
   $resourceDirectory = Join-Path $updatedState.installLocation 'resources'
   $shellDlls = @(
     Get-ChildItem -LiteralPath $resourceDirectory `
