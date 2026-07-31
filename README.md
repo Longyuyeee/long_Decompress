@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.20-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.21-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,15 +20,14 @@
 
 ---
 
-## v1.0.20 更新亮点
+## v1.0.21 更新亮点
 
-- ZIP、7Z、TAR 系列、单文件流和应用自有 AES 压缩写入迁入独立原生模块，归档路由与事务边界更清晰。
-- 7Z 解压补齐 CRC/密码错误分类、时间戳恢复、筛选、取消、磁盘写满和暂存回滚的真实归档验证。
-- 压缩输出统一通过唯一临时文件发布；失败、磁盘写满或目标竞争不会覆盖既有文件，也不会遗留半成品。
-- 修复完成的同源 ZIP 任务会阻止后续 7Z 请求的问题；新格式任务会原位替换终态行，活动任务重复请求会明确提示。
-- 严格全格式桌面矩阵、真实安装生命周期 42 项及同源 ZIP → 7Z 安装版界面验收通过。
+- 修复 Windows 11“显示更多选项”中传统右键级联菜单为空或子命令消失的问题，改用按用户注册的内联二级命令。
+- 安装与公开更新验收现在严格核对四类菜单根、合计 17 条子命令及其可执行文件目标，避免只验证顶层键造成误判。
+- 新增固定 Windows 性能趋势工具，覆盖大文件 ZIP、小文件 ZIP、原生 7Z 和 AES v2 真实往返；同机双方至少 10 次样本后才启用阈值。
+- 更新 Vue 3、Playwright 1、Vue Test Utils 2、GSAP 3、PostCSS 8 和 Autoprefixer 10 的同主版本依赖，生产依赖漏洞保持为 0。
 
-完整变更请查看 [v1.0.20 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.20)。
+完整变更请查看 [v1.0.21 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.21)。
 
 ## 为什么选择 Long解压
 
@@ -115,8 +114,7 @@
 
 当前公开安装包没有 Windows 商业代码签名证书，因此 Windows 11 新式顶层菜单身份包不会随安装器分发；快捷操作位于“显示更多选项”的传统菜单中。项目已保留新式菜单实现，未来具备可信代码签名证书后可启用。
 
-> v1.0.20 已确认存在传统二级菜单为空或消失的问题，修复正在
-> [PR #38](https://github.com/Longyuyeee/long_Decompress/pull/38) 收口，并将在下一补丁版本交付。
+> v1.0.20 的传统二级菜单问题已在 v1.0.21 修复；应用内更新后会重新注册四类菜单根和 17 条内联子命令。
 
 ## 常用快捷键
 
