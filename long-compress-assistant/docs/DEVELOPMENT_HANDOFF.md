@@ -13,6 +13,13 @@
 - 少于 10 次样本只用于烟雾检查，不应用回归阈值；固定机器首份 10 次结果建立后，才可用 `-BaselinePath` 做版本趋势门禁。
 - 操作方法和约束见 [PERFORMANCE_BASELINE.md](PERFORMANCE_BASELINE.md)。下一批只在有稳定真实样本和可比指标时扩展 TAR 包装或只读格式，避免用模拟数据充数。
 
+## 2026-08-01 同主版本依赖更新
+
+- Vue 及其 compiler/runtime overrides 已统一到 3.5.40；Playwright 为 1.62.1，Vue Test Utils 为 2.4.11。
+- GSAP、PostCSS、Autoprefixer 已更新到各自当前主版本内的 3.15.0、8.5.25、10.5.4。
+- 干净 `npm ci`、184 项覆盖率测试、25 项多浏览器 E2E、类型检查、生产构建和版本身份通过。
+- `npm audit --omit=dev` 仍为 0；完整审计仍为 15 项开发工具链漏洞。不要运行 `npm audit fix --force`，后续按 Vite/Vitest/vue-tsc 等主版本分别迁移。
+
 ## 2026-08-01 右键菜单与发布追溯更正
 
 - v1.0.20 的更新、资产、重启、安装路径和用户数据保持通过，但传统右键二级菜单存在发布后回归；总体发布验收为 `INCOMPLETE`。
@@ -27,7 +34,7 @@
 - 当前稳定基线为 `master` / `5f4505686a8ea0770b5de5178d9ad6433967fb4e`，正式版本为 `v1.0.20`。
 - `v1.0.20` GitHub Release 已发布，包含 NSIS 安装器、updater ZIP、签名文件和 `latest.json`。
 - 已从公开安装的 v1.0.19 通过应用内更新升级到 v1.0.20，`test:public-update` 验证安装、签名下载、自动重启、安装路径保持、用户数据保持、传统右键菜单资源和版本化 Shell DLL 均通过。
-- 当前 GitHub 无开放 PR、无开放 Issue；生产依赖审计为 0。
+- v1.0.20 发布复验 Issue #39 保持开放，直到下一补丁版取得严格 17 条传统子菜单更新证据；生产依赖审计为 0。
 - 完整 npm audit 仍有 15 项开发工具链漏洞，修复需要 Vite/Vitest/vue-tsc/@vue/test-utils 等主版本迁移，必须放到独立迁移分支。
 - 下一阶段优先顺序：发布验收记录回链、固定 Windows 性能趋势、self-hosted 桌面 E2E、HFSX/扩展格式真实样本补齐、依赖与平台现代化。
 - 不要再按 2026-07-30 的旧步骤创建 `v1.0.20` 标签或等待发布 PR；这些动作已经完成。
