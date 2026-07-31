@@ -5,6 +5,11 @@
 > 当前正式版本：v1.0.20  
 > 当前文档分支：`agent/development-audit-2026-07-31`
 
+> 2026-08-01 更正：发布后用户实测证明传统右键二级菜单为空或消失。原 `test:public-update` 只检查顶层键，
+> 不能证明子命令可用；v1.0.20 整体验收改为 `INCOMPLETE`。追溯见
+> [正式验收记录](long-compress-assistant/docs/RELEASE_VALIDATION_1.0.20.md)与
+> [Issue #39](https://github.com/Longyuyeee/long_Decompress/issues/39)，修复见 PR #38。
+
 ## 1. 当前结论
 
 v1.0.20 已经完成正式发布，可以作为当前稳定基线继续向后开发。

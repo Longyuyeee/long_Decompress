@@ -35,6 +35,9 @@
 
 ## 正式发布后验收
 
-发布工作流将在 `v1.0.20` 标签上生成 NSIS 安装包、签名 updater ZIP 和 `latest.json`。资产公开后必须从保留的
-v1.0.19 环境执行 `npm.cmd run test:public-update`，验证应用内发现、签名下载、覆盖安装、自动重启、安装目录、
-两套用户数据指纹、单一版本化 Shell DLL、传统右键菜单和无签名 MSIX 残留。
+`v1.0.20` Release 工作流已成功生成 NSIS 安装包、签名 updater ZIP 和 `latest.json`。从保留的 v1.0.19
+环境执行的真实应用内更新完成签名下载、覆盖安装、自动重启、安装目录和用户数据保持验证。
+
+发布后复查发现，原自动化只验证传统菜单顶层注册键，没有验证 Explorer 可解析的真实二级命令，v1.0.20
+在部分 Windows 11 环境会出现二级菜单为空或消失。因此整体验收状态为 `INCOMPLETE`，详见
+[正式验收记录](RELEASE_VALIDATION_1.0.20.md)和 [Issue #39](https://github.com/Longyuyeee/long_Decompress/issues/39)。

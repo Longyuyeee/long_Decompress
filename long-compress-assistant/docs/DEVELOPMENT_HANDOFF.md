@@ -6,6 +6,15 @@
 > 2026-07-31 发布后审计见仓库根目录
 > [DEVELOPMENT_AUDIT_2026-07-31.md](../../DEVELOPMENT_AUDIT_2026-07-31.md)。
 
+## 2026-08-01 右键菜单与发布追溯更正
+
+- v1.0.20 的更新、资产、重启、安装路径和用户数据保持通过，但传统右键二级菜单存在发布后回归；总体发布验收为 `INCOMPLETE`。
+- 原因是 HKCU CommandStore 子命令不能作为可靠的按用户级联实现；修复改用 `ExtendedSubCommandsKey` 内联子命令。
+- `test:installed-release` 与 `test:public-update` 必须验证四类菜单根下合计 17 条命令，不能只检查顶层键。
+- 正式记录见 [RELEASE_VALIDATION_1.0.20.md](RELEASE_VALIDATION_1.0.20.md)和
+  [Issue #39](https://github.com/Longyuyeee/long_Decompress/issues/39)；修复实现见 PR #38。
+- 下一补丁版必须从 v1.0.20 执行真实应用内更新，得到严格菜单证据后才能关闭 Issue #39。
+
 ## 2026-07-31 交接点
 
 - 当前稳定基线为 `master` / `5f4505686a8ea0770b5de5178d9ad6433967fb4e`，正式版本为 `v1.0.20`。
