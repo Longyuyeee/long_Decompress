@@ -2,6 +2,15 @@
 
 面向 Windows 的本地压缩与解压工具，使用 Vue 3、TypeScript、Tauri 和 Rust 构建。支持批量任务、密码本、智能密码尝试、托盘运行、资源管理器右键菜单与一键解压。
 
+## v1.0.21 更新
+
+- 修复 Windows“显示更多选项”中只有顶层入口、二级命令消失的问题；四类菜单根现在使用 `ExtendedSubCommandsKey` 注册 17 条按用户内联命令。
+- 状态检测会拒绝旧 `SubCommands` 布局，并逐项核对命令目标；应用覆盖升级后会在启动阶段自动迁移旧菜单。
+- 已从官方 v1.0.20 通过软件内可见更新界面升级到公开 v1.0.21，签名交接、独立重启、安装目录、两套用户数据、唯一 Shell DLL 和 4 根/17 命令共 21 项检查全部通过。
+- 新增固定机器性能趋势工具，覆盖大文件 ZIP、小文件 ZIP、原生 7Z 和 AES v2 真实往返；同机同配置且双方至少 10 次样本后才应用回归阈值。
+- 完成 Vue、Playwright、Vue Test Utils、GSAP、PostCSS 和 Autoprefixer 的同主版本更新，生产依赖审计保持 0 个已知漏洞。
+- [v1.0.21 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.21) 与[正式验收报告](docs/RELEASE_VALIDATION_1.0.21.md)均已发布，最终结果为 `PASS`。
+
 ## v1.0.20 更新
 
 - ZIP、7Z、TAR 系列、单文件流和应用自有 AES 压缩写入已拆分为独立原生模块，归档能力、执行路由与事务发布规则保持统一。

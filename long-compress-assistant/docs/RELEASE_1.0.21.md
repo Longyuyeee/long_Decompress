@@ -18,14 +18,22 @@
 
 ## 发布验收
 
-- 发布前要求 Frontend、Rust/Shell Extension、浏览器、Windows 桌面构建和 NSIS 五项 CI 全部通过。
-- 发布后必须从公开 v1.0.20 执行真实应用内更新，确认签名下载、覆盖安装、自动重启、安装目录与用户数据保持。
-- 最终证据必须包含 `contextMenuCascade.valid=true` 和 `commandCount=17`，通过后回填并关闭 Issue #39。
+- [Release v1.0.21](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.21) 已由
+  [Actions run 30657834110](https://github.com/Longyuyeee/long_Decompress/actions/runs/30657834110) 从发布提交
+  `97cc7e63e15dc0870f7603eb13edcacea754043a` 构建并发布，五项发布前 CI 全部通过。
+- 已从官方 v1.0.20 通过软件内可见更新界面升级到公开 v1.0.21；21/21 项检查通过，包含签名下载、升级前进程退出、
+  新版独立重启、安装目录与两套用户数据保持、唯一 `long_compress_shell_extension_1_0_21.dll`，以及四类传统菜单根的 17 条命令。
+- 严格菜单证据为 `contextMenuCascade.valid=true`、`commandCount=17`。Issue
+  [#39](https://github.com/Longyuyeee/long_Decompress/issues/39) 与
+  [#46](https://github.com/Longyuyeee/long_Decompress/issues/46) 均已完成关闭，正式结果见
+  [RELEASE_VALIDATION_1.0.21.md](RELEASE_VALIDATION_1.0.21.md)。
 
-本地生产 NSIS 候选已完成 v1.0.20 → v1.0.21 → 卸载 → v1.0.20 恢复的 41 项生命周期验证，
-其中严格传统菜单检查为四类菜单根、17 条命令，安装目录和两套用户数据指纹均保持。候选安装器
-SHA-256 为 `9990E06CD8CA8500529FE53A0BB00EB86DA5D79CEEB4E7F7B2919312C2AF7799`；最终公开资产
-以 Release 工作流生成的文件和校验和为准。
+公开资产 SHA-256：
+
+- 安装器：`E82F1A4BC60D1F6A87FBE62B9045F6C85B0C35F054813F03EBD9E80516CC6ADD`
+- updater ZIP：`4CA2037D637E1205F34A120CF0D8680DD0BA0069D07848AE04165F703514D353`
+- updater 签名资产：`FC96CE376ED106A992EF0269CA48E341176AD37BDE76F5E7A7D80393BB576E1F`
+- `latest.json`：`823A61505F443F24DEED69EF6A718370EA49DDC06743B7F99D3DF365C54E72F1`
 
 ## 已知限制
 

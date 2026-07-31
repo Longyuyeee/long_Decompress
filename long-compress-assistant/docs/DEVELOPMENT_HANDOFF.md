@@ -20,12 +20,22 @@
 - 干净 `npm ci`、184 项覆盖率测试、25 项多浏览器 E2E、类型检查、生产构建和版本身份通过。
 - `npm audit --omit=dev` 仍为 0；完整审计仍为 15 项开发工具链漏洞。不要运行 `npm audit fix --force`，后续按 Vite/Vitest/vue-tsc 等主版本分别迁移。
 
-## 2026-08-01 v1.0.21 发布候选
+## 2026-08-01 v1.0.21 发布收口
 
-- 八个版本源和资源目录中的唯一 Shell DLL 已统一为 1.0.21，README 与 `RELEASE_1.0.21.md` 已更新。
-- 主程序 166 项 Rust 核心测试、全目标/全特性矩阵、Clippy、Shell Extension、184 项前端覆盖率、生产构建和 Chromium E2E 通过。
-- 本地生产 NSIS 完成 v1.0.20 → v1.0.21 → 卸载 → v1.0.20 恢复 41 项验证；四类传统菜单根、17 条命令、安装目录和用户数据保持均通过。
-- 下一步必须先走受保护主线 PR/CI，再创建 `v1.0.21` tag。Release 后从当前保留的公开 v1.0.20 环境运行 `test:public-update`，不得在公开更新证据生成前关闭 Issue #39。
+- `v1.0.21` 已由发布提交 `97cc7e63e15dc0870f7603eb13edcacea754043a` 构建并公开，安装器、updater ZIP、签名和 `latest.json` 四项资产齐全。
+- 主程序 166 项 Rust 核心测试、全目标/全特性矩阵、Clippy、Shell Extension、184 项前端覆盖率、生产构建、浏览器/桌面 E2E 和 NSIS CI 均通过。
+- 本地生产 NSIS 完成 v1.0.20 → v1.0.21 → 卸载 → v1.0.20 恢复 41 项验证；公开签名更新另完成 21/21 项验证。
+- 公开更新确认升级前进程退出、新版独立重启、安装目录和两套用户数据保持、唯一 1.0.21 Shell DLL，以及四类传统菜单根/17 条命令全部有效。
+- 真实更新验收曾暴露自动化过早终止新版进程的问题；PR #45 增加 PID 代际、启动迁移等待和 SQLite 校验前精确停进程，五组 CI 通过后已合并。
+- 正式证据见 [RELEASE_VALIDATION_1.0.21.md](RELEASE_VALIDATION_1.0.21.md)和
+  [Issue #46](https://github.com/Longyuyeee/long_Decompress/issues/46)；v1.0.20 回归 Issue #39 已由该证据关闭。
+
+### 下一阶段优先顺序
+
+1. 为 Windows self-hosted runner 接入真实已安装桌面/更新 E2E，降低发布后才能验证的人工依赖。
+2. 分支化升级 Vite、Vitest、vue-tsc 等开发工具链主版本；保持生产审计为 0，禁止使用 `npm audit fix --force` 批量跨主版本改写。
+3. 只在获得可复现非空样本与内容校验后补充 HFSX/扩展格式矩阵，不扩大未经桌面闭环验证的公开格式声明。
+4. 获取可信 Windows 代码签名证书后，再启用 Windows 11 新式顶层菜单身份包；在此之前继续使用已验证的传统级联菜单。
 
 ## 2026-08-01 右键菜单与发布追溯更正
 
