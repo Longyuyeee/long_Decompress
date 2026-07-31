@@ -93,6 +93,55 @@ function Get-ContextMenuMode {
   return 'none'
 }
 
+function Get-ClassicContextMenuCascadeStatus {
+  param([string]$ExpectedExecutable)
+  $definitions = @(
+    @{ path = 'HKCU:\Software\Classes\*\shell\LongDecompress'; count = 3 },
+    @{ path = 'HKCU:\Software\Classes\SystemFileAssociations\.zip\shell\LongDecompress'; count = 8 },
+    @{ path = 'HKCU:\Software\Classes\directory\shell\LongDecompress'; count = 3 },
+    @{ path = 'HKCU:\Software\Classes\directory\Background\shell\LongDecompress'; count = 3 }
+  )
+  $errors = [Collections.Generic.List[string]]::new()
+  $commandCount = 0
+  foreach ($definition in $definitions) {
+    $root = $definition.path
+    if (-not (Test-Path -LiteralPath $root)) {
+      [void]$errors.Add("missing root: $root")
+      continue
+    }
+    $rootProperties = Get-ItemProperty -LiteralPath $root
+    if ($rootProperties.PSObject.Properties.Name -contains 'SubCommands') {
+      [void]$errors.Add("obsolete SubCommands value: $root")
+    }
+    $submenu = Join-Path $root 'ExtendedSubCommandsKey\shell'
+    $children = if (Test-Path -LiteralPath $submenu) {
+      @(Get-ChildItem -LiteralPath $submenu | Sort-Object PSChildName)
+    } else {
+      @()
+    }
+    if ($children.Count -ne $definition.count) {
+      [void]$errors.Add("submenu count $($children.Count)/$($definition.count): $root")
+    }
+    foreach ($child in $children) {
+      $commandKey = Join-Path $child.PSPath 'command'
+      if (-not (Test-Path -LiteralPath $commandKey)) {
+        [void]$errors.Add("missing command: $($child.PSChildName)")
+        continue
+      }
+      $command = [string](Get-Item -LiteralPath $commandKey).GetValue('')
+      $commandCount += 1
+      if (-not $command.StartsWith("`"$ExpectedExecutable`" ", [StringComparison]::OrdinalIgnoreCase)) {
+        [void]$errors.Add("wrong target: $command")
+      }
+    }
+  }
+  return [pscustomobject]@{
+    valid = $errors.Count -eq 0
+    commandCount = $commandCount
+    detail = if ($errors.Count -eq 0) { "roots=4; commands=$commandCount" } else { $errors -join '; ' }
+  }
+}
+
 function Compare-Fingerprints {
   param($Expected, $Actual)
   foreach ($path in $appDataPaths) {
@@ -209,12 +258,16 @@ try {
   $contextMenuDeadline = (Get-Date).AddSeconds(20)
   do {
     $contextMenuMode = Get-ContextMenuMode
-    if ($contextMenuMode -eq 'legacy') { break }
+    $contextMenuCascade = Get-ClassicContextMenuCascadeStatus $updatedState.executable
+    if ($contextMenuMode -eq 'legacy' -and $contextMenuCascade.valid) { break }
     Start-Sleep -Milliseconds 250
   } while ((Get-Date) -lt $contextMenuDeadline)
   Add-Check 'updated release registers the legacy context menu' (
     $contextMenuMode -eq 'legacy'
   ) "actual=$contextMenuMode"
+  Add-Check 'updated release registers complete legacy submenus' (
+    $contextMenuCascade.valid
+  ) $contextMenuCascade.detail
   $resourceDirectory = Join-Path $updatedState.installLocation 'resources'
   $shellDlls = @(
     Get-ChildItem -LiteralPath $resourceDirectory `
@@ -233,6 +286,7 @@ try {
     installedState = $updatedState
     dataFingerprints = Get-DataFingerprints
     contextMenuMode = Get-ContextMenuMode
+    contextMenuCascade = $contextMenuCascade
     shellDlls = @($shellDlls | ForEach-Object Name)
   }
   $validationSucceeded = $true

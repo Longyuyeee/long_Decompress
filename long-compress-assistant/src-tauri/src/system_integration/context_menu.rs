@@ -792,6 +792,9 @@ mod tests {
         include_str!("../../windows-context-menu/AppxManifest.xml.template");
     const IDENTITY_PACKAGE_BUILD_SCRIPT: &str =
         include_str!("../../../scripts/build-context-menu-package.ps1");
+    const INSTALLED_RELEASE_TEST_SCRIPT: &str =
+        include_str!("../../../scripts/test-installed-release.ps1");
+    const PUBLIC_UPDATE_TEST_SCRIPT: &str = include_str!("../../../scripts/test-public-update.ps1");
     const CONTEXT_MENU_SOURCE: &str = include_str!("context_menu.rs");
 
     #[test]
@@ -888,6 +891,21 @@ mod tests {
             submenu.enum_keys().filter_map(Result::ok).count(),
             ARCHIVE_VERBS.len()
         );
+    }
+
+    #[test]
+    fn installed_release_checks_validate_real_legacy_submenus() {
+        for script in [INSTALLED_RELEASE_TEST_SCRIPT, PUBLIC_UPDATE_TEST_SCRIPT] {
+            assert!(script.contains("Get-ClassicContextMenuCascadeStatus"));
+            assert!(script.contains("ExtendedSubCommandsKey\\shell"));
+            assert!(script.contains("obsolete SubCommands value"));
+            assert!(script.contains("roots=4; commands=$commandCount"));
+        }
+        assert!(INSTALLED_RELEASE_TEST_SCRIPT.contains(
+            "classic context-menu submenus are complete and target current executable"
+        ));
+        assert!(PUBLIC_UPDATE_TEST_SCRIPT
+            .contains("updated release registers complete legacy submenus"));
     }
 
     #[test]
