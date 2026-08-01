@@ -14,6 +14,7 @@
 [下载最新版](https://github.com/Longyuyeee/long_Decompress/releases/latest) ·
 [使用说明](#使用说明) ·
 [格式支持](#格式支持) ·
+[开发审计](DEVELOPMENT_AUDIT_2026-08-01.md) ·
 [问题反馈](https://github.com/Longyuyeee/long_Decompress/issues)
 
 </div>
@@ -28,6 +29,7 @@
 - 更新 Vue 3、Playwright 1、Vue Test Utils 2、GSAP 3、PostCSS 8 和 Autoprefixer 10 的同主版本依赖，生产依赖漏洞保持为 0。
 
 完整变更请查看 [v1.0.21 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.21)。
+当前开发状态、发布判断和后续路线见 [2026-08-01 开发与发布审计](DEVELOPMENT_AUDIT_2026-08-01.md)。
 
 ## 为什么选择 Long解压
 
