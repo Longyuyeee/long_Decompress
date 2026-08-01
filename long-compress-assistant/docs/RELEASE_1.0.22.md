@@ -24,11 +24,20 @@
 
 ## 发布后验收
 
-发布后必须从公开 v1.0.21 通过软件内可见更新界面升级到 v1.0.22，验证版本切换、独立重启、安装目录、
-两套用户数据、唯一 Shell DLL 和传统菜单四根/17 命令，并生成独立验收 Issue 与报告。
+已从公开 v1.0.21 通过软件内可见更新界面升级到 v1.0.22。22/22 项检查通过，包括版本切换、独立重启、
+安装目录、两套用户数据、唯一 Shell DLL，以及应用退出后仍稳定存在的传统菜单四根/17 命令。正式记录见
+[Issue #51](https://github.com/Longyuyeee/long_Decompress/issues/51) 和
+[RELEASE_VALIDATION_1.0.22.md](RELEASE_VALIDATION_1.0.22.md)。
 
 本地生产 NSIS 候选已完成 v1.0.21 → v1.0.22 → 卸载 → v1.0.21 恢复的 41 项生命周期验证，结果为
 41/41 `PASS`。原安装目录、两套用户数据、传统菜单模式和 v1.0.21 基线均完整恢复；v1.0.22 候选阶段
 严格验证了唯一 `long_compress_shell_extension_1_0_22.dll` 以及四类菜单根/17 条命令。候选安装器
 SHA-256 为 `4AF1079C5F20E79F97C5301523E48C7DE1E6B63633457B83CA244E7B20EAAAB2`；公开资产以 Release
 工作流生成结果为准。
+
+公开资产 SHA-256：
+
+- 安装器：`3CC6157214F74B3397AC6BE99300A679166F2AEFCBA3BF72A6853068D0D5CD96`
+- updater ZIP：`6293DCB3DADE961CE12A5540F04E7045B384713D64DBBDF7A637D86A444FB526`
+- updater 签名资产：`48407AC8F244494221F4177FEE9EE17DCDAA039BC34DC2D24BC1FB8C2B68DB7F`
+- `latest.json`：`B18D00A450B2C1DA6C5001566451635C531C894B62C6C2C142CC77A83CE455F9`

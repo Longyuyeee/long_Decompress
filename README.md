@@ -29,7 +29,8 @@
 - 更新 README、开发路线和发布验收追溯，明确下一阶段的工具链迁移、桌面 E2E 与格式样本计划。
 - 公开安装器仍不使用 Windows 商业代码签名证书，继续跳过 Windows 11 顶层菜单身份包；应用内更新包保留内置公钥校验。
 
-完整变更请查看 [v1.0.22 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.22)。
+完整变更请查看 [v1.0.22 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.22)和
+[正式验收报告](long-compress-assistant/docs/RELEASE_VALIDATION_1.0.22.md)。
 
 ## v1.0.21 更新亮点
 

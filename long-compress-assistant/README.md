@@ -9,6 +9,7 @@
 - 发布验收继续覆盖签名更新清单、安装目录、两套用户数据、唯一版本化 Shell DLL，以及四类菜单根/17 条命令。
 - README、开发审计、路线图和 Release 追溯已同步到当前状态。
 - 不配置 Windows 商业代码签名证书；公开安装器继续使用已验证的传统菜单，应用内更新仍使用独立的更新包校验签名。
+- [v1.0.22 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.22) 与[正式验收报告](docs/RELEASE_VALIDATION_1.0.22.md)已发布；真实公开更新 22/22 项通过。
 
 ## v1.0.21 更新
 

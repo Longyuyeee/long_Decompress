@@ -11,9 +11,9 @@
 
 - `master` 与 `origin/master` 一致，审计开始时工作区干净，没有开放 PR 或 Issue。
 - 最新主线 CI 为 [run 30660733646](https://github.com/Longyuyeee/long_Decompress/actions/runs/30660733646)，结论为 `success`。
-- [v1.0.21 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.21) 是 Latest，安装器、updater ZIP、签名和 `latest.json` 四项资产齐全。
-- v1.0.20 → v1.0.21 公开应用内更新为 21/21 `PASS`；安装目录、两套用户数据、独立重启、唯一版本化 Shell DLL 和传统菜单四根/17 命令均通过。
-- 版本身份门禁通过：前端、Tauri、Cargo lock、Shell Extension 和版本化 DLL 均为 `1.0.21`。
+- [v1.0.22 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.22) 是 Latest，安装器、updater ZIP、签名和 `latest.json` 四项资产齐全。
+- v1.0.21 → v1.0.22 公开应用内更新为 22/22 `PASS`；安装目录、两套用户数据、独立重启、唯一版本化 Shell DLL 和应用退出后的传统菜单四根/17 命令均通过。
+- 版本身份门禁通过：前端、Tauri、Cargo lock、Shell Extension 和版本化 DLL 均为 `1.0.22`。
 - `npm audit --omit=dev` 为 0；生产依赖没有已知漏洞。
 - 完整 npm 审计仍有 7 项开发工具链问题（3 moderate、2 high、2 critical），主要位于旧 Vite/Vitest/esbuild 链路。完整修复要求跨主版本迁移，不应通过 `npm audit fix --force` 混入补丁发布。
 - `npm outdated` 显示 Tauri 1→2、Vite 5→8、Vitest 2→4、Tailwind 3→4、Pinia 2→4 等均属于独立迁移项目。
