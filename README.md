@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.21-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.22-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,6 +20,16 @@
 </div>
 
 ---
+
+## v1.0.22 更新亮点
+
+- 强化公开应用内更新验收：区分升级前进程与新版重启进程，避免旧进程退出阶段造成假阳性。
+- 在校验 SQLite 用户数据前只终止当前安装路径对应的应用进程，避免数据库占用导致验收误报。
+- 将右键菜单迁移纳入新版启动完成条件，持续严格核对四类菜单根和 17 条内联命令。
+- 更新 README、开发路线和发布验收追溯，明确下一阶段的工具链迁移、桌面 E2E 与格式样本计划。
+- 公开安装器仍不使用 Windows 商业代码签名证书，继续跳过 Windows 11 顶层菜单身份包；应用内更新包保留内置公钥校验。
+
+完整变更请查看 [v1.0.22 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.22)。
 
 ## v1.0.21 更新亮点
 
