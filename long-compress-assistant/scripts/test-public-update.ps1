@@ -326,6 +326,15 @@ try {
     Stop-InstalledApplication $updatedState.executable
   ) $updatedState.executable
 
+  # The updater and old uninstaller can finish cleanup after the restarted app
+  # first registers its menu. Require the registration to survive process exit
+  # so a transient startup state cannot be reported as a successful migration.
+  $finalContextMenuMode = Get-ContextMenuMode
+  $finalContextMenuCascade = Get-ClassicContextMenuCascadeStatus $updatedState.executable
+  Add-Check 'updated context menu remains registered after application exit' (
+    $finalContextMenuMode -eq 'legacy' -and $finalContextMenuCascade.valid
+  ) "mode=$finalContextMenuMode; $($finalContextMenuCascade.detail)"
+
   Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints)
   $resourceDirectory = Join-Path $updatedState.installLocation 'resources'
   $shellDlls = @(
@@ -344,8 +353,8 @@ try {
   $evidence.updated = [ordered]@{
     installedState = $updatedState
     dataFingerprints = Get-DataFingerprints
-    contextMenuMode = Get-ContextMenuMode
-    contextMenuCascade = $contextMenuCascade
+    contextMenuMode = $finalContextMenuMode
+    contextMenuCascade = $finalContextMenuCascade
     shellDlls = @($shellDlls | ForEach-Object Name)
   }
   $validationSucceeded = $true
