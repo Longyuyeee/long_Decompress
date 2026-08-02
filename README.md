@@ -14,7 +14,7 @@
 [下载最新版](https://github.com/Longyuyeee/long_Decompress/releases/latest) ·
 [使用说明](#使用说明) ·
 [格式支持](#格式支持) ·
-[开发审计](DEVELOPMENT_AUDIT_2026-08-01.md) ·
+[开发审计](DEVELOPMENT_AUDIT_2026-08-02.md) ·
 [问题反馈](https://github.com/Longyuyeee/long_Decompress/issues)
 
 </div>
@@ -40,7 +40,7 @@
 - 更新 Vue 3、Playwright 1、Vue Test Utils 2、GSAP 3、PostCSS 8 和 Autoprefixer 10 的同主版本依赖，生产依赖漏洞保持为 0。
 
 完整变更请查看 [v1.0.21 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.21)。
-当前开发状态、发布判断和后续路线见 [2026-08-01 开发与发布审计](DEVELOPMENT_AUDIT_2026-08-01.md)。
+当前开发状态、最初计划对比和后续路线见 [2026-08-02 开发审计](DEVELOPMENT_AUDIT_2026-08-02.md)。
 
 ## 为什么选择 Long解压
 
@@ -125,7 +125,7 @@
 - 压缩为 ZIP 或 7Z
 - 测试压缩包完整性
 
-当前公开安装包没有 Windows 商业代码签名证书，因此 Windows 11 新式顶层菜单身份包不会随安装器分发；快捷操作位于“显示更多选项”的传统菜单中。项目已保留新式菜单实现，未来具备可信代码签名证书后可启用。
+当前公开安装包不使用 Windows 商业代码签名证书，因此 Windows 11 新式顶层菜单身份包不会随安装器分发；快捷操作位于“显示更多选项”的传统菜单中。项目已保留相关实现基础，但商业签名与顶层菜单不属于当前开发路线。
 
 > v1.0.20 的传统二级菜单问题已在 v1.0.21 修复；应用内更新后会重新注册四类菜单根和 17 条内联子命令。
 
