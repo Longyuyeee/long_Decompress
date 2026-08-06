@@ -1,6 +1,6 @@
 use anyhow::Result;
 /// Windows 级联右键菜单集成
-/// 使用 Explorer CommandStore 注册级联子菜单
+/// 使用 ExtendedSubCommandsKey 注册经典级联菜单，并注册独立高频操作。
 #[cfg(target_os = "windows")]
 use winreg::enums::*;
 #[cfg(target_os = "windows")]
@@ -42,6 +42,10 @@ const QUICK_PACK_COMMAND_CLSID: &str = "{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4C}";
 #[cfg(target_os = "windows")]
 const QUICK_PACK_COMMAND_VERB: &str = "LongDecompressNativeQuickPack";
 #[cfg(target_os = "windows")]
+const LEGACY_QUICK_EXTRACT_VERB: &str = "LongDecompressQuickExtract";
+#[cfg(target_os = "windows")]
+const LEGACY_QUICK_PACK_VERB: &str = "LongDecompressQuickPack";
+#[cfg(target_os = "windows")]
 const SHELL_EXTENSION_DLL_PREFIX: &str = "long_compress_shell_extension";
 #[cfg(target_os = "windows")]
 const CONTEXT_MENU_QUICK_EXTRACT_PACKAGE_NAME: &str =
@@ -68,12 +72,13 @@ fn context_menu_package_version() -> String {
 }
 
 const ARCHIVE_EXTENSIONS: &[&str] = &[
-    ".zip", ".zipx", ".7z", ".rar", ".tar", ".gz", ".gzip", ".bz2", ".bzip2", ".xz",
-    ".zst", ".zstd", ".lzma", ".tgz", ".tpz", ".tbz", ".tbz2", ".txz", ".tzst",
-    ".iso", ".img", ".dmg", ".wim", ".vhd", ".vhdx", ".cab", ".msi", ".deb", ".rpm",
-    ".lzh", ".lha", ".arj", ".chm", ".xar", ".cpio", ".squashfs", ".sfs", ".udf",
-    ".jar", ".xpi", ".odt", ".ods", ".docx", ".xlsx", ".pptx", ".epub", ".ipa", ".apk",
-    ".appx", ".ova", ".aes",
+    ".zip", ".zipx", ".7z", ".rar", ".wim", ".tar", ".ova", ".gz", ".gzip", ".tgz",
+    ".tpz", ".bz2", ".bzip2", ".tbz", ".tbz2", ".xz", ".txz", ".zst", ".zstd",
+    ".tzst", ".aes", ".lzma", ".jar", ".xpi", ".ipa", ".apk", ".appx", ".iso", ".img",
+    ".dmg", ".vhd", ".vhdx", ".qcow", ".qcow2", ".qcow2c", ".vdi", ".vmdk", ".cab",
+    ".deb", ".udeb", ".rpm", ".msi", ".msp", ".msm", ".nsis", ".apfs", ".ext", ".ext2",
+    ".ext3", ".ext4", ".gpt", ".mbr", ".uefif", ".cramfs", ".fat", ".ntfs", ".hfs",
+    ".hfsx", ".ar", ".a", ".lzh", ".lha", ".squashfs", ".sfs", ".xar", ".cpio", ".ihex",
 ];
 
 #[cfg(target_os = "windows")]
@@ -240,15 +245,27 @@ fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
         COMPRESS_VERBS,
         app_path,
     )?;
+    reg_direct_shell_entry(
+        hkcu,
+        &format!(r"Software\Classes\*\shell\{}", LEGACY_QUICK_PACK_VERB),
+        "一键打包为 ZIP",
+        "--quick-pack \"%1\"",
+        app_path,
+    )?;
     for ext in ARCHIVE_EXTENSIONS {
+        let association_root = format!(r"Software\Classes\SystemFileAssociations\{}\shell", ext);
         reg_shell_entry(
             hkcu,
-            &format!(
-                r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress",
-                ext
-            ),
+            &format!(r"{}\LongDecompress", association_root),
             &all_verbs,
             ARCHIVE_VERBS,
+            app_path,
+        )?;
+        reg_direct_shell_entry(
+            hkcu,
+            &format!(r"{}\{}", association_root, LEGACY_QUICK_EXTRACT_VERB),
+            "一键解压到同名文件夹",
+            "--quick-extract \"%1\"",
             app_path,
         )?;
     }
@@ -261,11 +278,31 @@ fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
         COMPRESS_VERBS,
         app_path,
     )?;
+    reg_direct_shell_entry(
+        hkcu,
+        &format!(
+            r"Software\Classes\directory\shell\{}",
+            LEGACY_QUICK_PACK_VERB
+        ),
+        "一键打包为 ZIP",
+        "--quick-pack \"%1\"",
+        app_path,
+    )?;
     reg_shell_entry(
         hkcu,
         r"Software\Classes\directory\Background\shell\LongDecompress",
         &all_verbs,
         BACKGROUND_VERBS,
+        app_path,
+    )?;
+    reg_direct_shell_entry(
+        hkcu,
+        &format!(
+            r"Software\Classes\directory\Background\shell\{}",
+            LEGACY_QUICK_PACK_VERB
+        ),
+        "一键打包当前文件夹为 ZIP",
+        "--quick-pack \"%V\"",
         app_path,
     )?;
 
@@ -516,8 +553,12 @@ fn unregister_legacy_menu(hkcu: &RegKey) -> Result<()> {
     }
     for entry in [
         r"Software\Classes\*\shell\LongDecompress",
+        r"Software\Classes\*\shell\LongDecompressQuickExtract",
+        r"Software\Classes\*\shell\LongDecompressQuickPack",
         r"Software\Classes\directory\shell\LongDecompress",
+        r"Software\Classes\directory\shell\LongDecompressQuickPack",
         r"Software\Classes\directory\Background\shell\LongDecompress",
+        r"Software\Classes\directory\Background\shell\LongDecompressQuickPack",
     ] {
         delete_tree_if_present(hkcu, entry)?;
     }
@@ -527,6 +568,13 @@ fn unregister_legacy_menu(hkcu: &RegKey) -> Result<()> {
             &format!(
                 r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress",
                 extension
+            ),
+        )?;
+        delete_tree_if_present(
+            hkcu,
+            &format!(
+                r"Software\Classes\SystemFileAssociations\{}\shell\{}",
+                extension, LEGACY_QUICK_EXTRACT_VERB
             ),
         )?;
     }
@@ -563,6 +611,23 @@ fn reg_shell_entry(
         let (command_key, _) = hkcu.create_subkey(format!(r"{}\command", verb_path))?;
         command_key.set_value("", &format!(r#""{}" {}"#, app_path, verb.cli))?;
     }
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn reg_direct_shell_entry(
+    hkcu: &RegKey,
+    path: &str,
+    label: &str,
+    cli: &str,
+    app_path: &str,
+) -> Result<()> {
+    let (key, _) = hkcu.create_subkey(path)?;
+    key.set_value("MUIVerb", &label)?;
+    key.set_value("Icon", &format!(r#""{}""#, app_path))?;
+    key.set_value("MultiSelectModel", &"Document")?;
+    let (command_key, _) = hkcu.create_subkey(format!(r"{}\command", path))?;
+    command_key.set_value("", &format!(r#""{}" {}"#, app_path, cli))?;
     Ok(())
 }
 
@@ -657,6 +722,15 @@ fn legacy_shell_entry_is_current(
 }
 
 #[cfg(target_os = "windows")]
+fn legacy_direct_entry_is_current(hkcu: &RegKey, path: &str, cli: &str, app_path: &str) -> bool {
+    let expected_command = format!(r#""{}" {}"#, app_path, cli);
+    hkcu.open_subkey(format!(r"{}\command", path))
+        .and_then(|key| key.get_value::<String, _>(""))
+        .map(|command| command.eq_ignore_ascii_case(&expected_command))
+        .unwrap_or(false)
+}
+
+#[cfg(target_os = "windows")]
 pub fn is_context_menu_registered() -> bool {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let Ok(exe_path) = std::env::current_exe() else { return false };
@@ -727,7 +801,28 @@ pub fn is_context_menu_registered() -> bool {
 
     let all_verbs = verbs();
     let app_path = exe_path.to_string_lossy();
-    legacy_shell_entry_is_current(
+    legacy_direct_entry_is_current(
+        &hkcu,
+        &format!(r"Software\Classes\*\shell\{}", LEGACY_QUICK_PACK_VERB),
+        "--quick-pack \"%1\"",
+        &app_path,
+    ) && legacy_direct_entry_is_current(
+        &hkcu,
+        &format!(
+            r"Software\Classes\directory\shell\{}",
+            LEGACY_QUICK_PACK_VERB
+        ),
+        "--quick-pack \"%1\"",
+        &app_path,
+    ) && legacy_direct_entry_is_current(
+        &hkcu,
+        &format!(
+            r"Software\Classes\directory\Background\shell\{}",
+            LEGACY_QUICK_PACK_VERB
+        ),
+        "--quick-pack \"%V\"",
+        &app_path,
+    ) && legacy_shell_entry_is_current(
         &hkcu,
         r"Software\Classes\*\shell\LongDecompress",
         &all_verbs,
@@ -755,6 +850,14 @@ pub fn is_context_menu_registered() -> bool {
             &all_verbs,
             ARCHIVE_VERBS,
             &app_path,
+        ) && legacy_direct_entry_is_current(
+            &hkcu,
+            &format!(
+                r"Software\Classes\SystemFileAssociations\{}\shell\{}",
+                extension, LEGACY_QUICK_EXTRACT_VERB
+            ),
+            "--quick-extract \"%1\"",
+            &app_path,
         )
     })
 }
@@ -780,9 +883,11 @@ pub fn refresh_context_menu_if_present(_app_path: &str) -> Result<bool> {
 #[cfg(all(test, target_os = "windows"))]
 mod tests {
     use super::{
-        legacy_shell_entry_is_current, native_package_registration_is_current, reg_shell_entry,
-        verbs, RegKey, ARCHIVE_EXTENSIONS, ARCHIVE_VERBS, BACKGROUND_VERBS, COMPRESS_VERBS,
-        HKEY_CURRENT_USER, NATIVE_COMMAND_CLSID, NATIVE_COMMAND_VERB, QUICK_EXTRACT_COMMAND_CLSID,
+        legacy_direct_entry_is_current, legacy_shell_entry_is_current,
+        native_package_registration_is_current, reg_direct_shell_entry, reg_shell_entry, verbs,
+        RegKey, ARCHIVE_EXTENSIONS, ARCHIVE_VERBS, BACKGROUND_VERBS, COMPRESS_VERBS,
+        HKEY_CURRENT_USER, LEGACY_QUICK_EXTRACT_VERB, LEGACY_QUICK_PACK_VERB,
+        NATIVE_COMMAND_CLSID, NATIVE_COMMAND_VERB, QUICK_EXTRACT_COMMAND_CLSID,
         QUICK_EXTRACT_COMMAND_VERB, QUICK_PACK_COMMAND_CLSID, QUICK_PACK_COMMAND_VERB,
     };
 
@@ -820,6 +925,28 @@ mod tests {
         assert!(verbs.iter().any(|verb| {
             verb.verb == "LongDecompress.quickExtract" && verb.cli == "--quick-extract \"%1\""
         }));
+    }
+
+    #[test]
+    fn classic_menu_extensions_match_public_decompression_scope() {
+        for document in [".docx", ".xlsx", ".pptx", ".odt", ".ods", ".epub"] {
+            assert!(
+                !ARCHIVE_EXTENSIONS.contains(&document),
+                "document container must not be exposed as an archive: {document}"
+            );
+        }
+        for withdrawn in [".arj", ".chm", ".udf", ".ppkg"] {
+            assert!(
+                !ARCHIVE_EXTENSIONS.contains(&withdrawn),
+                "unvalidated format must not be exposed: {withdrawn}"
+            );
+        }
+        for validated in [".qcow2", ".vmdk", ".apfs", ".hfsx", ".cramfs", ".ihex"] {
+            assert!(
+                ARCHIVE_EXTENSIONS.contains(&validated),
+                "validated format is missing from Explorer integration: {validated}"
+            );
+        }
     }
 
     #[test]
@@ -891,6 +1018,22 @@ mod tests {
             submenu.enum_keys().filter_map(Result::ok).count(),
             ARCHIVE_VERBS.len()
         );
+
+        let quick_path = format!(r"{}\shell\{}", test_root, LEGACY_QUICK_PACK_VERB);
+        reg_direct_shell_entry(
+            &hkcu,
+            &quick_path,
+            "一键打包为 ZIP",
+            "--quick-pack \"%1\"",
+            app_path,
+        )
+        .expect("register direct quick action");
+        assert!(legacy_direct_entry_is_current(
+            &hkcu,
+            &quick_path,
+            "--quick-pack \"%1\"",
+            app_path,
+        ));
     }
 
     #[test]
@@ -899,7 +1042,7 @@ mod tests {
             assert!(script.contains("Get-ClassicContextMenuCascadeStatus"));
             assert!(script.contains("ExtendedSubCommandsKey\\shell"));
             assert!(script.contains("obsolete SubCommands value"));
-            assert!(script.contains("roots=4; commands=$commandCount"));
+            assert!(script.contains("quickActions=$quickActionCount"));
         }
         assert!(INSTALLED_RELEASE_TEST_SCRIPT.contains(
             "classic context-menu submenus are complete and target current executable"
@@ -940,6 +1083,29 @@ mod tests {
         assert!(INSTALLER_TEMPLATE.contains(QUICK_EXTRACT_COMMAND_VERB));
         assert!(INSTALLER_TEMPLATE.contains(QUICK_PACK_COMMAND_CLSID));
         assert!(INSTALLER_TEMPLATE.contains(QUICK_PACK_COMMAND_VERB));
+        for key in [
+            format!(r"Software\Classes\*\shell\{}", LEGACY_QUICK_PACK_VERB),
+            format!(r"Software\Classes\directory\shell\{}", LEGACY_QUICK_PACK_VERB),
+            format!(
+                r"Software\Classes\directory\Background\shell\{}",
+                LEGACY_QUICK_PACK_VERB
+            ),
+        ] {
+            assert!(
+                INSTALLER_TEMPLATE.contains(&key),
+                "NSIS cleanup is missing direct quick-pack action {key}"
+            );
+        }
+        for extension in ARCHIVE_EXTENSIONS {
+            let key = format!(
+                r"Software\Classes\SystemFileAssociations\{}\shell\{}",
+                extension, LEGACY_QUICK_EXTRACT_VERB
+            );
+            assert!(
+                INSTALLER_TEMPLATE.contains(&key),
+                "NSIS cleanup is missing direct quick-extract action {key}"
+            );
+        }
         assert!(INSTALLER_TEMPLATE.contains("SHChangeNotify(i 0x08000000"));
         assert!(SHELL_EXTENSION_SOURCE.contains(NATIVE_COMMAND_CLSID));
     }

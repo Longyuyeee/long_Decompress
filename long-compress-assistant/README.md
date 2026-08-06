@@ -2,6 +2,15 @@
 
 面向 Windows 的本地压缩与解压工具，使用 Vue 3、TypeScript、Tauri 和 Rust 构建。支持批量任务、密码本、智能密码尝试、托盘运行、资源管理器右键菜单与一键解压。
 
+## v1.0.23 更新
+
+- 在“显示更多选项”的经典菜单外层增加“一键解压到同名文件夹”和“一键打包为 ZIP”，常用操作不再需要展开 Long解压 二级菜单。
+- 保留 `ExtendedSubCommandsKey` 四类菜单根和 17 条内联命令，并让注册状态、覆盖安装和公开更新验收同时核对独立快捷项。
+- 资源管理器格式表与解压中心统一：过滤 DOCX、XLSX、PPTX、ODT、ODS、EPUB 和未完成公开验证的格式，补齐 QCOW、VDI、VMDK、APFS、EXT、HFSX 等已验证格式。
+- v1.0.19 → v1.0.23 → 卸载 → v1.0.19 的本地安装生命周期 41/41 项通过，原安装路径、用户数据和菜单状态均已恢复。
+- 无商业代码签名的公开安装包继续只交付经典菜单，不把 Windows 11 第一层菜单写成已支持能力。
+- [v1.0.23 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.23)记录本轮测试与发布资产。
+
 ## v1.0.22 更新
 
 - 公开更新自动化现在严格区分旧进程退出与新版独立重启，并等待启动阶段完成右键菜单结构迁移。
@@ -171,9 +180,9 @@
 除上述格式外，第一批完整引擎扩展覆盖：
 
 - 镜像与虚拟磁盘：ISO、IMG、DMG、VHD/VHDX、QCOW/QCOW2、VDI、VMDK
-- 安装包与容器：CAB、DEB、RPM、MSI/MSP/MSM、NSIS、PPKG
-- 文件系统与固件：APFS、EXT2/3/4、FAT、NTFS、HFS/HFSX、GPT、MBR、UEFI、UDF、CramFS
-- 传统归档：AR/A、ARJ、LZH/LHA、CHM、CPIO、SquashFS、XAR、Unix Z
+- 安装包与容器：CAB、DEB/UDEB、RPM、MSI/MSP/MSM、NSIS
+- 文件系统与固件：APFS、EXT2/3/4、FAT、NTFS、HFS/HFSX、GPT、MBR、UEFI、CramFS
+- 传统归档：AR/A、LZH/LHA、CPIO、SquashFS、XAR、IHex
 - 应用归档与安装容器：JAR、APK、APPX 等；Office/OpenDocument/EPUB 文档容器不在解压中心中作为压缩包导入
 
 具体能力以当前引擎动态检测结果为准。某些镜像或文件系统格式只支持读取和解压，不支持创建。

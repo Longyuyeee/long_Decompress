@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.22-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.23-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,6 +20,17 @@
 </div>
 
 ---
+
+## v1.0.23 更新亮点
+
+- 在 Windows 10/11 的“显示更多选项”经典菜单外层增加“一键解压到同名文件夹”和“一键打包为 ZIP”。
+- 保留已经验证的 `ExtendedSubCommandsKey` 二级菜单，解决只显示 Long解压 根入口却没有子命令的问题。
+- 右键菜单格式范围与解压中心统一：DOCX、XLSX、PPTX、ODT、ODS、EPUB 不再显示解压操作；补齐 QCOW、VDI、VMDK、APFS、EXT、HFSX 等已验证格式。
+- 安装、覆盖升级、卸载和公开更新验收同步检查独立快捷项，避免升级后出现重复、残留或命令指向旧版本。
+- 本地 v1.0.19 → v1.0.23 → 卸载 → v1.0.19 恢复生命周期 41/41 项通过，安装位置与用户数据保持不变。
+- 公开安装器仍不使用 Windows 商业代码签名证书，因此不承诺 Windows 11 第一层新式菜单；所有快捷项位于“显示更多选项”中。
+
+完整变更请查看 [v1.0.23 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.0.23)。
 
 ## v1.0.22 更新亮点
 
@@ -125,9 +136,11 @@
 - 压缩为 ZIP 或 7Z
 - 测试压缩包完整性
 
+其中“一键解压到同名文件夹”和“一键打包为 ZIP”会直接显示在经典菜单外层；其余操作位于 Long解压 二级菜单中。
+
 当前公开安装包不使用 Windows 商业代码签名证书，因此 Windows 11 新式顶层菜单身份包不会随安装器分发；快捷操作位于“显示更多选项”的传统菜单中。项目已保留相关实现基础，但商业签名与顶层菜单不属于当前开发路线。
 
-> v1.0.20 的传统二级菜单问题已在 v1.0.21 修复；应用内更新后会重新注册四类菜单根和 17 条内联子命令。
+> v1.0.20 的传统二级菜单问题已在 v1.0.21 修复；v1.0.23 在保留四类菜单根和 17 条内联子命令的基础上增加独立高频入口。
 
 ## 常用快捷键
 
@@ -146,8 +159,8 @@
 | 常用压缩 | ZIP、7Z、TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST、GZ、BZ2、XZ、ZST、LZMA |
 | 加密压缩 | ZIP、7Z、RAR、TAR.AES、TGZ.AES、TBZ.AES、TXZ.AES、TZST.AES、GZ.AES、BZ2.AES、XZ.AES、ZST.AES |
 | 常用解压 | ZIP、ZIPX、7Z、RAR、TAR、GZ、BZ2、XZ、ZST、LZMA |
-| 兼容归档 | CAB、ISO、WIM、DMG、VHD/VHDX、DEB、RPM、MSI、ARJ、LZH、XAR、CPIO 等 |
-| 应用包与文档容器 | APK、IPA、APPX、JAR 等可导入；DOCX、XLSX、PPTX、ODT、ODS、EPUB 虽为容器格式，但会在解压中心默认过滤 |
+| 兼容归档 | CAB、ISO、WIM、DMG、VHD/VHDX、QCOW、VDI、VMDK、DEB/UDEB、RPM、MSI/MSP/MSM、APFS、EXT、HFS/HFSX、LZH、XAR、CPIO 等 |
+| 应用包 | APK、IPA、APPX、JAR、XPI 等可导入；DOCX、XLSX、PPTX、ODT、ODS、EPUB 等文档容器不会作为压缩包导入 |
 
 具体能力会受到文件本身、加密方式以及系统环境影响。RAR 创建需要 WinRAR；创建加密 RAR 时，应用会在执行前明确说明密码会短暂出现在本机进程参数中，并由用户确认是否继续。
 

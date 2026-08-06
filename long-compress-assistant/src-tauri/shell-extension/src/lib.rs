@@ -31,10 +31,12 @@ const REGISTRATION_KEY: &str = r"Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 const ARCHIVE_EXTENSIONS: &[&str] = &[
-    "zip", "zipx", "7z", "rar", "tar", "gz", "gzip", "bz2", "bzip2", "xz", "zst", "zstd", "lzma",
-    "tgz", "tpz", "tbz", "tbz2", "txz", "tzst", "iso", "img", "dmg", "wim", "vhd", "vhdx", "cab",
-    "msi", "deb", "rpm", "lzh", "lha", "arj", "chm", "xar", "cpio", "squashfs", "sfs", "udf",
-    "jar", "xpi", "odt", "ods", "docx", "xlsx", "pptx", "epub", "ipa", "apk", "appx", "ova", "aes",
+    "zip", "zipx", "7z", "rar", "wim", "tar", "ova", "gz", "gzip", "tgz", "tpz", "bz2", "bzip2",
+    "tbz", "tbz2", "xz", "txz", "zst", "zstd", "tzst", "aes", "lzma", "jar", "xpi", "ipa", "apk",
+    "appx", "iso", "img", "dmg", "vhd", "vhdx", "qcow", "qcow2", "qcow2c", "vdi", "vmdk", "cab",
+    "deb", "udeb", "rpm", "msi", "msp", "msm", "nsis", "apfs", "ext", "ext2", "ext3", "ext4", "gpt",
+    "mbr", "uefif", "cramfs", "fat", "ntfs", "hfs", "hfsx", "ar", "a", "lzh", "lha", "squashfs",
+    "sfs", "xar", "cpio", "ihex",
 ];
 
 static OBJECT_COUNT: AtomicU32 = AtomicU32::new(0);
