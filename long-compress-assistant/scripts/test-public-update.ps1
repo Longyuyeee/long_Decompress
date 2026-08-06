@@ -170,10 +170,32 @@ function Get-ClassicContextMenuCascadeStatus {
       }
     }
   }
+  $quickDefinitions = @(
+    @{ path = 'HKCU:\Software\Classes\*\shell\LongDecompressQuickPack'; cli = '--quick-pack "%1"' },
+    @{ path = 'HKCU:\Software\Classes\directory\shell\LongDecompressQuickPack'; cli = '--quick-pack "%1"' },
+    @{ path = 'HKCU:\Software\Classes\directory\Background\shell\LongDecompressQuickPack'; cli = '--quick-pack "%V"' },
+    @{ path = 'HKCU:\Software\Classes\SystemFileAssociations\.zip\shell\LongDecompressQuickExtract'; cli = '--quick-extract "%1"' }
+  )
+  $quickActionCount = 0
+  foreach ($definition in $quickDefinitions) {
+    $commandKey = Join-Path $definition.path 'command'
+    if (-not (Test-Path -LiteralPath $commandKey)) {
+      [void]$errors.Add("missing quick action: $($definition.path)")
+      continue
+    }
+    $command = [string](Get-Item -LiteralPath $commandKey).GetValue('')
+    $expected = "`"$ExpectedExecutable`" $($definition.cli)"
+    if (-not $command.Equals($expected, [StringComparison]::OrdinalIgnoreCase)) {
+      [void]$errors.Add("wrong quick action target: $command")
+      continue
+    }
+    $quickActionCount += 1
+  }
   return [pscustomobject]@{
     valid = $errors.Count -eq 0
     commandCount = $commandCount
-    detail = if ($errors.Count -eq 0) { "roots=4; commands=$commandCount" } else { $errors -join '; ' }
+    quickActionCount = $quickActionCount
+    detail = if ($errors.Count -eq 0) { "roots=4; commands=$commandCount; quickActions=$quickActionCount" } else { $errors -join '; ' }
   }
 }
 
