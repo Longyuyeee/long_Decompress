@@ -153,6 +153,19 @@ try {
   await installButtons.nth(buttonCount - 1).click()
 
   await page.waitForEvent('close', { timeout: 180_000 })
+  // The updater installer must terminate the old desktop process before it
+  // can replace the executable. Keeping the CDP client connected after the
+  // WebView closes can keep that process alive long enough for NSIS to abort
+  // with "unable to terminate the application". Release the automation
+  // connection as soon as the updater owns the hand-off.
+  if (browser) {
+    try {
+      await browser.close()
+    } catch {
+      // The application may close the debugging endpoint first.
+    }
+    browser = undefined
+  }
   handedOff = true
   await waitForInstalledVersion()
 } catch (error) {
