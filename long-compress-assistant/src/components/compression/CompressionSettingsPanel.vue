@@ -215,7 +215,7 @@ const handlePasswordGenerated = (password: string) => {
 </script>
 
 <template>
-  <div class="horizontal-settings flex flex-col gap-4">
+  <div class="horizontal-settings flex min-w-0 max-w-full flex-col gap-4 overflow-x-hidden">
     <!-- 第一行：核心必填参数 -->
     <div class="settings-core-grid">
       <!-- 格式选择 -->
@@ -267,7 +267,7 @@ const handlePasswordGenerated = (password: string) => {
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.filename') }}</label>
           <button
             type="button"
-            class="text-xs font-bold text-primary hover:underline whitespace-nowrap"
+            class="min-w-0 text-right text-xs font-bold text-primary hover:underline"
             @click="useSuggestedFilename"
           >{{ appStore.t('compress.use_same_name') }}</button>
         </div>
@@ -320,7 +320,7 @@ const handlePasswordGenerated = (password: string) => {
       <!-- 高级开关按钮 -->
       <button
         @click="showAdvanced = !showAdvanced"
-        class="h-9 px-4 rounded-xl border border-subtle text-xs font-black transition-all whitespace-nowrap"
+        class="min-w-0 max-w-full px-4 py-2 rounded-xl border border-subtle text-xs font-black leading-5 transition-all"
         :class="showAdvanced ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-input text-muted hover:text-content'"
       >
         <i class="pi pi-cog mr-2" :class="{ 'animate-spin-slow': showAdvanced }"></i>
@@ -330,7 +330,7 @@ const handlePasswordGenerated = (password: string) => {
       <!-- 配置组选择按钮 -->
       <button
         @click="profileDialogMode = 'manage'; showProfileSelector = true"
-        class="h-9 px-4 rounded-xl border border-subtle text-xs font-black transition-all whitespace-nowrap"
+        class="min-w-0 max-w-full px-4 py-2 rounded-xl border border-subtle text-xs font-black leading-5 transition-all"
         :class="showProfileSelector ? 'bg-sky-500/10 border-sky-500/30 text-sky-400' : 'bg-input text-muted hover:text-content'"
       >
         <i class="pi pi-bookmark mr-2"></i>
@@ -340,7 +340,7 @@ const handlePasswordGenerated = (password: string) => {
       <!-- 保存为配置组按钮 -->
       <button
         @click="openSaveProfileModal"
-        class="h-9 px-4 rounded-xl border border-subtle text-xs font-black transition-all bg-input text-muted hover:text-content hover:border-sky-500/30 whitespace-nowrap"
+        class="min-w-0 max-w-full px-4 py-2 rounded-xl border border-subtle text-xs font-black leading-5 transition-all bg-input text-muted hover:text-content hover:border-sky-500/30"
         :title="appStore.t('profiles.save_as_new')"
       >
         <i class="pi pi-save mr-2"></i>

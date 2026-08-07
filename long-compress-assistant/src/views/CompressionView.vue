@@ -526,16 +526,16 @@ const onDetailLeave = (element: Element) => {
 
     <!-- 主工作区 -->
     <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
-      <div v-if="totalPayload > 0" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+      <div v-if="totalPayload > 0" class="compression-task-list flex-1 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-3 space-y-3">
         <div
           data-testid="compression-table-header"
           class="compression-table-header sticky top-0 z-20 flex items-center px-4 py-2.5 border-b border-subtle bg-card/95 backdrop-blur-xl text-dim text-xs font-bold tracking-[0.1em] uppercase"
         >
-          <div class="w-8 shrink-0"></div>
-          <div data-testid="compression-name-header" class="flex-[1.25] min-w-[160px]">压缩包名称</div>
-          <div data-testid="compression-source-header" class="flex-1 min-w-[150px] px-4 hidden md:block">源文件路径</div>
-          <div data-testid="compression-status-header" class="flex-1 min-w-[160px]">压缩状态与进度</div>
-          <div class="w-20 shrink-0"></div>
+          <div class="compression-leading-cell w-8 shrink-0"></div>
+          <div data-testid="compression-name-header" class="flex-[1.25] min-w-0">压缩包名称</div>
+          <div data-testid="compression-source-header" class="flex-1 min-w-0 px-4 hidden md:block">源文件路径</div>
+          <div data-testid="compression-status-header" class="flex-1 min-w-0">压缩状态与进度</div>
+          <div class="compression-row-actions w-20 shrink-0"></div>
         </div>
 
         <!-- 1. 压缩组列表 -->
@@ -553,7 +553,7 @@ const onDetailLeave = (element: Element) => {
                @keydown.space.prevent="group.expanded = !group.expanded">
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover/header:opacity-100 transition-opacity duration-200"></div>
 
-            <div class="w-8 shrink-0 flex items-center justify-center">
+            <div class="compression-leading-cell w-8 shrink-0 flex items-center justify-center">
               <div
                 class="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm transition-transform group-hover/header:rotate-6"
                 :style="{ backgroundColor: `${group.themeColor}20`, color: group.themeColor, border: `1px solid ${group.themeColor}40` }"
@@ -562,7 +562,7 @@ const onDetailLeave = (element: Element) => {
               </div>
             </div>
 
-            <div data-testid="compression-archive-name" class="flex-[1.25] min-w-[160px] overflow-hidden flex items-center gap-3">
+            <div data-testid="compression-archive-name" class="flex-[1.25] min-w-0 overflow-hidden flex items-center gap-3">
               <div class="min-w-0">
                 <div
                   class="text-sm font-black text-content tracking-tight truncate group-hover/header:text-primary transition-colors"
@@ -579,7 +579,7 @@ const onDetailLeave = (element: Element) => {
 
             <div
               data-testid="compression-source-path"
-              class="flex-1 min-w-[150px] px-4 hidden md:flex items-center gap-2 text-muted text-xs font-mono font-light opacity-75"
+              class="flex-1 min-w-0 px-4 hidden md:flex items-center gap-2 text-muted text-xs font-mono font-light opacity-75"
               :title="group.files.map(file => file.path).join('\n')"
             >
               <span class="truncate">{{ group.files[0]?.path }}</span>
@@ -588,7 +588,7 @@ const onDetailLeave = (element: Element) => {
 
             <CompressionStatusCell :task="taskForJob(group.taskId)" />
 
-            <div class="w-20 shrink-0 flex items-center justify-end gap-3">
+            <div class="compression-row-actions w-20 shrink-0 flex items-center justify-end gap-3">
               <button
                 v-if="!group.taskId"
                 @click.stop="compressionStore.dissolveGroup(group.id)"
@@ -632,7 +632,7 @@ const onDetailLeave = (element: Element) => {
                 <div
                   data-testid="compression-draft-config"
                   class="compression-config-panel min-w-0 space-y-5"
-                  :class="{ 'pointer-events-none opacity-80': Boolean(group.taskId) }"
+                  :class="{ 'is-submitted opacity-80': Boolean(group.taskId) }"
                 >
                   <div>
                     <h4 class="detail-heading justify-between">
@@ -656,13 +656,13 @@ const onDetailLeave = (element: Element) => {
 
                   <div class="space-y-2">
                     <h4 class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('compress.group_files') }}</h4>
-                    <div v-for="file in group.files" :key="file.path" class="text-sm text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex items-center justify-between group/file">
+                    <div v-for="file in group.files" :key="file.path" class="text-sm text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex min-w-0 items-center justify-between gap-2 group/file">
                       <div class="flex items-center gap-2 overflow-hidden min-w-0">
                         <i :class="file.isDirectory ? 'pi pi-folder text-primary/60' : 'pi pi-file text-muted/60'" class="text-xs shrink-0"></i>
                         <span class="truncate">{{ file.name }}</span>
                       </div>
-                      <div class="flex items-center gap-2 shrink-0 min-w-0">
-                        <span class="opacity-75 italic ml-2 truncate">{{ file.path }}</span>
+                      <div class="flex max-w-[55%] items-center gap-2 min-w-0">
+                        <span class="opacity-75 italic ml-2 truncate" :title="file.path">{{ file.path }}</span>
                         <button
                           @click.stop="compressionStore.removeFileFromGroup(group.id, file.path)"
                           class="w-5 h-5 rounded-md flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover/file:opacity-100 transition-all shrink-0"
@@ -707,7 +707,7 @@ const onDetailLeave = (element: Element) => {
               v-if="!file.taskId"
               type="button"
               data-testid="compression-group-checkbox"
-              class="w-8 flex shrink-0 items-center justify-center"
+              class="compression-leading-cell w-8 flex shrink-0 items-center justify-center"
               :aria-label="`选择 ${file.name} 用于打组`"
               @click.stop="toggleSelection(file.path)"
             >
@@ -716,14 +716,14 @@ const onDetailLeave = (element: Element) => {
                 <i v-if="selectedRows.has(file.path)" class="pi pi-check text-xs text-white"></i>
               </div>
             </button>
-            <div v-else class="w-8 flex shrink-0 items-center justify-center">
+            <div v-else class="compression-leading-cell w-8 flex shrink-0 items-center justify-center">
               <i
                 class="pi text-sm"
                 :class="[compressionStatusIcon(taskForJob(file.taskId)?.status), compressionStatusClass(taskForJob(file.taskId)?.status)]"
               ></i>
             </div>
 
-            <div data-testid="compression-archive-name" class="flex-[1.25] min-w-[160px] overflow-hidden flex items-center gap-3">
+            <div data-testid="compression-archive-name" class="flex-[1.25] min-w-0 overflow-hidden flex items-center gap-3">
               <div class="w-7 h-7 rounded-lg bg-input/60 border border-subtle/50 flex items-center justify-center shrink-0">
                 <i class="pi pi-box text-primary text-xs"></i>
               </div>
@@ -745,7 +745,7 @@ const onDetailLeave = (element: Element) => {
 
             <div
               data-testid="compression-source-path"
-              class="flex-1 min-w-[150px] px-4 hidden md:block text-muted text-xs truncate font-mono font-light opacity-75"
+              class="flex-1 min-w-0 px-4 hidden md:block text-muted text-xs truncate font-mono font-light opacity-75"
               :title="file.path"
             >
               {{ file.path }}
@@ -753,7 +753,7 @@ const onDetailLeave = (element: Element) => {
 
             <CompressionStatusCell :task="taskForJob(file.taskId)" />
 
-            <div class="w-20 shrink-0 flex items-center justify-end">
+            <div class="compression-row-actions w-20 shrink-0 flex items-center justify-end">
               <button
                 v-if="!file.taskId"
                 @click.stop="compressionStore.selectedFiles = compressionStore.selectedFiles.filter(f => f.path !== file.path)"
@@ -801,7 +801,7 @@ const onDetailLeave = (element: Element) => {
                   <div
                     data-testid="compression-draft-config"
                     class="compression-config-panel min-w-0"
-                    :class="{ 'pointer-events-none opacity-80': Boolean(file.taskId) }"
+                    :class="{ 'is-submitted opacity-80': Boolean(file.taskId) }"
                   >
                     <h4 class="detail-heading justify-between">
                       <span class="flex items-center gap-2">
@@ -922,7 +922,18 @@ const onDetailLeave = (element: Element) => {
 
 <style scoped>
 .compression-view {
+  min-width: 0;
+  overflow-x: hidden;
   background: radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--dynamic-accent) 4%, transparent) 0%, transparent 40%);
+}
+
+.compression-task-list,
+.compression-table-header,
+.compression-job-card,
+.compression-job-row,
+.details-drawer {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pop-enter-active, .pop-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -942,6 +953,10 @@ const onDetailLeave = (element: Element) => {
 
 .compression-detail-card {
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   border: 1px dashed color-mix(in srgb, var(--dynamic-accent) 24%, transparent);
   border-radius: 1rem;
@@ -979,18 +994,32 @@ const onDetailLeave = (element: Element) => {
 }
 
 .compression-detail-grid {
-  display: grid;
-  grid-template-columns: minmax(320px, 45%) minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 0;
   align-items: stretch;
 }
 
 .compression-config-panel {
+  flex: 0.85 1 20rem;
+  min-width: 0;
   max-height: 26rem;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 1.25rem 1.5rem;
   border-right: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
   scrollbar-gutter: stable;
+}
+
+.compression-detail-grid :deep(.compression-execution-panel) {
+  flex: 1 1 20rem;
+}
+
+.compression-config-panel.is-submitted :deep(input),
+.compression-config-panel.is-submitted :deep(select),
+.compression-config-panel.is-submitted :deep(button),
+.compression-config-panel.is-submitted :deep(label) {
+  pointer-events: none;
 }
 
 .compression-config-panel :deep(.horizontal-settings) {
@@ -1019,17 +1048,50 @@ const onDetailLeave = (element: Element) => {
 
 @media (max-width: 760px) {
   .compression-detail-grid {
-    grid-template-columns: minmax(0, 1fr);
+    flex-direction: column;
   }
 
   .compression-config-panel {
-    max-height: none;
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+    max-height: 22rem;
     border-right: 0;
     border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
   }
 
   .compression-config-panel :deep(.settings-core-grid) {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .compression-detail-grid :deep(.compression-execution-panel) {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .compression-table-header,
+  .compression-job-row {
+    gap: 0.5rem;
+    padding-inline: 0.75rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .compression-leading-cell {
+    width: 1.25rem;
+  }
+
+  .compression-row-actions {
+    width: 2.5rem;
+  }
+
+  .details-drawer {
+    padding-inline: 0;
+  }
+
+  .compression-config-panel {
+    padding: 1rem;
   }
 }
 

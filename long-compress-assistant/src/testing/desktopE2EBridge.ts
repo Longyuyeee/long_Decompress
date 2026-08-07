@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 import { listen } from '@tauri-apps/api/event'
 import type { UpdateManifest } from '@tauri-apps/api/updater'
 import { useTaskStore, type TaskStatus } from '@/stores/task'
+import { useCompressionStore } from '@/stores/compression'
 import { useUpdateStore } from '@/stores/update'
 
 const TEST_TASK_ID = 'desktop-e2e-lifecycle-task'
@@ -34,6 +35,7 @@ export interface DesktopE2EBridge {
   ) => Promise<string>
   startSevenZipCompression: (sourcePath: string, archivePath: string) => Promise<string>
   showAvailableUpdate: () => void
+  seedResponsiveWorkspace: (type: 'compression' | 'decompression') => string
   setCloseToTray: (enabled: boolean) => Promise<void>
   hideWindow: (markerPath: string) => Promise<void>
   isWindowVisible: () => Promise<boolean>
@@ -49,6 +51,7 @@ declare global {
 
 export const installDesktopE2EBridge = () => {
   const taskStore = useTaskStore()
+  const compressionStore = useCompressionStore()
   const updateStore = useUpdateStore()
 
   const addActiveTask = () => {
@@ -308,6 +311,57 @@ export const installDesktopE2EBridge = () => {
         errorMessage: '',
         dialogVisible: true,
       })
+    },
+
+    seedResponsiveWorkspace(type) {
+      const taskId = `responsive-${type}`
+      const longSourcePath = `C:\\Users\\ResponsiveFixture\\Documents\\${'deep-folder\\'.repeat(8)}source-file-with-a-very-long-name.bin`
+      const longOutputPath = `C:\\Users\\ResponsiveFixture\\Archives\\${'nested-output\\'.repeat(6)}responsive-output.${type === 'compression' ? 'zip' : 'folder'}`
+
+      taskStore.tasks = []
+      compressionStore.prepareQuickPacks()
+      taskStore.addTask({
+        id: taskId,
+        name: type === 'compression' ? 'responsive-output.zip' : 'responsive-input.7z',
+        type,
+        sourceFiles: [longSourcePath],
+        outputPath: longOutputPath,
+        format: type === 'compression' ? 'zip' : '7z',
+        compressionOptions: type === 'compression'
+          ? { format: 'zip', level: 6, preserve_paths: true }
+          : undefined,
+      })
+      const task = taskStore.tasks.find(item => item.id === taskId)!
+      taskStore.updateTaskStatus(taskId, 'completed')
+      task.progress = 100
+      task.stage = 'Finalizing'
+      task.currentFile = longSourcePath
+      task.logs = Array.from({ length: 18 }, (_, index) => ({
+        task_id: taskId,
+        timestamp: new Date(Date.now() + index * 1000).toISOString(),
+        message: `${index + 1}: ${longSourcePath} -> ${longOutputPath}`,
+        severity: index === 17 ? 'success' as const : 'info' as const,
+      }))
+
+      if (type === 'compression') {
+        compressionStore.addFile({
+          name: 'source-file-with-a-very-long-name.bin',
+          path: longSourcePath,
+          size: 4096,
+          type: 'file',
+          isDirectory: false,
+        })
+        const file = compressionStore.selectedFiles[0]
+        file.expanded = true
+        compressionStore.bindJobTask(
+          longSourcePath,
+          taskId,
+          { ...compressionStore.globalSettings, filename: 'responsive-output' },
+          longOutputPath,
+        )
+      }
+
+      return taskId
     },
 
     async setCloseToTray(enabled) {

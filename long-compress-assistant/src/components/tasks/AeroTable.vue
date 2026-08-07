@@ -205,11 +205,11 @@ const onLeave = (el: any) => {
 </script>
 
 <template>
-  <div class="aero-table-container w-full h-full flex flex-col">
+  <div class="aero-table-container w-full h-full min-w-0 max-w-full overflow-x-hidden flex flex-col">
     <!-- 智慧表格 (重构为极简列表模式) -->
-    <div class="glass-table w-full flex-1 flex flex-col min-h-0">
+    <div class="glass-table w-full max-w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-x-hidden">
       <!-- 表头 (高度压缩，字体减小) -->
-      <div class="table-header sticky top-0 z-20 flex items-center px-6 py-2.5 border-b border-subtle bg-card/95 backdrop-blur-xl text-dim text-xs font-bold tracking-[0.1em] uppercase shrink-0">
+      <div class="table-header sticky top-0 z-20 flex min-w-0 max-w-full items-center px-6 py-2.5 border-b border-subtle bg-card/95 backdrop-blur-xl text-dim text-xs font-bold tracking-[0.1em] uppercase shrink-0">
         <!-- 复选框列 -->
         <div class="w-8 shrink-0 flex items-center justify-center">
           <button
@@ -222,18 +222,18 @@ const onLeave = (el: any) => {
             <i v-if="pendingDisplayTasks.every(t => isSelected(t.id))" class="pi pi-check text-sm text-white"></i>
           </button>
         </div>
-        <div class="flex-[1.5] min-w-[180px]">{{ appStore.t('decompress.column.name') }}</div>
+        <div class="flex-[1.5] min-w-0">{{ appStore.t('decompress.column.name') }}</div>
         <div class="w-60 hidden lg:block">{{ appStore.t('decompress.column.path') }}</div>
-        <div class="flex-1 min-w-[180px]">{{ appStore.t('decompress.column.status') }}</div>
+        <div class="flex-1 min-w-0">{{ appStore.t('decompress.column.status') }}</div>
         <div class="w-10"></div>
       </div>
 
       <!-- 表格内容 (高密度布局 + 物理隔断) -->
-      <div class="table-body flex-1 overflow-y-auto custom-scrollbar p-3">
+      <div class="table-body flex-1 min-w-0 max-w-full overflow-y-auto overflow-x-hidden custom-scrollbar p-3">
         <TransitionGroup name="task-depart">
         <div v-for="task in displayTasks" :key="task.id" class="task-row-container mb-1.5 last:mb-0 group/row">
           <div
-            class="task-row flex items-center px-4 py-2 bg-card/40 border border-subtle/40 rounded-lg hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden shadow-sm"
+            class="task-row flex min-w-0 max-w-full items-center px-4 py-2 bg-card/40 border border-subtle/40 rounded-lg hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden shadow-sm"
             @click="toggleExpand(task.id)"
             role="button"
             tabindex="0"
@@ -262,7 +262,7 @@ const onLeave = (el: any) => {
             </div>
 
             <!-- 文件识别区 (极致紧凑) -->
-            <div class="flex-[1.5] min-w-[180px] overflow-hidden flex items-center gap-3">
+            <div class="task-name-cell flex-[1.5] min-w-0 overflow-hidden flex items-center gap-3">
               <div class="text-content font-bold truncate text-sm tracking-tight group-hover/row:text-primary transition-colors leading-tight">{{ task.name }}</div>
               <span class="text-dim text-sm uppercase font-black tracking-widest bg-input/50 px-1 py-0 rounded border border-subtle/20 shrink-0">
                 {{ task.format?.toUpperCase() }}
@@ -275,7 +275,7 @@ const onLeave = (el: any) => {
             </div>
 
             <!-- 状态与执行进度 -->
-            <div class="flex-1 min-w-[180px] flex items-center gap-3">
+            <div class="task-status-cell flex-1 min-w-0 flex items-center gap-3">
               <!-- 状态图标和文字 -->
               <div class="flex items-center gap-2">
                 <span class="text-lg">{{ getStatusIcon(task.status) }}</span>
@@ -360,14 +360,14 @@ const onLeave = (el: any) => {
             @before-leave="onBeforeLeave"
             @leave="onLeave"
           >
-            <div v-if="expandedTasks.has(task.id)" class="details-drawer relative px-6 pb-6 pt-2">
+            <div v-if="expandedTasks.has(task.id)" class="details-drawer relative min-w-0 max-w-full px-6 pb-6 pt-2">
               <!-- 交互增强：task-detail-card 增加 hover 动效 -->
-              <div class="task-detail-card flex rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
+              <div class="task-detail-card rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
 
                 <!-- 详情区内容布局：改为弹性分配，防止溢出 -->
-                <div class="flex w-full relative z-10">
+                <div class="task-detail-layout w-full min-w-0 relative z-10">
                   <!-- 左侧：核心配置 -->
-                  <div class="flex-initial min-w-[320px] max-w-[45%] p-5 border-r border-subtle/20 flex flex-col space-y-3 pl-8 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto custom-scrollbar max-h-56">
+                  <div class="task-config-panel min-w-0 p-5 border-r border-subtle/20 flex flex-col space-y-3 pl-8 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto overflow-x-hidden custom-scrollbar max-h-56">
                     <div class="flex items-center justify-between">
                       <h4 class="text-primary text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
                         <i class="pi pi-cog text-sm"></i>
@@ -380,7 +380,7 @@ const onLeave = (el: any) => {
                       <div class="space-y-2">
                         <div class="flex items-center justify-between gap-3">
                           <span class="text-muted text-xs uppercase font-black tracking-widest opacity-90 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
-                          <div class="flex gap-1.5 flex-nowrap shrink-0 overflow-x-auto no-scrollbar">
+                          <div class="flex min-w-0 flex-wrap justify-end gap-1.5">
                             <button @click.stop="handleSetSameDir(task)" 
                                     class="h-6 px-2.5 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-xs font-black whitespace-nowrap">
                               {{ appStore.t('decompress.config.output_same') }}
@@ -392,7 +392,7 @@ const onLeave = (el: any) => {
                             </button>
                           </div>
                         </div>
-                        <div class="px-3 py-2 rounded-xl bg-input/50 border border-subtle/50 font-mono text-sm text-content/80 truncate shadow-inner">
+                        <div class="min-w-0 px-3 py-2 rounded-xl bg-input/50 border border-subtle/50 font-mono text-sm text-content/80 break-words [overflow-wrap:anywhere] shadow-inner">
                           {{ task.outputPath || appStore.t('decompress.config.output_auto') }}
                         </div>
                       </div>
@@ -437,9 +437,9 @@ const onLeave = (el: any) => {
                     </div>
 
                     <div v-else class="space-y-3 text-xs">
-                      <div class="grid grid-cols-[90px_1fr] gap-x-3 gap-y-2">
+                      <div class="grid min-w-0 grid-cols-[minmax(0,90px)_minmax(0,1fr)] gap-x-3 gap-y-2">
                         <span class="text-muted font-black uppercase">输出文件</span>
-                        <span class="font-mono text-content truncate" :title="task.outputPath">{{ task.outputPath }}</span>
+                        <span class="min-w-0 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.outputPath">{{ task.outputPath }}</span>
                         <span class="text-muted font-black uppercase">压缩格式</span>
                         <span class="font-mono text-primary font-black">{{ task.format?.toUpperCase() }}</span>
                         <span class="text-muted font-black uppercase">压缩等级</span>
@@ -457,7 +457,7 @@ const onLeave = (el: any) => {
                   </div>
 
                   <!-- 右侧：执行日志 -->
-                  <div class="flex-1 p-5 flex flex-col overflow-hidden">
+                  <div class="task-execution-panel min-w-0 p-5 flex flex-col overflow-x-hidden">
                     <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">阶段</span>
@@ -467,7 +467,7 @@ const onLeave = (el: any) => {
                         <span class="text-muted">进度</span>
                         <div class="font-mono font-black text-primary mt-0.5">{{ task.progress || 0 }}%<span v-if="task.speed" class="ml-2 text-muted">{{ task.speed }}</span></div>
                       </div>
-                      <div v-if="task.currentFile" class="col-span-2 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 truncate font-mono text-content" :title="task.currentFile">
+                      <div v-if="task.currentFile" class="col-span-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentFile">
                         {{ task.currentFile }}
                       </div>
                     </div>
@@ -477,10 +477,10 @@ const onLeave = (el: any) => {
                         {{ appStore.t('decompress.config.logs_title') }}
                       </span>
                     </h4>
-                    <div class="log-viewport flex-1 overflow-y-auto pr-2 space-y-1.5 custom-scrollbar">
-                      <div v-for="(log, idx) in task.logs" :key="idx" class="flex gap-3 items-start group/log border-l-2 border-subtle/20 pl-3 py-0.5">
+                    <div class="log-viewport flex-1 min-w-0 overflow-y-auto overflow-x-hidden pr-2 space-y-1.5 custom-scrollbar">
+                      <div v-for="(log, idx) in task.logs" :key="idx" class="flex min-w-0 gap-3 items-start group/log border-l-2 border-subtle/20 pl-3 py-0.5">
                         <span class="text-dim font-mono text-xs mt-0.5 opacity-80 shrink-0">{{ new Date(log.timestamp).toLocaleTimeString([], {hour12: false}) }}</span>
-                        <div class="flex-1 text-sm leading-relaxed font-mono" :class="getSeverityClass(log.severity)">
+                        <div class="min-w-0 flex-1 break-words [overflow-wrap:anywhere] text-sm leading-relaxed font-mono" :class="getSeverityClass(log.severity)">
                           {{ log.message }}
                         </div>
                       </div>
@@ -535,6 +535,9 @@ const onLeave = (el: any) => {
 <style scoped>
 .aero-table-container {
   /* 解决展开时滚动条出现导致的布局跳动 */
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   scrollbar-gutter: stable;
 }
 
@@ -559,6 +562,9 @@ const onLeave = (el: any) => {
 
 .table-body {
   /* 确保主体区域也有稳定的间隙 */
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   scrollbar-gutter: stable;
 }
 
@@ -568,9 +574,36 @@ const onLeave = (el: any) => {
 }
 
 .task-detail-card {
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
   background-image: linear-gradient(to bottom, rgba(var(--color-card-rgb), 0.92), rgba(var(--color-card-rgb), 0.98));
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   border: 1px dashed color-mix(in srgb, var(--dynamic-accent) 20%, transparent);
+}
+
+.task-detail-layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  overflow-x: hidden;
+}
+
+.task-config-panel {
+  flex: 0.85 1 20rem;
+}
+
+.task-execution-panel {
+  flex: 1 1 20rem;
+}
+
+.task-config-panel,
+.task-execution-panel,
+.log-viewport {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .task-detail-card:hover {
@@ -626,4 +659,70 @@ const onLeave = (el: any) => {
 
 .pop-enter-active, .pop-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.95) translateY(10px); }
+
+@media (max-width: 760px) {
+  .task-detail-layout {
+    flex-direction: column;
+  }
+
+  .task-config-panel {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+    max-height: 20rem;
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+    padding: 1rem;
+  }
+
+  .task-execution-panel {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+    min-height: 16rem;
+    max-height: 22rem;
+    padding: 1rem;
+  }
+
+  .table-header,
+  .task-row {
+    gap: 0.5rem;
+    padding-inline: 0.75rem;
+  }
+
+  .task-row {
+    height: auto;
+    min-height: 42px;
+  }
+
+  .details-drawer {
+    padding-inline: 0.25rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .table-header {
+    padding-inline: 0.5rem;
+    letter-spacing: 0.04em;
+  }
+
+  .task-row {
+    flex-wrap: wrap;
+    padding-inline: 0.5rem;
+  }
+
+  .task-name-cell,
+  .task-status-cell {
+    flex-basis: calc(50% - 3rem);
+  }
+
+  .task-status-cell {
+    gap: 0.375rem;
+  }
+
+  .task-status-cell > div:nth-child(2),
+  .task-status-cell > span:last-child {
+    display: none;
+  }
+}
 </style>

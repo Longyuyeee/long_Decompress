@@ -18,7 +18,7 @@ const progress = computed(() => props.task?.progress || 0)
 <template>
   <div
     data-testid="compression-status-progress"
-    class="flex-1 min-w-[160px] flex items-center gap-3"
+    class="compression-status-cell flex-1 min-w-0 flex items-center gap-3"
   >
     <div class="flex items-center gap-2 shrink-0">
       <i
@@ -49,3 +49,16 @@ const progress = computed(() => props.task?.progress || 0)
     </span>
   </div>
 </template>
+
+<style scoped>
+@media (max-width: 520px) {
+  .compression-status-cell {
+    flex-basis: 5.5rem;
+    gap: 0.375rem;
+  }
+
+  .compression-status-cell > div:nth-child(2) {
+    display: none;
+  }
+}
+</style>

@@ -34,7 +34,7 @@ const appStore = useAppStore()
     </div>
     <div
       v-if="task?.currentFile"
-      class="mt-2 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 truncate font-mono text-xs text-content"
+      class="mt-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-xs text-content"
       :title="task.currentFile"
     >
       {{ task.currentFile }}
@@ -43,17 +43,17 @@ const appStore = useAppStore()
       <i class="pi pi-align-left text-xs"></i>
       {{ appStore.t('decompress.config.logs_title') }}
     </h4>
-    <div class="pending-log custom-scrollbar overflow-y-auto space-y-1.5">
+    <div class="pending-log custom-scrollbar overflow-y-auto overflow-x-hidden space-y-1.5">
       <div
         v-for="(log, index) in task?.logs || []"
         :key="`${log.timestamp}-${index}`"
-        class="flex gap-3 items-start border-l-2 border-subtle/20 pl-3 py-0.5"
+        class="flex min-w-0 gap-3 items-start border-l-2 border-subtle/20 pl-3 py-0.5"
       >
         <span class="text-dim font-mono text-xs shrink-0">
           {{ new Date(log.timestamp).toLocaleTimeString([], { hour12: false }) }}
         </span>
         <span
-          class="font-mono text-xs leading-relaxed"
+          class="min-w-0 flex-1 break-words [overflow-wrap:anywhere] font-mono text-xs leading-relaxed"
           :class="compressionLogSeverityClass(log.severity)"
         >
           {{ log.message }}
@@ -80,6 +80,8 @@ const appStore = useAppStore()
 
 .pending-execution-panel {
   min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   border: 0;
@@ -102,6 +104,9 @@ const appStore = useAppStore()
 }
 
 .pending-log {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   flex: 1;
   min-height: 8rem;
   max-height: 16rem;
@@ -110,5 +115,11 @@ const appStore = useAppStore()
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--bg-input) 35%, transparent);
   font-size: 0.75rem;
+}
+
+@media (max-width: 520px) {
+  .compression-execution-panel {
+    padding: 1rem;
+  }
 }
 </style>

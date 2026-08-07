@@ -43,8 +43,13 @@ export default defineConfig({
 
   webServer: {
     command: `node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port ${e2ePort} --strictPort`,
+    env: {
+      VITE_DESKTOP_E2E: '1',
+    },
     url: e2eBaseUrl,
     reuseExistingServer: false,
+    stdout: 'ignore',
+    stderr: 'ignore',
     timeout: 120 * 1000,
   },
 })

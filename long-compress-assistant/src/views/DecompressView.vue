@@ -810,6 +810,8 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
 
 <style scoped>
 .decompress-view {
+  min-width: 0;
+  overflow-x: hidden;
   background: radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--dynamic-accent) 4%, transparent) 0%, transparent 40%);
 }
 
