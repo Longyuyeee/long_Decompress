@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.0.23-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.1.0-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,6 +20,16 @@
 </div>
 
 ---
+
+## v1.1.0 更新亮点
+
+- 修复 Windows 经典右键菜单只显示 Long解压 父项、没有二级菜单且点击后报“没有与之关联的应用”的问题。
+- 经典菜单改用空 `SubCommands` 与内联 `shell` 子项；Long解压、一键解压到同名文件夹、一键打包为 ZIP 统一置顶并连续排列。
+- 将 Vite、Vitest、Vue 插件与 vue-tsc 迁移到安全主版本，完整 npm 审计和生产依赖审计均为 0。
+- 重新建立 Vitest 4 的真实覆盖率防倒退门禁，并通过前端、浏览器 E2E、Rust、Shell Extension、桌面构建和安装包 CI。
+- 公开安装包仍不使用 Windows 商业代码签名证书，因此 Windows 11 新式第一层菜单不属于当前承诺；本轮修复位于“显示更多选项”的经典菜单。
+
+完整变更请查看 [v1.1.0 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.0)。
 
 ## v1.0.23 更新亮点
 

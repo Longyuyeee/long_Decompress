@@ -2,6 +2,14 @@
 
 面向 Windows 的本地压缩与解压工具，使用 Vue 3、TypeScript、Tauri 和 Rust 构建。支持批量任务、密码本、智能密码尝试、托盘运行、资源管理器右键菜单与一键解压。
 
+## v1.1.0 更新
+
+- 修复经典资源管理器菜单中 Long解压 父项没有二级菜单、点击后触发文件关联错误的问题。
+- 使用空 `SubCommands` 与内联 `shell` 子项恢复四类级联菜单；Long解压、一键解压和一键打包统一设置为顶部同组。
+- Vite 8、Vitest 4、Vue 插件 6 与 vue-tsc 3 完成迁移，完整 npm 审计和生产依赖审计均为 0。
+- 覆盖率、浏览器 E2E、Rust、Shell Extension、桌面构建和 Windows 安装包继续作为发布门禁。
+- [v1.1.0 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.0)记录本轮测试与发布资产。
+
 ## v1.0.23 更新
 
 - 在“显示更多选项”的经典菜单外层增加“一键解压到同名文件夹”和“一键打包为 ZIP”，常用操作不再需要展开 Long解压 二级菜单。
