@@ -145,10 +145,14 @@ function Get-ClassicContextMenuCascadeStatus {
       continue
     }
     $rootProperties = Get-ItemProperty -LiteralPath $root
-    if ($rootProperties.PSObject.Properties.Name -contains 'SubCommands') {
-      [void]$errors.Add("obsolete SubCommands value: $root")
+    if (-not ($rootProperties.PSObject.Properties.Name -contains 'SubCommands') -or
+        [string]$rootProperties.SubCommands -ne '') {
+      [void]$errors.Add("missing empty SubCommands value: $root")
     }
-    $submenu = Join-Path $root 'ExtendedSubCommandsKey\shell'
+    if ([string]$rootProperties.Position -ne 'Top') {
+      [void]$errors.Add("missing top group position: $root")
+    }
+    $submenu = Join-Path $root 'shell'
     $children = if (Test-Path -LiteralPath $submenu) {
       @(Get-ChildItem -LiteralPath $submenu | Sort-Object PSChildName)
     } else {
@@ -178,6 +182,10 @@ function Get-ClassicContextMenuCascadeStatus {
   )
   $quickActionCount = 0
   foreach ($definition in $quickDefinitions) {
+    $quickProperties = Get-ItemProperty -LiteralPath $definition.path -ErrorAction SilentlyContinue
+    if ($null -eq $quickProperties -or [string]$quickProperties.Position -ne 'Top') {
+      [void]$errors.Add("missing quick-action top group position: $($definition.path)")
+    }
     $commandKey = Join-Path $definition.path 'command'
     if (-not (Test-Path -LiteralPath $commandKey)) {
       [void]$errors.Add("missing quick action: $($definition.path)")

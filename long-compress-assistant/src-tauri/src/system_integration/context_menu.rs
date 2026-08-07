@@ -1,6 +1,7 @@
 use anyhow::Result;
 /// Windows 级联右键菜单集成
-/// 使用 ExtendedSubCommandsKey 注册经典级联菜单，并注册独立高频操作。
+/// 使用空 SubCommands 值和内联 shell 子键注册经典级联菜单，
+/// 并注册独立高频操作。
 #[cfg(target_os = "windows")]
 use winreg::enums::*;
 #[cfg(target_os = "windows")]
@@ -235,9 +236,9 @@ fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
 
     // CommandStore custom verbs are documented under HKLM. Putting them under
     // HKCU leaves the cascade root visible while Explorer silently drops its
-    // children on current Windows 11 builds. ExtendedSubCommandsKey supports
-    // inline per-user verbs under HKCU\Software\Classes, so it works without
-    // elevation and keeps every submenu self-contained.
+    // children. On current Windows 11 builds the reliable per-user layout is
+    // an empty SubCommands value plus inline `shell` children. This also keeps
+    // every submenu self-contained and avoids requiring elevation.
     reg_shell_entry(
         hkcu,
         r"Software\Classes\*\shell\LongDecompress",
@@ -593,8 +594,10 @@ fn reg_shell_entry(
     key.set_value("MUIVerb", &"Long解压")?;
     key.set_value("Icon", &format!(r#""{}""#, app_path))?;
     key.set_value("MultiSelectModel", &"Document")?;
+    key.set_value("SubCommands", &"")?;
+    key.set_value("Position", &"Top")?;
 
-    let submenu_path = format!(r"{}\ExtendedSubCommandsKey\shell", path);
+    let submenu_path = format!(r"{}\shell", path);
     for (index, verb_name) in selected_verbs.iter().enumerate() {
         let verb = all_verbs
             .iter()
@@ -626,6 +629,7 @@ fn reg_direct_shell_entry(
     key.set_value("MUIVerb", &label)?;
     key.set_value("Icon", &format!(r#""{}""#, app_path))?;
     key.set_value("MultiSelectModel", &"Document")?;
+    key.set_value("Position", &"Top")?;
     let (command_key, _) = hkcu.create_subkey(format!(r"{}\command", path))?;
     command_key.set_value("", &format!(r#""{}" {}"#, app_path, cli))?;
     Ok(())
@@ -695,7 +699,14 @@ fn legacy_shell_entry_is_current(
         .get_value::<String, _>("MUIVerb")
         .map(|label| label != "Long解压")
         .unwrap_or(true)
-        || root.get_value::<String, _>("SubCommands").is_ok()
+        || root
+            .get_value::<String, _>("Position")
+            .map(|position| !position.eq_ignore_ascii_case("Top"))
+            .unwrap_or(true)
+        || root
+            .get_value::<String, _>("SubCommands")
+            .map(|value| !value.is_empty())
+            .unwrap_or(true)
     {
         return false;
     }
@@ -708,7 +719,7 @@ fn legacy_shell_entry_is_current(
             return false;
         };
         let command_path = format!(
-            r"{}\ExtendedSubCommandsKey\shell\{:02}.{}\command",
+            r"{}\shell\{:02}.{}\command",
             path,
             index + 1,
             verb.verb
@@ -724,10 +735,15 @@ fn legacy_shell_entry_is_current(
 #[cfg(target_os = "windows")]
 fn legacy_direct_entry_is_current(hkcu: &RegKey, path: &str, cli: &str, app_path: &str) -> bool {
     let expected_command = format!(r#""{}" {}"#, app_path, cli);
-    hkcu.open_subkey(format!(r"{}\command", path))
-        .and_then(|key| key.get_value::<String, _>(""))
-        .map(|command| command.eq_ignore_ascii_case(&expected_command))
+    hkcu.open_subkey(path)
+        .and_then(|key| key.get_value::<String, _>("Position"))
+        .map(|position| position.eq_ignore_ascii_case("Top"))
         .unwrap_or(false)
+        && hkcu
+            .open_subkey(format!(r"{}\command", path))
+            .and_then(|key| key.get_value::<String, _>(""))
+            .map(|command| command.eq_ignore_ascii_case(&expected_command))
+            .unwrap_or(false)
 }
 
 #[cfg(target_os = "windows")]
@@ -886,7 +902,7 @@ mod tests {
         legacy_direct_entry_is_current, legacy_shell_entry_is_current,
         native_package_registration_is_current, reg_direct_shell_entry, reg_shell_entry, verbs,
         RegKey, ARCHIVE_EXTENSIONS, ARCHIVE_VERBS, BACKGROUND_VERBS, COMPRESS_VERBS,
-        HKEY_CURRENT_USER, LEGACY_QUICK_EXTRACT_VERB, LEGACY_QUICK_PACK_VERB,
+        HKEY_CURRENT_USER, KEY_SET_VALUE, LEGACY_QUICK_EXTRACT_VERB, LEGACY_QUICK_PACK_VERB,
         NATIVE_COMMAND_CLSID, NATIVE_COMMAND_VERB, QUICK_EXTRACT_COMMAND_CLSID,
         QUICK_EXTRACT_COMMAND_VERB, QUICK_PACK_COMMAND_CLSID, QUICK_PACK_COMMAND_VERB,
     };
@@ -958,19 +974,14 @@ mod tests {
                 all_verbs.iter().any(|candidate| candidate.verb == *name)
             }));
         }
-        assert!(CONTEXT_MENU_SOURCE
-            .matches("ExtendedSubCommandsKey\\shell")
-            .count()
-            >= 2);
+        assert!(CONTEXT_MENU_SOURCE.contains("key.set_value(\"SubCommands\", &\"\")"));
         assert_eq!(
             CONTEXT_MENU_SOURCE
                 .matches("let store_base = r\"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CommandStore")
                 .count(),
             1
         );
-        assert!(CONTEXT_MENU_SOURCE.contains(
-            "root.get_value::<String, _>(\"SubCommands\").is_ok()"
-        ));
+        assert!(CONTEXT_MENU_SOURCE.contains("map(|value| !value.is_empty())"));
     }
 
     #[test]
@@ -1010,9 +1021,34 @@ mod tests {
             app_path,
         ));
         let root = hkcu.open_subkey(&menu_path).expect("open cascade root");
-        assert!(root.get_value::<String, _>("SubCommands").is_err());
+        assert_eq!(
+            root.get_value::<String, _>("SubCommands")
+                .expect("cascade marker"),
+            ""
+        );
+        assert_eq!(
+            root.get_value::<String, _>("Position")
+                .expect("top-level group position"),
+            "Top"
+        );
+        let writable_root = hkcu
+            .open_subkey_with_flags(&menu_path, KEY_SET_VALUE)
+            .expect("open cascade root for stale-registration probe");
+        writable_root
+            .delete_value("Position")
+            .expect("remove group position for stale-registration probe");
+        assert!(!legacy_shell_entry_is_current(
+            &hkcu,
+            &menu_path,
+            &all_verbs,
+            ARCHIVE_VERBS,
+            app_path,
+        ));
+        writable_root
+            .set_value("Position", &"Top")
+            .expect("restore group position");
         let submenu = hkcu
-            .open_subkey(format!(r"{}\ExtendedSubCommandsKey\shell", menu_path))
+            .open_subkey(format!(r"{}\shell", menu_path))
             .expect("open inline submenu");
         assert_eq!(
             submenu.enum_keys().filter_map(Result::ok).count(),
@@ -1034,14 +1070,31 @@ mod tests {
             "--quick-pack \"%1\"",
             app_path,
         ));
+        assert_eq!(
+            hkcu.open_subkey(&quick_path)
+                .expect("open direct quick action")
+                .get_value::<String, _>("Position")
+                .expect("quick action group position"),
+            "Top"
+        );
+        hkcu.open_subkey_with_flags(&quick_path, KEY_SET_VALUE)
+            .expect("open quick action for stale-registration probe")
+            .delete_value("Position")
+            .expect("remove quick action group position");
+        assert!(!legacy_direct_entry_is_current(
+            &hkcu,
+            &quick_path,
+            "--quick-pack \"%1\"",
+            app_path,
+        ));
     }
 
     #[test]
     fn installed_release_checks_validate_real_legacy_submenus() {
         for script in [INSTALLED_RELEASE_TEST_SCRIPT, PUBLIC_UPDATE_TEST_SCRIPT] {
             assert!(script.contains("Get-ClassicContextMenuCascadeStatus"));
-            assert!(script.contains("ExtendedSubCommandsKey\\shell"));
-            assert!(script.contains("obsolete SubCommands value"));
+            assert!(script.contains("Join-Path $root 'shell'"));
+            assert!(script.contains("missing empty SubCommands value"));
             assert!(script.contains("quickActions=$quickActionCount"));
         }
         assert!(INSTALLED_RELEASE_TEST_SCRIPT.contains(
