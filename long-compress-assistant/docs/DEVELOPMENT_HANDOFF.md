@@ -6,7 +6,12 @@
 - 当前修复改用空 `SubCommands` 值配合父项下的内联 `shell` 子键，并让 Long解压、一键解压、一键打包统一声明 `Position=Top`，保持同组排列。
 - 注册状态、已安装版本和公开更新脚本必须同时验证空 `SubCommands`、内联命令数量、目标程序路径和顶部排序；不能只检查注册表键是否存在。
 - 本修复不改变 Windows 11 新式第一层菜单的签名边界：没有可信代码签名证书时仍使用“显示更多选项”中的经典菜单。
+## 2026-08-07 前端工具链安全迁移
 
+- Vite、Vue 插件、Vitest、V8 覆盖率和 vue-tsc 已迁移到 `8.2.1 / 6.0.8 / 4.1.10 / 4.1.10 / 3.3.9`，Node 约束固定为 `^20.19.0 || >=22.12.0`，与 CI 的 Node 24 对齐。
+- 公开 npm 安全源的完整审计和生产依赖审计均由 7 项开发工具链漏洞降为 0；没有使用 `npm audit fix --force`，也没有迁移 Tauri、Tailwind、Pinia 等业务或平台依赖。
+- Vitest 4 的 V8 AST 重映射改变了 Vue/TypeScript 的覆盖率统计口径。配置已移除会产生假 `0/0` 的旧 `all/include` 组合，明确排除测试夹具，并以本次真实结果重新建立 `67/55/58/69` 的 statements/branches/functions/lines 防倒退门槛。
+- Vite 8 的严格检查同时消除了 `vitest.config.ts` 中的 `__dirname` 警告和非 scoped 样式中的无效 `:global(...)` 写法。后续升级必须继续通过类型检查、184 项覆盖率测试、浏览器 E2E 和生产构建。
 > 2026-07-30 详细代码审计见仓库根目录
 > [DEVELOPMENT_AUDIT_2026-07-30.md](../../DEVELOPMENT_AUDIT_2026-07-30.md)。
 
