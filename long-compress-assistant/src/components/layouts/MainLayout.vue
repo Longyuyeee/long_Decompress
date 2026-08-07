@@ -114,7 +114,7 @@ const navigateTo = (name: string) => {
 </template>
 
 <style>
-:global(html), :global(body), :global(#app) {
+html, body, #app {
   background-color: transparent !important;
   margin: 0;
   padding: 0;
