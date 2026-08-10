@@ -93,6 +93,7 @@ const requireFullFormatMatrix =
   process.argv.includes('--require-full-format-matrix') ||
   process.env.LONG_DECOMPRESS_REQUIRE_FULL_FORMAT_MATRIX === '1'
 const watchFolderLifecycleOnly = process.argv.includes('--watch-folder-lifecycle-only')
+const resourcePreflightOnly = process.argv.includes('--resource-preflight-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -414,6 +415,67 @@ async function waitForWatchFolderState(profileId, predicate, timeoutMs = 30_000)
   }
 }
 
+async function waitForResourcePreflightTask(type, predicate, timeoutMs = 30_000) {
+  let lastState = null
+  try {
+    return await driver.wait(async () => {
+      lastState = await callDesktopBridge('resourcePreflightAuditState', type)
+      const task = lastState.tasks.find(predicate)
+      return task || false
+    }, timeoutMs)
+  } catch (error) {
+    throw new Error(
+      `Resource-preflight task timed out after ${timeoutMs}ms. Last state: ${JSON.stringify(lastState)}`,
+      { cause: error },
+    )
+  }
+}
+
+function assertRealResourceReport(task, expected) {
+  const report = task.report
+  assert.ok(report, `${expected.operation} task must retain its resource report`)
+  assert.equal(report.operation, expected.operation)
+  assert.equal(task.status, expected.taskStatus)
+  assert.equal(report.canStart, expected.canStart)
+  assert.ok(
+    expected.reportStatuses.includes(report.status),
+    `unexpected resource status ${report.status}; expected one of ${expected.reportStatuses.join(', ')}`,
+  )
+  assert.equal(normalizedDesktopPath(report.outputPath), normalizedDesktopPath(expected.outputPath))
+  assert.equal(report.location, 'local', 'the real temporary output must resolve to a local volume')
+  assert.ok(report.mountPoint, 'the real volume mount point must be visible')
+  assert.ok(report.fileSystem, 'the real volume file system must be visible')
+  assert.ok(report.totalBytes > 0, 'the real volume total capacity must be positive')
+  assert.ok(report.availableBytes > 0, 'the real volume available capacity must be positive')
+  assert.ok(report.totalBytes >= report.availableBytes, 'available capacity cannot exceed total capacity')
+  assert.equal(report.reserveBytes, 128 * 1024 * 1024, 'the desktop report must retain the safety reserve')
+  assert.ok(
+    task.logMessages.some(message => message.includes('资源预检')),
+    'the resource conclusion must be preserved in the real task log',
+  )
+}
+
+async function assertVisibleResourceCard(taskId, expectedLabel) {
+  const rowSelector = `[data-task-id="${taskId}"]`
+  if ((await driver.findElements(By.css('[data-testid="resource-preflight-card"]'))).length === 0) {
+    await (await waitForElement(rowSelector)).click()
+  }
+  const card = await waitForElement('[data-testid="resource-preflight-card"]')
+  const text = (await card.getAttribute('textContent')).trim()
+  assert.match(text, /资源预检/)
+  assert.match(text, new RegExp(expectedLabel))
+  const dimensions = await driver.executeScript(
+    `const card = document.querySelector('[data-testid="resource-preflight-card"]');
+     return card ? { scrollWidth: card.scrollWidth, clientWidth: card.clientWidth } : null;`,
+  )
+  assert.ok(dimensions, 'the resource-preflight card must remain mounted')
+  assert.ok(
+    dimensions.scrollWidth <= dimensions.clientWidth + 1,
+    `the resource-preflight card must not scroll horizontally: ${JSON.stringify(dimensions)}`,
+  )
+  return text
+}
+
 function watchDraftPaths(state) {
   return state.draftGroups
     .flatMap(group => group.files)
@@ -609,6 +671,28 @@ try {
     readFileSync(archivePath).length > 0,
     'the real compression command must create a non-empty ZIP archive',
   )
+  const compressionResourceTask = await waitForResourcePreflightTask(
+    'compression',
+    task => task.status === 'completed' && normalizedDesktopPath(task.outputPath) === normalizedDesktopPath(archivePath),
+  )
+  assertRealResourceReport(compressionResourceTask, {
+    operation: 'compression',
+    taskStatus: 'completed',
+    canStart: true,
+    reportStatuses: ['ready', 'warning'],
+    outputPath: archivePath,
+  })
+  assert.equal(compressionResourceTask.report.estimateSource, 'provided_estimate')
+  assert.equal(compressionResourceTask.report.estimateReliable, true)
+  assert.equal(
+    compressionResourceTask.report.estimatedOutputBytes,
+    Math.ceil(statSync(sourcePath).size * 1.05),
+    'the desktop compression report must use the conservative regular-file estimate',
+  )
+  await assertVisibleResourceCard(
+    compressionResourceTask.id,
+    compressionResourceTask.report.status === 'ready' ? '已通过' : '需留意',
+  )
 
   forwardContextAction('--quick-extract', [archivePath])
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 30_000)
@@ -618,6 +702,64 @@ try {
     payload,
     'the extracted file must match the source payload byte-for-byte',
   )
+  const decompressionResourceTask = await waitForResourcePreflightTask(
+    'decompression',
+    task => task.status === 'completed' && normalizedDesktopPath(task.outputPath) === normalizedDesktopPath(fixtureDirectory),
+  )
+  assertRealResourceReport(decompressionResourceTask, {
+    operation: 'decompression',
+    taskStatus: 'completed',
+    canStart: true,
+    reportStatuses: ['ready', 'warning'],
+    outputPath: fixtureDirectory,
+  })
+  assert.equal(decompressionResourceTask.report.estimateSource, 'archive_metadata')
+  assert.equal(decompressionResourceTask.report.estimateReliable, true)
+  assert.equal(
+    decompressionResourceTask.report.estimatedOutputBytes,
+    Buffer.byteLength(payload, 'utf8'),
+    'the desktop decompression report must use the real archive metadata size',
+  )
+  await assertVisibleResourceCard(
+    decompressionResourceTask.id,
+    decompressionResourceTask.report.status === 'ready' ? '已通过' : '需留意',
+  )
+
+  console.log('[desktop-e2e] verifying reliable capacity blocking and the visible blocked state')
+  await callDesktopBridge('clearTasks')
+  const blockedOutput = path.join(fixtureDirectory, 'must-not-create-blocked-output')
+  const blockedSeed = await callDesktopBridge(
+    'seedBlockedResourcePreflight',
+    archivePath,
+    blockedOutput,
+  )
+  const blockedResourceTask = await waitForResourcePreflightTask(
+    'decompression',
+    task => task.id === blockedSeed.taskId && task.status === 'failed',
+  )
+  assertRealResourceReport(blockedResourceTask, {
+    operation: 'decompression',
+    taskStatus: 'failed',
+    canStart: false,
+    reportStatuses: ['blocked'],
+    outputPath: blockedOutput,
+  })
+  assert.equal(blockedResourceTask.report.estimateReliable, true)
+  assert.equal(blockedResourceTask.report.estimatedOutputBytes, Number.MAX_SAFE_INTEGER)
+  assert.match(blockedResourceTask.report.summary, /空间不足/)
+  assert.equal(
+    existsSync(blockedOutput),
+    false,
+    'the blocked desktop preflight must not create an extraction output',
+  )
+  const blockedCardText = await assertVisibleResourceCard(blockedResourceTask.id, '已阻止')
+  assert.match(blockedCardText, /空间不足/)
+  await callDesktopBridge('clearTasks')
+
+  if (resourcePreflightOnly) {
+    completedSuccessfully = true
+    console.log('Real Windows Tauri resource-preflight gate passed.')
+  } else {
 
   console.log('[desktop-e2e] verifying task-template import, draft, and read-only folder preview')
   const taskTemplateDirectory = path.join(fixtureDirectory, 'task-template-watch')
@@ -1946,6 +2088,7 @@ try {
 
   completedSuccessfully = true
   console.log('Real Windows Tauri desktop archive and lifecycle tests passed.')
+  }
   }
 } catch (error) {
   await captureFailure()

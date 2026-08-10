@@ -6,6 +6,8 @@ import { useTaskStore, type TaskStatus } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
 import { useUpdateStore } from '@/stores/update'
 import type { WatchFolderDraftBatch, WatchFolderRegistration } from '@/types/profile'
+import type { ResourcePreflightReport } from '@/types/resourcePreflight'
+import { attachResourcePreflight } from '@/utils/resourcePreflight'
 
 const TEST_TASK_ID = 'desktop-e2e-lifecycle-task'
 
@@ -82,6 +84,19 @@ export interface DesktopE2EBridge {
     activeTaskCount: number
     autoStartRequested: boolean
   }>
+  resourcePreflightAuditState: (type: 'compression' | 'decompression') => {
+    tasks: Array<{
+      id: string
+      status: TaskStatus
+      outputPath: string
+      report: ResourcePreflightReport | null
+      logMessages: string[]
+    }>
+  }
+  seedBlockedResourcePreflight: (
+    archivePath: string,
+    outputPath: string,
+  ) => Promise<{ taskId: string; report: ResourcePreflightReport }>
 }
 
 declare global {
@@ -519,6 +534,43 @@ export const installDesktopE2EBridge = () => {
         activeTaskCount: taskStore.activeTaskCount,
         autoStartRequested: compressionStore.autoStartRequested,
       }
+    },
+
+    resourcePreflightAuditState(type) {
+      return {
+        tasks: taskStore.tasksFor(type).map(task => ({
+          id: task.id,
+          status: task.status,
+          outputPath: task.outputPath,
+          report: task.resourcePreflight
+            ? { ...task.resourcePreflight, warnings: [...task.resourcePreflight.warnings] }
+            : null,
+          logMessages: task.logs.map(log => log.message),
+        })),
+      }
+    },
+
+    async seedBlockedResourcePreflight(archivePath, outputPath) {
+      const report = await invoke<ResourcePreflightReport>('preflight_operation_resources', {
+        operation: 'decompression',
+        outputPath,
+        sourcePaths: [archivePath],
+        password: null,
+        estimatedOutputBytes: Number.MAX_SAFE_INTEGER,
+        estimateReliable: true,
+      })
+      if (report.canStart || report.status !== 'blocked') {
+        throw new Error(`Reliable oversized estimate was not blocked: ${JSON.stringify(report)}`)
+      }
+
+      const taskId = `desktop-e2e-resource-blocked-${Date.now()}`
+      addArchiveTask(taskId, 'decompression', archivePath, outputPath)
+      const task = taskStore.tasks.find(item => item.id === taskId)!
+      attachResourcePreflight(task, report)
+      task.error = report.summary
+      taskStore.updateTaskStatus(taskId, 'failed')
+      await syncActiveState()
+      return { taskId, report }
     },
   }
 

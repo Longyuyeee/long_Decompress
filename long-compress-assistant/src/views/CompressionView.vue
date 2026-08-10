@@ -770,6 +770,7 @@ const onDetailLeave = (element: Element) => {
           </div>
           <div v-for="file in compressionStore.selectedFiles" :key="file.path" 
                data-testid="compression-draft-row"
+               :data-task-id="file.taskId || ''"
                @click="file.expanded = !file.expanded"
                class="compression-job-card compression-job-row flex flex-wrap items-center justify-between px-4 py-2.5 rounded-lg bg-card/40 border border-subtle/40 group/row hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden"
                :class="{ 'border-primary/30 bg-card/60 shadow-lg': file.expanded }">

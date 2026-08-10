@@ -7,9 +7,10 @@
 ## 当前覆盖
 
 - Release Tauri 二进制成功启动并进入默认解压工作区。
-- 主工作区标题可见，五个侧栏入口存在，解压中心默认选中。
+- 主工作区标题可见，六个侧栏入口存在，解压中心默认选中。
 - 通过第二实例参数发送“一键打包”，执行真实 ZIP 压缩并验证输出非空。
 - 通过第二实例参数发送“一键解压”，执行真实解压并逐字节校验源文件与输出文件。
+- 真实一键打包/解压任务保留本机卷容量、文件系统、介质和体积估算，详情卡片可见且无横向溢出；可靠不足经正式 IPC 返回 blocked，目标目录不会创建。
 - 在真实 WebView2 中进入设置中心。
 - 启动确定性长任务，通过实际取消注册表停止任务，并验证未完成输出被清理。
 - 验证活动任务退出判断、三操作确认框，以及更新安装在任务运行时保持禁用。
@@ -47,6 +48,8 @@ npm.cmd run test:tools:qemu-img
 npm.cmd run test:tools:wsl-fs
 
 npm run test:e2e:desktop
+# 只复验资源预检的真实卷、可见卡片与阻断状态
+npm.cmd run test:e2e:desktop:resource-preflight
 # 发布前全格式验收会强制检查所有生成器，不允许静默跳过
 npm.cmd run test:prepare:full-format
 npm.cmd run test:e2e:desktop:full-format

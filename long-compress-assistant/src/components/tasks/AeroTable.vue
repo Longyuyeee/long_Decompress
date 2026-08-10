@@ -235,6 +235,8 @@ const onLeave = (el: any) => {
         <div v-for="task in displayTasks" :key="task.id" class="task-row-container mb-1.5 last:mb-0 group/row">
           <div
             class="task-row flex min-w-0 max-w-full items-center px-4 py-2 bg-card/40 border border-subtle/40 rounded-lg hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden shadow-sm"
+            data-testid="task-row"
+            :data-task-id="task.id"
             @click="toggleExpand(task.id)"
             role="button"
             tabindex="0"
