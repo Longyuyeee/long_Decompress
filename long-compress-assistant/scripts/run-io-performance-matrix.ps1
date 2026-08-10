@@ -89,14 +89,19 @@ if ($Iterations -ge 10) {
       }
     }
   }
-  $outputInsideRepository = $resolvedOutputDirectory.StartsWith(
-    $repositoryRoot.TrimEnd('\') + '\',
-    [StringComparison]::OrdinalIgnoreCase
+  $outputInsideRepository = (
+    $resolvedOutputDirectory.Equals($repositoryRoot, [StringComparison]::OrdinalIgnoreCase) -or
+    $resolvedOutputDirectory.StartsWith(
+      $repositoryRoot.TrimEnd('\') + '\',
+      [StringComparison]::OrdinalIgnoreCase
+    )
   )
   if ($outputInsideRepository) {
-    & git -C $projectRoot check-ignore --quiet -- $sameVolumePath
-    if ($LASTEXITCODE -ne 0) {
-      throw 'A qualified matrix output inside the repository must be ignored by Git.'
+    foreach ($path in $pathsToCreate) {
+      & git -C $projectRoot check-ignore --quiet -- $path
+      if ($LASTEXITCODE -ne 0) {
+        throw "A qualified matrix output inside the repository must be ignored by Git: $path"
+      }
     }
   }
 }
