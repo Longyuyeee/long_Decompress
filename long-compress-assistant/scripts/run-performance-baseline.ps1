@@ -10,6 +10,12 @@ param(
 
   [switch]$SkipAes,
 
+  [switch]$IoTopologyOnly,
+
+  [string]$SourceRoot,
+
+  [string]$TargetRoot,
+
   [string]$BaselinePath,
 
   [ValidateRange(1, 100)]
@@ -29,6 +35,161 @@ if (-not $OutputPath) {
 }
 $resolvedOutputPath = [IO.Path]::GetFullPath($OutputPath)
 $resolvedBaselinePath = if ($BaselinePath) { [IO.Path]::GetFullPath($BaselinePath) } else { $null }
+
+if (-not $IoTopologyOnly -and ($SourceRoot -or $TargetRoot)) {
+  throw 'SourceRoot and TargetRoot are only valid with -IoTopologyOnly.'
+}
+
+function Resolve-PerformanceRoot {
+  param([string]$Path, [string]$Name)
+  $candidate = if ($Path) { $Path } else { [IO.Path]::GetTempPath() }
+  $resolved = [IO.Path]::GetFullPath($candidate)
+  if (-not (Test-Path -LiteralPath $resolved -PathType Container)) {
+    throw "$Name must point to an existing directory: $resolved"
+  }
+  return $resolved
+}
+
+function Get-StorageEndpoint {
+  param([string]$Path)
+  try {
+    $volume = Get-Volume -FilePath $Path -ErrorAction Stop
+    $partition = Get-Partition -Volume $volume -ErrorAction Stop | Select-Object -First 1
+    if ($null -eq $partition) { throw 'No partition backs this volume.' }
+    $disk = Get-Disk -Number $partition.DiskNumber -ErrorAction Stop
+  } catch {
+    return [ordered]@{
+      root = $Path
+      identity_reliable = $false
+      volume_id = $null
+      mount_path = $null
+      drive_letter = $null
+      file_system = $null
+      disk_number = $null
+      partition_number = $null
+      disk_id = $null
+      disk_name = $null
+      bus_type = $null
+      medium = 'unknown'
+      total_bytes = $null
+      available_bytes = $null
+    }
+  }
+
+  $physicalDisk = Get-PhysicalDisk |
+    Where-Object { [string]$_.DeviceId -eq [string]$disk.Number } |
+    Select-Object -First 1
+  $medium = if ($null -ne $physicalDisk -and $physicalDisk.MediaType) {
+    ([string]$physicalDisk.MediaType).ToLowerInvariant()
+  } elseif ($disk.MediaType) {
+    ([string]$disk.MediaType).ToLowerInvariant()
+  } else {
+    'unknown'
+  }
+  if ($medium -notin @('ssd', 'hdd')) { $medium = 'unknown' }
+  $volumeId = [string]$volume.UniqueId
+  $diskId = [string]$disk.UniqueId
+  return [ordered]@{
+    root = $Path
+    identity_reliable = (
+      -not [string]::IsNullOrWhiteSpace($volumeId) -and
+      -not [string]::IsNullOrWhiteSpace($diskId) -and
+      -not [string]::IsNullOrWhiteSpace([string]$volume.FileSystem)
+    )
+    volume_id = $volumeId
+    mount_path = [string]$volume.Path
+    drive_letter = ([string]$volume.DriveLetter).ToUpperInvariant()
+    file_system = [string]$volume.FileSystem
+    disk_number = [int]$disk.Number
+    partition_number = [int]$partition.PartitionNumber
+    disk_id = $diskId
+    disk_name = [string]$disk.FriendlyName
+    bus_type = [string]$disk.BusType
+    medium = $medium
+    total_bytes = [int64]$volume.Size
+    available_bytes = [int64]$volume.SizeRemaining
+  }
+}
+
+function Get-IoStorageTopology {
+  param([string]$ResolvedSourceRoot, [string]$ResolvedTargetRoot)
+  $source = Get-StorageEndpoint -Path $ResolvedSourceRoot
+  $target = Get-StorageEndpoint -Path $ResolvedTargetRoot
+  $sameVolume = (
+    $source.identity_reliable -and
+    $target.identity_reliable -and
+    $source.volume_id -eq $target.volume_id
+  )
+  $samePhysicalDisk = (
+    $source.identity_reliable -and
+    $target.identity_reliable -and
+    $source.disk_id -eq $target.disk_id
+  )
+  $relation = if ($sameVolume) {
+    'same_volume'
+  } elseif ($samePhysicalDisk) {
+    'same_disk_cross_volume'
+  } elseif ($source.identity_reliable -and $target.identity_reliable) {
+    'cross_physical_disk'
+  } else {
+    'unknown'
+  }
+  $fingerprint = if ($source.identity_reliable -and $target.identity_reliable) {
+    '{0}|{1}|{2}|{3}|{4}' -f (
+      $source.volume_id,
+      $source.disk_id,
+      $target.volume_id,
+      $target.disk_id,
+      $relation
+    )
+  } else {
+    $null
+  }
+  return [ordered]@{
+    relation = $relation
+    same_volume = $sameVolume
+    same_physical_disk = $samePhysicalDisk
+    identity_reliable = ($source.identity_reliable -and $target.identity_reliable)
+    fingerprint = $fingerprint
+    source = $source
+    target = $target
+  }
+}
+
+function Assert-IoWorkingSpace {
+  param($Storage, [int]$LargeMiB, [int]$SmallCount)
+  $reserveBytes = [int64](128 * 1MB)
+  $largeBytes = [int64]$LargeMiB * 1MB
+  $smallBytes = [int64]$SmallCount * 4096
+  $largestFixtureBytes = [Math]::Max($largeBytes, $smallBytes)
+  # Each endpoint may temporarily hold the fixture plus a near-incompressible
+  # archive and output. Keep an extra copy worth of headroom and the same
+  # reserve used by the application resource preflight.
+  $perEndpointRequired = [int64](3 * $largestFixtureBytes + $reserveBytes)
+  $sameVolumeRequired = [int64](6 * $largestFixtureBytes + $reserveBytes)
+
+  if (-not $Storage.identity_reliable) {
+    throw 'I/O topology baseline requires stable local volume and disk identities.'
+  }
+  if ($Storage.same_volume) {
+    if ([int64]$Storage.source.available_bytes -lt $sameVolumeRequired) {
+      throw "Insufficient benchmark space on $($Storage.source.drive_letter):. Required $sameVolumeRequired bytes; available $($Storage.source.available_bytes)."
+    }
+  } else {
+    foreach ($endpointName in @('source', 'target')) {
+      $endpoint = $Storage[$endpointName]
+      if ([int64]$endpoint.available_bytes -lt $perEndpointRequired) {
+        throw "Insufficient benchmark space on $endpointName volume $($endpoint.drive_letter):. Required $perEndpointRequired bytes; available $($endpoint.available_bytes)."
+      }
+    }
+  }
+  return [ordered]@{
+    reserve_bytes = $reserveBytes
+    largest_fixture_bytes = $largestFixtureBytes
+    required_source_bytes = if ($Storage.same_volume) { $sameVolumeRequired } else { $perEndpointRequired }
+    required_target_bytes = if ($Storage.same_volume) { $sameVolumeRequired } else { $perEndpointRequired }
+  }
+}
 
 function Get-Median {
   param([double[]]$Values)
@@ -206,7 +367,43 @@ function Compare-Baseline {
 $previousLargeSize = [Environment]::GetEnvironmentVariable('LONG_DECOMPRESS_PERF_SIZE_MIB')
 $previousFileCount = [Environment]::GetEnvironmentVariable('LONG_DECOMPRESS_PERF_FILE_COUNT')
 $previousAesSize = [Environment]::GetEnvironmentVariable('LONG_DECOMPRESS_PERF_AES_SIZE_MIB')
+$previousSourceRoot = [Environment]::GetEnvironmentVariable('LONG_DECOMPRESS_PERF_SOURCE_ROOT')
+$previousTargetRoot = [Environment]::GetEnvironmentVariable('LONG_DECOMPRESS_PERF_TARGET_ROOT')
 $machine = Get-MachineIdentity
+$workloadProfile = if ($IoTopologyOnly) { 'zip_io_topology' } else { 'archive_roundtrip' }
+$aesIncluded = -not $SkipAes -and -not $IoTopologyOnly
+$resolvedSourceRoot = $null
+$resolvedTargetRoot = $null
+$storage = $null
+$storagePreflight = $null
+$storageClassificationReliable = $true
+if ($IoTopologyOnly) {
+  $resolvedSourceRoot = Resolve-PerformanceRoot -Path $SourceRoot -Name 'SourceRoot'
+  $resolvedTargetRoot = Resolve-PerformanceRoot -Path $TargetRoot -Name 'TargetRoot'
+  $storage = Get-IoStorageTopology `
+    -ResolvedSourceRoot $resolvedSourceRoot `
+    -ResolvedTargetRoot $resolvedTargetRoot
+  $storagePreflight = Assert-IoWorkingSpace `
+    -Storage $storage `
+    -LargeMiB $LargeFileMiB `
+    -SmallCount $SmallFileCount
+  $storageClassificationReliable = (
+    $storage.identity_reliable -and
+    $storage.source.medium -ne 'unknown' -and
+    $storage.target.medium -ne 'unknown'
+  )
+  Write-Output (
+    'I/O topology: {0}; source={1} ({2}/{3}); target={4} ({5}/{6})' -f (
+      $storage.relation,
+      $storage.source.root,
+      $storage.source.medium,
+      $storage.source.file_system,
+      $storage.target.root,
+      $storage.target.medium,
+      $storage.target.file_system
+    )
+  )
+}
 $baseline = $null
 if ($resolvedBaselinePath) {
   if (-not (Test-Path -LiteralPath $resolvedBaselinePath -PathType Leaf)) {
@@ -222,9 +419,17 @@ if ($resolvedBaselinePath) {
   if (
     [int]$baseline.configuration.large_file_mib -ne $LargeFileMiB -or
     [int]$baseline.configuration.small_file_count -ne $SmallFileCount -or
-    [bool]$baseline.configuration.aes_included -ne (-not $SkipAes)
+    [bool]$baseline.configuration.aes_included -ne $aesIncluded
   ) {
     throw 'Baseline workload configuration does not match this run.'
+  }
+  if ($IoTopologyOnly) {
+    if ($baseline.configuration.workload_profile -ne $workloadProfile) {
+      throw 'Baseline workload profile does not match this I/O topology run.'
+    }
+    if ($baseline.storage.fingerprint -ne $storage.fingerprint) {
+      throw 'Baseline source/target storage topology does not match this run.'
+    }
   }
 }
 $samples = [Collections.Generic.List[object]]::new()
@@ -232,22 +437,33 @@ try {
   $env:LONG_DECOMPRESS_PERF_SIZE_MIB = [string]$LargeFileMiB
   $env:LONG_DECOMPRESS_PERF_FILE_COUNT = [string]$SmallFileCount
   $env:LONG_DECOMPRESS_PERF_AES_SIZE_MIB = [string]$LargeFileMiB
+  if ($IoTopologyOnly) {
+    $env:LONG_DECOMPRESS_PERF_SOURCE_ROOT = $resolvedSourceRoot
+    $env:LONG_DECOMPRESS_PERF_TARGET_ROOT = $resolvedTargetRoot
+  } else {
+    [Environment]::SetEnvironmentVariable('LONG_DECOMPRESS_PERF_SOURCE_ROOT', $null)
+    [Environment]::SetEnvironmentVariable('LONG_DECOMPRESS_PERF_TARGET_ROOT', $null)
+  }
   for ($iteration = 1; $iteration -le $Iterations; $iteration += 1) {
     [void]$samples.Add((Invoke-PerformanceScenario `
       'archive_performance_regression' 'real_zip_compress_extract_baseline' $iteration))
     [void]$samples.Add((Invoke-PerformanceScenario `
       'archive_performance_regression' 'real_zip_many_small_files_baseline' $iteration))
-    [void]$samples.Add((Invoke-PerformanceScenario `
-      'lib' 'services::performance_regression::real_7z_large_file_baseline' $iteration))
-    if (-not $SkipAes) {
+    if (-not $IoTopologyOnly) {
       [void]$samples.Add((Invoke-PerformanceScenario `
-        'aes_stream_performance' 'real_aes_stream_100_mib_baseline' $iteration))
+        'lib' 'services::performance_regression::real_7z_large_file_baseline' $iteration))
+      if (-not $SkipAes) {
+        [void]$samples.Add((Invoke-PerformanceScenario `
+          'aes_stream_performance' 'real_aes_stream_100_mib_baseline' $iteration))
+      }
     }
   }
 } finally {
   [Environment]::SetEnvironmentVariable('LONG_DECOMPRESS_PERF_SIZE_MIB', $previousLargeSize)
   [Environment]::SetEnvironmentVariable('LONG_DECOMPRESS_PERF_FILE_COUNT', $previousFileCount)
   [Environment]::SetEnvironmentVariable('LONG_DECOMPRESS_PERF_AES_SIZE_MIB', $previousAesSize)
+  [Environment]::SetEnvironmentVariable('LONG_DECOMPRESS_PERF_SOURCE_ROOT', $previousSourceRoot)
+  [Environment]::SetEnvironmentVariable('LONG_DECOMPRESS_PERF_TARGET_ROOT', $previousTargetRoot)
 }
 
 $aggregates = Get-Aggregates -Samples @($samples)
@@ -262,7 +478,11 @@ if ($resolvedBaselinePath) {
     $baseline.qualification.threshold_eligible -eq $true -and
     [int]$baseline.qualification.sample_count -ge 10
   )
-  $thresholdApplied = $baselineEligible -and $Iterations -ge 10
+  $thresholdApplied = (
+    $baselineEligible -and
+    $Iterations -ge 10 -and
+    $storageClassificationReliable
+  )
   if ($thresholdApplied) {
     $baselineComparison = Compare-Baseline $aggregates $baseline.aggregates $RegressionThresholdPercent
     $comparisonMetrics = [object[]]@($baselineComparison.comparisons)
@@ -279,6 +499,8 @@ $result = [ordered]@{
     dirty = $gitDirty
   }
   machine = $machine
+  storage = $storage
+  storage_preflight = $storagePreflight
   toolchain = [ordered]@{
     rustc = (& rustc --version).Trim()
     cargo = (& cargo --version).Trim()
@@ -287,15 +509,19 @@ $result = [ordered]@{
     iterations = $Iterations
     large_file_mib = $LargeFileMiB
     small_file_count = $SmallFileCount
-    aes_included = -not $SkipAes
+    workload_profile = $workloadProfile
+    aes_included = $aesIncluded
     regression_threshold_percent = $RegressionThresholdPercent
   }
   qualification = [ordered]@{
     sample_count = $Iterations
     required_sample_count = 10
-    threshold_eligible = $Iterations -ge 10
-    note = if ($Iterations -ge 10) {
+    storage_classification_reliable = $storageClassificationReliable
+    threshold_eligible = ($Iterations -ge 10 -and $storageClassificationReliable)
+    note = if ($Iterations -ge 10 -and $storageClassificationReliable) {
       'Eligible as a fixed-machine warning baseline.'
+    } elseif (-not $storageClassificationReliable) {
+      'Observation only. Windows did not prove SSD/HDD media for both endpoints.'
     } else {
       'Observation only. Accumulate at least 10 fixed-machine samples before enabling warnings.'
     }

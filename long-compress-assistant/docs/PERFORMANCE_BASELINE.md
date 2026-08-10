@@ -58,6 +58,15 @@ npm.cmd run performance:baseline -- -Iterations 10 -LargeFileMiB 100 -SmallFileC
 npm.cmd run performance:baseline -- -Iterations 10 -LargeFileMiB 100 -SmallFileCount 10000 `
   -BaselinePath test-results\performance-baseline\v1.0.20\result.json `
   -RegressionThresholdPercent 25
+
+# I/O 拓扑烟雾：显式指定源端和目标端，只运行真实 ZIP 单大文件/大量小文件
+npm.cmd run performance:io-baseline -- -Iterations 1 -LargeFileMiB 16 -SmallFileCount 1000 `
+  -SourceRoot C:\baseline-source -TargetRoot D:\baseline-target
+
+# I/O 拓扑正式样本：相同源卷、目标卷和规模至少重复 10 次
+npm.cmd run performance:io-baseline -- -Iterations 10 -LargeFileMiB 100 -SmallFileCount 10000 `
+  -SourceRoot C:\baseline-source -TargetRoot D:\baseline-target `
+  -OutputPath test-results\performance-baseline\io\c-to-d.json
 ```
 
 结果 JSON 包含 Git 提交及工作区状态、Windows/CPU/内存/架构组成的机器指纹、活动电源计划、
@@ -66,6 +75,21 @@ Rust 工具链、逐次样本、中位数/最小值/最大值和基线比较结�
 
 同一基线周期必须保持机器、存储设备、电源计划、实时防护策略和输入规模不变。脚本会拒绝跨机器指纹比较；
 少于 10 次的结果会明确标记 `threshold_eligible=false`，只能用于烟雾观察，不能阻断发布。
+
+I/O 拓扑模式会通过 Windows 卷、分区、磁盘和物理介质信息证明源端/目标端关系，记录文件系统、SSD/HDD、
+总容量、可用容量、卷与磁盘指纹，并区分同卷、同物理盘跨卷和跨物理盘。源目录和目标目录必须已经存在；
+运行前按最大夹具体积和 128 MiB 安全预留检查空间，无法取得稳定本地磁盘身份时拒绝运行。比较文件还必须与
+当前源卷和目标卷指纹完全一致，不能把 C→C 与 D→C、SSD 与 HDD 的结果混在一起。
+
+该模式复用正式 ZIP 压缩服务和真实 ZIP 解码：压缩从源端读取并写到目标端；压缩完成后在计时外把归档放回
+源端，解压再从源端读取并写到目标端，因此两个指标都表达同一个 I/O 方向。大文件按长度与 CRC32 校验，
+小文件按数量与组合 CRC32 校验。它衡量应用实际路径（会受到 Windows 文件缓存、杀毒软件和电源计划影响），
+不是裸盘顺序读写测试；结果只适合同机同配置趋势，不能作为磁盘厂商级带宽结论。
+
+2026-08-10 的工具烟雾在当前开发机完成：C→C 被系统证明为同卷 NVMe SSD，E→C 被证明为跨两块物理
+NVMe SSD；两条路线均以 16 MiB 单文件和 1000 个 4 KiB 小文件完成真实往返。每场景只有 1 个样本，
+`threshold_eligible=false`，仅证明工具、拓扑识别、空间护栏和内容闭环可用。本机没有可证明的 HDD，
+因此 HDD 仍明确标记为未覆盖，且本轮数据不支持任何默认并发或调度调整。
 
 底层测试仍可单独运行：
 
@@ -90,4 +114,5 @@ cargo test --release --test aes_stream_performance real_aes_stream_1_gib_baselin
 ## 后续优化顺序
 
 1. 在固定 Windows 环境周期运行 `performance:baseline`；首份合格结果至少包含 ZIP 大文件、ZIP 小文件、7Z 大文件和 AES v2 每场景 10 个样本，之后才启用同机趋势告警。
-2. 在保持密码、冲突策略、时间戳、事务回滚和路径安全语义一致的前提下，再评估受控并行解压；当前未启用尚未覆盖这些语义的实验性并行提取器。
+2. 对同一对 SSD 源端/目标端，以 100 MiB 单文件和 10000 个 4 KiB 文件分别积累同卷与跨物理盘各 10 个样本；另找系统可明确识别的 HDD 重复同样矩阵，缺失场景不得用盘符或设备名称推测。
+3. 只有上述矩阵显示稳定、可复现的任务级收益，才设计与现有用户并发设置兼容的策略；在保持密码、冲突、时间戳、事务回滚和取消语义前，不接入实验性并行提取器，也不改变默认并发。

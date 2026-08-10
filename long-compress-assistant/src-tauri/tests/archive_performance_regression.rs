@@ -2,14 +2,81 @@ use long_compress_assistant::models::compression::CompressionOptions;
 use long_compress_assistant::services::compression_service::CompressionService;
 use std::fs::File;
 use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use sysinfo::System;
-use tempfile::tempdir;
+use tempfile::{Builder, TempDir};
 
 const MIB: u64 = 1024 * 1024;
 const COPY_BUFFER_SIZE: usize = 256 * 1024;
+
+struct PerformanceDirs {
+    source: TempDir,
+    target: Option<TempDir>,
+}
+
+impl PerformanceDirs {
+    fn create(prefix: &str) -> Self {
+        let source_root = std::env::var_os("LONG_DECOMPRESS_PERF_SOURCE_ROOT");
+        let target_root = std::env::var_os("LONG_DECOMPRESS_PERF_TARGET_ROOT");
+        match (source_root, target_root) {
+            (None, None) => Self {
+                source: Builder::new()
+                    .prefix(prefix)
+                    .tempdir()
+                    .expect("create performance temp dir"),
+                target: None,
+            },
+            (Some(source_root), Some(target_root)) => Self {
+                source: Self::create_in(source_root, "source", prefix),
+                target: Some(Self::create_in(target_root, "target", prefix)),
+            },
+            _ => panic!(
+                "LONG_DECOMPRESS_PERF_SOURCE_ROOT and LONG_DECOMPRESS_PERF_TARGET_ROOT must be set together"
+            ),
+        }
+    }
+
+    fn create_in(root: impl Into<PathBuf>, endpoint: &str, prefix: &str) -> TempDir {
+        let root = root.into();
+        assert!(
+            root.is_dir(),
+            "performance {endpoint} root must be an existing directory: {}",
+            root.display()
+        );
+        Builder::new()
+            .prefix(&format!("{prefix}{endpoint}-"))
+            .tempdir_in(&root)
+            .unwrap_or_else(|error| {
+                panic!(
+                    "create performance {endpoint} directory inside {}: {error}",
+                    root.display()
+                )
+            })
+    }
+
+    fn source_path(&self) -> &Path {
+        self.source.path()
+    }
+
+    fn target_path(&self) -> &Path {
+        self.target
+            .as_ref()
+            .map_or_else(|| self.source.path(), TempDir::path)
+    }
+
+    fn archive_for_extraction(&self, archive: &Path, file_name: &str) -> PathBuf {
+        if self.target.is_none() {
+            return archive.to_path_buf();
+        }
+        let extraction_archive = self.source.path().join(file_name);
+        std::fs::copy(archive, &extraction_archive)
+            .expect("stage archive on extraction source volume");
+        extraction_archive
+    }
+}
 
 fn update_peak(peak: &AtomicU64, value: u64) {
     let mut current = peak.load(Ordering::Relaxed);
@@ -97,10 +164,10 @@ async fn real_zip_compress_extract_baseline() {
         .and_then(|value| value.parse::<u64>().ok())
         .unwrap_or(100)
         .clamp(16, 2048);
-    let temp = tempdir().expect("performance temp dir");
-    let source = temp.path().join("source.bin");
-    let archive = temp.path().join("source.zip");
-    let extracted = temp.path().join("extracted.bin");
+    let dirs = PerformanceDirs::create("long-decompress-zip-");
+    let source = dirs.source_path().join("source.bin");
+    let archive = dirs.target_path().join("source.zip");
+    let extracted = dirs.target_path().join("extracted.bin");
     let expected_crc = write_deterministic_fixture(&source, size_mib);
     let source_bytes = size_mib * MIB;
 
@@ -118,7 +185,8 @@ async fn real_zip_compress_extract_baseline() {
         .expect("compress performance fixture");
     let compression_time = started.elapsed();
 
-    let archive_file = File::open(&archive).expect("open performance archive");
+    let extraction_archive = dirs.archive_for_extraction(&archive, "source-for-extraction.zip");
+    let archive_file = File::open(&extraction_archive).expect("open performance archive");
     let mut zip = zip::ZipArchive::new(archive_file).expect("read performance archive");
     let mut entry = zip.by_index(0).expect("performance archive entry");
     let mut output = File::create(&extracted).expect("create extracted fixture");
@@ -192,10 +260,10 @@ async fn real_zip_many_small_files_baseline() {
         .and_then(|value| value.parse::<usize>().ok())
         .unwrap_or(10_000)
         .clamp(1_000, 50_000);
-    let temp = tempdir().expect("small-files performance temp dir");
-    let source_dir = temp.path().join("source");
-    let output_dir = temp.path().join("output");
-    let archive = temp.path().join("small-files.zip");
+    let dirs = PerformanceDirs::create("long-decompress-small-");
+    let source_dir = dirs.source_path().join("source");
+    let output_dir = dirs.target_path().join("output");
+    let archive = dirs.target_path().join("small-files.zip");
     std::fs::create_dir_all(&source_dir).expect("create small-files source dir");
     std::fs::create_dir_all(&output_dir).expect("create small-files output dir");
 
@@ -231,7 +299,9 @@ async fn real_zip_many_small_files_baseline() {
         .expect("compress small-files fixture");
     let compression_time = compression_started.elapsed();
 
-    let archive_file = File::open(&archive).expect("open small-files archive");
+    let extraction_archive =
+        dirs.archive_for_extraction(&archive, "small-files-for-extraction.zip");
+    let archive_file = File::open(&extraction_archive).expect("open small-files archive");
     let mut zip = zip::ZipArchive::new(archive_file).expect("read small-files archive");
     assert_eq!(zip.len(), file_count);
     let mut observed_hasher = crc32fast::Hasher::new();
