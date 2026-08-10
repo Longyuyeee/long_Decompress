@@ -44,11 +44,13 @@ import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
 import { useUpdateStore } from '@/stores/update'
 import { useAccessibility } from '@/composables/useAccessibility'
+import { useCompressionProfiles } from '@/composables/useCompressionProfiles'
 import { installDesktopE2EBridge } from '@/testing/desktopE2EBridge'
 import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
 import { createContextCompressionEntry, createQuickPackCandidate, createQuickPackPlan, groupContextActions, type ContextAction } from '@/utils/contextActions'
+import { buildSafeTemplateDraftSettings, taskTemplateCandidatesToFiles } from '@/utils/taskTemplateDraft'
 
 const router = useRouter()
 const taskStore = useTaskStore()
@@ -56,6 +58,7 @@ const compressionStore = useCompressionStore()
 const appStore = useAppStore()
 const uiStore = useUIStore()
 const updateStore = useUpdateStore()
+const taskTemplates = useCompressionProfiles()
 const { initAccessibility, setupWatchers, watchSystemPreferences } = useAccessibility()
 
 let saveWindowTimer: any = null
@@ -65,6 +68,8 @@ let cleanupDesktopE2EBridge: (() => void) | null = null
 let contextDrainTimer: ReturnType<typeof setTimeout> | null = null
 let contextDrainPromise: Promise<void> | null = null
 let contextDrainAgain = false
+let watchBatchTimer: ReturnType<typeof setInterval> | null = null
+let watchBatchDrainPromise: Promise<void> | null = null
 const appUnlisteners: Array<() => void> = []
 let isUnmounted = false
 const showExitConfirmation = ref(false)
@@ -112,6 +117,39 @@ watch(() => appStore.settings.autoCheckUpdates, enabled => {
 const keepAppListener = (unlisten: () => void) => {
   if (isUnmounted) unlisten()
   else appUnlisteners.push(unlisten)
+}
+
+const drainWatchFolderBatches = () => {
+  if (watchBatchDrainPromise) return watchBatchDrainPromise
+  watchBatchDrainPromise = (async () => {
+    try {
+      const batches = await taskTemplates.listPendingTaskTemplateWatchBatches()
+      if (!Array.isArray(batches) || batches.length === 0) return
+      let addedFiles = 0
+      for (const batch of batches) {
+        const profile = await taskTemplates.getProfileById(batch.profileId)
+        if (!profile) {
+          await taskTemplates.acknowledgeTaskTemplateWatchBatch(batch.id)
+          continue
+        }
+        const result = compressionStore.addTemplateDraft(
+          taskTemplateCandidatesToFiles(batch.candidates),
+          `${profile.name} · 监控草稿`,
+          buildSafeTemplateDraftSettings(profile, batch.candidates),
+        )
+        await taskTemplates.acknowledgeTaskTemplateWatchBatch(batch.id)
+        addedFiles += result?.addedCount || 0
+      }
+      if (addedFiles > 0) {
+        appStore.setSuccess(`监控目录发现 ${addedFiles} 个稳定文件，已加入压缩中心待确认草稿`)
+      }
+    } catch (error) {
+      console.warn('Unable to drain watch-folder draft batches:', error)
+    }
+  })().finally(() => {
+    watchBatchDrainPromise = null
+  })
+  return watchBatchDrainPromise
 }
 
 // v2 intentionally resets the oversized window state saved by earlier releases.
@@ -355,6 +393,11 @@ onMounted(async () => {
     console.warn('Window resize listener is unavailable:', error)
   }
 
+  void drainWatchFolderBatches()
+  watchBatchTimer = setInterval(() => {
+    void drainWatchFolderBatches()
+  }, 1_500)
+
   // Expose the desktop test bridge only after native event listeners are ready.
   // This is the application-readiness boundary for desktop lifecycle assertions.
   if (import.meta.env.VITE_DESKTOP_E2E === '1') {
@@ -367,6 +410,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
   if (saveWindowTimer) clearTimeout(saveWindowTimer)
   if (contextDrainTimer) clearTimeout(contextDrainTimer)
+  if (watchBatchTimer) clearInterval(watchBatchTimer)
   if (unlistenResize) unlistenResize()
   if (cleanupSystemWatcher) cleanupSystemWatcher()
   cleanupDesktopE2EBridge?.()

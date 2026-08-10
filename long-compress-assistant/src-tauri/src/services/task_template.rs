@@ -21,7 +21,7 @@ const MAX_WATCH_PREVIEW_FILES: usize = 1_000;
 const MAX_WATCH_PREVIEW_DEPTH: usize = 32;
 const WATCH_STABILITY_DELAY_MS: u64 = 750;
 
-fn metadata_is_link_or_reparse_point(metadata: &std::fs::Metadata) -> bool {
+pub(crate) fn metadata_is_link_or_reparse_point(metadata: &std::fs::Metadata) -> bool {
     if metadata.file_type().is_symlink() {
         return true;
     }
@@ -115,7 +115,7 @@ pub struct TaskTemplatePreview {
     pub content_sha256: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskTemplateDraftCandidate {
     pub path: String,

@@ -17,6 +17,10 @@ const mocks = vi.hoisted(() => ({
   importTaskTemplate: vi.fn(),
   planTaskTemplateDraft: vi.fn(),
   previewTaskTemplateWatchFolder: vi.fn(),
+  listTaskTemplateWatchFolders: vi.fn(),
+  createTaskTemplateWatchFolder: vi.fn(),
+  setTaskTemplateWatchFolderStatus: vi.fn(),
+  deleteTaskTemplateWatchFolder: vi.fn(),
   addTemplateDraft: vi.fn(),
 }))
 
@@ -29,6 +33,10 @@ vi.mock('@/composables/useCompressionProfiles', () => ({
     importTaskTemplate: mocks.importTaskTemplate,
     planTaskTemplateDraft: mocks.planTaskTemplateDraft,
     previewTaskTemplateWatchFolder: mocks.previewTaskTemplateWatchFolder,
+    listTaskTemplateWatchFolders: mocks.listTaskTemplateWatchFolders,
+    createTaskTemplateWatchFolder: mocks.createTaskTemplateWatchFolder,
+    setTaskTemplateWatchFolderStatus: mocks.setTaskTemplateWatchFolderStatus,
+    deleteTaskTemplateWatchFolder: mocks.deleteTaskTemplateWatchFolder,
   }),
 }))
 
@@ -76,6 +84,7 @@ describe('ProfileManager', () => {
     mocks.profiles.splice(0)
     mocks.loadAllProfiles.mockResolvedValue(undefined)
     mocks.addProfile.mockResolvedValue('profile-id')
+    mocks.listTaskTemplateWatchFolders.mockResolvedValue([])
   })
 
   it('previews a bounded template and imports only after explicit confirmation', async () => {
@@ -175,7 +184,7 @@ describe('ProfileManager', () => {
     expect(mocks.setSuccess).toHaveBeenCalledWith(expect.stringContaining('尚未开始压缩'))
   })
 
-  it('previews one folder without creating a watcher, draft, or compression task', async () => {
+  it('previews one folder and requires explicit authorization before starting a watcher', async () => {
     mocks.profiles.push({
       id: 'logs', name: '日志归档', icon: '📦', description: '',
       config: {
@@ -197,6 +206,7 @@ describe('ProfileManager', () => {
       stabilityWindowMs: 750,
       warnings: ['本结果仅为一次性只读预览，不会保存监控、创建草稿或启动压缩'],
     })
+    mocks.createTaskTemplateWatchFolder.mockResolvedValue({ id: 'watch-1', status: 'active' })
 
     const wrapper = mountManager()
     await flushPromises()
@@ -209,14 +219,47 @@ describe('ProfileManager', () => {
     }))
     expect(mocks.previewTaskTemplateWatchFolder).toHaveBeenCalledWith('logs', 'C:/logs')
     const preview = wrapper.get('[data-testid="watch-folder-preview"]')
-    expect(preview.text()).toContain('一次性扫描，不会建立后台监控')
+    expect(preview.text()).toContain('当前仍是一次性扫描')
     expect(preview.text()).toContain('稳定且通过')
     expect(preview.text()).toContain('发生变化、消失或无法读取')
     expect(preview.text()).not.toContain('确认创建')
     expect(mocks.addTemplateDraft).not.toHaveBeenCalled()
+    expect(mocks.createTaskTemplateWatchFolder).not.toHaveBeenCalled()
 
-    await wrapper.get('[data-testid="close-watch-folder-preview"]').trigger('click')
+    await wrapper.get('[data-testid="save-watch-folder"]').trigger('click')
+    await flushPromises()
+    expect(mocks.createTaskTemplateWatchFolder).toHaveBeenCalledWith('logs', 'C:/logs')
     expect(wrapper.find('[data-testid="watch-folder-preview"]').exists()).toBe(false)
+    expect(mocks.setSuccess).toHaveBeenCalledWith(expect.stringContaining('只会进入待确认草稿'))
+  })
+
+  it('renders and pauses an active persisted watch-folder authorization', async () => {
+    mocks.profiles.push({
+      id: 'logs', name: '日志归档', icon: '📦', description: '',
+      config: {
+        format: '7z', level: 7, password: null, splitArchive: false, splitSize: null,
+        keepStructure: true, deleteAfter: false, verifyAfter: true,
+        createSolidArchive: true, filenameTemplate: null, extraParams: {},
+      },
+      stats: { useCount: 0, totalBytesProcessed: 0 }, lastUsedAt: null,
+    })
+    const active = {
+      id: 'watch-1', profileId: 'logs', profileName: '日志归档', folderPath: 'C:/logs',
+      status: 'active', pendingBatchCount: 0, createdAt: '', updatedAt: '', lastEventAt: null,
+    }
+    mocks.listTaskTemplateWatchFolders.mockResolvedValueOnce([active]).mockResolvedValueOnce([
+      { ...active, status: 'paused' },
+    ])
+    mocks.setTaskTemplateWatchFolderStatus.mockResolvedValue({ ...active, status: 'paused' })
+
+    const wrapper = mountManager()
+    await flushPromises()
+    expect(wrapper.get('[data-testid="watch-folder-registration-watch-1"]').text()).toContain('监控中')
+    await wrapper.get('[data-testid="pause-watch-folder-watch-1"]').trigger('click')
+    await flushPromises()
+    expect(mocks.setTaskTemplateWatchFolderStatus).toHaveBeenCalledWith('watch-1', 'paused')
+    expect(wrapper.get('[data-testid="watch-folder-registration-watch-1"]').text()).toContain('已暂停')
+    expect(mocks.setSuccess).toHaveBeenCalledWith(expect.stringContaining('不会自动启动压缩'))
   })
 
   it('exports a profile through a user-selected file without exposing a task execution action', async () => {

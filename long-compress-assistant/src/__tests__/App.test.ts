@@ -238,4 +238,106 @@ describe('App orchestration', () => {
 
     wrapper.unmount()
   })
+
+  it('turns persistent watch batches into inert drafts before acknowledging them', async () => {
+    mocks.contextActions = []
+    let batchRead = false
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'load_app_settings') return '{}'
+      if (command === 'take_pending_context_actions') return []
+      if (command === 'list_pending_task_template_watch_batches') {
+        if (batchRead) return []
+        batchRead = true
+        return [{
+          id: 'batch-1',
+          watchFolderId: 'watch-1',
+          profileId: 'profile-1',
+          profileName: '日志归档',
+          rootPath: 'C:\\logs',
+          candidates: [{
+            path: 'C:\\logs\\stable.log',
+            name: 'stable.log',
+            size: 128,
+            isDirectory: false,
+          }],
+          createdAt: '2026-08-10T00:00:00Z',
+        }]
+      }
+      if (command === 'get_compression_profile') {
+        return {
+          id: 'profile-1',
+          name: '日志归档',
+          icon: '📦',
+          description: '监控测试',
+          config: {
+            format: '7z',
+            level: 8,
+            password: 'must-not-propagate',
+            splitArchive: false,
+            splitSize: null,
+            keepStructure: true,
+            deleteAfter: true,
+            verifyAfter: true,
+            createSolidArchive: true,
+            filenameTemplate: '{name}-{date}',
+            extraParams: { unsafe: 'must-not-propagate' },
+          },
+          autoApply: {
+            enabled: true,
+            mode: 'pattern',
+            filePatterns: ['*.log'],
+            excludePatterns: [],
+            sizeRange: null,
+          },
+          passwordStrategy: { type: 'fixed' },
+          stats: {
+            useCount: 0,
+            successCount: 0,
+            failureCount: 0,
+            totalFilesProcessed: 0,
+            totalBytesProcessed: 0,
+          },
+          createdAt: 0,
+          lastUsedAt: null,
+        }
+      }
+      return undefined
+    })
+
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const compressionStore = useCompressionStore()
+    const wrapper = mount(App, {
+      global: {
+        plugins: [pinia],
+        stubs: {
+          MainLayout: true,
+          ToastContainer: true,
+          UpdateDialog: true,
+          Modal: modalStub,
+        },
+      },
+    })
+
+    await vi.waitFor(() => expect(compressionStore.groups).toHaveLength(1))
+    const draft = compressionStore.groups[0]
+    expect(draft.name).toBe('日志归档 · 监控草稿')
+    expect(draft.files).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: 'C:\\logs\\stable.log' }),
+    ]))
+    expect(draft.settings).toMatchObject({
+      format: '7z',
+      level: 8,
+      password: '',
+      deleteAfter: false,
+    })
+    expect(draft.taskId).toBeUndefined()
+    expect(compressionStore.autoStartRequested).toBe(false)
+    expect(mocks.invoke).not.toHaveBeenCalledWith('compress_files', expect.anything())
+    expect(mocks.invoke).toHaveBeenCalledWith('acknowledge_task_template_watch_batch', {
+      id: 'batch-1',
+    })
+
+    wrapper.unmount()
+  })
 })

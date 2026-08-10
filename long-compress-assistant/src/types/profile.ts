@@ -174,3 +174,27 @@ export interface TaskTemplateWatchFolderPreview {
   stabilityWindowMs: number
   warnings: string[]
 }
+
+export type WatchFolderStatus = 'active' | 'paused' | 'disabled'
+
+export interface WatchFolderRegistration {
+  id: string
+  profileId: string
+  profileName: string
+  folderPath: string
+  status: WatchFolderStatus
+  pendingBatchCount: number
+  createdAt: string
+  updatedAt: string
+  lastEventAt: string | null
+}
+
+export interface WatchFolderDraftBatch {
+  id: string
+  watchFolderId: string
+  profileId: string
+  profileName: string
+  rootPath: string
+  candidates: TaskTemplateDraftCandidate[]
+  createdAt: string
+}

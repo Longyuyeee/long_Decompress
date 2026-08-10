@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { extractErrorMessage } from '@/utils'
-import type { CompressionProfile, CreateProfileRequest, PasswordStrategy, TaskTemplate, TaskTemplateDraftPlan, TaskTemplatePreview, TaskTemplateWatchFolderPreview } from '@/types'
+import type { CompressionProfile, CreateProfileRequest, PasswordStrategy, TaskTemplate, TaskTemplateDraftPlan, TaskTemplatePreview, TaskTemplateWatchFolderPreview, WatchFolderDraftBatch, WatchFolderRegistration, WatchFolderStatus } from '@/types'
 
 interface ApplyProfileParams {
   profile_id: string
@@ -286,6 +286,42 @@ export const useCompressionProfiles = () => {
     })
   }
 
+  const listTaskTemplateWatchFolders = async (): Promise<WatchFolderRegistration[]> => {
+    return await invoke<WatchFolderRegistration[]>('list_task_template_watch_folders')
+  }
+
+  const createTaskTemplateWatchFolder = async (
+    profileId: string,
+    folderPath: string,
+  ): Promise<WatchFolderRegistration> => {
+    return await invoke<WatchFolderRegistration>('create_task_template_watch_folder', {
+      profileId,
+      folderPath,
+    })
+  }
+
+  const setTaskTemplateWatchFolderStatus = async (
+    id: string,
+    status: WatchFolderStatus,
+  ): Promise<WatchFolderRegistration> => {
+    return await invoke<WatchFolderRegistration>('set_task_template_watch_folder_status', {
+      id,
+      status,
+    })
+  }
+
+  const deleteTaskTemplateWatchFolder = async (id: string): Promise<void> => {
+    await invoke<void>('delete_task_template_watch_folder', { id })
+  }
+
+  const listPendingTaskTemplateWatchBatches = async (): Promise<WatchFolderDraftBatch[]> => {
+    return await invoke<WatchFolderDraftBatch[]>('list_pending_task_template_watch_batches')
+  }
+
+  const acknowledgeTaskTemplateWatchBatch = async (id: string): Promise<void> => {
+    await invoke<void>('acknowledge_task_template_watch_batch', { id })
+  }
+
   return {
     getAllProfiles,
     getProfileById,
@@ -300,5 +336,11 @@ export const useCompressionProfiles = () => {
     importTaskTemplate,
     planTaskTemplateDraft,
     previewTaskTemplateWatchFolder,
+    listTaskTemplateWatchFolders,
+    createTaskTemplateWatchFolder,
+    setTaskTemplateWatchFolderStatus,
+    deleteTaskTemplateWatchFolder,
+    listPendingTaskTemplateWatchBatches,
+    acknowledgeTaskTemplateWatchBatch,
   }
 }

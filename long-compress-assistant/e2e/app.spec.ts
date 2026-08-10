@@ -148,6 +148,10 @@ test.describe('Long Decompress desktop shell', () => {
             auto_apply: { enabled: false, mode: 'pattern', file_patterns: ['*.log'], exclude_patterns: ['*.tmp'], size_range: null },
             password_strategy: 'none', stats: { use_count: 0, success_count: 0, failure_count: 0, total_files_processed: 0, total_bytes_processed: 0 }, created_at: 0, last_used_at: null,
           }]
+        } else if (message.cmd === 'list_task_template_watch_folders') {
+          value = []
+        } else if (message.cmd === 'list_pending_task_template_watch_batches') {
+          value = []
         } else if (message.cmd === 'get_archive_engine_capabilities') {
           value = {
             available: true,
@@ -212,7 +216,7 @@ test.describe('Long Decompress desktop shell', () => {
     await preview.getByRole('button', { name: '取消' }).click()
     await page.getByTestId('preview-watch-folder-logs').click()
     const watchPreview = page.getByTestId('watch-folder-preview')
-    await expect(watchPreview).toContainText('一次性扫描，不会建立后台监控')
+    await expect(watchPreview).toContainText('当前仍是一次性扫描')
     await expect(watchPreview).toContainText('文件在稳定观察窗口内发生变化')
     await expect(watchPreview).not.toContainText('确认创建')
     for (const width of responsiveWidths) {

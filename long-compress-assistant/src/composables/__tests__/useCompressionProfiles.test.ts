@@ -300,6 +300,36 @@ describe('useCompressionProfiles', () => {
       profileId: 'profile-1',
       folderPath: 'C:/input',
     })
+
+    const registration = { id: 'watch-1', profileId: 'profile-1', folderPath: 'C:/input', status: 'active' }
+    mocks.invoke.mockResolvedValueOnce([registration])
+    await expect(api.listTaskTemplateWatchFolders()).resolves.toEqual([registration])
+    expect(mocks.invoke).toHaveBeenLastCalledWith('list_task_template_watch_folders')
+
+    mocks.invoke.mockResolvedValueOnce(registration)
+    await api.createTaskTemplateWatchFolder('profile-1', 'C:/input')
+    expect(mocks.invoke).toHaveBeenLastCalledWith('create_task_template_watch_folder', {
+      profileId: 'profile-1', folderPath: 'C:/input',
+    })
+
+    mocks.invoke.mockResolvedValueOnce({ ...registration, status: 'paused' })
+    await api.setTaskTemplateWatchFolderStatus('watch-1', 'paused')
+    expect(mocks.invoke).toHaveBeenLastCalledWith('set_task_template_watch_folder_status', {
+      id: 'watch-1', status: 'paused',
+    })
+
+    mocks.invoke.mockResolvedValueOnce(undefined)
+    await api.deleteTaskTemplateWatchFolder('watch-1')
+    expect(mocks.invoke).toHaveBeenLastCalledWith('delete_task_template_watch_folder', { id: 'watch-1' })
+
+    const batch = { id: 'batch-1', profileId: 'profile-1', candidates: [] }
+    mocks.invoke.mockResolvedValueOnce([batch])
+    await expect(api.listPendingTaskTemplateWatchBatches()).resolves.toEqual([batch])
+    expect(mocks.invoke).toHaveBeenLastCalledWith('list_pending_task_template_watch_batches')
+
+    mocks.invoke.mockResolvedValueOnce(undefined)
+    await api.acknowledgeTaskTemplateWatchBatch('batch-1')
+    expect(mocks.invoke).toHaveBeenLastCalledWith('acknowledge_task_template_watch_batch', { id: 'batch-1' })
   })
 
   it('normalizes every command failure and keeps initialization backward compatible', async () => {

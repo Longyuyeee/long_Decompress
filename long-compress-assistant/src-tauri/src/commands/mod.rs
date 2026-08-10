@@ -10,3 +10,4 @@ pub mod system_integration;
 pub mod file_integrity;
 pub mod password_generator;
 pub mod archive_helpers;
+pub mod watch_folder;

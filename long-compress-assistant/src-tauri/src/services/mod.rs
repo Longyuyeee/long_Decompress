@@ -39,3 +39,4 @@ pub mod aes_wrapper;
 pub mod aes_stream_v2;
 pub mod system_service;
 pub mod task_template;
+pub mod watch_folder_service;

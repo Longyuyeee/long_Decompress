@@ -1,3 +1,4 @@
+use crate::commands::watch_folder::WatchFolderServiceState;
 use crate::models::compression_profile::{AutoApplyRule, CompressionConfig, CompressionProfile};
 use crate::services::compression_profile_service::CompressionProfileService;
 use anyhow::Result;
@@ -164,8 +165,24 @@ pub async fn update_compression_profile(
 #[command]
 pub async fn delete_compression_profile(
     state: State<'_, CompressionProfileServiceState>,
+    watch_state: State<'_, WatchFolderServiceState>,
     id: String,
 ) -> Result<(), String> {
+    let watch_service = watch_state
+        .service
+        .lock()
+        .await
+        .as_ref()
+        .cloned()
+        .ok_or_else(|| "监控目录服务未初始化".to_string())?;
+    if watch_service
+        .has_watch_folders_for_profile(&id)
+        .await
+        .map_err(|e| format!("检查配置组监控授权失败: {e}"))?
+    {
+        return Err("该配置组仍有监控目录授权，请先删除授权再删除配置组".to_string());
+    }
+
     let service_lock = state.service.lock().await;
     let service = service_lock
         .as_ref()

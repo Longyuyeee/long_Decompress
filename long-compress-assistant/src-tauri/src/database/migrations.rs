@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const _CURRENT_VERSION: i32 = 4;
+const _CURRENT_VERSION: i32 = 5;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -51,6 +51,63 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
             .execute(pool)
             .await?;
     }
+
+    if current < 5 {
+        migrate_v5(pool).await?;
+        query("INSERT INTO schema_version (version) VALUES (5)")
+            .execute(pool)
+            .await?;
+    }
+
+    Ok(())
+}
+
+/// V5: persist explicitly authorized watch folders and inert draft batches.
+async fn migrate_v5(pool: &SqlitePool) -> Result<()> {
+    query(
+        r#"
+        CREATE TABLE IF NOT EXISTS task_template_watch_folders (
+            id TEXT PRIMARY KEY,
+            profile_id TEXT NOT NULL,
+            folder_path TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'paused'
+                CHECK(status IN ('active', 'paused', 'disabled')),
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            last_event_at TEXT,
+            UNIQUE(profile_id, folder_path),
+            FOREIGN KEY (profile_id) REFERENCES compression_profiles(id) ON DELETE CASCADE
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .context("创建任务模板监控目录表失败")?;
+
+    query(
+        r#"
+        CREATE TABLE IF NOT EXISTS task_template_watch_batches (
+            id TEXT PRIMARY KEY,
+            watch_folder_id TEXT NOT NULL,
+            profile_id TEXT NOT NULL,
+            profile_name TEXT NOT NULL,
+            root_path TEXT NOT NULL,
+            candidates TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (watch_folder_id) REFERENCES task_template_watch_folders(id) ON DELETE CASCADE
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .context("创建任务模板监控草稿批次表失败")?;
+
+    query(
+        "CREATE INDEX IF NOT EXISTS idx_task_template_watch_batches_folder_created ON task_template_watch_batches(watch_folder_id, created_at)",
+    )
+    .execute(pool)
+    .await
+    .context("创建任务模板监控草稿批次索引失败")?;
 
     Ok(())
 }
@@ -1029,5 +1086,45 @@ mod tests {
         .unwrap()
         .0;
         assert_eq!(patterns, "[]");
+    }
+
+    #[tokio::test]
+    async fn v4_database_gains_persistent_watch_lifecycle_tables() {
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+        query(
+            "CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+        query("INSERT INTO schema_version (version) VALUES (4)")
+            .execute(&pool)
+            .await
+            .unwrap();
+        query("CREATE TABLE compression_profiles (id TEXT PRIMARY KEY)")
+            .execute(&pool)
+            .await
+            .unwrap();
+        query("INSERT INTO compression_profiles (id) VALUES ('existing')")
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        init_tables(&pool).await.unwrap();
+
+        let tables: i64 = query_as::<_, (i64,)>(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('task_template_watch_folders', 'task_template_watch_batches')",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap()
+        .0;
+        assert_eq!(tables, 2);
+        let version: i32 = query_as::<_, (i32,)>("SELECT MAX(version) FROM schema_version")
+            .fetch_one(&pool)
+            .await
+            .unwrap()
+            .0;
+        assert_eq!(version, 5);
     }
 }

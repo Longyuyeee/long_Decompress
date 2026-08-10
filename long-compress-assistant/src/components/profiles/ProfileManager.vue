@@ -3,13 +3,14 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { open, save } from '@tauri-apps/api/dialog'
 import { useCompressionProfileStore } from '@/stores/compressionProfile'
 import { useAppStore } from '@/stores/app'
-import { AutoApplyMode, type CompressionProfile, type CreateProfileRequest, type TaskTemplateDraftPlan, type TaskTemplatePreview, type TaskTemplateWatchFolderPreview } from '@/types/profile'
+import { AutoApplyMode, type CompressionProfile, type CreateProfileRequest, type TaskTemplateDraftPlan, type TaskTemplatePreview, type TaskTemplateWatchFolderPreview, type WatchFolderRegistration, type WatchFolderStatus } from '@/types/profile'
 import { COMPRESSIBLE_FORMATS, FORMAT_CAPABILITIES, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 import { extractErrorMessage } from '@/utils'
 import Modal from '@/components/ui/Modal.vue'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
 import { useCompressionProfiles } from '@/composables/useCompressionProfiles'
-import { useCompressionStore, type CompressionOptions } from '@/stores/compression'
+import { useCompressionStore } from '@/stores/compression'
+import { buildSafeTemplateDraftSettings, taskTemplateCandidatesToFiles } from '@/utils/taskTemplateDraft'
 
 const emit = defineEmits<{ draftCreated: [] }>()
 
@@ -59,6 +60,8 @@ const draftBusy = ref(false)
 const watchPreviewProfile = ref<CompressionProfile | null>(null)
 const watchPreview = ref<TaskTemplateWatchFolderPreview | null>(null)
 const watchPreviewBusy = ref(false)
+const watchFolders = ref<WatchFolderRegistration[]>([])
+const watchActionId = ref<string | null>(null)
 
 const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '🎨', '🔧', '⭐']
 const formatOptions = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
@@ -116,11 +119,33 @@ watch(() => formData.value.config.deleteAfter, enabled => {
 onMounted(async () => {
   void archiveEngine.refresh()
   try {
-    await profileStore.loadAllProfiles()
+    await Promise.all([
+      profileStore.loadAllProfiles(),
+      reloadWatchFolders(),
+    ])
   } catch (error) {
     appStore.setError(extractErrorMessage(error))
   }
 })
+
+async function reloadWatchFolders() {
+  watchFolders.value = await taskTemplates.listTaskTemplateWatchFolders()
+}
+
+const watchFoldersForProfile = (profileId: string) =>
+  watchFolders.value.filter(item => item.profileId === profileId)
+
+const watchStatusLabel = (status: WatchFolderStatus) => ({
+  active: '监控中',
+  paused: '已暂停',
+  disabled: '已停用',
+}[status])
+
+const watchStatusClass = (status: WatchFolderStatus) => ({
+  active: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400',
+  paused: 'border-amber-500/25 bg-amber-500/10 text-amber-400',
+  disabled: 'border-subtle bg-input text-muted',
+}[status])
 
 const openCreateModal = () => {
   formData.value = createEmptyForm()
@@ -365,18 +390,53 @@ const closeWatchPreview = () => {
   watchPreview.value = null
 }
 
-const resolveDraftFilename = (profile: CompressionProfile, plan: TaskTemplateDraftPlan) => {
-  const firstName = plan.accepted[0]?.name.replace(/\.[^/.]+$/, '') || profile.name
-  const sourceName = plan.accepted.length === 1 ? firstName : profile.name
-  const now = new Date()
-  const date = now.toISOString().slice(0, 10)
-  const time = [now.getHours(), now.getMinutes(), now.getSeconds()]
-    .map(value => String(value).padStart(2, '0'))
-    .join('')
-  return (profile.config.filenameTemplate || sourceName)
-    .replaceAll('{name}', sourceName)
-    .replaceAll('{date}', date)
-    .replaceAll('{time}', time)
+const saveWatchFolder = async () => {
+  const profile = watchPreviewProfile.value
+  const preview = watchPreview.value
+  if (!profile || !preview) return
+  watchPreviewBusy.value = true
+  try {
+    await taskTemplates.createTaskTemplateWatchFolder(profile.id, preview.rootPath)
+    await reloadWatchFolders()
+    watchPreviewProfile.value = null
+    watchPreview.value = null
+    appStore.setSuccess('监控目录已保存并启用；之后稳定且命中规则的文件只会进入待确认草稿')
+  } catch (error) {
+    appStore.setError(extractErrorMessage(error))
+  } finally {
+    watchPreviewBusy.value = false
+  }
+}
+
+const updateWatchFolderStatus = async (
+  registration: WatchFolderRegistration,
+  status: WatchFolderStatus,
+) => {
+  watchActionId.value = registration.id
+  try {
+    await taskTemplates.setTaskTemplateWatchFolderStatus(registration.id, status)
+    await reloadWatchFolders()
+    const action = status === 'active' ? '启用' : status === 'paused' ? '暂停' : '停用'
+    appStore.setSuccess(`监控目录已${action}；不会自动启动压缩`)
+  } catch (error) {
+    appStore.setError(extractErrorMessage(error))
+  } finally {
+    watchActionId.value = null
+  }
+}
+
+const removeWatchFolder = async (registration: WatchFolderRegistration) => {
+  if (!window.confirm('删除这个监控授权？不会删除目录或其中的文件。')) return
+  watchActionId.value = registration.id
+  try {
+    await taskTemplates.deleteTaskTemplateWatchFolder(registration.id)
+    await reloadWatchFolders()
+    appStore.setSuccess('监控授权已删除，目录和文件未被修改')
+  } catch (error) {
+    appStore.setError(extractErrorMessage(error))
+  } finally {
+    watchActionId.value = null
+  }
 }
 
 const confirmDraftCreation = () => {
@@ -384,26 +444,9 @@ const confirmDraftCreation = () => {
   const plan = draftPlan.value
   if (!profile || !plan || plan.accepted.length === 0) return
   draftBusy.value = true
-  const settings: CompressionOptions = {
-    format: profile.config.format as CompressionOptions['format'],
-    level: profile.config.level,
-    password: '',
-    filename: resolveDraftFilename(profile, plan),
-    splitArchive: profile.config.splitArchive,
-    splitSize: String(profile.config.splitSize || 1024),
-    keepStructure: profile.config.keepStructure,
-    deleteAfter: false,
-    verifyAfter: profile.config.verifyAfter,
-    createSolidArchive: profile.config.createSolidArchive,
-  }
+  const settings = buildSafeTemplateDraftSettings(profile, plan.accepted)
   const result = compressionStore.addTemplateDraft(
-    plan.accepted.map(candidate => ({
-      name: candidate.name,
-      path: candidate.path,
-      size: candidate.size,
-      type: candidate.isDirectory ? 'directory' : 'file',
-      isDirectory: candidate.isDirectory,
-    })),
+    taskTemplateCandidatesToFiles(plan.accepted),
     profile.name,
     settings,
   )
@@ -517,6 +560,25 @@ const formatDate = (timestamp: number | null) =>
             <button :data-testid="`preview-watch-folder-${profile.id}`" type="button" class="mt-3 flex h-8 max-w-full items-center gap-2 rounded-lg border border-subtle bg-input/30 px-3 text-xs font-black text-muted transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary disabled:cursor-wait disabled:opacity-60" title="只扫描一次，不保存监控" :disabled="watchPreviewBusy" @click="selectFolderForWatchPreview(profile)">
               <i :class="watchPreviewBusy ? 'pi pi-spin pi-spinner' : 'pi pi-folder-open'" class="shrink-0 text-xs"></i><span class="truncate">文件夹规则只读预览</span>
             </button>
+            <div v-if="watchFoldersForProfile(profile.id).length" class="mt-3 space-y-2 border-t border-subtle/50 pt-3">
+              <div v-for="registration in watchFoldersForProfile(profile.id)" :key="registration.id" :data-testid="`watch-folder-registration-${registration.id}`" class="min-w-0 rounded-xl border border-subtle bg-input/20 p-3">
+                <div class="flex min-w-0 items-start gap-2">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="rounded-md border px-2 py-0.5 text-[10px] font-black" :class="watchStatusClass(registration.status)">{{ watchStatusLabel(registration.status) }}</span>
+                      <span v-if="registration.pendingBatchCount" class="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">{{ registration.pendingBatchCount }} 批待接收</span>
+                    </div>
+                    <p class="mt-1 truncate text-[11px] text-muted" :title="registration.folderPath">{{ registration.folderPath }}</p>
+                  </div>
+                  <div class="flex shrink-0 gap-1">
+                    <button v-if="registration.status !== 'active'" :data-testid="`resume-watch-folder-${registration.id}`" type="button" class="h-7 w-7 rounded-lg text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50" title="启用监控（只生成草稿）" :disabled="watchActionId === registration.id" @click="updateWatchFolderStatus(registration, 'active')"><i class="pi pi-play text-[10px]"></i></button>
+                    <button v-if="registration.status === 'active'" :data-testid="`pause-watch-folder-${registration.id}`" type="button" class="h-7 w-7 rounded-lg text-amber-400 hover:bg-amber-500/10 disabled:opacity-50" title="暂停监控" :disabled="watchActionId === registration.id" @click="updateWatchFolderStatus(registration, 'paused')"><i class="pi pi-pause text-[10px]"></i></button>
+                    <button v-if="registration.status !== 'disabled'" :data-testid="`disable-watch-folder-${registration.id}`" type="button" class="h-7 w-7 rounded-lg text-muted hover:bg-input hover:text-content disabled:opacity-50" title="停用监控" :disabled="watchActionId === registration.id" @click="updateWatchFolderStatus(registration, 'disabled')"><i class="pi pi-stop text-[10px]"></i></button>
+                    <button :data-testid="`delete-watch-folder-${registration.id}`" type="button" class="h-7 w-7 rounded-lg text-muted hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50" title="删除监控授权" :disabled="watchActionId === registration.id" @click="removeWatchFolder(registration)"><i class="pi pi-trash text-[10px]"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -795,8 +857,8 @@ const formatDate = (timestamp: number | null) =>
     >
       <div v-if="watchPreview" data-testid="watch-folder-preview" class="min-w-0 space-y-4 overflow-x-hidden">
         <div class="rounded-2xl border border-primary/25 bg-primary/10 p-4">
-          <p class="text-sm font-black text-content"><i class="pi pi-shield mr-2 text-primary"></i>一次性扫描，不会建立后台监控</p>
-          <p class="mt-1 text-xs leading-5 text-muted">本窗口只审计当前文件夹与配置组规则，不保存目录、不创建草稿、不启动压缩，也不读取密码。</p>
+          <p class="text-sm font-black text-content"><i class="pi pi-shield mr-2 text-primary"></i>当前仍是一次性扫描，尚未保存授权</p>
+          <p class="mt-1 text-xs leading-5 text-muted">只有点击“保存并启用”才会建立监控；现有文件只作为基线，之后稳定且命中规则的文件也只进入待确认草稿，不读取密码、不删除源文件、不自动压缩。</p>
         </div>
 
         <dl class="grid min-w-0 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
@@ -840,8 +902,9 @@ const formatDate = (timestamp: number | null) =>
           </ul>
         </section>
 
-        <div class="flex justify-end border-t border-subtle pt-4">
-          <button data-testid="close-watch-folder-preview" type="button" class="h-10 rounded-xl border border-subtle bg-input px-5 text-xs font-black text-content hover:border-primary/30 hover:text-primary" @click="closeWatchPreview">关闭只读预览</button>
+        <div class="flex flex-wrap justify-end gap-2 border-t border-subtle pt-4">
+          <button data-testid="close-watch-folder-preview" type="button" class="h-10 rounded-xl border border-subtle bg-input px-5 text-xs font-black text-content hover:border-primary/30 hover:text-primary" @click="closeWatchPreview">仅关闭预览</button>
+          <button data-testid="save-watch-folder" type="button" class="h-10 rounded-xl bg-primary px-5 text-xs font-black text-white shadow-lg shadow-primary/20 hover:brightness-110 disabled:cursor-wait disabled:opacity-50" :disabled="watchPreviewBusy" @click="saveWatchFolder"><i :class="watchPreviewBusy ? 'pi pi-spin pi-spinner' : 'pi pi-shield'" class="mr-2"></i>保存并启用（只生成草稿）</button>
         </div>
       </div>
     </Modal>

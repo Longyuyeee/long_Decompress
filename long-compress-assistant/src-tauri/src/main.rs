@@ -6,6 +6,7 @@ use long_compress_assistant::utils::app_paths::app_data_dir;
 
 use long_compress_assistant::commands::compression_profile::CompressionProfileServiceState;
 use long_compress_assistant::commands::encrypted_password::EncryptedPasswordServiceState;
+use long_compress_assistant::commands::watch_folder::WatchFolderServiceState;
 use long_compress_assistant::services::decompression_profile_service::DecompressionProfileService;
 
 use interprocess::local_socket::{
@@ -204,6 +205,7 @@ fn main() {
     tauri::Builder::default()
         .manage(EncryptedPasswordServiceState::new(data_dir.clone()))
         .manage(CompressionProfileServiceState::new())
+        .manage(WatchFolderServiceState::new())
         .manage(DesktopBehaviorState::default())
         .system_tray(long_compress_assistant::system_integration::setup_tray())
         .on_system_tray_event(long_compress_assistant::system_integration::handle_tray_event)
@@ -264,6 +266,16 @@ fn main() {
                                 let state: tauri::State<CompressionProfileServiceState> = app.state();
                                 let mut service_lock = state.service.lock().await;
                                 *service_lock = Some(profile_service);
+                                drop(service_lock);
+
+                                let watch_service = long_compress_assistant::services::watch_folder_service::WatchFolderService::new(pool.clone());
+                                if let Err(e) = watch_service.restore_active().await {
+                                    eprintln!("Failed to restore task-template watch folders: {}", e);
+                                }
+                                let watch_state: tauri::State<WatchFolderServiceState> = app.state();
+                                let mut watch_service_lock = watch_state.service.lock().await;
+                                *watch_service_lock = Some(watch_service);
+                                drop(watch_service_lock);
 
                                 // 初始化解压配置组服务
                                 let decompression_service = DecompressionProfileService::new(pool.clone());
@@ -422,6 +434,12 @@ fn main() {
             long_compress_assistant::commands::compression_profile::import_task_template,
             long_compress_assistant::commands::compression_profile::plan_task_template_draft,
             long_compress_assistant::commands::compression_profile::preview_task_template_watch_folder,
+            long_compress_assistant::commands::watch_folder::list_task_template_watch_folders,
+            long_compress_assistant::commands::watch_folder::create_task_template_watch_folder,
+            long_compress_assistant::commands::watch_folder::set_task_template_watch_folder_status,
+            long_compress_assistant::commands::watch_folder::delete_task_template_watch_folder,
+            long_compress_assistant::commands::watch_folder::list_pending_task_template_watch_batches,
+            long_compress_assistant::commands::watch_folder::acknowledge_task_template_watch_batch,
             long_compress_assistant::commands::decompression_profile::get_all_decompression_profiles,
             long_compress_assistant::commands::decompression_profile::get_decompression_profile_by_id,
             long_compress_assistant::commands::decompression_profile::create_decompression_profile,

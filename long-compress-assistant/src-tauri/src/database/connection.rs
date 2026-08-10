@@ -59,6 +59,7 @@ impl DatabaseConnection {
         let path_str = db_path.to_string_lossy().to_string();
         let connect_options = SqliteConnectOptions::from_str(&path_str)?
             .create_if_missing(true)
+            .foreign_keys(true)
             .busy_timeout(Duration::from_secs(5));
 
         let pool = SqlitePoolOptions::new()
