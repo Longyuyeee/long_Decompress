@@ -167,6 +167,7 @@ export const useTauriCommands = () => {
           skip_corrupted: options.skipCorrupted ?? false,
           extract_only_newer: options.extractOnlyNewer ?? false,
           create_subdirectory: options.createSubdirectory ?? false,
+          preserve_mark_of_web: appStore.settings.preserveMarkOfWeb,
           file_filter: options.fileFilter || null,
           conflict_policy: options.conflictPolicy || 'rename',
           enable_bruteforce: appStore.settings.enableBruteForce,

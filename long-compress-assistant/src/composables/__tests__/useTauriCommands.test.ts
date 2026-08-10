@@ -132,6 +132,7 @@ describe('useTauriCommands', () => {
         skip_corrupted: false,
         extract_only_newer: false,
         create_subdirectory: false,
+        preserve_mark_of_web: true,
         file_filter: null,
         conflict_policy: 'rename',
         enable_bruteforce: true,

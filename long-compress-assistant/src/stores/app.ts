@@ -49,6 +49,7 @@ export interface AppSettings {
   autoCheckUpdates: boolean
   conflictPolicy: 'ask' | 'overwrite' | 'skip' | 'rename'
   autoDeleteSource: boolean
+  preserveMarkOfWeb: boolean
   uiScale: number
   accessibility?: {
     fontSize: 'normal' | 'large' | 'x-large'
@@ -99,7 +100,7 @@ export const useAppStore = defineStore('app', () => {
     savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
     sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
     bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-    bruteForceWordlists: [], autoStart: false, contextMenuEnabled: true, closeToTray: true, autoCheckUpdates: true, conflictPolicy: 'ask', autoDeleteSource: false,
+    bruteForceWordlists: [], autoStart: false, contextMenuEnabled: true, closeToTray: true, autoCheckUpdates: true, conflictPolicy: 'ask', autoDeleteSource: false, preserveMarkOfWeb: true,
     uiScale: 100,
     accessibility: {
       fontSize: 'normal',
@@ -211,7 +212,7 @@ export const useAppStore = defineStore('app', () => {
       savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-      bruteForceWordlists: [], autoStart: false, contextMenuEnabled: true, closeToTray: true, autoCheckUpdates: true, conflictPolicy: 'ask', autoDeleteSource: false,
+      bruteForceWordlists: [], autoStart: false, contextMenuEnabled: true, closeToTray: true, autoCheckUpdates: true, conflictPolicy: 'ask', autoDeleteSource: false, preserveMarkOfWeb: true,
       uiScale: 100,
       accessibility: {
         fontSize: 'normal',

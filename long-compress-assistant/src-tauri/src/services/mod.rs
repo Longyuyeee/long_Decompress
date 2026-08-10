@@ -5,6 +5,7 @@ pub mod archive_format;
 pub mod compression_format;
 pub(crate) mod compression_entries;
 pub mod extraction_transaction;
+pub(crate) mod mark_of_web;
 pub(crate) mod native_compression;
 pub(crate) mod native_extraction;
 pub mod compression_profile_service;

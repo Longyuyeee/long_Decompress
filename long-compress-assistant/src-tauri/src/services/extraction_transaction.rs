@@ -642,6 +642,63 @@ mod tests {
         }));
     }
 
+    #[cfg(windows)]
+    #[test]
+    fn rollback_restores_the_original_mark_of_web_stream() {
+        use crate::services::mark_of_web;
+
+        let temp = tempfile::tempdir().expect("temp dir");
+        let archive = temp.path().join("download.zip");
+        std::fs::write(&archive, b"archive").expect("archive fixture");
+        let internet_zone = b"[ZoneTransfer]\r\nZoneId=3\r\n";
+        std::fs::write(
+            format!("{}:Zone.Identifier", archive.display()),
+            internet_zone,
+        )
+        .expect("archive zone stream");
+        let mark = mark_of_web::read_from(&archive)
+            .expect("read archive mark")
+            .expect("archive is marked");
+
+        let staging = temp.path().join("staging");
+        let output = temp.path().join("output");
+        std::fs::create_dir_all(staging.join("z")).expect("staging tree");
+        std::fs::create_dir_all(&output).expect("output tree");
+        std::fs::write(staging.join("a.txt"), b"new").expect("staged overwrite");
+        std::fs::write(staging.join("z/child.txt"), b"child").expect("later staged file");
+        mark_of_web::propagate_to_tree(&staging, &mark, || false).expect("propagate mark");
+
+        let destination = output.join("a.txt");
+        let original_zone = b"[ZoneTransfer]\r\nZoneId=2\r\n";
+        std::fs::write(&destination, b"old").expect("old destination");
+        std::fs::write(
+            format!("{}:Zone.Identifier", destination.display()),
+            original_zone,
+        )
+        .expect("original destination zone stream");
+        std::fs::write(output.join("z"), b"blocks directory creation").expect("blocking file");
+
+        let result = commit_staged_extraction(
+            "archive.zip",
+            &staging,
+            &output,
+            &DecompressOptions {
+                overwrite_existing: true,
+                conflict_policy: "overwrite".to_string(),
+                ..Default::default()
+            },
+            |_| {},
+        );
+
+        assert!(result.is_err());
+        assert_eq!(std::fs::read(&destination).unwrap(), b"old");
+        assert_eq!(
+            std::fs::read(format!("{}:Zone.Identifier", destination.display())).unwrap(),
+            original_zone
+        );
+        assert!(!output.join("z/child.txt").exists());
+    }
+
     #[test]
     fn extract_only_newer_handles_older_equal_and_newer_staged_files() {
         let scenarios = [

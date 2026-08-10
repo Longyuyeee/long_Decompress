@@ -132,6 +132,8 @@ pub struct DecompressOptions {
     pub skip_corrupted: bool,
     pub extract_only_newer: bool,
     pub create_subdirectory: bool,
+    #[serde(default = "default_true")]
+    pub preserve_mark_of_web: bool,
     pub file_filter: Option<String>,
     #[serde(default = "default_conflict_policy")]
     pub conflict_policy: String,
@@ -145,6 +147,10 @@ fn default_conflict_policy() -> String {
     "rename".to_string()
 }
 
+fn default_true() -> bool {
+    true
+}
+
 impl Default for DecompressOptions {
     fn default() -> Self {
         Self {
@@ -155,6 +161,7 @@ impl Default for DecompressOptions {
             skip_corrupted: false,
             extract_only_newer: false,
             create_subdirectory: false,
+            preserve_mark_of_web: true,
             file_filter: None,
             conflict_policy: default_conflict_policy(),
             enable_bruteforce: false,

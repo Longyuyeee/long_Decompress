@@ -23,6 +23,7 @@ use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 use crate::services::compression_format::{self, CompressionRoute};
 use crate::services::extraction_transaction::{self, ExtractionStaging};
+use crate::services::mark_of_web::{self, PropagationStatus};
 use crate::services::native_compression::{self, CompressionRuntime};
 use crate::services::native_extraction::{self, ExtractionRuntime};
 
@@ -1040,6 +1041,27 @@ impl CompressionService {
         service
             .preflight_extraction(path, &format, final_password.as_deref(), &final_out_dir)
             .await?;
+        let mark_of_web = if options.preserve_mark_of_web {
+            mark_of_web::read_from(path).map_err(|error| {
+                CompressionError::ExtractionFailed(format!(
+                    "Unable to inspect the archive's Windows security zone: {}",
+                    error
+                ))
+            })?
+        } else {
+            None
+        };
+        if let Some(mark) = mark_of_web.as_ref() {
+            service.emit_log(
+                &window,
+                &task_id,
+                &format!(
+                    "检测到互联网来源安全标记 (ZoneId={})，将在事务提交时传播到输出文件",
+                    mark.zone_id()
+                ),
+                TaskLogSeverity::Info,
+            );
+        }
         self.check_cancellation()?;
         Self::ensure_no_link_ancestors(&final_out_dir)?;
         let mut staging = ExtractionStaging::create_for(&final_out_dir)?;
@@ -1279,6 +1301,41 @@ impl CompressionService {
             let _ = staging.cleanup();
             return Err(error);
         }
+        service.check_cancellation()?;
+        if let Some(mark) = mark_of_web.as_ref() {
+            match mark_of_web::propagate_to_tree(&out_dir, mark, || {
+                service.cancellation_flag.load(Ordering::Relaxed)
+            }) {
+                Ok(PropagationStatus::Applied(count)) => {
+                    service.emit_log(
+                        &window,
+                        &task_id,
+                        &format!("已为 {} 个待提交文件保留互联网来源安全标记", count),
+                        TaskLogSeverity::Success,
+                    );
+                }
+                Ok(PropagationStatus::Unsupported) => {
+                    service.emit_log(
+                        &window,
+                        &task_id,
+                        "目标文件系统不支持 Windows 来源安全标记，将继续完成解压",
+                        TaskLogSeverity::Warning,
+                    );
+                }
+                Err(error) => {
+                    let _ = staging.cleanup();
+                    if error.kind() == std::io::ErrorKind::Interrupted {
+                        service.check_cancellation()?;
+                    }
+                    return Err(CompressionError::ExtractionFailed(format!(
+                        "Unable to preserve the archive's Windows security zone safely: {}",
+                        error
+                    ))
+                    .into());
+                }
+            }
+        }
+        service.check_cancellation()?;
         if let Err(error) = service.commit_staged_extraction(
             Some(&window),
             &task_id,

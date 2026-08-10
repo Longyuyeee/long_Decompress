@@ -53,6 +53,7 @@ describe('SettingsView archive engine diagnostics', () => {
     expect(wrapper.text()).toContain('最近成功检查')
     expect(wrapper.text()).toContain('尚未检查')
     expect(wrapper.text()).toContain('更新包安装前会验证 Tauri 数字签名')
+    expect(wrapper.text()).toContain('保留互联网来源安全标记')
 
     const refresh = wrapper.findAll('button').find(button => button.text().includes('重新检测'))
     expect(refresh).toBeTruthy()

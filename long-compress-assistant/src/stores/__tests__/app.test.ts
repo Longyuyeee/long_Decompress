@@ -60,4 +60,15 @@ describe('App Store Explorer context menu synchronization', () => {
 
     expect(store.settings.contextMenuEnabled).toBe(true)
   })
+
+  it('enables Mark-of-the-Web propagation for new and existing settings', () => {
+    localStorage.setItem('app-settings', JSON.stringify({ language: 'en-US' }))
+
+    const store = useAppStore()
+
+    expect(store.settings.preserveMarkOfWeb).toBe(true)
+    store.settings.preserveMarkOfWeb = false
+    store.resetSettings()
+    expect(store.settings.preserveMarkOfWeb).toBe(true)
+  })
 })

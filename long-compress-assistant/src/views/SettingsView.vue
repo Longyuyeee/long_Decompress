@@ -360,6 +360,15 @@ const removeWordlist = (index: number) => {
                   <span class="settings-toggle-knob"></span>
                 </div>
               </button>
+              <button type="button" role="switch" :aria-checked="appStore.settings.preserveMarkOfWeb" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ preserveMarkOfWeb: !appStore.settings.preserveMarkOfWeb })">
+                <div class="min-w-0 pr-4">
+                  <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.preserve_motw') }}</div>
+                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.preserve_motw.desc') }}</div>
+                </div>
+                <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.preserveMarkOfWeb }">
+                  <span class="settings-toggle-knob"></span>
+                </div>
+              </button>
               <button type="button" role="switch" :aria-checked="appStore.settings.savePasswords" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ savePasswords: !appStore.settings.savePasswords })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.save_passwords') }}</div>
