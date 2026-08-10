@@ -51,6 +51,7 @@ impl CompressionProfileService {
                    config_delete_after, config_verify_after, config_create_solid_archive,
                    config_filename_template, config_extra_params,
                    auto_apply_enabled, auto_apply_mode, auto_apply_file_patterns,
+                   auto_apply_exclude_patterns,
                    auto_apply_size_range_min, auto_apply_size_range_max,
                    password_strategy, password_strategy_category_id,
                    password_strategy_length, password_strategy_save_to_vault,
@@ -84,6 +85,7 @@ impl CompressionProfileService {
                    config_delete_after, config_verify_after, config_create_solid_archive,
                    config_filename_template, config_extra_params,
                    auto_apply_enabled, auto_apply_mode, auto_apply_file_patterns,
+                   auto_apply_exclude_patterns,
                    auto_apply_size_range_min, auto_apply_size_range_max,
                    password_strategy, password_strategy_category_id,
                    password_strategy_length, password_strategy_save_to_vault,
@@ -130,6 +132,8 @@ impl CompressionProfileService {
             .context("序列化 extra_params 失败")?;
         let file_patterns = serde_json::to_string(&profile.auto_apply.file_patterns)
             .context("序列化 file_patterns 失败")?;
+        let exclude_patterns = serde_json::to_string(&profile.auto_apply.exclude_patterns)
+            .context("序列化 exclude_patterns 失败")?;
 
         let (password_strategy_type, category_id, pwd_length, save_to_vault) =
             self.serialize_password_strategy(&profile.password_strategy);
@@ -143,13 +147,14 @@ impl CompressionProfileService {
                 config_delete_after, config_verify_after, config_create_solid_archive,
                 config_filename_template, config_extra_params,
                 auto_apply_enabled, auto_apply_mode, auto_apply_file_patterns,
+                auto_apply_exclude_patterns,
                 auto_apply_size_range_min, auto_apply_size_range_max,
                 password_strategy, password_strategy_category_id,
                 password_strategy_length, password_strategy_save_to_vault,
                 stats_use_count, stats_success_count, stats_failure_count,
                 stats_total_files_processed, stats_total_bytes_processed,
                 display_order, created_at, last_used_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#
         )
         .bind(&profile.id)
@@ -170,6 +175,7 @@ impl CompressionProfileService {
         .bind(profile.auto_apply.enabled)
         .bind(format!("{:?}", profile.auto_apply.mode).to_lowercase())
         .bind(&file_patterns)
+        .bind(&exclude_patterns)
         .bind(profile.auto_apply.size_range.map(|(min, _)| min as i64))
         .bind(profile.auto_apply.size_range.map(|(_, max)| max as i64))
         .bind(&password_strategy_type)
@@ -197,6 +203,8 @@ impl CompressionProfileService {
             .context("序列化 extra_params 失败")?;
         let file_patterns = serde_json::to_string(&profile.auto_apply.file_patterns)
             .context("序列化 file_patterns 失败")?;
+        let exclude_patterns = serde_json::to_string(&profile.auto_apply.exclude_patterns)
+            .context("序列化 exclude_patterns 失败")?;
 
         let (password_strategy_type, category_id, pwd_length, save_to_vault) =
             self.serialize_password_strategy(&profile.password_strategy);
@@ -210,6 +218,7 @@ impl CompressionProfileService {
                 config_delete_after = ?, config_verify_after = ?, config_create_solid_archive = ?,
                 config_filename_template = ?, config_extra_params = ?,
                 auto_apply_enabled = ?, auto_apply_mode = ?, auto_apply_file_patterns = ?,
+                auto_apply_exclude_patterns = ?,
                 auto_apply_size_range_min = ?, auto_apply_size_range_max = ?,
                 password_strategy = ?, password_strategy_category_id = ?,
                 password_strategy_length = ?, password_strategy_save_to_vault = ?
@@ -233,6 +242,7 @@ impl CompressionProfileService {
         .bind(profile.auto_apply.enabled)
         .bind(format!("{:?}", profile.auto_apply.mode).to_lowercase())
         .bind(&file_patterns)
+        .bind(&exclude_patterns)
         .bind(profile.auto_apply.size_range.map(|(min, _)| min as i64))
         .bind(profile.auto_apply.size_range.map(|(_, max)| max as i64))
         .bind(&password_strategy_type)
@@ -414,10 +424,13 @@ impl CompressionProfileService {
         let auto_apply_enabled: bool = row.try_get("auto_apply_enabled")?;
         let auto_apply_mode: String = row.try_get("auto_apply_mode")?;
         let auto_apply_file_patterns: String = row.try_get("auto_apply_file_patterns")?;
+        let auto_apply_exclude_patterns: String = row.try_get("auto_apply_exclude_patterns")?;
         let auto_apply_size_range_min: Option<i64> = row.try_get("auto_apply_size_range_min")?;
         let auto_apply_size_range_max: Option<i64> = row.try_get("auto_apply_size_range_max")?;
 
         let file_patterns: Vec<String> = serde_json::from_str(&auto_apply_file_patterns)
+            .unwrap_or_default();
+        let exclude_patterns: Vec<String> = serde_json::from_str(&auto_apply_exclude_patterns)
             .unwrap_or_default();
 
         let mode = match auto_apply_mode.as_str() {
@@ -437,6 +450,7 @@ impl CompressionProfileService {
             enabled: auto_apply_enabled,
             mode,
             file_patterns,
+            exclude_patterns,
             size_range,
         };
 
@@ -539,6 +553,7 @@ mod tests {
 
         let mut profile = profiles.remove(0);
         profile.config.verify_after = false;
+        profile.auto_apply.exclude_patterns = vec!["*.tmp".to_string()];
         service
             .update_profile(&profile.id, profile.clone())
             .await
@@ -549,5 +564,6 @@ mod tests {
             .unwrap()
             .unwrap();
         assert!(!reloaded.config.verify_after);
+        assert_eq!(reloaded.auto_apply.exclude_patterns, vec!["*.tmp"]);
     }
 }

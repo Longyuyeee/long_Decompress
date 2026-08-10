@@ -1,4 +1,4 @@
-use crate::models::compression_profile::{CompressionConfig, CompressionProfile};
+use crate::models::compression_profile::{AutoApplyRule, CompressionConfig, CompressionProfile};
 use crate::services::compression_profile_service::CompressionProfileService;
 use anyhow::Result;
 use serde::Deserialize;
@@ -14,6 +14,8 @@ pub struct CreateCompressionProfileRequest {
     icon: String,
     description: String,
     config: CreateCompressionConfig,
+    #[serde(default)]
+    auto_apply: Option<AutoApplyRule>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -119,12 +121,18 @@ pub async fn create_compression_profile(
         .as_ref()
         .ok_or_else(|| "配置组服务未初始化".to_string())?;
 
-    let profile = CompressionProfile::new(
+    let requested_auto_apply = profile.auto_apply;
+    let mut profile = CompressionProfile::new(
         profile.name,
         profile.icon,
         profile.description,
         profile.config.into(),
     );
+    if let Some(auto_apply) = requested_auto_apply {
+        crate::services::task_template::validate_profile_source_rules(&auto_apply)
+            .map_err(|error| format!("源文件规则无效: {error}"))?;
+        profile.auto_apply = auto_apply;
+    }
 
     service
         .create_profile(profile)
@@ -139,6 +147,8 @@ pub async fn update_compression_profile(
     id: String,
     profile: CompressionProfile,
 ) -> Result<(), String> {
+    crate::services::task_template::validate_profile_source_rules(&profile.auto_apply)
+        .map_err(|error| format!("源文件规则无效: {error}"))?;
     let service_lock = state.service.lock().await;
     let service = service_lock
         .as_ref()
@@ -278,6 +288,32 @@ pub async fn import_task_template(
     Ok(id)
 }
 
+/// Evaluate explicit user-selected sources and return a read-only draft plan.
+#[command]
+pub async fn plan_task_template_draft(
+    state: State<'_, CompressionProfileServiceState>,
+    profile_id: String,
+    file_paths: Vec<String>,
+) -> Result<crate::services::task_template::TaskTemplateDraftPlan, String> {
+    let service_lock = state.service.lock().await;
+    let service = service_lock
+        .as_ref()
+        .ok_or_else(|| "配置组服务未初始化".to_string())?;
+    let profile = service
+        .get_profile_by_id(&profile_id)
+        .await
+        .map_err(|error| format!("读取配置组失败: {error}"))?
+        .ok_or_else(|| "要创建草稿的配置组不存在".to_string())?;
+    drop(service_lock);
+
+    tokio::task::spawn_blocking(move || {
+        crate::services::task_template::plan_profile_draft(&profile, &file_paths)
+    })
+    .await
+    .map_err(|error| format!("创建任务模板草稿计划失败: {error}"))?
+    .map_err(|error| format!("创建任务模板草稿计划失败: {error}"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::CreateCompressionProfileRequest;
@@ -300,6 +336,13 @@ mod tests {
                 "createSolidArchive": false,
                 "filenameTemplate": null,
                 "extraParams": {}
+            },
+            "autoApply": {
+                "enabled": false,
+                "mode": "pattern",
+                "file_patterns": ["*.log"],
+                "exclude_patterns": ["*.tmp"],
+                "size_range": null
             }
         }))
         .expect("frontend profile payload should deserialize");
@@ -308,5 +351,6 @@ mod tests {
         assert_eq!(request.config.format, "zip");
         assert!(request.config.keep_structure);
         assert!(!request.config.verify_after);
+        assert_eq!(request.auto_apply.unwrap().exclude_patterns, vec!["*.tmp"]);
     }
 }

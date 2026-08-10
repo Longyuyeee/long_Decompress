@@ -420,6 +420,7 @@ fn main() {
             long_compress_assistant::commands::compression_profile::export_task_template,
             long_compress_assistant::commands::compression_profile::preview_task_template,
             long_compress_assistant::commands::compression_profile::import_task_template,
+            long_compress_assistant::commands::compression_profile::plan_task_template_draft,
             long_compress_assistant::commands::decompression_profile::get_all_decompression_profiles,
             long_compress_assistant::commands::decompression_profile::get_decompression_profile_by_id,
             long_compress_assistant::commands::decompression_profile::create_decompression_profile,

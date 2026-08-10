@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   exportTaskTemplate: vi.fn(),
   previewTaskTemplate: vi.fn(),
   importTaskTemplate: vi.fn(),
+  planTaskTemplateDraft: vi.fn(),
+  addTemplateDraft: vi.fn(),
 }))
 
 vi.mock('@tauri-apps/api/dialog', () => ({ open: mocks.open, save: mocks.save }))
@@ -24,7 +26,12 @@ vi.mock('@/composables/useCompressionProfiles', () => ({
     exportTaskTemplate: mocks.exportTaskTemplate,
     previewTaskTemplate: mocks.previewTaskTemplate,
     importTaskTemplate: mocks.importTaskTemplate,
+    planTaskTemplateDraft: mocks.planTaskTemplateDraft,
   }),
+}))
+
+vi.mock('@/stores/compression', () => ({
+  useCompressionStore: () => ({ addTemplateDraft: mocks.addTemplateDraft }),
 }))
 
 vi.mock('@/stores/compressionProfile', () => ({
@@ -78,7 +85,7 @@ describe('ProfileManager', () => {
         name: '日志归档',
         icon: '📦',
         description: '归档日志文件',
-        sourceRules: { mode: 'pattern', includePatterns: ['*.log'], sizeRangeMib: null },
+        sourceRules: { mode: 'pattern', includePatterns: ['*.log'], excludePatterns: ['*.tmp'], sizeRangeMib: null },
         targetRule: { mode: 'choose_at_runtime', filenameTemplate: '{name}-{date}' },
         compression: {
           format: '7z',
@@ -119,6 +126,51 @@ describe('ProfileManager', () => {
     )
     expect(mocks.loadAllProfiles).toHaveBeenCalledTimes(2)
     expect(mocks.setSuccess).toHaveBeenCalledWith('任务模板已导入为配置组，尚未执行任何压缩任务')
+  })
+
+  it('creates an explicit safe draft after previewing accepted and excluded sources', async () => {
+    mocks.profiles.push({
+      id: 'logs', name: '日志归档', icon: '📦', description: '',
+      config: {
+        format: '7z', level: 7, password: 'never-copy', splitArchive: false, splitSize: null,
+        keepStructure: true, deleteAfter: true, verifyAfter: true,
+        createSolidArchive: true, filenameTemplate: '{name}-{date}', extraParams: {},
+      },
+      stats: { useCount: 0, totalBytesProcessed: 0 }, lastUsedAt: null,
+    })
+    mocks.open.mockResolvedValue(['C:/logs/keep.log', 'C:/logs/skip.tmp'])
+    mocks.planTaskTemplateDraft.mockResolvedValue({
+      profileId: 'logs', profileName: '日志归档',
+      accepted: [{ path: 'C:/logs/keep.log', name: 'keep.log', size: 12, isDirectory: false }],
+      excluded: [{
+        candidate: { path: 'C:/logs/skip.tmp', name: 'skip.tmp', size: 3, isDirectory: false },
+        reason: '命中排除规则',
+      }],
+      warnings: ['该计划只会创建压缩草稿，不会启动任务'],
+    })
+    mocks.addTemplateDraft.mockReturnValue({ id: 'draft-1', addedCount: 1, skippedCount: 0 })
+
+    const wrapper = mountManager()
+    await flushPromises()
+    await wrapper.get('[data-testid="create-template-draft-logs"]').trigger('click')
+    await flushPromises()
+
+    expect(mocks.planTaskTemplateDraft).toHaveBeenCalledWith('logs', [
+      'C:/logs/keep.log', 'C:/logs/skip.tmp',
+    ])
+    expect(wrapper.get('[data-testid="template-draft-plan"]').text()).toContain('命中排除规则')
+    expect(mocks.addTemplateDraft).not.toHaveBeenCalled()
+
+    await wrapper.get('[data-testid="confirm-template-draft"]').trigger('click')
+    expect(mocks.addTemplateDraft).toHaveBeenCalledWith(
+      [expect.objectContaining({ path: 'C:/logs/keep.log' })],
+      '日志归档',
+      expect.objectContaining({
+        format: '7z', password: '', deleteAfter: false, verifyAfter: true,
+      }),
+    )
+    expect(wrapper.emitted('draftCreated')).toHaveLength(1)
+    expect(mocks.setSuccess).toHaveBeenCalledWith(expect.stringContaining('尚未开始压缩'))
   })
 
   it('exports a profile through a user-selected file without exposing a task execution action', async () => {
@@ -184,6 +236,10 @@ describe('ProfileManager', () => {
     expect((verifyArchive!.get('input').element as HTMLInputElement).checked).toBe(true)
     expect(verifyArchive!.get('input').attributes('disabled')).toBeDefined()
 
+    await wrapper.get('[data-testid="source-rule-mode"]').setValue('pattern')
+    await wrapper.get('[data-testid="include-patterns"]').setValue('*.log\nreport-*.csv')
+    await wrapper.get('[data-testid="exclude-patterns"]').setValue('*.tmp, *.bak')
+
     await form.trigger('submit')
     await flushPromises()
 
@@ -195,7 +251,52 @@ describe('ProfileManager', () => {
         verifyAfter: true,
         createSolidArchive: false,
       }),
+      autoApply: {
+        enabled: false,
+        mode: 'pattern',
+        filePatterns: ['*.log', 'report-*.csv'],
+        excludePatterns: ['*.tmp', '*.bak'],
+        sizeRange: null,
+      },
     }))
     expect(mocks.setSuccess).toHaveBeenCalledWith('配置组保存成功')
+  })
+
+  it('preserves an existing auto-apply enabled state while editing', async () => {
+    mocks.profiles.push({
+      id: 'existing', name: '现有配置', icon: '📦', description: '',
+      config: {
+        format: 'zip', level: 6, password: null, splitArchive: false, splitSize: null,
+        keepStructure: true, deleteAfter: false, verifyAfter: true,
+        createSolidArchive: false, filenameTemplate: null, extraParams: {},
+      },
+      autoApply: {
+        enabled: true, mode: 'pattern', filePatterns: ['*.log'],
+        excludePatterns: ['*.tmp'], sizeRange: null,
+      },
+      passwordStrategy: { type: 'none' },
+      stats: {
+        useCount: 0, successCount: 0, failureCount: 0,
+        totalFilesProcessed: 0, totalBytesProcessed: 0,
+      },
+      createdAt: 0,
+      lastUsedAt: null,
+    })
+
+    const wrapper = mountManager()
+    await flushPromises()
+    await wrapper.get('button[title="编辑配置组"]').trigger('click')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    expect(mocks.modifyProfile).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'existing',
+      autoApply: expect.objectContaining({
+        enabled: true,
+        mode: 'pattern',
+        filePatterns: ['*.log'],
+        excludePatterns: ['*.tmp'],
+      }),
+    }))
   })
 })

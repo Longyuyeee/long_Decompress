@@ -68,6 +68,7 @@ test.describe('Long Decompress desktop shell', () => {
 
   test('keeps compression and decompression details free of horizontal scrolling', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'responsive overflow matrix runs once in Chromium')
+    test.slow()
 
     await page.waitForFunction(() => Boolean(window.__LONG_DECOMPRESS_DESKTOP_E2E__))
     await page.evaluate(() => window.__LONG_DECOMPRESS_DESKTOP_E2E__!.seedResponsiveWorkspace('compression'))
@@ -127,13 +128,24 @@ test.describe('Long Decompress desktop shell', () => {
 
   test('previews task templates without executing and keeps the audit modal responsive', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium', 'task-template audit matrix runs once in desktop Chromium')
+    test.slow()
     await page.addInitScript(() => {
+      let openDialogCount = 0
+      ;(window as any).__TASK_TEMPLATE_COMPRESSION_STARTED__ = false
       window.__TAURI_IPC__ = (message: Record<string, any>) => {
         let value: unknown
         if (message.cmd === 'tauri' && message.message?.cmd === 'openDialog') {
-          value = 'C:/templates/logs.longtask.json'
+          openDialogCount += 1
+          value = openDialogCount === 1
+            ? 'C:/templates/logs.longtask.json'
+            : ['C:/logs/keep.log', 'C:/logs/skip.tmp']
         } else if (message.cmd === 'get_compression_profiles') {
-          value = []
+          value = [{
+            id: 'logs', name: '日志归档', icon: '📦', description: '安全归档日志',
+            config: { format: '7z', level: 7, password: null, split_archive: false, split_size: null, keep_structure: true, delete_after: false, verify_after: true, create_solid_archive: true, filename_template: '{name}-{date}', extra_params: {} },
+            auto_apply: { enabled: false, mode: 'pattern', file_patterns: ['*.log'], exclude_patterns: ['*.tmp'], size_range: null },
+            password_strategy: 'none', stats: { use_count: 0, success_count: 0, failure_count: 0, total_files_processed: 0, total_bytes_processed: 0 }, created_at: 0, last_used_at: null,
+          }]
         } else if (message.cmd === 'get_archive_engine_capabilities') {
           value = {
             available: true,
@@ -145,7 +157,7 @@ test.describe('Long Decompress desktop shell', () => {
           value = {
             template: {
               schema: 'long-decompress-task-template', version: 1, name: '日志归档', icon: '📦', description: '安全归档日志',
-              sourceRules: { mode: 'pattern', includePatterns: ['*.log'], sizeRangeMib: null },
+              sourceRules: { mode: 'pattern', includePatterns: ['*.log'], excludePatterns: ['*.tmp'], sizeRangeMib: null },
               targetRule: { mode: 'choose_at_runtime', filenameTemplate: '{name}-{date}' },
               compression: { format: '7z', level: 7, splitArchive: false, splitSizeMib: null, keepStructure: true, verifyAfter: true, createSolidArchive: true },
               passwordStrategy: { mode: 'prompt_at_runtime' }, exportNotes: [],
@@ -153,6 +165,16 @@ test.describe('Long Decompress desktop shell', () => {
             warnings: ['自动应用保持关闭'],
             contentSha256: 'a'.repeat(64),
           }
+        } else if (message.cmd === 'plan_task_template_draft') {
+          value = {
+            profileId: 'logs', profileName: '日志归档',
+            accepted: [{ path: 'C:/logs/keep.log', name: 'keep.log', size: 12, isDirectory: false }],
+            excluded: [{ candidate: { path: 'C:/logs/skip.tmp', name: 'skip.tmp', size: 3, isDirectory: false }, reason: '命中排除规则' }],
+            warnings: ['该计划只会创建压缩草稿，不会启动任务'],
+          }
+        } else if (message.cmd === 'compress_files') {
+          ;(window as any).__TASK_TEMPLATE_COMPRESSION_STARTED__ = true
+          value = 'unexpected-task'
         } else if (message.cmd === 'load_app_settings') {
           value = '{}'
         }
@@ -176,6 +198,20 @@ test.describe('Long Decompress desktop shell', () => {
       await page.setViewportSize({ width, height: 800 })
       await expectVerticalOnlyScrolling(page, ['[data-testid="task-template-preview"]'])
     }
+
+    await preview.getByRole('button', { name: '取消' }).click()
+    await page.getByTestId('create-template-draft-logs').click()
+    const draftPlan = page.getByTestId('template-draft-plan')
+    await expect(draftPlan).toContainText('命中排除规则')
+    await expect(draftPlan).toContainText('只创建草稿，不启动任务')
+    for (const width of responsiveWidths) {
+      await page.setViewportSize({ width, height: 800 })
+      await expectVerticalOnlyScrolling(page, ['[data-testid="template-draft-plan"]'])
+    }
+    await page.getByTestId('confirm-template-draft').click()
+    await expect(page.getByRole('button', { name: /keep-\d{4}-\d{2}-\d{2}\.7z.*等待中/ })).toBeVisible()
+    await expect.poll(() => page.evaluate(() => (window as any).__TASK_TEMPLATE_COMPRESSION_STARTED__))
+      .toBe(false)
   })
 
   test('renders bounded archive image preview without horizontal overflow', async ({ page, browserName }) => {

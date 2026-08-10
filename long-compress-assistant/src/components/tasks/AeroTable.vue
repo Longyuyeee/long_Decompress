@@ -368,8 +368,8 @@ const onLeave = (el: any) => {
                 <div class="task-detail-layout w-full min-w-0 relative z-10">
                   <!-- 左侧：核心配置 -->
                   <div class="task-config-panel min-w-0 p-5 border-r border-subtle/20 flex flex-col space-y-3 pl-8 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto overflow-x-hidden custom-scrollbar max-h-56">
-                    <div class="flex items-center justify-between">
-                      <h4 class="text-primary text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                    <div class="flex min-w-0 items-center justify-between">
+                      <h4 class="task-config-heading min-w-0 text-primary text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 break-words">
                         <i class="pi pi-cog text-sm"></i>
                         {{ appStore.t('decompress.column.config') }}
                       </h4>
@@ -378,9 +378,9 @@ const onLeave = (el: any) => {
                     <div v-if="task.type === 'decompression'" class="space-y-3.5">
                       <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
                       <div class="space-y-2">
-                        <div class="flex items-center justify-between gap-3">
-                          <span class="text-muted text-xs uppercase font-black tracking-widest opacity-90 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
-                          <div class="flex min-w-0 flex-wrap justify-end gap-1.5">
+                        <div class="task-output-row flex min-w-0 items-center justify-between gap-3">
+                          <span class="task-output-label text-muted text-xs uppercase font-black tracking-widest opacity-90 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
+                          <div class="task-output-actions flex min-w-0 flex-wrap justify-end gap-1.5">
                             <button @click.stop="handleSetSameDir(task)" 
                                     class="h-6 px-2.5 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-xs font-black whitespace-nowrap">
                               {{ appStore.t('decompress.config.output_same') }}
@@ -397,12 +397,12 @@ const onLeave = (el: any) => {
                         </div>
                       </div>
 
-                      <div class="flex items-center gap-3 cursor-pointer group/check" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
+                      <div class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
                         <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
                              :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
                           <i v-if="task.extractToSubfolder" class="pi pi-check text-xs text-white"></i>
                         </div>
-                        <span class="text-sm font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
+                        <span class="min-w-0 break-words [overflow-wrap:anywhere] text-sm font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
                       </div>
 
                       <!-- 密码输入区 (仅在自动破解失败时显示) -->
@@ -471,16 +471,16 @@ const onLeave = (el: any) => {
                         {{ task.currentFile }}
                       </div>
                     </div>
-                    <h4 class="text-muted text-xs font-black uppercase tracking-[0.2em] mb-3 flex items-center justify-between opacity-90">
+                    <h4 class="task-log-heading text-muted text-xs font-black uppercase tracking-[0.2em] mb-3 flex items-center justify-between opacity-90">
                       <span class="flex items-center gap-2">
                         <i class="pi pi-align-left text-xs"></i>
                         {{ appStore.t('decompress.config.logs_title') }}
                       </span>
                     </h4>
                     <div class="log-viewport flex-1 min-w-0 overflow-y-auto overflow-x-hidden pr-2 space-y-1.5 custom-scrollbar">
-                      <div v-for="(log, idx) in task.logs" :key="idx" class="flex min-w-0 gap-3 items-start group/log border-l-2 border-subtle/20 pl-3 py-0.5">
-                        <span class="text-dim font-mono text-xs mt-0.5 opacity-80 shrink-0">{{ new Date(log.timestamp).toLocaleTimeString([], {hour12: false}) }}</span>
-                        <div class="min-w-0 flex-1 break-words [overflow-wrap:anywhere] text-sm leading-relaxed font-mono" :class="getSeverityClass(log.severity)">
+                      <div v-for="(log, idx) in task.logs" :key="idx" class="task-log-entry flex min-w-0 gap-3 items-start group/log border-l-2 border-subtle/20 pl-3 py-0.5">
+                        <span class="task-log-time text-dim font-mono text-xs mt-0.5 opacity-80 shrink-0">{{ new Date(log.timestamp).toLocaleTimeString([], {hour12: false}) }}</span>
+                        <div class="task-log-message min-w-0 flex-1 break-words [overflow-wrap:anywhere] text-sm leading-relaxed font-mono" :class="getSeverityClass(log.severity)">
                           {{ log.message }}
                         </div>
                       </div>
@@ -701,6 +701,61 @@ const onLeave = (el: any) => {
 }
 
 @media (max-width: 520px) {
+  .task-config-panel {
+    padding: 0.75rem;
+  }
+
+  .task-config-heading {
+    gap: 0.375rem;
+    letter-spacing: 0.08em;
+  }
+
+  .task-output-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .task-output-label,
+  .task-output-actions {
+    width: 100%;
+  }
+
+  .task-output-actions {
+    justify-content: flex-start;
+  }
+
+  .task-output-actions button {
+    max-width: 100%;
+    height: auto;
+    min-height: 1.75rem;
+    white-space: normal;
+  }
+
+  .task-subfolder-option {
+    align-items: flex-start;
+  }
+
+  .task-log-heading {
+    letter-spacing: 0.08em;
+  }
+
+  .log-viewport {
+    padding-right: 0;
+  }
+
+  .task-log-entry {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-left: 0.5rem;
+  }
+
+  .task-log-time,
+  .task-log-message {
+    max-width: 100%;
+  }
+
   .table-header {
     padding-inline: 0.5rem;
     letter-spacing: 0.04em;

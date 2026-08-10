@@ -27,6 +27,7 @@ const rawProfile = (passwordStrategy: unknown = 'none') => ({
     enabled: true,
     mode: 'pattern',
     file_patterns: ['*.log'],
+    exclude_patterns: ['*.tmp'],
     size_range: [1, 512],
   },
   password_strategy: passwordStrategy,
@@ -63,6 +64,7 @@ const profile = (passwordStrategy: PasswordStrategy = { type: 'none' }): Compres
     enabled: true,
     mode: 'pattern' as never,
     filePatterns: ['*.log'],
+    excludePatterns: ['*.tmp'],
     sizeRange: [1, 512],
   },
   passwordStrategy,
@@ -133,6 +135,7 @@ describe('useCompressionProfiles', () => {
         enabled: false,
         mode: 'none',
         filePatterns: [],
+        excludePatterns: [],
         sizeRange: null,
       },
       passwordStrategy: { type: 'auto_generate', length: 16, saveToVault: false },
@@ -158,12 +161,21 @@ describe('useCompressionProfiles', () => {
       icon: 'N',
       description: '',
       config: profile().config,
+      autoApply: profile().autoApply,
     }
 
     mocks.invoke.mockResolvedValueOnce('new-id')
     await expect(api.createProfile(createRequest)).resolves.toBe('new-id')
     expect(mocks.invoke).toHaveBeenLastCalledWith('create_compression_profile', {
-      profile: createRequest,
+      profile: expect.objectContaining({
+        autoApply: {
+          enabled: true,
+          mode: 'pattern',
+          file_patterns: ['*.log'],
+          exclude_patterns: ['*.tmp'],
+          size_range: [1, 512],
+        },
+      }),
     })
 
     const strategies: Array<[PasswordStrategy, unknown]> = [
@@ -192,6 +204,7 @@ describe('useCompressionProfiles', () => {
             }),
             auto_apply: expect.objectContaining({
               file_patterns: ['*.log'],
+              exclude_patterns: ['*.tmp'],
               size_range: [1, 512],
             }),
           }),
@@ -269,6 +282,13 @@ describe('useCompressionProfiles', () => {
     expect(mocks.invoke).toHaveBeenLastCalledWith('import_task_template', {
       filePath: 'C:/daily.longtask.json',
       expectedSha256: 'b'.repeat(64),
+    })
+
+    mocks.invoke.mockResolvedValueOnce({ profileId: 'profile-1', accepted: [], excluded: [], warnings: [] })
+    await api.planTaskTemplateDraft('profile-1', ['C:/input/a.log'])
+    expect(mocks.invoke).toHaveBeenLastCalledWith('plan_task_template_draft', {
+      profileId: 'profile-1',
+      filePaths: ['C:/input/a.log'],
     })
   })
 

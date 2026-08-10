@@ -77,6 +77,16 @@ fn default_verify_after() -> bool {
     true
 }
 
+fn pattern_matches_path(pattern: &str, file_path: &str) -> bool {
+    let Ok(compiled) = glob::Pattern::new(pattern) else { return false };
+    let normalized = file_path.replace('\\', "/");
+    let file_name = std::path::Path::new(file_path)
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or(file_path);
+    compiled.matches(&normalized) || compiled.matches(file_name)
+}
+
 /// 自动应用规则
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AutoApplyRule {
@@ -88,6 +98,10 @@ pub struct AutoApplyRule {
 
     /// 文件模式匹配（如 "*.jpg", "*.mp4"）
     pub file_patterns: Vec<String>,
+
+    /// 排除模式优先于包含模式（如 "*.tmp", "node_modules/**"）
+    #[serde(default)]
+    pub exclude_patterns: Vec<String>,
 
     /// 文件大小范围（min_mb, max_mb）
     pub size_range: Option<(u64, u64)>,
@@ -160,6 +174,7 @@ impl CompressionProfile {
                 enabled: false,
                 mode: AutoApplyMode::None,
                 file_patterns: vec![],
+                exclude_patterns: vec![],
                 size_range: None,
             },
             password_strategy: PasswordStrategy::None,
@@ -188,16 +203,16 @@ impl CompressionProfile {
             return false;
         }
 
+        if self.auto_apply.exclude_patterns.iter()
+            .any(|pattern| pattern_matches_path(pattern, file_path)) {
+            return false;
+        }
+
         match &self.auto_apply.mode {
             AutoApplyMode::None => false,
             AutoApplyMode::All => true,
-            AutoApplyMode::Pattern => {
-                self.auto_apply.file_patterns.iter().any(|pattern| {
-                    glob::Pattern::new(pattern)
-                        .map(|p| p.matches(file_path))
-                        .unwrap_or(false)
-                })
-            }
+            AutoApplyMode::Pattern => self.auto_apply.file_patterns.iter()
+                .any(|pattern| pattern_matches_path(pattern, file_path)),
             AutoApplyMode::SizeRange => {
                 if let Some((min, max)) = self.auto_apply.size_range {
                     let size_mb = file_size / (1024 * 1024);

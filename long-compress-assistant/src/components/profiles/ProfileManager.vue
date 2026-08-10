@@ -3,17 +3,21 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { open, save } from '@tauri-apps/api/dialog'
 import { useCompressionProfileStore } from '@/stores/compressionProfile'
 import { useAppStore } from '@/stores/app'
-import type { CompressionProfile, CreateProfileRequest, TaskTemplatePreview } from '@/types/profile'
+import { AutoApplyMode, type CompressionProfile, type CreateProfileRequest, type TaskTemplateDraftPlan, type TaskTemplatePreview } from '@/types/profile'
 import { COMPRESSIBLE_FORMATS, FORMAT_CAPABILITIES, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 import { extractErrorMessage } from '@/utils'
 import Modal from '@/components/ui/Modal.vue'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
 import { useCompressionProfiles } from '@/composables/useCompressionProfiles'
+import { useCompressionStore, type CompressionOptions } from '@/stores/compression'
+
+const emit = defineEmits<{ draftCreated: [] }>()
 
 const profileStore = useCompressionProfileStore()
 const appStore = useAppStore()
 const archiveEngine = useArchiveEngine()
 const taskTemplates = useCompressionProfiles()
+const compressionStore = useCompressionStore()
 
 type DialogMode = 'create' | 'edit' | null
 
@@ -24,10 +28,18 @@ const saving = ref(false)
 const deleting = ref(false)
 const formError = ref('')
 const showPassword = ref(false)
+const sourceRuleMode = ref<AutoApplyMode>(AutoApplyMode.None)
+const includePatternsText = ref('')
+const excludePatternsText = ref('')
+const minimumSizeMib = ref<number | null>(null)
+const maximumSizeMib = ref<number | null>(null)
 const templatePreview = ref<TaskTemplatePreview | null>(null)
 const templateFilePath = ref('')
 const templateBusy = ref(false)
 const exportingProfileId = ref<string | null>(null)
+const draftProfile = ref<CompressionProfile | null>(null)
+const draftPlan = ref<TaskTemplateDraftPlan | null>(null)
+const draftBusy = ref(false)
 
 const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '🎨', '🔧', '⭐']
 const formatOptions = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
@@ -96,6 +108,11 @@ const openCreateModal = () => {
   editingProfile.value = null
   formError.value = ''
   showPassword.value = false
+  sourceRuleMode.value = AutoApplyMode.None
+  includePatternsText.value = ''
+  excludePatternsText.value = ''
+  minimumSizeMib.value = null
+  maximumSizeMib.value = null
   dialogMode.value = 'create'
 }
 
@@ -112,6 +129,11 @@ const openEditModal = (profile: CompressionProfile) => {
   }
   formError.value = ''
   showPassword.value = false
+  sourceRuleMode.value = profile.autoApply?.mode || AutoApplyMode.None
+  includePatternsText.value = (profile.autoApply?.filePatterns || []).join('\n')
+  excludePatternsText.value = (profile.autoApply?.excludePatterns || []).join('\n')
+  minimumSizeMib.value = profile.autoApply?.sizeRange?.[0] ?? null
+  maximumSizeMib.value = profile.autoApply?.sizeRange?.[1] ?? null
   dialogMode.value = 'edit'
 }
 
@@ -129,7 +151,24 @@ const validateForm = () => {
   if (formData.value.config.splitArchive && (!formData.value.config.splitSize || formData.value.config.splitSize < 1)) {
     return '分卷大小必须大于 0 MB'
   }
+  const includePatterns = parsePatternText(includePatternsText.value)
+  const excludePatterns = parsePatternText(excludePatternsText.value)
+  if (includePatterns.length + excludePatterns.length > 32) return '包含与排除规则合计不能超过 32 条'
+  if ([...includePatterns, ...excludePatterns].some(pattern => pattern.length > 128)) {
+    return '每条源文件规则不能超过 128 个字符'
+  }
+  if (sourceRuleMode.value === AutoApplyMode.Pattern && includePatterns.length === 0) {
+    return '按模式筛选时至少需要一条包含规则'
+  }
+  if (sourceRuleMode.value === AutoApplyMode.SizeRange) {
+    if (minimumSizeMib.value === null || maximumSizeMib.value === null) return '按大小筛选时需要填写完整范围'
+    if (minimumSizeMib.value < 0 || maximumSizeMib.value < minimumSizeMib.value) return '文件大小范围无效'
+  }
   return ''
+}
+
+function parsePatternText(value: string) {
+  return [...new Set(value.split(/[\n,]/).map(pattern => pattern.trim()).filter(Boolean))]
 }
 
 const saveProfile = async () => {
@@ -146,7 +185,18 @@ const saveProfile = async () => {
       ...formData.value,
       name: formData.value.name.trim(),
       description: formData.value.description.trim(),
-      config: { ...formData.value.config }
+      config: { ...formData.value.config },
+      autoApply: {
+        enabled: dialogMode.value === 'edit' && editingProfile.value
+          ? editingProfile.value.autoApply.enabled
+          : false,
+        mode: sourceRuleMode.value,
+        filePatterns: parsePatternText(includePatternsText.value),
+        excludePatterns: parsePatternText(excludePatternsText.value),
+        sizeRange: sourceRuleMode.value === AutoApplyMode.SizeRange
+          ? [minimumSizeMib.value!, maximumSizeMib.value!]
+          : null,
+      }
     }
     if (dialogMode.value === 'create') {
       await profileStore.addProfile(payload)
@@ -245,6 +295,86 @@ const confirmTemplateImport = async () => {
   }
 }
 
+const selectSourcesForDraft = async (profile: CompressionProfile) => {
+  const selection = await open({
+    title: `为“${profile.name}”选择源文件`,
+    multiple: true,
+    directory: false,
+  })
+  const filePaths = typeof selection === 'string' ? [selection] : selection
+  if (!filePaths?.length) return
+
+  draftBusy.value = true
+  try {
+    draftPlan.value = await taskTemplates.planTaskTemplateDraft(profile.id, filePaths)
+    draftProfile.value = profile
+  } catch (error) {
+    appStore.setError(extractErrorMessage(error))
+  } finally {
+    draftBusy.value = false
+  }
+}
+
+const closeDraftPlan = () => {
+  if (draftBusy.value) return
+  draftProfile.value = null
+  draftPlan.value = null
+}
+
+const resolveDraftFilename = (profile: CompressionProfile, plan: TaskTemplateDraftPlan) => {
+  const firstName = plan.accepted[0]?.name.replace(/\.[^/.]+$/, '') || profile.name
+  const sourceName = plan.accepted.length === 1 ? firstName : profile.name
+  const now = new Date()
+  const date = now.toISOString().slice(0, 10)
+  const time = [now.getHours(), now.getMinutes(), now.getSeconds()]
+    .map(value => String(value).padStart(2, '0'))
+    .join('')
+  return (profile.config.filenameTemplate || sourceName)
+    .replaceAll('{name}', sourceName)
+    .replaceAll('{date}', date)
+    .replaceAll('{time}', time)
+}
+
+const confirmDraftCreation = () => {
+  const profile = draftProfile.value
+  const plan = draftPlan.value
+  if (!profile || !plan || plan.accepted.length === 0) return
+  draftBusy.value = true
+  const settings: CompressionOptions = {
+    format: profile.config.format as CompressionOptions['format'],
+    level: profile.config.level,
+    password: '',
+    filename: resolveDraftFilename(profile, plan),
+    splitArchive: profile.config.splitArchive,
+    splitSize: String(profile.config.splitSize || 1024),
+    keepStructure: profile.config.keepStructure,
+    deleteAfter: false,
+    verifyAfter: profile.config.verifyAfter,
+    createSolidArchive: profile.config.createSolidArchive,
+  }
+  const result = compressionStore.addTemplateDraft(
+    plan.accepted.map(candidate => ({
+      name: candidate.name,
+      path: candidate.path,
+      size: candidate.size,
+      type: candidate.isDirectory ? 'directory' : 'file',
+      isDirectory: candidate.isDirectory,
+    })),
+    profile.name,
+    settings,
+  )
+  draftBusy.value = false
+  if (!result) {
+    appStore.setError('通过规则的源文件已经在压缩中心，请先检查现有草稿')
+    return
+  }
+  draftProfile.value = null
+  draftPlan.value = null
+  const skippedMessage = result.skippedCount > 0 ? `，另有 ${result.skippedCount} 个已存在项未重复添加` : ''
+  appStore.setSuccess(`已创建包含 ${result.addedCount} 个源文件的待确认草稿${skippedMessage}，尚未开始压缩`)
+  emit('draftCreated')
+}
+
 const passwordStrategyLabel = computed(() => {
   const strategy = templatePreview.value?.template.passwordStrategy
   if (!strategy || strategy.mode === 'none') return '不使用密码'
@@ -261,6 +391,11 @@ const sourceRuleLabel = computed(() => {
   return rules.sizeRangeMib
     ? `建议大小：${rules.sizeRangeMib[0]}–${rules.sizeRangeMib[1]} MiB`
     : '按文件大小建议匹配'
+})
+
+const sourceExclusionLabel = computed(() => {
+  const patterns = templatePreview.value?.template.sourceRules.excludePatterns || []
+  return patterns.length ? patterns.join('、') : '无排除规则'
 })
 
 const targetRuleLabel = computed(() =>
@@ -321,6 +456,7 @@ const formatDate = (timestamp: number | null) =>
                 <p class="mt-1 line-clamp-2 min-h-8 text-xs leading-4 text-muted">{{ profile.description || '未填写说明' }}</p>
               </div>
               <div class="flex shrink-0 gap-1">
+                <button :data-testid="`create-template-draft-${profile.id}`" type="button" class="h-8 w-8 rounded-lg text-muted hover:bg-primary/10 hover:text-primary disabled:cursor-wait disabled:opacity-60" title="用配置组创建待确认草稿" :disabled="draftBusy" @click="selectSourcesForDraft(profile)"><i class="pi pi-file-plus text-xs"></i></button>
                 <button :data-testid="`export-task-template-${profile.id}`" type="button" class="h-8 w-8 rounded-lg text-muted hover:bg-primary/10 hover:text-primary disabled:cursor-wait disabled:opacity-60" title="导出安全任务模板" :disabled="exportingProfileId === profile.id" @click="exportTemplate(profile)"><i :class="exportingProfileId === profile.id ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'" class="text-xs"></i></button>
                 <button type="button" class="h-8 w-8 rounded-lg text-muted hover:bg-primary/10 hover:text-primary" :title="appStore.t('profiles.edit')" @click="openEditModal(profile)"><i class="pi pi-pencil text-xs"></i></button>
                 <button type="button" class="h-8 w-8 rounded-lg text-muted hover:bg-red-500/10 hover:text-red-400" :title="appStore.t('profiles.delete')" @click="deletingProfile = profile"><i class="pi pi-trash text-xs"></i></button>
@@ -381,6 +517,39 @@ const formatDate = (timestamp: number | null) =>
           <span class="mb-2 block text-xs font-black text-muted">用途说明（可选）</span>
           <textarea v-model="formData.description" rows="2" maxlength="160" class="w-full resize-none rounded-xl border border-subtle bg-input px-3 py-2 text-sm text-content outline-none focus:border-primary" placeholder="说明这个配置组适合什么场景"></textarea>
         </label>
+
+        <section class="rounded-2xl border border-subtle bg-input/20 p-4">
+          <div class="mb-4">
+            <p class="text-xs font-black text-content">任务模板源文件规则</p>
+            <p class="mt-1 text-xs leading-5 text-muted">仅用于选择源文件和创建待确认草稿，不会开启后台监控或自动压缩。</p>
+          </div>
+          <label class="block">
+            <span class="mb-2 block text-xs font-black text-muted">包含方式</span>
+            <select v-model="sourceRuleMode" data-testid="source-rule-mode" class="h-10 w-full rounded-xl border border-subtle bg-input px-3 text-sm text-content outline-none focus:border-primary">
+              <option :value="AutoApplyMode.None">每次手动选择</option>
+              <option :value="AutoApplyMode.All">采用全部已选文件</option>
+              <option :value="AutoApplyMode.Pattern">按文件名模式筛选</option>
+              <option :value="AutoApplyMode.SizeRange">按文件大小筛选</option>
+            </select>
+          </label>
+
+          <label v-if="sourceRuleMode === AutoApplyMode.Pattern" class="mt-4 block">
+            <span class="mb-2 block text-xs font-black text-muted">包含规则</span>
+            <textarea v-model="includePatternsText" data-testid="include-patterns" rows="3" class="w-full resize-y rounded-xl border border-subtle bg-input px-3 py-2 font-mono text-xs text-content outline-none focus:border-primary" placeholder="*.log&#10;report-*.csv"></textarea>
+            <span class="mt-1 block text-[11px] leading-4 text-muted">每行或逗号分隔；只有命中的显式文件会进入草稿。</span>
+          </label>
+
+          <div v-if="sourceRuleMode === AutoApplyMode.SizeRange" class="mt-4 grid gap-3 sm:grid-cols-2">
+            <label class="block"><span class="mb-2 block text-xs font-black text-muted">最小体积（MiB）</span><input v-model.number="minimumSizeMib" min="0" type="number" class="h-10 w-full rounded-xl border border-subtle bg-input px-3 text-sm text-content outline-none focus:border-primary" /></label>
+            <label class="block"><span class="mb-2 block text-xs font-black text-muted">最大体积（MiB）</span><input v-model.number="maximumSizeMib" min="0" type="number" class="h-10 w-full rounded-xl border border-subtle bg-input px-3 text-sm text-content outline-none focus:border-primary" /></label>
+          </div>
+
+          <label class="mt-4 block">
+            <span class="mb-2 block text-xs font-black text-muted">排除规则（优先级更高）</span>
+            <textarea v-model="excludePatternsText" data-testid="exclude-patterns" rows="3" class="w-full resize-y rounded-xl border border-subtle bg-input px-3 py-2 font-mono text-xs text-content outline-none focus:border-primary" placeholder="*.tmp&#10;*.bak"></textarea>
+            <span class="mt-1 block text-[11px] leading-4 text-muted">排除规则始终优先；规则型模板首阶段不会展开目录内部。</span>
+          </label>
+        </section>
 
         <div class="rounded-2xl border border-subtle bg-input/20 p-4">
           <div class="mb-3 flex items-center justify-between gap-3">
@@ -477,6 +646,7 @@ const formatDate = (timestamp: number | null) =>
           <p class="text-xs font-black uppercase tracking-wider text-muted">运行时计划</p>
           <dl class="mt-3 grid min-w-0 gap-3 text-xs sm:grid-cols-2">
             <div class="min-w-0"><dt class="text-muted">源文件</dt><dd class="mt-1 break-words font-bold leading-5 text-content">{{ sourceRuleLabel }}</dd></div>
+            <div class="min-w-0"><dt class="text-muted">排除规则</dt><dd class="mt-1 break-words font-bold leading-5 text-content">{{ sourceExclusionLabel }}</dd></div>
             <div class="min-w-0"><dt class="text-muted">输出位置</dt><dd class="mt-1 break-words font-bold leading-5 text-content">{{ targetRuleLabel }}</dd></div>
             <div class="min-w-0"><dt class="text-muted">压缩包名称</dt><dd class="mt-1 break-all font-mono font-bold leading-5 text-content">{{ templatePreview.template.targetRule.filenameTemplate || '使用源文件同名压缩包' }}</dd></div>
             <div class="min-w-0"><dt class="text-muted">密码策略</dt><dd class="mt-1 break-words font-bold leading-5 text-content">{{ passwordStrategyLabel }}</dd></div>
@@ -496,6 +666,70 @@ const formatDate = (timestamp: number | null) =>
           <button type="button" class="h-10 rounded-xl border border-subtle bg-input px-5 text-xs font-black text-muted hover:text-content" :disabled="templateBusy" @click="closeTemplatePreview">取消</button>
           <button data-testid="confirm-task-template-import" type="button" class="h-10 rounded-xl bg-primary px-5 text-xs font-black text-white shadow-lg shadow-primary/20 hover:brightness-110 disabled:cursor-wait disabled:opacity-60" :disabled="templateBusy" @click="confirmTemplateImport">
             <i v-if="templateBusy" class="pi pi-spin pi-spinner mr-2"></i>{{ templateBusy ? '正在导入' : '确认导入配置组（不执行）' }}
+          </button>
+        </div>
+      </div>
+    </Modal>
+
+    <Modal
+      :visible="Boolean(draftPlan)"
+      title="创建待确认压缩草稿"
+      :description="draftProfile?.name"
+      icon="pi pi-file-plus"
+      size="lg"
+      layer="nested"
+      :close-on-backdrop="!draftBusy"
+      :close-on-escape="!draftBusy"
+      @update:visible="value => { if (!value) closeDraftPlan() }"
+    >
+      <div v-if="draftPlan && draftProfile" data-testid="template-draft-plan" class="min-w-0 space-y-4 overflow-x-hidden">
+        <div class="rounded-2xl border border-primary/25 bg-primary/10 p-4">
+          <p class="text-sm font-black text-content"><i class="pi pi-shield mr-2 text-primary"></i>只创建草稿，不启动任务</p>
+          <p class="mt-1 text-xs leading-5 text-muted">固定密码与删除源文件均已关闭。进入压缩中心后仍需检查名称、输出目录和参数，再手动点击开始压缩。</p>
+        </div>
+
+        <div class="grid min-w-0 gap-3 sm:grid-cols-2">
+          <section class="min-w-0 rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-4">
+            <p class="text-xs font-black text-emerald-400">通过规则 · {{ draftPlan.accepted.length }}</p>
+            <ul class="mt-3 max-h-44 space-y-2 overflow-y-auto overflow-x-hidden pr-1 text-xs">
+              <li v-for="candidate in draftPlan.accepted" :key="candidate.path" class="min-w-0 rounded-lg bg-input/40 px-3 py-2">
+                <p class="truncate font-bold text-content" :title="candidate.name">{{ candidate.name }}</p>
+                <p class="mt-0.5 truncate text-muted" :title="candidate.path">{{ candidate.path }}</p>
+              </li>
+              <li v-if="draftPlan.accepted.length === 0" class="leading-5 text-muted">没有源文件通过当前规则，不能创建草稿。</li>
+            </ul>
+          </section>
+
+          <section class="min-w-0 rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4">
+            <p class="text-xs font-black text-amber-400">未采用 · {{ draftPlan.excluded.length }}</p>
+            <ul class="mt-3 max-h-44 space-y-2 overflow-y-auto overflow-x-hidden pr-1 text-xs">
+              <li v-for="item in draftPlan.excluded" :key="`${item.candidate.path}-${item.reason}`" class="min-w-0 rounded-lg bg-input/40 px-3 py-2">
+                <p class="truncate font-bold text-content" :title="item.candidate.name">{{ item.candidate.name }}</p>
+                <p class="mt-0.5 break-words text-amber-400">{{ item.reason }}</p>
+              </li>
+              <li v-if="draftPlan.excluded.length === 0" class="leading-5 text-muted">所有已选源文件都通过规则。</li>
+            </ul>
+          </section>
+        </div>
+
+        <section class="rounded-2xl border border-subtle bg-input/20 p-4">
+          <p class="text-xs font-black text-content">将应用的安全设置</p>
+          <div class="mt-3 flex flex-wrap gap-1.5 text-xs font-bold">
+            <span class="rounded-md bg-primary/10 px-2 py-1 text-primary">{{ draftProfile.config.format.toUpperCase() }}</span>
+            <span class="rounded-md bg-card px-2 py-1 text-muted">等级 {{ draftProfile.config.level }}</span>
+            <span class="rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-400">{{ draftProfile.config.verifyAfter ? '完成后校验' : '未开启校验' }}</span>
+            <span class="rounded-md bg-card px-2 py-1 text-muted">不带密码</span>
+            <span class="rounded-md bg-card px-2 py-1 text-muted">保留源文件</span>
+          </div>
+          <ul class="mt-3 space-y-1 pl-5 text-xs leading-5 text-muted">
+            <li v-for="warning in draftPlan.warnings" :key="warning" class="list-disc break-words">{{ warning }}</li>
+          </ul>
+        </section>
+
+        <div class="flex flex-col-reverse gap-2 border-t border-subtle pt-4 sm:flex-row sm:justify-end">
+          <button type="button" class="h-10 rounded-xl border border-subtle bg-input px-5 text-xs font-black text-muted hover:text-content" :disabled="draftBusy" @click="closeDraftPlan">取消</button>
+          <button data-testid="confirm-template-draft" type="button" class="h-10 rounded-xl bg-primary px-5 text-xs font-black text-white shadow-lg shadow-primary/20 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50" :disabled="draftBusy || draftPlan.accepted.length === 0" @click="confirmDraftCreation">
+            确认创建草稿（不执行）
           </button>
         </div>
       </div>

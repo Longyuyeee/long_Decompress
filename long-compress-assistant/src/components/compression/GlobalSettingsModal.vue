@@ -15,6 +15,7 @@ interface Emits {
   (e: 'update:visible', value: boolean): void
   (e: 'update:settings', value: CompressionOptions): void
   (e: 'update:outputPath', value: string): void
+  (e: 'template-draft-created'): void
 }
 
 const props = defineProps<Props>()
@@ -39,6 +40,11 @@ const handleCancel = () => {
   localOutputPath.value = props.outputPath
   emit('update:visible', false)
 }
+
+const handleTemplateDraftCreated = () => {
+  emit('template-draft-created')
+  emit('update:visible', false)
+}
 </script>
 
 <template>
@@ -56,6 +62,7 @@ const handleCancel = () => {
         v-model="localSettings"
         v-model:outputPath="localOutputPath"
         :allow-single-file-formats="allowSingleFileFormats"
+        @template-draft-created="handleTemplateDraftCreated"
       />
     </div>
 

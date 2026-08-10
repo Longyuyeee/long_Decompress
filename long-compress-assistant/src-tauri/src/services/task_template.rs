@@ -5,6 +5,7 @@ use crate::services::compression_format::find_compression_format_capability;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::HashSet;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::Path;
@@ -14,6 +15,7 @@ const TEMPLATE_VERSION: u32 = 1;
 const MAX_TEMPLATE_BYTES: u64 = 256 * 1024;
 const MAX_PATTERNS: usize = 32;
 const MAX_PATTERN_LENGTH: usize = 128;
+const MAX_DRAFT_SOURCES: usize = 1_000;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -37,6 +39,8 @@ pub struct TemplateSourceRules {
     pub mode: TemplateSourceMode,
     #[serde(default)]
     pub include_patterns: Vec<String>,
+    #[serde(default)]
+    pub exclude_patterns: Vec<String>,
     pub size_range_mib: Option<(u64, u64)>,
 }
 
@@ -92,6 +96,32 @@ pub struct TaskTemplatePreview {
     pub content_sha256: String,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskTemplateDraftCandidate {
+    pub path: String,
+    pub name: String,
+    pub size: u64,
+    pub is_directory: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskTemplateDraftExcluded {
+    pub candidate: TaskTemplateDraftCandidate,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskTemplateDraftPlan {
+    pub profile_id: String,
+    pub profile_name: String,
+    pub accepted: Vec<TaskTemplateDraftCandidate>,
+    pub excluded: Vec<TaskTemplateDraftExcluded>,
+    pub warnings: Vec<String>,
+}
+
 fn source_mode(mode: &AutoApplyMode) -> TemplateSourceMode {
     match mode {
         AutoApplyMode::All => TemplateSourceMode::All,
@@ -144,6 +174,7 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
         source_rules: TemplateSourceRules {
             mode: source_mode(&profile.auto_apply.mode),
             include_patterns: profile.auto_apply.file_patterns.clone(),
+            exclude_patterns: profile.auto_apply.exclude_patterns.clone(),
             size_range_mib: profile.auto_apply.size_range,
         },
         target_rule: TemplateTargetRule {
@@ -197,6 +228,26 @@ fn validate_patterns(patterns: &[String]) -> Result<()> {
     Ok(())
 }
 
+pub fn validate_profile_source_rules(rules: &AutoApplyRule) -> Result<()> {
+    if rules.file_patterns.len() + rules.exclude_patterns.len() > MAX_PATTERNS {
+        anyhow::bail!("源文件包含与排除规则合计最多允许 {MAX_PATTERNS} 个模式");
+    }
+    validate_patterns(&rules.file_patterns)?;
+    validate_patterns(&rules.exclude_patterns)?;
+    if matches!(rules.mode, AutoApplyMode::Pattern) && rules.file_patterns.is_empty() {
+        anyhow::bail!("按模式筛选时必须至少填写一条包含规则");
+    }
+    if matches!(rules.mode, AutoApplyMode::SizeRange) {
+        let Some((minimum, maximum)) = rules.size_range else {
+            anyhow::bail!("按大小筛选时必须填写大小范围");
+        };
+        if minimum > maximum {
+            anyhow::bail!("源文件大小范围的最小值不能大于最大值");
+        }
+    }
+    Ok(())
+}
+
 fn validate_template(template: &TaskTemplate) -> Result<Vec<String>> {
     if template.schema != TEMPLATE_SCHEMA || template.version != TEMPLATE_VERSION {
         anyhow::bail!("不支持的任务模板架构或版本");
@@ -225,7 +276,13 @@ fn validate_template(template: &TaskTemplate) -> Result<Vec<String>> {
         anyhow::bail!("只有 7Z 模板可以启用固实压缩");
     }
     validate_filename_template(template.target_rule.filename_template.as_deref())?;
+    if template.source_rules.include_patterns.len() + template.source_rules.exclude_patterns.len()
+        > MAX_PATTERNS
+    {
+        anyhow::bail!("源文件包含与排除规则合计最多允许 {MAX_PATTERNS} 个模式");
+    }
     validate_patterns(&template.source_rules.include_patterns)?;
+    validate_patterns(&template.source_rules.exclude_patterns)?;
     if let Some((minimum, maximum)) = template.source_rules.size_range_mib {
         if minimum > maximum {
             anyhow::bail!("源文件大小范围的最小值不能大于最大值");
@@ -323,6 +380,156 @@ fn auto_apply_mode(mode: TemplateSourceMode) -> AutoApplyMode {
     }
 }
 
+fn pattern_matches_source(pattern: &str, candidate: &TaskTemplateDraftCandidate) -> bool {
+    let Ok(compiled) = glob::Pattern::new(pattern) else {
+        return false;
+    };
+    let normalized_path = candidate.path.replace('\\', "/");
+    compiled.matches(&candidate.name) || compiled.matches(&normalized_path)
+}
+
+fn source_rule_exclusion(
+    profile: &CompressionProfile,
+    candidate: &TaskTemplateDraftCandidate,
+) -> Option<String> {
+    let rules = &profile.auto_apply;
+    if rules
+        .exclude_patterns
+        .iter()
+        .any(|pattern| pattern_matches_source(pattern, candidate))
+    {
+        return Some("命中排除规则".to_string());
+    }
+
+    let requires_file_metadata = !rules.exclude_patterns.is_empty()
+        || matches!(
+            rules.mode,
+            AutoApplyMode::Pattern | AutoApplyMode::SizeRange
+        );
+    if candidate.is_directory && requires_file_metadata {
+        return Some("规则型模板首阶段不展开目录，请显式选择文件".to_string());
+    }
+
+    match rules.mode {
+        AutoApplyMode::None | AutoApplyMode::All => None,
+        AutoApplyMode::Pattern => {
+            if rules
+                .file_patterns
+                .iter()
+                .any(|pattern| pattern_matches_source(pattern, candidate))
+            {
+                None
+            } else {
+                Some("未命中包含规则".to_string())
+            }
+        }
+        AutoApplyMode::SizeRange => {
+            let Some((minimum, maximum)) = rules.size_range else {
+                return Some("模板缺少文件大小范围".to_string());
+            };
+            let size_mib = candidate.size / (1024 * 1024);
+            if size_mib < minimum || size_mib > maximum {
+                Some(format!("不在 {minimum}–{maximum} MiB 范围内"))
+            } else {
+                None
+            }
+        }
+    }
+}
+
+/// Build a read-only source plan from a profile. This never mutates profile or task storage.
+pub fn plan_profile_draft(
+    profile: &CompressionProfile,
+    file_paths: &[String],
+) -> Result<TaskTemplateDraftPlan> {
+    if file_paths.is_empty() {
+        anyhow::bail!("至少选择一个源文件");
+    }
+    if file_paths.len() > MAX_DRAFT_SOURCES {
+        anyhow::bail!("单次任务模板草稿最多选择 {MAX_DRAFT_SOURCES} 个源项");
+    }
+    validate_profile_source_rules(&profile.auto_apply)?;
+
+    let mut accepted = Vec::new();
+    let mut excluded = Vec::new();
+    let mut seen = HashSet::new();
+    for file_path in file_paths {
+        let path = Path::new(file_path);
+        let name = path
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or(file_path)
+            .to_string();
+        let normalized = file_path.replace('/', "\\").to_lowercase();
+        if !seen.insert(normalized) {
+            let metadata = std::fs::metadata(path).ok();
+            excluded.push(TaskTemplateDraftExcluded {
+                candidate: TaskTemplateDraftCandidate {
+                    path: file_path.clone(),
+                    name,
+                    size: metadata.as_ref().map(|value| value.len()).unwrap_or(0),
+                    is_directory: metadata.as_ref().is_some_and(|value| value.is_dir()),
+                },
+                reason: "重复源项已忽略".to_string(),
+            });
+            continue;
+        }
+        let metadata = match std::fs::metadata(path) {
+            Ok(metadata) => metadata,
+            Err(_) => {
+                excluded.push(TaskTemplateDraftExcluded {
+                    candidate: TaskTemplateDraftCandidate {
+                        path: file_path.clone(),
+                        name,
+                        size: 0,
+                        is_directory: false,
+                    },
+                    reason: "源项不存在或无法读取".to_string(),
+                });
+                continue;
+            }
+        };
+        let candidate = TaskTemplateDraftCandidate {
+            path: file_path.clone(),
+            name,
+            size: metadata.len(),
+            is_directory: metadata.is_dir(),
+        };
+        if !metadata.is_file() && !metadata.is_dir() {
+            excluded.push(TaskTemplateDraftExcluded {
+                candidate,
+                reason: "不是普通文件或目录".to_string(),
+            });
+            continue;
+        }
+        if let Some(reason) = source_rule_exclusion(profile, &candidate) {
+            excluded.push(TaskTemplateDraftExcluded { candidate, reason });
+        } else {
+            accepted.push(candidate);
+        }
+    }
+
+    let mut warnings = vec!["该计划只会创建压缩草稿，不会启动任务".to_string()];
+    if !excluded.is_empty() {
+        warnings.push(format!("有 {} 个源项未通过模板规则", excluded.len()));
+    }
+    if profile.config.delete_after {
+        warnings.push("创建草稿时将强制关闭删除源文件".to_string());
+    }
+    if profile.config.password.is_some()
+        || !matches!(&profile.password_strategy, PasswordStrategy::None)
+    {
+        warnings.push("创建草稿时不会自动填入或生成密码".to_string());
+    }
+    Ok(TaskTemplateDraftPlan {
+        profile_id: profile.id.clone(),
+        profile_name: profile.name.clone(),
+        accepted,
+        excluded,
+        warnings,
+    })
+}
+
 pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<CompressionProfile> {
     let (bytes, actual_sha256) = read_template_file(path)?;
     if actual_sha256 != expected_sha256 {
@@ -351,6 +558,7 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
         enabled: false,
         mode: auto_apply_mode(template.source_rules.mode),
         file_patterns: template.source_rules.include_patterns,
+        exclude_patterns: template.source_rules.exclude_patterns,
         size_range: template.source_rules.size_range_mib,
     };
     profile.password_strategy = match template.password_strategy {
@@ -397,6 +605,7 @@ mod tests {
                 enabled: true,
                 mode: AutoApplyMode::Pattern,
                 file_patterns: vec!["*.txt".to_string()],
+                exclude_patterns: vec!["*.tmp".to_string()],
                 size_range: None,
             },
             password_strategy: PasswordStrategy::Fixed,
@@ -452,10 +661,59 @@ mod tests {
         assert!(!imported.config.delete_after);
         assert!(!imported.auto_apply.enabled);
         assert!(matches!(imported.auto_apply.mode, AutoApplyMode::Pattern));
+        assert_eq!(imported.auto_apply.exclude_patterns, vec!["*.tmp"]);
 
         std::fs::write(&path, b"{}").unwrap();
         let error = import_template_profile(&path, &preview.content_sha256).unwrap_err();
         assert!(error.to_string().contains("发生变化"));
+    }
+
+    #[test]
+    fn draft_plan_uses_real_metadata_and_exclusion_rules_without_starting_work() {
+        let temp = tempfile::tempdir().unwrap();
+        let accepted_path = temp.path().join("keep.txt");
+        let excluded_path = temp.path().join("skip.tmp");
+        let directory_path = temp.path().join("nested");
+        std::fs::write(&accepted_path, b"keep").unwrap();
+        std::fs::write(&excluded_path, b"skip").unwrap();
+        std::fs::create_dir(&directory_path).unwrap();
+        let missing_path = temp.path().join("missing.txt");
+
+        let plan = plan_profile_draft(
+            &profile(),
+            &[
+                accepted_path.to_string_lossy().into_owned(),
+                accepted_path.to_string_lossy().into_owned(),
+                excluded_path.to_string_lossy().into_owned(),
+                directory_path.to_string_lossy().into_owned(),
+                missing_path.to_string_lossy().into_owned(),
+            ],
+        )
+        .unwrap();
+
+        assert_eq!(plan.accepted.len(), 1);
+        assert_eq!(plan.accepted[0].name, "keep.txt");
+        assert_eq!(plan.excluded.len(), 4);
+        assert!(plan
+            .excluded
+            .iter()
+            .any(|item| item.reason.contains("重复源项")));
+        assert!(plan
+            .excluded
+            .iter()
+            .any(|item| item.reason.contains("排除规则")));
+        assert!(plan
+            .excluded
+            .iter()
+            .any(|item| item.reason.contains("不展开目录")));
+        assert!(plan
+            .excluded
+            .iter()
+            .any(|item| item.reason.contains("无法读取")));
+        assert!(plan
+            .warnings
+            .iter()
+            .any(|warning| warning.contains("不会启动任务")));
     }
 
     #[test]

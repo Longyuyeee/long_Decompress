@@ -33,6 +33,7 @@ export interface AutoApplyRule {
   enabled: boolean
   mode: AutoApplyMode
   filePatterns: string[]
+  excludePatterns: string[]
   sizeRange: [number, number] | null
 }
 
@@ -65,6 +66,7 @@ export interface CreateProfileRequest {
   icon: string
   description: string
   config: CompressionConfig
+  autoApply?: AutoApplyRule
 }
 
 /**
@@ -115,6 +117,7 @@ export interface TaskTemplate {
   sourceRules: {
     mode: TaskTemplateSourceMode
     includePatterns: string[]
+    excludePatterns: string[]
     sizeRangeMib: [number, number] | null
   }
   targetRule: {
@@ -138,4 +141,24 @@ export interface TaskTemplatePreview {
   template: TaskTemplate
   warnings: string[]
   contentSha256: string
+}
+
+export interface TaskTemplateDraftCandidate {
+  path: string
+  name: string
+  size: number
+  isDirectory: boolean
+}
+
+export interface TaskTemplateDraftExcluded {
+  candidate: TaskTemplateDraftCandidate
+  reason: string
+}
+
+export interface TaskTemplateDraftPlan {
+  profileId: string
+  profileName: string
+  accepted: TaskTemplateDraftCandidate[]
+  excluded: TaskTemplateDraftExcluded[]
+  warnings: string[]
 }

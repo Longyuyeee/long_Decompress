@@ -252,6 +252,38 @@ export const useCompressionStore = defineStore('compression', () => {
     }
   }
 
+  const addTemplateDraft = (
+    files: FileObject[],
+    name: string,
+    settings: CompressionOptions,
+  ) => {
+    const occupied = new Set([
+      ...selectedFiles.value.map(file => file.path.replace(/\//g, '\\').toLowerCase()),
+      ...groups.value.flatMap(group => group.files.map(file => file.path.replace(/\//g, '\\').toLowerCase())),
+    ])
+    const unique = new Set<string>()
+    const accepted = files.filter(file => {
+      const key = file.path.replace(/\//g, '\\').toLowerCase()
+      if (!file.path || occupied.has(key) || unique.has(key)) return false
+      unique.add(key)
+      return true
+    })
+    if (accepted.length === 0) return null
+
+    const id = `template-draft-${Date.now()}-${groups.value.length}`
+    groups.value.push({
+      id,
+      name,
+      files: accepted.map(file => ({ ...file, expanded: false })),
+      themeColor: '#6366f1',
+      expanded: true,
+      settings: cloneSettings(settings),
+    })
+    // A template draft must never inherit a pending Explorer quick-action auto start.
+    autoStartRequested.value = false
+    return { id, addedCount: accepted.length, skippedCount: files.length - accepted.length }
+  }
+
   const removeFile = (path: string) => {
     selectedFiles.value = selectedFiles.value.filter(file => file.path !== path)
     clearAnalysis(path)
@@ -299,6 +331,7 @@ export const useCompressionStore = defineStore('compression', () => {
     createGroup,
     prepareQuickPacks,
     addQuickPack,
+    addTemplateDraft,
     replaceWithQuickPack,
     dissolveGroup,
     removeFileFromGroup,

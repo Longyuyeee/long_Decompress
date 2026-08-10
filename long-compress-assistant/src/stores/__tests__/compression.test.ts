@@ -129,6 +129,29 @@ describe('Compression Store', () => {
     expect(store.getEffectiveOutputPath()).toBe('D:/global-output')
   })
 
+  it('creates a grouped template draft without inheriting auto start or duplicate sources', () => {
+    const store = useCompressionStore()
+    const existing = mockFile('existing.log', 100)
+    const fresh = mockFile('fresh.log', 200)
+    store.addFile(existing)
+    store.requestAutoStart()
+
+    const result = store.addTemplateDraft(
+      [existing, fresh, fresh],
+      '日志归档',
+      { ...defaultOptions(), format: '7z', filename: '日志归档-2026-08-10' },
+    )
+
+    expect(result).toEqual(expect.objectContaining({ addedCount: 1, skippedCount: 2 }))
+    expect(store.groups).toHaveLength(1)
+    expect(store.groups[0]).toMatchObject({
+      name: '日志归档',
+      files: [{ name: 'fresh.log' }],
+      settings: { format: '7z', filename: '日志归档-2026-08-10' },
+    })
+    expect(store.autoStartRequested).toBe(false)
+  })
+
   it('publishes completed estimates and invalidates them when job sources change', () => {
     const store = useCompressionStore()
     const file = mockFile('analysis.txt', 8 * 1024 * 1024)

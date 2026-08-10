@@ -939,6 +939,7 @@ const onDetailLeave = (element: Element) => {
       :outputPath="compressionStore.globalOutputPath"
       @update:outputPath="compressionStore.globalOutputPath = $event"
       :allow-single-file-formats="canGlobalUseSingleFileFormats"
+      @template-draft-created="showGlobalSettingsModal = false"
     />
   </div>
 </template>

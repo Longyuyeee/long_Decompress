@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const _CURRENT_VERSION: i32 = 3;
+const _CURRENT_VERSION: i32 = 4;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -45,6 +45,32 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
             .await?;
     }
 
+    if current < 4 {
+        migrate_v4(pool).await?;
+        query("INSERT INTO schema_version (version) VALUES (4)")
+            .execute(pool)
+            .await?;
+    }
+
+    Ok(())
+}
+
+/// V4: 压缩配置组增加任务模板排除规则。
+async fn migrate_v4(pool: &SqlitePool) -> Result<()> {
+    let has_column: bool = query_as::<_, (i64,)>(
+        "SELECT COUNT(*) FROM pragma_table_info('compression_profiles') WHERE name = 'auto_apply_exclude_patterns'",
+    )
+    .fetch_one(pool)
+    .await
+    .map(|row| row.0 > 0)?;
+    if !has_column {
+        query(
+            "ALTER TABLE compression_profiles ADD COLUMN auto_apply_exclude_patterns TEXT NOT NULL DEFAULT '[]'",
+        )
+        .execute(pool)
+        .await
+        .context("为压缩配置组增加排除规则字段失败")?;
+    }
     Ok(())
 }
 
@@ -470,6 +496,7 @@ async fn migrate_v2(pool: &SqlitePool) -> Result<()> {
             auto_apply_enabled BOOLEAN NOT NULL DEFAULT FALSE,
             auto_apply_mode TEXT NOT NULL DEFAULT 'none',
             auto_apply_file_patterns TEXT NOT NULL DEFAULT '[]',
+            auto_apply_exclude_patterns TEXT NOT NULL DEFAULT '[]',
             auto_apply_size_range_min INTEGER,
             auto_apply_size_range_max INTEGER,
             password_strategy TEXT NOT NULL DEFAULT 'none',
@@ -968,5 +995,39 @@ mod tests {
         .unwrap()
         .0;
         assert!(verify_after);
+    }
+
+    #[tokio::test]
+    async fn v3_database_gains_empty_exclusion_rules_without_losing_rows() {
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+        query(
+            "CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+        query("INSERT INTO schema_version (version) VALUES (3)")
+            .execute(&pool)
+            .await
+            .unwrap();
+        query("CREATE TABLE compression_profiles (id TEXT PRIMARY KEY)")
+            .execute(&pool)
+            .await
+            .unwrap();
+        query("INSERT INTO compression_profiles (id) VALUES ('existing')")
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        init_tables(&pool).await.unwrap();
+
+        let patterns: String = query_as::<_, (String,)>(
+            "SELECT auto_apply_exclude_patterns FROM compression_profiles WHERE id = 'existing'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap()
+        .0;
+        assert_eq!(patterns, "[]");
     }
 }

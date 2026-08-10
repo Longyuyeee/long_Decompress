@@ -36,9 +36,15 @@ const props = withDefaults(defineProps<Props>(), {
 interface Emits {
   (e: 'update:modelValue', value: CompressionOptions): void
   (e: 'update:outputPath', value: string): void
+  (e: 'template-draft-created'): void
 }
 
 const emit = defineEmits<Emits>()
+
+const handleTemplateDraftCreated = () => {
+  showProfileSelector.value = false
+  emit('template-draft-created')
+}
 
 const compressionOptions = ref<CompressionOptions>(props.modelValue || {
   format: 'zip',
@@ -418,7 +424,7 @@ const handlePasswordGenerated = (password: string) => {
           <ProfileSelector v-if="profileDialogMode === 'select'" :show-manage-button="true" @apply="applyProfile" @manage="profileDialogMode = 'manage'" />
           <div v-else>
             <button type="button" class="mb-4 h-9 px-4 rounded-lg bg-input border border-subtle text-xs font-bold text-muted hover:text-content" @click="profileDialogMode = 'select'"><i class="pi pi-arrow-left mr-2"></i>返回选择配置</button>
-            <ProfileManager />
+            <ProfileManager @draft-created="handleTemplateDraftCreated" />
           </div>
         </div>
       </div>

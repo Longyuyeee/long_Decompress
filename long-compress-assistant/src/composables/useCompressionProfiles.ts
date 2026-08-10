@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { extractErrorMessage } from '@/utils'
-import type { CompressionProfile, CreateProfileRequest, PasswordStrategy, TaskTemplate, TaskTemplatePreview } from '@/types'
+import type { CompressionProfile, CreateProfileRequest, PasswordStrategy, TaskTemplate, TaskTemplateDraftPlan, TaskTemplatePreview } from '@/types'
 
 interface ApplyProfileParams {
   profile_id: string
@@ -80,6 +80,7 @@ const normalizeProfile = (raw: any): CompressionProfile => {
     enabled: autoApply.enabled ?? false,
     mode: autoApply.mode ?? 'none',
     filePatterns: autoApply.filePatterns ?? autoApply.file_patterns ?? [],
+    excludePatterns: autoApply.excludePatterns ?? autoApply.exclude_patterns ?? [],
     sizeRange: autoApply.sizeRange ?? autoApply.size_range ?? null,
   },
   passwordStrategy: normalizePasswordStrategy(raw.passwordStrategy ?? raw.password_strategy),
@@ -117,6 +118,7 @@ const toBackendProfile = (profile: CompressionProfile) => ({
     enabled: profile.autoApply.enabled,
     mode: profile.autoApply.mode,
     file_patterns: profile.autoApply.filePatterns,
+    exclude_patterns: profile.autoApply.excludePatterns,
     size_range: profile.autoApply.sizeRange,
   },
   password_strategy: toBackendPasswordStrategy(profile.passwordStrategy),
@@ -167,7 +169,17 @@ export const useCompressionProfiles = () => {
    */
   const createProfile = async (input: CreateProfileRequest): Promise<string> => {
     try {
-      return await invoke<string>('create_compression_profile', { profile: input })
+      const profile = input.autoApply ? {
+        ...input,
+        autoApply: {
+          enabled: input.autoApply.enabled,
+          mode: input.autoApply.mode,
+          file_patterns: input.autoApply.filePatterns,
+          exclude_patterns: input.autoApply.excludePatterns,
+          size_range: input.autoApply.sizeRange,
+        },
+      } : input
+      return await invoke<string>('create_compression_profile', { profile })
     } catch (error) {
       console.error('[useCompressionProfiles] Failed to create profile:', error)
       throw new Error(extractErrorMessage(error))
@@ -260,6 +272,10 @@ export const useCompressionProfiles = () => {
     return await invoke<string>('import_task_template', { filePath, expectedSha256 })
   }
 
+  const planTaskTemplateDraft = async (profileId: string, filePaths: string[]): Promise<TaskTemplateDraftPlan> => {
+    return await invoke<TaskTemplateDraftPlan>('plan_task_template_draft', { profileId, filePaths })
+  }
+
   return {
     getAllProfiles,
     getProfileById,
@@ -272,5 +288,6 @@ export const useCompressionProfiles = () => {
     exportTaskTemplate,
     previewTaskTemplate,
     importTaskTemplate,
+    planTaskTemplateDraft,
   }
 }
