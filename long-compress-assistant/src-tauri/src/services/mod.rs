@@ -2,6 +2,7 @@ pub mod archive_engine;
 pub mod archive_browser;
 pub mod universal_engine;
 pub mod compression_service;
+pub mod compression_analysis;
 pub(crate) mod compression_verification;
 pub mod archive_format;
 pub mod compression_format;

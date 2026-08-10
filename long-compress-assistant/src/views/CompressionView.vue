@@ -13,6 +13,7 @@ import {
   isFinishedCompressionStatus,
 } from '@/utils/compressionTaskPresentation'
 import CompressionExecutionPanel from '@/components/compression/CompressionExecutionPanel.vue'
+import CompressionAnalysisCard from '@/components/compression/CompressionAnalysisCard.vue'
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import CompressionStatusCell from '@/components/compression/CompressionStatusCell.vue'
 import CompressionToolbar from '@/components/compression/CompressionToolbar.vue'
@@ -342,6 +343,10 @@ const runCompression = async () => {
       const finishedTask = taskStore.tasks.find(task => task.id === taskId)
       if (finishedTask && !['cancelled', 'cancelling'].includes(finishedTask.status)) {
         taskStore.updateTaskStatus(taskId, 'completed')
+        if (!job.settings.splitArchive && compressionStore.compressionAnalysis[job.id]?.result) {
+          const outputInfo = await tauriCommands.getFileInfo(job.outputPath)
+          if (outputInfo) compressionStore.recordActualSize(job.id, outputInfo.size)
+        }
         succeeded++
       }
     } catch (error) {
@@ -646,6 +651,14 @@ const onDetailLeave = (element: Element) => {
                         {{ appStore.t('compress.config_submitted') }}
                       </span>
                     </h4>
+                    <CompressionAnalysisCard
+                      class="mb-4"
+                      :job-id="group.id"
+                      :paths="group.files.map(file => file.path)"
+                      :model-value="compressionStore.getEffectiveSettings(group.settings)"
+                      :disabled="Boolean(group.taskId)"
+                      @update:model-value="compressionStore.updateGroupSettings(group.id, $event)"
+                    />
                     <CompressionSettingsPanel
                       :modelValue="compressionStore.getEffectiveSettings(group.settings)"
                       :outputPath="compressionStore.getEffectiveOutputPath(group.outputPath)"
@@ -758,7 +771,7 @@ const onDetailLeave = (element: Element) => {
             <div class="compression-row-actions w-20 shrink-0 flex items-center justify-end">
               <button
                 v-if="!file.taskId"
-                @click.stop="compressionStore.selectedFiles = compressionStore.selectedFiles.filter(f => f.path !== file.path)"
+                @click.stop="compressionStore.removeFile(file.path)"
                 class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-red-500 transition-all"
                 title="移除文件"
               >
@@ -814,6 +827,14 @@ const onDetailLeave = (element: Element) => {
                         {{ appStore.t('compress.config_submitted') }}
                       </span>
                     </h4>
+                    <CompressionAnalysisCard
+                      class="mb-4"
+                      :job-id="file.path"
+                      :paths="[file.path]"
+                      :model-value="compressionStore.getEffectiveSettings(file.settings)"
+                      :disabled="Boolean(file.taskId)"
+                      @update:model-value="compressionStore.updateFileSettings(file.path, $event)"
+                    />
                     <CompressionSettingsPanel
                       :modelValue="compressionStore.getEffectiveSettings(file.settings)"
                       :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"

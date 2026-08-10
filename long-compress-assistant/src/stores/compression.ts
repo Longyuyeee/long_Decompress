@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { CompressionFormatId } from '@/utils/compressionFormat'
+import type { CompressionAnalysisResult } from '@/composables/useTauriCommands'
 
 export interface FileObject {
   name: string
@@ -56,6 +57,17 @@ export interface CompressionHistory {
   size: number
 }
 
+export interface CompressionAnalysisState {
+  status: 'idle' | 'running' | 'completed' | 'failed' | 'cancelled'
+  analysisId?: string
+  format?: CompressionFormatId
+  level?: number
+  result?: CompressionAnalysisResult
+  actualSize?: number
+  predictionErrorPercent?: number
+  error?: string
+}
+
 export const useCompressionStore = defineStore('compression', () => {
   const selectedFiles = ref<FileObject[]>([])
   const groups = ref<CompressionGroup[]>([])
@@ -74,8 +86,12 @@ export const useCompressionStore = defineStore('compression', () => {
   const globalOutputPath = ref('')
   const autoStartRequested = ref(false)
   
-  // 预计体积预演数据
-  const estimatedSize = ref<Record<string, number>>({})
+  const compressionAnalysis = ref<Record<string, CompressionAnalysisState>>({})
+  const estimatedSize = computed<Record<string, number>>(() => Object.fromEntries(
+    Object.entries(compressionAnalysis.value)
+      .filter(([, state]) => state.status === 'completed' && state.result)
+      .map(([jobId, state]) => [jobId, state.result!.estimatedSize])
+  ))
 
   const totalOriginalSize = computed(() => {
     return selectedFiles.value.reduce((acc, f) => acc + f.size, 0) + 
@@ -124,6 +140,24 @@ export const useCompressionStore = defineStore('compression', () => {
     if (group) group.outputPath = outputPath
   }
 
+  const setAnalysisState = (jobId: string, state: CompressionAnalysisState) => {
+    compressionAnalysis.value[jobId] = state
+  }
+
+  const clearAnalysis = (jobId: string) => {
+    delete compressionAnalysis.value[jobId]
+  }
+
+  const recordActualSize = (jobId: string, actualSize: number) => {
+    const state = compressionAnalysis.value[jobId]
+    if (!state?.result || actualSize < 0) return
+    const denominator = Math.max(actualSize, 1)
+    state.actualSize = actualSize
+    state.predictionErrorPercent = Math.round(
+      Math.abs(state.result.estimatedSize - actualSize) / denominator * 100
+    )
+  }
+
   const bindJobTask = (
     jobId: string,
     taskId: string,
@@ -153,6 +187,7 @@ export const useCompressionStore = defineStore('compression', () => {
     
     // 找到对应的 FileObject
     const targetFiles = selectedFiles.value.filter(f => paths.includes(f.path))
+    targetFiles.forEach(file => clearAnalysis(file.path))
     
     groups.value.push({
       id,
@@ -170,6 +205,7 @@ export const useCompressionStore = defineStore('compression', () => {
   const prepareQuickPacks = () => {
     selectedFiles.value = []
     groups.value = []
+    compressionAnalysis.value = {}
   }
 
   const addQuickPack = (files: FileObject[], name: string, outputPath: string) => {
@@ -201,6 +237,7 @@ export const useCompressionStore = defineStore('compression', () => {
       const group = groups.value[index]
       selectedFiles.value.push(...group.files)
       groups.value.splice(index, 1)
+      clearAnalysis(groupId)
     }
   }
 
@@ -208,14 +245,22 @@ export const useCompressionStore = defineStore('compression', () => {
     const group = groups.value.find(g => g.id === groupId)
     if (!group) return
     group.files = group.files.filter(f => f.path !== filePath)
+    clearAnalysis(groupId)
     // 如果组内没有文件了，自动解散
     if (group.files.length === 0) {
       groups.value = groups.value.filter(g => g.id !== groupId)
     }
   }
 
+  const removeFile = (path: string) => {
+    selectedFiles.value = selectedFiles.value.filter(file => file.path !== path)
+    clearAnalysis(path)
+  }
+
   const removeJobsByTaskIds = (taskIds: string[]) => {
     const removed = new Set(taskIds)
+    groups.value.filter(group => group.taskId && removed.has(group.taskId)).forEach(group => clearAnalysis(group.id))
+    selectedFiles.value.filter(file => file.taskId && removed.has(file.taskId)).forEach(file => clearAnalysis(file.path))
     groups.value = groups.value.filter(group => !group.taskId || !removed.has(group.taskId))
     selectedFiles.value = selectedFiles.value.filter(file => !file.taskId || !removed.has(file.taskId))
   }
@@ -237,6 +282,7 @@ export const useCompressionStore = defineStore('compression', () => {
     globalOutputPath,
     autoStartRequested,
     estimatedSize,
+    compressionAnalysis,
     totalOriginalSize,
     cloneSettings,
     getEffectiveSettings,
@@ -246,6 +292,9 @@ export const useCompressionStore = defineStore('compression', () => {
     updateFileOutputPath,
     updateGroupSettings,
     updateGroupOutputPath,
+    setAnalysisState,
+    clearAnalysis,
+    recordActualSize,
     bindJobTask,
     createGroup,
     prepareQuickPacks,
@@ -253,6 +302,7 @@ export const useCompressionStore = defineStore('compression', () => {
     replaceWithQuickPack,
     dissolveGroup,
     removeFileFromGroup,
+    removeFile,
     removeJobsByTaskIds,
     requestAutoStart,
     consumeAutoStart

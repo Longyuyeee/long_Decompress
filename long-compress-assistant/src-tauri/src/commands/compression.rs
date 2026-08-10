@@ -11,6 +11,7 @@ use once_cell::sync::Lazy;
 
 static CANCELLATION_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 static ACTIVE_COMPRESSION_OUTPUTS: Lazy<DashMap<String, String>> = Lazy::new(DashMap::new);
+static COMPRESSION_ANALYSIS_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 
 async fn service_for_task(task_id: &str) -> Result<CompressionService, String> {
     let cancellation_flag = Arc::new(AtomicBool::new(false));
@@ -320,6 +321,58 @@ pub async fn list_archive_contents(file_path: String, password: Option<String>) 
         .map_err(|e| e.to_string())
 }
 
+struct CompressionAnalysisGuard {
+    analysis_id: String,
+}
+
+impl Drop for CompressionAnalysisGuard {
+    fn drop(&mut self) {
+        COMPRESSION_ANALYSIS_FLAGS.remove(&self.analysis_id);
+    }
+}
+
+#[command]
+pub async fn analyze_compression_sources(
+    analysis_id: String,
+    paths: Vec<String>,
+    format: String,
+    level: u32,
+) -> Result<crate::services::compression_analysis::CompressionAnalysisResult, String> {
+    if paths.is_empty() {
+        return Err("Compression analysis requires at least one source".to_string());
+    }
+    let cancelled = Arc::new(AtomicBool::new(false));
+    match COMPRESSION_ANALYSIS_FLAGS.entry(analysis_id.clone()) {
+        Entry::Vacant(entry) => {
+            entry.insert(cancelled.clone());
+        }
+        Entry::Occupied(_) => {
+            return Err(format!(
+                "Compression analysis is already running: {analysis_id}"
+            ))
+        }
+    }
+    let _analysis_guard = CompressionAnalysisGuard { analysis_id: analysis_id.clone() };
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        crate::services::compression_analysis::analyze_compression(
+            &paths, &format, level, &cancelled,
+        )
+    })
+    .await
+    .map_err(|error| error.to_string())
+    .and_then(|result| result.map_err(|error| error.to_string()));
+    result
+}
+
+#[command]
+pub async fn cancel_compression_analysis(analysis_id: String) -> Result<(), String> {
+    let flag = COMPRESSION_ANALYSIS_FLAGS
+        .get(&analysis_id)
+        .ok_or_else(|| format!("Compression analysis is not active: {analysis_id}"))?;
+    flag.store(true, Ordering::SeqCst);
+    Ok(())
+}
+
 /// Returns structured archive metadata for the archive browser.
 #[command]
 pub async fn browse_archive(file_path: String, password: Option<String>) -> Result<crate::models::compression::ArchiveBrowseResult, String> {
@@ -367,7 +420,8 @@ pub async fn repair_zip(file_path: String) -> Result<String, String> {
 mod cancellation_tests {
     use super::{
         cancel_compression, cancel_tasks_and_wait, normalized_output_key, CompressionOutputGuard,
-        ACTIVE_COMPRESSION_OUTPUTS, CANCELLATION_FLAGS,
+        CompressionAnalysisGuard, ACTIVE_COMPRESSION_OUTPUTS, CANCELLATION_FLAGS,
+        COMPRESSION_ANALYSIS_FLAGS,
     };
     use std::sync::{
         atomic::{AtomicBool, Ordering},
@@ -459,5 +513,21 @@ mod cancellation_tests {
         }
 
         assert!(!ACTIVE_COMPRESSION_OUTPUTS.contains_key(&key));
+    }
+
+    #[test]
+    fn analysis_registration_is_removed_when_command_future_drops() {
+        let analysis_id = format!("analysis-cleanup-{}", uuid::Uuid::new_v4());
+        COMPRESSION_ANALYSIS_FLAGS.insert(
+            analysis_id.clone(),
+            Arc::new(AtomicBool::new(false)),
+        );
+        {
+            let _guard = CompressionAnalysisGuard {
+                analysis_id: analysis_id.clone(),
+            };
+            assert!(COMPRESSION_ANALYSIS_FLAGS.contains_key(&analysis_id));
+        }
+        assert!(!COMPRESSION_ANALYSIS_FLAGS.contains_key(&analysis_id));
     }
 }

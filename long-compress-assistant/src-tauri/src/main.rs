@@ -347,6 +347,8 @@ fn main() {
             long_compress_assistant::commands::compression::verify_archive_password,
             long_compress_assistant::commands::compression::extract_multiple,
             long_compress_assistant::commands::compression::compress_files,
+            long_compress_assistant::commands::compression::analyze_compression_sources,
+            long_compress_assistant::commands::compression::cancel_compression_analysis,
             long_compress_assistant::commands::compression::cancel_compression,
             long_compress_assistant::commands::compression::cancel_tasks_and_wait,
             long_compress_assistant::commands::compression::desktop_e2e_run_cancellable_task,

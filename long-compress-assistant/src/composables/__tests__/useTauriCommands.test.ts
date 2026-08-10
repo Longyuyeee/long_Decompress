@@ -429,6 +429,8 @@ describe('useTauriCommands', () => {
     await commands.listArchiveContents('a.zip', 'secret')
     await commands.browseArchive('a.zip', 'secret')
     await commands.testArchiveIntegrity('a.zip')
+    await commands.analyzeCompressionSources('analysis-1', ['a.txt'], 'zip', 6)
+    await commands.cancelCompressionAnalysis('analysis-1')
     await commands.repairZip('a.zip')
     await commands.registerContextMenu()
     await commands.unregisterContextMenu()
@@ -447,6 +449,15 @@ describe('useTauriCommands', () => {
       password: null,
     })
     expect(mocks.invoke).toHaveBeenCalledWith('repair_zip', { filePath: 'a.zip' })
+    expect(mocks.invoke).toHaveBeenCalledWith('analyze_compression_sources', {
+      analysisId: 'analysis-1',
+      paths: ['a.txt'],
+      format: 'zip',
+      level: 6,
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('cancel_compression_analysis', {
+      analysisId: 'analysis-1',
+    })
   })
 
   it('degrades optional system UI commands safely when native APIs reject', async () => {

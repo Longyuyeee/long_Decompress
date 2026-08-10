@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   checkRarCompressionSupport: vi.fn(),
   openRarDownloadPage: vi.fn(),
   installWinRarWithWinget: vi.fn(),
+  getFileInfo: vi.fn(),
   invoke: vi.fn(),
 }))
 
@@ -23,6 +24,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
     checkRarCompressionSupport: mocks.checkRarCompressionSupport,
     openRarDownloadPage: mocks.openRarDownloadPage,
     installWinRarWithWinget: mocks.installWinRarWithWinget,
+    getFileInfo: mocks.getFileInfo,
   }),
 }))
 
@@ -61,6 +63,7 @@ describe('CompressionView', () => {
     mocks.compressFiles.mockResolvedValue(undefined)
     mocks.checkRarCompressionSupport.mockResolvedValue({ available: true, message: 'ready' })
     mocks.installWinRarWithWinget.mockResolvedValue({ available: true, encoder_path: 'C:/Program Files/WinRAR/Rar.exe', message: 'ready' })
+    mocks.getFileInfo.mockResolvedValue(null)
   })
 
   it('accepts a selected file and runs a complete compression job', async () => {

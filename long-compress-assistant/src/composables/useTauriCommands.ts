@@ -59,6 +59,24 @@ export interface ArchiveEngineCapabilities {
   message: string
 }
 
+export interface CompressionAnalysisResult {
+  totalSize: number
+  fileCount: number
+  sampledFiles: number
+  sampledBytes: number
+  estimatedSize: number
+  estimatedRatio: number
+  estimatedSecondsLow: number
+  estimatedSecondsHigh: number
+  confidence: 'low' | 'medium' | 'high'
+  recommendedFormat: string
+  recommendedLevel: number
+  recommendedSolid: boolean
+  lowValueBytes: number
+  lowValueFileCount: number
+  reasons: string[]
+}
+
 export interface ArchiveEntryInfo {
   path: string
   name: string
@@ -533,6 +551,19 @@ export const useTauriCommands = () => {
     return await invoke<string[]>('list_archive_contents', { filePath, password: password || null })
   }
 
+  const analyzeCompressionSources = async (
+    analysisId: string,
+    paths: string[],
+    format: string,
+    level: number,
+  ) => invoke<CompressionAnalysisResult>('analyze_compression_sources', {
+    analysisId, paths, format, level,
+  })
+
+  const cancelCompressionAnalysis = async (analysisId: string) => {
+    await invoke('cancel_compression_analysis', { analysisId })
+  }
+
   const browseArchive = async (filePath: string, password?: string) => {
     return await invoke<ArchiveBrowseResult>('browse_archive', { filePath, password: password || null })
   }
@@ -567,6 +598,8 @@ export const useTauriCommands = () => {
     decompressFile,
     decompressFiles,
     compressFiles,
+    analyzeCompressionSources,
+    cancelCompressionAnalysis,
     checkRarCompressionSupport,
     installWinRarWithWinget,
     getArchiveEngineCapabilities,

@@ -129,6 +129,47 @@ describe('Compression Store', () => {
     expect(store.getEffectiveOutputPath()).toBe('D:/global-output')
   })
 
+  it('publishes completed estimates and invalidates them when job sources change', () => {
+    const store = useCompressionStore()
+    const file = mockFile('analysis.txt', 8 * 1024 * 1024)
+    store.addFile(file)
+    store.setAnalysisState(file.path, {
+      status: 'completed',
+      result: {
+        totalSize: file.size,
+        fileCount: 1,
+        sampledFiles: 1,
+        sampledBytes: 64 * 1024,
+        estimatedSize: 2 * 1024 * 1024,
+        estimatedRatio: 0.25,
+        estimatedSecondsLow: 1,
+        estimatedSecondsHigh: 3,
+        confidence: 'medium',
+        recommendedFormat: '7z',
+        recommendedLevel: 7,
+        recommendedSolid: false,
+        lowValueBytes: 0,
+        lowValueFileCount: 0,
+        reasons: ['text compresses well'],
+      },
+      format: 'zip',
+      level: 6,
+    })
+
+    expect(store.estimatedSize[file.path]).toBe(2 * 1024 * 1024)
+    store.recordActualSize(file.path, 2_500_000)
+    expect(store.compressionAnalysis[file.path].actualSize).toBe(2_500_000)
+    expect(store.compressionAnalysis[file.path].predictionErrorPercent).toBe(16)
+
+    store.createGroup([file.path])
+    expect(store.estimatedSize[file.path]).toBeUndefined()
+
+    const groupId = store.groups[0].id
+    store.setAnalysisState(groupId, { status: 'running', analysisId: 'analysis-1' })
+    store.prepareQuickPacks()
+    expect(store.compressionAnalysis).toEqual({})
+  })
+
   it('binds submitted files and groups to immutable task snapshots and removes them together', () => {
     const store = useCompressionStore()
     const submittedOptions = { ...defaultOptions(), format: '7z' as const, level: 8 }
