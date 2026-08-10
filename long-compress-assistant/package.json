@@ -20,6 +20,7 @@
     "release:validation-report": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/generate-release-validation.ps1",
     "performance:baseline": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-performance-baseline.ps1",
     "performance:io-baseline": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-performance-baseline.ps1 -IoTopologyOnly",
+    "performance:io-matrix": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-io-performance-matrix.ps1",
     "build:check": "vue-tsc && vite build",
     "type-check": "vue-tsc --noEmit",
     "lint": "vue-tsc --noEmit",

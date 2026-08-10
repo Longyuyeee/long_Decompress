@@ -67,6 +67,10 @@ npm.cmd run performance:io-baseline -- -Iterations 1 -LargeFileMiB 16 -SmallFile
 npm.cmd run performance:io-baseline -- -Iterations 10 -LargeFileMiB 100 -SmallFileCount 10000 `
   -SourceRoot C:\baseline-source -TargetRoot D:\baseline-target `
   -OutputPath test-results\performance-baseline\io\c-to-d.json
+
+# 正式 SSD/HDD 矩阵：共享同一个目标卷，比较“目标卷→目标卷”和“另一物理盘→目标卷”
+npm.cmd run performance:io-matrix -- -Iterations 10 -LargeFileMiB 100 -SmallFileCount 10000 `
+  -TargetRoot C:\baseline-target -CrossSourceRoot D:\baseline-source
 ```
 
 结果 JSON 包含 Git 提交及工作区状态、Windows/CPU/内存/架构组成的机器指纹、活动电源计划、
@@ -74,7 +78,9 @@ Rust 工具链、逐次样本、中位数/最小值/最大值和基线比较结�
 均由真实写入、读取和内容校验路径产生 `PERF_JSON`，脚本不会解析易变化的展示文本。
 
 同一基线周期必须保持机器、存储设备、电源计划、实时防护策略和输入规模不变。脚本会拒绝跨机器指纹比较；
-少于 10 次的结果会明确标记 `threshold_eligible=false`，只能用于烟雾观察，不能阻断发布。
+少于 10 次、Windows 无法证明介质，或 Git 工作区存在未提交改动时，结果都会明确标记
+`threshold_eligible=false`，只能用于烟雾观察，不能阻断发布。正式矩阵会在采样前检查工作区，避免完成昂贵测试后
+才发现代码状态不可追溯；仓库内的输出目录还必须被 Git 忽略，防止第一组结果污染第二组资格。
 
 I/O 拓扑模式会通过 Windows 卷、分区、磁盘和物理介质信息证明源端/目标端关系，记录文件系统、SSD/HDD、
 总容量、可用容量、卷与磁盘指纹，并区分同卷、同物理盘跨卷和跨物理盘。源目录和目标目录必须已经存在；
@@ -85,6 +91,12 @@ I/O 拓扑模式会通过 Windows 卷、分区、磁盘和物理介质信息证�
 源端，解压再从源端读取并写到目标端，因此两个指标都表达同一个 I/O 方向。大文件按长度与 CRC32 校验，
 小文件按数量与组合 CRC32 校验。它衡量应用实际路径（会受到 Windows 文件缓存、杀毒软件和电源计划影响），
 不是裸盘顺序读写测试；结果只适合同机同配置趋势，不能作为磁盘厂商级带宽结论。
+
+`performance:io-matrix` 在上述单场景能力之上按固定顺序运行两组结果：第一组把共享目标目录同时作为源端，
+第二组从另一块物理盘读取但继续写入同一个目标目录。汇总器会验证机器、Git 提交、应用版本、规模和目标卷完全一致，
+并要求关系分别为 `same_volume` 与 `cross_physical_disk`；四项吞吐量均输出中位数、跨盘相对变化以及
+最小值到最大值相对中位数的波动范围。`matrix.json` 只说明存储拓扑基线，固定写入
+`change_default_concurrency=false`，不能被解释为某种调度策略已经获益。
 
 2026-08-10 的工具烟雾在当前开发机完成：C→C 被系统证明为同卷 NVMe SSD，E→C 被证明为跨两块物理
 NVMe SSD；两条路线均以 16 MiB 单文件和 1000 个 4 KiB 小文件完成真实往返。每场景只有 1 个样本，

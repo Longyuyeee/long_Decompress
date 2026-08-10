@@ -476,12 +476,14 @@ $comparisonMetrics = [object[]]@()
 if ($resolvedBaselinePath) {
   $baselineEligible = (
     $baseline.qualification.threshold_eligible -eq $true -and
-    [int]$baseline.qualification.sample_count -ge 10
+    [int]$baseline.qualification.sample_count -ge 10 -and
+    $baseline.git.dirty -eq $false
   )
   $thresholdApplied = (
     $baselineEligible -and
     $Iterations -ge 10 -and
-    $storageClassificationReliable
+    $storageClassificationReliable -and
+    -not $gitDirty
   )
   if ($thresholdApplied) {
     $baselineComparison = Compare-Baseline $aggregates $baseline.aggregates $RegressionThresholdPercent
@@ -517,8 +519,15 @@ $result = [ordered]@{
     sample_count = $Iterations
     required_sample_count = 10
     storage_classification_reliable = $storageClassificationReliable
-    threshold_eligible = ($Iterations -ge 10 -and $storageClassificationReliable)
-    note = if ($Iterations -ge 10 -and $storageClassificationReliable) {
+    code_state_clean = -not $gitDirty
+    threshold_eligible = (
+      $Iterations -ge 10 -and
+      $storageClassificationReliable -and
+      -not $gitDirty
+    )
+    note = if ($gitDirty) {
+      'Observation only. Commit or revert local changes before recording a qualified baseline.'
+    } elseif ($Iterations -ge 10 -and $storageClassificationReliable) {
       'Eligible as a fixed-machine warning baseline.'
     } elseif (-not $storageClassificationReliable) {
       'Observation only. Windows did not prove SSD/HDD media for both endpoints.'
