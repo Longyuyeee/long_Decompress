@@ -98,6 +98,15 @@ export interface ArchiveBrowseResult {
   encrypted: boolean
 }
 
+export interface ArchiveImagePreview {
+  entryPath: string
+  mimeType: string
+  dataUrl: string
+  byteSize: number
+  width: number
+  height: number
+}
+
 export interface ArchiveDiagnosticIssue {
   code: string
   severity: 'info' | 'warning' | 'error'
@@ -602,6 +611,12 @@ export const useTauriCommands = () => {
     return await invoke<ArchiveBrowseResult>('browse_archive', { filePath, password: password || null })
   }
 
+  const previewArchiveImage = async (filePath: string, entryPath: string, password?: string) => {
+    return await invoke<ArchiveImagePreview>('preview_archive_image', {
+      filePath, entryPath, password: password || null,
+    })
+  }
+
   const testArchiveIntegrity = async (filePath: string, password?: string) => {
     return await invoke<string>('test_archive_integrity', { filePath, password: password || null })
   }
@@ -663,6 +678,7 @@ export const useTauriCommands = () => {
     openInExplorer,
     listArchiveContents,
     browseArchive,
+    previewArchiveImage,
     testArchiveIntegrity,
     diagnoseArchive,
     cancelArchiveDiagnosis,

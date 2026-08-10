@@ -447,6 +447,31 @@ pub async fn browse_archive(file_path: String, password: Option<String>) -> Resu
     .map_err(|error| error.to_string())
 }
 
+/// Reads one supported raster image from an archive under strict byte and pixel limits.
+#[command]
+pub async fn preview_archive_image(
+    file_path: String,
+    entry_path: String,
+    password: Option<String>,
+) -> Result<crate::services::archive_preview::ArchiveImagePreview, String> {
+    let resolved_password = match password.filter(|value| !value.is_empty()) {
+        Some(password) => Some(password),
+        None => {
+            let service = CompressionService::new_with_defaults().await;
+            service
+                .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+                .await
+        }
+    };
+    crate::services::archive_preview::preview_archive_image(
+        std::path::Path::new(&file_path),
+        &entry_path,
+        resolved_password.as_deref(),
+    )
+    .await
+    .map_err(|error| error.to_string())
+}
+
 /// 检测归档文件完整性（通过 7z CLI 的 t 命令）
 #[command]
 pub async fn test_archive_integrity(file_path: String, password: Option<String>) -> Result<String, String> {

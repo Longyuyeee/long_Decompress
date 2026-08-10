@@ -124,4 +124,48 @@ test.describe('Long Decompress desktop shell', () => {
       ])
     }
   })
+
+  test('renders bounded archive image preview without horizontal overflow', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'archive preview matrix runs once in Chromium')
+    await page.addInitScript(() => {
+      const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg=='
+      window.__TAURI_IPC__ = (message: Record<string, any>) => {
+        let value: unknown
+        if (message.cmd === 'tauri' && message.message?.cmd === 'openDialog') {
+          value = 'C:/archives/images.zip'
+        } else if (message.cmd === 'get_file_info') {
+          value = { name: 'images.zip', size: 128, is_dir: false, modified: 0 }
+        } else if (message.cmd === 'browse_archive') {
+          value = {
+            format: 'ZIP', totalFiles: 1, totalDirectories: 0,
+            totalUncompressedSize: 68, totalCompressedSize: 60, encrypted: false,
+            entries: [{ path: 'art/preview.png', name: 'preview.png', size: 68, compressedSize: 60, modified: null, crc: '12345678', encrypted: false, isDir: false }],
+          }
+        } else if (message.cmd === 'preview_archive_image') {
+          value = { entryPath: 'art/preview.png', mimeType: 'image/png', dataUrl: png, byteSize: 68, width: 1, height: 1 }
+        } else if (message.cmd === 'load_app_settings') {
+          value = '{}'
+        }
+        ;(window as any)[`_${message.callback}`]?.(value)
+      }
+    })
+    await page.reload()
+    await page.keyboard.press('Control+b')
+    await page.waitForURL('**/#/browser')
+    await page.locator('header .browser-primary').click()
+    await expect(page.getByText('preview.png').first()).toBeVisible()
+    await page.getByRole('button', { name: '预览 preview.png' }).click()
+    const preview = page.getByTestId('archive-image-preview')
+    await expect(preview.getByRole('img', { name: 'preview.png' })).toBeVisible()
+    await expect(preview).toContainText('只读 · 未写入磁盘')
+
+    for (const width of responsiveWidths) {
+      await page.setViewportSize({ width, height: 800 })
+      await expectVerticalOnlyScrolling(page, [
+        '.browser-page',
+        '[data-testid="archive-image-preview"]',
+        '.preview-dialog',
+      ])
+    }
+  })
 })

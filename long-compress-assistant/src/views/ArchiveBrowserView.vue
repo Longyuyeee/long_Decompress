@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { useTauriCommands, type ArchiveBrowseResult, type ArchiveEntryInfo } from '@/composables/useTauriCommands'
+import { useTauriCommands, type ArchiveBrowseResult, type ArchiveEntryInfo, type ArchiveImagePreview } from '@/composables/useTauriCommands'
 
 const appStore = useAppStore()
 const commands = useTauriCommands()
@@ -15,12 +15,18 @@ const typeFilter = ref('all')
 const activeDirectory = ref('')
 const loading = ref(false)
 const extracting = ref(false)
+const imagePreview = ref<ArchiveImagePreview | null>(null)
+const previewEntry = ref<ArchiveEntryInfo | null>(null)
+const previewLoading = ref(false)
+const previewError = ref('')
+let previewSequence = 0
 
 const extensionGroups: Record<string, Set<string>> = {
   image: new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'ico', 'avif']),
   document: new Set(['txt', 'md', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv', 'json', 'xml']),
   archive: new Set(['zip', '7z', 'rar', 'tar', 'gz', 'bz2', 'xz', 'zst', 'iso', 'cab'])
 }
+const boundedPreviewExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'])
 
 const files = computed(() => result.value?.entries.filter(entry => !entry.isDir) ?? [])
 const directories = computed(() => {
@@ -50,6 +56,12 @@ const filteredEntries = computed(() => {
 })
 
 const visibleSelected = computed(() => filteredEntries.value.length > 0 && filteredEntries.value.every(entry => selected.value.has(entry.path)))
+const previewRouteSupported = computed(() => result.value?.format === 'ZIP' || result.value?.format.startsWith('TAR'))
+
+const canPreviewEntry = (entry: ArchiveEntryInfo) => {
+  const extension = entry.name.includes('.') ? entry.name.split('.').pop()!.toLocaleLowerCase() : ''
+  return boundedPreviewExtensions.has(extension)
+}
 
 const formatBytes = (value: number) => {
   if (value < 1024) return `${value} B`
@@ -79,6 +91,7 @@ const loadArchive = async () => {
   result.value = null
   selected.value = new Set()
   activeDirectory.value = ''
+  closePreview()
   try {
     result.value = await commands.browseArchive(archivePath.value, password.value)
     selected.value = new Set(result.value.entries.filter(entry => !entry.isDir).map(entry => entry.path))
@@ -86,6 +99,31 @@ const loadArchive = async () => {
     appStore.setError(String(error))
   } finally {
     loading.value = false
+  }
+}
+
+const closePreview = () => {
+  previewSequence++
+  imagePreview.value = null
+  previewEntry.value = null
+  previewLoading.value = false
+  previewError.value = ''
+}
+
+const openPreview = async (entry: ArchiveEntryInfo) => {
+  if (!canPreviewEntry(entry) || !previewRouteSupported.value) return
+  const sequence = ++previewSequence
+  previewEntry.value = entry
+  imagePreview.value = null
+  previewError.value = ''
+  previewLoading.value = true
+  try {
+    const value = await commands.previewArchiveImage(archivePath.value, entry.path, password.value)
+    if (sequence === previewSequence) imagePreview.value = value
+  } catch (error) {
+    if (sequence === previewSequence) previewError.value = String(error)
+  } finally {
+    if (sequence === previewSequence) previewLoading.value = false
   }
 }
 
@@ -130,7 +168,7 @@ const extractSelected = async () => {
 </script>
 
 <template>
-  <div class="browser-page h-full min-w-0 overflow-hidden p-responsive p-8 flex flex-col gap-5">
+  <div class="browser-page relative h-full min-w-0 overflow-hidden p-responsive p-8 flex flex-col gap-5">
     <header class="shrink-0 flex flex-wrap items-end justify-between gap-4">
       <div class="min-w-0">
         <h1 class="text-4xl font-black text-content tracking-tighter">压缩包浏览中心</h1>
@@ -197,13 +235,24 @@ const extractSelected = async () => {
             <span>名称与路径</span><span class="hidden md:block">大小</span><span class="hidden lg:block">修改时间</span><span class="hidden xl:block">CRC</span>
           </div>
           <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
-            <button v-for="entry in filteredEntries" :key="entry.path" type="button" class="browser-row" @click="toggleEntry(entry)">
-              <span class="browser-checkbox" :class="{ checked: selected.has(entry.path) }"><i v-if="selected.has(entry.path)" class="pi pi-check"></i></span>
-              <span class="min-w-0 text-left"><strong class="block truncate text-content">{{ entry.name }}</strong><small class="block truncate text-muted mt-0.5">{{ entry.path }}</small></span>
+            <div v-for="entry in filteredEntries" :key="entry.path" class="browser-row" @click="toggleEntry(entry)">
+              <button type="button" class="browser-checkbox" :class="{ checked: selected.has(entry.path) }" :aria-label="selected.has(entry.path) ? `取消选择 ${entry.name}` : `选择 ${entry.name}`" @click.stop="toggleEntry(entry)"><i v-if="selected.has(entry.path)" class="pi pi-check"></i></button>
+              <span class="min-w-0 text-left flex items-center gap-2">
+                <span class="min-w-0 flex-1"><strong class="block truncate text-content">{{ entry.name }}</strong><small class="block truncate text-muted mt-0.5">{{ entry.path }}</small></span>
+                <button
+                  v-if="canPreviewEntry(entry)"
+                  type="button"
+                  class="preview-trigger"
+                  :disabled="!previewRouteSupported"
+                  :title="previewRouteSupported ? `预览 ${entry.name}` : '当前仅支持 ZIP 与 TAR 系列的有界预览'"
+                  :aria-label="`预览 ${entry.name}`"
+                  @click.stop="openPreview(entry)"
+                ><i class="pi pi-eye"></i></button>
+              </span>
               <span class="hidden md:block text-left text-muted">{{ formatBytes(entry.size) }}</span>
               <span class="hidden lg:block text-left text-muted truncate">{{ entry.modified || '—' }}</span>
               <span class="hidden xl:block text-left font-mono text-muted truncate">{{ entry.crc || '—' }}</span>
-            </button>
+            </div>
             <div v-if="filteredEntries.length === 0" class="h-full grid place-items-center text-muted text-sm">没有符合条件的文件</div>
           </div>
         </div>
@@ -216,6 +265,24 @@ const extractSelected = async () => {
         </button>
       </footer>
     </template>
+
+    <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-image-preview" @click.self="closePreview">
+      <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
+        <header class="preview-header">
+          <div class="min-w-0"><p class="text-xs font-black tracking-widest text-primary">归档内图片预览</p><h2 class="mt-1 truncate text-lg font-black text-content">{{ previewEntry.name }}</h2></div>
+          <button type="button" class="preview-close" aria-label="关闭预览" @click="closePreview"><i class="pi pi-times"></i></button>
+        </header>
+        <div class="preview-stage">
+          <div v-if="previewLoading" class="text-center text-muted"><i class="pi pi-spin pi-spinner text-3xl text-primary"></i><p class="mt-3 text-sm font-bold">正在进行有界读取与安全检查…</p></div>
+          <div v-else-if="previewError" class="max-w-md text-center"><i class="pi pi-exclamation-triangle text-3xl text-amber-500"></i><p class="mt-3 break-words text-sm font-bold text-content">无法预览</p><p class="mt-2 break-words text-xs leading-5 text-muted">{{ previewError }}</p></div>
+          <img v-else-if="imagePreview" :src="imagePreview.dataUrl" :alt="previewEntry.name" class="preview-image">
+        </div>
+        <footer v-if="imagePreview" class="preview-meta">
+          <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读 · 未写入磁盘</span>
+        </footer>
+        <p class="preview-safety">预览仅接受经魔数确认的 PNG、JPEG、GIF、WebP、BMP；解压后最大 8 MiB、最多 1600 万像素。SVG 与扩展名伪装内容不会渲染。</p>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -242,8 +309,20 @@ const extractSelected = async () => {
 .browser-table-head { color: var(--text-muted); font-size: .68rem; font-weight: 900; border-bottom: 1px solid var(--border-subtle); }
 .browser-row { width: 100%; border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent); font-size: .75rem; }
 .browser-row:hover { background: color-mix(in srgb, var(--dynamic-accent) 7%, transparent); }
+.preview-trigger { flex: 0 0 auto; width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: .65rem; color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent); }
+.preview-trigger:hover { background: color-mix(in srgb, var(--dynamic-accent) 18%, transparent); }
+.preview-trigger:disabled { color: var(--text-muted); background: var(--bg-input); opacity: .45; cursor: not-allowed; }
 .browser-checkbox { width: 1.15rem; height: 1.15rem; border: 1px solid var(--border-subtle); border-radius: .35rem; display: inline-grid; place-items: center; color: white; font-size: .55rem; }
 .browser-checkbox.checked { background: var(--dynamic-accent); border-color: var(--dynamic-accent); }
+.preview-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; min-width: 0; padding: clamp(.75rem, 3vw, 2rem); background: color-mix(in srgb, #08141f 58%, transparent); backdrop-filter: blur(14px); overflow-x: hidden; }
+.preview-dialog { width: min(52rem, 100%); max-height: 100%; min-width: 0; overflow-x: hidden; overflow-y: auto; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 24%, var(--border-subtle)); border-radius: 1.5rem; background: color-mix(in srgb, var(--bg-card) 94%, transparent); box-shadow: 0 28px 80px rgba(0, 0, 0, .34); }
+.preview-header { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-subtle); }
+.preview-close { flex: 0 0 auto; width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border-radius: .75rem; color: var(--text-muted); background: var(--bg-input); }
+.preview-stage { min-height: min(54vh, 30rem); display: grid; place-items: center; padding: clamp(1rem, 3vw, 2rem); background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--dynamic-accent) 12%, transparent), transparent 65%); overflow: hidden; }
+.preview-image { display: block; max-width: 100%; max-height: min(54vh, 30rem); object-fit: contain; border-radius: 1rem; box-shadow: 0 18px 50px rgba(0, 0, 0, .25); }
+.preview-meta { display: flex; flex-wrap: wrap; gap: .5rem; padding: .9rem 1.25rem 0; }
+.preview-meta span { border-radius: 999px; padding: .35rem .65rem; background: var(--bg-input); color: var(--text-muted); font-size: .68rem; font-weight: 800; }
+.preview-safety { padding: .8rem 1.25rem 1.15rem; color: var(--text-muted); font-size: .68rem; line-height: 1.55; }
 @media (max-width: 1050px) { .browser-toolbar { grid-template-columns: minmax(0, 1fr) minmax(12rem, .65fr); } .browser-field:last-child { grid-column: 1 / -1; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(8rem, 1fr) minmax(5rem, .28fr) minmax(7rem, .4fr); } }
-@media (max-width: 760px) { .browser-page { padding: 1rem; } .browser-workspace { grid-template-columns: 1fr; grid-template-rows: minmax(5rem, 8rem) minmax(0, 1fr); } .browser-workspace aside { border-right: 0; border-bottom: 1px solid var(--border-subtle); } .browser-toolbar { grid-template-columns: 1fr; } .browser-field:last-child { grid-column: auto; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } }
+@media (max-width: 760px) { .browser-page { padding: 1rem; overflow-y: auto; overflow-x: hidden; } .browser-workspace { flex: 0 0 30rem; min-height: 30rem; grid-template-columns: 1fr; grid-template-rows: minmax(5rem, 8rem) minmax(20rem, 1fr); } .browser-workspace aside { border-right: 0; border-bottom: 1px solid var(--border-subtle); } .browser-toolbar { grid-template-columns: 1fr; } .browser-field:last-child { grid-column: auto; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } }
 </style>
