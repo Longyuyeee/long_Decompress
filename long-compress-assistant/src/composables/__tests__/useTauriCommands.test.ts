@@ -429,9 +429,12 @@ describe('useTauriCommands', () => {
     await commands.listArchiveContents('a.zip', 'secret')
     await commands.browseArchive('a.zip', 'secret')
     await commands.testArchiveIntegrity('a.zip')
+    await commands.diagnoseArchive('diagnostic-1', 'a.zip', 'secret')
+    await commands.cancelArchiveDiagnosis('diagnostic-1')
     await commands.analyzeCompressionSources('analysis-1', ['a.txt'], 'zip', 6)
     await commands.cancelCompressionAnalysis('analysis-1')
-    await commands.repairZip('a.zip')
+    await commands.repairZip('repair-1', 'a.zip', 'a.repaired.zip')
+    await commands.cancelZipRepair('repair-1')
     await commands.registerContextMenu()
     await commands.unregisterContextMenu()
     await commands.isContextMenuRegistered()
@@ -448,7 +451,16 @@ describe('useTauriCommands', () => {
       filePath: 'a.zip',
       password: null,
     })
-    expect(mocks.invoke).toHaveBeenCalledWith('repair_zip', { filePath: 'a.zip' })
+    expect(mocks.invoke).toHaveBeenCalledWith('diagnose_archive', {
+      diagnosticId: 'diagnostic-1', filePath: 'a.zip', password: 'secret',
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('cancel_archive_diagnosis', {
+      diagnosticId: 'diagnostic-1',
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('repair_zip', {
+      repairId: 'repair-1', filePath: 'a.zip', outputPath: 'a.repaired.zip',
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('cancel_zip_repair', { repairId: 'repair-1' })
     expect(mocks.invoke).toHaveBeenCalledWith('analyze_compression_sources', {
       analysisId: 'analysis-1',
       paths: ['a.txt'],

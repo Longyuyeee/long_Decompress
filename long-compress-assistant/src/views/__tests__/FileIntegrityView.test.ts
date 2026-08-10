@@ -9,6 +9,10 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn(),
   invoke: vi.fn(),
   clipboardWrite: vi.fn(),
+  diagnoseArchive: vi.fn(),
+  cancelArchiveDiagnosis: vi.fn(),
+  repairZip: vi.fn(),
+  cancelZipRepair: vi.fn(),
 }))
 
 vi.mock('@tauri-apps/api/dialog', () => ({
@@ -17,7 +21,13 @@ vi.mock('@tauri-apps/api/dialog', () => ({
 }))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 vi.mock('@/composables/useTauriCommands', () => ({
-  useTauriCommands: () => ({ invoke: mocks.invoke }),
+  useTauriCommands: () => ({
+    invoke: mocks.invoke,
+    diagnoseArchive: mocks.diagnoseArchive,
+    cancelArchiveDiagnosis: mocks.cancelArchiveDiagnosis,
+    repairZip: mocks.repairZip,
+    cancelZipRepair: mocks.cancelZipRepair,
+  }),
 }))
 
 describe('FileIntegrityView', () => {
@@ -27,6 +37,10 @@ describe('FileIntegrityView', () => {
     mocks.save.mockReset()
     mocks.invoke.mockReset()
     mocks.clipboardWrite.mockReset()
+    mocks.diagnoseArchive.mockReset()
+    mocks.cancelArchiveDiagnosis.mockReset()
+    mocks.repairZip.mockReset()
+    mocks.cancelZipRepair.mockReset()
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText: mocks.clipboardWrite },
@@ -116,5 +130,49 @@ describe('FileIntegrityView', () => {
     expect(wrapper.text()).toContain('1 file mismatch')
     expect(wrapper.text()).toContain(appStore.t('integrity.verify_failed'))
     expect(appStore.error).toBe(appStore.t('integrity.verify_failed', '✗ 校验失败'))
+  })
+
+  it('diagnoses a damaged archive, copies evidence, and repairs to a new verified file', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    mocks.open.mockResolvedValue('C:\\data\\damaged.zip')
+    mocks.save.mockResolvedValue('C:\\data\\damaged.repaired.zip')
+    mocks.diagnoseArchive.mockResolvedValue({
+      filePath: 'C:\\data\\damaged.zip', fileSize: 4096, actualFormat: 'ZIP',
+      status: 'crc_error', encrypted: false, splitArchive: false, volumesFound: 1,
+      missingVolumes: [], totalFiles: 2, totalDirectories: 0, totalUncompressedSize: 1024,
+      integrityTested: true, canRepair: true, recoverability: 'repairable',
+      issues: [{ code: 'crc_error', severity: 'error', title: '内容校验失败', detail: '一个条目 CRC 错误' }],
+      evidence: ['Integrity failure class: crc_error'],
+    })
+    mocks.repairZip.mockResolvedValue({
+      outputPath: 'C:\\data\\damaged.repaired.zip', recoveredFiles: 1,
+      recoveredDirectories: 0, skippedEntries: ['bad.txt: CRC mismatch'], verified: true,
+    })
+    mocks.clipboardWrite.mockResolvedValue(undefined)
+    const wrapper = mount(FileIntegrityView, { global: { plugins: [pinia] } })
+
+    await wrapper.get('[data-testid="archive-diagnostic-mode"]').trigger('click')
+    await wrapper.findAll('button').find(button => button.text().includes('选择压缩包'))?.trigger('click')
+    await flushPromises()
+    await wrapper.get('input[type="password"]').setValue('local-secret')
+    await wrapper.findAll('button').find(button => button.text().includes('开始诊断'))?.trigger('click')
+    await flushPromises()
+
+    expect(mocks.diagnoseArchive).toHaveBeenCalledWith(
+      expect.stringMatching(/^diagnostic-/), 'C:\\data\\damaged.zip', 'local-secret',
+    )
+    expect(wrapper.get('[data-testid="diagnostic-report"]').text()).toContain('内容校验失败')
+    await wrapper.findAll('button').find(button => button.text().includes('复制报告'))?.trigger('click')
+    expect(mocks.clipboardWrite).toHaveBeenCalledWith(expect.stringContaining('Integrity failure class: crc_error'))
+    expect(mocks.clipboardWrite.mock.calls[0][0]).not.toContain('local-secret')
+
+    await wrapper.findAll('button').find(button => button.text().includes('选择位置并修复'))?.trigger('click')
+    await flushPromises()
+    expect(mocks.repairZip).toHaveBeenCalledWith(
+      expect.stringMatching(/^repair-/), 'C:\\data\\damaged.zip', 'C:\\data\\damaged.repaired.zip',
+    )
+    expect(wrapper.get('[data-testid="repair-result"]').text()).toContain('恢复 1 个文件')
+    expect(wrapper.text()).toContain('原压缩包不会被覆盖或删除')
   })
 })

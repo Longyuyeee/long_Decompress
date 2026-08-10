@@ -12,6 +12,8 @@ use once_cell::sync::Lazy;
 static CANCELLATION_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 static ACTIVE_COMPRESSION_OUTPUTS: Lazy<DashMap<String, String>> = Lazy::new(DashMap::new);
 static COMPRESSION_ANALYSIS_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
+static ARCHIVE_DIAGNOSTIC_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
+static ZIP_REPAIR_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 
 async fn service_for_task(task_id: &str) -> Result<CompressionService, String> {
     let cancellation_flag = Arc::new(AtomicBool::new(false));
@@ -325,6 +327,26 @@ struct CompressionAnalysisGuard {
     analysis_id: String,
 }
 
+struct ArchiveDiagnosticGuard {
+    diagnostic_id: String,
+}
+
+impl Drop for ArchiveDiagnosticGuard {
+    fn drop(&mut self) {
+        ARCHIVE_DIAGNOSTIC_FLAGS.remove(&self.diagnostic_id);
+    }
+}
+
+struct ZipRepairGuard {
+    repair_id: String,
+}
+
+impl Drop for ZipRepairGuard {
+    fn drop(&mut self) {
+        ZIP_REPAIR_FLAGS.remove(&self.repair_id);
+    }
+}
+
 impl Drop for CompressionAnalysisGuard {
     fn drop(&mut self) {
         COMPRESSION_ANALYSIS_FLAGS.remove(&self.analysis_id);
@@ -373,6 +395,38 @@ pub async fn cancel_compression_analysis(analysis_id: String) -> Result<(), Stri
     Ok(())
 }
 
+#[command]
+pub async fn diagnose_archive(
+    diagnostic_id: String,
+    file_path: String,
+    password: Option<String>,
+) -> Result<crate::services::archive_diagnostics::ArchiveDiagnosticReport, String> {
+    let cancelled = Arc::new(AtomicBool::new(false));
+    match ARCHIVE_DIAGNOSTIC_FLAGS.entry(diagnostic_id.clone()) {
+        Entry::Vacant(entry) => {
+            entry.insert(cancelled.clone());
+        }
+        Entry::Occupied(_) => return Err(format!("Archive diagnosis is already running: {diagnostic_id}")),
+    }
+    let _guard = ArchiveDiagnosticGuard { diagnostic_id };
+    crate::services::archive_diagnostics::diagnose_archive(
+        std::path::Path::new(&file_path),
+        password.as_deref(),
+        cancelled,
+    )
+    .await
+    .map_err(|error| error.to_string())
+}
+
+#[command]
+pub async fn cancel_archive_diagnosis(diagnostic_id: String) -> Result<(), String> {
+    let flag = ARCHIVE_DIAGNOSTIC_FLAGS
+        .get(&diagnostic_id)
+        .ok_or_else(|| format!("Archive diagnosis is not active: {diagnostic_id}"))?;
+    flag.store(true, Ordering::SeqCst);
+    Ok(())
+}
+
 /// Returns structured archive metadata for the archive browser.
 #[command]
 pub async fn browse_archive(file_path: String, password: Option<String>) -> Result<crate::models::compression::ArchiveBrowseResult, String> {
@@ -405,23 +459,47 @@ pub async fn test_archive_integrity(file_path: String, password: Option<String>)
         .map_err(|e| e.to_string())
 }
 
-/// 尝试修复损坏的 ZIP 文件
+/// 将 ZIP 中仍可完整读取的条目重建到一个新的、已校验的归档。
 #[command]
-pub async fn repair_zip(file_path: String) -> Result<String, String> {
-    use crate::services::universal_engine::UniversalCliEngine;
+pub async fn repair_zip(
+    repair_id: String,
+    file_path: String,
+    output_path: String,
+) -> Result<crate::services::archive_diagnostics::ZipRepairResult, String> {
+    let cancelled = Arc::new(AtomicBool::new(false));
+    match ZIP_REPAIR_FLAGS.entry(repair_id.clone()) {
+        Entry::Vacant(entry) => { entry.insert(cancelled.clone()); }
+        Entry::Occupied(_) => return Err(format!("ZIP repair is already running: {repair_id}")),
+    }
+    let _guard = ZipRepairGuard { repair_id };
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::services::archive_diagnostics::repair_zip_to_new(
+            std::path::Path::new(&file_path),
+            std::path::Path::new(&output_path),
+            &cancelled,
+        )
+    })
+    .await
+    .map_err(|error| error.to_string())?
+    .map_err(|error| error.to_string())
+}
 
-    let path = std::path::Path::new(&file_path);
-    UniversalCliEngine::repair_zip(path)
-        .await
-        .map_err(|e| e.to_string())
+#[command]
+pub async fn cancel_zip_repair(repair_id: String) -> Result<(), String> {
+    let flag = ZIP_REPAIR_FLAGS
+        .get(&repair_id)
+        .ok_or_else(|| format!("ZIP repair is not active: {repair_id}"))?;
+    flag.store(true, Ordering::SeqCst);
+    Ok(())
 }
 
 #[cfg(test)]
 mod cancellation_tests {
     use super::{
         cancel_compression, cancel_tasks_and_wait, normalized_output_key, CompressionOutputGuard,
-        CompressionAnalysisGuard, ACTIVE_COMPRESSION_OUTPUTS, CANCELLATION_FLAGS,
-        COMPRESSION_ANALYSIS_FLAGS,
+        CompressionAnalysisGuard, ArchiveDiagnosticGuard, ZipRepairGuard,
+        ACTIVE_COMPRESSION_OUTPUTS, CANCELLATION_FLAGS, COMPRESSION_ANALYSIS_FLAGS,
+        ARCHIVE_DIAGNOSTIC_FLAGS, ZIP_REPAIR_FLAGS,
     };
     use std::sync::{
         atomic::{AtomicBool, Ordering},
@@ -529,5 +607,24 @@ mod cancellation_tests {
             assert!(COMPRESSION_ANALYSIS_FLAGS.contains_key(&analysis_id));
         }
         assert!(!COMPRESSION_ANALYSIS_FLAGS.contains_key(&analysis_id));
+    }
+
+    #[test]
+    fn diagnostic_and_repair_registrations_are_removed_when_futures_drop() {
+        let diagnostic_id = format!("diagnostic-cleanup-{}", uuid::Uuid::new_v4());
+        ARCHIVE_DIAGNOSTIC_FLAGS.insert(diagnostic_id.clone(), Arc::new(AtomicBool::new(false)));
+        {
+            let _guard = ArchiveDiagnosticGuard { diagnostic_id: diagnostic_id.clone() };
+            assert!(ARCHIVE_DIAGNOSTIC_FLAGS.contains_key(&diagnostic_id));
+        }
+        assert!(!ARCHIVE_DIAGNOSTIC_FLAGS.contains_key(&diagnostic_id));
+
+        let repair_id = format!("repair-cleanup-{}", uuid::Uuid::new_v4());
+        ZIP_REPAIR_FLAGS.insert(repair_id.clone(), Arc::new(AtomicBool::new(false)));
+        {
+            let _guard = ZipRepairGuard { repair_id: repair_id.clone() };
+            assert!(ZIP_REPAIR_FLAGS.contains_key(&repair_id));
+        }
+        assert!(!ZIP_REPAIR_FLAGS.contains_key(&repair_id));
     }
 }

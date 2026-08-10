@@ -363,7 +363,7 @@ export const translations: Record<string, Record<string, string>> = {
     'vault.fetch_failed': '获取数据失败: {0}',
     // ===== 文件完整性校验 =====
     'integrity.title': '文件完整性校验',
-    'integrity.subtitle': '计算和验证文件校验和 (CRC32/MD5/SHA256)',
+    'integrity.subtitle': '计算与验证校验和，诊断归档损坏、缺卷与可恢复性',
     'integrity.mode.calculate': '计算校验和',
     'integrity.mode.verify': '验证校验文件',
     'integrity.algorithm': '校验算法',

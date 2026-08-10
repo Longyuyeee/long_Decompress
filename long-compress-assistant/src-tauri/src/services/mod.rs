@@ -1,5 +1,6 @@
 pub mod archive_engine;
 pub mod archive_browser;
+pub mod archive_diagnostics;
 pub mod universal_engine;
 pub mod compression_service;
 pub mod compression_analysis;

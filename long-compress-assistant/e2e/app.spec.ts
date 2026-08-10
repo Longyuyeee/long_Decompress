@@ -107,4 +107,21 @@ test.describe('Long Decompress desktop shell', () => {
       ])
     }
   })
+
+  test('keeps archive diagnostics vertically scrollable at narrow widths', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'responsive diagnostics matrix runs once in Chromium')
+    await page.keyboard.press('Control+i')
+    await page.waitForURL('**/#/integrity')
+    await page.getByTestId('archive-diagnostic-mode').click()
+    await expect(page.getByTestId('archive-diagnostic-panel')).toBeVisible()
+
+    for (const width of responsiveWidths) {
+      await page.setViewportSize({ width, height: 800 })
+      await expectVerticalOnlyScrolling(page, [
+        '.integrity-view',
+        '.integrity-scroll',
+        '[data-testid="archive-diagnostic-panel"]',
+      ])
+    }
+  })
 })

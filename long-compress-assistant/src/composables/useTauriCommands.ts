@@ -98,6 +98,40 @@ export interface ArchiveBrowseResult {
   encrypted: boolean
 }
 
+export interface ArchiveDiagnosticIssue {
+  code: string
+  severity: 'info' | 'warning' | 'error'
+  title: string
+  detail: string
+}
+
+export interface ArchiveDiagnosticReport {
+  filePath: string
+  fileSize: number
+  actualFormat: string
+  status: string
+  encrypted: boolean
+  splitArchive: boolean
+  volumesFound: number
+  missingVolumes: string[]
+  totalFiles: number
+  totalDirectories: number
+  totalUncompressedSize: number
+  integrityTested: boolean
+  canRepair: boolean
+  recoverability: string
+  issues: ArchiveDiagnosticIssue[]
+  evidence: string[]
+}
+
+export interface ZipRepairResult {
+  outputPath: string
+  recoveredFiles: number
+  recoveredDirectories: number
+  skippedEntries: string[]
+  verified: boolean
+}
+
 interface WordlistValidationResult {
   path: string
   valid: boolean
@@ -572,8 +606,22 @@ export const useTauriCommands = () => {
     return await invoke<string>('test_archive_integrity', { filePath, password: password || null })
   }
 
-  const repairZip = async (filePath: string) => {
-    return await invoke<string>('repair_zip', { filePath })
+  const diagnoseArchive = async (diagnosticId: string, filePath: string, password?: string) => {
+    return await invoke<ArchiveDiagnosticReport>('diagnose_archive', {
+      diagnosticId, filePath, password: password || null,
+    })
+  }
+
+  const cancelArchiveDiagnosis = async (diagnosticId: string) => {
+    await invoke('cancel_archive_diagnosis', { diagnosticId })
+  }
+
+  const repairZip = async (repairId: string, filePath: string, outputPath: string) => {
+    return await invoke<ZipRepairResult>('repair_zip', { repairId, filePath, outputPath })
+  }
+
+  const cancelZipRepair = async (repairId: string) => {
+    await invoke('cancel_zip_repair', { repairId })
   }
 
   const cancelCompression = async (taskId: string) => {
@@ -616,7 +664,10 @@ export const useTauriCommands = () => {
     listArchiveContents,
     browseArchive,
     testArchiveIntegrity,
+    diagnoseArchive,
+    cancelArchiveDiagnosis,
     repairZip,
+    cancelZipRepair,
     cancelCompression,
     registerContextMenu: () => invoke<boolean>('register_context_menu'),
     unregisterContextMenu: () => invoke<boolean>('unregister_context_menu'),
