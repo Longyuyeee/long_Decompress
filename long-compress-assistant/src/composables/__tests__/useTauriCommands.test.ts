@@ -417,6 +417,12 @@ describe('useTauriCommands', () => {
     const commands = useTauriCommands()
 
     await expect(commands.compressFiles('task', ['a.txt'], 'a.zip', { level: 6 })).resolves.toBe('compress_files')
+    await expect(commands.preflightOperationResources({
+      operation: 'compression',
+      outputPath: 'a.zip',
+      sourcePaths: ['a.txt'],
+      estimatedOutputBytes: 42,
+    })).resolves.toBe('preflight_operation_resources')
     await expect(commands.checkRarCompressionSupport()).resolves.toEqual({
       available: false,
       message: 'WinRAR missing',
@@ -443,6 +449,14 @@ describe('useTauriCommands', () => {
     expect(mocks.invoke).toHaveBeenCalledWith('list_archive_contents', {
       filePath: 'a.zip',
       password: 'secret',
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('preflight_operation_resources', {
+      operation: 'compression',
+      outputPath: 'a.zip',
+      sourcePaths: ['a.txt'],
+      password: null,
+      estimatedOutputBytes: 42,
+      estimateReliable: false,
     })
     expect(mocks.invoke).toHaveBeenCalledWith('browse_archive', {
       filePath: 'a.zip',

@@ -38,5 +38,6 @@ pub mod tar_aes_engine;
 pub mod aes_wrapper;
 pub mod aes_stream_v2;
 pub mod system_service;
+pub mod storage_preflight;
 pub mod task_template;
 pub mod watch_folder_service;

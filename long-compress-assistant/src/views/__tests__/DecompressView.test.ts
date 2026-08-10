@@ -9,6 +9,7 @@ import { useTaskStore } from '@/stores/task'
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
   decompressFile: vi.fn(),
+  preflightOperationResources: vi.fn(),
   listArchiveContents: vi.fn(),
   listen: vi.fn(async () => vi.fn()),
 }))
@@ -23,6 +24,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
   useTauriCommands: () => ({
     invoke: mocks.invoke,
     decompressFile: mocks.decompressFile,
+    preflightOperationResources: mocks.preflightOperationResources,
     listArchiveContents: mocks.listArchiveContents,
     testArchiveIntegrity: vi.fn(),
   }),
@@ -56,6 +58,26 @@ describe('DecompressView', () => {
     })
     mocks.listArchiveContents.mockResolvedValue(['one.txt', 'two.txt'])
     mocks.decompressFile.mockResolvedValue(undefined)
+    mocks.preflightOperationResources.mockResolvedValue({
+      operation: 'decompression',
+      outputPath: 'C:/archives',
+      probePath: 'C:/archives',
+      mountPoint: 'C:/',
+      fileSystem: 'NTFS',
+      location: 'local',
+      medium: 'ssd',
+      totalBytes: 1_000_000_000,
+      availableBytes: 900_000_000,
+      estimatedOutputBytes: 20,
+      requiredBytes: 134_217_748,
+      reserveBytes: 134_217_728,
+      estimateSource: 'archive_metadata',
+      estimateReliable: true,
+      status: 'ready',
+      canStart: true,
+      summary: '空间充足',
+      warnings: [],
+    })
   })
 
   it('adds an archive task and enables smart subfolder extraction for multiple roots', async () => {
@@ -149,6 +171,48 @@ describe('DecompressView', () => {
       severity: 'warning',
     })
     expect(appStore.error).toBeNull()
+    wrapper.unmount()
+  })
+
+  it('blocks decompression before the engine when expanded contents cannot fit', async () => {
+    mocks.preflightOperationResources.mockResolvedValueOnce({
+      operation: 'decompression',
+      outputPath: 'C:/archives',
+      probePath: 'C:/archives',
+      mountPoint: 'C:/',
+      fileSystem: 'NTFS',
+      location: 'local',
+      medium: 'ssd',
+      totalBytes: 1_000,
+      availableBytes: 100,
+      estimatedOutputBytes: 900,
+      requiredBytes: 134_218_628,
+      reserveBytes: 134_217_728,
+      estimateSource: 'archive_metadata',
+      estimateReliable: true,
+      status: 'blocked',
+      canStart: false,
+      summary: '解压空间不足',
+      warnings: [],
+    })
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'large.zip',
+      path: 'C:/archives/large.zip',
+    }])
+    await flushPromises()
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(useAppStore().t('decompress.start_queue')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(mocks.decompressFile).not.toHaveBeenCalled()
+    expect(useTaskStore().tasks[0]).toMatchObject({
+      status: 'failed',
+      error: '解压空间不足',
+      resourcePreflight: { status: 'blocked', canStart: false },
+    })
     wrapper.unmount()
   })
 

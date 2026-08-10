@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
+import type { ResourcePreflightReport } from '@/types/resourcePreflight'
 
 export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'cancelling' | 'completed' | 'failed' | 'cancelled'
 export type LogSeverity = 'info' | 'warning' | 'error' | 'success'
@@ -60,6 +61,7 @@ export interface Task {
     verify_after?: boolean
     allow_insecure_password_cli?: boolean
   }
+  resourcePreflight?: ResourcePreflightReport
 }
 
 export const useTaskStore = defineStore('task', () => {

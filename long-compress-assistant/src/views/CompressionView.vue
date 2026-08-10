@@ -5,6 +5,7 @@ import { useCompressionStore, type CompressionGroup, type FileObject } from '@/s
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage, generateId } from '@/utils'
+import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
 import {
   compressionStatusClass,
@@ -179,6 +180,58 @@ const getFileArchivePath = (file: FileObject) => {
   )
 }
 
+const getCompressionEstimate = (
+  jobId: string,
+  files: FileObject[],
+  format: string,
+  level: number,
+) => {
+  const analysis = compressionStore.compressionAnalysis[jobId]
+  if (
+    analysis?.status === 'completed' &&
+    analysis.result &&
+    analysis.format === format &&
+    analysis.level === level
+  ) {
+    return { estimatedOutputBytes: analysis.result.estimatedSize, estimateReliable: false }
+  }
+
+  if (files.every(file => !file.isDirectory)) {
+    const sourceBytes = files.reduce((total, file) => total + Math.max(0, file.size || 0), 0)
+    return { estimatedOutputBytes: Math.ceil(sourceBytes * 1.05), estimateReliable: true }
+  }
+  return { estimatedOutputBytes: undefined, estimateReliable: false }
+}
+
+const runCompressionResourcePreflight = async (
+  taskId: string,
+  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number } },
+) => {
+  const task = taskStore.tasks.find(item => item.id === taskId)
+  if (!task) return false
+
+  taskStore.updateTaskStatus(taskId, 'preparing')
+  try {
+    const estimate = getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level)
+    const report = await tauriCommands.preflightOperationResources({
+      operation: 'compression',
+      outputPath: job.outputPath,
+      sourcePaths: job.files.map(file => file.path),
+      ...estimate,
+    })
+    attachResourcePreflight(task, report)
+    if (!report.canStart) {
+      task.error = report.summary
+      taskStore.updateTaskStatus(taskId, 'failed')
+      appStore.setError(`${appStore.t('common.error')}: ${report.summary}`)
+      return false
+    }
+  } catch (error) {
+    appendResourcePreflightFallback(task, error)
+  }
+  return true
+}
+
 const runCompression = async () => {
   if (compressionStore.groups.length === 0 && compressionStore.selectedFiles.length === 0) return
 
@@ -324,6 +377,10 @@ const runCompression = async () => {
       continue
     }
     try {
+      if (!await runCompressionResourcePreflight(taskId, job)) {
+        failed++
+        continue
+      }
       taskStore.updateTaskStatus(taskId, 'compressing')
       await tauriCommands.compressFiles(
         taskId,

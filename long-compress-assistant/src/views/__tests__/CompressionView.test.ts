@@ -9,6 +9,7 @@ import { useTaskStore } from '@/stores/task'
 
 const mocks = vi.hoisted(() => ({
   compressFiles: vi.fn(),
+  preflightOperationResources: vi.fn(),
   checkRarCompressionSupport: vi.fn(),
   openRarDownloadPage: vi.fn(),
   installWinRarWithWinget: vi.fn(),
@@ -21,6 +22,7 @@ vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => vi.fn()) }))
 vi.mock('@/composables/useTauriCommands', () => ({
   useTauriCommands: () => ({
     compressFiles: mocks.compressFiles,
+    preflightOperationResources: mocks.preflightOperationResources,
     checkRarCompressionSupport: mocks.checkRarCompressionSupport,
     openRarDownloadPage: mocks.openRarDownloadPage,
     installWinRarWithWinget: mocks.installWinRarWithWinget,
@@ -61,6 +63,26 @@ describe('CompressionView', () => {
     vi.clearAllMocks()
     mocks.invoke.mockResolvedValue('{}')
     mocks.compressFiles.mockResolvedValue(undefined)
+    mocks.preflightOperationResources.mockResolvedValue({
+      operation: 'compression',
+      outputPath: 'C:/input/sample.zip',
+      probePath: 'C:/input/sample.zip',
+      mountPoint: 'C:/',
+      fileSystem: 'NTFS',
+      location: 'local',
+      medium: 'ssd',
+      totalBytes: 1_000_000_000,
+      availableBytes: 900_000_000,
+      estimatedOutputBytes: 13,
+      requiredBytes: 134_217_741,
+      reserveBytes: 134_217_728,
+      estimateSource: 'provided_estimate',
+      estimateReliable: false,
+      status: 'ready',
+      canStart: true,
+      summary: '空间充足',
+      warnings: [],
+    })
     mocks.checkRarCompressionSupport.mockResolvedValue({ available: true, message: 'ready' })
     mocks.installWinRarWithWinget.mockResolvedValue({ available: true, encoder_path: 'C:/Program Files/WinRAR/Rar.exe', message: 'ready' })
     mocks.getFileInfo.mockResolvedValue(null)
@@ -80,6 +102,7 @@ describe('CompressionView', () => {
     const startButton = wrapper.findAll('button').find(button => button.text().includes(appStore.t('compress.start')))
     expect(startButton).toBeTruthy()
     await startButton!.trigger('click')
+    await flushPromises()
 
     expect(mocks.compressFiles).toHaveBeenCalledWith(
       expect.any(String),
@@ -87,6 +110,13 @@ describe('CompressionView', () => {
       'C:/input/sample.zip',
       expect.objectContaining({ format: 'zip', level: 6 }),
     )
+    expect(mocks.preflightOperationResources).toHaveBeenCalledWith(expect.objectContaining({
+      operation: 'compression',
+      outputPath: 'C:/input/sample.zip',
+      sourcePaths: ['C:/input/sample.txt'],
+      estimatedOutputBytes: 13,
+      estimateReliable: true,
+    }))
     expect(taskStore.tasks).toHaveLength(1)
     expect(taskStore.tasks[0].status).toBe('completed')
     expect(compressionStore.selectedFiles).toHaveLength(1)
@@ -118,6 +148,46 @@ describe('CompressionView', () => {
     expect(row.get('[data-testid="compression-status-progress"]').text()).toContain(
       useAppStore().t('compress.status.pending'),
     )
+  })
+
+  it('blocks compression before the engine when resource capacity is insufficient', async () => {
+    mocks.preflightOperationResources.mockResolvedValueOnce({
+      operation: 'compression',
+      outputPath: 'C:/input/sample.zip',
+      probePath: 'C:/input/sample.zip',
+      mountPoint: 'C:/',
+      fileSystem: 'NTFS',
+      location: 'local',
+      medium: 'ssd',
+      totalBytes: 1_000,
+      availableBytes: 100,
+      estimatedOutputBytes: 13,
+      requiredBytes: 134_217_741,
+      reserveBytes: 134_217_728,
+      estimateSource: 'provided_estimate',
+      estimateReliable: false,
+      status: 'blocked',
+      canStart: false,
+      summary: '目标盘空间不足',
+      warnings: [],
+    })
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(useAppStore().t('compress.start')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(mocks.compressFiles).not.toHaveBeenCalled()
+    expect(useTaskStore().tasks[0]).toMatchObject({
+      status: 'failed',
+      error: '目标盘空间不足',
+      resourcePreflight: { status: 'blocked', canStart: false },
+    })
+    expect(useTaskStore().tasks[0].logs.some(log => log.message.includes('资源预检'))).toBe(true)
+    wrapper.unmount()
   })
 
   it('keeps one row and updates real progress and logs in place for the full lifecycle', async () => {
@@ -290,6 +360,7 @@ describe('CompressionView', () => {
     const appStore = useAppStore()
     const startButton = wrapper.findAll('button').find(button => button.text().includes(appStore.t('compress.start')))
     await startButton!.trigger('click')
+    await flushPromises()
 
     expect(mocks.compressFiles).toHaveBeenCalledTimes(2)
     expect(useTaskStore().tasks.map(task => task.status)).toEqual(['failed', 'completed'])

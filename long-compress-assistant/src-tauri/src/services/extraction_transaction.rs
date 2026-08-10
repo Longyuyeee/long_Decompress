@@ -9,7 +9,7 @@ use super::compression_service::CompressionError;
 pub(crate) const MAX_EXTRACTED_ENTRIES: usize = 250_000;
 pub(crate) const MAX_EXTRACTED_BYTES: u64 = 512 * 1024 * 1024 * 1024;
 pub(crate) const MAX_EXPANSION_RATIO: u64 = 10_000;
-pub(crate) const DISK_SAFETY_RESERVE: u64 = 128 * 1024 * 1024;
+pub(crate) use super::storage_preflight::DISK_SAFETY_RESERVE;
 
 /// Owns a sibling extraction directory and removes it on every exit path.
 pub(crate) struct ExtractionStaging {
@@ -103,18 +103,8 @@ pub(crate) fn validate_resource_limits(
     Ok(())
 }
 
-fn available_disk_space(path: &Path) -> Option<u64> {
-    let disks = sysinfo::Disks::new_with_refreshed_list();
-    disks
-        .list()
-        .iter()
-        .filter(|disk| path.starts_with(disk.mount_point()))
-        .max_by_key(|disk| disk.mount_point().components().count())
-        .map(|disk| disk.available_space())
-}
-
 pub(crate) fn validate_disk_capacity(path: &Path, expanded_bytes: u64) -> Result<()> {
-    if available_disk_space(path)
+    if super::storage_preflight::available_disk_space(path)
         .is_some_and(|available| available < expanded_bytes.saturating_add(DISK_SAFETY_RESERVE))
     {
         return Err(CompressionError::DiskFull.into());

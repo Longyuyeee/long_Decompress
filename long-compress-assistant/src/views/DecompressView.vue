@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { useTaskStore } from '@/stores/task'
+import { useTaskStore, type Task } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { usePasswordStore } from '@/stores/password'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -11,6 +11,7 @@ import AeroTable from '@/components/tasks/AeroTable.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath } from '@/utils/compressionFormat'
+import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -233,6 +234,28 @@ const deselectAll = () => {
 
 const isProcessing = ref(false)
 
+const runDecompressionResourcePreflight = async (task: Task) => {
+  taskStore.updateTaskStatus(task.id, 'preparing')
+  try {
+    const report = await tauriCommands.preflightOperationResources({
+      operation: 'decompression',
+      outputPath: task.outputPath,
+      sourcePaths: task.sourceFiles,
+      password: task.password,
+    })
+    attachResourcePreflight(task, report)
+    if (!report.canStart) {
+      task.error = report.summary
+      taskStore.updateTaskStatus(task.id, 'failed')
+      appStore.setError(`${appStore.t('common.error')}: ${report.summary}`)
+      return false
+    }
+  } catch (error) {
+    appendResourcePreflightFallback(task, error)
+  }
+  return true
+}
+
 const startDecompression = async (onlyTaskIds?: string[]) => {
   // 防止重复点击
   if (isProcessing.value) return
@@ -269,7 +292,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
     }
 
     try {
-      taskStore.updateTaskStatus(task.id, 'preparing')
+      if (!await runDecompressionResourcePreflight(task)) continue
       task.passwordRequired = false
       await tauriCommands.decompressFile(task.sourceFiles[0], options, task.id)
 

@@ -1,7 +1,7 @@
 use crate::services::system_service::{SystemService, SystemInfo};
 use tauri::{command, AppHandle};
 use serde::Serialize;
-use sysinfo::{Disks, System};
+use sysinfo::System;
 
 #[cfg(target_os = "windows")]
 use winreg::enums::*;
@@ -43,15 +43,35 @@ pub async fn get_resource_usage() -> Result<ResourceUsage, String> {
 
 #[command]
 pub async fn get_disk_space(path: String) -> Result<(u64, u64), String> {
-    let requested = std::path::PathBuf::from(path);
-    let disks = Disks::new_with_refreshed_list();
-    disks
-        .list()
-        .iter()
-        .filter(|disk| requested.starts_with(disk.mount_point()))
-        .max_by_key(|disk| disk.mount_point().components().count())
-        .map(|disk| (disk.total_space(), disk.available_space()))
+    let target = crate::services::storage_preflight::probe_storage(std::path::Path::new(&path));
+    target
+        .total_bytes
+        .zip(target.available_bytes)
         .ok_or_else(|| "Unable to determine disk space for the selected path".to_string())
+}
+
+#[command]
+pub async fn preflight_operation_resources(
+    operation: String,
+    output_path: String,
+    source_paths: Vec<String>,
+    password: Option<String>,
+    estimated_output_bytes: Option<u64>,
+    estimate_reliable: Option<bool>,
+) -> Result<crate::services::storage_preflight::ResourcePreflightReport, String> {
+    if source_paths.len() > 1_000 {
+        return Err("Resource preflight accepts at most 1000 explicit source paths".to_string());
+    }
+    crate::services::storage_preflight::preflight_operation_resources(
+        &operation,
+        &output_path,
+        &source_paths,
+        password.as_deref(),
+        estimated_output_bytes,
+        estimate_reliable.unwrap_or(false),
+    )
+    .await
+    .map_err(|error| error.to_string())
 }
 
 #[command]

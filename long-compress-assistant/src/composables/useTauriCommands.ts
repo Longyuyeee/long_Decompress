@@ -3,6 +3,7 @@ import { message, open, save, ask } from '@tauri-apps/api/dialog'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage } from '@/utils'
+import type { ResourcePreflightReport, ResourcePreflightRequest } from '@/types/resourcePreflight'
 
 export interface DecompressOptions {
   outputPath: string
@@ -594,6 +595,19 @@ export const useTauriCommands = () => {
     return await invoke<string[]>('list_archive_contents', { filePath, password: password || null })
   }
 
+  const preflightOperationResources = async (
+    request: ResourcePreflightRequest
+  ): Promise<ResourcePreflightReport> => {
+    return await invoke<ResourcePreflightReport>('preflight_operation_resources', {
+      operation: request.operation,
+      outputPath: request.outputPath,
+      sourcePaths: request.sourcePaths,
+      password: request.password || null,
+      estimatedOutputBytes: request.estimatedOutputBytes ?? null,
+      estimateReliable: request.estimateReliable ?? false,
+    })
+  }
+
   const analyzeCompressionSources = async (
     analysisId: string,
     paths: string[],
@@ -661,6 +675,7 @@ export const useTauriCommands = () => {
     decompressFile,
     decompressFiles,
     compressFiles,
+    preflightOperationResources,
     analyzeCompressionSources,
     cancelCompressionAnalysis,
     checkRarCompressionSupport,

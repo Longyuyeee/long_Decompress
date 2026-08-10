@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAppStore } from '@/stores/app'
 import type { Task } from '@/stores/task'
+import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import {
   compressionLogSeverityClass,
   compressionStageTranslationKey,
@@ -39,6 +40,7 @@ const appStore = useAppStore()
     >
       {{ task.currentFile }}
     </div>
+    <ResourcePreflightCard :report="task?.resourcePreflight" class="mt-3" />
     <h4 class="detail-heading mt-5">
       <i class="pi pi-align-left text-xs"></i>
       {{ appStore.t('decompress.config.logs_title') }}
@@ -92,6 +94,7 @@ const appStore = useAppStore()
 .compression-execution-panel {
   min-height: 17rem;
   max-height: 26rem;
+  overflow-y: auto;
   padding: 1.25rem;
 }
 

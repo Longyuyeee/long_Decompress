@@ -391,6 +391,7 @@ fn main() {
             long_compress_assistant::commands::system::get_system_info,
             long_compress_assistant::commands::system::get_resource_usage,
             long_compress_assistant::commands::system::get_disk_space,
+            long_compress_assistant::commands::system::preflight_operation_resources,
             long_compress_assistant::commands::system::get_app_version,
             long_compress_assistant::commands::system::set_auto_start,
             long_compress_assistant::commands::system::check_auto_start,

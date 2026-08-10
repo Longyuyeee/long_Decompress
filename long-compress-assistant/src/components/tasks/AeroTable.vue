@@ -5,6 +5,7 @@ import { useAppStore } from '@/stores/app'
 import { usePasswordStore } from '@/stores/password'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import Modal from '@/components/ui/Modal.vue'
+import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import { open } from '@tauri-apps/api/dialog'
 
 const props = defineProps<{
@@ -454,6 +455,7 @@ const onLeave = (el: any) => {
                         <span class="text-content">{{ task.compressionOptions?.password ? '已启用' : '关闭' }}</span>
                       </div>
                     </div>
+                    <ResourcePreflightCard :report="task.resourcePreflight" />
                   </div>
 
                   <!-- 右侧：执行日志 -->

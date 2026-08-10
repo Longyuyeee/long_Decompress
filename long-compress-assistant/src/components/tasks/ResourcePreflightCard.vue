@@ -1,0 +1,89 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import type { ResourcePreflightReport } from '@/types/resourcePreflight'
+import { formatResourceBytes } from '@/utils/resourcePreflight'
+
+const props = defineProps<{ report?: ResourcePreflightReport }>()
+
+const statusLabel = computed(() => ({
+  ready: '已通过',
+  warning: '需留意',
+  blocked: '已阻止',
+}[props.report?.status || 'warning']))
+
+const locationLabel = computed(() => ({
+  local: '本地磁盘',
+  network: '网络位置',
+  removable: '移动设备',
+  unknown: '位置未知',
+}[props.report?.location || 'unknown']))
+
+const mediumLabel = computed(() => ({
+  ssd: 'SSD',
+  hdd: 'HDD',
+  unknown: '介质未知',
+}[props.report?.medium || 'unknown']))
+</script>
+
+<template>
+  <section
+    v-if="report"
+    data-testid="resource-preflight-card"
+    class="resource-preflight-card min-w-0 rounded-xl border p-3 text-xs"
+    :class="`is-${report.status}`"
+  >
+    <div class="flex min-w-0 items-start justify-between gap-3">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2 font-black text-content">
+          <i class="pi pi-database text-primary"></i>
+          <span>资源预检</span>
+        </div>
+        <p class="mt-1 break-words [overflow-wrap:anywhere] leading-relaxed text-muted">{{ report.summary }}</p>
+      </div>
+      <span class="status-badge shrink-0 rounded-full px-2 py-1 font-black">{{ statusLabel }}</span>
+    </div>
+
+    <dl class="mt-3 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+      <div class="metric"><dt>位置</dt><dd>{{ locationLabel }}</dd></div>
+      <div class="metric"><dt>介质</dt><dd>{{ mediumLabel }}</dd></div>
+      <div class="metric"><dt>可用空间</dt><dd>{{ formatResourceBytes(report.availableBytes) }}</dd></div>
+      <div class="metric"><dt>预计输出</dt><dd>{{ formatResourceBytes(report.estimatedOutputBytes) }}</dd></div>
+    </dl>
+
+    <div class="mt-2 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-dim">
+      {{ report.mountPoint || report.probePath }}<span v-if="report.fileSystem"> · {{ report.fileSystem }}</span>
+      · 预留 {{ formatResourceBytes(report.reserveBytes) }}
+    </div>
+    <ul v-if="report.warnings.length" class="mt-2 space-y-1 text-amber-500">
+      <li v-for="warning in report.warnings" :key="warning" class="flex min-w-0 gap-2">
+        <i class="pi pi-exclamation-triangle mt-0.5 shrink-0"></i>
+        <span class="min-w-0 break-words [overflow-wrap:anywhere]">{{ warning }}</span>
+      </li>
+    </ul>
+  </section>
+</template>
+
+<style scoped>
+.resource-preflight-card {
+  max-width: 100%;
+  overflow-x: hidden;
+  background: color-mix(in srgb, var(--bg-input) 42%, transparent);
+  border-color: color-mix(in srgb, var(--border-subtle) 74%, transparent);
+}
+
+.resource-preflight-card.is-ready { border-color: color-mix(in srgb, #22c55e 38%, var(--border-subtle)); }
+.resource-preflight-card.is-warning { border-color: color-mix(in srgb, #f59e0b 44%, var(--border-subtle)); }
+.resource-preflight-card.is-blocked { border-color: color-mix(in srgb, #ef4444 48%, var(--border-subtle)); }
+.is-ready .status-badge { color: #22c55e; background: color-mix(in srgb, #22c55e 12%, transparent); }
+.is-warning .status-badge { color: #f59e0b; background: color-mix(in srgb, #f59e0b 12%, transparent); }
+.is-blocked .status-badge { color: #ef4444; background: color-mix(in srgb, #ef4444 12%, transparent); }
+
+.metric {
+  min-width: 0;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--bg-card) 48%, transparent);
+}
+.metric dt { color: var(--text-muted); }
+.metric dd { min-width: 0; margin-top: 0.125rem; overflow-wrap: anywhere; color: var(--text-content); font-weight: 800; }
+</style>
