@@ -98,6 +98,11 @@ I/O 拓扑模式会通过 Windows 卷、分区、磁盘和物理介质信息证�
 最小值到最大值相对中位数的波动范围。`matrix.json` 只说明存储拓扑基线，固定写入
 `change_default_concurrency=false`，不能被解释为某种调度策略已经获益。
 
+长时间矩阵也可以先分别用 `performance:io-baseline` 采集两份结果，再向 `performance:io-matrix` 同时传入
+`-ExistingSameVolumeResult` 与 `-ExistingCrossPhysicalDiskResult` 做只读汇总；两份结果仍必须来自同一干净提交、
+同一机器、相同规模和同一个目标卷。正式采样根目录如果位于 Git 仓库内，随机夹具路径必须已被忽略，否则会在
+开始前拒绝，避免临时目录把后续样本变成脏工作区。
+
 2026-08-10 的工具烟雾在当前开发机完成：C→C 被系统证明为同卷 NVMe SSD，E→C 被证明为跨两块物理
 NVMe SSD；两条路线均以 16 MiB 单文件和 1000 个 4 KiB 小文件完成真实往返。每场景只有 1 个样本，
 `threshold_eligible=false`，仅证明工具、拓扑识别、空间护栏和内容闭环可用。本机没有可证明的 HDD，

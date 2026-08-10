@@ -1,8 +1,6 @@
 param(
-  [Parameter(Mandatory = $true)]
   [string]$TargetRoot,
 
-  [Parameter(Mandatory = $true)]
   [string]$CrossSourceRoot,
 
   [ValidateRange(1, 20)]
@@ -14,7 +12,11 @@ param(
   [ValidateRange(1000, 50000)]
   [int]$SmallFileCount = 10000,
 
-  [string]$OutputDirectory
+  [string]$OutputDirectory,
+
+  [string]$ExistingSameVolumeResult,
+
+  [string]$ExistingCrossPhysicalDiskResult
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,12 +31,31 @@ if (-not $OutputDirectory) {
   $runId = Get-Date -Format 'yyyyMMdd-HHmmss'
   $OutputDirectory = Join-Path $projectRoot "test-results\performance-baseline\io-matrix\$runId"
 }
+$analyzeExisting = ($ExistingSameVolumeResult -or $ExistingCrossPhysicalDiskResult)
+if ($analyzeExisting -and -not ($ExistingSameVolumeResult -and $ExistingCrossPhysicalDiskResult)) {
+  throw 'ExistingSameVolumeResult and ExistingCrossPhysicalDiskResult must be provided together.'
+}
+if (-not $analyzeExisting -and (-not $TargetRoot -or -not $CrossSourceRoot)) {
+  throw 'TargetRoot and CrossSourceRoot are required when collecting a new matrix.'
+}
 $resolvedOutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
-$sameVolumePath = Join-Path $resolvedOutputDirectory 'same-volume.json'
-$crossPhysicalPath = Join-Path $resolvedOutputDirectory 'cross-physical-disk.json'
+$sameVolumePath = if ($analyzeExisting) {
+  [IO.Path]::GetFullPath($ExistingSameVolumeResult)
+} else {
+  Join-Path $resolvedOutputDirectory 'same-volume.json'
+}
+$crossPhysicalPath = if ($analyzeExisting) {
+  [IO.Path]::GetFullPath($ExistingCrossPhysicalDiskResult)
+} else {
+  Join-Path $resolvedOutputDirectory 'cross-physical-disk.json'
+}
 $matrixPath = Join-Path $resolvedOutputDirectory 'matrix.json'
 
-foreach ($path in @($sameVolumePath, $crossPhysicalPath, $matrixPath)) {
+$pathsToCreate = @($matrixPath)
+if (-not $analyzeExisting) {
+  $pathsToCreate += @($sameVolumePath, $crossPhysicalPath)
+}
+foreach ($path in $pathsToCreate) {
   if (Test-Path -LiteralPath $path) {
     throw "Refusing to overwrite an existing matrix result: $path"
   }
@@ -46,6 +67,28 @@ if ($Iterations -ge 10 -and $initialDirty) {
 }
 if ($Iterations -ge 10) {
   $repositoryRoot = [IO.Path]::GetFullPath((& git -C $projectRoot rev-parse --show-toplevel).Trim())
+  if (-not $analyzeExisting) {
+    foreach ($benchmarkRoot in @(
+      [pscustomobject]@{ label = 'TargetRoot'; path = $TargetRoot },
+      [pscustomobject]@{ label = 'CrossSourceRoot'; path = $CrossSourceRoot }
+    )) {
+      $resolvedBenchmarkRoot = [IO.Path]::GetFullPath($benchmarkRoot.path)
+      $rootInsideRepository = (
+        $resolvedBenchmarkRoot.Equals($repositoryRoot, [StringComparison]::OrdinalIgnoreCase) -or
+        $resolvedBenchmarkRoot.StartsWith(
+          $repositoryRoot.TrimEnd('\') + '\',
+          [StringComparison]::OrdinalIgnoreCase
+        )
+      )
+      if ($rootInsideRepository) {
+        $probePath = Join-Path $resolvedBenchmarkRoot 'long-decompress-qualification-probe'
+        & git -C $projectRoot check-ignore --quiet -- $probePath
+        if ($LASTEXITCODE -ne 0) {
+          throw "$($benchmarkRoot.label) would create untracked fixtures inside the Git repository."
+        }
+      }
+    }
+  }
   $outputInsideRepository = $resolvedOutputDirectory.StartsWith(
     $repositoryRoot.TrimEnd('\') + '\',
     [StringComparison]::OrdinalIgnoreCase
@@ -123,16 +166,20 @@ function Get-MetricSummary {
   }
 }
 
-Invoke-IoBaseline `
-  -Label 'same_volume' `
-  -Source $TargetRoot `
-  -Target $TargetRoot `
-  -OutputPath $sameVolumePath
-Invoke-IoBaseline `
-  -Label 'cross_physical_disk' `
-  -Source $CrossSourceRoot `
-  -Target $TargetRoot `
-  -OutputPath $crossPhysicalPath
+if (-not $analyzeExisting) {
+  Invoke-IoBaseline `
+    -Label 'same_volume' `
+    -Source $TargetRoot `
+    -Target $TargetRoot `
+    -OutputPath $sameVolumePath
+  Invoke-IoBaseline `
+    -Label 'cross_physical_disk' `
+    -Source $CrossSourceRoot `
+    -Target $TargetRoot `
+    -OutputPath $crossPhysicalPath
+} else {
+  Write-Output "[io-matrix] analyzing existing qualified results without resampling"
+}
 
 $same = Read-BaselineResult -Path $sameVolumePath
 $cross = Read-BaselineResult -Path $crossPhysicalPath
