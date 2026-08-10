@@ -125,6 +125,59 @@ test.describe('Long Decompress desktop shell', () => {
     }
   })
 
+  test('previews task templates without executing and keeps the audit modal responsive', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'task-template audit matrix runs once in desktop Chromium')
+    await page.addInitScript(() => {
+      window.__TAURI_IPC__ = (message: Record<string, any>) => {
+        let value: unknown
+        if (message.cmd === 'tauri' && message.message?.cmd === 'openDialog') {
+          value = 'C:/templates/logs.longtask.json'
+        } else if (message.cmd === 'get_compression_profiles') {
+          value = []
+        } else if (message.cmd === 'get_archive_engine_capabilities') {
+          value = {
+            available: true,
+            fullEngine: true,
+            message: 'ready',
+            formats: [{ name: '7z', extensions: ['7z'], canCreate: true }],
+          }
+        } else if (message.cmd === 'preview_task_template') {
+          value = {
+            template: {
+              schema: 'long-decompress-task-template', version: 1, name: '日志归档', icon: '📦', description: '安全归档日志',
+              sourceRules: { mode: 'pattern', includePatterns: ['*.log'], sizeRangeMib: null },
+              targetRule: { mode: 'choose_at_runtime', filenameTemplate: '{name}-{date}' },
+              compression: { format: '7z', level: 7, splitArchive: false, splitSizeMib: null, keepStructure: true, verifyAfter: true, createSolidArchive: true },
+              passwordStrategy: { mode: 'prompt_at_runtime' }, exportNotes: [],
+            },
+            warnings: ['自动应用保持关闭'],
+            contentSha256: 'a'.repeat(64),
+          }
+        } else if (message.cmd === 'load_app_settings') {
+          value = '{}'
+        }
+        ;(window as any)[`_${message.callback}`]?.(value)
+      }
+    })
+    await page.reload()
+    await page.waitForFunction(() => Boolean(window.__LONG_DECOMPRESS_DESKTOP_E2E__))
+    await page.evaluate(() => window.__LONG_DECOMPRESS_DESKTOP_E2E__!.seedResponsiveWorkspace('compression'))
+    await page.getByRole('button', { name: /压缩中心/ }).click()
+    await page.getByRole('button', { name: /全局设置/ }).click()
+    await page.getByLabel('全局压缩设置').getByRole('button', { name: /管理配置组/ }).click()
+    await page.getByTestId('import-task-template').click()
+
+    const preview = page.getByTestId('task-template-preview')
+    await expect(preview).toBeVisible()
+    await expect(preview).toContainText('导入不会启动压缩')
+    await expect(preview).toContainText('确认导入配置组（不执行）')
+
+    for (const width of responsiveWidths) {
+      await page.setViewportSize({ width, height: 800 })
+      await expectVerticalOnlyScrolling(page, ['[data-testid="task-template-preview"]'])
+    }
+  })
+
   test('renders bounded archive image preview without horizontal overflow', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'archive preview matrix runs once in Chromium')
     await page.addInitScript(() => {

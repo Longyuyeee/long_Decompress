@@ -222,6 +222,62 @@ pub async fn suggest_compression_profile(
         .map_err(|e| format!("推荐配置组失败: {}", e))
 }
 
+/// Export one profile as a portable, secret-free task template.
+#[command]
+pub async fn export_task_template(
+    state: State<'_, CompressionProfileServiceState>,
+    profile_id: String,
+    file_path: String,
+) -> Result<crate::services::task_template::TaskTemplate, String> {
+    let service_lock = state.service.lock().await;
+    let service = service_lock
+        .as_ref()
+        .ok_or_else(|| "配置组服务未初始化".to_string())?;
+    let profile = service
+        .get_profile_by_id(&profile_id)
+        .await
+        .map_err(|error| format!("读取配置组失败: {error}"))?
+        .ok_or_else(|| "要导出的配置组不存在".to_string())?;
+    crate::services::task_template::export_profile_template(
+        &profile,
+        std::path::Path::new(&file_path),
+    )
+    .map_err(|error| format!("导出任务模板失败: {error}"))
+}
+
+/// Parse and validate a template without changing profile storage.
+#[command]
+pub async fn preview_task_template(
+    file_path: String,
+) -> Result<crate::services::task_template::TaskTemplatePreview, String> {
+    crate::services::task_template::preview_template_file(std::path::Path::new(&file_path))
+        .map_err(|error| format!("预览任务模板失败: {error}"))
+}
+
+/// Re-read a previously previewed template, verify its hash, and create a disabled-by-default profile.
+#[command]
+pub async fn import_task_template(
+    state: State<'_, CompressionProfileServiceState>,
+    file_path: String,
+    expected_sha256: String,
+) -> Result<String, String> {
+    let profile = crate::services::task_template::import_template_profile(
+        std::path::Path::new(&file_path),
+        &expected_sha256,
+    )
+    .map_err(|error| format!("导入任务模板失败: {error}"))?;
+    let id = profile.id.clone();
+    let service_lock = state.service.lock().await;
+    let service = service_lock
+        .as_ref()
+        .ok_or_else(|| "配置组服务未初始化".to_string())?;
+    service
+        .create_profile(profile)
+        .await
+        .map_err(|error| format!("保存导入配置组失败: {error}"))?;
+    Ok(id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::CreateCompressionProfileRequest;

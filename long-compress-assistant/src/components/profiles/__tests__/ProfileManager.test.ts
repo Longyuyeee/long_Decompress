@@ -3,17 +3,33 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ProfileManager from '../ProfileManager.vue'
 
 const mocks = vi.hoisted(() => ({
+  profiles: [] as Record<string, unknown>[],
   loadAllProfiles: vi.fn(),
   addProfile: vi.fn(),
   modifyProfile: vi.fn(),
   removeProfile: vi.fn(),
   setError: vi.fn(),
   setSuccess: vi.fn(),
+  open: vi.fn(),
+  save: vi.fn(),
+  exportTaskTemplate: vi.fn(),
+  previewTaskTemplate: vi.fn(),
+  importTaskTemplate: vi.fn(),
+}))
+
+vi.mock('@tauri-apps/api/dialog', () => ({ open: mocks.open, save: mocks.save }))
+
+vi.mock('@/composables/useCompressionProfiles', () => ({
+  useCompressionProfiles: () => ({
+    exportTaskTemplate: mocks.exportTaskTemplate,
+    previewTaskTemplate: mocks.previewTaskTemplate,
+    importTaskTemplate: mocks.importTaskTemplate,
+  }),
 }))
 
 vi.mock('@/stores/compressionProfile', () => ({
   useCompressionProfileStore: () => ({
-    sortedProfiles: [],
+    sortedProfiles: mocks.profiles,
     loading: false,
     loadAllProfiles: mocks.loadAllProfiles,
     addProfile: mocks.addProfile,
@@ -48,8 +64,93 @@ const mountManager = () => mount(ProfileManager, {
 describe('ProfileManager', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.profiles.splice(0)
     mocks.loadAllProfiles.mockResolvedValue(undefined)
     mocks.addProfile.mockResolvedValue('profile-id')
+  })
+
+  it('previews a bounded template and imports only after explicit confirmation', async () => {
+    mocks.open.mockResolvedValue('C:/templates/daily.longtask.json')
+    mocks.previewTaskTemplate.mockResolvedValue({
+      template: {
+        schema: 'long-decompress-task-template',
+        version: 1,
+        name: '日志归档',
+        icon: '📦',
+        description: '归档日志文件',
+        sourceRules: { mode: 'pattern', includePatterns: ['*.log'], sizeRangeMib: null },
+        targetRule: { mode: 'choose_at_runtime', filenameTemplate: '{name}-{date}' },
+        compression: {
+          format: '7z',
+          level: 7,
+          splitArchive: false,
+          splitSizeMib: null,
+          keepStructure: true,
+          verifyAfter: true,
+          createSolidArchive: true,
+        },
+        passwordStrategy: { mode: 'prompt_at_runtime' },
+        exportNotes: ['固定密码已替换为执行时询问'],
+      },
+      warnings: ['自动匹配规则导入后默认保持关闭'],
+      contentSha256: 'a'.repeat(64),
+    })
+    mocks.importTaskTemplate.mockResolvedValue('imported-profile')
+
+    const wrapper = mountManager()
+    await flushPromises()
+    await wrapper.get('[data-testid="import-task-template"]').trigger('click')
+    await flushPromises()
+
+    expect(mocks.previewTaskTemplate).toHaveBeenCalledWith('C:/templates/daily.longtask.json')
+    const preview = wrapper.get('[data-testid="task-template-preview"]')
+    expect(wrapper.text()).toContain('确认后只创建配置组')
+    expect(preview.text()).toContain('固定密码、删除源文件和额外引擎参数')
+    expect(preview.text()).toContain('执行时询问密码')
+    expect(preview.text()).toContain('自动匹配规则导入后默认保持关闭')
+    expect(mocks.importTaskTemplate).not.toHaveBeenCalled()
+
+    await wrapper.get('[data-testid="confirm-task-template-import"]').trigger('click')
+    await flushPromises()
+
+    expect(mocks.importTaskTemplate).toHaveBeenCalledWith(
+      'C:/templates/daily.longtask.json',
+      'a'.repeat(64),
+    )
+    expect(mocks.loadAllProfiles).toHaveBeenCalledTimes(2)
+    expect(mocks.setSuccess).toHaveBeenCalledWith('任务模板已导入为配置组，尚未执行任何压缩任务')
+  })
+
+  it('exports a profile through a user-selected file without exposing a task execution action', async () => {
+    mocks.profiles.push({
+      id: 'daily',
+      name: '日常/ZIP',
+      icon: '📦',
+      description: '',
+      config: {
+        format: 'zip', level: 6, password: null, splitArchive: false, splitSize: null,
+        keepStructure: true, deleteAfter: false, verifyAfter: true,
+        createSolidArchive: false, filenameTemplate: null, extraParams: {},
+      },
+      stats: { useCount: 0, totalBytesProcessed: 0 },
+      lastUsedAt: null,
+    })
+    mocks.save.mockResolvedValue('C:/templates/daily.longtask.json')
+    mocks.exportTaskTemplate.mockResolvedValue({})
+
+    const wrapper = mountManager()
+    await flushPromises()
+    await wrapper.get('[data-testid="export-task-template-daily"]').trigger('click')
+    await flushPromises()
+
+    expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({
+      defaultPath: '日常-ZIP.longtask.json',
+    }))
+    expect(mocks.exportTaskTemplate).toHaveBeenCalledWith(
+      'daily',
+      'C:/templates/daily.longtask.json',
+    )
+    expect(mocks.setSuccess).toHaveBeenCalledWith(expect.stringContaining('不包含固定密码'))
   })
 
   it('validates the name and saves a capability-aligned profile', async () => {

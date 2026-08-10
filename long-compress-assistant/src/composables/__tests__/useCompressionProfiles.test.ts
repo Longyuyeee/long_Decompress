@@ -237,6 +237,41 @@ describe('useCompressionProfiles', () => {
     await expect(api.suggestProfile({ file_path: 'C:/none', file_size: 0 })).resolves.toBeNull()
   })
 
+  it('binds task-template export, preview, and import to explicit command payloads', async () => {
+    const api = useCompressionProfiles()
+    const template = {
+      schema: 'long-decompress-task-template',
+      version: 1,
+      name: 'Daily ZIP',
+    }
+    const preview = {
+      template,
+      warnings: ['review first'],
+      contentSha256: 'b'.repeat(64),
+    }
+
+    mocks.invoke.mockResolvedValueOnce(template)
+    await expect(api.exportTaskTemplate('profile-1', 'C:/daily.longtask.json')).resolves.toEqual(template)
+    expect(mocks.invoke).toHaveBeenLastCalledWith('export_task_template', {
+      profileId: 'profile-1',
+      filePath: 'C:/daily.longtask.json',
+    })
+
+    mocks.invoke.mockResolvedValueOnce(preview)
+    await expect(api.previewTaskTemplate('C:/daily.longtask.json')).resolves.toEqual(preview)
+    expect(mocks.invoke).toHaveBeenLastCalledWith('preview_task_template', {
+      filePath: 'C:/daily.longtask.json',
+    })
+
+    mocks.invoke.mockResolvedValueOnce('imported-profile')
+    await expect(api.importTaskTemplate('C:/daily.longtask.json', 'b'.repeat(64)))
+      .resolves.toBe('imported-profile')
+    expect(mocks.invoke).toHaveBeenLastCalledWith('import_task_template', {
+      filePath: 'C:/daily.longtask.json',
+      expectedSha256: 'b'.repeat(64),
+    })
+  })
+
   it('normalizes every command failure and keeps initialization backward compatible', async () => {
     const error = new Error('backend exploded')
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)

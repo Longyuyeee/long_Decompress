@@ -96,3 +96,46 @@ export interface ApplyProfileRequest {
 export interface SuggestProfileRequest {
   filePath: string
 }
+
+export type TaskTemplateSourceMode = 'manual_selection' | 'all' | 'pattern' | 'size_range'
+export type TaskTemplateTargetMode = 'same_directory' | 'choose_at_runtime'
+
+export type TaskTemplatePasswordStrategy =
+  | { mode: 'none' }
+  | { mode: 'prompt_at_runtime' }
+  | { mode: 'from_vault'; categoryId: string | null }
+  | { mode: 'auto_generate'; length: number; saveToVault: boolean }
+
+export interface TaskTemplate {
+  schema: 'long-decompress-task-template'
+  version: 1
+  name: string
+  icon: string
+  description: string
+  sourceRules: {
+    mode: TaskTemplateSourceMode
+    includePatterns: string[]
+    sizeRangeMib: [number, number] | null
+  }
+  targetRule: {
+    mode: TaskTemplateTargetMode
+    filenameTemplate: string | null
+  }
+  compression: {
+    format: string
+    level: number
+    splitArchive: boolean
+    splitSizeMib: number | null
+    keepStructure: boolean
+    verifyAfter: boolean
+    createSolidArchive: boolean
+  }
+  passwordStrategy: TaskTemplatePasswordStrategy
+  exportNotes: string[]
+}
+
+export interface TaskTemplatePreview {
+  template: TaskTemplate
+  warnings: string[]
+  contentSha256: string
+}

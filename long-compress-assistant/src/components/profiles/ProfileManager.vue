@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { open, save } from '@tauri-apps/api/dialog'
 import { useCompressionProfileStore } from '@/stores/compressionProfile'
 import { useAppStore } from '@/stores/app'
-import type { CompressionProfile, CreateProfileRequest } from '@/types/profile'
+import type { CompressionProfile, CreateProfileRequest, TaskTemplatePreview } from '@/types/profile'
 import { COMPRESSIBLE_FORMATS, FORMAT_CAPABILITIES, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 import { extractErrorMessage } from '@/utils'
 import Modal from '@/components/ui/Modal.vue'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
+import { useCompressionProfiles } from '@/composables/useCompressionProfiles'
 
 const profileStore = useCompressionProfileStore()
 const appStore = useAppStore()
 const archiveEngine = useArchiveEngine()
+const taskTemplates = useCompressionProfiles()
 
 type DialogMode = 'create' | 'edit' | null
 
@@ -21,6 +24,10 @@ const saving = ref(false)
 const deleting = ref(false)
 const formError = ref('')
 const showPassword = ref(false)
+const templatePreview = ref<TaskTemplatePreview | null>(null)
+const templateFilePath = ref('')
+const templateBusy = ref(false)
+const exportingProfileId = ref<string | null>(null)
 
 const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '🎨', '🔧', '⭐']
 const formatOptions = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
@@ -170,6 +177,98 @@ const confirmDelete = async () => {
   }
 }
 
+const safeTemplateFileName = (name: string) => {
+  const normalized = name.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-').replace(/[. ]+$/g, '').trim()
+  return `${normalized || 'task-template'}.longtask.json`
+}
+
+const exportTemplate = async (profile: CompressionProfile) => {
+  const filePath = await save({
+    title: '导出任务模板',
+    defaultPath: safeTemplateFileName(profile.name),
+    filters: [{ name: 'Long解压任务模板', extensions: ['json'] }],
+  })
+  if (!filePath) return
+
+  exportingProfileId.value = profile.id
+  try {
+    await taskTemplates.exportTaskTemplate(profile.id, filePath)
+    appStore.setSuccess('任务模板已安全导出，不包含固定密码与删除源文件设置')
+  } catch (error) {
+    appStore.setError(extractErrorMessage(error))
+  } finally {
+    exportingProfileId.value = null
+  }
+}
+
+const selectTemplateForImport = async () => {
+  const selection = await open({
+    title: '选择任务模板',
+    multiple: false,
+    filters: [{ name: 'Long解压任务模板', extensions: ['json'] }],
+  })
+  if (typeof selection !== 'string') return
+
+  templateBusy.value = true
+  try {
+    templatePreview.value = await taskTemplates.previewTaskTemplate(selection)
+    templateFilePath.value = selection
+  } catch (error) {
+    appStore.setError(extractErrorMessage(error))
+  } finally {
+    templateBusy.value = false
+  }
+}
+
+const closeTemplatePreview = () => {
+  if (templateBusy.value) return
+  templatePreview.value = null
+  templateFilePath.value = ''
+}
+
+const confirmTemplateImport = async () => {
+  if (!templatePreview.value || !templateFilePath.value) return
+  templateBusy.value = true
+  try {
+    await taskTemplates.importTaskTemplate(
+      templateFilePath.value,
+      templatePreview.value.contentSha256,
+    )
+    await profileStore.loadAllProfiles()
+    templatePreview.value = null
+    templateFilePath.value = ''
+    appStore.setSuccess('任务模板已导入为配置组，尚未执行任何压缩任务')
+  } catch (error) {
+    appStore.setError(extractErrorMessage(error))
+  } finally {
+    templateBusy.value = false
+  }
+}
+
+const passwordStrategyLabel = computed(() => {
+  const strategy = templatePreview.value?.template.passwordStrategy
+  if (!strategy || strategy.mode === 'none') return '不使用密码'
+  if (strategy.mode === 'prompt_at_runtime') return '执行时询问密码'
+  if (strategy.mode === 'from_vault') return '执行时从密码保险箱选择'
+  return `执行时自动生成 ${strategy.length} 位密码`
+})
+
+const sourceRuleLabel = computed(() => {
+  const rules = templatePreview.value?.template.sourceRules
+  if (!rules || rules.mode === 'manual_selection') return '每次手动选择文件'
+  if (rules.mode === 'all') return '建议匹配全部文件（导入后默认停用）'
+  if (rules.mode === 'pattern') return `建议匹配：${rules.includePatterns.join('、')}`
+  return rules.sizeRangeMib
+    ? `建议大小：${rules.sizeRangeMib[0]}–${rules.sizeRangeMib[1]} MiB`
+    : '按文件大小建议匹配'
+})
+
+const targetRuleLabel = computed(() =>
+  templatePreview.value?.template.targetRule.mode === 'same_directory'
+    ? '源文件同目录（执行前仍需确认）'
+    : '执行时选择目录'
+)
+
 const formatBytes = (bytes: number) => {
   if (!bytes) return '0 B'
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
@@ -188,9 +287,14 @@ const formatDate = (timestamp: number | null) =>
         <p class="text-sm font-black text-content">{{ profiles.length }} 个配置组</p>
         <p class="mt-0.5 text-xs text-muted">保存常用格式、压缩等级、加密和分卷设置</p>
       </div>
-      <button type="button" class="h-9 shrink-0 rounded-lg bg-primary px-4 text-xs font-black text-white shadow-lg shadow-primary/20 transition hover:brightness-110" @click="openCreateModal">
-        <i class="pi pi-plus mr-2"></i>{{ appStore.t('profiles.add_new') }}
-      </button>
+      <div class="flex min-w-0 flex-wrap justify-end gap-2">
+        <button data-testid="import-task-template" type="button" class="h-9 shrink-0 rounded-lg border border-primary/30 bg-primary/10 px-4 text-xs font-black text-primary transition hover:bg-primary/15 disabled:cursor-wait disabled:opacity-60" :disabled="templateBusy" @click="selectTemplateForImport">
+          <i :class="templateBusy ? 'pi pi-spin pi-spinner' : 'pi pi-file-import'" class="mr-2"></i>导入任务模板
+        </button>
+        <button type="button" class="h-9 shrink-0 rounded-lg bg-primary px-4 text-xs font-black text-white shadow-lg shadow-primary/20 transition hover:brightness-110" @click="openCreateModal">
+          <i class="pi pi-plus mr-2"></i>{{ appStore.t('profiles.add_new') }}
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="flex min-h-48 items-center justify-center text-primary">
@@ -217,6 +321,7 @@ const formatDate = (timestamp: number | null) =>
                 <p class="mt-1 line-clamp-2 min-h-8 text-xs leading-4 text-muted">{{ profile.description || '未填写说明' }}</p>
               </div>
               <div class="flex shrink-0 gap-1">
+                <button :data-testid="`export-task-template-${profile.id}`" type="button" class="h-8 w-8 rounded-lg text-muted hover:bg-primary/10 hover:text-primary disabled:cursor-wait disabled:opacity-60" title="导出安全任务模板" :disabled="exportingProfileId === profile.id" @click="exportTemplate(profile)"><i :class="exportingProfileId === profile.id ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'" class="text-xs"></i></button>
                 <button type="button" class="h-8 w-8 rounded-lg text-muted hover:bg-primary/10 hover:text-primary" :title="appStore.t('profiles.edit')" @click="openEditModal(profile)"><i class="pi pi-pencil text-xs"></i></button>
                 <button type="button" class="h-8 w-8 rounded-lg text-muted hover:bg-red-500/10 hover:text-red-400" :title="appStore.t('profiles.delete')" @click="deletingProfile = profile"><i class="pi pi-trash text-xs"></i></button>
               </div>
@@ -316,6 +421,84 @@ const formatDate = (timestamp: number | null) =>
           </button>
         </div>
       </form>
+    </Modal>
+
+    <Modal
+      :visible="Boolean(templatePreview)"
+      title="导入任务模板"
+      description="审计预览 · 确认后只创建配置组"
+      icon="pi pi-shield"
+      size="lg"
+      layer="nested"
+      :close-on-backdrop="!templateBusy"
+      :close-on-escape="!templateBusy"
+      @update:visible="value => { if (!value) closeTemplatePreview() }"
+    >
+      <div v-if="templatePreview" data-testid="task-template-preview" class="min-w-0 space-y-4 overflow-x-hidden">
+        <div class="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4">
+          <div class="flex items-start gap-3">
+            <i class="pi pi-check-circle mt-0.5 shrink-0 text-emerald-400"></i>
+            <div class="min-w-0">
+              <p class="text-sm font-black text-content">安全边界已应用</p>
+              <p class="mt-1 text-xs leading-5 text-muted">模板不携带固定密码、删除源文件和额外引擎参数；导入不会启动压缩，自动匹配规则默认停用。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid min-w-0 gap-3 sm:grid-cols-2">
+          <section class="min-w-0 rounded-2xl border border-subtle bg-input/25 p-4">
+            <p class="text-xs font-black uppercase tracking-wider text-muted">模板身份</p>
+            <div class="mt-3 flex min-w-0 items-center gap-3">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xl">{{ templatePreview.template.icon }}</span>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-black text-content">{{ templatePreview.template.name }}</p>
+                <p class="mt-0.5 text-xs text-muted">结构版本 {{ templatePreview.template.version }}</p>
+              </div>
+            </div>
+            <p class="mt-3 break-words text-xs leading-5 text-muted">{{ templatePreview.template.description || '未填写用途说明' }}</p>
+          </section>
+
+          <section class="min-w-0 rounded-2xl border border-subtle bg-input/25 p-4">
+            <p class="text-xs font-black uppercase tracking-wider text-muted">压缩方案</p>
+            <div class="mt-3 flex flex-wrap gap-1.5 text-xs font-bold">
+              <span class="rounded-md bg-primary/10 px-2 py-1 text-primary">{{ templatePreview.template.compression.format.toUpperCase() }}</span>
+              <span class="rounded-md bg-card px-2 py-1 text-muted">等级 {{ templatePreview.template.compression.level }}</span>
+              <span v-if="templatePreview.template.compression.splitArchive" class="rounded-md bg-violet-500/10 px-2 py-1 text-violet-400">分卷</span>
+              <span v-if="templatePreview.template.compression.createSolidArchive" class="rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-400">固实</span>
+            </div>
+            <dl class="mt-3 space-y-2 text-xs">
+              <div class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">完整性校验</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.verifyAfter ? '开启' : '关闭' }}</dd></div>
+              <div class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">目录结构</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.keepStructure ? '保留' : '不保留' }}</dd></div>
+            </dl>
+          </section>
+        </div>
+
+        <section class="min-w-0 rounded-2xl border border-subtle bg-input/25 p-4">
+          <p class="text-xs font-black uppercase tracking-wider text-muted">运行时计划</p>
+          <dl class="mt-3 grid min-w-0 gap-3 text-xs sm:grid-cols-2">
+            <div class="min-w-0"><dt class="text-muted">源文件</dt><dd class="mt-1 break-words font-bold leading-5 text-content">{{ sourceRuleLabel }}</dd></div>
+            <div class="min-w-0"><dt class="text-muted">输出位置</dt><dd class="mt-1 break-words font-bold leading-5 text-content">{{ targetRuleLabel }}</dd></div>
+            <div class="min-w-0"><dt class="text-muted">压缩包名称</dt><dd class="mt-1 break-all font-mono font-bold leading-5 text-content">{{ templatePreview.template.targetRule.filenameTemplate || '使用源文件同名压缩包' }}</dd></div>
+            <div class="min-w-0"><dt class="text-muted">密码策略</dt><dd class="mt-1 break-words font-bold leading-5 text-content">{{ passwordStrategyLabel }}</dd></div>
+          </dl>
+        </section>
+
+        <section v-if="templatePreview.warnings.length" class="min-w-0 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4">
+          <p class="text-xs font-black text-amber-400"><i class="pi pi-exclamation-triangle mr-2"></i>导入前提醒</p>
+          <ul class="mt-2 space-y-1.5 pl-5 text-xs leading-5 text-muted">
+            <li v-for="warning in templatePreview.warnings" :key="warning" class="list-disc break-words">{{ warning }}</li>
+          </ul>
+        </section>
+
+        <p class="break-all rounded-xl border border-subtle bg-input/20 px-3 py-2 font-mono text-[10px] leading-4 text-muted">SHA-256 {{ templatePreview.contentSha256 }}</p>
+
+        <div class="flex flex-col-reverse gap-2 border-t border-subtle pt-4 sm:flex-row sm:justify-end">
+          <button type="button" class="h-10 rounded-xl border border-subtle bg-input px-5 text-xs font-black text-muted hover:text-content" :disabled="templateBusy" @click="closeTemplatePreview">取消</button>
+          <button data-testid="confirm-task-template-import" type="button" class="h-10 rounded-xl bg-primary px-5 text-xs font-black text-white shadow-lg shadow-primary/20 hover:brightness-110 disabled:cursor-wait disabled:opacity-60" :disabled="templateBusy" @click="confirmTemplateImport">
+            <i v-if="templateBusy" class="pi pi-spin pi-spinner mr-2"></i>{{ templateBusy ? '正在导入' : '确认导入配置组（不执行）' }}
+          </button>
+        </div>
+      </div>
     </Modal>
 
     <Modal

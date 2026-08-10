@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { extractErrorMessage } from '@/utils'
-import type { CompressionProfile, CreateProfileRequest, PasswordStrategy } from '@/types'
+import type { CompressionProfile, CreateProfileRequest, PasswordStrategy, TaskTemplate, TaskTemplatePreview } from '@/types'
 
 interface ApplyProfileParams {
   profile_id: string
@@ -248,6 +248,18 @@ export const useCompressionProfiles = () => {
     console.warn('[useCompressionProfiles] initializeDefaultProfiles is deprecated - profiles are auto-initialized on app startup')
   }
 
+  const exportTaskTemplate = async (profileId: string, filePath: string): Promise<TaskTemplate> => {
+    return await invoke<TaskTemplate>('export_task_template', { profileId, filePath })
+  }
+
+  const previewTaskTemplate = async (filePath: string): Promise<TaskTemplatePreview> => {
+    return await invoke<TaskTemplatePreview>('preview_task_template', { filePath })
+  }
+
+  const importTaskTemplate = async (filePath: string, expectedSha256: string): Promise<string> => {
+    return await invoke<string>('import_task_template', { filePath, expectedSha256 })
+  }
+
   return {
     getAllProfiles,
     getProfileById,
@@ -257,5 +269,8 @@ export const useCompressionProfiles = () => {
     recordProfileUsage,
     suggestProfile,
     initializeDefaultProfiles,
+    exportTaskTemplate,
+    previewTaskTemplate,
+    importTaskTemplate,
   }
 }
