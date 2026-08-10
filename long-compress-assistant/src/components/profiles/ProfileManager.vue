@@ -19,6 +19,22 @@ const archiveEngine = useArchiveEngine()
 const taskTemplates = useCompressionProfiles()
 const compressionStore = useCompressionStore()
 
+const takeDesktopE2EDialogSelection = () =>
+  import.meta.env.VITE_DESKTOP_E2E === '1'
+    ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeTaskTemplateDialogSelection()
+    : undefined
+
+const openTaskTemplateDialog = async (options: Parameters<typeof open>[0]) => {
+  const selection = takeDesktopE2EDialogSelection()
+  return selection !== undefined ? selection : open(options)
+}
+
+const saveTaskTemplateDialog = async (options: Parameters<typeof save>[0]) => {
+  const selection = takeDesktopE2EDialogSelection()
+  if (selection !== undefined) return typeof selection === 'string' ? selection : null
+  return save(options)
+}
+
 type DialogMode = 'create' | 'edit' | null
 
 const dialogMode = ref<DialogMode>(null)
@@ -236,7 +252,7 @@ const safeTemplateFileName = (name: string) => {
 }
 
 const exportTemplate = async (profile: CompressionProfile) => {
-  const filePath = await save({
+  const filePath = await saveTaskTemplateDialog({
     title: '导出任务模板',
     defaultPath: safeTemplateFileName(profile.name),
     filters: [{ name: 'Long解压任务模板', extensions: ['json'] }],
@@ -255,7 +271,7 @@ const exportTemplate = async (profile: CompressionProfile) => {
 }
 
 const selectTemplateForImport = async () => {
-  const selection = await open({
+  const selection = await openTaskTemplateDialog({
     title: '选择任务模板',
     multiple: false,
     filters: [{ name: 'Long解压任务模板', extensions: ['json'] }],
@@ -299,7 +315,7 @@ const confirmTemplateImport = async () => {
 }
 
 const selectSourcesForDraft = async (profile: CompressionProfile) => {
-  const selection = await open({
+  const selection = await openTaskTemplateDialog({
     title: `为“${profile.name}”选择源文件`,
     multiple: true,
     directory: false,
@@ -325,7 +341,7 @@ const closeDraftPlan = () => {
 }
 
 const selectFolderForWatchPreview = async (profile: CompressionProfile) => {
-  const selection = await open({
+  const selection = await openTaskTemplateDialog({
     title: `用“${profile.name}”只读预览文件夹规则`,
     multiple: false,
     directory: true,

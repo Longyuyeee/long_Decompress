@@ -5,6 +5,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   statSync,
@@ -444,7 +445,7 @@ try {
   )
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
-  assert.equal(navigation.length, 5, 'the real desktop shell must expose five navigation buttons')
+  assert.equal(navigation.length, 6, 'the real desktop shell must expose six navigation buttons')
   assert.equal(
     await navigation[0].getAttribute('aria-current'),
     'page',
@@ -478,6 +479,123 @@ try {
     payload,
     'the extracted file must match the source payload byte-for-byte',
   )
+
+  console.log('[desktop-e2e] verifying task-template import, draft, and read-only folder preview')
+  const taskTemplateDirectory = path.join(fixtureDirectory, 'task-template-watch')
+  const taskTemplateNestedDirectory = path.join(taskTemplateDirectory, 'nested')
+  const taskTemplateKeep = path.join(taskTemplateNestedDirectory, 'keep.log')
+  const taskTemplateSkip = path.join(taskTemplateDirectory, 'skip.tmp')
+  const taskTemplateUnmatched = path.join(taskTemplateDirectory, 'notes.txt')
+  const exportedTaskTemplate = path.join(fixtureDirectory, 'desktop-audit.longtask.json')
+  mkdirSync(taskTemplateNestedDirectory, { recursive: true })
+  writeFileSync(taskTemplateKeep, 'stable log payload', 'utf8')
+  writeFileSync(taskTemplateSkip, 'excluded temporary payload', 'utf8')
+  writeFileSync(taskTemplateUnmatched, 'unmatched text payload', 'utf8')
+
+  const taskTemplateProfile = await callDesktopBridge('createTaskTemplateAuditProfile')
+  await callDesktopBridge('queueTaskTemplateDialogSelections', [
+    exportedTaskTemplate,
+    exportedTaskTemplate,
+    taskTemplateDirectory,
+    [taskTemplateKeep, taskTemplateSkip],
+  ])
+
+  navigation = await driver.findElements(By.css('aside nav > button'))
+  await navigation[1].click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
+  await (await waitForElement('[data-testid="manage-compression-profiles"]')).click()
+  await waitForElement('.profile-manager')
+
+  await (await waitForElement(`[data-testid="export-task-template-${taskTemplateProfile.id}"]`)).click()
+  await waitForNonEmptyFile(exportedTaskTemplate)
+  const exportedTaskTemplateJson = readFileSync(exportedTaskTemplate, 'utf8')
+  assert.ok(
+    !exportedTaskTemplateJson.includes('desktop-e2e-secret-must-not-export'),
+    'the real desktop export must not contain the fixed password',
+  )
+  assert.ok(
+    !exportedTaskTemplateJson.includes('deleteAfter') &&
+      !exportedTaskTemplateJson.includes('must-not-export'),
+    'the real desktop export must omit delete-source and extra engine parameters',
+  )
+
+  await (await waitForElement('[data-testid="import-task-template"]')).click()
+  const templatePreview = await waitForElement('[data-testid="task-template-preview"]')
+  const templatePreviewText = await templatePreview.getAttribute('textContent')
+  assert.match(templatePreviewText, /导入不会启动压缩/)
+  assert.match(templatePreviewText, /执行时询问密码/)
+  await (await waitForElement('[data-testid="confirm-task-template-import"]')).click()
+  await driver.wait(
+    async () => (await driver.findElements(By.css('[data-testid="task-template-preview"]'))).length === 0,
+    30_000,
+  )
+
+  await (await waitForElement(`[data-testid="preview-watch-folder-${taskTemplateProfile.id}"]`)).click()
+  const watchPreview = await waitForElement('[data-testid="watch-folder-preview"]', 30_000)
+  const watchPreviewText = await watchPreview.getAttribute('textContent')
+  assert.match(watchPreviewText, /一次性扫描，不会建立后台监控/)
+  assert.match(watchPreviewText, /keep\.log/)
+  assert.match(watchPreviewText, /命中排除规则/)
+  assert.match(watchPreviewText, /未命中包含规则/)
+  assert.doesNotMatch(watchPreviewText, /确认创建/)
+  await (await waitForElement('[data-testid="close-watch-folder-preview"]')).click()
+
+  const lateWatchCandidate = path.join(taskTemplateDirectory, 'late.log')
+  writeFileSync(lateWatchCandidate, 'created after the one-shot preview', 'utf8')
+  await new Promise((resolve) => setTimeout(resolve, 1_200))
+  const stateAfterPreview = await callDesktopBridge(
+    'taskTemplateAuditState',
+    taskTemplateProfile.id,
+    taskTemplateProfile.name,
+  )
+  assert.equal(stateAfterPreview.taskCount, 0, 'read-only preview must not create a desktop task')
+  assert.equal(stateAfterPreview.draftGroups.length, 0, 'read-only preview must not create a draft')
+
+  await (await waitForElement(`[data-testid="create-template-draft-${taskTemplateProfile.id}"]`)).click()
+  const draftPlan = await waitForElement('[data-testid="template-draft-plan"]')
+  const draftPlanText = await draftPlan.getAttribute('textContent')
+  assert.match(draftPlanText, /只创建草稿，不启动任务/)
+  assert.match(draftPlanText, /命中排除规则/)
+  await (await waitForElement('[data-testid="confirm-template-draft"]')).click()
+  await waitForElement('[data-testid="compression-group-row"]')
+
+  const finalTaskTemplateState = await callDesktopBridge(
+    'taskTemplateAuditState',
+    taskTemplateProfile.id,
+    taskTemplateProfile.name,
+  )
+  assert.equal(finalTaskTemplateState.importedProfiles.length, 1)
+  assert.deepEqual(
+    finalTaskTemplateState.importedProfiles[0],
+    {
+      password: null,
+      deleteAfter: false,
+      autoApplyEnabled: false,
+      passwordStrategy: 'none',
+      extraParams: {},
+    },
+    'the imported desktop profile must retain safe runtime defaults',
+  )
+  assert.deepEqual(
+    finalTaskTemplateState.draftGroups,
+    [{ fileCount: 1, password: '', deleteAfter: false, taskId: null }],
+    'the confirmed template result must remain an inert, secret-free draft',
+  )
+  assert.equal(finalTaskTemplateState.taskCount, 0)
+  assert.equal(finalTaskTemplateState.activeTaskCount, 0)
+  assert.equal(finalTaskTemplateState.autoStartRequested, false)
+  assert.equal(
+    readdirSync(taskTemplateNestedDirectory).some(entry => entry.endsWith('.7z')),
+    false,
+    'the desktop template workflow must not create an archive before explicit start',
+  )
+  assert.equal(
+    await callDesktopBridge('taskTemplateDialogQueueLength'),
+    0,
+    'every desktop task-template dialog selection must be consumed',
+  )
+  await callDesktopBridge('clearCompressionWorkspace')
 
   console.log('[desktop-e2e] verifying native 7Z progress and byte-for-byte round-trip')
   const sevenZipSource = path.join(fixtureDirectory, 'sevenzip-payload.bin')
@@ -1168,6 +1286,7 @@ try {
           ].join('; '),
         ],
         layout.toUpperCase(),
+        { timeout: 120_000 },
       )
       addExtractOnlyCase(layout, diskImage, 'extract-only-payload.txt')
     }
@@ -1435,7 +1554,7 @@ try {
   assertFullFormatMatrixReady()
 
   navigation = await driver.findElements(By.css('aside nav > button'))
-  await navigation[4].click()
+  await navigation[navigation.length - 1].click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/settings'), 30_000)
   assert.ok(await waitForNonEmptyText('main h1'), 'the settings heading is empty')
 

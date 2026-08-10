@@ -342,6 +342,7 @@ const handlePasswordGenerated = (password: string) => {
 
       <!-- 配置组选择按钮 -->
       <button
+        data-testid="manage-compression-profiles"
         @click="profileDialogMode = 'manage'; showProfileSelector = true"
         class="min-w-0 max-w-full px-4 py-2 rounded-xl border border-subtle text-xs font-black leading-5 transition-all"
         :class="showProfileSelector ? 'bg-sky-500/10 border-sky-500/30 text-sky-400' : 'bg-input text-muted hover:text-content'"

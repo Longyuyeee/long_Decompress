@@ -181,9 +181,6 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 onMounted(async () => {
   window.addEventListener('keydown', handleKeydown)
-  if (import.meta.env.VITE_DESKTOP_E2E === '1') {
-    cleanupDesktopE2EBridge = installDesktopE2EBridge()
-  }
   // 初始化可访问性设置
   initAccessibility()
   setupWatchers()
@@ -356,6 +353,12 @@ onMounted(async () => {
     else unlistenResize = unlisten
   } catch (error) {
     console.warn('Window resize listener is unavailable:', error)
+  }
+
+  // Expose the desktop test bridge only after native event listeners are ready.
+  // This is the application-readiness boundary for desktop lifecycle assertions.
+  if (import.meta.env.VITE_DESKTOP_E2E === '1') {
+    cleanupDesktopE2EBridge = installDesktopE2EBridge()
   }
 })
 

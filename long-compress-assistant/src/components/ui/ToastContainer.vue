@@ -4,7 +4,7 @@
       <div 
         v-for="toast in uiStore.toasts" 
         :key="toast.id"
-        class="toast-item pointer-events-auto flex items-center p-4 rounded-2xl shadow-2xl border border-subtle bg-modal/95 backdrop-blur-xl text-content relative overflow-hidden"
+        class="toast-item pointer-events-none flex items-center p-4 rounded-2xl shadow-2xl border border-subtle bg-modal/95 backdrop-blur-xl text-content relative overflow-hidden"
         :role="toast.type === 'error' ? 'alert' : 'status'"
       >
         <!-- 侧边指示条 -->
@@ -19,7 +19,7 @@
           <p class="text-xs font-bold leading-relaxed">{{ toast.message }}</p>
         </div>
 
-        <button @click="uiStore.removeToast(toast.id)" :aria-label="`关闭${getTypeLabel(toast.type)}提示`" class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-content hover:bg-input transition-colors">
+        <button @click="uiStore.removeToast(toast.id)" :aria-label="`关闭${getTypeLabel(toast.type)}提示`" class="pointer-events-auto absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-content hover:bg-input transition-colors">
           <i class="pi pi-times text-sm"></i>
         </button>
       </div>

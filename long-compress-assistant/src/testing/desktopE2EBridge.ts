@@ -41,6 +41,32 @@ export interface DesktopE2EBridge {
   isWindowVisible: () => Promise<boolean>
   desktopBehaviorState: () => Promise<{ close_to_tray: boolean; has_active_tasks: boolean }>
   requestExitConfirmation: () => Promise<boolean>
+  createTaskTemplateAuditProfile: () => Promise<{ id: string; name: string }>
+  taskTemplateAuditState: (
+    sourceProfileId: string,
+    profileName: string,
+  ) => Promise<{
+    importedProfiles: Array<{
+      password: string | null
+      deleteAfter: boolean
+      autoApplyEnabled: boolean
+      passwordStrategy: unknown
+      extraParams: Record<string, string>
+    }>
+    draftGroups: Array<{
+      fileCount: number
+      password: string
+      deleteAfter: boolean
+      taskId: string | null
+    }>
+    taskCount: number
+    activeTaskCount: number
+    autoStartRequested: boolean
+  }>
+  clearCompressionWorkspace: () => void
+  queueTaskTemplateDialogSelections: (selections: Array<string | string[] | null>) => void
+  takeTaskTemplateDialogSelection: () => string | string[] | null | undefined
+  taskTemplateDialogQueueLength: () => number
 }
 
 declare global {
@@ -53,6 +79,7 @@ export const installDesktopE2EBridge = () => {
   const taskStore = useTaskStore()
   const compressionStore = useCompressionStore()
   const updateStore = useUpdateStore()
+  const taskTemplateDialogSelections: Array<string | string[] | null> = []
 
   const addActiveTask = () => {
     taskStore.removeTask(TEST_TASK_ID)
@@ -372,6 +399,85 @@ export const installDesktopE2EBridge = () => {
     isWindowVisible: () => appWindow.isVisible(),
     desktopBehaviorState: () => invoke('desktop_e2e_get_behavior_state'),
     requestExitConfirmation: () => invoke('desktop_e2e_request_exit_confirmation'),
+
+    async createTaskTemplateAuditProfile() {
+      compressionStore.prepareQuickPacks()
+      taskStore.tasks.splice(0)
+      await syncActiveState()
+      const name = `Desktop E2E 任务模板 ${Date.now()}`
+      const id = await invoke<string>('create_compression_profile', {
+        profile: {
+          name,
+          icon: '📦',
+          description: '真实桌面任务模板安全门禁',
+          config: {
+            format: '7z',
+            level: 7,
+            password: 'desktop-e2e-secret-must-not-export',
+            splitArchive: false,
+            splitSize: null,
+            keepStructure: true,
+            deleteAfter: true,
+            verifyAfter: true,
+            createSolidArchive: true,
+            filenameTemplate: '{name}-{date}',
+            extraParams: { unsafe: 'must-not-export' },
+          },
+          autoApply: {
+            enabled: false,
+            mode: 'pattern',
+            file_patterns: ['*.log'],
+            exclude_patterns: ['*.tmp'],
+            size_range: null,
+          },
+        },
+      })
+      return { id, name }
+    },
+
+    async taskTemplateAuditState(sourceProfileId, profileName) {
+      const profiles = await invoke<any[]>('get_compression_profiles')
+      const importedProfiles = profiles
+        .filter(profile => profile.id !== sourceProfileId && profile.name === profileName)
+        .map(profile => ({
+          password: profile.config.password ?? null,
+          deleteAfter: profile.config.delete_after ?? false,
+          autoApplyEnabled: profile.auto_apply?.enabled ?? false,
+          passwordStrategy: profile.password_strategy,
+          extraParams: profile.config.extra_params ?? {},
+        }))
+      const draftGroups = compressionStore.groups
+        .filter(group => group.id.startsWith('template-draft-'))
+        .map(group => ({
+          fileCount: group.files.length,
+          password: group.settings?.password ?? '',
+          deleteAfter: group.settings?.deleteAfter ?? false,
+          taskId: group.taskId ?? null,
+        }))
+      return {
+        importedProfiles,
+        draftGroups,
+        taskCount: taskStore.tasks.length,
+        activeTaskCount: taskStore.activeTaskCount,
+        autoStartRequested: compressionStore.autoStartRequested,
+      }
+    },
+
+    clearCompressionWorkspace() {
+      compressionStore.prepareQuickPacks()
+    },
+
+    queueTaskTemplateDialogSelections(selections) {
+      taskTemplateDialogSelections.splice(0, taskTemplateDialogSelections.length, ...selections)
+    },
+
+    takeTaskTemplateDialogSelection() {
+      return taskTemplateDialogSelections.shift()
+    },
+
+    taskTemplateDialogQueueLength() {
+      return taskTemplateDialogSelections.length
+    },
   }
 
   window.__LONG_DECOMPRESS_DESKTOP_E2E__ = bridge

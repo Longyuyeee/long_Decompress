@@ -42,6 +42,7 @@ const appStore = useAppStore()
       <span class="hidden md:inline">{{ appStore.t('compress.cancel_active') }}</span>
     </button>
     <button
+      data-testid="open-global-compression-settings"
       type="button"
       class="h-8 md:h-9 px-3 md:px-5 rounded-lg bg-input border border-subtle text-content text-xs font-bold uppercase tracking-wider hover:bg-primary/10 hover:border-primary transition-all flex items-center gap-2"
       @click="$emit('openSettings')"
