@@ -5,6 +5,7 @@ import type { UpdateManifest } from '@tauri-apps/api/updater'
 import { useTaskStore, type TaskStatus } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
 import { useUpdateStore } from '@/stores/update'
+import type { WatchFolderDraftBatch, WatchFolderRegistration } from '@/types/profile'
 
 const TEST_TASK_ID = 'desktop-e2e-lifecycle-task'
 
@@ -37,6 +38,7 @@ export interface DesktopE2EBridge {
   showAvailableUpdate: () => void
   seedResponsiveWorkspace: (type: 'compression' | 'decompression') => string
   setCloseToTray: (enabled: boolean) => Promise<void>
+  requestAppExit: () => void
   hideWindow: (markerPath: string) => Promise<void>
   isWindowVisible: () => Promise<boolean>
   desktopBehaviorState: () => Promise<{ close_to_tray: boolean; has_active_tasks: boolean }>
@@ -67,6 +69,19 @@ export interface DesktopE2EBridge {
   queueTaskTemplateDialogSelections: (selections: Array<string | string[] | null>) => void
   takeTaskTemplateDialogSelection: () => string | string[] | null | undefined
   taskTemplateDialogQueueLength: () => number
+  watchFolderAuditState: (profileId: string) => Promise<{
+    registrations: WatchFolderRegistration[]
+    pendingBatches: WatchFolderDraftBatch[]
+    draftGroups: Array<{
+      files: string[]
+      password: string
+      deleteAfter: boolean
+      taskId: string | null
+    }>
+    taskCount: number
+    activeTaskCount: number
+    autoStartRequested: boolean
+  }>
 }
 
 declare global {
@@ -395,6 +410,10 @@ export const installDesktopE2EBridge = () => {
       await invoke('set_close_to_tray', { enabled })
     },
 
+    requestAppExit() {
+      void invoke('exit_app')
+    },
+
     hideWindow: (markerPath) => invoke('desktop_e2e_hide_window', { markerPath }),
     isWindowVisible: () => appWindow.isVisible(),
     desktopBehaviorState: () => invoke('desktop_e2e_get_behavior_state'),
@@ -477,6 +496,29 @@ export const installDesktopE2EBridge = () => {
 
     taskTemplateDialogQueueLength() {
       return taskTemplateDialogSelections.length
+    },
+
+    async watchFolderAuditState(profileId) {
+      const [registrations, pendingBatches] = await Promise.all([
+        invoke<WatchFolderRegistration[]>('list_task_template_watch_folders'),
+        invoke<WatchFolderDraftBatch[]>('list_pending_task_template_watch_batches'),
+      ])
+      const draftGroups = compressionStore.groups
+        .filter(group => group.name.endsWith('· 监控草稿'))
+        .map(group => ({
+          files: group.files.map(file => file.path),
+          password: group.settings?.password ?? '',
+          deleteAfter: group.settings?.deleteAfter ?? false,
+          taskId: group.taskId ?? null,
+        }))
+      return {
+        registrations: registrations.filter(item => item.profileId === profileId),
+        pendingBatches: pendingBatches.filter(item => item.profileId === profileId),
+        draftGroups,
+        taskCount: taskStore.tasks.length,
+        activeTaskCount: taskStore.activeTaskCount,
+        autoStartRequested: compressionStore.autoStartRequested,
+      }
     },
   }
 

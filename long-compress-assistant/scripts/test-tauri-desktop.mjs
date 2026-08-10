@@ -51,7 +51,8 @@ const e2eInstanceId =
 const e2eDataDirectory =
   process.env.LONG_DECOMPRESS_E2E_DATA_DIR ||
   path.join(root, 'test-results', `desktop-e2e-data-${e2eInstanceId}`)
-const webviewUserDataDirectory = path.join(e2eDataDirectory, 'webview2')
+let desktopSessionIndex = 0
+let webviewUserDataDirectory = path.join(e2eDataDirectory, `webview2-session-${desktopSessionIndex}`)
 const bundledSevenZip = path.join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
 const qemuImg =
   process.env.QEMU_IMG_PATH ||
@@ -91,6 +92,7 @@ const nsisFixture =
 const requireFullFormatMatrix =
   process.argv.includes('--require-full-format-matrix') ||
   process.env.LONG_DECOMPRESS_REQUIRE_FULL_FORMAT_MATRIX === '1'
+const watchFolderLifecycleOnly = process.argv.includes('--watch-folder-lifecycle-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -153,6 +155,46 @@ function terminateProcessTree(processId) {
     stdio: 'ignore',
     windowsHide: true,
   })
+}
+
+function desktopApplicationProcessIds() {
+  const escapedApplication = application.replaceAll("'", "''")
+  const result = spawnSync(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      `Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -eq '${escapedApplication}' } | ForEach-Object { $_.ProcessId }`,
+    ],
+    { encoding: 'utf8', windowsHide: true },
+  )
+  assert.ifError(result.error)
+  assert.equal(result.status, 0, `failed to inspect the desktop application process: ${result.stderr}`)
+  return result.stdout
+    .split(/\r?\n/u)
+    .map(value => Number.parseInt(value.trim(), 10))
+    .filter(Number.isInteger)
+}
+
+async function startTauriDriver() {
+  tauriDriverProcess = spawn(
+    tauriDriver,
+    ['--native-driver', edgeDriver],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        LONG_DECOMPRESS_E2E_DATA_DIR: e2eDataDirectory,
+        LONG_DECOMPRESS_E2E_INSTANCE_ID: e2eInstanceId,
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    },
+  )
+  tauriDriverProcess.stdout.on('data', appendDriverOutput)
+  tauriDriverProcess.stderr.on('data', appendDriverOutput)
+  await waitForWebDriver()
 }
 
 function forwardContextAction(flag, files) {
@@ -341,6 +383,54 @@ async function callDesktopBridgeFailure(method, ...args) {
   return result.error || ''
 }
 
+const normalizedDesktopPath = (value) => {
+  const windowsPath = String(value).replaceAll('/', '\\')
+  const portablePath = windowsPath.startsWith('\\\\?\\UNC\\')
+    ? `\\\\${windowsPath.slice(8)}`
+    : windowsPath.startsWith('\\\\?\\')
+      ? windowsPath.slice(4)
+      : windowsPath
+  return path.resolve(portablePath).replaceAll('/', '\\').toLowerCase()
+}
+
+async function waitForWatchFolderState(profileId, predicate, timeoutMs = 30_000) {
+  let lastState = null
+  let lastError = null
+  try {
+    return await driver.wait(async () => {
+      try {
+        lastState = await callDesktopBridge('watchFolderAuditState', profileId)
+        return predicate(lastState) ? lastState : false
+      } catch (error) {
+        lastError = String(error)
+        return false
+      }
+    }, timeoutMs)
+  } catch (error) {
+    throw new Error(
+      `Watch-folder state timed out after ${timeoutMs}ms. Last state: ${JSON.stringify(lastState)}. Last bridge error: ${lastError ?? 'none'}`,
+      { cause: error },
+    )
+  }
+}
+
+function watchDraftPaths(state) {
+  return state.draftGroups
+    .flatMap(group => group.files)
+    .map(normalizedDesktopPath)
+}
+
+function assertInertWatchDraftState(state) {
+  assert.equal(state.taskCount, 0, 'watch-folder discovery must not create a desktop task')
+  assert.equal(state.activeTaskCount, 0, 'watch-folder discovery must not create an active task')
+  assert.equal(state.autoStartRequested, false, 'watch-folder discovery must not request auto-start')
+  for (const group of state.draftGroups) {
+    assert.equal(group.password, '', 'watch-folder drafts must not carry a password')
+    assert.equal(group.deleteAfter, false, 'watch-folder drafts must not delete source files')
+    assert.equal(group.taskId, null, 'watch-folder drafts must remain unbound to a task')
+  }
+}
+
 async function waitForElement(selector, timeoutMs = 30_000) {
   return driver.wait(async () => {
     const elements = await driver.findElements(By.css(selector))
@@ -403,26 +493,7 @@ function mirrorDevToolsActivePort() {
   }
 }
 
-try {
-  mkdirSync(webviewUserDataDirectory, { recursive: true })
-  tauriDriverProcess = spawn(
-    tauriDriver,
-    ['--native-driver', edgeDriver],
-    {
-      cwd: root,
-      env: {
-        ...process.env,
-        LONG_DECOMPRESS_E2E_DATA_DIR: e2eDataDirectory,
-        LONG_DECOMPRESS_E2E_INSTANCE_ID: e2eInstanceId,
-      },
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
-    },
-  )
-  tauriDriverProcess.stdout.on('data', appendDriverOutput)
-  tauriDriverProcess.stderr.on('data', appendDriverOutput)
-  await waitForWebDriver()
-
+async function createDesktopSession() {
   const capabilities = new Capabilities()
   capabilities.setBrowserName('wry')
   const webviewOptions = {
@@ -433,16 +504,84 @@ try {
   }
   capabilities.set('tauri:options', { application, webviewOptions })
   devToolsPortMirror = setInterval(mirrorDevToolsActivePort, 50)
-  driver = await new Builder().usingServer(webdriverUrl).withCapabilities(capabilities).build()
-  clearInterval(devToolsPortMirror)
-  devToolsPortMirror = undefined
-  await driver.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 120_000 })
+  try {
+    const session = await new Builder()
+      .usingServer(webdriverUrl)
+      .withCapabilities(capabilities)
+      .build()
+    await session.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 120_000 })
+    return session
+  } finally {
+    if (devToolsPortMirror) clearInterval(devToolsPortMirror)
+    devToolsPortMirror = undefined
+  }
+}
 
+async function waitForDesktopReady() {
+  console.log('[desktop-e2e] waiting for desktop heading')
   assert.ok(await waitForNonEmptyText('main h1'), 'the decompression workspace heading is empty')
+  console.log('[desktop-e2e] desktop heading is ready; waiting for the E2E bridge')
   await driver.wait(
     () => driver.executeScript('return Boolean(window.__LONG_DECOMPRESS_DESKTOP_E2E__)'),
     30_000,
   )
+  console.log('[desktop-e2e] desktop E2E bridge is ready')
+}
+
+async function restartDesktopSession() {
+  if (driver) {
+    const previousDriver = driver
+    const previousApplicationProcessIds = desktopApplicationProcessIds()
+    assert.ok(
+      previousApplicationProcessIds.length > 0,
+      'the desktop application process must exist before the restart gate',
+    )
+    console.log('[desktop-e2e] requesting native application exit')
+    await callDesktopBridge('requestAppExit')
+    driver = undefined
+    await new Promise((resolve) => setTimeout(resolve, 1_000))
+    const remainingApplicationProcessIds = desktopApplicationProcessIds()
+    if (remainingApplicationProcessIds.length > 0) {
+      console.log('[desktop-e2e] force-stopping the exact workspace application process')
+      for (const processId of remainingApplicationProcessIds) terminateProcessTree(processId)
+      await new Promise((resolve) => setTimeout(resolve, 1_000))
+    }
+    assert.deepEqual(
+      desktopApplicationProcessIds(),
+      [],
+      'the previous desktop application process must exit before restart',
+    )
+    try {
+      await previousDriver.quit()
+    } catch {
+      // The exit command may invalidate the WebDriver session immediately.
+    }
+    console.log('[desktop-e2e] previous WebDriver session released')
+  }
+  terminateProcessTree(tauriDriverProcess?.pid)
+  tauriDriverProcess = undefined
+  console.log('[desktop-e2e] previous tauri-driver service stopped')
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  await startTauriDriver()
+  console.log('[desktop-e2e] replacement tauri-driver service is ready')
+  desktopSessionIndex += 1
+  webviewUserDataDirectory = path.join(
+    e2eDataDirectory,
+    `webview2-session-${desktopSessionIndex}`,
+  )
+  mkdirSync(webviewUserDataDirectory, { recursive: true })
+  console.log('[desktop-e2e] creating replacement desktop session')
+  driver = await createDesktopSession()
+  console.log('[desktop-e2e] replacement desktop session created')
+  await waitForDesktopReady()
+}
+
+try {
+  mkdirSync(webviewUserDataDirectory, { recursive: true })
+  await startTauriDriver()
+
+  driver = await createDesktopSession()
+  await waitForDesktopReady()
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
   assert.equal(navigation.length, 6, 'the real desktop shell must expose six navigation buttons')
@@ -498,6 +637,7 @@ try {
     exportedTaskTemplate,
     taskTemplateDirectory,
     [taskTemplateKeep, taskTemplateSkip],
+    taskTemplateDirectory,
   ])
 
   navigation = await driver.findElements(By.css('aside nav > button'))
@@ -534,7 +674,7 @@ try {
   await (await waitForElement(`[data-testid="preview-watch-folder-${taskTemplateProfile.id}"]`)).click()
   const watchPreview = await waitForElement('[data-testid="watch-folder-preview"]', 30_000)
   const watchPreviewText = await watchPreview.getAttribute('textContent')
-  assert.match(watchPreviewText, /一次性扫描，不会建立后台监控/)
+  assert.match(watchPreviewText, /当前仍是一次性扫描/)
   assert.match(watchPreviewText, /keep\.log/)
   assert.match(watchPreviewText, /命中排除规则/)
   assert.match(watchPreviewText, /未命中包含规则/)
@@ -592,11 +732,180 @@ try {
   )
   assert.equal(
     await callDesktopBridge('taskTemplateDialogQueueLength'),
-    0,
-    'every desktop task-template dialog selection must be consumed',
+    1,
+    'the persistent watch-folder selection must remain queued for the lifecycle gate',
   )
   await callDesktopBridge('clearCompressionWorkspace')
 
+  console.log('[desktop-e2e] verifying persistent watch-folder lifecycle and safe drafts')
+  await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
+  await (await waitForElement('[data-testid="manage-compression-profiles"]')).click()
+  await waitForElement('.profile-manager')
+  await (await waitForElement(`[data-testid="preview-watch-folder-${taskTemplateProfile.id}"]`)).click()
+  const persistentWatchPreview = await waitForElement('[data-testid="watch-folder-preview"]', 30_000)
+  assert.match(await persistentWatchPreview.getAttribute('textContent'), /保存并启用/)
+  await (await waitForElement('[data-testid="save-watch-folder"]')).click()
+
+  const initialWatchState = await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state => state.registrations.length === 1 && state.registrations[0].status === 'active',
+  )
+  const watchRegistrationId = initialWatchState.registrations[0].id
+  assert.equal(
+    await callDesktopBridge('taskTemplateDialogQueueLength'),
+    0,
+    'every desktop task-template dialog selection must be consumed',
+  )
+  await new Promise((resolve) => setTimeout(resolve, 3_000))
+  const baselineWatchState = await callDesktopBridge('watchFolderAuditState', taskTemplateProfile.id)
+  assert.deepEqual(
+    watchDraftPaths(baselineWatchState),
+    [],
+    'files that already existed when authorization was enabled must remain baseline only',
+  )
+
+  const activeWatchCandidate = path.join(taskTemplateDirectory, 'active-after-enable.log')
+  writeFileSync(activeWatchCandidate, 'active watch payload', 'utf8')
+  const activeWatchState = await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state =>
+      state.pendingBatches.length === 0 &&
+      watchDraftPaths(state).includes(normalizedDesktopPath(activeWatchCandidate)),
+  )
+  assertInertWatchDraftState(activeWatchState)
+  await callDesktopBridge('clearCompressionWorkspace')
+
+  await (await waitForElement(`[data-testid="pause-watch-folder-${watchRegistrationId}"]`)).click()
+  await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state => state.registrations[0]?.status === 'paused',
+  )
+  const pausedWatchCandidate = path.join(taskTemplateDirectory, 'created-while-paused.log')
+  writeFileSync(pausedWatchCandidate, 'paused watch payload', 'utf8')
+  await new Promise((resolve) => setTimeout(resolve, 3_500))
+  assert.deepEqual(
+    watchDraftPaths(await callDesktopBridge('watchFolderAuditState', taskTemplateProfile.id)),
+    [],
+    'paused authorization must not create a draft',
+  )
+
+  await (await waitForElement(`[data-testid="resume-watch-folder-${watchRegistrationId}"]`)).click()
+  await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state => state.registrations[0]?.status === 'active',
+  )
+  await new Promise((resolve) => setTimeout(resolve, 3_000))
+  assert.deepEqual(
+    watchDraftPaths(await callDesktopBridge('watchFolderAuditState', taskTemplateProfile.id)),
+    [],
+    'files created while paused must become resume baseline instead of retroactive drafts',
+  )
+  const resumedWatchCandidate = path.join(taskTemplateDirectory, 'active-after-resume.log')
+  writeFileSync(resumedWatchCandidate, 'resumed watch payload', 'utf8')
+  const resumedWatchState = await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state => watchDraftPaths(state).includes(normalizedDesktopPath(resumedWatchCandidate)),
+  )
+  assertInertWatchDraftState(resumedWatchState)
+  await callDesktopBridge('clearCompressionWorkspace')
+
+  console.log('[desktop-e2e] verifying watch discovery while the real window is hidden to tray')
+  await callDesktopBridge('setCloseToTray', true)
+  const watchTrayHiddenMarker = path.join(fixtureDirectory, 'watch-tray-hidden.marker')
+  const watchTrayRestoredMarker = path.join(fixtureDirectory, 'watch-tray-restored.marker')
+  await hideDesktopWindow(watchTrayHiddenMarker)
+  await waitForLocalFileContent(watchTrayHiddenMarker, 'hidden')
+  const trayWatchCandidate = path.join(taskTemplateDirectory, 'created-while-in-tray.log')
+  writeFileSync(trayWatchCandidate, 'tray watch payload', 'utf8')
+  const trayWatchState = await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state => watchDraftPaths(state).includes(normalizedDesktopPath(trayWatchCandidate)),
+  )
+  assertInertWatchDraftState(trayWatchState)
+  assert.equal(await callDesktopBridge('isWindowVisible'), false)
+  forwardContextAction('--desktop-e2e-restore', [watchTrayRestoredMarker])
+  await waitForLocalFileContent(watchTrayRestoredMarker, 'visible')
+  await callDesktopBridge('clearCompressionWorkspace')
+
+  console.log('[desktop-e2e] verifying active watch restoration after a real application restart')
+  await callDesktopBridge('setCloseToTray', false)
+  await restartDesktopSession()
+  const restoredWatchState = await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state =>
+      state.registrations.length === 1 &&
+      state.registrations[0].id === watchRegistrationId &&
+      state.registrations[0].status === 'active',
+    45_000,
+  )
+  assert.deepEqual(watchDraftPaths(restoredWatchState), [])
+  const restartedWatchCandidate = path.join(taskTemplateDirectory, 'active-after-restart.log')
+  writeFileSync(restartedWatchCandidate, 'restart watch payload', 'utf8')
+  const restartedCandidateState = await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state => watchDraftPaths(state).includes(normalizedDesktopPath(restartedWatchCandidate)),
+    45_000,
+  )
+  assertInertWatchDraftState(restartedCandidateState)
+  await callDesktopBridge('clearCompressionWorkspace')
+
+  navigation = await driver.findElements(By.css('aside nav > button'))
+  await navigation[1].click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
+  await (await waitForElement('[data-testid="manage-compression-profiles"]')).click()
+  await waitForElement(`[data-testid="watch-folder-registration-${watchRegistrationId}"]`)
+
+  await (await waitForElement(`[data-testid="disable-watch-folder-${watchRegistrationId}"]`)).click()
+  await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state => state.registrations[0]?.status === 'disabled',
+  )
+  const disabledWatchCandidate = path.join(taskTemplateDirectory, 'created-while-disabled.log')
+  writeFileSync(disabledWatchCandidate, 'disabled watch payload', 'utf8')
+  await new Promise((resolve) => setTimeout(resolve, 3_500))
+  assert.deepEqual(
+    watchDraftPaths(await callDesktopBridge('watchFolderAuditState', taskTemplateProfile.id)),
+    [],
+    'disabled authorization must not create a draft',
+  )
+
+  await (await waitForElement(`[data-testid="resume-watch-folder-${watchRegistrationId}"]`)).click()
+  await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state => state.registrations[0]?.status === 'active',
+  )
+  await new Promise((resolve) => setTimeout(resolve, 3_000))
+  assert.deepEqual(
+    watchDraftPaths(await callDesktopBridge('watchFolderAuditState', taskTemplateProfile.id)),
+    [],
+    'files created while disabled must become the next activation baseline',
+  )
+
+  await driver.executeScript(
+    `const originalConfirm = window.confirm;
+     window.confirm = () => true;
+     try { document.querySelector(arguments[0])?.click(); }
+     finally { window.confirm = originalConfirm; }`,
+    `[data-testid="delete-watch-folder-${watchRegistrationId}"]`,
+  )
+  await waitForWatchFolderState(
+    taskTemplateProfile.id,
+    state => state.registrations.length === 0,
+  )
+  const deletedWatchCandidate = path.join(taskTemplateDirectory, 'created-after-delete.log')
+  writeFileSync(deletedWatchCandidate, 'deleted watch payload', 'utf8')
+  await new Promise((resolve) => setTimeout(resolve, 3_500))
+  const deletedWatchState = await callDesktopBridge('watchFolderAuditState', taskTemplateProfile.id)
+  assert.deepEqual(watchDraftPaths(deletedWatchState), [])
+  assert.equal(deletedWatchState.pendingBatches.length, 0)
+  assertInertWatchDraftState(deletedWatchState)
+  await callDesktopBridge('setCloseToTray', true)
+
+  if (watchFolderLifecycleOnly) {
+    completedSuccessfully = true
+    console.log('Real Windows Tauri watch-folder lifecycle gate passed.')
+  } else {
   console.log('[desktop-e2e] verifying native 7Z progress and byte-for-byte round-trip')
   const sevenZipSource = path.join(fixtureDirectory, 'sevenzip-payload.bin')
   const sevenZipArchive = path.join(fixtureDirectory, 'sevenzip-payload.7z')
@@ -1637,6 +1946,7 @@ try {
 
   completedSuccessfully = true
   console.log('Real Windows Tauri desktop archive and lifecycle tests passed.')
+  }
 } catch (error) {
   await captureFailure()
   throw error

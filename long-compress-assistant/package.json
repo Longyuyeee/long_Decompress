@@ -31,6 +31,7 @@
     "test:performance": "vitest run tests/performance tests/integration/performance_integration.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:desktop": "node scripts/test-tauri-desktop.mjs",
+    "test:e2e:desktop:watch-folder": "node scripts/test-tauri-desktop.mjs --watch-folder-lifecycle-only",
     "test:e2e:desktop:full-format": "node scripts/test-tauri-desktop.mjs --require-full-format-matrix",
     "test:fixtures:archives": "node scripts/fetch-archive-test-fixtures.mjs",
     "test:tools:qemu-img": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-qemu-img-test-tool.ps1",
