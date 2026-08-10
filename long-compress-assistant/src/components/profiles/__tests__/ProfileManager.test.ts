@@ -75,6 +75,14 @@ describe('ProfileManager', () => {
     expect(wrapper.text()).not.toContain('将压缩包拆分为多个文件')
     expect(wrapper.text()).not.toContain('提高同类文件压缩率')
 
+    const deleteSource = wrapper.findAll('label').find(label => label.text().includes('完成后删除源文件'))
+    const verifyArchive = wrapper.findAll('label').find(label => label.text().includes('压缩完成后校验'))
+    expect(deleteSource).toBeTruthy()
+    expect(verifyArchive).toBeTruthy()
+    await deleteSource!.get('input').setValue(true)
+    expect((verifyArchive!.get('input').element as HTMLInputElement).checked).toBe(true)
+    expect(verifyArchive!.get('input').attributes('disabled')).toBeDefined()
+
     await form.trigger('submit')
     await flushPromises()
 
@@ -83,6 +91,7 @@ describe('ProfileManager', () => {
       config: expect.objectContaining({
         format: 'tar',
         splitArchive: false,
+        verifyAfter: true,
         createSolidArchive: false,
       }),
     }))

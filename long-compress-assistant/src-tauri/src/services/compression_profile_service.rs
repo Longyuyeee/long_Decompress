@@ -48,7 +48,7 @@ impl CompressionProfileService {
             SELECT id, name, icon, description,
                    config_format, config_level, config_password,
                    config_split_archive, config_split_size, config_keep_structure,
-                   config_delete_after, config_create_solid_archive,
+                   config_delete_after, config_verify_after, config_create_solid_archive,
                    config_filename_template, config_extra_params,
                    auto_apply_enabled, auto_apply_mode, auto_apply_file_patterns,
                    auto_apply_size_range_min, auto_apply_size_range_max,
@@ -81,7 +81,7 @@ impl CompressionProfileService {
             SELECT id, name, icon, description,
                    config_format, config_level, config_password,
                    config_split_archive, config_split_size, config_keep_structure,
-                   config_delete_after, config_create_solid_archive,
+                   config_delete_after, config_verify_after, config_create_solid_archive,
                    config_filename_template, config_extra_params,
                    auto_apply_enabled, auto_apply_mode, auto_apply_file_patterns,
                    auto_apply_size_range_min, auto_apply_size_range_max,
@@ -140,7 +140,7 @@ impl CompressionProfileService {
                 id, name, icon, description,
                 config_format, config_level, config_password,
                 config_split_archive, config_split_size, config_keep_structure,
-                config_delete_after, config_create_solid_archive,
+                config_delete_after, config_verify_after, config_create_solid_archive,
                 config_filename_template, config_extra_params,
                 auto_apply_enabled, auto_apply_mode, auto_apply_file_patterns,
                 auto_apply_size_range_min, auto_apply_size_range_max,
@@ -149,7 +149,7 @@ impl CompressionProfileService {
                 stats_use_count, stats_success_count, stats_failure_count,
                 stats_total_files_processed, stats_total_bytes_processed,
                 display_order, created_at, last_used_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#
         )
         .bind(&profile.id)
@@ -163,6 +163,7 @@ impl CompressionProfileService {
         .bind(profile.config.split_size.map(|s| s as i64))
         .bind(profile.config.keep_structure)
         .bind(profile.config.delete_after)
+        .bind(profile.config.verify_after)
         .bind(profile.config.create_solid_archive)
         .bind(&profile.config.filename_template)
         .bind(&extra_params)
@@ -206,7 +207,7 @@ impl CompressionProfileService {
                 name = ?, icon = ?, description = ?,
                 config_format = ?, config_level = ?, config_password = ?,
                 config_split_archive = ?, config_split_size = ?, config_keep_structure = ?,
-                config_delete_after = ?, config_create_solid_archive = ?,
+                config_delete_after = ?, config_verify_after = ?, config_create_solid_archive = ?,
                 config_filename_template = ?, config_extra_params = ?,
                 auto_apply_enabled = ?, auto_apply_mode = ?, auto_apply_file_patterns = ?,
                 auto_apply_size_range_min = ?, auto_apply_size_range_max = ?,
@@ -225,6 +226,7 @@ impl CompressionProfileService {
         .bind(profile.config.split_size.map(|s| s as i64))
         .bind(profile.config.keep_structure)
         .bind(profile.config.delete_after)
+        .bind(profile.config.verify_after)
         .bind(profile.config.create_solid_archive)
         .bind(&profile.config.filename_template)
         .bind(&extra_params)
@@ -386,6 +388,7 @@ impl CompressionProfileService {
         let config_split_size: Option<i64> = row.try_get("config_split_size")?;
         let config_keep_structure: bool = row.try_get("config_keep_structure")?;
         let config_delete_after: bool = row.try_get("config_delete_after")?;
+        let config_verify_after: bool = row.try_get("config_verify_after")?;
         let config_create_solid_archive: bool = row.try_get("config_create_solid_archive")?;
         let config_filename_template: Option<String> = row.try_get("config_filename_template")?;
         let config_extra_params: String = row.try_get("config_extra_params")?;
@@ -401,6 +404,7 @@ impl CompressionProfileService {
             split_size: config_split_size.map(|s| s as u32),
             keep_structure: config_keep_structure,
             delete_after: config_delete_after,
+            verify_after: config_verify_after,
             create_solid_archive: config_create_solid_archive,
             filename_template: config_filename_template,
             extra_params,
@@ -515,5 +519,35 @@ impl CompressionProfileService {
             },
             _ => PasswordStrategy::None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn verify_after_round_trips_through_profile_storage() {
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+        crate::database::migrations::init_tables(&pool).await.unwrap();
+        let service = CompressionProfileService::new(pool);
+        service.init_default_profiles().await.unwrap();
+
+        let mut profiles = service.get_all_profiles().await.unwrap();
+        assert_eq!(profiles.len(), 5);
+        assert!(profiles.iter().all(|profile| profile.config.verify_after));
+
+        let mut profile = profiles.remove(0);
+        profile.config.verify_after = false;
+        service
+            .update_profile(&profile.id, profile.clone())
+            .await
+            .unwrap();
+        let reloaded = service
+            .get_profile_by_id(&profile.id)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(!reloaded.config.verify_after);
     }
 }

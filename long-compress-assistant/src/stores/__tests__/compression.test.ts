@@ -11,6 +11,7 @@ const defaultOptions = (): CompressionOptions => ({
   splitSize: '1024',
   keepStructure: true,
   deleteAfter: false,
+  verifyAfter: true,
   createSolidArchive: false
 })
 

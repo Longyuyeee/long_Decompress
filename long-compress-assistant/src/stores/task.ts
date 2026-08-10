@@ -42,7 +42,7 @@ export interface Task {
   extractToSubfolder?: boolean
   fileFilter?: string
   // 增强字段 [FE-INT-001]
-  stage?: 'Pre-checking' | 'Extracting' | 'Finalizing'
+  stage?: 'Pre-checking' | 'Extracting' | 'Verifying' | 'Finalizing'
   currentFile?: string
   currentPassword?: string
   speed?: string
@@ -56,6 +56,7 @@ export interface Task {
     split_size?: number | null
     preserve_paths?: boolean
     delete_after?: boolean
+    verify_after?: boolean
     allow_insecure_password_cli?: boolean
   }
 }

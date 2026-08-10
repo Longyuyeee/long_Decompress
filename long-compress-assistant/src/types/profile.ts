@@ -23,6 +23,7 @@ export interface CompressionConfig {
   splitSize: number | null
   keepStructure: boolean
   deleteAfter: boolean
+  verifyAfter: boolean
   createSolidArchive: boolean
   filenameTemplate: string | null
   extraParams: Record<string, string>

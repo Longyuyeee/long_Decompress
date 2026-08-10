@@ -185,7 +185,7 @@ impl SplitCompressionService {
         Ok(parts)
     }
 
-    fn cleanup_parts(output_path: &Path) {
+    pub(crate) fn cleanup_parts(output_path: &Path) {
         if let Ok(parts) = Self::discover_parts(output_path) {
             for part in parts {
                 let _ = std::fs::remove_file(part);

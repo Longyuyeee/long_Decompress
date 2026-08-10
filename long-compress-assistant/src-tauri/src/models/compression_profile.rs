@@ -59,6 +59,10 @@ pub struct CompressionConfig {
     /// 压缩后是否删除源文件
     pub delete_after: bool,
 
+    /// 压缩完成后、发布最终文件前是否执行完整性校验
+    #[serde(default = "default_verify_after")]
+    pub verify_after: bool,
+
     /// 是否创建固实归档（7z 专属）
     pub create_solid_archive: bool,
 
@@ -67,6 +71,10 @@ pub struct CompressionConfig {
 
     /// 额外参数（格式特定的高级选项）
     pub extra_params: HashMap<String, String>,
+}
+
+fn default_verify_after() -> bool {
+    true
 }
 
 /// 自动应用规则
@@ -217,6 +225,7 @@ pub fn create_default_profiles() -> Vec<CompressionProfile> {
                 split_size: None,
                 keep_structure: true,
                 delete_after: false,
+                verify_after: true,
                 create_solid_archive: true,
                 filename_template: Some("{name}_极限压缩_{date}".to_string()),
                 extra_params: HashMap::new(),
@@ -234,6 +243,7 @@ pub fn create_default_profiles() -> Vec<CompressionProfile> {
                 split_size: None,
                 keep_structure: true,
                 delete_after: false,
+                verify_after: true,
                 create_solid_archive: false,
                 filename_template: Some("{name}_快速_{date}".to_string()),
                 extra_params: HashMap::new(),
@@ -251,6 +261,7 @@ pub fn create_default_profiles() -> Vec<CompressionProfile> {
                 split_size: None,
                 keep_structure: true,
                 delete_after: false,
+                verify_after: true,
                 create_solid_archive: false,
                 filename_template: Some("{name}_加密_{date}".to_string()),
                 extra_params: HashMap::new(),
@@ -268,6 +279,7 @@ pub fn create_default_profiles() -> Vec<CompressionProfile> {
                 split_size: Some(4096),
                 keep_structure: true,
                 delete_after: false,
+                verify_after: true,
                 create_solid_archive: false,
                 filename_template: Some("{name}_分卷_{date}".to_string()),
                 extra_params: HashMap::new(),
@@ -285,6 +297,7 @@ pub fn create_default_profiles() -> Vec<CompressionProfile> {
                 split_size: None,
                 keep_structure: true,
                 delete_after: false,
+                verify_after: true,
                 create_solid_archive: false,
                 filename_template: Some("{name}_归档_{date}".to_string()),
                 extra_params: HashMap::new(),

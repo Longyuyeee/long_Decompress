@@ -33,6 +33,7 @@ export interface CompressOptions {
   split_size?: number | null
   preserve_paths?: boolean
   delete_after?: boolean
+  verify_after?: boolean
   allow_insecure_password_cli?: boolean
 }
 

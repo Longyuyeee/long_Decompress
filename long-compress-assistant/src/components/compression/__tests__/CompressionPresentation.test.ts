@@ -118,6 +118,9 @@ describe('compression presentation components', () => {
     expect(wrapper.find('.text-yellow-400').exists()).toBe(true)
     expect(wrapper.find('.text-green-400').exists()).toBe(true)
 
+    await wrapper.setProps({ task: task('compressing', { progress: 100, stage: 'Verifying' }) })
+    expect(wrapper.text()).toContain('正在校验')
+
     await wrapper.setProps({ task: task('running') })
     expect(wrapper.text()).toContain('暂无执行日志')
   })

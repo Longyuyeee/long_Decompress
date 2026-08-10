@@ -22,6 +22,7 @@ use crate::services::tar_aes_engine::TarAesEngine;
 use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 use crate::services::compression_format::{self, CompressionRoute};
+use crate::services::compression_verification;
 use crate::services::extraction_transaction::{self, ExtractionStaging};
 use crate::services::mark_of_web::{self, PropagationStatus};
 use crate::services::native_compression::{self, CompressionRuntime};
@@ -287,6 +288,28 @@ impl CompressionService {
         let _ = window.emit("task-progress", payload);
     }
 
+    fn emit_compression_stage(
+        &self,
+        window: &Window,
+        task_id: &str,
+        stage: &str,
+        current_file: Option<String>,
+    ) {
+        let payload = TaskProgress {
+            task_id: task_id.to_string(),
+            stage: Some(stage.to_string()),
+            current_password: None,
+            progress: 1.0,
+            current_file,
+            processed_bytes: 0,
+            total_bytes: 0,
+            speed: None,
+            password_attempt_current: None,
+            password_attempt_total: None,
+        };
+        let _ = window.emit("task-progress", payload);
+    }
+
     pub fn infer_compression_format(output_path: &str, explicit_format: Option<&str>) -> String {
         compression_format::infer_compression_format(output_path, explicit_format)
     }
@@ -518,6 +541,76 @@ impl CompressionService {
         result
     }
 
+    fn cleanup_unverified_compression_output(
+        working_output: &Path,
+        final_output: &Path,
+        split_requested: bool,
+    ) {
+        if split_requested {
+            crate::services::split_compression::SplitCompressionService::cleanup_parts(
+                final_output,
+            );
+        } else {
+            Self::cleanup_failed_compression_outputs(working_output, false);
+        }
+    }
+
+    fn verify_compression_output(
+        &self,
+        route: CompressionRoute,
+        output: &Path,
+        password: Option<&str>,
+        split_requested: bool,
+    ) -> Result<()> {
+        if !split_requested
+            && compression_verification::verify_native(route, output, password, || {
+                self.cancellation_flag.load(Ordering::Relaxed)
+            })?
+        {
+            return Ok(());
+        }
+
+        self.check_cancellation()?;
+        let output_result = if route == CompressionRoute::Rar {
+            let encoder = Self::find_rar_encoder().ok_or_else(|| {
+                CompressionError::CompressionFailed(
+                    "RAR verification requires the RAR command line encoder".to_string(),
+                )
+            })?;
+            let mut command = crate::utils::process::command(encoder);
+            command.arg("t").arg("-idq").arg("-y");
+            if let Some(password) = password.filter(|value| !value.is_empty()) {
+                command.arg(format!("-p{password}"));
+            } else {
+                command.arg("-p-");
+            }
+            command.arg(output);
+            self.run_command_cancellable(command)?
+        } else {
+            let engine = find_7z_command().ok_or_else(|| {
+                CompressionError::CompressionFailed(missing_7z_message())
+            })?;
+            let mut command = crate::utils::process::command(engine);
+            command.arg("t").arg("-y").arg("-p-").arg(output);
+            self.run_command_cancellable(command)?
+        };
+
+        if !output_result.status.success() {
+            let stderr = String::from_utf8_lossy(&output_result.stderr);
+            let stdout = String::from_utf8_lossy(&output_result.stdout);
+            let detail = if stderr.trim().is_empty() {
+                stdout.trim()
+            } else {
+                stderr.trim()
+            };
+            return Err(CompressionError::CompressionFailed(format!(
+                "Newly created archive failed integrity verification: {detail}"
+            ))
+            .into());
+        }
+        Ok(())
+    }
+
     pub fn removable_compressed_sources(source_files: &[String], output_path: &str) -> Result<Vec<PathBuf>> {
         let output = Path::new(output_path);
         if !output.is_file() {
@@ -570,6 +663,9 @@ impl CompressionService {
             let requested_format = Self::validate_compression_request(&source_files, &output_path, &options)?;
             Self::validate_compression_io_paths(&source_files, &output_path, &options)?;
             let delete_after = options.delete_after;
+            let requested_verify_after = options.verify_after;
+            let verify_after = requested_verify_after || delete_after;
+            let verification_password = options.password.clone();
             let split_requested = options.split_size.is_some_and(|size| size > 0);
             let final_output = PathBuf::from(&output_path);
             let working_output = if split_requested {
@@ -579,35 +675,90 @@ impl CompressionService {
             };
             let working_output_string = working_output.to_string_lossy().to_string();
             service.emit_log(&window, &task_id, &format!("开始压缩到: {}", output_path), TaskLogSeverity::Info);
-            let res = match compression_format::compression_route(&requested_format) {
-                Some(CompressionRoute::TarAes) => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::TarGzipAes) => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::TarBzip2Aes) => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::TarXzAes) => service.do_compress_tar_xz_aes(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::TarZstdAes) => service.do_compress_tar_zst_aes(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::GzipAes) => service.do_compress_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::Bzip2Aes) => service.do_compress_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::XzAes) => service.do_compress_xz_aes(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::ZstdAes) => service.do_compress_zst_aes(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::Zip) => service.do_compress_zip(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::Tar) => service.do_compress_tar(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::TarGzip) => service.do_compress_tar_gz(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::TarBzip2) => service.do_compress_tar_bz2(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::TarXz) => service.do_compress_tar_xz(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::SevenZip) => service.do_compress_7z(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::Rar) => service.do_compress_rar(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::Wim) => service.do_compress_wim(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::Gzip) => service.do_compress_gz(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::Bzip2) => service.do_compress_bz2(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::Xz) => service.do_compress_xz(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::Zstd) => service.do_compress_zstd(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::TarZstd) => service.do_compress_tar_zstd(&window, &task_id, &source_files, &working_output_string, options),
-                Some(CompressionRoute::Lzma) => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
-                None => Err(CompressionError::CompressionFailed(format!(
+            let route = compression_format::compression_route(&requested_format).ok_or_else(|| {
+                CompressionError::CompressionFailed(format!(
                     "Unsupported compression format '{}'.",
                     requested_format
-                )).into()),
+                ))
+            })?;
+            let res = match route {
+                CompressionRoute::TarAes => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::TarGzipAes => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::TarBzip2Aes => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::TarXzAes => service.do_compress_tar_xz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::TarZstdAes => service.do_compress_tar_zst_aes(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::GzipAes => service.do_compress_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Bzip2Aes => service.do_compress_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::XzAes => service.do_compress_xz_aes(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::ZstdAes => service.do_compress_zst_aes(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Zip => service.do_compress_zip(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Tar => service.do_compress_tar(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::TarGzip => service.do_compress_tar_gz(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::TarBzip2 => service.do_compress_tar_bz2(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::TarXz => service.do_compress_tar_xz(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::SevenZip => service.do_compress_7z(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Rar => service.do_compress_rar(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Wim => service.do_compress_wim(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Gzip => service.do_compress_gz(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Bzip2 => service.do_compress_bz2(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Xz => service.do_compress_xz(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Zstd => service.do_compress_zstd(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::TarZstd => service.do_compress_tar_zstd(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Lzma => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
             };
+            let verification_output = if split_requested {
+                PathBuf::from(format!("{}.001", output_path))
+            } else {
+                working_output.clone()
+            };
+            let res = res.and_then(|_| {
+                if verify_after {
+                    service.emit_compression_stage(
+                        &window,
+                        &task_id,
+                        "Verifying",
+                        Some(output_path.clone()),
+                    );
+                    service.emit_log(
+                        &window,
+                        &task_id,
+                        if delete_after && !requested_verify_after {
+                            "已启用删除源文件，正在执行强制完整性校验"
+                        } else {
+                            "正在校验新压缩包的完整性"
+                        },
+                        TaskLogSeverity::Info,
+                    );
+                    service.verify_compression_output(
+                        route,
+                        &verification_output,
+                        verification_password.as_deref(),
+                        split_requested,
+                    )?;
+                    service.emit_log(
+                        &window,
+                        &task_id,
+                        "压缩包完整性校验通过",
+                        TaskLogSeverity::Success,
+                    );
+                }
+                Ok(())
+            });
+            if res.is_err() {
+                Self::cleanup_unverified_compression_output(
+                    &working_output,
+                    &final_output,
+                    split_requested,
+                );
+            }
+            if res.is_ok() {
+                service.emit_compression_stage(
+                    &window,
+                    &task_id,
+                    "Finalizing",
+                    Some(output_path.clone()),
+                );
+            }
             let res = Self::finalize_compression_output(
                 res,
                 &working_output,
@@ -2329,6 +2480,83 @@ mod tests_continued {
         assert!(result.is_err());
         assert_eq!(std::fs::read(output.join("a.txt")).unwrap(), b"old");
         assert!(!output.join("z/child.txt").exists());
+    }
+
+    #[tokio::test]
+    async fn split_archive_verification_failure_keeps_sources_and_cleans_every_volume() {
+        if find_7z_command().is_none() {
+            return;
+        }
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("source.bin");
+        let output = temp.path().join("archive.zip");
+        let mut state = 0x1234_5678u32;
+        let payload: Vec<u8> = (0..256 * 1024)
+            .map(|_| {
+                state ^= state << 13;
+                state ^= state >> 17;
+                state ^= state << 5;
+                state as u8
+            })
+            .collect();
+        std::fs::write(&source, payload).expect("source fixture");
+        let service = CompressionService::new_with_defaults().await;
+        let split_service = crate::services::split_compression::SplitCompressionService::new();
+        let result = split_service
+            .compress_to_split_zips(
+                &[source.to_string_lossy().to_string()],
+                &output,
+                CompressionOptions {
+                    format: Some("zip".to_string()),
+                    split_size: Some(4096),
+                    ..Default::default()
+                },
+            )
+            .await
+            .expect("create split fixture");
+        assert!(result.part_files.len() > 1);
+        let first_volume = output.with_extension("zip.001");
+        let mut bytes = std::fs::read(&first_volume).expect("first volume");
+        bytes[0] ^= 0xff;
+        std::fs::write(&first_volume, bytes).expect("corrupt first volume");
+
+        assert!(service
+            .verify_compression_output(
+                CompressionRoute::Zip,
+                &first_volume,
+                None,
+                true,
+            )
+            .is_err());
+        CompressionService::cleanup_unverified_compression_output(&output, &output, true);
+
+        assert!(source.exists(), "verification failure must preserve the source");
+        assert!(result.part_files.iter().all(|part| !part.exists()));
+    }
+
+    #[tokio::test]
+    async fn verification_failure_never_publishes_over_an_existing_target() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let source = temp.path().join("source.txt");
+        let working = temp.path().join(".long-compress-test.archive.zip");
+        let final_output = temp.path().join("archive.zip");
+        std::fs::write(&source, b"source must survive").expect("source fixture");
+        std::fs::write(&working, b"not a zip archive").expect("corrupt working output");
+        std::fs::write(&final_output, b"existing archive").expect("existing target");
+        let service = CompressionService::new_with_defaults().await;
+
+        assert!(service
+            .verify_compression_output(CompressionRoute::Zip, &working, None, false)
+            .is_err());
+        CompressionService::cleanup_unverified_compression_output(
+            &working,
+            &final_output,
+            false,
+        );
+
+        assert_eq!(std::fs::read(&final_output).unwrap(), b"existing archive");
+        assert_eq!(std::fs::read(&source).unwrap(), b"source must survive");
+        assert!(!working.exists());
     }
 
     #[tokio::test]

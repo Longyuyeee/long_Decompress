@@ -26,10 +26,16 @@ struct CreateCompressionConfig {
     split_size: Option<u32>,
     keep_structure: bool,
     delete_after: bool,
+    #[serde(default = "default_verify_after")]
+    verify_after: bool,
     create_solid_archive: bool,
     filename_template: Option<String>,
     #[serde(default)]
     extra_params: HashMap<String, String>,
+}
+
+fn default_verify_after() -> bool {
+    true
 }
 
 impl From<CreateCompressionConfig> for CompressionConfig {
@@ -42,6 +48,7 @@ impl From<CreateCompressionConfig> for CompressionConfig {
             split_size: config.split_size,
             keep_structure: config.keep_structure,
             delete_after: config.delete_after,
+            verify_after: config.verify_after,
             create_solid_archive: config.create_solid_archive,
             filename_template: config.filename_template,
             extra_params: config.extra_params,
@@ -233,6 +240,7 @@ mod tests {
                 "splitSize": null,
                 "keepStructure": true,
                 "deleteAfter": false,
+                "verifyAfter": false,
                 "createSolidArchive": false,
                 "filenameTemplate": null,
                 "extraParams": {}
@@ -243,5 +251,6 @@ mod tests {
         assert_eq!(request.name, "快速归档");
         assert_eq!(request.config.format, "zip");
         assert!(request.config.keep_structure);
+        assert!(!request.config.verify_after);
     }
 }

@@ -15,6 +15,7 @@ fn compression_options(format: Option<&str>) -> CompressionOptions {
         split_size: None,
         preserve_paths: Some(true),
         delete_after: false,
+        verify_after: true,
         allow_insecure_password_cli: false,
     }
 }

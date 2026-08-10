@@ -106,7 +106,7 @@ impl CompressionFormat {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionOptions {
     #[serde(default)]
     pub format: Option<String>,
@@ -117,6 +117,8 @@ pub struct CompressionOptions {
     pub preserve_paths: Option<bool>,
     #[serde(default)]
     pub delete_after: bool,
+    #[serde(default = "default_true")]
+    pub verify_after: bool,
     /// RAR.exe has no stdin or environment-variable password channel. This must
     /// be explicitly approved by the UI before a password is placed in argv.
     #[serde(default)]
@@ -145,6 +147,21 @@ pub struct DecompressOptions {
 
 fn default_conflict_policy() -> String {
     "rename".to_string()
+}
+
+impl Default for CompressionOptions {
+    fn default() -> Self {
+        Self {
+            format: None,
+            level: 0,
+            password: None,
+            split_size: None,
+            preserve_paths: None,
+            delete_after: false,
+            verify_after: true,
+            allow_insecure_password_cli: false,
+        }
+    }
 }
 
 fn default_true() -> bool {

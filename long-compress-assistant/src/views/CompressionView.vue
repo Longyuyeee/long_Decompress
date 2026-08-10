@@ -300,6 +300,7 @@ const runCompression = async () => {
         split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
         preserve_paths: job.settings.keepStructure,
         delete_after: job.settings.deleteAfter,
+        verify_after: job.settings.verifyAfter,
         allow_insecure_password_cli: effectiveFormat === 'rar' && allowRarPasswordCli
       }
     })
@@ -334,6 +335,7 @@ const runCompression = async () => {
           split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
           preserve_paths: job.settings.keepStructure,
           delete_after: job.settings.deleteAfter,
+          verify_after: job.settings.verifyAfter,
           allow_insecure_password_cli: effectiveFormat === 'rar' && allowRarPasswordCli
         }
       )

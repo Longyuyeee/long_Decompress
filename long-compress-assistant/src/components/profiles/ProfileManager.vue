@@ -37,6 +37,7 @@ const createEmptyForm = (): CreateProfileRequest => ({
     splitSize: null,
     keepStructure: true,
     deleteAfter: false,
+    verifyAfter: true,
     createSolidArchive: false,
     filenameTemplate: null,
     extraParams: {}
@@ -68,6 +69,10 @@ watch(() => formData.value.config.format, () => {
 watch(() => formData.value.config.splitArchive, enabled => {
   if (enabled && !formData.value.config.splitSize) formData.value.config.splitSize = 1024
   if (!enabled) formData.value.config.splitSize = null
+})
+
+watch(() => formData.value.config.deleteAfter, enabled => {
+  if (enabled) formData.value.config.verifyAfter = true
 })
 
 onMounted(async () => {
@@ -291,7 +296,8 @@ const formatDate = (timestamp: number | null) =>
 
         <div class="grid gap-3 md:grid-cols-2">
           <label class="profile-option"><input v-model="formData.config.keepStructure" type="checkbox" /><span><strong>保留目录结构</strong><small>归档内保留原始文件夹层级</small></span></label>
-          <label class="profile-option"><input v-model="formData.config.deleteAfter" type="checkbox" /><span><strong>完成后删除源文件</strong><small>仅在压缩成功后执行</small></span></label>
+          <label class="profile-option"><input v-model="formData.config.deleteAfter" type="checkbox" /><span><strong>完成后删除源文件</strong><small>仅在完整性校验通过后执行</small></span></label>
+          <label class="profile-option" :class="{ 'opacity-70': formData.config.deleteAfter }"><input v-model="formData.config.verifyAfter" type="checkbox" :disabled="formData.config.deleteAfter" /><span><strong>压缩完成后校验</strong><small>{{ formData.config.deleteAfter ? '删除源文件时强制开启' : '发布最终文件前读取并验证归档' }}</small></span></label>
           <label v-if="supportsSplit" class="profile-option"><input v-model="formData.config.splitArchive" type="checkbox" /><span><strong>分卷压缩</strong><small>将压缩包拆分为多个文件</small></span></label>
           <label v-if="supportsSolid" class="profile-option"><input v-model="formData.config.createSolidArchive" type="checkbox" /><span><strong>固实压缩</strong><small>提高同类文件压缩率</small></span></label>
         </div>

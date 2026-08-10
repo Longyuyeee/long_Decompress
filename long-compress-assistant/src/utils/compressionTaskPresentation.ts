@@ -25,6 +25,7 @@ export const compressionStageTranslationKey = (task?: Task) => {
   }
 
   const normalized = String(task.stage).toLowerCase()
+  if (normalized.includes('verif')) return 'compress.status.verifying'
   if (normalized.includes('final')) return 'compress.status.finalizing'
   if (normalized.includes('compress') || normalized.includes('writ')) {
     return 'compress.status.compressing'

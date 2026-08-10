@@ -23,6 +23,7 @@ export interface CompressionOptions {
   splitSize: string
   keepStructure: boolean
   deleteAfter: boolean
+  verifyAfter: boolean
   createSolidArchive: boolean
 }
 
@@ -67,6 +68,7 @@ export const useCompressionStore = defineStore('compression', () => {
     splitSize: '1024',
     keepStructure: true,
     deleteAfter: false,
+    verifyAfter: true,
     createSolidArchive: false
   })
   const globalOutputPath = ref('')

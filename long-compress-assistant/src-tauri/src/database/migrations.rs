@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const _CURRENT_VERSION: i32 = 2;
+const _CURRENT_VERSION: i32 = 3;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -38,6 +38,32 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
         query("INSERT INTO schema_version (version) VALUES (2)").execute(pool).await?;
     }
 
+    if current < 3 {
+        migrate_v3(pool).await?;
+        query("INSERT INTO schema_version (version) VALUES (3)")
+            .execute(pool)
+            .await?;
+    }
+
+    Ok(())
+}
+
+/// V3: 压缩配置组增加发布前完整性校验策略。
+async fn migrate_v3(pool: &SqlitePool) -> Result<()> {
+    let has_column: bool = query_as::<_, (i64,)>(
+        "SELECT COUNT(*) FROM pragma_table_info('compression_profiles') WHERE name = 'config_verify_after'",
+    )
+    .fetch_one(pool)
+    .await
+    .map(|row| row.0 > 0)?;
+    if !has_column {
+        query(
+            "ALTER TABLE compression_profiles ADD COLUMN config_verify_after BOOLEAN NOT NULL DEFAULT TRUE",
+        )
+        .execute(pool)
+        .await
+        .context("为压缩配置组增加完整性校验字段失败")?;
+    }
     Ok(())
 }
 
@@ -437,6 +463,7 @@ async fn migrate_v2(pool: &SqlitePool) -> Result<()> {
             config_split_size INTEGER,
             config_keep_structure BOOLEAN NOT NULL DEFAULT TRUE,
             config_delete_after BOOLEAN NOT NULL DEFAULT FALSE,
+            config_verify_after BOOLEAN NOT NULL DEFAULT TRUE,
             config_create_solid_archive BOOLEAN NOT NULL DEFAULT FALSE,
             config_filename_template TEXT,
             config_extra_params TEXT NOT NULL DEFAULT '{}',
@@ -901,4 +928,45 @@ pub async fn restore_database(_pool: &SqlitePool, _backup_path: &str) -> Result<
 
     log::warn!("数据库恢复功能需要特殊实现");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn v2_database_gains_verify_after_with_a_safe_default() {
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+        query(
+            "CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+        query("INSERT INTO schema_version (version) VALUES (2)")
+            .execute(&pool)
+            .await
+            .unwrap();
+        query(
+            "CREATE TABLE compression_profiles (id TEXT PRIMARY KEY, config_delete_after BOOLEAN NOT NULL DEFAULT FALSE)",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+        query("INSERT INTO compression_profiles (id) VALUES ('existing')")
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        init_tables(&pool).await.unwrap();
+
+        let verify_after: bool = query_as::<_, (bool,)>(
+            "SELECT config_verify_after FROM compression_profiles WHERE id = 'existing'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap()
+        .0;
+        assert!(verify_after);
+    }
 }

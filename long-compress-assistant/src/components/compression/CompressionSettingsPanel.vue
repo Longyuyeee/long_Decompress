@@ -49,6 +49,7 @@ const compressionOptions = ref<CompressionOptions>(props.modelValue || {
   splitSize: '1024',
   keepStructure: true,
   deleteAfter: false,
+  verifyAfter: true,
   createSolidArchive: false
 })
 
@@ -124,6 +125,10 @@ watch(() => compressionOptions.value.format, () => {
   }
 })
 
+watch(() => compressionOptions.value.deleteAfter, (deleteAfter) => {
+  if (deleteAfter) compressionOptions.value.verifyAfter = true
+})
+
 watch(outputPath, (newPath) => {
   if (syncingFromProps) return
   emit('update:outputPath', newPath)
@@ -162,6 +167,7 @@ const applyProfile = (profile: CompressionProfile) => {
   compressionOptions.value.splitSize = profile.config.splitSize?.toString() || '1024'
   compressionOptions.value.keepStructure = profile.config.keepStructure
   compressionOptions.value.deleteAfter = profile.config.deleteAfter
+  compressionOptions.value.verifyAfter = profile.config.verifyAfter
   compressionOptions.value.createSolidArchive = profile.config.createSolidArchive
   showProfileSelector.value = false
   appStore.setSuccess(appStore.t('profiles.applied_success').replace('{0}', profile.name))
@@ -193,6 +199,7 @@ const saveAsNewProfile = async () => {
         splitSize: compressionOptions.value.splitArchive ? parseInt(compressionOptions.value.splitSize) : null,
         keepStructure: compressionOptions.value.keepStructure,
         deleteAfter: compressionOptions.value.deleteAfter,
+        verifyAfter: compressionOptions.value.verifyAfter,
         createSolidArchive: compressionOptions.value.createSolidArchive,
         filenameTemplate: compressionOptions.value.filename ? `{name}_${compressionOptions.value.filename}` : null,
         extraParams: {}
@@ -373,7 +380,11 @@ const handlePasswordGenerated = (password: string) => {
           </label>
           <label class="advanced-option advanced-option-danger">
             <input v-model="compressionOptions.deleteAfter" type="checkbox" />
-            <span><strong>{{ appStore.t('preset.delete_after') }}</strong><small>仅压缩成功后删除原始文件，请谨慎启用</small></span>
+            <span><strong>{{ appStore.t('preset.delete_after') }}</strong><small>{{ appStore.t('preset.delete_after.desc') }}</small></span>
+          </label>
+          <label class="advanced-option" :class="{ 'opacity-70': compressionOptions.deleteAfter }">
+            <input v-model="compressionOptions.verifyAfter" type="checkbox" :disabled="compressionOptions.deleteAfter" />
+            <span><strong>{{ appStore.t('preset.verify_after') }}</strong><small>{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</small></span>
           </label>
           <label class="advanced-option">
             <input v-model="compressionOptions.splitArchive" type="checkbox" />
