@@ -23,6 +23,14 @@ const routes: Array<RouteRecordRaw> = [
     }
   },
   {
+    path: '/browser',
+    name: 'ArchiveBrowser',
+    component: () => import('@/views/ArchiveBrowserView.vue'),
+    meta: {
+      title: '压缩包浏览中心'
+    }
+  },
+  {
     path: '/vault',
     name: 'Vault',
     component: () => import('@/views/PasswordVaultView.vue'),

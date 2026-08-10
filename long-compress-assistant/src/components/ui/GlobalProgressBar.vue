@@ -113,8 +113,9 @@ const retryTask = async (task: Task) => {
         deleteAfter: appStore.settings.autoDeleteSource,
         createSubdirectory: task.extractToSubfolder ?? false,
         password: task.password || undefined,
-        fileFilter: task.fileFilter || null
-        ,conflictPolicy: appStore.settings.conflictPolicy
+        fileFilter: task.fileFilter || null,
+        selectedEntries: task.selectedEntries,
+        conflictPolicy: appStore.settings.conflictPolicy
       }
       taskStore.updateTaskStatus(task.id, 'preparing')
       await tauriCommands.decompressFile(task.sourceFiles[0], options, task.id)

@@ -1,4 +1,5 @@
 use anyhow::Result;
+use crate::models::compression::{ArchiveBrowseResult, ArchiveEntryInfo};
 use std::io::{Read, Write};
 use std::path::Path;
 use std::sync::Arc;
@@ -272,6 +273,69 @@ impl UniversalCliEngine {
             })
             .filter(|name| !name.starts_with("---") && name != "Name")
             .collect())
+    }
+
+    fn parse_metadata_listing(stdout: &str, format: String) -> ArchiveBrowseResult {
+        let mut entries = Vec::new();
+        let mut current = std::collections::HashMap::<String, String>::new();
+        let flush = |current: &mut std::collections::HashMap<String, String>, entries: &mut Vec<ArchiveEntryInfo>| {
+            let Some(path) = current.remove("Path") else {
+                current.clear();
+                return;
+            };
+            let path = path.replace('\\', "/");
+            let attributes = current.get("Attributes").map(String::as_str).unwrap_or("");
+            let is_dir = attributes.contains('D') || path.ends_with('/');
+            let name = path.trim_end_matches('/').rsplit('/').next().unwrap_or(&path).to_string();
+            entries.push(ArchiveEntryInfo {
+                name,
+                path,
+                size: current.get("Size").and_then(|value| value.parse().ok()).unwrap_or(0),
+                compressed_size: current.get("Packed Size").and_then(|value| value.parse().ok()),
+                modified: current.get("Modified").cloned(),
+                crc: current.get("CRC").cloned().filter(|value| !value.is_empty()),
+                encrypted: current.get("Encrypted").is_some_and(|value| value == "+"),
+                is_dir,
+            });
+            current.clear();
+        };
+
+        for line in stdout.lines() {
+            let line = line.trim_end();
+            if line.is_empty() {
+                flush(&mut current, &mut entries);
+            } else if let Some((key, value)) = line.split_once(" = ") {
+                current.insert(key.trim().to_string(), value.trim().to_string());
+            }
+        }
+        flush(&mut current, &mut entries);
+
+        ArchiveBrowseResult {
+            format,
+            total_files: entries.iter().filter(|entry| !entry.is_dir).count(),
+            total_directories: entries.iter().filter(|entry| entry.is_dir).count(),
+            total_uncompressed_size: entries.iter().filter(|entry| !entry.is_dir).map(|entry| entry.size).sum(),
+            total_compressed_size: entries.iter().filter_map(|entry| entry.compressed_size).sum(),
+            encrypted: entries.iter().any(|entry| entry.encrypted),
+            entries,
+        }
+    }
+
+    /// Reads structured metadata without placing passwords in process arguments.
+    pub async fn list_metadata(file_path: &Path, format: String) -> Result<ArchiveBrowseResult> {
+        let args = vec![
+            "l".to_string(), "-slt".to_string(), "-ba".to_string(), "-p-".to_string(),
+            file_path.to_string_lossy().to_string(),
+        ];
+        let output = Self::run_7z_command(&args).await?;
+        if !output.status.success() {
+            anyhow::bail!("Unable to read archive metadata safely");
+        }
+        let result = Self::parse_metadata_listing(&String::from_utf8_lossy(&output.stdout), format);
+        if result.entries.is_empty() {
+            anyhow::bail!("The archive did not expose any browseable entries");
+        }
+        Ok(result)
     }
 
     /// Read declared entry count and expanded size without extracting data.

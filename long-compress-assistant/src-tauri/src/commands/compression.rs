@@ -320,6 +320,26 @@ pub async fn list_archive_contents(file_path: String, password: Option<String>) 
         .map_err(|e| e.to_string())
 }
 
+/// Returns structured archive metadata for the archive browser.
+#[command]
+pub async fn browse_archive(file_path: String, password: Option<String>) -> Result<crate::models::compression::ArchiveBrowseResult, String> {
+    let resolved_password = match password.filter(|value| !value.is_empty()) {
+        Some(password) => Some(password),
+        None => {
+            let service = CompressionService::new_with_defaults().await;
+            service
+                .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+                .await
+        }
+    };
+    crate::services::archive_browser::browse_archive(
+        std::path::Path::new(&file_path),
+        resolved_password.as_deref(),
+    )
+    .await
+    .map_err(|error| error.to_string())
+}
+
 /// 检测归档文件完整性（通过 7z CLI 的 t 命令）
 #[command]
 pub async fn test_archive_integrity(file_path: String, password: Option<String>) -> Result<String, String> {

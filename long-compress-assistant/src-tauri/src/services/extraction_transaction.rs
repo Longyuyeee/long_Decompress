@@ -227,6 +227,36 @@ pub(crate) fn matches_compiled_file_filter(path: &Path, filter: &[regex::Regex])
         .any(|pattern| pattern.is_match(&normalized) || pattern.is_match(file_name))
 }
 
+fn normalized_selected_entry(value: &str) -> Option<String> {
+    let value = value.trim().replace('\\', "/");
+    if value.is_empty() || value.starts_with('/') || value.contains('\0') {
+        return None;
+    }
+    let mut parts = Vec::new();
+    for part in value.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => return None,
+            part => parts.push(part),
+        }
+    }
+    (!parts.is_empty()).then(|| parts.join("/"))
+}
+
+pub(crate) fn matches_selected_entries(path: &Path, selected_entries: &[String]) -> bool {
+    if selected_entries.is_empty() {
+        return true;
+    }
+    let candidate = path.to_string_lossy().replace('\\', "/");
+    let Some(candidate) = normalized_selected_entry(&candidate) else {
+        return false;
+    };
+    selected_entries.iter().any(|selected| {
+        normalized_selected_entry(selected)
+            .is_some_and(|selected| candidate == selected || candidate.starts_with(&format!("{selected}/")))
+    })
+}
+
 pub(crate) fn resolve_extract_path(target: &Path, options: &DecompressOptions) -> Result<PathBuf> {
     if options.overwrite_existing || !target.exists() {
         return Ok(target.to_path_buf());
@@ -295,7 +325,9 @@ pub(crate) fn prepare_staging_layout(
     let mut expanded_bytes = 0u64;
     for source in files {
         let relative = source.strip_prefix(staging)?;
-        if !matches_compiled_file_filter(relative, &file_filter) {
+        if !matches_compiled_file_filter(relative, &file_filter)
+            || !matches_selected_entries(relative, &options.selected_entries)
+        {
             std::fs::remove_file(&source)?;
             continue;
         }
@@ -767,5 +799,42 @@ mod tests {
             &filter,
         ));
         assert!(matches_compiled_file_filter(Path::new("anything.bin"), &[]));
+    }
+
+    #[test]
+    fn selected_entries_are_exact_safe_archive_paths() {
+        let selected = vec!["docs/readme.txt".to_string(), "images".to_string()];
+        assert!(matches_selected_entries(Path::new("docs/readme.txt"), &selected));
+        assert!(matches_selected_entries(Path::new("images/icon.png"), &selected));
+        assert!(!matches_selected_entries(Path::new("docs/readme.txt.bak"), &selected));
+        assert!(!matches_selected_entries(Path::new("other/icon.png"), &selected));
+        assert!(!matches_selected_entries(Path::new("../docs/readme.txt"), &selected));
+    }
+
+    #[test]
+    fn staging_layout_keeps_only_exact_selected_files() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let staging = temp.path().join("staging");
+        std::fs::create_dir_all(staging.join("docs")).unwrap();
+        std::fs::create_dir_all(staging.join("images")).unwrap();
+        std::fs::write(staging.join("docs/readme.txt"), b"keep").unwrap();
+        std::fs::write(staging.join("docs/notes.txt"), b"remove").unwrap();
+        std::fs::write(staging.join("images/icon.png"), b"remove").unwrap();
+        let archive = temp.path().join("fixture.zip");
+        std::fs::write(&archive, b"fixture").unwrap();
+
+        prepare_staging_layout(
+            &archive,
+            &staging,
+            &DecompressOptions {
+                preserve_paths: true,
+                selected_entries: vec!["docs/readme.txt".to_string()],
+                ..Default::default()
+            },
+        ).unwrap();
+
+        assert!(staging.join("docs/readme.txt").is_file());
+        assert!(!staging.join("docs/notes.txt").exists());
+        assert!(!staging.join("images/icon.png").exists());
     }
 }

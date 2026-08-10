@@ -9,6 +9,7 @@ export const translations: Record<string, Record<string, string>> = {
     // 导航
     'nav.decompress': '解压中心',
     'nav.compress': '压缩中心',
+    'nav.browser': '压缩包浏览',
     'nav.vault': '密码保险箱',
     'nav.integrity': '文件完整性',
     'nav.settings': '设置中心',
@@ -583,6 +584,7 @@ export const translations: Record<string, Record<string, string>> = {
     // Nav
     'nav.decompress': 'Extraction',
     'nav.compress': 'Compression',
+    'nav.browser': 'Archive Browser',
     'nav.vault': 'Vault',
     'nav.integrity': 'File Integrity',
     'nav.settings': 'Settings',

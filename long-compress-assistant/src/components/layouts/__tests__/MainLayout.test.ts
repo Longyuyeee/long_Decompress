@@ -36,6 +36,7 @@ const routes = [
   { path: '/', redirect: { name: 'Decompress' } },
   { path: '/decompress', name: 'Decompress', component: { template: '<div>Decompress</div>' } },
   { path: '/compress', name: 'Compress', component: { template: '<div>Compress</div>' } },
+  { path: '/browser', name: 'ArchiveBrowser', component: { template: '<div>Browser</div>' } },
   { path: '/vault', name: 'Vault', component: { template: '<div>Vault</div>' } },
   { path: '/integrity', name: 'FileIntegrity', component: { template: '<div>Integrity</div>' } },
   { path: '/settings', name: 'Settings', component: { template: '<div>Settings</div>' } }
@@ -75,16 +76,18 @@ describe('MainLayout', () => {
     expect(mocks.onFocusChanged).toHaveBeenCalledOnce()
   })
 
-  it('renders the five product navigation entries', async () => {
+  it('renders the six product navigation entries', async () => {
     const { wrapper } = await mountLayout()
 
     expect(wrapper.find('.pi-folder-open').exists()).toBe(true)
     expect(wrapper.find('.pi-box').exists()).toBe(true)
+    expect(wrapper.find('.pi-list').exists()).toBe(true)
     expect(wrapper.find('.pi-shield').exists()).toBe(true)
     expect(wrapper.find('.pi-verified').exists()).toBe(true)
     expect(wrapper.find('.pi-cog').exists()).toBe(true)
     expect(mocks.t).toHaveBeenCalledWith('nav.decompress')
     expect(mocks.t).toHaveBeenCalledWith('nav.compress')
+    expect(mocks.t).toHaveBeenCalledWith('nav.browser')
     expect(mocks.t).toHaveBeenCalledWith('nav.vault')
     expect(mocks.t).toHaveBeenCalledWith('nav.integrity')
     expect(mocks.t).toHaveBeenCalledWith('nav.settings')
@@ -94,7 +97,7 @@ describe('MainLayout', () => {
     const { wrapper } = await mountLayout('/compress')
 
     const navButtons = wrapper.findAll('aside nav > button')
-    expect(navButtons).toHaveLength(5)
+    expect(navButtons).toHaveLength(6)
     expect(navButtons[1].classes()).toContain('bg-primary/20')
     expect(navButtons[0].classes()).toContain('hover:bg-primary/8')
     expect(navButtons[1].attributes('aria-current')).toBe('page')
@@ -104,7 +107,7 @@ describe('MainLayout', () => {
     const { wrapper, router } = await mountLayout('/decompress')
 
     const navButtons = wrapper.findAll('aside nav > button')
-    await navButtons[2].trigger('click')
+    await navButtons[3].trigger('click')
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('Vault')

@@ -134,6 +134,7 @@ describe('useTauriCommands', () => {
         create_subdirectory: false,
         preserve_mark_of_web: true,
         file_filter: null,
+        selected_entries: [],
         conflict_policy: 'rename',
         enable_bruteforce: true,
         bruteforce_wordlists: ['C:/words.txt'],
@@ -426,6 +427,7 @@ describe('useTauriCommands', () => {
     await commands.installWinRarWithWinget()
     await commands.openRarDownloadPage()
     await commands.listArchiveContents('a.zip', 'secret')
+    await commands.browseArchive('a.zip', 'secret')
     await commands.testArchiveIntegrity('a.zip')
     await commands.repairZip('a.zip')
     await commands.registerContextMenu()
@@ -433,6 +435,10 @@ describe('useTauriCommands', () => {
     await commands.isContextMenuRegistered()
 
     expect(mocks.invoke).toHaveBeenCalledWith('list_archive_contents', {
+      filePath: 'a.zip',
+      password: 'secret',
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('browse_archive', {
       filePath: 'a.zip',
       password: 'secret',
     })

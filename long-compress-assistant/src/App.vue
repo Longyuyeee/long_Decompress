@@ -168,6 +168,7 @@ const handleKeydown = (e: KeyboardEvent) => {
     switch (e.key.toLowerCase()) {
       case 'o': e.preventDefault(); router.push('/decompress'); break  // Ctrl+O → 解压
       case 'n': e.preventDefault(); router.push('/compress'); break   // Ctrl+N → 压缩
+      case 'b': e.preventDefault(); router.push('/browser'); break   // Ctrl+B → 浏览压缩包
       case 'v': if (e.shiftKey) { e.preventDefault(); router.push('/vault') }; break
       case 'i': e.preventDefault(); router.push('/integrity'); break
       case ',': e.preventDefault(); router.push('/settings'); break  // Ctrl+, → 设置

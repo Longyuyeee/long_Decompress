@@ -1,4 +1,5 @@
 pub mod archive_engine;
+pub mod archive_browser;
 pub mod universal_engine;
 pub mod compression_service;
 pub(crate) mod compression_verification;

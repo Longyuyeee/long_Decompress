@@ -15,6 +15,7 @@ export interface DecompressOptions {
   extractOnlyNewer?: boolean
   createSubdirectory?: boolean
   fileFilter?: string | null
+  selectedEntries?: string[]
   conflictPolicy?: 'ask' | 'overwrite' | 'skip' | 'rename'
 }
 
@@ -56,6 +57,27 @@ export interface ArchiveEngineCapabilities {
   fullEngine: boolean
   formats: ArchiveEngineFormatCapability[]
   message: string
+}
+
+export interface ArchiveEntryInfo {
+  path: string
+  name: string
+  size: number
+  compressedSize: number | null
+  modified: string | null
+  crc: string | null
+  encrypted: boolean
+  isDir: boolean
+}
+
+export interface ArchiveBrowseResult {
+  format: string
+  entries: ArchiveEntryInfo[]
+  totalFiles: number
+  totalDirectories: number
+  totalUncompressedSize: number
+  totalCompressedSize: number
+  encrypted: boolean
 }
 
 interface WordlistValidationResult {
@@ -150,6 +172,8 @@ export const useTauriCommands = () => {
       outputPath: options.outputPath,
       format: filePath.split('.').pop() || 'zip'
     })
+    const trackedTask = taskStore.tasks.find(item => item.id === taskId)
+    if (trackedTask) trackedTask.selectedEntries = options.selectedEntries ? [...options.selectedEntries] : undefined
 
     try {
       taskStore.updateTaskStatus(taskId, 'preparing')
@@ -170,6 +194,7 @@ export const useTauriCommands = () => {
           create_subdirectory: options.createSubdirectory ?? false,
           preserve_mark_of_web: appStore.settings.preserveMarkOfWeb,
           file_filter: options.fileFilter || null,
+          selected_entries: options.selectedEntries || [],
           conflict_policy: options.conflictPolicy || 'rename',
           enable_bruteforce: appStore.settings.enableBruteForce,
           bruteforce_wordlists: appStore.settings.bruteForceWordlists
@@ -508,6 +533,10 @@ export const useTauriCommands = () => {
     return await invoke<string[]>('list_archive_contents', { filePath, password: password || null })
   }
 
+  const browseArchive = async (filePath: string, password?: string) => {
+    return await invoke<ArchiveBrowseResult>('browse_archive', { filePath, password: password || null })
+  }
+
   const testArchiveIntegrity = async (filePath: string, password?: string) => {
     return await invoke<string>('test_archive_integrity', { filePath, password: password || null })
   }
@@ -552,6 +581,7 @@ export const useTauriCommands = () => {
     importPasswords,
     openInExplorer,
     listArchiveContents,
+    browseArchive,
     testArchiveIntegrity,
     repairZip,
     cancelCompression,

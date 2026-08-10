@@ -137,6 +137,10 @@ pub struct DecompressOptions {
     #[serde(default = "default_true")]
     pub preserve_mark_of_web: bool,
     pub file_filter: Option<String>,
+    /// Exact archive-relative file paths selected in the archive browser.
+    /// An empty list keeps the historical "extract everything" behavior.
+    #[serde(default)]
+    pub selected_entries: Vec<String>,
     #[serde(default = "default_conflict_policy")]
     pub conflict_policy: String,
     #[serde(default)]
@@ -180,11 +184,37 @@ impl Default for DecompressOptions {
             create_subdirectory: false,
             preserve_mark_of_web: true,
             file_filter: None,
+            selected_entries: Vec::new(),
             conflict_policy: default_conflict_policy(),
             enable_bruteforce: false,
             bruteforce_wordlists: Vec::new(),
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ArchiveEntryInfo {
+    pub path: String,
+    pub name: String,
+    pub size: u64,
+    pub compressed_size: Option<u64>,
+    pub modified: Option<String>,
+    pub crc: Option<String>,
+    pub encrypted: bool,
+    pub is_dir: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ArchiveBrowseResult {
+    pub format: String,
+    pub entries: Vec<ArchiveEntryInfo>,
+    pub total_files: usize,
+    pub total_directories: usize,
+    pub total_uncompressed_size: u64,
+    pub total_compressed_size: u64,
+    pub encrypted: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
