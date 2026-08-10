@@ -9,6 +9,7 @@ use std::collections::HashSet;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::Path;
+use std::time::Duration;
 
 const TEMPLATE_SCHEMA: &str = "long-decompress-task-template";
 const TEMPLATE_VERSION: u32 = 1;
@@ -16,6 +17,24 @@ const MAX_TEMPLATE_BYTES: u64 = 256 * 1024;
 const MAX_PATTERNS: usize = 32;
 const MAX_PATTERN_LENGTH: usize = 128;
 const MAX_DRAFT_SOURCES: usize = 1_000;
+const MAX_WATCH_PREVIEW_FILES: usize = 1_000;
+const MAX_WATCH_PREVIEW_DEPTH: usize = 32;
+const WATCH_STABILITY_DELAY_MS: u64 = 750;
+
+fn metadata_is_link_or_reparse_point(metadata: &std::fs::Metadata) -> bool {
+    if metadata.file_type().is_symlink() {
+        return true;
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::MetadataExt;
+        const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0400;
+        if metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+            return true;
+        }
+    }
+    false
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -119,6 +138,20 @@ pub struct TaskTemplateDraftPlan {
     pub profile_name: String,
     pub accepted: Vec<TaskTemplateDraftCandidate>,
     pub excluded: Vec<TaskTemplateDraftExcluded>,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskTemplateWatchFolderPreview {
+    pub profile_id: String,
+    pub profile_name: String,
+    pub root_path: String,
+    pub scanned_files: usize,
+    pub accepted: Vec<TaskTemplateDraftCandidate>,
+    pub excluded: Vec<TaskTemplateDraftExcluded>,
+    pub truncated: bool,
+    pub stability_window_ms: u64,
     pub warnings: Vec<String>,
 }
 
@@ -380,23 +413,37 @@ fn auto_apply_mode(mode: TemplateSourceMode) -> AutoApplyMode {
     }
 }
 
-fn pattern_matches_source(pattern: &str, candidate: &TaskTemplateDraftCandidate) -> bool {
+fn pattern_matches_source(
+    pattern: &str,
+    candidate: &TaskTemplateDraftCandidate,
+    relative_path: Option<&str>,
+) -> bool {
     let Ok(compiled) = glob::Pattern::new(pattern) else {
         return false;
     };
     let normalized_path = candidate.path.replace('\\', "/");
-    compiled.matches(&candidate.name) || compiled.matches(&normalized_path)
+    compiled.matches(&candidate.name)
+        || compiled.matches(&normalized_path)
+        || relative_path.is_some_and(|path| compiled.matches(path))
 }
 
 fn source_rule_exclusion(
     profile: &CompressionProfile,
     candidate: &TaskTemplateDraftCandidate,
 ) -> Option<String> {
+    source_rule_exclusion_with_relative_path(profile, candidate, None)
+}
+
+fn source_rule_exclusion_with_relative_path(
+    profile: &CompressionProfile,
+    candidate: &TaskTemplateDraftCandidate,
+    relative_path: Option<&str>,
+) -> Option<String> {
     let rules = &profile.auto_apply;
     if rules
         .exclude_patterns
         .iter()
-        .any(|pattern| pattern_matches_source(pattern, candidate))
+        .any(|pattern| pattern_matches_source(pattern, candidate, relative_path))
     {
         return Some("命中排除规则".to_string());
     }
@@ -416,7 +463,7 @@ fn source_rule_exclusion(
             if rules
                 .file_patterns
                 .iter()
-                .any(|pattern| pattern_matches_source(pattern, candidate))
+                .any(|pattern| pattern_matches_source(pattern, candidate, relative_path))
             {
                 None
             } else {
@@ -435,6 +482,188 @@ fn source_rule_exclusion(
             }
         }
     }
+}
+
+/// Scan a user-selected folder once and preview which stable files match a profile.
+/// This function never persists a watcher, creates a task, or mutates profile/task storage.
+pub fn preview_profile_watch_folder(
+    profile: &CompressionProfile,
+    root: &Path,
+) -> Result<TaskTemplateWatchFolderPreview> {
+    preview_profile_watch_folder_with_delay(
+        profile,
+        root,
+        Duration::from_millis(WATCH_STABILITY_DELAY_MS),
+    )
+}
+
+fn preview_profile_watch_folder_with_delay(
+    profile: &CompressionProfile,
+    root: &Path,
+    stability_delay: Duration,
+) -> Result<TaskTemplateWatchFolderPreview> {
+    validate_profile_source_rules(&profile.auto_apply)?;
+    let root_metadata = std::fs::symlink_metadata(root)
+        .with_context(|| format!("无法读取预览文件夹：{}", root.display()))?;
+    if metadata_is_link_or_reparse_point(&root_metadata) {
+        anyhow::bail!("预览根目录不能是符号链接或目录联接");
+    }
+    if !root_metadata.is_dir() {
+        anyhow::bail!("只读预览需要选择文件夹");
+    }
+
+    let mut scanned_files = 0usize;
+    let mut excluded = Vec::new();
+    let mut pending_stability = Vec::new();
+    let mut truncated = false;
+    let mut walk_errors = 0usize;
+    let mut skipped_links = 0usize;
+    let mut depth_limit_reached = false;
+
+    for entry in walkdir::WalkDir::new(root)
+        .min_depth(1)
+        .max_depth(MAX_WATCH_PREVIEW_DEPTH)
+        .follow_links(false)
+        .sort_by_file_name()
+    {
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(_) => {
+                walk_errors += 1;
+                continue;
+            }
+        };
+        let path = entry.path();
+        let metadata = match std::fs::symlink_metadata(path) {
+            Ok(metadata) => metadata,
+            Err(_) => {
+                walk_errors += 1;
+                continue;
+            }
+        };
+        if metadata_is_link_or_reparse_point(&metadata) {
+            skipped_links += 1;
+            continue;
+        }
+        if metadata.is_dir() && entry.depth() == MAX_WATCH_PREVIEW_DEPTH {
+            depth_limit_reached = true;
+        }
+        if !metadata.is_file() {
+            continue;
+        }
+        if scanned_files >= MAX_WATCH_PREVIEW_FILES {
+            truncated = true;
+            break;
+        }
+        scanned_files += 1;
+        let candidate = TaskTemplateDraftCandidate {
+            path: path.to_string_lossy().into_owned(),
+            name: entry.file_name().to_string_lossy().into_owned(),
+            size: metadata.len(),
+            is_directory: false,
+        };
+        let relative_path = path
+            .strip_prefix(root)
+            .ok()
+            .map(|value| value.to_string_lossy().replace('\\', "/"));
+
+        if let Some(reason) =
+            source_rule_exclusion_with_relative_path(profile, &candidate, relative_path.as_deref())
+        {
+            excluded.push(TaskTemplateDraftExcluded { candidate, reason });
+            continue;
+        }
+
+        match metadata.modified() {
+            Ok(modified) => pending_stability.push((candidate, modified)),
+            Err(_) => excluded.push(TaskTemplateDraftExcluded {
+                candidate,
+                reason: "无法读取文件修改时间，不能判断稳定性".to_string(),
+            }),
+        }
+    }
+
+    if !pending_stability.is_empty() && !stability_delay.is_zero() {
+        std::thread::sleep(stability_delay);
+    }
+
+    let mut accepted = Vec::new();
+    for (candidate, initial_modified) in pending_stability {
+        let current_metadata = std::fs::symlink_metadata(&candidate.path);
+        let is_stable = current_metadata.as_ref().is_ok_and(|metadata| {
+            metadata.is_file()
+                && !metadata_is_link_or_reparse_point(metadata)
+                && metadata.len() == candidate.size
+                && metadata
+                    .modified()
+                    .is_ok_and(|modified| modified == initial_modified)
+        });
+        if is_stable {
+            accepted.push(candidate);
+        } else {
+            excluded.push(TaskTemplateDraftExcluded {
+                candidate,
+                reason: "文件在稳定观察窗口内发生变化、消失或无法读取".to_string(),
+            });
+        }
+    }
+
+    let stability_window_ms = stability_delay.as_millis().min(u64::MAX as u128) as u64;
+    let mut warnings = vec![
+        "本结果仅为一次性只读预览，不会保存监控、创建草稿或启动压缩".to_string(),
+        format!(
+            "稳定性仅依据间隔 {stability_window_ms} 毫秒的两次文件元数据快照，不代表后台持续监控"
+        ),
+    ];
+    if matches!(profile.auto_apply.mode, AutoApplyMode::None) {
+        warnings.push("当前配置组为手动选择模式，本次仅展示全部稳定普通文件".to_string());
+    }
+    if truncated {
+        warnings.push(format!(
+            "文件数量超过上限，仅审计前 {MAX_WATCH_PREVIEW_FILES} 个普通文件"
+        ));
+    }
+    if walk_errors > 0 {
+        warnings.push(format!("有 {walk_errors} 个路径无法读取，未纳入结果"));
+    }
+    if skipped_links > 0 {
+        warnings.push(format!(
+            "已跳过 {skipped_links} 个符号链接或目录联接，未跟随到外部路径"
+        ));
+    }
+    if depth_limit_reached {
+        warnings.push(format!(
+            "目录层级超过 {MAX_WATCH_PREVIEW_DEPTH} 层，更深内容未纳入结果"
+        ));
+    }
+    if profile.config.delete_after {
+        warnings.push("预览不会采用删除源文件设置".to_string());
+    }
+    if profile.config.password.is_some()
+        || !matches!(&profile.password_strategy, PasswordStrategy::None)
+    {
+        warnings.push("预览不会读取、填入或生成密码".to_string());
+    }
+
+    accepted.sort_by(|left, right| left.path.to_lowercase().cmp(&right.path.to_lowercase()));
+    excluded.sort_by(|left, right| {
+        left.candidate
+            .path
+            .to_lowercase()
+            .cmp(&right.candidate.path.to_lowercase())
+    });
+
+    Ok(TaskTemplateWatchFolderPreview {
+        profile_id: profile.id.clone(),
+        profile_name: profile.name.clone(),
+        root_path: root.to_string_lossy().into_owned(),
+        scanned_files,
+        accepted,
+        excluded,
+        truncated,
+        stability_window_ms,
+        warnings,
+    })
 }
 
 /// Build a read-only source plan from a profile. This never mutates profile or task storage.
@@ -714,6 +943,72 @@ mod tests {
             .warnings
             .iter()
             .any(|warning| warning.contains("不会启动任务")));
+    }
+
+    #[test]
+    fn watch_folder_preview_uses_relative_rules_and_rejects_changing_files() {
+        let temp = tempfile::tempdir().unwrap();
+        let nested = temp.path().join("nested");
+        std::fs::create_dir(&nested).unwrap();
+        let accepted_path = nested.join("keep.log");
+        let changing_path = nested.join("changing.log");
+        let excluded_path = nested.join("skip.tmp");
+        let unmatched_path = temp.path().join("root.log");
+        std::fs::write(&accepted_path, b"stable").unwrap();
+        std::fs::write(&changing_path, b"first").unwrap();
+        std::fs::write(&excluded_path, b"excluded").unwrap();
+        std::fs::write(&unmatched_path, b"unmatched").unwrap();
+
+        let mut source = profile();
+        source.auto_apply.file_patterns = vec!["nested/*.log".to_string()];
+        let changing_path_for_thread = changing_path.clone();
+        let writer = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(30));
+            std::fs::write(changing_path_for_thread, b"changed-and-longer").unwrap();
+        });
+
+        let preview = preview_profile_watch_folder_with_delay(
+            &source,
+            temp.path(),
+            Duration::from_millis(150),
+        )
+        .unwrap();
+        writer.join().unwrap();
+
+        assert_eq!(preview.scanned_files, 4);
+        assert_eq!(preview.accepted.len(), 1);
+        assert_eq!(preview.accepted[0].name, "keep.log");
+        assert_eq!(preview.excluded.len(), 3);
+        assert!(preview
+            .excluded
+            .iter()
+            .any(|item| item.candidate.name == "skip.tmp" && item.reason.contains("排除规则")));
+        assert!(preview.excluded.iter().any(|item| {
+            item.candidate.name == "root.log" && item.reason.contains("未命中包含规则")
+        }));
+        assert!(preview.excluded.iter().any(|item| {
+            item.candidate.name == "changing.log" && item.reason.contains("发生变化")
+        }));
+        assert!(!preview.truncated);
+        assert_eq!(preview.stability_window_ms, 150);
+        assert!(preview
+            .warnings
+            .iter()
+            .any(|warning| warning.contains("不会保存监控、创建草稿或启动压缩")));
+        assert!(preview
+            .warnings
+            .iter()
+            .any(|warning| warning.contains("不会读取、填入或生成密码")));
+    }
+
+    #[test]
+    fn watch_folder_preview_rejects_non_directory_roots() {
+        let temp = tempfile::tempdir().unwrap();
+        let file_path = temp.path().join("not-a-folder.txt");
+        std::fs::write(&file_path, b"content").unwrap();
+        let error = preview_profile_watch_folder_with_delay(&profile(), &file_path, Duration::ZERO)
+            .unwrap_err();
+        assert!(error.to_string().contains("需要选择文件夹"));
     }
 
     #[test]

@@ -290,6 +290,16 @@ describe('useCompressionProfiles', () => {
       profileId: 'profile-1',
       filePaths: ['C:/input/a.log'],
     })
+
+    mocks.invoke.mockResolvedValueOnce({
+      profileId: 'profile-1', rootPath: 'C:/input', scannedFiles: 0,
+      accepted: [], excluded: [], truncated: false, stabilityWindowMs: 750, warnings: [],
+    })
+    await api.previewTaskTemplateWatchFolder('profile-1', 'C:/input')
+    expect(mocks.invoke).toHaveBeenLastCalledWith('preview_task_template_watch_folder', {
+      profileId: 'profile-1',
+      folderPath: 'C:/input',
+    })
   })
 
   it('normalizes every command failure and keeps initialization backward compatible', async () => {

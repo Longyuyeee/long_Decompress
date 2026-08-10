@@ -162,3 +162,15 @@ export interface TaskTemplateDraftPlan {
   excluded: TaskTemplateDraftExcluded[]
   warnings: string[]
 }
+
+export interface TaskTemplateWatchFolderPreview {
+  profileId: string
+  profileName: string
+  rootPath: string
+  scannedFiles: number
+  accepted: TaskTemplateDraftCandidate[]
+  excluded: TaskTemplateDraftExcluded[]
+  truncated: boolean
+  stabilityWindowMs: number
+  warnings: string[]
+}

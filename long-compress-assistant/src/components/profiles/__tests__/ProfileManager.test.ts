@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   previewTaskTemplate: vi.fn(),
   importTaskTemplate: vi.fn(),
   planTaskTemplateDraft: vi.fn(),
+  previewTaskTemplateWatchFolder: vi.fn(),
   addTemplateDraft: vi.fn(),
 }))
 
@@ -27,6 +28,7 @@ vi.mock('@/composables/useCompressionProfiles', () => ({
     previewTaskTemplate: mocks.previewTaskTemplate,
     importTaskTemplate: mocks.importTaskTemplate,
     planTaskTemplateDraft: mocks.planTaskTemplateDraft,
+    previewTaskTemplateWatchFolder: mocks.previewTaskTemplateWatchFolder,
   }),
 }))
 
@@ -171,6 +173,50 @@ describe('ProfileManager', () => {
     )
     expect(wrapper.emitted('draftCreated')).toHaveLength(1)
     expect(mocks.setSuccess).toHaveBeenCalledWith(expect.stringContaining('尚未开始压缩'))
+  })
+
+  it('previews one folder without creating a watcher, draft, or compression task', async () => {
+    mocks.profiles.push({
+      id: 'logs', name: '日志归档', icon: '📦', description: '',
+      config: {
+        format: '7z', level: 7, password: 'never-read', splitArchive: false, splitSize: null,
+        keepStructure: true, deleteAfter: true, verifyAfter: true,
+        createSolidArchive: true, filenameTemplate: '{name}-{date}', extraParams: {},
+      },
+      stats: { useCount: 0, totalBytesProcessed: 0 }, lastUsedAt: null,
+    })
+    mocks.open.mockResolvedValue('C:/logs')
+    mocks.previewTaskTemplateWatchFolder.mockResolvedValue({
+      profileId: 'logs', profileName: '日志归档', rootPath: 'C:/logs', scannedFiles: 3,
+      accepted: [{ path: 'C:/logs/keep.log', name: 'keep.log', size: 12, isDirectory: false }],
+      excluded: [{
+        candidate: { path: 'C:/logs/changing.log', name: 'changing.log', size: 3, isDirectory: false },
+        reason: '文件在稳定观察窗口内发生变化、消失或无法读取',
+      }],
+      truncated: false,
+      stabilityWindowMs: 750,
+      warnings: ['本结果仅为一次性只读预览，不会保存监控、创建草稿或启动压缩'],
+    })
+
+    const wrapper = mountManager()
+    await flushPromises()
+    await wrapper.get('[data-testid="preview-watch-folder-logs"]').trigger('click')
+    await flushPromises()
+
+    expect(mocks.open).toHaveBeenCalledWith(expect.objectContaining({
+      directory: true,
+      multiple: false,
+    }))
+    expect(mocks.previewTaskTemplateWatchFolder).toHaveBeenCalledWith('logs', 'C:/logs')
+    const preview = wrapper.get('[data-testid="watch-folder-preview"]')
+    expect(preview.text()).toContain('一次性扫描，不会建立后台监控')
+    expect(preview.text()).toContain('稳定且通过')
+    expect(preview.text()).toContain('发生变化、消失或无法读取')
+    expect(preview.text()).not.toContain('确认创建')
+    expect(mocks.addTemplateDraft).not.toHaveBeenCalled()
+
+    await wrapper.get('[data-testid="close-watch-folder-preview"]').trigger('click')
+    expect(wrapper.find('[data-testid="watch-folder-preview"]').exists()).toBe(false)
   })
 
   it('exports a profile through a user-selected file without exposing a task execution action', async () => {

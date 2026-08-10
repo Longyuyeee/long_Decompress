@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { open, save } from '@tauri-apps/api/dialog'
 import { useCompressionProfileStore } from '@/stores/compressionProfile'
 import { useAppStore } from '@/stores/app'
-import { AutoApplyMode, type CompressionProfile, type CreateProfileRequest, type TaskTemplateDraftPlan, type TaskTemplatePreview } from '@/types/profile'
+import { AutoApplyMode, type CompressionProfile, type CreateProfileRequest, type TaskTemplateDraftPlan, type TaskTemplatePreview, type TaskTemplateWatchFolderPreview } from '@/types/profile'
 import { COMPRESSIBLE_FORMATS, FORMAT_CAPABILITIES, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 import { extractErrorMessage } from '@/utils'
 import Modal from '@/components/ui/Modal.vue'
@@ -40,6 +40,9 @@ const exportingProfileId = ref<string | null>(null)
 const draftProfile = ref<CompressionProfile | null>(null)
 const draftPlan = ref<TaskTemplateDraftPlan | null>(null)
 const draftBusy = ref(false)
+const watchPreviewProfile = ref<CompressionProfile | null>(null)
+const watchPreview = ref<TaskTemplateWatchFolderPreview | null>(null)
+const watchPreviewBusy = ref(false)
 
 const iconOptions = ['📦', '🗜️', '📁', '🔐', '⚡', '🎯', '💼', '🎨', '🔧', '⭐']
 const formatOptions = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
@@ -321,6 +324,31 @@ const closeDraftPlan = () => {
   draftPlan.value = null
 }
 
+const selectFolderForWatchPreview = async (profile: CompressionProfile) => {
+  const selection = await open({
+    title: `用“${profile.name}”只读预览文件夹规则`,
+    multiple: false,
+    directory: true,
+  })
+  if (typeof selection !== 'string') return
+
+  watchPreviewBusy.value = true
+  try {
+    watchPreview.value = await taskTemplates.previewTaskTemplateWatchFolder(profile.id, selection)
+    watchPreviewProfile.value = profile
+  } catch (error) {
+    appStore.setError(extractErrorMessage(error))
+  } finally {
+    watchPreviewBusy.value = false
+  }
+}
+
+const closeWatchPreview = () => {
+  if (watchPreviewBusy.value) return
+  watchPreviewProfile.value = null
+  watchPreview.value = null
+}
+
 const resolveDraftFilename = (profile: CompressionProfile, plan: TaskTemplateDraftPlan) => {
   const firstName = plan.accepted[0]?.name.replace(/\.[^/.]+$/, '') || profile.name
   const sourceName = plan.accepted.length === 1 ? firstName : profile.name
@@ -470,6 +498,9 @@ const formatDate = (timestamp: number | null) =>
               <span v-if="profile.config.splitArchive" class="rounded-md bg-violet-500/10 px-2 py-1 text-violet-400">分卷</span>
               <span v-if="profile.config.createSolidArchive" class="rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-400">固实</span>
             </div>
+            <button :data-testid="`preview-watch-folder-${profile.id}`" type="button" class="mt-3 flex h-8 max-w-full items-center gap-2 rounded-lg border border-subtle bg-input/30 px-3 text-xs font-black text-muted transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary disabled:cursor-wait disabled:opacity-60" title="只扫描一次，不保存监控" :disabled="watchPreviewBusy" @click="selectFolderForWatchPreview(profile)">
+              <i :class="watchPreviewBusy ? 'pi pi-spin pi-spinner' : 'pi pi-folder-open'" class="shrink-0 text-xs"></i><span class="truncate">文件夹规则只读预览</span>
+            </button>
           </div>
         </div>
 
@@ -731,6 +762,70 @@ const formatDate = (timestamp: number | null) =>
           <button data-testid="confirm-template-draft" type="button" class="h-10 rounded-xl bg-primary px-5 text-xs font-black text-white shadow-lg shadow-primary/20 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50" :disabled="draftBusy || draftPlan.accepted.length === 0" @click="confirmDraftCreation">
             确认创建草稿（不执行）
           </button>
+        </div>
+      </div>
+    </Modal>
+
+    <Modal
+      :visible="Boolean(watchPreview)"
+      title="文件夹规则只读预览"
+      :description="watchPreviewProfile?.name"
+      icon="pi pi-folder-open"
+      size="lg"
+      layer="nested"
+      :close-on-backdrop="!watchPreviewBusy"
+      :close-on-escape="!watchPreviewBusy"
+      @update:visible="value => { if (!value) closeWatchPreview() }"
+    >
+      <div v-if="watchPreview" data-testid="watch-folder-preview" class="min-w-0 space-y-4 overflow-x-hidden">
+        <div class="rounded-2xl border border-primary/25 bg-primary/10 p-4">
+          <p class="text-sm font-black text-content"><i class="pi pi-shield mr-2 text-primary"></i>一次性扫描，不会建立后台监控</p>
+          <p class="mt-1 text-xs leading-5 text-muted">本窗口只审计当前文件夹与配置组规则，不保存目录、不创建草稿、不启动压缩，也不读取密码。</p>
+        </div>
+
+        <dl class="grid min-w-0 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
+          <div class="min-w-0 rounded-xl border border-subtle bg-input/25 p-3"><dt class="text-muted">已扫描文件</dt><dd class="mt-1 text-lg font-black text-content">{{ watchPreview.scannedFiles }}</dd></div>
+          <div class="min-w-0 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3"><dt class="text-muted">稳定且通过</dt><dd class="mt-1 text-lg font-black text-emerald-400">{{ watchPreview.accepted.length }}</dd></div>
+          <div class="min-w-0 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3"><dt class="text-muted">未采用</dt><dd class="mt-1 text-lg font-black text-amber-400">{{ watchPreview.excluded.length }}</dd></div>
+          <div class="min-w-0 rounded-xl border border-subtle bg-input/25 p-3"><dt class="text-muted">稳定观察</dt><dd class="mt-1 text-lg font-black text-content">{{ watchPreview.stabilityWindowMs }} ms</dd></div>
+        </dl>
+
+        <p class="min-w-0 break-all rounded-xl border border-subtle bg-input/20 px-3 py-2 font-mono text-[11px] leading-5 text-muted" :title="watchPreview.rootPath">{{ watchPreview.rootPath }}</p>
+
+        <div class="grid min-w-0 gap-3 sm:grid-cols-2">
+          <section class="min-w-0 rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-4">
+            <p class="text-xs font-black text-emerald-400">稳定且通过规则 · {{ watchPreview.accepted.length }}</p>
+            <ul class="mt-3 max-h-52 space-y-2 overflow-y-auto overflow-x-hidden pr-1 text-xs">
+              <li v-for="candidate in watchPreview.accepted" :key="candidate.path" class="min-w-0 rounded-lg bg-input/40 px-3 py-2">
+                <p class="truncate font-bold text-content" :title="candidate.name">{{ candidate.name }}</p>
+                <p class="mt-0.5 truncate text-muted" :title="candidate.path">{{ candidate.path }}</p>
+                <p class="mt-0.5 text-[11px] text-muted">{{ formatBytes(candidate.size) }}</p>
+              </li>
+              <li v-if="watchPreview.accepted.length === 0" class="leading-5 text-muted">当前没有文件同时通过规则和稳定性检查。</li>
+            </ul>
+          </section>
+
+          <section class="min-w-0 rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4">
+            <p class="text-xs font-black text-amber-400">未采用 · {{ watchPreview.excluded.length }}</p>
+            <ul class="mt-3 max-h-52 space-y-2 overflow-y-auto overflow-x-hidden pr-1 text-xs">
+              <li v-for="item in watchPreview.excluded" :key="`${item.candidate.path}-${item.reason}`" class="min-w-0 rounded-lg bg-input/40 px-3 py-2">
+                <p class="truncate font-bold text-content" :title="item.candidate.name">{{ item.candidate.name }}</p>
+                <p class="mt-0.5 break-words leading-5 text-amber-400">{{ item.reason }}</p>
+              </li>
+              <li v-if="watchPreview.excluded.length === 0" class="leading-5 text-muted">已扫描文件全部通过规则和稳定性检查。</li>
+            </ul>
+          </section>
+        </div>
+
+        <section class="min-w-0 rounded-2xl border border-subtle bg-input/20 p-4">
+          <p class="text-xs font-black text-content">审计边界</p>
+          <ul class="mt-2 space-y-1.5 pl-5 text-xs leading-5 text-muted">
+            <li v-for="warning in watchPreview.warnings" :key="warning" class="list-disc break-words">{{ warning }}</li>
+          </ul>
+        </section>
+
+        <div class="flex justify-end border-t border-subtle pt-4">
+          <button data-testid="close-watch-folder-preview" type="button" class="h-10 rounded-xl border border-subtle bg-input px-5 text-xs font-black text-content hover:border-primary/30 hover:text-primary" @click="closeWatchPreview">关闭只读预览</button>
         </div>
       </div>
     </Modal>

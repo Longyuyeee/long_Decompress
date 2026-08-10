@@ -138,7 +138,9 @@ test.describe('Long Decompress desktop shell', () => {
           openDialogCount += 1
           value = openDialogCount === 1
             ? 'C:/templates/logs.longtask.json'
-            : ['C:/logs/keep.log', 'C:/logs/skip.tmp']
+            : openDialogCount === 2
+              ? 'C:/logs'
+              : ['C:/logs/keep.log', 'C:/logs/skip.tmp']
         } else if (message.cmd === 'get_compression_profiles') {
           value = [{
             id: 'logs', name: '日志归档', icon: '📦', description: '安全归档日志',
@@ -172,6 +174,14 @@ test.describe('Long Decompress desktop shell', () => {
             excluded: [{ candidate: { path: 'C:/logs/skip.tmp', name: 'skip.tmp', size: 3, isDirectory: false }, reason: '命中排除规则' }],
             warnings: ['该计划只会创建压缩草稿，不会启动任务'],
           }
+        } else if (message.cmd === 'preview_task_template_watch_folder') {
+          value = {
+            profileId: 'logs', profileName: '日志归档', rootPath: 'C:/logs', scannedFiles: 3,
+            accepted: [{ path: 'C:/logs/keep.log', name: 'keep.log', size: 12, isDirectory: false }],
+            excluded: [{ candidate: { path: 'C:/logs/changing.log', name: 'changing.log', size: 3, isDirectory: false }, reason: '文件在稳定观察窗口内发生变化、消失或无法读取' }],
+            truncated: false, stabilityWindowMs: 750,
+            warnings: ['本结果仅为一次性只读预览，不会保存监控、创建草稿或启动压缩'],
+          }
         } else if (message.cmd === 'compress_files') {
           ;(window as any).__TASK_TEMPLATE_COMPRESSION_STARTED__ = true
           value = 'unexpected-task'
@@ -200,6 +210,17 @@ test.describe('Long Decompress desktop shell', () => {
     }
 
     await preview.getByRole('button', { name: '取消' }).click()
+    await page.getByTestId('preview-watch-folder-logs').click()
+    const watchPreview = page.getByTestId('watch-folder-preview')
+    await expect(watchPreview).toContainText('一次性扫描，不会建立后台监控')
+    await expect(watchPreview).toContainText('文件在稳定观察窗口内发生变化')
+    await expect(watchPreview).not.toContainText('确认创建')
+    for (const width of responsiveWidths) {
+      await page.setViewportSize({ width, height: 800 })
+      await expectVerticalOnlyScrolling(page, ['[data-testid="watch-folder-preview"]'])
+    }
+    await page.getByTestId('close-watch-folder-preview').click()
+
     await page.getByTestId('create-template-draft-logs').click()
     const draftPlan = page.getByTestId('template-draft-plan')
     await expect(draftPlan).toContainText('命中排除规则')

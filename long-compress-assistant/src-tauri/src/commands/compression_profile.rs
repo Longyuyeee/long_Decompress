@@ -314,6 +314,35 @@ pub async fn plan_task_template_draft(
     .map_err(|error| format!("创建任务模板草稿计划失败: {error}"))
 }
 
+/// Scan one explicitly selected folder and return a read-only rule/stability preview.
+#[command]
+pub async fn preview_task_template_watch_folder(
+    state: State<'_, CompressionProfileServiceState>,
+    profile_id: String,
+    folder_path: String,
+) -> Result<crate::services::task_template::TaskTemplateWatchFolderPreview, String> {
+    let service_lock = state.service.lock().await;
+    let service = service_lock
+        .as_ref()
+        .ok_or_else(|| "配置组服务未初始化".to_string())?;
+    let profile = service
+        .get_profile_by_id(&profile_id)
+        .await
+        .map_err(|error| format!("读取配置组失败: {error}"))?
+        .ok_or_else(|| "要预览文件夹规则的配置组不存在".to_string())?;
+    drop(service_lock);
+
+    tokio::task::spawn_blocking(move || {
+        crate::services::task_template::preview_profile_watch_folder(
+            &profile,
+            std::path::Path::new(&folder_path),
+        )
+    })
+    .await
+    .map_err(|error| format!("预览文件夹规则失败: {error}"))?
+    .map_err(|error| format!("预览文件夹规则失败: {error}"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::CreateCompressionProfileRequest;

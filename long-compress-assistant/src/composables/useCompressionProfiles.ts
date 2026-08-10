@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { extractErrorMessage } from '@/utils'
-import type { CompressionProfile, CreateProfileRequest, PasswordStrategy, TaskTemplate, TaskTemplateDraftPlan, TaskTemplatePreview } from '@/types'
+import type { CompressionProfile, CreateProfileRequest, PasswordStrategy, TaskTemplate, TaskTemplateDraftPlan, TaskTemplatePreview, TaskTemplateWatchFolderPreview } from '@/types'
 
 interface ApplyProfileParams {
   profile_id: string
@@ -276,6 +276,16 @@ export const useCompressionProfiles = () => {
     return await invoke<TaskTemplateDraftPlan>('plan_task_template_draft', { profileId, filePaths })
   }
 
+  const previewTaskTemplateWatchFolder = async (
+    profileId: string,
+    folderPath: string,
+  ): Promise<TaskTemplateWatchFolderPreview> => {
+    return await invoke<TaskTemplateWatchFolderPreview>('preview_task_template_watch_folder', {
+      profileId,
+      folderPath,
+    })
+  }
+
   return {
     getAllProfiles,
     getProfileById,
@@ -289,5 +299,6 @@ export const useCompressionProfiles = () => {
     previewTaskTemplate,
     importTaskTemplate,
     planTaskTemplateDraft,
+    previewTaskTemplateWatchFolder,
   }
 }
