@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.1.2-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.1.3-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,6 +20,18 @@
 </div>
 
 ---
+
+## v1.1.3 更新亮点
+
+- 修复 ZIP 精确选择解压对 Unicode Path Extra Field 解码不一致的问题，中文深层路径不会再出现“任务完成但没有输出”。
+- 非空选择如果最终未匹配到任何文件会明确失败，阻止空结果被误报为成功。
+- Windows Release 实机门禁新增中文八层长路径 ZIP、加密与文件名加密 7Z、固定加密 RAR 的浏览和精确解压验证。
+- 补齐智能压缩、互联网来源安全标记、压缩后完整性校验，以及“校验成功后才能删除源文件”的可见桌面验收。
+- 完整桌面回归继续覆盖归档诊断、ZIP 修复、图片预览、资源预检、任务模板、监控目录、托盘和重启恢复。
+- 将间接依赖 `nanoid` 更新到 3.3.18，官方生产依赖安全审计恢复为 0 个已知漏洞。
+- 公开安装包仍不使用 Windows 商业代码签名证书；Windows 11 新式第一层右键菜单不属于本版本承诺。
+
+完整变更请查看 [v1.1.3 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.3)。
 
 ## v1.1.2 更新亮点
 
