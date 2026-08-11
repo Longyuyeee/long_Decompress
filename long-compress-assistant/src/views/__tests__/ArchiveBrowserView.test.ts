@@ -81,6 +81,25 @@ describe('ArchiveBrowserView', () => {
     expect(wrapper.find('.browser-workspace [class*="overflow-y-auto"]').exists()).toBe(true)
   })
 
+  it('renders archive folders as a collapsible hierarchy instead of full-path rows', async () => {
+    mocks.browseArchive.mockResolvedValueOnce({
+      format: 'ZIP', totalFiles: 1, totalDirectories: 2,
+      totalUncompressedSize: 10, totalCompressedSize: 8, encrypted: false,
+      entries: [
+        { path: 'docs/guides/readme.txt', name: 'readme.txt', size: 10, compressedSize: 8, modified: null, crc: null, encrypted: false, isDir: false },
+      ],
+    })
+    const wrapper = mount(ArchiveBrowserView)
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.directory-pane').text()).toContain('docs')
+    expect(wrapper.find('.directory-pane').text()).not.toContain('guides')
+    await wrapper.get('.directory-toggle').trigger('click')
+    expect(wrapper.find('.directory-pane').text()).toContain('guides')
+    expect(wrapper.find('.directory-pane').text()).not.toContain('docs/guides')
+  })
+
   it('previews a bounded raster entry without changing its selection', async () => {
     const wrapper = mount(ArchiveBrowserView)
     await wrapper.find('header .browser-primary').trigger('click')

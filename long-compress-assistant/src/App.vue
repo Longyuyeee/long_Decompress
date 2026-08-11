@@ -233,6 +233,12 @@ onMounted(async () => {
     const files = request.files.filter(file => file && !file.startsWith('%'))
     if (files.length === 0) return
 
+    if (request.action === 'context-browse-archive') {
+      appStore.openArchiveInBrowser(files[0])
+      void router.push('/browser')
+      return
+    }
+
     if (request.action === 'context-quick-pack' || request.action.startsWith('context-compress-')) {
       const metadata = await Promise.all(files.map(path =>
         invoke<{ size: number; is_dir: boolean }>('get_file_info', { path }).catch(() => null)

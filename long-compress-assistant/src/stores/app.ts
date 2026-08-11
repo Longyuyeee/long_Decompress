@@ -70,6 +70,7 @@ export const useAppStore = defineStore('app', () => {
   const errorMessage = ref<string | null>(null)
   const decompressTasks = ref<DecompressTask[]>([])
   const pendingContextActions = ref<Array<{ action: string; files: string[] }>>([])
+  const pendingArchiveBrowserPath = ref('')
   let errorTimer: ReturnType<typeof setTimeout> | null = null
   let successTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -299,7 +300,7 @@ export const useAppStore = defineStore('app', () => {
 
   return {
     theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings,
-    pendingContextActions,
+    pendingContextActions, pendingArchiveBrowserPath,
     recentFiles, addRecentFile,
     compressionPresets, saveCompressionPreset, deleteCompressionPreset,
     currentTheme, activeTasks, completedTasks, totalProgress, t,
@@ -316,6 +317,12 @@ export const useAppStore = defineStore('app', () => {
     clearError: () => { error.value = null; if (errorTimer) clearTimeout(errorTimer) },
     enqueueContextAction: (action: { action: string; files: string[] }) => pendingContextActions.value.push(action),
     takeContextActions: () => pendingContextActions.value.splice(0),
+    openArchiveInBrowser: (path: string) => { pendingArchiveBrowserPath.value = path },
+    takeArchiveBrowserPath: () => {
+      const path = pendingArchiveBrowserPath.value
+      pendingArchiveBrowserPath.value = ''
+      return path
+    },
     createDecompressTask, updateTaskProgress, markTaskAsError, clearCompletedTasks, updateSettings, resetSettings, saveSettingsToStorage,
     synchronizeContextMenu, setContextMenuEnabled
   }

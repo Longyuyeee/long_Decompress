@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { listen } from '@tauri-apps/api/event'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands, type ArchiveBrowseResult, type ArchiveEntryInfo, type ArchiveImagePreview } from '@/composables/useTauriCommands'
 
@@ -19,7 +20,12 @@ const imagePreview = ref<ArchiveImagePreview | null>(null)
 const previewEntry = ref<ArchiveEntryInfo | null>(null)
 const previewLoading = ref(false)
 const previewError = ref('')
+const expandedDirectories = ref(new Set<string>())
+const isDraggingArchive = ref(false)
 let previewSequence = 0
+let unlistenDrop: (() => void) | null = null
+let unlistenHover: (() => void) | null = null
+let unlistenCancel: (() => void) | null = null
 
 const extensionGroups: Record<string, Set<string>> = {
   image: new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'ico', 'avif']),
@@ -31,13 +37,25 @@ const boundedPreviewExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', '
 const files = computed(() => result.value?.entries.filter(entry => !entry.isDir) ?? [])
 const directories = computed(() => {
   const values = new Set<string>()
-  files.value.forEach(entry => {
-    const parts = entry.path.replace(/\\/g, '/').split('/')
-    parts.pop()
+  result.value?.entries.forEach(entry => {
+    const normalized = entry.path.replace(/\\/g, '/').replace(/\/+$/, '')
+    const parts = normalized.split('/')
+    if (!entry.isDir) parts.pop()
     for (let index = 1; index <= parts.length; index++) values.add(parts.slice(0, index).join('/'))
   })
   return [...values].sort((a, b) => a.localeCompare(b))
 })
+const visibleDirectories = computed(() => directories.value
+  .filter(path => {
+    const parts = path.split('/')
+    return parts.slice(0, -1).every((_, index) => expandedDirectories.value.has(parts.slice(0, index + 1).join('/')))
+  })
+  .map(path => ({
+    path,
+    name: path.split('/').pop() || path,
+    depth: path.split('/').length - 1,
+    hasChildren: directories.value.some(candidate => candidate.startsWith(`${path}/`) && candidate.split('/').length === path.split('/').length + 1)
+  })))
 
 const filteredEntries = computed(() => {
   const search = query.value.trim().toLocaleLowerCase()
@@ -77,6 +95,21 @@ const parentDirectory = (path: string) => {
   return index > 0 ? path.slice(0, index) : ''
 }
 
+const archiveName = computed(() => archivePath.value.split(/[\\/]/).pop() || archivePath.value)
+
+const openArchivePath = async (path: string) => {
+  if (!path || loading.value) return
+  try {
+    archivePath.value = path
+    outputPath.value = parentDirectory(path)
+    query.value = ''
+    typeFilter.value = 'all'
+    await loadArchive()
+  } catch (error) {
+    appStore.setError(`无法打开压缩包：${String(error)}`)
+  }
+}
+
 const takeDesktopDialogSelection = () => import.meta.env.VITE_DESKTOP_E2E
   ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection()
   : undefined
@@ -89,11 +122,7 @@ const chooseArchive = async () => {
     ? await commands.selectFiles(false)
     : queuedInfo ? [queuedInfo] : []
   if (!picked[0]) return
-  archivePath.value = picked[0].path
-  outputPath.value = parentDirectory(picked[0].path)
-  query.value = ''
-  typeFilter.value = 'all'
-  await loadArchive()
+  await openArchivePath(picked[0].path)
 }
 
 const loadArchive = async () => {
@@ -102,6 +131,7 @@ const loadArchive = async () => {
   result.value = null
   selected.value = new Set()
   activeDirectory.value = ''
+  expandedDirectories.value = new Set()
   closePreview()
   try {
     result.value = await commands.browseArchive(archivePath.value, password.value)
@@ -146,6 +176,50 @@ const chooseOutput = async () => {
   if (typeof picked === 'string') outputPath.value = picked
 }
 
+const selectDirectory = (path: string) => {
+  activeDirectory.value = path
+  if (!path) return
+  const next = new Set(expandedDirectories.value)
+  const parts = path.split('/')
+  parts.forEach((_, index) => next.add(parts.slice(0, index + 1).join('/')))
+  expandedDirectories.value = next
+}
+
+const toggleDirectory = (path: string) => {
+  const next = new Set(expandedDirectories.value)
+  next.has(path) ? next.delete(path) : next.add(path)
+  expandedDirectories.value = next
+}
+
+const droppedBrowserFiles = (event: DragEvent) => {
+  event.preventDefault()
+  isDraggingArchive.value = false
+  const path = (event.dataTransfer?.files[0] as (File & { path?: string }) | undefined)?.path
+  if (path) void openArchivePath(path)
+}
+
+watch(() => appStore.pendingArchiveBrowserPath, path => {
+  if (path) void openArchivePath(appStore.takeArchiveBrowserPath())
+}, { immediate: true })
+
+onMounted(() => {
+  if (import.meta.env.MODE === 'test') return
+  void Promise.all([
+    listen('tauri://file-drop-hover', () => { isDraggingArchive.value = true }).then(value => { unlistenHover = value }),
+    listen<string[]>('tauri://file-drop', event => {
+      isDraggingArchive.value = false
+      if (event.payload[0]) void openArchivePath(event.payload[0])
+    }).then(value => { unlistenDrop = value }),
+    listen('tauri://file-drop-cancelled', () => { isDraggingArchive.value = false }).then(value => { unlistenCancel = value })
+  ]).catch(error => console.warn('Archive browser drag-and-drop is unavailable:', error))
+})
+
+onUnmounted(() => {
+  unlistenHover?.()
+  unlistenDrop?.()
+  unlistenCancel?.()
+})
+
 const toggleEntry = (entry: ArchiveEntryInfo) => {
   const next = new Set(selected.value)
   next.has(entry.path) ? next.delete(entry.path) : next.add(entry.path)
@@ -182,21 +256,27 @@ const extractSelected = async () => {
 </script>
 
 <template>
-  <div class="browser-page relative h-full min-w-0 overflow-hidden p-responsive p-8 flex flex-col gap-5">
-    <header class="shrink-0 flex flex-wrap items-end justify-between gap-4">
+  <div
+    class="browser-page relative h-full min-w-0 overflow-hidden p-responsive p-8 flex flex-col gap-3"
+    @dragenter.prevent="isDraggingArchive = true"
+    @dragover.prevent="isDraggingArchive = true"
+    @dragleave.self="isDraggingArchive = false"
+    @drop="droppedBrowserFiles"
+  >
+    <header class="shrink-0 flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
-        <h1 class="text-4xl font-black text-content tracking-tighter">压缩包浏览中心</h1>
-        <p class="text-muted text-sm font-bold mt-2">查看目录、搜索筛选，并只解压需要的文件</p>
+        <h1 class="browser-title font-black text-content tracking-tighter">压缩包浏览中心</h1>
+        <p class="text-muted text-xs font-bold mt-1">像文件夹一样浏览压缩包，只解压真正需要的内容</p>
       </div>
       <button class="browser-primary" type="button" @click="chooseArchive">
         <i class="pi pi-folder-open"></i><span>打开压缩包</span>
       </button>
     </header>
 
-    <section class="aero-card shrink-0 p-4 grid gap-3 browser-toolbar">
+    <section class="aero-card shrink-0 p-3 grid gap-3 browser-toolbar">
       <div class="min-w-0 browser-field">
-        <span class="browser-label">压缩包</span>
-        <button class="browser-input text-left truncate" type="button" @click="chooseArchive">{{ archivePath || '选择需要浏览的压缩包' }}</button>
+        <span class="browser-label">当前压缩包</span>
+        <button class="browser-input text-left truncate" type="button" :title="archivePath" @click="chooseArchive">{{ archiveName || '选择或拖入需要浏览的压缩包' }}</button>
       </div>
       <div class="min-w-0 browser-field">
         <span class="browser-label">密码</span>
@@ -207,34 +287,37 @@ const extractSelected = async () => {
           </button>
         </div>
       </div>
-      <div class="min-w-0 browser-field">
-        <span class="browser-label">解压到</span>
-        <button class="browser-input text-left truncate" type="button" @click="chooseOutput">{{ outputPath || '选择输出目录' }}</button>
-      </div>
     </section>
 
     <div v-if="loading" class="aero-card flex-1 min-h-0 grid place-items-center">
       <div class="text-center text-muted"><i class="pi pi-spin pi-spinner text-primary text-3xl"></i><p class="mt-4 font-bold">正在读取压缩包结构…</p></div>
     </div>
 
-    <div v-else-if="!result" class="aero-card flex-1 min-h-0 grid place-items-center border-dashed">
-      <div class="max-w-sm text-center px-6"><i class="pi pi-list text-primary text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">先打开一个压缩包</h2><p class="mt-2 text-sm text-muted leading-6">内容只在本机读取。密码 ZIP、7Z、RAR 的元数据由进程内引擎处理，不写入命令行。</p></div>
+    <div v-else-if="!result" class="aero-card browser-empty flex-1 min-h-0 grid place-items-center border-dashed" @click="chooseArchive">
+      <div class="max-w-md text-center px-6"><i class="pi pi-cloud-upload text-primary text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">把压缩包拖到这里直接浏览</h2><p class="mt-2 text-sm text-muted leading-6">也可以点击此区域选择文件。内容只在本机读取，密码不会写入命令行。</p><span class="browser-drop-hint">支持 ZIP、7Z、RAR、TAR 等已接入格式</span></div>
     </div>
 
     <template v-else>
-      <section class="shrink-0 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div class="browser-stat"><span>格式</span><strong>{{ result.format }}</strong></div>
-        <div class="browser-stat"><span>文件</span><strong>{{ result.totalFiles }}</strong></div>
-        <div class="browser-stat"><span>展开大小</span><strong>{{ formatBytes(result.totalUncompressedSize) }}</strong></div>
-        <div class="browser-stat"><span>安全状态</span><strong>{{ result.encrypted ? '已加密' : '未加密' }}</strong></div>
+      <section class="browser-summary shrink-0" aria-label="压缩包摘要">
+        <span><b>{{ result.format }}</b> 格式</span>
+        <span><b>{{ result.totalFiles }}</b> 个文件</span>
+        <span>展开后 <b>{{ formatBytes(result.totalUncompressedSize) }}</b></span>
+        <span><i :class="result.encrypted ? 'pi pi-lock' : 'pi pi-lock-open'"></i> {{ result.encrypted ? '已加密' : '未加密' }}</span>
       </section>
 
       <section class="aero-card flex-1 min-h-0 min-w-0 overflow-hidden browser-workspace">
-        <aside class="min-h-0 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar border-r border-subtle/70 p-3">
-          <button class="directory-entry" :class="{ active: activeDirectory === '' }" type="button" @click="activeDirectory = ''"><i class="pi pi-home"></i><span>全部文件</span></button>
-          <button v-for="directory in directories" :key="directory" class="directory-entry" :class="{ active: activeDirectory === directory }" type="button" @click="activeDirectory = directory">
-            <i class="pi pi-folder"></i><span class="truncate">{{ directory }}</span>
-          </button>
+        <aside class="directory-pane min-h-0 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar border-r border-subtle/70 p-3">
+          <p class="directory-heading">目录树</p>
+          <button class="directory-entry" :class="{ active: activeDirectory === '' }" type="button" @click="selectDirectory('')"><i class="pi pi-home"></i><span>全部文件</span></button>
+          <div v-for="directory in visibleDirectories" :key="directory.path" class="directory-tree-row" :style="{ paddingLeft: `${directory.depth * 0.9}rem` }">
+            <button v-if="directory.hasChildren" class="directory-toggle" type="button" :aria-label="expandedDirectories.has(directory.path) ? '折叠目录' : '展开目录'" @click="toggleDirectory(directory.path)">
+              <i :class="expandedDirectories.has(directory.path) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
+            </button>
+            <span v-else class="directory-toggle-spacer"></span>
+            <button class="directory-entry" :class="{ active: activeDirectory === directory.path }" type="button" :title="directory.path" @click="selectDirectory(directory.path)">
+              <i :class="expandedDirectories.has(directory.path) ? 'pi pi-folder-open' : 'pi pi-folder'"></i><span class="truncate">{{ directory.name }}</span>
+            </button>
+          </div>
         </aside>
 
         <div class="min-h-0 min-w-0 overflow-hidden flex flex-col">
@@ -273,12 +356,19 @@ const extractSelected = async () => {
       </section>
 
       <footer class="shrink-0 flex flex-wrap items-center justify-between gap-3">
-        <span class="text-sm font-bold text-muted">已选择 <strong class="text-primary">{{ selected.size }}</strong> / {{ result.totalFiles }} 个文件</span>
+        <div class="footer-status min-w-0">
+          <span class="text-sm font-bold text-muted">已选择 <strong class="text-primary">{{ selected.size }}</strong> / {{ result.totalFiles }} 个文件</span>
+          <button class="output-target" type="button" :title="outputPath" @click="chooseOutput"><i class="pi pi-folder"></i><span class="truncate">解压到：{{ outputPath || '选择输出目录' }}</span><i class="pi pi-pencil"></i></button>
+        </div>
         <button class="browser-primary" type="button" :disabled="selected.size === 0 || !outputPath || extracting" @click="extractSelected">
           <i :class="extracting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i><span>{{ extracting ? '正在解压' : '解压所选文件' }}</span>
         </button>
       </footer>
     </template>
+
+    <div v-if="isDraggingArchive" class="browser-drop-overlay" aria-live="polite">
+      <div><i class="pi pi-cloud-upload"></i><strong>松开即可浏览压缩包</strong><span>将替换当前打开的压缩包</span></div>
+    </div>
 
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-image-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
@@ -302,7 +392,8 @@ const extractSelected = async () => {
 
 <style scoped>
 .browser-page { max-width: 100%; }
-.browser-toolbar { grid-template-columns: minmax(0, 1.45fr) minmax(12rem, .7fr) minmax(0, 1fr); }
+.browser-title { font-size: clamp(1.75rem, 3vw, 2.5rem); line-height: 1; }
+.browser-toolbar { grid-template-columns: minmax(0, 1fr) minmax(14rem, .42fr); }
 .browser-field { display: flex; flex-direction: column; gap: .4rem; }
 .browser-label { color: var(--text-muted); font-size: .7rem; font-weight: 900; letter-spacing: .12em; }
 .browser-input, .browser-search, .browser-select { height: 2.75rem; border: 1px solid var(--border-subtle); border-radius: .85rem; background: var(--bg-input); color: var(--text-content); padding: 0 .9rem; outline: none; }
@@ -310,11 +401,18 @@ const extractSelected = async () => {
 .browser-icon-button { width: 2.75rem; height: 2.75rem; border-radius: .85rem; border: 1px solid var(--border-subtle); color: var(--dynamic-accent); background: var(--bg-input); }
 .browser-primary { min-height: 2.85rem; padding: 0 1.15rem; border-radius: .9rem; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; color: white; font-size: .8rem; font-weight: 900; background: var(--dynamic-accent); box-shadow: 0 8px 24px color-mix(in srgb, var(--dynamic-accent) 25%, transparent); }
 .browser-primary:disabled, .browser-icon-button:disabled { opacity: .45; cursor: not-allowed; }
-.browser-stat { min-width: 0; padding: .85rem 1rem; border-radius: 1rem; border: 1px solid var(--border-subtle); background: color-mix(in srgb, var(--bg-card) 85%, transparent); display: flex; flex-direction: column; gap: .25rem; }
-.browser-stat span { color: var(--text-muted); font-size: .68rem; font-weight: 800; }
-.browser-stat strong { color: var(--text-content); font-size: 1rem; overflow: hidden; text-overflow: ellipsis; }
+.browser-empty { cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
+.browser-empty:hover { border-color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 5%, var(--bg-card)); transform: translateY(-1px); }
+.browser-drop-hint { display: inline-flex; margin-top: 1rem; padding: .45rem .75rem; border-radius: 999px; background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent); color: var(--dynamic-accent); font-size: .7rem; font-weight: 800; }
+.browser-summary { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; min-height: 2.25rem; }
+.browser-summary span { display: inline-flex; align-items: center; gap: .35rem; padding: .38rem .65rem; border: 1px solid var(--border-subtle); border-radius: 999px; background: color-mix(in srgb, var(--bg-card) 82%, transparent); color: var(--text-muted); font-size: .68rem; font-weight: 800; }
+.browser-summary b { color: var(--text-content); }
 .browser-workspace { display: grid; grid-template-columns: minmax(10rem, 15rem) minmax(0, 1fr); }
-.directory-entry { width: 100%; min-width: 0; display: flex; align-items: center; gap: .65rem; border-radius: .75rem; padding: .68rem .75rem; color: var(--text-muted); font-size: .76rem; font-weight: 800; text-align: left; }
+.directory-heading { padding: .2rem .75rem .5rem; color: var(--text-muted); font-size: .64rem; font-weight: 900; letter-spacing: .12em; }
+.directory-tree-row { display: flex; min-width: 0; align-items: center; }
+.directory-toggle, .directory-toggle-spacer { flex: 0 0 1.35rem; width: 1.35rem; height: 2.15rem; display: grid; place-items: center; color: var(--text-muted); font-size: .58rem; }
+.directory-toggle:hover { color: var(--dynamic-accent); }
+.directory-entry { flex: 1; width: 100%; min-width: 0; display: flex; align-items: center; gap: .55rem; border-radius: .7rem; padding: .56rem .65rem; color: var(--text-muted); font-size: .74rem; font-weight: 800; text-align: left; }
 .directory-entry:hover, .directory-entry.active { background: color-mix(in srgb, var(--dynamic-accent) 13%, transparent); color: var(--dynamic-accent); }
 .browser-search { display: flex; align-items: center; gap: .6rem; padding-inline: .8rem; }
 .browser-search input { width: 100%; min-width: 0; background: transparent; outline: none; }
@@ -328,6 +426,14 @@ const extractSelected = async () => {
 .preview-trigger:disabled { color: var(--text-muted); background: var(--bg-input); opacity: .45; cursor: not-allowed; }
 .browser-checkbox { width: 1.15rem; height: 1.15rem; border: 1px solid var(--border-subtle); border-radius: .35rem; display: inline-grid; place-items: center; color: white; font-size: .55rem; }
 .browser-checkbox.checked { background: var(--dynamic-accent); border-color: var(--dynamic-accent); }
+.footer-status { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; }
+.output-target { min-width: 0; max-width: min(36rem, 55vw); display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .7rem; border: 1px solid var(--border-subtle); border-radius: .7rem; color: var(--text-muted); background: var(--bg-input); font-size: .7rem; font-weight: 800; }
+.output-target:hover { border-color: var(--dynamic-accent); color: var(--dynamic-accent); }
+.browser-drop-overlay { position: absolute; inset: .75rem; z-index: 45; display: grid; place-items: center; border: 2px dashed var(--dynamic-accent); border-radius: 1.5rem; background: color-mix(in srgb, var(--bg-card) 88%, transparent); backdrop-filter: blur(16px); pointer-events: none; }
+.browser-drop-overlay > div { display: flex; flex-direction: column; align-items: center; gap: .65rem; color: var(--text-muted); }
+.browser-drop-overlay i { color: var(--dynamic-accent); font-size: 3rem; }
+.browser-drop-overlay strong { color: var(--text-content); font-size: 1.15rem; }
+.browser-drop-overlay span { font-size: .75rem; font-weight: 700; }
 .preview-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; min-width: 0; padding: clamp(.75rem, 3vw, 2rem); background: color-mix(in srgb, #08141f 58%, transparent); backdrop-filter: blur(14px); overflow-x: hidden; }
 .preview-dialog { width: min(52rem, 100%); max-height: 100%; min-width: 0; overflow-x: hidden; overflow-y: auto; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 24%, var(--border-subtle)); border-radius: 1.5rem; background: color-mix(in srgb, var(--bg-card) 94%, transparent); box-shadow: 0 28px 80px rgba(0, 0, 0, .34); }
 .preview-header { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-subtle); }
@@ -337,6 +443,6 @@ const extractSelected = async () => {
 .preview-meta { display: flex; flex-wrap: wrap; gap: .5rem; padding: .9rem 1.25rem 0; }
 .preview-meta span { border-radius: 999px; padding: .35rem .65rem; background: var(--bg-input); color: var(--text-muted); font-size: .68rem; font-weight: 800; }
 .preview-safety { padding: .8rem 1.25rem 1.15rem; color: var(--text-muted); font-size: .68rem; line-height: 1.55; }
-@media (max-width: 1050px) { .browser-toolbar { grid-template-columns: minmax(0, 1fr) minmax(12rem, .65fr); } .browser-field:last-child { grid-column: 1 / -1; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(8rem, 1fr) minmax(5rem, .28fr) minmax(7rem, .4fr); } }
-@media (max-width: 760px) { .browser-page { padding: 1rem; overflow-y: auto; overflow-x: hidden; } .browser-workspace { flex: 0 0 30rem; min-height: 30rem; grid-template-columns: 1fr; grid-template-rows: minmax(5rem, 8rem) minmax(20rem, 1fr); } .browser-workspace aside { border-right: 0; border-bottom: 1px solid var(--border-subtle); } .browser-toolbar { grid-template-columns: 1fr; } .browser-field:last-child { grid-column: auto; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } }
+@media (max-width: 1050px) { .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(8rem, 1fr) minmax(5rem, .28fr) minmax(7rem, .4fr); } }
+@media (max-width: 760px) { .browser-page { padding: 1rem; overflow-y: auto; overflow-x: hidden; } .browser-workspace { flex: 0 0 34rem; min-height: 34rem; grid-template-columns: 1fr; grid-template-rows: minmax(7rem, 10rem) minmax(22rem, 1fr); } .browser-workspace aside { border-right: 0; border-bottom: 1px solid var(--border-subtle); } .browser-toolbar { grid-template-columns: 1fr; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } .output-target { max-width: 80vw; } }
 </style>

@@ -34,9 +34,9 @@ const ARCHIVE_EXTENSIONS: &[&str] = &[
     "zip", "zipx", "7z", "rar", "wim", "tar", "ova", "gz", "gzip", "tgz", "tpz", "bz2", "bzip2",
     "tbz", "tbz2", "xz", "txz", "zst", "zstd", "tzst", "aes", "lzma", "jar", "xpi", "ipa", "apk",
     "appx", "iso", "img", "dmg", "vhd", "vhdx", "qcow", "qcow2", "qcow2c", "vdi", "vmdk", "cab",
-    "deb", "udeb", "rpm", "msi", "msp", "msm", "nsis", "apfs", "ext", "ext2", "ext3", "ext4", "gpt",
-    "mbr", "uefif", "cramfs", "fat", "ntfs", "hfs", "hfsx", "ar", "a", "lzh", "lha", "squashfs",
-    "sfs", "xar", "cpio", "ihex",
+    "deb", "udeb", "rpm", "msi", "msp", "msm", "nsis", "apfs", "ext", "ext2", "ext3", "ext4",
+    "gpt", "mbr", "uefif", "cramfs", "fat", "ntfs", "hfs", "hfsx", "ar", "a", "lzh", "lha",
+    "squashfs", "sfs", "xar", "cpio", "ihex",
 ];
 
 static OBJECT_COUNT: AtomicU32 = AtomicU32::new(0);
@@ -60,6 +60,7 @@ impl Drop for ObjectLifetime {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum CommandKind {
     Root,
+    BrowseArchive,
     QuickExtract,
     ExtractHere,
     ExtractTo,
@@ -71,6 +72,7 @@ enum CommandKind {
 }
 
 const SUBCOMMANDS: &[CommandKind] = &[
+    CommandKind::BrowseArchive,
     CommandKind::QuickExtract,
     CommandKind::ExtractHere,
     CommandKind::ExtractTo,
@@ -85,6 +87,7 @@ impl CommandKind {
     fn title(self) -> &'static str {
         match self {
             Self::Root => "Long解压",
+            Self::BrowseArchive => "浏览压缩包内容",
             Self::QuickExtract => "一键解压到同名文件夹",
             Self::ExtractHere => "解压到此处",
             Self::ExtractTo => "解压到同名文件夹",
@@ -99,6 +102,7 @@ impl CommandKind {
     fn cli_flag(self) -> Option<&'static str> {
         match self {
             Self::Root => None,
+            Self::BrowseArchive => Some("--browse-archive"),
             Self::QuickExtract => Some("--quick-extract"),
             Self::ExtractHere => Some("--extract-here"),
             Self::ExtractTo => Some("--extract-to"),
@@ -113,13 +117,18 @@ impl CommandKind {
     fn requires_archive(self) -> bool {
         matches!(
             self,
-            Self::QuickExtract | Self::ExtractHere | Self::ExtractTo | Self::TestArchive
+            Self::BrowseArchive
+                | Self::QuickExtract
+                | Self::ExtractHere
+                | Self::ExtractTo
+                | Self::TestArchive
         )
     }
 
     fn canonical_guid(self) -> GUID {
         let suffix = match self {
             Self::Root => 0,
+            Self::BrowseArchive => 9,
             Self::QuickExtract => 1,
             Self::ExtractHere => 2,
             Self::ExtractTo => 3,
@@ -436,10 +445,11 @@ mod tests {
 
     #[test]
     fn native_menu_contains_expected_commands() {
-        assert_eq!(SUBCOMMANDS.len(), 8);
-        assert_eq!(SUBCOMMANDS[0], CommandKind::QuickExtract);
-        assert_eq!(SUBCOMMANDS[4], CommandKind::QuickPack);
-        assert_eq!(SUBCOMMANDS[7], CommandKind::CompressCustom);
+        assert_eq!(SUBCOMMANDS.len(), 9);
+        assert_eq!(SUBCOMMANDS[0], CommandKind::BrowseArchive);
+        assert_eq!(SUBCOMMANDS[1], CommandKind::QuickExtract);
+        assert_eq!(SUBCOMMANDS[5], CommandKind::QuickPack);
+        assert_eq!(SUBCOMMANDS[8], CommandKind::CompressCustom);
         assert!(is_archive_path(r"C:\archives\sample.ZIP"));
         assert!(!is_archive_path(r"C:\documents\sample.txt"));
     }
@@ -466,10 +476,10 @@ mod tests {
             assert_eq!(root.GetFlags().unwrap(), ECF_HASSUBCOMMANDS.0 as u32);
 
             let enumerator = root.EnumSubCommands().unwrap();
-            let mut commands: [Option<IExplorerCommand>; 8] = std::array::from_fn(|_| None);
+            let mut commands: [Option<IExplorerCommand>; 9] = std::array::from_fn(|_| None);
             let mut fetched = 0;
             assert_eq!(enumerator.Next(&mut commands, Some(&mut fetched)), S_OK);
-            assert_eq!(fetched, 8);
+            assert_eq!(fetched, 9);
             assert!(commands.iter().all(Option::is_some));
             assert_eq!(DllCanUnloadNow(), S_FALSE);
 

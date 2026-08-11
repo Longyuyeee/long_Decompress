@@ -120,8 +120,8 @@ fn verbs() -> Vec<VerbDef> {
     vec![
         VerbDef {
             verb: "LongDecompress.open",
-            label: "用 Long解压 打开",
-            cli: "--open \"%1\"",
+            label: "浏览压缩包内容",
+            cli: "--browse-archive \"%1\"",
         },
         VerbDef {
             verb: "LongDecompress.quickExtract",
@@ -940,6 +940,11 @@ mod tests {
             .all(|verb| { !verb.cli.contains("%1") || verb.cli.contains("\"%1\"") }));
         assert!(verbs.iter().any(|verb| {
             verb.verb == "LongDecompress.quickExtract" && verb.cli == "--quick-extract \"%1\""
+        }));
+        assert!(verbs.iter().any(|verb| {
+            verb.verb == "LongDecompress.open"
+                && verb.label == "浏览压缩包内容"
+                && verb.cli == "--browse-archive \"%1\""
         }));
     }
 

@@ -239,6 +239,34 @@ describe('App orchestration', () => {
     wrapper.unmount()
   })
 
+  it('routes the Explorer browse action directly into Archive Browser', async () => {
+    mocks.contextActions = [{
+      action: 'context-browse-archive',
+      files: ['C:\\archives\\photos.zip'],
+    }]
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const appStore = useAppStore()
+
+    const wrapper = mount(App, {
+      global: {
+        plugins: [pinia],
+        stubs: {
+          MainLayout: true,
+          ToastContainer: true,
+          UpdateDialog: true,
+          Modal: modalStub,
+        },
+      },
+    })
+    await flushPromises()
+
+    expect(mocks.routerPush).toHaveBeenCalledWith('/browser')
+    expect(appStore.pendingArchiveBrowserPath).toBe('C:\\archives\\photos.zip')
+    expect(appStore.pendingContextActions).toHaveLength(0)
+    wrapper.unmount()
+  })
+
   it('turns persistent watch batches into inert drafts before acknowledging them', async () => {
     mocks.contextActions = []
     let batchRead = false
