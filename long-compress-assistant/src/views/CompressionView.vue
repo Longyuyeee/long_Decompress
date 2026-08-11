@@ -996,13 +996,20 @@ const onDetailLeave = (element: Element) => {
 .compression-detail-grid {
   display: flex;
   flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   gap: 0;
   align-items: stretch;
 }
 
 .compression-config-panel {
   flex: 0.85 1 20rem;
+  box-sizing: border-box;
   min-width: 0;
+  max-width: 100%;
   max-height: 26rem;
   overflow-y: auto;
   overflow-x: hidden;
@@ -1013,6 +1020,10 @@ const onDetailLeave = (element: Element) => {
 
 .compression-detail-grid :deep(.compression-execution-panel) {
   flex: 1 1 20rem;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .compression-config-panel.is-submitted :deep(input),
@@ -1048,7 +1059,8 @@ const onDetailLeave = (element: Element) => {
 
 @media (max-width: 760px) {
   .compression-detail-grid {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .compression-config-panel {
