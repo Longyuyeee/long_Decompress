@@ -4,6 +4,7 @@ use crate::services::compression_format::{
     compression_route, infer_compression_format, CompressionRoute,
 };
 use crate::services::compression_verification::verify_native;
+use crate::services::extraction_transaction;
 use crate::services::native_extraction::seven_zip;
 use crate::services::universal_engine::UniversalCliEngine;
 use anyhow::{Context, Result};
@@ -86,6 +87,34 @@ fn copy_cancellable(
         }
         writer.write_all(&buffer[..read])?;
         written = written.saturating_add(read as u64);
+    }
+}
+
+fn copy_cancellable_bounded(
+    reader: &mut impl Read,
+    writer: &mut impl Write,
+    cancelled: &AtomicBool,
+    max_bytes: u64,
+) -> Result<u64> {
+    let mut buffer = [0u8; 256 * 1024];
+    let mut written = 0u64;
+    loop {
+        check_cancelled(cancelled)?;
+        let remaining = max_bytes.saturating_sub(written);
+        if remaining == 0 {
+            let mut overflow = [0u8; 1];
+            if reader.read(&mut overflow)? == 0 {
+                return Ok(written);
+            }
+            anyhow::bail!("ZIP repair expanded data exceeds the safety limit");
+        }
+        let capacity = usize::try_from(remaining.min(buffer.len() as u64)).unwrap_or(buffer.len());
+        let read = reader.read(&mut buffer[..capacity])?;
+        if read == 0 {
+            return Ok(written);
+        }
+        writer.write_all(&buffer[..read])?;
+        written += read as u64;
     }
 }
 
@@ -473,25 +502,42 @@ pub fn repair_zip_to_new(
         );
     }
 
+    let mut source = zip::ZipArchive::new(File::open(path)?)
+        .context("ZIP central directory is unreadable; no repair output was created")?;
+    let entry_count = source.len();
+    let mut declared_expanded_bytes = 0u64;
+    for index in 0..entry_count {
+        let entry = source.by_index(index)?;
+        if !entry.is_dir() {
+            declared_expanded_bytes = declared_expanded_bytes.saturating_add(entry.size());
+        }
+    }
+    extraction_transaction::validate_resource_limits(path, entry_count, declared_expanded_bytes)?;
+
     let parent = output.parent().unwrap_or_else(|| Path::new("."));
     std::fs::create_dir_all(parent)?;
+    // During rebuilding, the temporary ZIP and one uncompressed spool can coexist.
+    extraction_transaction::validate_disk_capacity(
+        parent,
+        declared_expanded_bytes.saturating_mul(2),
+    )?;
     let temporary = parent.join(format!(".long-repair-{}.zip", uuid::Uuid::new_v4()));
     let mut guard = UnpublishedFile(Some(temporary.clone()));
     let temp_file = OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(&temporary)?;
-    let mut source = zip::ZipArchive::new(File::open(path)?)
-        .context("ZIP central directory is unreadable; no repair output was created")?;
     let mut writer = zip::ZipWriter::new(temp_file);
     let mut recovered_files = 0usize;
     let mut recovered_directories = 0usize;
+    let mut recovered_bytes = 0u64;
     let mut skipped_entries = Vec::new();
 
     for index in 0..source.len() {
         check_cancelled(cancelled)?;
         let mut entry = source.by_index(index)?;
         let name = entry.name().replace('\\', "/");
+        let declared_entry_size = entry.size();
         if entry.enclosed_name().is_none() {
             skipped_entries.push(format!("{name}: unsafe path"));
             continue;
@@ -510,16 +556,36 @@ pub fn repair_zip_to_new(
             .write(true)
             .create_new(true)
             .open(&spool_path)?;
-        if let Err(error) = copy_cancellable(&mut entry, &mut spool, cancelled) {
-            if error.to_string().to_ascii_lowercase().contains("cancelled") {
+        let remaining = extraction_transaction::MAX_EXTRACTED_BYTES.saturating_sub(recovered_bytes);
+        let entry_limit = remaining.min(declared_entry_size);
+        let copied = match copy_cancellable_bounded(&mut entry, &mut spool, cancelled, entry_limit)
+        {
+            Ok(copied) => copied,
+            Err(error)
+                if error
+                    .to_string()
+                    .contains("expanded data exceeds the safety limit") =>
+            {
                 return Err(error);
             }
-            skipped_entries.push(format!("{name}: {error}"));
-            continue;
-        }
+            Err(error) => {
+                if error.to_string().to_ascii_lowercase().contains("cancelled") {
+                    return Err(error);
+                }
+                skipped_entries.push(format!("{name}: {error}"));
+                continue;
+            }
+        };
+        let next_recovered_bytes = recovered_bytes.saturating_add(copied);
+        extraction_transaction::validate_resource_limits(
+            path,
+            recovered_files + recovered_directories + 1,
+            next_recovered_bytes,
+        )?;
         spool.rewind()?;
         writer.start_file(name, options)?;
         copy_cancellable(&mut spool, &mut writer, cancelled)?;
+        recovered_bytes = next_recovered_bytes;
         recovered_files += 1;
         std::fs::remove_file(&spool_path)?;
         spool_guard.0.take();
@@ -551,6 +617,20 @@ mod tests {
     use sha2::{Digest, Sha256};
     use std::io::Write;
     use tauri::Window;
+
+    #[test]
+    fn bounded_repair_copy_stops_before_writing_overflow_data() {
+        let mut source = std::io::Cursor::new(vec![7u8; 9]);
+        let mut output = Vec::new();
+
+        let error = copy_cancellable_bounded(&mut source, &mut output, &AtomicBool::new(false), 8)
+            .unwrap_err();
+
+        assert!(error
+            .to_string()
+            .contains("expanded data exceeds the safety limit"));
+        assert_eq!(output.len(), 8);
+    }
 
     #[derive(Default)]
     struct TestRuntime {
