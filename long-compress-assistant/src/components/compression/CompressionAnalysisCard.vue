@@ -46,6 +46,7 @@ const analyze = async () => {
       level: props.modelValue.level, result: analysis,
     })
   } catch (error) {
+    if (store.compressionAnalysis[props.jobId]?.analysisId !== analysisId) return
     if (store.compressionAnalysis[props.jobId]?.status === 'cancelled') return
     store.setAnalysisState(props.jobId, {
       status: 'failed', analysisId, format: props.modelValue.format,
