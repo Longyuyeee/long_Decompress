@@ -67,9 +67,10 @@ const navigateTo = (name: string) => {
           </div>
           <nav class="flex-1 flex flex-col gap-2 w-full p-3 overflow-visible">
             <button v-for="item in navItems" :key="item.name"
-                 type="button"
-                 @click="navigateTo(item.name)"
-                 :aria-label="`${appStore.t(item.label)} (${item.shortcut})`"
+                  type="button"
+                  @click="navigateTo(item.name)"
+                  :data-testid="`nav-${item.name}`"
+                  :aria-label="`${appStore.t(item.label)} (${item.shortcut})`"
                  :aria-current="route.name === item.name ? 'page' : undefined"
                  class="nav-entry group relative w-full h-12 flex items-center gap-3 px-3 rounded-xl cursor-pointer transition-all duration-200 text-left"
                  :class="route.name === item.name ? 'bg-primary/20 shadow-sm text-primary' : 'text-muted hover:bg-primary/8 hover:text-content'">
