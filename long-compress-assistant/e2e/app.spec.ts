@@ -6,28 +6,43 @@ const expectVerticalOnlyScrolling = async (
   page: import('@playwright/test').Page,
   selectors: string[],
 ) => {
-  const measurements = await page.locator(selectors.join(',')).evaluateAll(elements =>
-    elements.map(element => {
-      const htmlElement = element as HTMLElement
-      const style = getComputedStyle(htmlElement)
-      return {
-        selector: htmlElement.className || htmlElement.dataset.testid || htmlElement.tagName,
-        clientWidth: htmlElement.clientWidth,
-        scrollWidth: htmlElement.scrollWidth,
-        overflowX: style.overflowX,
-      }
-    }),
-  )
-
-  expect(measurements.length).toBeGreaterThanOrEqual(selectors.length)
-  for (const measurement of measurements) {
-    // A few pixels of intrinsic text/border rounding are harmless once overflow-x is
-    // explicitly hidden; a materially wider child still indicates a broken layout.
-    expect(measurement.scrollWidth, `${measurement.selector} overflowed horizontally`).toBeLessThanOrEqual(
-      Math.max(measurement.clientWidth + 8, measurement.clientWidth * 1.15),
+  await expect.poll(async () => {
+    const measurements = await page.locator(selectors.join(',')).evaluateAll(elements =>
+      elements.map(element => {
+        const htmlElement = element as HTMLElement
+        const style = getComputedStyle(htmlElement)
+        return {
+          selector: htmlElement.className || htmlElement.dataset.testid || htmlElement.tagName,
+          clientWidth: htmlElement.clientWidth,
+          scrollWidth: htmlElement.scrollWidth,
+          overflowX: style.overflowX,
+        }
+      }),
     )
-    expect(measurement.overflowX).toBe('hidden')
-  }
+
+    return {
+      foundEverySelector: measurements.length >= selectors.length,
+      violations: measurements.flatMap(measurement => {
+        const maximumWidth = Math.max(measurement.clientWidth + 8, measurement.clientWidth * 1.15)
+        const issues: string[] = []
+        if (measurement.scrollWidth > maximumWidth) {
+          issues.push(
+            `${measurement.selector}: scrollWidth=${measurement.scrollWidth}, clientWidth=${measurement.clientWidth}`,
+          )
+        }
+        if (measurement.overflowX !== 'hidden') {
+          issues.push(`${measurement.selector}: overflow-x=${measurement.overflowX}`)
+        }
+        return issues
+      }),
+    }
+  }, {
+    message: `responsive layout did not settle without horizontal overflow: ${selectors.join(', ')}`,
+    timeout: 3_000,
+  }).toEqual({
+    foundEverySelector: true,
+    violations: [],
+  })
 }
 
 test.describe('Long Decompress desktop shell', () => {
