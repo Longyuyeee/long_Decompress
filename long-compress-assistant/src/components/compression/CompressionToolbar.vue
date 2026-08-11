@@ -52,6 +52,7 @@ const appStore = useAppStore()
     </button>
     <button
       v-if="pendingCount > 0"
+      data-testid="start-compression"
       type="button"
       :disabled="busy"
       class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait"

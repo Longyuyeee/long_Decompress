@@ -97,6 +97,7 @@ const resourcePreflightOnly = process.argv.includes('--resource-preflight-only')
 const smartAnalysisOnly = process.argv.includes('--smart-analysis-only')
 const archiveBrowserOnly = process.argv.includes('--archive-browser-only')
 const markOfWebOnly = process.argv.includes('--mark-of-web-only')
+const compressionVerificationOnly = process.argv.includes('--compression-verification-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -653,6 +654,110 @@ async function runMarkOfWebDesktopGate() {
   await driver.wait(async () => (await preserveSwitch.getAttribute('aria-checked')) === 'true', 10_000)
 }
 
+async function runCompressionVerificationDesktopGate() {
+  console.log('[desktop-e2e] verifying visible post-compression verification and protected source deletion')
+  const fixtureRoot = path.join(fixtureDirectory, 'compression-verification')
+  const outputRoot = path.join(fixtureRoot, 'archives')
+  mkdirSync(outputRoot, { recursive: true })
+
+  const runScenario = async ({ sourceName, contents, deleteAfter }) => {
+    await callDesktopBridge('clearCompressionWorkspace')
+    await callDesktopBridge('clearTasks')
+    const sourcePath = path.join(fixtureRoot, sourceName)
+    writeFileSync(sourcePath, contents, 'utf8')
+    const outputPath = path.join(outputRoot, `${path.parse(sourceName).name}.zip`)
+
+    await callDesktopBridge('queueDesktopDialogSelections', [[sourcePath]])
+    await (await waitForElement('[data-testid="nav-Compress"]')).click()
+    await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+    await (await waitForElement('[data-testid="dropzone-file"]')).click()
+    const draftRow = await driver.wait(async () => {
+      const rows = await driver.findElements(By.css('[data-testid="compression-draft-row"]'))
+      return rows.length === 1 && (await rows[0].getText()).includes(sourceName) ? rows[0] : false
+    }, 30_000)
+
+    await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
+    if ((await driver.findElements(By.css('[data-testid="compression-output-path"]'))).length === 0) {
+      await (await waitForElement('[data-testid="compression-advanced-options"]')).click()
+    }
+    const outputInput = await waitForElement('[data-testid="compression-output-path"]')
+    await driver.executeScript(
+      'const input = arguments[0], value = arguments[1]; input.value = value; input.dispatchEvent(new Event("input", { bubbles: true }));',
+      outputInput,
+      outputRoot,
+    )
+    const deleteCheckbox = await waitForElement('[data-testid="compression-delete-after"]')
+    const verifyCheckbox = await waitForElement('[data-testid="compression-verify-after"]')
+    if (deleteAfter) {
+      if (await verifyCheckbox.isSelected()) await verifyCheckbox.click()
+      assert.equal(await verifyCheckbox.isSelected(), false, 'verification must be user-toggleable before deletion')
+      if (!(await deleteCheckbox.isSelected())) await deleteCheckbox.click()
+      await driver.wait(async () => (await verifyCheckbox.isSelected()) && !(await verifyCheckbox.isEnabled()), 10_000)
+    } else {
+      if (await deleteCheckbox.isSelected()) await deleteCheckbox.click()
+      if (!(await verifyCheckbox.isSelected())) await verifyCheckbox.click()
+      assert.equal(await verifyCheckbox.isEnabled(), true)
+    }
+    await (await waitForElement('[data-testid="save-global-compression-settings"]')).click()
+    await driver.wait(async () => (await driver.findElements(By.css('[data-testid="save-global-compression-settings"]'))).length === 0, 10_000)
+
+    await (await waitForElement('[data-testid="start-compression"]')).click()
+    const task = await driver.wait(async () => {
+      const tasks = await callDesktopBridge('compressionVerificationTaskState')
+      const latest = tasks.at(-1)
+      return latest && ['completed', 'failed', 'cancelled'].includes(latest.status) ? latest : false
+    }, 60_000)
+    assert.equal(task.status, 'completed', `verified compression failed: ${JSON.stringify(task)}`)
+    assert.equal(normalizedDesktopPath(task.outputPath), normalizedDesktopPath(outputPath))
+    assert.equal(task.deleteAfter, deleteAfter)
+    assert.equal(task.verifyAfter, true, 'the submitted task must never disable required verification')
+    const verifyStart = task.logs.findIndex(message => message.includes('正在校验新压缩包的完整性'))
+    const verifyPassed = task.logs.findIndex(message => message.includes('压缩包完整性校验通过'))
+    const completed = task.logs.findIndex(message => message === '压缩完成')
+    assert.ok(verifyStart >= 0 && verifyPassed > verifyStart && completed > verifyPassed, JSON.stringify(task.logs))
+    await waitForStableFile(outputPath)
+    runFixtureCommand(bundledSevenZip, ['t', '-y', outputPath], `verified ZIP ${sourceName}`)
+    assert.equal(existsSync(sourcePath), !deleteAfter, 'source deletion must match the visible setting')
+
+    await draftRow.click()
+    await driver.wait(async () => {
+      const panels = await driver.findElements(By.css('[data-testid="compression-draft-execution"]'))
+      return panels.length > 0 && (await panels[0].getText()).includes('压缩包完整性校验通过')
+    }, 10_000)
+
+    const extracted = path.join(fixtureRoot, `audit-${path.parse(sourceName).name}`)
+    runFixtureCommand(bundledSevenZip, ['x', '-y', `-o${extracted}`, outputPath], `verified ZIP extraction ${sourceName}`)
+    assert.equal(readFileSync(path.join(extracted, sourceName), 'utf8'), contents)
+  }
+
+  await runScenario({
+    sourceName: '保留源文件.txt',
+    contents: 'verified compression keeps this source',
+    deleteAfter: false,
+  })
+  await runScenario({
+    sourceName: '校验后删除.txt',
+    contents: 'verified compression may delete this source only after publishing',
+    deleteAfter: true,
+  })
+  await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
+  if ((await driver.findElements(By.css('[data-testid="compression-delete-after"]'))).length === 0) {
+    const advancedButton = await waitForElement('[data-testid="compression-advanced-options"]')
+    await driver.executeScript('arguments[0].scrollIntoView({ block: "center" });', advancedButton)
+    await driver.wait(async () => advancedButton.isDisplayed(), 10_000)
+    await driver.executeScript('arguments[0].click();', advancedButton)
+  }
+  const deleteCheckbox = await waitForElement('[data-testid="compression-delete-after"]')
+  const verifyCheckbox = await waitForElement('[data-testid="compression-verify-after"]')
+  if (await deleteCheckbox.isSelected()) await driver.executeScript('arguments[0].click();', deleteCheckbox)
+  if (!(await verifyCheckbox.isSelected())) await driver.executeScript('arguments[0].click();', verifyCheckbox)
+  assert.equal(await verifyCheckbox.isEnabled(), true)
+  await driver.executeScript(
+    'arguments[0].click();',
+    await waitForElement('[data-testid="save-global-compression-settings"]'),
+  )
+}
+
 async function waitForWatchFolderState(profileId, predicate, timeoutMs = 30_000) {
   let lastState = null
   let lastError = null
@@ -716,16 +821,25 @@ function assertRealResourceReport(task, expected) {
 
 async function assertVisibleResourceCard(taskId, expectedLabel) {
   const rowSelector = `[data-task-id="${taskId}"]`
-  if ((await driver.findElements(By.css('[data-testid="resource-preflight-card"]'))).length === 0) {
-    await (await waitForElement(rowSelector)).click()
+  const findMatchingCard = async () => {
+    const candidates = await driver.findElements(By.css('[data-testid="resource-preflight-card"]'))
+    for (const candidate of candidates) {
+      const text = (await candidate.getAttribute('textContent')).trim()
+      if (new RegExp(expectedLabel).test(text)) return candidate
+    }
+    return false
   }
-  const card = await waitForElement('[data-testid="resource-preflight-card"]')
+  let card = await findMatchingCard()
+  if (!card) {
+    await (await waitForElement(rowSelector)).click()
+    card = await driver.wait(findMatchingCard, 10_000)
+  }
   const text = (await card.getAttribute('textContent')).trim()
   assert.match(text, /资源预检/)
   assert.match(text, new RegExp(expectedLabel))
   const dimensions = await driver.executeScript(
-    `const card = document.querySelector('[data-testid="resource-preflight-card"]');
-     return card ? { scrollWidth: card.scrollWidth, clientWidth: card.clientWidth } : null;`,
+    'const card = arguments[0]; return { scrollWidth: card.scrollWidth, clientWidth: card.clientWidth };',
+    card,
   )
   assert.ok(dimensions, 'the resource-preflight card must remain mounted')
   assert.ok(
@@ -1116,6 +1230,12 @@ try {
   if (markOfWebOnly) {
     completedSuccessfully = true
     console.log('Real Windows Tauri Mark-of-the-Web gate passed.')
+  } else {
+
+  await runCompressionVerificationDesktopGate()
+  if (compressionVerificationOnly) {
+    completedSuccessfully = true
+    console.log('Real Windows Tauri post-compression verification gate passed.')
   } else {
 
   navigation = await driver.findElements(By.css('aside nav > button'))
@@ -2485,6 +2605,7 @@ try {
 
   completedSuccessfully = true
   console.log('Real Windows Tauri desktop archive and lifecycle tests passed.')
+  }
   }
   }
   }

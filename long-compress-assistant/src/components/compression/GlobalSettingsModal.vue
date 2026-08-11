@@ -75,6 +75,7 @@ const handleTemplateDraftCreated = () => {
           取消
         </button>
         <button
+          data-testid="save-global-compression-settings"
           @click="handleSave"
           class="px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold uppercase tracking-wider hover:bg-primary/90 transition-all shadow-lg shadow-primary/25"
         >

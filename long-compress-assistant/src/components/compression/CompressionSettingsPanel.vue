@@ -332,6 +332,7 @@ const handlePasswordGenerated = (password: string) => {
     <div class="flex flex-wrap items-center gap-2">
       <!-- 高级开关按钮 -->
       <button
+        data-testid="compression-advanced-options"
         @click="showAdvanced = !showAdvanced"
         class="min-w-0 max-w-full px-4 py-2 rounded-xl border border-subtle text-xs font-black leading-5 transition-all"
         :class="showAdvanced ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-input text-muted hover:text-content'"
@@ -370,6 +371,7 @@ const handlePasswordGenerated = (password: string) => {
           <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.output_path') }}</label>
           <div class="flex gap-2">
             <input 
+              data-testid="compression-output-path"
               v-model="outputPath" 
               class="flex-1 px-4 py-2 rounded-xl bg-input border border-subtle text-sm text-muted outline-none focus:border-primary transition-all font-mono"
               :placeholder="appStore.t('preset.default_path')"
@@ -386,11 +388,11 @@ const handlePasswordGenerated = (password: string) => {
             <span><strong>{{ appStore.t('preset.keep_structure') }}</strong><small>保留源文件夹的层级关系</small></span>
           </label>
           <label class="advanced-option advanced-option-danger">
-            <input v-model="compressionOptions.deleteAfter" type="checkbox" />
+            <input data-testid="compression-delete-after" v-model="compressionOptions.deleteAfter" type="checkbox" />
             <span><strong>{{ appStore.t('preset.delete_after') }}</strong><small>{{ appStore.t('preset.delete_after.desc') }}</small></span>
           </label>
           <label class="advanced-option" :class="{ 'opacity-70': compressionOptions.deleteAfter }">
-            <input v-model="compressionOptions.verifyAfter" type="checkbox" :disabled="compressionOptions.deleteAfter" />
+            <input data-testid="compression-verify-after" v-model="compressionOptions.verifyAfter" type="checkbox" :disabled="compressionOptions.deleteAfter" />
             <span><strong>{{ appStore.t('preset.verify_after') }}</strong><small>{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</small></span>
           </label>
           <label class="advanced-option">

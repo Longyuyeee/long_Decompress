@@ -98,6 +98,10 @@ const displayAddLabel = computed(() => {
     : appStore.t('compress.add_files')
 })
 
+const takeDesktopDialogSelection = () => import.meta.env.VITE_DESKTOP_E2E === '1'
+  ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection()
+  : undefined
+
 // 兼容标准的 Web 拖放（作为兜底）
 const onDragOver = (e: DragEvent) => {
   e.preventDefault()
@@ -128,12 +132,13 @@ const onFileChange = (e: Event) => {
 const triggerFileInput = async () => {
   if (props.mode === 'folder') {
     try {
-      const selected = await open({
+      const queued = takeDesktopDialogSelection()
+      const selected = queued === undefined ? await open({
         directory: true,
         multiple: true,
         title: appStore.t('compress.add_folders')
-      })
-      if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected])
+      }) : queued
+      if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected], queued !== undefined)
     } catch (err) {
       console.error('Failed to select folders:', err)
       appStore.setError(`${appStore.t('common.error')}: ${String(err)}`)
@@ -141,7 +146,8 @@ const triggerFileInput = async () => {
   } else {
     // 使用 Tauri 对话框而不是 HTML input，确保获得文件路径
     try {
-      const selected = await open({
+      const queued = takeDesktopDialogSelection()
+      const selected = queued === undefined ? await open({
         directory: false,
         multiple: true,
         title: appStore.t('decompress.drop_hint'),
@@ -149,8 +155,8 @@ const triggerFileInput = async () => {
           name: 'Archives',
           extensions: props.accept.split(',').map(e => e.trim().replace(/^[*.]*/, ''))
         }] : []
-      })
-      if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected])
+      }) : queued
+      if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected], queued !== undefined)
     } catch (err) {
       console.error('Failed to select files:', err)
       appStore.setError(`${appStore.t('common.error')}: ${String(err)}`)
@@ -211,6 +217,7 @@ const handleFiles = (files: File[]) => {
 
 <template>
   <div
+    :data-testid="`dropzone-${props.mode}`"
     class="drop-area group"
     :class="{
       'is-dragging': isDragging,

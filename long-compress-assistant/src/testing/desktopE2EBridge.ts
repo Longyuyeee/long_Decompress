@@ -77,6 +77,14 @@ export interface DesktopE2EBridge {
     outputPath: string
     logs: string[]
   }>
+  compressionVerificationTaskState: () => Array<{
+    status: TaskStatus
+    error: string | null
+    outputPath: string
+    deleteAfter: boolean
+    verifyAfter: boolean
+    logs: string[]
+  }>
   startSevenZipCompression: (sourcePath: string, archivePath: string) => Promise<string>
   showAvailableUpdate: () => void
   seedResponsiveWorkspace: (type: 'compression' | 'decompression') => string
@@ -429,6 +437,17 @@ export const installDesktopE2EBridge = () => {
         error: task.error ?? null,
         selectedEntries: task.selectedEntries ? [...task.selectedEntries] : [],
         outputPath: task.outputPath,
+        logs: task.logs.map(log => log.message),
+      }))
+    },
+
+    compressionVerificationTaskState() {
+      return taskStore.tasksFor('compression').map(task => ({
+        status: task.status,
+        error: task.error ?? null,
+        outputPath: task.outputPath,
+        deleteAfter: task.compressionOptions?.delete_after ?? false,
+        verifyAfter: task.compressionOptions?.verify_after ?? true,
         logs: task.logs.map(log => log.message),
       }))
     },

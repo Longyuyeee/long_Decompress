@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-08-11 压缩后校验桌面门禁
+
+- `test:e2e:desktop:compression-verification` 已在独立 Windows Release Tauri + WebView2 会话中通过，从可见压缩中心选择真实中文源文件、修改全局高级设置并启动正式压缩任务。
+- “校验但保留源文件”场景确认任务按“正在校验 → 校验通过 → 压缩完成”排序，最终 ZIP 通过独立 7-Zip 完整性检查和内容解出复核，源文件保持不变。
+- “校验后删除源文件”场景先在界面主动取消校验，再开启删除源文件；界面立即重新勾选并锁定校验。提交任务的 `verify_after=true`，最终归档完成独立校验与内容复核后源文件才消失。
+- 既有 Rust 回归继续保护校验失败清理、既有目标不覆盖、密码 ZIP/7Z、AES、分卷和取消。压缩后校验与删除保护首阶段可以收口；P0 两项候选桌面证据均已补齐。
+
 ## 2026-08-11 Mark-of-the-Web 桌面门禁
 
 - `test:e2e:desktop:mark-of-web` 已在独立 Windows Release Tauri + WebView2 会话中通过，使用真实 NTFS `Zone.Identifier` 和正式解压 IPC，不以 Mock 或仅 Rust 单测代替候选桌面证据。
