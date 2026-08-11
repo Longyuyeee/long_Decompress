@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-08-11 压缩包浏览中心桌面门禁
+
+- `test:e2e:desktop:archive-browser` 已在独立 Windows Release Tauri + WebView2 会话中通过，直接驱动可见浏览中心和正式解压 IPC，不依赖 Mock 归档结果。
+- 门禁覆盖 7-Zip 生成的中文八层长路径 ZIP、密码与文件名加密 7Z，以及固定上游加密 RAR；逐项验证搜索、取消全选、精确单选、输出目录选择、任务完成状态、未选文件不落盘和页面无横向溢出。RAR 使用固定密码 `12345678`，并校验 `foo.txt` 的固定 SHA-256。
+- 实机验收发现浏览元数据使用的新 ZIP 引擎能读取 Unicode Path Extra Field，而旧解压引擎会按 CP437 解释未设置 UTF-8 标志的中文路径，导致明确选择的文件在暂存事务中被全部过滤。解压现已统一使用 `zip_aes` 8.6；若非空选择最终匹配到 0 个文件，事务会失败，不再允许“完成但空输出”。
+- 完整 `test:e2e:desktop:watch-folder` 回归也已通过，继续覆盖诊断、非破坏 ZIP 修复、ZIP/TAR 图片预览、智能压缩、可靠容量阻止、任务模板、托盘监控、退出重启和持久恢复。下一步优先完成本独立 PR 审核；随后按路线图补固定 Windows 性能趋势与真实 HDD 证据，不改变默认并发。
+
 ## 2026-08-11 智能压缩桌面门禁
 
 - `test:e2e:desktop:smart-analysis` 已在独立 Windows Release Tauri + WebView2 会话中通过，不依赖 Mock IPC。

@@ -95,6 +95,7 @@ const requireFullFormatMatrix =
 const watchFolderLifecycleOnly = process.argv.includes('--watch-folder-lifecycle-only')
 const resourcePreflightOnly = process.argv.includes('--resource-preflight-only')
 const smartAnalysisOnly = process.argv.includes('--smart-analysis-only')
+const archiveBrowserOnly = process.argv.includes('--archive-browser-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -393,6 +394,149 @@ const normalizedDesktopPath = (value) => {
       ? windowsPath.slice(4)
       : windowsPath
   return path.resolve(portablePath).replaceAll('/', '\\').toLowerCase()
+}
+
+async function runArchiveBrowserDesktopGate() {
+  console.log('[desktop-e2e] verifying archive-browser UI with long paths, passwords, and exact extraction')
+  await callDesktopBridge('clearTasks')
+  const browserFixtureRoot = path.join(fixtureDirectory, 'archive-browser')
+  const sourceRoot = path.join(browserFixtureRoot, 'sources')
+  const archiveRoot = path.join(browserFixtureRoot, 'archives')
+  mkdirSync(sourceRoot, { recursive: true })
+  mkdirSync(archiveRoot, { recursive: true })
+
+  const longSegments = Array.from({ length: 8 }, (_, index) => `中文长目录-${index + 1}-${'层级'.repeat(3)}`)
+  const zipRootName = '资料集合'
+  const zipKeepRelative = path.join(zipRootName, ...longSegments, '保留文件.txt')
+  const zipSkipRelative = path.join(zipRootName, '不应解压.txt')
+  const zipKeepSource = path.join(sourceRoot, zipKeepRelative)
+  const zipSkipSource = path.join(sourceRoot, zipSkipRelative)
+  const zipKeepPayload = 'Long解压 archive browser 中文长路径 selective payload\n'
+  mkdirSync(path.dirname(zipKeepSource), { recursive: true })
+  writeFileSync(zipKeepSource, zipKeepPayload, 'utf8')
+  writeFileSync(zipSkipSource, 'must remain inside the archive', 'utf8')
+  const browserZip = path.join(archiveRoot, '中文长路径.zip')
+  runFixtureCommand(bundledSevenZip, ['a', '-tzip', '-y', browserZip, zipRootName], 'archive browser ZIP', {
+    cwd: sourceRoot,
+  })
+
+  const passwordRootName = '密码资料'
+  const passwordKeepRelative = path.join(passwordRootName, '安全目录', '只解压这一项.txt')
+  const passwordSkipRelative = path.join(passwordRootName, '不要解压.txt')
+  const passwordKeepSource = path.join(sourceRoot, passwordKeepRelative)
+  mkdirSync(path.dirname(passwordKeepSource), { recursive: true })
+  writeFileSync(passwordKeepSource, 'password 7z selected payload', 'utf8')
+  writeFileSync(path.join(sourceRoot, passwordSkipRelative), 'password 7z excluded payload', 'utf8')
+  const browser7z = path.join(archiveRoot, '密码与中文.7z')
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-t7z', '-pdesktop-browser-secret', '-mhe=on', '-y', browser7z, passwordRootName],
+    'archive browser encrypted 7Z',
+    { cwd: sourceRoot },
+  )
+
+  let navigation = await driver.findElements(By.css('aside nav > button'))
+  await navigation[2].click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/browser'), 30_000)
+
+  const openArchive = async (archivePath, outputPath, password, expectedText) => {
+    await callDesktopBridge('queueDesktopDialogSelections', [archivePath, outputPath])
+    const passwordInput = await waitForElement('.browser-toolbar input[type="password"]')
+    await passwordInput.clear()
+    if (password) await passwordInput.sendKeys(password)
+    await (await waitForElement('.browser-page > header .browser-primary')).click()
+    await driver.wait(async () => {
+      const pages = await driver.findElements(By.css('.browser-page'))
+      return pages.length > 0 && (await pages[0].getText()).includes(expectedText)
+    }, 30_000)
+    const fields = await driver.findElements(By.css('.browser-toolbar .browser-field'))
+    assert.equal(fields.length, 3)
+    await (await fields[2].findElement(By.css('button'))).click()
+    await driver.wait(async () => (await fields[2].getText()).includes(outputPath), 10_000)
+    const dimensions = await driver.executeScript(
+      'const page = document.querySelector(\'.browser-page\'); return page ? { scrollWidth: page.scrollWidth, clientWidth: page.clientWidth } : null;',
+    )
+    assert.ok(dimensions)
+    assert.ok(
+      dimensions.scrollWidth <= dimensions.clientWidth + 1,
+      `the archive-browser page must not scroll horizontally: ${JSON.stringify(dimensions)}`,
+    )
+  }
+
+  const extractOnly = async (query, expectedPath, expectedContent, excludedPath) => {
+    await (await waitForElement('.browser-table-head .browser-checkbox')).click()
+    const search = await waitForElement('.browser-search input')
+    await search.clear()
+    await search.sendKeys(query)
+    const rows = await driver.wait(async () => {
+      const entries = await driver.findElements(By.css('.browser-row'))
+      return entries.length === 1 ? entries : false
+    }, 10_000)
+    await (await rows[0].findElement(By.css('.browser-checkbox'))).click()
+    assert.match(await (await waitForElement('.browser-page > footer')).getText(), /已选择\s+1\s+\//)
+    await (await waitForElement('.browser-page > footer .browser-primary')).click()
+    let lastTask = null
+    let terminalTask
+    try {
+      terminalTask = await driver.wait(async () => {
+        const tasks = await callDesktopBridge('archiveBrowserTaskState')
+        lastTask = tasks.at(-1) ?? null
+        return lastTask && ['completed', 'failed', 'cancelled'].includes(lastTask.status) ? lastTask : false
+      }, 60_000)
+    } catch (error) {
+      throw new Error(`archive-browser extraction timed out; last task: ${JSON.stringify(lastTask)}`, {
+        cause: error,
+      })
+    }
+    assert.equal(
+      terminalTask.status,
+      'completed',
+      `archive-browser extraction failed: ${JSON.stringify(terminalTask)}`,
+    )
+    console.log(`[desktop-e2e] archive-browser terminal task: ${JSON.stringify(terminalTask)}`)
+    assert.equal(terminalTask.selectedEntries.length, 1)
+    if (expectedContent === null) await waitForStableFile(expectedPath)
+    else await waitForFileContent(expectedPath, expectedContent, 10_000)
+    assert.equal(existsSync(excludedPath), false, 'selective extraction must not publish excluded entries')
+    await callDesktopBridge('clearTasks')
+  }
+
+  const zipOutput = path.join(browserFixtureRoot, 'zip-selected-output')
+  await openArchive(browserZip, zipOutput, '', '保留文件.txt')
+  assert.match(await (await waitForElement('.browser-page')).getText(), /ZIP[\s\S]*未加密/)
+  await extractOnly(
+    '保留文件',
+    path.join(zipOutput, zipKeepRelative),
+    zipKeepPayload,
+    path.join(zipOutput, zipSkipRelative),
+  )
+
+  const sevenZipOutput = path.join(browserFixtureRoot, '7z-selected-output')
+  await openArchive(browser7z, sevenZipOutput, 'desktop-browser-secret', '只解压这一项.txt')
+  assert.match(await (await waitForElement('.browser-page')).getText(), /7Z[\s\S]*已加密/)
+  await extractOnly(
+    '只解压这一项',
+    path.join(sevenZipOutput, passwordKeepRelative),
+    'password 7z selected payload',
+    path.join(sevenZipOutput, passwordSkipRelative),
+  )
+
+  const encryptedRar = path.join(externalFixtureDirectory, 'libarchive-rar-encrypted.rar')
+  if (archiveBrowserOnly) {
+    assert.ok(
+      existsSync(encryptedRar),
+      'the pinned encrypted RAR fixture is required; run npm.cmd run test:fixtures:archives',
+    )
+    const rarOutput = path.join(browserFixtureRoot, 'rar-selected-output')
+    await openArchive(encryptedRar, rarOutput, '12345678', 'foo.txt')
+    assert.match(await (await waitForElement('.browser-page')).getText(), /RAR[\s\S]*已加密/)
+    await extractOnly('foo.txt', path.join(rarOutput, 'foo.txt'), null, path.join(rarOutput, 'bar.txt'))
+    assert.equal(
+      fileSha256(path.join(rarOutput, 'foo.txt')),
+      '325d7b459b439684cad8825cbf2e488de15518103de09c56a42d6b1875081ee7',
+      'selected encrypted RAR output must match the pinned plaintext hash',
+    )
+  }
 }
 
 async function waitForWatchFolderState(profileId, predicate, timeoutMs = 30_000) {
@@ -846,6 +990,12 @@ try {
   if (smartAnalysisOnly) {
     completedSuccessfully = true
     console.log('Real Windows Tauri smart-compression analysis gate passed.')
+  } else {
+
+  await runArchiveBrowserDesktopGate()
+  if (archiveBrowserOnly) {
+    completedSuccessfully = true
+    console.log('Real Windows Tauri archive-browser gate passed.')
   } else {
 
   navigation = await driver.findElements(By.css('aside nav > button'))
@@ -2215,6 +2365,7 @@ try {
 
   completedSuccessfully = true
   console.log('Real Windows Tauri desktop archive and lifecycle tests passed.')
+  }
   }
   }
   }

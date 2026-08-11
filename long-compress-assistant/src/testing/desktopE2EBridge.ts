@@ -70,6 +70,12 @@ export interface DesktopE2EBridge {
     status: string | null
     settings: { format: string; level: number; createSolidArchive: boolean } | null
   }
+  archiveBrowserTaskState: () => Array<{
+    status: TaskStatus
+    error: string | null
+    selectedEntries: string[]
+    outputPath: string
+  }>
   startSevenZipCompression: (sourcePath: string, archivePath: string) => Promise<string>
   showAvailableUpdate: () => void
   seedResponsiveWorkspace: (type: 'compression' | 'decompression') => string
@@ -105,6 +111,8 @@ export interface DesktopE2EBridge {
   queueTaskTemplateDialogSelections: (selections: Array<string | string[] | null>) => void
   takeTaskTemplateDialogSelection: () => string | string[] | null | undefined
   taskTemplateDialogQueueLength: () => number
+  queueDesktopDialogSelections: (selections: Array<string | string[] | null>) => void
+  takeDesktopDialogSelection: () => string | string[] | null | undefined
   watchFolderAuditState: (profileId: string) => Promise<{
     registrations: WatchFolderRegistration[]
     pendingBatches: WatchFolderDraftBatch[]
@@ -414,6 +422,15 @@ export const installDesktopE2EBridge = () => {
       }
     },
 
+    archiveBrowserTaskState() {
+      return taskStore.tasksFor('decompression').map(task => ({
+        status: task.status,
+        error: task.error ?? null,
+        selectedEntries: task.selectedEntries ? [...task.selectedEntries] : [],
+        outputPath: task.outputPath,
+      }))
+    },
+
     async startSevenZipCompression(sourcePath, archivePath) {
       const taskId = `desktop-e2e-7z-cancel-${Date.now()}`
       addArchiveTask(taskId, 'compression', sourcePath, archivePath)
@@ -596,6 +613,14 @@ export const installDesktopE2EBridge = () => {
 
     taskTemplateDialogQueueLength() {
       return taskTemplateDialogSelections.length
+    },
+
+    queueDesktopDialogSelections(selections) {
+      taskTemplateDialogSelections.splice(0, taskTemplateDialogSelections.length, ...selections)
+    },
+
+    takeDesktopDialogSelection() {
+      return taskTemplateDialogSelections.shift()
     },
 
     async watchFolderAuditState(profileId) {

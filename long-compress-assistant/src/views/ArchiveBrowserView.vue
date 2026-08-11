@@ -77,11 +77,22 @@ const parentDirectory = (path: string) => {
   return index > 0 ? path.slice(0, index) : ''
 }
 
+const takeDesktopDialogSelection = () => import.meta.env.VITE_DESKTOP_E2E
+  ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection()
+  : undefined
+
 const chooseArchive = async () => {
-  const picked = await commands.selectFiles(false)
+  const queued = takeDesktopDialogSelection()
+  const queuedPath = typeof queued === 'string' ? queued : Array.isArray(queued) ? queued[0] : null
+  const queuedInfo = queuedPath ? await commands.getFileInfo(queuedPath) : null
+  const picked = queued === undefined
+    ? await commands.selectFiles(false)
+    : queuedInfo ? [queuedInfo] : []
   if (!picked[0]) return
   archivePath.value = picked[0].path
   outputPath.value = parentDirectory(picked[0].path)
+  query.value = ''
+  typeFilter.value = 'all'
   await loadArchive()
 }
 
@@ -128,7 +139,10 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
 }
 
 const chooseOutput = async () => {
-  const picked = await commands.selectDirectory(outputPath.value || undefined)
+  const queued = takeDesktopDialogSelection()
+  const picked = queued === undefined
+    ? await commands.selectDirectory(outputPath.value || undefined)
+    : typeof queued === 'string' ? queued : null
   if (typeof picked === 'string') outputPath.value = picked
 }
 

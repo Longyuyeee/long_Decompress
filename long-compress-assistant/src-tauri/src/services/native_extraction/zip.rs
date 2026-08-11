@@ -10,8 +10,8 @@ use std::io::{Read, Seek, Write};
 use std::path::Path;
 use std::sync::Arc;
 use tauri::Window;
-use zip::result::ZipError;
-use zip::ZipArchive;
+use zip_aes::result::ZipError;
+use zip_aes::ZipArchive;
 
 const PROGRESS_EMIT_INTERVAL_BYTES: u64 = 4 * 1024 * 1024;
 
@@ -39,9 +39,7 @@ fn validate_password_access<R: Read + Seek>(
     for index in 0..archive.len() {
         let requires_password = match archive.by_index(index) {
             Ok(_) => false,
-            Err(ZipError::UnsupportedArchive(detail))
-                if detail == ZipError::PASSWORD_REQUIRED =>
-            {
+            Err(ZipError::UnsupportedArchive(detail)) if detail == ZipError::PASSWORD_REQUIRED => {
                 true
             }
             Err(error) => return Err(error.into()),
@@ -52,11 +50,13 @@ fn validate_password_access<R: Read + Seek>(
 
         match password {
             Some(password) => match archive.by_index_decrypt(index, password.as_bytes()) {
-                Ok(Ok(mut reader)) => {
+                Ok(mut reader) => {
                     let mut probe = [0u8; 4];
                     let _read = reader.read(&mut probe)?;
                 }
-                Ok(Err(_)) => return Err(CompressionError::InvalidPassword.into()),
+                Err(ZipError::InvalidPassword) => {
+                    return Err(CompressionError::InvalidPassword.into())
+                }
                 Err(error) => return Err(error.into()),
             },
             None => return Err(CompressionError::PasswordRequired.into()),
@@ -78,8 +78,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
     validate_password_access(&mut archive, password)?;
 
     let total_files = archive.len();
-    let file_filter =
-        extraction_transaction::compile_file_filter(options.file_filter.as_deref());
+    let file_filter = extraction_transaction::compile_file_filter(options.file_filter.as_deref());
 
     for index in 0..total_files {
         runtime.check_cancellation()?;
@@ -102,22 +101,17 @@ pub(crate) fn extract<R: ExtractionRuntime>(
             } else {
                 extraction_transaction::resolve_extract_path(&target, options)?
             };
-            let modified = entry.last_modified();
-            let source_modified = system_time(
-                modified.year(),
-                modified.month(),
-                modified.day(),
-                modified.hour(),
-                modified.minute(),
-                modified.second(),
-            );
-            (
-                file_name,
-                outpath,
-                is_dir,
-                entry.size(),
-                source_modified,
-            )
+            let source_modified = entry.last_modified().and_then(|modified| {
+                system_time(
+                    modified.year(),
+                    modified.month(),
+                    modified.day(),
+                    modified.hour(),
+                    modified.minute(),
+                    modified.second(),
+                )
+            });
+            (file_name, outpath, is_dir, entry.size(), source_modified)
         };
 
         let entry_result = (|| -> Result<()> {
@@ -130,7 +124,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
             }
 
             let reader = if let Some(password) = password {
-                archive.by_index_decrypt(index, password.as_bytes())??
+                archive.by_index_decrypt(index, password.as_bytes())?
             } else {
                 archive.by_index(index)?
             };
@@ -138,8 +132,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
             let buffer_size = runtime.buffer_pool().recommend_buffer_size(source_size);
             let mut handle =
                 tauri::async_runtime::block_on(runtime.buffer_pool().acquire(Some(buffer_size)));
-            let mut progress_reader =
-                ProgressReader::new(reader, source_size, Arc::new(|_, _| {}));
+            let mut progress_reader = ProgressReader::new(reader, source_size, Arc::new(|_, _| {}));
             let mut last_emitted = 0u64;
 
             let copy_result = (|| -> Result<()> {
@@ -153,8 +146,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
                     outfile.write_all(&buffer[..read])?;
                     let processed = progress_reader.current_pos();
                     if processed < source_size
-                        && processed.saturating_sub(last_emitted)
-                            >= PROGRESS_EMIT_INTERVAL_BYTES
+                        && processed.saturating_sub(last_emitted) >= PROGRESS_EMIT_INTERVAL_BYTES
                     {
                         last_emitted = processed;
                         let entry_progress = if source_size == 0 {
@@ -220,10 +212,13 @@ pub(crate) fn extract<R: ExtractionRuntime>(
 mod tests {
     use super::{system_time, validate_password_access};
     use crate::services::compression_service::CompressionError;
-    use std::io::{Cursor, Write};
+    use std::io::{Cursor, Read, Write};
     use zip::unstable::write::FileOptionsExt;
     use zip::write::FileOptions;
-    use zip::{ZipArchive, ZipWriter};
+    use zip::ZipWriter;
+    use zip_aes::write::SimpleFileOptions;
+    use zip_aes::ZipArchive;
+    use zip_aes::{CompressionMethod, ZipWriter as ModernZipWriter};
 
     #[test]
     fn zip_timestamps_reject_invalid_dates() {
@@ -234,6 +229,30 @@ mod tests {
     #[test]
     fn zip_timestamps_clamp_leap_seconds() {
         assert!(system_time(2026, 7, 30, 12, 30, 60).is_some());
+    }
+
+    #[test]
+    fn modern_zip_reader_preserves_legacy_compression_method_coverage() {
+        for method in [CompressionMethod::Bzip2, CompressionMethod::Zstd] {
+            let mut writer = ModernZipWriter::new(Cursor::new(Vec::new()));
+            writer
+                .start_file(
+                    "资料/内容.txt",
+                    SimpleFileOptions::default().compression_method(method),
+                )
+                .expect("start compressed entry");
+            writer
+                .write_all(b"compression compatibility payload")
+                .unwrap();
+            let cursor = writer.finish().expect("finish archive");
+
+            let mut archive = ZipArchive::new(Cursor::new(cursor.into_inner())).unwrap();
+            let mut entry = archive.by_index(0).expect("read compressed entry");
+            assert_eq!(entry.name(), "资料/内容.txt");
+            let mut payload = Vec::new();
+            entry.read_to_end(&mut payload).unwrap();
+            assert_eq!(payload, b"compression compatibility payload");
+        }
     }
 
     fn mixed_encryption_archive() -> ZipArchive<Cursor<Vec<u8>>> {
@@ -260,10 +279,13 @@ mod tests {
     fn password_preflight_scans_entries_beyond_the_old_probe_limit() {
         let error = validate_password_access(&mut mixed_encryption_archive(), None)
             .expect_err("late encrypted entry must require a password");
-        assert!(matches!(
-            error.downcast_ref::<CompressionError>(),
-            Some(CompressionError::PasswordRequired)
-        ), "{error:?}");
+        assert!(
+            matches!(
+                error.downcast_ref::<CompressionError>(),
+                Some(CompressionError::PasswordRequired)
+            ),
+            "{error:?}"
+        );
     }
 
     #[test]
@@ -271,15 +293,15 @@ mod tests {
         let error =
             validate_password_access(&mut mixed_encryption_archive(), Some("wrong-password"))
                 .expect_err("wrong password must fail on the late encrypted entry");
-        assert!(matches!(
-            error.downcast_ref::<CompressionError>(),
-            Some(CompressionError::InvalidPassword)
-        ), "{error:?}");
+        assert!(
+            matches!(
+                error.downcast_ref::<CompressionError>(),
+                Some(CompressionError::InvalidPassword)
+            ),
+            "{error:?}"
+        );
 
-        validate_password_access(
-            &mut mixed_encryption_archive(),
-            Some("correct-password"),
-        )
-        .expect("correct password must unlock every entry");
+        validate_password_access(&mut mixed_encryption_archive(), Some("correct-password"))
+            .expect("correct password must unlock every entry");
     }
 }

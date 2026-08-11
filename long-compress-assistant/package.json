@@ -36,6 +36,7 @@
     "test:e2e:desktop:watch-folder": "node scripts/test-tauri-desktop.mjs --watch-folder-lifecycle-only",
     "test:e2e:desktop:resource-preflight": "node scripts/test-tauri-desktop.mjs --resource-preflight-only",
     "test:e2e:desktop:smart-analysis": "node scripts/test-tauri-desktop.mjs --smart-analysis-only",
+    "test:e2e:desktop:archive-browser": "node scripts/test-tauri-desktop.mjs --archive-browser-only",
     "test:e2e:desktop:full-format": "node scripts/test-tauri-desktop.mjs --require-full-format-matrix",
     "test:fixtures:archives": "node scripts/fetch-archive-test-fixtures.mjs",
     "test:tools:qemu-img": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-qemu-img-test-tool.ps1",

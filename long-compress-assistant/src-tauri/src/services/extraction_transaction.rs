@@ -242,8 +242,9 @@ pub(crate) fn matches_selected_entries(path: &Path, selected_entries: &[String])
         return false;
     };
     selected_entries.iter().any(|selected| {
-        normalized_selected_entry(selected)
-            .is_some_and(|selected| candidate == selected || candidate.starts_with(&format!("{selected}/")))
+        normalized_selected_entry(selected).is_some_and(|selected| {
+            candidate == selected || candidate.starts_with(&format!("{selected}/"))
+        })
     })
 }
 
@@ -312,6 +313,7 @@ pub(crate) fn prepare_staging_layout(
     files.sort();
 
     let mut entry_count = directories.len();
+    let mut retained_file_count = 0usize;
     let mut expanded_bytes = 0u64;
     for source in files {
         let relative = source.strip_prefix(staging)?;
@@ -322,6 +324,7 @@ pub(crate) fn prepare_staging_layout(
             continue;
         }
         let source_size = std::fs::metadata(&source)?.len();
+        retained_file_count = retained_file_count.saturating_add(1);
         entry_count = entry_count.saturating_add(1);
         expanded_bytes = expanded_bytes.checked_add(source_size).ok_or_else(|| {
             CompressionError::ExtractionFailed(
@@ -370,6 +373,12 @@ pub(crate) fn prepare_staging_layout(
     directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
     for directory in directories {
         let _ = std::fs::remove_dir(&directory);
+    }
+    if !options.selected_entries.is_empty() && retained_file_count == 0 {
+        return Err(CompressionError::ExtractionFailed(
+            "None of the selected archive entries matched the extracted file paths".to_string(),
+        )
+        .into());
     }
     validate_resource_limits(archive_path, entry_count, expanded_bytes)?;
     validate_staging_disk_reserve(staging)
@@ -794,11 +803,26 @@ mod tests {
     #[test]
     fn selected_entries_are_exact_safe_archive_paths() {
         let selected = vec!["docs/readme.txt".to_string(), "images".to_string()];
-        assert!(matches_selected_entries(Path::new("docs/readme.txt"), &selected));
-        assert!(matches_selected_entries(Path::new("images/icon.png"), &selected));
-        assert!(!matches_selected_entries(Path::new("docs/readme.txt.bak"), &selected));
-        assert!(!matches_selected_entries(Path::new("other/icon.png"), &selected));
-        assert!(!matches_selected_entries(Path::new("../docs/readme.txt"), &selected));
+        assert!(matches_selected_entries(
+            Path::new("docs/readme.txt"),
+            &selected
+        ));
+        assert!(matches_selected_entries(
+            Path::new("images/icon.png"),
+            &selected
+        ));
+        assert!(!matches_selected_entries(
+            Path::new("docs/readme.txt.bak"),
+            &selected
+        ));
+        assert!(!matches_selected_entries(
+            Path::new("other/icon.png"),
+            &selected
+        ));
+        assert!(!matches_selected_entries(
+            Path::new("../docs/readme.txt"),
+            &selected
+        ));
     }
 
     #[test]
@@ -821,10 +845,34 @@ mod tests {
                 selected_entries: vec!["docs/readme.txt".to_string()],
                 ..Default::default()
             },
-        ).unwrap();
+        )
+        .unwrap();
 
         assert!(staging.join("docs/readme.txt").is_file());
         assert!(!staging.join("docs/notes.txt").exists());
         assert!(!staging.join("images/icon.png").exists());
+    }
+
+    #[test]
+    fn staging_layout_rejects_empty_explicit_selection_results() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let staging = temp.path().join("staging");
+        std::fs::create_dir_all(&staging).unwrap();
+        std::fs::write(staging.join("actual.txt"), b"payload").unwrap();
+        let archive = temp.path().join("fixture.zip");
+        std::fs::write(&archive, b"fixture").unwrap();
+
+        let error = prepare_staging_layout(
+            &archive,
+            &staging,
+            &DecompressOptions {
+                preserve_paths: true,
+                selected_entries: vec!["missing.txt".to_string()],
+                ..Default::default()
+            },
+        )
+        .expect_err("an explicit selection must never report success with no output");
+
+        assert!(error.to_string().contains("selected archive entries"));
     }
 }

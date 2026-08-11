@@ -43,7 +43,7 @@ log = "0.4"
 env_logger = "0.11"
 regex = "1.10"
 zip = "0.6"
-zip_aes = { package = "zip", version = "8.6", default-features = false, features = ["aes-crypto", "deflate-flate2"] }
+zip_aes = { package = "zip", version = "8.6", default-features = false, features = ["aes-crypto", "bzip2", "deflate64", "deflate-flate2", "lzma", "xz", "zstd"] }
 sevenz-rust = { version = "0.5", features = ["aes256"] }
 unrar = "0.5"
 memmap2 = "0.9"
