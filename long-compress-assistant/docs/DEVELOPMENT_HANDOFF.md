@@ -117,10 +117,10 @@
 - Vitest 4 的 V8 AST 重映射改变了 Vue/TypeScript 的覆盖率统计口径。配置已移除会产生假 `0/0` 的旧 `all/include` 组合，明确排除测试夹具，并以本次真实结果重新建立 `67/55/58/69` 的 statements/branches/functions/lines 防倒退门槛。
 - Vite 8 的严格检查同时消除了 `vitest.config.ts` 中的 `__dirname` 警告和非 scoped 样式中的无效 `:global(...)` 写法。后续升级必须继续通过类型检查、184 项覆盖率测试、浏览器 E2E 和生产构建。
 > 2026-07-30 详细代码审计见仓库根目录
-> [DEVELOPMENT_AUDIT_2026-07-30.md](../../DEVELOPMENT_AUDIT_2026-07-30.md)。
+> [DEVELOPMENT_AUDIT_2026-07-30.md](../../archive/legacy-root/documents/DEVELOPMENT_AUDIT_2026-07-30.md)。
 
 > 2026-07-31 发布后审计见仓库根目录
-> [DEVELOPMENT_AUDIT_2026-07-31.md](../../DEVELOPMENT_AUDIT_2026-07-31.md)。
+> [DEVELOPMENT_AUDIT_2026-07-31.md](../../archive/legacy-root/documents/DEVELOPMENT_AUDIT_2026-07-31.md)。
 
 ## 2026-08-01 性能趋势工具
 

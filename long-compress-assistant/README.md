@@ -279,7 +279,7 @@ cd src-tauri
 cargo test
 ```
 
-当前开发状态、风险分级和后续阶段见仓库根目录的 [`DEVELOPMENT_ROADMAP.md`](../DEVELOPMENT_ROADMAP.md)，AES 分块格式见 [`docs/AES_STREAM_V2.md`](docs/AES_STREAM_V2.md)，真实性能数据见 [`docs/PERFORMANCE_BASELINE.md`](docs/PERFORMANCE_BASELINE.md)。
+当前开发状态、风险分级和后续阶段见 [`docs/PRODUCT_ENHANCEMENT_ROADMAP.md`](docs/PRODUCT_ENHANCEMENT_ROADMAP.md)，AES 分块格式见 [`docs/AES_STREAM_V2.md`](docs/AES_STREAM_V2.md)，真实性能数据见 [`docs/PERFORMANCE_BASELINE.md`](docs/PERFORMANCE_BASELINE.md)。
 
 签名更新构建还需要在环境中提供 `TAURI_PRIVATE_KEY` 和 `TAURI_KEY_PASSWORD`。私钥不得写入仓库；正式标签构建由 GitHub Actions Secrets 注入。
 
