@@ -56,14 +56,14 @@ test.describe('Long Decompress desktop shell', () => {
     await expect(page.locator('[role="button"][tabindex="0"]').first()).toBeVisible()
   })
 
-  test('renders five keyboard-accessible navigation buttons', async ({ page }) => {
+  test('renders six keyboard-accessible navigation buttons', async ({ page }) => {
     const navigation = page.locator('aside nav > button')
-    await expect(navigation).toHaveCount(5)
+    await expect(navigation).toHaveCount(6)
     await expect(navigation.first()).toHaveAttribute('aria-current', 'page')
   })
 
   test('navigates to settings from the sidebar', async ({ page }) => {
-    await page.locator('aside nav > button').nth(4).click()
+    await page.getByTestId('nav-Settings').click()
     await page.waitForURL('**/#/settings')
     await expect(page.locator('main h1')).toBeVisible()
   })
@@ -86,7 +86,7 @@ test.describe('Long Decompress desktop shell', () => {
 
     await page.waitForFunction(() => Boolean(window.__LONG_DECOMPRESS_DESKTOP_E2E__))
     await page.evaluate(() => window.__LONG_DECOMPRESS_DESKTOP_E2E__!.seedResponsiveWorkspace('compression'))
-    await page.locator('aside nav > button').nth(1).click()
+    await page.getByTestId('nav-Compress').click()
     await page.waitForURL('**/#/compress')
     await expect(page.getByTestId('compression-draft-details')).toBeVisible()
 
@@ -104,7 +104,7 @@ test.describe('Long Decompress desktop shell', () => {
     }
 
     await page.evaluate(() => window.__LONG_DECOMPRESS_DESKTOP_E2E__!.seedResponsiveWorkspace('decompression'))
-    await page.locator('aside nav > button').first().click()
+    await page.getByTestId('nav-Decompress').click()
     await page.waitForURL('**/#/decompress')
     await page.locator('.task-row').click()
     await expect(page.locator('.task-detail-card')).toBeVisible()
