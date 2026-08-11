@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-08-11 Mark-of-the-Web 桌面门禁
+
+- `test:e2e:desktop:mark-of-web` 已在独立 Windows Release Tauri + WebView2 会话中通过，使用真实 NTFS `Zone.Identifier` 和正式解压 IPC，不以 Mock 或仅 Rust 单测代替候选桌面证据。
+- 可见压缩包浏览中心对带 `ZoneId=3` 的真实 ZIP 解压普通文本、Office、PowerShell、EXE 和嵌套目录文件；默认开启时逐文件 ADS 与源标记完全一致，任务日志报告安全标记传播。
+- 测试随后进入可见设置中心关闭“保留互联网来源安全标记”，再次解压同一归档并确认全部输出均未创建 ADS。既有 Windows Rust 回归继续保护畸形/超限标记、取消清理、重命名提交和失败回滚。
+- 本阶段不改变 Windows 下载安全策略、不伪造互联网标记，也不把 ADS 行为扩展到不支持的文件系统。Mark-of-the-Web 首阶段可以收口；下一项按 P0 顺序验收压缩后校验与删除源文件保护。
+
 ## 2026-08-11 压缩包浏览中心桌面门禁
 
 - `test:e2e:desktop:archive-browser` 已在独立 Windows Release Tauri + WebView2 会话中通过，直接驱动可见浏览中心和正式解压 IPC，不依赖 Mock 归档结果。

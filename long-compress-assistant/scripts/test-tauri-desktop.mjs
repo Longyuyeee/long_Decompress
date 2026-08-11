@@ -96,6 +96,7 @@ const watchFolderLifecycleOnly = process.argv.includes('--watch-folder-lifecycle
 const resourcePreflightOnly = process.argv.includes('--resource-preflight-only')
 const smartAnalysisOnly = process.argv.includes('--smart-analysis-only')
 const archiveBrowserOnly = process.argv.includes('--archive-browser-only')
+const markOfWebOnly = process.argv.includes('--mark-of-web-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -537,6 +538,119 @@ async function runArchiveBrowserDesktopGate() {
       'selected encrypted RAR output must match the pinned plaintext hash',
     )
   }
+}
+
+async function runMarkOfWebDesktopGate() {
+  console.log('[desktop-e2e] verifying visible Mark-of-the-Web propagation settings and real NTFS ADS')
+  await callDesktopBridge('clearTasks')
+  const fixtureRoot = path.join(fixtureDirectory, 'mark-of-web')
+  const sourceRoot = path.join(fixtureRoot, 'internet-source')
+  const archivePath = path.join(fixtureRoot, 'internet-download.zip')
+  mkdirSync(path.join(sourceRoot, '目录'), { recursive: true })
+  const payloads = new Map([
+    ['普通文件.txt', 'ordinary payload'],
+    ['报告.docx', 'office payload'],
+    ['脚本.ps1', 'Write-Output motw'],
+    ['工具.exe', 'executable fixture payload'],
+    [path.join('目录', '嵌套.txt'), 'nested payload'],
+  ])
+  for (const [relative, contents] of payloads) {
+    writeFileSync(path.join(sourceRoot, relative), contents, 'utf8')
+  }
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-tzip', '-y', archivePath, path.basename(sourceRoot)],
+    'Mark-of-the-Web ZIP',
+    { cwd: fixtureRoot },
+  )
+  const zone = '[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=https://example.test/internet-download.zip\r\n'
+  const archiveZoneStream = `${archivePath}:Zone.Identifier`
+  writeFileSync(archiveZoneStream, zone, 'utf8')
+  assert.equal(readFileSync(archiveZoneStream, 'utf8'), zone, 'the NTFS source ADS must be readable')
+
+  await (await waitForElement('[data-testid="nav-Settings"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/settings'), 30_000)
+  let preserveSwitch = await waitForElement('[data-testid="preserve-mark-of-web-switch"]')
+  if ((await preserveSwitch.getAttribute('aria-checked')) !== 'true') {
+    await preserveSwitch.click()
+    await driver.wait(async () => (await preserveSwitch.getAttribute('aria-checked')) === 'true', 10_000)
+  }
+
+  const extractFromVisibleBrowser = async (outputPath) => {
+    await callDesktopBridge('queueDesktopDialogSelections', [archivePath, outputPath])
+    await (await waitForElement('[data-testid="nav-ArchiveBrowser"]')).click()
+    await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/browser'), 30_000)
+    const passwordInput = await waitForElement('.browser-toolbar input[type="password"]')
+    await driver.executeScript(
+      'const input = arguments[0]; input.value = ""; input.dispatchEvent(new Event("input", { bubbles: true }));',
+      passwordInput,
+    )
+    await (await waitForElement('.browser-page > header .browser-primary')).click()
+    await driver.wait(async () => {
+      const page = await waitForElement('.browser-page')
+      return (await page.getText()).includes('报告.docx')
+    }, 30_000)
+    const fields = await driver.findElements(By.css('.browser-toolbar .browser-field'))
+    await (await fields[2].findElement(By.css('button'))).click()
+    await driver.wait(async () => (await fields[2].getText()).includes(outputPath), 10_000)
+    assert.match(await (await waitForElement('.browser-page > footer')).getText(), /已选择\s+5\s+\//)
+    await (await waitForElement('.browser-page > footer .browser-primary')).click()
+    const task = await driver.wait(async () => {
+      const tasks = await callDesktopBridge('archiveBrowserTaskState')
+      const latest = tasks.at(-1)
+      return latest && ['completed', 'failed', 'cancelled'].includes(latest.status) ? latest : false
+    }, 60_000)
+    assert.equal(task.status, 'completed', `Mark-of-the-Web extraction failed: ${JSON.stringify(task)}`)
+    for (const [relative, contents] of payloads) {
+      await waitForFileContent(path.join(outputPath, path.basename(sourceRoot), relative), contents, 10_000)
+    }
+    return task
+  }
+
+  const markedOutput = path.join(fixtureRoot, 'marked-output')
+  const markedTask = await extractFromVisibleBrowser(markedOutput)
+  assert.ok(
+    markedTask.logs.some(message => message.includes('互联网来源安全标记')),
+    `the real task log must report Mark-of-the-Web propagation: ${JSON.stringify(markedTask.logs)}`,
+  )
+  for (const relative of payloads.keys()) {
+    const outputFile = path.join(markedOutput, path.basename(sourceRoot), relative)
+    assert.equal(
+      readFileSync(`${outputFile}:Zone.Identifier`, 'utf8'),
+      zone,
+      `the committed file must preserve the source ADS: ${relative}`,
+    )
+  }
+
+  await callDesktopBridge('clearTasks')
+  await (await waitForElement('[data-testid="nav-Settings"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/settings'), 30_000)
+  preserveSwitch = await waitForElement('[data-testid="preserve-mark-of-web-switch"]')
+  assert.equal(await preserveSwitch.getAttribute('aria-checked'), 'true')
+  await preserveSwitch.click()
+  await driver.wait(async () => (await preserveSwitch.getAttribute('aria-checked')) === 'false', 10_000)
+
+  const unmarkedOutput = path.join(fixtureRoot, 'unmarked-output')
+  const unmarkedTask = await extractFromVisibleBrowser(unmarkedOutput)
+  assert.equal(
+    unmarkedTask.logs.some(message => message.includes('互联网来源安全标记')),
+    false,
+    'disabled propagation must not report an applied mark',
+  )
+  for (const relative of payloads.keys()) {
+    const outputFile = path.join(unmarkedOutput, path.basename(sourceRoot), relative)
+    assert.equal(
+      existsSync(`${outputFile}:Zone.Identifier`),
+      false,
+      `disabled propagation must not create an ADS: ${relative}`,
+    )
+  }
+  await (await waitForElement('[data-testid="nav-Settings"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/settings'), 30_000)
+  preserveSwitch = await waitForElement('[data-testid="preserve-mark-of-web-switch"]')
+  assert.equal(await preserveSwitch.getAttribute('aria-checked'), 'false')
+  await preserveSwitch.click()
+  await driver.wait(async () => (await preserveSwitch.getAttribute('aria-checked')) === 'true', 10_000)
 }
 
 async function waitForWatchFolderState(profileId, predicate, timeoutMs = 30_000) {
@@ -996,6 +1110,12 @@ try {
   if (archiveBrowserOnly) {
     completedSuccessfully = true
     console.log('Real Windows Tauri archive-browser gate passed.')
+  } else {
+
+  await runMarkOfWebDesktopGate()
+  if (markOfWebOnly) {
+    completedSuccessfully = true
+    console.log('Real Windows Tauri Mark-of-the-Web gate passed.')
   } else {
 
   navigation = await driver.findElements(By.css('aside nav > button'))
@@ -2365,6 +2485,7 @@ try {
 
   completedSuccessfully = true
   console.log('Real Windows Tauri desktop archive and lifecycle tests passed.')
+  }
   }
   }
   }

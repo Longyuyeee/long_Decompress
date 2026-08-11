@@ -75,6 +75,7 @@ export interface DesktopE2EBridge {
     error: string | null
     selectedEntries: string[]
     outputPath: string
+    logs: string[]
   }>
   startSevenZipCompression: (sourcePath: string, archivePath: string) => Promise<string>
   showAvailableUpdate: () => void
@@ -428,6 +429,7 @@ export const installDesktopE2EBridge = () => {
         error: task.error ?? null,
         selectedEntries: task.selectedEntries ? [...task.selectedEntries] : [],
         outputPath: task.outputPath,
+        logs: task.logs.map(log => log.message),
       }))
     },
 
