@@ -88,21 +88,33 @@ struct WatchRuntime {
 pub struct WatchFolderService {
     pool: SqlitePool,
     runtimes: Arc<StdMutex<HashMap<String, WatchRuntime>>>,
-    event_tx: mpsc::UnboundedSender<String>,
+    pending_events: Arc<StdMutex<HashSet<String>>>,
+    event_tx: mpsc::Sender<()>,
 }
 
 impl WatchFolderService {
     pub fn new(pool: SqlitePool) -> Self {
         let runtimes = Arc::new(StdMutex::new(HashMap::new()));
-        let (event_tx, event_rx) = mpsc::unbounded_channel();
+        let pending_events = Arc::new(StdMutex::new(HashSet::new()));
+        // The channel is only a wake-up edge. Watch IDs live in a bounded set,
+        // so repeated filesystem notifications cannot create an unbounded queue.
+        let (event_tx, event_rx) = mpsc::channel(1);
         let worker_pool = pool.clone();
         let worker_runtimes = Arc::clone(&runtimes);
+        let worker_pending_events = Arc::clone(&pending_events);
         tauri::async_runtime::spawn(async move {
-            run_event_worker(worker_pool, worker_runtimes, event_rx).await;
+            run_event_worker(
+                worker_pool,
+                worker_runtimes,
+                worker_pending_events,
+                event_rx,
+            )
+            .await;
         });
         Self {
             pool,
             runtimes,
+            pending_events,
             event_tx,
         }
     }
@@ -365,11 +377,12 @@ impl WatchFolderService {
 
         let watch_id = id.to_string();
         let event_tx = self.event_tx.clone();
+        let pending_events = Arc::clone(&self.pending_events);
         let mut watcher =
             notify::recommended_watcher(move |event: notify::Result<notify::Event>| {
                 let Ok(event) = event else { return };
                 if !matches!(event.kind, EventKind::Access(_)) {
-                    let _ = event_tx.send(watch_id.clone());
+                    queue_watch_event(&pending_events, &event_tx, &watch_id);
                 }
             })
             .context("创建文件系统监控器失败")?;
@@ -388,17 +401,28 @@ impl WatchFolderService {
                 },
             );
         let now = Utc::now().to_rfc3339();
-        sqlx::query(
+        let status_update = sqlx::query(
             "UPDATE task_template_watch_folders SET status = 'active', updated_at = ? WHERE id = ?",
         )
         .bind(now)
         .bind(id)
         .execute(&self.pool)
-        .await?;
+        .await;
+        match status_update {
+            Ok(result) if result.rows_affected() > 0 => {}
+            Ok(_) => {
+                self.stop_runtime(id)?;
+                return Err(anyhow!("Watch folder does not exist"));
+            }
+            Err(error) => {
+                self.stop_runtime(id)?;
+                return Err(error.into());
+            }
+        }
         // Close the baseline-to-watcher handoff window with one bounded rescan.
         // Baseline files remain deduplicated, while a concurrent new file cannot
         // be silently missed just because no later filesystem event arrives.
-        let _ = self.event_tx.send(id.to_string());
+        queue_watch_event(&self.pending_events, &self.event_tx, id);
         Ok(())
     }
 
@@ -408,6 +432,21 @@ impl WatchFolderService {
             .map_err(|_| anyhow!("监控运行状态不可用"))?
             .remove(id);
         Ok(())
+    }
+}
+
+fn queue_watch_event(
+    pending_events: &Arc<StdMutex<HashSet<String>>>,
+    event_tx: &mpsc::Sender<()>,
+    watch_id: &str,
+) {
+    let inserted = pending_events
+        .lock()
+        .map(|mut pending| pending.insert(watch_id.to_string()))
+        .unwrap_or(false);
+    if inserted {
+        // A full channel already contains the wake-up needed to drain the set.
+        let _ = event_tx.try_send(());
     }
 }
 
@@ -496,21 +535,16 @@ fn deduplicate_candidates(
 async fn run_event_worker(
     pool: SqlitePool,
     runtimes: Arc<StdMutex<HashMap<String, WatchRuntime>>>,
-    mut event_rx: mpsc::UnboundedReceiver<String>,
+    pending_events: Arc<StdMutex<HashSet<String>>>,
+    mut event_rx: mpsc::Receiver<()>,
 ) {
-    while let Some(first_id) = event_rx.recv().await {
-        let mut watch_ids = HashSet::from([first_id]);
-        let delay = tokio::time::sleep(Duration::from_millis(WATCH_EVENT_DEBOUNCE_MS));
-        tokio::pin!(delay);
-        loop {
-            tokio::select! {
-                _ = &mut delay => break,
-                next = event_rx.recv() => {
-                    let Some(next_id) = next else { break };
-                    watch_ids.insert(next_id);
-                }
-            }
-        }
+    while event_rx.recv().await.is_some() {
+        tokio::time::sleep(Duration::from_millis(WATCH_EVENT_DEBOUNCE_MS)).await;
+        while event_rx.try_recv().is_ok() {}
+        let watch_ids = pending_events
+            .lock()
+            .map(|mut pending| pending.drain().collect::<Vec<_>>())
+            .unwrap_or_default();
 
         for watch_id in watch_ids {
             if let Err(error) = process_watch_folder_event(&pool, &runtimes, &watch_id).await {
@@ -640,6 +674,20 @@ mod tests {
     use sqlx::sqlite::SqlitePoolOptions;
     use tempfile::tempdir;
 
+    #[test]
+    fn event_storm_uses_one_wakeup_and_one_pending_id_per_watch() {
+        let pending = Arc::new(StdMutex::new(HashSet::new()));
+        let (tx, mut rx) = mpsc::channel(1);
+
+        for index in 0..2_000 {
+            queue_watch_event(&pending, &tx, &format!("watch-{}", index % 20));
+        }
+
+        assert_eq!(pending.lock().unwrap().len(), 20);
+        assert!(rx.try_recv().is_ok());
+        assert!(rx.try_recv().is_err());
+    }
+
     async fn setup() -> (SqlitePool, WatchFolderService, String, tempfile::TempDir) {
         let pool = SqlitePoolOptions::new()
             .max_connections(1)
@@ -711,6 +759,38 @@ mod tests {
             .has_watch_folders_for_profile(&profile_id)
             .await
             .unwrap());
+    }
+
+    #[tokio::test]
+    async fn failed_activation_removes_the_live_runtime_before_create_rolls_back() {
+        let (pool, service, profile_id, directory) = setup().await;
+        sqlx::query(
+            r#"
+            CREATE TRIGGER reject_watch_activation
+            BEFORE UPDATE OF status ON task_template_watch_folders
+            WHEN NEW.status = 'active'
+            BEGIN
+                SELECT RAISE(ABORT, 'injected activation failure');
+            END
+            "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        let error = service
+            .create_watch_folder(&profile_id, directory.path().to_str().unwrap())
+            .await
+            .unwrap_err();
+
+        assert!(error.to_string().contains("injected activation failure"));
+        assert!(service.runtimes.lock().unwrap().is_empty());
+        let registrations: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM task_template_watch_folders")
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+        assert_eq!(registrations, 0);
     }
 
     #[tokio::test]

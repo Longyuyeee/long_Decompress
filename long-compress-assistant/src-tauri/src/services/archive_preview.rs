@@ -1,14 +1,15 @@
-use crate::services::archive_browser;
+use crate::services::archive_format::ArchiveFormat;
 use anyhow::{Context, Result};
 use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
-use std::io::Read;
+use std::io::{self, Read};
 use std::path::Path;
 
 pub const MAX_PREVIEW_BYTES: u64 = 8 * 1024 * 1024;
 pub const MAX_PREVIEW_PIXELS: u64 = 16_000_000;
 pub const MAX_PREVIEW_DIMENSION: u32 = 8192;
+pub const MAX_TAR_PREVIEW_SCAN_BYTES: u64 = 64 * 1024 * 1024;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -29,7 +30,40 @@ fn normalized_entry_path(value: &str) -> Result<String> {
     Ok(normalized)
 }
 
-fn read_bounded(reader: &mut dyn Read) -> Result<Vec<u8>> {
+struct ScanLimitedReader<R> {
+    inner: R,
+    remaining: u64,
+}
+
+impl<R> ScanLimitedReader<R> {
+    fn new(inner: R, max_bytes: u64) -> Self {
+        Self {
+            inner,
+            remaining: max_bytes,
+        }
+    }
+}
+
+impl<R: Read> Read for ScanLimitedReader<R> {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        if self.remaining == 0 {
+            let mut overflow = [0u8; 1];
+            return match self.inner.read(&mut overflow)? {
+                0 => Ok(0),
+                _ => Err(io::Error::other(
+                    "TAR image preview exceeded the bounded scan budget",
+                )),
+            };
+        }
+        let capacity =
+            usize::try_from(self.remaining.min(buffer.len() as u64)).unwrap_or(buffer.len());
+        let read = self.inner.read(&mut buffer[..capacity])?;
+        self.remaining -= read as u64;
+        Ok(read)
+    }
+}
+
+fn read_bounded(reader: &mut dyn Read, expected_bytes: u64) -> Result<Vec<u8>> {
     let mut bytes = Vec::new();
     reader
         .take(MAX_PREVIEW_BYTES + 1)
@@ -39,6 +73,12 @@ fn read_bounded(reader: &mut dyn Read) -> Result<Vec<u8>> {
         anyhow::bail!(
             "Image preview is limited to {} MiB after decompression",
             MAX_PREVIEW_BYTES / 1024 / 1024
+        );
+    }
+    if bytes.len() as u64 != expected_bytes {
+        anyhow::bail!(
+            "Image entry was truncated (expected {expected_bytes} bytes, read {})",
+            bytes.len()
         );
     }
     Ok(bytes)
@@ -53,16 +93,18 @@ fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Resu
     if entry.is_dir() {
         anyhow::bail!("Directories cannot be previewed");
     }
-    if entry.size() > MAX_PREVIEW_BYTES {
+    let expected_bytes = entry.size();
+    if expected_bytes > MAX_PREVIEW_BYTES {
         anyhow::bail!(
             "Image preview is limited to {} MiB after decompression",
             MAX_PREVIEW_BYTES / 1024 / 1024
         );
     }
-    read_bounded(&mut entry)
+    read_bounded(&mut entry, expected_bytes)
 }
 
 fn read_tar_entry<R: Read>(reader: R, entry_path: &str) -> Result<Vec<u8>> {
+    let reader = ScanLimitedReader::new(reader, MAX_TAR_PREVIEW_SCAN_BYTES);
     let mut archive = tar::Archive::new(reader);
     for entry in archive.entries()? {
         let mut entry = entry?;
@@ -73,15 +115,49 @@ fn read_tar_entry<R: Read>(reader: R, entry_path: &str) -> Result<Vec<u8>> {
         if !entry.header().entry_type().is_file() {
             anyhow::bail!("Only regular image files can be previewed");
         }
-        if entry.size() > MAX_PREVIEW_BYTES {
+        let expected_bytes = entry.size();
+        if expected_bytes > MAX_PREVIEW_BYTES {
             anyhow::bail!(
                 "Image preview is limited to {} MiB after decompression",
                 MAX_PREVIEW_BYTES / 1024 / 1024
             );
         }
-        return read_bounded(&mut entry);
+        return read_bounded(&mut entry, expected_bytes);
     }
     anyhow::bail!("The selected image entry was not found in the archive")
+}
+
+fn preview_format(path: &Path) -> Result<&'static str> {
+    let name = path
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    if name.ends_with(".tar") || name.ends_with(".ova") {
+        return Ok("TAR");
+    }
+    if name.ends_with(".tar.gz") || name.ends_with(".tgz") || name.ends_with(".tpz") {
+        return Ok("TAR.GZ");
+    }
+    if name.ends_with(".tar.bz2") || name.ends_with(".tbz") || name.ends_with(".tbz2") {
+        return Ok("TAR.BZ2");
+    }
+    if name.ends_with(".tar.xz") || name.ends_with(".txz") {
+        return Ok("TAR.XZ");
+    }
+    if name.ends_with(".tar.zst") || name.ends_with(".tzst") {
+        return Ok("TAR.ZST");
+    }
+
+    let mut header = [0u8; 560];
+    let mut file = File::open(path)?;
+    let read = file.read(&mut header)?;
+    if ArchiveFormat::from_magic(&header[..read]) == ArchiveFormat::Zip {
+        return Ok("ZIP");
+    }
+    anyhow::bail!(
+        "Safe bounded preview is currently available for ZIP and TAR-family archives only"
+    )
 }
 
 fn read_tar_family(path: &Path, format: &str, entry_path: &str) -> Result<Vec<u8>> {
@@ -214,28 +290,14 @@ fn image_identity(bytes: &[u8]) -> Result<(&'static str, u32, u32)> {
     Ok((mime, width, height))
 }
 
-pub async fn preview_archive_image(
+fn preview_archive_image_sync(
     archive_path: &Path,
     entry_path: &str,
     password: Option<&str>,
 ) -> Result<ArchiveImagePreview> {
     let entry_path = normalized_entry_path(entry_path)?;
-    let metadata = archive_browser::browse_archive(archive_path, password).await?;
-    let entry = metadata
-        .entries
-        .iter()
-        .find(|entry| entry.path.replace('\\', "/") == entry_path)
-        .ok_or_else(|| anyhow::anyhow!("The selected image entry was not found in the archive"))?;
-    if entry.is_dir {
-        anyhow::bail!("Directories cannot be previewed");
-    }
-    if entry.size > MAX_PREVIEW_BYTES {
-        anyhow::bail!(
-            "Image preview is limited to {} MiB after decompression",
-            MAX_PREVIEW_BYTES / 1024 / 1024
-        );
-    }
-    let bytes = match metadata.format.as_str() {
+    let format = preview_format(archive_path)?;
+    let bytes = match format {
         "ZIP" => read_zip_entry(archive_path, &entry_path, password)?,
         format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path)?,
         _ => anyhow::bail!(
@@ -256,6 +318,21 @@ pub async fn preview_archive_image(
     })
 }
 
+pub async fn preview_archive_image(
+    archive_path: &Path,
+    entry_path: &str,
+    password: Option<&str>,
+) -> Result<ArchiveImagePreview> {
+    let archive_path = archive_path.to_path_buf();
+    let entry_path = entry_path.to_string();
+    let password = password.map(str::to_string);
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_archive_image_sync(&archive_path, &entry_path, password.as_deref())
+    })
+    .await
+    .context("Archive image preview worker failed")?
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -266,6 +343,27 @@ mod tests {
         0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 8, 215, 99, 248, 207, 192, 240, 31,
         0, 5, 0, 1, 255, 137, 153, 61, 29, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
     ];
+
+    #[test]
+    fn tar_scan_reader_accepts_exact_budget_and_rejects_the_next_byte() {
+        let mut exact = ScanLimitedReader::new(std::io::Cursor::new(vec![1u8; 4]), 4);
+        let mut exact_bytes = Vec::new();
+        exact.read_to_end(&mut exact_bytes).unwrap();
+        assert_eq!(exact_bytes.len(), 4);
+
+        let mut overflow = ScanLimitedReader::new(std::io::Cursor::new(vec![1u8; 5]), 4);
+        let mut overflow_bytes = Vec::new();
+        let error = overflow.read_to_end(&mut overflow_bytes).unwrap_err();
+        assert!(error.to_string().contains("bounded scan budget"));
+        assert_eq!(overflow_bytes.len(), 4);
+    }
+
+    #[test]
+    fn bounded_image_read_rejects_truncated_payloads() {
+        let mut source = std::io::Cursor::new(vec![1u8; 3]);
+        let error = read_bounded(&mut source, 4).unwrap_err();
+        assert!(error.to_string().contains("truncated"));
+    }
 
     fn write_zip(path: &Path, entry_name: &str, contents: &[u8]) {
         let mut writer = zip::ZipWriter::new(File::create(path).unwrap());

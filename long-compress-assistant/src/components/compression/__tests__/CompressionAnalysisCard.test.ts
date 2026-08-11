@@ -82,4 +82,35 @@ describe('CompressionAnalysisCard', () => {
     expect(useCompressionStore().compressionAnalysis['job-1'].status).toBe('cancelled')
     expect(wrapper.text()).toContain('分析已取消')
   })
+
+  it('ignores a stale failure after a replacement analysis starts', async () => {
+    let rejectFirst!: (error: Error) => void
+    let resolveSecond!: (value: typeof result) => void
+    mocks.analyze
+      .mockImplementationOnce(() => new Promise((_, reject) => { rejectFirst = reject }))
+      .mockImplementationOnce(() => new Promise(resolve => { resolveSecond = resolve }))
+
+    const wrapper = mountCard()
+    const store = useCompressionStore()
+    await wrapper.get('.analysis-button').trigger('click')
+    const firstId = store.compressionAnalysis['job-1'].analysisId
+    await wrapper.get('.analysis-button.is-cancel').trigger('click')
+    await wrapper.get('.analysis-button').trigger('click')
+    const secondId = store.compressionAnalysis['job-1'].analysisId
+
+    expect(secondId).not.toBe(firstId)
+    rejectFirst(new Error('stale analysis failed'))
+    await flushPromises()
+    expect(store.compressionAnalysis['job-1']).toMatchObject({
+      status: 'running',
+      analysisId: secondId,
+    })
+
+    resolveSecond(result)
+    await flushPromises()
+    expect(store.compressionAnalysis['job-1']).toMatchObject({
+      status: 'completed',
+      analysisId: secondId,
+    })
+  })
 })
