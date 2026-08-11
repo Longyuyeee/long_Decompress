@@ -280,7 +280,7 @@ const extractSelected = async () => {
         <footer v-if="imagePreview" class="preview-meta">
           <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读 · 未写入磁盘</span>
         </footer>
-        <p class="preview-safety">预览仅接受经魔数确认的 PNG、JPEG、GIF、WebP、BMP；解压后最大 8 MiB、最多 1600 万像素。SVG 与扩展名伪装内容不会渲染。</p>
+        <p class="preview-safety">预览仅接受经魔数确认的 PNG、JPEG、GIF、WebP、BMP；解压后最大 8 MiB、最多 1600 万像素，TAR 流最多扫描 64 MiB。SVG、截断与扩展名伪装内容不会渲染。</p>
       </section>
     </div>
   </div>
