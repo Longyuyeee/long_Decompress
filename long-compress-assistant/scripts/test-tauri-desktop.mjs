@@ -94,6 +94,7 @@ const requireFullFormatMatrix =
   process.env.LONG_DECOMPRESS_REQUIRE_FULL_FORMAT_MATRIX === '1'
 const watchFolderLifecycleOnly = process.argv.includes('--watch-folder-lifecycle-only')
 const resourcePreflightOnly = process.argv.includes('--resource-preflight-only')
+const smartAnalysisOnly = process.argv.includes('--smart-analysis-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -774,6 +775,82 @@ try {
     assert.ok(preview.byteSize > 0)
     assert.match(preview.dataUrl, /^data:image\/png;base64,/)
   }
+
+  console.log('[desktop-e2e] verifying bounded smart-compression analysis and visible recommendations')
+  const textDirectory = path.join(fixtureDirectory, 'smart-analysis-text')
+  mkdirSync(textDirectory)
+  const compressibleChunk = Buffer.from('Long解压 bounded smart compression analysis\n'.repeat(12_000), 'utf8')
+  for (let index = 0; index < 24; index += 1) {
+    writeFileSync(path.join(textDirectory, `document-${String(index).padStart(2, '0')}.txt`), compressibleChunk)
+  }
+  await callDesktopBridge('clearCompressionWorkspace')
+  let analysisJobId = await callDesktopBridge('seedCompressionAnalysisWorkspace', [{
+    name: 'smart-analysis-text',
+    path: textDirectory,
+    size: 0,
+    isDirectory: true,
+  }])
+  navigation = await driver.findElements(By.css('aside nav > button'))
+  await navigation[1].click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  let analysisCard = await waitForElement('[data-testid="compression-analysis"]')
+  const textAnalysisStartedAt = Date.now()
+  await (await analysisCard.findElement(By.css('.analysis-button'))).click()
+  let analysisState = await driver.wait(async () => {
+    const state = await callDesktopBridge('compressionAnalysisAuditState', analysisJobId)
+    return state.status === 'completed' ? state : false
+  }, 15_000)
+  assert.ok(Date.now() - textAnalysisStartedAt < 15_000, 'large-directory analysis must stay interactive')
+  assert.equal(analysisState.analysis.fileCount, 24)
+  assert.ok(analysisState.analysis.totalSize >= 8 * 1024 * 1024)
+  assert.ok(analysisState.analysis.sampledFiles <= 16)
+  assert.ok(analysisState.analysis.sampledBytes <= 2 * 1024 * 1024)
+  assert.equal(analysisState.analysis.recommendedFormat, '7z')
+  assert.equal(analysisState.analysis.recommendedLevel, 7)
+  assert.equal(analysisState.analysis.recommendedSolid, true)
+  assert.match(await analysisCard.getText(), /智能压缩分析[\s\S]*预计体积[\s\S]*建议 7Z · L7/)
+  const analysisDimensions = await driver.executeScript(
+    'const card = document.querySelector(\'[data-testid="compression-analysis"]\'); return card ? { scrollWidth: card.scrollWidth, clientWidth: card.clientWidth } : null;',
+  )
+  assert.ok(analysisDimensions)
+  assert.ok(
+    analysisDimensions.scrollWidth <= analysisDimensions.clientWidth + 1,
+    `the smart-analysis card must not scroll horizontally: ${JSON.stringify(analysisDimensions)}`,
+  )
+  await (await analysisCard.findElement(By.css('.analysis-apply'))).click()
+  analysisState = await callDesktopBridge('compressionAnalysisAuditState', analysisJobId)
+  assert.deepEqual(analysisState.settings, { format: '7z', level: 7, createSolidArchive: true })
+
+  const mediaPngPath = path.join(fixtureDirectory, 'smart-photo.png')
+  const mediaVideoPath = path.join(fixtureDirectory, 'smart-video.mp4')
+  copyFileSync(path.join(root, 'src-tauri', 'icons', 'icon.png'), mediaPngPath)
+  writeFileSync(mediaVideoPath, randomBytes(4 * 1024 * 1024))
+  await callDesktopBridge('clearCompressionWorkspace')
+  analysisJobId = await callDesktopBridge('seedCompressionAnalysisWorkspace', [
+    { name: 'smart-photo.png', path: mediaPngPath, size: statSync(mediaPngPath).size, isDirectory: false },
+    { name: 'smart-video.mp4', path: mediaVideoPath, size: statSync(mediaVideoPath).size, isDirectory: false },
+  ])
+  analysisCard = await waitForElement('[data-testid="compression-analysis"]')
+  await (await analysisCard.findElement(By.css('.analysis-button'))).click()
+  analysisState = await driver.wait(async () => {
+    const state = await callDesktopBridge('compressionAnalysisAuditState', analysisJobId)
+    return state.status === 'completed' ? state : false
+  }, 15_000)
+  assert.equal(analysisState.analysis.lowValueFileCount, 2)
+  assert.equal(analysisState.analysis.lowValueBytes, analysisState.analysis.totalSize)
+  assert.equal(analysisState.analysis.recommendedFormat, 'zip')
+  assert.equal(analysisState.analysis.recommendedLevel, 1)
+  assert.equal(analysisState.analysis.recommendedSolid, false)
+  assert.match(await analysisCard.getText(), /高等级压缩收益有限/)
+
+  if (smartAnalysisOnly) {
+    completedSuccessfully = true
+    console.log('Real Windows Tauri smart-compression analysis gate passed.')
+  } else {
+
+  navigation = await driver.findElements(By.css('aside nav > button'))
+  await navigation[0].click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 30_000)
 
   console.log('[desktop-e2e] verifying reliable capacity blocking and the visible blocked state')
   await callDesktopBridge('clearTasks')
@@ -2138,6 +2215,7 @@ try {
 
   completedSuccessfully = true
   console.log('Real Windows Tauri desktop archive and lifecycle tests passed.')
+  }
   }
   }
 } catch (error) {

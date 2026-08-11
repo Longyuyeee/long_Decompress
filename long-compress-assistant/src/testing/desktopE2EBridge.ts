@@ -7,6 +7,7 @@ import { useCompressionStore } from '@/stores/compression'
 import { useUpdateStore } from '@/stores/update'
 import type { WatchFolderDraftBatch, WatchFolderRegistration } from '@/types/profile'
 import type { ResourcePreflightReport } from '@/types/resourcePreflight'
+import type { CompressionAnalysisResult } from '@/composables/useTauriCommands'
 import { attachResourcePreflight } from '@/utils/resourcePreflight'
 
 const TEST_TASK_ID = 'desktop-e2e-lifecycle-task'
@@ -58,6 +59,17 @@ export interface DesktopE2EBridge {
     width: number
     height: number
   }>
+  seedCompressionAnalysisWorkspace: (entries: Array<{
+    name: string
+    path: string
+    size: number
+    isDirectory: boolean
+  }>) => string
+  compressionAnalysisAuditState: (jobId: string) => {
+    analysis: CompressionAnalysisResult | null
+    status: string | null
+    settings: { format: string; level: number; createSolidArchive: boolean } | null
+  }
   startSevenZipCompression: (sourcePath: string, archivePath: string) => Promise<string>
   showAvailableUpdate: () => void
   seedResponsiveWorkspace: (type: 'compression' | 'decompression') => string
@@ -368,6 +380,39 @@ export const installDesktopE2EBridge = () => {
       entryPath,
       password: null,
     }),
+
+    seedCompressionAnalysisWorkspace(entries) {
+      compressionStore.prepareQuickPacks()
+      const draft = compressionStore.addTemplateDraft(
+        entries.map(entry => ({
+          ...entry,
+          type: entry.isDirectory ? 'directory' : 'file',
+        })),
+        'Desktop E2E 智能分析',
+        { ...compressionStore.globalSettings, format: 'zip', level: 6 },
+      )
+      if (!draft) throw new Error('Unable to seed the smart-compression workspace')
+      const group = compressionStore.groups.find(item => item.id === draft.id)
+      if (group) group.expanded = true
+      return draft.id
+    },
+
+    compressionAnalysisAuditState(jobId) {
+      const state = compressionStore.compressionAnalysis[jobId]
+      const group = compressionStore.groups.find(item => item.id === jobId)
+      const settings = group ? compressionStore.getEffectiveSettings(group.settings) : null
+      return {
+        analysis: state?.result ?? null,
+        status: state?.status ?? null,
+        settings: settings
+          ? {
+              format: settings.format,
+              level: settings.level,
+              createSolidArchive: settings.createSolidArchive,
+            }
+          : null,
+      }
+    },
 
     async startSevenZipCompression(sourcePath, archivePath) {
       const taskId = `desktop-e2e-7z-cancel-${Date.now()}`
