@@ -49,9 +49,9 @@ const appStore = useAppStore()
       <div
         v-for="(log, index) in task?.logs || []"
         :key="`${log.timestamp}-${index}`"
-        class="flex min-w-0 gap-3 items-start border-l-2 border-subtle/20 pl-3 py-0.5"
+        class="pending-log-row flex min-w-0 gap-3 items-start border-l-2 border-subtle/20 pl-3 py-0.5"
       >
-        <span class="text-dim font-mono text-xs shrink-0">
+        <span class="pending-log-time text-dim font-mono text-xs shrink-0">
           {{ new Date(log.timestamp).toLocaleTimeString([], { hour12: false }) }}
         </span>
         <span
@@ -81,6 +81,8 @@ const appStore = useAppStore()
 }
 
 .pending-execution-panel {
+  width: 100%;
+  box-sizing: border-box;
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
@@ -107,6 +109,8 @@ const appStore = useAppStore()
 }
 
 .pending-log {
+  width: 100%;
+  box-sizing: border-box;
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
@@ -120,9 +124,31 @@ const appStore = useAppStore()
   font-size: 0.75rem;
 }
 
+.pending-log-row {
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 @media (max-width: 520px) {
   .compression-execution-panel {
     padding: 1rem;
+  }
+
+  .pending-execution-panel > .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pending-log-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .pending-log-time {
+    min-width: 0;
+    max-width: 100%;
+    flex-shrink: 1;
+    overflow-wrap: anywhere;
   }
 }
 </style>
