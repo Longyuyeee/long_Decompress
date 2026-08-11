@@ -6,7 +6,7 @@
 
 一款面向 Windows 的现代化压缩、解压与归档管理工具。
 
-[![Version](https://img.shields.io/badge/version-1.1.0-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.1.2-0ea5e9?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -20,6 +20,18 @@
 </div>
 
 ---
+
+## v1.1.2 更新亮点
+
+- 新增归档浏览、压缩包诊断、非破坏式 ZIP 修复，以及受字节数、像素数和 TAR 扫描预算保护的图片预览。
+- 新增可导入导出的压缩任务模板、只读规则预览和持久化监控文件夹；监控事件经过合并、稳定性扫描与去重后仅生成待确认草稿。
+- 压缩与解压执行前新增结构化资源预检，明确展示空间、文件系统、介质与估算来源；可靠判定空间不足时在调用引擎前阻止任务。
+- 压缩发布前完成完整性校验，删除源文件必须等待校验成功；互联网来源标记随安全解压事务传播。
+- 补齐固定机器 I/O 基线与双 NVMe SSD 矩阵，当前仅记录性能基线，不据此改变默认并发策略。
+- Windows Release 实机门禁已覆盖真实 ZIP 往返、诊断、修复、ZIP/TAR 图片预览、资源预检、任务模板、监控目录、托盘隐藏与重启恢复。
+- 公开安装包仍不使用 Windows 商业代码签名证书，因此 Windows 11 新式第一层右键菜单不属于本版本承诺；经典菜单能力继续保留。
+
+完整变更请查看 [v1.1.2 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.2)。
 
 ## v1.1.0 更新亮点
 

@@ -38,6 +38,7 @@ Thumbs.db
 *.exe
 prototype/config.yaml
 long-compress-assistant/src-tauri/target/
+long-compress-assistant/src-tauri/target-desktop-gate/
 long-compress-assistant/node_modules/
 long-compress-assistant/dist/
 long-compress-assistant/playwright-report/

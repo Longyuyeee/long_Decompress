@@ -725,6 +725,56 @@ try {
     decompressionResourceTask.report.status === 'ready' ? '已通过' : '需留意',
   )
 
+  console.log('[desktop-e2e] verifying archive diagnosis, non-destructive ZIP repair, and ZIP/TAR image preview')
+  const sourceArchiveHash = fileSha256(archivePath)
+  const diagnosis = await callDesktopBridge('diagnoseArchive', archivePath)
+  assert.equal(diagnosis.actualFormat, 'ZIP')
+  assert.equal(diagnosis.status, 'healthy')
+  assert.equal(diagnosis.totalFiles, 1)
+  assert.equal(diagnosis.integrityTested, true)
+  assert.equal(diagnosis.canRepair, false, 'a healthy ZIP should not advertise repair as necessary')
+
+  const repairedArchivePath = path.join(fixtureDirectory, 'roundtrip-payload-repaired.zip')
+  const repair = await callDesktopBridge('repairZip', archivePath, repairedArchivePath)
+  assert.equal(repair.outputPath, repairedArchivePath)
+  assert.equal(repair.recoveredFiles, 1)
+  assert.equal(repair.recoveredDirectories, 0)
+  assert.deepEqual(repair.skippedEntries, [])
+  assert.equal(repair.verified, true)
+  assert.equal(fileSha256(archivePath), sourceArchiveHash, 'ZIP repair must not modify the source archive')
+  assert.ok(existsSync(repairedArchivePath), 'ZIP repair must publish a new archive')
+  const repairedDiagnosis = await callDesktopBridge('diagnoseArchive', repairedArchivePath)
+  assert.equal(repairedDiagnosis.status, 'healthy')
+  assert.equal(repairedDiagnosis.integrityTested, true)
+
+  const previewPngName = 'preview.png'
+  const previewPngPath = path.join(fixtureDirectory, previewPngName)
+  const previewZipPath = path.join(fixtureDirectory, 'preview-image.zip')
+  const previewTarPath = path.join(fixtureDirectory, 'preview-image.tar')
+  writeFileSync(
+    previewPngPath,
+    Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64'),
+  )
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-tzip', '-y', previewZipPath, previewPngName],
+    'ZIP image preview',
+  )
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-ttar', '-y', previewTarPath, previewPngName],
+    'TAR image preview',
+  )
+  for (const previewArchivePath of [previewZipPath, previewTarPath]) {
+    const preview = await callDesktopBridge('previewArchiveImage', previewArchivePath, previewPngName)
+    assert.equal(preview.entryPath, previewPngName)
+    assert.equal(preview.mimeType, 'image/png')
+    assert.equal(preview.width, 1)
+    assert.equal(preview.height, 1)
+    assert.ok(preview.byteSize > 0)
+    assert.match(preview.dataUrl, /^data:image\/png;base64,/)
+  }
+
   console.log('[desktop-e2e] verifying reliable capacity blocking and the visible blocked state')
   await callDesktopBridge('clearTasks')
   const blockedOutput = path.join(fixtureDirectory, 'must-not-create-blocked-output')

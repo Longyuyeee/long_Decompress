@@ -36,6 +36,28 @@ export interface DesktopE2EBridge {
     outputPath: string,
     password?: string | null,
   ) => Promise<string>
+  diagnoseArchive: (filePath: string) => Promise<{
+    actualFormat: string
+    status: string
+    totalFiles: number
+    integrityTested: boolean
+    canRepair: boolean
+  }>
+  repairZip: (filePath: string, outputPath: string) => Promise<{
+    outputPath: string
+    recoveredFiles: number
+    recoveredDirectories: number
+    skippedEntries: string[]
+    verified: boolean
+  }>
+  previewArchiveImage: (filePath: string, entryPath: string) => Promise<{
+    entryPath: string
+    mimeType: string
+    dataUrl: string
+    byteSize: number
+    width: number
+    height: number
+  }>
   startSevenZipCompression: (sourcePath: string, archivePath: string) => Promise<string>
   showAvailableUpdate: () => void
   seedResponsiveWorkspace: (type: 'compression' | 'decompression') => string
@@ -328,6 +350,24 @@ export const installDesktopE2EBridge = () => {
         await syncActiveState()
       }
     },
+
+    diagnoseArchive: filePath => invoke('diagnose_archive', {
+      diagnosticId: `desktop-e2e-diagnosis-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      filePath,
+      password: null,
+    }),
+
+    repairZip: (filePath, outputPath) => invoke('repair_zip', {
+      repairId: `desktop-e2e-repair-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      filePath,
+      outputPath,
+    }),
+
+    previewArchiveImage: (filePath, entryPath) => invoke('preview_archive_image', {
+      filePath,
+      entryPath,
+      password: null,
+    }),
 
     async startSevenZipCompression(sourcePath, archivePath) {
       const taskId = `desktop-e2e-7z-cancel-${Date.now()}`
