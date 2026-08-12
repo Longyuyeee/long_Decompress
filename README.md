@@ -27,7 +27,7 @@ Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows �
 
 ## 真实运行界面
 
-以下图片来自 Windows 上实际运行的 Long解压 1.1.4 程序，不是设计稿。
+以下图片由 Long解压 1.1.4 当前代码实际渲染生成，不是设计稿。每张图片都保留完整侧栏、主工作区和底部操作区。
 
 <table>
   <tr>
@@ -42,15 +42,21 @@ Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows �
       <sub>多文件归档、格式转换、加密与压缩后校验</sub>
     </td>
   </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/archive-browser.png" alt="Long解压的压缩包浏览中心完整运行界面"><br>
+      <strong>压缩包浏览中心</strong><br>
+      <sub>可折叠目录树、搜索筛选、条目详情与选择性解压</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/password-vault.png" alt="Long解压的密码保险箱完整运行界面"><br>
+      <strong>密码保险箱</strong><br>
+      <sub>密码名称、密码正文、备注、使用频率与数据统计统一管理</sub>
+    </td>
+  </tr>
 </table>
 
-<p align="center">
-  <img src="docs/screenshots/password-vault.png" width="900" alt="Long解压的密码保险箱真实运行界面"><br>
-  <strong>密码保险箱</strong><br>
-  <sub>密码名称、密码正文、备注、使用频率与数据统计统一管理</sub>
-</p>
-
-> 截图使用隔离的临时应用数据生成，不包含用户的真实密码或私人文件。
+> 截图使用隔离数据和脱敏示例归档生成，不包含用户的真实密码或私人文件。
 
 ## 核心特色
 
