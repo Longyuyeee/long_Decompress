@@ -16,7 +16,7 @@ const appStore = useAppStore()
 <template>
   <div
     data-testid="compression-draft-execution"
-    class="pending-execution-panel compression-execution-panel"
+    class="pending-execution-panel compression-execution-panel custom-scrollbar"
   >
     <div class="grid grid-cols-2 gap-2">
       <div class="pending-stat-card">

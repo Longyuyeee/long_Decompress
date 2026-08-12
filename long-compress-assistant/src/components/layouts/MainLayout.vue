@@ -145,7 +145,24 @@ html, body, #app {
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
   background: transparent;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dynamic-accent) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {

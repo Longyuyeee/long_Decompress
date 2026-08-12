@@ -45,6 +45,25 @@ const expectVerticalOnlyScrolling = async (
   })
 }
 
+const expectSideBySide = async (
+  page: import('@playwright/test').Page,
+  leftSelector: string,
+  rightSelector: string,
+) => {
+  const positions = await page.locator(`${leftSelector}, ${rightSelector}`).evaluateAll(elements =>
+    elements.map(element => {
+      const rect = element.getBoundingClientRect()
+      return { left: rect.left, top: rect.top, width: rect.width }
+    }),
+  )
+
+  expect(positions).toHaveLength(2)
+  expect(positions[0].width).toBeGreaterThan(0)
+  expect(positions[1].width).toBeGreaterThan(0)
+  expect(Math.abs(positions[0].top - positions[1].top)).toBeLessThanOrEqual(2)
+  expect(positions[1].left).toBeGreaterThan(positions[0].left)
+}
+
 test.describe('Long Decompress desktop shell', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
@@ -101,6 +120,11 @@ test.describe('Long Decompress desktop shell', () => {
         '[data-testid="compression-draft-execution"]',
         '.pending-log',
       ])
+      await expectSideBySide(
+        page,
+        '.compression-config-panel',
+        '[data-testid="compression-draft-execution"]',
+      )
       await expect(page.locator('.compression-config-panel')).toHaveCSS('pointer-events', 'auto')
     }
 
@@ -121,6 +145,7 @@ test.describe('Long Decompress desktop shell', () => {
         '.task-execution-panel',
         '.log-viewport',
       ])
+      await expectSideBySide(page, '.task-config-panel', '.task-execution-panel')
     }
   })
 

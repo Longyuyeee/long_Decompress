@@ -461,7 +461,7 @@ const onLeave = (el: any) => {
                   </div>
 
                   <!-- 右侧：执行日志 -->
-                  <div class="task-execution-panel min-w-0 p-5 flex flex-col overflow-x-hidden">
+                  <div class="task-execution-panel custom-scrollbar min-w-0 p-5 flex flex-col overflow-y-auto overflow-x-hidden">
                     <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">阶段</span>
@@ -588,18 +588,10 @@ const onLeave = (el: any) => {
 }
 
 .task-detail-layout {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   align-items: stretch;
   overflow-x: hidden;
-}
-
-.task-config-panel {
-  flex: 0.85 1 20rem;
-}
-
-.task-execution-panel {
-  flex: 1 1 20rem;
 }
 
 .task-config-panel,
@@ -665,24 +657,12 @@ const onLeave = (el: any) => {
 .pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.95) translateY(10px); }
 
 @media (max-width: 760px) {
-  .task-detail-layout {
-    flex-direction: column;
-  }
-
   .task-config-panel {
-    flex: none;
-    width: 100%;
-    max-width: 100%;
     max-height: 20rem;
-    border-right: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
     padding: 1rem;
   }
 
   .task-execution-panel {
-    flex: none;
-    width: 100%;
-    max-width: 100%;
     min-height: 16rem;
     max-height: 22rem;
     padding: 1rem;

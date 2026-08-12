@@ -695,7 +695,7 @@ const onDetailLeave = (element: Element) => {
               <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
                 <div
                   data-testid="compression-draft-config"
-                  class="compression-config-panel min-w-0 space-y-5"
+                  class="compression-config-panel custom-scrollbar min-w-0 space-y-5"
                   :class="{ 'is-submitted opacity-80': Boolean(group.taskId) }"
                 >
                   <div>
@@ -873,7 +873,7 @@ const onDetailLeave = (element: Element) => {
                 <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
                   <div
                     data-testid="compression-draft-config"
-                    class="compression-config-panel min-w-0"
+                    class="compression-config-panel custom-scrollbar min-w-0"
                     :class="{ 'is-submitted opacity-80': Boolean(file.taskId) }"
                   >
                     <h4 class="detail-heading justify-between">
@@ -1076,8 +1076,8 @@ const onDetailLeave = (element: Element) => {
 }
 
 .compression-detail-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -1088,7 +1088,6 @@ const onDetailLeave = (element: Element) => {
 }
 
 .compression-config-panel {
-  flex: 0.85 1 20rem;
   box-sizing: border-box;
   min-width: 0;
   max-width: 100%;
@@ -1101,7 +1100,6 @@ const onDetailLeave = (element: Element) => {
 }
 
 .compression-detail-grid :deep(.compression-execution-panel) {
-  flex: 1 1 20rem;
   box-sizing: border-box;
   min-width: 0;
   max-width: 100%;
@@ -1140,28 +1138,12 @@ const onDetailLeave = (element: Element) => {
 }
 
 @media (max-width: 760px) {
-  .compression-detail-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .compression-config-panel {
-    flex: none;
-    width: 100%;
-    max-width: 100%;
     max-height: 22rem;
-    border-right: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
   }
 
   .compression-config-panel :deep(.settings-core-grid) {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .compression-detail-grid :deep(.compression-execution-panel) {
-    flex: none;
-    width: 100%;
-    max-width: 100%;
   }
 
   .compression-table-header,
