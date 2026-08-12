@@ -645,13 +645,8 @@ fn preview_profile_watch_folder_with_delay(
         warnings.push("预览不会读取、填入或生成密码".to_string());
     }
 
-    accepted.sort_by(|left, right| left.path.to_lowercase().cmp(&right.path.to_lowercase()));
-    excluded.sort_by(|left, right| {
-        left.candidate
-            .path
-            .to_lowercase()
-            .cmp(&right.candidate.path.to_lowercase())
-    });
+    accepted.sort_by_key(|item| item.path.to_lowercase());
+    excluded.sort_by_key(|item| item.candidate.path.to_lowercase());
 
     Ok(TaskTemplateWatchFolderPreview {
         profile_id: profile.id.clone(),
