@@ -297,6 +297,19 @@ const runCompression = async () => {
     }
   }
 
+  const convertedPasswordFormats = [...new Set(
+    jobs
+      .filter(job => Boolean(job.settings.password) && job.settings.format !== '7z' && effectiveFormatForPassword(job.settings.format, job.settings.password) === '7z')
+      .map(job => job.settings.format.toUpperCase())
+  )]
+  if (convertedPasswordFormats.length > 0) {
+    const confirmed = await ask(
+      appStore.t('compress.password_7z_confirm').replace('{0}', convertedPasswordFormats.join('、')),
+      { title: appStore.t('compress.password_7z_title'), type: 'warning' }
+    )
+    if (!confirmed) return
+  }
+
   let allowRarPasswordCli = false
   if (jobs.some(job => job.settings.format === 'rar' && Boolean(job.settings.password))) {
     allowRarPasswordCli = await ask(
