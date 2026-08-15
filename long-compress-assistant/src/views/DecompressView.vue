@@ -12,6 +12,7 @@ import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath } from '@/utils/compressionFormat'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
+import { runArchiveTasks } from '@/utils/taskConcurrency'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -272,7 +273,11 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
   // 启动后清除选择
   selectedTaskIds.value = new Set()
 
-  for (const task of pendingTasks) {
+  try {
+    await runArchiveTasks(
+      pendingTasks,
+      appStore.settings.maxConcurrentTasks,
+      async task => {
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
       outputPath: task.outputPath,
@@ -286,7 +291,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
     }
 
     try {
-      if (!await runDecompressionResourcePreflight(task)) continue
+      if (!await runDecompressionResourcePreflight(task)) return
       task.passwordRequired = false
       await tauriCommands.decompressFile(task.sourceFiles[0], options, task.id)
 
@@ -343,9 +348,12 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
         appStore.setError(`${appStore.t('common.error')}: ${task.error}`)
       }
     }
+      },
+      task => task.outputPath.replace(/\\/g, '/').replace(/\/$/, '').toLocaleLowerCase(),
+    )
+  } finally {
+    isProcessing.value = false
   }
-
-  isProcessing.value = false
 }
 
 const hasPendingTasks = computed(() => decompressionTasks.value.some(t => t.status === 'pending'))

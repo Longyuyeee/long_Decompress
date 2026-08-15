@@ -368,12 +368,13 @@ describe('CompressionView', () => {
     expect(appStore.successMessage).toBeTruthy()
   })
 
-  it('cancels the active job and never starts queued compression jobs', async () => {
+  it('cancels the active job and queued jobs when concurrency is one', async () => {
     let rejectActive!: (error: Error) => void
     mocks.compressFiles.mockImplementationOnce(() => new Promise((_, reject) => {
       rejectActive = reject
     }))
     const wrapper = mountView()
+    useAppStore().updateSettings({ maxConcurrentTasks: 1 })
     wrapper.findComponent(DropzoneStub).vm.$emit(
       'files-selected',
       [source('C:/one/first.txt'), source('C:/two/second.txt')],

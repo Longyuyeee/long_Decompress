@@ -6,6 +6,7 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage, generateId } from '@/utils'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
+import { runArchiveTasks } from '@/utils/taskConcurrency'
 import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
 import {
   compressionStatusClass,
@@ -368,18 +369,18 @@ const runCompression = async () => {
   // row's real status, progress and logs for its entire lifecycle.
   validJobs.forEach(({ job }) => selectedRows.value.delete(job.id))
 
-  // 第二阶段：依次执行所有任务
+  // 第二阶段：按用户配置的并发上限执行。输出路径在上方已完成唯一性校验。
   let succeeded = 0
 
-  for (const { job, taskId, effectiveFormat } of validJobs) {
+  await runArchiveTasks(validJobs, appStore.settings.maxConcurrentTasks, async ({ job, taskId, effectiveFormat }) => {
     const queuedTask = taskStore.tasks.find(task => task.id === taskId)
     if (!queuedTask || queuedTask.status === 'cancelled') {
-      continue
+      return
     }
     try {
       if (!await runCompressionResourcePreflight(taskId, job)) {
         failed++
-        continue
+        return
       }
       taskStore.updateTaskStatus(taskId, 'compressing')
       await tauriCommands.compressFiles(
@@ -418,7 +419,7 @@ const runCompression = async () => {
       }
       // 继续处理下一个任务，不中断整个批次
     }
-  }
+  })
 
   if (succeeded > 0 && failed === 0) {
     appStore.setSuccess(appStore.t('compress.status_success').replace('{0}', String(succeeded)).replace('{1}', succeeded === 1 ? '' : 's'))

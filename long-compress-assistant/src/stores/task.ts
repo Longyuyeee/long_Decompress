@@ -48,6 +48,9 @@ export interface Task {
   currentFile?: string
   currentPassword?: string
   speed?: string
+  processedBytes?: number
+  totalBytes?: number
+  etaSeconds?: number
   // 密码相关
   password?: string
   passwordRequired?: boolean
@@ -94,9 +97,15 @@ export const useTaskStore = defineStore('task', () => {
       stage?: string,
       current_file?: string,
       current_password?: string,
-      speed?: string
+      speed?: string,
+      processed_bytes?: number,
+      total_bytes?: number,
+      eta_seconds?: number,
     }>('task-progress', (event) => {
-      const { task_id, progress, stage, current_file, current_password, speed } = event.payload
+      const {
+        task_id, progress, stage, current_file, current_password, speed,
+        processed_bytes, total_bytes, eta_seconds,
+      } = event.payload
       const task = tasks.value.find(t => t.id === task_id)
       if (task) {
         // 使用 floor 确保进度不会跳变；活跃任务至少显示 1%
@@ -106,7 +115,10 @@ export const useTaskStore = defineStore('task', () => {
         task.stage = stage as any
         task.currentFile = current_file
         task.currentPassword = current_password
-        task.speed = speed
+        if (speed !== undefined) task.speed = speed
+        if (processed_bytes !== undefined) task.processedBytes = processed_bytes
+        if (total_bytes !== undefined) task.totalBytes = total_bytes
+        task.etaSeconds = eta_seconds
 
         // Progress reaching 100% only means the engine finished transferring data.
         // Final rename, integrity checks and optional cleanup may still fail, so the
@@ -172,6 +184,7 @@ export const useTaskStore = defineStore('task', () => {
       }
       if (['completed', 'failed', 'cancelled'].includes(status)) {
         task.endTime = new Date()
+        task.etaSeconds = undefined
       }
     }
   }

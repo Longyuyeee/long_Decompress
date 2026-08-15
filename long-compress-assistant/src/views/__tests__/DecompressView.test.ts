@@ -346,8 +346,7 @@ describe('DecompressView', () => {
     await nextTick()
 
     wrapper.findComponent({ name: 'AeroTable' }).vm.$emit('retry-with-password', taskId)
-    await nextTick()
-    await nextTick()
+    await flushPromises()
 
     expect(mocks.decompressFile).toHaveBeenCalledWith(
       'C:/archives/encrypted.7z',
