@@ -6,7 +6,7 @@
 
 ### 面向 Windows 的本地压缩、解压、归档浏览与密码管理工具
 
-[![Version](https://img.shields.io/badge/version-1.1.5-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.1.6-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri%20%2B%20Rust-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -23,7 +23,7 @@
 
 Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows 桌面归档工具。它不仅能完成日常压缩与解压，还把批量任务、压缩包浏览、密码保险箱、完整性检查、资源预检、任务模板和资源管理器右键菜单整合在同一个界面中。
 
-当前版本：**v1.1.5**。
+当前版本：**v1.1.6**。
 
 ## 真实运行界面
 
@@ -198,6 +198,17 @@ DOCX、XLSX、PPTX、ODT、ODS、EPUB 等文档容器不会被当作普通压缩
 - 解压流程检查路径穿越、资源预算、磁盘空间、冲突策略和取消状态。
 - Windows 下载来源标记可以随安全解压事务传播，也可以在设置中关闭。
 - 任务模板不会跨设备携带固定密码、危险额外参数或删除源文件授权。
+
+## v1.1.6 更新重点
+
+- 统一密码解压状态机，未加密归档不再进入密码破解流程或产生虚假成功日志；密码本、导入字典和推荐字典按明确授权依次尝试。
+- 批量压缩与解压接通有界并发，同一输出目录强制串行；默认并发仍为 1，避免在未经验证的存储介质上激进调度。
+- 使用引擎真实处理字节展示速度和预计剩余时间，不支持字节回调的路线不再显示模拟吞吐。
+- 7Z 固实压缩落实为原生单压缩块并支持 AES 密码往返；分卷创建能力按真实实现收敛为无密码 ZIP 普通文件。
+- 非原生密码格式转为 AES-256 7Z 时会提前显示最终扩展名，并在创建任务前要求确认。
+- 新增 Windows Release 可见桌面和安装态门禁，覆盖并发、串行、取消、右键菜单、覆盖安装、卸载清理和用户数据恢复。
+
+完整记录见 [v1.1.6 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.6) 和 [发布说明](long-compress-assistant/docs/RELEASE_NOTES_1.1.6.md)。
 
 ## v1.1.5 更新重点
 
