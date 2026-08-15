@@ -58,10 +58,10 @@ describe('Tauri compression integration', () => {
   it('forwards complete compression settings', async () => {
     const commands = useTauriCommands()
 
-    await commands.compressFiles('task-1', ['C:/data/a.txt'], 'C:/data/a.7z', {
-      format: '7z',
+    await commands.compressFiles('task-1', ['C:/data/a.txt'], 'C:/data/a.zip', {
+      format: 'zip',
       level: 9,
-      password: 'secret',
+      password: undefined,
       split_size: 1024,
       preserve_paths: true,
       delete_after: false,
@@ -70,8 +70,8 @@ describe('Tauri compression integration', () => {
     expect(mocks.invoke).toHaveBeenCalledWith('compress_files', {
       taskId: 'task-1',
       files: ['C:/data/a.txt'],
-      outputPath: 'C:/data/a.7z',
-      options: expect.objectContaining({ format: '7z', level: 9, split_size: 1024 }),
+      outputPath: 'C:/data/a.zip',
+      options: expect.objectContaining({ format: 'zip', level: 9, split_size: 1024 }),
     })
   })
 

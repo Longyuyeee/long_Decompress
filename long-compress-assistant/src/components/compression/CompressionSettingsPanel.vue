@@ -23,6 +23,7 @@ interface Props {
   modelValue?: CompressionOptions
   outputPath?: string
   allowSingleFileFormats?: boolean
+  allowSplitArchive?: boolean
   suggestedFilename?: string
 }
 
@@ -30,6 +31,7 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: undefined,
   outputPath: '',
   allowSingleFileFormats: true,
+  allowSplitArchive: true,
   suggestedFilename: ''
 })
 
@@ -73,6 +75,9 @@ const newProfileDescription = ref('')
 
 const compressionFormats = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
 const selectedFormat = computed(() => compressionFormats.value.find(format => format.value === compressionOptions.value.format))
+const canCreateSplitArchive = computed(() =>
+  Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive && !compressionOptions.value.password)
+)
 
 onMounted(() => {
   void archiveEngine.refresh()
@@ -129,6 +134,12 @@ watch(() => compressionOptions.value.format, () => {
   if (!supportsPassword.value) {
     compressionOptions.value.password = ''
   }
+  if (!canCreateSplitArchive.value) {
+    compressionOptions.value.splitArchive = false
+  }
+  if (compressionOptions.value.format !== '7z') {
+    compressionOptions.value.createSolidArchive = false
+  }
 })
 
 watch(() => compressionOptions.value.deleteAfter, (deleteAfter) => {
@@ -163,6 +174,14 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
   if (currentFormat && isFormatDisabled(currentFormat)) {
     compressionOptions.value.format = 'zip'
   }
+})
+
+watch(() => props.allowSplitArchive, allowSplitArchive => {
+  if (!allowSplitArchive) compressionOptions.value.splitArchive = false
+})
+
+watch(() => compressionOptions.value.password, () => {
+  if (!canCreateSplitArchive.value) compressionOptions.value.splitArchive = false
 })
 
 const applyProfile = (profile: CompressionProfile) => {
@@ -395,7 +414,7 @@ const handlePasswordGenerated = (password: string) => {
             <input data-testid="compression-verify-after" v-model="compressionOptions.verifyAfter" type="checkbox" :disabled="compressionOptions.deleteAfter" />
             <span><strong>{{ appStore.t('preset.verify_after') }}</strong><small>{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</small></span>
           </label>
-          <label class="advanced-option">
+          <label v-if="canCreateSplitArchive" class="advanced-option">
             <input v-model="compressionOptions.splitArchive" type="checkbox" />
             <span><strong>{{ appStore.t('preset.split_archive') }}</strong><small>把大压缩包拆成多个便于传输的分卷</small></span>
           </label>

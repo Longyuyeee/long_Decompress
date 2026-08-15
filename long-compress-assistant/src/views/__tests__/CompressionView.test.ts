@@ -132,6 +132,28 @@ describe('CompressionView', () => {
     expect(taskStore.tasks).toHaveLength(0)
   })
 
+  it('passes the selected 7z solid mode to the native compression command', async () => {
+    const wrapper = mountView()
+    const compressionStore = useCompressionStore()
+    compressionStore.globalSettings.format = '7z'
+    compressionStore.globalSettings.createSolidArchive = true
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(useAppStore().t('compress.start')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(mocks.compressFiles).toHaveBeenCalledWith(
+      expect.any(String),
+      ['C:/input/sample.txt'],
+      'C:/input/sample.7z',
+      expect.objectContaining({ format: '7z', create_solid_archive: true }),
+    )
+  })
+
   it('aligns each draft row into archive name, source path, and status-progress columns', async () => {
     const wrapper = mountView()
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])

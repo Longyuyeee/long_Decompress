@@ -59,6 +59,7 @@ export interface Task {
     level: number
     password?: string
     split_size?: number | null
+    create_solid_archive?: boolean
     preserve_paths?: boolean
     delete_after?: boolean
     verify_after?: boolean

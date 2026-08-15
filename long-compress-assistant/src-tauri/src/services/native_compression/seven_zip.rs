@@ -7,7 +7,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
+    atomic::{AtomicBool, AtomicU64, Ordering},
     Arc,
 };
 use tauri::Window;
@@ -93,54 +93,116 @@ pub(crate) fn compress<R: CompressionRuntime>(
     methods.push(lzma_options.into());
     writer.set_content_methods(methods);
 
-    for (index, entry) in entries.iter().enumerate() {
-        runtime.check_cancellation()?;
-        let archive_entry =
-            sevenz_rust::SevenZArchiveEntry::from_path(&entry.path, entry.archive_name.clone());
-        if entry.is_dir {
-            writer
-                .push_archive_entry::<&[u8]>(archive_entry, None)
-                .map_err(|error| CompressionError::CompressionFailed(error.to_string()))?;
-        } else {
-            let file = File::open(&entry.path)?;
+    if options.create_solid_archive {
+        let processed = Arc::new(AtomicU64::new(0));
+        let last_emitted = Arc::new(AtomicU64::new(0));
+        let mut solid_entries = Vec::new();
+        let mut solid_readers = Vec::new();
+
+        for entry in &entries {
+            runtime.check_cancellation()?;
+            let archive_entry = sevenz_rust::SevenZArchiveEntry::from_path(
+                &entry.path,
+                entry.archive_name.clone(),
+            );
+            if entry.is_dir {
+                writer
+                    .push_archive_entry::<&[u8]>(archive_entry, None)
+                    .map_err(|error| CompressionError::CompressionFailed(error.to_string()))?;
+                continue;
+            }
+
+            let processed = processed.clone();
+            let last_emitted = last_emitted.clone();
             let current_name = entry.archive_name.clone();
-            let mut last_emitted = processed_bytes;
-            let progress_reader =
-                CancellableProgressReader::new(file, runtime.cancellation_flag(), |read| {
-                    processed_bytes = processed_bytes.saturating_add(read);
-                    if processed_bytes.saturating_sub(last_emitted) >= PROGRESS_EMIT_INTERVAL_BYTES
-                        || processed_bytes >= total_bytes
+            let progress_reader = CancellableProgressReader::new(
+                File::open(&entry.path)?,
+                runtime.cancellation_flag(),
+                move |read| {
+                    let current = processed.fetch_add(read, Ordering::Relaxed) + read;
+                    let previous = last_emitted.load(Ordering::Relaxed);
+                    if current.saturating_sub(previous) >= PROGRESS_EMIT_INTERVAL_BYTES
+                        || current >= total_bytes
                     {
+                        last_emitted.store(current, Ordering::Relaxed);
                         if let Some(window) = window {
                             runtime.emit_progress(
                                 window,
                                 task_id,
-                                processed_bytes as f32 / total_bytes as f32,
+                                current as f32 / total_bytes as f32,
                                 Some(current_name.clone()),
-                                processed_bytes,
+                                current,
                                 total_bytes,
                             );
                         }
-                        last_emitted = processed_bytes;
                     }
-                });
-            if let Err(error) = writer.push_archive_entry(archive_entry, Some(progress_reader)) {
+                },
+            );
+            solid_entries.push(archive_entry);
+            solid_readers.push(sevenz_rust::SourceReader::new(progress_reader));
+        }
+
+        if !solid_entries.is_empty() {
+            if let Err(error) = writer.push_archive_entries(
+                solid_entries,
+                sevenz_rust::SeqReader::new(solid_readers),
+            ) {
                 if runtime.cancellation_flag().load(Ordering::Relaxed) {
                     return Err(CompressionError::Cancelled.into());
                 }
                 return Err(CompressionError::CompressionFailed(error.to_string()).into());
             }
         }
-        if processed_bytes == 0 {
-            if let Some(window) = window {
-                runtime.emit_progress(
-                    window,
-                    task_id,
-                    (index + 1) as f32 / entries.len().max(1) as f32,
-                    Some(entry.archive_name.clone()),
-                    0,
-                    0,
-                );
+    } else {
+        for (index, entry) in entries.iter().enumerate() {
+            runtime.check_cancellation()?;
+            let archive_entry =
+                sevenz_rust::SevenZArchiveEntry::from_path(&entry.path, entry.archive_name.clone());
+            if entry.is_dir {
+                writer
+                    .push_archive_entry::<&[u8]>(archive_entry, None)
+                    .map_err(|error| CompressionError::CompressionFailed(error.to_string()))?;
+            } else {
+                let file = File::open(&entry.path)?;
+                let current_name = entry.archive_name.clone();
+                let mut last_emitted = processed_bytes;
+                let progress_reader =
+                    CancellableProgressReader::new(file, runtime.cancellation_flag(), |read| {
+                        processed_bytes = processed_bytes.saturating_add(read);
+                        if processed_bytes.saturating_sub(last_emitted) >= PROGRESS_EMIT_INTERVAL_BYTES
+                            || processed_bytes >= total_bytes
+                        {
+                            if let Some(window) = window {
+                                runtime.emit_progress(
+                                    window,
+                                    task_id,
+                                    processed_bytes as f32 / total_bytes as f32,
+                                    Some(current_name.clone()),
+                                    processed_bytes,
+                                    total_bytes,
+                                );
+                            }
+                            last_emitted = processed_bytes;
+                        }
+                    });
+                if let Err(error) = writer.push_archive_entry(archive_entry, Some(progress_reader)) {
+                    if runtime.cancellation_flag().load(Ordering::Relaxed) {
+                        return Err(CompressionError::Cancelled.into());
+                    }
+                    return Err(CompressionError::CompressionFailed(error.to_string()).into());
+                }
+            }
+            if processed_bytes == 0 {
+                if let Some(window) = window {
+                    runtime.emit_progress(
+                        window,
+                        task_id,
+                        (index + 1) as f32 / entries.len().max(1) as f32,
+                        Some(entry.archive_name.clone()),
+                        0,
+                        0,
+                    );
+                }
             }
         }
     }
@@ -266,6 +328,51 @@ mod tests {
             std::fs::read(extracted.join("secret.txt")).expect("read extracted secret"),
             b"encrypted seven zip payload"
         );
+    }
+
+    #[test]
+    fn solid_option_places_multiple_files_in_one_compression_folder() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let first = temp.path().join("first.txt");
+        let second = temp.path().join("second.txt");
+        let archive = temp.path().join("solid.7z");
+        std::fs::write(&first, b"shared-prefix-first").expect("write first");
+        std::fs::write(&second, b"shared-prefix-second").expect("write second");
+
+        compress(
+            &TestRuntime::default(),
+            None,
+            "solid-7z-task",
+            &[
+                first.to_string_lossy().to_string(),
+                second.to_string_lossy().to_string(),
+            ],
+            archive.to_string_lossy().as_ref(),
+            CompressionOptions {
+                password: Some("solid-password".to_string()),
+                create_solid_archive: true,
+                ..CompressionOptions::default()
+            },
+        )
+        .expect("create solid 7z");
+
+        let mut archive_file = File::open(&archive).expect("open solid archive");
+        let archive_len = archive_file.metadata().expect("archive metadata").len();
+        let password = sevenz_rust::Password::from("solid-password");
+        let metadata = sevenz_rust::Archive::read(
+            &mut archive_file,
+            archive_len,
+            password.as_slice(),
+        )
+            .expect("read solid metadata");
+
+        assert_eq!(metadata.folders.len(), 1);
+        assert_eq!(metadata.files.iter().filter(|entry| entry.has_stream).count(), 2);
+        let extracted = temp.path().join("solid-output");
+        sevenz_rust::decompress_file_with_password(&archive, &extracted, password)
+            .expect("extract encrypted solid archive");
+        assert_eq!(std::fs::read(extracted.join("first.txt")).expect("first output"), b"shared-prefix-first");
+        assert_eq!(std::fs::read(extracted.join("second.txt")).expect("second output"), b"shared-prefix-second");
     }
 
     #[test]
