@@ -52,6 +52,14 @@ const compressionTaskById = computed(() =>
 )
 const taskForJob = (taskId?: string) => taskId ? compressionTaskById.value.get(taskId) : undefined
 
+const requestConfirmation = async (message: string, options: Parameters<typeof ask>[1]) => {
+  if (import.meta.env.VITE_DESKTOP_E2E === '1') {
+    const selected = window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopConfirmation()
+    if (selected !== undefined) return selected
+  }
+  return ask(message, options)
+}
+
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
     // 检查是否已经存在
@@ -303,7 +311,7 @@ const runCompression = async () => {
       .map(job => job.settings.format.toUpperCase())
   )]
   if (convertedPasswordFormats.length > 0) {
-    const confirmed = await ask(
+    const confirmed = await requestConfirmation(
       appStore.t('compress.password_7z_confirm').replace('{0}', convertedPasswordFormats.join('、')),
       { title: appStore.t('compress.password_7z_title'), type: 'warning' }
     )
@@ -312,7 +320,7 @@ const runCompression = async () => {
 
   let allowRarPasswordCli = false
   if (jobs.some(job => job.settings.format === 'rar' && Boolean(job.settings.password))) {
-    allowRarPasswordCli = await ask(
+    allowRarPasswordCli = await requestConfirmation(
       'WinRAR 的命令行编码器没有安全的密码输入通道。继续创建加密 RAR 时，密码会在本机进程参数中短暂可见。建议改用加密 ZIP 或 7Z。是否仍要继续？',
       { title: '加密 RAR 安全提示', type: 'warning' }
     )

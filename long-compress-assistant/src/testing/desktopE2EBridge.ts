@@ -9,6 +9,7 @@ import type { WatchFolderDraftBatch, WatchFolderRegistration } from '@/types/pro
 import type { ResourcePreflightReport } from '@/types/resourcePreflight'
 import type { CompressionAnalysisResult } from '@/composables/useTauriCommands'
 import { attachResourcePreflight } from '@/utils/resourcePreflight'
+import { runArchiveTasks } from '@/utils/taskConcurrency'
 
 const TEST_TASK_ID = 'desktop-e2e-lifecycle-task'
 
@@ -86,6 +87,33 @@ export interface DesktopE2EBridge {
     logs: string[]
   }>
   startSevenZipCompression: (sourcePath: string, archivePath: string) => Promise<string>
+  startArchiveCompressionBatch: (
+    jobs: Array<{ sourcePath: string; archivePath: string }>,
+  ) => Promise<string[]>
+  startSharedOutputExtraction: (archivePaths: string[], outputPath: string) => Promise<string[]>
+  archiveFlowAuditState: () => {
+    compressionMaxActive: number
+    compressionDone: boolean
+    extractionMaxActive: number
+    extractionDone: boolean
+    telemetry: Array<{ taskId: string; speed?: string; etaSeconds?: number }>
+    errors: string[]
+  }
+  runEncryptedSolidSevenZipRoundTrip: (
+    sourcePath: string,
+    archivePath: string,
+    outputPath: string,
+    password: string,
+  ) => Promise<string>
+  queueDesktopConfirmations: (choices: boolean[]) => void
+  takeDesktopConfirmation: () => boolean | undefined
+  seedPasswordFallbackWorkspace: (sourcePath: string, outputPath: string) => string
+  compressionWorkspaceAuditState: () => {
+    taskCount: number
+    pendingGroupCount: number
+    groupFormats: string[]
+    outputPaths: string[]
+  }
   showAvailableUpdate: () => void
   seedResponsiveWorkspace: (type: 'compression' | 'decompression') => string
   setCloseToTray: (enabled: boolean) => Promise<void>
@@ -161,6 +189,15 @@ export const installDesktopE2EBridge = () => {
   const compressionStore = useCompressionStore()
   const updateStore = useUpdateStore()
   const taskTemplateDialogSelections: Array<string | string[] | null> = []
+  const desktopConfirmations: boolean[] = []
+  const archiveFlowAudit = {
+    compressionMaxActive: 0,
+    compressionDone: false,
+    extractionMaxActive: 0,
+    extractionDone: false,
+    telemetry: [] as Array<{ taskId: string; speed?: string; etaSeconds?: number }>,
+    errors: [] as string[],
+  }
 
   const addActiveTask = () => {
     taskStore.removeTask(TEST_TASK_ID)
@@ -478,6 +515,191 @@ export const installDesktopE2EBridge = () => {
         })
         .finally(() => void syncActiveState())
       return taskId
+    },
+
+    async startArchiveCompressionBatch(jobs) {
+      archiveFlowAudit.compressionMaxActive = 0
+      archiveFlowAudit.compressionDone = false
+      archiveFlowAudit.telemetry = []
+      archiveFlowAudit.errors = []
+      let active = 0
+      const taskIds = jobs.map((job, index) => {
+        const taskId = `desktop-e2e-concurrent-compress-${Date.now()}-${index}`
+        addArchiveTask(taskId, 'compression', job.sourcePath, job.archivePath)
+        return taskId
+      })
+      const unlisten = await listen<{
+        task_id: string
+        speed?: string
+        eta_seconds?: number
+      }>('task-progress', event => {
+        if (!taskIds.includes(event.payload.task_id)) return
+        if (event.payload.speed || event.payload.eta_seconds !== undefined) {
+          archiveFlowAudit.telemetry.push({
+            taskId: event.payload.task_id,
+            speed: event.payload.speed,
+            etaSeconds: event.payload.eta_seconds,
+          })
+        }
+      })
+      await syncActiveState()
+      void runArchiveTasks(jobs, 2, async (job, index) => {
+        const taskId = taskIds[index]
+        active++
+        archiveFlowAudit.compressionMaxActive = Math.max(
+          archiveFlowAudit.compressionMaxActive,
+          active,
+        )
+        taskStore.updateTaskStatus(taskId, 'compressing')
+        try {
+          await invoke('compress_files', {
+            taskId,
+            files: [job.sourcePath],
+            outputPath: job.archivePath,
+            options: { ...sevenZipOptions, level: 1 },
+          })
+          taskStore.updateTaskStatus(taskId, 'completed')
+        } catch (error) {
+          archiveFlowAudit.errors.push(String(error))
+          taskStore.updateTaskStatus(taskId, 'failed')
+        } finally {
+          active--
+        }
+      }).finally(() => {
+        archiveFlowAudit.compressionDone = true
+        unlisten()
+        void syncActiveState()
+      })
+      return taskIds
+    },
+
+    async startSharedOutputExtraction(archivePaths, outputPath) {
+      archiveFlowAudit.extractionMaxActive = 0
+      archiveFlowAudit.extractionDone = false
+      let active = 0
+      const taskIds = archivePaths.map((archivePath, index) => {
+        const taskId = `desktop-e2e-serial-extract-${Date.now()}-${index}`
+        addArchiveTask(taskId, 'decompression', archivePath, outputPath)
+        return taskId
+      })
+      await syncActiveState()
+      void runArchiveTasks(archivePaths, 2, async (archivePath, index) => {
+        const taskId = taskIds[index]
+        active++
+        archiveFlowAudit.extractionMaxActive = Math.max(
+          archiveFlowAudit.extractionMaxActive,
+          active,
+        )
+        taskStore.updateTaskStatus(taskId, 'extracting')
+        try {
+          await invoke('extract_file', {
+            taskId,
+            filePath: archivePath,
+            outputPath,
+            password: null,
+            options: extractionOptions,
+          })
+          taskStore.updateTaskStatus(taskId, 'completed')
+        } catch (error) {
+          archiveFlowAudit.errors.push(String(error))
+          taskStore.updateTaskStatus(taskId, 'failed')
+        } finally {
+          active--
+        }
+      }, () => outputPath.replace(/\\/g, '/').replace(/\/$/, '').toLocaleLowerCase())
+        .finally(() => {
+          archiveFlowAudit.extractionDone = true
+          void syncActiveState()
+        })
+      return taskIds
+    },
+
+    archiveFlowAuditState() {
+      return {
+        ...archiveFlowAudit,
+        telemetry: archiveFlowAudit.telemetry.map(item => ({ ...item })),
+        errors: [...archiveFlowAudit.errors],
+      }
+    },
+
+    async runEncryptedSolidSevenZipRoundTrip(sourcePath, archivePath, outputPath, password) {
+      const nonce = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+      const compressionTaskId = `desktop-e2e-solid-compress-${nonce}`
+      const extractionTaskId = `desktop-e2e-solid-extract-${nonce}`
+      addArchiveTask(compressionTaskId, 'compression', sourcePath, archivePath)
+      taskStore.updateTaskStatus(compressionTaskId, 'compressing')
+      await syncActiveState()
+      await invoke('compress_files', {
+        taskId: compressionTaskId,
+        files: [sourcePath],
+        outputPath: archivePath,
+        options: {
+          ...sevenZipOptions,
+          level: 5,
+          password,
+          create_solid_archive: true,
+        },
+      })
+      taskStore.updateTaskStatus(compressionTaskId, 'completed')
+
+      addArchiveTask(extractionTaskId, 'decompression', archivePath, outputPath)
+      taskStore.updateTaskStatus(extractionTaskId, 'extracting')
+      const extractedPath = await invoke<string>('extract_file', {
+        taskId: extractionTaskId,
+        filePath: archivePath,
+        outputPath,
+        password,
+        options: extractionOptions,
+      })
+      taskStore.updateTaskStatus(extractionTaskId, 'completed')
+      await syncActiveState()
+      return extractedPath
+    },
+
+    queueDesktopConfirmations(choices) {
+      desktopConfirmations.splice(0, desktopConfirmations.length, ...choices)
+    },
+
+    takeDesktopConfirmation() {
+      return desktopConfirmations.shift()
+    },
+
+    seedPasswordFallbackWorkspace(sourcePath, outputPath) {
+      compressionStore.prepareQuickPacks()
+      taskStore.tasks.splice(0)
+      const draft = compressionStore.addTemplateDraft(
+        [{
+          name: sourcePath.split(/[\\/]/).pop() || 'password-fallback.txt',
+          path: sourcePath,
+          size: 1,
+          type: 'file',
+          isDirectory: false,
+        }],
+        'Desktop E2E 密码格式回退',
+        {
+          ...compressionStore.globalSettings,
+          format: 'tar',
+          password: 'desktop-e2e-password',
+          filename: 'password-fallback',
+        },
+      )
+      if (!draft) throw new Error('Unable to seed the password fallback workspace')
+      const group = compressionStore.groups.find(item => item.id === draft.id)
+      if (!group) throw new Error('Password fallback draft group was not created')
+      group.outputPath = outputPath
+      return draft.id
+    },
+
+    compressionWorkspaceAuditState() {
+      const pendingGroups = compressionStore.groups.filter(group => !group.taskId)
+      return {
+        taskCount: taskStore.tasks.length,
+        pendingGroupCount: pendingGroups.length,
+        groupFormats: pendingGroups.map(group =>
+          compressionStore.getEffectiveSettings(group.settings).format,
+        ),
+        outputPaths: pendingGroups.map(group => group.outputPath || ''),
+      }
     },
 
     showAvailableUpdate() {
