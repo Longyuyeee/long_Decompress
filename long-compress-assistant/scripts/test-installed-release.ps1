@@ -35,7 +35,7 @@ $validationSucceeded = $false
 $baselineContextMenuMode = 'none'
 $contextMenuRegistryBackups = @()
 $evidence = [ordered]@{
-  schemaVersion = 1
+  schemaVersion = 2
   startedAt = (Get-Date).ToUniversalTime().ToString('o')
   machine = [ordered]@{
     windows = [Environment]::OSVersion.VersionString
@@ -135,17 +135,31 @@ function Restore-UserData {
 function Stop-InstalledApplication {
   param([string]$InstallLocation)
   $expectedExecutable = [IO.Path]::GetFullPath((Join-Path $InstallLocation $applicationName))
-  Get-CimInstance Win32_Process -Filter "Name = '$applicationName'" -ErrorAction SilentlyContinue |
+  $ownedProcesses = @(Get-CimInstance Win32_Process -Filter "Name = '$applicationName'" -ErrorAction SilentlyContinue |
     Where-Object {
       $_.ExecutablePath -and
       [IO.Path]::GetFullPath($_.ExecutablePath).Equals(
         $expectedExecutable,
         [StringComparison]::OrdinalIgnoreCase
       )
-    } |
-    ForEach-Object {
-      Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop
-    }
+    })
+  foreach ($process in $ownedProcesses) {
+    Stop-Process -Id $process.ProcessId -Force -ErrorAction Stop
+  }
+  foreach ($process in $ownedProcesses) {
+    Wait-Process -Id $process.ProcessId -Timeout 10 -ErrorAction SilentlyContinue
+  }
+  $remaining = @(Get-CimInstance Win32_Process -Filter "Name = '$applicationName'" -ErrorAction SilentlyContinue |
+    Where-Object {
+      $_.ExecutablePath -and
+      [IO.Path]::GetFullPath($_.ExecutablePath).Equals(
+        $expectedExecutable,
+        [StringComparison]::OrdinalIgnoreCase
+      )
+    })
+  if ($remaining.Count -ne 0) {
+    throw "Installed application did not exit: $expectedExecutable"
+  }
 }
 
 function Get-ContextMenuMode {
@@ -304,30 +318,16 @@ function Restore-ContextMenuRegistry {
 }
 
 function Restore-ContextMenuMode {
-  param($InstalledState, [string]$ExpectedMode)
+  param([string]$ExpectedMode, [string]$ExpectedClassicCommand)
   Restore-ContextMenuRegistry
-  if ($ExpectedMode -eq 'native') {
-    $process = Start-Process -FilePath $InstalledState.executable -PassThru -WindowStyle Hidden
-    try {
-      $deadline = (Get-Date).AddSeconds(20)
-      do {
-        if ((Get-ContextMenuMode) -eq 'native') { break }
-        Start-Sleep -Milliseconds 250
-      } while ((Get-Date) -lt $deadline)
-    } finally {
-      Stop-InstalledApplication $InstalledState.installLocation
-      if (-not $process.HasExited) {
-        $process.WaitForExit(5000) | Out-Null
-      }
-    }
-  }
   Add-Check 'baseline context-menu mode is restored' (
     (Get-ContextMenuMode) -eq $ExpectedMode
   ) "expected=$ExpectedMode; actual=$(Get-ContextMenuMode)"
   if ($ExpectedMode -eq 'legacy') {
+    $actualCommand = Get-ClassicContextMenuCommand
     Add-Check 'baseline context-menu target is restored' (
-      Test-ClassicContextMenuTarget $InstalledState.executable
-    ) "expected=$($InstalledState.executable); actual=$(Get-ClassicContextMenuCommand)"
+      $actualCommand.Equals($ExpectedClassicCommand, [StringComparison]::OrdinalIgnoreCase)
+    ) "expected=$ExpectedClassicCommand; actual=$actualCommand"
   }
 }
 
@@ -442,6 +442,7 @@ try {
     @(Get-CimInstance Win32_Process -Filter "Name = '$applicationName'" -ErrorAction SilentlyContinue).Count -eq 0
   ) "Close $productName before running installed-release validation."
   $baselineContextMenuMode = Get-ContextMenuMode
+  $baselineClassicContextMenuCommand = Get-ClassicContextMenuCommand
   Add-Check 'baseline context-menu mode is valid' (
     $baselineContextMenuMode -in @('none', 'legacy', 'native')
   ) "actual=$baselineContextMenuMode"
@@ -475,6 +476,8 @@ try {
       $candidateProcess.WaitForExit(5000) | Out-Null
     }
   }
+  $candidateRuntimeFingerprints = Get-DataFingerprints
+  $evidence.candidateRuntimeDataFingerprints = $candidateRuntimeFingerprints
 
   $candidateUninstaller = $candidateState.uninstaller
   # Use NSIS silent uninstall here. `/P` is the passive installer switch; when
@@ -499,12 +502,14 @@ try {
     Start-Sleep -Milliseconds 250
   }
   Assert-Uninstalled $candidateState.installLocation
-  Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints) 'uninstall'
+  Compare-Fingerprints $candidateRuntimeFingerprints (Get-DataFingerprints) 'uninstall'
 
+  Restore-UserData
+  Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints) 'pre-restore user data'
   Invoke-Installer $previousInstallerPath
   $restoredState = Assert-Installed $PreviousVersion $initialState.installLocation
   Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints) 'baseline restore'
-  Restore-ContextMenuMode $restoredState $baselineContextMenuMode
+  Restore-ContextMenuMode $baselineContextMenuMode $baselineClassicContextMenuCommand
   Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints) 'baseline menu restore'
   $restoreRequired = $false
   $validationSucceeded = $true
@@ -520,7 +525,7 @@ try {
       Restore-UserData
       $recoveredState = Get-InstalledState
       if ($recoveredState) {
-        Restore-ContextMenuMode $recoveredState $baselineContextMenuMode
+        Restore-ContextMenuMode $baselineContextMenuMode $baselineClassicContextMenuCommand
       }
       $evidence.recovery = 'Previous installer and user-data backup restored after failure.'
     } catch {
