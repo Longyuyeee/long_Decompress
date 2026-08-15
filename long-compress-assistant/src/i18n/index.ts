@@ -58,7 +58,7 @@ export const translations: Record<string, Record<string, string>> = {
     'settings.performance.auto_start': '开机自动启动',
     'settings.performance.auto_start.desc': '在系统登录时自动启动应用程序',
     'settings.performance.threads': '同时运行的归档任务',
-    'settings.performance.threads.desc': '控制批量压缩与解压的任务并发数；同一输出目录会自动串行保护',
+    'settings.performance.threads.desc': '控制批量压缩与解压的任务并发数；默认 1，同一输出目录会自动串行保护',
     // 暴力破解
     'settings.bruteforce': '暴力破解引擎',
     'settings.bruteforce.enable': '启用智能密码破解',
@@ -637,7 +637,7 @@ export const translations: Record<string, Record<string, string>> = {
     'settings.performance.auto_start': 'Auto-start on Boot',
     'settings.performance.auto_start.desc': 'Launch application on system login',
     'settings.performance.threads': 'Concurrent Archive Tasks',
-    'settings.performance.threads.desc': 'Controls batch compression and extraction concurrency; shared output folders remain serialized',
+    'settings.performance.threads.desc': 'Controls batch compression and extraction concurrency; defaults to 1 and shared output folders remain serialized',
     // Brute Force
     'settings.bruteforce': 'Brute Force Engine',
     'settings.bruteforce.enable': 'Enable Intelligent Brute Force',

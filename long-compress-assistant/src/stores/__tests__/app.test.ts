@@ -71,4 +71,24 @@ describe('App Store Explorer context menu synchronization', () => {
     store.resetSettings()
     expect(store.settings.preserveMarkOfWeb).toBe(true)
   })
+
+  it('keeps legacy installations serial until concurrency is explicitly changed', () => {
+    localStorage.setItem('app-settings', JSON.stringify({ maxConcurrentTasks: 4 }))
+
+    const store = useAppStore()
+
+    expect(store.settings.maxConcurrentTasks).toBe(1)
+    expect(store.settings.archiveTaskConcurrencyVersion).toBe(1)
+  })
+
+  it('preserves an explicitly configured concurrency-v1 value', () => {
+    localStorage.setItem('app-settings', JSON.stringify({
+      maxConcurrentTasks: 3,
+      archiveTaskConcurrencyVersion: 1,
+    }))
+
+    const store = useAppStore()
+
+    expect(store.settings.maxConcurrentTasks).toBe(3)
+  })
 })
