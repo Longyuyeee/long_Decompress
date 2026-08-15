@@ -9,6 +9,7 @@ interface Props {
   settings: CompressionOptions
   outputPath: string
   allowSingleFileFormats: boolean
+  allowSplitArchive: boolean
 }
 
 interface Emits {
@@ -62,6 +63,7 @@ const handleTemplateDraftCreated = () => {
         v-model="localSettings"
         v-model:outputPath="localOutputPath"
         :allow-single-file-formats="allowSingleFileFormats"
+        :allow-split-archive="allowSplitArchive"
         @template-draft-created="handleTemplateDraftCreated"
       />
     </div>

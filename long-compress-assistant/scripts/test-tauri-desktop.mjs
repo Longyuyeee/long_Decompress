@@ -98,6 +98,7 @@ const smartAnalysisOnly = process.argv.includes('--smart-analysis-only')
 const archiveBrowserOnly = process.argv.includes('--archive-browser-only')
 const markOfWebOnly = process.argv.includes('--mark-of-web-only')
 const compressionVerificationOnly = process.argv.includes('--compression-verification-only')
+const archiveFlowOnly = process.argv.includes('--archive-flow-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -1011,6 +1012,136 @@ async function restartDesktopSession() {
   await waitForDesktopReady()
 }
 
+async function runArchiveFlowDesktopGate() {
+  console.log('[desktop-e2e] verifying concurrent compression and visible throughput telemetry')
+  await callDesktopBridge('clearTasks')
+  const flowRoot = path.join(fixtureDirectory, 'archive-flow')
+  const sourceRoot = path.join(flowRoot, 'sources')
+  const archiveRoot = path.join(flowRoot, 'archives')
+  const sharedOutput = path.join(flowRoot, 'shared-output')
+  mkdirSync(sourceRoot, { recursive: true })
+  mkdirSync(archiveRoot, { recursive: true })
+  mkdirSync(sharedOutput, { recursive: true })
+
+  const compressionJobs = [0, 1].map(index => {
+    const sourcePath = path.join(sourceRoot, `concurrent-${index + 1}.bin`)
+    const archivePath = path.join(archiveRoot, `concurrent-${index + 1}.7z`)
+    writeFileSync(sourcePath, randomBytes(128 * 1024 * 1024))
+    return { sourcePath, archivePath }
+  })
+
+  const compressionTaskIds = await callDesktopBridge(
+    'startArchiveCompressionBatch',
+    compressionJobs,
+  )
+  await driver.wait(async () => {
+    const state = await callDesktopBridge('archiveFlowAuditState')
+    return state.compressionMaxActive === 2
+  }, 30_000)
+
+  const progressSummary = await waitForElement('.progress-summary')
+  await progressSummary.click()
+  await driver.wait(async () => {
+    const panels = await driver.findElements(By.css('.progress-panel'))
+    if (panels.length === 0) return false
+    const text = await panels[0].getAttribute('textContent')
+    return /速度[\s\S]*\/s/.test(text) && /(剩余|ETA)/.test(text)
+  }, 60_000)
+
+  const compressionState = await driver.wait(async () => {
+    const state = await callDesktopBridge('archiveFlowAuditState')
+    return state.compressionDone ? state : false
+  }, 180_000)
+  assert.equal(compressionState.compressionMaxActive, 2)
+  assert.deepEqual(compressionState.errors, [])
+  assert.ok(
+    compressionState.telemetry.some(item => item.speed && item.etaSeconds !== undefined),
+    'the Release desktop flow must receive real speed and ETA telemetry',
+  )
+  for (let index = 0; index < compressionJobs.length; index += 1) {
+    assert.equal(await callDesktopBridge('taskStatus', compressionTaskIds[index]), 'completed')
+    await waitForStableFile(compressionJobs[index].archivePath, 30_000)
+  }
+
+  console.log('[desktop-e2e] verifying same-output extraction serialization')
+  const extractionTaskIds = await callDesktopBridge(
+    'startSharedOutputExtraction',
+    compressionJobs.map(job => job.archivePath),
+    sharedOutput,
+  )
+  const extractionState = await driver.wait(async () => {
+    const state = await callDesktopBridge('archiveFlowAuditState')
+    return state.extractionDone ? state : false
+  }, 180_000)
+  assert.equal(extractionState.extractionMaxActive, 1)
+  assert.deepEqual(extractionState.errors, [])
+  for (const taskId of extractionTaskIds) {
+    assert.equal(await callDesktopBridge('taskStatus', taskId), 'completed')
+  }
+  for (const job of compressionJobs) {
+    const extractedFile = path.join(sharedOutput, path.basename(job.sourcePath))
+    assert.equal(fileSha256(extractedFile), fileSha256(job.sourcePath))
+  }
+
+  console.log('[desktop-e2e] verifying encrypted solid 7Z creation and extraction')
+  const solidSource = path.join(flowRoot, 'solid-source')
+  const solidArchive = path.join(archiveRoot, 'encrypted-solid.7z')
+  const solidOutput = path.join(flowRoot, 'solid-output')
+  const solidPassword = 'Long-Desktop-E2E-2026!'
+  mkdirSync(solidSource, { recursive: true })
+  writeFileSync(path.join(solidSource, 'alpha.txt'), 'alpha solid payload\n'.repeat(16_384), 'utf8')
+  writeFileSync(path.join(solidSource, 'beta.txt'), 'beta solid payload\n'.repeat(16_384), 'utf8')
+  await callDesktopBridge(
+    'runEncryptedSolidSevenZipRoundTrip',
+    solidSource,
+    solidArchive,
+    solidOutput,
+    solidPassword,
+  )
+  const solidListing = spawnSync(
+    bundledSevenZip,
+    ['l', '-slt', `-p${solidPassword}`, solidArchive],
+    { encoding: 'utf8', windowsHide: true },
+  )
+  assert.equal(solidListing.status, 0, solidListing.stderr || solidListing.stdout)
+  assert.match(solidListing.stdout, /Solid = \+/)
+  const extractedAlpha = path.join(solidOutput, 'solid-source', 'alpha.txt')
+  const extractedBeta = path.join(solidOutput, 'solid-source', 'beta.txt')
+  assert.equal(readFileSync(extractedAlpha, 'utf8'), readFileSync(path.join(solidSource, 'alpha.txt'), 'utf8'))
+  assert.equal(readFileSync(extractedBeta, 'utf8'), readFileSync(path.join(solidSource, 'beta.txt'), 'utf8'))
+
+  console.log('[desktop-e2e] verifying explicit password-format fallback decline and acceptance')
+  const fallbackSource = path.join(flowRoot, 'password-fallback.txt')
+  const fallbackOutput = path.join(flowRoot, 'password-fallback-output')
+  const fallbackArchive = path.join(fallbackOutput, 'password-fallback.7z')
+  writeFileSync(fallbackSource, 'password fallback payload', 'utf8')
+  mkdirSync(fallbackOutput, { recursive: true })
+  await callDesktopBridge('seedPasswordFallbackWorkspace', fallbackSource, fallbackOutput)
+  await callDesktopBridge('queueDesktopConfirmations', [false])
+  let navigation = await driver.findElements(By.css('aside nav > button'))
+  await navigation[1].click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="start-compression"]')).click()
+  await driver.wait(async () => {
+    const state = await callDesktopBridge('compressionWorkspaceAuditState')
+    return state.taskCount === 0 && state.pendingGroupCount === 1
+  }, 30_000)
+  assert.equal(existsSync(fallbackArchive), false, 'declining the 7Z fallback must not create a task output')
+
+  await callDesktopBridge('queueDesktopConfirmations', [true])
+  await (await waitForElement('[data-testid="start-compression"]')).click()
+  await waitForStableFile(fallbackArchive, 60_000)
+  const acceptedState = await callDesktopBridge('compressionWorkspaceAuditState')
+  assert.equal(acceptedState.taskCount, 1)
+  assert.equal(acceptedState.pendingGroupCount, 0)
+  const fallbackExtract = path.join(flowRoot, 'password-fallback-extract')
+  await callDesktopBridge('extractArchive', fallbackArchive, fallbackExtract, 'desktop-e2e-password')
+  assert.equal(
+    readFileSync(path.join(fallbackExtract, 'password-fallback.txt'), 'utf8'),
+    readFileSync(fallbackSource, 'utf8'),
+  )
+}
+
 try {
   mkdirSync(webviewUserDataDirectory, { recursive: true })
   await startTauriDriver()
@@ -1036,6 +1167,12 @@ try {
   )
   const payload = `Long解压 real desktop round-trip ${new Date().toISOString()}\n`
   writeFileSync(sourcePath, payload, 'utf8')
+
+  if (archiveFlowOnly) {
+    await runArchiveFlowDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri archive-flow alignment gate passed.')
+  } else {
 
   forwardContextAction('--quick-pack', [sourcePath])
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
@@ -2605,6 +2742,7 @@ try {
 
   completedSuccessfully = true
   console.log('Real Windows Tauri desktop archive and lifecycle tests passed.')
+  }
   }
   }
   }

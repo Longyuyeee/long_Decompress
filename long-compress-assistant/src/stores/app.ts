@@ -29,6 +29,7 @@ export interface AppSettings {
   accentColor: string
   defaultOutputPath: string
   maxConcurrentTasks: number
+  archiveTaskConcurrencyVersion: number
   scanForViruses: boolean
   checkFileExtensions: boolean
   warnLargeFiles: boolean
@@ -97,7 +98,7 @@ export const useAppStore = defineStore('app', () => {
 
   const settings = ref<AppSettings>({
     theme: 'auto', language: 'zh-CN', accentColor: '#0ea5e9', defaultOutputPath: '',
-    maxConcurrentTasks: 4, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
+    maxConcurrentTasks: 1, archiveTaskConcurrencyVersion: 1, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
     savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
     sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
     bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
@@ -198,7 +199,7 @@ export const useAppStore = defineStore('app', () => {
   const updateSettings = (newSettings: Partial<AppSettings>) => {
     const merged = { ...settings.value, ...newSettings }
     // 输入校验：防止非法值
-    merged.maxConcurrentTasks = Math.max(1, Math.min(16, merged.maxConcurrentTasks || 4))
+    merged.maxConcurrentTasks = Math.max(1, Math.min(16, merged.maxConcurrentTasks || 1))
     merged.cacheSize = Math.max(50, Math.min(1000, merged.cacheSize || 200))
     merged.bruteForceMaxLen = Math.max(1, Math.min(20, merged.bruteForceMaxLen || 6))
     merged.uiScale = Math.max(60, Math.min(200, merged.uiScale || 100))
@@ -209,7 +210,7 @@ export const useAppStore = defineStore('app', () => {
   const resetSettings = () => {
     settings.value = {
       theme: 'auto', language: 'zh-CN', accentColor: '#0ea5e9', defaultOutputPath: '',
-      maxConcurrentTasks: 4, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
+      maxConcurrentTasks: 1, archiveTaskConcurrencyVersion: 1, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
       savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
@@ -241,12 +242,26 @@ export const useAppStore = defineStore('app', () => {
     } catch (e) { console.error(e) }
   }
 
+  const mergeStoredSettings = (parsed: Partial<AppSettings>) => {
+    const merged = { ...settings.value, ...parsed }
+    // Before concurrency v1 this setting was visible but the queues were always
+    // serial. Preserve that effective behavior on upgrade; users can explicitly
+    // raise the value after migration.
+    if (parsed.archiveTaskConcurrencyVersion !== 1) {
+      merged.maxConcurrentTasks = 1
+      merged.archiveTaskConcurrencyVersion = 1
+    }
+    merged.maxConcurrentTasks = Math.max(1, Math.min(16, merged.maxConcurrentTasks || 1))
+    return merged
+  }
+
   const loadSettingsFromStorage = () => {
     try {
       const savedSettings = localStorage.getItem('app-settings')
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings)
-        settings.value = { ...settings.value, ...parsed }
+        settings.value = mergeStoredSettings(parsed)
+        if (parsed.archiveTaskConcurrencyVersion !== 1) saveSettingsToStorage()
       }
       theme.value = (localStorage.getItem('app-theme') as any) || 'auto'
       language.value = localStorage.getItem('app-language') || 'zh-CN'
@@ -257,7 +272,7 @@ export const useAppStore = defineStore('app', () => {
       invoke<string>('load_app_settings').then(json => {
         if (json && json !== '{}') {
           const parsed = JSON.parse(json)
-          settings.value = { ...settings.value, ...parsed }
+          settings.value = mergeStoredSettings(parsed)
           saveSettingsToStorage()
           void synchronizeContextMenu(settings.value.contextMenuEnabled).catch(e => {
             console.warn('Failed to synchronize Explorer context menu:', e)

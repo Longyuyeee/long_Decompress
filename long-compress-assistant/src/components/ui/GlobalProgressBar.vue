@@ -51,6 +51,14 @@ const runningTask = computed(() => taskStats.value.runningTask)
 
 const currentTaskName = computed(() => runningTask.value?.name || '')
 
+const formatEta = (seconds?: number) => {
+  if (seconds === undefined || !Number.isFinite(seconds)) return ''
+  if (seconds < 60) return `${Math.max(1, Math.ceil(seconds))}s`
+  const minutes = Math.ceil(seconds / 60)
+  if (minutes < 60) return `${minutes}m`
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+}
+
 const isVisible = computed(() => taskStore.tasks.length > 0)
 
 const sortedTasks = computed(() =>
@@ -238,6 +246,7 @@ const copyToClipboard = async (text: string) => {
             <div v-if="runningTask" class="flex items-center gap-4 mt-2 text-xs text-dim">
               <span v-if="runningTask.stage">{{ appStore.t('progress.stage') }}: {{ stageLabel(runningTask.stage) }}</span>
               <span v-if="runningTask.speed">{{ appStore.t('progress.speed') }}: {{ runningTask.speed }}</span>
+              <span v-if="runningTask.etaSeconds !== undefined">{{ appStore.t('progress.remaining') }}: {{ formatEta(runningTask.etaSeconds) }}</span>
               <span v-if="runningTask.currentFile" class="truncate flex-1" :title="runningTask.currentFile">
                 {{ appStore.t('progress.current_file') }}: {{ runningTask.currentFile.split(/[\\/]/).pop() }}
               </span>
@@ -278,6 +287,7 @@ const copyToClipboard = async (text: string) => {
                     <span v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"
                           class="text-sm font-mono text-primary font-bold">{{ task.progress }}%</span>
                     <span v-if="task.speed" class="text-xs font-mono text-dim ml-1">{{ task.speed }}</span>
+                    <span v-if="task.etaSeconds !== undefined" class="text-xs font-mono text-dim ml-1">ETA {{ formatEta(task.etaSeconds) }}</span>
                   </div>
                   <!-- 进度条 -->
                   <div v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"

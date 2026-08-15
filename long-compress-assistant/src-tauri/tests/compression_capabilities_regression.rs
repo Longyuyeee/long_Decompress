@@ -13,6 +13,7 @@ fn compression_options(format: Option<&str>) -> CompressionOptions {
         level: 6,
         password: None,
         split_size: None,
+        create_solid_archive: false,
         preserve_paths: Some(true),
         delete_after: false,
         verify_after: true,
@@ -211,7 +212,7 @@ fn exposes_backend_compression_capability_matrix() {
     assert!(capabilities.iter().any(|capability| capability.format == "lzma" && capability.requires_7za));
     assert!(capabilities.iter().any(|capability| capability.format == "rar" && capability.requires_winrar));
     assert!(capabilities.iter().any(|capability| capability.format == "zip" && capability.supports_split));
-    assert!(capabilities.iter().any(|capability| capability.format == "7z" && capability.supports_split));
+    assert!(capabilities.iter().any(|capability| capability.format == "7z" && !capability.supports_split));
     assert!(capabilities.iter().any(|capability| capability.format == "wim" && capability.requires_7za));
 }
 

@@ -197,7 +197,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: true,
         single_file_only: false,
-        supports_split: true,
+        supports_split: false,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -404,6 +404,22 @@ pub fn validate_compression_request(
         .password
         .as_deref()
         .is_some_and(|password| !password.is_empty());
+    let split_requested = options.split_size.is_some_and(|size| size > 0);
+
+    if split_requested && !capability.is_some_and(|capability| capability.supports_split) {
+        return Err(CompressionError::CompressionFailed(format!(
+            "{} does not support split archive creation in the active engine.",
+            requested_format
+        ))
+        .into());
+    }
+
+    if options.create_solid_archive && requested_format != "7z" {
+        return Err(CompressionError::CompressionFailed(
+            "Solid compression is only supported for 7Z archives.".to_string(),
+        )
+        .into());
+    }
 
     if has_password && !capability.is_some_and(|capability| capability.supports_password_compress) {
         return Err(CompressionError::UnsupportedEncryption.into());
@@ -629,5 +645,26 @@ mod tests {
                 .format,
             "gz"
         );
+    }
+
+    #[test]
+    fn validation_rejects_unimplemented_split_and_solid_combinations() {
+        let temp = tempdir().expect("temp dir");
+        let source = temp.path().join("source.txt");
+        fs::write(&source, b"source").expect("source");
+        let source = source.to_string_lossy().to_string();
+
+        let mut split_7z = options(Some("7z"));
+        split_7z.split_size = Some(1024);
+        assert!(validate_compression_request(
+            std::slice::from_ref(&source),
+            "archive.7z",
+            &split_7z,
+        )
+        .is_err());
+
+        let mut solid_zip = options(Some("zip"));
+        solid_zip.create_solid_archive = true;
+        assert!(validate_compression_request(&[source], "archive.zip", &solid_zip).is_err());
     }
 }

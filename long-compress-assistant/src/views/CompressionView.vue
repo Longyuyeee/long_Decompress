@@ -6,6 +6,7 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage, generateId } from '@/utils'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
+import { runArchiveTasks } from '@/utils/taskConcurrency'
 import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
 import {
   compressionStatusClass,
@@ -50,6 +51,14 @@ const compressionTaskById = computed(() =>
   new Map(compressionTasks.value.map(task => [task.id, task]))
 )
 const taskForJob = (taskId?: string) => taskId ? compressionTaskById.value.get(taskId) : undefined
+
+const requestConfirmation = async (message: string, options: Parameters<typeof ask>[1]) => {
+  if (import.meta.env.VITE_DESKTOP_E2E === '1') {
+    const selected = window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopConfirmation()
+    if (selected !== undefined) return selected
+  }
+  return ask(message, options)
+}
 
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
@@ -97,10 +106,19 @@ const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {
   return files.length === 1 && !files[0]?.isDirectory
 }
 
+const canUseSplitArchive = (files: Array<{ isDirectory: boolean }>) => {
+  return files.length > 0 && files.every(file => !file.isDirectory)
+}
+
 const canGlobalUseSingleFileFormats = computed(() => {
   return compressionStore.groups.every(group => canUseSingleFileFormats(group.files)) &&
     compressionStore.selectedFiles.every(file => canUseSingleFileFormats([file]))
 })
+
+const canGlobalUseSplitArchive = computed(() =>
+  compressionStore.groups.every(group => canUseSplitArchive(group.files)) &&
+  compressionStore.selectedFiles.every(file => canUseSplitArchive([file]))
+)
 
 const usesRarFormat = computed(() => {
   return compressionStore.globalSettings.format === 'rar' ||
@@ -287,9 +305,22 @@ const runCompression = async () => {
     }
   }
 
+  const convertedPasswordFormats = [...new Set(
+    jobs
+      .filter(job => Boolean(job.settings.password) && job.settings.format !== '7z' && effectiveFormatForPassword(job.settings.format, job.settings.password) === '7z')
+      .map(job => job.settings.format.toUpperCase())
+  )]
+  if (convertedPasswordFormats.length > 0) {
+    const confirmed = await requestConfirmation(
+      appStore.t('compress.password_7z_confirm').replace('{0}', convertedPasswordFormats.join('、')),
+      { title: appStore.t('compress.password_7z_title'), type: 'warning' }
+    )
+    if (!confirmed) return
+  }
+
   let allowRarPasswordCli = false
   if (jobs.some(job => job.settings.format === 'rar' && Boolean(job.settings.password))) {
-    allowRarPasswordCli = await ask(
+    allowRarPasswordCli = await requestConfirmation(
       'WinRAR 的命令行编码器没有安全的密码输入通道。继续创建加密 RAR 时，密码会在本机进程参数中短暂可见。建议改用加密 ZIP 或 7Z。是否仍要继续？',
       { title: '加密 RAR 安全提示', type: 'warning' }
     )
@@ -352,6 +383,7 @@ const runCompression = async () => {
         level: job.settings.level,
         password: job.settings.password || undefined,
         split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
+        create_solid_archive: effectiveFormat === '7z' && job.settings.createSolidArchive,
         preserve_paths: job.settings.keepStructure,
         delete_after: job.settings.deleteAfter,
         verify_after: job.settings.verifyAfter,
@@ -368,18 +400,18 @@ const runCompression = async () => {
   // row's real status, progress and logs for its entire lifecycle.
   validJobs.forEach(({ job }) => selectedRows.value.delete(job.id))
 
-  // 第二阶段：依次执行所有任务
+  // 第二阶段：按用户配置的并发上限执行。输出路径在上方已完成唯一性校验。
   let succeeded = 0
 
-  for (const { job, taskId, effectiveFormat } of validJobs) {
+  await runArchiveTasks(validJobs, appStore.settings.maxConcurrentTasks, async ({ job, taskId, effectiveFormat }) => {
     const queuedTask = taskStore.tasks.find(task => task.id === taskId)
     if (!queuedTask || queuedTask.status === 'cancelled') {
-      continue
+      return
     }
     try {
       if (!await runCompressionResourcePreflight(taskId, job)) {
         failed++
-        continue
+        return
       }
       taskStore.updateTaskStatus(taskId, 'compressing')
       await tauriCommands.compressFiles(
@@ -391,6 +423,7 @@ const runCompression = async () => {
           level: job.settings.level,
           password: job.settings.password || undefined,
           split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
+          create_solid_archive: effectiveFormat === '7z' && job.settings.createSolidArchive,
           preserve_paths: job.settings.keepStructure,
           delete_after: job.settings.deleteAfter,
           verify_after: job.settings.verifyAfter,
@@ -418,7 +451,7 @@ const runCompression = async () => {
       }
       // 继续处理下一个任务，不中断整个批次
     }
-  }
+  })
 
   if (succeeded > 0 && failed === 0) {
     appStore.setSuccess(appStore.t('compress.status_success').replace('{0}', String(succeeded)).replace('{1}', succeeded === 1 ? '' : 's'))
@@ -720,6 +753,7 @@ const onDetailLeave = (element: Element) => {
                       :modelValue="compressionStore.getEffectiveSettings(group.settings)"
                       :outputPath="compressionStore.getEffectiveOutputPath(group.outputPath)"
                       :allow-single-file-formats="canUseSingleFileFormats(group.files)"
+                      :allow-split-archive="canUseSplitArchive(group.files)"
                       :suggested-filename="group.name"
                       @update:modelValue="compressionStore.updateGroupSettings(group.id, $event)"
                       @update:outputPath="compressionStore.updateGroupOutputPath(group.id, $event)"
@@ -897,6 +931,7 @@ const onDetailLeave = (element: Element) => {
                       :modelValue="compressionStore.getEffectiveSettings(file.settings)"
                       :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"
                       :allow-single-file-formats="canUseSingleFileFormats([file])"
+                      :allow-split-archive="canUseSplitArchive([file])"
                       :suggested-filename="getBaseName(file.path)"
                       @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
                       @update:outputPath="compressionStore.updateFileOutputPath(file.path, $event)"
@@ -970,7 +1005,7 @@ const onDetailLeave = (element: Element) => {
 
         <button type="button" class="w-full rounded-2xl border border-primary/30 bg-primary/10 p-4 text-left transition hover:border-primary" @click="finishRarResolution('use-7z')">
           <div class="font-black text-content"><i class="pi pi-star mr-2 text-primary"></i>改用 7Z（推荐）</div>
-          <div class="mt-1 text-xs leading-5 text-muted">无需安装额外软件，支持 AES-256 密码、固实压缩和分卷。</div>
+          <div class="mt-1 text-xs leading-5 text-muted">无需安装额外软件，支持 AES-256 密码与固实压缩。</div>
         </button>
 
         <button type="button" class="w-full rounded-2xl border border-subtle bg-input p-4 text-left transition hover:border-primary disabled:opacity-60" :disabled="installingWinRar" @click="installWinRar">
@@ -997,6 +1032,7 @@ const onDetailLeave = (element: Element) => {
       :outputPath="compressionStore.globalOutputPath"
       @update:outputPath="compressionStore.globalOutputPath = $event"
       :allow-single-file-formats="canGlobalUseSingleFileFormats"
+      :allow-split-archive="canGlobalUseSplitArchive"
       @template-draft-created="showGlobalSettingsModal = false"
     />
   </div>

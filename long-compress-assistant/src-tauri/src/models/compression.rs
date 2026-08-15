@@ -114,6 +114,8 @@ pub struct CompressionOptions {
     pub password: Option<String>,
     pub split_size: Option<u64>,
     #[serde(default)]
+    pub create_solid_archive: bool,
+    #[serde(default)]
     pub preserve_paths: Option<bool>,
     #[serde(default)]
     pub delete_after: bool,
@@ -160,6 +162,7 @@ impl Default for CompressionOptions {
             level: 0,
             password: None,
             split_size: None,
+            create_solid_archive: false,
             preserve_paths: None,
             delete_after: false,
             verify_after: true,

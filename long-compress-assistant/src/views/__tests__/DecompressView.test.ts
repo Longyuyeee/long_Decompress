@@ -346,8 +346,7 @@ describe('DecompressView', () => {
     await nextTick()
 
     wrapper.findComponent({ name: 'AeroTable' }).vm.$emit('retry-with-password', taskId)
-    await nextTick()
-    await nextTick()
+    await flushPromises()
 
     expect(mocks.decompressFile).toHaveBeenCalledWith(
       'C:/archives/encrypted.7z',
@@ -387,13 +386,11 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
-  it('does not report a dictionary password when backend validation rejects it', async () => {
+  it('leaves password discovery to the backend and exposes one manual retry state', async () => {
     mocks.decompressFile.mockRejectedValueOnce('PasswordRequired')
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'detect_split_archive') return null
       if (command === 'load_app_settings') return '{}'
-      if (command === 'get_dictionary_passwords') return ['!@#$%^&*']
-      if (command === 'verify_archive_password') return false
       return []
     })
 
@@ -409,13 +406,13 @@ describe('DecompressView', () => {
     await startButton!.trigger('click')
     await flushPromises()
 
-    expect(mocks.invoke).toHaveBeenCalledWith('verify_archive_password', {
-      taskId: useTaskStore().tasks[0].id,
-      filePath: 'C:/archives/plain.zip',
-      password: '!@#$%^&*',
-    })
+    expect(mocks.invoke).not.toHaveBeenCalledWith('get_dictionary_passwords', expect.anything())
+    expect(mocks.invoke).not.toHaveBeenCalledWith('verify_archive_password', expect.anything())
     expect(mocks.decompressFile).toHaveBeenCalledTimes(1)
-    expect(useTaskStore().tasks[0].logs.some(log => log.message.includes('密码破解成功'))).toBe(false)
+    expect(useTaskStore().tasks[0]).toMatchObject({
+      status: 'failed',
+      passwordRequired: true,
+    })
     wrapper.unmount()
   })
 

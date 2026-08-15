@@ -5,7 +5,7 @@ import { useAppStore } from '@/stores/app'
 import { useCompressionProfileStore } from '@/stores/compressionProfile'
 import type { CompressionOptions } from '@/stores/compression'
 import type { CompressionProfile } from '@/types/profile'
-import { COMPRESSIBLE_FORMATS, isPasswordSupportedFormat } from '@/utils/compressionFormat'
+import { COMPRESSIBLE_FORMATS, effectiveFormatForPassword, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 import ProfileSelector from '@/components/profiles/ProfileSelector.vue'
 import ProfileManager from '@/components/profiles/ProfileManager.vue'
 import PasswordGeneratorDialog from '@/components/password/PasswordGeneratorDialog.vue'
@@ -23,6 +23,7 @@ interface Props {
   modelValue?: CompressionOptions
   outputPath?: string
   allowSingleFileFormats?: boolean
+  allowSplitArchive?: boolean
   suggestedFilename?: string
 }
 
@@ -30,6 +31,7 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: undefined,
   outputPath: '',
   allowSingleFileFormats: true,
+  allowSplitArchive: true,
   suggestedFilename: ''
 })
 
@@ -73,13 +75,26 @@ const newProfileDescription = ref('')
 
 const compressionFormats = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
 const selectedFormat = computed(() => compressionFormats.value.find(format => format.value === compressionOptions.value.format))
+const canCreateSplitArchive = computed(() =>
+  Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive && !compressionOptions.value.password)
+)
 
 onMounted(() => {
   void archiveEngine.refresh()
 })
 
-// 全部格式支持密码：ZIP/7Z/RAR 原生支持，其他格式通过 7z CLI 自动创建 .7z 加密容器
+// ZIP/7Z/RAR 与 .aes 格式原生支持密码；其他格式显式转为加密 7Z 容器。
 const supportsPassword = computed(() => isPasswordSupportedFormat(compressionOptions.value.format))
+const usesEncrypted7zContainer = computed(() =>
+  Boolean(
+    compressionOptions.value.password &&
+    compressionOptions.value.format !== '7z' &&
+    effectiveFormatForPassword(compressionOptions.value.format, compressionOptions.value.password) === '7z'
+  )
+)
+const effectiveOutputExtension = computed(() =>
+  effectiveFormatForPassword(compressionOptions.value.format, compressionOptions.value.password)
+)
 
 const presets = computed(() => appStore.compressionPresets)
 
@@ -129,6 +144,12 @@ watch(() => compressionOptions.value.format, () => {
   if (!supportsPassword.value) {
     compressionOptions.value.password = ''
   }
+  if (!canCreateSplitArchive.value) {
+    compressionOptions.value.splitArchive = false
+  }
+  if (compressionOptions.value.format !== '7z') {
+    compressionOptions.value.createSolidArchive = false
+  }
 })
 
 watch(() => compressionOptions.value.deleteAfter, (deleteAfter) => {
@@ -163,6 +184,14 @@ watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
   if (currentFormat && isFormatDisabled(currentFormat)) {
     compressionOptions.value.format = 'zip'
   }
+})
+
+watch(() => props.allowSplitArchive, allowSplitArchive => {
+  if (!allowSplitArchive) compressionOptions.value.splitArchive = false
+})
+
+watch(() => compressionOptions.value.password, () => {
+  if (!canCreateSplitArchive.value) compressionOptions.value.splitArchive = false
 })
 
 const applyProfile = (profile: CompressionProfile) => {
@@ -290,7 +319,7 @@ const handlePasswordGenerated = (password: string) => {
             class="w-full px-4 py-2 rounded-xl bg-input border border-subtle text-sm text-content outline-none focus:border-primary transition-all placeholder:text-dim"
             :placeholder="appStore.t('vault.placeholder.name')"
           />
-          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-dim uppercase">.{{ compressionOptions.format }}</span>
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-dim uppercase">.{{ effectiveOutputExtension }}</span>
         </div>
       </div>
 
@@ -325,6 +354,9 @@ const handlePasswordGenerated = (password: string) => {
             <span class="text-base">🎲</span>
           </button>
         </div>
+        <p v-if="usesEncrypted7zContainer" data-testid="encrypted-7z-conversion-hint" class="rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-xs leading-5 text-amber-300">
+          <i class="pi pi-info-circle mr-1"></i>{{ appStore.t('compress.password_7z_hint') }}
+        </p>
       </div>
 
     </div>
@@ -395,7 +427,7 @@ const handlePasswordGenerated = (password: string) => {
             <input data-testid="compression-verify-after" v-model="compressionOptions.verifyAfter" type="checkbox" :disabled="compressionOptions.deleteAfter" />
             <span><strong>{{ appStore.t('preset.verify_after') }}</strong><small>{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</small></span>
           </label>
-          <label class="advanced-option">
+          <label v-if="canCreateSplitArchive" class="advanced-option">
             <input v-model="compressionOptions.splitArchive" type="checkbox" />
             <span><strong>{{ appStore.t('preset.split_archive') }}</strong><small>把大压缩包拆成多个便于传输的分卷</small></span>
           </label>

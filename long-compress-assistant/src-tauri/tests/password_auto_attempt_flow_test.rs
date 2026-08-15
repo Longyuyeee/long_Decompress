@@ -277,3 +277,33 @@ async fn resolves_encrypted_archive_password_from_imported_wordlist() {
 
     assert_eq!(resolved.as_deref(), Some("wordlist-hit-2026"));
 }
+
+#[tokio::test]
+async fn does_not_run_the_builtin_dictionary_without_explicit_authorization() {
+    let harness = build_harness().await;
+    let archive = create_encrypted_7z(harness._temp.path(), "123456");
+
+    let resolved = harness
+        .service
+        .resolve_archive_password_silent(archive.to_str().unwrap(), &DecompressOptions::default())
+        .await;
+
+    assert_eq!(resolved, None);
+}
+
+#[tokio::test]
+async fn runs_the_builtin_dictionary_after_explicit_authorization() {
+    let harness = build_harness().await;
+    let archive = create_encrypted_7z(harness._temp.path(), "123456");
+    let options = DecompressOptions {
+        enable_bruteforce: true,
+        ..Default::default()
+    };
+
+    let resolved = harness
+        .service
+        .resolve_archive_password_silent(archive.to_str().unwrap(), &options)
+        .await;
+
+    assert_eq!(resolved.as_deref(), Some("123456"));
+}

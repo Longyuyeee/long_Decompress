@@ -15,10 +15,12 @@ const mocks = vi.hoisted(() => ({
   installWinRarWithWinget: vi.fn(),
   getFileInfo: vi.fn(),
   invoke: vi.fn(),
+  ask: vi.fn(),
 }))
 
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => vi.fn()) }))
+vi.mock('@tauri-apps/api/dialog', () => ({ ask: mocks.ask }))
 vi.mock('@/composables/useTauriCommands', () => ({
   useTauriCommands: () => ({
     compressFiles: mocks.compressFiles,
@@ -86,6 +88,7 @@ describe('CompressionView', () => {
     mocks.checkRarCompressionSupport.mockResolvedValue({ available: true, message: 'ready' })
     mocks.installWinRarWithWinget.mockResolvedValue({ available: true, encoder_path: 'C:/Program Files/WinRAR/Rar.exe', message: 'ready' })
     mocks.getFileInfo.mockResolvedValue(null)
+    mocks.ask.mockResolvedValue(true)
   })
 
   it('accepts a selected file and runs a complete compression job', async () => {
@@ -130,6 +133,73 @@ describe('CompressionView', () => {
     await clear!.trigger('click')
     expect(compressionStore.selectedFiles).toHaveLength(0)
     expect(taskStore.tasks).toHaveLength(0)
+  })
+
+  it('passes the selected 7z solid mode to the native compression command', async () => {
+    const wrapper = mountView()
+    const compressionStore = useCompressionStore()
+    compressionStore.globalSettings.format = '7z'
+    compressionStore.globalSettings.createSolidArchive = true
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(useAppStore().t('compress.start')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(mocks.compressFiles).toHaveBeenCalledWith(
+      expect.any(String),
+      ['C:/input/sample.txt'],
+      'C:/input/sample.7z',
+      expect.objectContaining({ format: '7z', create_solid_archive: true }),
+    )
+  })
+
+  it('confirms non-native password formats before creating an encrypted 7z', async () => {
+    const wrapper = mountView()
+    const compressionStore = useCompressionStore()
+    compressionStore.globalSettings.format = 'tar.gz'
+    compressionStore.globalSettings.password = 'secret'
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(useAppStore().t('compress.start')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(mocks.ask).toHaveBeenCalledWith(
+      expect.stringContaining('TAR.GZ'),
+      expect.objectContaining({ type: 'warning' }),
+    )
+    expect(mocks.compressFiles).toHaveBeenCalledWith(
+      expect.any(String),
+      ['C:/input/sample.txt'],
+      'C:/input/sample.7z',
+      expect.objectContaining({ format: '7z', password: 'secret' }),
+    )
+  })
+
+  it('does not create a task when encrypted 7z conversion is declined', async () => {
+    mocks.ask.mockResolvedValueOnce(false)
+    const wrapper = mountView()
+    const compressionStore = useCompressionStore()
+    compressionStore.globalSettings.format = 'tar.gz'
+    compressionStore.globalSettings.password = 'secret'
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(useAppStore().t('compress.start')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(mocks.compressFiles).not.toHaveBeenCalled()
+    expect(useTaskStore().tasks).toHaveLength(0)
   })
 
   it('aligns each draft row into archive name, source path, and status-progress columns', async () => {
@@ -368,12 +438,13 @@ describe('CompressionView', () => {
     expect(appStore.successMessage).toBeTruthy()
   })
 
-  it('cancels the active job and never starts queued compression jobs', async () => {
+  it('cancels the active job and queued jobs when concurrency is one', async () => {
     let rejectActive!: (error: Error) => void
     mocks.compressFiles.mockImplementationOnce(() => new Promise((_, reject) => {
       rejectActive = reject
     }))
     const wrapper = mountView()
+    useAppStore().updateSettings({ maxConcurrentTasks: 1 })
     wrapper.findComponent(DropzoneStub).vm.$emit(
       'files-selected',
       [source('C:/one/first.txt'), source('C:/two/second.txt')],

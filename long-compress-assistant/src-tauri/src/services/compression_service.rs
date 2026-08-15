@@ -1,14 +1,15 @@
 use crate::models::compression::{CompressionOptions, DecompressOptions, TaskLog, TaskLogSeverity};
 use anyhow::Result;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 use zip::{write::FileOptions, CompressionMethod};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::fs::File;
 use sevenz_rust;
 use thiserror::Error;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Instant;
 use tauri::Window;
 use chrono::Utc;
 use serde::Serialize;
@@ -72,6 +73,7 @@ pub struct TaskProgress {
     pub current_password: Option<String>,
     pub progress: f32,
     pub speed: Option<String>,
+    pub eta_seconds: Option<u64>,
     pub current_file: Option<String>,
     pub processed_bytes: u64,
     pub total_bytes: u64,
@@ -110,6 +112,11 @@ pub struct RarCompressionSupport {
 
 use tokio::sync::Semaphore;
 
+struct ProgressMetric {
+    started_at: Instant,
+    last_bytes: u64,
+}
+
 #[derive(Clone)]
 pub struct CompressionService {
     pub config: CompressionServiceConfig,
@@ -119,6 +126,7 @@ pub struct CompressionService {
     pub universal_engine: Arc<UniversalCliEngine>,
     pub password_query_service: Arc<PasswordQueryService>,
     pub semaphore: Arc<Semaphore>,
+    progress_metrics: Arc<Mutex<HashMap<String, ProgressMetric>>>,
 }
 
 impl ExtractionRuntime for CompressionService {
@@ -223,6 +231,7 @@ impl CompressionService {
             universal_engine,
             password_query_service,
             semaphore: Arc::new(Semaphore::new(max_concurrency)),
+            progress_metrics: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -244,6 +253,7 @@ impl CompressionService {
             universal_engine: Arc::new(UniversalCliEngine::new()),
             password_query_service: query_service,
             semaphore: Arc::new(Semaphore::new(2)),
+            progress_metrics: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -272,7 +282,57 @@ impl CompressionService {
         let _ = window.emit("task-log", log);
     }
 
+    fn progress_telemetry(
+        &self,
+        task_id: &str,
+        progress: f32,
+        processed_bytes: u64,
+        total_bytes: u64,
+    ) -> (Option<String>, Option<u64>) {
+        if processed_bytes == 0 || total_bytes == 0 {
+            return (None, None);
+        }
+
+        let Ok(mut metrics) = self.progress_metrics.lock() else {
+            return (None, None);
+        };
+        let metric = metrics.entry(task_id.to_string()).or_insert_with(|| ProgressMetric {
+            started_at: Instant::now(),
+            last_bytes: 0,
+        });
+        if processed_bytes < metric.last_bytes {
+            metric.started_at = Instant::now();
+        }
+        metric.last_bytes = processed_bytes;
+
+        let elapsed = metric.started_at.elapsed().as_secs_f64();
+        let bytes_per_second = if elapsed >= 0.25 {
+            processed_bytes as f64 / elapsed
+        } else {
+            0.0
+        };
+        let result = if bytes_per_second > 0.0 {
+            let speed = if bytes_per_second >= 1024.0 * 1024.0 {
+                format!("{:.1} MB/s", bytes_per_second / (1024.0 * 1024.0))
+            } else if bytes_per_second >= 1024.0 {
+                format!("{:.1} KB/s", bytes_per_second / 1024.0)
+            } else {
+                format!("{:.0} B/s", bytes_per_second)
+            };
+            let remaining = total_bytes.saturating_sub(processed_bytes) as f64;
+            (Some(speed), Some((remaining / bytes_per_second).ceil() as u64))
+        } else {
+            (None, None)
+        };
+
+        if progress >= 1.0 || processed_bytes >= total_bytes {
+            metrics.remove(task_id);
+        }
+        result
+    }
+
     pub fn emit_progress(&self, window: &Window, task_id: &str, progress: f32, current_file: Option<String>, processed_bytes: u64, total_bytes: u64) {
+        let (speed, eta_seconds) = self.progress_telemetry(task_id, progress, processed_bytes, total_bytes);
         let payload = TaskProgress {
             task_id: task_id.to_string(),
             stage: None,
@@ -281,7 +341,8 @@ impl CompressionService {
             current_file,
             processed_bytes,
             total_bytes,
-            speed: None,
+            speed,
+            eta_seconds,
             password_attempt_current: None,
             password_attempt_total: None,
         };
@@ -304,6 +365,7 @@ impl CompressionService {
             processed_bytes: 0,
             total_bytes: 0,
             speed: None,
+            eta_seconds: None,
             password_attempt_current: None,
             password_attempt_total: None,
         };
@@ -789,8 +851,15 @@ impl CompressionService {
             return Some(password);
         }
 
-        if options.enable_bruteforce && !options.bruteforce_wordlists.is_empty() {
-            return self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists).await;
+        if options.enable_bruteforce {
+            if !options.bruteforce_wordlists.is_empty() {
+                if let Some(password) = self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists).await {
+                    return Some(password);
+                }
+            }
+            if let Some(password) = self.attempt_recommended_dictionary(window, task_id, file_path).await {
+                return Some(password);
+            }
         }
 
         None
@@ -801,10 +870,88 @@ impl CompressionService {
             return Some(password);
         }
 
-        if options.enable_bruteforce && !options.bruteforce_wordlists.is_empty() {
-            return self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists).await;
+        if options.enable_bruteforce {
+            if !options.bruteforce_wordlists.is_empty() {
+                if let Some(password) = self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists).await {
+                    return Some(password);
+                }
+            }
+            if let Some(password) = self.attempt_recommended_dictionary_silent(file_path).await {
+                return Some(password);
+            }
         }
 
+        None
+    }
+
+    fn recommended_dictionary(file_path: &str) -> Vec<String> {
+        let file_name = Path::new(file_path)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or(file_path);
+        crate::services::password_dictionary_service::PasswordDictionaryService::new()
+            .get_recommended_strategy(Some(file_name))
+    }
+
+    async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Option<String> {
+        for password in Self::recommended_dictionary(file_path) {
+            if self.cancellation_flag.load(Ordering::SeqCst) {
+                return None;
+            }
+            if self.test_archive_password(file_path, &password).await.is_ok_and(|matched| matched) {
+                return Some(password);
+            }
+        }
+        None
+    }
+
+    async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
+        let passwords = Self::recommended_dictionary(file_path);
+        let total = passwords.len();
+        self.emit_log(
+            window,
+            task_id,
+            &format!("已授权密码字典尝试，共 {} 个候选", total),
+            TaskLogSeverity::Info,
+        );
+
+        for (index, password) in passwords.into_iter().enumerate() {
+            if self.cancellation_flag.load(Ordering::SeqCst) {
+                return None;
+            }
+            let current = index + 1;
+            if current == 1 || current % 10 == 0 || current == total {
+                let _ = window.emit("task-progress", TaskProgress {
+                    task_id: task_id.to_string(),
+                    stage: Some("password-attempt".to_string()),
+                    current_password: None,
+                    progress: current as f32 / total.max(1) as f32,
+                    speed: None,
+                    eta_seconds: None,
+                    current_file: None,
+                    processed_bytes: 0,
+                    total_bytes: 0,
+                    password_attempt_current: Some(current),
+                    password_attempt_total: Some(total),
+                });
+            }
+            if self.test_archive_password(file_path, &password).await.is_ok_and(|matched| matched) {
+                self.emit_log(
+                    window,
+                    task_id,
+                    &format!("密码字典在第 {} 次尝试时匹配成功", current),
+                    TaskLogSeverity::Success,
+                );
+                return Some(password);
+            }
+        }
+
+        self.emit_log(
+            window,
+            task_id,
+            &format!("密码字典已完成 {} 次尝试，未找到匹配项", total),
+            TaskLogSeverity::Warning,
+        );
         None
     }
 
@@ -874,8 +1021,9 @@ impl CompressionService {
                 task_id: task_id.to_string(),
                 stage: Some("password-attempt".to_string()),
                 current_password: Some(entry_name.clone()),
-                progress: (current as f32 / total as f32) * 100.0,
+                progress: current as f32 / total as f32,
                 speed: None,
+                eta_seconds: None,
                 current_file: None,
                 processed_bytes: 0,
                 total_bytes: 0,
@@ -2409,6 +2557,28 @@ impl CompressionService {
 #[cfg(test)]
 mod tests_continued {
     use super::*;
+
+    #[tokio::test]
+    async fn progress_telemetry_reports_real_speed_and_eta() {
+        let service = CompressionService::for_testing();
+        service.progress_metrics.lock().expect("progress metrics").insert(
+            "telemetry-task".to_string(),
+            ProgressMetric {
+                started_at: Instant::now() - std::time::Duration::from_secs(2),
+                last_bytes: 0,
+            },
+        );
+
+        let (speed, eta) = service.progress_telemetry(
+            "telemetry-task",
+            0.5,
+            5 * 1024 * 1024,
+            10 * 1024 * 1024,
+        );
+
+        assert!(speed.as_deref().is_some_and(|value| value.ends_with(" MB/s")));
+        assert!(matches!(eta, Some(2..=3)));
+    }
 
     #[test]
     fn extraction_resource_limits_reject_oversized_archives() {
