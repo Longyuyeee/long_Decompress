@@ -789,8 +789,15 @@ impl CompressionService {
             return Some(password);
         }
 
-        if options.enable_bruteforce && !options.bruteforce_wordlists.is_empty() {
-            return self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists).await;
+        if options.enable_bruteforce {
+            if !options.bruteforce_wordlists.is_empty() {
+                if let Some(password) = self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists).await {
+                    return Some(password);
+                }
+            }
+            if let Some(password) = self.attempt_recommended_dictionary(window, task_id, file_path).await {
+                return Some(password);
+            }
         }
 
         None
@@ -801,10 +808,87 @@ impl CompressionService {
             return Some(password);
         }
 
-        if options.enable_bruteforce && !options.bruteforce_wordlists.is_empty() {
-            return self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists).await;
+        if options.enable_bruteforce {
+            if !options.bruteforce_wordlists.is_empty() {
+                if let Some(password) = self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists).await {
+                    return Some(password);
+                }
+            }
+            if let Some(password) = self.attempt_recommended_dictionary_silent(file_path).await {
+                return Some(password);
+            }
         }
 
+        None
+    }
+
+    fn recommended_dictionary(file_path: &str) -> Vec<String> {
+        let file_name = Path::new(file_path)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or(file_path);
+        crate::services::password_dictionary_service::PasswordDictionaryService::new()
+            .get_recommended_strategy(Some(file_name))
+    }
+
+    async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Option<String> {
+        for password in Self::recommended_dictionary(file_path) {
+            if self.cancellation_flag.load(Ordering::SeqCst) {
+                return None;
+            }
+            if self.test_archive_password(file_path, &password).await.is_ok_and(|matched| matched) {
+                return Some(password);
+            }
+        }
+        None
+    }
+
+    async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
+        let passwords = Self::recommended_dictionary(file_path);
+        let total = passwords.len();
+        self.emit_log(
+            window,
+            task_id,
+            &format!("已授权密码字典尝试，共 {} 个候选", total),
+            TaskLogSeverity::Info,
+        );
+
+        for (index, password) in passwords.into_iter().enumerate() {
+            if self.cancellation_flag.load(Ordering::SeqCst) {
+                return None;
+            }
+            let current = index + 1;
+            if current == 1 || current % 10 == 0 || current == total {
+                let _ = window.emit("task-progress", TaskProgress {
+                    task_id: task_id.to_string(),
+                    stage: Some("password-attempt".to_string()),
+                    current_password: None,
+                    progress: current as f32 / total.max(1) as f32,
+                    speed: None,
+                    current_file: None,
+                    processed_bytes: 0,
+                    total_bytes: 0,
+                    password_attempt_current: Some(current),
+                    password_attempt_total: Some(total),
+                });
+            }
+            if self.test_archive_password(file_path, &password).await.is_ok_and(|matched| matched) {
+                self.emit_log(
+                    window,
+                    task_id,
+                    &format!("密码字典在第 {} 次尝试时匹配成功", current),
+                    TaskLogSeverity::Success,
+                );
+                return Some(password);
+            }
+        }
+
+        self.emit_log(
+            window,
+            task_id,
+            &format!("密码字典已完成 {} 次尝试，未找到匹配项", total),
+            TaskLogSeverity::Warning,
+        );
         None
     }
 
@@ -874,7 +958,7 @@ impl CompressionService {
                 task_id: task_id.to_string(),
                 stage: Some("password-attempt".to_string()),
                 current_password: Some(entry_name.clone()),
-                progress: (current as f32 / total as f32) * 100.0,
+                progress: current as f32 / total as f32,
                 speed: None,
                 current_file: None,
                 processed_bytes: 0,
