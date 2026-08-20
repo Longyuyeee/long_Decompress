@@ -16,7 +16,7 @@
 
 ## 2026-08-20 后续增强审计
 
-审计基线为 `master@0694fac` / `v1.1.6`。普通 ZIP 与 AES ZIP 的真实输入字节、速度和 ETA 已在当前开发分支完成，并通过 64 MiB 普通/AES Windows Release + WebView2 聚焦门禁；下一阶段独立处理 TAR 与外部 CLI，继续严禁用百分比推算字节冒充实测。
+审计基线为 `master@0694fac` / `v1.1.6`。普通/AES ZIP 以及 TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST 的真实输入字节、速度和 ETA 已在当前开发分支完成，并分别通过 64 MiB Windows Release + WebView2 聚焦门禁；下一阶段独立处理外部 CLI，继续严禁用百分比推算字节冒充实测。
 
 本阶段已经保留修复前基线、首轮真实门禁发现的 `0/0` 覆盖问题和修复后证据。完整预期/实际差异见 [DEVELOPMENT_AUDIT_2026-08-20.md](DEVELOPMENT_AUDIT_2026-08-20.md)。
 

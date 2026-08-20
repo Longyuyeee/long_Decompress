@@ -306,7 +306,7 @@ impl CompressionService {
         metric.last_bytes = processed_bytes;
 
         let elapsed = metric.started_at.elapsed().as_secs_f64();
-        let bytes_per_second = if elapsed >= 0.25 {
+        let bytes_per_second = if elapsed > f64::EPSILON {
             processed_bytes as f64 / elapsed
         } else {
             0.0
@@ -329,6 +329,15 @@ impl CompressionService {
             metrics.remove(task_id);
         }
         result
+    }
+
+    fn begin_progress_telemetry(&self, task_id: &str) {
+        if let Ok(mut metrics) = self.progress_metrics.lock() {
+            metrics.insert(task_id.to_string(), ProgressMetric {
+                started_at: Instant::now(),
+                last_bytes: 0,
+            });
+        }
     }
 
     pub fn emit_progress(&self, window: &Window, task_id: &str, progress: f32, current_file: Option<String>, processed_bytes: u64, total_bytes: u64) {
@@ -724,6 +733,7 @@ impl CompressionService {
         tokio::task::spawn_blocking(move || {
             let requested_format = Self::validate_compression_request(&source_files, &output_path, &options)?;
             Self::validate_compression_io_paths(&source_files, &output_path, &options)?;
+            service.begin_progress_telemetry(&task_id);
             let delete_after = options.delete_after;
             let requested_verify_after = options.verify_after;
             let verify_after = requested_verify_after || delete_after;
@@ -2578,6 +2588,23 @@ mod tests_continued {
 
         assert!(speed.as_deref().is_some_and(|value| value.ends_with(" MB/s")));
         assert!(matches!(eta, Some(2..=3)));
+    }
+
+    #[tokio::test]
+    async fn progress_telemetry_reports_short_task_throughput() {
+        let service = CompressionService::for_testing();
+        service.begin_progress_telemetry("short-telemetry-task");
+        std::thread::sleep(std::time::Duration::from_millis(1));
+
+        let (speed, eta) = service.progress_telemetry(
+            "short-telemetry-task",
+            1.0,
+            4 * 1024 * 1024,
+            4 * 1024 * 1024,
+        );
+
+        assert!(speed.is_some());
+        assert_eq!(eta, Some(0));
     }
 
     #[test]

@@ -97,6 +97,7 @@ export interface DesktopE2EBridge {
     sourcePath: string | string[],
     archivePath: string,
     password?: string,
+    format?: string,
   ) => Promise<string>
   startSharedOutputExtraction: (archivePaths: string[], outputPath: string) => Promise<string[]>
   archiveFlowAuditState: () => {
@@ -621,13 +622,15 @@ export const installDesktopE2EBridge = () => {
       return invoke<TaskHistoryRecord[]>('list_task_history', { limit: 500 })
     },
 
-    async startZipTelemetryCompression(sourcePath, archivePath, password) {
+    async startZipTelemetryCompression(sourcePath, archivePath, password, format = 'zip') {
       archiveFlowAudit.zipDone = false
       archiveFlowAudit.zipTelemetry = []
-      const taskId = `desktop-e2e-zip-telemetry-${Date.now()}`
+      const taskId = `desktop-e2e-${format.replaceAll('.', '-')}-telemetry-${Date.now()}`
       archiveFlowAudit.zipTaskId = taskId
       const sourcePaths = Array.isArray(sourcePath) ? sourcePath : [sourcePath]
       addArchiveTask(taskId, 'compression', sourcePaths[0], archivePath)
+      const task = taskStore.tasks.find(item => item.id === taskId)
+      if (task) task.format = format
       const unlisten = await listen<{
         task_id: string
         speed?: string
@@ -652,8 +655,8 @@ export const installDesktopE2EBridge = () => {
         outputPath: archivePath,
         options: {
           ...sevenZipOptions,
-          format: 'zip',
-          level: 9,
+          format,
+          level: format === 'zip' ? 9 : 3,
           password: password || null,
         },
       })

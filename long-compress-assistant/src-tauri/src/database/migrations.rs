@@ -1171,11 +1171,19 @@ mod tests {
         .unwrap()
         .0;
         assert_eq!(tables, 2);
+        let history_tables: i64 = query_as::<_, (i64,)>(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'task_operation_history'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap()
+        .0;
+        assert_eq!(history_tables, 1);
         let version: i32 = query_as::<_, (i32,)>("SELECT MAX(version) FROM schema_version")
             .fetch_one(&pool)
             .await
             .unwrap()
             .0;
-        assert_eq!(version, 5);
+        assert_eq!(version, _CURRENT_VERSION);
     }
 }

@@ -101,6 +101,7 @@ const compressionVerificationOnly = process.argv.includes('--compression-verific
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
 const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
 const historyOnly = process.argv.includes('--history-only')
+const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -1380,6 +1381,75 @@ async function runZipTelemetryDesktopGate() {
   }
 }
 
+async function runTarTelemetryDesktopGate() {
+  console.log('[desktop-e2e] verifying TAR-family real-byte telemetry and round trips')
+  await callDesktopBridge('clearTasks')
+  const root = path.join(fixtureDirectory, 'tar-telemetry')
+  const sourcePath = path.join(root, 'tar-telemetry-payload.bin')
+  mkdirSync(root, { recursive: true })
+  writeFileSync(sourcePath, randomBytes(64 * 1024 * 1024))
+  const sourceBytes = statSync(sourcePath).size
+  const formats = [
+    ['tar', 'tar'],
+    ['tar.gz', 'tar.gz'],
+    ['tar.bz2', 'tar.bz2'],
+    ['tar.xz', 'tar.xz'],
+    ['tar.zst', 'tar.zst'],
+  ]
+
+  for (const [format, extension] of formats) {
+    console.log(`[desktop-e2e] TAR telemetry round trip: ${format}`)
+    const archivePath = path.join(root, `payload.${extension}`)
+    const extractRoot = path.join(root, `extract-${format.replaceAll('.', '-')}`)
+    const taskId = await callDesktopBridge(
+      'startZipTelemetryCompression',
+      sourcePath,
+      archivePath,
+      undefined,
+      format,
+    )
+    if (format === 'tar.gz' && (await driver.findElements(By.css('.progress-panel'))).length === 0) {
+      await (await waitForElement('.progress-summary')).click()
+    }
+    if (format === 'tar.gz') {
+      await driver.wait(async () => {
+        const panels = await driver.findElements(By.css('.progress-panel'))
+        if (panels.length === 0) return false
+        const text = await panels[0].getAttribute('textContent')
+        return /速度[\s\S]*\/s/.test(text) && /(剩余|ETA)/.test(text)
+      }, 60_000)
+    }
+    const state = await driver.wait(async () => {
+      const current = await callDesktopBridge('archiveFlowAuditState')
+      return current.zipDone ? current : false
+    }, 180_000)
+    assert.equal(await callDesktopBridge('taskStatus', taskId), 'completed')
+    assert.deepEqual(state.errors, [])
+    const byteTelemetry = state.zipTelemetry.filter(item => item.totalBytes > 0)
+    assert.ok(
+      byteTelemetry.some(item => item.processedBytes > 0 && item.processedBytes < item.totalBytes),
+      `${format} must emit an intermediate real-byte event`,
+    )
+    const finalTelemetry = byteTelemetry.at(-1)
+    assert.equal(finalTelemetry.processedBytes, sourceBytes, `${format} final processed bytes`)
+    assert.equal(finalTelemetry.totalBytes, sourceBytes, `${format} final total bytes`)
+    assert.ok(finalTelemetry.speed, `${format} must expose measured throughput`)
+    assert.equal(finalTelemetry.etaSeconds, 0)
+
+    const archiveTest = spawnSync(bundledSevenZip, ['t', '-y', archivePath], {
+      encoding: 'utf8', windowsHide: true,
+    })
+    assert.equal(archiveTest.status, 0, archiveTest.stderr || archiveTest.stdout)
+    mkdirSync(extractRoot, { recursive: true })
+    await callDesktopBridge('extractArchive', archivePath, extractRoot)
+    assert.equal(
+      fileSha256(path.join(extractRoot, path.basename(sourcePath))),
+      fileSha256(sourcePath),
+      `${format} extracted payload must match the source`,
+    )
+  }
+}
+
 try {
   mkdirSync(webviewUserDataDirectory, { recursive: true })
   await startTauriDriver()
@@ -1406,7 +1476,11 @@ try {
   const payload = `Long解压 real desktop round-trip ${new Date().toISOString()}\n`
   writeFileSync(sourcePath, payload, 'utf8')
 
-  if (historyOnly) {
+  if (tarTelemetryOnly) {
+    await runTarTelemetryDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri TAR telemetry gate passed.')
+  } else if (historyOnly) {
     await runHistoryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri task-history persistence gate passed.')
