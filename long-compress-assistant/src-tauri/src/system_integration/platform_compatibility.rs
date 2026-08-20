@@ -397,16 +397,10 @@ impl PlatformCompatibilityChecker {
             PlatformType::Windows => PlatformFeatureCheck {
                 feature_name: "自动启动".to_string(),
                 platform: PlatformType::Windows,
-                support_status: FeatureSupport::FullySupported,
-                description: "Windows通过注册表或启动文件夹支持自动启动".to_string(),
-                notes: vec![
-                    "用户级启动在HKCU注册表".to_string(),
-                    "系统级启动需要管理员权限".to_string(),
-                ],
-                workarounds: vec![
-                    "使用用户级注册避免权限问题".to_string(),
-                    "提供启动选项配置".to_string(),
-                ],
+                support_status: FeatureSupport::NotSupported,
+                description: "未签名 Windows 构建已暂停自动启动能力".to_string(),
+                notes: vec!["取得可信代码签名并通过安全验证后再重新评估".to_string()],
+                workarounds: vec!["请从开始菜单按需启动，不要添加 Defender 白名单".to_string()],
             },
             PlatformType::MacOS => PlatformFeatureCheck {
                 feature_name: "自动启动".to_string(),

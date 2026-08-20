@@ -6,7 +6,7 @@
 
 ### 面向 Windows 的本地压缩、解压、归档浏览与密码管理工具
 
-[![Version](https://img.shields.io/badge/version-1.1.7-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.1.8-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri%20%2B%20Rust-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -23,15 +23,15 @@
 
 Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows 桌面归档工具。它不仅能完成日常压缩与解压，还把批量任务、压缩包浏览、密码保险箱、完整性检查、资源预检、任务模板和资源管理器右键菜单整合在同一个界面中。
 
-当前版本：**v1.1.7**。
+当前版本：**v1.1.8**。
 
-### v1.1.7 本次更新
+### v1.1.8 安全热修复
 
-- 新增持久化历史任务中心，集中查看真实压缩/解压结果、耗时、处理量、错误摘要与脱敏日志。
-- 密码保险箱数据全景加入 35 天活跃热力、更新年龄、风险洞察和常用排行。
-- 普通/AES ZIP 与 TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST 使用真实读取字节展示进度、速度和 ETA。
-- 五种 TAR 格式均通过 64 MiB Windows Release 真实压缩、独立完整性校验、应用解压和 SHA-256 内容回环。
-- [查看 v1.1.7 发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.7)
+- 停用未签名构建中的开机自启动能力，主程序不再读写 Windows `Run` 持久化项。
+- 修复旧设置加载时每次启动都重复写入自启动注册表的问题。
+- v1.1.8 安装与更新会一次性清理 v1.1.7 及更早版本遗留的自启动值，不删除密码保险箱和任务数据。
+- 保留历史任务、密码保险箱统计以及 ZIP/TAR 系列真实进度等 v1.1.7 能力。
+- [查看 v1.1.8 发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.8)
 
 ## 真实运行界面
 

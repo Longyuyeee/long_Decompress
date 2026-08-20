@@ -28,7 +28,6 @@ describe('SettingsView archive engine diagnostics', () => {
       if (command === 'check_rar_compression_support') {
         return Promise.resolve({ available: true, message: 'RAR ready' })
       }
-      if (command === 'check_auto_start') return Promise.resolve(false)
       return Promise.resolve(undefined)
     })
   })

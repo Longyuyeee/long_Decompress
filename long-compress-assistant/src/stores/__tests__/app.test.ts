@@ -91,4 +91,15 @@ describe('App Store Explorer context menu synchronization', () => {
 
     expect(store.settings.maxConcurrentTasks).toBe(3)
   })
+
+  it('disables legacy auto-start state without writing persistence during startup', () => {
+    localStorage.setItem('app-settings', JSON.stringify({ autoStart: true }))
+
+    const store = useAppStore()
+
+    expect(store.settings.autoStart).toBe(false)
+    expect(mocks.invoke).not.toHaveBeenCalledWith('set_auto_start', expect.anything())
+    expect(mocks.invoke).not.toHaveBeenCalledWith('check_auto_start')
+    expect(JSON.parse(localStorage.getItem('app-settings') || '{}').autoStart).toBe(false)
+  })
 })
