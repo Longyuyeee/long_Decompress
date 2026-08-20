@@ -89,6 +89,33 @@ describe('Tauri compression integration', () => {
     expect(tasks.tasks[0].progress).toBe(42)
   })
 
+  it('preserves real byte totals when a final stage event carries zero placeholders', async () => {
+    const tasks = useTaskStore()
+    await tasks.initListeners()
+    tasks.addTask({
+      id: 'zip-telemetry', name: 'large.zip', type: 'compression',
+      sourceFiles: ['large.bin'], outputPath: 'large.zip',
+    })
+    const listener = mocks.listeners.get('task-progress')!
+
+    listener({ payload: {
+      task_id: 'zip-telemetry', progress: 1, processed_bytes: 67_108_864,
+      total_bytes: 67_108_864, speed: '24.0 MB/s', eta_seconds: 0,
+    } })
+    listener({ payload: {
+      task_id: 'zip-telemetry', progress: 1, stage: 'Finalizing',
+      processed_bytes: 0, total_bytes: 0,
+    } })
+
+    expect(tasks.tasks[0]).toMatchObject({
+      progress: 100,
+      processedBytes: 67_108_864,
+      totalBytes: 67_108_864,
+      speed: '24.0 MB/s',
+      etaSeconds: 0,
+    })
+  })
+
   it('returns a task to pending when a password is required', async () => {
     const tasks = useTaskStore()
     await tasks.initListeners()

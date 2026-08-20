@@ -455,7 +455,11 @@ fn main() {
             long_compress_assistant::commands::password_generator::generate_memorable_password,
             long_compress_assistant::commands::password_generator::generate_pin,
             long_compress_assistant::commands::archive_helpers::detect_split_archive,
-            long_compress_assistant::commands::archive_helpers::get_dictionary_passwords
+            long_compress_assistant::commands::archive_helpers::get_dictionary_passwords,
+            long_compress_assistant::commands::task_history::save_task_history,
+            long_compress_assistant::commands::task_history::list_task_history,
+            long_compress_assistant::commands::task_history::delete_task_history,
+            long_compress_assistant::commands::task_history::clear_task_history
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

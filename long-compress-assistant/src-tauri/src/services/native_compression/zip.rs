@@ -1,3 +1,4 @@
+use super::byte_progress::{source_total_bytes, ByteProgress};
 use super::CompressionRuntime;
 use crate::models::compression::{CompressionOptions, TaskLogSeverity};
 use crate::services::compression_entries;
@@ -15,6 +16,7 @@ fn copy_cancellable<R: CompressionRuntime, Rd: Read, Wr: Write>(
     reader: &mut Rd,
     writer: &mut Wr,
     buffer: &mut [u8],
+    mut on_read: impl FnMut(u64),
 ) -> Result<()> {
     loop {
         runtime.check_cancellation()?;
@@ -23,6 +25,7 @@ fn copy_cancellable<R: CompressionRuntime, Rd: Read, Wr: Write>(
             return Ok(());
         }
         writer.write_all(&buffer[..read])?;
+        on_read(read as u64);
     }
 }
 
@@ -33,7 +36,8 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     sources: &[String],
     output: &str,
     preserve_paths: bool,
-) -> Result<()> {
+    progress_context: Option<(&Window, &str)>,
+) -> Result<u64> {
     let file = File::create(output)?;
     let mut writer = zip_aes::ZipWriter::new(file);
     let options = zip_aes::write::SimpleFileOptions::default()
@@ -41,6 +45,8 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
         .compression_level(Some(level.clamp(1, 9) as i64))
         .with_aes_encryption(zip_aes::AesMode::Aes256, password);
     let entries = compression_entries::collect(sources, preserve_paths, true)?;
+    let total_bytes = source_total_bytes(&entries)?;
+    let mut progress = ByteProgress::new(total_bytes);
     let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
 
     for entry in entries {
@@ -51,11 +57,43 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
         } else {
             writer.start_file(archive_name, options)?;
             let mut source = File::open(entry.path)?;
-            copy_cancellable(runtime, &mut source, &mut writer, &mut copy_buffer)?;
+            let current_name = entry.archive_name.clone();
+            copy_cancellable(
+                runtime,
+                &mut source,
+                &mut writer,
+                &mut copy_buffer,
+                |read| {
+                    if let Some((ratio, processed, total)) = progress.record(read, false) {
+                        if let Some((window, task_id)) = progress_context {
+                            runtime.emit_progress(
+                                window,
+                                task_id,
+                                ratio,
+                                Some(current_name.clone()),
+                                processed,
+                                total,
+                            );
+                        }
+                    }
+                },
+            )?;
+            if let Some((ratio, processed, total)) = progress.record(0, true) {
+                if let Some((window, task_id)) = progress_context {
+                    runtime.emit_progress(
+                        window,
+                        task_id,
+                        ratio,
+                        Some(entry.archive_name.clone()),
+                        processed,
+                        total,
+                    );
+                }
+            }
         }
     }
     writer.finish()?;
-    Ok(())
+    Ok(total_bytes)
 }
 
 pub(crate) fn compress<R: CompressionRuntime>(
@@ -115,16 +153,19 @@ pub(crate) fn compress<R: CompressionRuntime>(
                 TaskLogSeverity::Info,
             );
         }
-        create_encrypted_zip(
+        let total_bytes = create_encrypted_zip(
             runtime,
             password,
             options.level.clamp(1, 9),
             sources,
             output,
             options.preserve_paths.unwrap_or(true),
+            window.map(|window| (window, task_id)),
         )?;
         if let Some(window) = window {
-            runtime.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
+            if total_bytes == 0 {
+                runtime.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
+            }
             runtime.emit_log(
                 window,
                 task_id,
@@ -142,23 +183,57 @@ pub(crate) fn compress<R: CompressionRuntime>(
         .compression_level(Some(options.level.clamp(1, 9) as i32));
     let entries =
         compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), false)?;
-    let total = entries.len().max(1);
+    let total_entries = entries.len().max(1);
+    let mut byte_progress = ByteProgress::new(source_total_bytes(&entries)?);
     let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
 
     for (index, entry) in entries.iter().enumerate() {
         runtime.check_cancellation()?;
         writer.start_file(&entry.archive_name, zip_options)?;
         let mut source = File::open(&entry.path)?;
-        copy_cancellable(runtime, &mut source, &mut writer, &mut copy_buffer)?;
-        if let Some(window) = window {
-            runtime.emit_progress(
-                window,
-                task_id,
-                (index + 1) as f32 / total as f32,
-                Some(entry.archive_name.clone()),
-                0,
-                0,
-            );
+        let current_name = entry.archive_name.clone();
+        copy_cancellable(
+            runtime,
+            &mut source,
+            &mut writer,
+            &mut copy_buffer,
+            |read| {
+                if let Some((ratio, processed, total)) = byte_progress.record(read, false) {
+                    if let Some(window) = window {
+                        runtime.emit_progress(
+                            window,
+                            task_id,
+                            ratio,
+                            Some(current_name.clone()),
+                            processed,
+                            total,
+                        );
+                    }
+                }
+            },
+        )?;
+        if let Some((ratio, processed, total)) = byte_progress.record(0, true) {
+            if let Some(window) = window {
+                runtime.emit_progress(
+                    window,
+                    task_id,
+                    ratio,
+                    Some(entry.archive_name.clone()),
+                    processed,
+                    total,
+                );
+            }
+        } else if byte_progress.total() == 0 {
+            if let Some(window) = window {
+                runtime.emit_progress(
+                    window,
+                    task_id,
+                    (index + 1) as f32 / total_entries as f32,
+                    Some(entry.archive_name.clone()),
+                    0,
+                    0,
+                );
+            }
         }
     }
     writer.finish()?;
@@ -266,5 +341,19 @@ mod tests {
             error.downcast_ref::<CompressionError>(),
             Some(CompressionError::Cancelled)
         ));
+    }
+
+    #[test]
+    fn source_total_bytes_ignores_directories_and_counts_payloads() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let folder = temp.path().join("payloads");
+        std::fs::create_dir_all(&folder).expect("create folder");
+        std::fs::write(folder.join("alpha.bin"), vec![1u8; 8192]).expect("alpha");
+        std::fs::write(folder.join("beta.bin"), vec![2u8; 4096]).expect("beta");
+        let entries =
+            compression_entries::collect(&[folder.to_string_lossy().to_string()], true, true)
+                .expect("collect entries");
+
+        assert_eq!(source_total_bytes(&entries).expect("total bytes"), 12_288);
     }
 }

@@ -99,6 +99,9 @@ const archiveBrowserOnly = process.argv.includes('--archive-browser-only')
 const markOfWebOnly = process.argv.includes('--mark-of-web-only')
 const compressionVerificationOnly = process.argv.includes('--compression-verification-only')
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
+const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
+const historyOnly = process.argv.includes('--history-only')
+const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -1063,6 +1066,71 @@ async function runArchiveFlowDesktopGate() {
     await waitForStableFile(compressionJobs[index].archivePath, 30_000)
   }
 
+  console.log('[desktop-e2e] verifying plain and AES ZIP real-byte telemetry')
+  for (const encrypted of [false, true]) {
+    const label = encrypted ? 'aes' : 'plain'
+    const sourcePath = path.join(sourceRoot, `${label}-zip-telemetry.bin`)
+    const archivePath = path.join(archiveRoot, `${label}-zip-telemetry.zip`)
+    const extractRoot = path.join(flowRoot, `${label}-zip-extracted`)
+    const password = encrypted ? 'Long-ZIP-Telemetry-2026!' : undefined
+    writeFileSync(sourcePath, randomBytes(64 * 1024 * 1024))
+
+    const taskId = await callDesktopBridge(
+      'startZipTelemetryCompression',
+      sourcePath,
+      archivePath,
+      password,
+    )
+    await driver.wait(async () => {
+      const state = await callDesktopBridge('archiveFlowAuditState')
+      return state.zipTelemetry.some(item => item.speed && item.etaSeconds !== undefined)
+    }, 60_000)
+    await driver.wait(async () => {
+      const panels = await driver.findElements(By.css('.progress-panel'))
+      if (panels.length === 0) return false
+      const text = await panels[0].getAttribute('textContent')
+      return /速度[\s\S]*\/s/.test(text) && /(剩余|ETA)/.test(text)
+    }, 60_000)
+    const state = await driver.wait(async () => {
+      const current = await callDesktopBridge('archiveFlowAuditState')
+      return current.zipDone ? current : false
+    }, 180_000)
+    assert.equal(await callDesktopBridge('taskStatus', taskId), 'completed')
+    assert.deepEqual(state.errors, [])
+    const sourceBytes = statSync(sourcePath).size
+    assert.ok(
+      state.zipTelemetry.some(item => item.processedBytes > 0 && item.processedBytes < item.totalBytes),
+      `${label} ZIP must emit an intermediate real-byte event`,
+    )
+    const byteTelemetry = state.zipTelemetry.filter(item => item.totalBytes > 0)
+    const finalTelemetry = byteTelemetry.at(-1)
+    assert.equal(finalTelemetry.processedBytes, sourceBytes)
+    assert.equal(finalTelemetry.totalBytes, sourceBytes)
+    assert.ok(finalTelemetry.speed, `${label} ZIP must expose measured throughput`)
+    assert.equal(finalTelemetry.etaSeconds, 0)
+
+    const testArgs = ['t', '-y']
+    if (password) testArgs.push(`-p${password}`)
+    testArgs.push(archivePath)
+    const archiveTest = spawnSync(bundledSevenZip, testArgs, { encoding: 'utf8', windowsHide: true })
+    assert.equal(archiveTest.status, 0, archiveTest.stderr || archiveTest.stdout)
+    if (password) {
+      const wrongPassword = spawnSync(
+        bundledSevenZip,
+        ['t', '-y', '-pwrong-password', archivePath],
+        { encoding: 'utf8', windowsHide: true },
+      )
+      assert.notEqual(wrongPassword.status, 0, 'AES ZIP must reject an incorrect password')
+    }
+    mkdirSync(extractRoot, { recursive: true })
+    const extractArgs = ['x', '-y', `-o${extractRoot}`]
+    if (password) extractArgs.push(`-p${password}`)
+    extractArgs.push(archivePath)
+    const extraction = spawnSync(bundledSevenZip, extractArgs, { encoding: 'utf8', windowsHide: true })
+    assert.equal(extraction.status, 0, extraction.stderr || extraction.stdout)
+    assert.equal(fileSha256(path.join(extractRoot, path.basename(sourcePath))), fileSha256(sourcePath))
+  }
+
   console.log('[desktop-e2e] verifying same-output extraction serialization')
   const extractionTaskIds = await callDesktopBridge(
     'startSharedOutputExtraction',
@@ -1142,6 +1210,246 @@ async function runArchiveFlowDesktopGate() {
   )
 }
 
+async function runHistoryDesktopGate() {
+  console.log('[desktop-e2e] verifying persistent history from a real ZIP round trip')
+  await callDesktopBridge('clearTasks')
+  await callDesktopBridge('clearTaskHistory')
+  const root = path.join(fixtureDirectory, 'history-gate')
+  const sourcePath = path.join(root, 'history-payload.bin')
+  const archivePath = path.join(root, 'history-payload.zip')
+  const outputPath = path.join(root, 'extracted')
+  mkdirSync(root, { recursive: true })
+  writeFileSync(sourcePath, randomBytes(2 * 1024 * 1024))
+
+  await callDesktopBridge('runArchiveRoundTrip', sourcePath, archivePath, outputPath, 'zip')
+  const beforeRestart = await driver.wait(async () => {
+    const records = await callDesktopBridge('taskHistory')
+    return records.length >= 2 ? records : false
+  }, 30_000)
+  const compression = beforeRestart.find(record => record.taskType === 'compression')
+  const extraction = beforeRestart.find(record => record.taskType === 'decompression')
+  assert.equal(compression?.status, 'completed')
+  assert.equal(extraction?.status, 'completed')
+  assert.equal(normalizedDesktopPath(compression?.outputPath), normalizedDesktopPath(archivePath))
+  assert.ok(compression?.durationMs >= 0)
+  assert.ok(!JSON.stringify(beforeRestart).toLowerCase().includes('password'))
+
+  await restartDesktopSession()
+  const afterRestart = await callDesktopBridge('taskHistory')
+  assert.ok(afterRestart.some(record => record.id === compression.id))
+  assert.ok(afterRestart.some(record => record.id === extraction.id))
+
+  const historyButton = await driver.findElement(By.css('[data-testid="nav-History"]'))
+  await historyButton.click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/history'), 15_000)
+  await driver.wait(async () => (await driver.findElement(By.css('[data-testid="history-list"]')).isDisplayed()), 15_000)
+  const overflow = await driver.executeScript(() => ({
+    body: document.body.scrollWidth - document.body.clientWidth,
+    page: document.querySelector('.history-view')?.scrollWidth - document.querySelector('.history-view')?.clientWidth,
+  }))
+  assert.ok(overflow.body <= 1, `history shell must not overflow horizontally: ${JSON.stringify(overflow)}`)
+  assert.ok((overflow.page ?? 0) <= 1, `history page must not overflow horizontally: ${JSON.stringify(overflow)}`)
+  await driver.manage().window().setRect({ width: 760, height: 520 })
+  const compactOverflow = await driver.executeScript(() => ({
+    body: document.body.scrollWidth - document.body.clientWidth,
+    page: document.querySelector('.history-view')?.scrollWidth - document.querySelector('.history-view')?.clientWidth,
+  }))
+  assert.ok(compactOverflow.body <= 1, `compact history shell must not overflow: ${JSON.stringify(compactOverflow)}`)
+  assert.ok((compactOverflow.page ?? 0) <= 1, `compact history page must not overflow: ${JSON.stringify(compactOverflow)}`)
+  mkdirSync(artifactDirectory, { recursive: true })
+  writeFileSync(
+    path.join(artifactDirectory, 'task-history-compact.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+}
+
+async function runZipTelemetryDesktopGate() {
+  console.log('[desktop-e2e] verifying focused plain and AES ZIP real-byte telemetry')
+  await callDesktopBridge('clearTasks')
+  const flowRoot = path.join(fixtureDirectory, 'zip-telemetry')
+  const sourceRoot = path.join(flowRoot, 'sources')
+  const archiveRoot = path.join(flowRoot, 'archives')
+  mkdirSync(sourceRoot, { recursive: true })
+  mkdirSync(archiveRoot, { recursive: true })
+
+  for (const encrypted of [false, true]) {
+    const label = encrypted ? 'aes' : 'plain'
+    const sourcePath = path.join(sourceRoot, `${label}-zip-telemetry.bin`)
+    const archivePath = path.join(archiveRoot, `${label}-zip-telemetry.zip`)
+    const extractRoot = path.join(flowRoot, `${label}-zip-extracted`)
+    const password = encrypted ? 'Long-ZIP-Telemetry-2026!' : undefined
+    writeFileSync(sourcePath, randomBytes(64 * 1024 * 1024))
+
+    const taskId = await callDesktopBridge(
+      'startZipTelemetryCompression',
+      sourcePath,
+      archivePath,
+      password,
+    )
+    if ((await driver.findElements(By.css('.progress-panel'))).length === 0) {
+      await (await waitForElement('.progress-summary')).click()
+    }
+    await driver.wait(async () => {
+      const state = await callDesktopBridge('archiveFlowAuditState')
+      return state.zipTelemetry.some(item => item.speed && item.etaSeconds !== undefined)
+    }, 60_000)
+    await driver.wait(async () => {
+      const panels = await driver.findElements(By.css('.progress-panel'))
+      if (panels.length === 0) return false
+      const text = await panels[0].getAttribute('textContent')
+      return /速度[\s\S]*\/s/.test(text) && /(剩余|ETA)/.test(text)
+    }, 60_000)
+    const state = await driver.wait(async () => {
+      const current = await callDesktopBridge('archiveFlowAuditState')
+      return current.zipDone ? current : false
+    }, 180_000)
+    assert.equal(await callDesktopBridge('taskStatus', taskId), 'completed')
+    assert.deepEqual(state.errors, [])
+    const sourceBytes = statSync(sourcePath).size
+    assert.ok(
+      state.zipTelemetry.some(item => item.processedBytes > 0 && item.processedBytes < item.totalBytes),
+      `${label} ZIP must emit an intermediate real-byte event`,
+    )
+    const byteTelemetry = state.zipTelemetry.filter(item => item.totalBytes > 0)
+    const finalTelemetry = byteTelemetry.at(-1)
+    assert.equal(finalTelemetry.processedBytes, sourceBytes)
+    assert.equal(finalTelemetry.totalBytes, sourceBytes)
+    assert.ok(finalTelemetry.speed, `${label} ZIP must expose measured throughput`)
+    assert.equal(finalTelemetry.etaSeconds, 0)
+
+    const testArgs = ['t', '-y']
+    if (password) testArgs.push(`-p${password}`)
+    testArgs.push(archivePath)
+    const archiveTest = spawnSync(bundledSevenZip, testArgs, { encoding: 'utf8', windowsHide: true })
+    assert.equal(archiveTest.status, 0, archiveTest.stderr || archiveTest.stdout)
+    if (password) {
+      const wrongPassword = spawnSync(
+        bundledSevenZip,
+        ['t', '-y', '-pwrong-password', archivePath],
+        { encoding: 'utf8', windowsHide: true },
+      )
+      assert.notEqual(wrongPassword.status, 0, 'AES ZIP must reject an incorrect password')
+    }
+    mkdirSync(extractRoot, { recursive: true })
+    const extractArgs = ['x', '-y', `-o${extractRoot}`]
+    if (password) extractArgs.push(`-p${password}`)
+    extractArgs.push(archivePath)
+    const extraction = spawnSync(bundledSevenZip, extractArgs, { encoding: 'utf8', windowsHide: true })
+    assert.equal(extraction.status, 0, extraction.stderr || extraction.stdout)
+    assert.equal(fileSha256(path.join(extractRoot, path.basename(sourcePath))), fileSha256(sourcePath))
+  }
+
+  console.log('[desktop-e2e] verifying multi-file ZIP cumulative byte telemetry')
+  const multiSources = [
+    { path: path.join(sourceRoot, 'multi-alpha.bin'), size: 24 * 1024 * 1024 },
+    { path: path.join(sourceRoot, 'multi-beta.bin'), size: 40 * 1024 * 1024 },
+  ]
+  for (const source of multiSources) writeFileSync(source.path, randomBytes(source.size))
+  const multiArchive = path.join(archiveRoot, 'multi-zip-telemetry.zip')
+  const multiOutput = path.join(flowRoot, 'multi-zip-extracted')
+  const multiTaskId = await callDesktopBridge(
+    'startZipTelemetryCompression',
+    multiSources.map(source => source.path),
+    multiArchive,
+  )
+  const multiState = await driver.wait(async () => {
+    const state = await callDesktopBridge('archiveFlowAuditState')
+    return state.zipDone ? state : false
+  }, 180_000)
+  assert.equal(await callDesktopBridge('taskStatus', multiTaskId), 'completed')
+  assert.deepEqual(multiState.errors, [])
+  const multiByteEvents = multiState.zipTelemetry.filter(item => item.totalBytes > 0)
+  const expectedMultiBytes = multiSources.reduce((total, source) => total + source.size, 0)
+  assert.ok(multiByteEvents.length > 2, 'multi-file ZIP must emit intermediate byte events')
+  assert.ok(
+    multiByteEvents.every((event, index) => index === 0 || event.processedBytes >= multiByteEvents[index - 1].processedBytes),
+    'multi-file ZIP processed bytes must be monotonic',
+  )
+  assert.equal(multiByteEvents.at(-1).processedBytes, expectedMultiBytes)
+  assert.equal(multiByteEvents.at(-1).totalBytes, expectedMultiBytes)
+  const multiTest = spawnSync(bundledSevenZip, ['t', '-y', multiArchive], {
+    encoding: 'utf8', windowsHide: true,
+  })
+  assert.equal(multiTest.status, 0, multiTest.stderr || multiTest.stdout)
+  mkdirSync(multiOutput, { recursive: true })
+  const multiExtract = spawnSync(bundledSevenZip, ['x', '-y', `-o${multiOutput}`, multiArchive], {
+    encoding: 'utf8', windowsHide: true,
+  })
+  assert.equal(multiExtract.status, 0, multiExtract.stderr || multiExtract.stdout)
+  for (const source of multiSources) {
+    assert.equal(fileSha256(path.join(multiOutput, path.basename(source.path))), fileSha256(source.path))
+  }
+}
+
+async function runTarTelemetryDesktopGate() {
+  console.log('[desktop-e2e] verifying TAR-family real-byte telemetry and round trips')
+  await callDesktopBridge('clearTasks')
+  const root = path.join(fixtureDirectory, 'tar-telemetry')
+  const sourcePath = path.join(root, 'tar-telemetry-payload.bin')
+  mkdirSync(root, { recursive: true })
+  writeFileSync(sourcePath, randomBytes(64 * 1024 * 1024))
+  const sourceBytes = statSync(sourcePath).size
+  const formats = [
+    ['tar', 'tar'],
+    ['tar.gz', 'tar.gz'],
+    ['tar.bz2', 'tar.bz2'],
+    ['tar.xz', 'tar.xz'],
+    ['tar.zst', 'tar.zst'],
+  ]
+
+  for (const [format, extension] of formats) {
+    console.log(`[desktop-e2e] TAR telemetry round trip: ${format}`)
+    const archivePath = path.join(root, `payload.${extension}`)
+    const extractRoot = path.join(root, `extract-${format.replaceAll('.', '-')}`)
+    const taskId = await callDesktopBridge(
+      'startZipTelemetryCompression',
+      sourcePath,
+      archivePath,
+      undefined,
+      format,
+    )
+    if (format === 'tar.gz' && (await driver.findElements(By.css('.progress-panel'))).length === 0) {
+      await (await waitForElement('.progress-summary')).click()
+    }
+    if (format === 'tar.gz') {
+      await driver.wait(async () => {
+        const panels = await driver.findElements(By.css('.progress-panel'))
+        if (panels.length === 0) return false
+        const text = await panels[0].getAttribute('textContent')
+        return /速度[\s\S]*\/s/.test(text) && /(剩余|ETA)/.test(text)
+      }, 60_000)
+    }
+    const state = await driver.wait(async () => {
+      const current = await callDesktopBridge('archiveFlowAuditState')
+      return current.zipDone ? current : false
+    }, 180_000)
+    assert.equal(await callDesktopBridge('taskStatus', taskId), 'completed')
+    assert.deepEqual(state.errors, [])
+    const byteTelemetry = state.zipTelemetry.filter(item => item.totalBytes > 0)
+    assert.ok(
+      byteTelemetry.some(item => item.processedBytes > 0 && item.processedBytes < item.totalBytes),
+      `${format} must emit an intermediate real-byte event`,
+    )
+    const finalTelemetry = byteTelemetry.at(-1)
+    assert.equal(finalTelemetry.processedBytes, sourceBytes, `${format} final processed bytes`)
+    assert.equal(finalTelemetry.totalBytes, sourceBytes, `${format} final total bytes`)
+    assert.ok(finalTelemetry.speed, `${format} must expose measured throughput`)
+    assert.equal(finalTelemetry.etaSeconds, 0)
+
+    const archiveTest = spawnSync(bundledSevenZip, ['t', '-y', archivePath], {
+      encoding: 'utf8', windowsHide: true,
+    })
+    assert.equal(archiveTest.status, 0, archiveTest.stderr || archiveTest.stdout)
+    mkdirSync(extractRoot, { recursive: true })
+    await callDesktopBridge('extractArchive', archivePath, extractRoot)
+    assert.equal(
+      fileSha256(path.join(extractRoot, path.basename(sourcePath))),
+      fileSha256(sourcePath),
+      `${format} extracted payload must match the source`,
+    )
+  }
+}
+
 try {
   mkdirSync(webviewUserDataDirectory, { recursive: true })
   await startTauriDriver()
@@ -1150,7 +1458,7 @@ try {
   await waitForDesktopReady()
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
-  assert.equal(navigation.length, 6, 'the real desktop shell must expose six navigation buttons')
+  assert.equal(navigation.length, 7, 'the real desktop shell must expose seven navigation buttons')
   assert.equal(
     await navigation[0].getAttribute('aria-current'),
     'page',
@@ -1168,7 +1476,19 @@ try {
   const payload = `Long解压 real desktop round-trip ${new Date().toISOString()}\n`
   writeFileSync(sourcePath, payload, 'utf8')
 
-  if (archiveFlowOnly) {
+  if (tarTelemetryOnly) {
+    await runTarTelemetryDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri TAR telemetry gate passed.')
+  } else if (historyOnly) {
+    await runHistoryDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri task-history persistence gate passed.')
+  } else if (zipTelemetryOnly) {
+    await runZipTelemetryDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri ZIP telemetry gate passed.')
+  } else if (archiveFlowOnly) {
     await runArchiveFlowDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri archive-flow alignment gate passed.')

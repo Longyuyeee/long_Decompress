@@ -75,9 +75,9 @@ test.describe('Long Decompress desktop shell', () => {
     await expect(page.locator('[role="button"][tabindex="0"]').first()).toBeVisible()
   })
 
-  test('renders six keyboard-accessible navigation buttons', async ({ page }) => {
+  test('renders seven keyboard-accessible navigation buttons', async ({ page }) => {
     const navigation = page.locator('aside nav > button')
-    await expect(navigation).toHaveCount(6)
+    await expect(navigation).toHaveCount(7)
     await expect(navigation.first()).toHaveAttribute('aria-current', 'page')
   })
 

@@ -10,6 +10,7 @@ import type { ResourcePreflightReport } from '@/types/resourcePreflight'
 import type { CompressionAnalysisResult } from '@/composables/useTauriCommands'
 import { attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
+import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 const TEST_TASK_ID = 'desktop-e2e-lifecycle-task'
 
@@ -18,6 +19,8 @@ export interface DesktopE2EBridge {
   seedActiveTask: () => Promise<string>
   cancelTask: (taskId: string) => Promise<boolean>
   clearTasks: () => Promise<void>
+  clearTaskHistory: () => Promise<void>
+  taskHistory: () => Promise<TaskHistoryRecord[]>
   reset: () => Promise<void>
   taskStatus: (taskId: string) => TaskStatus | null
   taskProgress: (taskId: string) => number | null
@@ -90,13 +93,34 @@ export interface DesktopE2EBridge {
   startArchiveCompressionBatch: (
     jobs: Array<{ sourcePath: string; archivePath: string }>,
   ) => Promise<string[]>
+  startZipTelemetryCompression: (
+    sourcePath: string | string[],
+    archivePath: string,
+    password?: string,
+    format?: string,
+  ) => Promise<string>
   startSharedOutputExtraction: (archivePaths: string[], outputPath: string) => Promise<string[]>
   archiveFlowAuditState: () => {
     compressionMaxActive: number
     compressionDone: boolean
     extractionMaxActive: number
     extractionDone: boolean
-    telemetry: Array<{ taskId: string; speed?: string; etaSeconds?: number }>
+    telemetry: Array<{
+      taskId: string
+      speed?: string
+      etaSeconds?: number
+      processedBytes: number
+      totalBytes: number
+    }>
+    zipDone: boolean
+    zipTaskId: string | null
+    zipTelemetry: Array<{
+      taskId: string
+      speed?: string
+      etaSeconds?: number
+      processedBytes: number
+      totalBytes: number
+    }>
     errors: string[]
   }
   runEncryptedSolidSevenZipRoundTrip: (
@@ -195,7 +219,22 @@ export const installDesktopE2EBridge = () => {
     compressionDone: false,
     extractionMaxActive: 0,
     extractionDone: false,
-    telemetry: [] as Array<{ taskId: string; speed?: string; etaSeconds?: number }>,
+    telemetry: [] as Array<{
+      taskId: string
+      speed?: string
+      etaSeconds?: number
+      processedBytes: number
+      totalBytes: number
+    }>,
+    zipDone: false,
+    zipTaskId: null as string | null,
+    zipTelemetry: [] as Array<{
+      taskId: string
+      speed?: string
+      etaSeconds?: number
+      processedBytes: number
+      totalBytes: number
+    }>,
     errors: [] as string[],
   }
 
@@ -532,15 +571,17 @@ export const installDesktopE2EBridge = () => {
         task_id: string
         speed?: string
         eta_seconds?: number
+        processed_bytes: number
+        total_bytes: number
       }>('task-progress', event => {
         if (!taskIds.includes(event.payload.task_id)) return
-        if (event.payload.speed || event.payload.eta_seconds !== undefined) {
-          archiveFlowAudit.telemetry.push({
-            taskId: event.payload.task_id,
-            speed: event.payload.speed,
-            etaSeconds: event.payload.eta_seconds,
-          })
-        }
+        archiveFlowAudit.telemetry.push({
+          taskId: event.payload.task_id,
+          speed: event.payload.speed,
+          etaSeconds: event.payload.eta_seconds,
+          processedBytes: event.payload.processed_bytes,
+          totalBytes: event.payload.total_bytes,
+        })
       })
       await syncActiveState()
       void runArchiveTasks(jobs, 2, async (job, index) => {
@@ -571,6 +612,65 @@ export const installDesktopE2EBridge = () => {
         void syncActiveState()
       })
       return taskIds
+    },
+
+    async clearTaskHistory() {
+      await invoke('clear_task_history')
+    },
+
+    async taskHistory() {
+      return invoke<TaskHistoryRecord[]>('list_task_history', { limit: 500 })
+    },
+
+    async startZipTelemetryCompression(sourcePath, archivePath, password, format = 'zip') {
+      archiveFlowAudit.zipDone = false
+      archiveFlowAudit.zipTelemetry = []
+      const taskId = `desktop-e2e-${format.replaceAll('.', '-')}-telemetry-${Date.now()}`
+      archiveFlowAudit.zipTaskId = taskId
+      const sourcePaths = Array.isArray(sourcePath) ? sourcePath : [sourcePath]
+      addArchiveTask(taskId, 'compression', sourcePaths[0], archivePath)
+      const task = taskStore.tasks.find(item => item.id === taskId)
+      if (task) task.format = format
+      const unlisten = await listen<{
+        task_id: string
+        speed?: string
+        eta_seconds?: number
+        processed_bytes: number
+        total_bytes: number
+      }>('task-progress', event => {
+        if (event.payload.task_id !== taskId) return
+        archiveFlowAudit.zipTelemetry.push({
+          taskId,
+          speed: event.payload.speed,
+          etaSeconds: event.payload.eta_seconds,
+          processedBytes: event.payload.processed_bytes,
+          totalBytes: event.payload.total_bytes,
+        })
+      })
+      taskStore.updateTaskStatus(taskId, 'compressing')
+      await syncActiveState()
+      void invoke('compress_files', {
+        taskId,
+        files: sourcePaths,
+        outputPath: archivePath,
+        options: {
+          ...sevenZipOptions,
+          format,
+          level: format === 'zip' ? 9 : 3,
+          password: password || null,
+        },
+      })
+        .then(() => taskStore.updateTaskStatus(taskId, 'completed'))
+        .catch(error => {
+          archiveFlowAudit.errors.push(String(error))
+          taskStore.updateTaskStatus(taskId, 'failed')
+        })
+        .finally(() => {
+          archiveFlowAudit.zipDone = true
+          unlisten()
+          void syncActiveState()
+        })
+      return taskId
     },
 
     async startSharedOutputExtraction(archivePaths, outputPath) {
@@ -618,6 +718,7 @@ export const installDesktopE2EBridge = () => {
       return {
         ...archiveFlowAudit,
         telemetry: archiveFlowAudit.telemetry.map(item => ({ ...item })),
+        zipTelemetry: archiveFlowAudit.zipTelemetry.map(item => ({ ...item })),
         errors: [...archiveFlowAudit.errors],
       }
     },

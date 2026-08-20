@@ -1,5 +1,27 @@
 # 开发交接
 
+## 2026-08-20 TAR 系列真实遥测收口
+
+- `tar / tar.gz / tar.bz2 / tar.xz / tar.zst` 已使用共享有界计数读取器报告真实输入字节，4 MiB 中间事件、文件边界终值、任务起始速率基线和 ETA 均已接通；不使用百分比推算字节。
+- 真实回归保留长路径与元数据，并修复读取中取消被 `Interrupted` 自动重试的问题。64 MiB 随机非空载荷逐格式通过 Windows Release + WebView2 可见遥测、独立 7-Zip 校验、应用实际解压和 SHA-256 回环；复验命令为 `npm.cmd run test:e2e:desktop:tar-telemetry`。
+- 全量审计修正历史任务 schema v6 后遗留的 v5 迁移测试预期，迁移回归现在同时确认 watch 生命周期表与 `task_operation_history` 表。
+- 下一阶段转向外部 CLI 路线可证明的真实落盘观测；若引擎只能返回百分比，继续不显示伪造速度。真实 HDD/网络盘矩阵与 HFSX 非空已知载荷仍保持独立未完成项。
+
+## 2026-08-20 密码全景与历史任务中心
+
+- 左侧已在“文件完整性”与“设置中心”之间增加“历史任务”，覆盖真实压缩/解压的完成、失败和取消结果；统一历史持久化来源、目标、格式、耗时、真实处理量、错误摘要与脱敏日志，清理当前队列不会删除历史。
+- 密码保险箱全景已增加 35 天活跃热力、更新年龄、可行动风险洞察、常用与最近活跃排行；所有统计继续只使用本机真实条目字段。
+- 独立 Windows Release 门禁已用 2 MiB 随机非空载荷完成真实 ZIP 压缩与解压，应用重启后两条历史仍存在，760×520 最小窗口无横向溢出；复验命令为 `npm.cmd run test:e2e:desktop:history`。
+- 本阶段详细审计、预期/实际差异和隐私边界见 [DEVELOPMENT_AUDIT_2026-08-20_VAULT_HISTORY.md](DEVELOPMENT_AUDIT_2026-08-20_VAULT_HISTORY.md)。
+
+## 2026-08-20 v1.1.6 后续增强审计
+
+- 已从远端切换并快进到最新 `master@0694fac`；`agent/p0-archive-flow-alignment` 与 `agent/release-1.1.6` 均已通过 PR #81/#82 合入主线，公开 `v1.1.6` 的 CI、Release 和四项更新资产完整。
+- 普通 ZIP 与 AES ZIP 的真实输入字节遥测已经完成；64 MiB 普通/AES 单文件及 24 MiB + 40 MiB 双文件的 Windows Release + WebView2 聚焦门禁通过，中间字节、单调累计、最终总量、可见速度/ETA、错误密码拒绝、独立 7-Zip 和 SHA-256 全部有真实证据。
+- 真实门禁同时修正了完成阶段 `0/0` 占位事件覆盖前端总量/ETA 的问题；独立复验命令为 `npm.cmd run test:e2e:desktop:zip-telemetry`。
+- TAR 真实字节已在后续阶段完成；外部 CLI、真实 HDD/网络盘矩阵与 HFSX 非空载荷继续作为独立阶段，避免把进度语义、文件格式语义和调度策略混在一次修改中。
+- 详细预期/实际差距及验收矩阵见 [DEVELOPMENT_AUDIT_2026-08-20.md](DEVELOPMENT_AUDIT_2026-08-20.md)。
+
 ## 2026-08-15 v1.1.6 发布收口
 
 - 原计划以公开版 `v1.1.5` 为基线提升一个补丁版本，本次版本身份统一为 `1.1.6`，没有覆盖或重发旧版本。

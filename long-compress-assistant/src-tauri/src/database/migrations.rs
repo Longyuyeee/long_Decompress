@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const _CURRENT_VERSION: i32 = 5;
+const _CURRENT_VERSION: i32 = 6;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -58,6 +58,57 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
             .execute(pool)
             .await?;
     }
+
+    if current < 6 {
+        migrate_v6(pool).await?;
+        query("INSERT INTO schema_version (version) VALUES (6)")
+            .execute(pool)
+            .await?;
+    }
+
+    Ok(())
+}
+
+/// V6: unified, privacy-safe history for the current compression and extraction flows.
+async fn migrate_v6(pool: &SqlitePool) -> Result<()> {
+    query(
+        r#"
+        CREATE TABLE IF NOT EXISTS task_operation_history (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            task_type TEXT NOT NULL CHECK(task_type IN ('compression', 'decompression')),
+            status TEXT NOT NULL CHECK(status IN ('completed', 'failed', 'cancelled')),
+            source_paths TEXT NOT NULL DEFAULT '[]',
+            output_path TEXT NOT NULL DEFAULT '',
+            format TEXT,
+            started_at TEXT,
+            completed_at TEXT NOT NULL,
+            duration_ms INTEGER NOT NULL DEFAULT 0,
+            processed_bytes INTEGER NOT NULL DEFAULT 0,
+            total_bytes INTEGER NOT NULL DEFAULT 0,
+            error_message TEXT,
+            logs TEXT NOT NULL DEFAULT '[]',
+            updated_at TEXT NOT NULL
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .context("创建统一任务历史表失败")?;
+
+    query(
+        "CREATE INDEX IF NOT EXISTS idx_task_operation_history_completed ON task_operation_history(completed_at DESC)",
+    )
+    .execute(pool)
+    .await
+    .context("创建任务历史时间索引失败")?;
+
+    query(
+        "CREATE INDEX IF NOT EXISTS idx_task_operation_history_type_status ON task_operation_history(task_type, status)",
+    )
+    .execute(pool)
+    .await
+    .context("创建任务历史类型状态索引失败")?;
 
     Ok(())
 }
@@ -1120,11 +1171,19 @@ mod tests {
         .unwrap()
         .0;
         assert_eq!(tables, 2);
+        let history_tables: i64 = query_as::<_, (i64,)>(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'task_operation_history'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap()
+        .0;
+        assert_eq!(history_tables, 1);
         let version: i32 = query_as::<_, (i32,)>("SELECT MAX(version) FROM schema_version")
             .fetch_one(&pool)
             .await
             .unwrap()
             .0;
-        assert_eq!(version, 5);
+        assert_eq!(version, _CURRENT_VERSION);
     }
 }

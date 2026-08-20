@@ -209,6 +209,7 @@ const handleKeydown = (e: KeyboardEvent) => {
       case 'b': e.preventDefault(); router.push('/browser'); break   // Ctrl+B → 浏览压缩包
       case 'v': if (e.shiftKey) { e.preventDefault(); router.push('/vault') }; break
       case 'i': e.preventDefault(); router.push('/integrity'); break
+      case 'h': e.preventDefault(); router.push('/history'); break
       case ',': e.preventDefault(); router.push('/settings'); break  // Ctrl+, → 设置
     }
   }

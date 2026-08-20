@@ -7,12 +7,15 @@
 ## 当前覆盖
 
 - Release Tauri 二进制成功启动并进入默认解压工作区。
-- 主工作区标题可见，六个侧栏入口存在，解压中心默认选中。
+- 主工作区标题可见，七个侧栏入口存在，解压中心默认选中。
+- 真实 ZIP 压缩/解压的终态写入统一历史，重启隔离测试应用后仍可读取；历史页面在 760×520 最小窗口不产生横向溢出。
 - 通过第二实例参数发送“一键打包”，执行真实 ZIP 压缩并验证输出非空。
 - 通过第二实例参数发送“一键解压”，执行真实解压并逐字节校验源文件与输出文件。
 - 真实一键打包/解压任务保留本机卷容量、文件系统、介质和体积估算，详情卡片可见且无横向溢出；可靠不足经正式 IPC 返回 blocked，目标目录不会创建。
 - 两项真实 7Z 压缩按显式并发 2 同时执行；写入同一输出目录的两项解压即使全局并发为 2 也保持串行。
 - 全局进度面板在实际传输期间显示后端字节计算的速度和剩余时间，不用模拟值通过门禁。
+- 普通 ZIP 与 AES ZIP 使用 64 MiB 随机非空载荷验证真实中间/最终字节、可见速度与 ETA、AES 错误密码拒绝；另用 24 MiB + 40 MiB 双文件验证累计单调与精确总量，全部经独立 7-Zip 完整性和解出文件 SHA-256 复核。可用聚焦门禁避开无关高负载场景。
+- TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST 各使用 64 MiB 随机非空载荷验证中间/最终真实字节、速率与 ETA，并逐格式执行独立 7-Zip 完整性测试、应用解压和 SHA-256 回环。
 - AES 密码双文件 7Z 使用单固实块创建，独立 7-Zip 元数据与完整解出共同确认；非原生密码格式拒绝转换时不创建任务，确认后才生成并验证 `.7z`。
 - 在真实 WebView2 中进入设置中心。
 - 启动确定性长任务，通过实际取消注册表停止任务，并验证未完成输出被清理。
@@ -55,6 +58,12 @@ npm run test:e2e:desktop
 npm.cmd run test:e2e:desktop:resource-preflight
 # 只复验归档并发、同目录串行、遥测、加密固实 7Z 和格式回退确认
 npm.cmd run test:e2e:desktop:archive-flow
+# 只复验普通/AES ZIP 的真实字节、可见遥测、密码与内容一致性
+npm.cmd run test:e2e:desktop:zip-telemetry
+# 只复验五种 TAR 系列的真实字节、可见遥测、独立校验与内容回环
+npm.cmd run test:e2e:desktop:tar-telemetry
+# 只复验真实 ZIP 往返、历史持久化、重启恢复与最小窗口适配
+npm.cmd run test:e2e:desktop:history
 # 发布前全格式验收会强制检查所有生成器，不允许静默跳过
 npm.cmd run test:prepare:full-format
 npm.cmd run test:e2e:desktop:full-format
