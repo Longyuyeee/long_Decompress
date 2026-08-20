@@ -39,6 +39,7 @@ const routes = [
   { path: '/browser', name: 'ArchiveBrowser', component: { template: '<div>Browser</div>' } },
   { path: '/vault', name: 'Vault', component: { template: '<div>Vault</div>' } },
   { path: '/integrity', name: 'FileIntegrity', component: { template: '<div>Integrity</div>' } },
+  { path: '/history', name: 'History', component: { template: '<div>History</div>' } },
   { path: '/settings', name: 'Settings', component: { template: '<div>Settings</div>' } }
 ]
 
@@ -76,7 +77,7 @@ describe('MainLayout', () => {
     expect(mocks.onFocusChanged).toHaveBeenCalledOnce()
   })
 
-  it('renders the six product navigation entries', async () => {
+  it('renders the seven product navigation entries with history before settings', async () => {
     const { wrapper } = await mountLayout()
 
     expect(wrapper.find('.pi-folder-open').exists()).toBe(true)
@@ -84,12 +85,14 @@ describe('MainLayout', () => {
     expect(wrapper.find('.pi-list').exists()).toBe(true)
     expect(wrapper.find('.pi-shield').exists()).toBe(true)
     expect(wrapper.find('.pi-verified').exists()).toBe(true)
+    expect(wrapper.find('.pi-history').exists()).toBe(true)
     expect(wrapper.find('.pi-cog').exists()).toBe(true)
     expect(mocks.t).toHaveBeenCalledWith('nav.decompress')
     expect(mocks.t).toHaveBeenCalledWith('nav.compress')
     expect(mocks.t).toHaveBeenCalledWith('nav.browser')
     expect(mocks.t).toHaveBeenCalledWith('nav.vault')
     expect(mocks.t).toHaveBeenCalledWith('nav.integrity')
+    expect(mocks.t).toHaveBeenCalledWith('nav.history')
     expect(mocks.t).toHaveBeenCalledWith('nav.settings')
   })
 
@@ -97,7 +100,9 @@ describe('MainLayout', () => {
     const { wrapper } = await mountLayout('/compress')
 
     const navButtons = wrapper.findAll('aside nav > button')
-    expect(navButtons).toHaveLength(6)
+    expect(navButtons).toHaveLength(7)
+    expect(navButtons[5].attributes('data-testid')).toBe('nav-History')
+    expect(navButtons[6].attributes('data-testid')).toBe('nav-Settings')
     expect(navButtons[1].classes()).toContain('bg-primary/20')
     expect(navButtons[0].classes()).toContain('hover:bg-primary/8')
     expect(navButtons[1].attributes('aria-current')).toBe('page')

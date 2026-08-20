@@ -10,6 +10,7 @@ import type { ResourcePreflightReport } from '@/types/resourcePreflight'
 import type { CompressionAnalysisResult } from '@/composables/useTauriCommands'
 import { attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
+import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 const TEST_TASK_ID = 'desktop-e2e-lifecycle-task'
 
@@ -18,6 +19,8 @@ export interface DesktopE2EBridge {
   seedActiveTask: () => Promise<string>
   cancelTask: (taskId: string) => Promise<boolean>
   clearTasks: () => Promise<void>
+  clearTaskHistory: () => Promise<void>
+  taskHistory: () => Promise<TaskHistoryRecord[]>
   reset: () => Promise<void>
   taskStatus: (taskId: string) => TaskStatus | null
   taskProgress: (taskId: string) => number | null
@@ -608,6 +611,14 @@ export const installDesktopE2EBridge = () => {
         void syncActiveState()
       })
       return taskIds
+    },
+
+    async clearTaskHistory() {
+      await invoke('clear_task_history')
+    },
+
+    async taskHistory() {
+      return invoke<TaskHistoryRecord[]>('list_task_history', { limit: 500 })
     },
 
     async startZipTelemetryCompression(sourcePath, archivePath, password) {

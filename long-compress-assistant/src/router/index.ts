@@ -39,6 +39,14 @@ const routes: Array<RouteRecordRaw> = [
     }
   },
   {
+    path: '/history',
+    name: 'History',
+    component: () => import('@/views/HistoryView.vue'),
+    meta: {
+      title: '历史任务'
+    }
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/SettingsView.vue'),

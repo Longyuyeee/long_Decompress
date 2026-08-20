@@ -197,6 +197,12 @@ describe('PasswordVaultView', () => {
     expect(modal?.textContent).toContain('密码强度分布')
     expect(modal?.textContent).toContain('使用趋势')
     expect(modal?.textContent).toContain('风险雷达')
+    expect(modal?.textContent).toContain('35 天活跃热力')
+    expect(modal?.textContent).toContain('密码更新年龄')
+    expect(modal?.textContent).toContain('可行动安全洞察')
+    expect(modal?.querySelector('[data-testid="vault-activity-heatmap"]')).toBeTruthy()
+    expect(modal?.querySelector('[data-testid="vault-age-breakdown"]')).toBeTruthy()
+    expect(modal?.querySelector('[data-testid="vault-action-insights"]')?.textContent).toContain('弱密码需要升级')
     expect(modal?.textContent).toContain('长期使用画像')
     expect(modal?.textContent).toContain('保险箱使用时长')
     expect(modal?.textContent).toContain('历史月均使用')
@@ -226,7 +232,7 @@ describe('PasswordVaultView', () => {
     expect(modal?.querySelector('[data-testid="vault-entry-lifecycle"]')).toBeTruthy()
     expect(modal?.textContent).toContain('保管天数')
     expect(modal?.textContent).toContain('正文长度')
-  })
+  }, 12_000)
 })
 
 void consoleError

@@ -415,6 +415,56 @@ const mostUsedEntries = computed(() =>
     .slice(0, 5)
 )
 
+const updateAgeBreakdown = computed(() => {
+  const buckets = [
+    { key: 'fresh', labelKey: 'vault.analytics.age_fresh', min: 0, max: 30, color: '#22c55e' },
+    { key: 'recent', labelKey: 'vault.analytics.age_recent', min: 31, max: 90, color: '#14b8a6' },
+    { key: 'aging', labelKey: 'vault.analytics.age_aging', min: 91, max: 180, color: '#f59e0b' },
+    { key: 'stale', labelKey: 'vault.analytics.age_stale', min: 181, max: Number.POSITIVE_INFINITY, color: '#f97316' },
+  ]
+  const counts = buckets.map(bucket => ({
+    ...bucket,
+    count: passwordStore.entries.filter(entry => {
+      const age = daysSince(entry.updated_at)
+      return age !== null && age >= bucket.min && age <= bucket.max
+    }).length,
+  }))
+  const max = Math.max(...counts.map(bucket => bucket.count), 1)
+  return counts.map(bucket => ({ ...bucket, percent: Math.round((bucket.count / max) * 100) }))
+})
+
+const activityHeatmap = computed(() => {
+  const today = new Date()
+  const todayStart = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+  const dailyCounts = usageEvents.value.reduce<Record<string, number>>((result, event) => {
+    const key = event.date.toISOString().slice(0, 10)
+    result[key] = (result[key] || 0) + event.count
+    return result
+  }, {})
+  const cells = Array.from({ length: 35 }, (_, index) => {
+    const date = new Date(todayStart - (34 - index) * DAY_MS)
+    const key = date.toISOString().slice(0, 10)
+    return { key, label: formatDate(date.toISOString()), count: dailyCounts[key] || 0 }
+  })
+  const max = Math.max(...cells.map(cell => cell.count), 1)
+  return cells.map(cell => ({ ...cell, level: cell.count ? Math.max(1, Math.ceil((cell.count / max) * 4)) : 0 }))
+})
+
+const recentlyActiveEntries = computed(() => [...passwordStore.entries]
+  .filter(entry => safeDate(entry.last_used))
+  .sort((a, b) => (safeDate(b.last_used)?.getTime() || 0) - (safeDate(a.last_used)?.getTime() || 0))
+  .slice(0, 4))
+
+const insightCards = computed(() => {
+  const insights: Array<{ icon: string; tone: string; titleKey: string; detailKey: string; count: number }> = []
+  if (stats.value.weak) insights.push({ icon: 'pi pi-lock-open', tone: 'danger', titleKey: 'vault.analytics.insight_weak_title', detailKey: 'vault.analytics.insight_weak_detail', count: stats.value.weak })
+  if (stats.value.stale) insights.push({ icon: 'pi pi-clock', tone: 'warning', titleKey: 'vault.analytics.insight_stale_title', detailKey: 'vault.analytics.insight_stale_detail', count: stats.value.stale })
+  if (stats.value.expiringSoon) insights.push({ icon: 'pi pi-calendar-times', tone: 'warning', titleKey: 'vault.analytics.insight_expiring_title', detailKey: 'vault.analytics.insight_expiring_detail', count: stats.value.expiringSoon })
+  if (stats.value.neverUsed) insights.push({ icon: 'pi pi-eye-slash', tone: 'info', titleKey: 'vault.analytics.insight_unused_title', detailKey: 'vault.analytics.insight_unused_detail', count: stats.value.neverUsed })
+  if (!insights.length) insights.push({ icon: 'pi pi-sparkles', tone: 'success', titleKey: 'vault.analytics.insight_healthy_title', detailKey: 'vault.analytics.insight_healthy_detail', count: stats.value.total })
+  return insights.slice(0, 4)
+})
+
 const selectedLifecycle = computed(() => {
   const entry = selectedEntryForHistory.value as VaultEntryWithHistory | null
   if (!entry) return null
@@ -881,6 +931,84 @@ const selectedLifecycle = computed(() => {
                     </div>
                   </div>
                 </article>
+
+                <article class="analytics-card lg:col-span-7" data-testid="vault-activity-heatmap">
+                  <div class="flex items-center justify-between gap-4 mb-5">
+                    <div>
+                      <p class="analytics-label">{{ appStore.t('vault.analytics.rhythm') }}</p>
+                      <h3 class="analytics-title">{{ appStore.t('vault.analytics.activity_heatmap') }}</h3>
+                    </div>
+                    <span class="text-xs text-muted">{{ appStore.t('vault.analytics.last_35_days') }}</span>
+                  </div>
+                  <div class="heatmap-grid">
+                    <div
+                      v-for="cell in activityHeatmap"
+                      :key="cell.key"
+                      class="heatmap-cell"
+                      :class="`heatmap-level-${cell.level}`"
+                      :title="`${cell.label} · ${cell.count} ${appStore.t('vault.analytics.times')}`"
+                    ></div>
+                  </div>
+                  <div class="flex items-center justify-between mt-4 text-[10px] text-dim">
+                    <span>{{ activityHeatmap[0]?.label }}</span>
+                    <span>{{ appStore.t('vault.analytics.less') }} ··· {{ appStore.t('vault.analytics.more') }}</span>
+                    <span>{{ activityHeatmap[activityHeatmap.length - 1]?.label }}</span>
+                  </div>
+                </article>
+
+                <article class="analytics-card lg:col-span-5" data-testid="vault-age-breakdown">
+                  <p class="analytics-label">{{ appStore.t('vault.analytics.maintenance') }}</p>
+                  <h3 class="analytics-title mb-5">{{ appStore.t('vault.analytics.update_age') }}</h3>
+                  <div class="space-y-3.5">
+                    <div v-for="bucket in updateAgeBreakdown" :key="bucket.key" class="grid grid-cols-[92px_1fr_28px] gap-3 items-center">
+                      <span class="text-xs text-muted truncate">{{ appStore.t(bucket.labelKey) }}</span>
+                      <div class="h-2.5 bg-input rounded-full overflow-hidden">
+                        <div class="h-full rounded-full age-fill" :style="{ width: `${bucket.percent}%`, backgroundColor: bucket.color }"></div>
+                      </div>
+                      <strong class="text-xs text-right">{{ bucket.count }}</strong>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="analytics-card lg:col-span-12" data-testid="vault-action-insights">
+                  <div class="flex items-center justify-between gap-4 mb-5">
+                    <div>
+                      <p class="analytics-label">{{ appStore.t('vault.analytics.intelligence') }}</p>
+                      <h3 class="analytics-title">{{ appStore.t('vault.analytics.action_insights') }}</h3>
+                    </div>
+                    <span class="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-black">{{ insightCards.length }}</span>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                    <div v-for="insight in insightCards" :key="insight.titleKey" class="insight-card" :class="`insight-${insight.tone}`">
+                      <div class="flex items-center justify-between gap-3"><i :class="insight.icon"></i><strong>{{ insight.count }}</strong></div>
+                      <h4>{{ appStore.t(insight.titleKey) }}</h4>
+                      <p>{{ appStore.t(insight.detailKey) }}</p>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="analytics-card lg:col-span-12">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <p class="analytics-label">{{ appStore.t('vault.analytics.frequency') }}</p>
+                      <h3 class="analytics-title mb-4">{{ appStore.t('vault.analytics.top_accessed') }}</h3>
+                      <div class="space-y-2">
+                        <div v-for="(entry, index) in mostUsedEntries" :key="entry.id" class="analytics-ranking-row">
+                          <span class="ranking-index">{{ String(index + 1).padStart(2, '0') }}</span><span class="truncate flex-1 font-bold">{{ entry.name }}</span><strong>{{ entry.use_count || 0 }}</strong>
+                        </div>
+                        <p v-if="!mostUsedEntries.length" class="text-sm text-muted">{{ appStore.t('vault.analytics.no_data') }}</p>
+                      </div>
+                    </div>
+                    <div class="lg:border-l border-subtle lg:pl-6">
+                      <p class="analytics-label">{{ appStore.t('vault.analytics.recency') }}</p>
+                      <h3 class="analytics-title mb-4">{{ appStore.t('vault.analytics.recently_active') }}</h3>
+                      <div class="space-y-2">
+                        <div v-for="entry in recentlyActiveEntries" :key="entry.id" class="analytics-ranking-row"><span class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center"><i class="pi pi-bolt text-xs"></i></span><span class="truncate flex-1 font-bold">{{ entry.name }}</span><time class="text-xs text-muted">{{ formatDate(entry.last_used) }}</time></div>
+                        <p v-if="!recentlyActiveEntries.length" class="text-sm text-muted">{{ appStore.t('vault.analytics.no_data') }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </article>
               </div>
             </div>
           </section>
@@ -1023,6 +1151,39 @@ const selectedLifecycle = computed(() => {
 .analytics-card:nth-child(3) { animation-delay: 0.14s; }
 .analytics-card:nth-child(4) { animation-delay: 0.2s; }
 .analytics-card:nth-child(5) { animation-delay: 0.26s; }
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.heatmap-cell {
+  aspect-ratio: 1.8;
+  min-height: 0.7rem;
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--bg-input) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  transition: transform 0.2s ease, filter 0.2s ease;
+  animation: analytics-card-rise 0.45s both;
+}
+.heatmap-cell:hover { transform: scale(1.12); filter: brightness(1.15); }
+.heatmap-level-1 { background: color-mix(in srgb, var(--dynamic-accent) 25%, var(--bg-input)); }
+.heatmap-level-2 { background: color-mix(in srgb, var(--dynamic-accent) 45%, var(--bg-input)); }
+.heatmap-level-3 { background: color-mix(in srgb, var(--dynamic-accent) 68%, var(--bg-input)); }
+.heatmap-level-4 { background: var(--dynamic-accent); box-shadow: 0 0 12px color-mix(in srgb, var(--dynamic-accent) 35%, transparent); }
+
+.age-fill { animation: analytics-bar-grow 0.75s both cubic-bezier(0.22, 1, 0.36, 1); }
+.insight-card { border: 1px solid var(--border-subtle); background: color-mix(in srgb, var(--bg-input) 74%, transparent); border-radius: 1rem; padding: 1rem; min-width: 0; }
+.insight-card > div { color: var(--dynamic-accent); }
+.insight-card > div strong { font-size: 1.4rem; }
+.insight-card h4 { font-size: 0.82rem; font-weight: 900; margin-top: 0.8rem; }
+.insight-card p { font-size: 0.68rem; color: var(--text-muted); line-height: 1.55; margin-top: 0.3rem; }
+.insight-danger > div { color: #ef4444; }.insight-warning > div { color: #f59e0b; }.insight-info > div { color: #0ea5e9; }.insight-success > div { color: #22c55e; }
+.analytics-ranking-row { display: flex; align-items: center; gap: 0.7rem; min-width: 0; padding: 0.65rem 0.75rem; border-radius: 0.8rem; background: color-mix(in srgb, var(--bg-input) 70%, transparent); font-size: 0.75rem; }
+.ranking-index { width: 1.5rem; color: var(--text-dim); font-family: ui-monospace, monospace; font-size: 0.65rem; }
+
+@keyframes analytics-bar-grow { from { width: 0; opacity: 0.3; } }
 
 .analytics-kpi {
   border-radius: 1.15rem;

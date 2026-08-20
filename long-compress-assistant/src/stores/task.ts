@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { ResourcePreflightReport } from '@/types/resourcePreflight'
+import { createTaskHistoryRecord } from '@/types/taskHistory'
 
 export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'cancelling' | 'completed' | 'failed' | 'cancelled'
 export type LogSeverity = 'info' | 'warning' | 'error' | 'success'
@@ -192,6 +193,10 @@ export const useTaskStore = defineStore('task', () => {
       if (['completed', 'failed', 'cancelled'].includes(status)) {
         task.endTime = new Date()
         task.etaSeconds = undefined
+        const historyRecord = createTaskHistoryRecord(task)
+        void invoke('save_task_history', { record: historyRecord }).catch((error) => {
+          console.warn('Failed to persist task history:', error)
+        })
       }
     }
   }

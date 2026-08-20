@@ -100,6 +100,7 @@ const markOfWebOnly = process.argv.includes('--mark-of-web-only')
 const compressionVerificationOnly = process.argv.includes('--compression-verification-only')
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
 const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
+const historyOnly = process.argv.includes('--history-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -1208,6 +1209,59 @@ async function runArchiveFlowDesktopGate() {
   )
 }
 
+async function runHistoryDesktopGate() {
+  console.log('[desktop-e2e] verifying persistent history from a real ZIP round trip')
+  await callDesktopBridge('clearTasks')
+  await callDesktopBridge('clearTaskHistory')
+  const root = path.join(fixtureDirectory, 'history-gate')
+  const sourcePath = path.join(root, 'history-payload.bin')
+  const archivePath = path.join(root, 'history-payload.zip')
+  const outputPath = path.join(root, 'extracted')
+  mkdirSync(root, { recursive: true })
+  writeFileSync(sourcePath, randomBytes(2 * 1024 * 1024))
+
+  await callDesktopBridge('runArchiveRoundTrip', sourcePath, archivePath, outputPath, 'zip')
+  const beforeRestart = await driver.wait(async () => {
+    const records = await callDesktopBridge('taskHistory')
+    return records.length >= 2 ? records : false
+  }, 30_000)
+  const compression = beforeRestart.find(record => record.taskType === 'compression')
+  const extraction = beforeRestart.find(record => record.taskType === 'decompression')
+  assert.equal(compression?.status, 'completed')
+  assert.equal(extraction?.status, 'completed')
+  assert.equal(normalizedDesktopPath(compression?.outputPath), normalizedDesktopPath(archivePath))
+  assert.ok(compression?.durationMs >= 0)
+  assert.ok(!JSON.stringify(beforeRestart).toLowerCase().includes('password'))
+
+  await restartDesktopSession()
+  const afterRestart = await callDesktopBridge('taskHistory')
+  assert.ok(afterRestart.some(record => record.id === compression.id))
+  assert.ok(afterRestart.some(record => record.id === extraction.id))
+
+  const historyButton = await driver.findElement(By.css('[data-testid="nav-History"]'))
+  await historyButton.click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/history'), 15_000)
+  await driver.wait(async () => (await driver.findElement(By.css('[data-testid="history-list"]')).isDisplayed()), 15_000)
+  const overflow = await driver.executeScript(() => ({
+    body: document.body.scrollWidth - document.body.clientWidth,
+    page: document.querySelector('.history-view')?.scrollWidth - document.querySelector('.history-view')?.clientWidth,
+  }))
+  assert.ok(overflow.body <= 1, `history shell must not overflow horizontally: ${JSON.stringify(overflow)}`)
+  assert.ok((overflow.page ?? 0) <= 1, `history page must not overflow horizontally: ${JSON.stringify(overflow)}`)
+  await driver.manage().window().setRect({ width: 760, height: 520 })
+  const compactOverflow = await driver.executeScript(() => ({
+    body: document.body.scrollWidth - document.body.clientWidth,
+    page: document.querySelector('.history-view')?.scrollWidth - document.querySelector('.history-view')?.clientWidth,
+  }))
+  assert.ok(compactOverflow.body <= 1, `compact history shell must not overflow: ${JSON.stringify(compactOverflow)}`)
+  assert.ok((compactOverflow.page ?? 0) <= 1, `compact history page must not overflow: ${JSON.stringify(compactOverflow)}`)
+  mkdirSync(artifactDirectory, { recursive: true })
+  writeFileSync(
+    path.join(artifactDirectory, 'task-history-compact.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+}
+
 async function runZipTelemetryDesktopGate() {
   console.log('[desktop-e2e] verifying focused plain and AES ZIP real-byte telemetry')
   await callDesktopBridge('clearTasks')
@@ -1334,7 +1388,7 @@ try {
   await waitForDesktopReady()
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
-  assert.equal(navigation.length, 6, 'the real desktop shell must expose six navigation buttons')
+  assert.equal(navigation.length, 7, 'the real desktop shell must expose seven navigation buttons')
   assert.equal(
     await navigation[0].getAttribute('aria-current'),
     'page',
@@ -1352,7 +1406,11 @@ try {
   const payload = `Long解压 real desktop round-trip ${new Date().toISOString()}\n`
   writeFileSync(sourcePath, payload, 'utf8')
 
-  if (zipTelemetryOnly) {
+  if (historyOnly) {
+    await runHistoryDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri task-history persistence gate passed.')
+  } else if (zipTelemetryOnly) {
     await runZipTelemetryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri ZIP telemetry gate passed.')

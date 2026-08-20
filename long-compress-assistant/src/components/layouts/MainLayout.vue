@@ -36,6 +36,7 @@ const navItems = [
   { name: 'ArchiveBrowser', icon: 'pi pi-list', label: 'nav.browser', shortcut: 'Ctrl+B' },
   { name: 'Vault', icon: 'pi pi-shield', label: 'nav.vault', shortcut: 'Ctrl+Shift+V' },
   { name: 'FileIntegrity', icon: 'pi pi-verified', label: 'nav.integrity', shortcut: 'Ctrl+I' },
+  { name: 'History', icon: 'pi pi-history', label: 'nav.history', shortcut: 'Ctrl+H' },
   { name: 'Settings', icon: 'pi pi-cog', label: 'nav.settings', shortcut: 'Ctrl+,' }
 ]
 
@@ -65,7 +66,7 @@ const navigateTo = (name: string) => {
               <div class="text-xs text-muted tracking-wider mt-0.5">Archive Studio</div>
             </div>
           </div>
-          <nav class="flex-1 flex flex-col gap-2 w-full p-3 overflow-visible">
+          <nav class="flex-1 flex flex-col gap-2 w-full p-3 overflow-y-auto overflow-x-hidden custom-scrollbar">
             <button v-for="item in navItems" :key="item.name"
                   type="button"
                   @click="navigateTo(item.name)"
