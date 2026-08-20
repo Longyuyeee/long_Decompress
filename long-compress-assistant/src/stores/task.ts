@@ -117,9 +117,15 @@ export const useTaskStore = defineStore('task', () => {
         task.currentFile = current_file
         task.currentPassword = current_password
         if (speed !== undefined) task.speed = speed
-        if (processed_bytes !== undefined) task.processedBytes = processed_bytes
-        if (total_bytes !== undefined) task.totalBytes = total_bytes
-        task.etaSeconds = eta_seconds
+        // Stage-only completion events use zero byte fields. Do not let those
+        // erase real transfer totals already emitted by the archive engine.
+        if (processed_bytes !== undefined && (processed_bytes > 0 || !task.processedBytes)) {
+          task.processedBytes = processed_bytes
+        }
+        if (total_bytes !== undefined && (total_bytes > 0 || !task.totalBytes)) {
+          task.totalBytes = total_bytes
+        }
+        if (eta_seconds !== undefined) task.etaSeconds = eta_seconds
 
         // Progress reaching 100% only means the engine finished transferring data.
         // Final rename, integrity checks and optional cleanup may still fail, so the

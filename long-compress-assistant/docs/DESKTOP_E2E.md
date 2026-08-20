@@ -13,6 +13,7 @@
 - 真实一键打包/解压任务保留本机卷容量、文件系统、介质和体积估算，详情卡片可见且无横向溢出；可靠不足经正式 IPC 返回 blocked，目标目录不会创建。
 - 两项真实 7Z 压缩按显式并发 2 同时执行；写入同一输出目录的两项解压即使全局并发为 2 也保持串行。
 - 全局进度面板在实际传输期间显示后端字节计算的速度和剩余时间，不用模拟值通过门禁。
+- 普通 ZIP 与 AES ZIP 使用 64 MiB 随机非空载荷验证真实中间/最终字节、可见速度与 ETA、AES 错误密码拒绝；另用 24 MiB + 40 MiB 双文件验证累计单调与精确总量，全部经独立 7-Zip 完整性和解出文件 SHA-256 复核。可用聚焦门禁避开无关高负载场景。
 - AES 密码双文件 7Z 使用单固实块创建，独立 7-Zip 元数据与完整解出共同确认；非原生密码格式拒绝转换时不创建任务，确认后才生成并验证 `.7z`。
 - 在真实 WebView2 中进入设置中心。
 - 启动确定性长任务，通过实际取消注册表停止任务，并验证未完成输出被清理。
@@ -55,6 +56,8 @@ npm run test:e2e:desktop
 npm.cmd run test:e2e:desktop:resource-preflight
 # 只复验归档并发、同目录串行、遥测、加密固实 7Z 和格式回退确认
 npm.cmd run test:e2e:desktop:archive-flow
+# 只复验普通/AES ZIP 的真实字节、可见遥测、密码与内容一致性
+npm.cmd run test:e2e:desktop:zip-telemetry
 # 发布前全格式验收会强制检查所有生成器，不允许静默跳过
 npm.cmd run test:prepare:full-format
 npm.cmd run test:e2e:desktop:full-format

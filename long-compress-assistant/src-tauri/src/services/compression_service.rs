@@ -2791,6 +2791,7 @@ mod tests_continued {
             &[source.to_string_lossy().to_string()],
             &archive.to_string_lossy(),
             true,
+            None,
         ).expect("encrypted ZIP creation");
 
         let engine = UniversalCliEngine::new();

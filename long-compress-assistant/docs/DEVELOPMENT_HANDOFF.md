@@ -3,9 +3,9 @@
 ## 2026-08-20 v1.1.6 后续增强审计
 
 - 已从远端切换并快进到最新 `master@0694fac`；`agent/p0-archive-flow-alignment` 与 `agent/release-1.1.6` 均已通过 PR #81/#82 合入主线，公开 `v1.1.6` 的 CI、Release 和四项更新资产完整。
-- 下一阶段优先补现有高频路线的真实可观测性：普通 ZIP 与 AES ZIP 当前只按文件数更新百分比，`processed_bytes/total_bytes` 为 0，无法显示真实速度和 ETA；原生 7Z 与单流格式已经具备真实字节基线。
-- 第一阶段只接入 ZIP 输入流的真实字节，不用百分比推算吞吐；验收必须包含非空大文件、中间字节事件、最终字节总量、SHA-256 内容一致和 Windows Release 可见桌面证据。
-- TAR、外部 CLI、真实 HDD/网络盘矩阵与 HFSX 非空载荷分别作为后续独立阶段，避免把进度语义、文件格式语义和调度策略混在一次修改中。
+- 普通 ZIP 与 AES ZIP 的真实输入字节遥测已经完成；64 MiB 普通/AES 单文件及 24 MiB + 40 MiB 双文件的 Windows Release + WebView2 聚焦门禁通过，中间字节、单调累计、最终总量、可见速度/ETA、错误密码拒绝、独立 7-Zip 和 SHA-256 全部有真实证据。
+- 真实门禁同时修正了完成阶段 `0/0` 占位事件覆盖前端总量/ETA 的问题；独立复验命令为 `npm.cmd run test:e2e:desktop:zip-telemetry`。
+- 下一阶段按顺序处理 TAR 真实字节；外部 CLI、真实 HDD/网络盘矩阵与 HFSX 非空载荷继续作为独立阶段，避免把进度语义、文件格式语义和调度策略混在一次修改中。
 - 详细预期/实际差距及验收矩阵见 [DEVELOPMENT_AUDIT_2026-08-20.md](DEVELOPMENT_AUDIT_2026-08-20.md)。
 
 ## 2026-08-15 v1.1.6 发布收口
