@@ -78,6 +78,8 @@ pub struct TaskProgress {
     pub current_file: Option<String>,
     pub processed_bytes: u64,
     pub total_bytes: u64,
+    pub output_bytes: u64,
+    pub output_bytes_estimated: bool,
     // 密码尝试进度
     pub password_attempt_current: Option<usize>,
     pub password_attempt_total: Option<usize>,
@@ -122,6 +124,12 @@ struct ProgressMetric {
 }
 
 #[derive(Clone)]
+struct CompressionProgressOutput {
+    path: PathBuf,
+    split: bool,
+}
+
+#[derive(Clone)]
 pub struct CompressionService {
     pub config: CompressionServiceConfig,
     pub cancellation_flag: Arc<AtomicBool>,
@@ -131,6 +139,7 @@ pub struct CompressionService {
     pub encrypted_password_service: Arc<EncryptedPasswordService>,
     pub semaphore: Arc<Semaphore>,
     progress_metrics: Arc<Mutex<HashMap<String, ProgressMetric>>>,
+    compression_progress_outputs: Arc<Mutex<HashMap<String, CompressionProgressOutput>>>,
 }
 
 impl ExtractionRuntime for CompressionService {
@@ -250,6 +259,7 @@ impl CompressionService {
             encrypted_password_service,
             semaphore: Arc::new(Semaphore::new(max_concurrency)),
             progress_metrics: Arc::new(Mutex::new(HashMap::new())),
+            compression_progress_outputs: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -268,6 +278,7 @@ impl CompressionService {
             encrypted_password_service,
             semaphore: Arc::new(Semaphore::new(2)),
             progress_metrics: Arc::new(Mutex::new(HashMap::new())),
+            compression_progress_outputs: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -354,8 +365,106 @@ impl CompressionService {
         }
     }
 
+    fn register_compression_progress_output(&self, task_id: &str, path: PathBuf, split: bool) {
+        if let Ok(mut outputs) = self.compression_progress_outputs.lock() {
+            outputs.insert(task_id.to_string(), CompressionProgressOutput { path, split });
+        }
+    }
+
+    fn clear_compression_progress_output(&self, task_id: &str) {
+        if let Ok(mut outputs) = self.compression_progress_outputs.lock() {
+            outputs.remove(task_id);
+        }
+    }
+
+    fn compression_output_bytes(&self, task_id: &str) -> Option<u64> {
+        let output = self
+            .compression_progress_outputs
+            .lock()
+            .ok()?
+            .get(task_id)
+            .cloned()?;
+        if !output.split {
+            return std::fs::metadata(output.path).ok().map(|metadata| metadata.len());
+        }
+
+        let parent = output.path.parent().unwrap_or(Path::new("."));
+        let base_name = output.path.file_name()?.to_string_lossy();
+        let prefix = format!("{}.", base_name);
+        let mut total = 0u64;
+        for entry in std::fs::read_dir(parent).ok()?.flatten() {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            let Some(volume) = name.strip_prefix(&prefix) else {
+                continue;
+            };
+            if volume.len() == 3 && volume.chars().all(|ch| ch.is_ascii_digit()) {
+                if let Ok(metadata) = entry.metadata() {
+                    total = total.saturating_add(metadata.len());
+                }
+            }
+        }
+        Some(total)
+    }
+
+    fn has_compression_progress_output(&self, task_id: &str) -> bool {
+        self.compression_progress_outputs
+            .lock()
+            .map(|outputs| outputs.contains_key(task_id))
+            .unwrap_or(false)
+    }
+
+    fn directory_payload_size(path: &Path) -> u64 {
+        let Ok(entries) = std::fs::read_dir(path) else {
+            return 0;
+        };
+        entries.flatten().fold(0u64, |total, entry| {
+            let entry_path = entry.path();
+            let size = entry
+                .metadata()
+                .ok()
+                .map(|metadata| {
+                    if metadata.is_dir() {
+                        Self::directory_payload_size(&entry_path)
+                    } else if metadata.is_file() {
+                        metadata.len()
+                    } else {
+                        0
+                    }
+                })
+                .unwrap_or(0);
+            total.saturating_add(size)
+        })
+    }
+
     pub fn emit_progress(&self, window: &Window, task_id: &str, progress: f32, current_file: Option<String>, processed_bytes: u64, total_bytes: u64) {
+        self.emit_progress_with_output_estimate(
+            window,
+            task_id,
+            progress,
+            current_file,
+            processed_bytes,
+            total_bytes,
+            false,
+        );
+    }
+
+    fn emit_progress_with_output_estimate(
+        &self,
+        window: &Window,
+        task_id: &str,
+        progress: f32,
+        current_file: Option<String>,
+        processed_bytes: u64,
+        total_bytes: u64,
+        output_bytes_estimated: bool,
+    ) {
         let (speed, eta_seconds) = self.progress_telemetry(task_id, progress, processed_bytes, total_bytes);
+        let output_bytes = if self.has_compression_progress_output(task_id) {
+            self.compression_output_bytes(task_id).unwrap_or(0)
+        } else {
+            processed_bytes
+        };
         let payload = TaskProgress {
             task_id: task_id.to_string(),
             stage: None,
@@ -364,6 +473,8 @@ impl CompressionService {
             current_file,
             processed_bytes,
             total_bytes,
+            output_bytes,
+            output_bytes_estimated,
             speed,
             eta_seconds,
             password_attempt_current: None,
@@ -387,6 +498,8 @@ impl CompressionService {
             current_file,
             processed_bytes: 0,
             total_bytes: 0,
+            output_bytes: self.compression_output_bytes(task_id).unwrap_or(0),
+            output_bytes_estimated: false,
             speed: None,
             eta_seconds: None,
             password_attempt_current: None,
@@ -767,6 +880,11 @@ impl CompressionService {
                     requested_format
                 ))
             })?;
+            service.register_compression_progress_output(
+                &task_id,
+                working_output.clone(),
+                split_requested,
+            );
             let res = match route {
                 CompressionRoute::TarAes => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarGzipAes => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
@@ -861,10 +979,16 @@ impl CompressionService {
                     service.delete_sources_after_success(&window, &task_id, &source_files, &verified_output);
                 }
                 service.emit_log(&window, &task_id, "压缩完成", TaskLogSeverity::Success);
+                service.register_compression_progress_output(
+                    &task_id,
+                    final_output.clone(),
+                    split_requested,
+                );
                 service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
             } else {
                 service.emit_log(&window, &task_id, &format!("压缩失败: {:?}", res.as_ref().err()), TaskLogSeverity::Error);
             }
+            service.clear_compression_progress_output(&task_id);
             res
         }).await?
     }
@@ -978,6 +1102,8 @@ impl CompressionService {
             current_file: None,
             processed_bytes: 0,
             total_bytes: 0,
+            output_bytes: self.compression_output_bytes(task_id).unwrap_or(0),
+            output_bytes_estimated: false,
             password_attempt_current: Some(current),
             password_attempt_total: total,
         });
@@ -1616,9 +1742,10 @@ impl CompressionService {
             );
         }
 
-        service
+        let preflight_stats = service
             .preflight_extraction(path, &format, final_password.as_deref(), &final_out_dir)
             .await?;
+        let expected_expanded_bytes = preflight_stats.map(|(_, expanded_bytes)| expanded_bytes);
         if password_required == Some(true) && final_password.is_some() {
             service.emit_log(
                 &window,
@@ -1658,29 +1785,44 @@ impl CompressionService {
         let srv_progress = service.clone();
         let extraction_progress = Arc::new(Mutex::new(0.0f32));
         let progress_for_callback = extraction_progress.clone();
+        let expanded_for_progress = expected_expanded_bytes;
         let on_progress: Arc<dyn Fn(f32) + Send + Sync> = Arc::new(move |p| {
             if let Ok(mut latest) = progress_for_callback.lock() {
                 *latest = p;
             }
-            srv_progress.emit_progress(&win_progress, &tid_progress, p, None, 0, 0);
+            let total = expanded_for_progress.unwrap_or(0);
+            let processed = ((total as f64) * (p.clamp(0.0, 1.0) as f64)).round() as u64;
+            srv_progress.emit_progress_with_output_estimate(
+                &win_progress,
+                &tid_progress,
+                p,
+                None,
+                processed,
+                total,
+                total > 0,
+            );
         });
 
         let win_log = window.clone();
         let tid_log = task_id.clone();
         let srv_log = service.clone();
         let progress_for_log = extraction_progress.clone();
+        let expanded_for_log = expected_expanded_bytes;
         let last_file_log = Arc::new(Mutex::new(None::<Instant>));
         let last_file_log_for_callback = last_file_log.clone();
         let on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync> = Arc::new(move |msg, severity| {
             if let Some(current_file) = msg.strip_prefix("正在解压：") {
                 let progress = progress_for_log.lock().map(|value| *value).unwrap_or(0.0);
-                srv_log.emit_progress(
+                let total = expanded_for_log.unwrap_or(0);
+                let processed = ((total as f64) * (progress.clamp(0.0, 1.0) as f64)).round() as u64;
+                srv_log.emit_progress_with_output_estimate(
                     &win_log,
                     &tid_log,
                     progress,
                     Some(current_file.to_string()),
-                    0,
-                    0,
+                    processed,
+                    total,
+                    total > 0,
                 );
                 let should_log = last_file_log_for_callback
                     .lock()
@@ -2008,8 +2150,26 @@ impl CompressionService {
                 ),
             }
         }
+        let final_expanded_bytes = Self::directory_payload_size(&final_out_dir);
+        let telemetry_total = expected_expanded_bytes
+            .unwrap_or(final_expanded_bytes)
+            .max(final_expanded_bytes);
+        service.emit_progress_with_output_estimate(
+            &window,
+            &task_id,
+            1.0,
+            None,
+            final_expanded_bytes,
+            telemetry_total,
+            false,
+        );
+        service.emit_log(
+            &window,
+            &task_id,
+            &format!("解压数据统计完成：实际产出 {} 字节", final_expanded_bytes),
+            TaskLogSeverity::Success,
+        );
         service.emit_log(&window, &task_id, "全部解压任务已完成", TaskLogSeverity::Success);
-        service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
         Ok(final_out_dir.to_string_lossy().to_string())
     }
 
@@ -2035,7 +2195,7 @@ impl CompressionService {
         format: &ArchiveFormat,
         password: Option<&str>,
         output: &Path,
-    ) -> Result<()> {
+    ) -> Result<Option<(usize, u64)>> {
         let stats = match format {
             ArchiveFormat::Zip => {
                 let file = File::open(archive_path)?;
@@ -2114,7 +2274,7 @@ impl CompressionService {
             let disk_probe = output.parent().unwrap_or(output);
             extraction_transaction::validate_disk_capacity(disk_probe, expanded_bytes)?;
         }
-        Ok(())
+        Ok(stats)
     }
 
     fn prepare_staging_layout(
@@ -3286,6 +3446,35 @@ mod tests_continued {
         assert_eq!(descriptor, "7 字符 · 字母+数字+符号+非 ASCII 字符");
         assert!(!descriptor.contains("Ab12"));
         assert!(!descriptor.contains("测试"));
+    }
+
+    #[test]
+    fn progress_artifact_size_tracks_regular_split_and_extracted_outputs() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let service = CompressionService::for_testing();
+        let archive = temp.path().join("sample.7z");
+        std::fs::write(&archive, vec![0u8; 1_024]).expect("archive fixture");
+        service.register_compression_progress_output("regular", archive.clone(), false);
+        assert_eq!(service.compression_output_bytes("regular"), Some(1_024));
+        service.register_compression_progress_output(
+            "pending",
+            temp.path().join("not-created-yet.zip"),
+            false,
+        );
+        assert!(service.has_compression_progress_output("pending"));
+        assert_eq!(service.compression_output_bytes("pending"), None);
+
+        let split_base = temp.path().join("sample.zip");
+        std::fs::write(temp.path().join("sample.zip.001"), vec![0u8; 700]).expect("split one");
+        std::fs::write(temp.path().join("sample.zip.002"), vec![0u8; 300]).expect("split two");
+        service.register_compression_progress_output("split", split_base, true);
+        assert_eq!(service.compression_output_bytes("split"), Some(1_000));
+
+        let extracted = temp.path().join("output");
+        std::fs::create_dir_all(extracted.join("nested")).expect("output tree");
+        std::fs::write(extracted.join("one.bin"), vec![0u8; 80]).expect("output one");
+        std::fs::write(extracted.join("nested/two.bin"), vec![0u8; 20]).expect("output two");
+        assert_eq!(CompressionService::directory_payload_size(&extracted), 100);
     }
 
     #[tokio::test]

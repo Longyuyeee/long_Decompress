@@ -8,6 +8,7 @@ import Modal from '@/components/ui/Modal.vue'
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import { open } from '@tauri-apps/api/dialog'
 import { formatProgressPercent } from '@/utils/progress'
+import { formatFileSize } from '@/utils'
 
 const props = defineProps<{
   selectedTaskIds?: Set<string>
@@ -506,6 +507,27 @@ const onLeave = (el: any) => {
                           {{ task.currentPassword }}
                         </div>
                         <div class="mt-1 text-xs text-dim">为保护隐私，不在执行日志中记录密码明文</div>
+                      </div>
+                      <div
+                        v-if="task.type === 'decompression' && (task.outputBytes !== undefined || task.totalBytes)"
+                        class="col-span-2 grid min-w-0 grid-cols-3 gap-2"
+                      >
+                        <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
+                          <span class="text-muted">已产出内容</span>
+                          <div class="mt-0.5 truncate font-mono font-black text-primary" :title="`${task.outputBytes || 0} B`">
+                            {{ task.outputBytesEstimated ? '约 ' : '' }}{{ formatFileSize(task.outputBytes || 0) }}
+                          </div>
+                        </div>
+                        <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
+                          <span class="text-muted">预计展开大小</span>
+                          <div class="mt-0.5 truncate font-mono font-black text-content" :title="`${task.totalBytes || 0} B`">
+                            {{ task.totalBytes ? formatFileSize(task.totalBytes) : '计算中' }}
+                          </div>
+                        </div>
+                        <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
+                          <span class="text-muted">展开速度</span>
+                          <div class="mt-0.5 truncate font-mono font-black text-content">{{ task.speed || '计算中' }}</div>
+                        </div>
                       </div>
                     </div>
                     <h4 class="task-log-heading text-muted text-xs font-black uppercase tracking-[0.2em] mb-3 flex items-center justify-between opacity-90">

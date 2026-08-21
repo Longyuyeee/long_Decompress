@@ -92,6 +92,9 @@ describe('compression presentation components', () => {
         progress: 42,
         stage: 'Finalizing',
         speed: '12 MB/s',
+        processedBytes: 10 * 1024 * 1024,
+        totalBytes: 20 * 1024 * 1024,
+        outputBytes: 6 * 1024 * 1024,
         currentFile: 'C:/input/sample.txt',
         logs: [
           {
@@ -113,6 +116,10 @@ describe('compression presentation components', () => {
     expect(wrapper.text()).toContain('正在收尾')
     expect(wrapper.text()).toContain('42.00%')
     expect(wrapper.text()).toContain('12 MB/s')
+    expect(wrapper.get('[data-testid="compression-live-metrics"]').text()).toContain('10 MB')
+    expect(wrapper.get('[data-testid="compression-live-metrics"]').text()).toContain('6 MB')
+    expect(wrapper.get('[data-testid="compression-live-metrics"]').text()).toContain('60.00%')
+    expect(wrapper.get('[data-testid="compression-live-metrics"]').text()).toContain('节省 40.00%')
     expect(wrapper.text()).toContain('C:/input/sample.txt')
     expect(wrapper.text()).toContain('archive warning')
     expect(wrapper.find('.text-yellow-400').exists()).toBe(true)
