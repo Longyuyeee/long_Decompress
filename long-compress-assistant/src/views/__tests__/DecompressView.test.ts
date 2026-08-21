@@ -117,6 +117,65 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
+  it('groups unordered numeric split volumes into one task using the first volume', async () => {
+    const parts = [1, 2, 3, 4, 5].map(index => `C:/archives/project.zip.${String(index).padStart(3, '0')}`)
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'detect_split_archive') return {
+        is_split: true,
+        format: 'GenericNumeric',
+        base_name: 'project.zip',
+        parts,
+        first_part: parts[0],
+        total_parts: 5,
+        total_size: 500,
+        is_complete: true,
+        missing_parts: [],
+      }
+      return []
+    })
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [5, 2, 1, 4, 3, 3].map(index => ({
+      name: `project.zip.${String(index).padStart(3, '0')}`,
+      path: parts[index - 1],
+    })))
+    await flushPromises()
+
+    expect(useTaskStore().tasks).toHaveLength(1)
+    expect(useTaskStore().tasks[0]).toMatchObject({
+      name: 'project.zip (5 个分卷)',
+      sourceFiles: [parts[0]],
+    })
+    expect(mocks.invoke.mock.calls.filter(([command]) => command === 'detect_split_archive')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('rejects an incomplete split group with the missing volume name', async () => {
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'detect_split_archive') return {
+        is_split: true,
+        format: 'GenericNumeric',
+        base_name: 'project.zip',
+        parts: ['C:/archives/project.zip.001', 'C:/archives/project.zip.003'],
+        first_part: 'C:/archives/project.zip.001',
+        total_parts: 3,
+        total_size: 200,
+        is_complete: false,
+        missing_parts: ['C:/archives/project.zip.002'],
+      }
+      return []
+    })
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'project.zip.003',
+      path: 'C:/archives/project.zip.003',
+    }])
+    await flushPromises()
+
+    expect(useTaskStore().tasks).toHaveLength(0)
+    expect(useAppStore().error).toContain('project.zip.002')
+    wrapper.unmount()
+  })
+
   it('starts pending archive tasks with the configured extraction options', async () => {
     const wrapper = mountView()
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{

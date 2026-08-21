@@ -30,6 +30,10 @@ const props = defineProps({
   nativeDrop: {
     type: Boolean,
     default: true
+  },
+  unfilteredPicker: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -151,7 +155,7 @@ const triggerFileInput = async () => {
         directory: false,
         multiple: true,
         title: appStore.t('decompress.drop_hint'),
-        filters: props.accept !== '*' ? [{
+        filters: props.accept !== '*' && !props.unfilteredPicker ? [{
           name: 'Archives',
           extensions: props.accept.split(',').map(e => e.trim().replace(/^[*.]*/, ''))
         }] : []

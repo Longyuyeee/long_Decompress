@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useAppStore } from '@/stores/app'
 import type { Task } from '@/stores/task'
-import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import {
   compressionLogSeverityClass,
   compressionStageTranslationKey,
@@ -35,17 +34,16 @@ const appStore = useAppStore()
     </div>
     <div
       v-if="task?.currentFile"
-      class="mt-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-xs text-content"
+      class="current-file-path mt-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-xs text-content"
       :title="task.currentFile"
     >
       {{ task.currentFile }}
     </div>
-    <ResourcePreflightCard :report="task?.resourcePreflight" class="mt-3" />
     <h4 class="detail-heading mt-5">
       <i class="pi pi-align-left text-xs"></i>
       {{ appStore.t('decompress.config.logs_title') }}
     </h4>
-    <div class="pending-log custom-scrollbar overflow-y-auto overflow-x-hidden space-y-1.5">
+    <div data-testid="compression-log-viewport" class="pending-log custom-scrollbar overflow-y-auto overflow-x-hidden space-y-1.5">
       <div
         v-for="(log, index) in task?.logs || []"
         :key="`${log.timestamp}-${index}`"
@@ -94,9 +92,10 @@ const appStore = useAppStore()
 }
 
 .compression-execution-panel {
-  min-height: 17rem;
-  max-height: 26rem;
-  overflow-y: auto;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  overflow-y: hidden;
   padding: 1.25rem;
 }
 
@@ -115,19 +114,33 @@ const appStore = useAppStore()
   max-width: 100%;
   overflow-x: hidden;
   flex: 1;
-  min-height: 8rem;
-  max-height: 16rem;
+  min-height: 0;
+  max-height: none;
   padding: 0.75rem;
   border-left: 2px solid color-mix(in srgb, var(--dynamic-accent) 28%, transparent);
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--bg-input) 35%, transparent);
   font-size: 0.75rem;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .pending-log-row {
   width: 100%;
   box-sizing: border-box;
   max-width: 100%;
+}
+
+.pending-log-row > :last-child {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.current-file-path {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 @media (max-width: 520px) {

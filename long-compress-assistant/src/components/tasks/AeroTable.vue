@@ -363,14 +363,14 @@ const onLeave = (el: any) => {
             @before-leave="onBeforeLeave"
             @leave="onLeave"
           >
-            <div v-if="expandedTasks.has(task.id)" class="details-drawer relative min-w-0 max-w-full px-6 pb-6 pt-2">
+            <div v-if="expandedTasks.has(task.id)" class="details-drawer relative min-w-0 max-w-full px-2 md:px-3 pb-4 pt-2">
               <!-- 交互增强：task-detail-card 增加 hover 动效 -->
-              <div class="task-detail-card rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
+              <div data-testid="decompression-task-details" class="task-detail-card rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
 
                 <!-- 详情区内容布局：改为弹性分配，防止溢出 -->
                 <div class="task-detail-layout w-full min-w-0 relative z-10">
                   <!-- 左侧：核心配置 -->
-                  <div class="task-config-panel min-w-0 p-5 border-r border-subtle/20 flex flex-col space-y-3 pl-8 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto overflow-x-hidden custom-scrollbar max-h-56">
+                  <div data-testid="decompression-config-panel" class="task-config-panel min-w-0 p-4 border-r border-subtle/20 flex flex-col space-y-3 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto overflow-x-hidden custom-scrollbar">
                     <div class="flex min-w-0 items-center justify-between">
                       <h4 class="task-config-heading min-w-0 text-primary text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 break-words">
                         <i class="pi pi-cog text-sm"></i>
@@ -461,7 +461,7 @@ const onLeave = (el: any) => {
                   </div>
 
                   <!-- 右侧：执行日志 -->
-                  <div class="task-execution-panel custom-scrollbar min-w-0 p-5 flex flex-col overflow-y-auto overflow-x-hidden">
+                  <div data-testid="decompression-execution-panel" class="task-execution-panel min-w-0 p-4 flex flex-col overflow-hidden">
                     <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">阶段</span>
@@ -471,7 +471,7 @@ const onLeave = (el: any) => {
                         <span class="text-muted">进度</span>
                         <div class="font-mono font-black text-primary mt-0.5">{{ task.progress || 0 }}%<span v-if="task.speed" class="ml-2 text-muted">{{ task.speed }}</span></div>
                       </div>
-                      <div v-if="task.currentFile" class="col-span-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentFile">
+                      <div v-if="task.currentFile" class="task-current-file col-span-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentFile">
                         {{ task.currentFile }}
                       </div>
                     </div>
@@ -481,7 +481,7 @@ const onLeave = (el: any) => {
                         {{ appStore.t('decompress.config.logs_title') }}
                       </span>
                     </h4>
-                    <div class="log-viewport flex-1 min-w-0 overflow-y-auto overflow-x-hidden pr-2 space-y-1.5 custom-scrollbar">
+                    <div data-testid="decompression-log-viewport" class="log-viewport flex-1 min-w-0 overflow-y-auto overflow-x-hidden pr-2 space-y-1.5 custom-scrollbar">
                       <div v-for="(log, idx) in task.logs" :key="idx" class="task-log-entry flex min-w-0 gap-3 items-start group/log border-l-2 border-subtle/20 pl-3 py-0.5">
                         <span class="task-log-time text-dim font-mono text-xs mt-0.5 opacity-80 shrink-0">{{ new Date(log.timestamp).toLocaleTimeString([], {hour12: false}) }}</span>
                         <div class="task-log-message min-w-0 flex-1 break-words [overflow-wrap:anywhere] text-sm leading-relaxed font-mono" :class="getSeverityClass(log.severity)">
@@ -589,8 +589,10 @@ const onLeave = (el: any) => {
 
 .task-detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
   align-items: stretch;
+  height: clamp(22rem, 54vh, 32rem);
+  min-height: 0;
   overflow-x: hidden;
 }
 
@@ -600,6 +602,44 @@ const onLeave = (el: any) => {
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
+}
+
+.task-config-panel,
+.task-execution-panel {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+}
+
+.task-config-panel > * {
+  flex-shrink: 0;
+}
+
+.task-execution-panel {
+  overflow: hidden;
+}
+
+.log-viewport {
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.task-log-entry,
+.task-log-message {
+  max-width: 100%;
+}
+
+.task-current-file {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.task-log-message {
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .task-detail-card:hover {
@@ -658,13 +698,10 @@ const onLeave = (el: any) => {
 
 @media (max-width: 760px) {
   .task-config-panel {
-    max-height: 20rem;
     padding: 1rem;
   }
 
   .task-execution-panel {
-    min-height: 16rem;
-    max-height: 22rem;
     padding: 1rem;
   }
 

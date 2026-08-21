@@ -408,7 +408,9 @@ mod tests {
     use super::*;
     use crate::services::extraction_transaction::ExtractionStaging;
     use crate::services::io_buffer_pool::IOBufferPool;
+    use crate::utils::archive_tools::find_7z_command;
     use std::path::Component;
+    use std::process::Command;
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::Mutex;
 
@@ -634,13 +636,32 @@ mod tests {
         let temp = tempfile::tempdir().expect("temp dir");
         let source = temp.path().join("secret.txt");
         let archive = temp.path().join("secret.7z");
-        std::fs::write(&source, b"real encrypted seven zip fixture").expect("write source");
-        sevenz_rust::compress_to_path_encrypted(
-            &source,
-            &archive,
-            sevenz_rust::Password::from("correct-password"),
-        )
-        .expect("create encrypted 7z");
+        let payload: Vec<u8> = (0..256 * 1024)
+            .map(|index| ((index * 31 + index / 251) % 256) as u8)
+            .collect();
+        std::fs::write(&source, payload).expect("write source");
+
+        // Generate the fixture with the same real 7-Zip engine used by users. A
+        // sevenz-rust self-generated tiny fixture has accepted a wrong password
+        // on some Windows runners, so it cannot prove the interoperability gate.
+        let seven_zip = find_7z_command().expect("7-Zip command available");
+        let output = Command::new(seven_zip)
+            .current_dir(temp.path())
+            .arg("a")
+            .arg("-t7z")
+            .arg("-mhe=on")
+            .arg("-pcorrect-password")
+            .arg("-y")
+            .arg(&archive)
+            .arg(&source)
+            .output()
+            .expect("run 7-Zip");
+        assert!(
+            output.status.success(),
+            "7-Zip fixture creation failed: {}{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
         assert!(requires_password(&archive).expect("encrypted archive state"));
 
         let drain = || {

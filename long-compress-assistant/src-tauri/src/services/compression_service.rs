@@ -1815,15 +1815,38 @@ impl CompressionService {
 
     fn archive_output_dir_name(path: &Path) -> String {
         let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("archive");
-        for suffix in [".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst"] {
-            if file_name.to_lowercase().ends_with(suffix) {
-                return file_name[..file_name.len() - suffix.len()].to_string();
+        let mut candidate = file_name.to_string();
+        let lower = candidate.to_lowercase();
+        if let Some((_, extension)) = lower.rsplit_once('.') {
+            if extension.len() >= 3 && extension.chars().all(|character| character.is_ascii_digit()) {
+                candidate.truncate(candidate.len() - extension.len() - 1);
             }
         }
-        path.file_stem()
-            .and_then(|name| name.to_str())
-            .unwrap_or("archive")
-            .to_string()
+        let lower = candidate.to_lowercase();
+        if lower.ends_with(".rar") {
+            if let Some(part_position) = lower.rfind(".part") {
+                let volume = &lower[part_position + 5..lower.len() - 4];
+                if !volume.is_empty() && volume.chars().all(|character| character.is_ascii_digit()) {
+                    candidate.truncate(part_position);
+                }
+            }
+        } else if let Some(part_position) = lower.rfind(".part") {
+            let volume = &lower[part_position + 5..];
+            if !volume.is_empty() && volume.chars().all(|character| character.is_ascii_digit()) {
+                candidate.truncate(part_position);
+            }
+        }
+
+        for suffix in [
+            ".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst", ".zip", ".zipx", ".7z", ".rar",
+            ".tar", ".wim",
+        ] {
+            if candidate.to_lowercase().ends_with(suffix) {
+                candidate.truncate(candidate.len() - suffix.len());
+                break;
+            }
+        }
+        if candidate.is_empty() { "archive".to_string() } else { candidate }
     }
 
     fn normalized_archive_path(path: &Path, preserve_paths: bool) -> Option<PathBuf> {
@@ -2953,6 +2976,15 @@ mod tests_continued {
             &nested_output.to_string_lossy(),
             &CompressionOptions::default(),
         ).is_err());
+    }
+
+    #[test]
+    fn split_entries_use_a_clean_output_directory_name() {
+        assert_eq!(CompressionService::archive_output_dir_name(Path::new("project.zip.001")), "project");
+        assert_eq!(CompressionService::archive_output_dir_name(Path::new("project.7z.001")), "project");
+        assert_eq!(CompressionService::archive_output_dir_name(Path::new("project.part01.rar")), "project");
+        assert_eq!(CompressionService::archive_output_dir_name(Path::new("project.part1")), "project");
+        assert_eq!(CompressionService::archive_output_dir_name(Path::new("project.tar.gz")), "project");
     }
 
     #[test]

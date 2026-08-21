@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test'
 
 const responsiveWidths = [1440, 1024, 760, 390]
+const desktopDetailViewports = [
+  { width: 1440, height: 900 },
+  { width: 1024, height: 720 },
+  { width: 920, height: 620 },
+  { width: 760, height: 520 },
+]
 
 const expectVerticalOnlyScrolling = async (
   page: import('@playwright/test').Page,
@@ -64,6 +70,46 @@ const expectSideBySide = async (
   expect(positions[1].left).toBeGreaterThan(positions[0].left)
 }
 
+const expectBoundedDetailPanels = async (
+  page: import('@playwright/test').Page,
+  selectors: { detail: string; config: string; execution: string; log: string },
+) => {
+  const measurements = await page.locator([
+    selectors.detail,
+    selectors.config,
+    selectors.execution,
+    selectors.log,
+  ].join(',')).evaluateAll(elements => elements.map(element => {
+    const htmlElement = element as HTMLElement
+    const rect = htmlElement.getBoundingClientRect()
+    const style = getComputedStyle(htmlElement)
+    return {
+      width: rect.width,
+      height: rect.height,
+      clientHeight: htmlElement.clientHeight,
+      scrollHeight: htmlElement.scrollHeight,
+      overflowY: style.overflowY,
+    }
+  }))
+
+  expect(measurements).toHaveLength(4)
+  const [detail, config, execution, log] = measurements
+  expect(detail.height).toBeGreaterThanOrEqual(340)
+  expect(config.width).toBeGreaterThanOrEqual(180)
+  expect(execution.width).toBeGreaterThanOrEqual(180)
+  expect(Math.abs(config.height - execution.height)).toBeLessThanOrEqual(2)
+  expect(config.overflowY).toBe('auto')
+  expect(execution.overflowY).toBe('hidden')
+  expect(log.overflowY).toBe('auto')
+  expect(log.scrollHeight).toBeGreaterThan(log.clientHeight)
+
+  const resourceMetrics = page.getByTestId('resource-preflight-metrics')
+  await expect(resourceMetrics).toBeVisible()
+  await expect(resourceMetrics.locator('.metric')).toHaveCount(4)
+  const resourceCard = await page.getByTestId('resource-preflight-card').boundingBox()
+  expect(resourceCard?.height).toBeGreaterThanOrEqual(100)
+}
+
 test.describe('Long Decompress desktop shell', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
@@ -100,7 +146,7 @@ test.describe('Long Decompress desktop shell', () => {
     await expect(dropzone).toBeFocused()
   })
 
-  test('keeps compression and decompression details free of horizontal scrolling', async ({ page, browserName }) => {
+  test('keeps compression and decompression details free of horizontal scrolling', async ({ page, browserName }, testInfo) => {
     test.skip(browserName !== 'chromium', 'responsive overflow matrix runs once in Chromium')
     test.slow()
 
@@ -110,8 +156,8 @@ test.describe('Long Decompress desktop shell', () => {
     await page.waitForURL('**/#/compress')
     await expect(page.getByTestId('compression-draft-details')).toBeVisible()
 
-    for (const width of responsiveWidths) {
-      await page.setViewportSize({ width, height: 800 })
+    for (const viewport of desktopDetailViewports) {
+      await page.setViewportSize(viewport)
       await expectVerticalOnlyScrolling(page, [
         '.compression-view',
         '.compression-task-list',
@@ -125,7 +171,25 @@ test.describe('Long Decompress desktop shell', () => {
         '.compression-config-panel',
         '[data-testid="compression-draft-execution"]',
       )
+      await expectBoundedDetailPanels(page, {
+        detail: '[data-testid="compression-draft-details"]',
+        config: '[data-testid="compression-draft-config"]',
+        execution: '[data-testid="compression-draft-execution"]',
+        log: '[data-testid="compression-log-viewport"]',
+      })
       await expect(page.locator('.compression-config-panel')).toHaveCSS('pointer-events', 'auto')
+      if (viewport.width === 1024 || viewport.width === 920 || viewport.width === 760) {
+        await page.screenshot({ path: testInfo.outputPath(`compression-${viewport.width}x${viewport.height}.png`), fullPage: false })
+      }
+      if (viewport.width === 760) {
+        const scrollTop = await page.getByTestId('compression-draft-config').evaluate(element => {
+          element.scrollTop = element.scrollHeight
+          return element.scrollTop
+        })
+        expect(scrollTop).toBeGreaterThan(0)
+        await page.waitForTimeout(100)
+        await page.screenshot({ path: testInfo.outputPath('compression-resource-760x520.png'), fullPage: false })
+      }
     }
 
     await page.evaluate(() => window.__LONG_DECOMPRESS_DESKTOP_E2E__!.seedResponsiveWorkspace('decompression'))
@@ -134,8 +198,8 @@ test.describe('Long Decompress desktop shell', () => {
     await page.locator('.task-row').click()
     await expect(page.locator('.task-detail-card')).toBeVisible()
 
-    for (const width of responsiveWidths) {
-      await page.setViewportSize({ width, height: 800 })
+    for (const viewport of desktopDetailViewports) {
+      await page.setViewportSize(viewport)
       await expectVerticalOnlyScrolling(page, [
         '.decompress-view',
         '.aero-table-container',
@@ -146,6 +210,24 @@ test.describe('Long Decompress desktop shell', () => {
         '.log-viewport',
       ])
       await expectSideBySide(page, '.task-config-panel', '.task-execution-panel')
+      await expectBoundedDetailPanels(page, {
+        detail: '[data-testid="decompression-task-details"]',
+        config: '[data-testid="decompression-config-panel"]',
+        execution: '[data-testid="decompression-execution-panel"]',
+        log: '[data-testid="decompression-log-viewport"]',
+      })
+      if (viewport.width === 1024 || viewport.width === 920 || viewport.width === 760) {
+        await page.screenshot({ path: testInfo.outputPath(`decompression-${viewport.width}x${viewport.height}.png`), fullPage: false })
+      }
+      if (viewport.width === 760) {
+        const scrollTop = await page.getByTestId('decompression-config-panel').evaluate(element => {
+          element.scrollTop = element.scrollHeight
+          return element.scrollTop
+        })
+        expect(scrollTop).toBeGreaterThan(0)
+        await page.waitForTimeout(100)
+        await page.screenshot({ path: testInfo.outputPath('decompression-resource-760x520.png'), fullPage: false })
+      }
     }
   })
 

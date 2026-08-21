@@ -18,6 +18,7 @@ import CompressionExecutionPanel from '@/components/compression/CompressionExecu
 import CompressionAnalysisCard from '@/components/compression/CompressionAnalysisCard.vue'
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import CompressionStatusCell from '@/components/compression/CompressionStatusCell.vue'
+import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import CompressionToolbar from '@/components/compression/CompressionToolbar.vue'
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
@@ -724,7 +725,7 @@ const onDetailLeave = (element: Element) => {
             @before-leave="onBeforeDetailLeave"
             @leave="onDetailLeave"
           >
-            <div v-if="group.expanded" class="details-drawer px-3 md:px-6 pb-5 pt-2">
+            <div v-if="group.expanded" class="details-drawer px-2 md:px-3 pb-4 pt-2">
               <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
                 <div
                   data-testid="compression-draft-config"
@@ -758,6 +759,7 @@ const onDetailLeave = (element: Element) => {
                       @update:modelValue="compressionStore.updateGroupSettings(group.id, $event)"
                       @update:outputPath="compressionStore.updateGroupOutputPath(group.id, $event)"
                     />
+                    <ResourcePreflightCard :report="taskForJob(group.taskId)?.resourcePreflight" />
                   </div>
 
                   <div class="space-y-2">
@@ -903,7 +905,7 @@ const onDetailLeave = (element: Element) => {
               @before-leave="onBeforeDetailLeave"
               @leave="onDetailLeave"
             >
-              <div v-if="file.expanded" class="details-drawer w-full px-2 md:px-5 pb-4 pt-2" @click.stop>
+              <div v-if="file.expanded" class="details-drawer w-full px-2 md:px-3 pb-4 pt-2" @click.stop>
                 <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
                   <div
                     data-testid="compression-draft-config"
@@ -936,6 +938,7 @@ const onDetailLeave = (element: Element) => {
                       @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
                       @update:outputPath="compressionStore.updateFileOutputPath(file.path, $event)"
                     />
+                    <ResourcePreflightCard :report="taskForJob(file.taskId)?.resourcePreflight" class="mt-4" />
                   </div>
 
                   <CompressionExecutionPanel :task="taskForJob(file.taskId)" />
@@ -1113,7 +1116,8 @@ const onDetailLeave = (element: Element) => {
 
 .compression-detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  height: clamp(22rem, 54vh, 32rem);
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -1127,7 +1131,9 @@ const onDetailLeave = (element: Element) => {
   box-sizing: border-box;
   min-width: 0;
   max-width: 100%;
-  max-height: 26rem;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 1.25rem 1.5rem;
@@ -1139,7 +1145,11 @@ const onDetailLeave = (element: Element) => {
   box-sizing: border-box;
   min-width: 0;
   max-width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
   overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .compression-config-panel.is-submitted :deep(input),
@@ -1175,7 +1185,7 @@ const onDetailLeave = (element: Element) => {
 
 @media (max-width: 760px) {
   .compression-config-panel {
-    max-height: 22rem;
+    padding: 1rem;
   }
 
   .compression-config-panel :deep(.settings-core-grid) {

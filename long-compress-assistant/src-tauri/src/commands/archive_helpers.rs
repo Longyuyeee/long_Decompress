@@ -12,6 +12,8 @@ pub struct SplitArchiveResponse {
     pub first_part: Option<String>,
     pub total_parts: usize,
     pub total_size: u64,
+    pub is_complete: bool,
+    pub missing_parts: Vec<String>,
 }
 
 #[tauri::command]
@@ -32,6 +34,12 @@ pub async fn detect_split_archive(path: String) -> Result<SplitArchiveResponse, 
                 first_part: Some(info.first_part.to_string_lossy().into_owned()),
                 total_parts: info.total_parts,
                 total_size: info.total_size,
+                is_complete: info.is_complete,
+                missing_parts: info
+                    .missing_parts
+                    .iter()
+                    .map(|part| part.to_string_lossy().into_owned())
+                    .collect(),
             },
             None => SplitArchiveResponse {
                 is_split: false,
@@ -41,6 +49,8 @@ pub async fn detect_split_archive(path: String) -> Result<SplitArchiveResponse, 
                 first_part: None,
                 total_parts: 0,
                 total_size: 0,
+                is_complete: true,
+                missing_parts: Vec::new(),
             },
         })
     })

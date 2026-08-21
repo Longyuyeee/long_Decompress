@@ -6,6 +6,7 @@ import {
   effectiveFormatForPassword,
   extensionForFormat,
   isDecompressArchivePath,
+  isPotentialSplitArchivePath,
   isPasswordSupportedFormat,
   isSingleFileStreamFormat,
 } from '../compressionFormat'
@@ -76,5 +77,15 @@ describe('compression format helpers', () => {
     expect(isDecompressArchivePath('C:/downloads/app.apk')).toBe(true)
     expect(isDecompressArchivePath('C:/documents/report.docx')).toBe(false)
     expect(isDecompressArchivePath('C:/documents/budget.xlsx')).toBe(false)
+  })
+
+  it('recognizes common split-volume names without treating documents as archives', () => {
+    expect(isPotentialSplitArchivePath('C:/downloads/project.zip.001')).toBe(true)
+    expect(isPotentialSplitArchivePath('C:/downloads/project.7z.005')).toBe(true)
+    expect(isPotentialSplitArchivePath('C:/downloads/project.z01')).toBe(true)
+    expect(isPotentialSplitArchivePath('C:/downloads/project.r00')).toBe(true)
+    expect(isPotentialSplitArchivePath('C:/downloads/project.part12.rar')).toBe(true)
+    expect(isPotentialSplitArchivePath('C:/downloads/project.part12')).toBe(true)
+    expect(isPotentialSplitArchivePath('C:/documents/report.docx')).toBe(false)
   })
 })
