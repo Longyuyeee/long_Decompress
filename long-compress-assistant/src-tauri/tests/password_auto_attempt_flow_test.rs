@@ -3,32 +3,24 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::Arc;
 
-use long_compress_assistant::database::migrations;
 use long_compress_assistant::models::compression::DecompressOptions;
 use long_compress_assistant::models::password::{PasswordCategory, PasswordEntry};
 use long_compress_assistant::services::compression_service::{CompressionService, CompressionServiceConfig};
 use long_compress_assistant::services::encrypted_password_service::EncryptedPasswordService;
 use long_compress_assistant::services::io_buffer_pool::IOBufferPool;
-use long_compress_assistant::services::password_query_service::PasswordQueryService;
 use long_compress_assistant::services::rar_support::RarSupportService;
 use long_compress_assistant::services::universal_engine::UniversalCliEngine;
 use long_compress_assistant::utils::archive_tools::find_7z_command;
-use sqlx::SqlitePool;
 use tempfile::{tempdir, TempDir};
 
 struct FlowHarness {
     _temp: TempDir,
-    pool: SqlitePool,
     encrypted_service: Arc<EncryptedPasswordService>,
     service: CompressionService,
 }
 
 async fn build_harness() -> FlowHarness {
     let temp = tempdir().expect("temp dir");
-    let pool = SqlitePool::connect("sqlite::memory:").await.expect("sqlite");
-    migrations::init_tables(&pool).await.expect("migrations");
-    ensure_usage_history_column(&pool).await;
-
     let data_dir = temp.path().join("password-book");
     let mut encrypted_service = EncryptedPasswordService::new(&data_dir);
     encrypted_service
@@ -37,37 +29,18 @@ async fn build_harness() -> FlowHarness {
         .expect("initialize password service");
     let encrypted_service = Arc::new(encrypted_service);
 
-    let query_service = Arc::new(PasswordQueryService::new(pool.clone(), encrypted_service.clone()));
     let service = CompressionService::new(
         CompressionServiceConfig::default(),
         Arc::new(IOBufferPool::default()),
         Arc::new(RarSupportService::new()),
         Arc::new(UniversalCliEngine::new()),
-        query_service,
+        encrypted_service.clone(),
     );
 
     FlowHarness {
         _temp: temp,
-        pool,
         encrypted_service,
         service,
-    }
-}
-
-async fn ensure_usage_history_column(pool: &SqlitePool) {
-    let columns: Vec<(String,)> = sqlx::query_as("PRAGMA table_info(password_entries)")
-        .fetch_all(pool)
-        .await
-        .expect("password_entries pragma")
-        .into_iter()
-        .map(|row: (i64, String, String, i64, Option<String>, i64)| (row.1,))
-        .collect();
-
-    if !columns.iter().any(|(name,)| name == "usage_history") {
-        sqlx::query("ALTER TABLE password_entries ADD COLUMN usage_history TEXT NOT NULL DEFAULT '{}'")
-            .execute(pool)
-            .await
-            .expect("add usage_history");
     }
 }
 
@@ -79,70 +52,11 @@ async fn seed_password_book(harness: &FlowHarness, name: &str, password: &str, u
     );
     entry.use_count = use_count as u32;
 
-    let entry = harness
+    harness
         .encrypted_service
         .add_password(entry)
         .await
         .expect("add password file entry");
-
-    sqlx::query(
-        r#"
-        INSERT OR IGNORE INTO password_keys (
-            id, key_type, algorithm, key_data, key_hash, key_size, key_version,
-            created_at, active, archived, metadata
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        "#,
-    )
-    .bind("test-key")
-    .bind("Master")
-    .bind("PLAINTEXT_TEST")
-    .bind("test-key-data")
-    .bind("test-key-hash")
-    .bind(0_i32)
-    .bind(1_i32)
-    .bind(entry.created_at)
-    .bind(true)
-    .bind(false)
-    .bind("{}")
-    .execute(&harness.pool)
-    .await
-    .expect("insert password key");
-
-    sqlx::query(
-        r#"
-        INSERT INTO password_entries (
-            id, name, username, password, url, notes, tags, category, strength,
-            key_id, encryption_algorithm, encryption_version, created_at, updated_at,
-            last_used, use_count, expires_at, favorite, archived, deleted,
-            usage_history, custom_fields
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        "#,
-    )
-    .bind(&entry.id)
-    .bind(&entry.name)
-    .bind(&entry.username)
-    .bind(&entry.password)
-    .bind(&entry.url)
-    .bind(&entry.notes)
-    .bind(serde_json::to_string(&entry.tags).expect("tags json"))
-    .bind(entry.category.to_string())
-    .bind(entry.strength.to_string())
-    .bind("test-key")
-    .bind("PLAINTEXT_TEST")
-    .bind(1_i32)
-    .bind(entry.created_at)
-    .bind(entry.updated_at)
-    .bind(entry.last_used)
-    .bind(entry.use_count as i32)
-    .bind(entry.expires_at)
-    .bind(entry.favorite)
-    .bind(false)
-    .bind(false)
-    .bind("{}")
-    .bind(serde_json::to_string(&entry.custom_fields).expect("fields json"))
-    .execute(&harness.pool)
-    .await
-    .expect("insert password index row");
 }
 
 fn create_encrypted_7z(root: &Path, password: &str) -> std::path::PathBuf {

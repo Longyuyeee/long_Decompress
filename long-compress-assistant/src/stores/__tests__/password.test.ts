@@ -27,6 +27,7 @@ const entry = (overrides: Partial<PasswordEntry> = {}): PasswordEntry => ({
   expires_at: null,
   favorite: false,
   use_count: 0,
+  usage_history: {},
   custom_fields: [],
   ...overrides,
 })
@@ -37,6 +38,14 @@ describe('Password Store', () => {
     mocks.invoke.mockReset()
     mocks.invoke.mockImplementation(async (command: string, args?: Record<string, any>) => {
       if (command === 'update_encrypted_password') return args?.entry
+      if (command === 'increment_encrypted_password_use_count') {
+        return entry({
+          favorite: true,
+          use_count: 1,
+          last_used: new Date().toISOString(),
+          usage_history: { '2026-08-21': 1 },
+        })
+      }
       return undefined
     })
   })
@@ -86,7 +95,29 @@ describe('Password Store', () => {
     expect(store.entries[0].favorite).toBe(true)
     expect(store.entries[0].use_count).toBe(1)
     expect(store.entries[0].last_used).toBeTruthy()
+    expect(store.entries[0].usage_history).toEqual({ '2026-08-21': 1 })
     expect(mocks.invoke).toHaveBeenCalledWith('update_encrypted_password', expect.objectContaining({ id: 'entry-1' }))
+    expect(mocks.invoke).toHaveBeenCalledWith('increment_encrypted_password_use_count', { id: 'entry-1' })
+  })
+
+  it('refreshes file-backed usage after the store was already initialized', async () => {
+    const stale = entry()
+    const fresh = entry({ use_count: 1, usage_history: { '2026-08-21': 1 } })
+    let listCalls = 0
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'is_encrypted_password_service_unlocked') return true
+      if (command === 'list_encrypted_passwords') return [listCalls++ ? fresh : stale]
+      if (command === 'list_password_groups') return []
+      return undefined
+    })
+    const store = usePasswordStore()
+
+    await store.checkUnlockStatus()
+    expect(store.entries[0].use_count).toBe(0)
+    await store.checkUnlockStatus()
+
+    expect(store.entries[0].use_count).toBe(1)
+    expect(store.entries[0].usage_history).toEqual({ '2026-08-21': 1 })
   })
 
   it('deletes all selected entries and clears the selection', async () => {

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import {
-  PasswordStrength,
   usePasswordStore,
   type PasswordEntry,
 } from '@/stores/password'
@@ -36,14 +35,6 @@ type VaultEntryWithHistory = Omit<PasswordEntry, 'usage_history'> & {
 }
 
 const DAY_MS = 86_400_000
-const strengthMeta = [
-  { key: PasswordStrength.VeryStrong, labelKey: 'vault.analytics.strength_very_strong', color: '#22c55e' },
-  { key: PasswordStrength.Strong, labelKey: 'vault.analytics.strength_strong', color: '#14b8a6' },
-  { key: PasswordStrength.Medium, labelKey: 'vault.analytics.strength_medium', color: '#f59e0b' },
-  { key: PasswordStrength.Weak, labelKey: 'vault.analytics.strength_weak', color: '#f97316' },
-  { key: PasswordStrength.VeryWeak, labelKey: 'vault.analytics.strength_very_weak', color: '#ef4444' },
-]
-
 const safeDate = (value?: string | null) => {
   if (!value) return null
   const date = new Date(value)
@@ -70,55 +61,21 @@ const stats = computed(() => {
   const entries = passwordStore.entries
   const total = entries.length
   const totalUsage = entries.reduce((sum, entry) => sum + (entry.use_count || 0), 0)
-  const strongEntries = entries.filter(entry =>
-    entry.strength === PasswordStrength.Strong || entry.strength === PasswordStrength.VeryStrong
-  )
-  const weakEntries = entries.filter(entry =>
-    entry.strength === PasswordStrength.Weak || entry.strength === PasswordStrength.VeryWeak
-  )
   const active30 = entries.filter(entry => {
     const age = daysSince(entry.last_used)
     return age !== null && age <= 30
   }).length
-  const staleEntries = entries.filter(entry => {
-    const age = daysSince(entry.updated_at)
-    return age !== null && age > 180
-  })
   const neverUsed = entries.filter(entry => !entry.last_used && !entry.use_count).length
-  const expiringSoonEntries = entries.filter(entry => {
-    const expiresAt = safeDate(entry.expires_at)
-    if (!expiresAt) return false
-    const days = Math.ceil((expiresAt.getTime() - Date.now()) / DAY_MS)
-    return days >= 0 && days <= 30
-  })
-  const strong = strongEntries.length
-  const weak = weakEntries.length
-  const stale = staleEntries.length
-  const expiringSoon = expiringSoonEntries.length
-  const attentionCount = new Set([
-    ...weakEntries.map(entry => entry.id),
-    ...staleEntries.map(entry => entry.id),
-    ...expiringSoonEntries.map(entry => entry.id),
-  ]).size
-  const averageLength = total
-    ? Math.round(entries.reduce((sum, entry) => sum + entry.password.length, 0) / total)
-    : 0
-  const securityScore = total
-    ? Math.max(0, Math.min(100, Math.round(((strong + (total - strong - weak) * 0.55) / total) * 100 - (stale / total) * 12)))
-    : 0
+  const favorites = entries.filter(entry => entry.favorite).length
+  const documented = entries.filter(entry => Boolean(entry.notes?.trim()) || Boolean(entry.tags?.length) || Boolean(entry.category)).length
 
   return {
     total,
     totalUsage,
-    strong,
-    weak,
     active30,
-    stale,
     neverUsed,
-    expiringSoon,
-    attentionCount,
-    averageLength,
-    securityScore,
+    favorites,
+    documented,
   }
 })
 
@@ -206,12 +163,15 @@ const confirmClearAll = async () => {
   }
 }
 
-const showUsageHistory = (entry: any) => {
-  selectedEntryForHistory.value = entry
+const showUsageHistory = async (entry: PasswordEntry) => {
+  await passwordStore.fetchAllData()
+  selectedEntryForHistory.value = passwordStore.entries.find(item => item.id === entry.id) || entry
   showHistoryModal.value = true
 }
 
-const showVaultAnalytics = () => {
+const showVaultAnalytics = async () => {
+  // 自动解压可能刚刚在后端命中密码；打开统计前重新读取真实文件数据。
+  await passwordStore.fetchAllData()
   selectedEntryForHistory.value = null
   showHistoryModal.value = true
 }
@@ -238,8 +198,9 @@ const toggleEntryPasswordVisibility = (id: string) => {
   visiblePasswordIds.value = next
 }
 
-const copyToClipboard = (text: string) => {
-  navigator.clipboard.writeText(text)
+const copyPasswordToClipboard = async (entry: PasswordEntry) => {
+  const password = await passwordStore.usePassword(entry.id)
+  await navigator.clipboard.writeText(password)
   appStore.setSuccess(appStore.t('vault.action.copy'))
 }
 
@@ -250,7 +211,7 @@ const usageEvents = computed(() => {
     const historyItems = Object.entries(history || {})
     if (historyItems.length) {
       historyItems.forEach(([date, count]) => {
-        const parsed = safeDate(`${date}T00:00:00.000Z`)
+        const parsed = safeDate(`${date}T00:00:00`)
         if (parsed && count > 0) events.push({ date: parsed, count })
       })
       return
@@ -263,19 +224,23 @@ const usageEvents = computed(() => {
 
 const buildFixedRangeBuckets = (days: number, bucketDays: number) => {
   const today = new Date()
-  const end = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 1)
-  const start = end - days * DAY_MS
+  const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
+  const startDate = new Date(endDate)
+  startDate.setDate(startDate.getDate() - days)
   const bucketCount = Math.ceil(days / bucketDays)
   return Array.from({ length: bucketCount }, (_, index) => {
-    const bucketStart = start + index * bucketDays * DAY_MS
-    const bucketEnd = Math.min(end, bucketStart + bucketDays * DAY_MS)
+    const bucketStartDate = new Date(startDate)
+    bucketStartDate.setDate(bucketStartDate.getDate() + index * bucketDays)
+    const bucketEndDate = new Date(bucketStartDate)
+    bucketEndDate.setDate(bucketEndDate.getDate() + bucketDays)
+    const bucketStart = bucketStartDate.getTime()
+    const bucketEnd = Math.min(endDate.getTime(), bucketEndDate.getTime())
     const count = usageEvents.value.reduce(
       (sum, event) => sum + (event.date.getTime() >= bucketStart && event.date.getTime() < bucketEnd ? event.count : 0),
       0,
     )
-    const labelDate = new Date(bucketStart)
     return {
-      date: `${String(labelDate.getUTCMonth() + 1).padStart(2, '0')}-${String(labelDate.getUTCDate()).padStart(2, '0')}`,
+      date: `${String(bucketStartDate.getMonth() + 1).padStart(2, '0')}-${String(bucketStartDate.getDate()).padStart(2, '0')}`,
       count,
     }
   })
@@ -290,29 +255,29 @@ const buildLifetimeBuckets = () => {
   const earliest = dateCandidates.length
     ? new Date(Math.min(...dateCandidates.map(date => date.getTime())))
     : now
-  const firstMonth = Date.UTC(earliest.getUTCFullYear(), earliest.getUTCMonth(), 1)
-  const nextMonth = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)
+  const firstMonth = new Date(earliest.getFullYear(), earliest.getMonth(), 1)
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
   const totalMonths = Math.max(
     1,
-    (now.getUTCFullYear() - earliest.getUTCFullYear()) * 12 + now.getUTCMonth() - earliest.getUTCMonth() + 1,
+    (now.getFullYear() - earliest.getFullYear()) * 12 + now.getMonth() - earliest.getMonth() + 1,
   )
   const monthsPerBucket = Math.max(1, Math.ceil(totalMonths / 10))
   const bucketCount = Math.ceil(totalMonths / monthsPerBucket)
 
   return Array.from({ length: bucketCount }, (_, index) => {
     const startDate = new Date(firstMonth)
-    startDate.setUTCMonth(startDate.getUTCMonth() + index * monthsPerBucket)
+    startDate.setMonth(startDate.getMonth() + index * monthsPerBucket)
     const endDate = new Date(firstMonth)
-    endDate.setUTCMonth(endDate.getUTCMonth() + Math.min(totalMonths, (index + 1) * monthsPerBucket))
+    endDate.setMonth(endDate.getMonth() + Math.min(totalMonths, (index + 1) * monthsPerBucket))
     const bucketEnd = index === bucketCount - 1
-      ? nextMonth
+      ? nextMonth.getTime()
       : endDate.getTime()
     const count = usageEvents.value.reduce(
       (sum, event) => sum + (event.date.getTime() >= startDate.getTime() && event.date.getTime() < bucketEnd ? event.count : 0),
       0,
     )
-    const year = String(startDate.getUTCFullYear()).slice(-2)
-    const month = String(startDate.getUTCMonth() + 1).padStart(2, '0')
+    const year = String(startDate.getFullYear()).slice(-2)
+    const month = String(startDate.getMonth() + 1).padStart(2, '0')
     return { date: `${year}-${month}`, count }
   })
 }
@@ -358,11 +323,11 @@ const lifetimeStats = computed(() => {
     : null
   const vaultAgeDays = earliest ? Math.max(0, Math.floor((now.getTime() - earliest.getTime()) / DAY_MS)) : 0
   const activeMonths = earliest
-    ? Math.max(1, (now.getUTCFullYear() - earliest.getUTCFullYear()) * 12 + now.getUTCMonth() - earliest.getUTCMonth() + 1)
+    ? Math.max(1, (now.getFullYear() - earliest.getFullYear()) * 12 + now.getMonth() - earliest.getMonth() + 1)
     : 1
   const monthlyAverage = Math.round((stats.value.totalUsage / activeMonths) * 10) / 10
   const monthlyCounts = usageEvents.value.reduce<Record<string, number>>((result, event) => {
-    const key = `${event.date.getUTCFullYear()}-${String(event.date.getUTCMonth() + 1).padStart(2, '0')}`
+    const key = `${event.date.getFullYear()}-${String(event.date.getMonth() + 1).padStart(2, '0')}`
     result[key] = (result[key] || 0) + event.count
     return result
   }, {})
@@ -377,20 +342,26 @@ const lifetimeStats = computed(() => {
   }
 })
 
-const strengthBreakdown = computed(() => {
+const usageTierBreakdown = computed(() => {
   const total = Math.max(passwordStore.entries.length, 1)
-  return strengthMeta.map(item => {
-    const count = passwordStore.entries.filter(entry => entry.strength === item.key).length
+  const tiers = [
+    { key: 'never', labelKey: 'vault.analytics.tier_never', color: '#94a3b8', matches: (count: number) => count === 0 },
+    { key: 'occasional', labelKey: 'vault.analytics.tier_occasional', color: '#38bdf8', matches: (count: number) => count >= 1 && count <= 2 },
+    { key: 'regular', labelKey: 'vault.analytics.tier_regular', color: '#8b5cf6', matches: (count: number) => count >= 3 && count <= 9 },
+    { key: 'frequent', labelKey: 'vault.analytics.tier_frequent', color: '#22c55e', matches: (count: number) => count >= 10 },
+  ]
+  return tiers.map(item => {
+    const count = passwordStore.entries.filter(entry => item.matches(entry.use_count || 0)).length
     return { ...item, count, ratio: count / total, percent: Math.round((count / total) * 100) }
   })
 })
 
-const strengthGradient = computed(() => {
+const usageTierGradient = computed(() => {
   if (!passwordStore.entries.length) return 'conic-gradient(#334155 0deg 360deg)'
   let cursor = 0
-  const stops = strengthBreakdown.value.map((item, index) => {
+  const stops = usageTierBreakdown.value.map((item, index) => {
     const start = cursor
-    cursor = index === strengthBreakdown.value.length - 1 ? 360 : cursor + item.ratio * 360
+    cursor = index === usageTierBreakdown.value.length - 1 ? 360 : cursor + item.ratio * 360
     return `${item.color} ${start}deg ${cursor}deg`
   })
   return `conic-gradient(${stops.join(', ')})`
@@ -415,17 +386,18 @@ const mostUsedEntries = computed(() =>
     .slice(0, 5)
 )
 
-const updateAgeBreakdown = computed(() => {
+const hitRecencyBreakdown = computed(() => {
   const buckets = [
-    { key: 'fresh', labelKey: 'vault.analytics.age_fresh', min: 0, max: 30, color: '#22c55e' },
-    { key: 'recent', labelKey: 'vault.analytics.age_recent', min: 31, max: 90, color: '#14b8a6' },
-    { key: 'aging', labelKey: 'vault.analytics.age_aging', min: 91, max: 180, color: '#f59e0b' },
-    { key: 'stale', labelKey: 'vault.analytics.age_stale', min: 181, max: Number.POSITIVE_INFINITY, color: '#f97316' },
+    { key: 'week', labelKey: 'vault.analytics.hit_week', min: 0, max: 7, color: '#22c55e' },
+    { key: 'month', labelKey: 'vault.analytics.hit_month', min: 8, max: 30, color: '#38bdf8' },
+    { key: 'older', labelKey: 'vault.analytics.hit_older', min: 31, max: Number.POSITIVE_INFINITY, color: '#8b5cf6' },
+    { key: 'never', labelKey: 'vault.analytics.hit_never', min: -1, max: -1, color: '#94a3b8' },
   ]
   const counts = buckets.map(bucket => ({
     ...bucket,
     count: passwordStore.entries.filter(entry => {
-      const age = daysSince(entry.updated_at)
+      const age = daysSince(entry.last_used)
+      if (bucket.key === 'never') return age === null
       return age !== null && age >= bucket.min && age <= bucket.max
     }).length,
   }))
@@ -435,15 +407,17 @@ const updateAgeBreakdown = computed(() => {
 
 const activityHeatmap = computed(() => {
   const today = new Date()
-  const todayStart = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const localDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   const dailyCounts = usageEvents.value.reduce<Record<string, number>>((result, event) => {
-    const key = event.date.toISOString().slice(0, 10)
+    const key = localDateKey(event.date)
     result[key] = (result[key] || 0) + event.count
     return result
   }, {})
   const cells = Array.from({ length: 35 }, (_, index) => {
-    const date = new Date(todayStart - (34 - index) * DAY_MS)
-    const key = date.toISOString().slice(0, 10)
+    const date = new Date(todayStart)
+    date.setDate(date.getDate() - (34 - index))
+    const key = localDateKey(date)
     return { key, label: formatDate(date.toISOString()), count: dailyCounts[key] || 0 }
   })
   const max = Math.max(...cells.map(cell => cell.count), 1)
@@ -457,15 +431,16 @@ const recentlyActiveEntries = computed(() => [...passwordStore.entries]
 
 const insightCards = computed(() => {
   const insights: Array<{ icon: string; tone: string; titleKey: string; detailKey: string; count: number }> = []
-  if (stats.value.weak) insights.push({ icon: 'pi pi-lock-open', tone: 'danger', titleKey: 'vault.analytics.insight_weak_title', detailKey: 'vault.analytics.insight_weak_detail', count: stats.value.weak })
-  if (stats.value.stale) insights.push({ icon: 'pi pi-clock', tone: 'warning', titleKey: 'vault.analytics.insight_stale_title', detailKey: 'vault.analytics.insight_stale_detail', count: stats.value.stale })
-  if (stats.value.expiringSoon) insights.push({ icon: 'pi pi-calendar-times', tone: 'warning', titleKey: 'vault.analytics.insight_expiring_title', detailKey: 'vault.analytics.insight_expiring_detail', count: stats.value.expiringSoon })
-  if (stats.value.neverUsed) insights.push({ icon: 'pi pi-eye-slash', tone: 'info', titleKey: 'vault.analytics.insight_unused_title', detailKey: 'vault.analytics.insight_unused_detail', count: stats.value.neverUsed })
-  if (!insights.length) insights.push({ icon: 'pi pi-sparkles', tone: 'success', titleKey: 'vault.analytics.insight_healthy_title', detailKey: 'vault.analytics.insight_healthy_detail', count: stats.value.total })
+  const missingContext = passwordStore.entries.filter(entry => !entry.notes?.trim() && !entry.tags?.length && !entry.category).length
+  if (stats.value.neverUsed) insights.push({ icon: 'pi pi-question-circle', tone: 'info', titleKey: 'vault.analytics.insight_unused_title', detailKey: 'vault.analytics.insight_unused_detail', count: stats.value.neverUsed })
+  if (missingContext) insights.push({ icon: 'pi pi-tags', tone: 'warning', titleKey: 'vault.analytics.insight_context_title', detailKey: 'vault.analytics.insight_context_detail', count: missingContext })
+  if (stats.value.favorites) insights.push({ icon: 'pi pi-star', tone: 'success', titleKey: 'vault.analytics.insight_favorite_title', detailKey: 'vault.analytics.insight_favorite_detail', count: stats.value.favorites })
+  if (stats.value.active30) insights.push({ icon: 'pi pi-bolt', tone: 'success', titleKey: 'vault.analytics.insight_active_title', detailKey: 'vault.analytics.insight_active_detail', count: stats.value.active30 })
+  if (!insights.length) insights.push({ icon: 'pi pi-inbox', tone: 'info', titleKey: 'vault.analytics.insight_empty_title', detailKey: 'vault.analytics.insight_empty_detail', count: stats.value.total })
   return insights.slice(0, 4)
 })
 
-const selectedLifecycle = computed(() => {
+const selectedProfile = computed(() => {
   const entry = selectedEntryForHistory.value as VaultEntryWithHistory | null
   if (!entry) return null
   return {
@@ -473,11 +448,41 @@ const selectedLifecycle = computed(() => {
     updated: formatDate(entry.updated_at),
     lastUsed: formatDate(entry.last_used),
     daysStored: daysSince(entry.created_at) || 0,
-    passwordLength: entry.password.length,
     useCount: entry.use_count || 0,
-    strength: strengthMeta.find(item => item.key === entry.strength) || strengthMeta[2],
+    category: entry.category || appStore.t('vault.analytics.uncategorized'),
+    notes: entry.notes?.trim() || appStore.t('vault.analytics.no_notes'),
+    tags: entry.tags || [],
+    favorite: Boolean(entry.favorite),
   }
 })
+
+const selectedUsageEvents = computed(() => {
+  const entry = selectedEntryForHistory.value as VaultEntryWithHistory | null
+  if (!entry) return []
+  const history = Object.entries(entry.usage_history || {})
+    .map(([date, count]) => ({ date: safeDate(`${date}T00:00:00`), count }))
+    .filter((item): item is { date: Date; count: number } => Boolean(item.date) && item.count > 0)
+  if (history.length) return history
+  const fallback = safeDate(entry.last_used)
+  // 旧条目只有最后命中时间而没有逐日历史，最多确认当天发生过一次，不把累计次数伪造到同一天。
+  return fallback ? [{ date: fallback, count: 1 }] : []
+})
+
+const selectedUsageDays = computed(() => {
+  const today = new Date()
+  const localKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  const counts = selectedUsageEvents.value.reduce<Record<string, number>>((result, item) => {
+    result[localKey(item.date)] = (result[localKey(item.date)] || 0) + item.count
+    return result
+  }, {})
+  return Array.from({ length: 14 }, (_, index) => {
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (13 - index))
+    const key = localKey(date)
+    return { key, label: `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`, count: counts[key] || 0 }
+  })
+})
+
+const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(day => day.count), 1))
 </script>
 
 <template>
@@ -606,7 +611,7 @@ const selectedLifecycle = computed(() => {
                     <button type="button" @click="toggleEntryPasswordVisibility(entry.id)" :aria-label="isPasswordVisible(entry.id) ? appStore.t('vault.action.hide') : appStore.t('vault.action.show')" :title="isPasswordVisible(entry.id) ? appStore.t('vault.action.hide') : appStore.t('vault.action.show')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0">
                       <i :class="isPasswordVisible(entry.id) ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm"></i>
                     </button>
-                    <button type="button" @click="copyToClipboard(entry.password)" :aria-label="appStore.t('vault.action.copy_password')" :title="appStore.t('vault.action.copy_password')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0"><i class="pi pi-copy text-sm"></i></button>
+                    <button type="button" @click="copyPasswordToClipboard(entry)" :aria-label="appStore.t('vault.action.copy_password')" :title="appStore.t('vault.action.copy_password')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0"><i class="pi pi-copy text-sm"></i></button>
                   </div>
                 </td>
                 <td class="px-4 py-3.5">
@@ -670,7 +675,7 @@ const selectedLifecycle = computed(() => {
           class="vault-analytics-backdrop fixed inset-0 z-[350] flex items-center justify-center p-4 sm:p-6"
           role="dialog"
           aria-modal="true"
-          :aria-label="appStore.t('vault.analytics.title')"
+          :aria-label="appStore.t(selectedEntryForHistory ? 'vault.analytics.entry_title' : 'vault.analytics.title')"
           @click.self="showHistoryModal = false"
         >
           <section class="vault-analytics-panel relative w-full max-w-[1120px] max-h-[90vh] rounded-[2rem] overflow-hidden text-content flex flex-col">
@@ -685,7 +690,7 @@ const selectedLifecycle = computed(() => {
                 <div class="min-w-0">
                   <p class="text-xs font-black text-primary uppercase tracking-[0.24em]">{{ appStore.t('vault.analytics.eyebrow') }}</p>
                   <h2 class="text-xl sm:text-2xl font-black tracking-tight truncate">
-                    {{ selectedEntryForHistory?.name || appStore.t('vault.analytics.title') }}
+                    {{ appStore.t(selectedEntryForHistory ? 'vault.analytics.entry_title' : 'vault.analytics.title') }}
                   </h2>
                   <p class="text-xs text-muted mt-1">
                     {{ selectedEntryForHistory ? appStore.t('vault.analytics.entry_subtitle') : appStore.t('vault.analytics.subtitle') }}
@@ -703,16 +708,85 @@ const selectedLifecycle = computed(() => {
             </header>
 
             <div class="relative z-10 flex-1 min-h-0 overflow-y-auto custom-scrollbar p-5 sm:p-8">
+              <div v-if="selectedProfile" data-testid="vault-entry-profile" class="space-y-5">
+                <article class="analytics-card entry-profile-hero">
+                  <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
+                    <div class="min-w-0">
+                      <p class="analytics-label">{{ appStore.t('vault.analytics.entry_profile') }}</p>
+                      <h3 class="text-2xl font-black mt-1 truncate">{{ selectedEntryForHistory.name }}</h3>
+                      <p class="text-sm text-muted mt-2">{{ appStore.t('vault.analytics.entry_profile_hint') }}</p>
+                    </div>
+                    <span class="entry-hit-badge">
+                      <i class="pi pi-key"></i>
+                      {{ selectedProfile.useCount }} {{ appStore.t('vault.analytics.unlock_hits') }}
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+                    <div class="lifecycle-metric"><span>{{ appStore.t('vault.analytics.total_unlock_hits') }}</span><strong>{{ selectedProfile.useCount }}</strong></div>
+                    <div class="lifecycle-metric"><span>{{ appStore.t('vault.analytics.last_hit') }}</span><strong>{{ selectedProfile.lastUsed }}</strong></div>
+                    <div class="lifecycle-metric"><span>{{ appStore.t('vault.analytics.created') }}</span><strong>{{ selectedProfile.created }}</strong></div>
+                    <div class="lifecycle-metric"><span>{{ appStore.t('vault.analytics.updated') }}</span><strong>{{ selectedProfile.updated }}</strong></div>
+                  </div>
+                </article>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  <article class="analytics-card lg:col-span-8" data-testid="vault-entry-hit-timeline">
+                    <div class="flex items-center justify-between gap-4 mb-5">
+                      <div>
+                        <p class="analytics-label">{{ appStore.t('vault.analytics.entry_activity') }}</p>
+                        <h3 class="analytics-title">{{ appStore.t('vault.analytics.entry_hit_timeline') }}</h3>
+                      </div>
+                      <span class="text-xs text-muted">{{ appStore.t('vault.analytics.last_14_days') }}</span>
+                    </div>
+                    <div class="entry-hit-chart">
+                      <div v-for="day in selectedUsageDays" :key="day.key" class="entry-hit-column">
+                        <strong>{{ day.count }}</strong>
+                        <div class="entry-hit-track"><span :style="{ height: `${Math.max(day.count ? 12 : 3, (day.count / selectedUsageMax) * 100)}%` }"></span></div>
+                        <small>{{ day.label }}</small>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="analytics-card lg:col-span-4">
+                    <p class="analytics-label">{{ appStore.t('vault.analytics.entry_status') }}</p>
+                    <h3 class="analytics-title mb-5">{{ appStore.t('vault.analytics.archive_context') }}</h3>
+                    <div class="space-y-3">
+                      <div class="profile-context-row"><span>{{ appStore.t('vault.analytics.category') }}</span><strong>{{ selectedProfile.category }}</strong></div>
+                      <div class="profile-context-row"><span>{{ appStore.t('vault.analytics.days_stored') }}</span><strong>{{ selectedProfile.daysStored }} {{ appStore.t('vault.analytics.days') }}</strong></div>
+                      <div class="profile-context-row"><span>{{ appStore.t('vault.analytics.favorite') }}</span><strong>{{ selectedProfile.favorite ? appStore.t('common.yes') : appStore.t('common.no') }}</strong></div>
+                      <div class="profile-context-row"><span>{{ appStore.t('vault.analytics.tag_count') }}</span><strong>{{ selectedProfile.tags.length }}</strong></div>
+                    </div>
+                  </article>
+
+                  <article class="analytics-card lg:col-span-12">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div>
+                        <p class="analytics-label">{{ appStore.t('vault.analytics.archive_clues') }}</p>
+                        <h3 class="analytics-title mb-4">{{ appStore.t('vault.analytics.tags') }}</h3>
+                        <div v-if="selectedProfile.tags.length" class="flex flex-wrap gap-2">
+                          <span v-for="tag in selectedProfile.tags" :key="tag" class="entry-context-tag">{{ tag }}</span>
+                        </div>
+                        <p v-else class="text-sm text-muted">{{ appStore.t('vault.analytics.no_tags') }}</p>
+                      </div>
+                      <div class="lg:border-l border-subtle lg:pl-6">
+                        <p class="analytics-label">{{ appStore.t('vault.column.notes') }}</p>
+                        <h3 class="analytics-title mb-4">{{ appStore.t('vault.analytics.notes_context') }}</h3>
+                        <p class="text-sm text-muted leading-7 whitespace-pre-wrap break-words">{{ selectedProfile.notes }}</p>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+
+              <template v-else>
               <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
                 <article class="analytics-kpi">
                   <div class="flex items-center justify-between">
-                    <span>{{ appStore.t('vault.analytics.security_score') }}</span>
-                    <i class="pi pi-shield text-emerald-400"></i>
+                    <span>{{ appStore.t('vault.analytics.saved_entries') }}</span>
+                    <i class="pi pi-inbox text-emerald-400"></i>
                   </div>
-                  <strong>{{ stats.securityScore }}<small>/100</small></strong>
-                  <div class="h-1.5 rounded-full bg-input overflow-hidden mt-3">
-                    <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-400" :style="{ width: `${stats.securityScore}%` }"></div>
-                  </div>
+                  <strong>{{ stats.total }}</strong>
+                  <p>{{ appStore.t('vault.analytics.saved_entries_hint') }}</p>
                 </article>
                 <article class="analytics-kpi">
                   <div class="flex items-center justify-between">
@@ -728,15 +802,15 @@ const selectedLifecycle = computed(() => {
                     <i class="pi pi-chart-line text-violet-400"></i>
                   </div>
                   <strong>{{ stats.totalUsage }}</strong>
-                  <p>{{ appStore.t('vault.analytics.average_length') }} · {{ stats.averageLength }}</p>
+                  <p>{{ appStore.t('vault.analytics.total_usage_hint') }}</p>
                 </article>
                 <article class="analytics-kpi">
                   <div class="flex items-center justify-between">
-                    <span>{{ appStore.t('vault.analytics.attention') }}</span>
-                    <i class="pi pi-exclamation-triangle text-orange-400"></i>
+                    <span>{{ appStore.t('vault.analytics.never_used') }}</span>
+                    <i class="pi pi-question-circle text-orange-400"></i>
                   </div>
-                  <strong data-testid="vault-attention-count">{{ stats.attentionCount }}</strong>
-                  <p>{{ appStore.t('vault.analytics.attention_hint') }}</p>
+                  <strong data-testid="vault-unverified-count">{{ stats.neverUsed }}</strong>
+                  <p>{{ appStore.t('vault.analytics.never_used_hint') }}</p>
                 </article>
               </div>
 
@@ -768,47 +842,24 @@ const selectedLifecycle = computed(() => {
                 </div>
               </article>
 
-              <div v-if="selectedLifecycle" data-testid="vault-entry-lifecycle" class="analytics-card mb-5">
-                <div class="flex items-start justify-between gap-5 mb-5">
-                  <div>
-                    <p class="analytics-label">{{ appStore.t('vault.lifecycle') }}</p>
-                    <h3 class="text-lg font-black mt-1">{{ selectedEntryForHistory.name }}</h3>
-                  </div>
-                  <span
-                    class="px-3 py-1.5 rounded-full border text-xs font-black"
-                    :style="{ color: selectedLifecycle.strength.color, borderColor: `${selectedLifecycle.strength.color}55`, backgroundColor: `${selectedLifecycle.strength.color}16` }"
-                  >
-                    {{ appStore.t(selectedLifecycle.strength.labelKey) }}
-                  </span>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
-                  <div class="lifecycle-metric"><span>{{ appStore.t('vault.analytics.created') }}</span><strong>{{ selectedLifecycle.created }}</strong></div>
-                  <div class="lifecycle-metric"><span>{{ appStore.t('vault.analytics.updated') }}</span><strong>{{ selectedLifecycle.updated }}</strong></div>
-                  <div class="lifecycle-metric"><span>{{ appStore.t('vault.analytics.last_used') }}</span><strong>{{ selectedLifecycle.lastUsed }}</strong></div>
-                  <div class="lifecycle-metric"><span>{{ appStore.t('vault.analytics.days_stored') }}</span><strong>{{ selectedLifecycle.daysStored }}</strong></div>
-                  <div class="lifecycle-metric"><span>{{ appStore.t('vault.total_access') }}</span><strong>{{ selectedLifecycle.useCount }}</strong></div>
-                  <div class="lifecycle-metric"><span>{{ appStore.t('vault.analytics.password_length') }}</span><strong>{{ selectedLifecycle.passwordLength }}</strong></div>
-                </div>
-              </div>
-
               <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 <article class="analytics-card lg:col-span-4">
                   <div class="flex items-center justify-between mb-5">
                     <div>
-                      <p class="analytics-label">{{ appStore.t('vault.analytics.strength') }}</p>
-                      <h3 class="analytics-title">{{ appStore.t('vault.analytics.strength_distribution') }}</h3>
+                      <p class="analytics-label">{{ appStore.t('vault.analytics.hit_spectrum') }}</p>
+                      <h3 class="analytics-title">{{ appStore.t('vault.analytics.hit_tier_distribution') }}</h3>
                     </div>
-                    <span class="text-xs text-muted">{{ stats.strong }} {{ appStore.t('vault.analytics.strong_items') }}</span>
+                    <span class="text-xs text-muted">{{ stats.totalUsage }} {{ appStore.t('vault.analytics.unlock_hits') }}</span>
                   </div>
                   <div class="flex items-center gap-6">
-                    <div class="strength-donut shrink-0" :style="{ background: strengthGradient }">
+                    <div class="strength-donut shrink-0" :style="{ background: usageTierGradient }">
                       <div>
                         <strong>{{ stats.total }}</strong>
                         <span>{{ appStore.t('vault.analytics.items') }}</span>
                       </div>
                     </div>
                     <div class="flex-1 space-y-2.5 min-w-0">
-                      <div v-for="item in strengthBreakdown" :key="item.key" class="flex items-center gap-2 text-xs">
+                      <div v-for="item in usageTierBreakdown" :key="item.key" class="flex items-center gap-2 text-xs">
                         <span class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: item.color }"></span>
                         <span class="text-muted flex-1 truncate">{{ appStore.t(item.labelKey) }}</span>
                         <strong>{{ item.count }}</strong>
@@ -909,13 +960,13 @@ const selectedLifecycle = computed(() => {
                 <article class="analytics-card lg:col-span-6">
                   <div class="grid grid-cols-2 gap-5">
                     <div>
-                      <p class="analytics-label">{{ appStore.t('vault.analytics.health') }}</p>
-                      <h3 class="analytics-title mb-4">{{ appStore.t('vault.analytics.risk_radar') }}</h3>
+                      <p class="analytics-label">{{ appStore.t('vault.analytics.coverage') }}</p>
+                      <h3 class="analytics-title mb-4">{{ appStore.t('vault.analytics.context_coverage') }}</h3>
                       <div class="space-y-2">
-                        <div class="risk-row"><span class="risk-dot bg-red-500"></span><span>{{ appStore.t('vault.analytics.weak') }}</span><strong>{{ stats.weak }}</strong></div>
-                        <div class="risk-row"><span class="risk-dot bg-amber-500"></span><span>{{ appStore.t('vault.analytics.stale') }}</span><strong>{{ stats.stale }}</strong></div>
-                        <div class="risk-row"><span class="risk-dot bg-sky-500"></span><span>{{ appStore.t('vault.analytics.never_used') }}</span><strong>{{ stats.neverUsed }}</strong></div>
-                        <div class="risk-row"><span class="risk-dot bg-violet-500"></span><span>{{ appStore.t('vault.analytics.expiring') }}</span><strong>{{ stats.expiringSoon }}</strong></div>
+                        <div class="risk-row"><span class="risk-dot bg-emerald-500"></span><span>{{ appStore.t('vault.analytics.ever_hit') }}</span><strong>{{ stats.total - stats.neverUsed }}</strong></div>
+                        <div class="risk-row"><span class="risk-dot bg-sky-500"></span><span>{{ appStore.t('vault.analytics.active_30') }}</span><strong>{{ stats.active30 }}</strong></div>
+                        <div class="risk-row"><span class="risk-dot bg-violet-500"></span><span>{{ appStore.t('vault.analytics.documented') }}</span><strong>{{ stats.documented }}</strong></div>
+                        <div class="risk-row"><span class="risk-dot bg-amber-500"></span><span>{{ appStore.t('vault.analytics.favorites') }}</span><strong>{{ stats.favorites }}</strong></div>
                       </div>
                     </div>
                     <div class="border-l border-subtle pl-5">
@@ -956,11 +1007,11 @@ const selectedLifecycle = computed(() => {
                   </div>
                 </article>
 
-                <article class="analytics-card lg:col-span-5" data-testid="vault-age-breakdown">
-                  <p class="analytics-label">{{ appStore.t('vault.analytics.maintenance') }}</p>
-                  <h3 class="analytics-title mb-5">{{ appStore.t('vault.analytics.update_age') }}</h3>
+                <article class="analytics-card lg:col-span-5" data-testid="vault-hit-recency-breakdown">
+                  <p class="analytics-label">{{ appStore.t('vault.analytics.recency') }}</p>
+                  <h3 class="analytics-title mb-5">{{ appStore.t('vault.analytics.hit_recency') }}</h3>
                   <div class="space-y-3.5">
-                    <div v-for="bucket in updateAgeBreakdown" :key="bucket.key" class="grid grid-cols-[92px_1fr_28px] gap-3 items-center">
+                    <div v-for="bucket in hitRecencyBreakdown" :key="bucket.key" class="grid grid-cols-[92px_1fr_28px] gap-3 items-center">
                       <span class="text-xs text-muted truncate">{{ appStore.t(bucket.labelKey) }}</span>
                       <div class="h-2.5 bg-input rounded-full overflow-hidden">
                         <div class="h-full rounded-full age-fill" :style="{ width: `${bucket.percent}%`, backgroundColor: bucket.color }"></div>
@@ -974,7 +1025,7 @@ const selectedLifecycle = computed(() => {
                   <div class="flex items-center justify-between gap-4 mb-5">
                     <div>
                       <p class="analytics-label">{{ appStore.t('vault.analytics.intelligence') }}</p>
-                      <h3 class="analytics-title">{{ appStore.t('vault.analytics.action_insights') }}</h3>
+                      <h3 class="analytics-title">{{ appStore.t('vault.analytics.archive_insights') }}</h3>
                     </div>
                     <span class="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-black">{{ insightCards.length }}</span>
                   </div>
@@ -991,7 +1042,7 @@ const selectedLifecycle = computed(() => {
                   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                       <p class="analytics-label">{{ appStore.t('vault.analytics.frequency') }}</p>
-                      <h3 class="analytics-title mb-4">{{ appStore.t('vault.analytics.top_accessed') }}</h3>
+                      <h3 class="analytics-title mb-4">{{ appStore.t('vault.analytics.top_unlock_hits') }}</h3>
                       <div class="space-y-2">
                         <div v-for="(entry, index) in mostUsedEntries" :key="entry.id" class="analytics-ranking-row">
                           <span class="ranking-index">{{ String(index + 1).padStart(2, '0') }}</span><span class="truncate flex-1 font-bold">{{ entry.name }}</span><strong>{{ entry.use_count || 0 }}</strong>
@@ -1001,7 +1052,7 @@ const selectedLifecycle = computed(() => {
                     </div>
                     <div class="lg:border-l border-subtle lg:pl-6">
                       <p class="analytics-label">{{ appStore.t('vault.analytics.recency') }}</p>
-                      <h3 class="analytics-title mb-4">{{ appStore.t('vault.analytics.recently_active') }}</h3>
+                      <h3 class="analytics-title mb-4">{{ appStore.t('vault.analytics.recent_unlock_hits') }}</h3>
                       <div class="space-y-2">
                         <div v-for="entry in recentlyActiveEntries" :key="entry.id" class="analytics-ranking-row"><span class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center"><i class="pi pi-bolt text-xs"></i></span><span class="truncate flex-1 font-bold">{{ entry.name }}</span><time class="text-xs text-muted">{{ formatDate(entry.last_used) }}</time></div>
                         <p v-if="!recentlyActiveEntries.length" class="text-sm text-muted">{{ appStore.t('vault.analytics.no_data') }}</p>
@@ -1010,6 +1061,7 @@ const selectedLifecycle = computed(() => {
                   </div>
                 </article>
               </div>
+              </template>
             </div>
           </section>
         </div>
@@ -1476,6 +1528,93 @@ const selectedLifecycle = computed(() => {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.48), transparent);
   transform: translateX(-120%);
   animation: analytics-bar-shine 2.8s 1s infinite ease-in-out;
+}
+
+.entry-profile-hero {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 92% 18%, color-mix(in srgb, var(--dynamic-accent) 18%, transparent), transparent 32%),
+    color-mix(in srgb, var(--bg-input) 82%, transparent);
+}
+
+.entry-hit-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  color: var(--dynamic-accent);
+  background: color-mix(in srgb, var(--dynamic-accent) 11%, var(--bg-input));
+  border: 1px solid color-mix(in srgb, var(--dynamic-accent) 30%, var(--border-subtle));
+  font-size: 0.75rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.entry-hit-chart {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.45rem;
+  min-height: 190px;
+}
+
+.entry-hit-column {
+  display: grid;
+  grid-template-rows: 1.25rem 130px 1.2rem;
+  gap: 0.45rem;
+  min-width: 0;
+  text-align: center;
+}
+
+.entry-hit-column strong { font-size: 0.68rem; }
+.entry-hit-column small { color: var(--text-muted); font-size: 0.55rem; font-family: monospace; }
+.entry-hit-track {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--bg-input) 72%, transparent);
+  overflow: hidden;
+}
+.entry-hit-track span {
+  width: 60%;
+  min-height: 3px;
+  border-radius: 999px 999px 0.25rem 0.25rem;
+  background: linear-gradient(to top, var(--dynamic-accent), color-mix(in srgb, var(--dynamic-accent) 45%, white));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--dynamic-accent) 34%, transparent);
+  animation: analytics-area-reveal 0.75s both cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: bottom;
+}
+
+.profile-context-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--bg-input) 76%, transparent);
+  font-size: 0.75rem;
+}
+.profile-context-row span { color: var(--text-muted); }
+.profile-context-row strong { text-align: right; overflow-wrap: anywhere; }
+.entry-context-tag {
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  color: var(--dynamic-accent);
+  background: color-mix(in srgb, var(--dynamic-accent) 10%, var(--bg-input));
+  border: 1px solid color-mix(in srgb, var(--dynamic-accent) 22%, var(--border-subtle));
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .entry-hit-chart { gap: 0.22rem; }
+  .entry-hit-column { grid-template-rows: 1rem 105px 1rem; }
+  .entry-hit-column small { font-size: 0; }
+  .entry-hit-column:nth-child(odd) small { font-size: 0.48rem; }
 }
 
 @keyframes analytics-card-rise {

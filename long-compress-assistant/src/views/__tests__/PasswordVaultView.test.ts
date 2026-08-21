@@ -127,6 +127,52 @@ describe('PasswordVaultView', () => {
     expect(wrapper.find('[aria-label="隐藏密码"]').exists()).toBe(true)
   })
 
+  it('refreshes backend usage and assigns it to the current local day before opening analytics', async () => {
+    const now = new Date()
+    const localDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    let listCalls = 0
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'load_app_settings') return '{}'
+      if (command === 'is_encrypted_password_service_unlocked') return true
+      if (command === 'list_encrypted_passwords') {
+        const fresh = listCalls++ > 0
+        return [{
+          id: 'entry-live-usage',
+          name: '实时使用密码',
+          password: 'Secret!123',
+          notes: '',
+          tags: [],
+          category: 'Other',
+          strength: 'Strong',
+          created_at: '2026-01-01T00:00:00.000Z',
+          updated_at: new Date().toISOString(),
+          last_used: fresh ? new Date().toISOString() : null,
+          favorite: false,
+          use_count: fresh ? 1 : 0,
+          usage_history: fresh ? { [localDay]: 1 } : {},
+          custom_fields: [],
+        }]
+      }
+      if (command === 'list_password_groups') return []
+      return undefined
+    })
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper.get('[data-testid="vault-analytics-trigger"]').trigger('click')
+    await flushPromises()
+    const modal = document.querySelector('[data-testid="vault-analytics-modal"]')
+    const sevenDayButton = modal?.querySelector('[data-testid="vault-range-7d"]') as HTMLButtonElement
+    sevenDayButton.click()
+    await flushPromises()
+    const usageCounts = Array.from(modal?.querySelectorAll('[data-testid="vault-usage-day-count"]') || [])
+
+    expect(listCalls).toBeGreaterThanOrEqual(2)
+    expect(usageCounts.at(-1)?.textContent).toBe('1')
+    expect(modal?.querySelector('[data-testid="vault-range-usage-total"]')?.textContent).toContain('1')
+    wrapper.unmount()
+  })
+
   it('opens the vault panorama and switches to entry lifecycle analytics', async () => {
     const today = new Date().toISOString()
     mocks.invoke.mockImplementation(async (command: string) => {
@@ -193,18 +239,20 @@ describe('PasswordVaultView', () => {
     await flushPromises()
 
     let modal = document.querySelector('[data-testid="vault-analytics-modal"]')
-    expect(modal?.textContent).toContain('密码保险箱数据全景')
-    expect(modal?.textContent).toContain('密码强度分布')
-    expect(modal?.textContent).toContain('使用趋势')
-    expect(modal?.textContent).toContain('风险雷达')
+    expect(modal?.textContent).toContain('解压密码库数据全景')
+    expect(modal?.textContent).toContain('调用层级分布')
+    expect(modal?.textContent).toContain('解压密码使用趋势')
+    expect(modal?.textContent).toContain('归档线索覆盖')
     expect(modal?.textContent).toContain('35 天活跃热力')
-    expect(modal?.textContent).toContain('密码更新年龄')
-    expect(modal?.textContent).toContain('可行动安全洞察')
+    expect(modal?.textContent).toContain('最近使用时效')
+    expect(modal?.textContent).toContain('解压密码库提示')
+    expect(modal?.textContent).not.toContain('密码强度分布')
+    expect(modal?.textContent).not.toContain('风险雷达')
     expect(modal?.querySelector('[data-testid="vault-activity-heatmap"]')).toBeTruthy()
-    expect(modal?.querySelector('[data-testid="vault-age-breakdown"]')).toBeTruthy()
-    expect(modal?.querySelector('[data-testid="vault-action-insights"]')?.textContent).toContain('弱密码需要升级')
-    expect(modal?.textContent).toContain('长期使用画像')
-    expect(modal?.textContent).toContain('保险箱使用时长')
+    expect(modal?.querySelector('[data-testid="vault-hit-recency-breakdown"]')).toBeTruthy()
+    expect(modal?.querySelector('[data-testid="vault-action-insights"]')?.textContent).toContain('尚未产生使用记录')
+    expect(modal?.textContent).toContain('解压密码库长期画像')
+    expect(modal?.textContent).toContain('密码库收录时长')
     expect(modal?.textContent).toContain('历史月均使用')
     expect(modal?.querySelector('[data-testid="vault-range-7d"]')).toBeTruthy()
     expect(modal?.querySelector('[data-testid="vault-range-30d"]')).toBeTruthy()
@@ -220,7 +268,7 @@ describe('PasswordVaultView', () => {
     await flushPromises()
     modal = document.querySelector('[data-testid="vault-analytics-modal"]')
     expect(modal?.querySelector('[data-testid="vault-range-usage-total"]')?.textContent).toContain('4')
-    expect(modal?.querySelector('[data-testid="vault-attention-count"]')?.textContent).toBe('1')
+    expect(modal?.querySelector('[data-testid="vault-unverified-count"]')?.textContent).toBe('1')
 
     ;(modal?.querySelector('[aria-label="关闭"]') as HTMLButtonElement)?.click()
     await flushPromises()
@@ -229,9 +277,14 @@ describe('PasswordVaultView', () => {
 
     modal = document.querySelector('[data-testid="vault-analytics-modal"]')
     expect(modal?.textContent).toContain('生产环境密码')
-    expect(modal?.querySelector('[data-testid="vault-entry-lifecycle"]')).toBeTruthy()
-    expect(modal?.textContent).toContain('保管天数')
-    expect(modal?.textContent).toContain('正文长度')
+    expect(modal?.querySelector('[data-testid="vault-entry-profile"]')).toBeTruthy()
+    expect(modal?.querySelector('[data-testid="vault-entry-hit-timeline"]')).toBeTruthy()
+    expect(modal?.textContent).toContain('单条解压密码使用趋势')
+    expect(modal?.textContent).toContain('归档适用信息')
+    expect(modal?.textContent).toContain('核心服务')
+    expect(modal?.textContent).not.toContain('调用层级分布')
+    expect(modal?.textContent).not.toContain('归档场景分类')
+    expect(modal?.textContent).not.toContain('正文长度')
   }, 12_000)
 })
 

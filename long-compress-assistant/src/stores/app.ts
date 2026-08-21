@@ -124,14 +124,6 @@ export const useAppStore = defineStore('app', () => {
     root.style.fontSize = `${scale * accessibilityFactor}%`
   }, { immediate: true })
 
-  watch(() => settings.value.autoStart, async (newVal) => {
-    try {
-      await invoke('set_auto_start', { enable: newVal })
-    } catch (e) {
-      console.error('Failed to set auto start:', e)
-    }
-  })
-
   watch(() => settings.value.closeToTray, async (enabled) => {
     try {
       await invoke('set_close_to_tray', { enabled })
@@ -244,6 +236,10 @@ export const useAppStore = defineStore('app', () => {
 
   const mergeStoredSettings = (parsed: Partial<AppSettings>) => {
     const merged = { ...settings.value, ...parsed }
+    // v1.1.8 safety migration: the unsigned Windows build previously rewrote
+    // HKCU\...\Run on every launch. Keep the legacy field only for settings
+    // compatibility, but never restore persistence from stored state.
+    merged.autoStart = false
     // Before concurrency v1 this setting was visible but the queues were always
     // serial. Preserve that effective behavior on upgrade; users can explicitly
     // raise the value after migration.
@@ -261,7 +257,9 @@ export const useAppStore = defineStore('app', () => {
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings)
         settings.value = mergeStoredSettings(parsed)
-        if (parsed.archiveTaskConcurrencyVersion !== 1) saveSettingsToStorage()
+        if (parsed.archiveTaskConcurrencyVersion !== 1 || parsed.autoStart !== false) {
+          saveSettingsToStorage()
+        }
       }
       theme.value = (localStorage.getItem('app-theme') as any) || 'auto'
       language.value = localStorage.getItem('app-language') || 'zh-CN'

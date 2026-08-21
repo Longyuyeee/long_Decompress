@@ -549,6 +549,13 @@ Section Install
 
   !insertmacro CheckIfAppIsRunning
 
+  ; v1.1.8 safety migration: older builds rewrote these persistence values on
+  ; every launch. Auto-start is suspended for unsigned builds, so remove the
+  ; current and legacy value names once during install/update.
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCTNAME}"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "LongDecompress"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${LEGACY_PRODUCTNAME}"
+
   ; Remove versioned Explorer integration from the previous installation
   ; before copying this release. Otherwise every overlay upgrade leaves an
   ; obsolete shell DLL behind, and an unsigned build can accidentally reuse

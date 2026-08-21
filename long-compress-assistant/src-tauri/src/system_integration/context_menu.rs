@@ -1204,6 +1204,20 @@ mod tests {
     }
 
     #[test]
+    fn nsis_install_removes_legacy_auto_start_persistence() {
+        let run_key = r#"Software\Microsoft\Windows\CurrentVersion\Run"#;
+        for value in [r#""${PRODUCTNAME}""#, r#""LongDecompress""#, r#""${LEGACY_PRODUCTNAME}""#] {
+            assert!(
+                INSTALLER_TEMPLATE.contains(&format!(
+                    r#"DeleteRegValue HKCU "{}" {}"#,
+                    run_key, value
+                )),
+                "NSIS safety migration is missing auto-start value {value}"
+            );
+        }
+    }
+
+    #[test]
     fn unsigned_native_menu_is_never_treated_as_current() {
         assert!(!native_package_registration_is_current(false, false));
         assert!(!native_package_registration_is_current(false, true));

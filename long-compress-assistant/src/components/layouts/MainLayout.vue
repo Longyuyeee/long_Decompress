@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { getVersion } from '@tauri-apps/api/app'
 import { appWindow } from '@tauri-apps/api/window'
 import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
 import { useAppStore } from '@/stores/app'
@@ -10,10 +11,16 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const isFocused = ref(true)
+const appVersion = ref('')
 let unlistenFocus: any = null
 let isUnmounted = false
 
 onMounted(async () => {
+  try {
+    appVersion.value = await getVersion()
+  } catch {
+    // 浏览器预览没有原生应用信息；不展示容易误导的硬编码版本。
+  }
   try {
     const unlisten = await appWindow.onFocusChanged(({ payload: focused }) => {
       isFocused.value = focused
@@ -97,6 +104,14 @@ const navigateTo = (name: string) => {
               <i class="pi pi-sparkles text-primary"></i>
               <span>本地处理 · 隐私优先</span>
             </div>
+          </div>
+          <div
+            v-if="appVersion"
+            class="sidebar-version-row mx-3 mb-3 px-2.5 py-2 rounded-xl border border-primary/15 bg-primary/5 flex items-center justify-between gap-2"
+            :title="`Long解压 v${appVersion}`"
+          >
+            <span class="sidebar-version-label text-[10px] font-black tracking-[0.12em] text-dim uppercase">Long解压</span>
+            <span data-testid="sidebar-version-badge" class="sidebar-version-badge rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary tabular-nums whitespace-nowrap">v{{ appVersion }}</span>
           </div>
         </aside>
 
@@ -200,5 +215,8 @@ html, body, #app {
   .sidebar-brand { justify-content: center; padding-inline: 0.75rem; }
   .nav-entry { justify-content: center; padding-inline: 0.5rem; }
   .sidebar-task-area { padding-inline: 1rem; }
+  .sidebar-version-row { margin-inline: 0.5rem; padding-inline: 0.25rem; justify-content: center; }
+  .sidebar-version-label { display: none; }
+  .sidebar-version-badge { padding-inline: 0.35rem; font-size: 0.55rem; letter-spacing: -0.02em; }
 }
 </style>

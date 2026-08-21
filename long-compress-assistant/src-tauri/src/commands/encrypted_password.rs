@@ -237,6 +237,22 @@ pub async fn list_encrypted_passwords(
     }
 }
 
+/// 原子记录一次密码使用，并返回包含最新统计的条目。
+#[tauri::command]
+pub async fn increment_encrypted_password_use_count(
+    app: AppHandle,
+    id: String,
+) -> Result<PasswordEntry, String> {
+    let state: State<'_, EncryptedPasswordServiceState> = app.state();
+    let service_lock = state.service.lock().await;
+    let service = service_lock.as_ref().ok_or("服务未初始化")?;
+
+    service
+        .increment_use_count(&id)
+        .await
+        .map_err(|error| format!("记录密码使用失败: {}", error))
+}
+
 /// 生成强密码
 #[tauri::command]
 pub fn generate_strong_password(

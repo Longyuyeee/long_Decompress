@@ -1,5 +1,7 @@
 # 密码保险箱全景与历史任务中心开发审计（2026-08-20）
 
+> 历史设计说明：本文记录 2026-08-20 的初始方案。传统账户密码的强度、轮换、到期与风险统计已被后续审计否决并替换；当前实现与验收口径以 [DEVELOPMENT_AUDIT_2026-08-21_ARCHIVE_PASSWORD_ANALYTICS.md](DEVELOPMENT_AUDIT_2026-08-21_ARCHIVE_PASSWORD_ANALYTICS.md) 为准。
+
 ## 本阶段目标
 
 1. 将密码保险箱统计从基础概览升级为可解释、可行动的数据全景。

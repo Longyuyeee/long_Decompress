@@ -59,16 +59,6 @@ const selectedAccentName = computed(() =>
 
 const contextMenuBusy = ref(false)
 const toggleBruteForce = () => appStore.updateSettings({ enableBruteForce: !appStore.settings.enableBruteForce })
-const toggleAutoStart = async () => {
-  const newValue = !appStore.settings.autoStart
-  try {
-    await tauriCommands.invoke('set_auto_start', { enable: newValue })
-    appStore.updateSettings({ autoStart: newValue })
-    appStore.setSuccess(appStore.t('common.success'))
-  } catch (e: any) {
-    appStore.setError(String(e))
-  }
-}
 
 const contextMenuSupported = ref(navigator.platform.toLowerCase().includes('win'))
 
@@ -93,15 +83,7 @@ const checkContextMenu = async () => {
   } catch { /* ignore */ }
 }
 
-const checkAutoStart = async () => {
-  try {
-    const enabled = await tauriCommands.invoke<boolean>('check_auto_start')
-    appStore.updateSettings({ autoStart: enabled })
-  } catch { /* ignore */ }
-}
-
 onMounted(async () => {
-  checkAutoStart()
   checkContextMenu()
   void refreshEngineDiagnostics()
   try {
@@ -271,19 +253,8 @@ const removeWordlist = (index: number) => {
           <section class="aero-card p-8">
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-8">{{ appStore.t('settings.performance') }}</h2>
             <div class="space-y-6">
-              <!-- 自启动开关 -->
-              <button type="button" role="switch" :aria-checked="appStore.settings.autoStart" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="toggleAutoStart">
-                <div>
-                  <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.auto_start') }}</div>
-                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.performance.auto_start.desc') }}</div>
-                </div>
-                <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.autoStart }">
-                  <span class="settings-toggle-knob"></span>
-                </div>
-              </button>
-
               <!-- 并行线程设置 -->
-              <div class="space-y-4 pt-6 border-t border-subtle">
+              <div class="space-y-4">
                 <div class="flex justify-between items-center">
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.threads') }}</div>
                   <span class="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-black font-mono">

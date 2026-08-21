@@ -101,6 +101,7 @@ const compressionVerificationOnly = process.argv.includes('--compression-verific
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
 const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
 const historyOnly = process.argv.includes('--history-only')
+const vaultUsageOnly = process.argv.includes('--vault-usage-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const missingFullFormatCapabilities = new Set()
 
@@ -838,17 +839,45 @@ async function assertVisibleResourceCard(taskId, expectedLabel) {
     await (await waitForElement(rowSelector)).click()
     card = await driver.wait(findMatchingCard, 10_000)
   }
+  await driver.executeScript(
+    'arguments[0].scrollIntoView({ block: "start", inline: "nearest", behavior: "instant" });',
+    card,
+  )
   const text = (await card.getAttribute('textContent')).trim()
-  assert.match(text, /资源预检/)
+  assert.match(text, /目标存储预检/)
   assert.match(text, new RegExp(expectedLabel))
   const dimensions = await driver.executeScript(
-    'const card = arguments[0]; return { scrollWidth: card.scrollWidth, clientWidth: card.clientWidth };',
+    `const card = arguments[0];
+     const metrics = card.querySelector('[data-testid="resource-preflight-metrics"]');
+     const fields = [...card.querySelectorAll('.metric dt, .metric dd')];
+     return {
+       scrollWidth: card.scrollWidth,
+       clientWidth: card.clientWidth,
+       columnCount: metrics ? getComputedStyle(metrics).gridTemplateColumns.split(' ').filter(Boolean).length : 0,
+       fields: fields.map(field => {
+         const style = getComputedStyle(field);
+         return {
+           text: field.textContent?.trim(),
+           height: field.getBoundingClientRect().height,
+           lineHeight: Number.parseFloat(style.lineHeight) || Number.parseFloat(style.fontSize) * 1.2,
+           whiteSpace: style.whiteSpace,
+         };
+       }),
+     };`,
     card,
   )
   assert.ok(dimensions, 'the resource-preflight card must remain mounted')
   assert.ok(
     dimensions.scrollWidth <= dimensions.clientWidth + 1,
     `the resource-preflight card must not scroll horizontally: ${JSON.stringify(dimensions)}`,
+  )
+  assert.ok(
+    dimensions.columnCount >= 1 && dimensions.columnCount <= 2,
+    `the narrow resource card must use at most two metric columns: ${JSON.stringify(dimensions)}`,
+  )
+  assert.ok(
+    dimensions.fields.every(field => field.whiteSpace === 'nowrap' && field.height <= field.lineHeight * 1.35),
+    `resource metric labels and values must remain on one readable line: ${JSON.stringify(dimensions)}`,
   )
   return text
 }
@@ -1256,9 +1285,216 @@ async function runHistoryDesktopGate() {
   }))
   assert.ok(compactOverflow.body <= 1, `compact history shell must not overflow: ${JSON.stringify(compactOverflow)}`)
   assert.ok((compactOverflow.page ?? 0) <= 1, `compact history page must not overflow: ${JSON.stringify(compactOverflow)}`)
+  const compactRowLayout = await driver.executeScript(() => {
+    const badge = document.querySelector('[data-testid="history-status-badge"]')
+    const cluster = badge?.closest('.history-status-cluster')
+    const completedAt = cluster?.querySelector('.history-completed-at')
+    const badgeStyle = badge ? getComputedStyle(badge) : null
+    return {
+      badgeText: badge?.textContent?.trim(),
+      badgeWhiteSpace: badgeStyle?.whiteSpace,
+      badgeWidth: badge?.getBoundingClientRect().width,
+      badgeHeight: badge?.getBoundingClientRect().height,
+      clusterOverflow: cluster ? cluster.scrollWidth - cluster.clientWidth : null,
+      completedAtWhiteSpace: completedAt ? getComputedStyle(completedAt).whiteSpace : null,
+    }
+  })
+  assert.equal(compactRowLayout.badgeText, '已完成')
+  assert.equal(compactRowLayout.badgeWhiteSpace, 'nowrap')
+  assert.ok(compactRowLayout.badgeWidth > compactRowLayout.badgeHeight, `status badge must remain a horizontal pill: ${JSON.stringify(compactRowLayout)}`)
+  assert.ok((compactRowLayout.clusterOverflow ?? 0) <= 1, `history status cluster must not overflow: ${JSON.stringify(compactRowLayout)}`)
+  assert.equal(compactRowLayout.completedAtWhiteSpace, 'nowrap')
   mkdirSync(artifactDirectory, { recursive: true })
   writeFileSync(
     path.join(artifactDirectory, 'task-history-compact.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+
+  await (await driver.findElement(By.css('[data-testid="history-record-row"]'))).click()
+  await driver.wait(async () => (await driver.findElement(By.css('[data-testid="history-detail"]')).isDisplayed()), 10_000)
+  const detailAudit = await driver.executeScript(() => {
+    const detail = document.querySelector('[data-testid="history-detail"]')
+    const backgroundColor = detail ? getComputedStyle(detail).backgroundColor : ''
+    const rgba = backgroundColor.match(/rgba?\(([^)]+)\)/)?.[1]?.split(',').map(value => value.trim()) || []
+    const alpha = rgba.length === 4 ? Number(rgba[3]) : 1
+    return {
+      backgroundColor,
+      alpha,
+      overflow: detail ? detail.scrollWidth - detail.clientWidth : null,
+    }
+  })
+  assert.equal(detailAudit.alpha, 1, `history detail must use an opaque surface: ${JSON.stringify(detailAudit)}`)
+  assert.ok(detailAudit.backgroundColor && detailAudit.backgroundColor !== 'transparent')
+  assert.ok((detailAudit.overflow ?? 0) <= 1, `history detail must not overflow horizontally: ${JSON.stringify(detailAudit)}`)
+  writeFileSync(
+    path.join(artifactDirectory, 'task-history-detail-compact.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+}
+
+async function runVaultUsageDesktopGate() {
+  console.log('[desktop-e2e] verifying real vault password usage appears in the current local-day trend')
+  const root = path.join(fixtureDirectory, 'vault-usage-gate')
+  const sourceName = 'vault-usage-payload.txt'
+  const sourcePath = path.join(root, sourceName)
+  const archivePath = path.join(root, 'vault-usage.7z')
+  const outputPath = path.join(root, 'extracted')
+  const password = 'Long-Vault-Usage-2026!'
+  const payload = `vault usage ${new Date().toISOString()}\n`
+  mkdirSync(root, { recursive: true })
+  writeFileSync(sourcePath, payload, 'utf8')
+  await callDesktopBridge('seedVaultPassword', 'Desktop E2E 当天趋势', password)
+
+  const packed = spawnSync(
+    bundledSevenZip,
+    ['a', '-t7z', `-p${password}`, '-mhe=on', '-y', archivePath, sourceName],
+    { cwd: root, encoding: 'utf8', windowsHide: true },
+  )
+  assert.equal(packed.status, 0, packed.stderr || packed.stdout)
+
+  await callDesktopBridge('extractArchive', archivePath, outputPath)
+  assert.equal(readFileSync(path.join(outputPath, sourceName), 'utf8'), payload)
+
+  await (await driver.findElement(By.css('[data-testid="nav-Vault"]'))).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/vault'), 15_000)
+  await (await waitForElement('[data-testid="vault-analytics-trigger"]')).click()
+  await waitForElement('[data-testid="vault-analytics-modal"]')
+  await (await waitForElement('[data-testid="vault-range-7d"]')).click()
+  const audit = await driver.wait(async () => {
+    const result = await driver.executeScript(() => {
+      const counts = [...document.querySelectorAll('[data-testid="vault-usage-day-count"]')]
+      const labels = counts.map(node => node.parentElement?.querySelector('span')?.textContent?.trim())
+      return {
+        lastCount: counts.at(-1)?.textContent?.trim(),
+        lastLabel: labels.at(-1),
+        total: document.querySelector('[data-testid="vault-range-usage-total"]')?.textContent?.trim(),
+      }
+    })
+    return result.lastCount === '1' ? result : false
+  }, 15_000)
+  const now = new Date()
+  const expectedLabel = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  assert.equal(audit.lastLabel, expectedLabel)
+  assert.match(audit.total || '', /1\s*次/)
+
+  const panoramaSemantics = await driver.executeScript(() => {
+    const modal = document.querySelector('[data-testid="vault-analytics-modal"]')
+    const text = modal?.textContent || ''
+    return {
+      hasArchiveTitle: text.includes('解压密码库数据全景'),
+      hasHitTiers: text.includes('调用层级分布'),
+      hasArchiveCoverage: text.includes('归档线索覆盖'),
+      hasTraditionalStrength: text.includes('密码强度分布'),
+      hasRiskRadar: text.includes('风险雷达'),
+    }
+  })
+  assert.deepEqual(panoramaSemantics, {
+    hasArchiveTitle: true,
+    hasHitTiers: true,
+    hasArchiveCoverage: true,
+    hasTraditionalStrength: false,
+    hasRiskRadar: false,
+  })
+
+  await driver.executeScript(() => {
+    document.querySelector('[data-testid="vault-range-7d"]')?.scrollIntoView({ block: 'center' })
+  })
+  mkdirSync(artifactDirectory, { recursive: true })
+  writeFileSync(
+    path.join(artifactDirectory, 'vault-archive-panorama.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+
+  await driver.executeScript(() => {
+    document.querySelector('[data-testid="vault-analytics-modal"] button[aria-label="关闭"]')?.click()
+  })
+  await driver.wait(
+    async () => (await driver.findElements(By.css('[data-testid="vault-analytics-modal"]'))).length === 0,
+    10_000,
+  )
+  await (await waitForElement('[data-testid="vault-entry-usage"]')).click()
+  await waitForElement('[data-testid="vault-entry-profile"]')
+  const entrySemantics = await driver.executeScript(() => {
+    const modal = document.querySelector('[data-testid="vault-analytics-modal"]')
+    const text = modal?.textContent || ''
+    return {
+      hasEntryName: text.includes('Desktop E2E 当天趋势'),
+      hasEntryTimeline: text.includes('单条解压密码使用趋势'),
+      hasArchiveContext: text.includes('归档适用信息'),
+      hasOverallHitTiers: text.includes('调用层级分布'),
+      hasPasswordLength: text.includes('正文长度'),
+    }
+  })
+  assert.deepEqual(entrySemantics, {
+    hasEntryName: true,
+    hasEntryTimeline: true,
+    hasArchiveContext: true,
+    hasOverallHitTiers: false,
+    hasPasswordLength: false,
+  })
+  writeFileSync(
+    path.join(artifactDirectory, 'vault-entry-unlock-profile.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+}
+
+async function runResourcePreflightLayoutDesktopGate() {
+  console.log('[desktop-e2e] verifying shared resource-preflight layout in real compression and decompression details')
+  const gateRoot = path.join(fixtureDirectory, 'resource-preflight-layout')
+  const sourcePath = path.join(gateRoot, 'resource-layout-payload.txt')
+  const archivePath = path.join(gateRoot, 'resource-layout-payload.zip')
+  const extractedPath = path.join(gateRoot, 'resource-layout-payload', 'resource-layout-payload.txt')
+  const payload = `resource preflight layout ${new Date().toISOString()}\n`
+  mkdirSync(gateRoot, { recursive: true })
+  writeFileSync(sourcePath, payload, 'utf8')
+  await callDesktopBridge('clearTasks')
+  await callDesktopBridge('clearCompressionWorkspace')
+  await driver.manage().window().setRect({ width: 980, height: 720 })
+
+  forwardContextAction('--quick-pack', [sourcePath])
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await waitForStableFile(archivePath)
+  const compressionTask = await waitForResourcePreflightTask(
+    'compression',
+    task => task.status === 'completed' && normalizedDesktopPath(task.outputPath) === normalizedDesktopPath(archivePath),
+  )
+  assertRealResourceReport(compressionTask, {
+    operation: 'compression',
+    taskStatus: 'completed',
+    canStart: true,
+    reportStatuses: ['ready', 'warning'],
+    outputPath: archivePath,
+  })
+  await assertVisibleResourceCard(
+    compressionTask.id,
+    compressionTask.report.status === 'ready' ? '已通过' : '需留意',
+  )
+  mkdirSync(artifactDirectory, { recursive: true })
+  writeFileSync(
+    path.join(artifactDirectory, 'resource-preflight-compression.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+
+  forwardContextAction('--quick-extract', [archivePath])
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 30_000)
+  await waitForFileContent(extractedPath, payload)
+  const decompressionTask = await waitForResourcePreflightTask(
+    'decompression',
+    task => task.status === 'completed' && normalizedDesktopPath(task.outputPath) === normalizedDesktopPath(path.dirname(archivePath)),
+  )
+  assertRealResourceReport(decompressionTask, {
+    operation: 'decompression',
+    taskStatus: 'completed',
+    canStart: true,
+    reportStatuses: ['ready', 'warning'],
+    outputPath: path.dirname(archivePath),
+  })
+  await assertVisibleResourceCard(
+    decompressionTask.id,
+    decompressionTask.report.status === 'ready' ? '已通过' : '需留意',
+  )
+  writeFileSync(
+    path.join(artifactDirectory, 'resource-preflight-decompression.png'),
     Buffer.from(await driver.takeScreenshot(), 'base64'),
   )
 }
@@ -1459,6 +1695,17 @@ try {
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
   assert.equal(navigation.length, 7, 'the real desktop shell must expose seven navigation buttons')
+  const versionBadge = await waitForElement('[data-testid="sidebar-version-badge"]')
+  assert.equal(
+    (await versionBadge.getAttribute('textContent')).trim(),
+    `v${tauriConfig.package.version}`,
+    'the sidebar version badge must come from the packaged application version',
+  )
+  mkdirSync(artifactDirectory, { recursive: true })
+  writeFileSync(
+    path.join(artifactDirectory, 'sidebar-version-badge.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
   assert.equal(
     await navigation[0].getAttribute('aria-current'),
     'page',
@@ -1480,6 +1727,14 @@ try {
     await runTarTelemetryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri TAR telemetry gate passed.')
+  } else if (vaultUsageOnly) {
+    await runVaultUsageDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri vault current-day usage gate passed.')
+  } else if (resourcePreflightOnly) {
+    await runResourcePreflightLayoutDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri shared resource-preflight layout gate passed.')
   } else if (historyOnly) {
     await runHistoryDesktopGate()
     completedSuccessfully = true

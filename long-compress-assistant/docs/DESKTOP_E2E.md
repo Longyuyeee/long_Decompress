@@ -64,6 +64,8 @@ npm.cmd run test:e2e:desktop:zip-telemetry
 npm.cmd run test:e2e:desktop:tar-telemetry
 # 只复验真实 ZIP 往返、历史持久化、重启恢复与最小窗口适配
 npm.cmd run test:e2e:desktop:history
+# 只复验真实保险箱密码自动解压命中，并同步到本地当天使用趋势
+npm.cmd run test:e2e:desktop:vault-usage
 # 发布前全格式验收会强制检查所有生成器，不允许静默跳过
 npm.cmd run test:prepare:full-format
 npm.cmd run test:e2e:desktop:full-format

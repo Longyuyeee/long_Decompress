@@ -19,7 +19,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::fs;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local, Utc};
 
 /// 加密密码服务
 pub struct EncryptedPasswordService {
@@ -190,7 +190,7 @@ impl EncryptedPasswordService {
     }
 
     /// 增加密码使用次数
-    pub async fn increment_use_count(&self, id: &str) -> Result<()> {
+    pub async fn increment_use_count(&self, id: &str) -> Result<PasswordEntry> {
         if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
@@ -206,14 +206,16 @@ impl EncryptedPasswordService {
         entry.updated_at = now;
 
         // 记录历史
-        let date_str = now.format("%Y-%m-%d").to_string();
+        // 日趋势面向用户展示，按机器本地自然日归档，避免 UTC 跨日后
+        // “刚刚使用”落入昨天的统计桶。
+        let date_str = Local::now().format("%Y-%m-%d").to_string();
         let count = entry.usage_history.entry(date_str).or_insert(0);
         *count += 1;
 
         // 保存更新
         self.save_password_entry(&entry).await?;
 
-        Ok(())
+        Ok(entry)
     }
 
     /// 删除密码条目

@@ -167,7 +167,11 @@ export const usePasswordStore = defineStore('password', () => {
 
   // 初始化检查
   const checkUnlockStatus = async () => {
-    if (isInitialized.value) return
+    if (isInitialized.value) {
+      // 解压服务可能在其他页面更新文件保险箱；重新进入时必须同步后端。
+      if (isUnlocked.value) await fetchAllData()
+      return
+    }
     isLoading.value = true
     try {
       const unlocked = await invoke<boolean>('is_encrypted_password_service_unlocked')
@@ -434,10 +438,9 @@ export const usePasswordStore = defineStore('password', () => {
   const usePassword = async (id: string) => {
     const entry = entries.value.find(e => e.id === id)
     if (!entry) return ''
-    await updateEntry(id, {
-      use_count: (entry.use_count || 0) + 1,
-      last_used: new Date().toISOString(),
-    })
+    const updated = await invoke<PasswordEntry>('increment_encrypted_password_use_count', { id })
+    const index = entries.value.findIndex(item => item.id === id)
+    if (index !== -1) entries.value[index] = updated
     return entry.password
   }
   const assessPasswordStrength = async (password: string) => {
