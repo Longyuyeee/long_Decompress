@@ -1349,12 +1349,63 @@ async function runVaultUsageDesktopGate() {
   assert.equal(audit.lastLabel, expectedLabel)
   assert.match(audit.total || '', /1\s*次/)
 
+  const panoramaSemantics = await driver.executeScript(() => {
+    const modal = document.querySelector('[data-testid="vault-analytics-modal"]')
+    const text = modal?.textContent || ''
+    return {
+      hasArchiveTitle: text.includes('解压密码库数据全景'),
+      hasHitTiers: text.includes('调用层级分布'),
+      hasArchiveCoverage: text.includes('归档线索覆盖'),
+      hasTraditionalStrength: text.includes('密码强度分布'),
+      hasRiskRadar: text.includes('风险雷达'),
+    }
+  })
+  assert.deepEqual(panoramaSemantics, {
+    hasArchiveTitle: true,
+    hasHitTiers: true,
+    hasArchiveCoverage: true,
+    hasTraditionalStrength: false,
+    hasRiskRadar: false,
+  })
+
   await driver.executeScript(() => {
     document.querySelector('[data-testid="vault-range-7d"]')?.scrollIntoView({ block: 'center' })
   })
   mkdirSync(artifactDirectory, { recursive: true })
   writeFileSync(
-    path.join(artifactDirectory, 'vault-current-day-usage.png'),
+    path.join(artifactDirectory, 'vault-archive-panorama.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+
+  await driver.executeScript(() => {
+    document.querySelector('[data-testid="vault-analytics-modal"] button[aria-label="关闭"]')?.click()
+  })
+  await driver.wait(
+    async () => (await driver.findElements(By.css('[data-testid="vault-analytics-modal"]'))).length === 0,
+    10_000,
+  )
+  await (await waitForElement('[data-testid="vault-entry-usage"]')).click()
+  await waitForElement('[data-testid="vault-entry-profile"]')
+  const entrySemantics = await driver.executeScript(() => {
+    const modal = document.querySelector('[data-testid="vault-analytics-modal"]')
+    const text = modal?.textContent || ''
+    return {
+      hasEntryName: text.includes('Desktop E2E 当天趋势'),
+      hasEntryTimeline: text.includes('单条解压密码使用趋势'),
+      hasArchiveContext: text.includes('归档适用信息'),
+      hasOverallHitTiers: text.includes('调用层级分布'),
+      hasPasswordLength: text.includes('正文长度'),
+    }
+  })
+  assert.deepEqual(entrySemantics, {
+    hasEntryName: true,
+    hasEntryTimeline: true,
+    hasArchiveContext: true,
+    hasOverallHitTiers: false,
+    hasPasswordLength: false,
+  })
+  writeFileSync(
+    path.join(artifactDirectory, 'vault-entry-unlock-profile.png'),
     Buffer.from(await driver.takeScreenshot(), 'base64'),
   )
 }
