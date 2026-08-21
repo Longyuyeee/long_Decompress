@@ -2549,6 +2549,8 @@ mod tests {
             .expect("password remains in vault");
         assert_eq!(updated.use_count, 1);
         assert!(updated.last_used.is_some());
+        let local_today = chrono::Local::now().format("%Y-%m-%d").to_string();
+        assert_eq!(updated.usage_history.get(&local_today), Some(&1));
     }
 
     #[test]

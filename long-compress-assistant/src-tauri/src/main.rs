@@ -409,6 +409,7 @@ fn main() {
             long_compress_assistant::commands::system_integration::take_pending_context_actions,
             long_compress_assistant::commands::encrypted_password::init_encrypted_password_service,
             long_compress_assistant::commands::encrypted_password::list_encrypted_passwords,
+            long_compress_assistant::commands::encrypted_password::increment_encrypted_password_use_count,
             long_compress_assistant::commands::encrypted_password::add_encrypted_password,
             long_compress_assistant::commands::encrypted_password::delete_encrypted_password,
             long_compress_assistant::commands::encrypted_password::update_encrypted_password,

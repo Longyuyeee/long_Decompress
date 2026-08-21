@@ -42,6 +42,7 @@
     "test:e2e:desktop:archive-flow": "node scripts/test-tauri-desktop.mjs --archive-flow-only",
     "test:e2e:desktop:zip-telemetry": "node scripts/test-tauri-desktop.mjs --zip-telemetry-only",
     "test:e2e:desktop:history": "node scripts/test-tauri-desktop.mjs --history-only",
+    "test:e2e:desktop:vault-usage": "node scripts/test-tauri-desktop.mjs --vault-usage-only",
     "test:e2e:desktop:tar-telemetry": "node scripts/test-tauri-desktop.mjs --tar-telemetry-only",
     "test:e2e:desktop:full-format": "node scripts/test-tauri-desktop.mjs --require-full-format-matrix",
     "test:fixtures:archives": "node scripts/fetch-archive-test-fixtures.mjs",

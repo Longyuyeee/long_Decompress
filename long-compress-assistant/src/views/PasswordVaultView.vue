@@ -206,12 +206,15 @@ const confirmClearAll = async () => {
   }
 }
 
-const showUsageHistory = (entry: any) => {
-  selectedEntryForHistory.value = entry
+const showUsageHistory = async (entry: PasswordEntry) => {
+  await passwordStore.fetchAllData()
+  selectedEntryForHistory.value = passwordStore.entries.find(item => item.id === entry.id) || entry
   showHistoryModal.value = true
 }
 
-const showVaultAnalytics = () => {
+const showVaultAnalytics = async () => {
+  // 自动解压可能刚刚在后端命中密码；打开统计前重新读取真实文件数据。
+  await passwordStore.fetchAllData()
   selectedEntryForHistory.value = null
   showHistoryModal.value = true
 }
@@ -238,8 +241,9 @@ const toggleEntryPasswordVisibility = (id: string) => {
   visiblePasswordIds.value = next
 }
 
-const copyToClipboard = (text: string) => {
-  navigator.clipboard.writeText(text)
+const copyPasswordToClipboard = async (entry: PasswordEntry) => {
+  const password = await passwordStore.usePassword(entry.id)
+  await navigator.clipboard.writeText(password)
   appStore.setSuccess(appStore.t('vault.action.copy'))
 }
 
@@ -250,7 +254,7 @@ const usageEvents = computed(() => {
     const historyItems = Object.entries(history || {})
     if (historyItems.length) {
       historyItems.forEach(([date, count]) => {
-        const parsed = safeDate(`${date}T00:00:00.000Z`)
+        const parsed = safeDate(`${date}T00:00:00`)
         if (parsed && count > 0) events.push({ date: parsed, count })
       })
       return
@@ -263,19 +267,23 @@ const usageEvents = computed(() => {
 
 const buildFixedRangeBuckets = (days: number, bucketDays: number) => {
   const today = new Date()
-  const end = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 1)
-  const start = end - days * DAY_MS
+  const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
+  const startDate = new Date(endDate)
+  startDate.setDate(startDate.getDate() - days)
   const bucketCount = Math.ceil(days / bucketDays)
   return Array.from({ length: bucketCount }, (_, index) => {
-    const bucketStart = start + index * bucketDays * DAY_MS
-    const bucketEnd = Math.min(end, bucketStart + bucketDays * DAY_MS)
+    const bucketStartDate = new Date(startDate)
+    bucketStartDate.setDate(bucketStartDate.getDate() + index * bucketDays)
+    const bucketEndDate = new Date(bucketStartDate)
+    bucketEndDate.setDate(bucketEndDate.getDate() + bucketDays)
+    const bucketStart = bucketStartDate.getTime()
+    const bucketEnd = Math.min(endDate.getTime(), bucketEndDate.getTime())
     const count = usageEvents.value.reduce(
       (sum, event) => sum + (event.date.getTime() >= bucketStart && event.date.getTime() < bucketEnd ? event.count : 0),
       0,
     )
-    const labelDate = new Date(bucketStart)
     return {
-      date: `${String(labelDate.getUTCMonth() + 1).padStart(2, '0')}-${String(labelDate.getUTCDate()).padStart(2, '0')}`,
+      date: `${String(bucketStartDate.getMonth() + 1).padStart(2, '0')}-${String(bucketStartDate.getDate()).padStart(2, '0')}`,
       count,
     }
   })
@@ -290,29 +298,29 @@ const buildLifetimeBuckets = () => {
   const earliest = dateCandidates.length
     ? new Date(Math.min(...dateCandidates.map(date => date.getTime())))
     : now
-  const firstMonth = Date.UTC(earliest.getUTCFullYear(), earliest.getUTCMonth(), 1)
-  const nextMonth = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)
+  const firstMonth = new Date(earliest.getFullYear(), earliest.getMonth(), 1)
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
   const totalMonths = Math.max(
     1,
-    (now.getUTCFullYear() - earliest.getUTCFullYear()) * 12 + now.getUTCMonth() - earliest.getUTCMonth() + 1,
+    (now.getFullYear() - earliest.getFullYear()) * 12 + now.getMonth() - earliest.getMonth() + 1,
   )
   const monthsPerBucket = Math.max(1, Math.ceil(totalMonths / 10))
   const bucketCount = Math.ceil(totalMonths / monthsPerBucket)
 
   return Array.from({ length: bucketCount }, (_, index) => {
     const startDate = new Date(firstMonth)
-    startDate.setUTCMonth(startDate.getUTCMonth() + index * monthsPerBucket)
+    startDate.setMonth(startDate.getMonth() + index * monthsPerBucket)
     const endDate = new Date(firstMonth)
-    endDate.setUTCMonth(endDate.getUTCMonth() + Math.min(totalMonths, (index + 1) * monthsPerBucket))
+    endDate.setMonth(endDate.getMonth() + Math.min(totalMonths, (index + 1) * monthsPerBucket))
     const bucketEnd = index === bucketCount - 1
-      ? nextMonth
+      ? nextMonth.getTime()
       : endDate.getTime()
     const count = usageEvents.value.reduce(
       (sum, event) => sum + (event.date.getTime() >= startDate.getTime() && event.date.getTime() < bucketEnd ? event.count : 0),
       0,
     )
-    const year = String(startDate.getUTCFullYear()).slice(-2)
-    const month = String(startDate.getUTCMonth() + 1).padStart(2, '0')
+    const year = String(startDate.getFullYear()).slice(-2)
+    const month = String(startDate.getMonth() + 1).padStart(2, '0')
     return { date: `${year}-${month}`, count }
   })
 }
@@ -358,11 +366,11 @@ const lifetimeStats = computed(() => {
     : null
   const vaultAgeDays = earliest ? Math.max(0, Math.floor((now.getTime() - earliest.getTime()) / DAY_MS)) : 0
   const activeMonths = earliest
-    ? Math.max(1, (now.getUTCFullYear() - earliest.getUTCFullYear()) * 12 + now.getUTCMonth() - earliest.getUTCMonth() + 1)
+    ? Math.max(1, (now.getFullYear() - earliest.getFullYear()) * 12 + now.getMonth() - earliest.getMonth() + 1)
     : 1
   const monthlyAverage = Math.round((stats.value.totalUsage / activeMonths) * 10) / 10
   const monthlyCounts = usageEvents.value.reduce<Record<string, number>>((result, event) => {
-    const key = `${event.date.getUTCFullYear()}-${String(event.date.getUTCMonth() + 1).padStart(2, '0')}`
+    const key = `${event.date.getFullYear()}-${String(event.date.getMonth() + 1).padStart(2, '0')}`
     result[key] = (result[key] || 0) + event.count
     return result
   }, {})
@@ -435,15 +443,17 @@ const updateAgeBreakdown = computed(() => {
 
 const activityHeatmap = computed(() => {
   const today = new Date()
-  const todayStart = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const localDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   const dailyCounts = usageEvents.value.reduce<Record<string, number>>((result, event) => {
-    const key = event.date.toISOString().slice(0, 10)
+    const key = localDateKey(event.date)
     result[key] = (result[key] || 0) + event.count
     return result
   }, {})
   const cells = Array.from({ length: 35 }, (_, index) => {
-    const date = new Date(todayStart - (34 - index) * DAY_MS)
-    const key = date.toISOString().slice(0, 10)
+    const date = new Date(todayStart)
+    date.setDate(date.getDate() - (34 - index))
+    const key = localDateKey(date)
     return { key, label: formatDate(date.toISOString()), count: dailyCounts[key] || 0 }
   })
   const max = Math.max(...cells.map(cell => cell.count), 1)
@@ -606,7 +616,7 @@ const selectedLifecycle = computed(() => {
                     <button type="button" @click="toggleEntryPasswordVisibility(entry.id)" :aria-label="isPasswordVisible(entry.id) ? appStore.t('vault.action.hide') : appStore.t('vault.action.show')" :title="isPasswordVisible(entry.id) ? appStore.t('vault.action.hide') : appStore.t('vault.action.show')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0">
                       <i :class="isPasswordVisible(entry.id) ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm"></i>
                     </button>
-                    <button type="button" @click="copyToClipboard(entry.password)" :aria-label="appStore.t('vault.action.copy_password')" :title="appStore.t('vault.action.copy_password')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0"><i class="pi pi-copy text-sm"></i></button>
+                    <button type="button" @click="copyPasswordToClipboard(entry)" :aria-label="appStore.t('vault.action.copy_password')" :title="appStore.t('vault.action.copy_password')" class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0"><i class="pi pi-copy text-sm"></i></button>
                   </div>
                 </td>
                 <td class="px-4 py-3.5">

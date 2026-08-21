@@ -21,6 +21,7 @@ export interface DesktopE2EBridge {
   clearTasks: () => Promise<void>
   clearTaskHistory: () => Promise<void>
   taskHistory: () => Promise<TaskHistoryRecord[]>
+  seedVaultPassword: (name: string, password: string) => Promise<string>
   reset: () => Promise<void>
   taskStatus: (taskId: string) => TaskStatus | null
   taskProgress: (taskId: string) => number | null
@@ -296,6 +297,29 @@ export const installDesktopE2EBridge = () => {
   }
 
   const bridge: DesktopE2EBridge = {
+    async seedVaultPassword(name, password) {
+      const masterPassword = await invoke<string>('get_or_create_master_key')
+      const isUnlocked = await invoke<boolean>('is_encrypted_password_service_unlocked')
+      if (!isUnlocked) {
+        const unlocked = await invoke<boolean>('unlock_encrypted_password_service', { masterPassword })
+        if (!unlocked) await invoke('init_encrypted_password_service', { masterPassword })
+      }
+      const entry = await invoke<{ id: string }>('add_encrypted_password', {
+        entry: {
+          name,
+          username: null,
+          password,
+          url: null,
+          notes: 'desktop-e2e local-day usage audit',
+          category: 'Other',
+          tags: ['desktop-e2e'],
+          strength: 'Strong',
+          custom_fields: [],
+        },
+      })
+      return entry.id
+    },
+
     async startCancellableTask(outputPath) {
       const taskId = addActiveTask()
       const task = taskStore.tasks.find(item => item.id === taskId)

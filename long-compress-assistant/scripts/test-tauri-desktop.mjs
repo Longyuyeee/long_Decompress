@@ -101,6 +101,7 @@ const compressionVerificationOnly = process.argv.includes('--compression-verific
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
 const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
 const historyOnly = process.argv.includes('--history-only')
+const vaultUsageOnly = process.argv.includes('--vault-usage-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const missingFullFormatCapabilities = new Set()
 
@@ -1303,6 +1304,61 @@ async function runHistoryDesktopGate() {
   )
 }
 
+async function runVaultUsageDesktopGate() {
+  console.log('[desktop-e2e] verifying real vault password usage appears in the current local-day trend')
+  const root = path.join(fixtureDirectory, 'vault-usage-gate')
+  const sourceName = 'vault-usage-payload.txt'
+  const sourcePath = path.join(root, sourceName)
+  const archivePath = path.join(root, 'vault-usage.7z')
+  const outputPath = path.join(root, 'extracted')
+  const password = 'Long-Vault-Usage-2026!'
+  const payload = `vault usage ${new Date().toISOString()}\n`
+  mkdirSync(root, { recursive: true })
+  writeFileSync(sourcePath, payload, 'utf8')
+  await callDesktopBridge('seedVaultPassword', 'Desktop E2E 当天趋势', password)
+
+  const packed = spawnSync(
+    bundledSevenZip,
+    ['a', '-t7z', `-p${password}`, '-mhe=on', '-y', archivePath, sourceName],
+    { cwd: root, encoding: 'utf8', windowsHide: true },
+  )
+  assert.equal(packed.status, 0, packed.stderr || packed.stdout)
+
+  await callDesktopBridge('extractArchive', archivePath, outputPath)
+  assert.equal(readFileSync(path.join(outputPath, sourceName), 'utf8'), payload)
+
+  await (await driver.findElement(By.css('[data-testid="nav-Vault"]'))).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/vault'), 15_000)
+  await (await waitForElement('[data-testid="vault-analytics-trigger"]')).click()
+  await waitForElement('[data-testid="vault-analytics-modal"]')
+  await (await waitForElement('[data-testid="vault-range-7d"]')).click()
+  const audit = await driver.wait(async () => {
+    const result = await driver.executeScript(() => {
+      const counts = [...document.querySelectorAll('[data-testid="vault-usage-day-count"]')]
+      const labels = counts.map(node => node.parentElement?.querySelector('span')?.textContent?.trim())
+      return {
+        lastCount: counts.at(-1)?.textContent?.trim(),
+        lastLabel: labels.at(-1),
+        total: document.querySelector('[data-testid="vault-range-usage-total"]')?.textContent?.trim(),
+      }
+    })
+    return result.lastCount === '1' ? result : false
+  }, 15_000)
+  const now = new Date()
+  const expectedLabel = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  assert.equal(audit.lastLabel, expectedLabel)
+  assert.match(audit.total || '', /1\s*次/)
+
+  await driver.executeScript(() => {
+    document.querySelector('[data-testid="vault-range-7d"]')?.scrollIntoView({ block: 'center' })
+  })
+  mkdirSync(artifactDirectory, { recursive: true })
+  writeFileSync(
+    path.join(artifactDirectory, 'vault-current-day-usage.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+}
+
 async function runZipTelemetryDesktopGate() {
   console.log('[desktop-e2e] verifying focused plain and AES ZIP real-byte telemetry')
   await callDesktopBridge('clearTasks')
@@ -1520,6 +1576,10 @@ try {
     await runTarTelemetryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri TAR telemetry gate passed.')
+  } else if (vaultUsageOnly) {
+    await runVaultUsageDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri vault current-day usage gate passed.')
   } else if (historyOnly) {
     await runHistoryDesktopGate()
     completedSuccessfully = true
