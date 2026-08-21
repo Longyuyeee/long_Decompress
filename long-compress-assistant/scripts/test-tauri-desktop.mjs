@@ -1256,9 +1256,49 @@ async function runHistoryDesktopGate() {
   }))
   assert.ok(compactOverflow.body <= 1, `compact history shell must not overflow: ${JSON.stringify(compactOverflow)}`)
   assert.ok((compactOverflow.page ?? 0) <= 1, `compact history page must not overflow: ${JSON.stringify(compactOverflow)}`)
+  const compactRowLayout = await driver.executeScript(() => {
+    const badge = document.querySelector('[data-testid="history-status-badge"]')
+    const cluster = badge?.closest('.history-status-cluster')
+    const completedAt = cluster?.querySelector('.history-completed-at')
+    const badgeStyle = badge ? getComputedStyle(badge) : null
+    return {
+      badgeText: badge?.textContent?.trim(),
+      badgeWhiteSpace: badgeStyle?.whiteSpace,
+      badgeWidth: badge?.getBoundingClientRect().width,
+      badgeHeight: badge?.getBoundingClientRect().height,
+      clusterOverflow: cluster ? cluster.scrollWidth - cluster.clientWidth : null,
+      completedAtWhiteSpace: completedAt ? getComputedStyle(completedAt).whiteSpace : null,
+    }
+  })
+  assert.equal(compactRowLayout.badgeText, '已完成')
+  assert.equal(compactRowLayout.badgeWhiteSpace, 'nowrap')
+  assert.ok(compactRowLayout.badgeWidth > compactRowLayout.badgeHeight, `status badge must remain a horizontal pill: ${JSON.stringify(compactRowLayout)}`)
+  assert.ok((compactRowLayout.clusterOverflow ?? 0) <= 1, `history status cluster must not overflow: ${JSON.stringify(compactRowLayout)}`)
+  assert.equal(compactRowLayout.completedAtWhiteSpace, 'nowrap')
   mkdirSync(artifactDirectory, { recursive: true })
   writeFileSync(
     path.join(artifactDirectory, 'task-history-compact.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+
+  await (await driver.findElement(By.css('[data-testid="history-record-row"]'))).click()
+  await driver.wait(async () => (await driver.findElement(By.css('[data-testid="history-detail"]')).isDisplayed()), 10_000)
+  const detailAudit = await driver.executeScript(() => {
+    const detail = document.querySelector('[data-testid="history-detail"]')
+    const backgroundColor = detail ? getComputedStyle(detail).backgroundColor : ''
+    const rgba = backgroundColor.match(/rgba?\(([^)]+)\)/)?.[1]?.split(',').map(value => value.trim()) || []
+    const alpha = rgba.length === 4 ? Number(rgba[3]) : 1
+    return {
+      backgroundColor,
+      alpha,
+      overflow: detail ? detail.scrollWidth - detail.clientWidth : null,
+    }
+  })
+  assert.equal(detailAudit.alpha, 1, `history detail must use an opaque surface: ${JSON.stringify(detailAudit)}`)
+  assert.ok(detailAudit.backgroundColor && detailAudit.backgroundColor !== 'transparent')
+  assert.ok((detailAudit.overflow ?? 0) <= 1, `history detail must not overflow horizontally: ${JSON.stringify(detailAudit)}`)
+  writeFileSync(
+    path.join(artifactDirectory, 'task-history-detail-compact.png'),
     Buffer.from(await driver.takeScreenshot(), 'base64'),
   )
 }

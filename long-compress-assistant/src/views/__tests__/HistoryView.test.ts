@@ -43,6 +43,9 @@ describe('HistoryView', () => {
     expect(wrapper.get('[data-testid="history-kpis"]').text()).toContain('50%')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('photos.zip')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
+    const completedBadge = wrapper.findAll('[data-testid="history-status-badge"]')
+      .find(badge => badge.text() === '已完成')
+    expect(completedBadge?.classes()).toContain('history-status-badge')
 
     await wrapper.get('[data-testid="history-type-filter"]').setValue('decompression')
     expect(wrapper.get('[data-testid="history-list"]').text()).not.toContain('photos.zip')
@@ -51,6 +54,7 @@ describe('HistoryView', () => {
     await wrapper.find('[data-testid="history-list"] article').trigger('click')
     expect(wrapper.get('[data-testid="history-detail"]').text()).toContain('数据错误')
     expect(wrapper.get('[data-testid="history-detail"]').text()).toContain('D:/broken.7z')
+    expect(wrapper.get('[data-testid="history-detail"]').classes()).toContain('history-detail-solid')
   })
 
   it('shows a helpful empty state and can clear persisted history', async () => {
