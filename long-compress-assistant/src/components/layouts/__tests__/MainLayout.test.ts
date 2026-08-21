@@ -5,8 +5,11 @@ import MainLayout from '../MainLayout.vue'
 
 const mocks = vi.hoisted(() => ({
   onFocusChanged: vi.fn(async () => vi.fn()),
+  getVersion: vi.fn(async () => '1.1.8'),
   t: vi.fn((key: string) => key)
 }))
+
+vi.mock('@tauri-apps/api/app', () => ({ getVersion: mocks.getVersion }))
 
 vi.mock('@tauri-apps/api/window', () => ({
   appWindow: {
@@ -74,6 +77,8 @@ describe('MainLayout', () => {
     expect(wrapper.find('aside nav').exists()).toBe(true)
     expect(wrapper.find('main').exists()).toBe(true)
     expect(wrapper.find('[data-test="global-progress"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="sidebar-version-badge"]').text()).toBe('v1.1.8')
+    expect(mocks.getVersion).toHaveBeenCalledOnce()
     expect(mocks.onFocusChanged).toHaveBeenCalledOnce()
   })
 

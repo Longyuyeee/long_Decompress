@@ -1555,6 +1555,17 @@ try {
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
   assert.equal(navigation.length, 7, 'the real desktop shell must expose seven navigation buttons')
+  const versionBadge = await waitForElement('[data-testid="sidebar-version-badge"]')
+  assert.equal(
+    (await versionBadge.getAttribute('textContent')).trim(),
+    `v${tauriConfig.package.version}`,
+    'the sidebar version badge must come from the packaged application version',
+  )
+  mkdirSync(artifactDirectory, { recursive: true })
+  writeFileSync(
+    path.join(artifactDirectory, 'sidebar-version-badge.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
   assert.equal(
     await navigation[0].getAttribute('aria-current'),
     'page',
