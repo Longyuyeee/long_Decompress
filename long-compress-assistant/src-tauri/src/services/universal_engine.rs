@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::process::Stdio;
-use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::io::AsyncReadExt;
 use crate::models::compression::TaskLogSeverity;
 use super::archive_engine::ArchiveEngine;
 use crate::services::compression_service::CompressionError;
@@ -225,16 +225,54 @@ impl UniversalCliEngine {
     fn parse_progress(text: &str) -> Option<f32> {
         if let Some(idx) = text.find('%') {
             let mut start_idx = idx;
-            while start_idx > 0 && text.as_bytes()[start_idx - 1].is_ascii_digit() {
+            while start_idx > 0
+                && (text.as_bytes()[start_idx - 1].is_ascii_digit()
+                    || text.as_bytes()[start_idx - 1] == b'.')
+            {
                 start_idx -= 1;
             }
             if start_idx < idx {
                 if let Ok(percent) = text[start_idx..idx].parse::<f32>() {
-                    return Some(percent / 100.0);
+                    return Some((percent / 100.0).clamp(0.0, 1.0));
                 }
             }
         }
         None
+    }
+
+    fn current_file_from_progress(text: &str) -> Option<String> {
+        let trimmed = text.trim();
+        let candidate = text
+            .find('%')
+            .and_then(|percent| text.get(percent + 1..))
+            .map(str::trim)
+            .and_then(|tail| tail.strip_prefix("- "))
+            .or_else(|| trimmed.strip_prefix("- "))
+            .or_else(|| trimmed.strip_prefix("Extracting  "))
+            .or_else(|| trimmed.strip_prefix("Extracting "))
+            .map(str::trim)
+            .filter(|path| !path.is_empty())?;
+        Some(candidate.to_string())
+    }
+
+    fn publish_progress_record(
+        text: &str,
+        on_progress: &Arc<dyn Fn(f32) + Send + Sync>,
+        on_log: &Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
+        last_file: &mut Option<String>,
+    ) {
+        if let Some(progress) = Self::parse_progress(text) {
+            on_progress(progress);
+        }
+        if let Some(current_file) = Self::current_file_from_progress(text) {
+            if last_file.as_deref() != Some(current_file.as_str()) {
+                on_log(
+                    format!("正在解压：{}", current_file),
+                    TaskLogSeverity::Info,
+                );
+                *last_file = Some(current_file);
+            }
+        }
     }
 
     fn encryption_state_from_listing(
@@ -242,8 +280,16 @@ impl UniversalCliEngine {
     ) -> Result<bool> {
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
+        Self::encryption_state_from_listing_text(output.status.success(), &stdout, &stderr)
+    }
+
+    fn encryption_state_from_listing_text(
+        succeeded: bool,
+        stdout: &str,
+        stderr: &str,
+    ) -> Result<bool> {
         let combined = format!("{}\n{}", stdout, stderr);
-        let lower = combined.to_ascii_lowercase();
+        let stderr_lower = stderr.to_ascii_lowercase();
 
         if stdout.lines().any(|line| {
             line.split_once(" = ")
@@ -260,12 +306,12 @@ impl UniversalCliEngine {
             "wrong password",
         ]
         .iter()
-        .any(|marker| lower.contains(marker))
+        .any(|marker| stderr_lower.contains(marker))
         {
             return Ok(true);
         }
 
-        if !output.status.success() {
+        if !succeeded {
             return Err(anyhow::anyhow!(
                 "Unable to inspect archive encryption metadata: {}",
                 combined.trim()
@@ -538,15 +584,17 @@ impl ArchiveEngine for UniversalCliEngine {
         command.arg("x"); // extract with full paths
         command.arg("-y"); // yes to all
         command.arg(Self::overwrite_mode_arg(overwrite_existing));
+        command.arg("-bb1"); // report each processed file
+        command.arg("-bsp1"); // progress stream -> stdout
+        command.arg("-bso1"); // normal output -> stdout
+        command.arg("-bse2"); // errors -> stderr
 
         // 7z 密码传递：使用 -p<password> 格式
         // 注意：密码会出现在命令行参数中，但这是 7z CLI 唯一支持的方式
         // 为了减少暴露时间，我们使用非交互模式，进程会快速结束
         command.arg(format!("-o{}", output_dir.to_string_lossy()));
+        command.arg("--");
         command.arg(file_path);
-
-        // 开启进度输出
-        command.arg("-bsp1");
 
         // Never let an unexpected archive prompt wait invisibly for terminal
         // input. Password state is resolved before this process starts.
@@ -563,15 +611,23 @@ impl ArchiveEngine for UniversalCliEngine {
         let stderr = child.stderr.take()
             .ok_or_else(|| anyhow::anyhow!("Failed to capture 7z stderr"))?;
 
-        let mut reader = BufReader::new(stdout).lines();
-        let mut err_reader = BufReader::new(stderr).lines();
+        let mut stdout = stdout;
+        let stderr_task = tokio::spawn(async move {
+            let mut stderr = stderr;
+            let mut bytes = Vec::new();
+            stderr.read_to_end(&mut bytes).await?;
+            Ok::<Vec<u8>, std::io::Error>(bytes)
+        });
 
         let cancel_flag = is_cancelled.clone();
 
         let mut last_resource_check = std::time::Instant::now();
         let mut last_disk_check = std::time::Instant::now();
-        // 解析标准输出流以提取进度。定时分支保证即使子进程没有
-        // 输出新行，取消和资源配额仍会被及时检查。
+        let mut chunk = [0u8; 16 * 1024];
+        let mut pending_record = Vec::new();
+        let mut last_file = None;
+        // 7z 的进度使用回车符刷新同一行，而文件日志使用换行符。
+        // 同时解析 \r 与 \n，避免大文件直到进程结束才刷新界面。
         loop {
             if cancel_flag.load(Ordering::SeqCst) {
                 let _ = child.kill().await;
@@ -579,19 +635,32 @@ impl ArchiveEngine for UniversalCliEngine {
             }
 
             tokio::select! {
-                line = reader.next_line() => {
-                    match line {
-                        Ok(Some(text)) => {
-                            if let Some(progress) = Self::parse_progress(&text) {
-                                on_progress(progress);
+                read = stdout.read(&mut chunk) => {
+                    match read {
+                        Ok(0) => {
+                            if !pending_record.is_empty() {
+                                let text = String::from_utf8_lossy(&pending_record);
+                                Self::publish_progress_record(&text, &on_progress, &on_log, &mut last_file);
                             }
-                            // 同时记录提取的文件
-                            if let Some(stripped) = text.strip_prefix("- ") {
-                                on_log(stripped.to_string(), TaskLogSeverity::Info);
+                            break;
+                        },
+                        Ok(count) => {
+                            for byte in &chunk[..count] {
+                                if *byte == b'\r' || *byte == b'\n' {
+                                    if !pending_record.is_empty() {
+                                        let text = String::from_utf8_lossy(&pending_record);
+                                        Self::publish_progress_record(&text, &on_progress, &on_log, &mut last_file);
+                                        pending_record.clear();
+                                    }
+                                } else {
+                                    pending_record.push(*byte);
+                                }
                             }
                         },
-                        Ok(None) => break, // EOF
-                        Err(_) => break,
+                        Err(error) => {
+                            let _ = child.kill().await;
+                            return Err(anyhow::anyhow!("Failed to read 7z progress stream: {}", error));
+                        },
                     }
                 },
                 _ = tokio::time::sleep(std::time::Duration::from_millis(100)) => {
@@ -614,14 +683,11 @@ impl ArchiveEngine for UniversalCliEngine {
         }
 
         let status = child.wait().await?;
+        let err_bytes = stderr_task
+            .await
+            .map_err(|error| anyhow::anyhow!("Failed to join 7z error stream: {}", error))??;
+        let err_msg = String::from_utf8_lossy(&err_bytes).to_string();
         if !status.success() {
-            // 读取可能的错误信息
-            let mut err_msg = String::new();
-            while let Ok(Some(line)) = err_reader.next_line().await {
-                err_msg.push_str(&line);
-                err_msg.push('\n');
-            }
-            
             if err_msg.contains("Wrong password") {
                 return Err(CompressionError::InvalidPassword.into());
             }
@@ -651,8 +717,98 @@ mod tests {
         assert_eq!(UniversalCliEngine::parse_progress("no percent"), None);
         assert_eq!(UniversalCliEngine::parse_progress("%"), None);
         assert_eq!(UniversalCliEngine::parse_progress("abc 50% def"), Some(0.5));
+        assert_eq!(UniversalCliEngine::parse_progress(" 12.34% - path/to/file"), Some(0.1234));
         
         // 多个百分号（虽然不常见，但应取第一个）
         assert_eq!(UniversalCliEngine::parse_progress(" 10% ... 20%"), Some(0.1));
+    }
+
+    #[test]
+    fn parses_current_file_from_carriage_return_progress_records() {
+        assert_eq!(
+            UniversalCliEngine::current_file_from_progress(" 12% - folder/file.txt"),
+            Some("folder/file.txt".to_string())
+        );
+        assert_eq!(
+            UniversalCliEngine::current_file_from_progress("Extracting  folder/second.txt"),
+            Some("folder/second.txt".to_string())
+        );
+    }
+
+    #[test]
+    fn plain_listing_text_cannot_become_a_password_false_positive() {
+        let plain_listing = "Path = enter password notes.txt\nEncrypted = -\nPath = normal.txt\nEncrypted = -";
+        assert!(!UniversalCliEngine::encryption_state_from_listing_text(
+            true,
+            plain_listing,
+            "",
+        )
+        .expect("plain listing"));
+        assert!(UniversalCliEngine::encryption_state_from_listing_text(
+            true,
+            "Path = secret.txt\nEncrypted = +",
+            "",
+        )
+        .expect("encrypted metadata"));
+        assert!(UniversalCliEngine::encryption_state_from_listing_text(
+            false,
+            "",
+            "ERROR: Wrong password",
+        )
+        .expect("password error"));
+    }
+
+    #[tokio::test]
+    #[ignore = "requires LONG_REAL_SPLIT_ARCHIVE and performs a cancellable real extraction"]
+    async fn real_split_archive_streams_progress_and_current_files() {
+        let archive = std::env::var("LONG_REAL_SPLIT_ARCHIVE")
+            .expect("set LONG_REAL_SPLIT_ARCHIVE to the first split volume");
+        let archive = std::path::PathBuf::from(archive);
+        assert!(archive.is_file(), "real split fixture must exist");
+        let engine = UniversalCliEngine::new();
+        assert!(
+            !engine
+                .requires_password(&archive)
+                .await
+                .expect("inspect real split encryption metadata"),
+            "the real plain split archive must not enter password discovery"
+        );
+        let output = tempfile::tempdir().expect("temporary extraction output");
+        let progress = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let logs = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let cancellation = Arc::new(AtomicBool::new(false));
+
+        let progress_capture = progress.clone();
+        let log_capture = logs.clone();
+        let cancel_after_observation = cancellation.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_secs(25)).await;
+            cancel_after_observation.store(true, Ordering::SeqCst);
+        });
+
+        let result = engine
+            .extract_with_progress(
+                &archive,
+                output.path(),
+                None,
+                true,
+                Arc::new(move |value| progress_capture.lock().unwrap().push(value)),
+                Arc::new(move |message, _| log_capture.lock().unwrap().push(message)),
+                cancellation,
+            )
+            .await;
+
+        assert!(result.is_err(), "observation run should stop through cancellation");
+        assert!(
+            progress.lock().unwrap().iter().any(|value| *value > 0.0),
+            "real extraction must publish progress before cancellation"
+        );
+        assert!(
+            logs.lock()
+                .unwrap()
+                .iter()
+                .any(|message| message.starts_with("正在解压：")),
+            "real extraction must publish the current file"
+        );
     }
 }

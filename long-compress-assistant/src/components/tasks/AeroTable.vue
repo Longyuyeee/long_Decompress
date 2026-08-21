@@ -7,6 +7,7 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import Modal from '@/components/ui/Modal.vue'
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import { open } from '@tauri-apps/api/dialog'
+import { formatProgressPercent } from '@/utils/progress'
 
 const props = defineProps<{
   selectedTaskIds?: Set<string>
@@ -296,7 +297,7 @@ const onLeave = (el: any) => {
                 class="flex-1 h-1.5 bg-input/50 rounded-full overflow-hidden"
               >
                 <div
-                  class="h-full bg-primary transition-all duration-300 rounded-full"
+                  class="archive-progress-fill h-full bg-primary transition-all duration-300 rounded-full"
                   :style="{ width: `${task.progress || 0}%` }"
                 ></div>
               </div>
@@ -306,7 +307,7 @@ const onLeave = (el: any) => {
                 v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)"
                 class="text-xs font-mono text-primary font-bold"
               >
-                {{ task.progress || 0 }}%
+                {{ formatProgressPercent(task.progress) }}%
               </span>
             </div>
 
@@ -478,7 +479,7 @@ const onLeave = (el: any) => {
                       </div>
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">进度</span>
-                        <div class="font-mono font-black text-primary mt-0.5">{{ task.progress || 0 }}%<span v-if="task.speed" class="ml-2 text-muted">{{ task.speed }}</span></div>
+                        <div class="font-mono font-black text-primary mt-0.5">{{ formatProgressPercent(task.progress) }}%<span v-if="task.speed" class="ml-2 text-muted">{{ task.speed }}</span></div>
                       </div>
                       <div v-if="task.currentFile" class="task-current-file col-span-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentFile">
                         {{ task.currentFile }}
@@ -637,6 +638,22 @@ const onLeave = (el: any) => {
 .task-log-entry,
 .task-log-message {
   max-width: 100%;
+}
+
+.archive-progress-fill {
+  background-image: linear-gradient(
+    100deg,
+    var(--dynamic-accent) 0%,
+    color-mix(in srgb, var(--dynamic-accent) 68%, white) 48%,
+    var(--dynamic-accent) 100%
+  );
+  background-size: 220% 100%;
+  animation: archive-progress-flow 1.35s linear infinite;
+}
+
+@keyframes archive-progress-flow {
+  from { background-position: 100% 0; }
+  to { background-position: -120% 0; }
 }
 
 .task-current-file {

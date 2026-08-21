@@ -295,7 +295,7 @@ describe('CompressionView', () => {
 
     const execution = wrapper.get('[data-testid="compression-draft-execution"]')
     expect(execution.text()).toContain('压缩中')
-    expect(execution.text()).toContain('42%')
+    expect(execution.text()).toContain('42.00%')
     expect(execution.text()).toContain('正在写入压缩数据')
 
     resolveCompression()

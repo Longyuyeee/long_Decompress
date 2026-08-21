@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useAppStore } from '@/stores/app'
 import type { Task } from '@/stores/task'
+import { formatProgressPercent } from '@/utils/progress'
 import {
   compressionStatusClass,
   compressionStatusIcon,
@@ -45,7 +46,7 @@ const progress = computed(() => props.task?.progress || 0)
       v-if="showsCompressionProgress(status)"
       class="text-xs font-mono text-primary font-bold"
     >
-      {{ progress }}%
+      {{ formatProgressPercent(progress) }}%
     </span>
   </div>
 </template>

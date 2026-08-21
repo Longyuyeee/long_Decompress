@@ -75,7 +75,7 @@ describe('compression presentation components', () => {
 
     await wrapper.setProps({ task: task('compressing', { progress: 42 }) })
     expect(wrapper.text()).toContain('压缩中')
-    expect(wrapper.text()).toContain('42%')
+    expect(wrapper.text()).toContain('42.00%')
     expect(wrapper.find('[style="width: 42%;"]').exists()).toBe(true)
 
     await wrapper.setProps({ task: task('completed', { progress: 100 }) })
@@ -111,7 +111,7 @@ describe('compression presentation components', () => {
     })
 
     expect(wrapper.text()).toContain('正在收尾')
-    expect(wrapper.text()).toContain('42%')
+    expect(wrapper.text()).toContain('42.00%')
     expect(wrapper.text()).toContain('12 MB/s')
     expect(wrapper.text()).toContain('C:/input/sample.txt')
     expect(wrapper.text()).toContain('archive warning')

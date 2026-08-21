@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAppStore } from '@/stores/app'
 import type { Task } from '@/stores/task'
+import { formatProgressPercent } from '@/utils/progress'
 import {
   compressionLogSeverityClass,
   compressionStageTranslationKey,
@@ -27,7 +28,7 @@ const appStore = useAppStore()
       <div class="pending-stat-card">
         <span class="text-muted">{{ appStore.t('progress.percent') }}</span>
         <div class="font-mono font-black text-primary mt-0.5">
-          {{ task?.progress || 0 }}%
+          {{ formatProgressPercent(task?.progress) }}%
           <span v-if="task?.speed" class="ml-2 text-muted">{{ task.speed }}</span>
         </div>
       </div>

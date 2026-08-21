@@ -4,6 +4,7 @@ import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { ResourcePreflightReport } from '@/types/resourcePreflight'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
+import { normalizeProgressPercent } from '@/utils/progress'
 
 export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'cancelling' | 'completed' | 'failed' | 'cancelled'
 export type LogSeverity = 'info' | 'warning' | 'error' | 'success'
@@ -111,11 +112,12 @@ export const useTaskStore = defineStore('task', () => {
       } = event.payload
       const task = tasks.value.find(t => t.id === task_id)
       if (task) {
-        // 使用 floor 确保进度不会跳变；活跃任务至少显示 1%
-        task.progress = progress > 0 && progress < 1.0
-          ? Math.max(1, Math.floor(progress * 100))
-          : Math.round(progress * 100)
-        task.stage = stage as any
+        task.progress = normalizeProgressPercent(progress)
+        task.stage = stage !== undefined
+          ? stage as any
+          : task.status === 'extracting'
+            ? 'Extracting'
+            : task.stage
         task.currentFile = current_file
         task.currentPassword = current_password
         if (speed !== undefined) task.speed = speed

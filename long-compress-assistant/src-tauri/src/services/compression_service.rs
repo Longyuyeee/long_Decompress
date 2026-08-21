@@ -1438,16 +1438,57 @@ impl CompressionService {
         let win_progress = window.clone();
         let tid_progress = task_id.clone();
         let srv_progress = service.clone();
+        let extraction_progress = Arc::new(Mutex::new(0.0f32));
+        let progress_for_callback = extraction_progress.clone();
         let on_progress: Arc<dyn Fn(f32) + Send + Sync> = Arc::new(move |p| {
+            if let Ok(mut latest) = progress_for_callback.lock() {
+                *latest = p;
+            }
             srv_progress.emit_progress(&win_progress, &tid_progress, p, None, 0, 0);
         });
 
         let win_log = window.clone();
         let tid_log = task_id.clone();
         let srv_log = service.clone();
+        let progress_for_log = extraction_progress.clone();
+        let last_file_log = Arc::new(Mutex::new(None::<Instant>));
+        let last_file_log_for_callback = last_file_log.clone();
         let on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync> = Arc::new(move |msg, severity| {
+            if let Some(current_file) = msg.strip_prefix("正在解压：") {
+                let progress = progress_for_log.lock().map(|value| *value).unwrap_or(0.0);
+                srv_log.emit_progress(
+                    &win_log,
+                    &tid_log,
+                    progress,
+                    Some(current_file.to_string()),
+                    0,
+                    0,
+                );
+                let should_log = last_file_log_for_callback
+                    .lock()
+                    .map(|mut last| {
+                        let should_log = last
+                            .as_ref()
+                            .is_none_or(|instant| instant.elapsed() >= std::time::Duration::from_secs(1));
+                        if should_log {
+                            *last = Some(Instant::now());
+                        }
+                        should_log
+                    })
+                    .unwrap_or(true);
+                if !should_log {
+                    return;
+                }
+            }
             srv_log.emit_log(&win_log, &tid_log, &msg, severity);
         });
+
+        service.emit_log(
+            &window,
+            &task_id,
+            &format!("开始解压：{}", file_name),
+            TaskLogSeverity::Info,
+        );
 
         let effective_format = if format == ArchiveFormat::Zip && final_password.is_some() {
             service.emit_log(&window, &task_id, "检测到加密 ZIP，使用内置加密 ZIP 兼容引擎解压", TaskLogSeverity::Info);

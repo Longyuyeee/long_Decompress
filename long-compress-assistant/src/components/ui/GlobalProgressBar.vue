@@ -4,6 +4,7 @@ import { useTaskStore, type Task } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage } from '@/utils'
+import { formatProgressPercent } from '@/utils/progress'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -285,7 +286,7 @@ const copyToClipboard = async (text: string) => {
                   <div class="flex items-center gap-2 mt-1">
                     <span class="text-sm text-dim uppercase tracking-tight">{{ statusLabel(task.status) }}</span>
                     <span v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"
-                          class="text-sm font-mono text-primary font-bold">{{ task.progress }}%</span>
+                          class="text-sm font-mono text-primary font-bold">{{ formatProgressPercent(task.progress) }}%</span>
                     <span v-if="task.speed" class="text-xs font-mono text-dim ml-1">{{ task.speed }}</span>
                     <span v-if="task.etaSeconds !== undefined" class="text-xs font-mono text-dim ml-1">ETA {{ formatEta(task.etaSeconds) }}</span>
                   </div>
