@@ -104,7 +104,10 @@ const historyOnly = process.argv.includes('--history-only')
 const vaultUsageOnly = process.argv.includes('--vault-usage-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const responsiveLayoutOnly = process.argv.includes('--responsive-layout-only')
+const autoStartOnly = process.argv.includes('--auto-start-only')
 const missingFullFormatCapabilities = new Set()
+const autoStartRegistryKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
+const autoStartValueName = 'Long解压'
 
 function recordMissingFullFormatCapability(capability, preparation) {
   missingFullFormatCapabilities.add(`${capability} — ${preparation}`)
@@ -137,6 +140,7 @@ let devToolsPortMirror
 let driverOutput = ''
 let fixtureDirectory
 let completedSuccessfully = false
+let autoStartRegistryOwnedByTest = false
 
 function appendDriverOutput(chunk) {
   driverOutput = `${driverOutput}${chunk}`.slice(-32_768)
@@ -186,6 +190,45 @@ function desktopApplicationProcessIds() {
     .split(/\r?\n/u)
     .map(value => Number.parseInt(value.trim(), 10))
     .filter(Number.isInteger)
+}
+
+async function waitForStandaloneFileContent(filePath, expectedContent, timeoutMs = 30_000) {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    try {
+      if (readFileSync(filePath, 'utf8') === expectedContent) return
+    } catch {
+      // The standalone process has not written its probe yet.
+    }
+    await new Promise(resolve => setTimeout(resolve, 100))
+  }
+  throw new Error(`Timed out waiting for ${filePath} to contain ${expectedContent}`)
+}
+
+function readAutoStartRegistryValue() {
+  const result = spawnSync(
+    'reg.exe',
+    ['query', autoStartRegistryKey, '/v', autoStartValueName],
+    { encoding: 'utf8', windowsHide: true },
+  )
+  if (result.status === 1) return null
+  assert.ifError(result.error)
+  assert.equal(result.status, 0, result.stderr || result.stdout)
+  // reg.exe follows the active Windows console code page, so the non-ASCII
+  // value name may be mojibake when Node decodes stdout. REG_SZ is stable.
+  const match = result.stdout.match(/^\s+\S+\s+REG_SZ\s+(.+)$/mu)
+  assert.ok(match, `unable to parse the auto-start value: ${result.stdout}`)
+  return match[1].trim()
+}
+
+function removeAutoStartRegistryValue() {
+  const result = spawnSync(
+    'reg.exe',
+    ['delete', autoStartRegistryKey, '/v', autoStartValueName, '/f'],
+    { encoding: 'utf8', windowsHide: true },
+  )
+  assert.ifError(result.error)
+  assert.ok([0, 1].includes(result.status), result.stderr || result.stdout)
 }
 
 async function startTauriDriver() {
@@ -962,7 +1005,7 @@ function mirrorDevToolsActivePort() {
   }
 }
 
-async function createDesktopSession() {
+async function createDesktopSession(applicationArgs = []) {
   const capabilities = new Capabilities()
   capabilities.setBrowserName('wry')
   const webviewOptions = {
@@ -971,7 +1014,7 @@ async function createDesktopSession() {
   if (process.env.CI) {
     webviewOptions.additionalBrowserArguments = ['--headless=new', '--disable-gpu']
   }
-  capabilities.set('tauri:options', { application, webviewOptions })
+  capabilities.set('tauri:options', { application, args: applicationArgs, webviewOptions })
   devToolsPortMirror = setInterval(mirrorDevToolsActivePort, 50)
   try {
     const session = await new Builder()
@@ -1040,6 +1083,13 @@ async function restartDesktopSession() {
   )
   mkdirSync(webviewUserDataDirectory, { recursive: true })
   console.log('[desktop-e2e] creating replacement desktop session')
+  if (autoStartOnly) {
+    assert.equal(
+      readAutoStartRegistryValue(),
+      null,
+      'the focused auto-start gate refuses to overwrite an existing user startup choice',
+    )
+  }
   driver = await createDesktopSession()
   console.log('[desktop-e2e] replacement desktop session created')
   await waitForDesktopReady()
@@ -1814,6 +1864,14 @@ async function runTarTelemetryDesktopGate() {
 }
 
 try {
+  if (autoStartOnly) {
+    assert.equal(
+      readAutoStartRegistryValue(),
+      null,
+      'the focused auto-start gate refuses to overwrite an existing user startup choice',
+    )
+    autoStartRegistryOwnedByTest = true
+  }
   mkdirSync(webviewUserDataDirectory, { recursive: true })
   await startTauriDriver()
 
@@ -1829,10 +1887,12 @@ try {
     'the sidebar version badge must come from the packaged application version',
   )
   mkdirSync(artifactDirectory, { recursive: true })
-  writeFileSync(
-    path.join(artifactDirectory, 'sidebar-version-badge.png'),
-    Buffer.from(await driver.takeScreenshot(), 'base64'),
-  )
+  if (!autoStartOnly) {
+    writeFileSync(
+      path.join(artifactDirectory, 'sidebar-version-badge.png'),
+      Buffer.from(await driver.takeScreenshot(), 'base64'),
+    )
+  }
   assert.equal(
     await navigation[0].getAttribute('aria-current'),
     'page',
@@ -1850,7 +1910,71 @@ try {
   const payload = `Long解压 real desktop round-trip ${new Date().toISOString()}\n`
   writeFileSync(sourcePath, payload, 'utf8')
 
-  if (responsiveLayoutOnly) {
+  if (autoStartOnly) {
+    await (await waitForElement('[data-testid="nav-Settings"]')).click()
+    await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/settings'), 30_000)
+    const autoStartSwitch = await waitForElement('[data-testid="auto-start-switch"]')
+    assert.equal(await autoStartSwitch.getAttribute('disabled'), null)
+    assert.equal(await autoStartSwitch.getAttribute('aria-checked'), 'false')
+    assert.equal(await callDesktopBridge('checkAutoStart'), false)
+    await autoStartSwitch.click()
+    await driver.wait(
+      async () => (await autoStartSwitch.getAttribute('aria-checked')) === 'true',
+      10_000,
+    )
+    assert.equal(await callDesktopBridge('checkAutoStart'), true)
+    assert.equal(
+      readAutoStartRegistryValue()?.toLowerCase(),
+      `"${application}" --autostart`.toLowerCase(),
+      'the startup entry must quote the exact executable and use only the dedicated activation flag',
+    )
+    assert.equal(
+      await callDesktopBridge('setAutoStart', true),
+      true,
+      'enabling an already-current startup entry must be idempotent',
+    )
+    await autoStartSwitch.click()
+    await driver.wait(
+      async () => (await autoStartSwitch.getAttribute('aria-checked')) === 'false',
+      10_000,
+    )
+    assert.equal(await callDesktopBridge('checkAutoStart'), false)
+    assert.equal(readAutoStartRegistryValue(), null)
+
+    await callDesktopBridge('requestAppExit')
+    await new Promise(resolve => setTimeout(resolve, 1_000))
+    try {
+      await driver.quit()
+    } catch {
+      // The native exit can invalidate the WebDriver session first.
+    }
+    driver = undefined
+    const remainingProcessIds = desktopApplicationProcessIds()
+    for (const processId of remainingProcessIds) terminateProcessTree(processId)
+
+    const startupProbe = path.join(fixtureDirectory, 'auto-start-visibility.marker')
+    const startupProcess = spawn(
+      application,
+      ['--autostart', '--desktop-e2e-autostart-probe', startupProbe],
+      {
+        cwd: root,
+        env: {
+          ...process.env,
+          LONG_DECOMPRESS_E2E_DATA_DIR: e2eDataDirectory,
+          LONG_DECOMPRESS_E2E_INSTANCE_ID: e2eInstanceId,
+        },
+        stdio: 'ignore',
+        windowsHide: true,
+      },
+    )
+    try {
+      await waitForStandaloneFileContent(startupProbe, 'hidden')
+    } finally {
+      terminateProcessTree(startupProcess.pid)
+    }
+    completedSuccessfully = true
+    console.log('Real Windows Tauri explicit auto-start gate passed.')
+  } else if (responsiveLayoutOnly) {
     await runResponsiveTaskDetailDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri responsive task-detail gate passed.')
@@ -3459,6 +3583,9 @@ try {
   await captureFailure()
   throw error
 } finally {
+  if (autoStartOnly && autoStartRegistryOwnedByTest) {
+    removeAutoStartRegistryValue()
+  }
   if (devToolsPortMirror) clearInterval(devToolsPortMirror)
   if (driver) {
     try {

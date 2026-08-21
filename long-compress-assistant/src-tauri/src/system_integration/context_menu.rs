@@ -1204,15 +1204,32 @@ mod tests {
     }
 
     #[test]
-    fn nsis_install_removes_legacy_auto_start_persistence() {
+    fn nsis_preserves_opt_in_auto_start_on_update_and_cleans_it_on_uninstall() {
         let run_key = r#"Software\Microsoft\Windows\CurrentVersion\Run"#;
-        for value in [r#""${PRODUCTNAME}""#, r#""LongDecompress""#, r#""${LEGACY_PRODUCTNAME}""#] {
+        let (install, uninstall) = INSTALLER_TEMPLATE
+            .split_once("Section Uninstall")
+            .expect("installer must contain an uninstall section");
+
+        assert!(!install.contains(&format!(
+            r#"DeleteRegValue HKCU "{}" "${{PRODUCTNAME}}""#,
+            run_key
+        )));
+        for value in [r#""LongDecompress""#, r#""${LEGACY_PRODUCTNAME}""#] {
             assert!(
-                INSTALLER_TEMPLATE.contains(&format!(
+                install.contains(&format!(
                     r#"DeleteRegValue HKCU "{}" {}"#,
                     run_key, value
                 )),
                 "NSIS safety migration is missing auto-start value {value}"
+            );
+        }
+        for value in [r#""${PRODUCTNAME}""#, r#""LongDecompress""#, r#""${LEGACY_PRODUCTNAME}""#] {
+            assert!(
+                uninstall.contains(&format!(
+                    r#"DeleteRegValue HKCU "{}" {}"#,
+                    run_key, value
+                )),
+                "NSIS uninstall cleanup is missing auto-start value {value}"
             );
         }
     }

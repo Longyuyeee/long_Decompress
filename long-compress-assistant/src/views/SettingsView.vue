@@ -58,6 +58,8 @@ const selectedAccentName = computed(() =>
 )
 
 const contextMenuBusy = ref(false)
+const autoStartBusy = ref(false)
+const autoStartSupported = ref(navigator.platform.toLowerCase().includes('win'))
 const toggleBruteForce = () => appStore.updateSettings({ enableBruteForce: !appStore.settings.enableBruteForce })
 
 const contextMenuSupported = ref(navigator.platform.toLowerCase().includes('win'))
@@ -83,7 +85,43 @@ const checkContextMenu = async () => {
   } catch { /* ignore */ }
 }
 
+const checkAutoStart = async () => {
+  if (!autoStartSupported.value) return
+  try {
+    const enabled = await tauriCommands.invoke<boolean>('check_auto_start')
+    if (appStore.settings.autoStart !== enabled) {
+      appStore.updateSettings({ autoStart: enabled })
+    }
+  } catch {
+    autoStartSupported.value = false
+  }
+}
+
+const toggleAutoStart = async () => {
+  if (!autoStartSupported.value || autoStartBusy.value) return
+  autoStartBusy.value = true
+  const enable = !appStore.settings.autoStart
+  try {
+    const registered = await tauriCommands.invoke<boolean>('set_auto_start', { enable })
+    if (registered !== enable) {
+      throw new Error(appStore.t('settings.performance.auto_start.verify_failed'))
+    }
+    appStore.updateSettings({ autoStart: registered })
+    appStore.setSuccess(appStore.t(
+      registered
+        ? 'settings.performance.auto_start.enabled'
+        : 'settings.performance.auto_start.disabled'
+    ))
+  } catch (error) {
+    appStore.setError(String(error))
+    await checkAutoStart()
+  } finally {
+    autoStartBusy.value = false
+  }
+}
+
 onMounted(async () => {
+  void checkAutoStart()
   checkContextMenu()
   void refreshEngineDiagnostics()
   try {
@@ -253,8 +291,27 @@ const removeWordlist = (index: number) => {
           <section class="aero-card p-8">
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-8">{{ appStore.t('settings.performance') }}</h2>
             <div class="space-y-6">
+              <button
+                type="button"
+                role="switch"
+                data-testid="auto-start-switch"
+                :aria-checked="appStore.settings.autoStart"
+                :aria-busy="autoStartBusy"
+                :disabled="!autoStartSupported || autoStartBusy"
+                class="w-full flex items-center justify-between gap-4 text-left disabled:cursor-not-allowed disabled:opacity-60"
+                @click="toggleAutoStart"
+              >
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.auto_start') }}</div>
+                  <div class="text-xs text-muted mt-1 leading-5">{{ appStore.t('settings.performance.auto_start.desc') }}</div>
+                </div>
+                <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.autoStart }">
+                  <span class="settings-toggle-knob"></span>
+                </div>
+              </button>
+
               <!-- 并行线程设置 -->
-              <div class="space-y-4">
+              <div class="space-y-4 pt-6 border-t border-subtle">
                 <div class="flex justify-between items-center">
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.threads') }}</div>
                   <span class="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-black font-mono">

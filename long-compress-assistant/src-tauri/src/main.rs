@@ -99,6 +99,18 @@ fn parse_context_action(args: &[String]) -> Option<ContextAction> {
     None
 }
 
+fn is_auto_start_activation(args: &[String]) -> bool {
+    args.iter().any(|argument| argument == "--autostart")
+}
+
+#[cfg(feature = "desktop-e2e")]
+fn auto_start_probe_path(args: &[String]) -> Option<String> {
+    let position = args
+        .iter()
+        .position(|argument| argument == "--desktop-e2e-autostart-probe")?;
+    args.get(position + 1).cloned()
+}
+
 fn instance_socket_name() -> std::io::Result<interprocess::local_socket::Name<'static>> {
     let socket_name = instance_socket_name_value();
     if GenericNamespaced::is_supported() {
@@ -160,7 +172,15 @@ fn main() {
     let instance = single_instance::SingleInstance::new(&instance_name)
         .expect("failed to create application instance guard");
     let args: Vec<String> = std::env::args().collect();
+    let auto_start_activation = is_auto_start_activation(&args);
+    #[cfg(feature = "desktop-e2e")]
+    let auto_start_probe_path = auto_start_probe_path(&args);
     if !instance.is_single() {
+        // A logon activation must never steal focus from an instance that is
+        // already running in the tray.
+        if is_auto_start_activation(&args) {
+            return;
+        }
         if !forward_to_running_instance(&args) {
             rfd::MessageDialog::new()
                 .set_title("Long解压")
@@ -204,6 +224,23 @@ fn main() {
     let db_path = data_dir.join("data.db");
 
     tauri::Builder::default()
+        .on_page_load(move |window, _payload| {
+            // Configured windows can become visible again when their WebView
+            // finishes loading, so enforce the logon activation contract at
+            // the final native page-load boundary as well as during setup.
+            if auto_start_activation {
+                let _ = window.hide();
+                #[cfg(feature = "desktop-e2e")]
+                if let Some(marker_path) = auto_start_probe_path.as_ref() {
+                    let visibility = if window.is_visible().unwrap_or(false) {
+                        "visible"
+                    } else {
+                        "hidden"
+                    };
+                    let _ = std::fs::write(marker_path, visibility);
+                }
+            }
+        })
         .manage(EncryptedPasswordServiceState::new(data_dir.clone()))
         .manage(CompressionProfileServiceState::new())
         .manage(WatchFolderServiceState::new())
@@ -235,6 +272,9 @@ fn main() {
                     return Ok(());
                 }
             };
+            if is_auto_start_activation(&args) {
+                let _ = window.hide();
+            }
             #[cfg(any(target_os = "windows", target_os = "macos"))]
             let _ = set_shadow(&window, true);
 
@@ -394,6 +434,8 @@ fn main() {
             long_compress_assistant::commands::system::get_disk_space,
             long_compress_assistant::commands::system::preflight_operation_resources,
             long_compress_assistant::commands::system::get_app_version,
+            long_compress_assistant::commands::system::set_auto_start,
+            long_compress_assistant::commands::system::check_auto_start,
             long_compress_assistant::commands::system::load_app_settings,
             long_compress_assistant::commands::system::save_app_settings,
             long_compress_assistant::commands::system_integration::open_in_explorer,
@@ -462,4 +504,22 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_auto_start_activation;
+
+    #[test]
+    fn only_the_dedicated_flag_is_treated_as_logon_activation() {
+        assert!(is_auto_start_activation(&[
+            "Long解压.exe".to_string(),
+            "--autostart".to_string(),
+        ]));
+        assert!(!is_auto_start_activation(&[
+            "Long解压.exe".to_string(),
+            "--quick-pack".to_string(),
+            "archive".to_string(),
+        ]));
+    }
 }

@@ -549,10 +549,9 @@ Section Install
 
   !insertmacro CheckIfAppIsRunning
 
-  ; v1.1.8 safety migration: older builds rewrote these persistence values on
-  ; every launch. Auto-start is suspended for unsigned builds, so remove the
-  ; current and legacy value names once during install/update.
-  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCTNAME}"
+  ; Keep the current opt-in value across overlay updates. The application only
+  ; creates it after an explicit settings-page click and never rewrites it at
+  ; startup. Old brand values are still removed as a one-way migration.
   DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "LongDecompress"
   DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${LEGACY_PRODUCTNAME}"
 
@@ -893,6 +892,11 @@ FunctionEnd
 Section Uninstall
   !insertmacro CheckIfAppIsRunning
   !insertmacro RemoveLongDecompressContextMenu
+
+  ; Remove every startup value owned by current or legacy product identities.
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCTNAME}"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "LongDecompress"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${LEGACY_PRODUCTNAME}"
 
   ; Delete the app directory and its content from disk
   ; Copy main executable

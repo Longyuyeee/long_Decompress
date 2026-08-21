@@ -144,6 +144,8 @@ export interface DesktopE2EBridge {
   showAvailableUpdate: () => void
   seedResponsiveWorkspace: (type: 'compression' | 'decompression') => string
   setCloseToTray: (enabled: boolean) => Promise<void>
+  setAutoStart: (enabled: boolean) => Promise<boolean>
+  checkAutoStart: () => Promise<boolean>
   requestAppExit: () => void
   hideWindow: (markerPath: string) => Promise<void>
   isWindowVisible: () => Promise<boolean>
@@ -922,6 +924,9 @@ export const installDesktopE2EBridge = () => {
     async setCloseToTray(enabled) {
       await invoke('set_close_to_tray', { enabled })
     },
+
+    setAutoStart: (enable) => invoke<boolean>('set_auto_start', { enable }),
+    checkAutoStart: () => invoke<boolean>('check_auto_start'),
 
     requestAppExit() {
       void invoke('exit_app')

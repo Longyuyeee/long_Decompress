@@ -200,13 +200,16 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const resetSettings = () => {
+    // Resetting application preferences must not silently change a Windows
+    // persistence choice. Only the dedicated auto-start switch may do that.
+    const autoStart = settings.value.autoStart
     settings.value = {
       theme: 'auto', language: 'zh-CN', accentColor: '#0ea5e9', defaultOutputPath: '',
       maxConcurrentTasks: 1, archiveTaskConcurrencyVersion: 1, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
       savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
-      bruteForceWordlists: [], autoStart: false, contextMenuEnabled: true, closeToTray: true, autoCheckUpdates: true, conflictPolicy: 'ask', autoDeleteSource: false, preserveMarkOfWeb: true,
+      bruteForceWordlists: [], autoStart, contextMenuEnabled: true, closeToTray: true, autoCheckUpdates: true, conflictPolicy: 'ask', autoDeleteSource: false, preserveMarkOfWeb: true,
       uiScale: 100,
       accessibility: {
         fontSize: 'normal',
@@ -236,10 +239,9 @@ export const useAppStore = defineStore('app', () => {
 
   const mergeStoredSettings = (parsed: Partial<AppSettings>) => {
     const merged = { ...settings.value, ...parsed }
-    // v1.1.8 safety migration: the unsigned Windows build previously rewrote
-    // HKCU\...\Run on every launch. Keep the legacy field only for settings
-    // compatibility, but never restore persistence from stored state.
-    merged.autoStart = false
+    // autoStart is display state only. Loading it must never register or repair
+    // a Windows startup entry; the settings page refreshes the actual read-only
+    // state and only an explicit toggle may invoke set_auto_start.
     // Before concurrency v1 this setting was visible but the queues were always
     // serial. Preserve that effective behavior on upgrade; users can explicitly
     // raise the value after migration.
@@ -257,7 +259,7 @@ export const useAppStore = defineStore('app', () => {
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings)
         settings.value = mergeStoredSettings(parsed)
-        if (parsed.archiveTaskConcurrencyVersion !== 1 || parsed.autoStart !== false) {
+        if (parsed.archiveTaskConcurrencyVersion !== 1) {
           saveSettingsToStorage()
         }
       }

@@ -397,10 +397,13 @@ impl PlatformCompatibilityChecker {
             PlatformType::Windows => PlatformFeatureCheck {
                 feature_name: "自动启动".to_string(),
                 platform: PlatformType::Windows,
-                support_status: FeatureSupport::NotSupported,
-                description: "未签名 Windows 构建已暂停自动启动能力".to_string(),
-                notes: vec!["取得可信代码签名并通过安全验证后再重新评估".to_string()],
-                workarounds: vec!["请从开始菜单按需启动，不要添加 Defender 白名单".to_string()],
+                support_status: FeatureSupport::FullySupported,
+                description: "Windows 支持由用户在设置页明确选择的开机自动启动".to_string(),
+                notes: vec![
+                    "状态检查只读；应用启动、设置加载和更新不会自动注册或修复启动项".to_string(),
+                    "启用后使用当前用户 Run 项，并以 --autostart 参数静默进入托盘".to_string(),
+                ],
+                workarounds: vec!["若安全软件阻止注册，请保持关闭并从开始菜单启动；不要添加 Defender 白名单".to_string()],
             },
             PlatformType::MacOS => PlatformFeatureCheck {
                 feature_name: "自动启动".to_string(),
@@ -515,5 +518,20 @@ impl PlatformCompatibilityChecker {
                 workarounds: vec!["使用平台检测失败处理".to_string()],
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn windows_auto_start_reports_explicit_opt_in_contract() {
+        let result = PlatformCompatibilityChecker::check_auto_start_support(PlatformType::Windows);
+
+        assert_eq!(result.support_status, FeatureSupport::FullySupported);
+        assert!(result.description.contains("明确选择"));
+        assert!(result.notes.iter().any(|note| note.contains("只读")));
+        assert!(result.workarounds.iter().any(|workaround| workaround.contains("不要添加 Defender 白名单")));
     }
 }

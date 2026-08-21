@@ -164,7 +164,10 @@ export const translations: Record<string, Record<string, string>> = {
     // 性能
     'settings.performance': '常规性能设置',
     'settings.performance.auto_start': '开机自动启动',
-    'settings.performance.auto_start.desc': '在系统登录时自动启动应用程序',
+    'settings.performance.auto_start.desc': '仅在你点击开启时注册；系统登录后静默进入托盘，应用启动和更新不会重复写入启动项',
+    'settings.performance.auto_start.enabled': '已开启开机自动启动',
+    'settings.performance.auto_start.disabled': '已关闭开机自动启动',
+    'settings.performance.auto_start.verify_failed': 'Windows 启动项状态校验失败，设置未保存',
     'settings.performance.threads': '同时运行的归档任务',
     'settings.performance.threads.desc': '控制批量压缩与解压的任务并发数；默认 1，同一输出目录会自动串行保护',
     // 暴力破解
@@ -865,7 +868,10 @@ export const translations: Record<string, Record<string, string>> = {
     // Performance
     'settings.performance': 'Performance',
     'settings.performance.auto_start': 'Auto-start on Boot',
-    'settings.performance.auto_start.desc': 'Launch application on system login',
+    'settings.performance.auto_start.desc': 'Registered only when you turn it on; starts silently in the tray and is never rewritten during launch or update',
+    'settings.performance.auto_start.enabled': 'Auto-start enabled',
+    'settings.performance.auto_start.disabled': 'Auto-start disabled',
+    'settings.performance.auto_start.verify_failed': 'Windows startup entry verification failed; the setting was not saved',
     'settings.performance.threads': 'Concurrent Archive Tasks',
     'settings.performance.threads.desc': 'Controls batch compression and extraction concurrency; defaults to 1 and shared output folders remain serialized',
     // Brute Force
