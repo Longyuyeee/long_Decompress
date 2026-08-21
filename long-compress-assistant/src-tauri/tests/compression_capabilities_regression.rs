@@ -339,3 +339,43 @@ async fn universal_engine_detects_password_zip_created_by_bundled_7za() {
     assert!(engine.try_password(&archive, "open-sesame").await.expect("correct password"));
     assert!(!engine.try_password(&archive, "wrong-password").await.expect("wrong password"));
 }
+
+#[tokio::test]
+async fn universal_engine_reads_split_zip_encryption_metadata_without_full_test() {
+    let Some(seven_zip) = find_7z_command() else {
+        eprintln!("Skipping split ZIP metadata test because 7-Zip is unavailable");
+        return;
+    };
+
+    let temp = tempdir().expect("temp dir");
+    let source_file = temp.path().join("split-source.bin");
+    let archive = temp.path().join("split.zip");
+    let payload: Vec<u8> = (0..512 * 1024)
+        .map(|index| ((index * 17 + index / 127) % 256) as u8)
+        .collect();
+    fs::write(&source_file, payload).expect("split source fixture");
+
+    let output = std::process::Command::new(seven_zip)
+        .arg("a")
+        .arg("-tzip")
+        .arg("-v128k")
+        .arg("-y")
+        .arg(&archive)
+        .arg(&source_file)
+        .output()
+        .expect("7-Zip should create split ZIP fixture");
+    assert!(
+        output.status.success(),
+        "7-Zip split fixture failed: {}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let first_volume = temp.path().join("split.zip.001");
+    assert!(first_volume.exists(), "first split volume should exist");
+    let engine = UniversalCliEngine::new();
+    assert!(!engine
+        .requires_password(&first_volume)
+        .await
+        .expect("split ZIP encryption metadata"));
+}

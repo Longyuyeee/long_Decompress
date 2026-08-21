@@ -22,6 +22,8 @@ impl Default for UniversalCliEngine {
 impl UniversalCliEngine {
     const COPY_BUFFER_SIZE: usize = 256 * 1024;
     const RESOURCE_SCAN_INTERVAL: std::time::Duration = std::time::Duration::from_secs(5);
+    const ENCRYPTION_INSPECTION_TIMEOUT: std::time::Duration =
+        std::time::Duration::from_secs(15);
 
     pub fn new() -> Self {
         Self
@@ -235,6 +237,44 @@ impl UniversalCliEngine {
         None
     }
 
+    fn encryption_state_from_listing(
+        output: &std::process::Output,
+    ) -> Result<bool> {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let combined = format!("{}\n{}", stdout, stderr);
+        let lower = combined.to_ascii_lowercase();
+
+        if stdout.lines().any(|line| {
+            line.split_once(" = ")
+                .is_some_and(|(key, value)| key.trim() == "Encrypted" && value.trim() == "+")
+        }) {
+            return Ok(true);
+        }
+
+        if [
+            "cannot open encrypted archive",
+            "can not open encrypted archive",
+            "enter password",
+            "data error in encrypted file",
+            "wrong password",
+        ]
+        .iter()
+        .any(|marker| lower.contains(marker))
+        {
+            return Ok(true);
+        }
+
+        if !output.status.success() {
+            return Err(anyhow::anyhow!(
+                "Unable to inspect archive encryption metadata: {}",
+                combined.trim()
+            ));
+        }
+
+        Ok(false)
+    }
+
     /// 列出归档文件中的内容条目（通过 7z CLI 的 l 命令）
     pub async fn list_contents(file_path: &Path, password: Option<&str>) -> Result<Vec<String>> {
         let mut args = vec!["l".to_string(), "-slt".to_string(), "-ba".to_string()];
@@ -426,12 +466,18 @@ impl ArchiveEngine for UniversalCliEngine {
             None => return Ok(false),
         };
 
-        // 无密码尝试列出内容或测试
+        // Encryption detection only needs the archive directory metadata. Using
+        // `7z t` here performed a full read of every split volume before any
+        // extraction progress was visible, which made large archives appear to
+        // hang and duplicated all I/O immediately before extraction.
         let mut command = crate::utils::process::async_command(cmd);
         command
-            .arg("t")
-            .arg("-y")
+            .arg("l")
+            .arg("-slt")
+            .arg("-ba")
+            .arg("-bd")
             .arg("-p-")
+            .arg("--")
             .arg(file_path)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
@@ -439,30 +485,21 @@ impl ArchiveEngine for UniversalCliEngine {
             .kill_on_drop(true);
         let child = command.spawn()?;
         let output = match tokio::time::timeout(
-            std::time::Duration::from_secs(15),
+            Self::ENCRYPTION_INSPECTION_TIMEOUT,
             child.wait_with_output(),
-        ).await {
+        )
+        .await
+        {
             Ok(result) => result?,
             Err(_) => {
-                return Ok(true);
+                return Err(anyhow::anyhow!(
+                    "Archive encryption metadata inspection timed out after {} seconds",
+                    Self::ENCRYPTION_INSPECTION_TIMEOUT.as_secs()
+                ));
             }
         };
 
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let combined = format!("{}\n{}", stdout, stderr);
-
-        // 7z CLI 会在遇到需要密码的归档时提示 Enter password (在终端) 
-        // 并在带 -y 参数时报错 "Cannot open encrypted archive" 或 "Data Error in encrypted file"
-        if combined.contains("Cannot open encrypted archive")
-            || combined.contains("Can not open encrypted archive")
-            || combined.contains("Enter password")
-            || combined.contains("Data Error in encrypted file")
-            || combined.contains("Wrong password") {
-            return Ok(true);
-        }
-
-        Ok(false)
+        Self::encryption_state_from_listing(&output)
     }
 
     async fn extract_with_progress(
@@ -510,6 +547,10 @@ impl ArchiveEngine for UniversalCliEngine {
 
         // 开启进度输出
         command.arg("-bsp1");
+
+        // Never let an unexpected archive prompt wait invisibly for terminal
+        // input. Password state is resolved before this process starts.
+        command.stdin(Stdio::null());
 
         // 我们需要捕获 stdout 来解析进度
         command.stdout(Stdio::piped());

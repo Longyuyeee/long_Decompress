@@ -1336,9 +1336,17 @@ impl CompressionService {
             None
         };
 
-        if password_required == Some(false) && final_password.is_some() {
-            service.emit_log(&window, &task_id, "归档未加密，已忽略多余的密码参数", TaskLogSeverity::Info);
-            final_password = None;
+        if password_required == Some(false) {
+            if final_password.is_some() {
+                service.emit_log(&window, &task_id, "归档未加密，已忽略多余的密码参数", TaskLogSeverity::Info);
+                final_password = None;
+            }
+            service.emit_log(
+                &window,
+                &task_id,
+                "加密状态检测完成：归档未加密，正在准备解压...",
+                TaskLogSeverity::Success,
+            );
         }
 
         if final_password.is_none() && password_required == Some(true) {
