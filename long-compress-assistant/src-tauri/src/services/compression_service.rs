@@ -28,6 +28,7 @@ use crate::services::extraction_transaction::{self, ExtractionStaging};
 use crate::services::mark_of_web::{self, PropagationStatus};
 use crate::services::native_compression::{self, CompressionRuntime};
 use crate::services::native_extraction::{self, ExtractionRuntime};
+use crate::services::split_archive_detector::SplitArchiveDetector;
 
 pub use crate::services::archive_format::ArchiveFormat;
 pub use crate::services::compression_format::{
@@ -77,6 +78,8 @@ pub struct TaskProgress {
     pub current_file: Option<String>,
     pub processed_bytes: u64,
     pub total_bytes: u64,
+    pub output_bytes: u64,
+    pub output_bytes_estimated: bool,
     // 密码尝试进度
     pub password_attempt_current: Option<usize>,
     pub password_attempt_total: Option<usize>,
@@ -120,6 +123,18 @@ struct ProgressMetric {
     last_bytes: u64,
 }
 
+struct ProgressBytes {
+    processed: u64,
+    total: u64,
+    output_estimated: bool,
+}
+
+#[derive(Clone)]
+struct CompressionProgressOutput {
+    path: PathBuf,
+    split: bool,
+}
+
 #[derive(Clone)]
 pub struct CompressionService {
     pub config: CompressionServiceConfig,
@@ -130,6 +145,7 @@ pub struct CompressionService {
     pub encrypted_password_service: Arc<EncryptedPasswordService>,
     pub semaphore: Arc<Semaphore>,
     progress_metrics: Arc<Mutex<HashMap<String, ProgressMetric>>>,
+    compression_progress_outputs: Arc<Mutex<HashMap<String, CompressionProgressOutput>>>,
 }
 
 impl ExtractionRuntime for CompressionService {
@@ -249,6 +265,7 @@ impl CompressionService {
             encrypted_password_service,
             semaphore: Arc::new(Semaphore::new(max_concurrency)),
             progress_metrics: Arc::new(Mutex::new(HashMap::new())),
+            compression_progress_outputs: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -267,6 +284,7 @@ impl CompressionService {
             encrypted_password_service,
             semaphore: Arc::new(Semaphore::new(2)),
             progress_metrics: Arc::new(Mutex::new(HashMap::new())),
+            compression_progress_outputs: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -353,8 +371,111 @@ impl CompressionService {
         }
     }
 
+    fn register_compression_progress_output(&self, task_id: &str, path: PathBuf, split: bool) {
+        if let Ok(mut outputs) = self.compression_progress_outputs.lock() {
+            outputs.insert(task_id.to_string(), CompressionProgressOutput { path, split });
+        }
+    }
+
+    fn clear_compression_progress_output(&self, task_id: &str) {
+        if let Ok(mut outputs) = self.compression_progress_outputs.lock() {
+            outputs.remove(task_id);
+        }
+    }
+
+    fn compression_output_bytes(&self, task_id: &str) -> Option<u64> {
+        let output = self
+            .compression_progress_outputs
+            .lock()
+            .ok()?
+            .get(task_id)
+            .cloned()?;
+        if !output.split {
+            return std::fs::metadata(output.path).ok().map(|metadata| metadata.len());
+        }
+
+        let parent = output.path.parent().unwrap_or(Path::new("."));
+        let base_name = output.path.file_name()?.to_string_lossy();
+        let prefix = format!("{}.", base_name);
+        let mut total = 0u64;
+        for entry in std::fs::read_dir(parent).ok()?.flatten() {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            let Some(volume) = name.strip_prefix(&prefix) else {
+                continue;
+            };
+            if volume.len() == 3 && volume.chars().all(|ch| ch.is_ascii_digit()) {
+                if let Ok(metadata) = entry.metadata() {
+                    total = total.saturating_add(metadata.len());
+                }
+            }
+        }
+        Some(total)
+    }
+
+    fn has_compression_progress_output(&self, task_id: &str) -> bool {
+        self.compression_progress_outputs
+            .lock()
+            .map(|outputs| outputs.contains_key(task_id))
+            .unwrap_or(false)
+    }
+
+    fn directory_payload_size(path: &Path) -> u64 {
+        let Ok(entries) = std::fs::read_dir(path) else {
+            return 0;
+        };
+        entries.flatten().fold(0u64, |total, entry| {
+            let entry_path = entry.path();
+            let size = entry
+                .metadata()
+                .ok()
+                .map(|metadata| {
+                    if metadata.is_dir() {
+                        Self::directory_payload_size(&entry_path)
+                    } else if metadata.is_file() {
+                        metadata.len()
+                    } else {
+                        0
+                    }
+                })
+                .unwrap_or(0);
+            total.saturating_add(size)
+        })
+    }
+
     pub fn emit_progress(&self, window: &Window, task_id: &str, progress: f32, current_file: Option<String>, processed_bytes: u64, total_bytes: u64) {
+        self.emit_progress_with_output_estimate(
+            window,
+            task_id,
+            progress,
+            current_file,
+            ProgressBytes {
+                processed: processed_bytes,
+                total: total_bytes,
+                output_estimated: false,
+            },
+        );
+    }
+
+    fn emit_progress_with_output_estimate(
+        &self,
+        window: &Window,
+        task_id: &str,
+        progress: f32,
+        current_file: Option<String>,
+        bytes: ProgressBytes,
+    ) {
+        let ProgressBytes {
+            processed: processed_bytes,
+            total: total_bytes,
+            output_estimated: output_bytes_estimated,
+        } = bytes;
         let (speed, eta_seconds) = self.progress_telemetry(task_id, progress, processed_bytes, total_bytes);
+        let output_bytes = if self.has_compression_progress_output(task_id) {
+            self.compression_output_bytes(task_id).unwrap_or(0)
+        } else {
+            processed_bytes
+        };
         let payload = TaskProgress {
             task_id: task_id.to_string(),
             stage: None,
@@ -363,6 +484,8 @@ impl CompressionService {
             current_file,
             processed_bytes,
             total_bytes,
+            output_bytes,
+            output_bytes_estimated,
             speed,
             eta_seconds,
             password_attempt_current: None,
@@ -386,6 +509,8 @@ impl CompressionService {
             current_file,
             processed_bytes: 0,
             total_bytes: 0,
+            output_bytes: self.compression_output_bytes(task_id).unwrap_or(0),
+            output_bytes_estimated: false,
             speed: None,
             eta_seconds: None,
             password_attempt_current: None,
@@ -766,6 +891,11 @@ impl CompressionService {
                     requested_format
                 ))
             })?;
+            service.register_compression_progress_output(
+                &task_id,
+                working_output.clone(),
+                split_requested,
+            );
             let res = match route {
                 CompressionRoute::TarAes => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarGzipAes => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
@@ -860,16 +990,32 @@ impl CompressionService {
                     service.delete_sources_after_success(&window, &task_id, &source_files, &verified_output);
                 }
                 service.emit_log(&window, &task_id, "压缩完成", TaskLogSeverity::Success);
+                service.register_compression_progress_output(
+                    &task_id,
+                    final_output.clone(),
+                    split_requested,
+                );
                 service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
             } else {
                 service.emit_log(&window, &task_id, &format!("压缩失败: {:?}", res.as_ref().err()), TaskLogSeverity::Error);
             }
+            service.clear_compression_progress_output(&task_id);
             res
         }).await?
     }
 
     /// 智能尝试密码本中的密码
     async fn resolve_archive_password(&self, window: &Window, task_id: &str, file_path: &str, options: &DecompressOptions) -> Option<String> {
+        self.emit_log(
+            window,
+            task_id,
+            if options.enable_bruteforce {
+                "自动解锁顺序：密码保险箱 → 导入词表 → 内置字典"
+            } else {
+                "自动解锁顺序：仅尝试密码保险箱；密码字典未启用"
+            },
+            TaskLogSeverity::Info,
+        );
         if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path).await {
             return Some(password);
         }
@@ -916,6 +1062,64 @@ impl CompressionService {
             .get_recommended_strategy(Some(file_name))
     }
 
+    fn password_candidate_descriptor(password: &str) -> String {
+        let mut kinds = Vec::new();
+        if password.chars().any(|ch| ch.is_ascii_alphabetic()) {
+            kinds.push("字母");
+        }
+        if password.chars().any(|ch| ch.is_ascii_digit()) {
+            kinds.push("数字");
+        }
+        if password.chars().any(|ch| ch.is_ascii_punctuation()) {
+            kinds.push("符号");
+        }
+        if !password.is_ascii() {
+            kinds.push("非 ASCII 字符");
+        }
+        if kinds.is_empty() {
+            kinds.push("其他字符");
+        }
+        format!("{} 字符 · {}", password.chars().count(), kinds.join("+"))
+    }
+
+    fn elapsed_label(started_at: Instant) -> String {
+        let elapsed = started_at.elapsed();
+        if elapsed.as_millis() < 1_000 {
+            format!("{} ms", elapsed.as_millis().max(1))
+        } else {
+            format!("{:.2} s", elapsed.as_secs_f64())
+        }
+    }
+
+    fn emit_password_attempt_progress(
+        &self,
+        window: &Window,
+        task_id: &str,
+        current: usize,
+        total: Option<usize>,
+        candidate: String,
+    ) {
+        let progress = total
+            .filter(|value| *value > 0)
+            .map(|value| current as f32 / value as f32)
+            .unwrap_or(0.0);
+        let _ = window.emit("task-progress", TaskProgress {
+            task_id: task_id.to_string(),
+            stage: Some("password-attempt".to_string()),
+            current_password: Some(candidate),
+            progress,
+            speed: None,
+            eta_seconds: None,
+            current_file: None,
+            processed_bytes: 0,
+            total_bytes: 0,
+            output_bytes: self.compression_output_bytes(task_id).unwrap_or(0),
+            output_bytes_estimated: false,
+            password_attempt_current: Some(current),
+            password_attempt_total: total,
+        });
+    }
+
     async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Option<String> {
         for password in Self::recommended_dictionary(file_path) {
             if self.cancellation_flag.load(Ordering::SeqCst) {
@@ -931,48 +1135,83 @@ impl CompressionService {
     async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
         let passwords = Self::recommended_dictionary(file_path);
         let total = passwords.len();
+        let started_at = Instant::now();
         self.emit_log(
             window,
             task_id,
-            &format!("已授权密码字典尝试，共 {} 个候选", total),
+            &format!(
+                "内置密码字典准备完成：共 {} 个候选；实时展示候选特征，不记录密码明文",
+                total
+            ),
             TaskLogSeverity::Info,
         );
 
         for (index, password) in passwords.into_iter().enumerate() {
             if self.cancellation_flag.load(Ordering::SeqCst) {
+                self.emit_log(window, task_id, "内置密码字典尝试已取消", TaskLogSeverity::Warning);
                 return None;
             }
             let current = index + 1;
-            if current == 1 || current % 10 == 0 || current == total {
-                let _ = window.emit("task-progress", TaskProgress {
-                    task_id: task_id.to_string(),
-                    stage: Some("password-attempt".to_string()),
-                    current_password: None,
-                    progress: current as f32 / total.max(1) as f32,
-                    speed: None,
-                    eta_seconds: None,
-                    current_file: None,
-                    processed_bytes: 0,
-                    total_bytes: 0,
-                    password_attempt_current: Some(current),
-                    password_attempt_total: Some(total),
-                });
-            }
-            if self.test_archive_password(file_path, &password).await.is_ok_and(|matched| matched) {
-                self.emit_log(
+            let descriptor = Self::password_candidate_descriptor(&password);
+            self.emit_password_attempt_progress(
+                window,
+                task_id,
+                current,
+                Some(total),
+                format!("内置字典 #{} · {}", current, descriptor),
+            );
+            let attempt_started_at = Instant::now();
+            match self.test_archive_password(file_path, &password).await {
+                Ok(true) => {
+                    self.emit_log(
+                        window,
+                        task_id,
+                        &format!(
+                            "内置字典候选 [{}/{}] · {} → 匹配成功（{}）",
+                            current,
+                            total,
+                            descriptor,
+                            Self::elapsed_label(attempt_started_at)
+                        ),
+                        TaskLogSeverity::Success,
+                    );
+                    return Some(password);
+                }
+                Ok(false) => self.emit_log(
                     window,
                     task_id,
-                    &format!("密码字典在第 {} 次尝试时匹配成功", current),
-                    TaskLogSeverity::Success,
-                );
-                return Some(password);
+                    &format!(
+                        "内置字典候选 [{}/{}] · {} → 未匹配（{}）",
+                        current,
+                        total,
+                        descriptor,
+                        Self::elapsed_label(attempt_started_at)
+                    ),
+                    TaskLogSeverity::Info,
+                ),
+                Err(error) => self.emit_log(
+                    window,
+                    task_id,
+                    &format!(
+                        "内置字典候选 [{}/{}] 验证异常，已跳过（{}）：{}",
+                        current,
+                        total,
+                        Self::elapsed_label(attempt_started_at),
+                        error
+                    ),
+                    TaskLogSeverity::Warning,
+                ),
             }
         }
 
         self.emit_log(
             window,
             task_id,
-            &format!("密码字典已完成 {} 次尝试，未找到匹配项", total),
+            &format!(
+                "内置密码字典已完成 {} 次尝试，未找到匹配项；总耗时 {}",
+                total,
+                Self::elapsed_label(started_at)
+            ),
             TaskLogSeverity::Warning,
         );
         None
@@ -1020,6 +1259,7 @@ impl CompressionService {
 
     async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
         self.emit_log(window, task_id, "正在检索密码保险箱...", TaskLogSeverity::Info);
+        let started_at = Instant::now();
 
         let passwords = match self.password_book_candidates().await {
             Ok(res) => res,
@@ -1041,37 +1281,85 @@ impl CompressionService {
             return None;
         }
 
+        self.emit_log(
+            window,
+            task_id,
+            &format!(
+                "密码保险箱已载入 {} 个候选，按收藏、使用频率和最近使用排序；日志不会记录密码明文",
+                total
+            ),
+            TaskLogSeverity::Info,
+        );
+
         for (idx, (entry_id, entry_name, pwd)) in passwords.iter().enumerate() {
             let current = idx + 1;
-
-            // 发送密码尝试进度事件
-            let _ = window.emit("task-progress", TaskProgress {
-                task_id: task_id.to_string(),
-                stage: Some("password-attempt".to_string()),
-                current_password: Some(entry_name.clone()),
-                progress: current as f32 / total as f32,
-                speed: None,
-                eta_seconds: None,
-                current_file: None,
-                processed_bytes: 0,
-                total_bytes: 0,
-                password_attempt_current: Some(current),
-                password_attempt_total: Some(total),
-            });
-
-            self.emit_log(window, task_id, &format!("正在尝试已知密码 [{}/{}]: {}...", current, total, entry_name), TaskLogSeverity::Info);
+            let descriptor = Self::password_candidate_descriptor(pwd);
+            self.emit_password_attempt_progress(
+                window,
+                task_id,
+                current,
+                Some(total),
+                format!("保险箱「{}」· {}", entry_name, descriptor),
+            );
+            let attempt_started_at = Instant::now();
 
             match self.test_archive_password(file_path, pwd).await {
                 Ok(true) => {
-                    self.emit_log(window, task_id, &format!("密码匹配成功 ({})", entry_name), TaskLogSeverity::Success);
+                    self.emit_log(
+                        window,
+                        task_id,
+                        &format!(
+                            "保险箱候选 [{}/{}]「{}」· {} → 匹配成功（{}）",
+                            current,
+                            total,
+                            entry_name,
+                            descriptor,
+                            Self::elapsed_label(attempt_started_at)
+                        ),
+                        TaskLogSeverity::Success,
+                    );
                     let _ = self.encrypted_password_service.increment_use_count(entry_id).await;
                     return Some(pwd.clone());
                 },
-                _ => continue,
+                Ok(false) => self.emit_log(
+                    window,
+                    task_id,
+                    &format!(
+                        "保险箱候选 [{}/{}]「{}」· {} → 未匹配（{}）",
+                        current,
+                        total,
+                        entry_name,
+                        descriptor,
+                        Self::elapsed_label(attempt_started_at)
+                    ),
+                    TaskLogSeverity::Info,
+                ),
+                Err(error) => self.emit_log(
+                    window,
+                    task_id,
+                    &format!(
+                        "保险箱候选 [{}/{}]「{}」验证异常，已跳过（{}）：{}",
+                        current,
+                        total,
+                        entry_name,
+                        Self::elapsed_label(attempt_started_at),
+                        error
+                    ),
+                    TaskLogSeverity::Warning,
+                ),
             }
         }
         
-        self.emit_log(window, task_id, "所有已知密码均匹配失败", TaskLogSeverity::Warning);
+        self.emit_log(
+            window,
+            task_id,
+            &format!(
+                "密码保险箱的 {} 个候选均未匹配；总耗时 {}",
+                total,
+                Self::elapsed_label(started_at)
+            ),
+            TaskLogSeverity::Warning,
+        );
         None
     }
 
@@ -1112,14 +1400,23 @@ impl CompressionService {
     }
 
     async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String]) -> Option<String> {
-        self.emit_log(window, task_id, "Starting imported wordlist password attempts...", TaskLogSeverity::Info);
+        self.emit_log(
+            window,
+            task_id,
+            &format!(
+                "开始尝试 {} 个导入密码词表；实时展示候选特征，不记录密码明文",
+                wordlists.len()
+            ),
+            TaskLogSeverity::Info,
+        );
 
         let mut tested = HashSet::new();
         let mut attempted = 0usize;
+        let started_at = Instant::now();
 
         for wordlist in wordlists {
             if self.cancellation_flag.load(Ordering::SeqCst) {
-                self.emit_log(window, task_id, "Wordlist password attempts cancelled.", TaskLogSeverity::Warning);
+                self.emit_log(window, task_id, "导入密码词表尝试已取消", TaskLogSeverity::Warning);
                 return None;
             }
 
@@ -1127,7 +1424,7 @@ impl CompressionService {
             let file = match File::open(path) {
                 Ok(file) => file,
                 Err(err) => {
-                    self.emit_log(window, task_id, &format!("Unable to read wordlist {}: {}", path.display(), err), TaskLogSeverity::Warning);
+                    self.emit_log(window, task_id, &format!("无法读取密码词表 {}：{}", path.display(), err), TaskLogSeverity::Warning);
                     continue;
                 }
             };
@@ -1135,20 +1432,20 @@ impl CompressionService {
             self.emit_log(
                 window,
                 task_id,
-                &format!("Trying imported wordlist: {}", path.file_name().and_then(|name| name.to_str()).unwrap_or("wordlist")),
+                &format!("正在读取密码词表：{}", path.file_name().and_then(|name| name.to_str()).unwrap_or("未命名词表")),
                 TaskLogSeverity::Info,
             );
 
             for line in BufReader::new(file).lines() {
                 if self.cancellation_flag.load(Ordering::SeqCst) {
-                    self.emit_log(window, task_id, "Wordlist password attempts cancelled.", TaskLogSeverity::Warning);
+                    self.emit_log(window, task_id, "导入密码词表尝试已取消", TaskLogSeverity::Warning);
                     return None;
                 }
 
                 let password = match line {
                     Ok(value) => value.trim().trim_end_matches('\u{feff}').to_string(),
                     Err(err) => {
-                        self.emit_log(window, task_id, &format!("Skipped unreadable wordlist line in {}: {}", path.display(), err), TaskLogSeverity::Warning);
+                        self.emit_log(window, task_id, &format!("词表 {} 存在无法读取的行，已跳过：{}", path.display(), err), TaskLogSeverity::Warning);
                         continue;
                     }
                 };
@@ -1158,20 +1455,62 @@ impl CompressionService {
                 }
 
                 attempted += 1;
+                let descriptor = Self::password_candidate_descriptor(&password);
+                self.emit_password_attempt_progress(
+                    window,
+                    task_id,
+                    attempted,
+                    None,
+                    format!("导入词表 #{} · {}", attempted, descriptor),
+                );
+                let attempt_started_at = Instant::now();
                 match self.test_archive_password(file_path, &password).await {
                     Ok(true) => {
-                        self.emit_log(window, task_id, &format!("Imported wordlist matched after {} attempts.", attempted), TaskLogSeverity::Success);
+                        self.emit_log(
+                            window,
+                            task_id,
+                            &format!(
+                                "导入词表候选 #{} · {} → 匹配成功（{}）",
+                                attempted,
+                                descriptor,
+                                Self::elapsed_label(attempt_started_at)
+                            ),
+                            TaskLogSeverity::Success,
+                        );
                         return Some(password);
                     }
-                    Ok(false) => {}
+                    Ok(false) => {
+                        if attempted == 1 || attempted.is_multiple_of(25) {
+                            self.emit_log(
+                                window,
+                                task_id,
+                                &format!(
+                                    "导入词表已验证 {} 个候选；当前候选 {} → 未匹配（{}）",
+                                    attempted,
+                                    descriptor,
+                                    Self::elapsed_label(attempt_started_at)
+                                ),
+                                TaskLogSeverity::Info,
+                            );
+                        }
+                    }
                     Err(err) => {
-                        self.emit_log(window, task_id, &format!("Wordlist password test failed: {}", err), TaskLogSeverity::Warning);
+                        self.emit_log(window, task_id, &format!("导入词表候选 #{} 验证异常，已跳过：{}", attempted, err), TaskLogSeverity::Warning);
                     }
                 }
             }
         }
 
-        self.emit_log(window, task_id, &format!("Imported wordlists exhausted after {} attempts.", attempted), TaskLogSeverity::Warning);
+        self.emit_log(
+            window,
+            task_id,
+            &format!(
+                "导入密码词表已完成 {} 次有效尝试，未找到匹配项；总耗时 {}",
+                attempted,
+                Self::elapsed_label(started_at)
+            ),
+            TaskLogSeverity::Warning,
+        );
         None
     }
 
@@ -1237,6 +1576,45 @@ impl CompressionService {
         self.test_archive_password(file_path, password).await
     }
 
+    fn source_archive_paths_for_recycle_bin(file_path: &Path) -> Result<Vec<PathBuf>> {
+        match SplitArchiveDetector::detect_split_archive(file_path)? {
+            Some(info) if !info.parts.is_empty() => Ok(info.parts),
+            _ => Ok(vec![file_path.to_path_buf()]),
+        }
+    }
+
+    fn move_source_archives_to_system_recycle_bin(file_path: &Path) -> Result<usize> {
+        let source_paths = Self::source_archive_paths_for_recycle_bin(file_path)?;
+        let source_count = source_paths.len();
+        trash::delete_all(&source_paths).map_err(|error| {
+            anyhow::anyhow!(
+                "Windows system Recycle Bin rejected the source archive: {}",
+                error
+            )
+        })?;
+        Ok(source_count)
+    }
+
+    fn validate_recycle_bin_options(options: &DecompressOptions) -> Result<()> {
+        let filtered = options
+            .file_filter
+            .as_deref()
+            .is_some_and(|filter| !filter.trim().is_empty());
+        if options.delete_after
+            && (options.skip_corrupted
+                || options.extract_only_newer
+                || filtered
+                || !options.selected_entries.is_empty()
+                || options.conflict_policy == "skip")
+        {
+            return Err(CompressionError::ExtractionFailed(
+                "部分解压、容错解压或跳过冲突时不能将源压缩包移入系统回收站".to_string(),
+            )
+            .into());
+        }
+        Ok(())
+    }
+
     pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, options: DecompressOptions) -> Result<String> {
         let service = self.clone();
         let path = Path::new(&file_path);
@@ -1249,14 +1627,7 @@ impl CompressionService {
                 options.conflict_policy
             )).into());
         }
-        if options.delete_after
-            && (options.skip_corrupted
-                || options.file_filter.as_deref().is_some_and(|filter| !filter.trim().is_empty()))
-        {
-            return Err(CompressionError::ExtractionFailed(
-                "The source archive cannot be deleted after a partial or corruption-tolerant extraction".to_string()
-            ).into());
-        }
+        Self::validate_recycle_bin_options(&options)?;
         let mut final_out_dir = output_dir.map(PathBuf::from).unwrap_or_else(|| {
             path.parent().unwrap_or(Path::new(".")).to_path_buf()
         });
@@ -1336,18 +1707,26 @@ impl CompressionService {
             None
         };
 
-        if password_required == Some(false) && final_password.is_some() {
-            service.emit_log(&window, &task_id, "归档未加密，已忽略多余的密码参数", TaskLogSeverity::Info);
-            final_password = None;
+        if password_required == Some(false) {
+            if final_password.is_some() {
+                service.emit_log(&window, &task_id, "归档未加密，已忽略多余的密码参数", TaskLogSeverity::Info);
+                final_password = None;
+            }
+            service.emit_log(
+                &window,
+                &task_id,
+                "加密状态检测完成：归档未加密，正在准备解压...",
+                TaskLogSeverity::Success,
+            );
         }
 
         if final_password.is_none() && password_required == Some(true) {
             let needs_pwd = true;
 
             if needs_pwd {
-                service.emit_log(&window, &task_id, "检测到加密格式，正在尝试静默解锁...", TaskLogSeverity::Info);
+                service.emit_log(&window, &task_id, "检测到加密格式，正在启动自动解锁流程...", TaskLogSeverity::Info);
                 if let Some(smart_pwd) = service.resolve_archive_password(&window, &task_id, &file_path, &options).await {
-                    service.emit_log(&window, &task_id, "密码本匹配成功", TaskLogSeverity::Success);
+                    service.emit_log(&window, &task_id, "已取得有效解压凭据，准备执行安全预检", TaskLogSeverity::Success);
                     final_password = Some(smart_pwd);
                 } else {
                     service.emit_log(&window, &task_id, "所有已知密码均无效，等待手动输入", TaskLogSeverity::Warning);
@@ -1365,9 +1744,27 @@ impl CompressionService {
             }
         }
 
-        service
+        if password_required == Some(true) && password.is_some() {
+            service.emit_log(
+                &window,
+                &task_id,
+                "已收到手动输入的解压密码，正在安全预检；日志不会记录密码明文",
+                TaskLogSeverity::Info,
+            );
+        }
+
+        let preflight_stats = service
             .preflight_extraction(path, &format, final_password.as_deref(), &final_out_dir)
             .await?;
+        let expected_expanded_bytes = preflight_stats.map(|(_, expanded_bytes)| expanded_bytes);
+        if password_required == Some(true) && final_password.is_some() {
+            service.emit_log(
+                &window,
+                &task_id,
+                "密码验证通过，归档可以解锁",
+                TaskLogSeverity::Success,
+            );
+        }
         let mark_of_web = if options.preserve_mark_of_web {
             mark_of_web::read_from(path).map_err(|error| {
                 CompressionError::ExtractionFailed(format!(
@@ -1397,16 +1794,76 @@ impl CompressionService {
         let win_progress = window.clone();
         let tid_progress = task_id.clone();
         let srv_progress = service.clone();
+        let extraction_progress = Arc::new(Mutex::new(0.0f32));
+        let progress_for_callback = extraction_progress.clone();
+        let expanded_for_progress = expected_expanded_bytes;
         let on_progress: Arc<dyn Fn(f32) + Send + Sync> = Arc::new(move |p| {
-            srv_progress.emit_progress(&win_progress, &tid_progress, p, None, 0, 0);
+            if let Ok(mut latest) = progress_for_callback.lock() {
+                *latest = p;
+            }
+            let total = expanded_for_progress.unwrap_or(0);
+            let processed = ((total as f64) * (p.clamp(0.0, 1.0) as f64)).round() as u64;
+            srv_progress.emit_progress_with_output_estimate(
+                &win_progress,
+                &tid_progress,
+                p,
+                None,
+                ProgressBytes {
+                    processed,
+                    total,
+                    output_estimated: total > 0,
+                },
+            );
         });
 
         let win_log = window.clone();
         let tid_log = task_id.clone();
         let srv_log = service.clone();
+        let progress_for_log = extraction_progress.clone();
+        let expanded_for_log = expected_expanded_bytes;
+        let last_file_log = Arc::new(Mutex::new(None::<Instant>));
+        let last_file_log_for_callback = last_file_log.clone();
         let on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync> = Arc::new(move |msg, severity| {
+            if let Some(current_file) = msg.strip_prefix("正在解压：") {
+                let progress = progress_for_log.lock().map(|value| *value).unwrap_or(0.0);
+                let total = expanded_for_log.unwrap_or(0);
+                let processed = ((total as f64) * (progress.clamp(0.0, 1.0) as f64)).round() as u64;
+                srv_log.emit_progress_with_output_estimate(
+                    &win_log,
+                    &tid_log,
+                    progress,
+                    Some(current_file.to_string()),
+                    ProgressBytes {
+                        processed,
+                        total,
+                        output_estimated: total > 0,
+                    },
+                );
+                let should_log = last_file_log_for_callback
+                    .lock()
+                    .map(|mut last| {
+                        let should_log = last
+                            .as_ref()
+                            .is_none_or(|instant| instant.elapsed() >= std::time::Duration::from_secs(1));
+                        if should_log {
+                            *last = Some(Instant::now());
+                        }
+                        should_log
+                    })
+                    .unwrap_or(true);
+                if !should_log {
+                    return;
+                }
+            }
             srv_log.emit_log(&win_log, &tid_log, &msg, severity);
         });
+
+        service.emit_log(
+            &window,
+            &task_id,
+            &format!("开始解压：{}", file_name),
+            TaskLogSeverity::Info,
+        );
 
         let effective_format = if format == ArchiveFormat::Zip && final_password.is_some() {
             service.emit_log(&window, &task_id, "检测到加密 ZIP，使用内置加密 ZIP 兼容引擎解压", TaskLogSeverity::Info);
@@ -1686,17 +2143,50 @@ impl CompressionService {
             );
         }
         if options.delete_after {
-            if let Err(error) = std::fs::remove_file(&file_path) {
-                service.emit_log(
+            let source_path = path.to_path_buf();
+            let recycle_result = tokio::task::spawn_blocking(move || {
+                Self::move_source_archives_to_system_recycle_bin(&source_path)
+            }).await;
+            match recycle_result
+                .map_err(|error| anyhow::anyhow!("System recycle-bin task failed: {}", error))
+                .and_then(|result| result)
+            {
+                Err(error) => service.emit_log(
                     &window,
                     &task_id,
-                    &format!("Extraction succeeded, but the source archive could not be deleted: {}", error),
+                    &format!("解压已完成，但源压缩包未能移入系统回收站：{}", error),
                     TaskLogSeverity::Warning,
-                );
+                ),
+                Ok(source_count) => service.emit_log(
+                    &window,
+                    &task_id,
+                    &format!("已将 {} 个源压缩文件移入系统回收站，可从 Windows 回收站恢复", source_count),
+                    TaskLogSeverity::Success,
+                ),
             }
         }
+        let final_expanded_bytes = Self::directory_payload_size(&final_out_dir);
+        let telemetry_total = expected_expanded_bytes
+            .unwrap_or(final_expanded_bytes)
+            .max(final_expanded_bytes);
+        service.emit_progress_with_output_estimate(
+            &window,
+            &task_id,
+            1.0,
+            None,
+            ProgressBytes {
+                processed: final_expanded_bytes,
+                total: telemetry_total,
+                output_estimated: false,
+            },
+        );
+        service.emit_log(
+            &window,
+            &task_id,
+            &format!("解压数据统计完成：实际产出 {} 字节", final_expanded_bytes),
+            TaskLogSeverity::Success,
+        );
         service.emit_log(&window, &task_id, "全部解压任务已完成", TaskLogSeverity::Success);
-        service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
         Ok(final_out_dir.to_string_lossy().to_string())
     }
 
@@ -1722,7 +2212,7 @@ impl CompressionService {
         format: &ArchiveFormat,
         password: Option<&str>,
         output: &Path,
-    ) -> Result<()> {
+    ) -> Result<Option<(usize, u64)>> {
         let stats = match format {
             ArchiveFormat::Zip => {
                 let file = File::open(archive_path)?;
@@ -1801,7 +2291,7 @@ impl CompressionService {
             let disk_probe = output.parent().unwrap_or(output);
             extraction_transaction::validate_disk_capacity(disk_probe, expanded_bytes)?;
         }
-        Ok(())
+        Ok(stats)
     }
 
     fn prepare_staging_layout(
@@ -2660,6 +3150,78 @@ impl CompressionService {
 mod tests_continued {
     use super::*;
 
+    #[test]
+    fn recycle_bin_source_resolution_includes_every_split_volume() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let first = temp.path().join("bundle.zip.001");
+        let second = temp.path().join("bundle.zip.002");
+        std::fs::write(&first, b"part one").expect("first split fixture");
+        std::fs::write(&second, b"part two").expect("second split fixture");
+
+        let paths = CompressionService::source_archive_paths_for_recycle_bin(&first)
+            .expect("resolve split source paths");
+
+        assert_eq!(paths, vec![first, second]);
+    }
+
+    #[test]
+    fn recycle_bin_rejects_every_partial_extraction_mode() {
+        let partial_options = [
+            DecompressOptions {
+                delete_after: true,
+                skip_corrupted: true,
+                ..Default::default()
+            },
+            DecompressOptions {
+                delete_after: true,
+                extract_only_newer: true,
+                ..Default::default()
+            },
+            DecompressOptions {
+                delete_after: true,
+                file_filter: Some("*.txt".to_string()),
+                ..Default::default()
+            },
+            DecompressOptions {
+                delete_after: true,
+                selected_entries: vec!["one.txt".to_string()],
+                ..Default::default()
+            },
+            DecompressOptions {
+                delete_after: true,
+                conflict_policy: "skip".to_string(),
+                ..Default::default()
+            },
+        ];
+
+        for options in partial_options {
+            assert!(CompressionService::validate_recycle_bin_options(&options).is_err());
+        }
+        assert!(CompressionService::validate_recycle_bin_options(&DecompressOptions {
+            delete_after: true,
+            ..Default::default()
+        })
+        .is_ok());
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    #[ignore = "mutates the Windows system Recycle Bin; run explicitly for release validation"]
+    fn real_windows_recycle_bin_moves_every_split_volume() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let first = temp.path().join(format!("long-recycle-{}.zip.001", uuid::Uuid::new_v4()));
+        let second = first.with_extension("002");
+        std::fs::write(&first, b"part one").expect("first split fixture");
+        std::fs::write(&second, b"part two").expect("second split fixture");
+
+        let moved = CompressionService::move_source_archives_to_system_recycle_bin(&first)
+            .expect("move split sources to the Windows system Recycle Bin");
+
+        assert_eq!(moved, 2);
+        assert!(!first.exists(), "first volume must leave its original path");
+        assert!(!second.exists(), "second volume must leave its original path");
+    }
+
     #[tokio::test]
     async fn progress_telemetry_reports_real_speed_and_eta() {
         let service = CompressionService::for_testing();
@@ -2893,6 +3455,43 @@ mod tests_continued {
     fn test_refined_error_variants() {
         let err1 = CompressionError::PasswordRequired;
         assert_eq!(err1.to_string(), "需要输入密码才能解压");
+    }
+
+    #[test]
+    fn password_candidate_logs_describe_shape_without_exposing_plaintext() {
+        let descriptor = CompressionService::password_candidate_descriptor("Ab12-测试");
+        assert_eq!(descriptor, "7 字符 · 字母+数字+符号+非 ASCII 字符");
+        assert!(!descriptor.contains("Ab12"));
+        assert!(!descriptor.contains("测试"));
+    }
+
+    #[test]
+    fn progress_artifact_size_tracks_regular_split_and_extracted_outputs() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let service = CompressionService::for_testing();
+        let archive = temp.path().join("sample.7z");
+        std::fs::write(&archive, vec![0u8; 1_024]).expect("archive fixture");
+        service.register_compression_progress_output("regular", archive.clone(), false);
+        assert_eq!(service.compression_output_bytes("regular"), Some(1_024));
+        service.register_compression_progress_output(
+            "pending",
+            temp.path().join("not-created-yet.zip"),
+            false,
+        );
+        assert!(service.has_compression_progress_output("pending"));
+        assert_eq!(service.compression_output_bytes("pending"), None);
+
+        let split_base = temp.path().join("sample.zip");
+        std::fs::write(temp.path().join("sample.zip.001"), vec![0u8; 700]).expect("split one");
+        std::fs::write(temp.path().join("sample.zip.002"), vec![0u8; 300]).expect("split two");
+        service.register_compression_progress_output("split", split_base, true);
+        assert_eq!(service.compression_output_bytes("split"), Some(1_000));
+
+        let extracted = temp.path().join("output");
+        std::fs::create_dir_all(extracted.join("nested")).expect("output tree");
+        std::fs::write(extracted.join("one.bin"), vec![0u8; 80]).expect("output one");
+        std::fs::write(extracted.join("nested/two.bin"), vec![0u8; 20]).expect("output two");
+        assert_eq!(CompressionService::directory_payload_size(&extracted), 100);
     }
 
     #[tokio::test]

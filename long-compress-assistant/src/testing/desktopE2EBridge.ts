@@ -112,6 +112,7 @@ export interface DesktopE2EBridge {
       etaSeconds?: number
       processedBytes: number
       totalBytes: number
+      outputBytes?: number
     }>
     zipDone: boolean
     zipTaskId: string | null
@@ -121,6 +122,7 @@ export interface DesktopE2EBridge {
       etaSeconds?: number
       processedBytes: number
       totalBytes: number
+      outputBytes?: number
     }>
     errors: string[]
   }
@@ -226,6 +228,7 @@ export const installDesktopE2EBridge = () => {
       etaSeconds?: number
       processedBytes: number
       totalBytes: number
+      outputBytes?: number
     }>,
     zipDone: false,
     zipTaskId: null as string | null,
@@ -235,6 +238,7 @@ export const installDesktopE2EBridge = () => {
       etaSeconds?: number
       processedBytes: number
       totalBytes: number
+      outputBytes?: number
     }>,
     errors: [] as string[],
   }
@@ -597,6 +601,7 @@ export const installDesktopE2EBridge = () => {
         eta_seconds?: number
         processed_bytes: number
         total_bytes: number
+        output_bytes?: number
       }>('task-progress', event => {
         if (!taskIds.includes(event.payload.task_id)) return
         archiveFlowAudit.telemetry.push({
@@ -605,6 +610,7 @@ export const installDesktopE2EBridge = () => {
           etaSeconds: event.payload.eta_seconds,
           processedBytes: event.payload.processed_bytes,
           totalBytes: event.payload.total_bytes,
+          outputBytes: event.payload.output_bytes,
         })
       })
       await syncActiveState()
@@ -661,6 +667,7 @@ export const installDesktopE2EBridge = () => {
         eta_seconds?: number
         processed_bytes: number
         total_bytes: number
+        output_bytes?: number
       }>('task-progress', event => {
         if (event.payload.task_id !== taskId) return
         archiveFlowAudit.zipTelemetry.push({
@@ -669,6 +676,7 @@ export const installDesktopE2EBridge = () => {
           etaSeconds: event.payload.eta_seconds,
           processedBytes: event.payload.processed_bytes,
           totalBytes: event.payload.total_bytes,
+          outputBytes: event.payload.output_bytes,
         })
       })
       taskStore.updateTaskStatus(taskId, 'compressing')

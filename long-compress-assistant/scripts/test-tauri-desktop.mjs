@@ -1138,6 +1138,9 @@ async function runArchiveFlowDesktopGate() {
     assert.equal(finalTelemetry.totalBytes, sourceBytes)
     assert.ok(finalTelemetry.speed, `${label} ZIP must expose measured throughput`)
     assert.equal(finalTelemetry.etaSeconds, 0)
+    const outputTelemetry = state.zipTelemetry.filter(item => item.outputBytes > 0)
+    assert.ok(outputTelemetry.length > 0, `${label} ZIP must emit its real archive size`)
+    assert.equal(outputTelemetry.at(-1).outputBytes, statSync(archivePath).size)
 
     const testArgs = ['t', '-y']
     if (password) testArgs.push(`-p${password}`)
@@ -1669,6 +1672,9 @@ async function runZipTelemetryDesktopGate() {
     assert.equal(finalTelemetry.totalBytes, sourceBytes)
     assert.ok(finalTelemetry.speed, `${label} ZIP must expose measured throughput`)
     assert.equal(finalTelemetry.etaSeconds, 0)
+    const outputTelemetry = state.zipTelemetry.filter(item => item.outputBytes > 0)
+    assert.ok(outputTelemetry.length > 0, `${label} ZIP must emit its real archive size`)
+    assert.equal(outputTelemetry.at(-1).outputBytes, statSync(archivePath).size)
 
     const testArgs = ['t', '-y']
     if (password) testArgs.push(`-p${password}`)
@@ -1720,6 +1726,10 @@ async function runZipTelemetryDesktopGate() {
   )
   assert.equal(multiByteEvents.at(-1).processedBytes, expectedMultiBytes)
   assert.equal(multiByteEvents.at(-1).totalBytes, expectedMultiBytes)
+  assert.equal(
+    multiState.zipTelemetry.filter(item => item.outputBytes > 0).at(-1).outputBytes,
+    statSync(multiArchive).size,
+  )
   const multiTest = spawnSync(bundledSevenZip, ['t', '-y', multiArchive], {
     encoding: 'utf8', windowsHide: true,
   })

@@ -4,6 +4,7 @@ import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { ResourcePreflightReport } from '@/types/resourcePreflight'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
+import { normalizeProgressPercent } from '@/utils/progress'
 
 export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'cancelling' | 'completed' | 'failed' | 'cancelled'
 export type LogSeverity = 'info' | 'warning' | 'error' | 'success'
@@ -42,15 +43,20 @@ export interface Task {
   format?: string
   conflicts: ConflictInfo[]
   extractToSubfolder?: boolean
+  recycleSourceAfterExtract?: boolean
   fileFilter?: string
   selectedEntries?: string[]
   // 增强字段 [FE-INT-001]
-  stage?: 'Pre-checking' | 'Extracting' | 'Verifying' | 'Finalizing'
+  stage?: 'Pre-checking' | 'Extracting' | 'Verifying' | 'Finalizing' | 'password-attempt'
   currentFile?: string
   currentPassword?: string
+  passwordAttemptCurrent?: number
+  passwordAttemptTotal?: number
   speed?: string
   processedBytes?: number
   totalBytes?: number
+  outputBytes?: number
+  outputBytesEstimated?: boolean
   etaSeconds?: number
   // 密码相关
   password?: string
@@ -103,20 +109,29 @@ export const useTaskStore = defineStore('task', () => {
       processed_bytes?: number,
       total_bytes?: number,
       eta_seconds?: number,
+      output_bytes?: number,
+      output_bytes_estimated?: boolean,
+      password_attempt_current?: number,
+      password_attempt_total?: number,
     }>('task-progress', (event) => {
       const {
         task_id, progress, stage, current_file, current_password, speed,
         processed_bytes, total_bytes, eta_seconds,
+        output_bytes, output_bytes_estimated,
+        password_attempt_current, password_attempt_total,
       } = event.payload
       const task = tasks.value.find(t => t.id === task_id)
       if (task) {
-        // 使用 floor 确保进度不会跳变；活跃任务至少显示 1%
-        task.progress = progress > 0 && progress < 1.0
-          ? Math.max(1, Math.floor(progress * 100))
-          : Math.round(progress * 100)
-        task.stage = stage as any
+        task.progress = normalizeProgressPercent(progress)
+        task.stage = stage !== undefined
+          ? stage as any
+          : task.status === 'extracting'
+            ? 'Extracting'
+            : task.stage
         task.currentFile = current_file
         task.currentPassword = current_password
+        task.passwordAttemptCurrent = password_attempt_current
+        task.passwordAttemptTotal = password_attempt_total
         if (speed !== undefined) task.speed = speed
         // Stage-only completion events use zero byte fields. Do not let those
         // erase real transfer totals already emitted by the archive engine.
@@ -125,6 +140,12 @@ export const useTaskStore = defineStore('task', () => {
         }
         if (total_bytes !== undefined && (total_bytes > 0 || !task.totalBytes)) {
           task.totalBytes = total_bytes
+        }
+        if (output_bytes !== undefined && (output_bytes > 0 || task.outputBytes === undefined)) {
+          task.outputBytes = output_bytes
+        }
+        if (output_bytes_estimated !== undefined) {
+          task.outputBytesEstimated = output_bytes_estimated
         }
         if (eta_seconds !== undefined) task.etaSeconds = eta_seconds
 

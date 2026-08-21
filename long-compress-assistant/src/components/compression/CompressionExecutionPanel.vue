@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useAppStore } from '@/stores/app'
 import type { Task } from '@/stores/task'
+import { formatProgressPercent } from '@/utils/progress'
+import { formatFileSize } from '@/utils'
 import {
   compressionLogSeverityClass,
   compressionStageTranslationKey,
@@ -8,8 +11,16 @@ import {
   emptyCompressionLogTranslationKey,
 } from '@/utils/compressionTaskPresentation'
 
-defineProps<{ task?: Task }>()
+const props = defineProps<{ task?: Task }>()
 const appStore = useAppStore()
+
+const liveRatio = computed(() => {
+  const input = props.task?.processedBytes || 0
+  const output = props.task?.outputBytes || 0
+  return input > 0 && output > 0 ? output / input * 100 : undefined
+})
+
+const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 100 - liveRatio.value)
 </script>
 
 <template>
@@ -27,8 +38,34 @@ const appStore = useAppStore()
       <div class="pending-stat-card">
         <span class="text-muted">{{ appStore.t('progress.percent') }}</span>
         <div class="font-mono font-black text-primary mt-0.5">
-          {{ task?.progress || 0 }}%
+          {{ formatProgressPercent(task?.progress) }}%
           <span v-if="task?.speed" class="ml-2 text-muted">{{ task.speed }}</span>
+        </div>
+      </div>
+    </div>
+    <div
+      v-if="task?.processedBytes !== undefined || task?.outputBytes !== undefined"
+      class="grid grid-cols-2 gap-2 mt-2"
+      data-testid="compression-live-metrics"
+    >
+      <div class="pending-stat-card">
+        <span class="text-muted">已读取源数据</span>
+        <div class="font-mono font-black text-content mt-0.5">{{ formatFileSize(task?.processedBytes || 0) }}</div>
+      </div>
+      <div class="pending-stat-card">
+        <span class="text-muted">当前压缩包大小</span>
+        <div class="font-mono font-black text-primary mt-0.5">{{ formatFileSize(task?.outputBytes || 0) }}</div>
+      </div>
+      <div class="pending-stat-card">
+        <span class="text-muted">实时压缩比</span>
+        <div class="font-mono font-black text-content mt-0.5">{{ liveRatio === undefined ? '计算中' : `${liveRatio.toFixed(2)}%` }}</div>
+      </div>
+      <div class="pending-stat-card">
+        <span class="text-muted">空间变化</span>
+        <div class="font-mono font-black mt-0.5" :class="savedRatio !== undefined && savedRatio >= 0 ? 'text-green-500' : 'text-amber-500'">
+          <template v-if="savedRatio === undefined">计算中</template>
+          <template v-else-if="savedRatio >= 0">节省 {{ savedRatio.toFixed(2) }}%</template>
+          <template v-else>增加 {{ Math.abs(savedRatio).toFixed(2) }}%</template>
         </div>
       </div>
     </div>

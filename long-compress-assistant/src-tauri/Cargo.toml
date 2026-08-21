@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.1.10"
+version = "1.1.11"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -81,6 +81,7 @@ window-shadows = "0.2"
 glob = "0.3"
 single-instance = "0.3.3"
 interprocess = "2.4.0"
+trash = { version = "5.2.6", default-features = false, features = ["coinit_multithreaded"] }
 
 [dev-dependencies]
 tempfile = "3.10"

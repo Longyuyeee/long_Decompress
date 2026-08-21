@@ -4,6 +4,7 @@ import { useTaskStore, type Task } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage } from '@/utils'
+import { formatProgressPercent } from '@/utils/progress'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -95,7 +96,9 @@ const stageLabel = (stage?: string) => {
   switch (stage) {
     case 'Pre-checking': return appStore.t('tasks.status.preparing')
     case 'Extracting': return appStore.t('tasks.status.running')
+    case 'Verifying': return '验证输出'
     case 'Finalizing': return appStore.t('tasks.status.finalizing')
+    case 'password-attempt': return '验证解压密码'
     default: return stage
   }
 }
@@ -118,7 +121,7 @@ const retryTask = async (task: Task) => {
         outputPath: task.outputPath,
         keepStructure: true,
         overwrite: false,
-        deleteAfter: appStore.settings.autoDeleteSource,
+        deleteAfter: task.recycleSourceAfterExtract ?? false,
         createSubdirectory: task.extractToSubfolder ?? false,
         password: task.password || undefined,
         fileFilter: task.fileFilter || null,
@@ -285,7 +288,7 @@ const copyToClipboard = async (text: string) => {
                   <div class="flex items-center gap-2 mt-1">
                     <span class="text-sm text-dim uppercase tracking-tight">{{ statusLabel(task.status) }}</span>
                     <span v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"
-                          class="text-sm font-mono text-primary font-bold">{{ task.progress }}%</span>
+                          class="text-sm font-mono text-primary font-bold">{{ formatProgressPercent(task.progress) }}%</span>
                     <span v-if="task.speed" class="text-xs font-mono text-dim ml-1">{{ task.speed }}</span>
                     <span v-if="task.etaSeconds !== undefined" class="text-xs font-mono text-dim ml-1">ETA {{ formatEta(task.etaSeconds) }}</span>
                   </div>
@@ -299,6 +302,12 @@ const copyToClipboard = async (text: string) => {
                   <!-- 当前处理文件 + 阶段 -->
                   <div v-if="task.currentFile" class="text-xs text-dim font-mono mt-1 truncate opacity-90" :title="task.currentFile">
                     {{ task.currentFile.split(/[\\/]/).pop() }}
+                  </div>
+                  <div v-if="task.currentPassword" class="text-xs text-primary font-mono mt-1 truncate opacity-90" :title="task.currentPassword">
+                    正在验证 {{ task.currentPassword }}
+                    <template v-if="task.passwordAttemptCurrent">
+                      · {{ task.passwordAttemptCurrent }}<template v-if="task.passwordAttemptTotal">/{{ task.passwordAttemptTotal }}</template>
+                    </template>
                   </div>
                   <!-- 输出路径 -->
                   <div class="text-xs text-dim font-mono mt-1 truncate opacity-85" :title="task.outputPath">

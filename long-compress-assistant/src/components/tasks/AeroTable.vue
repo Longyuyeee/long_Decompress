@@ -7,6 +7,8 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import Modal from '@/components/ui/Modal.vue'
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import { open } from '@tauri-apps/api/dialog'
+import { formatProgressPercent } from '@/utils/progress'
+import { formatFileSize } from '@/utils'
 
 const props = defineProps<{
   selectedTaskIds?: Set<string>
@@ -156,6 +158,17 @@ const getStatusText = (status: string) => {
   return appStore.t(`decompress.status.${status}`) || status
 }
 
+const getStageText = (task: Task) => {
+  switch (task.stage) {
+    case 'password-attempt': return '验证解压密码'
+    case 'Pre-checking': return '执行预检'
+    case 'Extracting': return '正在解压'
+    case 'Verifying': return '验证输出'
+    case 'Finalizing': return '提交结果'
+    default: return getStatusText(task.status)
+  }
+}
+
 const getFormatBadgeColor = (format?: string) => {
   switch (format?.toLowerCase()) {
     case 'zip': return `bg-primary/20 text-primary border-primary/30 shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.15)]`
@@ -296,7 +309,7 @@ const onLeave = (el: any) => {
                 class="flex-1 h-1.5 bg-input/50 rounded-full overflow-hidden"
               >
                 <div
-                  class="h-full bg-primary transition-all duration-300 rounded-full"
+                  class="archive-progress-fill h-full bg-primary transition-all duration-300 rounded-full"
                   :style="{ width: `${task.progress || 0}%` }"
                 ></div>
               </div>
@@ -306,7 +319,7 @@ const onLeave = (el: any) => {
                 v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)"
                 class="text-xs font-mono text-primary font-bold"
               >
-                {{ task.progress || 0 }}%
+                {{ formatProgressPercent(task.progress) }}%
               </span>
             </div>
 
@@ -400,12 +413,21 @@ const onLeave = (el: any) => {
                         </div>
                       </div>
 
-                      <div class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
-                        <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
-                             :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
-                          <i v-if="task.extractToSubfolder" class="pi pi-check text-xs text-white"></i>
-                        </div>
-                        <span class="min-w-0 break-words [overflow-wrap:anywhere] text-sm font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
+                      <div class="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
+                        <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
+                          <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
+                                :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
+                            <i v-if="task.extractToSubfolder" class="pi pi-check text-xs text-white"></i>
+                          </span>
+                          <span class="min-w-0 break-words [overflow-wrap:anywhere] text-sm font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
+                        </button>
+                        <button type="button" role="switch" data-testid="task-recycle-source-switch" :aria-checked="task.recycleSourceAfterExtract" :disabled="task.status !== 'pending'" :title="appStore.t('decompress.config.recycle_source.desc')" class="flex min-w-0 items-center gap-3 cursor-pointer group/recycle text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.recycleSourceAfterExtract = !task.recycleSourceAfterExtract">
+                          <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/recycle:border-primary"
+                                :class="task.recycleSourceAfterExtract ? 'bg-primary border-primary' : 'bg-input'">
+                            <i v-if="task.recycleSourceAfterExtract" class="pi pi-check text-xs text-white"></i>
+                          </span>
+                          <span class="min-w-0 break-words [overflow-wrap:anywhere] text-sm font-bold text-muted group-hover/recycle:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.recycle_source') }}</span>
+                        </button>
                       </div>
 
                       <!-- 密码输入区 (仅在自动破解失败时显示) -->
@@ -465,14 +487,47 @@ const onLeave = (el: any) => {
                     <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">阶段</span>
-                        <div class="font-black text-content truncate mt-0.5">{{ task.stage || getStatusText(task.status) }}</div>
+                        <div class="font-black text-content truncate mt-0.5">{{ getStageText(task) }}</div>
                       </div>
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">进度</span>
-                        <div class="font-mono font-black text-primary mt-0.5">{{ task.progress || 0 }}%<span v-if="task.speed" class="ml-2 text-muted">{{ task.speed }}</span></div>
+                        <div class="font-mono font-black text-primary mt-0.5">{{ formatProgressPercent(task.progress) }}%<span v-if="task.speed" class="ml-2 text-muted">{{ task.speed }}</span></div>
                       </div>
                       <div v-if="task.currentFile" class="task-current-file col-span-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentFile">
                         {{ task.currentFile }}
+                      </div>
+                      <div v-if="task.currentPassword" class="col-span-2 min-w-0 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2">
+                        <div class="flex min-w-0 items-center justify-between gap-3">
+                          <span class="text-muted">正在验证</span>
+                          <span v-if="task.passwordAttemptCurrent" class="shrink-0 font-mono font-black text-primary">
+                            {{ task.passwordAttemptCurrent }}<template v-if="task.passwordAttemptTotal"> / {{ task.passwordAttemptTotal }}</template>
+                          </span>
+                        </div>
+                        <div class="mt-1 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentPassword">
+                          {{ task.currentPassword }}
+                        </div>
+                        <div class="mt-1 text-xs text-dim">为保护隐私，不在执行日志中记录密码明文</div>
+                      </div>
+                      <div
+                        v-if="task.type === 'decompression' && (task.outputBytes !== undefined || task.totalBytes)"
+                        class="col-span-2 grid min-w-0 grid-cols-3 gap-2"
+                      >
+                        <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
+                          <span class="text-muted">已产出内容</span>
+                          <div class="mt-0.5 truncate font-mono font-black text-primary" :title="`${task.outputBytes || 0} B`">
+                            {{ task.outputBytesEstimated ? '约 ' : '' }}{{ formatFileSize(task.outputBytes || 0) }}
+                          </div>
+                        </div>
+                        <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
+                          <span class="text-muted">预计展开大小</span>
+                          <div class="mt-0.5 truncate font-mono font-black text-content" :title="`${task.totalBytes || 0} B`">
+                            {{ task.totalBytes ? formatFileSize(task.totalBytes) : '计算中' }}
+                          </div>
+                        </div>
+                        <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
+                          <span class="text-muted">展开速度</span>
+                          <div class="mt-0.5 truncate font-mono font-black text-content">{{ task.speed || '计算中' }}</div>
+                        </div>
                       </div>
                     </div>
                     <h4 class="task-log-heading text-muted text-xs font-black uppercase tracking-[0.2em] mb-3 flex items-center justify-between opacity-90">
@@ -628,6 +683,22 @@ const onLeave = (el: any) => {
 .task-log-entry,
 .task-log-message {
   max-width: 100%;
+}
+
+.archive-progress-fill {
+  background-image: linear-gradient(
+    100deg,
+    var(--dynamic-accent) 0%,
+    color-mix(in srgb, var(--dynamic-accent) 68%, white) 48%,
+    var(--dynamic-accent) 100%
+  );
+  background-size: 220% 100%;
+  animation: archive-progress-flow 1.35s linear infinite;
+}
+
+@keyframes archive-progress-flow {
+  from { background-position: 100% 0; }
+  to { background-position: -120% 0; }
 }
 
 .task-current-file {
