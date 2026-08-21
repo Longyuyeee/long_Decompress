@@ -108,6 +108,17 @@ export const isDecompressArchivePath = (path: string) => {
   return DECOMPRESS_ARCHIVE_SUFFIXES.some(suffix => normalizedPath.endsWith(suffix))
 }
 
+// These names cannot be represented reliably by a short native file-dialog
+// extension filter. They are only candidates: the Rust detector verifies the
+// sibling volumes before a task is created.
+export const isPotentialSplitArchivePath = (path: string) => {
+  const normalizedPath = path.trim().toLowerCase()
+  return /(?:\.7z)?\.\d{3,}$/.test(normalizedPath)
+    || /\.z\d{2,3}$/.test(normalizedPath)
+    || /\.r\d{2,3}$/.test(normalizedPath)
+    || /\.part\d+(?:\.rar)?$/.test(normalizedPath)
+}
+
 export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_EXTENSIONS
   .map(extension => `.${extension}`)
   .join(',')

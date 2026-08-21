@@ -6,11 +6,10 @@ import { usePasswordStore } from '@/stores/password'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage, generateId, isPasswordRelatedError } from '@/utils'
 import { open } from '@tauri-apps/api/dialog'
-import { confirm } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
-import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath } from '@/utils/compressionFormat'
+import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath, isPotentialSplitArchivePath } from '@/utils/compressionFormat'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
 
@@ -94,60 +93,33 @@ onUnmounted(() => {
 
 const onFilesSelected = async (files: any[]) => {
   const createdTaskIds: string[] = []
-  const supportedFiles = files.filter(file => typeof file?.path === 'string' && isDecompressArchivePath(file.path))
-  const rejectedCount = files.length - supportedFiles.length
-  if (rejectedCount > 0) {
-    appStore.setError(appStore.t('decompress.unsupported_files').replace('{0}', String(rejectedCount)))
+  const errors: string[] = []
+  let groupedSplitCount = 0
+  const normalizePath = (path: string) => path.replace(/\\/g, '/').toLowerCase()
+  const uniqueFiles = new Map<string, any>()
+  let unsupportedCount = 0
+  for (const file of files) {
+    if (typeof file?.path !== 'string' || !file.path.trim()) {
+      unsupportedCount++
+      continue
+    }
+    if (!isDecompressArchivePath(file.path) && !isPotentialSplitArchivePath(file.path)) {
+      unsupportedCount++
+      continue
+    }
+    uniqueFiles.set(normalizePath(file.path), file)
   }
 
-  for (const file of supportedFiles) {
-    const sourcePath = file.path
-    // 去重：如果任务列表中已有相同文件，跳过
-    if (decompressionTasks.value.some(t => t.sourceFiles.includes(sourcePath))) continue
+  const handledPaths = new Set<string>()
+  const existingSources = new Set(
+    decompressionTasks.value.flatMap(task => task.sourceFiles.map(normalizePath))
+  )
 
-    // 检测是否为分卷文件
-    try {
-      const splitInfo = await tauriCommands.invoke<any>('detect_split_archive', { path: sourcePath })
-
-      if (splitInfo && splitInfo.is_split) {
-        // 检测到分卷文件
-        const totalSizeMB = (splitInfo.total_size / 1024 / 1024).toFixed(2)
-        const confirmed = await confirm(
-          appStore.t('decompress.split.detected', `检测到分卷压缩文件！\n\n分卷数量: ${splitInfo.parts.length}\n总大小: ${totalSizeMB} MB\n\n是否自动添加所有分卷？`),
-          { title: appStore.t('decompress.split.title', '分卷检测'), type: 'info' }
-        )
-
-        if (confirmed) {
-          // 用户确认，添加所有分卷（作为单个任务，使用第一个分卷）
-          const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
-
-          const taskId = taskStore.addTask({
-            id: generateId(),
-            name: (file.name || sourcePath.split(/[\\/]/).pop() || 'Unknown') + ` (${splitInfo.parts.length} 个分卷)`,
-            type: 'decompression',
-            sourceFiles: [splitInfo.first_part], // 使用第一个分卷
-            outputPath: isGlobalSameDir.value ? parentDir : globalOutputPath.value,
-            extractToSubfolder: globalExtractToSubfolder.value
-          })
-          createdTaskIds.push(taskId)
-
-          appStore.setSuccess(
-            appStore.t('decompress.split.added', `已添加分卷文件（${splitInfo.parts.length} 个分卷，总计 ${totalSizeMB} MB）`)
-          )
-          appStore.addRecentFile(splitInfo.first_part)
-          continue // 跳过普通处理
-        }
-      }
-    } catch (e) {
-      // 分卷检测失败或不是分卷文件，继续普通处理
-      console.debug('Split archive detection skipped:', e)
-    }
-
+  const createTask = (sourcePath: string, name: string, splitCount?: number) => {
     const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
-
     const taskId = taskStore.addTask({
       id: generateId(),
-      name: file.name || sourcePath.split(/[\\/]/).pop() || 'Unknown',
+      name: splitCount ? `${name} (${splitCount} 个分卷)` : name,
       type: 'decompression',
       sourceFiles: [sourcePath],
       outputPath: isGlobalSameDir.value ? parentDir : globalOutputPath.value,
@@ -155,23 +127,68 @@ const onFilesSelected = async (files: any[]) => {
     })
     createdTaskIds.push(taskId)
     appStore.addRecentFile(sourcePath)
-
-    // Smart extraction: auto-detect if subfolder is needed
     tauriCommands.listArchiveContents(sourcePath).then((contents: string[]) => {
-      const task = taskStore.tasks.find(t => t.id === taskId)
+      const task = taskStore.tasks.find(task => task.id === taskId)
       if (!task || task.status !== 'pending') return
       const rootEntries = contents.filter(item => !item.includes('/')).length
-      if (rootEntries > 1) {
-        task.extractToSubfolder = true
-        appStore.setSuccess(appStore.t('decompress.smart_extract'))
-      } else if (rootEntries === 1) {
-        task.extractToSubfolder = false
-      }
-    }).catch((e) => {
-      // Archiving listing failed (encrypted/unsupported format) — keep default behavior
-      console.debug('Smart extract skipped (unable to list contents):', sourcePath, e)
-    })
+      if (rootEntries > 1) task.extractToSubfolder = true
+      else if (rootEntries === 1) task.extractToSubfolder = false
+    }).catch(error => console.debug('Smart extract skipped (unable to list contents):', sourcePath, error))
   }
+
+  for (const file of uniqueFiles.values()) {
+    const sourcePath = file.path as string
+    const normalizedSource = normalizePath(sourcePath)
+    if (handledPaths.has(normalizedSource) || existingSources.has(normalizedSource)) continue
+    handledPaths.add(normalizedSource)
+
+    try {
+      const splitInfo = await tauriCommands.invoke<any>('detect_split_archive', { path: sourcePath })
+      if (splitInfo && splitInfo.is_split) {
+        const groupPaths = Array.isArray(splitInfo.parts) ? splitInfo.parts : []
+        groupPaths.forEach((part: string) => handledPaths.add(normalizePath(part)))
+        const firstPart = typeof splitInfo.first_part === 'string' ? splitInfo.first_part : ''
+        if (!firstPart) {
+          errors.push(appStore.t('decompress.split.first_missing').replace('{0}', file.name || sourcePath))
+          continue
+        }
+        const missingParts = Array.isArray(splitInfo.missing_parts) ? splitInfo.missing_parts : []
+        if (splitInfo.is_complete === false || missingParts.length > 0) {
+          const missingNames = missingParts.slice(0, 5).map((part: string) => part.split(/[\\/]/).pop()).join('、')
+          errors.push(appStore.t('decompress.split.incomplete')
+            .replace('{0}', file.name || sourcePath)
+            .replace('{1}', missingNames || appStore.t('decompress.split.required_part')))
+          continue
+        }
+        const normalizedFirst = normalizePath(firstPart)
+        if (existingSources.has(normalizedFirst)) continue
+        const displayName = splitInfo.base_name || firstPart.split(/[\\/]/).pop() || file.name || 'Unknown'
+        createTask(firstPart, displayName, Number(splitInfo.total_parts || groupPaths.length || 1))
+        groupedSplitCount++
+        existingSources.add(normalizedFirst)
+        continue
+      }
+    } catch (error) {
+      if (isPotentialSplitArchivePath(sourcePath) && !isDecompressArchivePath(sourcePath)) {
+        errors.push(appStore.t('decompress.split.detection_failed')
+          .replace('{0}', file.name || sourcePath)
+          .replace('{1}', String(error)))
+        continue
+      }
+      console.debug('Split archive detection skipped:', error)
+    }
+    if (isPotentialSplitArchivePath(sourcePath) && !isDecompressArchivePath(sourcePath)) {
+      errors.push(appStore.t('decompress.split.group_not_found').replace('{0}', file.name || sourcePath))
+      continue
+    }
+    createTask(sourcePath, file.name || sourcePath.split(/[\\/]/).pop() || 'Unknown')
+  }
+
+  if (unsupportedCount > 0) errors.push(appStore.t('decompress.unsupported_files').replace('{0}', String(unsupportedCount)))
+  if (groupedSplitCount > 0) {
+    appStore.setSuccess(appStore.t('decompress.split.grouped').replace('{0}', String(groupedSplitCount)))
+  }
+  if (errors.length > 0) appStore.setError(errors.slice(0, 3).join('；'))
   return createdTaskIds
 }
 
@@ -493,6 +510,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           <EnhancedFileDropzone
             @files-selected="onFilesSelected"
             :accept="supportedArchiveAccept"
+            :unfiltered-picker="true"
             class="w-full max-w-lg shadow-sm"
           />
         </div>
@@ -534,6 +552,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           @files-selected="onFilesSelected"
           :compact="true"
           :accept="supportedArchiveAccept"
+          :unfiltered-picker="true"
           class="flex-1 min-w-[8rem] h-9"
         />
       </div>
