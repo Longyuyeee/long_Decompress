@@ -6,7 +6,7 @@
 
 ### 面向 Windows 的本地压缩、解压、归档浏览与密码管理工具
 
-[![Version](https://img.shields.io/badge/version-1.1.8-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.1.9-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri%20%2B%20Rust-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -23,15 +23,17 @@
 
 Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows 桌面归档工具。它不仅能完成日常压缩与解压，还把批量任务、压缩包浏览、密码保险箱、完整性检查、资源预检、任务模板和资源管理器右键菜单整合在同一个界面中。
 
-当前版本：**v1.1.8**。
+当前版本：**v1.1.9**。
 
-### v1.1.8 安全热修复
+### v1.1.9 修复收口
 
 - 停用未签名构建中的开机自启动能力，主程序不再读写 Windows `Run` 持久化项。
 - 修复旧设置加载时每次启动都重复写入自启动注册表的问题。
-- v1.1.8 安装与更新会一次性清理 v1.1.7 及更早版本遗留的自启动值，不删除密码保险箱和任务数据。
-- 保留历史任务、密码保险箱统计以及 ZIP/TAR 系列真实进度等 v1.1.7 能力。
-- [查看 v1.1.8 发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.8)
+- 安装与更新会一次性清理 v1.1.7 及更早版本遗留的自启动值，不删除密码保险箱和任务数据。
+- 修复解压服务读取不到文件型密码保险箱的问题；真实加密归档命中后会同步当天及长期调用统计。
+- 历史任务详情改为不透明表面，状态与完成时间不再换行；压缩和解压的目标存储预检在窄窗口中保持可读。
+- 密码统计改为解压场景的调用、归档线索和使用趋势，不再展示传统账户密码的强度、轮换或到期结论。
+- [查看 v1.1.9 发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.9)
 
 ## 真实运行界面
 
@@ -64,9 +66,9 @@ Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows �
   </tr>
   <tr>
     <td colspan="2" align="center">
-      <img src="docs/screenshots/password-vault-analytics.png" alt="Long解压的密码生命周期分析完整运行界面" width="75%"><br>
-      <strong>密码生命周期分析</strong><br>
-      <sub>集中查看密码强度、创建与使用周期、访问趋势及保险箱整体健康度</sub>
+      <img src="docs/screenshots/password-vault-analytics.png" alt="Long解压的解压密码使用分析完整运行界面" width="75%"><br>
+      <strong>解压密码使用分析</strong><br>
+      <sub>集中查看真实调用趋势、归档线索覆盖、最近使用时效与长期活跃</sub>
     </td>
   </tr>
 </table>
@@ -83,7 +85,7 @@ Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows �
 | 智能压缩 | 对有限内容样本进行分析，给出格式、压缩等级和固实压缩建议，不会自动替用户执行 |
 | 安全落盘 | 解压先进入暂存区，再执行路径检查、容量限制、冲突处理和原子提交，失败时尽量回滚 |
 | 完整性与修复 | 计算 CRC32、MD5、SHA256，诊断归档问题，并以新文件方式非破坏修复可恢复 ZIP |
-| Windows 集成 | 文件拖放、快捷键、托盘、开机启动、资源管理器右键菜单和签名校验的应用内更新 |
+| Windows 集成 | 文件拖放、快捷键、托盘、资源管理器经典右键菜单和签名校验的应用内更新 |
 | 可访问性 | 多主题、强调色、界面缩放、高对比度、减少动效、焦点指示与色觉辅助选项 |
 
 ## 密码保险箱
@@ -97,7 +99,7 @@ Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows �
 - 单条显示或隐藏密码，并可一键复制密码正文。
 - 按分类、标签、使用次数、最后使用时间和更新时间整理记录。
 - 导入、导出或清空密码数据。
-- 查看单条密码的使用历史，以及长期使用趋势、分类分布和整体统计。
+- 查看单条解压密码的调用档案，以及整库的长期使用趋势、归档线索和整体统计。
 
 ### 如何参与解压
 
