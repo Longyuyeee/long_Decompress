@@ -96,7 +96,9 @@ const stageLabel = (stage?: string) => {
   switch (stage) {
     case 'Pre-checking': return appStore.t('tasks.status.preparing')
     case 'Extracting': return appStore.t('tasks.status.running')
+    case 'Verifying': return '验证输出'
     case 'Finalizing': return appStore.t('tasks.status.finalizing')
+    case 'password-attempt': return '验证解压密码'
     default: return stage
   }
 }
@@ -300,6 +302,12 @@ const copyToClipboard = async (text: string) => {
                   <!-- 当前处理文件 + 阶段 -->
                   <div v-if="task.currentFile" class="text-xs text-dim font-mono mt-1 truncate opacity-90" :title="task.currentFile">
                     {{ task.currentFile.split(/[\\/]/).pop() }}
+                  </div>
+                  <div v-if="task.currentPassword" class="text-xs text-primary font-mono mt-1 truncate opacity-90" :title="task.currentPassword">
+                    正在验证 {{ task.currentPassword }}
+                    <template v-if="task.passwordAttemptCurrent">
+                      · {{ task.passwordAttemptCurrent }}<template v-if="task.passwordAttemptTotal">/{{ task.passwordAttemptTotal }}</template>
+                    </template>
                   </div>
                   <!-- 输出路径 -->
                   <div class="text-xs text-dim font-mono mt-1 truncate opacity-85" :title="task.outputPath">

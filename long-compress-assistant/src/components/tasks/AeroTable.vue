@@ -157,6 +157,17 @@ const getStatusText = (status: string) => {
   return appStore.t(`decompress.status.${status}`) || status
 }
 
+const getStageText = (task: Task) => {
+  switch (task.stage) {
+    case 'password-attempt': return '验证解压密码'
+    case 'Pre-checking': return '执行预检'
+    case 'Extracting': return '正在解压'
+    case 'Verifying': return '验证输出'
+    case 'Finalizing': return '提交结果'
+    default: return getStatusText(task.status)
+  }
+}
+
 const getFormatBadgeColor = (format?: string) => {
   switch (format?.toLowerCase()) {
     case 'zip': return `bg-primary/20 text-primary border-primary/30 shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.15)]`
@@ -475,7 +486,7 @@ const onLeave = (el: any) => {
                     <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">阶段</span>
-                        <div class="font-black text-content truncate mt-0.5">{{ task.stage || getStatusText(task.status) }}</div>
+                        <div class="font-black text-content truncate mt-0.5">{{ getStageText(task) }}</div>
                       </div>
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">进度</span>
@@ -483,6 +494,18 @@ const onLeave = (el: any) => {
                       </div>
                       <div v-if="task.currentFile" class="task-current-file col-span-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentFile">
                         {{ task.currentFile }}
+                      </div>
+                      <div v-if="task.currentPassword" class="col-span-2 min-w-0 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2">
+                        <div class="flex min-w-0 items-center justify-between gap-3">
+                          <span class="text-muted">正在验证</span>
+                          <span v-if="task.passwordAttemptCurrent" class="shrink-0 font-mono font-black text-primary">
+                            {{ task.passwordAttemptCurrent }}<template v-if="task.passwordAttemptTotal"> / {{ task.passwordAttemptTotal }}</template>
+                          </span>
+                        </div>
+                        <div class="mt-1 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentPassword">
+                          {{ task.currentPassword }}
+                        </div>
+                        <div class="mt-1 text-xs text-dim">为保护隐私，不在执行日志中记录密码明文</div>
                       </div>
                     </div>
                     <h4 class="task-log-heading text-muted text-xs font-black uppercase tracking-[0.2em] mb-3 flex items-center justify-between opacity-90">

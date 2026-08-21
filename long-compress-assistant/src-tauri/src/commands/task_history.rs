@@ -56,8 +56,25 @@ fn truncate_text(value: &str) -> String {
     value.chars().take(MAX_TEXT_CHARS).collect()
 }
 
-fn contains_sensitive_label(value: &str) -> bool {
-    value.to_lowercase().contains("password") || value.contains("密码")
+fn redact_sensitive_text(value: &str) -> String {
+    let lower = value.to_ascii_lowercase();
+    let ascii_markers = ["password:", "password=", "pwd:", "pwd="];
+    let localized_markers = ["密码：", "密码:"];
+    let marker = ascii_markers
+        .iter()
+        .filter_map(|marker| lower.find(marker).map(|index| (index, marker.len())))
+        .chain(
+            localized_markers
+                .iter()
+                .filter_map(|marker| value.find(marker).map(|index| (index, marker.len()))),
+        )
+        .min_by_key(|(index, _)| *index);
+
+    if let Some((index, marker_len)) = marker {
+        format!("{}{} [已隐藏]", &value[..index], &value[index..index + marker_len])
+    } else {
+        value.to_string()
+    }
 }
 
 fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, String> {
@@ -75,11 +92,7 @@ fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, S
     record.output_path = truncate_text(record.output_path.trim());
     record.format = record.format.map(|value| truncate_text(value.trim()));
     record.error_message = record.error_message.map(|value| {
-        if contains_sensitive_label(&value) {
-            "任务失败（敏感信息已隐藏）".to_string()
-        } else {
-            truncate_text(value.trim())
-        }
+        truncate_text(redact_sensitive_text(value.trim()).trim())
     });
     record.source_paths = record
         .source_paths
@@ -93,9 +106,8 @@ fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, S
         .into_iter()
         .rev()
         .take(MAX_LOGS)
-        .filter(|log| !contains_sensitive_label(&log.message))
         .map(|mut log| {
-            log.message = truncate_text(log.message.trim());
+            log.message = truncate_text(redact_sensitive_text(log.message.trim()).trim());
             log.severity = truncate_text(log.severity.trim());
             log
         })
@@ -271,10 +283,23 @@ mod tests {
         };
 
         let sanitized = sanitize_record(record).expect("record should be valid");
-        assert_eq!(sanitized.logs.len(), 2);
+        assert_eq!(sanitized.logs.len(), 3);
         assert!(sanitized.logs.iter().all(|log| !log.message.contains("top-secret")));
+        assert!(sanitized.logs[1].message.contains("[已隐藏]"));
         assert_eq!(sanitized.duration_ms, 0);
         assert_eq!(sanitized.processed_bytes, 0);
+    }
+
+    #[test]
+    fn preserves_safe_password_workflow_logs() {
+        assert_eq!(
+            redact_sensitive_text("保险箱候选 [1/2] → 未匹配"),
+            "保险箱候选 [1/2] → 未匹配"
+        );
+        assert_eq!(
+            redact_sensitive_text("解压密码：open-sesame"),
+            "解压密码： [已隐藏]"
+        );
     }
 
     #[test]

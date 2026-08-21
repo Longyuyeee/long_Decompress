@@ -871,6 +871,16 @@ impl CompressionService {
 
     /// 智能尝试密码本中的密码
     async fn resolve_archive_password(&self, window: &Window, task_id: &str, file_path: &str, options: &DecompressOptions) -> Option<String> {
+        self.emit_log(
+            window,
+            task_id,
+            if options.enable_bruteforce {
+                "自动解锁顺序：密码保险箱 → 导入词表 → 内置字典"
+            } else {
+                "自动解锁顺序：仅尝试密码保险箱；密码字典未启用"
+            },
+            TaskLogSeverity::Info,
+        );
         if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path).await {
             return Some(password);
         }
@@ -917,6 +927,62 @@ impl CompressionService {
             .get_recommended_strategy(Some(file_name))
     }
 
+    fn password_candidate_descriptor(password: &str) -> String {
+        let mut kinds = Vec::new();
+        if password.chars().any(|ch| ch.is_ascii_alphabetic()) {
+            kinds.push("字母");
+        }
+        if password.chars().any(|ch| ch.is_ascii_digit()) {
+            kinds.push("数字");
+        }
+        if password.chars().any(|ch| ch.is_ascii_punctuation()) {
+            kinds.push("符号");
+        }
+        if password.chars().any(|ch| !ch.is_ascii()) {
+            kinds.push("非 ASCII 字符");
+        }
+        if kinds.is_empty() {
+            kinds.push("其他字符");
+        }
+        format!("{} 字符 · {}", password.chars().count(), kinds.join("+"))
+    }
+
+    fn elapsed_label(started_at: Instant) -> String {
+        let elapsed = started_at.elapsed();
+        if elapsed.as_millis() < 1_000 {
+            format!("{} ms", elapsed.as_millis().max(1))
+        } else {
+            format!("{:.2} s", elapsed.as_secs_f64())
+        }
+    }
+
+    fn emit_password_attempt_progress(
+        &self,
+        window: &Window,
+        task_id: &str,
+        current: usize,
+        total: Option<usize>,
+        candidate: String,
+    ) {
+        let progress = total
+            .filter(|value| *value > 0)
+            .map(|value| current as f32 / value as f32)
+            .unwrap_or(0.0);
+        let _ = window.emit("task-progress", TaskProgress {
+            task_id: task_id.to_string(),
+            stage: Some("password-attempt".to_string()),
+            current_password: Some(candidate),
+            progress,
+            speed: None,
+            eta_seconds: None,
+            current_file: None,
+            processed_bytes: 0,
+            total_bytes: 0,
+            password_attempt_current: Some(current),
+            password_attempt_total: total,
+        });
+    }
+
     async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Option<String> {
         for password in Self::recommended_dictionary(file_path) {
             if self.cancellation_flag.load(Ordering::SeqCst) {
@@ -932,48 +998,83 @@ impl CompressionService {
     async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
         let passwords = Self::recommended_dictionary(file_path);
         let total = passwords.len();
+        let started_at = Instant::now();
         self.emit_log(
             window,
             task_id,
-            &format!("已授权密码字典尝试，共 {} 个候选", total),
+            &format!(
+                "内置密码字典准备完成：共 {} 个候选；实时展示候选特征，不记录密码明文",
+                total
+            ),
             TaskLogSeverity::Info,
         );
 
         for (index, password) in passwords.into_iter().enumerate() {
             if self.cancellation_flag.load(Ordering::SeqCst) {
+                self.emit_log(window, task_id, "内置密码字典尝试已取消", TaskLogSeverity::Warning);
                 return None;
             }
             let current = index + 1;
-            if current == 1 || current % 10 == 0 || current == total {
-                let _ = window.emit("task-progress", TaskProgress {
-                    task_id: task_id.to_string(),
-                    stage: Some("password-attempt".to_string()),
-                    current_password: None,
-                    progress: current as f32 / total.max(1) as f32,
-                    speed: None,
-                    eta_seconds: None,
-                    current_file: None,
-                    processed_bytes: 0,
-                    total_bytes: 0,
-                    password_attempt_current: Some(current),
-                    password_attempt_total: Some(total),
-                });
-            }
-            if self.test_archive_password(file_path, &password).await.is_ok_and(|matched| matched) {
-                self.emit_log(
+            let descriptor = Self::password_candidate_descriptor(&password);
+            self.emit_password_attempt_progress(
+                window,
+                task_id,
+                current,
+                Some(total),
+                format!("内置字典 #{} · {}", current, descriptor),
+            );
+            let attempt_started_at = Instant::now();
+            match self.test_archive_password(file_path, &password).await {
+                Ok(true) => {
+                    self.emit_log(
+                        window,
+                        task_id,
+                        &format!(
+                            "内置字典候选 [{}/{}] · {} → 匹配成功（{}）",
+                            current,
+                            total,
+                            descriptor,
+                            Self::elapsed_label(attempt_started_at)
+                        ),
+                        TaskLogSeverity::Success,
+                    );
+                    return Some(password);
+                }
+                Ok(false) => self.emit_log(
                     window,
                     task_id,
-                    &format!("密码字典在第 {} 次尝试时匹配成功", current),
-                    TaskLogSeverity::Success,
-                );
-                return Some(password);
+                    &format!(
+                        "内置字典候选 [{}/{}] · {} → 未匹配（{}）",
+                        current,
+                        total,
+                        descriptor,
+                        Self::elapsed_label(attempt_started_at)
+                    ),
+                    TaskLogSeverity::Info,
+                ),
+                Err(error) => self.emit_log(
+                    window,
+                    task_id,
+                    &format!(
+                        "内置字典候选 [{}/{}] 验证异常，已跳过（{}）：{}",
+                        current,
+                        total,
+                        Self::elapsed_label(attempt_started_at),
+                        error
+                    ),
+                    TaskLogSeverity::Warning,
+                ),
             }
         }
 
         self.emit_log(
             window,
             task_id,
-            &format!("密码字典已完成 {} 次尝试，未找到匹配项", total),
+            &format!(
+                "内置密码字典已完成 {} 次尝试，未找到匹配项；总耗时 {}",
+                total,
+                Self::elapsed_label(started_at)
+            ),
             TaskLogSeverity::Warning,
         );
         None
@@ -1021,6 +1122,7 @@ impl CompressionService {
 
     async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
         self.emit_log(window, task_id, "正在检索密码保险箱...", TaskLogSeverity::Info);
+        let started_at = Instant::now();
 
         let passwords = match self.password_book_candidates().await {
             Ok(res) => res,
@@ -1042,37 +1144,85 @@ impl CompressionService {
             return None;
         }
 
+        self.emit_log(
+            window,
+            task_id,
+            &format!(
+                "密码保险箱已载入 {} 个候选，按收藏、使用频率和最近使用排序；日志不会记录密码明文",
+                total
+            ),
+            TaskLogSeverity::Info,
+        );
+
         for (idx, (entry_id, entry_name, pwd)) in passwords.iter().enumerate() {
             let current = idx + 1;
-
-            // 发送密码尝试进度事件
-            let _ = window.emit("task-progress", TaskProgress {
-                task_id: task_id.to_string(),
-                stage: Some("password-attempt".to_string()),
-                current_password: Some(entry_name.clone()),
-                progress: current as f32 / total as f32,
-                speed: None,
-                eta_seconds: None,
-                current_file: None,
-                processed_bytes: 0,
-                total_bytes: 0,
-                password_attempt_current: Some(current),
-                password_attempt_total: Some(total),
-            });
-
-            self.emit_log(window, task_id, &format!("正在尝试已知密码 [{}/{}]: {}...", current, total, entry_name), TaskLogSeverity::Info);
+            let descriptor = Self::password_candidate_descriptor(pwd);
+            self.emit_password_attempt_progress(
+                window,
+                task_id,
+                current,
+                Some(total),
+                format!("保险箱「{}」· {}", entry_name, descriptor),
+            );
+            let attempt_started_at = Instant::now();
 
             match self.test_archive_password(file_path, pwd).await {
                 Ok(true) => {
-                    self.emit_log(window, task_id, &format!("密码匹配成功 ({})", entry_name), TaskLogSeverity::Success);
+                    self.emit_log(
+                        window,
+                        task_id,
+                        &format!(
+                            "保险箱候选 [{}/{}]「{}」· {} → 匹配成功（{}）",
+                            current,
+                            total,
+                            entry_name,
+                            descriptor,
+                            Self::elapsed_label(attempt_started_at)
+                        ),
+                        TaskLogSeverity::Success,
+                    );
                     let _ = self.encrypted_password_service.increment_use_count(entry_id).await;
                     return Some(pwd.clone());
                 },
-                _ => continue,
+                Ok(false) => self.emit_log(
+                    window,
+                    task_id,
+                    &format!(
+                        "保险箱候选 [{}/{}]「{}」· {} → 未匹配（{}）",
+                        current,
+                        total,
+                        entry_name,
+                        descriptor,
+                        Self::elapsed_label(attempt_started_at)
+                    ),
+                    TaskLogSeverity::Info,
+                ),
+                Err(error) => self.emit_log(
+                    window,
+                    task_id,
+                    &format!(
+                        "保险箱候选 [{}/{}]「{}」验证异常，已跳过（{}）：{}",
+                        current,
+                        total,
+                        entry_name,
+                        Self::elapsed_label(attempt_started_at),
+                        error
+                    ),
+                    TaskLogSeverity::Warning,
+                ),
             }
         }
         
-        self.emit_log(window, task_id, "所有已知密码均匹配失败", TaskLogSeverity::Warning);
+        self.emit_log(
+            window,
+            task_id,
+            &format!(
+                "密码保险箱的 {} 个候选均未匹配；总耗时 {}",
+                total,
+                Self::elapsed_label(started_at)
+            ),
+            TaskLogSeverity::Warning,
+        );
         None
     }
 
@@ -1113,14 +1263,23 @@ impl CompressionService {
     }
 
     async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String]) -> Option<String> {
-        self.emit_log(window, task_id, "Starting imported wordlist password attempts...", TaskLogSeverity::Info);
+        self.emit_log(
+            window,
+            task_id,
+            &format!(
+                "开始尝试 {} 个导入密码词表；实时展示候选特征，不记录密码明文",
+                wordlists.len()
+            ),
+            TaskLogSeverity::Info,
+        );
 
         let mut tested = HashSet::new();
         let mut attempted = 0usize;
+        let started_at = Instant::now();
 
         for wordlist in wordlists {
             if self.cancellation_flag.load(Ordering::SeqCst) {
-                self.emit_log(window, task_id, "Wordlist password attempts cancelled.", TaskLogSeverity::Warning);
+                self.emit_log(window, task_id, "导入密码词表尝试已取消", TaskLogSeverity::Warning);
                 return None;
             }
 
@@ -1128,7 +1287,7 @@ impl CompressionService {
             let file = match File::open(path) {
                 Ok(file) => file,
                 Err(err) => {
-                    self.emit_log(window, task_id, &format!("Unable to read wordlist {}: {}", path.display(), err), TaskLogSeverity::Warning);
+                    self.emit_log(window, task_id, &format!("无法读取密码词表 {}：{}", path.display(), err), TaskLogSeverity::Warning);
                     continue;
                 }
             };
@@ -1136,20 +1295,20 @@ impl CompressionService {
             self.emit_log(
                 window,
                 task_id,
-                &format!("Trying imported wordlist: {}", path.file_name().and_then(|name| name.to_str()).unwrap_or("wordlist")),
+                &format!("正在读取密码词表：{}", path.file_name().and_then(|name| name.to_str()).unwrap_or("未命名词表")),
                 TaskLogSeverity::Info,
             );
 
             for line in BufReader::new(file).lines() {
                 if self.cancellation_flag.load(Ordering::SeqCst) {
-                    self.emit_log(window, task_id, "Wordlist password attempts cancelled.", TaskLogSeverity::Warning);
+                    self.emit_log(window, task_id, "导入密码词表尝试已取消", TaskLogSeverity::Warning);
                     return None;
                 }
 
                 let password = match line {
                     Ok(value) => value.trim().trim_end_matches('\u{feff}').to_string(),
                     Err(err) => {
-                        self.emit_log(window, task_id, &format!("Skipped unreadable wordlist line in {}: {}", path.display(), err), TaskLogSeverity::Warning);
+                        self.emit_log(window, task_id, &format!("词表 {} 存在无法读取的行，已跳过：{}", path.display(), err), TaskLogSeverity::Warning);
                         continue;
                     }
                 };
@@ -1159,20 +1318,62 @@ impl CompressionService {
                 }
 
                 attempted += 1;
+                let descriptor = Self::password_candidate_descriptor(&password);
+                self.emit_password_attempt_progress(
+                    window,
+                    task_id,
+                    attempted,
+                    None,
+                    format!("导入词表 #{} · {}", attempted, descriptor),
+                );
+                let attempt_started_at = Instant::now();
                 match self.test_archive_password(file_path, &password).await {
                     Ok(true) => {
-                        self.emit_log(window, task_id, &format!("Imported wordlist matched after {} attempts.", attempted), TaskLogSeverity::Success);
+                        self.emit_log(
+                            window,
+                            task_id,
+                            &format!(
+                                "导入词表候选 #{} · {} → 匹配成功（{}）",
+                                attempted,
+                                descriptor,
+                                Self::elapsed_label(attempt_started_at)
+                            ),
+                            TaskLogSeverity::Success,
+                        );
                         return Some(password);
                     }
-                    Ok(false) => {}
+                    Ok(false) => {
+                        if attempted == 1 || attempted % 25 == 0 {
+                            self.emit_log(
+                                window,
+                                task_id,
+                                &format!(
+                                    "导入词表已验证 {} 个候选；当前候选 {} → 未匹配（{}）",
+                                    attempted,
+                                    descriptor,
+                                    Self::elapsed_label(attempt_started_at)
+                                ),
+                                TaskLogSeverity::Info,
+                            );
+                        }
+                    }
                     Err(err) => {
-                        self.emit_log(window, task_id, &format!("Wordlist password test failed: {}", err), TaskLogSeverity::Warning);
+                        self.emit_log(window, task_id, &format!("导入词表候选 #{} 验证异常，已跳过：{}", attempted, err), TaskLogSeverity::Warning);
                     }
                 }
             }
         }
 
-        self.emit_log(window, task_id, &format!("Imported wordlists exhausted after {} attempts.", attempted), TaskLogSeverity::Warning);
+        self.emit_log(
+            window,
+            task_id,
+            &format!(
+                "导入密码词表已完成 {} 次有效尝试，未找到匹配项；总耗时 {}",
+                attempted,
+                Self::elapsed_label(started_at)
+            ),
+            TaskLogSeverity::Warning,
+        );
         None
     }
 
@@ -1386,9 +1587,9 @@ impl CompressionService {
             let needs_pwd = true;
 
             if needs_pwd {
-                service.emit_log(&window, &task_id, "检测到加密格式，正在尝试静默解锁...", TaskLogSeverity::Info);
+                service.emit_log(&window, &task_id, "检测到加密格式，正在启动自动解锁流程...", TaskLogSeverity::Info);
                 if let Some(smart_pwd) = service.resolve_archive_password(&window, &task_id, &file_path, &options).await {
-                    service.emit_log(&window, &task_id, "密码本匹配成功", TaskLogSeverity::Success);
+                    service.emit_log(&window, &task_id, "已取得有效解压凭据，准备执行安全预检", TaskLogSeverity::Success);
                     final_password = Some(smart_pwd);
                 } else {
                     service.emit_log(&window, &task_id, "所有已知密码均无效，等待手动输入", TaskLogSeverity::Warning);
@@ -1406,9 +1607,26 @@ impl CompressionService {
             }
         }
 
+        if password_required == Some(true) && password.is_some() {
+            service.emit_log(
+                &window,
+                &task_id,
+                "已收到手动输入的解压密码，正在安全预检；日志不会记录密码明文",
+                TaskLogSeverity::Info,
+            );
+        }
+
         service
             .preflight_extraction(path, &format, final_password.as_deref(), &final_out_dir)
             .await?;
+        if password_required == Some(true) && final_password.is_some() {
+            service.emit_log(
+                &window,
+                &task_id,
+                "密码验证通过，归档可以解锁",
+                TaskLogSeverity::Success,
+            );
+        }
         let mark_of_web = if options.preserve_mark_of_web {
             mark_of_web::read_from(path).map_err(|error| {
                 CompressionError::ExtractionFailed(format!(
@@ -3060,6 +3278,14 @@ mod tests_continued {
     fn test_refined_error_variants() {
         let err1 = CompressionError::PasswordRequired;
         assert_eq!(err1.to_string(), "需要输入密码才能解压");
+    }
+
+    #[test]
+    fn password_candidate_logs_describe_shape_without_exposing_plaintext() {
+        let descriptor = CompressionService::password_candidate_descriptor("Ab12-测试");
+        assert_eq!(descriptor, "7 字符 · 字母+数字+符号+非 ASCII 字符");
+        assert!(!descriptor.contains("Ab12"));
+        assert!(!descriptor.contains("测试"));
     }
 
     #[tokio::test]
