@@ -44,6 +44,7 @@
     "test:e2e:desktop:history": "node scripts/test-tauri-desktop.mjs --history-only",
     "test:e2e:desktop:vault-usage": "node scripts/test-tauri-desktop.mjs --vault-usage-only",
     "test:e2e:desktop:tar-telemetry": "node scripts/test-tauri-desktop.mjs --tar-telemetry-only",
+    "test:e2e:desktop:responsive-layout": "node scripts/test-tauri-desktop.mjs --responsive-layout-only",
     "test:e2e:desktop:full-format": "node scripts/test-tauri-desktop.mjs --require-full-format-matrix",
     "test:fixtures:archives": "node scripts/fetch-archive-test-fixtures.mjs",
     "test:tools:qemu-img": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-qemu-img-test-tool.ps1",

@@ -103,6 +103,7 @@ const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
 const historyOnly = process.argv.includes('--history-only')
 const vaultUsageOnly = process.argv.includes('--vault-usage-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
+const responsiveLayoutOnly = process.argv.includes('--responsive-layout-only')
 const missingFullFormatCapabilities = new Set()
 
 function recordMissingFullFormatCapability(capability, preparation) {
@@ -1499,6 +1500,122 @@ async function runResourcePreflightLayoutDesktopGate() {
   )
 }
 
+async function assertBoundedTaskDetailLayout(type) {
+  const selectors = type === 'compression'
+    ? {
+        details: '[data-testid="compression-draft-details"]',
+        config: '[data-testid="compression-draft-config"]',
+        execution: '[data-testid="compression-draft-execution"]',
+        log: '[data-testid="compression-log-viewport"]',
+      }
+    : {
+        details: '[data-testid="decompression-task-details"]',
+        config: '[data-testid="decompression-config-panel"]',
+        execution: '[data-testid="decompression-execution-panel"]',
+        log: '[data-testid="decompression-log-viewport"]',
+      }
+
+  const result = await driver.executeScript((target) => {
+    const details = document.querySelector(target.details)
+    const config = document.querySelector(target.config)
+    const execution = document.querySelector(target.execution)
+    const log = document.querySelector(target.log)
+    const resource = details?.querySelector('[data-testid="resource-preflight-card"]')
+    const metrics = resource?.querySelector('[data-testid="resource-preflight-metrics"]')
+    if (!details || !config || !execution || !log || !resource || !metrics) return null
+    config.style.scrollBehavior = 'auto'
+    config.scrollTop = config.scrollHeight
+    const detailRect = details.getBoundingClientRect()
+    const configRect = config.getBoundingClientRect()
+    const executionRect = execution.getBoundingClientRect()
+    const resourceRect = resource.getBoundingClientRect()
+    const visibleResourceHeight = Math.max(
+      0,
+      Math.min(resourceRect.bottom, configRect.bottom) - Math.max(resourceRect.top, configRect.top),
+    )
+    return {
+      detailWidth: details.clientWidth,
+      detailHeight: details.clientHeight,
+      detailHorizontalOverflow: details.scrollWidth - details.clientWidth,
+      configWidth: config.clientWidth,
+      configHeight: config.clientHeight,
+      configHorizontalOverflow: config.scrollWidth - config.clientWidth,
+      executionWidth: execution.clientWidth,
+      executionHeight: execution.clientHeight,
+      executionHorizontalOverflow: execution.scrollWidth - execution.clientWidth,
+      columnTopDelta: Math.abs(configRect.top - executionRect.top),
+      columnHeightDelta: Math.abs(configRect.height - executionRect.height),
+      isSideBySide: executionRect.left >= configRect.right - 2,
+      logClientHeight: log.clientHeight,
+      logScrollHeight: log.scrollHeight,
+      logHorizontalOverflow: log.scrollWidth - log.clientWidth,
+      logOverflowY: getComputedStyle(log).overflowY,
+      resourceWidth: resource.clientWidth,
+      resourceHorizontalOverflow: resource.scrollWidth - resource.clientWidth,
+      resourceVisibleHeight: visibleResourceHeight,
+      resourceHeight: resourceRect.height,
+      metricColumns: getComputedStyle(metrics).gridTemplateColumns.split(' ').filter(Boolean).length,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      detailRectWidth: detailRect.width,
+    }
+  }, selectors)
+
+  assert.ok(result, `${type} detail layout was not rendered`)
+  assert.equal(result.isSideBySide, true, `${type} detail columns must remain side by side`)
+  assert.ok(result.configWidth >= 250, `${type} config panel is too narrow: ${JSON.stringify(result)}`)
+  assert.ok(result.executionWidth >= 250, `${type} execution panel is too narrow: ${JSON.stringify(result)}`)
+  assert.ok(result.configHeight >= 340, `${type} config viewport is too short: ${JSON.stringify(result)}`)
+  assert.ok(result.detailHeight <= 520, `${type} details grew without a vertical bound: ${JSON.stringify(result)}`)
+  assert.ok(result.columnTopDelta <= 2, `${type} columns are not aligned: ${JSON.stringify(result)}`)
+  assert.ok(result.columnHeightDelta <= 2, `${type} columns do not share one viewport height: ${JSON.stringify(result)}`)
+  assert.ok(result.logScrollHeight > result.logClientHeight, `${type} log fixture must require vertical scrolling`)
+  assert.equal(result.logOverflowY, 'auto', `${type} log must own the vertical scrollbar`)
+  assert.ok(result.resourceVisibleHeight >= Math.min(120, result.resourceHeight * 0.7), `${type} resource card is clipped: ${JSON.stringify(result)}`)
+  assert.ok(
+    result.metricColumns >= 1 && result.metricColumns <= 2,
+    `${type} resource metrics must use a readable one- or two-column layout`,
+  )
+  for (const [label, overflow] of Object.entries({
+    details: result.detailHorizontalOverflow,
+    config: result.configHorizontalOverflow,
+    execution: result.executionHorizontalOverflow,
+    log: result.logHorizontalOverflow,
+    resource: result.resourceHorizontalOverflow,
+  })) {
+    assert.ok(overflow <= 1, `${type} ${label} has horizontal overflow: ${JSON.stringify(result)}`)
+  }
+  return result
+}
+
+async function runResponsiveTaskDetailDesktopGate() {
+  console.log('[desktop-e2e] verifying bounded side-by-side task details at real window sizes')
+  mkdirSync(artifactDirectory, { recursive: true })
+
+  for (const type of ['decompression', 'compression']) {
+    await callDesktopBridge('seedResponsiveWorkspace', type)
+    const targetHash = `#/${type === 'compression' ? 'compress' : 'decompress'}`
+    await driver.executeScript(hash => { window.location.hash = hash }, targetHash)
+    await driver.wait(async () => (await driver.getCurrentUrl()).includes(type === 'compression' ? '#/compress' : '#/decompress'), 10_000)
+    if (type === 'decompression') {
+      await (await waitForElement('[data-task-id="responsive-decompression"]')).click()
+      await waitForElement('[data-testid="decompression-task-details"]')
+    } else {
+      await waitForElement('[data-testid="compression-draft-details"]')
+    }
+
+    for (const size of [{ width: 920, height: 620 }, { width: 760, height: 520 }]) {
+      await driver.manage().window().setRect(size)
+      await new Promise(resolve => setTimeout(resolve, 250))
+      await assertBoundedTaskDetailLayout(type)
+      writeFileSync(
+        path.join(artifactDirectory, `responsive-${type}-${size.width}x${size.height}.png`),
+        Buffer.from(await driver.takeScreenshot(), 'base64'),
+      )
+    }
+  }
+}
+
 async function runZipTelemetryDesktopGate() {
   console.log('[desktop-e2e] verifying focused plain and AES ZIP real-byte telemetry')
   await callDesktopBridge('clearTasks')
@@ -1723,7 +1840,11 @@ try {
   const payload = `Long解压 real desktop round-trip ${new Date().toISOString()}\n`
   writeFileSync(sourcePath, payload, 'utf8')
 
-  if (tarTelemetryOnly) {
+  if (responsiveLayoutOnly) {
+    await runResponsiveTaskDetailDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri responsive task-detail gate passed.')
+  } else if (tarTelemetryOnly) {
     await runTarTelemetryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri TAR telemetry gate passed.')

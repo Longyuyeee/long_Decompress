@@ -863,6 +863,26 @@ export const installDesktopE2EBridge = () => {
       task.progress = 100
       task.stage = 'Finalizing'
       task.currentFile = longSourcePath
+      task.resourcePreflight = {
+        operation: type,
+        outputPath: longOutputPath,
+        probePath: 'C:\\',
+        mountPoint: 'C:\\',
+        fileSystem: 'NTFS',
+        location: 'local',
+        medium: 'ssd',
+        totalBytes: 512 * 1024 * 1024 * 1024,
+        availableBytes: 106 * 1024 * 1024 * 1024,
+        estimatedOutputBytes: 780 * 1024 * 1024,
+        requiredBytes: 908 * 1024 * 1024,
+        reserveBytes: 128 * 1024 * 1024,
+        estimateSource: type === 'compression' ? 'provided_estimate' : 'archive_metadata',
+        estimateReliable: true,
+        status: 'ready',
+        canStart: true,
+        summary: '目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。',
+        warnings: [],
+      }
       task.logs = Array.from({ length: 18 }, (_, index) => ({
         task_id: taskId,
         timestamp: new Date(Date.now() + index * 1000).toISOString(),
