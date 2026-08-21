@@ -36,18 +36,18 @@ const mediumLabel = computed(() => ({
       <div class="min-w-0">
         <div class="flex items-center gap-2 font-black text-content">
           <i class="pi pi-database text-primary"></i>
-          <span>资源预检</span>
+          <span>目标存储预检</span>
         </div>
         <p class="mt-1 break-words [overflow-wrap:anywhere] leading-relaxed text-muted">{{ report.summary }}</p>
       </div>
       <span class="status-badge shrink-0 rounded-full px-2 py-1 font-black">{{ statusLabel }}</span>
     </div>
 
-    <dl class="mt-3 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
-      <div class="metric"><dt>位置</dt><dd>{{ locationLabel }}</dd></div>
-      <div class="metric"><dt>介质</dt><dd>{{ mediumLabel }}</dd></div>
-      <div class="metric"><dt>可用空间</dt><dd>{{ formatResourceBytes(report.availableBytes) }}</dd></div>
-      <div class="metric"><dt>预计输出</dt><dd>{{ formatResourceBytes(report.estimatedOutputBytes) }}</dd></div>
+    <dl data-testid="resource-preflight-metrics" class="resource-preflight-metrics mt-3 grid min-w-0 grid-cols-2 gap-2">
+      <div data-testid="resource-preflight-location" class="metric"><dt>目标位置</dt><dd :title="locationLabel">{{ locationLabel }}</dd></div>
+      <div data-testid="resource-preflight-medium" class="metric"><dt>存储介质</dt><dd :title="mediumLabel">{{ mediumLabel }}</dd></div>
+      <div data-testid="resource-preflight-available" class="metric"><dt>剩余可用</dt><dd>{{ formatResourceBytes(report.availableBytes) }}</dd></div>
+      <div data-testid="resource-preflight-estimated" class="metric"><dt>预计占用</dt><dd>{{ formatResourceBytes(report.estimatedOutputBytes) }}</dd></div>
     </dl>
 
     <div class="mt-2 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-dim">
@@ -65,6 +65,7 @@ const mediumLabel = computed(() => ({
 
 <style scoped>
 .resource-preflight-card {
+  container-type: inline-size;
   max-width: 100%;
   overflow-x: hidden;
   background: color-mix(in srgb, var(--bg-input) 42%, transparent);
@@ -84,6 +85,17 @@ const mediumLabel = computed(() => ({
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--bg-card) 48%, transparent);
 }
+.metric dt,
+.metric dd {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .metric dt { color: var(--text-muted); }
-.metric dd { min-width: 0; margin-top: 0.125rem; overflow-wrap: anywhere; color: var(--text-content); font-weight: 800; }
+.metric dd { margin-top: 0.125rem; color: var(--text-content); font-weight: 800; }
+
+@container (max-width: 17rem) {
+  .resource-preflight-metrics { grid-template-columns: minmax(0, 1fr); }
+}
 </style>

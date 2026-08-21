@@ -839,17 +839,45 @@ async function assertVisibleResourceCard(taskId, expectedLabel) {
     await (await waitForElement(rowSelector)).click()
     card = await driver.wait(findMatchingCard, 10_000)
   }
+  await driver.executeScript(
+    'arguments[0].scrollIntoView({ block: "start", inline: "nearest", behavior: "instant" });',
+    card,
+  )
   const text = (await card.getAttribute('textContent')).trim()
-  assert.match(text, /资源预检/)
+  assert.match(text, /目标存储预检/)
   assert.match(text, new RegExp(expectedLabel))
   const dimensions = await driver.executeScript(
-    'const card = arguments[0]; return { scrollWidth: card.scrollWidth, clientWidth: card.clientWidth };',
+    `const card = arguments[0];
+     const metrics = card.querySelector('[data-testid="resource-preflight-metrics"]');
+     const fields = [...card.querySelectorAll('.metric dt, .metric dd')];
+     return {
+       scrollWidth: card.scrollWidth,
+       clientWidth: card.clientWidth,
+       columnCount: metrics ? getComputedStyle(metrics).gridTemplateColumns.split(' ').filter(Boolean).length : 0,
+       fields: fields.map(field => {
+         const style = getComputedStyle(field);
+         return {
+           text: field.textContent?.trim(),
+           height: field.getBoundingClientRect().height,
+           lineHeight: Number.parseFloat(style.lineHeight) || Number.parseFloat(style.fontSize) * 1.2,
+           whiteSpace: style.whiteSpace,
+         };
+       }),
+     };`,
     card,
   )
   assert.ok(dimensions, 'the resource-preflight card must remain mounted')
   assert.ok(
     dimensions.scrollWidth <= dimensions.clientWidth + 1,
     `the resource-preflight card must not scroll horizontally: ${JSON.stringify(dimensions)}`,
+  )
+  assert.ok(
+    dimensions.columnCount >= 1 && dimensions.columnCount <= 2,
+    `the narrow resource card must use at most two metric columns: ${JSON.stringify(dimensions)}`,
+  )
+  assert.ok(
+    dimensions.fields.every(field => field.whiteSpace === 'nowrap' && field.height <= field.lineHeight * 1.35),
+    `resource metric labels and values must remain on one readable line: ${JSON.stringify(dimensions)}`,
   )
   return text
 }
@@ -1410,6 +1438,67 @@ async function runVaultUsageDesktopGate() {
   )
 }
 
+async function runResourcePreflightLayoutDesktopGate() {
+  console.log('[desktop-e2e] verifying shared resource-preflight layout in real compression and decompression details')
+  const gateRoot = path.join(fixtureDirectory, 'resource-preflight-layout')
+  const sourcePath = path.join(gateRoot, 'resource-layout-payload.txt')
+  const archivePath = path.join(gateRoot, 'resource-layout-payload.zip')
+  const extractedPath = path.join(gateRoot, 'resource-layout-payload', 'resource-layout-payload.txt')
+  const payload = `resource preflight layout ${new Date().toISOString()}\n`
+  mkdirSync(gateRoot, { recursive: true })
+  writeFileSync(sourcePath, payload, 'utf8')
+  await callDesktopBridge('clearTasks')
+  await callDesktopBridge('clearCompressionWorkspace')
+  await driver.manage().window().setRect({ width: 980, height: 720 })
+
+  forwardContextAction('--quick-pack', [sourcePath])
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await waitForStableFile(archivePath)
+  const compressionTask = await waitForResourcePreflightTask(
+    'compression',
+    task => task.status === 'completed' && normalizedDesktopPath(task.outputPath) === normalizedDesktopPath(archivePath),
+  )
+  assertRealResourceReport(compressionTask, {
+    operation: 'compression',
+    taskStatus: 'completed',
+    canStart: true,
+    reportStatuses: ['ready', 'warning'],
+    outputPath: archivePath,
+  })
+  await assertVisibleResourceCard(
+    compressionTask.id,
+    compressionTask.report.status === 'ready' ? '已通过' : '需留意',
+  )
+  mkdirSync(artifactDirectory, { recursive: true })
+  writeFileSync(
+    path.join(artifactDirectory, 'resource-preflight-compression.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+
+  forwardContextAction('--quick-extract', [archivePath])
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/decompress'), 30_000)
+  await waitForFileContent(extractedPath, payload)
+  const decompressionTask = await waitForResourcePreflightTask(
+    'decompression',
+    task => task.status === 'completed' && normalizedDesktopPath(task.outputPath) === normalizedDesktopPath(path.dirname(archivePath)),
+  )
+  assertRealResourceReport(decompressionTask, {
+    operation: 'decompression',
+    taskStatus: 'completed',
+    canStart: true,
+    reportStatuses: ['ready', 'warning'],
+    outputPath: path.dirname(archivePath),
+  })
+  await assertVisibleResourceCard(
+    decompressionTask.id,
+    decompressionTask.report.status === 'ready' ? '已通过' : '需留意',
+  )
+  writeFileSync(
+    path.join(artifactDirectory, 'resource-preflight-decompression.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+}
+
 async function runZipTelemetryDesktopGate() {
   console.log('[desktop-e2e] verifying focused plain and AES ZIP real-byte telemetry')
   await callDesktopBridge('clearTasks')
@@ -1642,6 +1731,10 @@ try {
     await runVaultUsageDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri vault current-day usage gate passed.')
+  } else if (resourcePreflightOnly) {
+    await runResourcePreflightLayoutDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri shared resource-preflight layout gate passed.')
   } else if (historyOnly) {
     await runHistoryDesktopGate()
     completedSuccessfully = true
