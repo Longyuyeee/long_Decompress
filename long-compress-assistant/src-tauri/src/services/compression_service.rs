@@ -123,6 +123,12 @@ struct ProgressMetric {
     last_bytes: u64,
 }
 
+struct ProgressBytes {
+    processed: u64,
+    total: u64,
+    output_estimated: bool,
+}
+
 #[derive(Clone)]
 struct CompressionProgressOutput {
     path: PathBuf,
@@ -443,9 +449,11 @@ impl CompressionService {
             task_id,
             progress,
             current_file,
-            processed_bytes,
-            total_bytes,
-            false,
+            ProgressBytes {
+                processed: processed_bytes,
+                total: total_bytes,
+                output_estimated: false,
+            },
         );
     }
 
@@ -455,10 +463,13 @@ impl CompressionService {
         task_id: &str,
         progress: f32,
         current_file: Option<String>,
-        processed_bytes: u64,
-        total_bytes: u64,
-        output_bytes_estimated: bool,
+        bytes: ProgressBytes,
     ) {
+        let ProgressBytes {
+            processed: processed_bytes,
+            total: total_bytes,
+            output_estimated: output_bytes_estimated,
+        } = bytes;
         let (speed, eta_seconds) = self.progress_telemetry(task_id, progress, processed_bytes, total_bytes);
         let output_bytes = if self.has_compression_progress_output(task_id) {
             self.compression_output_bytes(task_id).unwrap_or(0)
@@ -1062,7 +1073,7 @@ impl CompressionService {
         if password.chars().any(|ch| ch.is_ascii_punctuation()) {
             kinds.push("符号");
         }
-        if password.chars().any(|ch| !ch.is_ascii()) {
+        if !password.is_ascii() {
             kinds.push("非 ASCII 字符");
         }
         if kinds.is_empty() {
@@ -1469,7 +1480,7 @@ impl CompressionService {
                         return Some(password);
                     }
                     Ok(false) => {
-                        if attempted == 1 || attempted % 25 == 0 {
+                        if attempted == 1 || attempted.is_multiple_of(25) {
                             self.emit_log(
                                 window,
                                 task_id,
@@ -1797,9 +1808,11 @@ impl CompressionService {
                 &tid_progress,
                 p,
                 None,
-                processed,
-                total,
-                total > 0,
+                ProgressBytes {
+                    processed,
+                    total,
+                    output_estimated: total > 0,
+                },
             );
         });
 
@@ -1820,9 +1833,11 @@ impl CompressionService {
                     &tid_log,
                     progress,
                     Some(current_file.to_string()),
-                    processed,
-                    total,
-                    total > 0,
+                    ProgressBytes {
+                        processed,
+                        total,
+                        output_estimated: total > 0,
+                    },
                 );
                 let should_log = last_file_log_for_callback
                     .lock()
@@ -2159,9 +2174,11 @@ impl CompressionService {
             &task_id,
             1.0,
             None,
-            final_expanded_bytes,
-            telemetry_total,
-            false,
+            ProgressBytes {
+                processed: final_expanded_bytes,
+                total: telemetry_total,
+                output_estimated: false,
+            },
         );
         service.emit_log(
             &window,

@@ -23,9 +23,10 @@ v1.1.10 的大型分卷加密误判路径已被移除。当前实现能够区分
 - 版本身份检查通过：npm、Tauri、主程序、Shell 扩展和两个 Cargo 锁文件均为 `1.1.11`，版本化资源为 `long_compress_shell_extension_1_1_11.dll`。
 - 前端 36 个测试文件、212 项单元/组件测试全部通过，TypeScript 与 Vite 生产构建通过。
 - Rust release 主库 251 项通过、3 项按设计忽略；全部归档、密码、分卷、配置和真实往返集成测试通过。
+- Rust 主程序与 Shell 扩展均通过全目标严格 Clippy 检查（`-D warnings`）。
 - 使用用户提供的五卷约 2.5 GB ZIP 执行 release 真实门禁：加密判断为未加密，产生非零解压进度与当前文件事件，受控取消后源文件保持不变。
 - 本地 NSIS 安装包构建成功，主程序 FileVersion/ProductVersion 均为 `1.1.11`；7-Zip 完整性检查显示 14 个载荷文件全部正常。
-- 本地安装包 SHA-256：`BCB43F284F7B2B3A3E6E561C5423A4A2D71FD5671BF945F8207775994C72F46D`。
+- 本地安装包 SHA-256：`75E73E3035BF9E92FA8F78D85694E616B7BE97A0EF3CBB91104448411E28F2EB`。
 
 ## 发布门禁
 
