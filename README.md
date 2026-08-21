@@ -6,7 +6,7 @@
 
 ### 面向 Windows 的本地压缩、解压、归档浏览与密码管理工具
 
-[![Version](https://img.shields.io/badge/version-1.1.9-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.1.11-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri%20%2B%20Rust-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -23,7 +23,16 @@
 
 Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows 桌面归档工具。它不仅能完成日常压缩与解压，还把批量任务、压缩包浏览、密码保险箱、完整性检查、资源预检、任务模板和资源管理器右键菜单整合在同一个界面中。
 
-当前版本：**v1.1.9**。
+当前版本：**v1.1.11**。
+
+### v1.1.11 分卷解压收口
+
+- 修复大型未加密分卷在加密检测阶段看似停滞、继而误入密码字典流程的问题。
+- 分卷解压持续展示两位小数进度、当前文件、已产出体积、预计展开大小和速度；压缩任务同步展示真实输出大小、压缩比和空间变化。
+- 密码保险箱、导入词表和内置字典明确展示候选来源、序号、结果和耗时，同时继续隐藏密码明文。
+- 新增“解压后移入系统回收站”，仅在完整事务成功后处理整组源分卷；失败、取消和部分解压均保留源文件。
+- 真实五卷 ZIP、Windows Tauri 可见遥测和 v1.1.10 → v1.1.11 安装态 43 项门禁全部通过。
+- [查看 v1.1.11 发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.11)
 
 ### v1.1.9 修复收口
 
