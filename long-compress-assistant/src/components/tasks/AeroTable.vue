@@ -400,12 +400,21 @@ const onLeave = (el: any) => {
                         </div>
                       </div>
 
-                      <div class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
-                        <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
-                             :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
-                          <i v-if="task.extractToSubfolder" class="pi pi-check text-xs text-white"></i>
-                        </div>
-                        <span class="min-w-0 break-words [overflow-wrap:anywhere] text-sm font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
+                      <div class="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
+                        <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
+                          <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
+                                :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
+                            <i v-if="task.extractToSubfolder" class="pi pi-check text-xs text-white"></i>
+                          </span>
+                          <span class="min-w-0 break-words [overflow-wrap:anywhere] text-sm font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
+                        </button>
+                        <button type="button" role="switch" data-testid="task-recycle-source-switch" :aria-checked="task.recycleSourceAfterExtract" :disabled="task.status !== 'pending'" :title="appStore.t('decompress.config.recycle_source.desc')" class="flex min-w-0 items-center gap-3 cursor-pointer group/recycle text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.recycleSourceAfterExtract = !task.recycleSourceAfterExtract">
+                          <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/recycle:border-primary"
+                                :class="task.recycleSourceAfterExtract ? 'bg-primary border-primary' : 'bg-input'">
+                            <i v-if="task.recycleSourceAfterExtract" class="pi pi-check text-xs text-white"></i>
+                          </span>
+                          <span class="min-w-0 break-words [overflow-wrap:anywhere] text-sm font-bold text-muted group-hover/recycle:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.recycle_source') }}</span>
+                        </button>
                       </div>
 
                       <!-- 密码输入区 (仅在自动破解失败时显示) -->

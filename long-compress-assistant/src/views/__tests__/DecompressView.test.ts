@@ -201,6 +201,44 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
+  it('applies the global recycle-bin default to pending and newly added tasks', async () => {
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'bundle.zip',
+      path: 'C:/archives/bundle.zip',
+    }])
+    await flushPromises()
+
+    const globalRecycleSwitch = wrapper.get('[data-testid="global-recycle-source-switch"]')
+    expect(globalRecycleSwitch.attributes('aria-checked')).toBe('false')
+    await globalRecycleSwitch.trigger('click')
+
+    const appStore = useAppStore()
+    const taskStore = useTaskStore()
+    expect(appStore.settings.autoDeleteSource).toBe(true)
+    expect(taskStore.tasks[0].recycleSourceAfterExtract).toBe(true)
+
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'second.zip',
+      path: 'C:/archives/second.zip',
+    }])
+    await flushPromises()
+    expect(taskStore.tasks[1].recycleSourceAfterExtract).toBe(true)
+
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(appStore.t('decompress.start_queue')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(mocks.decompressFile).toHaveBeenCalledWith(
+      'C:/archives/bundle.zip',
+      expect.objectContaining({ deleteAfter: true }),
+      expect.any(String),
+    )
+    wrapper.unmount()
+  })
+
   it('keeps a file-conflict task resumable without showing a false failure', async () => {
     mocks.decompressFile.mockRejectedValueOnce(
       new Error('Extraction failed: File conflict requires resolution'),

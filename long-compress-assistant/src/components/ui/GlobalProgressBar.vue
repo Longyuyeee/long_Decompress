@@ -118,7 +118,7 @@ const retryTask = async (task: Task) => {
         outputPath: task.outputPath,
         keepStructure: true,
         overwrite: false,
-        deleteAfter: appStore.settings.autoDeleteSource,
+        deleteAfter: task.recycleSourceAfterExtract ?? false,
         createSubdirectory: task.extractToSubfolder ?? false,
         password: task.password || undefined,
         fileFilter: task.fileFilter || null,

@@ -42,6 +42,7 @@ export interface Task {
   format?: string
   conflicts: ConflictInfo[]
   extractToSubfolder?: boolean
+  recycleSourceAfterExtract?: boolean
   fileFilter?: string
   selectedEntries?: string[]
   // 增强字段 [FE-INT-001]

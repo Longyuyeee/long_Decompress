@@ -28,6 +28,7 @@ use crate::services::extraction_transaction::{self, ExtractionStaging};
 use crate::services::mark_of_web::{self, PropagationStatus};
 use crate::services::native_compression::{self, CompressionRuntime};
 use crate::services::native_extraction::{self, ExtractionRuntime};
+use crate::services::split_archive_detector::SplitArchiveDetector;
 
 pub use crate::services::archive_format::ArchiveFormat;
 pub use crate::services::compression_format::{
@@ -1237,6 +1238,45 @@ impl CompressionService {
         self.test_archive_password(file_path, password).await
     }
 
+    fn source_archive_paths_for_recycle_bin(file_path: &Path) -> Result<Vec<PathBuf>> {
+        match SplitArchiveDetector::detect_split_archive(file_path)? {
+            Some(info) if !info.parts.is_empty() => Ok(info.parts),
+            _ => Ok(vec![file_path.to_path_buf()]),
+        }
+    }
+
+    fn move_source_archives_to_system_recycle_bin(file_path: &Path) -> Result<usize> {
+        let source_paths = Self::source_archive_paths_for_recycle_bin(file_path)?;
+        let source_count = source_paths.len();
+        trash::delete_all(&source_paths).map_err(|error| {
+            anyhow::anyhow!(
+                "Windows system Recycle Bin rejected the source archive: {}",
+                error
+            )
+        })?;
+        Ok(source_count)
+    }
+
+    fn validate_recycle_bin_options(options: &DecompressOptions) -> Result<()> {
+        let filtered = options
+            .file_filter
+            .as_deref()
+            .is_some_and(|filter| !filter.trim().is_empty());
+        if options.delete_after
+            && (options.skip_corrupted
+                || options.extract_only_newer
+                || filtered
+                || !options.selected_entries.is_empty()
+                || options.conflict_policy == "skip")
+        {
+            return Err(CompressionError::ExtractionFailed(
+                "部分解压、容错解压或跳过冲突时不能将源压缩包移入系统回收站".to_string(),
+            )
+            .into());
+        }
+        Ok(())
+    }
+
     pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, options: DecompressOptions) -> Result<String> {
         let service = self.clone();
         let path = Path::new(&file_path);
@@ -1249,14 +1289,7 @@ impl CompressionService {
                 options.conflict_policy
             )).into());
         }
-        if options.delete_after
-            && (options.skip_corrupted
-                || options.file_filter.as_deref().is_some_and(|filter| !filter.trim().is_empty()))
-        {
-            return Err(CompressionError::ExtractionFailed(
-                "The source archive cannot be deleted after a partial or corruption-tolerant extraction".to_string()
-            ).into());
-        }
+        Self::validate_recycle_bin_options(&options)?;
         let mut final_out_dir = output_dir.map(PathBuf::from).unwrap_or_else(|| {
             path.parent().unwrap_or(Path::new(".")).to_path_buf()
         });
@@ -1694,13 +1727,26 @@ impl CompressionService {
             );
         }
         if options.delete_after {
-            if let Err(error) = std::fs::remove_file(&file_path) {
-                service.emit_log(
+            let source_path = path.to_path_buf();
+            let recycle_result = tokio::task::spawn_blocking(move || {
+                Self::move_source_archives_to_system_recycle_bin(&source_path)
+            }).await;
+            match recycle_result
+                .map_err(|error| anyhow::anyhow!("System recycle-bin task failed: {}", error))
+                .and_then(|result| result)
+            {
+                Err(error) => service.emit_log(
                     &window,
                     &task_id,
-                    &format!("Extraction succeeded, but the source archive could not be deleted: {}", error),
+                    &format!("解压已完成，但源压缩包未能移入系统回收站：{}", error),
                     TaskLogSeverity::Warning,
-                );
+                ),
+                Ok(source_count) => service.emit_log(
+                    &window,
+                    &task_id,
+                    &format!("已将 {} 个源压缩文件移入系统回收站，可从 Windows 回收站恢复", source_count),
+                    TaskLogSeverity::Success,
+                ),
             }
         }
         service.emit_log(&window, &task_id, "全部解压任务已完成", TaskLogSeverity::Success);
@@ -2667,6 +2713,78 @@ impl CompressionService {
 #[cfg(test)]
 mod tests_continued {
     use super::*;
+
+    #[test]
+    fn recycle_bin_source_resolution_includes_every_split_volume() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let first = temp.path().join("bundle.zip.001");
+        let second = temp.path().join("bundle.zip.002");
+        std::fs::write(&first, b"part one").expect("first split fixture");
+        std::fs::write(&second, b"part two").expect("second split fixture");
+
+        let paths = CompressionService::source_archive_paths_for_recycle_bin(&first)
+            .expect("resolve split source paths");
+
+        assert_eq!(paths, vec![first, second]);
+    }
+
+    #[test]
+    fn recycle_bin_rejects_every_partial_extraction_mode() {
+        let partial_options = [
+            DecompressOptions {
+                delete_after: true,
+                skip_corrupted: true,
+                ..Default::default()
+            },
+            DecompressOptions {
+                delete_after: true,
+                extract_only_newer: true,
+                ..Default::default()
+            },
+            DecompressOptions {
+                delete_after: true,
+                file_filter: Some("*.txt".to_string()),
+                ..Default::default()
+            },
+            DecompressOptions {
+                delete_after: true,
+                selected_entries: vec!["one.txt".to_string()],
+                ..Default::default()
+            },
+            DecompressOptions {
+                delete_after: true,
+                conflict_policy: "skip".to_string(),
+                ..Default::default()
+            },
+        ];
+
+        for options in partial_options {
+            assert!(CompressionService::validate_recycle_bin_options(&options).is_err());
+        }
+        assert!(CompressionService::validate_recycle_bin_options(&DecompressOptions {
+            delete_after: true,
+            ..Default::default()
+        })
+        .is_ok());
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    #[ignore = "mutates the Windows system Recycle Bin; run explicitly for release validation"]
+    fn real_windows_recycle_bin_moves_every_split_volume() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let first = temp.path().join(format!("long-recycle-{}.zip.001", uuid::Uuid::new_v4()));
+        let second = first.with_extension("002");
+        std::fs::write(&first, b"part one").expect("first split fixture");
+        std::fs::write(&second, b"part two").expect("second split fixture");
+
+        let moved = CompressionService::move_source_archives_to_system_recycle_bin(&first)
+            .expect("move split sources to the Windows system Recycle Bin");
+
+        assert_eq!(moved, 2);
+        assert!(!first.exists(), "first volume must leave its original path");
+        assert!(!second.exists(), "second volume must leave its original path");
+    }
 
     #[tokio::test]
     async fn progress_telemetry_reports_real_speed_and_eta() {

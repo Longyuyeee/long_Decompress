@@ -29,6 +29,12 @@ const decompressionTasks = computed(() => taskStore.tasksFor('decompression'))
 const globalOutputPath = ref('')
 const isGlobalSameDir = ref(true) // 默认同目录，用户可通过按钮手动选择
 const globalExtractToSubfolder = ref(false)
+const globalRecycleSourceAfterExtract = ref(appStore.settings.autoDeleteSource)
+
+watch(
+  () => appStore.settings.autoDeleteSource,
+  enabled => { globalRecycleSourceAfterExtract.value = enabled }
+)
 
 let contextActionDrain: Promise<void> | null = null
 
@@ -123,7 +129,8 @@ const onFilesSelected = async (files: any[]) => {
       type: 'decompression',
       sourceFiles: [sourcePath],
       outputPath: isGlobalSameDir.value ? parentDir : globalOutputPath.value,
-      extractToSubfolder: globalExtractToSubfolder.value
+      extractToSubfolder: globalExtractToSubfolder.value,
+      recycleSourceAfterExtract: globalRecycleSourceAfterExtract.value
     })
     createdTaskIds.push(taskId)
     appStore.addRecentFile(sourcePath)
@@ -231,6 +238,14 @@ const toggleGlobalSubfolder = () => {
   })
 }
 
+const toggleGlobalRecycleSource = () => {
+  globalRecycleSourceAfterExtract.value = !globalRecycleSourceAfterExtract.value
+  appStore.updateSettings({ autoDeleteSource: globalRecycleSourceAfterExtract.value })
+  decompressionTasks.value.forEach(t => {
+    if (t.status === 'pending') t.recycleSourceAfterExtract = globalRecycleSourceAfterExtract.value
+  })
+}
+
 const toggleTaskSelection = (taskId: string) => {
   if (selectedTaskIds.value.has(taskId)) {
     selectedTaskIds.value.delete(taskId)
@@ -300,7 +315,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       outputPath: task.outputPath,
       keepStructure: true,
       overwrite: false,
-      deleteAfter: appStore.settings.autoDeleteSource,
+      deleteAfter: task.recycleSourceAfterExtract ?? false,
       createSubdirectory: task.extractToSubfolder ?? false,
       password: task.password || undefined, // 只使用用户手动输入的密码
       fileFilter: task.fileFilter || null
@@ -431,7 +446,7 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
     outputPath: task.outputPath,
     keepStructure: true,
     overwrite: action === 'overwrite',
-    deleteAfter: appStore.settings.autoDeleteSource,
+    deleteAfter: task.recycleSourceAfterExtract ?? false,
     createSubdirectory: task.extractToSubfolder ?? false,
     password: task.password || undefined,
     fileFilter: task.fileFilter || null
@@ -545,6 +560,22 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           </div>
           <span class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('decompress.config.output_sub') }}</span>
         </div>
+
+        <button
+          type="button"
+          role="switch"
+          data-testid="global-recycle-source-switch"
+          :aria-checked="globalRecycleSourceAfterExtract"
+          :title="appStore.t('decompress.config.recycle_source.desc')"
+          class="flex items-center gap-2 shrink-0 text-left"
+          @click="toggleGlobalRecycleSource"
+        >
+          <span class="w-3 h-3 rounded border border-primary/30 flex items-center justify-center"
+                :class="globalRecycleSourceAfterExtract ? 'bg-primary border-primary' : 'bg-transparent'">
+            <i v-if="globalRecycleSourceAfterExtract" class="pi pi-check text-[0.375rem] text-white"></i>
+          </span>
+          <span class="text-xs font-black text-muted uppercase tracking-widest whitespace-nowrap">{{ appStore.t('decompress.config.recycle_source') }}</span>
+        </button>
 
         <div class="w-px h-5 bg-subtle/20 mx-1 hidden md:block"></div>
 
