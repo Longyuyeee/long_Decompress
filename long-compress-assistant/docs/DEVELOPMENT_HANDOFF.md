@@ -6,7 +6,7 @@
 - 启用值固定为带引号的当前可执行文件绝对路径和 `--autostart` 参数，重复启用幂等；禁用和卸载清理当前及历史品牌值，覆盖更新保留用户已明确开启的当前值。
 - 登录启动期间主窗口在 setup 与页面加载阶段保持隐藏，只驻留托盘；携带 `--autostart` 的第二实例不会唤醒现有窗口。
 - 前端错误路径在注册失败后回读真实状态，不把失败写成成功；重置普通设置也不会绕过专用开关偷偷改变 Windows 启动项。
-- Windows Release Tauri 门禁已覆盖初始关闭、单次启用、注册表精确命令、重复启用、禁用清理和独立进程隐藏启动，并接入 Windows CI。完整边界与 Defender 验证状态见 [AUTOSTART_SECURITY_AUDIT.md](AUTOSTART_SECURITY_AUDIT.md)。
+- Windows Release Tauri 门禁已覆盖初始关闭、单次启用、注册表精确命令、重复启用、禁用清理和独立进程隐藏启动。托管 CI 只构建隔离测试二进制并校验脚本；真实 GUI 闭环按既有约束在交互式 Windows 环境执行。完整边界与 Defender 验证状态见 [AUTOSTART_SECURITY_AUDIT.md](AUTOSTART_SECURITY_AUDIT.md)。
 - 正式发布说明见 [RELEASE_NOTES_1.1.12.md](RELEASE_NOTES_1.1.12.md)，候选审计见 [RELEASE_AUDIT_1.1.12.md](RELEASE_AUDIT_1.1.12.md)。
 
 ## 2026-08-21 v1.1.11 发布收口

@@ -106,8 +106,6 @@ jobs:
       - name: Build real Tauri application
         working-directory: long-compress-assistant/src-tauri
         run: cargo build --release --features custom-protocol,desktop-e2e
-      - name: Install Tauri WebDriver bridge
-        run: cargo install tauri-driver --version 2.0.6 --locked
       - name: Validate desktop E2E scripts
         run: |
           node --check scripts/test-tauri-desktop.mjs
@@ -123,10 +121,6 @@ jobs:
           }
       - name: Validate matching Microsoft EdgeDriver
         run: .\scripts\install-edge-driver.ps1 -Destination (Join-Path $env:RUNNER_TEMP "edge-driver")
-      - name: Verify explicit auto-start lifecycle
-        env:
-          EDGE_DRIVER_PATH: ${{ runner.temp }}\edge-driver\msedgedriver.exe
-        run: npm run test:e2e:desktop:auto-start
 
   installer:
     name: Windows installer

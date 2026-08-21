@@ -37,7 +37,7 @@
 - 设置中心恢复 Windows 开机自动启动开关，状态加载严格只读，只有用户点击才会注册或删除启动项。
 - 启用命令固定为带引号的当前程序绝对路径与 `--autostart`，重复启用不改写；登录启动隐藏主窗口并驻留托盘。
 - 更新保留用户选择，卸载清理当前和历史品牌值；注册失败时界面回读真实状态，不保存虚假成功。
-- 真实 Windows Release Tauri 门禁点击实际设置开关，验证注册表精确值、幂等启用、关闭清理及隐藏启动，并已接入 Windows CI。
+- 真实 Windows Release Tauri 门禁点击实际设置开关，验证注册表精确值、幂等启用、关闭清理及隐藏启动；托管 CI 构建测试二进制并校验脚本，GUI 闭环保留在交互式 Windows 环境执行。
 - [v1.1.12 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.12) 提供 Windows 安装包、自动更新资产和完整发布说明。
 
 ## v1.1.11 修复收口

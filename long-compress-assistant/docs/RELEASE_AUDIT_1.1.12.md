@@ -24,6 +24,7 @@ v1.1.12 将开机自动启动恢复为严格的显式选择能力：默认不注
 - 前端 36 个测试文件、214 项单元/组件测试通过，TypeScript 类型检查和 Vite 生产构建通过。
 - Rust release 主库 254 项通过、3 项按设计忽略；主程序启动参数测试通过，Clippy 严格检查零警告。
 - 真实 Windows Release Tauri/WebView2 聚焦门禁通过，实际点击设置页开关并验证注册、精确命令、幂等、关闭清理和隐藏启动。
+- GitHub 托管 Windows runner 按既有环境边界只构建测试二进制、校验脚本和匹配的 EdgeDriver；真实 GUI 门禁不在非交互会话中伪装执行。
 - 测试结束后 `HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run` 中没有遗留 `Long解压` 测试值。
 - NSIS 候选构建成功，安装器模板测试确认覆盖更新保留当前值、卸载清理当前及历史品牌值。
 - 主程序 FileVersion/ProductVersion 均为 `1.1.12`；7-Zip 对 NSIS 内 14 个载荷文件的完整性检查通过。

@@ -37,7 +37,7 @@
 - 安装器模板测试验证更新保留当前显式值、清理旧品牌值，卸载清理全部相关值。
 - 前端单元测试验证加载只读、点击才写、成功后才持久化以及失败回滚。
 - `npm.cmd run test:e2e:desktop:auto-start` 在真实 Windows Release Tauri/WebView2 设置页中点击实际开关，并验证注册表精确值、幂等启用、禁用清理和登录启动隐藏窗口；测试发现已有用户值时直接拒绝执行，只有确认初始无值后才取得清理权。
-- Windows CI 在构建真实桌面程序并准备匹配的 EdgeDriver 后执行上述聚焦门禁。
+- Windows CI 构建带隔离测试桥的真实桌面程序、校验脚本并准备匹配的 EdgeDriver；GitHub 托管 runner 是非交互会话，无法可靠创建 WebView2 `DevToolsActivePort`，因此聚焦 GUI 门禁只在本机或交互式 self-hosted Windows runner 执行。
 
 ## Defender 验证状态
 
