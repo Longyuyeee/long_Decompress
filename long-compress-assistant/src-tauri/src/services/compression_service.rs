@@ -18,7 +18,7 @@ use crate::services::io_buffer_pool::IOBufferPool;
 use crate::services::rar_support::RarSupportService;
 use crate::services::universal_engine::UniversalCliEngine;
 use crate::services::archive_engine::ArchiveEngine;
-use crate::services::password_query_service::PasswordQueryService;
+use crate::services::encrypted_password_service::EncryptedPasswordService;
 use crate::services::tar_aes_engine::TarAesEngine;
 use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
@@ -111,6 +111,9 @@ pub struct RarCompressionSupport {
 }
 
 use tokio::sync::Semaphore;
+use tokio::sync::OnceCell;
+
+static DEFAULT_PASSWORD_VAULT: OnceCell<Arc<EncryptedPasswordService>> = OnceCell::const_new();
 
 struct ProgressMetric {
     started_at: Instant,
@@ -124,7 +127,7 @@ pub struct CompressionService {
     pub buffer_pool: Arc<IOBufferPool>,
     pub rar_service: Arc<RarSupportService>,
     pub universal_engine: Arc<UniversalCliEngine>,
-    pub password_query_service: Arc<PasswordQueryService>,
+    pub encrypted_password_service: Arc<EncryptedPasswordService>,
     pub semaphore: Arc<Semaphore>,
     progress_metrics: Arc<Mutex<HashMap<String, ProgressMetric>>>,
 }
@@ -185,26 +188,40 @@ impl CompressionService {
     const COPY_BUFFER_SIZE: usize = 256 * 1024;
 
     pub async fn new_with_defaults() -> Self {
-        let pool = match crate::database::connection::get_connection().await {
-            Ok(conn) => conn.pool().clone(),
-            Err(e) => {
-                log::warn!("Database connection unavailable; password book features will be limited: {}", e);
-                sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:").unwrap_or_else(|_| {
-                    sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:").unwrap()
-                })
-            }
-        };
-
-        let data_dir = crate::utils::app_paths::app_data_dir();
-        let enc_service = Arc::new(crate::services::encrypted_password_service::EncryptedPasswordService::new(&data_dir));
-        let query_service = Arc::new(PasswordQueryService::new(pool, enc_service));
+        let encrypted_password_service = DEFAULT_PASSWORD_VAULT
+            .get_or_init(|| async {
+                let data_dir = crate::utils::app_paths::app_data_dir();
+                let mut service = EncryptedPasswordService::new(&data_dir);
+                match EncryptedPasswordService::get_or_create_master_key(&data_dir).await {
+                    Ok(master_key) => match service.unlock(&master_key).await {
+                        Ok(true) => {}
+                        Ok(false) if !data_dir.join("master_password.hash").exists() => {
+                            if let Err(error) = service.initialize(&master_key).await {
+                                log::error!("Failed to initialize password vault for archive tasks: {}", error);
+                            }
+                        }
+                        Ok(false) => {
+                            log::error!("Password vault installation key did not unlock the existing vault");
+                        }
+                        Err(error) => {
+                            log::error!("Failed to unlock password vault for archive tasks: {}", error);
+                        }
+                    },
+                    Err(error) => {
+                        log::error!("Failed to load password vault installation key: {}", error);
+                    }
+                }
+                Arc::new(service)
+            })
+            .await
+            .clone();
 
         Self::new(
             CompressionServiceConfig::default(),
             Arc::new(IOBufferPool::default()),
             Arc::new(RarSupportService::new()),
             Arc::new(UniversalCliEngine::new()),
-            query_service,
+            encrypted_password_service,
         )
     }
     pub fn new(
@@ -212,7 +229,7 @@ impl CompressionService {
         buffer_pool: Arc<IOBufferPool>,
         rar_service: Arc<RarSupportService>,
         universal_engine: Arc<UniversalCliEngine>,
-        password_query_service: Arc<PasswordQueryService>,
+        encrypted_password_service: Arc<EncryptedPasswordService>,
     ) -> Self {
         // 默认并发数为 CPU 核心数，最低为 2
         let max_concurrency = if config.max_concurrent_files > 0 {
@@ -229,21 +246,17 @@ impl CompressionService {
             buffer_pool,
             rar_service,
             universal_engine,
-            password_query_service,
+            encrypted_password_service,
             semaphore: Arc::new(Semaphore::new(max_concurrency)),
             progress_metrics: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
     pub fn for_testing() -> Self {
-        // 此实现使用内存数据库作为密码本后端，仅用于兼容性和测试场景。
-        // 在生产代码中请使用 new_with_defaults() 以接入真实的数据库连接。
-        log::warn!("CompressionService::for_testing() called - password book features will be unavailable. Use new_with_defaults() instead.");
-        let pool = sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:")
-            .unwrap_or_else(|_| sqlx::pool::Pool::<sqlx::Sqlite>::connect_lazy("sqlite::memory:").unwrap());
+        // 测试默认使用未解锁的文件型密码保险箱；需要密码候选的测试应显式注入临时保险箱。
+        log::warn!("CompressionService::for_testing() called - inject an unlocked temporary vault when testing password lookup.");
         let data_dir = crate::utils::app_paths::app_data_dir();
-        let enc_service = Arc::new(crate::services::encrypted_password_service::EncryptedPasswordService::new(&data_dir));
-        let query_service = Arc::new(PasswordQueryService::new(pool, enc_service));
+        let encrypted_password_service = Arc::new(EncryptedPasswordService::new(&data_dir));
 
         Self {
             config: CompressionServiceConfig::default(),
@@ -251,7 +264,7 @@ impl CompressionService {
             buffer_pool: Arc::new(IOBufferPool::default()),
             rar_service: Arc::new(RarSupportService::new()),
             universal_engine: Arc::new(UniversalCliEngine::new()),
-            password_query_service: query_service,
+            encrypted_password_service,
             semaphore: Arc::new(Semaphore::new(2)),
             progress_metrics: Arc::new(Mutex::new(HashMap::new())),
         }
@@ -966,19 +979,18 @@ impl CompressionService {
     }
 
     async fn password_book_candidates(&self) -> Result<Vec<(String, String, String)>> {
-        use crate::services::password_query_service::{PasswordQueryRequest, SortField, SortOrder};
+        let mut entries = self.encrypted_password_service.list_passwords().await?;
+        entries.retain(|entry| !entry.password.is_empty());
+        entries.sort_by(|left, right| {
+            right
+                .favorite
+                .cmp(&left.favorite)
+                .then_with(|| right.use_count.cmp(&left.use_count))
+                .then_with(|| right.last_used.cmp(&left.last_used))
+                .then_with(|| left.name.cmp(&right.name))
+        });
 
-        let request = PasswordQueryRequest {
-            sort_by: Some(SortField::UsageCount),
-            sort_order: Some(SortOrder::Desc),
-            page_size: Some(1000),
-            include_decrypted: true,
-            ..Default::default()
-        };
-
-        let response = self.password_query_service.search_passwords(&request).await?;
-        Ok(response
-            .data
+        Ok(entries
             .into_iter()
             .map(|entry| (entry.id, entry.name, entry.password))
             .collect())
@@ -996,7 +1008,7 @@ impl CompressionService {
         for (entry_id, _entry_name, password) in passwords {
             match self.test_archive_password(file_path, &password).await {
                 Ok(true) => {
-                    let _ = self.password_query_service.increment_use_count(&entry_id).await;
+                    let _ = self.encrypted_password_service.increment_use_count(&entry_id).await;
                     return Some(password);
                 }
                 _ => continue,
@@ -1007,19 +1019,25 @@ impl CompressionService {
     }
 
     async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
-        self.emit_log(window, task_id, "正在检索高频密码本...", TaskLogSeverity::Info);
+        self.emit_log(window, task_id, "正在检索密码保险箱...", TaskLogSeverity::Info);
 
         let passwords = match self.password_book_candidates().await {
             Ok(res) => res,
             Err(e) => {
                 log::error!("获取密码本失败: {}", e);
+                self.emit_log(
+                    window,
+                    task_id,
+                    &format!("密码保险箱读取失败，已跳过保险箱尝试：{}", e),
+                    TaskLogSeverity::Warning,
+                );
                 return None;
             }
         };
 
         let total = passwords.len();
         if total == 0 {
-            self.emit_log(window, task_id, "密码本为空，跳过尝试", TaskLogSeverity::Info);
+            self.emit_log(window, task_id, "密码保险箱为空，跳过尝试", TaskLogSeverity::Info);
             return None;
         }
 
@@ -1046,7 +1064,7 @@ impl CompressionService {
             match self.test_archive_password(file_path, pwd).await {
                 Ok(true) => {
                     self.emit_log(window, task_id, &format!("密码匹配成功 ({})", entry_name), TaskLogSeverity::Success);
-                    let _ = self.password_query_service.increment_use_count(entry_id).await;
+                    let _ = self.encrypted_password_service.increment_use_count(entry_id).await;
                     return Some(pwd.clone());
                 },
                 _ => continue,
@@ -2482,6 +2500,55 @@ mod tests {
             .test_archive_password(&encrypted.to_string_lossy(), "wrong-password")
             .await
             .expect("wrong password check"));
+    }
+
+    #[tokio::test]
+    async fn resolves_encrypted_archive_from_the_file_backed_password_vault() {
+        use crate::models::password::{PasswordCategory, PasswordEntry};
+
+        let temp = tempfile::tempdir().expect("temp dir");
+        let input = temp.path().join("payload.gz");
+        let encrypted = temp.path().join("payload.gz.aes");
+        std::fs::write(&input, b"real encrypted payload").expect("write fixture");
+        AesWrapper::encrypt_file(&input, &encrypted, "vault-password").expect("encrypt fixture");
+
+        let vault_dir = temp.path().join("vault");
+        let mut vault = EncryptedPasswordService::new(&vault_dir);
+        vault.initialize("installation-key").await.expect("initialize vault");
+        let saved = vault
+            .add_password(PasswordEntry::new(
+                "archive password".to_string(),
+                "vault-password".to_string(),
+                PasswordCategory::Other,
+            ))
+            .await
+            .expect("save password");
+
+        let service = CompressionService::new(
+            CompressionServiceConfig::default(),
+            Arc::new(IOBufferPool::default()),
+            Arc::new(RarSupportService::new()),
+            Arc::new(UniversalCliEngine::new()),
+            Arc::new(vault),
+        );
+        let options = DecompressOptions {
+            enable_bruteforce: false,
+            ..Default::default()
+        };
+
+        let resolved = service
+            .resolve_archive_password_silent(&encrypted.to_string_lossy(), &options)
+            .await;
+
+        assert_eq!(resolved.as_deref(), Some("vault-password"));
+        let updated = service
+            .encrypted_password_service
+            .get_password(&saved.id)
+            .await
+            .expect("read password")
+            .expect("password remains in vault");
+        assert_eq!(updated.use_count, 1);
+        assert!(updated.last_used.is_some());
     }
 
     #[test]
