@@ -1,5 +1,6 @@
-use long_compress_assistant::services::rar_support::RarSupportService;
 use long_compress_assistant::models::compression::DecompressOptions;
+use long_compress_assistant::services::rar_support::RarSupportService;
+use std::sync::{atomic::AtomicBool, Arc};
 use tempfile::tempdir;
 
 #[test]
@@ -22,13 +23,15 @@ async fn test_rar_extraction_nonexistent_file() {
     let output_dir = temp_dir.path().join("output");
     let options = DecompressOptions::default();
 
-    let result = service.extract_rar(
-        &nonexistent_rar,
-        &output_dir,
-        None,
-        &options,
-        std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
-    ).await;
+    let result = service
+        .extract_rar(
+            &nonexistent_rar,
+            &output_dir,
+            None,
+            &options,
+            std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        )
+        .await;
 
     assert!(result.is_err(), "不存在的RAR文件应该失败");
 }
@@ -91,4 +94,63 @@ async fn test_rar_password_attempt() {
     let result = service.test_rar_password(&test_rar, "test123").await;
     println!("RAR密码测试结果: {}", result);
     assert!(!result);
+}
+
+/// Runs against a pinned, independently produced encrypted RAR fixture.
+///
+/// The fixture and password are supplied explicitly so ordinary offline test
+/// runs do not depend on the network. Release validation sets both variables
+/// after verifying the fixture checksum in `test:fixtures:archives`.
+#[tokio::test]
+async fn real_encrypted_rar_password_and_extraction_round_trip() {
+    let Some(fixture) = std::env::var_os("LONG_EXTERNAL_RAR_PASSWORD_FIXTURE") else {
+        eprintln!("skipped: LONG_EXTERNAL_RAR_PASSWORD_FIXTURE is not set");
+        return;
+    };
+    let Some(password) = std::env::var_os("LONG_EXTERNAL_RAR_PASSWORD") else {
+        eprintln!("skipped: LONG_EXTERNAL_RAR_PASSWORD is not set");
+        return;
+    };
+    let fixture = std::path::PathBuf::from(fixture);
+    let password = password
+        .to_str()
+        .expect("fixture password must be valid Unicode");
+    assert!(fixture.is_file(), "encrypted RAR fixture must exist");
+
+    let service = RarSupportService::new();
+    assert!(
+        !service
+            .verify_rar_password(&fixture, "definitely-wrong-password")
+            .await
+            .expect("wrong-password verification must not fail structurally"),
+        "wrong RAR password must be rejected"
+    );
+    assert!(
+        service
+            .verify_rar_password(&fixture, password)
+            .await
+            .expect("correct-password verification must complete"),
+        "correct RAR password must be accepted"
+    );
+
+    let output = tempdir().expect("temporary extraction directory");
+    service
+        .extract_rar(
+            &fixture,
+            output.path(),
+            Some(password),
+            &DecompressOptions::default(),
+            Arc::new(AtomicBool::new(false)),
+        )
+        .await
+        .expect("encrypted RAR must extract with the verified password");
+
+    let foo = std::fs::read(output.path().join("foo.txt")).expect("foo.txt extracted");
+    let bar = std::fs::read(output.path().join("bar.txt")).expect("bar.txt extracted");
+    assert_eq!(foo.len(), 16, "foo.txt must be complete");
+    assert_eq!(bar.len(), 16, "bar.txt must be complete");
+    assert_ne!(
+        foo, bar,
+        "fixture members must retain their distinct contents"
+    );
 }
