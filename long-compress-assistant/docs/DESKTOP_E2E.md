@@ -66,6 +66,8 @@ npm.cmd run test:e2e:desktop:tar-telemetry
 npm.cmd run test:e2e:desktop:history
 # 只复验真实保险箱密码自动解压命中，并同步到本地当天使用趋势
 npm.cmd run test:e2e:desktop:vault-usage
+# 只复验固定官方加密 RAR 的错误密码拒绝、正确密码解压和逐文件 SHA-256
+npm.cmd run test:e2e:desktop:encrypted-rar
 # 发布前全格式验收会强制检查所有生成器，不允许静默跳过
 npm.cmd run test:prepare:full-format
 npm.cmd run test:e2e:desktop:full-format
