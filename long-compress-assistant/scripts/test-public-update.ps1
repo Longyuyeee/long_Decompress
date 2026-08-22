@@ -6,7 +6,6 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-Import-Module Microsoft.PowerShell.Utility -ErrorAction Stop
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $resultsRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot 'test-results\public-update-validation'))
@@ -42,6 +41,23 @@ function Add-Check {
   }
 }
 
+function Get-FileSha256 {
+  param([string]$Path)
+  $stream = [IO.File]::Open(
+    $Path,
+    [IO.FileMode]::Open,
+    [IO.FileAccess]::Read,
+    [IO.FileShare]::ReadWrite
+  )
+  $hasher = [Security.Cryptography.SHA256]::Create()
+  try {
+    return ([BitConverter]::ToString($hasher.ComputeHash($stream)) -replace '-', '')
+  } finally {
+    $hasher.Dispose()
+    $stream.Dispose()
+  }
+}
+
 function Get-DirectoryFingerprint {
   param([string]$Path)
   if (-not (Test-Path -LiteralPath $Path)) {
@@ -52,7 +68,7 @@ function Get-DirectoryFingerprint {
     Sort-Object FullName |
     ForEach-Object {
       $relative = $_.FullName.Substring($root.Length).TrimStart('\')
-      "$relative|$($_.Length)|$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash)"
+      "$relative|$($_.Length)|$(Get-FileSha256 $_.FullName)"
     }
   $payload = [Text.Encoding]::UTF8.GetBytes(($records -join "`n"))
   $hasher = [Security.Cryptography.SHA256]::Create()
