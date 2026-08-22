@@ -102,6 +102,7 @@ const archiveFlowOnly = process.argv.includes('--archive-flow-only')
 const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
 const historyOnly = process.argv.includes('--history-only')
 const vaultUsageOnly = process.argv.includes('--vault-usage-only')
+const encryptedRarOnly = process.argv.includes('--encrypted-rar-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const responsiveLayoutOnly = process.argv.includes('--responsive-layout-only')
 const autoStartOnly = process.argv.includes('--auto-start-only')
@@ -1492,6 +1493,60 @@ async function runVaultUsageDesktopGate() {
   )
 }
 
+async function runEncryptedRarDesktopGate() {
+  console.log('[desktop-e2e] preparing pinned upstream encrypted RAR fixture')
+  runFixtureCommand(
+    process.execPath,
+    [path.join(root, 'scripts', 'fetch-archive-test-fixtures.mjs')],
+    'encrypted RAR fixture',
+  )
+  const encryptedRar = path.join(
+    externalFixtureDirectory,
+    'libarchive-rar-encrypted.rar',
+  )
+  assert.ok(existsSync(encryptedRar), 'the pinned encrypted RAR fixture must exist')
+
+  console.log('[desktop-e2e] verifying encrypted RAR wrong-password rejection')
+  const wrongPasswordStartedAt = Date.now()
+  const wrongPasswordOutput = path.join(fixtureDirectory, 'rar-encrypted-wrong-password')
+  const wrongPasswordError = await callDesktopBridgeFailure(
+    'extractArchive',
+    encryptedRar,
+    wrongPasswordOutput,
+    'wrong-password',
+  )
+  assert.match(
+    wrongPasswordError,
+    /password|encrypted|decrypt|checksum|crc|密码|解密/i,
+    `encrypted RAR must report a password-related failure: ${wrongPasswordError}`,
+  )
+  assert.equal(
+    existsSync(path.join(wrongPasswordOutput, 'foo.txt')),
+    false,
+    'wrong RAR password must not publish decrypted output',
+  )
+  assert.ok(
+    Date.now() - wrongPasswordStartedAt < 60_000,
+    'wrong RAR password rejection must complete within 60 seconds',
+  )
+  await callDesktopBridge('clearTasks')
+
+  console.log('[desktop-e2e] verifying encrypted RAR correct-password extraction')
+  const correctPasswordOutput = path.join(fixtureDirectory, 'rar-encrypted-correct-password')
+  await callDesktopBridge('extractArchive', encryptedRar, correctPasswordOutput, '12345678')
+  assert.equal(
+    fileSha256(path.join(correctPasswordOutput, 'foo.txt')),
+    '325d7b459b439684cad8825cbf2e488de15518103de09c56a42d6b1875081ee7',
+    'encrypted RAR foo.txt must match the pinned plaintext',
+  )
+  assert.equal(
+    fileSha256(path.join(correctPasswordOutput, 'bar.txt')),
+    '7113d093a90b4a5cbac15a3bc8e85efbac50556c2a1f58f70a283cb2c373f1d5',
+    'encrypted RAR bar.txt must match the pinned plaintext',
+  )
+  await callDesktopBridge('clearTasks')
+}
+
 async function runResourcePreflightLayoutDesktopGate() {
   console.log('[desktop-e2e] verifying shared resource-preflight layout in real compression and decompression details')
   const gateRoot = path.join(fixtureDirectory, 'resource-preflight-layout')
@@ -1986,6 +2041,10 @@ try {
     await runVaultUsageDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri vault current-day usage gate passed.')
+  } else if (encryptedRarOnly) {
+    await runEncryptedRarDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri encrypted RAR password gate passed.')
   } else if (resourcePreflightOnly) {
     await runResourcePreflightLayoutDesktopGate()
     completedSuccessfully = true
