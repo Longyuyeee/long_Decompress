@@ -65,6 +65,130 @@ fn medium_label(kind: DiskKind) -> String {
     .to_string()
 }
 
+#[cfg(windows)]
+fn nearest_existing_path(path: &Path) -> PathBuf {
+    let mut candidate = path.to_path_buf();
+    while !candidate.exists() && candidate.pop() {}
+    candidate
+}
+
+#[cfg(windows)]
+fn wide_path(path: &Path) -> Vec<u16> {
+    use std::os::windows::ffi::OsStrExt;
+    path.as_os_str().encode_wide().chain(Some(0)).collect()
+}
+
+#[cfg(windows)]
+#[link(name = "kernel32")]
+extern "system" {
+    fn GetDiskFreeSpaceExW(
+        directory_name: *const u16,
+        free_bytes_available: *mut u64,
+        total_bytes: *mut u64,
+        total_free_bytes: *mut u64,
+    ) -> i32;
+    fn GetVolumePathNameW(
+        file_name: *const u16,
+        volume_path_name: *mut u16,
+        buffer_length: u32,
+    ) -> i32;
+    fn GetVolumeInformationW(
+        root_path_name: *const u16,
+        volume_name: *mut u16,
+        volume_name_size: u32,
+        volume_serial_number: *mut u32,
+        maximum_component_length: *mut u32,
+        file_system_flags: *mut u32,
+        file_system_name: *mut u16,
+        file_system_name_size: u32,
+    ) -> i32;
+    fn GetDriveTypeW(root_path_name: *const u16) -> u32;
+}
+
+#[cfg(windows)]
+fn probe_windows_storage(requested: &Path) -> Option<StorageTarget> {
+    const DRIVE_REMOVABLE: u32 = 2;
+    const DRIVE_REMOTE: u32 = 4;
+
+    let existing = nearest_existing_path(requested);
+    if existing.as_os_str().is_empty() {
+        return None;
+    }
+    let existing_wide = wide_path(&existing);
+    let mut available = 0u64;
+    let mut total = 0u64;
+    let mut total_free = 0u64;
+    // SAFETY: all pointers target live writable/read-only buffers for the call.
+    if unsafe {
+        GetDiskFreeSpaceExW(
+            existing_wide.as_ptr(),
+            &mut available,
+            &mut total,
+            &mut total_free,
+        )
+    } == 0
+    {
+        return None;
+    }
+
+    let mut volume_buffer = vec![0u16; 512];
+    let has_volume = unsafe {
+        GetVolumePathNameW(
+            existing_wide.as_ptr(),
+            volume_buffer.as_mut_ptr(),
+            volume_buffer.len() as u32,
+        )
+    } != 0;
+    let volume_length = volume_buffer.iter().position(|value| *value == 0).unwrap_or(0);
+    let volume_path = has_volume.then(|| String::from_utf16_lossy(&volume_buffer[..volume_length]));
+
+    let mut file_system_buffer = vec![0u16; 64];
+    let file_system = volume_path.as_ref().and_then(|volume| {
+        let volume_wide = wide_path(Path::new(volume));
+        let ok = unsafe {
+            GetVolumeInformationW(
+                volume_wide.as_ptr(),
+                std::ptr::null_mut(),
+                0,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                file_system_buffer.as_mut_ptr(),
+                file_system_buffer.len() as u32,
+            )
+        } != 0;
+        if !ok {
+            return None;
+        }
+        let length = file_system_buffer.iter().position(|value| *value == 0).unwrap_or(0);
+        Some(String::from_utf16_lossy(&file_system_buffer[..length]))
+    });
+    let drive_type = volume_path.as_ref().map(|volume| {
+        let volume_wide = wide_path(Path::new(volume));
+        unsafe { GetDriveTypeW(volume_wide.as_ptr()) }
+    });
+    let location = match drive_type {
+        Some(DRIVE_REMOVABLE) => "removable",
+        Some(DRIVE_REMOTE) => "network",
+        _ => "local",
+    };
+
+    Some(StorageTarget {
+        probe_path: requested.to_string_lossy().to_string(),
+        mount_point: volume_path,
+        file_system,
+        location: location.to_string(),
+        medium: "unknown".to_string(),
+        total_bytes: Some(total),
+        available_bytes: Some(available),
+    })
+}
+
+#[cfg(not(windows))]
+fn probe_windows_storage(_: &Path) -> Option<StorageTarget> {
+    None
+}
+
 pub fn probe_storage(path: &Path) -> StorageTarget {
     let requested = absolute_probe_path(path);
     let disks = Disks::new_with_refreshed_list();
@@ -89,6 +213,10 @@ pub fn probe_storage(path: &Path) -> StorageTarget {
             total_bytes: Some(disk.total_space()),
             available_bytes: Some(disk.available_space()),
         };
+    }
+
+    if let Some(target) = probe_windows_storage(&requested) {
+        return target;
     }
 
     StorageTarget {
@@ -368,6 +496,31 @@ mod tests {
         let target = probe_storage(directory.path());
         assert!(target.available_bytes.is_some());
         assert!(target.mount_point.is_some());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn native_windows_probe_reads_capacity_for_a_missing_descendant() {
+        let directory = tempfile::tempdir().unwrap();
+        let missing = directory.path().join("not-created").join("output");
+        let target = probe_windows_storage(&missing).expect("Windows volume probe");
+        assert!(target.total_bytes.is_some_and(|value| value > 0));
+        assert!(target.available_bytes.is_some());
+        assert!(target.mount_point.is_some());
+        assert_ne!(target.location, "unknown");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn configured_windows_volume_resolves_through_public_probe() {
+        let Ok(path) = std::env::var("LONG_STORAGE_PREFLIGHT_TEST_PATH") else {
+            return;
+        };
+        let target = probe_storage(Path::new(&path));
+        assert!(target.total_bytes.is_some_and(|value| value > 0));
+        assert!(target.available_bytes.is_some_and(|value| value > 0));
+        assert!(target.mount_point.is_some());
+        assert_ne!(target.location, "unknown");
     }
 
     #[tokio::test]
