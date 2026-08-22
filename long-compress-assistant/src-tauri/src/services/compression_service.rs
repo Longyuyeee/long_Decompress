@@ -12,7 +12,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 use tauri::Window;
 use chrono::Utc;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use dashmap::DashMap;
+use once_cell::sync::Lazy;
 
 use crate::services::io_buffer_pool::IOBufferPool;
 use crate::services::rar_support::RarSupportService;
@@ -117,6 +119,22 @@ use tokio::sync::Semaphore;
 use tokio::sync::OnceCell;
 
 static DEFAULT_PASSWORD_VAULT: OnceCell<Arc<EncryptedPasswordService>> = OnceCell::const_new();
+static PENDING_EXTRACTIONS: Lazy<DashMap<String, PendingExtraction>> = Lazy::new(DashMap::new);
+
+struct PendingExtraction {
+    staging: ExtractionStaging,
+    source_archive: PathBuf,
+    final_output: PathBuf,
+    options: DecompressOptions,
+    expected_expanded_bytes: Option<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FileConflictResolution {
+    pub dest_path: String,
+    pub action: String,
+}
 
 struct ProgressMetric {
     started_at: Instant,
@@ -197,6 +215,127 @@ impl CompressionRuntime for CompressionService {
 }
 
 impl CompressionService {
+    fn is_conflict_resolution_required(error: &anyhow::Error) -> bool {
+        matches!(
+            error.downcast_ref::<CompressionError>(),
+            Some(CompressionError::ExtractionFailed(message))
+                if message == "File conflict requires resolution"
+        )
+    }
+
+    async fn finish_committed_extraction(
+        &self,
+        window: &Window,
+        task_id: &str,
+        source_archive: &Path,
+        final_output: &Path,
+        options: &DecompressOptions,
+        expected_expanded_bytes: Option<u64>,
+    ) -> Result<String> {
+        if options.delete_after {
+            let source_path = source_archive.to_path_buf();
+            let recycle_result = tokio::task::spawn_blocking(move || {
+                Self::move_source_archives_to_system_recycle_bin(&source_path)
+            }).await;
+            match recycle_result
+                .map_err(|error| anyhow::anyhow!("System recycle-bin task failed: {}", error))
+                .and_then(|result| result)
+            {
+                Err(error) => self.emit_log(
+                    window, task_id,
+                    &format!("解压已完成，但源压缩包未能移入系统回收站：{}", error),
+                    TaskLogSeverity::Warning,
+                ),
+                Ok(source_count) => self.emit_log(
+                    window, task_id,
+                    &format!("已将 {} 个源压缩文件移入系统回收站，可从 Windows 回收站恢复", source_count),
+                    TaskLogSeverity::Success,
+                ),
+            }
+        }
+        let final_expanded_bytes = Self::directory_payload_size(final_output);
+        let telemetry_total = expected_expanded_bytes
+            .unwrap_or(final_expanded_bytes)
+            .max(final_expanded_bytes);
+        self.emit_progress_with_output_estimate(
+            window, task_id, 1.0, None,
+            ProgressBytes {
+                processed: final_expanded_bytes,
+                total: telemetry_total,
+                output_estimated: false,
+            },
+        );
+        self.emit_log(
+            window, task_id,
+            &format!("解压数据统计完成：实际产出 {} 字节", final_expanded_bytes),
+            TaskLogSeverity::Success,
+        );
+        self.emit_log(window, task_id, "全部解压任务已完成", TaskLogSeverity::Success);
+        Ok(final_output.to_string_lossy().to_string())
+    }
+
+    pub fn discard_pending_extraction(task_id: &str) -> bool {
+        PENDING_EXTRACTIONS.remove(task_id).is_some()
+    }
+
+    pub async fn resolve_pending_extraction(
+        &self,
+        window: &Window,
+        task_id: &str,
+        resolutions: Vec<FileConflictResolution>,
+        fallback_action: Option<String>,
+    ) -> Result<String> {
+        let (_, mut pending) = PENDING_EXTRACTIONS
+            .remove(task_id)
+            .ok_or_else(|| anyhow::anyhow!("No pending extraction conflict for task: {task_id}"))?;
+
+        let valid_action = |action: &str| matches!(action, "overwrite" | "skip" | "rename");
+        if fallback_action.as_deref().is_some_and(|action| !valid_action(action))
+            || resolutions.iter().any(|item| !valid_action(&item.action))
+        {
+            PENDING_EXTRACTIONS.insert(task_id.to_string(), pending);
+            anyhow::bail!("Unsupported extraction conflict action");
+        }
+
+        let resolution_map = resolutions.into_iter()
+            .map(|item| (item.dest_path, item.action))
+            .collect::<HashMap<_, _>>();
+        let commit_result = extraction_transaction::commit_staged_extraction_with_resolutions(
+            pending.source_archive.to_string_lossy().as_ref(),
+            pending.staging.path(),
+            &pending.final_output,
+            &pending.options,
+            &resolution_map,
+            fallback_action.as_deref(),
+            |conflict| {
+                let _ = window.emit("file-conflict", FileConflictPayload {
+                    task_id: task_id.to_string(),
+                    file_name: conflict.file_name,
+                    source_path: conflict.source_path,
+                    dest_path: conflict.dest_path,
+                    source_size: conflict.source_size,
+                    dest_size: conflict.dest_size,
+                    source_modified: conflict.source_modified,
+                    dest_modified: conflict.dest_modified,
+                });
+            },
+        );
+        if let Err(error) = commit_result {
+            PENDING_EXTRACTIONS.insert(task_id.to_string(), pending);
+            return Err(error);
+        }
+        pending.staging.cleanup()?;
+        self.emit_log(
+            window, task_id,
+            "冲突策略已应用，直接提交既有解压暂存结果",
+            TaskLogSeverity::Success,
+        );
+        self.finish_committed_extraction(
+            window, task_id, &pending.source_archive, &pending.final_output,
+            &pending.options, pending.expected_expanded_bytes,
+        ).await
+    }
+
     #[cfg(test)]
     const MAX_EXTRACTED_FILES: usize = extraction_transaction::MAX_EXTRACTED_ENTRIES;
     #[cfg(test)]
@@ -2187,6 +2326,25 @@ impl CompressionService {
             &final_out_dir,
             &options,
         ) {
+            if Self::is_conflict_resolution_required(&error) {
+                service.emit_log(
+                    &window,
+                    &task_id,
+                    "解压数据已安全保留，等待冲突策略；确认后只提交暂存文件，不会重新解压",
+                    TaskLogSeverity::Warning,
+                );
+                PENDING_EXTRACTIONS.insert(
+                    task_id.clone(),
+                    PendingExtraction {
+                        staging,
+                        source_archive: path.to_path_buf(),
+                        final_output: final_out_dir,
+                        options,
+                        expected_expanded_bytes,
+                    },
+                );
+                return Err(error);
+            }
             let _ = staging.cleanup();
             return Err(error);
         }
@@ -2201,52 +2359,9 @@ impl CompressionService {
                 TaskLogSeverity::Warning,
             );
         }
-        if options.delete_after {
-            let source_path = path.to_path_buf();
-            let recycle_result = tokio::task::spawn_blocking(move || {
-                Self::move_source_archives_to_system_recycle_bin(&source_path)
-            }).await;
-            match recycle_result
-                .map_err(|error| anyhow::anyhow!("System recycle-bin task failed: {}", error))
-                .and_then(|result| result)
-            {
-                Err(error) => service.emit_log(
-                    &window,
-                    &task_id,
-                    &format!("解压已完成，但源压缩包未能移入系统回收站：{}", error),
-                    TaskLogSeverity::Warning,
-                ),
-                Ok(source_count) => service.emit_log(
-                    &window,
-                    &task_id,
-                    &format!("已将 {} 个源压缩文件移入系统回收站，可从 Windows 回收站恢复", source_count),
-                    TaskLogSeverity::Success,
-                ),
-            }
-        }
-        let final_expanded_bytes = Self::directory_payload_size(&final_out_dir);
-        let telemetry_total = expected_expanded_bytes
-            .unwrap_or(final_expanded_bytes)
-            .max(final_expanded_bytes);
-        service.emit_progress_with_output_estimate(
-            &window,
-            &task_id,
-            1.0,
-            None,
-            ProgressBytes {
-                processed: final_expanded_bytes,
-                total: telemetry_total,
-                output_estimated: false,
-            },
-        );
-        service.emit_log(
-            &window,
-            &task_id,
-            &format!("解压数据统计完成：实际产出 {} 字节", final_expanded_bytes),
-            TaskLogSeverity::Success,
-        );
-        service.emit_log(&window, &task_id, "全部解压任务已完成", TaskLogSeverity::Success);
-        Ok(final_out_dir.to_string_lossy().to_string())
+        service.finish_committed_extraction(
+            &window, &task_id, path, &final_out_dir, &options, expected_expanded_bytes,
+        ).await
     }
 
     fn validate_resource_limits(
@@ -3036,6 +3151,27 @@ impl CompressionService {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pending_conflict_owns_staging_until_cancelled() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let output = temp.path().join("output");
+        let staging = ExtractionStaging::create_for(&output).expect("staging");
+        let staging_path = staging.path().to_path_buf();
+        std::fs::write(staging_path.join("payload.txt"), b"payload").expect("payload");
+        let task_id = format!("pending-{}", uuid::Uuid::new_v4());
+        PENDING_EXTRACTIONS.insert(task_id.clone(), PendingExtraction {
+            staging,
+            source_archive: temp.path().join("archive.zip"),
+            final_output: output,
+            options: DecompressOptions::default(),
+            expected_expanded_bytes: Some(7),
+        });
+
+        assert!(staging_path.exists());
+        assert!(CompressionService::discard_pending_extraction(&task_id));
+        assert!(!staging_path.exists());
+    }
 
     #[test]
     fn password_candidate_position_never_changes_extraction_progress() {

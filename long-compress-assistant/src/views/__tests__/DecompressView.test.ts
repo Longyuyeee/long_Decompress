@@ -9,6 +9,7 @@ import { useTaskStore } from '@/stores/task'
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
   decompressFile: vi.fn(),
+  resolveExtractionConflict: vi.fn(),
   preflightOperationResources: vi.fn(),
   listArchiveContents: vi.fn(),
   listen: vi.fn(async () => vi.fn()),
@@ -24,6 +25,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
   useTauriCommands: () => ({
     invoke: mocks.invoke,
     decompressFile: mocks.decompressFile,
+    resolveExtractionConflict: mocks.resolveExtractionConflict,
     preflightOperationResources: mocks.preflightOperationResources,
     listArchiveContents: mocks.listArchiveContents,
     testArchiveIntegrity: vi.fn(),
@@ -58,6 +60,7 @@ describe('DecompressView', () => {
     })
     mocks.listArchiveContents.mockResolvedValue(['one.txt', 'two.txt'])
     mocks.decompressFile.mockResolvedValue(undefined)
+    mocks.resolveExtractionConflict.mockResolvedValue(undefined)
     mocks.preflightOperationResources.mockResolvedValue({
       operation: 'decompression',
       outputPath: 'C:/archives',

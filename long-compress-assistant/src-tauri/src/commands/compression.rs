@@ -1,4 +1,5 @@
 use crate::services::compression_service::CompressionService;
+use crate::services::compression_service::FileConflictResolution;
 use crate::services::compression_service::RarCompressionSupport;
 use crate::models::compression::{CompressionOptions, DecompressOptions};
 use tauri::{command, AppHandle, Manager, Window};
@@ -129,6 +130,21 @@ pub async fn extract_file(
 }
 
 #[command]
+pub async fn resolve_extraction_conflict(
+    window: Window,
+    task_id: String,
+    resolutions: Vec<FileConflictResolution>,
+    fallback_action: Option<String>,
+) -> Result<String, String> {
+    let service = service_for_task(&task_id).await?;
+    let _task_guard = TaskCancellationGuard::new(&task_id);
+    service
+        .resolve_pending_extraction(&window, &task_id, resolutions, fallback_action)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[command]
 pub async fn verify_archive_password(
     task_id: String,
     file_path: String,
@@ -196,6 +212,9 @@ pub async fn compress_files(
 #[command]
 pub async fn cancel_compression(task_id: String) -> Result<(), String> {
     let Some(flag) = CANCELLATION_FLAGS.get(&task_id) else {
+        if CompressionService::discard_pending_extraction(&task_id) {
+            return Ok(());
+        }
         return Err(format!("Task is not active: {task_id}"));
     };
     flag.store(true, Ordering::SeqCst);

@@ -490,6 +490,32 @@ describe('useTauriCommands', () => {
     })
   })
 
+  it('commits saved extraction staging when conflicts are resolved', async () => {
+    mocks.invoke.mockResolvedValue('C:/output')
+    const tasks = useTaskStore()
+    tasks.addTask({
+      id: 'conflict-task',
+      name: 'archive.zip',
+      type: 'decompression',
+      sourceFiles: ['C:/archive.zip'],
+      outputPath: 'C:/output',
+    })
+    const commands = useTauriCommands()
+
+    await expect(commands.resolveExtractionConflict(
+      'conflict-task',
+      [{ destPath: 'C:/output/same.txt', action: 'overwrite' }],
+      'rename',
+    )).resolves.toBe('C:/output')
+
+    expect(mocks.invoke).toHaveBeenCalledWith('resolve_extraction_conflict', {
+      taskId: 'conflict-task',
+      resolutions: [{ destPath: 'C:/output/same.txt', action: 'overwrite' }],
+      fallbackAction: 'rename',
+    })
+    expect(tasks.tasks[0]).toMatchObject({ status: 'completed', progress: 100 })
+  })
+
   it('degrades optional system UI commands safely when native APIs reject', async () => {
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'get_system_info') throw new Error('system info unavailable')

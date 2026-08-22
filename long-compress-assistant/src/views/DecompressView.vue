@@ -20,6 +20,10 @@ const tauriCommands = useTauriCommands()
 
 const selectedConflictTaskId = ref<string | null>(null)
 const showConflictModal = ref(false)
+const conflictSelections = new Map<string, Array<{
+  destPath: string
+  action: 'overwrite' | 'skip' | 'rename'
+}>>()
 const selectedTaskIds = ref<Set<string>>(new Set())
 const supportedArchiveAccept = DECOMPRESS_ARCHIVE_ACCEPT
 const supportedArchiveHint = DECOMPRESS_ARCHIVE_HINT
@@ -423,40 +427,43 @@ const handleConflict = (taskId: string) => {
   showConflictModal.value = true
 }
 
-// 处理冲突解决：取消当前任务并用新策略重试
+// 处理冲突解决：收集逐项策略，并直接提交后端保留的暂存结果。
 const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean) => {
   const taskId = selectedConflictTaskId.value
   if (!taskId) return
   const task = taskStore.tasks.find(t => t.id === taskId)
   if (!task) return
 
-  // 应用冲突策略
+  const currentConflict = task.conflicts[0]
+  if (!currentConflict) return
+  const selections = conflictSelections.get(taskId) || []
+  selections.push({ destPath: currentConflict.destPath, action })
+  conflictSelections.set(taskId, selections)
+
+  // 未选择“应用全部”时，让弹窗继续处理剩余冲突，最后一次再提交。
+  if (!applyToAll && task.conflicts.length > 1) return
+
+  // “应用全部”同时保存为之后任务的默认策略。
   if (applyToAll) {
     appStore.updateSettings({ conflictPolicy: action })
   }
   showConflictModal.value = false
   selectedConflictTaskId.value = null
 
-  // 取消当前任务并用新策略重试
-  try {
-    await taskStore.cancelTask(taskId)
-  } catch { /* ignore cancel errors */ }
-
-  const options = {
-    outputPath: task.outputPath,
-    keepStructure: true,
-    overwrite: action === 'overwrite',
-    deleteAfter: task.recycleSourceAfterExtract ?? false,
-    createSubdirectory: task.extractToSubfolder ?? false,
-    password: task.password || undefined,
-    fileFilter: task.fileFilter || null
-    ,conflictPolicy: action
-  }
   try {
     task.error = undefined
-    taskStore.updateTaskStatus(task.id, 'preparing')
-    await tauriCommands.decompressFile(task.sourceFiles[0], options, taskId)
+    await tauriCommands.resolveExtractionConflict(
+      taskId,
+      selections,
+      applyToAll ? action : undefined,
+    )
+    task.conflicts = []
+    conflictSelections.delete(taskId)
+    task.password = undefined
+    task.currentPassword = undefined
   } catch (e: any) {
+    conflictSelections.delete(taskId)
+    task.error = extractErrorMessage(e) || String(e)
     appStore.setError(appStore.t('decompress.extract_failed').replace('{0}', e))
   }
 }

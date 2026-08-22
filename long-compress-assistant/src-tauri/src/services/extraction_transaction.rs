@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
@@ -550,6 +551,26 @@ pub(crate) fn commit_staged_extraction(
     staging: &Path,
     output: &Path,
     options: &DecompressOptions,
+    on_conflict: impl FnMut(FileConflict),
+) -> Result<()> {
+    commit_staged_extraction_with_resolutions(
+        source_archive,
+        staging,
+        output,
+        options,
+        &HashMap::new(),
+        None,
+        on_conflict,
+    )
+}
+
+pub(crate) fn commit_staged_extraction_with_resolutions(
+    source_archive: &str,
+    staging: &Path,
+    output: &Path,
+    options: &DecompressOptions,
+    resolutions: &HashMap<String, String>,
+    fallback_action: Option<&str>,
     mut on_conflict: impl FnMut(FileConflict),
 ) -> Result<()> {
     ensure_no_link_ancestors(output)?;
@@ -584,13 +605,19 @@ pub(crate) fn commit_staged_extraction(
     files.sort();
 
     if options.conflict_policy == "ask" && !options.overwrite_existing {
-        if let Some(relative) = files.iter().find(|relative| {
+        let mut unresolved = false;
+        for relative in files.iter().filter(|relative| {
             let destination = output.join(relative);
             destination.exists()
                 && !(options.extract_only_newer
                     && staged_file_is_not_newer(&staging.join(relative), &destination))
         }) {
             let destination = output.join(relative);
+            let destination_key = destination.to_string_lossy().into_owned();
+            if resolutions.contains_key(&destination_key) || fallback_action.is_some() {
+                continue;
+            }
+            unresolved = true;
             let metadata = std::fs::metadata(&destination).ok();
             on_conflict(FileConflict {
                 file_name: destination
@@ -611,6 +638,8 @@ pub(crate) fn commit_staged_extraction(
                     .map(|value| value.as_millis() as u64)
                     .unwrap_or(0),
             });
+        }
+        if unresolved {
             return Err(CompressionError::ExtractionFailed(
                 "File conflict requires resolution".to_string(),
             )
@@ -640,20 +669,36 @@ pub(crate) fn commit_staged_extraction(
             let requested = output.join(&relative);
             ensure_commit_target_safe(output, &requested)?;
 
+            let requested_key = requested.to_string_lossy().into_owned();
+            let conflict_action = resolutions
+                .get(&requested_key)
+                .map(String::as_str)
+                .or(fallback_action)
+                .unwrap_or(options.conflict_policy.as_str());
+
             if options.extract_only_newer
                 && requested.exists()
                 && staged_file_is_not_newer(&source, &requested)
             {
                 continue;
             }
-            if requested.exists() && options.conflict_policy == "skip" {
+            if requested.exists() && conflict_action == "skip" {
                 continue;
             }
-            let destination = if requested.exists()
+            let destination = if requested.exists() && conflict_action == "rename" {
+                let mut rename_options = options.clone();
+                rename_options.overwrite_existing = false;
+                rename_options.conflict_policy = "rename".to_string();
+                resolve_extract_path(&requested, &rename_options)?
+            } else if requested.exists()
+                && conflict_action != "overwrite"
                 && !options.overwrite_existing
-                && options.conflict_policy != "overwrite"
             {
-                resolve_extract_path(&requested, options)?
+                return Err(CompressionError::ExtractionFailed(format!(
+                    "File conflict has no valid resolution: {}",
+                    requested.display()
+                ))
+                .into());
             } else {
                 requested
             };
@@ -744,22 +789,61 @@ mod tests {
         let output = temp.path().join("output");
         std::fs::create_dir_all(&staging).expect("staging");
         std::fs::create_dir_all(&output).expect("output");
-        std::fs::write(staging.join("same.txt"), b"new").expect("staged");
-        std::fs::write(output.join("same.txt"), b"old").expect("destination");
+        for name in ["same.txt", "second.txt"] {
+            std::fs::write(staging.join(name), b"new").expect("staged");
+            std::fs::write(output.join(name), b"old").expect("destination");
+        }
         let options = DecompressOptions {
             conflict_policy: "ask".to_string(),
             ..Default::default()
         };
-        let mut conflict = None;
+        let mut conflicts = Vec::new();
 
         assert!(
             commit_staged_extraction("archive.zip", &staging, &output, &options, |value| {
-                conflict = Some(value)
+                conflicts.push(value)
             },)
             .is_err()
         );
         assert_eq!(std::fs::read(output.join("same.txt")).unwrap(), b"old");
-        assert_eq!(conflict.unwrap().file_name, "same.txt");
+        assert_eq!(std::fs::read(output.join("second.txt")).unwrap(), b"old");
+        assert_eq!(conflicts.len(), 2);
+        assert!(conflicts.iter().any(|item| item.file_name == "same.txt"));
+        assert!(conflicts.iter().any(|item| item.file_name == "second.txt"));
+    }
+
+    #[test]
+    fn resolved_conflicts_commit_once_with_mixed_actions() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let staging = temp.path().join("staging");
+        let output = temp.path().join("output");
+        std::fs::create_dir_all(&staging).expect("staging");
+        std::fs::create_dir_all(&output).expect("output");
+        for name in ["overwrite.txt", "skip.txt", "rename.txt"] {
+            std::fs::write(staging.join(name), format!("new-{name}"))
+                .expect("staged file");
+            std::fs::write(output.join(name), format!("old-{name}"))
+                .expect("destination file");
+        }
+        let options = DecompressOptions {
+            conflict_policy: "ask".to_string(),
+            ..Default::default()
+        };
+        let resolutions = HashMap::from([
+            (output.join("overwrite.txt").to_string_lossy().into_owned(), "overwrite".to_string()),
+            (output.join("skip.txt").to_string_lossy().into_owned(), "skip".to_string()),
+            (output.join("rename.txt").to_string_lossy().into_owned(), "rename".to_string()),
+        ]);
+
+        commit_staged_extraction_with_resolutions(
+            "archive.zip", &staging, &output, &options, &resolutions, None,
+            |_| panic!("every conflict has an explicit resolution"),
+        ).expect("resolved commit");
+
+        assert_eq!(std::fs::read_to_string(output.join("overwrite.txt")).unwrap(), "new-overwrite.txt");
+        assert_eq!(std::fs::read_to_string(output.join("skip.txt")).unwrap(), "old-skip.txt");
+        assert_eq!(std::fs::read_to_string(output.join("rename.txt")).unwrap(), "old-rename.txt");
+        assert_eq!(std::fs::read_to_string(output.join("rename (1).txt")).unwrap(), "new-rename.txt");
     }
 
     #[test]

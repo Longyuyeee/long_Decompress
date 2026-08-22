@@ -20,6 +20,11 @@ export interface DecompressOptions {
   conflictPolicy?: 'ask' | 'overwrite' | 'skip' | 'rename'
 }
 
+export interface FileConflictResolution {
+  destPath: string
+  action: 'overwrite' | 'skip' | 'rename'
+}
+
 export interface FileInfo {
   path: string
   name: string
@@ -296,6 +301,30 @@ export const useTauriCommands = () => {
       }
     }
     return results
+  }
+
+  const resolveExtractionConflict = async (
+    taskId: string,
+    resolutions: FileConflictResolution[],
+    fallbackAction?: 'overwrite' | 'skip' | 'rename',
+  ) => {
+    const task = taskStore.tasks.find(item => item.id === taskId)
+    try {
+      taskStore.updateTaskStatus(taskId, 'finalizing')
+      const result = await invoke<string>('resolve_extraction_conflict', {
+        taskId,
+        resolutions,
+        fallbackAction: fallbackAction || null,
+      })
+      if (task) task.progress = 100
+      taskStore.updateTaskStatus(taskId, 'completed')
+      return result
+    } catch (error) {
+      if (task && !['cancelled', 'cancelling'].includes(task.status)) {
+        taskStore.updateTaskStatus(taskId, 'failed')
+      }
+      throw error
+    }
   }
 
   const compressFiles = async (
@@ -675,6 +704,7 @@ export const useTauriCommands = () => {
     selectWordlists,
     decompressFile,
     decompressFiles,
+    resolveExtractionConflict,
     compressFiles,
     preflightOperationResources,
     analyzeCompressionSources,
