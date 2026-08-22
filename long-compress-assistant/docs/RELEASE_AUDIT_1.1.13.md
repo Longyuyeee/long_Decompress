@@ -32,4 +32,6 @@ v1.1.13 的代码、真实样本与关键桌面交互门禁均已通过。正式
 - 主程序 FileVersion/ProductVersion 均为 `1.1.13`，ProductName 为 `Long解压`，Authenticode 状态按既定无商业证书策略为 `NotSigned`。
 - NSIS 安装包包含 14 个载荷文件，7-Zip 完整性测试通过；大小为 7,714,218 字节，SHA-256 为 `6E9F55DA079D2E592779A9C9FB0DB846E3BD5EA4E31EEB45D18E34D882D9B57B`。
 - updater ZIP 大小为 7,714,378 字节，SHA-256 为 `9BC64159977677E50EB68EE7A5A8742BBA3063414B4B19EFC8A3F5E66EB916DC`；独立 `.sig` 已生成，Tauri 配置公钥与仓库忽略的本地公钥备份逐字一致。
-- GitHub Release 仍必须包含 NSIS 安装包、updater ZIP、签名文件和可解析的 `latest.json`；公开复验完成后才算发布结束。
+- 上述大小与哈希属于本地独立候选。GitHub Actions 在干净 Windows runner 重新构建并成功发布四项资产；公开安装包大小为 7,634,242 字节，SHA-256 为 `F93908955014F88E524C4E5761D96DC747B5D0127248A195702BE38EEA760062`。
+- 从公开 Release 重新下载的 NSIS 安装包和 updater ZIP 均通过 7-Zip 完整性测试；`latest.json` 版本为 `1.1.13`，下载 URL 指向同一标签，内嵌签名与公开 `.sig` 逐字一致。
+- Release 工作流 `32581439992` 全部通过，发布页为 <https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.13>。
