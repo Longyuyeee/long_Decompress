@@ -6,6 +6,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+Import-Module Microsoft.PowerShell.Utility -ErrorAction Stop
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $resultsRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot 'test-results\public-update-validation'))
