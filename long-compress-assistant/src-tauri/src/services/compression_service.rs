@@ -129,6 +129,13 @@ struct PendingExtraction {
     expected_expanded_bytes: Option<u64>,
 }
 
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArchiveFormatDetectedPayload {
+    pub task_id: String,
+    pub format: String,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileConflictResolution {
@@ -215,6 +222,74 @@ impl CompressionRuntime for CompressionService {
 }
 
 impl CompressionService {
+    fn extraction_history_format(path: &Path, format: &ArchiveFormat) -> String {
+        let name = path.file_name().and_then(|value| value.to_str())
+            .unwrap_or_default().to_ascii_lowercase();
+        let wrapped = |suffixes: &[&str], canonical: &str| {
+            suffixes.iter().any(|suffix| name.ends_with(suffix)).then(|| canonical.to_string())
+        };
+        match format {
+            ArchiveFormat::Zip => "zip".to_string(),
+            ArchiveFormat::SevenZip => "7z".to_string(),
+            ArchiveFormat::Rar => "rar".to_string(),
+            ArchiveFormat::AesEncrypted => [
+                "tar.gz.aes", "tar.bz2.aes", "tar.xz.aes", "tar.zst.aes",
+                "tar.aes", "gz.aes", "bz2.aes", "xz.aes", "zst.aes",
+            ].iter().find(|suffix| name.ends_with(**suffix))
+                .copied().unwrap_or("aes").to_string(),
+            ArchiveFormat::Tar => "tar".to_string(),
+            ArchiveFormat::Gzip => wrapped(&[".tar.gz", ".tgz", ".tpz"], "tar.gz")
+                .unwrap_or_else(|| "gz".to_string()),
+            ArchiveFormat::Bzip2 => wrapped(&[".tar.bz2", ".tbz", ".tbz2"], "tar.bz2")
+                .unwrap_or_else(|| "bz2".to_string()),
+            ArchiveFormat::Xz => wrapped(&[".tar.xz", ".txz"], "tar.xz")
+                .unwrap_or_else(|| "xz".to_string()),
+            ArchiveFormat::Zstd => wrapped(&[".tar.zst", ".tzst"], "tar.zst")
+                .unwrap_or_else(|| "zst".to_string()),
+            ArchiveFormat::Lzma => "lzma".to_string(),
+            ArchiveFormat::Iso => "iso".to_string(),
+            ArchiveFormat::Cab => "cab".to_string(),
+            ArchiveFormat::Lzh => "lzh".to_string(),
+            ArchiveFormat::Arj => "arj".to_string(),
+            ArchiveFormat::Dmg => "dmg".to_string(),
+            ArchiveFormat::Wim => "wim".to_string(),
+            ArchiveFormat::Vhd => "vhd".to_string(),
+            ArchiveFormat::Chm => "chm".to_string(),
+            ArchiveFormat::Deb => "deb".to_string(),
+            ArchiveFormat::Rpm => "rpm".to_string(),
+            ArchiveFormat::SquashFs => "squashfs".to_string(),
+            ArchiveFormat::Nsis => "nsis".to_string(),
+            ArchiveFormat::Msi => "msi".to_string(),
+            ArchiveFormat::Xar => "xar".to_string(),
+            ArchiveFormat::Cpio => "cpio".to_string(),
+            ArchiveFormat::Udf => "udf".to_string(),
+            ArchiveFormat::Fat => "fat".to_string(),
+            ArchiveFormat::Ntfs => "ntfs".to_string(),
+            ArchiveFormat::Hfs => "hfs".to_string(),
+            ArchiveFormat::Alz => "alz".to_string(),
+            ArchiveFormat::Arc => "arc".to_string(),
+            ArchiveFormat::Apfs => "apfs".to_string(),
+            ArchiveFormat::Ext => "ext".to_string(),
+            ArchiveFormat::Universal | ArchiveFormat::Unknown => {
+                let mut extension = path.extension().and_then(|value| value.to_str())
+                    .unwrap_or("unknown").to_ascii_lowercase();
+                if extension.chars().all(|value| value.is_ascii_digit()) {
+                    extension = path.file_stem().map(Path::new)
+                        .and_then(Path::extension).and_then(|value| value.to_str())
+                        .unwrap_or("split").to_ascii_lowercase();
+                } else if extension.starts_with('z')
+                    && extension[1..].chars().all(|value| value.is_ascii_digit())
+                {
+                    extension = "zip".to_string();
+                } else if extension.starts_with('r')
+                    && extension[1..].chars().all(|value| value.is_ascii_digit())
+                {
+                    extension = "rar".to_string();
+                }
+                extension
+            }
+        }
+    }
     fn is_conflict_resolution_required(error: &anyhow::Error) -> bool {
         matches!(
             error.downcast_ref::<CompressionError>(),
@@ -1844,6 +1919,13 @@ impl CompressionService {
             }
         }
 
+        let _ = window.emit(
+            "archive-format-detected",
+            ArchiveFormatDetectedPayload {
+                task_id: task_id.clone(),
+                format: Self::extraction_history_format(path, &format),
+            },
+        );
         service.emit_log(&window, &task_id, &format!("确定解压格式: {:?} (后缀: {})", format, ext), TaskLogSeverity::Info);
 
         let mut final_password = password.clone();
@@ -3171,6 +3253,31 @@ mod tests {
         assert!(staging_path.exists());
         assert!(CompressionService::discard_pending_extraction(&task_id));
         assert!(!staging_path.exists());
+    }
+
+    #[test]
+    fn extraction_history_format_uses_detected_route_and_wrapped_suffixes() {
+        assert_eq!(
+            CompressionService::extraction_history_format(
+                Path::new("misleading.zip"),
+                &ArchiveFormat::SevenZip,
+            ),
+            "7z"
+        );
+        assert_eq!(
+            CompressionService::extraction_history_format(
+                Path::new("backup.tar.gz"),
+                &ArchiveFormat::Gzip,
+            ),
+            "tar.gz"
+        );
+        assert_eq!(
+            CompressionService::extraction_history_format(
+                Path::new("bundle.rar.001"),
+                &ArchiveFormat::Universal,
+            ),
+            "rar"
+        );
     }
 
     #[test]

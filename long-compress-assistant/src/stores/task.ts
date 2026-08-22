@@ -165,6 +165,11 @@ export const useTaskStore = defineStore('task', () => {
       }
     })
 
+    await listen<{ taskId: string, format: string }>('archive-format-detected', (event) => {
+      const task = tasks.value.find(item => item.id === event.payload.taskId)
+      if (task) task.format = event.payload.format
+    })
+
     // 监听密码需求事件 - 后端检测到加密文件但密码为空时发送
     await listen<{
       task_id: string

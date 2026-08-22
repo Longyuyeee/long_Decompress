@@ -1,6 +1,7 @@
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use std::collections::HashSet;
 
 const MAX_HISTORY_RECORDS: i64 = 500;
 const MAX_SOURCE_PATHS: usize = 128;
@@ -77,6 +78,61 @@ fn redact_sensitive_text(value: &str) -> String {
     }
 }
 
+fn is_high_frequency_log(message: &str) -> bool {
+    message.contains("字典攻击进度")
+        || (message.contains("候选 [")
+            && (message.contains("未匹配") || message.contains("验证异常")))
+}
+
+fn evenly_sample(indices: &[usize], count: usize) -> Vec<usize> {
+    if indices.len() <= count {
+        return indices.to_vec();
+    }
+    if count == 0 {
+        return Vec::new();
+    }
+    if count == 1 {
+        return vec![indices[0]];
+    }
+    (0..count)
+        .map(|position| indices[position * (indices.len() - 1) / (count - 1)])
+        .collect()
+}
+
+fn retain_auditable_logs(logs: Vec<TaskHistoryLog>) -> Vec<TaskHistoryLog> {
+    if logs.len() <= MAX_LOGS {
+        return logs;
+    }
+    let last = logs.len() - 1;
+    let priority = logs.iter().enumerate()
+        .filter(|(index, log)| {
+            *index == 0
+                || *index == last
+                || !log.severity.eq_ignore_ascii_case("info")
+                || !is_high_frequency_log(&log.message)
+        })
+        .map(|(index, _)| index)
+        .collect::<Vec<_>>();
+    let selected = if priority.len() >= MAX_LOGS {
+        evenly_sample(&priority, MAX_LOGS)
+    } else {
+        let priority_set = priority.iter().copied().collect::<HashSet<_>>();
+        let candidates = (0..logs.len())
+            .filter(|index| !priority_set.contains(index))
+            .collect::<Vec<_>>();
+        let mut selected = priority;
+        let remaining = MAX_LOGS - selected.len();
+        selected.extend(evenly_sample(&candidates, remaining));
+        selected.sort_unstable();
+        selected.dedup();
+        selected
+    };
+    let selected = selected.into_iter().collect::<HashSet<_>>();
+    logs.into_iter().enumerate()
+        .filter_map(|(index, log)| selected.contains(&index).then_some(log))
+        .collect()
+}
+
 fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, String> {
     if !matches!(record.task_type.as_str(), "compression" | "decompression") {
         return Err("不支持的任务类型".to_string());
@@ -101,19 +157,13 @@ fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, S
         .map(|path| truncate_text(path.trim()))
         .filter(|path| !path.is_empty())
         .collect();
-    record.logs = record
-        .logs
+    record.logs = retain_auditable_logs(record.logs)
         .into_iter()
-        .rev()
-        .take(MAX_LOGS)
         .map(|mut log| {
             log.message = truncate_text(redact_sensitive_text(log.message.trim()).trim());
             log.severity = truncate_text(log.severity.trim());
             log
         })
-        .collect::<Vec<_>>()
-        .into_iter()
-        .rev()
         .collect();
     record.duration_ms = record.duration_ms.max(0);
     record.processed_bytes = record.processed_bytes.max(0);
@@ -300,6 +350,43 @@ mod tests {
             redact_sensitive_text("解压密码：open-sesame"),
             "解压密码： [已隐藏]"
         );
+    }
+
+    #[test]
+    fn long_dictionary_history_preserves_milestones_and_samples_candidates() {
+        let mut logs = vec![TaskHistoryLog {
+            timestamp: "0".into(),
+            message: "正在检索密码保险箱...".into(),
+            severity: "info".into(),
+        }];
+        for index in 1..=391 {
+            logs.push(TaskHistoryLog {
+                timestamp: index.to_string(),
+                message: format!("内置字典候选 [{index}/391] · 8 字符 → 未匹配"),
+                severity: "info".into(),
+            });
+            if index == 200 {
+                logs.push(TaskHistoryLog {
+                    timestamp: "milestone".into(),
+                    message: "字典尝试阶段检查点".into(),
+                    severity: "warning".into(),
+                });
+            }
+        }
+        logs.push(TaskHistoryLog {
+            timestamp: "end".into(),
+            message: "所有候选均未匹配，等待手动输入".into(),
+            severity: "warning".into(),
+        });
+
+        let retained = retain_auditable_logs(logs);
+
+        assert_eq!(retained.len(), MAX_LOGS);
+        assert_eq!(retained.first().unwrap().message, "正在检索密码保险箱...");
+        assert!(retained.iter().any(|log| log.message == "字典尝试阶段检查点"));
+        assert_eq!(retained.last().unwrap().message, "所有候选均未匹配，等待手动输入");
+        assert!(retained.iter().any(|log| log.message.contains("候选 [1/391]")));
+        assert!(retained.iter().any(|log| log.message.contains("候选 [391/391]")));
     }
 
     #[test]

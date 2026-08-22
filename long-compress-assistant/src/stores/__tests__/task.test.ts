@@ -74,4 +74,22 @@ describe('task progress state machine', () => {
       totalBytes: 2048,
     })
   })
+
+  it('stores the backend-detected archive format for history', async () => {
+    const store = useTaskStore()
+    await store.initListeners()
+    store.addTask({
+      id: 'format-task',
+      name: 'misleading.zip',
+      type: 'decompression',
+      sourceFiles: ['C:/archives/misleading.zip'],
+      outputPath: 'C:/archives/output',
+    })
+
+    mocks.listeners.get('archive-format-detected')?.({
+      payload: { taskId: 'format-task', format: '7z' },
+    })
+
+    expect(store.tasks[0].format).toBe('7z')
+  })
 })
