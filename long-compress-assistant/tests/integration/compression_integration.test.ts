@@ -79,7 +79,7 @@ describe('Tauri compression integration', () => {
     const tasks = useTaskStore()
     await tasks.initListeners()
     await tasks.initListeners()
-    expect(mocks.listen).toHaveBeenCalledTimes(4)
+    expect(mocks.listen).toHaveBeenCalledTimes(5)
 
     tasks.addTask({
       id: 'task-2', name: 'demo.zip', type: 'decompression',
@@ -87,6 +87,10 @@ describe('Tauri compression integration', () => {
     })
     mocks.listeners.get('task-progress')?.({ payload: { task_id: 'task-2', progress: 0.42 } })
     expect(tasks.tasks[0].progress).toBe(42)
+    mocks.listeners.get('archive-format-detected')?.({
+      payload: { taskId: 'task-2', format: 'Rar' },
+    })
+    expect(tasks.tasks[0].format).toBe('Rar')
   })
 
   it('preserves real byte totals when a final stage event carries zero placeholders', async () => {
