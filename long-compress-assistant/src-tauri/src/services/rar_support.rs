@@ -8,8 +8,6 @@ use log;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 use tokio::io::AsyncReadExt;
 
-const RAR_PASSWORD_TEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
-
 /// RAR解压错误
 #[derive(Debug, thiserror::Error)]
 pub enum RarError {
@@ -57,6 +55,22 @@ pub enum RarError {
 pub struct RarSupportService;
 
 impl RarSupportService {
+    fn map_unrar_extraction_error(
+        error: unrar::error::UnrarError,
+        password_supplied: bool,
+        context: &str,
+    ) -> RarError {
+        use unrar::error::{Code, When};
+
+        if matches!(error.code, Code::BadPassword | Code::MissingPassword)
+            || (password_supplied
+                && matches!((error.code, error.when), (Code::BadData, When::Process)))
+        {
+            return RarError::PasswordError;
+        }
+        RarError::ExtractionFailed(format!("{context}: {error:?}"))
+    }
+
     async fn run_command_cancellable(
         mut command: tokio::process::Command,
         cancellation: Arc<AtomicBool>,
@@ -168,19 +182,6 @@ impl RarSupportService {
         tokio::fs::create_dir_all(output_dir).await
             .map_err(|e| RarError::ExtractionFailed(format!("创建输出目录失败: {}", e)))?;
 
-        if let Some(pwd) = password {
-            match self.test_rar_password_with_timeout(rar_path, pwd).await {
-                Ok(true) => {}
-                Ok(false) => return Err(RarError::PasswordError),
-                Err(RarError::OperationTimeout) => {
-                    return Err(RarError::ExtractionFailed(
-                        "RAR password verification timed out before extraction".to_string(),
-                    ));
-                }
-                Err(error) => return Err(error),
-            }
-        }
-
         // 策略 1: 尝试使用原生 unrar 库
         match self.extract_with_native_library(rar_path, output_dir, password, options, cancellation_flag.clone()).await {
             Ok(_) => {
@@ -242,17 +243,18 @@ impl RarSupportService {
 
         // 尝试打开归档并读取头部
         let mut open_archive = archive.open_for_processing()
-            .map_err(|e| {
-                let err_msg = format!("{:?}", e);
-                if err_msg.contains("Password") {
-                    RarError::PasswordError
-                } else {
-                    RarError::ExtractionFailed(err_msg)
-                }
-            })?;
+            .map_err(|error| Self::map_unrar_extraction_error(
+                error,
+                password.is_some(),
+                "打开 RAR 归档失败",
+            ))?;
 
         while let Some(header) = open_archive.read_header()
-            .map_err(|e| RarError::ExtractionFailed(format!("读取Header失败: {:?}", e)))? {
+            .map_err(|error| Self::map_unrar_extraction_error(
+                error,
+                password.is_some(),
+                "读取 RAR 文件头失败",
+            ))? {
             
             if cancellation_flag.load(Ordering::SeqCst) {
                 return Err(RarError::CommandFailed("RAR extraction cancelled".to_string()));
@@ -289,14 +291,11 @@ impl RarSupportService {
                     std::fs::create_dir_all(parent).ok();
                 }
                 open_archive = header.extract_to(&target_path)
-                    .map_err(|e| {
-                        let err_msg = format!("{:?}", e);
-                        if err_msg.contains("Password") {
-                            RarError::PasswordError
-                        } else {
-                            RarError::ExtractionFailed(err_msg)
-                        }
-                    })?;
+                    .map_err(|error| Self::map_unrar_extraction_error(
+                        error,
+                        password.is_some(),
+                        "提取 RAR 文件失败",
+                    ))?;
             }
         }
 
@@ -526,58 +525,64 @@ impl RarSupportService {
 
     /// 测试 RAR 密码是否正确
     pub async fn test_rar_password(&self, rar_path: &Path, password: &str) -> bool {
-        self.test_rar_password_with_timeout(rar_path, password)
+        self.verify_rar_password(rar_path, password)
             .await
             .unwrap_or(false)
     }
 
-    async fn test_rar_password_with_timeout(
+    /// 验证 RAR 密码，同时保留“密码不匹配”和“验证器异常”的区别。
+    ///
+    /// 正确密码可能需要解码一个较大的首个文件才能通过 CRC 校验，因此不能使用
+    /// 固定的短超时。之前的 10 秒超时会把仍在正常校验的正确密码误判为失败。
+    pub async fn verify_rar_password(
         &self,
         rar_path: &Path,
         password: &str,
     ) -> Result<bool, RarError> {
         let path = rar_path.to_path_buf();
         let password = password.to_string();
-        let task = tokio::task::spawn_blocking(move || {
-            Self::test_rar_password_blocking(&path, &password)
-        });
-
-        match tokio::time::timeout(RAR_PASSWORD_TEST_TIMEOUT, task).await {
-            Ok(Ok(result)) => Ok(result),
-            Ok(Err(error)) => Err(RarError::CommandFailed(format!(
+        tokio::task::spawn_blocking(move || Self::test_rar_password_blocking(&path, &password))
+            .await
+            .map_err(|error| RarError::CommandFailed(format!(
                 "RAR password verification task failed: {}",
                 error
+            )))?
+    }
+
+    fn classify_password_test_error(error: unrar::error::UnrarError) -> Result<bool, RarError> {
+        use unrar::error::{Code, When};
+
+        match (error.code, error.when) {
+            (Code::BadPassword | Code::MissingPassword, _) => Ok(false),
+            // UnRAR reports a wrong password for encrypted file data as a CRC
+            // failure on some RAR4/RAR5 archives.
+            (Code::BadData, When::Process) => Ok(false),
+            _ => Err(RarError::FileCorrupted(format!(
+                "RAR password verification failed: {error:?}"
             ))),
-            Err(_) => {
-                log::warn!(
-                    "RAR password verification exceeded {} seconds",
-                    RAR_PASSWORD_TEST_TIMEOUT.as_secs()
-                );
-                Err(RarError::OperationTimeout)
-            }
         }
     }
 
-    fn test_rar_password_blocking(rar_path: &Path, password: &str) -> bool {
+    fn test_rar_password_blocking(rar_path: &Path, password: &str) -> Result<bool, RarError> {
         use unrar::Archive;
         let path_str = match rar_path.to_str() {
             Some(s) => s,
-            None => return false,
+            None => return Err(RarError::InvalidRarFile("RAR path is not valid Unicode".to_string())),
         };
 
         // 基础验证：如果连基本的 RAR 签名都没有，直接返回 false
         if !Self::is_valid_rar_file_sync(rar_path) {
-            return false;
+            return Err(RarError::InvalidRarFile(rar_path.to_string_lossy().to_string()));
         }
 
         let mut open_archive = match Archive::with_password(path_str, password).open_for_processing() {
             Ok(archive) => archive,
             Err(error) => {
                 log::debug!("RAR 密码验证无法打开归档: {:?}", error);
-                return false;
+                return Self::classify_password_test_error(error);
             }
         };
-        let mut tested_file = false;
+        let has_encrypted_headers = open_archive.has_encrypted_headers();
 
         loop {
             let header = match open_archive.read_header() {
@@ -585,7 +590,7 @@ impl RarSupportService {
                 Ok(None) => break,
                 Err(error) => {
                     log::debug!("RAR 密码验证无法读取文件头: {:?}", error);
-                    return false;
+                    return Self::classify_password_test_error(error);
                 }
             };
 
@@ -594,23 +599,27 @@ impl RarSupportService {
                     Ok(archive) => archive,
                     Err(error) => {
                         log::debug!("RAR 密码验证无法跳过目录: {:?}", error);
-                        return false;
+                        return Self::classify_password_test_error(error);
                     }
                 };
                 continue;
             }
 
-            tested_file = true;
-            open_archive = match header.test() {
-                Ok(archive) => archive,
+            // One successfully decoded file with a valid CRC is sufficient to
+            // prove the password. Testing every entry made password validation
+            // as expensive as extracting the entire archive.
+            return match header.test() {
+                Ok(_) => Ok(true),
                 Err(error) => {
                     log::debug!("RAR 密码验证内容测试失败: {:?}", error);
-                    return false;
+                    Self::classify_password_test_error(error)
                 }
             };
         }
 
-        tested_file
+        // Opening and traversing encrypted headers to the end also proves the
+        // candidate, even when the archive contains directories only.
+        Ok(has_encrypted_headers)
     }
 
     fn is_valid_rar_file_sync(file_path: &Path) -> bool {
@@ -874,7 +883,50 @@ impl Default for RarSupportService {
 
 #[cfg(test)]
 mod tests {
-    use super::RarSupportService;
+    use super::{RarError, RarSupportService};
+    use unrar::error::{Code, UnrarError, When};
+
+    #[test]
+    fn rar_password_error_classification_preserves_engine_failures() {
+        assert!(matches!(
+            RarSupportService::classify_password_test_error(UnrarError::from(
+                Code::BadPassword,
+                When::Process,
+            )),
+            Ok(false)
+        ));
+        assert!(matches!(
+            RarSupportService::classify_password_test_error(UnrarError::from(
+                Code::BadData,
+                When::Process,
+            )),
+            Ok(false)
+        ));
+        assert!(matches!(
+            RarSupportService::classify_password_test_error(UnrarError::from(
+                Code::ERead,
+                When::Process,
+            )),
+            Err(RarError::FileCorrupted(_))
+        ));
+    }
+
+    #[test]
+    fn rar_extraction_maps_crc_to_password_error_only_when_a_password_was_supplied() {
+        let encrypted_error = RarSupportService::map_unrar_extraction_error(
+            UnrarError::from(Code::BadData, When::Process),
+            true,
+            "extract",
+        );
+        let plain_error = RarSupportService::map_unrar_extraction_error(
+            UnrarError::from(Code::BadData, When::Process),
+            false,
+            "extract",
+        );
+
+        assert!(matches!(encrypted_error, RarError::PasswordError));
+        assert!(matches!(plain_error, RarError::ExtractionFailed(_)));
+    }
 
     #[test]
     fn rar_signature_validation_accepts_rar4_and_rar5() {

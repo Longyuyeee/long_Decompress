@@ -296,7 +296,7 @@ const copyToClipboard = async (text: string) => {
                   <div v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"
                        class="h-1 bg-input rounded-full mt-1.5 overflow-hidden relative">
                     <div class="h-full bg-primary rounded-full transition-all duration-700 progress-bar-fill"
-                         :style="{ width: `${Math.max(task.progress, 1)}%` }"></div>
+                         :style="{ width: `${task.progress}%` }"></div>
                     <div class="absolute inset-0 shimmer-overlay"></div>
                   </div>
                   <!-- 当前处理文件 + 阶段 -->

@@ -113,4 +113,34 @@ describe('GlobalProgressBar', () => {
     await restore.trigger('click')
     expect(wrapper.find('.progress-summary').exists()).toBe(true)
   })
+
+  it('renders password verification at exactly zero extraction progress', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const taskStore = useTaskStore()
+    taskStore.addTask({
+      id: 'password-check',
+      name: 'encrypted.rar',
+      type: 'decompression',
+      sourceFiles: ['encrypted.rar'],
+      outputPath: 'C:\\output\\encrypted',
+    })
+    taskStore.updateTaskStatus('password-check', 'extracting')
+    const task = taskStore.tasks[0]
+    task.stage = 'password-attempt'
+    task.progress = 0
+    task.currentPassword = '保险箱候选'
+    task.passwordAttemptCurrent = 2
+    task.passwordAttemptTotal = 2
+
+    const wrapper = mount(GlobalProgressBar, {
+      global: { plugins: [pinia] },
+    })
+    await wrapper.find('.progress-summary').trigger('click')
+
+    expect(wrapper.text()).toContain('验证解压密码')
+    expect(wrapper.text()).toContain('0%')
+    expect(wrapper.text()).toContain('2/2')
+    expect(wrapper.find('.progress-bar-fill').attributes('style')).toContain('width: 0%')
+  })
 })

@@ -122,7 +122,10 @@ export const useTaskStore = defineStore('task', () => {
       } = event.payload
       const task = tasks.value.find(t => t.id === task_id)
       if (task) {
-        task.progress = normalizeProgressPercent(progress)
+        const isPasswordAttempt = stage === 'password-attempt'
+        // Candidate count is not decompression progress. Keep this defensive
+        // frontend guard even though the backend also emits zero for this stage.
+        task.progress = isPasswordAttempt ? 0 : normalizeProgressPercent(progress)
         task.stage = stage !== undefined
           ? stage as any
           : task.status === 'extracting'
@@ -132,6 +135,13 @@ export const useTaskStore = defineStore('task', () => {
         task.currentPassword = current_password
         task.passwordAttemptCurrent = password_attempt_current
         task.passwordAttemptTotal = password_attempt_total
+        if (isPasswordAttempt) {
+          task.currentFile = undefined
+          task.speed = undefined
+          task.etaSeconds = undefined
+          task.processedBytes = 0
+          task.totalBytes = 0
+        }
         if (speed !== undefined) task.speed = speed
         // Stage-only completion events use zero byte fields. Do not let those
         // erase real transfer totals already emitted by the archive engine.

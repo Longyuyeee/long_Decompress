@@ -6,6 +6,82 @@ use crate::models::compression::DecompressOptions;
 
 use super::compression_service::CompressionError;
 
+#[cfg(windows)]
+const FILE_ATTRIBUTE_HIDDEN: u32 = 0x0000_0002;
+#[cfg(windows)]
+const FILE_ATTRIBUTE_NOT_CONTENT_INDEXED: u32 = 0x0000_2000;
+#[cfg(windows)]
+const INVALID_FILE_ATTRIBUTES: u32 = u32::MAX;
+#[cfg(windows)]
+const SHCNE_UPDATEDIR: i32 = 0x0000_1000;
+#[cfg(windows)]
+const SHCNF_PATHW: u32 = 0x0005;
+#[cfg(windows)]
+const SHCNF_FLUSHNOWAIT: u32 = 0x2000;
+
+#[cfg(windows)]
+#[link(name = "kernel32")]
+extern "system" {
+    fn GetFileAttributesW(file_name: *const u16) -> u32;
+    fn SetFileAttributesW(file_name: *const u16, attributes: u32) -> i32;
+}
+
+#[cfg(windows)]
+#[link(name = "shell32")]
+extern "system" {
+    fn SHChangeNotify(
+        event_id: i32,
+        flags: u32,
+        item1: *const std::ffi::c_void,
+        item2: *const std::ffi::c_void,
+    );
+}
+
+#[cfg(windows)]
+fn wide_path(path: &Path) -> Vec<u16> {
+    use std::os::windows::ffi::OsStrExt;
+    path.as_os_str().encode_wide().chain(Some(0)).collect()
+}
+
+#[cfg(windows)]
+fn conceal_staging_directory(path: &Path) -> std::io::Result<()> {
+    let path = wide_path(path);
+    // SAFETY: `path` is a NUL-terminated UTF-16 buffer that remains alive for
+    // both calls. SetFileAttributesW does not retain the pointer.
+    let attributes = unsafe { GetFileAttributesW(path.as_ptr()) };
+    if attributes == INVALID_FILE_ATTRIBUTES {
+        return Err(std::io::Error::last_os_error());
+    }
+    let updated = attributes | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
+    if unsafe { SetFileAttributesW(path.as_ptr(), updated) } == 0 {
+        return Err(std::io::Error::last_os_error());
+    }
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn conceal_staging_directory(_: &Path) -> std::io::Result<()> {
+    Ok(())
+}
+
+#[cfg(windows)]
+fn notify_explorer_directory_changed(path: &Path) {
+    let path = wide_path(path);
+    // SAFETY: SHCNF_PATHW requires a NUL-terminated UTF-16 path in item1. The
+    // buffer is alive for the duration of the synchronous notification call.
+    unsafe {
+        SHChangeNotify(
+            SHCNE_UPDATEDIR,
+            SHCNF_PATHW | SHCNF_FLUSHNOWAIT,
+            path.as_ptr().cast(),
+            std::ptr::null(),
+        );
+    }
+}
+
+#[cfg(not(windows))]
+fn notify_explorer_directory_changed(_: &Path) {}
+
 pub(crate) const MAX_EXTRACTED_ENTRIES: usize = 250_000;
 pub(crate) const MAX_EXTRACTED_BYTES: u64 = 512 * 1024 * 1024 * 1024;
 pub(crate) const MAX_EXPANSION_RATIO: u64 = 10_000;
@@ -26,6 +102,13 @@ impl ExtractionStaging {
         std::fs::create_dir_all(parent)?;
         let path = parent.join(format!(".long-extract-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir(&path)?;
+        if let Err(error) = conceal_staging_directory(&path) {
+            log::warn!(
+                "Unable to hide extraction staging directory {}: {}",
+                path.display(),
+                error
+            );
+        }
         Ok(Self {
             path,
             cleaned: false,
@@ -43,10 +126,16 @@ impl ExtractionStaging {
         match std::fs::remove_dir_all(&self.path) {
             Ok(()) => {
                 self.cleaned = true;
+                if let Some(parent) = self.path.parent() {
+                    notify_explorer_directory_changed(parent);
+                }
                 Ok(())
             }
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
                 self.cleaned = true;
+                if let Some(parent) = self.path.parent() {
+                    notify_explorer_directory_changed(parent);
+                }
                 Ok(())
             }
             Err(error) => Err(error),
@@ -621,6 +710,21 @@ mod tests {
             std::fs::write(path.join("partial.txt"), b"partial").expect("partial");
         }
         assert!(!path.exists());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn staging_directory_is_hidden_from_explorer() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let output = temp.path().join("output");
+        let staging = ExtractionStaging::create_for(&output).expect("staging");
+        let wide = wide_path(staging.path());
+
+        // SAFETY: `wide` is a live, NUL-terminated UTF-16 path buffer.
+        let attributes = unsafe { GetFileAttributesW(wide.as_ptr()) };
+        assert_ne!(attributes, INVALID_FILE_ATTRIBUTES);
+        assert_ne!(attributes & FILE_ATTRIBUTE_HIDDEN, 0);
+        assert_ne!(attributes & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED, 0);
     }
 
     #[test]

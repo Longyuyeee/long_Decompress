@@ -1099,25 +1099,43 @@ impl CompressionService {
         total: Option<usize>,
         candidate: String,
     ) {
-        let progress = total
-            .filter(|value| *value > 0)
-            .map(|value| current as f32 / value as f32)
-            .unwrap_or(0.0);
-        let _ = window.emit("task-progress", TaskProgress {
+        let _ = window.emit(
+            "task-progress",
+            Self::password_attempt_progress_payload(task_id, current, total, candidate),
+        );
+    }
+
+    fn extraction_progress_from_output(processed_bytes: u64, total_bytes: u64) -> Option<f32> {
+        if processed_bytes == 0 || total_bytes == 0 {
+            return None;
+        }
+        Some(((processed_bytes as f64 / total_bytes as f64) as f32).clamp(0.0, 0.99))
+    }
+
+    fn password_attempt_progress_payload(
+        task_id: &str,
+        current: usize,
+        total: Option<usize>,
+        candidate: String,
+    ) -> TaskProgress {
+        TaskProgress {
             task_id: task_id.to_string(),
             stage: Some("password-attempt".to_string()),
             current_password: Some(candidate),
-            progress,
+            // Password candidate position is diagnostic metadata, not extraction
+            // progress. Extraction has not started yet, so the task must remain
+            // at exactly zero regardless of how many candidates were attempted.
+            progress: 0.0,
             speed: None,
             eta_seconds: None,
             current_file: None,
             processed_bytes: 0,
             total_bytes: 0,
-            output_bytes: self.compression_output_bytes(task_id).unwrap_or(0),
+            output_bytes: 0,
             output_bytes_estimated: false,
             password_attempt_current: Some(current),
             password_attempt_total: total,
-        });
+        }
     }
 
     async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Option<String> {
@@ -1864,6 +1882,9 @@ impl CompressionService {
             &format!("开始解压：{}", file_name),
             TaskLogSeverity::Info,
         );
+        // Explicitly leave preflight/password verification before the first
+        // engine-specific callback. This is the exact point extraction begins.
+        service.emit_progress(&window, &task_id, 0.0, None, 0, expected_expanded_bytes.unwrap_or(0));
 
         let effective_format = if format == ArchiveFormat::Zip && final_password.is_some() {
             service.emit_log(&window, &task_id, "检测到加密 ZIP，使用内置加密 ZIP 兼容引擎解压", TaskLogSeverity::Info);
@@ -1887,13 +1908,51 @@ impl CompressionService {
                 }).await?
             },
             ArchiveFormat::Rar => {
-                service.rar_service.extract_rar(
+                // The native UnRAR wrapper does not expose byte callbacks. Poll
+                // the transactional staging tree so RAR progress reflects bytes
+                // actually materialized on disk, never password candidate count.
+                let monitor_done = Arc::new(AtomicBool::new(false));
+                let monitor_done_task = monitor_done.clone();
+                let monitor_output = out_dir.clone();
+                let monitor_total = expected_expanded_bytes.unwrap_or(0);
+                let monitor_progress = on_progress.clone();
+                let monitor = tokio::spawn(async move {
+                    let mut last_progress = 0.0f32;
+                    while !monitor_done_task.load(Ordering::Acquire) {
+                        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                        if monitor_done_task.load(Ordering::Acquire) {
+                            break;
+                        }
+                        let output = monitor_output.clone();
+                        let processed = tokio::task::spawn_blocking(move || {
+                            CompressionService::directory_payload_size(&output)
+                        })
+                        .await
+                        .unwrap_or(0);
+                        if let Some(progress) = CompressionService::extraction_progress_from_output(
+                            processed,
+                            monitor_total,
+                        ) {
+                            if progress > last_progress {
+                                last_progress = progress;
+                                monitor_progress(progress);
+                            }
+                        }
+                    }
+                });
+                let extraction_result = service.rar_service.extract_rar(
                     Path::new(&file_path),
                     &out_dir,
                     final_password.as_deref(),
                     &options,
                     service.cancellation_flag.clone()
-                ).await.map_err(|e| anyhow::anyhow!("RAR 解压失败: {}", e))
+                ).await.map_err(|e| anyhow::anyhow!("RAR 解压失败: {}", e));
+                monitor_done.store(true, Ordering::Release);
+                let _ = monitor.await;
+                if extraction_result.is_ok() {
+                    on_progress(1.0);
+                }
+                extraction_result
             },
             ArchiveFormat::SevenZip => {
                 let srv = service.clone();
@@ -2874,7 +2933,11 @@ impl CompressionService {
             return UniversalCliEngine::try_zip_password(path, password);
         }
         if format == ArchiveFormat::Rar {
-            return Ok(self.rar_service.test_rar_password(path, password).await);
+            return self
+                .rar_service
+                .verify_rar_password(path, password)
+                .await
+                .map_err(anyhow::Error::from);
         }
 
         let cancellation_flag = self.cancellation_flag.clone();
@@ -2973,6 +3036,31 @@ impl CompressionService {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn password_candidate_position_never_changes_extraction_progress() {
+        let payload = CompressionService::password_attempt_progress_payload(
+            "task-1",
+            2,
+            Some(2),
+            "保险箱候选".to_string(),
+        );
+
+        assert_eq!(payload.stage.as_deref(), Some("password-attempt"));
+        assert_eq!(payload.progress, 0.0);
+        assert_eq!(payload.processed_bytes, 0);
+        assert_eq!(payload.total_bytes, 0);
+        assert_eq!(payload.password_attempt_current, Some(2));
+        assert_eq!(payload.password_attempt_total, Some(2));
+    }
+
+    #[test]
+    fn rar_output_monitor_reports_real_bytes_without_finishing_early() {
+        assert_eq!(CompressionService::extraction_progress_from_output(0, 100), None);
+        assert_eq!(CompressionService::extraction_progress_from_output(50, 100), Some(0.5));
+        assert_eq!(CompressionService::extraction_progress_from_output(100, 100), Some(0.99));
+        assert_eq!(CompressionService::extraction_progress_from_output(150, 100), Some(0.99));
+    }
 
     #[test]
     fn recognizes_application_native_aes_headers() {
