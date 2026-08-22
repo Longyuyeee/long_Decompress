@@ -28,7 +28,8 @@ v1.1.13 的代码、真实样本与关键桌面交互门禁均已通过。正式
 
 ## 正式资产门禁
 
-- npm、Tauri、主程序、Shell Extension、两个 Cargo 锁文件和版本化 DLL 必须统一为 `1.1.13`。
-- GitHub Release 必须包含 NSIS 安装包、updater ZIP、签名文件和可解析的 `latest.json`。
-- `latest.json` 的版本、下载 URL 与签名必须指向同一公开 Release。
-- 安装包大小、SHA-256 和公开资产复验结果在正式构建后补入本审计。
+- npm、Tauri、主程序、Shell Extension、两个 Cargo 锁文件和版本化 DLL 已统一为 `1.1.13`；发布身份脚本通过。
+- 主程序 FileVersion/ProductVersion 均为 `1.1.13`，ProductName 为 `Long解压`，Authenticode 状态按既定无商业证书策略为 `NotSigned`。
+- NSIS 安装包包含 14 个载荷文件，7-Zip 完整性测试通过；大小为 7,714,218 字节，SHA-256 为 `6E9F55DA079D2E592779A9C9FB0DB846E3BD5EA4E31EEB45D18E34D882D9B57B`。
+- updater ZIP 大小为 7,714,378 字节，SHA-256 为 `9BC64159977677E50EB68EE7A5A8742BBA3063414B4B19EFC8A3F5E66EB916DC`；独立 `.sig` 已生成，Tauri 配置公钥与仓库忽略的本地公钥备份逐字一致。
+- GitHub Release 仍必须包含 NSIS 安装包、updater ZIP、签名文件和可解析的 `latest.json`；公开复验完成后才算发布结束。
