@@ -433,7 +433,10 @@ fn looks_binary(bytes: &[u8]) -> bool {
 
 fn decode_utf16(bytes: &[u8], little_endian: bool) -> Option<String> {
     let mut values = Vec::with_capacity(bytes.len() / 2);
-    for pair in bytes.chunks_exact(2) {
+    for pair in bytes.chunks(2) {
+        if pair.len() != 2 {
+            break;
+        }
         values.push(if little_endian {
             u16::from_le_bytes([pair[0], pair[1]])
         } else {

@@ -377,6 +377,18 @@ test.describe('Long Decompress desktop shell', () => {
             totalUncompressedSize: 68, totalCompressedSize: 60, encrypted: false,
             entries: [{ path: 'art/preview.png', name: 'preview.png', size: 68, compressedSize: 60, modified: null, crc: '12345678', encrypted: false, isDir: false }],
           }
+        } else if (message.cmd === 'get_archive_engine_capabilities') {
+          value = {
+            available: true,
+            fullEngine: true,
+            formats: [{ name: 'ZIP', extensions: ['zip'], canCreate: true }],
+            browseExtensions: ['zip'],
+            nestedExtensions: ['zip'],
+            boundedPreviewFormats: ['ZIP'],
+            imagePreviewExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
+            textPreviewExtensions: ['txt', 'md', 'log'],
+            message: 'ready',
+          }
         } else if (message.cmd === 'preview_archive_image') {
           value = { entryPath: 'art/preview.png', mimeType: 'image/png', dataUrl: png, byteSize: 68, width: 1, height: 1 }
         } else if (message.cmd === 'load_app_settings') {
@@ -395,9 +407,9 @@ test.describe('Long Decompress desktop shell', () => {
     await page.locator('[data-entry-path="art/preview.png"]').click({ button: 'right' })
     const contextMenu = page.getByTestId('archive-context-menu')
     await expect(contextMenu).toContainText('内部查看器打开')
+    await expect(contextMenu).toContainText('使用默认应用打开')
     await expect(contextMenu).toContainText('解压到当前输出目录')
     await expect(contextMenu).toContainText('显示详细信息')
-    await expect(contextMenu).not.toContainText('默认应用')
     await expect(contextMenu).not.toContainText('进入压缩包')
     const menuBox = await contextMenu.boundingBox()
     const menuViewport = page.viewportSize()
@@ -421,15 +433,16 @@ test.describe('Long Decompress desktop shell', () => {
     await page.getByRole('button', { name: '关闭条目详情' }).click()
     await page.locator('[data-entry-path="art/preview.png"]').click({ button: 'right' })
     await page.getByTestId('archive-context-preview').click()
+    const previewDialog = page.getByTestId('archive-entry-preview')
     const preview = page.getByTestId('archive-image-preview')
     await expect(preview.getByRole('img', { name: 'preview.png' })).toBeVisible()
-    await expect(preview).toContainText('只读 · 未写入磁盘')
+    await expect(previewDialog).toContainText('只读 · 未写入磁盘')
 
     for (const width of responsiveWidths) {
       await page.setViewportSize({ width, height: 800 })
       await expectVerticalOnlyScrolling(page, [
         '.browser-page',
-        '[data-testid="archive-image-preview"]',
+        '.preview-stage',
         '.preview-dialog',
       ])
     }
