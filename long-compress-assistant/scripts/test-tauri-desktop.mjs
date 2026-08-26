@@ -524,7 +524,24 @@ async function runArchiveBrowserDesktopGate() {
     assert.match(await directoryRow.getAttribute('class'), /focused/)
     assert.match(await footer.getText(), /已选择\s+2\s+\/\s+2/, 'plain click must focus without changing selection')
 
-    await driver.actions().doubleClick(directoryRow).perform()
+    await driver.actions().contextClick(directoryRow).perform()
+    const directoryMenu = await waitForElement('[data-testid="archive-context-menu"]')
+    assert.match(await directoryMenu.getText(), /打开文件夹/)
+    assert.match(await directoryMenu.getText(), /解压到当前输出目录/)
+    assert.equal(
+      (await directoryMenu.findElements(By.css('[data-testid="archive-context-preview"]'))).length,
+      0,
+      'a directory must not expose the internal image viewer action',
+    )
+    assert.match(await footer.getText(), /已选择\s+2\s+\/\s+2/, 'right-clicking a directory must preserve selection')
+    await (await directoryMenu.findElement(By.css('[data-testid="archive-context-open"]'))).click()
+    await driver.wait(async () => (await waitForElement('[data-testid="archive-breadcrumbs"]')).getText().then(text => text.includes('资料集合')), 10_000)
+    console.log('[desktop-e2e] archive workspace opened a directory from its real context menu')
+    await driver.actions().keyDown(Key.ALT).sendKeys(Key.ARROW_LEFT).keyUp(Key.ALT).perform()
+    await driver.wait(async () => (await waitForElement('[data-testid="archive-breadcrumbs"]')).getText().then(text => !text.includes('资料集合')), 10_000)
+
+    const directoryRowAfterContextOpen = await waitForElement('[data-entry-path="资料集合/"]')
+    await driver.actions().doubleClick(directoryRowAfterContextOpen).perform()
     await driver.wait(async () => (await waitForElement('[data-testid="archive-breadcrumbs"]')).getText().then(text => text.includes('资料集合')), 10_000)
     console.log('[desktop-e2e] archive workspace entered a directory by double-click')
     await driver.actions().keyDown(Key.ALT).sendKeys(Key.ARROW_LEFT).keyUp(Key.ALT).perform()
@@ -550,7 +567,7 @@ async function runArchiveBrowserDesktopGate() {
     )
   }
 
-  const extractOnly = async (query, expectedPath, expectedContent, excludedPath) => {
+  const extractOnly = async (query, expectedPath, expectedContent, excludedPath, useContextMenu = false) => {
     const search = await waitForElement('.browser-search input')
     await search.clear()
     await search.sendKeys('.txt')
@@ -565,7 +582,59 @@ async function runArchiveBrowserDesktopGate() {
     }, 10_000)
     await (await rows[0].findElement(By.css('.browser-checkbox'))).click()
     assert.match(await (await waitForElement('.browser-page > footer')).getText(), /已选择\s+1\s+\//)
-    await (await waitForElement('.browser-page > footer .browser-primary')).click()
+    if (useContextMenu) {
+      await driver.actions().contextClick(rows[0]).perform()
+      const menu = await waitForElement('[data-testid="archive-context-menu"]')
+      assert.match(await menu.getText(), /解压到当前输出目录/)
+      assert.match(await menu.getText(), /复制归档内路径/)
+      assert.match(await menu.getText(), /显示详细信息/)
+      assert.doesNotMatch(await menu.getText(), /默认应用|进入压缩包/, 'unimplemented dependent actions must not be advertised')
+      writeFileSync(
+        path.join(artifactDirectory, 'archive-browser-a02-context-menu.png'),
+        Buffer.from(await driver.takeScreenshot(), 'base64'),
+      )
+
+      await (await menu.findElement(By.css('[data-testid="archive-context-copy-path"]'))).click()
+      await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-context-menu"]'))).length === 0, 10_000)
+      const clipboardResult = spawnSync(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; Get-Clipboard -Raw',
+        ],
+        { encoding: 'utf8', windowsHide: true },
+      )
+      assert.equal(clipboardResult.status, 0, `Windows clipboard read failed: ${clipboardResult.stderr}`)
+      const clipboardText = clipboardResult.stdout.trimEnd()
+      assert.equal(
+        clipboardText,
+        zipKeepRelative.replaceAll('\\', '/'),
+        `the real WebView clipboard must contain the archive path, got ${clipboardText}`,
+      )
+
+      await driver.actions().contextClick(rows[0]).perform()
+      await (await waitForElement('[data-testid="archive-context-details"]')).click()
+      const details = await waitForElement('[data-testid="archive-entry-details"]')
+      assert.match(await details.getText(), new RegExp(query))
+      const detailDimensions = await driver.executeScript(
+        'const dialog = document.querySelector(\'.archive-details-dialog\'); return dialog ? { scrollWidth: dialog.scrollWidth, clientWidth: dialog.clientWidth } : null;',
+      )
+      assert.ok(detailDimensions)
+      assert.ok(detailDimensions.scrollWidth <= detailDimensions.clientWidth + 1)
+      writeFileSync(
+        path.join(artifactDirectory, 'archive-browser-a02-entry-details.png'),
+        Buffer.from(await driver.takeScreenshot(), 'base64'),
+      )
+      await (await details.findElement(By.css('[aria-label="关闭条目详情"]'))).click()
+
+      await driver.actions().contextClick(rows[0]).perform()
+      await (await waitForElement('[data-testid="archive-context-extract-current"]')).click()
+      console.log('[desktop-e2e] archive-browser extraction started from the real file context menu')
+    } else {
+      await (await waitForElement('.browser-page > footer .browser-primary')).click()
+    }
     let lastTask = null
     let terminalTask
     try {
@@ -601,6 +670,7 @@ async function runArchiveBrowserDesktopGate() {
     path.join(zipOutput, zipKeepRelative),
     zipKeepPayload,
     path.join(zipOutput, zipSkipRelative),
+    true,
   )
 
   const sevenZipOutput = path.join(browserFixtureRoot, '7z-selected-output')

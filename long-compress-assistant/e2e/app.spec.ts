@@ -392,7 +392,35 @@ test.describe('Long Decompress desktop shell', () => {
     await page.locator('[data-entry-path="art/"]').dblclick()
     await expect(page.getByTestId('archive-breadcrumbs')).toContainText('art')
     await expect(page.getByText('preview.png').first()).toBeVisible()
-    await page.getByRole('button', { name: '预览 preview.png' }).click()
+    await page.locator('[data-entry-path="art/preview.png"]').click({ button: 'right' })
+    const contextMenu = page.getByTestId('archive-context-menu')
+    await expect(contextMenu).toContainText('内部查看器打开')
+    await expect(contextMenu).toContainText('解压到当前输出目录')
+    await expect(contextMenu).toContainText('显示详细信息')
+    await expect(contextMenu).not.toContainText('默认应用')
+    await expect(contextMenu).not.toContainText('进入压缩包')
+    const menuBox = await contextMenu.boundingBox()
+    const menuViewport = page.viewportSize()
+    expect(menuBox).not.toBeNull()
+    expect(menuViewport).not.toBeNull()
+    expect(menuBox!.x).toBeGreaterThanOrEqual(0)
+    expect(menuBox!.y).toBeGreaterThanOrEqual(0)
+    expect(menuBox!.x + menuBox!.width).toBeLessThanOrEqual(menuViewport!.width)
+    expect(menuBox!.y + menuBox!.height).toBeLessThanOrEqual(menuViewport!.height)
+    await page.getByTestId('archive-context-details').click()
+    const details = page.getByTestId('archive-entry-details')
+    await expect(details).toContainText('art/preview.png')
+    for (const width of responsiveWidths) {
+      await page.setViewportSize({ width, height: 800 })
+      await expectVerticalOnlyScrolling(page, [
+        '.browser-page',
+        '[data-testid="archive-entry-details"]',
+        '.archive-details-dialog',
+      ])
+    }
+    await page.getByRole('button', { name: '关闭条目详情' }).click()
+    await page.locator('[data-entry-path="art/preview.png"]').click({ button: 'right' })
+    await page.getByTestId('archive-context-preview').click()
     const preview = page.getByTestId('archive-image-preview')
     await expect(preview.getByRole('img', { name: 'preview.png' })).toBeVisible()
     await expect(preview).toContainText('只读 · 未写入磁盘')

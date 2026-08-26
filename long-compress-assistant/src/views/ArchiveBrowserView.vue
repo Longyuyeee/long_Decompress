@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands, type ArchiveBrowseResult, type ArchiveEntryInfo, type ArchiveImagePreview } from '@/composables/useTauriCommands'
@@ -25,6 +25,13 @@ const previewLoading = ref(false)
 const previewError = ref('')
 const expandedDirectories = ref(new Set<string>())
 const isDraggingArchive = ref(false)
+const contextMenu = ref<{
+  entry: ArchiveEntryInfo | null
+  entries: ArchiveEntryInfo[]
+  left: number
+  top: number
+} | null>(null)
+const detailEntries = ref<ArchiveEntryInfo[]>([])
 let previewSequence = 0
 let selectionAnchorPath = ''
 let unlistenDrop: (() => void) | null = null
@@ -106,6 +113,17 @@ const breadcrumbs = computed(() => {
     { name: '根目录', path: '' },
     ...parts.map((name, index) => ({ name, path: parts.slice(0, index + 1).join('/') })),
   ]
+})
+const detailFiles = computed(() => detailEntries.value.flatMap(entry => entry.isDir
+  ? files.value.filter(file => file.path.replace(/\\/g, '/').startsWith(entry.path.replace(/\\/g, '/')))
+  : [entry]))
+const detailTotalSize = computed(() => detailFiles.value.reduce((sum, entry) => sum + entry.size, 0))
+const detailCompressedSize = computed(() => detailFiles.value.reduce((sum, entry) => sum + (entry.compressedSize ?? 0), 0))
+const detailTitle = computed(() => detailEntries.value.length === 1 ? detailEntries.value[0].name : `${detailEntries.value.length} 个条目`)
+const contextDisplayEntries = computed(() => {
+  if (!contextMenu.value) return []
+  if (contextMenu.value.entry?.isDir) return [contextMenu.value.entry]
+  return contextMenu.value.entries
 })
 
 const canPreviewEntry = (entry: ArchiveEntryInfo) => {
@@ -205,11 +223,16 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
 }
 
 const chooseOutput = async () => {
+  const picked = await requestOutputDirectory(outputPath.value)
+  if (picked) outputPath.value = picked
+}
+
+const requestOutputDirectory = async (initialPath: string) => {
   const queued = takeDesktopDialogSelection()
   const picked = queued === undefined
-    ? await commands.selectDirectory(outputPath.value || undefined)
+    ? await commands.selectDirectory(initialPath || undefined)
     : typeof queued === 'string' ? queued : null
-  if (typeof picked === 'string') outputPath.value = picked
+  return typeof picked === 'string' ? picked : null
 }
 
 const expandDirectoryAncestors = (path: string) => {
@@ -288,6 +311,105 @@ const activateEntry = (entry: ArchiveEntryInfo) => {
   if (entry.isDir) navigateToDirectory(entry.path.replace(/\/+$/, ''))
 }
 
+const contextEntriesFor = (entry: ArchiveEntryInfo | null) => {
+  if (!entry) return files.value.filter(file => selected.value.has(file.path))
+  if (entry.isDir) {
+    const prefix = entry.path.replace(/\\/g, '/')
+    return files.value.filter(file => file.path.replace(/\\/g, '/').startsWith(prefix))
+  }
+  if (selected.value.has(entry.path) && selected.value.size > 1) {
+    return files.value.filter(file => selected.value.has(file.path))
+  }
+  return [entry]
+}
+
+const openContextMenu = (entry: ArchiveEntryInfo | null, event: MouseEvent) => {
+  event.preventDefault()
+  if (entry) focusedEntryPath.value = entry.path
+  contextMenu.value = {
+    entry,
+    entries: contextEntriesFor(entry),
+    left: Math.max(8, event.clientX),
+    top: Math.max(8, event.clientY),
+  }
+  void nextTick(() => {
+    const menu = document.querySelector<HTMLElement>('[data-testid="archive-context-menu"]')
+    if (!menu || !contextMenu.value) return
+    const bounds = menu.getBoundingClientRect()
+    contextMenu.value.left = Math.max(8, Math.min(contextMenu.value.left, window.innerWidth - bounds.width - 8))
+    contextMenu.value.top = Math.max(8, Math.min(contextMenu.value.top, window.innerHeight - bounds.height - 8))
+  })
+}
+
+const closeContextMenu = () => {
+  contextMenu.value = null
+}
+
+const showDetails = (entries: ArchiveEntryInfo[]) => {
+  if (entries.length === 0) return
+  detailEntries.value = entries
+  closeContextMenu()
+}
+
+const closeDetails = () => {
+  detailEntries.value = []
+}
+
+const copyContextText = async (kind: 'name' | 'path', entries: ArchiveEntryInfo[]) => {
+  if (entries.length === 0) return
+  const text = entries.map(entry => kind === 'name' ? entry.name : entry.path.replace(/\/+$/, '')).join('\n')
+  closeContextMenu()
+  try {
+    await navigator.clipboard.writeText(text)
+    appStore.setSuccess(`已复制${kind === 'name' ? '名称' : '归档内路径'}`)
+  } catch (error) {
+    appStore.setError(`复制失败：${String(error)}`)
+  }
+}
+
+const extractPaths = async (paths: string[], destination: string) => {
+  if (!archivePath.value || !destination || paths.length === 0 || extracting.value) return
+  extracting.value = true
+  closeContextMenu()
+  try {
+    await commands.decompressFile(archivePath.value, {
+      outputPath: destination,
+      password: password.value || undefined,
+      keepStructure: true,
+      overwrite: false,
+      deleteAfter: false,
+      preserveTimestamps: true,
+      selectedEntries: paths,
+      conflictPolicy: 'rename'
+    })
+    appStore.setSuccess(`已解压 ${paths.length} 个所选文件`)
+  } catch (error) {
+    appStore.setError(String(error))
+  } finally {
+    extracting.value = false
+  }
+}
+
+const extractContextEntries = async (chooseDestination: boolean) => {
+  const entries = contextMenu.value?.entries ?? []
+  const paths = entries.filter(entry => !entry.isDir).map(entry => entry.path)
+  if (chooseDestination) closeContextMenu()
+  const destination = chooseDestination
+    ? await requestOutputDirectory(outputPath.value)
+    : outputPath.value
+  if (destination) await extractPaths(paths, destination)
+}
+
+const openContextEntry = (entry: ArchiveEntryInfo) => {
+  closeContextMenu()
+  activateEntry(entry)
+}
+
+const previewContextEntry = (entry: ArchiveEntryInfo) => {
+  closeContextMenu()
+  void openPreview(entry)
+}
+
 const handleEntryClick = (entry: ArchiveEntryInfo, event: MouseEvent) => {
   focusedEntryPath.value = entry.path
   if (entry.isDir) return
@@ -313,8 +435,54 @@ const isEditableKeyboardTarget = (target: EventTarget | null) => {
 
 const handleWorkspaceKeydown = (event: KeyboardEvent) => {
   if (event.defaultPrevented) return
+  if (event.key === 'Escape') {
+    if (contextMenu.value) closeContextMenu()
+    else if (detailEntries.value.length > 0) closeDetails()
+    return
+  }
   if (isEditableKeyboardTarget(event.target)) return
-  if (event.altKey && event.key === 'ArrowLeft') {
+  const focusedEntry = [...directoryEntries.value, ...files.value].find(entry => entry.path === focusedEntryPath.value) ?? null
+  const keyboardEntries = contextEntriesFor(focusedEntry)
+  const keyboardDisplayEntries = focusedEntry?.isDir ? [focusedEntry] : keyboardEntries
+  if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu') {
+    event.preventDefault()
+    const focusedElement = focusedEntryPath.value
+      ? Array.from(document.querySelectorAll<HTMLElement>('[data-entry-path]'))
+          .find(element => element.dataset.entryPath === focusedEntryPath.value) ?? null
+      : null
+    const rect = focusedElement?.getBoundingClientRect()
+    openContextMenu(focusedEntry, new MouseEvent('contextmenu', {
+      clientX: rect ? rect.left + Math.min(rect.width / 2, 160) : window.innerWidth / 2,
+      clientY: rect ? rect.top + Math.min(rect.height, 36) : window.innerHeight / 2,
+    }))
+  } else if (event.ctrlKey && event.key === 'Enter' && focusedEntry && canPreviewEntry(focusedEntry) && previewRouteSupported.value) {
+    event.preventDefault()
+    void openPreview(focusedEntry)
+  } else if (event.altKey && event.key === 'Enter' && keyboardDisplayEntries.length > 0) {
+    event.preventDefault()
+    showDetails(keyboardDisplayEntries)
+  } else if (event.altKey && event.shiftKey && event.key.toLocaleLowerCase() === 'e' && keyboardEntries.length > 0) {
+    event.preventDefault()
+    void (async () => {
+      const destination = await requestOutputDirectory(outputPath.value)
+      if (destination) await extractPaths(keyboardEntries.map(entry => entry.path), destination)
+    })()
+  } else if (event.altKey && event.key.toLocaleLowerCase() === 'e' && keyboardEntries.length > 0) {
+    event.preventDefault()
+    void extractPaths(keyboardEntries.map(entry => entry.path), outputPath.value)
+  } else if (event.ctrlKey && event.shiftKey && event.key.toLocaleLowerCase() === 'c' && keyboardDisplayEntries.length > 0) {
+    event.preventDefault()
+    void copyContextText('path', keyboardDisplayEntries)
+  } else if (event.ctrlKey && event.altKey && event.key.toLocaleLowerCase() === 'c' && keyboardDisplayEntries.length > 0) {
+    event.preventDefault()
+    void copyContextText('name', keyboardDisplayEntries)
+  } else if (event.key === 'F5') {
+    event.preventDefault()
+    void refreshDirectory()
+  } else if (event.key === 'Enter' && focusedEntry) {
+    event.preventDefault()
+    activateEntry(focusedEntry)
+  } else if (event.altKey && event.key === 'ArrowLeft') {
     event.preventDefault()
     goBack()
   } else if (event.altKey && event.key === 'ArrowRight') {
@@ -376,25 +544,7 @@ const toggleVisible = () => {
 }
 
 const extractSelected = async () => {
-  if (!archivePath.value || !outputPath.value || selected.value.size === 0 || extracting.value) return
-  extracting.value = true
-  try {
-    await commands.decompressFile(archivePath.value, {
-      outputPath: outputPath.value,
-      password: password.value || undefined,
-      keepStructure: true,
-      overwrite: false,
-      deleteAfter: false,
-      preserveTimestamps: true,
-      selectedEntries: [...selected.value],
-      conflictPolicy: 'rename'
-    })
-    appStore.setSuccess(`已解压 ${selected.value.size} 个所选文件`)
-  } catch (error) {
-    appStore.setError(String(error))
-  } finally {
-    extracting.value = false
-  }
+  await extractPaths([...selected.value], outputPath.value)
 }
 </script>
 
@@ -489,7 +639,7 @@ const extractSelected = async () => {
             <button type="button" class="browser-checkbox" :class="{ checked: visibleSelected }" @click="toggleVisible"><i v-if="visibleSelected" class="pi pi-check"></i></button>
             <span>名称与路径</span><span class="hidden md:block">大小</span><span class="hidden lg:block">修改时间</span><span class="hidden xl:block">CRC</span>
           </div>
-          <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
+          <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar" @contextmenu.self="openContextMenu(null, $event)">
             <div
               v-for="entry in filteredEntries"
               :key="entry.path"
@@ -499,6 +649,7 @@ const extractSelected = async () => {
               role="row"
               tabindex="0"
               @click="handleEntryClick(entry, $event)"
+              @contextmenu="openContextMenu(entry, $event)"
               @dblclick="activateEntry(entry)"
               @keydown.enter.prevent="activateEntry(entry)"
             >
@@ -557,6 +708,63 @@ const extractSelected = async () => {
         <p class="preview-safety">预览仅接受经魔数确认的 PNG、JPEG、GIF、WebP、BMP；解压后最大 8 MiB、最多 1600 万像素，TAR 流最多扫描 64 MiB。SVG、截断与扩展名伪装内容不会渲染。</p>
       </section>
     </div>
+
+    <Teleport to="body">
+      <div v-if="contextMenu" class="archive-context-layer" @pointerdown.self="closeContextMenu" @contextmenu.prevent>
+        <section
+          class="archive-context-menu"
+          data-testid="archive-context-menu"
+          role="menu"
+          :aria-label="contextMenu.entry ? `${contextMenu.entry.name} 操作菜单` : '文件区操作菜单'"
+          :style="{ left: `${contextMenu.left}px`, top: `${contextMenu.top}px` }"
+        >
+          <header class="archive-context-header">
+            <i :class="contextMenu.entry?.isDir ? 'pi pi-folder' : contextDisplayEntries.length > 1 ? 'pi pi-clone' : 'pi pi-file'"></i>
+            <span class="min-w-0"><strong class="block truncate">{{ contextMenu.entry?.isDir ? contextMenu.entry.name : contextDisplayEntries.length > 1 ? `${contextDisplayEntries.length} 个已选文件` : contextMenu.entry?.name || '当前文件区' }}</strong><small>{{ contextMenu.entry?.isDir ? `${contextMenu.entries.length} 个文件` : contextDisplayEntries.length > 1 ? '批量操作' : '只读归档操作' }}</small></span>
+          </header>
+
+          <button v-if="contextMenu.entry?.isDir" type="button" role="menuitem" data-testid="archive-context-open" @click="openContextEntry(contextMenu.entry)"><i class="pi pi-folder-open"></i><span>打开文件夹</span><kbd>Enter</kbd></button>
+          <button v-if="contextMenu.entry && !contextMenu.entry.isDir && canPreviewEntry(contextMenu.entry) && previewRouteSupported" type="button" role="menuitem" data-testid="archive-context-preview" @click="previewContextEntry(contextMenu.entry)"><i class="pi pi-eye"></i><span>内部查看器打开</span><kbd>Ctrl+Enter</kbd></button>
+
+          <div v-if="contextMenu.entries.length > 0" class="archive-context-separator"></div>
+          <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-current" :disabled="extracting || !outputPath" @click="extractContextEntries(false)"><i class="pi pi-download"></i><span>解压到当前输出目录</span><kbd>Alt+E</kbd></button>
+          <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-choose" :disabled="extracting" @click="extractContextEntries(true)"><i class="pi pi-folder-open"></i><span>解压到指定目录…</span><kbd>Alt+Shift+E</kbd></button>
+
+          <div v-if="contextDisplayEntries.length > 0" class="archive-context-separator"></div>
+          <button v-if="contextDisplayEntries.length > 0" type="button" role="menuitem" data-testid="archive-context-copy-name" @click="copyContextText('name', contextDisplayEntries)"><i class="pi pi-copy"></i><span>复制名称</span><kbd>Ctrl+Alt+C</kbd></button>
+          <button v-if="contextDisplayEntries.length > 0" type="button" role="menuitem" data-testid="archive-context-copy-path" @click="copyContextText('path', contextDisplayEntries)"><i class="pi pi-link"></i><span>复制归档内路径</span><kbd>Ctrl+Shift+C</kbd></button>
+          <button v-if="contextDisplayEntries.length > 0" type="button" role="menuitem" data-testid="archive-context-details" @click="showDetails(contextDisplayEntries)"><i class="pi pi-info-circle"></i><span>显示详细信息</span><kbd>Alt+Enter</kbd></button>
+
+          <div class="archive-context-separator"></div>
+          <button type="button" role="menuitem" data-testid="archive-context-refresh" @click="closeContextMenu(); refreshDirectory()"><i class="pi pi-refresh"></i><span>刷新压缩包</span><kbd>F5</kbd></button>
+        </section>
+      </div>
+
+      <div v-if="detailEntries.length > 0" class="archive-details-backdrop" data-testid="archive-entry-details" @pointerdown.self="closeDetails">
+        <section class="archive-details-dialog" role="dialog" aria-modal="true" :aria-label="`${detailTitle} 详细信息`">
+          <header class="archive-details-header">
+            <div class="min-w-0"><p>ARCHIVE ENTRY</p><h2 class="truncate">{{ detailTitle }}</h2><span>只读元数据，不会提取或修改归档内容</span></div>
+            <button type="button" aria-label="关闭条目详情" @click="closeDetails"><i class="pi pi-times"></i></button>
+          </header>
+          <div class="archive-details-metrics">
+            <article><span>条目</span><strong>{{ detailEntries.length }}</strong></article>
+            <article><span>包含文件</span><strong>{{ detailFiles.length }}</strong></article>
+            <article><span>展开大小</span><strong>{{ formatBytes(detailTotalSize) }}</strong></article>
+            <article><span>归档内大小</span><strong>{{ detailCompressedSize ? formatBytes(detailCompressedSize) : '未知' }}</strong></article>
+          </div>
+          <dl v-if="detailEntries.length === 1" class="archive-details-grid">
+            <div><dt>类型</dt><dd>{{ detailEntries[0].isDir ? '文件夹' : '文件' }}</dd></div>
+            <div><dt>加密标记</dt><dd>{{ detailEntries[0].encrypted ? '已加密' : '未单独标记' }}</dd></div>
+            <div><dt>修改时间</dt><dd>{{ detailEntries[0].modified || '归档未提供' }}</dd></div>
+            <div><dt>CRC</dt><dd class="font-mono">{{ detailEntries[0].crc || '归档未提供' }}</dd></div>
+          </dl>
+          <section class="archive-details-paths">
+            <h3>归档内路径</h3>
+            <ul><li v-for="entry in detailEntries" :key="entry.path">{{ entry.path.replace(/\/+$/, '') }}</li></ul>
+          </section>
+        </section>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -627,6 +835,36 @@ const extractSelected = async () => {
 .preview-meta { display: flex; flex-wrap: wrap; gap: .5rem; padding: .9rem 1.25rem 0; }
 .preview-meta span { border-radius: 999px; padding: .35rem .65rem; background: var(--bg-input); color: var(--text-muted); font-size: .68rem; font-weight: 800; }
 .preview-safety { padding: .8rem 1.25rem 1.15rem; color: var(--text-muted); font-size: .68rem; line-height: 1.55; }
+.archive-context-layer { position: fixed; inset: 0; z-index: 80; }
+.archive-context-menu { position: fixed; width: min(17rem, calc(100vw - 1rem)); max-height: calc(100vh - 1rem); overflow-y: auto; overflow-x: hidden; padding: .45rem; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 25%, var(--border-subtle)); border-radius: 1rem; background: color-mix(in srgb, var(--bg-modal) 96%, transparent); box-shadow: 0 20px 60px rgba(5, 18, 28, .28); backdrop-filter: blur(20px); }
+.archive-context-header { min-width: 0; display: flex; align-items: center; gap: .7rem; padding: .65rem .7rem .75rem; color: var(--dynamic-accent); }
+.archive-context-header > i { flex: 0 0 auto; font-size: 1rem; }
+.archive-context-header strong { color: var(--text-content); font-size: .76rem; }
+.archive-context-header small { display: block; margin-top: .15rem; color: var(--text-muted); font-size: .62rem; font-weight: 700; }
+.archive-context-menu > button { width: 100%; min-width: 0; display: grid; grid-template-columns: 1.2rem minmax(0, 1fr) auto; align-items: center; gap: .55rem; padding: .58rem .65rem; border-radius: .65rem; color: var(--text-content); text-align: left; font-size: .7rem; font-weight: 800; }
+.archive-context-menu > button:hover:not(:disabled), .archive-context-menu > button:focus-visible { color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 11%, transparent); outline: none; }
+.archive-context-menu > button:disabled { opacity: .4; cursor: not-allowed; }
+.archive-context-menu kbd { color: var(--text-muted); font-family: inherit; font-size: .56rem; font-weight: 700; white-space: nowrap; }
+.archive-context-separator { height: 1px; margin: .35rem .45rem; background: var(--border-subtle); }
+.archive-details-backdrop { position: fixed; inset: 0; z-index: 85; display: grid; place-items: center; min-width: 0; padding: clamp(.75rem, 3vw, 2rem); background: color-mix(in srgb, #08141f 58%, transparent); backdrop-filter: blur(14px); overflow: hidden; }
+.archive-details-dialog { width: min(46rem, 100%); max-height: 100%; min-width: 0; overflow-y: auto; overflow-x: hidden; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 25%, var(--border-subtle)); border-radius: 1.5rem; background: var(--bg-modal); box-shadow: 0 28px 80px rgba(0, 0, 0, .34); }
+.archive-details-header { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem; border-bottom: 1px solid var(--border-subtle); background: radial-gradient(circle at 90% 0, color-mix(in srgb, var(--dynamic-accent) 13%, transparent), transparent 48%); }
+.archive-details-header p { color: var(--dynamic-accent); font-size: .62rem; font-weight: 900; letter-spacing: .2em; }
+.archive-details-header h2 { margin-top: .3rem; color: var(--text-content); font-size: 1.2rem; font-weight: 900; }
+.archive-details-header span { display: block; margin-top: .2rem; color: var(--text-muted); font-size: .68rem; font-weight: 700; }
+.archive-details-header button { flex: 0 0 auto; width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: .8rem; color: var(--text-muted); background: var(--bg-input); }
+.archive-details-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; padding: 1rem 1.25rem 0; }
+.archive-details-metrics article { min-width: 0; padding: .8rem; border: 1px solid var(--border-subtle); border-radius: .9rem; background: var(--bg-input); }
+.archive-details-metrics span, .archive-details-grid dt { display: block; color: var(--text-muted); font-size: .62rem; font-weight: 800; }
+.archive-details-metrics strong { display: block; margin-top: .3rem; overflow: hidden; color: var(--text-content); font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.archive-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 1rem; padding: 1rem 1.25rem 0; }
+.archive-details-grid > div { min-width: 0; padding: .65rem .8rem; border-bottom: 1px solid var(--border-subtle); }
+.archive-details-grid dd { margin-top: .25rem; overflow: hidden; color: var(--text-content); font-size: .7rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.archive-details-paths { padding: 1rem 1.25rem 1.25rem; }
+.archive-details-paths h3 { color: var(--text-muted); font-size: .65rem; font-weight: 900; letter-spacing: .12em; }
+.archive-details-paths ul { max-height: 12rem; margin-top: .55rem; overflow-y: auto; overflow-x: hidden; border: 1px solid var(--border-subtle); border-radius: .85rem; background: var(--bg-input); }
+.archive-details-paths li { overflow-wrap: anywhere; padding: .55rem .7rem; border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 65%, transparent); color: var(--text-content); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .66rem; }
+.archive-details-paths li:last-child { border-bottom: 0; }
 @media (max-width: 1050px) { .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(8rem, 1fr) minmax(5rem, .28fr) minmax(7rem, .4fr); } }
-@media (max-width: 760px) { .browser-page { padding: 1rem; overflow-y: auto; overflow-x: hidden; } .browser-workspace { flex: 0 0 34rem; min-height: 34rem; grid-template-columns: 1fr; grid-template-rows: minmax(7rem, 10rem) minmax(22rem, 1fr); } .browser-workspace aside { border-right: 0; border-bottom: 1px solid var(--border-subtle); } .browser-toolbar { grid-template-columns: 1fr; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } .output-target { max-width: 80vw; } }
+@media (max-width: 760px) { .browser-page { padding: 1rem; overflow-y: auto; overflow-x: hidden; } .browser-workspace { flex: 0 0 34rem; min-height: 34rem; grid-template-columns: 1fr; grid-template-rows: minmax(7rem, 10rem) minmax(22rem, 1fr); } .browser-workspace aside { border-right: 0; border-bottom: 1px solid var(--border-subtle); } .browser-toolbar { grid-template-columns: 1fr; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } .output-target { max-width: 80vw; } .archive-details-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-details-grid { grid-template-columns: 1fr; } }
 </style>

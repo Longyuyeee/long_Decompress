@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   browseArchive: vi.fn(),
   previewArchiveImage: vi.fn(),
   decompressFile: vi.fn(),
+  clipboardWrite: vi.fn(),
   setError: vi.fn(),
   setSuccess: vi.fn(),
 }))
@@ -29,6 +30,12 @@ vi.mock('@/composables/useTauriCommands', () => ({
 describe('ArchiveBrowserView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: mocks.clipboardWrite },
+    })
+    mocks.clipboardWrite.mockResolvedValue(undefined)
+    mocks.selectDirectory.mockResolvedValue(null)
     mocks.selectFiles.mockResolvedValue([{ path: 'C:/archives/demo.zip', name: 'demo.zip', size: 12, isDir: false, modified: 0 }])
     mocks.browseArchive.mockResolvedValue({
       format: 'ZIP', totalFiles: 2, totalDirectories: 1,
@@ -66,6 +73,84 @@ describe('ArchiveBrowserView', () => {
       conflictPolicy: 'rename',
     }))
     expect(mocks.setSuccess).toHaveBeenCalledWith('已解压 1 个所选文件')
+  })
+
+  it('shows object-specific context actions without changing selection', async () => {
+    const wrapper = mount(ArchiveBrowserView, { attachTo: document.body })
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+
+    await wrapper.get('[data-entry-path="image.png"] .browser-checkbox').trigger('click')
+    expect(wrapper.find('footer').text()).toContain('已选择 1 / 2 个文件')
+    await wrapper.get('[data-entry-path="image.png"]').trigger('contextmenu', { clientX: 80, clientY: 90 })
+
+    const menu = document.querySelector('[data-testid="archive-context-menu"]') as HTMLElement
+    expect(menu).not.toBeNull()
+    expect(menu.textContent).toContain('image.png')
+    expect(menu.querySelector('[data-testid="archive-context-preview"]')).not.toBeNull()
+    expect(wrapper.find('footer').text()).toContain('已选择 1 / 2 个文件')
+
+    ;(menu.querySelector('[data-testid="archive-context-copy-path"]') as HTMLButtonElement).click()
+    await flushPromises()
+    expect(mocks.clipboardWrite).toHaveBeenCalledWith('image.png')
+    expect(mocks.setSuccess).toHaveBeenCalledWith('已复制归档内路径')
+    wrapper.unmount()
+  })
+
+  it('routes context extraction and details through existing safe entry semantics', async () => {
+    mocks.selectDirectory.mockResolvedValue('C:/archives/custom-output')
+    const wrapper = mount(ArchiveBrowserView, { attachTo: document.body })
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+
+    await wrapper.get('[data-entry-path="image.png"] .browser-checkbox').trigger('click')
+    await wrapper.find('input[placeholder="搜索文件名或路径"]').setValue('readme')
+    const readmeRow = wrapper.get('[data-entry-path="docs/readme.txt"]')
+    await readmeRow.trigger('contextmenu', { clientX: 100, clientY: 110 })
+    ;(document.querySelector('[data-testid="archive-context-details"]') as HTMLButtonElement).click()
+    await flushPromises()
+    expect((document.querySelector('[data-testid="archive-entry-details"]') as HTMLElement).textContent).toContain('docs/readme.txt')
+    ;(document.querySelector('[aria-label="关闭条目详情"]') as HTMLButtonElement).click()
+
+    await readmeRow.trigger('contextmenu', { clientX: 100, clientY: 110 })
+    ;(document.querySelector('[data-testid="archive-context-extract-choose"]') as HTMLButtonElement).click()
+    await flushPromises()
+    expect(mocks.decompressFile).toHaveBeenCalledWith('C:/archives/demo.zip', expect.objectContaining({
+      outputPath: 'C:/archives/custom-output',
+      selectedEntries: ['docs/readme.txt'],
+      conflictPolicy: 'rename',
+    }))
+    wrapper.unmount()
+  })
+
+  it('provides keyboard equivalents for context menu actions', async () => {
+    const wrapper = mount(ArchiveBrowserView, { attachTo: document.body })
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+
+    const imageRow = wrapper.get('[data-entry-path="image.png"]')
+    await imageRow.get('.browser-checkbox').trigger('click')
+    await imageRow.trigger('click')
+    await wrapper.get('.browser-page').trigger('keydown', { key: 'F10', shiftKey: true })
+    expect(document.querySelector('[data-testid="archive-context-menu"]')).not.toBeNull()
+    await wrapper.get('.browser-page').trigger('keydown', { key: 'Escape' })
+    expect(document.querySelector('[data-testid="archive-context-menu"]')).toBeNull()
+
+    await wrapper.get('.browser-page').trigger('keydown', { key: 'c', ctrlKey: true, shiftKey: true })
+    await flushPromises()
+    expect(mocks.clipboardWrite).toHaveBeenCalledWith('image.png')
+    await wrapper.get('.browser-page').trigger('keydown', { key: 'Enter', altKey: true })
+    expect(document.querySelector('[data-testid="archive-entry-details"]')).not.toBeNull()
+    ;(document.querySelector('[aria-label="关闭条目详情"]') as HTMLButtonElement).click()
+
+    await wrapper.get('[data-entry-path="docs/"]').trigger('click')
+    await wrapper.get('.browser-page').trigger('keydown', { key: 'c', ctrlKey: true, shiftKey: true })
+    await flushPromises()
+    expect(mocks.clipboardWrite).toHaveBeenLastCalledWith('docs')
+    await wrapper.get('.browser-page').trigger('keydown', { key: 'Enter', altKey: true })
+    expect((document.querySelector('[data-testid="archive-entry-details"]') as HTMLElement).textContent).toContain('docs')
+    expect((document.querySelector('[data-testid="archive-entry-details"]') as HTMLElement).textContent).not.toContain('docs/readme.txt')
+    wrapper.unmount()
   })
 
   it('uses file-manager focus, multiselect and directory navigation semantics', async () => {
