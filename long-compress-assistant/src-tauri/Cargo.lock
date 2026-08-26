@@ -3145,6 +3145,7 @@ dependencies = [
  "crossbeam",
  "dashmap",
  "dirs",
+ "encoding_rs",
  "env_logger",
  "filetime",
  "flate2",

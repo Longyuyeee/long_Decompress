@@ -507,6 +507,8 @@ async function runArchiveBrowserDesktopGate() {
   const openPngPayload = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415408d763f8cfc0f01f00050001ff89993d1d0000000049454e44ae426082', 'hex')
   const openPdfPayload = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n', 'ascii')
   writeFileSync(path.join(defaultOpenRoot, '说明 文档.txt'), openTxtPayload)
+  writeFileSync(path.join(defaultOpenRoot, '超长 日志.log'), Buffer.alloc(1024 * 1024 + 4096, 0x78))
+  writeFileSync(path.join(defaultOpenRoot, '伪装 二进制.txt'), Buffer.from([0, 1, 2, 3, 0, 255, 8]))
   writeFileSync(path.join(defaultOpenRoot, '像素 图片.png'), openPngPayload)
   writeFileSync(path.join(defaultOpenRoot, '空白 文档.pdf'), openPdfPayload)
   writeFileSync(path.join(defaultOpenRoot, '禁止自动启动.cmd'), '@echo A-03-dangerous-content-must-not-run>"%TEMP%\\long-a03-danger.marker"\r\n', 'utf8')
@@ -519,6 +521,20 @@ async function runArchiveBrowserDesktopGate() {
   )
   const defaultOpenZone = '[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=https://example.test/default-open.zip\r\n'
   writeFileSync(`${defaultOpenZip}:Zone.Identifier`, defaultOpenZone, 'utf8')
+
+  const utf16PreviewName = 'UTF16 本地文本.txt'
+  const utf16PreviewPayload = Buffer.concat([
+    Buffer.from([0xff, 0xfe]),
+    Buffer.from('Long解压 UTF-16 真实 TAR 文本\n第二行', 'utf16le'),
+  ])
+  writeFileSync(path.join(sourceRoot, utf16PreviewName), utf16PreviewPayload)
+  const textPreviewTar = path.join(archiveRoot, '文本预览.tar')
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-ttar', '-y', textPreviewTar, utf16PreviewName],
+    'archive text-preview TAR',
+    { cwd: sourceRoot },
+  )
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[2].click()
@@ -713,6 +729,14 @@ async function runArchiveBrowserDesktopGate() {
   const sevenZipOutput = path.join(browserFixtureRoot, '7z-selected-output')
   await openArchive(browser7z, sevenZipOutput, 'desktop-browser-secret', passwordRootName)
   assert.match(await (await waitForElement('.browser-page')).getText(), /7Z[\s\S]*已加密/)
+  const sevenZipSearch = await waitForElement('.browser-search input')
+  await sevenZipSearch.clear()
+  await sevenZipSearch.sendKeys('只解压这一项')
+  assert.equal(
+    await (await waitForElement('.preview-trigger')).isEnabled(),
+    false,
+    '7Z internal text preview must remain disabled until a bounded reader exists',
+  )
   await extractOnly(
     '只解压这一项',
     path.join(sevenZipOutput, passwordKeepRelative),
@@ -757,6 +781,46 @@ async function runArchiveBrowserDesktopGate() {
 
   const defaultOpenOutput = path.join(browserFixtureRoot, 'default-open-output')
   await openArchive(defaultOpenZip, defaultOpenOutput, '', defaultOpenRootName)
+
+  const verifyInternalTextPreview = async (fileName, expectedText, expectedMeta) => {
+    const search = await waitForElement('.browser-search input')
+    await search.clear()
+    await search.sendKeys(fileName)
+    const row = await waitForElement(`[data-entry-path$="${fileName}"]`)
+    await (await row.findElement(By.css('.preview-trigger'))).click()
+    const preview = await waitForElement('[data-testid="archive-entry-preview"]')
+    assert.match(await preview.getText(), expectedText)
+    assert.match(await preview.getText(), expectedMeta)
+    if (fileName === '说明 文档.txt') {
+      writeFileSync(
+        path.join(artifactDirectory, 'archive-browser-a04-text-preview.png'),
+        Buffer.from(await driver.takeScreenshot(), 'base64'),
+      )
+    }
+    await (await preview.findElement(By.css('[aria-label="关闭预览"]'))).click()
+  }
+
+  await verifyInternalTextPreview('说明 文档.txt', /Long解压 A-03 Windows default TXT application/, /UTF-8[\s\S]*完整显示/)
+  assert.equal(
+    findFileRecursively(path.join(e2eDataDirectory, 'preview-cache'), '说明 文档.txt'),
+    null,
+    'internal text preview must not write an extracted cache file',
+  )
+  await verifyInternalTextPreview('超长 日志.log', /xxxxxxxx/, /仅显示前 1 MiB/)
+
+  const binarySearch = await waitForElement('.browser-search input')
+  await binarySearch.clear()
+  await binarySearch.sendKeys('伪装 二进制.txt')
+  const binaryRow = await waitForElement('[data-entry-path$="伪装 二进制.txt"]')
+  await (await binaryRow.findElement(By.css('.preview-trigger'))).click()
+  const binaryPreview = await waitForElement('[data-testid="archive-entry-preview"]')
+  assert.match(await binaryPreview.getText(), /无法预览[\s\S]*appears to be binary/)
+  await (await binaryPreview.findElement(By.css('[aria-label="关闭预览"]'))).click()
+
+  const utf16Preview = await callDesktopBridge('previewArchiveText', textPreviewTar, utf16PreviewName)
+  assert.equal(utf16Preview.encoding, 'UTF-16LE')
+  assert.match(utf16Preview.content, /Long解压 UTF-16 真实 TAR 文本/)
+  assert.equal(utf16Preview.truncated, false)
   await verifyDefaultApplicationOpen('说明 文档.txt', openTxtPayload)
   await verifyDefaultApplicationOpen('像素 图片.png', openPngPayload)
   await verifyDefaultApplicationOpen('空白 文档.pdf', openPdfPayload)

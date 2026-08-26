@@ -209,7 +209,7 @@ src/types/media.ts
 
 完成证据：见 [ARCHIVE_WORKSPACE_A03_AUDIT.md](ARCHIVE_WORKSPACE_A03_AUDIT.md)。真实 Release WebView2 已验证 TXT、PNG、PDF 的默认应用打开、缓存字节一致、Mark-of-the-Web 一致，以及危险 CMD 默认取消时不落盘、不执行。
 
-### A-04 内部查看器分层
+### A-04 内部查看器分层（2026-08-26 已完成）
 
 工作内容：
 
@@ -225,6 +225,8 @@ src/types/media.ts
 - 文本预览不加载完整超大文件，二进制文件不造成页面冻结；
 - 7Z/RAR 不绕过既有安全边界；
 - 预览关闭后不改变已选条目和当前目录。
+
+完成证据：见 [ARCHIVE_WORKSPACE_A04_AUDIT.md](ARCHIVE_WORKSPACE_A04_AUDIT.md)。真实 Release WebView2 已验证 ZIP UTF-8、超大日志截断、伪装二进制拒绝、UTF-16LE TAR 解码、7Z 禁用边界和内部预览不落盘。
 
 ### A-05 嵌套归档
 
@@ -566,11 +568,11 @@ npm.cmd run test:release-identity -- --expected <version>
 
 - 当前正式基线仍为 `1.1.13`；
 - A-01 已完成聚焦/多选分离、直属目录列表、双击/Enter 进入、Backspace/Alt 方向键、面包屑和后退/前进/上一级/刷新；搜索继续匹配完整归档路径；
-- A-02 已完成空白区、单项、多选和目录的动态右键菜单，接通内部图片查看、当前/指定目录解压、复制名称/路径、详情、刷新及键盘等价操作；A-03 已接通默认应用安全打开，A-05 的嵌套进入动作仍不提前展示；
+- A-02 已完成空白区、单项、多选和目录的动态右键菜单；A-03 已接通默认应用安全打开；A-04 已完成 ZIP/TAR 图片与文本分层预览、编码识别、1 MiB 上限和二进制拒绝；A-05 的嵌套进入动作仍不提前展示；
 - 聚焦前端与全量前端 224/224、生产构建和 Chromium 四档响应式门禁均通过；
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
-- 大节点 A 尚有 A-04 至 A-06，当前不提升版本。下一步实现有界纯文本内部查看器，不并行引入媒体引擎。
+- 大节点 A 尚有 A-05、A-06，当前不提升版本。下一步实现嵌套归档工作区、归档链和共享预算，不并行引入媒体引擎。
 
 ## 12. 技术参考
 

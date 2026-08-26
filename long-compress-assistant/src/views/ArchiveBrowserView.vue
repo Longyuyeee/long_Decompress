@@ -2,7 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { useAppStore } from '@/stores/app'
-import { useTauriCommands, type ArchiveBrowseResult, type ArchiveEntryInfo, type ArchiveImagePreview } from '@/composables/useTauriCommands'
+import { useTauriCommands, type ArchiveBrowseResult, type ArchiveEntryInfo, type ArchiveImagePreview, type ArchiveTextPreview } from '@/composables/useTauriCommands'
 
 const appStore = useAppStore()
 const commands = useTauriCommands()
@@ -22,6 +22,7 @@ const extracting = ref(false)
 const openingEntryPath = ref('')
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
 const imagePreview = ref<ArchiveImagePreview | null>(null)
+const textPreview = ref<ArchiveTextPreview | null>(null)
 const previewEntry = ref<ArchiveEntryInfo | null>(null)
 const previewLoading = ref(false)
 const previewError = ref('')
@@ -45,7 +46,12 @@ const extensionGroups: Record<string, Set<string>> = {
   document: new Set(['txt', 'md', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv', 'json', 'xml']),
   archive: new Set(['zip', '7z', 'rar', 'tar', 'gz', 'bz2', 'xz', 'zst', 'iso', 'cab'])
 }
-const boundedPreviewExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'])
+const boundedImagePreviewExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'])
+const boundedTextPreviewExtensions = new Set([
+  'txt', 'md', 'csv', 'json', 'xml', 'yaml', 'yml', 'toml', 'ini', 'log', 'conf', 'config',
+  'properties', 'rs', 'ts', 'tsx', 'js', 'jsx', 'vue', 'css', 'scss', 'html', 'htm', 'py',
+  'java', 'c', 'cc', 'cpp', 'h', 'hpp', 'go', 'sh', 'bat', 'cmd', 'ps1', 'sql',
+])
 
 const files = computed(() => result.value?.entries.filter(entry => !entry.isDir) ?? [])
 const directories = computed(() => {
@@ -128,10 +134,14 @@ const contextDisplayEntries = computed(() => {
   return contextMenu.value.entries
 })
 
-const canPreviewEntry = (entry: ArchiveEntryInfo) => {
+const previewKind = (entry: ArchiveEntryInfo): 'image' | 'text' | null => {
+  if (entry.isDir) return null
   const extension = entry.name.includes('.') ? entry.name.split('.').pop()!.toLocaleLowerCase() : ''
-  return boundedPreviewExtensions.has(extension)
+  if (boundedImagePreviewExtensions.has(extension)) return 'image'
+  if (boundedTextPreviewExtensions.has(extension)) return 'text'
+  return null
 }
+const canPreviewEntry = (entry: ArchiveEntryInfo) => previewKind(entry) !== null
 
 const formatBytes = (value: number) => {
   if (value < 1024) return `${value} B`
@@ -202,6 +212,7 @@ const loadArchive = async () => {
 const closePreview = () => {
   previewSequence++
   imagePreview.value = null
+  textPreview.value = null
   previewEntry.value = null
   previewLoading.value = false
   previewError.value = ''
@@ -212,11 +223,17 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
   const sequence = ++previewSequence
   previewEntry.value = entry
   imagePreview.value = null
+  textPreview.value = null
   previewError.value = ''
   previewLoading.value = true
   try {
-    const value = await commands.previewArchiveImage(archivePath.value, entry.path, password.value)
-    if (sequence === previewSequence) imagePreview.value = value
+    if (previewKind(entry) === 'image') {
+      const value = await commands.previewArchiveImage(archivePath.value, entry.path, password.value)
+      if (sequence === previewSequence) imagePreview.value = value
+    } else {
+      const value = await commands.previewArchiveText(archivePath.value, entry.path, password.value)
+      if (sequence === previewSequence) textPreview.value = value
+    }
   } catch (error) {
     if (sequence === previewSequence) previewError.value = String(error)
   } finally {
@@ -724,21 +741,26 @@ const extractSelected = async () => {
       <div><i class="pi pi-cloud-upload"></i><strong>松开即可浏览压缩包</strong><span>将替换当前打开的压缩包</span></div>
     </div>
 
-    <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-image-preview" @click.self="closePreview">
+    <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
         <header class="preview-header">
-          <div class="min-w-0"><p class="text-xs font-black tracking-widest text-primary">归档内图片预览</p><h2 class="mt-1 truncate text-lg font-black text-content">{{ previewEntry.name }}</h2></div>
+          <div class="min-w-0"><p class="text-xs font-black tracking-widest text-primary">{{ previewKind(previewEntry) === 'image' ? '归档内图片预览' : '归档内文本预览' }}</p><h2 class="mt-1 truncate text-lg font-black text-content">{{ previewEntry.name }}</h2></div>
           <button type="button" class="preview-close" aria-label="关闭预览" @click="closePreview"><i class="pi pi-times"></i></button>
         </header>
         <div class="preview-stage">
           <div v-if="previewLoading" class="text-center text-muted"><i class="pi pi-spin pi-spinner text-3xl text-primary"></i><p class="mt-3 text-sm font-bold">正在进行有界读取与安全检查…</p></div>
           <div v-else-if="previewError" class="max-w-md text-center"><i class="pi pi-exclamation-triangle text-3xl text-amber-500"></i><p class="mt-3 break-words text-sm font-bold text-content">无法预览</p><p class="mt-2 break-words text-xs leading-5 text-muted">{{ previewError }}</p></div>
-          <img v-else-if="imagePreview" :src="imagePreview.dataUrl" :alt="previewEntry.name" class="preview-image">
+          <div v-else-if="imagePreview" data-testid="archive-image-preview" class="contents"><img :src="imagePreview.dataUrl" :alt="previewEntry.name" class="preview-image"></div>
+          <pre v-else-if="textPreview" data-testid="archive-text-preview" class="preview-text">{{ textPreview.content }}</pre>
         </div>
         <footer v-if="imagePreview" class="preview-meta">
           <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读 · 未写入磁盘</span>
         </footer>
-        <p class="preview-safety">预览仅接受经魔数确认的 PNG、JPEG、GIF、WebP、BMP；解压后最大 8 MiB、最多 1600 万像素，TAR 流最多扫描 64 MiB。SVG、截断与扩展名伪装内容不会渲染。</p>
+        <footer v-else-if="textPreview" class="preview-meta">
+          <span>{{ textPreview.encoding }}</span><span>已读 {{ formatBytes(textPreview.byteSize) }} / {{ formatBytes(textPreview.totalSize) }}</span><span>{{ textPreview.lineCount }} 行</span><span>{{ textPreview.truncated ? '仅显示前 1 MiB' : '完整显示' }}</span><span>只读 · 未写入磁盘</span>
+        </footer>
+        <p v-if="previewKind(previewEntry) === 'image'" class="preview-safety">内部查看器直接在内存中显示经魔数确认的 PNG、JPEG、GIF、WebP、BMP；解压后最大 8 MiB、最多 1600 万像素，TAR 流最多扫描 64 MiB。SVG、截断与扩展名伪装内容不会渲染。</p>
+        <p v-else class="preview-safety">内部查看器只读最多 1 MiB，并识别 UTF-8、UTF-16、GBK、Big5 与常见西文编码；二进制内容会被拒绝。需要完整编辑、播放或查看 PDF 时，请使用“默认应用打开”，文件将安全提取到隔离缓存。</p>
       </section>
     </div>
 
@@ -753,7 +775,7 @@ const extractSelected = async () => {
         >
           <header class="archive-context-header">
             <i :class="contextMenu.entry?.isDir ? 'pi pi-folder' : contextDisplayEntries.length > 1 ? 'pi pi-clone' : 'pi pi-file'"></i>
-            <span class="min-w-0"><strong class="block truncate">{{ contextMenu.entry?.isDir ? contextMenu.entry.name : contextDisplayEntries.length > 1 ? `${contextDisplayEntries.length} 个已选文件` : contextMenu.entry?.name || '当前文件区' }}</strong><small>{{ contextMenu.entry?.isDir ? `${contextMenu.entries.length} 个文件` : contextDisplayEntries.length > 1 ? '批量操作' : '只读归档操作' }}</small></span>
+            <span class="min-w-0"><strong class="block truncate">{{ contextMenu.entry?.isDir ? contextMenu.entry.name : contextDisplayEntries.length > 1 ? `${contextDisplayEntries.length} 个已选文件` : contextMenu.entry?.name || '当前文件区' }}</strong><small>{{ contextMenu.entry?.isDir ? `${contextMenu.entries.length} 个文件` : contextDisplayEntries.length > 1 ? '批量操作' : contextMenu.entry && canPreviewEntry(contextMenu.entry) && previewRouteSupported ? '可内部只读预览，也可用默认应用打开' : '可安全提取后用默认应用打开' }}</small></span>
           </header>
 
           <button v-if="contextMenu.entry?.isDir" type="button" role="menuitem" data-testid="archive-context-open" @click="openContextEntry(contextMenu.entry)"><i class="pi pi-folder-open"></i><span>打开文件夹</span><kbd>Enter</kbd></button>
@@ -881,6 +903,7 @@ const extractSelected = async () => {
 .preview-close { flex: 0 0 auto; width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border-radius: .75rem; color: var(--text-muted); background: var(--bg-input); }
 .preview-stage { min-height: min(54vh, 30rem); display: grid; place-items: center; padding: clamp(1rem, 3vw, 2rem); background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--dynamic-accent) 12%, transparent), transparent 65%); overflow: hidden; }
 .preview-image { display: block; max-width: 100%; max-height: min(54vh, 30rem); object-fit: contain; border-radius: 1rem; box-shadow: 0 18px 50px rgba(0, 0, 0, .25); }
+.preview-text { width: 100%; min-height: min(46vh, 24rem); max-height: min(54vh, 30rem); overflow: auto; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-input) 92%, transparent); padding: 1rem; color: var(--text-content); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .75rem; line-height: 1.65; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
 .preview-meta { display: flex; flex-wrap: wrap; gap: .5rem; padding: .9rem 1.25rem 0; }
 .preview-meta span { border-radius: 999px; padding: .35rem .65rem; background: var(--bg-input); color: var(--text-muted); font-size: .68rem; font-weight: 800; }
 .preview-safety { padding: .8rem 1.25rem 1.15rem; color: var(--text-muted); font-size: .68rem; line-height: 1.55; }

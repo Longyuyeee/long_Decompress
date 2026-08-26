@@ -64,6 +64,15 @@ export interface DesktopE2EBridge {
     width: number
     height: number
   }>
+  previewArchiveText: (filePath: string, entryPath: string) => Promise<{
+    entryPath: string
+    content: string
+    encoding: string
+    byteSize: number
+    totalSize: number
+    truncated: boolean
+    lineCount: number
+  }>
   seedCompressionAnalysisWorkspace: (entries: Array<{
     name: string
     path: string
@@ -499,6 +508,12 @@ export const installDesktopE2EBridge = () => {
     }),
 
     previewArchiveImage: (filePath, entryPath) => invoke('preview_archive_image', {
+      filePath,
+      entryPath,
+      password: null,
+    }),
+
+    previewArchiveText: (filePath, entryPath) => invoke('preview_archive_text', {
       filePath,
       entryPath,
       password: null,

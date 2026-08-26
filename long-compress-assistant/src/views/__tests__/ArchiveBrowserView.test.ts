@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   selectDirectory: vi.fn(),
   browseArchive: vi.fn(),
   previewArchiveImage: vi.fn(),
+  previewArchiveText: vi.fn(),
   openArchiveEntry: vi.fn(),
   decompressFile: vi.fn(),
   clipboardWrite: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
     selectDirectory: mocks.selectDirectory,
     browseArchive: mocks.browseArchive,
     previewArchiveImage: mocks.previewArchiveImage,
+    previewArchiveText: mocks.previewArchiveText,
     openArchiveEntry: mocks.openArchiveEntry,
     decompressFile: mocks.decompressFile,
   })
@@ -52,6 +54,10 @@ describe('ArchiveBrowserView', () => {
     mocks.previewArchiveImage.mockResolvedValue({
       entryPath: 'image.png', mimeType: 'image/png',
       dataUrl: 'data:image/png;base64,c2FmZQ==', byteSize: 4, width: 1, height: 1,
+    })
+    mocks.previewArchiveText.mockResolvedValue({
+      entryPath: 'docs/readme.txt', content: '你好，归档文本\n第二行', encoding: 'UTF-8',
+      byteSize: 28, totalSize: 28, truncated: false, lineCount: 2,
     })
     mocks.openArchiveEntry.mockResolvedValue({
       status: 'opened', entryPath: 'docs/readme.txt', cachePath: 'C:/cache/readme.txt', dangerous: false,
@@ -276,11 +282,30 @@ describe('ArchiveBrowserView', () => {
     )
     expect(wrapper.get('[data-testid="archive-image-preview"] img').attributes('src'))
       .toBe('data:image/png;base64,c2FmZQ==')
-    expect(wrapper.get('[data-testid="archive-image-preview"]').text()).toContain('只读 · 未写入磁盘')
+    expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('只读 · 未写入磁盘')
     expect(wrapper.find('footer').text()).toContain('已选择 2 / 2 个文件')
 
     await wrapper.get('[aria-label="关闭预览"]').trigger('click')
     expect(wrapper.find('[data-testid="archive-image-preview"]').exists()).toBe(false)
+  })
+
+  it('previews bounded decoded text and explains internal versus default opening', async () => {
+    const wrapper = mount(ArchiveBrowserView, { attachTo: document.body })
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+
+    await wrapper.get('[data-entry-path="docs/"]').trigger('dblclick')
+    await wrapper.get('[data-entry-path="docs/readme.txt"] .preview-trigger').trigger('click')
+    await flushPromises()
+
+    expect(mocks.previewArchiveText).toHaveBeenCalledWith(
+      'C:/archives/demo.zip', 'docs/readme.txt', '',
+    )
+    expect(wrapper.get('[data-testid="archive-text-preview"]').text()).toContain('你好，归档文本')
+    expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('UTF-8')
+    expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('完整显示')
+    expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('默认应用打开')
+    wrapper.unmount()
   })
 
   it('keeps preview disabled when the archive route cannot prove bounded reading', async () => {

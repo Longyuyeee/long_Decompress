@@ -435,6 +435,7 @@ describe('useTauriCommands', () => {
     await commands.listArchiveContents('a.zip', 'secret')
     await commands.browseArchive('a.zip', 'secret')
     await commands.previewArchiveImage('a.zip', 'images/cover.png', 'secret')
+    await commands.previewArchiveText('a.zip', 'docs/readme.txt', 'secret')
     await commands.testArchiveIntegrity('a.zip')
     await commands.diagnoseArchive('diagnostic-1', 'a.zip', 'secret')
     await commands.cancelArchiveDiagnosis('diagnostic-1')
@@ -464,6 +465,9 @@ describe('useTauriCommands', () => {
     })
     expect(mocks.invoke).toHaveBeenCalledWith('preview_archive_image', {
       filePath: 'a.zip', entryPath: 'images/cover.png', password: 'secret',
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('preview_archive_text', {
+      filePath: 'a.zip', entryPath: 'docs/readme.txt', password: 'secret',
     })
     expect(mocks.invoke).toHaveBeenCalledWith('test_archive_integrity', {
       filePath: 'a.zip',

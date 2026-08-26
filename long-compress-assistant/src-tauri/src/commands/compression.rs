@@ -491,6 +491,32 @@ pub async fn preview_archive_image(
     .map_err(|error| error.to_string())
 }
 
+/// Reads one text entry without extracting it to disk. The service caps the
+/// decoded prefix, rejects binary payloads and reports the detected encoding.
+#[command]
+pub async fn preview_archive_text(
+    file_path: String,
+    entry_path: String,
+    password: Option<String>,
+) -> Result<crate::services::archive_preview::ArchiveTextPreview, String> {
+    let resolved_password = match password.filter(|value| !value.is_empty()) {
+        Some(password) => Some(password),
+        None => {
+            let service = CompressionService::new_with_defaults().await;
+            service
+                .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+                .await
+        }
+    };
+    crate::services::archive_preview::preview_archive_text(
+        std::path::Path::new(&file_path),
+        &entry_path,
+        resolved_password.as_deref(),
+    )
+    .await
+    .map_err(|error| error.to_string())
+}
+
 /// Extracts one validated archive entry into an isolated session cache and opens it
 /// through the Windows default application. Active content requires an explicit
 /// second call with `allow_dangerous` set to true.

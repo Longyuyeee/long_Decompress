@@ -10,6 +10,7 @@ pub const MAX_PREVIEW_BYTES: u64 = 8 * 1024 * 1024;
 pub const MAX_PREVIEW_PIXELS: u64 = 16_000_000;
 pub const MAX_PREVIEW_DIMENSION: u32 = 8192;
 pub const MAX_TAR_PREVIEW_SCAN_BYTES: u64 = 64 * 1024 * 1024;
+pub const MAX_TEXT_PREVIEW_BYTES: u64 = 1024 * 1024;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -20,6 +21,23 @@ pub struct ArchiveImagePreview {
     pub byte_size: u64,
     pub width: u32,
     pub height: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ArchiveTextPreview {
+    pub entry_path: String,
+    pub content: String,
+    pub encoding: String,
+    pub byte_size: u64,
+    pub total_size: u64,
+    pub truncated: bool,
+    pub line_count: usize,
+}
+
+struct TextBytes {
+    bytes: Vec<u8>,
+    total_size: u64,
 }
 
 fn normalized_entry_path(value: &str) -> Result<String> {
@@ -84,6 +102,21 @@ fn read_bounded(reader: &mut dyn Read, expected_bytes: u64) -> Result<Vec<u8>> {
     Ok(bytes)
 }
 
+fn read_text_prefix(reader: &mut dyn Read, total_size: u64) -> Result<TextBytes> {
+    let mut bytes = Vec::with_capacity(total_size.min(MAX_TEXT_PREVIEW_BYTES) as usize);
+    reader
+        .take(MAX_TEXT_PREVIEW_BYTES)
+        .read_to_end(&mut bytes)
+        .context("Unable to read the selected text entry")?;
+    if total_size <= MAX_TEXT_PREVIEW_BYTES && bytes.len() as u64 != total_size {
+        anyhow::bail!(
+            "Text entry was truncated (expected {total_size} bytes, read {})",
+            bytes.len()
+        );
+    }
+    Ok(TextBytes { bytes, total_size })
+}
+
 fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Result<Vec<u8>> {
     let mut archive = zip_aes::ZipArchive::new(File::open(path)?)?;
     let mut entry = match password.filter(|value| !value.is_empty()) {
@@ -101,6 +134,19 @@ fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Resu
         );
     }
     read_bounded(&mut entry, expected_bytes)
+}
+
+fn read_zip_text_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Result<TextBytes> {
+    let mut archive = zip_aes::ZipArchive::new(File::open(path)?)?;
+    let mut entry = match password.filter(|value| !value.is_empty()) {
+        Some(password) => archive.by_name_decrypt(entry_path, password.as_bytes())?,
+        None => archive.by_name(entry_path)?,
+    };
+    if entry.is_dir() {
+        anyhow::bail!("Directories cannot be previewed");
+    }
+    let total_size = entry.size();
+    read_text_prefix(&mut entry, total_size)
 }
 
 fn read_tar_entry<R: Read>(reader: R, entry_path: &str) -> Result<Vec<u8>> {
@@ -125,6 +171,24 @@ fn read_tar_entry<R: Read>(reader: R, entry_path: &str) -> Result<Vec<u8>> {
         return read_bounded(&mut entry, expected_bytes);
     }
     anyhow::bail!("The selected image entry was not found in the archive")
+}
+
+fn read_tar_text_entry<R: Read>(reader: R, entry_path: &str) -> Result<TextBytes> {
+    let reader = ScanLimitedReader::new(reader, MAX_TAR_PREVIEW_SCAN_BYTES);
+    let mut archive = tar::Archive::new(reader);
+    for entry in archive.entries()? {
+        let mut entry = entry?;
+        let path = entry.path()?.to_string_lossy().replace('\\', "/");
+        if path != entry_path {
+            continue;
+        }
+        if !entry.header().entry_type().is_file() {
+            anyhow::bail!("Only regular text files can be previewed");
+        }
+        let total_size = entry.size();
+        return read_text_prefix(&mut entry, total_size);
+    }
+    anyhow::bail!("The selected text entry was not found in the archive")
 }
 
 fn preview_format(path: &Path) -> Result<&'static str> {
@@ -172,6 +236,26 @@ fn read_tar_family(path: &Path, format: &str, entry_path: &str) -> Result<Vec<u8
         ),
         _ => anyhow::bail!(
             "Safe bounded preview is currently available for ZIP and TAR-family archives only"
+        ),
+    }
+}
+
+fn read_tar_family_text(path: &Path, format: &str, entry_path: &str) -> Result<TextBytes> {
+    match format {
+        "TAR" => read_tar_text_entry(File::open(path)?, entry_path),
+        "TAR.GZ" => {
+            read_tar_text_entry(flate2::read::GzDecoder::new(File::open(path)?), entry_path)
+        }
+        "TAR.BZ2" => {
+            read_tar_text_entry(bzip2::read::BzDecoder::new(File::open(path)?), entry_path)
+        }
+        "TAR.XZ" => read_tar_text_entry(xz2::read::XzDecoder::new(File::open(path)?), entry_path),
+        "TAR.ZST" => read_tar_text_entry(
+            zstd::stream::read::Decoder::new(File::open(path)?)?,
+            entry_path,
+        ),
+        _ => anyhow::bail!(
+            "Safe bounded text preview is currently available for ZIP and TAR-family archives only"
         ),
     }
 }
@@ -333,6 +417,120 @@ pub async fn preview_archive_image(
     .context("Archive image preview worker failed")?
 }
 
+fn looks_binary(bytes: &[u8]) -> bool {
+    if bytes.starts_with(&[0xFF, 0xFE]) || bytes.starts_with(&[0xFE, 0xFF]) {
+        return false;
+    }
+    if bytes.contains(&0) {
+        return true;
+    }
+    let controls = bytes
+        .iter()
+        .filter(|byte| matches!(byte, 0x01..=0x08 | 0x0B | 0x0C | 0x0E..=0x1F | 0x7F))
+        .count();
+    controls > bytes.len().max(1) / 20
+}
+
+fn decode_utf16(bytes: &[u8], little_endian: bool) -> Option<String> {
+    let mut values = Vec::with_capacity(bytes.len() / 2);
+    for pair in bytes.chunks_exact(2) {
+        values.push(if little_endian {
+            u16::from_le_bytes([pair[0], pair[1]])
+        } else {
+            u16::from_be_bytes([pair[0], pair[1]])
+        });
+    }
+    String::from_utf16(&values).ok()
+}
+
+fn decode_text_prefix(bytes: &[u8]) -> Result<(String, String, usize)> {
+    if looks_binary(bytes) {
+        anyhow::bail!("The selected entry appears to be binary and will not be rendered as text");
+    }
+    if let Some(payload) = bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]) {
+        let text = std::str::from_utf8(payload).context("Invalid UTF-8 text after BOM")?;
+        return Ok((text.to_string(), "UTF-8 BOM".to_string(), bytes.len()));
+    }
+    if let Some(payload) = bytes.strip_prefix(&[0xFF, 0xFE]) {
+        let usable = payload.len() - payload.len() % 2;
+        let text = decode_utf16(&payload[..usable], true).context("Invalid UTF-16LE text")?;
+        return Ok((text, "UTF-16LE".to_string(), usable + 2));
+    }
+    if let Some(payload) = bytes.strip_prefix(&[0xFE, 0xFF]) {
+        let usable = payload.len() - payload.len() % 2;
+        let text = decode_utf16(&payload[..usable], false).context("Invalid UTF-16BE text")?;
+        return Ok((text, "UTF-16BE".to_string(), usable + 2));
+    }
+    if let Ok(text) = std::str::from_utf8(bytes) {
+        return Ok((text.to_string(), "UTF-8".to_string(), bytes.len()));
+    }
+
+    for (encoding, label) in [
+        (encoding_rs::GBK, "GBK"),
+        (encoding_rs::BIG5, "Big5"),
+        (encoding_rs::WINDOWS_1252, "Windows-1252"),
+    ] {
+        for trim in 0..=4.min(bytes.len()) {
+            let candidate = &bytes[..bytes.len() - trim];
+            if let Some(text) =
+                encoding.decode_without_bom_handling_and_without_replacement(candidate)
+            {
+                return Ok((text.into_owned(), label.to_string(), candidate.len()));
+            }
+        }
+    }
+    anyhow::bail!("The selected entry does not use a supported text encoding")
+}
+
+fn preview_archive_text_sync(
+    archive_path: &Path,
+    entry_path: &str,
+    password: Option<&str>,
+) -> Result<ArchiveTextPreview> {
+    let entry_path = normalized_entry_path(entry_path)?;
+    let format = preview_format(archive_path)?;
+    let text_bytes = match format {
+        "ZIP" => read_zip_text_entry(archive_path, &entry_path, password)?,
+        format if format.starts_with("TAR") => {
+            read_tar_family_text(archive_path, format, &entry_path)?
+        }
+        _ => anyhow::bail!(
+            "Safe bounded text preview is currently available for ZIP and TAR-family archives only"
+        ),
+    };
+    let (content, encoding, consumed) = decode_text_prefix(&text_bytes.bytes)?;
+    let truncated = text_bytes.total_size > consumed as u64;
+    let line_count = if content.is_empty() {
+        0
+    } else {
+        content.lines().count()
+    };
+    Ok(ArchiveTextPreview {
+        entry_path,
+        content,
+        encoding,
+        byte_size: consumed as u64,
+        total_size: text_bytes.total_size,
+        truncated,
+        line_count,
+    })
+}
+
+pub async fn preview_archive_text(
+    archive_path: &Path,
+    entry_path: &str,
+    password: Option<&str>,
+) -> Result<ArchiveTextPreview> {
+    let archive_path = archive_path.to_path_buf();
+    let entry_path = entry_path.to_string();
+    let password = password.map(str::to_string);
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_archive_text_sync(&archive_path, &entry_path, password.as_deref())
+    })
+    .await
+    .context("Archive text preview worker failed")?
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -452,6 +650,91 @@ mod tests {
 
         let entry_name = source.file_name().unwrap().to_string_lossy();
         let error = preview_archive_image(&archive, &entry_name, None)
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains("ZIP and TAR-family"));
+    }
+
+    #[tokio::test]
+    async fn previews_real_zip_utf8_text_without_writing_to_disk() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("text.zip");
+        write_zip(&archive, "docs/说明.txt", "第一行\n第二行\n".as_bytes());
+
+        let preview = preview_archive_text(&archive, "docs/说明.txt", None)
+            .await
+            .unwrap();
+        assert_eq!(preview.content, "第一行\n第二行\n");
+        assert_eq!(preview.encoding, "UTF-8");
+        assert_eq!(preview.line_count, 2);
+        assert!(!preview.truncated);
+        assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 1);
+    }
+
+    #[tokio::test]
+    async fn previews_real_tar_gz_gbk_text() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("text.tar.gz");
+        let (encoded, _, had_errors) = encoding_rs::GBK.encode("中文本地编码\n第二行");
+        assert!(!had_errors);
+        let encoder = flate2::write::GzEncoder::new(
+            File::create(&archive).unwrap(),
+            flate2::Compression::default(),
+        );
+        let mut tar = tar::Builder::new(encoder);
+        let mut header = tar::Header::new_gnu();
+        header.set_size(encoded.len() as u64);
+        header.set_mode(0o644);
+        header.set_cksum();
+        tar.append_data(&mut header, "legacy.txt", encoded.as_ref())
+            .unwrap();
+        tar.into_inner().unwrap().finish().unwrap();
+
+        let preview = preview_archive_text(&archive, "legacy.txt", None)
+            .await
+            .unwrap();
+        assert_eq!(preview.content, "中文本地编码\n第二行");
+        assert_eq!(preview.encoding, "GBK");
+        assert_eq!(preview.line_count, 2);
+    }
+
+    #[tokio::test]
+    async fn truncates_real_oversized_text_at_the_bounded_prefix() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("large-text.zip");
+        let contents = vec![b'x'; MAX_TEXT_PREVIEW_BYTES as usize + 4096];
+        write_zip(&archive, "large.log", &contents);
+
+        let preview = preview_archive_text(&archive, "large.log", None)
+            .await
+            .unwrap();
+        assert_eq!(preview.byte_size, MAX_TEXT_PREVIEW_BYTES);
+        assert_eq!(preview.content.len(), MAX_TEXT_PREVIEW_BYTES as usize);
+        assert_eq!(preview.total_size, contents.len() as u64);
+        assert!(preview.truncated);
+    }
+
+    #[tokio::test]
+    async fn rejects_binary_payloads_even_with_a_text_extension() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("binary.zip");
+        write_zip(&archive, "spoofed.txt", &[0, 1, 2, 3, 255, 0, 8]);
+
+        let error = preview_archive_text(&archive, "spoofed.txt", None)
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains("appears to be binary"));
+    }
+
+    #[tokio::test]
+    async fn refuses_text_routes_without_a_provable_bounded_reader() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("text.7z");
+        let source = temp.path().join("readme.txt");
+        std::fs::write(&source, b"bounded route required").unwrap();
+        sevenz_rust::compress_to_path(&source, &archive).unwrap();
+
+        let error = preview_archive_text(&archive, "readme.txt", None)
             .await
             .unwrap_err();
         assert!(error.to_string().contains("ZIP and TAR-family"));

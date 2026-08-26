@@ -114,6 +114,16 @@ export interface ArchiveImagePreview {
   height: number
 }
 
+export interface ArchiveTextPreview {
+  entryPath: string
+  content: string
+  encoding: string
+  byteSize: number
+  totalSize: number
+  truncated: boolean
+  lineCount: number
+}
+
 export interface ArchiveEntryOpenResult {
   status: 'opened' | 'confirmationRequired'
   entryPath: string
@@ -668,6 +678,12 @@ export const useTauriCommands = () => {
     })
   }
 
+  const previewArchiveText = async (filePath: string, entryPath: string, password?: string) => {
+    return await invoke<ArchiveTextPreview>('preview_archive_text', {
+      filePath, entryPath, password: password || null,
+    })
+  }
+
   const openArchiveEntry = async (filePath: string, entryPath: string, password?: string, allowDangerous = false) => {
     return await invoke<ArchiveEntryOpenResult>('open_archive_entry', {
       filePath, entryPath, password: password || null, allowDangerous,
@@ -738,6 +754,7 @@ export const useTauriCommands = () => {
     listArchiveContents,
     browseArchive,
     previewArchiveImage,
+    previewArchiveText,
     openArchiveEntry,
     testArchiveIntegrity,
     diagnoseArchive,

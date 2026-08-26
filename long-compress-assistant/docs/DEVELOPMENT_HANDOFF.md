@@ -2,11 +2,11 @@
 
 ## 2026-08-26 下一阶段：归档工作区与媒体压缩
 
-- 当前正式基线仍为 `v1.1.13`；A-01 交互状态模型与 A-02 归档内右键操作已完成并通过真实桌面门禁，但整个浏览中心 2.0 尚未收口，因此不升版本、不打包发布。
+- 当前正式基线仍为 `v1.1.13`；A-01 至 A-04 已完成并通过真实桌面门禁，但浏览中心 2.0 还缺 A-05 嵌套归档和 A-06 安装版综合矩阵，因此不升版本、不打包发布。
 - 浏览中心现已区分聚焦与多选，右侧可像文件管理器一样双击/Enter 进入文件夹，并提供面包屑、后退、前进、上一级、刷新、Backspace 和 Alt 方向键。键盘监听经过真实 WebView2 焦点丢失复现后改为窗口级处理。
-- 右键菜单按对象动态提供文件夹打开、Windows 默认应用安全打开、内部图片查看、当前/指定目录解压、复制名称/归档内路径、详情和刷新；右键未选项不会破坏既有多选，Enter、Ctrl+Enter、Shift+F10、Alt+E、Alt+Enter 等键盘入口复用同一语义。进入嵌套归档在 A-05 完成前不显示。
-- 真实门禁使用现场生成中文八层长路径 ZIP、文件名加密 7Z 和固定加密 RAR，验证中文系统剪贴板、详情无横向溢出、右键精确解压、排除项不落盘和内容/哈希一致；A-03 另以真实 TXT/PNG/PDF/CMD 验证默认应用、NTFS 安全标记与默认取消；全量前端 224 项通过。证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)、[ARCHIVE_WORKSPACE_A02_AUDIT.md](ARCHIVE_WORKSPACE_A02_AUDIT.md) 与 [ARCHIVE_WORKSPACE_A03_AUDIT.md](ARCHIVE_WORKSPACE_A03_AUDIT.md)。
-- A-03 已完成随机隔离会话缓存、路径/大小/数量/TTL 上限、Mark-of-the-Web、危险内容默认取消和真实 TXT/PNG/PDF Windows 默认应用验收。下一步严格进入 A-04 有界纯文本查看器；完成 A-04、A-05 嵌套归档和 A-06 安装版矩阵后，才允许发布 `v1.1.14`。
+- 右键菜单按对象动态提供文件夹打开、Windows 默认应用安全打开、内部图片/文本查看、当前/指定目录解压、复制名称/归档内路径、详情和刷新；右键未选项不会破坏既有多选，Enter、Ctrl+Enter、Shift+F10、Alt+E、Alt+Enter 等键盘入口复用同一语义。进入嵌套归档在 A-05 完成前不显示。
+- 真实门禁使用现场生成中文八层长路径 ZIP、文件名加密 7Z 和固定加密 RAR；A-03 以真实 TXT/PNG/PDF/CMD 验证默认应用、NTFS 安全标记与默认取消；A-04 新增真实 ZIP UTF-8/超大日志/伪装二进制、UTF-16LE TAR 和 7Z 禁用边界。全量前端 225 项通过。证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)、[ARCHIVE_WORKSPACE_A02_AUDIT.md](ARCHIVE_WORKSPACE_A02_AUDIT.md)、[ARCHIVE_WORKSPACE_A03_AUDIT.md](ARCHIVE_WORKSPACE_A03_AUDIT.md) 与 [ARCHIVE_WORKSPACE_A04_AUDIT.md](ARCHIVE_WORKSPACE_A04_AUDIT.md)。
+- A-04 已完成 ZIP/TAR 有界文本查看器：最多读取 1 MiB，识别 UTF-8/UTF-16/GBK/Big5/Windows-1252，拒绝二进制且不落盘；7Z/RAR 保持内部预览禁用并可走 A-03 默认应用。下一步严格进入 A-05 嵌套归档；完成 A-05 与 A-06 后，才允许发布 `v1.1.14`。
 - 后续按图片压缩、视频压缩软件编码、PDF 安全优化推进。三个模式都放在压缩中心内部，继续使用 `compression` 顶层任务类型，通过可选工作负载分类扩展历史，不复制任务、日志和发布事务。
 - 图片首选固定版本的 Apache-2.0 `libcaesium`；视频使用经过许可与哈希审计的 FFmpeg LGPL 构建；PDF 首期采用 Apache-2.0 qpdf。Ghostscript 在 AGPL/商业许可方案未明确前不得内置。
 - 每个大节点的开发步骤、真实样本、验收目标、阻断条件、版本提升和 Release 闭环统一以 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md) 为准。
