@@ -4,6 +4,23 @@ import { listen } from '@tauri-apps/api/event'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands, type ArchiveBrowseResult, type ArchiveEntryInfo, type ArchiveImagePreview, type ArchiveTextPreview } from '@/composables/useTauriCommands'
 
+interface ArchiveWorkspaceFrame {
+  archivePath: string
+  displayName: string
+  password: string
+  outputPath: string
+  result: ArchiveBrowseResult
+  selected: string[]
+  query: string
+  typeFilter: string
+  activeDirectory: string
+  focusedEntryPath: string
+  navigationBack: string[]
+  navigationForward: string[]
+  expandedDirectories: string[]
+  contentSha256: string
+}
+
 const appStore = useAppStore()
 const commands = useTauriCommands()
 const archivePath = ref('')
@@ -26,6 +43,9 @@ const textPreview = ref<ArchiveTextPreview | null>(null)
 const previewEntry = ref<ArchiveEntryInfo | null>(null)
 const previewLoading = ref(false)
 const previewError = ref('')
+const parentFrames = ref<ArchiveWorkspaceFrame[]>([])
+const currentContentSha256 = ref('')
+const nestedLoadError = ref('')
 const expandedDirectories = ref(new Set<string>())
 const isDraggingArchive = ref(false)
 const contextMenu = ref<{
@@ -36,6 +56,7 @@ const contextMenu = ref<{
 } | null>(null)
 const detailEntries = ref<ArchiveEntryInfo[]>([])
 let previewSequence = 0
+let archiveLoadSequence = 0
 let selectionAnchorPath = ''
 let unlistenDrop: (() => void) | null = null
 let unlistenHover: (() => void) | null = null
@@ -51,6 +72,10 @@ const boundedTextPreviewExtensions = new Set([
   'txt', 'md', 'csv', 'json', 'xml', 'yaml', 'yml', 'toml', 'ini', 'log', 'conf', 'config',
   'properties', 'rs', 'ts', 'tsx', 'js', 'jsx', 'vue', 'css', 'scss', 'html', 'htm', 'py',
   'java', 'c', 'cc', 'cpp', 'h', 'hpp', 'go', 'sh', 'bat', 'cmd', 'ps1', 'sql',
+])
+const nestedArchiveExtensions = new Set([
+  'zip', 'zipx', '7z', 'rar', 'tar', 'tgz', 'tpz', 'gz', 'tbz', 'tbz2', 'bz2',
+  'txz', 'xz', 'tzst', 'zst', 'cab', 'iso', 'jar', 'epub', 'apk', 'appx',
 ])
 
 const files = computed(() => result.value?.entries.filter(entry => !entry.isDir) ?? [])
@@ -142,6 +167,11 @@ const previewKind = (entry: ArchiveEntryInfo): 'image' | 'text' | null => {
   return null
 }
 const canPreviewEntry = (entry: ArchiveEntryInfo) => previewKind(entry) !== null
+const isNestedArchiveEntry = (entry: ArchiveEntryInfo) => {
+  if (entry.isDir) return false
+  const extension = entry.name.includes('.') ? entry.name.split('.').pop()!.toLocaleLowerCase() : ''
+  return nestedArchiveExtensions.has(extension)
+}
 
 const formatBytes = (value: number) => {
   if (value < 1024) return `${value} B`
@@ -158,11 +188,19 @@ const parentDirectory = (path: string) => {
 }
 
 const archiveName = computed(() => archivePath.value.split(/[\\/]/).pop() || archivePath.value)
+const archiveChain = computed(() => [
+  ...parentFrames.value.map((frame, index) => ({ name: frame.displayName, index, current: false })),
+  { name: archiveName.value, index: parentFrames.value.length, current: true },
+])
+const archiveDepth = computed(() => parentFrames.value.length + 1)
 
 const openArchivePath = async (path: string) => {
   if (!path || loading.value) return
   try {
     archivePath.value = path
+    parentFrames.value = []
+    currentContentSha256.value = ''
+    nestedLoadError.value = ''
     outputPath.value = parentDirectory(path)
     query.value = ''
     typeFilter.value = 'all'
@@ -189,6 +227,7 @@ const chooseArchive = async () => {
 
 const loadArchive = async () => {
   if (!archivePath.value || loading.value) return
+  const sequence = ++archiveLoadSequence
   loading.value = true
   result.value = null
   selected.value = new Set()
@@ -200,12 +239,17 @@ const loadArchive = async () => {
   expandedDirectories.value = new Set()
   closePreview()
   try {
-    result.value = await commands.browseArchive(archivePath.value, password.value)
-    selected.value = new Set(result.value.entries.filter(entry => !entry.isDir).map(entry => entry.path))
+    const loaded = await commands.browseArchive(archivePath.value, password.value)
+    if (sequence !== archiveLoadSequence) return
+    result.value = loaded
+    selected.value = new Set(loaded.entries.filter(entry => !entry.isDir).map(entry => entry.path))
+    nestedLoadError.value = ''
   } catch (error) {
-    appStore.setError(String(error))
+    if (sequence !== archiveLoadSequence) return
+    if (parentFrames.value.length > 0) nestedLoadError.value = String(error)
+    else appStore.setError(String(error))
   } finally {
-    loading.value = false
+    if (sequence === archiveLoadSequence) loading.value = false
   }
 }
 
@@ -350,9 +394,90 @@ const confirmDangerousOpen = async () => {
   await openWithDefaultApplication(entry, true)
 }
 
+const captureCurrentFrame = (contentSha256: string): ArchiveWorkspaceFrame | null => {
+  if (!result.value) return null
+  return {
+    archivePath: archivePath.value,
+    displayName: archiveName.value,
+    password: password.value,
+    outputPath: outputPath.value,
+    result: result.value,
+    selected: [...selected.value],
+    query: query.value,
+    typeFilter: typeFilter.value,
+    activeDirectory: activeDirectory.value,
+    focusedEntryPath: focusedEntryPath.value,
+    navigationBack: [...navigationBack.value],
+    navigationForward: [...navigationForward.value],
+    expandedDirectories: [...expandedDirectories.value],
+    contentSha256,
+  }
+}
+
+const restoreFrame = (index: number) => {
+  const frame = parentFrames.value[index]
+  if (!frame) return
+  archiveLoadSequence++
+  loading.value = false
+  parentFrames.value = parentFrames.value.slice(0, index)
+  archivePath.value = frame.archivePath
+  password.value = frame.password
+  outputPath.value = frame.outputPath
+  result.value = frame.result
+  selected.value = new Set(frame.selected)
+  query.value = frame.query
+  typeFilter.value = frame.typeFilter
+  activeDirectory.value = frame.activeDirectory
+  focusedEntryPath.value = frame.focusedEntryPath
+  navigationBack.value = [...frame.navigationBack]
+  navigationForward.value = [...frame.navigationForward]
+  expandedDirectories.value = new Set(frame.expandedDirectories)
+  currentContentSha256.value = frame.contentSha256
+  nestedLoadError.value = ''
+  closeContextMenu()
+  closePreview()
+}
+
+const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
+  if (!isNestedArchiveEntry(entry) || openingEntryPath.value || !result.value) return
+  if (archiveDepth.value >= 3) {
+    appStore.setError('嵌套归档最多允许 3 层，请返回上层后再打开其他归档')
+    return
+  }
+  closeContextMenu()
+  openingEntryPath.value = entry.path
+  try {
+    const ancestorHashes = [
+      ...parentFrames.value.map(frame => frame.contentSha256),
+      currentContentSha256.value,
+    ].filter(Boolean)
+    const materialized = await commands.materializeNestedArchive(
+      archivePath.value,
+      entry.path,
+      password.value,
+      archiveDepth.value + 1,
+      ancestorHashes,
+    )
+    const frame = captureCurrentFrame(currentContentSha256.value || materialized.parentSha256)
+    if (!frame) throw new Error('外层归档状态不可用')
+    parentFrames.value = [...parentFrames.value, frame]
+    archivePath.value = materialized.cachePath
+    password.value = ''
+    currentContentSha256.value = materialized.contentSha256
+    outputPath.value = frame.outputPath
+    nestedLoadError.value = ''
+    await loadArchive()
+  } catch (error) {
+    appStore.setError(`无法进入嵌套归档：${String(error)}`)
+  } finally {
+    openingEntryPath.value = ''
+  }
+}
+
 const activateEntry = (entry: ArchiveEntryInfo) => {
   focusedEntryPath.value = entry.path
   if (entry.isDir) navigateToDirectory(entry.path.replace(/\/+$/, ''))
+  else if (isNestedArchiveEntry(entry)) void enterNestedArchive(entry)
   else void openWithDefaultApplication(entry)
 }
 
@@ -617,6 +742,16 @@ const extractSelected = async () => {
       </button>
     </header>
 
+    <nav v-if="archivePath" class="archive-chain shrink-0" aria-label="嵌套归档链" data-testid="archive-chain">
+      <template v-for="(item, index) in archiveChain" :key="`${item.index}-${item.name}`">
+        <i v-if="index > 0" class="pi pi-angle-right" aria-hidden="true"></i>
+        <button type="button" :disabled="item.current" :class="{ current: item.current }" :title="item.name" @click="restoreFrame(item.index)">
+          <i :class="item.current ? 'pi pi-box' : 'pi pi-folder-open'"></i><span class="truncate">{{ item.name }}</span>
+        </button>
+      </template>
+      <span class="archive-depth">{{ archiveDepth }} / 3 层</span>
+    </nav>
+
     <section class="aero-card shrink-0 p-3 grid gap-3 browser-toolbar">
       <div class="min-w-0 browser-field">
         <span class="browser-label">当前压缩包</span>
@@ -635,6 +770,10 @@ const extractSelected = async () => {
 
     <div v-if="loading" class="aero-card flex-1 min-h-0 grid place-items-center">
       <div class="text-center text-muted"><i class="pi pi-spin pi-spinner text-primary text-3xl"></i><p class="mt-4 font-bold">正在读取压缩包结构…</p></div>
+    </div>
+
+    <div v-else-if="!result && parentFrames.length > 0" class="aero-card flex-1 min-h-0 grid place-items-center">
+      <div class="max-w-lg text-center px-6"><i class="pi pi-lock text-amber-500 text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">内层归档尚未打开</h2><p class="mt-2 text-sm text-muted leading-6 break-words" data-testid="archive-nested-error">{{ nestedLoadError || '如果内层归档已加密，请只输入这一层的密码后重试；外层密码不会自动继承。' }}</p><div class="mt-5 flex justify-center gap-3"><button class="browser-primary" data-testid="archive-nested-retry" type="button" @click="loadArchive"><i class="pi pi-refresh"></i><span>使用当前内层密码重试</span></button><button class="browser-icon-button nested-return" type="button" title="返回上一层" @click="restoreFrame(parentFrames.length - 1)"><i class="pi pi-arrow-left"></i></button></div></div>
     </div>
 
     <div v-else-if="!result" class="aero-card browser-empty flex-1 min-h-0 grid place-items-center border-dashed" @click="chooseArchive">
@@ -780,6 +919,7 @@ const extractSelected = async () => {
 
           <button v-if="contextMenu.entry?.isDir" type="button" role="menuitem" data-testid="archive-context-open" @click="openContextEntry(contextMenu.entry)"><i class="pi pi-folder-open"></i><span>打开文件夹</span><kbd>Enter</kbd></button>
           <button v-if="contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-default-open" :disabled="Boolean(openingEntryPath)" @click="defaultOpenContextEntry(contextMenu.entry)"><i :class="openingEntryPath === contextMenu.entry.path ? 'pi pi-spin pi-spinner' : 'pi pi-external-link'"></i><span>使用默认应用打开</span><kbd>Enter</kbd></button>
+          <button v-if="contextMenu.entry && isNestedArchiveEntry(contextMenu.entry)" type="button" role="menuitem" data-testid="archive-context-enter-nested" :disabled="archiveDepth >= 3 || Boolean(openingEntryPath)" :title="archiveDepth >= 3 ? '已达到最多 3 层嵌套限制' : '在只读子工作区中打开'" @click="enterNestedArchive(contextMenu.entry)"><i class="pi pi-sitemap"></i><span>{{ archiveDepth >= 3 ? '已达到 3 层上限' : '进入压缩包' }}</span><kbd>Enter</kbd></button>
           <button v-if="contextMenu.entry && !contextMenu.entry.isDir && canPreviewEntry(contextMenu.entry) && previewRouteSupported" type="button" role="menuitem" data-testid="archive-context-preview" @click="previewContextEntry(contextMenu.entry)"><i class="pi pi-eye"></i><span>内部查看器打开</span><kbd>Ctrl+Enter</kbd></button>
 
           <div v-if="contextMenu.entries.length > 0" class="archive-context-separator"></div>
@@ -841,6 +981,14 @@ const extractSelected = async () => {
 
 <style scoped>
 .browser-page { max-width: 100%; }
+.archive-chain { min-width: 0; display: flex; align-items: center; gap: .35rem; overflow-x: auto; overflow-y: hidden; padding: .15rem .1rem; scrollbar-width: none; }
+.archive-chain::-webkit-scrollbar { display: none; }
+.archive-chain > i { flex: 0 0 auto; color: var(--text-muted); font-size: .6rem; }
+.archive-chain button { flex: 0 1 auto; min-width: 0; max-width: 16rem; display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--border-subtle); border-radius: 999px; padding: .38rem .65rem; background: var(--bg-input); color: var(--text-muted); font-size: .68rem; font-weight: 850; }
+.archive-chain button:not(:disabled):hover { border-color: var(--dynamic-accent); color: var(--dynamic-accent); }
+.archive-chain button.current { color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 10%, var(--bg-input)); }
+.archive-depth { flex: 0 0 auto; margin-left: auto; color: var(--text-muted); font-size: .65rem; font-weight: 850; }
+.nested-return { display: inline-grid; place-items: center; }
 .browser-title { font-size: clamp(1.75rem, 3vw, 2.5rem); line-height: 1; }
 .browser-toolbar { grid-template-columns: minmax(0, 1fr) minmax(14rem, .42fr); }
 .browser-field { display: flex; flex-direction: column; gap: .4rem; }

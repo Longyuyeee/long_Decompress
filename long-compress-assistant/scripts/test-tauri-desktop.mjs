@@ -536,6 +536,32 @@ async function runArchiveBrowserDesktopGate() {
     { cwd: sourceRoot },
   )
 
+  const nestedSource = path.join(sourceRoot, 'nested-workspace')
+  mkdirSync(nestedSource, { recursive: true })
+  const nestedLeafName = '最内层结果.txt'
+  const nestedLeafPayload = 'Long解压 A-05 真实三层嵌套选择性解压\n'
+  writeFileSync(path.join(nestedSource, nestedLeafName), nestedLeafPayload, 'utf8')
+  writeFileSync(path.join(nestedSource, '第四层占位.txt'), 'must not be entered at depth four', 'utf8')
+  const fourthArchiveName = '第四层.zip'
+  runFixtureCommand(bundledSevenZip, ['a', '-tzip', '-y', fourthArchiveName, '第四层占位.txt'], 'fourth-level ZIP', { cwd: nestedSource })
+  const nestedInnerName = '内层.zip'
+  runFixtureCommand(bundledSevenZip, ['a', '-tzip', '-y', nestedInnerName, nestedLeafName, fourthArchiveName], 'nested inner ZIP', { cwd: nestedSource })
+  const nestedMiddleName = '加密中层.7z'
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-t7z', '-pnested-middle-secret', '-mhe=on', '-y', nestedMiddleName, nestedInnerName],
+    'encrypted nested middle 7Z',
+    { cwd: nestedSource },
+  )
+  writeFileSync(path.join(nestedSource, '损坏内层.zip'), Buffer.from('504b030462726f6b656e', 'hex'))
+  const nestedOuter = path.join(archiveRoot, '外层工作区.zip')
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-tzip', '-y', nestedOuter, nestedMiddleName, '损坏内层.zip'],
+    'nested outer ZIP',
+    { cwd: nestedSource },
+  )
+
   let navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[2].click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/browser'), 30_000)
@@ -789,8 +815,12 @@ async function runArchiveBrowserDesktopGate() {
     const row = await waitForElement(`[data-entry-path$="${fileName}"]`)
     await (await row.findElement(By.css('.preview-trigger'))).click()
     const preview = await waitForElement('[data-testid="archive-entry-preview"]')
-    assert.match(await preview.getText(), expectedText)
-    assert.match(await preview.getText(), expectedMeta)
+    const previewText = await driver.wait(async () => {
+      const text = await preview.getText()
+      return expectedText.test(text) && expectedMeta.test(text) ? text : false
+    }, 30_000)
+    assert.match(previewText, expectedText)
+    assert.match(previewText, expectedMeta)
     if (fileName === '说明 文档.txt') {
       writeFileSync(
         path.join(artifactDirectory, 'archive-browser-a04-text-preview.png'),
@@ -841,6 +871,77 @@ async function runArchiveBrowserDesktopGate() {
     path.join(artifactDirectory, 'archive-browser-a03-safe-open.png'),
     Buffer.from(await driver.takeScreenshot(), 'base64'),
   )
+
+  const nestedOutput = path.join(browserFixtureRoot, 'nested-selected-output')
+  await openArchive(nestedOuter, nestedOutput, '', nestedMiddleName)
+  const nestedOuterFooter = await waitForElement('.browser-page > footer')
+  assert.match(await nestedOuterFooter.getText(), /已选择\s+2\s+\/\s+2/)
+  await driver.actions().doubleClick(await waitForElement(`[data-entry-path="${nestedMiddleName}"]`)).perform()
+  await driver.wait(async () => (await waitForElement('[data-testid="archive-chain"]')).getText().then(text => text.includes(nestedMiddleName)), 30_000)
+  const nestedPasswordInput = await waitForElement('.browser-toolbar input[type="password"]')
+  assert.equal(await nestedPasswordInput.getAttribute('value'), '', 'the outer password must not be inherited by the nested archive')
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-nested-retry"]'))).length === 1, 30_000)
+  assert.match(await (await waitForElement('.browser-page')).getText(), /内层归档尚未打开/)
+  const initialNestedError = await (await waitForElement('[data-testid="archive-nested-error"]')).getText()
+  await nestedPasswordInput.sendKeys('wrong-nested-password')
+  await (await waitForElement('[data-testid="archive-nested-retry"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-nested-retry"]'))).length === 1, 30_000)
+  await driver.wait(async () => (await waitForElement('[data-testid="archive-nested-error"]')).getText().then(text => text !== initialNestedError), 30_000)
+  assert.match(await (await waitForElement('[data-testid="archive-chain"]')).getText(), /外层工作区\.zip[\s\S]*加密中层\.7z/)
+  await driver.executeScript(
+    "const input = arguments[0]; input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true }));",
+    nestedPasswordInput,
+  )
+  await nestedPasswordInput.sendKeys('nested-middle-secret')
+  await (await waitForElement('[data-testid="archive-nested-retry"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css(`[data-entry-path="${nestedInnerName}"]`))).length === 1, 30_000)
+  await driver.actions().doubleClick(await waitForElement(`[data-entry-path="${nestedInnerName}"]`)).perform()
+  await driver.wait(async () => (await waitForElement('[data-testid="archive-chain"]')).getText().then(text => text.includes('3 / 3 层')), 30_000)
+  const nestedChain = await waitForElement('[data-testid="archive-chain"]')
+  assert.match(await nestedChain.getText(), /外层工作区\.zip[\s\S]*加密中层\.7z[\s\S]*内层\.zip/)
+  assert.equal(await nestedPasswordInput.getAttribute('value'), '', 'the middle password must not leak into the inner ZIP')
+
+  const fourthRow = await waitForElement(`[data-entry-path="${fourthArchiveName}"]`)
+  await driver.actions().contextClick(fourthRow).perform()
+  const fourthButton = await waitForElement('[data-testid="archive-context-enter-nested"]')
+  assert.equal(await fourthButton.isEnabled(), false)
+  assert.match(await fourthButton.getText(), /已达到 3 层上限/)
+  writeFileSync(
+    path.join(artifactDirectory, 'archive-browser-a05-nested-chain.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+  await driver.actions().sendKeys(Key.ESCAPE).perform()
+
+  await callDesktopBridge('clearTasks')
+  const nestedSearch = await waitForElement('.browser-search input')
+  await nestedSearch.clear()
+  await (await waitForElement('.browser-table-head .browser-checkbox')).click()
+  assert.match(await (await waitForElement('.browser-page > footer')).getText(), /已选择\s+0\s+\/\s+2/)
+  await nestedSearch.sendKeys(nestedLeafName)
+  await (await waitForElement(`[data-entry-path="${nestedLeafName}"] .browser-checkbox`)).click()
+  await (await waitForElement('.browser-page > footer .browser-primary')).click()
+  const nestedTerminalTask = await driver.wait(async () => {
+    const tasks = await callDesktopBridge('archiveBrowserTaskState')
+    const task = tasks.at(-1)
+    return task && ['completed', 'failed', 'cancelled'].includes(task.status) ? task : false
+  }, 60_000)
+  assert.equal(nestedTerminalTask.status, 'completed', JSON.stringify(nestedTerminalTask))
+  await waitForFileContent(path.join(nestedOutput, nestedLeafName), nestedLeafPayload, 10_000)
+  assert.equal(existsSync(path.join(nestedOutput, fourthArchiveName)), false, 'the unselected fourth-level archive must not be extracted')
+
+  const chainButtons = await nestedChain.findElements(By.css('button'))
+  await chainButtons[0].click()
+  await driver.wait(async () => (await driver.findElements(By.css(`[data-entry-path="${nestedMiddleName}"]`))).length === 1, 10_000)
+  assert.match(await (await waitForElement('.browser-page > footer')).getText(), /已选择\s+2\s+\/\s+2/, 'returning must restore the exact outer selection')
+
+  const damagedSearch = await waitForElement('.browser-search input')
+  await damagedSearch.clear()
+  await damagedSearch.sendKeys('损坏内层.zip')
+  await driver.actions().doubleClick(await waitForElement('[data-entry-path="损坏内层.zip"]')).perform()
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-nested-retry"]'))).length === 1, 30_000)
+  assert.match(await (await waitForElement('.browser-page')).getText(), /内层归档尚未打开/)
+  await (await waitForElement('.nested-return')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[data-entry-path="损坏内层.zip"]'))).length === 1, 10_000)
 
   const encryptedRar = path.join(externalFixtureDirectory, 'libarchive-rar-encrypted.rar')
   if (archiveBrowserOnly) {

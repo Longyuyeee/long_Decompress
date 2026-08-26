@@ -131,6 +131,14 @@ export interface ArchiveEntryOpenResult {
   dangerous: boolean
 }
 
+export interface NestedArchiveMaterializeResult {
+  entryPath: string
+  cachePath: string
+  parentSha256: string
+  contentSha256: string
+  depth: number
+}
+
 export interface ArchiveDiagnosticIssue {
   code: string
   severity: 'info' | 'warning' | 'error'
@@ -690,6 +698,20 @@ export const useTauriCommands = () => {
     })
   }
 
+  const materializeNestedArchive = async (
+    filePath: string,
+    entryPath: string,
+    password: string | undefined,
+    targetDepth: number,
+    ancestorHashes: string[],
+  ) => invoke<NestedArchiveMaterializeResult>('materialize_nested_archive', {
+    filePath,
+    entryPath,
+    password: password || null,
+    targetDepth,
+    ancestorHashes,
+  })
+
   const testArchiveIntegrity = async (filePath: string, password?: string) => {
     return await invoke<string>('test_archive_integrity', { filePath, password: password || null })
   }
@@ -756,6 +778,7 @@ export const useTauriCommands = () => {
     previewArchiveImage,
     previewArchiveText,
     openArchiveEntry,
+    materializeNestedArchive,
     testArchiveIntegrity,
     diagnoseArchive,
     cancelArchiveDiagnosis,

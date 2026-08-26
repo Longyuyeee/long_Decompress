@@ -418,6 +418,7 @@ fn main() {
             long_compress_assistant::commands::compression::browse_archive,
             long_compress_assistant::commands::compression::preview_archive_image,
             long_compress_assistant::commands::compression::preview_archive_text,
+            long_compress_assistant::commands::compression::materialize_nested_archive,
             long_compress_assistant::commands::compression::open_archive_entry,
             long_compress_assistant::commands::compression::test_archive_integrity,
             long_compress_assistant::commands::compression::repair_zip,

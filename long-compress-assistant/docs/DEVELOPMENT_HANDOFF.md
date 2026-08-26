@@ -1,12 +1,21 @@
 # 开发交接
 
+## 2026-08-26 A-05 嵌套归档工作区收口
+
+- 正式基线仍为 `v1.1.13`。A-05 已完成，压缩包浏览中心可在同一只读工作区进入 ZIP→7Z→ZIP，显示可返回的归档链，并在第三层明确阻断第四层。
+- 嵌套条目复用 A-03 会话缓存与单文件/会话预算；后端自行推导登记深度、校验归档魔数和父子 SHA-256、拒绝祖先重复内容，不能靠前端伪造深度绕过。
+- 每层密码独立：进入子层会清空父层手工密码，再按当前缓存归档匹配保险箱。真实加密 7Z 已完成错误密码失败、正确密码进入和内层 ZIP 密码为空的验证。
+- 返回会恢复外层目录、筛选、搜索、焦点、多选和导航栈；迟到的内层读取结果会被序列号丢弃。真实桌面门禁确认外层 2/2 选择恢复、最内层只发布选中内容、损坏内层可稳定返回。
+- 当前验证为前端 228/228、A-05 Rust 8/8、Clippy 零告警、测试桥生产前端构建、Release Rust 构建和真实 Windows Tauri/WebView2 归档浏览门禁全部通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A05_AUDIT.md](ARCHIVE_WORKSPACE_A05_AUDIT.md)。
+- 下一步只剩 A-06：用正式安装态综合矩阵回归普通/加密 ZIP、7Z、RAR、TAR/TAR.GZ、长路径、混合内容、三层嵌套、负向安全场景、资源管理器经典右键入口和选择性解压。A-06 与发布门禁通过后才提升 `1.1.14`、构建安装包并更新 Release；媒体压缩继续冻结。
+
 ## 2026-08-26 下一阶段：归档工作区与媒体压缩
 
-- 当前正式基线仍为 `v1.1.13`；A-01 至 A-04 已完成并通过真实桌面门禁，但浏览中心 2.0 还缺 A-05 嵌套归档和 A-06 安装版综合矩阵，因此不升版本、不打包发布。
+- 当前正式基线仍为 `v1.1.13`；A-01 至 A-05 已完成并通过真实桌面门禁，但浏览中心 2.0 还缺 A-06 安装版综合矩阵，因此不升版本、不打包发布。
 - 浏览中心现已区分聚焦与多选，右侧可像文件管理器一样双击/Enter 进入文件夹，并提供面包屑、后退、前进、上一级、刷新、Backspace 和 Alt 方向键。键盘监听经过真实 WebView2 焦点丢失复现后改为窗口级处理。
-- 右键菜单按对象动态提供文件夹打开、Windows 默认应用安全打开、内部图片/文本查看、当前/指定目录解压、复制名称/归档内路径、详情和刷新；右键未选项不会破坏既有多选，Enter、Ctrl+Enter、Shift+F10、Alt+E、Alt+Enter 等键盘入口复用同一语义。进入嵌套归档在 A-05 完成前不显示。
-- 真实门禁使用现场生成中文八层长路径 ZIP、文件名加密 7Z 和固定加密 RAR；A-03 以真实 TXT/PNG/PDF/CMD 验证默认应用、NTFS 安全标记与默认取消；A-04 新增真实 ZIP UTF-8/超大日志/伪装二进制、UTF-16LE TAR 和 7Z 禁用边界。全量前端 225 项通过。证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)、[ARCHIVE_WORKSPACE_A02_AUDIT.md](ARCHIVE_WORKSPACE_A02_AUDIT.md)、[ARCHIVE_WORKSPACE_A03_AUDIT.md](ARCHIVE_WORKSPACE_A03_AUDIT.md) 与 [ARCHIVE_WORKSPACE_A04_AUDIT.md](ARCHIVE_WORKSPACE_A04_AUDIT.md)。
-- A-04 已完成 ZIP/TAR 有界文本查看器：最多读取 1 MiB，识别 UTF-8/UTF-16/GBK/Big5/Windows-1252，拒绝二进制且不落盘；7Z/RAR 保持内部预览禁用并可走 A-03 默认应用。下一步严格进入 A-05 嵌套归档；完成 A-05 与 A-06 后，才允许发布 `v1.1.14`。
+- 右键菜单按对象动态提供文件夹打开、Windows 默认应用安全打开、内部图片/文本查看、嵌套归档进入、当前/指定目录解压、复制名称/归档内路径、详情和刷新；右键未选项不会破坏既有多选，Enter、Ctrl+Enter、Shift+F10、Alt+E、Alt+Enter 等键盘入口复用同一语义。第三层会把嵌套入口明确禁用并解释上限。
+- 真实门禁使用现场生成中文八层长路径 ZIP、文件名加密 7Z、固定加密 RAR 和 ZIP→加密 7Z→ZIP；A-03 以真实 TXT/PNG/PDF/CMD 验证默认应用、NTFS 安全标记与默认取消；A-04 覆盖 ZIP UTF-8/超大日志/伪装二进制、UTF-16LE TAR 和 7Z 禁用边界；A-05 覆盖错/正确密码、三层链、第四层阻断、损坏内层和返回恢复。全量前端 228 项通过。证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)、[ARCHIVE_WORKSPACE_A02_AUDIT.md](ARCHIVE_WORKSPACE_A02_AUDIT.md)、[ARCHIVE_WORKSPACE_A03_AUDIT.md](ARCHIVE_WORKSPACE_A03_AUDIT.md)、[ARCHIVE_WORKSPACE_A04_AUDIT.md](ARCHIVE_WORKSPACE_A04_AUDIT.md) 与 [ARCHIVE_WORKSPACE_A05_AUDIT.md](ARCHIVE_WORKSPACE_A05_AUDIT.md)。
+- A-04 已完成 ZIP/TAR 有界文本查看器，A-05 已完成嵌套归档工作区。下一步严格执行 A-06 安装版综合矩阵；通过后才允许发布 `v1.1.14`。
 - 后续按图片压缩、视频压缩软件编码、PDF 安全优化推进。三个模式都放在压缩中心内部，继续使用 `compression` 顶层任务类型，通过可选工作负载分类扩展历史，不复制任务、日志和发布事务。
 - 图片首选固定版本的 Apache-2.0 `libcaesium`；视频使用经过许可与哈希审计的 FFmpeg LGPL 构建；PDF 首期采用 Apache-2.0 qpdf。Ghostscript 在 AGPL/商业许可方案未明确前不得内置。
 - 每个大节点的开发步骤、真实样本、验收目标、阻断条件、版本提升和 Release 闭环统一以 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md) 为准。

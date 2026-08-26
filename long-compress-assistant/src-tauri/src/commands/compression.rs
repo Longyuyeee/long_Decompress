@@ -517,6 +517,114 @@ pub async fn preview_archive_text(
     .map_err(|error| error.to_string())
 }
 
+/// Safely materializes one nested archive into the shared session cache without
+/// launching it. The caller can then browse the returned path as a child workspace.
+#[command]
+pub async fn materialize_nested_archive(
+    window: Window,
+    cache: State<'_, crate::services::archive_entry_open::ArchiveEntryOpenCache>,
+    file_path: String,
+    entry_path: String,
+    password: Option<String>,
+    target_depth: usize,
+    ancestor_hashes: Vec<String>,
+) -> Result<crate::services::archive_entry_open::NestedArchiveMaterializeResult, String> {
+    use crate::services::archive_entry_open::{
+        normalize_safe_entry_path, validate_extracted_file, validate_nested_archive_identity,
+        NestedArchiveMaterializeResult,
+    };
+
+    let entry_path = normalize_safe_entry_path(&entry_path).map_err(|error| error.to_string())?;
+    let archive = std::path::PathBuf::from(&file_path);
+    let service = CompressionService::new_with_defaults().await;
+    let resolved_password = match password.filter(|value| !value.is_empty()) {
+        Some(password) => Some(password),
+        None => service
+            .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+            .await,
+    };
+    let metadata = crate::services::archive_browser::browse_archive(
+        &archive,
+        resolved_password.as_deref(),
+    )
+    .await
+    .map_err(|error| error.to_string())?;
+    let selected = metadata
+        .entries
+        .iter()
+        .find(|entry| !entry.is_dir && entry.path.replace('\\', "/") == entry_path)
+        .ok_or_else(|| "所选嵌套归档不存在，或不是普通文件".to_string())?;
+    let expected_bytes = selected.size;
+    let (entry_dir, reservation) = cache
+        .create_entry_dir(expected_bytes)
+        .map_err(|error| error.to_string())?;
+    let options = DecompressOptions {
+        preserve_paths: true,
+        overwrite_existing: false,
+        delete_after: false,
+        preserve_timestamps: true,
+        skip_corrupted: false,
+        extract_only_newer: false,
+        create_subdirectory: false,
+        preserve_mark_of_web: true,
+        file_filter: None,
+        selected_entries: vec![entry_path.clone()],
+        conflict_policy: "rename".to_string(),
+        enable_bruteforce: false,
+        bruteforce_wordlists: Vec::new(),
+    };
+    let task_id = format!("archive-nested-{}", uuid::Uuid::new_v4());
+    if let Err(error) = service
+        .extract(
+            window,
+            task_id,
+            file_path,
+            Some(entry_dir.to_string_lossy().into_owned()),
+            resolved_password,
+            options,
+        )
+        .await
+    {
+        let _ = std::fs::remove_dir_all(&entry_dir);
+        return Err(error.to_string());
+    }
+    let extracted = validate_extracted_file(&entry_dir, &entry_path, expected_bytes)
+        .map_err(|error| {
+            let _ = std::fs::remove_dir_all(&entry_dir);
+            error.to_string()
+        })?;
+    let (parent_sha256, content_sha256) = validate_nested_archive_identity(
+        &archive,
+        &extracted,
+        target_depth,
+        &ancestor_hashes,
+    )
+    .map_err(|error| {
+        let _ = std::fs::remove_dir_all(&entry_dir);
+        error.to_string()
+    })?;
+    cache
+        .register_nested_archive(
+            &archive,
+            &extracted,
+            &parent_sha256,
+            &content_sha256,
+            target_depth,
+        )
+        .map_err(|error| {
+            let _ = std::fs::remove_dir_all(&entry_dir);
+            error.to_string()
+        })?;
+    reservation.commit();
+    Ok(NestedArchiveMaterializeResult {
+        entry_path,
+        cache_path: extracted.to_string_lossy().into_owned(),
+        parent_sha256,
+        content_sha256,
+        depth: target_depth,
+    })
+}
+
 /// Extracts one validated archive entry into an isolated session cache and opens it
 /// through the Windows default application. Active content requires an explicit
 /// second call with `allow_dangerous` set to true.

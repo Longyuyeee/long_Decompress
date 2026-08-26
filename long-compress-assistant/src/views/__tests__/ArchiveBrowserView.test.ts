@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   browseArchive: vi.fn(),
   previewArchiveImage: vi.fn(),
   previewArchiveText: vi.fn(),
+  materializeNestedArchive: vi.fn(),
   openArchiveEntry: vi.fn(),
   decompressFile: vi.fn(),
   clipboardWrite: vi.fn(),
@@ -26,6 +27,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
     browseArchive: mocks.browseArchive,
     previewArchiveImage: mocks.previewArchiveImage,
     previewArchiveText: mocks.previewArchiveText,
+    materializeNestedArchive: mocks.materializeNestedArchive,
     openArchiveEntry: mocks.openArchiveEntry,
     decompressFile: mocks.decompressFile,
   })
@@ -61,6 +63,10 @@ describe('ArchiveBrowserView', () => {
     })
     mocks.openArchiveEntry.mockResolvedValue({
       status: 'opened', entryPath: 'docs/readme.txt', cachePath: 'C:/cache/readme.txt', dangerous: false,
+    })
+    mocks.materializeNestedArchive.mockResolvedValue({
+      entryPath: 'nested.7z', cachePath: 'C:/cache/nested.7z',
+      parentSha256: 'parent-hash', contentSha256: 'child-hash', depth: 2,
     })
   })
 
@@ -321,5 +327,127 @@ describe('ArchiveBrowserView', () => {
     expect(wrapper.get('.preview-trigger').attributes('disabled')).toBeDefined()
     expect(wrapper.get('.preview-trigger').attributes('title')).toContain('ZIP 与 TAR')
     expect(mocks.previewArchiveImage).not.toHaveBeenCalled()
+  })
+
+  it('enters nested archives, preserves outer state, and enforces the three-layer UI boundary', async () => {
+    mocks.browseArchive
+      .mockResolvedValueOnce({
+        format: 'ZIP', totalFiles: 2, totalDirectories: 0,
+        totalUncompressedSize: 30, totalCompressedSize: 20, encrypted: false,
+        entries: [
+          { path: 'middle.7z', name: 'middle.7z', size: 20, compressedSize: 12, modified: null, crc: null, encrypted: false, isDir: false },
+          { path: 'outer-note.txt', name: 'outer-note.txt', size: 10, compressedSize: 8, modified: null, crc: null, encrypted: false, isDir: false },
+        ],
+      })
+      .mockResolvedValueOnce({
+        format: '7Z', totalFiles: 1, totalDirectories: 0,
+        totalUncompressedSize: 12, totalCompressedSize: 8, encrypted: false,
+        entries: [{ path: 'inner.zip', name: 'inner.zip', size: 12, compressedSize: 8, modified: null, crc: null, encrypted: false, isDir: false }],
+      })
+      .mockResolvedValueOnce({
+        format: 'ZIP', totalFiles: 1, totalDirectories: 0,
+        totalUncompressedSize: 6, totalCompressedSize: 4, encrypted: false,
+        entries: [{ path: 'fourth.zip', name: 'fourth.zip', size: 6, compressedSize: 4, modified: null, crc: null, encrypted: false, isDir: false }],
+      })
+    mocks.materializeNestedArchive
+      .mockResolvedValueOnce({ entryPath: 'middle.7z', cachePath: 'C:/cache/middle.7z', parentSha256: 'outer-hash', contentSha256: 'middle-hash', depth: 2 })
+      .mockResolvedValueOnce({ entryPath: 'inner.zip', cachePath: 'C:/cache/inner.zip', parentSha256: 'middle-hash', contentSha256: 'inner-hash', depth: 3 })
+
+    const wrapper = mount(ArchiveBrowserView, { attachTo: document.body })
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-entry-path="outer-note.txt"] .browser-checkbox').trigger('click')
+    await wrapper.get('[data-entry-path="middle.7z"]').trigger('dblclick')
+    await flushPromises()
+
+    expect(mocks.materializeNestedArchive).toHaveBeenLastCalledWith(
+      'C:/archives/demo.zip', 'middle.7z', '', 2, [],
+    )
+    expect(wrapper.get('[data-testid="archive-chain"]').text()).toContain('demo.zip')
+    expect(wrapper.get('[data-testid="archive-chain"]').text()).toContain('middle.7z')
+    expect(wrapper.get('input[type="password"]').element.value).toBe('')
+
+    await wrapper.get('input[type="password"]').setValue('middle-only-password')
+    await wrapper.get('[data-entry-path="inner.zip"]').trigger('dblclick')
+    await flushPromises()
+    expect(mocks.materializeNestedArchive).toHaveBeenLastCalledWith(
+      'C:/cache/middle.7z', 'inner.zip', 'middle-only-password', 3, ['outer-hash', 'middle-hash'],
+    )
+    expect(wrapper.get('[data-testid="archive-chain"]').text()).toContain('3 / 3 层')
+
+    await wrapper.get('[data-entry-path="fourth.zip"]').trigger('contextmenu', { clientX: 100, clientY: 100 })
+    const nestedButton = document.querySelector('[data-testid="archive-context-enter-nested"]') as HTMLButtonElement
+    expect(nestedButton.disabled).toBe(true)
+    expect(nestedButton.textContent).toContain('已达到 3 层上限')
+    ;(document.querySelector('[data-testid="archive-chain"] button') as HTMLButtonElement).click()
+    await flushPromises()
+    expect(wrapper.get('[data-entry-path="middle.7z"]').exists()).toBe(true)
+    expect(wrapper.find('footer').text()).toContain('已选择 1 / 2 个文件')
+    wrapper.unmount()
+  })
+
+  it('does not inherit an outer password when an inner archive requires its own password', async () => {
+    mocks.browseArchive
+      .mockResolvedValueOnce({
+        format: 'ZIP', totalFiles: 1, totalDirectories: 0,
+        totalUncompressedSize: 10, totalCompressedSize: 8, encrypted: true,
+        entries: [{ path: 'locked.7z', name: 'locked.7z', size: 10, compressedSize: 8, modified: null, crc: null, encrypted: false, isDir: false }],
+      })
+      .mockRejectedValueOnce(new Error('Unable to read 7Z metadata: PasswordRequired'))
+      .mockResolvedValueOnce({
+        format: '7Z', totalFiles: 1, totalDirectories: 0,
+        totalUncompressedSize: 4, totalCompressedSize: 4, encrypted: true,
+        entries: [{ path: 'secret.txt', name: 'secret.txt', size: 4, compressedSize: 4, modified: null, crc: null, encrypted: true, isDir: false }],
+      })
+    mocks.materializeNestedArchive.mockResolvedValueOnce({
+      entryPath: 'locked.7z', cachePath: 'C:/cache/locked.7z', parentSha256: 'outer-hash', contentSha256: 'locked-hash', depth: 2,
+    })
+    const wrapper = mount(ArchiveBrowserView)
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+    await wrapper.get('input[type="password"]').setValue('outer-password')
+    await wrapper.get('[data-entry-path="locked.7z"]').trigger('dblclick')
+    await flushPromises()
+
+    expect(mocks.materializeNestedArchive).toHaveBeenCalledWith(
+      'C:/archives/demo.zip', 'locked.7z', 'outer-password', 2, [],
+    )
+    expect(wrapper.get('input[type="password"]').element.value).toBe('')
+    expect(wrapper.text()).toContain('内层归档尚未打开')
+    expect(mocks.setError).not.toHaveBeenCalled()
+    await wrapper.get('input[type="password"]').setValue('inner-password')
+    await wrapper.get('[data-testid="archive-nested-retry"]').trigger('click')
+    await flushPromises()
+    expect(mocks.browseArchive).toHaveBeenLastCalledWith('C:/cache/locked.7z', 'inner-password')
+  })
+
+  it('ignores a late inner browse result after the user returns to the outer archive', async () => {
+    let resolveNested!: (value: any) => void
+    const pendingNested = new Promise(resolve => { resolveNested = resolve })
+    mocks.browseArchive
+      .mockResolvedValueOnce({
+        format: 'ZIP', totalFiles: 1, totalDirectories: 0,
+        totalUncompressedSize: 10, totalCompressedSize: 8, encrypted: false,
+        entries: [{ path: 'slow.7z', name: 'slow.7z', size: 10, compressedSize: 8, modified: null, crc: null, encrypted: false, isDir: false }],
+      })
+      .mockReturnValueOnce(pendingNested)
+    mocks.materializeNestedArchive.mockResolvedValueOnce({
+      entryPath: 'slow.7z', cachePath: 'C:/cache/slow.7z', parentSha256: 'outer-hash', contentSha256: 'slow-hash', depth: 2,
+    })
+    const wrapper = mount(ArchiveBrowserView)
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-entry-path="slow.7z"]').trigger('dblclick')
+    await flushPromises()
+    await wrapper.get('[data-testid="archive-chain"] button').trigger('click')
+    resolveNested({
+      format: '7Z', totalFiles: 1, totalDirectories: 0,
+      totalUncompressedSize: 4, totalCompressedSize: 4, encrypted: false,
+      entries: [{ path: 'late.txt', name: 'late.txt', size: 4, compressedSize: 4, modified: null, crc: null, encrypted: false, isDir: false }],
+    })
+    await flushPromises()
+    expect(wrapper.get('[data-entry-path="slow.7z"]').exists()).toBe(true)
+    expect(wrapper.find('[data-entry-path="late.txt"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="archive-chain"]').text()).toContain('1 / 3 层')
   })
 })

@@ -1,6 +1,8 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
+use std::io::{BufReader, Read};
 use std::path::{Component, Path, PathBuf};
 use std::sync::Mutex;
 use std::time::{Duration, SystemTime};
@@ -12,6 +14,7 @@ use std::os::windows::ffi::OsStrExt;
 pub const MAX_OPEN_FILE_BYTES: u64 = 64 * 1024 * 1024;
 pub const MAX_SESSION_BYTES: u64 = 256 * 1024 * 1024;
 pub const MAX_SESSION_ENTRIES: usize = 64;
+pub const MAX_NESTED_ARCHIVE_DEPTH: usize = 3;
 const CACHE_TTL: Duration = Duration::from_secs(24 * 60 * 60);
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -23,6 +26,16 @@ pub struct ArchiveEntryOpenResult {
     pub dangerous: bool,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct NestedArchiveMaterializeResult {
+    pub entry_path: String,
+    pub cache_path: String,
+    pub parent_sha256: String,
+    pub content_sha256: String,
+    pub depth: usize,
+}
+
 #[derive(Default)]
 struct CacheUsage {
     entries: usize,
@@ -32,6 +45,13 @@ struct CacheUsage {
 pub struct ArchiveEntryOpenCache {
     session: PathBuf,
     usage: Mutex<CacheUsage>,
+    nested: Mutex<HashMap<PathBuf, NestedCacheIdentity>>,
+}
+
+#[derive(Clone)]
+struct NestedCacheIdentity {
+    depth: usize,
+    ancestor_hashes: Vec<String>,
 }
 
 impl ArchiveEntryOpenCache {
@@ -43,6 +63,7 @@ impl ArchiveEntryOpenCache {
         Self {
             session,
             usage: Mutex::new(CacheUsage::default()),
+            nested: Mutex::new(HashMap::new()),
         }
     }
 
@@ -89,6 +110,44 @@ impl ArchiveEntryOpenCache {
 
     pub fn cleanup_session(&self) {
         let _ = fs::remove_dir_all(&self.session);
+    }
+
+    pub fn register_nested_archive(
+        &self,
+        parent_path: &Path,
+        nested_path: &Path,
+        parent_sha256: &str,
+        content_sha256: &str,
+        claimed_depth: usize,
+    ) -> Result<()> {
+        let mut nested = self
+            .nested
+            .lock()
+            .map_err(|_| anyhow::anyhow!("嵌套归档缓存状态不可用"))?;
+        let parent_key = parent_path.canonicalize().unwrap_or_else(|_| parent_path.to_path_buf());
+        let child_key = nested_path.canonicalize().unwrap_or_else(|_| nested_path.to_path_buf());
+        let (expected_depth, mut ancestor_hashes) = match nested.get(&parent_key) {
+            Some(parent) => (parent.depth + 1, parent.ancestor_hashes.clone()),
+            None => (2, vec![parent_sha256.to_ascii_lowercase()]),
+        };
+        if claimed_depth != expected_depth || claimed_depth > MAX_NESTED_ARCHIVE_DEPTH {
+            anyhow::bail!(
+                "嵌套归档层级状态不一致：服务端期望第 {expected_depth} 层，收到第 {claimed_depth} 层"
+            );
+        }
+        let normalized_hash = content_sha256.to_ascii_lowercase();
+        if ancestor_hashes.iter().any(|value| value == &normalized_hash) {
+            anyhow::bail!("检测到重复归档内容，已阻止循环进入");
+        }
+        ancestor_hashes.push(normalized_hash);
+        nested.insert(
+            child_key,
+            NestedCacheIdentity {
+                depth: claimed_depth,
+                ancestor_hashes,
+            },
+        );
+        Ok(())
     }
 }
 
@@ -276,6 +335,61 @@ pub fn validate_extracted_file(
     Ok(expected)
 }
 
+fn sha256_file(path: &Path) -> Result<String> {
+    use sha2::{Digest, Sha256};
+
+    let mut reader = BufReader::new(fs::File::open(path)?);
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 64 * 1024];
+    loop {
+        let read = reader.read(&mut buffer)?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(hex::encode(hasher.finalize()))
+}
+
+pub fn validate_nested_archive_identity(
+    parent_archive: &Path,
+    nested_archive: &Path,
+    target_depth: usize,
+    ancestor_hashes: &[String],
+) -> Result<(String, String)> {
+    use crate::services::archive_format::ArchiveFormat;
+
+    if !(2..=MAX_NESTED_ARCHIVE_DEPTH).contains(&target_depth) {
+        anyhow::bail!(
+            "嵌套归档最多允许 {} 层，当前目标为第 {target_depth} 层",
+            MAX_NESTED_ARCHIVE_DEPTH
+        );
+    }
+    let mut file = fs::File::open(nested_archive)?;
+    let mut header = [0u8; 560];
+    let read = file.read(&mut header)?;
+    let magic = ArchiveFormat::from_magic(&header[..read]);
+    let extension = nested_archive
+        .extension()
+        .and_then(|value| value.to_str())
+        .map(ArchiveFormat::from_extension)
+        .unwrap_or(ArchiveFormat::Unknown);
+    if magic == ArchiveFormat::Unknown && extension == ArchiveFormat::Unknown {
+        anyhow::bail!("所选条目不是受支持的归档格式");
+    }
+
+    let parent_sha256 = sha256_file(parent_archive)?;
+    let content_sha256 = sha256_file(nested_archive)?;
+    if content_sha256 == parent_sha256
+        || ancestor_hashes
+            .iter()
+            .any(|value| value.eq_ignore_ascii_case(&content_sha256))
+    {
+        anyhow::bail!("检测到重复归档内容，已阻止循环进入");
+    }
+    Ok((parent_sha256, content_sha256))
+}
+
 fn cleanup_stale_sessions(root: &Path, now: SystemTime) -> Result<()> {
     fs::create_dir_all(root)?;
     for entry in fs::read_dir(root)? {
@@ -384,5 +498,61 @@ mod tests {
             fs::write(session.join("occupied.txt"), b"preview").unwrap();
         }
         assert!(!session.exists());
+    }
+
+    #[test]
+    fn nested_identity_enforces_depth_and_repeated_content() {
+        let temp = tempfile::tempdir().unwrap();
+        let parent = temp.path().join("parent.zip");
+        let child = temp.path().join("child.zip");
+        fs::write(&parent, b"PK\x03\x04parent").unwrap();
+        fs::write(&child, b"PK\x03\x04child").unwrap();
+
+        let (parent_hash, child_hash) =
+            validate_nested_archive_identity(&parent, &child, 2, &[]).unwrap();
+        assert_ne!(parent_hash, child_hash);
+        assert!(validate_nested_archive_identity(&parent, &child, 4, &[])
+            .unwrap_err()
+            .to_string()
+            .contains("最多允许"));
+        assert!(validate_nested_archive_identity(&parent, &child, 3, &[child_hash])
+            .unwrap_err()
+            .to_string()
+            .contains("重复归档"));
+
+        fs::write(&child, fs::read(&parent).unwrap()).unwrap();
+        assert!(validate_nested_archive_identity(&parent, &child, 2, &[])
+            .unwrap_err()
+            .to_string()
+            .contains("循环进入"));
+    }
+
+    #[test]
+    fn nested_cache_derives_depth_server_side_and_rejects_a_fourth_layer() {
+        let temp = tempfile::tempdir().unwrap();
+        let cache = ArchiveEntryOpenCache::new(temp.path().join("cache"));
+        let root = temp.path().join("root.zip");
+        let middle = temp.path().join("middle.7z");
+        let inner = temp.path().join("inner.zip");
+        let fourth = temp.path().join("fourth.zip");
+        for path in [&root, &middle, &inner, &fourth] {
+            fs::write(path, b"archive").unwrap();
+        }
+        cache
+            .register_nested_archive(&root, &middle, "root", "middle", 2)
+            .unwrap();
+        cache
+            .register_nested_archive(&middle, &inner, "middle", "inner", 3)
+            .unwrap();
+        assert!(cache
+            .register_nested_archive(&inner, &fourth, "inner", "fourth", 4)
+            .unwrap_err()
+            .to_string()
+            .contains("层级状态不一致"));
+        assert!(cache
+            .register_nested_archive(&middle, &fourth, "middle", "root", 3)
+            .unwrap_err()
+            .to_string()
+            .contains("循环进入"));
     }
 }
