@@ -16,6 +16,8 @@ $backupRoot = Join-Path ([IO.Path]::GetTempPath()) "long-decompress-public-updat
 $productName = "Long$([char]0x89E3)$([char]0x538B)"
 $applicationName = "$productName.exe"
 $uninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$productName"
+$autoStartKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+$autoStartValueName = $productName
 $appDataPaths = @(
   [IO.Path]::GetFullPath((Join-Path $env:APPDATA 'LongDecompress')),
   [IO.Path]::GetFullPath((Join-Path $env:APPDATA 'com.longcompress.assistant'))
@@ -99,6 +101,24 @@ function Get-InstalledState {
     executable = Join-Path $installLocation $applicationName
     uninstaller = Join-Path $installLocation 'uninstall.exe'
   }
+}
+
+function Get-PersistedAutoStartPreference {
+  $settingsPath = Join-Path $env:APPDATA 'com.longcompress.assistant\app_settings.json'
+  if (-not (Test-Path -LiteralPath $settingsPath)) {
+    return $false
+  }
+  $settings = Get-Content -Raw -LiteralPath $settingsPath | ConvertFrom-Json
+  return [bool]$settings.autoStart
+}
+
+function Get-AutoStartRegistration {
+  $properties = Get-ItemProperty -LiteralPath $autoStartKey -ErrorAction SilentlyContinue
+  if ($null -eq $properties -or
+      -not ($properties.PSObject.Properties.Name -contains $autoStartValueName)) {
+    return $null
+  }
+  return [string]$properties.$autoStartValueName
 }
 
 function Stop-InstalledApplication {
@@ -269,6 +289,16 @@ try {
   Add-Check 'installed uninstaller exists' (Test-Path -LiteralPath $initialState.uninstaller) (
     $initialState.uninstaller
   )
+  $autoStartPreference = Get-PersistedAutoStartPreference
+  $autoStartRegistration = Get-AutoStartRegistration
+  $expectedAutoStartRegistration = "`"$($initialState.executable)`" --autostart"
+  Add-Check 'baseline auto-start preference matches Windows registration' (
+    ($autoStartPreference -and
+      $autoStartRegistration -eq $expectedAutoStartRegistration) -or
+    (-not $autoStartPreference -and $null -eq $autoStartRegistration)
+  ) (
+    "preference=$autoStartPreference; expected=$expectedAutoStartRegistration; actual=$autoStartRegistration"
+  )
   Add-Check 'no installed application process is running' (
     @(Get-CimInstance Win32_Process -Filter "Name = '$applicationName'" -ErrorAction SilentlyContinue).Count -eq 0
   ) $applicationName
@@ -381,6 +411,15 @@ try {
   Add-Check 'updated context menu remains registered after application exit' (
     $finalContextMenuMode -eq 'legacy' -and $finalContextMenuCascade.valid
   ) "mode=$finalContextMenuMode; $($finalContextMenuCascade.detail)"
+  $updatedAutoStartRegistration = Get-AutoStartRegistration
+  $expectedUpdatedAutoStartRegistration = "`"$($updatedState.executable)`" --autostart"
+  Add-Check 'application update preserves coherent auto-start state' (
+    ($autoStartPreference -and
+      $updatedAutoStartRegistration -eq $expectedUpdatedAutoStartRegistration) -or
+    (-not $autoStartPreference -and $null -eq $updatedAutoStartRegistration)
+  ) (
+    "preference=$autoStartPreference; expected=$expectedUpdatedAutoStartRegistration; actual=$updatedAutoStartRegistration"
+  )
 
   Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints)
   $resourceDirectory = Join-Path $updatedState.installLocation 'resources'

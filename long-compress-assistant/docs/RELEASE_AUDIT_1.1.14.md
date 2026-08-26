@@ -4,7 +4,7 @@
 
 ## 结论
 
-归档工作区 A-01 至 A-06 已完成，产品能力达到发布准备线。正式发布仍必须同时满足版本身份、生产构建、单元与 Rust Release 测试、真实覆盖安装、卸载恢复、四项公开资产、updater 签名和公开 `latest.json` 对账；任一项失败则不得发布或必须撤销错误资产。
+归档工作区 A-01 至 A-06 已完成，`v1.1.14` 已正式发布。版本身份、生产构建、单元与 Rust Release 测试、真实覆盖安装、卸载恢复、四项公开资产、updater 签名、公开 `latest.json` 对账及本机 `1.1.13 → 1.1.14` 应用内更新均通过。
 
 ## 需求对齐
 
@@ -37,4 +37,8 @@
 
 ## 发布后审计
 
-待标签工作流和公开更新门禁完成后补录。当前状态为“本地候选通过”，不提前宣称公开 Release 已成功。
+- 正式标签固定在提交 `cfc58ec9a14dc8ccb3f0e026986786af5693b6cc`；GitHub Actions Release 运行 `32947440127` 的版本身份、前端检查、Rust Release 测试、Tauri 构建、无证书身份包边界和 updater 清单发布全部通过。
+- Release 地址：[Long解压 v1.1.14](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.14)。公开资产共四项：`latest.json` 811 字节，SHA-256 `31FDE77AD58B4505554966158BB4A808F64633FAC387DE01635264F672B3FC66`；NSIS 安装包 7,722,311 字节，SHA-256 `05C2B1D20611F1A063D39EA79623E711CCD3A93F0FB9C0090CF762B6A8D6A427`；updater ZIP 7,722,471 字节，SHA-256 `99697DE09072AB8A88B7433F5761D21725DB216041AC44C5EE051383A6861306`；签名文件 428 字节，SHA-256 `7B8A36D4033D527796BDF3C55F2C3BF95BE0B6341A8021C4CF2552ACFDAD933E`。
+- 从公开 Release 重新下载的 NSIS 与 updater ZIP 均通过内置 7-Zip 26.02 完整性检查；`latest.json` 的版本、URL 与独立签名逐项一致。
+- 本机通过应用设置界面使用公开 `latest.json` 完成真实 `1.1.13 → 1.1.14` 更新。共 24 项检查通过：安装位置和两处用户数据指纹保持不变，应用自动重启，经典菜单 17 条子命令与 4 条快捷命令完整，目标 Shell Extension 唯一，且无证书版本不包含 MSIX 身份包。证据位于 `test-results/public-update-validation/20260826-164854/result.json`。
+- 首轮公开更新已经成功安装，但严格数据指纹门禁发现测试恢复态的设置文件记录 `autoStart=true`、Windows Run 项却不存在；设置页同步真实系统状态后造成单字段变化。验收脚本现增加更新前后“持久化偏好与 Windows 注册必须一致”的明确门禁；修复基线后完整重跑通过，没有通过忽略字段来放宽用户数据保护。
