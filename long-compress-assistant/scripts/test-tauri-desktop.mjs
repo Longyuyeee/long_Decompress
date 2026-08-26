@@ -16,7 +16,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { deflateSync } from 'node:zlib'
-import { Builder, By, Capabilities } from 'selenium-webdriver'
+import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const executableSuffix = process.platform === 'win32' ? '.exe' : ''
@@ -502,9 +502,10 @@ async function runArchiveBrowserDesktopGate() {
       return pages.length > 0 && (await pages[0].getText()).includes(expectedText)
     }, 30_000)
     const fields = await driver.findElements(By.css('.browser-toolbar .browser-field'))
-    assert.equal(fields.length, 3)
-    await (await fields[2].findElement(By.css('button'))).click()
-    await driver.wait(async () => (await fields[2].getText()).includes(outputPath), 10_000)
+    assert.equal(fields.length, 2, 'the archive chooser and password are the only top configuration fields')
+    const outputTarget = await waitForElement('.browser-page > footer .output-target')
+    await outputTarget.click()
+    await driver.wait(async () => (await outputTarget.getText()).includes(outputPath), 10_000)
     const dimensions = await driver.executeScript(
       'const page = document.querySelector(\'.browser-page\'); return page ? { scrollWidth: page.scrollWidth, clientWidth: page.clientWidth } : null;',
     )
@@ -515,9 +516,47 @@ async function runArchiveBrowserDesktopGate() {
     )
   }
 
+  const verifyWorkspaceNavigation = async () => {
+    const footer = await waitForElement('.browser-page > footer')
+    assert.match(await footer.getText(), /已选择\s+2\s+\/\s+2/)
+    const directoryRow = await waitForElement('[data-entry-path="资料集合/"]')
+    await directoryRow.click()
+    assert.match(await directoryRow.getAttribute('class'), /focused/)
+    assert.match(await footer.getText(), /已选择\s+2\s+\/\s+2/, 'plain click must focus without changing selection')
+
+    await driver.actions().doubleClick(directoryRow).perform()
+    await driver.wait(async () => (await waitForElement('[data-testid="archive-breadcrumbs"]')).getText().then(text => text.includes('资料集合')), 10_000)
+    console.log('[desktop-e2e] archive workspace entered a directory by double-click')
+    await driver.actions().keyDown(Key.ALT).sendKeys(Key.ARROW_LEFT).keyUp(Key.ALT).perform()
+    await driver.wait(async () => (await waitForElement('[data-testid="archive-breadcrumbs"]')).getText().then(text => !text.includes('资料集合')), 10_000)
+    console.log('[desktop-e2e] archive workspace returned by Alt+Left')
+    const forward = await waitForElement('[data-testid="archive-nav-forward"]')
+    assert.equal(await forward.isEnabled(), true)
+    await forward.click()
+    await driver.wait(async () => (await waitForElement('[data-testid="archive-breadcrumbs"]')).getText().then(text => text.includes('资料集合')), 10_000)
+    console.log('[desktop-e2e] archive workspace moved forward from visible navigation history')
+    const up = await waitForElement('[data-testid="archive-nav-up"]')
+    assert.equal(await up.isEnabled(), true)
+    await driver.executeScript('arguments[0].click()', up)
+    await driver.wait(async () => (await waitForElement('[data-testid="archive-breadcrumbs"]')).getText().then(text => !text.includes('资料集合')), 10_000)
+    console.log('[desktop-e2e] archive workspace moved to the parent directory')
+    await (await waitForElement('[data-testid="archive-nav-refresh"]')).click()
+    await driver.wait(async () => (await driver.findElements(By.css('[data-entry-path="资料集合/"]'))).length === 1, 30_000)
+    assert.match(await (await waitForElement('.browser-page > footer')).getText(), /已选择\s+2\s+\/\s+2/)
+    console.log('[desktop-e2e] archive workspace refreshed metadata and preserved valid selection')
+    writeFileSync(
+      path.join(artifactDirectory, 'archive-browser-a01-workspace.png'),
+      Buffer.from(await driver.takeScreenshot(), 'base64'),
+    )
+  }
+
   const extractOnly = async (query, expectedPath, expectedContent, excludedPath) => {
-    await (await waitForElement('.browser-table-head .browser-checkbox')).click()
     const search = await waitForElement('.browser-search input')
+    await search.clear()
+    await search.sendKeys('.txt')
+    await driver.wait(async () => (await driver.findElements(By.css('.browser-row'))).length === 2, 10_000)
+    await (await waitForElement('.browser-table-head .browser-checkbox')).click()
+    assert.match(await (await waitForElement('.browser-page > footer')).getText(), /已选择\s+0\s+\//)
     await search.clear()
     await search.sendKeys(query)
     const rows = await driver.wait(async () => {
@@ -554,8 +593,9 @@ async function runArchiveBrowserDesktopGate() {
   }
 
   const zipOutput = path.join(browserFixtureRoot, 'zip-selected-output')
-  await openArchive(browserZip, zipOutput, '', '保留文件.txt')
+  await openArchive(browserZip, zipOutput, '', zipRootName)
   assert.match(await (await waitForElement('.browser-page')).getText(), /ZIP[\s\S]*未加密/)
+  await verifyWorkspaceNavigation()
   await extractOnly(
     '保留文件',
     path.join(zipOutput, zipKeepRelative),
@@ -564,7 +604,7 @@ async function runArchiveBrowserDesktopGate() {
   )
 
   const sevenZipOutput = path.join(browserFixtureRoot, '7z-selected-output')
-  await openArchive(browser7z, sevenZipOutput, 'desktop-browser-secret', '只解压这一项.txt')
+  await openArchive(browser7z, sevenZipOutput, 'desktop-browser-secret', passwordRootName)
   assert.match(await (await waitForElement('.browser-page')).getText(), /7Z[\s\S]*已加密/)
   await extractOnly(
     '只解压这一项',

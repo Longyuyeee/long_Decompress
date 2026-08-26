@@ -14,6 +14,9 @@ const selected = ref(new Set<string>())
 const query = ref('')
 const typeFilter = ref('all')
 const activeDirectory = ref('')
+const focusedEntryPath = ref('')
+const navigationBack = ref<string[]>([])
+const navigationForward = ref<string[]>([])
 const loading = ref(false)
 const extracting = ref(false)
 const imagePreview = ref<ArchiveImagePreview | null>(null)
@@ -23,6 +26,7 @@ const previewError = ref('')
 const expandedDirectories = ref(new Set<string>())
 const isDraggingArchive = ref(false)
 let previewSequence = 0
+let selectionAnchorPath = ''
 let unlistenDrop: (() => void) | null = null
 let unlistenHover: (() => void) | null = null
 let unlistenCancel: (() => void) | null = null
@@ -57,24 +61,52 @@ const visibleDirectories = computed(() => directories.value
     hasChildren: directories.value.some(candidate => candidate.startsWith(`${path}/`) && candidate.split('/').length === path.split('/').length + 1)
   })))
 
+const directoryEntries = computed<ArchiveEntryInfo[]>(() => directories.value.map(path => ({
+  path: `${path}/`,
+  name: path.split('/').pop() || path,
+  size: 0,
+  compressedSize: 0,
+  modified: null,
+  crc: null,
+  encrypted: false,
+  isDir: true,
+})))
+
+const entryParent = (entry: ArchiveEntryInfo) => {
+  const normalized = entry.path.replace(/\\/g, '/').replace(/\/+$/, '')
+  const index = normalized.lastIndexOf('/')
+  return index < 0 ? '' : normalized.slice(0, index)
+}
+
 const filteredEntries = computed(() => {
   const search = query.value.trim().toLocaleLowerCase()
-  return files.value.filter(entry => {
+  return [...directoryEntries.value, ...files.value].filter(entry => {
     const normalized = entry.path.replace(/\\/g, '/')
-    const parent = normalized.includes('/') ? normalized.slice(0, normalized.lastIndexOf('/')) : ''
-    if (activeDirectory.value && parent !== activeDirectory.value) return false
+    if (!search && entryParent(entry) !== activeDirectory.value) return false
     if (search && !normalized.toLocaleLowerCase().includes(search)) return false
+    if (entry.isDir) return typeFilter.value === 'all'
     if (typeFilter.value === 'all') return true
     const extension = entry.name.includes('.') ? entry.name.split('.').pop()!.toLocaleLowerCase() : ''
     if (typeFilter.value === 'other') {
       return !Object.values(extensionGroups).some(group => group.has(extension))
     }
     return extensionGroups[typeFilter.value]?.has(extension) ?? false
-  })
+  }).sort((left, right) => Number(right.isDir) - Number(left.isDir) || left.name.localeCompare(right.name))
 })
 
-const visibleSelected = computed(() => filteredEntries.value.length > 0 && filteredEntries.value.every(entry => selected.value.has(entry.path)))
+const visibleFiles = computed(() => filteredEntries.value.filter(entry => !entry.isDir))
+const visibleSelected = computed(() => visibleFiles.value.length > 0 && visibleFiles.value.every(entry => selected.value.has(entry.path)))
 const previewRouteSupported = computed(() => result.value?.format === 'ZIP' || result.value?.format.startsWith('TAR'))
+const canNavigateBack = computed(() => navigationBack.value.length > 0)
+const canNavigateForward = computed(() => navigationForward.value.length > 0)
+const canNavigateUp = computed(() => activeDirectory.value.length > 0)
+const breadcrumbs = computed(() => {
+  const parts = activeDirectory.value ? activeDirectory.value.split('/') : []
+  return [
+    { name: '根目录', path: '' },
+    ...parts.map((name, index) => ({ name, path: parts.slice(0, index + 1).join('/') })),
+  ]
+})
 
 const canPreviewEntry = (entry: ArchiveEntryInfo) => {
   const extension = entry.name.includes('.') ? entry.name.split('.').pop()!.toLocaleLowerCase() : ''
@@ -131,6 +163,10 @@ const loadArchive = async () => {
   result.value = null
   selected.value = new Set()
   activeDirectory.value = ''
+  focusedEntryPath.value = ''
+  navigationBack.value = []
+  navigationForward.value = []
+  selectionAnchorPath = ''
   expandedDirectories.value = new Set()
   closePreview()
   try {
@@ -176,13 +212,118 @@ const chooseOutput = async () => {
   if (typeof picked === 'string') outputPath.value = picked
 }
 
-const selectDirectory = (path: string) => {
-  activeDirectory.value = path
+const expandDirectoryAncestors = (path: string) => {
   if (!path) return
   const next = new Set(expandedDirectories.value)
   const parts = path.split('/')
   parts.forEach((_, index) => next.add(parts.slice(0, index + 1).join('/')))
   expandedDirectories.value = next
+}
+
+const navigateToDirectory = (path: string, recordHistory = true) => {
+  const normalized = path.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')
+  if (normalized === activeDirectory.value) return
+  if (recordHistory) {
+    navigationBack.value = [...navigationBack.value, activeDirectory.value]
+    navigationForward.value = []
+  }
+  activeDirectory.value = normalized
+  focusedEntryPath.value = ''
+  selectionAnchorPath = ''
+  expandDirectoryAncestors(normalized)
+}
+
+const selectDirectory = (path: string) => {
+  navigateToDirectory(path)
+}
+
+const goBack = () => {
+  const target = navigationBack.value.at(-1)
+  if (target === undefined) return
+  navigationBack.value = navigationBack.value.slice(0, -1)
+  navigationForward.value = [activeDirectory.value, ...navigationForward.value]
+  navigateToDirectory(target, false)
+}
+
+const goForward = () => {
+  const [target, ...remaining] = navigationForward.value
+  if (target === undefined) return
+  navigationForward.value = remaining
+  navigationBack.value = [...navigationBack.value, activeDirectory.value]
+  navigateToDirectory(target, false)
+}
+
+const goUp = () => {
+  if (!activeDirectory.value) return
+  const parts = activeDirectory.value.split('/')
+  parts.pop()
+  navigateToDirectory(parts.join('/'))
+}
+
+const refreshDirectory = async () => {
+  if (!archivePath.value || loading.value) return
+  loading.value = true
+  focusedEntryPath.value = ''
+  selectionAnchorPath = ''
+  closePreview()
+  try {
+    const refreshed = await commands.browseArchive(archivePath.value, password.value)
+    result.value = refreshed
+    const availableFiles = new Set(refreshed.entries.filter(entry => !entry.isDir).map(entry => entry.path))
+    selected.value = new Set([...selected.value].filter(path => availableFiles.has(path)))
+    const availableDirectories = new Set(directories.value)
+    if (activeDirectory.value && !availableDirectories.has(activeDirectory.value)) activeDirectory.value = ''
+    navigationBack.value = navigationBack.value.filter(path => !path || availableDirectories.has(path))
+    navigationForward.value = navigationForward.value.filter(path => !path || availableDirectories.has(path))
+    expandDirectoryAncestors(activeDirectory.value)
+  } catch (error) {
+    appStore.setError(`刷新压缩包失败：${String(error)}`)
+  } finally {
+    loading.value = false
+  }
+}
+
+const activateEntry = (entry: ArchiveEntryInfo) => {
+  focusedEntryPath.value = entry.path
+  if (entry.isDir) navigateToDirectory(entry.path.replace(/\/+$/, ''))
+}
+
+const handleEntryClick = (entry: ArchiveEntryInfo, event: MouseEvent) => {
+  focusedEntryPath.value = entry.path
+  if (entry.isDir) return
+  if (event.shiftKey && selectionAnchorPath) {
+    const start = visibleFiles.value.findIndex(item => item.path === selectionAnchorPath)
+    const end = visibleFiles.value.findIndex(item => item.path === entry.path)
+    if (start >= 0 && end >= 0) {
+      const next = new Set(selected.value)
+      const [from, to] = start <= end ? [start, end] : [end, start]
+      visibleFiles.value.slice(from, to + 1).forEach(item => next.add(item.path))
+      selected.value = next
+      return
+    }
+  }
+  selectionAnchorPath = entry.path
+  if (event.ctrlKey || event.metaKey) toggleEntry(entry)
+}
+
+const isEditableKeyboardTarget = (target: EventTarget | null) => {
+  const element = target as HTMLElement | null
+  return Boolean(element?.closest('input, select, textarea, [contenteditable="true"]'))
+}
+
+const handleWorkspaceKeydown = (event: KeyboardEvent) => {
+  if (event.defaultPrevented) return
+  if (isEditableKeyboardTarget(event.target)) return
+  if (event.altKey && event.key === 'ArrowLeft') {
+    event.preventDefault()
+    goBack()
+  } else if (event.altKey && event.key === 'ArrowRight') {
+    event.preventDefault()
+    goForward()
+  } else if (event.key === 'Backspace') {
+    event.preventDefault()
+    goUp()
+  }
 }
 
 const toggleDirectory = (path: string) => {
@@ -204,6 +345,7 @@ watch(() => appStore.pendingArchiveBrowserPath, path => {
 
 onMounted(() => {
   if (import.meta.env.MODE === 'test') return
+  window.addEventListener('keydown', handleWorkspaceKeydown)
   void Promise.all([
     listen('tauri://file-drop-hover', () => { isDraggingArchive.value = true }).then(value => { unlistenHover = value }),
     listen<string[]>('tauri://file-drop', event => {
@@ -215,6 +357,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('keydown', handleWorkspaceKeydown)
   unlistenHover?.()
   unlistenDrop?.()
   unlistenCancel?.()
@@ -228,7 +371,7 @@ const toggleEntry = (entry: ArchiveEntryInfo) => {
 
 const toggleVisible = () => {
   const next = new Set(selected.value)
-  filteredEntries.value.forEach(entry => visibleSelected.value ? next.delete(entry.path) : next.add(entry.path))
+  visibleFiles.value.forEach(entry => visibleSelected.value ? next.delete(entry.path) : next.add(entry.path))
   selected.value = next
 }
 
@@ -262,6 +405,7 @@ const extractSelected = async () => {
     @dragover.prevent="isDraggingArchive = true"
     @dragleave.self="isDraggingArchive = false"
     @drop="droppedBrowserFiles"
+    @keydown="handleWorkspaceKeydown"
   >
     <header class="shrink-0 flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
@@ -321,6 +465,20 @@ const extractSelected = async () => {
         </aside>
 
         <div class="min-h-0 min-w-0 overflow-hidden flex flex-col">
+          <nav class="browser-navigation shrink-0 border-b border-subtle/70" aria-label="压缩包目录导航">
+            <div class="browser-navigation-actions">
+              <button type="button" data-testid="archive-nav-back" :disabled="!canNavigateBack" title="后退 (Alt+左箭头)" aria-label="后退" @click="goBack"><i class="pi pi-arrow-left"></i></button>
+              <button type="button" data-testid="archive-nav-forward" :disabled="!canNavigateForward" title="前进 (Alt+右箭头)" aria-label="前进" @click="goForward"><i class="pi pi-arrow-right"></i></button>
+              <button type="button" data-testid="archive-nav-up" :disabled="!canNavigateUp" title="上一级 (Backspace)" aria-label="上一级" @click="goUp"><i class="pi pi-arrow-up"></i></button>
+              <button type="button" data-testid="archive-nav-refresh" title="刷新当前目录" aria-label="刷新当前目录" @click="refreshDirectory"><i class="pi pi-refresh"></i></button>
+            </div>
+            <div class="browser-breadcrumbs" data-testid="archive-breadcrumbs">
+              <template v-for="(crumb, index) in breadcrumbs" :key="crumb.path || '__root__'">
+                <i v-if="index > 0" class="pi pi-angle-right" aria-hidden="true"></i>
+                <button type="button" :class="{ current: index === breadcrumbs.length - 1 }" :title="crumb.path || '根目录'" @click="navigateToDirectory(crumb.path)">{{ crumb.name }}</button>
+              </template>
+            </div>
+          </nav>
           <div class="shrink-0 p-3 border-b border-subtle/70 flex flex-wrap gap-2">
             <label class="browser-search min-w-0 flex-1"><i class="pi pi-search"></i><input v-model="query" placeholder="搜索文件名或路径"></label>
             <select v-model="typeFilter" class="browser-select">
@@ -332,8 +490,20 @@ const extractSelected = async () => {
             <span>名称与路径</span><span class="hidden md:block">大小</span><span class="hidden lg:block">修改时间</span><span class="hidden xl:block">CRC</span>
           </div>
           <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
-            <div v-for="entry in filteredEntries" :key="entry.path" class="browser-row" @click="toggleEntry(entry)">
-              <button type="button" class="browser-checkbox" :class="{ checked: selected.has(entry.path) }" :aria-label="selected.has(entry.path) ? `取消选择 ${entry.name}` : `选择 ${entry.name}`" @click.stop="toggleEntry(entry)"><i v-if="selected.has(entry.path)" class="pi pi-check"></i></button>
+            <div
+              v-for="entry in filteredEntries"
+              :key="entry.path"
+              class="browser-row"
+              :class="{ focused: focusedEntryPath === entry.path, directory: entry.isDir }"
+              :data-entry-path="entry.path"
+              role="row"
+              tabindex="0"
+              @click="handleEntryClick(entry, $event)"
+              @dblclick="activateEntry(entry)"
+              @keydown.enter.prevent="activateEntry(entry)"
+            >
+              <button v-if="!entry.isDir" type="button" class="browser-checkbox" :class="{ checked: selected.has(entry.path) }" :aria-label="selected.has(entry.path) ? `取消选择 ${entry.name}` : `选择 ${entry.name}`" @click.stop="focusedEntryPath = entry.path; toggleEntry(entry)"><i v-if="selected.has(entry.path)" class="pi pi-check"></i></button>
+              <span v-else class="browser-directory-marker"><i class="pi pi-folder"></i></span>
               <span class="min-w-0 text-left flex items-center gap-2">
                 <span class="min-w-0 flex-1"><strong class="block truncate text-content">{{ entry.name }}</strong><small class="block truncate text-muted mt-0.5">{{ entry.path }}</small></span>
                 <button
@@ -346,7 +516,7 @@ const extractSelected = async () => {
                   @click.stop="openPreview(entry)"
                 ><i class="pi pi-eye"></i></button>
               </span>
-              <span class="hidden md:block text-left text-muted">{{ formatBytes(entry.size) }}</span>
+              <span class="hidden md:block text-left text-muted">{{ entry.isDir ? '文件夹' : formatBytes(entry.size) }}</span>
               <span class="hidden lg:block text-left text-muted truncate">{{ entry.modified || '—' }}</span>
               <span class="hidden xl:block text-left font-mono text-muted truncate">{{ entry.crc || '—' }}</span>
             </div>
@@ -414,6 +584,16 @@ const extractSelected = async () => {
 .directory-toggle:hover { color: var(--dynamic-accent); }
 .directory-entry { flex: 1; width: 100%; min-width: 0; display: flex; align-items: center; gap: .55rem; border-radius: .7rem; padding: .56rem .65rem; color: var(--text-muted); font-size: .74rem; font-weight: 800; text-align: left; }
 .directory-entry:hover, .directory-entry.active { background: color-mix(in srgb, var(--dynamic-accent) 13%, transparent); color: var(--dynamic-accent); }
+.browser-navigation { min-width: 0; display: flex; align-items: center; gap: .7rem; padding: .55rem .75rem; }
+.browser-navigation-actions { flex: 0 0 auto; display: flex; gap: .25rem; }
+.browser-navigation-actions button { width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: .6rem; color: var(--text-muted); font-size: .7rem; }
+.browser-navigation-actions button:hover:not(:disabled) { color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent); }
+.browser-navigation-actions button:disabled { opacity: .3; cursor: not-allowed; }
+.browser-breadcrumbs { min-width: 0; display: flex; align-items: center; gap: .2rem; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.browser-breadcrumbs::-webkit-scrollbar { display: none; }
+.browser-breadcrumbs > i { flex: 0 0 auto; color: var(--text-muted); font-size: .55rem; }
+.browser-breadcrumbs button { flex: 0 0 auto; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: .55rem; padding: .38rem .5rem; color: var(--text-muted); font-size: .7rem; font-weight: 800; }
+.browser-breadcrumbs button:hover, .browser-breadcrumbs button.current { color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 9%, transparent); }
 .browser-search { display: flex; align-items: center; gap: .6rem; padding-inline: .8rem; }
 .browser-search input { width: 100%; min-width: 0; background: transparent; outline: none; }
 .browser-select { min-width: 8.5rem; }
@@ -421,6 +601,10 @@ const extractSelected = async () => {
 .browser-table-head { color: var(--text-muted); font-size: .68rem; font-weight: 900; border-bottom: 1px solid var(--border-subtle); }
 .browser-row { width: 100%; border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent); font-size: .75rem; }
 .browser-row:hover { background: color-mix(in srgb, var(--dynamic-accent) 7%, transparent); }
+.browser-row.focused { outline: 1px solid color-mix(in srgb, var(--dynamic-accent) 68%, transparent); outline-offset: -2px; background: color-mix(in srgb, var(--dynamic-accent) 11%, transparent); }
+.browser-row:focus-visible { outline: 2px solid var(--dynamic-accent); outline-offset: -2px; }
+.browser-row.directory strong { color: var(--dynamic-accent); }
+.browser-directory-marker { width: 1.15rem; height: 1.15rem; display: inline-grid; place-items: center; color: var(--dynamic-accent); font-size: .8rem; }
 .preview-trigger { flex: 0 0 auto; width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: .65rem; color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent); }
 .preview-trigger:hover { background: color-mix(in srgb, var(--dynamic-accent) 18%, transparent); }
 .preview-trigger:disabled { color: var(--text-muted); background: var(--bg-input); opacity: .45; cursor: not-allowed; }

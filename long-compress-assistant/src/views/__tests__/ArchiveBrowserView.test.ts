@@ -52,11 +52,10 @@ describe('ArchiveBrowserView', () => {
     await flushPromises()
 
     expect(mocks.browseArchive).toHaveBeenCalledWith('C:/archives/demo.zip', '')
-    expect(wrapper.text()).toContain('readme.txt')
+    expect(wrapper.text()).toContain('docs')
     expect(wrapper.text()).toContain('image.png')
 
-    const rows = wrapper.findAll('.browser-row')
-    await rows[1].trigger('click')
+    await wrapper.get('[data-entry-path="image.png"] .browser-checkbox').trigger('click')
     await wrapper.find('footer .browser-primary').trigger('click')
     await flushPromises()
 
@@ -67,6 +66,40 @@ describe('ArchiveBrowserView', () => {
       conflictPolicy: 'rename',
     }))
     expect(mocks.setSuccess).toHaveBeenCalledWith('已解压 1 个所选文件')
+  })
+
+  it('uses file-manager focus, multiselect and directory navigation semantics', async () => {
+    const wrapper = mount(ArchiveBrowserView)
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+
+    const imageRow = wrapper.get('[data-entry-path="image.png"]')
+    await imageRow.trigger('click')
+    expect(imageRow.classes()).toContain('focused')
+    expect(wrapper.find('footer').text()).toContain('已选择 2 / 2 个文件')
+
+    await imageRow.trigger('click', { ctrlKey: true })
+    expect(wrapper.find('footer').text()).toContain('已选择 1 / 2 个文件')
+
+    await wrapper.get('[data-entry-path="docs/"]').trigger('dblclick')
+    expect(wrapper.get('[data-testid="archive-breadcrumbs"]').text()).toContain('docs')
+    expect(wrapper.get('[data-entry-path="docs/readme.txt"]').text()).toContain('readme.txt')
+    expect(wrapper.get('[data-testid="archive-nav-back"]').attributes('disabled')).toBeUndefined()
+
+    await wrapper.get('[data-testid="archive-nav-refresh"]').trigger('click')
+    await flushPromises()
+    expect(mocks.browseArchive).toHaveBeenCalledTimes(2)
+    expect(wrapper.get('[data-testid="archive-breadcrumbs"]').text()).toContain('docs')
+    expect(wrapper.find('footer').text()).toContain('已选择 1 / 2 个文件')
+
+    await wrapper.get('.browser-page').trigger('keydown', { key: 'Backspace' })
+    expect(wrapper.get('[data-testid="archive-breadcrumbs"]').text()).not.toContain('docs')
+    expect(wrapper.get('[data-entry-path="docs/"]').exists()).toBe(true)
+
+    await wrapper.get('[data-testid="archive-nav-back"]').trigger('click')
+    expect(wrapper.get('[data-testid="archive-breadcrumbs"]').text()).toContain('docs')
+    await wrapper.get('[data-testid="archive-nav-forward"]').trigger('click')
+    expect(wrapper.get('[data-testid="archive-breadcrumbs"]').text()).not.toContain('docs')
   })
 
   it('filters entries by directory, search text and type without horizontal overflow containers', async () => {
@@ -105,7 +138,7 @@ describe('ArchiveBrowserView', () => {
     await wrapper.find('header .browser-primary').trigger('click')
     await flushPromises()
 
-    expect(wrapper.findAll('.browser-checkbox.checked')).toHaveLength(3)
+    expect(wrapper.find('footer').text()).toContain('已选择 2 / 2 个文件')
     await wrapper.get('.preview-trigger').trigger('click')
     await flushPromises()
 
@@ -115,7 +148,7 @@ describe('ArchiveBrowserView', () => {
     expect(wrapper.get('[data-testid="archive-image-preview"] img').attributes('src'))
       .toBe('data:image/png;base64,c2FmZQ==')
     expect(wrapper.get('[data-testid="archive-image-preview"]').text()).toContain('只读 · 未写入磁盘')
-    expect(wrapper.findAll('.browser-checkbox.checked')).toHaveLength(3)
+    expect(wrapper.find('footer').text()).toContain('已选择 2 / 2 个文件')
 
     await wrapper.get('[aria-label="关闭预览"]').trigger('click')
     expect(wrapper.find('[data-testid="archive-image-preview"]').exists()).toBe(false)

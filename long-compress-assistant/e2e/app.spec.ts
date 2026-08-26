@@ -389,6 +389,8 @@ test.describe('Long Decompress desktop shell', () => {
     await page.keyboard.press('Control+b')
     await page.waitForURL('**/#/browser')
     await page.locator('header .browser-primary').click()
+    await page.locator('[data-entry-path="art/"]').dblclick()
+    await expect(page.getByTestId('archive-breadcrumbs')).toContainText('art')
     await expect(page.getByText('preview.png').first()).toBeVisible()
     await page.getByRole('button', { name: '预览 preview.png' }).click()
     const preview = page.getByTestId('archive-image-preview')
