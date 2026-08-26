@@ -519,7 +519,9 @@ const isEditableKeyboardTarget = (target: EventTarget | null) => {
 const handleWorkspaceKeydown = (event: KeyboardEvent) => {
   if (event.defaultPrevented) return
   if (event.key === 'Escape') {
-    if (contextMenu.value) closeContextMenu()
+    if (previewEntry.value) closePreview()
+    else if (dangerousOpenEntry.value) dangerousOpenEntry.value = null
+    else if (contextMenu.value) closeContextMenu()
     else if (detailEntries.value.length > 0) closeDetails()
     return
   }

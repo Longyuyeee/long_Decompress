@@ -7,7 +7,9 @@ param(
   [string]$PreviousVersion,
   [Parameter(Mandatory = $true)]
   [string]$CandidateVersion,
-  [switch]$AllowExistingInstall
+  [string]$CandidateExecutable,
+  [switch]$AllowExistingInstall,
+  [switch]$RunArchiveWorkspaceMatrix
 )
 
 $ErrorActionPreference = 'Stop'
@@ -67,6 +69,18 @@ function Resolve-Installer {
   return $resolved
 }
 
+function Get-FileSha256 {
+  param([string]$Path)
+  $stream = [IO.File]::OpenRead($Path)
+  $hasher = [Security.Cryptography.SHA256]::Create()
+  try {
+    return ([BitConverter]::ToString($hasher.ComputeHash($stream)) -replace '-', '')
+  } finally {
+    $hasher.Dispose()
+    $stream.Dispose()
+  }
+}
+
 function Get-DirectoryFingerprint {
   param([string]$Path)
   if (-not (Test-Path -LiteralPath $Path)) {
@@ -77,7 +91,7 @@ function Get-DirectoryFingerprint {
     Sort-Object FullName |
     ForEach-Object {
       $relative = $_.FullName.Substring($root.Length).TrimStart('\')
-      "$relative|$($_.Length)|$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash)"
+      "$relative|$($_.Length)|$(Get-FileSha256 $_.FullName)"
     }
   $payload = [Text.Encoding]::UTF8.GetBytes(($records -join "`n"))
   $hasher = [Security.Cryptography.SHA256]::Create()
@@ -206,7 +220,11 @@ function Get-ClassicContextMenuCascadeStatus {
       [void]$errors.Add("missing root: $root")
       continue
     }
-    $rootProperties = Get-ItemProperty -LiteralPath $root
+    $rootProperties = Get-ItemProperty -LiteralPath $root -ErrorAction SilentlyContinue
+    if ($null -eq $rootProperties) {
+      [void]$errors.Add("root changed while inspecting: $root")
+      continue
+    }
     if (-not ($rootProperties.PSObject.Properties.Name -contains 'SubCommands') -or
         [string]$rootProperties.SubCommands -ne '') {
       [void]$errors.Add("missing empty SubCommands value: $root")
@@ -229,7 +247,12 @@ function Get-ClassicContextMenuCascadeStatus {
         [void]$errors.Add("missing command: $($child.PSChildName)")
         continue
       }
-      $command = [string](Get-Item -LiteralPath $commandKey).GetValue('')
+      $commandItem = Get-Item -LiteralPath $commandKey -ErrorAction SilentlyContinue
+      if ($null -eq $commandItem) {
+        [void]$errors.Add("command changed while inspecting: $($child.PSChildName)")
+        continue
+      }
+      $command = [string]$commandItem.GetValue('')
       $commandCount += 1
       if (-not $command.StartsWith("`"$ExpectedExecutable`" ", [StringComparison]::OrdinalIgnoreCase)) {
         [void]$errors.Add("wrong target: $command")
@@ -253,7 +276,12 @@ function Get-ClassicContextMenuCascadeStatus {
       [void]$errors.Add("missing quick action: $($definition.path)")
       continue
     }
-    $command = [string](Get-Item -LiteralPath $commandKey).GetValue('')
+    $commandItem = Get-Item -LiteralPath $commandKey -ErrorAction SilentlyContinue
+    if ($null -eq $commandItem) {
+      [void]$errors.Add("quick action changed while inspecting: $($definition.path)")
+      continue
+    }
+    $command = [string]$commandItem.GetValue('')
     $expected = "`"$ExpectedExecutable`" $($definition.cli)"
     if (-not $command.Equals($expected, [StringComparison]::OrdinalIgnoreCase)) {
       [void]$errors.Add("wrong quick action target: $command")
@@ -428,6 +456,11 @@ function Assert-Uninstalled {
 
 $previousInstallerPath = Resolve-Installer $PreviousInstaller 'Previous installer'
 $candidateInstallerPath = Resolve-Installer $CandidateInstaller 'Candidate installer'
+$candidateExecutablePath = if ($CandidateExecutable) {
+  [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $CandidateExecutable).Path)
+} else {
+  $null
+}
 
 try {
   if (-not $AllowExistingInstall) {
@@ -457,6 +490,13 @@ try {
 
   Invoke-Installer $candidateInstallerPath
   $candidateState = Assert-Installed $CandidateVersion $initialState.installLocation
+  if ($candidateExecutablePath) {
+    $expectedCandidateHash = Get-FileSha256 $candidateExecutablePath
+    $installedCandidateHash = Get-FileSha256 $candidateState.executable
+    Add-Check 'installed executable matches candidate build bytes' (
+      $expectedCandidateHash -eq $installedCandidateHash
+    ) "expected=$expectedCandidateHash; actual=$installedCandidateHash"
+  }
   Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints) 'overlay install'
 
   $candidateProcess = Start-Process -FilePath $candidateState.executable -PassThru -WindowStyle Hidden
@@ -474,6 +514,23 @@ try {
     Stop-InstalledApplication $candidateState.installLocation
     if (-not $candidateProcess.HasExited) {
       $candidateProcess.WaitForExit(5000) | Out-Null
+    }
+  }
+  if ($RunArchiveWorkspaceMatrix) {
+    $previousAppBinary = $env:TAURI_APP_BINARY
+    try {
+      $env:TAURI_APP_BINARY = $candidateState.executable
+      & node (Join-Path $projectRoot 'scripts\test-installed-archive-workspace.mjs')
+      Add-Check 'installed archive workspace matrix exits successfully' ($LASTEXITCODE -eq 0) (
+        "exitCode=$LASTEXITCODE; executable=$($candidateState.executable)"
+      )
+    } finally {
+      if ($null -eq $previousAppBinary) {
+        Remove-Item Env:TAURI_APP_BINARY -ErrorAction SilentlyContinue
+      } else {
+        $env:TAURI_APP_BINARY = $previousAppBinary
+      }
+      Stop-InstalledApplication $candidateState.installLocation
     }
   }
   $candidateRuntimeFingerprints = Get-DataFingerprints

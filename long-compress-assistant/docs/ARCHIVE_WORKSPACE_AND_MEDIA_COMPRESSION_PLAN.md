@@ -610,7 +610,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- 大节点 A 只剩 A-06 安装版综合矩阵与发布门禁，当前不提升版本。下一步一次性回归普通/加密 ZIP、7Z、RAR、TAR、TAR.GZ、长路径、混合内容、三层嵌套、负向安全场景、资源管理器经典右键入口和安装版 WebView2 全流程；通过后才发布 `1.1.14`，期间不并行引入媒体引擎。
+- A-06 正式安装态综合矩阵已完成：候选覆盖安装后的 EXE 字节、经典右键、150% 缩放、普通 ZIP、加密 7Z/RAR、TAR/TAR.GZ、中文八层路径、混合内容、三层嵌套、危险内容、损坏包和 18 万条目取消均通过，卸载后恢复 `v1.1.13`、菜单与用户数据指纹。证据见 [ARCHIVE_WORKSPACE_A06_AUDIT.md](ARCHIVE_WORKSPACE_A06_AUDIT.md)。大节点 A 已达到发布准备线，下一步单独执行 `v1.1.14` 版本、README、Release Notes、不可变资产与公开更新门禁；期间不并行引入媒体引擎。
 
 ## 12. 技术参考
 

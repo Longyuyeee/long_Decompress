@@ -346,6 +346,8 @@ describe('ArchiveBrowserView', () => {
     expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('UTF-8')
     expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('完整显示')
     expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('默认应用打开')
+    await wrapper.get('.browser-page').trigger('keydown', { key: 'Escape' })
+    expect(wrapper.find('[data-testid="archive-entry-preview"]').exists()).toBe(false)
     wrapper.unmount()
   })
 

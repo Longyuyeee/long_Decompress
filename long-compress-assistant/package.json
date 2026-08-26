@@ -16,6 +16,7 @@
     "test:context-menu-package": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-context-menu-package.ps1",
     "test:release-identity": "node scripts/check-release-identity.mjs",
     "test:installed-release": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-installed-release.ps1",
+    "test:installed-archive-workspace": "node scripts/test-installed-archive-workspace.mjs",
     "test:public-update": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-public-update.ps1",
     "release:validation-report": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/generate-release-validation.ps1",
     "performance:baseline": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-performance-baseline.ps1",
