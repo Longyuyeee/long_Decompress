@@ -15,6 +15,7 @@ static ACTIVE_COMPRESSION_OUTPUTS: Lazy<DashMap<String, String>> = Lazy::new(Das
 static COMPRESSION_ANALYSIS_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 static ARCHIVE_DIAGNOSTIC_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 static ZIP_REPAIR_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
+static ARCHIVE_BROWSE_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 
 async fn service_for_task(task_id: &str) -> Result<CompressionService, String> {
     let cancellation_flag = Arc::new(AtomicBool::new(false));
@@ -448,7 +449,11 @@ pub async fn cancel_archive_diagnosis(diagnostic_id: String) -> Result<(), Strin
 
 /// Returns structured archive metadata for the archive browser.
 #[command]
-pub async fn browse_archive(file_path: String, password: Option<String>) -> Result<crate::models::compression::ArchiveBrowseResult, String> {
+pub async fn browse_archive(
+    file_path: String,
+    password: Option<String>,
+    browse_id: Option<String>,
+) -> Result<crate::models::compression::ArchiveBrowseResult, String> {
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
         None => {
@@ -458,12 +463,51 @@ pub async fn browse_archive(file_path: String, password: Option<String>) -> Resu
                 .await
         }
     };
-    crate::services::archive_browser::browse_archive(
+    let browse_id = browse_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+    let cancelled = Arc::new(AtomicBool::new(false));
+    match ARCHIVE_BROWSE_FLAGS.entry(browse_id.clone()) {
+        Entry::Vacant(entry) => {
+            entry.insert(cancelled.clone());
+        }
+        Entry::Occupied(entry) => {
+            if entry.get().load(Ordering::Relaxed) {
+                entry.remove();
+                return Err("ARCHIVE_BROWSE_CANCELLED|已取消读取压缩包内容".to_string());
+            }
+            return Err("ARCHIVE_BROWSE_FAILED|同一个读取请求已在执行".to_string());
+        }
+    }
+    let _guard = ArchiveBrowseGuard { browse_id };
+    crate::services::archive_browser::browse_archive_cancellable(
         std::path::Path::new(&file_path),
         resolved_password.as_deref(),
+        cancelled,
     )
     .await
-    .map_err(|error| error.to_string())
+    .map_err(|error| classify_archive_browse_error(&error.to_string()))
+}
+
+#[command]
+pub async fn cancel_archive_browse(browse_id: String) -> Result<(), String> {
+    let flag = match ARCHIVE_BROWSE_FLAGS.entry(browse_id.clone()) {
+        Entry::Vacant(entry) => {
+            entry.insert(Arc::new(AtomicBool::new(true))).clone()
+        }
+        Entry::Occupied(entry) => {
+            entry.get().store(true, Ordering::Relaxed);
+            entry.get().clone()
+        }
+    };
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+        if let Some(current) = ARCHIVE_BROWSE_FLAGS.get(&browse_id) {
+            if Arc::ptr_eq(current.value(), &flag) {
+                drop(current);
+                ARCHIVE_BROWSE_FLAGS.remove(&browse_id);
+            }
+        }
+    });
+    Ok(())
 }
 
 /// Reads one supported raster image from an archive under strict byte and pixel limits.
@@ -489,6 +533,43 @@ pub async fn preview_archive_image(
     )
     .await
     .map_err(|error| error.to_string())
+}
+
+struct ArchiveBrowseGuard {
+    browse_id: String,
+}
+
+impl Drop for ArchiveBrowseGuard {
+    fn drop(&mut self) {
+        ARCHIVE_BROWSE_FLAGS.remove(&self.browse_id);
+    }
+}
+
+fn classify_archive_browse_error(error: &str) -> String {
+    let lower = error.to_ascii_lowercase();
+    if error.contains("ARCHIVE_BROWSE_CANCELLED") {
+        return "ARCHIVE_BROWSE_CANCELLED|已取消读取压缩包内容".to_string();
+    }
+    if error.contains("ARCHIVE_BROWSE_TIMEOUT") {
+        return "ARCHIVE_BROWSE_TIMEOUT|读取压缩包内容超过 30 秒，已停止等待；归档可能损坏或所在设备响应过慢".to_string();
+    }
+    if lower.contains("password")
+        || lower.contains("checksumverificationfailed")
+        || lower.contains("encrypted")
+    {
+        return format!("ARCHIVE_BROWSE_PASSWORD|密码不正确，或这一层归档需要单独的密码|{error}");
+    }
+    if lower.contains("unsupported") || lower.contains("did not expose any browseable") {
+        return format!("ARCHIVE_BROWSE_UNSUPPORTED|该文件不是受支持的可浏览归档|{error}");
+    }
+    if lower.contains("invalid")
+        || lower.contains("corrupt")
+        || lower.contains("unable to read")
+        || lower.contains("unexpected")
+    {
+        return format!("ARCHIVE_BROWSE_DAMAGED|压缩包结构损坏或内容不完整|{error}");
+    }
+    format!("ARCHIVE_BROWSE_FAILED|无法读取压缩包内容|{error}")
 }
 
 /// Reads one text entry without extracting it to disk. The service caps the
@@ -778,10 +859,11 @@ pub async fn cancel_zip_repair(repair_id: String) -> Result<(), String> {
 #[cfg(test)]
 mod cancellation_tests {
     use super::{
-        cancel_compression, cancel_tasks_and_wait, normalized_output_key, CompressionOutputGuard,
-        CompressionAnalysisGuard, ArchiveDiagnosticGuard, ZipRepairGuard,
+        cancel_archive_browse, cancel_compression, cancel_tasks_and_wait,
+        classify_archive_browse_error, normalized_output_key, ArchiveDiagnosticGuard,
+        CompressionAnalysisGuard, CompressionOutputGuard, ZipRepairGuard,
         ACTIVE_COMPRESSION_OUTPUTS, CANCELLATION_FLAGS, COMPRESSION_ANALYSIS_FLAGS,
-        ARCHIVE_DIAGNOSTIC_FLAGS, ZIP_REPAIR_FLAGS,
+        ARCHIVE_BROWSE_FLAGS, ARCHIVE_DIAGNOSTIC_FLAGS, ZIP_REPAIR_FLAGS,
     };
     use std::sync::{
         atomic::{AtomicBool, Ordering},
@@ -826,6 +908,27 @@ mod cancellation_tests {
         cancel_compression(task_id.clone()).await.unwrap();
         assert!(flag.load(Ordering::SeqCst));
         assert!(!CANCELLATION_FLAGS.contains_key(&task_id));
+    }
+
+    #[tokio::test]
+    async fn archive_browse_cancellation_can_arrive_before_registration() {
+        let browse_id = format!("browse-early-cancel-{}", uuid::Uuid::new_v4());
+        cancel_archive_browse(browse_id.clone()).await.unwrap();
+        assert!(ARCHIVE_BROWSE_FLAGS
+            .get(&browse_id)
+            .unwrap()
+            .load(Ordering::Relaxed));
+        ARCHIVE_BROWSE_FLAGS.remove(&browse_id);
+    }
+
+    #[test]
+    fn archive_browse_errors_are_classified_for_the_ui() {
+        assert!(classify_archive_browse_error("ARCHIVE_BROWSE_TIMEOUT")
+            .starts_with("ARCHIVE_BROWSE_TIMEOUT|"));
+        assert!(classify_archive_browse_error("ChecksumVerificationFailed")
+            .starts_with("ARCHIVE_BROWSE_PASSWORD|"));
+        assert!(classify_archive_browse_error("corrupt archive")
+            .starts_with("ARCHIVE_BROWSE_DAMAGED|"));
     }
 
     #[test]

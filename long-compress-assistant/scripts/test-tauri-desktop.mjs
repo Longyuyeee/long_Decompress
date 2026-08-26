@@ -462,6 +462,29 @@ const findFileRecursively = (rootPath, fileName) => {
   return null
 }
 
+const createLargeMetadataTar = (targetPath, entryCount) => {
+  const archive = Buffer.alloc(entryCount * 512 + 1024)
+  const writeOctal = (header, offset, length, value) => {
+    header.write(`${value.toString(8).padStart(length - 1, '0')}\0`, offset, length, 'ascii')
+  }
+  for (let index = 0; index < entryCount; index += 1) {
+    const header = archive.subarray(index * 512, (index + 1) * 512)
+    header.write(`bulk/entry-${String(index).padStart(6, '0')}.txt`, 0, 100, 'utf8')
+    writeOctal(header, 100, 8, 0o644)
+    writeOctal(header, 108, 8, 0)
+    writeOctal(header, 116, 8, 0)
+    writeOctal(header, 124, 12, 0)
+    writeOctal(header, 136, 12, 1_700_000_000)
+    header.fill(0x20, 148, 156)
+    header.write('0', 156, 1, 'ascii')
+    header.write('ustar\0', 257, 6, 'ascii')
+    header.write('00', 263, 2, 'ascii')
+    const checksum = header.reduce((sum, value) => sum + value, 0)
+    header.write(`${checksum.toString(8).padStart(6, '0')}\0 `, 148, 8, 'ascii')
+  }
+  writeFileSync(targetPath, archive)
+}
+
 async function runArchiveBrowserDesktopGate() {
   console.log('[desktop-e2e] verifying archive-browser UI with long paths, passwords, and exact extraction')
   await callDesktopBridge('clearTasks')
@@ -562,6 +585,9 @@ async function runArchiveBrowserDesktopGate() {
     { cwd: nestedSource },
   )
 
+  const cancellableTar = path.join(archiveRoot, '大量目录项-取消读取.tar')
+  createLargeMetadataTar(cancellableTar, 180_000)
+
   let navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[2].click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/browser'), 30_000)
@@ -593,6 +619,17 @@ async function runArchiveBrowserDesktopGate() {
       `the archive-browser page must not scroll horizontally: ${JSON.stringify(dimensions)}`,
     )
   }
+
+  await callDesktopBridge('queueDesktopDialogSelections', [cancellableTar])
+  await (await waitForElement('.browser-page > header .browser-primary')).click()
+  const cancelBrowse = await waitForElement('[data-testid="archive-browse-cancel"]')
+  const cancellationStartedAt = Date.now()
+  await cancelBrowse.click()
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-browse-notice"]'))).length === 1, 5_000)
+  const cancellationElapsedMs = Date.now() - cancellationStartedAt
+  assert.ok(cancellationElapsedMs < 5_000, `real large TAR cancellation took ${cancellationElapsedMs} ms`)
+  assert.match(await (await waitForElement('[data-testid="archive-browse-notice"]')).getText(), /已取消读取压缩包内容/)
+  console.log(`[desktop-e2e] real 180000-entry TAR cancelled in ${cancellationElapsedMs} ms`)
 
   const verifyWorkspaceNavigation = async () => {
     const footer = await waitForElement('.browser-page > footer')
@@ -882,11 +919,11 @@ async function runArchiveBrowserDesktopGate() {
   assert.equal(await nestedPasswordInput.getAttribute('value'), '', 'the outer password must not be inherited by the nested archive')
   await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-nested-retry"]'))).length === 1, 30_000)
   assert.match(await (await waitForElement('.browser-page')).getText(), /内层归档尚未打开/)
-  const initialNestedError = await (await waitForElement('[data-testid="archive-nested-error"]')).getText()
   await nestedPasswordInput.sendKeys('wrong-nested-password')
   await (await waitForElement('[data-testid="archive-nested-retry"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-browse-cancel"]'))).length === 1, 5_000)
   await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-nested-retry"]'))).length === 1, 30_000)
-  await driver.wait(async () => (await waitForElement('[data-testid="archive-nested-error"]')).getText().then(text => text !== initialNestedError), 30_000)
+  assert.match(await (await waitForElement('[data-testid="archive-nested-error"]')).getText(), /密码不正确|需要单独的密码/)
   assert.match(await (await waitForElement('[data-testid="archive-chain"]')).getText(), /外层工作区\.zip[\s\S]*加密中层\.7z/)
   await driver.executeScript(
     "const input = arguments[0]; input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true }));",

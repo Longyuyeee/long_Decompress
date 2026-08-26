@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   selectFiles: vi.fn(),
   selectDirectory: vi.fn(),
   browseArchive: vi.fn(),
+  cancelArchiveBrowse: vi.fn(),
   previewArchiveImage: vi.fn(),
   previewArchiveText: vi.fn(),
   materializeNestedArchive: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
     selectFiles: mocks.selectFiles,
     selectDirectory: mocks.selectDirectory,
     browseArchive: mocks.browseArchive,
+    cancelArchiveBrowse: mocks.cancelArchiveBrowse,
     previewArchiveImage: mocks.previewArchiveImage,
     previewArchiveText: mocks.previewArchiveText,
     materializeNestedArchive: mocks.materializeNestedArchive,
@@ -41,6 +43,7 @@ describe('ArchiveBrowserView', () => {
       value: { writeText: mocks.clipboardWrite },
     })
     mocks.clipboardWrite.mockResolvedValue(undefined)
+    mocks.cancelArchiveBrowse.mockResolvedValue(undefined)
     mocks.selectDirectory.mockResolvedValue(null)
     mocks.selectFiles.mockResolvedValue([{ path: 'C:/archives/demo.zip', name: 'demo.zip', size: 12, isDir: false, modified: 0 }])
     mocks.browseArchive.mockResolvedValue({
@@ -75,7 +78,7 @@ describe('ArchiveBrowserView', () => {
     await wrapper.find('header .browser-primary').trigger('click')
     await flushPromises()
 
-    expect(mocks.browseArchive).toHaveBeenCalledWith('C:/archives/demo.zip', '')
+    expect(mocks.browseArchive).toHaveBeenCalledWith('C:/archives/demo.zip', '', expect.any(String))
     expect(wrapper.text()).toContain('docs')
     expect(wrapper.text()).toContain('image.png')
 
@@ -90,6 +93,20 @@ describe('ArchiveBrowserView', () => {
       conflictPolicy: 'rename',
     }))
     expect(mocks.setSuccess).toHaveBeenCalledWith('已解压 1 个所选文件')
+  })
+
+  it('cancels an active archive metadata read and shows a clear idle result', async () => {
+    mocks.browseArchive.mockReturnValueOnce(new Promise(() => undefined))
+    const wrapper = mount(ArchiveBrowserView)
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="archive-browse-cancel"]').text()).toContain('取消读取')
+    await wrapper.get('[data-testid="archive-browse-cancel"]').trigger('click')
+    await flushPromises()
+
+    expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(expect.any(String))
+    expect(wrapper.get('[data-testid="archive-browse-notice"]').text()).toContain('已取消读取压缩包内容')
   })
 
   it('shows object-specific context actions without changing selection', async () => {
@@ -418,7 +435,7 @@ describe('ArchiveBrowserView', () => {
     await wrapper.get('input[type="password"]').setValue('inner-password')
     await wrapper.get('[data-testid="archive-nested-retry"]').trigger('click')
     await flushPromises()
-    expect(mocks.browseArchive).toHaveBeenLastCalledWith('C:/cache/locked.7z', 'inner-password')
+    expect(mocks.browseArchive).toHaveBeenLastCalledWith('C:/cache/locked.7z', 'inner-password', expect.any(String))
   })
 
   it('ignores a late inner browse result after the user returns to the outer archive', async () => {
@@ -440,6 +457,7 @@ describe('ArchiveBrowserView', () => {
     await wrapper.get('[data-entry-path="slow.7z"]').trigger('dblclick')
     await flushPromises()
     await wrapper.get('[data-testid="archive-chain"] button').trigger('click')
+    expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(expect.any(String))
     resolveNested({
       format: '7Z', totalFiles: 1, totalDirectories: 0,
       totalUncompressedSize: 4, totalCompressedSize: 4, encrypted: false,

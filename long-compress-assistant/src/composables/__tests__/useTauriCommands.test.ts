@@ -433,7 +433,8 @@ describe('useTauriCommands', () => {
     await commands.installWinRarWithWinget()
     await commands.openRarDownloadPage()
     await commands.listArchiveContents('a.zip', 'secret')
-    await commands.browseArchive('a.zip', 'secret')
+    await commands.browseArchive('a.zip', 'secret', 'browse-1')
+    await commands.cancelArchiveBrowse('browse-1')
     await commands.previewArchiveImage('a.zip', 'images/cover.png', 'secret')
     await commands.previewArchiveText('a.zip', 'docs/readme.txt', 'secret')
     await commands.materializeNestedArchive('a.zip', 'nested/child.7z', 'outer-secret', 2, ['parent-hash'])
@@ -463,7 +464,9 @@ describe('useTauriCommands', () => {
     expect(mocks.invoke).toHaveBeenCalledWith('browse_archive', {
       filePath: 'a.zip',
       password: 'secret',
+      browseId: 'browse-1',
     })
+    expect(mocks.invoke).toHaveBeenCalledWith('cancel_archive_browse', { browseId: 'browse-1' })
     expect(mocks.invoke).toHaveBeenCalledWith('preview_archive_image', {
       filePath: 'a.zip', entryPath: 'images/cover.png', password: 'secret',
     })

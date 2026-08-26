@@ -676,8 +676,16 @@ export const useTauriCommands = () => {
     await invoke('cancel_compression_analysis', { analysisId })
   }
 
-  const browseArchive = async (filePath: string, password?: string) => {
-    return await invoke<ArchiveBrowseResult>('browse_archive', { filePath, password: password || null })
+  const browseArchive = async (filePath: string, password?: string, browseId?: string) => {
+    return await invoke<ArchiveBrowseResult>('browse_archive', {
+      filePath,
+      password: password || null,
+      browseId: browseId || null,
+    })
+  }
+
+  const cancelArchiveBrowse = async (browseId: string) => {
+    await invoke('cancel_archive_browse', { browseId })
   }
 
   const previewArchiveImage = async (filePath: string, entryPath: string, password?: string) => {
@@ -775,6 +783,7 @@ export const useTauriCommands = () => {
     openInExplorer,
     listArchiveContents,
     browseArchive,
+    cancelArchiveBrowse,
     previewArchiveImage,
     previewArchiveText,
     openArchiveEntry,

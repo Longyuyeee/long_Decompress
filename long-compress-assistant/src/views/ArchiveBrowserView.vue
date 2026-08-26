@@ -46,6 +46,7 @@ const previewError = ref('')
 const parentFrames = ref<ArchiveWorkspaceFrame[]>([])
 const currentContentSha256 = ref('')
 const nestedLoadError = ref('')
+const browseNotice = ref('')
 const expandedDirectories = ref(new Set<string>())
 const isDraggingArchive = ref(false)
 const contextMenu = ref<{
@@ -57,6 +58,7 @@ const contextMenu = ref<{
 const detailEntries = ref<ArchiveEntryInfo[]>([])
 let previewSequence = 0
 let archiveLoadSequence = 0
+let activeBrowseId = ''
 let selectionAnchorPath = ''
 let unlistenDrop: (() => void) | null = null
 let unlistenHover: (() => void) | null = null
@@ -194,6 +196,41 @@ const archiveChain = computed(() => [
 ])
 const archiveDepth = computed(() => parentFrames.value.length + 1)
 
+const createBrowseId = () => globalThis.crypto?.randomUUID?.()
+  ?? `archive-browse-${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+const describeBrowseError = (error: unknown) => {
+  const raw = String(error).replace(/^Error:\s*/i, '')
+  const marker = raw.indexOf('ARCHIVE_BROWSE_')
+  if (marker < 0) return '无法读取压缩包结构，请确认文件完整且格式受支持'
+  const [, message] = raw.slice(marker).split('|')
+  return message || '无法读取压缩包结构，请稍后重试'
+}
+
+const invokeArchiveBrowse = async () => {
+  const browseId = createBrowseId()
+  activeBrowseId = browseId
+  try {
+    return await commands.browseArchive(archivePath.value, password.value, browseId)
+  } finally {
+    if (activeBrowseId === browseId) activeBrowseId = ''
+  }
+}
+
+const signalActiveBrowseCancellation = () => {
+  const browseId = activeBrowseId
+  activeBrowseId = ''
+  if (browseId) void commands.cancelArchiveBrowse(browseId).catch(() => undefined)
+}
+
+const cancelArchiveLoad = () => {
+  if (!loading.value) return
+  signalActiveBrowseCancellation()
+  archiveLoadSequence++
+  loading.value = false
+  browseNotice.value = '已取消读取压缩包内容'
+}
+
 const openArchivePath = async (path: string) => {
   if (!path || loading.value) return
   try {
@@ -201,6 +238,7 @@ const openArchivePath = async (path: string) => {
     parentFrames.value = []
     currentContentSha256.value = ''
     nestedLoadError.value = ''
+    browseNotice.value = ''
     outputPath.value = parentDirectory(path)
     query.value = ''
     typeFilter.value = 'all'
@@ -229,6 +267,7 @@ const loadArchive = async () => {
   if (!archivePath.value || loading.value) return
   const sequence = ++archiveLoadSequence
   loading.value = true
+  browseNotice.value = ''
   result.value = null
   selected.value = new Set()
   activeDirectory.value = ''
@@ -239,15 +278,16 @@ const loadArchive = async () => {
   expandedDirectories.value = new Set()
   closePreview()
   try {
-    const loaded = await commands.browseArchive(archivePath.value, password.value)
+    const loaded = await invokeArchiveBrowse()
     if (sequence !== archiveLoadSequence) return
     result.value = loaded
     selected.value = new Set(loaded.entries.filter(entry => !entry.isDir).map(entry => entry.path))
     nestedLoadError.value = ''
   } catch (error) {
     if (sequence !== archiveLoadSequence) return
-    if (parentFrames.value.length > 0) nestedLoadError.value = String(error)
-    else appStore.setError(String(error))
+    const message = describeBrowseError(error)
+    if (parentFrames.value.length > 0) nestedLoadError.value = message
+    else appStore.setError(message)
   } finally {
     if (sequence === archiveLoadSequence) loading.value = false
   }
@@ -348,12 +388,15 @@ const goUp = () => {
 
 const refreshDirectory = async () => {
   if (!archivePath.value || loading.value) return
+  const sequence = ++archiveLoadSequence
   loading.value = true
+  browseNotice.value = ''
   focusedEntryPath.value = ''
   selectionAnchorPath = ''
   closePreview()
   try {
-    const refreshed = await commands.browseArchive(archivePath.value, password.value)
+    const refreshed = await invokeArchiveBrowse()
+    if (sequence !== archiveLoadSequence) return
     result.value = refreshed
     const availableFiles = new Set(refreshed.entries.filter(entry => !entry.isDir).map(entry => entry.path))
     selected.value = new Set([...selected.value].filter(path => availableFiles.has(path)))
@@ -363,9 +406,9 @@ const refreshDirectory = async () => {
     navigationForward.value = navigationForward.value.filter(path => !path || availableDirectories.has(path))
     expandDirectoryAncestors(activeDirectory.value)
   } catch (error) {
-    appStore.setError(`刷新压缩包失败：${String(error)}`)
+    if (sequence === archiveLoadSequence) appStore.setError(`刷新压缩包失败：${describeBrowseError(error)}`)
   } finally {
-    loading.value = false
+    if (sequence === archiveLoadSequence) loading.value = false
   }
 }
 
@@ -417,6 +460,7 @@ const captureCurrentFrame = (contentSha256: string): ArchiveWorkspaceFrame | nul
 const restoreFrame = (index: number) => {
   const frame = parentFrames.value[index]
   if (!frame) return
+  signalActiveBrowseCancellation()
   archiveLoadSequence++
   loading.value = false
   parentFrames.value = parentFrames.value.slice(0, index)
@@ -434,6 +478,7 @@ const restoreFrame = (index: number) => {
   expandedDirectories.value = new Set(frame.expandedDirectories)
   currentContentSha256.value = frame.contentSha256
   nestedLoadError.value = ''
+  browseNotice.value = ''
   closeContextMenu()
   closePreview()
 }
@@ -700,6 +745,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  signalActiveBrowseCancellation()
   window.removeEventListener('keydown', handleWorkspaceKeydown)
   unlistenHover?.()
   unlistenDrop?.()
@@ -769,7 +815,14 @@ const extractSelected = async () => {
     </section>
 
     <div v-if="loading" class="aero-card flex-1 min-h-0 grid place-items-center">
-      <div class="text-center text-muted"><i class="pi pi-spin pi-spinner text-primary text-3xl"></i><p class="mt-4 font-bold">正在读取压缩包结构…</p></div>
+      <div class="text-center text-muted">
+        <i class="pi pi-spin pi-spinner text-primary text-3xl"></i>
+        <p class="mt-4 font-bold">正在读取压缩包结构…</p>
+        <p class="mt-2 text-xs">大型或异常归档最多等待 30 秒，你也可以立即取消。</p>
+        <button class="browser-icon-button mt-4 mx-auto px-4" data-testid="archive-browse-cancel" type="button" @click="cancelArchiveLoad">
+          <i class="pi pi-times"></i><span>取消读取</span>
+        </button>
+      </div>
     </div>
 
     <div v-else-if="!result && parentFrames.length > 0" class="aero-card flex-1 min-h-0 grid place-items-center">
@@ -777,7 +830,7 @@ const extractSelected = async () => {
     </div>
 
     <div v-else-if="!result" class="aero-card browser-empty flex-1 min-h-0 grid place-items-center border-dashed" @click="chooseArchive">
-      <div class="max-w-md text-center px-6"><i class="pi pi-cloud-upload text-primary text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">把压缩包拖到这里直接浏览</h2><p class="mt-2 text-sm text-muted leading-6">也可以点击此区域选择文件。内容只在本机读取，密码不会写入命令行。</p><span class="browser-drop-hint">支持 ZIP、7Z、RAR、TAR 等已接入格式</span></div>
+      <div class="max-w-md text-center px-6"><i class="pi pi-cloud-upload text-primary text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">把压缩包拖到这里直接浏览</h2><p v-if="browseNotice" class="mt-2 text-sm font-bold text-primary" data-testid="archive-browse-notice">{{ browseNotice }}</p><p class="mt-2 text-sm text-muted leading-6">也可以点击此区域选择文件。内容只在本机读取，密码不会写入命令行。</p><span class="browser-drop-hint">支持 ZIP、7Z、RAR、TAR 等已接入格式</span></div>
     </div>
 
     <template v-else>

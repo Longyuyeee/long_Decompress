@@ -409,11 +409,36 @@ impl UniversalCliEngine {
 
     /// Reads structured metadata without placing passwords in process arguments.
     pub async fn list_metadata(file_path: &Path, format: String) -> Result<ArchiveBrowseResult> {
+        Self::list_metadata_cancellable(
+            file_path,
+            format,
+            Arc::new(AtomicBool::new(false)),
+        )
+        .await
+    }
+
+    pub async fn list_metadata_cancellable(
+        file_path: &Path,
+        format: String,
+        cancelled: Arc<AtomicBool>,
+    ) -> Result<ArchiveBrowseResult> {
         let args = vec![
             "l".to_string(), "-slt".to_string(), "-ba".to_string(), "-p-".to_string(),
             file_path.to_string_lossy().to_string(),
         ];
-        let output = Self::run_7z_command(&args).await?;
+        let executable = Self::get_7z_command()
+            .ok_or_else(|| anyhow::anyhow!(missing_7z_message()))?;
+        let mut command = crate::utils::process::async_command(executable);
+        command.args(&args).kill_on_drop(true);
+        let output = tokio::select! {
+            output = command.output() => output
+                .map_err(|error| anyhow::anyhow!("7z command failed: {error}"))?,
+            _ = async {
+                while !cancelled.load(Ordering::Relaxed) {
+                    tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+                }
+            } => anyhow::bail!("ARCHIVE_BROWSE_CANCELLED"),
+        };
         if !output.status.success() {
             anyhow::bail!("Unable to read archive metadata safely");
         }
