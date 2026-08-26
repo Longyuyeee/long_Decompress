@@ -14,7 +14,7 @@ const tauriDriver = process.env.TAURI_DRIVER_PATH || path.join(homedir(), '.carg
 const webdriverUrl = 'http://127.0.0.1:4444/'
 const fixtureRoot = mkdtempSync(path.join(tmpdir(), 'long-decompress-installed-a06-'))
 const evidenceRoot = path.join(root, 'test-results', 'installed-archive-workspace')
-const webviewData = path.join(fixtureRoot, 'webview2')
+let webviewData = path.join(fixtureRoot, 'webview2-1')
 const installedSevenZip = application
   ? path.join(path.dirname(application), 'resources', 'archive-engine', '7z.exe')
   : ''
@@ -215,17 +215,32 @@ try {
   tauriDriverProcess.stderr.on('data', appendDriverOutput)
   await waitForDriver()
 
-  const capabilities = new Capabilities()
-  capabilities.setBrowserName('wry')
-  capabilities.set('tauri:options', {
-    application,
-    args: [],
-    webviewOptions: { userDataFolder: webviewData, additionalBrowserArguments: ['--force-device-scale-factor=1.5'] },
-  })
-  mirrorTimer = setInterval(mirrorDevToolsPort, 50)
-  driver = await new Builder().usingServer(webdriverUrl).withCapabilities(capabilities).build()
-  clearInterval(mirrorTimer)
-  mirrorTimer = undefined
+  let startupAttempts = 0
+  while (!driver && startupAttempts < 3) {
+    startupAttempts += 1
+    webviewData = path.join(fixtureRoot, `webview2-${startupAttempts}`)
+    mkdirSync(webviewData, { recursive: true })
+    const capabilities = new Capabilities()
+    capabilities.setBrowserName('wry')
+    capabilities.set('tauri:options', {
+      application,
+      args: [],
+      webviewOptions: { userDataFolder: webviewData, additionalBrowserArguments: ['--force-device-scale-factor=1.5'] },
+    })
+    mirrorTimer = setInterval(mirrorDevToolsPort, 50)
+    try {
+      driver = await new Builder().usingServer(webdriverUrl).withCapabilities(capabilities).build()
+    } catch (error) {
+      if (startupAttempts >= 3 || !/DevToolsActivePort|session not created/i.test(String(error))) throw error
+      terminateApplication()
+      await new Promise(resolve => setTimeout(resolve, 750))
+    } finally {
+      clearInterval(mirrorTimer)
+      mirrorTimer = undefined
+    }
+  }
+  assert.ok(driver, 'installed WebView2 session was not created')
+  if (startupAttempts > 1) record('installed WebView2 startup recovery', `session created on attempt ${startupAttempts}`)
   await driver.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 120_000 })
   await driver.manage().window().setRect({ width: 1280, height: 800 })
 
