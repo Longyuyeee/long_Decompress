@@ -2,7 +2,7 @@
 #![allow(unexpected_cfgs)]
 
 use long_compress_assistant::database;
-use long_compress_assistant::utils::app_paths::app_data_dir;
+use long_compress_assistant::utils::app_paths::{app_data_dir, preview_cache_dir};
 
 use long_compress_assistant::commands::compression_profile::CompressionProfileServiceState;
 use long_compress_assistant::commands::encrypted_password::EncryptedPasswordServiceState;
@@ -245,6 +245,7 @@ fn main() {
         .manage(CompressionProfileServiceState::new())
         .manage(WatchFolderServiceState::new())
         .manage(DesktopBehaviorState::default())
+        .manage(long_compress_assistant::services::archive_entry_open::ArchiveEntryOpenCache::new(preview_cache_dir()))
         .system_tray(long_compress_assistant::system_integration::setup_tray())
         .on_system_tray_event(long_compress_assistant::system_integration::handle_tray_event)
         .on_window_event(|event| {
@@ -416,6 +417,7 @@ fn main() {
             long_compress_assistant::commands::compression::list_archive_contents,
             long_compress_assistant::commands::compression::browse_archive,
             long_compress_assistant::commands::compression::preview_archive_image,
+            long_compress_assistant::commands::compression::open_archive_entry,
             long_compress_assistant::commands::compression::test_archive_integrity,
             long_compress_assistant::commands::compression::repair_zip,
             long_compress_assistant::commands::file::list_files,

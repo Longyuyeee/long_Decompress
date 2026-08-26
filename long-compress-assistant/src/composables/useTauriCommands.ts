@@ -114,6 +114,13 @@ export interface ArchiveImagePreview {
   height: number
 }
 
+export interface ArchiveEntryOpenResult {
+  status: 'opened' | 'confirmationRequired'
+  entryPath: string
+  cachePath: string | null
+  dangerous: boolean
+}
+
 export interface ArchiveDiagnosticIssue {
   code: string
   severity: 'info' | 'warning' | 'error'
@@ -661,6 +668,12 @@ export const useTauriCommands = () => {
     })
   }
 
+  const openArchiveEntry = async (filePath: string, entryPath: string, password?: string, allowDangerous = false) => {
+    return await invoke<ArchiveEntryOpenResult>('open_archive_entry', {
+      filePath, entryPath, password: password || null, allowDangerous,
+    })
+  }
+
   const testArchiveIntegrity = async (filePath: string, password?: string) => {
     return await invoke<string>('test_archive_integrity', { filePath, password: password || null })
   }
@@ -725,6 +738,7 @@ export const useTauriCommands = () => {
     listArchiveContents,
     browseArchive,
     previewArchiveImage,
+    openArchiveEntry,
     testArchiveIntegrity,
     diagnoseArchive,
     cancelArchiveDiagnosis,

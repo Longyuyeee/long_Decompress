@@ -19,6 +19,8 @@ const navigationBack = ref<string[]>([])
 const navigationForward = ref<string[]>([])
 const loading = ref(false)
 const extracting = ref(false)
+const openingEntryPath = ref('')
+const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
 const imagePreview = ref<ArchiveImagePreview | null>(null)
 const previewEntry = ref<ArchiveEntryInfo | null>(null)
 const previewLoading = ref(false)
@@ -306,9 +308,35 @@ const refreshDirectory = async () => {
   }
 }
 
+const openWithDefaultApplication = async (entry: ArchiveEntryInfo, allowDangerous = false) => {
+  if (entry.isDir || openingEntryPath.value) return
+  closeContextMenu()
+  openingEntryPath.value = entry.path
+  try {
+    const opened = await commands.openArchiveEntry(archivePath.value, entry.path, password.value, allowDangerous)
+    if (opened.status === 'confirmationRequired') {
+      dangerousOpenEntry.value = entry
+      return
+    }
+    dangerousOpenEntry.value = null
+    appStore.setSuccess(`已使用默认应用打开：${entry.name}`)
+  } catch (error) {
+    appStore.setError(`无法打开归档内文件：${String(error)}`)
+  } finally {
+    openingEntryPath.value = ''
+  }
+}
+
+const confirmDangerousOpen = async () => {
+  const entry = dangerousOpenEntry.value
+  if (!entry) return
+  await openWithDefaultApplication(entry, true)
+}
+
 const activateEntry = (entry: ArchiveEntryInfo) => {
   focusedEntryPath.value = entry.path
   if (entry.isDir) navigateToDirectory(entry.path.replace(/\/+$/, ''))
+  else void openWithDefaultApplication(entry)
 }
 
 const contextEntriesFor = (entry: ArchiveEntryInfo | null) => {
@@ -408,6 +436,11 @@ const openContextEntry = (entry: ArchiveEntryInfo) => {
 const previewContextEntry = (entry: ArchiveEntryInfo) => {
   closeContextMenu()
   void openPreview(entry)
+}
+
+const defaultOpenContextEntry = (entry: ArchiveEntryInfo) => {
+  closeContextMenu()
+  void openWithDefaultApplication(entry)
 }
 
 const handleEntryClick = (entry: ArchiveEntryInfo, event: MouseEvent) => {
@@ -724,6 +757,7 @@ const extractSelected = async () => {
           </header>
 
           <button v-if="contextMenu.entry?.isDir" type="button" role="menuitem" data-testid="archive-context-open" @click="openContextEntry(contextMenu.entry)"><i class="pi pi-folder-open"></i><span>打开文件夹</span><kbd>Enter</kbd></button>
+          <button v-if="contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-default-open" :disabled="Boolean(openingEntryPath)" @click="defaultOpenContextEntry(contextMenu.entry)"><i :class="openingEntryPath === contextMenu.entry.path ? 'pi pi-spin pi-spinner' : 'pi pi-external-link'"></i><span>使用默认应用打开</span><kbd>Enter</kbd></button>
           <button v-if="contextMenu.entry && !contextMenu.entry.isDir && canPreviewEntry(contextMenu.entry) && previewRouteSupported" type="button" role="menuitem" data-testid="archive-context-preview" @click="previewContextEntry(contextMenu.entry)"><i class="pi pi-eye"></i><span>内部查看器打开</span><kbd>Ctrl+Enter</kbd></button>
 
           <div v-if="contextMenu.entries.length > 0" class="archive-context-separator"></div>
@@ -762,6 +796,21 @@ const extractSelected = async () => {
             <h3>归档内路径</h3>
             <ul><li v-for="entry in detailEntries" :key="entry.path">{{ entry.path.replace(/\/+$/, '') }}</li></ul>
           </section>
+        </section>
+      </div>
+
+      <div v-if="dangerousOpenEntry" class="archive-details-backdrop" data-testid="archive-dangerous-open-dialog" @pointerdown.self="dangerousOpenEntry = null">
+        <section class="dangerous-open-dialog" role="alertdialog" aria-modal="true" aria-labelledby="dangerous-open-title">
+          <div class="dangerous-open-icon"><i class="pi pi-shield"></i></div>
+          <div class="min-w-0">
+            <p class="dangerous-open-kicker">ACTIVE CONTENT</p>
+            <h2 id="dangerous-open-title">此文件可能执行系统操作</h2>
+            <p>“{{ dangerousOpenEntry.name }}”属于可执行或脚本内容。它尚未解压，也没有启动。仅在你确认来源可信时继续。</p>
+          </div>
+          <footer>
+            <button type="button" autofocus data-testid="archive-dangerous-cancel" @click="dangerousOpenEntry = null">取消（推荐）</button>
+            <button class="dangerous-confirm" type="button" data-testid="archive-dangerous-confirm" :disabled="Boolean(openingEntryPath)" @click="confirmDangerousOpen">仍要打开</button>
+          </footer>
         </section>
       </div>
     </Teleport>
@@ -845,6 +894,15 @@ const extractSelected = async () => {
 .archive-context-menu > button:hover:not(:disabled), .archive-context-menu > button:focus-visible { color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 11%, transparent); outline: none; }
 .archive-context-menu > button:disabled { opacity: .4; cursor: not-allowed; }
 .archive-context-menu kbd { color: var(--text-muted); font-family: inherit; font-size: .56rem; font-weight: 700; white-space: nowrap; }
+.dangerous-open-dialog { width: min(34rem, calc(100vw - 2rem)); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; padding: 1.4rem; border: 1px solid color-mix(in srgb, #f59e0b 38%, var(--border-subtle)); border-radius: 1.5rem; background: var(--bg-modal); box-shadow: 0 26px 80px rgba(5, 18, 28, .36); }
+.dangerous-open-icon { width: 3.4rem; height: 3.4rem; display: grid; place-items: center; border-radius: 1rem; color: #d97706; background: color-mix(in srgb, #f59e0b 14%, var(--bg-soft)); font-size: 1.45rem; }
+.dangerous-open-kicker { color: #d97706; font-size: .64rem; font-weight: 900; letter-spacing: .18em; }
+.dangerous-open-dialog h2 { margin-top: .25rem; color: var(--text-content); font-size: 1.18rem; font-weight: 900; }
+.dangerous-open-dialog p:not(.dangerous-open-kicker) { margin-top: .55rem; color: var(--text-muted); font-size: .78rem; font-weight: 650; line-height: 1.65; overflow-wrap: anywhere; }
+.dangerous-open-dialog footer { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: .7rem; padding-top: .25rem; }
+.dangerous-open-dialog footer button { min-height: 2.7rem; padding: 0 1rem; border: 1px solid var(--border-subtle); border-radius: .8rem; color: var(--text-content); background: var(--bg-soft); font-size: .72rem; font-weight: 850; }
+.dangerous-open-dialog footer button:focus-visible { outline: 3px solid color-mix(in srgb, var(--dynamic-accent) 32%, transparent); outline-offset: 2px; }
+.dangerous-open-dialog footer .dangerous-confirm { color: #fff; border-color: #d97706; background: #d97706; }
 .archive-context-separator { height: 1px; margin: .35rem .45rem; background: var(--border-subtle); }
 .archive-details-backdrop { position: fixed; inset: 0; z-index: 85; display: grid; place-items: center; min-width: 0; padding: clamp(.75rem, 3vw, 2rem); background: color-mix(in srgb, #08141f 58%, transparent); backdrop-filter: blur(14px); overflow: hidden; }
 .archive-details-dialog { width: min(46rem, 100%); max-height: 100%; min-width: 0; overflow-y: auto; overflow-x: hidden; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 25%, var(--border-subtle)); border-radius: 1.5rem; background: var(--bg-modal); box-shadow: 0 28px 80px rgba(0, 0, 0, .34); }

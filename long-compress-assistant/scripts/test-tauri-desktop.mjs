@@ -448,6 +448,20 @@ const normalizedDesktopPath = (value) => {
   return path.resolve(portablePath).replaceAll('/', '\\').toLowerCase()
 }
 
+const findFileRecursively = (rootPath, fileName) => {
+  if (!existsSync(rootPath)) return null
+  for (const entry of readdirSync(rootPath, { withFileTypes: true })) {
+    const target = path.join(rootPath, entry.name)
+    if (entry.isDirectory()) {
+      const found = findFileRecursively(target, fileName)
+      if (found) return found
+    } else if (entry.isFile() && entry.name === fileName) {
+      return target
+    }
+  }
+  return null
+}
+
 async function runArchiveBrowserDesktopGate() {
   console.log('[desktop-e2e] verifying archive-browser UI with long paths, passwords, and exact extraction')
   await callDesktopBridge('clearTasks')
@@ -486,6 +500,25 @@ async function runArchiveBrowserDesktopGate() {
     'archive browser encrypted 7Z',
     { cwd: sourceRoot },
   )
+  const defaultOpenRootName = '默认应用安全打开'
+  const defaultOpenRoot = path.join(sourceRoot, defaultOpenRootName)
+  mkdirSync(defaultOpenRoot, { recursive: true })
+  const openTxtPayload = Buffer.from('Long解压 A-03 Windows default TXT application\n', 'utf8')
+  const openPngPayload = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415408d763f8cfc0f01f00050001ff89993d1d0000000049454e44ae426082', 'hex')
+  const openPdfPayload = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n', 'ascii')
+  writeFileSync(path.join(defaultOpenRoot, '说明 文档.txt'), openTxtPayload)
+  writeFileSync(path.join(defaultOpenRoot, '像素 图片.png'), openPngPayload)
+  writeFileSync(path.join(defaultOpenRoot, '空白 文档.pdf'), openPdfPayload)
+  writeFileSync(path.join(defaultOpenRoot, '禁止自动启动.cmd'), '@echo A-03-dangerous-content-must-not-run>"%TEMP%\\long-a03-danger.marker"\r\n', 'utf8')
+  const defaultOpenZip = path.join(archiveRoot, '默认应用打开.zip')
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-tzip', '-y', defaultOpenZip, defaultOpenRootName],
+    'archive default-open ZIP',
+    { cwd: sourceRoot },
+  )
+  const defaultOpenZone = '[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=https://example.test/default-open.zip\r\n'
+  writeFileSync(`${defaultOpenZip}:Zone.Identifier`, defaultOpenZone, 'utf8')
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[2].click()
@@ -494,7 +527,10 @@ async function runArchiveBrowserDesktopGate() {
   const openArchive = async (archivePath, outputPath, password, expectedText) => {
     await callDesktopBridge('queueDesktopDialogSelections', [archivePath, outputPath])
     const passwordInput = await waitForElement('.browser-toolbar input[type="password"]')
-    await passwordInput.clear()
+    await driver.executeScript(
+      "const input = arguments[0]; input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true }));",
+      passwordInput,
+    )
     if (password) await passwordInput.sendKeys(password)
     await (await waitForElement('.browser-page > header .browser-primary')).click()
     await driver.wait(async () => {
@@ -588,7 +624,8 @@ async function runArchiveBrowserDesktopGate() {
       assert.match(await menu.getText(), /解压到当前输出目录/)
       assert.match(await menu.getText(), /复制归档内路径/)
       assert.match(await menu.getText(), /显示详细信息/)
-      assert.doesNotMatch(await menu.getText(), /默认应用|进入压缩包/, 'unimplemented dependent actions must not be advertised')
+      assert.match(await menu.getText(), /使用默认应用打开/, 'A-03 default-application action must be visible')
+      assert.doesNotMatch(await menu.getText(), /进入压缩包/, 'unimplemented nested archive navigation must not be advertised')
       writeFileSync(
         path.join(artifactDirectory, 'archive-browser-a02-context-menu.png'),
         Buffer.from(await driver.takeScreenshot(), 'base64'),
@@ -681,6 +718,64 @@ async function runArchiveBrowserDesktopGate() {
     path.join(sevenZipOutput, passwordKeepRelative),
     'password 7z selected payload',
     path.join(sevenZipOutput, passwordSkipRelative),
+  )
+
+  const verifyDefaultApplicationOpen = async (fileName, expectedBytes) => {
+    const search = await waitForElement('.browser-search input')
+    await search.clear()
+    await search.sendKeys(fileName)
+    const row = await waitForElement(`[data-entry-path$="${fileName}"]`)
+    await driver.actions().contextClick(row).perform()
+    const menu = await waitForElement('[data-testid="archive-context-menu"]')
+    await (await menu.findElement(By.css('[data-testid="archive-context-default-open"]'))).click()
+    const cacheRoot = path.join(e2eDataDirectory, 'preview-cache')
+    const cached = await driver.wait(async () => {
+      const found = findFileRecursively(cacheRoot, fileName)
+      if (found) return found
+      const alerts = await driver.findElements(By.css('[role="alert"]'))
+      for (const alert of alerts) {
+        const message = await alert.getText()
+        if (message.includes('无法打开归档内文件')) throw new Error(message)
+      }
+      return false
+    }, 30_000)
+    assert.deepEqual(readFileSync(cached), expectedBytes, `${fileName} cache bytes must match the real archive entry`)
+    assert.equal(
+      readFileSync(`${cached}:Zone.Identifier`, 'utf8'),
+      defaultOpenZone,
+      `${fileName} must retain the source archive Mark-of-the-Web`,
+    )
+    await driver.wait(async () => {
+      const statuses = await driver.findElements(By.css('[role="status"]'))
+      for (const status of statuses) {
+        if ((await status.getText()).includes(`已使用默认应用打开：${fileName}`)) return true
+      }
+      return false
+    }, 10_000)
+    console.log(`[desktop-e2e] Windows accepted the default-application open request for ${fileName}`)
+  }
+
+  const defaultOpenOutput = path.join(browserFixtureRoot, 'default-open-output')
+  await openArchive(defaultOpenZip, defaultOpenOutput, '', defaultOpenRootName)
+  await verifyDefaultApplicationOpen('说明 文档.txt', openTxtPayload)
+  await verifyDefaultApplicationOpen('像素 图片.png', openPngPayload)
+  await verifyDefaultApplicationOpen('空白 文档.pdf', openPdfPayload)
+
+  const search = await waitForElement('.browser-search input')
+  await search.clear()
+  await search.sendKeys('禁止自动启动.cmd')
+  const dangerousRow = await waitForElement('[data-entry-path$="禁止自动启动.cmd"]')
+  await driver.actions().contextClick(dangerousRow).perform()
+  await (await waitForElement('[data-testid="archive-context-default-open"]')).click()
+  const warning = await waitForElement('[data-testid="archive-dangerous-open-dialog"]')
+  assert.match(await warning.getText(), /尚未解压，也没有启动/)
+  assert.equal(findFileRecursively(path.join(e2eDataDirectory, 'preview-cache'), '禁止自动启动.cmd'), null)
+  assert.equal(existsSync(path.join(tmpdir(), 'long-a03-danger.marker')), false)
+  await (await warning.findElement(By.css('[data-testid="archive-dangerous-cancel"]'))).click()
+  assert.equal((await driver.findElements(By.css('[data-testid="archive-dangerous-open-dialog"]'))).length, 0)
+  writeFileSync(
+    path.join(artifactDirectory, 'archive-browser-a03-safe-open.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
   )
 
   const encryptedRar = path.join(externalFixtureDirectory, 'libarchive-rar-encrypted.rar')

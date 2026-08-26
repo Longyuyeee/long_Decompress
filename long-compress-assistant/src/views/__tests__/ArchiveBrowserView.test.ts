@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   selectDirectory: vi.fn(),
   browseArchive: vi.fn(),
   previewArchiveImage: vi.fn(),
+  openArchiveEntry: vi.fn(),
   decompressFile: vi.fn(),
   clipboardWrite: vi.fn(),
   setError: vi.fn(),
@@ -23,6 +24,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
     selectDirectory: mocks.selectDirectory,
     browseArchive: mocks.browseArchive,
     previewArchiveImage: mocks.previewArchiveImage,
+    openArchiveEntry: mocks.openArchiveEntry,
     decompressFile: mocks.decompressFile,
   })
 }))
@@ -50,6 +52,9 @@ describe('ArchiveBrowserView', () => {
     mocks.previewArchiveImage.mockResolvedValue({
       entryPath: 'image.png', mimeType: 'image/png',
       dataUrl: 'data:image/png;base64,c2FmZQ==', byteSize: 4, width: 1, height: 1,
+    })
+    mocks.openArchiveEntry.mockResolvedValue({
+      status: 'opened', entryPath: 'docs/readme.txt', cachePath: 'C:/cache/readme.txt', dangerous: false,
     })
   })
 
@@ -88,12 +93,51 @@ describe('ArchiveBrowserView', () => {
     expect(menu).not.toBeNull()
     expect(menu.textContent).toContain('image.png')
     expect(menu.querySelector('[data-testid="archive-context-preview"]')).not.toBeNull()
+    expect(menu.querySelector('[data-testid="archive-context-default-open"]')).not.toBeNull()
     expect(wrapper.find('footer').text()).toContain('已选择 1 / 2 个文件')
 
     ;(menu.querySelector('[data-testid="archive-context-copy-path"]') as HTMLButtonElement).click()
     await flushPromises()
     expect(mocks.clipboardWrite).toHaveBeenCalledWith('image.png')
     expect(mocks.setSuccess).toHaveBeenCalledWith('已复制归档内路径')
+    wrapper.unmount()
+  })
+
+  it('opens ordinary entries with the Windows default application route', async () => {
+    const wrapper = mount(ArchiveBrowserView)
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+
+    await wrapper.get('[data-entry-path="image.png"]').trigger('dblclick')
+    await flushPromises()
+    expect(mocks.openArchiveEntry).toHaveBeenCalledWith('C:/archives/demo.zip', 'image.png', '', false)
+    expect(mocks.setSuccess).toHaveBeenCalledWith('已使用默认应用打开：image.png')
+  })
+
+  it('keeps active content unopened until the explicit warning is confirmed', async () => {
+    mocks.browseArchive.mockResolvedValueOnce({
+      format: 'ZIP', totalFiles: 1, totalDirectories: 0,
+      totalUncompressedSize: 8, totalCompressedSize: 8, encrypted: false,
+      entries: [{ path: 'scripts/run.cmd', name: 'run.cmd', size: 8, compressedSize: 8, modified: null, crc: null, encrypted: false, isDir: false }],
+    })
+    mocks.openArchiveEntry
+      .mockResolvedValueOnce({ status: 'confirmationRequired', entryPath: 'scripts/run.cmd', cachePath: null, dangerous: true })
+      .mockResolvedValueOnce({ status: 'opened', entryPath: 'scripts/run.cmd', cachePath: 'C:/cache/run.cmd', dangerous: true })
+    const wrapper = mount(ArchiveBrowserView, { attachTo: document.body })
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+
+    await wrapper.get('[data-entry-path="scripts/"]').trigger('dblclick')
+    await wrapper.get('[data-entry-path="scripts/run.cmd"]').trigger('dblclick')
+    await flushPromises()
+    expect(mocks.openArchiveEntry).toHaveBeenCalledTimes(1)
+    expect(mocks.openArchiveEntry).toHaveBeenLastCalledWith('C:/archives/demo.zip', 'scripts/run.cmd', '', false)
+    expect(document.querySelector('[data-testid="archive-dangerous-open-dialog"]')).not.toBeNull()
+    expect((document.querySelector('[data-testid="archive-dangerous-cancel"]') as HTMLButtonElement).autofocus).toBe(true)
+
+    ;(document.querySelector('[data-testid="archive-dangerous-confirm"]') as HTMLButtonElement).click()
+    await flushPromises()
+    expect(mocks.openArchiveEntry).toHaveBeenLastCalledWith('C:/archives/demo.zip', 'scripts/run.cmd', '', true)
     wrapper.unmount()
   })
 

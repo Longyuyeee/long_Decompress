@@ -21,3 +21,16 @@ pub fn app_data_dir() -> PathBuf {
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_default())
         .join(APP_DATA_FOLDER)
 }
+
+pub fn preview_cache_dir() -> PathBuf {
+    #[cfg(feature = "desktop-e2e")]
+    if let Some(path) = std::env::var_os("LONG_DECOMPRESS_E2E_DATA_DIR") {
+        return PathBuf::from(path).join("preview-cache");
+    }
+
+    dirs::data_local_dir()
+        .or_else(dirs::data_dir)
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_default())
+        .join(APP_DATA_FOLDER)
+        .join("preview-cache")
+}
