@@ -21,6 +21,24 @@ vi.mock('@/stores/app', () => ({
   useAppStore: () => ({ setError: mocks.setError, setSuccess: mocks.setSuccess })
 }))
 
+vi.mock('@/composables/useArchiveEngine', () => ({
+  useArchiveEngine: () => ({
+    capabilities: { value: {
+      available: true,
+      fullEngine: true,
+      formats: [],
+      browseExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
+      nestedExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
+      boundedPreviewFormats: ['ZIP', 'TAR'],
+      imagePreviewExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
+      textPreviewExtensions: ['txt', 'md', 'log'],
+      message: 'ready',
+    } },
+    loading: { value: false },
+    refresh: vi.fn().mockResolvedValue(undefined),
+  }),
+}))
+
 vi.mock('@/composables/useTauriCommands', () => ({
   useTauriCommands: () => ({
     selectFiles: mocks.selectFiles,

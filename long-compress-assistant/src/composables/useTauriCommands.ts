@@ -63,6 +63,11 @@ export interface ArchiveEngineCapabilities {
   version?: string | null
   fullEngine: boolean
   formats: ArchiveEngineFormatCapability[]
+  browseExtensions: string[]
+  nestedExtensions: string[]
+  boundedPreviewFormats: string[]
+  imagePreviewExtensions: string[]
+  textPreviewExtensions: string[]
   message: string
 }
 

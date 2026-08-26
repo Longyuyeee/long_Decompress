@@ -3,6 +3,10 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands, type ArchiveBrowseResult, type ArchiveEntryInfo, type ArchiveImagePreview, type ArchiveTextPreview } from '@/composables/useTauriCommands'
+import { useArchiveBrowserCapabilities } from '@/composables/useArchiveBrowserCapabilities'
+import { describeArchiveBrowseError, useArchiveBrowseRequest } from '@/composables/useArchiveBrowseRequest'
+import { useArchiveWorkspaceNavigation } from '@/composables/useArchiveWorkspaceNavigation'
+import ArchiveDirectoryPane from '@/components/archive/ArchiveDirectoryPane.vue'
 
 interface ArchiveWorkspaceFrame {
   archivePath: string
@@ -23,6 +27,9 @@ interface ArchiveWorkspaceFrame {
 
 const appStore = useAppStore()
 const commands = useTauriCommands()
+const archiveCapabilities = useArchiveBrowserCapabilities()
+void archiveCapabilities.refresh()
+const browseRequest = useArchiveBrowseRequest(commands.browseArchive, commands.cancelArchiveBrowse)
 const archivePath = ref('')
 const outputPath = ref('')
 const password = ref('')
@@ -30,11 +37,15 @@ const result = ref<ArchiveBrowseResult | null>(null)
 const selected = ref(new Set<string>())
 const query = ref('')
 const typeFilter = ref('all')
-const activeDirectory = ref('')
-const focusedEntryPath = ref('')
-const navigationBack = ref<string[]>([])
-const navigationForward = ref<string[]>([])
-const loading = ref(false)
+let selectionAnchorPath = ''
+const navigation = useArchiveWorkspaceNavigation(result, () => { selectionAnchorPath = '' })
+const {
+  activeDirectory, focusedEntryPath, navigationBack, navigationForward, expandedDirectories,
+  directories, visibleDirectories, directoryEntries, canNavigateBack, canNavigateForward,
+  canNavigateUp, breadcrumbs, navigateToDirectory, selectDirectory, goBack, goForward, goUp,
+  toggleDirectory,
+} = navigation
+const loading = browseRequest.loading
 const extracting = ref(false)
 const openingEntryPath = ref('')
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
@@ -46,8 +57,8 @@ const previewError = ref('')
 const parentFrames = ref<ArchiveWorkspaceFrame[]>([])
 const currentContentSha256 = ref('')
 const nestedLoadError = ref('')
-const browseNotice = ref('')
-const expandedDirectories = ref(new Set<string>())
+const nestedLoadRevision = ref(0)
+const browseNotice = browseRequest.notice
 const isDraggingArchive = ref(false)
 const contextMenu = ref<{
   entry: ArchiveEntryInfo | null
@@ -58,62 +69,11 @@ const contextMenu = ref<{
 const detailEntries = ref<ArchiveEntryInfo[]>([])
 let previewSequence = 0
 let archiveLoadSequence = 0
-let activeBrowseId = ''
-let selectionAnchorPath = ''
 let unlistenDrop: (() => void) | null = null
 let unlistenHover: (() => void) | null = null
 let unlistenCancel: (() => void) | null = null
 
-const extensionGroups: Record<string, Set<string>> = {
-  image: new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'ico', 'avif']),
-  document: new Set(['txt', 'md', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv', 'json', 'xml']),
-  archive: new Set(['zip', '7z', 'rar', 'tar', 'gz', 'bz2', 'xz', 'zst', 'iso', 'cab'])
-}
-const boundedImagePreviewExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'])
-const boundedTextPreviewExtensions = new Set([
-  'txt', 'md', 'csv', 'json', 'xml', 'yaml', 'yml', 'toml', 'ini', 'log', 'conf', 'config',
-  'properties', 'rs', 'ts', 'tsx', 'js', 'jsx', 'vue', 'css', 'scss', 'html', 'htm', 'py',
-  'java', 'c', 'cc', 'cpp', 'h', 'hpp', 'go', 'sh', 'bat', 'cmd', 'ps1', 'sql',
-])
-const nestedArchiveExtensions = new Set([
-  'zip', 'zipx', '7z', 'rar', 'tar', 'tgz', 'tpz', 'gz', 'tbz', 'tbz2', 'bz2',
-  'txz', 'xz', 'tzst', 'zst', 'cab', 'iso', 'jar', 'epub', 'apk', 'appx',
-])
-
 const files = computed(() => result.value?.entries.filter(entry => !entry.isDir) ?? [])
-const directories = computed(() => {
-  const values = new Set<string>()
-  result.value?.entries.forEach(entry => {
-    const normalized = entry.path.replace(/\\/g, '/').replace(/\/+$/, '')
-    const parts = normalized.split('/')
-    if (!entry.isDir) parts.pop()
-    for (let index = 1; index <= parts.length; index++) values.add(parts.slice(0, index).join('/'))
-  })
-  return [...values].sort((a, b) => a.localeCompare(b))
-})
-const visibleDirectories = computed(() => directories.value
-  .filter(path => {
-    const parts = path.split('/')
-    return parts.slice(0, -1).every((_, index) => expandedDirectories.value.has(parts.slice(0, index + 1).join('/')))
-  })
-  .map(path => ({
-    path,
-    name: path.split('/').pop() || path,
-    depth: path.split('/').length - 1,
-    hasChildren: directories.value.some(candidate => candidate.startsWith(`${path}/`) && candidate.split('/').length === path.split('/').length + 1)
-  })))
-
-const directoryEntries = computed<ArchiveEntryInfo[]>(() => directories.value.map(path => ({
-  path: `${path}/`,
-  name: path.split('/').pop() || path,
-  size: 0,
-  compressedSize: 0,
-  modified: null,
-  crc: null,
-  encrypted: false,
-  isDir: true,
-})))
-
 const entryParent = (entry: ArchiveEntryInfo) => {
   const normalized = entry.path.replace(/\\/g, '/').replace(/\/+$/, '')
   const index = normalized.lastIndexOf('/')
@@ -128,27 +88,16 @@ const filteredEntries = computed(() => {
     if (search && !normalized.toLocaleLowerCase().includes(search)) return false
     if (entry.isDir) return typeFilter.value === 'all'
     if (typeFilter.value === 'all') return true
-    const extension = entry.name.includes('.') ? entry.name.split('.').pop()!.toLocaleLowerCase() : ''
     if (typeFilter.value === 'other') {
-      return !Object.values(extensionGroups).some(group => group.has(extension))
+      return archiveCapabilities.entryCategory(entry.name) === 'other'
     }
-    return extensionGroups[typeFilter.value]?.has(extension) ?? false
+    return archiveCapabilities.entryCategory(entry.name) === typeFilter.value
   }).sort((left, right) => Number(right.isDir) - Number(left.isDir) || left.name.localeCompare(right.name))
 })
 
 const visibleFiles = computed(() => filteredEntries.value.filter(entry => !entry.isDir))
 const visibleSelected = computed(() => visibleFiles.value.length > 0 && visibleFiles.value.every(entry => selected.value.has(entry.path)))
-const previewRouteSupported = computed(() => result.value?.format === 'ZIP' || result.value?.format.startsWith('TAR'))
-const canNavigateBack = computed(() => navigationBack.value.length > 0)
-const canNavigateForward = computed(() => navigationForward.value.length > 0)
-const canNavigateUp = computed(() => activeDirectory.value.length > 0)
-const breadcrumbs = computed(() => {
-  const parts = activeDirectory.value ? activeDirectory.value.split('/') : []
-  return [
-    { name: '根目录', path: '' },
-    ...parts.map((name, index) => ({ name, path: parts.slice(0, index + 1).join('/') })),
-  ]
-})
+const previewRouteSupported = computed(() => archiveCapabilities.supportsBoundedPreview(result.value?.format))
 const detailFiles = computed(() => detailEntries.value.flatMap(entry => entry.isDir
   ? files.value.filter(file => file.path.replace(/\\/g, '/').startsWith(entry.path.replace(/\\/g, '/')))
   : [entry]))
@@ -163,16 +112,12 @@ const contextDisplayEntries = computed(() => {
 
 const previewKind = (entry: ArchiveEntryInfo): 'image' | 'text' | null => {
   if (entry.isDir) return null
-  const extension = entry.name.includes('.') ? entry.name.split('.').pop()!.toLocaleLowerCase() : ''
-  if (boundedImagePreviewExtensions.has(extension)) return 'image'
-  if (boundedTextPreviewExtensions.has(extension)) return 'text'
-  return null
+  return archiveCapabilities.previewKind(entry.name)
 }
 const canPreviewEntry = (entry: ArchiveEntryInfo) => previewKind(entry) !== null
 const isNestedArchiveEntry = (entry: ArchiveEntryInfo) => {
   if (entry.isDir) return false
-  const extension = entry.name.includes('.') ? entry.name.split('.').pop()!.toLocaleLowerCase() : ''
-  return nestedArchiveExtensions.has(extension)
+  return archiveCapabilities.isNestedArchiveName(entry.name)
 }
 
 const formatBytes = (value: number) => {
@@ -196,39 +141,10 @@ const archiveChain = computed(() => [
 ])
 const archiveDepth = computed(() => parentFrames.value.length + 1)
 
-const createBrowseId = () => globalThis.crypto?.randomUUID?.()
-  ?? `archive-browse-${Date.now()}-${Math.random().toString(16).slice(2)}`
-
-const describeBrowseError = (error: unknown) => {
-  const raw = String(error).replace(/^Error:\s*/i, '')
-  const marker = raw.indexOf('ARCHIVE_BROWSE_')
-  if (marker < 0) return '无法读取压缩包结构，请确认文件完整且格式受支持'
-  const [, message] = raw.slice(marker).split('|')
-  return message || '无法读取压缩包结构，请稍后重试'
-}
-
-const invokeArchiveBrowse = async () => {
-  const browseId = createBrowseId()
-  activeBrowseId = browseId
-  try {
-    return await commands.browseArchive(archivePath.value, password.value, browseId)
-  } finally {
-    if (activeBrowseId === browseId) activeBrowseId = ''
-  }
-}
-
-const signalActiveBrowseCancellation = () => {
-  const browseId = activeBrowseId
-  activeBrowseId = ''
-  if (browseId) void commands.cancelArchiveBrowse(browseId).catch(() => undefined)
-}
-
 const cancelArchiveLoad = () => {
   if (!loading.value) return
-  signalActiveBrowseCancellation()
+  browseRequest.cancel()
   archiveLoadSequence++
-  loading.value = false
-  browseNotice.value = '已取消读取压缩包内容'
 }
 
 const openArchivePath = async (path: string) => {
@@ -238,7 +154,8 @@ const openArchivePath = async (path: string) => {
     parentFrames.value = []
     currentContentSha256.value = ''
     nestedLoadError.value = ''
-    browseNotice.value = ''
+    nestedLoadRevision.value = 0
+    browseRequest.clearNotice()
     outputPath.value = parentDirectory(path)
     query.value = ''
     typeFilter.value = 'all'
@@ -266,27 +183,25 @@ const chooseArchive = async () => {
 const loadArchive = async () => {
   if (!archivePath.value || loading.value) return
   const sequence = ++archiveLoadSequence
-  loading.value = true
-  browseNotice.value = ''
+  browseRequest.clearNotice()
   result.value = null
   selected.value = new Set()
-  activeDirectory.value = ''
-  focusedEntryPath.value = ''
-  navigationBack.value = []
-  navigationForward.value = []
-  selectionAnchorPath = ''
-  expandedDirectories.value = new Set()
+  navigation.reset()
   closePreview()
   try {
-    const loaded = await invokeArchiveBrowse()
+    const loaded = await browseRequest.run(archivePath.value, password.value)
     if (sequence !== archiveLoadSequence) return
     result.value = loaded
     selected.value = new Set(loaded.entries.filter(entry => !entry.isDir).map(entry => entry.path))
     nestedLoadError.value = ''
+    nestedLoadRevision.value = 0
   } catch (error) {
     if (sequence !== archiveLoadSequence) return
-    const message = describeBrowseError(error)
-    if (parentFrames.value.length > 0) nestedLoadError.value = message
+    const message = describeArchiveBrowseError(error)
+    if (parentFrames.value.length > 0) {
+      nestedLoadError.value = message
+      nestedLoadRevision.value++
+    }
     else appStore.setError(message)
   } finally {
     if (sequence === archiveLoadSequence) loading.value = false
@@ -338,75 +253,22 @@ const requestOutputDirectory = async (initialPath: string) => {
   return typeof picked === 'string' ? picked : null
 }
 
-const expandDirectoryAncestors = (path: string) => {
-  if (!path) return
-  const next = new Set(expandedDirectories.value)
-  const parts = path.split('/')
-  parts.forEach((_, index) => next.add(parts.slice(0, index + 1).join('/')))
-  expandedDirectories.value = next
-}
-
-const navigateToDirectory = (path: string, recordHistory = true) => {
-  const normalized = path.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')
-  if (normalized === activeDirectory.value) return
-  if (recordHistory) {
-    navigationBack.value = [...navigationBack.value, activeDirectory.value]
-    navigationForward.value = []
-  }
-  activeDirectory.value = normalized
-  focusedEntryPath.value = ''
-  selectionAnchorPath = ''
-  expandDirectoryAncestors(normalized)
-}
-
-const selectDirectory = (path: string) => {
-  navigateToDirectory(path)
-}
-
-const goBack = () => {
-  const target = navigationBack.value.at(-1)
-  if (target === undefined) return
-  navigationBack.value = navigationBack.value.slice(0, -1)
-  navigationForward.value = [activeDirectory.value, ...navigationForward.value]
-  navigateToDirectory(target, false)
-}
-
-const goForward = () => {
-  const [target, ...remaining] = navigationForward.value
-  if (target === undefined) return
-  navigationForward.value = remaining
-  navigationBack.value = [...navigationBack.value, activeDirectory.value]
-  navigateToDirectory(target, false)
-}
-
-const goUp = () => {
-  if (!activeDirectory.value) return
-  const parts = activeDirectory.value.split('/')
-  parts.pop()
-  navigateToDirectory(parts.join('/'))
-}
-
 const refreshDirectory = async () => {
   if (!archivePath.value || loading.value) return
   const sequence = ++archiveLoadSequence
-  loading.value = true
-  browseNotice.value = ''
+  browseRequest.clearNotice()
   focusedEntryPath.value = ''
   selectionAnchorPath = ''
   closePreview()
   try {
-    const refreshed = await invokeArchiveBrowse()
+    const refreshed = await browseRequest.run(archivePath.value, password.value)
     if (sequence !== archiveLoadSequence) return
     result.value = refreshed
     const availableFiles = new Set(refreshed.entries.filter(entry => !entry.isDir).map(entry => entry.path))
     selected.value = new Set([...selected.value].filter(path => availableFiles.has(path)))
-    const availableDirectories = new Set(directories.value)
-    if (activeDirectory.value && !availableDirectories.has(activeDirectory.value)) activeDirectory.value = ''
-    navigationBack.value = navigationBack.value.filter(path => !path || availableDirectories.has(path))
-    navigationForward.value = navigationForward.value.filter(path => !path || availableDirectories.has(path))
-    expandDirectoryAncestors(activeDirectory.value)
+    navigation.reconcile()
   } catch (error) {
-    if (sequence === archiveLoadSequence) appStore.setError(`刷新压缩包失败：${describeBrowseError(error)}`)
+    if (sequence === archiveLoadSequence) appStore.setError(`刷新压缩包失败：${describeArchiveBrowseError(error)}`)
   } finally {
     if (sequence === archiveLoadSequence) loading.value = false
   }
@@ -460,9 +322,8 @@ const captureCurrentFrame = (contentSha256: string): ArchiveWorkspaceFrame | nul
 const restoreFrame = (index: number) => {
   const frame = parentFrames.value[index]
   if (!frame) return
-  signalActiveBrowseCancellation()
+  browseRequest.cancel(false)
   archiveLoadSequence++
-  loading.value = false
   parentFrames.value = parentFrames.value.slice(0, index)
   archivePath.value = frame.archivePath
   password.value = frame.password
@@ -478,7 +339,8 @@ const restoreFrame = (index: number) => {
   expandedDirectories.value = new Set(frame.expandedDirectories)
   currentContentSha256.value = frame.contentSha256
   nestedLoadError.value = ''
-  browseNotice.value = ''
+  nestedLoadRevision.value = 0
+  browseRequest.clearNotice()
   closeContextMenu()
   closePreview()
 }
@@ -511,6 +373,7 @@ const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
     currentContentSha256.value = materialized.contentSha256
     outputPath.value = frame.outputPath
     nestedLoadError.value = ''
+    nestedLoadRevision.value = 0
     await loadArchive()
   } catch (error) {
     appStore.setError(`无法进入嵌套归档：${String(error)}`)
@@ -714,12 +577,6 @@ const handleWorkspaceKeydown = (event: KeyboardEvent) => {
   }
 }
 
-const toggleDirectory = (path: string) => {
-  const next = new Set(expandedDirectories.value)
-  next.has(path) ? next.delete(path) : next.add(path)
-  expandedDirectories.value = next
-}
-
 const droppedBrowserFiles = (event: DragEvent) => {
   event.preventDefault()
   isDraggingArchive.value = false
@@ -745,7 +602,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  signalActiveBrowseCancellation()
+  browseRequest.cancel(false)
   window.removeEventListener('keydown', handleWorkspaceKeydown)
   unlistenHover?.()
   unlistenDrop?.()
@@ -826,7 +683,7 @@ const extractSelected = async () => {
     </div>
 
     <div v-else-if="!result && parentFrames.length > 0" class="aero-card flex-1 min-h-0 grid place-items-center">
-      <div class="max-w-lg text-center px-6"><i class="pi pi-lock text-amber-500 text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">内层归档尚未打开</h2><p class="mt-2 text-sm text-muted leading-6 break-words" data-testid="archive-nested-error">{{ nestedLoadError || '如果内层归档已加密，请只输入这一层的密码后重试；外层密码不会自动继承。' }}</p><div class="mt-5 flex justify-center gap-3"><button class="browser-primary" data-testid="archive-nested-retry" type="button" @click="loadArchive"><i class="pi pi-refresh"></i><span>使用当前内层密码重试</span></button><button class="browser-icon-button nested-return" type="button" title="返回上一层" @click="restoreFrame(parentFrames.length - 1)"><i class="pi pi-arrow-left"></i></button></div></div>
+      <div class="max-w-lg text-center px-6"><i class="pi pi-lock text-amber-500 text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">内层归档尚未打开</h2><p class="mt-2 text-sm text-muted leading-6 break-words" data-testid="archive-nested-error" :data-error-revision="nestedLoadRevision">{{ nestedLoadError || '如果内层归档已加密，请只输入这一层的密码后重试；外层密码不会自动继承。' }}</p><div class="mt-5 flex justify-center gap-3"><button class="browser-primary" data-testid="archive-nested-retry" type="button" @click="loadArchive"><i class="pi pi-refresh"></i><span>使用当前内层密码重试</span></button><button class="browser-icon-button nested-return" type="button" title="返回上一层" @click="restoreFrame(parentFrames.length - 1)"><i class="pi pi-arrow-left"></i></button></div></div>
     </div>
 
     <div v-else-if="!result" class="aero-card browser-empty flex-1 min-h-0 grid place-items-center border-dashed" @click="chooseArchive">
@@ -842,19 +699,13 @@ const extractSelected = async () => {
       </section>
 
       <section class="aero-card flex-1 min-h-0 min-w-0 overflow-hidden browser-workspace">
-        <aside class="directory-pane min-h-0 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar border-r border-subtle/70 p-3">
-          <p class="directory-heading">目录树</p>
-          <button class="directory-entry" :class="{ active: activeDirectory === '' }" type="button" @click="selectDirectory('')"><i class="pi pi-home"></i><span>全部文件</span></button>
-          <div v-for="directory in visibleDirectories" :key="directory.path" class="directory-tree-row" :style="{ paddingLeft: `${directory.depth * 0.9}rem` }">
-            <button v-if="directory.hasChildren" class="directory-toggle" type="button" :aria-label="expandedDirectories.has(directory.path) ? '折叠目录' : '展开目录'" @click="toggleDirectory(directory.path)">
-              <i :class="expandedDirectories.has(directory.path) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
-            </button>
-            <span v-else class="directory-toggle-spacer"></span>
-            <button class="directory-entry" :class="{ active: activeDirectory === directory.path }" type="button" :title="directory.path" @click="selectDirectory(directory.path)">
-              <i :class="expandedDirectories.has(directory.path) ? 'pi pi-folder-open' : 'pi pi-folder'"></i><span class="truncate">{{ directory.name }}</span>
-            </button>
-          </div>
-        </aside>
+        <ArchiveDirectoryPane
+          :active-directory="activeDirectory"
+          :directories="visibleDirectories"
+          :expanded-directories="expandedDirectories"
+          @select="selectDirectory"
+          @toggle="toggleDirectory"
+        />
 
         <div class="min-h-0 min-w-0 overflow-hidden flex flex-col">
           <nav class="browser-navigation shrink-0 border-b border-subtle/70" aria-label="压缩包目录导航">
@@ -1058,12 +909,6 @@ const extractSelected = async () => {
 .browser-summary span { display: inline-flex; align-items: center; gap: .35rem; padding: .38rem .65rem; border: 1px solid var(--border-subtle); border-radius: 999px; background: color-mix(in srgb, var(--bg-card) 82%, transparent); color: var(--text-muted); font-size: .68rem; font-weight: 800; }
 .browser-summary b { color: var(--text-content); }
 .browser-workspace { display: grid; grid-template-columns: minmax(10rem, 15rem) minmax(0, 1fr); }
-.directory-heading { padding: .2rem .75rem .5rem; color: var(--text-muted); font-size: .64rem; font-weight: 900; letter-spacing: .12em; }
-.directory-tree-row { display: flex; min-width: 0; align-items: center; }
-.directory-toggle, .directory-toggle-spacer { flex: 0 0 1.35rem; width: 1.35rem; height: 2.15rem; display: grid; place-items: center; color: var(--text-muted); font-size: .58rem; }
-.directory-toggle:hover { color: var(--dynamic-accent); }
-.directory-entry { flex: 1; width: 100%; min-width: 0; display: flex; align-items: center; gap: .55rem; border-radius: .7rem; padding: .56rem .65rem; color: var(--text-muted); font-size: .74rem; font-weight: 800; text-align: left; }
-.directory-entry:hover, .directory-entry.active { background: color-mix(in srgb, var(--dynamic-accent) 13%, transparent); color: var(--dynamic-accent); }
 .browser-navigation { min-width: 0; display: flex; align-items: center; gap: .7rem; padding: .55rem .75rem; }
 .browser-navigation-actions { flex: 0 0 auto; display: flex; gap: .25rem; }
 .browser-navigation-actions button { width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: .6rem; color: var(--text-muted); font-size: .7rem; }
@@ -1148,5 +993,5 @@ const extractSelected = async () => {
 .archive-details-paths li { overflow-wrap: anywhere; padding: .55rem .7rem; border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 65%, transparent); color: var(--text-content); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .66rem; }
 .archive-details-paths li:last-child { border-bottom: 0; }
 @media (max-width: 1050px) { .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(8rem, 1fr) minmax(5rem, .28fr) minmax(7rem, .4fr); } }
-@media (max-width: 760px) { .browser-page { padding: 1rem; overflow-y: auto; overflow-x: hidden; } .browser-workspace { flex: 0 0 34rem; min-height: 34rem; grid-template-columns: 1fr; grid-template-rows: minmax(7rem, 10rem) minmax(22rem, 1fr); } .browser-workspace aside { border-right: 0; border-bottom: 1px solid var(--border-subtle); } .browser-toolbar { grid-template-columns: 1fr; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } .output-target { max-width: 80vw; } .archive-details-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-details-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .browser-page { padding: 1rem; overflow-y: auto; overflow-x: hidden; } .browser-workspace { flex: 0 0 34rem; min-height: 34rem; grid-template-columns: 1fr; grid-template-rows: minmax(7rem, 10rem) minmax(22rem, 1fr); } .browser-toolbar { grid-template-columns: 1fr; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } .output-target { max-width: 80vw; } .archive-details-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-details-grid { grid-template-columns: 1fr; } }
 </style>

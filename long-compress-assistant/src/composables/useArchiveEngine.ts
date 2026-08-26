@@ -13,6 +13,11 @@ export interface ArchiveEngineCapabilities {
   version?: string | null
   fullEngine: boolean
   formats: ArchiveEngineFormatCapability[]
+  browseExtensions: string[]
+  nestedExtensions: string[]
+  boundedPreviewFormats: string[]
+  imagePreviewExtensions: string[]
+  textPreviewExtensions: string[]
   message: string
 }
 
@@ -30,6 +35,11 @@ export const useArchiveEngine = () => {
           available: false,
           fullEngine: false,
           formats: [],
+          browseExtensions: [],
+          nestedExtensions: [],
+          boundedPreviewFormats: [],
+          imagePreviewExtensions: [],
+          textPreviewExtensions: [],
           message: '压缩引擎没有返回能力信息',
         }
         return capabilities.value
@@ -39,6 +49,11 @@ export const useArchiveEngine = () => {
           available: false,
           fullEngine: false,
           formats: [],
+          browseExtensions: [],
+          nestedExtensions: [],
+          boundedPreviewFormats: [],
+          imagePreviewExtensions: [],
+          textPreviewExtensions: [],
           message: '当前运行环境无法读取归档引擎能力',
         }
         return capabilities.value

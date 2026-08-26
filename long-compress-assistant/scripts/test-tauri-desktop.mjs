@@ -15,7 +15,7 @@ import { homedir, tmpdir } from 'node:os'
 import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { deflateSync } from 'node:zlib'
+import { deflateSync, zstdCompressSync } from 'node:zlib'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -587,6 +587,15 @@ async function runArchiveBrowserDesktopGate() {
 
   const cancellableTar = path.join(archiveRoot, '大量目录项-取消读取.tar')
   createLargeMetadataTar(cancellableTar, 180_000)
+  const zstdEntryName = '后端能力来源.zst'
+  writeFileSync(path.join(sourceRoot, zstdEntryName), zstdCompressSync(Buffer.from('backend capability source', 'utf8')))
+  const capabilityOuter = path.join(archiveRoot, '能力来源验证.zip')
+  runFixtureCommand(
+    bundledSevenZip,
+    ['a', '-tzip', '-y', capabilityOuter, zstdEntryName],
+    'archive capability-source ZIP',
+    { cwd: sourceRoot },
+  )
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[2].click()
@@ -630,6 +639,15 @@ async function runArchiveBrowserDesktopGate() {
   assert.ok(cancellationElapsedMs < 5_000, `real large TAR cancellation took ${cancellationElapsedMs} ms`)
   assert.match(await (await waitForElement('[data-testid="archive-browse-notice"]')).getText(), /已取消读取压缩包内容/)
   console.log(`[desktop-e2e] real 180000-entry TAR cancelled in ${cancellationElapsedMs} ms`)
+
+  const capabilityOutput = path.join(browserFixtureRoot, 'capability-output')
+  await openArchive(capabilityOuter, capabilityOutput, '', zstdEntryName)
+  const zstdRow = await waitForElement(`[data-entry-path="${zstdEntryName}"]`)
+  await driver.actions().contextClick(zstdRow).perform()
+  const enterZstd = await waitForElement('[data-testid="archive-context-enter-nested"]')
+  assert.equal(await enterZstd.isEnabled(), true, 'the UI must consume backend-reported zstd nested capability')
+  await driver.actions().sendKeys(Key.ESCAPE).perform()
+  console.log('[desktop-e2e] backend-reported zstd capability reached the real archive context menu')
 
   const verifyWorkspaceNavigation = async () => {
     const footer = await waitForElement('.browser-page > footer')
@@ -818,7 +836,7 @@ async function runArchiveBrowserDesktopGate() {
     const cacheRoot = path.join(e2eDataDirectory, 'preview-cache')
     const cached = await driver.wait(async () => {
       const found = findFileRecursively(cacheRoot, fileName)
-      if (found) return found
+      if (found && existsSync(`${found}:Zone.Identifier`)) return found
       const alerts = await driver.findElements(By.css('[role="alert"]'))
       for (const alert of alerts) {
         const message = await alert.getText()
@@ -919,10 +937,15 @@ async function runArchiveBrowserDesktopGate() {
   assert.equal(await nestedPasswordInput.getAttribute('value'), '', 'the outer password must not be inherited by the nested archive')
   await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-nested-retry"]'))).length === 1, 30_000)
   assert.match(await (await waitForElement('.browser-page')).getText(), /内层归档尚未打开/)
+  const nestedErrorElement = await waitForElement('[data-testid="archive-nested-error"]')
+  const initialErrorRevision = Number(await nestedErrorElement.getAttribute('data-error-revision'))
   await nestedPasswordInput.sendKeys('wrong-nested-password')
   await (await waitForElement('[data-testid="archive-nested-retry"]')).click()
-  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-browse-cancel"]'))).length === 1, 5_000)
-  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-nested-retry"]'))).length === 1, 30_000)
+  await driver.wait(async () => {
+    const currentErrorElement = await waitForElement('[data-testid="archive-nested-error"]')
+    const currentRevision = Number(await currentErrorElement.getAttribute('data-error-revision'))
+    return currentRevision > initialErrorRevision
+  }, 30_000)
   assert.match(await (await waitForElement('[data-testid="archive-nested-error"]')).getText(), /密码不正确|需要单独的密码/)
   assert.match(await (await waitForElement('[data-testid="archive-chain"]')).getText(), /外层工作区\.zip[\s\S]*加密中层\.7z/)
   await driver.executeScript(
