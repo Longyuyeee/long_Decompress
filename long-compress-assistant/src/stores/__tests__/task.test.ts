@@ -23,6 +23,13 @@ describe('task progress state machine', () => {
     mocks.invoke.mockClear()
   })
 
+  it('keeps the live queue separate from persisted history reads', () => {
+    const store = useTaskStore()
+
+    expect(store).not.toHaveProperty('fetchTasks')
+    expect(mocks.invoke).not.toHaveBeenCalledWith('list_task_history', expect.anything())
+  })
+
   it('keeps extraction progress at zero while password candidates are being verified', async () => {
     const store = useTaskStore()
     await store.initListeners()
