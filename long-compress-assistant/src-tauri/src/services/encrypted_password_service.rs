@@ -3,13 +3,9 @@ use crate::crypto::encryption::{EncryptionService, EncryptedData};
 use crate::crypto::key_management::KeyManager;
 use base64::Engine as _;
 use crate::crypto::hashing::{HashingService, HashResult};
-use crate::models::password::{
-    PasswordEntry, PasswordStrength, 
-    PasswordGroup
-};
+use crate::models::password::{PasswordEntry, PasswordGroup};
 use crate::services::password_strength_service::{
-    PasswordAuditResult, PasswordIssue, PasswordIssueType, IssueSeverity,
-    PasswordGeneratorOptions, PasswordImportExportOptions
+    PasswordImportExportOptions
 };
 use crate::database::models::{PasswordEntryDb, PasswordGroupDb};
 use serde::{Deserialize, Serialize};
@@ -407,150 +403,6 @@ impl EncryptedPasswordService {
         }
 
         self.load_password_entry(id).await
-    }
-
-    /// 生成强密码
-    pub fn generate_password(options: &PasswordGeneratorOptions) -> String {
-        
-        use rand::seq::SliceRandom;
-
-        let mut charset = String::new();
-
-        if options.include_lowercase {
-            charset.push_str("abcdefghijklmnopqrstuvwxyz");
-        }
-        if options.include_uppercase {
-            charset.push_str("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-        }
-        if options.include_numbers {
-            charset.push_str("0123456789");
-        }
-        if options.include_symbols {
-            charset.push_str("!@#$%^&*()-_=+[]{}|;:,.<>?");
-        }
-
-        // 排除相似字符
-        if options.exclude_similar {
-            charset = charset.replace("iIlL1", "")
-                .replace("oO0", "")
-                .replace("sS5", "");
-        }
-
-        // 排除歧义字符
-        if options.exclude_ambiguous {
-            charset = charset.replace("{}[]()/\\'\"`~,;:.<>", "");
-        }
-
-        // 如果字符集为空，使用默认字符集
-        if charset.is_empty() {
-            charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".to_string();
-        }
-
-        let charset_chars: Vec<char> = charset.chars().collect();
-        let mut rng = rand::thread_rng();
-
-        (0..options.length)
-            .map(|_| *charset_chars.choose(&mut rng).unwrap())
-            .collect()
-    }
-
-    /// 审计密码安全性
-    pub async fn audit_passwords(&self) -> Result<Vec<PasswordAuditResult>> {
-        if !self.is_unlocked().await {
-            return Err(anyhow::anyhow!("密码服务未解锁"));
-        }
-
-        let entries = self.list_passwords().await?;
-        let mut audit_results = Vec::new();
-
-        for entry in entries {
-            let mut issues = Vec::new();
-            let mut score = 10; // 初始分数
-
-            // 检查密码强度
-            match entry.strength {
-                PasswordStrength::VeryWeak => {
-                    issues.push(PasswordIssue {
-                        issue_type: PasswordIssueType::WeakPassword,
-                        severity: IssueSeverity::Critical,
-                        description: "密码非常弱".to_string(),
-                        recommendation: "使用更强的密码".to_string(),
-                    });
-                    score -= 4;
-                }
-                PasswordStrength::Weak => {
-                    issues.push(PasswordIssue {
-                        issue_type: PasswordIssueType::WeakPassword,
-                        severity: IssueSeverity::High,
-                        description: "密码较弱".to_string(),
-                        recommendation: "使用更强的密码".to_string(),
-                    });
-                    score -= 3;
-                }
-                PasswordStrength::Medium => {
-                    score -= 1;
-                }
-                _ => {}
-            }
-
-            // 检查密码是否过期
-            if let Some(expires_at) = entry.expires_at {
-                if expires_at < Utc::now() {
-                    issues.push(PasswordIssue {
-                        issue_type: PasswordIssueType::ExpiredPassword,
-                        severity: IssueSeverity::High,
-                        description: "密码已过期".to_string(),
-                        recommendation: "更新密码".to_string(),
-                    });
-                    score -= 3;
-                }
-            }
-
-            // 检查最后使用时间
-            if let Some(last_used) = entry.last_used {
-                let days_since_used = (Utc::now() - last_used).num_days();
-                if days_since_used > 180 { // 6个月未使用
-                    issues.push(PasswordIssue {
-                        issue_type: PasswordIssueType::OldPassword,
-                        severity: IssueSeverity::Medium,
-                        description: format!("密码已{}天未使用", days_since_used),
-                        recommendation: "考虑删除或更新".to_string(),
-                    });
-                    score -= 1;
-                }
-            }
-
-            // 检查是否缺少用户名
-            if entry.username.is_none() {
-                issues.push(PasswordIssue {
-                    issue_type: PasswordIssueType::MissingUsername,
-                    severity: IssueSeverity::Low,
-                    description: "缺少用户名".to_string(),
-                    recommendation: "添加用户名".to_string(),
-                });
-                score -= 1;
-            }
-
-            // 检查是否缺少URL
-            if entry.url.is_none() {
-                issues.push(PasswordIssue {
-                    issue_type: PasswordIssueType::MissingUrl,
-                    severity: IssueSeverity::Low,
-                    description: "缺少URL".to_string(),
-                    recommendation: "添加URL".to_string(),
-                });
-                score -= 1;
-            }
-
-            audit_results.push(PasswordAuditResult {
-                entry_id: entry.id,
-                issues,
-                score: score.max(0) as u8,
-                recommendations: Vec::new(), // 可以根据问题生成建议
-            });
-        }
-
-        Ok(audit_results)
     }
 
     /// 导出密码本

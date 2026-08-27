@@ -1,9 +1,7 @@
 #![allow(dead_code, unused_imports)]
 use crate::models::password::{PasswordCategory, PasswordEntry, PasswordGroup};
 use crate::services::encrypted_password_service::{EncryptedPasswordService, PasswordGroupService};
-use crate::services::password_strength_service::{
-    ImportExportFormat, PasswordAuditResult, PasswordGeneratorOptions, PasswordImportExportOptions,
-};
+use crate::services::password_strength_service::{ImportExportFormat, PasswordImportExportOptions};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -315,26 +313,6 @@ pub async fn increment_encrypted_password_use_count(
         .await
         .map(Into::into)
         .map_err(|error| format!("记录密码使用失败: {}", error))
-}
-
-/// 生成强密码
-#[tauri::command]
-pub fn generate_strong_password(options: PasswordGeneratorOptions) -> Result<String, String> {
-    Ok(EncryptedPasswordService::generate_password(&options))
-}
-
-/// 审计密码安全性
-#[tauri::command]
-pub async fn audit_encrypted_passwords(app: AppHandle) -> Result<Vec<PasswordAuditResult>, String> {
-    let state: State<'_, EncryptedPasswordServiceState> = app.state();
-
-    let service_lock = state.service.lock().await;
-    let service = service_lock.as_ref().ok_or("服务未初始化")?;
-
-    match service.audit_passwords().await {
-        Ok(results) => Ok(results),
-        Err(e) => Err(format!("审计密码失败: {}", e)),
-    }
 }
 
 /// 导出密码本
@@ -771,5 +749,35 @@ mod password_entry_request_tests {
         assert!(json.get("strength").is_none());
         assert!(json.get("expires_at").is_none());
         assert!(json.get("custom_fields").is_none());
+    }
+
+    #[test]
+    fn tauri_handler_exposes_only_the_archive_vault_command_family() {
+        let main_source = include_str!("../main.rs");
+        for legacy_command in [
+            "commands::password::add_password",
+            "commands::password::delete_password",
+            "commands::password::update_password",
+            "commands::password::get_all_passwords",
+            "commands::password::search_passwords",
+            "commands::password::get_password_suggestions",
+        ] {
+            assert!(
+                !main_source.contains(legacy_command),
+                "legacy generic password command remains registered: {legacy_command}"
+            );
+        }
+
+        for archive_command in [
+            "commands::encrypted_password::list_encrypted_passwords",
+            "commands::encrypted_password::add_encrypted_password",
+            "commands::encrypted_password::update_encrypted_password",
+            "commands::encrypted_password::search_encrypted_passwords",
+        ] {
+            assert!(
+                main_source.contains(archive_command),
+                "archive password command is missing from the Tauri handler: {archive_command}"
+            );
+        }
     }
 }

@@ -1,6 +1,6 @@
 # Long解压：归档工作区与媒体压缩开发计划
 
-公开基线：`master` / Long解压 `1.1.14`；当前开发基线：`codex/archive-media-roadmap` / `d985556`（与 `origin/master` 一致）
+公开基线：`master` / Long解压 `1.1.14`；B-00 起始审计基线：`codex/archive-media-roadmap` / `19bb4b6`（S-00 总验收通过，比 `origin/master` 领先 6 个提交）
 
 编制日期：2026-08-26
 
