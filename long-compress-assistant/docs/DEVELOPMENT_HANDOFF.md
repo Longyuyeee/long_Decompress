@@ -4,7 +4,7 @@
 
 - 已建立 4 图片、2 视频、6 PDF 的合成真实夹具：透明/EXIF/动图/9600 万像素，H.264/H.265/VFR/AAC/旋转矩阵/字幕，以及文本/扫描/透明/表单/CMS 签名/AES-256 拒绝边界。
 - 首轮真实运行依次发现 ReportLab API 名称、pyHanko 参数、加密 PDF 检查顺序、MP4 旋转标签不产生 Display Matrix 和扫描字体过小，均按实际差异修正并重跑。最终结构化 `differences=0`，六个 PDF Poppler 渲染已逐张视觉复核。
-- 视频生成使用固定 SHA-256 的 GPL 测试工具且明确禁止产品集成；实际夹具和 170 MB 测试工具均留在 Git 忽略目录。B-00.5 已以可执行契约固定图片/视频/PDF 的真实进度、大小、速度、ETA 和最终指标来源，并纠正首期图片格式/许可偏差。本步骤不升版、不发布；下一步为 B-00.6 安装态桌面门禁、回滚和 Release 证据模板。完整证据见 [B00_MEDIA_FIXTURE_BASELINE_AUDIT.md](B00_MEDIA_FIXTURE_BASELINE_AUDIT.md) 与 [B00_MEDIA_METRIC_SOURCE_AUDIT.md](B00_MEDIA_METRIC_SOURCE_AUDIT.md)。
+- B-00.1 至 B-00.6 已通过总审计：共享任务/历史/事务、供应链、4 图片/2 视频/6 PDF 属性夹具、真实指标来源，以及 B/C/D 安装/回滚/Release 证据门禁均已收口。当前 `1.1.14` 正式 NSIS 生命周期 44/44 并恢复原安装；产品仍无媒体引擎或占位 Tab。本前置节点不升版、不发布；下一步为 B-01 图片依赖与固定输入哈希基线，B-01 未通过前不进入 UI。完整证据见 [B00_TOTAL_ACCEPTANCE_AUDIT.md](B00_TOTAL_ACCEPTANCE_AUDIT.md)。
 
 ## 2026-08-27 B-00.3 媒体依赖身份与许可门禁收口
 

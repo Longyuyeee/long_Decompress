@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-27",
+  "policy": {
+    "versionBump": "complete-user-visible-node-only",
+    "requiresInstalledNsis": true,
+    "requiresPreviousReleaseRestore": true,
+    "requiresPublicUpdateAfterRelease": true,
+    "unsignedWindowsBuildAllowed": true,
+    "unsignedNativeContextMenuPackageAllowed": false,
+    "estimatedMetricsAcceptedAsEvidence": false,
+    "ignoredOrSyntheticSuccessAccepted": false
+  },
+  "sharedInstalledChecks": [
+    "candidate-executable-byte-identity",
+    "overlay-preserves-user-data",
+    "production-bridge-only",
+    "drag-drop-and-mode-navigation",
+    "real-task-complete-failed-cancelled",
+    "output-reopen-and-validate",
+    "history-survives-restart",
+    "source-recycle-after-publish-only",
+    "uninstall-preserves-user-data",
+    "previous-release-restored"
+  ],
+  "sharedRollbackFaults": [
+    "cancel-during-processing",
+    "engine-nonzero-exit",
+    "invalid-or-truncated-output",
+    "target-appears-before-publish",
+    "insufficient-disk-space",
+    "source-recycle-failure"
+  ],
+  "nodes": {
+    "B": {
+      "workload": "image",
+      "publicFormats": ["jpeg", "webp", "png-lossless"],
+      "requiredRealCases": [
+        "jpeg-exif-orientation",
+        "png-alpha",
+        "webp-photo",
+        "gif-explicit-preserve-or-reject",
+        "hundred-file-mixed-batch",
+        "ultra-large-pixel-limit"
+      ],
+      "requiredValidation": ["decode-output", "dimensions", "frame-semantics", "metadata-policy", "filesystem-bytes"]
+    },
+    "C": {
+      "workload": "video",
+      "publicFormats": ["h264-mp4", "h265-mp4"],
+      "requiredRealCases": [
+        "h264-aac-vfr-rotation-subtitle",
+        "h265-input",
+        "long-running-cancel-process-tree",
+        "unicode-long-path",
+        "audio-only-explicit-reject"
+      ],
+      "requiredValidation": ["ffprobe-output", "duration-tolerance", "stream-map", "container", "filesystem-bytes"]
+    },
+    "D": {
+      "workload": "pdf",
+      "publicFormats": ["pdf-structural-optimization"],
+      "requiredRealCases": [
+        "searchable-vector",
+        "scanned-image",
+        "transparency",
+        "acroform-preserve",
+        "signed-explicit-refusal",
+        "encrypted-explicit-refusal"
+      ],
+      "requiredValidation": ["qpdf-check", "page-count", "render-first-and-last-page", "form-policy", "signature-policy", "filesystem-bytes"]
+    }
+  },
+  "requiredEvidenceFields": [
+    "schemaVersion",
+    "node",
+    "version",
+    "commit",
+    "installerSha256",
+    "machine",
+    "expectedActualCorrections",
+    "installedChecks",
+    "rollbackFaults",
+    "realCases",
+    "outputFacts",
+    "previousReleaseRestore",
+    "publicUpdate",
+    "decision"
+  ]
+}
