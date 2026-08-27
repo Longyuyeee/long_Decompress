@@ -193,19 +193,10 @@ export const usePasswordStore = defineStore('password', () => {
 
   const autoInitialize = async () => {
     try {
-      // 获取或创建每安装实例的随机主密钥（不再使用硬编码默认密码）
-      const masterKey = await invoke<string>('get_or_create_master_key')
-      // 先尝试解锁
-      const success = await invoke<boolean>('unlock_encrypted_password_service', { masterPassword: masterKey })
-      if (success) {
-        isUnlocked.value = true
-        await fetchAllData()
-      } else {
-        // 解锁失败可能是还没初始化，尝试初始化
-        await invoke('init_encrypted_password_service', { masterPassword: masterKey })
-        isUnlocked.value = true
-        await fetchAllData()
-      }
+      // 安装密钥及其解锁流程全部留在 Rust 后端，不向 WebView 暴露。
+      await invoke<boolean>('ensure_encrypted_password_service')
+      isUnlocked.value = true
+      await fetchAllData()
     } catch (e) {
       console.error('自动初始化密码服务失败:', e)
       isUnlocked.value = false

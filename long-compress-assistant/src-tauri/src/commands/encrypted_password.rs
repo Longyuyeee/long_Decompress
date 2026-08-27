@@ -34,6 +34,47 @@ impl EncryptedPasswordServiceState {
     }
 }
 
+/// 在 Rust 后端确保密码保险箱就绪。安装密钥不会返回给 WebView。
+#[tauri::command]
+pub async fn ensure_encrypted_password_service(app: AppHandle) -> Result<bool, String> {
+    let state: State<'_, EncryptedPasswordServiceState> = app.state();
+
+    {
+        let service_lock = state.service.lock().await;
+        if let Some(service) = service_lock.as_ref() {
+            if service.is_unlocked().await {
+                return Ok(true);
+            }
+        }
+    }
+
+    let master_key = EncryptedPasswordService::get_or_create_master_key(&state.data_dir)
+        .await
+        .map_err(|error| format!("读取本机密码保护密钥失败: {}", error))?;
+    let mut service = EncryptedPasswordService::new(&state.data_dir);
+    let unlocked = service
+        .unlock(&master_key)
+        .await
+        .map_err(|error| format!("解锁密码保险箱失败: {}", error))?;
+
+    if !unlocked {
+        let hash_path = state.data_dir.join("master_password.hash");
+        if hash_path.exists() {
+            return Err("本机保护密钥与现有密码保险箱不匹配；已保留原数据，未重新初始化".to_string());
+        }
+        service
+            .initialize(&master_key)
+            .await
+            .map_err(|error| format!("初始化密码保险箱失败: {}", error))?;
+    }
+
+    let mut service_lock = state.service.lock().await;
+    *service_lock = Some(service.clone());
+    let mut group_service_lock = state.group_service.lock().await;
+    *group_service_lock = Some(PasswordGroupService::new(Arc::new(service)));
+    Ok(true)
+}
+
 /// 初始化加密密码服务
 #[tauri::command]
 pub async fn init_encrypted_password_service(
@@ -589,6 +630,13 @@ impl From<PasswordEntryRequest> for PasswordEntry {
     }
 }
 
+/// 从请求创建密码组
+impl From<PasswordGroupRequest> for PasswordGroup {
+    fn from(req: PasswordGroupRequest) -> Self {
+        PasswordGroup::new(req.name, req.description)
+    }
+}
+
 #[cfg(test)]
 mod password_entry_request_tests {
     use super::*;
@@ -611,27 +659,5 @@ mod password_entry_request_tests {
         let entry: PasswordEntry = request.into();
 
         assert_eq!(entry.strength, PasswordStrength::VeryStrong);
-    }
-}
-
-/// 获取或创建每安装实例的随机主密钥。
-/// 第一次调用时生成一个新密钥并存储到 data_dir/installation.key。
-/// 后续调用返回已存储的密钥。
-/// 这取代了硬编码的默认密码。
-#[command]
-pub async fn get_or_create_master_key(app: AppHandle) -> Result<String, String> {
-    let state: State<'_, EncryptedPasswordServiceState> = app.state();
-    EncryptedPasswordService::get_or_create_master_key(&state.data_dir)
-        .await
-        .map_err(|e| e.to_string())
-}
-
-/// 从请求创建密码组
-impl From<PasswordGroupRequest> for PasswordGroup {
-    fn from(req: PasswordGroupRequest) -> Self {
-        PasswordGroup::new(
-            req.name,
-            req.description,
-        )
     }
 }

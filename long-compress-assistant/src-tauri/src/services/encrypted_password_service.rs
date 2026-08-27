@@ -20,10 +20,16 @@ use tokio::sync::RwLock;
 use tokio::fs;
 use uuid::Uuid;
 use chrono::{DateTime, Local, Utc};
+use sha2::{Digest, Sha256};
+use zeroize::Zeroize;
+
+const DPAPI_KEY_PREFIX: &str = "long-dpapi:v1:";
+const PASSWORD_CIPHERTEXT_PREFIX: &str = "long-vault:v2:";
 
 /// 加密密码服务
 pub struct EncryptedPasswordService {
     pub key_manager: Arc<RwLock<Option<KeyManager>>>,
+    protection_key: Arc<RwLock<Option<Vec<u8>>>>,
     pub data_dir: PathBuf,
     pub master_password_hash: Option<HashResult>,
 }
@@ -32,6 +38,7 @@ impl Clone for EncryptedPasswordService {
     fn clone(&self) -> Self {
         Self {
             key_manager: self.key_manager.clone(),
+            protection_key: self.protection_key.clone(),
             data_dir: self.data_dir.clone(),
             master_password_hash: self.master_password_hash.clone(),
         }
@@ -43,34 +50,108 @@ impl EncryptedPasswordService {
     pub fn new(data_dir: &Path) -> Self {
         Self {
             key_manager: Arc::new(RwLock::new(None)),
+            protection_key: Arc::new(RwLock::new(None)),
             data_dir: data_dir.to_path_buf(),
             master_password_hash: None,
         }
     }
 
     /// 获取或创建每安装实例的随机主密钥。
-    /// 密钥存储在 data_dir/installation.key 中，权限为 0600 (Unix) 或受限 (Windows)。
-    /// 这取代了之前所有安装共享的硬编码默认密码。
+    /// Windows 使用当前用户 DPAPI 保护磁盘密钥；旧版明文密钥在成功读取后原地迁移。
     pub async fn get_or_create_master_key(data_dir: &Path) -> Result<String> {
         let key_path = data_dir.join("installation.key");
         if key_path.exists() {
-            let key_metadata = fs::metadata(&key_path).await?;
-            if key_metadata.len() == 0 {
-                // 空文件视为损坏，重新生成
-                let random_key = Self::generate_installation_key();
-                fs::write(&key_path, &random_key).await?;
-                Self::restrict_key_file_permissions(&key_path)?;
-                return Ok(random_key);
+            let stored = fs::read_to_string(&key_path).await?;
+            let stored = stored.trim();
+            if stored.is_empty() {
+                return Err(anyhow::anyhow!("安装密钥为空，拒绝生成新密钥以避免覆盖既有密码数据"));
             }
-            return Ok(String::from_utf8_lossy(&fs::read(&key_path).await?).trim().to_string());
+
+            #[cfg(windows)]
+            {
+                if let Some(encoded) = stored.strip_prefix(DPAPI_KEY_PREFIX) {
+                    let protected = base64::engine::general_purpose::STANDARD
+                        .decode(encoded)
+                        .context("安装密钥的 DPAPI 数据无效")?;
+                    let plaintext = crate::crypto::os_protection::unprotect_for_current_user(&protected)?;
+                    return String::from_utf8(plaintext).context("DPAPI 安装密钥不是有效 UTF-8");
+                }
+
+                // v1.1.14 及更早版本把随机安装密钥明文保存在此文件。
+                // 只有 DPAPI 保护和原子替换都成功后才完成迁移。
+                Self::store_master_key(&key_path, stored).await?;
+                return Ok(stored.to_string());
+            }
+
+            #[cfg(not(windows))]
+            return Ok(stored.to_string());
         }
 
-        // 首次运行：生成随机密钥并存储
         let random_key = Self::generate_installation_key();
         fs::create_dir_all(data_dir).await?;
-        fs::write(&key_path, &random_key).await?;
+        Self::store_master_key(&key_path, &random_key).await?;
         Self::restrict_key_file_permissions(&key_path)?;
         Ok(random_key)
+    }
+
+    async fn store_master_key(key_path: &Path, plaintext: &str) -> Result<()> {
+        #[cfg(windows)]
+        let stored = {
+            let protected = crate::crypto::os_protection::protect_for_current_user(plaintext.as_bytes())?;
+            format!(
+                "{}{}",
+                DPAPI_KEY_PREFIX,
+                base64::engine::general_purpose::STANDARD.encode(protected)
+            )
+        };
+
+        #[cfg(not(windows))]
+        let stored = plaintext.to_string();
+
+        Self::write_atomically(key_path, stored.as_bytes()).await
+    }
+
+    async fn write_atomically(path: &Path, bytes: &[u8]) -> Result<()> {
+        let parent = path.parent().context("目标文件缺少父目录")?;
+        fs::create_dir_all(parent).await?;
+        let file_name = path
+            .file_name()
+            .and_then(|value| value.to_str())
+            .context("目标文件名无效")?;
+        let temporary = parent.join(format!(".{}.{}.tmp", file_name, Uuid::new_v4()));
+        fs::write(&temporary, bytes).await?;
+
+        #[cfg(windows)]
+        let replace_result = {
+            use std::os::windows::ffi::OsStrExt;
+            use windows_sys::Win32::Storage::FileSystem::{
+                MoveFileExW, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH,
+            };
+
+            let from: Vec<u16> = temporary.as_os_str().encode_wide().chain(Some(0)).collect();
+            let to: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+            let result = unsafe {
+                MoveFileExW(
+                    from.as_ptr(),
+                    to.as_ptr(),
+                    MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH,
+                )
+            };
+            if result == 0 {
+                Err(std::io::Error::last_os_error())
+            } else {
+                Ok(())
+            }
+        };
+
+        #[cfg(not(windows))]
+        let replace_result = fs::rename(&temporary, path).await;
+
+        if let Err(error) = replace_result {
+            let _ = fs::remove_file(&temporary).await;
+            return Err(error).with_context(|| format!("原子替换失败: {}", path.display()));
+        }
+        Ok(())
     }
 
     /// 生成随机安装密钥 (32 字节的 base64 编码)
@@ -79,6 +160,21 @@ impl EncryptedPasswordService {
         use base64::Engine;
         let random_bytes: [u8; 32] = rand::thread_rng().gen();
         base64::engine::general_purpose::STANDARD.encode(random_bytes)
+    }
+
+    fn derive_data_protection_key(master_key: &str) -> Vec<u8> {
+        if let Ok(decoded) = base64::engine::general_purpose::STANDARD.decode(master_key) {
+            if decoded.len() == 32 {
+                return decoded;
+            }
+        }
+
+        // Compatibility for tests and pre-random-key installations. The production installation
+        // key is already 256 bits of randomness; this branch only normalizes legacy input to 32 bytes.
+        let mut digest = Sha256::new();
+        digest.update(b"LongDecompress.PasswordVault.v2\0");
+        digest.update(master_key.as_bytes());
+        digest.finalize().to_vec()
     }
 
     /// 在 Unix 上设置文件权限为 0600 (仅所有者可读写)
@@ -113,6 +209,8 @@ impl EncryptedPasswordService {
         // 设置密钥管理器
         let mut key_manager_lock = self.key_manager.write().await;
         *key_manager_lock = Some(key_manager);
+        let mut protection_key = self.protection_key.write().await;
+        *protection_key = Some(Self::derive_data_protection_key(master_password));
 
         Ok(())
     }
@@ -138,6 +236,8 @@ impl EncryptedPasswordService {
         // 设置密钥管理器
         let mut key_manager_lock = self.key_manager.write().await;
         *key_manager_lock = Some(key_manager);
+        let mut protection_key = self.protection_key.write().await;
+        *protection_key = Some(Self::derive_data_protection_key(master_password));
 
         Ok(true)
     }
@@ -146,6 +246,10 @@ impl EncryptedPasswordService {
     pub async fn lock(&mut self) {
         let mut key_manager_lock = self.key_manager.write().await;
         *key_manager_lock = None;
+        let mut protection_key = self.protection_key.write().await;
+        if let Some(mut key) = protection_key.take() {
+            key.zeroize();
+        }
     }
 
     /// 检查是否已解锁
@@ -156,8 +260,7 @@ impl EncryptedPasswordService {
     }
 
     pub async fn is_unlocked(&self) -> bool {
-        let key_manager_lock = self.key_manager.read().await;
-        key_manager_lock.is_some()
+        self.protection_key.read().await.is_some()
     }
 
     /// 添加密码条目
@@ -166,7 +269,6 @@ impl EncryptedPasswordService {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
-        // 直接存储，不再加密
         entry.id = Uuid::new_v4().to_string();
         entry.created_at = Utc::now();
         entry.updated_at = Utc::now();
@@ -181,7 +283,6 @@ impl EncryptedPasswordService {
             return Err(anyhow::anyhow!("密码服务未解锁"));
         }
 
-        // 直接存储，不再加密
         entry.updated_at = Utc::now();
         entry.id = id.to_string();
 
@@ -268,15 +369,14 @@ impl EncryptedPasswordService {
         while let Some(entry) = dir.next_entry().await? {
             let path = entry.path();
             if path.extension().is_some_and(|ext| ext == "json") {
-                let content = fs::read_to_string(&path).await?;
-                let db_entry: PasswordEntryDb = serde_json::from_str(&content)?;
-                let password_entry: PasswordEntry = db_entry.into();
-
-                // 解密密码用于搜索
-                let decrypted_entry = match self.get_password(&password_entry.id).await {
-                    Ok(Some(de)) => de,
-                    _ => password_entry // 即使解密失败也返回原始加密条目
-                };
+                let id = path
+                    .file_stem()
+                    .and_then(|value| value.to_str())
+                    .context("密码条目文件名无效")?;
+                let decrypted_entry = self
+                    .load_password_entry(id)
+                    .await?
+                    .context("密码条目在读取期间消失")?;
 
                 // 搜索条件
                 let query_lower = query.to_lowercase();
@@ -300,7 +400,7 @@ impl EncryptedPasswordService {
         self.search_passwords("").await
     }
 
-    /// 获取密码条目 (不再尝试解密)
+    /// 获取密码条目并在 Rust 内存中解密密码正文。
     pub async fn get_password(&self, id: &str) -> Result<Option<PasswordEntry>> {
         if !self.is_unlocked().await {
             return Err(anyhow::anyhow!("密码服务未解锁"));
@@ -546,7 +646,54 @@ impl EncryptedPasswordService {
         Ok(imported_count)
     }
 
-    /// 保存密码条目到文件（简化处理）
+    async fn encrypt_password_for_storage(&self, password: &str) -> Result<String> {
+        let mut key = self
+            .protection_key
+            .read()
+            .await
+            .as_ref()
+            .cloned()
+            .context("密码服务未解锁")?;
+        let result = (|| {
+            let encryption_service = EncryptionService::new(key.clone());
+            let encrypted = encryption_service.encrypt_string(password)?;
+            let payload = serde_json::to_vec(&encrypted)?;
+            Ok(format!(
+                "{}{}",
+                PASSWORD_CIPHERTEXT_PREFIX,
+                base64::engine::general_purpose::STANDARD.encode(payload)
+            ))
+        })();
+        key.zeroize();
+        result
+    }
+
+    async fn decrypt_password_from_storage(&self, stored: &str) -> Result<(String, bool)> {
+        let Some(encoded) = stored.strip_prefix(PASSWORD_CIPHERTEXT_PREFIX) else {
+            return Ok((stored.to_string(), true));
+        };
+
+        let mut key = self
+            .protection_key
+            .read()
+            .await
+            .as_ref()
+            .cloned()
+            .context("密码服务未解锁")?;
+        let result = (|| {
+            let payload = base64::engine::general_purpose::STANDARD
+                .decode(encoded)
+                .context("密码条目密文编码无效")?;
+            let encrypted: EncryptedData = serde_json::from_slice(&payload)
+                .context("密码条目密文结构无效")?;
+            let encryption_service = EncryptionService::new(key.clone());
+            encryption_service.decrypt_string(&encrypted)
+        })();
+        key.zeroize();
+        result.map(|password| (password, false))
+    }
+
+    /// 保存密码条目。磁盘 JSON 只保存 AES-GCM 密文，不保存密码正文。
     async fn save_password_entry(&self, entry: &PasswordEntry) -> Result<()> {
         let passwords_dir = self.data_dir.join("passwords");
         if !passwords_dir.exists() {
@@ -554,15 +701,24 @@ impl EncryptedPasswordService {
         }
 
         let entry_path = passwords_dir.join(format!("{}.json", entry.id));
-        let db_entry: PasswordEntryDb = entry.clone().into();
+        let mut db_entry: PasswordEntryDb = entry.clone().into();
+        db_entry.password = self.encrypt_password_for_storage(&entry.password).await?;
+        db_entry.key_id = "installation-key".to_string();
+        db_entry.encryption_algorithm = if cfg!(windows) {
+            "AES256GCM+WindowsDPAPI"
+        } else {
+            "AES256GCM+UserFilePermissions"
+        }
+        .to_string();
+        db_entry.encryption_version = 2;
         let entry_json = serde_json::to_string(&db_entry)?;
 
-        fs::write(&entry_path, entry_json).await?;
+        Self::write_atomically(&entry_path, entry_json.as_bytes()).await?;
 
         Ok(())
     }
 
-    /// 从文件加载密码条目（简化处理）
+    /// 从文件加载密码条目。旧版明文只在成功读取后迁移为 v2 密文。
     async fn load_password_entry(&self, id: &str) -> Result<Option<PasswordEntry>> {
         let entry_path = self.data_dir.join("passwords").join(format!("{}.json", id));
 
@@ -571,8 +727,19 @@ impl EncryptedPasswordService {
         }
 
         let entry_json = fs::read_to_string(&entry_path).await?;
-        let db_entry: PasswordEntryDb = serde_json::from_str(&entry_json)?;
+        let mut db_entry: PasswordEntryDb = serde_json::from_str(&entry_json)?;
+        let (password, needs_migration) = self
+            .decrypt_password_from_storage(&db_entry.password)
+            .await
+            .with_context(|| format!("无法解锁密码条目 {}", id))?;
+        db_entry.password = password;
         let entry: PasswordEntry = db_entry.into();
+
+        if needs_migration {
+            self.save_password_entry(&entry)
+                .await
+                .with_context(|| format!("迁移旧密码条目失败: {}", id))?;
+        }
 
         Ok(Some(entry))
     }
@@ -750,5 +917,94 @@ impl PasswordGroupService {
         let group: PasswordGroup = db_group.into();
 
         Ok(Some(group))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::password::PasswordCategory;
+
+    #[tokio::test]
+    async fn legacy_plaintext_entry_is_migrated_without_changing_the_password() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut service = EncryptedPasswordService::new(temp.path());
+        service.initialize("real-installation-key").await.unwrap();
+
+        let entry = PasswordEntry::new(
+            "真实迁移样本".to_string(),
+            "archive-secret-迁移".to_string(),
+            PasswordCategory::Other,
+        );
+        let entry_path = temp
+            .path()
+            .join("passwords")
+            .join(format!("{}.json", entry.id));
+        fs::create_dir_all(entry_path.parent().unwrap()).await.unwrap();
+        let legacy: PasswordEntryDb = entry.clone().into();
+        fs::write(&entry_path, serde_json::to_vec(&legacy).unwrap())
+            .await
+            .unwrap();
+
+        let loaded = service.get_password(&entry.id).await.unwrap().unwrap();
+        assert_eq!(loaded.password, entry.password);
+
+        let migrated = fs::read_to_string(&entry_path).await.unwrap();
+        assert!(!migrated.contains(&entry.password));
+        assert!(migrated.contains(PASSWORD_CIPHERTEXT_PREFIX));
+        assert!(migrated.contains("AES256GCM+WindowsDPAPI") || migrated.contains("AES256GCM+UserFilePermissions"));
+
+        service.lock().await;
+        let mut reopened = EncryptedPasswordService::new(temp.path());
+        assert!(reopened.unlock("real-installation-key").await.unwrap());
+        assert_eq!(
+            reopened.get_password(&entry.id).await.unwrap().unwrap().password,
+            entry.password
+        );
+    }
+
+    #[tokio::test]
+    async fn damaged_ciphertext_is_rejected_without_overwriting_the_record() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut service = EncryptedPasswordService::new(temp.path());
+        service.initialize("real-installation-key").await.unwrap();
+        let saved = service
+            .add_password(PasswordEntry::new(
+                "损坏密文样本".to_string(),
+                "must-not-leak".to_string(),
+                PasswordCategory::Other,
+            ))
+            .await
+            .unwrap();
+        let path = temp.path().join("passwords").join(format!("{}.json", saved.id));
+        let mut stored: PasswordEntryDb = serde_json::from_slice(&fs::read(&path).await.unwrap()).unwrap();
+        stored.password.push('A');
+        let damaged = serde_json::to_vec(&stored).unwrap();
+        fs::write(&path, &damaged).await.unwrap();
+
+        assert!(service.get_password(&saved.id).await.is_err());
+        assert_eq!(fs::read(&path).await.unwrap(), damaged);
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn legacy_installation_key_is_really_migrated_to_windows_dpapi() {
+        let temp = tempfile::tempdir().unwrap();
+        let key_path = temp.path().join("installation.key");
+        let legacy = "legacy-installation-key-real-fixture";
+        fs::write(&key_path, legacy).await.unwrap();
+
+        let first = EncryptedPasswordService::get_or_create_master_key(temp.path())
+            .await
+            .unwrap();
+        let stored = fs::read_to_string(&key_path).await.unwrap();
+        assert_eq!(first, legacy);
+        assert!(stored.starts_with(DPAPI_KEY_PREFIX));
+        assert!(!stored.contains(legacy));
+
+        let second = EncryptedPasswordService::get_or_create_master_key(temp.path())
+            .await
+            .unwrap();
+        assert_eq!(second, legacy);
     }
 }

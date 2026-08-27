@@ -1828,7 +1828,31 @@ async function runVaultUsageDesktopGate() {
   const payload = `vault usage ${new Date().toISOString()}\n`
   mkdirSync(root, { recursive: true })
   writeFileSync(sourcePath, payload, 'utf8')
-  await callDesktopBridge('seedVaultPassword', 'Desktop E2E 当天趋势', password)
+  const entryId = await callDesktopBridge('seedVaultPassword', 'Desktop E2E 当天趋势', password)
+
+  const installationKeyPath = path.join(e2eDataDirectory, 'installation.key')
+  const entryPath = path.join(e2eDataDirectory, 'passwords', `${entryId}.json`)
+  const installationKey = readFileSync(installationKeyPath, 'utf8')
+  const storedEntryText = readFileSync(entryPath, 'utf8')
+  const storedEntry = JSON.parse(storedEntryText)
+  assert.match(
+    installationKey,
+    /^long-dpapi:v1:/,
+    'the real Windows installation key must be wrapped by current-user DPAPI',
+  )
+  assert.equal(
+    installationKey.includes(password),
+    false,
+    'the installation-key file must not contain the archive password',
+  )
+  assert.equal(
+    storedEntryText.includes(password),
+    false,
+    'the real password entry JSON must not contain the archive password in plaintext',
+  )
+  assert.match(storedEntry.password, /^long-vault:v2:/)
+  assert.equal(storedEntry.encryption_version, 2)
+  assert.equal(storedEntry.encryption_algorithm, 'AES256GCM+WindowsDPAPI')
 
   const packed = spawnSync(
     bundledSevenZip,
@@ -1837,6 +1861,7 @@ async function runVaultUsageDesktopGate() {
   )
   assert.equal(packed.status, 0, packed.stderr || packed.stdout)
 
+  await restartDesktopSession()
   await callDesktopBridge('extractArchive', archivePath, outputPath)
   assert.equal(readFileSync(path.join(outputPath, sourceName), 'utf8'), payload)
 

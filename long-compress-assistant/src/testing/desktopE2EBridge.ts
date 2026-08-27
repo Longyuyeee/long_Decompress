@@ -313,11 +313,9 @@ export const installDesktopE2EBridge = () => {
 
   const bridge: DesktopE2EBridge = {
     async seedVaultPassword(name, password) {
-      const masterPassword = await invoke<string>('get_or_create_master_key')
       const isUnlocked = await invoke<boolean>('is_encrypted_password_service_unlocked')
       if (!isUnlocked) {
-        const unlocked = await invoke<boolean>('unlock_encrypted_password_service', { masterPassword })
-        if (!unlocked) await invoke('init_encrypted_password_service', { masterPassword })
+        await invoke<boolean>('ensure_encrypted_password_service')
       }
       const entry = await invoke<{ id: string }>('add_encrypted_password', {
         entry: {

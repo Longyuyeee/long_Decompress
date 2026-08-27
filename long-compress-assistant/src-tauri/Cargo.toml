@@ -84,6 +84,13 @@ single-instance = "0.3.3"
 interprocess = "2.4.0"
 trash = { version = "5.2.6", default-features = false, features = ["coinit_multithreaded"] }
 
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_Security_Cryptography",
+    "Win32_Storage_FileSystem"
+] }
+
 [dev-dependencies]
 tempfile = "3.10"
 mockall = "0.12"
