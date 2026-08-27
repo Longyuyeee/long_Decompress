@@ -1,8 +1,11 @@
 # 媒体节点 <B|C|D> 发布证据
 
-> 版本：`<version>`  
-> 提交：`<full commit SHA>`  
-> 正式 NSIS SHA-256：`<sha256>`  
+> 版本：`<version>`
+>
+> 提交：`<full commit SHA>`
+>
+> 正式 NSIS SHA-256：`<sha256>`
+>
 > 结论：`PASS | INCOMPLETE`
 
 ## 1. 机器与安装身份
