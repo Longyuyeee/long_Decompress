@@ -7,6 +7,11 @@ const MAX_HISTORY_RECORDS: i64 = 500;
 const MAX_SOURCE_PATHS: usize = 128;
 const MAX_LOGS: usize = 200;
 const MAX_TEXT_CHARS: usize = 4_096;
+const MAX_METRIC_LABEL_CHARS: usize = 128;
+
+fn default_workload_kind() -> String {
+    "archive".to_string()
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -16,12 +21,40 @@ pub struct TaskHistoryLog {
     pub severity: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MediaMetricsV1 {
+    pub width: Option<u64>,
+    pub height: Option<u64>,
+    pub frame_count: Option<u64>,
+    pub duration_ms: Option<u64>,
+    pub page_count: Option<u64>,
+    pub video_codec: Option<String>,
+    pub audio_codec: Option<String>,
+    pub container: Option<String>,
+    pub has_alpha: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskHistoryMetricsV1 {
+    pub schema_version: u32,
+    pub input_bytes: u64,
+    pub output_bytes: u64,
+    pub savings_ratio: f64,
+    pub media: Option<MediaMetricsV1>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskHistoryRecord {
     pub id: String,
     pub name: String,
     pub task_type: String,
+    #[serde(default = "default_workload_kind")]
+    pub workload_kind: String,
+    #[serde(default)]
+    pub metrics: Option<TaskHistoryMetricsV1>,
     pub status: String,
     pub source_paths: Vec<String>,
     pub output_path: String,
@@ -40,6 +73,8 @@ struct TaskHistoryRow {
     id: String,
     name: String,
     task_type: String,
+    workload_kind: Option<String>,
+    metrics: Option<String>,
     status: String,
     source_paths: String,
     output_path: String,
@@ -137,6 +172,9 @@ fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, S
     if !matches!(record.task_type.as_str(), "compression" | "decompression") {
         return Err("不支持的任务类型".to_string());
     }
+    if !matches!(record.workload_kind.as_str(), "archive" | "image" | "video" | "pdf") {
+        return Err("不支持的工作负载类型".to_string());
+    }
     if !matches!(record.status.as_str(), "completed" | "failed" | "cancelled") {
         return Err("只能保存已结束任务".to_string());
     }
@@ -168,6 +206,27 @@ fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, S
     record.duration_ms = record.duration_ms.max(0);
     record.processed_bytes = record.processed_bytes.max(0);
     record.total_bytes = record.total_bytes.max(0);
+    if let Some(metrics) = record.metrics.as_mut() {
+        if metrics.schema_version != 1 {
+            return Err("不支持的任务指标版本".to_string());
+        }
+        if record.workload_kind == "archive" && metrics.media.is_some() {
+            return Err("归档任务不能写入媒体指标".to_string());
+        }
+        metrics.savings_ratio = if metrics.input_bytes > 0 {
+            (metrics.input_bytes as f64 - metrics.output_bytes as f64)
+                / metrics.input_bytes as f64
+        } else {
+            0.0
+        };
+        if let Some(media) = metrics.media.as_mut() {
+            for label in [&mut media.video_codec, &mut media.audio_codec, &mut media.container] {
+                *label = label
+                    .take()
+                    .map(|value| value.chars().take(MAX_METRIC_LABEL_CHARS).collect());
+            }
+        }
+    }
     Ok(record)
 }
 
@@ -181,18 +240,24 @@ pub async fn save_task_history(record: TaskHistoryRecord) -> Result<(), String> 
         .map_err(|error| format!("序列化来源路径失败: {error}"))?;
     let logs = serde_json::to_string(&record.logs)
         .map_err(|error| format!("序列化任务日志失败: {error}"))?;
+    let metrics = record.metrics.as_ref()
+        .map(serde_json::to_string)
+        .transpose()
+        .map_err(|error| format!("序列化任务指标失败: {error}"))?;
     let updated_at = Utc::now().to_rfc3339();
 
     sqlx::query(
         r#"
         INSERT INTO task_operation_history (
-            id, name, task_type, status, source_paths, output_path, format,
+            id, name, task_type, workload_kind, metrics, status, source_paths, output_path, format,
             started_at, completed_at, duration_ms, processed_bytes, total_bytes,
             error_message, logs, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
             task_type = excluded.task_type,
+            workload_kind = excluded.workload_kind,
+            metrics = excluded.metrics,
             status = excluded.status,
             source_paths = excluded.source_paths,
             output_path = excluded.output_path,
@@ -210,6 +275,8 @@ pub async fn save_task_history(record: TaskHistoryRecord) -> Result<(), String> 
     .bind(&record.id)
     .bind(&record.name)
     .bind(&record.task_type)
+    .bind(&record.workload_kind)
+    .bind(metrics)
     .bind(&record.status)
     .bind(source_paths)
     .bind(&record.output_path)
@@ -243,7 +310,7 @@ pub async fn list_task_history(limit: Option<i64>) -> Result<Vec<TaskHistoryReco
         .map_err(|error| format!("任务历史数据库不可用: {error}"))?;
     let rows = sqlx::query_as::<_, TaskHistoryRow>(
         r#"
-        SELECT id, name, task_type, status, source_paths, output_path, format,
+        SELECT id, name, task_type, workload_kind, metrics, status, source_paths, output_path, format,
                started_at, completed_at, duration_ms, processed_bytes, total_bytes,
                error_message, logs
         FROM task_operation_history
@@ -262,6 +329,11 @@ pub async fn list_task_history(limit: Option<i64>) -> Result<Vec<TaskHistoryReco
                 id: row.id,
                 name: row.name,
                 task_type: row.task_type,
+                workload_kind: row.workload_kind.unwrap_or_else(default_workload_kind),
+                metrics: row.metrics
+                    .map(|metrics| serde_json::from_str(&metrics)
+                        .map_err(|error| format!("解析任务指标失败: {error}")))
+                    .transpose()?,
                 status: row.status,
                 source_paths: serde_json::from_str(&row.source_paths)
                     .map_err(|error| format!("解析任务来源失败: {error}"))?,
@@ -315,6 +387,11 @@ mod tests {
             id: "task-1".into(),
             name: "sample.zip".into(),
             task_type: "compression".into(),
+            workload_kind: "archive".into(),
+            metrics: Some(TaskHistoryMetricsV1 {
+                schema_version: 1, input_bytes: 1_200, output_bytes: 600,
+                savings_ratio: 99.0, media: None,
+            }),
             status: "completed".into(),
             source_paths: vec!["C:/data".into()],
             output_path: "C:/sample.zip".into(),
@@ -338,6 +415,7 @@ mod tests {
         assert!(sanitized.logs[1].message.contains("[已隐藏]"));
         assert_eq!(sanitized.duration_ms, 0);
         assert_eq!(sanitized.processed_bytes, 0);
+        assert_eq!(sanitized.metrics.unwrap().savings_ratio, 0.5);
     }
 
     #[test]
@@ -393,7 +471,42 @@ mod tests {
     fn rejects_non_terminal_status() {
         let record = TaskHistoryRecord {
             id: "task-1".into(), name: "task".into(), task_type: "decompression".into(),
+            workload_kind: "archive".into(), metrics: None,
             status: "running".into(), source_paths: vec![], output_path: String::new(),
+            format: None, started_at: None, completed_at: Utc::now().to_rfc3339(),
+            duration_ms: 0, processed_bytes: 0, total_bytes: 0, error_message: None, logs: vec![],
+        };
+        assert!(sanitize_record(record).is_err());
+    }
+
+    #[test]
+    fn old_json_defaults_to_archive_without_inventing_metrics() {
+        let json = serde_json::json!({
+            "id": "legacy-task", "name": "legacy.zip", "taskType": "compression",
+            "status": "completed", "sourcePaths": ["C:/source"],
+            "outputPath": "C:/legacy.zip", "format": "zip", "startedAt": null,
+            "completedAt": Utc::now().to_rfc3339(), "durationMs": 10,
+            "processedBytes": 12, "totalBytes": 12, "errorMessage": null, "logs": []
+        });
+        let record: TaskHistoryRecord = serde_json::from_value(json).unwrap();
+        assert_eq!(record.workload_kind, "archive");
+        assert!(record.metrics.is_none());
+    }
+
+    #[test]
+    fn rejects_media_metrics_on_archive_history() {
+        let record = TaskHistoryRecord {
+            id: "task-media".into(), name: "task".into(), task_type: "compression".into(),
+            workload_kind: "archive".into(),
+            metrics: Some(TaskHistoryMetricsV1 {
+                schema_version: 1, input_bytes: 12, output_bytes: 8, savings_ratio: 0.0,
+                media: Some(MediaMetricsV1 {
+                    width: Some(1), height: Some(1), frame_count: None, duration_ms: None,
+                    page_count: None, video_codec: None, audio_codec: None,
+                    container: Some("png".into()), has_alpha: Some(true),
+                }),
+            }),
+            status: "completed".into(), source_paths: vec![], output_path: String::new(),
             format: None, started_at: None, completed_at: Utc::now().to_rfc3339(),
             duration_ms: 0, processed_bytes: 0, total_bytes: 0, error_message: None, logs: vec![],
         };

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { ResourcePreflightReport } from '@/types/resourcePreflight'
+import type { TaskMetrics, WorkloadKind } from '@/types/taskMetrics'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
 import { normalizeProgressPercent } from '@/utils/progress'
 
@@ -32,6 +33,10 @@ export interface Task {
   id: string
   name: string
   type: TaskType
+  /** Missing on pre-B00 tasks and interpreted as archive for compatibility. */
+  workloadKind?: WorkloadKind
+  /** Only measured values are persisted; never synthesize progress or quality. */
+  metrics?: TaskMetrics
   status: TaskStatus
   progress: number
   startTime?: Date

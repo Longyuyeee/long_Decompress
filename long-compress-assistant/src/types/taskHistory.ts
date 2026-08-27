@@ -1,4 +1,9 @@
 import type { Task } from '@/stores/task'
+import {
+  createMeasuredTaskMetricsV1,
+  type TaskMetrics,
+  type WorkloadKind,
+} from '@/types/taskMetrics'
 
 export type TaskHistoryStatus = 'completed' | 'failed' | 'cancelled'
 
@@ -12,6 +17,8 @@ export interface TaskHistoryRecord {
   id: string
   name: string
   taskType: 'compression' | 'decompression'
+  workloadKind: WorkloadKind
+  metrics?: TaskMetrics | null
   status: TaskHistoryStatus
   sourcePaths: string[]
   outputPath: string
@@ -28,10 +35,22 @@ export interface TaskHistoryRecord {
 export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
   const completedAt = task.endTime || new Date()
   const startedAt = task.startTime
+  const measuredMetrics = task.metrics || (
+    task.type === 'compression'
+    && task.outputBytes !== undefined
+    && !task.outputBytesEstimated
+      ? createMeasuredTaskMetricsV1(
+          Math.max(0, task.totalBytes || task.processedBytes || 0),
+          task.outputBytes,
+        )
+      : null
+  )
   return {
     id: task.id,
     name: task.name,
     taskType: task.type,
+    workloadKind: task.workloadKind || 'archive',
+    metrics: measuredMetrics,
     status: task.status as TaskHistoryStatus,
     sourcePaths: [...task.sourceFiles],
     outputPath: task.outputPath,
