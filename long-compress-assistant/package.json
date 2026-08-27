@@ -16,6 +16,8 @@
     "test:context-menu-package": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-context-menu-package.ps1",
     "test:release-identity": "node scripts/check-release-identity.mjs",
     "test:media-architecture": "node scripts/check-media-architecture.mjs",
+    "test:media-dependencies": "node scripts/check-media-dependencies.mjs",
+    "test:media-dependencies:real": "node scripts/check-media-dependencies.mjs --real",
     "test:installed-release": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-installed-release.ps1",
     "test:installed-archive-workspace": "node scripts/test-installed-archive-workspace.mjs",
     "test:public-update": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-public-update.ps1",

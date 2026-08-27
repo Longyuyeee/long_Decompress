@@ -1,5 +1,11 @@
 # 开发交接
 
+## 2026-08-27 B-00.3 媒体依赖身份与许可门禁收口
+
+- 已固定 `libcaesium 0.21.0`、`oxipng 10.2.0`、FFmpeg 9.0.1 官方源码和 qpdf 12.4.0 官方 MinGW64 候选的来源、字节、SHA-256、许可、平台、链接方式、禁用功能与安全责任；Ghostscript 明确阻断。
+- 真实审计纠正了顶层许可误判：libcaesium 默认/GIF/PNG 会引入 AGPL/GPL 依赖，因此未来只允许显式 JPEG/WebP，无损 PNG 独立走 MIT oxipng。FFmpeg 官方源码 PGP 签名与发布指纹已真实验证；qpdf 真实运行版本/crypto 与 12,637,211 B 运行子集已核对。
+- CI 和 Release 增加失败关闭静态门禁，真实网络门禁可复验下载与执行身份；四个候选仍为 `integrationAllowed=false`，生产代码中没有媒体引擎。本步骤不升版、不发布；下一步为 B-00.4 固定真实媒体样本。完整证据见 [B00_MEDIA_DEPENDENCY_AUDIT.md](B00_MEDIA_DEPENDENCY_AUDIT.md)。
+
 ## 2026-08-27 B-00.2 共享事务边界收口
 
 - 非分卷归档压缩已从服务内部重命名逻辑迁移到公共单文件发布事务：同目录唯一暂存、校验后发布、取消/目标竞争/缺失暂存/写满清理均有真实文件证据；分卷压缩和目录解压事务保持原边界。
