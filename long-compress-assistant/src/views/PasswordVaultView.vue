@@ -852,7 +852,7 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
                     <span class="text-xs text-muted">{{ stats.totalUsage }} {{ appStore.t('vault.analytics.unlock_hits') }}</span>
                   </div>
                   <div class="flex items-center gap-6">
-                    <div class="strength-donut shrink-0" :style="{ background: usageTierGradient }">
+                    <div class="usage-donut shrink-0" :style="{ background: usageTierGradient }">
                       <div>
                         <strong>{{ stats.total }}</strong>
                         <span>{{ appStore.t('vault.analytics.items') }}</span>
@@ -1301,7 +1301,7 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
   margin-top: 0.25rem;
 }
 
-.strength-donut {
+.usage-donut {
   position: relative;
   isolation: isolate;
   width: 118px;
@@ -1314,7 +1314,7 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
   animation: analytics-donut-arrive 0.85s 0.18s both cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.strength-donut::before {
+.usage-donut::before {
   content: '';
   position: absolute;
   inset: -8px;
@@ -1325,7 +1325,7 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
   animation: analytics-orbit 8s linear infinite;
 }
 
-.strength-donut::after {
+.usage-donut::after {
   content: '';
   position: absolute;
   width: 6px;
@@ -1337,7 +1337,7 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
   box-shadow: 0 0 14px 3px color-mix(in srgb, var(--dynamic-accent) 52%, transparent);
 }
 
-.strength-donut > div {
+.usage-donut > div {
   width: 100%;
   height: 100%;
   border-radius: inherit;
@@ -1348,13 +1348,13 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
   justify-content: center;
 }
 
-.strength-donut strong {
+.usage-donut strong {
   font-size: 1.7rem;
   font-weight: 900;
   line-height: 1;
 }
 
-.strength-donut span {
+.usage-donut span {
   color: var(--text-muted);
   font-size: 0.62rem;
   font-weight: 800;
@@ -1678,8 +1678,8 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
   .analytics-orb,
   .analytics-kpi,
   .analytics-card,
-  .strength-donut,
-  .strength-donut::before,
+  .usage-donut,
+  .usage-donut::before,
   .usage-chart-area,
   .usage-chart-glow,
   .usage-chart-line,

@@ -8,9 +8,7 @@ export { useCompressionStore } from './compression'
 export { useCompressionProfileStore } from './compressionProfile'
 export {
   usePasswordStore,
-  PasswordCategory,
-  PasswordStrength,
-  CustomFieldType
+  PasswordCategory
 } from './password'
 
 // 类型导出
@@ -19,9 +17,6 @@ export type { Notification, ModalState, Toast } from './ui'
 export type { CompressionOptions, CompressionTask, CompressionHistory } from './compression'
 export type {
   PasswordEntry,
-  PasswordGroup,
-  CustomField,
   AddPasswordRequest,
-  UpdatePasswordRequest,
-  PasswordStrengthAssessment
+  UpdatePasswordRequest
 } from './password'
