@@ -2,6 +2,12 @@
 
 本文档定义 Long解压 的格式验收口径。格式不能仅凭界面可选、函数返回成功或模拟测试判定为可用；可创建格式必须在 Windows Tauri 正式后端完成真实压缩与解压，并逐字节比对源文件和输出文件。
 
+## 2026-08-27 当前结论
+
+格式公开口径现统一到 [FORMAT_SUPPORT_LEVELS.md](FORMAT_SUPPORT_LEVELS.md)。HFSX 已补齐可复现非空载荷方案：固定 `mozilla/libdmg-hfsplus@ec239599c1f234a4e01ae3fe51214d0c77e5baa3`，写入 `Firefox/known-payload.txt`，转换为 HFSX，并通过随包 7-Zip和 Windows Release Tauri 解压。载荷 SHA-256 为 `0A7130487543AF627E9C15512AE6DBE0A6FD9D6ED5F4C2C89942E56CB3B14023`。
+
+下方 2026-07-29 各阶段记录保留为历史证据；其中“HFSX 尚未完成”的当时结论已由本节取代。
+
 ## 2026-07-29 验收结果
 
 测试环境为 Windows 11、WebView2、Release Tauri 二进制和项目随包提供的完整 7-Zip 引擎。测试使用独立数据目录与系统临时目录，不读取或修改正式版密码保险箱和用户设置。

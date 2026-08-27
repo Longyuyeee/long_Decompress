@@ -49,6 +49,7 @@
     "test:e2e:desktop:responsive-layout": "node scripts/test-tauri-desktop.mjs --responsive-layout-only",
     "test:e2e:desktop:auto-start": "node scripts/test-tauri-desktop.mjs --auto-start-only",
     "test:e2e:desktop:full-format": "node scripts/test-tauri-desktop.mjs --require-full-format-matrix",
+    "test:e2e:desktop:hfsx": "node scripts/test-tauri-desktop.mjs --hfsx-only",
     "test:fixtures:archives": "node scripts/fetch-archive-test-fixtures.mjs",
     "test:tools:qemu-img": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-qemu-img-test-tool.ps1",
     "test:tools:wsl-fs": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-wsl-fs-test-tools.ps1",

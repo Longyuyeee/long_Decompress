@@ -103,6 +103,7 @@ const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
 const historyOnly = process.argv.includes('--history-only')
 const vaultUsageOnly = process.argv.includes('--vault-usage-only')
 const encryptedRarOnly = process.argv.includes('--encrypted-rar-only')
+const hfsxOnly = process.argv.includes('--hfsx-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const responsiveLayoutOnly = process.argv.includes('--responsive-layout-only')
 const autoStartOnly = process.argv.includes('--auto-start-only')
@@ -1817,6 +1818,21 @@ async function runHistoryDesktopGate() {
   )
 }
 
+async function runHfsxDesktopGate() {
+  console.log('[desktop-e2e] verifying a non-empty HFSX image through the real application backend')
+  assert.ok(existsSync(hfsxFixture), `HFSX fixture is missing; run npm.cmd run test:fixtures:hfsx: ${hfsxFixture}`)
+  const outputPath = path.join(fixtureDirectory, 'hfsx-extracted')
+  await callDesktopBridge('clearTasks')
+  await callDesktopBridge('extractArchive', hfsxFixture, outputPath)
+
+  const extractedPayload = path.join(outputPath, 'Firefox', 'known-payload.txt')
+  assert.ok(existsSync(extractedPayload), `HFSX payload was not extracted: ${extractedPayload}`)
+  assert.deepEqual(
+    readFileSync(extractedPayload),
+    Buffer.from('Long Decompress HFSX real payload\n', 'utf8'),
+  )
+}
+
 async function runVaultUsageDesktopGate() {
   console.log('[desktop-e2e] verifying real vault password usage appears in the current local-day trend')
   const root = path.join(fixtureDirectory, 'vault-usage-gate')
@@ -2500,6 +2516,10 @@ try {
     await runEncryptedRarDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri encrypted RAR password gate passed.')
+  } else if (hfsxOnly) {
+    await runHfsxDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri non-empty HFSX extraction gate passed.')
   } else if (resourcePreflightOnly) {
     await runResourcePreflightLayoutDesktopGate()
     completedSuccessfully = true

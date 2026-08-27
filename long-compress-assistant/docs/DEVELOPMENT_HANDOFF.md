@@ -1,5 +1,11 @@
 # 开发交接
 
+## 2026-08-27 S-00.4 格式支持与仓库卫生收口
+
+- 新增 A/B/C/D 格式支持等级，明确动态处理器、扩展名识别和空镜像不能作为公开支持证据；README、全格式验证文档与当前权威清单已经统一。
+- HFSX 使用固定 `libdmg-hfsplus` 提交生成包含 `Firefox/known-payload.txt` 的非空镜像，随包 7-Zip 与 Windows Release Tauri 均完成真实解压和内容校验；首次夹具哈希兼容问题及首次误用普通 Release 可执行文件均已记录并修正。
+- 无构建引用的 `src-tauri/TranslateSoftware` 已以可追溯 Git 重命名移入 `archive/legacy-projects`。前端类型检查、40/40 测试文件（235/235）通过；本步骤不升版本、不发布，下一步为 S-00 跨步骤总验收。完整证据见 [FORMAT_SUPPORT_AND_REPOSITORY_HYGIENE_S00_4_AUDIT.md](FORMAT_SUPPORT_AND_REPOSITORY_HYGIENE_S00_4_AUDIT.md)。
+
 ## 2026-08-27 S-00.3 运行队列与历史任务边界收口
 
 - 已删除 `task.ts` 中无调用方、无后端实现的 `fetchTasks` 占位接口；当前任务 store 只维护运行队列，历史页面只从 `history.ts` 和后端 SQLite 读取，不再存在第二套历史读取入口。
@@ -386,7 +392,7 @@
 - 桌面测试现在为每次运行生成独立实例名、IPC socket、数据目录和 WebView2 用户目录；即使旧 E2E
   进程异常残留，也不会阻断新会话或污染固定样本验收。
 - Windows 11 顶层右键菜单仍受签名证书限制，当前不作为开发阻塞项。
-- HFSX 目前只能可靠生成空镜像，尚未找到可写入已知载荷的可信方案，因此不能标记为完整通过。
+- 历史说明：本段当时尚不能生成非空 HFSX；该限制已在 2026-08-27 由固定工具提交、已知载荷和 Release Tauri 门禁解除，当前口径见 `FORMAT_SUPPORT_LEVELS.md`。
 - v1.0.18 候选已修复无签名 Windows 11 菜单降级与覆盖安装残留，并通过公开 v1.0.17
   覆盖安装、41 项状态/数据检查、卸载和基线恢复。
 - v1.0.18 正式更新的签名下载与覆盖安装成功，但被动安装没有自动重启；v1.0.19 已修复。
