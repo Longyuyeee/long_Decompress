@@ -2312,6 +2312,56 @@ async function runImageWorkspaceDesktopGate() {
     acceptedImageNames.toSorted(),
     'switching workload modes must preserve the isolated image queue',
   )
+
+  console.log('[desktop-e2e] verifying the visible image-picker handler path')
+  await callDesktopBridge('reset')
+  await driver.wait(async () => (await callDesktopBridge('imageCompressionAuditState')).length === 0, 10_000)
+  await driver.manage().window().setRect({ width: 1100, height: 720 })
+  await (await waitForElement('[data-testid="image-compression-workspace"] .secondary-action')).click()
+  const nativePickerDropzone = await waitForElement('[data-testid="dropzone-file"]')
+  await driver.wait(async () => nativePickerDropzone.isDisplayed(), 10_000)
+  const pickerJpeg = path.join(mediaRoot, 'images', 'exif-orientation.jpg')
+  const pickerGif = path.join(mediaRoot, 'images', 'animated.gif')
+  await callDesktopBridge('queueDesktopDialogSelections', [[pickerJpeg, pickerGif]])
+  await nativePickerDropzone.click()
+  const pickerState = await driver.wait(async () => {
+    const current = await callDesktopBridge('imageCompressionAuditState')
+    return current.length === 1 && current[0].status === 'ready' ? current : false
+  }, 30_000)
+  assert.deepEqual(
+    pickerState[0],
+    {
+      name: 'exif-orientation.jpg',
+      status: 'ready',
+      width: 360,
+      height: 640,
+      inputSize: statSync(pickerJpeg).size,
+    },
+    'the visible picker handler must preserve the real JPEG path, bytes and decoded dimensions',
+  )
+  const rejectionText = await driver.wait(async () => {
+    const alerts = await driver.findElements(By.css('[role="alert"]'))
+    for (const alert of alerts) {
+      const text = await alert.getText()
+      if (/animated\.gif.*GIF/.test(text)) return text
+    }
+    return false
+  }, 10_000)
+  assert.match(rejectionText, /animated\.gif.*GIF/)
+  assert.deepEqual(
+    (await callDesktopBridge('imageCompressionAuditState')).map(item => item.name),
+    ['exif-orientation.jpg'],
+    'the rejected GIF must not enter the image queue',
+  )
+  assert.equal(
+    await driver.executeScript('return document.hasFocus()'),
+    true,
+    'the picker handler must leave the WebView focused',
+  )
+  writeFileSync(
+    path.join(artifactDirectory, 'image-workspace-picker-handler.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
 }
 
 async function runZipTelemetryDesktopGate() {

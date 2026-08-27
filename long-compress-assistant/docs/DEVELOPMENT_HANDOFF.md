@@ -496,3 +496,8 @@
 - 隔离 Release/WebView2 双尺寸门禁已真实通过并人工检查截图：JPEG/PNG/WebP 能预览，GIF/PDF 明确拒绝，1100×720 与 760×560 无横向溢出，归档/图片队列互不污染。
 - 首次失败确认 Windows `convertFileSrc` 使用 `https://asset.localhost`，CSP 已补齐且 Release 身份门禁会锁定空默认 scope 与两种资产源；随后将 Orientation=6 的公开尺寸明确为应用方向后的 360×640，编码矩阵 640×360 和方向值仍单独验证。
 - B-02 仍未收口：下一步只补系统文件选择器或真实拖放路径，然后做全量回归审计；不得提前进入 B-03、升版或发布。证据见 [B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md](B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md)。
+## 2026-08-28 B-02 系统选择路径纠偏
+
+- 修复真实 `dialog.open` 路径未读取磁盘元数据、图片大小先显示 0 B 的偏移；文件/目录选择、测试桥和原生拖放现在统一调用 `get_file_info`。
+- 图片系统选择器改用“选择图片文件”标题并允许选中 GIF 后由统一业务规则明确拒绝。组件测试与 Windows Release/WebView2 可见入口门禁通过，JPEG 使用真实字节和方向后尺寸，GIF Toast 拒绝且不入队。
+- 当前 Codex 宿主可打开、枚举和预选真实 Windows 对话框，但阻止后台测试进程完成受信任点击；实验性调度器已全部撤回。B-02 仍需一次有人值守的系统选择，不能宣称收口或进入 B-03。证据见 [B02_NATIVE_PICKER_PATH_AUDIT.md](B02_NATIVE_PICKER_PATH_AUDIT.md)。

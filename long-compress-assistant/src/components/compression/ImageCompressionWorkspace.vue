@@ -120,6 +120,8 @@ const readyItems = computed(() => store.imageItems.filter(item => item.status ==
       <EnhancedFileDropzone
         mode="file"
         accept="jpg,jpeg,png,webp"
+        picker-title="选择图片文件"
+        unfiltered-picker
         hint="拖入需要压缩的图片"
         sub-hint="会先读取真实尺寸和格式，不会自动开始处理"
         @files-selected="onFilesSelected"
@@ -177,7 +179,7 @@ const readyItems = computed(() => store.imageItems.filter(item => item.status ==
           </div>
         </article>
       </div>
-      <EnhancedFileDropzone compact mode="file" accept="jpg,jpeg,png,webp" hint="继续添加图片" :native-drop="false" @files-selected="onFilesSelected" />
+      <EnhancedFileDropzone compact mode="file" accept="jpg,jpeg,png,webp" picker-title="选择图片文件" unfiltered-picker hint="继续添加图片" :native-drop="false" @files-selected="onFilesSelected" />
     </div>
   </section>
 </template>
