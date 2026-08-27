@@ -23,6 +23,9 @@ export function validateMediaMetricContract(contract) {
 
   const workloads = contract.workloads
   assert(Object.keys(workloads ?? {}).sort().join(',') === 'image,pdf,video', 'image/video/PDF contracts are required')
+  assert(workloads.image.dimensionSemantics?.widthHeight === 'orientation-applied-display-dimensions', 'image width/height must describe the orientation-applied display')
+  assert(workloads.image.dimensionSemantics?.encodedPixelMatrix === 'validation-only', 'encoded image dimensions must remain validation facts')
+  assert(workloads.image.dimensionSemantics?.orientation === 'decoded-source-metadata', 'image orientation must come from decoded metadata')
   assert(workloads.image.progress.percent === 'batch-item-count-only', 'image percent must use completed item count')
   assert(workloads.image.progress.eta === null, 'image ETA is not currently provable')
   assert(workloads.video.progress.authoritativeSource === 'ffmpeg-progress-pipe', 'video progress must use FFmpeg progress pipe')

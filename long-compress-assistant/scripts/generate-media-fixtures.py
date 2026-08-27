@@ -177,7 +177,14 @@ def inspect(root, include_pdfs=True):
     actual = {"images": {}, "pdfs": {}}
     for path in (root / "images").iterdir():
         with Image.open(path) as image:
-            item = {"format": image.format, "width": image.width, "height": image.height, "hasAlpha": "A" in image.getbands()}
+            item = {
+                "format": image.format,
+                "width": image.width,
+                "height": image.height,
+                "displayWidth": image.width,
+                "displayHeight": image.height,
+                "hasAlpha": "A" in image.getbands(),
+            }
             if image.format == "GIF":
                 item["frames"] = image.n_frames
                 item["durationsMs"] = []
@@ -185,6 +192,8 @@ def inspect(root, include_pdfs=True):
                     image.seek(frame); item["durationsMs"].append(image.info.get("duration"))
             if image.format == "JPEG":
                 exif = image.getexif(); item["exifMake"] = exif.get(271); item["orientation"] = exif.get(274)
+                if item["orientation"] in (5, 6, 7, 8):
+                    item["displayWidth"], item["displayHeight"] = image.height, image.width
             item["pixels"] = image.width * image.height
             actual["images"][path.name] = item
 

@@ -23,6 +23,9 @@ const executableSuffix = process.platform === 'win32' ? '.exe' : ''
 const tauriConfig = JSON.parse(
   readFileSync(path.join(root, 'src-tauri', 'tauri.conf.json'), 'utf8'),
 )
+const mediaFixtureManifest = JSON.parse(
+  readFileSync(path.join(root, 'tests', 'fixtures', 'media', 'manifest.json'), 'utf8'),
+)
 const packagedApplication = path.join(
   root,
   'src-tauri',
@@ -2199,16 +2202,17 @@ async function runResponsiveTaskDetailDesktopGate() {
 async function runImageWorkspaceDesktopGate() {
   console.log('[desktop-e2e] verifying the real B-02 image workspace and queue isolation')
   const mediaRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures')
-  const imageFixtures = [
-    ['exif-orientation.jpg', 640, 360],
-    ['photo.webp', 800, 500],
-    ['transparent.png', 256, 256],
-  ].map(([name, width, height]) => ({
-    name,
-    width,
-    height,
-    path: path.join(mediaRoot, 'images', name),
-  }))
+  const acceptedImageNames = ['exif-orientation.jpg', 'photo.webp', 'transparent.png']
+  const imageFixtures = acceptedImageNames.map(name => {
+    const expected = mediaFixtureManifest.images.find(item => item.file === name)
+    assert.ok(expected, `missing image fixture contract: ${name}`)
+    return {
+      name,
+      width: expected.displayWidth,
+      height: expected.displayHeight,
+      path: path.join(mediaRoot, 'images', name),
+    }
+  })
   const rejectedFixtures = [
     { name: 'animated.gif', path: path.join(mediaRoot, 'images', 'animated.gif') },
     { name: 'rejected-input.pdf', path: path.join(mediaRoot, 'pdfs', 'rejected-input.pdf') },
@@ -2248,13 +2252,15 @@ async function runImageWorkspaceDesktopGate() {
     assert.deepEqual(
       actual && { width: actual.width, height: actual.height, inputSize: actual.inputSize },
       { width: expected.width, height: expected.height, inputSize: statSync(expected.path).size },
-      `${expected.name} must use decoded real dimensions and filesystem bytes`,
+      `${expected.name} must use orientation-applied display dimensions and filesystem bytes`,
     )
   }
 
   const startButton = await waitForElement('[data-testid="image-compression-workspace"] .primary-action')
   assert.equal(await startButton.getAttribute('disabled'), 'true', 'B-02 must not expose fake execution')
-  assert.match(await (await waitForElement('[data-testid="image-compression-workspace"]')).getText(), /非实际结果/)
+  const workspaceText = await (await waitForElement('[data-testid="image-compression-workspace"]')).getText()
+  assert.match(workspaceText, /尚未生成结果文件/)
+  assert.match(workspaceText, /B-03.*验证.*开放/)
   await waitForElement('.image-details')
 
   mkdirSync(artifactDirectory, { recursive: true })
@@ -2297,7 +2303,15 @@ async function runImageWorkspaceDesktopGate() {
   assert.match(await (await waitForElement('main')).getText(), /Desktop E2E 智能分析/)
   assert.doesNotMatch(await (await waitForElement('main')).getText(), /photo\.webp/)
   await (await waitForElement('[data-testid="compression-mode-image"]')).click()
-  assert.match(await (await waitForElement('[data-testid="image-compression-workspace"]')).getText(), /photo\.webp/)
+  await waitForElement('[data-testid="image-compression-workspace"]')
+  const restoredImageNames = (await callDesktopBridge('imageCompressionAuditState'))
+    .map(item => item.name)
+    .sort()
+  assert.deepEqual(
+    restoredImageNames,
+    acceptedImageNames.toSorted(),
+    'switching workload modes must preserve the isolated image queue',
+  )
 }
 
 async function runZipTelemetryDesktopGate() {

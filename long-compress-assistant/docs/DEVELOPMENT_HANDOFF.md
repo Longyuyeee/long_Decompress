@@ -491,3 +491,8 @@
 4. 每次正式发布后继续用 `test:public-update` 从上一正式版本执行独立 WebView2 更新验收。
 5. 正式发布 PR 通过后合入 `master` 并创建 `v1.0.20` 标签，由 Release 工作流生产签名 updater 资产；发布后立即从
    保留的 v1.0.19 环境执行 `test:public-update`，回填应用内更新和自动重启证据。
+## 2026-08-27 B-02 Release/WebView2 桌面矩阵通过
+
+- 隔离 Release/WebView2 双尺寸门禁已真实通过并人工检查截图：JPEG/PNG/WebP 能预览，GIF/PDF 明确拒绝，1100×720 与 760×560 无横向溢出，归档/图片队列互不污染。
+- 首次失败确认 Windows `convertFileSrc` 使用 `https://asset.localhost`，CSP 已补齐且 Release 身份门禁会锁定空默认 scope 与两种资产源；随后将 Orientation=6 的公开尺寸明确为应用方向后的 360×640，编码矩阵 640×360 和方向值仍单独验证。
+- B-02 仍未收口：下一步只补系统文件选择器或真实拖放路径，然后做全量回归审计；不得提前进入 B-03、升版或发布。证据见 [B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md](B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md)。

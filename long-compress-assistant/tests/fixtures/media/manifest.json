@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "fixtureRevision": "2026-08-27-b00.4",
+  "fixtureRevision": "2026-08-27-b00.5",
   "privacy": "synthetic-only-no-user-data",
   "identityPolicy": {
     "acceptanceBasis": "decoded-and-probed-properties",
@@ -18,11 +18,11 @@
     "productIntegrationAllowed": false
   },
   "images": [
-    { "file": "transparent.png", "format": "PNG", "width": 256, "height": 256, "hasAlpha": true },
-    { "file": "exif-orientation.jpg", "format": "JPEG", "width": 640, "height": 360, "exifMake": "LongDecompressFixture", "orientation": 6 },
-    { "file": "photo.webp", "format": "WEBP", "width": 800, "height": 500, "hasAlpha": false },
-    { "file": "animated.gif", "format": "GIF", "width": 320, "height": 180, "frames": 3, "durationsMs": [100, 200, 300] },
-    { "file": "ultra-large.png", "format": "PNG", "width": 12000, "height": 8000, "pixels": 96000000 }
+    { "file": "transparent.png", "format": "PNG", "width": 256, "height": 256, "displayWidth": 256, "displayHeight": 256, "hasAlpha": true },
+    { "file": "exif-orientation.jpg", "format": "JPEG", "width": 640, "height": 360, "displayWidth": 360, "displayHeight": 640, "exifMake": "LongDecompressFixture", "orientation": 6 },
+    { "file": "photo.webp", "format": "WEBP", "width": 800, "height": 500, "displayWidth": 800, "displayHeight": 500, "hasAlpha": false },
+    { "file": "animated.gif", "format": "GIF", "width": 320, "height": 180, "displayWidth": 320, "displayHeight": 180, "frames": 3, "durationsMs": [100, 200, 300] },
+    { "file": "ultra-large.png", "format": "PNG", "width": 12000, "height": 8000, "displayWidth": 12000, "displayHeight": 8000, "pixels": 96000000 }
   ],
   "videos": [
     { "file": "h264-vfr-audio-rotation-subtitles.mp4", "videoCodec": "h264", "audioCodec": "aac", "subtitleCodec": "mov_text", "rotation": 90, "variableFrameRate": true },

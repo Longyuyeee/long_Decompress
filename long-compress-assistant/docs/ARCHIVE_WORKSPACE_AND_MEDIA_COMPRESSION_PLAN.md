@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已全部完成并随 `v1.1.14` 发布，B-00.1 至 B-00.6 前置门禁和 B-01 图片依赖/固定哈希基线也已完成。B-02 已实现图片前端工作区和受限预览授权，但修正后的 Windows Release 桌面复验尚未完成，当前暂停且不得进入 B-03。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内；图片候选仍在隔离实验中，没有进入产品运行时。
+当前 A-01 至 A-06 已全部完成并随 `v1.1.14` 发布，B-00.1 至 B-00.6 前置门禁和 B-01 图片依赖/固定哈希基线也已完成。B-02 已实现图片前端工作区和受限预览授权，Windows Release/WebView2 双尺寸桌面矩阵已通过；尚欠一次原生文件选择/拖放证据，因此仍不得进入 B-03。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内；图片候选仍在隔离实验中，没有进入产品运行时。
 
 ### 2.2 任务和历史模型
 
@@ -349,10 +349,10 @@ src/types/media.ts
 
 ### B-02 前端工作区
 
-状态：**进行中 / 2026-08-27 暂停**。前端工作区、压缩 store 内隔离草稿、同源配置、格式拒绝和安全预览授权已实现；暂停审计已纠正首稿新建图片 store 的架构偏移。资产协议修正后的 Windows Release 双尺寸复验与原生选择/拖放仍未完成。恢复开发时必须先完成 [B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md](B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md) 第 6 节，不得直接进入 B-03。
+状态：**进行中 / 2026-08-27 已恢复**。前端工作区、压缩 store 内隔离草稿、同源配置、格式拒绝和安全预览授权已实现；暂停审计已纠正首稿新建图片 store 的架构偏移。Windows Release/WebView2 双尺寸复验已通过并人工检查截图，尚欠原生选择/拖放证据。必须先完成 [B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md](B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md) 第 6 节，不得直接进入 B-03。
 
 - 压缩中心新增四模式切换组件，保留归档压缩为默认；
-- 图片任务列表显示文件名、尺寸、输入大小、输出格式、状态、进度和节省比例；
+- 图片任务列表显示文件名、应用方向后的可见尺寸、输入大小、输出格式、状态、进度和节省比例；编码像素矩阵与方向信息保留为后端验证事实；
 - 配置包含：无损/有损、质量、保持尺寸/最大宽高、输出格式、保留元数据、输出目录、冲突策略；
 - 提供原图/结果图对比和预计结果说明，但预计值不得冒充实际值；
 - 批量全局设置与单项覆盖使用同一模型。
@@ -363,7 +363,7 @@ src/types/media.ts
 
 - 魔数和解码器共同确认输入，不只看扩展名；
 - 输出写入唯一临时文件；
-- 完成后重新解码，验证尺寸、帧数和格式；
+- 完成后重新解码，分别验证编码像素矩阵、方向信息、应用方向后的可见尺寸、帧数和格式；
 - 只有输出有效且满足用户策略时才发布；
 - “仅在更小时替换”作为默认行为，结果更大时保留源文件并明确说明；
 - 取消、编码失败、磁盘不足和发布竞态全部清理临时输出；
@@ -376,7 +376,7 @@ src/types/media.ts
 - 日志展示解码、缩放、编码、验证、发布阶段；
 - 进度按批量文件数与可用字节信息组合，不得长时间静止在虚假百分比；
 - 历史记录 `taskType=compression`、`workloadKind=image`；
-- 指标至少包含输入大小、输出大小、节省字节、节省比例、输入/输出尺寸与格式。
+- 指标至少包含输入大小、输出大小、节省字节、节省比例、输入/输出可见尺寸与格式；图片可见尺寸统一为应用方向后的结果，编码矩阵与方向作为校验事实单独记录。
 
 验收目标：完成、失败、取消三种历史跨重启保留；统计使用真实输出，不用估算覆盖实际结果。
 
@@ -642,7 +642,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-00.6 已全部完成并通过总审计；B-01 也已完成精确 feature 构建、五个固定输入、JPEG/WebP/无损 PNG 输出复核、GIF 拒绝、质量/内存/并发和隔离载荷基线。B-02 前端代码与安全预览边界已落地，但真实桌面终验尚未闭环，当前暂停；产品仍没有媒体编码引擎或占位成功状态。证据见 [B00_TOTAL_ACCEPTANCE_AUDIT.md](B00_TOTAL_ACCEPTANCE_AUDIT.md)、[B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md](B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md) 与 [B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md](B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md)。下一步先完成 B-02 桌面复验，而不是进入 B-03。
+- B-00.1 至 B-00.6 已全部完成并通过总审计；B-01 也已完成精确 feature 构建、五个固定输入、JPEG/WebP/无损 PNG 输出复核、GIF 拒绝、质量/内存/并发和隔离载荷基线。B-02 前端代码、安全预览边界与 Release/WebView2 双尺寸矩阵已落地，尚欠原生文件进入路径；产品仍没有媒体编码引擎或占位成功状态。证据见 [B00_TOTAL_ACCEPTANCE_AUDIT.md](B00_TOTAL_ACCEPTANCE_AUDIT.md)、[B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md](B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md) 与 [B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md](B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md)。下一步先完成 B-02 原生选择/拖放，而不是进入 B-03。
 
 ## 12. 技术参考
 

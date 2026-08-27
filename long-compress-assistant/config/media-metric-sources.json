@@ -13,6 +13,11 @@
   },
   "workloads": {
     "image": {
+      "dimensionSemantics": {
+        "widthHeight": "orientation-applied-display-dimensions",
+        "encodedPixelMatrix": "validation-only",
+        "orientation": "decoded-source-metadata"
+      },
       "progress": {
         "authoritativeSource": "completed-items/total-items",
         "processedBytes": "engine-callback-only",

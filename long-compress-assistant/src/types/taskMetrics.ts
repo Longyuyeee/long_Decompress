@@ -1,6 +1,7 @@
 export type WorkloadKind = 'archive' | 'image' | 'video' | 'pdf'
 
 export interface MediaMetricsV1 {
+  /** Orientation-applied dimensions shown to the user, not the encoded pixel matrix. */
   width?: number
   height?: number
   frameCount?: number
