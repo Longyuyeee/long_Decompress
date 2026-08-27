@@ -21,6 +21,7 @@ import CompressionStatusCell from '@/components/compression/CompressionStatusCel
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import CompressionToolbar from '@/components/compression/CompressionToolbar.vue'
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
+import ImageCompressionWorkspace from '@/components/compression/ImageCompressionWorkspace.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import Modal from '@/components/ui/Modal.vue'
 import { ask } from '@tauri-apps/api/dialog'
@@ -29,6 +30,15 @@ const appStore = useAppStore()
 const compressionStore = useCompressionStore()
 const tauriCommands = useTauriCommands()
 const taskStore = useTaskStore()
+
+type CompressionWorkspaceMode = 'archive' | 'image' | 'video' | 'pdf'
+const activeWorkspaceMode = ref<CompressionWorkspaceMode>('archive')
+const compressionWorkspaceModes: Array<{ id: CompressionWorkspaceMode, label: string, icon: string, stage?: string }> = [
+  { id: 'archive', label: '归档压缩', icon: 'pi pi-box' },
+  { id: 'image', label: '图片压缩', icon: 'pi pi-images' },
+  { id: 'video', label: '视频压缩', icon: 'pi pi-video', stage: '节点 C' },
+  { id: 'pdf', label: 'PDF 压缩', icon: 'pi pi-file-pdf', stage: '节点 D' },
+]
 
 const selectedRows = ref<Set<string>>(new Set())
 const showGlobalSettingsModal = ref(false)
@@ -611,6 +621,7 @@ const onDetailLeave = (element: Element) => {
         <p class="text-xs md:text-sm text-muted font-semibold mt-1">{{ appStore.t('compress.subtitle') }}</p>
       </div>
       <CompressionToolbar
+        v-if="activeWorkspaceMode === 'archive'"
         :has-finished="hasFinishedCompressionTasks"
         :active-count="activeCompressionTasks.length"
         :pending-count="pendingPayload"
@@ -622,8 +633,24 @@ const onDetailLeave = (element: Element) => {
       />
     </header>
 
+    <nav class="compression-mode-switch" aria-label="压缩模式" data-testid="compression-mode-switch">
+      <button
+        v-for="mode in compressionWorkspaceModes"
+        :key="mode.id"
+        type="button"
+        :data-testid="`compression-mode-${mode.id}`"
+        :aria-current="activeWorkspaceMode === mode.id ? 'page' : undefined"
+        :class="{ active: activeWorkspaceMode === mode.id }"
+        @click="activeWorkspaceMode = mode.id"
+      >
+        <i :class="mode.icon"></i>
+        <span>{{ mode.label }}</span>
+        <small v-if="mode.stage">{{ mode.stage }}</small>
+      </button>
+    </nav>
+
     <!-- 主工作区 -->
-    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
+    <div v-if="activeWorkspaceMode === 'archive'" class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div v-if="totalPayload > 0" class="compression-task-list flex-1 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-3 space-y-3">
         <div
           data-testid="compression-table-header"
@@ -991,6 +1018,18 @@ const onDetailLeave = (element: Element) => {
       </div>
     </div>
 
+    <ImageCompressionWorkspace v-else-if="activeWorkspaceMode === 'image'" />
+
+    <section v-else class="planned-workspace" data-testid="planned-compression-workspace">
+      <div class="planned-icon"><i :class="activeWorkspaceMode === 'video' ? 'pi pi-video' : 'pi pi-file-pdf'"></i></div>
+      <div>
+        <span>{{ activeWorkspaceMode === 'video' ? '视频压缩 · 节点 C' : 'PDF 压缩 · 节点 D' }}</span>
+        <h2>路线已定义，尚未进入公开实现</h2>
+        <p>当前不会创建任务、模拟进度或生成占位结果。图片节点 B 完整通过后再按路线接入真实引擎与验收矩阵。</p>
+      </div>
+      <button type="button" @click="activeWorkspaceMode = 'archive'">返回归档压缩</button>
+    </section>
+
     <Modal
       :visible="showRarResolution"
       title="创建 RAR 需要编码器"
@@ -1047,6 +1086,87 @@ const onDetailLeave = (element: Element) => {
   overflow-x: hidden;
   background: radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--dynamic-accent) 4%, transparent) 0%, transparent 40%);
 }
+
+.compression-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  flex-shrink: 0;
+  min-width: 0;
+  padding: 0.35rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--bg-card) 72%, transparent);
+}
+
+.compression-mode-switch button {
+  display: flex;
+  min-width: 0;
+  height: 2.6rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  transition: 0.2s ease;
+}
+
+.compression-mode-switch button:hover {
+  color: var(--text-content);
+  background: color-mix(in srgb, var(--dynamic-accent) 7%, transparent);
+}
+
+.compression-mode-switch button.active {
+  border-color: color-mix(in srgb, var(--dynamic-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--dynamic-accent) 13%, transparent);
+  color: var(--dynamic-accent);
+  box-shadow: 0 8px 20px -15px var(--dynamic-accent);
+}
+
+.compression-mode-switch small {
+  border-radius: 999px;
+  background: var(--bg-input);
+  padding: 0.12rem 0.35rem;
+  color: var(--text-dim);
+  font-size: 0.55rem;
+}
+
+.planned-workspace {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--bg-card) 65%, transparent);
+  padding: 2rem;
+  text-align: left;
+}
+
+.planned-icon {
+  display: flex;
+  width: 4rem;
+  height: 4rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--dynamic-accent) 22%, transparent);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--dynamic-accent) 8%, transparent);
+  color: var(--dynamic-accent);
+  font-size: 1.5rem;
+}
+
+.planned-workspace span { color: var(--dynamic-accent); font-size: 0.68rem; font-weight: 900; letter-spacing: 0.12em; }
+.planned-workspace h2 { margin-top: 0.35rem; color: var(--text-content); font-size: 1.05rem; font-weight: 900; }
+.planned-workspace p { margin-top: 0.35rem; max-width: 34rem; color: var(--text-muted); font-size: 0.72rem; font-weight: 650; line-height: 1.6; }
+.planned-workspace button { flex-shrink: 0; border: 1px solid var(--border-subtle); border-radius: 0.8rem; background: var(--bg-input); padding: 0.7rem 0.9rem; color: var(--text-content); font-size: 0.7rem; font-weight: 850; }
 
 .compression-task-list,
 .compression-table-header,
@@ -1184,6 +1304,9 @@ const onDetailLeave = (element: Element) => {
 }
 
 @media (max-width: 760px) {
+  .compression-mode-switch button { gap: 0.3rem; }
+  .compression-mode-switch small { display: none; }
+
   .compression-config-panel {
     padding: 1rem;
   }
@@ -1200,6 +1323,9 @@ const onDetailLeave = (element: Element) => {
 }
 
 @media (max-width: 520px) {
+  .compression-mode-switch button span { display: none; }
+  .compression-mode-switch button i { font-size: 1rem; }
+  .planned-workspace { align-items: flex-start; flex-direction: column; padding: 1.25rem; }
   .compression-leading-cell {
     width: 1.25rem;
   }

@@ -36,6 +36,10 @@
         "setSize": true,
         "show": true,
         "unmaximize": true
+      },
+      "protocol": {
+        "asset": true,
+        "assetScope": []
       }
     },
     "bundle": {

@@ -425,6 +425,7 @@ fn main() {
             long_compress_assistant::commands::compression::repair_zip,
             long_compress_assistant::commands::file::list_files,
             long_compress_assistant::commands::file::get_file_info,
+            long_compress_assistant::commands::file::authorize_image_preview,
             long_compress_assistant::commands::file::path_exists,
             long_compress_assistant::commands::file::read_text_file,
             long_compress_assistant::commands::file::write_text_file,

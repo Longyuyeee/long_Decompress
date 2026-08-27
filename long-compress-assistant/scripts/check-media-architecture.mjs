@@ -73,7 +73,10 @@ const productionFiles = [
   ...(await collectFiles('src/', new Set(['.ts', '.vue']))),
   ...(await collectFiles('src-tauri/src/', new Set(['.rs']))),
 ]
-const mediaFiles = productionFiles.filter((file) => /(?:^|[\\/])media(?:[_.\\/-]|$)/i.test(file))
+const mediaFiles = productionFiles.filter((file) =>
+  /(?:^|[\\/])media(?:[_.\\/-]|$)/i.test(file)
+  || /imageCompression/i.test(file),
+)
 const forbiddenMediaBypasses = [
   'std::fs::rename(',
   'tokio::fs::rename(',
@@ -82,6 +85,8 @@ const forbiddenMediaBypasses = [
   "invoke('save_task_history'",
   'defineStore(\'media',
   'defineStore("media',
+  'defineStore(\'image',
+  'defineStore("image',
 ]
 for (const file of mediaFiles) {
   const source = await readFile(file, 'utf8')

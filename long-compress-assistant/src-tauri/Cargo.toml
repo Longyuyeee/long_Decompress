@@ -16,6 +16,7 @@ tauri = { version = "1.5", features = [
     "dialog-save",
     "global-shortcut",
     "shell-open",
+    "protocol-asset",
     "system-tray",
     "updater",
     "window-close",

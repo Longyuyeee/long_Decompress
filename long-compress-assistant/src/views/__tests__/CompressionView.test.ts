@@ -612,4 +612,22 @@ describe('CompressionView', () => {
       expect.objectContaining({ format: '7z', password: 'keep-this-password' }),
     )
   })
+
+  it('exposes four honest workspaces and keeps the archive queue intact while switching modes', async () => {
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+    expect(wrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(1)
+
+    await wrapper.get('[data-testid="compression-mode-image"]').trigger('click')
+    expect(wrapper.get('[data-testid="image-compression-workspace"]').text()).toContain('尚未生成结果文件')
+    expect(useCompressionStore().imageItems).toHaveLength(0)
+    expect(useCompressionStore().selectedFiles).toHaveLength(1)
+
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    expect(wrapper.get('[data-testid="planned-compression-workspace"]').text()).toContain('不会创建任务、模拟进度或生成占位结果')
+
+    await wrapper.get('[data-testid="compression-mode-archive"]').trigger('click')
+    expect(wrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(1)
+  })
 })

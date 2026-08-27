@@ -106,6 +106,7 @@ const encryptedRarOnly = process.argv.includes('--encrypted-rar-only')
 const hfsxOnly = process.argv.includes('--hfsx-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const responsiveLayoutOnly = process.argv.includes('--responsive-layout-only')
+const imageWorkspaceOnly = process.argv.includes('--image-workspace-only')
 const autoStartOnly = process.argv.includes('--auto-start-only')
 const missingFullFormatCapabilities = new Set()
 const autoStartRegistryKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
@@ -2195,6 +2196,110 @@ async function runResponsiveTaskDetailDesktopGate() {
   }
 }
 
+async function runImageWorkspaceDesktopGate() {
+  console.log('[desktop-e2e] verifying the real B-02 image workspace and queue isolation')
+  const mediaRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures')
+  const imageFixtures = [
+    ['exif-orientation.jpg', 640, 360],
+    ['photo.webp', 800, 500],
+    ['transparent.png', 256, 256],
+  ].map(([name, width, height]) => ({
+    name,
+    width,
+    height,
+    path: path.join(mediaRoot, 'images', name),
+  }))
+  const rejectedFixtures = [
+    { name: 'animated.gif', path: path.join(mediaRoot, 'images', 'animated.gif') },
+    { name: 'text-vector.pdf', path: path.join(mediaRoot, 'pdfs', 'text-vector.pdf') },
+  ]
+  for (const fixture of [...imageFixtures, ...rejectedFixtures]) {
+    assert.equal(existsSync(fixture.path), true, `missing real media fixture: ${fixture.path}`)
+    assert.ok(statSync(fixture.path).size > 0, `real media fixture is empty: ${fixture.path}`)
+  }
+
+  const archiveSeed = path.join(fixtureDirectory, 'archive-queue-must-survive.txt')
+  writeFileSync(archiveSeed, 'B-02 queue isolation', 'utf8')
+  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await callDesktopBridge('seedCompressionAnalysisWorkspace', [{
+    name: path.basename(archiveSeed), path: archiveSeed, size: statSync(archiveSeed).size, isDirectory: false,
+  }])
+
+  await (await waitForElement('[data-testid="compression-mode-image"]')).click()
+  await waitForElement('[data-testid="image-compression-workspace"]')
+  const batchSettings = await waitForElement('[data-testid="image-compression-workspace"] .secondary-action')
+  await batchSettings.click()
+  const seed = await callDesktopBridge('seedImageCompressionWorkspace', [
+    ...imageFixtures.map(fixture => ({ name: fixture.name, path: fixture.path, size: statSync(fixture.path).size, isDirectory: false })),
+    ...rejectedFixtures.map(fixture => ({ name: fixture.name, path: fixture.path, size: statSync(fixture.path).size, isDirectory: false })),
+  ])
+  assert.equal(seed.accepted, 3, 'JPG, WebP and PNG must enter the image workspace')
+  assert.equal(seed.rejected.length, 2, 'GIF and PDF must be rejected before task creation')
+  assert.match(seed.rejected.find(item => item.name === 'animated.gif')?.reason || '', /GIF/)
+  assert.match(seed.rejected.find(item => item.name === 'text-vector.pdf')?.reason || '', /JPG|PNG|WebP/)
+
+  const state = await driver.wait(async () => {
+    const current = await callDesktopBridge('imageCompressionAuditState')
+    return current.length === 3 && current.every(item => item.status === 'ready') ? current : false
+  }, 30_000)
+  for (const expected of imageFixtures) {
+    const actual = state.find(item => item.name === expected.name)
+    assert.deepEqual(
+      actual && { width: actual.width, height: actual.height, inputSize: actual.inputSize },
+      { width: expected.width, height: expected.height, inputSize: statSync(expected.path).size },
+      `${expected.name} must use decoded real dimensions and filesystem bytes`,
+    )
+  }
+
+  const startButton = await waitForElement('[data-testid="image-compression-workspace"] .primary-action')
+  assert.equal(await startButton.getAttribute('disabled'), 'true', 'B-02 must not expose fake execution')
+  assert.match(await (await waitForElement('[data-testid="image-compression-workspace"]')).getText(), /非实际结果/)
+  await waitForElement('.image-details')
+
+  mkdirSync(artifactDirectory, { recursive: true })
+  for (const size of [{ width: 1100, height: 720 }, { width: 760, height: 560 }]) {
+    await driver.manage().window().setRect(size)
+    await new Promise(resolve => setTimeout(resolve, 250))
+    const layout = await driver.executeScript(() => {
+      const main = document.querySelector('main')
+      const workspace = document.querySelector('[data-testid="image-compression-workspace"]')
+      const list = document.querySelector('.image-list')
+      const details = document.querySelector('.image-details')
+      const config = document.querySelector('.item-config')
+      const comparison = document.querySelector('.comparison-panel')
+      if (!main || !workspace || !list || !details || !config || !comparison) return null
+      const configRect = config.getBoundingClientRect()
+      const comparisonRect = comparison.getBoundingClientRect()
+      return {
+        mainOverflow: main.scrollWidth - main.clientWidth,
+        workspaceOverflow: workspace.scrollWidth - workspace.clientWidth,
+        listOverflow: list.scrollWidth - list.clientWidth,
+        detailsOverflow: details.scrollWidth - details.clientWidth,
+        sideBySide: comparisonRect.left >= configRect.right - 2,
+        configWidth: configRect.width,
+        comparisonWidth: comparisonRect.width,
+      }
+    })
+    assert.ok(layout, 'image details must be visible')
+    assert.equal(layout.sideBySide, true, `image details must remain side by side: ${JSON.stringify(layout)}`)
+    assert.ok(layout.configWidth >= 190 && layout.comparisonWidth >= 190, `image detail columns are unreadable: ${JSON.stringify(layout)}`)
+    for (const [label, overflow] of Object.entries(layout).filter(([key]) => key.endsWith('Overflow'))) {
+      assert.ok(overflow <= 1, `image ${label} must not scroll horizontally: ${JSON.stringify(layout)}`)
+    }
+    writeFileSync(
+      path.join(artifactDirectory, `image-workspace-${size.width}x${size.height}.png`),
+      Buffer.from(await driver.takeScreenshot(), 'base64'),
+    )
+  }
+
+  await (await waitForElement('[data-testid="compression-mode-archive"]')).click()
+  assert.match(await (await waitForElement('main')).getText(), /Desktop E2E 智能分析/)
+  assert.doesNotMatch(await (await waitForElement('main')).getText(), /photo\.webp/)
+  await (await waitForElement('[data-testid="compression-mode-image"]')).click()
+  assert.match(await (await waitForElement('[data-testid="image-compression-workspace"]')).getText(), /photo\.webp/)
+}
+
 async function runZipTelemetryDesktopGate() {
   console.log('[desktop-e2e] verifying focused plain and AES ZIP real-byte telemetry')
   await callDesktopBridge('clearTasks')
@@ -2504,6 +2609,10 @@ try {
     await runResponsiveTaskDetailDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri responsive task-detail gate passed.')
+  } else if (imageWorkspaceOnly) {
+    await runImageWorkspaceDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri B-02 image-workspace gate passed.')
   } else if (tarTelemetryOnly) {
     await runTarTelemetryDesktopGate()
     completedSuccessfully = true

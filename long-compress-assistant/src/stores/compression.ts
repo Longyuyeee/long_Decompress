@@ -2,6 +2,13 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { CompressionFormatId } from '@/utils/compressionFormat'
 import type { CompressionAnalysisResult } from '@/composables/useTauriCommands'
+import {
+  createDefaultImageSettings,
+  inferImageFormat,
+  validateImageCandidate,
+  type ImageCandidate,
+  type ImageCompressionSettings,
+} from '@/utils/imageCompressionWorkspace'
 
 export interface FileObject {
   name: string
@@ -68,6 +75,28 @@ export interface CompressionAnalysisState {
   error?: string
 }
 
+export interface ImageCompressionItem {
+  id: string
+  name: string
+  path: string
+  inputSize: number
+  inputFormat: string
+  width?: number
+  height?: number
+  previewUrl?: string
+  status: 'inspecting' | 'ready' | 'rejected'
+  progress: number
+  expanded: boolean
+  error?: string
+  settings?: ImageCompressionSettings
+}
+
+export interface ImageCandidateRejection {
+  name: string
+  path: string
+  reason: string
+}
+
 export const useCompressionStore = defineStore('compression', () => {
   const selectedFiles = ref<FileObject[]>([])
   const groups = ref<CompressionGroup[]>([])
@@ -85,6 +114,10 @@ export const useCompressionStore = defineStore('compression', () => {
   })
   const globalOutputPath = ref('')
   const autoStartRequested = ref(false)
+  const imageItems = ref<ImageCompressionItem[]>([])
+  const imageGlobalSettings = ref<ImageCompressionSettings>(createDefaultImageSettings())
+  const imageLastRejections = ref<ImageCandidateRejection[]>([])
+  let nextImageDraftId = 0
   
   const compressionAnalysis = ref<Record<string, CompressionAnalysisState>>({})
   const estimatedSize = computed<Record<string, number>>(() => Object.fromEntries(
@@ -97,6 +130,77 @@ export const useCompressionStore = defineStore('compression', () => {
     return selectedFiles.value.reduce((acc, f) => acc + f.size, 0) + 
            groups.value.reduce((acc, g) => acc + g.files.reduce((ga, f) => ga + f.size, 0), 0)
   })
+  const acceptedImageCount = computed(() => imageItems.value.filter(item => item.status !== 'rejected').length)
+
+  const cloneImageSettings = (settings: ImageCompressionSettings): ImageCompressionSettings => ({ ...settings })
+
+  const addImageCandidates = (candidates: ImageCandidate[]) => {
+    const occupied = new Set(imageItems.value.map(item => item.path.replace(/\//g, '\\').toLocaleLowerCase()))
+    const accepted: ImageCompressionItem[] = []
+    const rejected: ImageCandidateRejection[] = []
+    for (const candidate of candidates) {
+      const result = validateImageCandidate(candidate)
+      if (!result.accepted) {
+        rejected.push({ name: candidate.name, path: candidate.path, reason: result.reason })
+        continue
+      }
+      const key = candidate.path.replace(/\//g, '\\').toLocaleLowerCase()
+      if (occupied.has(key)) continue
+      occupied.add(key)
+      const item: ImageCompressionItem = {
+        id: `image-draft-${Date.now()}-${nextImageDraftId++}`,
+        name: candidate.name,
+        path: candidate.path,
+        inputSize: Math.max(0, candidate.size || 0),
+        inputFormat: inferImageFormat(candidate.name),
+        status: 'inspecting',
+        progress: 0,
+        expanded: accepted.length === 0 && imageItems.value.length === 0,
+      }
+      imageItems.value.push(item)
+      accepted.push(item)
+    }
+    imageLastRejections.value = rejected
+    return { accepted, rejected }
+  }
+
+  const completeImageInspection = (id: string, details: { width: number, height: number, previewUrl: string }) => {
+    const item = imageItems.value.find(candidate => candidate.id === id)
+    if (!item) return
+    item.width = details.width
+    item.height = details.height
+    item.previewUrl = details.previewUrl
+    item.status = 'ready'
+    item.error = undefined
+  }
+
+  const failImageInspection = (id: string, reason: string) => {
+    const item = imageItems.value.find(candidate => candidate.id === id)
+    if (!item) return
+    item.status = 'rejected'
+    item.error = reason
+  }
+
+  const getEffectiveImageSettings = (item: ImageCompressionItem) => item.settings || imageGlobalSettings.value
+  const enableImageItemOverride = (id: string) => {
+    const item = imageItems.value.find(candidate => candidate.id === id)
+    if (item && !item.settings) item.settings = cloneImageSettings(imageGlobalSettings.value)
+  }
+  const disableImageItemOverride = (id: string) => {
+    const item = imageItems.value.find(candidate => candidate.id === id)
+    if (item) item.settings = undefined
+  }
+  const updateImageItemSettings = (id: string, settings: ImageCompressionSettings) => {
+    const item = imageItems.value.find(candidate => candidate.id === id)
+    if (item) item.settings = cloneImageSettings(settings)
+  }
+  const removeImageItem = (id: string) => {
+    imageItems.value = imageItems.value.filter(item => item.id !== id)
+  }
+  const clearImageDrafts = () => {
+    imageItems.value = []
+    imageLastRejections.value = []
+  }
 
   // 磁吸打组逻辑
   const cloneSettings = (settings: CompressionOptions): CompressionOptions => ({ ...settings })
@@ -313,9 +417,22 @@ export const useCompressionStore = defineStore('compression', () => {
     globalSettings,
     globalOutputPath,
     autoStartRequested,
+    imageItems,
+    imageGlobalSettings,
+    imageLastRejections,
+    acceptedImageCount,
     estimatedSize,
     compressionAnalysis,
     totalOriginalSize,
+    addImageCandidates,
+    completeImageInspection,
+    failImageInspection,
+    getEffectiveImageSettings,
+    enableImageItemOverride,
+    disableImageItemOverride,
+    updateImageItemSettings,
+    removeImageItem,
+    clearImageDrafts,
     cloneSettings,
     getEffectiveSettings,
     getEffectiveOutputPath,

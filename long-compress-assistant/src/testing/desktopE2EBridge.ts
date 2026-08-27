@@ -79,6 +79,19 @@ export interface DesktopE2EBridge {
     size: number
     isDirectory: boolean
   }>) => string
+  seedImageCompressionWorkspace: (entries: Array<{
+    name: string
+    path: string
+    size: number
+    isDirectory: boolean
+  }>) => { accepted: number; rejected: Array<{ name: string; reason: string }> }
+  imageCompressionAuditState: () => Array<{
+    name: string
+    status: string
+    width: number | null
+    height: number | null
+    inputSize: number
+  }>
   compressionAnalysisAuditState: (jobId: string) => {
     analysis: CompressionAnalysisResult | null
     status: string | null
@@ -371,6 +384,7 @@ export const installDesktopE2EBridge = () => {
 
     async reset() {
       taskStore.tasks.splice(0)
+      compressionStore.clearImageDrafts()
       await syncActiveState()
       updateStore.$patch({
         status: 'idle',
@@ -531,6 +545,28 @@ export const installDesktopE2EBridge = () => {
       const group = compressionStore.groups.find(item => item.id === draft.id)
       if (group) group.expanded = true
       return draft.id
+    },
+
+    seedImageCompressionWorkspace(entries) {
+      compressionStore.clearImageDrafts()
+      const result = compressionStore.addImageCandidates(entries.map(entry => ({
+        ...entry,
+        type: entry.isDirectory ? 'directory' : 'file',
+      })))
+      return {
+        accepted: result.accepted.length,
+        rejected: result.rejected.map(item => ({ name: item.name, reason: item.reason })),
+      }
+    },
+
+    imageCompressionAuditState() {
+      return compressionStore.imageItems.map(item => ({
+        name: item.name,
+        status: item.status,
+        width: item.width ?? null,
+        height: item.height ?? null,
+        inputSize: item.inputSize,
+      }))
     },
 
     compressionAnalysisAuditState(jobId) {
