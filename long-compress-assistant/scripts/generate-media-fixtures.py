@@ -1,22 +1,8 @@
 import argparse
-import datetime
 import json
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
-from reportlab.lib.colors import Color, HexColor
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from pypdf import PdfReader, PdfWriter
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.serialization import pkcs12
-from cryptography.x509.oid import NameOID
-from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
-from pyhanko.pdf_utils.reader import PdfFileReader
-from pyhanko.sign import fields, signers
-from pyhanko.sign.validation import validate_pdf_signature
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -37,7 +23,7 @@ def fixture_font(size):
     return ImageFont.load_default()
 
 
-def generate_images(root):
+def generate_images(root, include_video_source=True):
     images = root / "images"
     images.mkdir(parents=True, exist_ok=True)
 
@@ -76,15 +62,28 @@ def generate_images(root):
         draw.line((offset, 0, 11999 - offset // 2, 7999), fill=(offset // 400 * 7) % 220, width=3)
     large.save(images / "ultra-large.png", compress_level=1)
 
-    video_frames = root / "video-source"
-    video_frames.mkdir(parents=True, exist_ok=True)
-    for index, color in enumerate(((245, 105, 105), (90, 195, 150), (90, 130, 245)), start=1):
-        frame = Image.new("RGB", (640, 360), color)
-        draw_label(frame, f"VFR frame {index}", "Synthetic video source")
-        frame.save(video_frames / f"frame-{index}.png")
+    if include_video_source:
+        video_frames = root / "video-source"
+        video_frames.mkdir(parents=True, exist_ok=True)
+        for index, color in enumerate(((245, 105, 105), (90, 195, 150), (90, 130, 245)), start=1):
+            frame = Image.new("RGB", (640, 360), color)
+            draw_label(frame, f"VFR frame {index}", "Synthetic video source")
+            frame.save(video_frames / f"frame-{index}.png")
+
+
+def generate_image_workspace_rejection_pdf(root):
+    pdfs = root / "pdfs"
+    pdfs.mkdir(parents=True, exist_ok=True)
+    page = Image.new("RGB", (640, 360), (248, 248, 244))
+    draw_label(page, "PDF rejection fixture", "B-02 must reject non-image input before task creation")
+    page.save(pdfs / "rejected-input.pdf", format="PDF", resolution=96.0)
 
 
 def make_base_pdf(path, title, subtitle):
+    from reportlab.lib.colors import HexColor
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
     pdf = canvas.Canvas(str(path), pagesize=A4, pageCompression=0)
     width, height = A4
     pdf.setFillColor(HexColor("#F7F2E3"))
@@ -98,6 +97,20 @@ def make_base_pdf(path, title, subtitle):
 
 
 def generate_pdfs(root):
+    import datetime
+
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.primitives.serialization import pkcs12
+    from cryptography.x509.oid import NameOID
+    from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
+    from pyhanko.sign import fields, signers
+    from pypdf import PdfReader, PdfWriter
+    from reportlab.lib.colors import Color, HexColor
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
     pdfs = root / "pdfs"
     pdfs.mkdir(parents=True, exist_ok=True)
 
@@ -160,7 +173,7 @@ def generate_pdfs(root):
     source.unlink()
 
 
-def inspect(root):
+def inspect(root, include_pdfs=True):
     actual = {"images": {}, "pdfs": {}}
     for path in (root / "images").iterdir():
         with Image.open(path) as image:
@@ -174,6 +187,14 @@ def inspect(root):
                 exif = image.getexif(); item["exifMake"] = exif.get(271); item["orientation"] = exif.get(274)
             item["pixels"] = image.width * image.height
             actual["images"][path.name] = item
+
+    if not include_pdfs:
+        (root / "python-actual.json").write_text(json.dumps(actual, ensure_ascii=False, indent=2), encoding="utf-8")
+        return
+
+    from pyhanko.pdf_utils.reader import PdfFileReader
+    from pyhanko.sign.validation import validate_pdf_signature
+    from pypdf import PdfReader
 
     for path in (root / "pdfs").iterdir():
         reader = PdfReader(path)
@@ -209,11 +230,16 @@ def inspect(root):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
+    parser.add_argument("--images-only", action="store_true")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
-    generate_images(args.output)
-    generate_pdfs(args.output)
-    inspect(args.output)
+    generate_images(args.output, include_video_source=not args.images_only)
+    if args.images_only:
+        generate_image_workspace_rejection_pdf(args.output)
+        inspect(args.output, include_pdfs=False)
+    else:
+        generate_pdfs(args.output)
+        inspect(args.output)
 
 
 if __name__ == "__main__":

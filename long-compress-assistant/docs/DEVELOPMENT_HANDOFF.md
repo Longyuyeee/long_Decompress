@@ -1,5 +1,11 @@
 # 开发交接
 
+## 2026-08-27 B-02 验证基础设施纠偏
+
+- 恢复 B-02 时真实复现 Windows CRLF 使 `test:image-baseline` 误报缺少 libcaesium 锁项；现只规范化换行，版本、feature 与禁止依赖检查均未放宽。
+- 图片桌面门禁此前错误依赖完整视频/PDF/FFmpeg 夹具，170,676,191 B 固定测试工具首次下载停在 467,520 B 且无限等待。现新增图片专用夹具路径，固定五图片和一个真实 PDF 拒绝样本；B-01 真实图片基线复验通过。
+- 完整媒体下载增加 `.part`、Range 续传、停滞超时、重试、进度和哈希后原子发布，B-00 完整矩阵保持不变。下一步仍是 B-02 Release/WebView2 双尺寸复验和原生选择/拖放，不进入 B-03。证据见 [B02_VALIDATION_INFRASTRUCTURE_AUDIT.md](B02_VALIDATION_INFRASTRUCTURE_AUDIT.md)。
+
 ## 2026-08-27 B-02 图片前端工作区暂停交接
 
 - 已实现压缩中心四模式入口、现有压缩 store 内隔离的图片草稿、JPEG/PNG/WebP 输入边界、GIF/PDF 明确拒绝、批量/单项同源配置、预计范围标识以及原图/结果对比框架；视频和 PDF 只展示计划节点，不创建假任务。

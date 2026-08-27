@@ -2211,7 +2211,7 @@ async function runImageWorkspaceDesktopGate() {
   }))
   const rejectedFixtures = [
     { name: 'animated.gif', path: path.join(mediaRoot, 'images', 'animated.gif') },
-    { name: 'text-vector.pdf', path: path.join(mediaRoot, 'pdfs', 'text-vector.pdf') },
+    { name: 'rejected-input.pdf', path: path.join(mediaRoot, 'pdfs', 'rejected-input.pdf') },
   ]
   for (const fixture of [...imageFixtures, ...rejectedFixtures]) {
     assert.equal(existsSync(fixture.path), true, `missing real media fixture: ${fixture.path}`)
@@ -2237,7 +2237,7 @@ async function runImageWorkspaceDesktopGate() {
   assert.equal(seed.accepted, 3, 'JPG, WebP and PNG must enter the image workspace')
   assert.equal(seed.rejected.length, 2, 'GIF and PDF must be rejected before task creation')
   assert.match(seed.rejected.find(item => item.name === 'animated.gif')?.reason || '', /GIF/)
-  assert.match(seed.rejected.find(item => item.name === 'text-vector.pdf')?.reason || '', /JPG|PNG|WebP/)
+  assert.match(seed.rejected.find(item => item.name === 'rejected-input.pdf')?.reason || '', /JPG|PNG|WebP/)
 
   const state = await driver.wait(async () => {
     const current = await callDesktopBridge('imageCompressionAuditState')
