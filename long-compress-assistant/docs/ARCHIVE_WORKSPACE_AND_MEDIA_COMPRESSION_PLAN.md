@@ -92,7 +92,7 @@ B-00 在任何媒体编码页面和引擎之前执行，并以独立审计文档
 1. **B-00.1（2026-08-27 已完成）**：为活动任务和历史记录设计向后兼容的可选 `workloadKind` 与版本化 `metrics`；旧记录缺省解释为 `archive`，数据库迁移可重复执行且不重写旧任务；完整证据见 [B00_TASK_HISTORY_MODEL_AUDIT.md](B00_TASK_HISTORY_MODEL_AUDIT.md)；
 2. **B-00.2（2026-08-27 已完成）**：定义并落地媒体任务必须复用的暂存、容量预检、取消、子进程终止、冲突处理、最终校验、原子发布、Mark-of-the-Web、历史脱敏及系统回收站边界；现有非分卷归档压缩已接入公共单文件发布事务，真实文件、Windows 系统回收站和 Release/WebView2 归档闭环通过，证据见 [B00_SHARED_TRANSACTION_AUDIT.md](B00_SHARED_TRANSACTION_AUDIT.md)；
 3. **B-00.3（2026-08-27 已完成）**：固定图片、视频、PDF 候选的项目主页、精确版本、许可证、构建来源、SHA-256、支持平台、链接/进程方式、安装体积测量阶段和安全更新责任；静态门禁已进入 CI/Release，真实下载、FFmpeg PGP 和 qpdf 可执行身份已验证；所有运行时仍保持阻断，完整证据见 [B00_MEDIA_DEPENDENCY_AUDIT.md](B00_MEDIA_DEPENDENCY_AUDIT.md)；
-4. 建立不含隐私内容的固定真实样本：图片至少覆盖透明度、EXIF、动图和超大尺寸；视频至少覆盖 H.264/H.265、可变帧率、音轨、旋转元数据和字幕；PDF 至少覆盖文本、扫描图、透明对象、表单、签名和加密拒绝边界；
+4. **B-00.4（2026-08-27 已完成）**：建立不含隐私内容、可再生成且带精确预期属性的真实样本；图片覆盖透明度、EXIF、动图和 9600 万像素，视频覆盖 H.264/H.265、VFR、AAC、旋转矩阵和字幕，PDF 覆盖文本、扫描、透明、AcroForm、有效自签 CMS 和 AES-256 拒绝边界；生成、解析、签名验证和 Poppler 视觉复核证据见 [B00_MEDIA_FIXTURE_BASELINE_AUDIT.md](B00_MEDIA_FIXTURE_BASELINE_AUDIT.md)；
 5. 定义每类任务的真实指标来源。无法从引擎证明的速度、ETA、压缩率或质量指标不得显示模拟值；
 6. 明确 B/C/D 节点的安装态桌面门禁、失败回滚、版本提升和 Release 证据模板。
 

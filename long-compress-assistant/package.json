@@ -18,6 +18,7 @@
     "test:media-architecture": "node scripts/check-media-architecture.mjs",
     "test:media-dependencies": "node scripts/check-media-dependencies.mjs",
     "test:media-dependencies:real": "node scripts/check-media-dependencies.mjs --real",
+    "test:fixtures:media": "node scripts/prepare-media-test-fixtures.mjs",
     "test:installed-release": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-installed-release.ps1",
     "test:installed-archive-workspace": "node scripts/test-installed-archive-workspace.mjs",
     "test:public-update": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-public-update.ps1",

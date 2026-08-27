@@ -1,5 +1,11 @@
 # 开发交接
 
+## 2026-08-27 B-00.4 真实媒体样本基线收口
+
+- 已建立 4 图片、2 视频、6 PDF 的合成真实夹具：透明/EXIF/动图/9600 万像素，H.264/H.265/VFR/AAC/旋转矩阵/字幕，以及文本/扫描/透明/表单/CMS 签名/AES-256 拒绝边界。
+- 首轮真实运行依次发现 ReportLab API 名称、pyHanko 参数、加密 PDF 检查顺序、MP4 旋转标签不产生 Display Matrix 和扫描字体过小，均按实际差异修正并重跑。最终结构化 `differences=0`，六个 PDF Poppler 渲染已逐张视觉复核。
+- 视频生成使用固定 SHA-256 的 GPL 测试工具且明确禁止产品集成；实际夹具和 170 MB 测试工具均留在 Git 忽略目录。本步骤不升版、不发布；下一步为 B-00.5 真实指标来源定义。完整证据见 [B00_MEDIA_FIXTURE_BASELINE_AUDIT.md](B00_MEDIA_FIXTURE_BASELINE_AUDIT.md)。
+
 ## 2026-08-27 B-00.3 媒体依赖身份与许可门禁收口
 
 - 已固定 `libcaesium 0.21.0`、`oxipng 10.2.0`、FFmpeg 9.0.1 官方源码和 qpdf 12.4.0 官方 MinGW64 候选的来源、字节、SHA-256、许可、平台、链接方式、禁用功能与安全责任；Ghostscript 明确阻断。

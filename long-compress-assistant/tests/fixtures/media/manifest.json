@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "fixtureRevision": "2026-08-27-b00.4",
+  "privacy": "synthetic-only-no-user-data",
+  "testTool": {
+    "name": "BtbN FFmpeg GPL test-only build",
+    "assetId": 530855149,
+    "fileName": "ffmpeg-master-20260826-win64-gpl.zip",
+    "url": "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/assets/530855149",
+    "bytes": 170676191,
+    "sha256": "06496188114b93337cdb10e38e5d3c8d7ffe467af2bc912268b601fa868d02cc",
+    "productIntegrationAllowed": false
+  },
+  "images": [
+    { "file": "transparent.png", "format": "PNG", "width": 256, "height": 256, "hasAlpha": true },
+    { "file": "exif-orientation.jpg", "format": "JPEG", "width": 640, "height": 360, "exifMake": "LongDecompressFixture", "orientation": 6 },
+    { "file": "animated.gif", "format": "GIF", "width": 320, "height": 180, "frames": 3, "durationsMs": [100, 200, 300] },
+    { "file": "ultra-large.png", "format": "PNG", "width": 12000, "height": 8000, "pixels": 96000000 }
+  ],
+  "videos": [
+    { "file": "h264-vfr-audio-rotation-subtitles.mp4", "videoCodec": "h264", "audioCodec": "aac", "subtitleCodec": "mov_text", "rotation": 90, "variableFrameRate": true },
+    { "file": "h265.mp4", "videoCodec": "hevc", "audioCodec": null, "subtitleCodec": null, "rotation": 0, "variableFrameRate": false }
+  ],
+  "pdfs": [
+    { "file": "text-vector.pdf", "pages": 1, "kind": "searchable-text", "expectedText": "Long Decompress vector text fixture" },
+    { "file": "scanned-image.pdf", "pages": 1, "kind": "scan", "expectedText": "" },
+    { "file": "transparency.pdf", "pages": 1, "kind": "transparency" },
+    { "file": "form.pdf", "pages": 1, "kind": "acroform", "fields": ["archive_name", "preserve_metadata"] },
+    { "file": "signed.pdf", "pages": 1, "kind": "digitally-signed", "signatureField": "FixtureSignature", "signatureValid": true, "signatureIntact": true, "signatureTrusted": false },
+    { "file": "encrypted.pdf", "pages": 1, "kind": "encrypted-refusal", "password": "fixture-user" }
+  ]
+}
