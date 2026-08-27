@@ -501,4 +501,9 @@
 - 修复真实 `dialog.open` 路径未读取磁盘元数据、图片大小先显示 0 B 的偏移；文件/目录选择、测试桥和原生拖放现在统一调用 `get_file_info`。
 - 图片系统选择器改用“选择图片文件”标题并允许选中 GIF 后由统一业务规则明确拒绝。组件测试与 Windows Release/WebView2 可见入口门禁通过，JPEG 使用真实字节和方向后尺寸，GIF Toast 拒绝且不入队。
 - 当前 Codex 宿主可打开、枚举和预选真实 Windows 对话框，但阻止后台测试进程完成受信任点击；实验性调度器已全部撤回。B-02 仍需一次有人值守的系统选择，不能宣称收口或进入 B-03。证据见 [B02_NATIVE_PICKER_PATH_AUDIT.md](B02_NATIVE_PICKER_PATH_AUDIT.md)。
-- 有人值守门禁现可通过 `npm.cmd run test:e2e:desktop:image-picker-manual` 启动隔离 Release/WebView2 会话；脚本不注入选择结果，只在用户完成真实系统对话框操作后自动审计 JPEG 字节与方向尺寸、预览、GIF 拒绝、队列和焦点，并保存本地证据。
+- 有人值守门禁现可通过 `npm.cmd run test:e2e:desktop:image-picker-manual` 启动隔离 Release/WebView2 会话；脚本不注入选择结果，会自动点击可见投放入口打开真实系统对话框，只在用户完成对话框操作后自动审计 JPEG 字节与方向尺寸、预览、GIF 拒绝、队列和焦点，并保存本地证据。
+## 2026-08-28 B-02 图片前端工作区收口
+
+- 原生门禁由产品可见投放入口真实打开 Windows `#32770`“选择图片文件”对话框，系统选择状态确认 `exif-orientation.jpg` 与 `animated.gif` 同时选中后由标准 `IDOK` 返回路径；未调用测试桥选择队列，也未把后台坐标输入冒充通过。
+- 返回应用后自动证据为 JPEG 15,788 B、360×640、预览完成；GIF Toast 明确拒绝且不入队；WebView 确实失焦并重新获焦。`test:e2e:desktop:image-picker-manual` 退出码 0，本地 PNG/JSON 证据不提交。
+- B-02 至此收口，不升版、不发布。下一步进入 B-03，只接入 B-01 已审计图片引擎和 B-00 共享发布事务；真实输出重新解码、失败/取消清理与发布竞态通过前，执行按钮继续禁用。

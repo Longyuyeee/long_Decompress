@@ -2388,7 +2388,7 @@ async function runManualImagePickerDesktopGate() {
   if (globalSettings.length > 0) {
     await (await waitForElement('[data-testid="image-compression-workspace"] .secondary-action')).click()
   }
-  await waitForElement('[data-testid="dropzone-file"]')
+  const nativePickerDropzone = await waitForElement('[data-testid="dropzone-file"]')
 
   await driver.executeScript(() => {
     const audit = { alerts: [], lostFocus: false, returnedFocus: false }
@@ -2412,11 +2412,12 @@ async function runManualImagePickerDesktopGate() {
   })
 
   console.log('')
-  console.log('[manual-gate] 请在已打开的应用中点击“浏览文件”，通过真实 Windows 对话框选择：')
+  console.log('[manual-gate] 即将通过可见工作区入口打开真实 Windows 对话框，请在对话框中选择：')
   console.log(`[manual-gate] JPEG: ${pickerJpeg}`)
   console.log(`[manual-gate] GIF:  ${pickerGif}`)
   console.log('[manual-gate] 可以一次多选，也可以先选 JPEG、再用“继续添加图片”选择 GIF。')
   console.log('[manual-gate] 脚本将在 10 分钟内自动核验真实字节、360×640、预览、GIF 拒绝、队列和焦点。')
+  await nativePickerDropzone.click()
 
   const result = await driver.wait(async () => {
     const state = await callDesktopBridge('imageCompressionAuditState')
