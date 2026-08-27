@@ -41,6 +41,14 @@ cargo clippy --manifest-path src-tauri\Cargo.toml --all-targets --features custo
 
 ## 4. 剩余人工步骤
 
+使用隔离 Release/WebView2 会话运行：
+
+```powershell
+npm.cmd run test:e2e:desktop:image-picker-manual
+```
+
+该门禁优先使用 `EDGE_DRIVER_PATH`，否则复用项目 `test-results/edge-driver-b02` 中已准备的匹配驱动；两者均不存在时会在启动应用前明确失败，不会联网下载或猜测版本。它不调用 `queueDesktopDialogSelections`，也不替代系统对话框返回值，只自动进入图片工作区并记录 UI 结果；文件必须由有人值守的用户在真实 Windows 对话框中选入。通过后会生成未提交的截图和 JSON 证据，并输出明确 PASS。
+
 1. 在 Windows Release 测试应用进入“压缩中心 → 图片压缩”，清空图片列表并收起批量设置。
 2. 点击“浏览文件”，在真实“选择图片文件”对话框先选 `exif-orientation.jpg`，确认显示非零大小、360×640 和原图预览。
 3. 再点击“添加文件”选择 `animated.gif`，确认 Toast 明确包含文件名与 GIF 拒绝原因，且 GIF 不进入队列。

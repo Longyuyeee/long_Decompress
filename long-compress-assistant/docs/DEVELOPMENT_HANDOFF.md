@@ -501,3 +501,4 @@
 - 修复真实 `dialog.open` 路径未读取磁盘元数据、图片大小先显示 0 B 的偏移；文件/目录选择、测试桥和原生拖放现在统一调用 `get_file_info`。
 - 图片系统选择器改用“选择图片文件”标题并允许选中 GIF 后由统一业务规则明确拒绝。组件测试与 Windows Release/WebView2 可见入口门禁通过，JPEG 使用真实字节和方向后尺寸，GIF Toast 拒绝且不入队。
 - 当前 Codex 宿主可打开、枚举和预选真实 Windows 对话框，但阻止后台测试进程完成受信任点击；实验性调度器已全部撤回。B-02 仍需一次有人值守的系统选择，不能宣称收口或进入 B-03。证据见 [B02_NATIVE_PICKER_PATH_AUDIT.md](B02_NATIVE_PICKER_PATH_AUDIT.md)。
+- 有人值守门禁现可通过 `npm.cmd run test:e2e:desktop:image-picker-manual` 启动隔离 Release/WebView2 会话；脚本不注入选择结果，只在用户完成真实系统对话框操作后自动审计 JPEG 字节与方向尺寸、预览、GIF 拒绝、队列和焦点，并保存本地证据。

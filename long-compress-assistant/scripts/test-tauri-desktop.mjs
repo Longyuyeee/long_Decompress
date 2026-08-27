@@ -46,7 +46,10 @@ const application =
 const tauriDriver =
   process.env.TAURI_DRIVER_PATH ||
   path.join(homedir(), '.cargo', 'bin', `tauri-driver${executableSuffix}`)
-const edgeDriver = process.env.EDGE_DRIVER_PATH
+const cachedEdgeDriver = path.join(root, 'test-results', 'edge-driver-b02', `msedgedriver${executableSuffix}`)
+const edgeDriver =
+  process.env.EDGE_DRIVER_PATH ||
+  (existsSync(cachedEdgeDriver) ? cachedEdgeDriver : undefined)
 const webdriverUrl = 'http://127.0.0.1:4444/'
 const artifactDirectory = path.join(root, 'test-results', 'desktop-e2e')
 const e2eInstanceId =
@@ -110,6 +113,7 @@ const hfsxOnly = process.argv.includes('--hfsx-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const responsiveLayoutOnly = process.argv.includes('--responsive-layout-only')
 const imageWorkspaceOnly = process.argv.includes('--image-workspace-only')
+const imagePickerManualOnly = process.argv.includes('--image-picker-manual-only')
 const autoStartOnly = process.argv.includes('--auto-start-only')
 const missingFullFormatCapabilities = new Set()
 const autoStartRegistryKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
@@ -2364,6 +2368,100 @@ async function runImageWorkspaceDesktopGate() {
   )
 }
 
+async function runManualImagePickerDesktopGate() {
+  console.log('[desktop-e2e] preparing the attended real Windows image-picker gate')
+  const mediaRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures')
+  const pickerJpeg = path.join(mediaRoot, 'images', 'exif-orientation.jpg')
+  const pickerGif = path.join(mediaRoot, 'images', 'animated.gif')
+  for (const fixture of [pickerJpeg, pickerGif]) {
+    assert.equal(existsSync(fixture), true, `missing manual picker fixture: ${fixture}`)
+    assert.ok(statSync(fixture).size > 0, `manual picker fixture is empty: ${fixture}`)
+  }
+
+  await callDesktopBridge('reset')
+  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="compression-mode-image"]')).click()
+  await waitForElement('[data-testid="image-compression-workspace"]')
+  await driver.manage().window().setRect({ width: 1100, height: 720 })
+  const globalSettings = await driver.findElements(By.css('.global-settings-card'))
+  if (globalSettings.length > 0) {
+    await (await waitForElement('[data-testid="image-compression-workspace"] .secondary-action')).click()
+  }
+  await waitForElement('[data-testid="dropzone-file"]')
+
+  await driver.executeScript(() => {
+    const audit = { alerts: [], lostFocus: false, returnedFocus: false }
+    const recordAlerts = () => {
+      for (const node of document.querySelectorAll('[role="alert"]')) {
+        const message = node.textContent?.trim()
+        if (message && !audit.alerts.includes(message)) audit.alerts.push(message)
+      }
+    }
+    new MutationObserver(recordAlerts).observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    })
+    window.addEventListener('blur', () => { audit.lostFocus = true })
+    window.addEventListener('focus', () => {
+      if (audit.lostFocus) audit.returnedFocus = true
+    })
+    window.__LONG_DECOMPRESS_MANUAL_PICKER_AUDIT__ = audit
+    recordAlerts()
+  })
+
+  console.log('')
+  console.log('[manual-gate] 请在已打开的应用中点击“浏览文件”，通过真实 Windows 对话框选择：')
+  console.log(`[manual-gate] JPEG: ${pickerJpeg}`)
+  console.log(`[manual-gate] GIF:  ${pickerGif}`)
+  console.log('[manual-gate] 可以一次多选，也可以先选 JPEG、再用“继续添加图片”选择 GIF。')
+  console.log('[manual-gate] 脚本将在 10 分钟内自动核验真实字节、360×640、预览、GIF 拒绝、队列和焦点。')
+
+  const result = await driver.wait(async () => {
+    const state = await callDesktopBridge('imageCompressionAuditState')
+    const ui = await driver.executeScript(() => {
+      const audit = window.__LONG_DECOMPRESS_MANUAL_PICKER_AUDIT__
+      const preview = document.querySelector('.preview-card img')
+      return {
+        alerts: audit?.alerts ?? [],
+        lostFocus: audit?.lostFocus ?? false,
+        returnedFocus: audit?.returnedFocus ?? false,
+        documentHasFocus: document.hasFocus(),
+        previewReady: Boolean(preview?.complete && preview?.naturalWidth > 0 && preview?.naturalHeight > 0),
+      }
+    })
+    const jpeg = state.find(item => item.name === 'exif-orientation.jpg')
+    const gifRejected = ui.alerts.some(message => /animated\.gif.*GIF/.test(message))
+    if (
+      state.length === 1 &&
+      jpeg?.status === 'ready' &&
+      jpeg.width === 360 &&
+      jpeg.height === 640 &&
+      jpeg.inputSize === statSync(pickerJpeg).size &&
+      gifRejected &&
+      ui.previewReady &&
+      ui.documentHasFocus
+    ) {
+      return { state, ui }
+    }
+    return false
+  }, 600_000)
+
+  assert.deepEqual(result.state.map(item => item.name), ['exif-orientation.jpg'])
+  assert.equal(result.ui.documentHasFocus, true, 'focus must return to the WebView after the native dialog closes')
+  mkdirSync(artifactDirectory, { recursive: true })
+  writeFileSync(
+    path.join(artifactDirectory, 'image-workspace-native-picker-manual.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+  writeFileSync(
+    path.join(artifactDirectory, 'image-workspace-native-picker-manual.json'),
+    `${JSON.stringify({ verifiedAt: new Date().toISOString(), ...result }, null, 2)}\n`,
+    'utf8',
+  )
+}
+
 async function runZipTelemetryDesktopGate() {
   console.log('[desktop-e2e] verifying focused plain and AES ZIP real-byte telemetry')
   await callDesktopBridge('clearTasks')
@@ -2677,6 +2775,10 @@ try {
     await runImageWorkspaceDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri B-02 image-workspace gate passed.')
+  } else if (imagePickerManualOnly) {
+    await runManualImagePickerDesktopGate()
+    completedSuccessfully = true
+    console.log('Attended real Windows Tauri B-02 native image-picker gate passed.')
   } else if (tarTelemetryOnly) {
     await runTarTelemetryDesktopGate()
     completedSuccessfully = true
