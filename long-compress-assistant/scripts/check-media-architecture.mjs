@@ -75,7 +75,7 @@ const productionFiles = [
 ]
 const mediaFiles = productionFiles.filter((file) =>
   /(?:^|[\\/])media(?:[_.\\/-]|$)/i.test(file)
-  || /imageCompression/i.test(file),
+  || /image[_-]?compression/i.test(file),
 )
 const forbiddenMediaBypasses = [
   'std::fs::rename(',

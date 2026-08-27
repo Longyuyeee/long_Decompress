@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-27",
+  "reviewedAt": "2026-08-28",
   "policy": {
     "allowedDownloadHosts": ["crates.io", "static.crates.io", "ffmpeg.org", "github.com", "objects.githubusercontent.com", "raw.githubusercontent.com"],
     "releaseRequiresRealVerification": true,
@@ -12,11 +12,11 @@
       "id": "libcaesium",
       "workload": "image",
       "version": "0.21.0",
-      "status": "candidate-build-verified-runtime-blocked",
-      "integrationAllowed": false,
+      "status": "runtime-admitted-b03-service",
+      "integrationAllowed": true,
       "projectUrl": "https://github.com/Lymphatus/libcaesium",
       "license": { "expression": "Apache-2.0", "url": "https://github.com/Lymphatus/libcaesium/blob/v0.21.0/LICENSE", "noticeRequired": true },
-      "linkage": "planned-static-rust",
+      "linkage": "static-rust",
       "platforms": ["windows-x86_64"],
       "features": {
         "allowed": ["jpg", "webp"],
@@ -36,11 +36,11 @@
       "id": "oxipng",
       "workload": "image",
       "version": "10.2.0",
-      "status": "candidate-build-verified-runtime-blocked",
-      "integrationAllowed": false,
+      "status": "runtime-admitted-b03-service",
+      "integrationAllowed": true,
       "projectUrl": "https://github.com/shssoichiro/oxipng",
       "license": { "expression": "MIT", "url": "https://github.com/shssoichiro/oxipng/blob/v10.2.0/LICENSE", "noticeRequired": true },
-      "linkage": "planned-static-rust",
+      "linkage": "static-rust",
       "platforms": ["windows-x86_64"],
       "features": {
         "allowed": ["parallel", "zopfli"],
@@ -54,6 +54,30 @@
         "sha256": "f80e5d92fd65b00e3953760e6a7616264a509b6bbee22502e0226774204da1a3"
       },
       "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-01 isolated candidate measured; B-03 final NSIS required" },
+      "securityOwner": "Long解压 maintainers"
+    },
+    {
+      "id": "image",
+      "workload": "image",
+      "version": "0.25.10",
+      "status": "runtime-admitted-b03-service",
+      "integrationAllowed": true,
+      "projectUrl": "https://github.com/image-rs/image",
+      "license": { "expression": "MIT OR Apache-2.0", "url": "https://github.com/image-rs/image/blob/v0.25.10/LICENSE-MIT", "noticeRequired": true },
+      "linkage": "static-rust-validation-decoder",
+      "platforms": ["windows-x86_64"],
+      "features": {
+        "allowed": ["jpeg", "png", "webp"],
+        "forbidden": ["default", "gif", "avif", "tiff"],
+        "reason": "B-03 re-decode verification is restricted to the three public image formats"
+      },
+      "artifact": {
+        "fileName": "image-0.25.10.crate",
+        "url": "https://crates.io/api/v1/crates/image/0.25.10/download",
+        "bytes": 303647,
+        "sha256": "85ab80394333c02fe689eaf900ab500fbd0c2213da414687ebf995a65d5a6104"
+      },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-03 final NSIS required" },
       "securityOwner": "Long解压 maintainers"
     },
     {

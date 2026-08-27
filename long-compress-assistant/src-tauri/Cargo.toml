@@ -84,6 +84,9 @@ glob = "0.3"
 single-instance = "0.3.3"
 interprocess = "2.4.0"
 trash = { version = "5.2.6", default-features = false, features = ["coinit_multithreaded"] }
+libcaesium = { version = "=0.21.0", default-features = false, features = ["jpg", "webp"] }
+oxipng = { version = "=10.2.0", default-features = false, features = ["parallel", "zopfli"] }
+image = { version = "=0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [

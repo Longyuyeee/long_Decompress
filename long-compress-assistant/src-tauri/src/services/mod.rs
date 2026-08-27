@@ -22,6 +22,7 @@ pub mod file_service;
 pub mod file_integrity_service;
 pub mod io_buffer_pool;
 pub mod io_buffer_pool_benchmark;
+pub mod image_compression_service;
 pub mod parallel_extraction;
 pub mod password_service;
 pub mod password_book_service;

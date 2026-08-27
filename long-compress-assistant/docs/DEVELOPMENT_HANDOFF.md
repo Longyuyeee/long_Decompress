@@ -1,5 +1,13 @@
 # 开发交接
 
+## 2026-08-28 B-03.1 单文件图片编码与发布事务
+
+- 产品运行时首次严格准入 `libcaesium 0.21.0`（仅 `jpg,webp`）、`oxipng 10.2.0`（仅 `parallel,zopfli`）和 `image 0.25.10`（仅 `jpeg,png,webp` 验证）；门禁同时锁定 Cargo 声明、lockfile 精确版本并拒绝 gifski/imagequant，FFmpeg/qpdf 继续冻结。
+- 审计发现架构扫描只识别驼峰 `imageCompression`、会漏掉 Rust 的 `image_compression`；现已修正命名匹配，新服务进入共享发布/历史/回收禁止绕过扫描。
+- 新服务以魔数猜测和真实完整解码确认 JPEG/PNG/WebP，拒绝 GIF/动画及 1 亿像素以上输入；输出只写目标旁唯一暂存，编码后再次完整解码并核对格式、编码矩阵、EXIF 方向、方向后可见尺寸、帧数和 Alpha，再复用共享事务原子发布。
+- 默认“仅在更小时替换”、预取消、编码/验证失败、目标已存在和发布竞态都不修改源文件、不留下暂存；真实方向 JPEG、透明 PNG、WebP、扩展名伪装与拒绝边界测试已通过。
+- B-03 尚未收口。下一步只做 B-03.2：同一服务内补输出格式转换、缩放、元数据逐字段保持/移除验证、任务取消注册表与容量预检接线，并测最终 NSIS 增量；之后才连接前端执行。当前不升版、不发布，执行按钮继续禁用。完整证据见 [B03_IMAGE_ENCODING_TRANSACTION_AUDIT.md](B03_IMAGE_ENCODING_TRANSACTION_AUDIT.md)。
+
 ## 2026-08-27 B-02 验证基础设施纠偏
 
 - 恢复 B-02 时真实复现 Windows CRLF 使 `test:image-baseline` 误报缺少 libcaesium 锁项；现只规范化换行，版本、feature 与禁止依赖检查均未放宽。

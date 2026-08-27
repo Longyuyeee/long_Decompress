@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { createWriteStream } from 'node:fs'
-import { access, mkdir, readFile, readdir, rm, stat } from 'node:fs/promises'
+import { access, mkdir, readFile, readdir, rename, rm, stat } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 import { basename, join, resolve } from 'node:path'
 import { Readable } from 'node:stream'
@@ -43,8 +43,13 @@ function validateManifest(manifest) {
     ids.add(label)
     assert(['image', 'video', 'pdf'].includes(dependency.workload), `${label}: invalid workload`)
     assert(/^\d+\.\d+\.\d+(?:[-+].+)?$/.test(dependency.version), `${label}: exact semantic version is required`)
-    assert(dependency.integrationAllowed === false, `${label}: B-00 must not enable runtime integration`)
-    assert(dependency.status.includes('blocked') || dependency.status.includes('candidate'), `${label}: pre-engine status must remain blocked/candidate`)
+    if (dependency.integrationAllowed) {
+      assert(dependency.workload === 'image', `${label}: only the B-03 image workload may enter runtime`)
+      assert(['libcaesium', 'oxipng', 'image'].includes(label), `${label}: runtime dependency is not approved`)
+      assert(dependency.status === 'runtime-admitted-b03-service', `${label}: runtime admission status is invalid`)
+    } else {
+      assert(dependency.status.includes('blocked') || dependency.status.includes('candidate'), `${label}: pre-engine status must remain blocked/candidate`)
+    }
     assert(dependency.projectUrl?.startsWith('https://'), `${label}: project URL is required`)
     assert(dependency.license?.expression && dependency.license?.url?.startsWith('https://'), `${label}: license identity and URL are required`)
     assert(dependency.license?.noticeRequired === true, `${label}: redistribution notice policy is required`)
@@ -52,6 +57,7 @@ function validateManifest(manifest) {
     assert(dependency.platforms?.includes('windows-x86_64'), `${label}: Windows x64 support decision is required`)
     assert(dependency.features?.allowed?.length > 0, `${label}: allowed feature set is required`)
     assert(dependency.features?.forbidden?.length > 0, `${label}: forbidden feature set is required`)
+    assert(!dependency.features.allowed.some(feature => dependency.features.forbidden.includes(feature)), `${label}: allowed and forbidden features overlap`)
     assert(dependency.installerImpact && 'compressedInstallerDeltaBytes' in dependency.installerImpact, `${label}: installer impact field is required`)
     assert(dependency.installerImpact.measurementStage, `${label}: installer measurement stage is required`)
     assert(dependency.securityOwner, `${label}: security update owner is required`)
@@ -63,7 +69,7 @@ function validateManifest(manifest) {
     }
     if (dependency.upstreamChecksum) validateArtifact(dependency.upstreamChecksum, `${label} checksum`, hosts)
   }
-  assert(['libcaesium', 'oxipng', 'ffmpeg', 'qpdf'].every((id) => ids.has(id)), 'image, video, and PDF candidates are incomplete')
+  assert(['libcaesium', 'oxipng', 'image', 'ffmpeg', 'qpdf'].every((id) => ids.has(id)), 'image, video, and PDF dependencies are incomplete')
   const caesium = manifest.dependencies.find((item) => item.id === 'libcaesium')
   assert(['default', 'gif', 'png'].every((feature) => caesium.features.forbidden.includes(feature)), 'AGPL/GPL libcaesium feature paths must remain forbidden')
   const ffmpeg = manifest.dependencies.find((item) => item.id === 'ffmpeg')
@@ -78,14 +84,47 @@ async function sha256(path) {
 
 async function download(artifact) {
   const target = join(cache, artifact.fileName)
+  const partial = `${target}.part`
   try {
     const current = await stat(target)
     if (current.size === artifact.bytes && (await sha256(target)) === artifact.sha256) return target
   } catch {}
-  const response = await fetch(artifact.url, { redirect: 'follow' })
-  assert(response.ok && response.body, `${artifact.fileName}: download failed with HTTP ${response.status}`)
-  await pipeline(Readable.fromWeb(response.body), createWriteStream(target))
-  return target
+  await rm(target, { force: true })
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await rm(partial, { force: true })
+    try {
+      const response = await fetch(artifact.url, {
+        redirect: 'follow',
+        signal: AbortSignal.timeout(60_000),
+        headers: {
+          Accept: 'application/octet-stream',
+          'User-Agent': 'Long-Decompress-Media-Dependency-Audit/1.1.14',
+        },
+      })
+      assert(response.ok && response.body, `${artifact.fileName}: download failed with HTTP ${response.status}`)
+      await pipeline(Readable.fromWeb(response.body), createWriteStream(partial))
+      await rename(partial, target)
+      return target
+    } catch (error) {
+      await rm(partial, { force: true })
+      if (process.platform === 'win32') {
+        try {
+          run('curl.exe', [
+            '--silent', '--show-error', '--location', '--fail', '--max-time', '120',
+            '--user-agent', 'Long-Decompress-Media-Dependency-Audit/1.1.14',
+            '--output', partial, artifact.url,
+          ], `${artifact.fileName} curl fallback`)
+          await rename(partial, target)
+          return target
+        } catch {
+          await rm(partial, { force: true })
+        }
+      }
+      if (attempt === 3) throw error
+      process.stderr.write(`${artifact.fileName}: download attempt ${attempt}/3 failed; retrying.\n`)
+    }
+  }
+  throw new Error(`${artifact.fileName}: download attempts exhausted`)
 }
 
 async function verifyDownloaded(artifact, label) {
@@ -136,7 +175,7 @@ async function verifyReal(manifest) {
   for (const dependency of manifest.dependencies) {
     const artifactPath = await verifyDownloaded(dependency.artifact, dependency.id)
     const listing = run(sevenZip, ['l', '-slt', artifactPath], `${dependency.id} archive listing`)
-    if (dependency.id === 'libcaesium' || dependency.id === 'oxipng') {
+    if (['libcaesium', 'oxipng', 'image'].includes(dependency.id)) {
       const crateRoot = join(cache, `real-${dependency.id}`)
       await rm(crateRoot, { recursive: true, force: true })
       await mkdir(crateRoot, { recursive: true })
@@ -177,9 +216,9 @@ async function verifyReal(manifest) {
   }
 }
 
-async function assertNoPrematureIntegration(manifest) {
+async function assertIntegrationBoundary(manifest) {
   const roots = [join(root, 'src-tauri', 'Cargo.toml'), join(root, 'src-tauri', 'src'), join(root, 'src'), join(root, 'src-tauri', 'resources')]
-  const needles = manifest.dependencies.flatMap((item) => [item.id, item.artifact.fileName])
+  const blockedNeedles = manifest.dependencies.filter(item => !item.integrationAllowed).flatMap((item) => [item.id, item.artifact.fileName])
   async function inspect(path) {
     const info = await stat(path)
     if (info.isDirectory()) {
@@ -190,21 +229,35 @@ async function assertNoPrematureIntegration(manifest) {
     const source = await readFile(path).catch(() => null)
     if (!source) return
     const text = source.toString('utf8').toLowerCase()
-    const match = needles.find((needle) => text.includes(needle.toLowerCase()))
+    const match = blockedNeedles.find((needle) => text.includes(needle.toLowerCase()))
     assert(!match, `media engine appeared before approval: ${match} in ${resolve(path)}`)
   }
   for (const path of roots) await inspect(path)
+
+  const cargo = await readFile(join(root, 'src-tauri', 'Cargo.toml'), 'utf8')
+  const exact = [
+    'libcaesium = { version = "=0.21.0", default-features = false, features = ["jpg", "webp"] }',
+    'oxipng = { version = "=10.2.0", default-features = false, features = ["parallel", "zopfli"] }',
+    'image = { version = "=0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }',
+  ]
+  for (const declaration of exact) assert(cargo.includes(declaration), `approved image runtime declaration drifted: ${declaration}`)
+  const lock = (await readFile(join(root, 'src-tauri', 'Cargo.lock'), 'utf8')).replace(/\r\n?/g, '\n')
+  for (const [name, version] of [['libcaesium', '0.21.0'], ['oxipng', '10.2.0'], ['image', '0.25.10']]) {
+    assert(lock.includes(`name = "${name}"\nversion = "${version}"`), `${name}: approved product lock entry is missing`)
+  }
+  assert(!lock.includes('name = "gifski"') && !lock.includes('name = "imagequant"'), 'forbidden GIF/PNG dependency entered the product lockfile')
 }
 
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
 validateManifest(manifest)
 
-// Negative controls prove the gate rejects missing identity, license, HTTPS, and premature enablement.
+// Negative controls prove the gate rejects missing identity, license, HTTPS, unapproved runtime admission, and forbidden features.
 for (const mutation of [
   (copy) => { delete copy.dependencies[0].artifact.sha256 },
   (copy) => { delete copy.dependencies[1].license.expression },
-  (copy) => { copy.dependencies[2].artifact.url = 'http://ffmpeg.org/unsafe' },
-  (copy) => { copy.dependencies[3].integrationAllowed = true },
+  (copy) => { copy.dependencies.find(item => item.id === 'ffmpeg').artifact.url = 'http://ffmpeg.org/unsafe' },
+  (copy) => { copy.dependencies.find(item => item.id === 'qpdf').integrationAllowed = true },
+  (copy) => { copy.dependencies.find(item => item.id === 'libcaesium').features.allowed.push('gif') },
 ]) {
   const copy = structuredClone(manifest)
   mutation(copy)
@@ -213,6 +266,6 @@ for (const mutation of [
   assert(rejected, 'negative dependency-gate control was unexpectedly accepted')
 }
 
-await assertNoPrematureIntegration(manifest)
+await assertIntegrationBoundary(manifest)
 if (real) await verifyReal(manifest)
-console.log(`Media dependency gate passed (${manifest.dependencies.length} locked candidates; real=${real}).`)
+console.log(`Media dependency gate passed (${manifest.dependencies.length} locked dependencies; real=${real}).`)

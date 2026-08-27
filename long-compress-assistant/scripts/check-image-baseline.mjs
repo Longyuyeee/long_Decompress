@@ -33,12 +33,12 @@ export async function checkImageBaseline() {
 
   const dependencies = JSON.parse(await readFile(join(root, 'config', 'media-dependencies.json'), 'utf8'))
   const imageDependencies = dependencies.dependencies.filter(item => item.workload === 'image')
-  assert(imageDependencies.length === 2 && imageDependencies.every(item => item.integrationAllowed === false), 'B-01 candidates must remain outside product runtime')
-  assert(imageDependencies.every(item => item.status === 'candidate-build-verified-runtime-blocked'), 'B-01 candidate status is incomplete')
+  assert(imageDependencies.length === 3 && imageDependencies.every(item => item.integrationAllowed === true), 'B-03 image runtime admission is incomplete')
+  assert(imageDependencies.every(item => item.status === 'runtime-admitted-b03-service'), 'B-03 image dependency status is incomplete')
   const payload = dependencies.candidateBaselines?.image
   assert(payload?.scope === 'isolated-static-Rust-candidate-not-product-runtime', 'candidate payload scope is missing')
   assert(payload.incrementalExecutableBytes > 0 && payload.incrementalCompressedBytes > 0, 'candidate payload measurements are missing')
-  assert(payload.finalNsisDeltaBytes === null && payload.finalNsisMeasurementStage === 'B-03 product integration', 'final NSIS delta must remain deferred to B-03')
+  assert(payload.finalNsisDeltaBytes === null && payload.finalNsisMeasurementStage === 'B-03 product integration', 'final NSIS delta remains required before B-03 closes')
   return { inputs: fixture.inputs.length, incrementalCompressedBytes: payload.incrementalCompressedBytes }
 }
 
