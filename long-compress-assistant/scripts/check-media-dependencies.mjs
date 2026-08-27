@@ -45,7 +45,7 @@ function validateManifest(manifest) {
     assert(/^\d+\.\d+\.\d+(?:[-+].+)?$/.test(dependency.version), `${label}: exact semantic version is required`)
     if (dependency.integrationAllowed) {
       assert(dependency.workload === 'image', `${label}: only the B-03 image workload may enter runtime`)
-      assert(['libcaesium', 'oxipng', 'image'].includes(label), `${label}: runtime dependency is not approved`)
+      assert(['libcaesium', 'oxipng', 'image', 'img-parts'].includes(label), `${label}: runtime dependency is not approved`)
       assert(dependency.status === 'runtime-admitted-b03-service', `${label}: runtime admission status is invalid`)
     } else {
       assert(dependency.status.includes('blocked') || dependency.status.includes('candidate'), `${label}: pre-engine status must remain blocked/candidate`)
@@ -69,7 +69,7 @@ function validateManifest(manifest) {
     }
     if (dependency.upstreamChecksum) validateArtifact(dependency.upstreamChecksum, `${label} checksum`, hosts)
   }
-  assert(['libcaesium', 'oxipng', 'image', 'ffmpeg', 'qpdf'].every((id) => ids.has(id)), 'image, video, and PDF dependencies are incomplete')
+  assert(['libcaesium', 'oxipng', 'image', 'img-parts', 'ffmpeg', 'qpdf'].every((id) => ids.has(id)), 'image, video, and PDF dependencies are incomplete')
   const caesium = manifest.dependencies.find((item) => item.id === 'libcaesium')
   assert(['default', 'gif', 'png'].every((feature) => caesium.features.forbidden.includes(feature)), 'AGPL/GPL libcaesium feature paths must remain forbidden')
   const ffmpeg = manifest.dependencies.find((item) => item.id === 'ffmpeg')
@@ -175,7 +175,7 @@ async function verifyReal(manifest) {
   for (const dependency of manifest.dependencies) {
     const artifactPath = await verifyDownloaded(dependency.artifact, dependency.id)
     const listing = run(sevenZip, ['l', '-slt', artifactPath], `${dependency.id} archive listing`)
-    if (['libcaesium', 'oxipng', 'image'].includes(dependency.id)) {
+    if (['libcaesium', 'oxipng', 'image', 'img-parts'].includes(dependency.id)) {
       const crateRoot = join(cache, `real-${dependency.id}`)
       await rm(crateRoot, { recursive: true, force: true })
       await mkdir(crateRoot, { recursive: true })
@@ -239,10 +239,11 @@ async function assertIntegrationBoundary(manifest) {
     'libcaesium = { version = "=0.21.0", default-features = false, features = ["jpg", "webp"] }',
     'oxipng = { version = "=10.2.0", default-features = false, features = ["parallel", "zopfli"] }',
     'image = { version = "=0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }',
+    'img-parts = { version = "=0.4.0", default-features = false, features = ["std"] }',
   ]
   for (const declaration of exact) assert(cargo.includes(declaration), `approved image runtime declaration drifted: ${declaration}`)
   const lock = (await readFile(join(root, 'src-tauri', 'Cargo.lock'), 'utf8')).replace(/\r\n?/g, '\n')
-  for (const [name, version] of [['libcaesium', '0.21.0'], ['oxipng', '10.2.0'], ['image', '0.25.10']]) {
+  for (const [name, version] of [['libcaesium', '0.21.0'], ['oxipng', '10.2.0'], ['image', '0.25.10'], ['img-parts', '0.4.0']]) {
     assert(lock.includes(`name = "${name}"\nversion = "${version}"`), `${name}: approved product lock entry is missing`)
   }
   assert(!lock.includes('name = "gifski"') && !lock.includes('name = "imagequant"'), 'forbidden GIF/PNG dependency entered the product lockfile')

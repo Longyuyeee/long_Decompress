@@ -1,5 +1,13 @@
 # 开发交接
 
+## 2026-08-28 B-03.2 图片变换、命令执行与 NSIS 增量收口
+
+- B-03 后端执行与发布事务已完成：JPEG/PNG/WebP 支持同格式压缩、格式转换和按可见尺寸等比例缩放；输出发布前重新解码并核对格式、矩阵、方向、可见尺寸、帧数、Alpha，以及配置承诺的 EXIF/ICC 字段。
+- 新增受治理的 `img-parts 0.4.0`（仅 `std`）处理 EXIF/ICC 容器字段；转换/缩放时烘焙方向并归一 Orientation，同格式移除元数据时仍保留最小方向语义。XMP/任意 PNG ancillary chunk 不在既有产品承诺内，未被扩张为虚假支持。
+- `compress_image_file` 已复用现有容量预检、统一取消注册表、`spawn_blocking` 和共享原子发布事务；失败、取消、空间不足、目标冲突、结果不更小均不发布且清理暂存。当前没有“删除源文件”选项，因此源文件始终只读；未来只能在发布成功后接共享回收站。
+- 同版本 NSIS 前后对照完成：`f4ea25b` 基线 7,736,450 B，当前 8,613,866 B，净增 877,416 B（11.3413%），两份 SHA-256 已进入机器门禁。宿主 NSIS 缓存无法启动，使用同一透明转发工具链生成两包，不影响对照口径。
+- 下一步进入 B-04：接统一进度、阶段日志、真实指标和跨重启历史，事实来源完成后再启用前端按钮；B-05 负责安装版完整矩阵。当前不升版、不更新 Release。完整证据见 [B03_2_IMAGE_TRANSFORM_EXECUTION_AUDIT.md](B03_2_IMAGE_TRANSFORM_EXECUTION_AUDIT.md)。
+
 ## 2026-08-28 B-03.1 单文件图片编码与发布事务
 
 - 产品运行时首次严格准入 `libcaesium 0.21.0`（仅 `jpg,webp`）、`oxipng 10.2.0`（仅 `parallel,zopfli`）和 `image 0.25.10`（仅 `jpeg,png,webp` 验证）；门禁同时锁定 Cargo 声明、lockfile 精确版本并拒绝 gifski/imagequant，FFmpeg/qpdf 继续冻结。

@@ -3277,6 +3277,7 @@ dependencies = [
  "glob",
  "hex",
  "image 0.25.10",
+ "img-parts",
  "interprocess",
  "lazy_static",
  "libcaesium",

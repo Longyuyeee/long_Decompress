@@ -29,7 +29,7 @@
         "bytes": 33105,
         "sha256": "7eb0de563820ff19fe1374b8b1bfd74007c793d2f3ac72737746d38464f803a8"
       },
-      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-01 isolated candidate measured; B-03 final NSIS required" },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-03 aggregate NSIS delta measured; see candidateBaselines.image" },
       "securityOwner": "Long解压 maintainers"
     },
     {
@@ -53,7 +53,7 @@
         "bytes": 76578,
         "sha256": "f80e5d92fd65b00e3953760e6a7616264a509b6bbee22502e0226774204da1a3"
       },
-      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-01 isolated candidate measured; B-03 final NSIS required" },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-03 aggregate NSIS delta measured; see candidateBaselines.image" },
       "securityOwner": "Long解压 maintainers"
     },
     {
@@ -77,7 +77,31 @@
         "bytes": 303647,
         "sha256": "85ab80394333c02fe689eaf900ab500fbd0c2213da414687ebf995a65d5a6104"
       },
-      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-03 final NSIS required" },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-03 aggregate NSIS delta measured; see candidateBaselines.image" },
+      "securityOwner": "Long解压 maintainers"
+    },
+    {
+      "id": "img-parts",
+      "workload": "image",
+      "version": "0.4.0",
+      "status": "runtime-admitted-b03-service",
+      "integrationAllowed": true,
+      "projectUrl": "https://github.com/paolobarbolini/img-parts",
+      "license": { "expression": "MIT OR Apache-2.0", "url": "https://github.com/paolobarbolini/img-parts/blob/v0.4.0/LICENSE-MIT", "noticeRequired": true },
+      "linkage": "static-rust-metadata-container",
+      "platforms": ["windows-x86_64"],
+      "features": {
+        "allowed": ["std"],
+        "forbidden": ["default"],
+        "reason": "B-03 copies and verifies only EXIF/ICC fields across JPEG, PNG and WebP containers"
+      },
+      "artifact": {
+        "fileName": "img-parts-0.4.0.crate",
+        "url": "https://crates.io/api/v1/crates/img-parts/0.4.0/download",
+        "bytes": 22386,
+        "sha256": "19734e3c43b2a850f5889c077056e47c874095f2d87e853c7c41214ae67375f0"
+      },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-03 aggregate NSIS delta measured; see candidateBaselines.image" },
       "securityOwner": "Long解压 maintainers"
     },
     {
@@ -164,8 +188,14 @@
       "compressedExecutableBytes": 1135518,
       "compressedMinimalBytes": 58391,
       "incrementalCompressedBytes": 1077127,
-      "finalNsisDeltaBytes": null,
-      "finalNsisMeasurementStage": "B-03 product integration"
+      "finalNsisBaselineCommit": "f4ea25b",
+      "finalNsisBaselineBytes": 7736450,
+      "finalNsisBaselineSha256": "3e183b9c22624f15893c93c9e787fdb9b8ea9e17c7a4935d839c2562ec283e70",
+      "finalNsisCurrentBytes": 8613866,
+      "finalNsisCurrentSha256": "1e81dc079bde00d659f6fc18c92cddf3c27e33a4388bb7bb6bbee8b44dbcb7d8",
+      "finalNsisDeltaBytes": 877416,
+      "finalNsisDeltaPercent": 11.3413,
+      "finalNsisMeasurementStage": "B-03 product integration measured"
     }
   },
   "blockedAlternatives": [
