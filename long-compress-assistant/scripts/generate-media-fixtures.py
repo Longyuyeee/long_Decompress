@@ -56,6 +56,13 @@ def generate_images(root):
     exif[36867] = "2026:08:27 12:00:00"
     exif_image.save(images / "exif-orientation.jpg", quality=92, exif=exif)
 
+    webp_image = Image.new("RGB", (800, 500), (236, 244, 255))
+    webp_draw = ImageDraw.Draw(webp_image)
+    for x in range(800):
+        webp_draw.line((x, 0, x, 499), fill=(30 + x // 5, 90 + x // 8, 210 - x // 12))
+    draw_label(webp_image, "WebP photo fixture", "Synthetic gradients and edges")
+    webp_image.save(images / "photo.webp", format="WEBP", quality=88, method=6)
+
     frames = []
     for index, color in enumerate(((255, 226, 118), (128, 222, 195), (139, 157, 255)), start=1):
         frame = Image.new("RGB", (320, 180), color)

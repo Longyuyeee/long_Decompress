@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已全部完成并随 `v1.1.14` 发布：默认应用会话缓存、ZIP/TAR 有界文本预览、三层嵌套工作区、请求级取消、30 秒等待上限、后端结构化能力和正式安装态综合矩阵均有真实证据。B-00.1 至 B-00.6 前置门禁也已完成且未提前加入媒体产品代码。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。下一步进入 B-01 图片依赖与固定哈希基线实验。
+当前 A-01 至 A-06 已全部完成并随 `v1.1.14` 发布，B-00.1 至 B-00.6 前置门禁和 B-01 图片依赖/固定哈希基线也已完成。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内；图片候选仍在隔离实验中，没有进入产品运行时。下一步进入 B-02 前端工作区。
 
 ### 2.2 任务和历史模型
 
@@ -336,14 +336,16 @@ src/types/media.ts
 
 候选引擎：JPEG/WebP 只评估关闭默认功能并显式启用 `jpg,webp` 的 Rust `libcaesium`；无损 PNG 独立评估 MIT `oxipng`。禁止启用会引入 AGPL `gifski` 或 GPL `imagequant` 的 libcaesium 默认/GIF/PNG 路径。
 
-### B-01 依赖与基线实验
+### B-01 依赖与基线实验（2026-08-27 已完成）
 
 - 固定 libcaesium 与 oxipng 版本和 feature 集，只启用首期已审计格式；
-- 记录安装包体积、冷启动、单张峰值内存和多张并发基线；
+- 在不违反 B-00 产品运行时冻结的前提下，记录隔离候选载荷的原始/压缩增量、冷进程全流程、峰值内存和四进程并发基线；最终 NSIS 增量在 B-03 接入正式运行时后测量；
 - 建立照片、透明 PNG、截图、动画 GIF 拒绝边界、WebP 和元数据样本；TIFF 在进入公开范围时再补齐；
 - 从 B-00 属性夹具中分离 B-01 固定基准输入：对每个可处理样本提交输入哈希清单、尺寸、帧数/动画属性、ICC/EXIF 预期和允许变化。B-00 可再生成夹具未承诺字节相同，不得直接用于性能结论。
 
 验收目标：依赖许可证与 NOTICE 完整；没有未审计二进制下载；每种公开格式至少一个非空真实样本可重复处理。
+
+完成结果：精确 feature 的 libcaesium 0.21.0 与 oxipng 10.2.0 已在 Windows x64/Rust 1.93.1 真实构建；五个固定输入连续两次生成 SHA-256 一致，JPEG/WebP/无损 PNG 输出可重新解码，GIF 明确拒绝且不落盘。隔离候选压缩增量为 1,077,127 B，单进程峰值工作集约 10.2 MiB，四进程并发完成。完整预期—实际—修正见 [B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md](B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md)。
 
 ### B-02 前端工作区
 
@@ -638,7 +640,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-00.6 已全部完成并通过总审计：任务/历史兼容、共享事务、依赖供应链、真实属性夹具、真实指标来源和媒体节点安装/回滚/Release 证据门禁均已进入可执行检查；产品代码仍没有媒体引擎或占位 Tab。证据见 [B00_TOTAL_ACCEPTANCE_AUDIT.md](B00_TOTAL_ACCEPTANCE_AUDIT.md)。下一步进入 B-01 图片依赖与固定哈希基线实验，不提前制作 B-02 UI。
+- B-00.1 至 B-00.6 已全部完成并通过总审计；B-01 也已完成精确 feature 构建、五个固定输入、JPEG/WebP/无损 PNG 输出复核、GIF 拒绝、质量/内存/并发和隔离载荷基线。产品代码仍没有媒体引擎或占位成功状态。证据见 [B00_TOTAL_ACCEPTANCE_AUDIT.md](B00_TOTAL_ACCEPTANCE_AUDIT.md) 与 [B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md](B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md)。下一步进入 B-02 前端工作区。
 
 ## 12. 技术参考
 

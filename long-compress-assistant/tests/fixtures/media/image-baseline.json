@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "fixtureRevision": "2026-08-27-b01",
+  "platform": "windows-x86_64",
+  "generator": "Pillow 12.3.0",
+  "inputs": [
+    { "file": "exif-orientation.jpg", "bytes": 15788, "sha256": "291f614dd1832bea94b884f116a9063c5d3bfa0fbe089ba8fcb9e1e7aa32aa0d", "format": "JPEG", "width": 640, "height": 360, "orientation": 6 },
+    { "file": "photo.webp", "bytes": 3884, "sha256": "12403feaf86d9322fcdd3867e9d7fef641c17ce770503697f5e4d72b1b3ffef1", "format": "WEBP", "width": 800, "height": 500 },
+    { "file": "transparent.png", "bytes": 1546, "sha256": "008a670aced1d3446a6dca8dc232164b1269c652a98524a1f8de1ec024106632", "format": "PNG", "width": 256, "height": 256, "hasAlpha": true, "losslessPixels": true },
+    { "file": "animated.gif", "bytes": 7224, "sha256": "47670a2220f659fdfd0ace11b99a500aabaa79bc841b92827fe6076259fe962d", "format": "GIF", "width": 320, "height": 180, "frames": 3, "expectedAction": "reject" },
+    { "file": "ultra-large.png", "bytes": 1617665, "sha256": "af894765a2a03d446e0b30f0ceaa97fca7c52c9c4412948721866a21a1f843f7", "format": "PNG", "width": 12000, "height": 8000, "pixels": 96000000, "expectedAction": "resource-limit-boundary" }
+  ]
+}

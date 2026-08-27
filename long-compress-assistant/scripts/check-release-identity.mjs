@@ -121,6 +121,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     await checkMediaMetrics()
     const { checkMediaReleaseGates } = await import('./check-media-release-gates.mjs')
     await checkMediaReleaseGates()
+    const { checkImageBaseline } = await import('./check-image-baseline.mjs')
+    await checkImageBaseline()
     const result = verifyReleaseIdentity(parseArguments(process.argv.slice(2)))
     process.stdout.write(
       `Release identity verified: v${result.version} (${result.expectedShellDll})\n`,

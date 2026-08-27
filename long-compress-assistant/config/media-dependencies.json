@@ -12,7 +12,7 @@
       "id": "libcaesium",
       "workload": "image",
       "version": "0.21.0",
-      "status": "source-approved-runtime-blocked",
+      "status": "candidate-build-verified-runtime-blocked",
       "integrationAllowed": false,
       "projectUrl": "https://github.com/Lymphatus/libcaesium",
       "license": { "expression": "Apache-2.0", "url": "https://github.com/Lymphatus/libcaesium/blob/v0.21.0/LICENSE", "noticeRequired": true },
@@ -29,14 +29,14 @@
         "bytes": 33105,
         "sha256": "7eb0de563820ff19fe1374b8b1bfd74007c793d2f3ac72737746d38464f803a8"
       },
-      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-01 candidate build" },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-01 isolated candidate measured; B-03 final NSIS required" },
       "securityOwner": "Long解压 maintainers"
     },
     {
       "id": "oxipng",
       "workload": "image",
       "version": "10.2.0",
-      "status": "source-approved-runtime-blocked",
+      "status": "candidate-build-verified-runtime-blocked",
       "integrationAllowed": false,
       "projectUrl": "https://github.com/shssoichiro/oxipng",
       "license": { "expression": "MIT", "url": "https://github.com/shssoichiro/oxipng/blob/v10.2.0/LICENSE", "noticeRequired": true },
@@ -53,7 +53,7 @@
         "bytes": 76578,
         "sha256": "f80e5d92fd65b00e3953760e6a7616264a509b6bbee22502e0226774204da1a3"
       },
-      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-01 candidate build" },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-01 isolated candidate measured; B-03 final NSIS required" },
       "securityOwner": "Long解压 maintainers"
     },
     {
@@ -130,6 +130,20 @@
       "securityOwner": "Long解压 maintainers"
     }
   ],
+  "candidateBaselines": {
+    "image": {
+      "measuredAt": "2026-08-27",
+      "scope": "isolated-static-Rust-candidate-not-product-runtime",
+      "executableBytes": 2872320,
+      "minimalExecutableBytes": 117760,
+      "incrementalExecutableBytes": 2754560,
+      "compressedExecutableBytes": 1135518,
+      "compressedMinimalBytes": 58391,
+      "incrementalCompressedBytes": 1077127,
+      "finalNsisDeltaBytes": null,
+      "finalNsisMeasurementStage": "B-03 product integration"
+    }
+  },
   "blockedAlternatives": [
     { "id": "ghostscript", "reason": "AGPL/commercial licensing is outside the current redistribution boundary", "integrationAllowed": false }
   ]

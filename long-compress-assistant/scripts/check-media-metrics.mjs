@@ -53,7 +53,8 @@ async function verifyRealFixtureFacts(contract) {
       measured.push({ workload: manifestKey.slice(0, -1), file: item.file, inputBytes: facts.size })
     }
   }
-  assert(measured.length === 12, `expected 12 real fixture files, found ${measured.length}`)
+  const expectedCount = result.expected.images.length + result.expected.videos.length + result.expected.pdfs.length
+  assert(measured.length === expectedCount, `expected ${expectedCount} real fixture files, found ${measured.length}`)
   assert(measured.every(item => Number.isSafeInteger(item.inputBytes)), 'filesystem byte facts must be safe integers')
   assert(contract.policy.finalMetricsRequireValidatedOutput, 'real facts cannot bypass output validation')
   return measured

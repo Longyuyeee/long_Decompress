@@ -1,0 +1,17 @@
+[package]
+name = "long-image-baseline"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "long-image-baseline"
+path = "src/main.rs"
+
+[[bin]]
+name = "long-image-minimal"
+path = "src/bin/minimal.rs"
+
+[dependencies]
+libcaesium = { version = "=0.21.0", default-features = false, features = ["jpg", "webp"] }
+oxipng = { version = "=10.2.0", default-features = false, features = ["parallel", "zopfli"] }
