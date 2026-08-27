@@ -74,6 +74,26 @@ npm.cmd run test:e2e:desktop:full-format
 Remove-Item Env:EDGE_DRIVER_PATH
 ```
 
+正式安装态工作区矩阵必须先准备 EdgeDriver 与固定外部样本；`test-installed-release.ps1`
+会在备份、覆盖安装或修改菜单之前检查这些条件，缺失时无损失败：
+
+```powershell
+$driver = powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File scripts/install-edge-driver.ps1 `
+  -Destination (Join-Path $env:TEMP "long-compress-edge-driver")
+$env:EDGE_DRIVER_PATH = $driver
+npm.cmd run test:fixtures:archives
+
+npm.cmd run test:installed-release -- `
+  -PreviousInstaller "C:\path\to\previous.exe" `
+  -CandidateInstaller "C:\path\to\candidate.exe" `
+  -PreviousVersion 1.1.14 `
+  -CandidateVersion 1.1.14 `
+  -CandidateExecutable "C:\path\to\candidate-app.exe" `
+  -AllowExistingInstall `
+  -RunArchiveWorkspaceMatrix
+```
+
 也可以通过 `TAURI_APP_BINARY`、`TAURI_DRIVER_PATH` 和
 `LONG_DECOMPRESS_E2E_DATA_DIR` 覆盖默认路径。
 

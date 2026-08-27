@@ -482,6 +482,27 @@ try {
   $evidence.baselineContextMenuMode = $baselineContextMenuMode
 
   New-Item -ItemType Directory -Path $evidenceDirectory -Force | Out-Null
+  if ($RunArchiveWorkspaceMatrix) {
+    $edgeDriverPath = [string]$env:EDGE_DRIVER_PATH
+    $tauriDriverPath = if ([string]::IsNullOrWhiteSpace([string]$env:TAURI_DRIVER_PATH)) {
+      Join-Path $env:USERPROFILE '.cargo\bin\tauri-driver.exe'
+    } else {
+      [string]$env:TAURI_DRIVER_PATH
+    }
+    $encryptedRarFixture = Join-Path `
+      $projectRoot `
+      'test-results\external-archive-fixtures\libarchive-rar-encrypted.rar'
+    Add-Check 'installed workspace EdgeDriver prerequisite exists' (
+      -not [string]::IsNullOrWhiteSpace($edgeDriverPath) -and
+      (Test-Path -LiteralPath $edgeDriverPath -PathType Leaf)
+    ) 'Set EDGE_DRIVER_PATH using scripts/install-edge-driver.ps1 before changing the installed application.'
+    Add-Check 'installed workspace tauri-driver prerequisite exists' (
+      Test-Path -LiteralPath $tauriDriverPath -PathType Leaf
+    ) "expected=$tauriDriverPath"
+    Add-Check 'installed workspace encrypted RAR fixture exists' (
+      Test-Path -LiteralPath $encryptedRarFixture -PathType Leaf
+    ) "Run npm.cmd run test:fixtures:archives first; expected=$encryptedRarFixture"
+  }
   Backup-UserData
   Backup-ContextMenuRegistry
   $baselineFingerprints = Get-DataFingerprints
