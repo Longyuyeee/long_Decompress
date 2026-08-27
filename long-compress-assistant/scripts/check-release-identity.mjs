@@ -117,6 +117,8 @@ export const verifyReleaseIdentity = ({ expected = '', tag = '' } = {}) => {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try {
     await import('./check-media-dependencies.mjs')
+    const { checkMediaMetrics } = await import('./check-media-metrics.mjs')
+    await checkMediaMetrics()
     const result = verifyReleaseIdentity(parseArguments(process.argv.slice(2)))
     process.stdout.write(
       `Release identity verified: v${result.version} (${result.expectedShellDll})\n`,

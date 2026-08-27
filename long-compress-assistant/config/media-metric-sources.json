@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-27",
+  "policy": {
+    "unknownValue": null,
+    "estimatedValuesMustBeLabeled": true,
+    "estimatedValuesMayEnterHistory": false,
+    "finalMetricsRequireValidatedOutput": true,
+    "finalOutputBytesSource": "published-file-filesystem-metadata",
+    "inputBytesSource": "source-file-filesystem-metadata-before-processing",
+    "savingsRatioFormula": "(inputBytes-outputBytes)/inputBytes",
+    "qualityScoreAllowed": false
+  },
+  "workloads": {
+    "image": {
+      "progress": {
+        "authoritativeSource": "completed-items/total-items",
+        "processedBytes": "engine-callback-only",
+        "percent": "batch-item-count-only",
+        "speed": null,
+        "eta": null
+      },
+      "liveOutputBytes": null,
+      "finalFacts": ["width", "height", "frameCount", "hasAlpha", "format"]
+    },
+    "video": {
+      "progress": {
+        "authoritativeSource": "ffmpeg-progress-pipe",
+        "processedBytes": null,
+        "percent": "out_time_us/probed-duration-us",
+        "speed": "ffmpeg-speed",
+        "eta": "remaining-media-duration/observed-speed-after-two-samples"
+      },
+      "liveOutputBytes": "ffmpeg-total_size-provisional",
+      "finalFacts": ["durationMs", "videoCodec", "audioCodec", "container"]
+    },
+    "pdf": {
+      "progress": {
+        "authoritativeSource": "verified-stage-transition",
+        "processedBytes": null,
+        "percent": null,
+        "speed": null,
+        "eta": null
+      },
+      "liveOutputBytes": null,
+      "finalFacts": ["pageCount", "format"]
+    }
+  },
+  "stages": ["queued", "probing", "decoding", "processing", "encoding", "validating", "publishing", "completed"]
+}

@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { createWriteStream } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 import { join, resolve } from 'node:path'
@@ -16,7 +17,13 @@ const archive = join(auditRoot, manifest.testTool.fileName)
 const toolRoot = join(auditRoot, 'ffmpeg-tool')
 const sevenZip = join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
 const python = process.env.LONG_MEDIA_FIXTURE_PYTHON || 'python'
-const pdfToPpm = process.env.LONG_MEDIA_PDFTOPPM || 'pdftoppm'
+const bundledPdfToPpm = join(
+  process.env.USERPROFILE || '',
+  '.cache', 'codex-runtimes', 'codex-primary-runtime', 'dependencies', 'native',
+  'poppler', 'Library', 'bin', 'pdftoppm.exe',
+)
+const pdfToPpm = process.env.LONG_MEDIA_PDFTOPPM
+  || (existsSync(bundledPdfToPpm) ? bundledPdfToPpm : 'pdftoppm')
 
 function assert(condition, message) {
   if (!condition) throw new Error(message)
@@ -24,7 +31,10 @@ function assert(condition, message) {
 
 function run(command, args, label, options = {}) {
   const result = spawnSync(command, args, { encoding: 'utf8', windowsHide: true, ...options })
-  assert(result.status === 0, `${label} failed (${result.status}): ${result.stderr || result.stdout}`)
+  assert(
+    result.status === 0,
+    `${label} failed (${result.status}): ${result.error?.message || result.stderr || result.stdout || 'no process output'}`,
+  )
   return `${result.stdout ?? ''}${result.stderr ?? ''}`
 }
 

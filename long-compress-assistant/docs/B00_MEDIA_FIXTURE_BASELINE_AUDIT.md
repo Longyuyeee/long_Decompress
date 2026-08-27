@@ -10,6 +10,8 @@
 
 B-00.4 已建立可再生成、无用户数据、带机器可验证预期属性的真实媒体夹具。仓库提交生成器、精确依赖版本、测试工具身份和属性清单；实际图片、视频、PDF、渲染图与结果 JSON 位于 Git 忽略目录 `test-results/media-fixture-audit`，不扩大仓库和安装包。
 
+这些夹具以解码/探测后的属性为验收依据，不承诺不同工具链运行产生逐字节相同文件，也不得直接作为性能基准。特别是 PDF 签名、容器元数据和编码器版本可能改变文件哈希。B-01 必须另行冻结可处理输入的 SHA-256 清单；这一边界已写入 `manifest.json` 并由 B-00.5 真实门禁检查。
+
 本节点仍不实现媒体压缩。用于生成视频的 GPL FFmpeg 只允许作为测试工具，固定 GitHub asset ID、字节数和 SHA-256，清单明确 `productIntegrationAllowed=false`；它不会进入 `src-tauri/resources`、Cargo 依赖或 NSIS。
 
 ## 2. 固定样本与真实属性

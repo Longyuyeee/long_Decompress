@@ -10,7 +10,7 @@
 
 下一轮已拆分为四个可独立验收的大节点：压缩包浏览中心 2.0、图片压缩、视频压缩软件编码和 PDF 安全优化。三个媒体入口放在压缩中心内部，与归档压缩共享任务队列、进度、取消、历史、容量预检、临时输出、校验和系统回收站语义；不新增三套旁路任务系统。
 
-每个大节点只有在真实样本、Windows 安装版桌面闭环、回归审计和公开更新门禁全部通过后，才允许把补丁版本提升一位。完整工作项、引擎和许可边界、预期—实际—修正记录要求及 Release 流程见 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md)。下一步从浏览中心交互状态模型开始，不并行引入 FFmpeg、libcaesium 和 qpdf。
+每个大节点只有在真实样本、Windows 安装版桌面闭环、回归审计和公开更新门禁全部通过后，才允许把补丁版本提升一位。完整工作项、引擎和许可边界、预期—实际—修正记录要求及 Release 流程见 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md)。归档浏览大节点已完成；媒体前置 B-00.1 至 B-00.5 已完成，下一步只收口 B-00.6 的安装态桌面门禁、失败回滚和 Release 证据模板，仍不提前集成 FFmpeg、libcaesium、oxipng 或 qpdf 运行时。
 
 ## 2026-08-22 主流程纠偏与后续方向
 

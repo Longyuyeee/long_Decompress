@@ -93,7 +93,7 @@ B-00 在任何媒体编码页面和引擎之前执行，并以独立审计文档
 2. **B-00.2（2026-08-27 已完成）**：定义并落地媒体任务必须复用的暂存、容量预检、取消、子进程终止、冲突处理、最终校验、原子发布、Mark-of-the-Web、历史脱敏及系统回收站边界；现有非分卷归档压缩已接入公共单文件发布事务，真实文件、Windows 系统回收站和 Release/WebView2 归档闭环通过，证据见 [B00_SHARED_TRANSACTION_AUDIT.md](B00_SHARED_TRANSACTION_AUDIT.md)；
 3. **B-00.3（2026-08-27 已完成）**：固定图片、视频、PDF 候选的项目主页、精确版本、许可证、构建来源、SHA-256、支持平台、链接/进程方式、安装体积测量阶段和安全更新责任；静态门禁已进入 CI/Release，真实下载、FFmpeg PGP 和 qpdf 可执行身份已验证；所有运行时仍保持阻断，完整证据见 [B00_MEDIA_DEPENDENCY_AUDIT.md](B00_MEDIA_DEPENDENCY_AUDIT.md)；
 4. **B-00.4（2026-08-27 已完成）**：建立不含隐私内容、可再生成且带精确预期属性的真实样本；图片覆盖透明度、EXIF、动图和 9600 万像素，视频覆盖 H.264/H.265、VFR、AAC、旋转矩阵和字幕，PDF 覆盖文本、扫描、透明、AcroForm、有效自签 CMS 和 AES-256 拒绝边界；生成、解析、签名验证和 Poppler 视觉复核证据见 [B00_MEDIA_FIXTURE_BASELINE_AUDIT.md](B00_MEDIA_FIXTURE_BASELINE_AUDIT.md)；
-5. 定义每类任务的真实指标来源。无法从引擎证明的速度、ETA、压缩率或质量指标不得显示模拟值；
+5. **B-00.5（2026-08-27 已完成）**：以可执行契约固定每类任务的真实指标来源。图片只按已完成条目数显示批量进度；视频只消费 FFmpeg progress pipe 的时间戳、临时大小和速度，ETA 至少等待两个有效样本；PDF 只有可验证阶段，不显示伪百分比或 ETA；最终输入/输出字节只取处理前源文件和校验发布后文件的文件系统元数据，估算值不得进入历史；完整证据见 [B00_MEDIA_METRIC_SOURCE_AUDIT.md](B00_MEDIA_METRIC_SOURCE_AUDIT.md)；
 6. 明确 B/C/D 节点的安装态桌面门禁、失败回滚、版本提升和 Release 证据模板。
 
 验收目标：
@@ -332,16 +332,16 @@ src/types/media.ts
 
 ### 开发目标
 
-在压缩中心增加可批量、可比较、可取消、可验证的图片压缩模式。首期支持 JPEG、PNG、WebP、GIF、TIFF；HEIC 在取得稳定解码、编码和许可方案前不公开声明。
+在压缩中心增加可批量、可比较、可取消、可验证的图片压缩模式。首期公开写入能力收紧为 JPEG、WebP 与无损 PNG。GIF 首期只识别并保持原文件或明确拒绝，直到动画编码链的许可与帧语义独立通过；TIFF、HEIC 在取得稳定解码、编码、元数据和许可方案前不公开声明。
 
-首选引擎：Rust `libcaesium`，固定版本并审计其 Apache-2.0 许可和间接依赖。
+候选引擎：JPEG/WebP 只评估关闭默认功能并显式启用 `jpg,webp` 的 Rust `libcaesium`；无损 PNG 独立评估 MIT `oxipng`。禁止启用会引入 AGPL `gifski` 或 GPL `imagequant` 的 libcaesium 默认/GIF/PNG 路径。
 
 ### B-01 依赖与基线实验
 
-- 固定 libcaesium 版本和 feature 集，只启用首期格式；
+- 固定 libcaesium 与 oxipng 版本和 feature 集，只启用首期已审计格式；
 - 记录安装包体积、冷启动、单张峰值内存和多张并发基线；
-- 建立照片、透明 PNG、截图、动画 GIF、WebP、TIFF 和元数据样本；
-- 对每个样本保存输入哈希、尺寸、帧数/动画属性、ICC/EXIF 预期和允许变化。
+- 建立照片、透明 PNG、截图、动画 GIF 拒绝边界、WebP 和元数据样本；TIFF 在进入公开范围时再补齐；
+- 从 B-00 属性夹具中分离 B-01 固定基准输入：对每个可处理样本提交输入哈希清单、尺寸、帧数/动画属性、ICC/EXIF 预期和允许变化。B-00 可再生成夹具未承诺字节相同，不得直接用于性能结论。
 
 验收目标：依赖许可证与 NOTICE 完整；没有未审计二进制下载；每种公开格式至少一个非空真实样本可重复处理。
 

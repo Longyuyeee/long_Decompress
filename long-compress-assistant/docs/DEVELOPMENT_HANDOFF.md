@@ -4,7 +4,7 @@
 
 - 已建立 4 图片、2 视频、6 PDF 的合成真实夹具：透明/EXIF/动图/9600 万像素，H.264/H.265/VFR/AAC/旋转矩阵/字幕，以及文本/扫描/透明/表单/CMS 签名/AES-256 拒绝边界。
 - 首轮真实运行依次发现 ReportLab API 名称、pyHanko 参数、加密 PDF 检查顺序、MP4 旋转标签不产生 Display Matrix 和扫描字体过小，均按实际差异修正并重跑。最终结构化 `differences=0`，六个 PDF Poppler 渲染已逐张视觉复核。
-- 视频生成使用固定 SHA-256 的 GPL 测试工具且明确禁止产品集成；实际夹具和 170 MB 测试工具均留在 Git 忽略目录。本步骤不升版、不发布；下一步为 B-00.5 真实指标来源定义。完整证据见 [B00_MEDIA_FIXTURE_BASELINE_AUDIT.md](B00_MEDIA_FIXTURE_BASELINE_AUDIT.md)。
+- 视频生成使用固定 SHA-256 的 GPL 测试工具且明确禁止产品集成；实际夹具和 170 MB 测试工具均留在 Git 忽略目录。B-00.5 已以可执行契约固定图片/视频/PDF 的真实进度、大小、速度、ETA 和最终指标来源，并纠正首期图片格式/许可偏差。本步骤不升版、不发布；下一步为 B-00.6 安装态桌面门禁、回滚和 Release 证据模板。完整证据见 [B00_MEDIA_FIXTURE_BASELINE_AUDIT.md](B00_MEDIA_FIXTURE_BASELINE_AUDIT.md) 与 [B00_MEDIA_METRIC_SOURCE_AUDIT.md](B00_MEDIA_METRIC_SOURCE_AUDIT.md)。
 
 ## 2026-08-27 B-00.3 媒体依赖身份与许可门禁收口
 
@@ -108,7 +108,7 @@
 - 真实门禁使用现场生成中文八层长路径 ZIP、文件名加密 7Z、固定加密 RAR 和 ZIP→加密 7Z→ZIP；A-03 以真实 TXT/PNG/PDF/CMD 验证默认应用、NTFS 安全标记与默认取消；A-04 覆盖 ZIP UTF-8/超大日志/伪装二进制、UTF-16LE TAR 和 7Z 禁用边界；A-05 覆盖错/正确密码、三层链、第四层阻断、损坏内层和返回恢复。全量前端 228 项通过。证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)、[ARCHIVE_WORKSPACE_A02_AUDIT.md](ARCHIVE_WORKSPACE_A02_AUDIT.md)、[ARCHIVE_WORKSPACE_A03_AUDIT.md](ARCHIVE_WORKSPACE_A03_AUDIT.md)、[ARCHIVE_WORKSPACE_A04_AUDIT.md](ARCHIVE_WORKSPACE_A04_AUDIT.md) 与 [ARCHIVE_WORKSPACE_A05_AUDIT.md](ARCHIVE_WORKSPACE_A05_AUDIT.md)。
 - A-04 已完成 ZIP/TAR 有界文本查看器，A-05 已完成嵌套归档工作区。下一步严格执行 A-06 安装版综合矩阵；通过后才允许发布 `v1.1.14`。
 - 后续按图片压缩、视频压缩软件编码、PDF 安全优化推进。三个模式都放在压缩中心内部，继续使用 `compression` 顶层任务类型，通过可选工作负载分类扩展历史，不复制任务、日志和发布事务。
-- 图片首选固定版本的 Apache-2.0 `libcaesium`；视频使用经过许可与哈希审计的 FFmpeg LGPL 构建；PDF 首期采用 Apache-2.0 qpdf。Ghostscript 在 AGPL/商业许可方案未明确前不得内置。
+- 图片 JPEG/WebP 仅评估关闭默认功能并显式启用 `jpg,webp` 的 Apache-2.0 `libcaesium`，无损 PNG 独立评估 MIT `oxipng`；禁止 libcaesium 默认/GIF/PNG 路径引入 AGPL/GPL 依赖。视频使用经过许可与哈希审计的 FFmpeg LGPL 构建；PDF 首期采用 Apache-2.0 qpdf。Ghostscript 在 AGPL/商业许可方案未明确前不得内置。
 - 每个大节点的开发步骤、真实样本、验收目标、阻断条件、版本提升和 Release 闭环统一以 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md) 为准。
 - 媒体引擎在大节点 A 完成前继续冻结，避免把归档交互、安全临时提取和第三方编解码依赖混入同一发布审计。
 

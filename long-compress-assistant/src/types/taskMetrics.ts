@@ -26,13 +26,18 @@ export interface TaskMetricsV1 {
 
 export type TaskMetrics = TaskMetricsV1
 
+const normalizeMeasuredBytes = (value: number): number => {
+  if (!Number.isFinite(value) || value <= 0) return 0
+  return Math.min(Number.MAX_SAFE_INTEGER, Math.round(value))
+}
+
 export const createMeasuredTaskMetricsV1 = (
   inputBytes: number,
   outputBytes: number,
   media?: MediaMetricsV1,
 ): TaskMetricsV1 => {
-  const input = Math.max(0, Math.round(inputBytes))
-  const output = Math.max(0, Math.round(outputBytes))
+  const input = normalizeMeasuredBytes(inputBytes)
+  const output = normalizeMeasuredBytes(outputBytes)
   return {
     schemaVersion: 1,
     inputBytes: input,

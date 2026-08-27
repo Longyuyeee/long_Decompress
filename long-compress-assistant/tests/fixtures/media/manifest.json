@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "fixtureRevision": "2026-08-27-b00.4",
   "privacy": "synthetic-only-no-user-data",
+  "identityPolicy": {
+    "acceptanceBasis": "decoded-and-probed-properties",
+    "byteIdentityRequired": false,
+    "performanceBaselineEligible": false,
+    "reason": "generated containers, PDF signatures and encoder metadata may vary by toolchain; B-01 must publish a separately frozen input-hash inventory before benchmark claims"
+  },
   "testTool": {
     "name": "BtbN FFmpeg GPL test-only build",
     "assetId": 530855149,
