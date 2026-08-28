@@ -1,5 +1,13 @@
 # 开发交接
 
+## 2026-08-28 C-01.2.1 视频运行时准入
+
+- C-01.1 的 FFmpeg 9.0.1 可复现候选已进入 Tauri 产品资源；8 个二进制、来源/配置和 FFmpeg/MinGW/GCC 许可文件总计 24,631,334 B，后端在启动进程前逐项验证大小与 SHA-256。
+- 生产预检真实执行 ffmpeg/ffprobe，固定 LGPL-only、h264_mf 软件默认、AAC 和必需过滤器；缺失和篡改负向测试通过。视频 UI 仍禁用，版本仍为 `1.1.15`。
+- 已移除会轮换的 BtbN nightly 依赖，改为仓库跟踪且逐字节锁定的两个真实 MP4；完整 11 图片/2 视频/6 PDF 夹具由产品 ffprobe 验证通过。
+- 未签名 NSIS 包内 8/8 资源、能力和真实 MP4 探测差异为 0；当前包 15,554,236 B，相对父提交 CI 包聚合增加 6,895,417 B。该数不是正式签名/updater 精确增量。
+- 完整 Rust 首轮暴露 watch-folder 测试线程调度竞态（预期 1、实际 2），改为第一次快照后同步改写；定向 10/10、完整 322/322 通过。下一接续点严格为 C-01.2.2：正式安装目录执行、Windows N 分类、替换拒绝和同提交签名 NSIS/updater 精确测量。详见 [C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md](C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md)。
+
 ## 2026-08-28 C-01.1 FFmpeg 可复现候选
 
 - FFmpeg `9.0.1` 官方源码的最小 LGPL Windows x64 构建已脚本化；双干净目录产出的 `ffmpeg.exe`（12,349,440 B，`35c3c8bb...8672eb`）与 `ffprobe.exe`（12,131,840 B，`2c1df07c...ba1d98`）逐字节一致。

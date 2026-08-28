@@ -1,0 +1,48 @@
+FFmpeg version: 9.0.1
+Target: Windows x86_64 (MinGW-w64 POSIX)
+SOURCE_DATE_EPOCH: 1786505700
+Fixed prefix: /opt/long-decompress/ffmpeg-9.0.1
+
+./configure \
+  --target-os=mingw32 \
+  --arch=x86_64 \
+  --enable-cross-compile \
+  --cross-prefix=x86_64-w64-mingw32- \
+  --prefix=/opt/long-decompress/ffmpeg-9.0.1 \
+  --disable-everything \
+  --disable-autodetect \
+  --disable-debug \
+  --disable-doc \
+  --disable-shared \
+  --enable-static \
+  --disable-network \
+  --disable-schannel \
+  --disable-bzlib \
+  --disable-iconv \
+  --disable-lzma \
+  --disable-sdl2 \
+  --disable-zlib \
+  --enable-ffmpeg \
+  --enable-ffprobe \
+  --enable-avcodec \
+  --enable-avformat \
+  --enable-avfilter \
+  --enable-swscale \
+  --enable-swresample \
+  --enable-mediafoundation \
+  --disable-hwaccels \
+  --enable-d3d11va \
+  --enable-protocol=file,pipe \
+  --enable-demuxer=mov,matroska,avi,asf \
+  --enable-muxer=mp4 \
+  --enable-decoder=h264,hevc,mpeg4,msmpeg4v1,msmpeg4v2,msmpeg4v3,wmv1,wmv2,wmv3,vc1,vp8,vp9,av1,aac,mp3,ac3,eac3,opus,vorbis,flac,wmav1,wmav2,wmapro,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le \
+  --enable-encoder=h264_mf,aac \
+  --enable-parser=h264,hevc,mpeg4video,vp8,vp9,av1,aac,ac3,opus,vorbis \
+  --enable-filter=scale,format,fps,setsar,setdar,transpose,aresample \
+  --enable-bsf=aac_adtstoasc,extract_extradata,h264_mp4toannexb,hevc_mp4toannexb \
+  --extra-cflags=-O2 \
+  --extra-ldflags='-static -static-libgcc -Wl,--no-insert-timestamp'
+
+Enabled encoders: aac, h264_mf
+Enabled hardware accelerators: none
+Runtime H.264 policy: h264_mf with -hw_encoding 0

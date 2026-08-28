@@ -1,0 +1,2 @@
+long-compress-assistant/src-tauri/resources/video-engine/** -text
+long-compress-assistant/src-tauri/resources/video-engine/licenses/* -whitespace

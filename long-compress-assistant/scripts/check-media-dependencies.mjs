@@ -44,9 +44,13 @@ function validateManifest(manifest) {
     assert(['image', 'video', 'pdf'].includes(dependency.workload), `${label}: invalid workload`)
     assert(/^\d+\.\d+\.\d+(?:[-+].+)?$/.test(dependency.version), `${label}: exact semantic version is required`)
     if (dependency.integrationAllowed) {
-      assert(dependency.workload === 'image', `${label}: only the B-03 image workload may enter runtime`)
-      assert(['libcaesium', 'oxipng', 'image', 'img-parts'].includes(label), `${label}: runtime dependency is not approved`)
-      assert(dependency.status === 'runtime-admitted-b03-service', `${label}: runtime admission status is invalid`)
+      if (dependency.workload === 'image') {
+        assert(['libcaesium', 'oxipng', 'image', 'img-parts'].includes(label), `${label}: runtime dependency is not approved`)
+        assert(dependency.status === 'runtime-admitted-b03-service', `${label}: runtime admission status is invalid`)
+      } else {
+        assert(label === 'ffmpeg' && dependency.workload === 'video', `${label}: runtime dependency is not approved`)
+        assert(dependency.status === 'runtime-admitted-c01.2.1-preflight', `${label}: FFmpeg runtime admission status is invalid`)
+      }
     } else {
       assert(dependency.status.includes('blocked') || dependency.status.includes('candidate'), `${label}: pre-engine status must remain blocked/candidate`)
     }
@@ -74,7 +78,7 @@ function validateManifest(manifest) {
   assert(['default', 'gif', 'png'].every((feature) => caesium.features.forbidden.includes(feature)), 'AGPL/GPL libcaesium feature paths must remain forbidden')
   const ffmpeg = manifest.dependencies.find((item) => item.id === 'ffmpeg')
   assert(['--enable-gpl', '--enable-nonfree', 'libx264', 'libx265'].every((feature) => ffmpeg.features.forbidden.includes(feature)), 'FFmpeg GPL/nonfree paths must remain forbidden')
-  assert(ffmpeg.integrationAllowed === false, 'C-01.1 FFmpeg candidate must remain outside the product runtime')
+  assert(ffmpeg.integrationAllowed === true, 'C-01.2.1 FFmpeg runtime admission is incomplete')
   assert(ffmpeg.runtimeCandidate?.reproducibility === 'two-clean-builds-in-different-directories-byte-identical', 'FFmpeg reproducibility evidence is missing')
   assert(ffmpeg.runtimeCandidate?.buildScript === 'scripts/build-ffmpeg-c01-windows.sh', 'FFmpeg build script identity is missing')
   assert(ffmpeg.runtimeCandidate?.softwareEncoder?.name === 'h264_mf' && ffmpeg.runtimeCandidate?.softwareEncoder?.forceHardware === false, 'FFmpeg software encoder policy is invalid')
@@ -84,9 +88,17 @@ function validateManifest(manifest) {
     assert(Number.isSafeInteger(file.bytes) && file.bytes > 0, `${file.name}: positive byte size is required`)
     assert(/^[a-f0-9]{64}$/.test(file.sha256), `${file.name}: exact lowercase SHA-256 is required`)
   }
-  assert(ffmpeg.runtimeCandidate?.licenseFiles?.length === 2, 'FFmpeg LGPL license payload is incomplete')
-  assert(ffmpeg.installerImpact.runtimePayloadBytes === 24515448, 'FFmpeg isolated runtime payload measurement changed')
+  assert(ffmpeg.runtimeCandidate?.licenseFiles?.length === 4, 'FFmpeg/MinGW/GCC redistribution notice payload is incomplete')
+  assert(ffmpeg.runtimeCandidate?.documentationFiles?.length === 2, 'FFmpeg source/build documentation payload is incomplete')
+  assert(ffmpeg.installerImpact.runtimePayloadBytes === 24631334, 'FFmpeg admitted runtime payload measurement changed')
   assert(ffmpeg.installerImpact.compressedInstallerDeltaBytes === null, 'FFmpeg must not claim an NSIS delta before product integration')
+  const videoBaseline = manifest.candidateBaselines?.video
+  assert(videoBaseline?.scope === 'c01.2.1-unsigned-local-aggregate-not-final-signed-delta', 'C-01.2.1 installer measurement scope is missing')
+  assert(videoBaseline?.baselineCommit === '705fcdd5b828ca3edd7113568e2b406365ad5287', 'C-01.2.1 parent baseline identity drifted')
+  assert(videoBaseline?.aggregateDeltaBytes === videoBaseline.currentInstallerBytes - videoBaseline.baselineInstallerBytes, 'C-01.2.1 aggregate installer delta is inconsistent')
+  assert(videoBaseline?.expandedRuntimeBytes === ffmpeg.installerImpact.runtimePayloadBytes, 'C-01.2.1 packaged runtime measurement is inconsistent')
+  assert(videoBaseline?.packagedResourceReadbackPassed === true, 'C-01.2.1 packaged runtime readback evidence is missing')
+  assert(videoBaseline?.finalSignedDeltaPendingNode === 'C-01.2.2', 'final signed video delta must remain assigned to C-01.2.2')
   assert(manifest.blockedAlternatives?.some((item) => item.id === 'ghostscript' && item.integrationAllowed === false), 'Ghostscript must remain explicitly blocked')
 }
 
@@ -260,6 +272,28 @@ async function assertIntegrationBoundary(manifest) {
     assert(lock.includes(`name = "${name}"\nversion = "${version}"`), `${name}: approved product lock entry is missing`)
   }
   assert(!lock.includes('name = "gifski"') && !lock.includes('name = "imagequant"'), 'forbidden GIF/PNG dependency entered the product lockfile')
+
+  const ffmpeg = manifest.dependencies.find(item => item.id === 'ffmpeg')
+  const videoRoot = join(root, ffmpeg.runtimeCandidate.resourceDirectory)
+  for (const item of ffmpeg.runtimeCandidate.files) {
+    const path = join(videoRoot, item.name)
+    assert((await stat(path)).size === item.bytes, `${item.name}: admitted runtime byte size drifted`)
+    assert((await sha256(path)) === item.sha256, `${item.name}: admitted runtime SHA-256 drifted`)
+  }
+  for (const item of ffmpeg.runtimeCandidate.licenseFiles) {
+    const path = join(videoRoot, 'licenses', item.name)
+    assert((await stat(path)).size === item.bytes, `${item.name}: admitted license byte size drifted`)
+    assert((await sha256(path)) === item.sha256, `${item.name}: admitted license SHA-256 drifted`)
+  }
+  for (const item of ffmpeg.runtimeCandidate.documentationFiles) {
+    const path = join(videoRoot, item.name)
+    assert((await stat(path)).size === item.bytes, `${item.name}: admitted documentation byte size drifted`)
+    assert((await sha256(path)) === item.sha256, `${item.name}: admitted documentation SHA-256 drifted`)
+  }
+  const tauriConfig = await readFile(join(root, 'src-tauri', 'tauri.conf.json'), 'utf8')
+  for (const relativePath of ['ffmpeg.exe', 'ffprobe.exe', 'SOURCE.txt', 'BUILD-CONFIGURATION.txt', 'licenses/COPYING.LGPLv2.1', 'licenses/COPYING.LGPLv3', 'licenses/GCC-MinGW-runtime-copyright.txt', 'licenses/MinGW-w64-copyright.txt']) {
+    assert(tauriConfig.includes(`resources/video-engine/${relativePath}`), `Tauri video resource declaration is missing: ${relativePath}`)
+  }
 }
 
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))

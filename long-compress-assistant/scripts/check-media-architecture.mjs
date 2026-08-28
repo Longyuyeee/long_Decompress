@@ -60,6 +60,25 @@ assert(!imageCommand.includes('"task-progress"'), 'image stages must not emit sy
 
 const main = await read('src-tauri/src/main.rs')
 assert(
+  (main.match(/commands::video_engine::preflight_video_engine/g) ?? []).length === 1,
+  'C-01.2.1 must expose exactly one authoritative video-engine preflight command',
+)
+const videoEngine = await read('src-tauri/src/services/video_engine.rs')
+for (const contract of [
+  'VIDEO_ENGINE_RESOURCE_MISSING',
+  'VIDEO_ENGINE_RESOURCE_HASH_MISMATCH',
+  'VIDEO_ENGINE_VERSION_POLICY_MISMATCH',
+  'VIDEO_ENGINE_ENCODER_MISSING',
+  'VIDEO_ENGINE_FILTER_MISSING',
+  'Command::new(executable)',
+  '.args(arguments)',
+  'hw_encoding',
+  'default false',
+]) {
+  assert(videoEngine.includes(contract), `C-01.2.1 video preflight contract is missing: ${contract}`)
+}
+assert(!videoEngine.includes('cmd.exe') && !videoEngine.includes('powershell'), 'video preflight must not use a shell')
+assert(
   (main.match(/commands::compression::plan_image_compression_destination/g) ?? []).length === 1,
   'the application must expose exactly one authoritative image destination planner',
 )
@@ -89,6 +108,23 @@ assert(!imageWorkspaceView.includes('B-02 前端'), 'the enabled image workspace
 assert(!imageWorkspaceView.includes('B-03 实际编码后显示'), 'the result preview must not retain the B-03 placeholder')
 assert(!imageWorkspaceView.includes("invoke('compress_image_file'"), 'the image workspace must not bypass the audited batch composable')
 const packageManifest = JSON.parse(await read('package.json'))
+assert(
+  packageManifest.scripts?.['test:video-runtime-package:real'] === 'node scripts/check-video-runtime-package.mjs',
+  'C-01.2.1 real packaged-runtime command is missing',
+)
+const mediaFixtureManifest = JSON.parse(await read('tests/fixtures/media/manifest.json'))
+assert(mediaFixtureManifest.videoFixtureSource?.kind === 'tracked-frozen-real-containers', 'video fixtures must be frozen real containers')
+assert(mediaFixtureManifest.videoFixtureSource?.probeRuntime === 'src-tauri/resources/video-engine/ffprobe.exe', 'video fixtures must use the admitted product ffprobe')
+assert(mediaFixtureManifest.videos?.length === 2, 'C-01.2.1 must retain two frozen real video fixtures')
+assert(
+  mediaFixtureManifest.videos.every(item => item.bytes > 0 && /^[a-f0-9]{64}$/.test(item.sha256)),
+  'video fixtures must retain exact byte identities',
+)
+const mediaFixturePreparation = await read('scripts/prepare-media-test-fixtures.mjs')
+assert(mediaFixturePreparation.includes("'src-tauri', 'resources', 'video-engine', 'ffprobe.exe'"), 'fixture preparation must probe with the product ffprobe')
+for (const forbidden of ['BtbN', 'downloadTestTool', 'generateVideoFixtures']) {
+  assert(!mediaFixturePreparation.includes(forbidden), `mutable/generated video fixture path returned: ${forbidden}`)
+}
 assert(
   packageManifest.scripts?.['test:image-matrix:real'] === 'npm run test:fixtures:media:images && node scripts/run-b05-image-format-matrix.mjs',
   'B-05.1 real production matrix command is missing or bypasses fixture preparation',
