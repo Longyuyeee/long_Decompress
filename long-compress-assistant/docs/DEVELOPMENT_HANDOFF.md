@@ -1,15 +1,16 @@
 # 开发交接
 
-## 2026-08-28 v1.1.15 发布候选准备
+## 2026-08-28 v1.1.15 正式发布
 
 - 图片压缩 B-01 至 B-05.3 已完成后，8 个版本源统一提升为 `1.1.15`，唯一版本化 Shell Extension 已重新编译；Release notes 与候选审计已建立。
 - v1.1.15 正式 NSIS 为 8,691,488 B、SHA-256 `85CFBAD4230D3C1948278B34CFEC6327AC67368BC3730F66F35A8A99DBF8765A`；主程序为 28,400,640 B、SHA-256 `7D11ED9673865B4F9BBF2B617AE215B8413EDEB4317154FFACB84BB78E476E05`，PE 版本 1.1.15，14 项载荷完整。
 - 真实 `v1.1.14 → v1.1.15 → 卸载 → v1.1.14` 已通过：候选 EXE 字节一致、图片 17/17、安装生命周期 50/50、两处用户数据、经典菜单 17+4 和旧版恢复均符合预期，最终无运行进程。
 - 全回归通过：前端 254/254、集成 6/6；Rust debug 全目标及 Release workflow 同命令均通过（库 319/319、4 项既定忽略）；Clippy 零警告；真实媒体依赖/指标/图片基线、9 样本格式矩阵和资源/故障边界全部通过；npm 生产依赖漏洞为 0。
-- 本机没有可用的 updater 私钥环境，不能伪造签名资产；本地只验证正式 NSIS 和真实 `v1.1.14 → v1.1.15 → 卸载 → v1.1.14` 安装链。签名 ZIP、`.sig`、`latest.json` 和应用内公开更新必须由标签触发的 GitHub Actions 生成后复验。
+- PR #87 已合入受保护主分支，`v1.1.15` annotated tag 固定在 `82b1b8f`；Release run 33146766724 的版本身份、真实图片夹具单测、Rust Release、签名 Tauri/updater 构建、identity package 排除和公开 manifest 回读全部通过。
 - PR #87 首轮 Browser E2E 通过，但 Frontend coverage 暴露 4 个真实图片夹具 `ENOENT`：本地已有忽略目录掩盖了干净检出的前置条件。`test:unit` 与 `test:unit:coverage` 现都通过 npm 前置生命周期生成并冻结校验真实图片；两次从项目内无夹具目录开始复验分别通过 276/276 和 254/254，类型、生产构建及发布身份也通过。
-- 修正提交 `b74cabeda6266dbd6b1b814194799e8d9a8d33c7` 的远端 CI run 33144654827 已全部通过：Frontend、Browser shell E2E、Windows desktop E2E build、Rust/Shell Extension 和实际 NSIS installer 共五个 job 全绿，四个受保护分支必需上下文全部满足；PR #87 为 `MERGEABLE / CLEAN`。
-- 当前没有创建标签或公开 Release。下一接续点是审查并合入 PR #87；公开标签、签名资产、回下载和应用内升级复验须等主分支合并与明确授权。详见 [RELEASE_AUDIT_1.1.15.md](RELEASE_AUDIT_1.1.15.md)。
+- 四项公开资产已回下载并对账：NSIS 8,658,170 B / `DBFF77AE...DD2C51`，updater ZIP 8,658,330 B / `DE591FDB...241D00`，`.sig` 428 B / `BE82F7E0...02E2AC`，`latest.json` 950 B / `8265EFE6...3A3E78`；ZIP 内唯一 EXE 与独立 NSIS 字节一致，manifest 签名逐字一致。
+- 首轮公开更新在安装前发现恢复测试基线 `autoStart=true` 但 Run 项缺失；没有放宽断言。使用公开 v1.1.14 真实设置 UI 同步后显式开启，生产 Tauri 命令恢复精确注册，再从头重跑通过 24/24。
+- 当前机器已由生产 WebView2 更新 UI 从公开 `v1.1.14` 升至 `v1.1.15`：安装位置、自动重启、两处用户数据指纹、自动启动、经典菜单 17+4、唯一 Shell DLL 和无 MSIX identity package 全部符合预期，最终无运行进程。图片大节点与 v1.1.15 发布至此关闭；下一接续点为视频压缩软件编码前置审计。详见 [RELEASE_AUDIT_1.1.15.md](RELEASE_AUDIT_1.1.15.md)。
 
 ## 2026-08-28 B-05.3 正式安装版图片全流程
 
