@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 已按原始验收完成可复现/许可、产品资源、安装态能力、缺失/替换拒绝及同提交签名 NSIS/updater 增量。下一接续点为 C-02 探测与配置模型。真实 Windows N 前后验证移回 C-05/发布门禁，完成前不得发布 v1.1.16，但不再阻塞 C-02 至 C-04 开发。完整证据见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 已按原始验收完成，C-02.1 已完成有界 ffprobe 输入事实、稳定错误分类和首期流策略。下一接续点为 C-02.2 三档配置、最大分辨率与明确标记的估算区间。真实 Windows N 前后验证仍归 C-05/发布门禁，完成前不得发布 v1.1.16。证据见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md) 与 [C02_1_VIDEO_PROBE_FACTS_AUDIT.md](C02_1_VIDEO_PROBE_FACTS_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -419,6 +419,8 @@ src/types/media.ts
 验收目标：CI 与安装包内二进制哈希可追踪；缺失或被替换时应用拒绝开始任务；许可清单完整。
 
 ### C-02 探测与配置模型
+
+分段进度（2026-08-28）：**C-02.1 已完成**。产品 ffprobe 已通过有界、无 shell 的后端服务返回输入事实，VFR/旋转/无音频/字幕/损坏输入由冻结真实样本稳定验证；额外音轨、字幕、章节、封面显式告警，HDR 编码前拒绝。下一步为 C-02.2 三档配置、最大分辨率、派生输出尺寸和标为估算的大小区间；当前仍不启用视频 UI 或转码。证据见 [C02_1_VIDEO_PROBE_FACTS_AUDIT.md](C02_1_VIDEO_PROBE_FACTS_AUDIT.md)。
 
 - 使用 ffprobe 获取时长、分辨率、帧率、视频/音频编码、码率、旋转和字幕流；
 - 提供“清晰、均衡、小体积”三档，并允许设置最大分辨率；

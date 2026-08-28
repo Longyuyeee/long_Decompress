@@ -79,10 +79,36 @@ for (const contract of [
 }
 assert(!videoEngine.includes('cmd.exe') && !videoEngine.includes('powershell'), 'video preflight must not use a shell')
 assert(
+  (main.match(/commands::video_engine::probe_video_input/g) ?? []).length === 1,
+  'C-02.1 must expose exactly one authoritative video probe command',
+)
+const videoProbe = await read('src-tauri/src/services/video_probe.rs')
+for (const contract of [
+  'VIDEO_PROBE_SOURCE_EMPTY',
+  'VIDEO_PROBE_TIMEOUT',
+  'VIDEO_PROBE_OUTPUT_TOO_LARGE',
+  'VIDEO_PROBE_NO_VIDEO_STREAM',
+  'drop-with-explicit-warning',
+  'refuse-before-encoding',
+  'preserve-input-timestamps',
+]) {
+  assert(videoProbe.includes(contract), `C-02.1 video probe contract is missing: ${contract}`)
+}
+assert(videoProbe.includes('.args(['), 'video probe arguments must be passed as an argument array')
+assert(videoProbe.includes('.kill_on_drop(true)'), 'timed-out video probes must terminate the child process')
+assert(!videoProbe.includes('cmd.exe') && !videoProbe.includes('powershell'), 'video probe must not use a shell')
+const videoCommands = await read('src-tauri/src/commands/video_engine.rs')
+assert(videoCommands.includes('validate_video_engine(&validation_root)'), 'video probe must validate the admitted runtime first')
+assert(videoCommands.includes('probe_video_file(&ffprobe'), 'video probe command must use the bounded production service')
+assert(
   (main.match(/commands::compression::plan_image_compression_destination/g) ?? []).length === 1,
   'the application must expose exactly one authoritative image destination planner',
 )
 const tauriCommands = await read('src/composables/useTauriCommands.ts')
+assert(
+  tauriCommands.includes("invoke<VideoProbeReport>('probe_video_input', { path })"),
+  'the frontend video probe wrapper is missing or bypasses the typed contract',
+)
 assert(
   tauriCommands.includes("invoke<ImageDestinationPlan>('plan_image_compression_destination'"),
   'the frontend must use the backend image destination planner',
@@ -198,7 +224,8 @@ const productionFiles = [
 ]
 const mediaFiles = productionFiles.filter((file) =>
   /(?:^|[\\/])media(?:[_.\\/-]|$)/i.test(file)
-  || /image[_-]?compression/i.test(file),
+  || /image[_-]?compression/i.test(file)
+  || /video[_-]?(?:engine|probe)/i.test(file)
 )
 const forbiddenMediaBypasses = [
   'std::fs::rename(',

@@ -463,6 +463,7 @@ fn main() {
             long_compress_assistant::commands::system::load_app_settings,
             long_compress_assistant::commands::system::save_app_settings,
             long_compress_assistant::commands::video_engine::preflight_video_engine,
+            long_compress_assistant::commands::video_engine::probe_video_input,
             long_compress_assistant::commands::system_integration::open_in_explorer,
             long_compress_assistant::commands::system_integration::register_context_menu,
             long_compress_assistant::commands::system_integration::unregister_context_menu,

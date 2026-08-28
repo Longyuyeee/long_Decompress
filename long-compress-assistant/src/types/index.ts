@@ -317,3 +317,4 @@ export interface ShortcutConfig {
 
 // Export profile types
 export * from './profile'
+export * from './video'
