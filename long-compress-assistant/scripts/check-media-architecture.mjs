@@ -168,6 +168,14 @@ assert(!imageWorkspaceView.includes('B-03 实际编码后显示'), 'the result p
 assert(!imageWorkspaceView.includes("invoke('compress_image_file'"), 'the image workspace must not bypass the audited batch composable')
 const packageManifest = JSON.parse(await read('package.json'))
 assert(
+  packageManifest.scripts?.['test:e2e:desktop:video-workspace'] === 'node scripts/test-tauri-desktop.mjs --video-workspace-only',
+  'C-02.4 real desktop video planning gate is missing',
+)
+const desktopVideoGate = await read('scripts/test-tauri-desktop.mjs')
+assert(desktopVideoGate.includes('runVideoWorkspaceDesktopGate'), 'C-02.4 desktop video gate implementation is missing')
+assert(desktopVideoGate.includes('C-02 must not enable video execution'), 'C-02.4 desktop gate must enforce the execution freeze')
+assert(desktopVideoGate.includes('planning must not write task history'), 'C-02.4 desktop gate must enforce zero history writes')
+assert(
   packageManifest.scripts?.['test:video-runtime-package:real'] === 'node scripts/check-video-runtime-package.mjs',
   'C-01.2.1 real packaged-runtime command is missing',
 )

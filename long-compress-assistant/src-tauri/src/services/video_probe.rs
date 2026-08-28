@@ -505,6 +505,100 @@ mod tests {
         assert!(error.to_string().starts_with("VIDEO_PROBE_PROCESS_FAILED:"));
     }
 
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn classifies_real_multi_audio_streams_generated_by_the_product_runtime() {
+        let directory = tempfile::tempdir().expect("temporary directory");
+        let source = fixture("h264-vfr-audio-rotation-subtitles.mp4");
+        let output = directory.path().join("multi-audio-30s.mp4");
+        let status = std::process::Command::new(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources/video-engine/ffmpeg.exe"),
+        )
+        .args([
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-stream_loop",
+            "29",
+            "-i",
+        ])
+        .arg(&source)
+        .args([
+            "-map",
+            "0:v:0",
+            "-map",
+            "0:a:0",
+            "-map",
+            "0:a:0",
+            "-map",
+            "0:s:0",
+            "-c",
+            "copy",
+            "-t",
+            "30",
+            "-metadata:s:a:0",
+            "language=eng",
+            "-metadata:s:a:1",
+            "language=zho",
+            "-y",
+        ])
+        .arg(&output)
+        .status()
+        .expect("run admitted product ffmpeg");
+        assert!(status.success());
+
+        let report = probe_video_file(&ffprobe(), &output)
+            .await
+            .expect("probe multi-audio fixture");
+        assert!((30_000..=31_000).contains(&report.duration_ms));
+        assert_eq!(report.audio_streams.len(), 2);
+        assert_eq!(report.audio_streams[0].language.as_deref(), Some("eng"));
+        assert_eq!(report.audio_streams[1].language.as_deref(), Some("zho"));
+        assert_eq!(report.subtitle_streams.len(), 1);
+        assert!(report
+            .warnings
+            .iter()
+            .any(|warning| warning.starts_with("VIDEO_PROBE_ADDITIONAL_AUDIO_WILL_BE_DROPPED:")));
+    }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn classifies_a_real_ten_minute_container_without_scanning_media_packets() {
+        let directory = tempfile::tempdir().expect("temporary directory");
+        let source = fixture("h264-vfr-audio-rotation-subtitles.mp4");
+        let output = directory.path().join("long-10m.mp4");
+        let status = std::process::Command::new(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources/video-engine/ffmpeg.exe"),
+        )
+        .args([
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-stream_loop",
+            "599",
+            "-i",
+        ])
+        .arg(&source)
+        .args([
+            "-map", "0:v:0", "-map", "0:a:0", "-c", "copy", "-t", "600", "-y",
+        ])
+        .arg(&output)
+        .status()
+        .expect("run admitted product ffmpeg");
+        assert!(status.success());
+
+        let report = probe_video_file(&ffprobe(), &output)
+            .await
+            .expect("probe long fixture");
+        assert!((599_000..=602_000).contains(&report.duration_ms));
+        assert_eq!(report.audio_streams.len(), 1);
+        assert_eq!(report.primary_video.rotation_degrees, 90);
+        assert_eq!(
+            report.primary_video.frame_rate_mode,
+            VideoFrameRateMode::Variable
+        );
+    }
+
     #[test]
     fn classifies_hdr_and_all_lossy_stream_changes_before_encoding() {
         let root = serde_json::json!({

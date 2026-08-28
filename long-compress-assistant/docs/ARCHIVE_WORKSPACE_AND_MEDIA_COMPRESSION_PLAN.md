@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01、C-02.1 至 C-02.3 已完成。下一接续点为 C-02.4 真实多音轨/较长输入和 Windows 桌面矩阵；C-02 未整体关闭，不能提前进入编码。真实 Windows N 前后验证仍归 C-05/发布门禁，完成前不得发布 v1.1.16。证据见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)、[C02_1_VIDEO_PROBE_FACTS_AUDIT.md](C02_1_VIDEO_PROBE_FACTS_AUDIT.md)、[C02_2_VIDEO_COMPRESSION_PLAN_AUDIT.md](C02_2_VIDEO_COMPRESSION_PLAN_AUDIT.md) 与 [C02_3_VIDEO_PLANNING_WORKSPACE_AUDIT.md](C02_3_VIDEO_PLANNING_WORKSPACE_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 与 C-02 已完成。VFR、旋转、无音频、真实双音轨、字幕、10 分钟输入、损坏容器、三档估算和真实 Windows 工作区均已通过，下一接续点为 C-03 执行、进度与取消。真实 Windows N 前后验证仍归 C-05/发布门禁，完成前不得发布 v1.1.16。完整 C-02 收口证据见 [C02_4_VIDEO_REAL_MATRIX_AUDIT.md](C02_4_VIDEO_REAL_MATRIX_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -420,7 +420,7 @@ src/types/media.ts
 
 ### C-02 探测与配置模型
 
-分段进度（2026-08-28）：**C-02.1 至 C-02.3 已完成**。产品 ffprobe 已通过有界、无 shell 的后端服务返回输入事实；后端规划器固定三档、最大分辨率、只缩小尺寸、目标码率、估算区间和流变化；压缩中心现可真实选择/拖入并展示这些事实，执行按钮保持禁用且不创建任务。下一步为 C-02.4 真实多音轨/较长输入和 Windows 桌面矩阵，之后才可关闭 C-02。证据见 [C02_1_VIDEO_PROBE_FACTS_AUDIT.md](C02_1_VIDEO_PROBE_FACTS_AUDIT.md)、[C02_2_VIDEO_COMPRESSION_PLAN_AUDIT.md](C02_2_VIDEO_COMPRESSION_PLAN_AUDIT.md) 与 [C02_3_VIDEO_PLANNING_WORKSPACE_AUDIT.md](C02_3_VIDEO_PLANNING_WORKSPACE_AUDIT.md)。
+完成状态（2026-08-28）：**C-02.1 至 C-02.4 全部完成，C-02 已关闭**。产品 ffprobe 有界事实、三档/最大分辨率/估算/流变化规划、不可执行工作区及真实分类/Windows 桌面矩阵全部通过；VFR、旋转、无音频、双音轨、字幕、10 分钟输入和损坏容器均有真实产品运行时证据。下一节点为 C-03，C-04 验证完成前仍不得发布视频输出。完整收口证据见 [C02_4_VIDEO_REAL_MATRIX_AUDIT.md](C02_4_VIDEO_REAL_MATRIX_AUDIT.md)。
 
 - 使用 ffprobe 获取时长、分辨率、帧率、视频/音频编码、码率、旋转和字幕流；
 - 提供“清晰、均衡、小体积”三档，并允许设置最大分辨率；

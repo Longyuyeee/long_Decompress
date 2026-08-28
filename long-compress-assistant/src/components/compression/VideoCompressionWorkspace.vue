@@ -176,19 +176,21 @@ const readyCount = computed(() => store.videoItems.filter(item => item.status ==
 </template>
 
 <style scoped>
-.video-workspace { display: flex; min-width: 0; min-height: 0; flex: 1; flex-direction: column; gap: .75rem; overflow: auto; padding: .1rem; }
-.workspace-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.video-workspace { box-sizing: border-box; display: flex; width: 100%; max-width: 100%; min-width: 0; min-height: 0; flex: 1; flex-direction: column; gap: .75rem; overflow-x: hidden; overflow-y: auto; padding: .1rem; }
+.video-workspace > * { box-sizing: border-box; max-width: 100%; min-width: 0; }
+.workspace-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; }
+.workspace-toolbar > div { min-width: 0; flex: 1 1 20rem; }
 .title-line { display: flex; align-items: center; gap: .45rem; color: var(--text-content); }
 .title-line i { color: var(--dynamic-accent); }
 .title-line strong { font-size: .88rem; font-weight: 900; }
 .title-line span { border-radius: 999px; background: color-mix(in srgb, var(--dynamic-accent) 12%, transparent); padding: .18rem .45rem; color: var(--dynamic-accent); font-size: .58rem; font-weight: 900; }
 .workspace-toolbar p { margin-top: .2rem; color: var(--text-muted); font-size: .65rem; }
-.execute-disabled { flex-shrink: 0; border: 1px solid var(--border-subtle); border-radius: .75rem; background: var(--bg-input); padding: .65rem .8rem; color: var(--text-muted); font-size: .65rem; font-weight: 850; opacity: .7; }
+.execute-disabled { max-width: 100%; flex: 0 1 auto; border: 1px solid var(--border-subtle); border-radius: .75rem; background: var(--bg-input); padding: .65rem .8rem; color: var(--text-muted); font-size: .65rem; font-weight: 850; opacity: .7; }
 .truth-boundary { display: flex; align-items: center; gap: .5rem; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 22%, transparent); border-radius: .8rem; background: color-mix(in srgb, var(--dynamic-accent) 7%, transparent); padding: .6rem .75rem; color: var(--text-muted); font-size: .62rem; line-height: 1.45; }
 .truth-boundary i, .truth-boundary strong { color: var(--dynamic-accent); }.truth-boundary strong { margin-left: auto; white-space: nowrap; }
-.global-settings-card, .video-card { border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-card) 88%, transparent); padding: .85rem; }
+.global-settings-card, .video-card { box-sizing: border-box; max-width: 100%; min-width: 0; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-card) 88%, transparent); padding: .85rem; }
 .settings-heading { display: flex; justify-content: space-between; gap: .75rem; margin-bottom: .65rem; color: var(--text-content); font-size: .68rem; font-weight: 900; }.settings-heading small { color: var(--text-muted); font-size: .58rem; font-weight: 650; }
-.video-empty { min-height: 14rem; }.video-list { display: grid; gap: .65rem; }
+.video-empty { min-height: 14rem; }.video-list { display: grid; width: 100%; max-width: 100%; min-width: 0; gap: .65rem; }.video-card { overflow: hidden; }
 .video-card header { display: flex; min-width: 0; align-items: center; gap: .55rem; }.expand, .remove { flex: 0 0 auto; width: 1.8rem; height: 1.8rem; border-radius: .55rem; color: var(--text-muted); }.expand:hover, .remove:hover { background: var(--bg-input); color: var(--text-content); }
 .file-identity { min-width: 0; flex: 1; }.file-identity strong, .file-identity small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.file-identity strong { color: var(--text-content); font-size: .72rem; }.file-identity small { margin-top: .12rem; color: var(--text-muted); font-size: .55rem; }
 .status { display: flex; flex: 0 0 auto; align-items: center; gap: .3rem; border-radius: 999px; background: var(--bg-input); padding: .28rem .48rem; color: var(--text-muted); font-size: .58rem; font-weight: 850; }.video-card[data-status="ready"] .status { color: #22c55e; }.video-card[data-status="rejected"] .status { color: #ef4444; }
