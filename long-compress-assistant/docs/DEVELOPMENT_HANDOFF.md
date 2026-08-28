@@ -1,11 +1,18 @@
 # 开发交接
 
+## 2026-08-28 B-04.2 图片真实阶段事件收口
+
+- 图片服务新增可测试的 `decoding/resizing/encoding/validating/publishing` 观察器；缩放仅在可见尺寸实际变化时出现，候选不更小时不会记录发布，预取消不生成任何阶段。
+- Tauri 图片命令将阶段映射为现有 `task-log`；没有新增日志 store，也没有发送要求数值百分比的 `task-progress`。架构门禁会阻止后续误加虚假图片进度。
+- 固定真实方向 JPEG、透明 PNG、WebP 和 GIF 已完成预期—实际序列复核；前端 244/244、Rust 313 通过/4 忽略、Clippy 零警告、生产构建和五项媒体门禁通过。
+- 当前仍不启用按钮、不写终态历史、不升版、不发布。下一步严格执行 B-04.3 安全批量编排，完整证据见 [B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md)。
+
 ## 2026-08-28 B-04.1 图片输入/输出事实契约收口
 
 - Rust `ImageCompressionOutcome` 已从输出单侧事实改为 `input/output`；仅更小策略返回 `input/candidate`。两侧均包含真实文件字节、格式、编码矩阵、方向后可见尺寸、方向、帧数和 Alpha。
 - 前端新增同构请求/响应类型；历史 `MediaMetricsV1` 向后兼容增加可选 `image.input/output`，Rust `deny_unknown_fields` 同步并拒绝未知字段、无效格式、零尺寸/帧数和方向范围外数据。
 - 固定真实方向 JPEG、透明 PNG 和 WebP 已复核预期—实际差异；前端 244/244、Rust 312 通过/4 忽略、Clippy 零警告、生产构建和五项媒体门禁通过。
-- 当前仍不调用图片命令、不启用按钮、不升版、不发布。下一步严格执行 B-04.2 真实阶段事件，完整证据见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)。
+- 本节点收口时尚未接入阶段事件；该项现已由顶部 B-04.2 完成。当前以 B-04.3 安全批量编排为唯一接续点，仍不启用按钮、不升版、不发布。完整事实契约证据见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)。
 
 ## 2026-08-28 B-03 后跨设备接续审计（已由 B-04.1 更新）
 

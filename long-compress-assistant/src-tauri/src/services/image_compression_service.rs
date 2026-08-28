@@ -79,6 +79,28 @@ pub enum ImageFileFormat {
     WebP,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ImageCompressionStage {
+    Decoding,
+    Resizing,
+    Encoding,
+    Validating,
+    Publishing,
+}
+
+impl ImageCompressionStage {
+    pub fn log_message(self) -> &'static str {
+        match self {
+            Self::Decoding => "正在解码图片并确认真实格式与属性",
+            Self::Resizing => "正在按可见尺寸等比例缩放图片",
+            Self::Encoding => "正在使用所选格式和质量编码图片",
+            Self::Validating => "正在重新解码并验证候选输出",
+            Self::Publishing => "正在原子发布已验证的图片输出",
+        }
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum ImageCompressionError {
     #[error("image compression was cancelled")]
@@ -132,9 +154,21 @@ pub fn compress_single_image(
     request: &ImageCompressionRequest,
     cancelled: &AtomicBool,
 ) -> Result<ImageCompressionOutcome, ImageCompressionError> {
+    compress_single_image_with_observer(request, cancelled, |_| {})
+}
+
+pub fn compress_single_image_with_observer<F>(
+    request: &ImageCompressionRequest,
+    cancelled: &AtomicBool,
+    mut observe_stage: F,
+) -> Result<ImageCompressionOutcome, ImageCompressionError>
+where
+    F: FnMut(ImageCompressionStage),
+{
     validate_request(request)?;
     check_cancelled(cancelled)?;
 
+    observe_stage(ImageCompressionStage::Decoding);
     let input = decode_facts(&request.source, true)?;
     if input.frame_count != 1 {
         return Err(ImageCompressionError::AnimatedInput(input.frame_count));
@@ -161,6 +195,11 @@ pub fn compress_single_image(
 
     let staged = staged_output_path(&request.destination, "image-compress")?;
     let guard = StagedOutputGuard(staged.clone());
+    if target_visible.width != input.visible_width || target_visible.height != input.visible_height
+    {
+        observe_stage(ImageCompressionStage::Resizing);
+    }
+    observe_stage(ImageCompressionStage::Encoding);
     encode(request, &input, target_visible, &staged)?;
     let expected_metadata = apply_metadata_policy(
         &staged,
@@ -174,6 +213,7 @@ pub fn compress_single_image(
     )?;
     check_cancelled(cancelled)?;
 
+    observe_stage(ImageCompressionStage::Validating);
     let output = decode_facts(&staged, false)
         .map_err(|error| ImageCompressionError::Verification(error.to_string()))?;
     verify_output(
@@ -202,6 +242,7 @@ pub fn compress_single_image(
         );
     }
 
+    observe_stage(ImageCompressionStage::Publishing);
     publish_verified_file(&staged, &request.destination, || {
         cancelled.load(Ordering::Acquire)
     })?;
@@ -772,12 +813,15 @@ mod tests {
         }
         let temp = tempfile::tempdir().unwrap();
         let destination = temp.path().join("result.jpg");
-        let error = compress_single_image(
+        let mut stages = Vec::new();
+        let error = compress_single_image_with_observer(
             &request(source, destination.clone()),
             &AtomicBool::new(false),
+            |stage| stages.push(stage),
         )
         .unwrap_err();
         assert!(matches!(error, ImageCompressionError::InvalidInput(_)));
+        assert_eq!(stages, vec![ImageCompressionStage::Decoding]);
         assert!(!destination.exists());
         assert_eq!(fs::read_dir(temp.path()).unwrap().count(), 0);
     }
@@ -820,23 +864,40 @@ mod tests {
         }
         let temp = tempfile::tempdir().unwrap();
         let destination = temp.path().join("cancelled.webp");
-        let error = compress_single_image(
+        let mut cancelled_stages = Vec::new();
+        let error = compress_single_image_with_observer(
             &request(source.clone(), destination.clone()),
             &AtomicBool::new(true),
+            |stage| cancelled_stages.push(stage),
         )
         .unwrap_err();
         assert!(matches!(error, ImageCompressionError::Cancelled));
+        assert!(cancelled_stages.is_empty());
         assert!(!destination.exists());
 
         let destination = temp.path().join("larger.webp");
         let mut policy_request = request(source, destination.clone());
         policy_request.mode = ImageCompressionMode::Lossless;
         policy_request.only_if_smaller = true;
-        let outcome = compress_single_image(&policy_request, &AtomicBool::new(false)).unwrap();
+        let mut policy_stages = Vec::new();
+        let outcome = compress_single_image_with_observer(
+            &policy_request,
+            &AtomicBool::new(false),
+            |stage| policy_stages.push(stage),
+        )
+        .unwrap();
         assert!(matches!(
             outcome,
             ImageCompressionOutcome::KeptSourceBecauseOutputWasNotSmaller { .. }
         ));
+        assert_eq!(
+            policy_stages,
+            vec![
+                ImageCompressionStage::Decoding,
+                ImageCompressionStage::Encoding,
+                ImageCompressionStage::Validating,
+            ]
+        );
         assert!(!destination.exists());
         assert!(!fs::read_dir(temp.path())
             .unwrap()
@@ -876,7 +937,12 @@ mod tests {
         let mut request = request(source.clone(), destination);
         request.mode = ImageCompressionMode::Lossless;
         request.target_format = ImageFileFormat::Png;
-        let outcome = compress_single_image(&request, &AtomicBool::new(false)).unwrap();
+        let mut stages = Vec::new();
+        let outcome =
+            compress_single_image_with_observer(&request, &AtomicBool::new(false), |stage| {
+                stages.push(stage)
+            })
+            .unwrap();
         let ImageCompressionOutcome::Published { input, output } = outcome else {
             panic!("converted output should publish");
         };
@@ -885,6 +951,15 @@ mod tests {
         assert_eq!(output.format, ImageFileFormat::Png);
         assert_eq!(output.orientation, 1);
         assert_eq!((output.visible_width, output.visible_height), (360, 640));
+        assert_eq!(
+            stages,
+            vec![
+                ImageCompressionStage::Decoding,
+                ImageCompressionStage::Encoding,
+                ImageCompressionStage::Validating,
+                ImageCompressionStage::Publishing,
+            ]
+        );
         let source_metadata = read_metadata(&source, true).unwrap();
         let output_metadata = read_metadata(&request.destination, false).unwrap();
         assert_eq!(
@@ -909,13 +984,28 @@ mod tests {
             width: 180,
             height: 320,
         });
-        let outcome = compress_single_image(&request, &AtomicBool::new(false)).unwrap();
+        let mut stages = Vec::new();
+        let outcome =
+            compress_single_image_with_observer(&request, &AtomicBool::new(false), |stage| {
+                stages.push(stage)
+            })
+            .unwrap();
         let ImageCompressionOutcome::Published { input, output } = outcome else {
             panic!("resized output should publish");
         };
         assert_eq!((input.visible_width, input.visible_height), (360, 640));
         assert_eq!((output.visible_width, output.visible_height), (180, 320));
         assert_eq!(output.orientation, 6);
+        assert_eq!(
+            stages,
+            vec![
+                ImageCompressionStage::Decoding,
+                ImageCompressionStage::Resizing,
+                ImageCompressionStage::Encoding,
+                ImageCompressionStage::Validating,
+                ImageCompressionStage::Publishing,
+            ]
+        );
         let metadata = read_metadata(&request.destination, false).unwrap();
         assert_eq!(metadata.exif, Some(build_orientation_exif(6)));
         assert_eq!(metadata.icc, None);
@@ -939,5 +1029,21 @@ mod tests {
         assert!(input.has_alpha);
         assert_eq!(output.format, ImageFileFormat::Jpeg);
         assert!(!output.has_alpha);
+    }
+
+    #[test]
+    fn stage_messages_are_stable_and_describe_real_work() {
+        assert_eq!(
+            ImageCompressionStage::Decoding.log_message(),
+            "正在解码图片并确认真实格式与属性"
+        );
+        assert_eq!(
+            ImageCompressionStage::Publishing.log_message(),
+            "正在原子发布已验证的图片输出"
+        );
+        assert_eq!(
+            serde_json::to_value(ImageCompressionStage::Validating).unwrap(),
+            "validating"
+        );
     }
 }

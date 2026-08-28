@@ -377,7 +377,7 @@ src/types/media.ts
 
 ### B-04 进度、日志和历史
 
-状态：**进行中；B-04.1 已完成，下一接续点为 B-04.2**。2026-08-28 已完成输入/输出双侧事实契约：Rust 图片结果、前端响应类型和前后端历史 `MediaMetricsV1` 现在可同时表达真实格式、可见尺寸、编码矩阵、方向、帧数与 Alpha，旧历史通过可选字段继续兼容，机器门禁明确禁止浏览器预览尺寸进入历史。真实方向 JPEG、透明 PNG、WebP、全量前端/Rust 和 Clippy 已通过，证据见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)。下一步增加可信阶段事件，之后再做冲突/批量编排和三种终态历史；界面按钮继续禁用。
+状态：**进行中；B-04.1 与 B-04.2 已完成，下一接续点为 B-04.3**。输入/输出双侧事实契约见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)。图片服务现以真实执行边界产生解码、条件缩放、编码、验证和发布阶段，Tauri 命令只映射统一 `task-log`，不会在缺少编码器字节回调时制造百分比、速度或 ETA；真实方向 JPEG、透明 PNG、WebP、GIF 拒绝、预取消与候选不更小序列均已复核，证据见 [B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md)。下一步建立安全冲突/批量编排，之后再做三种终态历史和 UI 开放；界面按钮继续禁用。
 
 - 日志展示解码、缩放、编码、验证、发布阶段；
 - 进度按批量文件数与可用字节信息组合，不得长时间静止在虚假百分比；

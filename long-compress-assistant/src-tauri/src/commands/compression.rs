@@ -1,7 +1,9 @@
 use crate::services::compression_service::CompressionService;
 use crate::services::compression_service::FileConflictResolution;
 use crate::services::compression_service::RarCompressionSupport;
-use crate::models::compression::{CompressionOptions, DecompressOptions};
+use crate::models::compression::{
+    CompressionOptions, DecompressOptions, TaskLog, TaskLogSeverity,
+};
 use tauri::{command, AppHandle, Manager, State, Window};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -215,9 +217,37 @@ pub async fn compress_files(
 
 #[command]
 pub async fn compress_image_file(
+    window: Window,
     task_id: String,
     request: crate::services::image_compression_service::ImageCompressionRequest,
 ) -> Result<crate::services::image_compression_service::ImageCompressionOutcome, String> {
+    let log_task_id = task_id.clone();
+    run_image_compression(task_id, request, move |stage| {
+        let _ = window.emit("task-log", image_stage_log(&log_task_id, stage));
+    })
+    .await
+}
+
+fn image_stage_log(
+    task_id: &str,
+    stage: crate::services::image_compression_service::ImageCompressionStage,
+) -> TaskLog {
+    TaskLog {
+        task_id: task_id.to_string(),
+        timestamp: chrono::Utc::now(),
+        message: stage.log_message().to_string(),
+        severity: TaskLogSeverity::Info,
+    }
+}
+
+async fn run_image_compression<F>(
+    task_id: String,
+    request: crate::services::image_compression_service::ImageCompressionRequest,
+    observe_stage: F,
+) -> Result<crate::services::image_compression_service::ImageCompressionOutcome, String>
+where
+    F: FnMut(crate::services::image_compression_service::ImageCompressionStage) + Send + 'static,
+{
     let output_path = request.destination.to_string_lossy().into_owned();
     let source_path = request.source.to_string_lossy().into_owned();
     let _output_guard = CompressionOutputGuard::acquire(&task_id, &output_path)?;
@@ -242,8 +272,12 @@ pub async fn compress_image_file(
     }
 
     tauri::async_runtime::spawn_blocking(move || {
-        crate::services::image_compression_service::compress_single_image(&request, &cancelled)
-            .map_err(|error| error.to_string())
+        crate::services::image_compression_service::compress_single_image_with_observer(
+            &request,
+            &cancelled,
+            observe_stage,
+        )
+        .map_err(|error| error.to_string())
     })
     .await
     .map_err(|error| error.to_string())?
@@ -898,14 +932,16 @@ pub async fn cancel_zip_repair(repair_id: String) -> Result<(), String> {
 #[cfg(test)]
 mod cancellation_tests {
     use super::{
-        cancel_archive_browse, cancel_compression, cancel_tasks_and_wait, compress_image_file,
-        classify_archive_browse_error, normalized_output_key, ArchiveDiagnosticGuard,
-        CompressionAnalysisGuard, CompressionOutputGuard, ZipRepairGuard,
+        cancel_archive_browse, cancel_compression, cancel_tasks_and_wait,
+        classify_archive_browse_error, image_stage_log, normalized_output_key,
+        run_image_compression, ArchiveDiagnosticGuard, CompressionAnalysisGuard,
+        CompressionOutputGuard, ZipRepairGuard,
         ACTIVE_COMPRESSION_OUTPUTS, CANCELLATION_FLAGS, COMPRESSION_ANALYSIS_FLAGS,
         ARCHIVE_BROWSE_FLAGS, ARCHIVE_DIAGNOSTIC_FLAGS, ZIP_REPAIR_FLAGS,
     };
     use crate::services::image_compression_service::{
-        ImageCompressionMode, ImageCompressionOutcome, ImageCompressionRequest, ImageFileFormat,
+        ImageCompressionMode, ImageCompressionOutcome, ImageCompressionRequest,
+        ImageCompressionStage, ImageFileFormat,
     };
     use std::path::Path;
     use std::sync::{
@@ -968,7 +1004,9 @@ mod cancellation_tests {
         let temp = tempfile::tempdir().unwrap();
         let destination = temp.path().join("command-output.png");
         let task_id = format!("image-command-{}", uuid::Uuid::new_v4());
-        let outcome = compress_image_file(
+        let observed = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let observed_for_worker = observed.clone();
+        let outcome = run_image_compression(
             task_id.clone(),
             ImageCompressionRequest {
                 source,
@@ -980,12 +1018,35 @@ mod cancellation_tests {
                 preserve_metadata: true,
                 only_if_smaller: false,
             },
+            move |stage| observed_for_worker.lock().unwrap().push(stage),
         )
         .await
         .unwrap();
         assert!(matches!(outcome, ImageCompressionOutcome::Published { .. }));
+        assert_eq!(
+            *observed.lock().unwrap(),
+            vec![
+                ImageCompressionStage::Decoding,
+                ImageCompressionStage::Encoding,
+                ImageCompressionStage::Validating,
+                ImageCompressionStage::Publishing,
+            ]
+        );
         assert!(destination.is_file());
         assert!(!CANCELLATION_FLAGS.contains_key(&task_id));
+    }
+
+    #[test]
+    fn image_stage_log_matches_the_existing_task_log_contract() {
+        let payload = serde_json::to_value(image_stage_log(
+            "image-task",
+            ImageCompressionStage::Validating,
+        ))
+        .unwrap();
+        assert_eq!(payload["task_id"], "image-task");
+        assert_eq!(payload["severity"], "Info");
+        assert_eq!(payload["message"], "正在重新解码并验证候选输出");
+        assert!(payload["timestamp"].as_str().is_some());
     }
 
     #[tokio::test]

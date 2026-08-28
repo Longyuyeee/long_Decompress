@@ -50,6 +50,14 @@ assert(
   'archive compression must not bypass the shared publication boundary',
 )
 
+const compressionCommands = await read('src-tauri/src/commands/compression.rs')
+const imageCommandStart = compressionCommands.indexOf('pub async fn compress_image_file')
+const imageCommandEnd = compressionCommands.indexOf('pub async fn cancel_compression', imageCommandStart)
+assert(imageCommandStart >= 0 && imageCommandEnd > imageCommandStart, 'image compression command boundary is missing')
+const imageCommand = compressionCommands.slice(imageCommandStart, imageCommandEnd)
+assert(imageCommand.includes('window.emit("task-log"'), 'image stages must use the unified task log event')
+assert(!imageCommand.includes('"task-progress"'), 'image stages must not emit synthetic progress percentages')
+
 const main = await read('src-tauri/src/main.rs')
 assert(
   (main.match(/commands::task_history::save_task_history/g) ?? []).length === 1,
