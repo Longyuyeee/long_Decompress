@@ -29,6 +29,7 @@
     "test:image-boundaries:real": "npm run test:fixtures:media:images && node scripts/run-b05-image-boundaries.mjs",
     "test:installed-release": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-installed-release.ps1",
     "test:installed-archive-workspace": "node scripts/test-installed-archive-workspace.mjs",
+    "test:installed-image-workspace": "node scripts/test-installed-image-workspace.mjs",
     "test:public-update": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-public-update.ps1",
     "release:validation-report": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/generate-release-validation.ps1",
     "performance:baseline": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-performance-baseline.ps1",

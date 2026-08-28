@@ -1,5 +1,13 @@
 # 开发交接
 
+## 2026-08-28 B-05.3 正式安装版图片全流程
+
+- 新增 `test:installed-image-workspace` 与 `-RunImageWorkspaceMatrix` 安装门禁；正式候选不含桌面 E2E 桥，通过生产 Tauri `Event.emit` 文件投递监听接收真实路径，不直接注入 store、任务或结果。
+- 最终安装态图片链 17/17：三个真实 JPEG/PNG/WebP 输入与尺寸、可见质量 67/保持格式/限制尺寸/rename 设置、执行前结果为空、三个真实发布文件、源哈希变化 0、三组前后预览、三条完成历史、完整重启历史和三个输出重新导入解码全部通过。
+- 正式 NSIS 为 8,688,052 B、SHA-256 `404A9BC533F64C8688A05B6E08118817902A4B21131D7B19333F7E81A18DBA2C`；14 个载荷完整。覆盖/卸载/公开 v1.1.14 恢复生命周期 50/50，用户数据和菜单恢复，最终无应用进程。
+- 真实差异包括全局 Tauri API 不存在、Windows 文件对话框自动化假成功、ready 文案、滚动区点击和 Explorer 标签页 COM 观察不可靠；均按实际结果修正测试口径，没有放松磁盘文件、预览、历史或重启断言。并发 Cargo 首轮出现一次 7Z 分类差异，单项与完整串行复验均通过，未形成稳定产品缺陷。
+- B-05.1 至 B-05.3 功能矩阵至此完成，当前仍不升版、不更新 Release；下一接续点严格为 `v1.1.15` 版本身份、Release notes、正式资产/签名、公开更新和回下载复验。完整证据见 [B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md](B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md)。
+
 ## 2026-08-28 B-05.2.2 图片资源与故障边界
 
 - 新增 `test:image-boundaries:real`，直接调用生产图片服务验证 96 MP 可解码与 100.01 MP 有效 PNG 拒绝、340 UTF-16 中文长路径、skip/rename/replace-if-smaller 和编码期目标竞态、标准 StorageFull 注入、编码启动后取消。

@@ -8,7 +8,7 @@ GitHub：`https://github.com/Longyuyeee/long_Decompress.git`
 
 原始审计锚点：`5e396c67e0b8aa4f4bd3cfc822a63c2f1b24f1e3`（`feat: complete B-03 image backend execution`）
 
-最新接续状态：B-04 整体、B-05.1 三格式矩阵和 B-05.2 百图/故障边界已完成；下一接续点为 B-05.3 正式安装版全流程。完成证据见 [B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md](B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md)、[B05_2_1_IMAGE_BATCH_AUDIT.md](B05_2_1_IMAGE_BATCH_AUDIT.md) 与 [B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md](B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md)。
+最新接续状态：B-04 整体和 B-05.1 至 B-05.3 真实验收矩阵已完成；下一接续点为 `v1.1.15` 发布审计与公开更新闭环。完成证据见 [B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md](B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md)、[B05_2_1_IMAGE_BATCH_AUDIT.md](B05_2_1_IMAGE_BATCH_AUDIT.md)、[B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md](B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md) 与 [B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md](B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md)。
 
 公开版本：`v1.1.14`，标签仍固定在 `cfc58ec9a14dc8ccb3f0e026986786af5693b6cc`；当前开发分支不升版、不更新 Release。
 
@@ -16,7 +16,7 @@ GitHub：`https://github.com/Longyuyeee/long_Decompress.git`
 
 当前开发分支已完成大节点 A、媒体前置 B-00、图片依赖基线 B-01、图片前端工作区 B-02、图片后端执行/发布事务 B-03 和图片任务事实/UI B-04。B-04.5 开发前分支相对 `origin/master` 为领先 28 个提交、落后 0 个提交，当前工作从 GitHub 同名远端分支顶端继续。
 
-B-04.1 至 B-04.5 已全部完成。B-05.1 已完成 9 样本真实生产矩阵；B-05.2.1 已完成 Windows Release/WebView2 百图批量；B-05.2.2 已完成像素上下界、340 UTF-16 中文长路径、目标冲突、StorageFull 和编码期取消。下一接续点严格为 **B-05.3 正式安装版全流程**；B-05 整体、版本提升和公开发布仍未完成。
+B-04.1 至 B-04.5 已全部完成。B-05.1 已完成 9 样本真实生产矩阵；B-05.2 已完成百图、像素上下界、340 UTF-16 中文长路径、目标冲突、StorageFull 和编码期取消；B-05.3 已完成无测试桥正式安装版输入、配置、前后对比、执行、历史、完整重启与输出重新打开。B-05 功能矩阵完成，但版本提升和公开发布仍未执行。
 
 ## 2. 已完成的实际代码
 
@@ -64,10 +64,12 @@ B-04.1 至 B-04.5 已全部完成。B-05.1 已完成 9 样本真实生产矩阵�
 6. **B-05.1 三格式矩阵（已完成）**：JPEG、PNG、WebP 各 3 个冻结真实样本直接调用生产压缩服务，9 个输出重新解码差异为 0。
 7. **B-05.2.1 百图批量（已完成）**：100 个真实磁盘输入经可见桌面入口执行，100/100 完成、100 个唯一输出、100 条历史、源哈希变化 0。
 8. **B-05.2.2 资源与故障边界（已完成）**：96 MP/100.01 MP 上下界、340 UTF-16 中文长路径、冲突/竞态、StorageFull 注入和编码期取消全部通过；现有产品未提供删除源文件选项，不得把该项冒充已可测功能。
-9. **B-05.3（下一步）**：执行正式安装版拖入、配置、对比、执行、历史查看和重新打开输出完整流程。
+9. **B-05.3（已完成）**：正式安装版图片链 17/17、安装生命周期 50/50；三张真实图片完成输入、配置、对比、发布、历史、完整重启和输出重新解码。
+10. **下一步**：执行 `v1.1.15` 版本身份、Release notes、正式资产/签名、上一公开版本更新、公开回下载和应用内更新闭环。
 
 ## 5. 本次审计证据
 
+- B-05.3 正式安装态图片链 17/17、安装生命周期 50/50；候选 NSIS 8,688,052 B、SHA-256 `404A9BC533F64C8688A05B6E08118817902A4B21131D7B19333F7E81A18DBA2C`。三输出、源哈希、三组前后预览、三条历史、重启和重开输出全部通过，最终恢复公开 v1.1.14。完整差异见 [B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md](B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md)。
 - B-05.2.2 专项生产门禁最终耗时 2,432 ms、差异 0：96 MP 解码成功，100.01 MP 有效 PNG 明确拒绝；340 UTF-16 中文长路径发布成功；冲突、StorageFull 和编码期取消均未留下错误输出或事务暂存。首轮多余 `mut` 警告和 Pillow 预期大图日志已修正。完整证据见 [B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md](B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md)。
 - B-05.2.1 真实 Windows Release Tauri/WebView2 百图门禁已通过：输入/ready/completed/唯一输出/历史均为 100，JPEG/PNG/WebP 为 34/33/33，源 SHA-256 变化 0，实际耗时 17,059 ms；首次仅因 Selenium 可见文本读取遗漏滚动区摘要而失败，改为收起真实设置面板后从头复跑通过。完整差异见 [B05_2_1_IMAGE_BATCH_AUDIT.md](B05_2_1_IMAGE_BATCH_AUDIT.md)。
 - B-05.1 真实生产矩阵已通过：JPEG/PNG/WebP 各 3 个、9 个发布输出、三帧 GIF 明确拒绝且无输出，独立重新解码差异 0；前端 276/276、Rust 318 通过/4 忽略、Clippy 与生产构建通过。完整预期—实际修正见 [B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md](B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md)。
@@ -131,7 +133,7 @@ npm run test:image-matrix:real
 npm run test:image-boundaries:real
 ```
 
-Windows 11 AppX 上下文菜单部署测试需要管理员 PowerShell 和 LocalMachine 证书信任；普通终端拒绝启动不应被误判为图片功能失败。B-01 至 B-05 全部通过前，不提升版本、不生成公开 Release。
+Windows 11 AppX 上下文菜单部署测试需要管理员 PowerShell 和 LocalMachine 证书信任；普通终端拒绝启动不应被误判为图片功能失败。B-01 至 B-05 功能矩阵现已通过；下一步骤才统一提升到 `v1.1.15` 并执行公开 Release/更新门禁，不得跳过版本身份或公开资产复验。
 
 ## 7. 工作区与提交边界
 

@@ -9,7 +9,8 @@ param(
   [string]$CandidateVersion,
   [string]$CandidateExecutable,
   [switch]$AllowExistingInstall,
-  [switch]$RunArchiveWorkspaceMatrix
+  [switch]$RunArchiveWorkspaceMatrix,
+  [switch]$RunImageWorkspaceMatrix
 )
 
 $ErrorActionPreference = 'Stop'
@@ -482,16 +483,13 @@ try {
   $evidence.baselineContextMenuMode = $baselineContextMenuMode
 
   New-Item -ItemType Directory -Path $evidenceDirectory -Force | Out-Null
-  if ($RunArchiveWorkspaceMatrix) {
+  if ($RunArchiveWorkspaceMatrix -or $RunImageWorkspaceMatrix) {
     $edgeDriverPath = [string]$env:EDGE_DRIVER_PATH
     $tauriDriverPath = if ([string]::IsNullOrWhiteSpace([string]$env:TAURI_DRIVER_PATH)) {
       Join-Path $env:USERPROFILE '.cargo\bin\tauri-driver.exe'
     } else {
       [string]$env:TAURI_DRIVER_PATH
     }
-    $encryptedRarFixture = Join-Path `
-      $projectRoot `
-      'test-results\external-archive-fixtures\libarchive-rar-encrypted.rar'
     Add-Check 'installed workspace EdgeDriver prerequisite exists' (
       -not [string]::IsNullOrWhiteSpace($edgeDriverPath) -and
       (Test-Path -LiteralPath $edgeDriverPath -PathType Leaf)
@@ -499,9 +497,23 @@ try {
     Add-Check 'installed workspace tauri-driver prerequisite exists' (
       Test-Path -LiteralPath $tauriDriverPath -PathType Leaf
     ) "expected=$tauriDriverPath"
+  }
+  if ($RunArchiveWorkspaceMatrix) {
+    $encryptedRarFixture = Join-Path `
+      $projectRoot `
+      'test-results\external-archive-fixtures\libarchive-rar-encrypted.rar'
     Add-Check 'installed workspace encrypted RAR fixture exists' (
       Test-Path -LiteralPath $encryptedRarFixture -PathType Leaf
     ) "Run npm.cmd run test:fixtures:archives first; expected=$encryptedRarFixture"
+  }
+  if ($RunImageWorkspaceMatrix) {
+    $imageFixtureRoot = Join-Path $projectRoot 'test-results\media-fixture-audit\fixtures\images'
+    foreach ($imageFixture in @('large-photo.jpg', 'large-alpha.png', 'photo.webp')) {
+      $imageFixturePath = Join-Path $imageFixtureRoot $imageFixture
+      Add-Check "installed image workspace fixture exists: $imageFixture" (
+        Test-Path -LiteralPath $imageFixturePath -PathType Leaf
+      ) "Run npm.cmd run test:fixtures:media:images first; expected=$imageFixturePath"
+    }
   }
   Backup-UserData
   Backup-ContextMenuRegistry
@@ -543,6 +555,23 @@ try {
       $env:TAURI_APP_BINARY = $candidateState.executable
       & node (Join-Path $projectRoot 'scripts\test-installed-archive-workspace.mjs')
       Add-Check 'installed archive workspace matrix exits successfully' ($LASTEXITCODE -eq 0) (
+        "exitCode=$LASTEXITCODE; executable=$($candidateState.executable)"
+      )
+    } finally {
+      if ($null -eq $previousAppBinary) {
+        Remove-Item Env:TAURI_APP_BINARY -ErrorAction SilentlyContinue
+      } else {
+        $env:TAURI_APP_BINARY = $previousAppBinary
+      }
+      Stop-InstalledApplication $candidateState.installLocation
+    }
+  }
+  if ($RunImageWorkspaceMatrix) {
+    $previousAppBinary = $env:TAURI_APP_BINARY
+    try {
+      $env:TAURI_APP_BINARY = $candidateState.executable
+      & node (Join-Path $projectRoot 'scripts\test-installed-image-workspace.mjs')
+      Add-Check 'installed image workspace full flow exits successfully' ($LASTEXITCODE -eq 0) (
         "exitCode=$LASTEXITCODE; executable=$($candidateState.executable)"
       )
     } finally {
