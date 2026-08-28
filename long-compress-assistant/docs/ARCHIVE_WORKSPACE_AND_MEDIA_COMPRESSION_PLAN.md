@@ -408,7 +408,7 @@ src/types/media.ts
 
 ### C-01 FFmpeg 构建与合规
 
-进度（2026-08-28）：C-01.1 已完成可复现候选基线。FFmpeg 9.0.1 最小 LGPL Windows x64 构建在两个不同干净目录逐字节一致，真实 Media Foundation 软件 H.264/AAC 转码通过；产品资源集成、安装态哈希拒绝、Windows N 分类和精确 NSIS/updater 增量仍属 C-01.2，因此 C-01 尚未整体关闭，也未启用视频入口。完整证据见 [C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md](C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md)。
+进度（2026-08-28）：C-01.1 已完成可复现候选；C-01.2.1 已将 FFmpeg 9.0.1 最小 LGPL Windows x64 构建、完整 FFmpeg/MinGW/GCC 声明和来源/配置纳入产品资源，并以 8 文件大小/SHA-256、真实能力执行、两个冻结 MP4 和 NSIS 包内回读关闭运行时准入。C-01 尚未整体关闭：正式安装目录转码、替换拒绝、Windows N 分类以及同提交签名 NSIS/updater 精确增量属于 C-01.2.2；视频入口仍禁用。证据见 [C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md](C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md) 与 [C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md](C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md)。
 
 - 选择固定版本、固定哈希、可重现的 Windows x64 构建；
 - 首期采用可满足项目分发策略的 LGPL 配置，不启用会让整体 FFmpeg 变为 GPL 的组件；

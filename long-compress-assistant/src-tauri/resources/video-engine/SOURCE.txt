@@ -1,0 +1,15 @@
+FFmpeg 9.0.1 minimal LGPL Windows x64 runtime
+
+Project: https://ffmpeg.org/
+Source: https://ffmpeg.org/releases/ffmpeg-9.0.1.tar.xz
+Source bytes: 12036420
+Source SHA-256: cf38e0e28c7e5605942c4a77755349b0145804a397af37eb1fb4c77cb237f635
+Signature: https://ffmpeg.org/releases/ffmpeg-9.0.1.tar.xz.asc
+Signing-key fingerprint: FCF986EA15E6E293A5644F10B4322F04D67658D8
+Build script: scripts/build-ffmpeg-c01-windows.sh
+Build audit: docs/C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md
+
+This runtime is executed as a separate process. It was configured as LGPL
+version 2.1 or later without GPL, nonfree, libx264, libx265, or libopenh264.
+The first product path permits only h264_mf with hw_encoding=false and the
+built-in AAC encoder. See BUILD-CONFIGURATION.txt and the bundled license text.

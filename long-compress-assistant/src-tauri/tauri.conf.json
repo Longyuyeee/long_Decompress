@@ -59,7 +59,15 @@
         "resources/archive-engine/7z.exe",
         "resources/archive-engine/7z.dll",
         "resources/archive-engine/7-Zip-License.txt",
-        "resources/archive-engine/7-Zip-Readme.txt"
+        "resources/archive-engine/7-Zip-Readme.txt",
+        "resources/video-engine/ffmpeg.exe",
+        "resources/video-engine/ffprobe.exe",
+        "resources/video-engine/SOURCE.txt",
+        "resources/video-engine/BUILD-CONFIGURATION.txt",
+        "resources/video-engine/licenses/COPYING.LGPLv2.1",
+        "resources/video-engine/licenses/COPYING.LGPLv3",
+        "resources/video-engine/licenses/GCC-MinGW-runtime-copyright.txt",
+        "resources/video-engine/licenses/MinGW-w64-copyright.txt"
       ],
       "externalBin": [],
       "copyright": "Copyright © 2026 Long解压",

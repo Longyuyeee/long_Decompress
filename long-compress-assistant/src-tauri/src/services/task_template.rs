@@ -502,6 +502,18 @@ fn preview_profile_watch_folder_with_delay(
     root: &Path,
     stability_delay: Duration,
 ) -> Result<TaskTemplateWatchFolderPreview> {
+    preview_profile_watch_folder_with_snapshot_hook(profile, root, stability_delay, || {})
+}
+
+fn preview_profile_watch_folder_with_snapshot_hook<F>(
+    profile: &CompressionProfile,
+    root: &Path,
+    stability_delay: Duration,
+    after_initial_snapshot: F,
+) -> Result<TaskTemplateWatchFolderPreview>
+where
+    F: FnOnce(),
+{
     validate_profile_source_rules(&profile.auto_apply)?;
     let root_metadata = std::fs::symlink_metadata(root)
         .with_context(|| format!("无法读取预览文件夹：{}", root.display()))?;
@@ -583,6 +595,7 @@ fn preview_profile_watch_folder_with_delay(
         }
     }
 
+    after_initial_snapshot();
     if !pending_stability.is_empty() && !stability_delay.is_zero() {
         std::thread::sleep(stability_delay);
     }
@@ -956,19 +969,13 @@ mod tests {
 
         let mut source = profile();
         source.auto_apply.file_patterns = vec!["nested/*.log".to_string()];
-        let changing_path_for_thread = changing_path.clone();
-        let writer = std::thread::spawn(move || {
-            std::thread::sleep(Duration::from_millis(30));
-            std::fs::write(changing_path_for_thread, b"changed-and-longer").unwrap();
-        });
-
-        let preview = preview_profile_watch_folder_with_delay(
+        let preview = preview_profile_watch_folder_with_snapshot_hook(
             &source,
             temp.path(),
             Duration::from_millis(150),
+            || std::fs::write(&changing_path, b"changed-and-longer").unwrap(),
         )
         .unwrap();
-        writer.join().unwrap();
 
         assert_eq!(preview.scanned_files, 4);
         assert_eq!(preview.accepted.len(), 1);

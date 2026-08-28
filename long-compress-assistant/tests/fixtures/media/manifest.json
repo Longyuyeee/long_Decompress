@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "fixtureRevision": "2026-08-27-b00.5",
+  "fixtureRevision": "2026-08-28-c01.2.1",
   "privacy": "synthetic-only-no-user-data",
   "identityPolicy": {
     "acceptanceBasis": "decoded-and-probed-properties",
@@ -8,14 +8,11 @@
     "performanceBaselineEligible": false,
     "reason": "generated containers, PDF signatures and encoder metadata may vary by toolchain; B-01 must publish a separately frozen input-hash inventory before benchmark claims"
   },
-  "testTool": {
-    "name": "BtbN FFmpeg GPL test-only build",
-    "assetId": 530855149,
-    "fileName": "ffmpeg-master-20260826-win64-gpl.zip",
-    "url": "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/assets/530855149",
-    "bytes": 170676191,
-    "sha256": "06496188114b93337cdb10e38e5d3c8d7ffe467af2bc912268b601fa868d02cc",
-    "productIntegrationAllowed": false
+  "videoFixtureSource": {
+    "kind": "tracked-frozen-real-containers",
+    "directory": "tests/fixtures/media/videos",
+    "probeRuntime": "src-tauri/resources/video-engine/ffprobe.exe",
+    "reason": "nightly release assets are mutable and were returning HTTP 404; frozen inputs are byte-identified and probed by the admitted product runtime"
   },
   "images": [
     { "file": "transparent.png", "format": "PNG", "width": 256, "height": 256, "displayWidth": 256, "displayHeight": 256, "hasAlpha": true },
@@ -31,8 +28,8 @@
     { "file": "ultra-large.png", "format": "PNG", "width": 12000, "height": 8000, "displayWidth": 12000, "displayHeight": 8000, "pixels": 96000000 }
   ],
   "videos": [
-    { "file": "h264-vfr-audio-rotation-subtitles.mp4", "videoCodec": "h264", "audioCodec": "aac", "subtitleCodec": "mov_text", "rotation": 90, "variableFrameRate": true },
-    { "file": "h265.mp4", "videoCodec": "hevc", "audioCodec": null, "subtitleCodec": null, "rotation": 0, "variableFrameRate": false }
+    { "file": "h264-vfr-audio-rotation-subtitles.mp4", "bytes": 22769, "sha256": "cf9a10cc0018934a037c32fc923542f677a2f23d575f431963cd402020755ce8", "videoCodec": "h264", "audioCodec": "aac", "subtitleCodec": "mov_text", "rotation": 90, "variableFrameRate": true },
+    { "file": "h265.mp4", "bytes": 61329, "sha256": "aef114d717a4d61b41a3029da7b626b03e01e68dd6b143977fd8dbc743a13dbf", "videoCodec": "hevc", "audioCodec": null, "subtitleCodec": null, "rotation": 0, "variableFrameRate": false }
   ],
   "pdfs": [
     { "file": "text-vector.pdf", "pages": 1, "kind": "searchable-text", "expectedText": "Long Decompress vector text fixture" },

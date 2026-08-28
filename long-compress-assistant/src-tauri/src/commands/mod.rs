@@ -12,3 +12,4 @@ pub mod password_generator;
 pub mod archive_helpers;
 pub mod watch_folder;
 pub mod task_history;
+pub mod video_engine;

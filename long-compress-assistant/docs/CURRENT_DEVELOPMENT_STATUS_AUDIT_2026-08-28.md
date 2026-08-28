@@ -4,13 +4,13 @@
 
 GitHub：`https://github.com/Longyuyeee/long_Decompress.git`
 
-开发分支：`codex/archive-media-roadmap`
+开发分支：`codex/video-c01-2-runtime-admission`
 
 原始审计锚点：`5e396c67e0b8aa4f4bd3cfc822a63c2f1b24f1e3`（`feat: complete B-03 image backend execution`）
 
-最新接续状态：B-04 整体和 B-05.1 至 B-05.3 真实验收矩阵已完成；下一接续点为 `v1.1.15` 发布审计与公开更新闭环。完成证据见 [B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md](B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md)、[B05_2_1_IMAGE_BATCH_AUDIT.md](B05_2_1_IMAGE_BATCH_AUDIT.md)、[B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md](B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md) 与 [B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md](B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md)。
+最新接续状态：图片节点已发布为 `v1.1.15`；视频 C-01.1 与 C-01.2.1 已完成。下一接续点为 C-01.2.2 正式安装目录执行、Windows N 分类、安装文件替换拒绝和同提交签名 NSIS/updater 精确增量；完成前不启用视频入口。证据见 [C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md](C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md) 与 [C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md](C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md)。
 
-公开版本：`v1.1.14`，标签仍固定在 `cfc58ec9a14dc8ccb3f0e026986786af5693b6cc`；当前开发分支不升版、不更新 Release。
+公开版本：`v1.1.15`；当前开发分支不升版、不更新 Release。
 
 ## 1. 审计结论
 
