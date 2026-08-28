@@ -1,6 +1,6 @@
 # 开发交接
 
-## 2026-08-28 C-01.2.2 正式安装与签名增量检查点
+## 2026-08-28 C-01 完成与门禁归位
 
 - 生产视频预检现验证 System32 中 `mfplat.dll`、`mf.dll`、`mfreadwrite.dll`，Windows N 无 Media Feature Pack 统一返回稳定错误；状态明确返回 Media Foundation 可用事实。
 - 正式应用新增无 UI 的内部安装审计入口，严格从当前 EXE 同目录解析资源并复用生产预检。安装生命周期脚本新增视频矩阵：安装目录内真实软件转码与 ffprobe 复核，缺失/替换只在隔离副本验证。
@@ -9,8 +9,8 @@
 - 正式安装生命周期已通过：本机 v1.1.13 覆盖到候选 v1.1.15 后，从真实安装目录完成生产预检、软件转码、ffprobe 复核及隔离的缺失/替换拒绝；候选卸载、用户数据保持、v1.1.13 与菜单状态恢复全部通过。
 - `test-windows-n-video-runtime.ps1` 已把剩余实机门禁固化为前后两阶段：真实 N/无 Media Feature Pack 必须被生产预检拒绝；安装组件并重启后，必须在同一机器通过生产预检与真实安装态转码。当前普通专业版会以 `WINDOWS_N_MACHINE_REQUIRED` 拒绝，不能误充证据。
 - `verify-windows-n-video-runtime-evidence.mjs` 独立复核 schema 2 的前后报告，并以 SHA-256 把前报告字节链入后报告；候选、生成脚本、机器、生产预检、真实输出和两个资源负向控制任一不一致即拒绝。PowerShell 5 UTF-8 BOM 已兼容，但哈希仍覆盖原始 BOM 字节。
-- 当前主机没有 Hyper-V/VirtualBox/VMware 命令，也没有已发现的 Windows N 安装介质；继续完成该门禁需要提供一台真实 Windows N 机器或明确授权并提供合法的 N 虚拟机/镜像环境。
-- C-01.2.2 仍未收口：唯一剩余项是真实 Windows N 无 Media Feature Pack 机器的拒绝证据及安装 Media Feature Pack 后的恢复复测。不得用单元模拟冒充，不得提前进入 C-02。详见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。
+- 历史回溯确认真实 Windows N 实机证据被错误前移：最初 C-01 验收要求哈希/许可/安装态能力/缺失替换拒绝和体积；“缺 MF 时明确分类”已经由生产实现与稳定测试满足。真实多平台安装证据归回 C-05 和发布门禁。
+- C-01 已关闭，下一接续点为 C-02 探测与配置模型。Windows N 两阶段工具与验收器全部保留，C-05 完成前仍不得发布 v1.1.16。详见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。
 
 ## 2026-08-28 C-01.2.1 合并后当前状态审计
 

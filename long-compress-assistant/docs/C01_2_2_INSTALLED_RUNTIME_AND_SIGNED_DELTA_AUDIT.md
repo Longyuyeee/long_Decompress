@@ -2,11 +2,13 @@
 
 审计日期：2026-08-28
 
-状态：**进行中；生产实现、正式 NSIS 安装生命周期和同提交 updater 签名增量均已完成，仅剩真实 Windows N（未安装 Media Feature Pack）机器证据。C-01 与视频入口继续保持关闭。**
+状态：**完成。C-01 原始验收已全部满足；真实 Windows N 前后实机证据保留为 C-05/发布门禁，不再错误阻塞 C-02。视频 UI 仍未实现，不能表述为视频压缩可用。**
 
 ## 1. 原始需求与本轮边界
 
-C-01.2.2 只关闭 C-01 的分发与平台边界：正式安装目录生产预检、真实软件转码、安装资源缺失/替换拒绝、Windows N 无 Media Feature Pack 的稳定分类，以及同提交、同配置的无/含 FFmpeg NSIS 与 updater ZIP 精确增量。本节点不增加视频 UI、输入探测模型、任务编排、硬件编码或公开 Release。
+C-01.2.2 关闭 C-01 的分发与平台边界：正式安装目录生产预检、真实软件转码、安装资源缺失/替换拒绝、Windows N 无 Media Feature Pack 的稳定分类实现，以及同提交、同配置的无/含 FFmpeg NSIS 与 updater ZIP 精确增量。本节点不增加视频 UI、输入探测模型、任务编排、硬件编码或公开 Release。
+
+历史回溯确认最初主计划提交 `8ce898b` 的 C-01 验收目标是：CI/安装包二进制哈希可追踪、缺失或替换时拒绝开始任务、许可清单完整，并要求安装态执行版本/编码器/过滤器及记录安装和更新体积。后续候选审计增加的是“Windows N 缺 Media Foundation 时明确分类”，不是“真实 Windows N 必须在 C-02 前完成”。真实多平台、安装版和公开更新复验原本归属 C-05 与第 9 节发布门禁。此前将实机 N 证据设为 C-01.2.2 唯一阻塞属于范围前移，本次予以纠正。
 
 项目没有商业 Authenticode 证书。文档中的“签名 updater”指 Tauri updater 完整性签名；普通 NSIS 可以无 Authenticode 签名，Windows 11 原生上下文菜单身份包仍不得在无证书时生成。
 
@@ -88,11 +90,11 @@ npm run test:windows-n-video-runtime -- -Phase MediaFeaturePackInstalled -Instal
 npm run verify:windows-n-video-runtime -- '<同一证据目录>'
 ```
 
-## 5. 未完成项与下一动作
+## 5. C-05 保留门禁与下一动作
 
-1. 在真实 Windows N 且未安装 Media Feature Pack 的机器安装当前集成候选，运行 `MissingMediaFeaturePack` 阶段并保存报告。
-2. 安装 Media Feature Pack 并重启，在同一机器、同一正式安装和同一证据目录运行 `MediaFeaturePackInstalled` 阶段。
-3. 运行独立验收器并取得 `verification.json` 的 `passed=true`；只有此后才把 `windowsNRealMachinePassed` 改为 `true`、关闭 C-01 并进入 C-02。
+1. C-02 现在按原始顺序进入输入探测与配置模型；C-01 的分类实现和依赖准入不再重复开发。
+2. C-05 必须在真实 Windows N 且未安装 Media Feature Pack 的机器安装候选，运行 `MissingMediaFeaturePack` 阶段；安装组件并重启后运行 `MediaFeaturePackInstalled`。
+3. C-05 运行独立验收器并取得 `verification.json` 的 `passed=true`，之后才可把 `windowsNRealMachinePassed` 改为 `true`。该证据仍阻止 v1.1.16 发布，但不阻止 C-02 至 C-04 的开发。
 
 测量实现演练中纠正两项假设：Tauri 额外配置会叠加资源数组，基线必须在一次性 runner 内备份后原位过滤并无条件恢复；公开 NSIS 使用英文资产名，而 updater ZIP 内为中文产品名，必须枚举唯一 EXE 后按字节比较，不能按 basename 推断。正式运行随后证明该方案可重复执行并产生完整签名证据。
 

@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01.1、C-01.2.1 以及 C-01.2.2 的正式安装目录执行、缺失/替换拒绝和同提交签名 NSIS/updater 精确增量已完成。当前唯一接续点仍在 C-01.2.2：取得真实 Windows N 无 Media Feature Pack 的拒绝证据及安装组件后的恢复复测。完成前不启用视频入口、不进入 C-02、不提升版本、不更新公开 Release。完整证据见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 已按原始验收完成可复现/许可、产品资源、安装态能力、缺失/替换拒绝及同提交签名 NSIS/updater 增量。下一接续点为 C-02 探测与配置模型。真实 Windows N 前后验证移回 C-05/发布门禁，完成前不得发布 v1.1.16，但不再阻塞 C-02 至 C-04 开发。完整证据见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -408,7 +408,7 @@ src/types/media.ts
 
 ### C-01 FFmpeg 构建与合规
 
-进度（2026-08-28）：C-01.1 已完成可复现候选；C-01.2.1 已关闭产品运行时准入。C-01.2.2 已完成生产 Media Foundation 分类、正式应用内部预检、正式 NSIS 覆盖安装目录的真实软件转码、隔离缺失/替换拒绝、卸载/上一版本恢复，以及同提交 Tauri-updater-signed NSIS/updater 精确增量（均为 `6,821,970 B`）。真实 Windows N 无 Media Feature Pack 机器证据仍未完成，因此 C-01 尚未整体关闭，视频入口继续禁用。证据见 [C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md](C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md)、[C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md](C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md) 与 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。
+进度（2026-08-28）：C-01.1 已完成可复现候选；C-01.2.1 已关闭产品运行时准入；C-01.2.2 已完成生产 Media Foundation 稳定分类、正式应用内部预检、正式 NSIS 覆盖安装目录的真实软件转码、隔离缺失/替换拒绝、卸载/上一版本恢复，以及同提交 Tauri-updater-signed NSIS/updater 精确增量（均为 `6,821,970 B`）。上述结果满足最初 C-01 验收，C-01 已关闭。真实 Windows N 前后实机工具和验收器已就绪，实际机器证据归入 C-05/发布门禁；下一节点为 C-02。证据见 [C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md](C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md)、[C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md](C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md) 与 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。
 
 - 选择固定版本、固定哈希、可重现的 Windows x64 构建；
 - 首期采用可满足项目分发策略的 LGPL 配置，不启用会让整体 FFmpeg 变为 GPL 的组件；
@@ -457,6 +457,7 @@ src/types/media.ts
 - 30 秒小样本、10 分钟样本和至少一个大文件；
 - 三档预设分别验证输出可播放、时长、分辨率、音视频流和实际大小；
 - 安装版执行、取消、历史、输出默认应用播放与公开更新后复验。
+- Windows N 未安装 Media Feature Pack 时稳定拒绝，安装组件并重启后在同一机器通过生产预检与真实软件转码；独立证据验收必须通过。
 
 ### C-06 后续硬件编码节点
 

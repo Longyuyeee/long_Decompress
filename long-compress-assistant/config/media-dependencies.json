@@ -108,7 +108,7 @@
       "id": "ffmpeg",
       "workload": "video",
       "version": "9.0.1",
-      "status": "runtime-admitted-c01.2.2-installed-windows-n-pending",
+      "status": "runtime-admitted-c01-complete",
       "integrationAllowed": true,
       "projectUrl": "https://ffmpeg.org/",
       "license": { "expression": "LGPL-2.1-or-later-only-if-configure-flags-remain-compliant", "url": "https://ffmpeg.org/legal.html", "noticeRequired": true },
@@ -117,7 +117,7 @@
       "features": {
         "allowed": ["lgpl-only", "native-codecs", "h264_mf-software", "aac", "no-enabled-hwaccels"],
         "forbidden": ["--enable-gpl", "--enable-nonfree", "libx264", "libx265"],
-        "reason": "C-01.2.2 verifies the byte-reproducible minimal LGPL runtime from the formal installed directory, including real software transcode and missing/replaced resource refusal; the real Windows N machine gate remains pending"
+        "reason": "C-01 verifies the byte-reproducible minimal LGPL runtime from the formal installed directory, including real software transcode, exact identity and missing/replaced resource refusal; real Windows N execution remains a C-05 release-matrix gate"
       },
       "artifact": {
         "fileName": "ffmpeg-9.0.1.tar.xz",
@@ -168,7 +168,7 @@
         "softwareEncoder": { "name": "h264_mf", "forceHardware": false, "audio": "aac" },
         "platformRequirement": "Windows Media Foundation must be present; Windows N without the Media Feature Pack must be refused explicitly"
       },
-      "installerImpact": { "runtimePayloadBytes": 24631334, "compressedInstallerDeltaBytes": 6821970, "updaterCompressedDeltaBytes": 6821970, "measurementStage": "C-01.2.2 same-commit/same-toolchain Tauri-updater-signed NSIS and updater delta measured; real Windows N machine evidence remains pending" },
+      "installerImpact": { "runtimePayloadBytes": 24631334, "compressedInstallerDeltaBytes": 6821970, "updaterCompressedDeltaBytes": 6821970, "measurementStage": "C-01 complete: same-commit/same-toolchain Tauri-updater-signed NSIS and updater delta measured" },
       "securityOwner": "Long解压 maintainers"
     },
     {
@@ -263,10 +263,12 @@
         "previousVersionRestored": true,
         "userDataPreserved": true
       },
+      "windowsNClassificationImplemented": true,
+      "windowsNClassificationUnitTestPassed": true,
       "windowsNRealMachinePassed": false,
       "windowsNEvidenceScript": "scripts/test-windows-n-video-runtime.ps1",
       "windowsNEvidenceVerifier": "scripts/verify-windows-n-video-runtime-evidence.mjs",
-      "remainingGate": "C-01.2.2-real-windows-n-without-media-feature-pack"
+      "windowsNReleaseMatrixNode": "C-05"
     }
   },
   "blockedAlternatives": [

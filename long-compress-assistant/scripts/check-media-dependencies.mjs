@@ -49,7 +49,7 @@ function validateManifest(manifest) {
         assert(dependency.status === 'runtime-admitted-b03-service', `${label}: runtime admission status is invalid`)
       } else {
         assert(label === 'ffmpeg' && dependency.workload === 'video', `${label}: runtime dependency is not approved`)
-        assert(dependency.status === 'runtime-admitted-c01.2.2-installed-windows-n-pending', `${label}: FFmpeg runtime admission status is invalid`)
+        assert(dependency.status === 'runtime-admitted-c01-complete', `${label}: FFmpeg runtime admission status is invalid`)
       }
     } else {
       assert(dependency.status.includes('blocked') || dependency.status.includes('candidate'), `${label}: pre-engine status must remain blocked/candidate`)
@@ -78,7 +78,7 @@ function validateManifest(manifest) {
   assert(['default', 'gif', 'png'].every((feature) => caesium.features.forbidden.includes(feature)), 'AGPL/GPL libcaesium feature paths must remain forbidden')
   const ffmpeg = manifest.dependencies.find((item) => item.id === 'ffmpeg')
   assert(['--enable-gpl', '--enable-nonfree', 'libx264', 'libx265'].every((feature) => ffmpeg.features.forbidden.includes(feature)), 'FFmpeg GPL/nonfree paths must remain forbidden')
-  assert(ffmpeg.integrationAllowed === true, 'C-01.2.2 FFmpeg installed-runtime admission is incomplete')
+  assert(ffmpeg.integrationAllowed === true, 'C-01 FFmpeg installed-runtime admission is incomplete')
   assert(ffmpeg.runtimeCandidate?.reproducibility === 'two-clean-builds-in-different-directories-byte-identical', 'FFmpeg reproducibility evidence is missing')
   assert(ffmpeg.runtimeCandidate?.buildScript === 'scripts/build-ffmpeg-c01-windows.sh', 'FFmpeg build script identity is missing')
   assert(ffmpeg.runtimeCandidate?.softwareEncoder?.name === 'h264_mf' && ffmpeg.runtimeCandidate?.softwareEncoder?.forceHardware === false, 'FFmpeg software encoder policy is invalid')
@@ -114,10 +114,11 @@ function validateManifest(manifest) {
   assert(videoBaseline?.installedLifecycle?.missingResourceRefused === true && videoBaseline?.installedLifecycle?.replacedResourceRefused === true, 'C-01.2.2 installed negative controls are incomplete')
   assert(videoBaseline?.installedLifecycle?.uninstallPassed === true && videoBaseline?.installedLifecycle?.previousVersionRestored === true, 'C-01.2.2 installed lifecycle recovery evidence is incomplete')
   assert(videoBaseline?.installedLifecycle?.userDataPreserved === true, 'C-01.2.2 installed user-data preservation evidence is missing')
-  assert(videoBaseline?.windowsNRealMachinePassed === false, 'do not claim the real Windows N gate without machine evidence')
+  assert(videoBaseline?.windowsNClassificationImplemented === true && videoBaseline?.windowsNClassificationUnitTestPassed === true, 'C-01 Windows N stable classification evidence is incomplete')
+  assert(videoBaseline?.windowsNRealMachinePassed === false, 'do not claim real Windows N execution without machine evidence')
   assert(videoBaseline?.windowsNEvidenceScript === 'scripts/test-windows-n-video-runtime.ps1', 'C-01.2.2 Windows N evidence entry point is missing')
   assert(videoBaseline?.windowsNEvidenceVerifier === 'scripts/verify-windows-n-video-runtime-evidence.mjs', 'C-01.2.2 Windows N evidence verifier is missing')
-  assert(videoBaseline?.remainingGate === 'C-01.2.2-real-windows-n-without-media-feature-pack', 'C-01.2.2 remaining platform gate is not explicit')
+  assert(videoBaseline?.windowsNReleaseMatrixNode === 'C-05', 'real Windows N evidence must remain assigned to the release matrix')
   assert(manifest.blockedAlternatives?.some((item) => item.id === 'ghostscript' && item.integrationAllowed === false), 'Ghostscript must remain explicitly blocked')
 }
 
