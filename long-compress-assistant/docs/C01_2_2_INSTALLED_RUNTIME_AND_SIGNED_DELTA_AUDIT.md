@@ -75,6 +75,8 @@ GitHub Actions 运行 `33173219785` 在提交 `6b95f5c2f6d66fc0a879eebb10f0346ea
 
 本地检查已通过 PowerShell AST 解析、清单字段门禁和上述普通版防误报；正式 N 前/后阶段只能在目标机器执行，当前仍不记为通过。
 
+环境可用性审计：当前主机是 `EditionID=Professional`，三个必需 Media Foundation DLL 均存在；没有可调用的 Hyper-V、VirtualBox 或 VMware 管理命令，项目测试目录及当前用户下载目录也没有明确的 Windows N 安装介质。因此本轮不能在不新增系统镜像/虚拟化环境的前提下取得真实 N 证据。下载许可受约束的 Windows 镜像、安装虚拟化组件或修改宿主系统版本均超出本节点已有授权，不自动执行。
+
 在目标 Windows N 上使用同一证据目录依次执行：
 
 ```powershell
