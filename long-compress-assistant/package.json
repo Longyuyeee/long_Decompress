@@ -20,6 +20,8 @@
     "test:media-dependencies:real": "node scripts/check-media-dependencies.mjs --real",
     "test:video-c01:real": "node scripts/run-c01-ffmpeg-baseline.mjs",
     "test:video-runtime-package:real": "node scripts/check-video-runtime-package.mjs",
+    "test:video-bundle-delta": "node scripts/measure-c01-video-bundle-delta.mjs",
+    "prepare:video-bundle-baseline": "node scripts/prepare-c01-video-baseline-config.mjs",
     "test:fixtures:media": "node scripts/prepare-media-test-fixtures.mjs",
     "test:fixtures:media:images": "node scripts/prepare-media-test-fixtures.mjs --images-only",
     "test:media-metrics": "node scripts/check-media-metrics.mjs",

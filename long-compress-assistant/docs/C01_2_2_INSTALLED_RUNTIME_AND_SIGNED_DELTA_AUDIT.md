@@ -41,3 +41,5 @@ C-01.2.2 只关闭 C-01 的分发与平台边界：正式安装目录生产预�
 2. 新增只读测量工作流，在同一提交、同一工具链与同一 updater 密钥下分别打包去除视频资源和包含视频资源的 NSIS/updater ZIP；验证 updater 内 EXE 与 NSIS 一致并记录精确差值。
 3. 在真实 Windows N 且未安装 Media Feature Pack 的机器运行正式安装预检。当前单元负向路径不能冒充真实 Windows N 机器证据。
 4. 上述三项完成后才更新 `compressedInstallerDeltaBytes`、关闭 C-01 并进入 C-02。
+
+测量工作流实现检查点：`video-c01-2-2.yml` 已建立同提交双构建和机器报告；测量器使用公开 v1.1.14/v1.1.15 的 NSIS、updater ZIP 与 Base64 包装 minisign 签名完成真实演练。演练中纠正两项假设：Tauri 额外配置会叠加资源数组，基线必须在一次性 runner 内备份后原位过滤并无条件恢复；公开 NSIS 使用英文资产名，而 updater ZIP 内为中文产品名，必须枚举唯一 EXE 后按字节比较，不能按 basename 推断。
