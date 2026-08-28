@@ -74,6 +74,19 @@ function validateManifest(manifest) {
   assert(['default', 'gif', 'png'].every((feature) => caesium.features.forbidden.includes(feature)), 'AGPL/GPL libcaesium feature paths must remain forbidden')
   const ffmpeg = manifest.dependencies.find((item) => item.id === 'ffmpeg')
   assert(['--enable-gpl', '--enable-nonfree', 'libx264', 'libx265'].every((feature) => ffmpeg.features.forbidden.includes(feature)), 'FFmpeg GPL/nonfree paths must remain forbidden')
+  assert(ffmpeg.integrationAllowed === false, 'C-01.1 FFmpeg candidate must remain outside the product runtime')
+  assert(ffmpeg.runtimeCandidate?.reproducibility === 'two-clean-builds-in-different-directories-byte-identical', 'FFmpeg reproducibility evidence is missing')
+  assert(ffmpeg.runtimeCandidate?.buildScript === 'scripts/build-ffmpeg-c01-windows.sh', 'FFmpeg build script identity is missing')
+  assert(ffmpeg.runtimeCandidate?.softwareEncoder?.name === 'h264_mf' && ffmpeg.runtimeCandidate?.softwareEncoder?.forceHardware === false, 'FFmpeg software encoder policy is invalid')
+  assert(ffmpeg.runtimeCandidate?.files?.length === 2, 'FFmpeg and ffprobe runtime identities are required')
+  for (const file of ffmpeg.runtimeCandidate.files) {
+    assert(['ffmpeg.exe', 'ffprobe.exe'].includes(file.name), `unexpected FFmpeg runtime file: ${file.name}`)
+    assert(Number.isSafeInteger(file.bytes) && file.bytes > 0, `${file.name}: positive byte size is required`)
+    assert(/^[a-f0-9]{64}$/.test(file.sha256), `${file.name}: exact lowercase SHA-256 is required`)
+  }
+  assert(ffmpeg.runtimeCandidate?.licenseFiles?.length === 2, 'FFmpeg LGPL license payload is incomplete')
+  assert(ffmpeg.installerImpact.runtimePayloadBytes === 24515448, 'FFmpeg isolated runtime payload measurement changed')
+  assert(ffmpeg.installerImpact.compressedInstallerDeltaBytes === null, 'FFmpeg must not claim an NSIS delta before product integration')
   assert(manifest.blockedAlternatives?.some((item) => item.id === 'ghostscript' && item.integrationAllowed === false), 'Ghostscript must remain explicitly blocked')
 }
 

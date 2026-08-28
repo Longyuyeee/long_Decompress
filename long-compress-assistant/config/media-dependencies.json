@@ -108,16 +108,16 @@
       "id": "ffmpeg",
       "workload": "video",
       "version": "9.0.1",
-      "status": "official-source-approved-windows-runtime-blocked",
+      "status": "reproducible-windows-runtime-candidate-integration-blocked",
       "integrationAllowed": false,
       "projectUrl": "https://ffmpeg.org/",
       "license": { "expression": "LGPL-2.1-or-later-only-if-configure-flags-remain-compliant", "url": "https://ffmpeg.org/legal.html", "noticeRequired": true },
-      "linkage": "planned-separate-process-minimal-lgpl-build",
+      "linkage": "separate-process-minimal-lgpl-candidate",
       "platforms": ["windows-x86_64"],
       "features": {
-        "allowed": ["lgpl-only", "native-codecs"],
+        "allowed": ["lgpl-only", "native-codecs", "h264_mf-software", "aac", "no-enabled-hwaccels"],
         "forbidden": ["--enable-gpl", "--enable-nonfree", "libx264", "libx265"],
-        "reason": "official project publishes source, not an official Windows runtime; C-01 must produce a reproducible minimal LGPL build"
+        "reason": "C-01.1 produces a byte-reproducible minimal LGPL candidate; product resource admission and installed hash refusal remain blocked until C-01.2"
       },
       "artifact": {
         "fileName": "ffmpeg-9.0.1.tar.xz",
@@ -135,7 +135,33 @@
         "keySha256": "397b3becedcd5a98769967ff1ff8501ddc89f8368b8f766e4701377d7dbaabe5",
         "fingerprint": "FCF986EA15E6E293A5644F10B4322F04D67658D8"
       },
-      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "C-01 reproducible Windows build" },
+      "runtimeCandidate": {
+        "builtAt": "2026-08-28",
+        "buildScript": "scripts/build-ffmpeg-c01-windows.sh",
+        "sourceDateEpoch": 1786505700,
+        "fixedPrefix": "/opt/long-decompress/ffmpeg-9.0.1",
+        "reproducibility": "two-clean-builds-in-different-directories-byte-identical",
+        "toolchain": {
+          "distribution": "Ubuntu 24.04.3 LTS under WSL2",
+          "gcc": "gcc-mingw-w64-x86-64-posix 13.2.0-6ubuntu1+26.1",
+          "mingwHeaders": "mingw-w64-x86-64-dev 11.0.1-3build1",
+          "binutils": "binutils-mingw-w64-x86-64 2.41.90.20240122-1ubuntu1+11.4",
+          "nasm": "2.16.01-1build1",
+          "make": "4.3-4.1build2"
+        },
+        "files": [
+          { "name": "ffmpeg.exe", "bytes": 12349440, "sha256": "35c3c8bb7d9371825ba3ee8ee6f6b39205877c5d1172e4a4e925c2d6368672eb" },
+          { "name": "ffprobe.exe", "bytes": 12131840, "sha256": "2c1df07c649e9499eddd40b445c8721f07b95b8a85524a5e8645a86fb2ba1d98" }
+        ],
+        "licenseFiles": [
+          { "name": "COPYING.LGPLv2.1", "bytes": 26517, "sha256": "246041b6ecf9bc32d718a62c57877c78b5eb397b6467e74ed7ae2626ab189c30" },
+          { "name": "COPYING.LGPLv3", "bytes": 7651, "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768" }
+        ],
+        "systemDllImports": ["bcrypt.dll", "KERNEL32.dll", "msvcrt.dll", "ole32.dll", "SHELL32.dll"],
+        "softwareEncoder": { "name": "h264_mf", "forceHardware": false, "audio": "aac" },
+        "platformRequirement": "Windows Media Foundation must be present; Windows N without the Media Feature Pack must be refused explicitly"
+      },
+      "installerImpact": { "runtimePayloadBytes": 24515448, "compressedInstallerDeltaBytes": null, "measurementStage": "C-01.1 isolated candidate is 3736540 bytes with 7z LZMA2; exact signed NSIS/update delta remains C-01.2" },
       "securityOwner": "Long解压 maintainers"
     },
     {
