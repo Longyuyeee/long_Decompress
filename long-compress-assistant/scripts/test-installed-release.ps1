@@ -10,7 +10,8 @@ param(
   [string]$CandidateExecutable,
   [switch]$AllowExistingInstall,
   [switch]$RunArchiveWorkspaceMatrix,
-  [switch]$RunImageWorkspaceMatrix
+  [switch]$RunImageWorkspaceMatrix,
+  [switch]$RunVideoRuntimeMatrix
 )
 
 $ErrorActionPreference = 'Stop'
@@ -515,6 +516,14 @@ try {
       ) "Run npm.cmd run test:fixtures:media:images first; expected=$imageFixturePath"
     }
   }
+  if ($RunVideoRuntimeMatrix) {
+    $videoFixturePath = Join-Path `
+      $projectRoot `
+      'tests\fixtures\media\videos\h264-vfr-audio-rotation-subtitles.mp4'
+    Add-Check 'installed video runtime fixture exists' (
+      Test-Path -LiteralPath $videoFixturePath -PathType Leaf
+    ) "expected=$videoFixturePath"
+  }
   Backup-UserData
   Backup-ContextMenuRegistry
   $baselineFingerprints = Get-DataFingerprints
@@ -579,6 +588,30 @@ try {
         Remove-Item Env:TAURI_APP_BINARY -ErrorAction SilentlyContinue
       } else {
         $env:TAURI_APP_BINARY = $previousAppBinary
+      }
+      Stop-InstalledApplication $candidateState.installLocation
+    }
+  }
+  if ($RunVideoRuntimeMatrix) {
+    $previousAppBinary = $env:TAURI_APP_BINARY
+    $previousEvidenceDirectory = $env:VIDEO_RUNTIME_EVIDENCE_DIRECTORY
+    try {
+      $env:TAURI_APP_BINARY = $candidateState.executable
+      $env:VIDEO_RUNTIME_EVIDENCE_DIRECTORY = Join-Path $evidenceDirectory 'video-runtime'
+      & node (Join-Path $projectRoot 'scripts\test-installed-video-runtime.mjs')
+      Add-Check 'installed video runtime matrix exits successfully' ($LASTEXITCODE -eq 0) (
+        "exitCode=$LASTEXITCODE; executable=$($candidateState.executable)"
+      )
+    } finally {
+      if ($null -eq $previousAppBinary) {
+        Remove-Item Env:TAURI_APP_BINARY -ErrorAction SilentlyContinue
+      } else {
+        $env:TAURI_APP_BINARY = $previousAppBinary
+      }
+      if ($null -eq $previousEvidenceDirectory) {
+        Remove-Item Env:VIDEO_RUNTIME_EVIDENCE_DIRECTORY -ErrorAction SilentlyContinue
+      } else {
+        $env:VIDEO_RUNTIME_EVIDENCE_DIRECTORY = $previousEvidenceDirectory
       }
       Stop-InstalledApplication $candidateState.installLocation
     }

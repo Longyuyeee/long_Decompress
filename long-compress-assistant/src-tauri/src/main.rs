@@ -168,10 +168,31 @@ fn write_restore_visibility_probe(args: &[String], window: &tauri::Window) {
 }
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(position) = args
+        .iter()
+        .position(|argument| argument == "--internal-video-engine-preflight-report")
+    {
+        let Some(report_path) = args.get(position + 1) else {
+            std::process::exit(3);
+        };
+        let executable_path = match std::env::current_exe() {
+            Ok(path) => path,
+            Err(_) => std::process::exit(3),
+        };
+        let exit_code = match long_compress_assistant::services::video_engine::write_installed_video_engine_preflight_report(
+            &executable_path,
+            std::path::Path::new(report_path),
+        ) {
+            Ok(true) => 0,
+            Ok(false) => 2,
+            Err(_) => 3,
+        };
+        std::process::exit(exit_code);
+    }
     let instance_name = instance_name();
     let instance = single_instance::SingleInstance::new(&instance_name)
         .expect("failed to create application instance guard");
-    let args: Vec<String> = std::env::args().collect();
     let auto_start_activation = is_auto_start_activation(&args);
     #[cfg(feature = "desktop-e2e")]
     let auto_start_probe_path = auto_start_probe_path(&args);

@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-08-28 C-01.2.2 安装运行时实现检查点
+
+- 生产视频预检现验证 System32 中 `mfplat.dll`、`mf.dll`、`mfreadwrite.dll`，Windows N 无 Media Feature Pack 统一返回稳定错误；状态明确返回 Media Foundation 可用事实。
+- 正式应用新增无 UI 的内部安装审计入口，严格从当前 EXE 同目录解析资源并复用生产预检。安装生命周期脚本新增视频矩阵：安装目录内真实软件转码与 ffprobe 复核，缺失/替换只在隔离副本验证。
+- 同布局隔离验证已通过；旋转产品夹具的实际输出为 480×854、1.2 秒，已纠正沿用 C-01.1 临时横屏 5 秒样本的错误预期。
+- C-01.2.2 尚未收口：下一步仍需正式 NSIS 安装生命周期、同提交 updater 签名增量和真实 Windows N 无 Media Feature Pack 机器证据。不得提前进入 C-02。详见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。
+
 ## 2026-08-28 C-01.2.1 合并后当前状态审计
 
 - `master` 与 GitHub 同步在 `7bc44a1`；公开版本仍为 `v1.1.15` / `82b1b8f`。主分支比标签多 4 个提交，公开 v1.1.15 资产不包含标签之后准入的 FFmpeg，不能把开发树能力冒充已发布能力。
