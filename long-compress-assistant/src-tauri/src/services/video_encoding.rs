@@ -107,6 +107,10 @@ pub fn build_ffmpeg_arguments(
     arguments.extend([
         OsString::from("-sn"),
         OsString::from("-dn"),
+        OsString::from("-map_metadata"),
+        OsString::from("-1"),
+        OsString::from("-map_chapters"),
+        OsString::from("-1"),
         OsString::from("-movflags"),
         OsString::from("+faststart"),
         OsString::from("-progress"),

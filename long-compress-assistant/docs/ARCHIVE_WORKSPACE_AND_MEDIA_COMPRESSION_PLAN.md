@@ -432,7 +432,7 @@ src/types/media.ts
 
 ### C-03 执行、进度与取消
 
-进度（2026-08-28）：**C-03.1 与 C-03.2 已完成**。参数数组、产品 FFmpeg 机器进度解析、两有效样本后 ETA、临时大小/比例标记、Windows Job Object、容量预检、真实异步暂存、心跳、取消和完整清理均通过；内部执行结果具有暂存所有权，drop 即清理，尚无可调用命令且不开放 UI。下一接续点为 C-03.3 统一取消/事件/任务 UI 接入；C-04 验证前仍不得发布或标记最终成功。证据见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md) 与 [C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md](C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md)。
+进度（2026-08-28）：**C-03.1 与 C-03.2 已完成**。参数数组、产品 FFmpeg 机器进度解析、两有效样本后 ETA、临时大小/比例标记、Windows Job Object、容量预检、真实异步暂存、心跳、取消和完整清理均通过；内部执行结果具有暂存所有权，drop 即清理，尚无可调用命令且不开放 UI。实际依赖审计已纠正顺序：先完成 C-04 验证/发布，才能让 C-03.3 在单个安全命令中接入统一取消、事件和任务 UI，避免暴露未验证暂存文件。证据见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md)、[C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md](C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md) 与 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)。
 
 - 通过 `-progress pipe:1` 等机器可解析通道读取进度，不解析本地化控制台文本；
 - 参数以参数数组传入，不拼接 shell 字符串；
@@ -444,6 +444,8 @@ src/types/media.ts
 验收目标：路径含中文、空格和特殊字符可处理；取消后 FFmpeg 及子进程全部退出；输出和 passlog 等临时文件全部清理。
 
 ### C-04 输出验证
+
+进度（2026-08-28）：**C-04.1 已完成**。暂存文件身份/大小不变、MP4/H.264/AAC、音视频流数量、编码/可见尺寸、旋转归一、时长阈值及完整音视频帧扫描均已实现；真实截断、带音频和无音频输出通过正负矩阵。下一步 C-04.2 负责 Mark-of-the-Web、取消复检、共享原子发布和发布后最终事实；完成前仍不注册执行命令。证据见 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)。
 
 - 用 ffprobe 验证输出容器、视频流、音频流、时长和可解码性；
 - 输入有音视频时，输出不得静默缺少对应流；

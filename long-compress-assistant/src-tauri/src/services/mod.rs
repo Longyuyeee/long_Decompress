@@ -48,4 +48,5 @@ pub mod watch_folder_service;
 pub mod video_engine;
 pub mod video_compression_plan;
 pub mod video_encoding;
+pub mod video_output_validation;
 pub mod video_probe;

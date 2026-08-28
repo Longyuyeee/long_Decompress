@@ -683,3 +683,9 @@
 - 内部异步执行器已复用容量预检与同目录唯一暂存；机器 stdout、持续排空且保留 64 KiB 的 stderr、5 秒心跳、50 ms 取消轮询、Job Object 与 Future drop 清理均已落地。
 - 真实特殊字符输入成功编码但不发布，暂存所有者 drop 后清除；产品 FFmpeg 现场生成约 500 秒输入，心跳触发取消后 5 秒门限内结束，最终/暂存均无残留。
 - 为守住 C-04 验证发布边界，本节点不注册 Tauri 命令、不解锁 UI。下一接续点纠正为 C-03.3：复用统一取消注册表、输出锁、任务事件和视频任务 UI，但 C-04 前仍不能标记最终完成。详见 [C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md](C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md)。
+
+# 2026-08-28 C-04.1 视频输出验证
+
+- 实际依赖已纠偏为先验证/发布、后接统一命令/UI；否则 C-03.3 会暴露未验证暂存文件。C-04.1 只接受 C-03 所有权对象，不发布。
+- 产品 ffprobe 验证 MP4/H.264/AAC、流数量、编码/可见尺寸、0° 旋转、字幕/章节/附图清除和有界时长偏差，并以全流 `-count_frames` 复核音视频可解码帧数。
+- 真实 `faststart` MP4 截半后仍保留元数据和 2 个视频帧，首版“至少一帧”会误放行；现已增加视频/AAC 最低帧数和编码后大小不变校验，截断稳定拒绝。下一节点为 C-04.2 Mark-of-the-Web、取消复检、共享原子发布和发布后最终事实。详见 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)。

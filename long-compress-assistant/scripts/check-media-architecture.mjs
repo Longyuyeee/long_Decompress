@@ -142,6 +142,21 @@ for (const contract of [
 assert(!videoEncoding.includes('Command::new("cmd.exe")'), 'video encoding must not launch through cmd.exe')
 assert(!videoEncoding.includes('Command::new("powershell")'), 'video encoding must not launch through PowerShell')
 assert(!main.includes('commands::video_engine::encode_video'), 'C-03.2 internal staging must not bypass the C-04 publication gate')
+const videoValidation = await read('src-tauri/src/services/video_output_validation.rs')
+for (const contract of [
+  'validate_staged_video_output',
+  'probe_video_file(ffprobe, staged.path())',
+  '-count_frames',
+  'duration_tolerance_ms',
+  'DecodedFrameCountTooLow',
+  'DecodedAudioFrameCountTooLow',
+  'SizeChanged',
+  'RotationNotNormalized',
+  'LossyStreamsRemain',
+]) {
+  assert(videoValidation.includes(contract), `C-04.1 video validation contract is missing: ${contract}`)
+}
+assert(!videoValidation.includes('publish_verified_file'), 'C-04.1 validation must not publish before its own audit closes')
 const videoWorkspace = await read('src/components/compression/VideoCompressionWorkspace.vue')
 assert(videoWorkspace.includes('commands.planVideoCompression'), 'C-02.3 workspace must consume the authoritative backend plan')
 assert(videoWorkspace.includes('estimatedOutput.lowBytes'), 'C-02.3 workspace must display the labeled backend estimate')
