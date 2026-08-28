@@ -695,3 +695,9 @@
 - 验证结果只能连同其 `StagedVideoOutput` 所有者发布；发布前复核源/暂存字节、取消和 Mark-of-the-Web，再调用共享 `publish_verified_file`，最终字节取发布后文件系统。
 - 真实原子发布、NTFS ZoneId=3/HostUrl 逐字节传播、发布前取消和目标竞态通过；竞态目标 `existing-user-bytes` 未被覆盖，失败暂存无残留。
 - 源文件回收没有提前进入发布服务。下一步 C-04.3 补齐编码非零退出/终止、源或暂存改写、零字节、容量和竞态跨层矩阵；通过后关闭 C-04，再接 C-03.3 完整任务/UI。详见 [C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md](C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md)。
+
+# 2026-08-28 C-04.3 视频失败矩阵收口
+
+- 新增产品 FFmpeg 非零退出、编码后清零、验证后源改写三条真实负向路径，连同既有截断、Job 终止、容量门禁、取消和目标竞态，全部不发布且无暂存残留。
+- `video_` 定向矩阵 35/35 通过。C-04.1 至 C-04.3 已覆盖最初容器/流/时长/解码、无效输出、源回收时序和失败不覆盖要求，C-04 关闭。
+- 下一接续点回到 C-03.3：用单个安全命令串起重新探测/规划、编码、验证和发布，复用统一取消/输出锁/任务事件/历史，再解锁视频 UI。详见 [C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md](C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md)。

@@ -436,4 +436,27 @@ mod tests {
         ));
         assert!(!final_output.exists());
     }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn zeroed_output_after_encoding_is_rejected_and_cleaned_on_drop() {
+        let directory = tempfile::tempdir().expect("temporary directory");
+        let final_output = directory.path().join("zero-must-not-exist.mp4");
+        let (plan, staged) = encoded_staging(&fixture("h265.mp4"), &final_output).await;
+        let staged_path = staged.path().to_path_buf();
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&staged_path)
+            .unwrap()
+            .set_len(0)
+            .unwrap();
+
+        let error = validate_staged_video_output(&resource("ffprobe.exe"), &plan, &staged)
+            .await
+            .unwrap_err();
+        assert_eq!(error, VideoOutputValidationError::Empty);
+        assert!(!final_output.exists());
+        drop(staged);
+        assert!(!staged_path.exists());
+    }
 }

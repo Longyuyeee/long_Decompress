@@ -145,6 +145,7 @@ mod tests {
     use crate::services::video_encoding::encode_video_to_staging;
     use crate::services::video_output_validation::validate_staged_video_output;
     use crate::services::video_probe::probe_video_file;
+    use std::io::Write;
     use std::path::PathBuf;
     use std::sync::Arc;
 
@@ -313,5 +314,35 @@ mod tests {
             std::fs::read(PathBuf::from(std::ffi::OsString::from_wide(&final_stream))).unwrap(),
             zone
         );
+    }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn source_change_after_validation_prevents_publication() {
+        let directory = tempfile::tempdir().expect("temporary directory");
+        let source = directory.path().join("source-changes.mp4");
+        std::fs::copy(fixture(), &source).expect("copy source");
+        let final_output = directory.path().join("source-change-must-not-publish.mp4");
+        let (_plan, staged, verified) = staged_and_verified(&source, &final_output).await;
+        let staged_path = staged.path().to_path_buf();
+        std::fs::OpenOptions::new()
+            .append(true)
+            .open(&source)
+            .unwrap()
+            .write_all(b"changed-after-validation")
+            .unwrap();
+
+        let error = publish_validated_video_output(
+            staged,
+            verified,
+            &source,
+            &final_output,
+            true,
+            &AtomicBool::new(false),
+        )
+        .unwrap_err();
+        assert!(matches!(error, VideoPublishError::SourceChanged(_, _)));
+        assert!(!final_output.exists());
+        assert!(!staged_path.exists());
     }
 }

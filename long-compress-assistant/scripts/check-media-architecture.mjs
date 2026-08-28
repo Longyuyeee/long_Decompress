@@ -170,6 +170,16 @@ for (const contract of [
   assert(videoPublish.includes(contract), `C-04.2 video publication contract is missing: ${contract}`)
 }
 assert(!videoPublish.includes('move_paths_to_system_recycle_bin'), 'video publication must not recycle sources before command-level opt-in')
+for (const contract of [
+  'real_ffmpeg_nonzero_exit_publishes_nothing_and_leaves_no_staging',
+  'zeroed_output_after_encoding_is_rejected_and_cleaned_on_drop',
+  'source_change_after_validation_prevents_publication',
+]) {
+  assert(
+    videoEncoding.includes(contract) || videoValidation.includes(contract) || videoPublish.includes(contract),
+    `C-04.3 failure-matrix evidence is missing: ${contract}`,
+  )
+}
 const videoWorkspace = await read('src/components/compression/VideoCompressionWorkspace.vue')
 assert(videoWorkspace.includes('commands.planVideoCompression'), 'C-02.3 workspace must consume the authoritative backend plan')
 assert(videoWorkspace.includes('estimatedOutput.lowBytes'), 'C-02.3 workspace must display the labeled backend estimate')

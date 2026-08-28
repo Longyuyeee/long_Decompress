@@ -445,7 +445,7 @@ src/types/media.ts
 
 ### C-04 输出验证
 
-进度（2026-08-28）：**C-04.1 与 C-04.2 已完成**。暂存文件身份/大小不变、MP4/H.264/AAC、音视频流数量、编码/可见尺寸、旋转归一、时长阈值及完整音视频帧扫描均已实现；验证后复用 Mark-of-the-Web 与共享原子发布，取消、目标竞态和最终磁盘事实通过。下一步 C-04.3 完成跨层失败矩阵后关闭 C-04；完成前仍不注册执行命令。证据见 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md) 与 [C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md](C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md)。
+完成状态（2026-08-28）：**C-04.1 至 C-04.3 全部完成，C-04 已关闭**。暂存身份/大小、MP4/H.264/AAC、流数量、尺寸、旋转、时长、完整音视频帧扫描、Mark-of-the-Web、原子发布和最终磁盘事实已实现；真实截断、零字节、FFmpeg 非零退出/终止、源或暂存改写、容量门禁、取消和目标竞态均不发布。下一接续点回到 C-03.3，将完整管线接入统一任务/事件/UI。证据见 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)、[C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md](C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md) 与 [C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md](C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md)。
 
 - 用 ffprobe 验证输出容器、视频流、音频流、时长和可解码性；
 - 输入有音视频时，输出不得静默缺少对应流；

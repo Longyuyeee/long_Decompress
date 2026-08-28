@@ -910,4 +910,56 @@ mod tests {
             });
         assert!(!leaked, "cancel must remove staged output and sidecars");
     }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn real_ffmpeg_nonzero_exit_publishes_nothing_and_leaves_no_staging() {
+        use crate::services::video_probe::probe_video_file;
+
+        let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let ffmpeg = manifest.join("resources/video-engine/ffmpeg.exe");
+        let ffprobe = manifest.join("resources/video-engine/ffprobe.exe");
+        let fixture =
+            manifest.join("../tests/fixtures/media/videos/h264-vfr-audio-rotation-subtitles.mp4");
+        let temporary = tempfile::tempdir().expect("temporary directory");
+        let source = temporary.path().join("becomes-corrupt.mp4");
+        std::fs::copy(fixture, &source).expect("copy valid source");
+        let report = probe_video_file(&ffprobe, &source)
+            .await
+            .expect("probe valid source");
+        let plan = build_video_compression_plan(
+            report,
+            &VideoCompressionPlanRequest {
+                path: source.to_string_lossy().into_owned(),
+                preset: VideoCompressionPreset::Balanced,
+                max_width: None,
+                max_height: None,
+            },
+        )
+        .expect("plan source");
+        std::fs::write(&source, b"not a media container after planning")
+            .expect("replace source with corrupt bytes");
+        let final_output = temporary.path().join("must-not-publish.mp4");
+
+        let result = encode_video_to_staging(
+            &ffmpeg,
+            &plan,
+            &final_output,
+            Arc::new(AtomicBool::new(false)),
+            |_| {},
+        )
+        .await;
+        assert!(matches!(result, Err(VideoEncodingError::ProcessFailed(_))));
+        assert!(!final_output.exists());
+        let leaked = std::fs::read_dir(temporary.path())
+            .unwrap()
+            .flatten()
+            .any(|entry| {
+                entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(".video-encode-")
+            });
+        assert!(!leaked);
+    }
 }
