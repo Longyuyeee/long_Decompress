@@ -116,3 +116,36 @@ export interface VideoCompressionPlan {
   requiresExplicitConfirmation: boolean
   canEncode: boolean
 }
+
+export interface VideoCompressionExecutionRequest {
+  plan: VideoCompressionPlanRequest
+  destination: string
+  /** Must exactly match the latest backend plan when lossy stream changes exist. */
+  confirmedStreamChanges: string[]
+  preserveMarkOfWeb: boolean
+}
+
+export interface VerifiedVideoOutput {
+  encodedBytes: number
+  container: 'mp4'
+  durationMs: number
+  durationDifferenceMs: number
+  durationToleranceMs: number
+  videoCodec: 'h264'
+  audioCodec: 'aac' | null
+  encodedWidth: number
+  encodedHeight: number
+  visibleWidth: number
+  visibleHeight: number
+  rotationDegrees: number
+  decodedVideoFrames: number
+}
+
+export interface PublishedVideoOutput {
+  path: string
+  inputBytes: number
+  outputBytes: number
+  savingsRatio: number
+  markOfTheWeb: 'applied' | 'not-present' | 'disabled'
+  verified: VerifiedVideoOutput
+}

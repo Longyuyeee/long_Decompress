@@ -4,7 +4,13 @@ import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage } from '@/utils'
 import type { ResourcePreflightReport, ResourcePreflightRequest } from '@/types/resourcePreflight'
-import type { VideoCompressionPlan, VideoCompressionPlanRequest, VideoProbeReport } from '@/types/video'
+import type {
+  PublishedVideoOutput,
+  VideoCompressionExecutionRequest,
+  VideoCompressionPlan,
+  VideoCompressionPlanRequest,
+  VideoProbeReport,
+} from '@/types/video'
 import type {
   ImageCompressionOutcome,
   ImageCompressionRequest,
@@ -685,6 +691,13 @@ export const useTauriCommands = () => {
     return await invoke<VideoCompressionPlan>('plan_video_compression', { request })
   }
 
+  const compressVideoFile = async (
+    taskId: string,
+    request: VideoCompressionExecutionRequest,
+  ): Promise<PublishedVideoOutput> => {
+    return await invoke<PublishedVideoOutput>('compress_video_file', { taskId, request })
+  }
+
   const analyzeCompressionSources = async (
     analysisId: string,
     paths: string[],
@@ -801,6 +814,7 @@ export const useTauriCommands = () => {
     preflightOperationResources,
     probeVideoInput,
     planVideoCompression,
+    compressVideoFile,
     analyzeCompressionSources,
     cancelCompressionAnalysis,
     checkRarCompressionSupport,

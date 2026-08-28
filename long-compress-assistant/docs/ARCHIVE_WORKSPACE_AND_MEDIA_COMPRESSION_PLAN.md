@@ -432,7 +432,7 @@ src/types/media.ts
 
 ### C-03 执行、进度与取消
 
-进度（2026-08-28）：**C-03.1 与 C-03.2 已完成**。参数数组、产品 FFmpeg 机器进度解析、两有效样本后 ETA、临时大小/比例标记、Windows Job Object、容量预检、真实异步暂存、心跳、取消和完整清理均通过；内部执行结果具有暂存所有权，drop 即清理，尚无可调用命令且不开放 UI。实际依赖审计已纠正顺序：先完成 C-04 验证/发布，才能让 C-03.3 在单个安全命令中接入统一取消、事件和任务 UI，避免暴露未验证暂存文件。证据见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md)、[C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md](C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md) 与 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)。
+进度（2026-08-29）：**C-03.1、C-03.2 与 C-03.3.1 已完成**。参数数组、机器进度、ETA、临时大小/比例、Job Object、容量预检、真实暂存、心跳和清理已通过；唯一 `compress_video_file` 命令进一步串起冻结引擎校验、权威重探测/规划、精确流变化确认、编码、完整验证和原子发布，并复用统一取消注册表、输出锁、`task-log` 与 `task-progress`。当前 UI 仍禁止执行；下一步 C-03.3.2 只负责接入统一视频任务、真实最终指标与历史后再开放按钮。证据见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md)、[C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md](C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md)、[C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md](C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md) 与 C-04 审计。
 
 - 通过 `-progress pipe:1` 等机器可解析通道读取进度，不解析本地化控制台文本；
 - 参数以参数数组传入，不拼接 shell 字符串；
@@ -445,7 +445,7 @@ src/types/media.ts
 
 ### C-04 输出验证
 
-完成状态（2026-08-28）：**C-04.1 至 C-04.3 全部完成，C-04 已关闭**。暂存身份/大小、MP4/H.264/AAC、流数量、尺寸、旋转、时长、完整音视频帧扫描、Mark-of-the-Web、原子发布和最终磁盘事实已实现；真实截断、零字节、FFmpeg 非零退出/终止、源或暂存改写、容量门禁、取消和目标竞态均不发布。下一接续点回到 C-03.3，将完整管线接入统一任务/事件/UI。证据见 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)、[C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md](C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md) 与 [C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md](C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md)。
+完成状态（2026-08-29）：**C-04.1 至 C-04.3 全部完成，C-04 已关闭**。暂存身份/大小、MP4/H.264/AAC、流数量、尺寸、旋转、时长、完整音视频帧扫描、Mark-of-the-Web、原子发布和最终磁盘事实已实现；真实截断、零字节、FFmpeg 非零退出/终止、源或暂存改写、容量门禁、取消和目标竞态均不发布。C-03.3.1 已将完整安全管线接入唯一后端命令；下一接续点为 C-03.3.2 统一任务 UI、最终指标与历史。证据见 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)、[C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md](C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md)、[C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md](C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md) 与 [C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md](C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md)。
 
 - 用 ffprobe 验证输出容器、视频流、音频流、时长和可解码性；
 - 输入有音视频时，输出不得静默缺少对应流；

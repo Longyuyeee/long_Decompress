@@ -52,13 +52,36 @@ assert(
 
 const compressionCommands = await read('src-tauri/src/commands/compression.rs')
 const imageCommandStart = compressionCommands.indexOf('pub async fn compress_image_file')
-const imageCommandEnd = compressionCommands.indexOf('pub async fn cancel_compression', imageCommandStart)
+const imageCommandEnd = compressionCommands.indexOf('pub struct VideoCompressionExecutionRequest', imageCommandStart)
 assert(imageCommandStart >= 0 && imageCommandEnd > imageCommandStart, 'image compression command boundary is missing')
 const imageCommand = compressionCommands.slice(imageCommandStart, imageCommandEnd)
 assert(imageCommand.includes('window.emit("task-log"'), 'image stages must use the unified task log event')
 assert(!imageCommand.includes('"task-progress"'), 'image stages must not emit synthetic progress percentages')
 
+const videoCommandStart = imageCommandEnd
+const videoCommandEnd = compressionCommands.indexOf('pub fn plan_image_compression_destination', videoCommandStart)
+assert(videoCommandEnd > videoCommandStart, 'video compression command boundary is missing')
+const videoCommand = compressionCommands.slice(videoCommandStart, videoCommandEnd)
+for (const contract of [
+  'register_task_cancellation(&task_id)',
+  'CompressionOutputGuard::acquire(&task_id, &output_path)',
+  'probe_video_file(&ffprobe, &source)',
+  'request.confirmed_stream_changes != plan.stream_changes',
+  'encode_video_to_staging',
+  'validate_staged_video_output',
+  'publish_validated_video_output',
+  'window.emit("task-log"',
+  'window.emit("task-progress"',
+  '"still-encoding"',
+]) {
+  assert(videoCommand.includes(contract), `C-03.3 video command contract is missing: ${contract}`)
+}
+
 const main = await read('src-tauri/src/main.rs')
+assert(
+  (main.match(/commands::compression::compress_video_file/g) ?? []).length === 1,
+  'C-03.3 must expose exactly one safe video execution command',
+)
 assert(
   (main.match(/commands::video_engine::preflight_video_engine/g) ?? []).length === 1,
   'C-01.2.1 must expose exactly one authoritative video-engine preflight command',

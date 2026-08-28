@@ -99,4 +99,59 @@ describe('task progress state machine', () => {
 
     expect(store.tasks[0].format).toBe('7z')
   })
+
+  it('keeps video heartbeats attached to the last measured progress snapshot', async () => {
+    const store = useTaskStore()
+    await store.initListeners()
+    store.addTask({
+      id: 'video-task',
+      name: 'sample.mp4',
+      type: 'compression',
+      workloadKind: 'video',
+      sourceFiles: ['C:/videos/sample.mov'],
+      outputPath: 'C:/videos/sample-compressed.mp4',
+    })
+    store.updateTaskStatus('video-task', 'compressing')
+
+    mocks.listeners.get('task-progress')?.({
+      payload: {
+        task_id: 'video-task',
+        stage: 'Encoding',
+        progress: 0.425,
+        speed: '1.25x',
+        eta_seconds: 12,
+        output_bytes: 8192,
+        output_bytes_estimated: true,
+        current_time_ms: 1250,
+        speed_multiple: 1.25,
+        output_to_input_ratio: 0.4,
+      },
+    })
+    mocks.listeners.get('task-progress')?.({
+      payload: {
+        task_id: 'video-task',
+        stage: 'still-encoding',
+        progress: 0.425,
+        output_bytes: 8192,
+        output_bytes_estimated: true,
+        current_time_ms: 1250,
+        speed_multiple: 1.25,
+        output_to_input_ratio: 0.4,
+        heartbeat_seconds_since_progress: 5,
+        heartbeat_at: '2026-08-29T00:00:00Z',
+      },
+    })
+
+    expect(store.tasks[0]).toMatchObject({
+      progress: 42.5,
+      stage: 'still-encoding',
+      currentTimeMs: 1250,
+      speedMultiple: 1.25,
+      outputBytes: 8192,
+      outputBytesEstimated: true,
+      outputToInputRatio: 0.4,
+      heartbeatSecondsSinceProgress: 5,
+      heartbeatAt: '2026-08-29T00:00:00Z',
+    })
+  })
 })
