@@ -8,7 +8,7 @@ GitHub：`https://github.com/Longyuyeee/long_Decompress.git`
 
 原始审计锚点：`5e396c67e0b8aa4f4bd3cfc822a63c2f1b24f1e3`（`feat: complete B-03 image backend execution`）
 
-最新接续状态：B-04.1 至 B-04.5 及 B-04 整体已完成；下一接续点为 B-05 安装版真实验收矩阵。完成证据见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)、[B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md)、[B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md](B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md)、[B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md](B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md) 与 [B04_5_IMAGE_RESULT_UI_AUDIT.md](B04_5_IMAGE_RESULT_UI_AUDIT.md)。
+最新接续状态：B-04 整体与 B-05.1 三格式真实样本矩阵已完成；下一接续点为 B-05.2 百图批量与故障边界。完成证据见 [B04_5_IMAGE_RESULT_UI_AUDIT.md](B04_5_IMAGE_RESULT_UI_AUDIT.md) 与 [B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md](B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md)。
 
 公开版本：`v1.1.14`，标签仍固定在 `cfc58ec9a14dc8ccb3f0e026986786af5693b6cc`；当前开发分支不升版、不更新 Release。
 
@@ -16,7 +16,7 @@ GitHub：`https://github.com/Longyuyeee/long_Decompress.git`
 
 当前开发分支已完成大节点 A、媒体前置 B-00、图片依赖基线 B-01、图片前端工作区 B-02、图片后端执行/发布事务 B-03 和图片任务事实/UI B-04。B-04.5 开发前分支相对 `origin/master` 为领先 28 个提交、落后 0 个提交，当前工作从 GitHub 同名远端分支顶端继续。
 
-B-04.1 输入/输出双侧事实模型、B-04.2 真实阶段日志、B-04.3 安全批量编排、B-04.4 统一队列/历史和 B-04.5 真实结果 UI 已全部完成。按钮只在存在真实 ready 图片时开放；工作区从统一 task store 展示真实结果，过期 B-02/B-03 文案已移除。下一接续点严格为 **B-05 安装版真实验收矩阵**；版本提升和公开发布仍未开始。
+B-04.1 至 B-04.5 已全部完成。B-05.1 现已冻结 JPEG/PNG/WebP 各 3 个真实输入，并由生产图片服务完成 9 次发布与独立重新解码；开发中捕获并修复透明 WebP 的元数据容器重写缺陷。下一接续点严格为 **B-05.2 百图批量与故障边界**；B-05 整体、版本提升和公开发布仍未完成。
 
 ## 2. 已完成的实际代码
 
@@ -61,10 +61,13 @@ B-04.1 输入/输出双侧事实模型、B-04.2 真实阶段日志、B-04.3 安�
 3. **B-04.3 安全编排（已完成）**：前端同源设置已映射为后端请求；后端生成确定目标并处理 rename/skip；每张图使用唯一 task id，批量进度按文件终态计算且支持统一取消。
 4. **B-04.4 队列与历史（已完成）**：复用 task store，写入 `taskType=compression`、`workloadKind=image` 和后端真实指标；完成/失败/取消已跨 SQLite 关闭/重开保留。
 5. **B-04.5 UI 开放（已完成）**：已接入审计批量 composable；真实结果文件、预览、节省字节和历史进入工作区，过期 B-02/B-03 文案已移除，按钮按真实可执行状态开放。
-6. **B-05（下一步）**：执行每格式三样本、100 张混合批量、超大像素、中文长路径、冲突、磁盘不足、取消和安装版完整流程。现有产品未提供删除源文件选项，不得把该项冒充已可测功能。
+6. **B-05.1 三格式矩阵（已完成）**：JPEG、PNG、WebP 各 3 个冻结真实样本直接调用生产压缩服务，9 个输出重新解码差异为 0。
+7. **B-05.2（下一步）**：执行 100 张混合批量、超大像素、中文长路径、冲突、磁盘不足和取消边界；现有产品未提供删除源文件选项，不得把该项冒充已可测功能。
+8. **B-05.3**：在 B-05.2 通过后执行安装版拖入、配置、对比、执行、历史查看和重新打开输出完整流程。
 
 ## 5. 本次审计证据
 
+- B-05.1 真实生产矩阵已通过：JPEG/PNG/WebP 各 3 个、9 个发布输出、三帧 GIF 明确拒绝且无输出，独立重新解码差异 0；前端 276/276、Rust 318 通过/4 忽略、Clippy 与生产构建通过。完整预期—实际修正见 [B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md](B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md)。
 - B-04.5 前端全量 47 个文件、276 项通过；Rust 317 项通过、4 项显式忽略、0 失败；Clippy、生产构建与全部媒体门禁通过。
 - 真实 Windows WebView2 中实际点击执行固定 JPEG/WebP/PNG，三项磁盘输出、metadata 字节、后端尺寸/格式、结果预览和三条统一历史均通过；GIF/PDF 拒绝与归档队列隔离继续通过。
 - 第一轮真实桌面测试使默认 PNG 请求实际失败，修正为 PNG 按格式能力使用无损优化后同场景通过；完整差异证据见 [B04_5_IMAGE_RESULT_UI_AUDIT.md](B04_5_IMAGE_RESULT_UI_AUDIT.md)。
@@ -121,6 +124,7 @@ Pop-Location
 ```powershell
 npm run test:media-dependencies:real
 npm run test:image-baseline:real
+npm run test:image-matrix:real
 ```
 
 Windows 11 AppX 上下文菜单部署测试需要管理员 PowerShell 和 LocalMachine 证书信任；普通终端拒绝启动不应被误判为图片功能失败。B-01 至 B-05 全部通过前，不提升版本、不生成公开 Release。

@@ -49,6 +49,46 @@ def generate_images(root, include_video_source=True):
     draw_label(webp_image, "WebP photo fixture", "Synthetic gradients and edges")
     webp_image.save(images / "photo.webp", format="WEBP", quality=88, method=6)
 
+    jpeg_small = Image.new("RGB", (96, 64), (246, 238, 220))
+    jpeg_small_draw = ImageDraw.Draw(jpeg_small)
+    for offset in range(0, 96, 8):
+        jpeg_small_draw.line((offset, 0, 95 - offset // 2, 63), fill=(35 + offset, 80, 170), width=2)
+    jpeg_small.save(images / "small-detail.jpg", quality=90, progressive=True)
+
+    jpeg_large = Image.new("RGB", (2400, 1600), (0, 0, 0))
+    jpeg_large_draw = ImageDraw.Draw(jpeg_large)
+    for y in range(1600):
+        jpeg_large_draw.line((0, y, 2399, y), fill=(30 + y // 9, 70 + y // 12, 210 - y // 11))
+    jpeg_large_draw.ellipse((540, 260, 1860, 1340), outline=(250, 245, 230), width=24)
+    jpeg_large.save(images / "large-photo.jpg", quality=93, subsampling=0)
+
+    png_small = Image.new("RGB", (80, 60), (248, 245, 236))
+    png_small_draw = ImageDraw.Draw(png_small)
+    png_small_draw.rectangle((5, 5, 74, 54), outline=(24, 92, 180), width=3)
+    png_small_draw.line((8, 48, 72, 12), fill=(230, 72, 92), width=4)
+    png_small.save(images / "opaque-small.png", compress_level=6)
+
+    png_large = Image.new("RGBA", (2048, 1280), (22, 32, 54, 255))
+    png_large_draw = ImageDraw.Draw(png_large)
+    for x in range(0, 2048, 64):
+        alpha = 70 + (x // 64 * 5) % 180
+        png_large_draw.rectangle((x, 0, min(x + 63, 2047), 1279), fill=(40 + x // 16, 90, 220 - x // 20, alpha))
+    png_large_draw.ellipse((520, 210, 1528, 1218), fill=(255, 245, 225, 112))
+    png_large.save(images / "large-alpha.png", compress_level=4)
+
+    webp_alpha = Image.new("RGBA", (128, 96), (0, 0, 0, 0))
+    webp_alpha_draw = ImageDraw.Draw(webp_alpha)
+    webp_alpha_draw.rounded_rectangle((8, 8, 119, 87), radius=18, fill=(65, 125, 245, 170))
+    webp_alpha_draw.ellipse((38, 22, 94, 78), fill=(255, 235, 180, 105))
+    webp_alpha.save(images / "alpha-small.webp", format="WEBP", lossless=True, method=6)
+
+    webp_large = Image.new("RGB", (1920, 1080), (235, 241, 250))
+    webp_large_draw = ImageDraw.Draw(webp_large)
+    for x in range(1920):
+        webp_large_draw.line((x, 0, x, 1079), fill=(25 + x // 10, 75 + x // 14, 215 - x // 13))
+    webp_large_draw.rectangle((260, 180, 1660, 900), outline=(250, 248, 235), width=18)
+    webp_large.save(images / "large-photo.webp", format="WEBP", quality=91, method=6)
+
     frames = []
     for index, color in enumerate(((255, 226, 118), (128, 222, 195), (139, 157, 255)), start=1):
         frame = Image.new("RGB", (320, 180), color)

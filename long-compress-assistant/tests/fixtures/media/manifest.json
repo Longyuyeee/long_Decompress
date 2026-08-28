@@ -21,6 +21,12 @@
     { "file": "transparent.png", "format": "PNG", "width": 256, "height": 256, "displayWidth": 256, "displayHeight": 256, "hasAlpha": true },
     { "file": "exif-orientation.jpg", "format": "JPEG", "width": 640, "height": 360, "displayWidth": 360, "displayHeight": 640, "exifMake": "LongDecompressFixture", "orientation": 6 },
     { "file": "photo.webp", "format": "WEBP", "width": 800, "height": 500, "displayWidth": 800, "displayHeight": 500, "hasAlpha": false },
+    { "file": "small-detail.jpg", "format": "JPEG", "width": 96, "height": 64, "displayWidth": 96, "displayHeight": 64, "hasAlpha": false },
+    { "file": "large-photo.jpg", "format": "JPEG", "width": 2400, "height": 1600, "displayWidth": 2400, "displayHeight": 1600, "hasAlpha": false },
+    { "file": "opaque-small.png", "format": "PNG", "width": 80, "height": 60, "displayWidth": 80, "displayHeight": 60, "hasAlpha": false },
+    { "file": "large-alpha.png", "format": "PNG", "width": 2048, "height": 1280, "displayWidth": 2048, "displayHeight": 1280, "hasAlpha": true },
+    { "file": "alpha-small.webp", "format": "WEBP", "width": 128, "height": 96, "displayWidth": 128, "displayHeight": 96, "hasAlpha": true },
+    { "file": "large-photo.webp", "format": "WEBP", "width": 1920, "height": 1080, "displayWidth": 1920, "displayHeight": 1080, "hasAlpha": false },
     { "file": "animated.gif", "format": "GIF", "width": 320, "height": 180, "displayWidth": 320, "displayHeight": 180, "frames": 3, "durationsMs": [100, 200, 300] },
     { "file": "ultra-large.png", "format": "PNG", "width": 12000, "height": 8000, "displayWidth": 12000, "displayHeight": 8000, "pixels": 96000000 }
   ],

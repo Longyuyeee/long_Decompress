@@ -39,6 +39,7 @@
         "jpeg-exif-orientation",
         "png-alpha",
         "webp-photo",
+        "three-samples-per-public-format",
         "gif-explicit-preserve-or-reject",
         "hundred-file-mixed-batch",
         "ultra-large-pixel-limit"

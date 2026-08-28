@@ -88,6 +88,30 @@ assert(imageWorkspaceView.includes('taskForItem(item)?.metrics'), 'the image res
 assert(!imageWorkspaceView.includes('B-02 前端'), 'the enabled image workspace must not retain the B-02 placeholder badge')
 assert(!imageWorkspaceView.includes('B-03 实际编码后显示'), 'the result preview must not retain the B-03 placeholder')
 assert(!imageWorkspaceView.includes("invoke('compress_image_file'"), 'the image workspace must not bypass the audited batch composable')
+const packageManifest = JSON.parse(await read('package.json'))
+assert(
+  packageManifest.scripts?.['test:image-matrix:real'] === 'npm run test:fixtures:media:images && node scripts/run-b05-image-format-matrix.mjs',
+  'B-05.1 real production matrix command is missing or bypasses fixture preparation',
+)
+const imageMatrix = JSON.parse(await read('tests/fixtures/media/b05-image-format-matrix.json'))
+assert(imageMatrix.expected?.samplesPerFormat === 3, 'B-05.1 must freeze three samples per public image format')
+assert(imageMatrix.cases?.length === 9, 'B-05.1 must retain nine real image cases')
+for (const format of ['jpeg', 'png', 'webp']) {
+  assert(imageMatrix.cases.filter(item => item.format === format).length === 3, `B-05.1 ${format} sample count drifted`)
+}
+assert(
+  imageMatrix.cases.every(item => item.bytes > 0 && /^[a-f0-9]{64}$/.test(item.sha256)),
+  'B-05.1 inputs must retain frozen real byte identities',
+)
+const imageService = await read('src-tauri/src/services/image_compression_service.rs')
+assert(
+  imageService.includes('fn b05_public_format_matrix_uses_real_production_compression()'),
+  'B-05.1 must execute the real production image service',
+)
+assert(
+  imageService.includes('if read_metadata(path, false)? == expected'),
+  'matching WebP metadata must not be destructively rewritten',
+)
 assert(
   (main.match(/commands::task_history::save_task_history/g) ?? []).length === 1,
   'the application must expose exactly one history write command',

@@ -602,6 +602,14 @@ fn apply_metadata_policy(
         }
     };
 
+    // Avoid rebuilding a container when the encoder already produced the exact
+    // requested metadata state. In particular, rewriting a lossy WebP with an
+    // ALPH chunk through img-parts can drop the VP8X alpha feature flag and turn
+    // an otherwise valid candidate into a file our verification decoder rejects.
+    if read_metadata(path, false)? == expected {
+        return Ok(expected);
+    }
+
     let bytes = fs::read(path)?;
     let mut image = DynImage::from_bytes(img_parts::Bytes::from(bytes))
         .map_err(|error| ImageCompressionError::Encoder(error.to_string()))?
@@ -1241,5 +1249,131 @@ mod tests {
             serde_json::to_value(ImageCompressionStage::Validating).unwrap(),
             "validating"
         );
+    }
+
+    #[test]
+    fn b05_public_format_matrix_uses_real_production_compression() {
+        let Ok(output_root) = std::env::var("LONG_B05_IMAGE_MATRIX_OUTPUT") else {
+            eprintln!("B-05.1 matrix is opt-in; run npm run test:image-matrix:real");
+            return;
+        };
+        let manifest_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("tests")
+            .join("fixtures")
+            .join("media")
+            .join("b05-image-format-matrix.json");
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&fs::read(manifest_path).unwrap()).unwrap();
+        let cases = manifest["cases"].as_array().unwrap();
+        assert_eq!(cases.len(), 9, "B-05.1 requires nine real cases");
+        let output_root = PathBuf::from(output_root);
+        fs::create_dir_all(&output_root).unwrap();
+
+        for case in cases {
+            let file = case["file"].as_str().unwrap();
+            let format = match case["format"].as_str().unwrap() {
+                "jpeg" => ImageFileFormat::Jpeg,
+                "png" => ImageFileFormat::Png,
+                "webp" => ImageFileFormat::WebP,
+                other => panic!("unsupported matrix format: {other}"),
+            };
+            let source = fixture(file);
+            assert!(
+                source.is_file(),
+                "missing real fixture: {}",
+                source.display()
+            );
+            let extension = match format {
+                ImageFileFormat::Jpeg => "jpg",
+                ImageFileFormat::Png => "png",
+                ImageFileFormat::WebP => "webp",
+            };
+            let destination = output_root.join(format!("{file}.compressed.{extension}"));
+            let mut matrix_request = request(source.clone(), destination.clone());
+            matrix_request.target_format = format;
+            matrix_request.mode = if format == ImageFileFormat::Png {
+                ImageCompressionMode::Lossless
+            } else {
+                ImageCompressionMode::Lossy
+            };
+            let source_metadata = read_metadata(&source, true).unwrap();
+            let outcome = compress_single_image(&matrix_request, &AtomicBool::new(false)).unwrap();
+            let ImageCompressionOutcome::Published { input, output } = outcome else {
+                panic!("{file}: matrix output must be published");
+            };
+            let expected_width = case["width"].as_u64().unwrap() as u32;
+            let expected_height = case["height"].as_u64().unwrap() as u32;
+            let visible_width = case["visibleWidth"]
+                .as_u64()
+                .unwrap_or(u64::from(expected_width)) as u32;
+            let visible_height = case["visibleHeight"]
+                .as_u64()
+                .unwrap_or(u64::from(expected_height)) as u32;
+            let orientation = case["orientation"].as_u64().unwrap_or(1) as u8;
+            let expected_alpha = case["hasAlpha"].as_bool().unwrap();
+
+            assert_eq!(input.format, format, "{file}: decoded input format");
+            assert_eq!(
+                (input.encoded_width, input.encoded_height),
+                (expected_width, expected_height),
+                "{file}: input matrix"
+            );
+            assert_eq!(
+                (input.visible_width, input.visible_height),
+                (visible_width, visible_height),
+                "{file}: input visible dimensions"
+            );
+            assert_eq!(input.orientation, orientation, "{file}: input orientation");
+            assert_eq!(input.has_alpha, expected_alpha, "{file}: input alpha");
+            assert_eq!(output.format, format, "{file}: output format");
+            assert_eq!(
+                (output.encoded_width, output.encoded_height),
+                (expected_width, expected_height),
+                "{file}: output matrix"
+            );
+            assert_eq!(
+                (output.visible_width, output.visible_height),
+                (visible_width, visible_height),
+                "{file}: output visible dimensions"
+            );
+            assert_eq!(
+                output.orientation, orientation,
+                "{file}: output orientation"
+            );
+            assert_eq!(output.has_alpha, expected_alpha, "{file}: output alpha");
+            assert_eq!(
+                output.encoded_bytes,
+                fs::metadata(&destination).unwrap().len(),
+                "{file}: filesystem bytes"
+            );
+            assert_eq!(
+                read_metadata(&destination, false).unwrap(),
+                source_metadata,
+                "{file}: metadata policy"
+            );
+
+            if format == ImageFileFormat::Png {
+                let source_pixels = ImageReader::open(&source)
+                    .unwrap()
+                    .decode()
+                    .unwrap()
+                    .to_rgba8();
+                let output_pixels = ImageReader::open(&destination)
+                    .unwrap()
+                    .decode()
+                    .unwrap()
+                    .to_rgba8();
+                assert_eq!(source_pixels, output_pixels, "{file}: PNG decoded pixels");
+            }
+        }
+
+        let animated_source = fixture("animated.gif");
+        let animated_destination = output_root.join("animated.gif.compressed.webp");
+        let mut animated_request = request(animated_source, animated_destination.clone());
+        animated_request.target_format = ImageFileFormat::WebP;
+        let error = compress_single_image(&animated_request, &AtomicBool::new(false)).unwrap_err();
+        assert!(matches!(error, ImageCompressionError::InvalidInput(_)));
+        assert!(!animated_destination.exists());
     }
 }

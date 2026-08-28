@@ -22,12 +22,10 @@ describe('image compression workspace store', () => {
 
     const result = store.addImageCandidates(candidates)
 
-    expect(result.accepted.map(item => item.name)).toEqual([
-      'transparent.png',
-      'exif-orientation.jpg',
-      'photo.webp',
-      'ultra-large.png',
-    ])
+    const supportedFixtureNames = manifest.images
+      .filter((entry: { format: string }) => ['JPEG', 'PNG', 'WEBP'].includes(entry.format))
+      .map((entry: { file: string }) => entry.file)
+    expect(result.accepted.map(item => item.name)).toEqual(supportedFixtureNames)
     expect(result.rejected).toEqual(expect.arrayContaining([
       expect.objectContaining({ name: 'animated.gif', reason: expect.stringContaining('GIF') }),
       expect.objectContaining({ name: 'text-vector.pdf', reason: expect.stringContaining('不是受支持') }),

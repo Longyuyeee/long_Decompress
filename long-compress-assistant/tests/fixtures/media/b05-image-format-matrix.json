@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "fixtureRevision": "2026-08-28-b05.1",
+  "expected": {
+    "publicFormats": ["jpeg", "png", "webp"],
+    "samplesPerFormat": 3,
+    "totalCases": 9,
+    "animationBoundary": "gif-rejected-without-output",
+    "decodedDifferences": 0
+  },
+  "cases": [
+    { "file": "small-detail.jpg", "format": "jpeg", "width": 96, "height": 64, "hasAlpha": false, "metadata": false, "minimumPsnrDb": 24, "bytes": 3265, "sha256": "10709bd02f25cee2f759c72f56392563fcb359cb00850ccb19a4ee9e4fd1f509" },
+    { "file": "exif-orientation.jpg", "format": "jpeg", "width": 640, "height": 360, "visibleWidth": 360, "visibleHeight": 640, "orientation": 6, "hasAlpha": false, "metadata": true, "minimumPsnrDb": 35, "bytes": 15788, "sha256": "291f614dd1832bea94b884f116a9063c5d3bfa0fbe089ba8fcb9e1e7aa32aa0d" },
+    { "file": "large-photo.jpg", "format": "jpeg", "width": 2400, "height": 1600, "hasAlpha": false, "metadata": false, "minimumPsnrDb": 35, "bytes": 242609, "sha256": "283491a32db52a4742c1fe336bb162b32c829379327f0a9c2db80062307a5e45" },
+    { "file": "opaque-small.png", "format": "png", "width": 80, "height": 60, "hasAlpha": false, "metadata": false, "bytes": 384, "sha256": "cb003e754358fbdfa67baaa55f51933247e9fdf0b249440b9115c3a8bdcc9d89" },
+    { "file": "transparent.png", "format": "png", "width": 256, "height": 256, "hasAlpha": true, "metadata": false, "bytes": 1546, "sha256": "008a670aced1d3446a6dca8dc232164b1269c652a98524a1f8de1ec024106632" },
+    { "file": "large-alpha.png", "format": "png", "width": 2048, "height": 1280, "hasAlpha": true, "metadata": false, "bytes": 18323, "sha256": "7801e9d24634bb81c8aec0bffc9acbd63410dcecca5ea83bfa94df8eecb40861" },
+    { "file": "alpha-small.webp", "format": "webp", "width": 128, "height": 96, "hasAlpha": true, "metadata": false, "minimumPsnrDb": 32, "alphaIdentical": true, "bytes": 278, "sha256": "b297f3a395652b4b069f5afd5c1703cf959c5ce7eace6a4898e4f5a83716a389" },
+    { "file": "photo.webp", "format": "webp", "width": 800, "height": 500, "hasAlpha": false, "metadata": false, "minimumPsnrDb": 35, "bytes": 3884, "sha256": "12403feaf86d9322fcdd3867e9d7fef641c17ce770503697f5e4d72b1b3ffef1" },
+    { "file": "large-photo.webp", "format": "webp", "width": 1920, "height": 1080, "hasAlpha": false, "metadata": false, "minimumPsnrDb": 40, "bytes": 11850, "sha256": "7a848743b97e2feb8e806a81f86c65d67bf8c0c69472b0d98b1b67d8be075c28" }
+  ]
+}
