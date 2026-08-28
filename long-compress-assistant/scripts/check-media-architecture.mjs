@@ -318,8 +318,8 @@ assert(!imageWorkspaceView.includes('B-03 实际编码后显示'), 'the result p
 assert(!imageWorkspaceView.includes("invoke('compress_image_file'"), 'the image workspace must not bypass the audited batch composable')
 const packageManifest = JSON.parse(await read('package.json'))
 assert(
-  packageManifest.scripts?.['test:e2e:desktop:video-workspace'] === 'node scripts/test-tauri-desktop.mjs --video-workspace-only',
-  'C-05.1 real desktop video execution gate is missing',
+  packageManifest.scripts?.['test:e2e:desktop:video-workspace'] === 'npm run test:video-long-large:real && node scripts/test-tauri-desktop.mjs --video-workspace-only',
+  'C-05.1/C-05.3 real desktop video gate is missing its reproducible cancellation fixture',
 )
 const desktopVideoGate = await read('scripts/test-tauri-desktop.mjs')
 assert(desktopVideoGate.includes('runVideoWorkspaceDesktopGate'), 'C-05.1 desktop video gate implementation is missing')
@@ -329,6 +329,24 @@ assert(desktopVideoGate.includes("const productFfprobe = path.join"), 'C-05.1 de
 assert(desktopVideoGate.includes("assert.equal(video?.codec_name, 'h264')"), 'C-05.1 desktop gate must verify H.264 publication')
 assert(desktopVideoGate.includes("assert.equal(audio?.codec_name, 'aac')"), 'C-05.1 desktop gate must verify AAC publication')
 assert(desktopVideoGate.includes('planning must not write task history'), 'video planning must still enforce zero history writes')
+assert(desktopVideoGate.includes('videoFfmpegProcessIds(cancellationVideo)'), 'C-05.3 must observe and terminate the real product FFmpeg process')
+assert(desktopVideoGate.includes("candidate.status === 'cancelled'"), 'C-05.3 must persist cancelled video history')
+assert(desktopVideoGate.includes('await restartDesktopSession()'), 'C-05.3 must perform a complete application restart')
+assert(desktopVideoGate.includes('measured video history must survive a complete app restart'), 'C-05.3 must compare measured history across restart')
+assert(desktopVideoGate.includes('video-open-default-app'), 'C-05.3 must invoke default-application playback from the visible result')
+assert(
+  (main.match(/commands::system_integration::open_video_output_with_default_application/g) ?? []).length === 1,
+  'C-05.3 must expose exactly one restricted video default-application command',
+)
+const systemIntegrationCommands = await read('src-tauri/src/commands/system_integration.rs')
+for (const contract of [
+  'VIDEO_DEFAULT_OPEN_PATH_MUST_BE_ABSOLUTE',
+  'VIDEO_DEFAULT_OPEN_REQUIRES_REGULAR_FILE',
+  'VIDEO_DEFAULT_OPEN_REQUIRES_MP4',
+  'archive_entry_open::open_with_default_application(&path)',
+]) {
+  assert(systemIntegrationCommands.includes(contract), `C-05.3 default-open contract is missing: ${contract}`)
+}
 assert(
   packageManifest.scripts?.['test:video-runtime-package:real'] === 'node scripts/check-video-runtime-package.mjs',
   'C-01.2.1 real packaged-runtime command is missing',

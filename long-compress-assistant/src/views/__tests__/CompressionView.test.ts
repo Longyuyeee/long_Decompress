@@ -21,7 +21,7 @@ const mocks = vi.hoisted(() => ({
   planVideoCompression: vi.fn(),
   planVideoCompressionDestination: vi.fn(),
   compressVideoFile: vi.fn(),
-  openInExplorer: vi.fn(),
+  openVideoOutputWithDefaultApplication: vi.fn(),
   invoke: vi.fn(),
   ask: vi.fn(),
 }))
@@ -45,7 +45,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
     planVideoCompression: mocks.planVideoCompression,
     planVideoCompressionDestination: mocks.planVideoCompressionDestination,
     compressVideoFile: mocks.compressVideoFile,
-    openInExplorer: mocks.openInExplorer,
+    openVideoOutputWithDefaultApplication: mocks.openVideoOutputWithDefaultApplication,
   }),
 }))
 
@@ -830,6 +830,8 @@ describe('CompressionView', () => {
     })
     expect(workspace.text()).toContain('最终输出')
     expect(workspace.text()).toContain('11.7 KiB')
+    await workspace.get('[data-testid="video-open-default-app"]').trigger('click')
+    expect(mocks.openVideoOutputWithDefaultApplication).toHaveBeenCalledWith('C:/output/rotated.compressed.mp4')
   })
 
   it('creates no video task or output plan when stream-change confirmation is declined', async () => {

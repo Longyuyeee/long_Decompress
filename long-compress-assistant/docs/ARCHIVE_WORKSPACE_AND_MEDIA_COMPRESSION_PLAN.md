@@ -1,6 +1,6 @@
 # Long解压：归档工作区与媒体压缩开发计划
 
-公开基线：`master` / Long解压 `1.1.14`；B-00 起始审计基线：`codex/archive-media-roadmap` / `19bb4b6`（S-00 总验收通过，比 `origin/master` 领先 6 个提交）
+公开基线：`master` / Long解压 `1.1.15`（tag `v1.1.15` 固定在 `82b1b8f`）；B-00 起始审计基线：`codex/archive-media-roadmap` / `19bb4b6`（S-00 总验收通过，比当时 `origin/master` 领先 6 个提交）
 
 编制日期：2026-08-26
 
@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-04、C-05.1 和 C-05.2 已完成。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0。下一接续点为 C-05.3 的真实取消、跨重启历史与默认应用矩阵。真实 Windows N 前后验证仍归 C-05/发布门禁，完成前不得发布 v1.1.16。证据见 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md) 与 [C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-04、C-05.1、C-05.2 和 C-05.3 已完成。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0，真实编码取消、无残留、跨完整重启历史和默认应用播放也已通过。下一唯一接续点为 C-05.4 的正式安装候选、Windows N 前后与公开更新闭环，完成前不得发布 v1.1.16。证据见 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md) 与 [C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -445,7 +445,7 @@ src/types/media.ts
 
 ### C-04 输出验证
 
-完成状态（2026-08-29）：**C-04.1 至 C-04.3 全部完成，C-04 已关闭**。暂存身份/大小、MP4/H.264/AAC、流数量、尺寸、旋转、时长、完整音视频帧扫描、Mark-of-the-Web、原子发布和最终磁盘事实已实现；真实截断、零字节、FFmpeg 非零退出/终止、源或暂存改写、容量门禁、取消和目标竞态均不发布。C-03.3.1 已将完整安全管线接入唯一后端命令，C-03.3.2 也已接通统一任务 UI、最终指标与历史；当前下一接续点为 C-05.2 真实格式/分辨率/三预设矩阵。证据见 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)、[C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md](C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md)、[C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md](C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md)、[C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md](C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md) 与 [C03_3_2_VIDEO_TASK_UI_AUDIT.md](C03_3_2_VIDEO_TASK_UI_AUDIT.md)。
+完成状态（2026-08-29）：**C-04.1 至 C-04.3 全部完成，C-04 已关闭**。暂存身份/大小、MP4/H.264/AAC、流数量、尺寸、旋转、时长、完整音视频帧扫描、Mark-of-the-Web、原子发布和最终磁盘事实已实现；真实截断、零字节、FFmpeg 非零退出/终止、源或暂存改写、容量门禁、取消和目标竞态均不发布。C-03.3.1 已将完整安全管线接入唯一后端命令，C-03.3.2 也已接通统一任务 UI、最终指标与历史；后续 C-05.1 至 C-05.3 已完成，当前下一接续点为 C-05.4。证据见 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)、[C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md](C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md)、[C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md](C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md)、[C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md](C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md) 与 [C03_3_2_VIDEO_TASK_UI_AUDIT.md](C03_3_2_VIDEO_TASK_UI_AUDIT.md)。
 
 - 用 ffprobe 验证输出容器、视频流、音频流、时长和可解码性；
 - 输入有音视频时，输出不得静默缺少对应流；
@@ -457,7 +457,7 @@ src/types/media.ts
 
 ### C-05 真实验收矩阵
 
-进度（2026-08-29）：**C-05.1 与 C-05.2 已完成，C-05 尚未关闭。** Release WebView2 已完成两条真实均衡预设桌面执行；开发态矩阵以 5 种格式、4 个分辨率层级和 7 次产品执行覆盖全部三档预设及无音频，并以两个独立产品执行补齐 600 秒/3600 帧和 114,842,332 B 大输入。输出容器、编码、时长、尺寸、流、完整帧和实际字节差异均为 0。下一步 C-05.3 验证真实中途取消、跨重启历史和默认应用；随后 C-05.4 完成安装版、Windows N 和公开更新。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md)、[C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md) 与 [C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)。
+进度（2026-08-29）：**C-05.1 至 C-05.3 已完成，C-05 尚未关闭。** Release WebView2 已完成两条真实视频执行；开发态矩阵以 5 种格式、4 个分辨率层级和 7 次产品执行覆盖全部三档预设及无音频，并以两个独立产品执行补齐 600 秒/3600 帧和 114,842,332 B 大输入。输出容器、编码、时长、尺寸、流、完整帧和实际字节差异均为 0。C-05.3 又用真实 109.52 MiB 编码验证 UI 中途取消后产品 FFmpeg 退出、无暂存/最终输出、取消历史落库；两条完成记录及精确 metrics 跨原生应用完整重启保持一致，发布 MP4 由 Windows 默认应用接收。下一唯一接续点 C-05.4 完成正式安装候选、Windows N 前后、版本身份、公开更新和回下载复验。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md)、[C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md) 与 [C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)。
 
 - MP4/H.264、MOV、AVI、WMV、WebM 输入；
 - 480p、720p、1080p、4K；
@@ -654,14 +654,14 @@ npm.cmd run test:release-identity -- --expected <version>
 
 ## 11. 当前状态
 
-- 当前正式基线为 `1.1.14`；标签固定在 `cfc58ec`，公开 Release 与真实应用内更新门禁均已通过；
+- 当前正式基线为 `1.1.15`；标签固定在 `82b1b8f`，公开 Release 与真实应用内更新门禁均已通过；
 - A-01 已完成聚焦/多选分离、直属目录列表、双击/Enter 进入、Backspace/Alt 方向键、面包屑和后退/前进/上一级/刷新；搜索继续匹配完整归档路径；
 - A-02 已完成空白区、单项、多选和目录的动态右键菜单；A-03 已接通默认应用安全打开；A-04 已完成 ZIP/TAR 图片与文本分层预览、编码识别、1 MiB 上限和二进制拒绝；A-05 已完成三层只读嵌套工作区、归档链、逐层密码隔离、服务端深度/循环防护与返回状态恢复；
 - 全量前端 234/234、生产构建、A-05 Rust 8/8、A-05.2 归档能力 Rust 3/3 和 Clippy 零告警均通过；
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-05.3 已全部完成；正式安装版图片链使用真实 JPEG/PNG/WebP，完成输入、配置、对比、执行、历史、完整重启和输出重新打开，安装生命周期 50/50、图片链 17/17。当前仍保持公开 `v1.1.14`；下一步为 `v1.1.15` 统一版本身份、Release notes、正式资产/签名、公开更新和回下载复验。
+- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；正式安装版图片链使用真实 JPEG/PNG/WebP，完成输入、配置、对比、执行、历史、完整重启和输出重新打开，安装生命周期 50/50、图片链 17/17。视频 C-01 至 C-05.3 已完成，下一步为 C-05.4 正式安装候选、Windows N 前后、`v1.1.16` 版本身份、正式资产/签名、公开更新和回下载复验。
 
 ## 12. 技术参考
 

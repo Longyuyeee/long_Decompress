@@ -682,6 +682,10 @@ export const useTauriCommands = () => {
     })
   }
 
+  const openVideoOutputWithDefaultApplication = async (path: string) => {
+    await invoke('open_video_output_with_default_application', { path })
+  }
+
   const probeVideoInput = async (path: string): Promise<VideoProbeReport> => {
     return await invoke<VideoProbeReport>('probe_video_input', { path })
   }
@@ -844,6 +848,7 @@ export const useTauriCommands = () => {
     exportPasswords,
     importPasswords,
     openInExplorer,
+    openVideoOutputWithDefaultApplication,
     listArchiveContents,
     browseArchive,
     cancelArchiveBrowse,
