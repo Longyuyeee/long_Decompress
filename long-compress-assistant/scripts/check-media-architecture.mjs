@@ -118,6 +118,24 @@ for (const contract of [
 ]) {
   assert(videoPlan.includes(contract), `C-02.2 video planning contract is missing: ${contract}`)
 }
+const videoEncoding = await read('src-tauri/src/services/video_encoding.rs')
+for (const contract of [
+  'build_ffmpeg_arguments',
+  'OsString',
+  'pipe:1',
+  'out_time_us',
+  'total_size',
+  'valid_timeline_samples >= 2',
+  'fps_mode',
+  'rate_control',
+  'JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE',
+  'AssignProcessToJobObject',
+  'TerminateJobObject',
+]) {
+  assert(videoEncoding.includes(contract), `C-03.1 video execution contract is missing: ${contract}`)
+}
+assert(!videoEncoding.includes('Command::new("cmd.exe")'), 'video encoding must not launch through cmd.exe')
+assert(!videoEncoding.includes('Command::new("powershell")'), 'video encoding must not launch through PowerShell')
 const videoWorkspace = await read('src/components/compression/VideoCompressionWorkspace.vue')
 assert(videoWorkspace.includes('commands.planVideoCompression'), 'C-02.3 workspace must consume the authoritative backend plan')
 assert(videoWorkspace.includes('estimatedOutput.lowBytes'), 'C-02.3 workspace must display the labeled backend estimate')

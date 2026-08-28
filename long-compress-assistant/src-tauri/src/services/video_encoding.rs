@@ -1,0 +1,481 @@
+use crate::services::video_compression_plan::VideoCompressionPlan;
+use serde::Serialize;
+use std::ffi::OsString;
+use std::path::Path;
+use thiserror::Error;
+
+#[derive(Debug, Error, PartialEq, Eq)]
+pub enum VideoEncodingError {
+    #[error("VIDEO_ENCODING_PLAN_BLOCKED")]
+    PlanBlocked,
+    #[error("VIDEO_ENCODING_OUTPUT_MUST_BE_MP4")]
+    OutputMustBeMp4,
+    #[error("VIDEO_ENCODING_PROGRESS_INVALID: {0}")]
+    InvalidProgress(String),
+    #[cfg(windows)]
+    #[error("VIDEO_ENCODING_JOB_OBJECT_FAILED: {0}")]
+    JobObjectFailed(String),
+}
+
+/// Builds the exact product FFmpeg argv. Paths remain individual OS strings and
+/// are never interpolated into a shell command.
+pub fn build_ffmpeg_arguments(
+    plan: &VideoCompressionPlan,
+    staged_output: &Path,
+) -> Result<Vec<OsString>, VideoEncodingError> {
+    if !plan.can_encode {
+        return Err(VideoEncodingError::PlanBlocked);
+    }
+    if staged_output
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_none_or(|value| !value.eq_ignore_ascii_case("mp4"))
+    {
+        return Err(VideoEncodingError::OutputMustBeMp4);
+    }
+
+    let mut arguments = vec![
+        OsString::from("-hide_banner"),
+        OsString::from("-nostdin"),
+        OsString::from("-nostats"),
+        OsString::from("-loglevel"),
+        OsString::from("error"),
+        OsString::from("-n"),
+        OsString::from("-i"),
+        plan.probe.source.as_os_str().to_owned(),
+        OsString::from("-map"),
+        OsString::from(format!("0:{}", plan.probe.primary_video.index)),
+    ];
+    if let Some(audio) = plan.probe.audio_streams.first() {
+        arguments.extend([
+            OsString::from("-map"),
+            OsString::from(format!("0:{}", audio.index)),
+        ]);
+    }
+    arguments.extend([
+        OsString::from("-vf"),
+        OsString::from(format!(
+            "scale={}:{},format=nv12",
+            plan.output_width, plan.output_height
+        )),
+        OsString::from("-c:v"),
+        OsString::from("h264_mf"),
+        OsString::from("-hw_encoding"),
+        OsString::from("0"),
+        OsString::from("-rate_control"),
+        OsString::from("cbr"),
+        OsString::from("-b:v"),
+        OsString::from(plan.target_video_bit_rate.to_string()),
+        OsString::from("-fps_mode"),
+        OsString::from("passthrough"),
+    ]);
+    if let Some(audio_bit_rate) = plan.target_audio_bit_rate {
+        arguments.extend([
+            OsString::from("-c:a"),
+            OsString::from("aac"),
+            OsString::from("-b:a"),
+            OsString::from(audio_bit_rate.to_string()),
+        ]);
+    }
+    arguments.extend([
+        OsString::from("-sn"),
+        OsString::from("-dn"),
+        OsString::from("-movflags"),
+        OsString::from("+faststart"),
+        OsString::from("-progress"),
+        OsString::from("pipe:1"),
+        OsString::from("-f"),
+        OsString::from("mp4"),
+        staged_output.as_os_str().to_owned(),
+    ]);
+    Ok(arguments)
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VideoProgressSnapshot {
+    pub current_time_ms: u64,
+    pub progress_percent: f32,
+    pub speed_multiple: Option<f64>,
+    pub output_bytes: Option<u64>,
+    pub output_bytes_provisional: bool,
+    pub eta_seconds: Option<u64>,
+    pub output_to_input_ratio: Option<f64>,
+    pub finished: bool,
+}
+
+#[derive(Debug)]
+pub struct VideoProgressParser {
+    duration_us: u64,
+    input_bytes: u64,
+    out_time_us: Option<u64>,
+    total_size: Option<u64>,
+    speed_multiple: Option<f64>,
+    valid_timeline_samples: u32,
+    previous_sample_time_us: Option<u64>,
+}
+
+impl VideoProgressParser {
+    pub fn new(duration_ms: u64, input_bytes: u64) -> Result<Self, VideoEncodingError> {
+        let duration_us = duration_ms
+            .checked_mul(1_000)
+            .filter(|value| *value > 0)
+            .ok_or_else(|| VideoEncodingError::InvalidProgress("duration".to_string()))?;
+        Ok(Self {
+            duration_us,
+            input_bytes,
+            out_time_us: None,
+            total_size: None,
+            speed_multiple: None,
+            valid_timeline_samples: 0,
+            previous_sample_time_us: None,
+        })
+    }
+
+    pub fn push_line(
+        &mut self,
+        line: &str,
+    ) -> Result<Option<VideoProgressSnapshot>, VideoEncodingError> {
+        let line = line.trim_end_matches(['\r', '\n']);
+        let Some((key, value)) = line.split_once('=') else {
+            return Ok(None);
+        };
+        match key {
+            "out_time_us" => {
+                self.out_time_us = Some(parse_u64(value, key)?);
+            }
+            "total_size" => {
+                self.total_size = Some(parse_u64(value, key)?);
+            }
+            "speed" => {
+                self.speed_multiple = parse_speed(value);
+            }
+            "progress" if value == "continue" || value == "end" => {
+                let finished = value == "end";
+                let out_time_us = self.out_time_us.unwrap_or(0).min(self.duration_us);
+                if self
+                    .previous_sample_time_us
+                    .is_none_or(|previous| out_time_us > previous)
+                {
+                    self.valid_timeline_samples = self.valid_timeline_samples.saturating_add(1);
+                    self.previous_sample_time_us = Some(out_time_us);
+                }
+                let speed = self.speed_multiple.filter(|value| *value > 0.0);
+                let eta_seconds = (self.valid_timeline_samples >= 2)
+                    .then_some(speed)
+                    .flatten()
+                    .map(|speed| {
+                        ((self.duration_us.saturating_sub(out_time_us) as f64 / 1_000_000.0)
+                            / speed)
+                            .ceil() as u64
+                    });
+                let output_to_input_ratio = self
+                    .total_size
+                    .filter(|_| self.input_bytes > 0)
+                    .map(|size| size as f64 / self.input_bytes as f64);
+                return Ok(Some(VideoProgressSnapshot {
+                    current_time_ms: out_time_us / 1_000,
+                    progress_percent: if finished {
+                        100.0
+                    } else {
+                        (out_time_us as f64 * 100.0 / self.duration_us as f64).clamp(0.0, 99.9)
+                            as f32
+                    },
+                    speed_multiple: speed,
+                    output_bytes: self.total_size,
+                    output_bytes_provisional: self.total_size.is_some(),
+                    eta_seconds,
+                    output_to_input_ratio,
+                    finished,
+                }));
+            }
+            "progress" => {
+                return Err(VideoEncodingError::InvalidProgress(format!(
+                    "progress={value}"
+                )));
+            }
+            _ => {}
+        }
+        Ok(None)
+    }
+}
+
+fn parse_u64(value: &str, key: &str) -> Result<u64, VideoEncodingError> {
+    value
+        .parse()
+        .map_err(|_| VideoEncodingError::InvalidProgress(key.to_string()))
+}
+
+fn parse_speed(value: &str) -> Option<f64> {
+    value
+        .strip_suffix('x')?
+        .parse::<f64>()
+        .ok()
+        .filter(|value| value.is_finite())
+}
+
+#[cfg(windows)]
+pub struct WindowsJobObject {
+    handle: windows_sys::Win32::Foundation::HANDLE,
+}
+
+// Windows kernel handles may be transferred between threads; ownership remains
+// unique because this guard is not Clone and closes the handle exactly once.
+#[cfg(windows)]
+unsafe impl Send for WindowsJobObject {}
+
+#[cfg(windows)]
+impl WindowsJobObject {
+    pub fn create() -> Result<Self, VideoEncodingError> {
+        use windows_sys::Win32::System::JobObjects::{
+            CreateJobObjectW, JobObjectExtendedLimitInformation, SetInformationJobObject,
+            JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        };
+        let handle = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };
+        if handle.is_null() {
+            return Err(last_job_error("create"));
+        }
+        let mut information: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
+        information.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        let configured = unsafe {
+            SetInformationJobObject(
+                handle,
+                JobObjectExtendedLimitInformation,
+                std::ptr::addr_of!(information).cast(),
+                std::mem::size_of_val(&information) as u32,
+            )
+        };
+        if configured == 0 {
+            unsafe { windows_sys::Win32::Foundation::CloseHandle(handle) };
+            return Err(last_job_error("configure"));
+        }
+        Ok(Self { handle })
+    }
+
+    pub fn assign(&self, child: &std::process::Child) -> Result<(), VideoEncodingError> {
+        use std::os::windows::io::AsRawHandle;
+        use windows_sys::Win32::System::JobObjects::AssignProcessToJobObject;
+        let assigned = unsafe { AssignProcessToJobObject(self.handle, child.as_raw_handle() as _) };
+        if assigned == 0 {
+            return Err(last_job_error("assign"));
+        }
+        Ok(())
+    }
+
+    pub fn terminate(&self) -> Result<(), VideoEncodingError> {
+        use windows_sys::Win32::System::JobObjects::TerminateJobObject;
+        if unsafe { TerminateJobObject(self.handle, 1) } == 0 {
+            return Err(last_job_error("terminate"));
+        }
+        Ok(())
+    }
+}
+
+#[cfg(windows)]
+fn last_job_error(operation: &str) -> VideoEncodingError {
+    VideoEncodingError::JobObjectFailed(format!("{operation}: win32={}", unsafe {
+        windows_sys::Win32::Foundation::GetLastError()
+    }))
+}
+
+#[cfg(windows)]
+impl Drop for WindowsJobObject {
+    fn drop(&mut self) {
+        unsafe { windows_sys::Win32::Foundation::CloseHandle(self.handle) };
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::video_compression_plan::{
+        build_video_compression_plan, VideoCompressionPlanRequest, VideoCompressionPreset,
+    };
+    use crate::services::video_probe::{
+        VideoFirstReleasePolicy, VideoFrameRateMode, VideoProbeReport, VideoStreamFacts,
+    };
+    use std::path::PathBuf;
+
+    fn plan(source: &str) -> VideoCompressionPlan {
+        let probe = VideoProbeReport {
+            source: PathBuf::from(source),
+            input_bytes: 10_000,
+            container: Some("mov,mp4".to_string()),
+            duration_ms: 10_000,
+            overall_bit_rate: None,
+            primary_video: VideoStreamFacts {
+                index: 2,
+                codec: Some("h264".to_string()),
+                profile: None,
+                encoded_width: 640,
+                encoded_height: 360,
+                visible_width: 640,
+                visible_height: 360,
+                rotation_degrees: 0,
+                pixel_format: Some("yuv420p".to_string()),
+                color_transfer: None,
+                hdr: false,
+                nominal_frame_rate: Some("30/1".to_string()),
+                average_frame_rate: Some("30/1".to_string()),
+                average_frame_rate_milli: Some(30_000),
+                frame_rate_mode: VideoFrameRateMode::ConstantOrUndetermined,
+                bit_rate: None,
+                default: true,
+            },
+            video_stream_count: 1,
+            audio_streams: Vec::new(),
+            subtitle_streams: Vec::new(),
+            chapter_count: 0,
+            attached_picture_count: 0,
+            policy: VideoFirstReleasePolicy::default(),
+            warnings: Vec::new(),
+            blocking_reasons: Vec::new(),
+        };
+        build_video_compression_plan(
+            probe,
+            &VideoCompressionPlanRequest {
+                path: source.to_string(),
+                preset: VideoCompressionPreset::Balanced,
+                max_width: None,
+                max_height: None,
+            },
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn argv_keeps_special_paths_as_single_os_arguments_and_uses_progress_pipe() {
+        let source = r"C:\视频 文件\a&b (最终).mp4";
+        let output = Path::new(r"D:\输出 目录\.video-123.a&b (最终).mp4");
+        let arguments = build_ffmpeg_arguments(&plan(source), output).unwrap();
+        assert!(arguments.iter().any(|value| value == source));
+        assert!(arguments.iter().any(|value| value == output.as_os_str()));
+        assert!(arguments
+            .windows(2)
+            .any(|pair| pair == ["-progress", "pipe:1"]));
+        assert!(arguments
+            .windows(2)
+            .any(|pair| pair == ["-hw_encoding", "0"]));
+        assert!(arguments
+            .windows(2)
+            .any(|pair| pair == ["-rate_control", "cbr"]));
+        assert!(arguments
+            .windows(2)
+            .any(|pair| pair == ["-fps_mode", "passthrough"]));
+        assert!(!arguments
+            .iter()
+            .any(|value| value == "cmd.exe" || value == "/C"));
+    }
+
+    #[test]
+    fn progress_uses_machine_fields_and_waits_for_two_samples_before_eta() {
+        let mut parser = VideoProgressParser::new(10_000, 20_000).unwrap();
+        for line in ["out_time_us=2000000", "total_size=5000", "speed=2.0x"] {
+            assert!(parser.push_line(line).unwrap().is_none());
+        }
+        let first = parser.push_line("progress=continue").unwrap().unwrap();
+        assert_eq!(first.current_time_ms, 2_000);
+        assert_eq!(first.progress_percent, 20.0);
+        assert_eq!(first.output_bytes, Some(5_000));
+        assert_eq!(first.output_to_input_ratio, Some(0.25));
+        assert_eq!(first.eta_seconds, None);
+
+        for line in ["out_time_us=6000000", "total_size=8000", "speed=2.0x"] {
+            assert!(parser.push_line(line).unwrap().is_none());
+        }
+        let second = parser.push_line("progress=continue").unwrap().unwrap();
+        assert_eq!(second.eta_seconds, Some(2));
+        assert!(second.output_bytes_provisional);
+        let end = parser.push_line("progress=end").unwrap().unwrap();
+        assert_eq!(end.progress_percent, 100.0);
+        assert!(end.finished);
+    }
+
+    #[test]
+    fn malformed_authoritative_values_are_rejected_not_fabricated() {
+        let mut parser = VideoProgressParser::new(1_000, 1).unwrap();
+        assert!(matches!(
+            parser.push_line("out_time_us=not-a-number"),
+            Err(VideoEncodingError::InvalidProgress(_))
+        ));
+        assert!(matches!(
+            parser.push_line("progress=localized"),
+            Err(VideoEncodingError::InvalidProgress(_))
+        ));
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn job_object_terminates_an_assigned_real_process() {
+        let job = WindowsJobObject::create().expect("create job");
+        let mut child = crate::utils::process::command("ping")
+            .args(["127.0.0.1", "-n", "60"])
+            .spawn()
+            .expect("spawn ping");
+        job.assign(&child).expect("assign ping");
+        job.terminate().expect("terminate job");
+        let status = child.wait().expect("wait ping");
+        assert!(!status.success());
+    }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn product_ffmpeg_encodes_a_real_special_character_path_and_emits_machine_progress() {
+        use crate::services::video_probe::probe_video_file;
+        use std::process::Stdio;
+
+        let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let ffmpeg = manifest.join("resources/video-engine/ffmpeg.exe");
+        let ffprobe = manifest.join("resources/video-engine/ffprobe.exe");
+        let fixture =
+            manifest.join("../tests/fixtures/media/videos/h264-vfr-audio-rotation-subtitles.mp4");
+        let temporary = tempfile::tempdir().expect("temporary directory");
+        let special_directory = temporary.path().join("中文 空格 & (C03)");
+        std::fs::create_dir(&special_directory).expect("create special directory");
+        let source = special_directory.join("输入 & source (1).mp4");
+        std::fs::copy(fixture, &source).expect("copy real input");
+        let staged = special_directory.join(".video-test.输出 & staged (1).mp4");
+
+        let report = probe_video_file(&ffprobe, &source)
+            .await
+            .expect("probe real input");
+        let plan = build_video_compression_plan(
+            report,
+            &VideoCompressionPlanRequest {
+                path: source.to_string_lossy().into_owned(),
+                preset: VideoCompressionPreset::Balanced,
+                max_width: None,
+                max_height: None,
+            },
+        )
+        .expect("plan real input");
+        let arguments = build_ffmpeg_arguments(&plan, &staged).expect("build argv");
+        let job = WindowsJobObject::create().expect("create job");
+        let mut command = crate::utils::process::command(&ffmpeg);
+        command
+            .args(arguments)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        let child = command.spawn().expect("spawn product ffmpeg");
+        job.assign(&child).expect("assign product ffmpeg");
+        let output = child.wait_with_output().expect("wait product ffmpeg");
+        assert!(
+            output.status.success(),
+            "product ffmpeg failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let mut parser = VideoProgressParser::new(plan.probe.duration_ms, plan.probe.input_bytes)
+            .expect("create progress parser");
+        let snapshots = String::from_utf8(output.stdout)
+            .expect("progress is UTF-8 machine data")
+            .lines()
+            .filter_map(|line| parser.push_line(line).expect("parse progress"))
+            .collect::<Vec<_>>();
+        assert!(snapshots.last().is_some_and(|snapshot| snapshot.finished));
+        assert!(snapshots
+            .iter()
+            .any(|snapshot| snapshot.output_bytes.is_some()));
+        assert!(std::fs::metadata(staged).expect("staged output").len() > 0);
+    }
+}

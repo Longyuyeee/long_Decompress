@@ -671,3 +671,9 @@
 - 原生门禁由产品可见投放入口真实打开 Windows `#32770`“选择图片文件”对话框，系统选择状态确认 `exif-orientation.jpg` 与 `animated.gif` 同时选中后由标准 `IDOK` 返回路径；未调用测试桥选择队列，也未把后台坐标输入冒充通过。
 - 返回应用后自动证据为 JPEG 15,788 B、360×640、预览完成；GIF Toast 明确拒绝且不入队；WebView 确实失焦并重新获焦。`test:e2e:desktop:image-picker-manual` 退出码 0，本地 PNG/JSON 证据不提交。
 - B-02 至此收口，不升版、不发布。下一步进入 B-03，只接入 B-01 已审计图片引擎和 B-00 共享发布事务；真实输出重新解码、失败/取消清理与发布竞态通过前，执行按钮继续禁用。
+
+# 2026-08-28 C-03.1 视频执行基础
+
+- C-03.1 已完成：FFmpeg 参数固定为 `Vec<OsString>`，真实中文/空格/`&`/括号路径使用产品 `h264_mf` 软件编码和 AAC 转码通过，不经过 shell。
+- 进度只解析 `-progress pipe:1` 的机器字段；百分比、临时输出大小、速度、比例均保留事实来源，ETA 至少等待两个递增时间样本。
+- Windows Job Object 使用 `KILL_ON_JOB_CLOSE`，真实分配和终止进程通过。视频 UI 仍禁止执行，C-04 前不发布、不写最终成功历史。下一接续点为 C-03.2 暂存执行器、统一取消/事件、心跳和完整临时清理。详见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md)。

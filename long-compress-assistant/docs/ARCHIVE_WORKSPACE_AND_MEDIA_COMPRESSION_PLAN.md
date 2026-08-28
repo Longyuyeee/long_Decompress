@@ -432,6 +432,8 @@ src/types/media.ts
 
 ### C-03 执行、进度与取消
 
+进度（2026-08-28）：**C-03.1 已完成**。参数数组、产品 FFmpeg 机器进度解析、两有效样本后 ETA、临时大小/比例标记和 Windows Job Object 生命周期已由真实特殊字符路径转码及真实进程终止测试验证；尚未开放执行。下一接续点为 C-03.2 暂存执行器、统一取消/事件、心跳与清理；C-04 验证前仍不得发布或标记最终成功。证据见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md)。
+
 - 通过 `-progress pipe:1` 等机器可解析通道读取进度，不解析本地化控制台文本；
 - 参数以参数数组传入，不拼接 shell 字符串；
 - 子进程放入 Windows Job Object 或等价生命周期控制，取消和应用退出能终止进程树；
