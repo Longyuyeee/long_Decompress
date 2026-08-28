@@ -108,7 +108,7 @@
       "id": "ffmpeg",
       "workload": "video",
       "version": "9.0.1",
-      "status": "runtime-admitted-c01.2.1-preflight",
+      "status": "runtime-admitted-c01.2.2-installed-windows-n-pending",
       "integrationAllowed": true,
       "projectUrl": "https://ffmpeg.org/",
       "license": { "expression": "LGPL-2.1-or-later-only-if-configure-flags-remain-compliant", "url": "https://ffmpeg.org/legal.html", "noticeRequired": true },
@@ -117,7 +117,7 @@
       "features": {
         "allowed": ["lgpl-only", "native-codecs", "h264_mf-software", "aac", "no-enabled-hwaccels"],
         "forbidden": ["--enable-gpl", "--enable-nonfree", "libx264", "libx265"],
-        "reason": "C-01.2.1 admits the byte-reproducible minimal LGPL runtime behind exact byte-identity and capability preflight; installed/signed and Windows N classification remain C-01.2.2"
+        "reason": "C-01.2.2 verifies the byte-reproducible minimal LGPL runtime from the formal installed directory, including real software transcode and missing/replaced resource refusal; the real Windows N machine gate remains pending"
       },
       "artifact": {
         "fileName": "ffmpeg-9.0.1.tar.xz",
@@ -168,7 +168,7 @@
         "softwareEncoder": { "name": "h264_mf", "forceHardware": false, "audio": "aac" },
         "platformRequirement": "Windows Media Foundation must be present; Windows N without the Media Feature Pack must be refused explicitly"
       },
-      "installerImpact": { "runtimePayloadBytes": 24631334, "compressedInstallerDeltaBytes": null, "measurementStage": "C-01.2.1 measures an unsigned local aggregate NSIS delta; exact same-commit signed NSIS/updater delta remains C-01.2.2" },
+      "installerImpact": { "runtimePayloadBytes": 24631334, "compressedInstallerDeltaBytes": 6821970, "updaterCompressedDeltaBytes": 6821970, "measurementStage": "C-01.2.2 same-commit/same-toolchain Tauri-updater-signed NSIS and updater delta measured; real Windows N machine evidence remains pending" },
       "securityOwner": "Long解压 maintainers"
     },
     {
@@ -232,17 +232,37 @@
     },
     "video": {
       "measuredAt": "2026-08-28",
-      "scope": "c01.2.1-unsigned-local-aggregate-not-final-signed-delta",
-      "baselineCommit": "705fcdd5b828ca3edd7113568e2b406365ad5287",
-      "baselineRun": 33152716382,
-      "baselineInstallerBytes": 8658819,
-      "baselineInstallerSha256": "c1754d0ccfabf28580aed44b96e5934973ee6918d5342fbde228f9557bb9cf04",
-      "currentInstallerBytes": 15554236,
-      "currentInstallerSha256": "6e2f4efbae090d498074ba438b13e9655e9c52a2fb2e43343a4e5dac4a44c3fd",
-      "aggregateDeltaBytes": 6895417,
+      "scope": "c01.2.2-same-commit-same-toolchain-tauri-updater-signed-video-resource-delta",
+      "measurementCommit": "6b95f5c2f6d66fc0a879eebb10f0346eac6792c7",
+      "workflowRun": 33173219785,
+      "baselineNsisBytes": 8671804,
+      "baselineNsisSha256": "bd32dba2f09ba957a5b17d6931b77ec1a89537b51c3307b1177d7e59210c9a33",
+      "integratedNsisBytes": 15493774,
+      "integratedNsisSha256": "118397ce3022f0a4f0b85b7cad54ecf284c50974d9811b353ef55b7580030b3f",
+      "nsisDeltaBytes": 6821970,
+      "baselineUpdaterBytes": 8671964,
+      "baselineUpdaterSha256": "1e5faa5bfd57a5ec144669fdcf1eb4c9139f4d07d022016cb5efa8f265ee62ab",
+      "integratedUpdaterBytes": 15493934,
+      "integratedUpdaterSha256": "8e1dfb5158f3cbd1a0db1f6e7a4753990c4062889adbc65478d876788779d24f",
+      "updaterDeltaBytes": 6821970,
       "expandedRuntimeBytes": 24631334,
       "packagedResourceReadbackPassed": true,
-      "finalSignedDeltaPendingNode": "C-01.2.2"
+      "updaterArchiveIntegrityPassed": true,
+      "updaterContainsByteIdenticalNsis": true,
+      "installedLifecycle": {
+        "previousVersion": "1.1.13",
+        "candidateVersion": "1.1.15",
+        "windowsBuild": "10.0.22621",
+        "productionPreflightPassed": true,
+        "realSoftwareTranscodePassed": true,
+        "missingResourceRefused": true,
+        "replacedResourceRefused": true,
+        "uninstallPassed": true,
+        "previousVersionRestored": true,
+        "userDataPreserved": true
+      },
+      "windowsNRealMachinePassed": false,
+      "remainingGate": "C-01.2.2-real-windows-n-without-media-feature-pack"
     }
   },
   "blockedAlternatives": [

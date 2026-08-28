@@ -49,7 +49,7 @@ function validateManifest(manifest) {
         assert(dependency.status === 'runtime-admitted-b03-service', `${label}: runtime admission status is invalid`)
       } else {
         assert(label === 'ffmpeg' && dependency.workload === 'video', `${label}: runtime dependency is not approved`)
-        assert(dependency.status === 'runtime-admitted-c01.2.1-preflight', `${label}: FFmpeg runtime admission status is invalid`)
+        assert(dependency.status === 'runtime-admitted-c01.2.2-installed-windows-n-pending', `${label}: FFmpeg runtime admission status is invalid`)
       }
     } else {
       assert(dependency.status.includes('blocked') || dependency.status.includes('candidate'), `${label}: pre-engine status must remain blocked/candidate`)
@@ -78,7 +78,7 @@ function validateManifest(manifest) {
   assert(['default', 'gif', 'png'].every((feature) => caesium.features.forbidden.includes(feature)), 'AGPL/GPL libcaesium feature paths must remain forbidden')
   const ffmpeg = manifest.dependencies.find((item) => item.id === 'ffmpeg')
   assert(['--enable-gpl', '--enable-nonfree', 'libx264', 'libx265'].every((feature) => ffmpeg.features.forbidden.includes(feature)), 'FFmpeg GPL/nonfree paths must remain forbidden')
-  assert(ffmpeg.integrationAllowed === true, 'C-01.2.1 FFmpeg runtime admission is incomplete')
+  assert(ffmpeg.integrationAllowed === true, 'C-01.2.2 FFmpeg installed-runtime admission is incomplete')
   assert(ffmpeg.runtimeCandidate?.reproducibility === 'two-clean-builds-in-different-directories-byte-identical', 'FFmpeg reproducibility evidence is missing')
   assert(ffmpeg.runtimeCandidate?.buildScript === 'scripts/build-ffmpeg-c01-windows.sh', 'FFmpeg build script identity is missing')
   assert(ffmpeg.runtimeCandidate?.softwareEncoder?.name === 'h264_mf' && ffmpeg.runtimeCandidate?.softwareEncoder?.forceHardware === false, 'FFmpeg software encoder policy is invalid')
@@ -91,14 +91,29 @@ function validateManifest(manifest) {
   assert(ffmpeg.runtimeCandidate?.licenseFiles?.length === 4, 'FFmpeg/MinGW/GCC redistribution notice payload is incomplete')
   assert(ffmpeg.runtimeCandidate?.documentationFiles?.length === 2, 'FFmpeg source/build documentation payload is incomplete')
   assert(ffmpeg.installerImpact.runtimePayloadBytes === 24631334, 'FFmpeg admitted runtime payload measurement changed')
-  assert(ffmpeg.installerImpact.compressedInstallerDeltaBytes === null, 'FFmpeg must not claim an NSIS delta before product integration')
+  assert(ffmpeg.installerImpact.compressedInstallerDeltaBytes === 6821970, 'FFmpeg same-commit NSIS delta changed')
+  assert(ffmpeg.installerImpact.updaterCompressedDeltaBytes === 6821970, 'FFmpeg same-commit updater delta changed')
   const videoBaseline = manifest.candidateBaselines?.video
-  assert(videoBaseline?.scope === 'c01.2.1-unsigned-local-aggregate-not-final-signed-delta', 'C-01.2.1 installer measurement scope is missing')
-  assert(videoBaseline?.baselineCommit === '705fcdd5b828ca3edd7113568e2b406365ad5287', 'C-01.2.1 parent baseline identity drifted')
-  assert(videoBaseline?.aggregateDeltaBytes === videoBaseline.currentInstallerBytes - videoBaseline.baselineInstallerBytes, 'C-01.2.1 aggregate installer delta is inconsistent')
-  assert(videoBaseline?.expandedRuntimeBytes === ffmpeg.installerImpact.runtimePayloadBytes, 'C-01.2.1 packaged runtime measurement is inconsistent')
-  assert(videoBaseline?.packagedResourceReadbackPassed === true, 'C-01.2.1 packaged runtime readback evidence is missing')
-  assert(videoBaseline?.finalSignedDeltaPendingNode === 'C-01.2.2', 'final signed video delta must remain assigned to C-01.2.2')
+  assert(videoBaseline?.scope === 'c01.2.2-same-commit-same-toolchain-tauri-updater-signed-video-resource-delta', 'C-01.2.2 installer measurement scope is missing')
+  assert(videoBaseline?.measurementCommit === '6b95f5c2f6d66fc0a879eebb10f0346eac6792c7', 'C-01.2.2 measurement commit identity drifted')
+  assert(videoBaseline?.workflowRun === 33173219785, 'C-01.2.2 workflow identity drifted')
+  for (const field of ['baselineNsisSha256', 'integratedNsisSha256', 'baselineUpdaterSha256', 'integratedUpdaterSha256']) {
+    assert(/^[a-f0-9]{64}$/.test(videoBaseline?.[field]), `C-01.2.2 ${field} is missing`)
+  }
+  assert(videoBaseline?.nsisDeltaBytes === videoBaseline.integratedNsisBytes - videoBaseline.baselineNsisBytes, 'C-01.2.2 NSIS delta is inconsistent')
+  assert(videoBaseline?.updaterDeltaBytes === videoBaseline.integratedUpdaterBytes - videoBaseline.baselineUpdaterBytes, 'C-01.2.2 updater delta is inconsistent')
+  assert(videoBaseline?.nsisDeltaBytes === ffmpeg.installerImpact.compressedInstallerDeltaBytes, 'C-01.2.2 NSIS dependency measurement is inconsistent')
+  assert(videoBaseline?.updaterDeltaBytes === ffmpeg.installerImpact.updaterCompressedDeltaBytes, 'C-01.2.2 updater dependency measurement is inconsistent')
+  assert(videoBaseline?.expandedRuntimeBytes === ffmpeg.installerImpact.runtimePayloadBytes, 'C-01.2.2 packaged runtime measurement is inconsistent')
+  assert(videoBaseline?.packagedResourceReadbackPassed === true, 'C-01.2.2 packaged runtime readback evidence is missing')
+  assert(videoBaseline?.updaterArchiveIntegrityPassed === true && videoBaseline?.updaterContainsByteIdenticalNsis === true, 'C-01.2.2 updater integrity evidence is missing')
+  assert(videoBaseline?.installedLifecycle?.productionPreflightPassed === true, 'C-01.2.2 installed production preflight evidence is missing')
+  assert(videoBaseline?.installedLifecycle?.realSoftwareTranscodePassed === true, 'C-01.2.2 installed real transcode evidence is missing')
+  assert(videoBaseline?.installedLifecycle?.missingResourceRefused === true && videoBaseline?.installedLifecycle?.replacedResourceRefused === true, 'C-01.2.2 installed negative controls are incomplete')
+  assert(videoBaseline?.installedLifecycle?.uninstallPassed === true && videoBaseline?.installedLifecycle?.previousVersionRestored === true, 'C-01.2.2 installed lifecycle recovery evidence is incomplete')
+  assert(videoBaseline?.installedLifecycle?.userDataPreserved === true, 'C-01.2.2 installed user-data preservation evidence is missing')
+  assert(videoBaseline?.windowsNRealMachinePassed === false, 'do not claim the real Windows N gate without machine evidence')
+  assert(videoBaseline?.remainingGate === 'C-01.2.2-real-windows-n-without-media-feature-pack', 'C-01.2.2 remaining platform gate is not explicit')
   assert(manifest.blockedAlternatives?.some((item) => item.id === 'ghostscript' && item.integrationAllowed === false), 'Ghostscript must remain explicitly blocked')
 }
 

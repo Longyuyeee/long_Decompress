@@ -1,11 +1,13 @@
 # 开发交接
 
-## 2026-08-28 C-01.2.2 安装运行时实现检查点
+## 2026-08-28 C-01.2.2 正式安装与签名增量检查点
 
 - 生产视频预检现验证 System32 中 `mfplat.dll`、`mf.dll`、`mfreadwrite.dll`，Windows N 无 Media Feature Pack 统一返回稳定错误；状态明确返回 Media Foundation 可用事实。
 - 正式应用新增无 UI 的内部安装审计入口，严格从当前 EXE 同目录解析资源并复用生产预检。安装生命周期脚本新增视频矩阵：安装目录内真实软件转码与 ffprobe 复核，缺失/替换只在隔离副本验证。
 - 同布局隔离验证已通过；旋转产品夹具的实际输出为 480×854、1.2 秒，已纠正沿用 C-01.1 临时横屏 5 秒样本的错误预期。
-- C-01.2.2 尚未收口：下一步仍需正式 NSIS 安装生命周期、同提交 updater 签名增量和真实 Windows N 无 Media Feature Pack 机器证据。不得提前进入 C-02。详见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。
+- GitHub Actions `33173219785` 在提交 `6b95f5c` 上完成同提交、同工具链、同 updater 密钥的双构建：视频资源令 NSIS 和 updater ZIP 均精确增加 `6,821,970 B`，两侧包内 NSIS 字节一致且 updater 签名结构有效。
+- 正式安装生命周期已通过：本机 v1.1.13 覆盖到候选 v1.1.15 后，从真实安装目录完成生产预检、软件转码、ffprobe 复核及隔离的缺失/替换拒绝；候选卸载、用户数据保持、v1.1.13 与菜单状态恢复全部通过。
+- C-01.2.2 仍未收口：唯一剩余项是真实 Windows N 无 Media Feature Pack 机器的拒绝证据及安装 Media Feature Pack 后的恢复复测。不得用单元模拟冒充，不得提前进入 C-02。详见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。
 
 ## 2026-08-28 C-01.2.1 合并后当前状态审计
 

@@ -2,7 +2,7 @@
 
 审计日期：2026-08-28
 
-状态：**进行中；生产实现和同布局隔离验证已完成，正式 NSIS 安装生命周期、真实 Windows N 机器和 GitHub updater 签名增量尚待完成。**
+状态：**进行中；生产实现、正式 NSIS 安装生命周期和同提交 updater 签名增量均已完成，仅剩真实 Windows N（未安装 Media Feature Pack）机器证据。C-01 与视频入口继续保持关闭。**
 
 ## 1. 原始需求与本轮边界
 
@@ -35,11 +35,41 @@ C-01.2.2 只关闭 C-01 的分发与平台边界：正式安装目录生产预�
 - 与正式安装目录相同的唯一隔离布局：生产预检、真实软件转码、同目录 ffprobe、缺失拒绝、替换拒绝全部通过，差异 0。
 - `cargo clippy --all-targets -- -D warnings`、`npm run type-check`、媒体架构和依赖门禁：通过。
 
+### 4.1 同提交签名 updater 精确测量
+
+GitHub Actions 运行 `33173219785` 在提交 `6b95f5c2f6d66fc0a879eebb10f0346eac6792c7`、同一 Windows runner、同一 Tauri 工具链和同一 updater minisign 密钥下完成双构建。基线只从一次性 runner 的规范配置中移除 8 个视频资源，构建后无条件恢复配置再构建集成包。
+
+| 产物 | 无视频资源基线 | 含视频资源集成 | 精确差值 |
+| --- | ---: | ---: | ---: |
+| NSIS | 8,671,804 B；`bd32dba2...10c9a33` | 15,493,774 B；`118397ce...030b3f` | **6,821,970 B（78.6684%）** |
+| updater ZIP | 8,671,964 B；`1e5faa5b...e62ab` | 15,493,934 B；`8e1dfb51...79d24f` | **6,821,970 B（78.6670%）** |
+
+两个 updater ZIP 都通过 7-Zip 完整性测试，包内唯一 NSIS 与各自独立 NSIS 字节一致；两个 428 字符 `.sig` 均解码为 Tauri minisign 结构。`compressedInstallerDeltaBytes` 与 updater 对应字段据此写为 `6,821,970`，不再沿用 C-01.2.1 的跨提交未签名聚合数 `6,895,417`。
+
+### 4.2 正式安装生命周期
+
+本机基线为 Windows x64 `10.0.22621`、已安装 v1.1.13。正式候选来自上述工作流的集成 NSIS，生命周期结果为：
+
+1. v1.1.13 → v1.1.15 覆盖安装成功，安装位置保持 `E:\long\Long解压`，产品 EXE、卸载器和 shell extension 版本一致；
+2. 从正式安装 EXE 调用生产预检成功，并使用正式安装目录内 FFmpeg/ffprobe 完成真实软件转码与语义复核；
+3. 唯一隔离副本中的 FFmpeg 缺失与替换分别被稳定拒绝，正式安装目录全程只读；
+4. 候选卸载成功，安装文件和安装器拥有的菜单键清理干净；
+5. 两处用户数据指纹保持，v1.1.13、原安装路径和原菜单模式恢复成功。
+
+机器报告位于忽略目录 `test-results/installed-release-validation/20260828-212031/result.json`；清单固化通过项而不提交包含本机绝对路径的原始机器报告。
+
+### 4.3 完整回归
+
+- 前端：44 个测试文件、254 个测试全部通过；
+- Rust：323 个测试通过、0 失败、4 个明确的环境型测试保持 ignored；
+- 工作流与安装态证据均来自提交后的干净产物，不用本机无法启动的 `makensis` 结果代替。
+
 ## 5. 未完成项与下一动作
 
-1. 构建正式 NSIS，执行 `test-installed-release.ps1 -RunVideoRuntimeMatrix`，保留覆盖安装、真实安装目录、卸载和上一版本恢复证据。
-2. 新增只读测量工作流，在同一提交、同一工具链与同一 updater 密钥下分别打包去除视频资源和包含视频资源的 NSIS/updater ZIP；验证 updater 内 EXE 与 NSIS 一致并记录精确差值。
-3. 在真实 Windows N 且未安装 Media Feature Pack 的机器运行正式安装预检。当前单元负向路径不能冒充真实 Windows N 机器证据。
-4. 上述三项完成后才更新 `compressedInstallerDeltaBytes`、关闭 C-01 并进入 C-02。
+1. 在真实 Windows N 且未安装 Media Feature Pack 的机器安装当前集成候选并运行正式应用内部预检，保存 OS edition/build、退出码和 `VIDEO_ENGINE_MEDIA_FOUNDATION_UNAVAILABLE` 报告。
+2. 安装 Media Feature Pack 后在同一机器复测通过，证明拒绝来自平台组件缺失而不是打包损坏。
+3. 只有这项真实平台证据完成后，才把 `windowsNRealMachinePassed` 改为 `true`、关闭 C-01 并进入 C-02。
 
-测量工作流实现检查点：`video-c01-2-2.yml` 已建立同提交双构建和机器报告；测量器使用公开 v1.1.14/v1.1.15 的 NSIS、updater ZIP 与 Base64 包装 minisign 签名完成真实演练。演练中纠正两项假设：Tauri 额外配置会叠加资源数组，基线必须在一次性 runner 内备份后原位过滤并无条件恢复；公开 NSIS 使用英文资产名，而 updater ZIP 内为中文产品名，必须枚举唯一 EXE 后按字节比较，不能按 basename 推断。
+测量实现演练中纠正两项假设：Tauri 额外配置会叠加资源数组，基线必须在一次性 runner 内备份后原位过滤并无条件恢复；公开 NSIS 使用英文资产名，而 updater ZIP 内为中文产品名，必须枚举唯一 EXE 后按字节比较，不能按 basename 推断。正式运行随后证明该方案可重复执行并产生完整签名证据。
+
+本机 `makensis.exe` 即使清空并重新下载 Tauri 官方 NSIS 缓存也在进程启动阶段返回 `0xC0000135`。这属于当前主机的 32 位 NSIS 运行环境问题；正式结论使用 GitHub 干净 Windows runner 构建的同提交产物，并在本机完成安装验证，不把本机构建失败混入产品缺陷。

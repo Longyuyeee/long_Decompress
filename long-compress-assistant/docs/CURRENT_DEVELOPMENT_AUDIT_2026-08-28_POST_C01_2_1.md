@@ -1,5 +1,7 @@
 # 当前开发情况审计（C-01.2.1 合并后）
 
+> 本文保留 C-01.2.1 合并时的仓库审计快照。C-01.2.2 的正式安装和签名增量已经完成、真实 Windows N 机器证据仍待补齐；当前接续以 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md) 为准。
+
 审计日期：2026-08-28
 
 审计锚点：`master` / `7bc44a1c19804b87904f3c06e23c809482f32467`
