@@ -278,10 +278,17 @@ fn sanitize_image_facts(facts: &mut ImageFileMetricsV1) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn save_task_history(record: TaskHistoryRecord) -> Result<(), String> {
-    let record = sanitize_record(record)?;
     let pool = crate::database::connection::get_pool()
         .await
         .map_err(|error| format!("任务历史数据库不可用: {error}"))?;
+    save_task_history_to_pool(&pool, record).await
+}
+
+async fn save_task_history_to_pool(
+    pool: &sqlx::SqlitePool,
+    record: TaskHistoryRecord,
+) -> Result<(), String> {
+    let record = sanitize_record(record)?;
     let source_paths = serde_json::to_string(&record.source_paths)
         .map_err(|error| format!("序列化来源路径失败: {error}"))?;
     let logs = serde_json::to_string(&record.logs)
@@ -335,7 +342,7 @@ pub async fn save_task_history(record: TaskHistoryRecord) -> Result<(), String> 
     .bind(&record.error_message)
     .bind(logs)
     .bind(updated_at)
-    .execute(&pool)
+    .execute(pool)
     .await
     .map_err(|error| format!("保存任务历史失败: {error}"))?;
 
@@ -343,7 +350,7 @@ pub async fn save_task_history(record: TaskHistoryRecord) -> Result<(), String> 
         "DELETE FROM task_operation_history WHERE id NOT IN (SELECT id FROM task_operation_history ORDER BY completed_at DESC LIMIT ?)",
     )
     .bind(MAX_HISTORY_RECORDS)
-    .execute(&pool)
+    .execute(pool)
     .await
     .map_err(|error| format!("整理任务历史失败: {error}"))?;
     Ok(())
@@ -354,6 +361,13 @@ pub async fn list_task_history(limit: Option<i64>) -> Result<Vec<TaskHistoryReco
     let pool = crate::database::connection::get_pool()
         .await
         .map_err(|error| format!("任务历史数据库不可用: {error}"))?;
+    list_task_history_from_pool(&pool, limit).await
+}
+
+async fn list_task_history_from_pool(
+    pool: &sqlx::SqlitePool,
+    limit: Option<i64>,
+) -> Result<Vec<TaskHistoryRecord>, String> {
     let rows = sqlx::query_as::<_, TaskHistoryRow>(
         r#"
         SELECT id, name, task_type, workload_kind, metrics, status, source_paths, output_path, format,
@@ -365,7 +379,7 @@ pub async fn list_task_history(limit: Option<i64>) -> Result<Vec<TaskHistoryReco
         "#,
     )
     .bind(limit.unwrap_or(MAX_HISTORY_RECORDS).clamp(1, MAX_HISTORY_RECORDS))
-    .fetch_all(&pool)
+    .fetch_all(pool)
     .await
     .map_err(|error| format!("读取任务历史失败: {error}"))?;
 
@@ -618,5 +632,206 @@ mod tests {
             "frameCount": 1, "hasAlpha": false, "browserWidth": 360
         }));
         assert!(unknown.is_err());
+    }
+
+    #[tokio::test]
+    async fn real_image_terminal_history_survives_sqlite_close_and_reopen() {
+        use crate::services::image_compression_service::{
+            compress_single_image, plan_image_destination, ImageCompressionMode,
+            ImageCompressionOutcome, ImageCompressionRequest, ImageConflictPolicy,
+            ImageDestinationPlan, ImageFileFormat,
+        };
+        use std::path::Path;
+        use std::sync::atomic::AtomicBool;
+
+        let source = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("test-results")
+            .join("media-fixture-audit")
+            .join("fixtures")
+            .join("images")
+            .join("transparent.png");
+        if !source.exists() {
+            eprintln!("fixture is absent; run npm run test:fixtures:media:images");
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let ImageDestinationPlan::Ready { destination } = plan_image_destination(
+            &source,
+            Some(temp.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Rename,
+            &[],
+        )
+        .unwrap() else {
+            panic!("empty output directory must be ready");
+        };
+        let outcome = compress_single_image(
+            &ImageCompressionRequest {
+                source: source.clone(),
+                destination: destination.clone(),
+                mode: ImageCompressionMode::Lossless,
+                quality: 82,
+                target_format: ImageFileFormat::Png,
+                max_dimensions: None,
+                preserve_metadata: true,
+                only_if_smaller: false,
+            },
+            &AtomicBool::new(false),
+        )
+        .unwrap();
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
+            panic!("real PNG must publish for history verification");
+        };
+        let image_fact =
+            |facts: crate::services::image_compression_service::ImageCompressionFacts| {
+                ImageFileMetricsV1 {
+                    format: match facts.format {
+                        ImageFileFormat::Jpeg => "jpeg",
+                        ImageFileFormat::Png => "png",
+                        ImageFileFormat::WebP => "webp",
+                    }
+                    .to_string(),
+                    encoded_width: u64::from(facts.encoded_width),
+                    encoded_height: u64::from(facts.encoded_height),
+                    visible_width: u64::from(facts.visible_width),
+                    visible_height: u64::from(facts.visible_height),
+                    orientation: facts.orientation,
+                    frame_count: u64::from(facts.frame_count),
+                    has_alpha: facts.has_alpha,
+                }
+            };
+        let input_bytes = input.encoded_bytes;
+        let output_bytes = output.encoded_bytes;
+        let savings_ratio = if input_bytes == 0 {
+            0.0
+        } else {
+            ((input_bytes as f64 - output_bytes as f64) / input_bytes as f64).clamp(0.0, 1.0)
+        };
+        let completed = TaskHistoryRecord {
+            id: "real-image-completed".into(),
+            name: "transparent.png".into(),
+            task_type: "compression".into(),
+            workload_kind: "image".into(),
+            metrics: Some(TaskHistoryMetricsV1 {
+                schema_version: 1,
+                input_bytes,
+                output_bytes,
+                savings_ratio,
+                media: Some(MediaMetricsV1 {
+                    width: None,
+                    height: None,
+                    frame_count: None,
+                    duration_ms: None,
+                    page_count: None,
+                    video_codec: None,
+                    audio_codec: None,
+                    container: None,
+                    has_alpha: None,
+                    image: Some(ImageMediaMetricsV1 {
+                        input: image_fact(input),
+                        output: image_fact(output),
+                    }),
+                }),
+            }),
+            status: "completed".into(),
+            source_paths: vec![source.to_string_lossy().into_owned()],
+            output_path: destination.to_string_lossy().into_owned(),
+            format: Some("png".into()),
+            started_at: Some("2026-08-28T01:00:00Z".into()),
+            completed_at: "2026-08-28T01:00:01Z".into(),
+            duration_ms: 1_000,
+            processed_bytes: input_bytes as i64,
+            total_bytes: input_bytes as i64,
+            error_message: None,
+            logs: vec![],
+        };
+        let terminal_without_metrics =
+            |id: &str, status: &str, error: Option<&str>, second: u8| TaskHistoryRecord {
+                id: id.into(),
+                name: "photo.webp".into(),
+                task_type: "compression".into(),
+                workload_kind: "image".into(),
+                metrics: None,
+                status: status.into(),
+                source_paths: vec![source.to_string_lossy().into_owned()],
+                output_path: temp
+                    .path()
+                    .join(format!("{id}.webp"))
+                    .to_string_lossy()
+                    .into_owned(),
+                format: Some("webp".into()),
+                started_at: Some("2026-08-28T01:00:00Z".into()),
+                completed_at: format!("2026-08-28T01:00:0{second}Z"),
+                duration_ms: i64::from(second) * 1_000,
+                processed_bytes: 0,
+                total_bytes: 0,
+                error_message: error.map(str::to_string),
+                logs: vec![],
+            };
+
+        let database_path = temp.path().join("image-history.db");
+        let connection = crate::database::connection::DatabaseConnection::new(&database_path, None)
+            .await
+            .unwrap();
+        save_task_history_to_pool(connection.pool(), completed)
+            .await
+            .unwrap();
+        save_task_history_to_pool(
+            connection.pool(),
+            terminal_without_metrics("real-image-failed", "failed", Some("真实编码失败"), 2),
+        )
+        .await
+        .unwrap();
+        save_task_history_to_pool(
+            connection.pool(),
+            terminal_without_metrics("real-image-cancelled", "cancelled", None, 3),
+        )
+        .await
+        .unwrap();
+        connection.pool().close().await;
+        drop(connection);
+
+        let reopened = crate::database::connection::DatabaseConnection::new(&database_path, None)
+            .await
+            .unwrap();
+        let records = list_task_history_from_pool(reopened.pool(), Some(10))
+            .await
+            .unwrap();
+        assert_eq!(
+            records
+                .iter()
+                .map(|record| record.status.as_str())
+                .collect::<Vec<_>>(),
+            vec!["cancelled", "failed", "completed"]
+        );
+        let completed = records
+            .iter()
+            .find(|record| record.id == "real-image-completed")
+            .unwrap();
+        let metrics = completed.metrics.as_ref().unwrap();
+        assert_eq!(
+            metrics.input_bytes,
+            std::fs::metadata(&source).unwrap().len()
+        );
+        assert_eq!(
+            metrics.output_bytes,
+            std::fs::metadata(&destination).unwrap().len()
+        );
+        assert!((metrics.savings_ratio - savings_ratio).abs() < f64::EPSILON);
+        assert_eq!(
+            metrics
+                .media
+                .as_ref()
+                .unwrap()
+                .image
+                .as_ref()
+                .unwrap()
+                .output
+                .format,
+            "png"
+        );
+        assert!(database_path.is_file());
+        assert!(std::fs::metadata(database_path).unwrap().len() > 0);
     }
 }

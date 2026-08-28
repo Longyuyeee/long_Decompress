@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createImageMediaMetricsV1, createMeasuredTaskMetricsV1 } from '../taskMetrics'
+import { createImageMediaMetricsV1, createMeasuredTaskMetricsV1, createVerifiedImageTaskMetricsV1 } from '../taskMetrics'
 
 describe('createMeasuredTaskMetricsV1', () => {
   it('derives final savings only from normalized filesystem byte facts', () => {
@@ -49,5 +49,23 @@ describe('createMeasuredTaskMetricsV1', () => {
     expect(media.image?.output).toEqual(output)
     expect(media.image?.input).not.toBe(input)
     expect(media.image?.output).not.toBe(output)
+  })
+
+  it('derives image byte metrics from verified backend facts', () => {
+    const input = {
+      format: 'png' as const, encodedBytes: 1546, encodedWidth: 256, encodedHeight: 256,
+      visibleWidth: 256, visibleHeight: 256, orientation: 1, frameCount: 1, hasAlpha: true,
+    }
+    const output = { ...input, encodedBytes: 1000 }
+
+    expect(createVerifiedImageTaskMetricsV1(input, output)).toEqual(expect.objectContaining({
+      inputBytes: 1546,
+      outputBytes: 1000,
+      savingsRatio: 546 / 1546,
+      media: { image: {
+        input: expect.not.objectContaining({ encodedBytes: expect.anything() }),
+        output: expect.not.objectContaining({ encodedBytes: expect.anything() }),
+      } },
+    }))
   })
 })

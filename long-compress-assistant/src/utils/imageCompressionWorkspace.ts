@@ -85,6 +85,7 @@ export interface ImageBatchProgress {
   itemId: string
   taskId: string
   status: ImageBatchItemResult['status']
+  result: ImageBatchItemResult
 }
 
 export interface ImageBatchCommands {
@@ -197,6 +198,7 @@ export class ImageCompressionBatchRunner {
         itemId: result.itemId,
         taskId: result.taskId,
         status: result.status,
+        result,
       })
     }
 

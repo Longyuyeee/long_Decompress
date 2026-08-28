@@ -77,6 +77,11 @@ assert(imageWorkspaceModel.includes('class ImageCompressionBatchRunner'), 'the i
 assert(imageWorkspaceModel.includes('commands.cancel(this.activeTaskId)'), 'image batch cancellation must target the active child task')
 assert(imageWorkspaceModel.includes('results.length / jobs.length * 100'), 'image batch progress must derive from settled file count')
 assert(!imageWorkspaceModel.includes('task-progress'), 'the image batch runner must not manufacture encoder byte progress')
+const imageBatchTracking = await read('src/composables/useImageCompressionBatch.ts')
+assert(imageBatchTracking.includes("workloadKind: 'image'"), 'image child tasks must use the unified image workload identity')
+assert(imageBatchTracking.includes('createVerifiedImageTaskMetricsV1'), 'published image history must use verified backend facts')
+assert(imageBatchTracking.includes('waitForHistoryPersistence'), 'image batch completion must await history persistence')
+assert(!imageBatchTracking.includes("invoke('save_task_history'"), 'image orchestration must not bypass the unified task store history writer')
 assert(
   (main.match(/commands::task_history::save_task_history/g) ?? []).length === 1,
   'the application must expose exactly one history write command',

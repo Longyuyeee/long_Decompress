@@ -377,7 +377,7 @@ src/types/media.ts
 
 ### B-04 进度、日志和历史
 
-状态：**进行中；B-04.1 至 B-04.3 已完成，下一接续点为 B-04.4**。输入/输出双侧事实契约见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)，真实阶段事件见 [B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md)。后端现权威生成确定目标路径，安全处理 rename/skip，replace-if-smaller 继续使用已审计大小策略且不覆盖既有目标；前端具备逐图唯一 task id、按文件终态计数的批量进度和统一取消，真实冲突、编码及取消证据见 [B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md](B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md)。下一步接统一队列与三种终态历史，之后才开放 UI；界面按钮继续禁用。
+状态：**进行中；B-04.1 至 B-04.4 已完成，下一接续点为 B-04.5**。输入/输出事实、真实阶段和安全批量编排分别见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)、[B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md) 与 [B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md](B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md)。图片子任务现进入唯一 task store，以 `compression/image` 身份写入完成、失败、取消历史；真实 PNG 编码结果及三终态已在实际 SQLite 关闭/重开后复核，证据见 [B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md](B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md)。下一步只做真实结果 UI 接线和按钮开放；当前界面按钮继续禁用。
 
 - 日志展示解码、缩放、编码、验证、发布阶段；
 - 进度按批量文件数与可用字节信息组合，不得长时间静止在虚假百分比；
@@ -648,7 +648,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-00.6 已全部完成并通过总审计；B-01 已完成精确 feature、五个固定输入、质量/内存/并发和隔离载荷基线，B-02 已完成前端工作区、安全预览、Release/WebView2 双尺寸矩阵与真实系统文件选择，B-03 已完成图片运行时、格式/缩放/EXIF/ICC 验证、取消/容量预检、共享发布事务和 877,416 B 最终 NSIS 增量；B-04.1 至 B-04.3 已完成事实契约、真实阶段和安全批量编排。下一步为 B-04.4 统一队列与三种终态历史；完成前前端执行仍禁用。
+- B-00.1 至 B-00.6 已全部完成并通过总审计；B-01 已完成精确 feature、五个固定输入、质量/内存/并发和隔离载荷基线，B-02 已完成前端工作区、安全预览、Release/WebView2 双尺寸矩阵与真实系统文件选择，B-03 已完成图片运行时、格式/缩放/EXIF/ICC 验证、取消/容量预检、共享发布事务和 877,416 B 最终 NSIS 增量；B-04.1 至 B-04.4 已完成事实契约、真实阶段、安全编排和跨重启三终态历史。下一步为 B-04.5 真实结果 UI 开放；完成前前端执行仍禁用。
 
 ## 12. 技术参考
 

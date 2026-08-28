@@ -15,6 +15,10 @@ export interface ImageFileMetricsV1 {
   hasAlpha: boolean
 }
 
+export interface VerifiedImageFileFacts extends ImageFileMetricsV1 {
+  encodedBytes: number
+}
+
 export interface ImageMediaMetricsV1 {
   input: ImageFileMetricsV1
   output: ImageFileMetricsV1
@@ -78,4 +82,17 @@ export const createMeasuredTaskMetricsV1 = (
     savingsRatio: input > 0 ? (input - output) / input : 0,
     ...(media ? { media } : {}),
   }
+}
+
+export const createVerifiedImageTaskMetricsV1 = (
+  input: VerifiedImageFileFacts,
+  output: VerifiedImageFileFacts,
+): TaskMetricsV1 => {
+  const { encodedBytes: inputBytes, ...inputFacts } = input
+  const { encodedBytes: outputBytes, ...outputFacts } = output
+  return createMeasuredTaskMetricsV1(
+    inputBytes,
+    outputBytes,
+    createImageMediaMetricsV1(inputFacts, outputFacts),
+  )
 }

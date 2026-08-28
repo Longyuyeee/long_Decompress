@@ -1,31 +1,38 @@
 # 开发交接
 
+## 2026-08-28 B-04.4 图片统一队列与历史收口
+
+- 每张图片现注册为统一 `compression/image` Task，复用现有 task-log、状态机、取消和唯一 `save_task_history` 写入口；图片批量返回前等待每条终态历史的持久化结果。
+- published 使用后端真实 input/output 建立字节和双侧图片指标；候选不更小时以实际保留源文件作为最终事实；failed/cancelled/未编码 skip 不制造媒体指标。
+- 真实透明 PNG 完成记录及 failed/cancelled 已写入实际 SQLite，关闭连接后重新打开仍完整读取。开发中发现并修正嵌套 `encodedBytes` 严格字段泄漏和终态守卫阻断密码重试两项偏差。
+- 前端 273/273、Rust 317 通过/4 忽略、Clippy 零警告、生产构建、媒体门禁及真实图片基线通过。当前仍不启用按钮、不升版、不发布；下一步严格执行 B-04.5 真实结果 UI 开放，完整证据见 [B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md](B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md)。
+
 ## 2026-08-28 B-04.3 图片安全批量编排收口
 
 - 后端新增真实文件系统目标规划：稳定生成 `.compressed` 名称，rename 同时避让磁盘现有文件和同批预留目标，skip 返回结构化跳过；replace-if-smaller 只映射候选大小策略，既有目标继续失败关闭，未放松 B-03 禁止覆盖事务。
 - 前端新增强类型规划/压缩命令封装和逐图批量执行器；每张图使用唯一 task id，进度只按文件终态数计算，取消复用 `cancel_compression` 且不会在规划返回后误启动编码。
 - 真实方向 JPEG、透明 PNG 和 WebP 已完成请求映射、冲突、规划后实际编码与取消复核；前端 270/270、Rust 316 通过/4 忽略、Clippy 零警告、生产构建、媒体门禁及真实图片基线通过。
-- 当前仍不启用按钮、不写终态历史、不升版、不发布。下一步严格执行 B-04.4 统一队列与历史，完整证据见 [B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md](B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md)。
+- 本节点要求的 B-04.4 已由顶部统一队列与历史收口完成；当前下一接续点为 B-04.5，完整编排证据见 [B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md](B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md)。
 
 ## 2026-08-28 B-04.2 图片真实阶段事件收口
 
 - 图片服务新增可测试的 `decoding/resizing/encoding/validating/publishing` 观察器；缩放仅在可见尺寸实际变化时出现，候选不更小时不会记录发布，预取消不生成任何阶段。
 - Tauri 图片命令将阶段映射为现有 `task-log`；没有新增日志 store，也没有发送要求数值百分比的 `task-progress`。架构门禁会阻止后续误加虚假图片进度。
 - 固定真实方向 JPEG、透明 PNG、WebP 和 GIF 已完成预期—实际序列复核；前端 244/244、Rust 314 通过/4 忽略、Clippy 零警告、生产构建和五项媒体门禁通过。
-- 本节点要求的 B-04.3 已由顶部安全批量编排收口完成；当前下一接续点为 B-04.4，完整阶段证据见 [B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md)。
+- 本节点要求的 B-04.3 与后续 B-04.4 均已由顶部节点收口；当前下一接续点为 B-04.5，完整阶段证据见 [B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md)。
 
 ## 2026-08-28 B-04.1 图片输入/输出事实契约收口
 
 - Rust `ImageCompressionOutcome` 已从输出单侧事实改为 `input/output`；仅更小策略返回 `input/candidate`。两侧均包含真实文件字节、格式、编码矩阵、方向后可见尺寸、方向、帧数和 Alpha。
 - 前端新增同构请求/响应类型；历史 `MediaMetricsV1` 向后兼容增加可选 `image.input/output`，Rust `deny_unknown_fields` 同步并拒绝未知字段、无效格式、零尺寸/帧数和方向范围外数据。
 - 固定真实方向 JPEG、透明 PNG 和 WebP 已复核预期—实际差异；前端 244/244、Rust 312 通过/4 忽略、Clippy 零警告、生产构建和五项媒体门禁通过。
-- 本节点收口时尚未接入阶段事件；B-04.2 与 B-04.3 现均已由顶部节点完成。当前以 B-04.4 统一队列与历史为唯一接续点，仍不启用按钮、不升版、不发布。完整事实契约证据见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)。
+- 本节点收口时尚未接入阶段事件；B-04.2 至 B-04.4 现均已由顶部节点完成。当前以 B-04.5 真实结果 UI 开放为唯一接续点，完成前仍不启用按钮、不升版、不发布。完整事实契约证据见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)。
 
 ## 2026-08-28 B-03 后跨设备接续审计（已由 B-04.1 更新）
 
 - GitHub 开发分支为 `codex/archive-media-roadmap`，代码锚点 `5e396c6`；审计时本地与远端一致，相对 `origin/master` 领先 23、落后 0。公开 `v1.1.14` 标签仍在 `cfc58ec`，当前不升版、不更新 Release。
 - 实际代码确认 B-03 后端已完成，但前端仍有“B-02/B-03 待开放”旧文案且没有调用 `compress_image_file`。更关键的是，后端结果与现有历史指标尚不能同时表达输入/输出格式、可见尺寸、编码矩阵和方向事实，图片命令也没有阶段事件。
-- 该审计当时要求从 B-04.1 事实契约开始；该项现已完成，当前以文档顶部的 B-04.2 接续点为准。阶段事件、安全冲突/批量编排和统一任务历史完成前，仍不得直接点亮按钮或用浏览器尺寸/预计值生成历史。
+- 该审计当时要求从 B-04.1 事实契约开始；B-04.1 至 B-04.4 现均已完成，当前以文档顶部的 B-04.5 接续点为准。真实结果 UI 验收完成前，仍不得直接点亮按钮或用浏览器尺寸/预计值生成历史。
 - 新电脑的 clone/switch 命令、工具版本、验证命令、工作区噪声和完整阻断表见 [CURRENT_DEVELOPMENT_STATUS_AUDIT_2026-08-28.md](CURRENT_DEVELOPMENT_STATUS_AUDIT_2026-08-28.md)。
 
 ## 2026-08-28 B-03.2 图片变换、命令执行与 NSIS 增量收口
