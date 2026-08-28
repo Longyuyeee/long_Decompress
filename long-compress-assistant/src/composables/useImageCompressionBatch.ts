@@ -94,6 +94,7 @@ export const useImageCompressionBatch = () => {
     sources: ImageBatchSource[],
     onProgress?: (progress: ImageBatchProgress) => void,
     requestedBatchId?: string,
+    onTaskRegistered?: (itemId: string, taskId: string) => void,
   ) => {
     if (activeRunner) throw new Error('已有图片批量任务正在运行')
     const batchId = requestedBatchId || globalThis.crypto?.randomUUID?.() || `batch-${Date.now()}`
@@ -110,6 +111,7 @@ export const useImageCompressionBatch = () => {
         format: resolveImageTargetFormat(source.inputFormat, source.settings),
       })
       taskStore.updateTaskStatus(taskId, 'preparing')
+      onTaskRegistered?.(source.id, taskId)
     }
 
     const runner = new ImageCompressionBatchRunner({

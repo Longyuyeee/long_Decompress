@@ -85,12 +85,24 @@ export interface DesktopE2EBridge {
     size: number
     isDirectory: boolean
   }>) => { accepted: number; rejected: Array<{ name: string; reason: string }> }
+  configureImageCompressionWorkspace: (outputDirectory: string) => void
   imageCompressionAuditState: () => Array<{
     name: string
     status: string
     width: number | null
     height: number | null
     inputSize: number
+  }>
+  imageCompressionResultAuditState: () => Array<{
+    name: string
+    taskStatus: TaskStatus | null
+    outputPath: string | null
+    inputBytes: number | null
+    outputBytes: number | null
+    outputFormat: string | null
+    outputWidth: number | null
+    outputHeight: number | null
+    hasResultPreview: boolean
   }>
   compressionAnalysisAuditState: (jobId: string) => {
     analysis: CompressionAnalysisResult | null
@@ -559,6 +571,14 @@ export const installDesktopE2EBridge = () => {
       }
     },
 
+    configureImageCompressionWorkspace(outputDirectory) {
+      compressionStore.imageGlobalSettings = {
+        ...compressionStore.imageGlobalSettings,
+        outputDirectory,
+        conflictPolicy: 'rename',
+      }
+    },
+
     imageCompressionAuditState() {
       return compressionStore.imageItems.map(item => ({
         name: item.name,
@@ -567,6 +587,24 @@ export const installDesktopE2EBridge = () => {
         height: item.height ?? null,
         inputSize: item.inputSize,
       }))
+    },
+
+    imageCompressionResultAuditState() {
+      return compressionStore.imageItems.map(item => {
+        const task = item.taskId ? taskStore.tasks.find(candidate => candidate.id === item.taskId) : undefined
+        const output = task?.metrics?.media?.image?.output
+        return {
+          name: item.name,
+          taskStatus: task?.status ?? null,
+          outputPath: task?.outputPath || null,
+          inputBytes: task?.metrics?.inputBytes ?? null,
+          outputBytes: task?.metrics?.outputBytes ?? null,
+          outputFormat: output?.format ?? null,
+          outputWidth: output?.visibleWidth ?? null,
+          outputHeight: output?.visibleHeight ?? null,
+          hasResultPreview: Boolean(item.resultPreviewUrl),
+        }
+      })
     },
 
     compressionAnalysisAuditState(jobId) {

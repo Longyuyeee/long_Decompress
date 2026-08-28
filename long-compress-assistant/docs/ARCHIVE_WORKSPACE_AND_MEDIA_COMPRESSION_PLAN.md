@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已全部完成并随 `v1.1.14` 发布，B-00.1 至 B-00.6 前置门禁、B-01 图片依赖/固定哈希基线、B-02 图片前端工作区和 B-03 图片后端执行/发布事务也已完成。图片运行时已进入受审计后端，但前端执行仍等待 B-04 的统一进度、日志和历史事实来源；B-05 完成安装版矩阵前不升版、不更新 Release。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已全部完成并随 `v1.1.14` 发布，B-00.1 至 B-00.6 前置门禁、B-01 图片依赖/固定哈希基线、B-02 图片前端工作区、B-03 图片后端执行/发布事务和 B-04 真实进度/日志/历史/UI 均已完成。下一接续点为 B-05 安装版真实验收矩阵；B-05 完成前不升版、不更新 Release。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -363,7 +363,7 @@ src/types/media.ts
 
 状态：**已完成 / 2026-08-28 收口**。产品运行时严格准入 `libcaesium 0.21.0`（仅 `jpg,webp`）、`oxipng 10.2.0`（仅 `parallel,zopfli`）、`image 0.25.10`（仅 `jpeg,png,webp`）和 `img-parts 0.4.0`（仅 `std`）。服务支持同格式压缩、格式转换和按可见尺寸等比例缩放；编码后再次完整解码并核对格式、矩阵、方向、可见尺寸、帧数、Alpha 与配置承诺的 EXIF/ICC，再按用户大小策略调用共享原子发布事务。命令已复用统一取消注册表、容量预检和受控阻塞线程。最终 NSIS 相对 `f4ea25b` 同版本基线净增 877,416 B。详见 [B03_IMAGE_ENCODING_TRANSACTION_AUDIT.md](B03_IMAGE_ENCODING_TRANSACTION_AUDIT.md) 与 [B03_2_IMAGE_TRANSFORM_EXECUTION_AUDIT.md](B03_2_IMAGE_TRANSFORM_EXECUTION_AUDIT.md)。
 
-边界纠偏：现有图片配置没有“删除源文件”选项，因此当前实现始终只读源文件，不把并不存在的回收功能冒充完成；未来若开放该选项，只能在共享发布成功后调用系统回收站。前端按钮继续禁用是因为 B-04 尚未提供统一进度、日志和历史，而不是 B-03 后端缺失。
+边界纠偏：现有图片配置没有“删除源文件”选项，因此当前实现始终只读源文件，不把并不存在的回收功能冒充完成；未来若开放该选项，只能在共享发布成功后调用系统回收站。B-04 已完成统一事实链和真实结果 UI 开放；B-05 将验证安装版完整流程，不得借此绕过共享发布边界。
 
 - 魔数和解码器共同确认输入，不只看扩展名；
 - 输出写入唯一临时文件；
@@ -377,7 +377,7 @@ src/types/media.ts
 
 ### B-04 进度、日志和历史
 
-状态：**进行中；B-04.1 至 B-04.4 已完成，下一接续点为 B-04.5**。输入/输出事实、真实阶段和安全批量编排分别见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)、[B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md) 与 [B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md](B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md)。图片子任务现进入唯一 task store，以 `compression/image` 身份写入完成、失败、取消历史；真实 PNG 编码结果及三终态已在实际 SQLite 关闭/重开后复核，证据见 [B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md](B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md)。下一步只做真实结果 UI 接线和按钮开放；当前界面按钮继续禁用。
+状态：**已完成 / 2026-08-28 收口**。B-04.1 至 B-04.4 已完成输入/输出事实、真实阶段、安全批量编排、统一队列与跨重启历史；B-04.5 已将该链路接入图片工作区，按真实 ready 状态开放执行/取消，并展示后端验证的结果预览、路径、尺寸、格式和实际字节差。固定真实 JPEG/WebP/PNG 已在 Windows WebView2 中完成点击执行、磁盘 metadata、历史和双尺寸布局复核。证据见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)、[B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md)、[B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md](B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md)、[B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md](B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md) 与 [B04_5_IMAGE_RESULT_UI_AUDIT.md](B04_5_IMAGE_RESULT_UI_AUDIT.md)。下一接续点为 B-05。
 
 - 日志展示解码、缩放、编码、验证、发布阶段；
 - 进度按批量文件数与可用字节信息组合，不得长时间静止在虚假百分比；
@@ -648,7 +648,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-00.6 已全部完成并通过总审计；B-01 已完成精确 feature、五个固定输入、质量/内存/并发和隔离载荷基线，B-02 已完成前端工作区、安全预览、Release/WebView2 双尺寸矩阵与真实系统文件选择，B-03 已完成图片运行时、格式/缩放/EXIF/ICC 验证、取消/容量预检、共享发布事务和 877,416 B 最终 NSIS 增量；B-04.1 至 B-04.4 已完成事实契约、真实阶段、安全编排和跨重启三终态历史。下一步为 B-04.5 真实结果 UI 开放；完成前前端执行仍禁用。
+- B-00.1 至 B-00.6 已全部完成并通过总审计；B-01 已完成精确 feature、五个固定输入、质量/内存/并发和隔离载荷基线，B-02 已完成前端工作区、安全预览、Release/WebView2 双尺寸矩阵与真实系统文件选择，B-03 已完成图片运行时、格式/缩放/EXIF/ICC 验证、取消/容量预检、共享发布事务和 877,416 B 冻结 NSIS 增量；B-04.1 至 B-04.5 已完成事实契约、真实阶段、安全编排、跨重启三终态历史和真实结果 UI 开放。下一步为 B-05 安装版真实验收矩阵；完成前不升版、不更新 Release。
 
 ## 12. 技术参考
 

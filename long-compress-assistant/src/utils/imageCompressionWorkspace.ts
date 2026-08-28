@@ -143,6 +143,13 @@ const requireImageMetricFormat = (format: string): ImageMetricFormat => {
 export const resolveImageTargetFormat = (inputFormat: string, settings: ImageCompressionSettings) =>
   requireImageMetricFormat(settings.outputFormat === 'keep' ? inputFormat : settings.outputFormat)
 
+export const resolveImageCompressionMode = (
+  inputFormat: string,
+  settings: ImageCompressionSettings,
+): ImageCompressionMode => resolveImageTargetFormat(inputFormat, settings) === 'png'
+  ? 'lossless'
+  : settings.mode
+
 export const createImageCompressionRequest = (
   source: string,
   destination: string,
@@ -151,7 +158,7 @@ export const createImageCompressionRequest = (
 ): ImageCompressionRequest => ({
   source,
   destination,
-  mode: settings.mode,
+  mode: resolveImageCompressionMode(inputFormat, settings),
   quality: settings.quality,
   targetFormat: resolveImageTargetFormat(inputFormat, settings),
   maxDimensions: settings.resizeMode === 'limit'

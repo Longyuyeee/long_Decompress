@@ -23,6 +23,7 @@ const update = <K extends keyof ImageCompressionSettings>(key: K, value: ImageCo
         <option value="lossy">有损压缩</option>
         <option value="lossless">无损优化</option>
       </select>
+      <small>PNG 输出始终使用无损优化；JPEG/WebP 按所选方式处理。</small>
     </label>
 
     <label class="setting-field">
@@ -74,6 +75,7 @@ const update = <K extends keyof ImageCompressionSettings>(key: K, value: ImageCo
 .setting-field { display:flex; min-width:0; flex-direction:column; gap:.4rem; color:var(--text-muted); font-size:.72rem; font-weight:800; }
 .setting-field select,.setting-field input[type="number"] { width:100%; min-width:0; height:2.5rem; border:1px solid var(--border-subtle); border-radius:.75rem; background:var(--bg-input); color:var(--text-content); padding:0 .75rem; outline:none; }
 .setting-field select:focus,.setting-field input:focus { border-color:var(--dynamic-accent); }
+.setting-field small { color:var(--text-muted); font-size:.6rem; font-weight:650; line-height:1.35; }
 .setting-quality { grid-column:1/-1; }
 .setting-quality span { display:flex; justify-content:space-between; }
 .setting-quality strong { color:var(--dynamic-accent); }

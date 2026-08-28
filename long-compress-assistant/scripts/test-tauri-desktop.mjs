@@ -2204,7 +2204,7 @@ async function runResponsiveTaskDetailDesktopGate() {
 }
 
 async function runImageWorkspaceDesktopGate() {
-  console.log('[desktop-e2e] verifying the real B-02 image workspace and queue isolation')
+  console.log('[desktop-e2e] verifying the real B-04.5 image execution, results, history and queue isolation')
   const mediaRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures')
   const acceptedImageNames = ['exif-orientation.jpg', 'photo.webp', 'transparent.png']
   const imageFixtures = acceptedImageNames.map(name => {
@@ -2261,10 +2261,36 @@ async function runImageWorkspaceDesktopGate() {
   }
 
   const startButton = await waitForElement('[data-testid="image-compression-workspace"] .primary-action')
-  assert.equal(await startButton.getAttribute('disabled'), 'true', 'B-02 must not expose fake execution')
+  assert.equal(await startButton.getAttribute('disabled'), null, 'verified image drafts must enable real execution')
+  const imageOutputDirectory = path.join(fixtureDirectory, 'image-results')
+  mkdirSync(imageOutputDirectory, { recursive: true })
+  await callDesktopBridge('configureImageCompressionWorkspace', imageOutputDirectory)
+  await startButton.click()
+  const resultState = await driver.wait(async () => {
+    const current = await callDesktopBridge('imageCompressionResultAuditState')
+    return current.length === 3 && current.every(item => item.taskStatus === 'completed' && item.hasResultPreview)
+      ? current
+      : false
+  }, 60_000)
+  for (const expected of imageFixtures) {
+    const actual = resultState.find(item => item.name === expected.name)
+    assert.ok(actual, `missing real image result: ${expected.name}`)
+    assert.equal(actual.inputBytes, statSync(expected.path).size, `${expected.name} input bytes must come from the real source`)
+    assert.ok(actual.outputPath && existsSync(actual.outputPath), `${expected.name} must publish a real output file`)
+    assert.equal(actual.outputBytes, statSync(actual.outputPath).size, `${expected.name} output bytes must match the real file`)
+    assert.ok(actual.outputWidth > 0 && actual.outputHeight > 0, `${expected.name} must expose verified output dimensions`)
+    assert.match(actual.outputFormat || '', /jpeg|png|webp/)
+  }
+  const imageHistory = (await callDesktopBridge('taskHistory')).filter(record =>
+    record.workloadKind === 'image' && record.outputPath?.includes(imageOutputDirectory),
+  )
+  assert.equal(imageHistory.length, 3, 'every real published image must persist one unified history row')
+  assert.ok(imageHistory.every(record => record.status === 'completed' && record.metrics), 'real image history must contain completed measured results')
   const workspaceText = await (await waitForElement('[data-testid="image-compression-workspace"]')).getText()
-  assert.match(workspaceText, /尚未生成结果文件/)
-  assert.match(workspaceText, /B-03.*验证.*开放/)
+  assert.doesNotMatch(workspaceText, /B-02|B-03|尚未生成结果文件/)
+  assert.match(workspaceText, /实际字节差/)
+  const resultPreview = await waitForElement('[data-testid="image-compression-workspace"] .result-ready img')
+  assert.equal(await resultPreview.isDisplayed(), true, 'the verified output must render as the result preview')
   await waitForElement('.image-details')
 
   mkdirSync(artifactDirectory, { recursive: true })
@@ -2775,7 +2801,7 @@ try {
   } else if (imageWorkspaceOnly) {
     await runImageWorkspaceDesktopGate()
     completedSuccessfully = true
-    console.log('Real Windows Tauri B-02 image-workspace gate passed.')
+    console.log('Real Windows Tauri B-04.5 image execution and result gate passed.')
   } else if (imagePickerManualOnly) {
     await runManualImagePickerDesktopGate()
     completedSuccessfully = true

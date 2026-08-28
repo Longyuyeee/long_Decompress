@@ -101,6 +101,18 @@ describe('image compression orchestration', () => {
     })
   })
 
+  it('maps the default mixed-batch PNG path to its only valid lossless backend mode', () => {
+    const request = createImageCompressionRequest(
+      'C:/输入/transparent.png',
+      'C:/输出/transparent.compressed.png',
+      'png',
+      createDefaultImageSettings(),
+    )
+
+    expect(createDefaultImageSettings().mode).toBe('lossy')
+    expect(request).toMatchObject({ targetFormat: 'png', mode: 'lossless' })
+  })
+
   it('cancels the active unique task and truthfully settles untouched items as cancelled', async () => {
     let rejectActive!: (reason: unknown) => void
     const compress = vi.fn(() => new Promise<never>((_resolve, reject) => { rejectActive = reject }))

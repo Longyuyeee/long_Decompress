@@ -82,6 +82,12 @@ assert(imageBatchTracking.includes("workloadKind: 'image'"), 'image child tasks 
 assert(imageBatchTracking.includes('createVerifiedImageTaskMetricsV1'), 'published image history must use verified backend facts')
 assert(imageBatchTracking.includes('waitForHistoryPersistence'), 'image batch completion must await history persistence')
 assert(!imageBatchTracking.includes("invoke('save_task_history'"), 'image orchestration must not bypass the unified task store history writer')
+const imageWorkspaceView = await read('src/components/compression/ImageCompressionWorkspace.vue')
+assert(imageWorkspaceView.includes('useImageCompressionBatch'), 'the image workspace must use the audited batch composable')
+assert(imageWorkspaceView.includes('taskForItem(item)?.metrics'), 'the image result UI must read verified unified task metrics')
+assert(!imageWorkspaceView.includes('B-02 前端'), 'the enabled image workspace must not retain the B-02 placeholder badge')
+assert(!imageWorkspaceView.includes('B-03 实际编码后显示'), 'the result preview must not retain the B-03 placeholder')
+assert(!imageWorkspaceView.includes("invoke('compress_image_file'"), 'the image workspace must not bypass the audited batch composable')
 assert(
   (main.match(/commands::task_history::save_task_history/g) ?? []).length === 1,
   'the application must expose exactly one history write command',

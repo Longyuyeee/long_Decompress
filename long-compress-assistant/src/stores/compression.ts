@@ -89,6 +89,8 @@ export interface ImageCompressionItem {
   expanded: boolean
   error?: string
   settings?: ImageCompressionSettings
+  taskId?: string
+  resultPreviewUrl?: string
 }
 
 export interface ImageCandidateRejection {
@@ -193,6 +195,16 @@ export const useCompressionStore = defineStore('compression', () => {
   const updateImageItemSettings = (id: string, settings: ImageCompressionSettings) => {
     const item = imageItems.value.find(candidate => candidate.id === id)
     if (item) item.settings = cloneImageSettings(settings)
+  }
+  const bindImageItemTask = (id: string, taskId: string) => {
+    const item = imageItems.value.find(candidate => candidate.id === id)
+    if (!item) return
+    item.taskId = taskId
+    item.resultPreviewUrl = undefined
+  }
+  const setImageResultPreview = (id: string, previewUrl: string) => {
+    const item = imageItems.value.find(candidate => candidate.id === id)
+    if (item) item.resultPreviewUrl = previewUrl
   }
   const removeImageItem = (id: string) => {
     imageItems.value = imageItems.value.filter(item => item.id !== id)
@@ -431,6 +443,8 @@ export const useCompressionStore = defineStore('compression', () => {
     enableImageItemOverride,
     disableImageItemOverride,
     updateImageItemSettings,
+    bindImageItemTask,
+    setImageResultPreview,
     removeImageItem,
     clearImageDrafts,
     cloneSettings,
