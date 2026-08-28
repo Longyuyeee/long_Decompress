@@ -249,6 +249,8 @@
       "packagedResourceReadbackPassed": true,
       "updaterArchiveIntegrityPassed": true,
       "updaterContainsByteIdenticalNsis": true,
+      "installedExecutableBytes": 28491264,
+      "installedExecutableSha256": "f8d15c8cd873b2ca41579fe8f5ee91675119fbbe68d5ff31e861e9bef83460d2",
       "installedLifecycle": {
         "previousVersion": "1.1.13",
         "candidateVersion": "1.1.15",
@@ -262,6 +264,7 @@
         "userDataPreserved": true
       },
       "windowsNRealMachinePassed": false,
+      "windowsNEvidenceScript": "scripts/test-windows-n-video-runtime.ps1",
       "remainingGate": "C-01.2.2-real-windows-n-without-media-feature-pack"
     }
   },

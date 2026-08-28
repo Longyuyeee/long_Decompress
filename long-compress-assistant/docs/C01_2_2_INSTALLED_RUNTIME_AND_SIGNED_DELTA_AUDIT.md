@@ -60,14 +60,33 @@ GitHub Actions 运行 `33173219785` 在提交 `6b95f5c2f6d66fc0a879eebb10f0346ea
 
 ### 4.3 完整回归
 
-- 前端：44 个测试文件、254 个测试全部通过；
+- 前端单元/组件：44 个测试文件、254 个测试全部通过；Playwright：32 个通过、13 个按既有项目条件跳过；
 - Rust：323 个测试通过、0 失败、4 个明确的环境型测试保持 ignored；
 - 工作流与安装态证据均来自提交后的干净产物，不用本机无法启动的 `makensis` 结果代替。
 
+### 4.4 Windows N 实机证据入口
+
+新增 `scripts/test-windows-n-video-runtime.ps1`，把最后一个外部平台门禁固定为两个不可互换的阶段：
+
+- `MissingMediaFeaturePack`：只接受 `EditionID` 以 `N` 结尾的真实 Windows N，要求 HKCU 正式安装记录、v1.1.15 和正式候选 EXE 的大小/SHA-256 完全一致；随后必须由正式 EXE 返回非成功，并写出 `VIDEO_ENGINE_MEDIA_FOUNDATION_UNAVAILABLE`。
+- `MediaFeaturePackInstalled`：要求读取同一证据目录的前阶段通过报告，并用脱敏后的 MachineGuid 哈希证明是同一机器；生产预检必须转为成功，再复用安装态矩阵完成真实软件转码、ffprobe 输出复核和隔离缺失/替换拒绝。
+
+两个阶段均记录 OS caption、EditionID、build、三个 Media Foundation DLL 的存在性/身份以及生产预检原始报告。脚本不查询需要管理员权限且可能本地化的 Windows Capability 文本，也不把“DLL 人工改名”或单元注入视为实机证据。当前 Windows 11 专业版 `EditionID=Professional` 的负向自检会稳定返回 `WINDOWS_N_MACHINE_REQUIRED` 并写失败报告，证明普通 Windows 不能误提交为 Windows N 结果。
+
+本地检查已通过 PowerShell AST 解析、清单字段门禁和上述普通版防误报；正式 N 前/后阶段只能在目标机器执行，当前仍不记为通过。
+
+在目标 Windows N 上使用同一证据目录依次执行：
+
+```powershell
+npm run test:windows-n-video-runtime -- -Phase MissingMediaFeaturePack -InstalledExecutable '<正式安装目录>\Long解压.exe' -EvidenceDirectory '<证据目录>'
+# 通过 Windows 设置安装 Media Feature Pack，并按系统要求重启
+npm run test:windows-n-video-runtime -- -Phase MediaFeaturePackInstalled -InstalledExecutable '<同一正式安装目录>\Long解压.exe' -EvidenceDirectory '<同一证据目录>'
+```
+
 ## 5. 未完成项与下一动作
 
-1. 在真实 Windows N 且未安装 Media Feature Pack 的机器安装当前集成候选并运行正式应用内部预检，保存 OS edition/build、退出码和 `VIDEO_ENGINE_MEDIA_FOUNDATION_UNAVAILABLE` 报告。
-2. 安装 Media Feature Pack 后在同一机器复测通过，证明拒绝来自平台组件缺失而不是打包损坏。
+1. 在真实 Windows N 且未安装 Media Feature Pack 的机器安装当前集成候选，运行 `MissingMediaFeaturePack` 阶段并保存报告。
+2. 安装 Media Feature Pack 并重启，在同一机器、同一正式安装和同一证据目录运行 `MediaFeaturePackInstalled` 阶段。
 3. 只有这项真实平台证据完成后，才把 `windowsNRealMachinePassed` 改为 `true`、关闭 C-01 并进入 C-02。
 
 测量实现演练中纠正两项假设：Tauri 额外配置会叠加资源数组，基线必须在一次性 runner 内备份后原位过滤并无条件恢复；公开 NSIS 使用英文资产名，而 updater ZIP 内为中文产品名，必须枚举唯一 EXE 后按字节比较，不能按 basename 推断。正式运行随后证明该方案可重复执行并产生完整签名证据。
