@@ -8,7 +8,8 @@
 - 全回归通过：前端 254/254、集成 6/6；Rust debug 全目标及 Release workflow 同命令均通过（库 319/319、4 项既定忽略）；Clippy 零警告；真实媒体依赖/指标/图片基线、9 样本格式矩阵和资源/故障边界全部通过；npm 生产依赖漏洞为 0。
 - 本机没有可用的 updater 私钥环境，不能伪造签名资产；本地只验证正式 NSIS 和真实 `v1.1.14 → v1.1.15 → 卸载 → v1.1.14` 安装链。签名 ZIP、`.sig`、`latest.json` 和应用内公开更新必须由标签触发的 GitHub Actions 生成后复验。
 - PR #87 首轮 Browser E2E 通过，但 Frontend coverage 暴露 4 个真实图片夹具 `ENOENT`：本地已有忽略目录掩盖了干净检出的前置条件。`test:unit` 与 `test:unit:coverage` 现都通过 npm 前置生命周期生成并冻结校验真实图片；两次从项目内无夹具目录开始复验分别通过 276/276 和 254/254，类型、生产构建及发布身份也通过。
-- 当前没有创建标签或公开 Release。候选修正将推送 PR #87 并等待四项必需 CI；公开发布须等主分支合并与明确授权。详见 [RELEASE_AUDIT_1.1.15.md](RELEASE_AUDIT_1.1.15.md)。
+- 修正提交 `b74cabeda6266dbd6b1b814194799e8d9a8d33c7` 的远端 CI run 33144654827 已全部通过：Frontend、Browser shell E2E、Windows desktop E2E build、Rust/Shell Extension 和实际 NSIS installer 共五个 job 全绿，四个受保护分支必需上下文全部满足；PR #87 为 `MERGEABLE / CLEAN`。
+- 当前没有创建标签或公开 Release。下一接续点是审查并合入 PR #87；公开标签、签名资产、回下载和应用内升级复验须等主分支合并与明确授权。详见 [RELEASE_AUDIT_1.1.15.md](RELEASE_AUDIT_1.1.15.md)。
 
 ## 2026-08-28 B-05.3 正式安装版图片全流程
 

@@ -59,7 +59,9 @@
 
 - PR #87 首轮真实 Windows CI 中 Browser shell E2E 通过；Frontend checks 在 `test:unit:coverage` 发现 4 个 `ENOENT`，均指向被 Git 忽略的真实图片夹具。预期是干净检出能自建夹具，实际是本地已有 `test-results/media-fixture-audit` 掩盖了隐式前置条件。
 - 修正为 `test:unit` 和 `test:unit:coverage` 的 npm 前置生命周期都先执行 `test:fixtures:media:images`。这样 PR CI、开发者本地命令和正式 Release workflow 使用同一真实夹具生成/冻结哈希校验入口，不以 mock 或提交生成物规避问题。
-- 修正后两次把新生成目录完整移出项目，确认 `test-results/media-fixture-audit` 不存在再分别启动命令：coverage 重新生成 11 个真实图片与 1 个 PDF 拒绝边界后 47 文件 276/276；普通单测再次从空状态生成并通过 44 文件 254/254。类型检查、生产构建和 `1.1.15` 发布身份同时通过；下一步等待 PR 四项必需检查全部通过。
+- 修正后两次把新生成目录完整移出项目，确认 `test-results/media-fixture-audit` 不存在再分别启动命令：coverage 重新生成 11 个真实图片与 1 个 PDF 拒绝边界后 47 文件 276/276；普通单测再次从空状态生成并通过 44 文件 254/254。类型检查、生产构建和 `1.1.15` 发布身份同时通过。
+- 修正提交 `b74cabeda6266dbd6b1b814194799e8d9a8d33c7` 的远端 CI run [33144654827](https://github.com/Longyuyeee/long_Decompress/actions/runs/33144654827) 已在干净 runner 全部通过：Frontend checks 1m53s、Browser shell E2E 51s、Windows desktop E2E build 5m05s、Rust and shell-extension checks 14m36s、Windows installer 10m11s。最后一项实际完成无签名 NSIS 构建并上传产物，不以静态配置检查代替打包。
+- 对齐结果：首次实际为 4 个夹具 `ENOENT`，修正后实际为五个 CI job 全绿、四个受保护分支必需上下文全绿；预期与当前实际差异归零。PR #87 当前为 `MERGEABLE / CLEAN`，下一步是审查并合入受保护主分支；未获得合并及公开发布授权前不创建标签或 Release。
 
 ## 发布后必做
 
