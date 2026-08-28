@@ -1,5 +1,14 @@
 # 开发交接
 
+## 2026-08-28 C-01.1 FFmpeg 可复现候选
+
+- FFmpeg `9.0.1` 官方源码的最小 LGPL Windows x64 构建已脚本化；双干净目录产出的 `ffmpeg.exe`（12,349,440 B，`35c3c8bb...8672eb`）与 `ffprobe.exe`（12,131,840 B，`2c1df07c...ba1d98`）逐字节一致。
+- 能力只开放 `h264_mf` 软件 H.264、内置 AAC、固定 demux/mux/filter/decoder 集；硬件加速器列表为空，运行路径强制 `hw_encoding=0`，不存在 GPL/nonfree/libx264/libx265/libopenh264。
+- Windows 真实 5 秒 MP4/H.264/AAC 输入已由两套最终候选分别转码并由对应 ffprobe 复验：480×270、H.264/AAC、5.000 秒，progress pipe 正常结束，预期与实际语义差异为 0；PE 仅导入 Windows 系统 DLL。
+- 开发中真实纠正 D3D11 编译接口、动态 `libwinpthread-1.dll`、跨 Shell 并行参数和 Node `objdump` 缓冲区问题；两次正式复现前的受干扰构建证据已作废，没有混入通过结论。
+- 既有完整媒体夹具锁定的 BtbN nightly 资产已被轮换，4 次真实下载均 HTTP 404；C-01.1 使用明确记录版本的测试工具生成真实磁盘输入，没有把新 nightly 偷换成冻结资产。
+- FFmpeg 仍为 `integrationAllowed=false`：视频入口未启用，当前版本仍是 `1.1.15`。下一接续点严格为 C-01.2：修复长期视频夹具来源、产品资源与完整许可清单、后端哈希/能力拒绝、Windows N 分类、安装态真实转码及签名 NSIS/updater 精确增量。详见 [C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md](C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md)。
+
 ## 2026-08-28 v1.1.15 正式发布
 
 - 图片压缩 B-01 至 B-05.3 已完成后，8 个版本源统一提升为 `1.1.15`，唯一版本化 Shell Extension 已重新编译；Release notes 与候选审计已建立。
