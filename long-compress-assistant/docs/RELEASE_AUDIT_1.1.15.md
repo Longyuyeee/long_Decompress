@@ -2,11 +2,11 @@
 
 审计日期：2026-08-28（Asia/Hong_Kong）
 
-状态：**候选已就绪，尚未创建标签或公开 Release。**
+状态：**正式发布与公开更新验证已完成。**
 
 ## 结论
 
-图片压缩 B-01 至 B-05.3 与其依赖的 S-00、B-00 基础节点已完成。版本身份已统一提升为 `1.1.15`，Release notes、本地正式 NSIS、完整回归及 `v1.1.14 → v1.1.15 → 卸载 → v1.1.14` 真实安装链均已完成，候选允许提交并推送开发分支。签名 updater 与公开应用内更新只能在发布提交合入、GitHub Actions 使用仓库 Secrets 生成四项资产之后复验，不以本地无签名产物代替。
+图片压缩 B-01 至 B-05.3 与其依赖的 S-00、B-00 基础节点已完成。发布提交经 PR #87 合入受保护主分支，`v1.1.15` 标签固定在 `82b1b8f8fe9f596ef4cbe55aeac4c100b7d6c316`。GitHub Actions 已使用仓库 Secrets 生成并公开四项签名更新资产；公开回下载、哈希/签名对账及真实 `v1.1.14 → v1.1.15` 应用内更新 24/24 均通过。
 
 ## 需求对齐
 
@@ -21,7 +21,7 @@
 | `1.1.15` 版本身份 | npm、Tauri、两个 Cargo 清单/锁和唯一 DLL | 已完成 |
 | `1.1.15` 正式候选 | NSIS、主程序身份、14 项载荷完整性 | 已完成 |
 | 真实覆盖/恢复 | `1.1.14 → 1.1.15 → 卸载 → 1.1.14`、图片 17/17、生命周期 50/50 | 已完成 |
-| 公开 updater 与升级 | 四项公开资产、签名、回下载、应用内升级 | 待正式发布后补齐 |
+| 公开 updater 与升级 | 四项公开资产、签名、回下载、应用内升级 24/24 | 已完成 |
 
 ## 版本身份
 
@@ -49,11 +49,11 @@
 - npm 生产依赖安全审计为 0。首次使用机器配置的 npmmirror 时因镜像不实现 audit API 返回 404；显式切换 npm 官方 registry 后同一审计通过，未通过忽略告警或降低级别规避。
 - 最终再次执行 `test:release-identity -- --expected 1.1.15` 通过。
 
-## 签名与公开发布边界
+## 签名与公开发布
 
-- 本机未设置 `TAURI_PRIVATE_KEY` / `TAURI_KEY_PASSWORD`；历史 DPAPI 密码文件不能在当前机器状态解密，因此不在本地伪造 updater 签名。
-- Release workflow 在 `v*` 标签触发，执行版本身份、前端、Rust Release、`--bundles nsis,updater`，并用 GitHub Actions Secrets 生成 `.nsis.zip`、`.sig` 和 `latest.json`。
-- 当前分支相对 `origin/master` 领先且不落后，但公开发布仍须经过分支审计与合并；本步骤不直接创建标签或 Release。
+- 本机未设置 `TAURI_PRIVATE_KEY` / `TAURI_KEY_PASSWORD`，因此候选阶段没有伪造 updater 签名。正式签名仅由 GitHub Actions 仓库 Secrets 生成。
+- PR #87 以 squash 合入受保护主分支，合并提交 `82b1b8f8fe9f596ef4cbe55aeac4c100b7d6c316` 与最终跑绿 PR 头的文件树完全一致；annotated tag `v1.1.15` 精确指向该提交。
+- Release workflow run [33146766724](https://github.com/Longyuyeee/long_Decompress/actions/runs/33146766724) 用时 20m45s，版本身份、干净检出真实图片夹具单测、Rust Release、签名 `nsis,updater` 构建、identity package 排除和公开 manifest 回读全部成功。
 
 ## 合并前远端审计
 
@@ -61,13 +61,15 @@
 - 修正为 `test:unit` 和 `test:unit:coverage` 的 npm 前置生命周期都先执行 `test:fixtures:media:images`。这样 PR CI、开发者本地命令和正式 Release workflow 使用同一真实夹具生成/冻结哈希校验入口，不以 mock 或提交生成物规避问题。
 - 修正后两次把新生成目录完整移出项目，确认 `test-results/media-fixture-audit` 不存在再分别启动命令：coverage 重新生成 11 个真实图片与 1 个 PDF 拒绝边界后 47 文件 276/276；普通单测再次从空状态生成并通过 44 文件 254/254。类型检查、生产构建和 `1.1.15` 发布身份同时通过。
 - 修正提交 `b74cabeda6266dbd6b1b814194799e8d9a8d33c7` 的远端 CI run [33144654827](https://github.com/Longyuyeee/long_Decompress/actions/runs/33144654827) 已在干净 runner 全部通过：Frontend checks 1m53s、Browser shell E2E 51s、Windows desktop E2E build 5m05s、Rust and shell-extension checks 14m36s、Windows installer 10m11s。最后一项实际完成无签名 NSIS 构建并上传产物，不以静态配置检查代替打包。
-- 对齐结果：首次实际为 4 个夹具 `ENOENT`，修正后实际为五个 CI job 全绿、四个受保护分支必需上下文全绿；预期与当前实际差异归零。PR #87 当前为 `MERGEABLE / CLEAN`，下一步是审查并合入受保护主分支；未获得合并及公开发布授权前不创建标签或 Release。
+- 对齐结果：首次实际为 4 个夹具 `ENOENT`，修正后实际为五个 CI job 全绿、四个受保护分支必需上下文全绿；预期与实际差异归零。PR #87 随后以 `MERGED` 状态完成，受保护主分支没有被绕过。
 
-## 发布后必做
+## 正式资产与公开更新审计
 
-1. 确认发布提交已合入受保护主分支，再创建 `v1.1.15` 标签。
-2. 验证 Release Actions 成功且四项资产名称、版本、URL、签名一致。
-3. 从公开 Release 回下载 NSIS 与 updater ZIP，执行完整性与 SHA-256 对账。
-4. 在已安装公开 `v1.1.14` 的真实桌面环境运行 `test:public-update -PreviousVersion 1.1.14 -TargetVersion 1.1.15`。
-5. 核对自动重启、安装位置、两处用户数据指纹、自动启动注册、唯一 Shell DLL、经典菜单 17 条子命令和 4 条快捷命令。
-6. 将正式资产、Actions run、公开更新 evidence 和最终 PASS 回填本审计；任何差异先修正并从头复验。
+- 正式 Release：[Long解压 v1.1.15](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.1.15)，非草稿、非预发布，目标提交为 `82b1b8f8fe9f596ef4cbe55aeac4c100b7d6c316`。
+- `latest.json`：950 B，SHA-256 `8265EFE654A773D85C1A06EF894FA5D1C278DC792EC2072E93DFD5577B3A3E78`。
+- NSIS：8,658,170 B，SHA-256 `DBFF77AE6C1C642B32EFC03C4726D14284A46CAED9AFA9EEA7F6BF4487DD2C51`。
+- updater ZIP：8,658,330 B，SHA-256 `DE591FDBF78F07813CCF91F0ACBBEB9A593FA2CC9A3D714E9A9CB1B3FA241D00`；解包得到的唯一 EXE 与独立 NSIS 大小、SHA-256 完全一致。
+- `.sig`：428 B，SHA-256 `BE82F7E06F563F6B84B1F25418CA6BA302D8342AB7C6D45F5A4ED4C24902E2AC`；内容与 `latest.json` 的 Windows x86_64 签名逐字一致，manifest 版本和 ZIP URL 正确。
+- 首轮真实公开更新在安装前安全失败：预期 `autoStart=true` 与 Windows Run 项一致，实际偏好为 `true` 但注册项缺失。这是此前安装恢复测试留下的基线不一致；生产设计禁止启动时静默修复。通过公开 `v1.1.14` 的真实设置 UI 先同步实际关闭状态、再显式点击开启，生产 Tauri 命令恢复精确注册值；没有直接写注册表或放宽断言。
+- 从一致基线重新执行 `test:public-update -PreviousVersion 1.1.14 -TargetVersion 1.1.15`，24/24 通过：签名更新 UI 交接、旧进程退出、目标版本安装、原路径保留、自动重启、经典菜单 4 根/17 条子命令/4 条快捷命令、自动启动、两处用户数据指纹、唯一 `long_compress_shell_extension_1_1_15.dll` 和无 MSIX identity package 均符合预期。结构化证据：`test-results/public-update-validation/20260828-143320/result.json`。
+- 本机最终安装公开 `v1.1.15`，测试完成后无运行中应用进程；发布预期与当前实际差异为 0。
