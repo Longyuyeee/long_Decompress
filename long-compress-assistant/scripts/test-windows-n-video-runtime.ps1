@@ -106,9 +106,10 @@ function Get-MediaFoundationModules {
 function Write-PhaseReport {
   param($Machine, $ExecutableIdentity, $Preflight, $MediaFoundationModules, [bool]$Passed)
   $report = [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     measuredAt = (Get-Date).ToUniversalTime().ToString('o')
     phase = $Phase
+    producerScriptSha256 = Get-FileSha256 $PSCommandPath
     machine = $Machine
     expected = [ordered]@{
       windowsNEdition = $true
@@ -123,6 +124,7 @@ function Write-PhaseReport {
       executable = $ExecutableIdentity
       mediaFoundationModules = $MediaFoundationModules
       productionPreflight = $Preflight
+      beforeReportSha256 = $beforeReportSha256
     }
     checks = $checks
     failure = $failure
@@ -136,6 +138,7 @@ $machine = $null
 $executableIdentity = $null
 $preflight = $null
 $mediaFoundationModules = @()
+$beforeReportSha256 = $null
 
 try {
   New-Item -ItemType Directory -Path $evidenceRoot -Force | Out-Null
@@ -189,8 +192,26 @@ try {
     Add-Check 'pre-feature-pack report exists' (
       Test-Path -LiteralPath $beforeReportPath -PathType Leaf
     ) $beforeReportPath
+    $beforeReportSha256 = Get-FileSha256 $beforeReportPath
     $before = Get-Content -Raw -Encoding utf8 -LiteralPath $beforeReportPath | ConvertFrom-Json
+    Add-Check 'pre-feature-pack report schema matches' ($before.schemaVersion -eq 2) (
+      "expected=2; actual=$($before.schemaVersion)"
+    )
+    Add-Check 'pre-feature-pack report phase matches' (
+      [string]$before.phase -eq 'MissingMediaFeaturePack'
+    ) "phase=$($before.phase)"
     Add-Check 'pre-feature-pack phase passed' ($before.passed -eq $true) "passed=$($before.passed)"
+    Add-Check 'both phases use the same evidence producer' (
+      [string]$before.producerScriptSha256 -eq (Get-FileSha256 $PSCommandPath)
+    ) "before=$($before.producerScriptSha256); after=$(Get-FileSha256 $PSCommandPath)"
+    Add-Check 'pre-feature-pack report is a Windows N result' (
+      $before.machine.isWindowsNEdition -eq $true -and
+      [string]$before.machine.editionId -match '(?i)N$'
+    ) "editionId=$($before.machine.editionId)"
+    Add-Check 'both phases use the locked candidate identity' (
+      [long]$before.actual.executable.bytes -eq $expectedExecutableBytes -and
+      [string]$before.actual.executable.sha256 -eq $expectedExecutableHash
+    ) "beforeBytes=$($before.actual.executable.bytes); beforeSha256=$($before.actual.executable.sha256)"
     Add-Check 'both phases ran on the same machine' (
       [string]$before.machine.identitySha256 -eq [string]$machine.identitySha256
     ) "before=$($before.machine.identitySha256); after=$($machine.identitySha256)"

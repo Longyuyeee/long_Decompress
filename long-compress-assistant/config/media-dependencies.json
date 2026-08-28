@@ -265,6 +265,7 @@
       },
       "windowsNRealMachinePassed": false,
       "windowsNEvidenceScript": "scripts/test-windows-n-video-runtime.ps1",
+      "windowsNEvidenceVerifier": "scripts/verify-windows-n-video-runtime-evidence.mjs",
       "remainingGate": "C-01.2.2-real-windows-n-without-media-feature-pack"
     }
   },

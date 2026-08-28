@@ -116,6 +116,7 @@ function validateManifest(manifest) {
   assert(videoBaseline?.installedLifecycle?.userDataPreserved === true, 'C-01.2.2 installed user-data preservation evidence is missing')
   assert(videoBaseline?.windowsNRealMachinePassed === false, 'do not claim the real Windows N gate without machine evidence')
   assert(videoBaseline?.windowsNEvidenceScript === 'scripts/test-windows-n-video-runtime.ps1', 'C-01.2.2 Windows N evidence entry point is missing')
+  assert(videoBaseline?.windowsNEvidenceVerifier === 'scripts/verify-windows-n-video-runtime-evidence.mjs', 'C-01.2.2 Windows N evidence verifier is missing')
   assert(videoBaseline?.remainingGate === 'C-01.2.2-real-windows-n-without-media-feature-pack', 'C-01.2.2 remaining platform gate is not explicit')
   assert(manifest.blockedAlternatives?.some((item) => item.id === 'ghostscript' && item.integrationAllowed === false), 'Ghostscript must remain explicitly blocked')
 }

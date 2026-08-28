@@ -71,9 +71,11 @@ GitHub Actions 运行 `33173219785` 在提交 `6b95f5c2f6d66fc0a879eebb10f0346ea
 - `MissingMediaFeaturePack`：只接受 `EditionID` 以 `N` 结尾的真实 Windows N，要求 HKCU 正式安装记录、v1.1.15 和正式候选 EXE 的大小/SHA-256 完全一致；随后必须由正式 EXE 返回非成功，并写出 `VIDEO_ENGINE_MEDIA_FOUNDATION_UNAVAILABLE`。
 - `MediaFeaturePackInstalled`：要求读取同一证据目录的前阶段通过报告，并用脱敏后的 MachineGuid 哈希证明是同一机器；生产预检必须转为成功，再复用安装态矩阵完成真实软件转码、ffprobe 输出复核和隔离缺失/替换拒绝。
 
+新增只读验收器 `scripts/verify-windows-n-video-runtime-evidence.mjs`。报告 schema 升级为 2；后阶段固化前阶段报告的 SHA-256，并要求前后阶段使用同一个证据生成脚本、同一机器和同一候选 EXE。验收器独立复核两个阶段、三个 MF 模块清单、生产预检、真实转码 H.264/AAC/480×854/1.2 秒事实及缺失/替换拒绝，任一报告缺失、失败或被替换都不会生成通过结论。
+
 两个阶段均记录 OS caption、EditionID、build、三个 Media Foundation DLL 的存在性/身份以及生产预检原始报告。脚本不查询需要管理员权限且可能本地化的 Windows Capability 文本，也不把“DLL 人工改名”或单元注入视为实机证据。当前 Windows 11 专业版 `EditionID=Professional` 的负向自检会稳定返回 `WINDOWS_N_MACHINE_REQUIRED` 并写失败报告，证明普通 Windows 不能误提交为 Windows N 结果。
 
-本地检查已通过 PowerShell AST 解析、清单字段门禁和上述普通版防误报；正式 N 前/后阶段只能在目标机器执行，当前仍不记为通过。
+本地检查已通过 PowerShell AST、Node 语法、清单字段门禁和上述普通版防误报；验收器会拒绝该普通版失败报告并写出 `passed=false`。首次跨工具读取暴露 Windows PowerShell 5 的 UTF-8 BOM，读取器现只剥离文件开头单个 BOM 后解析；前阶段字节链仍对原始文件（包含 BOM）计算 SHA-256，不弱化篡改检测。正式 N 前/后阶段只能在目标机器执行，当前仍不记为通过。
 
 环境可用性审计：当前主机是 `EditionID=Professional`，三个必需 Media Foundation DLL 均存在；没有可调用的 Hyper-V、VirtualBox 或 VMware 管理命令，项目测试目录及当前用户下载目录也没有明确的 Windows N 安装介质。因此本轮不能在不新增系统镜像/虚拟化环境的前提下取得真实 N 证据。下载许可受约束的 Windows 镜像、安装虚拟化组件或修改宿主系统版本均超出本节点已有授权，不自动执行。
 
@@ -83,13 +85,14 @@ GitHub Actions 运行 `33173219785` 在提交 `6b95f5c2f6d66fc0a879eebb10f0346ea
 npm run test:windows-n-video-runtime -- -Phase MissingMediaFeaturePack -InstalledExecutable '<正式安装目录>\Long解压.exe' -EvidenceDirectory '<证据目录>'
 # 通过 Windows 设置安装 Media Feature Pack，并按系统要求重启
 npm run test:windows-n-video-runtime -- -Phase MediaFeaturePackInstalled -InstalledExecutable '<同一正式安装目录>\Long解压.exe' -EvidenceDirectory '<同一证据目录>'
+npm run verify:windows-n-video-runtime -- '<同一证据目录>'
 ```
 
 ## 5. 未完成项与下一动作
 
 1. 在真实 Windows N 且未安装 Media Feature Pack 的机器安装当前集成候选，运行 `MissingMediaFeaturePack` 阶段并保存报告。
 2. 安装 Media Feature Pack 并重启，在同一机器、同一正式安装和同一证据目录运行 `MediaFeaturePackInstalled` 阶段。
-3. 只有这项真实平台证据完成后，才把 `windowsNRealMachinePassed` 改为 `true`、关闭 C-01 并进入 C-02。
+3. 运行独立验收器并取得 `verification.json` 的 `passed=true`；只有此后才把 `windowsNRealMachinePassed` 改为 `true`、关闭 C-01 并进入 C-02。
 
 测量实现演练中纠正两项假设：Tauri 额外配置会叠加资源数组，基线必须在一次性 runner 内备份后原位过滤并无条件恢复；公开 NSIS 使用英文资产名，而 updater ZIP 内为中文产品名，必须枚举唯一 EXE 后按字节比较，不能按 basename 推断。正式运行随后证明该方案可重复执行并产生完整签名证据。
 

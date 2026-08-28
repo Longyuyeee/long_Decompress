@@ -8,6 +8,7 @@
 - GitHub Actions `33173219785` 在提交 `6b95f5c` 上完成同提交、同工具链、同 updater 密钥的双构建：视频资源令 NSIS 和 updater ZIP 均精确增加 `6,821,970 B`，两侧包内 NSIS 字节一致且 updater 签名结构有效。
 - 正式安装生命周期已通过：本机 v1.1.13 覆盖到候选 v1.1.15 后，从真实安装目录完成生产预检、软件转码、ffprobe 复核及隔离的缺失/替换拒绝；候选卸载、用户数据保持、v1.1.13 与菜单状态恢复全部通过。
 - `test-windows-n-video-runtime.ps1` 已把剩余实机门禁固化为前后两阶段：真实 N/无 Media Feature Pack 必须被生产预检拒绝；安装组件并重启后，必须在同一机器通过生产预检与真实安装态转码。当前普通专业版会以 `WINDOWS_N_MACHINE_REQUIRED` 拒绝，不能误充证据。
+- `verify-windows-n-video-runtime-evidence.mjs` 独立复核 schema 2 的前后报告，并以 SHA-256 把前报告字节链入后报告；候选、生成脚本、机器、生产预检、真实输出和两个资源负向控制任一不一致即拒绝。PowerShell 5 UTF-8 BOM 已兼容，但哈希仍覆盖原始 BOM 字节。
 - 当前主机没有 Hyper-V/VirtualBox/VMware 命令，也没有已发现的 Windows N 安装介质；继续完成该门禁需要提供一台真实 Windows N 机器或明确授权并提供合法的 N 虚拟机/镜像环境。
 - C-01.2.2 仍未收口：唯一剩余项是真实 Windows N 无 Media Feature Pack 机器的拒绝证据及安装 Media Feature Pack 后的恢复复测。不得用单元模拟冒充，不得提前进入 C-02。详见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。
 
