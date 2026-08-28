@@ -118,6 +118,17 @@ for (const contract of [
 ]) {
   assert(videoPlan.includes(contract), `C-02.2 video planning contract is missing: ${contract}`)
 }
+const videoWorkspace = await read('src/components/compression/VideoCompressionWorkspace.vue')
+assert(videoWorkspace.includes('commands.planVideoCompression'), 'C-02.3 workspace must consume the authoritative backend plan')
+assert(videoWorkspace.includes('estimatedOutput.lowBytes'), 'C-02.3 workspace must display the labeled backend estimate')
+assert(videoWorkspace.includes('execute-disabled'), 'C-02.3 must keep video execution visibly disabled')
+assert(videoWorkspace.includes('当前节点不会创建任务或启动编码'), 'C-02.3 must state its non-execution boundary')
+for (const forbidden of ['taskStore.addTask', 'compressVideo', "invoke('plan_video_compression'"]) {
+  assert(!videoWorkspace.includes(forbidden), `C-02.3 workspace crossed its non-execution boundary: ${forbidden}`)
+}
+const compressionStore = await read('src/stores/compression.ts')
+assert(compressionStore.includes('videoItems'), 'C-02.3 video drafts must reuse the existing compression store')
+assert(compressionStore.includes('planRevision'), 'C-02.3 must reject stale asynchronous video plans')
 assert(
   (main.match(/commands::compression::plan_image_compression_destination/g) ?? []).length === 1,
   'the application must expose exactly one authoritative image destination planner',

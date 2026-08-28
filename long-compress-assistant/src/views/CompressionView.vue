@@ -22,6 +22,7 @@ import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import CompressionToolbar from '@/components/compression/CompressionToolbar.vue'
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
 import ImageCompressionWorkspace from '@/components/compression/ImageCompressionWorkspace.vue'
+import VideoCompressionWorkspace from '@/components/compression/VideoCompressionWorkspace.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import Modal from '@/components/ui/Modal.vue'
 import { ask } from '@tauri-apps/api/dialog'
@@ -36,7 +37,7 @@ const activeWorkspaceMode = ref<CompressionWorkspaceMode>('archive')
 const compressionWorkspaceModes: Array<{ id: CompressionWorkspaceMode, label: string, icon: string, stage?: string }> = [
   { id: 'archive', label: '归档压缩', icon: 'pi pi-box' },
   { id: 'image', label: '图片压缩', icon: 'pi pi-images' },
-  { id: 'video', label: '视频压缩', icon: 'pi pi-video', stage: '节点 C' },
+  { id: 'video', label: '视频压缩', icon: 'pi pi-video', stage: 'C-02' },
   { id: 'pdf', label: 'PDF 压缩', icon: 'pi pi-file-pdf', stage: '节点 D' },
 ]
 
@@ -1020,12 +1021,14 @@ const onDetailLeave = (element: Element) => {
 
     <ImageCompressionWorkspace v-else-if="activeWorkspaceMode === 'image'" />
 
+    <VideoCompressionWorkspace v-else-if="activeWorkspaceMode === 'video'" />
+
     <section v-else class="planned-workspace" data-testid="planned-compression-workspace">
-      <div class="planned-icon"><i :class="activeWorkspaceMode === 'video' ? 'pi pi-video' : 'pi pi-file-pdf'"></i></div>
+      <div class="planned-icon"><i class="pi pi-file-pdf"></i></div>
       <div>
-        <span>{{ activeWorkspaceMode === 'video' ? '视频压缩 · 节点 C' : 'PDF 压缩 · 节点 D' }}</span>
+        <span>PDF 压缩 · 节点 D</span>
         <h2>路线已定义，尚未进入公开实现</h2>
-        <p>当前不会创建任务、模拟进度或生成占位结果。图片节点 B 完整通过后再按路线接入真实引擎与验收矩阵。</p>
+        <p>当前不会创建任务、模拟进度或生成占位结果。视频节点完成并发布后再按路线接入真实引擎与验收矩阵。</p>
       </div>
       <button type="button" @click="activeWorkspaceMode = 'archive'">返回归档压缩</button>
     </section>

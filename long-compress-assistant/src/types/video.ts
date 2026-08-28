@@ -70,11 +70,14 @@ export interface VideoProbeReport {
 
 export type VideoCompressionPreset = 'clear' | 'balanced' | 'small'
 
-export interface VideoCompressionPlanRequest {
-  path: string
+export interface VideoCompressionSettings {
   preset: VideoCompressionPreset
   maxWidth: number | null
   maxHeight: number | null
+}
+
+export interface VideoCompressionPlanRequest extends VideoCompressionSettings {
+  path: string
 }
 
 export interface VideoPresetFacts {
