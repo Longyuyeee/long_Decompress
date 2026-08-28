@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import {
   PasswordCategory,
-  PasswordStrength,
   usePasswordStore,
   type PasswordEntry,
 } from '../password'
@@ -14,21 +13,16 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 const entry = (overrides: Partial<PasswordEntry> = {}): PasswordEntry => ({
   id: 'entry-1',
   name: 'Work archive',
-  username: 'alice',
   password: 'Secret!123',
-  url: null,
   notes: null,
   tags: ['backup'],
   category: PasswordCategory.Work,
-  strength: PasswordStrength.Strong,
   created_at: '2026-01-01T00:00:00.000Z',
   updated_at: '2026-01-01T00:00:00.000Z',
   last_used: null,
-  expires_at: null,
   favorite: false,
   use_count: 0,
   usage_history: {},
-  custom_fields: [],
   ...overrides,
 })
 
@@ -37,7 +31,7 @@ describe('Password Store', () => {
     setActivePinia(createPinia())
     mocks.invoke.mockReset()
     mocks.invoke.mockImplementation(async (command: string, args?: Record<string, any>) => {
-      if (command === 'update_encrypted_password') return args?.entry
+      if (command === 'update_encrypted_password') return entry({ id: args?.id, ...args?.entry })
       if (command === 'increment_encrypted_password_use_count') {
         return entry({
           favorite: true,
@@ -144,11 +138,22 @@ describe('Password Store', () => {
     expect(store.findCandidatePasswords('project.zip')).toEqual(['project-pass', 'same'])
   })
 
-  it('assesses empty, weak, and strong passwords', async () => {
+  it('does not send lifecycle or traditional password-manager fields when editing', async () => {
     const store = usePasswordStore()
+    store.entries = [entry({ use_count: 7, usage_history: { '2026-08-21': 2 } })]
 
-    expect((await store.assessPasswordStrength('')).score).toBe(0)
-    expect((await store.assessPasswordStrength('password')).score).toBeLessThan(50)
-    expect((await store.assessPasswordStrength('Long!Secure#Password123')).score).toBeGreaterThanOrEqual(90)
+    await store.updateEntry('entry-1', { notes: 'RAR source' })
+
+    const payload = mocks.invoke.mock.calls.find(([command]) => command === 'update_encrypted_password')?.[1]?.entry
+    expect(payload).toEqual({
+      name: 'Work archive',
+      password: 'Secret!123',
+      notes: 'RAR source',
+      tags: ['backup'],
+      category: undefined,
+      favorite: false,
+    })
+    expect(payload).not.toHaveProperty('use_count')
+    expect(payload).not.toHaveProperty('usage_history')
   })
 })

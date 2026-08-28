@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.1.14"
+version = "1.1.15"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -16,6 +16,7 @@ tauri = { version = "1.5", features = [
     "dialog-save",
     "global-shortcut",
     "shell-open",
+    "protocol-asset",
     "system-tray",
     "updater",
     "window-close",
@@ -83,6 +84,17 @@ glob = "0.3"
 single-instance = "0.3.3"
 interprocess = "2.4.0"
 trash = { version = "5.2.6", default-features = false, features = ["coinit_multithreaded"] }
+libcaesium = { version = "=0.21.0", default-features = false, features = ["jpg", "webp"] }
+oxipng = { version = "=10.2.0", default-features = false, features = ["parallel", "zopfli"] }
+image = { version = "=0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
+img-parts = { version = "=0.4.0", default-features = false, features = ["std"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_Security_Cryptography",
+    "Win32_Storage_FileSystem"
+] }
 
 [dev-dependencies]
 tempfile = "3.10"

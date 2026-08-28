@@ -1,9 +1,10 @@
 ﻿import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import EnhancedFileDropzone from '../ui/EnhancedFileDropzone.vue'
 
 const mocks = vi.hoisted(() => ({
   open: vi.fn(),
+  invoke: vi.fn(),
   listen: vi.fn(async () => vi.fn()),
   setError: vi.fn(),
   t: vi.fn((key: string) => key)
@@ -15,6 +16,10 @@ vi.mock('@tauri-apps/api/dialog', () => ({
 
 vi.mock('@tauri-apps/api/event', () => ({
   listen: mocks.listen
+}))
+
+vi.mock('@tauri-apps/api/tauri', () => ({
+  invoke: mocks.invoke
 }))
 
 vi.mock('@/stores/app', () => ({
@@ -34,6 +39,7 @@ const fileWithPath = (name: string, path: string, size = 1024, type = 'text/plai
 describe('EnhancedFileDropzone', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.invoke.mockResolvedValue({ is_dir: false, size: 0 })
   })
 
   it('renders as an accessible file dropzone', () => {
@@ -113,11 +119,13 @@ describe('EnhancedFileDropzone', () => {
 
   it('uses the native folder picker in folder mode', async () => {
     mocks.open.mockResolvedValueOnce(['C:/work/source', 'D:/assets'])
+    mocks.invoke.mockResolvedValue({ is_dir: true, size: 0 })
     const wrapper = mount(EnhancedFileDropzone, {
       props: { mode: 'folder' }
     })
 
     await wrapper.trigger('click')
+    await flushPromises()
 
     expect(mocks.open).toHaveBeenCalledWith({
       directory: true,
@@ -139,6 +147,32 @@ describe('EnhancedFileDropzone', () => {
         type: 'directory',
         isDirectory: true
       }
+    ])
+  })
+
+  it('uses an unfiltered native picker and reads real filesystem metadata', async () => {
+    mocks.open.mockResolvedValueOnce(['C:/images/photo.jpg', 'C:/images/animated.gif'])
+    mocks.invoke.mockImplementation(async (_command: string, { path }: { path: string }) => ({
+      is_dir: false,
+      size: path.endsWith('.jpg') ? 1536 : 3072,
+    }))
+    const wrapper = mount(EnhancedFileDropzone, {
+      props: { accept: 'jpg,jpeg,png,webp', unfilteredPicker: true, pickerTitle: '选择图片文件' }
+    })
+
+    await wrapper.trigger('click')
+    await flushPromises()
+
+    expect(mocks.open).toHaveBeenCalledWith({
+      directory: false,
+      multiple: true,
+      title: '选择图片文件',
+      filters: []
+    })
+    expect(mocks.invoke).toHaveBeenCalledTimes(2)
+    expect(wrapper.emitted('files-selected')?.[0][0]).toEqual([
+      { name: 'photo.jpg', path: 'C:/images/photo.jpg', size: 1536, type: 'file', isDirectory: false },
+      { name: 'animated.gif', path: 'C:/images/animated.gif', size: 3072, type: 'file', isDirectory: false }
     ])
   })
 })

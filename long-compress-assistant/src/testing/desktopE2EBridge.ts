@@ -79,6 +79,31 @@ export interface DesktopE2EBridge {
     size: number
     isDirectory: boolean
   }>) => string
+  seedImageCompressionWorkspace: (entries: Array<{
+    name: string
+    path: string
+    size: number
+    isDirectory: boolean
+  }>) => { accepted: number; rejected: Array<{ name: string; reason: string }> }
+  configureImageCompressionWorkspace: (outputDirectory: string) => void
+  imageCompressionAuditState: () => Array<{
+    name: string
+    status: string
+    width: number | null
+    height: number | null
+    inputSize: number
+  }>
+  imageCompressionResultAuditState: () => Array<{
+    name: string
+    taskStatus: TaskStatus | null
+    outputPath: string | null
+    inputBytes: number | null
+    outputBytes: number | null
+    outputFormat: string | null
+    outputWidth: number | null
+    outputHeight: number | null
+    hasResultPreview: boolean
+  }>
   compressionAnalysisAuditState: (jobId: string) => {
     analysis: CompressionAnalysisResult | null
     status: string | null
@@ -313,11 +338,9 @@ export const installDesktopE2EBridge = () => {
 
   const bridge: DesktopE2EBridge = {
     async seedVaultPassword(name, password) {
-      const masterPassword = await invoke<string>('get_or_create_master_key')
       const isUnlocked = await invoke<boolean>('is_encrypted_password_service_unlocked')
       if (!isUnlocked) {
-        const unlocked = await invoke<boolean>('unlock_encrypted_password_service', { masterPassword })
-        if (!unlocked) await invoke('init_encrypted_password_service', { masterPassword })
+        await invoke<boolean>('ensure_encrypted_password_service')
       }
       const entry = await invoke<{ id: string }>('add_encrypted_password', {
         entry: {
@@ -373,6 +396,7 @@ export const installDesktopE2EBridge = () => {
 
     async reset() {
       taskStore.tasks.splice(0)
+      compressionStore.clearImageDrafts()
       await syncActiveState()
       updateStore.$patch({
         status: 'idle',
@@ -533,6 +557,54 @@ export const installDesktopE2EBridge = () => {
       const group = compressionStore.groups.find(item => item.id === draft.id)
       if (group) group.expanded = true
       return draft.id
+    },
+
+    seedImageCompressionWorkspace(entries) {
+      compressionStore.clearImageDrafts()
+      const result = compressionStore.addImageCandidates(entries.map(entry => ({
+        ...entry,
+        type: entry.isDirectory ? 'directory' : 'file',
+      })))
+      return {
+        accepted: result.accepted.length,
+        rejected: result.rejected.map(item => ({ name: item.name, reason: item.reason })),
+      }
+    },
+
+    configureImageCompressionWorkspace(outputDirectory) {
+      compressionStore.imageGlobalSettings = {
+        ...compressionStore.imageGlobalSettings,
+        outputDirectory,
+        conflictPolicy: 'rename',
+      }
+    },
+
+    imageCompressionAuditState() {
+      return compressionStore.imageItems.map(item => ({
+        name: item.name,
+        status: item.status,
+        width: item.width ?? null,
+        height: item.height ?? null,
+        inputSize: item.inputSize,
+      }))
+    },
+
+    imageCompressionResultAuditState() {
+      return compressionStore.imageItems.map(item => {
+        const task = item.taskId ? taskStore.tasks.find(candidate => candidate.id === item.taskId) : undefined
+        const output = task?.metrics?.media?.image?.output
+        return {
+          name: item.name,
+          taskStatus: task?.status ?? null,
+          outputPath: task?.outputPath || null,
+          inputBytes: task?.metrics?.inputBytes ?? null,
+          outputBytes: task?.metrics?.outputBytes ?? null,
+          outputFormat: output?.format ?? null,
+          outputWidth: output?.visibleWidth ?? null,
+          outputHeight: output?.visibleHeight ?? null,
+          hasResultPreview: Boolean(item.resultPreviewUrl),
+        }
+      })
     },
 
     compressionAnalysisAuditState(jobId) {

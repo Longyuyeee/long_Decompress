@@ -3,7 +3,6 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import {
   PasswordCategory,
-  PasswordStrength,
   usePasswordStore,
   type PasswordEntry,
 } from '@/stores/password'
@@ -43,26 +42,21 @@ describe('PasswordEntryModal', () => {
     expect(wrapper.find('[aria-label="显示密码"]').exists()).toBe(true)
   })
 
-  it('preserves lifecycle metadata while recalculating strength on edit', async () => {
+  it('sends only archive-password fields while the backend preserves lifecycle metadata', async () => {
     const pinia = createPinia()
     const original: PasswordEntry = {
       id: 'entry-edit',
       name: '原密码',
       password: 'old-password',
       notes: '原备注',
-      username: 'owner',
-      url: 'https://example.com',
       tags: ['work'],
       category: PasswordCategory.Work,
-      strength: PasswordStrength.Weak,
       created_at: '2025-01-01T00:00:00.000Z',
       updated_at: '2026-01-01T00:00:00.000Z',
       last_used: '2026-07-20T00:00:00.000Z',
-      expires_at: null,
       favorite: true,
       use_count: 9,
       usage_history: { '2026-07-20': 4 },
-      custom_fields: [],
     }
     const store = usePasswordStore(pinia)
     store.entries = [original]
@@ -91,19 +85,17 @@ describe('PasswordEntryModal', () => {
 
     const updateCall = mocks.invoke.mock.calls.find(([command]) => command === 'update_encrypted_password')
     expect(updateCall).toBeTruthy()
-    expect(updateCall?.[1]?.entry).toMatchObject({
-      id: original.id,
-      category: original.category,
+    expect(updateCall?.[1]?.entry).toEqual({
+      name: '原密码',
+      password: 'Long!Secure#Password123',
+      notes: '原备注',
+      tags: ['work'],
+      category: undefined,
       favorite: true,
-      created_at: original.created_at,
-      last_used: original.last_used,
-      use_count: 9,
-      usage_history: original.usage_history,
-      strength: PasswordStrength.VeryStrong,
     })
   })
 
-  it('persists the assessed strength when creating a password', async () => {
+  it('creates an archive password without traditional strength or login fields', async () => {
     const pinia = createPinia()
     mocks.invoke.mockImplementation(async (command: string, args?: Record<string, any>) => {
       if (command === 'load_app_settings') return '{}'
@@ -114,7 +106,6 @@ describe('PasswordEntryModal', () => {
           created_at: '2026-07-29T00:00:00.000Z',
           updated_at: '2026-07-29T00:00:00.000Z',
           last_used: null,
-          expires_at: null,
           favorite: false,
           use_count: 0,
           usage_history: {},
@@ -141,6 +132,15 @@ describe('PasswordEntryModal', () => {
     await flushPromises()
 
     const addCall = mocks.invoke.mock.calls.find(([command]) => command === 'add_encrypted_password')
-    expect(addCall?.[1]?.entry.strength).toBe(PasswordStrength.VeryStrong)
+    expect(addCall?.[1]?.entry).toEqual({
+      name: '新密码',
+      password: 'Long!Secure#Password123',
+      notes: '',
+      category: PasswordCategory.Other,
+      tags: [],
+    })
+    expect(addCall?.[1]?.entry).not.toHaveProperty('username')
+    expect(addCall?.[1]?.entry).not.toHaveProperty('url')
+    expect(addCall?.[1]?.entry).not.toHaveProperty('strength')
   })
 })

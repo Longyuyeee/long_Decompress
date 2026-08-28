@@ -30,6 +30,7 @@ use crate::services::extraction_transaction::{self, ExtractionStaging};
 use crate::services::mark_of_web::{self, PropagationStatus};
 use crate::services::native_compression::{self, CompressionRuntime};
 use crate::services::native_extraction::{self, ExtractionRuntime};
+use crate::services::output_publish_transaction::{self, PublishError};
 use crate::services::split_archive_detector::SplitArchiveDetector;
 
 pub use crate::services::archive_format::ArchiveFormat;
@@ -887,11 +888,8 @@ impl CompressionService {
     }
 
     fn temporary_compression_output(output: &Path) -> Result<PathBuf> {
-        let parent = output.parent().unwrap_or_else(|| Path::new("."));
-        let file_name = output.file_name().and_then(|name| name.to_str()).ok_or_else(|| {
-            CompressionError::CompressionFailed(format!("Invalid output file name: {}", output.display()))
-        })?;
-        Ok(parent.join(format!(".long-compress-{}.{}", uuid::Uuid::new_v4(), file_name)))
+        output_publish_transaction::staged_output_path(output, "long-compress")
+            .map_err(|error| CompressionError::CompressionFailed(error.to_string()).into())
     }
 
     fn cleanup_failed_compression_outputs(path: &Path, split_requested: bool) {
@@ -901,25 +899,7 @@ impl CompressionService {
         if split_requested {
             return;
         }
-        let _ = std::fs::remove_file(path);
-        let Some(parent) = path.parent() else { return; };
-        let Some(file_name) = path.file_name().and_then(|name| name.to_str()) else { return; };
-        let unique_temp_prefix = if file_name.starts_with(".long-compress-") {
-            file_name.split('.').nth(1).map(|id| format!(".{}.", id))
-        } else {
-            None
-        };
-        if let Ok(entries) = std::fs::read_dir(parent) {
-            for entry in entries.flatten() {
-                let candidate = entry.path();
-                let name = candidate.file_name().and_then(|value| value.to_str()).unwrap_or("");
-                let is_temp_sidecar = name.starts_with(file_name)
-                    || unique_temp_prefix.as_ref().is_some_and(|prefix| name.starts_with(prefix));
-                if is_temp_sidecar {
-                    let _ = std::fs::remove_file(candidate);
-                }
-            }
-        }
+        output_publish_transaction::cleanup_staged_output_family(path);
     }
 
     fn normalize_storage_full_error(error: anyhow::Error) -> anyhow::Error {
@@ -940,19 +920,30 @@ impl CompressionService {
         working_output: &Path,
         final_output: &Path,
         split_requested: bool,
+        cancelled: bool,
     ) -> Result<()> {
         let result = route_result
             .map_err(Self::normalize_storage_full_error)
             .and_then(|_| {
                 if !split_requested {
-                    if final_output.exists() {
-                        return Err(CompressionError::CompressionFailed(format!(
-                            "Output appeared while compression was running; it was not overwritten: {}",
-                            final_output.display()
-                        ))
-                        .into());
-                    }
-                    std::fs::rename(working_output, final_output)?;
+                    output_publish_transaction::publish_verified_file(
+                        working_output,
+                        final_output,
+                        || cancelled,
+                    )
+                    .map_err(|error| -> anyhow::Error {
+                        match error {
+                            PublishError::TargetAppeared(path) => {
+                                CompressionError::CompressionFailed(format!(
+                                    "Output appeared while compression was running; it was not overwritten: {}",
+                                    path.display()
+                                ))
+                                .into()
+                            }
+                            PublishError::Cancelled => CompressionError::Cancelled.into(),
+                            other => CompressionError::CompressionFailed(other.to_string()).into(),
+                        }
+                    })?;
                 }
                 Ok(())
             })
@@ -1193,6 +1184,7 @@ impl CompressionService {
                 &working_output,
                 &final_output,
                 split_requested,
+                service.cancellation_flag.load(Ordering::Relaxed),
             );
             if res.is_ok() {
                 if delete_after {
@@ -1817,14 +1809,7 @@ impl CompressionService {
 
     fn move_source_archives_to_system_recycle_bin(file_path: &Path) -> Result<usize> {
         let source_paths = Self::source_archive_paths_for_recycle_bin(file_path)?;
-        let source_count = source_paths.len();
-        trash::delete_all(&source_paths).map_err(|error| {
-            anyhow::anyhow!(
-                "Windows system Recycle Bin rejected the source archive: {}",
-                error
-            )
-        })?;
-        Ok(source_count)
+        crate::services::source_recycle::move_paths_to_system_recycle_bin(&source_paths)
     }
 
     fn validate_recycle_bin_options(options: &DecompressOptions) -> Result<()> {
@@ -3422,6 +3407,7 @@ mod tests {
             &working_output,
             &final_output,
             false,
+            false,
         )
         .expect_err("storage-full compression must fail");
 
@@ -3431,6 +3417,31 @@ mod tests {
         ));
         assert!(!working_output.exists());
         assert!(!sidecar.exists());
+        assert!(!final_output.exists());
+    }
+
+    #[test]
+    fn cancellation_before_publication_keeps_verified_output_private() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let final_output = temp.path().join("archive.zip");
+        let working_output =
+            CompressionService::temporary_compression_output(&final_output).expect("working path");
+        std::fs::write(&working_output, b"verified archive bytes").expect("working output");
+
+        let error = CompressionService::finalize_compression_output(
+            Ok(()),
+            &working_output,
+            &final_output,
+            false,
+            true,
+        )
+        .expect_err("cancelled publication must fail");
+
+        assert!(matches!(
+            error.downcast_ref::<CompressionError>(),
+            Some(CompressionError::Cancelled)
+        ));
+        assert!(!working_output.exists());
         assert!(!final_output.exists());
     }
 
@@ -3720,8 +3731,9 @@ mod tests_continued {
     async fn verification_failure_never_publishes_over_an_existing_target() {
         let temp = tempfile::tempdir().expect("temp dir");
         let source = temp.path().join("source.txt");
-        let working = temp.path().join(".long-compress-test.archive.zip");
         let final_output = temp.path().join("archive.zip");
+        let working = CompressionService::temporary_compression_output(&final_output)
+            .expect("transaction working output");
         std::fs::write(&source, b"source must survive").expect("source fixture");
         std::fs::write(&working, b"not a zip archive").expect("corrupt working output");
         std::fs::write(&final_output, b"existing archive").expect("existing target");

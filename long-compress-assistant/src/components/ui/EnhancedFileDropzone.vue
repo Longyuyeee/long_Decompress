@@ -34,6 +34,10 @@ const props = defineProps({
   unfilteredPicker: {
     type: Boolean,
     default: false
+  },
+  pickerTitle: {
+    type: String,
+    default: ''
   }
 })
 
@@ -140,9 +144,9 @@ const triggerFileInput = async () => {
       const selected = queued === undefined ? await open({
         directory: true,
         multiple: true,
-        title: appStore.t('compress.add_folders')
+        title: props.pickerTitle || appStore.t('compress.add_folders')
       }) : queued
-      if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected], queued !== undefined)
+      if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected], true)
     } catch (err) {
       console.error('Failed to select folders:', err)
       appStore.setError(`${appStore.t('common.error')}: ${String(err)}`)
@@ -154,13 +158,13 @@ const triggerFileInput = async () => {
       const selected = queued === undefined ? await open({
         directory: false,
         multiple: true,
-        title: appStore.t('decompress.drop_hint'),
+        title: props.pickerTitle || appStore.t('decompress.drop_hint'),
         filters: props.accept !== '*' && !props.unfilteredPicker ? [{
           name: 'Archives',
           extensions: props.accept.split(',').map(e => e.trim().replace(/^[*.]*/, ''))
         }] : []
       }) : queued
-      if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected], queued !== undefined)
+      if (selected) await handleRawPaths(Array.isArray(selected) ? selected : [selected], true)
     } catch (err) {
       console.error('Failed to select files:', err)
       appStore.setError(`${appStore.t('common.error')}: ${String(err)}`)

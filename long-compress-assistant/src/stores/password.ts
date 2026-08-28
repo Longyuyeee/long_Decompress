@@ -9,95 +9,39 @@ const t = (key: string) => translations[lang()]?.[key] || translations['zh-CN']?
 // --- 类型定义 ---
 
 export enum PasswordCategory {
-  Personal = 'Personal',
+  General = 'General',
   Work = 'Work',
-  Finance = 'Finance',
-  Social = 'Social',
-  Shopping = 'Shopping',
-  Entertainment = 'Entertainment',
-  Education = 'Education',
-  Travel = 'Travel',
-  Health = 'Health',
+  Media = 'Media',
+  Documents = 'Documents',
   Other = 'Other'
-}
-
-export enum PasswordStrength {
-  VeryWeak = 'VeryWeak',
-  Weak = 'Weak',
-  Medium = 'Medium',
-  Strong = 'Strong',
-  VeryStrong = 'VeryStrong'
-}
-
-export enum CustomFieldType {
-  Text = 'Text',
-  Password = 'Password',
-  Email = 'Email',
-  Url = 'Url',
-  Phone = 'Phone',
-  Date = 'Date',
-  Number = 'Number',
-  MultilineText = 'MultilineText'
-}
-
-export interface CustomField {
-  name: string
-  value: string
-  field_type: CustomFieldType
-  sensitive: boolean
 }
 
 export interface PasswordEntry {
   id: string
   name: string
-  username?: string | null
   password: string
-  url?: string | null
   notes?: string | null
   tags: string[]
   category: PasswordCategory
-  strength: PasswordStrength
   created_at: string
   updated_at: string
   last_used?: string | null
-  expires_at?: string | null
   favorite: boolean
   use_count: number
   usage_history: Record<string, number>
-  custom_fields: CustomField[]
-  }
-export interface PasswordGroup {
-  id: string
-  name: string
-  description?: string | null
-  category: PasswordCategory
-  entry_ids: string[]
-  created_at: string
-  updated_at: string
 }
 
 export interface AddPasswordRequest {
   name: string
-  username?: string
   password: string
-  url?: string
-  notes?: string
+  notes?: string | null
   tags: string[]
-  category: PasswordCategory
-  expires_at?: string | Date
-  custom_fields: CustomField[]
+  category?: PasswordCategory
+  favorite?: boolean
 }
 
 export interface UpdatePasswordRequest extends Partial<AddPasswordRequest> {
   id: string
-}
-
-export interface PasswordStrengthAssessment {
-  score: number
-  entropyBits: number
-  crackTimeDisplay: string
-  issues: Array<{ description: string }>
-  recommendations: string[]
 }
 
 // --- Store 定义 ---
@@ -105,7 +49,6 @@ export interface PasswordStrengthAssessment {
 export const usePasswordStore = defineStore('password', () => {
   // 状态
   const entries = ref<PasswordEntry[]>([])
-  const groups = ref<PasswordGroup[]>([])
   const isUnlocked = ref(false) // 默认未解锁
   const isLoading = ref(false)
   const isInitialized = ref(false)
@@ -135,8 +78,7 @@ export const usePasswordStore = defineStore('password', () => {
       const q = searchQuery.value.toLowerCase()
       result = result.filter(e => 
         e.name.toLowerCase().includes(q) || 
-        (e.username && e.username.toLowerCase().includes(q)) ||
-        (e.url && e.url.toLowerCase().includes(q)) ||
+        (e.notes && e.notes.toLowerCase().includes(q)) ||
         e.tags.some(t => t.toLowerCase().includes(q))
       )
     }
@@ -193,19 +135,10 @@ export const usePasswordStore = defineStore('password', () => {
 
   const autoInitialize = async () => {
     try {
-      // 获取或创建每安装实例的随机主密钥（不再使用硬编码默认密码）
-      const masterKey = await invoke<string>('get_or_create_master_key')
-      // 先尝试解锁
-      const success = await invoke<boolean>('unlock_encrypted_password_service', { masterPassword: masterKey })
-      if (success) {
-        isUnlocked.value = true
-        await fetchAllData()
-      } else {
-        // 解锁失败可能是还没初始化，尝试初始化
-        await invoke('init_encrypted_password_service', { masterPassword: masterKey })
-        isUnlocked.value = true
-        await fetchAllData()
-      }
+      // 安装密钥及其解锁流程全部留在 Rust 后端，不向 WebView 暴露。
+      await invoke<boolean>('ensure_encrypted_password_service')
+      isUnlocked.value = true
+      await fetchAllData()
     } catch (e) {
       console.error('自动初始化密码服务失败:', e)
       isUnlocked.value = false
@@ -225,12 +158,7 @@ export const usePasswordStore = defineStore('password', () => {
     if (!isUnlocked.value) return
     isLoading.value = true
     try {
-      const [allEntries, allGroups] = await Promise.all([
-        invoke<PasswordEntry[]>('list_encrypted_passwords'),
-        invoke<PasswordGroup[]>('list_password_groups')
-      ])
-      entries.value = allEntries
-      groups.value = allGroups
+      entries.value = await invoke<PasswordEntry[]>('list_encrypted_passwords')
     } catch (e) {
       console.error('获取密码本数据失败', e)
       errorMessage.value = t('vault.fetch_failed').replace('{0}', String(e))
@@ -281,14 +209,21 @@ export const usePasswordStore = defineStore('password', () => {
   }
 
   // 更新
-  const updateEntry = async (id: string, entryRequest: any) => {
+  const updateEntry = async (id: string, entryRequest: Partial<AddPasswordRequest>) => {
     try {
       // console.log('Invoke: update_encrypted_password', id)
-      // 关键修复：合并原始数据，确保 strength, usage_history 等字段不丢失
       const originalEntry = entries.value.find(e => e.id === id)
       if (!originalEntry) throw new Error('找不到原始条目')
-      
-      const payload = { ...originalEntry, ...entryRequest, id }
+
+      // 只回传归档密码领域字段。生命周期统计由 Rust 原子保留，旧网站字段不再穿过 WebView。
+      const payload: AddPasswordRequest = {
+        name: entryRequest.name ?? originalEntry.name,
+        password: entryRequest.password ?? originalEntry.password,
+        notes: entryRequest.notes ?? originalEntry.notes,
+        tags: entryRequest.tags ?? originalEntry.tags,
+        category: entryRequest.category,
+        favorite: entryRequest.favorite ?? originalEntry.favorite,
+      }
       const updated = await invoke<PasswordEntry>('update_encrypted_password', { id, entry: payload })
       
       // console.log('Update success:', updated)
@@ -357,33 +292,16 @@ export const usePasswordStore = defineStore('password', () => {
     return Array.from(tags)
   })
 
-  // 统计信息兼容
+  // 归档线索统计，不对解压密码做传统网站密码强度判断。
   const statistics = computed(() => {
     const stats = {
       total: entries.value.length,
       favorite: favoriteEntries.value.length,
       byCategory: {} as Record<string, number>,
-      byStrength: {
-        veryWeak: 0,
-        weak: 0,
-        medium: 0,
-        strong: 0,
-        veryStrong: 0
-      }
     }
 
     entries.value.forEach(e => {
-      // 类别统计
       stats.byCategory[e.category] = (stats.byCategory[e.category] || 0) + 1
-      
-      // 强度统计
-      switch (e.strength) {
-        case PasswordStrength.VeryWeak: stats.byStrength.veryWeak++; break
-        case PasswordStrength.Weak: stats.byStrength.weak++; break
-        case PasswordStrength.Medium: stats.byStrength.medium++; break
-        case PasswordStrength.Strong: stats.byStrength.strong++; break
-        case PasswordStrength.VeryStrong: stats.byStrength.veryStrong++; break
-      }
     })
 
     return stats
@@ -443,92 +361,9 @@ export const usePasswordStore = defineStore('password', () => {
     if (index !== -1) entries.value[index] = updated
     return entry.password
   }
-  const assessPasswordStrength = async (password: string) => {
-    const issues: string[] = []
-    const recommendations: string[] = []
-
-    if (!password) {
-      return { score: 0, entropyBits: 0, crackTimeDisplay: 'N/A', issues: ['密码为空'], recommendations: ['请输入密码'] }
-    }
-
-    // 字符集分析
-    const hasLower = /[a-z]/.test(password)
-    const hasUpper = /[A-Z]/.test(password)
-    const hasDigit = /\d/.test(password)
-    const hasSpecial = /[^a-zA-Z0-9]/.test(password)
-    const charsetSize =
-      (hasLower ? 26 : 0) +
-      (hasUpper ? 26 : 0) +
-      (hasDigit ? 10 : 0) +
-      (hasSpecial ? 32 : 0)
-
-    // 估算熵 (bits)
-    const entropyBits = password.length * Math.log2(charsetSize || 1)
-
-    // 评分 0-100
-    let score = 0
-    score += Math.min(password.length * 6, 40) // length contribution
-    score += hasLower && hasUpper ? 15 : (hasLower || hasUpper ? 8 : 0) // case diversity
-    score += hasDigit ? 10 : 0
-    score += hasSpecial ? 15 : 0
-    score += password.length >= 12 ? 20 : password.length >= 8 ? 10 : 0 // bonus for length
-
-    // 检测弱模式
-    const commonPatterns = [
-      /^12345/, /^password/i, /^qwerty/i, /^abc/i, /^111/, /^000/,
-      /(.)\1{3,}/, // 重复字符
-    ]
-    for (const pattern of commonPatterns) {
-      if (pattern.test(password)) {
-        score = Math.max(0, score - 25)
-        issues.push('包含常见弱密码模式')
-        recommendations.push('避免使用常见序列或重复字符')
-        break
-      }
-    }
-
-    if (password.length < 8) {
-      issues.push('密码长度不足8位')
-      recommendations.push('建议至少使用8个字符')
-    }
-    if (!hasSpecial) {
-      issues.push('缺少特殊字符')
-      recommendations.push('建议添加特殊字符如 !@#$%')
-    }
-    if (charsetSize <= 26) {
-      issues.push('字符集单一')
-      recommendations.push('混合使用大小写字母、数字和特殊字符')
-    }
-
-    // 估算破解时间
-    const guessesPerSecond = 1e9 // 假设 1 billion guesses/second
-    const totalCombinations = Math.pow(charsetSize || 1, password.length)
-    const secondsToCrack = totalCombinations / guessesPerSecond
-
-    let crackTimeDisplay: string
-    if (secondsToCrack < 60) crackTimeDisplay = '瞬间'
-    else if (secondsToCrack < 3600) crackTimeDisplay = '< 1 小时'
-    else if (secondsToCrack < 86400) crackTimeDisplay = '< 1 天'
-    else if (secondsToCrack < 86400 * 365) crackTimeDisplay = '< 1 年'
-    else if (secondsToCrack < 86400 * 365 * 100) crackTimeDisplay = '数百年'
-    else crackTimeDisplay = '数千年以上'
-
-    score = Math.min(100, Math.max(0, Math.round(score)))
-
-    return {
-      score,
-      entropyBits: Math.round(entropyBits * 10) / 10,
-      crackTimeDisplay,
-      issues,
-      recommendations,
-    }
-  }
-  const hideAllPasswords = () => { /* 实现逻辑 */ }
-
   return {
     // 状态
     entries,
-    groups,
     isUnlocked,
     isLoading,
     isInitialized,
@@ -577,15 +412,7 @@ export const usePasswordStore = defineStore('password', () => {
     toggleFavorite,
     deleteSelectedPasswords,
     usePassword,
-    assessPasswordStrength,
-    hideAllPasswords,
-    
     // 辅助工具方法
-    togglePasswordVisibility: (id: string) => { /* 简单实现 */ },
-    showPassword: (id: string) => false,
     formatTime: (date?: string | null) => date ? new Date(date).toLocaleString() : '从不',
-    getStrengthColor: (s: PasswordStrength | number) => 'bg-green-500',
-    getStrengthTextColor: (s: PasswordStrength | number) => 'text-green-500',
-    getStrengthLabel: (s: PasswordStrength | number) => '中等'
   }
 })

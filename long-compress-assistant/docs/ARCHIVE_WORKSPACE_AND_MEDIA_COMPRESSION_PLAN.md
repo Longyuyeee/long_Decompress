@@ -1,6 +1,6 @@
 # Long解压：归档工作区与媒体压缩开发计划
 
-公开基线：`master` / Long解压 `1.1.14`；当前开发基线：`codex/archive-media-roadmap` / `v1.1.14` 发布后证据提交
+公开基线：`master` / Long解压 `1.1.14`；B-00 起始审计基线：`codex/archive-media-roadmap` / `19bb4b6`（S-00 总验收通过，比 `origin/master` 领先 6 个提交）
 
 编制日期：2026-08-26
 
@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已全部完成并随 `v1.1.14` 发布：默认应用会话缓存、ZIP/TAR 有界文本预览、三层嵌套工作区、请求级取消、30 秒等待上限、后端结构化能力和正式安装态综合矩阵均有真实证据。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内，未来若做编辑必须采用“重建新归档、完整校验、原子替换”。下一步进入媒体压缩前置节点 B-00。
+当前 A-01 至 A-06 已全部完成并随 `v1.1.14` 发布，B-00.1 至 B-00.6 前置门禁、B-01 图片依赖/固定哈希基线、B-02 图片前端工作区、B-03 图片后端执行/发布事务、B-04 真实进度/日志/历史/UI 和 B-05.1 至 B-05.3 真实验收矩阵均已完成。下一接续点为 `v1.1.15` 版本提升、发布审计和公开更新闭环；完成前不更新公开 Release。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -82,6 +82,34 @@
 | `.github/workflows/ci.yml`、`release.yml` | CI、安装器和 Release | 增加第三方二进制身份/许可检查；继续由标签触发正式 Release |
 
 ## 3. 总体产品结构
+
+### 3.0 B-00 媒体压缩前置门禁
+
+B-00 在任何媒体编码页面和引擎之前执行，并以独立审计文档收口。本节点不产生图片、视频或 PDF 压缩能力。
+
+工作项：
+
+1. **B-00.1（2026-08-27 已完成）**：为活动任务和历史记录设计向后兼容的可选 `workloadKind` 与版本化 `metrics`；旧记录缺省解释为 `archive`，数据库迁移可重复执行且不重写旧任务；完整证据见 [B00_TASK_HISTORY_MODEL_AUDIT.md](B00_TASK_HISTORY_MODEL_AUDIT.md)；
+2. **B-00.2（2026-08-27 已完成）**：定义并落地媒体任务必须复用的暂存、容量预检、取消、子进程终止、冲突处理、最终校验、原子发布、Mark-of-the-Web、历史脱敏及系统回收站边界；现有非分卷归档压缩已接入公共单文件发布事务，真实文件、Windows 系统回收站和 Release/WebView2 归档闭环通过，证据见 [B00_SHARED_TRANSACTION_AUDIT.md](B00_SHARED_TRANSACTION_AUDIT.md)；
+3. **B-00.3（2026-08-27 已完成）**：固定图片、视频、PDF 候选的项目主页、精确版本、许可证、构建来源、SHA-256、支持平台、链接/进程方式、安装体积测量阶段和安全更新责任；静态门禁已进入 CI/Release，真实下载、FFmpeg PGP 和 qpdf 可执行身份已验证；所有运行时仍保持阻断，完整证据见 [B00_MEDIA_DEPENDENCY_AUDIT.md](B00_MEDIA_DEPENDENCY_AUDIT.md)；
+4. **B-00.4（2026-08-27 已完成）**：建立不含隐私内容、可再生成且带精确预期属性的真实样本；图片覆盖透明度、EXIF、动图和 9600 万像素，视频覆盖 H.264/H.265、VFR、AAC、旋转矩阵和字幕，PDF 覆盖文本、扫描、透明、AcroForm、有效自签 CMS 和 AES-256 拒绝边界；生成、解析、签名验证和 Poppler 视觉复核证据见 [B00_MEDIA_FIXTURE_BASELINE_AUDIT.md](B00_MEDIA_FIXTURE_BASELINE_AUDIT.md)；
+5. **B-00.5（2026-08-27 已完成）**：以可执行契约固定每类任务的真实指标来源。图片只按已完成条目数显示批量进度；视频只消费 FFmpeg progress pipe 的时间戳、临时大小和速度，ETA 至少等待两个有效样本；PDF 只有可验证阶段，不显示伪百分比或 ETA；最终输入/输出字节只取处理前源文件和校验发布后文件的文件系统元数据，估算值不得进入历史；完整证据见 [B00_MEDIA_METRIC_SOURCE_AUDIT.md](B00_MEDIA_METRIC_SOURCE_AUDIT.md)；
+6. **B-00.6（2026-08-27 已完成）**：以可执行契约明确 B/C/D 节点的安装态桌面门禁、真实格式矩阵、失败回滚、版本提升和 Release 证据模板；当前 `1.1.14` 正式 NSIS 已完成覆盖安装、生产启动、数据保持、卸载和原版本恢复 44/44 项真实检查，完整证据见 [B00_MEDIA_RELEASE_GATE_AUDIT.md](B00_MEDIA_RELEASE_GATE_AUDIT.md)。
+
+验收目标：
+
+- 迁移测试证明旧任务、旧历史和现有筛选结果不变；
+- 架构测试证明媒体任务没有复制第二套队列、历史、事务或删除源文件逻辑；
+- 依赖清单在缺少许可证、哈希或来源不一致时会阻断构建/发布；
+- 固定样本记录预期属性、首次实际结果、修正和最终实际结果；
+- 完成独立 B-00 审计，确认没有媒体引擎、占位成功状态或无法验证的进度进入产品代码。
+
+已解除的前置阻断：[DEVELOPMENT_ALIGNMENT_AUDIT_2026-08-26.md](DEVELOPMENT_ALIGNMENT_AUDIT_2026-08-26.md) 中的 S-00 密码存储语义、模型、文档与仓库卫生已经完成，并通过跨步骤总验收。
+
+剩余阻断条件：
+
+- 任一依赖的许可证、再分发权、固定二进制来源或哈希无法确认；
+- 任务/历史迁移需要破坏旧数据，或者媒体任务绕过现有事务式发布和取消机制。
 
 ### 3.1 导航结构
 
@@ -304,23 +332,27 @@ src/types/media.ts
 
 ### 开发目标
 
-在压缩中心增加可批量、可比较、可取消、可验证的图片压缩模式。首期支持 JPEG、PNG、WebP、GIF、TIFF；HEIC 在取得稳定解码、编码和许可方案前不公开声明。
+在压缩中心增加可批量、可比较、可取消、可验证的图片压缩模式。首期公开写入能力收紧为 JPEG、WebP 与无损 PNG。GIF 首期只识别并保持原文件或明确拒绝，直到动画编码链的许可与帧语义独立通过；TIFF、HEIC 在取得稳定解码、编码、元数据和许可方案前不公开声明。
 
-首选引擎：Rust `libcaesium`，固定版本并审计其 Apache-2.0 许可和间接依赖。
+候选引擎：JPEG/WebP 只评估关闭默认功能并显式启用 `jpg,webp` 的 Rust `libcaesium`；无损 PNG 独立评估 MIT `oxipng`。禁止启用会引入 AGPL `gifski` 或 GPL `imagequant` 的 libcaesium 默认/GIF/PNG 路径。
 
-### B-01 依赖与基线实验
+### B-01 依赖与基线实验（2026-08-27 已完成）
 
-- 固定 libcaesium 版本和 feature 集，只启用首期格式；
-- 记录安装包体积、冷启动、单张峰值内存和多张并发基线；
-- 建立照片、透明 PNG、截图、动画 GIF、WebP、TIFF 和元数据样本；
-- 对每个样本保存输入哈希、尺寸、帧数/动画属性、ICC/EXIF 预期和允许变化。
+- 固定 libcaesium 与 oxipng 版本和 feature 集，只启用首期已审计格式；
+- 在不违反 B-00 产品运行时冻结的前提下，记录隔离候选载荷的原始/压缩增量、冷进程全流程、峰值内存和四进程并发基线；最终 NSIS 增量在 B-03 接入正式运行时后测量；
+- 建立照片、透明 PNG、截图、动画 GIF 拒绝边界、WebP 和元数据样本；TIFF 在进入公开范围时再补齐；
+- 从 B-00 属性夹具中分离 B-01 固定基准输入：对每个可处理样本提交输入哈希清单、尺寸、帧数/动画属性、ICC/EXIF 预期和允许变化。B-00 可再生成夹具未承诺字节相同，不得直接用于性能结论。
 
 验收目标：依赖许可证与 NOTICE 完整；没有未审计二进制下载；每种公开格式至少一个非空真实样本可重复处理。
 
+完成结果：精确 feature 的 libcaesium 0.21.0 与 oxipng 10.2.0 已在 Windows x64/Rust 1.93.1 真实构建；五个固定输入连续两次生成 SHA-256 一致，JPEG/WebP/无损 PNG 输出可重新解码，GIF 明确拒绝且不落盘。隔离候选压缩增量为 1,077,127 B，单进程峰值工作集约 10.2 MiB，四进程并发完成。完整预期—实际—修正见 [B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md](B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md)。
+
 ### B-02 前端工作区
 
+状态：**已完成 / 2026-08-28 收口**。前端工作区、压缩 store 内隔离草稿、同源配置、格式拒绝和安全预览授权已实现；收口审计纠正了首稿新建图片 store、Windows 资产 CSP、方向尺寸语义和系统选择后 0 B 四项偏移。Windows Release/WebView2 双尺寸矩阵与真实系统“选择图片文件”路径均已通过，证据见 [B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md](B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md) 与 [B02_NATIVE_PICKER_PATH_AUDIT.md](B02_NATIVE_PICKER_PATH_AUDIT.md)。允许进入 B-03，仍不升版、不开放伪执行。
+
 - 压缩中心新增四模式切换组件，保留归档压缩为默认；
-- 图片任务列表显示文件名、尺寸、输入大小、输出格式、状态、进度和节省比例；
+- 图片任务列表显示文件名、应用方向后的可见尺寸、输入大小、输出格式、状态、进度和节省比例；编码像素矩阵与方向信息保留为后端验证事实；
 - 配置包含：无损/有损、质量、保持尺寸/最大宽高、输出格式、保留元数据、输出目录、冲突策略；
 - 提供原图/结果图对比和预计结果说明，但预计值不得冒充实际值；
 - 批量全局设置与单项覆盖使用同一模型。
@@ -329,9 +361,13 @@ src/types/media.ts
 
 ### B-03 后端执行与发布事务
 
+状态：**已完成 / 2026-08-28 收口**。产品运行时严格准入 `libcaesium 0.21.0`（仅 `jpg,webp`）、`oxipng 10.2.0`（仅 `parallel,zopfli`）、`image 0.25.10`（仅 `jpeg,png,webp`）和 `img-parts 0.4.0`（仅 `std`）。服务支持同格式压缩、格式转换和按可见尺寸等比例缩放；编码后再次完整解码并核对格式、矩阵、方向、可见尺寸、帧数、Alpha 与配置承诺的 EXIF/ICC，再按用户大小策略调用共享原子发布事务。命令已复用统一取消注册表、容量预检和受控阻塞线程。最终 NSIS 相对 `f4ea25b` 同版本基线净增 877,416 B。详见 [B03_IMAGE_ENCODING_TRANSACTION_AUDIT.md](B03_IMAGE_ENCODING_TRANSACTION_AUDIT.md) 与 [B03_2_IMAGE_TRANSFORM_EXECUTION_AUDIT.md](B03_2_IMAGE_TRANSFORM_EXECUTION_AUDIT.md)。
+
+边界纠偏：现有图片配置没有“删除源文件”选项，因此当前实现始终只读源文件，不把并不存在的回收功能冒充完成；未来若开放该选项，只能在共享发布成功后调用系统回收站。B-04 已完成统一事实链和真实结果 UI 开放；B-05 将验证安装版完整流程，不得借此绕过共享发布边界。
+
 - 魔数和解码器共同确认输入，不只看扩展名；
 - 输出写入唯一临时文件；
-- 完成后重新解码，验证尺寸、帧数和格式；
+- 完成后重新解码，分别验证编码像素矩阵、方向信息、应用方向后的可见尺寸、帧数和格式；
 - 只有输出有效且满足用户策略时才发布；
 - “仅在更小时替换”作为默认行为，结果更大时保留源文件并明确说明；
 - 取消、编码失败、磁盘不足和发布竞态全部清理临时输出；
@@ -341,14 +377,18 @@ src/types/media.ts
 
 ### B-04 进度、日志和历史
 
+状态：**已完成 / 2026-08-28 收口**。B-04.1 至 B-04.4 已完成输入/输出事实、真实阶段、安全批量编排、统一队列与跨重启历史；B-04.5 已将该链路接入图片工作区，按真实 ready 状态开放执行/取消，并展示后端验证的结果预览、路径、尺寸、格式和实际字节差。固定真实 JPEG/WebP/PNG 已在 Windows WebView2 中完成点击执行、磁盘 metadata、历史和双尺寸布局复核。证据见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)、[B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md)、[B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md](B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md)、[B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md](B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md) 与 [B04_5_IMAGE_RESULT_UI_AUDIT.md](B04_5_IMAGE_RESULT_UI_AUDIT.md)。下一接续点为 B-05。
+
 - 日志展示解码、缩放、编码、验证、发布阶段；
 - 进度按批量文件数与可用字节信息组合，不得长时间静止在虚假百分比；
 - 历史记录 `taskType=compression`、`workloadKind=image`；
-- 指标至少包含输入大小、输出大小、节省字节、节省比例、输入/输出尺寸与格式。
+- 指标至少包含输入大小、输出大小、节省字节、节省比例、输入/输出可见尺寸与格式；图片可见尺寸统一为应用方向后的结果，编码矩阵与方向作为校验事实单独记录。
 
 验收目标：完成、失败、取消三种历史跨重启保留；统计使用真实输出，不用估算覆盖实际结果。
 
 ### B-05 真实验收矩阵
+
+分段状态（2026-08-28）：**B-05.1 至 B-05.3 已完成**。B-05.1 的 JPEG、PNG、WebP 各 3 个冻结真实输入通过生产服务并独立重新解码；B-05.2.1 在真实 Windows Release Tauri/WebView2 中完成 100/100 图片、唯一输出和统一历史；B-05.2.2 完成 96 MP/100.01 MP 上下界、340 UTF-16 中文长路径、冲突/竞态、StorageFull 和编码期取消；B-05.3 以无测试桥正式 NSIS 完成三张真实图片的输入、可见配置、执行前后对比、发布、历史、完整重启和输出重新打开，安装生命周期 50/50、图片链 17/17。证据见 [B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md](B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md)、[B05_2_1_IMAGE_BATCH_AUDIT.md](B05_2_1_IMAGE_BATCH_AUDIT.md)、[B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md](B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md) 与 [B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md](B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md)。下一接续点为 **v1.1.15 发布审计与公开更新闭环**。
 
 - 每个公开格式至少 3 个真实样本，覆盖小图、大图、透明、动画和元数据；
 - 100 张混合批量；
@@ -594,7 +634,7 @@ npm.cmd run test:release-identity -- --expected <version>
 | 顺序 | 大节点 | 建议版本 | 发布前不可缺少的证据 |
 | --- | --- | --- | --- |
 | 1 | 压缩包浏览中心 2.0 | `1.1.14` | 双击、右键、默认应用、嵌套归档、安装版桌面闭环 |
-| 2 | 图片压缩 | `1.1.15` | 五类格式真实批量、结果复核、对比、取消和历史 |
+| 2 | 图片压缩 | `1.1.15` | JPEG/WebP/无损 PNG 真实批量、GIF 明确边界、结果复核、对比、取消和历史 |
 | 3 | 视频压缩软件编码 | `1.1.16` | FFmpeg 合规、真实多格式、输出流/时长验证、进程树取消 |
 | 4 | PDF 安全优化 | `1.1.17` | qpdf 合规、结构复核、签名/表单边界、真实安装版批量 |
 | 5 | 视频硬件编码（可选） | 后续补丁版 | 多厂商真实设备、自动回退和性能/质量对比 |
@@ -610,7 +650,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- A-06 正式安装态综合矩阵已完成：候选覆盖安装后的 EXE 字节、经典右键、150% 缩放、普通 ZIP、加密 7Z/RAR、TAR/TAR.GZ、中文八层路径、混合内容、三层嵌套、危险内容、损坏包和 18 万条目取消均通过；`v1.1.14` 工作流、四项公开资产和真实 `1.1.13 → 1.1.14` 更新也已通过。证据见 [ARCHIVE_WORKSPACE_A06_AUDIT.md](ARCHIVE_WORKSPACE_A06_AUDIT.md) 与 [RELEASE_AUDIT_1.1.14.md](RELEASE_AUDIT_1.1.14.md)。下一步只进入 B-00 模型与依赖边界审计，期间不提前接入媒体引擎。
+- B-00.1 至 B-05.3 已全部完成；正式安装版图片链使用真实 JPEG/PNG/WebP，完成输入、配置、对比、执行、历史、完整重启和输出重新打开，安装生命周期 50/50、图片链 17/17。当前仍保持公开 `v1.1.14`；下一步为 `v1.1.15` 统一版本身份、Release notes、正式资产/签名、公开更新和回下载复验。
 
 ## 12. 技术参考
 

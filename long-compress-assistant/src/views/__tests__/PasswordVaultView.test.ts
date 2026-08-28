@@ -22,11 +22,10 @@ describe('PasswordVaultView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
-    mocks.invoke.mockImplementation(async (command: string, args?: Record<string, string>) => {
+    mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'load_app_settings') return '{}'
       if (command === 'is_encrypted_password_service_unlocked') return false
-      if (command === 'get_or_create_master_key') throw new Error('not initialized')
-      if (command === 'unlock_encrypted_password_service') return args?.masterPassword === 'correct-password'
+      if (command === 'ensure_encrypted_password_service') throw new Error('not initialized')
       if (command === 'list_encrypted_passwords' || command === 'list_password_groups') return []
       return undefined
     })
@@ -40,9 +39,7 @@ describe('PasswordVaultView', () => {
         return new Promise<boolean>(resolve => { resolveStatus = resolve })
       }
       if (command === 'list_encrypted_passwords' || command === 'list_password_groups') return Promise.resolve([])
-      if (command === 'get_or_create_master_key') {
-        return Promise.reject(new Error('not initialized'))
-      }
+      if (command === 'ensure_encrypted_password_service') return Promise.reject(new Error('not initialized'))
       return Promise.resolve(undefined)
     })
     const wrapper = mountView()
@@ -67,21 +64,21 @@ describe('PasswordVaultView', () => {
     expect(wrapper.find('input[autocomplete="current-password"]').exists()).toBe(false)
   })
 
-  it('retries automatic initialization with the installation key', async () => {
+  it('retries automatic initialization without exposing the installation key', async () => {
     const wrapper = mountView()
     await flushPromises()
 
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'is_encrypted_password_service_unlocked') return false
-      if (command === 'get_or_create_master_key') return 'installation-key'
-      if (command === 'unlock_encrypted_password_service') return true
+      if (command === 'ensure_encrypted_password_service') return true
       if (command === 'list_encrypted_passwords' || command === 'list_password_groups') return []
       return undefined
     })
     await wrapper.findAll('button').find(button => button.text().includes('重新加载'))!.trigger('click')
     await flushPromises()
 
-    expect(mocks.invoke).toHaveBeenCalledWith('unlock_encrypted_password_service', { masterPassword: 'installation-key' })
+    expect(mocks.invoke).toHaveBeenCalledWith('ensure_encrypted_password_service')
+    expect(mocks.invoke).not.toHaveBeenCalledWith('unlock_encrypted_password_service', expect.anything())
     expect(wrapper.text()).not.toContain('密码保险箱暂时不可用')
   })
 

@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-28",
+  "policy": {
+    "allowedDownloadHosts": ["crates.io", "static.crates.io", "ffmpeg.org", "github.com", "objects.githubusercontent.com", "raw.githubusercontent.com"],
+    "releaseRequiresRealVerification": true,
+    "integrationDefault": "blocked",
+    "securityReviewCadenceDays": 30
+  },
+  "dependencies": [
+    {
+      "id": "libcaesium",
+      "workload": "image",
+      "version": "0.21.0",
+      "status": "runtime-admitted-b03-service",
+      "integrationAllowed": true,
+      "projectUrl": "https://github.com/Lymphatus/libcaesium",
+      "license": { "expression": "Apache-2.0", "url": "https://github.com/Lymphatus/libcaesium/blob/v0.21.0/LICENSE", "noticeRequired": true },
+      "linkage": "static-rust",
+      "platforms": ["windows-x86_64"],
+      "features": {
+        "allowed": ["jpg", "webp"],
+        "forbidden": ["default", "gif", "png"],
+        "reason": "default/gif pulls AGPL gifski; png pulls GPL imagequant"
+      },
+      "artifact": {
+        "fileName": "libcaesium-0.21.0.crate",
+        "url": "https://crates.io/api/v1/crates/libcaesium/0.21.0/download",
+        "bytes": 33105,
+        "sha256": "7eb0de563820ff19fe1374b8b1bfd74007c793d2f3ac72737746d38464f803a8"
+      },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-03 aggregate NSIS delta measured; see candidateBaselines.image" },
+      "securityOwner": "Long解压 maintainers"
+    },
+    {
+      "id": "oxipng",
+      "workload": "image",
+      "version": "10.2.0",
+      "status": "runtime-admitted-b03-service",
+      "integrationAllowed": true,
+      "projectUrl": "https://github.com/shssoichiro/oxipng",
+      "license": { "expression": "MIT", "url": "https://github.com/shssoichiro/oxipng/blob/v10.2.0/LICENSE", "noticeRequired": true },
+      "linkage": "static-rust",
+      "platforms": ["windows-x86_64"],
+      "features": {
+        "allowed": ["parallel", "zopfli"],
+        "forbidden": ["binary", "default"],
+        "reason": "library-only lossless PNG path; feature set must remain explicit"
+      },
+      "artifact": {
+        "fileName": "oxipng-10.2.0.crate",
+        "url": "https://crates.io/api/v1/crates/oxipng/10.2.0/download",
+        "bytes": 76578,
+        "sha256": "f80e5d92fd65b00e3953760e6a7616264a509b6bbee22502e0226774204da1a3"
+      },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-03 aggregate NSIS delta measured; see candidateBaselines.image" },
+      "securityOwner": "Long解压 maintainers"
+    },
+    {
+      "id": "image",
+      "workload": "image",
+      "version": "0.25.10",
+      "status": "runtime-admitted-b03-service",
+      "integrationAllowed": true,
+      "projectUrl": "https://github.com/image-rs/image",
+      "license": { "expression": "MIT OR Apache-2.0", "url": "https://github.com/image-rs/image/blob/v0.25.10/LICENSE-MIT", "noticeRequired": true },
+      "linkage": "static-rust-validation-decoder",
+      "platforms": ["windows-x86_64"],
+      "features": {
+        "allowed": ["jpeg", "png", "webp"],
+        "forbidden": ["default", "gif", "avif", "tiff"],
+        "reason": "B-03 re-decode verification is restricted to the three public image formats"
+      },
+      "artifact": {
+        "fileName": "image-0.25.10.crate",
+        "url": "https://crates.io/api/v1/crates/image/0.25.10/download",
+        "bytes": 303647,
+        "sha256": "85ab80394333c02fe689eaf900ab500fbd0c2213da414687ebf995a65d5a6104"
+      },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-03 aggregate NSIS delta measured; see candidateBaselines.image" },
+      "securityOwner": "Long解压 maintainers"
+    },
+    {
+      "id": "img-parts",
+      "workload": "image",
+      "version": "0.4.0",
+      "status": "runtime-admitted-b03-service",
+      "integrationAllowed": true,
+      "projectUrl": "https://github.com/paolobarbolini/img-parts",
+      "license": { "expression": "MIT OR Apache-2.0", "url": "https://github.com/paolobarbolini/img-parts/blob/v0.4.0/LICENSE-MIT", "noticeRequired": true },
+      "linkage": "static-rust-metadata-container",
+      "platforms": ["windows-x86_64"],
+      "features": {
+        "allowed": ["std"],
+        "forbidden": ["default"],
+        "reason": "B-03 copies and verifies only EXIF/ICC fields across JPEG, PNG and WebP containers"
+      },
+      "artifact": {
+        "fileName": "img-parts-0.4.0.crate",
+        "url": "https://crates.io/api/v1/crates/img-parts/0.4.0/download",
+        "bytes": 22386,
+        "sha256": "19734e3c43b2a850f5889c077056e47c874095f2d87e853c7c41214ae67375f0"
+      },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "B-03 aggregate NSIS delta measured; see candidateBaselines.image" },
+      "securityOwner": "Long解压 maintainers"
+    },
+    {
+      "id": "ffmpeg",
+      "workload": "video",
+      "version": "9.0.1",
+      "status": "official-source-approved-windows-runtime-blocked",
+      "integrationAllowed": false,
+      "projectUrl": "https://ffmpeg.org/",
+      "license": { "expression": "LGPL-2.1-or-later-only-if-configure-flags-remain-compliant", "url": "https://ffmpeg.org/legal.html", "noticeRequired": true },
+      "linkage": "planned-separate-process-minimal-lgpl-build",
+      "platforms": ["windows-x86_64"],
+      "features": {
+        "allowed": ["lgpl-only", "native-codecs"],
+        "forbidden": ["--enable-gpl", "--enable-nonfree", "libx264", "libx265"],
+        "reason": "official project publishes source, not an official Windows runtime; C-01 must produce a reproducible minimal LGPL build"
+      },
+      "artifact": {
+        "fileName": "ffmpeg-9.0.1.tar.xz",
+        "url": "https://ffmpeg.org/releases/ffmpeg-9.0.1.tar.xz",
+        "bytes": 12036420,
+        "sha256": "cf38e0e28c7e5605942c4a77755349b0145804a397af37eb1fb4c77cb237f635"
+      },
+      "signature": {
+        "fileName": "ffmpeg-9.0.1.tar.xz.asc",
+        "url": "https://ffmpeg.org/releases/ffmpeg-9.0.1.tar.xz.asc",
+        "bytes": 520,
+        "sha256": "b613a00005232a1245ace7080088781ac23a916119d3e5b0d6c042368eee0177",
+        "keyUrl": "https://ffmpeg.org/ffmpeg-devel.asc",
+        "keyBytes": 1709,
+        "keySha256": "397b3becedcd5a98769967ff1ff8501ddc89f8368b8f766e4701377d7dbaabe5",
+        "fingerprint": "FCF986EA15E6E293A5644F10B4322F04D67658D8"
+      },
+      "installerImpact": { "runtimePayloadBytes": null, "compressedInstallerDeltaBytes": null, "measurementStage": "C-01 reproducible Windows build" },
+      "securityOwner": "Long解压 maintainers"
+    },
+    {
+      "id": "qpdf",
+      "workload": "pdf",
+      "version": "12.4.0",
+      "status": "official-runtime-candidate-packaging-blocked",
+      "integrationAllowed": false,
+      "projectUrl": "https://github.com/qpdf/qpdf",
+      "license": {
+        "expression": "Apache-2.0",
+        "url": "https://github.com/qpdf/qpdf/blob/v12.4.0/LICENSE.txt",
+        "noticeUrl": "https://github.com/qpdf/qpdf/blob/v12.4.0/NOTICE.md",
+        "noticeRequired": true
+      },
+      "linkage": "planned-separate-process-official-mingw64-runtime",
+      "platforms": ["windows-x86_64"],
+      "features": {
+        "allowed": ["openssl-native-crypto"],
+        "forbidden": ["ghostscript"],
+        "reason": "official runtime identity is verified; D-01 must package notices and measure the exact NSIS delta"
+      },
+      "artifact": {
+        "fileName": "qpdf-12.4.0-mingw64.zip",
+        "url": "https://github.com/qpdf/qpdf/releases/download/v12.4.0/qpdf-12.4.0-mingw64.zip",
+        "bytes": 24063155,
+        "sha256": "dcec940ce825b3b654d4936918190f52e7bfca85b7fb1c49bc24b3035185b4f5"
+      },
+      "upstreamChecksum": {
+        "fileName": "qpdf-12.4.0.sha256",
+        "url": "https://github.com/qpdf/qpdf/releases/download/v12.4.0/qpdf-12.4.0.sha256",
+        "bytes": 2227,
+        "sha256": "4779aadd098a03e90d47944cf51e25a49ca3f1a4407c1d8610ae06401aca71a1"
+      },
+      "runtimeSubset": {
+        "bytes": 12637211,
+        "files": ["qpdf.exe", "qpdf30.dll", "libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll"]
+      },
+      "installerImpact": { "runtimePayloadBytes": 12637211, "compressedInstallerDeltaBytes": null, "measurementStage": "D-01 candidate NSIS build" },
+      "securityOwner": "Long解压 maintainers"
+    }
+  ],
+  "candidateBaselines": {
+    "image": {
+      "measuredAt": "2026-08-27",
+      "scope": "isolated-static-Rust-candidate-not-product-runtime",
+      "executableBytes": 2872320,
+      "minimalExecutableBytes": 117760,
+      "incrementalExecutableBytes": 2754560,
+      "compressedExecutableBytes": 1135518,
+      "compressedMinimalBytes": 58391,
+      "incrementalCompressedBytes": 1077127,
+      "finalNsisBaselineCommit": "f4ea25b",
+      "finalNsisBaselineBytes": 7736450,
+      "finalNsisBaselineSha256": "3e183b9c22624f15893c93c9e787fdb9b8ea9e17c7a4935d839c2562ec283e70",
+      "finalNsisCurrentBytes": 8613866,
+      "finalNsisCurrentSha256": "1e81dc079bde00d659f6fc18c92cddf3c27e33a4388bb7bb6bbee8b44dbcb7d8",
+      "finalNsisDeltaBytes": 877416,
+      "finalNsisDeltaPercent": 11.3413,
+      "finalNsisMeasurementStage": "B-03 product integration measured"
+    }
+  },
+  "blockedAlternatives": [
+    { "id": "ghostscript", "reason": "AGPL/commercial licensing is outside the current redistribution boundary", "integrationAllowed": false }
+  ]
+}

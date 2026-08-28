@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const _CURRENT_VERSION: i32 = 6;
+const _CURRENT_VERSION: i32 = 7;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -66,6 +66,37 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
             .await?;
     }
 
+    if current < 7 {
+        migrate_v7(pool).await?;
+        query("INSERT INTO schema_version (version) VALUES (7)").execute(pool).await?;
+    }
+
+    Ok(())
+}
+
+/// V7: optional B-00 workload identity and versioned measured metrics.
+/// Existing rows deliberately remain NULL on disk and are interpreted as archive by the API.
+async fn migrate_v7(pool: &SqlitePool) -> Result<()> {
+    let has_workload_kind: bool = query_as::<_, (i64,)>(
+        "SELECT COUNT(*) FROM pragma_table_info('task_operation_history') WHERE name = 'workload_kind'",
+    ).fetch_one(pool).await.map(|row| row.0 > 0)?;
+    if !has_workload_kind {
+        query(
+            "ALTER TABLE task_operation_history ADD COLUMN workload_kind TEXT CHECK(workload_kind IN ('archive', 'image', 'video', 'pdf'))",
+        ).execute(pool).await.context("为任务历史增加工作负载类型失败")?;
+    }
+
+    let has_metrics: bool = query_as::<_, (i64,)>(
+        "SELECT COUNT(*) FROM pragma_table_info('task_operation_history') WHERE name = 'metrics'",
+    ).fetch_one(pool).await.map(|row| row.0 > 0)?;
+    if !has_metrics {
+        query("ALTER TABLE task_operation_history ADD COLUMN metrics TEXT")
+            .execute(pool).await.context("为任务历史增加版本化指标失败")?;
+    }
+
+    query(
+        "CREATE INDEX IF NOT EXISTS idx_task_operation_history_workload_status ON task_operation_history(workload_kind, status)",
+    ).execute(pool).await.context("创建任务历史工作负载索引失败")?;
     Ok(())
 }
 
@@ -1185,5 +1216,84 @@ mod tests {
             .unwrap()
             .0;
         assert_eq!(version, _CURRENT_VERSION);
+    }
+
+    #[tokio::test]
+    async fn v6_history_rows_gain_optional_b00_columns_without_rewrite() {
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+        query("CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+            .execute(&pool).await.unwrap();
+        migrate_v6(&pool).await.unwrap();
+        query("INSERT INTO schema_version (version) VALUES (6)").execute(&pool).await.unwrap();
+        query(r#"
+            INSERT INTO task_operation_history (
+                id, name, task_type, status, source_paths, output_path, format,
+                started_at, completed_at, duration_ms, processed_bytes, total_bytes,
+                error_message, logs, updated_at
+            ) VALUES ('legacy', 'legacy.zip', 'compression', 'completed', '["C:/source"]',
+                'C:/legacy.zip', 'zip', NULL, '2026-08-20T00:00:00Z', 10, 12, 12,
+                NULL, '[]', '2026-08-20T00:00:00Z')
+        "#).execute(&pool).await.unwrap();
+
+        init_tables(&pool).await.unwrap();
+        init_tables(&pool).await.unwrap();
+
+        let row: (String, String, Option<String>, Option<String>) = query_as(
+            "SELECT name, output_path, workload_kind, metrics FROM task_operation_history WHERE id = 'legacy'",
+        ).fetch_one(&pool).await.unwrap();
+        assert_eq!(row.0, "legacy.zip");
+        assert_eq!(row.1, "C:/legacy.zip");
+        assert!(row.2.is_none(), "old workload must stay NULL on disk");
+        assert!(row.3.is_none(), "old metrics must stay NULL on disk");
+        let columns: i64 = query_as::<_, (i64,)>(
+            "SELECT COUNT(*) FROM pragma_table_info('task_operation_history') WHERE name IN ('workload_kind', 'metrics')",
+        ).fetch_one(&pool).await.unwrap().0;
+        assert_eq!(columns, 2);
+        let version: i32 = query_as::<_, (i32,)>("SELECT MAX(version) FROM schema_version")
+            .fetch_one(&pool).await.unwrap().0;
+        assert_eq!(version, 7);
+    }
+
+    #[tokio::test]
+    #[ignore = "requires LONG_B00_REAL_DB pointing to a closed real LongDecompress data.db"]
+    async fn real_history_snapshot_migrates_without_changing_user_database() {
+        use sqlx::sqlite::SqliteConnectOptions;
+        let source = std::env::var_os("LONG_B00_REAL_DB")
+            .map(std::path::PathBuf::from).expect("LONG_B00_REAL_DB is required");
+        assert!(source.is_file(), "real database does not exist: {}", source.display());
+        let wal = std::path::PathBuf::from(format!("{}-wal", source.display()));
+        assert!(!wal.exists(), "close Long解压 before snapshotting the real database");
+
+        let before = std::fs::read(&source).unwrap();
+        let snapshot = std::env::temp_dir().join(format!("long-b00-history-{}.db", uuid::Uuid::new_v4()));
+        std::fs::copy(&source, &snapshot).unwrap();
+        let options = SqliteConnectOptions::new().filename(&snapshot).create_if_missing(false);
+        let pool = SqlitePool::connect_with(options).await.unwrap();
+        let initial_version: i32 = query_as::<_, (i32,)>(
+            "SELECT COALESCE(MAX(version), 0) FROM schema_version",
+        ).fetch_one(&pool).await.unwrap().0;
+        let before_rows: Vec<(String, String, String, String)> = query_as(
+            "SELECT id, name, task_type, status FROM task_operation_history ORDER BY id",
+        ).fetch_all(&pool).await.unwrap();
+        init_tables(&pool).await.unwrap();
+        let after_rows: Vec<(String, String, String, String)> = query_as(
+            "SELECT id, name, task_type, status FROM task_operation_history ORDER BY id",
+        ).fetch_all(&pool).await.unwrap();
+        assert_eq!(after_rows, before_rows);
+        let populated: i64 = query_as::<_, (i64,)>(
+            "SELECT COUNT(*) FROM task_operation_history WHERE workload_kind IS NOT NULL OR metrics IS NOT NULL",
+        ).fetch_one(&pool).await.unwrap().0;
+        assert_eq!(populated, 0, "migration must not invent values for old rows");
+        let final_version: i32 = query_as::<_, (i32,)>(
+            "SELECT COALESCE(MAX(version), 0) FROM schema_version",
+        ).fetch_one(&pool).await.unwrap().0;
+        assert_eq!(final_version, 7);
+        println!("real history snapshot: {} rows, schema {} -> {}, source {} bytes",
+            before_rows.len(), initial_version, final_version, before.len());
+        pool.close().await;
+
+        let after = std::fs::read(&source).unwrap();
+        assert_eq!(after, before, "real user database was modified");
+        std::fs::remove_file(snapshot).unwrap();
     }
 }

@@ -1,5 +1,173 @@
 # 开发交接
 
+## 2026-08-28 v1.1.15 发布候选准备
+
+- 图片压缩 B-01 至 B-05.3 已完成后，8 个版本源统一提升为 `1.1.15`，唯一版本化 Shell Extension 已重新编译；Release notes 与候选审计已建立。
+- v1.1.15 正式 NSIS 为 8,691,488 B、SHA-256 `85CFBAD4230D3C1948278B34CFEC6327AC67368BC3730F66F35A8A99DBF8765A`；主程序为 28,400,640 B、SHA-256 `7D11ED9673865B4F9BBF2B617AE215B8413EDEB4317154FFACB84BB78E476E05`，PE 版本 1.1.15，14 项载荷完整。
+- 真实 `v1.1.14 → v1.1.15 → 卸载 → v1.1.14` 已通过：候选 EXE 字节一致、图片 17/17、安装生命周期 50/50、两处用户数据、经典菜单 17+4 和旧版恢复均符合预期，最终无运行进程。
+- 全回归通过：前端 254/254、集成 6/6；Rust debug 全目标及 Release workflow 同命令均通过（库 319/319、4 项既定忽略）；Clippy 零警告；真实媒体依赖/指标/图片基线、9 样本格式矩阵和资源/故障边界全部通过；npm 生产依赖漏洞为 0。
+- 本机没有可用的 updater 私钥环境，不能伪造签名资产；本地只验证正式 NSIS 和真实 `v1.1.14 → v1.1.15 → 卸载 → v1.1.14` 安装链。签名 ZIP、`.sig`、`latest.json` 和应用内公开更新必须由标签触发的 GitHub Actions 生成后复验。
+- PR #87 首轮 Browser E2E 通过，但 Frontend coverage 暴露 4 个真实图片夹具 `ENOENT`：本地已有忽略目录掩盖了干净检出的前置条件。`test:unit` 与 `test:unit:coverage` 现都通过 npm 前置生命周期生成并冻结校验真实图片；两次从项目内无夹具目录开始复验分别通过 276/276 和 254/254，类型、生产构建及发布身份也通过。
+- 修正提交 `b74cabeda6266dbd6b1b814194799e8d9a8d33c7` 的远端 CI run 33144654827 已全部通过：Frontend、Browser shell E2E、Windows desktop E2E build、Rust/Shell Extension 和实际 NSIS installer 共五个 job 全绿，四个受保护分支必需上下文全部满足；PR #87 为 `MERGEABLE / CLEAN`。
+- 当前没有创建标签或公开 Release。下一接续点是审查并合入 PR #87；公开标签、签名资产、回下载和应用内升级复验须等主分支合并与明确授权。详见 [RELEASE_AUDIT_1.1.15.md](RELEASE_AUDIT_1.1.15.md)。
+
+## 2026-08-28 B-05.3 正式安装版图片全流程
+
+- 新增 `test:installed-image-workspace` 与 `-RunImageWorkspaceMatrix` 安装门禁；正式候选不含桌面 E2E 桥，通过生产 Tauri `Event.emit` 文件投递监听接收真实路径，不直接注入 store、任务或结果。
+- 最终安装态图片链 17/17：三个真实 JPEG/PNG/WebP 输入与尺寸、可见质量 67/保持格式/限制尺寸/rename 设置、执行前结果为空、三个真实发布文件、源哈希变化 0、三组前后预览、三条完成历史、完整重启历史和三个输出重新导入解码全部通过。
+- 正式 NSIS 为 8,688,052 B、SHA-256 `404A9BC533F64C8688A05B6E08118817902A4B21131D7B19333F7E81A18DBA2C`；14 个载荷完整。覆盖/卸载/公开 v1.1.14 恢复生命周期 50/50，用户数据和菜单恢复，最终无应用进程。
+- 真实差异包括全局 Tauri API 不存在、Windows 文件对话框自动化假成功、ready 文案、滚动区点击和 Explorer 标签页 COM 观察不可靠；均按实际结果修正测试口径，没有放松磁盘文件、预览、历史或重启断言。并发 Cargo 首轮出现一次 7Z 分类差异，单项与完整串行复验均通过，未形成稳定产品缺陷。
+- B-05.1 至 B-05.3 功能矩阵至此完成，当前仍不升版、不更新 Release；下一接续点严格为 `v1.1.15` 版本身份、Release notes、正式资产/签名、公开更新和回下载复验。完整证据见 [B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md](B05_3_INSTALLED_IMAGE_FULL_FLOW_AUDIT.md)。
+
+## 2026-08-28 B-05.2.2 图片资源与故障边界
+
+- 新增 `test:image-boundaries:real`，直接调用生产图片服务验证 96 MP 可解码与 100.01 MP 有效 PNG 拒绝、340 UTF-16 中文长路径、skip/rename/replace-if-smaller 和编码期目标竞态、标准 StorageFull 注入、编码启动后取消。
+- 最终所有功能预期与实际差异为 0；长路径真实发布且源文件不变，超限/竞态/磁盘满/取消均不留下错误输出或事务暂存。StorageFull 仅在真实解码和编码后的最终写入点安全注入，不冒充物理磁盘耗尽。
+- 首轮发现新增观察器参数的多余 `mut` 编译警告及 Pillow 有意大图告警，均已修正并从头复跑。前端 276/276、Rust 319 通过/4 忽略、Clippy、生产构建、媒体门禁和 B-05.1 九样本矩阵全部通过。
+- B-05.2 整体已完成；当前图片配置没有删除源文件选项，不得把归档回收能力冒充完成。B-05 整体仍不升版、不更新 Release；下一接续点严格为 B-05.3 正式安装版拖入—配置—对比—执行—历史—重开输出。完整证据见 [B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md](B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md)。
+
+## 2026-08-28 B-05.2.1 百图真实批处理
+
+- 新增 `test:e2e:desktop:image-batch`：生成 JPEG 34、PNG 33、WebP 33 共 100 个不同的真实磁盘输入，在 Windows Release Tauri/WebView2 中通过可见按钮执行生产批处理。
+- 最终实际为 100/100 ready、100/100 completed、100 个唯一发布文件、100 条统一图片历史、源 SHA-256 变化 0，生产批处理耗时 17,059 ms；输出格式分布与预期 34/33/33 完全一致。
+- 首轮测试在 100 个输入全部 ready 后因 Selenium `getText()` 不读取视口外摘要而误报；现通过真实“批量设置”按钮收起面板，让摘要可见后断言，并从头复跑完整批次通过。没有修改产品实现或放松结果断言。
+- 前端 276/276、Rust 318 通过/4 忽略、Clippy、普通生产构建、媒体门禁和 B-05.1 九样本生产矩阵全部通过。B-05 整体仍未完成，不升版、不更新 Release；下一接续点严格为 B-05.2.2：超大像素、中文长路径、目标冲突、磁盘不足和取消。完整证据见 [B05_2_1_IMAGE_BATCH_AUDIT.md](B05_2_1_IMAGE_BATCH_AUDIT.md)。
+
+## 2026-08-28 B-05.1 三格式真实样本矩阵
+
+- B-05.1 已完成：新增 9 个冻结真实输入，JPEG、PNG、WebP 各 3 个，覆盖小图、大图、透明、EXIF 方向元数据；`test:image-matrix:real` 直接调用生产 `compress_single_image`，不是候选编码器或模拟返回。
+- 每个发布文件均重新解码并核对磁盘字节、格式、矩阵、可见尺寸、Alpha 和元数据；PNG 三例像素完全一致，有损样本按冻结的逐样本 PSNR 下限验收，透明 WebP 按白底合成后的可见像素比较且 Alpha 平面必须完全一致。最终 9/9 通过、解码差异 0。
+- 首轮真实矩阵发现无元数据透明 WebP 经 `img-parts` 无效重写后丢失 VP8X Alpha 标志，生产复验拒绝 `ALPH` 块；现仅在编码器元数据状态与目标状态不一致时重写容器。同轮还纠正透明隐藏 RGB 被纳入 PSNR 的错误口径，没有降低 Alpha 或可见质量要求。
+- B-05 整体尚未完成，不升版、不更新 Release。下一接续点严格为 B-05.2：100 张混合批量、超大像素、中文长路径、冲突、磁盘不足和取消；其后 B-05.3 才做安装版全流程。完整证据见 [B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md](B05_1_IMAGE_FORMAT_MATRIX_AUDIT.md)。
+
+## 2026-08-28 B-04.5 图片真实结果 UI 与 B-04 总收口
+
+- 图片工作区已接入 `useImageCompressionBatch`；按钮按真实 ready 状态开放，运行中提供统一取消，逐项状态和阶段读取 task store/task-log，批量百分比只按终态文件数计算。
+- 结果卡从统一 Task 指标展示真实发布路径、输出字节、格式、应用方向后的尺寸和实际字节差；最终路径经后端授权后在 WebView2 加载真实结果预览。失败、取消和 skip 不使用原图或估算伪装结果。
+- 第一轮 Windows 真实桌面执行中 JPEG 15,788→7,909 B、WebP 3,884→3,814 B 成功，透明 PNG 因默认 `lossy + keep PNG` 实际失败；现按 PNG 格式能力映射为无损优化并公开说明，复跑得到 PNG 1,546→601 B，三输出、三历史和双尺寸 UI 全部通过。
+- 开发中同时修正含失败/取消批次仍显示绿色成功汇总的语义偏差。前端 276/276、Rust 317 通过/4 忽略、Clippy、生产/正式 Tauri 构建、媒体门禁和真实图片基线通过；最终本地正式 NSIS 候选 8,671,911 B，SHA-256 `472E144050AEB50ADD96D2F4995F61168AD624E9EC6845886AF013CE59B17F27`，B-05 前不更新公开基线。
+- B-04.1 至 B-04.5 已全部完成；不升版、不更新 Release。下一接续点严格为 B-05 安装版真实验收矩阵，完整证据见 [B04_5_IMAGE_RESULT_UI_AUDIT.md](B04_5_IMAGE_RESULT_UI_AUDIT.md)。
+
+## 2026-08-28 B-04.4 图片统一队列与历史收口
+
+- 每张图片现注册为统一 `compression/image` Task，复用现有 task-log、状态机、取消和唯一 `save_task_history` 写入口；图片批量返回前等待每条终态历史的持久化结果。
+- published 使用后端真实 input/output 建立字节和双侧图片指标；候选不更小时以实际保留源文件作为最终事实；failed/cancelled/未编码 skip 不制造媒体指标。
+- 真实透明 PNG 完成记录及 failed/cancelled 已写入实际 SQLite，关闭连接后重新打开仍完整读取。开发中发现并修正嵌套 `encodedBytes` 严格字段泄漏和终态守卫阻断密码重试两项偏差。
+- 前端 273/273、Rust 317 通过/4 忽略、Clippy 零警告、生产构建、媒体门禁及真实图片基线通过。本节点当时仍不启用按钮；B-04.5 现已由顶部节点完成，下一接续点为 B-05。完整证据见 [B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md](B04_4_IMAGE_QUEUE_HISTORY_AUDIT.md)。
+
+## 2026-08-28 B-04.3 图片安全批量编排收口
+
+- 后端新增真实文件系统目标规划：稳定生成 `.compressed` 名称，rename 同时避让磁盘现有文件和同批预留目标，skip 返回结构化跳过；replace-if-smaller 只映射候选大小策略，既有目标继续失败关闭，未放松 B-03 禁止覆盖事务。
+- 前端新增强类型规划/压缩命令封装和逐图批量执行器；每张图使用唯一 task id，进度只按文件终态数计算，取消复用 `cancel_compression` 且不会在规划返回后误启动编码。
+- 真实方向 JPEG、透明 PNG 和 WebP 已完成请求映射、冲突、规划后实际编码与取消复核；前端 270/270、Rust 316 通过/4 忽略、Clippy 零警告、生产构建、媒体门禁及真实图片基线通过。
+- 本节点要求的 B-04.4 与后续 B-04.5 均已由顶部节点收口；当前下一接续点为 B-05，完整编排证据见 [B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md](B04_3_IMAGE_SAFE_ORCHESTRATION_AUDIT.md)。
+
+## 2026-08-28 B-04.2 图片真实阶段事件收口
+
+- 图片服务新增可测试的 `decoding/resizing/encoding/validating/publishing` 观察器；缩放仅在可见尺寸实际变化时出现，候选不更小时不会记录发布，预取消不生成任何阶段。
+- Tauri 图片命令将阶段映射为现有 `task-log`；没有新增日志 store，也没有发送要求数值百分比的 `task-progress`。架构门禁会阻止后续误加虚假图片进度。
+- 固定真实方向 JPEG、透明 PNG、WebP 和 GIF 已完成预期—实际序列复核；前端 244/244、Rust 314 通过/4 忽略、Clippy 零警告、生产构建和五项媒体门禁通过。
+- 本节点要求的 B-04.3 至 B-04.5 均已由顶部节点收口；当前下一接续点为 B-05，完整阶段证据见 [B04_2_IMAGE_STAGE_EVENT_AUDIT.md](B04_2_IMAGE_STAGE_EVENT_AUDIT.md)。
+
+## 2026-08-28 B-04.1 图片输入/输出事实契约收口
+
+- Rust `ImageCompressionOutcome` 已从输出单侧事实改为 `input/output`；仅更小策略返回 `input/candidate`。两侧均包含真实文件字节、格式、编码矩阵、方向后可见尺寸、方向、帧数和 Alpha。
+- 前端新增同构请求/响应类型；历史 `MediaMetricsV1` 向后兼容增加可选 `image.input/output`，Rust `deny_unknown_fields` 同步并拒绝未知字段、无效格式、零尺寸/帧数和方向范围外数据。
+- 固定真实方向 JPEG、透明 PNG 和 WebP 已复核预期—实际差异；前端 244/244、Rust 312 通过/4 忽略、Clippy 零警告、生产构建和五项媒体门禁通过。
+- 本节点收口时尚未接入阶段事件；B-04.2 至 B-04.5 现均已由顶部节点完成。当前以 B-05 安装版真实验收矩阵为唯一接续点，完成前仍不升版、不发布。完整事实契约证据见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)。
+
+## 2026-08-28 B-03 后跨设备接续审计（已由 B-04.1 更新）
+
+- GitHub 开发分支为 `codex/archive-media-roadmap`，代码锚点 `5e396c6`；审计时本地与远端一致，相对 `origin/master` 领先 23、落后 0。公开 `v1.1.14` 标签仍在 `cfc58ec`，当前不升版、不更新 Release。
+- 实际代码确认 B-03 后端已完成，但前端仍有“B-02/B-03 待开放”旧文案且没有调用 `compress_image_file`。更关键的是，后端结果与现有历史指标尚不能同时表达输入/输出格式、可见尺寸、编码矩阵和方向事实，图片命令也没有阶段事件。
+- 该审计当时要求从 B-04.1 事实契约开始；B-04.1 至 B-04.5 现均已完成，当前以文档顶部的 B-05 接续点为准。后续仍不得用浏览器尺寸或预计值覆盖真实结果历史。
+- 新电脑的 clone/switch 命令、工具版本、验证命令、工作区噪声和完整阻断表见 [CURRENT_DEVELOPMENT_STATUS_AUDIT_2026-08-28.md](CURRENT_DEVELOPMENT_STATUS_AUDIT_2026-08-28.md)。
+
+## 2026-08-28 B-03.2 图片变换、命令执行与 NSIS 增量收口
+
+- B-03 后端执行与发布事务已完成：JPEG/PNG/WebP 支持同格式压缩、格式转换和按可见尺寸等比例缩放；输出发布前重新解码并核对格式、矩阵、方向、可见尺寸、帧数、Alpha，以及配置承诺的 EXIF/ICC 字段。
+- 新增受治理的 `img-parts 0.4.0`（仅 `std`）处理 EXIF/ICC 容器字段；转换/缩放时烘焙方向并归一 Orientation，同格式移除元数据时仍保留最小方向语义。XMP/任意 PNG ancillary chunk 不在既有产品承诺内，未被扩张为虚假支持。
+- `compress_image_file` 已复用现有容量预检、统一取消注册表、`spawn_blocking` 和共享原子发布事务；失败、取消、空间不足、目标冲突、结果不更小均不发布且清理暂存。当前没有“删除源文件”选项，因此源文件始终只读；未来只能在发布成功后接共享回收站。
+- 同版本 NSIS 前后对照完成：`f4ea25b` 基线 7,736,450 B，当前 8,613,866 B，净增 877,416 B（11.3413%），两份 SHA-256 已进入机器门禁。宿主 NSIS 缓存无法启动，使用同一透明转发工具链生成两包，不影响对照口径。
+- 下一步进入 B-04：接统一进度、阶段日志、真实指标和跨重启历史，事实来源完成后再启用前端按钮；B-05 负责安装版完整矩阵。当前不升版、不更新 Release。完整证据见 [B03_2_IMAGE_TRANSFORM_EXECUTION_AUDIT.md](B03_2_IMAGE_TRANSFORM_EXECUTION_AUDIT.md)。
+
+## 2026-08-28 B-03.1 单文件图片编码与发布事务
+
+- 产品运行时首次严格准入 `libcaesium 0.21.0`（仅 `jpg,webp`）、`oxipng 10.2.0`（仅 `parallel,zopfli`）和 `image 0.25.10`（仅 `jpeg,png,webp` 验证）；门禁同时锁定 Cargo 声明、lockfile 精确版本并拒绝 gifski/imagequant，FFmpeg/qpdf 继续冻结。
+- 审计发现架构扫描只识别驼峰 `imageCompression`、会漏掉 Rust 的 `image_compression`；现已修正命名匹配，新服务进入共享发布/历史/回收禁止绕过扫描。
+- 新服务以魔数猜测和真实完整解码确认 JPEG/PNG/WebP，拒绝 GIF/动画及 1 亿像素以上输入；输出只写目标旁唯一暂存，编码后再次完整解码并核对格式、编码矩阵、EXIF 方向、方向后可见尺寸、帧数和 Alpha，再复用共享事务原子发布。
+- 默认“仅在更小时替换”、预取消、编码/验证失败、目标已存在和发布竞态都不修改源文件、不留下暂存；真实方向 JPEG、透明 PNG、WebP、扩展名伪装与拒绝边界测试已通过。
+- B-03 尚未收口。下一步只做 B-03.2：同一服务内补输出格式转换、缩放、元数据逐字段保持/移除验证、任务取消注册表与容量预检接线，并测最终 NSIS 增量；之后才连接前端执行。当前不升版、不发布，执行按钮继续禁用。完整证据见 [B03_IMAGE_ENCODING_TRANSACTION_AUDIT.md](B03_IMAGE_ENCODING_TRANSACTION_AUDIT.md)。
+
+## 2026-08-27 B-02 验证基础设施纠偏
+
+- 恢复 B-02 时真实复现 Windows CRLF 使 `test:image-baseline` 误报缺少 libcaesium 锁项；现只规范化换行，版本、feature 与禁止依赖检查均未放宽。
+- 图片桌面门禁此前错误依赖完整视频/PDF/FFmpeg 夹具，170,676,191 B 固定测试工具首次下载停在 467,520 B 且无限等待。现新增图片专用夹具路径，固定五图片和一个真实 PDF 拒绝样本；B-01 真实图片基线复验通过。
+- 完整媒体下载增加 `.part`、Range 续传、停滞超时、重试、进度和哈希后原子发布，B-00 完整矩阵保持不变。下一步仍是 B-02 Release/WebView2 双尺寸复验和原生选择/拖放，不进入 B-03。证据见 [B02_VALIDATION_INFRASTRUCTURE_AUDIT.md](B02_VALIDATION_INFRASTRUCTURE_AUDIT.md)。
+
+## 2026-08-27 B-02 图片前端工作区暂停交接
+
+- 已实现压缩中心四模式入口、现有压缩 store 内隔离的图片草稿、JPEG/PNG/WebP 输入边界、GIF/PDF 明确拒绝、批量/单项同源配置、预计范围标识以及原图/结果对比框架；视频和 PDF 只展示计划节点，不创建假任务。
+- 暂停审计发现首稿曾新建图片 store，偏离 B-00“统一任务/不新建媒体 store”边界；现已并回压缩 store，并扩大架构门禁以阻止用 `imageCompression` 命名绕过检查。
+- 第一次 Windows Release/WebView2 真实运行发现原图全部无法解码，实际原因是 Tauri 本地资产协议未启用。现已改为默认空 scope，并由 Rust 在普通文件、大小、魔数和扩展名一致性校验后逐文件授权；聚焦 Rust 安全测试通过。
+- 修正后的隔离 Release 重新构建在用户要求暂停时终止，所以 B-02 不能收口。恢复后第一步必须完成双尺寸桌面复验和一次原生选择/拖放，不得直接进入 B-03、升版或发布。完整现状与命令见 [B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md](B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md)。
+
+## 2026-08-27 B-00.4 真实媒体样本基线收口
+
+- 已建立 5 图片、2 视频、6 PDF 的合成真实夹具：透明/EXIF/WebP/动图/9600 万像素，H.264/H.265/VFR/AAC/旋转矩阵/字幕，以及文本/扫描/透明/表单/CMS 签名/AES-256 拒绝边界。
+- 首轮真实运行依次发现 ReportLab API 名称、pyHanko 参数、加密 PDF 检查顺序、MP4 旋转标签不产生 Display Matrix 和扫描字体过小，均按实际差异修正并重跑。最终结构化 `differences=0`，六个 PDF Poppler 渲染已逐张视觉复核。
+- B-00.1 至 B-00.6 总审计和 B-01 图片依赖/固定哈希基线已完成。libcaesium 仅启用 JPEG/WebP，PNG 独立使用 oxipng；五个输入哈希稳定，三种输出真实解码复核，GIF 不落盘，隔离候选压缩增量 1,077,127 B。候选仍未进入产品运行时，本步骤不升版、不发布；下一步为 B-02 图片前端工作区。完整证据见 [B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md](B01_IMAGE_DEPENDENCY_BASELINE_AUDIT.md)。
+
+## 2026-08-27 B-00.3 媒体依赖身份与许可门禁收口
+
+- 已固定 `libcaesium 0.21.0`、`oxipng 10.2.0`、FFmpeg 9.0.1 官方源码和 qpdf 12.4.0 官方 MinGW64 候选的来源、字节、SHA-256、许可、平台、链接方式、禁用功能与安全责任；Ghostscript 明确阻断。
+- 真实审计纠正了顶层许可误判：libcaesium 默认/GIF/PNG 会引入 AGPL/GPL 依赖，因此未来只允许显式 JPEG/WebP，无损 PNG 独立走 MIT oxipng。FFmpeg 官方源码 PGP 签名与发布指纹已真实验证；qpdf 真实运行版本/crypto 与 12,637,211 B 运行子集已核对。
+- CI 和 Release 增加失败关闭静态门禁，真实网络门禁可复验下载与执行身份；四个候选仍为 `integrationAllowed=false`，生产代码中没有媒体引擎。本步骤不升版、不发布；下一步为 B-00.4 固定真实媒体样本。完整证据见 [B00_MEDIA_DEPENDENCY_AUDIT.md](B00_MEDIA_DEPENDENCY_AUDIT.md)。
+
+## 2026-08-27 B-00.2 共享事务边界收口
+
+- 非分卷归档压缩已从服务内部重命名逻辑迁移到公共单文件发布事务：同目录唯一暂存、校验后发布、取消/目标竞争/缺失暂存/写满清理均有真实文件证据；分卷压缩和目录解压事务保持原边界。
+- Windows 系统回收站调用已提取为公共服务，整组临时分卷真实移入电脑回收站；没有建立应用内回收站。架构门禁会阻止未来媒体生产代码直接重命名最终文件、调用回收站、另写历史或建立媒体 store。
+- Release/WebView2 真实归档闭环通过。首次门禁依次发现 EdgeDriver 环境变量缺失和前端测试桥未编入，均按实际原因修正后重建复验。B-00.2 不升版、不发布；下一步为 B-00.3 第三方依赖身份、许可、哈希和再分发门禁。完整证据见 [B00_SHARED_TRANSACTION_AUDIT.md](B00_SHARED_TRANSACTION_AUDIT.md)。
+
+## 2026-08-27 S-00 跨步骤总验收收口
+
+- S-00.1 至 S-00.4 已通过同一轮跨步骤复验：Windows DPAPI/迁移、真实加密 7Z 保险箱命中与当天趋势、真实 ZIP 历史跨完整进程重启均通过。
+- 当前代码重建的无测试桥 NSIS 已覆盖正式安装，安装态工作区、用户数据、经典菜单、卸载和公开 `1.1.14` 恢复共 48/48 通过；真实归档矩阵覆盖加密 7Z/RAR、TAR、嵌套、安全负向与 18 万条目取消。
+- 首次安装验收分别被运行中的正式进程、缺少 EdgeDriver 和缺少固定 RAR 夹具阻断；未发现产品回归。安装脚本已增加覆盖安装前的无损前置检查，文档补齐准备顺序。S-00 正式关闭，本节点不升版、不发布；下一步进入 B-00 架构门禁。完整证据见 [S00_TOTAL_ACCEPTANCE_AUDIT.md](S00_TOTAL_ACCEPTANCE_AUDIT.md)。
+
+## 2026-08-27 S-00.4 格式支持与仓库卫生收口
+
+- 新增 A/B/C/D 格式支持等级，明确动态处理器、扩展名识别和空镜像不能作为公开支持证据；README、全格式验证文档与当前权威清单已经统一。
+- HFSX 使用固定 `libdmg-hfsplus` 提交生成包含 `Firefox/known-payload.txt` 的非空镜像，随包 7-Zip 与 Windows Release Tauri 均完成真实解压和内容校验；首次夹具哈希兼容问题及首次误用普通 Release 可执行文件均已记录并修正。
+- 无构建引用的 `src-tauri/TranslateSoftware` 已以可追溯 Git 重命名移入 `archive/legacy-projects`。前端类型检查、40/40 测试文件（235/235）通过；本步骤不升版本、不发布，下一步为 S-00 跨步骤总验收。完整证据见 [FORMAT_SUPPORT_AND_REPOSITORY_HYGIENE_S00_4_AUDIT.md](FORMAT_SUPPORT_AND_REPOSITORY_HYGIENE_S00_4_AUDIT.md)。
+
+## 2026-08-27 S-00.3 运行队列与历史任务边界收口
+
+- 已删除 `task.ts` 中无调用方、无后端实现的 `fetchTasks` 占位接口；当前任务 store 只维护运行队列，历史页面只从 `history.ts` 和后端 SQLite 读取，不再存在第二套历史读取入口。
+- 真实 Windows Release + WebView2 使用 2 MiB 随机文件完成 ZIP 压缩—解压，压缩与解压历史在应用完全退出重启后仍存在；正常/760×520 窗口、状态胶囊和不透明详情抽屉均通过。
+- 类型检查、40/40 测试文件（235/235）通过。本步骤不升版本、不发布；下一步为 S-00.4 文档、格式支持等级和未参与构建旧工程治理。完整证据见 [TASK_HISTORY_BOUNDARY_S00_3_AUDIT.md](TASK_HISTORY_BOUNDARY_S00_3_AUDIT.md)。
+
+## 2026-08-27 S-00.2 归档密码领域模型收口
+
+- 活动 WebView/Tauri CRUD 已只保留归档密码字段，新增与编辑不再计算或提交传统网站密码强度，账号、网址、到期和自定义登录字段只留在磁盘兼容模型；编辑旧条目时由 Rust 合并并保留旧字段与生命周期统计。
+- 手动密码成功解压后的调用统计已改走后端原子事件；搜索只覆盖归档名称、备注和标签。真实 Windows Release + WebView2 在应用重启后使用保险箱密码解开加密 7Z，当天趋势正确增加。
+- 类型检查、40/40 前端测试文件（234/234）、Rust 领域边界 2/2、生产前端构建和真实桌面门禁均通过。本步骤不升版本、不发布；下一步为 S-00.3 历史任务占位接口治理。完整证据见 [ARCHIVE_PASSWORD_MODEL_S00_2_AUDIT.md](ARCHIVE_PASSWORD_MODEL_S00_2_AUDIT.md)。
+
+## 2026-08-27 S-00.1 密码保险箱本机保护收口
+
+- Windows 安装密钥现使用当前用户 DPAPI 保护，密码正文使用 AES-256-GCM v2 密文；旧明文安装密钥和旧明文密码条目在成功读取后原子迁移，密文损坏、密钥不匹配或迁移失败不会覆盖原数据。
+- 前端不再获取安装密钥，只调用 Rust 后端无参数就绪命令；内存数据密钥仅在解锁时生成一次并在锁定时清零，避免多条密码重复执行慢密钥派生。
+- 真实 Windows Tauri 门禁已检查磁盘文件不含密码明文、DPAPI/v2 标识、完全退出重启后密码保险箱命中真实加密 7Z，以及本地当天趋势为 1；前端 234/234、Rust 聚焦 4/4、全目标 Clippy和正式生产构建均通过。
+- 本步骤不升版本、不发布。S-00 下一步为归档密码领域模型收敛，媒体压缩 B-00 继续冻结。完整预期—实际—修正见 [PASSWORD_VAULT_PROTECTION_S00_1_AUDIT.md](PASSWORD_VAULT_PROTECTION_S00_1_AUDIT.md)。
+
+## 2026-08-26 开发目标对齐审计
+
+- 当前分支与 `origin/master` 均为 `d985556`，公开版本为 `v1.1.14`。归档主流程、浏览工作区、密码自动尝试、历史任务、系统回收站、经典右键菜单及公开更新仍然对齐最初基本需求；媒体引擎尚未进入生产代码，没有发生战略性开发偏移。
+- 审计发现密码保险箱“安装实例密钥保护”的公开描述与当前直接 JSON 存储不一致；传统网站密码模型也仍有残留。进入媒体功能前先执行 S-00，确定 Windows 无感数据保护/诚实降级方案、完成旧数据迁移验证并收敛归档密码领域模型。
+- 路线图已补充可执行的 B-00 门禁。S-00 与 B-00 通过前，不接入图片、视频或 PDF 编码引擎，不提前增加媒体 UI。
+- 完整需求矩阵、偏移证据、优先级和下一步顺序见 [DEVELOPMENT_ALIGNMENT_AUDIT_2026-08-26.md](DEVELOPMENT_ALIGNMENT_AUDIT_2026-08-26.md)。
+
 ## 2026-08-26 v1.1.14 正式发布
 
 - 全部版本源和唯一 Shell Extension DLL 已统一为 `1.1.14`，README、Release Notes 和发布审计已更新。
@@ -52,7 +220,7 @@
 - 真实门禁使用现场生成中文八层长路径 ZIP、文件名加密 7Z、固定加密 RAR 和 ZIP→加密 7Z→ZIP；A-03 以真实 TXT/PNG/PDF/CMD 验证默认应用、NTFS 安全标记与默认取消；A-04 覆盖 ZIP UTF-8/超大日志/伪装二进制、UTF-16LE TAR 和 7Z 禁用边界；A-05 覆盖错/正确密码、三层链、第四层阻断、损坏内层和返回恢复。全量前端 228 项通过。证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)、[ARCHIVE_WORKSPACE_A02_AUDIT.md](ARCHIVE_WORKSPACE_A02_AUDIT.md)、[ARCHIVE_WORKSPACE_A03_AUDIT.md](ARCHIVE_WORKSPACE_A03_AUDIT.md)、[ARCHIVE_WORKSPACE_A04_AUDIT.md](ARCHIVE_WORKSPACE_A04_AUDIT.md) 与 [ARCHIVE_WORKSPACE_A05_AUDIT.md](ARCHIVE_WORKSPACE_A05_AUDIT.md)。
 - A-04 已完成 ZIP/TAR 有界文本查看器，A-05 已完成嵌套归档工作区。下一步严格执行 A-06 安装版综合矩阵；通过后才允许发布 `v1.1.14`。
 - 后续按图片压缩、视频压缩软件编码、PDF 安全优化推进。三个模式都放在压缩中心内部，继续使用 `compression` 顶层任务类型，通过可选工作负载分类扩展历史，不复制任务、日志和发布事务。
-- 图片首选固定版本的 Apache-2.0 `libcaesium`；视频使用经过许可与哈希审计的 FFmpeg LGPL 构建；PDF 首期采用 Apache-2.0 qpdf。Ghostscript 在 AGPL/商业许可方案未明确前不得内置。
+- 图片 JPEG/WebP 仅评估关闭默认功能并显式启用 `jpg,webp` 的 Apache-2.0 `libcaesium`，无损 PNG 独立评估 MIT `oxipng`；禁止 libcaesium 默认/GIF/PNG 路径引入 AGPL/GPL 依赖。视频使用经过许可与哈希审计的 FFmpeg LGPL 构建；PDF 首期采用 Apache-2.0 qpdf。Ghostscript 在 AGPL/商业许可方案未明确前不得内置。
 - 每个大节点的开发步骤、真实样本、验收目标、阻断条件、版本提升和 Release 闭环统一以 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md) 为准。
 - 媒体引擎在大节点 A 完成前继续冻结，避免把归档交互、安全临时提取和第三方编解码依赖混入同一发布审计。
 
@@ -360,7 +528,7 @@
 - 桌面测试现在为每次运行生成独立实例名、IPC socket、数据目录和 WebView2 用户目录；即使旧 E2E
   进程异常残留，也不会阻断新会话或污染固定样本验收。
 - Windows 11 顶层右键菜单仍受签名证书限制，当前不作为开发阻塞项。
-- HFSX 目前只能可靠生成空镜像，尚未找到可写入已知载荷的可信方案，因此不能标记为完整通过。
+- 历史说明：本段当时尚不能生成非空 HFSX；该限制已在 2026-08-27 由固定工具提交、已知载荷和 Release Tauri 门禁解除，当前口径见 `FORMAT_SUPPORT_LEVELS.md`。
 - v1.0.18 候选已修复无签名 Windows 11 菜单降级与覆盖安装残留，并通过公开 v1.0.17
   覆盖安装、41 项状态/数据检查、卸载和基线恢复。
 - v1.0.18 正式更新的签名下载与覆盖安装成功，但被动安装没有自动重启；v1.0.19 已修复。
@@ -422,3 +590,19 @@
 4. 每次正式发布后继续用 `test:public-update` 从上一正式版本执行独立 WebView2 更新验收。
 5. 正式发布 PR 通过后合入 `master` 并创建 `v1.0.20` 标签，由 Release 工作流生产签名 updater 资产；发布后立即从
    保留的 v1.0.19 环境执行 `test:public-update`，回填应用内更新和自动重启证据。
+## 2026-08-27 B-02 Release/WebView2 桌面矩阵通过
+
+- 隔离 Release/WebView2 双尺寸门禁已真实通过并人工检查截图：JPEG/PNG/WebP 能预览，GIF/PDF 明确拒绝，1100×720 与 760×560 无横向溢出，归档/图片队列互不污染。
+- 首次失败确认 Windows `convertFileSrc` 使用 `https://asset.localhost`，CSP 已补齐且 Release 身份门禁会锁定空默认 scope 与两种资产源；随后将 Orientation=6 的公开尺寸明确为应用方向后的 360×640，编码矩阵 640×360 和方向值仍单独验证。
+- B-02 仍未收口：下一步只补系统文件选择器或真实拖放路径，然后做全量回归审计；不得提前进入 B-03、升版或发布。证据见 [B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md](B02_IMAGE_WORKSPACE_PAUSE_AUDIT.md)。
+## 2026-08-28 B-02 系统选择路径纠偏
+
+- 修复真实 `dialog.open` 路径未读取磁盘元数据、图片大小先显示 0 B 的偏移；文件/目录选择、测试桥和原生拖放现在统一调用 `get_file_info`。
+- 图片系统选择器改用“选择图片文件”标题并允许选中 GIF 后由统一业务规则明确拒绝。组件测试与 Windows Release/WebView2 可见入口门禁通过，JPEG 使用真实字节和方向后尺寸，GIF Toast 拒绝且不入队。
+- 当前 Codex 宿主可打开、枚举和预选真实 Windows 对话框，但阻止后台测试进程完成受信任点击；实验性调度器已全部撤回。B-02 仍需一次有人值守的系统选择，不能宣称收口或进入 B-03。证据见 [B02_NATIVE_PICKER_PATH_AUDIT.md](B02_NATIVE_PICKER_PATH_AUDIT.md)。
+- 有人值守门禁现可通过 `npm.cmd run test:e2e:desktop:image-picker-manual` 启动隔离 Release/WebView2 会话；脚本不注入选择结果，会自动点击可见投放入口打开真实系统对话框，只在用户完成对话框操作后自动审计 JPEG 字节与方向尺寸、预览、GIF 拒绝、队列和焦点，并保存本地证据。
+## 2026-08-28 B-02 图片前端工作区收口
+
+- 原生门禁由产品可见投放入口真实打开 Windows `#32770`“选择图片文件”对话框，系统选择状态确认 `exif-orientation.jpg` 与 `animated.gif` 同时选中后由标准 `IDOK` 返回路径；未调用测试桥选择队列，也未把后台坐标输入冒充通过。
+- 返回应用后自动证据为 JPEG 15,788 B、360×640、预览完成；GIF Toast 明确拒绝且不入队；WebView 确实失焦并重新获焦。`test:e2e:desktop:image-picker-manual` 退出码 0，本地 PNG/JSON 证据不提交。
+- B-02 至此收口，不升版、不发布。下一步进入 B-03，只接入 B-01 已审计图片引擎和 B-00 共享发布事务；真实输出重新解码、失败/取消清理与发布竞态通过前，执行按钮继续禁用。

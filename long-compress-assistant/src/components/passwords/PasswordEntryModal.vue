@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
-import { PasswordStrength, usePasswordStore } from '@/stores/password'
+import { PasswordCategory, usePasswordStore } from '@/stores/password'
 import { useAppStore } from '@/stores/app'
 import Modal from '@/components/ui/Modal.vue'
 
@@ -21,14 +21,6 @@ const form = reactive({
   password: '',
   notes: ''
 })
-
-const strengthFromScore = (score: number): PasswordStrength => {
-  if (score >= 80) return PasswordStrength.VeryStrong
-  if (score >= 60) return PasswordStrength.Strong
-  if (score >= 40) return PasswordStrength.Medium
-  if (score >= 20) return PasswordStrength.Weak
-  return PasswordStrength.VeryWeak
-}
 
 watch(() => props.visible, (isOpening) => {
   if (isOpening) {
@@ -52,29 +44,19 @@ const handleSave = async () => {
   if (!form.name || !form.password) return
   isSaving.value = true
   try {
-    const now = new Date().toISOString()
-    const assessment = await passwordStore.assessPasswordStrength(form.password)
-    const strength = strengthFromScore(assessment.score)
-
     if (props.entry) {
       await passwordStore.updateEntry(props.entry.id, {
         name: form.name,
         password: form.password,
         notes: form.notes,
-        strength,
-        updated_at: now,
       })
     } else {
       await passwordStore.addEntry({
         name: form.name,
         password: form.password,
         notes: form.notes,
-        username: '',
-        url: '',
-        category: 'Other',
+        category: PasswordCategory.Other,
         tags: [],
-        strength,
-        custom_fields: [],
       })
     }
     emit('saved')

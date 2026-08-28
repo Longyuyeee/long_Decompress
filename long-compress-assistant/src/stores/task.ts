@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { ResourcePreflightReport } from '@/types/resourcePreflight'
+import type { TaskMetrics, WorkloadKind } from '@/types/taskMetrics'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
 import { normalizeProgressPercent } from '@/utils/progress'
 
@@ -32,6 +33,10 @@ export interface Task {
   id: string
   name: string
   type: TaskType
+  /** Missing on pre-B00 tasks and interpreted as archive for compatibility. */
+  workloadKind?: WorkloadKind
+  /** Only measured values are persisted; never synthesize progress or quality. */
+  metrics?: TaskMetrics
   status: TaskStatus
   progress: number
   startTime?: Date
@@ -80,6 +85,7 @@ export const useTaskStore = defineStore('task', () => {
   const activeTaskCount = computed(() => tasks.value.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status)).length)
   const tasksFor = (type: TaskType) => tasks.value.filter(task => task.type === type)
   let listenerInitialization: Promise<void> | null = null
+  const historyPersistence = new Map<string, Promise<boolean>>()
 
   // 初始化监听器
   const initListeners = () => {
@@ -222,25 +228,34 @@ export const useTaskStore = defineStore('task', () => {
   const updateTaskStatus = (taskId: string, status: TaskStatus) => {
     const task = tasks.value.find(t => t.id === taskId)
     if (task) {
+      const terminalStatuses: TaskStatus[] = ['completed', 'failed', 'cancelled']
+      if (task.status === status
+        || (terminalStatuses.includes(task.status) && terminalStatuses.includes(status))) return
       task.status = status
       if (['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(status) && !task.startTime) {
         task.startTime = new Date()
       }
-      if (['completed', 'failed', 'cancelled'].includes(status)) {
+      if (terminalStatuses.includes(status)) {
         task.endTime = new Date()
         task.etaSeconds = undefined
         const historyRecord = createTaskHistoryRecord(task)
-        void invoke('save_task_history', { record: historyRecord }).catch((error) => {
-          console.warn('Failed to persist task history:', error)
-        })
+        historyPersistence.set(taskId, invoke('save_task_history', { record: historyRecord })
+          .then(() => true)
+          .catch((error) => {
+            console.warn('Failed to persist task history:', error)
+            return false
+          }))
       }
     }
   }
+
+  const waitForHistoryPersistence = (taskId: string) => historyPersistence.get(taskId) || Promise.resolve(true)
 
   const removeTask = (taskId: string) => {
     const index = tasks.value.findIndex(t => t.id === taskId)
     if (index !== -1) {
       tasks.value.splice(index, 1)
+      historyPersistence.delete(taskId)
     }
   }
 
@@ -271,16 +286,16 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
-  const fetchTasks = async () => {
-    // 这是一个占位符，如果后端支持获取历史任务，可以在此实现
-    // console.log('Fetching tasks...')
-  }
-
   const clearFinishedTasks = (type?: TaskType) => {
-    tasks.value = tasks.value.filter(task => {
+    const retainedTasks = tasks.value.filter(task => {
       const isFinished = ['completed', 'failed', 'cancelled'].includes(task.status)
       return !isFinished || (type !== undefined && task.type !== type)
     })
+    const retainedTaskIds = new Set(retainedTasks.map(task => task.id))
+    for (const taskId of historyPersistence.keys()) {
+      if (!retainedTaskIds.has(taskId)) historyPersistence.delete(taskId)
+    }
+    tasks.value = retainedTasks
   }
 
   return {
@@ -290,9 +305,9 @@ export const useTaskStore = defineStore('task', () => {
     initListeners,
     addTask,
     updateTaskStatus,
+    waitForHistoryPersistence,
     removeTask,
     clearFinishedTasks,
-    cancelTask,
-    fetchTasks
+    cancelTask
   }
 })

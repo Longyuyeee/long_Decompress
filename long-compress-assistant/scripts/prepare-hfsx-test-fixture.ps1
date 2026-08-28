@@ -35,6 +35,18 @@ function Convert-ToWslPath([string]$WindowsPath) {
     return "/mnt/$drive/$tail"
 }
 
+function Get-Sha256([string]$Path) {
+    $stream = [System.IO.File]::OpenRead([System.IO.Path]::GetFullPath($Path))
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString($sha256.ComputeHash($stream))).Replace('-', '')
+    }
+    finally {
+        $sha256.Dispose()
+        $stream.Dispose()
+    }
+}
+
 New-Item -ItemType Directory -Path $destination -Force | Out-Null
 if (-not (Test-Path -LiteralPath (Join-Path $toolRoot '.git'))) {
     git clone --filter=blob:none --no-checkout https://github.com/mozilla/libdmg-hfsplus.git $toolRoot
@@ -57,7 +69,7 @@ if ($actualCommit -ne $toolCommit) {
 }
 
 $emptyImage = Join-Path $toolRoot 'test\empty.hfs'
-$actualEmptyImageSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $emptyImage).Hash
+$actualEmptyImageSha256 = Get-Sha256 $emptyImage
 if ($actualEmptyImageSha256 -ne $emptyImageSha256) {
     throw "Pinned empty HFS+ image hash mismatch: $actualEmptyImageSha256"
 }
@@ -143,8 +155,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $extractedPayload = Join-Path $verificationRoot 'Firefox\known-payload.txt'
-$expectedHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $payloadPath).Hash
-$actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $extractedPayload).Hash
+$expectedHash = Get-Sha256 $payloadPath
+$actualHash = Get-Sha256 $extractedPayload
 if ($actualHash -ne $expectedHash) {
     throw "HFSX payload hash mismatch: expected=$expectedHash; actual=$actualHash"
 }

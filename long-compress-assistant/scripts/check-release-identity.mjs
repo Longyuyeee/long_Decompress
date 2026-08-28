@@ -72,6 +72,21 @@ export const collectReleaseIdentity = () => {
 }
 
 export const verifyReleaseIdentity = ({ expected = '', tag = '' } = {}) => {
+  const tauriConfig = readJson('src-tauri/tauri.conf.json')
+  const protocol = tauriConfig.tauri?.allowlist?.protocol
+  if (protocol?.asset !== true || !Array.isArray(protocol.assetScope) || protocol.assetScope.length !== 0) {
+    throw new Error('Image asset protocol must be enabled with an empty default scope.')
+  }
+  const imageSources = tauriConfig.tauri?.security?.csp
+    ?.match(/(?:^|;)\s*img-src\s+([^;]+)/)?.[1]
+    ?.trim()
+    ?.split(/\s+/) ?? []
+  for (const source of ['asset:', 'https://asset.localhost']) {
+    if (!imageSources.includes(source)) {
+      throw new Error(`Tauri image CSP is missing the required local asset source: ${source}`)
+    }
+  }
+
   const identity = collectReleaseIdentity()
   const entries = Object.entries(identity)
   const versions = new Set(entries.map(([, version]) => version))
@@ -116,6 +131,13 @@ export const verifyReleaseIdentity = ({ expected = '', tag = '' } = {}) => {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try {
+    await import('./check-media-dependencies.mjs')
+    const { checkMediaMetrics } = await import('./check-media-metrics.mjs')
+    await checkMediaMetrics()
+    const { checkMediaReleaseGates } = await import('./check-media-release-gates.mjs')
+    await checkMediaReleaseGates()
+    const { checkImageBaseline } = await import('./check-image-baseline.mjs')
+    await checkImageBaseline()
     const result = verifyReleaseIdentity(parseArguments(process.argv.slice(2)))
     process.stdout.write(
       `Release identity verified: v${result.version} (${result.expectedShellDll})\n`,

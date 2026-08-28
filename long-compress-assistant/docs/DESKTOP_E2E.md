@@ -16,6 +16,7 @@
 - 全局进度面板在实际传输期间显示后端字节计算的速度和剩余时间，不用模拟值通过门禁。
 - 普通 ZIP 与 AES ZIP 使用 64 MiB 随机非空载荷验证真实中间/最终字节、可见速度与 ETA、AES 错误密码拒绝；另用 24 MiB + 40 MiB 双文件验证累计单调与精确总量，全部经独立 7-Zip 完整性和解出文件 SHA-256 复核。可用聚焦门禁避开无关高负载场景。
 - TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST 各使用 64 MiB 随机非空载荷验证中间/最终真实字节、速率与 ETA，并逐格式执行独立 7-Zip 完整性测试、应用解压和 SHA-256 回环。
+- 图片百图门禁使用 JPEG 34、PNG 33、WebP 33 共 100 个真实磁盘输入，经可见工作区按钮执行生产压缩；核对 100 个唯一输出、100 条统一历史、后端格式/尺寸/字节、结果预览、100/100 终态和源 SHA-256 不变。
 - AES 密码双文件 7Z 使用单固实块创建，独立 7-Zip 元数据与完整解出共同确认；非原生密码格式拒绝转换时不创建任务，确认后才生成并验证 `.7z`。
 - 在真实 WebView2 中进入设置中心。
 - 启动确定性长任务，通过实际取消注册表停止任务，并验证未完成输出被清理。
@@ -54,6 +55,8 @@ npm.cmd run test:tools:qemu-img
 npm.cmd run test:tools:wsl-fs
 
 npm run test:e2e:desktop
+# 只复验 100 张混合图片的真实读取、生产执行、发布、预览与历史
+npm.cmd run test:e2e:desktop:image-batch
 # 只复验资源预检的真实卷、可见卡片与阻断状态
 npm.cmd run test:e2e:desktop:resource-preflight
 # 只复验归档并发、同目录串行、遥测、加密固实 7Z 和格式回退确认
@@ -72,6 +75,26 @@ npm.cmd run test:e2e:desktop:encrypted-rar
 npm.cmd run test:prepare:full-format
 npm.cmd run test:e2e:desktop:full-format
 Remove-Item Env:EDGE_DRIVER_PATH
+```
+
+正式安装态工作区矩阵必须先准备 EdgeDriver 与固定外部样本；`test-installed-release.ps1`
+会在备份、覆盖安装或修改菜单之前检查这些条件，缺失时无损失败：
+
+```powershell
+$driver = powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File scripts/install-edge-driver.ps1 `
+  -Destination (Join-Path $env:TEMP "long-compress-edge-driver")
+$env:EDGE_DRIVER_PATH = $driver
+npm.cmd run test:fixtures:archives
+
+npm.cmd run test:installed-release -- `
+  -PreviousInstaller "C:\path\to\previous.exe" `
+  -CandidateInstaller "C:\path\to\candidate.exe" `
+  -PreviousVersion 1.1.14 `
+  -CandidateVersion 1.1.14 `
+  -CandidateExecutable "C:\path\to\candidate-app.exe" `
+  -AllowExistingInstall `
+  -RunArchiveWorkspaceMatrix
 ```
 
 也可以通过 `TAURI_APP_BINARY`、`TAURI_DRIVER_PATH` 和

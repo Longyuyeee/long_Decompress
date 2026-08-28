@@ -336,7 +336,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
         const matchedEntry = passwordStore.entries.find(e => e.password === task.password)
         if (matchedEntry) {
           try {
-            await passwordStore.updateEntry(matchedEntry.id, { use_count: (matchedEntry.use_count || 0) + 1 })
+            await passwordStore.usePassword(matchedEntry.id)
           } catch { /* 非关键操作 */ }
         }
       }

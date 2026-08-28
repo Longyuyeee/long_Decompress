@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "fixtureRevision": "2026-08-27-b00.5",
+  "privacy": "synthetic-only-no-user-data",
+  "identityPolicy": {
+    "acceptanceBasis": "decoded-and-probed-properties",
+    "byteIdentityRequired": false,
+    "performanceBaselineEligible": false,
+    "reason": "generated containers, PDF signatures and encoder metadata may vary by toolchain; B-01 must publish a separately frozen input-hash inventory before benchmark claims"
+  },
+  "testTool": {
+    "name": "BtbN FFmpeg GPL test-only build",
+    "assetId": 530855149,
+    "fileName": "ffmpeg-master-20260826-win64-gpl.zip",
+    "url": "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/assets/530855149",
+    "bytes": 170676191,
+    "sha256": "06496188114b93337cdb10e38e5d3c8d7ffe467af2bc912268b601fa868d02cc",
+    "productIntegrationAllowed": false
+  },
+  "images": [
+    { "file": "transparent.png", "format": "PNG", "width": 256, "height": 256, "displayWidth": 256, "displayHeight": 256, "hasAlpha": true },
+    { "file": "exif-orientation.jpg", "format": "JPEG", "width": 640, "height": 360, "displayWidth": 360, "displayHeight": 640, "exifMake": "LongDecompressFixture", "orientation": 6 },
+    { "file": "photo.webp", "format": "WEBP", "width": 800, "height": 500, "displayWidth": 800, "displayHeight": 500, "hasAlpha": false },
+    { "file": "small-detail.jpg", "format": "JPEG", "width": 96, "height": 64, "displayWidth": 96, "displayHeight": 64, "hasAlpha": false },
+    { "file": "large-photo.jpg", "format": "JPEG", "width": 2400, "height": 1600, "displayWidth": 2400, "displayHeight": 1600, "hasAlpha": false },
+    { "file": "opaque-small.png", "format": "PNG", "width": 80, "height": 60, "displayWidth": 80, "displayHeight": 60, "hasAlpha": false },
+    { "file": "large-alpha.png", "format": "PNG", "width": 2048, "height": 1280, "displayWidth": 2048, "displayHeight": 1280, "hasAlpha": true },
+    { "file": "alpha-small.webp", "format": "WEBP", "width": 128, "height": 96, "displayWidth": 128, "displayHeight": 96, "hasAlpha": true },
+    { "file": "large-photo.webp", "format": "WEBP", "width": 1920, "height": 1080, "displayWidth": 1920, "displayHeight": 1080, "hasAlpha": false },
+    { "file": "animated.gif", "format": "GIF", "width": 320, "height": 180, "displayWidth": 320, "displayHeight": 180, "frames": 3, "durationsMs": [100, 200, 300] },
+    { "file": "ultra-large.png", "format": "PNG", "width": 12000, "height": 8000, "displayWidth": 12000, "displayHeight": 8000, "pixels": 96000000 }
+  ],
+  "videos": [
+    { "file": "h264-vfr-audio-rotation-subtitles.mp4", "videoCodec": "h264", "audioCodec": "aac", "subtitleCodec": "mov_text", "rotation": 90, "variableFrameRate": true },
+    { "file": "h265.mp4", "videoCodec": "hevc", "audioCodec": null, "subtitleCodec": null, "rotation": 0, "variableFrameRate": false }
+  ],
+  "pdfs": [
+    { "file": "text-vector.pdf", "pages": 1, "kind": "searchable-text", "expectedText": "Long Decompress vector text fixture" },
+    { "file": "scanned-image.pdf", "pages": 1, "kind": "scan", "expectedText": "" },
+    { "file": "transparency.pdf", "pages": 1, "kind": "transparency" },
+    { "file": "form.pdf", "pages": 1, "kind": "acroform", "fields": ["archive_name", "preserve_metadata"] },
+    { "file": "signed.pdf", "pages": 1, "kind": "digitally-signed", "signatureField": "FixtureSignature", "signatureValid": true, "signatureIntact": true, "signatureTrusted": false },
+    { "file": "encrypted.pdf", "pages": 1, "kind": "encrypted-refusal", "password": "fixture-user" }
+  ]
+}

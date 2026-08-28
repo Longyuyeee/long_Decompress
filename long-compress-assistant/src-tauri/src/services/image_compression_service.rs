@@ -1,0 +1,1621 @@
+use std::fs;
+use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+
+use caesium::parameters::CSParameters;
+use image::{DynamicImage, ImageDecoder, ImageFormat, ImageReader};
+use img_parts::{DynImage, ImageEXIF, ImageICC};
+use oxipng::{InFile, Options, OutFile};
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+
+use super::output_publish_transaction::{
+    cleanup_staged_output_family, publish_verified_file, staged_output_path, PublishError,
+};
+
+const MAX_DECODED_PIXELS: u64 = 100_000_000;
+const MAX_ENCODED_BYTES: u64 = 512 * 1024 * 1024;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ImageCompressionMode {
+    Lossy,
+    Lossless,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageCompressionRequest {
+    pub source: PathBuf,
+    pub destination: PathBuf,
+    pub mode: ImageCompressionMode,
+    pub quality: u8,
+    pub target_format: ImageFileFormat,
+    pub max_dimensions: Option<ImageDimensions>,
+    pub preserve_metadata: bool,
+    pub only_if_smaller: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageDimensions {
+    pub width: u32,
+    pub height: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "status", rename_all = "kebab-case")]
+pub enum ImageCompressionOutcome {
+    Published {
+        input: ImageCompressionFacts,
+        output: ImageCompressionFacts,
+    },
+    KeptSourceBecauseOutputWasNotSmaller {
+        input: ImageCompressionFacts,
+        candidate: ImageCompressionFacts,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageCompressionFacts {
+    pub format: ImageFileFormat,
+    pub encoded_bytes: u64,
+    pub encoded_width: u32,
+    pub encoded_height: u32,
+    pub visible_width: u32,
+    pub visible_height: u32,
+    pub orientation: u8,
+    pub frame_count: u32,
+    pub has_alpha: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ImageFileFormat {
+    Jpeg,
+    Png,
+    WebP,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ImageConflictPolicy {
+    Rename,
+    Skip,
+    ReplaceIfSmaller,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "status", rename_all = "kebab-case")]
+pub enum ImageDestinationPlan {
+    Ready {
+        destination: PathBuf,
+    },
+    Skipped {
+        destination: PathBuf,
+        reason: String,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ImageCompressionStage {
+    Decoding,
+    Resizing,
+    Encoding,
+    Validating,
+    Publishing,
+}
+
+impl ImageCompressionStage {
+    pub fn log_message(self) -> &'static str {
+        match self {
+            Self::Decoding => "正在解码图片并确认真实格式与属性",
+            Self::Resizing => "正在按可见尺寸等比例缩放图片",
+            Self::Encoding => "正在使用所选格式和质量编码图片",
+            Self::Validating => "正在重新解码并验证候选输出",
+            Self::Publishing => "正在原子发布已验证的图片输出",
+        }
+    }
+}
+
+#[derive(Debug, Error)]
+pub enum ImageCompressionError {
+    #[error("image compression was cancelled")]
+    Cancelled,
+    #[error("source and destination must be different files")]
+    SourceEqualsDestination,
+    #[error("destination already exists and will not be overwritten: {0}")]
+    DestinationExists(PathBuf),
+    #[error("image output directory is missing or is not a directory: {0}")]
+    InvalidOutputDirectory(PathBuf),
+    #[error("image source does not have a usable file name: {0}")]
+    InvalidSourceName(PathBuf),
+    #[error("unable to reserve a unique image destination after 10000 attempts")]
+    UniqueDestinationExhausted,
+    #[error("destination extension does not match the decoded {0:?} input format")]
+    DestinationFormatMismatch(ImageFileFormat),
+    #[error("unsupported or invalid image input: {0}")]
+    InvalidInput(String),
+    #[error("animated images are not supported by this image encoder (detected {0} frames)")]
+    AnimatedInput(u32),
+    #[error("lossy mode is not valid for PNG; choose lossless mode")]
+    LossyPng,
+    #[error("lossless JPEG is only available when optimizing an existing JPEG")]
+    LosslessJpegConversion,
+    #[error("resize limits must both be between 1 and 32768 pixels")]
+    InvalidResize,
+    #[error("quality must be between 1 and 100")]
+    InvalidQuality,
+    #[error("encoded output verification failed: {0}")]
+    Verification(String),
+    #[error("image encoder failed: {0}")]
+    Encoder(String),
+    #[error("verified output could not be published: {0}")]
+    Publish(String),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+}
+
+impl From<PublishError> for ImageCompressionError {
+    fn from(error: PublishError) -> Self {
+        match error {
+            PublishError::Cancelled => Self::Cancelled,
+            other => Self::Publish(other.to_string()),
+        }
+    }
+}
+
+struct StagedOutputGuard(PathBuf);
+
+impl Drop for StagedOutputGuard {
+    fn drop(&mut self) {
+        cleanup_staged_output_family(&self.0);
+    }
+}
+
+pub fn plan_image_destination(
+    source: &Path,
+    output_directory: Option<&Path>,
+    target_format: ImageFileFormat,
+    conflict_policy: ImageConflictPolicy,
+    reserved_destinations: &[PathBuf],
+) -> Result<ImageDestinationPlan, ImageCompressionError> {
+    let directory = match output_directory {
+        Some(directory) => directory,
+        None => source
+            .parent()
+            .ok_or_else(|| ImageCompressionError::InvalidSourceName(source.to_path_buf()))?,
+    };
+    if !directory.is_dir() {
+        return Err(ImageCompressionError::InvalidOutputDirectory(
+            directory.to_path_buf(),
+        ));
+    }
+    let stem = source
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| ImageCompressionError::InvalidSourceName(source.to_path_buf()))?;
+    let extension = match target_format {
+        ImageFileFormat::Jpeg => "jpg",
+        ImageFileFormat::Png => "png",
+        ImageFileFormat::WebP => "webp",
+    };
+    let requested = directory.join(format!("{stem}.compressed.{extension}"));
+    let occupied = |candidate: &Path| {
+        candidate.exists()
+            || reserved_destinations
+                .iter()
+                .any(|reserved| paths_match(candidate, reserved))
+    };
+
+    if !occupied(&requested) {
+        return Ok(ImageDestinationPlan::Ready {
+            destination: requested,
+        });
+    }
+
+    match conflict_policy {
+        ImageConflictPolicy::Skip => Ok(ImageDestinationPlan::Skipped {
+            destination: requested,
+            reason: "目标文件已存在，已按跳过策略保留现有文件".to_string(),
+        }),
+        ImageConflictPolicy::ReplaceIfSmaller => {
+            Err(ImageCompressionError::DestinationExists(requested))
+        }
+        ImageConflictPolicy::Rename => {
+            for sequence in 1..=10_000 {
+                let candidate =
+                    directory.join(format!("{stem}.compressed ({sequence}).{extension}"));
+                if !occupied(&candidate) {
+                    return Ok(ImageDestinationPlan::Ready {
+                        destination: candidate,
+                    });
+                }
+            }
+            Err(ImageCompressionError::UniqueDestinationExhausted)
+        }
+    }
+}
+
+fn paths_match(left: &Path, right: &Path) -> bool {
+    #[cfg(windows)]
+    {
+        left.to_string_lossy()
+            .replace('/', "\\")
+            .eq_ignore_ascii_case(&right.to_string_lossy().replace('/', "\\"))
+    }
+    #[cfg(not(windows))]
+    {
+        left == right
+    }
+}
+
+pub fn compress_single_image(
+    request: &ImageCompressionRequest,
+    cancelled: &AtomicBool,
+) -> Result<ImageCompressionOutcome, ImageCompressionError> {
+    compress_single_image_with_observer(request, cancelled, |_| {})
+}
+
+pub fn compress_single_image_with_observer<F>(
+    request: &ImageCompressionRequest,
+    cancelled: &AtomicBool,
+    observe_stage: F,
+) -> Result<ImageCompressionOutcome, ImageCompressionError>
+where
+    F: FnMut(ImageCompressionStage),
+{
+    compress_single_image_with_writer(request, cancelled, observe_stage, |path, bytes| {
+        fs::write(path, bytes)
+    })
+}
+
+fn compress_single_image_with_writer<F, W>(
+    request: &ImageCompressionRequest,
+    cancelled: &AtomicBool,
+    mut observe_stage: F,
+    mut write_file: W,
+) -> Result<ImageCompressionOutcome, ImageCompressionError>
+where
+    F: FnMut(ImageCompressionStage),
+    W: FnMut(&Path, &[u8]) -> std::io::Result<()>,
+{
+    validate_request(request)?;
+    check_cancelled(cancelled)?;
+
+    observe_stage(ImageCompressionStage::Decoding);
+    let input = decode_facts(&request.source, true)?;
+    if input.frame_count != 1 {
+        return Err(ImageCompressionError::AnimatedInput(input.frame_count));
+    }
+    if !destination_extension_matches(&request.destination, request.target_format) {
+        return Err(ImageCompressionError::DestinationFormatMismatch(
+            request.target_format,
+        ));
+    }
+    if request.target_format == ImageFileFormat::Png && request.mode == ImageCompressionMode::Lossy
+    {
+        return Err(ImageCompressionError::LossyPng);
+    }
+    if request.target_format == ImageFileFormat::Jpeg
+        && input.format != ImageFileFormat::Jpeg
+        && request.mode == ImageCompressionMode::Lossless
+    {
+        return Err(ImageCompressionError::LosslessJpegConversion);
+    }
+
+    let target_visible = target_visible_dimensions(&input, request.max_dimensions);
+    let normalizes_orientation = request.target_format != input.format && input.orientation != 1;
+    let source_metadata = read_metadata(&request.source, true)?;
+
+    let staged = staged_output_path(&request.destination, "image-compress")?;
+    let guard = StagedOutputGuard(staged.clone());
+    if target_visible.width != input.visible_width || target_visible.height != input.visible_height
+    {
+        observe_stage(ImageCompressionStage::Resizing);
+    }
+    observe_stage(ImageCompressionStage::Encoding);
+    encode(request, &input, target_visible, &staged, &mut write_file)?;
+    let expected_metadata = apply_metadata_policy(
+        &staged,
+        &source_metadata,
+        request.preserve_metadata,
+        if normalizes_orientation {
+            1
+        } else {
+            input.orientation
+        },
+    )?;
+    check_cancelled(cancelled)?;
+
+    observe_stage(ImageCompressionStage::Validating);
+    let output = decode_facts(&staged, false)
+        .map_err(|error| ImageCompressionError::Verification(error.to_string()))?;
+    verify_output(
+        &input,
+        &output,
+        request.target_format,
+        target_visible,
+        if normalizes_orientation {
+            1
+        } else {
+            input.orientation
+        },
+    )?;
+    let output_metadata = read_metadata(&staged, false)?;
+    if output_metadata != expected_metadata {
+        return Err(ImageCompressionError::Verification(
+            "EXIF/ICC metadata policy was not preserved by the encoded container".into(),
+        ));
+    }
+    if request.only_if_smaller && output.encoded_bytes >= input.encoded_bytes {
+        return Ok(
+            ImageCompressionOutcome::KeptSourceBecauseOutputWasNotSmaller {
+                input,
+                candidate: output,
+            },
+        );
+    }
+
+    observe_stage(ImageCompressionStage::Publishing);
+    publish_verified_file(&staged, &request.destination, || {
+        cancelled.load(Ordering::Acquire)
+    })?;
+    drop(guard);
+
+    Ok(ImageCompressionOutcome::Published { input, output })
+}
+
+fn destination_extension_matches(path: &Path, format: ImageFileFormat) -> bool {
+    let extension = path
+        .extension()
+        .and_then(|value| value.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    match format {
+        ImageFileFormat::Jpeg => matches!(extension.as_str(), "jpg" | "jpeg"),
+        ImageFileFormat::Png => extension == "png",
+        ImageFileFormat::WebP => extension == "webp",
+    }
+}
+
+fn validate_request(request: &ImageCompressionRequest) -> Result<(), ImageCompressionError> {
+    if request.quality == 0 || request.quality > 100 {
+        return Err(ImageCompressionError::InvalidQuality);
+    }
+    if request.source == request.destination {
+        return Err(ImageCompressionError::SourceEqualsDestination);
+    }
+    if request.destination.exists() {
+        return Err(ImageCompressionError::DestinationExists(
+            request.destination.clone(),
+        ));
+    }
+    if request.max_dimensions.is_some_and(|value| {
+        value.width == 0 || value.height == 0 || value.width > 32_768 || value.height > 32_768
+    }) {
+        return Err(ImageCompressionError::InvalidResize);
+    }
+    Ok(())
+}
+
+fn check_cancelled(cancelled: &AtomicBool) -> Result<(), ImageCompressionError> {
+    if cancelled.load(Ordering::Acquire) {
+        Err(ImageCompressionError::Cancelled)
+    } else {
+        Ok(())
+    }
+}
+
+fn encode<W>(
+    request: &ImageCompressionRequest,
+    input: &ImageCompressionFacts,
+    target_visible: ImageDimensions,
+    staged: &Path,
+    write_file: &mut W,
+) -> Result<(), ImageCompressionError>
+where
+    W: FnMut(&Path, &[u8]) -> std::io::Result<()>,
+{
+    let resized = target_visible.width != input.visible_width
+        || target_visible.height != input.visible_height;
+    match request.target_format {
+        ImageFileFormat::Png => {
+            if input.format == ImageFileFormat::Png && !resized {
+                let mut options = Options::from_preset(3);
+                options.optimize_alpha = false;
+                options.max_decompressed_size = Some(MAX_DECODED_PIXELS as usize * 8);
+                return oxipng::optimize(
+                    &InFile::Path(request.source.clone()),
+                    &OutFile::Path {
+                        path: Some(staged.to_path_buf()),
+                        preserve_attrs: false,
+                    },
+                    &options,
+                )
+                .map(|_| ())
+                .map_err(|error| ImageCompressionError::Encoder(error.to_string()));
+            }
+
+            let mut image = ImageReader::open(&request.source)
+                .and_then(|reader| reader.with_guessed_format())
+                .map_err(|error| ImageCompressionError::Encoder(error.to_string()))?
+                .decode()
+                .map_err(|error| ImageCompressionError::Encoder(error.to_string()))?;
+            image.apply_orientation(
+                image::metadata::Orientation::from_exif(input.orientation)
+                    .unwrap_or(image::metadata::Orientation::NoTransforms),
+            );
+            if resized {
+                image = image.resize_exact(
+                    target_visible.width,
+                    target_visible.height,
+                    image::imageops::FilterType::Lanczos3,
+                );
+            }
+            let mut encoded = Vec::new();
+            image
+                .write_to(&mut Cursor::new(&mut encoded), ImageFormat::Png)
+                .map_err(|error| ImageCompressionError::Encoder(error.to_string()))?;
+            let mut options = Options::from_preset(3);
+            options.optimize_alpha = false;
+            options.max_decompressed_size = Some(MAX_DECODED_PIXELS as usize * 8);
+            let optimized = oxipng::optimize_from_memory(&encoded, &options)
+                .map_err(|error| ImageCompressionError::Encoder(error.to_string()))?;
+            write_file(staged, &optimized).map_err(ImageCompressionError::Io)
+        }
+        ImageFileFormat::Jpeg | ImageFileFormat::WebP => {
+            let mut parameters = CSParameters::new();
+            parameters.keep_metadata = true;
+            // Orientation is visual-integrity data and is preserved independently of the
+            // user's optional metadata policy.
+            parameters.keep_rotation = true;
+            parameters.jpeg.quality = u32::from(request.quality);
+            parameters.jpeg.optimize = request.mode == ImageCompressionMode::Lossless;
+            parameters.webp.quality = u32::from(request.quality);
+            parameters.webp.lossless = request.mode == ImageCompressionMode::Lossless;
+            if resized {
+                parameters.width = target_visible.width;
+                parameters.height = target_visible.height;
+            }
+            let result = if input.format == request.target_format {
+                caesium::compress(
+                    request.source.to_string_lossy().into_owned(),
+                    staged.to_string_lossy().into_owned(),
+                    &parameters,
+                )
+            } else {
+                caesium::convert(
+                    request.source.to_string_lossy().into_owned(),
+                    staged.to_string_lossy().into_owned(),
+                    &parameters,
+                    match request.target_format {
+                        ImageFileFormat::Jpeg => caesium::SupportedFileTypes::Jpeg,
+                        ImageFileFormat::WebP => caesium::SupportedFileTypes::WebP,
+                        ImageFileFormat::Png => unreachable!(),
+                    },
+                )
+            };
+            result.map_err(|error| ImageCompressionError::Encoder(error.to_string()))
+        }
+    }
+}
+
+fn verify_output(
+    input: &ImageCompressionFacts,
+    output: &ImageCompressionFacts,
+    expected_format: ImageFileFormat,
+    expected_visible: ImageDimensions,
+    expected_orientation: u8,
+) -> Result<(), ImageCompressionError> {
+    if output.format != expected_format {
+        return Err(ImageCompressionError::Verification(
+            "encoded format does not match the requested output format".into(),
+        ));
+    }
+    if output.frame_count != 1 {
+        return Err(ImageCompressionError::Verification(format!(
+            "expected one frame, decoded {}",
+            output.frame_count
+        )));
+    }
+    let expected_encoded = if matches!(expected_orientation, 5..=8) {
+        ImageDimensions {
+            width: expected_visible.height,
+            height: expected_visible.width,
+        }
+    } else {
+        expected_visible
+    };
+    if output.encoded_width != expected_encoded.width
+        || output.encoded_height != expected_encoded.height
+        || output.visible_width != expected_visible.width
+        || output.visible_height != expected_visible.height
+        || output.orientation != expected_orientation
+    {
+        return Err(ImageCompressionError::Verification(
+            "encoded matrix, orientation, or visible dimensions changed".into(),
+        ));
+    }
+    if expected_format != ImageFileFormat::Jpeg && output.has_alpha != input.has_alpha {
+        return Err(ImageCompressionError::Verification(
+            "alpha-channel semantics changed unexpectedly".into(),
+        ));
+    }
+    Ok(())
+}
+
+fn target_visible_dimensions(
+    input: &ImageCompressionFacts,
+    limit: Option<ImageDimensions>,
+) -> ImageDimensions {
+    let original = ImageDimensions {
+        width: input.visible_width,
+        height: input.visible_height,
+    };
+    let Some(limit) = limit else {
+        return original;
+    };
+    if original.width <= limit.width && original.height <= limit.height {
+        return original;
+    }
+    let width_limited_height =
+        u64::from(original.height) * u64::from(limit.width) / u64::from(original.width);
+    if width_limited_height <= u64::from(limit.height) {
+        ImageDimensions {
+            width: limit.width,
+            height: width_limited_height.max(1) as u32,
+        }
+    } else {
+        ImageDimensions {
+            width: (u64::from(original.width) * u64::from(limit.height)
+                / u64::from(original.height))
+            .max(1) as u32,
+            height: limit.height,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct MetadataPayload {
+    exif: Option<Vec<u8>>,
+    icc: Option<Vec<u8>>,
+}
+
+fn read_metadata(path: &Path, input: bool) -> Result<MetadataPayload, ImageCompressionError> {
+    let bytes = fs::read(path)?;
+    let image = DynImage::from_bytes(img_parts::Bytes::from(bytes))
+        .map_err(|error| invalid_image(input, error))?
+        .ok_or_else(|| invalid_image(input, "metadata container format is unsupported"))?;
+    Ok(MetadataPayload {
+        exif: image.exif().map(|value| value.to_vec()),
+        icc: image.icc_profile().map(|value| value.to_vec()),
+    })
+}
+
+fn apply_metadata_policy(
+    path: &Path,
+    source: &MetadataPayload,
+    preserve_metadata: bool,
+    expected_orientation: u8,
+) -> Result<MetadataPayload, ImageCompressionError> {
+    let expected = if preserve_metadata {
+        MetadataPayload {
+            exif: source.exif.as_ref().map(|value| {
+                if expected_orientation == 1 {
+                    set_exif_orientation(value, 1)
+                } else {
+                    value.clone()
+                }
+            }),
+            icc: source.icc.clone(),
+        }
+    } else {
+        MetadataPayload {
+            exif: (expected_orientation != 1).then(|| build_orientation_exif(expected_orientation)),
+            icc: None,
+        }
+    };
+
+    // Avoid rebuilding a container when the encoder already produced the exact
+    // requested metadata state. In particular, rewriting a lossy WebP with an
+    // ALPH chunk through img-parts can drop the VP8X alpha feature flag and turn
+    // an otherwise valid candidate into a file our verification decoder rejects.
+    if read_metadata(path, false)? == expected {
+        return Ok(expected);
+    }
+
+    let bytes = fs::read(path)?;
+    let mut image = DynImage::from_bytes(img_parts::Bytes::from(bytes))
+        .map_err(|error| ImageCompressionError::Encoder(error.to_string()))?
+        .ok_or_else(|| {
+            ImageCompressionError::Encoder("encoded metadata container is unsupported".into())
+        })?;
+    image.set_exif(expected.exif.clone().map(img_parts::Bytes::from));
+    image.set_icc_profile(expected.icc.clone().map(img_parts::Bytes::from));
+    let mut output = Vec::new();
+    image
+        .encoder()
+        .write_to(&mut output)
+        .map_err(|error| ImageCompressionError::Encoder(error.to_string()))?;
+    fs::write(path, output)?;
+    Ok(expected)
+}
+
+fn build_orientation_exif(orientation: u8) -> Vec<u8> {
+    let mut exif = Vec::with_capacity(26);
+    exif.extend_from_slice(b"II*\0");
+    exif.extend_from_slice(&8u32.to_le_bytes());
+    exif.extend_from_slice(&1u16.to_le_bytes());
+    exif.extend_from_slice(&0x0112u16.to_le_bytes());
+    exif.extend_from_slice(&3u16.to_le_bytes());
+    exif.extend_from_slice(&1u32.to_le_bytes());
+    exif.extend_from_slice(&u16::from(orientation).to_le_bytes());
+    exif.extend_from_slice(&[0, 0]);
+    exif.extend_from_slice(&0u32.to_le_bytes());
+    exif
+}
+
+fn set_exif_orientation(exif: &[u8], orientation: u8) -> Vec<u8> {
+    let Some(header) = exif.get(..8) else {
+        return exif.to_vec();
+    };
+    let big_endian = match &header[..2] {
+        b"MM" => true,
+        b"II" => false,
+        _ => return exif.to_vec(),
+    };
+    let read_u16 = |value: &[u8]| {
+        if big_endian {
+            u16::from_be_bytes([value[0], value[1]])
+        } else {
+            u16::from_le_bytes([value[0], value[1]])
+        }
+    };
+    let read_u32 = |value: &[u8]| {
+        if big_endian {
+            u32::from_be_bytes([value[0], value[1], value[2], value[3]])
+        } else {
+            u32::from_le_bytes([value[0], value[1], value[2], value[3]])
+        }
+    };
+    let ifd0 = read_u32(&header[4..8]) as usize;
+    let Some(count) = exif.get(ifd0..ifd0 + 2).map(read_u16) else {
+        return exif.to_vec();
+    };
+    for index in 0..usize::from(count) {
+        let offset = ifd0 + 2 + index * 12;
+        let Some(entry) = exif.get(offset..offset + 12) else {
+            return exif.to_vec();
+        };
+        if read_u16(&entry[..2]) == 0x0112
+            && read_u16(&entry[2..4]) == 3
+            && read_u32(&entry[4..8]) == 1
+        {
+            let mut patched = exif.to_vec();
+            let bytes = if big_endian {
+                u16::from(orientation).to_be_bytes()
+            } else {
+                u16::from(orientation).to_le_bytes()
+            };
+            patched[offset + 8..offset + 10].copy_from_slice(&bytes);
+            return patched;
+        }
+    }
+    exif.to_vec()
+}
+
+fn decode_facts(path: &Path, input: bool) -> Result<ImageCompressionFacts, ImageCompressionError> {
+    let encoded_bytes = fs::metadata(path)?.len();
+    if encoded_bytes == 0 || encoded_bytes > MAX_ENCODED_BYTES {
+        return Err(invalid_image(
+            input,
+            format!("encoded size {encoded_bytes} exceeds the 512 MiB safety boundary"),
+        ));
+    }
+    let reader = ImageReader::open(path)
+        .and_then(|reader| reader.with_guessed_format())
+        .map_err(|error| invalid_image(input, error))?;
+    let format = match reader.format() {
+        Some(ImageFormat::Jpeg) => ImageFileFormat::Jpeg,
+        Some(ImageFormat::Png) => ImageFileFormat::Png,
+        Some(ImageFormat::WebP) => ImageFileFormat::WebP,
+        _ => {
+            return Err(invalid_image(
+                input,
+                "only JPEG, PNG and WebP are supported",
+            ))
+        }
+    };
+
+    let frame_count = detect_frame_count(path, format)?;
+    let mut decoder = reader
+        .into_decoder()
+        .map_err(|error| invalid_image(input, error))?;
+    let (encoded_width, encoded_height) = decoder.dimensions();
+    let pixels = u64::from(encoded_width) * u64::from(encoded_height);
+    if pixels == 0 || pixels > MAX_DECODED_PIXELS {
+        return Err(invalid_image(
+            input,
+            format!("decoded pixel count {pixels} exceeds the 100 MP safety boundary"),
+        ));
+    }
+    let has_alpha = decoder.color_type().has_alpha();
+    let orientation = decoder
+        .orientation()
+        .map_err(|error| invalid_image(input, error))?
+        .to_exif();
+    let decoded =
+        DynamicImage::from_decoder(decoder).map_err(|error| invalid_image(input, error))?;
+    if decoded.width() != encoded_width || decoded.height() != encoded_height {
+        return Err(invalid_image(
+            input,
+            "decoder returned an inconsistent pixel matrix",
+        ));
+    }
+    let (visible_width, visible_height) = if matches!(orientation, 5..=8) {
+        (encoded_height, encoded_width)
+    } else {
+        (encoded_width, encoded_height)
+    };
+    Ok(ImageCompressionFacts {
+        format,
+        encoded_bytes,
+        encoded_width,
+        encoded_height,
+        visible_width,
+        visible_height,
+        orientation,
+        frame_count,
+        has_alpha,
+    })
+}
+
+fn invalid_image(input: bool, error: impl std::fmt::Display) -> ImageCompressionError {
+    if input {
+        ImageCompressionError::InvalidInput(error.to_string())
+    } else {
+        ImageCompressionError::Verification(error.to_string())
+    }
+}
+
+fn detect_frame_count(path: &Path, format: ImageFileFormat) -> Result<u32, ImageCompressionError> {
+    let count = match format {
+        ImageFileFormat::Jpeg => 1,
+        ImageFileFormat::Png => png_frame_count(path)?,
+        ImageFileFormat::WebP => webp_frame_count(path)?,
+    };
+    Ok(count)
+}
+
+fn png_frame_count(path: &Path) -> Result<u32, std::io::Error> {
+    let mut file = fs::File::open(path)?;
+    file.seek(SeekFrom::Start(8))?;
+    loop {
+        let mut header = [0u8; 8];
+        if file.read_exact(&mut header).is_err() {
+            return Ok(1);
+        }
+        let length = u32::from_be_bytes(header[..4].try_into().unwrap());
+        if &header[4..] == b"acTL" && length >= 4 {
+            let mut frames = [0u8; 4];
+            file.read_exact(&mut frames)?;
+            return Ok(u32::from_be_bytes(frames).max(1));
+        }
+        file.seek(SeekFrom::Current(i64::from(length) + 4))?;
+    }
+}
+
+fn webp_frame_count(path: &Path) -> Result<u32, std::io::Error> {
+    let mut file = fs::File::open(path)?;
+    let mut riff = [0u8; 12];
+    if file.read_exact(&mut riff).is_err() || &riff[..4] != b"RIFF" || &riff[8..] != b"WEBP" {
+        return Ok(1);
+    }
+    let mut frames = 0u32;
+    loop {
+        let mut header = [0u8; 8];
+        if file.read_exact(&mut header).is_err() {
+            return Ok(frames.max(1));
+        }
+        let length = u32::from_le_bytes(header[4..].try_into().unwrap());
+        if &header[..4] == b"ANMF" {
+            frames = frames.saturating_add(1);
+        }
+        file.seek(SeekFrom::Current(i64::from(
+            length.saturating_add(length & 1),
+        )))?;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fixture(name: &str) -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("test-results")
+            .join("media-fixture-audit")
+            .join("fixtures")
+            .join("images")
+            .join(name)
+    }
+
+    fn request(source: PathBuf, destination: PathBuf) -> ImageCompressionRequest {
+        let target_format = match destination
+            .extension()
+            .and_then(|value| value.to_str())
+            .unwrap_or("")
+            .to_ascii_lowercase()
+            .as_str()
+        {
+            "jpg" | "jpeg" => ImageFileFormat::Jpeg,
+            "png" => ImageFileFormat::Png,
+            "webp" => ImageFileFormat::WebP,
+            _ => ImageFileFormat::Jpeg,
+        };
+        ImageCompressionRequest {
+            source,
+            destination,
+            mode: ImageCompressionMode::Lossy,
+            quality: 80,
+            target_format,
+            max_dimensions: None,
+            preserve_metadata: true,
+            only_if_smaller: false,
+        }
+    }
+
+    #[test]
+    fn real_oriented_jpeg_is_redecoded_and_published_atomically() {
+        let source = fixture("exif-orientation.jpg");
+        if !source.exists() {
+            eprintln!("fixture is absent; run npm run test:fixtures:media:images");
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let destination = temp.path().join("result.jpg");
+        let input_bytes = fs::metadata(&source).unwrap().len();
+        let outcome = compress_single_image(
+            &request(source, destination.clone()),
+            &AtomicBool::new(false),
+        )
+        .unwrap();
+        let serialized = serde_json::to_value(&outcome).unwrap();
+        assert_eq!(serialized["status"], "published");
+        assert_eq!(serialized["input"]["format"], "jpeg");
+        assert_eq!(serialized["output"]["format"], "jpeg");
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
+            panic!("output should publish");
+        };
+        assert_eq!(input.format, ImageFileFormat::Jpeg);
+        assert_eq!(input.encoded_bytes, input_bytes);
+        assert_eq!((input.encoded_width, input.encoded_height), (640, 360));
+        assert_eq!((input.visible_width, input.visible_height), (360, 640));
+        assert_eq!(input.orientation, 6);
+        assert_eq!(input.frame_count, 1);
+        assert_eq!(output.format, ImageFileFormat::Jpeg);
+        assert_eq!(
+            output.encoded_bytes,
+            fs::metadata(&destination).unwrap().len()
+        );
+        assert_eq!((output.encoded_width, output.encoded_height), (640, 360));
+        assert_eq!((output.visible_width, output.visible_height), (360, 640));
+        assert_eq!(output.orientation, 6);
+        assert_eq!(output.frame_count, 1);
+        assert!(destination.is_file());
+        assert!(!fs::read_dir(temp.path())
+            .unwrap()
+            .flatten()
+            .any(|entry| entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".image-compress-")));
+    }
+
+    #[test]
+    fn transparent_png_remains_lossless_and_keeps_alpha() {
+        let source = fixture("transparent.png");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let destination = temp.path().join("result.png");
+        let mut request = request(source, destination);
+        request.mode = ImageCompressionMode::Lossless;
+        let outcome = compress_single_image(&request, &AtomicBool::new(false)).unwrap();
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
+            panic!("output should publish");
+        };
+        assert!(input.has_alpha);
+        assert!(output.has_alpha);
+    }
+
+    #[test]
+    fn gif_is_rejected_before_staging() {
+        let source = fixture("animated.gif");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let destination = temp.path().join("result.jpg");
+        let mut stages = Vec::new();
+        let error = compress_single_image_with_observer(
+            &request(source, destination.clone()),
+            &AtomicBool::new(false),
+            |stage| stages.push(stage),
+        )
+        .unwrap_err();
+        assert!(matches!(error, ImageCompressionError::InvalidInput(_)));
+        assert_eq!(stages, vec![ImageCompressionStage::Decoding]);
+        assert!(!destination.exists());
+        assert_eq!(fs::read_dir(temp.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn input_extension_is_ignored_but_destination_extension_must_match_magic() {
+        let fixture = fixture("exif-orientation.jpg");
+        if !fixture.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let disguised_source = temp.path().join("input.bin");
+        fs::copy(fixture, &disguised_source).unwrap();
+        let valid_destination = temp.path().join("output.jpeg");
+        assert!(matches!(
+            compress_single_image(
+                &request(disguised_source.clone(), valid_destination),
+                &AtomicBool::new(false),
+            )
+            .unwrap(),
+            ImageCompressionOutcome::Published { .. }
+        ));
+
+        let wrong_destination = temp.path().join("output.webp");
+        let mut wrong_request = request(disguised_source, wrong_destination.clone());
+        wrong_request.target_format = ImageFileFormat::Jpeg;
+        let error = compress_single_image(&wrong_request, &AtomicBool::new(false)).unwrap_err();
+        assert!(matches!(
+            error,
+            ImageCompressionError::DestinationFormatMismatch(ImageFileFormat::Jpeg)
+        ));
+        assert!(!wrong_destination.exists());
+    }
+
+    #[test]
+    fn cancellation_and_size_policy_leave_no_output_or_staging() {
+        let source = fixture("photo.webp");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let destination = temp.path().join("cancelled.webp");
+        let mut cancelled_stages = Vec::new();
+        let error = compress_single_image_with_observer(
+            &request(source.clone(), destination.clone()),
+            &AtomicBool::new(true),
+            |stage| cancelled_stages.push(stage),
+        )
+        .unwrap_err();
+        assert!(matches!(error, ImageCompressionError::Cancelled));
+        assert!(cancelled_stages.is_empty());
+        assert!(!destination.exists());
+
+        let destination = temp.path().join("larger.webp");
+        let mut policy_request = request(source, destination.clone());
+        policy_request.mode = ImageCompressionMode::Lossless;
+        policy_request.only_if_smaller = true;
+        let mut policy_stages = Vec::new();
+        let outcome = compress_single_image_with_observer(
+            &policy_request,
+            &AtomicBool::new(false),
+            |stage| policy_stages.push(stage),
+        )
+        .unwrap();
+        assert!(matches!(
+            outcome,
+            ImageCompressionOutcome::KeptSourceBecauseOutputWasNotSmaller { .. }
+        ));
+        assert_eq!(
+            policy_stages,
+            vec![
+                ImageCompressionStage::Decoding,
+                ImageCompressionStage::Encoding,
+                ImageCompressionStage::Validating,
+            ]
+        );
+        assert!(!destination.exists());
+        assert!(!fs::read_dir(temp.path())
+            .unwrap()
+            .flatten()
+            .any(|entry| entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".image-compress-")));
+    }
+
+    #[test]
+    fn target_race_never_overwrites_existing_bytes() {
+        let source = fixture("photo.webp");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let destination = temp.path().join("result.webp");
+        fs::write(&destination, b"existing").unwrap();
+        let error = compress_single_image(
+            &request(source, destination.clone()),
+            &AtomicBool::new(false),
+        )
+        .unwrap_err();
+        assert!(matches!(error, ImageCompressionError::DestinationExists(_)));
+        assert_eq!(fs::read(destination).unwrap(), b"existing");
+    }
+
+    #[test]
+    fn oriented_jpeg_converts_to_png_with_normalized_orientation_and_metadata() {
+        let source = fixture("exif-orientation.jpg");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let destination = temp.path().join("converted.png");
+        let mut request = request(source.clone(), destination);
+        request.mode = ImageCompressionMode::Lossless;
+        request.target_format = ImageFileFormat::Png;
+        let mut stages = Vec::new();
+        let outcome =
+            compress_single_image_with_observer(&request, &AtomicBool::new(false), |stage| {
+                stages.push(stage)
+            })
+            .unwrap();
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
+            panic!("converted output should publish");
+        };
+        assert_eq!(input.format, ImageFileFormat::Jpeg);
+        assert_eq!(input.orientation, 6);
+        assert_eq!(output.format, ImageFileFormat::Png);
+        assert_eq!(output.orientation, 1);
+        assert_eq!((output.visible_width, output.visible_height), (360, 640));
+        assert_eq!(
+            stages,
+            vec![
+                ImageCompressionStage::Decoding,
+                ImageCompressionStage::Encoding,
+                ImageCompressionStage::Validating,
+                ImageCompressionStage::Publishing,
+            ]
+        );
+        let source_metadata = read_metadata(&source, true).unwrap();
+        let output_metadata = read_metadata(&request.destination, false).unwrap();
+        assert_eq!(
+            output_metadata.exif,
+            source_metadata
+                .exif
+                .map(|value| set_exif_orientation(&value, 1))
+        );
+    }
+
+    #[test]
+    fn resize_limit_preserves_aspect_ratio_and_strip_keeps_only_orientation() {
+        let source = fixture("exif-orientation.jpg");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let destination = temp.path().join("resized.jpg");
+        let mut request = request(source, destination);
+        request.preserve_metadata = false;
+        request.max_dimensions = Some(ImageDimensions {
+            width: 180,
+            height: 320,
+        });
+        let mut stages = Vec::new();
+        let outcome =
+            compress_single_image_with_observer(&request, &AtomicBool::new(false), |stage| {
+                stages.push(stage)
+            })
+            .unwrap();
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
+            panic!("resized output should publish");
+        };
+        assert_eq!((input.visible_width, input.visible_height), (360, 640));
+        assert_eq!((output.visible_width, output.visible_height), (180, 320));
+        assert_eq!(output.orientation, 6);
+        assert_eq!(
+            stages,
+            vec![
+                ImageCompressionStage::Decoding,
+                ImageCompressionStage::Resizing,
+                ImageCompressionStage::Encoding,
+                ImageCompressionStage::Validating,
+                ImageCompressionStage::Publishing,
+            ]
+        );
+        let metadata = read_metadata(&request.destination, false).unwrap();
+        assert_eq!(metadata.exif, Some(build_orientation_exif(6)));
+        assert_eq!(metadata.icc, None);
+    }
+
+    #[test]
+    fn transparent_png_converts_to_jpeg_with_explicit_alpha_removal() {
+        let source = fixture("transparent.png");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let destination = temp.path().join("opaque.jpg");
+        let mut request = request(source, destination);
+        request.target_format = ImageFileFormat::Jpeg;
+        let outcome = compress_single_image(&request, &AtomicBool::new(false)).unwrap();
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
+            panic!("JPEG conversion should publish");
+        };
+        assert_eq!(input.format, ImageFileFormat::Png);
+        assert!(input.has_alpha);
+        assert_eq!(output.format, ImageFileFormat::Jpeg);
+        assert!(!output.has_alpha);
+    }
+
+    #[test]
+    fn destination_planner_uses_real_files_for_conflict_policies_and_reservations() {
+        let source = fixture("transparent.png");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let requested = temp.path().join("transparent.compressed.png");
+        fs::write(&requested, b"existing output must stay unchanged").unwrap();
+
+        let skipped = plan_image_destination(
+            &source,
+            Some(temp.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Skip,
+            &[],
+        )
+        .unwrap();
+        assert!(matches!(
+            skipped,
+            ImageDestinationPlan::Skipped { destination, .. } if destination == requested
+        ));
+        assert_eq!(
+            fs::read(&requested).unwrap(),
+            b"existing output must stay unchanged"
+        );
+
+        let first_rename = temp.path().join("transparent.compressed (1).png");
+        fs::write(&first_rename, b"first collision").unwrap();
+        let reserved = temp.path().join("transparent.compressed (2).png");
+        let renamed = plan_image_destination(
+            &source,
+            Some(temp.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Rename,
+            &[reserved],
+        )
+        .unwrap();
+        assert_eq!(
+            renamed,
+            ImageDestinationPlan::Ready {
+                destination: temp.path().join("transparent.compressed (3).png")
+            }
+        );
+
+        let error = plan_image_destination(
+            &source,
+            Some(temp.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::ReplaceIfSmaller,
+            &[],
+        )
+        .unwrap_err();
+        assert!(matches!(error, ImageCompressionError::DestinationExists(_)));
+        assert_eq!(
+            fs::read(&requested).unwrap(),
+            b"existing output must stay unchanged"
+        );
+    }
+
+    #[test]
+    fn planned_destination_executes_against_a_real_transparent_png() {
+        let source = fixture("transparent.png");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let ImageDestinationPlan::Ready { destination } = plan_image_destination(
+            &source,
+            Some(temp.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Rename,
+            &[],
+        )
+        .unwrap() else {
+            panic!("an empty real output directory must produce a ready plan");
+        };
+        let mut request = request(source, destination.clone());
+        request.mode = ImageCompressionMode::Lossless;
+        let outcome = compress_single_image(&request, &AtomicBool::new(false)).unwrap();
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
+            panic!("planned real PNG should publish");
+        };
+        assert_eq!(input.format, ImageFileFormat::Png);
+        assert_eq!(output.format, ImageFileFormat::Png);
+        assert!(destination.is_file());
+        assert_eq!(
+            fs::metadata(destination).unwrap().len(),
+            output.encoded_bytes
+        );
+    }
+
+    #[test]
+    fn stage_messages_are_stable_and_describe_real_work() {
+        assert_eq!(
+            ImageCompressionStage::Decoding.log_message(),
+            "正在解码图片并确认真实格式与属性"
+        );
+        assert_eq!(
+            ImageCompressionStage::Publishing.log_message(),
+            "正在原子发布已验证的图片输出"
+        );
+        assert_eq!(
+            serde_json::to_value(ImageCompressionStage::Validating).unwrap(),
+            "validating"
+        );
+    }
+
+    #[test]
+    fn b05_public_format_matrix_uses_real_production_compression() {
+        let Ok(output_root) = std::env::var("LONG_B05_IMAGE_MATRIX_OUTPUT") else {
+            eprintln!("B-05.1 matrix is opt-in; run npm run test:image-matrix:real");
+            return;
+        };
+        let manifest_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("tests")
+            .join("fixtures")
+            .join("media")
+            .join("b05-image-format-matrix.json");
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&fs::read(manifest_path).unwrap()).unwrap();
+        let cases = manifest["cases"].as_array().unwrap();
+        assert_eq!(cases.len(), 9, "B-05.1 requires nine real cases");
+        let output_root = PathBuf::from(output_root);
+        fs::create_dir_all(&output_root).unwrap();
+
+        for case in cases {
+            let file = case["file"].as_str().unwrap();
+            let format = match case["format"].as_str().unwrap() {
+                "jpeg" => ImageFileFormat::Jpeg,
+                "png" => ImageFileFormat::Png,
+                "webp" => ImageFileFormat::WebP,
+                other => panic!("unsupported matrix format: {other}"),
+            };
+            let source = fixture(file);
+            assert!(
+                source.is_file(),
+                "missing real fixture: {}",
+                source.display()
+            );
+            let extension = match format {
+                ImageFileFormat::Jpeg => "jpg",
+                ImageFileFormat::Png => "png",
+                ImageFileFormat::WebP => "webp",
+            };
+            let destination = output_root.join(format!("{file}.compressed.{extension}"));
+            let mut matrix_request = request(source.clone(), destination.clone());
+            matrix_request.target_format = format;
+            matrix_request.mode = if format == ImageFileFormat::Png {
+                ImageCompressionMode::Lossless
+            } else {
+                ImageCompressionMode::Lossy
+            };
+            let source_metadata = read_metadata(&source, true).unwrap();
+            let outcome = compress_single_image(&matrix_request, &AtomicBool::new(false)).unwrap();
+            let ImageCompressionOutcome::Published { input, output } = outcome else {
+                panic!("{file}: matrix output must be published");
+            };
+            let expected_width = case["width"].as_u64().unwrap() as u32;
+            let expected_height = case["height"].as_u64().unwrap() as u32;
+            let visible_width = case["visibleWidth"]
+                .as_u64()
+                .unwrap_or(u64::from(expected_width)) as u32;
+            let visible_height = case["visibleHeight"]
+                .as_u64()
+                .unwrap_or(u64::from(expected_height)) as u32;
+            let orientation = case["orientation"].as_u64().unwrap_or(1) as u8;
+            let expected_alpha = case["hasAlpha"].as_bool().unwrap();
+
+            assert_eq!(input.format, format, "{file}: decoded input format");
+            assert_eq!(
+                (input.encoded_width, input.encoded_height),
+                (expected_width, expected_height),
+                "{file}: input matrix"
+            );
+            assert_eq!(
+                (input.visible_width, input.visible_height),
+                (visible_width, visible_height),
+                "{file}: input visible dimensions"
+            );
+            assert_eq!(input.orientation, orientation, "{file}: input orientation");
+            assert_eq!(input.has_alpha, expected_alpha, "{file}: input alpha");
+            assert_eq!(output.format, format, "{file}: output format");
+            assert_eq!(
+                (output.encoded_width, output.encoded_height),
+                (expected_width, expected_height),
+                "{file}: output matrix"
+            );
+            assert_eq!(
+                (output.visible_width, output.visible_height),
+                (visible_width, visible_height),
+                "{file}: output visible dimensions"
+            );
+            assert_eq!(
+                output.orientation, orientation,
+                "{file}: output orientation"
+            );
+            assert_eq!(output.has_alpha, expected_alpha, "{file}: output alpha");
+            assert_eq!(
+                output.encoded_bytes,
+                fs::metadata(&destination).unwrap().len(),
+                "{file}: filesystem bytes"
+            );
+            assert_eq!(
+                read_metadata(&destination, false).unwrap(),
+                source_metadata,
+                "{file}: metadata policy"
+            );
+
+            if format == ImageFileFormat::Png {
+                let source_pixels = ImageReader::open(&source)
+                    .unwrap()
+                    .decode()
+                    .unwrap()
+                    .to_rgba8();
+                let output_pixels = ImageReader::open(&destination)
+                    .unwrap()
+                    .decode()
+                    .unwrap()
+                    .to_rgba8();
+                assert_eq!(source_pixels, output_pixels, "{file}: PNG decoded pixels");
+            }
+        }
+
+        let animated_source = fixture("animated.gif");
+        let animated_destination = output_root.join("animated.gif.compressed.webp");
+        let mut animated_request = request(animated_source, animated_destination.clone());
+        animated_request.target_format = ImageFileFormat::WebP;
+        let error = compress_single_image(&animated_request, &AtomicBool::new(false)).unwrap_err();
+        assert!(matches!(error, ImageCompressionError::InvalidInput(_)));
+        assert!(!animated_destination.exists());
+    }
+
+    #[test]
+    fn b05_2_2_real_resource_and_failure_boundaries() {
+        let Ok(report_path) = std::env::var("LONG_B05_IMAGE_BOUNDARY_REPORT") else {
+            eprintln!("B-05.2.2 boundaries are opt-in; run npm run test:image-boundaries:real");
+            return;
+        };
+        let over_limit = PathBuf::from(
+            std::env::var("LONG_B05_OVER_LIMIT_IMAGE")
+                .expect("LONG_B05_OVER_LIMIT_IMAGE must point to the generated valid PNG"),
+        );
+        let fixture_root = fixture("small-detail.jpg")
+            .parent()
+            .expect("fixture directory")
+            .to_path_buf();
+        for required in [
+            fixture_root.join("ultra-large.png"),
+            fixture_root.join("small-detail.jpg"),
+            fixture_root.join("transparent.png"),
+            fixture_root.join("large-photo.webp"),
+            over_limit.clone(),
+        ] {
+            assert!(
+                required.is_file(),
+                "missing real boundary input: {}",
+                required.display()
+            );
+        }
+
+        let started = std::time::Instant::now();
+        let boundary_facts = decode_facts(&fixture_root.join("ultra-large.png"), true).unwrap();
+        let boundary_pixels =
+            u64::from(boundary_facts.encoded_width) * u64::from(boundary_facts.encoded_height);
+        assert_eq!(boundary_pixels, 96_000_000);
+
+        let resource_root = tempfile::tempdir().unwrap();
+        let over_limit_destination = resource_root.path().join("must-not-exist.png");
+        let mut over_limit_request = request(over_limit, over_limit_destination.clone());
+        over_limit_request.mode = ImageCompressionMode::Lossless;
+        let over_limit_error =
+            compress_single_image(&over_limit_request, &AtomicBool::new(false)).unwrap_err();
+        assert!(matches!(
+            over_limit_error,
+            ImageCompressionError::InvalidInput(_)
+        ));
+        assert!(over_limit_error
+            .to_string()
+            .contains("100 MP safety boundary"));
+        assert!(!over_limit_destination.exists());
+
+        let long_root = tempfile::tempdir().unwrap();
+        let mut long_directory = long_root.path().to_path_buf();
+        let mut layer = 0;
+        while long_directory.to_string_lossy().encode_utf16().count() < 300 {
+            layer += 1;
+            long_directory.push(format!("中文长路径层级-{layer:02}-真实图片测试"));
+        }
+        fs::create_dir_all(&long_directory).unwrap();
+        let long_source = long_directory.join("方向与空格 测试图片.jpg");
+        let long_destination = long_directory.join("方向与空格 测试图片.compressed.jpg");
+        fs::copy(fixture_root.join("small-detail.jpg"), &long_source).unwrap();
+        let long_source_bytes = fs::read(&long_source).unwrap();
+        let long_outcome = compress_single_image(
+            &request(long_source.clone(), long_destination.clone()),
+            &AtomicBool::new(false),
+        )
+        .unwrap();
+        assert!(matches!(
+            long_outcome,
+            ImageCompressionOutcome::Published { .. }
+        ));
+        assert!(long_destination.is_file());
+        assert_eq!(fs::read(&long_source).unwrap(), long_source_bytes);
+        let long_path_utf16 = long_destination.to_string_lossy().encode_utf16().count();
+        assert!(long_path_utf16 > 260);
+
+        let conflict_root = tempfile::tempdir().unwrap();
+        let conflict_source = fixture_root.join("transparent.png");
+        let requested = conflict_root.path().join("transparent.compressed.png");
+        fs::write(&requested, b"existing output").unwrap();
+        let skipped = plan_image_destination(
+            &conflict_source,
+            Some(conflict_root.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Skip,
+            &[],
+        )
+        .unwrap();
+        let renamed = plan_image_destination(
+            &conflict_source,
+            Some(conflict_root.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Rename,
+            &[],
+        )
+        .unwrap();
+        let replace_error = plan_image_destination(
+            &conflict_source,
+            Some(conflict_root.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::ReplaceIfSmaller,
+            &[],
+        )
+        .unwrap_err();
+        assert!(matches!(skipped, ImageDestinationPlan::Skipped { .. }));
+        assert!(matches!(
+            renamed,
+            ImageDestinationPlan::Ready { ref destination }
+                if destination.ends_with("transparent.compressed (1).png")
+        ));
+        assert!(matches!(
+            replace_error,
+            ImageCompressionError::DestinationExists(_)
+        ));
+
+        let race_destination = conflict_root.path().join("race.png");
+        let race_bytes = b"appeared during encoding";
+        let mut race_request = request(conflict_source, race_destination.clone());
+        race_request.mode = ImageCompressionMode::Lossless;
+        let race_error =
+            compress_single_image_with_observer(&race_request, &AtomicBool::new(false), |stage| {
+                if stage == ImageCompressionStage::Publishing {
+                    fs::write(&race_destination, race_bytes).unwrap();
+                }
+            })
+            .unwrap_err();
+        assert!(matches!(race_error, ImageCompressionError::Publish(_)));
+        assert_eq!(fs::read(&race_destination).unwrap(), race_bytes);
+        assert!(!fs::read_dir(conflict_root.path())
+            .unwrap()
+            .flatten()
+            .any(|entry| {
+                entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(".image-compress-")
+            }));
+
+        let storage_root = tempfile::tempdir().unwrap();
+        let storage_destination = storage_root.path().join("storage-full.png");
+        let mut storage_request = request(
+            fixture_root.join("small-detail.jpg"),
+            storage_destination.clone(),
+        );
+        storage_request.mode = ImageCompressionMode::Lossless;
+        storage_request.target_format = ImageFileFormat::Png;
+        let storage_error = compress_single_image_with_writer(
+            &storage_request,
+            &AtomicBool::new(false),
+            |_| {},
+            |_, _| {
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::StorageFull,
+                    "injected image output storage exhaustion",
+                ))
+            },
+        )
+        .unwrap_err();
+        assert!(matches!(
+            storage_error,
+            ImageCompressionError::Io(ref error)
+                if error.kind() == std::io::ErrorKind::StorageFull
+        ));
+        assert!(!storage_destination.exists());
+        assert_eq!(fs::read_dir(storage_root.path()).unwrap().count(), 0);
+
+        let cancellation_root = tempfile::tempdir().unwrap();
+        let cancellation_destination = cancellation_root.path().join("cancelled.webp");
+        let cancellation_flag = AtomicBool::new(false);
+        let mut cancellation_stages = Vec::new();
+        let cancellation_error = compress_single_image_with_observer(
+            &request(
+                fixture_root.join("large-photo.webp"),
+                cancellation_destination.clone(),
+            ),
+            &cancellation_flag,
+            |stage| {
+                cancellation_stages.push(stage);
+                if stage == ImageCompressionStage::Encoding {
+                    cancellation_flag.store(true, Ordering::Release);
+                }
+            },
+        )
+        .unwrap_err();
+        assert!(matches!(
+            cancellation_error,
+            ImageCompressionError::Cancelled
+        ));
+        assert_eq!(
+            cancellation_stages,
+            vec![
+                ImageCompressionStage::Decoding,
+                ImageCompressionStage::Encoding
+            ]
+        );
+        assert!(!cancellation_destination.exists());
+        assert_eq!(fs::read_dir(cancellation_root.path()).unwrap().count(), 0);
+
+        let report = serde_json::json!({
+            "resourceBelowLimitPixels": boundary_pixels,
+            "resourceBelowLimitDecoded": true,
+            "resourceAboveLimitRejected": true,
+            "resourceAboveLimitOutputExists": over_limit_destination.exists(),
+            "longPathUtf16": long_path_utf16,
+            "longPathPublished": long_destination.is_file(),
+            "longPathSourceUnchanged": fs::read(&long_source).unwrap() == long_source_bytes,
+            "conflictSkip": matches!(skipped, ImageDestinationPlan::Skipped { .. }),
+            "conflictRename": matches!(renamed, ImageDestinationPlan::Ready { .. }),
+            "conflictReplaceRejected": matches!(replace_error, ImageCompressionError::DestinationExists(_)),
+            "targetRacePreservedExisting": fs::read(&race_destination).unwrap() == race_bytes,
+            "targetRaceStagingFiles": 0,
+            "storageFullKind": "storage-full",
+            "storageFullOutputExists": storage_destination.exists(),
+            "storageFullStagingFiles": fs::read_dir(storage_root.path()).unwrap().count(),
+            "cancelledAfterEncodingStarted": cancellation_stages.contains(&ImageCompressionStage::Encoding),
+            "cancelledOutputExists": cancellation_destination.exists(),
+            "cancelledStagingFiles": fs::read_dir(cancellation_root.path()).unwrap().count(),
+            "elapsedMs": started.elapsed().as_millis(),
+        });
+        let report_path = PathBuf::from(report_path);
+        fs::create_dir_all(report_path.parent().unwrap()).unwrap();
+        fs::write(report_path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
+    }
+}

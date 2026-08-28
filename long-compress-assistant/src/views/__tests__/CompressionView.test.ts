@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { statSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { defineComponent, nextTick } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -14,13 +16,18 @@ const mocks = vi.hoisted(() => ({
   openRarDownloadPage: vi.fn(),
   installWinRarWithWinget: vi.fn(),
   getFileInfo: vi.fn(),
+  planImageCompressionDestination: vi.fn(),
+  compressImageFile: vi.fn(),
   invoke: vi.fn(),
   ask: vi.fn(),
 }))
 
-vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
+vi.mock('@tauri-apps/api/tauri', () => ({
+  invoke: mocks.invoke,
+  convertFileSrc: (path: string) => `asset://localhost/${encodeURIComponent(path)}`,
+}))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => vi.fn()) }))
-vi.mock('@tauri-apps/api/dialog', () => ({ ask: mocks.ask }))
+vi.mock('@tauri-apps/api/dialog', () => ({ ask: mocks.ask, open: vi.fn() }))
 vi.mock('@/composables/useTauriCommands', () => ({
   useTauriCommands: () => ({
     compressFiles: mocks.compressFiles,
@@ -29,6 +36,8 @@ vi.mock('@/composables/useTauriCommands', () => ({
     openRarDownloadPage: mocks.openRarDownloadPage,
     installWinRarWithWinget: mocks.installWinRarWithWinget,
     getFileInfo: mocks.getFileInfo,
+    planImageCompressionDestination: mocks.planImageCompressionDestination,
+    compressImageFile: mocks.compressImageFile,
   }),
 }))
 
@@ -88,6 +97,11 @@ describe('CompressionView', () => {
     mocks.checkRarCompressionSupport.mockResolvedValue({ available: true, message: 'ready' })
     mocks.installWinRarWithWinget.mockResolvedValue({ available: true, encoder_path: 'C:/Program Files/WinRAR/Rar.exe', message: 'ready' })
     mocks.getFileInfo.mockResolvedValue(null)
+    mocks.planImageCompressionDestination.mockResolvedValue({
+      status: 'ready',
+      destination: 'C:/output/transparent.compressed.png',
+    })
+    mocks.compressImageFile.mockResolvedValue(undefined)
     mocks.ask.mockResolvedValue(true)
   })
 
@@ -611,5 +625,113 @@ describe('CompressionView', () => {
       'C:/input/sample.7z',
       expect.objectContaining({ format: '7z', password: 'keep-this-password' }),
     )
+  })
+
+  it('exposes four honest workspaces and keeps the archive queue intact while switching modes', async () => {
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+    expect(wrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(1)
+
+    await wrapper.get('[data-testid="compression-mode-image"]').trigger('click')
+    expect(wrapper.get('[data-testid="image-compression-workspace"]').text()).toContain('统一任务队列')
+    expect(wrapper.get('[data-testid="image-compression-workspace"] .primary-action').attributes('disabled')).toBeDefined()
+    expect(useCompressionStore().imageItems).toHaveLength(0)
+    expect(useCompressionStore().selectedFiles).toHaveLength(1)
+
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    expect(wrapper.get('[data-testid="planned-compression-workspace"]').text()).toContain('不会创建任务、模拟进度或生成占位结果')
+
+    await wrapper.get('[data-testid="compression-mode-archive"]').trigger('click')
+    expect(wrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(1)
+  })
+
+  it('runs a ready real-fixture image through the unified batch and renders verified result facts', async () => {
+    const fixturePath = resolve(process.cwd(), 'test-results/media-fixture-audit/fixtures/images/transparent.png')
+    const inputBytes = statSync(fixturePath).size
+    const outputBytes = 1_000
+    const imageFacts = (encodedBytes: number) => ({
+      format: 'png' as const,
+      encodedBytes,
+      encodedWidth: 256,
+      encodedHeight: 256,
+      visibleWidth: 256,
+      visibleHeight: 256,
+      orientation: 1,
+      frameCount: 1,
+      hasAlpha: true,
+    })
+    mocks.compressImageFile.mockResolvedValue({
+      status: 'published',
+      input: imageFacts(inputBytes),
+      output: imageFacts(outputBytes),
+    })
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-image"]').trigger('click')
+    const compressionStore = useCompressionStore()
+    const { accepted } = compressionStore.addImageCandidates([{
+      name: 'transparent.png',
+      path: fixturePath,
+      size: inputBytes,
+      isDirectory: false,
+    }])
+    compressionStore.completeImageInspection(accepted[0].id, {
+      width: 256,
+      height: 256,
+      previewUrl: 'asset://localhost/source',
+    })
+    await nextTick()
+
+    const start = wrapper.get('[data-testid="image-compression-workspace"] .primary-action')
+    expect(start.attributes('disabled')).toBeUndefined()
+    await start.trigger('click')
+    await flushPromises()
+
+    expect(mocks.planImageCompressionDestination).toHaveBeenCalledWith(expect.objectContaining({
+      source: fixturePath,
+      targetFormat: 'png',
+    }))
+    expect(mocks.compressImageFile).toHaveBeenCalledWith(
+      expect.stringContaining('image-'),
+      expect.objectContaining({ source: fixturePath, destination: 'C:/output/transparent.compressed.png' }),
+    )
+    expect(useTaskStore().tasks[0]).toMatchObject({
+      workloadKind: 'image',
+      status: 'completed',
+      outputPath: 'C:/output/transparent.compressed.png',
+      metrics: { inputBytes, outputBytes },
+    })
+    const workspace = wrapper.get('[data-testid="image-compression-workspace"]')
+    expect(workspace.text()).toContain('C:/output/transparent.compressed.png')
+    expect(workspace.text()).toContain('节省 546 B')
+    expect(workspace.text()).not.toContain('B-03')
+    expect(compressionStore.imageItems[0].resultPreviewUrl).toContain('transparent.compressed.png')
+  })
+
+  it('reports a real image failure as incomplete instead of showing a success summary', async () => {
+    const fixturePath = resolve(process.cwd(), 'test-results/media-fixture-audit/fixtures/images/transparent.png')
+    mocks.compressImageFile.mockRejectedValueOnce(new Error('真实编码失败'))
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-image"]').trigger('click')
+    const compressionStore = useCompressionStore()
+    const { accepted } = compressionStore.addImageCandidates([{
+      name: 'transparent.png',
+      path: fixturePath,
+      size: statSync(fixturePath).size,
+      isDirectory: false,
+    }])
+    compressionStore.completeImageInspection(accepted[0].id, {
+      width: 256,
+      height: 256,
+      previewUrl: 'asset://localhost/source',
+    })
+    await nextTick()
+
+    await wrapper.get('[data-testid="image-compression-workspace"] .primary-action').trigger('click')
+    await flushPromises()
+
+    expect(useTaskStore().tasks[0]).toMatchObject({ status: 'failed', error: 'Error: 真实编码失败' })
+    expect(useAppStore().error).toContain('1 个失败')
+    expect(useAppStore().successMessage).toBeNull()
   })
 })
