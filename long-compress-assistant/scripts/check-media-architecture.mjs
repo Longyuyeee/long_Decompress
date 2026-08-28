@@ -203,6 +203,37 @@ for (const contract of [
     `C-04.3 failure-matrix evidence is missing: ${contract}`,
   )
 }
+const videoMatrixPackageManifest = JSON.parse(await read('package.json'))
+assert(
+  videoMatrixPackageManifest.scripts['test:video-matrix:real'] === 'node scripts/run-c05-video-format-matrix.mjs',
+  'C-05.2.1 must expose one reproducible real video matrix command',
+)
+const videoMatrixManifest = JSON.parse(await read('tests/fixtures/media/c05-video-format-matrix.json'))
+assert(videoMatrixManifest.fixtureTool.productIntegrationAllowed === false, 'C-05 fixture tooling must stay test-only')
+assert(
+  videoMatrixManifest.fixtureTool.archiveSha256 === '2e8e28af97c2ae338ccef92e36da9b2a4cd21d0cad9dde093545606cb07f5b00',
+  'C-05 fixture-tool identity must stay pinned',
+)
+assert(videoMatrixManifest.sources.length === 5, 'C-05.2.1 must cover five declared input formats')
+assert(videoMatrixManifest.executions.length === 7, 'C-05.2.1 must retain seven product-pipeline executions')
+assert(
+  new Set(videoMatrixManifest.executions.map(item => item.preset)).size === 3,
+  'C-05.2.1 must exercise all three presets',
+)
+const videoMatrixRunner = await read('scripts/run-c05-video-format-matrix.mjs')
+for (const contract of [
+  "join(root, 'test-results', 'c05-fixture-tool')",
+  "join(root, 'src-tauri', 'resources', 'video-engine', 'ffprobe.exe')",
+  'c05_real_format_resolution_preset_matrix',
+  "'-count_frames'",
+  'productIntegrationAllowed === false',
+]) {
+  assert(videoMatrixRunner.includes(contract), `C-05.2.1 matrix contract is missing: ${contract}`)
+}
+assert(
+  compressionCommands.includes('async fn c05_real_format_resolution_preset_matrix()'),
+  'C-05.2.1 must run the private product compression pipeline',
+)
 const videoWorkspace = await read('src/components/compression/VideoCompressionWorkspace.vue')
 assert(videoWorkspace.includes('commands.planVideoCompression'), 'C-02.3 workspace must consume the authoritative backend plan')
 assert(videoWorkspace.includes('estimatedOutput.lowBytes'), 'C-02.3 workspace must display the labeled backend estimate')

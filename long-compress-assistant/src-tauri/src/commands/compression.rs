@@ -1591,6 +1591,103 @@ mod cancellation_tests {
     }
 
     #[tokio::test]
+    #[cfg(windows)]
+    async fn c05_real_format_resolution_preset_matrix() {
+        let Ok(manifest_path) = std::env::var("LONG_C05_VIDEO_MATRIX_MANIFEST") else {
+            println!("C-05.2.1 matrix skipped: LONG_C05_VIDEO_MATRIX_MANIFEST is not set");
+            return;
+        };
+        let output_root = std::env::var("LONG_C05_VIDEO_MATRIX_OUTPUT")
+            .expect("LONG_C05_VIDEO_MATRIX_OUTPUT must accompany the matrix manifest");
+        let manifest: serde_json::Value = serde_json::from_slice(
+            &std::fs::read(&manifest_path).expect("read C-05.2.1 runtime manifest"),
+        )
+        .expect("parse C-05.2.1 runtime manifest");
+        let cases = manifest["cases"]
+            .as_array()
+            .expect("runtime manifest cases");
+        assert_eq!(cases.len(), 7);
+
+        let resource_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
+        let ffprobe = resource_root.join("video-engine/ffprobe.exe");
+        let output_root = Path::new(&output_root);
+        std::fs::create_dir_all(output_root).expect("create C-05.2.1 output root");
+        let mut results = Vec::with_capacity(cases.len());
+
+        for case in cases {
+            let id = case["id"].as_str().expect("case id");
+            let source = Path::new(case["sourcePath"].as_str().expect("source path"));
+            let source_bytes = std::fs::metadata(source).expect("source metadata").len();
+            let input = probe_video_file(&ffprobe, source)
+                .await
+                .expect("product probe must accept matrix input");
+            assert!(input
+                .container
+                .as_deref()
+                .unwrap_or_default()
+                .contains(case["inputContainerNeedle"].as_str().expect("container")));
+            assert_eq!(
+                input.primary_video.codec.as_deref(),
+                case["inputVideoCodec"].as_str()
+            );
+            assert_eq!(
+                input.audio_streams.first().and_then(|audio| audio.codec.as_deref()),
+                case["inputAudioCodec"].as_str()
+            );
+
+            let preset: VideoCompressionPreset = serde_json::from_value(case["preset"].clone())
+                .expect("deserialize matrix preset");
+            let plan_request = VideoCompressionPlanRequest {
+                path: source.to_string_lossy().into_owned(),
+                preset,
+                max_width: None,
+                max_height: None,
+            };
+            let plan = build_video_compression_plan(input, &plan_request)
+                .expect("build product compression plan");
+            let expected_width = case["outputWidth"].as_u64().expect("output width") as u32;
+            let expected_height = case["outputHeight"].as_u64().expect("output height") as u32;
+            assert_eq!((plan.output_width, plan.output_height), (expected_width, expected_height));
+
+            let destination = output_root.join(format!("{id}.mp4"));
+            let outcome = run_video_compression(
+                resource_root.clone(),
+                format!("c05-matrix-{id}-{}", uuid::Uuid::new_v4()),
+                VideoCompressionExecutionRequest {
+                    plan: plan_request,
+                    destination: destination.clone(),
+                    confirmed_stream_changes: plan.stream_changes,
+                    preserve_mark_of_web: false,
+                },
+                |_| {},
+            )
+            .await
+            .expect("execute product compression pipeline");
+
+            assert_eq!(outcome.path, destination);
+            assert_eq!(outcome.input_bytes, source_bytes);
+            assert_eq!(std::fs::metadata(source).expect("source remains").len(), source_bytes);
+            assert_eq!(outcome.verified.container, "mp4");
+            assert_eq!(outcome.verified.video_codec, "h264");
+            assert_eq!(outcome.verified.visible_width, expected_width);
+            assert_eq!(outcome.verified.visible_height, expected_height);
+            assert_eq!(
+                outcome.verified.audio_codec.as_deref(),
+                case["inputAudioCodec"].as_str().map(|_| "aac")
+            );
+            assert!(outcome.verified.decoded_video_frames > 0);
+            assert!(outcome.output_bytes > 0);
+            results.push(serde_json::to_value(&outcome).expect("serialize matrix outcome"));
+        }
+
+        std::fs::write(
+            output_root.join("backend-result.json"),
+            serde_json::to_vec_pretty(&results).expect("serialize matrix results"),
+        )
+        .expect("write matrix backend result");
+    }
+
+    #[tokio::test]
     async fn archive_browse_cancellation_can_arrive_before_registration() {
         let browse_id = format!("browse-early-cancel-{}", uuid::Uuid::new_v4());
         cancel_archive_browse(browse_id.clone()).await.unwrap();

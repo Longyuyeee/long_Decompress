@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-04 已完成，C-05.1 真实桌面执行闭环已通过。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通，下一接续点为 C-05.2 真实格式/分辨率/三预设矩阵。真实 Windows N 前后验证仍归 C-05/发布门禁，完成前不得发布 v1.1.16。证据见 [C03_3_2_VIDEO_TASK_UI_AUDIT.md](C03_3_2_VIDEO_TASK_UI_AUDIT.md) 与 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-04、C-05.1 和 C-05.2.1 已完成。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种输入格式、4 个分辨率层级和三档预设的 7 条真实产品管线矩阵差异为 0。下一接续点为 C-05.2.2 的 10 分钟与大文件矩阵。真实 Windows N 前后验证仍归 C-05/发布门禁，完成前不得发布 v1.1.16。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md) 与 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -457,7 +457,7 @@ src/types/media.ts
 
 ### C-05 真实验收矩阵
 
-进度（2026-08-29）：**C-05.1 已完成，C-05 尚未关闭。** Release WebView2 已从可见界面对一条 VFR/旋转/字幕 MP4 和一条 30 秒双音轨/字幕 MP4 执行均衡预设，真实发布两份 MP4/H.264/AAC，产品 ffprobe、磁盘事实、完成卡片和两条 `TaskMetricsV1` 历史一致。下一步 C-05.2 补齐格式、分辨率、三档预设、无音频、10 分钟和大文件矩阵；随后验证取消、跨重启历史、默认应用、安装版、Windows N 和公开更新。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md)。
+进度（2026-08-29）：**C-05.1 与 C-05.2.1 已完成，C-05 尚未关闭。** Release WebView2 已完成两条真实均衡预设桌面执行；开发态可重复矩阵又以 5 种输入格式、4 个分辨率层级、7 次唯一产品管线执行覆盖全部三档预设和无音频路径，产品 ffprobe 复核差异为 0。该矩阵是覆盖集而非 60 项笛卡尔积。下一步 C-05.2.2 补齐 10 分钟和至少一个大文件；随后验证取消、跨重启历史、默认应用、安装版、Windows N 和公开更新。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md) 与 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)。
 
 - MP4/H.264、MOV、AVI、WMV、WebM 输入；
 - 480p、720p、1080p、4K；
