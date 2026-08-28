@@ -35,6 +35,9 @@ export function validateMediaReleaseGates(contract) {
   assert(contract.nodes.B.publicFormats.join(',') === 'jpeg,webp,png-lossless', 'B format scope drifted from the dependency audit')
   assert(contract.nodes.B.requiredRealCases.includes('three-samples-per-public-format'), 'B-05.1 three-sample format matrix is required')
   assert(contract.nodes.B.requiredRealCases.includes('gif-explicit-preserve-or-reject'), 'GIF boundary evidence is required')
+  assert(contract.nodes.B.requiredRealCases.includes('hundred-file-mixed-batch'), 'B-05.2.1 hundred-file batch is required')
+  assert(contract.nodes.B.requiredRealCases.includes('ultra-large-pixel-limit'), 'B-05.2.2 pixel boundary is required')
+  assert(contract.nodes.B.requiredRealCases.includes('unicode-long-path'), 'B-05.2.2 Unicode long-path evidence is required')
   assert(contract.nodes.D.requiredRealCases.includes('signed-explicit-refusal'), 'signed PDF refusal evidence is required')
   assert(contract.requiredEvidenceFields?.length >= 13, 'release evidence template fields are incomplete')
   return contract

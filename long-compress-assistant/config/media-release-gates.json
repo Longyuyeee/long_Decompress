@@ -42,7 +42,8 @@
         "three-samples-per-public-format",
         "gif-explicit-preserve-or-reject",
         "hundred-file-mixed-batch",
-        "ultra-large-pixel-limit"
+        "ultra-large-pixel-limit",
+        "unicode-long-path"
       ],
       "requiredValidation": ["decode-output", "dimensions", "frame-semantics", "metadata-policy", "filesystem-bytes"]
     },

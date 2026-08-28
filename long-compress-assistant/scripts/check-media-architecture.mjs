@@ -102,6 +102,15 @@ assert(desktopE2e.includes("const imageBatchOnly = process.argv.includes('--imag
 assert(desktopE2e.includes('const expectedBatchSize = 100'), 'B-05.2.1 batch size contract must remain fixed at 100')
 assert(desktopE2e.includes('source bytes must remain unchanged'), 'B-05.2.1 must verify source byte identity after execution')
 assert(desktopE2e.includes('every published image must persist one unified history row'), 'B-05.2.1 must verify all history rows')
+assert(
+  packageManifest.scripts?.['test:image-boundaries:real'] === 'npm run test:fixtures:media:images && node scripts/run-b05-image-boundaries.mjs',
+  'B-05.2.2 real production boundary command is missing or bypasses fixture preparation',
+)
+const imageBoundaryRunner = await read('scripts/run-b05-image-boundaries.mjs')
+assert(imageBoundaryRunner.includes('resourceBelowLimitPixels: 96_000_000'), 'B-05.2.2 must lock the real below-limit image')
+assert(imageBoundaryRunner.includes('resourceAboveLimitRejected: true'), 'B-05.2.2 must reject a valid image above 100 MP')
+assert(imageBoundaryRunner.includes("storageFullKind: 'storage-full'"), 'B-05.2.2 must exercise standard StorageFull failure injection')
+assert(imageBoundaryRunner.includes('cancelledAfterEncodingStarted: true'), 'B-05.2.2 must cancel after real encoding starts')
 const imageMatrix = JSON.parse(await read('tests/fixtures/media/b05-image-format-matrix.json'))
 assert(imageMatrix.expected?.samplesPerFormat === 3, 'B-05.1 must freeze three samples per public image format')
 assert(imageMatrix.cases?.length === 9, 'B-05.1 must retain nine real image cases')
@@ -116,6 +125,14 @@ const imageService = await read('src-tauri/src/services/image_compression_servic
 assert(
   imageService.includes('fn b05_public_format_matrix_uses_real_production_compression()'),
   'B-05.1 must execute the real production image service',
+)
+assert(
+  imageService.includes('fn b05_2_2_real_resource_and_failure_boundaries()'),
+  'B-05.2.2 must execute the real production image service',
+)
+assert(
+  imageService.includes('compress_single_image_with_writer'),
+  'B-05.2.2 StorageFull injection must remain at the production file-write boundary',
 )
 assert(
   imageService.includes('if read_metadata(path, false)? == expected'),

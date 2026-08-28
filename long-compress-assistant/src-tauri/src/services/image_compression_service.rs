@@ -264,10 +264,25 @@ pub fn compress_single_image(
 pub fn compress_single_image_with_observer<F>(
     request: &ImageCompressionRequest,
     cancelled: &AtomicBool,
-    mut observe_stage: F,
+    observe_stage: F,
 ) -> Result<ImageCompressionOutcome, ImageCompressionError>
 where
     F: FnMut(ImageCompressionStage),
+{
+    compress_single_image_with_writer(request, cancelled, observe_stage, |path, bytes| {
+        fs::write(path, bytes)
+    })
+}
+
+fn compress_single_image_with_writer<F, W>(
+    request: &ImageCompressionRequest,
+    cancelled: &AtomicBool,
+    mut observe_stage: F,
+    mut write_file: W,
+) -> Result<ImageCompressionOutcome, ImageCompressionError>
+where
+    F: FnMut(ImageCompressionStage),
+    W: FnMut(&Path, &[u8]) -> std::io::Result<()>,
 {
     validate_request(request)?;
     check_cancelled(cancelled)?;
@@ -304,7 +319,7 @@ where
         observe_stage(ImageCompressionStage::Resizing);
     }
     observe_stage(ImageCompressionStage::Encoding);
-    encode(request, &input, target_visible, &staged)?;
+    encode(request, &input, target_visible, &staged, &mut write_file)?;
     let expected_metadata = apply_metadata_policy(
         &staged,
         &source_metadata,
@@ -396,12 +411,16 @@ fn check_cancelled(cancelled: &AtomicBool) -> Result<(), ImageCompressionError> 
     }
 }
 
-fn encode(
+fn encode<W>(
     request: &ImageCompressionRequest,
     input: &ImageCompressionFacts,
     target_visible: ImageDimensions,
     staged: &Path,
-) -> Result<(), ImageCompressionError> {
+    write_file: &mut W,
+) -> Result<(), ImageCompressionError>
+where
+    W: FnMut(&Path, &[u8]) -> std::io::Result<()>,
+{
     let resized = target_visible.width != input.visible_width
         || target_visible.height != input.visible_height;
     match request.target_format {
@@ -447,7 +466,7 @@ fn encode(
             options.max_decompressed_size = Some(MAX_DECODED_PIXELS as usize * 8);
             let optimized = oxipng::optimize_from_memory(&encoded, &options)
                 .map_err(|error| ImageCompressionError::Encoder(error.to_string()))?;
-            fs::write(staged, optimized).map_err(ImageCompressionError::Io)
+            write_file(staged, &optimized).map_err(ImageCompressionError::Io)
         }
         ImageFileFormat::Jpeg | ImageFileFormat::WebP => {
             let mut parameters = CSParameters::new();
@@ -1375,5 +1394,228 @@ mod tests {
         let error = compress_single_image(&animated_request, &AtomicBool::new(false)).unwrap_err();
         assert!(matches!(error, ImageCompressionError::InvalidInput(_)));
         assert!(!animated_destination.exists());
+    }
+
+    #[test]
+    fn b05_2_2_real_resource_and_failure_boundaries() {
+        let Ok(report_path) = std::env::var("LONG_B05_IMAGE_BOUNDARY_REPORT") else {
+            eprintln!("B-05.2.2 boundaries are opt-in; run npm run test:image-boundaries:real");
+            return;
+        };
+        let over_limit = PathBuf::from(
+            std::env::var("LONG_B05_OVER_LIMIT_IMAGE")
+                .expect("LONG_B05_OVER_LIMIT_IMAGE must point to the generated valid PNG"),
+        );
+        let fixture_root = fixture("small-detail.jpg")
+            .parent()
+            .expect("fixture directory")
+            .to_path_buf();
+        for required in [
+            fixture_root.join("ultra-large.png"),
+            fixture_root.join("small-detail.jpg"),
+            fixture_root.join("transparent.png"),
+            fixture_root.join("large-photo.webp"),
+            over_limit.clone(),
+        ] {
+            assert!(
+                required.is_file(),
+                "missing real boundary input: {}",
+                required.display()
+            );
+        }
+
+        let started = std::time::Instant::now();
+        let boundary_facts = decode_facts(&fixture_root.join("ultra-large.png"), true).unwrap();
+        let boundary_pixels =
+            u64::from(boundary_facts.encoded_width) * u64::from(boundary_facts.encoded_height);
+        assert_eq!(boundary_pixels, 96_000_000);
+
+        let resource_root = tempfile::tempdir().unwrap();
+        let over_limit_destination = resource_root.path().join("must-not-exist.png");
+        let mut over_limit_request = request(over_limit, over_limit_destination.clone());
+        over_limit_request.mode = ImageCompressionMode::Lossless;
+        let over_limit_error =
+            compress_single_image(&over_limit_request, &AtomicBool::new(false)).unwrap_err();
+        assert!(matches!(
+            over_limit_error,
+            ImageCompressionError::InvalidInput(_)
+        ));
+        assert!(over_limit_error
+            .to_string()
+            .contains("100 MP safety boundary"));
+        assert!(!over_limit_destination.exists());
+
+        let long_root = tempfile::tempdir().unwrap();
+        let mut long_directory = long_root.path().to_path_buf();
+        let mut layer = 0;
+        while long_directory.to_string_lossy().encode_utf16().count() < 300 {
+            layer += 1;
+            long_directory.push(format!("中文长路径层级-{layer:02}-真实图片测试"));
+        }
+        fs::create_dir_all(&long_directory).unwrap();
+        let long_source = long_directory.join("方向与空格 测试图片.jpg");
+        let long_destination = long_directory.join("方向与空格 测试图片.compressed.jpg");
+        fs::copy(fixture_root.join("small-detail.jpg"), &long_source).unwrap();
+        let long_source_bytes = fs::read(&long_source).unwrap();
+        let long_outcome = compress_single_image(
+            &request(long_source.clone(), long_destination.clone()),
+            &AtomicBool::new(false),
+        )
+        .unwrap();
+        assert!(matches!(
+            long_outcome,
+            ImageCompressionOutcome::Published { .. }
+        ));
+        assert!(long_destination.is_file());
+        assert_eq!(fs::read(&long_source).unwrap(), long_source_bytes);
+        let long_path_utf16 = long_destination.to_string_lossy().encode_utf16().count();
+        assert!(long_path_utf16 > 260);
+
+        let conflict_root = tempfile::tempdir().unwrap();
+        let conflict_source = fixture_root.join("transparent.png");
+        let requested = conflict_root.path().join("transparent.compressed.png");
+        fs::write(&requested, b"existing output").unwrap();
+        let skipped = plan_image_destination(
+            &conflict_source,
+            Some(conflict_root.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Skip,
+            &[],
+        )
+        .unwrap();
+        let renamed = plan_image_destination(
+            &conflict_source,
+            Some(conflict_root.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Rename,
+            &[],
+        )
+        .unwrap();
+        let replace_error = plan_image_destination(
+            &conflict_source,
+            Some(conflict_root.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::ReplaceIfSmaller,
+            &[],
+        )
+        .unwrap_err();
+        assert!(matches!(skipped, ImageDestinationPlan::Skipped { .. }));
+        assert!(matches!(
+            renamed,
+            ImageDestinationPlan::Ready { ref destination }
+                if destination.ends_with("transparent.compressed (1).png")
+        ));
+        assert!(matches!(
+            replace_error,
+            ImageCompressionError::DestinationExists(_)
+        ));
+
+        let race_destination = conflict_root.path().join("race.png");
+        let race_bytes = b"appeared during encoding";
+        let mut race_request = request(conflict_source, race_destination.clone());
+        race_request.mode = ImageCompressionMode::Lossless;
+        let race_error =
+            compress_single_image_with_observer(&race_request, &AtomicBool::new(false), |stage| {
+                if stage == ImageCompressionStage::Publishing {
+                    fs::write(&race_destination, race_bytes).unwrap();
+                }
+            })
+            .unwrap_err();
+        assert!(matches!(race_error, ImageCompressionError::Publish(_)));
+        assert_eq!(fs::read(&race_destination).unwrap(), race_bytes);
+        assert!(!fs::read_dir(conflict_root.path())
+            .unwrap()
+            .flatten()
+            .any(|entry| {
+                entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(".image-compress-")
+            }));
+
+        let storage_root = tempfile::tempdir().unwrap();
+        let storage_destination = storage_root.path().join("storage-full.png");
+        let mut storage_request = request(
+            fixture_root.join("small-detail.jpg"),
+            storage_destination.clone(),
+        );
+        storage_request.mode = ImageCompressionMode::Lossless;
+        storage_request.target_format = ImageFileFormat::Png;
+        let storage_error = compress_single_image_with_writer(
+            &storage_request,
+            &AtomicBool::new(false),
+            |_| {},
+            |_, _| {
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::StorageFull,
+                    "injected image output storage exhaustion",
+                ))
+            },
+        )
+        .unwrap_err();
+        assert!(matches!(
+            storage_error,
+            ImageCompressionError::Io(ref error)
+                if error.kind() == std::io::ErrorKind::StorageFull
+        ));
+        assert!(!storage_destination.exists());
+        assert_eq!(fs::read_dir(storage_root.path()).unwrap().count(), 0);
+
+        let cancellation_root = tempfile::tempdir().unwrap();
+        let cancellation_destination = cancellation_root.path().join("cancelled.webp");
+        let cancellation_flag = AtomicBool::new(false);
+        let mut cancellation_stages = Vec::new();
+        let cancellation_error = compress_single_image_with_observer(
+            &request(
+                fixture_root.join("large-photo.webp"),
+                cancellation_destination.clone(),
+            ),
+            &cancellation_flag,
+            |stage| {
+                cancellation_stages.push(stage);
+                if stage == ImageCompressionStage::Encoding {
+                    cancellation_flag.store(true, Ordering::Release);
+                }
+            },
+        )
+        .unwrap_err();
+        assert!(matches!(
+            cancellation_error,
+            ImageCompressionError::Cancelled
+        ));
+        assert_eq!(
+            cancellation_stages,
+            vec![
+                ImageCompressionStage::Decoding,
+                ImageCompressionStage::Encoding
+            ]
+        );
+        assert!(!cancellation_destination.exists());
+        assert_eq!(fs::read_dir(cancellation_root.path()).unwrap().count(), 0);
+
+        let report = serde_json::json!({
+            "resourceBelowLimitPixels": boundary_pixels,
+            "resourceBelowLimitDecoded": true,
+            "resourceAboveLimitRejected": true,
+            "resourceAboveLimitOutputExists": over_limit_destination.exists(),
+            "longPathUtf16": long_path_utf16,
+            "longPathPublished": long_destination.is_file(),
+            "longPathSourceUnchanged": fs::read(&long_source).unwrap() == long_source_bytes,
+            "conflictSkip": matches!(skipped, ImageDestinationPlan::Skipped { .. }),
+            "conflictRename": matches!(renamed, ImageDestinationPlan::Ready { .. }),
+            "conflictReplaceRejected": matches!(replace_error, ImageCompressionError::DestinationExists(_)),
+            "targetRacePreservedExisting": fs::read(&race_destination).unwrap() == race_bytes,
+            "targetRaceStagingFiles": 0,
+            "storageFullKind": "storage-full",
+            "storageFullOutputExists": storage_destination.exists(),
+            "storageFullStagingFiles": fs::read_dir(storage_root.path()).unwrap().count(),
+            "cancelledAfterEncodingStarted": cancellation_stages.contains(&ImageCompressionStage::Encoding),
+            "cancelledOutputExists": cancellation_destination.exists(),
+            "cancelledStagingFiles": fs::read_dir(cancellation_root.path()).unwrap().count(),
+            "elapsedMs": started.elapsed().as_millis(),
+        });
+        let report_path = PathBuf::from(report_path);
+        fs::create_dir_all(report_path.parent().unwrap()).unwrap();
+        fs::write(report_path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
     }
 }

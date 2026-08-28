@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-08-28 B-05.2.2 图片资源与故障边界
+
+- 新增 `test:image-boundaries:real`，直接调用生产图片服务验证 96 MP 可解码与 100.01 MP 有效 PNG 拒绝、340 UTF-16 中文长路径、skip/rename/replace-if-smaller 和编码期目标竞态、标准 StorageFull 注入、编码启动后取消。
+- 最终所有功能预期与实际差异为 0；长路径真实发布且源文件不变，超限/竞态/磁盘满/取消均不留下错误输出或事务暂存。StorageFull 仅在真实解码和编码后的最终写入点安全注入，不冒充物理磁盘耗尽。
+- 首轮发现新增观察器参数的多余 `mut` 编译警告及 Pillow 有意大图告警，均已修正并从头复跑。前端 276/276、Rust 319 通过/4 忽略、Clippy、生产构建、媒体门禁和 B-05.1 九样本矩阵全部通过。
+- B-05.2 整体已完成；当前图片配置没有删除源文件选项，不得把归档回收能力冒充完成。B-05 整体仍不升版、不更新 Release；下一接续点严格为 B-05.3 正式安装版拖入—配置—对比—执行—历史—重开输出。完整证据见 [B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md](B05_2_2_IMAGE_FAILURE_BOUNDARIES_AUDIT.md)。
+
 ## 2026-08-28 B-05.2.1 百图真实批处理
 
 - 新增 `test:e2e:desktop:image-batch`：生成 JPEG 34、PNG 33、WebP 33 共 100 个不同的真实磁盘输入，在 Windows Release Tauri/WebView2 中通过可见按钮执行生产批处理。
