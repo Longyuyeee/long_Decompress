@@ -53,6 +53,7 @@ export const applyPublishedVideoToTask = (
     container: outcome.verified.container,
   })
   task.progress = 100
+  task.stage = undefined
   task.heartbeatSecondsSinceProgress = undefined
   task.heartbeatAt = undefined
   appendTaskLog(task, '视频输出已完整验证并原子发布', 'success')

@@ -62,6 +62,7 @@ let desktopSessionIndex = 0
 let webviewUserDataDirectory = path.join(e2eDataDirectory, `webview2-session-${desktopSessionIndex}`)
 const bundledSevenZip = path.join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
 const productFfmpeg = path.join(root, 'src-tauri', 'resources', 'video-engine', 'ffmpeg.exe')
+const productFfprobe = path.join(root, 'src-tauri', 'resources', 'video-engine', 'ffprobe.exe')
 const qemuImg =
   process.env.QEMU_IMG_PATH ||
   path.join(root, 'test-results', 'qemu-img-tool', 'root', 'qemu-img.exe')
@@ -2411,10 +2412,12 @@ async function runImageWorkspaceDesktopGate() {
 }
 
 async function runVideoWorkspaceDesktopGate() {
-  console.log('[desktop-e2e] verifying real C-02 video probing, planning, labels and queue isolation')
+  console.log('[desktop-e2e] verifying real C-05.1 video planning, execution, publication and history')
   const frozenVideo = path.join(root, 'tests', 'fixtures', 'media', 'videos', 'h264-vfr-audio-rotation-subtitles.mp4')
   const multiAudioVideo = path.join(fixtureDirectory, 'multi-audio-30s.mp4')
+  const videoOutputDirectory = path.join(fixtureDirectory, 'video-results')
   assert.equal(existsSync(frozenVideo), true, `missing frozen video fixture: ${frozenVideo}`)
+  mkdirSync(videoOutputDirectory, { recursive: true })
   const generated = spawnSync(productFfmpeg, [
     '-hide_banner', '-loglevel', 'error', '-stream_loop', '29', '-i', frozenVideo,
     '-map', '0:v:0', '-map', '0:a:0', '-map', '0:a:0', '-map', '0:s:0', '-c', 'copy', '-t', '30',
@@ -2439,6 +2442,7 @@ async function runVideoWorkspaceDesktopGate() {
     const statuses = await Promise.all(cards.map(card => card.getAttribute('data-status')))
     return statuses.every(status => status === 'ready')
   }, 30_000)
+  console.log('[desktop-e2e] video drafts are initially planned')
   const text = await workspace.getText()
   assert.match(text, /预计输出 · 估算/)
   assert.match(text, /360×640/)
@@ -2446,15 +2450,9 @@ async function runVideoWorkspaceDesktopGate() {
   assert.match(text, /字幕流将被移除/)
   assert.match(text, /额外音轨将被移除/)
   assert.match(text, /后续执行前必须显式确认/)
-  const execute = await waitForElement('[data-testid="video-compression-workspace"] .execute-disabled')
-  assert.notEqual(await execute.getAttribute('disabled'), null, 'C-02 must not enable video execution')
-  assert.equal((await callDesktopBridge('taskHistory')).length, historyBefore, 'C-02 planning must not write task history')
-
-  await (await waitForElement('[data-testid="video-preset-small"]')).click()
-  await driver.wait(async () => {
-    const statuses = await driver.findElements(By.css('[data-testid="video-draft-card"][data-status="ready"]'))
-    return statuses.length === 2
-  }, 30_000)
+  const execute = await waitForElement('[data-testid="video-compression-workspace"] .primary-action')
+  assert.equal(await execute.getAttribute('disabled'), null, 'verified video drafts must enable real execution')
+  assert.equal((await callDesktopBridge('taskHistory')).length, historyBefore, 'planning must not write task history')
 
   mkdirSync(artifactDirectory, { recursive: true })
   for (const size of [{ width: 1100, height: 720 }, { width: 760, height: 560 }]) {
@@ -2483,12 +2481,91 @@ async function runVideoWorkspaceDesktopGate() {
     )
   }
 
-  await (await waitForElement('[data-testid="compression-mode-archive"]')).click()
-  await (await waitForElement('[data-testid="compression-mode-video"]')).click()
-  assert.equal(
-    (await driver.findElements(By.css('[data-testid="video-draft-card"]'))).length,
-    2,
-    'switching modes must preserve the isolated video drafts',
+  await callDesktopBridge('queueDesktopDialogSelections', [videoOutputDirectory])
+  await (await waitForElement('[data-testid="video-compression-workspace"] .output-directory button')).click()
+  await driver.wait(async () => (await workspace.getText()).includes(videoOutputDirectory), 15_000)
+  console.log('[desktop-e2e] video output directory selected')
+  await callDesktopBridge('queueDesktopConfirmations', [true])
+  await (await waitForElement('[data-testid="video-compression-workspace"] .primary-action')).click()
+  console.log('[desktop-e2e] real video batch started')
+
+  await driver.wait(async () => {
+    const cards = await driver.findElements(By.css('[data-testid="video-draft-card"]'))
+    if (cards.length !== 2) return false
+    const statuses = await Promise.all(cards.map(card => card.getAttribute('data-status')))
+    return statuses.every(status => status === 'completed')
+  }, 180_000)
+  console.log('[desktop-e2e] real video batch completed in the workspace')
+
+  const videoHistory = await driver.wait(async () => {
+    const records = (await callDesktopBridge('taskHistory')).filter(record =>
+      record.workloadKind === 'video'
+      && record.outputPath
+      && normalizedDesktopPath(path.dirname(record.outputPath)) === normalizedDesktopPath(videoOutputDirectory),
+    )
+    return records.length === 2 ? records : false
+  }, 30_000)
+  console.log('[desktop-e2e] real video history rows persisted')
+  assert.ok(videoHistory.every(record => record.status === 'completed'), 'every real video task must complete')
+  assert.ok(videoHistory.every(record => record.metrics?.schemaVersion === 1), 'video history must persist measured metrics')
+  assert.deepEqual(
+    new Set(videoHistory.flatMap(record => record.sourcePaths.map(normalizedDesktopPath))),
+    new Set([frozenVideo, multiAudioVideo].map(normalizedDesktopPath)),
+    'video history must retain both real source identities',
+  )
+  const verifiedOutputs = []
+  for (const record of videoHistory) {
+    assert.equal(existsSync(record.outputPath), true, `published video is missing: ${record.outputPath}`)
+    assert.equal(record.metrics.outputBytes, statSync(record.outputPath).size, 'history output bytes must match disk')
+    const probeResult = spawnSync(productFfprobe, [
+      '-v', 'error', '-show_entries',
+      'format=format_name,duration,size:stream=codec_type,codec_name,width,height',
+      '-of', 'json', record.outputPath,
+    ], { encoding: 'utf8', windowsHide: true })
+    assert.ifError(probeResult.error)
+    assert.equal(probeResult.status, 0, probeResult.stderr || probeResult.stdout)
+    const probe = JSON.parse(probeResult.stdout)
+    const video = probe.streams.find(stream => stream.codec_type === 'video')
+    const audio = probe.streams.find(stream => stream.codec_type === 'audio')
+    assert.match(probe.format.format_name, /mp4/)
+    assert.equal(video?.codec_name, 'h264')
+    assert.equal(audio?.codec_name, 'aac')
+    assert.ok(Number(probe.format.duration) > 0)
+    assert.equal(Number(probe.format.size), statSync(record.outputPath).size)
+    assert.equal(record.metrics.media.videoCodec, 'h264')
+    assert.equal(record.metrics.media.audioCodec, 'aac')
+    assert.equal(record.metrics.media.width, video.width)
+    assert.equal(record.metrics.media.height, video.height)
+    verifiedOutputs.push({
+      taskId: record.id,
+      sourcePaths: record.sourcePaths,
+      outputPath: record.outputPath,
+      historyStatus: record.status,
+      metrics: record.metrics,
+      probe,
+    })
+  }
+
+  const firstCard = (await driver.findElements(By.css('[data-testid="video-draft-card"]')))[0]
+  if ((await firstCard.findElement(By.css('.expand')).getAttribute('aria-expanded')) !== 'true') {
+    await firstCard.findElement(By.css('.expand')).click()
+  }
+  assert.match(await firstCard.getText(), /最终输出/)
+  assert.doesNotMatch(await firstCard.getText(), /Publishing/)
+  assert.equal(await firstCard.findElement(By.css('.execution-facts button')).isDisplayed(), true)
+  writeFileSync(
+    path.join(artifactDirectory, 'video-workspace-execution-result.json'),
+    `${JSON.stringify({
+      gate: 'C-05.1-real-desktop-video-execution',
+      preset: 'balanced',
+      inputCases: ['VFR + rotation + audio + subtitles', '30-second + multi-audio + subtitles'],
+      verifiedOutputs,
+    }, null, 2)}\n`,
+    'utf8',
+  )
+  writeFileSync(
+    path.join(artifactDirectory, 'video-workspace-published-results.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
   )
 }
 
@@ -3059,7 +3136,7 @@ try {
   } else if (videoWorkspaceOnly) {
     await runVideoWorkspaceDesktopGate()
     completedSuccessfully = true
-    console.log('Real Windows Tauri C-02 video planning workspace gate passed.')
+    console.log('Real Windows Tauri C-05.1 video execution workspace gate passed.')
   } else if (tarTelemetryOnly) {
     await runTarTelemetryDesktopGate()
     completedSuccessfully = true

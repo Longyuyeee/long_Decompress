@@ -265,12 +265,16 @@ assert(!imageWorkspaceView.includes("invoke('compress_image_file'"), 'the image 
 const packageManifest = JSON.parse(await read('package.json'))
 assert(
   packageManifest.scripts?.['test:e2e:desktop:video-workspace'] === 'node scripts/test-tauri-desktop.mjs --video-workspace-only',
-  'C-02.4 real desktop video planning gate is missing',
+  'C-05.1 real desktop video execution gate is missing',
 )
 const desktopVideoGate = await read('scripts/test-tauri-desktop.mjs')
-assert(desktopVideoGate.includes('runVideoWorkspaceDesktopGate'), 'C-02.4 desktop video gate implementation is missing')
-assert(desktopVideoGate.includes('C-02 must not enable video execution'), 'C-02.4 desktop gate must enforce the execution freeze')
-assert(desktopVideoGate.includes('planning must not write task history'), 'C-02.4 desktop gate must enforce zero history writes')
+assert(desktopVideoGate.includes('runVideoWorkspaceDesktopGate'), 'C-05.1 desktop video gate implementation is missing')
+assert(desktopVideoGate.includes('real video batch started'), 'C-05.1 desktop gate must start the visible product batch')
+assert(desktopVideoGate.includes("record.workloadKind === 'video'"), 'C-05.1 desktop gate must verify unified video history')
+assert(desktopVideoGate.includes("const productFfprobe = path.join"), 'C-05.1 desktop gate must independently probe published outputs')
+assert(desktopVideoGate.includes("assert.equal(video?.codec_name, 'h264')"), 'C-05.1 desktop gate must verify H.264 publication')
+assert(desktopVideoGate.includes("assert.equal(audio?.codec_name, 'aac')"), 'C-05.1 desktop gate must verify AAC publication')
+assert(desktopVideoGate.includes('planning must not write task history'), 'video planning must still enforce zero history writes')
 assert(
   packageManifest.scripts?.['test:video-runtime-package:real'] === 'node scripts/check-video-runtime-package.mjs',
   'C-01.2.1 real packaged-runtime command is missing',

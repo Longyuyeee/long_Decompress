@@ -121,7 +121,12 @@ const canStart = computed(() => !isRunning.value && runnableItems.value.length >
 
 const chooseOutputDirectory = async () => {
   try {
-    const selected = await open({ directory: true, multiple: false, title: '选择视频输出目录' })
+    const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
+      ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection()
+      : undefined
+    const selected = queued === undefined
+      ? await open({ directory: true, multiple: false, title: '选择视频输出目录' })
+      : queued
     if (selected && !Array.isArray(selected)) store.videoOutputDirectory = selected
   } catch (error) {
     appStore.setError(`无法选择视频输出目录：${String(error)}`)
@@ -149,6 +154,10 @@ const confirmStreamChanges = async (items: VideoCompressionItem[]) => {
     `\n${item.name}：`,
     ...item.plan!.streamChanges.map(change => `• ${streamChangeLabel(change)}`),
   ])
+  if (import.meta.env.VITE_DESKTOP_E2E === '1') {
+    const selected = window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopConfirmation()
+    if (selected !== undefined) return selected
+  }
   return ask(`以下视频存在有损流变化。请确认已阅读并接受：\n${lines.join('\n')}`, {
     title: '确认视频流变化',
     type: 'warning',

@@ -37,7 +37,7 @@ const activeWorkspaceMode = ref<CompressionWorkspaceMode>('archive')
 const compressionWorkspaceModes: Array<{ id: CompressionWorkspaceMode, label: string, icon: string, stage?: string }> = [
   { id: 'archive', label: '归档压缩', icon: 'pi pi-box' },
   { id: 'image', label: '图片压缩', icon: 'pi pi-images' },
-  { id: 'video', label: '视频压缩', icon: 'pi pi-video', stage: 'C-02' },
+  { id: 'video', label: '视频压缩', icon: 'pi pi-video', stage: 'C-05' },
   { id: 'pdf', label: 'PDF 压缩', icon: 'pi pi-file-pdf', stage: '节点 D' },
 ]
 

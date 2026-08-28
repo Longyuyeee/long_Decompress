@@ -818,6 +818,7 @@ describe('CompressionView', () => {
     expect(useTaskStore().tasks[0]).toMatchObject({
       workloadKind: 'video',
       status: 'completed',
+      stage: undefined,
       outputPath: 'C:/output/rotated.compressed.mp4',
       outputBytes: 12_000,
       outputBytesEstimated: false,
