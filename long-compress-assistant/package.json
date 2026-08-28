@@ -21,6 +21,7 @@
     "test:video-c01:real": "node scripts/run-c01-ffmpeg-baseline.mjs",
     "test:video-runtime-package:real": "node scripts/check-video-runtime-package.mjs",
     "test:video-matrix:real": "node scripts/run-c05-video-format-matrix.mjs",
+    "test:video-long-large:real": "node scripts/run-c05-video-long-large-matrix.mjs",
     "test:video-bundle-delta": "node scripts/measure-c01-video-bundle-delta.mjs",
     "prepare:video-bundle-baseline": "node scripts/prepare-c01-video-baseline-config.mjs",
     "test:fixtures:media": "node scripts/prepare-media-test-fixtures.mjs",

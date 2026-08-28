@@ -1688,6 +1688,132 @@ mod cancellation_tests {
     }
 
     #[tokio::test]
+    #[cfg(windows)]
+    async fn c05_real_long_duration_and_large_input_matrix() {
+        let Ok(manifest_path) = std::env::var("LONG_C05_VIDEO_LONG_LARGE_MANIFEST") else {
+            println!(
+                "C-05.2.2 matrix skipped: LONG_C05_VIDEO_LONG_LARGE_MANIFEST is not set"
+            );
+            return;
+        };
+        let output_root = std::env::var("LONG_C05_VIDEO_LONG_LARGE_OUTPUT")
+            .expect("LONG_C05_VIDEO_LONG_LARGE_OUTPUT must accompany the matrix manifest");
+        let manifest: serde_json::Value = serde_json::from_slice(
+            &std::fs::read(&manifest_path).expect("read C-05.2.2 runtime manifest"),
+        )
+        .expect("parse C-05.2.2 runtime manifest");
+        let cases = manifest["cases"]
+            .as_array()
+            .expect("runtime manifest cases");
+        assert_eq!(cases.len(), 2);
+
+        let resource_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
+        let ffprobe = resource_root.join("video-engine/ffprobe.exe");
+        let output_root = Path::new(&output_root);
+        std::fs::create_dir_all(output_root).expect("create C-05.2.2 output root");
+        let mut results = Vec::with_capacity(cases.len());
+
+        for case in cases {
+            let id = case["id"].as_str().expect("case id");
+            let source = Path::new(case["sourcePath"].as_str().expect("source path"));
+            let source_bytes = std::fs::metadata(source).expect("source metadata").len();
+            let minimum_input_bytes = case["minimumInputBytes"]
+                .as_u64()
+                .expect("minimum input bytes");
+            assert!(source_bytes >= minimum_input_bytes);
+
+            let input = probe_video_file(&ffprobe, source)
+                .await
+                .expect("product probe must accept long/large input");
+            let expected_duration_ms = case["durationSeconds"]
+                .as_u64()
+                .expect("duration seconds")
+                * 1_000;
+            assert!(input.duration_ms.abs_diff(expected_duration_ms) <= 100);
+            assert_eq!(input.primary_video.codec.as_deref(), Some("mpeg4"));
+            assert!(input.audio_streams.is_empty());
+
+            let preset: VideoCompressionPreset = serde_json::from_value(case["preset"].clone())
+                .expect("deserialize long/large preset");
+            let plan_request = VideoCompressionPlanRequest {
+                path: source.to_string_lossy().into_owned(),
+                preset,
+                max_width: None,
+                max_height: None,
+            };
+            let plan = build_video_compression_plan(input, &plan_request)
+                .expect("build product long/large plan");
+            let expected_width = case["outputWidth"].as_u64().expect("output width") as u32;
+            let expected_height = case["outputHeight"].as_u64().expect("output height") as u32;
+            assert_eq!((plan.output_width, plan.output_height), (expected_width, expected_height));
+
+            let progress = Arc::new(std::sync::Mutex::new(Vec::new()));
+            let observed = progress.clone();
+            let destination = output_root.join(format!("{id}.mp4"));
+            let outcome = run_video_compression(
+                resource_root.clone(),
+                format!("c05-long-large-{id}-{}", uuid::Uuid::new_v4()),
+                VideoCompressionExecutionRequest {
+                    plan: plan_request,
+                    destination: destination.clone(),
+                    confirmed_stream_changes: plan.stream_changes,
+                    preserve_mark_of_web: false,
+                },
+                move |event| {
+                    if let VideoCompressionCommandEvent::Encoding(
+                        VideoEncodingEvent::Progress { snapshot },
+                    ) = event
+                    {
+                        observed.lock().unwrap().push(snapshot);
+                    }
+                },
+            )
+            .await
+            .expect("execute product long/large compression pipeline");
+
+            let progress = progress.lock().unwrap();
+            let progress_events = progress.len();
+            let maximum_progress_time_ms = progress
+                .iter()
+                .map(|snapshot| snapshot.current_time_ms)
+                .max()
+                .unwrap_or(0);
+            assert!(progress_events > 0);
+            assert!(progress.iter().any(|snapshot| snapshot.finished));
+            drop(progress);
+
+            let minimum_frames = case["minimumDecodedVideoFrames"]
+                .as_u64()
+                .expect("minimum decoded frames");
+            assert_eq!(outcome.path, destination);
+            assert_eq!(outcome.input_bytes, source_bytes);
+            assert_eq!(std::fs::metadata(source).expect("source remains").len(), source_bytes);
+            assert_eq!(outcome.verified.container, "mp4");
+            assert_eq!(outcome.verified.video_codec, "h264");
+            assert_eq!(outcome.verified.audio_codec, None);
+            assert_eq!(outcome.verified.visible_width, expected_width);
+            assert_eq!(outcome.verified.visible_height, expected_height);
+            assert!(outcome.verified.decoded_video_frames >= minimum_frames);
+            assert!(outcome.verified.duration_difference_ms <= outcome.verified.duration_tolerance_ms);
+            assert!(outcome.output_bytes > 0);
+            results.push(serde_json::json!({
+                "id": id,
+                "kind": case["kind"],
+                "sourceBytes": source_bytes,
+                "progressEvents": progress_events,
+                "maximumProgressTimeMs": maximum_progress_time_ms,
+                "outcome": outcome,
+            }));
+        }
+
+        std::fs::write(
+            output_root.join("backend-result.json"),
+            serde_json::to_vec_pretty(&results).expect("serialize long/large results"),
+        )
+        .expect("write long/large backend result");
+    }
+
+    #[tokio::test]
     async fn archive_browse_cancellation_can_arrive_before_registration() {
         let browse_id = format!("browse-early-cancel-{}", uuid::Uuid::new_v4());
         cancel_archive_browse(browse_id.clone()).await.unwrap();

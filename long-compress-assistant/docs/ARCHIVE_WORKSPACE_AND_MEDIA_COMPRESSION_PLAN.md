@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-04、C-05.1 和 C-05.2.1 已完成。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种输入格式、4 个分辨率层级和三档预设的 7 条真实产品管线矩阵差异为 0。下一接续点为 C-05.2.2 的 10 分钟与大文件矩阵。真实 Windows N 前后验证仍归 C-05/发布门禁，完成前不得发布 v1.1.16。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md) 与 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-04、C-05.1 和 C-05.2 已完成。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0。下一接续点为 C-05.3 的真实取消、跨重启历史与默认应用矩阵。真实 Windows N 前后验证仍归 C-05/发布门禁，完成前不得发布 v1.1.16。证据见 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md) 与 [C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -457,7 +457,7 @@ src/types/media.ts
 
 ### C-05 真实验收矩阵
 
-进度（2026-08-29）：**C-05.1 与 C-05.2.1 已完成，C-05 尚未关闭。** Release WebView2 已完成两条真实均衡预设桌面执行；开发态可重复矩阵又以 5 种输入格式、4 个分辨率层级、7 次唯一产品管线执行覆盖全部三档预设和无音频路径，产品 ffprobe 复核差异为 0。该矩阵是覆盖集而非 60 项笛卡尔积。下一步 C-05.2.2 补齐 10 分钟和至少一个大文件；随后验证取消、跨重启历史、默认应用、安装版、Windows N 和公开更新。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md) 与 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)。
+进度（2026-08-29）：**C-05.1 与 C-05.2 已完成，C-05 尚未关闭。** Release WebView2 已完成两条真实均衡预设桌面执行；开发态矩阵以 5 种格式、4 个分辨率层级和 7 次产品执行覆盖全部三档预设及无音频，并以两个独立产品执行补齐 600 秒/3600 帧和 114,842,332 B 大输入。输出容器、编码、时长、尺寸、流、完整帧和实际字节差异均为 0。下一步 C-05.3 验证真实中途取消、跨重启历史和默认应用；随后 C-05.4 完成安装版、Windows N 和公开更新。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md)、[C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md) 与 [C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)。
 
 - MP4/H.264、MOV、AVI、WMV、WebM 输入；
 - 480p、720p、1080p、4K；

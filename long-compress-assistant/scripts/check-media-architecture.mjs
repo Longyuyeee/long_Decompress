@@ -234,6 +234,29 @@ assert(
   compressionCommands.includes('async fn c05_real_format_resolution_preset_matrix()'),
   'C-05.2.1 must run the private product compression pipeline',
 )
+assert(
+  videoMatrixPackageManifest.scripts['test:video-long-large:real'] === 'node scripts/run-c05-video-long-large-matrix.mjs',
+  'C-05.2.2 must expose one reproducible long/large video command',
+)
+const videoLongLargeManifest = JSON.parse(await read('tests/fixtures/media/c05-video-long-large-matrix.json'))
+assert(videoLongLargeManifest.fixtureTool.productIntegrationAllowed === false, 'C-05.2.2 fixture tooling must stay test-only')
+assert(videoLongLargeManifest.expected.longDurationMs === 600_000, 'C-05.2.2 must retain a ten-minute input')
+assert(videoLongLargeManifest.expected.largeInputMinBytes === 100 * 1024 * 1024, 'C-05.2.2 large input must remain at least 100 MiB')
+assert(videoLongLargeManifest.cases.length === 2, 'C-05.2.2 must keep independent long and large product executions')
+const videoLongLargeRunner = await read('scripts/run-c05-video-long-large-matrix.mjs')
+for (const contract of [
+  "join(root, 'test-results', 'c05-fixture-tool')",
+  "join(root, 'src-tauri', 'resources', 'video-engine', 'ffprobe.exe')",
+  'c05_real_long_duration_and_large_input_matrix',
+  "'-count_frames'",
+  'productIntegrationAllowed === false',
+]) {
+  assert(videoLongLargeRunner.includes(contract), `C-05.2.2 matrix contract is missing: ${contract}`)
+}
+assert(
+  compressionCommands.includes('async fn c05_real_long_duration_and_large_input_matrix()'),
+  'C-05.2.2 must run long and large inputs through the private product pipeline',
+)
 const videoWorkspace = await read('src/components/compression/VideoCompressionWorkspace.vue')
 assert(videoWorkspace.includes('commands.planVideoCompression'), 'C-02.3 workspace must consume the authoritative backend plan')
 assert(videoWorkspace.includes('estimatedOutput.lowBytes'), 'C-02.3 workspace must display the labeled backend estimate')
