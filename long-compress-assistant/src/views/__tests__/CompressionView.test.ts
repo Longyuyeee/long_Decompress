@@ -19,6 +19,9 @@ const mocks = vi.hoisted(() => ({
   planImageCompressionDestination: vi.fn(),
   compressImageFile: vi.fn(),
   planVideoCompression: vi.fn(),
+  planVideoCompressionDestination: vi.fn(),
+  compressVideoFile: vi.fn(),
+  openInExplorer: vi.fn(),
   invoke: vi.fn(),
   ask: vi.fn(),
 }))
@@ -40,6 +43,9 @@ vi.mock('@/composables/useTauriCommands', () => ({
     planImageCompressionDestination: mocks.planImageCompressionDestination,
     compressImageFile: mocks.compressImageFile,
     planVideoCompression: mocks.planVideoCompression,
+    planVideoCompressionDestination: mocks.planVideoCompressionDestination,
+    compressVideoFile: mocks.compressVideoFile,
+    openInExplorer: mocks.openInExplorer,
   }),
 }))
 
@@ -173,6 +179,29 @@ describe('CompressionView', () => {
     })
     mocks.compressImageFile.mockResolvedValue(undefined)
     mocks.planVideoCompression.mockImplementation(async request => videoPlan(request.preset))
+    mocks.planVideoCompressionDestination.mockResolvedValue({ destination: 'C:/output/rotated.compressed.mp4' })
+    mocks.compressVideoFile.mockResolvedValue({
+      path: 'C:/output/rotated.compressed.mp4',
+      inputBytes: 22_769,
+      outputBytes: 12_000,
+      savingsRatio: 0.4729,
+      markOfTheWeb: 'not-present',
+      verified: {
+        encodedBytes: 12_000,
+        container: 'mp4',
+        durationMs: 1_000,
+        durationDifferenceMs: 0,
+        durationToleranceMs: 250,
+        videoCodec: 'h264',
+        audioCodec: 'aac',
+        encodedWidth: 360,
+        encodedHeight: 640,
+        visibleWidth: 360,
+        visibleHeight: 640,
+        rotationDegrees: 0,
+        decodedVideoFrames: 4,
+      },
+    })
     mocks.ask.mockResolvedValue(true)
   })
 
@@ -711,8 +740,8 @@ describe('CompressionView', () => {
     expect(useCompressionStore().selectedFiles).toHaveLength(1)
 
     await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
-    expect(wrapper.get('[data-testid="video-compression-workspace"]').text()).toContain('当前节点不会创建任务或启动编码')
-    expect(wrapper.get('[data-testid="video-compression-workspace"] .execute-disabled').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-testid="video-compression-workspace"]').text()).toContain('统一任务')
+    expect(wrapper.get('[data-testid="video-compression-workspace"] .primary-action').attributes('disabled')).toBeDefined()
     expect(useTaskStore().tasks).toHaveLength(0)
 
     await wrapper.get('[data-testid="compression-mode-archive"]').trigger('click')
@@ -749,6 +778,122 @@ describe('CompressionView', () => {
     expect(useCompressionStore().selectedFiles).toHaveLength(0)
     expect(useCompressionStore().imageItems).toHaveLength(0)
     expect(useTaskStore().tasks).toHaveLength(0)
+  })
+
+  it('confirms exact video stream changes then persists only verified publication facts', async () => {
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'rotated.mp4',
+      path: 'C:/input/rotated.mp4',
+      size: 22_769,
+      type: 'video/mp4',
+      isDirectory: false,
+    }])
+    await flushPromises()
+
+    const workspace = wrapper.get('[data-testid="video-compression-workspace"]')
+    const start = workspace.get('.primary-action')
+    expect(start.attributes('disabled')).toBeUndefined()
+    await start.trigger('click')
+    await flushPromises()
+
+    expect(mocks.ask).toHaveBeenCalledWith(
+      expect.stringContaining('字幕流将被移除'),
+      expect.objectContaining({ type: 'warning' }),
+    )
+    expect(mocks.planVideoCompressionDestination).toHaveBeenCalledWith(
+      'C:/input/rotated.mp4',
+      null,
+      [],
+    )
+    expect(mocks.compressVideoFile).toHaveBeenCalledWith(
+      expect.stringContaining('video-'),
+      expect.objectContaining({
+        destination: 'C:/output/rotated.compressed.mp4',
+        confirmedStreamChanges: videoPlan().streamChanges,
+        preserveMarkOfWeb: true,
+      }),
+    )
+    expect(useTaskStore().tasks[0]).toMatchObject({
+      workloadKind: 'video',
+      status: 'completed',
+      outputPath: 'C:/output/rotated.compressed.mp4',
+      outputBytes: 12_000,
+      outputBytesEstimated: false,
+      metrics: {
+        inputBytes: 22_769,
+        outputBytes: 12_000,
+        media: { durationMs: 1_000, videoCodec: 'h264', audioCodec: 'aac', container: 'mp4' },
+      },
+    })
+    expect(workspace.text()).toContain('最终输出')
+    expect(workspace.text()).toContain('11.7 KiB')
+  })
+
+  it('creates no video task or output plan when stream-change confirmation is declined', async () => {
+    mocks.ask.mockResolvedValueOnce(false)
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'rotated.mp4', path: 'C:/input/rotated.mp4', size: 22_769,
+      type: 'video/mp4', isDirectory: false,
+    }])
+    await flushPromises()
+
+    await wrapper.get('[data-testid="video-compression-workspace"] .primary-action').trigger('click')
+    await flushPromises()
+
+    expect(mocks.planVideoCompressionDestination).not.toHaveBeenCalled()
+    expect(mocks.compressVideoFile).not.toHaveBeenCalled()
+    expect(useTaskStore().tasks).toHaveLength(0)
+  })
+
+  it('cancels an active video through the unified task cancellation command', async () => {
+    let rejectEncoding!: (error: Error) => void
+    mocks.compressVideoFile.mockImplementationOnce(() => new Promise((_, reject) => {
+      rejectEncoding = reject
+    }))
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'rotated.mp4', path: 'C:/input/rotated.mp4', size: 22_769,
+      type: 'video/mp4', isDirectory: false,
+    }])
+    await flushPromises()
+
+    void wrapper.get('[data-testid="video-compression-workspace"] .primary-action').trigger('click')
+    await flushPromises()
+    expect(useTaskStore().tasks[0].status).toBe('compressing')
+    await wrapper.get('[data-testid="video-compression-workspace"] .danger-action').trigger('click')
+    rejectEncoding(new Error('VIDEO_COMPRESSION_CANCELLED'))
+    await flushPromises()
+
+    expect(mocks.invoke).toHaveBeenCalledWith('cancel_compression', expect.objectContaining({ taskId: useTaskStore().tasks[0].id }))
+    expect(useTaskStore().tasks[0].status).toBe('cancelled')
+  })
+
+  it('does not start video encoding when cancellation lands during destination planning', async () => {
+    let resolveDestination!: (value: { destination: string }) => void
+    mocks.planVideoCompressionDestination.mockImplementationOnce(() => new Promise(resolve => {
+      resolveDestination = resolve
+    }))
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'rotated.mp4', path: 'C:/input/rotated.mp4', size: 22_769,
+      type: 'video/mp4', isDirectory: false,
+    }])
+    await flushPromises()
+
+    void wrapper.get('[data-testid="video-compression-workspace"] .primary-action').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-testid="video-compression-workspace"] .danger-action').trigger('click')
+    resolveDestination({ destination: 'C:/output/rotated.compressed.mp4' })
+    await flushPromises()
+
+    expect(mocks.compressVideoFile).not.toHaveBeenCalled()
+    expect(useTaskStore().tasks[0].status).toBe('cancelled')
   })
 
   it('runs a ready real-fixture image through the unified batch and renders verified result facts', async () => {

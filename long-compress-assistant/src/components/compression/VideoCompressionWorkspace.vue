@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { ask, open } from '@tauri-apps/api/dialog'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore, type VideoCompressionItem } from '@/stores/compression'
+import { useTaskStore, type Task } from '@/stores/task'
 import { useTauriCommands } from '@/composables/useTauriCommands'
+import { useVideoCompressionBatch } from '@/composables/useVideoCompressionBatch'
 import type { VideoCompressionSettings } from '@/types/video'
 import type { VideoCandidate } from '@/utils/videoCompressionWorkspace'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
@@ -10,8 +13,11 @@ import VideoCompressionSettingsPanel from './VideoCompressionSettingsPanel.vue'
 
 const appStore = useAppStore()
 const store = useCompressionStore()
+const taskStore = useTaskStore()
 const commands = useTauriCommands()
+const videoBatch = useVideoCompressionBatch()
 const inFlight = new Map<string, number>()
+const isRunning = ref(false)
 
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`
@@ -93,24 +99,112 @@ const onFilesSelected = (candidates: VideoCandidate[]) => {
   }
 }
 
-const updateGlobalSettings = (settings: VideoCompressionSettings) => store.updateVideoGlobalSettings(settings)
-const updateItemSettings = (item: VideoCompressionItem, settings: VideoCompressionSettings) => store.updateVideoItemSettings(item.id, settings)
+const updateGlobalSettings = (settings: VideoCompressionSettings) => {
+  if (!isRunning.value) store.updateVideoGlobalSettings(settings)
+}
+const updateItemSettings = (item: VideoCompressionItem, settings: VideoCompressionSettings) => {
+  if (!isRunning.value) store.updateVideoItemSettings(item.id, settings)
+}
 const toggleOverride = (item: VideoCompressionItem, enabled: boolean) => {
+  if (isRunning.value) return
   if (enabled) store.enableVideoItemOverride(item.id)
   else store.disableVideoItemOverride(item.id)
 }
 const planningCount = computed(() => store.videoItems.filter(item => item.status === 'planning').length)
 const readyCount = computed(() => store.videoItems.filter(item => item.status === 'ready').length)
+const taskForItem = (item: VideoCompressionItem): Task | undefined =>
+  item.taskId ? taskStore.tasks.find(task => task.id === item.taskId) : undefined
+const canRetryTask = (task?: Task) => !task || task.status === 'failed' || task.status === 'cancelled'
+const runnableItems = computed(() => store.videoItems.filter(item =>
+  item.status === 'ready' && item.plan?.canEncode && canRetryTask(taskForItem(item))))
+const canStart = computed(() => !isRunning.value && runnableItems.value.length > 0 && planningCount.value === 0)
+
+const chooseOutputDirectory = async () => {
+  try {
+    const selected = await open({ directory: true, multiple: false, title: '选择视频输出目录' })
+    if (selected && !Array.isArray(selected)) store.videoOutputDirectory = selected
+  } catch (error) {
+    appStore.setError(`无法选择视频输出目录：${String(error)}`)
+  }
+}
+
+const videoStatus = (item: VideoCompressionItem) => {
+  const task = taskForItem(item)
+  if (!task) return item.status === 'planning' ? '正在探测' : item.status === 'ready' ? '规划就绪' : '已拒绝'
+  const labels: Partial<Record<Task['status'], string>> = {
+    pending: '等待中', preparing: '准备中', compressing: '编码中', finalizing: '正在发布',
+    cancelling: '正在取消', completed: '已完成', failed: '失败', cancelled: '已取消',
+  }
+  return labels[task.status] || task.status
+}
+const videoStatusClass = (item: VideoCompressionItem) => taskForItem(item)?.status || item.status
+const formatEta = (seconds?: number) => seconds === undefined
+  ? '计算中'
+  : seconds < 60 ? `${Math.max(1, Math.ceil(seconds))} 秒` : `${Math.ceil(seconds / 60)} 分钟`
+
+const confirmStreamChanges = async (items: VideoCompressionItem[]) => {
+  const risky = items.filter(item => item.plan?.requiresExplicitConfirmation)
+  if (risky.length === 0) return true
+  const lines = risky.flatMap(item => [
+    `\n${item.name}：`,
+    ...item.plan!.streamChanges.map(change => `• ${streamChangeLabel(change)}`),
+  ])
+  return ask(`以下视频存在有损流变化。请确认已阅读并接受：\n${lines.join('\n')}`, {
+    title: '确认视频流变化',
+    type: 'warning',
+    okLabel: '确认并开始',
+    cancelLabel: '取消',
+  })
+}
+
+const startVideoCompression = async () => {
+  const items = runnableItems.value
+  if (!canStart.value || !(await confirmStreamChanges(items))) return
+  isRunning.value = true
+  try {
+    const results = await videoBatch.runVideoBatch(
+      items.map(item => ({
+        id: item.id,
+        name: item.name,
+        path: item.path,
+        plan: item.plan!,
+        settings: { ...store.getEffectiveVideoSettings(item) },
+      })),
+      store.videoOutputDirectory || null,
+      appStore.settings.preserveMarkOfWeb,
+      (itemId, taskId) => store.bindVideoItemTask(itemId, taskId),
+    )
+    const published = results.filter(result => result.status === 'published').length
+    const failed = results.filter(result => result.status === 'failed').length
+    const cancelled = results.filter(result => result.status === 'cancelled').length
+    const summary = `视频处理结束：${published} 个完成，${failed} 个失败，${cancelled} 个取消`
+    if (failed || cancelled) appStore.setError(summary)
+    else appStore.setSuccess(summary)
+  } catch (error) {
+    appStore.setError(`视频批量处理失败：${String(error)}`)
+  } finally {
+    isRunning.value = false
+  }
+}
+
+const cancelVideoCompression = async () => videoBatch.cancelVideoBatch()
+const openResultLocation = async (item: VideoCompressionItem) => {
+  const path = taskForItem(item)?.outputPath
+  if (path) await commands.openInExplorer(path)
+}
 </script>
 
 <template>
   <section class="video-workspace" data-testid="video-compression-workspace">
     <div class="workspace-toolbar">
       <div class="min-w-0">
-        <div class="title-line"><i class="pi pi-video"></i><strong>视频压缩工作区</strong><span>探测与配置</span></div>
-        <p>读取产品 ffprobe 的真实输入事实；当前节点不会创建任务或启动编码。</p>
+        <div class="title-line"><i class="pi pi-video"></i><strong>视频压缩工作区</strong><span>真实执行</span></div>
+        <p>执行复用统一任务、取消、验证、原子发布与跨重启历史。</p>
       </div>
-      <button type="button" class="execute-disabled" disabled title="C-03 完成执行、进度、取消审计后开放"><i class="pi pi-lock"></i>开始视频压缩 · C-03</button>
+      <div class="toolbar-actions">
+        <button v-if="isRunning" type="button" class="danger-action" @click="cancelVideoCompression"><i class="pi pi-stop-circle"></i>取消视频压缩</button>
+        <button v-else type="button" class="primary-action" :disabled="!canStart" @click="startVideoCompression"><i class="pi pi-play-circle"></i>开始视频压缩</button>
+      </div>
     </div>
 
     <div class="truth-boundary">
@@ -122,6 +216,7 @@ const readyCount = computed(() => store.videoItems.filter(item => item.status ==
     <div class="global-settings-card">
       <div class="settings-heading"><span><i class="pi pi-sliders-h"></i>批量配置</span><small>单项可展开覆盖；修改后重新探测和规划</small></div>
       <VideoCompressionSettingsPanel :model-value="store.videoGlobalSettings" @update:model-value="updateGlobalSettings" />
+      <div class="output-directory"><div><span>输出目录</span><strong :title="store.videoOutputDirectory">{{ store.videoOutputDirectory || '与源文件同目录' }}</strong></div><button type="button" :disabled="isRunning" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button></div>
     </div>
 
     <div v-if="store.videoItems.length === 0" class="video-empty">
@@ -137,12 +232,12 @@ const readyCount = computed(() => store.videoItems.filter(item => item.status ==
     </div>
 
     <div v-else class="video-list">
-      <article v-for="item in store.videoItems" :key="item.id" class="video-card" :data-status="item.status" data-testid="video-draft-card">
+      <article v-for="item in store.videoItems" :key="item.id" class="video-card" :data-status="videoStatusClass(item)" data-testid="video-draft-card">
         <header>
           <button type="button" class="expand" :aria-expanded="item.expanded" @click="item.expanded = !item.expanded"><i :class="item.expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i></button>
           <div class="file-identity"><strong :title="item.path">{{ item.name }}</strong><small>{{ formatBytes(item.inputSize) }} · {{ item.path }}</small></div>
-          <span class="status"><i :class="item.status === 'planning' ? 'pi pi-spin pi-spinner' : item.status === 'ready' ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>{{ item.status === 'planning' ? '正在探测' : item.status === 'ready' ? '规划就绪' : '已拒绝' }}</span>
-          <button type="button" class="remove" title="移除" @click="store.removeVideoItem(item.id)"><i class="pi pi-trash"></i></button>
+          <span class="status"><i :class="taskForItem(item)?.status === 'completed' ? 'pi pi-check-circle' : item.status === 'planning' || taskForItem(item)?.status === 'compressing' ? 'pi pi-spin pi-spinner' : item.status === 'ready' ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>{{ videoStatus(item) }}</span>
+          <button type="button" class="remove" title="移除" :disabled="isRunning" @click="store.removeVideoItem(item.id)"><i class="pi pi-trash"></i></button>
         </header>
 
         <div v-if="item.error" class="probe-error"><i class="pi pi-exclamation-triangle"></i><span>{{ item.error }}</span><button type="button" @click="store.retryVideoPlanning(item.id)">重试</button></div>
@@ -167,6 +262,12 @@ const readyCount = computed(() => store.videoItems.filter(item => item.status ==
           <label class="override-toggle"><input type="checkbox" :checked="Boolean(item.settings)" @change="toggleOverride(item, ($event.target as HTMLInputElement).checked)"><span>为此视频使用单项配置</span></label>
           <VideoCompressionSettingsPanel v-if="item.settings" :model-value="item.settings" @update:model-value="updateItemSettings(item, $event)" />
           <p v-else>当前跟随批量配置：{{ store.getEffectiveVideoSettings(item).preset }}。</p>
+          <div v-if="taskForItem(item)" class="execution-facts">
+            <div><span>执行阶段</span><strong>{{ taskForItem(item)!.stage || videoStatus(item) }}</strong><small v-if="taskForItem(item)!.heartbeatSecondsSinceProgress !== undefined">仍在编码 · {{ taskForItem(item)!.heartbeatSecondsSinceProgress }} 秒前收到真实进度</small></div>
+            <div><span>媒体时间</span><strong>{{ formatDuration(taskForItem(item)!.currentTimeMs || 0) }}</strong><small>{{ taskForItem(item)!.speed || '等待速度样本' }} · ETA {{ formatEta(taskForItem(item)!.etaSeconds) }}</small></div>
+            <div><span>{{ taskForItem(item)!.outputBytesEstimated ? '临时输出' : '最终输出' }}</span><strong>{{ formatBytes(taskForItem(item)!.outputBytes || 0) }}</strong><small>{{ taskForItem(item)!.outputToInputRatio === undefined ? '等待真实比例' : `输入的 ${(taskForItem(item)!.outputToInputRatio! * 100).toFixed(1)}%` }}</small></div>
+            <button v-if="taskForItem(item)!.status === 'completed'" type="button" @click="openResultLocation(item)"><i class="pi pi-folder-open"></i>打开结果</button>
+          </div>
         </div>
       </article>
 
@@ -185,11 +286,12 @@ const readyCount = computed(() => store.videoItems.filter(item => item.status ==
 .title-line strong { font-size: .88rem; font-weight: 900; }
 .title-line span { border-radius: 999px; background: color-mix(in srgb, var(--dynamic-accent) 12%, transparent); padding: .18rem .45rem; color: var(--dynamic-accent); font-size: .58rem; font-weight: 900; }
 .workspace-toolbar p { margin-top: .2rem; color: var(--text-muted); font-size: .65rem; }
-.execute-disabled { max-width: 100%; flex: 0 1 auto; border: 1px solid var(--border-subtle); border-radius: .75rem; background: var(--bg-input); padding: .65rem .8rem; color: var(--text-muted); font-size: .65rem; font-weight: 850; opacity: .7; }
+.toolbar-actions { display: flex; gap: .5rem; }.primary-action, .danger-action { border-radius: .75rem; padding: .65rem .8rem; color: white; font-size: .65rem; font-weight: 850; }.primary-action { background: var(--dynamic-accent); }.danger-action { background: #ef4444; }.primary-action:disabled { cursor: not-allowed; opacity: .45; }
 .truth-boundary { display: flex; align-items: center; gap: .5rem; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 22%, transparent); border-radius: .8rem; background: color-mix(in srgb, var(--dynamic-accent) 7%, transparent); padding: .6rem .75rem; color: var(--text-muted); font-size: .62rem; line-height: 1.45; }
 .truth-boundary i, .truth-boundary strong { color: var(--dynamic-accent); }.truth-boundary strong { margin-left: auto; white-space: nowrap; }
 .global-settings-card, .video-card { box-sizing: border-box; max-width: 100%; min-width: 0; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-card) 88%, transparent); padding: .85rem; }
 .settings-heading { display: flex; justify-content: space-between; gap: .75rem; margin-bottom: .65rem; color: var(--text-content); font-size: .68rem; font-weight: 900; }.settings-heading small { color: var(--text-muted); font-size: .58rem; font-weight: 650; }
+.output-directory { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .7rem; border-top: 1px solid var(--border-subtle); padding-top: .65rem; }.output-directory div { min-width: 0; }.output-directory span, .output-directory strong { display: block; }.output-directory span { color: var(--text-muted); font-size: .55rem; }.output-directory strong { overflow: hidden; margin-top: .15rem; color: var(--text-content); font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; }.output-directory button, .execution-facts button { flex: 0 0 auto; border: 1px solid var(--border-subtle); border-radius: .55rem; padding: .35rem .55rem; color: var(--text-content); font-size: .58rem; font-weight: 800; }
 .video-empty { min-height: 14rem; }.video-list { display: grid; width: 100%; max-width: 100%; min-width: 0; gap: .65rem; }.video-card { overflow: hidden; }
 .video-card header { display: flex; min-width: 0; align-items: center; gap: .55rem; }.expand, .remove { flex: 0 0 auto; width: 1.8rem; height: 1.8rem; border-radius: .55rem; color: var(--text-muted); }.expand:hover, .remove:hover { background: var(--bg-input); color: var(--text-content); }
 .file-identity { min-width: 0; flex: 1; }.file-identity strong, .file-identity small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.file-identity strong { color: var(--text-content); font-size: .72rem; }.file-identity small { margin-top: .12rem; color: var(--text-muted); font-size: .55rem; }
@@ -199,6 +301,7 @@ const readyCount = computed(() => store.videoItems.filter(item => item.status ==
 .estimate-disclaimer { display: flex; gap: .35rem; margin-top: .5rem; color: var(--text-muted); font-size: .55rem; font-style: italic; }
 .stream-changes { margin-top: .6rem; border-left: 3px solid #f59e0b; border-radius: .45rem; background: color-mix(in srgb, #f59e0b 7%, transparent); padding: .55rem .7rem; color: var(--text-muted); font-size: .56rem; }.stream-changes.blocked { border-left-color: #ef4444; background: color-mix(in srgb, #ef4444 7%, transparent); }.stream-changes strong { color: var(--text-content); font-size: .62rem; }.stream-changes ul { display: grid; gap: .2rem; margin: .35rem 0; padding-left: 1rem; overflow-wrap: anywhere; }.stream-changes small { color: #f59e0b; font-weight: 800; }
 .item-settings { display: grid; gap: .6rem; margin-top: .7rem; border-top: 1px solid var(--border-subtle); padding-top: .7rem; }.override-toggle { display: flex; align-items: center; gap: .4rem; color: var(--text-content); font-size: .62rem; font-weight: 800; }.override-toggle input { accent-color: var(--dynamic-accent); }.item-settings p { color: var(--text-muted); font-size: .58rem; }
+.execution-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: center; gap: .5rem; border-radius: .75rem; background: var(--bg-input); padding: .65rem; }.execution-facts span, .execution-facts strong, .execution-facts small { display: block; }.execution-facts span, .execution-facts small { color: var(--text-muted); font-size: .53rem; }.execution-facts strong { margin: .12rem 0; color: var(--text-content); font-size: .65rem; }
 @media (max-width: 900px) { .facts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 620px) { .workspace-toolbar { align-items: flex-start; flex-direction: column; }.execute-disabled { width: 100%; }.truth-boundary { align-items: flex-start; flex-wrap: wrap; }.truth-boundary strong { width: 100%; margin-left: 0; }.facts-grid { grid-template-columns: minmax(0, 1fr); }.status { font-size: 0; }.status i { font-size: .75rem; }.settings-heading { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 620px) { .workspace-toolbar { align-items: flex-start; flex-direction: column; }.toolbar-actions, .toolbar-actions button { width: 100%; }.truth-boundary { align-items: flex-start; flex-wrap: wrap; }.truth-boundary strong { width: 100%; margin-left: 0; }.facts-grid, .execution-facts { grid-template-columns: minmax(0, 1fr); }.status { font-size: 0; }.status i { font-size: .75rem; }.settings-heading { align-items: flex-start; flex-direction: column; } }
 </style>

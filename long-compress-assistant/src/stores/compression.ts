@@ -117,6 +117,7 @@ export interface VideoCompressionItem {
   plan?: VideoCompressionPlan
   error?: string
   settings?: VideoCompressionSettings
+  taskId?: string
 }
 
 export interface VideoCandidateRejection {
@@ -148,6 +149,7 @@ export const useCompressionStore = defineStore('compression', () => {
   let nextImageDraftId = 0
   const videoItems = ref<VideoCompressionItem[]>([])
   const videoGlobalSettings = ref<VideoCompressionSettings>(createDefaultVideoSettings())
+  const videoOutputDirectory = ref('')
   const videoLastRejections = ref<VideoCandidateRejection[]>([])
   let nextVideoDraftId = 0
   
@@ -324,6 +326,10 @@ export const useCompressionStore = defineStore('compression', () => {
   const retryVideoPlanning = (id: string) => {
     const item = videoItems.value.find(candidate => candidate.id === id)
     if (item) queueVideoPlanning(item)
+  }
+  const bindVideoItemTask = (id: string, taskId: string) => {
+    const item = videoItems.value.find(candidate => candidate.id === id)
+    if (item) item.taskId = taskId
   }
   const removeVideoItem = (id: string) => {
     videoItems.value = videoItems.value.filter(item => item.id !== id)
@@ -553,6 +559,7 @@ export const useCompressionStore = defineStore('compression', () => {
     imageLastRejections,
     videoItems,
     videoGlobalSettings,
+    videoOutputDirectory,
     videoLastRejections,
     acceptedImageCount,
     estimatedSize,
@@ -578,6 +585,7 @@ export const useCompressionStore = defineStore('compression', () => {
     disableVideoItemOverride,
     updateVideoItemSettings,
     retryVideoPlanning,
+    bindVideoItemTask,
     removeVideoItem,
     clearVideoDrafts,
     cloneSettings,

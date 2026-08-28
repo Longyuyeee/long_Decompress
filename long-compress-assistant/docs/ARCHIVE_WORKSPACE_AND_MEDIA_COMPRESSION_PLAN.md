@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 与 C-02 已完成。VFR、旋转、无音频、真实双音轨、字幕、10 分钟输入、损坏容器、三档估算和真实 Windows 工作区均已通过，下一接续点为 C-03 执行、进度与取消。真实 Windows N 前后验证仍归 C-05/发布门禁，完成前不得发布 v1.1.16。完整 C-02 收口证据见 [C02_4_VIDEO_REAL_MATRIX_AUDIT.md](C02_4_VIDEO_REAL_MATRIX_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-04 已完成。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通，下一接续点为 C-05 真实验收矩阵。真实 Windows N 前后验证仍归 C-05/发布门禁，完成前不得发布 v1.1.16。完整 C-03 收口证据见 [C03_3_2_VIDEO_TASK_UI_AUDIT.md](C03_3_2_VIDEO_TASK_UI_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -432,7 +432,7 @@ src/types/media.ts
 
 ### C-03 执行、进度与取消
 
-进度（2026-08-29）：**C-03.1、C-03.2 与 C-03.3.1 已完成**。参数数组、机器进度、ETA、临时大小/比例、Job Object、容量预检、真实暂存、心跳和清理已通过；唯一 `compress_video_file` 命令进一步串起冻结引擎校验、权威重探测/规划、精确流变化确认、编码、完整验证和原子发布，并复用统一取消注册表、输出锁、`task-log` 与 `task-progress`。当前 UI 仍禁止执行；下一步 C-03.3.2 只负责接入统一视频任务、真实最终指标与历史后再开放按钮。证据见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md)、[C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md](C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md)、[C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md](C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md) 与 C-04 审计。
+完成状态（2026-08-29）：**C-03.1 至 C-03.3.2 全部完成，C-03 已关闭**。参数数组、机器进度、ETA、临时大小/比例、Job Object、容量预检、真实暂存、心跳和清理已通过；唯一 `compress_video_file` 串起权威重规划、精确流变化确认、编码、完整验证和原子发布。视频工作区现已复用统一任务、取消、事件、无覆盖目标规划、最终 `TaskMetricsV1` 与跨重启历史，拒绝风险确认时不创建任务。下一步进入 C-05 真实验收矩阵。证据见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md)、[C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md](C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md)、[C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md](C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md) 与 [C03_3_2_VIDEO_TASK_UI_AUDIT.md](C03_3_2_VIDEO_TASK_UI_AUDIT.md)。
 
 - 通过 `-progress pipe:1` 等机器可解析通道读取进度，不解析本地化控制台文本；
 - 参数以参数数组传入，不拼接 shell 字符串；

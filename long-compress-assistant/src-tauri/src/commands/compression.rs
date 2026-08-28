@@ -243,6 +243,74 @@ pub struct VideoCompressionExecutionRequest {
     pub preserve_mark_of_web: bool,
 }
 
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct VideoCompressionDestinationPlan {
+    pub destination: PathBuf,
+}
+
+fn plan_video_destination(
+    source: &Path,
+    output_directory: Option<&Path>,
+    reserved_destinations: &[PathBuf],
+) -> Result<VideoCompressionDestinationPlan, String> {
+    let metadata = std::fs::metadata(source)
+        .map_err(|error| format!("VIDEO_DESTINATION_SOURCE_UNAVAILABLE: {error}"))?;
+    if !metadata.is_file() {
+        return Err("VIDEO_DESTINATION_SOURCE_NOT_FILE".to_string());
+    }
+    let directory = output_directory
+        .map(Path::to_path_buf)
+        .or_else(|| source.parent().map(Path::to_path_buf))
+        .ok_or_else(|| "VIDEO_DESTINATION_DIRECTORY_UNAVAILABLE".to_string())?;
+    if !directory.is_dir() {
+        return Err(format!(
+            "VIDEO_DESTINATION_DIRECTORY_NOT_FOUND: {}",
+            directory.display()
+        ));
+    }
+    let stem = source
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.trim().is_empty())
+        .ok_or_else(|| "VIDEO_DESTINATION_SOURCE_NAME_INVALID".to_string())?;
+    let reserved = reserved_destinations
+        .iter()
+        .map(|path| normalized_output_key(&path.to_string_lossy()))
+        .collect::<Result<std::collections::HashSet<_>, _>>()?;
+
+    for index in 0..10_000_u32 {
+        let suffix = if index == 0 {
+            String::new()
+        } else {
+            format!(" ({index})")
+        };
+        let destination = directory.join(format!("{stem}.compressed{suffix}.mp4"));
+        let key = normalized_output_key(&destination.to_string_lossy())?;
+        if !destination.exists() && !reserved.contains(&key) {
+            return Ok(VideoCompressionDestinationPlan { destination });
+        }
+    }
+    Err("VIDEO_DESTINATION_RENAME_LIMIT_REACHED".to_string())
+}
+
+#[command]
+pub fn plan_video_compression_destination(
+    source: String,
+    output_directory: Option<String>,
+    reserved_destinations: Vec<String>,
+) -> Result<VideoCompressionDestinationPlan, String> {
+    let reserved = reserved_destinations
+        .into_iter()
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
+    plan_video_destination(
+        Path::new(&source),
+        output_directory.as_deref().map(Path::new),
+        &reserved,
+    )
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum VideoCompressionStage {
     Probing,
@@ -1253,7 +1321,7 @@ mod cancellation_tests {
     use super::{
         cancel_archive_browse, cancel_compression, cancel_tasks_and_wait,
         classify_archive_browse_error, image_stage_log, normalized_output_key,
-        run_image_compression, run_video_compression, video_progress_payload,
+        plan_video_destination, run_image_compression, run_video_compression, video_progress_payload,
         ArchiveDiagnosticGuard, CompressionAnalysisGuard, CompressionOutputGuard,
         VideoCompressionCommandEvent, VideoCompressionExecutionRequest, VideoCompressionStage,
         ZipRepairGuard,
@@ -1406,6 +1474,24 @@ mod cancellation_tests {
         assert_eq!(payload["current_time_ms"], 1_250);
         assert_eq!(payload["heartbeat_seconds_since_progress"], 5);
         assert!(payload["heartbeat_at"].as_str().is_some());
+    }
+
+    #[test]
+    fn video_destination_planner_never_overwrites_or_duplicates_batch_targets() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("演示.video.mov");
+        std::fs::write(&source, b"source").unwrap();
+        let first = temp.path().join("演示.video.compressed.mp4");
+        std::fs::write(&first, b"existing").unwrap();
+        let reserved = temp.path().join("演示.video.compressed (1).mp4");
+
+        let plan = plan_video_destination(&source, None, &[reserved]).unwrap();
+
+        assert_eq!(
+            plan.destination,
+            temp.path().join("演示.video.compressed (2).mp4")
+        );
+        assert_eq!(std::fs::read(first).unwrap(), b"existing");
     }
 
     #[tokio::test]

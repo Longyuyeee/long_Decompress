@@ -206,17 +206,20 @@ for (const contract of [
 const videoWorkspace = await read('src/components/compression/VideoCompressionWorkspace.vue')
 assert(videoWorkspace.includes('commands.planVideoCompression'), 'C-02.3 workspace must consume the authoritative backend plan')
 assert(videoWorkspace.includes('estimatedOutput.lowBytes'), 'C-02.3 workspace must display the labeled backend estimate')
-assert(videoWorkspace.includes('execute-disabled'), 'C-02.3 must keep video execution visibly disabled')
-assert(videoWorkspace.includes('当前节点不会创建任务或启动编码'), 'C-02.3 must state its non-execution boundary')
-for (const forbidden of ['taskStore.addTask', 'compressVideo', "invoke('plan_video_compression'"]) {
-  assert(!videoWorkspace.includes(forbidden), `C-02.3 workspace crossed its non-execution boundary: ${forbidden}`)
-}
+assert(videoWorkspace.includes('useVideoCompressionBatch'), 'C-03.3.2 workspace must use the audited unified-task batch adapter')
+assert(videoWorkspace.includes('confirmStreamChanges'), 'C-03.3.2 must confirm lossy stream changes before task creation')
+assert(videoWorkspace.includes('taskForItem(item)'), 'C-03.3.2 result UI must read the unified task facts')
+assert(!videoWorkspace.includes("invoke('compress_video_file'"), 'video workspace must not bypass the typed command adapter')
 const compressionStore = await read('src/stores/compression.ts')
 assert(compressionStore.includes('videoItems'), 'C-02.3 video drafts must reuse the existing compression store')
 assert(compressionStore.includes('planRevision'), 'C-02.3 must reject stale asynchronous video plans')
 assert(
   (main.match(/commands::compression::plan_image_compression_destination/g) ?? []).length === 1,
   'the application must expose exactly one authoritative image destination planner',
+)
+assert(
+  (main.match(/commands::compression::plan_video_compression_destination/g) ?? []).length === 1,
+  'the application must expose exactly one authoritative video destination planner',
 )
 const tauriCommands = await read('src/composables/useTauriCommands.ts')
 assert(
@@ -227,6 +230,8 @@ assert(
   tauriCommands.includes("invoke<VideoCompressionPlan>('plan_video_compression', { request })"),
   'the frontend video planner wrapper is missing or bypasses the typed contract',
 )
+assert(tauriCommands.includes("invoke<PublishedVideoOutput>('compress_video_file'"), 'the frontend video execution wrapper is missing')
+assert(tauriCommands.includes("invoke<VideoCompressionDestinationPlan>('plan_video_compression_destination'"), 'the frontend video destination planner is missing')
 assert(
   tauriCommands.includes("invoke<ImageDestinationPlan>('plan_image_compression_destination'"),
   'the frontend must use the backend image destination planner',
@@ -245,6 +250,12 @@ assert(imageBatchTracking.includes("workloadKind: 'image'"), 'image child tasks 
 assert(imageBatchTracking.includes('createVerifiedImageTaskMetricsV1'), 'published image history must use verified backend facts')
 assert(imageBatchTracking.includes('waitForHistoryPersistence'), 'image batch completion must await history persistence')
 assert(!imageBatchTracking.includes("invoke('save_task_history'"), 'image orchestration must not bypass the unified task store history writer')
+const videoBatchTracking = await read('src/composables/useVideoCompressionBatch.ts')
+assert(videoBatchTracking.includes("workloadKind: 'video'"), 'video child tasks must use the unified video workload identity')
+assert(videoBatchTracking.includes('createMeasuredTaskMetricsV1'), 'published video history must use verified backend facts')
+assert(videoBatchTracking.includes('taskStore.cancelTask(activeTaskId)'), 'video cancellation must use the unified cancellation entry point')
+assert(videoBatchTracking.includes('waitForHistoryPersistence'), 'video batch completion must await history persistence')
+assert(!videoBatchTracking.includes("invoke('save_task_history'"), 'video orchestration must not bypass the unified task store history writer')
 const imageWorkspaceView = await read('src/components/compression/ImageCompressionWorkspace.vue')
 assert(imageWorkspaceView.includes('useImageCompressionBatch'), 'the image workspace must use the audited batch composable')
 assert(imageWorkspaceView.includes('taskForItem(item)?.metrics'), 'the image result UI must read verified unified task metrics')

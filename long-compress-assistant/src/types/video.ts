@@ -125,6 +125,10 @@ export interface VideoCompressionExecutionRequest {
   preserveMarkOfWeb: boolean
 }
 
+export interface VideoCompressionDestinationPlan {
+  destination: string
+}
+
 export interface VerifiedVideoOutput {
   encodedBytes: number
   container: 'mp4'

@@ -6,6 +6,7 @@ import { extractErrorMessage } from '@/utils'
 import type { ResourcePreflightReport, ResourcePreflightRequest } from '@/types/resourcePreflight'
 import type {
   PublishedVideoOutput,
+  VideoCompressionDestinationPlan,
   VideoCompressionExecutionRequest,
   VideoCompressionPlan,
   VideoCompressionPlanRequest,
@@ -698,6 +699,18 @@ export const useTauriCommands = () => {
     return await invoke<PublishedVideoOutput>('compress_video_file', { taskId, request })
   }
 
+  const planVideoCompressionDestination = async (
+    source: string,
+    outputDirectory: string | null,
+    reservedDestinations: string[],
+  ): Promise<VideoCompressionDestinationPlan> => {
+    return await invoke<VideoCompressionDestinationPlan>('plan_video_compression_destination', {
+      source,
+      outputDirectory,
+      reservedDestinations,
+    })
+  }
+
   const analyzeCompressionSources = async (
     analysisId: string,
     paths: string[],
@@ -815,6 +828,7 @@ export const useTauriCommands = () => {
     probeVideoInput,
     planVideoCompression,
     compressVideoFile,
+    planVideoCompressionDestination,
     analyzeCompressionSources,
     cancelCompressionAnalysis,
     checkRarCompressionSupport,

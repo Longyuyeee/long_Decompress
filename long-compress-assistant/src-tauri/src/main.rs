@@ -425,6 +425,7 @@ fn main() {
             long_compress_assistant::commands::compression::compress_files,
             long_compress_assistant::commands::compression::compress_image_file,
             long_compress_assistant::commands::compression::compress_video_file,
+            long_compress_assistant::commands::compression::plan_video_compression_destination,
             long_compress_assistant::commands::compression::plan_image_compression_destination,
             long_compress_assistant::commands::compression::analyze_compression_sources,
             long_compress_assistant::commands::compression::cancel_compression_analysis,

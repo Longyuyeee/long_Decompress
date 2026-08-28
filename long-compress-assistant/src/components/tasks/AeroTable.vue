@@ -165,6 +165,11 @@ const getStageText = (task: Task) => {
     case 'Extracting': return '正在解压'
     case 'Verifying': return '验证输出'
     case 'Finalizing': return '提交结果'
+    case 'Probing': return '重新探测'
+    case 'Encoding': return '视频编码'
+    case 'Validating': return '完整验证'
+    case 'Publishing': return '原子发布'
+    case 'still-encoding': return '仍在编码'
     default: return getStatusText(task.status)
   }
 }
