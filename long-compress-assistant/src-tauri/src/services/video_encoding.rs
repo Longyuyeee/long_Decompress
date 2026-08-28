@@ -2,7 +2,18 @@ use crate::services::video_compression_plan::VideoCompressionPlan;
 use serde::Serialize;
 use std::ffi::OsString;
 use std::path::Path;
+#[cfg(windows)]
+use std::sync::atomic::{AtomicBool, Ordering};
+#[cfg(windows)]
+use std::sync::Arc;
+#[cfg(windows)]
+use std::time::{Duration, Instant};
 use thiserror::Error;
+
+#[cfg(windows)]
+const MAX_FFMPEG_ERROR_BYTES: usize = 64 * 1024;
+#[cfg(windows)]
+const PROGRESS_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum VideoEncodingError {
@@ -12,6 +23,22 @@ pub enum VideoEncodingError {
     OutputMustBeMp4,
     #[error("VIDEO_ENCODING_PROGRESS_INVALID: {0}")]
     InvalidProgress(String),
+    #[error("VIDEO_ENCODING_DESTINATION_EXISTS: {0}")]
+    DestinationExists(String),
+    #[error("VIDEO_ENCODING_SOURCE_DESTINATION_CONFLICT")]
+    SourceDestinationConflict,
+    #[error("VIDEO_ENCODING_RESOURCE_PREFLIGHT_FAILED: {0}")]
+    ResourcePreflightFailed(String),
+    #[error("VIDEO_ENCODING_LAUNCH_FAILED: {0}")]
+    LaunchFailed(String),
+    #[error("VIDEO_ENCODING_PROCESS_FAILED: {0}")]
+    ProcessFailed(String),
+    #[error("VIDEO_ENCODING_PROGRESS_INCOMPLETE")]
+    ProgressIncomplete,
+    #[error("VIDEO_ENCODING_OUTPUT_EMPTY")]
+    OutputEmpty,
+    #[error("VIDEO_ENCODING_CANCELLED")]
+    Cancelled,
     #[cfg(windows)]
     #[error("VIDEO_ENCODING_JOB_OBJECT_FAILED: {0}")]
     JobObjectFailed(String),
@@ -102,6 +129,71 @@ pub struct VideoProgressSnapshot {
     pub eta_seconds: Option<u64>,
     pub output_to_input_ratio: Option<f64>,
     pub finished: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+pub enum VideoEncodingEvent {
+    Progress { snapshot: VideoProgressSnapshot },
+    Heartbeat { seconds_since_progress: u64 },
+}
+
+/// Owns an unpublished video output. Dropping it removes the whole staging
+/// family, so a caller cannot accidentally leak or publish an unverified file.
+#[derive(Debug)]
+#[cfg(windows)]
+pub struct StagedVideoOutput {
+    path: std::path::PathBuf,
+    input_bytes: u64,
+    output_bytes: u64,
+}
+
+#[cfg(windows)]
+impl StagedVideoOutput {
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn input_bytes(&self) -> u64 {
+        self.input_bytes
+    }
+
+    pub fn output_bytes(&self) -> u64 {
+        self.output_bytes
+    }
+}
+
+#[cfg(windows)]
+impl Drop for StagedVideoOutput {
+    fn drop(&mut self) {
+        crate::services::output_publish_transaction::cleanup_staged_output_family(&self.path);
+    }
+}
+
+#[cfg(windows)]
+struct StagedOutputCleanup {
+    path: std::path::PathBuf,
+    armed: bool,
+}
+
+#[cfg(windows)]
+impl StagedOutputCleanup {
+    fn new(path: std::path::PathBuf) -> Self {
+        Self { path, armed: true }
+    }
+
+    fn disarm(&mut self) {
+        self.armed = false;
+    }
+}
+
+#[cfg(windows)]
+impl Drop for StagedOutputCleanup {
+    fn drop(&mut self) {
+        if self.armed {
+            crate::services::output_publish_transaction::cleanup_staged_output_family(&self.path);
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -254,8 +346,15 @@ impl WindowsJobObject {
 
     pub fn assign(&self, child: &std::process::Child) -> Result<(), VideoEncodingError> {
         use std::os::windows::io::AsRawHandle;
+        self.assign_raw_handle(child.as_raw_handle())
+    }
+
+    pub fn assign_raw_handle(
+        &self,
+        raw_handle: std::os::windows::io::RawHandle,
+    ) -> Result<(), VideoEncodingError> {
         use windows_sys::Win32::System::JobObjects::AssignProcessToJobObject;
-        let assigned = unsafe { AssignProcessToJobObject(self.handle, child.as_raw_handle() as _) };
+        let assigned = unsafe { AssignProcessToJobObject(self.handle, raw_handle as _) };
         if assigned == 0 {
             return Err(last_job_error("assign"));
         }
@@ -283,6 +382,199 @@ impl Drop for WindowsJobObject {
     fn drop(&mut self) {
         unsafe { windows_sys::Win32::Foundation::CloseHandle(self.handle) };
     }
+}
+
+#[cfg(windows)]
+pub async fn encode_video_to_staging<F>(
+    ffmpeg: &Path,
+    plan: &VideoCompressionPlan,
+    final_output: &Path,
+    cancelled: Arc<AtomicBool>,
+    observer: F,
+) -> Result<StagedVideoOutput, VideoEncodingError>
+where
+    F: FnMut(VideoEncodingEvent),
+{
+    encode_video_to_staging_with_heartbeat(
+        ffmpeg,
+        plan,
+        final_output,
+        cancelled,
+        PROGRESS_HEARTBEAT_INTERVAL,
+        observer,
+    )
+    .await
+}
+
+#[cfg(windows)]
+async fn encode_video_to_staging_with_heartbeat<F>(
+    ffmpeg: &Path,
+    plan: &VideoCompressionPlan,
+    final_output: &Path,
+    cancelled: Arc<AtomicBool>,
+    heartbeat_interval: Duration,
+    mut observer: F,
+) -> Result<StagedVideoOutput, VideoEncodingError>
+where
+    F: FnMut(VideoEncodingEvent),
+{
+    use std::process::Stdio;
+    use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
+
+    if cancelled.load(Ordering::SeqCst) {
+        return Err(VideoEncodingError::Cancelled);
+    }
+    if final_output.exists() {
+        return Err(VideoEncodingError::DestinationExists(
+            final_output.to_string_lossy().into_owned(),
+        ));
+    }
+    if plan.probe.source == final_output {
+        return Err(VideoEncodingError::SourceDestinationConflict);
+    }
+
+    let source = plan.probe.source.to_string_lossy().into_owned();
+    let destination = final_output.to_string_lossy().into_owned();
+    let preflight = crate::services::storage_preflight::preflight_operation_resources(
+        "compression",
+        &destination,
+        &[source],
+        None,
+        Some(plan.estimated_output.high_bytes),
+        false,
+    )
+    .await
+    .map_err(|error| VideoEncodingError::ResourcePreflightFailed(error.to_string()))?;
+    if !preflight.can_start {
+        return Err(VideoEncodingError::ResourcePreflightFailed(
+            preflight.summary,
+        ));
+    }
+
+    let staged_path = crate::services::output_publish_transaction::staged_output_path(
+        final_output,
+        "video-encode",
+    )
+    .map_err(|error| VideoEncodingError::LaunchFailed(error.to_string()))?;
+    let mut staged_cleanup = StagedOutputCleanup::new(staged_path.clone());
+    let arguments = build_ffmpeg_arguments(plan, &staged_path)?;
+    let job = WindowsJobObject::create()?;
+    let mut command = crate::utils::process::async_command(ffmpeg);
+    command
+        .args(arguments)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .kill_on_drop(true);
+    let mut child = command
+        .spawn()
+        .map_err(|error| VideoEncodingError::LaunchFailed(error.to_string()))?;
+    let raw_handle = child
+        .raw_handle()
+        .ok_or_else(|| VideoEncodingError::LaunchFailed("missing process handle".to_string()))?;
+    if let Err(error) = job.assign_raw_handle(raw_handle) {
+        let _ = child.kill().await;
+        return Err(error);
+    }
+
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| VideoEncodingError::LaunchFailed("missing progress pipe".to_string()))?;
+    let stderr = child
+        .stderr
+        .take()
+        .ok_or_else(|| VideoEncodingError::LaunchFailed("missing error pipe".to_string()))?;
+    let mut stderr_task = tokio::spawn(async move {
+        let mut reader = BufReader::new(stderr);
+        let mut retained = Vec::new();
+        let mut buffer = [0_u8; 8 * 1024];
+        loop {
+            let read = reader.read(&mut buffer).await?;
+            if read == 0 {
+                break;
+            }
+            let remaining = MAX_FFMPEG_ERROR_BYTES.saturating_sub(retained.len());
+            retained.extend_from_slice(&buffer[..read.min(remaining)]);
+        }
+        std::io::Result::Ok(retained)
+    });
+
+    let mut lines = BufReader::new(stdout).lines();
+    let mut parser = VideoProgressParser::new(plan.probe.duration_ms, plan.probe.input_bytes)?;
+    let mut heartbeat = tokio::time::interval(heartbeat_interval);
+    heartbeat.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    heartbeat.tick().await;
+    let mut cancellation_poll = tokio::time::interval(Duration::from_millis(50));
+    cancellation_poll.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    cancellation_poll.tick().await;
+    let mut last_progress_at = Instant::now();
+    let mut progress_finished = false;
+    let mut progress_pipe_open = true;
+
+    let status = loop {
+        tokio::select! {
+            biased;
+            _ = cancellation_poll.tick() => {
+                if cancelled.load(Ordering::SeqCst) {
+                    if job.terminate().is_err() {
+                        let _ = child.kill().await;
+                    }
+                    let _ = child.wait().await;
+                    let _ = (&mut stderr_task).await;
+                    return Err(VideoEncodingError::Cancelled);
+                }
+            }
+            line = lines.next_line(), if progress_pipe_open => {
+                match line.map_err(|error| VideoEncodingError::ProcessFailed(error.to_string()))? {
+                    Some(line) => {
+                        if let Some(snapshot) = parser.push_line(&line)? {
+                            progress_finished |= snapshot.finished;
+                            last_progress_at = Instant::now();
+                            observer(VideoEncodingEvent::Progress { snapshot });
+                        }
+                    }
+                    None => progress_pipe_open = false,
+                }
+            }
+            _ = heartbeat.tick() => {
+                observer(VideoEncodingEvent::Heartbeat {
+                    seconds_since_progress: last_progress_at.elapsed().as_secs(),
+                });
+            }
+            status = child.wait() => {
+                break status.map_err(|error| VideoEncodingError::ProcessFailed(error.to_string()))?;
+            }
+        }
+    };
+
+    let stderr = (&mut stderr_task)
+        .await
+        .map_err(|error| VideoEncodingError::ProcessFailed(error.to_string()))?
+        .map_err(|error| VideoEncodingError::ProcessFailed(error.to_string()))?;
+    if cancelled.load(Ordering::SeqCst) {
+        return Err(VideoEncodingError::Cancelled);
+    }
+    if !status.success() {
+        return Err(VideoEncodingError::ProcessFailed(
+            String::from_utf8_lossy(&stderr).trim().to_string(),
+        ));
+    }
+    if !progress_finished {
+        return Err(VideoEncodingError::ProgressIncomplete);
+    }
+    let output_bytes = std::fs::metadata(&staged_path)
+        .map_err(|_| VideoEncodingError::OutputEmpty)?
+        .len();
+    if output_bytes == 0 {
+        return Err(VideoEncodingError::OutputEmpty);
+    }
+
+    staged_cleanup.disarm();
+    Ok(StagedVideoOutput {
+        path: staged_path,
+        input_bytes: plan.probe.input_bytes,
+        output_bytes,
+    })
 }
 
 #[cfg(test)]
@@ -477,5 +769,141 @@ mod tests {
             .iter()
             .any(|snapshot| snapshot.output_bytes.is_some()));
         assert!(std::fs::metadata(staged).expect("staged output").len() > 0);
+    }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn internal_executor_returns_only_owned_staging_and_drop_cleans_it() {
+        use crate::services::video_probe::probe_video_file;
+
+        let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let ffmpeg = manifest.join("resources/video-engine/ffmpeg.exe");
+        let ffprobe = manifest.join("resources/video-engine/ffprobe.exe");
+        let fixture =
+            manifest.join("../tests/fixtures/media/videos/h264-vfr-audio-rotation-subtitles.mp4");
+        let temporary = tempfile::tempdir().expect("temporary directory");
+        let source = temporary.path().join("输入 & executor (1).mp4");
+        std::fs::copy(fixture, &source).expect("copy real input");
+        let final_output = temporary.path().join("最终 & unpublished (1).mp4");
+        let report = probe_video_file(&ffprobe, &source)
+            .await
+            .expect("probe real input");
+        let plan = build_video_compression_plan(
+            report,
+            &VideoCompressionPlanRequest {
+                path: source.to_string_lossy().into_owned(),
+                preset: VideoCompressionPreset::Balanced,
+                max_width: None,
+                max_height: None,
+            },
+        )
+        .expect("plan real input");
+        let mut events = Vec::new();
+        let staged = encode_video_to_staging(
+            &ffmpeg,
+            &plan,
+            &final_output,
+            Arc::new(AtomicBool::new(false)),
+            |event| events.push(event),
+        )
+        .await
+        .expect("encode to staging");
+
+        assert!(!final_output.exists(), "C-03 must not publish final output");
+        assert!(staged.path().exists());
+        assert_eq!(staged.input_bytes(), plan.probe.input_bytes);
+        assert_eq!(
+            staged.output_bytes(),
+            std::fs::metadata(staged.path()).unwrap().len()
+        );
+        assert!(events.iter().any(|event| matches!(
+            event,
+            VideoEncodingEvent::Progress { snapshot } if snapshot.finished
+        )));
+        let staged_path = staged.path().to_path_buf();
+        drop(staged);
+        assert!(
+            !staged_path.exists(),
+            "unverified staging must be owned and cleaned"
+        );
+    }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn heartbeat_cancellation_terminates_long_encode_and_cleans_staging_family() {
+        use crate::services::video_probe::probe_video_file;
+
+        let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let ffmpeg = manifest.join("resources/video-engine/ffmpeg.exe");
+        let ffprobe = manifest.join("resources/video-engine/ffprobe.exe");
+        let fixture =
+            manifest.join("../tests/fixtures/media/videos/h264-vfr-audio-rotation-subtitles.mp4");
+        let temporary = tempfile::tempdir().expect("temporary directory");
+        let source = temporary.path().join("十分钟 输入 & cancel (1).mp4");
+        let generated = crate::utils::process::command(&ffmpeg)
+            .args([
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-stream_loop",
+                "499",
+                "-i",
+            ])
+            .arg(&fixture)
+            .args([
+                "-map", "0:v:0", "-map", "0:a:0?", "-c", "copy", "-sn", "-t", "600", "-f", "mp4",
+            ])
+            .arg(&source)
+            .status()
+            .expect("generate long real input");
+        assert!(generated.success());
+        let report = probe_video_file(&ffprobe, &source)
+            .await
+            .expect("probe long real input");
+        assert!(report.duration_ms >= 500_000);
+        let plan = build_video_compression_plan(
+            report,
+            &VideoCompressionPlanRequest {
+                path: source.to_string_lossy().into_owned(),
+                preset: VideoCompressionPreset::Clear,
+                max_width: None,
+                max_height: None,
+            },
+        )
+        .expect("plan long input");
+        let final_output = temporary.path().join("不得发布 & cancelled.mp4");
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let cancel_from_heartbeat = cancelled.clone();
+        let mut saw_heartbeat = false;
+        let started = Instant::now();
+        let result = encode_video_to_staging_with_heartbeat(
+            &ffmpeg,
+            &plan,
+            &final_output,
+            cancelled,
+            Duration::from_millis(10),
+            |event| {
+                if matches!(event, VideoEncodingEvent::Heartbeat { .. }) {
+                    saw_heartbeat = true;
+                    cancel_from_heartbeat.store(true, Ordering::SeqCst);
+                }
+            },
+        )
+        .await;
+
+        assert!(matches!(result, Err(VideoEncodingError::Cancelled)));
+        assert!(saw_heartbeat);
+        assert!(started.elapsed() < Duration::from_secs(5));
+        assert!(!final_output.exists());
+        let leaked = std::fs::read_dir(temporary.path())
+            .unwrap()
+            .flatten()
+            .any(|entry| {
+                entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(".video-encode-")
+            });
+        assert!(!leaked, "cancel must remove staged output and sidecars");
     }
 }

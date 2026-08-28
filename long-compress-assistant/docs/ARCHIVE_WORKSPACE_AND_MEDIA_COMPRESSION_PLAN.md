@@ -432,7 +432,7 @@ src/types/media.ts
 
 ### C-03 执行、进度与取消
 
-进度（2026-08-28）：**C-03.1 已完成**。参数数组、产品 FFmpeg 机器进度解析、两有效样本后 ETA、临时大小/比例标记和 Windows Job Object 生命周期已由真实特殊字符路径转码及真实进程终止测试验证；尚未开放执行。下一接续点为 C-03.2 暂存执行器、统一取消/事件、心跳与清理；C-04 验证前仍不得发布或标记最终成功。证据见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md)。
+进度（2026-08-28）：**C-03.1 与 C-03.2 已完成**。参数数组、产品 FFmpeg 机器进度解析、两有效样本后 ETA、临时大小/比例标记、Windows Job Object、容量预检、真实异步暂存、心跳、取消和完整清理均通过；内部执行结果具有暂存所有权，drop 即清理，尚无可调用命令且不开放 UI。下一接续点为 C-03.3 统一取消/事件/任务 UI 接入；C-04 验证前仍不得发布或标记最终成功。证据见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md) 与 [C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md](C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md)。
 
 - 通过 `-progress pipe:1` 等机器可解析通道读取进度，不解析本地化控制台文本；
 - 参数以参数数组传入，不拼接 shell 字符串；

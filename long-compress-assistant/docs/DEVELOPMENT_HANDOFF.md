@@ -677,3 +677,9 @@
 - C-03.1 已完成：FFmpeg 参数固定为 `Vec<OsString>`，真实中文/空格/`&`/括号路径使用产品 `h264_mf` 软件编码和 AAC 转码通过，不经过 shell。
 - 进度只解析 `-progress pipe:1` 的机器字段；百分比、临时输出大小、速度、比例均保留事实来源，ETA 至少等待两个递增时间样本。
 - Windows Job Object 使用 `KILL_ON_JOB_CLOSE`，真实分配和终止进程通过。视频 UI 仍禁止执行，C-04 前不发布、不写最终成功历史。下一接续点为 C-03.2 暂存执行器、统一取消/事件、心跳和完整临时清理。详见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md)。
+
+# 2026-08-28 C-03.2 视频暂存执行器
+
+- 内部异步执行器已复用容量预检与同目录唯一暂存；机器 stdout、持续排空且保留 64 KiB 的 stderr、5 秒心跳、50 ms 取消轮询、Job Object 与 Future drop 清理均已落地。
+- 真实特殊字符输入成功编码但不发布，暂存所有者 drop 后清除；产品 FFmpeg 现场生成约 500 秒输入，心跳触发取消后 5 秒门限内结束，最终/暂存均无残留。
+- 为守住 C-04 验证发布边界，本节点不注册 Tauri 命令、不解锁 UI。下一接续点纠正为 C-03.3：复用统一取消注册表、输出锁、任务事件和视频任务 UI，但 C-04 前仍不能标记最终完成。详见 [C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md](C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md)。

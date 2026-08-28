@@ -131,11 +131,17 @@ for (const contract of [
   'JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE',
   'AssignProcessToJobObject',
   'TerminateJobObject',
+  'encode_video_to_staging',
+  'preflight_operation_resources',
+  'cleanup_staged_output_family',
+  'VideoEncodingEvent::Heartbeat',
+  '.kill_on_drop(true)',
 ]) {
   assert(videoEncoding.includes(contract), `C-03.1 video execution contract is missing: ${contract}`)
 }
 assert(!videoEncoding.includes('Command::new("cmd.exe")'), 'video encoding must not launch through cmd.exe')
 assert(!videoEncoding.includes('Command::new("powershell")'), 'video encoding must not launch through PowerShell')
+assert(!main.includes('commands::video_engine::encode_video'), 'C-03.2 internal staging must not bypass the C-04 publication gate')
 const videoWorkspace = await read('src/components/compression/VideoCompressionWorkspace.vue')
 assert(videoWorkspace.includes('commands.planVideoCompression'), 'C-02.3 workspace must consume the authoritative backend plan')
 assert(videoWorkspace.includes('estimatedOutput.lowBytes'), 'C-02.3 workspace must display the labeled backend estimate')
