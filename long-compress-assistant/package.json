@@ -59,6 +59,7 @@
     "test:e2e:desktop:tar-telemetry": "node scripts/test-tauri-desktop.mjs --tar-telemetry-only",
     "test:e2e:desktop:responsive-layout": "node scripts/test-tauri-desktop.mjs --responsive-layout-only",
     "test:e2e:desktop:image-workspace": "npm run test:fixtures:media:images && node scripts/test-tauri-desktop.mjs --image-workspace-only",
+    "test:e2e:desktop:image-batch": "npm run test:fixtures:media:images && node scripts/test-tauri-desktop.mjs --image-batch-only",
     "test:e2e:desktop:image-picker-manual": "npm run test:fixtures:media:images && node scripts/test-tauri-desktop.mjs --image-picker-manual-only",
     "test:e2e:desktop:auto-start": "node scripts/test-tauri-desktop.mjs --auto-start-only",
     "test:e2e:desktop:full-format": "node scripts/test-tauri-desktop.mjs --require-full-format-matrix",

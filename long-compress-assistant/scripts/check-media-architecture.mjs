@@ -93,6 +93,15 @@ assert(
   packageManifest.scripts?.['test:image-matrix:real'] === 'npm run test:fixtures:media:images && node scripts/run-b05-image-format-matrix.mjs',
   'B-05.1 real production matrix command is missing or bypasses fixture preparation',
 )
+assert(
+  packageManifest.scripts?.['test:e2e:desktop:image-batch'] === 'npm run test:fixtures:media:images && node scripts/test-tauri-desktop.mjs --image-batch-only',
+  'B-05.2.1 real desktop batch command is missing or bypasses fixture preparation',
+)
+const desktopE2e = await read('scripts/test-tauri-desktop.mjs')
+assert(desktopE2e.includes("const imageBatchOnly = process.argv.includes('--image-batch-only')"), 'B-05.2.1 focused desktop gate is missing')
+assert(desktopE2e.includes('const expectedBatchSize = 100'), 'B-05.2.1 batch size contract must remain fixed at 100')
+assert(desktopE2e.includes('source bytes must remain unchanged'), 'B-05.2.1 must verify source byte identity after execution')
+assert(desktopE2e.includes('every published image must persist one unified history row'), 'B-05.2.1 must verify all history rows')
 const imageMatrix = JSON.parse(await read('tests/fixtures/media/b05-image-format-matrix.json'))
 assert(imageMatrix.expected?.samplesPerFormat === 3, 'B-05.1 must freeze three samples per public image format')
 assert(imageMatrix.cases?.length === 9, 'B-05.1 must retain nine real image cases')

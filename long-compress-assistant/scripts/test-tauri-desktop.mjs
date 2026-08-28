@@ -113,6 +113,7 @@ const hfsxOnly = process.argv.includes('--hfsx-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const responsiveLayoutOnly = process.argv.includes('--responsive-layout-only')
 const imageWorkspaceOnly = process.argv.includes('--image-workspace-only')
+const imageBatchOnly = process.argv.includes('--image-batch-only')
 const imagePickerManualOnly = process.argv.includes('--image-picker-manual-only')
 const autoStartOnly = process.argv.includes('--auto-start-only')
 const missingFullFormatCapabilities = new Set()
@@ -2394,6 +2395,154 @@ async function runImageWorkspaceDesktopGate() {
   )
 }
 
+async function runImageBatchDesktopGate() {
+  const expectedBatchSize = 100
+  const expectedFormatCounts = { jpeg: 34, png: 33, webp: 33 }
+  console.log('[desktop-e2e] verifying the real B-05.2.1 100-image mixed batch')
+  const mediaRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures', 'images')
+  const batchInputDirectory = path.join(fixtureDirectory, 'image-batch-inputs')
+  const imageOutputDirectory = path.join(fixtureDirectory, 'image-batch-results')
+  mkdirSync(batchInputDirectory, { recursive: true })
+  mkdirSync(imageOutputDirectory, { recursive: true })
+
+  const definitions = [
+    ...Array.from({ length: expectedFormatCounts.jpeg }, (_, index) => ({
+      format: 'jpeg',
+      sourceName: index === expectedFormatCounts.jpeg - 1
+        ? 'large-photo.jpg'
+        : index % 10 === 0 ? 'exif-orientation.jpg' : 'small-detail.jpg',
+      extension: 'jpg',
+    })),
+    ...Array.from({ length: expectedFormatCounts.png }, (_, index) => ({
+      format: 'png',
+      sourceName: index === expectedFormatCounts.png - 1
+        ? 'large-alpha.png'
+        : index % 5 === 0 ? 'transparent.png' : 'opaque-small.png',
+      extension: 'png',
+    })),
+    ...Array.from({ length: expectedFormatCounts.webp }, (_, index) => ({
+      format: 'webp',
+      sourceName: index === expectedFormatCounts.webp - 1
+        ? 'large-photo.webp'
+        : index % 3 === 0 ? 'photo.webp' : 'alpha-small.webp',
+      extension: 'webp',
+    })),
+  ]
+  assert.equal(definitions.length, expectedBatchSize)
+  const imageFixtures = definitions.map((definition, index) => {
+    const sourcePath = path.join(mediaRoot, definition.sourceName)
+    assert.equal(existsSync(sourcePath), true, `missing real image fixture: ${sourcePath}`)
+    const name = `batch-${String(index + 1).padStart(3, '0')}-${path.parse(definition.sourceName).name}.${definition.extension}`
+    const fixturePath = path.join(batchInputDirectory, name)
+    copyFileSync(sourcePath, fixturePath)
+    return {
+      ...definition,
+      name,
+      path: fixturePath,
+      size: statSync(fixturePath).size,
+      sha256: fileSha256(fixturePath),
+    }
+  })
+
+  await callDesktopBridge('reset')
+  await callDesktopBridge('clearTaskHistory')
+  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="compression-mode-image"]')).click()
+  await waitForElement('[data-testid="image-compression-workspace"]')
+  const seed = await callDesktopBridge('seedImageCompressionWorkspace', imageFixtures.map(fixture => ({
+    name: fixture.name,
+    path: fixture.path,
+    size: fixture.size,
+    isDirectory: false,
+  })))
+  assert.deepEqual(seed, { accepted: expectedBatchSize, rejected: [] })
+
+  const readyState = await driver.wait(async () => {
+    const current = await callDesktopBridge('imageCompressionAuditState')
+    return current.length === expectedBatchSize && current.every(item => item.status === 'ready')
+      ? current
+      : false
+  }, 120_000)
+  assert.equal(readyState.reduce((total, item) => total + item.inputSize, 0), imageFixtures.reduce((total, item) => total + item.size, 0))
+  await (await waitForElement('[data-testid="image-compression-workspace"] .secondary-action')).click()
+  let workspaceText = await (await waitForElement('[data-testid="image-compression-workspace"]')).getText()
+  assert.match(workspaceText, /图片任务\s*100/)
+  assert.match(workspaceText, /已读取\s*100/)
+
+  const startButton = await waitForElement('[data-testid="image-compression-workspace"] .primary-action')
+  assert.equal(await startButton.getAttribute('disabled'), null, '100 verified image drafts must enable real execution')
+  await callDesktopBridge('configureImageCompressionWorkspace', imageOutputDirectory)
+  const startedAt = Date.now()
+  await startButton.click()
+  const resultState = await driver.wait(async () => {
+    const current = await callDesktopBridge('imageCompressionResultAuditState')
+    return current.length === expectedBatchSize
+      && current.every(item => item.taskStatus === 'completed' && item.hasResultPreview)
+      ? current
+      : false
+  }, 600_000)
+  const elapsedMs = Date.now() - startedAt
+
+  const actualFormatCounts = { jpeg: 0, png: 0, webp: 0 }
+  const outputPaths = new Set()
+  for (const fixture of imageFixtures) {
+    const actual = resultState.find(item => item.name === fixture.name)
+    assert.ok(actual, `missing real image result: ${fixture.name}`)
+    assert.equal(actual.inputBytes, fixture.size, `${fixture.name} input bytes must match the real source`)
+    assert.ok(actual.outputPath && existsSync(actual.outputPath), `${fixture.name} must publish a real output file`)
+    assert.equal(actual.outputBytes, statSync(actual.outputPath).size, `${fixture.name} output bytes must match the real file`)
+    assert.ok(actual.outputWidth > 0 && actual.outputHeight > 0, `${fixture.name} must expose verified output dimensions`)
+    assert.equal(actual.outputFormat, fixture.format, `${fixture.name} must retain its configured public format`)
+    actualFormatCounts[fixture.format]++
+    outputPaths.add(path.resolve(actual.outputPath).toLocaleLowerCase())
+    assert.equal(fileSha256(fixture.path), fixture.sha256, `${fixture.name} source bytes must remain unchanged`)
+  }
+  assert.deepEqual(actualFormatCounts, expectedFormatCounts)
+  assert.equal(outputPaths.size, expectedBatchSize, 'the batch must publish 100 unique output paths')
+  assert.equal(readdirSync(imageOutputDirectory, { withFileTypes: true }).filter(entry => entry.isFile()).length, expectedBatchSize)
+
+  const imageHistory = (await callDesktopBridge('taskHistory')).filter(record =>
+    record.workloadKind === 'image' && record.outputPath?.includes(imageOutputDirectory),
+  )
+  assert.equal(imageHistory.length, expectedBatchSize, 'every published image must persist one unified history row')
+  assert.ok(imageHistory.every(record => record.status === 'completed' && record.metrics?.inputBytes > 0 && record.metrics?.outputBytes > 0))
+  workspaceText = await (await waitForElement('[data-testid="image-compression-workspace"]')).getText()
+  assert.match(workspaceText, /100\/100\s*·\s*100\.00%/)
+  assert.match(await (await waitForElement('body')).getText(), /图片处理完成：100 个结果，0 个跳过，0 个失败，0 个取消/)
+
+  mkdirSync(artifactDirectory, { recursive: true })
+  const auditResult = {
+    scope: 'B-05.2.1 real Windows image batch',
+    expected: {
+      inputs: expectedBatchSize,
+      ready: expectedBatchSize,
+      completed: expectedBatchSize,
+      uniqueOutputs: expectedBatchSize,
+      historyRows: expectedBatchSize,
+      formatCounts: expectedFormatCounts,
+      sourceHashChanges: 0,
+    },
+    actual: {
+      inputs: imageFixtures.length,
+      ready: readyState.length,
+      completed: resultState.filter(item => item.taskStatus === 'completed').length,
+      uniqueOutputs: outputPaths.size,
+      historyRows: imageHistory.length,
+      formatCounts: actualFormatCounts,
+      sourceHashChanges: imageFixtures.filter(fixture => fileSha256(fixture.path) !== fixture.sha256).length,
+      elapsedMs,
+    },
+  }
+  writeFileSync(path.join(artifactDirectory, 'image-batch-100-result.json'), `${JSON.stringify(auditResult, null, 2)}\n`, 'utf8')
+  await driver.manage().window().setRect({ width: 1100, height: 720 })
+  writeFileSync(
+    path.join(artifactDirectory, 'image-batch-100-completed.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+  console.log(`[desktop-e2e] B-05.2.1 expected/actual: ${JSON.stringify(auditResult)}`)
+}
+
 async function runManualImagePickerDesktopGate() {
   console.log('[desktop-e2e] preparing the attended real Windows image-picker gate')
   const mediaRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures')
@@ -2802,6 +2951,10 @@ try {
     await runImageWorkspaceDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri B-04.5 image execution and result gate passed.')
+  } else if (imageBatchOnly) {
+    await runImageBatchDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri B-05.2.1 100-image batch gate passed.')
   } else if (imagePickerManualOnly) {
     await runManualImagePickerDesktopGate()
     completedSuccessfully = true
