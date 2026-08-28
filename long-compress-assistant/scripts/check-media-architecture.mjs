@@ -157,6 +157,19 @@ for (const contract of [
   assert(videoValidation.includes(contract), `C-04.1 video validation contract is missing: ${contract}`)
 }
 assert(!videoValidation.includes('publish_verified_file'), 'C-04.1 validation must not publish before its own audit closes')
+const videoPublish = await read('src-tauri/src/services/video_publish.rs')
+for (const contract of [
+  'publish_validated_video_output',
+  'mark_of_web::read_from(source)',
+  'mark_of_web::propagate_to_tree',
+  'publish_verified_file(staged.path(), final_output',
+  'TargetAppeared',
+  'final_metadata.len() != verified.encoded_bytes',
+  'savings_ratio',
+]) {
+  assert(videoPublish.includes(contract), `C-04.2 video publication contract is missing: ${contract}`)
+}
+assert(!videoPublish.includes('move_paths_to_system_recycle_bin'), 'video publication must not recycle sources before command-level opt-in')
 const videoWorkspace = await read('src/components/compression/VideoCompressionWorkspace.vue')
 assert(videoWorkspace.includes('commands.planVideoCompression'), 'C-02.3 workspace must consume the authoritative backend plan')
 assert(videoWorkspace.includes('estimatedOutput.lowBytes'), 'C-02.3 workspace must display the labeled backend estimate')

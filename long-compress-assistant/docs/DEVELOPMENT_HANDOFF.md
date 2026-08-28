@@ -689,3 +689,9 @@
 - 实际依赖已纠偏为先验证/发布、后接统一命令/UI；否则 C-03.3 会暴露未验证暂存文件。C-04.1 只接受 C-03 所有权对象，不发布。
 - 产品 ffprobe 验证 MP4/H.264/AAC、流数量、编码/可见尺寸、0° 旋转、字幕/章节/附图清除和有界时长偏差，并以全流 `-count_frames` 复核音视频可解码帧数。
 - 真实 `faststart` MP4 截半后仍保留元数据和 2 个视频帧，首版“至少一帧”会误放行；现已增加视频/AAC 最低帧数和编码后大小不变校验，截断稳定拒绝。下一节点为 C-04.2 Mark-of-the-Web、取消复检、共享原子发布和发布后最终事实。详见 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)。
+
+# 2026-08-28 C-04.2 视频原子发布
+
+- 验证结果只能连同其 `StagedVideoOutput` 所有者发布；发布前复核源/暂存字节、取消和 Mark-of-the-Web，再调用共享 `publish_verified_file`，最终字节取发布后文件系统。
+- 真实原子发布、NTFS ZoneId=3/HostUrl 逐字节传播、发布前取消和目标竞态通过；竞态目标 `existing-user-bytes` 未被覆盖，失败暂存无残留。
+- 源文件回收没有提前进入发布服务。下一步 C-04.3 补齐编码非零退出/终止、源或暂存改写、零字节、容量和竞态跨层矩阵；通过后关闭 C-04，再接 C-03.3 完整任务/UI。详见 [C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md](C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md)。
