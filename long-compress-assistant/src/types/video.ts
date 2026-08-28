@@ -67,3 +67,49 @@ export interface VideoProbeReport {
   warnings: string[]
   blockingReasons: string[]
 }
+
+export type VideoCompressionPreset = 'clear' | 'balanced' | 'small'
+
+export interface VideoCompressionPlanRequest {
+  path: string
+  preset: VideoCompressionPreset
+  maxWidth: number | null
+  maxHeight: number | null
+}
+
+export interface VideoPresetFacts {
+  preset: VideoCompressionPreset
+  label: VideoCompressionPreset
+  videoBitsPerPixelMilli: number
+  minimumVideoBitRate: number
+  maximumVideoBitRate: number
+  audioBitRate: number
+  defaultMaxWidth: number
+  defaultMaxHeight: number
+}
+
+export interface VideoSizeEstimate {
+  isEstimate: true
+  lowBytes: number
+  highBytes: number
+  basis: 'duration-output-pixels-average-frame-rate-and-preset-bitrate-envelope'
+  disclaimer: string
+}
+
+export interface VideoCompressionPlan {
+  probe: VideoProbeReport
+  preset: VideoPresetFacts
+  effectiveMaxWidth: number
+  effectiveMaxHeight: number
+  outputWidth: number
+  outputHeight: number
+  willResize: boolean
+  willUpscale: false
+  aspectRatioPolicy: 'preserve-within-even-dimension-rounding'
+  targetVideoBitRate: number
+  targetAudioBitRate: number | null
+  estimatedOutput: VideoSizeEstimate
+  streamChanges: string[]
+  requiresExplicitConfirmation: boolean
+  canEncode: boolean
+}

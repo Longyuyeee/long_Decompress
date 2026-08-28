@@ -82,6 +82,10 @@ assert(
   (main.match(/commands::video_engine::probe_video_input/g) ?? []).length === 1,
   'C-02.1 must expose exactly one authoritative video probe command',
 )
+assert(
+  (main.match(/commands::video_engine::plan_video_compression/g) ?? []).length === 1,
+  'C-02.2 must expose exactly one authoritative video compression planner',
+)
 const videoProbe = await read('src-tauri/src/services/video_probe.rs')
 for (const contract of [
   'VIDEO_PROBE_SOURCE_EMPTY',
@@ -100,6 +104,20 @@ assert(!videoProbe.includes('cmd.exe') && !videoProbe.includes('powershell'), 'v
 const videoCommands = await read('src-tauri/src/commands/video_engine.rs')
 assert(videoCommands.includes('validate_video_engine(&validation_root)'), 'video probe must validate the admitted runtime first')
 assert(videoCommands.includes('probe_video_file(&ffprobe'), 'video probe command must use the bounded production service')
+const videoPlan = await read('src-tauri/src/services/video_compression_plan.rs')
+for (const contract of [
+  'VideoCompressionPreset',
+  'Clear',
+  'Balanced',
+  'Small',
+  'will_upscale: false',
+  'preserve-within-even-dimension-rounding',
+  'is_estimate: true',
+  'estimate-only;',
+  'MAX_OUTPUT_PIXELS',
+]) {
+  assert(videoPlan.includes(contract), `C-02.2 video planning contract is missing: ${contract}`)
+}
 assert(
   (main.match(/commands::compression::plan_image_compression_destination/g) ?? []).length === 1,
   'the application must expose exactly one authoritative image destination planner',
@@ -108,6 +126,10 @@ const tauriCommands = await read('src/composables/useTauriCommands.ts')
 assert(
   tauriCommands.includes("invoke<VideoProbeReport>('probe_video_input', { path })"),
   'the frontend video probe wrapper is missing or bypasses the typed contract',
+)
+assert(
+  tauriCommands.includes("invoke<VideoCompressionPlan>('plan_video_compression', { request })"),
+  'the frontend video planner wrapper is missing or bypasses the typed contract',
 )
 assert(
   tauriCommands.includes("invoke<ImageDestinationPlan>('plan_image_compression_destination'"),
@@ -225,7 +247,7 @@ const productionFiles = [
 const mediaFiles = productionFiles.filter((file) =>
   /(?:^|[\\/])media(?:[_.\\/-]|$)/i.test(file)
   || /image[_-]?compression/i.test(file)
-  || /video[_-]?(?:engine|probe)/i.test(file)
+  || /video[_-]?(?:engine|probe|compression)/i.test(file)
 )
 const forbiddenMediaBypasses = [
   'std::fs::rename(',
