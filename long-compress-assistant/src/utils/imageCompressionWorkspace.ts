@@ -52,6 +52,47 @@ export interface ImageCompressionRequest {
   onlyIfSmaller: boolean
 }
 
+export type ImageDestinationPlan =
+  | { status: 'ready', destination: string }
+  | { status: 'skipped', destination: string, reason: string }
+
+export interface ImageDestinationPlanRequest {
+  source: string
+  outputDirectory: string | null
+  targetFormat: ImageMetricFormat
+  conflictPolicy: ImageConflictPolicy
+  reservedDestinations: string[]
+}
+
+export interface ImageBatchSource {
+  id: string
+  name: string
+  path: string
+  inputFormat: string
+  settings: ImageCompressionSettings
+}
+
+export type ImageBatchItemResult =
+  | { status: 'published' | 'kept-source-because-output-was-not-smaller', itemId: string, taskId: string, destination: string, outcome: ImageCompressionOutcome }
+  | { status: 'skipped', itemId: string, taskId: string, destination: string, reason: string }
+  | { status: 'failed', itemId: string, taskId: string, error: string }
+  | { status: 'cancelled', itemId: string, taskId: string }
+
+export interface ImageBatchProgress {
+  settled: number
+  total: number
+  percentage: number
+  itemId: string
+  taskId: string
+  status: ImageBatchItemResult['status']
+}
+
+export interface ImageBatchCommands {
+  planDestination(request: ImageDestinationPlanRequest): Promise<ImageDestinationPlan>
+  compress(taskId: string, request: ImageCompressionRequest): Promise<ImageCompressionOutcome>
+  cancel(taskId: string): Promise<void>
+}
+
 const supportedExtensions = new Set(['jpg', 'jpeg', 'png', 'webp'])
 const explicitlyUnsupportedExtensions = new Map([
   ['gif', '动图 GIF 暂不在首期图片压缩范围内'],
@@ -92,6 +133,132 @@ export const createDefaultImageSettings = (): ImageCompressionSettings => ({
   outputDirectory: '',
   conflictPolicy: 'replace-if-smaller',
 })
+
+const requireImageMetricFormat = (format: string): ImageMetricFormat => {
+  if (format === 'jpeg' || format === 'png' || format === 'webp') return format
+  throw new Error(`无法为不受支持的图片格式建立压缩请求：${format}`)
+}
+
+export const resolveImageTargetFormat = (inputFormat: string, settings: ImageCompressionSettings) =>
+  requireImageMetricFormat(settings.outputFormat === 'keep' ? inputFormat : settings.outputFormat)
+
+export const createImageCompressionRequest = (
+  source: string,
+  destination: string,
+  inputFormat: string,
+  settings: ImageCompressionSettings,
+): ImageCompressionRequest => ({
+  source,
+  destination,
+  mode: settings.mode,
+  quality: settings.quality,
+  targetFormat: resolveImageTargetFormat(inputFormat, settings),
+  maxDimensions: settings.resizeMode === 'limit'
+    ? { width: settings.maxWidth, height: settings.maxHeight }
+    : null,
+  preserveMetadata: settings.preserveMetadata,
+  onlyIfSmaller: settings.conflictPolicy === 'replace-if-smaller',
+})
+
+export const createImageTaskId = (batchId: string, itemId: string, index: number) => {
+  const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${index}`
+  return `image-${batchId}-${itemId}-${nonce}`
+}
+
+export class ImageCompressionBatchRunner {
+  private activeTaskId: string | null = null
+  private cancellationRequested = false
+  private running = false
+
+  constructor(
+    private readonly commands: ImageBatchCommands,
+    private readonly taskIdFactory: (item: ImageBatchSource, index: number) => string,
+  ) {}
+
+  async run(
+    items: ImageBatchSource[],
+    onProgress?: (progress: ImageBatchProgress) => void,
+  ): Promise<ImageBatchItemResult[]> {
+    if (this.running) throw new Error('图片批量任务已在运行')
+    this.running = true
+    const jobs = items.map((item, index) => ({ item, taskId: this.taskIdFactory(item, index) }))
+    if (new Set(jobs.map(job => job.taskId)).size !== jobs.length) {
+      this.running = false
+      throw new Error('图片批量任务 ID 必须逐项唯一')
+    }
+    const results: ImageBatchItemResult[] = []
+    const reservedDestinations: string[] = []
+    const report = (result: ImageBatchItemResult) => {
+      results.push(result)
+      onProgress?.({
+        settled: results.length,
+        total: jobs.length,
+        percentage: jobs.length === 0 ? 100 : Number((results.length / jobs.length * 100).toFixed(2)),
+        itemId: result.itemId,
+        taskId: result.taskId,
+        status: result.status,
+      })
+    }
+
+    try {
+      for (const { item, taskId } of jobs) {
+        if (this.cancellationRequested) {
+          report({ status: 'cancelled', itemId: item.id, taskId })
+          continue
+        }
+        const targetFormat = resolveImageTargetFormat(item.inputFormat, item.settings)
+        let plan: ImageDestinationPlan
+        try {
+          plan = await this.commands.planDestination({
+            source: item.path,
+            outputDirectory: item.settings.outputDirectory || null,
+            targetFormat,
+            conflictPolicy: item.settings.conflictPolicy,
+            reservedDestinations: [...reservedDestinations],
+          })
+        } catch (error) {
+          if (this.cancellationRequested) report({ status: 'cancelled', itemId: item.id, taskId })
+          else report({ status: 'failed', itemId: item.id, taskId, error: String(error) })
+          continue
+        }
+        if (this.cancellationRequested) {
+          report({ status: 'cancelled', itemId: item.id, taskId })
+          continue
+        }
+        if (plan.status === 'skipped') {
+          report({ status: 'skipped', itemId: item.id, taskId, destination: plan.destination, reason: plan.reason })
+          continue
+        }
+
+        reservedDestinations.push(plan.destination)
+        this.activeTaskId = taskId
+        try {
+          const outcome = await this.commands.compress(
+            taskId,
+            createImageCompressionRequest(item.path, plan.destination, item.inputFormat, item.settings),
+          )
+          report({ status: outcome.status, itemId: item.id, taskId, destination: plan.destination, outcome })
+        } catch (error) {
+          if (this.cancellationRequested || String(error).toLocaleLowerCase().includes('cancel')) {
+            report({ status: 'cancelled', itemId: item.id, taskId })
+          } else {
+            report({ status: 'failed', itemId: item.id, taskId, error: String(error) })
+          }
+        } finally {
+          this.activeTaskId = null
+        }
+      }
+      return results
+    } finally {
+      this.running = false
+    }
+  }
+
+  async cancel(): Promise<void> {
+    this.cancellationRequested = true
+    if (this.activeTaskId) await this.commands.cancel(this.activeTaskId)
+  }
+}
 
 export const estimateImageOutputRange = (inputBytes: number, settings: ImageCompressionSettings) => {
   if (inputBytes <= 0) return null

@@ -228,6 +228,29 @@ pub async fn compress_image_file(
     .await
 }
 
+#[command]
+pub fn plan_image_compression_destination(
+    source: String,
+    output_directory: Option<String>,
+    target_format: crate::services::image_compression_service::ImageFileFormat,
+    conflict_policy: crate::services::image_compression_service::ImageConflictPolicy,
+    reserved_destinations: Vec<String>,
+) -> Result<crate::services::image_compression_service::ImageDestinationPlan, String> {
+    let output_directory = output_directory.as_deref().map(std::path::Path::new);
+    let reserved_destinations = reserved_destinations
+        .into_iter()
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
+    crate::services::image_compression_service::plan_image_destination(
+        std::path::Path::new(&source),
+        output_directory,
+        target_format,
+        conflict_policy,
+        &reserved_destinations,
+    )
+    .map_err(|error| error.to_string())
+}
+
 fn image_stage_log(
     task_id: &str,
     stage: crate::services::image_compression_service::ImageCompressionStage,

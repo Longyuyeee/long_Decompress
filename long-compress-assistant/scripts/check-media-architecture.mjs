@@ -60,6 +60,24 @@ assert(!imageCommand.includes('"task-progress"'), 'image stages must not emit sy
 
 const main = await read('src-tauri/src/main.rs')
 assert(
+  (main.match(/commands::compression::plan_image_compression_destination/g) ?? []).length === 1,
+  'the application must expose exactly one authoritative image destination planner',
+)
+const tauriCommands = await read('src/composables/useTauriCommands.ts')
+assert(
+  tauriCommands.includes("invoke<ImageDestinationPlan>('plan_image_compression_destination'"),
+  'the frontend must use the backend image destination planner',
+)
+assert(
+  tauriCommands.includes("invoke<ImageCompressionOutcome>('compress_image_file'"),
+  'the frontend image command wrapper is missing',
+)
+const imageWorkspaceModel = await read('src/utils/imageCompressionWorkspace.ts')
+assert(imageWorkspaceModel.includes('class ImageCompressionBatchRunner'), 'the image batch runner is missing')
+assert(imageWorkspaceModel.includes('commands.cancel(this.activeTaskId)'), 'image batch cancellation must target the active child task')
+assert(imageWorkspaceModel.includes('results.length / jobs.length * 100'), 'image batch progress must derive from settled file count')
+assert(!imageWorkspaceModel.includes('task-progress'), 'the image batch runner must not manufacture encoder byte progress')
+assert(
   (main.match(/commands::task_history::save_task_history/g) ?? []).length === 1,
   'the application must expose exactly one history write command',
 )

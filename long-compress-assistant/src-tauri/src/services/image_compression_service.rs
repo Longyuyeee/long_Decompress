@@ -79,6 +79,26 @@ pub enum ImageFileFormat {
     WebP,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ImageConflictPolicy {
+    Rename,
+    Skip,
+    ReplaceIfSmaller,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "status", rename_all = "kebab-case")]
+pub enum ImageDestinationPlan {
+    Ready {
+        destination: PathBuf,
+    },
+    Skipped {
+        destination: PathBuf,
+        reason: String,
+    },
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ImageCompressionStage {
@@ -109,6 +129,12 @@ pub enum ImageCompressionError {
     SourceEqualsDestination,
     #[error("destination already exists and will not be overwritten: {0}")]
     DestinationExists(PathBuf),
+    #[error("image output directory is missing or is not a directory: {0}")]
+    InvalidOutputDirectory(PathBuf),
+    #[error("image source does not have a usable file name: {0}")]
+    InvalidSourceName(PathBuf),
+    #[error("unable to reserve a unique image destination after 10000 attempts")]
+    UniqueDestinationExhausted,
     #[error("destination extension does not match the decoded {0:?} input format")]
     DestinationFormatMismatch(ImageFileFormat),
     #[error("unsupported or invalid image input: {0}")]
@@ -147,6 +173,84 @@ struct StagedOutputGuard(PathBuf);
 impl Drop for StagedOutputGuard {
     fn drop(&mut self) {
         cleanup_staged_output_family(&self.0);
+    }
+}
+
+pub fn plan_image_destination(
+    source: &Path,
+    output_directory: Option<&Path>,
+    target_format: ImageFileFormat,
+    conflict_policy: ImageConflictPolicy,
+    reserved_destinations: &[PathBuf],
+) -> Result<ImageDestinationPlan, ImageCompressionError> {
+    let directory = match output_directory {
+        Some(directory) => directory,
+        None => source
+            .parent()
+            .ok_or_else(|| ImageCompressionError::InvalidSourceName(source.to_path_buf()))?,
+    };
+    if !directory.is_dir() {
+        return Err(ImageCompressionError::InvalidOutputDirectory(
+            directory.to_path_buf(),
+        ));
+    }
+    let stem = source
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| ImageCompressionError::InvalidSourceName(source.to_path_buf()))?;
+    let extension = match target_format {
+        ImageFileFormat::Jpeg => "jpg",
+        ImageFileFormat::Png => "png",
+        ImageFileFormat::WebP => "webp",
+    };
+    let requested = directory.join(format!("{stem}.compressed.{extension}"));
+    let occupied = |candidate: &Path| {
+        candidate.exists()
+            || reserved_destinations
+                .iter()
+                .any(|reserved| paths_match(candidate, reserved))
+    };
+
+    if !occupied(&requested) {
+        return Ok(ImageDestinationPlan::Ready {
+            destination: requested,
+        });
+    }
+
+    match conflict_policy {
+        ImageConflictPolicy::Skip => Ok(ImageDestinationPlan::Skipped {
+            destination: requested,
+            reason: "目标文件已存在，已按跳过策略保留现有文件".to_string(),
+        }),
+        ImageConflictPolicy::ReplaceIfSmaller => {
+            Err(ImageCompressionError::DestinationExists(requested))
+        }
+        ImageConflictPolicy::Rename => {
+            for sequence in 1..=10_000 {
+                let candidate =
+                    directory.join(format!("{stem}.compressed ({sequence}).{extension}"));
+                if !occupied(&candidate) {
+                    return Ok(ImageDestinationPlan::Ready {
+                        destination: candidate,
+                    });
+                }
+            }
+            Err(ImageCompressionError::UniqueDestinationExhausted)
+        }
+    }
+}
+
+fn paths_match(left: &Path, right: &Path) -> bool {
+    #[cfg(windows)]
+    {
+        left.to_string_lossy()
+            .replace('/', "\\")
+            .eq_ignore_ascii_case(&right.to_string_lossy().replace('/', "\\"))
+    }
+    #[cfg(not(windows))]
+    {
+        left == right
     }
 }
 
@@ -1029,6 +1133,98 @@ mod tests {
         assert!(input.has_alpha);
         assert_eq!(output.format, ImageFileFormat::Jpeg);
         assert!(!output.has_alpha);
+    }
+
+    #[test]
+    fn destination_planner_uses_real_files_for_conflict_policies_and_reservations() {
+        let source = fixture("transparent.png");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let requested = temp.path().join("transparent.compressed.png");
+        fs::write(&requested, b"existing output must stay unchanged").unwrap();
+
+        let skipped = plan_image_destination(
+            &source,
+            Some(temp.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Skip,
+            &[],
+        )
+        .unwrap();
+        assert!(matches!(
+            skipped,
+            ImageDestinationPlan::Skipped { destination, .. } if destination == requested
+        ));
+        assert_eq!(
+            fs::read(&requested).unwrap(),
+            b"existing output must stay unchanged"
+        );
+
+        let first_rename = temp.path().join("transparent.compressed (1).png");
+        fs::write(&first_rename, b"first collision").unwrap();
+        let reserved = temp.path().join("transparent.compressed (2).png");
+        let renamed = plan_image_destination(
+            &source,
+            Some(temp.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Rename,
+            &[reserved],
+        )
+        .unwrap();
+        assert_eq!(
+            renamed,
+            ImageDestinationPlan::Ready {
+                destination: temp.path().join("transparent.compressed (3).png")
+            }
+        );
+
+        let error = plan_image_destination(
+            &source,
+            Some(temp.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::ReplaceIfSmaller,
+            &[],
+        )
+        .unwrap_err();
+        assert!(matches!(error, ImageCompressionError::DestinationExists(_)));
+        assert_eq!(
+            fs::read(&requested).unwrap(),
+            b"existing output must stay unchanged"
+        );
+    }
+
+    #[test]
+    fn planned_destination_executes_against_a_real_transparent_png() {
+        let source = fixture("transparent.png");
+        if !source.exists() {
+            return;
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let ImageDestinationPlan::Ready { destination } = plan_image_destination(
+            &source,
+            Some(temp.path()),
+            ImageFileFormat::Png,
+            ImageConflictPolicy::Rename,
+            &[],
+        )
+        .unwrap() else {
+            panic!("an empty real output directory must produce a ready plan");
+        };
+        let mut request = request(source, destination.clone());
+        request.mode = ImageCompressionMode::Lossless;
+        let outcome = compress_single_image(&request, &AtomicBool::new(false)).unwrap();
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
+            panic!("planned real PNG should publish");
+        };
+        assert_eq!(input.format, ImageFileFormat::Png);
+        assert_eq!(output.format, ImageFileFormat::Png);
+        assert!(destination.is_file());
+        assert_eq!(
+            fs::metadata(destination).unwrap().len(),
+            output.encoded_bytes
+        );
     }
 
     #[test]

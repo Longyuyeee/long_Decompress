@@ -417,6 +417,23 @@ describe('useTauriCommands', () => {
     const commands = useTauriCommands()
 
     await expect(commands.compressFiles('task', ['a.txt'], 'a.zip', { level: 6 })).resolves.toBe('compress_files')
+    await commands.planImageCompressionDestination({
+      source: 'C:/images/photo.webp',
+      outputDirectory: 'C:/output',
+      targetFormat: 'webp',
+      conflictPolicy: 'rename',
+      reservedDestinations: ['C:/output/photo.compressed.webp'],
+    })
+    await commands.compressImageFile('image-task', {
+      source: 'C:/images/photo.webp',
+      destination: 'C:/output/photo.compressed (1).webp',
+      mode: 'lossy',
+      quality: 82,
+      targetFormat: 'webp',
+      maxDimensions: null,
+      preserveMetadata: true,
+      onlyIfSmaller: false,
+    })
     await expect(commands.preflightOperationResources({
       operation: 'compression',
       outputPath: 'a.zip',
@@ -466,6 +483,17 @@ describe('useTauriCommands', () => {
       password: 'secret',
       browseId: 'browse-1',
     })
+    expect(mocks.invoke).toHaveBeenCalledWith('plan_image_compression_destination', {
+      source: 'C:/images/photo.webp',
+      outputDirectory: 'C:/output',
+      targetFormat: 'webp',
+      conflictPolicy: 'rename',
+      reservedDestinations: ['C:/output/photo.compressed.webp'],
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('compress_image_file', expect.objectContaining({
+      taskId: 'image-task',
+      request: expect.objectContaining({ destination: 'C:/output/photo.compressed (1).webp' }),
+    }))
     expect(mocks.invoke).toHaveBeenCalledWith('cancel_archive_browse', { browseId: 'browse-1' })
     expect(mocks.invoke).toHaveBeenCalledWith('preview_archive_image', {
       filePath: 'a.zip', entryPath: 'images/cover.png', password: 'secret',

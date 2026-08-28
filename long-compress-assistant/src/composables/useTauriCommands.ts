@@ -4,6 +4,12 @@ import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage } from '@/utils'
 import type { ResourcePreflightReport, ResourcePreflightRequest } from '@/types/resourcePreflight'
+import type {
+  ImageCompressionOutcome,
+  ImageCompressionRequest,
+  ImageDestinationPlan,
+  ImageDestinationPlanRequest,
+} from '@/utils/imageCompressionWorkspace'
 
 export interface DecompressOptions {
   outputPath: string
@@ -689,6 +695,15 @@ export const useTauriCommands = () => {
     })
   }
 
+  const planImageCompressionDestination = async (
+    request: ImageDestinationPlanRequest,
+  ): Promise<ImageDestinationPlan> => invoke<ImageDestinationPlan>('plan_image_compression_destination', { ...request })
+
+  const compressImageFile = async (
+    taskId: string,
+    request: ImageCompressionRequest,
+  ): Promise<ImageCompressionOutcome> => invoke<ImageCompressionOutcome>('compress_image_file', { taskId, request })
+
   const cancelArchiveBrowse = async (browseId: string) => {
     await invoke('cancel_archive_browse', { browseId })
   }
@@ -770,6 +785,8 @@ export const useTauriCommands = () => {
     decompressFiles,
     resolveExtractionConflict,
     compressFiles,
+    planImageCompressionDestination,
+    compressImageFile,
     preflightOperationResources,
     analyzeCompressionSources,
     cancelCompressionAnalysis,
