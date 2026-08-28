@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-27",
+  "reviewedAt": "2026-08-28",
   "policy": {
     "unknownValue": null,
     "estimatedValuesMustBeLabeled": true,
@@ -15,8 +15,9 @@
     "image": {
       "dimensionSemantics": {
         "widthHeight": "orientation-applied-display-dimensions",
-        "encodedPixelMatrix": "validation-only",
-        "orientation": "decoded-source-metadata"
+        "encodedPixelMatrix": "validated-and-persisted-input-output-fact",
+        "orientation": "backend-decoded-input-output-metadata",
+        "inputOutput": "backend-redecoded-facts-never-browser-preview"
       },
       "progress": {
         "authoritativeSource": "completed-items/total-items",
@@ -26,7 +27,24 @@
         "eta": null
       },
       "liveOutputBytes": null,
-      "finalFacts": ["width", "height", "frameCount", "hasAlpha", "format"]
+      "finalFacts": [
+        "image.input.format",
+        "image.input.encodedWidth",
+        "image.input.encodedHeight",
+        "image.input.visibleWidth",
+        "image.input.visibleHeight",
+        "image.input.orientation",
+        "image.input.frameCount",
+        "image.input.hasAlpha",
+        "image.output.format",
+        "image.output.encodedWidth",
+        "image.output.encodedHeight",
+        "image.output.visibleWidth",
+        "image.output.visibleHeight",
+        "image.output.orientation",
+        "image.output.frameCount",
+        "image.output.hasAlpha"
+      ]
     },
     "video": {
       "progress": {

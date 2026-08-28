@@ -983,7 +983,7 @@ mod cancellation_tests {
         )
         .await
         .unwrap();
-        assert!(matches!(outcome, ImageCompressionOutcome::Published(_)));
+        assert!(matches!(outcome, ImageCompressionOutcome::Published { .. }));
         assert!(destination.is_file());
         assert!(!CANCELLATION_FLAGS.contains_key(&task_id));
     }

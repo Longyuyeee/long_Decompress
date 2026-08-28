@@ -6,7 +6,9 @@ GitHub：`https://github.com/Longyuyeee/long_Decompress.git`
 
 开发分支：`codex/archive-media-roadmap`
 
-代码接续锚点：`5e396c67e0b8aa4f4bd3cfc822a63c2f1b24f1e3`（`feat: complete B-03 image backend execution`）
+原始审计锚点：`5e396c67e0b8aa4f4bd3cfc822a63c2f1b24f1e3`（`feat: complete B-03 image backend execution`）
+
+最新接续状态：B-04.1 已完成；下一接续点为 B-04.2 阶段事件。完成证据见 [B04_1_IMAGE_FACT_CONTRACT_AUDIT.md](B04_1_IMAGE_FACT_CONTRACT_AUDIT.md)。
 
 公开版本：`v1.1.14`，标签仍固定在 `cfc58ec9a14dc8ccb3f0e026986786af5693b6cc`；当前开发分支不升版、不更新 Release。
 
@@ -14,7 +16,7 @@ GitHub：`https://github.com/Longyuyeee/long_Decompress.git`
 
 当前开发分支已完成大节点 A、媒体前置 B-00、图片依赖基线 B-01、图片前端工作区 B-02 和图片后端执行/发布事务 B-03。分支相对 `origin/master` 为领先 23 个提交、落后 0 个提交，当前本地与 GitHub 同名远端分支一致。
 
-下一接续点严格为 **B-04 进度、日志和历史**。不能直接把图片“开始压缩”按钮改为可用：实际代码尚缺输入/输出双侧事实模型、图片阶段事件、批量编排、前端命令映射和终态历史闭环。B-05 安装版真实矩阵及版本发布仍未开始。
+B-04 已开始，B-04.1 输入/输出双侧事实模型已经完成。下一接续点严格为 **B-04.2 阶段事件**。不能直接把图片“开始压缩”按钮改为可用：实际代码仍缺图片阶段事件、批量编排、前端命令调用和终态历史闭环。B-05 安装版真实矩阵及版本发布仍未开始。
 
 ## 2. 已完成的实际代码
 
@@ -45,8 +47,8 @@ GitHub：`https://github.com/Longyuyeee/long_Decompress.git`
 | --- | --- | --- |
 | 前端文案滞后 | `ImageCompressionWorkspace.vue` 仍显示“B-02 前端”“B-03 接入后开放”“B-03 实际编码后显示” | B-03 已完成，文案已过期；但在 B-04 事实闭环前不能只改文案并点亮按钮 |
 | 前端没有调用后端 | `src` 中没有 `compress_image_file` 调用，按钮仍为静态 `disabled` | 必须新增请求/响应类型、配置映射、目标路径与批量任务编排 |
-| 后端结果事实不足 | `ImageCompressionFacts` 只返回输出格式、输出尺寸/方向和总字节，没有独立返回已验证的输入格式、输入可见尺寸/矩阵/方向 | 不能仅依赖浏览器预览尺寸生成 B-04 历史；需要后端返回输入与输出双侧事实 |
-| 历史指标结构不足 | 前后端 `MediaMetricsV1` 只有单组 `width/height/container/hasAlpha`，没有输入/输出格式与尺寸，也没有编码矩阵和方向字段 | 先做向后兼容的可选字段扩展和 Rust `deny_unknown_fields` 同步，再保存图片历史 |
+| 后端结果事实不足 | **B-04.1 已解决**：`ImageCompressionOutcome` 返回真实 `input/output`，仅更小策略返回 `input/candidate` | 后续编排可直接消费后端事实，不得退回浏览器预览尺寸 |
+| 历史指标结构不足 | **B-04.1 已解决**：前后端 `MediaMetricsV1` 向后兼容增加可选 `image.input/output`，Rust 严格字段同步 | B-04.4 可写入真实图片历史；旧历史继续无损读取 |
 | 图片阶段事件缺失 | 图片服务/命令没有发出 `task-log` 或 `task-progress`；现有事件只由归档 `CompressionService` 发出 | 必须新增解码、缩放、编码、验证、发布阶段事实；不可伪造连续字节进度 |
 | 冲突策略尚未映射 | 前端有 rename/skip/replace-if-smaller，后端请求只有 `onlyIfSmaller`，目标已存在时失败关闭 | B-04 编排层必须安全解析 rename/skip；不得绕过发布事务直接覆盖 |
 | 批量和终态未闭环 | 图片草稿状态只有 inspecting/ready/rejected，没有 running/completed/failed/cancelled 的实际映射 | 必须接统一 task store，完成、失败、取消三种终态均写入历史并跨重启读取 |
@@ -54,8 +56,8 @@ GitHub：`https://github.com/Longyuyeee/long_Decompress.git`
 
 ## 4. 换机后的唯一推荐开发顺序
 
-1. **B-04.1 事实契约**：扩展 Rust `ImageCompressionOutcome/Facts`、前端响应类型和前后端历史 `MediaMetricsV1`，同时覆盖输入/输出格式、可见尺寸、编码矩阵、方向、帧数、Alpha；字段保持可选以兼容旧历史。
-2. **B-04.2 阶段事件**：为图片命令建立解码、可选缩放、编码、验证、发布阶段日志。进度优先采用批量文件完成数加离散阶段，编码器没有可信字节信息时不得制造平滑百分比。
+1. **B-04.1 事实契约（已完成）**：Rust 结果、前端类型和历史指标已覆盖输入/输出格式、可见尺寸、编码矩阵、方向、帧数、Alpha；旧历史兼容与严格字段门禁已通过。
+2. **B-04.2 阶段事件（下一步）**：为图片命令建立解码、可选缩放、编码、验证、发布阶段日志。进度优先采用批量文件完成数加离散阶段，编码器没有可信字节信息时不得制造平滑百分比。
 3. **B-04.3 安全编排**：将前端同源设置映射为后端请求；生成确定目标路径；在编排层实现 rename/skip，replace-if-smaller 继续交给已审计服务；每张图使用唯一 task id 并支持统一取消。
 4. **B-04.4 队列与历史**：复用 task store，写入 `taskType=compression`、`workloadKind=image` 和后端真实指标；验证完成/失败/取消跨重启保留。
 5. **B-04.5 UI 开放**：真实结果文件、预览、节省字节和历史均可用后，才更新滞后 B-02/B-03 文案并启用按钮；不能用原图或预计值填充结果区。

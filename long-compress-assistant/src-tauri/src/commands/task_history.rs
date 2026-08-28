@@ -23,6 +23,26 @@ pub struct TaskHistoryLog {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ImageFileMetricsV1 {
+    pub format: String,
+    pub encoded_width: u64,
+    pub encoded_height: u64,
+    pub visible_width: u64,
+    pub visible_height: u64,
+    pub orientation: u8,
+    pub frame_count: u64,
+    pub has_alpha: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ImageMediaMetricsV1 {
+    pub input: ImageFileMetricsV1,
+    pub output: ImageFileMetricsV1,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MediaMetricsV1 {
     pub width: Option<u64>,
     pub height: Option<u64>,
@@ -33,6 +53,8 @@ pub struct MediaMetricsV1 {
     pub audio_codec: Option<String>,
     pub container: Option<String>,
     pub has_alpha: Option<bool>,
+    #[serde(default)]
+    pub image: Option<ImageMediaMetricsV1>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -220,14 +242,38 @@ fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, S
             0.0
         };
         if let Some(media) = metrics.media.as_mut() {
+            if media.image.is_some() && record.workload_kind != "image" {
+                return Err("只有图片任务可以写入图片输入/输出事实".to_string());
+            }
             for label in [&mut media.video_codec, &mut media.audio_codec, &mut media.container] {
                 *label = label
                     .take()
                     .map(|value| value.chars().take(MAX_METRIC_LABEL_CHARS).collect());
             }
+            if let Some(image) = media.image.as_mut() {
+                sanitize_image_facts(&mut image.input)?;
+                sanitize_image_facts(&mut image.output)?;
+            }
         }
     }
     Ok(record)
+}
+
+fn sanitize_image_facts(facts: &mut ImageFileMetricsV1) -> Result<(), String> {
+    facts.format = facts.format.trim().to_ascii_lowercase();
+    if !matches!(facts.format.as_str(), "jpeg" | "png" | "webp") {
+        return Err("图片指标格式必须是 jpeg、png 或 webp".to_string());
+    }
+    if facts.encoded_width == 0
+        || facts.encoded_height == 0
+        || facts.visible_width == 0
+        || facts.visible_height == 0
+        || facts.frame_count == 0
+        || !(1..=8).contains(&facts.orientation)
+    {
+        return Err("图片指标包含无效的尺寸、方向或帧数".to_string());
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -504,6 +550,7 @@ mod tests {
                     width: Some(1), height: Some(1), frame_count: None, duration_ms: None,
                     page_count: None, video_codec: None, audio_codec: None,
                     container: Some("png".into()), has_alpha: Some(true),
+                    image: None,
                 }),
             }),
             status: "completed".into(), source_paths: vec![], output_path: String::new(),
@@ -511,5 +558,65 @@ mod tests {
             duration_ms: 0, processed_bytes: 0, total_bytes: 0, error_message: None, logs: vec![],
         };
         assert!(sanitize_record(record).is_err());
+    }
+
+    #[test]
+    fn preserves_verified_image_input_and_output_facts() {
+        let json = serde_json::json!({
+            "id": "image-task", "name": "converted.png", "taskType": "compression",
+            "workloadKind": "image", "status": "completed",
+            "sourcePaths": ["C:/source.jpg"], "outputPath": "C:/converted.png",
+            "format": "png", "startedAt": null, "completedAt": Utc::now().to_rfc3339(),
+            "durationMs": 20, "processedBytes": 1200, "totalBytes": 1200,
+            "errorMessage": null, "logs": [],
+            "metrics": {
+                "schemaVersion": 1, "inputBytes": 1200, "outputBytes": 700,
+                "savingsRatio": 99,
+                "media": {
+                    "image": {
+                        "input": {
+                            "format": "JPEG", "encodedWidth": 640, "encodedHeight": 360,
+                            "visibleWidth": 360, "visibleHeight": 640, "orientation": 6,
+                            "frameCount": 1, "hasAlpha": false
+                        },
+                        "output": {
+                            "format": "png", "encodedWidth": 360, "encodedHeight": 640,
+                            "visibleWidth": 360, "visibleHeight": 640, "orientation": 1,
+                            "frameCount": 1, "hasAlpha": false
+                        }
+                    }
+                }
+            }
+        });
+        let record: TaskHistoryRecord = serde_json::from_value(json).unwrap();
+        let sanitized = sanitize_record(record).expect("verified image facts should persist");
+        let metrics = sanitized.metrics.unwrap();
+        assert_eq!(metrics.savings_ratio, 500.0 / 1200.0);
+        let image = metrics.media.unwrap().image.unwrap();
+        assert_eq!(image.input.format, "jpeg");
+        assert_eq!(image.input.orientation, 6);
+        assert_eq!(image.output.format, "png");
+        assert_eq!(
+            (image.output.visible_width, image.output.visible_height),
+            (360, 640)
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_or_unknown_image_facts() {
+        let invalid: Result<ImageFileMetricsV1, _> = serde_json::from_value(serde_json::json!({
+            "format": "jpeg", "encodedWidth": 640, "encodedHeight": 360,
+            "visibleWidth": 360, "visibleHeight": 640, "orientation": 0,
+            "frameCount": 1, "hasAlpha": false
+        }));
+        let mut invalid = invalid.unwrap();
+        assert!(sanitize_image_facts(&mut invalid).is_err());
+
+        let unknown: Result<ImageFileMetricsV1, _> = serde_json::from_value(serde_json::json!({
+            "format": "jpeg", "encodedWidth": 640, "encodedHeight": 360,
+            "visibleWidth": 360, "visibleHeight": 640, "orientation": 6,
+            "frameCount": 1, "hasAlpha": false, "browserWidth": 360
+        }));
+        assert!(unknown.is_err());
     }
 }

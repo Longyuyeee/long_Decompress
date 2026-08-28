@@ -24,8 +24,15 @@ export function validateMediaMetricContract(contract) {
   const workloads = contract.workloads
   assert(Object.keys(workloads ?? {}).sort().join(',') === 'image,pdf,video', 'image/video/PDF contracts are required')
   assert(workloads.image.dimensionSemantics?.widthHeight === 'orientation-applied-display-dimensions', 'image width/height must describe the orientation-applied display')
-  assert(workloads.image.dimensionSemantics?.encodedPixelMatrix === 'validation-only', 'encoded image dimensions must remain validation facts')
-  assert(workloads.image.dimensionSemantics?.orientation === 'decoded-source-metadata', 'image orientation must come from decoded metadata')
+  assert(workloads.image.dimensionSemantics?.encodedPixelMatrix === 'validated-and-persisted-input-output-fact', 'encoded image dimensions must remain validated input/output facts')
+  assert(workloads.image.dimensionSemantics?.orientation === 'backend-decoded-input-output-metadata', 'image orientation must come from backend decoded input/output metadata')
+  assert(workloads.image.dimensionSemantics?.inputOutput === 'backend-redecoded-facts-never-browser-preview', 'image history must not trust browser preview facts')
+  const imageFacts = workloads.image.finalFacts ?? []
+  for (const side of ['input', 'output']) {
+    for (const fact of ['format', 'encodedWidth', 'encodedHeight', 'visibleWidth', 'visibleHeight', 'orientation', 'frameCount', 'hasAlpha']) {
+      assert(imageFacts.includes(`image.${side}.${fact}`), `missing verified image fact: image.${side}.${fact}`)
+    }
+  }
   assert(workloads.image.progress.percent === 'batch-item-count-only', 'image percent must use completed item count')
   assert(workloads.image.progress.eta === null, 'image ETA is not currently provable')
   assert(workloads.video.progress.authoritativeSource === 'ffmpeg-progress-pipe', 'video progress must use FFmpeg progress pipe')

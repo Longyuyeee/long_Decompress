@@ -1,3 +1,5 @@
+import type { ImageFileMetricsV1, ImageMetricFormat } from '@/types/taskMetrics'
+
 export type ImageOutputFormat = 'keep' | 'jpeg' | 'png' | 'webp'
 export type ImageCompressionMode = 'lossy' | 'lossless'
 export type ImageResizeMode = 'keep' | 'limit'
@@ -21,6 +23,33 @@ export interface ImageCandidate {
   size: number
   type?: string
   isDirectory?: boolean
+}
+
+export interface ImageCompressionFacts extends ImageFileMetricsV1 {
+  encodedBytes: number
+}
+
+export type ImageCompressionOutcome =
+  | {
+      status: 'published'
+      input: ImageCompressionFacts
+      output: ImageCompressionFacts
+    }
+  | {
+      status: 'kept-source-because-output-was-not-smaller'
+      input: ImageCompressionFacts
+      candidate: ImageCompressionFacts
+    }
+
+export interface ImageCompressionRequest {
+  source: string
+  destination: string
+  mode: ImageCompressionMode
+  quality: number
+  targetFormat: ImageMetricFormat
+  maxDimensions: { width: number, height: number } | null
+  preserveMetadata: boolean
+  onlyIfSmaller: boolean
 }
 
 const supportedExtensions = new Set(['jpg', 'jpeg', 'png', 'webp'])

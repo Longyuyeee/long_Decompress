@@ -1,5 +1,25 @@
 export type WorkloadKind = 'archive' | 'image' | 'video' | 'pdf'
 
+export type ImageMetricFormat = 'jpeg' | 'png' | 'webp'
+
+export interface ImageFileMetricsV1 {
+  format: ImageMetricFormat
+  /** Encoded pixel matrix before applying EXIF orientation. */
+  encodedWidth: number
+  encodedHeight: number
+  /** Orientation-applied dimensions shown to the user. */
+  visibleWidth: number
+  visibleHeight: number
+  orientation: number
+  frameCount: number
+  hasAlpha: boolean
+}
+
+export interface ImageMediaMetricsV1 {
+  input: ImageFileMetricsV1
+  output: ImageFileMetricsV1
+}
+
 export interface MediaMetricsV1 {
   /** Orientation-applied dimensions shown to the user, not the encoded pixel matrix. */
   width?: number
@@ -11,6 +31,8 @@ export interface MediaMetricsV1 {
   audioCodec?: string
   container?: string
   hasAlpha?: boolean
+  /** Verified input/output image facts. Optional for pre-B04 history compatibility. */
+  image?: ImageMediaMetricsV1
 }
 
 /**
@@ -26,6 +48,16 @@ export interface TaskMetricsV1 {
 }
 
 export type TaskMetrics = TaskMetricsV1
+
+export const createImageMediaMetricsV1 = (
+  input: ImageFileMetricsV1,
+  output: ImageFileMetricsV1,
+): MediaMetricsV1 => ({
+  image: {
+    input: { ...input },
+    output: { ...output },
+  },
+})
 
 const normalizeMeasuredBytes = (value: number): number => {
   if (!Number.isFinite(value) || value <= 0) return 0

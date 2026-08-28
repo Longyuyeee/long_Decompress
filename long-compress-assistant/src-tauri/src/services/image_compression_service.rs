@@ -47,10 +47,13 @@ pub struct ImageDimensions {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "status", rename_all = "kebab-case")]
 pub enum ImageCompressionOutcome {
-    Published(ImageCompressionFacts),
+    Published {
+        input: ImageCompressionFacts,
+        output: ImageCompressionFacts,
+    },
     KeptSourceBecauseOutputWasNotSmaller {
-        input_bytes: u64,
-        encoded_bytes: u64,
+        input: ImageCompressionFacts,
+        candidate: ImageCompressionFacts,
     },
 }
 
@@ -58,8 +61,7 @@ pub enum ImageCompressionOutcome {
 #[serde(rename_all = "camelCase")]
 pub struct ImageCompressionFacts {
     pub format: ImageFileFormat,
-    pub input_bytes: u64,
-    pub output_bytes: u64,
+    pub encoded_bytes: u64,
     pub encoded_width: u32,
     pub encoded_height: u32,
     pub visible_width: u32,
@@ -157,7 +159,6 @@ pub fn compress_single_image(
     let normalizes_orientation = request.target_format != input.format && input.orientation != 1;
     let source_metadata = read_metadata(&request.source, true)?;
 
-    let input_bytes = fs::metadata(&request.source)?.len();
     let staged = staged_output_path(&request.destination, "image-compress")?;
     let guard = StagedOutputGuard(staged.clone());
     encode(request, &input, target_visible, &staged)?;
@@ -192,13 +193,11 @@ pub fn compress_single_image(
             "EXIF/ICC metadata policy was not preserved by the encoded container".into(),
         ));
     }
-    let encoded_bytes = fs::metadata(&staged)?.len();
-
-    if request.only_if_smaller && encoded_bytes >= input_bytes {
+    if request.only_if_smaller && output.encoded_bytes >= input.encoded_bytes {
         return Ok(
             ImageCompressionOutcome::KeptSourceBecauseOutputWasNotSmaller {
-                input_bytes,
-                encoded_bytes,
+                input,
+                candidate: output,
             },
         );
     }
@@ -208,11 +207,7 @@ pub fn compress_single_image(
     })?;
     drop(guard);
 
-    Ok(ImageCompressionOutcome::Published(ImageCompressionFacts {
-        input_bytes,
-        output_bytes: encoded_bytes,
-        ..output
-    }))
+    Ok(ImageCompressionOutcome::Published { input, output })
 }
 
 fn destination_extension_matches(path: &Path, format: ImageFileFormat) -> bool {
@@ -597,8 +592,7 @@ fn decode_facts(path: &Path, input: bool) -> Result<ImageCompressionFacts, Image
     };
     Ok(ImageCompressionFacts {
         format,
-        input_bytes: 0,
-        output_bytes: 0,
+        encoded_bytes,
         encoded_width,
         encoded_height,
         visible_width,
@@ -714,18 +708,34 @@ mod tests {
         }
         let temp = tempfile::tempdir().unwrap();
         let destination = temp.path().join("result.jpg");
+        let input_bytes = fs::metadata(&source).unwrap().len();
         let outcome = compress_single_image(
             &request(source, destination.clone()),
             &AtomicBool::new(false),
         )
         .unwrap();
-        let ImageCompressionOutcome::Published(facts) = outcome else {
+        let serialized = serde_json::to_value(&outcome).unwrap();
+        assert_eq!(serialized["status"], "published");
+        assert_eq!(serialized["input"]["format"], "jpeg");
+        assert_eq!(serialized["output"]["format"], "jpeg");
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
             panic!("output should publish");
         };
-        assert_eq!((facts.encoded_width, facts.encoded_height), (640, 360));
-        assert_eq!((facts.visible_width, facts.visible_height), (360, 640));
-        assert_eq!(facts.orientation, 6);
-        assert_eq!(facts.frame_count, 1);
+        assert_eq!(input.format, ImageFileFormat::Jpeg);
+        assert_eq!(input.encoded_bytes, input_bytes);
+        assert_eq!((input.encoded_width, input.encoded_height), (640, 360));
+        assert_eq!((input.visible_width, input.visible_height), (360, 640));
+        assert_eq!(input.orientation, 6);
+        assert_eq!(input.frame_count, 1);
+        assert_eq!(output.format, ImageFileFormat::Jpeg);
+        assert_eq!(
+            output.encoded_bytes,
+            fs::metadata(&destination).unwrap().len()
+        );
+        assert_eq!((output.encoded_width, output.encoded_height), (640, 360));
+        assert_eq!((output.visible_width, output.visible_height), (360, 640));
+        assert_eq!(output.orientation, 6);
+        assert_eq!(output.frame_count, 1);
         assert!(destination.is_file());
         assert!(!fs::read_dir(temp.path())
             .unwrap()
@@ -747,10 +757,11 @@ mod tests {
         let mut request = request(source, destination);
         request.mode = ImageCompressionMode::Lossless;
         let outcome = compress_single_image(&request, &AtomicBool::new(false)).unwrap();
-        let ImageCompressionOutcome::Published(facts) = outcome else {
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
             panic!("output should publish");
         };
-        assert!(facts.has_alpha);
+        assert!(input.has_alpha);
+        assert!(output.has_alpha);
     }
 
     #[test]
@@ -787,7 +798,7 @@ mod tests {
                 &AtomicBool::new(false),
             )
             .unwrap(),
-            ImageCompressionOutcome::Published(_)
+            ImageCompressionOutcome::Published { .. }
         ));
 
         let wrong_destination = temp.path().join("output.webp");
@@ -866,12 +877,14 @@ mod tests {
         request.mode = ImageCompressionMode::Lossless;
         request.target_format = ImageFileFormat::Png;
         let outcome = compress_single_image(&request, &AtomicBool::new(false)).unwrap();
-        let ImageCompressionOutcome::Published(facts) = outcome else {
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
             panic!("converted output should publish");
         };
-        assert_eq!(facts.format, ImageFileFormat::Png);
-        assert_eq!(facts.orientation, 1);
-        assert_eq!((facts.visible_width, facts.visible_height), (360, 640));
+        assert_eq!(input.format, ImageFileFormat::Jpeg);
+        assert_eq!(input.orientation, 6);
+        assert_eq!(output.format, ImageFileFormat::Png);
+        assert_eq!(output.orientation, 1);
+        assert_eq!((output.visible_width, output.visible_height), (360, 640));
         let source_metadata = read_metadata(&source, true).unwrap();
         let output_metadata = read_metadata(&request.destination, false).unwrap();
         assert_eq!(
@@ -897,11 +910,12 @@ mod tests {
             height: 320,
         });
         let outcome = compress_single_image(&request, &AtomicBool::new(false)).unwrap();
-        let ImageCompressionOutcome::Published(facts) = outcome else {
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
             panic!("resized output should publish");
         };
-        assert_eq!((facts.visible_width, facts.visible_height), (180, 320));
-        assert_eq!(facts.orientation, 6);
+        assert_eq!((input.visible_width, input.visible_height), (360, 640));
+        assert_eq!((output.visible_width, output.visible_height), (180, 320));
+        assert_eq!(output.orientation, 6);
         let metadata = read_metadata(&request.destination, false).unwrap();
         assert_eq!(metadata.exif, Some(build_orientation_exif(6)));
         assert_eq!(metadata.icc, None);
@@ -918,10 +932,12 @@ mod tests {
         let mut request = request(source, destination);
         request.target_format = ImageFileFormat::Jpeg;
         let outcome = compress_single_image(&request, &AtomicBool::new(false)).unwrap();
-        let ImageCompressionOutcome::Published(facts) = outcome else {
+        let ImageCompressionOutcome::Published { input, output } = outcome else {
             panic!("JPEG conversion should publish");
         };
-        assert_eq!(facts.format, ImageFileFormat::Jpeg);
-        assert!(!facts.has_alpha);
+        assert_eq!(input.format, ImageFileFormat::Png);
+        assert!(input.has_alpha);
+        assert_eq!(output.format, ImageFileFormat::Jpeg);
+        assert!(!output.has_alpha);
     }
 }

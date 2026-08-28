@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createMeasuredTaskMetricsV1 } from '../taskMetrics'
+import { createImageMediaMetricsV1, createMeasuredTaskMetricsV1 } from '../taskMetrics'
 
 describe('createMeasuredTaskMetricsV1', () => {
   it('derives final savings only from normalized filesystem byte facts', () => {
@@ -19,5 +19,35 @@ describe('createMeasuredTaskMetricsV1', () => {
       savingsRatio: 0,
     })
     expect(createMeasuredTaskMetricsV1(-1, -20).inputBytes).toBe(0)
+  })
+
+  it('keeps verified image input and output facts separate', () => {
+    const input = {
+      format: 'jpeg' as const,
+      encodedWidth: 640,
+      encodedHeight: 360,
+      visibleWidth: 360,
+      visibleHeight: 640,
+      orientation: 6,
+      frameCount: 1,
+      hasAlpha: false,
+    }
+    const output = {
+      format: 'png' as const,
+      encodedWidth: 360,
+      encodedHeight: 640,
+      visibleWidth: 360,
+      visibleHeight: 640,
+      orientation: 1,
+      frameCount: 1,
+      hasAlpha: false,
+    }
+
+    const media = createImageMediaMetricsV1(input, output)
+
+    expect(media.image?.input).toEqual(input)
+    expect(media.image?.output).toEqual(output)
+    expect(media.image?.input).not.toBe(input)
+    expect(media.image?.output).not.toBe(output)
   })
 })
