@@ -238,10 +238,10 @@ impl VideoProgressParser {
         };
         match key {
             "out_time_us" => {
-                self.out_time_us = Some(parse_u64(value, key)?);
+                self.out_time_us = parse_optional_timestamp_us(value, key)?;
             }
             "total_size" => {
-                self.total_size = Some(parse_u64(value, key)?);
+                self.total_size = parse_optional_u64(value, key)?;
             }
             "speed" => {
                 self.speed_multiple = parse_speed(value);
@@ -296,10 +296,24 @@ impl VideoProgressParser {
     }
 }
 
-fn parse_u64(value: &str, key: &str) -> Result<u64, VideoEncodingError> {
+fn parse_optional_timestamp_us(value: &str, key: &str) -> Result<Option<u64>, VideoEncodingError> {
+    if value == "N/A" {
+        return Ok(None);
+    }
+    let value = value
+        .parse::<i64>()
+        .map_err(|_| VideoEncodingError::InvalidProgress(format!("{key}={value}")))?;
+    Ok(Some(value.max(0) as u64))
+}
+
+fn parse_optional_u64(value: &str, key: &str) -> Result<Option<u64>, VideoEncodingError> {
+    if value == "N/A" {
+        return Ok(None);
+    }
     value
         .parse()
-        .map_err(|_| VideoEncodingError::InvalidProgress(key.to_string()))
+        .map(Some)
+        .map_err(|_| VideoEncodingError::InvalidProgress(format!("{key}={value}")))
 }
 
 fn parse_speed(value: &str) -> Option<f64> {
@@ -696,6 +710,29 @@ mod tests {
         ));
         assert!(matches!(
             parser.push_line("progress=localized"),
+            Err(VideoEncodingError::InvalidProgress(_))
+        ));
+    }
+
+    #[test]
+    fn official_unknown_and_negative_start_values_remain_zero_or_absent() {
+        let mut parser = VideoProgressParser::new(1_000, 1_000).unwrap();
+        for line in ["out_time_us=N/A", "total_size=N/A", "speed=N/A"] {
+            assert!(parser.push_line(line).unwrap().is_none());
+        }
+        let unknown = parser.push_line("progress=continue").unwrap().unwrap();
+        assert_eq!(unknown.current_time_ms, 0);
+        assert_eq!(unknown.output_bytes, None);
+        assert_eq!(unknown.speed_multiple, None);
+        assert_eq!(unknown.eta_seconds, None);
+
+        assert!(parser.push_line("out_time_us=-21333").unwrap().is_none());
+        let preroll = parser.push_line("progress=continue").unwrap().unwrap();
+        assert_eq!(preroll.current_time_ms, 0);
+        assert_eq!(preroll.progress_percent, 0.0);
+
+        assert!(matches!(
+            parser.push_line("total_size=-1"),
             Err(VideoEncodingError::InvalidProgress(_))
         ));
     }

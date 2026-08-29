@@ -27,6 +27,7 @@
 1. 原始计划和生产实现固定公开输出为 MP4/H.264/AAC，但 `media-release-gates.json` 曾把 `h265-mp4` 列为公共输出。实际 H.265 只作为输入矩阵用例。现已将公共输出收敛为唯一 `h264-mp4`，同时由静态门禁要求继续保留 `h265-input` 真实用例。
 2. 视频安装包校验脚本曾把默认文件名硬编码为 `Long解压_1.1.15_x64-setup.exe`。现改为读取 `tauri.conf.json` 的实际版本生成默认路径，避免版本提升后脚本继续检查旧产物。
 3. Windows N 实机门禁无法在唯一 Professional 主机取得。经产品负责人明确授权，本版本支持面缩小为 `windows-x86_64-non-n`；`windowsNRealMachinePassed` 继续为 `false`，两阶段工具和生产缺失拒绝均保留。
+4. 首轮干净 CI run `33261161074` 的 Browser、Frontend 和 Windows desktop E2E build 通过，但 Rust 后端 361/362 在真实发布命令测试中返回 `VIDEO_ENCODING_PROGRESS_INVALID: out_time_us`，安装器按依赖门禁未运行。冻结 FFmpeg 9.0.1 源码 `fftools/ffmpeg.c` 明确把未知 `out_time_us` / `total_size` 输出为 `N/A`，时间则使用有符号 `PRId64`；旧解析器错误地强制两个字段都是 `u64`。现只对白名单 `N/A` 表示未知，将负启动时间钳制为用户进度 0，负大小及其他畸形值仍拒绝，并新增定向回归。修正后视频 42/42 与全特性 Clippy 通过；仍须由下一次干净 CI 复验。
 
 ## 版本身份
 
@@ -41,6 +42,7 @@
 - 主后端全目标/全特性 Clippy `-D warnings` 通过；Shell Extension Release 5/5 与严格 Clippy 通过。
 - 媒体依赖、17 个生产媒体文件架构和媒体发布合同通过；npm 生产依赖审计为 0 个已知漏洞。
 - 本机非提升权限的 `test:context-menu-package` 按设计拒绝向 `LocalMachine\\TrustedPeople` 临时写入自签信任。这不是公开资产阻塞：仓库没有商业 Authenticode 证书，正式无签名构建必须跳过 Windows 11 identity package；经典菜单和 Shell DLL 继续由 Rust/安装门禁验证。
+- 修正 CI 进度协议偏差后，视频定向 Release 测试 42/42，通过真实编码命令、官方未知/负启动值、畸形值拒绝、取消、验证和发布；全目标/全特性 Clippy继续零警告。
 
 ## 候选与公开发布待办
 

@@ -5,6 +5,7 @@
 - 8 个版本源统一提升为 `1.1.16`，唯一 Shell Extension 为 246,784 B / `FDE0C001…92A7D`；视频安装包校验脚本改为从 Tauri 实际版本推导默认 NSIS 路径，不再硬编码 `1.1.15`。
 - 发布合同偏移已纠正：公开输出只承诺 MP4/H.264，H.265 保留为真实输入用例；Windows N 明确暂不支持且真实证据状态保持 false。
 - 类型检查、45 文件 262/262 前端单测、生产构建、Rust Release 全目标、全特性严格 Clippy、Shell Extension 5/5、媒体门禁及生产依赖审计全部通过。
+- 首轮干净 CI `33261161074` 的 Browser、Frontend、Windows desktop Release build 通过，Rust 361/362 因 FFmpeg 官方允许的 `out_time_us=N/A`/有符号启动时间被旧 `u64` 解析器拒绝而失败，安装器按依赖未运行。现已按冻结 FFmpeg 源码契约接受明确未知值、将负启动时间显示为 0，其他畸形值仍失败关闭；视频 Release 42/42 和严格 Clippy 通过，等待新 CI 复验。
 - 当前允许推送候选并运行干净 CI/正式 NSIS 安装复验；尚未允许标签和公开 Release。完整待办见 [RELEASE_AUDIT_1.1.16.md](RELEASE_AUDIT_1.1.16.md)。
 
 ## 2026-08-29 C-05 Windows N 支持范围变更并关闭功能节点
