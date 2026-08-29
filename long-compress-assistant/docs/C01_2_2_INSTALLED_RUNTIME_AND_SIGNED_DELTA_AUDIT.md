@@ -84,9 +84,9 @@ GitHub Actions 运行 `33173219785` 在提交 `6b95f5c2f6d66fc0a879eebb10f0346ea
 在目标 Windows N 上使用同一证据目录依次执行：
 
 ```powershell
-npm run test:windows-n-video-runtime -- -Phase MissingMediaFeaturePack -InstalledExecutable '<正式安装目录>\Long解压.exe' -EvidenceDirectory '<证据目录>'
+npm run test:windows-n-video-runtime -- -Phase MissingMediaFeaturePack -CandidateInstaller '<锁定正式 NSIS>' -EvidenceDirectory '<证据目录>'
 # 通过 Windows 设置安装 Media Feature Pack，并按系统要求重启
-npm run test:windows-n-video-runtime -- -Phase MediaFeaturePackInstalled -InstalledExecutable '<同一正式安装目录>\Long解压.exe' -EvidenceDirectory '<同一证据目录>'
+npm run test:windows-n-video-runtime -- -Phase MediaFeaturePackInstalled -EvidenceDirectory '<同一证据目录>'
 npm run verify:windows-n-video-runtime -- '<同一证据目录>'
 ```
 

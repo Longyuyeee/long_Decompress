@@ -49,4 +49,4 @@
 
 ## 下一接续点
 
-在真实 Windows N x64 上安装本审计锁定候选，使用同一证据目录先运行 `MissingMediaFeaturePack`，安装 Media Feature Pack 并重启后运行 `MediaFeaturePackInstalled`，最后执行独立验收器。当前主机 `EditionID=Professional`，不能替代或伪造该证据。Windows N 前后通过后，才进入合入主线、统一提升 `v1.1.16`、正式签名资产、公开更新和回下载复验。
+在真实 Windows N x64 上使用后续准备审计锁定的工具提交，由 `MissingMediaFeaturePack -CandidateInstaller` 阶段校验并安装本审计候选；安装 Media Feature Pack 并重启后，在同一证据目录运行 `MediaFeaturePackInstalled` 和独立验收器。当前主机 `EditionID=Professional`，不能替代或伪造该证据。完整跨机器手册见 [C05_4_2_WINDOWS_N_GATE_PREPARATION_AUDIT.md](C05_4_2_WINDOWS_N_GATE_PREPARATION_AUDIT.md)。
