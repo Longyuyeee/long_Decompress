@@ -70,8 +70,12 @@
       "requiredRealCases": [
         "searchable-vector",
         "scanned-image",
+        "mixed-content",
         "transparency",
         "acroform-preserve",
+        "annotation-preserve",
+        "outline-preserve",
+        "attachment-preserve",
         "signed-explicit-refusal",
         "encrypted-explicit-refusal"
       ],

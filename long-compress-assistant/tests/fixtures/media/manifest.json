@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "fixtureRevision": "2026-08-28-c01.2.1",
+  "fixtureRevision": "2026-08-30-d01.1",
   "privacy": "synthetic-only-no-user-data",
   "identityPolicy": {
     "acceptanceBasis": "decoded-and-probed-properties",
@@ -34,8 +34,12 @@
   "pdfs": [
     { "file": "text-vector.pdf", "pages": 1, "kind": "searchable-text", "expectedText": "Long Decompress vector text fixture" },
     { "file": "scanned-image.pdf", "pages": 1, "kind": "scan", "expectedText": "" },
+    { "file": "mixed-content.pdf", "pages": 1, "kind": "mixed", "expectedText": "Long Decompress mixed text fixture", "imageCount": 1 },
     { "file": "transparency.pdf", "pages": 1, "kind": "transparency" },
     { "file": "form.pdf", "pages": 1, "kind": "acroform", "fields": ["archive_name", "preserve_metadata"] },
+    { "file": "annotation.pdf", "pages": 1, "kind": "annotation", "annotationSubtypes": ["/Text"] },
+    { "file": "outline.pdf", "pages": 2, "kind": "outline", "outlineTitles": ["D-01 first page", "D-01 second page"] },
+    { "file": "attachment.pdf", "pages": 1, "kind": "attachment", "attachments": ["d01-evidence.txt"] },
     { "file": "signed.pdf", "pages": 1, "kind": "digitally-signed", "signatureField": "FixtureSignature", "signatureValid": true, "signatureIntact": true, "signatureTrusted": false },
     { "file": "encrypted.pdf", "pages": 1, "kind": "encrypted-refusal", "password": "fixture-user" }
   ]
