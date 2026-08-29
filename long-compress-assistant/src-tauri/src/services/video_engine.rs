@@ -6,7 +6,21 @@ use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[cfg(windows)]
+use windows_sys::Win32::{
+    Foundation::{FreeLibrary, GetLastError},
+    System::LibraryLoader::{LoadLibraryExW, LOAD_LIBRARY_SEARCH_SYSTEM32},
+};
+
 const RUNTIME_DIRECTORY: &str = "video-engine";
+
+pub fn bundled_resource_root(app_resource_dir: &Path) -> PathBuf {
+    // Tauri preserves the configured `resources/...` prefix in packaged
+    // layouts. `resource_dir()` is the executable directory on Windows, so
+    // video resources live below its `resources` child rather than directly
+    // below the executable.
+    app_resource_dir.join("resources")
+}
 
 #[derive(Clone, Copy)]
 struct ExpectedResource {
@@ -74,8 +88,60 @@ pub struct VideoEngineStatus {
     pub video_encoder: String,
     pub audio_encoder: String,
     pub hardware_encoding: bool,
+    pub media_foundation_available: bool,
     pub enabled_filters: Vec<String>,
     pub files: Vec<VideoEngineFileIdentity>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct InstalledVideoEnginePreflightReport {
+    pub schema_version: u32,
+    pub executable_path: String,
+    pub resource_root: String,
+    pub passed: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<VideoEngineStatus>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+fn verify_media_foundation_modules<F>(mut load: F) -> Result<()>
+where
+    F: FnMut(&str) -> std::result::Result<(), u32>,
+{
+    for module in ["mfplat.dll", "mf.dll", "mfreadwrite.dll"] {
+        if let Err(code) = load(module) {
+            bail!("VIDEO_ENGINE_MEDIA_FOUNDATION_UNAVAILABLE: {module}: win32={code}");
+        }
+    }
+    Ok(())
+}
+
+#[cfg(windows)]
+fn ensure_media_foundation_available() -> Result<()> {
+    verify_media_foundation_modules(|module| {
+        let wide: Vec<u16> = module.encode_utf16().chain(std::iter::once(0)).collect();
+        let handle = unsafe {
+            LoadLibraryExW(
+                wide.as_ptr(),
+                std::ptr::null_mut(),
+                LOAD_LIBRARY_SEARCH_SYSTEM32,
+            )
+        };
+        if handle.is_null() {
+            return Err(unsafe { GetLastError() });
+        }
+        unsafe {
+            FreeLibrary(handle);
+        }
+        Ok(())
+    })
+}
+
+#[cfg(not(windows))]
+fn ensure_media_foundation_available() -> Result<()> {
+    bail!("VIDEO_ENGINE_UNSUPPORTED_PLATFORM: Windows Media Foundation is required")
 }
 
 fn hash_file(path: &Path) -> Result<String> {
@@ -132,31 +198,44 @@ fn inspect_resources(resource_root: &Path) -> Result<(PathBuf, Vec<VideoEngineFi
 }
 
 fn run_probe(executable: &Path, arguments: &[&str], label: &str) -> Result<String> {
-    let output = Command::new(executable)
-        .args(arguments)
-        .output()
-        .with_context(|| {
-            format!(
-                "VIDEO_ENGINE_LAUNCH_FAILED: {label}: {}",
-                executable.display()
-            )
-        })?;
-    if !output.status.success() {
+    const WINDOWS_STATUS_DLL_INIT_FAILED: i32 = -1_073_741_502;
+    const MAX_ATTEMPTS: usize = 2;
+    for attempt in 0..MAX_ATTEMPTS {
+        let output = Command::new(executable)
+            .args(arguments)
+            .output()
+            .with_context(|| {
+                format!(
+                    "VIDEO_ENGINE_LAUNCH_FAILED: {label}: {}",
+                    executable.display()
+                )
+            })?;
+        if output.status.success() {
+            return Ok(format!(
+                "{}{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+        let exit_code = output.status.code();
+        if cfg!(windows)
+            && exit_code == Some(WINDOWS_STATUS_DLL_INIT_FAILED)
+            && attempt + 1 < MAX_ATTEMPTS
+        {
+            std::thread::sleep(std::time::Duration::from_millis(150));
+            continue;
+        }
         bail!(
-            "VIDEO_ENGINE_PROBE_FAILED: {label}: exit={:?}: {}",
-            output.status.code(),
+            "VIDEO_ENGINE_PROBE_FAILED: {label}: exit={exit_code:?}: {}",
             String::from_utf8_lossy(&output.stderr).trim()
         );
     }
-    Ok(format!(
-        "{}{}",
-        String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)
-    ))
+    unreachable!("bounded video probe loop always returns or fails")
 }
 
 pub fn validate_video_engine(resource_root: &Path) -> Result<VideoEngineStatus> {
     let (runtime_root, files) = inspect_resources(resource_root)?;
+    ensure_media_foundation_available()?;
     let ffmpeg = runtime_root.join("ffmpeg.exe");
     let ffprobe = runtime_root.join("ffprobe.exe");
 
@@ -214,6 +293,7 @@ pub fn validate_video_engine(resource_root: &Path) -> Result<VideoEngineStatus> 
         video_encoder: "h264_mf".to_string(),
         audio_encoder: "aac".to_string(),
         hardware_encoding: false,
+        media_foundation_available: true,
         enabled_filters: required_filters
             .iter()
             .map(|value| (*value).to_string())
@@ -222,9 +302,51 @@ pub fn validate_video_engine(resource_root: &Path) -> Result<VideoEngineStatus> 
     })
 }
 
+pub fn write_installed_video_engine_preflight_report(
+    executable_path: &Path,
+    report_path: &Path,
+) -> Result<bool> {
+    let install_root = executable_path.parent().with_context(|| {
+        format!(
+            "VIDEO_ENGINE_INSTALL_ROOT_UNAVAILABLE: {}",
+            executable_path.display()
+        )
+    })?;
+    let resource_root = install_root.join("resources");
+    let validation = validate_video_engine(&resource_root);
+    let (passed, status, error) = match validation {
+        Ok(status) => (true, Some(status), None),
+        Err(error) => (false, None, Some(error.to_string())),
+    };
+    let report = InstalledVideoEnginePreflightReport {
+        schema_version: 1,
+        executable_path: executable_path.display().to_string(),
+        resource_root: resource_root.display().to_string(),
+        passed,
+        status,
+        error,
+    };
+    if let Some(parent) = report_path.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("cannot create report directory {}", parent.display()))?;
+    }
+    std::fs::write(report_path, serde_json::to_vec_pretty(&report)?)
+        .with_context(|| format!("cannot write report {}", report_path.display()))?;
+    Ok(passed)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bundled_resource_root_preserves_the_configured_resources_prefix() {
+        let install_root = Path::new("install-root");
+        assert_eq!(
+            bundled_resource_root(install_root),
+            install_root.join("resources")
+        );
+    }
 
     fn repository_resource_root() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources")
@@ -271,5 +393,22 @@ mod tests {
             .unwrap_err()
             .to_string();
         assert!(error.contains("VIDEO_ENGINE_RESOURCE_HASH_MISMATCH"));
+    }
+
+    #[test]
+    fn missing_media_foundation_has_a_stable_windows_n_classification() {
+        let error = verify_media_foundation_modules(|module| {
+            if module == "mfplat.dll" {
+                Err(126)
+            } else {
+                Ok(())
+            }
+        })
+        .unwrap_err()
+        .to_string();
+        assert_eq!(
+            error,
+            "VIDEO_ENGINE_MEDIA_FOUNDATION_UNAVAILABLE: mfplat.dll: win32=126"
+        );
     }
 }

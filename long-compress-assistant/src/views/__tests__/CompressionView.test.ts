@@ -18,6 +18,10 @@ const mocks = vi.hoisted(() => ({
   getFileInfo: vi.fn(),
   planImageCompressionDestination: vi.fn(),
   compressImageFile: vi.fn(),
+  planVideoCompression: vi.fn(),
+  planVideoCompressionDestination: vi.fn(),
+  compressVideoFile: vi.fn(),
+  openVideoOutputWithDefaultApplication: vi.fn(),
   invoke: vi.fn(),
   ask: vi.fn(),
 }))
@@ -38,6 +42,10 @@ vi.mock('@/composables/useTauriCommands', () => ({
     getFileInfo: mocks.getFileInfo,
     planImageCompressionDestination: mocks.planImageCompressionDestination,
     compressImageFile: mocks.compressImageFile,
+    planVideoCompression: mocks.planVideoCompression,
+    planVideoCompressionDestination: mocks.planVideoCompressionDestination,
+    compressVideoFile: mocks.compressVideoFile,
+    openVideoOutputWithDefaultApplication: mocks.openVideoOutputWithDefaultApplication,
   }),
 }))
 
@@ -66,6 +74,74 @@ const source = (path = 'C:/input/sample.txt') => ({
   size: 12,
   type: 'text/plain',
   isDirectory: false,
+})
+
+const videoPlan = (preset: 'clear' | 'balanced' | 'small' = 'balanced') => ({
+  probe: {
+    source: 'C:/input/rotated.mp4',
+    inputBytes: 22_769,
+    container: 'mov,mp4,m4a,3gp,3g2,mj2',
+    durationMs: 1_000,
+    overallBitRate: 182_152,
+    primaryVideo: {
+      index: 0,
+      codec: 'h264',
+      profile: 'Main',
+      encodedWidth: 640,
+      encodedHeight: 360,
+      visibleWidth: 360,
+      visibleHeight: 640,
+      rotationDegrees: 90,
+      pixelFormat: 'yuv420p',
+      colorTransfer: null,
+      hdr: false,
+      nominalFrameRate: '25/6',
+      averageFrameRate: '25/8',
+      averageFrameRateMilli: 3_125,
+      frameRateMode: 'variable',
+      bitRate: 80_000,
+      default: true,
+    },
+    videoStreamCount: 1,
+    audioStreams: [{ index: 1, codec: 'aac', channels: 1, sampleRate: 48_000, bitRate: 69_000, language: null, default: true }],
+    subtitleStreams: [{ index: 2, codec: 'mov_text', language: null, default: true, forced: false }],
+    chapterCount: 0,
+    attachedPictureCount: 0,
+    policy: {
+      container: 'output-mp4', video: 'transcode-h264-mf-software', audio: 'preserve-primary-as-aac-when-present',
+      additionalAudio: 'drop-with-explicit-warning', subtitles: 'drop-with-explicit-warning', chapters: 'drop-with-explicit-warning',
+      attachedPictures: 'drop-with-explicit-warning', rotation: 'normalize-to-visible-pixel-orientation',
+      variableFrameRate: 'preserve-input-timestamps', hdr: 'refuse-before-encoding',
+    },
+    warnings: ['VIDEO_PROBE_SUBTITLES_WILL_BE_DROPPED: explicit confirmation is required before encoding'],
+    blockingReasons: [],
+  },
+  preset: {
+    preset, label: preset, videoBitsPerPixelMilli: 75, minimumVideoBitRate: 800_000,
+    maximumVideoBitRate: 8_000_000, audioBitRate: 128_000, defaultMaxWidth: 720, defaultMaxHeight: 1_280,
+  },
+  effectiveMaxWidth: 720,
+  effectiveMaxHeight: 1_280,
+  outputWidth: 360,
+  outputHeight: 640,
+  willResize: false,
+  willUpscale: false,
+  aspectRatioPolicy: 'preserve-within-even-dimension-rounding',
+  targetVideoBitRate: 800_000,
+  targetAudioBitRate: 128_000,
+  estimatedOutput: {
+    isEstimate: true,
+    lowBytes: 92_800,
+    highBytes: 145_000,
+    basis: 'duration-output-pixels-average-frame-rate-and-preset-bitrate-envelope',
+    disclaimer: 'estimate-only; source complexity, VFR timing and encoder behavior can change the final size',
+  },
+  streamChanges: [
+    'VIDEO_PLAN_ROTATION_NORMALIZED: 90 degree metadata will be applied to visible pixels',
+    'VIDEO_PROBE_SUBTITLES_WILL_BE_DROPPED: explicit confirmation is required before encoding',
+  ],
+  requiresExplicitConfirmation: true,
+  canEncode: true,
 })
 
 describe('CompressionView', () => {
@@ -102,6 +178,30 @@ describe('CompressionView', () => {
       destination: 'C:/output/transparent.compressed.png',
     })
     mocks.compressImageFile.mockResolvedValue(undefined)
+    mocks.planVideoCompression.mockImplementation(async request => videoPlan(request.preset))
+    mocks.planVideoCompressionDestination.mockResolvedValue({ destination: 'C:/output/rotated.compressed.mp4' })
+    mocks.compressVideoFile.mockResolvedValue({
+      path: 'C:/output/rotated.compressed.mp4',
+      inputBytes: 22_769,
+      outputBytes: 12_000,
+      savingsRatio: 0.4729,
+      markOfTheWeb: 'not-present',
+      verified: {
+        encodedBytes: 12_000,
+        container: 'mp4',
+        durationMs: 1_000,
+        durationDifferenceMs: 0,
+        durationToleranceMs: 250,
+        videoCodec: 'h264',
+        audioCodec: 'aac',
+        encodedWidth: 360,
+        encodedHeight: 640,
+        visibleWidth: 360,
+        visibleHeight: 640,
+        rotationDegrees: 0,
+        decodedVideoFrames: 4,
+      },
+    })
     mocks.ask.mockResolvedValue(true)
   })
 
@@ -640,10 +740,163 @@ describe('CompressionView', () => {
     expect(useCompressionStore().selectedFiles).toHaveLength(1)
 
     await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
-    expect(wrapper.get('[data-testid="planned-compression-workspace"]').text()).toContain('不会创建任务、模拟进度或生成占位结果')
+    expect(wrapper.get('[data-testid="video-compression-workspace"]').text()).toContain('统一任务')
+    expect(wrapper.get('[data-testid="video-compression-workspace"] .primary-action').attributes('disabled')).toBeDefined()
+    expect(useTaskStore().tasks).toHaveLength(0)
 
     await wrapper.get('[data-testid="compression-mode-archive"]').trigger('click')
     expect(wrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(1)
+  })
+
+  it('plans a real video candidate, labels estimates, and replans preset changes without creating tasks', async () => {
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'rotated.mp4',
+      path: 'C:/input/rotated.mp4',
+      size: 22_769,
+      type: 'video/mp4',
+      isDirectory: false,
+    }])
+    await flushPromises()
+
+    expect(mocks.planVideoCompression).toHaveBeenCalledWith({
+      path: 'C:/input/rotated.mp4',
+      preset: 'balanced',
+      maxWidth: null,
+      maxHeight: null,
+    })
+    const workspace = wrapper.get('[data-testid="video-compression-workspace"]')
+    expect(workspace.get('[data-testid="video-draft-card"]').text()).toContain('360×640')
+    expect(workspace.text()).toContain('预计输出 · 估算')
+    expect(workspace.text()).toContain('后续执行前必须显式确认')
+    expect(useTaskStore().tasks).toHaveLength(0)
+
+    await workspace.get('[data-testid="video-preset-small"]').trigger('click')
+    await flushPromises()
+    expect(mocks.planVideoCompression).toHaveBeenLastCalledWith(expect.objectContaining({ preset: 'small' }))
+    expect(useCompressionStore().selectedFiles).toHaveLength(0)
+    expect(useCompressionStore().imageItems).toHaveLength(0)
+    expect(useTaskStore().tasks).toHaveLength(0)
+  })
+
+  it('confirms exact video stream changes then persists only verified publication facts', async () => {
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'rotated.mp4',
+      path: 'C:/input/rotated.mp4',
+      size: 22_769,
+      type: 'video/mp4',
+      isDirectory: false,
+    }])
+    await flushPromises()
+
+    const workspace = wrapper.get('[data-testid="video-compression-workspace"]')
+    const start = workspace.get('.primary-action')
+    expect(start.attributes('disabled')).toBeUndefined()
+    await start.trigger('click')
+    await flushPromises()
+
+    expect(mocks.ask).toHaveBeenCalledWith(
+      expect.stringContaining('字幕流将被移除'),
+      expect.objectContaining({ type: 'warning' }),
+    )
+    expect(mocks.planVideoCompressionDestination).toHaveBeenCalledWith(
+      'C:/input/rotated.mp4',
+      null,
+      [],
+    )
+    expect(mocks.compressVideoFile).toHaveBeenCalledWith(
+      expect.stringContaining('video-'),
+      expect.objectContaining({
+        destination: 'C:/output/rotated.compressed.mp4',
+        confirmedStreamChanges: videoPlan().streamChanges,
+        preserveMarkOfWeb: true,
+      }),
+    )
+    expect(useTaskStore().tasks[0]).toMatchObject({
+      workloadKind: 'video',
+      status: 'completed',
+      stage: undefined,
+      outputPath: 'C:/output/rotated.compressed.mp4',
+      outputBytes: 12_000,
+      outputBytesEstimated: false,
+      metrics: {
+        inputBytes: 22_769,
+        outputBytes: 12_000,
+        media: { durationMs: 1_000, videoCodec: 'h264', audioCodec: 'aac', container: 'mp4' },
+      },
+    })
+    expect(workspace.text()).toContain('最终输出')
+    expect(workspace.text()).toContain('11.7 KiB')
+    await workspace.get('[data-testid="video-open-default-app"]').trigger('click')
+    expect(mocks.openVideoOutputWithDefaultApplication).toHaveBeenCalledWith('C:/output/rotated.compressed.mp4')
+  })
+
+  it('creates no video task or output plan when stream-change confirmation is declined', async () => {
+    mocks.ask.mockResolvedValueOnce(false)
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'rotated.mp4', path: 'C:/input/rotated.mp4', size: 22_769,
+      type: 'video/mp4', isDirectory: false,
+    }])
+    await flushPromises()
+
+    await wrapper.get('[data-testid="video-compression-workspace"] .primary-action').trigger('click')
+    await flushPromises()
+
+    expect(mocks.planVideoCompressionDestination).not.toHaveBeenCalled()
+    expect(mocks.compressVideoFile).not.toHaveBeenCalled()
+    expect(useTaskStore().tasks).toHaveLength(0)
+  })
+
+  it('cancels an active video through the unified task cancellation command', async () => {
+    let rejectEncoding!: (error: Error) => void
+    mocks.compressVideoFile.mockImplementationOnce(() => new Promise((_, reject) => {
+      rejectEncoding = reject
+    }))
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'rotated.mp4', path: 'C:/input/rotated.mp4', size: 22_769,
+      type: 'video/mp4', isDirectory: false,
+    }])
+    await flushPromises()
+
+    void wrapper.get('[data-testid="video-compression-workspace"] .primary-action').trigger('click')
+    await flushPromises()
+    expect(useTaskStore().tasks[0].status).toBe('compressing')
+    await wrapper.get('[data-testid="video-compression-workspace"] .danger-action').trigger('click')
+    rejectEncoding(new Error('VIDEO_COMPRESSION_CANCELLED'))
+    await flushPromises()
+
+    expect(mocks.invoke).toHaveBeenCalledWith('cancel_compression', expect.objectContaining({ taskId: useTaskStore().tasks[0].id }))
+    expect(useTaskStore().tasks[0].status).toBe('cancelled')
+  })
+
+  it('does not start video encoding when cancellation lands during destination planning', async () => {
+    let resolveDestination!: (value: { destination: string }) => void
+    mocks.planVideoCompressionDestination.mockImplementationOnce(() => new Promise(resolve => {
+      resolveDestination = resolve
+    }))
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'rotated.mp4', path: 'C:/input/rotated.mp4', size: 22_769,
+      type: 'video/mp4', isDirectory: false,
+    }])
+    await flushPromises()
+
+    void wrapper.get('[data-testid="video-compression-workspace"] .primary-action').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-testid="video-compression-workspace"] .danger-action').trigger('click')
+    resolveDestination({ destination: 'C:/output/rotated.compressed.mp4' })
+    await flushPromises()
+
+    expect(mocks.compressVideoFile).not.toHaveBeenCalled()
+    expect(useTaskStore().tasks[0].status).toBe('cancelled')
   })
 
   it('runs a ready real-fixture image through the unified batch and renders verified result facts', async () => {

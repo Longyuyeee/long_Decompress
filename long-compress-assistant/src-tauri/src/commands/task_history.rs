@@ -575,6 +575,37 @@ mod tests {
     }
 
     #[test]
+    fn preserves_verified_video_publication_facts() {
+        let json = serde_json::json!({
+            "id": "video-task", "name": "movie.mp4", "taskType": "compression",
+            "workloadKind": "video", "status": "completed",
+            "sourcePaths": ["C:/source.mov"], "outputPath": "C:/movie.compressed.mp4",
+            "format": "mp4", "startedAt": null, "completedAt": Utc::now().to_rfc3339(),
+            "durationMs": 2000, "processedBytes": 22769, "totalBytes": 22769,
+            "errorMessage": null, "logs": [],
+            "metrics": {
+                "schemaVersion": 1, "inputBytes": 22769, "outputBytes": 12000,
+                "savingsRatio": 99,
+                "media": {
+                    "width": 360, "height": 640, "durationMs": 1000,
+                    "videoCodec": "h264", "audioCodec": "aac", "container": "mp4"
+                }
+            }
+        });
+        let record: TaskHistoryRecord = serde_json::from_value(json).unwrap();
+        let sanitized = sanitize_record(record).unwrap();
+        let metrics = sanitized.metrics.unwrap();
+        let media = metrics.media.unwrap();
+
+        assert_eq!(metrics.savings_ratio, (22_769_f64 - 12_000_f64) / 22_769_f64);
+        assert_eq!(media.duration_ms, Some(1_000));
+        assert_eq!(media.video_codec.as_deref(), Some("h264"));
+        assert_eq!(media.audio_codec.as_deref(), Some("aac"));
+        assert_eq!(media.container.as_deref(), Some("mp4"));
+        assert!(media.image.is_none());
+    }
+
+    #[test]
     fn preserves_verified_image_input_and_output_facts() {
         let json = serde_json::json!({
             "id": "image-task", "name": "converted.png", "taskType": "compression",

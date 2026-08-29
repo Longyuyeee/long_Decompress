@@ -52,7 +52,7 @@ export interface Task {
   fileFilter?: string
   selectedEntries?: string[]
   // 增强字段 [FE-INT-001]
-  stage?: 'Pre-checking' | 'Extracting' | 'Verifying' | 'Finalizing' | 'password-attempt'
+  stage?: 'Pre-checking' | 'Extracting' | 'Verifying' | 'Finalizing' | 'password-attempt' | 'Probing' | 'Encoding' | 'Validating' | 'Publishing' | 'still-encoding'
   currentFile?: string
   currentPassword?: string
   passwordAttemptCurrent?: number
@@ -63,6 +63,11 @@ export interface Task {
   outputBytes?: number
   outputBytesEstimated?: boolean
   etaSeconds?: number
+  currentTimeMs?: number
+  speedMultiple?: number
+  outputToInputRatio?: number
+  heartbeatSecondsSinceProgress?: number
+  heartbeatAt?: string
   // 密码相关
   password?: string
   passwordRequired?: boolean
@@ -119,12 +124,19 @@ export const useTaskStore = defineStore('task', () => {
       output_bytes_estimated?: boolean,
       password_attempt_current?: number,
       password_attempt_total?: number,
+      current_time_ms?: number,
+      speed_multiple?: number,
+      output_to_input_ratio?: number,
+      heartbeat_seconds_since_progress?: number,
+      heartbeat_at?: string,
     }>('task-progress', (event) => {
       const {
         task_id, progress, stage, current_file, current_password, speed,
         processed_bytes, total_bytes, eta_seconds,
         output_bytes, output_bytes_estimated,
         password_attempt_current, password_attempt_total,
+        current_time_ms, speed_multiple, output_to_input_ratio,
+        heartbeat_seconds_since_progress, heartbeat_at,
       } = event.payload
       const task = tasks.value.find(t => t.id === task_id)
       if (task) {
@@ -164,6 +176,16 @@ export const useTaskStore = defineStore('task', () => {
           task.outputBytesEstimated = output_bytes_estimated
         }
         if (eta_seconds !== undefined) task.etaSeconds = eta_seconds
+        if (current_time_ms !== undefined) task.currentTimeMs = current_time_ms
+        if (speed_multiple !== undefined) task.speedMultiple = speed_multiple
+        if (output_to_input_ratio !== undefined) task.outputToInputRatio = output_to_input_ratio
+        if (heartbeat_seconds_since_progress !== undefined) {
+          task.heartbeatSecondsSinceProgress = heartbeat_seconds_since_progress
+          task.heartbeatAt = heartbeat_at
+        } else if (stage !== 'still-encoding') {
+          task.heartbeatSecondsSinceProgress = undefined
+          task.heartbeatAt = undefined
+        }
 
         // Progress reaching 100% only means the engine finished transferring data.
         // Final rename, integrity checks and optional cleanup may still fail, so the

@@ -168,10 +168,31 @@ fn write_restore_visibility_probe(args: &[String], window: &tauri::Window) {
 }
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(position) = args
+        .iter()
+        .position(|argument| argument == "--internal-video-engine-preflight-report")
+    {
+        let Some(report_path) = args.get(position + 1) else {
+            std::process::exit(3);
+        };
+        let executable_path = match std::env::current_exe() {
+            Ok(path) => path,
+            Err(_) => std::process::exit(3),
+        };
+        let exit_code = match long_compress_assistant::services::video_engine::write_installed_video_engine_preflight_report(
+            &executable_path,
+            std::path::Path::new(report_path),
+        ) {
+            Ok(true) => 0,
+            Ok(false) => 2,
+            Err(_) => 3,
+        };
+        std::process::exit(exit_code);
+    }
     let instance_name = instance_name();
     let instance = single_instance::SingleInstance::new(&instance_name)
         .expect("failed to create application instance guard");
-    let args: Vec<String> = std::env::args().collect();
     let auto_start_activation = is_auto_start_activation(&args);
     #[cfg(feature = "desktop-e2e")]
     let auto_start_probe_path = auto_start_probe_path(&args);
@@ -403,6 +424,8 @@ fn main() {
             long_compress_assistant::commands::compression::extract_multiple,
             long_compress_assistant::commands::compression::compress_files,
             long_compress_assistant::commands::compression::compress_image_file,
+            long_compress_assistant::commands::compression::compress_video_file,
+            long_compress_assistant::commands::compression::plan_video_compression_destination,
             long_compress_assistant::commands::compression::plan_image_compression_destination,
             long_compress_assistant::commands::compression::analyze_compression_sources,
             long_compress_assistant::commands::compression::cancel_compression_analysis,
@@ -442,7 +465,10 @@ fn main() {
             long_compress_assistant::commands::system::load_app_settings,
             long_compress_assistant::commands::system::save_app_settings,
             long_compress_assistant::commands::video_engine::preflight_video_engine,
+            long_compress_assistant::commands::video_engine::probe_video_input,
+            long_compress_assistant::commands::video_engine::plan_video_compression,
             long_compress_assistant::commands::system_integration::open_in_explorer,
+            long_compress_assistant::commands::system_integration::open_video_output_with_default_application,
             long_compress_assistant::commands::system_integration::register_context_menu,
             long_compress_assistant::commands::system_integration::unregister_context_menu,
             long_compress_assistant::commands::system_integration::is_context_menu_registered,

@@ -5,6 +5,14 @@ import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage } from '@/utils'
 import type { ResourcePreflightReport, ResourcePreflightRequest } from '@/types/resourcePreflight'
 import type {
+  PublishedVideoOutput,
+  VideoCompressionDestinationPlan,
+  VideoCompressionExecutionRequest,
+  VideoCompressionPlan,
+  VideoCompressionPlanRequest,
+  VideoProbeReport,
+} from '@/types/video'
+import type {
   ImageCompressionOutcome,
   ImageCompressionRequest,
   ImageDestinationPlan,
@@ -674,6 +682,39 @@ export const useTauriCommands = () => {
     })
   }
 
+  const openVideoOutputWithDefaultApplication = async (path: string) => {
+    await invoke('open_video_output_with_default_application', { path })
+  }
+
+  const probeVideoInput = async (path: string): Promise<VideoProbeReport> => {
+    return await invoke<VideoProbeReport>('probe_video_input', { path })
+  }
+
+  const planVideoCompression = async (
+    request: VideoCompressionPlanRequest,
+  ): Promise<VideoCompressionPlan> => {
+    return await invoke<VideoCompressionPlan>('plan_video_compression', { request })
+  }
+
+  const compressVideoFile = async (
+    taskId: string,
+    request: VideoCompressionExecutionRequest,
+  ): Promise<PublishedVideoOutput> => {
+    return await invoke<PublishedVideoOutput>('compress_video_file', { taskId, request })
+  }
+
+  const planVideoCompressionDestination = async (
+    source: string,
+    outputDirectory: string | null,
+    reservedDestinations: string[],
+  ): Promise<VideoCompressionDestinationPlan> => {
+    return await invoke<VideoCompressionDestinationPlan>('plan_video_compression_destination', {
+      source,
+      outputDirectory,
+      reservedDestinations,
+    })
+  }
+
   const analyzeCompressionSources = async (
     analysisId: string,
     paths: string[],
@@ -788,6 +829,10 @@ export const useTauriCommands = () => {
     planImageCompressionDestination,
     compressImageFile,
     preflightOperationResources,
+    probeVideoInput,
+    planVideoCompression,
+    compressVideoFile,
+    planVideoCompressionDestination,
     analyzeCompressionSources,
     cancelCompressionAnalysis,
     checkRarCompressionSupport,
@@ -803,6 +848,7 @@ export const useTauriCommands = () => {
     exportPasswords,
     importPasswords,
     openInExplorer,
+    openVideoOutputWithDefaultApplication,
     listArchiveContents,
     browseArchive,
     cancelArchiveBrowse,

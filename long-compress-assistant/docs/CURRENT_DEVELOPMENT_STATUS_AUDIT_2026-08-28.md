@@ -1,10 +1,12 @@
 # 当前开发状态与跨设备接续审计（2026-08-28）
 
+> 本文保留 B-03 至 B-05 的历史审计过程。C-01.2.1 合并快照见 [CURRENT_DEVELOPMENT_AUDIT_2026-08-28_POST_C01_2_1.md](CURRENT_DEVELOPMENT_AUDIT_2026-08-28_POST_C01_2_1.md)；C-01 已完成，权威接续状态见 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)，下一节点为 C-02。
+
 审计日期：2026-08-28（Asia/Shanghai）
 
 GitHub：`https://github.com/Longyuyeee/long_Decompress.git`
 
-开发分支：`codex/video-c01-2-runtime-admission`
+主分支审计锚点：`7bc44a1c19804b87904f3c06e23c809482f32467`
 
 原始审计锚点：`5e396c67e0b8aa4f4bd3cfc822a63c2f1b24f1e3`（`feat: complete B-03 image backend execution`）
 

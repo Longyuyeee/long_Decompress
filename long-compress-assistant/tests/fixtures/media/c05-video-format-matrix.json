@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "fixtureRevision": "2026-08-29-c05.2.1",
+  "fixtureTool": {
+    "name": "Gyan FFmpeg full build",
+    "version": "9.0.1",
+    "archiveUrl": "https://github.com/GyanD/codexffmpeg/releases/download/9.0.1/ffmpeg-9.0.1-full_build.zip",
+    "archiveSha256": "2e8e28af97c2ae338ccef92e36da9b2a4cd21d0cad9dde093545606cb07f5b00",
+    "productIntegrationAllowed": false,
+    "purpose": "isolated synthetic input generation only"
+  },
+  "expected": {
+    "inputFormats": ["mp4", "mov", "avi", "wmv", "webm"],
+    "inputResolutionTiers": ["480p", "720p", "1080p", "4k"],
+    "presets": ["clear", "balanced", "small"],
+    "executionCases": 7,
+    "publicOutput": { "container": "mp4", "videoCodec": "h264", "audioCodecWhenPresent": "aac" }
+  },
+  "sources": [
+    { "id": "mp4-480p", "file": "mp4-480p.mp4", "format": "mp4", "containerNeedle": "mp4", "videoCodec": "h264", "audioCodec": "aac", "width": 854, "height": 480, "frameRate": 12 },
+    { "id": "mov-720p", "file": "mov-720p.mov", "format": "mov", "containerNeedle": "mov", "videoCodec": "mpeg4", "audioCodec": "aac", "width": 1280, "height": 720, "frameRate": 12 },
+    { "id": "avi-1080p-no-audio", "file": "avi-1080p-no-audio.avi", "format": "avi", "containerNeedle": "avi", "videoCodec": "mpeg4", "audioCodec": null, "width": 1920, "height": 1080, "frameRate": 12 },
+    { "id": "wmv-360p", "file": "wmv-360p.wmv", "format": "wmv", "containerNeedle": "asf", "videoCodec": "wmv2", "audioCodec": "wmav2", "width": 640, "height": 360, "frameRate": 12 },
+    { "id": "webm-4k", "file": "webm-4k.webm", "format": "webm", "containerNeedle": "webm", "videoCodec": "vp9", "audioCodec": "opus", "width": 3840, "height": 2160, "frameRate": 6 }
+  ],
+  "executions": [
+    { "id": "mp4-480p-balanced", "sourceId": "mp4-480p", "preset": "balanced", "outputWidth": 854, "outputHeight": 480 },
+    { "id": "mov-720p-balanced", "sourceId": "mov-720p", "preset": "balanced", "outputWidth": 1280, "outputHeight": 720 },
+    { "id": "avi-1080p-balanced-no-audio", "sourceId": "avi-1080p-no-audio", "preset": "balanced", "outputWidth": 1280, "outputHeight": 720 },
+    { "id": "wmv-360p-balanced", "sourceId": "wmv-360p", "preset": "balanced", "outputWidth": 640, "outputHeight": 360 },
+    { "id": "webm-4k-clear", "sourceId": "webm-4k", "preset": "clear", "outputWidth": 1920, "outputHeight": 1080 },
+    { "id": "webm-4k-balanced", "sourceId": "webm-4k", "preset": "balanced", "outputWidth": 1280, "outputHeight": 720 },
+    { "id": "webm-4k-small", "sourceId": "webm-4k", "preset": "small", "outputWidth": 852, "outputHeight": 480 }
+  ]
+}

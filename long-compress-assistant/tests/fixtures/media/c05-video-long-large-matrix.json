@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "fixtureRevision": "2026-08-29-c05.2.2",
+  "fixtureTool": {
+    "version": "9.0.1",
+    "archiveUrl": "https://github.com/GyanD/codexffmpeg/releases/download/9.0.1/ffmpeg-9.0.1-full_build.zip",
+    "archiveSha256": "2e8e28af97c2ae338ccef92e36da9b2a4cd21d0cad9dde093545606cb07f5b00",
+    "productIntegrationAllowed": false
+  },
+  "expected": {
+    "executionCases": 2,
+    "longDurationMs": 600000,
+    "largeInputMinBytes": 104857600,
+    "publicOutput": { "container": "mp4", "videoCodec": "h264", "audioCodec": null }
+  },
+  "cases": [
+    {
+      "id": "avi-10-minute-balanced",
+      "kind": "long-duration",
+      "file": "avi-10-minute.avi",
+      "durationSeconds": 600,
+      "frameRate": 6,
+      "width": 640,
+      "height": 360,
+      "quality": 10,
+      "preset": "balanced",
+      "outputWidth": 640,
+      "outputHeight": 360,
+      "minimumDecodedVideoFrames": 2880,
+      "minimumInputBytes": 1
+    },
+    {
+      "id": "avi-100mib-1080p-balanced",
+      "kind": "large-input",
+      "file": "avi-100mib-1080p.avi",
+      "durationSeconds": 32,
+      "frameRate": 30,
+      "width": 1920,
+      "height": 1080,
+      "quality": 1,
+      "preset": "balanced",
+      "outputWidth": 1280,
+      "outputHeight": 720,
+      "minimumDecodedVideoFrames": 768,
+      "minimumInputBytes": 104857600
+    }
+  ]
+}

@@ -99,6 +99,11 @@ const stageLabel = (stage?: string) => {
     case 'Verifying': return '验证输出'
     case 'Finalizing': return appStore.t('tasks.status.finalizing')
     case 'password-attempt': return '验证解压密码'
+    case 'Probing': return '重新探测'
+    case 'Encoding': return '视频编码'
+    case 'Validating': return '完整验证'
+    case 'Publishing': return '原子发布'
+    case 'still-encoding': return '仍在编码'
     default: return stage
   }
 }
@@ -326,7 +331,7 @@ const copyToClipboard = async (text: string) => {
                   </button>
 
                   <button
-                    v-if="['failed', 'cancelled'].includes(task.status)"
+                    v-if="['failed', 'cancelled'].includes(task.status) && (!task.workloadKind || task.workloadKind === 'archive')"
                     @click.stop="retryTask(task)"
                     :disabled="retryingTaskId === task.id"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all disabled:opacity-85"

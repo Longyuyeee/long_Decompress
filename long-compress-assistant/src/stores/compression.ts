@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { CompressionFormatId } from '@/utils/compressionFormat'
 import type { CompressionAnalysisResult } from '@/composables/useTauriCommands'
+import type { VideoCompressionPlan, VideoCompressionSettings } from '@/types/video'
 import {
   createDefaultImageSettings,
   inferImageFormat,
@@ -9,6 +10,12 @@ import {
   type ImageCandidate,
   type ImageCompressionSettings,
 } from '@/utils/imageCompressionWorkspace'
+import {
+  cloneVideoSettings,
+  createDefaultVideoSettings,
+  validateVideoCandidate,
+  type VideoCandidate,
+} from '@/utils/videoCompressionWorkspace'
 
 export interface FileObject {
   name: string
@@ -99,6 +106,26 @@ export interface ImageCandidateRejection {
   reason: string
 }
 
+export interface VideoCompressionItem {
+  id: string
+  name: string
+  path: string
+  inputSize: number
+  status: 'planning' | 'ready' | 'rejected'
+  expanded: boolean
+  planRevision: number
+  plan?: VideoCompressionPlan
+  error?: string
+  settings?: VideoCompressionSettings
+  taskId?: string
+}
+
+export interface VideoCandidateRejection {
+  name: string
+  path: string
+  reason: string
+}
+
 export const useCompressionStore = defineStore('compression', () => {
   const selectedFiles = ref<FileObject[]>([])
   const groups = ref<CompressionGroup[]>([])
@@ -120,6 +147,11 @@ export const useCompressionStore = defineStore('compression', () => {
   const imageGlobalSettings = ref<ImageCompressionSettings>(createDefaultImageSettings())
   const imageLastRejections = ref<ImageCandidateRejection[]>([])
   let nextImageDraftId = 0
+  const videoItems = ref<VideoCompressionItem[]>([])
+  const videoGlobalSettings = ref<VideoCompressionSettings>(createDefaultVideoSettings())
+  const videoOutputDirectory = ref('')
+  const videoLastRejections = ref<VideoCandidateRejection[]>([])
+  let nextVideoDraftId = 0
   
   const compressionAnalysis = ref<Record<string, CompressionAnalysisState>>({})
   const estimatedSize = computed<Record<string, number>>(() => Object.fromEntries(
@@ -212,6 +244,99 @@ export const useCompressionStore = defineStore('compression', () => {
   const clearImageDrafts = () => {
     imageItems.value = []
     imageLastRejections.value = []
+  }
+
+  const addVideoCandidates = (candidates: VideoCandidate[]) => {
+    const occupied = new Set(videoItems.value.map(item => item.path.replace(/\//g, '\\').toLocaleLowerCase()))
+    const accepted: VideoCompressionItem[] = []
+    const rejected: VideoCandidateRejection[] = []
+    for (const candidate of candidates) {
+      const result = validateVideoCandidate(candidate)
+      if (!result.accepted) {
+        rejected.push({ name: candidate.name, path: candidate.path, reason: result.reason })
+        continue
+      }
+      const key = candidate.path.replace(/\//g, '\\').toLocaleLowerCase()
+      if (occupied.has(key)) continue
+      occupied.add(key)
+      const item: VideoCompressionItem = {
+        id: `video-draft-${Date.now()}-${nextVideoDraftId++}`,
+        name: candidate.name,
+        path: candidate.path,
+        inputSize: Math.max(0, candidate.size || 0),
+        status: 'planning',
+        expanded: accepted.length === 0 && videoItems.value.length === 0,
+        planRevision: 1,
+      }
+      videoItems.value.push(item)
+      accepted.push(item)
+    }
+    videoLastRejections.value = rejected
+    return { accepted, rejected }
+  }
+
+  const queueVideoPlanning = (item: VideoCompressionItem) => {
+    item.planRevision += 1
+    item.status = 'planning'
+    item.plan = undefined
+    item.error = undefined
+  }
+
+  const completeVideoPlanning = (id: string, revision: number, plan: VideoCompressionPlan) => {
+    const item = videoItems.value.find(candidate => candidate.id === id)
+    if (!item || item.planRevision !== revision) return false
+    item.plan = plan
+    item.status = 'ready'
+    item.error = undefined
+    return true
+  }
+
+  const failVideoPlanning = (id: string, revision: number, reason: string) => {
+    const item = videoItems.value.find(candidate => candidate.id === id)
+    if (!item || item.planRevision !== revision) return false
+    item.plan = undefined
+    item.status = 'rejected'
+    item.error = reason
+    return true
+  }
+
+  const getEffectiveVideoSettings = (item: VideoCompressionItem) => item.settings || videoGlobalSettings.value
+  const updateVideoGlobalSettings = (settings: VideoCompressionSettings) => {
+    videoGlobalSettings.value = cloneVideoSettings(settings)
+    videoItems.value.filter(item => !item.settings).forEach(queueVideoPlanning)
+  }
+  const enableVideoItemOverride = (id: string) => {
+    const item = videoItems.value.find(candidate => candidate.id === id)
+    if (!item || item.settings) return
+    item.settings = cloneVideoSettings(videoGlobalSettings.value)
+    queueVideoPlanning(item)
+  }
+  const disableVideoItemOverride = (id: string) => {
+    const item = videoItems.value.find(candidate => candidate.id === id)
+    if (!item || !item.settings) return
+    item.settings = undefined
+    queueVideoPlanning(item)
+  }
+  const updateVideoItemSettings = (id: string, settings: VideoCompressionSettings) => {
+    const item = videoItems.value.find(candidate => candidate.id === id)
+    if (!item) return
+    item.settings = cloneVideoSettings(settings)
+    queueVideoPlanning(item)
+  }
+  const retryVideoPlanning = (id: string) => {
+    const item = videoItems.value.find(candidate => candidate.id === id)
+    if (item) queueVideoPlanning(item)
+  }
+  const bindVideoItemTask = (id: string, taskId: string) => {
+    const item = videoItems.value.find(candidate => candidate.id === id)
+    if (item) item.taskId = taskId
+  }
+  const removeVideoItem = (id: string) => {
+    videoItems.value = videoItems.value.filter(item => item.id !== id)
+  }
+  const clearVideoDrafts = () => {
+    videoItems.value = []
+    videoLastRejections.value = []
   }
 
   // 磁吸打组逻辑
@@ -432,6 +557,10 @@ export const useCompressionStore = defineStore('compression', () => {
     imageItems,
     imageGlobalSettings,
     imageLastRejections,
+    videoItems,
+    videoGlobalSettings,
+    videoOutputDirectory,
+    videoLastRejections,
     acceptedImageCount,
     estimatedSize,
     compressionAnalysis,
@@ -447,6 +576,18 @@ export const useCompressionStore = defineStore('compression', () => {
     setImageResultPreview,
     removeImageItem,
     clearImageDrafts,
+    addVideoCandidates,
+    completeVideoPlanning,
+    failVideoPlanning,
+    getEffectiveVideoSettings,
+    updateVideoGlobalSettings,
+    enableVideoItemOverride,
+    disableVideoItemOverride,
+    updateVideoItemSettings,
+    retryVideoPlanning,
+    bindVideoItemTask,
+    removeVideoItem,
+    clearVideoDrafts,
     cloneSettings,
     getEffectiveSettings,
     getEffectiveOutputPath,

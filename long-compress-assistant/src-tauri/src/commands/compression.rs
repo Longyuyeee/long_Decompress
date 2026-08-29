@@ -1,13 +1,18 @@
 use crate::services::compression_service::CompressionService;
 use crate::services::compression_service::FileConflictResolution;
 use crate::services::compression_service::RarCompressionSupport;
+use crate::services::video_compression_plan::VideoCompressionPlanRequest;
+use crate::services::video_encoding::{VideoEncodingEvent, VideoProgressSnapshot};
+use crate::services::video_publish::PublishedVideoOutput;
 use crate::models::compression::{
     CompressionOptions, DecompressOptions, TaskLog, TaskLogSeverity,
 };
+use serde::{Deserialize, Serialize};
 use tauri::{command, AppHandle, Manager, State, Window};
+use std::future::Future;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::path::{Component, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use dashmap::DashMap;
 use dashmap::mapref::entry::Entry;
 use once_cell::sync::Lazy;
@@ -224,6 +229,367 @@ pub async fn compress_image_file(
     let log_task_id = task_id.clone();
     run_image_compression(task_id, request, move |stage| {
         let _ = window.emit("task-log", image_stage_log(&log_task_id, stage));
+    })
+    .await
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VideoCompressionExecutionRequest {
+    pub plan: VideoCompressionPlanRequest,
+    pub destination: PathBuf,
+    #[serde(default)]
+    pub confirmed_stream_changes: Vec<String>,
+    pub preserve_mark_of_web: bool,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct VideoCompressionDestinationPlan {
+    pub destination: PathBuf,
+}
+
+fn plan_video_destination(
+    source: &Path,
+    output_directory: Option<&Path>,
+    reserved_destinations: &[PathBuf],
+) -> Result<VideoCompressionDestinationPlan, String> {
+    let metadata = std::fs::metadata(source)
+        .map_err(|error| format!("VIDEO_DESTINATION_SOURCE_UNAVAILABLE: {error}"))?;
+    if !metadata.is_file() {
+        return Err("VIDEO_DESTINATION_SOURCE_NOT_FILE".to_string());
+    }
+    let directory = output_directory
+        .map(Path::to_path_buf)
+        .or_else(|| source.parent().map(Path::to_path_buf))
+        .ok_or_else(|| "VIDEO_DESTINATION_DIRECTORY_UNAVAILABLE".to_string())?;
+    if !directory.is_dir() {
+        return Err(format!(
+            "VIDEO_DESTINATION_DIRECTORY_NOT_FOUND: {}",
+            directory.display()
+        ));
+    }
+    let stem = source
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.trim().is_empty())
+        .ok_or_else(|| "VIDEO_DESTINATION_SOURCE_NAME_INVALID".to_string())?;
+    let reserved = reserved_destinations
+        .iter()
+        .map(|path| normalized_output_key(&path.to_string_lossy()))
+        .collect::<Result<std::collections::HashSet<_>, _>>()?;
+
+    for index in 0..10_000_u32 {
+        let suffix = if index == 0 {
+            String::new()
+        } else {
+            format!(" ({index})")
+        };
+        let destination = directory.join(format!("{stem}.compressed{suffix}.mp4"));
+        let key = normalized_output_key(&destination.to_string_lossy())?;
+        if !destination.exists() && !reserved.contains(&key) {
+            return Ok(VideoCompressionDestinationPlan { destination });
+        }
+    }
+    Err("VIDEO_DESTINATION_RENAME_LIMIT_REACHED".to_string())
+}
+
+#[command]
+pub fn plan_video_compression_destination(
+    source: String,
+    output_directory: Option<String>,
+    reserved_destinations: Vec<String>,
+) -> Result<VideoCompressionDestinationPlan, String> {
+    let reserved = reserved_destinations
+        .into_iter()
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
+    plan_video_destination(
+        Path::new(&source),
+        output_directory.as_deref().map(Path::new),
+        &reserved,
+    )
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum VideoCompressionStage {
+    Probing,
+    Encoding,
+    Validating,
+    Publishing,
+}
+
+impl VideoCompressionStage {
+    fn event_name(self) -> &'static str {
+        match self {
+            Self::Probing => "Probing",
+            Self::Encoding => "Encoding",
+            Self::Validating => "Validating",
+            Self::Publishing => "Publishing",
+        }
+    }
+
+    fn log_message(self) -> &'static str {
+        match self {
+            Self::Probing => "正在重新探测视频并确认执行计划",
+            Self::Encoding => "正在使用软件编码器生成隔离暂存输出",
+            Self::Validating => "正在完整扫描并验证暂存视频",
+            Self::Publishing => "验证通过，正在原子发布最终视频",
+        }
+    }
+}
+
+enum VideoCompressionCommandEvent {
+    Stage(VideoCompressionStage),
+    Encoding(VideoEncodingEvent),
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct VideoTaskProgress {
+    task_id: String,
+    stage: Option<String>,
+    current_password: Option<String>,
+    progress: f32,
+    speed: Option<String>,
+    eta_seconds: Option<u64>,
+    current_file: Option<String>,
+    processed_bytes: u64,
+    total_bytes: u64,
+    output_bytes: u64,
+    output_bytes_estimated: bool,
+    password_attempt_current: Option<usize>,
+    password_attempt_total: Option<usize>,
+    current_time_ms: Option<u64>,
+    speed_multiple: Option<f64>,
+    output_to_input_ratio: Option<f64>,
+    heartbeat_seconds_since_progress: Option<u64>,
+    heartbeat_at: Option<String>,
+}
+
+fn video_stage_log(task_id: &str, stage: VideoCompressionStage) -> TaskLog {
+    TaskLog {
+        task_id: task_id.to_string(),
+        timestamp: chrono::Utc::now(),
+        message: stage.log_message().to_string(),
+        severity: TaskLogSeverity::Info,
+    }
+}
+
+fn video_progress_payload(
+    task_id: &str,
+    source: &Path,
+    stage: &str,
+    snapshot: Option<&VideoProgressSnapshot>,
+    heartbeat_seconds_since_progress: Option<u64>,
+) -> VideoTaskProgress {
+    let snapshot = snapshot.cloned().unwrap_or(VideoProgressSnapshot {
+        current_time_ms: 0,
+        progress_percent: 0.0,
+        speed_multiple: None,
+        output_bytes: None,
+        output_bytes_provisional: true,
+        eta_seconds: None,
+        output_to_input_ratio: None,
+        finished: false,
+    });
+    VideoTaskProgress {
+        task_id: task_id.to_string(),
+        stage: Some(stage.to_string()),
+        current_password: None,
+        // The shared task event contract carries a 0..1 fraction; the video
+        // parser deliberately exposes a user-facing 0..100 percentage.
+        progress: snapshot.progress_percent / 100.0,
+        speed: snapshot.speed_multiple.map(|speed| format!("{speed:.2}x")),
+        eta_seconds: snapshot.eta_seconds,
+        current_file: Some(source.to_string_lossy().into_owned()),
+        processed_bytes: 0,
+        total_bytes: 0,
+        output_bytes: snapshot.output_bytes.unwrap_or(0),
+        output_bytes_estimated: snapshot.output_bytes_provisional,
+        password_attempt_current: None,
+        password_attempt_total: None,
+        current_time_ms: Some(snapshot.current_time_ms),
+        speed_multiple: snapshot.speed_multiple,
+        output_to_input_ratio: snapshot.output_to_input_ratio,
+        heartbeat_seconds_since_progress,
+        heartbeat_at: heartbeat_seconds_since_progress.map(|_| chrono::Utc::now().to_rfc3339()),
+    }
+}
+
+async fn await_video_step_or_cancellation<T, F>(
+    future: F,
+    cancelled: &AtomicBool,
+) -> Result<T, String>
+where
+    F: Future<Output = Result<T, String>>,
+{
+    tokio::pin!(future);
+    loop {
+        tokio::select! {
+            result = &mut future => return result,
+            _ = tokio::time::sleep(tokio::time::Duration::from_millis(25)) => {
+                if cancelled.load(Ordering::SeqCst) {
+                    return Err("VIDEO_COMPRESSION_CANCELLED".to_string());
+                }
+            }
+        }
+    }
+}
+
+async fn run_video_compression<F>(
+    resource_root: PathBuf,
+    task_id: String,
+    request: VideoCompressionExecutionRequest,
+    mut observe: F,
+) -> Result<PublishedVideoOutput, String>
+where
+    F: FnMut(VideoCompressionCommandEvent),
+{
+    let output_path = request.destination.to_string_lossy().into_owned();
+    let _output_guard = CompressionOutputGuard::acquire(&task_id, &output_path)?;
+    let cancelled = register_task_cancellation(&task_id)?;
+    let _task_guard = TaskCancellationGuard::new(&task_id);
+
+    if cancelled.load(Ordering::SeqCst) {
+        return Err("VIDEO_COMPRESSION_CANCELLED".to_string());
+    }
+    let validation_root = resource_root.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::services::video_engine::validate_video_engine(&validation_root)
+    })
+    .await
+    .map_err(|error| format!("VIDEO_ENGINE_PREFLIGHT_JOIN_FAILED: {error}"))?
+    .map_err(|error| error.to_string())?;
+    if cancelled.load(Ordering::SeqCst) {
+        return Err("VIDEO_COMPRESSION_CANCELLED".to_string());
+    }
+
+    let runtime_root = resource_root.join("video-engine");
+    let ffmpeg = runtime_root.join("ffmpeg.exe");
+    let ffprobe = runtime_root.join("ffprobe.exe");
+    let source = PathBuf::from(&request.plan.path);
+
+    observe(VideoCompressionCommandEvent::Stage(VideoCompressionStage::Probing));
+    let probe = await_video_step_or_cancellation(
+        async {
+            crate::services::video_probe::probe_video_file(&ffprobe, &source)
+                .await
+                .map_err(|error| error.to_string())
+        },
+        &cancelled,
+    )
+    .await?;
+    let plan = crate::services::video_compression_plan::build_video_compression_plan(
+        probe,
+        &request.plan,
+    )
+    .map_err(|error| error.to_string())?;
+    if !plan.can_encode {
+        return Err(format!(
+            "VIDEO_COMPRESSION_PLAN_BLOCKED: {}",
+            plan.probe.blocking_reasons.join("; ")
+        ));
+    }
+    if plan.requires_explicit_confirmation
+        && request.confirmed_stream_changes != plan.stream_changes
+    {
+        return Err("VIDEO_COMPRESSION_STREAM_CHANGES_CONFIRMATION_REQUIRED".to_string());
+    }
+
+    observe(VideoCompressionCommandEvent::Stage(VideoCompressionStage::Encoding));
+    let staged = crate::services::video_encoding::encode_video_to_staging(
+        &ffmpeg,
+        &plan,
+        &request.destination,
+        cancelled.clone(),
+        |event| observe(VideoCompressionCommandEvent::Encoding(event)),
+    )
+    .await
+    .map_err(|error| error.to_string())?;
+
+    observe(VideoCompressionCommandEvent::Stage(VideoCompressionStage::Validating));
+    let verified = await_video_step_or_cancellation(
+        async {
+            crate::services::video_output_validation::validate_staged_video_output(
+                &ffprobe, &plan, &staged,
+            )
+            .await
+            .map_err(|error| error.to_string())
+        },
+        &cancelled,
+    )
+    .await?;
+
+    if cancelled.load(Ordering::SeqCst) {
+        return Err("VIDEO_COMPRESSION_CANCELLED".to_string());
+    }
+    observe(VideoCompressionCommandEvent::Stage(VideoCompressionStage::Publishing));
+    crate::services::video_publish::publish_validated_video_output(
+        staged,
+        verified,
+        &source,
+        &request.destination,
+        request.preserve_mark_of_web,
+        &cancelled,
+    )
+    .map_err(|error| error.to_string())
+}
+
+#[command]
+pub async fn compress_video_file(
+    app: AppHandle,
+    window: Window,
+    task_id: String,
+    request: VideoCompressionExecutionRequest,
+) -> Result<PublishedVideoOutput, String> {
+    let app_resource_dir = app
+        .path_resolver()
+        .resource_dir()
+        .ok_or_else(|| "VIDEO_ENGINE_RESOURCE_DIRECTORY_UNAVAILABLE".to_string())?;
+    let resource_root =
+        crate::services::video_engine::bundled_resource_root(&app_resource_dir);
+    let event_task_id = task_id.clone();
+    let source = PathBuf::from(&request.plan.path);
+    let mut last_snapshot: Option<VideoProgressSnapshot> = None;
+    run_video_compression(resource_root, task_id, request, move |event| match event {
+        VideoCompressionCommandEvent::Stage(stage) => {
+            let _ = window.emit("task-log", video_stage_log(&event_task_id, stage));
+            let _ = window.emit(
+                "task-progress",
+                video_progress_payload(
+                    &event_task_id,
+                    &source,
+                    stage.event_name(),
+                    last_snapshot.as_ref(),
+                    None,
+                ),
+            );
+        }
+        VideoCompressionCommandEvent::Encoding(VideoEncodingEvent::Progress { snapshot }) => {
+            let payload = video_progress_payload(
+                &event_task_id,
+                &source,
+                VideoCompressionStage::Encoding.event_name(),
+                Some(&snapshot),
+                None,
+            );
+            last_snapshot = Some(snapshot);
+            let _ = window.emit("task-progress", payload);
+        }
+        VideoCompressionCommandEvent::Encoding(VideoEncodingEvent::Heartbeat {
+            seconds_since_progress,
+        }) => {
+            let _ = window.emit(
+                "task-progress",
+                video_progress_payload(
+                    &event_task_id,
+                    &source,
+                    "still-encoding",
+                    last_snapshot.as_ref(),
+                    Some(seconds_since_progress),
+                ),
+            );
+        }
     })
     .await
 }
@@ -957,8 +1323,10 @@ mod cancellation_tests {
     use super::{
         cancel_archive_browse, cancel_compression, cancel_tasks_and_wait,
         classify_archive_browse_error, image_stage_log, normalized_output_key,
-        run_image_compression, ArchiveDiagnosticGuard, CompressionAnalysisGuard,
-        CompressionOutputGuard, ZipRepairGuard,
+        plan_video_destination, run_image_compression, run_video_compression, video_progress_payload,
+        ArchiveDiagnosticGuard, CompressionAnalysisGuard, CompressionOutputGuard,
+        VideoCompressionCommandEvent, VideoCompressionExecutionRequest, VideoCompressionStage,
+        ZipRepairGuard,
         ACTIVE_COMPRESSION_OUTPUTS, CANCELLATION_FLAGS, COMPRESSION_ANALYSIS_FLAGS,
         ARCHIVE_BROWSE_FLAGS, ARCHIVE_DIAGNOSTIC_FLAGS, ZIP_REPAIR_FLAGS,
     };
@@ -966,6 +1334,11 @@ mod cancellation_tests {
         ImageCompressionMode, ImageCompressionOutcome, ImageCompressionRequest,
         ImageCompressionStage, ImageFileFormat,
     };
+    use crate::services::video_compression_plan::{
+        build_video_compression_plan, VideoCompressionPlanRequest, VideoCompressionPreset,
+    };
+    use crate::services::video_encoding::{VideoEncodingEvent, VideoProgressSnapshot};
+    use crate::services::video_probe::probe_video_file;
     use std::path::Path;
     use std::sync::{
         atomic::{AtomicBool, Ordering},
@@ -1070,6 +1443,376 @@ mod cancellation_tests {
         assert_eq!(payload["severity"], "Info");
         assert_eq!(payload["message"], "正在重新解码并验证候选输出");
         assert!(payload["timestamp"].as_str().is_some());
+    }
+
+    #[test]
+    fn video_progress_extends_the_existing_event_without_faking_byte_progress() {
+        let snapshot = VideoProgressSnapshot {
+            current_time_ms: 1_250,
+            progress_percent: 37.5,
+            speed_multiple: Some(1.25),
+            output_bytes: Some(8_192),
+            output_bytes_provisional: true,
+            eta_seconds: Some(12),
+            output_to_input_ratio: Some(0.4),
+            finished: false,
+        };
+        let payload = serde_json::to_value(video_progress_payload(
+            "video-task",
+            Path::new("C:/input/video.mp4"),
+            "still-encoding",
+            Some(&snapshot),
+            Some(5),
+        ))
+        .unwrap();
+
+        assert_eq!(payload["task_id"], "video-task");
+        assert_eq!(payload["stage"], "still-encoding");
+        assert_eq!(payload["progress"], 0.375);
+        assert_eq!(payload["processed_bytes"], 0);
+        assert_eq!(payload["total_bytes"], 0);
+        assert_eq!(payload["output_bytes"], 8_192);
+        assert_eq!(payload["output_bytes_estimated"], true);
+        assert_eq!(payload["current_time_ms"], 1_250);
+        assert_eq!(payload["heartbeat_seconds_since_progress"], 5);
+        assert!(payload["heartbeat_at"].as_str().is_some());
+    }
+
+    #[test]
+    fn video_destination_planner_never_overwrites_or_duplicates_batch_targets() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("演示.video.mov");
+        std::fs::write(&source, b"source").unwrap();
+        let first = temp.path().join("演示.video.compressed.mp4");
+        std::fs::write(&first, b"existing").unwrap();
+        let reserved = temp.path().join("演示.video.compressed (1).mp4");
+
+        let plan = plan_video_destination(&source, None, &[reserved]).unwrap();
+
+        assert_eq!(
+            plan.destination,
+            temp.path().join("演示.video.compressed (2).mp4")
+        );
+        assert_eq!(std::fs::read(first).unwrap(), b"existing");
+    }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn video_command_replans_then_validates_and_publishes_through_shared_guards() {
+        let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let resource_root = manifest.join("resources");
+        let source = manifest
+            .join("..")
+            .join("tests/fixtures/media/videos/h264-vfr-audio-rotation-subtitles.mp4");
+        if !source.exists() {
+            return;
+        }
+        let plan_request = VideoCompressionPlanRequest {
+            path: source.to_string_lossy().into_owned(),
+            preset: VideoCompressionPreset::Balanced,
+            max_width: None,
+            max_height: None,
+        };
+        let probe = probe_video_file(
+            &resource_root.join("video-engine/ffprobe.exe"),
+            &source,
+        )
+        .await
+        .unwrap();
+        let plan = build_video_compression_plan(probe, &plan_request).unwrap();
+        assert!(plan.requires_explicit_confirmation);
+
+        let temp = tempfile::tempdir().unwrap();
+        let refused_output = temp.path().join("refused.mp4");
+        let refused_task = format!("video-refused-{}", uuid::Uuid::new_v4());
+        let refusal = run_video_compression(
+            resource_root.clone(),
+            refused_task.clone(),
+            VideoCompressionExecutionRequest {
+                plan: plan_request.clone(),
+                destination: refused_output.clone(),
+                confirmed_stream_changes: Vec::new(),
+                preserve_mark_of_web: true,
+            },
+            |_| {},
+        )
+        .await
+        .unwrap_err();
+        assert_eq!(
+            refusal,
+            "VIDEO_COMPRESSION_STREAM_CHANGES_CONFIRMATION_REQUIRED"
+        );
+        assert!(!refused_output.exists());
+        assert!(!CANCELLATION_FLAGS.contains_key(&refused_task));
+
+        let destination = temp.path().join("published & verified.mp4");
+        let task_id = format!("video-command-{}", uuid::Uuid::new_v4());
+        let events = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let observed = events.clone();
+        let outcome = run_video_compression(
+            resource_root,
+            task_id.clone(),
+            VideoCompressionExecutionRequest {
+                plan: plan_request,
+                destination: destination.clone(),
+                confirmed_stream_changes: plan.stream_changes,
+                preserve_mark_of_web: true,
+            },
+            move |event| {
+                let label = match event {
+                    VideoCompressionCommandEvent::Stage(stage) => stage.event_name().to_string(),
+                    VideoCompressionCommandEvent::Encoding(VideoEncodingEvent::Progress { .. }) => {
+                        "progress".to_string()
+                    }
+                    VideoCompressionCommandEvent::Encoding(VideoEncodingEvent::Heartbeat { .. }) => {
+                        "heartbeat".to_string()
+                    }
+                };
+                observed.lock().unwrap().push(label);
+            },
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(outcome.path, destination);
+        assert!(outcome.output_bytes > 0);
+        assert_eq!(outcome.verified.container, "mp4");
+        assert_eq!(outcome.verified.video_codec, "h264");
+        assert!(source.exists());
+        assert!(!CANCELLATION_FLAGS.contains_key(&task_id));
+        let events = events.lock().unwrap();
+        for stage in [
+            VideoCompressionStage::Probing,
+            VideoCompressionStage::Encoding,
+            VideoCompressionStage::Validating,
+            VideoCompressionStage::Publishing,
+        ] {
+            assert!(events.contains(&stage.event_name().to_string()));
+        }
+        assert!(events.iter().any(|event| event == "progress"));
+    }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn c05_real_format_resolution_preset_matrix() {
+        let Ok(manifest_path) = std::env::var("LONG_C05_VIDEO_MATRIX_MANIFEST") else {
+            println!("C-05.2.1 matrix skipped: LONG_C05_VIDEO_MATRIX_MANIFEST is not set");
+            return;
+        };
+        let output_root = std::env::var("LONG_C05_VIDEO_MATRIX_OUTPUT")
+            .expect("LONG_C05_VIDEO_MATRIX_OUTPUT must accompany the matrix manifest");
+        let manifest: serde_json::Value = serde_json::from_slice(
+            &std::fs::read(&manifest_path).expect("read C-05.2.1 runtime manifest"),
+        )
+        .expect("parse C-05.2.1 runtime manifest");
+        let cases = manifest["cases"]
+            .as_array()
+            .expect("runtime manifest cases");
+        assert_eq!(cases.len(), 7);
+
+        let resource_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
+        let ffprobe = resource_root.join("video-engine/ffprobe.exe");
+        let output_root = Path::new(&output_root);
+        std::fs::create_dir_all(output_root).expect("create C-05.2.1 output root");
+        let mut results = Vec::with_capacity(cases.len());
+
+        for case in cases {
+            let id = case["id"].as_str().expect("case id");
+            let source = Path::new(case["sourcePath"].as_str().expect("source path"));
+            let source_bytes = std::fs::metadata(source).expect("source metadata").len();
+            let input = probe_video_file(&ffprobe, source)
+                .await
+                .expect("product probe must accept matrix input");
+            assert!(input
+                .container
+                .as_deref()
+                .unwrap_or_default()
+                .contains(case["inputContainerNeedle"].as_str().expect("container")));
+            assert_eq!(
+                input.primary_video.codec.as_deref(),
+                case["inputVideoCodec"].as_str()
+            );
+            assert_eq!(
+                input.audio_streams.first().and_then(|audio| audio.codec.as_deref()),
+                case["inputAudioCodec"].as_str()
+            );
+
+            let preset: VideoCompressionPreset = serde_json::from_value(case["preset"].clone())
+                .expect("deserialize matrix preset");
+            let plan_request = VideoCompressionPlanRequest {
+                path: source.to_string_lossy().into_owned(),
+                preset,
+                max_width: None,
+                max_height: None,
+            };
+            let plan = build_video_compression_plan(input, &plan_request)
+                .expect("build product compression plan");
+            let expected_width = case["outputWidth"].as_u64().expect("output width") as u32;
+            let expected_height = case["outputHeight"].as_u64().expect("output height") as u32;
+            assert_eq!((plan.output_width, plan.output_height), (expected_width, expected_height));
+
+            let destination = output_root.join(format!("{id}.mp4"));
+            let outcome = run_video_compression(
+                resource_root.clone(),
+                format!("c05-matrix-{id}-{}", uuid::Uuid::new_v4()),
+                VideoCompressionExecutionRequest {
+                    plan: plan_request,
+                    destination: destination.clone(),
+                    confirmed_stream_changes: plan.stream_changes,
+                    preserve_mark_of_web: false,
+                },
+                |_| {},
+            )
+            .await
+            .expect("execute product compression pipeline");
+
+            assert_eq!(outcome.path, destination);
+            assert_eq!(outcome.input_bytes, source_bytes);
+            assert_eq!(std::fs::metadata(source).expect("source remains").len(), source_bytes);
+            assert_eq!(outcome.verified.container, "mp4");
+            assert_eq!(outcome.verified.video_codec, "h264");
+            assert_eq!(outcome.verified.visible_width, expected_width);
+            assert_eq!(outcome.verified.visible_height, expected_height);
+            assert_eq!(
+                outcome.verified.audio_codec.as_deref(),
+                case["inputAudioCodec"].as_str().map(|_| "aac")
+            );
+            assert!(outcome.verified.decoded_video_frames > 0);
+            assert!(outcome.output_bytes > 0);
+            results.push(serde_json::to_value(&outcome).expect("serialize matrix outcome"));
+        }
+
+        std::fs::write(
+            output_root.join("backend-result.json"),
+            serde_json::to_vec_pretty(&results).expect("serialize matrix results"),
+        )
+        .expect("write matrix backend result");
+    }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn c05_real_long_duration_and_large_input_matrix() {
+        let Ok(manifest_path) = std::env::var("LONG_C05_VIDEO_LONG_LARGE_MANIFEST") else {
+            println!(
+                "C-05.2.2 matrix skipped: LONG_C05_VIDEO_LONG_LARGE_MANIFEST is not set"
+            );
+            return;
+        };
+        let output_root = std::env::var("LONG_C05_VIDEO_LONG_LARGE_OUTPUT")
+            .expect("LONG_C05_VIDEO_LONG_LARGE_OUTPUT must accompany the matrix manifest");
+        let manifest: serde_json::Value = serde_json::from_slice(
+            &std::fs::read(&manifest_path).expect("read C-05.2.2 runtime manifest"),
+        )
+        .expect("parse C-05.2.2 runtime manifest");
+        let cases = manifest["cases"]
+            .as_array()
+            .expect("runtime manifest cases");
+        assert_eq!(cases.len(), 2);
+
+        let resource_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
+        let ffprobe = resource_root.join("video-engine/ffprobe.exe");
+        let output_root = Path::new(&output_root);
+        std::fs::create_dir_all(output_root).expect("create C-05.2.2 output root");
+        let mut results = Vec::with_capacity(cases.len());
+
+        for case in cases {
+            let id = case["id"].as_str().expect("case id");
+            let source = Path::new(case["sourcePath"].as_str().expect("source path"));
+            let source_bytes = std::fs::metadata(source).expect("source metadata").len();
+            let minimum_input_bytes = case["minimumInputBytes"]
+                .as_u64()
+                .expect("minimum input bytes");
+            assert!(source_bytes >= minimum_input_bytes);
+
+            let input = probe_video_file(&ffprobe, source)
+                .await
+                .expect("product probe must accept long/large input");
+            let expected_duration_ms = case["durationSeconds"]
+                .as_u64()
+                .expect("duration seconds")
+                * 1_000;
+            assert!(input.duration_ms.abs_diff(expected_duration_ms) <= 100);
+            assert_eq!(input.primary_video.codec.as_deref(), Some("mpeg4"));
+            assert!(input.audio_streams.is_empty());
+
+            let preset: VideoCompressionPreset = serde_json::from_value(case["preset"].clone())
+                .expect("deserialize long/large preset");
+            let plan_request = VideoCompressionPlanRequest {
+                path: source.to_string_lossy().into_owned(),
+                preset,
+                max_width: None,
+                max_height: None,
+            };
+            let plan = build_video_compression_plan(input, &plan_request)
+                .expect("build product long/large plan");
+            let expected_width = case["outputWidth"].as_u64().expect("output width") as u32;
+            let expected_height = case["outputHeight"].as_u64().expect("output height") as u32;
+            assert_eq!((plan.output_width, plan.output_height), (expected_width, expected_height));
+
+            let progress = Arc::new(std::sync::Mutex::new(Vec::new()));
+            let observed = progress.clone();
+            let destination = output_root.join(format!("{id}.mp4"));
+            let outcome = run_video_compression(
+                resource_root.clone(),
+                format!("c05-long-large-{id}-{}", uuid::Uuid::new_v4()),
+                VideoCompressionExecutionRequest {
+                    plan: plan_request,
+                    destination: destination.clone(),
+                    confirmed_stream_changes: plan.stream_changes,
+                    preserve_mark_of_web: false,
+                },
+                move |event| {
+                    if let VideoCompressionCommandEvent::Encoding(
+                        VideoEncodingEvent::Progress { snapshot },
+                    ) = event
+                    {
+                        observed.lock().unwrap().push(snapshot);
+                    }
+                },
+            )
+            .await
+            .expect("execute product long/large compression pipeline");
+
+            let progress = progress.lock().unwrap();
+            let progress_events = progress.len();
+            let maximum_progress_time_ms = progress
+                .iter()
+                .map(|snapshot| snapshot.current_time_ms)
+                .max()
+                .unwrap_or(0);
+            assert!(progress_events > 0);
+            assert!(progress.iter().any(|snapshot| snapshot.finished));
+            drop(progress);
+
+            let minimum_frames = case["minimumDecodedVideoFrames"]
+                .as_u64()
+                .expect("minimum decoded frames");
+            assert_eq!(outcome.path, destination);
+            assert_eq!(outcome.input_bytes, source_bytes);
+            assert_eq!(std::fs::metadata(source).expect("source remains").len(), source_bytes);
+            assert_eq!(outcome.verified.container, "mp4");
+            assert_eq!(outcome.verified.video_codec, "h264");
+            assert_eq!(outcome.verified.audio_codec, None);
+            assert_eq!(outcome.verified.visible_width, expected_width);
+            assert_eq!(outcome.verified.visible_height, expected_height);
+            assert!(outcome.verified.decoded_video_frames >= minimum_frames);
+            assert!(outcome.verified.duration_difference_ms <= outcome.verified.duration_tolerance_ms);
+            assert!(outcome.output_bytes > 0);
+            results.push(serde_json::json!({
+                "id": id,
+                "kind": case["kind"],
+                "sourceBytes": source_bytes,
+                "progressEvents": progress_events,
+                "maximumProgressTimeMs": maximum_progress_time_ms,
+                "outcome": outcome,
+            }));
+        }
+
+        std::fs::write(
+            output_root.join("backend-result.json"),
+            serde_json::to_vec_pretty(&results).expect("serialize long/large results"),
+        )
+        .expect("write long/large backend result");
     }
 
     #[tokio::test]

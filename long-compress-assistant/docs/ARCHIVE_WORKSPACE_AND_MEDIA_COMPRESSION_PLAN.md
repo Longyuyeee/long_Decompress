@@ -1,6 +1,6 @@
 # Long解压：归档工作区与媒体压缩开发计划
 
-公开基线：`master` / Long解压 `1.1.14`；B-00 起始审计基线：`codex/archive-media-roadmap` / `19bb4b6`（S-00 总验收通过，比 `origin/master` 领先 6 个提交）
+公开基线：`master` / Long解压 `1.1.15`（tag `v1.1.15` 固定在 `82b1b8f`）；B-00 起始审计基线：`codex/archive-media-roadmap` / `19bb4b6`（S-00 总验收通过，比当时 `origin/master` 领先 6 个提交）
 
 编制日期：2026-08-26
 
@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已全部完成并随 `v1.1.14` 发布，B-00.1 至 B-00.6 前置门禁、B-01 图片依赖/固定哈希基线、B-02 图片前端工作区、B-03 图片后端执行/发布事务、B-04 真实进度/日志/历史/UI 和 B-05.1 至 B-05.3 真实验收矩阵均已完成。下一接续点为 `v1.1.15` 版本提升、发布审计和公开更新闭环；完成前不更新公开 Release。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在获批的非 N Windows x64 支持范围内完成，`v1.1.16` 候选身份和本地发布门禁也已通过。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0，真实编码取消、无残留、跨完整重启历史和默认应用播放也已通过。C-05.4.1 正式安装生命周期 50/50、安装态视频工作区 20/20；Windows N 实机证据仍未取得且 `windowsNRealMachinePassed=false`，产品负责人已明确将 Windows N 排除出 `v1.1.16` 支持范围，因此不再阻塞该版本。下一步为干净 CI 正式 NSIS、版本候选安装复验、PR、公开更新和回下载闭环，完成前仍不得创建标签。证据见 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)、[C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)、[C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md](C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md)、[C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md](C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md) 与 [RELEASE_AUDIT_1.1.16.md](RELEASE_AUDIT_1.1.16.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -408,7 +408,7 @@ src/types/media.ts
 
 ### C-01 FFmpeg 构建与合规
 
-进度（2026-08-28）：C-01.1 已完成可复现候选；C-01.2.1 已将 FFmpeg 9.0.1 最小 LGPL Windows x64 构建、完整 FFmpeg/MinGW/GCC 声明和来源/配置纳入产品资源，并以 8 文件大小/SHA-256、真实能力执行、两个冻结 MP4 和 NSIS 包内回读关闭运行时准入。C-01 尚未整体关闭：正式安装目录转码、替换拒绝、Windows N 分类以及同提交签名 NSIS/updater 精确增量属于 C-01.2.2；视频入口仍禁用。证据见 [C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md](C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md) 与 [C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md](C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md)。
+进度（2026-08-28）：C-01.1 已完成可复现候选；C-01.2.1 已关闭产品运行时准入；C-01.2.2 已完成生产 Media Foundation 稳定分类、正式应用内部预检、正式 NSIS 覆盖安装目录的真实软件转码、隔离缺失/替换拒绝、卸载/上一版本恢复，以及同提交 Tauri-updater-signed NSIS/updater 精确增量（均为 `6,821,970 B`）。上述结果满足最初 C-01 验收，C-01 已关闭。真实 Windows N 前后实机工具和验收器已就绪，实际机器证据归入 C-05/发布门禁；下一节点为 C-02。证据见 [C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md](C01_1_FFMPEG_REPRODUCIBLE_CANDIDATE_AUDIT.md)、[C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md](C01_2_1_VIDEO_RUNTIME_ADMISSION_AUDIT.md) 与 [C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md](C01_2_2_INSTALLED_RUNTIME_AND_SIGNED_DELTA_AUDIT.md)。
 
 - 选择固定版本、固定哈希、可重现的 Windows x64 构建；
 - 首期采用可满足项目分发策略的 LGPL 配置，不启用会让整体 FFmpeg 变为 GPL 的组件；
@@ -420,6 +420,8 @@ src/types/media.ts
 
 ### C-02 探测与配置模型
 
+完成状态（2026-08-28）：**C-02.1 至 C-02.4 全部完成，C-02 已关闭**。产品 ffprobe 有界事实、三档/最大分辨率/估算/流变化规划、不可执行工作区及真实分类/Windows 桌面矩阵全部通过；VFR、旋转、无音频、双音轨、字幕、10 分钟输入和损坏容器均有真实产品运行时证据。下一节点为 C-03，C-04 验证完成前仍不得发布视频输出。完整收口证据见 [C02_4_VIDEO_REAL_MATRIX_AUDIT.md](C02_4_VIDEO_REAL_MATRIX_AUDIT.md)。
+
 - 使用 ffprobe 获取时长、分辨率、帧率、视频/音频编码、码率、旋转和字幕流；
 - 提供“清晰、均衡、小体积”三档，并允许设置最大分辨率；
 - 默认保持宽高比、旋转方向和音频；
@@ -429,6 +431,8 @@ src/types/media.ts
 验收目标：VFR、旋转视频、无音频、多音轨、字幕、长视频和损坏输入均稳定分类；估算标记为估算。
 
 ### C-03 执行、进度与取消
+
+完成状态（2026-08-29）：**C-03.1 至 C-03.3.2 全部完成，C-03 已关闭**。参数数组、机器进度、ETA、临时大小/比例、Job Object、容量预检、真实暂存、心跳和清理已通过；唯一 `compress_video_file` 串起权威重规划、精确流变化确认、编码、完整验证和原子发布。视频工作区现已复用统一任务、取消、事件、无覆盖目标规划、最终 `TaskMetricsV1` 与跨重启历史，拒绝风险确认时不创建任务。下一步进入 C-05 真实验收矩阵。证据见 [C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md](C03_1_VIDEO_EXECUTION_FOUNDATION_AUDIT.md)、[C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md](C03_2_VIDEO_STAGING_EXECUTOR_AUDIT.md)、[C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md](C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md) 与 [C03_3_2_VIDEO_TASK_UI_AUDIT.md](C03_3_2_VIDEO_TASK_UI_AUDIT.md)。
 
 - 通过 `-progress pipe:1` 等机器可解析通道读取进度，不解析本地化控制台文本；
 - 参数以参数数组传入，不拼接 shell 字符串；
@@ -441,6 +445,8 @@ src/types/media.ts
 
 ### C-04 输出验证
 
+完成状态（2026-08-29）：**C-04.1 至 C-04.3 全部完成，C-04 已关闭**。暂存身份/大小、MP4/H.264/AAC、流数量、尺寸、旋转、时长、完整音视频帧扫描、Mark-of-the-Web、原子发布和最终磁盘事实已实现；真实截断、零字节、FFmpeg 非零退出/终止、源或暂存改写、容量门禁、取消和目标竞态均不发布。C-03.3.1 已将完整安全管线接入唯一后端命令，C-03.3.2 也已接通统一任务 UI、最终指标与历史；后续 C-05.1 至 C-05.4.1 已完成，当前下一接续点为真实 Windows N 前后门禁。证据见 [C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md](C04_1_VIDEO_OUTPUT_VALIDATION_AUDIT.md)、[C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md](C04_2_VIDEO_ATOMIC_PUBLICATION_AUDIT.md)、[C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md](C04_3_VIDEO_FAILURE_MATRIX_AUDIT.md)、[C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md](C03_3_1_VIDEO_COMMAND_PIPELINE_AUDIT.md) 与 [C03_3_2_VIDEO_TASK_UI_AUDIT.md](C03_3_2_VIDEO_TASK_UI_AUDIT.md)。
+
 - 用 ffprobe 验证输出容器、视频流、音频流、时长和可解码性；
 - 输入有音视频时，输出不得静默缺少对应流；
 - 时长偏差设置可解释阈值；
@@ -451,12 +457,15 @@ src/types/media.ts
 
 ### C-05 真实验收矩阵
 
+进度（2026-08-29）：**C-05.1 至 C-05.4.1 已完成；产品负责人明确将 Windows N 调整为 `v1.1.16` 暂不支持平台后，C-05 在非 N Windows x64 支持范围内关闭。** Release WebView2 已完成两条真实视频执行；开发态矩阵以 5 种格式、4 个分辨率层级和 7 次产品执行覆盖全部三档预设及无音频，并以两个独立产品执行补齐 600 秒/3600 帧和 114,842,332 B 大输入。输出容器、编码、时长、尺寸、流、完整帧和实际字节差异均为 0。C-05.3 用真实 109.52 MiB 编码验证 UI 中途取消后产品 FFmpeg 退出、无暂存/最终输出、取消历史落库；两条完成记录及精确 metrics 跨原生应用完整重启保持一致，发布 MP4 由 Windows 默认应用接收。C-05.4.1 正式 NSIS 生命周期 50/50、安装态视频工作区 20/20，通过候选字节对账、覆盖安装数据保持、真实运行时/UI、卸载与公开 `v1.1.15` 恢复。Windows N 工具和拒绝分类全部保留，`windowsNRealMachinePassed` 继续为 `false`，未来只有取得实机证据后才可移除不支持声明。下一步进入版本身份、公开更新和回下载复验。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md)、[C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)、[C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)、[C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md](C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md) 与 [C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md](C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md)。
+
 - MP4/H.264、MOV、AVI、WMV、WebM 输入；
 - 480p、720p、1080p、4K；
 - 有/无音频、旋转、VFR、字幕、多音轨；
 - 30 秒小样本、10 分钟样本和至少一个大文件；
 - 三档预设分别验证输出可播放、时长、分辨率、音视频流和实际大小；
 - 安装版执行、取消、历史、输出默认应用播放与公开更新后复验。
+- `v1.1.16` 公开支持限定为非 N Windows x64；Windows N 暂不支持，未来只有在 Media Feature Pack 安装前后同机生产验证及独立证据验收通过后才可纳入。
 
 ### C-06 后续硬件编码节点
 
@@ -645,14 +654,14 @@ npm.cmd run test:release-identity -- --expected <version>
 
 ## 11. 当前状态
 
-- 当前正式基线为 `1.1.14`；标签固定在 `cfc58ec`，公开 Release 与真实应用内更新门禁均已通过；
+- 当前正式基线为 `1.1.15`；标签固定在 `82b1b8f`，公开 Release 与真实应用内更新门禁均已通过；
 - A-01 已完成聚焦/多选分离、直属目录列表、双击/Enter 进入、Backspace/Alt 方向键、面包屑和后退/前进/上一级/刷新；搜索继续匹配完整归档路径；
 - A-02 已完成空白区、单项、多选和目录的动态右键菜单；A-03 已接通默认应用安全打开；A-04 已完成 ZIP/TAR 图片与文本分层预览、编码识别、1 MiB 上限和二进制拒绝；A-05 已完成三层只读嵌套工作区、归档链、逐层密码隔离、服务端深度/循环防护与返回状态恢复；
 - 全量前端 234/234、生产构建、A-05 Rust 8/8、A-05.2 归档能力 Rust 3/3 和 Clippy 零告警均通过；
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-05.3 已全部完成；正式安装版图片链使用真实 JPEG/PNG/WebP，完成输入、配置、对比、执行、历史、完整重启和输出重新打开，安装生命周期 50/50、图片链 17/17。当前仍保持公开 `v1.1.14`；下一步为 `v1.1.15` 统一版本身份、Release notes、正式资产/签名、公开更新和回下载复验。
+- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；正式安装版图片链使用真实 JPEG/PNG/WebP，完成输入、配置、对比、执行、历史、完整重启和输出重新打开，安装生命周期 50/50、图片链 17/17。视频 C-01 至 C-05 已在非 N Windows x64 支持范围内关闭；Windows N 暂不支持且实机证据状态仍为 false。`v1.1.16` 版本身份和本地门禁已完成，下一步为干净 CI 正式候选、安装复验、PR、正式资产/签名、公开更新和回下载复验。
 
 ## 12. 技术参考
 

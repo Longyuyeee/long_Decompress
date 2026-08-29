@@ -52,13 +52,36 @@ assert(
 
 const compressionCommands = await read('src-tauri/src/commands/compression.rs')
 const imageCommandStart = compressionCommands.indexOf('pub async fn compress_image_file')
-const imageCommandEnd = compressionCommands.indexOf('pub async fn cancel_compression', imageCommandStart)
+const imageCommandEnd = compressionCommands.indexOf('pub struct VideoCompressionExecutionRequest', imageCommandStart)
 assert(imageCommandStart >= 0 && imageCommandEnd > imageCommandStart, 'image compression command boundary is missing')
 const imageCommand = compressionCommands.slice(imageCommandStart, imageCommandEnd)
 assert(imageCommand.includes('window.emit("task-log"'), 'image stages must use the unified task log event')
 assert(!imageCommand.includes('"task-progress"'), 'image stages must not emit synthetic progress percentages')
 
+const videoCommandStart = imageCommandEnd
+const videoCommandEnd = compressionCommands.indexOf('pub fn plan_image_compression_destination', videoCommandStart)
+assert(videoCommandEnd > videoCommandStart, 'video compression command boundary is missing')
+const videoCommand = compressionCommands.slice(videoCommandStart, videoCommandEnd)
+for (const contract of [
+  'register_task_cancellation(&task_id)',
+  'CompressionOutputGuard::acquire(&task_id, &output_path)',
+  'probe_video_file(&ffprobe, &source)',
+  'request.confirmed_stream_changes != plan.stream_changes',
+  'encode_video_to_staging',
+  'validate_staged_video_output',
+  'publish_validated_video_output',
+  'window.emit("task-log"',
+  'window.emit("task-progress"',
+  '"still-encoding"',
+]) {
+  assert(videoCommand.includes(contract), `C-03.3 video command contract is missing: ${contract}`)
+}
+
 const main = await read('src-tauri/src/main.rs')
+assert(
+  (main.match(/commands::compression::compress_video_file/g) ?? []).length === 1,
+  'C-03.3 must expose exactly one safe video execution command',
+)
 assert(
   (main.match(/commands::video_engine::preflight_video_engine/g) ?? []).length === 1,
   'C-01.2.1 must expose exactly one authoritative video-engine preflight command',
@@ -79,10 +102,190 @@ for (const contract of [
 }
 assert(!videoEngine.includes('cmd.exe') && !videoEngine.includes('powershell'), 'video preflight must not use a shell')
 assert(
+  (main.match(/commands::video_engine::probe_video_input/g) ?? []).length === 1,
+  'C-02.1 must expose exactly one authoritative video probe command',
+)
+assert(
+  (main.match(/commands::video_engine::plan_video_compression/g) ?? []).length === 1,
+  'C-02.2 must expose exactly one authoritative video compression planner',
+)
+const videoProbe = await read('src-tauri/src/services/video_probe.rs')
+for (const contract of [
+  'VIDEO_PROBE_SOURCE_EMPTY',
+  'VIDEO_PROBE_TIMEOUT',
+  'VIDEO_PROBE_OUTPUT_TOO_LARGE',
+  'VIDEO_PROBE_NO_VIDEO_STREAM',
+  'drop-with-explicit-warning',
+  'refuse-before-encoding',
+  'preserve-input-timestamps',
+]) {
+  assert(videoProbe.includes(contract), `C-02.1 video probe contract is missing: ${contract}`)
+}
+assert(videoProbe.includes('.args(['), 'video probe arguments must be passed as an argument array')
+assert(videoProbe.includes('.kill_on_drop(true)'), 'timed-out video probes must terminate the child process')
+assert(!videoProbe.includes('cmd.exe') && !videoProbe.includes('powershell'), 'video probe must not use a shell')
+const videoCommands = await read('src-tauri/src/commands/video_engine.rs')
+assert(videoCommands.includes('validate_video_engine(&validation_root)'), 'video probe must validate the admitted runtime first')
+assert(videoCommands.includes('probe_video_file(&ffprobe'), 'video probe command must use the bounded production service')
+const videoPlan = await read('src-tauri/src/services/video_compression_plan.rs')
+for (const contract of [
+  'VideoCompressionPreset',
+  'Clear',
+  'Balanced',
+  'Small',
+  'will_upscale: false',
+  'preserve-within-even-dimension-rounding',
+  'is_estimate: true',
+  'estimate-only;',
+  'MAX_OUTPUT_PIXELS',
+]) {
+  assert(videoPlan.includes(contract), `C-02.2 video planning contract is missing: ${contract}`)
+}
+const videoEncoding = await read('src-tauri/src/services/video_encoding.rs')
+for (const contract of [
+  'build_ffmpeg_arguments',
+  'OsString',
+  'pipe:1',
+  'out_time_us',
+  'total_size',
+  'valid_timeline_samples >= 2',
+  'fps_mode',
+  'rate_control',
+  'JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE',
+  'AssignProcessToJobObject',
+  'TerminateJobObject',
+  'encode_video_to_staging',
+  'preflight_operation_resources',
+  'cleanup_staged_output_family',
+  'VideoEncodingEvent::Heartbeat',
+  '.kill_on_drop(true)',
+]) {
+  assert(videoEncoding.includes(contract), `C-03.1 video execution contract is missing: ${contract}`)
+}
+assert(!videoEncoding.includes('Command::new("cmd.exe")'), 'video encoding must not launch through cmd.exe')
+assert(!videoEncoding.includes('Command::new("powershell")'), 'video encoding must not launch through PowerShell')
+assert(!main.includes('commands::video_engine::encode_video'), 'C-03.2 internal staging must not bypass the C-04 publication gate')
+const videoValidation = await read('src-tauri/src/services/video_output_validation.rs')
+for (const contract of [
+  'validate_staged_video_output',
+  'probe_video_file(ffprobe, staged.path())',
+  '-count_frames',
+  'duration_tolerance_ms',
+  'DecodedFrameCountTooLow',
+  'DecodedAudioFrameCountTooLow',
+  'SizeChanged',
+  'RotationNotNormalized',
+  'LossyStreamsRemain',
+]) {
+  assert(videoValidation.includes(contract), `C-04.1 video validation contract is missing: ${contract}`)
+}
+assert(!videoValidation.includes('publish_verified_file'), 'C-04.1 validation must not publish before its own audit closes')
+const videoPublish = await read('src-tauri/src/services/video_publish.rs')
+for (const contract of [
+  'publish_validated_video_output',
+  'mark_of_web::read_from(source)',
+  'mark_of_web::propagate_to_tree',
+  'publish_verified_file(staged.path(), final_output',
+  'TargetAppeared',
+  'final_metadata.len() != verified.encoded_bytes',
+  'savings_ratio',
+]) {
+  assert(videoPublish.includes(contract), `C-04.2 video publication contract is missing: ${contract}`)
+}
+assert(!videoPublish.includes('move_paths_to_system_recycle_bin'), 'video publication must not recycle sources before command-level opt-in')
+for (const contract of [
+  'real_ffmpeg_nonzero_exit_publishes_nothing_and_leaves_no_staging',
+  'zeroed_output_after_encoding_is_rejected_and_cleaned_on_drop',
+  'source_change_after_validation_prevents_publication',
+]) {
+  assert(
+    videoEncoding.includes(contract) || videoValidation.includes(contract) || videoPublish.includes(contract),
+    `C-04.3 failure-matrix evidence is missing: ${contract}`,
+  )
+}
+const videoMatrixPackageManifest = JSON.parse(await read('package.json'))
+assert(
+  videoMatrixPackageManifest.scripts['test:video-matrix:real'] === 'node scripts/run-c05-video-format-matrix.mjs',
+  'C-05.2.1 must expose one reproducible real video matrix command',
+)
+const videoMatrixManifest = JSON.parse(await read('tests/fixtures/media/c05-video-format-matrix.json'))
+assert(videoMatrixManifest.fixtureTool.productIntegrationAllowed === false, 'C-05 fixture tooling must stay test-only')
+assert(
+  videoMatrixManifest.fixtureTool.archiveSha256 === '2e8e28af97c2ae338ccef92e36da9b2a4cd21d0cad9dde093545606cb07f5b00',
+  'C-05 fixture-tool identity must stay pinned',
+)
+assert(videoMatrixManifest.sources.length === 5, 'C-05.2.1 must cover five declared input formats')
+assert(videoMatrixManifest.executions.length === 7, 'C-05.2.1 must retain seven product-pipeline executions')
+assert(
+  new Set(videoMatrixManifest.executions.map(item => item.preset)).size === 3,
+  'C-05.2.1 must exercise all three presets',
+)
+const videoMatrixRunner = await read('scripts/run-c05-video-format-matrix.mjs')
+for (const contract of [
+  "join(root, 'test-results', 'c05-fixture-tool')",
+  "join(root, 'src-tauri', 'resources', 'video-engine', 'ffprobe.exe')",
+  'c05_real_format_resolution_preset_matrix',
+  "'-count_frames'",
+  'productIntegrationAllowed === false',
+]) {
+  assert(videoMatrixRunner.includes(contract), `C-05.2.1 matrix contract is missing: ${contract}`)
+}
+assert(
+  compressionCommands.includes('async fn c05_real_format_resolution_preset_matrix()'),
+  'C-05.2.1 must run the private product compression pipeline',
+)
+assert(
+  videoMatrixPackageManifest.scripts['test:video-long-large:real'] === 'node scripts/run-c05-video-long-large-matrix.mjs',
+  'C-05.2.2 must expose one reproducible long/large video command',
+)
+const videoLongLargeManifest = JSON.parse(await read('tests/fixtures/media/c05-video-long-large-matrix.json'))
+assert(videoLongLargeManifest.fixtureTool.productIntegrationAllowed === false, 'C-05.2.2 fixture tooling must stay test-only')
+assert(videoLongLargeManifest.expected.longDurationMs === 600_000, 'C-05.2.2 must retain a ten-minute input')
+assert(videoLongLargeManifest.expected.largeInputMinBytes === 100 * 1024 * 1024, 'C-05.2.2 large input must remain at least 100 MiB')
+assert(videoLongLargeManifest.cases.length === 2, 'C-05.2.2 must keep independent long and large product executions')
+const videoLongLargeRunner = await read('scripts/run-c05-video-long-large-matrix.mjs')
+for (const contract of [
+  "join(root, 'test-results', 'c05-fixture-tool')",
+  "join(root, 'src-tauri', 'resources', 'video-engine', 'ffprobe.exe')",
+  'c05_real_long_duration_and_large_input_matrix',
+  "'-count_frames'",
+  'productIntegrationAllowed === false',
+]) {
+  assert(videoLongLargeRunner.includes(contract), `C-05.2.2 matrix contract is missing: ${contract}`)
+}
+assert(
+  compressionCommands.includes('async fn c05_real_long_duration_and_large_input_matrix()'),
+  'C-05.2.2 must run long and large inputs through the private product pipeline',
+)
+const videoWorkspace = await read('src/components/compression/VideoCompressionWorkspace.vue')
+assert(videoWorkspace.includes('commands.planVideoCompression'), 'C-02.3 workspace must consume the authoritative backend plan')
+assert(videoWorkspace.includes('estimatedOutput.lowBytes'), 'C-02.3 workspace must display the labeled backend estimate')
+assert(videoWorkspace.includes('useVideoCompressionBatch'), 'C-03.3.2 workspace must use the audited unified-task batch adapter')
+assert(videoWorkspace.includes('confirmStreamChanges'), 'C-03.3.2 must confirm lossy stream changes before task creation')
+assert(videoWorkspace.includes('taskForItem(item)'), 'C-03.3.2 result UI must read the unified task facts')
+assert(!videoWorkspace.includes("invoke('compress_video_file'"), 'video workspace must not bypass the typed command adapter')
+const compressionStore = await read('src/stores/compression.ts')
+assert(compressionStore.includes('videoItems'), 'C-02.3 video drafts must reuse the existing compression store')
+assert(compressionStore.includes('planRevision'), 'C-02.3 must reject stale asynchronous video plans')
+assert(
   (main.match(/commands::compression::plan_image_compression_destination/g) ?? []).length === 1,
   'the application must expose exactly one authoritative image destination planner',
 )
+assert(
+  (main.match(/commands::compression::plan_video_compression_destination/g) ?? []).length === 1,
+  'the application must expose exactly one authoritative video destination planner',
+)
 const tauriCommands = await read('src/composables/useTauriCommands.ts')
+assert(
+  tauriCommands.includes("invoke<VideoProbeReport>('probe_video_input', { path })"),
+  'the frontend video probe wrapper is missing or bypasses the typed contract',
+)
+assert(
+  tauriCommands.includes("invoke<VideoCompressionPlan>('plan_video_compression', { request })"),
+  'the frontend video planner wrapper is missing or bypasses the typed contract',
+)
+assert(tauriCommands.includes("invoke<PublishedVideoOutput>('compress_video_file'"), 'the frontend video execution wrapper is missing')
+assert(tauriCommands.includes("invoke<VideoCompressionDestinationPlan>('plan_video_compression_destination'"), 'the frontend video destination planner is missing')
 assert(
   tauriCommands.includes("invoke<ImageDestinationPlan>('plan_image_compression_destination'"),
   'the frontend must use the backend image destination planner',
@@ -101,6 +304,12 @@ assert(imageBatchTracking.includes("workloadKind: 'image'"), 'image child tasks 
 assert(imageBatchTracking.includes('createVerifiedImageTaskMetricsV1'), 'published image history must use verified backend facts')
 assert(imageBatchTracking.includes('waitForHistoryPersistence'), 'image batch completion must await history persistence')
 assert(!imageBatchTracking.includes("invoke('save_task_history'"), 'image orchestration must not bypass the unified task store history writer')
+const videoBatchTracking = await read('src/composables/useVideoCompressionBatch.ts')
+assert(videoBatchTracking.includes("workloadKind: 'video'"), 'video child tasks must use the unified video workload identity')
+assert(videoBatchTracking.includes('createMeasuredTaskMetricsV1'), 'published video history must use verified backend facts')
+assert(videoBatchTracking.includes('taskStore.cancelTask(activeTaskId)'), 'video cancellation must use the unified cancellation entry point')
+assert(videoBatchTracking.includes('waitForHistoryPersistence'), 'video batch completion must await history persistence')
+assert(!videoBatchTracking.includes("invoke('save_task_history'"), 'video orchestration must not bypass the unified task store history writer')
 const imageWorkspaceView = await read('src/components/compression/ImageCompressionWorkspace.vue')
 assert(imageWorkspaceView.includes('useImageCompressionBatch'), 'the image workspace must use the audited batch composable')
 assert(imageWorkspaceView.includes('taskForItem(item)?.metrics'), 'the image result UI must read verified unified task metrics')
@@ -108,6 +317,69 @@ assert(!imageWorkspaceView.includes('B-02 前端'), 'the enabled image workspace
 assert(!imageWorkspaceView.includes('B-03 实际编码后显示'), 'the result preview must not retain the B-03 placeholder')
 assert(!imageWorkspaceView.includes("invoke('compress_image_file'"), 'the image workspace must not bypass the audited batch composable')
 const packageManifest = JSON.parse(await read('package.json'))
+assert(
+  packageManifest.scripts?.['test:installed-video-workspace'] === 'npm run test:video-long-large:real && node scripts/test-installed-video-workspace.mjs',
+  'C-05.4 formal installed video workspace gate is missing',
+)
+const installedVideoWorkspaceGate = await read('scripts/test-installed-video-workspace.mjs')
+for (const contract of [
+  'formal installed executable excludes desktop E2E bridge',
+  'videoFfmpegProcessIds',
+  'cancelled installed task does not publish output',
+  'installed default application accepts published MP4',
+  'history survives complete installed-app restart',
+  'productFfprobe',
+]) {
+  assert(installedVideoWorkspaceGate.includes(contract), `C-05.4 installed video contract is missing: ${contract}`)
+}
+assert(videoEngine.includes('WINDOWS_STATUS_DLL_INIT_FAILED'), 'installed video preflight must recognize the observed Windows DLL initialization transient')
+assert(videoEngine.includes('const MAX_ATTEMPTS: usize = 2'), 'installed video preflight retry must remain bounded to one retry')
+assert(
+  videoEngine.includes('app_resource_dir.join("resources")'),
+  'packaged video commands must preserve the configured resources/ prefix',
+)
+const videoEngineCommands = await read('src-tauri/src/commands/video_engine.rs')
+assert(
+  (videoEngineCommands.match(/bundled_resource_root\(&app_resource_dir\)/g) ?? []).length === 3,
+  'all video probe and planning commands must resolve the packaged resource root consistently',
+)
+assert(
+  compressionCommands.includes('bundled_resource_root(&app_resource_dir)'),
+  'video execution must resolve the same packaged resource root as probe and planning',
+)
+const installedReleaseGate = await read('scripts/test-installed-release.ps1')
+assert(installedReleaseGate.includes('[switch]$RunVideoWorkspaceMatrix'), 'installed lifecycle cannot run the C-05.4 video workspace matrix')
+assert(installedReleaseGate.includes('test-installed-video-workspace.mjs'), 'installed lifecycle does not invoke the C-05.4 video workspace matrix')
+assert(
+  packageManifest.scripts?.['test:e2e:desktop:video-workspace'] === 'npm run test:video-long-large:real && node scripts/test-tauri-desktop.mjs --video-workspace-only',
+  'C-05.1/C-05.3 real desktop video gate is missing its reproducible cancellation fixture',
+)
+const desktopVideoGate = await read('scripts/test-tauri-desktop.mjs')
+assert(desktopVideoGate.includes('runVideoWorkspaceDesktopGate'), 'C-05.1 desktop video gate implementation is missing')
+assert(desktopVideoGate.includes('real video batch started'), 'C-05.1 desktop gate must start the visible product batch')
+assert(desktopVideoGate.includes("record.workloadKind === 'video'"), 'C-05.1 desktop gate must verify unified video history')
+assert(desktopVideoGate.includes("const productFfprobe = path.join"), 'C-05.1 desktop gate must independently probe published outputs')
+assert(desktopVideoGate.includes("assert.equal(video?.codec_name, 'h264')"), 'C-05.1 desktop gate must verify H.264 publication')
+assert(desktopVideoGate.includes("assert.equal(audio?.codec_name, 'aac')"), 'C-05.1 desktop gate must verify AAC publication')
+assert(desktopVideoGate.includes('planning must not write task history'), 'video planning must still enforce zero history writes')
+assert(desktopVideoGate.includes('videoFfmpegProcessIds(cancellationVideo)'), 'C-05.3 must observe and terminate the real product FFmpeg process')
+assert(desktopVideoGate.includes("candidate.status === 'cancelled'"), 'C-05.3 must persist cancelled video history')
+assert(desktopVideoGate.includes('await restartDesktopSession()'), 'C-05.3 must perform a complete application restart')
+assert(desktopVideoGate.includes('measured video history must survive a complete app restart'), 'C-05.3 must compare measured history across restart')
+assert(desktopVideoGate.includes('video-open-default-app'), 'C-05.3 must invoke default-application playback from the visible result')
+assert(
+  (main.match(/commands::system_integration::open_video_output_with_default_application/g) ?? []).length === 1,
+  'C-05.3 must expose exactly one restricted video default-application command',
+)
+const systemIntegrationCommands = await read('src-tauri/src/commands/system_integration.rs')
+for (const contract of [
+  'VIDEO_DEFAULT_OPEN_PATH_MUST_BE_ABSOLUTE',
+  'VIDEO_DEFAULT_OPEN_REQUIRES_REGULAR_FILE',
+  'VIDEO_DEFAULT_OPEN_REQUIRES_MP4',
+  'archive_entry_open::open_with_default_application(&path)',
+]) {
+  assert(systemIntegrationCommands.includes(contract), `C-05.3 default-open contract is missing: ${contract}`)
+}
 assert(
   packageManifest.scripts?.['test:video-runtime-package:real'] === 'node scripts/check-video-runtime-package.mjs',
   'C-01.2.1 real packaged-runtime command is missing',
@@ -198,7 +470,8 @@ const productionFiles = [
 ]
 const mediaFiles = productionFiles.filter((file) =>
   /(?:^|[\\/])media(?:[_.\\/-]|$)/i.test(file)
-  || /image[_-]?compression/i.test(file),
+  || /image[_-]?compression/i.test(file)
+  || /video[_-]?(?:engine|probe|compression)/i.test(file)
 )
 const forbiddenMediaBypasses = [
   'std::fs::rename(',

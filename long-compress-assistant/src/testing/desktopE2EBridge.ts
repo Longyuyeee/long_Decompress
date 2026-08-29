@@ -397,6 +397,7 @@ export const installDesktopE2EBridge = () => {
     async reset() {
       taskStore.tasks.splice(0)
       compressionStore.clearImageDrafts()
+      compressionStore.clearVideoDrafts()
       await syncActiveState()
       updateStore.$patch({
         status: 'idle',

@@ -416,6 +416,11 @@ describe('useTauriCommands', () => {
     })
     const commands = useTauriCommands()
 
+    await commands.openVideoOutputWithDefaultApplication('C:/output/video.mp4')
+    expect(mocks.invoke).toHaveBeenCalledWith('open_video_output_with_default_application', {
+      path: 'C:/output/video.mp4',
+    })
+
     await expect(commands.compressFiles('task', ['a.txt'], 'a.zip', { level: 6 })).resolves.toBe('compress_files')
     await commands.planImageCompressionDestination({
       source: 'C:/images/photo.webp',

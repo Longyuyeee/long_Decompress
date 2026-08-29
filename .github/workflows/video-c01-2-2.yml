@@ -1,0 +1,97 @@
+name: C-01.2.2 video bundle delta
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/video-c01-2-2-installed-runtime
+
+permissions:
+  contents: read
+
+jobs:
+  signed-updater-delta:
+    name: Same-commit signed updater delta
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: long-compress-assistant
+    env:
+      CARGO_TERM_COLOR: always
+      TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+      TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: long-compress-assistant/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: long-compress-assistant/src-tauri -> target
+      - run: npm ci
+      - run: npm run type-check
+      - name: Require the existing updater signing boundary
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:TAURI_PRIVATE_KEY)) {
+            throw 'TAURI_PRIVATE_KEY is unavailable; C-01.2.2 must not fabricate signed updater evidence.'
+          }
+      - name: Generate same-commit no-video baseline config
+        shell: pwsh
+        run: |
+          Copy-Item src-tauri/tauri.conf.json $env:RUNNER_TEMP/c01-original-tauri.conf.json
+          npm run prepare:video-bundle-baseline -- --output=src-tauri/tauri.conf.json
+      - name: Build updater-signed no-video baseline
+        shell: pwsh
+        run: |
+          npm run tauri -- build --bundles nsis,updater
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $target = 'test-results/c01-video-delta/baseline'
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          Copy-Item 'src-tauri/target/release/bundle/nsis/*.exe' $target
+          Copy-Item 'src-tauri/target/release/bundle/nsis/*.nsis.zip' $target
+          Copy-Item 'src-tauri/target/release/bundle/nsis/*.nsis.zip.sig' $target
+      - name: Restore integrated product configuration
+        if: always()
+        shell: pwsh
+        run: Copy-Item $env:RUNNER_TEMP/c01-original-tauri.conf.json src-tauri/tauri.conf.json -Force
+      - name: Build updater-signed integrated bundle
+        shell: pwsh
+        run: |
+          npm run tauri -- build --bundles nsis,updater
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $target = 'test-results/c01-video-delta/integrated'
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          Copy-Item 'src-tauri/target/release/bundle/nsis/*.exe' $target
+          Copy-Item 'src-tauri/target/release/bundle/nsis/*.nsis.zip' $target
+          Copy-Item 'src-tauri/target/release/bundle/nsis/*.nsis.zip.sig' $target
+      - name: Verify package runtime and measure exact delta
+        shell: pwsh
+        run: |
+          $baseline = 'test-results/c01-video-delta/baseline'
+          $integrated = 'test-results/c01-video-delta/integrated'
+          $baselineNsis = (Get-ChildItem $baseline -Filter '*.exe' | Select-Object -First 1).FullName
+          $baselineUpdater = (Get-ChildItem $baseline -Filter '*.nsis.zip' | Select-Object -First 1).FullName
+          $baselineSignature = (Get-ChildItem $baseline -Filter '*.nsis.zip.sig' | Select-Object -First 1).FullName
+          $integratedNsis = (Get-ChildItem $integrated -Filter '*.exe' | Select-Object -First 1).FullName
+          $integratedUpdater = (Get-ChildItem $integrated -Filter '*.nsis.zip' | Select-Object -First 1).FullName
+          $integratedSignature = (Get-ChildItem $integrated -Filter '*.nsis.zip.sig' | Select-Object -First 1).FullName
+          npm run test:video-runtime-package:real -- --installer=$integratedNsis
+          npm run test:video-bundle-delta -- `
+            --baseline-nsis=$baselineNsis `
+            --baseline-updater=$baselineUpdater `
+            --baseline-signature=$baselineSignature `
+            --integrated-nsis=$integratedNsis `
+            --integrated-updater=$integratedUpdater `
+            --integrated-signature=$integratedSignature
+      - uses: actions/upload-artifact@v6
+        with:
+          name: c01-video-signed-updater-delta
+          path: |
+            long-compress-assistant/test-results/c01-video-delta
+            long-compress-assistant/test-results/video-runtime-package/result.json
+          if-no-files-found: error
+          retention-days: 7
