@@ -49,7 +49,7 @@
     },
     "C": {
       "workload": "video",
-      "publicFormats": ["h264-mp4", "h265-mp4"],
+      "publicFormats": ["h264-mp4"],
       "platformPolicy": {
         "supported": ["windows-x86_64-non-n"],
         "unsupported": ["windows-n"],

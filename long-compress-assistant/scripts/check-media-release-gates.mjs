@@ -38,6 +38,8 @@ export function validateMediaReleaseGates(contract) {
   assert(contract.nodes.B.requiredRealCases.includes('hundred-file-mixed-batch'), 'B-05.2.1 hundred-file batch is required')
   assert(contract.nodes.B.requiredRealCases.includes('ultra-large-pixel-limit'), 'B-05.2.2 pixel boundary is required')
   assert(contract.nodes.B.requiredRealCases.includes('unicode-long-path'), 'B-05.2.2 Unicode long-path evidence is required')
+  assert(contract.nodes.C.publicFormats.join(',') === 'h264-mp4', 'C public output must remain MP4/H.264; H.265 is an input case, not a promised output')
+  assert(contract.nodes.C.requiredRealCases.includes('h265-input'), 'C must preserve the real H.265 input case')
   assert(contract.nodes.C.platformPolicy?.supported?.join(',') === 'windows-x86_64-non-n', 'C video support must be limited to non-N Windows x64 editions')
   assert(contract.nodes.C.platformPolicy?.unsupported?.join(',') === 'windows-n', 'Windows N must be explicitly excluded from the C release matrix')
   assert(contract.nodes.C.platformPolicy?.windowsNRealMachineEvidenceRequiredToRemoveExclusion === true, 'Windows N support must not be claimed without real-machine evidence')

@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const configuredInstaller = process.argv.find(argument => argument.startsWith('--installer='))?.slice('--installer='.length)
-const installer = resolve(root, configuredInstaller || 'src-tauri/target/release/bundle/nsis/Long解压_1.1.15_x64-setup.exe')
+const tauriConfig = JSON.parse(await readFile(join(root, 'src-tauri', 'tauri.conf.json'), 'utf8'))
+const installer = resolve(root, configuredInstaller || `src-tauri/target/release/bundle/nsis/Long解压_${tauriConfig.package.version}_x64-setup.exe`)
 const sevenZip = join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
 const outputRoot = join(root, 'test-results', 'video-runtime-package')
 const extractionRoot = join(outputRoot, 'extracted')
