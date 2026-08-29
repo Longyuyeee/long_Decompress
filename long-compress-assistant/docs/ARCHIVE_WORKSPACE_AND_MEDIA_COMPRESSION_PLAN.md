@@ -490,7 +490,7 @@ Ghostscript 采用 AGPL/商业双许可，未完成法律与分发方案前不�
 
 验收目标：所有公开参数有官方依据；无法安全处理的加密、签名或特殊文档在执行前提示，不静默破坏。
 
-进度（2026-08-30）：**D-01.1 官方能力契约与完整样本基线已完成，D-01 尚未关闭。** 已锁定 qpdf 12.4.0 官方 Windows x64 候选、上游 SHA-256、Apache-2.0/NOTICE 边界和 OpenSSL provider；两种模式只接受结构化白名单参数，不接受原始命令行。真实样本由 6 类扩为 10 类，补齐图文混合、注释、书签和附件；8 个非签名/非加密样本分别通过“无损整理”和“兼容图片优化”的 qpdf `--check`、页数及独立结构保持复核，附件字节、书签目标、注释内容、表单值、页面尺寸和可搜索文本均一致。签名样本只分析并阻止执行，加密样本无密码安全拒绝、正确密码检查通过。qpdf 仍只存在于测试缓存，`integrationAllowed=false`，产品资源、后端命令和 PDF UI 均未开放。下一接续点为 D-01.2：把精确运行时子集与许可文件纳入正式资源，增加生产身份/缺失替换拒绝和同提交 NSIS/updater 增量后，才能关闭 D-01。证据见 [D01_1_QPDF_CAPABILITY_AND_FIXTURE_BASELINE_AUDIT.md](D01_1_QPDF_CAPABILITY_AND_FIXTURE_BASELINE_AUDIT.md)。
+进度（2026-08-30）：**D-01.1 与 D-01.2.1 已完成，D-01 尚未关闭。** D-01.1 已锁定两种白名单模式与十类真实 PDF 基线。D-01.2.1 又将 qpdf 12.4.0 官方 Windows x64 五文件运行时、Apache-2.0/NOTICE、GCC/MinGW notice 和来源说明纳入正式资源，共 10 文件、12,765,477 B；生产预检逐文件验证字节/SHA-256，并核对版本、OpenSSL/native、JSON v2 和图片优化能力，缺失或替换均失败关闭。产品只开放内部/后端身份预检，PDF 分析、执行和 UI 仍冻结。下一接续点严格为 D-01.2.2：基于同提交正式构建测量 NSIS/updater 精确增量，并完成安装态完整、缺失、替换与恢复验证；证据见 [D01_1_QPDF_CAPABILITY_AND_FIXTURE_BASELINE_AUDIT.md](D01_1_QPDF_CAPABILITY_AND_FIXTURE_BASELINE_AUDIT.md)和 [D01_2_1_QPDF_RUNTIME_ADMISSION_AUDIT.md](D01_2_1_QPDF_RUNTIME_ADMISSION_AUDIT.md)。
 
 ### D-02 前端配置
 
@@ -663,7 +663,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在非 N Windows x64 支持范围内关闭并发布为 `v1.1.16`，Windows N 暂不支持且实机证据状态仍为 false。D-01.1 已完成 qpdf 12.4.0 能力白名单与十类 PDF 样本基线，产品集成继续冻结；下一步为 D-01.2 正式运行时载荷、许可、生产预检与安装包增量。
+- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在非 N Windows x64 支持范围内关闭并发布为 `v1.1.16`，Windows N 暂不支持且实机证据状态仍为 false。PDF D-01.1 能力/十类样本基线与 D-01.2.1 正式运行时/许可/生产预检已完成；下一步为 D-01.2.2 正式安装包增量与安装态拒绝/恢复证据。
 
 ## 12. 技术参考
 

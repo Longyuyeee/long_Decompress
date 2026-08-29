@@ -124,12 +124,13 @@ for (const fixture of manifest.pdfs) {
 
 const evidence = {
   schemaVersion: 1,
-  node: contract.node,
+  node: contract.baselineNode,
   engine: { id: contract.engine.id, version: contract.engine.version, versionOutput: versionOutput.trim(), cryptoOutput: cryptoOutput.trim() },
   fixtureRevision: manifest.fixtureRevision,
-  productRuntimeIntegrated: false,
+  productRuntimeIntegrated: contract.executionBoundary.publishProductRuntime,
+  productTransformationIntegrated: false,
   productUiEnabled: false,
   results,
 }
 await writeFile(join(outputRoot, 'result.json'), JSON.stringify(evidence, null, 2), 'utf8')
-console.log(`D-01.1 real qpdf baseline passed (${results.length} PDFs; product runtime remains blocked).`)
+console.log(`D-01.1 real qpdf baseline passed (${results.length} PDFs; runtime preflight admitted, transformation remains blocked).`)
