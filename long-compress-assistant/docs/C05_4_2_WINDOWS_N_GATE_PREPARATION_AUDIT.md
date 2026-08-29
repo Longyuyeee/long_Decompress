@@ -34,6 +34,12 @@ C-05 原始验收要求的是“正式安装候选在真实 Windows N、Media Fe
 
 同时通过 PowerShell AST、两个 Node 脚本语法、真实媒体依赖、媒体架构和媒体发布门禁。
 
+## 环境可用性复核
+
+收口时重新执行只读盘点，而非沿用早期结论：当前为 build `22621`、`EditionID=Professional`；没有 `Get-VM` / `vmconnect.exe`、VirtualBox `VBoxManage.exe`、VMware `vmrun.exe` 或 QEMU 管理命令，也没有现存 Hyper-V VM。项目目录和当前用户 Downloads 中均未找到 ISO、VHD/VHDX、VMDK、OVA/OVF 安装介质。仅有 WSL，不能提供 Windows N 内核和 Media Feature Pack 状态，不能作为验收目标。
+
+因此本机无法继续取得真实 N 证据。新增虚拟化组件、下载 Windows N 镜像、改变宿主 Edition 或使用外部机器都属于新的系统资源/授权条件，本节点不擅自执行。
+
 ## Windows N 目标机执行手册
 
 目标必须是 Windows N x64，尚未安装 Media Feature Pack，且没有现存 Long解压安装。先固定工具提交并安装依赖：
