@@ -318,6 +318,26 @@ assert(!imageWorkspaceView.includes('B-03 实际编码后显示'), 'the result p
 assert(!imageWorkspaceView.includes("invoke('compress_image_file'"), 'the image workspace must not bypass the audited batch composable')
 const packageManifest = JSON.parse(await read('package.json'))
 assert(
+  packageManifest.scripts?.['test:installed-video-workspace'] === 'npm run test:video-long-large:real && node scripts/test-installed-video-workspace.mjs',
+  'C-05.4 formal installed video workspace gate is missing',
+)
+const installedVideoWorkspaceGate = await read('scripts/test-installed-video-workspace.mjs')
+for (const contract of [
+  'formal installed executable excludes desktop E2E bridge',
+  'videoFfmpegProcessIds',
+  'cancelled installed task does not publish output',
+  'installed default application accepts published MP4',
+  'history survives complete installed-app restart',
+  'productFfprobe',
+]) {
+  assert(installedVideoWorkspaceGate.includes(contract), `C-05.4 installed video contract is missing: ${contract}`)
+}
+assert(videoEngine.includes('WINDOWS_STATUS_DLL_INIT_FAILED'), 'installed video preflight must recognize the observed Windows DLL initialization transient')
+assert(videoEngine.includes('const MAX_ATTEMPTS: usize = 2'), 'installed video preflight retry must remain bounded to one retry')
+const installedReleaseGate = await read('scripts/test-installed-release.ps1')
+assert(installedReleaseGate.includes('[switch]$RunVideoWorkspaceMatrix'), 'installed lifecycle cannot run the C-05.4 video workspace matrix')
+assert(installedReleaseGate.includes('test-installed-video-workspace.mjs'), 'installed lifecycle does not invoke the C-05.4 video workspace matrix')
+assert(
   packageManifest.scripts?.['test:e2e:desktop:video-workspace'] === 'npm run test:video-long-large:real && node scripts/test-tauri-desktop.mjs --video-workspace-only',
   'C-05.1/C-05.3 real desktop video gate is missing its reproducible cancellation fixture',
 )

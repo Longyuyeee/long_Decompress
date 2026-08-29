@@ -37,6 +37,7 @@
     "test:installed-archive-workspace": "node scripts/test-installed-archive-workspace.mjs",
     "test:installed-image-workspace": "node scripts/test-installed-image-workspace.mjs",
     "test:installed-video-runtime": "node scripts/test-installed-video-runtime.mjs",
+    "test:installed-video-workspace": "npm run test:video-long-large:real && node scripts/test-installed-video-workspace.mjs",
     "test:windows-n-video-runtime": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-windows-n-video-runtime.ps1",
     "verify:windows-n-video-runtime": "node scripts/verify-windows-n-video-runtime-evidence.mjs",
     "test:public-update": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-public-update.ps1",

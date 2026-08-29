@@ -11,7 +11,8 @@ param(
   [switch]$AllowExistingInstall,
   [switch]$RunArchiveWorkspaceMatrix,
   [switch]$RunImageWorkspaceMatrix,
-  [switch]$RunVideoRuntimeMatrix
+  [switch]$RunVideoRuntimeMatrix,
+  [switch]$RunVideoWorkspaceMatrix
 )
 
 $ErrorActionPreference = 'Stop'
@@ -484,7 +485,7 @@ try {
   $evidence.baselineContextMenuMode = $baselineContextMenuMode
 
   New-Item -ItemType Directory -Path $evidenceDirectory -Force | Out-Null
-  if ($RunArchiveWorkspaceMatrix -or $RunImageWorkspaceMatrix) {
+  if ($RunArchiveWorkspaceMatrix -or $RunImageWorkspaceMatrix -or $RunVideoWorkspaceMatrix) {
     $edgeDriverPath = [string]$env:EDGE_DRIVER_PATH
     $tauriDriverPath = if ([string]::IsNullOrWhiteSpace([string]$env:TAURI_DRIVER_PATH)) {
       Join-Path $env:USERPROFILE '.cargo\bin\tauri-driver.exe'
@@ -523,6 +524,14 @@ try {
     Add-Check 'installed video runtime fixture exists' (
       Test-Path -LiteralPath $videoFixturePath -PathType Leaf
     ) "expected=$videoFixturePath"
+  }
+  if ($RunVideoWorkspaceMatrix) {
+    $videoWorkspaceFixturePath = Join-Path `
+      $projectRoot `
+      'test-results\c05-video-long-large-matrix\inputs\avi-100mib-1080p.avi'
+    Add-Check 'installed video workspace large fixture exists' (
+      Test-Path -LiteralPath $videoWorkspaceFixturePath -PathType Leaf
+    ) "Run npm.cmd run test:video-long-large:real first; expected=$videoWorkspaceFixturePath"
   }
   Backup-UserData
   Backup-ContextMenuRegistry
@@ -612,6 +621,30 @@ try {
         Remove-Item Env:VIDEO_RUNTIME_EVIDENCE_DIRECTORY -ErrorAction SilentlyContinue
       } else {
         $env:VIDEO_RUNTIME_EVIDENCE_DIRECTORY = $previousEvidenceDirectory
+      }
+      Stop-InstalledApplication $candidateState.installLocation
+    }
+  }
+  if ($RunVideoWorkspaceMatrix) {
+    $previousAppBinary = $env:TAURI_APP_BINARY
+    $previousEvidenceDirectory = $env:VIDEO_WORKSPACE_EVIDENCE_DIRECTORY
+    try {
+      $env:TAURI_APP_BINARY = $candidateState.executable
+      $env:VIDEO_WORKSPACE_EVIDENCE_DIRECTORY = Join-Path $evidenceDirectory 'video-workspace'
+      & node (Join-Path $projectRoot 'scripts\test-installed-video-workspace.mjs')
+      Add-Check 'installed video workspace full flow exits successfully' ($LASTEXITCODE -eq 0) (
+        "exitCode=$LASTEXITCODE; executable=$($candidateState.executable)"
+      )
+    } finally {
+      if ($null -eq $previousAppBinary) {
+        Remove-Item Env:TAURI_APP_BINARY -ErrorAction SilentlyContinue
+      } else {
+        $env:TAURI_APP_BINARY = $previousAppBinary
+      }
+      if ($null -eq $previousEvidenceDirectory) {
+        Remove-Item Env:VIDEO_WORKSPACE_EVIDENCE_DIRECTORY -ErrorAction SilentlyContinue
+      } else {
+        $env:VIDEO_WORKSPACE_EVIDENCE_DIRECTORY = $previousEvidenceDirectory
       }
       Stop-InstalledApplication $candidateState.installLocation
     }

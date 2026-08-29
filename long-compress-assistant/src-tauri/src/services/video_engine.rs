@@ -190,27 +190,39 @@ fn inspect_resources(resource_root: &Path) -> Result<(PathBuf, Vec<VideoEngineFi
 }
 
 fn run_probe(executable: &Path, arguments: &[&str], label: &str) -> Result<String> {
-    let output = Command::new(executable)
-        .args(arguments)
-        .output()
-        .with_context(|| {
-            format!(
-                "VIDEO_ENGINE_LAUNCH_FAILED: {label}: {}",
-                executable.display()
-            )
-        })?;
-    if !output.status.success() {
+    const WINDOWS_STATUS_DLL_INIT_FAILED: i32 = -1_073_741_502;
+    const MAX_ATTEMPTS: usize = 2;
+    for attempt in 0..MAX_ATTEMPTS {
+        let output = Command::new(executable)
+            .args(arguments)
+            .output()
+            .with_context(|| {
+                format!(
+                    "VIDEO_ENGINE_LAUNCH_FAILED: {label}: {}",
+                    executable.display()
+                )
+            })?;
+        if output.status.success() {
+            return Ok(format!(
+                "{}{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+        let exit_code = output.status.code();
+        if cfg!(windows)
+            && exit_code == Some(WINDOWS_STATUS_DLL_INIT_FAILED)
+            && attempt + 1 < MAX_ATTEMPTS
+        {
+            std::thread::sleep(std::time::Duration::from_millis(150));
+            continue;
+        }
         bail!(
-            "VIDEO_ENGINE_PROBE_FAILED: {label}: exit={:?}: {}",
-            output.status.code(),
+            "VIDEO_ENGINE_PROBE_FAILED: {label}: exit={exit_code:?}: {}",
             String::from_utf8_lossy(&output.stderr).trim()
         );
     }
-    Ok(format!(
-        "{}{}",
-        String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)
-    ))
+    unreachable!("bounded video probe loop always returns or fails")
 }
 
 pub fn validate_video_engine(resource_root: &Path) -> Result<VideoEngineStatus> {

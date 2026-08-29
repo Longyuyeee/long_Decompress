@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-04、C-05.1、C-05.2 和 C-05.3 已完成。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0，真实编码取消、无残留、跨完整重启历史和默认应用播放也已通过。下一唯一接续点为 C-05.4 的正式安装候选、Windows N 前后与公开更新闭环，完成前不得发布 v1.1.16。证据见 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md) 与 [C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-04、C-05.1、C-05.2 和 C-05.3 已完成。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0，真实编码取消、无残留、跨完整重启历史和默认应用播放也已通过。C-05.4.1 正式安装版视频工作区门禁及生命周期入口已经实现并通过无测试桥生产预演，下一步从干净提交构建正式 NSIS 并完成覆盖/卸载/恢复；其后仍需 Windows N 前后与公开更新闭环，完成前不得发布 v1.1.16。证据见 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)、[C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md) 与 [C05_4_1_INSTALLED_VIDEO_GATE_FOUNDATION_AUDIT.md](C05_4_1_INSTALLED_VIDEO_GATE_FOUNDATION_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -457,7 +457,7 @@ src/types/media.ts
 
 ### C-05 真实验收矩阵
 
-进度（2026-08-29）：**C-05.1 至 C-05.3 已完成，C-05 尚未关闭。** Release WebView2 已完成两条真实视频执行；开发态矩阵以 5 种格式、4 个分辨率层级和 7 次产品执行覆盖全部三档预设及无音频，并以两个独立产品执行补齐 600 秒/3600 帧和 114,842,332 B 大输入。输出容器、编码、时长、尺寸、流、完整帧和实际字节差异均为 0。C-05.3 又用真实 109.52 MiB 编码验证 UI 中途取消后产品 FFmpeg 退出、无暂存/最终输出、取消历史落库；两条完成记录及精确 metrics 跨原生应用完整重启保持一致，发布 MP4 由 Windows 默认应用接收。下一唯一接续点 C-05.4 完成正式安装候选、Windows N 前后、版本身份、公开更新和回下载复验。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md)、[C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md) 与 [C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)。
+进度（2026-08-29）：**C-05.1 至 C-05.3 已完成，C-05.4.1 门禁基础完成但正式 NSIS 生命周期尚未执行，C-05 尚未关闭。** Release WebView2 已完成两条真实视频执行；开发态矩阵以 5 种格式、4 个分辨率层级和 7 次产品执行覆盖全部三档预设及无音频，并以两个独立产品执行补齐 600 秒/3600 帧和 114,842,332 B 大输入。输出容器、编码、时长、尺寸、流、完整帧和实际字节差异均为 0。C-05.3 用真实 109.52 MiB 编码验证 UI 中途取消后产品 FFmpeg 退出、无暂存/最终输出、取消历史落库；两条完成记录及精确 metrics 跨原生应用完整重启保持一致，发布 MP4 由 Windows 默认应用接收。C-05.4.1 新增生产安装工作区门，并在无测试桥 Release 预演中完成取消、8,410,052 B MP4/H.264 发布、默认应用和完整重启历史；下一步必须从干净提交构建正式 NSIS，完成安装生命周期后再进入 Windows N 前后、版本身份、公开更新和回下载复验。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md)、[C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)、[C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md) 与 [C05_4_1_INSTALLED_VIDEO_GATE_FOUNDATION_AUDIT.md](C05_4_1_INSTALLED_VIDEO_GATE_FOUNDATION_AUDIT.md)。
 
 - MP4/H.264、MOV、AVI、WMV、WebM 输入；
 - 480p、720p、1080p、4K；
