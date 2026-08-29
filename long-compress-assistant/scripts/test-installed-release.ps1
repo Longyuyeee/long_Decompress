@@ -29,6 +29,8 @@ $backupRoot = [IO.Path]::GetFullPath(
 $productName = "Long$([char]0x89E3)$([char]0x538B)"
 $uninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$productName"
 $appProductKey = "HKCU:\Software\Longyuyeee\$productName"
+$autoStartKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+$autoStartValueName = $productName
 $appDataPaths = @(
   [IO.Path]::GetFullPath((Join-Path $env:APPDATA 'LongDecompress')),
   [IO.Path]::GetFullPath((Join-Path $env:APPDATA 'com.longcompress.assistant'))
@@ -38,6 +40,7 @@ $applicationName = "$productName.exe"
 $restoreRequired = $false
 $validationSucceeded = $false
 $baselineContextMenuMode = 'none'
+$baselineAutoStartRegistration = $null
 $contextMenuRegistryBackups = @()
 $evidence = [ordered]@{
   schemaVersion = 2
@@ -124,12 +127,35 @@ function Compare-Fingerprints {
 
 function Backup-UserData {
   New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null
+  $fingerprints = [ordered]@{}
   for ($index = 0; $index -lt $appDataPaths.Count; $index += 1) {
     $path = $appDataPaths[$index]
-    if (Test-Path -LiteralPath $path) {
-      Copy-Item -LiteralPath $path -Destination (Join-Path $backupRoot "data-$index") -Recurse
+    $backup = Join-Path $backupRoot "data-$index"
+    if (-not (Test-Path -LiteralPath $path)) {
+      $fingerprints[$path] = 'missing'
+      continue
+    }
+    $snapshotCreated = $false
+    for ($attempt = 1; $attempt -le 3; $attempt += 1) {
+      if (Test-Path -LiteralPath $backup) {
+        Remove-Item -LiteralPath $backup -Recurse -Force
+      }
+      $sourceBefore = Get-DirectoryFingerprint $path
+      Copy-Item -LiteralPath $path -Destination $backup -Recurse
+      $sourceAfter = Get-DirectoryFingerprint $path
+      $backupFingerprint = Get-DirectoryFingerprint $backup
+      if ($sourceBefore -eq $sourceAfter -and $sourceBefore -eq $backupFingerprint) {
+        $fingerprints[$path] = $sourceBefore
+        $snapshotCreated = $true
+        break
+      }
+      Start-Sleep -Milliseconds 250
+    }
+    if (-not $snapshotCreated) {
+      throw "Unable to create a stable user-data snapshot: $path"
     }
   }
+  return $fingerprints
 }
 
 function Restore-UserData {
@@ -137,12 +163,30 @@ function Restore-UserData {
     $path = $appDataPaths[$index]
     $backup = Join-Path $backupRoot "data-$index"
     if (Test-Path -LiteralPath $backup) {
-      if (Test-Path -LiteralPath $path) {
-        Remove-Item -LiteralPath $path -Recurse -Force
-      }
       $parent = Split-Path -Parent $path
       New-Item -ItemType Directory -Path $parent -Force | Out-Null
-      Copy-Item -LiteralPath $backup -Destination $path -Recurse
+      $staging = Join-Path $parent ".long-decompress-restore-$([guid]::NewGuid().ToString('N'))"
+      try {
+        Copy-Item -LiteralPath $backup -Destination $staging -Recurse
+        $expectedFingerprint = Get-DirectoryFingerprint $backup
+        Add-Check "restore staging matches backup for $path" (
+          (Get-DirectoryFingerprint $staging) -eq $expectedFingerprint
+        ) "expected=$expectedFingerprint; actual=$(Get-DirectoryFingerprint $staging)"
+        if (Test-Path -LiteralPath $path) {
+          Remove-Item -LiteralPath $path -Recurse -Force
+        }
+        if (Test-Path -LiteralPath $path) {
+          throw "User-data target was recreated during restore: $path"
+        }
+        Move-Item -LiteralPath $staging -Destination $path
+        Add-Check "restored user data matches backup for $path" (
+          (Get-DirectoryFingerprint $path) -eq $expectedFingerprint
+        ) "expected=$expectedFingerprint; actual=$(Get-DirectoryFingerprint $path)"
+      } finally {
+        if (Test-Path -LiteralPath $staging) {
+          Remove-Item -LiteralPath $staging -Recurse -Force
+        }
+      }
     } elseif (Test-Path -LiteralPath $path) {
       Remove-Item -LiteralPath $path -Recurse -Force
     }
@@ -186,6 +230,42 @@ function Get-ContextMenuMode {
   if ($legacy) { return 'legacy' }
   if ($native) { return 'native' }
   return 'none'
+}
+
+function Get-AutoStartRegistration {
+  if (-not (Test-Path -LiteralPath $autoStartKey)) {
+    return $null
+  }
+  $item = Get-Item -LiteralPath $autoStartKey
+  $value = $item.GetValue(
+    $autoStartValueName,
+    $null,
+    [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames
+  )
+  if ($null -eq $value) {
+    return $null
+  }
+  return [string]$value
+}
+
+function Restore-AutoStartRegistration {
+  param([AllowNull()][string]$ExpectedRegistration)
+  if ($null -eq $ExpectedRegistration) {
+    if (Test-Path -LiteralPath $autoStartKey) {
+      Remove-ItemProperty -LiteralPath $autoStartKey `
+        -Name $autoStartValueName -ErrorAction SilentlyContinue
+    }
+  } else {
+    if (-not (Test-Path -LiteralPath $autoStartKey)) {
+      New-Item -Path $autoStartKey -Force | Out-Null
+    }
+    Set-ItemProperty -LiteralPath $autoStartKey -Name $autoStartValueName `
+      -Value $ExpectedRegistration -Type String
+  }
+  $actualRegistration = Get-AutoStartRegistration
+  Add-Check 'baseline auto-start registration is restored' (
+    $actualRegistration -ceq $ExpectedRegistration
+  ) "expected=$ExpectedRegistration; actual=$actualRegistration"
 }
 
 function Get-ClassicContextMenuCommand {
@@ -479,10 +559,12 @@ try {
   ) "Close $productName before running installed-release validation."
   $baselineContextMenuMode = Get-ContextMenuMode
   $baselineClassicContextMenuCommand = Get-ClassicContextMenuCommand
+  $baselineAutoStartRegistration = Get-AutoStartRegistration
   Add-Check 'baseline context-menu mode is valid' (
     $baselineContextMenuMode -in @('none', 'legacy', 'native')
   ) "actual=$baselineContextMenuMode"
   $evidence.baselineContextMenuMode = $baselineContextMenuMode
+  $evidence.baselineAutoStartRegistration = $baselineAutoStartRegistration
 
   New-Item -ItemType Directory -Path $evidenceDirectory -Force | Out-Null
   if ($RunArchiveWorkspaceMatrix -or $RunImageWorkspaceMatrix -or $RunVideoWorkspaceMatrix) {
@@ -533,9 +615,8 @@ try {
       Test-Path -LiteralPath $videoWorkspaceFixturePath -PathType Leaf
     ) "Run npm.cmd run test:video-long-large:real first; expected=$videoWorkspaceFixturePath"
   }
-  Backup-UserData
+  $baselineFingerprints = Backup-UserData
   Backup-ContextMenuRegistry
-  $baselineFingerprints = Get-DataFingerprints
   $evidence.baselineDataFingerprints = $baselineFingerprints
   $restoreRequired = $true
 
@@ -683,6 +764,7 @@ try {
   $restoredState = Assert-Installed $PreviousVersion $initialState.installLocation
   Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints) 'baseline restore'
   Restore-ContextMenuMode $baselineContextMenuMode $baselineClassicContextMenuCommand
+  Restore-AutoStartRegistration $baselineAutoStartRegistration
   Compare-Fingerprints $baselineFingerprints (Get-DataFingerprints) 'baseline menu restore'
   $restoreRequired = $false
   $validationSucceeded = $true
@@ -699,6 +781,7 @@ try {
       $recoveredState = Get-InstalledState
       if ($recoveredState) {
         Restore-ContextMenuMode $baselineContextMenuMode $baselineClassicContextMenuCommand
+        Restore-AutoStartRegistration $baselineAutoStartRegistration
       }
       $evidence.recovery = 'Previous installer and user-data backup restored after failure.'
     } catch {

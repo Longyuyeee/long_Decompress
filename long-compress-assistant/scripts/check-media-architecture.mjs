@@ -351,6 +351,30 @@ const installedReleaseGate = await read('scripts/test-installed-release.ps1')
 assert(installedReleaseGate.includes('[switch]$RunVideoWorkspaceMatrix'), 'installed lifecycle cannot run the C-05.4 video workspace matrix')
 assert(installedReleaseGate.includes('test-installed-video-workspace.mjs'), 'installed lifecycle does not invoke the C-05.4 video workspace matrix')
 assert(
+  installedReleaseGate.includes('$baselineAutoStartRegistration = Get-AutoStartRegistration'),
+  'installed lifecycle must snapshot the user auto-start registration before mutation',
+)
+assert(
+  (installedReleaseGate.match(/Restore-AutoStartRegistration \$baselineAutoStartRegistration/g) ?? []).length === 2,
+  'installed lifecycle must restore auto-start after both success and recovery',
+)
+assert(
+  installedReleaseGate.includes("Add-Check 'baseline auto-start registration is restored'"),
+  'installed lifecycle must audit the exact restored auto-start registration',
+)
+assert(
+  installedReleaseGate.includes('$sourceBefore -eq $sourceAfter -and $sourceBefore -eq $backupFingerprint'),
+  'installed lifecycle must prove its user-data backup is a stable byte snapshot',
+)
+assert(
+  installedReleaseGate.includes('User-data target was recreated during restore'),
+  'installed lifecycle must refuse a restore race instead of nesting backup data',
+)
+assert(
+  installedReleaseGate.includes('Move-Item -LiteralPath $staging -Destination $path'),
+  'installed lifecycle must replace restored user data from verified staging',
+)
+assert(
   packageManifest.scripts?.['test:e2e:desktop:video-workspace'] === 'npm run test:video-long-large:real && node scripts/test-tauri-desktop.mjs --video-workspace-only',
   'C-05.1/C-05.3 real desktop video gate is missing its reproducible cancellation fixture',
 )
