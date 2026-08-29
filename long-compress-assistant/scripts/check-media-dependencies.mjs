@@ -12,6 +12,8 @@ const manifestPath = join(root, 'config', 'media-dependencies.json')
 const real = process.argv.includes('--real')
 const cache = join(root, 'test-results', 'media-dependency-audit')
 const sevenZip = join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
+const windowsNTest = await readFile(join(root, 'scripts', 'test-windows-n-video-runtime.ps1'), 'utf8')
+const windowsNVerifier = await readFile(join(root, 'scripts', 'verify-windows-n-video-runtime-evidence.mjs'), 'utf8')
 
 function assert(condition, message) {
   if (!condition) throw new Error(message)
@@ -124,6 +126,9 @@ function validateManifest(manifest) {
   assert(c05Candidate?.executableSha256 === '0b443647d39b817993794fa3e6f6d52600515b06700030f565cb4dbf5d795ef0', 'C-05.4.1 installed candidate executable hash drifted')
   assert(c05Candidate?.installedLifecycleChecks === 50 && c05Candidate?.installedWorkspaceChecks === 20, 'C-05.4.1 installed evidence count drifted')
   assert(c05Candidate?.installedLifecyclePassed === true && c05Candidate?.publicPreviousVersionRestored === true, 'C-05.4.1 installed lifecycle evidence is incomplete')
+  assert(windowsNTest.includes('candidate installer identity matches the locked C-05 candidate'), 'Windows N evidence must install the locked formal NSIS candidate')
+  assert(windowsNTest.includes("-ArgumentList @('/P', '/NS', '/NR')"), 'Windows N evidence must use the audited formal installer invocation')
+  assert(windowsNVerifier.includes('candidate installer hash differs'), 'Windows N verifier must independently bind the pre-feature-pack phase to the locked installer')
   assert(videoBaseline?.windowsNClassificationImplemented === true && videoBaseline?.windowsNClassificationUnitTestPassed === true, 'C-01 Windows N stable classification evidence is incomplete')
   assert(videoBaseline?.windowsNRealMachinePassed === false, 'do not claim real Windows N execution without machine evidence')
   assert(videoBaseline?.windowsNEvidenceScript === 'scripts/test-windows-n-video-runtime.ps1', 'C-01.2.2 Windows N evidence entry point is missing')

@@ -2,8 +2,8 @@ param(
   [Parameter(Mandatory = $true)]
   [ValidateSet('MissingMediaFeaturePack', 'MediaFeaturePackInstalled')]
   [string]$Phase,
-  [Parameter(Mandatory = $true)]
   [string]$InstalledExecutable,
+  [string]$CandidateInstaller,
   [string]$EvidenceDirectory
 )
 
@@ -15,6 +15,8 @@ $manifest = Get-Content -Raw -Encoding utf8 -LiteralPath (
 $videoEvidence = $manifest.candidateBaselines.video
 $candidateEvidence = $videoEvidence.c05InstalledCandidate
 $expectedVersion = [string]$candidateEvidence.version
+$expectedInstallerBytes = [long]$candidateEvidence.installerBytes
+$expectedInstallerHash = ([string]$candidateEvidence.installerSha256).ToLowerInvariant()
 $expectedExecutableBytes = [long]$candidateEvidence.executableBytes
 $expectedExecutableHash = ([string]$candidateEvidence.executableSha256).ToLowerInvariant()
 $productName = "Long$([char]0x89E3)$([char]0x538B)"
@@ -105,7 +107,7 @@ function Get-MediaFoundationModules {
 }
 
 function Write-PhaseReport {
-  param($Machine, $ExecutableIdentity, $Preflight, $MediaFoundationModules, [bool]$Passed)
+  param($Machine, $InstallerIdentity, $ExecutableIdentity, $Preflight, $MediaFoundationModules, [bool]$Passed)
   $report = [ordered]@{
     schemaVersion = 2
     measuredAt = (Get-Date).ToUniversalTime().ToString('o')
@@ -115,6 +117,8 @@ function Write-PhaseReport {
     expected = [ordered]@{
       windowsNEdition = $true
       installedVersion = $expectedVersion
+      installerBytes = $expectedInstallerBytes
+      installerSha256 = $expectedInstallerHash
       executableBytes = $expectedExecutableBytes
       executableSha256 = $expectedExecutableHash
       missingPhaseClassification = 'VIDEO_ENGINE_MEDIA_FOUNDATION_UNAVAILABLE'
@@ -122,6 +126,7 @@ function Write-PhaseReport {
       installedPhaseRealSoftwareTranscode = $true
     }
     actual = [ordered]@{
+      candidateInstaller = $InstallerIdentity
       executable = $ExecutableIdentity
       mediaFoundationModules = $MediaFoundationModules
       productionPreflight = $Preflight
@@ -136,6 +141,7 @@ function Write-PhaseReport {
 }
 
 $machine = $null
+$candidateInstallerIdentity = $null
 $executableIdentity = $null
 $preflight = $null
 $mediaFoundationModules = @()
@@ -151,11 +157,52 @@ try {
     "editionId=$($machine.editionId); caption=$($machine.caption)"
   )
 
+  if ($Phase -eq 'MissingMediaFeaturePack') {
+    if ([string]::IsNullOrWhiteSpace($CandidateInstaller)) {
+      throw 'CANDIDATE_INSTALLER_REQUIRED: MissingMediaFeaturePack must install the locked formal NSIS candidate.'
+    }
+    $candidateInstallerPath = [IO.Path]::GetFullPath(
+      (Resolve-Path -LiteralPath $CandidateInstaller).Path
+    )
+    Add-Check 'candidate installer is an executable' (
+      [IO.Path]::GetExtension($candidateInstallerPath) -eq '.exe'
+    ) $candidateInstallerPath
+    $candidateInstallerIdentity = [ordered]@{
+      path = $candidateInstallerPath
+      bytes = (Get-Item -LiteralPath $candidateInstallerPath).Length
+      sha256 = Get-FileSha256 $candidateInstallerPath
+    }
+    Add-Check 'candidate installer identity matches the locked C-05 candidate' (
+      $candidateInstallerIdentity.bytes -eq $expectedInstallerBytes -and
+      $candidateInstallerIdentity.sha256 -eq $expectedInstallerHash
+    ) "expectedBytes=$expectedInstallerBytes; actualBytes=$($candidateInstallerIdentity.bytes); expectedSha256=$expectedInstallerHash; actualSha256=$($candidateInstallerIdentity.sha256)"
+    Add-Check 'no product installation exists before the Windows N candidate install' (
+      -not (Test-Path -LiteralPath $uninstallKey)
+    ) $uninstallKey
+    Add-Check 'no product process is running before the Windows N candidate install' (
+      @(Get-CimInstance Win32_Process -Filter "Name = '$applicationName'" -ErrorAction SilentlyContinue).Count -eq 0
+    ) $applicationName
+
+    $installerProcess = Start-Process -FilePath $candidateInstallerPath `
+      -ArgumentList @('/P', '/NS', '/NR') -PassThru -WindowStyle Hidden
+    if (-not $installerProcess.WaitForExit(90000)) {
+      Stop-Process -Id $installerProcess.Id -Force -ErrorAction SilentlyContinue
+      throw "Candidate installer timed out after 90 seconds: $candidateInstallerPath"
+    }
+    Add-Check 'locked candidate installer exits successfully' ($installerProcess.ExitCode -eq 0) (
+      "exitCode=$($installerProcess.ExitCode)"
+    )
+  }
+
   Add-Check 'formal uninstall registry key exists' (Test-Path -LiteralPath $uninstallKey) $uninstallKey
   $installedState = Get-ItemProperty -LiteralPath $uninstallKey
   $installLocation = ([string]$installedState.InstallLocation).Trim('"')
   $expectedExecutable = [IO.Path]::GetFullPath((Join-Path $installLocation $applicationName))
-  $executablePath = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $InstalledExecutable).Path)
+  $executablePath = if ([string]::IsNullOrWhiteSpace($InstalledExecutable)) {
+    $expectedExecutable
+  } else {
+    [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $InstalledExecutable).Path)
+  }
   Add-Check 'installed version matches candidate' ([string]$installedState.DisplayVersion -eq $expectedVersion) (
     "expected=$expectedVersion; actual=$($installedState.DisplayVersion)"
   )
@@ -246,7 +293,7 @@ try {
 } catch {
   $failure = $_.Exception.Message
 } finally {
-  Write-PhaseReport $machine $executableIdentity $preflight $mediaFoundationModules ($null -eq $failure)
+  Write-PhaseReport $machine $candidateInstallerIdentity $executableIdentity $preflight $mediaFoundationModules ($null -eq $failure)
 }
 
 if ($null -ne $failure) {

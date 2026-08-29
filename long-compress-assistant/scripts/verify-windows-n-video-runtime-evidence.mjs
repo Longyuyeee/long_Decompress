@@ -50,10 +50,16 @@ function verifyCommon(report, phase, producerSha256) {
   assertSha256(report.machine?.identitySha256, `${phase}: machine identity`)
   assert(report.expected?.windowsNEdition === true, `${phase}: Windows N expectation is missing`)
   assert(report.expected?.installedVersion === candidateEvidence.version, `${phase}: candidate version differs`)
+  assert(report.expected?.installerBytes === candidateEvidence.installerBytes, `${phase}: expected installer size differs`)
+  assert(report.expected?.installerSha256 === candidateEvidence.installerSha256, `${phase}: expected installer hash differs`)
   assert(report.expected?.executableBytes === candidateEvidence.executableBytes, `${phase}: expected executable size differs`)
   assert(report.expected?.executableSha256 === candidateEvidence.executableSha256, `${phase}: expected executable hash differs`)
   assert(report.actual?.executable?.bytes === candidateEvidence.executableBytes, `${phase}: installed executable size differs`)
   assert(report.actual?.executable?.sha256 === candidateEvidence.executableSha256, `${phase}: installed executable hash differs`)
+  if (phase === 'MissingMediaFeaturePack') {
+    assert(report.actual?.candidateInstaller?.bytes === candidateEvidence.installerBytes, `${phase}: candidate installer size differs`)
+    assert(report.actual?.candidateInstaller?.sha256 === candidateEvidence.installerSha256, `${phase}: candidate installer hash differs`)
+  }
   const modules = report.actual?.mediaFoundationModules
   assert(Array.isArray(modules) && modules.length === 3, `${phase}: Media Foundation module inventory is incomplete`)
   assert(new Set(modules.map(module => module.name)).size === 3, `${phase}: Media Foundation module inventory contains duplicates`)
@@ -117,6 +123,8 @@ const verification = {
   evidenceRoot,
   expectedCandidate: {
     version: candidateEvidence.version,
+    installerBytes: candidateEvidence.installerBytes,
+    installerSha256: candidateEvidence.installerSha256,
     executableBytes: candidateEvidence.executableBytes,
     executableSha256: candidateEvidence.executableSha256,
   },
