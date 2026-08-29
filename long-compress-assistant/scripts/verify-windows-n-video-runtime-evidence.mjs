@@ -11,6 +11,7 @@ const evidenceRoot = resolve(
 )
 const manifest = JSON.parse(await readFile(join(root, 'config', 'media-dependencies.json'), 'utf8'))
 const videoEvidence = manifest.candidateBaselines.video
+const candidateEvidence = videoEvidence.c05InstalledCandidate
 const beforePath = join(evidenceRoot, 'before-media-feature-pack.json')
 const afterPath = join(evidenceRoot, 'after-media-feature-pack.json')
 const runtimePath = join(evidenceRoot, 'after-feature-pack-runtime', 'result.json')
@@ -48,11 +49,11 @@ function verifyCommon(report, phase, producerSha256) {
   assert(report.machine?.architecture === 'X64', `${phase}: Windows x64 evidence is required`)
   assertSha256(report.machine?.identitySha256, `${phase}: machine identity`)
   assert(report.expected?.windowsNEdition === true, `${phase}: Windows N expectation is missing`)
-  assert(report.expected?.installedVersion === videoEvidence.installedLifecycle.candidateVersion, `${phase}: candidate version differs`)
-  assert(report.expected?.executableBytes === videoEvidence.installedExecutableBytes, `${phase}: expected executable size differs`)
-  assert(report.expected?.executableSha256 === videoEvidence.installedExecutableSha256, `${phase}: expected executable hash differs`)
-  assert(report.actual?.executable?.bytes === videoEvidence.installedExecutableBytes, `${phase}: installed executable size differs`)
-  assert(report.actual?.executable?.sha256 === videoEvidence.installedExecutableSha256, `${phase}: installed executable hash differs`)
+  assert(report.expected?.installedVersion === candidateEvidence.version, `${phase}: candidate version differs`)
+  assert(report.expected?.executableBytes === candidateEvidence.executableBytes, `${phase}: expected executable size differs`)
+  assert(report.expected?.executableSha256 === candidateEvidence.executableSha256, `${phase}: expected executable hash differs`)
+  assert(report.actual?.executable?.bytes === candidateEvidence.executableBytes, `${phase}: installed executable size differs`)
+  assert(report.actual?.executable?.sha256 === candidateEvidence.executableSha256, `${phase}: installed executable hash differs`)
   const modules = report.actual?.mediaFoundationModules
   assert(Array.isArray(modules) && modules.length === 3, `${phase}: Media Foundation module inventory is incomplete`)
   assert(new Set(modules.map(module => module.name)).size === 3, `${phase}: Media Foundation module inventory contains duplicates`)
@@ -92,8 +93,8 @@ try {
   assert(runtime.schemaVersion === 1 && runtime.passed === true, 'post-feature-pack installed runtime matrix did not pass')
   assert(Array.isArray(runtime.differences) && runtime.differences.length === 0, 'post-feature-pack installed runtime matrix contains differences')
   assert(/N$/i.test(runtime.machine?.windowsEditionId), 'post-feature-pack runtime matrix is not from Windows N')
-  assert(runtime.actual?.executable?.bytes === videoEvidence.installedExecutableBytes, 'runtime matrix executable size differs')
-  assert(runtime.actual?.executable?.sha256 === videoEvidence.installedExecutableSha256, 'runtime matrix executable hash differs')
+  assert(runtime.actual?.executable?.bytes === candidateEvidence.executableBytes, 'runtime matrix executable size differs')
+  assert(runtime.actual?.executable?.sha256 === candidateEvidence.executableSha256, 'runtime matrix executable hash differs')
   assert(runtime.actual?.productionPreflight?.passed === true, 'runtime matrix production preflight did not pass')
   assert(runtime.actual?.productionPreflight?.status?.mediaFoundationAvailable === true, 'runtime matrix did not admit Media Foundation')
   assert(runtime.actual?.missingResource?.passed === false && runtime.actual.missingResource.error?.includes('VIDEO_ENGINE_RESOURCE_MISSING'), 'runtime matrix missing-resource refusal differs')
@@ -115,9 +116,9 @@ const verification = {
   verifiedAt: new Date().toISOString(),
   evidenceRoot,
   expectedCandidate: {
-    version: videoEvidence.installedLifecycle.candidateVersion,
-    executableBytes: videoEvidence.installedExecutableBytes,
-    executableSha256: videoEvidence.installedExecutableSha256,
+    version: candidateEvidence.version,
+    executableBytes: candidateEvidence.executableBytes,
+    executableSha256: candidateEvidence.executableSha256,
   },
   machineIdentitySha256: before?.machine?.identitySha256 ?? null,
   checks,

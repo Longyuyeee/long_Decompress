@@ -263,6 +263,21 @@
         "previousVersionRestored": true,
         "userDataPreserved": true
       },
+      "c05InstalledCandidate": {
+        "measuredAt": "2026-08-29",
+        "commit": "71a95729a17352c2c711b2f34764739175954099",
+        "workflowRun": 33258733949,
+        "version": "1.1.15",
+        "installerBytes": 15604389,
+        "installerSha256": "c4ff2374aa033a6ee892ef8bf6313cdb2b987bdd3ba244930c45af081391d718",
+        "executableBytes": 28853760,
+        "executableSha256": "0b443647d39b817993794fa3e6f6d52600515b06700030f565cb4dbf5d795ef0",
+        "installedLifecycleChecks": 50,
+        "installedWorkspaceChecks": 20,
+        "installedLifecyclePassed": true,
+        "publicPreviousVersionRestored": true,
+        "evidence": "test-results/installed-release-validation/20260829-230820/result.json"
+      },
       "windowsNClassificationImplemented": true,
       "windowsNClassificationUnitTestPassed": true,
       "windowsNRealMachinePassed": false,

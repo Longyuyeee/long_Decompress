@@ -13,9 +13,10 @@ $manifest = Get-Content -Raw -Encoding utf8 -LiteralPath (
   Join-Path $projectRoot 'config\media-dependencies.json'
 ) | ConvertFrom-Json
 $videoEvidence = $manifest.candidateBaselines.video
-$expectedVersion = [string]$videoEvidence.installedLifecycle.candidateVersion
-$expectedExecutableBytes = [long]$videoEvidence.installedExecutableBytes
-$expectedExecutableHash = ([string]$videoEvidence.installedExecutableSha256).ToLowerInvariant()
+$candidateEvidence = $videoEvidence.c05InstalledCandidate
+$expectedVersion = [string]$candidateEvidence.version
+$expectedExecutableBytes = [long]$candidateEvidence.executableBytes
+$expectedExecutableHash = ([string]$candidateEvidence.executableSha256).ToLowerInvariant()
 $productName = "Long$([char]0x89E3)$([char]0x538B)"
 $uninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$productName"
 $applicationName = "$productName.exe"
