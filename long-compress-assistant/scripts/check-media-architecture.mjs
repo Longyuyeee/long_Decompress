@@ -334,6 +334,19 @@ for (const contract of [
 }
 assert(videoEngine.includes('WINDOWS_STATUS_DLL_INIT_FAILED'), 'installed video preflight must recognize the observed Windows DLL initialization transient')
 assert(videoEngine.includes('const MAX_ATTEMPTS: usize = 2'), 'installed video preflight retry must remain bounded to one retry')
+assert(
+  videoEngine.includes('app_resource_dir.join("resources")'),
+  'packaged video commands must preserve the configured resources/ prefix',
+)
+const videoEngineCommands = await read('src-tauri/src/commands/video_engine.rs')
+assert(
+  (videoEngineCommands.match(/bundled_resource_root\(&app_resource_dir\)/g) ?? []).length === 3,
+  'all video probe and planning commands must resolve the packaged resource root consistently',
+)
+assert(
+  compressionCommands.includes('bundled_resource_root(&app_resource_dir)'),
+  'video execution must resolve the same packaged resource root as probe and planning',
+)
 const installedReleaseGate = await read('scripts/test-installed-release.ps1')
 assert(installedReleaseGate.includes('[switch]$RunVideoWorkspaceMatrix'), 'installed lifecycle cannot run the C-05.4 video workspace matrix')
 assert(installedReleaseGate.includes('test-installed-video-workspace.mjs'), 'installed lifecycle does not invoke the C-05.4 video workspace matrix')

@@ -542,10 +542,12 @@ pub async fn compress_video_file(
     task_id: String,
     request: VideoCompressionExecutionRequest,
 ) -> Result<PublishedVideoOutput, String> {
-    let resource_root = app
+    let app_resource_dir = app
         .path_resolver()
         .resource_dir()
         .ok_or_else(|| "VIDEO_ENGINE_RESOURCE_DIRECTORY_UNAVAILABLE".to_string())?;
+    let resource_root =
+        crate::services::video_engine::bundled_resource_root(&app_resource_dir);
     let event_task_id = task_id.clone();
     let source = PathBuf::from(&request.plan.path);
     let mut last_snapshot: Option<VideoProgressSnapshot> = None;

@@ -14,6 +14,14 @@ use windows_sys::Win32::{
 
 const RUNTIME_DIRECTORY: &str = "video-engine";
 
+pub fn bundled_resource_root(app_resource_dir: &Path) -> PathBuf {
+    // Tauri preserves the configured `resources/...` prefix in packaged
+    // layouts. `resource_dir()` is the executable directory on Windows, so
+    // video resources live below its `resources` child rather than directly
+    // below the executable.
+    app_resource_dir.join("resources")
+}
+
 #[derive(Clone, Copy)]
 struct ExpectedResource {
     relative_path: &'static str,
@@ -330,6 +338,15 @@ pub fn write_installed_video_engine_preflight_report(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bundled_resource_root_preserves_the_configured_resources_prefix() {
+        let install_root = Path::new("install-root");
+        assert_eq!(
+            bundled_resource_root(install_root),
+            install_root.join("resources")
+        );
+    }
 
     fn repository_resource_root() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources")
