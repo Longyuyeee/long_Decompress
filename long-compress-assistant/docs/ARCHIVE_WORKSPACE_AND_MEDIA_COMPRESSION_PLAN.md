@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-04、C-05.1、C-05.2、C-05.3 和 C-05.4.1 已完成。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0，真实编码取消、无残留、跨完整重启历史和默认应用播放也已通过。C-05.4.1 正式安装生命周期 50/50、安装态视频工作区 20/20；C-05.4.2 已补齐锁定 NSIS 的跨机器安装/证据工具，但真实 Windows N 前后尚未执行。下一步只能在符合条件的 Windows N 实机运行；其后仍需 `v1.1.16` 版本身份与公开更新闭环，完成前不得发布。证据见 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)、[C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)、[C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md](C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md) 与 [C05_4_2_WINDOWS_N_GATE_PREPARATION_AUDIT.md](C05_4_2_WINDOWS_N_GATE_PREPARATION_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在获批的非 N Windows x64 支持范围内完成。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0，真实编码取消、无残留、跨完整重启历史和默认应用播放也已通过。C-05.4.1 正式安装生命周期 50/50、安装态视频工作区 20/20；Windows N 实机证据仍未取得且 `windowsNRealMachinePassed=false`，产品负责人已明确将 Windows N 排除出 `v1.1.16` 支持范围，因此不再阻塞该版本。下一步为版本身份与公开更新闭环，完成前仍不得发布。证据见 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)、[C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)、[C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md](C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md) 与 [C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md](C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -457,7 +457,7 @@ src/types/media.ts
 
 ### C-05 真实验收矩阵
 
-进度（2026-08-29）：**C-05.1 至 C-05.4.1 已完成，C-05.4.2 工具准备完成但实机证据未完成，C-05 尚未关闭。** Release WebView2 已完成两条真实视频执行；开发态矩阵以 5 种格式、4 个分辨率层级和 7 次产品执行覆盖全部三档预设及无音频，并以两个独立产品执行补齐 600 秒/3600 帧和 114,842,332 B 大输入。输出容器、编码、时长、尺寸、流、完整帧和实际字节差异均为 0。C-05.3 用真实 109.52 MiB 编码验证 UI 中途取消后产品 FFmpeg 退出、无暂存/最终输出、取消历史落库；两条完成记录及精确 metrics 跨原生应用完整重启保持一致，发布 MP4 由 Windows 默认应用接收。C-05.4.1 正式 NSIS 生命周期 50/50、安装态视频工作区 20/20，通过候选字节对账、覆盖安装数据保持、真实运行时/UI、卸载与公开 `v1.1.15` 恢复。C-05.4.2 现要求前阶段校验并安装锁定 NSIS，独立验收器复核安装器与主程序；下一步只能在真实 Windows N 上执行 Media Feature Pack 前后门禁，通过后再进入版本身份、公开更新和回下载复验。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md)、[C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)、[C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)、[C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md](C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md) 与 [C05_4_2_WINDOWS_N_GATE_PREPARATION_AUDIT.md](C05_4_2_WINDOWS_N_GATE_PREPARATION_AUDIT.md)。
+进度（2026-08-29）：**C-05.1 至 C-05.4.1 已完成；产品负责人明确将 Windows N 调整为 `v1.1.16` 暂不支持平台后，C-05 在非 N Windows x64 支持范围内关闭。** Release WebView2 已完成两条真实视频执行；开发态矩阵以 5 种格式、4 个分辨率层级和 7 次产品执行覆盖全部三档预设及无音频，并以两个独立产品执行补齐 600 秒/3600 帧和 114,842,332 B 大输入。输出容器、编码、时长、尺寸、流、完整帧和实际字节差异均为 0。C-05.3 用真实 109.52 MiB 编码验证 UI 中途取消后产品 FFmpeg 退出、无暂存/最终输出、取消历史落库；两条完成记录及精确 metrics 跨原生应用完整重启保持一致，发布 MP4 由 Windows 默认应用接收。C-05.4.1 正式 NSIS 生命周期 50/50、安装态视频工作区 20/20，通过候选字节对账、覆盖安装数据保持、真实运行时/UI、卸载与公开 `v1.1.15` 恢复。Windows N 工具和拒绝分类全部保留，`windowsNRealMachinePassed` 继续为 `false`，未来只有取得实机证据后才可移除不支持声明。下一步进入版本身份、公开更新和回下载复验。证据见 [C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md](C05_1_VIDEO_DESKTOP_EXECUTION_AUDIT.md)、[C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)、[C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)、[C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md](C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md) 与 [C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md](C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md)。
 
 - MP4/H.264、MOV、AVI、WMV、WebM 输入；
 - 480p、720p、1080p、4K；
@@ -465,7 +465,7 @@ src/types/media.ts
 - 30 秒小样本、10 分钟样本和至少一个大文件；
 - 三档预设分别验证输出可播放、时长、分辨率、音视频流和实际大小；
 - 安装版执行、取消、历史、输出默认应用播放与公开更新后复验。
-- Windows N 未安装 Media Feature Pack 时稳定拒绝，安装组件并重启后在同一机器通过生产预检与真实软件转码；独立证据验收必须通过。
+- `v1.1.16` 公开支持限定为非 N Windows x64；Windows N 暂不支持，未来只有在 Media Feature Pack 安装前后同机生产验证及独立证据验收通过后才可纳入。
 
 ### C-06 后续硬件编码节点
 
@@ -661,7 +661,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；正式安装版图片链使用真实 JPEG/PNG/WebP，完成输入、配置、对比、执行、历史、完整重启和输出重新打开，安装生命周期 50/50、图片链 17/17。视频 C-01 至 C-05.4.1 已完成，C-05.4.2 的锁定安装器工具已就绪；下一步为真实 Windows N 前后门禁，其后才是 `v1.1.16` 版本身份、正式资产/签名、公开更新和回下载复验。
+- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；正式安装版图片链使用真实 JPEG/PNG/WebP，完成输入、配置、对比、执行、历史、完整重启和输出重新打开，安装生命周期 50/50、图片链 17/17。视频 C-01 至 C-05 已在非 N Windows x64 支持范围内关闭；Windows N 暂不支持且实机证据状态仍为 false。下一步为 `v1.1.16` 版本身份、正式资产/签名、公开更新和回下载复验。
 
 ## 12. 技术参考
 

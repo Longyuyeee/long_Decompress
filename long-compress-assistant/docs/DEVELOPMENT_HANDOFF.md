@@ -1,18 +1,25 @@
 # 开发交接
 
+## 2026-08-29 C-05 Windows N 支持范围变更并关闭功能节点
+
+- 产品负责人明确批准取消 Windows N 实机发布门禁，并将 Windows N 调整为暂不保证支持。本次变更只缩小 `v1.1.16` 支持范围，不把 Professional 主机结果伪装成 Windows N 通过。
+- `windowsNRealMachinePassed` 保持 `false`；发布合同明确只支持 `windows-x86_64-non-n`，Windows N 实机脚本、独立验收器和生产 Media Foundation 缺失拒绝均完整保留。
+- C-05.1 至 C-05.4.1 的真实功能与正式安装证据已经满足缩小后的发布范围，C-05 功能节点关闭。下一接续点为 `v1.1.16` 版本身份、候选构建、安装态复验、公开 Release 与回下载应用内更新；所有公开材料必须注明 Windows N 暂不支持。
+- 变更依据、未验证事实和未来重新纳入条件见 [C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md](C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md)。
+
 ## 2026-08-29 C-05.4.2 Windows N 门禁准备完成
 
 - 实际代码审计发现旧 Windows N 脚本只锁候选 EXE、假定安装由人工完成，不能证明目标机使用了正式 NSIS。现要求前阶段校验锁定安装器身份、干净安装基线，并由脚本执行 `/P /NS /NR` 正式安装；独立验收器同时复核安装器和主程序。
 - 工具提交固定为 `b717f973a79035bbf1a475885d84f493de398906`；候选仍为 `71a9572` / CI run `33258733949`。前后阶段不得拉取不同脚本，后阶段会以 SHA-256 拒绝生成器变化。
 - Professional 主机负向自检稳定返回 `WINDOWS_N_MACHINE_REQUIRED`，安装器未执行，公开 `v1.1.15` 版本/位置不变且无进程。PowerShell AST、Node 语法、真实媒体依赖、媒体架构和发布门禁通过。
-- C-05.4.2 尚未关闭。下一步只能在真实 Windows N x64、未安装 Media Feature Pack、无现存 Long解压的机器执行；精确命令见 [C05_4_2_WINDOWS_N_GATE_PREPARATION_AUDIT.md](C05_4_2_WINDOWS_N_GATE_PREPARATION_AUDIT.md)。
+- 本段保留范围变更前的工具准备事实。后续产品授权已把 Windows N 排除出 `v1.1.16` 支持范围，因此该实机矩阵不再阻塞发布；工具继续保留供未来恢复支持时使用，见顶部范围变更节点。
 
 ## 2026-08-29 C-05.4.1 正式安装生命周期完成
 
 - 修正提交 `71a9572` 的 CI run `33258733949` 全绿；NSIS 为 15,604,389 B / `C4FF2374…D718`，解包及安装主程序均为 28,853,760 B / `0B443647…5EF0`，8 项视频运行时共 24,631,334 B 且差异为零。
 - 正式安装生命周期 50/50，其中视频工作区 20/20：真实 109.52 MiB 输入完成取消无残留、MP4/H.264 1280×720 32 秒发布、默认应用和完整重启历史；候选卸载、用户数据保持及公开 `v1.1.15` 恢复全部通过。
 - C-01 历史候选身份继续保留；新增 `c05InstalledCandidate`，Windows N 生产脚本和独立验收器只接受本次候选，避免用旧二进制取得新阶段证据。
-- C-05.4.1 已关闭，C-05 尚未关闭。唯一接续点是真实 Windows N 同机、同证据目录的 Media Feature Pack 前后门禁；当前 Professional 主机不能替代。详见 [C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md](C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md)。
+- 本段记录范围变更前的状态：C-05.4.1 当时已关闭而 C-05 仍等待 Windows N。后续产品授权已由顶部节点将 Windows N 排除出 `v1.1.16` 支持范围，当前接续点不再是实机 N 门禁。正式安装证据见 [C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md](C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md)。
 
 ## 2026-08-29 C-05.4.1 正式安装资源布局纠偏
 

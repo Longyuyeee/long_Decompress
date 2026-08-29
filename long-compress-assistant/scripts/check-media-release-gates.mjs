@@ -38,6 +38,9 @@ export function validateMediaReleaseGates(contract) {
   assert(contract.nodes.B.requiredRealCases.includes('hundred-file-mixed-batch'), 'B-05.2.1 hundred-file batch is required')
   assert(contract.nodes.B.requiredRealCases.includes('ultra-large-pixel-limit'), 'B-05.2.2 pixel boundary is required')
   assert(contract.nodes.B.requiredRealCases.includes('unicode-long-path'), 'B-05.2.2 Unicode long-path evidence is required')
+  assert(contract.nodes.C.platformPolicy?.supported?.join(',') === 'windows-x86_64-non-n', 'C video support must be limited to non-N Windows x64 editions')
+  assert(contract.nodes.C.platformPolicy?.unsupported?.join(',') === 'windows-n', 'Windows N must be explicitly excluded from the C release matrix')
+  assert(contract.nodes.C.platformPolicy?.windowsNRealMachineEvidenceRequiredToRemoveExclusion === true, 'Windows N support must not be claimed without real-machine evidence')
   assert(contract.nodes.D.requiredRealCases.includes('signed-explicit-refusal'), 'signed PDF refusal evidence is required')
   assert(contract.requiredEvidenceFields?.length >= 13, 'release evidence template fields are incomplete')
   return contract

@@ -117,7 +117,7 @@
       "features": {
         "allowed": ["lgpl-only", "native-codecs", "h264_mf-software", "aac", "no-enabled-hwaccels"],
         "forbidden": ["--enable-gpl", "--enable-nonfree", "libx264", "libx265"],
-        "reason": "C-01 verifies the byte-reproducible minimal LGPL runtime from the formal installed directory, including real software transcode, exact identity and missing/replaced resource refusal; real Windows N execution remains a C-05 release-matrix gate"
+        "reason": "C-01 verifies the byte-reproducible minimal LGPL runtime from the formal installed directory, including real software transcode, exact identity and missing/replaced resource refusal; Windows N remains explicitly unsupported until real-machine evidence exists"
       },
       "artifact": {
         "fileName": "ffmpeg-9.0.1.tar.xz",
@@ -166,7 +166,7 @@
         ],
         "systemDllImports": ["bcrypt.dll", "KERNEL32.dll", "msvcrt.dll", "ole32.dll", "SHELL32.dll"],
         "softwareEncoder": { "name": "h264_mf", "forceHardware": false, "audio": "aac" },
-        "platformRequirement": "Windows Media Foundation must be present; Windows N without the Media Feature Pack must be refused explicitly"
+        "platformRequirement": "Windows Media Foundation must be present; v1.1.16 supports non-N Windows x64 editions only, and Windows N must remain explicitly unsupported until real-machine evidence exists"
       },
       "installerImpact": { "runtimePayloadBytes": 24631334, "compressedInstallerDeltaBytes": 6821970, "updaterCompressedDeltaBytes": 6821970, "measurementStage": "C-01 complete: same-commit/same-toolchain Tauri-updater-signed NSIS and updater delta measured" },
       "securityOwner": "Long解压 maintainers"
@@ -281,6 +281,10 @@
       "windowsNClassificationImplemented": true,
       "windowsNClassificationUnitTestPassed": true,
       "windowsNRealMachinePassed": false,
+      "windowsNSupportPolicy": "unsupported-until-real-machine-evidence",
+      "windowsNReleaseBlocking": false,
+      "windowsNRequirementChangedAt": "2026-08-29",
+      "windowsNRequirementChangeAuthority": "explicit-product-owner-authorization",
       "windowsNEvidenceScript": "scripts/test-windows-n-video-runtime.ps1",
       "windowsNEvidenceVerifier": "scripts/verify-windows-n-video-runtime-evidence.mjs",
       "windowsNReleaseMatrixNode": "C-05"

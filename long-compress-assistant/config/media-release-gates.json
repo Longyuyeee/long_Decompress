@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-27",
+  "reviewedAt": "2026-08-29",
   "policy": {
     "versionBump": "complete-user-visible-node-only",
     "requiresInstalledNsis": true,
@@ -50,6 +50,11 @@
     "C": {
       "workload": "video",
       "publicFormats": ["h264-mp4", "h265-mp4"],
+      "platformPolicy": {
+        "supported": ["windows-x86_64-non-n"],
+        "unsupported": ["windows-n"],
+        "windowsNRealMachineEvidenceRequiredToRemoveExclusion": true
+      },
       "requiredRealCases": [
         "h264-aac-vfr-rotation-subtitle",
         "h265-input",

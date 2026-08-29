@@ -4,7 +4,9 @@
 
 ## 结论
 
-**C-05.4.2 的跨机器执行工具已完成，真实 Windows N 前后证据尚未取得，因此 C-05.4.2、C-05 和 `v1.1.16` 发布门禁均未关闭。** 当前主机是 `EditionID=Professional`，只能验证拒绝边界，不能代替 Windows N 或通过移除 DLL 伪造证据。
+> 2026-08-29 后续决定：产品负责人已明确批准取消 Windows N 实机发布门禁，并把 Windows N 调整为 `v1.1.16` 暂不支持平台。本文件继续保存范围变更前的准备与执行手册；当前发布结论以 [C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md](C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md) 为准。
+
+**C-05.4.2 的跨机器执行工具已完成，真实 Windows N 前后证据尚未取得。** `windowsNRealMachinePassed` 继续为 `false`；当前主机是 `EditionID=Professional`，只能验证拒绝边界，不能代替 Windows N 或通过移除 DLL 伪造证据。
 
 候选产品仍严格锁定为提交 `71a95729a17352c2c711b2f34764739175954099`、CI run `33258733949` 的正式 NSIS；实机证据工具固定使用提交 `b717f973a79035bbf1a475885d84f493de398906`。Windows N 前后两阶段必须保持该工具提交不变，因为后阶段和独立验收器会复核前阶段记录的脚本 SHA-256。
 
@@ -76,8 +78,8 @@ npm run test:windows-n-video-runtime -- -Phase MediaFeaturePackInstalled -Eviden
 npm run verify:windows-n-video-runtime -- "$evidence"
 ```
 
-只接受 `git rev-parse HEAD` 为 `b717f973a79035bbf1a475885d84f493de398906`、工作区干净、最终 `verification.json` 为 `passed=true`。随后审计原始报告，更新 `windowsNRealMachinePassed` 和 C-05 文档，再进入 `v1.1.16` 版本身份与公开发布；不得仅凭命令退出码提前改状态。
+只接受 `git rev-parse HEAD` 为 `b717f973a79035bbf1a475885d84f493de398906`、工作区干净、最终 `verification.json` 为 `passed=true`。取得结果后才允许更新 `windowsNRealMachinePassed`，并重新审计是否能把 Windows N 纳入未来支持范围；不得仅凭命令退出码提前改状态。
 
 ## 下一接续点
 
-必须在具备上述条件的真实 Windows N 机器执行两阶段门禁。本机已穷尽所有不伪造平台证据的准备工作；在外部实机结果返回前，不进行版本提升、标签、Release 或公开更新。
+本手册当前不是 `v1.1.16` 发布接续点。Windows N 已被明确排除出该版本支持范围；未来如要恢复支持，必须在具备上述条件的真实机器执行两阶段门禁。本机已穷尽所有不伪造平台证据的准备工作。
