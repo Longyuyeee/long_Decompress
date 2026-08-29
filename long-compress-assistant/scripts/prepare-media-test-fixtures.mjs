@@ -127,6 +127,10 @@ function compare(actual, imageScopeOnly = false) {
     if (item?.pages !== expected.pages) differences.push(`PDF ${expected.file}: expected ${expected.pages} pages, got ${item?.pages}`)
     if (expected.expectedText !== undefined && !item?.text?.includes(expected.expectedText)) differences.push(`PDF ${expected.file}: expected text was not extracted`)
     if (expected.fields && JSON.stringify(item?.fields) !== JSON.stringify(expected.fields)) differences.push(`PDF ${expected.file}: form fields differ`)
+    if (expected.annotationSubtypes && JSON.stringify(item?.annotationSubtypes) !== JSON.stringify(expected.annotationSubtypes)) differences.push(`PDF ${expected.file}: annotation subtypes differ`)
+    if (expected.outlineTitles && JSON.stringify(item?.outlineTitles) !== JSON.stringify(expected.outlineTitles)) differences.push(`PDF ${expected.file}: outline titles differ`)
+    if (expected.attachments && JSON.stringify(item?.attachments) !== JSON.stringify(expected.attachments)) differences.push(`PDF ${expected.file}: attachments differ`)
+    if (expected.imageCount !== undefined && item?.imageCount !== expected.imageCount) differences.push(`PDF ${expected.file}: expected ${expected.imageCount} images, got ${item?.imageCount}`)
     if (expected.kind === 'scan' && item?.text !== '') differences.push(`PDF ${expected.file}: scan unexpectedly contains PDF text`)
     if (expected.kind === 'transparency' && !item?.hasTransparency) differences.push(`PDF ${expected.file}: transparency graphics state missing`)
     if (expected.kind === 'digitally-signed') {

@@ -147,6 +147,7 @@ def generate_pdfs(root):
     from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
     from pyhanko.sign import fields, signers
     from pypdf import PdfReader, PdfWriter
+    from pypdf.annotations import Text
     from reportlab.lib.colors import Color, HexColor
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
@@ -172,6 +173,12 @@ def generate_pdfs(root):
     pdf.drawImage(str(scan_path), 0, 0, width=A4[0], height=A4[1], mask='auto')
     pdf.showPage(); pdf.save()
 
+    pdf = make_base_pdf(pdfs / "mixed-content.pdf", "Mixed content", "Searchable text and a raster image must both remain")
+    pdf.setFont("Helvetica", 11)
+    pdf.drawString(54, A4[1] - 160, "Long Decompress mixed text fixture")
+    pdf.drawImage(str(scan_path), 54, 330, width=360, height=210, preserveAspectRatio=True, mask='auto')
+    pdf.showPage(); pdf.save()
+
     pdf = make_base_pdf(pdfs / "transparency.pdf", "Transparency", "Overlapping alpha objects must survive inspection")
     pdf.saveState(); pdf.setFillAlpha(0.45); pdf.setFillColor(Color(0.2, 0.4, 1)); pdf.circle(220, 470, 110, stroke=0, fill=1); pdf.restoreState()
     pdf.saveState(); pdf.setFillAlpha(0.45); pdf.setFillColor(Color(1, 0.25, 0.3)); pdf.circle(340, 470, 110, stroke=0, fill=1); pdf.restoreState()
@@ -182,6 +189,43 @@ def generate_pdfs(root):
     pdf.acroForm.checkbox(name="preserve_metadata", tooltip="Preserve metadata", x=54, y=552, checked=True)
     pdf.drawString(84, 558, "Preserve metadata")
     pdf.showPage(); pdf.save()
+
+    annotation_source = pdfs / "annotation-source.pdf"
+    pdf = make_base_pdf(annotation_source, "Annotation", "A text annotation must remain attached to the page")
+    pdf.showPage(); pdf.save()
+    reader = PdfReader(annotation_source)
+    writer = PdfWriter()
+    writer.append_pages_from_reader(reader)
+    writer.add_annotation(0, Text(rect=(72, 520, 108, 556), text="D-01 synthetic annotation", open=False))
+    with (pdfs / "annotation.pdf").open("wb") as target:
+        writer.write(target)
+    annotation_source.unlink()
+
+    outline_source = pdfs / "outline-source.pdf"
+    pdf = make_base_pdf(outline_source, "Outline", "A document outline must keep its destination")
+    pdf.showPage()
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawString(54, A4[1] - 84, "Second page")
+    pdf.showPage(); pdf.save()
+    reader = PdfReader(outline_source)
+    writer = PdfWriter()
+    writer.append_pages_from_reader(reader)
+    writer.add_outline_item("D-01 first page", 0)
+    writer.add_outline_item("D-01 second page", 1)
+    with (pdfs / "outline.pdf").open("wb") as target:
+        writer.write(target)
+    outline_source.unlink()
+
+    attachment_source = pdfs / "attachment-source.pdf"
+    pdf = make_base_pdf(attachment_source, "Attachment", "An embedded evidence file must remain byte-identical")
+    pdf.showPage(); pdf.save()
+    reader = PdfReader(attachment_source)
+    writer = PdfWriter()
+    writer.append_pages_from_reader(reader)
+    writer.add_attachment("d01-evidence.txt", b"Long Decompress D-01 attachment fixture\n")
+    with (pdfs / "attachment.pdf").open("wb") as target:
+        writer.write(target)
+    attachment_source.unlink()
 
     unsigned = pdfs / "unsigned-source.pdf"
     pdf = make_base_pdf(unsigned, "Signed fixture", "A real detached CMS signature is embedded below")
@@ -260,6 +304,21 @@ def inspect(root, include_pdfs=True):
             item["pages"] = len(reader.pages)
             item["text"] = "\n".join(page.extract_text() or "" for page in reader.pages)
             item["fields"] = sorted((reader.get_fields() or {}).keys())
+            item["annotationSubtypes"] = sorted(
+                str(annotation.get_object().get("/Subtype"))
+                for page in reader.pages
+                for annotation in (page.get("/Annots") or [])
+            )
+            item["outlineTitles"] = sorted(
+                str(entry.get("/Title"))
+                for entry in reader.outline
+                if hasattr(entry, "get") and entry.get("/Title")
+            )
+            item["attachments"] = sorted(reader.attachments.keys())
+            item["imageCount"] = sum(
+                len(page.images)
+                for page in reader.pages
+            )
             raw = path.read_bytes()
             item["hasTransparency"] = b"/ca " in raw or b"/CA " in raw
             item["hasByteRange"] = b"/ByteRange" in raw

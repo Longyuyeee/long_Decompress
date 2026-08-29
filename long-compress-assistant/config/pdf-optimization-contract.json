@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-30",
+  "node": "D-01.1",
+  "engine": {
+    "id": "qpdf",
+    "version": "12.4.0",
+    "dependencyManifest": "config/media-dependencies.json",
+    "integrationAllowed": false,
+    "candidateCacheOnly": true,
+    "officialReferences": [
+      "https://qpdf.readthedocs.io/en/latest/cli.html",
+      "https://qpdf.readthedocs.io/en/latest/qpdf-options.html",
+      "https://qpdf.readthedocs.io/en/latest/json.html",
+      "https://github.com/qpdf/qpdf/releases/tag/v12.4.0"
+    ]
+  },
+  "inspection": {
+    "arguments": ["--version", "--show-crypto", "--check", "--show-npages", "--is-encrypted", "--requires-password", "--json=2", "--json-stream-data=none"],
+    "forbidden": ["--show-encryption-key", "--password-is-hex-key", "--allow-insecure", "--allow-weak-crypto"]
+  },
+  "modes": {
+    "lossless-organization": {
+      "label": "无损整理",
+      "arguments": [
+        "--object-streams=generate",
+        "--compress-streams=y",
+        "--decode-level=generalized",
+        "--recompress-flate",
+        "--compression-level=9",
+        "--newline-before-endstream"
+      ],
+      "lossy": false,
+      "allowedChanges": ["serialization", "object-numbering", "xref-layout", "file-id", "generalized-stream-encoding", "object-stream-layout"],
+      "forbiddenChanges": ["page-count", "searchable-text", "page-size", "encryption-state", "form-fields", "annotations", "outlines", "attachments", "visible-page-content"]
+    },
+    "compatible-image-optimization": {
+      "label": "兼容图片优化",
+      "arguments": [
+        "--object-streams=generate",
+        "--compress-streams=y",
+        "--decode-level=generalized",
+        "--recompress-flate",
+        "--compression-level=9",
+        "--newline-before-endstream",
+        "--optimize-images",
+        "--jpeg-quality=85",
+        "--oi-min-width=128",
+        "--oi-min-height=128",
+        "--oi-min-area=16384"
+      ],
+      "lossy": true,
+      "allowedChanges": ["serialization", "object-numbering", "xref-layout", "file-id", "generalized-stream-encoding", "object-stream-layout", "eligible-image-encoding", "eligible-image-pixels"],
+      "forbiddenChanges": ["page-count", "searchable-text", "page-size", "encryption-state", "form-fields", "annotations", "outlines", "attachments", "non-image-page-content"]
+    }
+  },
+  "documentPolicies": {
+    "ordinary": "eligible-after-structural-inspection",
+    "acroform": "preserve-and-compare-field-identities",
+    "annotation": "preserve-and-compare-annotation-subtypes",
+    "outline": "preserve-and-compare-titles-and-destinations",
+    "attachment": "preserve-names-and-embedded-bytes",
+    "encrypted": "require-correct-password-before-planning; never-log-or-command-line-persist-password",
+    "digitally-signed": "analysis-only; execution-blocked-until-a-future-explicit-signature-invalidating-confirmation-flow"
+  },
+  "requiredFixtureKinds": [
+    "searchable-text",
+    "scan",
+    "mixed",
+    "transparency",
+    "acroform",
+    "annotation",
+    "outline",
+    "attachment",
+    "encrypted-refusal",
+    "digitally-signed"
+  ],
+  "executionBoundary": {
+    "acceptRawArguments": false,
+    "publishProductRuntime": false,
+    "enableProductUi": false,
+    "ghostscriptAllowed": false,
+    "largerOutputDefault": "do-not-publish",
+    "sourceMutationAllowed": false
+  }
+}
