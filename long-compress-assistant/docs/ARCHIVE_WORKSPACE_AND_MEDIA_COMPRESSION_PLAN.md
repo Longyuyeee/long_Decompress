@@ -1,6 +1,6 @@
 # Long解压：归档工作区与媒体压缩开发计划
 
-公开基线：`master` / Long解压 `1.1.15`（tag `v1.1.15` 固定在 `82b1b8f`）；B-00 起始审计基线：`codex/archive-media-roadmap` / `19bb4b6`（S-00 总验收通过，比当时 `origin/master` 领先 6 个提交）
+公开基线：`master` / Long解压 `1.1.16`（tag `v1.1.16` 固定在 `a597422`）；当前审计代码基线为 `e3282dd`，PDF D-01 已关闭。历史 B-00 起始审计基线：`codex/archive-media-roadmap` / `19bb4b6`（S-00 总验收通过，比当时 `origin/master` 领先 6 个提交）
 
 编制日期：2026-08-26
 
@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在获批的非 N Windows x64 支持范围内完成，`v1.1.16` 候选身份和本地发布门禁也已通过。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0，真实编码取消、无残留、跨完整重启历史和默认应用播放也已通过。C-05.4.1 正式安装生命周期 50/50、安装态视频工作区 20/20；Windows N 实机证据仍未取得且 `windowsNRealMachinePassed=false`，产品负责人已明确将 Windows N 排除出 `v1.1.16` 支持范围，因此不再阻塞该版本。下一步为干净 CI 正式 NSIS、版本候选安装复验、PR、公开更新和回下载闭环，完成前仍不得创建标签。证据见 [C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md](C05_2_1_VIDEO_FORMAT_MATRIX_AUDIT.md)、[C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md](C05_2_2_VIDEO_LONG_LARGE_MATRIX_AUDIT.md)、[C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md](C05_3_VIDEO_RUNTIME_BEHAVIOR_AUDIT.md)、[C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md](C05_4_1_INSTALLED_VIDEO_LIFECYCLE_AUDIT.md)、[C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md](C05_4_2_WINDOWS_N_SCOPE_CHANGE_AUDIT.md) 与 [RELEASE_AUDIT_1.1.16.md](RELEASE_AUDIT_1.1.16.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在获批的非 N Windows x64 支持范围内完成并发布为 `v1.1.16`。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0，真实编码取消、无残留、跨完整重启历史和默认应用播放也已通过。C-05.4.1 正式安装生命周期 50/50、安装态视频工作区 20/20；公开 Release、资产回下载和 `v1.1.15 → v1.1.16` 应用内更新也已关闭。Windows N 实机证据仍未取得且 `windowsNRealMachinePassed=false`，产品负责人已明确将 Windows N 排除出 `v1.1.16` 支持范围，因此不阻塞该版本。PDF D-01 已完成能力/样本、正式 qpdf 运行时/许可、生产预检、签名安装包增量和安装态恢复；下一唯一功能接续点为 D-02 输入分析与前端配置。证据见 [RELEASE_AUDIT_1.1.16.md](RELEASE_AUDIT_1.1.16.md)、[D01_2_2_INSTALLED_QPDF_AND_SIGNED_DELTA_AUDIT.md](D01_2_2_INSTALLED_QPDF_AND_SIGNED_DELTA_AUDIT.md) 与 [CURRENT_DEVELOPMENT_AND_MACHINE_HANDOFF_AUDIT_2026-08-30.md](CURRENT_DEVELOPMENT_AND_MACHINE_HANDOFF_AUDIT_2026-08-30.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
