@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { cp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 import { basename, dirname, join, resolve } from 'node:path'
@@ -24,6 +25,11 @@ async function invokePreflight(app, report, expectedStatus) {
   await rm(report, { force: true })
   run(app, ['--internal-pdf-engine-preflight-report', report], 'installed PDF production preflight', expectedStatus)
   return JSON.parse(await readFile(report, 'utf8'))
+}
+
+async function identity(path) {
+  const bytes = await readFile(path)
+  return { bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') }
 }
 
 assert(process.env.TAURI_APP_BINARY, 'TAURI_APP_BINARY must point to the formally installed application')
@@ -59,7 +65,7 @@ assert(replacement.passed === false && replacement.error?.includes('PDF_ENGINE_R
 await writeFile(join(evidenceRoot, 'result.json'), `${JSON.stringify({
   schemaVersion: 1,
   measuredAt: new Date().toISOString(),
-  actual: { executable, runtimeRoot, productionPreflight: installed, missingResource: missing, replacedResource: replacement },
+  actual: { executable: { path: executable, ...await identity(executable) }, runtimeRoot, productionPreflight: installed, missingResource: missing, replacedResource: replacement },
   passed: true,
 }, null, 2)}\n`)
 console.log('Installed PDF runtime passed (production preflight and isolated missing/replaced refusal).')

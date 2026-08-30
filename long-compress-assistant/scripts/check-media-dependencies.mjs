@@ -51,7 +51,7 @@ function validateManifest(manifest) {
         assert(dependency.status === 'runtime-admitted-b03-service', `${label}: runtime admission status is invalid`)
       } else if (dependency.workload === 'pdf') {
         assert(label === 'qpdf', `${label}: PDF runtime dependency is not approved`)
-        assert(dependency.status === 'runtime-admitted-d01-2-1-repository', `${label}: qpdf runtime admission status is invalid`)
+        assert(dependency.status === 'runtime-admitted-d01-complete', `${label}: qpdf runtime admission status is invalid`)
       } else {
         assert(label === 'ffmpeg' && dependency.workload === 'video', `${label}: runtime dependency is not approved`)
         assert(dependency.status === 'runtime-admitted-c01-complete', `${label}: FFmpeg runtime admission status is invalid`)
@@ -142,7 +142,7 @@ function validateManifest(manifest) {
   assert(videoBaseline?.windowsNEvidenceVerifier === 'scripts/verify-windows-n-video-runtime-evidence.mjs', 'C-01.2.2 Windows N evidence verifier is missing')
   assert(videoBaseline?.windowsNReleaseMatrixNode === 'C-05', 'real Windows N evidence must remain assigned to the release matrix')
   const qpdf = manifest.dependencies.find((item) => item.id === 'qpdf')
-  assert(qpdf.integrationAllowed === true, 'D-01.2.1 qpdf repository runtime admission is incomplete')
+  assert(qpdf.integrationAllowed === true, 'D-01 qpdf runtime admission is incomplete')
   assert(qpdf.runtimeCandidate?.resourceDirectory === 'src-tauri/resources/pdf-engine', 'qpdf resource directory is missing')
   assert(qpdf.runtimeCandidate?.files?.length === 5, 'qpdf runtime file identities are incomplete')
   assert(qpdf.runtimeCandidate?.licenseFiles?.length === 4, 'qpdf/MinGW redistribution notices are incomplete')
@@ -151,7 +151,14 @@ function validateManifest(manifest) {
   assert(qpdf.runtimeCandidate?.capabilities?.imageOptimization === true, 'qpdf image optimization capability is missing')
   assert(qpdf.runtimeCandidate?.capabilities?.cryptoProviders?.includes('openssl'), 'qpdf OpenSSL capability is missing')
   assert(qpdf.installerImpact.runtimePayloadBytes === 12765477, 'qpdf admitted runtime payload measurement changed')
-  assert(qpdf.installerImpact.compressedInstallerDeltaBytes === null && qpdf.installerImpact.updaterCompressedDeltaBytes === null, 'qpdf package delta must remain pending until D-01.2.2')
+  assert(qpdf.installerImpact.compressedInstallerDeltaBytes === 3603012 && qpdf.installerImpact.updaterCompressedDeltaBytes === 3603012, 'qpdf exact package delta drifted')
+  const pdfBaseline = manifest.candidateBaselines?.pdf
+  assert(pdfBaseline?.workflowRun === 33318192852 && pdfBaseline?.measurementCommit === 'a27ecc0c9fff7968a5d952b5647e25e82ee5f650', 'D-01.2.2 signed measurement identity drifted')
+  assert(pdfBaseline?.nsisDeltaBytes === 3603012 && pdfBaseline?.updaterDeltaBytes === 3603012, 'D-01.2.2 signed package delta drifted')
+  assert(pdfBaseline?.updaterArchiveIntegrityPassed === true && pdfBaseline?.updaterContainsByteIdenticalNsis === true, 'D-01.2.2 updater integrity evidence is missing')
+  assert(pdfBaseline?.installedCandidate?.installedLifecycleChecks === 49 && pdfBaseline?.installedCandidate?.productionPreflightPassed === true, 'D-01.2.2 installed lifecycle evidence is incomplete')
+  assert(pdfBaseline?.installedCandidate?.missingResourceRefused === true && pdfBaseline?.installedCandidate?.replacedResourceRefused === true, 'D-01.2.2 installed refusal evidence is incomplete')
+  assert(pdfBaseline?.installedCandidate?.publicPreviousVersionRestored === true && pdfBaseline?.installedCandidate?.userDataPreserved === true, 'D-01.2.2 recovery evidence is incomplete')
   assert(manifest.blockedAlternatives?.some((item) => item.id === 'ghostscript' && item.integrationAllowed === false), 'Ghostscript must remain explicitly blocked')
 }
 
@@ -379,6 +386,7 @@ for (const mutation of [
   (copy) => { delete copy.dependencies[1].license.expression },
   (copy) => { copy.dependencies.find(item => item.id === 'ffmpeg').artifact.url = 'http://ffmpeg.org/unsafe' },
   (copy) => { copy.dependencies.find(item => item.id === 'qpdf').status = 'unreviewed-runtime' },
+  (copy) => { copy.candidateBaselines.pdf.nsisDeltaBytes = 1 },
   (copy) => { copy.dependencies.find(item => item.id === 'libcaesium').features.allowed.push('gif') },
 ]) {
   const copy = structuredClone(manifest)

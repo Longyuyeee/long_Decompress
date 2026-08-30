@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedAt": "2026-08-30",
-  "node": "D-01.2.1",
+  "node": "D-01.2.2",
   "baselineNode": "D-01.1",
   "engine": {
     "id": "qpdf",
