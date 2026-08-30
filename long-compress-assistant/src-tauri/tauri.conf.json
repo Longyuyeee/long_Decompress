@@ -67,7 +67,17 @@
         "resources/video-engine/licenses/COPYING.LGPLv2.1",
         "resources/video-engine/licenses/COPYING.LGPLv3",
         "resources/video-engine/licenses/GCC-MinGW-runtime-copyright.txt",
-        "resources/video-engine/licenses/MinGW-w64-copyright.txt"
+        "resources/video-engine/licenses/MinGW-w64-copyright.txt",
+        "resources/pdf-engine/qpdf.exe",
+        "resources/pdf-engine/qpdf30.dll",
+        "resources/pdf-engine/libgcc_s_seh-1.dll",
+        "resources/pdf-engine/libstdc++-6.dll",
+        "resources/pdf-engine/libwinpthread-1.dll",
+        "resources/pdf-engine/SOURCE.txt",
+        "resources/pdf-engine/licenses/qpdf-LICENSE.txt",
+        "resources/pdf-engine/licenses/qpdf-NOTICE.md",
+        "resources/pdf-engine/licenses/GCC-MinGW-runtime-copyright.txt",
+        "resources/pdf-engine/licenses/MinGW-w64-copyright.txt"
       ],
       "externalBin": [],
       "copyright": "Copyright © 2026 Long解压",

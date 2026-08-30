@@ -49,6 +49,9 @@ function validateManifest(manifest) {
       if (dependency.workload === 'image') {
         assert(['libcaesium', 'oxipng', 'image', 'img-parts'].includes(label), `${label}: runtime dependency is not approved`)
         assert(dependency.status === 'runtime-admitted-b03-service', `${label}: runtime admission status is invalid`)
+      } else if (dependency.workload === 'pdf') {
+        assert(label === 'qpdf', `${label}: PDF runtime dependency is not approved`)
+        assert(dependency.status === 'runtime-admitted-d01-2-1-repository', `${label}: qpdf runtime admission status is invalid`)
       } else {
         assert(label === 'ffmpeg' && dependency.workload === 'video', `${label}: runtime dependency is not approved`)
         assert(dependency.status === 'runtime-admitted-c01-complete', `${label}: FFmpeg runtime admission status is invalid`)
@@ -138,6 +141,17 @@ function validateManifest(manifest) {
   assert(videoBaseline?.windowsNEvidenceScript === 'scripts/test-windows-n-video-runtime.ps1', 'C-01.2.2 Windows N evidence entry point is missing')
   assert(videoBaseline?.windowsNEvidenceVerifier === 'scripts/verify-windows-n-video-runtime-evidence.mjs', 'C-01.2.2 Windows N evidence verifier is missing')
   assert(videoBaseline?.windowsNReleaseMatrixNode === 'C-05', 'real Windows N evidence must remain assigned to the release matrix')
+  const qpdf = manifest.dependencies.find((item) => item.id === 'qpdf')
+  assert(qpdf.integrationAllowed === true, 'D-01.2.1 qpdf repository runtime admission is incomplete')
+  assert(qpdf.runtimeCandidate?.resourceDirectory === 'src-tauri/resources/pdf-engine', 'qpdf resource directory is missing')
+  assert(qpdf.runtimeCandidate?.files?.length === 5, 'qpdf runtime file identities are incomplete')
+  assert(qpdf.runtimeCandidate?.licenseFiles?.length === 4, 'qpdf/MinGW redistribution notices are incomplete')
+  assert(qpdf.runtimeCandidate?.documentationFiles?.length === 1, 'qpdf source documentation is incomplete')
+  assert(qpdf.runtimeCandidate?.capabilities?.jsonVersion === 2, 'qpdf JSON capability is missing')
+  assert(qpdf.runtimeCandidate?.capabilities?.imageOptimization === true, 'qpdf image optimization capability is missing')
+  assert(qpdf.runtimeCandidate?.capabilities?.cryptoProviders?.includes('openssl'), 'qpdf OpenSSL capability is missing')
+  assert(qpdf.installerImpact.runtimePayloadBytes === 12765477, 'qpdf admitted runtime payload measurement changed')
+  assert(qpdf.installerImpact.compressedInstallerDeltaBytes === null && qpdf.installerImpact.updaterCompressedDeltaBytes === null, 'qpdf package delta must remain pending until D-01.2.2')
   assert(manifest.blockedAlternatives?.some((item) => item.id === 'ghostscript' && item.integrationAllowed === false), 'Ghostscript must remain explicitly blocked')
 }
 
@@ -333,6 +347,27 @@ async function assertIntegrationBoundary(manifest) {
   for (const relativePath of ['ffmpeg.exe', 'ffprobe.exe', 'SOURCE.txt', 'BUILD-CONFIGURATION.txt', 'licenses/COPYING.LGPLv2.1', 'licenses/COPYING.LGPLv3', 'licenses/GCC-MinGW-runtime-copyright.txt', 'licenses/MinGW-w64-copyright.txt']) {
     assert(tauriConfig.includes(`resources/video-engine/${relativePath}`), `Tauri video resource declaration is missing: ${relativePath}`)
   }
+
+  const qpdf = manifest.dependencies.find(item => item.id === 'qpdf')
+  const pdfRoot = join(root, qpdf.runtimeCandidate.resourceDirectory)
+  for (const item of qpdf.runtimeCandidate.files) {
+    const path = join(pdfRoot, item.name)
+    assert((await stat(path)).size === item.bytes, `${item.name}: admitted qpdf runtime byte size drifted`)
+    assert((await sha256(path)) === item.sha256, `${item.name}: admitted qpdf runtime SHA-256 drifted`)
+  }
+  for (const item of qpdf.runtimeCandidate.licenseFiles) {
+    const path = join(pdfRoot, 'licenses', item.name)
+    assert((await stat(path)).size === item.bytes, `${item.name}: admitted qpdf license byte size drifted`)
+    assert((await sha256(path)) === item.sha256, `${item.name}: admitted qpdf license SHA-256 drifted`)
+  }
+  for (const item of qpdf.runtimeCandidate.documentationFiles) {
+    const path = join(pdfRoot, item.name)
+    assert((await stat(path)).size === item.bytes, `${item.name}: admitted qpdf documentation byte size drifted`)
+    assert((await sha256(path)) === item.sha256, `${item.name}: admitted qpdf documentation SHA-256 drifted`)
+  }
+  for (const relativePath of ['qpdf.exe', 'qpdf30.dll', 'libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll', 'SOURCE.txt', 'licenses/qpdf-LICENSE.txt', 'licenses/qpdf-NOTICE.md', 'licenses/GCC-MinGW-runtime-copyright.txt', 'licenses/MinGW-w64-copyright.txt']) {
+    assert(tauriConfig.includes(`resources/pdf-engine/${relativePath}`), `Tauri qpdf resource declaration is missing: ${relativePath}`)
+  }
 }
 
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
@@ -343,7 +378,7 @@ for (const mutation of [
   (copy) => { delete copy.dependencies[0].artifact.sha256 },
   (copy) => { delete copy.dependencies[1].license.expression },
   (copy) => { copy.dependencies.find(item => item.id === 'ffmpeg').artifact.url = 'http://ffmpeg.org/unsafe' },
-  (copy) => { copy.dependencies.find(item => item.id === 'qpdf').integrationAllowed = true },
+  (copy) => { copy.dependencies.find(item => item.id === 'qpdf').status = 'unreviewed-runtime' },
   (copy) => { copy.dependencies.find(item => item.id === 'libcaesium').features.allowed.push('gif') },
 ]) {
   const copy = structuredClone(manifest)

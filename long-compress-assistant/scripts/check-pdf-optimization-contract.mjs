@@ -14,10 +14,10 @@ function assert(condition, message) {
 
 function validate(candidate) {
   assert(candidate.schemaVersion === 1, 'unsupported PDF optimization contract schema')
-  assert(candidate.node === 'D-01.1', 'PDF contract must remain scoped to D-01.1')
+  assert(candidate.node === 'D-01.2.1' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
   assert(/^\d{4}-\d{2}-\d{2}$/.test(candidate.reviewedAt), 'PDF contract review date is missing')
   assert(candidate.engine?.id === 'qpdf' && candidate.engine?.version === '12.4.0', 'qpdf identity drifted')
-  assert(candidate.engine?.integrationAllowed === false && candidate.engine?.candidateCacheOnly === true, 'D-01.1 must not admit qpdf into the product runtime')
+  assert(candidate.engine?.integrationAllowed === true && candidate.engine?.candidateCacheOnly === false && candidate.engine?.productionPreflightOnly === true, 'D-01.2.1 qpdf runtime admission boundary is invalid')
   assert(candidate.engine?.officialReferences?.length >= 4 && candidate.engine.officialReferences.every(url => url.startsWith('https://')), 'official qpdf references are incomplete')
 
   const lossless = candidate.modes?.['lossless-organization']
@@ -34,14 +34,14 @@ function validate(candidate) {
   assert(candidate.documentPolicies?.['digitally-signed']?.startsWith('analysis-only'), 'signed PDF execution must remain blocked')
   assert(candidate.documentPolicies?.encrypted?.startsWith('require-correct-password'), 'encrypted PDF must require a correct password before planning')
   assert(candidate.executionBoundary?.acceptRawArguments === false, 'raw qpdf arguments must remain forbidden')
-  assert(candidate.executionBoundary?.publishProductRuntime === false && candidate.executionBoundary?.enableProductUi === false, 'D-01.1 must not expose a half-built product path')
+  assert(candidate.executionBoundary?.publishProductRuntime === true && candidate.executionBoundary?.enableProductUi === false, 'D-01.2.1 must package identity-checked qpdf without exposing a half-built UI')
   assert(candidate.executionBoundary?.ghostscriptAllowed === false, 'Ghostscript must remain outside the redistribution boundary')
   assert(candidate.executionBoundary?.sourceMutationAllowed === false, 'PDF source mutation must remain forbidden')
 }
 
 validate(contract)
 for (const mutation of [
-  copy => { copy.engine.integrationAllowed = true },
+  copy => { copy.engine.integrationAllowed = false },
   copy => { copy.modes['lossless-organization'].arguments.push('--optimize-images') },
   copy => { copy.executionBoundary.acceptRawArguments = true },
   copy => { copy.documentPolicies['digitally-signed'] = 'eligible' },
@@ -55,7 +55,7 @@ for (const mutation of [
 
 const qpdf = dependencies.dependencies.find(item => item.id === 'qpdf')
 assert(qpdf?.version === contract.engine.version, 'qpdf dependency and capability-contract versions differ')
-assert(qpdf?.integrationAllowed === false && qpdf?.status.includes('blocked'), 'qpdf product admission occurred before D-01.2')
+assert(qpdf?.integrationAllowed === true && qpdf?.status === 'runtime-admitted-d01-2-1-repository', 'qpdf repository runtime admission is incomplete')
 assert(dependencies.blockedAlternatives?.some(item => item.id === 'ghostscript' && item.integrationAllowed === false), 'Ghostscript block is missing')
 
 const fixtureKinds = new Set(fixtures.pdfs.map(item => item.kind))
@@ -66,4 +66,4 @@ for (const required of ['mixed-content', 'annotation-preserve', 'outline-preserv
   assert(releaseGates.nodes?.D?.requiredRealCases?.includes(required), `PDF release gate is missing ${required}`)
 }
 
-console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; qpdf remains cache-only).`)
+console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; qpdf production preflight only).`)

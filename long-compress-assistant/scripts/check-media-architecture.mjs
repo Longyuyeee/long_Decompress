@@ -165,6 +165,35 @@ for (const contract of [
 assert(!videoEncoding.includes('Command::new("cmd.exe")'), 'video encoding must not launch through cmd.exe')
 assert(!videoEncoding.includes('Command::new("powershell")'), 'video encoding must not launch through PowerShell')
 assert(!main.includes('commands::video_engine::encode_video'), 'C-03.2 internal staging must not bypass the C-04 publication gate')
+
+const pdfEngine = await read('src-tauri/src/services/pdf_engine.rs')
+const pdfCommands = await read('src-tauri/src/commands/pdf_engine.rs')
+const pdfContract = JSON.parse(await read('config/pdf-optimization-contract.json'))
+assert(
+  (main.match(/commands::pdf_engine::preflight_pdf_engine/g) ?? []).length === 1,
+  'D-01.2.1 must expose exactly one identity-only qpdf preflight command',
+)
+assert(
+  main.includes('--internal-pdf-engine-preflight-report')
+    && main.includes('write_installed_pdf_engine_preflight_report'),
+  'D-01.2.1 installed qpdf preflight report entry point is missing',
+)
+assert(
+  pdfCommands.includes('validate_pdf_engine(&resource_root)')
+    && pdfCommands.includes('bundled_pdf_resource_root(&app_resource_dir)'),
+  'qpdf command must resolve and validate the packaged production runtime',
+)
+assert(
+  pdfEngine.includes('PDF_ENGINE_RESOURCE_HASH_MISMATCH')
+    && pdfEngine.includes('qpdf version 12.4.0')
+    && pdfEngine.includes('--show-crypto')
+    && pdfEngine.includes('--help=--json')
+    && pdfEngine.includes('--help=--optimize-images'),
+  'qpdf production identity/capability refusal contract is incomplete',
+)
+assert(pdfContract.engine?.productionPreflightOnly === true, 'qpdf must remain preflight-only in D-01.2.1')
+assert(pdfContract.executionBoundary?.enableProductUi === false, 'PDF UI must remain disabled until D-02')
+assert(!main.includes('commands::pdf_engine::optimize_pdf'), 'D-01.2.1 must not expose PDF transformation')
 const videoValidation = await read('src-tauri/src/services/video_output_validation.rs')
 for (const contract of [
   'validate_staged_video_output',

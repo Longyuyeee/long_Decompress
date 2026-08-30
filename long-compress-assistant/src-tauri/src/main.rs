@@ -190,6 +190,27 @@ fn main() {
         };
         std::process::exit(exit_code);
     }
+    if let Some(position) = args
+        .iter()
+        .position(|argument| argument == "--internal-pdf-engine-preflight-report")
+    {
+        let Some(report_path) = args.get(position + 1) else {
+            std::process::exit(3);
+        };
+        let executable_path = match std::env::current_exe() {
+            Ok(path) => path,
+            Err(_) => std::process::exit(3),
+        };
+        let exit_code = match long_compress_assistant::services::pdf_engine::write_installed_pdf_engine_preflight_report(
+            &executable_path,
+            std::path::Path::new(report_path),
+        ) {
+            Ok(true) => 0,
+            Ok(false) => 2,
+            Err(_) => 3,
+        };
+        std::process::exit(exit_code);
+    }
     let instance_name = instance_name();
     let instance = single_instance::SingleInstance::new(&instance_name)
         .expect("failed to create application instance guard");
@@ -467,6 +488,7 @@ fn main() {
             long_compress_assistant::commands::video_engine::preflight_video_engine,
             long_compress_assistant::commands::video_engine::probe_video_input,
             long_compress_assistant::commands::video_engine::plan_video_compression,
+            long_compress_assistant::commands::pdf_engine::preflight_pdf_engine,
             long_compress_assistant::commands::system_integration::open_in_explorer,
             long_compress_assistant::commands::system_integration::open_video_output_with_default_application,
             long_compress_assistant::commands::system_integration::register_context_menu,

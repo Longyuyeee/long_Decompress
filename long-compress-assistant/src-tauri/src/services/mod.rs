@@ -51,3 +51,4 @@ pub mod video_encoding;
 pub mod video_output_validation;
 pub mod video_publish;
 pub mod video_probe;
+pub mod pdf_engine;

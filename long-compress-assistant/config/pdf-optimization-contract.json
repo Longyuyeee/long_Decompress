@@ -1,13 +1,15 @@
 {
   "schemaVersion": 1,
   "reviewedAt": "2026-08-30",
-  "node": "D-01.1",
+  "node": "D-01.2.1",
+  "baselineNode": "D-01.1",
   "engine": {
     "id": "qpdf",
     "version": "12.4.0",
     "dependencyManifest": "config/media-dependencies.json",
-    "integrationAllowed": false,
-    "candidateCacheOnly": true,
+    "integrationAllowed": true,
+    "candidateCacheOnly": false,
+    "productionPreflightOnly": true,
     "officialReferences": [
       "https://qpdf.readthedocs.io/en/latest/cli.html",
       "https://qpdf.readthedocs.io/en/latest/qpdf-options.html",
@@ -77,7 +79,7 @@
   ],
   "executionBoundary": {
     "acceptRawArguments": false,
-    "publishProductRuntime": false,
+    "publishProductRuntime": true,
     "enableProductUi": false,
     "ghostscriptAllowed": false,
     "largerOutputDefault": "do-not-publish",

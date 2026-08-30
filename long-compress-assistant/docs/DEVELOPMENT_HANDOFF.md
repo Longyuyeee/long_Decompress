@@ -1,5 +1,13 @@
 # 开发交接
 
+## 2026-08-30 D-01.2.1 qpdf 正式资源与生产预检完成
+
+- qpdf 12.4.0 官方 MinGW64 五文件子集已经从测试候选提升为仓库正式资源；二进制 12,637,211 B，连同 Apache-2.0、NOTICE、GCC/MinGW notice 与来源说明共 10 文件、12,765,477 B，全部锁定字节和 SHA-256。
+- 新增与产品共用的生产预检：先逐字节核验资源，再验证版本 12.4.0、OpenSSL/native、JSON v2 与图片优化能力；缺失或替换均在启动 qpdf 前失败关闭。Tauri 目前只开放身份预检，不开放 PDF 优化命令或 UI。
+- 首轮探针与 qpdf 实际帮助输出不符，已按 DCT/JPEG 与三个 `--oi-min-*` 事实纠正；意外触发的全仓 Rust 格式化漂移也已在提交前精确撤回，只定向格式化新增文件。
+- 首轮干净 CI 又发现 qpdf 许可文本会被 Windows checkout 转换为 CRLF 并破坏固定字节；根 `.gitattributes` 已将整个 `pdf-engine` 设为 `-text`，与既有 video-engine 的逐字节策略一致。
+- Rust 4/4、严格 Clippy、真实依赖、PDF 契约、媒体架构、类型、前端 284/284 覆盖率和生产构建均通过；Release 主程序内部预检报告也以 10 文件身份通过。下一唯一接续点为 D-01.2.2：同提交正式 NSIS/updater 精确增量、安装态完整/缺失/替换预检及公开版本恢复。详见 [D01_2_1_QPDF_RUNTIME_ADMISSION_AUDIT.md](D01_2_1_QPDF_RUNTIME_ADMISSION_AUDIT.md)。
+
 ## 2026-08-30 D-01.1 qpdf 能力契约与 PDF 样本基线完成
 
 - 实际代码确认 qpdf 12.4.0 官方 Windows x64 候选、上游校验文件和五文件运行时子集此前已经锁定，但仍为 `integrationAllowed=false`；旧样本只有文本、扫描、透明、表单、签名和加密六类，缺少原路线要求的图文混合、注释、书签和附件。

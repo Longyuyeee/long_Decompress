@@ -1,0 +1,13 @@
+qpdf 12.4.0 official Windows x86_64 runtime
+
+Project: https://github.com/qpdf/qpdf
+Release: https://github.com/qpdf/qpdf/releases/tag/v12.4.0
+Artifact: qpdf-12.4.0-mingw64.zip
+Artifact bytes: 24063155
+Artifact SHA-256: dcec940ce825b3b654d4936918190f52e7bfca85b7fb1c49bc24b3035185b4f5
+Upstream checksum: https://github.com/qpdf/qpdf/releases/download/v12.4.0/qpdf-12.4.0.sha256
+
+This directory contains the minimum official command-line runtime subset.
+The qpdf license and NOTICE are copied byte-for-byte from the v12.4.0 tag.
+The GCC/MinGW runtime notices cover the three redistributed MinGW DLLs.
+Ghostscript is not included or downloaded.

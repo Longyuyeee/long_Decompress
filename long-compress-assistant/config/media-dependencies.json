@@ -175,8 +175,8 @@
       "id": "qpdf",
       "workload": "pdf",
       "version": "12.4.0",
-      "status": "official-runtime-candidate-packaging-blocked",
-      "integrationAllowed": false,
+      "status": "runtime-admitted-d01-2-1-repository",
+      "integrationAllowed": true,
       "projectUrl": "https://github.com/qpdf/qpdf",
       "license": {
         "expression": "Apache-2.0",
@@ -189,7 +189,7 @@
       "features": {
         "allowed": ["openssl-native-crypto"],
         "forbidden": ["ghostscript"],
-        "reason": "official runtime identity is verified; D-01 must package notices and measure the exact NSIS delta"
+        "reason": "D-01.2.1 packages the exact official runtime with qpdf and MinGW notices, and production preflight refuses missing or replaced bytes; installed NSIS/updater delta remains assigned to D-01.2.2"
       },
       "artifact": {
         "fileName": "qpdf-12.4.0-mingw64.zip",
@@ -207,7 +207,29 @@
         "bytes": 12637211,
         "files": ["qpdf.exe", "qpdf30.dll", "libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll"]
       },
-      "installerImpact": { "runtimePayloadBytes": 12637211, "compressedInstallerDeltaBytes": null, "measurementStage": "D-01 candidate NSIS build" },
+      "runtimeCandidate": {
+        "admittedAt": "2026-08-30",
+        "resourceDirectory": "src-tauri/resources/pdf-engine",
+        "files": [
+          { "name": "qpdf.exe", "bytes": 114927, "sha256": "832b73b371db31908f4dc7a5c1411c066d3e030121807377d739803f4d211b24" },
+          { "name": "qpdf30.dll", "bytes": 9645568, "sha256": "970ead48587b3fcd2651706c846597a4ff212357da2f2dd54787cfeacc4837cc" },
+          { "name": "libgcc_s_seh-1.dll", "bytes": 150998, "sha256": "b37c1770c8ca092700875845b34918803ee6311573eba1c32ff4b1166e4a0e1e" },
+          { "name": "libstdc++-6.dll", "bytes": 2661299, "sha256": "887c21dbe2a211ac4d1a790e4f608b7dee27fae12352856963004e7a715d2e6c" },
+          { "name": "libwinpthread-1.dll", "bytes": 64419, "sha256": "d54ed5baa6d339e28fe18c0106caffd110ac42612908593e07211d7bb48f5e79" }
+        ],
+        "licenseFiles": [
+          { "name": "qpdf-LICENSE.txt", "bytes": 11358, "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30" },
+          { "name": "qpdf-NOTICE.md", "bytes": 2729, "sha256": "b207f65a9e5491195ded63b2941199b19a4d30148871f2742c88eae7bfc513a6" },
+          { "name": "GCC-MinGW-runtime-copyright.txt", "bytes": 75729, "sha256": "a481f772f7a53335f13b32c6c54eb1c8577ce97704edd3757ab7ed4287a8e96a" },
+          { "name": "MinGW-w64-copyright.txt", "bytes": 37808, "sha256": "af23297b7d17e8e31817a5d58088de6fdafe34705bb5a7d1d330f08711b31314" }
+        ],
+        "documentationFiles": [
+          { "name": "SOURCE.txt", "bytes": 642, "sha256": "1e61a4b304ed7dd7947e5dbfafb4f995c508966617da60d3a201236a9668646b" }
+        ],
+        "systemDllImports": ["ADVAPI32.dll", "CRYPT32.dll", "KERNEL32.dll", "msvcrt.dll", "USER32.dll", "WS2_32.dll"],
+        "capabilities": { "cryptoProviders": ["openssl", "native"], "jsonVersion": 2, "imageOptimization": true }
+      },
+      "installerImpact": { "runtimePayloadBytes": 12765477, "compressedInstallerDeltaBytes": null, "updaterCompressedDeltaBytes": null, "measurementStage": "D-01.2.2 same-commit NSIS/updater delta" },
       "securityOwner": "Long解压 maintainers"
     }
   ],
