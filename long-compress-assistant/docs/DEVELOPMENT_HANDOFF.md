@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-08-30 当前开发与换机接续审计
+
+- 审计基线为 `master` / `e3282ddb8f00b6f12d091c2720e930768effea64`；审计开始时与 `origin/master` 差异 0/0、工作区干净，产品版本仍为 `1.1.16`。
+- 实际代码确认 D-01 已关闭但 PDF 产品能力仍严格冻结在 qpdf 身份预检：压缩页只有 PDF 占位区域，没有输入分析或转换命令。下一唯一功能接续点是 D-02，先实现结构化只读分析，再接两模式配置和执行前风险确认。
+- 换机证据分为三类：Git 已跟踪的合同/脚本/运行时/审计、GitHub Actions/Release 可回查证据，以及被忽略的本机 `test-results` 原始产物。后者含绝对路径、安装副本和用户数据指纹，不推送且不作为换机开发的必要输入；D-04/发布必须在届时候选上重新取证。
+- 新电脑的工具链、最小复验命令、原始证据摘要、未完成风险和旧 PR #91 的非接续状态见 [CURRENT_DEVELOPMENT_AND_MACHINE_HANDOFF_AUDIT_2026-08-30.md](CURRENT_DEVELOPMENT_AND_MACHINE_HANDOFF_AUDIT_2026-08-30.md)。
+
 ## 2026-08-30 D-01.2.2 安装态与签名 updater 增量完成
 
 - GitHub 同提交双构建证明 qpdf 10 文件使 NSIS/updater 各增加 3,603,012 B；两份 updater 完整，包内 NSIS 与独立 NSIS 字节一致。运行 `33318192852`，测量提交 `a27ecc0`。
