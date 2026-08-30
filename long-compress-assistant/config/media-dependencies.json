@@ -175,7 +175,7 @@
       "id": "qpdf",
       "workload": "pdf",
       "version": "12.4.0",
-      "status": "runtime-admitted-d01-2-1-repository",
+      "status": "runtime-admitted-d01-complete",
       "integrationAllowed": true,
       "projectUrl": "https://github.com/qpdf/qpdf",
       "license": {
@@ -229,7 +229,7 @@
         "systemDllImports": ["ADVAPI32.dll", "CRYPT32.dll", "KERNEL32.dll", "msvcrt.dll", "USER32.dll", "WS2_32.dll"],
         "capabilities": { "cryptoProviders": ["openssl", "native"], "jsonVersion": 2, "imageOptimization": true }
       },
-      "installerImpact": { "runtimePayloadBytes": 12765477, "compressedInstallerDeltaBytes": null, "updaterCompressedDeltaBytes": null, "measurementStage": "D-01.2.2 same-commit NSIS/updater delta" },
+      "installerImpact": { "runtimePayloadBytes": 12765477, "compressedInstallerDeltaBytes": 3603012, "updaterCompressedDeltaBytes": 3603012, "measurementStage": "D-01.2.2 same-commit signed NSIS/updater complete" },
       "securityOwner": "Long解压 maintainers"
     }
   ],
@@ -310,6 +310,39 @@
       "windowsNEvidenceScript": "scripts/test-windows-n-video-runtime.ps1",
       "windowsNEvidenceVerifier": "scripts/verify-windows-n-video-runtime-evidence.mjs",
       "windowsNReleaseMatrixNode": "C-05"
+    },
+    "pdf": {
+      "measuredAt": "2026-08-30",
+      "scope": "d01.2.2-same-commit-same-toolchain-tauri-updater-signed-pdf-resource-delta",
+      "measurementCommit": "a27ecc0c9fff7968a5d952b5647e25e82ee5f650",
+      "workflowRun": 33318192852,
+      "baselineNsisBytes": 15592042,
+      "baselineNsisSha256": "c46bd10bb9b34e359a7caa3175b3049dd2db79d6b6333f11bda3e5a113cc635d",
+      "integratedNsisBytes": 19195054,
+      "integratedNsisSha256": "6abbd506033551efc59b573739ba048d06a87da9b590502f5972a9e2d890b09b",
+      "nsisDeltaBytes": 3603012,
+      "baselineUpdaterBytes": 15592202,
+      "baselineUpdaterSha256": "b0cccab068923146f0b6a25bceaae235be323ec079d5c7431784b576dfbf02dd",
+      "integratedUpdaterBytes": 19195214,
+      "integratedUpdaterSha256": "2bb5f0dd74573bb1ff3a7351e8e940899e4885b1bdaabddb3a993602deeb7854",
+      "updaterDeltaBytes": 3603012,
+      "updaterArchiveIntegrityPassed": true,
+      "updaterContainsByteIdenticalNsis": true,
+      "installedCandidate": {
+        "workflowRun": 33267974849,
+        "installerBytes": 19201569,
+        "installerSha256": "b679c8d0f2ebba173c51c2d5bb0206ca0e2af81ea769cb4917eb97b0a4b11492",
+        "executableBytes": 28914176,
+        "executableSha256": "4684370f94f4605c9940bfa7d11f0f872b9af2bdef57776b298cf3bd98fb664e",
+        "installedLifecycleChecks": 49,
+        "productionPreflightPassed": true,
+        "missingResourceRefused": true,
+        "replacedResourceRefused": true,
+        "uninstallPassed": true,
+        "publicPreviousVersionRestored": true,
+        "userDataPreserved": true,
+        "evidence": "test-results/installed-release-validation/20260830-225829/result.json"
+      }
     }
   },
   "blockedAlternatives": [

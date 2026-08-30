@@ -14,7 +14,7 @@ function assert(condition, message) {
 
 function validate(candidate) {
   assert(candidate.schemaVersion === 1, 'unsupported PDF optimization contract schema')
-  assert(candidate.node === 'D-01.2.1' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
+  assert(candidate.node === 'D-01.2.2' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
   assert(/^\d{4}-\d{2}-\d{2}$/.test(candidate.reviewedAt), 'PDF contract review date is missing')
   assert(candidate.engine?.id === 'qpdf' && candidate.engine?.version === '12.4.0', 'qpdf identity drifted')
   assert(candidate.engine?.integrationAllowed === true && candidate.engine?.candidateCacheOnly === false && candidate.engine?.productionPreflightOnly === true, 'D-01.2.1 qpdf runtime admission boundary is invalid')
@@ -55,7 +55,7 @@ for (const mutation of [
 
 const qpdf = dependencies.dependencies.find(item => item.id === 'qpdf')
 assert(qpdf?.version === contract.engine.version, 'qpdf dependency and capability-contract versions differ')
-assert(qpdf?.integrationAllowed === true && qpdf?.status === 'runtime-admitted-d01-2-1-repository', 'qpdf repository runtime admission is incomplete')
+assert(qpdf?.integrationAllowed === true && qpdf?.status === 'runtime-admitted-d01-complete', 'qpdf D-01 runtime admission is incomplete')
 assert(dependencies.blockedAlternatives?.some(item => item.id === 'ghostscript' && item.integrationAllowed === false), 'Ghostscript block is missing')
 
 const fixtureKinds = new Set(fixtures.pdfs.map(item => item.kind))

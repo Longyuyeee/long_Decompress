@@ -12,6 +12,7 @@ param(
   [switch]$RunArchiveWorkspaceMatrix,
   [switch]$RunImageWorkspaceMatrix,
   [switch]$RunVideoRuntimeMatrix,
+  [switch]$RunPdfRuntimeMatrix,
   [switch]$RunVideoWorkspaceMatrix
 )
 
@@ -702,6 +703,30 @@ try {
         Remove-Item Env:VIDEO_RUNTIME_EVIDENCE_DIRECTORY -ErrorAction SilentlyContinue
       } else {
         $env:VIDEO_RUNTIME_EVIDENCE_DIRECTORY = $previousEvidenceDirectory
+      }
+      Stop-InstalledApplication $candidateState.installLocation
+    }
+  }
+  if ($RunPdfRuntimeMatrix) {
+    $previousAppBinary = $env:TAURI_APP_BINARY
+    $previousEvidenceDirectory = $env:PDF_RUNTIME_EVIDENCE_DIRECTORY
+    try {
+      $env:TAURI_APP_BINARY = $candidateState.executable
+      $env:PDF_RUNTIME_EVIDENCE_DIRECTORY = Join-Path $evidenceDirectory 'pdf-runtime'
+      & node (Join-Path $projectRoot 'scripts\test-installed-pdf-runtime.mjs')
+      Add-Check 'installed PDF runtime matrix exits successfully' ($LASTEXITCODE -eq 0) (
+        "exitCode=$LASTEXITCODE; executable=$($candidateState.executable)"
+      )
+    } finally {
+      if ($null -eq $previousAppBinary) {
+        Remove-Item Env:TAURI_APP_BINARY -ErrorAction SilentlyContinue
+      } else {
+        $env:TAURI_APP_BINARY = $previousAppBinary
+      }
+      if ($null -eq $previousEvidenceDirectory) {
+        Remove-Item Env:PDF_RUNTIME_EVIDENCE_DIRECTORY -ErrorAction SilentlyContinue
+      } else {
+        $env:PDF_RUNTIME_EVIDENCE_DIRECTORY = $previousEvidenceDirectory
       }
       Stop-InstalledApplication $candidateState.installLocation
     }
