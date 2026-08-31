@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "fixtureRevision": "2026-08-30-d01.1",
+  "fixtureRevision": "2026-08-31-d04.3",
   "privacy": "synthetic-only-no-user-data",
   "identityPolicy": {
     "acceptanceBasis": "decoded-and-probed-properties",
@@ -36,6 +36,9 @@
     { "file": "scanned-image.pdf", "pages": 1, "kind": "scan", "expectedText": "" },
     { "file": "mixed-content.pdf", "pages": 1, "kind": "mixed", "expectedText": "Long Decompress mixed text fixture", "imageCount": 1 },
     { "file": "transparency.pdf", "pages": 1, "kind": "transparency" },
+    { "file": "chinese-font.pdf", "pages": 1, "kind": "chinese-font", "expectedText": "Long解压 PDF 安全优化验收" },
+    { "file": "large-pages.pdf", "pages": 300, "kind": "large-page-count", "expectedText": "Large page-count fixture 1/300" },
+    { "file": "large-image.pdf", "pages": 1, "kind": "large-image", "imageCount": 1, "imageWidth": 6000, "imageHeight": 4000 },
     { "file": "form.pdf", "pages": 1, "kind": "acroform", "fields": ["archive_name", "preserve_metadata"] },
     { "file": "annotation.pdf", "pages": 1, "kind": "annotation", "annotationSubtypes": ["/Text"] },
     { "file": "outline.pdf", "pages": 2, "kind": "outline", "outlineTitles": ["D-01 first page", "D-01 second page"] },

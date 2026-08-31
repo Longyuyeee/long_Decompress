@@ -71,7 +71,10 @@
         "searchable-vector",
         "scanned-image",
         "mixed-content",
-        "transparency",
+          "transparency",
+          "chinese-font",
+          "large-page-count",
+          "large-image",
         "acroform-preserve",
         "annotation-preserve",
         "outline-preserve",
@@ -79,7 +82,7 @@
         "signed-explicit-refusal",
         "encrypted-explicit-refusal"
       ],
-      "requiredValidation": ["qpdf-check", "page-count", "render-first-and-last-page", "form-policy", "annotation-policy", "outline-policy", "attachment-bytes", "signature-policy", "filesystem-bytes"]
+        "requiredValidation": ["qpdf-check", "page-count", "render-first-and-last-page", "manual-visible-inspection", "form-policy", "annotation-policy", "outline-policy", "attachment-bytes", "signature-policy", "filesystem-bytes", "installed-cancellation", "installed-failure-isolation", "restart-history", "default-reader"]
     }
   },
   "requiredEvidenceFields": [

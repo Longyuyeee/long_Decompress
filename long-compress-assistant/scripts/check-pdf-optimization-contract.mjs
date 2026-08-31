@@ -14,7 +14,7 @@ function assert(condition, message) {
 
 function validate(candidate) {
   assert(candidate.schemaVersion === 1, 'unsupported PDF optimization contract schema')
-  assert(candidate.node === 'D-04.2' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
+  assert(candidate.node === 'D-04.3' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
   assert(/^\d{4}-\d{2}-\d{2}$/.test(candidate.reviewedAt), 'PDF contract review date is missing')
   assert(candidate.engine?.id === 'qpdf' && candidate.engine?.version === '12.4.0', 'qpdf identity drifted')
   assert(candidate.engine?.integrationAllowed === true && candidate.engine?.candidateCacheOnly === false && candidate.engine?.productionPreflightOnly === false, 'D-02.1 qpdf read-only analysis boundary is invalid')
@@ -57,6 +57,9 @@ function validate(candidate) {
   assert(candidate.executionBoundary?.terminalHistoryPersistence === true, 'D-04.2 terminal history persistence must remain enabled')
   assert(JSON.stringify(candidate.executionBoundary?.publishedMetrics) === '["inputBytes","outputBytes","pageCount"]', 'D-04.2 measured PDF metrics drifted')
   assert(candidate.executionBoundary?.defaultReaderCommand === 'open_pdf_output_with_default_application', 'D-04.2 default PDF reader route drifted')
+  assert(candidate.executionBoundary?.realMatrix === 'eleven-executable-kinds-times-two-modes-plus-two-stable-refusals', 'D-04.3 real PDF matrix drifted')
+  assert(candidate.executionBoundary?.manualRenderInspection === true, 'D-04.3 manual render inspection is required')
+  assert(candidate.executionBoundary?.installedWorkspaceMatrix === 'cancel-then-failure-isolated-batch-then-restart', 'D-04.3 installed workspace matrix drifted')
   assert(candidate.executionBoundary?.outputLockScope === 'process-wide-normalized-destination', 'D-03.3 cross-task output lock drifted')
   assert(candidate.executionBoundary?.markOfTheWebPolicy === 'propagate-internet-or-restricted-zone-before-atomic-rename', 'D-03.3 Mark-of-the-Web policy drifted')
   for (const stage of ['normalized-cross-task-output-lock', 'candidate-validation', 'cancellation-recheck', 'source-sha256-recheck', 'candidate-sha256-recheck', 'mark-of-the-web-policy', 'same-directory-atomic-rename', 'published-filesystem-identity']) {
@@ -114,13 +117,13 @@ assert(dependencies.blockedAlternatives?.some(item => item.id === 'ghostscript' 
 
 const fixtureKinds = new Set(fixtures.pdfs.map(item => item.kind))
 for (const kind of contract.requiredFixtureKinds) assert(fixtureKinds.has(kind), `required D-01 fixture kind is missing: ${kind}`)
-assert(fixtures.fixtureRevision === '2026-08-30-d01.1', 'D-01 fixture revision drifted')
+assert(fixtures.fixtureRevision === '2026-08-31-d04.3', 'D-04.3 fixture revision drifted')
 
-for (const required of ['mixed-content', 'annotation-preserve', 'outline-preserve', 'attachment-preserve']) {
+for (const required of ['mixed-content', 'chinese-font', 'large-page-count', 'large-image', 'annotation-preserve', 'outline-preserve', 'attachment-preserve']) {
   assert(releaseGates.nodes?.D?.requiredRealCases?.includes(required), `PDF release gate is missing ${required}`)
 }
-for (const required of ['qpdf-check', 'annotation-policy', 'outline-policy', 'attachment-bytes']) {
+for (const required of ['qpdf-check', 'manual-visible-inspection', 'annotation-policy', 'outline-policy', 'attachment-bytes', 'installed-cancellation', 'installed-failure-isolation', 'restart-history', 'default-reader']) {
   assert(releaseGates.nodes?.D?.requiredValidation?.includes(required), `PDF release validation is missing ${required}`)
 }
 
-console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-04.2 unified task/UI orchestration enabled).`)
+console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-04.3 real and installed matrices required).`)

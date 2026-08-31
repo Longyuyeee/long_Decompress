@@ -459,6 +459,9 @@ assert(
 const installedReleaseGate = await read('scripts/test-installed-release.ps1')
 assert(installedReleaseGate.includes('[switch]$RunVideoWorkspaceMatrix'), 'installed lifecycle cannot run the C-05.4 video workspace matrix')
 assert(installedReleaseGate.includes('test-installed-video-workspace.mjs'), 'installed lifecycle does not invoke the C-05.4 video workspace matrix')
+assert(packageManifest.scripts?.['test:installed-pdf-workspace'] === 'node scripts/test-tauri-desktop.mjs --pdf-workspace-only', 'D-04.3 installed PDF workspace command is missing')
+assert(installedReleaseGate.includes('[switch]$RunPdfWorkspaceMatrix'), 'installed lifecycle cannot run the D-04.3 PDF workspace matrix')
+assert(installedReleaseGate.includes('--pdf-workspace-only'), 'installed lifecycle does not invoke the D-04.3 PDF workspace matrix')
 assert(
   installedReleaseGate.includes('$baselineAutoStartRegistration = Get-AutoStartRegistration'),
   'installed lifecycle must snapshot the user auto-start registration before mutation',

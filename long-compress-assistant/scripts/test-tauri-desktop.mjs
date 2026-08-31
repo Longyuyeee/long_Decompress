@@ -2236,20 +2236,58 @@ async function runResponsiveTaskDetailDesktopGate() {
 }
 
 async function runPdfWorkspaceDesktopGate() {
-  console.log('[desktop-e2e] verifying real D-04.2 PDF task, publication, history and default-reader UI')
+  console.log('[desktop-e2e] verifying real D-04.3 PDF cancellation, failure isolation, restart history and default-reader UI')
   const pdfRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures', 'pdfs')
-  const fixtures = Object.fromEntries(['form.pdf', 'signed.pdf', 'encrypted.pdf'].map(name => {
-    const fixturePath = path.join(pdfRoot, name)
+  const batchRoot = path.join(fixtureDirectory, 'pdf-d04-3')
+  mkdirSync(batchRoot, { recursive: true })
+  for (const name of ['form.pdf', 'text-vector.pdf', 'mixed-content.pdf', 'large-image.pdf']) {
+    copyFileSync(path.join(pdfRoot, name), path.join(batchRoot, name))
+  }
+  const fixturePaths = {
+    'form.pdf': path.join(batchRoot, 'form.pdf'),
+    'text-vector.pdf': path.join(batchRoot, 'text-vector.pdf'),
+    'mixed-content.pdf': path.join(batchRoot, 'mixed-content.pdf'),
+    'large-image.pdf': path.join(batchRoot, 'large-image.pdf'),
+    'signed.pdf': path.join(pdfRoot, 'signed.pdf'),
+    'encrypted.pdf': path.join(pdfRoot, 'encrypted.pdf'),
+  }
+  const fixtures = Object.fromEntries(Object.entries(fixturePaths).map(([name, fixturePath]) => {
     assert.equal(existsSync(fixturePath), true, `missing real PDF fixture: ${fixturePath}`)
     return [name, { path: fixturePath, bytes: statSync(fixturePath).size, sha256: fileSha256(fixturePath) }]
   }))
   await callDesktopBridge('clearTasks')
   await callDesktopBridge('clearTaskHistory')
+
   await (await waitForElement('[data-testid="nav-Compress"]')).click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
   await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
-  const workspace = await waitForElement('[data-testid="pdf-compression-workspace"]')
-  const picker = await waitForElement('[data-testid="pdf-compression-workspace"] [data-testid="dropzone-file"]')
+  let workspace = await waitForElement('[data-testid="pdf-compression-workspace"]')
+  let picker = await waitForElement('[data-testid="pdf-compression-workspace"] [data-testid="dropzone-file"]')
+  await callDesktopBridge('queueDesktopDialogSelections', [[fixtures['large-image.pdf'].path]])
+  await picker.click()
+  await driver.wait(async () => (await workspace.getText()).includes('large-image.pdf') && (await workspace.getText()).includes('可配置'), 30_000)
+  await (await waitForElement('[data-testid="pdf-mode-image"]')).click()
+  await (await waitForElement('[data-testid="pdf-risk-confirmation"]')).click()
+  await (await waitForElement('[data-testid="pdf-allow-larger-output"]')).click()
+  await (await waitForElement('[data-testid="pdf-freeze-configuration"]')).click()
+  await (await waitForElement('[data-testid="pdf-start-batch"]')).click()
+  const cancelBatch = await waitForElement('[data-testid="pdf-cancel-batch"]', 30_000)
+  await cancelBatch.click()
+  const cancelledHistory = await driver.wait(async () => {
+    const records = await callDesktopBridge('taskHistory')
+    return records.find(record => record.workloadKind === 'pdf' && record.status === 'cancelled') || false
+  }, 30_000)
+  assert.equal(existsSync(cancelledHistory.outputPath), false, 'cancelled PDF must not publish a final output')
+  assert.equal(fileSha256(fixtures['large-image.pdf'].path), fixtures['large-image.pdf'].sha256, 'cancelled PDF source must remain unchanged')
+
+  await callDesktopBridge('reset')
+  await (await waitForElement('[data-testid="nav-History"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/history'), 15_000)
+  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
+  workspace = await waitForElement('[data-testid="pdf-compression-workspace"]')
+  picker = await waitForElement('[data-testid="pdf-compression-workspace"] [data-testid="dropzone-file"]')
 
   await callDesktopBridge('queueDesktopDialogSelections', [[fixtures['form.pdf'].path]])
   await picker.click()
@@ -2286,10 +2324,24 @@ async function runPdfWorkspaceDesktopGate() {
   await driver.wait(async () => (await workspace.getText()).includes('配置已锁定'), 10_000)
   assert.match(await workspace.getText(), /form\.optimized\.pdf/u)
 
+  await callDesktopBridge('queueDesktopDialogSelections', [[fixtures['text-vector.pdf'].path, fixtures['mixed-content.pdf'].path]])
+  await picker.click()
+  await driver.wait(async () => {
+    const cards = await driver.findElements(By.css('[data-testid="pdf-draft-card"]'))
+    return cards.length === 3 && (await Promise.all(cards.map(card => card.getText()))).every(text => !text.includes('分析中'))
+  }, 30_000)
+  const safeCards = await driver.findElements(By.css('[data-testid="pdf-draft-card"]'))
+  for (const card of safeCards.slice(1, 3)) {
+    const freezeButton = await card.findElement(By.css('[data-testid="pdf-freeze-configuration"]'))
+    assert.equal(await freezeButton.getAttribute('disabled'), null, 'safe PDF must allow configuration locking')
+    await freezeButton.click()
+  }
+  await driver.wait(async () => (await workspace.getText()).match(/配置已锁定/gu)?.length === 3, 10_000)
+
   await callDesktopBridge('queueDesktopDialogSelections', [[fixtures['signed.pdf'].path]])
   await picker.click()
   await driver.wait(async () => (await workspace.getText()).includes('signed.pdf') && (await workspace.getText()).includes('当前仅可分析'), 30_000)
-  const signedCard = (await driver.findElements(By.css('[data-testid="pdf-draft-card"]')))[1]
+  const signedCard = (await driver.findElements(By.css('[data-testid="pdf-draft-card"]')))[3]
   const signedFreeze = await signedCard.findElement(By.css('[data-testid="pdf-freeze-configuration"]'))
   assert.notEqual(await signedFreeze.getAttribute('disabled'), null, 'signed PDF must not freeze an execution configuration')
 
@@ -2310,7 +2362,7 @@ async function runPdfWorkspaceDesktopGate() {
   await (await waitForElement('[data-testid="pdf-password-analyze"]')).click()
   await driver.wait(async () => (await workspace.getText()).includes('密码已验证'), 30_000)
   assert.equal((await driver.findElements(By.css('[data-testid="pdf-password-input"]'))).length, 0, 'accepted password must not remain in the DOM')
-  const encryptedCard = (await driver.findElements(By.css('[data-testid="pdf-draft-card"]')))[2]
+  const encryptedCard = (await driver.findElements(By.css('[data-testid="pdf-draft-card"]')))[4]
   const encryptedFreeze = await encryptedCard.findElement(By.css('[data-testid="pdf-freeze-configuration"]'))
   assert.notEqual(await encryptedFreeze.getAttribute('disabled'), null, 'encrypted PDF must remain analysis-only after password verification')
   assert.match(await encryptedCard.getText(), /PDF_ENCRYPTED_EXECUTION_UNSUPPORTED/u)
@@ -2345,44 +2397,77 @@ async function runPdfWorkspaceDesktopGate() {
   }
 
   const startBatch = await waitForElement('[data-testid="pdf-start-batch"]')
-  assert.equal(await startBatch.getAttribute('disabled'), null, 'one frozen safe PDF must enable batch execution')
+  assert.equal(await startBatch.getAttribute('disabled'), null, 'three frozen safe PDFs must enable batch execution')
+  rmSync(fixtures['form.pdf'].path)
   await startBatch.click()
-  await waitForElement('[data-testid="pdf-open-default-app"]', 120_000)
-  const history = await driver.wait(async () => {
-    const records = await callDesktopBridge('taskHistory')
-    return records.length === 1 && records[0].status === 'completed' ? records : false
+  await driver.wait(async () => (await driver.findElement(By.css('body')).getText()).includes('PDF 处理结束：2 个完成，1 个失败，0 个取消'), 120_000)
+  const batchHistory = await driver.wait(async () => {
+    const records = (await callDesktopBridge('taskHistory')).filter(record => record.workloadKind === 'pdf')
+    return records.length === 4 ? records : false
   }, 30_000)
-  assert.equal(history[0].workloadKind, 'pdf')
-  assert.equal(history[0].metrics?.media?.pageCount, 1)
-  assert.equal(history[0].metrics?.inputBytes, fixtures['form.pdf'].bytes)
-  assert.ok(history[0].metrics?.outputBytes > 0)
-  assert.equal(existsSync(history[0].outputPath), true, 'published PDF output must exist before history completion')
-  const defaultOpen = await waitForElement('[data-testid="pdf-open-default-app"]')
+  const failed = batchHistory.find(record => record.status === 'failed')
+  const completed = batchHistory.filter(record => record.status === 'completed')
+  assert.ok(failed, 'deleted first source must create one failed PDF history row')
+  assert.equal(failed.metrics, null, 'failed PDF history must not invent measured metrics')
+  assert.equal(existsSync(failed.outputPath), false, 'failed PDF must not publish a final output')
+  assert.equal(completed.length, 2, 'a failed first item must not stop the remaining PDF batch')
+  for (const record of completed) {
+    assert.equal(record.workloadKind, 'pdf')
+    assert.equal(record.metrics?.media?.pageCount, 1)
+    assert.ok(record.metrics?.inputBytes > 0)
+    assert.ok(record.metrics?.outputBytes > 0)
+    assert.equal(record.metrics.outputBytes, statSync(record.outputPath).size)
+    assert.equal(existsSync(record.outputPath), true, 'published PDF output must exist before history completion')
+  }
+  assert.equal(batchHistory.filter(record => record.status === 'cancelled').length, 1)
+  const defaultOpen = (await driver.findElements(By.css('[data-testid="pdf-open-default-app"]')))[0]
   await defaultOpen.click()
   await driver.wait(async () => (await driver.findElement(By.css('body')).getText()).includes('已将 PDF 交给系统默认阅读器'), 30_000)
 
-  for (const [name, fixture] of Object.entries(fixtures)) {
+  for (const [name, fixture] of Object.entries(fixtures).filter(([name]) => name !== 'form.pdf')) {
     assert.equal(fileSha256(fixture.path), fixture.sha256, `${name} source bytes must remain unchanged`)
   }
+  const persistedBeforeRestart = batchHistory.map(record => ({
+    id: record.id,
+    status: record.status,
+    sourcePaths: record.sourcePaths.map(normalizedDesktopPath),
+    outputPath: normalizedDesktopPath(record.outputPath),
+    metrics: record.metrics,
+  })).sort((left, right) => left.id.localeCompare(right.id))
+  await restartDesktopSession()
+  const persistedAfterRestart = await driver.wait(async () => {
+    const records = (await callDesktopBridge('taskHistory')).filter(record => record.workloadKind === 'pdf')
+      .map(record => ({
+        id: record.id,
+        status: record.status,
+        sourcePaths: record.sourcePaths.map(normalizedDesktopPath),
+        outputPath: normalizedDesktopPath(record.outputPath),
+        metrics: record.metrics,
+      })).sort((left, right) => left.id.localeCompare(right.id))
+    return records.length === 4 ? records : false
+  }, 30_000)
+  assert.deepEqual(persistedAfterRestart, persistedBeforeRestart, 'PDF completed/failed/cancelled history must survive a complete restart')
   const differences = Object.keys(formExpected).filter(key => JSON.stringify(formExpected[key]) !== JSON.stringify(formActual[key]))
   const wrongPasswordDifferences = wrongPasswordError.includes('PDF_ANALYSIS_INVALID_PASSWORD') ? [] : ['error']
   const differenceCount = differences.length + wrongPasswordDifferences.length
   const evidence = {
     schemaVersion: 1,
-    node: 'D-04.2',
-    testKind: 'real-windows-tauri-ui-with-product-qpdf-unified-task-history-and-default-reader',
+    node: 'D-04.3',
+    testKind: 'real-windows-tauri-ui-cancellation-failure-isolation-restart-history-and-default-reader',
     expectedVsActual: [
       { case: 'form-facts-and-default-output', expected: formExpected, actual: formActual, differences },
       { case: 'wrong-password', expected: 'PDF_ANALYSIS_INVALID_PASSWORD', actual: wrongPasswordError, differences: wrongPasswordDifferences },
       { case: 'source-integrity', expected: 'all-unchanged', actual: 'all-unchanged', differences: [] },
-      { case: 'published-task-history', expected: { status: 'completed', workloadKind: 'pdf', pageCount: 1 }, actual: { status: history[0].status, workloadKind: history[0].workloadKind, pageCount: history[0].metrics?.media?.pageCount }, differences: [] },
+      { case: 'cancelled-large-image', expected: { status: 'cancelled', outputAbsent: true }, actual: { status: cancelledHistory.status, outputAbsent: !existsSync(cancelledHistory.outputPath) }, differences: [] },
+      { case: 'batch-failure-isolation', expected: { completed: 2, failed: 1 }, actual: { completed: completed.length, failed: failed ? 1 : 0 }, differences: [] },
+      { case: 'restart-history', expected: 4, actual: persistedAfterRestart.length, differences: [] },
     ],
     layouts,
     differenceCount,
     passed: differenceCount === 0,
   }
   writeFileSync(path.join(artifactDirectory, 'pdf-workspace-result.json'), JSON.stringify(evidence, null, 2), 'utf8')
-  assert.equal(evidence.differenceCount, 0, `D-04.2 expected/actual differences remain: ${evidence.differenceCount}`)
+  assert.equal(evidence.differenceCount, 0, `D-04.3 expected/actual differences remain: ${evidence.differenceCount}`)
 }
 
 async function runImageWorkspaceDesktopGate() {
@@ -3458,7 +3543,7 @@ try {
   } else if (pdfWorkspaceOnly) {
     await runPdfWorkspaceDesktopGate()
     completedSuccessfully = true
-    console.log('Real Windows Tauri D-04.2 PDF task/UI/default-reader gate passed.')
+  console.log('Real Windows Tauri D-04.3 PDF cancellation/batch/restart/default-reader gate passed.')
   } else if (tarTelemetryOnly) {
     await runTarTelemetryDesktopGate()
     completedSuccessfully = true

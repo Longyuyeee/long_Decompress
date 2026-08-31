@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedAt": "2026-08-31",
-  "node": "D-04.2",
+  "node": "D-04.3",
   "baselineNode": "D-01.1",
   "engine": {
     "id": "qpdf",
@@ -80,6 +80,9 @@
     "scan",
     "mixed",
     "transparency",
+    "chinese-font",
+    "large-page-count",
+    "large-image",
     "acroform",
     "annotation",
     "outline",
@@ -120,6 +123,9 @@
     "terminalHistoryPersistence": true,
     "publishedMetrics": ["inputBytes", "outputBytes", "pageCount"],
     "defaultReaderCommand": "open_pdf_output_with_default_application",
+    "realMatrix": "eleven-executable-kinds-times-two-modes-plus-two-stable-refusals",
+    "manualRenderInspection": true,
+    "installedWorkspaceMatrix": "cancel-then-failure-isolated-batch-then-restart",
     "publicationTransaction": ["normalized-cross-task-output-lock", "owned-same-directory-staging", "candidate-validation", "cancellation-recheck", "source-sha256-recheck", "candidate-sha256-recheck", "mark-of-the-web-policy", "same-directory-atomic-rename", "published-filesystem-identity"],
     "outputLockScope": "process-wide-normalized-destination",
     "markOfTheWebPolicy": "propagate-internet-or-restricted-zone-before-atomic-rename",
