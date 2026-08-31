@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-30",
-  "node": "D-01.2.2",
+  "reviewedAt": "2026-08-31",
+  "node": "D-02.1",
   "baselineNode": "D-01.1",
   "engine": {
     "id": "qpdf",
@@ -9,7 +9,7 @@
     "dependencyManifest": "config/media-dependencies.json",
     "integrationAllowed": true,
     "candidateCacheOnly": false,
-    "productionPreflightOnly": true,
+    "productionPreflightOnly": false,
     "officialReferences": [
       "https://qpdf.readthedocs.io/en/latest/cli.html",
       "https://qpdf.readthedocs.io/en/latest/qpdf-options.html",
@@ -18,8 +18,18 @@
     ]
   },
   "inspection": {
-    "arguments": ["--version", "--show-crypto", "--check", "--show-npages", "--is-encrypted", "--requires-password", "--json=2", "--json-stream-data=none"],
+    "arguments": ["--version", "--show-crypto", "--check", "--show-npages", "--is-encrypted", "--requires-password", "--password-file=-", "--json=2", "--json-stream-data=none", "--json-key=pages", "--json-key=acroform", "--json-key=attachments", "--json-key=outlines"],
     "forbidden": ["--show-encryption-key", "--password-is-hex-key", "--allow-insecure", "--allow-weak-crypto"]
+  },
+  "analysisBoundary": {
+    "readOnly": true,
+    "fixedArgumentsOnly": true,
+    "passwordTransport": "stdin-via-password-file-dash",
+    "passwordInArguments": false,
+    "timeoutSeconds": 30,
+    "maximumJsonBytes": 33554432,
+    "incompleteEncryptedFactsWithoutPassword": true,
+    "signedDocumentDecision": "analysis-only"
   },
   "modes": {
     "lossless-organization": {

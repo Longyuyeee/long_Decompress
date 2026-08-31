@@ -168,10 +168,15 @@ assert(!main.includes('commands::video_engine::encode_video'), 'C-03.2 internal 
 
 const pdfEngine = await read('src-tauri/src/services/pdf_engine.rs')
 const pdfCommands = await read('src-tauri/src/commands/pdf_engine.rs')
+const pdfAnalysis = await read('src-tauri/src/services/pdf_analysis.rs')
 const pdfContract = JSON.parse(await read('config/pdf-optimization-contract.json'))
 assert(
   (main.match(/commands::pdf_engine::preflight_pdf_engine/g) ?? []).length === 1,
-  'D-01.2.1 must expose exactly one identity-only qpdf preflight command',
+  'D-02.1 must preserve exactly one qpdf identity preflight command',
+)
+assert(
+  (main.match(/commands::pdf_engine::analyze_pdf_input/g) ?? []).length === 1,
+  'D-02.1 must expose exactly one read-only PDF analysis command',
 )
 assert(
   main.includes('--internal-pdf-engine-preflight-report')
@@ -191,9 +196,19 @@ assert(
     && pdfEngine.includes('--help=--optimize-images'),
   'qpdf production identity/capability refusal contract is incomplete',
 )
-assert(pdfContract.engine?.productionPreflightOnly === true, 'qpdf must remain preflight-only in D-01.2.1')
-assert(pdfContract.executionBoundary?.enableProductUi === false, 'PDF UI must remain disabled until D-02')
-assert(!main.includes('commands::pdf_engine::optimize_pdf'), 'D-01.2.1 must not expose PDF transformation')
+assert(pdfContract.engine?.productionPreflightOnly === false, 'D-02.1 must enable product read-only analysis')
+assert(pdfContract.analysisBoundary?.readOnly === true, 'D-02.1 analysis must remain read-only')
+assert(pdfContract.executionBoundary?.enableProductUi === false, 'PDF UI must remain disabled until D-02.2')
+assert(
+  pdfAnalysis.includes('"--password-file=-"')
+    && pdfAnalysis.includes('Stdio::piped()')
+    && !pdfAnalysis.includes('OsString::from("--password=")'),
+  'D-02.1 password must use qpdf stdin and stay off the process argument list',
+)
+assert(
+  !/commands::pdf_engine::(?:optimize|compress|execute|publish)_pdf/.test(main),
+  'D-02.1 must not expose PDF transformation or publication commands',
+)
 const videoValidation = await read('src-tauri/src/services/video_output_validation.rs')
 for (const contract of [
   'validate_staged_video_output',

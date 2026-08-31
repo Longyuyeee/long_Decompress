@@ -14,10 +14,10 @@ function assert(condition, message) {
 
 function validate(candidate) {
   assert(candidate.schemaVersion === 1, 'unsupported PDF optimization contract schema')
-  assert(candidate.node === 'D-01.2.2' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
+  assert(candidate.node === 'D-02.1' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
   assert(/^\d{4}-\d{2}-\d{2}$/.test(candidate.reviewedAt), 'PDF contract review date is missing')
   assert(candidate.engine?.id === 'qpdf' && candidate.engine?.version === '12.4.0', 'qpdf identity drifted')
-  assert(candidate.engine?.integrationAllowed === true && candidate.engine?.candidateCacheOnly === false && candidate.engine?.productionPreflightOnly === true, 'D-01.2.1 qpdf runtime admission boundary is invalid')
+  assert(candidate.engine?.integrationAllowed === true && candidate.engine?.candidateCacheOnly === false && candidate.engine?.productionPreflightOnly === false, 'D-02.1 qpdf read-only analysis boundary is invalid')
   assert(candidate.engine?.officialReferences?.length >= 4 && candidate.engine.officialReferences.every(url => url.startsWith('https://')), 'official qpdf references are incomplete')
 
   const lossless = candidate.modes?.['lossless-organization']
@@ -33,6 +33,12 @@ function validate(candidate) {
   assert(image.allowedChanges.includes('eligible-image-pixels') && image.forbiddenChanges.includes('non-image-page-content'), 'image optimization change boundary is incomplete')
   assert(candidate.documentPolicies?.['digitally-signed']?.startsWith('analysis-only'), 'signed PDF execution must remain blocked')
   assert(candidate.documentPolicies?.encrypted?.startsWith('require-correct-password'), 'encrypted PDF must require a correct password before planning')
+  assert(candidate.analysisBoundary?.readOnly === true && candidate.analysisBoundary?.fixedArgumentsOnly === true, 'PDF analysis must remain read-only and fixed-argument only')
+  assert(candidate.analysisBoundary?.passwordTransport === 'stdin-via-password-file-dash' && candidate.analysisBoundary?.passwordInArguments === false, 'PDF password transport must stay off the process argument list')
+  assert(candidate.analysisBoundary?.timeoutSeconds === 30 && candidate.analysisBoundary?.maximumJsonBytes === 33554432, 'PDF analysis process bounds drifted')
+  for (const argument of ['--is-encrypted', '--requires-password', '--password-file=-', '--json=2', '--json-stream-data=none', '--json-key=pages', '--json-key=acroform', '--json-key=attachments', '--json-key=outlines']) {
+    assert(candidate.inspection?.arguments?.includes(argument), `required PDF analysis argument is missing: ${argument}`)
+  }
   assert(candidate.executionBoundary?.acceptRawArguments === false, 'raw qpdf arguments must remain forbidden')
   assert(candidate.executionBoundary?.publishProductRuntime === true && candidate.executionBoundary?.enableProductUi === false, 'D-01.2.1 must package identity-checked qpdf without exposing a half-built UI')
   assert(candidate.executionBoundary?.ghostscriptAllowed === false, 'Ghostscript must remain outside the redistribution boundary')
@@ -44,6 +50,7 @@ for (const mutation of [
   copy => { copy.engine.integrationAllowed = false },
   copy => { copy.modes['lossless-organization'].arguments.push('--optimize-images') },
   copy => { copy.executionBoundary.acceptRawArguments = true },
+  copy => { copy.analysisBoundary.passwordInArguments = true },
   copy => { copy.documentPolicies['digitally-signed'] = 'eligible' },
 ]) {
   const copy = structuredClone(contract)
@@ -66,4 +73,4 @@ for (const required of ['mixed-content', 'annotation-preserve', 'outline-preserv
   assert(releaseGates.nodes?.D?.requiredRealCases?.includes(required), `PDF release gate is missing ${required}`)
 }
 
-console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; qpdf production preflight only).`)
+console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-02.1 read-only analysis enabled, product UI frozen).`)

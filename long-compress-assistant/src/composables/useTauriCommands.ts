@@ -12,6 +12,7 @@ import type {
   VideoCompressionPlanRequest,
   VideoProbeReport,
 } from '@/types/video'
+import type { PdfInputAnalysisReport, PdfInputCandidate } from '@/types/pdf'
 import type {
   ImageCompressionOutcome,
   ImageCompressionRequest,
@@ -690,6 +691,12 @@ export const useTauriCommands = () => {
     return await invoke<VideoProbeReport>('probe_video_input', { path })
   }
 
+  const analyzePdfInput = async (
+    request: PdfInputCandidate,
+  ): Promise<PdfInputAnalysisReport> => {
+    return await invoke<PdfInputAnalysisReport>('analyze_pdf_input', { request })
+  }
+
   const planVideoCompression = async (
     request: VideoCompressionPlanRequest,
   ): Promise<VideoCompressionPlan> => {
@@ -829,6 +836,7 @@ export const useTauriCommands = () => {
     planImageCompressionDestination,
     compressImageFile,
     preflightOperationResources,
+    analyzePdfInput,
     probeVideoInput,
     planVideoCompression,
     compressVideoFile,
