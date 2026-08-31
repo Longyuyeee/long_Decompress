@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedAt": "2026-08-31",
-  "node": "D-02.2",
+  "node": "D-03.1",
   "baselineNode": "D-01.1",
   "engine": {
     "id": "qpdf",
@@ -72,7 +72,7 @@
     "annotation": "preserve-and-compare-annotation-subtypes",
     "outline": "preserve-and-compare-titles-and-destinations",
     "attachment": "preserve-names-and-embedded-bytes",
-    "encrypted": "require-correct-password-before-planning; never-log-or-command-line-persist-password",
+    "encrypted": "require-correct-password-before-planning; execution-blocked-until-encryption-can-be-preserved-without-command-line-credentials",
     "digitally-signed": "analysis-only; execution-blocked-until-a-future-explicit-signature-invalidating-confirmation-flow"
   },
   "requiredFixtureKinds": [
@@ -98,6 +98,15 @@
     "lossyModeRequiresExplicitConfirmation": true,
     "sizeReductionGuaranteed": false,
     "signedDocumentCanFreezeConfiguration": false,
+    "stagingTransformEnabled": true,
+    "stagingApiExposure": "internal-library-only",
+    "validationEnabled": false,
+    "publicationEnabled": false,
+    "encryptedExecutionEnabled": false,
+    "transformTimeoutSeconds": 600,
+    "stagingCleanup": "owned-drop-guard",
+    "capacityPreflight": "shared-storage-preflight",
+    "sourceIntegrityCheck": "sha256-before-and-after-transform",
     "ghostscriptAllowed": false,
     "largerOutputDefault": "do-not-publish",
     "sourceMutationAllowed": false

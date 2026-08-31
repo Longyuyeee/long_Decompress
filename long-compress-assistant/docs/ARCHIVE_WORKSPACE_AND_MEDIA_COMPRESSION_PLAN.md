@@ -501,7 +501,7 @@ Ghostscript 采用 AGPL/商业双许可，未完成法律与分发方案前不�
 
 验收目标：用户在执行前能看到风险；危险组合必须显式确认；页面不使用“压缩率保证”等误导文案。
 
-进度（2026-08-31）：**D-02 已关闭。** D-02.1 以固定参数 qpdf 返回输入字节、页数、加密/密码、签名、表单、附件和书签事实，密码经 stdin 传递，十类真实 PDF 共 12 组预期—实际差异为 0。D-02.2 已在产品中开放“无损整理/兼容图片优化”页面内配置草稿，签名强制阻断、加密需正确密码、有损需显式确认、默认新文件且不承诺变小；真实 Windows Tauri 三类 PDF、源哈希、无任务历史和双尺寸布局差异为 0。转换与发布仍冻结，下一步为 D-03.1 执行事务基础。证据见 [D02_1_PDF_READONLY_ANALYSIS_AUDIT.md](D02_1_PDF_READONLY_ANALYSIS_AUDIT.md) 与 [D02_2_PDF_RISK_CONFIGURATION_AUDIT.md](D02_2_PDF_RISK_CONFIGURATION_AUDIT.md)。
+进度（2026-08-31）：**D-02 已关闭。** D-02.1 以固定参数 qpdf 返回输入字节、页数、加密/密码、签名、表单、附件和书签事实，密码经 stdin 传递，十类真实 PDF 共 12 组预期—实际差异为 0。D-02.2 已在产品中开放“无损整理/兼容图片优化”页面内配置草稿，签名强制阻断、加密需正确密码、有损需显式确认、默认新文件且不承诺变小；真实 Windows Tauri 三类 PDF、源哈希、无任务历史和双尺寸布局差异为 0。D-03.1 内部暂存基础随后完成，当前下一步为 D-03.2；产品转换与发布仍冻结。证据见 [D02_1_PDF_READONLY_ANALYSIS_AUDIT.md](D02_1_PDF_READONLY_ANALYSIS_AUDIT.md)、[D02_2_PDF_RISK_CONFIGURATION_AUDIT.md](D02_2_PDF_RISK_CONFIGURATION_AUDIT.md)与 [D03_1_PDF_STAGING_FOUNDATION_AUDIT.md](D03_1_PDF_STAGING_FOUNDATION_AUDIT.md)。
 
 ### D-03 执行与校验
 
@@ -511,7 +511,9 @@ Ghostscript 采用 AGPL/商业双许可，未完成法律与分发方案前不�
 - 若结果更大，默认不发布并说明原因；用户可选择保留结果但不得自动替换源文件；
 - 签名 PDF 默认只分析，不执行会使签名失效的转换。
 
-验收目标：错误输入、损坏 PDF、密码错误、取消、磁盘不足均无半成品；源文件哈希保持不变。
+ 验收目标：错误输入、损坏 PDF、密码错误、取消、磁盘不足均无半成品；源文件哈希保持不变。
+
+进度（2026-08-31）：**D-03.1 已关闭。** 已建立仅供 Rust 内部使用的固定参数 qpdf 暂存执行器，复用共享容量预检，具备取消、600 秒超时、同目录受控暂存、Drop 自动清理和源 SHA-256 前后复核。真实文本/图文 PDF 两模式、签名/加密阻断与预启动取消逐项差异为 0；不注册产品命令，不验证或发布候选，不创建任务/历史。下一步严格为 D-03.2 候选 `qpdf --check`、页树和结构策略验证及失败矩阵；D-04 前不得升版或发布。证据见 [D03_1_PDF_STAGING_FOUNDATION_AUDIT.md](D03_1_PDF_STAGING_FOUNDATION_AUDIT.md)。
 
 ### D-04 真实验收矩阵
 
@@ -665,7 +667,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在非 N Windows x64 支持范围内关闭并发布为 `v1.1.16`，Windows N 暂不支持且实机证据状态仍为 false。PDF D-01 与 D-02 已关闭；下一步为 D-03.1 执行事务基础。
+- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在非 N Windows x64 支持范围内关闭并发布为 `v1.1.16`，Windows N 暂不支持且实机证据状态仍为 false。PDF D-01、D-02 与 D-03.1 已关闭；下一步为 D-03.2 候选验证与失败矩阵。
 
 ## 12. 技术参考
 
