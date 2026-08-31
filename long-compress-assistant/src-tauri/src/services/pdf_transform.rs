@@ -92,6 +92,7 @@ struct SourceIdentity {
 #[derive(Debug)]
 pub struct PdfStagedOutput {
     path: PathBuf,
+    destination: PathBuf,
     source_report: PdfInputAnalysisReport,
     encoded_bytes: u64,
     mode: PdfOptimizationMode,
@@ -100,6 +101,10 @@ pub struct PdfStagedOutput {
 impl PdfStagedOutput {
     pub fn path(&self) -> &Path {
         &self.path
+    }
+
+    pub fn destination(&self) -> &Path {
+        &self.destination
     }
 
     pub fn source_report(&self) -> &PdfInputAnalysisReport {
@@ -112,6 +117,11 @@ impl PdfStagedOutput {
 
     pub fn mode(&self) -> PdfOptimizationMode {
         self.mode
+    }
+
+    #[cfg(test)]
+    pub(crate) fn set_encoded_bytes_for_test(&mut self, encoded_bytes: u64) {
+        self.encoded_bytes = encoded_bytes;
     }
 }
 
@@ -324,6 +334,7 @@ pub async fn transform_pdf_to_staging(
     let staged = staged_output_path(&request.destination, "pdf-transform")?;
     let mut guard = PdfStagedOutput {
         path: staged.clone(),
+        destination: request.destination.clone(),
         source_report: report,
         encoded_bytes: 0,
         mode: request.mode,

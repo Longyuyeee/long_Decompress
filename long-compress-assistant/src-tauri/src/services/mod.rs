@@ -54,3 +54,4 @@ pub mod video_probe;
 pub mod pdf_engine;
 pub mod pdf_analysis;
 pub mod pdf_transform;
+pub mod pdf_output_validation;
