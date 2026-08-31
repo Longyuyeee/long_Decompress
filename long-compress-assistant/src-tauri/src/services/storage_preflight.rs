@@ -139,7 +139,10 @@ fn probe_windows_storage(requested: &Path) -> Option<StorageTarget> {
             volume_buffer.len() as u32,
         )
     } != 0;
-    let volume_length = volume_buffer.iter().position(|value| *value == 0).unwrap_or(0);
+    let volume_length = volume_buffer
+        .iter()
+        .position(|value| *value == 0)
+        .unwrap_or(0);
     let volume_path = has_volume.then(|| String::from_utf16_lossy(&volume_buffer[..volume_length]));
 
     let mut file_system_buffer = vec![0u16; 64];
@@ -160,7 +163,10 @@ fn probe_windows_storage(requested: &Path) -> Option<StorageTarget> {
         if !ok {
             return None;
         }
-        let length = file_system_buffer.iter().position(|value| *value == 0).unwrap_or(0);
+        let length = file_system_buffer
+            .iter()
+            .position(|value| *value == 0)
+            .unwrap_or(0);
         Some(String::from_utf16_lossy(&file_system_buffer[..length]))
     });
     let drive_type = volume_path.as_ref().map(|volume| {
@@ -191,12 +197,25 @@ fn probe_windows_storage(_: &Path) -> Option<StorageTarget> {
 
 pub fn probe_storage(path: &Path) -> StorageTarget {
     let requested = absolute_probe_path(path);
+    let native_target = probe_windows_storage(&requested);
     let disks = Disks::new_with_refreshed_list();
     let disk = disks
         .list()
         .iter()
         .filter(|disk| requested.starts_with(disk.mount_point()))
         .max_by_key(|disk| disk.mount_point().components().count());
+
+    if let (Some(native), Some(disk)) = (&native_target, disk) {
+        let native_depth = native
+            .mount_point
+            .as_deref()
+            .map(Path::new)
+            .map(|mount| mount.components().count())
+            .unwrap_or_default();
+        if native_depth > disk.mount_point().components().count() {
+            return native.clone();
+        }
+    }
 
     if let Some(disk) = disk {
         let location = if disk.is_removable() {
@@ -215,7 +234,7 @@ pub fn probe_storage(path: &Path) -> StorageTarget {
         };
     }
 
-    if let Some(target) = probe_windows_storage(&requested) {
+    if let Some(target) = native_target {
         return target;
     }
 
@@ -272,7 +291,11 @@ fn evaluate_preflight(
             "目标盘可用空间低于 128 MiB 安全预留，任务未启动。".to_string(),
         ),
         Some(available) if required_bytes.is_some_and(|required| available < required) => (
-            if estimate_reliable { "blocked" } else { "warning" },
+            if estimate_reliable {
+                "blocked"
+            } else {
+                "warning"
+            },
             !estimate_reliable,
             if estimate_reliable {
                 "目标盘空间不足以容纳预计输出和安全预留，任务未启动。".to_string()
@@ -487,7 +510,10 @@ mod tests {
         );
         assert_eq!(report.status, "warning");
         assert!(report.can_start);
-        assert!(report.warnings.iter().any(|warning| warning.contains("非可靠估算")));
+        assert!(report
+            .warnings
+            .iter()
+            .any(|warning| warning.contains("非可靠估算")));
     }
 
     #[test]

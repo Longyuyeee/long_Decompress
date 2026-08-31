@@ -1,5 +1,18 @@
 # 开发交接
 
+## 2026-08-31 D-03.3.1 低容量卷门禁完成，D-03 关闭
+
+- PR #103 提交 `03cd16d5e844c5133a79450a5d0f49e34123dce8` 的 CI run `33379106430` 五组门禁全部通过。Windows Runner 在 `RUNNER_TEMP` 创建并挂载 96 MiB NTFS VHD，真实调用 PDF 发布事务后稳定返回 `PDF_TRANSFORM_RESOURCE_PREFLIGHT_BLOCKED`；最终输出不存在、暂存数为 0、源 SHA-256 不变，VHD 成功 detach。
+- Rust 主库为 374 通过、0 失败、9 条按外部条件忽略；本节点没有新增产品命令、任务、历史或 UI 执行。合同已把 `controlledLowCapacityVolumeEvidence` 固化为 true，D-03 至此关闭。
+- 当前版本仍为 `1.1.16`。下一唯一接续点是 D-04：用现有统一任务/历史/取消/输出事实架构接入 PDF 产品执行，再完成批量、失败、默认 PDF 阅读器和正式安装版矩阵。D-04 完成前不得提升或发布 `1.1.17`。详见 [D03_3_1_LOW_CAPACITY_CLOSEOUT_AUDIT.md](D03_3_1_LOW_CAPACITY_CLOSEOUT_AUDIT.md)。
+
+## 2026-08-31 D-03.3.1 暂停与换机交接（历史，已由顶部收口节点取代）
+
+- 当前开发分支为 `codex/pdf-d03-3-1-low-capacity-gate`，继续使用 [PR #103](https://github.com/Longyuyeee/long_Decompress/pull/103)，不要从 `master` 重做。
+- 96 MiB NTFS VHD 的真实低容量产品事务已在 CI run `33378117324` 通过：主库 374/374，通过后成功 detach；但严格 Clippy 随后因两处 `needless_borrow` 失败，因此 PR 总门禁尚未完成。
+- 两处 Clippy 修正已随本次交接准备推送，换机后第一步是检查 PR #103 最新 CI。合同仍保持 `controlledLowCapacityVolumeEvidence=false`；只有最新提交全绿后才能改为 true、关闭 D-03 并进入 D-04。
+- 版本继续为 `1.1.16`。D-04 产品命令、任务/历史、批量和安装版验收未开始，所以不得打包或发布 `v1.1.17`。完整命令、两轮差异和严格接续顺序见 [D03_3_1_LOW_CAPACITY_MACHINE_HANDOFF_2026-08-31.md](D03_3_1_LOW_CAPACITY_MACHINE_HANDOFF_2026-08-31.md)。
+
 ## 2026-08-31 D-03.3 PDF 内部安全发布核心完成
 
 - `pdf_publish.rs` 已将规范化跨任务输出锁、D-03.1 转换、D-03.2 验证、发布前取消/源 SHA-256/候选 SHA-256 复核、Mark-of-the-Web 和同目录原子重命名绑定为单一内部事务。
