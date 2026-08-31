@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedAt": "2026-08-31",
-  "node": "D-03.3",
+  "node": "D-03.3.1",
   "baselineNode": "D-01.1",
   "engine": {
     "id": "qpdf",
@@ -116,7 +116,7 @@
     "outputLockScope": "process-wide-normalized-destination",
     "markOfTheWebPolicy": "propagate-internet-or-restricted-zone-before-atomic-rename",
     "publishedFacts": ["filesystem-bytes", "sha256", "savings-ratio", "mark-of-the-web-status", "validated-structural-facts"],
-    "controlledLowCapacityVolumeEvidence": false,
+    "controlledLowCapacityVolumeEvidence": true,
     "encryptedExecutionEnabled": false,
     "transformTimeoutSeconds": 600,
     "stagingCleanup": "owned-drop-guard",

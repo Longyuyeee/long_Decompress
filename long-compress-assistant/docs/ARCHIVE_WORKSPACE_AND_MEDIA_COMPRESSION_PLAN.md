@@ -519,6 +519,8 @@ Ghostscript 采用 AGPL/商业双许可，未完成法律与分发方案前不�
 
 进度（2026-08-31）：**D-03.3 内部安全发布核心完成，D-03 总节点仍未关闭。** 规范化目标输出锁覆盖转换至发布全周期；发布前复核取消、源/候选 SHA-256 和 Mark-of-the-Web，并复用同目录原子重命名。8 类 PDF × 2 模式及源/候选变化、目标竞争、取消、锁与 ADS 共 29 组真实预期—实际差异为 0，发布文件由独立 pypdf 再检查。当前机器无管理员权限且无 Hyper-V VHD cmdlet，受控低容量卷证据保持 false；下一步严格为 D-03.3.1 隔离低容量卷真实失败门禁，之后才能进入 D-04。证据见 [D03_3_PDF_SAFE_PUBLICATION_AUDIT.md](D03_3_PDF_SAFE_PUBLICATION_AUDIT.md)。
 
+进度（2026-08-31）：**D-03.3.1 已关闭，D-03 总节点关闭。** GitHub Actions Windows Runner 在 `RUNNER_TEMP` 创建 96 MiB NTFS VHD，真实产品事务完成 1 MiB 写探针后由共享容量预检阻断；无最终文件、无暂存残留、源 SHA-256 不变，VHD 在清理阶段成功卸载。对应提交五组 CI 全绿，合同证据已固化为 true。下一步严格为 D-04 产品执行与真实验收，D-04 前仍不提升版本。证据见 [D03_3_1_LOW_CAPACITY_CLOSEOUT_AUDIT.md](D03_3_1_LOW_CAPACITY_CLOSEOUT_AUDIT.md)。
+
 ### D-04 真实验收矩阵
 
 - 文本、扫描、图文混合、中文字体、透明图片；
@@ -671,7 +673,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在非 N Windows x64 支持范围内关闭并发布为 `v1.1.16`，Windows N 暂不支持且实机证据状态仍为 false。PDF D-01、D-02、D-03.1 与 D-03.2 已关闭，D-03.3 内部安全发布核心完成；下一步为 D-03.3.1 受控低容量卷证据。
+- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在非 N Windows x64 支持范围内关闭并发布为 `v1.1.16`，Windows N 暂不支持且实机证据状态仍为 false。PDF D-01 至 D-03 已关闭；下一步为 D-04 产品执行与真实验收。
 
 ## 12. 技术参考
 

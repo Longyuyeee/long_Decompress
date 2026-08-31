@@ -14,7 +14,7 @@ function assert(condition, message) {
 
 function validate(candidate) {
   assert(candidate.schemaVersion === 1, 'unsupported PDF optimization contract schema')
-  assert(candidate.node === 'D-03.3' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
+  assert(candidate.node === 'D-03.3.1' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
   assert(/^\d{4}-\d{2}-\d{2}$/.test(candidate.reviewedAt), 'PDF contract review date is missing')
   assert(candidate.engine?.id === 'qpdf' && candidate.engine?.version === '12.4.0', 'qpdf identity drifted')
   assert(candidate.engine?.integrationAllowed === true && candidate.engine?.candidateCacheOnly === false && candidate.engine?.productionPreflightOnly === false, 'D-02.1 qpdf read-only analysis boundary is invalid')
@@ -58,7 +58,7 @@ function validate(candidate) {
   for (const fact of ['filesystem-bytes', 'sha256', 'savings-ratio', 'mark-of-the-web-status', 'validated-structural-facts']) {
     assert(candidate.executionBoundary?.publishedFacts?.includes(fact), `D-03.3 published fact is missing: ${fact}`)
   }
-  assert(candidate.executionBoundary?.controlledLowCapacityVolumeEvidence === false, 'controlled low-capacity volume evidence must not be claimed before it exists')
+  assert(candidate.executionBoundary?.controlledLowCapacityVolumeEvidence === true, 'D-03.3.1 controlled low-capacity volume evidence must remain closed')
   assert(candidate.executionBoundary?.encryptedExecutionEnabled === false, 'encrypted PDF execution must remain blocked')
   assert(candidate.executionBoundary?.transformTimeoutSeconds === 600 && candidate.executionBoundary?.stagingCleanup === 'owned-drop-guard', 'D-03.1 process and staging bounds drifted')
   assert(candidate.executionBoundary?.capacityPreflight === 'shared-storage-preflight' && candidate.executionBoundary?.sourceIntegrityCheck === 'sha256-before-and-after-transform', 'D-03.1 shared preflight/source integrity boundary drifted')
@@ -113,4 +113,4 @@ for (const required of ['qpdf-check', 'annotation-policy', 'outline-policy', 'at
   assert(releaseGates.nodes?.D?.requiredValidation?.includes(required), `PDF release validation is missing ${required}`)
 }
 
-console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-03.3 internal atomic publication enabled, product execution frozen).`)
+console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-03 closed with controlled low-capacity evidence, product execution frozen).`)
