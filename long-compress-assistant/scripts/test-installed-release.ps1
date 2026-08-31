@@ -13,7 +13,8 @@ param(
   [switch]$RunImageWorkspaceMatrix,
   [switch]$RunVideoRuntimeMatrix,
   [switch]$RunPdfRuntimeMatrix,
-  [switch]$RunVideoWorkspaceMatrix
+  [switch]$RunVideoWorkspaceMatrix,
+  [switch]$RunPdfWorkspaceMatrix
 )
 
 $ErrorActionPreference = 'Stop'
@@ -568,7 +569,7 @@ try {
   $evidence.baselineAutoStartRegistration = $baselineAutoStartRegistration
 
   New-Item -ItemType Directory -Path $evidenceDirectory -Force | Out-Null
-  if ($RunArchiveWorkspaceMatrix -or $RunImageWorkspaceMatrix -or $RunVideoWorkspaceMatrix) {
+  if ($RunArchiveWorkspaceMatrix -or $RunImageWorkspaceMatrix -or $RunVideoWorkspaceMatrix -or $RunPdfWorkspaceMatrix) {
     $edgeDriverPath = [string]$env:EDGE_DRIVER_PATH
     $tauriDriverPath = if ([string]::IsNullOrWhiteSpace([string]$env:TAURI_DRIVER_PATH)) {
       Join-Path $env:USERPROFILE '.cargo\bin\tauri-driver.exe'
@@ -615,6 +616,14 @@ try {
     Add-Check 'installed video workspace large fixture exists' (
       Test-Path -LiteralPath $videoWorkspaceFixturePath -PathType Leaf
     ) "Run npm.cmd run test:video-long-large:real first; expected=$videoWorkspaceFixturePath"
+  }
+  if ($RunPdfWorkspaceMatrix) {
+    $pdfWorkspaceFixturePath = Join-Path `
+      $projectRoot `
+      'test-results\media-fixture-audit\fixtures\pdfs\large-image.pdf'
+    Add-Check 'installed PDF workspace large-image fixture exists' (
+      Test-Path -LiteralPath $pdfWorkspaceFixturePath -PathType Leaf
+    ) "Run npm.cmd run test:fixtures:media first; expected=$pdfWorkspaceFixturePath"
   }
   $baselineFingerprints = Backup-UserData
   Backup-ContextMenuRegistry
@@ -755,6 +764,30 @@ try {
       Stop-InstalledApplication $candidateState.installLocation
     }
   }
+  if ($RunPdfWorkspaceMatrix) {
+    $previousAppBinary = $env:TAURI_APP_BINARY
+    $previousEvidenceDirectory = $env:PDF_WORKSPACE_EVIDENCE_DIRECTORY
+    try {
+      $env:TAURI_APP_BINARY = $candidateState.executable
+      $env:PDF_WORKSPACE_EVIDENCE_DIRECTORY = Join-Path $evidenceDirectory 'pdf-workspace'
+      & node (Join-Path $projectRoot 'scripts\test-installed-pdf-workspace.mjs')
+      Add-Check 'installed PDF workspace full flow exits successfully' ($LASTEXITCODE -eq 0) (
+        "exitCode=$LASTEXITCODE; executable=$($candidateState.executable)"
+      )
+    } finally {
+      if ($null -eq $previousAppBinary) {
+        Remove-Item Env:TAURI_APP_BINARY -ErrorAction SilentlyContinue
+      } else {
+        $env:TAURI_APP_BINARY = $previousAppBinary
+      }
+      if ($null -eq $previousEvidenceDirectory) {
+        Remove-Item Env:PDF_WORKSPACE_EVIDENCE_DIRECTORY -ErrorAction SilentlyContinue
+      } else {
+        $env:PDF_WORKSPACE_EVIDENCE_DIRECTORY = $previousEvidenceDirectory
+      }
+      Stop-InstalledApplication $candidateState.installLocation
+    }
+  }
   $candidateRuntimeFingerprints = Get-DataFingerprints
   $evidence.candidateRuntimeDataFingerprints = $candidateRuntimeFingerprints
 
@@ -802,6 +835,10 @@ try {
         Stop-InstalledApplication $currentState.installLocation
       }
       Invoke-Installer $previousInstallerPath
+      $reinstalledState = Get-InstalledState
+      if ($reinstalledState) {
+        Stop-InstalledApplication $reinstalledState.installLocation
+      }
       Restore-UserData
       $recoveredState = Get-InstalledState
       if ($recoveredState) {

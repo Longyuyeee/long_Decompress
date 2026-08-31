@@ -150,6 +150,8 @@ def generate_pdfs(root):
     from pypdf.annotations import Text
     from reportlab.lib.colors import Color, HexColor
     from reportlab.lib.pagesizes import A4
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.cidfonts import UnicodeCIDFont
     from reportlab.pdfgen import canvas
 
     pdfs = root / "pdfs"
@@ -182,6 +184,39 @@ def generate_pdfs(root):
     pdf = make_base_pdf(pdfs / "transparency.pdf", "Transparency", "Overlapping alpha objects must survive inspection")
     pdf.saveState(); pdf.setFillAlpha(0.45); pdf.setFillColor(Color(0.2, 0.4, 1)); pdf.circle(220, 470, 110, stroke=0, fill=1); pdf.restoreState()
     pdf.saveState(); pdf.setFillAlpha(0.45); pdf.setFillColor(Color(1, 0.25, 0.3)); pdf.circle(340, 470, 110, stroke=0, fill=1); pdf.restoreState()
+    pdf.showPage(); pdf.save()
+
+    pdfmetrics.registerFont(UnicodeCIDFont("STSong-Light"))
+    pdf = canvas.Canvas(str(pdfs / "chinese-font.pdf"), pagesize=A4)
+    pdf.setTitle("Long Decompress Chinese font fixture")
+    pdf.setFont("STSong-Light", 22)
+    pdf.drawString(54, A4[1] - 90, "Long解压 PDF 安全优化验收")
+    pdf.setFont("STSong-Light", 13)
+    pdf.drawString(54, A4[1] - 128, "中文字体、标点与可搜索文本必须保持可见。")
+    pdf.showPage(); pdf.save()
+
+    pdf = canvas.Canvas(str(pdfs / "large-pages.pdf"), pagesize=A4)
+    pdf.setTitle("Long Decompress large page-count fixture")
+    for page_number in range(1, 301):
+        pdf.setFont("Helvetica-Bold", 16)
+        pdf.drawString(54, A4[1] - 84, f"Large page-count fixture {page_number}/300")
+        pdf.setFont("Helvetica", 10)
+        pdf.drawString(54, A4[1] - 112, "Every page must survive both optimization modes.")
+        pdf.showPage()
+    pdf.save()
+
+    large_image = Image.new("RGB", (6000, 4000), (242, 244, 248))
+    large_draw = ImageDraw.Draw(large_image)
+    for offset in range(0, 6000, 120):
+        colour = ((offset * 17) % 256, (offset * 29) % 256, (offset * 43) % 256)
+        large_draw.line((offset, 0, 5999 - offset // 2, 3999), fill=colour, width=18)
+    large_draw.text((180, 180), "6000 x 4000 large image fixture", fill=(18, 28, 48), font=fixture_font(84))
+    large_image_path = root / "large-pdf-source.jpg"
+    large_image.save(large_image_path, quality=96, subsampling=0)
+    pdf = canvas.Canvas(str(pdfs / "large-image.pdf"), pagesize=A4)
+    pdf.setTitle("Long Decompress large image fixture")
+    pdf.drawImage(str(large_image_path), 24, 96, width=A4[0] - 48, height=A4[1] - 144,
+                  preserveAspectRatio=True, anchor='c', mask='auto')
     pdf.showPage(); pdf.save()
 
     pdf = make_base_pdf(pdfs / "form.pdf", "Archive intake form", "Interactive AcroForm fixture")

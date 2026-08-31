@@ -301,53 +301,136 @@ mod tests {
     #[ignore = "run through npm run test:pdf-d04-command:real after generating real PDF fixtures"]
     async fn real_product_command_revalidates_and_publishes_with_truthful_stages() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
-        let source = root.join("test-results/media-fixture-audit/fixtures/pdfs/text-vector.pdf");
-        let source_before = std::fs::read(&source).expect("real PDF fixture");
-        let output = tempfile::tempdir().unwrap();
-        let destination = output.path().join("产品 命令.organized.pdf");
-        let stages = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-        let observed = stages.clone();
-        let published = run_pdf_compression(
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources"),
-            format!("pdf-command-{}", uuid::Uuid::new_v4()),
-            PdfCompressionExecutionRequest {
-                source: source.clone(),
-                destination: destination.clone(),
-                mode: PdfOptimizationMode::LosslessOrganization,
-                confirmed_lossy_image_changes: false,
-                preserve_mark_of_web: true,
-                allow_larger_output: false,
-            },
-            move |stage| observed.lock().unwrap().push(stage),
-        )
-        .await
-        .unwrap();
-        let stages = stages.lock().unwrap().clone();
-        assert_eq!(
-            stages,
-            vec![
-                PdfPublicationStage::Transforming,
-                PdfPublicationStage::Validating,
-                PdfPublicationStage::Publishing,
-            ]
-        );
-        assert_eq!(published.path, destination);
-        assert_eq!(published.verified.output_facts.page_count, 1);
-        assert_eq!(
-            published.output_bytes,
-            std::fs::metadata(&destination).unwrap().len()
-        );
-        assert_eq!(std::fs::read(&source).unwrap(), source_before);
+        let fixture_root = root.join("test-results/media-fixture-audit/fixtures/pdfs");
+        let output = root.join("test-results/d04-pdf-command/outputs");
+        std::fs::create_dir_all(&output).unwrap();
+        let fixtures = [
+            ("text-vector.pdf", 1_u32),
+            ("scanned-image.pdf", 1),
+            ("mixed-content.pdf", 1),
+            ("transparency.pdf", 1),
+            ("chinese-font.pdf", 1),
+            ("large-pages.pdf", 300),
+            ("large-image.pdf", 1),
+            ("form.pdf", 1),
+            ("annotation.pdf", 1),
+            ("outline.pdf", 2),
+            ("attachment.pdf", 1),
+        ];
+        let modes = [
+            PdfOptimizationMode::LosslessOrganization,
+            PdfOptimizationMode::CompatibleImageOptimization,
+        ];
+        let mut reports = Vec::new();
+        for (file, expected_pages) in fixtures {
+            for mode in modes {
+                let source = fixture_root.join(file);
+                let source_before = std::fs::read(&source).expect("real PDF fixture");
+                let mode_name = match mode {
+                    PdfOptimizationMode::LosslessOrganization => "lossless-organization",
+                    PdfOptimizationMode::CompatibleImageOptimization => {
+                        "compatible-image-optimization"
+                    }
+                };
+                let destination = output.join(format!("{file}.{mode_name}.pdf"));
+                if destination.exists() {
+                    std::fs::remove_file(&destination).unwrap();
+                }
+                let stages = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+                let observed = stages.clone();
+                let published = run_pdf_compression(
+                    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources"),
+                    format!("pdf-command-{}", uuid::Uuid::new_v4()),
+                    PdfCompressionExecutionRequest {
+                        source: source.clone(),
+                        destination: destination.clone(),
+                        mode,
+                        confirmed_lossy_image_changes: mode
+                            == PdfOptimizationMode::CompatibleImageOptimization,
+                        preserve_mark_of_web: true,
+                        allow_larger_output: true,
+                    },
+                    move |stage| observed.lock().unwrap().push(stage),
+                )
+                .await
+                .unwrap();
+                let stages = stages.lock().unwrap().clone();
+                assert_eq!(
+                    stages,
+                    vec![
+                        PdfPublicationStage::Transforming,
+                        PdfPublicationStage::Validating,
+                        PdfPublicationStage::Publishing,
+                    ]
+                );
+                assert_eq!(published.path, destination);
+                assert_eq!(published.verified.output_facts.page_count, expected_pages);
+                assert_eq!(
+                    published.verified.source_facts,
+                    published.verified.output_facts
+                );
+                assert_eq!(
+                    published.output_bytes,
+                    std::fs::metadata(&destination).unwrap().len()
+                );
+                assert_eq!(std::fs::read(&source).unwrap(), source_before);
+                reports.push(serde_json::json!({
+                    "file": file,
+                    "mode": mode_name,
+                    "stages": stages.iter().map(|stage| stage.event_name()).collect::<Vec<_>>(),
+                    "finalOutputExists": destination.exists(),
+                    "inputBytes": published.input_bytes,
+                    "outputBytes": published.output_bytes,
+                    "pageCount": published.verified.output_facts.page_count,
+                    "structuralFactsEqual": published.verified.source_facts == published.verified.output_facts,
+                    "sourceBytesUnchanged": std::fs::read(&source).unwrap() == source_before,
+                    "markOfTheWeb": published.mark_of_the_web,
+                }));
+            }
+        }
+
+        let mut blocked = Vec::new();
+        for (file, expected_code) in [
+            ("signed.pdf", "PDF_TRANSFORM_SIGNED_DOCUMENT_BLOCKED"),
+            ("encrypted.pdf", "PDF_TRANSFORM_ANALYSIS_INCOMPLETE"),
+        ] {
+            let source = fixture_root.join(file);
+            let destination = output.join(format!("blocked-{file}"));
+            if destination.exists() {
+                std::fs::remove_file(&destination).unwrap();
+            }
+            let error = run_pdf_compression(
+                PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources"),
+                format!("pdf-command-blocked-{}", uuid::Uuid::new_v4()),
+                PdfCompressionExecutionRequest {
+                    source,
+                    destination: destination.clone(),
+                    mode: PdfOptimizationMode::LosslessOrganization,
+                    confirmed_lossy_image_changes: false,
+                    preserve_mark_of_web: true,
+                    allow_larger_output: true,
+                },
+                |_| {},
+            )
+            .await
+            .unwrap_err();
+            assert!(
+                error.starts_with(expected_code),
+                "unexpected {file} error: {error}"
+            );
+            assert!(!destination.exists());
+            blocked.push(serde_json::json!({
+                "file": file,
+                "expectedCode": expected_code,
+                "actualError": error,
+                "outputAbsent": !destination.exists(),
+            }));
+        }
         println!(
             "D04_PDF_COMMAND_RESULT={}",
             serde_json::json!({
-                "stages": stages.iter().map(|stage| stage.event_name()).collect::<Vec<_>>(),
-                "finalOutputExists": destination.exists(),
-                "inputBytes": published.input_bytes,
-                "outputBytes": published.output_bytes,
-                "pageCount": published.verified.output_facts.page_count,
-                "sourceBytesUnchanged": std::fs::read(&source).unwrap() == source_before,
-                "markOfTheWeb": published.mark_of_the_web,
+                "reports": reports,
+                "blocked": blocked,
             })
         );
     }

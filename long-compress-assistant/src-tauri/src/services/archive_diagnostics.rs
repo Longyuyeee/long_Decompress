@@ -249,19 +249,7 @@ fn classify_failure(
         } else {
             ("wrong_password", "密码错误", "提供的密码无法解密归档内容")
         }
-    } else if encrypted
-        && password_supplied
-        && [
-            "corrupted input data",
-            "data error",
-            "decompression failed",
-            "checksumverificationfailed",
-            "checksum verification failed",
-            "invalid input",
-        ]
-        .iter()
-        .any(|marker| lower.contains(marker))
-    {
+    } else if encrypted && password_supplied {
         (
             "wrong_password",
             "密码错误或密文损坏",
@@ -854,6 +842,7 @@ mod tests {
             "Decompression failed",
             "ChecksumVerificationFailed",
             "corrupted input data",
+            "Decoder returned an implementation-specific failure",
         ] {
             let (code, title, detail) = classify_failure(message, true, true);
             assert_eq!(code, "wrong_password");

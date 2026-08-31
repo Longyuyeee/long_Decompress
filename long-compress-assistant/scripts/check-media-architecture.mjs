@@ -459,6 +459,12 @@ assert(
 const installedReleaseGate = await read('scripts/test-installed-release.ps1')
 assert(installedReleaseGate.includes('[switch]$RunVideoWorkspaceMatrix'), 'installed lifecycle cannot run the C-05.4 video workspace matrix')
 assert(installedReleaseGate.includes('test-installed-video-workspace.mjs'), 'installed lifecycle does not invoke the C-05.4 video workspace matrix')
+assert(packageManifest.scripts?.['test:installed-pdf-workspace'] === 'node scripts/test-installed-pdf-workspace.mjs', 'D-04.3 installed PDF workspace command is missing')
+assert(installedReleaseGate.includes('[switch]$RunPdfWorkspaceMatrix'), 'installed lifecycle cannot run the D-04.3 PDF workspace matrix')
+assert(installedReleaseGate.includes('test-installed-pdf-workspace.mjs'), 'installed lifecycle does not invoke the D-04.3 production PDF workspace matrix')
+const installedPdfWorkspace = await read('scripts/test-installed-pdf-workspace.mjs')
+assert(installedPdfWorkspace.includes('formal installed executable excludes desktop E2E bridge'), 'installed PDF workspace must verify the production bridge boundary')
+assert(installedPdfWorkspace.includes('__TAURI_IPC__/Event.emit'), 'installed PDF workspace must use production Tauri file-drop IPC')
 assert(
   installedReleaseGate.includes('$baselineAutoStartRegistration = Get-AutoStartRegistration'),
   'installed lifecycle must snapshot the user auto-start registration before mutation',
