@@ -570,12 +570,17 @@ mod tests {
     #[cfg(windows)]
     #[ignore = "requires LONG_D03_LOW_CAPACITY_PATH pointing to an isolated real NTFS volume"]
     async fn real_low_capacity_volume_blocks_pdf_transaction_without_artifacts() {
-        use crate::services::storage_preflight::{probe_storage, DISK_SAFETY_RESERVE};
-
         let volume = PathBuf::from(
             std::env::var("LONG_D03_LOW_CAPACITY_PATH")
                 .expect("isolated low-capacity volume path is required"),
         );
+        run_real_low_capacity_volume_assertions(&volume).await;
+    }
+
+    #[cfg(windows)]
+    async fn run_real_low_capacity_volume_assertions(volume: &Path) {
+        use crate::services::storage_preflight::{probe_storage, DISK_SAFETY_RESERVE};
+
         assert!(volume.is_dir(), "isolated volume must be mounted");
         let probe_file = volume.join("real-write-probe.bin");
         std::fs::write(&probe_file, vec![0x5a; 1024 * 1024])
@@ -636,22 +641,82 @@ mod tests {
         );
     }
 
-    #[test]
     #[cfg(windows)]
-    fn github_actions_runs_real_low_capacity_volume_gate() {
+    struct IsolatedLowCapacityVhd {
+        _root: tempfile::TempDir,
+        vhd_path: PathBuf,
+        cleanup_script: PathBuf,
+        mount_path: PathBuf,
+    }
+
+    #[cfg(windows)]
+    impl IsolatedLowCapacityVhd {
+        fn create() -> Self {
+            let runner_temp = PathBuf::from(
+                std::env::var_os("RUNNER_TEMP").expect("RUNNER_TEMP is required on GitHub Actions"),
+            );
+            let root = tempfile::Builder::new()
+                .prefix("long-pdf-low-capacity-")
+                .tempdir_in(&runner_temp)
+                .expect("create isolated VHD test root under RUNNER_TEMP");
+            let vhd_path = root.path().join("low-capacity.vhdx");
+            let mount_path = root.path().join("mount");
+            let create_script = root.path().join("create-vhd.txt");
+            let cleanup_script = root.path().join("cleanup-vhd.txt");
+            std::fs::create_dir(&mount_path).expect("create isolated volume mount directory");
+            std::fs::write(
+                &create_script,
+                format!(
+                    "create vdisk file=\"{}\" maximum=96 type=expandable\r\nselect vdisk file=\"{}\"\r\nattach vdisk\r\ncreate partition primary\r\nformat fs=ntfs quick label=LONGPDFLOW\r\nassign mount=\"{}\"\r\n",
+                    vhd_path.display(),
+                    vhd_path.display(),
+                    mount_path.display()
+                ),
+            )
+            .expect("write VHD creation script");
+            let output = std::process::Command::new("diskpart.exe")
+                .args(["/s"])
+                .arg(&create_script)
+                .output()
+                .expect("launch diskpart for isolated VHD");
+            assert!(
+                output.status.success(),
+                "create isolated low-capacity VHD failed: {} {}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            Self {
+                _root: root,
+                vhd_path,
+                cleanup_script,
+                mount_path,
+            }
+        }
+    }
+
+    #[cfg(windows)]
+    impl Drop for IsolatedLowCapacityVhd {
+        fn drop(&mut self) {
+            let script = format!(
+                "select vdisk file=\"{}\"\r\ndetach vdisk\r\n",
+                self.vhd_path.display()
+            );
+            if std::fs::write(&self.cleanup_script, script).is_ok() {
+                let _ = std::process::Command::new("diskpart.exe")
+                    .args(["/s"])
+                    .arg(&self.cleanup_script)
+                    .status();
+            }
+        }
+    }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    async fn github_actions_runs_real_low_capacity_volume_gate() {
         if std::env::var("GITHUB_ACTIONS").as_deref() != Ok("true") {
             return;
         }
-        if std::env::var("LONG_D03_LOW_CAPACITY_PATH").is_ok() {
-            return;
-        }
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
-        let status = std::process::Command::new("powershell.exe")
-            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"])
-            .arg(root.join("scripts/test-d03-pdf-low-capacity.ps1"))
-            .current_dir(&root)
-            .status()
-            .expect("launch isolated low-capacity VHD gate");
-        assert!(status.success(), "isolated low-capacity VHD gate failed");
+        let volume = IsolatedLowCapacityVhd::create();
+        run_real_low_capacity_volume_assertions(&volume.mount_path).await;
     }
 }
