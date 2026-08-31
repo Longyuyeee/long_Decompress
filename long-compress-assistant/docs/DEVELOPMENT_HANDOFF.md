@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-08-31 D-03.3.1 暂停与换机交接
+
+- 当前开发分支为 `codex/pdf-d03-3-1-low-capacity-gate`，继续使用 [PR #103](https://github.com/Longyuyeee/long_Decompress/pull/103)，不要从 `master` 重做。
+- 96 MiB NTFS VHD 的真实低容量产品事务已在 CI run `33378117324` 通过：主库 374/374，通过后成功 detach；但严格 Clippy 随后因两处 `needless_borrow` 失败，因此 PR 总门禁尚未完成。
+- 两处 Clippy 修正已随本次交接准备推送，换机后第一步是检查 PR #103 最新 CI。合同仍保持 `controlledLowCapacityVolumeEvidence=false`；只有最新提交全绿后才能改为 true、关闭 D-03 并进入 D-04。
+- 版本继续为 `1.1.16`。D-04 产品命令、任务/历史、批量和安装版验收未开始，所以不得打包或发布 `v1.1.17`。完整命令、两轮差异和严格接续顺序见 [D03_3_1_LOW_CAPACITY_MACHINE_HANDOFF_2026-08-31.md](D03_3_1_LOW_CAPACITY_MACHINE_HANDOFF_2026-08-31.md)。
+
 ## 2026-08-31 D-03.3 PDF 内部安全发布核心完成
 
 - `pdf_publish.rs` 已将规范化跨任务输出锁、D-03.1 转换、D-03.2 验证、发布前取消/源 SHA-256/候选 SHA-256 复核、Mark-of-the-Web 和同目录原子重命名绑定为单一内部事务。

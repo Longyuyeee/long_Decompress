@@ -585,7 +585,7 @@ mod tests {
         let probe_file = volume.join("real-write-probe.bin");
         std::fs::write(&probe_file, vec![0x5a; 1024 * 1024])
             .expect("isolated volume must accept a real write");
-        let target = probe_storage(&volume);
+        let target = probe_storage(volume);
         let total_bytes = target.total_bytes.expect("real volume total bytes");
         let available_bytes = target.available_bytes.expect("real volume available bytes");
         assert!(
@@ -611,7 +611,7 @@ mod tests {
         .await
         .expect_err("production preflight must reject the real low-capacity volume");
         let source_after = file_identity(&source).unwrap().1;
-        let staging_files: Vec<_> = std::fs::read_dir(&volume)
+        let staging_files: Vec<_> = std::fs::read_dir(volume)
             .unwrap()
             .flatten()
             .filter(|entry| {
