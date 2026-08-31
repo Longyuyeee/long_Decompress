@@ -198,7 +198,15 @@ assert(
 )
 assert(pdfContract.engine?.productionPreflightOnly === false, 'D-02.1 must enable product read-only analysis')
 assert(pdfContract.analysisBoundary?.readOnly === true, 'D-02.1 analysis must remain read-only')
-assert(pdfContract.executionBoundary?.enableProductUi === false, 'PDF UI must remain disabled until D-02.2')
+assert(pdfContract.executionBoundary?.enableProductUi === true, 'D-02.2 read-only PDF configuration UI must be enabled')
+assert(pdfContract.executionBoundary?.executionEnabled === false, 'D-02.2 PDF execution must remain disabled')
+const compressionView = await read('src/views/CompressionView.vue')
+const pdfWorkspace = await read('src/components/compression/PdfCompressionWorkspace.vue')
+assert(compressionView.includes("import PdfCompressionWorkspace") && compressionView.includes('<PdfCompressionWorkspace v-else />'), 'D-02.2 PDF workspace routing is missing')
+for (const boundary of ['D-03 执行尚未接入', 'pdf-risk-confirmation', '锁定配置（不执行）', '禁止覆盖源文件']) {
+  assert(pdfWorkspace.includes(boundary), `D-02.2 PDF UI boundary is missing: ${boundary}`)
+}
+assert(!pdfWorkspace.includes('useTaskStore') && !pdfWorkspace.includes('useCompressionStore'), 'D-02.2 PDF drafts must not create or persist product tasks')
 assert(
   pdfAnalysis.includes('"--password-file=-"')
     && pdfAnalysis.includes('Stdio::piped()')

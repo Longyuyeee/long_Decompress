@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   planVideoCompressionDestination: vi.fn(),
   compressVideoFile: vi.fn(),
   openVideoOutputWithDefaultApplication: vi.fn(),
+  analyzePdfInput: vi.fn(),
   invoke: vi.fn(),
   ask: vi.fn(),
 }))
@@ -46,6 +47,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
     planVideoCompressionDestination: mocks.planVideoCompressionDestination,
     compressVideoFile: mocks.compressVideoFile,
     openVideoOutputWithDefaultApplication: mocks.openVideoOutputWithDefaultApplication,
+    analyzePdfInput: mocks.analyzePdfInput,
   }),
 }))
 
@@ -144,6 +146,14 @@ const videoPlan = (preset: 'clear' | 'balanced' | 'small' = 'balanced') => ({
   canEncode: true,
 })
 
+const pdfReport = (overrides: Record<string, unknown> = {}) => ({
+  source: 'C:/input/form.pdf', inputBytes: 4096, analysisComplete: true, pageCount: 1,
+  encrypted: false, passwordState: 'not-required', hasDigitalSignature: false,
+  signatureFieldNames: [], hasFormFields: true, formFieldNames: ['full_name'],
+  hasAttachments: false, attachmentNames: [], outlineCount: 0, warnings: [], blockingReasons: [],
+  ...overrides,
+})
+
 describe('CompressionView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -202,6 +212,7 @@ describe('CompressionView', () => {
         decodedVideoFrames: 4,
       },
     })
+    mocks.analyzePdfInput.mockResolvedValue(pdfReport())
     mocks.ask.mockResolvedValue(true)
   })
 
@@ -744,8 +755,76 @@ describe('CompressionView', () => {
     expect(wrapper.get('[data-testid="video-compression-workspace"] .primary-action').attributes('disabled')).toBeDefined()
     expect(useTaskStore().tasks).toHaveLength(0)
 
+    await wrapper.get('[data-testid="compression-mode-pdf"]').trigger('click')
+    expect(wrapper.get('[data-testid="pdf-compression-workspace"]').text()).toContain('D-03 执行尚未接入')
+    expect(useTaskStore().tasks).toHaveLength(0)
+
     await wrapper.get('[data-testid="compression-mode-archive"]').trigger('click')
     expect(wrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(1)
+  })
+
+  it('analyzes PDF facts and requires explicit lossy confirmation before freezing a local draft', async () => {
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-pdf"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'form.pdf', path: 'C:/input/form.pdf', size: 4096, type: 'file', isDirectory: false,
+    }])
+    await flushPromises()
+
+    await vi.waitFor(() => expect(wrapper.text()).toContain('表单字段'))
+
+    expect(mocks.analyzePdfInput).toHaveBeenCalledWith({ path: 'C:/input/form.pdf', password: null })
+    const workspace = wrapper.get('[data-testid="pdf-compression-workspace"]')
+    expect(workspace.text()).toContain('表单字段')
+    expect(workspace.text()).toContain('4.0 KB')
+    expect(workspace.get('[data-testid="pdf-output-preview"]').text()).toContain('form.organized.pdf')
+
+    await workspace.get('[data-testid="pdf-mode-image"]').trigger('click')
+    expect(workspace.get('[data-testid="pdf-freeze-configuration"]').attributes('disabled')).toBeDefined()
+    await workspace.get('[data-testid="pdf-risk-confirmation"]').setValue(true)
+    expect(workspace.get('[data-testid="pdf-freeze-configuration"]').attributes('disabled')).toBeUndefined()
+    await workspace.get('[data-testid="pdf-freeze-configuration"]').trigger('click')
+    expect(workspace.text()).toContain('配置已锁定')
+    expect(workspace.get('[data-testid="pdf-output-preview"]').text()).toContain('form.optimized.pdf')
+    expect(useTaskStore().tasks).toHaveLength(0)
+  })
+
+  it('keeps signed PDFs analysis-only and unlocks encrypted facts only after password analysis', async () => {
+    mocks.analyzePdfInput
+      .mockResolvedValueOnce(pdfReport({
+        source: 'C:/input/signed.pdf', hasDigitalSignature: true, signatureFieldNames: ['Signature1'],
+        blockingReasons: ['PDF_DIGITAL_SIGNATURE_EXECUTION_BLOCKED'],
+      }))
+      .mockResolvedValueOnce(pdfReport({
+        source: 'C:/input/encrypted.pdf', analysisComplete: false, pageCount: null, encrypted: true,
+        passwordState: 'required', hasDigitalSignature: null, hasFormFields: null, hasAttachments: null,
+        outlineCount: null, blockingReasons: ['PDF_PASSWORD_REQUIRED'],
+      }))
+      .mockResolvedValueOnce(pdfReport({
+        source: 'C:/input/encrypted.pdf', encrypted: true, passwordState: 'accepted', hasFormFields: false,
+        formFieldNames: [],
+      }))
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-pdf"]').trigger('click')
+    const dropzone = wrapper.findComponent(DropzoneStub)
+    dropzone.vm.$emit('files-selected', [
+      { name: 'signed.pdf', path: 'C:/input/signed.pdf', size: 100, type: 'file', isDirectory: false },
+      { name: 'encrypted.pdf', path: 'C:/input/encrypted.pdf', size: 100, type: 'file', isDirectory: false },
+    ])
+    await flushPromises()
+
+    await vi.waitFor(() => expect(wrapper.findAll('[data-testid="pdf-draft-card"]')[1].find('[data-testid="pdf-password-input"]').exists()).toBe(true))
+
+    const cards = wrapper.findAll('[data-testid="pdf-draft-card"]')
+    expect(cards[0].text()).toContain('当前仅可分析')
+    expect(cards[0].get('[data-testid="pdf-freeze-configuration"]').attributes('disabled')).toBeDefined()
+    await cards[1].get('[data-testid="pdf-password-input"]').setValue('fixture-user')
+    await cards[1].get('[data-testid="pdf-password-analyze"]').trigger('click')
+    await flushPromises()
+    expect(mocks.analyzePdfInput).toHaveBeenLastCalledWith({ path: 'C:/input/encrypted.pdf', password: 'fixture-user' })
+    expect(cards[1].text()).toContain('密码已验证')
+    expect(cards[1].find('[data-testid="pdf-password-input"]').exists()).toBe(false)
+    expect(useTaskStore().tasks).toHaveLength(0)
   })
 
   it('plans a real video candidate, labels estimates, and replans preset changes without creating tasks', async () => {
