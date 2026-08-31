@@ -14,7 +14,7 @@ function assert(condition, message) {
 
 function validate(candidate) {
   assert(candidate.schemaVersion === 1, 'unsupported PDF optimization contract schema')
-  assert(candidate.node === 'D-03.2' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
+  assert(candidate.node === 'D-03.3' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
   assert(/^\d{4}-\d{2}-\d{2}$/.test(candidate.reviewedAt), 'PDF contract review date is missing')
   assert(candidate.engine?.id === 'qpdf' && candidate.engine?.version === '12.4.0', 'qpdf identity drifted')
   assert(candidate.engine?.integrationAllowed === true && candidate.engine?.candidateCacheOnly === false && candidate.engine?.productionPreflightOnly === false, 'D-02.1 qpdf read-only analysis boundary is invalid')
@@ -49,7 +49,16 @@ function validate(candidate) {
   assert(candidate.executionBoundary?.signedDocumentCanFreezeConfiguration === false, 'signed PDF configuration must remain blocked')
   assert(candidate.executionBoundary?.stagingTransformEnabled === true && candidate.executionBoundary?.stagingApiExposure === 'internal-library-only', 'D-03.1 must expose only the internal owned-staging transform')
   assert(candidate.executionBoundary?.validationEnabled === true && candidate.executionBoundary?.validationApiExposure === 'internal-library-only', 'D-03.2 must enable only internal candidate validation')
-  assert(candidate.executionBoundary?.publicationEnabled === false, 'D-03.2 must not publish candidates yet')
+  assert(candidate.executionBoundary?.publicationEnabled === true && candidate.executionBoundary?.publicationApiExposure === 'internal-library-only', 'D-03.3 must enable only internal atomic publication')
+  assert(candidate.executionBoundary?.outputLockScope === 'process-wide-normalized-destination', 'D-03.3 cross-task output lock drifted')
+  assert(candidate.executionBoundary?.markOfTheWebPolicy === 'propagate-internet-or-restricted-zone-before-atomic-rename', 'D-03.3 Mark-of-the-Web policy drifted')
+  for (const stage of ['normalized-cross-task-output-lock', 'candidate-validation', 'cancellation-recheck', 'source-sha256-recheck', 'candidate-sha256-recheck', 'mark-of-the-web-policy', 'same-directory-atomic-rename', 'published-filesystem-identity']) {
+    assert(candidate.executionBoundary?.publicationTransaction?.includes(stage), `D-03.3 publication stage is missing: ${stage}`)
+  }
+  for (const fact of ['filesystem-bytes', 'sha256', 'savings-ratio', 'mark-of-the-web-status', 'validated-structural-facts']) {
+    assert(candidate.executionBoundary?.publishedFacts?.includes(fact), `D-03.3 published fact is missing: ${fact}`)
+  }
+  assert(candidate.executionBoundary?.controlledLowCapacityVolumeEvidence === false, 'controlled low-capacity volume evidence must not be claimed before it exists')
   assert(candidate.executionBoundary?.encryptedExecutionEnabled === false, 'encrypted PDF execution must remain blocked')
   assert(candidate.executionBoundary?.transformTimeoutSeconds === 600 && candidate.executionBoundary?.stagingCleanup === 'owned-drop-guard', 'D-03.1 process and staging bounds drifted')
   assert(candidate.executionBoundary?.capacityPreflight === 'shared-storage-preflight' && candidate.executionBoundary?.sourceIntegrityCheck === 'sha256-before-and-after-transform', 'D-03.1 shared preflight/source integrity boundary drifted')
@@ -75,10 +84,11 @@ for (const mutation of [
   copy => { copy.documentPolicies['digitally-signed'] = 'eligible' },
   copy => { copy.executionBoundary.executionEnabled = true },
   copy => { copy.executionBoundary.lossyModeRequiresExplicitConfirmation = false },
-  copy => { copy.executionBoundary.publicationEnabled = true },
   copy => { copy.executionBoundary.encryptedExecutionEnabled = true },
   copy => { copy.executionBoundary.validationEnabled = false },
   copy => { copy.executionBoundary.validatedFacts = copy.executionBoundary.validatedFacts.filter(value => value !== 'attachment-name-bytes-and-sha256') },
+  copy => { copy.executionBoundary.publicationEnabled = false },
+  copy => { copy.executionBoundary.publicationTransaction = copy.executionBoundary.publicationTransaction.filter(value => value !== 'source-sha256-recheck') },
 ]) {
   const copy = structuredClone(contract)
   mutation(copy)
@@ -103,4 +113,4 @@ for (const required of ['qpdf-check', 'annotation-policy', 'outline-policy', 'at
   assert(releaseGates.nodes?.D?.requiredValidation?.includes(required), `PDF release validation is missing ${required}`)
 }
 
-console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-03.2 internal candidate validation enabled, publication frozen).`)
+console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-03.3 internal atomic publication enabled, product execution frozen).`)

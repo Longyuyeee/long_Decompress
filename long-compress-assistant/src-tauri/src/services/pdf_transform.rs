@@ -94,6 +94,7 @@ pub struct PdfStagedOutput {
     path: PathBuf,
     destination: PathBuf,
     source_report: PdfInputAnalysisReport,
+    source_sha256: String,
     encoded_bytes: u64,
     mode: PdfOptimizationMode,
 }
@@ -109,6 +110,10 @@ impl PdfStagedOutput {
 
     pub fn source_report(&self) -> &PdfInputAnalysisReport {
         &self.source_report
+    }
+
+    pub fn source_sha256(&self) -> &str {
+        &self.source_sha256
     }
 
     pub fn encoded_bytes(&self) -> u64 {
@@ -336,6 +341,7 @@ pub async fn transform_pdf_to_staging(
         path: staged.clone(),
         destination: request.destination.clone(),
         source_report: report,
+        source_sha256: source_before.sha256.clone(),
         encoded_bytes: 0,
         mode: request.mode,
     };

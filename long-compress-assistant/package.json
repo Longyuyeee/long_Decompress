@@ -23,6 +23,7 @@
     "test:pdf-d02-analysis:real": "npm run test:fixtures:media && node scripts/run-d02-pdf-analysis.mjs",
     "test:pdf-d03-staging:real": "npm run test:fixtures:media && node scripts/run-d03-pdf-staging.mjs",
     "test:pdf-d03-validation:real": "npm run test:fixtures:media && node scripts/run-d03-pdf-validation.mjs",
+    "test:pdf-d03-publication:real": "npm run test:fixtures:media && node scripts/run-d03-pdf-publication.mjs",
     "test:video-c01:real": "node scripts/run-c01-ffmpeg-baseline.mjs",
     "test:video-runtime-package:real": "node scripts/check-video-runtime-package.mjs",
     "test:video-matrix:real": "node scripts/run-c05-video-format-matrix.mjs",

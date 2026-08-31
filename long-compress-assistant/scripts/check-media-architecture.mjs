@@ -237,7 +237,21 @@ for (const boundary of [
   assert(pdfValidation.includes(boundary), `D-03.2 PDF validation boundary is missing: ${boundary}`)
 }
 assert(pdfContract.executionBoundary?.validationEnabled === true && pdfContract.executionBoundary?.validationApiExposure === 'internal-library-only', 'D-03.2 internal validation must be enabled')
-assert(pdfContract.executionBoundary?.publicationEnabled === false, 'D-03.2 publication must remain frozen')
+const pdfPublish = await read('src-tauri/src/services/pdf_publish.rs')
+for (const boundary of [
+  'execute_pdf_publication_transaction',
+  'ACTIVE_PDF_OUTPUTS',
+  'OutputLocked',
+  'validate_staged_pdf_output',
+  'source_sha256()',
+  'verified.output_sha256',
+  'mark_of_web::propagate_to_tree',
+  'publish_verified_file(staged.path()',
+  'FinalIdentityFailed',
+]) {
+  assert(pdfPublish.includes(boundary), `D-03.3 PDF publication boundary is missing: ${boundary}`)
+}
+assert(pdfContract.executionBoundary?.publicationEnabled === true && pdfContract.executionBoundary?.publicationApiExposure === 'internal-library-only', 'D-03.3 internal publication must be enabled')
 assert(
   pdfAnalysis.includes('"--password-file=-"')
     && pdfAnalysis.includes('Stdio::piped()')
@@ -246,7 +260,7 @@ assert(
 )
 assert(
   !/commands::pdf_engine::(?:optimize|compress|execute|validate|publish)_pdf/.test(main),
-  'D-03.2 must not expose internal PDF staging, validation, or publication as a product command',
+  'D-03.3 must not expose internal PDF staging, validation, or publication as a product command',
 )
 const videoValidation = await read('src-tauri/src/services/video_output_validation.rs')
 for (const contract of [
