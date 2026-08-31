@@ -300,6 +300,36 @@ mod tests {
         serde_json::from_slice(&output.stdout).unwrap()
     }
 
+    fn write_minimal_real_pdf(path: &Path) {
+        let objects = [
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>",
+            "<< /Length 0 >>\nstream\n\nendstream",
+        ];
+        let mut bytes = b"%PDF-1.4\n".to_vec();
+        let mut offsets = Vec::new();
+        for (index, object) in objects.iter().enumerate() {
+            offsets.push(bytes.len());
+            bytes
+                .extend_from_slice(format!("{} 0 obj\n{}\nendobj\n", index + 1, object).as_bytes());
+        }
+        let xref = bytes.len();
+        bytes.extend_from_slice(format!("xref\n0 {}\n", objects.len() + 1).as_bytes());
+        bytes.extend_from_slice(b"0000000000 65535 f \n");
+        for offset in offsets {
+            bytes.extend_from_slice(format!("{offset:010} 00000 n \n").as_bytes());
+        }
+        bytes.extend_from_slice(
+            format!(
+                "trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n",
+                objects.len() + 1
+            )
+            .as_bytes(),
+        );
+        std::fs::write(path, bytes).expect("write minimal real PDF");
+    }
+
     fn request(
         source: PathBuf,
         destination: PathBuf,
@@ -534,5 +564,94 @@ mod tests {
                     .count(),
             })
         );
+    }
+
+    #[tokio::test]
+    #[cfg(windows)]
+    #[ignore = "requires LONG_D03_LOW_CAPACITY_PATH pointing to an isolated real NTFS volume"]
+    async fn real_low_capacity_volume_blocks_pdf_transaction_without_artifacts() {
+        use crate::services::storage_preflight::{probe_storage, DISK_SAFETY_RESERVE};
+
+        let volume = PathBuf::from(
+            std::env::var("LONG_D03_LOW_CAPACITY_PATH")
+                .expect("isolated low-capacity volume path is required"),
+        );
+        assert!(volume.is_dir(), "isolated volume must be mounted");
+        let probe_file = volume.join("real-write-probe.bin");
+        std::fs::write(&probe_file, vec![0x5a; 1024 * 1024])
+            .expect("isolated volume must accept a real write");
+        let target = probe_storage(&volume);
+        let total_bytes = target.total_bytes.expect("real volume total bytes");
+        let available_bytes = target.available_bytes.expect("real volume available bytes");
+        assert!(
+            total_bytes < DISK_SAFETY_RESERVE,
+            "test volume must be smaller than the production safety reserve"
+        );
+
+        let source_directory = tempfile::tempdir().expect("real source directory");
+        let source = source_directory.path().join("minimal-real.pdf");
+        write_minimal_real_pdf(&source);
+        let source_before = file_identity(&source).unwrap().1;
+        let destination = volume.join("must-not-publish.pdf");
+        let error = execute_pdf_publication_transaction(
+            &qpdf(),
+            &request(
+                source.clone(),
+                destination.clone(),
+                PdfOptimizationMode::LosslessOrganization,
+            ),
+            true,
+            &AtomicBool::new(false),
+        )
+        .await
+        .expect_err("production preflight must reject the real low-capacity volume");
+        let source_after = file_identity(&source).unwrap().1;
+        let staging_files: Vec<_> = std::fs::read_dir(&volume)
+            .unwrap()
+            .flatten()
+            .filter(|entry| {
+                entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(".pdf-transform-")
+            })
+            .map(|entry| entry.path())
+            .collect();
+        std::fs::remove_file(&probe_file).expect("remove real write probe");
+
+        println!(
+            "D03_PDF_LOW_CAPACITY_RESULT={}",
+            serde_json::json!({
+                "fileSystem": target.file_system,
+                "mountPoint": target.mount_point,
+                "totalBytes": total_bytes,
+                "availableBytes": available_bytes,
+                "reserveBytes": DISK_SAFETY_RESERVE,
+                "realWriteProbeBytes": 1024 * 1024,
+                "error": error.to_string().split(':').next().unwrap_or_default(),
+                "finalOutputExists": destination.exists(),
+                "stagingFiles": staging_files,
+                "sourceHashUnchanged": source_before == source_after,
+            })
+        );
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn github_actions_runs_real_low_capacity_volume_gate() {
+        if std::env::var("GITHUB_ACTIONS").as_deref() != Ok("true") {
+            return;
+        }
+        if std::env::var("LONG_D03_LOW_CAPACITY_PATH").is_ok() {
+            return;
+        }
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
+        let status = std::process::Command::new("powershell.exe")
+            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"])
+            .arg(root.join("scripts/test-d03-pdf-low-capacity.ps1"))
+            .current_dir(&root)
+            .status()
+            .expect("launch isolated low-capacity VHD gate");
+        assert!(status.success(), "isolated low-capacity VHD gate failed");
     }
 }
