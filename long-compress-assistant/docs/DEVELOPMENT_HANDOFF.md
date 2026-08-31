@@ -4,7 +4,7 @@
 
 - 产品负责人批准将图片、视频、PDF 从压缩中心移出；左侧新增唯一“特殊压缩”入口，内部保留三种选择，压缩中心只做归档文件压缩。
 - 这是对 2026-08-26 原始界面路线的正式替换，不是无意偏移。统一 `compression/{archive,image,video,pdf}` 任务/历史、取消、容量预检、暂存校验和原子发布边界不变。
-- 当前实施分支为 `codex/special-compression-navigation`，目标补丁版为 `1.1.18`。页面纠偏已通过 270/270 单元、生产构建、17 文件媒体架构门禁，以及图片、视频、PDF 三类隔离 Windows Release 真实桌面门禁；下一步进入版本身份、README/Release Notes、正式安装候选与公开更新收口。完整证据见 [SPECIAL_COMPRESSION_NAVIGATION_AUDIT.md](SPECIAL_COMPRESSION_NAVIGATION_AUDIT.md)。
+- 当前实施分支为 `codex/special-compression-navigation`，目标补丁版为 `1.1.18`。页面纠偏已通过 270/270 单元、生产构建、17 文件媒体架构门禁，以及图片、视频、PDF 三类隔离 Windows Release 真实桌面门禁；八处版本身份、README/Release Notes、Rust/Shell 全回归也已完成。本机 NSIS 工具在启动 `makensis.exe` 时以 `os error 2` 失败，未冒充候选；下一步由干净 CI 生成精确 NSIS，再做安装态与公开更新收口。完整证据见 [SPECIAL_COMPRESSION_NAVIGATION_AUDIT.md](SPECIAL_COMPRESSION_NAVIGATION_AUDIT.md)和 [RELEASE_AUDIT_1.1.18.md](RELEASE_AUDIT_1.1.18.md)。
 
 ## 2026-09-01 v1.1.17 PDF 安全优化正式发布关闭
 
