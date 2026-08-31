@@ -25,6 +25,7 @@
     "test:pdf-d03-validation:real": "npm run test:fixtures:media && node scripts/run-d03-pdf-validation.mjs",
     "test:pdf-d03-publication:real": "npm run test:fixtures:media && node scripts/run-d03-pdf-publication.mjs",
     "test:pdf-d03-low-capacity:real": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-d03-pdf-low-capacity.ps1",
+    "test:pdf-d04-command:real": "npm run test:fixtures:media && node scripts/run-d04-pdf-command.mjs",
     "test:video-c01:real": "node scripts/run-c01-ffmpeg-baseline.mjs",
     "test:video-runtime-package:real": "node scripts/check-video-runtime-package.mjs",
     "test:video-matrix:real": "node scripts/run-c05-video-format-matrix.mjs",

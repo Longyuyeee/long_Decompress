@@ -517,6 +517,15 @@ pub async fn validate_staged_pdf_output(
     staged: &PdfStagedOutput,
     cancelled: &AtomicBool,
 ) -> Result<VerifiedPdfOutput, PdfOutputValidationError> {
+    validate_staged_pdf_output_with_size_policy(qpdf, staged, false, cancelled).await
+}
+
+pub async fn validate_staged_pdf_output_with_size_policy(
+    qpdf: &Path,
+    staged: &PdfStagedOutput,
+    allow_larger_output: bool,
+    cancelled: &AtomicBool,
+) -> Result<VerifiedPdfOutput, PdfOutputValidationError> {
     let metadata = std::fs::symlink_metadata(staged.path())
         .map_err(|_| PdfOutputValidationError::NotRegularFile)?;
     if !metadata.file_type().is_file() || metadata.file_type().is_symlink() {
@@ -534,7 +543,7 @@ pub async fn validate_staged_pdf_output(
     if staged.destination().exists() {
         return Err(PdfOutputValidationError::TargetAppeared);
     }
-    if metadata.len() > staged.source_report().input_bytes {
+    if metadata.len() > staged.source_report().input_bytes && !allow_larger_output {
         return Err(PdfOutputValidationError::LargerThanSource(
             staged.source_report().input_bytes,
             metadata.len(),

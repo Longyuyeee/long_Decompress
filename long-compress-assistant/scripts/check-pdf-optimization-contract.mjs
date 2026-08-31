@@ -14,7 +14,7 @@ function assert(condition, message) {
 
 function validate(candidate) {
   assert(candidate.schemaVersion === 1, 'unsupported PDF optimization contract schema')
-  assert(candidate.node === 'D-03.3.1' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
+  assert(candidate.node === 'D-04.1' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
   assert(/^\d{4}-\d{2}-\d{2}$/.test(candidate.reviewedAt), 'PDF contract review date is missing')
   assert(candidate.engine?.id === 'qpdf' && candidate.engine?.version === '12.4.0', 'qpdf identity drifted')
   assert(candidate.engine?.integrationAllowed === true && candidate.engine?.candidateCacheOnly === false && candidate.engine?.productionPreflightOnly === false, 'D-02.1 qpdf read-only analysis boundary is invalid')
@@ -41,7 +41,7 @@ function validate(candidate) {
   }
   assert(candidate.executionBoundary?.acceptRawArguments === false, 'raw qpdf arguments must remain forbidden')
   assert(candidate.executionBoundary?.publishProductRuntime === true && candidate.executionBoundary?.enableProductUi === true, 'D-02.2 must expose the read-only PDF configuration UI')
-  assert(candidate.executionBoundary?.executionEnabled === false && candidate.executionBoundary?.createsTasks === false, 'D-02.2 must not execute PDF transformations or create tasks')
+  assert(candidate.executionBoundary?.executionEnabled === true && candidate.executionBoundary?.createsTasks === false, 'D-04.1 must expose only the product command before task/UI orchestration')
   assert(candidate.executionBoundary?.configurationPersistence === 'page-local-draft-only', 'D-02.2 configuration must remain a page-local draft')
   assert(candidate.executionBoundary?.defaultOutput === 'new-file' && candidate.executionBoundary?.sourceMutationAllowed === false, 'PDF configuration must always propose a new output file')
   assert(candidate.executionBoundary?.lossyModeRequiresExplicitConfirmation === true, 'lossy PDF mode must require explicit confirmation')
@@ -50,6 +50,9 @@ function validate(candidate) {
   assert(candidate.executionBoundary?.stagingTransformEnabled === true && candidate.executionBoundary?.stagingApiExposure === 'internal-library-only', 'D-03.1 must expose only the internal owned-staging transform')
   assert(candidate.executionBoundary?.validationEnabled === true && candidate.executionBoundary?.validationApiExposure === 'internal-library-only', 'D-03.2 must enable only internal candidate validation')
   assert(candidate.executionBoundary?.publicationEnabled === true && candidate.executionBoundary?.publicationApiExposure === 'internal-library-only', 'D-03.3 must enable only internal atomic publication')
+  assert(candidate.executionBoundary?.productCommand === 'compress_pdf_file', 'D-04.1 product command identity drifted')
+  assert(JSON.stringify(candidate.executionBoundary?.productCommandStages) === '["Transforming","Validating","Publishing"]', 'D-04.1 truthful stage contract drifted')
+  assert(candidate.executionBoundary?.productCommandRevalidatesEngineAndDocument === true && candidate.executionBoundary?.sharedCancellationRegistry === true, 'D-04.1 must revalidate through the shared cancellation path')
   assert(candidate.executionBoundary?.outputLockScope === 'process-wide-normalized-destination', 'D-03.3 cross-task output lock drifted')
   assert(candidate.executionBoundary?.markOfTheWebPolicy === 'propagate-internet-or-restricted-zone-before-atomic-rename', 'D-03.3 Mark-of-the-Web policy drifted')
   for (const stage of ['normalized-cross-task-output-lock', 'candidate-validation', 'cancellation-recheck', 'source-sha256-recheck', 'candidate-sha256-recheck', 'mark-of-the-web-policy', 'same-directory-atomic-rename', 'published-filesystem-identity']) {
@@ -73,6 +76,7 @@ function validate(candidate) {
   }
   assert(candidate.executionBoundary?.ghostscriptAllowed === false, 'Ghostscript must remain outside the redistribution boundary')
   assert(candidate.executionBoundary?.sourceMutationAllowed === false, 'PDF source mutation must remain forbidden')
+  assert(candidate.executionBoundary?.largerOutputDefault === 'do-not-publish' && candidate.executionBoundary?.largerOutputExplicitRetention === 'validated-product-request-only', 'larger PDF output policy drifted')
 }
 
 validate(contract)
@@ -82,7 +86,7 @@ for (const mutation of [
   copy => { copy.executionBoundary.acceptRawArguments = true },
   copy => { copy.analysisBoundary.passwordInArguments = true },
   copy => { copy.documentPolicies['digitally-signed'] = 'eligible' },
-  copy => { copy.executionBoundary.executionEnabled = true },
+  copy => { copy.executionBoundary.executionEnabled = false },
   copy => { copy.executionBoundary.lossyModeRequiresExplicitConfirmation = false },
   copy => { copy.executionBoundary.encryptedExecutionEnabled = true },
   copy => { copy.executionBoundary.validationEnabled = false },
@@ -113,4 +117,4 @@ for (const required of ['qpdf-check', 'annotation-policy', 'outline-policy', 'at
   assert(releaseGates.nodes?.D?.requiredValidation?.includes(required), `PDF release validation is missing ${required}`)
 }
 
-console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-03 closed with controlled low-capacity evidence, product execution frozen).`)
+console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-04.1 product command enabled, task/UI orchestration frozen).`)
