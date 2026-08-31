@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedAt": "2026-08-31",
-  "node": "D-03.1",
+  "node": "D-03.2",
   "baselineNode": "D-01.1",
   "engine": {
     "id": "qpdf",
@@ -18,7 +18,7 @@
     ]
   },
   "inspection": {
-    "arguments": ["--version", "--show-crypto", "--check", "--show-npages", "--is-encrypted", "--requires-password", "--password-file=-", "--json=2", "--json-stream-data=none", "--json-key=pages", "--json-key=acroform", "--json-key=attachments", "--json-key=outlines"],
+    "arguments": ["--version", "--show-crypto", "--check", "--show-npages", "--is-encrypted", "--requires-password", "--password-file=-", "--json=2", "--json-stream-data=none", "--json-key=pages", "--json-key=acroform", "--json-key=attachments", "--json-key=outlines", "--json-key=qpdf", "--show-attachment"],
     "forbidden": ["--show-encryption-key", "--password-is-hex-key", "--allow-insecure", "--allow-weak-crypto"]
   },
   "analysisBoundary": {
@@ -100,7 +100,16 @@
     "signedDocumentCanFreezeConfiguration": false,
     "stagingTransformEnabled": true,
     "stagingApiExposure": "internal-library-only",
-    "validationEnabled": false,
+    "validationEnabled": true,
+    "validationApiExposure": "internal-library-only",
+    "validationTimeoutSeconds": 120,
+    "maximumValidationJsonBytes": 33554432,
+    "maximumAttachmentBytes": 67108864,
+    "maximumTotalAttachmentBytes": 134217728,
+    "qpdfCheckAcceptedExitCodes": [0],
+    "validatedFacts": ["candidate-sha256-before-and-after-validation", "page-count", "encryption-state", "page-media-boxes", "form-field-identities", "annotation-page-and-subtype", "outline-title-and-destination-page", "attachment-name-bytes-and-sha256"],
+    "independentRealGate": "pypdf-source-candidate-facts-equality",
+    "failureMatrix": ["damaged-input", "corrupt-candidate", "validation-cancellation", "target-race", "larger-output-default-refusal"],
     "publicationEnabled": false,
     "encryptedExecutionEnabled": false,
     "transformTimeoutSeconds": 600,

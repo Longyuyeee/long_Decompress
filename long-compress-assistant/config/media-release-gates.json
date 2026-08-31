@@ -79,7 +79,7 @@
         "signed-explicit-refusal",
         "encrypted-explicit-refusal"
       ],
-      "requiredValidation": ["qpdf-check", "page-count", "render-first-and-last-page", "form-policy", "signature-policy", "filesystem-bytes"]
+      "requiredValidation": ["qpdf-check", "page-count", "render-first-and-last-page", "form-policy", "annotation-policy", "outline-policy", "attachment-bytes", "signature-policy", "filesystem-bytes"]
     }
   },
   "requiredEvidenceFields": [

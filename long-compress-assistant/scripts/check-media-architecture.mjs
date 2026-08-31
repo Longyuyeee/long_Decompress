@@ -222,7 +222,22 @@ for (const boundary of [
   assert(pdfTransform.includes(boundary), `D-03.1 PDF staging boundary is missing: ${boundary}`)
 }
 assert(pdfContract.executionBoundary?.stagingTransformEnabled === true, 'D-03.1 owned staging must be enabled')
-assert(pdfContract.executionBoundary?.validationEnabled === false && pdfContract.executionBoundary?.publicationEnabled === false, 'D-03.1 validation/publication must remain frozen')
+const pdfValidation = await read('src-tauri/src/services/pdf_output_validation.rs')
+for (const boundary of [
+  'validate_staged_pdf_output',
+  'PDF_OUTPUT_QPDF_CHECK_FAILED',
+  'PDF_OUTPUT_LARGER_THAN_SOURCE',
+  'PDF_OUTPUT_TARGET_APPEARED',
+  'PDF_OUTPUT_CHANGED_DURING_VALIDATION',
+  '--show-attachment=',
+  'Sha256::digest',
+  'compare_facts',
+  'child.kill().await',
+]) {
+  assert(pdfValidation.includes(boundary), `D-03.2 PDF validation boundary is missing: ${boundary}`)
+}
+assert(pdfContract.executionBoundary?.validationEnabled === true && pdfContract.executionBoundary?.validationApiExposure === 'internal-library-only', 'D-03.2 internal validation must be enabled')
+assert(pdfContract.executionBoundary?.publicationEnabled === false, 'D-03.2 publication must remain frozen')
 assert(
   pdfAnalysis.includes('"--password-file=-"')
     && pdfAnalysis.includes('Stdio::piped()')
@@ -230,8 +245,8 @@ assert(
   'D-02.1 password must use qpdf stdin and stay off the process argument list',
 )
 assert(
-  !/commands::pdf_engine::(?:optimize|compress|execute|publish)_pdf/.test(main),
-  'D-03.1 must not expose internal PDF staging or publication as a product command',
+  !/commands::pdf_engine::(?:optimize|compress|execute|validate|publish)_pdf/.test(main),
+  'D-03.2 must not expose internal PDF staging, validation, or publication as a product command',
 )
 const videoValidation = await read('src-tauri/src/services/video_output_validation.rs')
 for (const contract of [
