@@ -207,6 +207,22 @@ for (const boundary of ['D-03 执行尚未接入', 'pdf-risk-confirmation', '锁
   assert(pdfWorkspace.includes(boundary), `D-02.2 PDF UI boundary is missing: ${boundary}`)
 }
 assert(!pdfWorkspace.includes('useTaskStore') && !pdfWorkspace.includes('useCompressionStore'), 'D-02.2 PDF drafts must not create or persist product tasks')
+const pdfTransform = await read('src-tauri/src/services/pdf_transform.rs')
+for (const boundary of [
+  'transform_arguments',
+  'staged_output_path(&request.destination, "pdf-transform")',
+  'cleanup_staged_output_family(&self.path)',
+  'preflight_operation_resources(',
+  'PDF_TRANSFORM_SIGNED_DOCUMENT_BLOCKED',
+  'PDF_TRANSFORM_ENCRYPTED_DOCUMENT_BLOCKED',
+  'PDF_TRANSFORM_LOSSY_CONFIRMATION_REQUIRED',
+  'PDF_TRANSFORM_SOURCE_CHANGED_DURING_EXECUTION',
+  'child.kill().await',
+]) {
+  assert(pdfTransform.includes(boundary), `D-03.1 PDF staging boundary is missing: ${boundary}`)
+}
+assert(pdfContract.executionBoundary?.stagingTransformEnabled === true, 'D-03.1 owned staging must be enabled')
+assert(pdfContract.executionBoundary?.validationEnabled === false && pdfContract.executionBoundary?.publicationEnabled === false, 'D-03.1 validation/publication must remain frozen')
 assert(
   pdfAnalysis.includes('"--password-file=-"')
     && pdfAnalysis.includes('Stdio::piped()')
@@ -215,7 +231,7 @@ assert(
 )
 assert(
   !/commands::pdf_engine::(?:optimize|compress|execute|publish)_pdf/.test(main),
-  'D-02.1 must not expose PDF transformation or publication commands',
+  'D-03.1 must not expose internal PDF staging or publication as a product command',
 )
 const videoValidation = await read('src-tauri/src/services/video_output_validation.rs')
 for (const contract of [

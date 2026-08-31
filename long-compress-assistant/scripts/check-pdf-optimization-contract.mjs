@@ -14,7 +14,7 @@ function assert(condition, message) {
 
 function validate(candidate) {
   assert(candidate.schemaVersion === 1, 'unsupported PDF optimization contract schema')
-  assert(candidate.node === 'D-02.2' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
+  assert(candidate.node === 'D-03.1' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
   assert(/^\d{4}-\d{2}-\d{2}$/.test(candidate.reviewedAt), 'PDF contract review date is missing')
   assert(candidate.engine?.id === 'qpdf' && candidate.engine?.version === '12.4.0', 'qpdf identity drifted')
   assert(candidate.engine?.integrationAllowed === true && candidate.engine?.candidateCacheOnly === false && candidate.engine?.productionPreflightOnly === false, 'D-02.1 qpdf read-only analysis boundary is invalid')
@@ -32,7 +32,7 @@ function validate(candidate) {
   assert(lossless.forbiddenChanges.includes('visible-page-content'), 'lossless mode must forbid visible-content changes')
   assert(image.allowedChanges.includes('eligible-image-pixels') && image.forbiddenChanges.includes('non-image-page-content'), 'image optimization change boundary is incomplete')
   assert(candidate.documentPolicies?.['digitally-signed']?.startsWith('analysis-only'), 'signed PDF execution must remain blocked')
-  assert(candidate.documentPolicies?.encrypted?.startsWith('require-correct-password'), 'encrypted PDF must require a correct password before planning')
+  assert(candidate.documentPolicies?.encrypted?.startsWith('require-correct-password') && candidate.documentPolicies.encrypted.includes('execution-blocked'), 'encrypted PDF must require a correct password for planning and remain execution-blocked')
   assert(candidate.analysisBoundary?.readOnly === true && candidate.analysisBoundary?.fixedArgumentsOnly === true, 'PDF analysis must remain read-only and fixed-argument only')
   assert(candidate.analysisBoundary?.passwordTransport === 'stdin-via-password-file-dash' && candidate.analysisBoundary?.passwordInArguments === false, 'PDF password transport must stay off the process argument list')
   assert(candidate.analysisBoundary?.timeoutSeconds === 30 && candidate.analysisBoundary?.maximumJsonBytes === 33554432, 'PDF analysis process bounds drifted')
@@ -47,6 +47,11 @@ function validate(candidate) {
   assert(candidate.executionBoundary?.lossyModeRequiresExplicitConfirmation === true, 'lossy PDF mode must require explicit confirmation')
   assert(candidate.executionBoundary?.sizeReductionGuaranteed === false, 'PDF UI must not guarantee size reduction')
   assert(candidate.executionBoundary?.signedDocumentCanFreezeConfiguration === false, 'signed PDF configuration must remain blocked')
+  assert(candidate.executionBoundary?.stagingTransformEnabled === true && candidate.executionBoundary?.stagingApiExposure === 'internal-library-only', 'D-03.1 must expose only the internal owned-staging transform')
+  assert(candidate.executionBoundary?.validationEnabled === false && candidate.executionBoundary?.publicationEnabled === false, 'D-03.1 must not validate or publish candidates yet')
+  assert(candidate.executionBoundary?.encryptedExecutionEnabled === false, 'encrypted PDF execution must remain blocked')
+  assert(candidate.executionBoundary?.transformTimeoutSeconds === 600 && candidate.executionBoundary?.stagingCleanup === 'owned-drop-guard', 'D-03.1 process and staging bounds drifted')
+  assert(candidate.executionBoundary?.capacityPreflight === 'shared-storage-preflight' && candidate.executionBoundary?.sourceIntegrityCheck === 'sha256-before-and-after-transform', 'D-03.1 shared preflight/source integrity boundary drifted')
   assert(candidate.executionBoundary?.ghostscriptAllowed === false, 'Ghostscript must remain outside the redistribution boundary')
   assert(candidate.executionBoundary?.sourceMutationAllowed === false, 'PDF source mutation must remain forbidden')
 }
@@ -60,6 +65,8 @@ for (const mutation of [
   copy => { copy.documentPolicies['digitally-signed'] = 'eligible' },
   copy => { copy.executionBoundary.executionEnabled = true },
   copy => { copy.executionBoundary.lossyModeRequiresExplicitConfirmation = false },
+  copy => { copy.executionBoundary.publicationEnabled = true },
+  copy => { copy.executionBoundary.encryptedExecutionEnabled = true },
 ]) {
   const copy = structuredClone(contract)
   mutation(copy)
@@ -81,4 +88,4 @@ for (const required of ['mixed-content', 'annotation-preserve', 'outline-preserv
   assert(releaseGates.nodes?.D?.requiredRealCases?.includes(required), `PDF release gate is missing ${required}`)
 }
 
-console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-02.2 read-only risk configuration UI enabled, execution frozen).`)
+console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-03.1 internal owned staging enabled, validation/publication frozen).`)
