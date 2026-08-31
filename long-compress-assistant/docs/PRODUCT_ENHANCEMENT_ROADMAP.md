@@ -10,7 +10,7 @@
 
 下一轮已拆分为四个可独立验收的大节点：压缩包浏览中心 2.0、图片压缩、视频压缩软件编码和 PDF 安全优化。三个媒体入口放在压缩中心内部，与归档压缩共享任务队列、进度、取消、历史、容量预检、临时输出、校验和系统回收站语义；不新增三套旁路任务系统。
 
-每个大节点只有在真实样本、Windows 安装版桌面闭环、回归审计和公开更新门禁全部通过后，才允许把补丁版本提升一位。完整工作项、引擎和许可边界、预期—实际—修正记录要求及 Release 流程见 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md)。图片 B 节点已发布为 `v1.1.15`，视频 C 节点已在非 N Windows x64 范围内发布为 `v1.1.16`；Windows N 暂不支持。PDF D-01 至 D-03 及 D-04.1/D-04.2 已关闭，安全产品命令、统一批量任务/取消、终态历史、显式保留较大结果和默认阅读器已有真实桌面证据；下一接续点为 D-04.3 完整真实/正式安装态矩阵。D-04 全部关闭前不得提升 `1.1.17`。证据见 [D04_2_PDF_TASK_UI_AUDIT.md](D04_2_PDF_TASK_UI_AUDIT.md)。
+每个大节点只有在真实样本、Windows 安装版桌面闭环、回归审计和公开更新门禁全部通过后，才允许把补丁版本提升一位。完整工作项、引擎和许可边界、预期—实际—修正记录要求及 Release 流程见 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md)。图片 B 节点已发布为 `v1.1.15`，视频 C 节点已在非 N Windows x64 范围内发布为 `v1.1.16`；Windows N 暂不支持。PDF D-01 至 D-04 已全部关闭，安全产品命令、统一批量任务/取消、终态历史、显式保留较大结果、默认阅读器、完整真实矩阵和正式 NSIS 生产工作区均有证据。下一接续点为 `1.1.17` 版本身份、正式资产、Release Notes、公开 Release/更新及回下载验证。证据见 [D04_3_PDF_FULL_MATRIX_AUDIT.md](D04_3_PDF_FULL_MATRIX_AUDIT.md)。
 
 ## 2026-08-22 主流程纠偏与后续方向
 
