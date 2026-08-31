@@ -12,6 +12,8 @@ D-04.3 的产品命令完整矩阵、人工渲染抽查和隔离 Windows Tauri �
 
 本机 Tauri NSIS 工具缓存首次构建在 `makensis.exe` 启动处以 Windows `os error 2` 失败。删除并由 Tauri 校验哈希、重新下载官方 NSIS 3 后，多个 32 位 NSIS 可执行文件仍统一以 `0xC0000135 / STATUS_DLL_NOT_FOUND` 退出；Rust Release、前端、资源清单和 `installer.nsi` 均已成功产生。不能把该基础设施失败写成安装包通过，也不降低正式安装态要求。下一步由 PR 的干净 Windows Runner 构建候选并回下载到本机完成安装、工作区、卸载和公开 `v1.1.16` 恢复。
 
+PR #106 首轮 CI 的前端、浏览器和真实桌面构建通过；Rust 门禁捕获了一个既有的跨环境不稳定：加密 7Z 在密码错误时可能返回实现相关的解码错误文本，旧诊断只按少量英文短语分类，因而在 Runner 上误报为普通损坏并阻止安装包任务启动。现已对齐原始安全语义：只要归档已确认加密且调用方提供了密码，解码失败就统一使用“密码错误或密文损坏”的保守类别，不再依赖底层错误文案；模块 Release 回归 `12 passed / 0 failed`，严格 Clippy 通过，待新提交 CI 复验。
+
 ## 2. 与最初路线对齐
 
 | 最初需求 | 当前事实 | 状态 |
@@ -30,11 +32,12 @@ D-04.3 的产品命令完整矩阵、人工渲染抽查和隔离 Windows Tauri �
 - 产品命令：24 个用例、expected/actual 差异 0；其中 22 次真实转换/验证/原子发布，2 次稳定拒绝。
 - 隔离 Windows Tauri：大图片兼容模式从 UI 取消且无最终输出；锁定后删除首个表单源文件产生单项失败，后续文本和混合两项继续完成；失败没有伪造指标，成功指标与磁盘字节一致；默认阅读器接受输出；完成、失败、取消共四条历史在完整应用重启后逐字段一致。
 - 人工渲染：中文可见，扫描/混合/表单/大图片无裁切，300 页首尾分别显示 `1/300`、`300/300`；透明源、无损输出、兼容图片输出渲染 SHA-256 均为 `117DE5DDD1F7798E4494E2C751F06A0660D59A401335093C6CBFA338F137A091`。
+- CI 纠偏：首轮运行 `33404181000` 的真实桌面构建通过；Rust 门禁在加密 7Z 错误分类处失败并正确阻止 installer job。修复后本机归档诊断模块 Release 回归为 `12 passed / 0 failed`，并增加不透明解码错误文本用例。
 - 可重复入口：`npm.cmd run test:pdf-d04-command:real`、`npm.cmd run test:e2e:desktop:pdf-workspace`。结构化结果和 PNG 位于忽略的 `test-results`，不提交本机路径。
 
 ## 4. 严格接续点
 
-1. 推送本分支并等待五组 CI；下载 Windows installer job 生成的同提交 NSIS 候选。
+1. 推送 CI 纠偏提交并等待五组 CI；下载 Windows installer job 生成的同提交 NSIS 候选。
 2. 使用公开 `v1.1.16` 为可恢复基线，以 `-RunPdfRuntimeMatrix -RunPdfWorkspaceMatrix` 跑正式安装生命周期。
 3. 正式安装态通过后更新本审计为关闭，完成全量回归并合入主线。
 4. 只有 D-04.3 关闭后，才进入 `1.1.17` 版本提升、正式资产、README/Release Notes、GitHub Release 和公开回下载验证。
