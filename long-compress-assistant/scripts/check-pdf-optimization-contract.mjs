@@ -14,7 +14,7 @@ function assert(condition, message) {
 
 function validate(candidate) {
   assert(candidate.schemaVersion === 1, 'unsupported PDF optimization contract schema')
-  assert(candidate.node === 'D-02.1' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
+  assert(candidate.node === 'D-02.2' && candidate.baselineNode === 'D-01.1', 'PDF contract node identity drifted')
   assert(/^\d{4}-\d{2}-\d{2}$/.test(candidate.reviewedAt), 'PDF contract review date is missing')
   assert(candidate.engine?.id === 'qpdf' && candidate.engine?.version === '12.4.0', 'qpdf identity drifted')
   assert(candidate.engine?.integrationAllowed === true && candidate.engine?.candidateCacheOnly === false && candidate.engine?.productionPreflightOnly === false, 'D-02.1 qpdf read-only analysis boundary is invalid')
@@ -40,7 +40,13 @@ function validate(candidate) {
     assert(candidate.inspection?.arguments?.includes(argument), `required PDF analysis argument is missing: ${argument}`)
   }
   assert(candidate.executionBoundary?.acceptRawArguments === false, 'raw qpdf arguments must remain forbidden')
-  assert(candidate.executionBoundary?.publishProductRuntime === true && candidate.executionBoundary?.enableProductUi === false, 'D-01.2.1 must package identity-checked qpdf without exposing a half-built UI')
+  assert(candidate.executionBoundary?.publishProductRuntime === true && candidate.executionBoundary?.enableProductUi === true, 'D-02.2 must expose the read-only PDF configuration UI')
+  assert(candidate.executionBoundary?.executionEnabled === false && candidate.executionBoundary?.createsTasks === false, 'D-02.2 must not execute PDF transformations or create tasks')
+  assert(candidate.executionBoundary?.configurationPersistence === 'page-local-draft-only', 'D-02.2 configuration must remain a page-local draft')
+  assert(candidate.executionBoundary?.defaultOutput === 'new-file' && candidate.executionBoundary?.sourceMutationAllowed === false, 'PDF configuration must always propose a new output file')
+  assert(candidate.executionBoundary?.lossyModeRequiresExplicitConfirmation === true, 'lossy PDF mode must require explicit confirmation')
+  assert(candidate.executionBoundary?.sizeReductionGuaranteed === false, 'PDF UI must not guarantee size reduction')
+  assert(candidate.executionBoundary?.signedDocumentCanFreezeConfiguration === false, 'signed PDF configuration must remain blocked')
   assert(candidate.executionBoundary?.ghostscriptAllowed === false, 'Ghostscript must remain outside the redistribution boundary')
   assert(candidate.executionBoundary?.sourceMutationAllowed === false, 'PDF source mutation must remain forbidden')
 }
@@ -52,6 +58,8 @@ for (const mutation of [
   copy => { copy.executionBoundary.acceptRawArguments = true },
   copy => { copy.analysisBoundary.passwordInArguments = true },
   copy => { copy.documentPolicies['digitally-signed'] = 'eligible' },
+  copy => { copy.executionBoundary.executionEnabled = true },
+  copy => { copy.executionBoundary.lossyModeRequiresExplicitConfirmation = false },
 ]) {
   const copy = structuredClone(contract)
   mutation(copy)
@@ -73,4 +81,4 @@ for (const required of ['mixed-content', 'annotation-preserve', 'outline-preserv
   assert(releaseGates.nodes?.D?.requiredRealCases?.includes(required), `PDF release gate is missing ${required}`)
 }
 
-console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-02.1 read-only analysis enabled, product UI frozen).`)
+console.log(`PDF optimization contract gate passed (${contract.requiredFixtureKinds.length} fixture kinds; D-02.2 read-only risk configuration UI enabled, execution frozen).`)

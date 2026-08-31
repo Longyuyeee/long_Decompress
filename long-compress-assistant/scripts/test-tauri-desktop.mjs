@@ -51,7 +51,9 @@ const cachedEdgeDriver = path.join(root, 'test-results', 'edge-driver-b02', `mse
 const edgeDriver =
   process.env.EDGE_DRIVER_PATH ||
   (existsSync(cachedEdgeDriver) ? cachedEdgeDriver : undefined)
-const webdriverUrl = 'http://127.0.0.1:4444/'
+const webdriverPort = Number.parseInt(process.env.LONG_DECOMPRESS_WEBDRIVER_PORT || '4723', 10)
+const nativeWebdriverPort = Number.parseInt(process.env.LONG_DECOMPRESS_NATIVE_WEBDRIVER_PORT || '4724', 10)
+const webdriverUrl = `http://127.0.0.1:${webdriverPort}/`
 const artifactDirectory = path.join(root, 'test-results', 'desktop-e2e')
 const e2eInstanceId =
   process.env.LONG_DECOMPRESS_E2E_INSTANCE_ID || randomBytes(12).toString('hex')
@@ -119,6 +121,7 @@ const imageWorkspaceOnly = process.argv.includes('--image-workspace-only')
 const imageBatchOnly = process.argv.includes('--image-batch-only')
 const imagePickerManualOnly = process.argv.includes('--image-picker-manual-only')
 const videoWorkspaceOnly = process.argv.includes('--video-workspace-only')
+const pdfWorkspaceOnly = process.argv.includes('--pdf-workspace-only')
 const autoStartOnly = process.argv.includes('--auto-start-only')
 const missingFullFormatCapabilities = new Set()
 const autoStartRegistryKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
@@ -132,6 +135,14 @@ if (videoWorkspaceOnly && path.resolve(application) === path.resolve(cargoApplic
   cpSync(
     path.join(root, 'src-tauri', 'resources', 'video-engine'),
     path.join(path.dirname(cargoApplication), 'video-engine'),
+    { recursive: true, force: true },
+  )
+}
+
+if (pdfWorkspaceOnly && path.resolve(application) === path.resolve(cargoApplication)) {
+  cpSync(
+    path.join(root, 'src-tauri', 'resources', 'pdf-engine'),
+    path.join(path.dirname(cargoApplication), 'pdf-engine'),
     { recursive: true, force: true },
   )
 }
@@ -261,7 +272,7 @@ function removeAutoStartRegistryValue() {
 async function startTauriDriver() {
   tauriDriverProcess = spawn(
     tauriDriver,
-    ['--native-driver', edgeDriver],
+    ['--port', String(webdriverPort), '--native-port', String(nativeWebdriverPort), '--native-driver', edgeDriver],
     {
       cwd: root,
       env: {
@@ -1487,9 +1498,13 @@ async function createDesktopSession(applicationArgs = []) {
 }
 
 async function waitForDesktopReady() {
-  console.log('[desktop-e2e] waiting for desktop heading')
-  assert.ok(await waitForNonEmptyText('main h1'), 'the decompression workspace heading is empty')
-  console.log('[desktop-e2e] desktop heading is ready; waiting for the E2E bridge')
+  if (!pdfWorkspaceOnly) {
+    console.log('[desktop-e2e] waiting for desktop heading')
+    assert.ok(await waitForNonEmptyText('main h1'), 'the decompression workspace heading is empty')
+    console.log('[desktop-e2e] desktop heading is ready; waiting for the E2E bridge')
+  } else {
+    console.log('[desktop-e2e] focused PDF gate is waiting for the application bridge before route navigation')
+  }
   await driver.wait(
     () => driver.executeScript('return Boolean(window.__LONG_DECOMPRESS_DESKTOP_E2E__)'),
     30_000,
@@ -2218,6 +2233,131 @@ async function runResponsiveTaskDetailDesktopGate() {
       )
     }
   }
+}
+
+async function runPdfWorkspaceDesktopGate() {
+  console.log('[desktop-e2e] verifying real D-02.2 qpdf analysis and risk configuration UI')
+  const pdfRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures', 'pdfs')
+  const fixtures = Object.fromEntries(['form.pdf', 'signed.pdf', 'encrypted.pdf'].map(name => {
+    const fixturePath = path.join(pdfRoot, name)
+    assert.equal(existsSync(fixturePath), true, `missing real PDF fixture: ${fixturePath}`)
+    return [name, { path: fixturePath, bytes: statSync(fixturePath).size, sha256: fileSha256(fixturePath) }]
+  }))
+  await callDesktopBridge('clearTasks')
+  await callDesktopBridge('clearTaskHistory')
+  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
+  const workspace = await waitForElement('[data-testid="pdf-compression-workspace"]')
+  const picker = await waitForElement('[data-testid="pdf-compression-workspace"] [data-testid="dropzone-file"]')
+
+  await callDesktopBridge('queueDesktopDialogSelections', [[fixtures['form.pdf'].path]])
+  await picker.click()
+  await driver.wait(async () => (await workspace.getText()).includes('form.pdf') && (await workspace.getText()).includes('表单字段'), 30_000)
+  const formText = await workspace.getText()
+  const formExpected = {
+    pageCount: 1,
+    inputBytes: fixtures['form.pdf'].bytes,
+    formFieldCount: 2,
+    defaultOutputSuffix: 'form.organized.pdf',
+    sourceMutation: false,
+  }
+  const formActual = {
+    pageCount: /页数\s*1/u.test(formText) ? 1 : null,
+    inputBytes: fixtures['form.pdf'].bytes,
+    formFieldCount: /表单字段\s*2/u.test(formText) ? 2 : null,
+    defaultOutputSuffix: formText.includes('form.organized.pdf') ? 'form.organized.pdf' : null,
+    sourceMutation: fileSha256(fixtures['form.pdf'].path) !== fixtures['form.pdf'].sha256,
+  }
+
+  const imageMode = await waitForElement('[data-testid="pdf-mode-image"]')
+  await imageMode.click()
+  const freeze = await waitForElement('[data-testid="pdf-freeze-configuration"]')
+  assert.notEqual(await freeze.getAttribute('disabled'), null, 'lossy mode must stay disabled before explicit confirmation')
+  await (await waitForElement('.risk-confirmation')).click()
+  assert.equal(await freeze.getAttribute('disabled'), null, 'explicit lossy confirmation must enable local draft freezing')
+  const enabledFreeze = await waitForElement('[data-testid="pdf-freeze-configuration"]')
+  await driver.executeScript('arguments[0].scrollIntoView({ block: "center" })', enabledFreeze)
+  await enabledFreeze.click()
+  await driver.wait(async () => (await workspace.getText()).includes('配置已锁定'), 10_000)
+  assert.match(await workspace.getText(), /form\.optimized\.pdf/u)
+
+  await callDesktopBridge('queueDesktopDialogSelections', [[fixtures['signed.pdf'].path]])
+  await picker.click()
+  await driver.wait(async () => (await workspace.getText()).includes('signed.pdf') && (await workspace.getText()).includes('当前仅可分析'), 30_000)
+  const signedCard = (await driver.findElements(By.css('[data-testid="pdf-draft-card"]')))[1]
+  const signedFreeze = await signedCard.findElement(By.css('[data-testid="pdf-freeze-configuration"]'))
+  assert.notEqual(await signedFreeze.getAttribute('disabled'), null, 'signed PDF must not freeze an execution configuration')
+
+  await callDesktopBridge('queueDesktopDialogSelections', [[fixtures['encrypted.pdf'].path]])
+  await picker.click()
+  await driver.wait(async () => (await workspace.getText()).includes('encrypted.pdf') && (await workspace.getText()).includes('需要正确密码'), 30_000)
+  let passwordInput = await waitForElement('[data-testid="pdf-password-input"]')
+  await passwordInput.sendKeys('wrong-password')
+  await (await waitForElement('[data-testid="pdf-password-analyze"]')).click()
+  const wrongPasswordError = await driver.wait(async () => {
+    const alerts = await driver.findElements(By.css('[data-testid="pdf-draft-card"] [role="alert"]'))
+    const text = alerts.length ? await alerts.at(-1).getText() : ''
+    return text.includes('PDF_ANALYSIS_INVALID_PASSWORD') ? text : false
+  }, 30_000)
+  passwordInput = await waitForElement('[data-testid="pdf-password-input"]')
+  assert.equal(await passwordInput.getAttribute('value'), '', 'password field must clear after a failed attempt')
+  await passwordInput.sendKeys('fixture-user')
+  await (await waitForElement('[data-testid="pdf-password-analyze"]')).click()
+  await driver.wait(async () => (await workspace.getText()).includes('密码已验证'), 30_000)
+  assert.equal((await driver.findElements(By.css('[data-testid="pdf-password-input"]'))).length, 0, 'accepted password must not remain in the DOM')
+
+  mkdirSync(artifactDirectory, { recursive: true })
+  const layouts = []
+  for (const size of [{ width: 1100, height: 720 }, { width: 760, height: 560 }]) {
+    await driver.manage().window().setRect(size)
+    await new Promise(resolve => setTimeout(resolve, 250))
+    const layout = await driver.executeScript(() => {
+      const main = document.querySelector('main')
+      const workspace = document.querySelector('[data-testid="pdf-compression-workspace"]')
+      if (!main || !workspace) return null
+      workspace.scrollLeft = 0
+      const boundary = workspace.getBoundingClientRect()
+      const offenders = [...workspace.querySelectorAll('*')].map(element => {
+        const rect = element.getBoundingClientRect()
+        return { tag: element.tagName, className: String(element.className), rightOverflow: Math.round(rect.right - boundary.right), leftOverflow: Math.round(boundary.left - rect.left), width: Math.round(rect.width) }
+      }).filter(item => item.rightOverflow > 1 || item.leftOverflow > 1).sort((left, right) => Math.max(right.rightOverflow, right.leftOverflow) - Math.max(left.rightOverflow, left.leftOverflow)).slice(0, 8)
+      return {
+        mainOverflow: main.scrollWidth - main.clientWidth,
+        workspaceOverflow: workspace.scrollWidth - workspace.clientWidth,
+        workspaceClientWidth: workspace.clientWidth,
+        workspaceScrollWidth: workspace.scrollWidth,
+        offenders,
+      }
+    })
+    assert.ok(layout, 'PDF workspace layout must be visible')
+    assert.ok(layout.mainOverflow <= 1 && layout.workspaceOverflow <= 1, `PDF workspace must not overflow horizontally: ${JSON.stringify(layout)}`)
+    layouts.push({ ...size, ...layout })
+    writeFileSync(path.join(artifactDirectory, `pdf-workspace-${size.width}x${size.height}.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  }
+
+  for (const [name, fixture] of Object.entries(fixtures)) {
+    assert.equal(fileSha256(fixture.path), fixture.sha256, `${name} source bytes must remain unchanged`)
+  }
+  assert.deepEqual(await callDesktopBridge('taskHistory'), [], 'D-02.2 must not create task history')
+  const differences = Object.keys(formExpected).filter(key => JSON.stringify(formExpected[key]) !== JSON.stringify(formActual[key]))
+  const wrongPasswordDifferences = wrongPasswordError.includes('PDF_ANALYSIS_INVALID_PASSWORD') ? [] : ['error']
+  const differenceCount = differences.length + wrongPasswordDifferences.length
+  const evidence = {
+    schemaVersion: 1,
+    node: 'D-02.2',
+    testKind: 'real-windows-tauri-ui-with-product-qpdf-and-real-pdfs',
+    expectedVsActual: [
+      { case: 'form-facts-and-default-output', expected: formExpected, actual: formActual, differences },
+      { case: 'wrong-password', expected: 'PDF_ANALYSIS_INVALID_PASSWORD', actual: wrongPasswordError, differences: wrongPasswordDifferences },
+      { case: 'source-integrity', expected: 'all-unchanged', actual: 'all-unchanged', differences: [] },
+    ],
+    layouts,
+    differenceCount,
+    passed: differenceCount === 0,
+  }
+  writeFileSync(path.join(artifactDirectory, 'pdf-workspace-result.json'), JSON.stringify(evidence, null, 2), 'utf8')
+  assert.equal(evidence.differenceCount, 0, `D-02.2 expected/actual differences remain: ${evidence.differenceCount}`)
 }
 
 async function runImageWorkspaceDesktopGate() {
@@ -3290,6 +3430,10 @@ try {
     await runVideoWorkspaceDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri C-05.1/C-05.3 video execution and runtime-behavior gate passed.')
+  } else if (pdfWorkspaceOnly) {
+    await runPdfWorkspaceDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri D-02.2 PDF risk-configuration gate passed.')
   } else if (tarTelemetryOnly) {
     await runTarTelemetryDesktopGate()
     completedSuccessfully = true

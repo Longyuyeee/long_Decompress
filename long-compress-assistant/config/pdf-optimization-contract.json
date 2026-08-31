@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedAt": "2026-08-31",
-  "node": "D-02.1",
+  "node": "D-02.2",
   "baselineNode": "D-01.1",
   "engine": {
     "id": "qpdf",
@@ -90,7 +90,14 @@
   "executionBoundary": {
     "acceptRawArguments": false,
     "publishProductRuntime": true,
-    "enableProductUi": false,
+    "enableProductUi": true,
+    "executionEnabled": false,
+    "createsTasks": false,
+    "configurationPersistence": "page-local-draft-only",
+    "defaultOutput": "new-file",
+    "lossyModeRequiresExplicitConfirmation": true,
+    "sizeReductionGuaranteed": false,
+    "signedDocumentCanFreezeConfiguration": false,
     "ghostscriptAllowed": false,
     "largerOutputDefault": "do-not-publish",
     "sourceMutationAllowed": false
