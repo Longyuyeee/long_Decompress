@@ -10,7 +10,7 @@
 
 下一轮已拆分为四个可独立验收的大节点：压缩包浏览中心 2.0、图片压缩、视频压缩软件编码和 PDF 安全优化。三个媒体入口放在压缩中心内部，与归档压缩共享任务队列、进度、取消、历史、容量预检、临时输出、校验和系统回收站语义；不新增三套旁路任务系统。
 
-每个大节点只有在真实样本、Windows 安装版桌面闭环、回归审计和公开更新门禁全部通过后，才允许把补丁版本提升一位。完整工作项、引擎和许可边界、预期—实际—修正记录要求及 Release 流程见 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md)。图片 B 节点已发布为 `v1.1.15`，视频 C 节点已在非 N Windows x64 范围内发布为 `v1.1.16`；Windows N 暂不支持。PDF D-01、D-02、D-03.1 和 D-03.2 已关闭；下一接续点为 D-03.3 安全发布事务。D-01 至 D-04 全部关闭前不得提升 `1.1.17`。证据见 [D03_2_PDF_CANDIDATE_VALIDATION_AUDIT.md](D03_2_PDF_CANDIDATE_VALIDATION_AUDIT.md)。
+每个大节点只有在真实样本、Windows 安装版桌面闭环、回归审计和公开更新门禁全部通过后，才允许把补丁版本提升一位。完整工作项、引擎和许可边界、预期—实际—修正记录要求及 Release 流程见 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md)。图片 B 节点已发布为 `v1.1.15`，视频 C 节点已在非 N Windows x64 范围内发布为 `v1.1.16`；Windows N 暂不支持。PDF D-01、D-02、D-03.1 和 D-03.2 已关闭，D-03.3 内部安全发布核心完成；下一接续点为 D-03.3.1 受控低容量卷证据，之后才进入 D-04。D-01 至 D-04 全部关闭前不得提升 `1.1.17`。证据见 [D03_3_PDF_SAFE_PUBLICATION_AUDIT.md](D03_3_PDF_SAFE_PUBLICATION_AUDIT.md)。
 
 ## 2026-08-22 主流程纠偏与后续方向
 
