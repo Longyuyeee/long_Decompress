@@ -766,9 +766,11 @@ try {
   }
   if ($RunPdfWorkspaceMatrix) {
     $previousAppBinary = $env:TAURI_APP_BINARY
+    $previousEvidenceDirectory = $env:PDF_WORKSPACE_EVIDENCE_DIRECTORY
     try {
       $env:TAURI_APP_BINARY = $candidateState.executable
-      & node (Join-Path $projectRoot 'scripts\test-tauri-desktop.mjs') --pdf-workspace-only
+      $env:PDF_WORKSPACE_EVIDENCE_DIRECTORY = Join-Path $evidenceDirectory 'pdf-workspace'
+      & node (Join-Path $projectRoot 'scripts\test-installed-pdf-workspace.mjs')
       Add-Check 'installed PDF workspace full flow exits successfully' ($LASTEXITCODE -eq 0) (
         "exitCode=$LASTEXITCODE; executable=$($candidateState.executable)"
       )
@@ -777,6 +779,11 @@ try {
         Remove-Item Env:TAURI_APP_BINARY -ErrorAction SilentlyContinue
       } else {
         $env:TAURI_APP_BINARY = $previousAppBinary
+      }
+      if ($null -eq $previousEvidenceDirectory) {
+        Remove-Item Env:PDF_WORKSPACE_EVIDENCE_DIRECTORY -ErrorAction SilentlyContinue
+      } else {
+        $env:PDF_WORKSPACE_EVIDENCE_DIRECTORY = $previousEvidenceDirectory
       }
       Stop-InstalledApplication $candidateState.installLocation
     }
@@ -828,6 +835,10 @@ try {
         Stop-InstalledApplication $currentState.installLocation
       }
       Invoke-Installer $previousInstallerPath
+      $reinstalledState = Get-InstalledState
+      if ($reinstalledState) {
+        Stop-InstalledApplication $reinstalledState.installLocation
+      }
       Restore-UserData
       $recoveredState = Get-InstalledState
       if ($recoveredState) {

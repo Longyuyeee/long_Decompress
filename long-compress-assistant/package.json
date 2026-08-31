@@ -48,7 +48,7 @@
     "test:installed-image-workspace": "node scripts/test-installed-image-workspace.mjs",
     "test:installed-video-runtime": "node scripts/test-installed-video-runtime.mjs",
     "test:installed-pdf-runtime": "node scripts/test-installed-pdf-runtime.mjs",
-    "test:installed-pdf-workspace": "node scripts/test-tauri-desktop.mjs --pdf-workspace-only",
+    "test:installed-pdf-workspace": "node scripts/test-installed-pdf-workspace.mjs",
     "test:installed-video-workspace": "npm run test:video-long-large:real && node scripts/test-installed-video-workspace.mjs",
     "test:windows-n-video-runtime": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-windows-n-video-runtime.ps1",
     "verify:windows-n-video-runtime": "node scripts/verify-windows-n-video-runtime-evidence.mjs",
