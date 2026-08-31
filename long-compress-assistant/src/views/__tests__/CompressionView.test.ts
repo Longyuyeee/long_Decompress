@@ -23,6 +23,9 @@ const mocks = vi.hoisted(() => ({
   compressVideoFile: vi.fn(),
   openVideoOutputWithDefaultApplication: vi.fn(),
   analyzePdfInput: vi.fn(),
+  planPdfOptimizationDestination: vi.fn(),
+  compressPdfFile: vi.fn(),
+  openPdfOutputWithDefaultApplication: vi.fn(),
   invoke: vi.fn(),
   ask: vi.fn(),
 }))
@@ -48,6 +51,9 @@ vi.mock('@/composables/useTauriCommands', () => ({
     compressVideoFile: mocks.compressVideoFile,
     openVideoOutputWithDefaultApplication: mocks.openVideoOutputWithDefaultApplication,
     analyzePdfInput: mocks.analyzePdfInput,
+    planPdfOptimizationDestination: mocks.planPdfOptimizationDestination,
+    compressPdfFile: mocks.compressPdfFile,
+    openPdfOutputWithDefaultApplication: mocks.openPdfOutputWithDefaultApplication,
   }),
 }))
 
@@ -160,6 +166,16 @@ describe('CompressionView', () => {
     vi.clearAllMocks()
     mocks.invoke.mockResolvedValue('{}')
     mocks.compressFiles.mockResolvedValue(undefined)
+    mocks.planPdfOptimizationDestination.mockResolvedValue({ destination: 'C:/output/form.organized.pdf' })
+    mocks.compressPdfFile.mockResolvedValue({
+      path: 'C:/output/form.organized.pdf', inputBytes: 4096, outputBytes: 3072,
+      savingsRatio: 0.25, outputSha256: 'a'.repeat(64), markOfTheWeb: 'not-present',
+      verified: {
+        outputBytes: 3072, outputSha256: 'a'.repeat(64),
+        sourceFacts: { pageCount: 1, encrypted: false, pageMediaBoxes: [['0', '0', '612', '792']], formFields: [], annotations: [], outlines: [], attachments: [] },
+        outputFacts: { pageCount: 1, encrypted: false, pageMediaBoxes: [['0', '0', '612', '792']], formFields: [], annotations: [], outlines: [], attachments: [] },
+      },
+    })
     mocks.preflightOperationResources.mockResolvedValue({
       operation: 'compression',
       outputPath: 'C:/input/sample.zip',
@@ -756,7 +772,7 @@ describe('CompressionView', () => {
     expect(useTaskStore().tasks).toHaveLength(0)
 
     await wrapper.get('[data-testid="compression-mode-pdf"]').trigger('click')
-    expect(wrapper.get('[data-testid="pdf-compression-workspace"]').text()).toContain('D-03 执行尚未接入')
+    expect(wrapper.get('[data-testid="pdf-compression-workspace"]').text()).toContain('统一任务')
     expect(useTaskStore().tasks).toHaveLength(0)
 
     await wrapper.get('[data-testid="compression-mode-archive"]').trigger('click')
@@ -824,7 +840,46 @@ describe('CompressionView', () => {
     expect(mocks.analyzePdfInput).toHaveBeenLastCalledWith({ path: 'C:/input/encrypted.pdf', password: 'fixture-user' })
     expect(cards[1].text()).toContain('密码已验证')
     expect(cards[1].find('[data-testid="pdf-password-input"]').exists()).toBe(false)
+    expect(cards[1].text()).toContain('PDF_ENCRYPTED_EXECUTION_UNSUPPORTED')
+    expect(cards[1].get('[data-testid="pdf-freeze-configuration"]').attributes('disabled')).toBeDefined()
     expect(useTaskStore().tasks).toHaveLength(0)
+  })
+
+  it('runs a frozen PDF through unified tasks, persists measured facts, and opens the published result', async () => {
+    const wrapper = mountView()
+    await wrapper.get('[data-testid="compression-mode-pdf"]').trigger('click')
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'form.pdf', path: 'C:/input/form.pdf', size: 4096, type: 'file', isDirectory: false,
+    }])
+    await flushPromises()
+
+    const workspace = wrapper.get('[data-testid="pdf-compression-workspace"]')
+    expect((workspace.get('[data-testid="pdf-allow-larger-output"]').element as HTMLInputElement).checked).toBe(false)
+    await workspace.get('[data-testid="pdf-allow-larger-output"]').setValue(true)
+    await workspace.get('[data-testid="pdf-freeze-configuration"]').trigger('click')
+    await workspace.get('[data-testid="pdf-start-batch"]').trigger('click')
+    await flushPromises()
+
+    expect(mocks.planPdfOptimizationDestination).toHaveBeenCalledWith(
+      'C:/input/form.pdf', 'lossless-organization', null, [],
+    )
+    expect(mocks.compressPdfFile).toHaveBeenCalledWith(expect.stringMatching(/^pdf-/), {
+      source: 'C:/input/form.pdf', destination: 'C:/output/form.organized.pdf',
+      mode: 'lossless-organization', confirmedLossyImageChanges: false,
+      preserveMarkOfWeb: true, allowLargerOutput: true,
+    })
+    const task = useTaskStore().tasks[0]
+    expect(task).toMatchObject({
+      workloadKind: 'pdf', status: 'completed', outputPath: 'C:/output/form.organized.pdf',
+      outputBytes: 3072, outputBytesEstimated: false,
+    })
+    expect(task.metrics?.media?.pageCount).toBe(1)
+    expect(mocks.invoke).toHaveBeenCalledWith('save_task_history', expect.objectContaining({
+      record: expect.objectContaining({ workloadKind: 'pdf', status: 'completed' }),
+    }))
+
+    await workspace.get('[data-testid="pdf-open-default-app"]').trigger('click')
+    expect(mocks.openPdfOutputWithDefaultApplication).toHaveBeenCalledWith('C:/output/form.organized.pdf')
   })
 
   it('plans a real video candidate, labels estimates, and replans preset changes without creating tasks', async () => {

@@ -421,6 +421,32 @@ describe('useTauriCommands', () => {
       path: 'C:/output/video.mp4',
     })
 
+    await commands.openPdfOutputWithDefaultApplication('C:/output/result.pdf')
+    expect(mocks.invoke).toHaveBeenCalledWith('open_pdf_output_with_default_application', {
+      path: 'C:/output/result.pdf',
+    })
+
+    await commands.planPdfOptimizationDestination(
+      'C:/input/source.pdf',
+      'lossless-organization',
+      'C:/output',
+      ['C:/output/source.organized.pdf'],
+    )
+    expect(mocks.invoke).toHaveBeenCalledWith('plan_pdf_optimization_destination', {
+      source: 'C:/input/source.pdf', mode: 'lossless-organization', outputDirectory: 'C:/output',
+      reservedDestinations: ['C:/output/source.organized.pdf'],
+    })
+
+    await commands.compressPdfFile('pdf-task', {
+      source: 'C:/input/source.pdf', destination: 'C:/output/source.organized (1).pdf',
+      mode: 'lossless-organization', confirmedLossyImageChanges: false,
+      preserveMarkOfWeb: true, allowLargerOutput: false,
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('compress_pdf_file', {
+      taskId: 'pdf-task',
+      request: expect.objectContaining({ destination: 'C:/output/source.organized (1).pdf' }),
+    })
+
     await expect(commands.compressFiles('task', ['a.txt'], 'a.zip', { level: 6 })).resolves.toBe('compress_files')
     await commands.planImageCompressionDestination({
       source: 'C:/images/photo.webp',

@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { open } from '@tauri-apps/api/dialog'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
+import { usePdfOptimizationBatch } from '@/composables/usePdfOptimizationBatch'
+import { useAppStore } from '@/stores/app'
+import { useTaskStore, type Task } from '@/stores/task'
 import type { PdfInputAnalysisReport } from '@/types/pdf'
 import {
   buildPdfConfigurationDraft,
@@ -11,6 +15,7 @@ import {
 
 interface SelectedFile { name: string, path: string, size: number, isDirectory: boolean }
 interface PdfWorkspaceItem {
+  id: string
   path: string
   name: string
   status: 'analyzing' | 'password-required' | 'ready' | 'blocked' | 'failed'
@@ -19,12 +24,19 @@ interface PdfWorkspaceItem {
   password: string
   riskConfirmed: boolean
   frozen: boolean
+  allowLargerOutput: boolean
+  taskId: string | null
   error: string
 }
 
+const appStore = useAppStore()
+const taskStore = useTaskStore()
 const commands = useTauriCommands()
+const pdfBatch = usePdfOptimizationBatch()
 const items = ref<PdfWorkspaceItem[]>([])
 const selectionError = ref('')
+const outputDirectory = ref('')
+const isRunning = ref(false)
 
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`
@@ -47,7 +59,7 @@ const analyze = async (item: PdfWorkspaceItem, password?: string) => {
     item.report = report
     item.password = ''
     if (report.passwordState === 'required') item.status = 'password-required'
-    else item.status = report.analysisComplete && report.blockingReasons.length === 0 && report.hasDigitalSignature !== true
+    else item.status = report.analysisComplete && report.blockingReasons.length === 0 && report.hasDigitalSignature !== true && !report.encrypted
       ? 'ready'
       : 'blocked'
   } catch (error) {
@@ -64,8 +76,10 @@ const onFilesSelected = async (files: SelectedFile[]) => {
   for (const file of files.filter(isPdfCandidate)) {
     if (items.value.some(item => item.path.toLowerCase() === file.path.toLowerCase())) continue
     const item: PdfWorkspaceItem = {
+      id: globalThis.crypto?.randomUUID?.() || `pdf-item-${Date.now()}-${items.value.length}`,
       path: file.path, name: file.name || fileName(file.path), status: 'analyzing', report: null,
-      mode: 'lossless-organization', password: '', riskConfirmed: false, frozen: false, error: '',
+      mode: 'lossless-organization', password: '', riskConfirmed: false, frozen: false,
+      allowLargerOutput: false, taskId: null, error: '',
     }
     items.value.push(item)
     await analyze(items.value[items.value.length - 1])
@@ -83,22 +97,99 @@ const freeze = (item: PdfWorkspaceItem) => {
 }
 
 const readyCount = computed(() => items.value.filter(item => item.frozen).length)
+const taskFor = (item: PdfWorkspaceItem): Task | undefined => item.taskId
+  ? taskStore.tasks.find(task => task.id === item.taskId)
+  : undefined
+const canRetry = (item: PdfWorkspaceItem) => {
+  const task = taskFor(item)
+  return !task || task.status === 'failed' || task.status === 'cancelled'
+}
+const runnableItems = computed(() => items.value.filter(item => item.frozen && canRetry(item)))
+const canStart = computed(() => !isRunning.value && runnableItems.value.length > 0)
+
+const chooseOutputDirectory = async () => {
+  try {
+    const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
+      ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection()
+      : undefined
+    const selected = queued === undefined
+      ? await open({ directory: true, multiple: false, title: '选择 PDF 输出目录' })
+      : queued
+    if (selected && !Array.isArray(selected)) outputDirectory.value = selected
+  } catch (error) {
+    appStore.setError(`无法选择 PDF 输出目录：${String(error)}`)
+  }
+}
+
+const startPdfOptimization = async () => {
+  const sources = runnableItems.value
+  if (!canStart.value) return
+  isRunning.value = true
+  try {
+    const results = await pdfBatch.runPdfBatch(
+      sources.map(item => ({
+        id: item.id,
+        name: item.name,
+        path: item.path,
+        mode: item.mode,
+        confirmedLossyImageChanges: item.riskConfirmed,
+        allowLargerOutput: item.allowLargerOutput,
+      })),
+      outputDirectory.value || null,
+      appStore.settings.preserveMarkOfWeb,
+      (itemId, taskId) => {
+        const item = items.value.find(candidate => candidate.id === itemId)
+        if (item) item.taskId = taskId
+      },
+    )
+    const published = results.filter(result => result.status === 'published').length
+    const failed = results.filter(result => result.status === 'failed').length
+    const cancelled = results.filter(result => result.status === 'cancelled').length
+    const summary = `PDF 处理结束：${published} 个完成，${failed} 个失败，${cancelled} 个取消`
+    if (failed || cancelled) appStore.setError(summary)
+    else appStore.setSuccess(summary)
+  } catch (error) {
+    appStore.setError(`PDF 批量处理失败：${String(error)}`)
+  } finally {
+    isRunning.value = false
+  }
+}
+
+const openPublishedPdf = async (item: PdfWorkspaceItem) => {
+  const path = taskFor(item)?.outputPath
+  if (!path) return
+  try {
+    await commands.openPdfOutputWithDefaultApplication(path)
+    appStore.setSuccess('已将 PDF 交给系统默认阅读器')
+  } catch (error) {
+    appStore.setError(`无法使用默认阅读器打开 PDF：${String(error)}`)
+  }
+}
 </script>
 
 <template>
   <section class="pdf-workspace" data-testid="pdf-compression-workspace">
     <header class="workspace-header">
       <div>
-        <span class="eyebrow">PDF · D-02.2</span>
-        <h2>分析真实结构，先锁定安全配置</h2>
-        <p>当前仅执行只读分析并保存页面内配置草稿；D-03 执行尚未接入，不会压缩、生成文件或创建任务。</p>
+        <span class="eyebrow">PDF · D-04.2</span>
+        <h2>安全分析、批量优化与验证发布</h2>
+        <p>执行复用统一任务、取消、安全发布和跨重启历史；只有验证通过的输出才会标记完成。</p>
       </div>
-      <div class="frozen-count"><strong>{{ readyCount }}</strong><span>已锁定配置</span></div>
+      <div class="header-actions">
+        <div class="frozen-count"><strong>{{ readyCount }}</strong><span>已锁定配置</span></div>
+        <button v-if="isRunning" type="button" class="danger-action" data-testid="pdf-cancel-batch" @click="pdfBatch.cancelPdfBatch()">取消处理</button>
+        <button v-else type="button" class="primary-action" data-testid="pdf-start-batch" :disabled="!canStart" @click="startPdfOptimization">开始批量优化</button>
+      </div>
     </header>
 
     <div class="boundary-banner" role="status">
       <i class="pi pi-shield"></i>
       <span>默认输出为新文件，禁止覆盖源文件；文件是否变小取决于原始结构，不保证压缩率。</span>
+    </div>
+
+    <div class="output-directory">
+      <div><span>输出目录</span><strong :title="outputDirectory">{{ outputDirectory || '与源文件同目录' }}</strong></div>
+      <button type="button" :disabled="isRunning" data-testid="pdf-output-directory" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button>
     </div>
 
     <EnhancedFileDropzone
@@ -116,7 +207,7 @@ const readyCount = computed(() => items.value.filter(item => item.frozen).length
           <div class="file-icon"><i class="pi pi-file-pdf"></i></div>
           <div class="file-heading"><h3>{{ item.name }}</h3><p :title="item.path">{{ item.path }}</p></div>
           <span class="status" :class="item.status">{{ item.frozen ? '配置已锁定' : item.status === 'analyzing' ? '分析中' : item.status === 'password-required' ? '需要密码' : item.status === 'ready' ? '可配置' : item.status === 'blocked' ? '仅可分析' : '分析失败' }}</span>
-          <button type="button" class="icon-button" data-testid="pdf-remove" aria-label="移除 PDF" @click="items = items.filter(candidate => candidate !== item)"><i class="pi pi-times"></i></button>
+          <button type="button" class="icon-button" data-testid="pdf-remove" aria-label="移除 PDF" :disabled="isRunning" @click="items = items.filter(candidate => candidate !== item)"><i class="pi pi-times"></i></button>
         </div>
 
         <div v-if="item.status === 'analyzing'" class="loading"><i class="pi pi-spin pi-spinner"></i> 正在读取真实 PDF 结构…</div>
@@ -153,6 +244,11 @@ const readyCount = computed(() => items.value.filter(item => item.frozen).length
               <span>我已理解图片优化是有损操作，未来执行时可能改变图片像素与编码数据。</span>
             </label>
 
+            <label class="larger-output-confirmation">
+              <input v-model="item.allowLargerOutput" data-testid="pdf-allow-larger-output" type="checkbox" :disabled="item.frozen || isRunning" />
+              <span><strong>仍保留比原文件更大的结果</strong>（默认关闭）。开启后只有结构验证全部通过才会发布，但可能增加占用空间。</span>
+            </label>
+
             <div v-if="draftFor(item)" class="output-preview" data-testid="pdf-output-preview">
               <span>建议的新文件</span><strong>{{ draftFor(item)?.proposedOutput }}</strong>
               <small>源文件不会被覆盖；输出大小不保证小于输入。</small>
@@ -166,8 +262,13 @@ const readyCount = computed(() => items.value.filter(item => item.frozen).length
             </ul>
 
             <div class="card-actions">
-              <button v-if="item.frozen" type="button" class="secondary-action" @click="item.frozen = false">解除锁定</button>
-              <button v-else type="button" class="primary-action" data-testid="pdf-freeze-configuration" :disabled="!draftFor(item)?.canFreeze" @click="freeze(item)">锁定配置（不执行）</button>
+              <div v-if="taskFor(item)" class="execution-result">
+                <span>{{ taskFor(item)!.stage || taskFor(item)!.status }}</span>
+                <strong v-if="taskFor(item)!.outputBytes">{{ formatBytes(taskFor(item)!.outputBytes || 0) }} · {{ taskFor(item)!.metrics?.media?.pageCount ?? item.report.pageCount }} 页</strong>
+                <button v-if="taskFor(item)!.status === 'completed'" type="button" data-testid="pdf-open-default-app" @click="openPublishedPdf(item)">默认阅读器打开</button>
+              </div>
+              <button v-if="item.frozen" type="button" class="secondary-action" :disabled="isRunning" @click="item.frozen = false">解除锁定</button>
+              <button v-else type="button" class="primary-action" data-testid="pdf-freeze-configuration" :disabled="!draftFor(item)?.canFreeze || isRunning" @click="freeze(item)">锁定执行配置</button>
             </div>
           </template>
         </template>
@@ -185,7 +286,9 @@ const readyCount = computed(() => items.value.filter(item => item.frozen).length
 h2 { margin: .25rem 0; font-size: 1.15rem; font-weight: 900; } .workspace-header p { color: var(--text-muted); font-size: .72rem; line-height: 1.55; }
 .frozen-count { min-width: 7rem; border: 1px solid var(--border-subtle); border-radius: 1rem; padding: .65rem; text-align: center; background: var(--bg-input); }
 .frozen-count strong { display: block; font-size: 1.1rem; } .frozen-count span { color: var(--text-muted); font-size: .65rem; }
+.header-actions { display: flex; align-items: center; gap: .5rem; }.danger-action { border-radius: .65rem; padding: .55rem .75rem; color: white; background: #ef4444; font-size: .68rem; font-weight: 850; }
 .boundary-banner { display: flex; gap: .55rem; align-items: center; margin-bottom: .8rem; border: 1px solid rgb(34 197 94 / .25); border-radius: .8rem; padding: .65rem .8rem; background: rgb(34 197 94 / .08); font-size: .7rem; line-height: 1.45; }
+.output-directory { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .8rem; border: 1px solid var(--border-subtle); border-radius: .75rem; padding: .65rem .75rem; background: var(--bg-input); }.output-directory div { min-width: 0; }.output-directory span,.output-directory strong { display: block; }.output-directory span { color: var(--text-muted); font-size: .58rem; }.output-directory strong { overflow: hidden; margin-top: .1rem; font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }.output-directory button,.execution-result button { flex: 0 0 auto; border: 1px solid var(--border-subtle); border-radius: .55rem; padding: .4rem .55rem; font-size: .6rem; font-weight: 800; }
 .selection-error,.analysis-error { margin-top: .5rem; color: #fb7185; font-size: .7rem; font-weight: 750; }
 .draft-list { display: grid; gap: .8rem; margin-top: .9rem; }.draft-card { width: 100%; border: 1px solid var(--border-subtle); border-radius: 1.1rem; padding: .9rem; background: var(--bg-card); }
 .card-title { display: flex; align-items: center; gap: .65rem; }.file-icon { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: .7rem; color: #fb7185; background: rgb(244 63 94 / .1); }
@@ -196,8 +299,9 @@ h2 { margin: .25rem 0; font-size: 1.15rem; font-weight: 900; } .workspace-header
 .password-panel { display: grid; grid-template-columns: 1fr minmax(9rem,16rem) auto; gap: .55rem; align-items: center; margin-top: .7rem; border: 1px solid rgb(245 158 11 / .3); border-radius: .8rem; padding: .7rem; background: rgb(245 158 11 / .08); }.password-panel strong { font-size: .7rem; }.password-panel p { color: var(--text-muted); font-size: .6rem; }.password-panel input { min-width: 0; border: 1px solid var(--border-subtle); border-radius: .6rem; padding: .55rem; background: var(--bg-input); font-size: .7rem; }.password-panel button,.primary-action,.secondary-action { border-radius: .65rem; padding: .55rem .75rem; font-size: .68rem; font-weight: 850; }.password-panel button,.primary-action { background: var(--dynamic-accent); color: white; }.password-panel button:disabled,.primary-action:disabled { cursor: not-allowed; opacity: .4; }
 .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin-top: .7rem; }.mode-grid button { display: grid; gap: .2rem; border: 1px solid var(--border-subtle); border-radius: .8rem; padding: .7rem; text-align: left; background: var(--bg-input); }.mode-grid button.selected { border-color: var(--dynamic-accent); box-shadow: inset 0 0 0 1px var(--dynamic-accent); }.mode-grid span { width: max-content; color: var(--dynamic-accent); font-size: .57rem; font-weight: 900; }.mode-grid .risk-label { color: #fb7185; }.mode-grid strong { font-size: .74rem; }.mode-grid small { color: var(--text-muted); font-size: .61rem; line-height: 1.45; }
 .risk-confirmation { display: flex; gap: .5rem; align-items: flex-start; margin-top: .65rem; color: #fbbf24; font-size: .66rem; line-height: 1.5; }.risk-confirmation input { margin-top: .12rem; }
+.larger-output-confirmation { display: flex; gap: .5rem; align-items: flex-start; margin-top: .65rem; border: 1px solid rgb(245 158 11 / .28); border-radius: .7rem; padding: .6rem; color: #fbbf24; background: rgb(245 158 11 / .07); font-size: .62rem; line-height: 1.45; }.larger-output-confirmation input { margin-top: .12rem; }.larger-output-confirmation strong { color: var(--text-content); }
 .output-preview { margin-top: .65rem; border-radius: .75rem; padding: .65rem; background: var(--bg-input); }.output-preview strong { display: block; margin: .15rem 0; color: var(--text-content); font-size: .7rem; overflow-wrap: anywhere; }.output-preview small { color: var(--text-muted); font-size: .59rem; }
-.signature-warning { display: flex; gap: .55rem; margin-top: .65rem; border: 1px solid rgb(244 63 94 / .3); border-radius: .75rem; padding: .65rem; color: #fb7185; background: rgb(244 63 94 / .08); }.signature-warning strong { font-size: .7rem; }.signature-warning p { margin-top: .1rem; font-size: .61rem; line-height: 1.4; }.blocking-list { margin: .45rem 0 0 1rem; color: #fb7185; font-size: .6rem; overflow-wrap: anywhere; }.card-actions { display: flex; justify-content: flex-end; margin-top: .7rem; }.secondary-action { border: 1px solid var(--border-subtle); background: var(--bg-input); }
+.signature-warning { display: flex; gap: .55rem; margin-top: .65rem; border: 1px solid rgb(244 63 94 / .3); border-radius: .75rem; padding: .65rem; color: #fb7185; background: rgb(244 63 94 / .08); }.signature-warning strong { font-size: .7rem; }.signature-warning p { margin-top: .1rem; font-size: .61rem; line-height: 1.4; }.blocking-list { margin: .45rem 0 0 1rem; color: #fb7185; font-size: .6rem; overflow-wrap: anywhere; }.card-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; margin-top: .7rem; }.secondary-action { border: 1px solid var(--border-subtle); background: var(--bg-input); }.execution-result { display: flex; min-width: 0; flex: 1; align-items: center; gap: .5rem; color: var(--text-muted); font-size: .6rem; }.execution-result strong { color: var(--text-content); }
 @media (max-width: 900px) { .fact-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }.password-panel { grid-template-columns: 1fr; } }
-@media (max-width: 620px) { .pdf-workspace { padding: .75rem; }.workspace-header { align-items: flex-start; }.frozen-count { min-width: 5rem; }.fact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.mode-grid { grid-template-columns: 1fr; }.status { display: none; } }
+@media (max-width: 620px) { .pdf-workspace { padding: .75rem; }.workspace-header,.header-actions,.card-actions { align-items: stretch; flex-direction: column; }.frozen-count { min-width: 5rem; }.fact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.mode-grid { grid-template-columns: 1fr; }.status { display: none; }.execution-result { flex-wrap: wrap; } }
 </style>

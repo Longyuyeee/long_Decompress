@@ -2236,7 +2236,7 @@ async function runResponsiveTaskDetailDesktopGate() {
 }
 
 async function runPdfWorkspaceDesktopGate() {
-  console.log('[desktop-e2e] verifying real D-02.2 qpdf analysis and risk configuration UI')
+  console.log('[desktop-e2e] verifying real D-04.2 PDF task, publication, history and default-reader UI')
   const pdfRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures', 'pdfs')
   const fixtures = Object.fromEntries(['form.pdf', 'signed.pdf', 'encrypted.pdf'].map(name => {
     const fixturePath = path.join(pdfRoot, name)
@@ -2276,6 +2276,10 @@ async function runPdfWorkspaceDesktopGate() {
   assert.notEqual(await freeze.getAttribute('disabled'), null, 'lossy mode must stay disabled before explicit confirmation')
   await (await waitForElement('.risk-confirmation')).click()
   assert.equal(await freeze.getAttribute('disabled'), null, 'explicit lossy confirmation must enable local draft freezing')
+  const allowLarger = await waitForElement('[data-testid="pdf-allow-larger-output"]')
+  assert.equal(await allowLarger.isSelected(), false, 'larger PDF retention must default to disabled')
+  await allowLarger.click()
+  assert.equal(await allowLarger.isSelected(), true, 'larger PDF retention requires an explicit user action')
   const enabledFreeze = await waitForElement('[data-testid="pdf-freeze-configuration"]')
   await driver.executeScript('arguments[0].scrollIntoView({ block: "center" })', enabledFreeze)
   await enabledFreeze.click()
@@ -2306,6 +2310,10 @@ async function runPdfWorkspaceDesktopGate() {
   await (await waitForElement('[data-testid="pdf-password-analyze"]')).click()
   await driver.wait(async () => (await workspace.getText()).includes('密码已验证'), 30_000)
   assert.equal((await driver.findElements(By.css('[data-testid="pdf-password-input"]'))).length, 0, 'accepted password must not remain in the DOM')
+  const encryptedCard = (await driver.findElements(By.css('[data-testid="pdf-draft-card"]')))[2]
+  const encryptedFreeze = await encryptedCard.findElement(By.css('[data-testid="pdf-freeze-configuration"]'))
+  assert.notEqual(await encryptedFreeze.getAttribute('disabled'), null, 'encrypted PDF must remain analysis-only after password verification')
+  assert.match(await encryptedCard.getText(), /PDF_ENCRYPTED_EXECUTION_UNSUPPORTED/u)
 
   mkdirSync(artifactDirectory, { recursive: true })
   const layouts = []
@@ -2336,28 +2344,45 @@ async function runPdfWorkspaceDesktopGate() {
     writeFileSync(path.join(artifactDirectory, `pdf-workspace-${size.width}x${size.height}.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
   }
 
+  const startBatch = await waitForElement('[data-testid="pdf-start-batch"]')
+  assert.equal(await startBatch.getAttribute('disabled'), null, 'one frozen safe PDF must enable batch execution')
+  await startBatch.click()
+  await waitForElement('[data-testid="pdf-open-default-app"]', 120_000)
+  const history = await driver.wait(async () => {
+    const records = await callDesktopBridge('taskHistory')
+    return records.length === 1 && records[0].status === 'completed' ? records : false
+  }, 30_000)
+  assert.equal(history[0].workloadKind, 'pdf')
+  assert.equal(history[0].metrics?.media?.pageCount, 1)
+  assert.equal(history[0].metrics?.inputBytes, fixtures['form.pdf'].bytes)
+  assert.ok(history[0].metrics?.outputBytes > 0)
+  assert.equal(existsSync(history[0].outputPath), true, 'published PDF output must exist before history completion')
+  const defaultOpen = await waitForElement('[data-testid="pdf-open-default-app"]')
+  await defaultOpen.click()
+  await driver.wait(async () => (await driver.findElement(By.css('body')).getText()).includes('已将 PDF 交给系统默认阅读器'), 30_000)
+
   for (const [name, fixture] of Object.entries(fixtures)) {
     assert.equal(fileSha256(fixture.path), fixture.sha256, `${name} source bytes must remain unchanged`)
   }
-  assert.deepEqual(await callDesktopBridge('taskHistory'), [], 'D-02.2 must not create task history')
   const differences = Object.keys(formExpected).filter(key => JSON.stringify(formExpected[key]) !== JSON.stringify(formActual[key]))
   const wrongPasswordDifferences = wrongPasswordError.includes('PDF_ANALYSIS_INVALID_PASSWORD') ? [] : ['error']
   const differenceCount = differences.length + wrongPasswordDifferences.length
   const evidence = {
     schemaVersion: 1,
-    node: 'D-02.2',
-    testKind: 'real-windows-tauri-ui-with-product-qpdf-and-real-pdfs',
+    node: 'D-04.2',
+    testKind: 'real-windows-tauri-ui-with-product-qpdf-unified-task-history-and-default-reader',
     expectedVsActual: [
       { case: 'form-facts-and-default-output', expected: formExpected, actual: formActual, differences },
       { case: 'wrong-password', expected: 'PDF_ANALYSIS_INVALID_PASSWORD', actual: wrongPasswordError, differences: wrongPasswordDifferences },
       { case: 'source-integrity', expected: 'all-unchanged', actual: 'all-unchanged', differences: [] },
+      { case: 'published-task-history', expected: { status: 'completed', workloadKind: 'pdf', pageCount: 1 }, actual: { status: history[0].status, workloadKind: history[0].workloadKind, pageCount: history[0].metrics?.media?.pageCount }, differences: [] },
     ],
     layouts,
     differenceCount,
     passed: differenceCount === 0,
   }
   writeFileSync(path.join(artifactDirectory, 'pdf-workspace-result.json'), JSON.stringify(evidence, null, 2), 'utf8')
-  assert.equal(evidence.differenceCount, 0, `D-02.2 expected/actual differences remain: ${evidence.differenceCount}`)
+  assert.equal(evidence.differenceCount, 0, `D-04.2 expected/actual differences remain: ${evidence.differenceCount}`)
 }
 
 async function runImageWorkspaceDesktopGate() {
@@ -3433,7 +3458,7 @@ try {
   } else if (pdfWorkspaceOnly) {
     await runPdfWorkspaceDesktopGate()
     completedSuccessfully = true
-    console.log('Real Windows Tauri D-02.2 PDF risk-configuration gate passed.')
+    console.log('Real Windows Tauri D-04.2 PDF task/UI/default-reader gate passed.')
   } else if (tarTelemetryOnly) {
     await runTarTelemetryDesktopGate()
     completedSuccessfully = true

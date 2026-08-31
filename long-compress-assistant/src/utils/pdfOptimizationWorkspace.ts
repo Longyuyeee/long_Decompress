@@ -1,6 +1,5 @@
-import type { PdfInputAnalysisReport } from '@/types/pdf'
-
-export type PdfOptimizationMode = 'lossless-organization' | 'compatible-image-optimization'
+import type { PdfInputAnalysisReport, PdfOptimizationMode } from '@/types/pdf'
+export type { PdfOptimizationMode } from '@/types/pdf'
 
 export interface PdfConfigurationDraft {
   mode: PdfOptimizationMode
@@ -46,6 +45,9 @@ export const buildPdfConfigurationDraft = (
   if (!report.analysisComplete && !blockingReasons.length) blockingReasons.push('PDF_ANALYSIS_INCOMPLETE')
   if (report.hasDigitalSignature === true && !blockingReasons.some(reason => reason.includes('SIGN'))) {
     blockingReasons.push('PDF_DIGITAL_SIGNATURE_EXECUTION_BLOCKED')
+  }
+  if (report.encrypted && !blockingReasons.some(reason => reason.includes('ENCRYPT'))) {
+    blockingReasons.push('PDF_ENCRYPTED_EXECUTION_UNSUPPORTED')
   }
   const requiresExplicitConfirmation = facts.lossy
   return {

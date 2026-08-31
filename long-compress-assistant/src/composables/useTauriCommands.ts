@@ -12,7 +12,13 @@ import type {
   VideoCompressionPlanRequest,
   VideoProbeReport,
 } from '@/types/video'
-import type { PdfInputAnalysisReport, PdfInputCandidate } from '@/types/pdf'
+import type {
+  PdfCompressionExecutionRequest,
+  PdfInputAnalysisReport,
+  PdfInputCandidate,
+  PdfOptimizationDestinationPlan,
+  PublishedPdfOutput,
+} from '@/types/pdf'
 import type {
   ImageCompressionOutcome,
   ImageCompressionRequest,
@@ -697,6 +703,25 @@ export const useTauriCommands = () => {
     return await invoke<PdfInputAnalysisReport>('analyze_pdf_input', { request })
   }
 
+  const planPdfOptimizationDestination = async (
+    source: string,
+    mode: PdfCompressionExecutionRequest['mode'],
+    outputDirectory: string | null,
+    reservedDestinations: string[],
+  ): Promise<PdfOptimizationDestinationPlan> => invoke<PdfOptimizationDestinationPlan>(
+    'plan_pdf_optimization_destination',
+    { source, mode, outputDirectory, reservedDestinations },
+  )
+
+  const compressPdfFile = async (
+    taskId: string,
+    request: PdfCompressionExecutionRequest,
+  ): Promise<PublishedPdfOutput> => invoke<PublishedPdfOutput>('compress_pdf_file', { taskId, request })
+
+  const openPdfOutputWithDefaultApplication = async (path: string) => {
+    await invoke('open_pdf_output_with_default_application', { path })
+  }
+
   const planVideoCompression = async (
     request: VideoCompressionPlanRequest,
   ): Promise<VideoCompressionPlan> => {
@@ -837,6 +862,9 @@ export const useTauriCommands = () => {
     compressImageFile,
     preflightOperationResources,
     analyzePdfInput,
+    planPdfOptimizationDestination,
+    compressPdfFile,
+    openPdfOutputWithDefaultApplication,
     probeVideoInput,
     planVideoCompression,
     compressVideoFile,
