@@ -34,7 +34,7 @@
 - ZIP/TAR 系列内 PNG、JPEG、GIF、WebP、BMP 的受限图片预览；
 - 输出目录选择和现有解压事务接入。
 
-当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在获批的非 N Windows x64 支持范围内完成并发布为 `v1.1.16`。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0，真实编码取消、无残留、跨完整重启历史和默认应用播放也已通过。C-05.4.1 正式安装生命周期 50/50、安装态视频工作区 20/20；公开 Release、资产回下载和 `v1.1.15 → v1.1.16` 应用内更新也已关闭。Windows N 实机证据仍未取得且 `windowsNRealMachinePassed=false`，产品负责人已明确将 Windows N 排除出 `v1.1.16` 支持范围，因此不阻塞该版本。PDF D-01 已完成能力/样本、正式 qpdf 运行时/许可、生产预检、签名安装包增量和安装态恢复；下一唯一功能接续点为 D-02 输入分析与前端配置。证据见 [RELEASE_AUDIT_1.1.16.md](RELEASE_AUDIT_1.1.16.md)、[D01_2_2_INSTALLED_QPDF_AND_SIGNED_DELTA_AUDIT.md](D01_2_2_INSTALLED_QPDF_AND_SIGNED_DELTA_AUDIT.md) 与 [CURRENT_DEVELOPMENT_AND_MACHINE_HANDOFF_AUDIT_2026-08-30.md](CURRENT_DEVELOPMENT_AND_MACHINE_HANDOFF_AUDIT_2026-08-30.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
+当前 A-01 至 A-06 已随 `v1.1.14` 发布，B-00.1 至 B-00.6 和图片 B-01 至 B-05.3 已完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在获批的非 N Windows x64 支持范围内完成并发布为 `v1.1.16`。安全单命令、统一任务/取消、真实进度心跳、完整验证、原子发布、最终指标和历史均已接通；5 种格式、4 个分辨率层级、三预设、10 分钟及 109.52 MiB 大输入的真实产品管线矩阵差异为 0，真实编码取消、无残留、跨完整重启历史和默认应用播放也已通过。C-05.4.1 正式安装生命周期 50/50、安装态视频工作区 20/20；公开 Release、资产回下载和 `v1.1.15 → v1.1.16` 应用内更新也已关闭。Windows N 实机证据仍未取得且 `windowsNRealMachinePassed=false`，产品负责人已明确将 Windows N 排除出 `v1.1.16` 支持范围，因此不阻塞该版本。PDF D-01 已完成运行时准入，D-02.1 已完成产品只读输入分析和十类真实 PDF 对账；下一唯一功能接续点为 D-02.2 两模式配置与风险界面。证据见 [RELEASE_AUDIT_1.1.16.md](RELEASE_AUDIT_1.1.16.md)、[D01_2_2_INSTALLED_QPDF_AND_SIGNED_DELTA_AUDIT.md](D01_2_2_INSTALLED_QPDF_AND_SIGNED_DELTA_AUDIT.md) 与 [D02_1_PDF_READONLY_ANALYSIS_AUDIT.md](D02_1_PDF_READONLY_ANALYSIS_AUDIT.md)。仍需注意：7Z 固实块和 RAR 不伪装成有界内部预览；归档内增删改继续不在大节点 A 范围内。
 
 ### 2.2 任务和历史模型
 
@@ -501,6 +501,8 @@ Ghostscript 采用 AGPL/商业双许可，未完成法律与分发方案前不�
 
 验收目标：用户在执行前能看到风险；危险组合必须显式确认；页面不使用“压缩率保证”等误导文案。
 
+进度（2026-08-31）：**D-02.1 已关闭。** 产品后端新增固定参数的 qpdf 只读分析，返回输入字节、页数、加密/密码状态、签名、普通表单、附件和书签事实；密码通过 `--password-file=-` 从 stdin 传递，不进入参数或稳定错误文本。十类真实 PDF、无密码/正确密码/错误密码、分析前后源 SHA-256 共 12 组预期—实际比较差异为 0。产品 UI 和转换仍冻结，下一步为 D-02.2 两模式配置与风险界面。证据见 [D02_1_PDF_READONLY_ANALYSIS_AUDIT.md](D02_1_PDF_READONLY_ANALYSIS_AUDIT.md)。
+
 ### D-03 执行与校验
 
 - 参数数组调用 qpdf，临时输出、取消、磁盘保护和原子发布复用公共事务；
@@ -663,7 +665,7 @@ npm.cmd run test:release-identity -- --expected <version>
 - 本机已配置与 WebView2 精确匹配的 EdgeDriver。真实 Windows Release Tauri 门禁使用现场生成长中文路径 ZIP、加密 7Z、固定加密 RAR 与 TXT/PNG/PDF/CMD 混合 ZIP，完成目录右键打开、中文系统剪贴板逐字复核、详情布局、右键精确选择性解压、默认应用打开、NTFS 安全标记、危险内容默认取消及内容/哈希复核；
 - 首次桌面运行发现目录切换后焦点离开页面导致 Alt+Left 无响应，现已改为窗口级键盘监听并复验通过。完整预期—实际—修正证据见 [ARCHIVE_WORKSPACE_A01_AUDIT.md](ARCHIVE_WORKSPACE_A01_AUDIT.md)；
 - A-05.2 已消除前端归档扩展名第二真相源并拆分请求、能力、导航和目录树边界；现场生成的真实 zstd 流嵌入 ZIP 后，后端动态能力已在 Release WebView2 中真实驱动嵌套右键入口。证据见 [ARCHIVE_WORKSPACE_A05_2_AUDIT.md](ARCHIVE_WORKSPACE_A05_2_AUDIT.md)；
-- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在非 N Windows x64 支持范围内关闭并发布为 `v1.1.16`，Windows N 暂不支持且实机证据状态仍为 false。PDF D-01 已完成能力/样本、正式运行时/许可/生产预检、精确安装包增量和安装态证据；下一步为 D-02 前端配置。
+- B-00.1 至 B-05.3 已全部完成并发布为 `v1.1.15`；视频 C-01 至 C-05 已在非 N Windows x64 支持范围内关闭并发布为 `v1.1.16`，Windows N 暂不支持且实机证据状态仍为 false。PDF D-01 与 D-02.1 已关闭；下一步为 D-02.2 两模式配置与风险界面。
 
 ## 12. 技术参考
 

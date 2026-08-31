@@ -20,6 +20,7 @@
     "test:media-dependencies:real": "node scripts/check-media-dependencies.mjs --real",
     "test:pdf-contract": "node scripts/check-pdf-optimization-contract.mjs",
     "test:pdf-d01-baseline:real": "npm run test:media-dependencies:real && npm run test:fixtures:media && node scripts/run-d01-pdf-baseline.mjs",
+    "test:pdf-d02-analysis:real": "npm run test:fixtures:media && node scripts/run-d02-pdf-analysis.mjs",
     "test:video-c01:real": "node scripts/run-c01-ffmpeg-baseline.mjs",
     "test:video-runtime-package:real": "node scripts/check-video-runtime-package.mjs",
     "test:video-matrix:real": "node scripts/run-c05-video-format-matrix.mjs",
