@@ -4,14 +4,227 @@ use crate::services::pdf_analysis::{
 use crate::services::pdf_engine::{
     bundled_pdf_resource_root, validate_pdf_engine, PdfEngineStatus,
 };
-use serde::Deserialize;
-use std::path::Path;
+use crate::services::pdf_publish::{
+    execute_pdf_publication_transaction_observed, PdfPublicationStage, PublishedPdfOutput,
+};
+use crate::services::pdf_transform::{PdfOptimizationMode, PdfTransformRequest};
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
+use std::sync::atomic::Ordering;
+use tauri::Window;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PdfInputAnalysisRequest {
     path: String,
     password: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PdfCompressionExecutionRequest {
+    pub source: PathBuf,
+    pub destination: PathBuf,
+    pub mode: PdfOptimizationMode,
+    #[serde(default)]
+    pub confirmed_lossy_image_changes: bool,
+    #[serde(default)]
+    pub preserve_mark_of_web: bool,
+    #[serde(default)]
+    pub allow_larger_output: bool,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfOptimizationDestinationPlan {
+    pub destination: PathBuf,
+}
+
+impl PdfPublicationStage {
+    fn event_name(self) -> &'static str {
+        match self {
+            Self::Transforming => "Transforming",
+            Self::Validating => "Validating",
+            Self::Publishing => "Publishing",
+        }
+    }
+
+    fn log_message(self) -> &'static str {
+        match self {
+            Self::Transforming => "正在重新分析并生成隔离 PDF 暂存输出",
+            Self::Validating => "正在检查 PDF 结构与源文件一致性",
+            Self::Publishing => "验证通过，正在原子发布最终 PDF",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct PdfTaskProgress {
+    task_id: String,
+    stage: String,
+    progress: f32,
+    current_file: String,
+    processed_bytes: u64,
+    total_bytes: u64,
+    output_bytes: u64,
+    output_bytes_estimated: bool,
+}
+
+fn normalized_destination_key(path: &Path) -> String {
+    let key = path.to_string_lossy().replace('/', "\\");
+    #[cfg(windows)]
+    let key = key.to_lowercase();
+    key
+}
+
+fn plan_pdf_destination(
+    source: &Path,
+    output_directory: Option<&Path>,
+    mode: PdfOptimizationMode,
+    reserved_destinations: &[PathBuf],
+) -> Result<PdfOptimizationDestinationPlan, String> {
+    let metadata = std::fs::metadata(source)
+        .map_err(|error| format!("PDF_DESTINATION_SOURCE_UNAVAILABLE: {error}"))?;
+    if !metadata.is_file() {
+        return Err("PDF_DESTINATION_SOURCE_NOT_FILE".to_string());
+    }
+    let directory = output_directory
+        .map(Path::to_path_buf)
+        .or_else(|| source.parent().map(Path::to_path_buf))
+        .ok_or_else(|| "PDF_DESTINATION_DIRECTORY_UNAVAILABLE".to_string())?;
+    if !directory.is_dir() {
+        return Err(format!(
+            "PDF_DESTINATION_DIRECTORY_NOT_FOUND: {}",
+            directory.display()
+        ));
+    }
+    let stem = source
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.trim().is_empty())
+        .ok_or_else(|| "PDF_DESTINATION_SOURCE_NAME_INVALID".to_string())?;
+    let mode_suffix = match mode {
+        PdfOptimizationMode::LosslessOrganization => "organized",
+        PdfOptimizationMode::CompatibleImageOptimization => "optimized",
+    };
+    let reserved = reserved_destinations
+        .iter()
+        .map(|path| normalized_destination_key(path))
+        .collect::<HashSet<_>>();
+    for index in 0..10_000_u32 {
+        let conflict_suffix = if index == 0 {
+            String::new()
+        } else {
+            format!(" ({index})")
+        };
+        let destination = directory.join(format!("{stem}.{mode_suffix}{conflict_suffix}.pdf"));
+        let key = normalized_destination_key(&destination);
+        if !destination.exists() && !reserved.contains(&key) {
+            return Ok(PdfOptimizationDestinationPlan { destination });
+        }
+    }
+    Err("PDF_DESTINATION_RENAME_LIMIT_REACHED".to_string())
+}
+
+#[tauri::command]
+pub fn plan_pdf_optimization_destination(
+    source: String,
+    output_directory: Option<String>,
+    mode: PdfOptimizationMode,
+    reserved_destinations: Vec<String>,
+) -> Result<PdfOptimizationDestinationPlan, String> {
+    let reserved = reserved_destinations
+        .into_iter()
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
+    plan_pdf_destination(
+        Path::new(&source),
+        output_directory.as_deref().map(Path::new),
+        mode,
+        &reserved,
+    )
+}
+
+async fn run_pdf_compression<F>(
+    resource_root: PathBuf,
+    task_id: String,
+    request: PdfCompressionExecutionRequest,
+    observe: F,
+) -> Result<PublishedPdfOutput, String>
+where
+    F: FnMut(PdfPublicationStage),
+{
+    let cancelled = crate::commands::compression::register_task_cancellation(&task_id)?;
+    let _task_guard = crate::commands::compression::TaskCancellationGuard::new(&task_id);
+    let validation_root = resource_root.clone();
+    tauri::async_runtime::spawn_blocking(move || validate_pdf_engine(&validation_root))
+        .await
+        .map_err(|error| format!("PDF_ENGINE_PREFLIGHT_JOIN_FAILED: {error}"))?
+        .map_err(|error| error.to_string())?;
+    if cancelled.load(Ordering::Acquire) {
+        return Err("PDF_PUBLISH_CANCELLED".to_string());
+    }
+    let qpdf = resource_root.join("pdf-engine").join("qpdf.exe");
+    let transform_request = PdfTransformRequest {
+        source: request.source,
+        destination: request.destination,
+        password: None,
+        mode: request.mode,
+        confirmed_lossy_image_changes: request.confirmed_lossy_image_changes,
+    };
+    execute_pdf_publication_transaction_observed(
+        &qpdf,
+        &transform_request,
+        request.preserve_mark_of_web,
+        request.allow_larger_output,
+        &cancelled,
+        observe,
+    )
+    .await
+    .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn compress_pdf_file(
+    app: tauri::AppHandle,
+    window: Window,
+    task_id: String,
+    request: PdfCompressionExecutionRequest,
+) -> Result<PublishedPdfOutput, String> {
+    let app_resource_dir = app
+        .path_resolver()
+        .resource_dir()
+        .ok_or_else(|| "PDF_ENGINE_RESOURCE_DIRECTORY_UNAVAILABLE".to_string())?;
+    let resource_root = bundled_pdf_resource_root(&app_resource_dir);
+    let event_task_id = task_id.clone();
+    let source = request.source.to_string_lossy().into_owned();
+    run_pdf_compression(resource_root, task_id, request, move |stage| {
+        let stage_name = stage.event_name().to_string();
+        let _ = window.emit(
+            "task-log",
+            crate::models::compression::TaskLog {
+                task_id: event_task_id.clone(),
+                timestamp: chrono::Utc::now(),
+                message: stage.log_message().to_string(),
+                severity: crate::models::compression::TaskLogSeverity::Info,
+            },
+        );
+        let _ = window.emit(
+            "task-progress",
+            PdfTaskProgress {
+                task_id: event_task_id.clone(),
+                stage: stage_name,
+                progress: 0.0,
+                current_file: source.clone(),
+                processed_bytes: 0,
+                total_bytes: 0,
+                output_bytes: 0,
+                output_bytes_estimated: true,
+            },
+        );
+    })
+    .await
 }
 
 #[tauri::command]
@@ -46,4 +259,96 @@ pub async fn analyze_pdf_input(
     analyze_pdf_input_service(&qpdf, Path::new(&request.path), request.password.as_deref())
         .await
         .map_err(|error| error.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn destination_planner_uses_mode_suffix_and_avoids_real_and_reserved_conflicts() {
+        let directory = tempfile::tempdir().unwrap();
+        let source = directory.path().join("中文 sample.pdf");
+        std::fs::write(&source, b"%PDF-1.4\n%%EOF\n").unwrap();
+        let first = directory.path().join("中文 sample.organized.pdf");
+        std::fs::write(&first, b"existing").unwrap();
+        let reserved = vec![directory.path().join("中文 sample.organized (1).pdf")];
+        let planned = plan_pdf_destination(
+            &source,
+            None,
+            PdfOptimizationMode::LosslessOrganization,
+            &reserved,
+        )
+        .unwrap();
+        assert_eq!(
+            planned.destination,
+            directory.path().join("中文 sample.organized (2).pdf")
+        );
+        let optimized = plan_pdf_destination(
+            &source,
+            None,
+            PdfOptimizationMode::CompatibleImageOptimization,
+            &[],
+        )
+        .unwrap();
+        assert_eq!(
+            optimized.destination,
+            directory.path().join("中文 sample.optimized.pdf")
+        );
+    }
+
+    #[tokio::test]
+    #[ignore = "run through npm run test:pdf-d04-command:real after generating real PDF fixtures"]
+    async fn real_product_command_revalidates_and_publishes_with_truthful_stages() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
+        let source = root.join("test-results/media-fixture-audit/fixtures/pdfs/text-vector.pdf");
+        let source_before = std::fs::read(&source).expect("real PDF fixture");
+        let output = tempfile::tempdir().unwrap();
+        let destination = output.path().join("产品 命令.organized.pdf");
+        let stages = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let observed = stages.clone();
+        let published = run_pdf_compression(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources"),
+            format!("pdf-command-{}", uuid::Uuid::new_v4()),
+            PdfCompressionExecutionRequest {
+                source: source.clone(),
+                destination: destination.clone(),
+                mode: PdfOptimizationMode::LosslessOrganization,
+                confirmed_lossy_image_changes: false,
+                preserve_mark_of_web: true,
+                allow_larger_output: false,
+            },
+            move |stage| observed.lock().unwrap().push(stage),
+        )
+        .await
+        .unwrap();
+        let stages = stages.lock().unwrap().clone();
+        assert_eq!(
+            stages,
+            vec![
+                PdfPublicationStage::Transforming,
+                PdfPublicationStage::Validating,
+                PdfPublicationStage::Publishing,
+            ]
+        );
+        assert_eq!(published.path, destination);
+        assert_eq!(published.verified.output_facts.page_count, 1);
+        assert_eq!(
+            published.output_bytes,
+            std::fs::metadata(&destination).unwrap().len()
+        );
+        assert_eq!(std::fs::read(&source).unwrap(), source_before);
+        println!(
+            "D04_PDF_COMMAND_RESULT={}",
+            serde_json::json!({
+                "stages": stages.iter().map(|stage| stage.event_name()).collect::<Vec<_>>(),
+                "finalOutputExists": destination.exists(),
+                "inputBytes": published.input_bytes,
+                "outputBytes": published.output_bytes,
+                "pageCount": published.verified.output_facts.page_count,
+                "sourceBytesUnchanged": std::fs::read(&source).unwrap() == source_before,
+                "markOfTheWeb": published.mark_of_the_web,
+            })
+        );
+    }
 }

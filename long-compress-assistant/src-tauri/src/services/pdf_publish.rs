@@ -1,7 +1,9 @@
 use crate::services::mark_of_web::{self, PropagationStatus};
 use crate::services::output_publish_transaction::{publish_verified_file, PublishError};
+#[cfg(test)]
+use crate::services::pdf_output_validation::validate_staged_pdf_output;
 use crate::services::pdf_output_validation::{
-    validate_staged_pdf_output, PdfOutputValidationError, VerifiedPdfOutput,
+    validate_staged_pdf_output_with_size_policy, PdfOutputValidationError, VerifiedPdfOutput,
 };
 use crate::services::pdf_transform::{
     transform_pdf_to_staging, PdfStagedOutput, PdfTransformError, PdfTransformRequest,
@@ -57,6 +59,13 @@ pub struct PublishedPdfOutput {
     pub output_sha256: String,
     pub mark_of_the_web: String,
     pub verified: VerifiedPdfOutput,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PdfPublicationStage {
+    Transforming,
+    Validating,
+    Publishing,
 }
 
 fn normalized_output_key(path: &Path) -> Result<String, PdfPublishError> {
@@ -246,12 +255,39 @@ pub async fn execute_pdf_publication_transaction(
     preserve_mark_of_web: bool,
     cancelled: &AtomicBool,
 ) -> Result<PublishedPdfOutput, PdfPublishError> {
+    execute_pdf_publication_transaction_observed(
+        qpdf,
+        request,
+        preserve_mark_of_web,
+        false,
+        cancelled,
+        |_| {},
+    )
+    .await
+}
+
+pub async fn execute_pdf_publication_transaction_observed<F>(
+    qpdf: &Path,
+    request: &PdfTransformRequest,
+    preserve_mark_of_web: bool,
+    allow_larger_output: bool,
+    cancelled: &AtomicBool,
+    mut observe: F,
+) -> Result<PublishedPdfOutput, PdfPublishError>
+where
+    F: FnMut(PdfPublicationStage),
+{
     let reservation = PdfOutputReservation::acquire(&request.destination)?;
     if cancelled.load(Ordering::Acquire) {
         return Err(PdfPublishError::Cancelled);
     }
+    observe(PdfPublicationStage::Transforming);
     let staged = transform_pdf_to_staging(qpdf, request, cancelled).await?;
-    let verified = validate_staged_pdf_output(qpdf, &staged, cancelled).await?;
+    observe(PdfPublicationStage::Validating);
+    let verified =
+        validate_staged_pdf_output_with_size_policy(qpdf, &staged, allow_larger_output, cancelled)
+            .await?;
+    observe(PdfPublicationStage::Publishing);
     publish_validated_pdf_output(
         reservation,
         staged,

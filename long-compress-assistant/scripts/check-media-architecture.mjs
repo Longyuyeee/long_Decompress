@@ -199,7 +199,7 @@ assert(
 assert(pdfContract.engine?.productionPreflightOnly === false, 'D-02.1 must enable product read-only analysis')
 assert(pdfContract.analysisBoundary?.readOnly === true, 'D-02.1 analysis must remain read-only')
 assert(pdfContract.executionBoundary?.enableProductUi === true, 'D-02.2 read-only PDF configuration UI must be enabled')
-assert(pdfContract.executionBoundary?.executionEnabled === false, 'D-02.2 PDF execution must remain disabled')
+assert(pdfContract.executionBoundary?.executionEnabled === true, 'D-04.1 PDF product command must be enabled')
 const compressionView = await read('src/views/CompressionView.vue')
 const pdfWorkspace = await read('src/components/compression/PdfCompressionWorkspace.vue')
 assert(compressionView.includes("import PdfCompressionWorkspace") && compressionView.includes('<PdfCompressionWorkspace v-else />'), 'D-02.2 PDF workspace routing is missing')
@@ -259,8 +259,16 @@ assert(
   'D-02.1 password must use qpdf stdin and stay off the process argument list',
 )
 assert(
-  !/commands::pdf_engine::(?:optimize|compress|execute|validate|publish)_pdf/.test(main),
-  'D-03.3 must not expose internal PDF staging, validation, or publication as a product command',
+  (main.match(/commands::pdf_engine::compress_pdf_file/g) ?? []).length === 1
+    && (main.match(/commands::pdf_engine::plan_pdf_optimization_destination/g) ?? []).length === 1,
+  'D-04.1 must expose exactly one PDF product command and one safe destination planner',
+)
+assert(
+  pdfCommands.includes('execute_pdf_publication_transaction_observed')
+    && pdfCommands.includes('register_task_cancellation(&task_id)')
+    && pdfCommands.includes('validate_pdf_engine(&validation_root)')
+    && pdfCommands.includes('allow_larger_output'),
+  'D-04.1 product command must revalidate and use the shared cancellable publication transaction',
 )
 const videoValidation = await read('src-tauri/src/services/video_output_validation.rs')
 for (const contract of [

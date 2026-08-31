@@ -490,6 +490,8 @@ fn main() {
             long_compress_assistant::commands::video_engine::plan_video_compression,
             long_compress_assistant::commands::pdf_engine::preflight_pdf_engine,
             long_compress_assistant::commands::pdf_engine::analyze_pdf_input,
+            long_compress_assistant::commands::pdf_engine::plan_pdf_optimization_destination,
+            long_compress_assistant::commands::pdf_engine::compress_pdf_file,
             long_compress_assistant::commands::system_integration::open_in_explorer,
             long_compress_assistant::commands::system_integration::open_video_output_with_default_application,
             long_compress_assistant::commands::system_integration::register_context_menu,

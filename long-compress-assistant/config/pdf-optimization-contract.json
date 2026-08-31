@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedAt": "2026-08-31",
-  "node": "D-03.3.1",
+  "node": "D-04.1",
   "baselineNode": "D-01.1",
   "engine": {
     "id": "qpdf",
@@ -91,7 +91,7 @@
     "acceptRawArguments": false,
     "publishProductRuntime": true,
     "enableProductUi": true,
-    "executionEnabled": false,
+    "executionEnabled": true,
     "createsTasks": false,
     "configurationPersistence": "page-local-draft-only",
     "defaultOutput": "new-file",
@@ -112,6 +112,10 @@
     "failureMatrix": ["damaged-input", "corrupt-candidate", "validation-cancellation", "post-validation-cancellation", "source-change-after-validation", "candidate-change-after-validation", "target-race", "duplicate-output-lock", "larger-output-default-refusal"],
     "publicationEnabled": true,
     "publicationApiExposure": "internal-library-only",
+    "productCommand": "compress_pdf_file",
+    "productCommandStages": ["Transforming", "Validating", "Publishing"],
+    "productCommandRevalidatesEngineAndDocument": true,
+    "sharedCancellationRegistry": true,
     "publicationTransaction": ["normalized-cross-task-output-lock", "owned-same-directory-staging", "candidate-validation", "cancellation-recheck", "source-sha256-recheck", "candidate-sha256-recheck", "mark-of-the-web-policy", "same-directory-atomic-rename", "published-filesystem-identity"],
     "outputLockScope": "process-wide-normalized-destination",
     "markOfTheWebPolicy": "propagate-internet-or-restricted-zone-before-atomic-rename",
@@ -124,6 +128,7 @@
     "sourceIntegrityCheck": "sha256-before-and-after-transform",
     "ghostscriptAllowed": false,
     "largerOutputDefault": "do-not-publish",
+    "largerOutputExplicitRetention": "validated-product-request-only",
     "sourceMutationAllowed": false
   }
 }

@@ -1,21 +1,19 @@
+use crate::models::compression::{CompressionOptions, DecompressOptions, TaskLog, TaskLogSeverity};
 use crate::services::compression_service::CompressionService;
 use crate::services::compression_service::FileConflictResolution;
 use crate::services::compression_service::RarCompressionSupport;
 use crate::services::video_compression_plan::VideoCompressionPlanRequest;
 use crate::services::video_encoding::{VideoEncodingEvent, VideoProgressSnapshot};
 use crate::services::video_publish::PublishedVideoOutput;
-use crate::models::compression::{
-    CompressionOptions, DecompressOptions, TaskLog, TaskLogSeverity,
-};
-use serde::{Deserialize, Serialize};
-use tauri::{command, AppHandle, Manager, State, Window};
-use std::future::Future;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::path::{Component, Path, PathBuf};
-use dashmap::DashMap;
 use dashmap::mapref::entry::Entry;
+use dashmap::DashMap;
 use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
+use std::future::Future;
+use std::path::{Component, Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use tauri::{command, AppHandle, Manager, State, Window};
 
 static CANCELLATION_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 static ACTIVE_COMPRESSION_OUTPUTS: Lazy<DashMap<String, String>> = Lazy::new(DashMap::new);
@@ -24,7 +22,7 @@ static ARCHIVE_DIAGNOSTIC_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::
 static ZIP_REPAIR_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 static ARCHIVE_BROWSE_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 
-fn register_task_cancellation(task_id: &str) -> Result<Arc<AtomicBool>, String> {
+pub(crate) fn register_task_cancellation(task_id: &str) -> Result<Arc<AtomicBool>, String> {
     let cancellation_flag = Arc::new(AtomicBool::new(false));
     match CANCELLATION_FLAGS.entry(task_id.to_string()) {
         Entry::Vacant(entry) => {
@@ -47,13 +45,15 @@ fn cleanup_task(task_id: &str) {
     CANCELLATION_FLAGS.remove(task_id);
 }
 
-struct TaskCancellationGuard {
+pub(crate) struct TaskCancellationGuard {
     task_id: String,
 }
 
 impl TaskCancellationGuard {
-    fn new(task_id: &str) -> Self {
-        Self { task_id: task_id.to_string() }
+    pub(crate) fn new(task_id: &str) -> Self {
+        Self {
+            task_id: task_id.to_string(),
+        }
     }
 }
 
@@ -123,16 +123,24 @@ pub async fn extract_file(
     _app: AppHandle,
     window: Window,
     task_id: String,
-    file_path: String, 
-    output_path: Option<String>, 
-    password: Option<String>, 
-    options: Option<DecompressOptions>
+    file_path: String,
+    output_path: Option<String>,
+    password: Option<String>,
+    options: Option<DecompressOptions>,
 ) -> Result<String, String> {
     let service = service_for_task(&task_id).await?;
     let _task_guard = TaskCancellationGuard::new(&task_id);
     let opts = options.unwrap_or_default();
-    
-    let result = service.extract(window, task_id.clone(), file_path, output_path, password, opts)
+
+    let result = service
+        .extract(
+            window,
+            task_id.clone(),
+            file_path,
+            output_path,
+            password,
+            opts,
+        )
         .await
         .map_err(|e| e.to_string());
 
@@ -174,24 +182,37 @@ pub async fn extract_multiple(
     _app: AppHandle,
     window: Window,
     task_ids: Vec<String>,
-    files: Vec<String>, 
-    output_path: Option<String>, 
-    password: Option<String>, 
-    options: Option<DecompressOptions>
+    files: Vec<String>,
+    output_path: Option<String>,
+    password: Option<String>,
+    options: Option<DecompressOptions>,
 ) -> Result<Vec<String>, String> {
     let mut results = Vec::new();
-    
+
     for (i, file) in files.iter().enumerate() {
-        let task_id = task_ids.get(i).cloned().unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+        let task_id = task_ids
+            .get(i)
+            .cloned()
+            .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
         let opts = options.clone().unwrap_or_default();
-        
+
         let service = service_for_task(&task_id).await?;
         let _task_guard = TaskCancellationGuard::new(&task_id);
-        match service.extract(window.clone(), task_id.clone(), file.clone(), output_path.clone(), password.clone(), opts).await {
+        match service
+            .extract(
+                window.clone(),
+                task_id.clone(),
+                file.clone(),
+                output_path.clone(),
+                password.clone(),
+                opts,
+            )
+            .await
+        {
             Ok(path) => {
                 cleanup_task(&task_id);
                 results.push(path);
-            },
+            }
             Err(e) => return Err(format!("解压文件 {} 失败: {}", file, e)),
         }
     }
@@ -202,16 +223,19 @@ pub async fn extract_multiple(
 pub async fn compress_files(
     window: Window,
     task_id: String,
-    files: Vec<String>, 
-    output_path: String, 
-    options: Option<CompressionOptions>
+    files: Vec<String>,
+    output_path: String,
+    options: Option<CompressionOptions>,
 ) -> Result<String, String> {
     let _output_guard = CompressionOutputGuard::acquire(&task_id, &output_path)?;
     let service = service_for_task(&task_id).await?;
     let _task_guard = TaskCancellationGuard::new(&task_id);
     let opts = options.unwrap_or_default();
 
-    let result = match service.compress(window, task_id.clone(), files, output_path.clone(), opts).await {
+    let result = match service
+        .compress(window, task_id.clone(), files, output_path.clone(), opts)
+        .await
+    {
         Ok(_) => Ok(format!("压缩成功: {}", output_path)),
         Err(e) => Err(format!("压缩失败: {}", e)),
     };
@@ -469,7 +493,9 @@ where
     let ffprobe = runtime_root.join("ffprobe.exe");
     let source = PathBuf::from(&request.plan.path);
 
-    observe(VideoCompressionCommandEvent::Stage(VideoCompressionStage::Probing));
+    observe(VideoCompressionCommandEvent::Stage(
+        VideoCompressionStage::Probing,
+    ));
     let probe = await_video_step_or_cancellation(
         async {
             crate::services::video_probe::probe_video_file(&ffprobe, &source)
@@ -479,11 +505,9 @@ where
         &cancelled,
     )
     .await?;
-    let plan = crate::services::video_compression_plan::build_video_compression_plan(
-        probe,
-        &request.plan,
-    )
-    .map_err(|error| error.to_string())?;
+    let plan =
+        crate::services::video_compression_plan::build_video_compression_plan(probe, &request.plan)
+            .map_err(|error| error.to_string())?;
     if !plan.can_encode {
         return Err(format!(
             "VIDEO_COMPRESSION_PLAN_BLOCKED: {}",
@@ -496,7 +520,9 @@ where
         return Err("VIDEO_COMPRESSION_STREAM_CHANGES_CONFIRMATION_REQUIRED".to_string());
     }
 
-    observe(VideoCompressionCommandEvent::Stage(VideoCompressionStage::Encoding));
+    observe(VideoCompressionCommandEvent::Stage(
+        VideoCompressionStage::Encoding,
+    ));
     let staged = crate::services::video_encoding::encode_video_to_staging(
         &ffmpeg,
         &plan,
@@ -507,7 +533,9 @@ where
     .await
     .map_err(|error| error.to_string())?;
 
-    observe(VideoCompressionCommandEvent::Stage(VideoCompressionStage::Validating));
+    observe(VideoCompressionCommandEvent::Stage(
+        VideoCompressionStage::Validating,
+    ));
     let verified = await_video_step_or_cancellation(
         async {
             crate::services::video_output_validation::validate_staged_video_output(
@@ -523,7 +551,9 @@ where
     if cancelled.load(Ordering::SeqCst) {
         return Err("VIDEO_COMPRESSION_CANCELLED".to_string());
     }
-    observe(VideoCompressionCommandEvent::Stage(VideoCompressionStage::Publishing));
+    observe(VideoCompressionCommandEvent::Stage(
+        VideoCompressionStage::Publishing,
+    ));
     crate::services::video_publish::publish_validated_video_output(
         staged,
         verified,
@@ -546,8 +576,7 @@ pub async fn compress_video_file(
         .path_resolver()
         .resource_dir()
         .ok_or_else(|| "VIDEO_ENGINE_RESOURCE_DIRECTORY_UNAVAILABLE".to_string())?;
-    let resource_root =
-        crate::services::video_engine::bundled_resource_root(&app_resource_dir);
+    let resource_root = crate::services::video_engine::bundled_resource_root(&app_resource_dir);
     let event_task_id = task_id.clone();
     let source = PathBuf::from(&request.plan.path);
     let mut last_snapshot: Option<VideoProgressSnapshot> = None;
@@ -690,7 +719,9 @@ pub async fn cancel_compression(task_id: String) -> Result<(), String> {
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
     }
 
-    Err(format!("Timed out waiting for task cancellation: {task_id}"))
+    Err(format!(
+        "Timed out waiting for task cancellation: {task_id}"
+    ))
 }
 
 /// Runs a deterministic, cancellable file-writing task for the real desktop E2E suite.
@@ -711,26 +742,26 @@ pub async fn desktop_e2e_run_cancellable_task(
 
     #[cfg(feature = "desktop-e2e")]
     {
-    use std::io::Write;
-    use std::path::PathBuf;
+        use std::io::Write;
+        use std::path::PathBuf;
 
-    let cancellation_flag = Arc::new(AtomicBool::new(false));
-    CANCELLATION_FLAGS.insert(task_id.clone(), cancellation_flag.clone());
-    let _task_guard = TaskCancellationGuard::new(&task_id);
-    let output = PathBuf::from(output_path);
-    let mut file = std::fs::File::create(&output).map_err(|error| error.to_string())?;
-    let chunk = vec![0x5a; 256 * 1024];
+        let cancellation_flag = Arc::new(AtomicBool::new(false));
+        CANCELLATION_FLAGS.insert(task_id.clone(), cancellation_flag.clone());
+        let _task_guard = TaskCancellationGuard::new(&task_id);
+        let output = PathBuf::from(output_path);
+        let mut file = std::fs::File::create(&output).map_err(|error| error.to_string())?;
+        let chunk = vec![0x5a; 256 * 1024];
 
-    for _ in 0..6_000 {
-        if cancellation_flag.load(Ordering::SeqCst) {
-            drop(file);
-            let _ = std::fs::remove_file(&output);
-            return Err("desktop E2E task cancelled".to_string());
+        for _ in 0..6_000 {
+            if cancellation_flag.load(Ordering::SeqCst) {
+                drop(file);
+                let _ = std::fs::remove_file(&output);
+                return Err("desktop E2E task cancelled".to_string());
+            }
+            file.write_all(&chunk).map_err(|error| error.to_string())?;
+            file.flush().map_err(|error| error.to_string())?;
+            tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
         }
-        file.write_all(&chunk).map_err(|error| error.to_string())?;
-        file.flush().map_err(|error| error.to_string())?;
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-    }
 
         Ok(())
     }
@@ -745,7 +776,10 @@ pub async fn cancel_tasks_and_wait(task_ids: Vec<String>) -> Result<(), String> 
     }
 
     for _ in 0..200 {
-        if task_ids.iter().all(|task_id| !CANCELLATION_FLAGS.contains_key(task_id)) {
+        if task_ids
+            .iter()
+            .all(|task_id| !CANCELLATION_FLAGS.contains_key(task_id))
+        {
             return Ok(());
         }
         tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
@@ -760,7 +794,8 @@ pub async fn check_rar_compression_support() -> Result<RarCompressionSupport, St
 }
 
 #[command]
-pub async fn get_archive_engine_capabilities() -> Result<crate::utils::archive_tools::ArchiveEngineCapabilities, String> {
+pub async fn get_archive_engine_capabilities(
+) -> Result<crate::utils::archive_tools::ArchiveEngineCapabilities, String> {
     Ok(crate::utils::archive_tools::detect_archive_engine_capabilities())
 }
 
@@ -768,8 +803,15 @@ pub async fn get_archive_engine_capabilities() -> Result<crate::utils::archive_t
 pub async fn install_winrar_with_winget() -> Result<RarCompressionSupport, String> {
     let output = crate::utils::process::async_command("winget")
         .args([
-            "install", "--id", "RARLab.WinRAR", "--exact", "--source", "winget",
-            "--accept-source-agreements", "--accept-package-agreements", "--silent",
+            "install",
+            "--id",
+            "RARLab.WinRAR",
+            "--exact",
+            "--source",
+            "winget",
+            "--accept-source-agreements",
+            "--accept-package-agreements",
+            "--silent",
         ])
         .output()
         .await
@@ -777,11 +819,19 @@ pub async fn install_winrar_with_winget() -> Result<RarCompressionSupport, Strin
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let detail = if stderr.trim().is_empty() { stdout.trim() } else { stderr.trim() };
+        let detail = if stderr.trim().is_empty() {
+            stdout.trim()
+        } else {
+            stderr.trim()
+        };
         return Err(format!("WinRAR installation failed: {detail}"));
     }
     let support = CompressionService::check_rar_compression_support();
-    if support.available { Ok(support) } else { Err("WinRAR installation finished, but Rar.exe was not detected. Restart the application and retry.".to_string()) }
+    if support.available {
+        Ok(support)
+    } else {
+        Err("WinRAR installation finished, but Rar.exe was not detected. Restart the application and retry.".to_string())
+    }
 }
 
 #[command]
@@ -796,7 +846,10 @@ pub async fn open_rar_download_page(app: AppHandle) -> Result<(), String> {
 
 /// 列出归档文件内容条目（通过 7z CLI）
 #[command]
-pub async fn list_archive_contents(file_path: String, password: Option<String>) -> Result<Vec<String>, String> {
+pub async fn list_archive_contents(
+    file_path: String,
+    password: Option<String>,
+) -> Result<Vec<String>, String> {
     use crate::services::universal_engine::UniversalCliEngine;
 
     let path = std::path::Path::new(&file_path);
@@ -856,7 +909,9 @@ pub async fn analyze_compression_sources(
             ))
         }
     }
-    let _analysis_guard = CompressionAnalysisGuard { analysis_id: analysis_id.clone() };
+    let _analysis_guard = CompressionAnalysisGuard {
+        analysis_id: analysis_id.clone(),
+    };
     let result = tauri::async_runtime::spawn_blocking(move || {
         crate::services::compression_analysis::analyze_compression(
             &paths, &format, level, &cancelled,
@@ -888,7 +943,11 @@ pub async fn diagnose_archive(
         Entry::Vacant(entry) => {
             entry.insert(cancelled.clone());
         }
-        Entry::Occupied(_) => return Err(format!("Archive diagnosis is already running: {diagnostic_id}")),
+        Entry::Occupied(_) => {
+            return Err(format!(
+                "Archive diagnosis is already running: {diagnostic_id}"
+            ))
+        }
     }
     let _guard = ArchiveDiagnosticGuard { diagnostic_id };
     crate::services::archive_diagnostics::diagnose_archive(
@@ -952,9 +1011,7 @@ pub async fn browse_archive(
 #[command]
 pub async fn cancel_archive_browse(browse_id: String) -> Result<(), String> {
     let flag = match ARCHIVE_BROWSE_FLAGS.entry(browse_id.clone()) {
-        Entry::Vacant(entry) => {
-            entry.insert(Arc::new(AtomicBool::new(true))).clone()
-        }
+        Entry::Vacant(entry) => entry.insert(Arc::new(AtomicBool::new(true))).clone(),
         Entry::Occupied(entry) => {
             entry.get().store(true, Ordering::Relaxed);
             entry.get().clone()
@@ -1082,16 +1139,16 @@ pub async fn materialize_nested_archive(
     let service = CompressionService::new_with_defaults().await;
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
-        None => service
-            .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
-            .await,
+        None => {
+            service
+                .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+                .await
+        }
     };
-    let metadata = crate::services::archive_browser::browse_archive(
-        &archive,
-        resolved_password.as_deref(),
-    )
-    .await
-    .map_err(|error| error.to_string())?;
+    let metadata =
+        crate::services::archive_browser::browse_archive(&archive, resolved_password.as_deref())
+            .await
+            .map_err(|error| error.to_string())?;
     let selected = metadata
         .entries
         .iter()
@@ -1131,21 +1188,17 @@ pub async fn materialize_nested_archive(
         let _ = std::fs::remove_dir_all(&entry_dir);
         return Err(error.to_string());
     }
-    let extracted = validate_extracted_file(&entry_dir, &entry_path, expected_bytes)
-        .map_err(|error| {
+    let extracted =
+        validate_extracted_file(&entry_dir, &entry_path, expected_bytes).map_err(|error| {
             let _ = std::fs::remove_dir_all(&entry_dir);
             error.to_string()
         })?;
-    let (parent_sha256, content_sha256) = validate_nested_archive_identity(
-        &archive,
-        &extracted,
-        target_depth,
-        &ancestor_hashes,
-    )
-    .map_err(|error| {
-        let _ = std::fs::remove_dir_all(&entry_dir);
-        error.to_string()
-    })?;
+    let (parent_sha256, content_sha256) =
+        validate_nested_archive_identity(&archive, &extracted, target_depth, &ancestor_hashes)
+            .map_err(|error| {
+                let _ = std::fs::remove_dir_all(&entry_dir);
+                error.to_string()
+            })?;
     cache
         .register_nested_archive(
             &archive,
@@ -1182,8 +1235,7 @@ pub async fn open_archive_entry(
 ) -> Result<crate::services::archive_entry_open::ArchiveEntryOpenResult, String> {
     use crate::services::archive_entry_open::{
         is_dangerous_entry, normalize_safe_entry_path, open_with_default_application,
-        validate_extracted_file,
-        ArchiveEntryOpenResult,
+        validate_extracted_file, ArchiveEntryOpenResult,
     };
 
     let entry_path = normalize_safe_entry_path(&entry_path).map_err(|error| error.to_string())?;
@@ -1201,16 +1253,16 @@ pub async fn open_archive_entry(
     let service = CompressionService::new_with_defaults().await;
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
-        None => service
-            .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
-            .await,
+        None => {
+            service
+                .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+                .await
+        }
     };
-    let metadata = crate::services::archive_browser::browse_archive(
-        archive,
-        resolved_password.as_deref(),
-    )
-    .await
-    .map_err(|error| error.to_string())?;
+    let metadata =
+        crate::services::archive_browser::browse_archive(archive, resolved_password.as_deref())
+            .await
+            .map_err(|error| error.to_string())?;
     let selected = metadata
         .entries
         .iter()
@@ -1252,13 +1304,12 @@ pub async fn open_archive_entry(
         return Err(error.to_string());
     }
 
-    let extracted = validate_extracted_file(&entry_dir, &entry_path, expected_bytes)
-        .map_err(|error| {
+    let extracted =
+        validate_extracted_file(&entry_dir, &entry_path, expected_bytes).map_err(|error| {
             let _ = std::fs::remove_dir_all(&entry_dir);
             error.to_string()
         })?;
-    open_with_default_application(&extracted)
-    .map_err(|error| {
+    open_with_default_application(&extracted).map_err(|error| {
         let _ = std::fs::remove_dir_all(&entry_dir);
         error.to_string()
     })?;
@@ -1274,7 +1325,10 @@ pub async fn open_archive_entry(
 
 /// 检测归档文件完整性（通过 7z CLI 的 t 命令）
 #[command]
-pub async fn test_archive_integrity(file_path: String, password: Option<String>) -> Result<String, String> {
+pub async fn test_archive_integrity(
+    file_path: String,
+    password: Option<String>,
+) -> Result<String, String> {
     use crate::services::universal_engine::UniversalCliEngine;
 
     let path = std::path::Path::new(&file_path);
@@ -1293,7 +1347,9 @@ pub async fn repair_zip(
 ) -> Result<crate::services::archive_diagnostics::ZipRepairResult, String> {
     let cancelled = Arc::new(AtomicBool::new(false));
     match ZIP_REPAIR_FLAGS.entry(repair_id.clone()) {
-        Entry::Vacant(entry) => { entry.insert(cancelled.clone()); }
+        Entry::Vacant(entry) => {
+            entry.insert(cancelled.clone());
+        }
         Entry::Occupied(_) => return Err(format!("ZIP repair is already running: {repair_id}")),
     }
     let _guard = ZipRepairGuard { repair_id };
@@ -1323,12 +1379,11 @@ mod cancellation_tests {
     use super::{
         cancel_archive_browse, cancel_compression, cancel_tasks_and_wait,
         classify_archive_browse_error, image_stage_log, normalized_output_key,
-        plan_video_destination, run_image_compression, run_video_compression, video_progress_payload,
-        ArchiveDiagnosticGuard, CompressionAnalysisGuard, CompressionOutputGuard,
-        VideoCompressionCommandEvent, VideoCompressionExecutionRequest, VideoCompressionStage,
-        ZipRepairGuard,
-        ACTIVE_COMPRESSION_OUTPUTS, CANCELLATION_FLAGS, COMPRESSION_ANALYSIS_FLAGS,
-        ARCHIVE_BROWSE_FLAGS, ARCHIVE_DIAGNOSTIC_FLAGS, ZIP_REPAIR_FLAGS,
+        plan_video_destination, run_image_compression, run_video_compression,
+        video_progress_payload, ArchiveDiagnosticGuard, CompressionAnalysisGuard,
+        CompressionOutputGuard, VideoCompressionCommandEvent, VideoCompressionExecutionRequest,
+        VideoCompressionStage, ZipRepairGuard, ACTIVE_COMPRESSION_OUTPUTS, ARCHIVE_BROWSE_FLAGS,
+        ARCHIVE_DIAGNOSTIC_FLAGS, CANCELLATION_FLAGS, COMPRESSION_ANALYSIS_FLAGS, ZIP_REPAIR_FLAGS,
     };
     use crate::services::image_compression_service::{
         ImageCompressionMode, ImageCompressionOutcome, ImageCompressionRequest,
@@ -1513,12 +1568,9 @@ mod cancellation_tests {
             max_width: None,
             max_height: None,
         };
-        let probe = probe_video_file(
-            &resource_root.join("video-engine/ffprobe.exe"),
-            &source,
-        )
-        .await
-        .unwrap();
+        let probe = probe_video_file(&resource_root.join("video-engine/ffprobe.exe"), &source)
+            .await
+            .unwrap();
         let plan = build_video_compression_plan(probe, &plan_request).unwrap();
         assert!(plan.requires_explicit_confirmation);
 
@@ -1561,12 +1613,12 @@ mod cancellation_tests {
             move |event| {
                 let label = match event {
                     VideoCompressionCommandEvent::Stage(stage) => stage.event_name().to_string(),
-                    VideoCompressionCommandEvent::Encoding(VideoEncodingEvent::Progress { .. }) => {
-                        "progress".to_string()
-                    }
-                    VideoCompressionCommandEvent::Encoding(VideoEncodingEvent::Heartbeat { .. }) => {
-                        "heartbeat".to_string()
-                    }
+                    VideoCompressionCommandEvent::Encoding(VideoEncodingEvent::Progress {
+                        ..
+                    }) => "progress".to_string(),
+                    VideoCompressionCommandEvent::Encoding(VideoEncodingEvent::Heartbeat {
+                        ..
+                    }) => "heartbeat".to_string(),
                 };
                 observed.lock().unwrap().push(label);
             },
@@ -1633,12 +1685,15 @@ mod cancellation_tests {
                 case["inputVideoCodec"].as_str()
             );
             assert_eq!(
-                input.audio_streams.first().and_then(|audio| audio.codec.as_deref()),
+                input
+                    .audio_streams
+                    .first()
+                    .and_then(|audio| audio.codec.as_deref()),
                 case["inputAudioCodec"].as_str()
             );
 
-            let preset: VideoCompressionPreset = serde_json::from_value(case["preset"].clone())
-                .expect("deserialize matrix preset");
+            let preset: VideoCompressionPreset =
+                serde_json::from_value(case["preset"].clone()).expect("deserialize matrix preset");
             let plan_request = VideoCompressionPlanRequest {
                 path: source.to_string_lossy().into_owned(),
                 preset,
@@ -1649,7 +1704,10 @@ mod cancellation_tests {
                 .expect("build product compression plan");
             let expected_width = case["outputWidth"].as_u64().expect("output width") as u32;
             let expected_height = case["outputHeight"].as_u64().expect("output height") as u32;
-            assert_eq!((plan.output_width, plan.output_height), (expected_width, expected_height));
+            assert_eq!(
+                (plan.output_width, plan.output_height),
+                (expected_width, expected_height)
+            );
 
             let destination = output_root.join(format!("{id}.mp4"));
             let outcome = run_video_compression(
@@ -1668,7 +1726,10 @@ mod cancellation_tests {
 
             assert_eq!(outcome.path, destination);
             assert_eq!(outcome.input_bytes, source_bytes);
-            assert_eq!(std::fs::metadata(source).expect("source remains").len(), source_bytes);
+            assert_eq!(
+                std::fs::metadata(source).expect("source remains").len(),
+                source_bytes
+            );
             assert_eq!(outcome.verified.container, "mp4");
             assert_eq!(outcome.verified.video_codec, "h264");
             assert_eq!(outcome.verified.visible_width, expected_width);
@@ -1693,9 +1754,7 @@ mod cancellation_tests {
     #[cfg(windows)]
     async fn c05_real_long_duration_and_large_input_matrix() {
         let Ok(manifest_path) = std::env::var("LONG_C05_VIDEO_LONG_LARGE_MANIFEST") else {
-            println!(
-                "C-05.2.2 matrix skipped: LONG_C05_VIDEO_LONG_LARGE_MANIFEST is not set"
-            );
+            println!("C-05.2.2 matrix skipped: LONG_C05_VIDEO_LONG_LARGE_MANIFEST is not set");
             return;
         };
         let output_root = std::env::var("LONG_C05_VIDEO_LONG_LARGE_OUTPUT")
@@ -1727,10 +1786,8 @@ mod cancellation_tests {
             let input = probe_video_file(&ffprobe, source)
                 .await
                 .expect("product probe must accept long/large input");
-            let expected_duration_ms = case["durationSeconds"]
-                .as_u64()
-                .expect("duration seconds")
-                * 1_000;
+            let expected_duration_ms =
+                case["durationSeconds"].as_u64().expect("duration seconds") * 1_000;
             assert!(input.duration_ms.abs_diff(expected_duration_ms) <= 100);
             assert_eq!(input.primary_video.codec.as_deref(), Some("mpeg4"));
             assert!(input.audio_streams.is_empty());
@@ -1747,7 +1804,10 @@ mod cancellation_tests {
                 .expect("build product long/large plan");
             let expected_width = case["outputWidth"].as_u64().expect("output width") as u32;
             let expected_height = case["outputHeight"].as_u64().expect("output height") as u32;
-            assert_eq!((plan.output_width, plan.output_height), (expected_width, expected_height));
+            assert_eq!(
+                (plan.output_width, plan.output_height),
+                (expected_width, expected_height)
+            );
 
             let progress = Arc::new(std::sync::Mutex::new(Vec::new()));
             let observed = progress.clone();
@@ -1762,9 +1822,9 @@ mod cancellation_tests {
                     preserve_mark_of_web: false,
                 },
                 move |event| {
-                    if let VideoCompressionCommandEvent::Encoding(
-                        VideoEncodingEvent::Progress { snapshot },
-                    ) = event
+                    if let VideoCompressionCommandEvent::Encoding(VideoEncodingEvent::Progress {
+                        snapshot,
+                    }) = event
                     {
                         observed.lock().unwrap().push(snapshot);
                     }
@@ -1789,14 +1849,19 @@ mod cancellation_tests {
                 .expect("minimum decoded frames");
             assert_eq!(outcome.path, destination);
             assert_eq!(outcome.input_bytes, source_bytes);
-            assert_eq!(std::fs::metadata(source).expect("source remains").len(), source_bytes);
+            assert_eq!(
+                std::fs::metadata(source).expect("source remains").len(),
+                source_bytes
+            );
             assert_eq!(outcome.verified.container, "mp4");
             assert_eq!(outcome.verified.video_codec, "h264");
             assert_eq!(outcome.verified.audio_codec, None);
             assert_eq!(outcome.verified.visible_width, expected_width);
             assert_eq!(outcome.verified.visible_height, expected_height);
             assert!(outcome.verified.decoded_video_frames >= minimum_frames);
-            assert!(outcome.verified.duration_difference_ms <= outcome.verified.duration_tolerance_ms);
+            assert!(
+                outcome.verified.duration_difference_ms <= outcome.verified.duration_tolerance_ms
+            );
             assert!(outcome.output_bytes > 0);
             results.push(serde_json::json!({
                 "id": id,
@@ -1832,15 +1897,16 @@ mod cancellation_tests {
             .starts_with("ARCHIVE_BROWSE_TIMEOUT|"));
         assert!(classify_archive_browse_error("ChecksumVerificationFailed")
             .starts_with("ARCHIVE_BROWSE_PASSWORD|"));
-        assert!(classify_archive_browse_error("corrupt archive")
-            .starts_with("ARCHIVE_BROWSE_DAMAGED|"));
+        assert!(
+            classify_archive_browse_error("corrupt archive").starts_with("ARCHIVE_BROWSE_DAMAGED|")
+        );
     }
 
     #[test]
     fn equivalent_output_paths_share_one_active_reservation() {
         let task_id = format!("output-owner-{}", uuid::Uuid::new_v4());
-        let output = std::env::temp_dir()
-            .join(format!("long-compress-output-{}.7z", uuid::Uuid::new_v4()));
+        let output =
+            std::env::temp_dir().join(format!("long-compress-output-{}.7z", uuid::Uuid::new_v4()));
         let equivalent = output
             .parent()
             .unwrap()
@@ -1853,7 +1919,9 @@ mod cancellation_tests {
             &equivalent.to_string_lossy(),
         );
 
-        assert!(duplicate.unwrap_err().contains("already writing this output"));
+        assert!(duplicate
+            .unwrap_err()
+            .contains("already writing this output"));
         drop(guard);
         assert!(CompressionOutputGuard::acquire(
             "replacement-output-owner",
@@ -1865,8 +1933,10 @@ mod cancellation_tests {
     #[test]
     fn output_reservation_is_removed_when_guard_drops() {
         let task_id = format!("output-cleanup-{}", uuid::Uuid::new_v4());
-        let output = std::env::temp_dir()
-            .join(format!("long-compress-cleanup-{}.zip", uuid::Uuid::new_v4()));
+        let output = std::env::temp_dir().join(format!(
+            "long-compress-cleanup-{}.zip",
+            uuid::Uuid::new_v4()
+        ));
         let key = normalized_output_key(&output.to_string_lossy()).unwrap();
 
         {
@@ -1886,10 +1956,7 @@ mod cancellation_tests {
     #[test]
     fn analysis_registration_is_removed_when_command_future_drops() {
         let analysis_id = format!("analysis-cleanup-{}", uuid::Uuid::new_v4());
-        COMPRESSION_ANALYSIS_FLAGS.insert(
-            analysis_id.clone(),
-            Arc::new(AtomicBool::new(false)),
-        );
+        COMPRESSION_ANALYSIS_FLAGS.insert(analysis_id.clone(), Arc::new(AtomicBool::new(false)));
         {
             let _guard = CompressionAnalysisGuard {
                 analysis_id: analysis_id.clone(),
@@ -1904,7 +1971,9 @@ mod cancellation_tests {
         let diagnostic_id = format!("diagnostic-cleanup-{}", uuid::Uuid::new_v4());
         ARCHIVE_DIAGNOSTIC_FLAGS.insert(diagnostic_id.clone(), Arc::new(AtomicBool::new(false)));
         {
-            let _guard = ArchiveDiagnosticGuard { diagnostic_id: diagnostic_id.clone() };
+            let _guard = ArchiveDiagnosticGuard {
+                diagnostic_id: diagnostic_id.clone(),
+            };
             assert!(ARCHIVE_DIAGNOSTIC_FLAGS.contains_key(&diagnostic_id));
         }
         assert!(!ARCHIVE_DIAGNOSTIC_FLAGS.contains_key(&diagnostic_id));
@@ -1912,7 +1981,9 @@ mod cancellation_tests {
         let repair_id = format!("repair-cleanup-{}", uuid::Uuid::new_v4());
         ZIP_REPAIR_FLAGS.insert(repair_id.clone(), Arc::new(AtomicBool::new(false)));
         {
-            let _guard = ZipRepairGuard { repair_id: repair_id.clone() };
+            let _guard = ZipRepairGuard {
+                repair_id: repair_id.clone(),
+            };
             assert!(ZIP_REPAIR_FLAGS.contains_key(&repair_id));
         }
         assert!(!ZIP_REPAIR_FLAGS.contains_key(&repair_id));

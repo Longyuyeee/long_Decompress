@@ -10,7 +10,7 @@
 
 下一轮已拆分为四个可独立验收的大节点：压缩包浏览中心 2.0、图片压缩、视频压缩软件编码和 PDF 安全优化。三个媒体入口放在压缩中心内部，与归档压缩共享任务队列、进度、取消、历史、容量预检、临时输出、校验和系统回收站语义；不新增三套旁路任务系统。
 
-每个大节点只有在真实样本、Windows 安装版桌面闭环、回归审计和公开更新门禁全部通过后，才允许把补丁版本提升一位。完整工作项、引擎和许可边界、预期—实际—修正记录要求及 Release 流程见 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md)。图片 B 节点已发布为 `v1.1.15`，视频 C 节点已在非 N Windows x64 范围内发布为 `v1.1.16`；Windows N 暂不支持。PDF D-01 至 D-03 已关闭，D-03.3.1 已取得受控低容量卷真实证据；下一接续点为 D-04 产品接入与真实验收。D-04 关闭前不得提升 `1.1.17`。证据见 [D03_3_1_LOW_CAPACITY_CLOSEOUT_AUDIT.md](D03_3_1_LOW_CAPACITY_CLOSEOUT_AUDIT.md)。
+每个大节点只有在真实样本、Windows 安装版桌面闭环、回归审计和公开更新门禁全部通过后，才允许把补丁版本提升一位。完整工作项、引擎和许可边界、预期—实际—修正记录要求及 Release 流程见 [ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md](ARCHIVE_WORKSPACE_AND_MEDIA_COMPRESSION_PLAN.md)。图片 B 节点已发布为 `v1.1.15`，视频 C 节点已在非 N Windows x64 范围内发布为 `v1.1.16`；Windows N 暂不支持。PDF D-01 至 D-03 已关闭，D-04.1 已完成经过重新核验、共享取消和安全发布的单一产品命令；下一接续点为 D-04.2 统一批量任务、历史与默认阅读器，之后仍有 D-04.3 真实/安装态矩阵。D-04 全部关闭前不得提升 `1.1.17`。证据见 [D04_1_PDF_COMMAND_PIPELINE_AUDIT.md](D04_1_PDF_COMMAND_PIPELINE_AUDIT.md)。
 
 ## 2026-08-22 主流程纠偏与后续方向
 
