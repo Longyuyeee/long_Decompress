@@ -634,8 +634,7 @@ async function runArchiveBrowserDesktopGate() {
     { cwd: sourceRoot },
   )
 
-  let navigation = await driver.findElements(By.css('aside nav > button'))
-  await navigation[2].click()
+  await (await waitForElement('[data-testid="nav-ArchiveBrowser"]')).click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/browser'), 30_000)
 
   const openArchive = async (archivePath, outputPath, password, expectedText) => {
@@ -2237,6 +2236,7 @@ async function runResponsiveTaskDetailDesktopGate() {
 
 async function runPdfWorkspaceDesktopGate() {
   console.log('[desktop-e2e] verifying real D-04.3 PDF cancellation, failure isolation, restart history and default-reader UI')
+  await driver.manage().window().setRect({ width: 1600, height: 1000 })
   const pdfRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures', 'pdfs')
   const batchRoot = path.join(fixtureDirectory, 'pdf-d04-3')
   mkdirSync(batchRoot, { recursive: true })
@@ -2258,8 +2258,9 @@ async function runPdfWorkspaceDesktopGate() {
   await callDesktopBridge('clearTasks')
   await callDesktopBridge('clearTaskHistory')
 
-  await (await waitForElement('[data-testid="nav-Compress"]')).click()
-  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  await waitForElement('[data-testid="special-compression-center"]')
   await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
   let workspace = await waitForElement('[data-testid="pdf-compression-workspace"]')
   let picker = await waitForElement('[data-testid="pdf-compression-workspace"] [data-testid="dropzone-file"]')
@@ -2283,8 +2284,9 @@ async function runPdfWorkspaceDesktopGate() {
   await callDesktopBridge('reset')
   await (await waitForElement('[data-testid="nav-History"]')).click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/history'), 15_000)
-  await (await waitForElement('[data-testid="nav-Compress"]')).click()
-  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  await waitForElement('[data-testid="special-compression-center"]')
   await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
   workspace = await waitForElement('[data-testid="pdf-compression-workspace"]')
   picker = await waitForElement('[data-testid="pdf-compression-workspace"] [data-testid="dropzone-file"]')
@@ -2472,6 +2474,11 @@ async function runPdfWorkspaceDesktopGate() {
 
 async function runImageWorkspaceDesktopGate() {
   console.log('[desktop-e2e] verifying the real B-04.5 image execution, results, history and queue isolation')
+  // Focused runs inherit the OS-scaled default window, which can be smaller
+  // than the functional result viewport. Establish a deterministic working
+  // size before execution; the dedicated loop below still audits both compact
+  // product sizes for horizontal overflow.
+  await driver.manage().window().setRect({ width: 1600, height: 1000 })
   const mediaRoot = path.join(root, 'test-results', 'media-fixture-audit', 'fixtures')
   const acceptedImageNames = ['exif-orientation.jpg', 'photo.webp', 'transparent.png']
   const imageFixtures = acceptedImageNames.map(name => {
@@ -2501,6 +2508,9 @@ async function runImageWorkspaceDesktopGate() {
     name: path.basename(archiveSeed), path: archiveSeed, size: statSync(archiveSeed).size, isDirectory: false,
   }])
 
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  await waitForElement('[data-testid="special-compression-center"]')
   await (await waitForElement('[data-testid="compression-mode-image"]')).click()
   await waitForElement('[data-testid="image-compression-workspace"]')
   const batchSettings = await waitForElement('[data-testid="image-compression-workspace"] .secondary-action')
@@ -2553,6 +2563,22 @@ async function runImageWorkspaceDesktopGate() {
   )
   assert.equal(imageHistory.length, 3, 'every real published image must persist one unified history row')
   assert.ok(imageHistory.every(record => record.status === 'completed' && record.metrics), 'real image history must contain completed measured results')
+  const imageWorkspaceLayout = await driver.executeScript(() => {
+    const page = document.querySelector('.special-compression-view')
+    const workspace = document.querySelector('[data-testid="image-compression-workspace"]')
+    const boundary = document.querySelector('[data-testid="image-compression-workspace"] .truth-boundary')
+    const list = document.querySelector('[data-testid="image-compression-workspace"] .image-list-shell')
+    const facts = (element) => element ? {
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+      top: element.getBoundingClientRect().top,
+      bottom: element.getBoundingClientRect().bottom,
+      display: getComputedStyle(element).display,
+      overflow: getComputedStyle(element).overflow,
+    } : null
+    return { page: facts(page), workspace: facts(workspace), boundary: facts(boundary), list: facts(list) }
+  })
+  console.log(`[desktop-e2e] image workspace layout: ${JSON.stringify(imageWorkspaceLayout)}`)
   const workspaceText = await (await waitForElement('[data-testid="image-compression-workspace"]')).getText()
   assert.doesNotMatch(workspaceText, /B-02|B-03|尚未生成结果文件/)
   assert.match(workspaceText, /实际字节差/)
@@ -2596,9 +2622,14 @@ async function runImageWorkspaceDesktopGate() {
     )
   }
 
-  await (await waitForElement('[data-testid="compression-mode-archive"]')).click()
+  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).endsWith('#/compress'), 30_000)
+  await waitForElement('[data-testid="compression-center"]')
   assert.match(await (await waitForElement('main')).getText(), /Desktop E2E 智能分析/)
   assert.doesNotMatch(await (await waitForElement('main')).getText(), /photo\.webp/)
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  await waitForElement('[data-testid="special-compression-center"]')
   await (await waitForElement('[data-testid="compression-mode-image"]')).click()
   await waitForElement('[data-testid="image-compression-workspace"]')
   const restoredImageNames = (await callDesktopBridge('imageCompressionAuditState'))
@@ -2683,6 +2714,7 @@ function videoFfmpegProcessIds(sourcePath) {
 
 async function runVideoWorkspaceDesktopGate() {
   console.log('[desktop-e2e] verifying real C-05.1/C-05.3 video execution, cancellation, restart history and default playback')
+  await driver.manage().window().setRect({ width: 1600, height: 1000 })
   const frozenVideo = path.join(root, 'tests', 'fixtures', 'media', 'videos', 'h264-vfr-audio-rotation-subtitles.mp4')
   const multiAudioVideo = path.join(fixtureDirectory, 'multi-audio-30s.mp4')
   const videoOutputDirectory = path.join(fixtureDirectory, 'video-results')
@@ -2705,8 +2737,9 @@ async function runVideoWorkspaceDesktopGate() {
   await callDesktopBridge('reset')
   const cancellationSourceBytes = statSync(cancellationVideo).size
   const cancellationSourceSha256 = fileSha256(cancellationVideo)
-  await (await waitForElement('[data-testid="nav-Compress"]')).click()
-  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  await waitForElement('[data-testid="special-compression-center"]')
   await (await waitForElement('[data-testid="compression-mode-video"]')).click()
   let workspace = await waitForElement('[data-testid="video-compression-workspace"]')
   let picker = await waitForElement('[data-testid="video-compression-workspace"] [data-testid="dropzone-file"]')
@@ -2764,8 +2797,9 @@ async function runVideoWorkspaceDesktopGate() {
 
   await callDesktopBridge('reset')
   const historyBefore = (await callDesktopBridge('taskHistory')).length
-  await (await waitForElement('[data-testid="nav-Compress"]')).click()
-  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  await waitForElement('[data-testid="special-compression-center"]')
   await (await waitForElement('[data-testid="compression-mode-video"]')).click()
   workspace = await waitForElement('[data-testid="video-compression-workspace"]')
   picker = await waitForElement('[data-testid="video-compression-workspace"] [data-testid="dropzone-file"]')
@@ -2937,10 +2971,14 @@ async function runVideoWorkspaceDesktopGate() {
   assert.deepEqual(persistedAfterRestart, persistedBeforeRestart, 'measured video history must survive a complete app restart')
   const cancelledAfterRestart = (await callDesktopBridge('taskHistory')).find(record => record.id === cancelledHistory.id)
   assert.equal(cancelledAfterRestart?.status, 'cancelled', 'cancelled video history must survive a complete app restart')
+  await driver.manage().window().setRect({ width: 1600, height: 1000 })
   await (await waitForElement('[data-testid="nav-History"]')).click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/history'), 15_000)
-  const visibleHistory = await waitForElement('[data-testid="history-list"]')
-  const visibleHistoryText = await visibleHistory.getText()
+  const visibleHistoryText = await driver.wait(async () => {
+    const visibleHistory = await waitForElement('[data-testid="history-list"]')
+    const text = await visibleHistory.getText()
+    return text.includes('h264-vfr-audio-rotation-subtitles.mp4') ? text : false
+  }, 30_000)
   assert.match(visibleHistoryText, /h264-vfr-audio-rotation-subtitles\.mp4/)
   assert.match(visibleHistoryText, /multi-audio-30s\.mp4/)
   assert.match(visibleHistoryText, /avi-100mib-1080p\.avi/)
@@ -3023,8 +3061,9 @@ async function runImageBatchDesktopGate() {
 
   await callDesktopBridge('reset')
   await callDesktopBridge('clearTaskHistory')
-  await (await waitForElement('[data-testid="nav-Compress"]')).click()
-  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  await waitForElement('[data-testid="special-compression-center"]')
   await (await waitForElement('[data-testid="compression-mode-image"]')).click()
   await waitForElement('[data-testid="image-compression-workspace"]')
   const seed = await callDesktopBridge('seedImageCompressionWorkspace', imageFixtures.map(fixture => ({
@@ -3131,8 +3170,9 @@ async function runManualImagePickerDesktopGate() {
   }
 
   await callDesktopBridge('reset')
-  await (await waitForElement('[data-testid="nav-Compress"]')).click()
-  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  await waitForElement('[data-testid="special-compression-center"]')
   await (await waitForElement('[data-testid="compression-mode-image"]')).click()
   await waitForElement('[data-testid="image-compression-workspace"]')
   await driver.manage().window().setRect({ width: 1100, height: 720 })
@@ -3425,7 +3465,7 @@ try {
   await waitForDesktopReady()
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
-  assert.equal(navigation.length, 7, 'the real desktop shell must expose seven navigation buttons')
+  assert.equal(navigation.length, 8, 'the real desktop shell must expose eight navigation buttons')
   const versionBadge = await waitForElement('[data-testid="sidebar-version-badge"]')
   assert.equal(
     (await versionBadge.getAttribute('textContent')).trim(),

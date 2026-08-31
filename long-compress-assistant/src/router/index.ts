@@ -23,6 +23,14 @@ const routes: Array<RouteRecordRaw> = [
     }
   },
   {
+    path: '/special-compression',
+    name: 'SpecialCompression',
+    component: () => import('@/views/SpecialCompressionView.vue'),
+    meta: {
+      title: '特殊压缩'
+    }
+  },
+  {
     path: '/browser',
     name: 'ArchiveBrowser',
     component: () => import('@/views/ArchiveBrowserView.vue'),

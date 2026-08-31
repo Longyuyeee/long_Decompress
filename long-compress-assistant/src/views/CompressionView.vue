@@ -21,9 +21,6 @@ import CompressionStatusCell from '@/components/compression/CompressionStatusCel
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import CompressionToolbar from '@/components/compression/CompressionToolbar.vue'
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
-import ImageCompressionWorkspace from '@/components/compression/ImageCompressionWorkspace.vue'
-import VideoCompressionWorkspace from '@/components/compression/VideoCompressionWorkspace.vue'
-import PdfCompressionWorkspace from '@/components/compression/PdfCompressionWorkspace.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import Modal from '@/components/ui/Modal.vue'
 import { ask } from '@tauri-apps/api/dialog'
@@ -32,15 +29,6 @@ const appStore = useAppStore()
 const compressionStore = useCompressionStore()
 const tauriCommands = useTauriCommands()
 const taskStore = useTaskStore()
-
-type CompressionWorkspaceMode = 'archive' | 'image' | 'video' | 'pdf'
-const activeWorkspaceMode = ref<CompressionWorkspaceMode>('archive')
-const compressionWorkspaceModes: Array<{ id: CompressionWorkspaceMode, label: string, icon: string, stage?: string }> = [
-  { id: 'archive', label: '归档压缩', icon: 'pi pi-box' },
-  { id: 'image', label: '图片压缩', icon: 'pi pi-images' },
-  { id: 'video', label: '视频压缩', icon: 'pi pi-video', stage: 'C-05' },
-  { id: 'pdf', label: 'PDF 压缩', icon: 'pi pi-file-pdf', stage: 'D-02' },
-]
 
 const selectedRows = ref<Set<string>>(new Set())
 const showGlobalSettingsModal = ref(false)
@@ -616,14 +604,13 @@ const onDetailLeave = (element: Element) => {
 </script>
 
 <template>
-  <div class="compression-view p-4 md:p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative">
+  <div class="compression-view p-4 md:p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative" data-testid="compression-center">
     <header class="flex justify-between items-center gap-3 shrink-0">
       <div class="min-w-0">
         <h1 class="text-2xl md:text-3xl font-black text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
         <p class="text-xs md:text-sm text-muted font-semibold mt-1">{{ appStore.t('compress.subtitle') }}</p>
       </div>
       <CompressionToolbar
-        v-if="activeWorkspaceMode === 'archive'"
         :has-finished="hasFinishedCompressionTasks"
         :active-count="activeCompressionTasks.length"
         :pending-count="pendingPayload"
@@ -635,24 +622,8 @@ const onDetailLeave = (element: Element) => {
       />
     </header>
 
-    <nav class="compression-mode-switch" aria-label="压缩模式" data-testid="compression-mode-switch">
-      <button
-        v-for="mode in compressionWorkspaceModes"
-        :key="mode.id"
-        type="button"
-        :data-testid="`compression-mode-${mode.id}`"
-        :aria-current="activeWorkspaceMode === mode.id ? 'page' : undefined"
-        :class="{ active: activeWorkspaceMode === mode.id }"
-        @click="activeWorkspaceMode = mode.id"
-      >
-        <i :class="mode.icon"></i>
-        <span>{{ mode.label }}</span>
-        <small v-if="mode.stage">{{ mode.stage }}</small>
-      </button>
-    </nav>
-
     <!-- 主工作区 -->
-    <div v-if="activeWorkspaceMode === 'archive'" class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
+    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div v-if="totalPayload > 0" class="compression-task-list flex-1 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-3 space-y-3">
         <div
           data-testid="compression-table-header"
@@ -1020,12 +991,6 @@ const onDetailLeave = (element: Element) => {
       </div>
     </div>
 
-    <ImageCompressionWorkspace v-else-if="activeWorkspaceMode === 'image'" />
-
-    <VideoCompressionWorkspace v-else-if="activeWorkspaceMode === 'video'" />
-
-    <PdfCompressionWorkspace v-else />
-
     <Modal
       :visible="showRarResolution"
       title="创建 RAR 需要编码器"
@@ -1081,53 +1046,6 @@ const onDetailLeave = (element: Element) => {
   min-width: 0;
   overflow-x: hidden;
   background: radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--dynamic-accent) 4%, transparent) 0%, transparent 40%);
-}
-
-.compression-mode-switch {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-  flex-shrink: 0;
-  min-width: 0;
-  padding: 0.35rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--bg-card) 72%, transparent);
-}
-
-.compression-mode-switch button {
-  display: flex;
-  min-width: 0;
-  height: 2.6rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  border: 1px solid transparent;
-  border-radius: 0.75rem;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 850;
-  transition: 0.2s ease;
-}
-
-.compression-mode-switch button:hover {
-  color: var(--text-content);
-  background: color-mix(in srgb, var(--dynamic-accent) 7%, transparent);
-}
-
-.compression-mode-switch button.active {
-  border-color: color-mix(in srgb, var(--dynamic-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--dynamic-accent) 13%, transparent);
-  color: var(--dynamic-accent);
-  box-shadow: 0 8px 20px -15px var(--dynamic-accent);
-}
-
-.compression-mode-switch small {
-  border-radius: 999px;
-  background: var(--bg-input);
-  padding: 0.12rem 0.35rem;
-  color: var(--text-dim);
-  font-size: 0.55rem;
 }
 
 .planned-workspace {
@@ -1300,9 +1218,6 @@ const onDetailLeave = (element: Element) => {
 }
 
 @media (max-width: 760px) {
-  .compression-mode-switch button { gap: 0.3rem; }
-  .compression-mode-switch small { display: none; }
-
   .compression-config-panel {
     padding: 1rem;
   }
@@ -1319,8 +1234,6 @@ const onDetailLeave = (element: Element) => {
 }
 
 @media (max-width: 520px) {
-  .compression-mode-switch button span { display: none; }
-  .compression-mode-switch button i { font-size: 1rem; }
   .planned-workspace { align-items: flex-start; flex-direction: column; padding: 1.25rem; }
   .compression-leading-cell {
     width: 1.25rem;

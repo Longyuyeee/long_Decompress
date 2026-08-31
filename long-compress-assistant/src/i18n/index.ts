@@ -9,6 +9,7 @@ export const translations: Record<string, Record<string, string>> = {
     // 导航
     'nav.decompress': '解压中心',
     'nav.compress': '压缩中心',
+    'nav.special_compression': '特殊压缩',
     'nav.browser': '压缩包浏览',
     'nav.vault': '密码保险箱',
     'nav.integrity': '文件完整性',
@@ -120,6 +121,7 @@ export const translations: Record<string, Record<string, string>> = {
     'vault.analytics.recency': 'RECENT SIGNAL',
     'vault.analytics.recently_active': '最近活跃密码',
     'compress.subtitle': '批量归档、格式转换与加密压缩',
+    'special_compression.subtitle': '图片、视频与 PDF 的本地专项压缩',
     // 通用
     'common.success': '操作成功',
     'common.error': '操作失败',
@@ -713,6 +715,7 @@ export const translations: Record<string, Record<string, string>> = {
     // Nav
     'nav.decompress': 'Extraction',
     'nav.compress': 'Compression',
+    'nav.special_compression': 'Special Compression',
     'nav.browser': 'Archive Browser',
     'nav.vault': 'Vault',
     'nav.integrity': 'File Integrity',
@@ -824,6 +827,7 @@ export const translations: Record<string, Record<string, string>> = {
     'vault.analytics.recency': 'RECENT SIGNAL',
     'vault.analytics.recently_active': 'Recently active passwords',
     'compress.subtitle': 'Batch archiving, format conversion, and encryption',
+    'special_compression.subtitle': 'Local image, video, and PDF compression',
     // Common
     'common.success': 'Success',
     'common.error': 'Error',

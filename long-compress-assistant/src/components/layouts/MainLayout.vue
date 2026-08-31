@@ -40,6 +40,7 @@ onUnmounted(() => {
 const navItems = [
   { name: 'Decompress', icon: 'pi pi-folder-open', label: 'nav.decompress', shortcut: 'Ctrl+O' },
   { name: 'Compress', icon: 'pi pi-box', label: 'nav.compress', shortcut: 'Ctrl+N' },
+  { name: 'SpecialCompression', icon: 'pi pi-sparkles', label: 'nav.special_compression', shortcut: '' },
   { name: 'ArchiveBrowser', icon: 'pi pi-list', label: 'nav.browser', shortcut: 'Ctrl+B' },
   { name: 'Vault', icon: 'pi pi-shield', label: 'nav.vault', shortcut: 'Ctrl+Shift+V' },
   { name: 'FileIntegrity', icon: 'pi pi-verified', label: 'nav.integrity', shortcut: 'Ctrl+I' },
@@ -78,7 +79,7 @@ const navigateTo = (name: string) => {
                   type="button"
                   @click="navigateTo(item.name)"
                   :data-testid="`nav-${item.name}`"
-                  :aria-label="`${appStore.t(item.label)} (${item.shortcut})`"
+                  :aria-label="item.shortcut ? `${appStore.t(item.label)} (${item.shortcut})` : appStore.t(item.label)"
                  :aria-current="route.name === item.name ? 'page' : undefined"
                  class="nav-entry group relative w-full h-12 flex items-center gap-3 px-3 rounded-xl cursor-pointer transition-all duration-200 text-left"
                  :class="route.name === item.name ? 'bg-primary/20 shadow-sm text-primary' : 'text-muted hover:bg-primary/8 hover:text-content'">
@@ -92,7 +93,7 @@ const navigateTo = (name: string) => {
               </div>
               <div class="sidebar-copy flex-1 min-w-0">
                 <div class="text-xs font-extrabold truncate">{{ appStore.t(item.label) }}</div>
-                <div class="text-xs text-dim font-mono mt-0.5">{{ item.shortcut }}</div>
+                <div v-if="item.shortcut" class="text-xs text-dim font-mono mt-0.5">{{ item.shortcut }}</div>
               </div>
             </button>
           </nav>

@@ -195,7 +195,7 @@ const videoFfmpegProcessIds = () => {
 }
 
 const navigateToVideoWorkspace = async () => {
-  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
   await (await waitForElement('[data-testid="compression-mode-video"]')).click()
   await waitForElement('[data-testid="video-compression-workspace"]')
 }

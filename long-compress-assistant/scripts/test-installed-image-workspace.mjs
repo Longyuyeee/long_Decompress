@@ -165,7 +165,7 @@ const setControl = async (selector, value) => {
 }
 
 const navigateToImageWorkspace = async () => {
-  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
   await (await waitForElement('[data-testid="compression-mode-image"]')).click()
   await waitForElement('[data-testid="image-compression-workspace"]')
 }

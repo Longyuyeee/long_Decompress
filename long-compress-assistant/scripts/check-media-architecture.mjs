@@ -201,8 +201,20 @@ assert(pdfContract.analysisBoundary?.readOnly === true, 'D-02.1 analysis must re
 assert(pdfContract.executionBoundary?.enableProductUi === true, 'D-02.2 read-only PDF configuration UI must be enabled')
 assert(pdfContract.executionBoundary?.executionEnabled === true, 'D-04.1 PDF product command must be enabled')
 const compressionView = await read('src/views/CompressionView.vue')
+const specialCompressionView = await read('src/views/SpecialCompressionView.vue')
 const pdfWorkspace = await read('src/components/compression/PdfCompressionWorkspace.vue')
-assert(compressionView.includes("import PdfCompressionWorkspace") && compressionView.includes('<PdfCompressionWorkspace v-else />'), 'D-02.2 PDF workspace routing is missing')
+for (const workspace of ['ImageCompressionWorkspace', 'VideoCompressionWorkspace', 'PdfCompressionWorkspace']) {
+  assert(
+    specialCompressionView.includes(`import ${workspace}`) && specialCompressionView.includes(`<${workspace}`),
+    `special compression workspace routing is missing: ${workspace}`,
+  )
+  assert(!compressionView.includes(workspace), `archive compression center must not route ${workspace}`)
+}
+assert(
+  specialCompressionView.includes("type SpecialCompressionMode = 'image' | 'video' | 'pdf'")
+    && !specialCompressionView.includes("'archive'"),
+  'special compression must expose exactly the image/video/PDF product modes',
+)
 for (const boundary of ['usePdfOptimizationBatch', 'pdf-risk-confirmation', 'pdf-allow-larger-output', '锁定执行配置', '禁止覆盖源文件']) {
   assert(pdfWorkspace.includes(boundary), `D-04.2 PDF UI boundary is missing: ${boundary}`)
 }

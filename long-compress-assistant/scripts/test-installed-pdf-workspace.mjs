@@ -100,7 +100,7 @@ const createSession = async attemptOffset => {
 }
 const waitForElement = (selector, timeout = 30_000) => driver.wait(async () => (await driver.findElements(By.css(selector)))[0] || false, timeout)
 const navigateToPdfWorkspace = async () => {
-  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
   await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
   await waitForElement('[data-testid="pdf-compression-workspace"]')
   // The production dropzone subscribes through Tauri's async event API after
