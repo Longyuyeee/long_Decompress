@@ -246,11 +246,38 @@ fn validate_video_output_for_default_open(path: &str) -> Result<std::path::PathB
     Ok(path)
 }
 
+fn validate_pdf_output_for_default_open(path: &str) -> Result<std::path::PathBuf, String> {
+    let path = std::path::PathBuf::from(path);
+    if !path.is_absolute() {
+        return Err("PDF_DEFAULT_OPEN_PATH_MUST_BE_ABSOLUTE".to_string());
+    }
+    let metadata = std::fs::symlink_metadata(&path)
+        .map_err(|error| format!("PDF_DEFAULT_OPEN_METADATA_FAILED: {error}"))?;
+    if !metadata.file_type().is_file() || metadata.file_type().is_symlink() {
+        return Err("PDF_DEFAULT_OPEN_REQUIRES_REGULAR_FILE".to_string());
+    }
+    if path
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_none_or(|value| !value.eq_ignore_ascii_case("pdf"))
+    {
+        return Err("PDF_DEFAULT_OPEN_REQUIRES_PDF".to_string());
+    }
+    Ok(path)
+}
+
 #[command]
 pub fn open_video_output_with_default_application(path: String) -> Result<(), String> {
     let path = validate_video_output_for_default_open(&path)?;
     crate::services::archive_entry_open::open_with_default_application(&path)
         .map_err(|error| format!("VIDEO_DEFAULT_OPEN_FAILED: {error}"))
+}
+
+#[command]
+pub fn open_pdf_output_with_default_application(path: String) -> Result<(), String> {
+    let path = validate_pdf_output_for_default_open(&path)?;
+    crate::services::archive_entry_open::open_with_default_application(&path)
+        .map_err(|error| format!("PDF_DEFAULT_OPEN_FAILED: {error}"))
 }
 
 /// 注册 Windows 右键上下文菜单
@@ -280,7 +307,8 @@ pub async fn is_context_menu_registered() -> Result<bool, String> {
 #[cfg(test)]
 mod desktop_behavior_tests {
     use super::{
-        should_confirm_exit, validate_video_output_for_default_open, DesktopBehaviorState,
+        should_confirm_exit, validate_pdf_output_for_default_open,
+        validate_video_output_for_default_open, DesktopBehaviorState,
     };
     use std::sync::atomic::Ordering;
 
@@ -321,5 +349,24 @@ mod desktop_behavior_tests {
         )
         .unwrap_err()
         .starts_with("VIDEO_DEFAULT_OPEN_METADATA_FAILED:"));
+    }
+
+    #[test]
+    fn pdf_default_open_accepts_only_absolute_regular_pdf_files() {
+        let temp = tempfile::tempdir().unwrap();
+        let pdf = temp.path().join("结果.PDF");
+        let text = temp.path().join("not-pdf.txt");
+        std::fs::write(&pdf, b"%PDF-1.7\n").unwrap();
+        std::fs::write(&text, b"text").unwrap();
+
+        assert_eq!(validate_pdf_output_for_default_open(&pdf.to_string_lossy()), Ok(pdf));
+        assert_eq!(
+            validate_pdf_output_for_default_open("relative.pdf").unwrap_err(),
+            "PDF_DEFAULT_OPEN_PATH_MUST_BE_ABSOLUTE"
+        );
+        assert_eq!(
+            validate_pdf_output_for_default_open(&text.to_string_lossy()).unwrap_err(),
+            "PDF_DEFAULT_OPEN_REQUIRES_PDF"
+        );
     }
 }

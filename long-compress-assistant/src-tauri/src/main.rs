@@ -494,6 +494,7 @@ fn main() {
             long_compress_assistant::commands::pdf_engine::compress_pdf_file,
             long_compress_assistant::commands::system_integration::open_in_explorer,
             long_compress_assistant::commands::system_integration::open_video_output_with_default_application,
+            long_compress_assistant::commands::system_integration::open_pdf_output_with_default_application,
             long_compress_assistant::commands::system_integration::register_context_menu,
             long_compress_assistant::commands::system_integration::unregister_context_menu,
             long_compress_assistant::commands::system_integration::is_context_menu_registered,

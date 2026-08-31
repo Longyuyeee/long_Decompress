@@ -52,7 +52,7 @@ export interface Task {
   fileFilter?: string
   selectedEntries?: string[]
   // 增强字段 [FE-INT-001]
-  stage?: 'Pre-checking' | 'Extracting' | 'Verifying' | 'Finalizing' | 'password-attempt' | 'Probing' | 'Encoding' | 'Validating' | 'Publishing' | 'still-encoding'
+  stage?: 'Pre-checking' | 'Extracting' | 'Verifying' | 'Finalizing' | 'password-attempt' | 'Probing' | 'Encoding' | 'Transforming' | 'Validating' | 'Publishing' | 'still-encoding'
   currentFile?: string
   currentPassword?: string
   passwordAttemptCurrent?: number

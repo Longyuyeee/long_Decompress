@@ -203,10 +203,14 @@ assert(pdfContract.executionBoundary?.executionEnabled === true, 'D-04.1 PDF pro
 const compressionView = await read('src/views/CompressionView.vue')
 const pdfWorkspace = await read('src/components/compression/PdfCompressionWorkspace.vue')
 assert(compressionView.includes("import PdfCompressionWorkspace") && compressionView.includes('<PdfCompressionWorkspace v-else />'), 'D-02.2 PDF workspace routing is missing')
-for (const boundary of ['D-03 执行尚未接入', 'pdf-risk-confirmation', '锁定配置（不执行）', '禁止覆盖源文件']) {
-  assert(pdfWorkspace.includes(boundary), `D-02.2 PDF UI boundary is missing: ${boundary}`)
+for (const boundary of ['usePdfOptimizationBatch', 'pdf-risk-confirmation', 'pdf-allow-larger-output', '锁定执行配置', '禁止覆盖源文件']) {
+  assert(pdfWorkspace.includes(boundary), `D-04.2 PDF UI boundary is missing: ${boundary}`)
 }
-assert(!pdfWorkspace.includes('useTaskStore') && !pdfWorkspace.includes('useCompressionStore'), 'D-02.2 PDF drafts must not create or persist product tasks')
+const pdfBatch = await read('src/composables/usePdfOptimizationBatch.ts')
+for (const boundary of ["workloadKind: 'pdf'", 'createMeasuredTaskMetricsV1', 'waitForHistoryPersistence', 'cancelTask', 'pageCount']) {
+  assert(pdfBatch.includes(boundary), `D-04.2 unified PDF task boundary is missing: ${boundary}`)
+}
+assert(!pdfWorkspace.includes('useCompressionStore'), 'PDF execution must use the unified task model instead of a media-specific task store')
 const pdfTransform = await read('src-tauri/src/services/pdf_transform.rs')
 for (const boundary of [
   'transform_arguments',
