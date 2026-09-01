@@ -4,7 +4,7 @@
 
 - 当前分支为 `codex/ux-convenience-1-2-0`，功能提交 `4e341e0` 与 `e87fb30` 已推送。特殊压缩紧凑布局、`Ctrl+Shift+S`、双栏显式多选、可点击面包屑、方向图标和空白区跨栏菜单均已完成。
 - 完整单元 276/276、Chromium 10/10、生产构建与隔离 Release WebView2 聚焦门禁通过；真实 IPC 复制/移动/属性为 2 文件、2 目录、9 B，预期与实际差异 0。
-- 八处版本身份现已同步为 `1.2.0`，唯一候选 DLL 为 `long_compress_shell_extension_1_2_0.dll`。下一步只允许完成 Rust/Shell 全门禁、无测试桥 NSIS、候选审计、PR 五项 CI、合并/标签/Release、公开资产回下载和真实 `v1.1.19 → v1.2.0` 更新。
+- 八处版本身份现已同步为 `1.2.0`，唯一候选 DLL 为 `long_compress_shell_extension_1_2_0.dll`。Rust/Shell 严格门禁、无测试桥 NSIS 和 50/50 安装生命周期已通过并恢复公开基线。下一步只允许候选审计、PR 五项 CI、合并/标签/Release、公开资产回下载和真实 `v1.1.19 → v1.2.0` 更新。
 - 在公开更新完成前，公开稳定版仍是 `v1.1.19`，不得把候选写成正式发布。完整证据见 [UX_CONVENIENCE_1_2_0_AUDIT.md](UX_CONVENIENCE_1_2_0_AUDIT.md) 与 [RELEASE_AUDIT_1.2.0.md](RELEASE_AUDIT_1.2.0.md)。
 
 ## 2026-09-01 v1.1.19 正式发布关闭（历史，已由上方 v1.2.0 候选节点取代）

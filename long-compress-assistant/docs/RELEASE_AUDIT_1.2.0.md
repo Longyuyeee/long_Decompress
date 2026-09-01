@@ -18,11 +18,12 @@
 | 隔离 Release 真实桌面 | WebView2 快捷键、布局、三类空态、双栏便利操作通过 |
 | 真实文件系统 IPC | 复制、移动、属性均为 2 文件、2 目录、9 B，差异 0 |
 | Rust / Shell 严格门禁 | 主程序 `cargo test --release --all-targets` 全通过，主库 380/380、主程序 1/1；Shell 5/5；两者严格 Clippy 通过 |
-| 无测试桥正式 NSIS | 待生成与安装态核验 |
+| 无测试桥正式 NSIS | `Long解压_1.2.0_x64-setup.exe`，19,386,947 B，SHA-256 `4FC9BC19…490F21` |
+| 真实安装生命周期 | 50/50、失败 0；覆盖、生产身份、菜单、卸载和 `v1.1.19` 基线恢复均通过 |
 
 ## 发布关闭条件
 
-- [ ] 候选完整门禁、无测试桥 NSIS 与生产包身份通过。
+- [x] 候选完整门禁、无测试桥 NSIS 与生产包身份通过。
 - [ ] 受保护主线 PR 五项 CI 全绿并合并。
 - [ ] annotated `v1.2.0` 标签和 GitHub Release 四资产完成。
 - [ ] 公开资产回下载、签名/清单/哈希一致。
@@ -30,3 +31,5 @@
 - [ ] README、交接文档与本审计改为正式发布关闭。
 
 实现和修正证据见 [UX_CONVENIENCE_1_2_0_AUDIT.md](UX_CONVENIENCE_1_2_0_AUDIT.md)。未完成上述条件前，不宣称 `v1.2.0` 已公开发布。
+
+本地精确候选主程序为 29,674,496 B / SHA-256 `DC142930505FB392603DB9EF50A82BC47594E03BD4D94AF978C5E94071D0E60E`，ProductVersion `1.2.0`；唯一 Shell DLL 为 246,784 B / SHA-256 `9BCE92FC16DB2BEB26E3757C156B317E6022D158F61D2EBF3CCFED687C6F9CCA`。安装生命周期原始证据保存在被忽略的本机目录 `test-results/installed-release-validation/20260901-151257/result.json`；验证后机器已恢复 `E:\Long\Long解压` 的公开 `v1.1.19`、两套用户数据、经典菜单与自启动，相关应用进程为 0。
