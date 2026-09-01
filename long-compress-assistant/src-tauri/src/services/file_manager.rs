@@ -410,7 +410,7 @@ fn is_link_or_reparse(metadata: &fs::Metadata) -> bool {
     }
     #[cfg(windows)]
     {
-        return metadata.file_attributes() & 0x400 != 0;
+        metadata.file_attributes() & 0x400 != 0
     }
     #[cfg(not(windows))]
     {
@@ -460,7 +460,7 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let source = root.path().join("source");
         fs::create_dir_all(source.join("child")).unwrap();
-        assert!(copy_to_directory(&[source.clone()], &source.join("child"))
+        assert!(copy_to_directory(std::slice::from_ref(&source), &source.join("child"))
             .unwrap_err()
             .to_string()
             .contains("自身内部"));
