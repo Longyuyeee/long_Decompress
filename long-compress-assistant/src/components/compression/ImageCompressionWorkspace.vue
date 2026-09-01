@@ -14,6 +14,7 @@ import {
   type ImageCompressionSettings,
 } from '@/utils/imageCompressionWorkspace'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
+import Modal from '@/components/ui/Modal.vue'
 import ImageCompressionSettingsPanel from './ImageCompressionSettingsPanel.vue'
 
 const appStore = useAppStore()
@@ -21,6 +22,7 @@ const store = useCompressionStore()
 const taskStore = useTaskStore()
 const imageBatch = useImageCompressionBatch()
 const showGlobalSettings = ref(false)
+const imageSettingsDraft = ref<ImageCompressionSettings>({ ...store.imageGlobalSettings })
 const isRunning = ref(false)
 const batchSettled = ref(0)
 const batchTotal = ref(0)
@@ -75,8 +77,18 @@ const onFilesSelected = (candidates: ImageCandidate[]) => {
   }
 }
 
-const updateGlobalSettings = (settings: ImageCompressionSettings) => {
-  store.imageGlobalSettings = settings
+const openGlobalSettings = () => {
+  imageSettingsDraft.value = { ...store.imageGlobalSettings }
+  showGlobalSettings.value = true
+}
+const updateGlobalSettings = (settings: ImageCompressionSettings) => { imageSettingsDraft.value = settings }
+const saveGlobalSettings = () => {
+  store.imageGlobalSettings = { ...imageSettingsDraft.value }
+  showGlobalSettings.value = false
+}
+const cancelGlobalSettings = () => {
+  imageSettingsDraft.value = { ...store.imageGlobalSettings }
+  showGlobalSettings.value = false
 }
 
 const updateItemSettings = (item: ImageCompressionItem, settings: ImageCompressionSettings) => {
@@ -95,7 +107,7 @@ const chooseOutputDirectory = async (item?: ImageCompressionItem) => {
     if (item) {
       store.updateImageItemSettings(item.id, { ...store.getEffectiveImageSettings(item), outputDirectory: selected })
     } else {
-      store.imageGlobalSettings = { ...store.imageGlobalSettings, outputDirectory: selected }
+      imageSettingsDraft.value = { ...imageSettingsDraft.value, outputDirectory: selected }
     }
   } catch (error) {
     appStore.setError(`无法选择输出目录：${String(error)}`)
@@ -225,27 +237,14 @@ const openResultLocation = async (item: ImageCompressionItem) => {
 <template>
   <section class="image-workspace" data-testid="image-compression-workspace">
     <div class="workspace-toolbar">
-      <div class="min-w-0">
-        <div class="flex items-center gap-2"><i class="pi pi-images text-primary"></i><strong>图片压缩工作区</strong><span class="scope-badge">真实执行</span></div>
-        <p>支持 JPG、PNG、WebP；结果路径、尺寸与节省字节均来自后端验证。</p>
-      </div>
       <div class="toolbar-actions">
-        <button type="button" class="secondary-action" :aria-expanded="showGlobalSettings" data-testid="image-toggle-global-settings" @click="showGlobalSettings = !showGlobalSettings"><i class="pi pi-sliders-h"></i>{{ showGlobalSettings ? '收起设置' : '批量设置' }}</button>
+        <button type="button" class="secondary-action" :aria-expanded="showGlobalSettings" data-testid="image-toggle-global-settings" @click="openGlobalSettings"><i class="pi pi-sliders-h"></i>批量设置</button>
         <button v-if="isRunning" type="button" class="danger-action" @click="cancelImageCompression"><i class="pi pi-stop-circle"></i>取消图片压缩</button>
         <button v-else type="button" class="primary-action" :disabled="!canStart" :title="canStart ? '开始处理待处理或可重试图片' : '请先添加并读取可处理图片'" @click="startImageCompression"><i class="pi pi-play-circle"></i>开始图片压缩</button>
       </div>
     </div>
 
-    <div class="truth-boundary"><i class="pi pi-info-circle"></i><span>执行复用统一任务队列、安全目标规划与历史写入口；没有编码器字节进度时仅展示真实阶段和已结束文件数。</span><strong v-if="batchTotal">{{ batchSettled }}/{{ batchTotal }} · {{ batchPercentage.toFixed(2) }}%</strong></div>
-
-    <div v-if="showGlobalSettings" class="global-settings-card" :class="{ locked: isRunning }">
-      <div class="settings-heading"><span><i class="pi pi-sparkles"></i>批量全局设置</span><small>单项可在展开后覆盖</small></div>
-      <ImageCompressionSettingsPanel :model-value="store.imageGlobalSettings" @update:model-value="updateGlobalSettings" />
-      <div class="output-directory">
-        <div class="min-w-0"><span>输出目录</span><strong :title="store.imageGlobalSettings.outputDirectory">{{ store.imageGlobalSettings.outputDirectory || '与源文件同目录' }}</strong></div>
-        <button type="button" @click="chooseOutputDirectory()"><i class="pi pi-folder-open"></i>选择目录</button>
-      </div>
-    </div>
+    <div v-if="batchTotal" class="batch-progress"><i class="pi pi-spin pi-spinner"></i><span>已完成 {{ batchSettled }}/{{ batchTotal }}</span><strong>{{ batchPercentage.toFixed(2) }}%</strong></div>
 
     <div v-if="store.imageItems.length === 0" class="image-empty">
       <EnhancedFileDropzone
@@ -316,17 +315,31 @@ const openResultLocation = async (item: ImageCompressionItem) => {
       </div>
       <EnhancedFileDropzone compact mode="file" accept="jpg,jpeg,png,webp" picker-title="选择图片文件" unfiltered-picker hint="继续添加图片" :native-drop="false" @files-selected="onFilesSelected" />
     </div>
+
+    <Modal :visible="showGlobalSettings" size="xl" title="图片批量设置" description="应用到尚未单独覆盖的图片" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
+      <div class="special-settings-dialog" :class="{ locked: isRunning }">
+        <ImageCompressionSettingsPanel :model-value="imageSettingsDraft" @update:model-value="updateGlobalSettings" />
+        <div class="output-directory">
+          <div class="min-w-0"><span>输出目录</span><strong :title="imageSettingsDraft.outputDirectory">{{ imageSettingsDraft.outputDirectory || '与源文件同目录' }}</strong></div>
+          <button type="button" @click="chooseOutputDirectory()"><i class="pi pi-folder-open"></i>选择目录</button>
+        </div>
+      </div>
+      <template #footer>
+        <button type="button" class="dialog-cancel" @click="cancelGlobalSettings">取消</button>
+        <button type="button" class="dialog-save" data-testid="image-save-global-settings" @click="saveGlobalSettings">保存设置</button>
+      </template>
+    </Modal>
   </section>
 </template>
 
 <style scoped>
 .image-workspace{display:flex;min-width:0;min-height:0;flex:1;flex-direction:column;gap:.75rem;overflow:hidden}
-.workspace-toolbar{display:flex;align-items:center;justify-content:space-between;gap:1rem}.workspace-toolbar strong{color:var(--text-content);font-size:.95rem}.workspace-toolbar p{margin-top:.25rem;color:var(--text-muted);font-size:.72rem;font-weight:650}.scope-badge{border:1px solid color-mix(in srgb,var(--dynamic-accent) 25%,transparent);border-radius:999px;background:color-mix(in srgb,var(--dynamic-accent) 9%,transparent);padding:.18rem .5rem;color:var(--dynamic-accent);font-size:.62rem;font-weight:900}.toolbar-actions{display:flex;gap:.5rem;flex-shrink:0}.toolbar-actions button,.output-directory button{display:flex;align-items:center;justify-content:center;gap:.4rem;height:2.5rem;border-radius:.8rem;padding:0 .9rem;font-size:.72rem;font-weight:900}.secondary-action,.output-directory button{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.primary-action{border:0;background:var(--dynamic-accent);color:white}.primary-action:disabled{cursor:not-allowed;filter:saturate(.25);opacity:.5}.truth-boundary{display:flex;align-items:flex-start;gap:.5rem;border:1px solid color-mix(in srgb,var(--dynamic-accent) 22%,transparent);border-radius:.8rem;background:color-mix(in srgb,var(--dynamic-accent) 6%,transparent);padding:.55rem .75rem;color:var(--text-muted);font-size:.68rem;font-weight:700;line-height:1.45}.truth-boundary i{margin-top:.1rem;color:var(--dynamic-accent)}
-.global-settings-card{flex-shrink:0;border:1px solid var(--border-subtle);border-radius:1rem;background:color-mix(in srgb,var(--bg-card) 82%,transparent);padding:.8rem;box-shadow:0 12px 30px -24px #000}.settings-heading{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.7rem;color:var(--text-content);font-size:.73rem;font-weight:900}.settings-heading span{display:flex;align-items:center;gap:.45rem}.settings-heading i{color:var(--dynamic-accent)}.settings-heading small,.settings-heading label{color:var(--text-muted);font-size:.65rem;font-weight:750}.settings-heading label{display:flex;align-items:center;gap:.35rem}.settings-heading input{accent-color:var(--dynamic-accent)}.output-directory{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-top:.7rem;border:1px solid var(--border-subtle);border-radius:.8rem;background:color-mix(in srgb,var(--bg-input) 65%,transparent);padding:.55rem .65rem}.output-directory>div{display:flex;min-width:0;flex-direction:column;gap:.15rem}.output-directory span{color:var(--text-muted);font-size:.62rem;font-weight:800}.output-directory strong{overflow:hidden;color:var(--text-content);font-size:.72rem;text-overflow:ellipsis;white-space:nowrap}.output-directory button{height:2.1rem;flex-shrink:0}
+.workspace-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:1rem}.toolbar-actions{display:flex;gap:.5rem;flex-shrink:0}.toolbar-actions button,.output-directory button{display:flex;align-items:center;justify-content:center;gap:.4rem;height:2.5rem;border-radius:.8rem;padding:0 .9rem;font-size:.72rem;font-weight:900;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}.toolbar-actions button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 22px -17px var(--dynamic-accent)}.toolbar-actions button:active:not(:disabled){transform:scale(.97)}.secondary-action,.output-directory button{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.primary-action{border:0;background:var(--dynamic-accent);color:white}.primary-action:disabled{cursor:not-allowed;filter:saturate(.25);opacity:.5}.batch-progress{display:flex;align-items:center;gap:.5rem;border-radius:.8rem;background:color-mix(in srgb,var(--dynamic-accent) 8%,transparent);padding:.55rem .75rem;color:var(--text-muted);font-size:.68rem;font-weight:800}.batch-progress i,.batch-progress strong{color:var(--dynamic-accent)}.batch-progress strong{margin-left:auto}
+.special-settings-dialog{min-width:0}.settings-heading{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.7rem;color:var(--text-content);font-size:.73rem;font-weight:900}.settings-heading span{display:flex;align-items:center;gap:.45rem}.settings-heading i{color:var(--dynamic-accent)}.settings-heading small,.settings-heading label{color:var(--text-muted);font-size:.65rem;font-weight:750}.settings-heading label{display:flex;align-items:center;gap:.35rem}.settings-heading input{accent-color:var(--dynamic-accent)}.output-directory{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-top:.7rem;border:1px solid var(--border-subtle);border-radius:.8rem;background:color-mix(in srgb,var(--bg-input) 65%,transparent);padding:.55rem .65rem}.output-directory>div{display:flex;min-width:0;flex-direction:column;gap:.15rem}.output-directory span{color:var(--text-muted);font-size:.62rem;font-weight:800}.output-directory strong{overflow:hidden;color:var(--text-content);font-size:.72rem;text-overflow:ellipsis;white-space:nowrap}.output-directory button{height:2.1rem;flex-shrink:0}.dialog-cancel,.dialog-save{border-radius:.75rem;padding:.65rem 1rem;font-size:.7rem;font-weight:900}.dialog-cancel{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.dialog-save{background:var(--dynamic-accent);color:white;box-shadow:0 10px 24px -15px var(--dynamic-accent)}
 .image-empty{display:flex;min-height:0;flex:1}.image-empty :deep(.drop-area){display:flex;min-height:15rem;width:100%;align-items:center;justify-content:center}.image-list-shell{display:flex;min-height:0;flex:1;flex-direction:column;gap:.55rem}.image-list-summary{display:flex;align-items:center;gap:1rem;color:var(--text-muted);font-size:.68rem;font-weight:750}.image-list-summary strong{color:var(--dynamic-accent)}.image-list-summary button{margin-left:auto;color:var(--text-muted)}.image-list{display:flex;min-height:0;flex:1;flex-direction:column;gap:.55rem;overflow-x:hidden;overflow-y:auto;padding-right:.25rem}.image-task{max-width:100%;min-width:0;overflow:hidden;border:1px solid var(--border-subtle);border-radius:1rem;background:color-mix(in srgb,var(--bg-card) 76%,transparent);transition:.2s ease}.image-task.expanded{border-color:color-mix(in srgb,var(--dynamic-accent) 38%,transparent);box-shadow:0 18px 34px -28px #000}.image-task.rejected{border-color:color-mix(in srgb,#ef4444 35%,transparent)}
 .image-row{display:grid;width:100%;min-width:0;grid-template-columns:minmax(9rem,1.5fr) minmax(6rem,.62fr) minmax(5rem,.48fr) minmax(4.5rem,.42fr) minmax(5.2rem,.52fr) minmax(4.7rem,.46fr) 1.5rem;align-items:center;gap:.65rem;padding:.75rem;text-align:left}.image-name{display:flex;min-width:0;align-items:center;gap:.65rem}.image-name>i{display:flex;width:2rem;height:2rem;flex-shrink:0;align-items:center;justify-content:center;border:1px solid color-mix(in srgb,var(--dynamic-accent) 20%,transparent);border-radius:.65rem;background:color-mix(in srgb,var(--dynamic-accent) 8%,transparent);color:var(--dynamic-accent)}.image-name>span{display:flex;min-width:0;flex-direction:column}.image-name strong,.image-name small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.image-name strong{color:var(--text-content);font-size:.74rem}.image-name small,.image-status small,.image-saving small{color:var(--text-muted);font-size:.6rem}.image-dimensions,.image-size,.image-format{overflow:hidden;color:var(--text-muted);font-size:.68rem;font-weight:800;text-overflow:ellipsis;white-space:nowrap}.image-format{color:var(--dynamic-accent)}.image-status,.image-saving{display:flex;min-width:0;flex-direction:column;gap:.12rem;color:var(--text-content);font-size:.68rem}.image-status.ready strong{color:var(--dynamic-accent)}.image-status.rejected strong{color:#ef4444}.row-actions{color:var(--text-muted)}.item-error{display:flex;align-items:center;gap:.5rem;border-top:1px solid color-mix(in srgb,#ef4444 18%,transparent);padding:.55rem .8rem;color:#ef4444;font-size:.68rem;font-weight:800}
 .image-details{display:grid;min-width:0;height:clamp(20rem,48vh,29rem);grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);overflow:hidden;border-top:1px solid var(--border-subtle)}.item-config,.comparison-panel{min-width:0;min-height:0;overflow-x:hidden;overflow-y:auto;padding:1rem}.item-config{border-right:1px solid var(--border-subtle)}.comparison-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}.preview-card{display:flex;min-width:0;flex-direction:column;gap:.45rem;border:1px solid var(--border-subtle);border-radius:.85rem;background:var(--bg-input);padding:.55rem}.preview-card>span{color:var(--text-content);font-size:.67rem;font-weight:900}.preview-card img,.preview-placeholder{width:100%;height:8rem;border-radius:.65rem;background:color-mix(in srgb,var(--bg-base) 65%,transparent);object-fit:contain}.preview-placeholder{display:flex;align-items:center;justify-content:center;gap:.4rem;color:var(--text-muted);font-size:.65rem;font-weight:750}.preview-card small{overflow:hidden;color:var(--text-muted);font-size:.6rem;text-overflow:ellipsis;white-space:nowrap}.result-pending{border-style:dashed}.estimate-card{display:flex;flex-direction:column;gap:.35rem;margin-top:.75rem;border:1px solid color-mix(in srgb,var(--dynamic-accent) 24%,transparent);border-radius:.85rem;background:color-mix(in srgb,var(--dynamic-accent) 6%,transparent);padding:.75rem}.estimate-card span{color:var(--text-content);font-size:.67rem;font-weight:900}.estimate-card strong{color:var(--dynamic-accent);font-size:1rem}.estimate-card small{color:var(--text-muted);font-size:.62rem;font-weight:650;line-height:1.5}.remove-item{margin-top:.7rem;color:#ef4444;font-size:.67rem;font-weight:850}.remove-item i{margin-right:.35rem}
-.danger-action{border:1px solid color-mix(in srgb,#ef4444 45%,transparent);background:color-mix(in srgb,#ef4444 14%,var(--bg-input));color:#ef4444}.truth-boundary strong{margin-left:auto;flex-shrink:0;color:var(--dynamic-accent)}.locked{pointer-events:none;opacity:.68}.image-status.completed strong{color:var(--dynamic-accent)}.image-status.failed strong{color:#ef4444}.image-status.cancelled strong{color:#f59e0b}.image-status small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.image-saving strong{font-size:.68rem}.result-ready{border-color:color-mix(in srgb,var(--dynamic-accent) 35%,transparent)}.result-path{direction:ltr;text-align:left}.open-result{display:flex;align-items:center;justify-content:center;gap:.35rem;border:1px solid var(--border-subtle);border-radius:.55rem;background:var(--bg-card);padding:.35rem;color:var(--text-content);font-size:.62rem;font-weight:850}
+.danger-action{border:1px solid color-mix(in srgb,#ef4444 45%,transparent);background:color-mix(in srgb,#ef4444 14%,var(--bg-input));color:#ef4444}.locked{pointer-events:none;opacity:.68}.image-status.completed strong{color:var(--dynamic-accent)}.image-status.failed strong{color:#ef4444}.image-status.cancelled strong{color:#f59e0b}.image-status small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.image-saving strong{font-size:.68rem}.result-ready{border-color:color-mix(in srgb,var(--dynamic-accent) 35%,transparent)}.result-path{direction:ltr;text-align:left}.open-result{display:flex;align-items:center;justify-content:center;gap:.35rem;border:1px solid var(--border-subtle);border-radius:.55rem;background:var(--bg-card);padding:.35rem;color:var(--text-content);font-size:.62rem;font-weight:850}
 @media(max-width:900px){.image-row{grid-template-columns:minmax(8rem,1fr) minmax(5.5rem,.5fr) minmax(4.5rem,.4fr) minmax(5rem,.45fr) 1.5rem}.image-size,.image-format{display:none}.workspace-toolbar{align-items:flex-start;flex-direction:column}.toolbar-actions{width:100%}.toolbar-actions button{flex:1}}
-@media(max-width:620px){.global-settings-card{max-height:16rem;overflow-y:auto}.image-row{grid-template-columns:minmax(0,1fr) minmax(4.5rem,.42fr) 1.5rem}.image-dimensions,.image-saving{display:none}.image-details{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.comparison-grid{grid-template-columns:minmax(0,1fr)}.preview-card img,.preview-placeholder{height:6rem}.item-config,.comparison-panel{padding:.7rem}}
+@media(max-width:620px){.image-row{grid-template-columns:minmax(0,1fr) minmax(4.5rem,.42fr) 1.5rem}.image-dimensions,.image-saving{display:none}.image-details{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.comparison-grid{grid-template-columns:minmax(0,1fr)}.preview-card img,.preview-placeholder{height:6rem}.item-config,.comparison-panel{padding:.7rem}}
 </style>
