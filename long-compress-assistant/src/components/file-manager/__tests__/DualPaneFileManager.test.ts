@@ -4,6 +4,7 @@ import DualPaneFileManager from '../DualPaneFileManager.vue'
 
 const invoke = vi.fn()
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: (...args: any[]) => invoke(...args) }))
+vi.mock('@tauri-apps/api/dialog', () => ({ open: vi.fn() }))
 
 const leftEntries = [
   { path: 'C:\\left\\Folder', name: 'Folder', size: 0, is_dir: true, extension: null },

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
+import { open } from '@tauri-apps/api/dialog'
 
 export interface LocalFileEntry {
   path: string
@@ -181,6 +182,13 @@ const formatDate = (value: any) => {
   return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString()
 }
 const icon = (entry: LocalFileEntry) => entry.isDir ? 'pi pi-folder' : isArchive(entry) ? 'pi pi-box' : /\.(jpg|jpeg|png|webp|gif)$/i.test(entry.name) ? 'pi pi-image' : /\.pdf$/i.test(entry.name) ? 'pi pi-file-pdf' : 'pi pi-file'
+const chooseArchive = async () => {
+  const queued = import.meta.env.VITE_DESKTOP_E2E ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
+  const selected = queued === undefined
+    ? await open({ multiple: false, filters: [{ name: '压缩包', extensions: ['zip', '7z', 'rar', 'tar', 'gz', 'tgz', 'bz2', 'xz', 'zst', 'cab', 'iso', 'wim'] }] })
+    : Array.isArray(queued) ? queued[0] : queued
+  if (typeof selected === 'string') emit('openArchive', selected)
+}
 
 const handleGlobalPointer = () => { context.value = null }
 onMounted(async () => {
@@ -201,7 +209,7 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
   <div class="file-manager h-full min-w-0 flex flex-col gap-3 p-responsive p-6" data-testid="dual-pane-file-manager">
     <header class="manager-header shrink-0 flex items-center justify-between gap-4">
       <div><h1 class="text-2xl font-black tracking-tight text-content">双栏文件浏览器</h1><p class="mt-1 text-xs font-bold text-muted">浏览电脑中的所有文件；在一栏选择，在另一栏落地</p></div>
-      <div class="status-pill"><i class="pi pi-shield"></i><span>不覆盖同名项 · 复制后哈希校验 · 删除进入回收站</span></div>
+      <div class="manager-actions"><div class="status-pill"><i class="pi pi-shield"></i><span>不覆盖同名项 · 复制后哈希校验 · 删除进入回收站</span></div><button data-testid="file-manager-open-archive" @click="chooseArchive"><i class="pi pi-box"></i><span>打开压缩包</span></button></div>
     </header>
     <div v-if="notice" class="notice-bar" data-testid="file-manager-notice"><i class="pi pi-info-circle"></i><span>{{ notice }}</span><button @click="notice = ''"><i class="pi pi-times"></i></button></div>
     <main class="pane-grid flex-1 min-h-0">
@@ -271,6 +279,7 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
 .manager-header h1 { line-height: 1; }
 .status-pill { display:flex; align-items:center; gap:.45rem; padding:.55rem .8rem; border:1px solid var(--border-subtle); border-radius:999px; color:var(--text-muted); background:var(--bg-input); font-size:.66rem; font-weight:800; }
 .status-pill i { color:var(--dynamic-accent); }
+.manager-actions{display:flex;align-items:center;gap:.55rem}.manager-actions>button{height:2.35rem;padding:0 .75rem;display:flex;align-items:center;gap:.4rem;border-radius:.72rem;background:var(--dynamic-accent);color:white;font-size:.68rem;font-weight:850}
 .notice-bar { display:flex; align-items:center; gap:.55rem; padding:.65rem .8rem; border-radius:.8rem; border:1px solid color-mix(in srgb,var(--dynamic-accent) 35%,var(--border-subtle)); background:color-mix(in srgb,var(--dynamic-accent) 8%,var(--bg-card)); color:var(--text-content); font-size:.72rem; font-weight:750; }
 .notice-bar span { flex:1; min-width:0; overflow-wrap:anywhere; }.notice-bar i{color:var(--dynamic-accent)}
 .pane-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:.65rem; }
@@ -278,7 +287,7 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
 .file-pane.active { border-color:color-mix(in srgb,var(--dynamic-accent) 58%,var(--border-subtle)); box-shadow:0 0 0 1px color-mix(in srgb,var(--dynamic-accent) 18%,transparent),0 12px 32px rgb(0 0 0 / .1); }
 .pane-nav { display:flex; align-items:center; gap:.3rem; padding:.55rem; border-bottom:1px solid var(--border-subtle); }.pane-nav button{width:2.1rem;height:2.1rem;border-radius:.6rem;color:var(--text-muted)}.pane-nav button:hover:not(:disabled){background:var(--bg-input);color:var(--dynamic-accent)}.pane-nav button:disabled{opacity:.28}.pane-nav select{min-width:0;flex:1;height:2.1rem;padding:0 .55rem;border:1px solid var(--border-subtle);border-radius:.6rem;background:var(--bg-input);color:var(--text-content);font-size:.68rem;font-weight:750}
 .path-strip { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.45rem; padding:.5rem .75rem; color:var(--text-muted); font-size:.64rem; border-bottom:1px solid color-mix(in srgb,var(--border-subtle) 70%,transparent); }.path-strip i{color:var(--dynamic-accent)}.path-strip strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-content)}
-.file-head,.file-row { display:grid; grid-template-columns:minmax(9rem,1fr) 5rem 8rem; gap:.5rem; align-items:center; }.file-head{padding:.5rem .75rem;border-bottom:1px solid var(--border-subtle);color:var(--text-muted);font-size:.62rem;font-weight:900}.file-list{flex:1;min-height:0;overflow:auto}.file-row{width:100%;padding:.52rem .75rem;border-bottom:1px solid color-mix(in srgb,var(--border-subtle) 55%,transparent);color:var(--text-muted);font-size:.64rem;text-align:left}.file-row:hover{background:color-mix(in srgb,var(--dynamic-accent) 6%,transparent)}.file-row.selected{background:color-mix(in srgb,var(--dynamic-accent) 13%,transparent);outline:1px solid color-mix(in srgb,var(--dynamic-accent) 48%,transparent);outline-offset:-1px}.file-name{min-width:0;display:flex;align-items:center;gap:.6rem}.file-name>i{width:1.2rem;color:var(--dynamic-accent);font-size:1rem}.file-name strong,.file-name small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-name strong{color:var(--text-content);font-size:.72rem}.file-name small{margin-top:.12rem;color:var(--text-muted);font-size:.54rem}.pane-empty{height:100%;display:grid;place-items:center;align-content:center;gap:.6rem;color:var(--text-muted);font-size:.7rem}.pane-empty i{font-size:1.6rem;color:var(--dynamic-accent)}.pane-empty.error{padding:2rem;text-align:center;color:#ef4444}.file-pane>footer{padding:.45rem .7rem;border-top:1px solid var(--border-subtle);color:var(--text-muted);font-size:.6rem;font-weight:700}
+.file-head,.file-row { box-sizing:border-box;display:grid;grid-template-columns:minmax(9rem,1fr) 5rem 8rem;gap:.5rem;align-items:center; }.file-head{padding:.5rem .75rem;border-bottom:1px solid var(--border-subtle);color:var(--text-muted);font-size:.62rem;font-weight:900}.file-list{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}.file-row{width:100%;padding:.52rem .75rem;border-bottom:1px solid color-mix(in srgb,var(--border-subtle) 55%,transparent);color:var(--text-muted);font-size:.64rem;text-align:left}.file-row>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-row:hover{background:color-mix(in srgb,var(--dynamic-accent) 6%,transparent)}.file-row.selected{background:color-mix(in srgb,var(--dynamic-accent) 13%,transparent);outline:1px solid color-mix(in srgb,var(--dynamic-accent) 48%,transparent);outline-offset:-1px}.file-name{min-width:0;display:flex;align-items:center;gap:.6rem}.file-name>i{width:1.2rem;color:var(--dynamic-accent);font-size:1rem}.file-name strong,.file-name small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-name strong{color:var(--text-content);font-size:.72rem}.file-name small{margin-top:.12rem;color:var(--text-muted);font-size:.54rem}.pane-empty{height:100%;display:grid;place-items:center;align-content:center;gap:.6rem;color:var(--text-muted);font-size:.7rem}.pane-empty i{font-size:1.6rem;color:var(--dynamic-accent)}.pane-empty.error{padding:2rem;text-align:center;color:#ef4444}.file-pane>footer{padding:.45rem .7rem;border-top:1px solid var(--border-subtle);color:var(--text-muted);font-size:.6rem;font-weight:700}
 .transfer-bar{display:flex;align-items:center;justify-content:flex-end;gap:.5rem}.transfer-bar>span{margin-right:auto;color:var(--text-muted);font-size:.7rem}.transfer-bar b{color:var(--dynamic-accent)}.transfer-bar button{height:2.45rem;padding:0 .8rem;border:1px solid var(--border-subtle);border-radius:.72rem;background:var(--bg-input);color:var(--text-content);font-size:.68rem;font-weight:850}.transfer-bar button:hover:not(:disabled){border-color:var(--dynamic-accent);color:var(--dynamic-accent)}.transfer-bar button:disabled{opacity:.35}
 @media(max-width:900px){.file-manager{overflow:auto}.pane-grid{grid-template-columns:1fr;grid-template-rows:30rem 30rem}.status-pill{display:none}.transfer-bar{flex-wrap:wrap}.file-head,.file-row{grid-template-columns:minmax(8rem,1fr) 4.5rem}.file-head span:last-child,.file-row>span:last-child{display:none}}
 </style>

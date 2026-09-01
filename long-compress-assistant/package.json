@@ -1,7 +1,7 @@
 {
   "name": "long-compress-assistant",
   "private": true,
-  "version": "1.1.18",
+  "version": "1.1.19",
   "author": "Longyuyeee",
   "license": "MIT",
   "type": "module",
@@ -75,6 +75,7 @@
     "test:e2e:desktop:resource-preflight": "node scripts/test-tauri-desktop.mjs --resource-preflight-only",
     "test:e2e:desktop:smart-analysis": "node scripts/test-tauri-desktop.mjs --smart-analysis-only",
     "test:e2e:desktop:archive-browser": "node scripts/test-tauri-desktop.mjs --archive-browser-only",
+    "test:e2e:desktop:file-manager": "node scripts/test-tauri-desktop.mjs --file-manager-only",
     "test:e2e:desktop:mark-of-web": "node scripts/test-tauri-desktop.mjs --mark-of-web-only",
     "test:e2e:desktop:compression-verification": "node scripts/test-tauri-desktop.mjs --compression-verification-only",
     "test:e2e:desktop:archive-flow": "node scripts/test-tauri-desktop.mjs --archive-flow-only",
