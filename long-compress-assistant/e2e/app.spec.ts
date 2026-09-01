@@ -121,10 +121,11 @@ test.describe('Long Decompress desktop shell', () => {
     await expect(page.locator('[role="button"][tabindex="0"]').first()).toBeVisible()
   })
 
-  test('renders seven keyboard-accessible navigation buttons', async ({ page }) => {
+  test('renders eight keyboard-accessible navigation buttons including special compression', async ({ page }) => {
     const navigation = page.locator('aside nav > button')
-    await expect(navigation).toHaveCount(7)
+    await expect(navigation).toHaveCount(8)
     await expect(navigation.first()).toHaveAttribute('aria-current', 'page')
+    await expect(page.getByTestId('nav-SpecialCompression')).toHaveAccessibleName('特殊压缩')
   })
 
   test('navigates to settings from the sidebar', async ({ page }) => {

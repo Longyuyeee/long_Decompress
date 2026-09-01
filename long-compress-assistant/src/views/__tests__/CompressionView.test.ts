@@ -5,6 +5,7 @@ import { defineComponent, nextTick } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import CompressionView from '../CompressionView.vue'
+import SpecialCompressionView from '../SpecialCompressionView.vue'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import { useTaskStore } from '@/stores/task'
@@ -63,13 +64,24 @@ const DropzoneStub = defineComponent({
   template: '<button class="dropzone-stub" type="button">add source</button>',
 })
 
-const mountView = () => mount(CompressionView, {
+const mountView = (pinia = createPinia()) => mount(CompressionView, {
   global: {
-    plugins: [createPinia()],
+    plugins: [pinia],
     stubs: {
       EnhancedFileDropzone: DropzoneStub,
       CompressionSettingsPanel: true,
       GlobalSettingsModal: true,
+      Transition: false,
+      Teleport: true,
+    },
+  },
+})
+
+const mountSpecialView = (pinia = createPinia()) => mount(SpecialCompressionView, {
+  global: {
+    plugins: [pinia],
+    stubs: {
+      EnhancedFileDropzone: DropzoneStub,
       Transition: false,
       Teleport: true,
     },
@@ -754,12 +766,18 @@ describe('CompressionView', () => {
     )
   })
 
-  it('exposes four honest workspaces and keeps the archive queue intact while switching modes', async () => {
-    const wrapper = mountView()
-    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+  it('keeps the compression center archive-only and exposes three media workspaces in special compression', async () => {
+    const pinia = createPinia()
+    const archiveWrapper = mountView(pinia)
+    archiveWrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
     await nextTick()
-    expect(wrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(1)
+    expect(archiveWrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(1)
+    expect(archiveWrapper.find('[data-testid="compression-mode-switch"]').exists()).toBe(false)
+    expect(archiveWrapper.find('[data-testid="image-compression-workspace"]').exists()).toBe(false)
 
+    const wrapper = mountSpecialView(pinia)
+    expect(wrapper.get('[data-testid="image-compression-workspace"]').text()).toContain('统一任务队列')
+    expect(wrapper.find('[data-testid="compression-mode-archive"]').exists()).toBe(false)
     await wrapper.get('[data-testid="compression-mode-image"]').trigger('click')
     expect(wrapper.get('[data-testid="image-compression-workspace"]').text()).toContain('统一任务队列')
     expect(wrapper.get('[data-testid="image-compression-workspace"] .primary-action').attributes('disabled')).toBeDefined()
@@ -775,12 +793,11 @@ describe('CompressionView', () => {
     expect(wrapper.get('[data-testid="pdf-compression-workspace"]').text()).toContain('统一任务')
     expect(useTaskStore().tasks).toHaveLength(0)
 
-    await wrapper.get('[data-testid="compression-mode-archive"]').trigger('click')
-    expect(wrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(1)
+    expect(useCompressionStore().selectedFiles).toHaveLength(1)
   })
 
   it('analyzes PDF facts and requires explicit lossy confirmation before freezing a local draft', async () => {
-    const wrapper = mountView()
+    const wrapper = mountSpecialView()
     await wrapper.get('[data-testid="compression-mode-pdf"]').trigger('click')
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
       name: 'form.pdf', path: 'C:/input/form.pdf', size: 4096, type: 'file', isDirectory: false,
@@ -820,7 +837,7 @@ describe('CompressionView', () => {
         source: 'C:/input/encrypted.pdf', encrypted: true, passwordState: 'accepted', hasFormFields: false,
         formFieldNames: [],
       }))
-    const wrapper = mountView()
+    const wrapper = mountSpecialView()
     await wrapper.get('[data-testid="compression-mode-pdf"]').trigger('click')
     const dropzone = wrapper.findComponent(DropzoneStub)
     dropzone.vm.$emit('files-selected', [
@@ -846,7 +863,7 @@ describe('CompressionView', () => {
   })
 
   it('runs a frozen PDF through unified tasks, persists measured facts, and opens the published result', async () => {
-    const wrapper = mountView()
+    const wrapper = mountSpecialView()
     await wrapper.get('[data-testid="compression-mode-pdf"]').trigger('click')
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
       name: 'form.pdf', path: 'C:/input/form.pdf', size: 4096, type: 'file', isDirectory: false,
@@ -883,7 +900,7 @@ describe('CompressionView', () => {
   })
 
   it('plans a real video candidate, labels estimates, and replans preset changes without creating tasks', async () => {
-    const wrapper = mountView()
+    const wrapper = mountSpecialView()
     await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
       name: 'rotated.mp4',
@@ -915,7 +932,7 @@ describe('CompressionView', () => {
   })
 
   it('confirms exact video stream changes then persists only verified publication facts', async () => {
-    const wrapper = mountView()
+    const wrapper = mountSpecialView()
     await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
       name: 'rotated.mp4',
@@ -970,7 +987,7 @@ describe('CompressionView', () => {
 
   it('creates no video task or output plan when stream-change confirmation is declined', async () => {
     mocks.ask.mockResolvedValueOnce(false)
-    const wrapper = mountView()
+    const wrapper = mountSpecialView()
     await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
       name: 'rotated.mp4', path: 'C:/input/rotated.mp4', size: 22_769,
@@ -991,7 +1008,7 @@ describe('CompressionView', () => {
     mocks.compressVideoFile.mockImplementationOnce(() => new Promise((_, reject) => {
       rejectEncoding = reject
     }))
-    const wrapper = mountView()
+    const wrapper = mountSpecialView()
     await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
       name: 'rotated.mp4', path: 'C:/input/rotated.mp4', size: 22_769,
@@ -1015,7 +1032,7 @@ describe('CompressionView', () => {
     mocks.planVideoCompressionDestination.mockImplementationOnce(() => new Promise(resolve => {
       resolveDestination = resolve
     }))
-    const wrapper = mountView()
+    const wrapper = mountSpecialView()
     await wrapper.get('[data-testid="compression-mode-video"]').trigger('click')
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
       name: 'rotated.mp4', path: 'C:/input/rotated.mp4', size: 22_769,
@@ -1053,7 +1070,7 @@ describe('CompressionView', () => {
       input: imageFacts(inputBytes),
       output: imageFacts(outputBytes),
     })
-    const wrapper = mountView()
+    const wrapper = mountSpecialView()
     await wrapper.get('[data-testid="compression-mode-image"]').trigger('click')
     const compressionStore = useCompressionStore()
     const { accepted } = compressionStore.addImageCandidates([{
@@ -1098,7 +1115,7 @@ describe('CompressionView', () => {
   it('reports a real image failure as incomplete instead of showing a success summary', async () => {
     const fixturePath = resolve(process.cwd(), 'test-results/media-fixture-audit/fixtures/images/transparent.png')
     mocks.compressImageFile.mockRejectedValueOnce(new Error('真实编码失败'))
-    const wrapper = mountView()
+    const wrapper = mountSpecialView()
     await wrapper.get('[data-testid="compression-mode-image"]').trigger('click')
     const compressionStore = useCompressionStore()
     const { accepted } = compressionStore.addImageCandidates([{

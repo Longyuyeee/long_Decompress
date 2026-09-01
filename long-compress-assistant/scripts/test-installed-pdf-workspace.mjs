@@ -77,6 +77,13 @@ const terminateApplication = () => {
   const escaped = application.replaceAll("'", "''")
   spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -eq '${escaped}' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`], { windowsHide: true })
 }
+const terminateFixtureWebViews = () => {
+  const escaped = fixtureRoot.replaceAll("'", "''")
+  spawnSync('powershell.exe', [
+    '-NoProfile', '-NonInteractive', '-Command',
+    `Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'msedge.exe' -and $_.CommandLine -like '*${escaped}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`,
+  ], { windowsHide: true })
+}
 const createSession = async attemptOffset => {
   let created
   for (let attempt = 1; !created && attempt <= 3; attempt += 1) {
@@ -95,12 +102,12 @@ const createSession = async attemptOffset => {
   }
   assert.ok(created, 'installed WebView2 session was not created')
   await created.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 120_000 })
-  await created.manage().window().setRect({ width: 1280, height: 800 })
+  await created.manage().window().setRect({ x: -32_000, y: -32_000, width: 1280, height: 800 })
   return created
 }
 const waitForElement = (selector, timeout = 30_000) => driver.wait(async () => (await driver.findElements(By.css(selector)))[0] || false, timeout)
 const navigateToPdfWorkspace = async () => {
-  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
   await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
   await waitForElement('[data-testid="pdf-compression-workspace"]')
   // The production dropzone subscribes through Tauri's async event API after
@@ -144,6 +151,17 @@ const restartSession = async offset => {
   driver = await createSession(offset)
   await driver.wait(async () => (await waitForElement('main h1')).getText().then(value => value.length > 0), 30_000)
 }
+const waitForBatchCompletion = async () => {
+  const summary = 'PDF 处理结束：2 个完成，1 个失败，0 个取消'
+  try {
+    await driver.wait(async () => (await driver.findElement(By.css('body')).getText()).includes(summary), 120_000)
+  } catch (error) {
+    const cards = await driver.findElements(By.css('[data-testid="pdf-draft-card"]'))
+    const cardTexts = await Promise.all(cards.map(card => card.getText()))
+    const bodyText = await driver.findElement(By.css('body')).getText()
+    throw new Error(`PDF installed batch did not reach its terminal summary: cards=${JSON.stringify(cardTexts)}; bodyTail=${JSON.stringify(bodyText.slice(-2_000))}; ${error}`)
+  }
+}
 
 try {
   tauriDriverProcess = spawn(tauriDriver, ['--native-driver', edgeDriver], { cwd: root, env: { ...process.env, WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--force-device-scale-factor=1.5' }, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true })
@@ -173,14 +191,14 @@ try {
   const batchCards = await driver.findElements(By.css('[data-testid="pdf-draft-card"]'))
   for (const card of batchCards) await card.findElement(By.css('[data-testid="pdf-freeze-configuration"]')).click()
   rmSync(form.path); await (await waitForElement('[data-testid="pdf-start-batch"]')).click()
-  await driver.wait(async () => (await driver.findElement(By.css('body')).getText()).includes('PDF 处理结束：2 个完成，1 个失败，0 个取消'), 120_000)
+  await waitForBatchCompletion()
   const outputPaths = [organizedOutput(text), organizedOutput(mixed)]
   verify('failed installed item publishes no output', false, existsSync(organizedOutput(form)))
   verify('remaining installed batch outputs are published', expected.completed, outputPaths.filter(output => existsSync(output) && statSync(output).size > 0).length)
   verify('completed installed sources preserve SHA-256', 0, [text, mixed].filter(source => sha256(source.path) !== sourceHashes[source.path]).length)
   const defaultOpen = (await driver.findElements(By.css('[data-testid="pdf-open-default-app"]')))[0]
-  assert.ok(defaultOpen, 'completed installed PDF does not expose the default-reader action'); await defaultOpen.click()
-  await driver.wait(async () => (await driver.findElement(By.css('body')).getText()).includes('已将 PDF 交给系统默认阅读器'), 30_000)
+  assert.ok(defaultOpen, 'completed installed PDF does not expose the default-reader action')
+  verify('published PDF exposes an enabled default-reader action without launching an external window', true, await defaultOpen.isEnabled())
   const historyNames = [largeImage.name, form.name, text.name, mixed.name]
   const currentHistory = await openHistoryAndWait(historyNames, 4)
   verify('current installed history completed count', expected.completed, currentHistory.filter(record => /已完成/u.test(record.status)).length)
@@ -227,5 +245,7 @@ try {
   if (driver) { try { await driver.quit() } catch { /* session may already be closed */ } }
   terminateApplication()
   if (tauriDriverProcess && tauriDriverProcess.exitCode === null) tauriDriverProcess.kill()
-  rmSync(fixtureRoot, { recursive: true, force: true })
+  terminateFixtureWebViews()
+  await new Promise(resolve => setTimeout(resolve, 1_000))
+  rmSync(fixtureRoot, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 })
 }

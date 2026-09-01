@@ -1,5 +1,38 @@
 # 开发交接
 
+## 2026-09-01 v1.1.18 候选实测后接续点（当前唯一接续点）
+
+- 分支仍为 `codex/special-compression-navigation`，PR 仍为 [#109](https://github.com/Longyuyeee/long_Decompress/pull/109)。纠偏 head `045d9d9` 的 CI run `33462432485` 五项全绿；其正式 NSIS、包内 EXE/DLL 身份及六组安装生命周期已经核验，精确最终候选同轮结果为 64/64、失败 0。
+- 实测发现 Node 25.2.1 会在 PDF 工作区稳定崩溃，Node 24.14.0 对同一候选通过；发布测试现只接纳 Node 20/22/24 LTS major。视频取消改用 10 分钟真实输入，完成继续使用 114,842,332 B 输入；这修复短输入过快完成造成的观察竞态，没有接受“已完成”冒充“已取消”。
+- 为避免自动化干扰当前桌面，四个安装工作区会将真实应用窗口移到虚拟桌面之外，并且不点击会启动外部播放器/阅读器的按钮；仍验证真实输出、格式/页数、源哈希、取消、历史重启和入口可用。直接最小化曾使 WebView2 停顿，已经撤销且未通过延长超时掩盖。
+- 当前机器已恢复公开 `1.1.17`，安装位置 `E:\Long\Long解压`，用户数据、经典菜单与自启动均恢复，相关测试进程为 0。原始最终同轮证据位于被忽略的 `test-results/installed-release-validation/20260901-104120`。
+- 最终 NSIS 为 19,315,298 B / `1DA61456…43B852`；包内 EXE 为 29,389,312 B / `A546CBCD…C0F6BB`；唯一 `long_compress_shell_extension_1_1_18.dll` 为 253,952 B / `49E619AF…45AAA9`。
+- 下一步只允许：提交/推送本次最终审计文档 → 确认该提交相对 `045d9d9` 仅文档变化且 CI 五项全绿 → 合并 → 打 annotated `v1.1.18` 标签 → 验证四项公开资产 → 跑真实 `v1.1.17 → v1.1.18` 更新 → 最后把 README 从候选改为公开稳定版。
+
+## 2026-09-01 v1.1.18 暂停与换机交接（历史，已由上方实测接续点取代）
+
+### 当前状态
+
+- 当前开发分支为 `codex/special-compression-navigation`，目标主线为 `master`，继续使用 [PR #109](https://github.com/Longyuyeee/long_Decompress/pull/109)，不要从主线重做。公开稳定版仍是 `v1.1.17`；README 有意写作“`v1.1.18` 候选，公开稳定版仍为 `v1.1.17`”。当前没有 `v1.1.18` 标签或公开 Release。
+- 产品负责人批准将图片、视频、PDF 从压缩中心移出；左侧新增唯一“特殊压缩”入口，内部保留三种选择，压缩中心只做归档文件压缩。这是对 2026-08-26 原始界面路线的正式替换，不是无意偏移。统一 `compression/{archive,image,video,pdf}` 任务/历史、取消、容量预检、暂存校验和原子发布边界不变。
+- 功能提交 `81c2649` 与候选准备提交 `54b3f5e` 已在远端分支。页面纠偏已通过 270/270 单元、生产构建、17 文件媒体架构门禁，以及图片、视频、PDF 三类隔离 Windows Release 真实桌面门禁；八处 `1.1.18` 版本身份、README、Release Notes、Rust/Shell 全回归也已完成。
+- PR #109 首轮 CI run `33426078666`（头提交 `54b3f5e096bb7b87d22ea5500571b2e0a5b0b0a7`）中 Frontend、Rust/Shell、Windows desktop 三项通过；Browser shell E2E 因旧断言仍要求 7 个导航而失败；Windows installer 按依赖跳过。浏览器断言现已纠正为 8 个，并直接验证“特殊压缩”入口；本地 Chromium 已从头通过 9/9。推送本交接提交后，以 PR #109 最新头提交的新一轮 CI 为准，不复用首轮失败结果。
+- 本机 Tauri 生产主程序编译成功，但本机 NSIS 在启动 `makensis.exe` 时以 `系统找不到指定的文件 (os error 2)` 失败。该本地产物不是候选安装器，不得复制到新电脑、安装或发布；精确 NSIS 必须来自 PR 最新提交的干净 GitHub Windows Runner `windows-nsis-installer` artifact。
+- Windows N 按产品授权暂不保证支持，不再是 `v1.1.18` 实机发布门禁；不得把普通 Windows 的结果写成 Windows N 支持证据。
+
+### 新电脑恢复与严格接续顺序
+
+1. 在仓库执行 `git fetch origin`、`git switch codex/special-compression-navigation`、`git pull --ff-only`，确认 `git status --short --branch` 干净；打开 PR #109，核对最新 head 与 CI，不要固定使用上面的首轮 head。
+2. 必须等 PR 最新头提交的五项 CI 全绿：Browser shell E2E、Frontend checks、Rust and shell-extension checks、Windows desktop E2E build、Windows installer。若任何一项失败，先按真实原因修复、补审计并重新推送；不得合并。
+3. 从该次全绿 run 回下载 `windows-nsis-installer`，记录 run ID、精确 head、安装器文件名/字节/SHA-256；用正式 7-Zip 运行时验证 NSIS 完整性，并复核包内主程序 ProductVersion/FileVersion、主程序 SHA-256、唯一 `long_compress_shell_extension_1_1_18.dll` 的字节与 SHA-256。不得引用本机失败 NSIS 或另一提交的 artifact。
+4. 修改系统安装前，先复核当前公开 `v1.1.17` 基线、安装位置、进程、用户数据、经典菜单和自动启动。上一台电脑结束时公开版安装在 `E:\long\Long解压` 且进程为 0，但新电脑必须采集自己的实际基线，不能照抄该路径或状态。
+5. 对精确候选运行 `npm.cmd run test:installed-release -- -PreviousInstaller <v1.1.17公开NSIS> -CandidateInstaller <CI-v1.1.18-NSIS> -PreviousVersion 1.1.17 -CandidateVersion 1.1.18 -RunArchiveWorkspaceMatrix -RunImageWorkspaceMatrix -RunVideoRuntimeMatrix -RunPdfRuntimeMatrix -RunVideoWorkspaceMatrix -RunPdfWorkspaceMatrix`。必须验证生产包没有 E2E bridge、左侧恰有 8 个入口、压缩中心没有图片/视频/PDF、特殊压缩内有三种工作区，并完成三类真实流程、历史/重启、默认应用、候选卸载与公开基线恢复。
+6. 将安装器、包内身份、安装生命周期及恢复证据写入 [RELEASE_AUDIT_1.1.18.md](RELEASE_AUDIT_1.1.18.md)，审计并推送；等待新 head 五项 CI 再次全绿后，才允许合并 PR #109。
+7. 合并后拉取 `master`，确认合并提交与 PR 最终文件树一致；只在该合并提交创建 annotated `v1.1.18` 并推送标签。等待 Release workflow 成功，核验 NSIS、updater `.nsis.zip`、`.sig`、`latest.json` 四项资产，逐项记录字节/SHA-256、签名、URL、版本与包内身份。
+8. 运行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-public-update.ps1 -PreviousVersion 1.1.17 -TargetVersion 1.1.18`，完成真实公开应用内更新。最后把 README 从“候选”改成公开稳定版、补齐最终审计并推送；在这些步骤全部完成前不得宣称 `v1.1.18` 已发布。
+
+完整功能证据见 [SPECIAL_COMPRESSION_NAVIGATION_AUDIT.md](SPECIAL_COMPRESSION_NAVIGATION_AUDIT.md)，候选与发布门禁见 [RELEASE_AUDIT_1.1.18.md](RELEASE_AUDIT_1.1.18.md)。本轮在浏览器门禁修复和交接文档推送后暂停，不继续合并、打标签或发布。
+
 ## 2026-09-01 v1.1.17 PDF 安全优化正式发布关闭
 
 - D-01 至 D-04 已关闭并经 PR #106 合入 `master`；收口提交 CI run `33412364228` 五项全绿。

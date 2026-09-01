@@ -39,6 +39,7 @@ const routes = [
   { path: '/', redirect: { name: 'Decompress' } },
   { path: '/decompress', name: 'Decompress', component: { template: '<div>Decompress</div>' } },
   { path: '/compress', name: 'Compress', component: { template: '<div>Compress</div>' } },
+  { path: '/special-compression', name: 'SpecialCompression', component: { template: '<div>Special Compression</div>' } },
   { path: '/browser', name: 'ArchiveBrowser', component: { template: '<div>Browser</div>' } },
   { path: '/vault', name: 'Vault', component: { template: '<div>Vault</div>' } },
   { path: '/integrity', name: 'FileIntegrity', component: { template: '<div>Integrity</div>' } },
@@ -82,11 +83,12 @@ describe('MainLayout', () => {
     expect(mocks.onFocusChanged).toHaveBeenCalledOnce()
   })
 
-  it('renders the seven product navigation entries with history before settings', async () => {
+  it('renders the eight product navigation entries with special compression beside archive compression', async () => {
     const { wrapper } = await mountLayout()
 
     expect(wrapper.find('.pi-folder-open').exists()).toBe(true)
     expect(wrapper.find('.pi-box').exists()).toBe(true)
+    expect(wrapper.find('.pi-sparkles').exists()).toBe(true)
     expect(wrapper.find('.pi-list').exists()).toBe(true)
     expect(wrapper.find('.pi-shield').exists()).toBe(true)
     expect(wrapper.find('.pi-verified').exists()).toBe(true)
@@ -94,6 +96,7 @@ describe('MainLayout', () => {
     expect(wrapper.find('.pi-cog').exists()).toBe(true)
     expect(mocks.t).toHaveBeenCalledWith('nav.decompress')
     expect(mocks.t).toHaveBeenCalledWith('nav.compress')
+    expect(mocks.t).toHaveBeenCalledWith('nav.special_compression')
     expect(mocks.t).toHaveBeenCalledWith('nav.browser')
     expect(mocks.t).toHaveBeenCalledWith('nav.vault')
     expect(mocks.t).toHaveBeenCalledWith('nav.integrity')
@@ -105,9 +108,9 @@ describe('MainLayout', () => {
     const { wrapper } = await mountLayout('/compress')
 
     const navButtons = wrapper.findAll('aside nav > button')
-    expect(navButtons).toHaveLength(7)
-    expect(navButtons[5].attributes('data-testid')).toBe('nav-History')
-    expect(navButtons[6].attributes('data-testid')).toBe('nav-Settings')
+    expect(navButtons).toHaveLength(8)
+    expect(navButtons[6].attributes('data-testid')).toBe('nav-History')
+    expect(navButtons[7].attributes('data-testid')).toBe('nav-Settings')
     expect(navButtons[1].classes()).toContain('bg-primary/20')
     expect(navButtons[0].classes()).toContain('hover:bg-primary/8')
     expect(navButtons[1].attributes('aria-current')).toBe('page')
@@ -116,8 +119,7 @@ describe('MainLayout', () => {
   it('navigates when a sidebar item is clicked', async () => {
     const { wrapper, router } = await mountLayout('/decompress')
 
-    const navButtons = wrapper.findAll('aside nav > button')
-    await navButtons[3].trigger('click')
+    await wrapper.get('[data-testid="nav-Vault"]').trigger('click')
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('Vault')
