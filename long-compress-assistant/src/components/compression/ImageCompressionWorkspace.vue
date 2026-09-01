@@ -20,7 +20,7 @@ const appStore = useAppStore()
 const store = useCompressionStore()
 const taskStore = useTaskStore()
 const imageBatch = useImageCompressionBatch()
-const showGlobalSettings = ref(true)
+const showGlobalSettings = ref(false)
 const isRunning = ref(false)
 const batchSettled = ref(0)
 const batchTotal = ref(0)
@@ -230,7 +230,7 @@ const openResultLocation = async (item: ImageCompressionItem) => {
         <p>支持 JPG、PNG、WebP；结果路径、尺寸与节省字节均来自后端验证。</p>
       </div>
       <div class="toolbar-actions">
-        <button type="button" class="secondary-action" @click="showGlobalSettings = !showGlobalSettings"><i class="pi pi-sliders-h"></i>批量设置</button>
+        <button type="button" class="secondary-action" :aria-expanded="showGlobalSettings" data-testid="image-toggle-global-settings" @click="showGlobalSettings = !showGlobalSettings"><i class="pi pi-sliders-h"></i>{{ showGlobalSettings ? '收起设置' : '批量设置' }}</button>
         <button v-if="isRunning" type="button" class="danger-action" @click="cancelImageCompression"><i class="pi pi-stop-circle"></i>取消图片压缩</button>
         <button v-else type="button" class="primary-action" :disabled="!canStart" :title="canStart ? '开始处理待处理或可重试图片' : '请先添加并读取可处理图片'" @click="startImageCompression"><i class="pi pi-play-circle"></i>开始图片压缩</button>
       </div>

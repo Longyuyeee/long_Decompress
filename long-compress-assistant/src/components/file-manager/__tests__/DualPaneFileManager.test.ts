@@ -10,6 +10,9 @@ const leftEntries = [
   { path: 'C:\\left\\Folder', name: 'Folder', size: 0, is_dir: true, extension: null },
   { path: 'C:\\left\\photos.zip', name: 'photos.zip', size: 2048, is_dir: false, extension: 'zip' },
 ]
+const rightEntries = [
+  { path: 'D:\\Target', name: 'Target', size: 0, is_dir: true, extension: null },
+]
 
 describe('DualPaneFileManager', () => {
   beforeEach(() => {
@@ -19,7 +22,7 @@ describe('DualPaneFileManager', () => {
         { name: '主目录', path: 'C:\\left', kind: 'home' },
         { name: 'D 盘', path: 'D:\\', kind: 'drive' },
       ])
-      if (command === 'list_files') return Promise.resolve(payload.path === 'C:\\left' ? leftEntries : [])
+      if (command === 'list_files') return Promise.resolve(payload.path === 'C:\\left' ? leftEntries : payload.path === 'D:\\' ? rightEntries : [])
       if (command === 'file_manager_copy') return Promise.resolve({ processed: 1, bytes: 2048 })
       return Promise.resolve(null)
     })
@@ -59,5 +62,47 @@ describe('DualPaneFileManager', () => {
     extractButton.click()
     await flushPromises()
     expect(wrapper.emitted('extract')?.[0]).toEqual([['C:\\left\\photos.zip'], 'D:\\'])
+  })
+
+  it('offers an explicit selection mode and clears it when exiting', async () => {
+    const wrapper = mount(DualPaneFileManager)
+    await flushPromises()
+    await wrapper.get('[data-testid="file-manager-selection-mode-left"]').trigger('click')
+    const leftRows = wrapper.findAll('.file-pane')[0].findAll('.file-row')
+    await leftRows[0].trigger('click')
+    await leftRows[1].trigger('click')
+    expect(wrapper.findAll('.file-pane')[0].text()).toContain('已选择 2 项')
+    await wrapper.get('[data-testid="file-manager-selection-mode-left"]').trigger('click')
+    expect(wrapper.findAll('.file-pane')[0].text()).toContain('单击选择')
+  })
+
+  it('navigates with path breadcrumbs and opens the current folder in the other pane from blank space', async () => {
+    const wrapper = mount(DualPaneFileManager, { attachTo: document.body })
+    await flushPromises()
+    const crumbs = wrapper.get('[data-testid="file-manager-breadcrumbs-left"]').findAll('button')
+    expect(crumbs.map(crumb => crumb.text())).toEqual(['C:', 'left'])
+    await crumbs[0].trigger('click')
+    expect(invoke).toHaveBeenCalledWith('list_files', { path: 'C:\\' })
+
+    await wrapper.findAll('.file-list')[1].trigger('contextmenu', { clientX: 30, clientY: 30 })
+    await flushPromises()
+    const sameFolder = document.body.querySelector('[data-testid="file-manager-open-same-other"]') as HTMLButtonElement
+    expect(sameFolder).toBeTruthy()
+    sameFolder.click()
+    await flushPromises()
+    expect(invoke).toHaveBeenCalledWith('list_files', { path: 'D:\\' })
+    wrapper.unmount()
+  })
+
+  it('uses directional move icons for left and right context menus', async () => {
+    const wrapper = mount(DualPaneFileManager, { attachTo: document.body })
+    await flushPromises()
+    await wrapper.findAll('.file-pane')[0].findAll('.file-row')[0].trigger('contextmenu', { clientX: 30, clientY: 30 })
+    let move = Array.from(document.body.querySelectorAll('.file-context button')).find(button => button.textContent?.includes('移动到另一栏'))!
+    expect(move.querySelector('i')?.classList.contains('pi-arrow-right')).toBe(true)
+    await wrapper.findAll('.file-pane')[1].findAll('.file-row')[0].trigger('contextmenu', { clientX: 30, clientY: 30 })
+    move = Array.from(document.body.querySelectorAll('.file-context button')).find(button => button.textContent?.includes('移动到另一栏'))!
+    expect(move.querySelector('i')?.classList.contains('pi-arrow-left')).toBe(true)
+    wrapper.unmount()
   })
 })
