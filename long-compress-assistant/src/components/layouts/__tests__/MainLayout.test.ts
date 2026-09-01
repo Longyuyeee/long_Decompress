@@ -97,6 +97,7 @@ describe('MainLayout', () => {
     expect(mocks.t).toHaveBeenCalledWith('nav.decompress')
     expect(mocks.t).toHaveBeenCalledWith('nav.compress')
     expect(mocks.t).toHaveBeenCalledWith('nav.special_compression')
+    expect(wrapper.get('[data-testid="nav-SpecialCompression"]').attributes('aria-label')).toContain('Ctrl+Shift+S')
     expect(mocks.t).toHaveBeenCalledWith('nav.browser')
     expect(mocks.t).toHaveBeenCalledWith('nav.vault')
     expect(mocks.t).toHaveBeenCalledWith('nav.integrity')

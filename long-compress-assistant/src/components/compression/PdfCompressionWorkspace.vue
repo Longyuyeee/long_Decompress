@@ -193,6 +193,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
     </div>
 
     <EnhancedFileDropzone
+      :compact="items.length > 0"
       accept="pdf"
       hint="添加需要分析的 PDF"
       sub-hint="只读调用已校验的 qpdf；支持加密 PDF 密码验证"
@@ -279,7 +280,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
 </template>
 
 <style scoped>
-.pdf-workspace { box-sizing: border-box; width: 100%; max-width: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 1rem; color: var(--text-content); }
+.pdf-workspace { box-sizing: border-box; display:flex; width: 100%; max-width: 100%; min-width:0; min-height: 0; flex:1; flex-direction:column; overflow: hidden; padding: .1rem; color: var(--text-content); }
 .pdf-workspace > *, .draft-list, .draft-card { box-sizing: border-box; max-width: 100%; min-width: 0; }
 .workspace-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
 .eyebrow { color: var(--dynamic-accent); font-size: .68rem; font-weight: 900; letter-spacing: .12em; }
@@ -290,7 +291,7 @@ h2 { margin: .25rem 0; font-size: 1.15rem; font-weight: 900; } .workspace-header
 .boundary-banner { display: flex; gap: .55rem; align-items: center; margin-bottom: .8rem; border: 1px solid rgb(34 197 94 / .25); border-radius: .8rem; padding: .65rem .8rem; background: rgb(34 197 94 / .08); font-size: .7rem; line-height: 1.45; }
 .output-directory { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .8rem; border: 1px solid var(--border-subtle); border-radius: .75rem; padding: .65rem .75rem; background: var(--bg-input); }.output-directory div { min-width: 0; }.output-directory span,.output-directory strong { display: block; }.output-directory span { color: var(--text-muted); font-size: .58rem; }.output-directory strong { overflow: hidden; margin-top: .1rem; font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }.output-directory button,.execution-result button { flex: 0 0 auto; border: 1px solid var(--border-subtle); border-radius: .55rem; padding: .4rem .55rem; font-size: .6rem; font-weight: 800; }
 .selection-error,.analysis-error { margin-top: .5rem; color: #fb7185; font-size: .7rem; font-weight: 750; }
-.draft-list { display: grid; gap: .8rem; margin-top: .9rem; }.draft-card { width: 100%; border: 1px solid var(--border-subtle); border-radius: 1.1rem; padding: .9rem; background: var(--bg-card); }
+.draft-list { display: grid; min-height:0; align-content:start; gap: .8rem; margin-top: .9rem; overflow-x:hidden;overflow-y:auto;padding-right:.25rem }.draft-card { width: 100%; border: 1px solid var(--border-subtle); border-radius: 1.1rem; padding: .9rem; background: var(--bg-card); }
 .card-title { display: flex; align-items: center; gap: .65rem; }.file-icon { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: .7rem; color: #fb7185; background: rgb(244 63 94 / .1); }
 .file-heading { min-width: 0; flex: 1; }.file-heading h3 { font-size: .82rem; font-weight: 900; }.file-heading p { overflow: hidden; color: var(--text-muted); font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; }
 .status { border-radius: 99px; padding: .25rem .5rem; font-size: .62rem; font-weight: 850; background: var(--bg-input); }.status.ready { color: #4ade80; }.status.blocked,.status.password-required { color: #fbbf24; }.status.failed { color: #fb7185; }

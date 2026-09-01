@@ -18,6 +18,7 @@ const commands = useTauriCommands()
 const videoBatch = useVideoCompressionBatch()
 const inFlight = new Map<string, number>()
 const isRunning = ref(false)
+const showGlobalSettings = ref(false)
 
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`
@@ -217,6 +218,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
         <p>执行复用统一任务、取消、验证、原子发布与跨重启历史。</p>
       </div>
       <div class="toolbar-actions">
+        <button type="button" class="secondary-action" :aria-expanded="showGlobalSettings" data-testid="video-toggle-global-settings" @click="showGlobalSettings = !showGlobalSettings"><i class="pi pi-sliders-h"></i>{{ showGlobalSettings ? '收起设置' : '批量设置' }}</button>
         <button v-if="isRunning" type="button" class="danger-action" @click="cancelVideoCompression"><i class="pi pi-stop-circle"></i>取消视频压缩</button>
         <button v-else type="button" class="primary-action" :disabled="!canStart" @click="startVideoCompression"><i class="pi pi-play-circle"></i>开始视频压缩</button>
       </div>
@@ -228,7 +230,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
       <strong v-if="store.videoItems.length">{{ readyCount }} 就绪<span v-if="planningCount"> · {{ planningCount }} 探测中</span></strong>
     </div>
 
-    <div class="global-settings-card">
+    <div v-if="showGlobalSettings" class="global-settings-card custom-scrollbar">
       <div class="settings-heading"><span><i class="pi pi-sliders-h"></i>批量配置</span><small>单项可展开覆盖；修改后重新探测和规划</small></div>
       <VideoCompressionSettingsPanel :model-value="store.videoGlobalSettings" @update:model-value="updateGlobalSettings" />
       <div class="output-directory"><div><span>输出目录</span><strong :title="store.videoOutputDirectory">{{ store.videoOutputDirectory || '与源文件同目录' }}</strong></div><button type="button" :disabled="isRunning" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button></div>
@@ -292,7 +294,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
 </template>
 
 <style scoped>
-.video-workspace { box-sizing: border-box; display: flex; width: 100%; max-width: 100%; min-width: 0; min-height: 0; flex: 1; flex-direction: column; gap: .75rem; overflow-x: hidden; overflow-y: auto; padding: .1rem; }
+.video-workspace { box-sizing: border-box; display: flex; width: 100%; max-width: 100%; min-width: 0; min-height: 0; flex: 1; flex-direction: column; gap: .75rem; overflow: hidden; padding: .1rem; }
 .video-workspace > * { box-sizing: border-box; max-width: 100%; min-width: 0; }
 .workspace-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; }
 .workspace-toolbar > div { min-width: 0; flex: 1 1 20rem; }
@@ -301,13 +303,13 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
 .title-line strong { font-size: .88rem; font-weight: 900; }
 .title-line span { border-radius: 999px; background: color-mix(in srgb, var(--dynamic-accent) 12%, transparent); padding: .18rem .45rem; color: var(--dynamic-accent); font-size: .58rem; font-weight: 900; }
 .workspace-toolbar p { margin-top: .2rem; color: var(--text-muted); font-size: .65rem; }
-.toolbar-actions { display: flex; gap: .5rem; }.primary-action, .danger-action { border-radius: .75rem; padding: .65rem .8rem; color: white; font-size: .65rem; font-weight: 850; }.primary-action { background: var(--dynamic-accent); }.danger-action { background: #ef4444; }.primary-action:disabled { cursor: not-allowed; opacity: .45; }
+.toolbar-actions { display: flex; gap: .5rem; }.primary-action, .danger-action, .secondary-action { border-radius: .75rem; padding: .65rem .8rem; font-size: .65rem; font-weight: 850; }.primary-action, .danger-action { color: white; }.primary-action { background: var(--dynamic-accent); }.danger-action { background: #ef4444; }.secondary-action{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.primary-action:disabled { cursor: not-allowed; opacity: .45; }
 .truth-boundary { display: flex; align-items: center; gap: .5rem; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 22%, transparent); border-radius: .8rem; background: color-mix(in srgb, var(--dynamic-accent) 7%, transparent); padding: .6rem .75rem; color: var(--text-muted); font-size: .62rem; line-height: 1.45; }
 .truth-boundary i, .truth-boundary strong { color: var(--dynamic-accent); }.truth-boundary strong { margin-left: auto; white-space: nowrap; }
-.global-settings-card, .video-card { box-sizing: border-box; max-width: 100%; min-width: 0; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-card) 88%, transparent); padding: .85rem; }
+.global-settings-card, .video-card { box-sizing: border-box; max-width: 100%; min-width: 0; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-card) 88%, transparent); padding: .85rem; }.global-settings-card{max-height:min(22rem,52vh);flex-shrink:0;overflow-x:hidden;overflow-y:auto}
 .settings-heading { display: flex; justify-content: space-between; gap: .75rem; margin-bottom: .65rem; color: var(--text-content); font-size: .68rem; font-weight: 900; }.settings-heading small { color: var(--text-muted); font-size: .58rem; font-weight: 650; }
 .output-directory { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .7rem; border-top: 1px solid var(--border-subtle); padding-top: .65rem; }.output-directory div { min-width: 0; }.output-directory span, .output-directory strong { display: block; }.output-directory span { color: var(--text-muted); font-size: .55rem; }.output-directory strong { overflow: hidden; margin-top: .15rem; color: var(--text-content); font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; }.output-directory button, .execution-facts button { flex: 0 0 auto; border: 1px solid var(--border-subtle); border-radius: .55rem; padding: .35rem .55rem; color: var(--text-content); font-size: .58rem; font-weight: 800; }
-.video-empty { min-height: 14rem; }.video-list { display: grid; width: 100%; max-width: 100%; min-width: 0; gap: .65rem; }.video-card { overflow: hidden; }
+.video-empty { display:flex;min-height:0;flex:1; }.video-empty :deep(.drop-area){display:flex;min-height:13rem;width:100%;align-items:center;justify-content:center}.video-list { display: grid; width: 100%; max-width: 100%; min-width: 0; min-height:0; flex:1; align-content:start; gap: .65rem; overflow-x:hidden;overflow-y:auto;padding-right:.25rem }.video-card { overflow: hidden; }
 .video-card header { display: flex; min-width: 0; align-items: center; gap: .55rem; }.expand, .remove { flex: 0 0 auto; width: 1.8rem; height: 1.8rem; border-radius: .55rem; color: var(--text-muted); }.expand:hover, .remove:hover { background: var(--bg-input); color: var(--text-content); }
 .file-identity { min-width: 0; flex: 1; }.file-identity strong, .file-identity small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.file-identity strong { color: var(--text-content); font-size: .72rem; }.file-identity small { margin-top: .12rem; color: var(--text-muted); font-size: .55rem; }
 .status { display: flex; flex: 0 0 auto; align-items: center; gap: .3rem; border-radius: 999px; background: var(--bg-input); padding: .28rem .48rem; color: var(--text-muted); font-size: .58rem; font-weight: 850; }.video-card[data-status="ready"] .status { color: #22c55e; }.video-card[data-status="rejected"] .status { color: #ef4444; }

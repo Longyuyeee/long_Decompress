@@ -923,6 +923,8 @@ describe('CompressionView', () => {
     expect(workspace.text()).toContain('后续执行前必须显式确认')
     expect(useTaskStore().tasks).toHaveLength(0)
 
+    expect(workspace.find('[data-testid="video-preset-small"]').exists()).toBe(false)
+    await workspace.get('[data-testid="video-toggle-global-settings"]').trigger('click')
     await workspace.get('[data-testid="video-preset-small"]').trigger('click')
     await flushPromises()
     expect(mocks.planVideoCompression).toHaveBeenLastCalledWith(expect.objectContaining({ preset: 'small' }))

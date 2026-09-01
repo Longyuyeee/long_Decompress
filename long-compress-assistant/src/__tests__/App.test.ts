@@ -149,10 +149,12 @@ describe('App orchestration', () => {
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'o', ctrlKey: true }))
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', ctrlKey: true }))
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, shiftKey: true }))
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', ctrlKey: true }))
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'h', ctrlKey: true }))
     window.dispatchEvent(new KeyboardEvent('keydown', { key: ',', ctrlKey: true }))
     expect(mocks.routerPush).toHaveBeenCalledWith('/decompress')
+    expect(mocks.routerPush).toHaveBeenCalledWith('/special-compression')
     expect(mocks.routerPush).toHaveBeenCalledWith('/integrity')
     expect(mocks.routerPush).toHaveBeenCalledWith('/history')
     expect(mocks.routerPush).toHaveBeenCalledWith('/settings')
