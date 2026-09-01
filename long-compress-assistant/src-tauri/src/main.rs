@@ -19,6 +19,23 @@ use window_shadows::set_shadow;
 
 use long_compress_assistant::commands::system_integration::{ContextAction, DesktopBehaviorState};
 
+#[cfg(target_os = "windows")]
+fn schedule_context_menu_refresh_retries(app_path: String) {
+    tauri::async_runtime::spawn(async move {
+        // A passive Tauri update can finish the previous uninstaller's registry
+        // cleanup after the new process has started. Recheck after that hand-off
+        // instead of requiring the user to launch the application a second time.
+        for delay_seconds in [2, 4] {
+            tokio::time::sleep(std::time::Duration::from_secs(delay_seconds)).await;
+            if let Err(error) = long_compress_assistant::system_integration::context_menu::refresh_context_menu_if_present(
+                &app_path,
+            ) {
+                eprintln!("Failed to retry Explorer context menu refresh: {error}");
+            }
+        }
+    });
+}
+
 #[cfg(not(feature = "desktop-e2e"))]
 const INSTANCE_NAME: &str = "com.longcompress.assistant.desktop";
 #[cfg(feature = "desktop-e2e")]
@@ -322,11 +339,14 @@ fn main() {
             let _ = set_shadow(&window, true);
 
             if let Ok(exe_path) = std::env::current_exe() {
+                let exe_path = exe_path.to_string_lossy().into_owned();
                 if let Err(error) = long_compress_assistant::system_integration::context_menu::refresh_context_menu_if_present(
-                    &exe_path.to_string_lossy(),
+                    &exe_path,
                 ) {
                     eprintln!("Failed to refresh Explorer context menu: {}", error);
                 }
+                #[cfg(target_os = "windows")]
+                schedule_context_menu_refresh_retries(exe_path);
             }
 
             // 初始化数据库

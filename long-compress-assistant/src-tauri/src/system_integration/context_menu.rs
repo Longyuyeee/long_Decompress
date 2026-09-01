@@ -1107,6 +1107,9 @@ mod tests {
         ));
         assert!(PUBLIC_UPDATE_TEST_SCRIPT
             .contains("updated release registers complete legacy submenus"));
+        assert!(PUBLIC_UPDATE_TEST_SCRIPT
+            .contains("updated context menu remains complete after updater cleanup"));
+        assert!(include_str!("../main.rs").contains("schedule_context_menu_refresh_retries"));
     }
 
     #[test]

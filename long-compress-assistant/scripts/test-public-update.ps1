@@ -397,6 +397,16 @@ try {
     $contextMenuCascade.valid
   ) $contextMenuCascade.detail
 
+  # The previous uninstaller may still be finishing after the new process
+  # first reports a complete menu. The product performs delayed refreshes;
+  # observe beyond both retries before stopping the new process.
+  Start-Sleep -Seconds 8
+  $stableContextMenuMode = Get-ContextMenuMode
+  $stableContextMenuCascade = Get-ClassicContextMenuCascadeStatus $updatedState.executable
+  Add-Check 'updated context menu remains complete after updater cleanup' (
+    $stableContextMenuMode -eq 'legacy' -and $stableContextMenuCascade.valid
+  ) "mode=$stableContextMenuMode; $($stableContextMenuCascade.detail)"
+
   # The restarted application keeps its SQLite database open. Prove the restart
   # first, then quiesce this exact installation before hashing persistent data.
   Add-Check 'updated application quiesces for data validation' (
