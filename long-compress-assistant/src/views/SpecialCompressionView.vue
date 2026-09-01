@@ -114,14 +114,14 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
   box-shadow: 0 8px 20px -15px var(--dynamic-accent);
 }
 
+@media (max-width: 960px) {
+  .special-compression-header { grid-template-columns: minmax(11rem, auto) minmax(18rem, 1fr); }
+}
+
 @media (max-width: 640px) {
   .special-compression-header { grid-template-columns: minmax(0, 1fr) auto; gap: .65rem; }
   .special-compression-mode-switch { grid-template-columns: repeat(3, 2.4rem); }
   .special-compression-mode-switch button span { display: none; }
   .special-compression-mode-switch button i { font-size: 1rem; }
-}
-
-@media (max-width: 960px) {
-  .special-compression-header { grid-template-columns: minmax(11rem, auto) minmax(18rem, 1fr); }
 }
 </style>
