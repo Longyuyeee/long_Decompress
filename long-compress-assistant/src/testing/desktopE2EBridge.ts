@@ -23,6 +23,12 @@ export interface DesktopE2EBridge {
   taskHistory: () => Promise<TaskHistoryRecord[]>
   seedVaultPassword: (name: string, password: string) => Promise<string>
   reset: () => Promise<void>
+  fileManagerCopyMove: (sourcePath: string, copyDestination: string, moveDestination: string) => Promise<{
+    copy: { processed: number; files: number; directories: number; bytes: number }
+    move: { processed: number; files: number; directories: number; bytes: number }
+    finalPath: string
+    properties: { bytes: number; files: number; directories: number }
+  }>
   taskStatus: (taskId: string) => TaskStatus | null
   taskProgress: (taskId: string) => number | null
   runSevenZipRoundTrip: (
@@ -413,6 +419,18 @@ export const installDesktopE2EBridge = () => {
 
     taskProgress(taskId) {
       return taskStore.tasks.find(item => item.id === taskId)?.progress ?? null
+    },
+
+    async fileManagerCopyMove(sourcePath, copyDestination, moveDestination) {
+      const name = sourcePath.split(/[\\/]/).pop()!
+      const separator = copyDestination.includes('\\') ? '\\' : '/'
+      const copiedPath = `${copyDestination.replace(/[\\/]+$/, '')}${separator}${name}`
+      const finalSeparator = moveDestination.includes('\\') ? '\\' : '/'
+      const finalPath = `${moveDestination.replace(/[\\/]+$/, '')}${finalSeparator}${name}`
+      const copy = await invoke<any>('file_manager_copy', { sources: [sourcePath], destination: copyDestination })
+      const move = await invoke<any>('file_manager_move', { sources: [copiedPath], destination: moveDestination })
+      const properties = await invoke<any>('file_manager_properties', { path: finalPath })
+      return { copy, move, finalPath, properties }
     },
 
     async runSevenZipRoundTrip(sourcePath, archivePath, outputPath) {

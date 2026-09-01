@@ -107,6 +107,7 @@ const watchFolderLifecycleOnly = process.argv.includes('--watch-folder-lifecycle
 const resourcePreflightOnly = process.argv.includes('--resource-preflight-only')
 const smartAnalysisOnly = process.argv.includes('--smart-analysis-only')
 const archiveBrowserOnly = process.argv.includes('--archive-browser-only')
+const fileManagerOnly = process.argv.includes('--file-manager-only')
 const markOfWebOnly = process.argv.includes('--mark-of-web-only')
 const compressionVerificationOnly = process.argv.includes('--compression-verification-only')
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
@@ -636,9 +637,51 @@ async function runArchiveBrowserDesktopGate() {
 
   await (await waitForElement('[data-testid="nav-ArchiveBrowser"]')).click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/browser'), 30_000)
+  const fileManager = await waitForElement('[data-testid="dual-pane-file-manager"]')
+  console.log('[desktop-e2e] dual-pane file-manager UI is visible')
+  assert.equal((await fileManager.findElements(By.css('.file-pane'))).length, 2, 'the browser tab must open as two real file panes')
+  assert.doesNotMatch(await fileManager.getText(), /把压缩包拖到这里/, 'archive drop must not be the default browser experience')
+
+  const fileManagerRoot = path.join(browserFixtureRoot, 'file-manager-real')
+  const fileManagerSource = path.join(fileManagerRoot, 'source', 'album')
+  const fileManagerCopyDestination = path.join(fileManagerRoot, 'copy-target')
+  const fileManagerMoveDestination = path.join(fileManagerRoot, 'move-target')
+  mkdirSync(path.join(fileManagerSource, 'nested'), { recursive: true })
+  mkdirSync(fileManagerCopyDestination, { recursive: true })
+  mkdirSync(fileManagerMoveDestination, { recursive: true })
+  writeFileSync(path.join(fileManagerSource, 'a.txt'), 'alpha')
+  writeFileSync(path.join(fileManagerSource, 'nested', 'b.bin'), Buffer.from([0, 1, 2, 3]))
+  console.log('[desktop-e2e] invoking real copy/move/properties commands')
+  const fileManagerResult = await callDesktopBridge(
+    'fileManagerCopyMove',
+    fileManagerSource,
+    fileManagerCopyDestination,
+    fileManagerMoveDestination,
+  )
+  console.log('[desktop-e2e] real copy/move/properties commands completed')
+  assert.deepEqual(
+    [fileManagerResult.copy.processed, fileManagerResult.copy.files, fileManagerResult.copy.directories, fileManagerResult.copy.bytes],
+    [1, 2, 2, 9],
+    'real desktop copy must report the exact expected tree totals',
+  )
+  assert.deepEqual(
+    [fileManagerResult.move.processed, fileManagerResult.move.files, fileManagerResult.move.directories, fileManagerResult.move.bytes],
+    [1, 2, 2, 9],
+    'real desktop move must report the exact expected tree totals',
+  )
+  assert.equal(existsSync(path.join(fileManagerCopyDestination, 'album')), false, 'move must remove the copied source tree')
+  assert.equal(readFileSync(path.join(fileManagerResult.finalPath, 'a.txt'), 'utf8'), 'alpha')
+  assert.deepEqual(
+    [fileManagerResult.properties.files, fileManagerResult.properties.directories, fileManagerResult.properties.bytes],
+    [2, 2, 9],
+    'real desktop properties must match the moved tree',
+  )
+  if (fileManagerOnly) return
 
   const openArchive = async (archivePath, outputPath, password, expectedText) => {
     await callDesktopBridge('queueDesktopDialogSelections', [archivePath, outputPath])
+    const fileManagerChooser = await driver.findElements(By.css('[data-testid="file-manager-open-archive"]'))
+    if (fileManagerChooser.length > 0) await fileManagerChooser[0].click()
     const passwordInput = await waitForElement('.browser-toolbar input[type="password"]')
     await driver.executeScript(
       "const input = arguments[0]; input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true }));",
@@ -666,7 +709,9 @@ async function runArchiveBrowserDesktopGate() {
   }
 
   await callDesktopBridge('queueDesktopDialogSelections', [cancellableTar])
-  await (await waitForElement('.browser-page > header .browser-primary')).click()
+  const initialFileManagerChooser = await driver.findElements(By.css('[data-testid="file-manager-open-archive"]'))
+  if (initialFileManagerChooser.length > 0) await initialFileManagerChooser[0].click()
+  else await (await waitForElement('.browser-page > header .browser-primary')).click()
   const cancelBrowse = await waitForElement('[data-testid="archive-browse-cancel"]')
   const cancellationStartedAt = Date.now()
   await cancelBrowse.click()
@@ -900,12 +945,16 @@ async function runArchiveBrowserDesktopGate() {
   await openArchive(defaultOpenZip, defaultOpenOutput, '', defaultOpenRootName)
 
   const verifyInternalTextPreview = async (fileName, expectedText, expectedMeta) => {
+    console.log(`[desktop-e2e] opening internal text preview for ${fileName}`)
     const search = await waitForElement('.browser-search input')
     await search.clear()
     await search.sendKeys(fileName)
     const row = await waitForElement(`[data-entry-path$="${fileName}"]`)
+    console.log(`[desktop-e2e] preview row found for ${fileName}`)
     await (await row.findElement(By.css('.preview-trigger'))).click()
+    console.log(`[desktop-e2e] preview trigger clicked for ${fileName}`)
     const preview = await waitForElement('[data-testid="archive-entry-preview"]')
+    console.log(`[desktop-e2e] preview dialog visible for ${fileName}`)
     const previewText = await driver.wait(async () => {
       const text = await preview.getText()
       return expectedText.test(text) && expectedMeta.test(text) ? text : false
@@ -919,6 +968,7 @@ async function runArchiveBrowserDesktopGate() {
       )
     }
     await (await preview.findElement(By.css('[aria-label="关闭预览"]'))).click()
+    console.log(`[desktop-e2e] internal text preview passed for ${fileName}`)
   }
 
   await verifyInternalTextPreview('说明 文档.txt', /Long解压 A-03 Windows default TXT application/, /UTF-8[\s\S]*完整显示/)
@@ -1097,6 +1147,8 @@ async function runMarkOfWebDesktopGate() {
     await callDesktopBridge('queueDesktopDialogSelections', [archivePath, outputPath])
     await (await waitForElement('[data-testid="nav-ArchiveBrowser"]')).click()
     await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/browser'), 30_000)
+    const fileManagerChooser = await driver.findElements(By.css('[data-testid="file-manager-open-archive"]'))
+    if (fileManagerChooser.length > 0) await fileManagerChooser[0].click()
     const passwordInput = await waitForElement('.browser-toolbar input[type="password"]')
     await driver.executeScript(
       'const input = arguments[0]; input.value = ""; input.dispatchEvent(new Event("input", { bubbles: true }));',
@@ -3802,9 +3854,9 @@ try {
   } else {
 
   await runArchiveBrowserDesktopGate()
-  if (archiveBrowserOnly) {
+  if (archiveBrowserOnly || fileManagerOnly) {
     completedSuccessfully = true
-    console.log('Real Windows Tauri archive-browser gate passed.')
+    console.log(fileManagerOnly ? 'Real Windows Tauri dual-pane file-manager gate passed.' : 'Real Windows Tauri archive-browser gate passed.')
   } else {
 
   await runMarkOfWebDesktopGate()
