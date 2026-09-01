@@ -20,9 +20,11 @@
 | 八处版本身份与唯一 Shell DLL | `1.2.1` 一致；`long_compress_shell_extension_1_2_1.dll` 唯一 |
 | 更新菜单合同与严格 Clippy | 通过 |
 | 完整前端 / Rust / Shell | 前端 276/276；Chromium 按 CI 单 worker 10/10；Rust 主库 380/380、主程序 1/1、全目标无失败；Shell 5/5；严格 Clippy 通过 |
-| 无测试桥 NSIS 与安装生命周期 | 待生成与核验 |
+| 无测试桥 NSIS 与安装生命周期 | `Long解压_1.2.1_x64-setup.exe` 已生成；真实 `v1.2.0 → v1.2.1 → 卸载 → v1.2.0` 50/50、失败 0 |
 | 真实公开 `v1.2.0 → v1.2.1` 更新 | 待 Release 后执行 |
 
 在真实公开更新全部通过前，不宣称本竞态已经关闭。
 
 本机首次把 Chromium 8 workers 与 Rust Release 并行运行时，两个随机懒加载路由超过原 30 秒；第二次 8 workers 又有三个不同页面超时。截图均显示导航按钮已经激活但页面仍停留在解压中心，没有业务异常。未增加重试、未延长超时；按仓库 CI 的单 worker 配置从头运行后 10/10，因此将差异归类为本机并行开发服务器资源竞争，而不是接受失败或修改产品断言。
+
+本地候选 NSIS 为 19,393,909 B / SHA-256 `B8294CB4FC7CC7257AFD544358B91B943BBB69BC412C6F81A4EC231D0CE85217`；主程序为 29,687,296 B / SHA-256 `294A676E02861A207ACFA786C7F6A921D012BE19CF60A0E9B6A98E7E537E3337`，ProductVersion `1.2.1`；唯一 Shell DLL 为 246,784 B / SHA-256 `AC6E9E3CE8E36A02749ACE0E4A72A01C26B10D04122AF5B288A1ED3C3CCF110B`。安装生命周期原始证据位于被忽略的 `test-results/installed-release-validation/20260901-161557/result.json`，结束后已恢复公开 `v1.2.0`，相关应用进程为 0。
