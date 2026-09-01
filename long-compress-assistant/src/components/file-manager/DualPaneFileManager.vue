@@ -277,6 +277,7 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
 
 <style scoped>
 .manager-header h1 { line-height: 1; }
+.file-manager{overflow:hidden}
 .status-pill { display:flex; align-items:center; gap:.45rem; padding:.55rem .8rem; border:1px solid var(--border-subtle); border-radius:999px; color:var(--text-muted); background:var(--bg-input); font-size:.66rem; font-weight:800; }
 .status-pill i { color:var(--dynamic-accent); }
 .manager-actions{display:flex;align-items:center;gap:.55rem}.manager-actions>button{height:2.35rem;padding:0 .75rem;display:flex;align-items:center;gap:.4rem;border-radius:.72rem;background:var(--dynamic-accent);color:white;font-size:.68rem;font-weight:850}

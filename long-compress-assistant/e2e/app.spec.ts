@@ -372,6 +372,13 @@ test.describe('Long Decompress desktop shell', () => {
           value = 'C:/archives/images.zip'
         } else if (message.cmd === 'get_file_info') {
           value = { name: 'images.zip', size: 128, is_dir: false, modified: 0 }
+        } else if (message.cmd === 'file_manager_locations') {
+          value = [
+            { name: '主目录', path: 'C:/Users/test', kind: 'home' },
+            { name: 'D 盘', path: 'D:/', kind: 'drive' },
+          ]
+        } else if (message.cmd === 'list_files') {
+          value = []
         } else if (message.cmd === 'browse_archive') {
           value = {
             format: 'ZIP', totalFiles: 1, totalDirectories: 0,
@@ -401,7 +408,13 @@ test.describe('Long Decompress desktop shell', () => {
     await page.reload()
     await page.keyboard.press('Control+b')
     await page.waitForURL('**/#/browser')
-    await page.locator('header .browser-primary').click()
+    const fileManager = page.getByTestId('dual-pane-file-manager')
+    await expect(fileManager).toBeVisible()
+    await expect(fileManager.locator('.file-pane')).toHaveCount(2)
+    await expect(fileManager).not.toContainText('把压缩包拖到这里')
+    await expectVerticalOnlyScrolling(page, ['[data-testid="dual-pane-file-manager"]', '.file-pane', '.file-list'])
+    await page.getByTestId('file-manager-open-archive').click()
+    await expect(page.locator('.browser-page')).toBeVisible()
     await page.locator('[data-entry-path="art/"]').dblclick()
     await expect(page.getByTestId('archive-breadcrumbs')).toContainText('art')
     await expect(page.getByText('preview.png').first()).toBeVisible()

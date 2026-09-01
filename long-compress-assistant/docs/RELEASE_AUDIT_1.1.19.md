@@ -13,7 +13,7 @@
 | --- | --- |
 | 八处版本身份与唯一 Shell DLL | `1.1.19` 一致，`long_compress_shell_extension_1_1_19.dll` 唯一 |
 | Rust 真实文件系统 | 3/3；复制、移动、BLAKE3、属性、冲突零落地和边界阻断通过 |
-| 相关 UI / 归档回归 | 41/41 |
+| 相关 UI / 归档回归 | 41/41；Browser shell Chromium 9/9 |
 | 全量单元 | 273/273；失败 0 |
 | TypeScript / Rust / Vite | 全部通过 |
 | 无测试桥本地 NSIS | `Long解压_1.1.19_x64-setup.exe` 已生成；本机无签名环境，未生成 Windows 11 identity package |
