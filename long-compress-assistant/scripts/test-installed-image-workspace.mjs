@@ -144,7 +144,7 @@ const createSession = async attemptOffset => {
   }
   assert.ok(created, 'installed WebView2 session was not created')
   await created.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 120_000 })
-  await created.manage().window().setRect({ width: 1280, height: 800 })
+  await created.manage().window().setRect({ x: -32_000, y: -32_000, width: 1280, height: 800 })
   return created
 }
 

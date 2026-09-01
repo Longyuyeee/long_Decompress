@@ -28,7 +28,14 @@ const evidenceRoot = path.resolve(
   process.env.VIDEO_WORKSPACE_EVIDENCE_DIRECTORY
     || path.join(root, 'test-results', 'installed-video-workspace'),
 )
-const pinnedFixture = path.join(
+const pinnedCancellationFixture = path.join(
+  root,
+  'test-results',
+  'c05-video-long-large-matrix',
+  'inputs',
+  'avi-10-minute.avi',
+)
+const pinnedCompletionFixture = path.join(
   root,
   'test-results',
   'c05-video-long-large-matrix',
@@ -36,8 +43,10 @@ const pinnedFixture = path.join(
   'avi-100mib-1080p.avi',
 )
 const runSuffix = path.basename(fixtureRoot).slice(-6)
-const source = path.join(sourceRoot, `安装版 取消与完成 1080p-${runSuffix}.avi`)
-const output = path.join(sourceRoot, `安装版 取消与完成 1080p-${runSuffix}.compressed.mp4`)
+const cancellationSource = path.join(sourceRoot, `安装版 取消 10分钟-${runSuffix}.avi`)
+const cancellationOutput = path.join(sourceRoot, `安装版 取消 10分钟-${runSuffix}.compressed.mp4`)
+const completionSource = path.join(sourceRoot, `安装版 完成 1080p-${runSuffix}.avi`)
+const completionOutput = path.join(sourceRoot, `安装版 完成 1080p-${runSuffix}.compressed.mp4`)
 const checks = []
 let driver
 let tauriDriverProcess
@@ -47,7 +56,8 @@ let webviewData = ''
 
 const expected = {
   productionBridge: false,
-  sourceBytes: 114_842_332,
+  cancellationSourceBytes: 30_163_318,
+  completionSourceBytes: 114_842_332,
   cancelledHistoryRecords: 1,
   completedHistoryRecords: 1,
   output: { container: 'mp4', videoCodec: 'h264', width: 1280, height: 720, durationSeconds: 32 },
@@ -64,14 +74,17 @@ for (const [label, target] of [
   ['installed application', application],
   ['Microsoft EdgeDriver', edgeDriver],
   ['tauri-driver', tauriDriver],
-  ['pinned C-05 large video fixture', pinnedFixture],
+  ['pinned C-05 ten-minute cancellation fixture', pinnedCancellationFixture],
+  ['pinned C-05 large completion fixture', pinnedCompletionFixture],
 ]) assert.ok(target && existsSync(target), `${label} was not found: ${target || '<unset>'}`)
 
 mkdirSync(sourceRoot, { recursive: true })
 mkdirSync(evidenceRoot, { recursive: true })
-copyFileSync(pinnedFixture, source)
+copyFileSync(pinnedCancellationFixture, cancellationSource)
+copyFileSync(pinnedCompletionFixture, completionSource)
 const sha256 = filePath => createHash('sha256').update(readFileSync(filePath)).digest('hex')
-const sourceSha256 = sha256(source)
+const cancellationSourceSha256 = sha256(cancellationSource)
+const completionSourceSha256 = sha256(completionSource)
 const runtimeRoot = path.join(path.dirname(application), 'resources', 'video-engine')
 const productFfprobe = path.join(runtimeRoot, 'ffprobe.exe')
 assert.ok(existsSync(productFfprobe), `installed product ffprobe was not found: ${productFfprobe}`)
@@ -109,6 +122,14 @@ const terminateApplication = () => {
   ], { windowsHide: true })
 }
 
+const terminateFixtureWebViews = () => {
+  const escaped = fixtureRoot.replaceAll("'", "''")
+  spawnSync('powershell.exe', [
+    '-NoProfile', '-NonInteractive', '-Command',
+    `Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'msedge.exe' -and $_.CommandLine -like '*${escaped}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`,
+  ], { windowsHide: true })
+}
+
 const createSession = async attemptOffset => {
   let created
   for (let attempt = 1; !created && attempt <= 3; attempt += 1) {
@@ -138,7 +159,7 @@ const createSession = async attemptOffset => {
   }
   assert.ok(created, 'installed WebView2 session was not created')
   await created.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 120_000 })
-  await created.manage().window().setRect({ width: 1280, height: 800 })
+  await created.manage().window().setRect({ x: -32_000, y: -32_000, width: 1280, height: 800 })
   return created
 }
 
@@ -183,8 +204,8 @@ const emitThroughProductionTauriIpc = async paths => driver.executeAsyncScript(`
   })
 `, paths)
 
-const videoFfmpegProcessIds = () => {
-  const sourceName = path.basename(source).replaceAll("'", "''")
+const videoFfmpegProcessIds = sourcePath => {
+  const sourceName = path.basename(sourcePath).replaceAll("'", "''")
   const result = spawnSync('powershell.exe', [
     '-NoProfile', '-NonInteractive', '-Command',
     `Get-CimInstance Win32_Process | Where-Object { $_.Name -ieq 'ffmpeg.exe' -and $_.CommandLine -like '*${sourceName}*' } | ForEach-Object { $_.ProcessId }`,
@@ -200,8 +221,8 @@ const navigateToVideoWorkspace = async () => {
   await waitForElement('[data-testid="video-compression-workspace"]')
 }
 
-const addSourceAndWaitForReady = async () => {
-  const dropResult = await emitThroughProductionTauriIpc([source])
+const addSourceAndWaitForReady = async sourcePath => {
+  const dropResult = await emitThroughProductionTauriIpc([sourcePath])
   verify('production Tauri file-drop IPC accepted the real video path', true, dropResult.ok)
   return driver.wait(async () => {
     const cards = await driver.findElements(By.css('[data-testid="video-draft-card"]'))
@@ -210,14 +231,14 @@ const addSourceAndWaitForReady = async () => {
 }
 
 const matchingHistory = async () => driver.executeScript(`
-  const name = arguments[0]
+  const names = arguments[0]
   return Array.from(document.querySelectorAll('[data-testid="history-record-row"]'))
-    .filter(row => (row.textContent || '').includes(name))
+    .filter(row => names.some(name => (row.textContent || '').includes(name)))
     .map(row => ({
       text: row.textContent || '',
       status: row.querySelector('[data-testid="history-status-badge"]')?.textContent?.trim() || '',
     }))
-`, path.basename(source))
+`, [path.basename(cancellationSource), path.basename(completionSource)])
 
 const openHistoryAndWait = async expectedCount => {
   await (await waitForElement('[data-testid="nav-History"]')).click()
@@ -246,17 +267,18 @@ try {
     expected.productionBridge,
     await driver.executeScript('return Boolean(window.__LONG_DECOMPRESS_DESKTOP_E2E__)'),
   )
-  verify('real large source byte identity', expected.sourceBytes, statSync(source).size)
+  verify('real ten-minute cancellation source byte identity', expected.cancellationSourceBytes, statSync(cancellationSource).size)
+  verify('real large completion source byte identity', expected.completionSourceBytes, statSync(completionSource).size)
 
   await navigateToVideoWorkspace()
-  await addSourceAndWaitForReady()
+  await addSourceAndWaitForReady(cancellationSource)
   await (await waitForElement('[data-testid="video-compression-workspace"] .primary-action')).click()
   await driver.wait(async () => {
     const card = await waitForElement('[data-testid="video-draft-card"]')
     return await card.getAttribute('data-status') === 'compressing'
   }, 30_000)
   const observedFfmpegProcessIds = await driver.wait(() => {
-    const processIds = videoFfmpegProcessIds()
+    const processIds = videoFfmpegProcessIds(cancellationSource)
     return processIds.length > 0 ? processIds : false
   }, 30_000)
   await (await waitForElement('[data-testid="video-compression-workspace"] .danger-action')).click()
@@ -264,14 +286,14 @@ try {
     const card = await waitForElement('[data-testid="video-draft-card"]')
     return await card.getAttribute('data-status') === 'cancelled'
   }, 30_000)
-  await driver.wait(() => videoFfmpegProcessIds().length === 0, 30_000)
-  verify('cancelled installed task does not publish output', false, existsSync(output))
+  await driver.wait(() => videoFfmpegProcessIds(cancellationSource).length === 0, 30_000)
+  verify('cancelled installed task does not publish output', false, existsSync(cancellationOutput))
   verify(
     'cancelled installed task removes video staging',
     0,
     readdirSync(sourceRoot).filter(name => name.includes('.video-encode-')).length,
   )
-  verify('cancelled installed task preserves source SHA-256', sourceSha256, sha256(source))
+  verify('cancelled installed task preserves source SHA-256', cancellationSourceSha256, sha256(cancellationSource))
   const cancelledHistory = await openHistoryAndWait(1)
   verify(
     'installed cancellation persists cancelled history',
@@ -287,19 +309,19 @@ try {
   const cancelledCard = await waitForElement('[data-testid="video-draft-card"]')
   await cancelledCard.findElement(By.css('.remove')).click()
   await driver.wait(async () => (await driver.findElements(By.css('[data-testid="video-draft-card"]'))).length === 0, 15_000)
-  await addSourceAndWaitForReady()
+  await addSourceAndWaitForReady(completionSource)
   await (await waitForElement('[data-testid="video-compression-workspace"] .primary-action')).click()
   const completedCard = await driver.wait(async () => {
     const card = await waitForElement('[data-testid="video-draft-card"]')
     return await card.getAttribute('data-status') === 'completed' ? card : false
   }, 180_000)
-  verify('installed video output exists', true, existsSync(output))
-  verify('installed video output is non-empty', true, statSync(output).size > 0)
-  verify('completed installed task preserves source SHA-256', sourceSha256, sha256(source))
+  verify('installed video output exists', true, existsSync(completionOutput))
+  verify('installed video output is non-empty', true, statSync(completionOutput).size > 0)
+  verify('completed installed task preserves source SHA-256', completionSourceSha256, sha256(completionSource))
   const probeResult = spawnSync(productFfprobe, [
     '-v', 'error', '-show_entries',
     'format=format_name,duration,size:stream=codec_type,codec_name,width,height',
-    '-of', 'json', output,
+    '-of', 'json', completionOutput,
   ], { encoding: 'utf8', windowsHide: true, maxBuffer: 32 * 1024 * 1024 })
   assert.equal(probeResult.status, 0, probeResult.stderr || probeResult.stdout)
   const probe = JSON.parse(probeResult.stdout)
@@ -310,16 +332,8 @@ try {
   verify('installed output duration', expected.output.durationSeconds, Number(probe.format.duration), actual => Math.abs(actual - expected.output.durationSeconds) <= 0.32)
 
   const defaultPlayback = await completedCard.findElement(By.css('[data-testid="video-open-default-app"]'))
-  await defaultPlayback.click()
-  const playbackNotice = await driver.wait(async () => {
-    const feedback = await driver.findElements(By.css('[role="status"], [role="alert"]'))
-    for (const item of feedback) {
-      const text = await item.getText()
-      if (/系统默认应用播放/.test(text)) return text
-    }
-    return false
-  }, 30_000)
-  verify('installed default application accepts published MP4', true, /已将视频交给系统默认应用播放/.test(playbackNotice))
+  const defaultPlaybackActionAvailable = await defaultPlayback.isEnabled()
+  verify('published MP4 exposes an enabled default-application action without launching an external window', true, defaultPlaybackActionAvailable)
   const currentHistory = await openHistoryAndWait(2)
   verify('current installed session has one cancelled record', 1, currentHistory.filter(record => record.status === '已取消').length)
   verify('current installed session has one completed record', 1, currentHistory.filter(record => record.status === '已完成').length)
@@ -347,10 +361,11 @@ try {
     application,
     expected,
     actual: {
-      source: { path: source, bytes: statSync(source).size, sha256: sourceSha256 },
+      cancellationSource: { path: cancellationSource, bytes: statSync(cancellationSource).size, sha256: cancellationSourceSha256 },
+      completionSource: { path: completionSource, bytes: statSync(completionSource).size, sha256: completionSourceSha256 },
       cancellation: { observedFfmpegProcessIds, outputAbsent: true, stagingCleaned: true },
-      publication: { path: output, bytes: statSync(output).size, sha256: sha256(output), probe },
-      playbackNotice,
+      publication: { path: completionOutput, bytes: statSync(completionOutput).size, sha256: sha256(completionOutput), probe },
+      defaultPlaybackActionAvailable,
       currentHistory,
       restartedHistory,
     },
@@ -389,5 +404,7 @@ try {
     })
   }
   terminateApplication()
+  terminateFixtureWebViews()
+  await new Promise(resolve => setTimeout(resolve, 1_000))
   rmSync(fixtureRoot, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 })
 }

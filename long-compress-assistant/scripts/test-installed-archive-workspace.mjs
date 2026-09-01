@@ -242,7 +242,7 @@ try {
   assert.ok(driver, 'installed WebView2 session was not created')
   if (startupAttempts > 1) record('installed WebView2 startup recovery', `session created on attempt ${startupAttempts}`)
   await driver.manage().setTimeouts({ implicit: 1_000, pageLoad: 60_000, script: 120_000 })
-  await driver.manage().window().setRect({ width: 1280, height: 800 })
+  await driver.manage().window().setRect({ x: -32_000, y: -32_000, width: 1280, height: 800 })
 
   await driver.wait(async () => (await waitForElement('main h1')).getText().then(text => text.length > 0), 30_000)
   assert.equal(await driver.executeScript('return Boolean(window.__LONG_DECOMPRESS_DESKTOP_E2E__)'), false)

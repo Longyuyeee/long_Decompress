@@ -447,7 +447,7 @@ for (const contract of [
   'formal installed executable excludes desktop E2E bridge',
   'videoFfmpegProcessIds',
   'cancelled installed task does not publish output',
-  'installed default application accepts published MP4',
+  'published MP4 exposes an enabled default-application action without launching an external window',
   'history survives complete installed-app restart',
   'productFfprobe',
 ]) {

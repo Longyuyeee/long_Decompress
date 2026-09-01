@@ -551,6 +551,14 @@ try {
   if (-not $AllowExistingInstall) {
     throw 'This test changes the current-user installation. Re-run with -AllowExistingInstall after reviewing the backup and restore behavior.'
   }
+  $nodeVersion = (& node -p 'process.versions.node').Trim()
+  if ($LASTEXITCODE -ne 0 -or $nodeVersion -notmatch '^(\d+)\.') {
+    throw "Unable to resolve the Node.js release-test runtime: $nodeVersion"
+  }
+  $nodeMajor = [int]$Matches[1]
+  Add-Check 'release-test Node.js runtime uses an admitted LTS major' (
+    $nodeMajor -in @(20, 22, 24)
+  ) "actual=$nodeVersion; admitted=20|22|24"
   $initialState = Get-InstalledState
   Add-Check 'previous release is installed' ($null -ne $initialState) $uninstallKey
   Add-Check 'installed baseline version matches' ($initialState.version -eq $PreviousVersion) (
