@@ -21,5 +21,6 @@ v1.1.19 将原“压缩包浏览”升级为真正的双栏文件浏览器。打
 - 真实目录树预期/实际：2 个文件、2 个目录、9 字节，复制、移动和属性三组结果一致。
 - 冲突夹具确认整批 0 项落地且既有内容不变。
 - 273/273 单元测试、Rust 真实文件系统 3/3、生产构建和发布身份门禁通过。
+- GitHub Release 四资产回下载一致；真实 `v1.1.18 → v1.1.19` 应用内更新 24/24、失败 0，安装路径、用户数据、经典菜单、自启动和唯一版本化 Shell DLL 均通过。
 
-完整实现与边界见 [双栏文件浏览器审计](DUAL_PANE_FILE_BROWSER_AUDIT.md)。
+完整实现与边界见 [双栏文件浏览器审计](https://github.com/Longyuyeee/long_Decompress/blob/master/long-compress-assistant/docs/DUAL_PANE_FILE_BROWSER_AUDIT.md)。
