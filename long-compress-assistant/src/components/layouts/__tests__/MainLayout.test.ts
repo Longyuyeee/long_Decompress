@@ -83,13 +83,13 @@ describe('MainLayout', () => {
     expect(mocks.onFocusChanged).toHaveBeenCalledOnce()
   })
 
-  it('renders the eight product navigation entries with special compression beside archive compression', async () => {
+  it('renders the eight product navigation entries with special compression beside the file browser', async () => {
     const { wrapper } = await mountLayout()
 
     expect(wrapper.find('.pi-folder-open').exists()).toBe(true)
     expect(wrapper.find('.pi-box').exists()).toBe(true)
     expect(wrapper.find('.pi-sparkles').exists()).toBe(true)
-    expect(wrapper.find('.pi-list').exists()).toBe(true)
+    expect(wrapper.find('.pi-folder').exists()).toBe(true)
     expect(wrapper.find('.pi-shield').exists()).toBe(true)
     expect(wrapper.find('.pi-verified').exists()).toBe(true)
     expect(wrapper.find('.pi-history').exists()).toBe(true)

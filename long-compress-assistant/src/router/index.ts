@@ -33,9 +33,9 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/browser',
     name: 'ArchiveBrowser',
-    component: () => import('@/views/ArchiveBrowserView.vue'),
+    component: () => import('@/views/FileBrowserView.vue'),
     meta: {
-      title: '压缩包浏览中心'
+      title: '双栏文件浏览器'
     }
   },
   {

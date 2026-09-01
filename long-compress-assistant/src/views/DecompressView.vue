@@ -69,6 +69,7 @@ const drainPendingContextActions = () => {
         const createdTasks = decompressionTasks.value.filter(
           task => createdTaskIds.includes(task.id) && task.status === 'pending'
         )
+        if (request.outputPath) createdTasks.forEach(task => { task.outputPath = request.outputPath! })
         const extractToSubfolder = request.action !== 'context-extract-here'
         createdTasks.forEach(task => { task.extractToSubfolder = extractToSubfolder })
         if (createdTasks.length > 0) {

@@ -70,7 +70,7 @@ export const useAppStore = defineStore('app', () => {
   const recentFiles = ref<string[]>([])
   const errorMessage = ref<string | null>(null)
   const decompressTasks = ref<DecompressTask[]>([])
-  const pendingContextActions = ref<Array<{ action: string; files: string[] }>>([])
+  const pendingContextActions = ref<Array<{ action: string; files: string[]; outputPath?: string }>>([])
   const pendingArchiveBrowserPath = ref('')
   let errorTimer: ReturnType<typeof setTimeout> | null = null
   let successTimer: ReturnType<typeof setTimeout> | null = null
@@ -330,7 +330,7 @@ export const useAppStore = defineStore('app', () => {
       if (msg) successTimer = setTimeout(() => { successMessage.value = null }, 3000)
     },
     clearError: () => { error.value = null; if (errorTimer) clearTimeout(errorTimer) },
-    enqueueContextAction: (action: { action: string; files: string[] }) => pendingContextActions.value.push(action),
+    enqueueContextAction: (action: { action: string; files: string[]; outputPath?: string }) => pendingContextActions.value.push(action),
     takeContextActions: () => pendingContextActions.value.splice(0),
     openArchiveInBrowser: (path: string) => { pendingArchiveBrowserPath.value = path },
     takeArchiveBrowserPath: () => {

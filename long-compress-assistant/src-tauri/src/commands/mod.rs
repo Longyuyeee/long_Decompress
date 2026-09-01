@@ -4,6 +4,7 @@ pub mod decompression_profile;
 pub mod encrypted_password;
 pub mod password;
 pub mod file;
+pub mod file_manager;
 pub mod system;
 pub mod task_queue;
 pub mod system_integration;
