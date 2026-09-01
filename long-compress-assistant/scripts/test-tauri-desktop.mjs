@@ -635,12 +635,94 @@ async function runArchiveBrowserDesktopGate() {
     { cwd: sourceRoot },
   )
 
+  await (await waitForElement('[data-testid="nav-Decompress"]')).click()
+  await driver.actions().keyDown(Key.CONTROL).keyDown(Key.SHIFT).sendKeys('s').keyUp(Key.SHIFT).keyUp(Key.CONTROL).perform()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  await waitForElement('[data-testid="special-compression-center"]')
+  const specialLayout = await driver.executeScript(() => {
+    const page = document.querySelector('.special-compression-view')
+    const header = document.querySelector('.special-compression-header')
+    const heading = document.querySelector('.special-compression-heading')
+    const tabs = document.querySelector('[data-testid="special-compression-mode-switch"]')
+    const workspace = document.querySelector('[data-testid="image-compression-workspace"]')
+    const rect = element => {
+      if (!element) return null
+      const value = element.getBoundingClientRect()
+      return { top: value.top, right: value.right, bottom: value.bottom, left: value.left, width: value.width, height: value.height }
+    }
+    return {
+      page: page && { clientHeight: page.clientHeight, scrollHeight: page.scrollHeight, clientWidth: page.clientWidth, scrollWidth: page.scrollWidth },
+      header: rect(header), heading: rect(heading), tabs: rect(tabs),
+      workspace: workspace && { clientHeight: workspace.clientHeight, scrollHeight: workspace.scrollHeight },
+      settingsVisible: Boolean(document.querySelector('[data-testid="image-compression-workspace"] .global-settings-card')),
+    }
+  })
+  assert.ok(specialLayout.tabs.left > specialLayout.heading.left, `special-compression tabs must occupy the title row's right side: ${JSON.stringify(specialLayout)}`)
+  assert.ok(specialLayout.tabs.top >= specialLayout.header.top - 1 && specialLayout.tabs.bottom <= specialLayout.header.bottom + 1, `special-compression tabs must stay in the title row: ${JSON.stringify(specialLayout)}`)
+  assert.equal(specialLayout.settingsVisible, false, 'image batch settings must be collapsed before files are added')
+  assert.ok(specialLayout.page.scrollHeight <= specialLayout.page.clientHeight + 1, `empty special-compression page must not scroll vertically: ${JSON.stringify(specialLayout)}`)
+  assert.ok(specialLayout.page.scrollWidth <= specialLayout.page.clientWidth + 1, `special-compression page must not scroll horizontally: ${JSON.stringify(specialLayout)}`)
+  assert.ok(specialLayout.workspace.scrollHeight <= specialLayout.workspace.clientHeight + 1, `empty image workspace must not need vertical scrolling: ${JSON.stringify(specialLayout)}`)
+  await (await waitForElement('[data-testid="compression-mode-video"]')).click()
+  const videoEmptyLayout = await driver.executeScript(() => {
+    const workspace = document.querySelector('[data-testid="video-compression-workspace"]')
+    return { clientHeight: workspace?.clientHeight, scrollHeight: workspace?.scrollHeight, settingsVisible: Boolean(workspace?.querySelector('.global-settings-card')) }
+  })
+  assert.equal(videoEmptyLayout.settingsVisible, false, 'video batch settings must be collapsed before files are added')
+  assert.ok(videoEmptyLayout.scrollHeight <= videoEmptyLayout.clientHeight + 1, `empty video workspace must not need vertical scrolling: ${JSON.stringify(videoEmptyLayout)}`)
+  await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
+  const pdfEmptyLayout = await driver.executeScript(() => {
+    const workspace = document.querySelector('[data-testid="pdf-compression-workspace"]')
+    return { clientHeight: workspace?.clientHeight, scrollHeight: workspace?.scrollHeight }
+  })
+  assert.ok(pdfEmptyLayout.scrollHeight <= pdfEmptyLayout.clientHeight + 1, `empty PDF workspace must not need vertical scrolling: ${JSON.stringify(pdfEmptyLayout)}`)
+  writeFileSync(path.join(artifactDirectory, 'special-compression-empty-layout-v1.2.0.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+
   await (await waitForElement('[data-testid="nav-ArchiveBrowser"]')).click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/browser'), 30_000)
   const fileManager = await waitForElement('[data-testid="dual-pane-file-manager"]')
   console.log('[desktop-e2e] dual-pane file-manager UI is visible')
   assert.equal((await fileManager.findElements(By.css('.file-pane'))).length, 2, 'the browser tab must open as two real file panes')
   assert.doesNotMatch(await fileManager.getText(), /把压缩包拖到这里/, 'archive drop must not be the default browser experience')
+  assert.equal((await fileManager.findElements(By.css('[data-testid^="file-manager-selection-mode-"]'))).length, 2, 'both panes must expose a direct multi-select toggle')
+  assert.equal((await fileManager.findElements(By.css('[data-testid^="file-manager-breadcrumbs-"]'))).length, 2, 'both panes must expose clickable path breadcrumbs')
+  const leftSelectionToggle = await waitForElement('[data-testid="file-manager-selection-mode-left"]')
+  await leftSelectionToggle.click()
+  assert.equal(await leftSelectionToggle.getAttribute('aria-pressed'), 'true', 'multi-select mode must open explicitly')
+  await leftSelectionToggle.click()
+  assert.equal(await leftSelectionToggle.getAttribute('aria-pressed'), 'false', 'multi-select mode must exit explicitly')
+  await driver.executeScript(() => {
+    document.querySelectorAll('.file-pane')[0]?.querySelector('.file-list')?.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 280, clientY: 420 }))
+  })
+  const openSameFolder = await waitForElement('[data-testid="file-manager-open-same-other"]')
+  assert.match(await openSameFolder.getText(), /另一栏打开相同文件夹/)
+  await openSameFolder.click()
+  await driver.wait(async () => {
+    const paths = await driver.findElements(By.css('.path-strip'))
+    return paths.length === 2 && await paths[0].getAttribute('title') === await paths[1].getAttribute('title')
+  }, 15_000)
+  const moveDirection = async (paneIndex, expectedClass) => {
+    await driver.executeScript(index => {
+      document.querySelectorAll('.file-pane')[index]?.querySelector('.file-row')?.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: index ? 920 : 320, clientY: 460 }))
+    }, paneIndex)
+    const buttons = await driver.findElements(By.css('.file-context button'))
+    for (const button of buttons) {
+      if ((await button.getText()).includes('移动到另一栏')) {
+        const iconClass = await (await button.findElement(By.css('i'))).getAttribute('class')
+        assert.match(iconClass, new RegExp(expectedClass), `pane ${paneIndex} move icon must point toward the other pane`)
+        return
+      }
+    }
+    assert.fail(`pane ${paneIndex} context menu did not expose move-to-other-pane`)
+  }
+  await moveDirection(0, 'pi-arrow-right')
+  await moveDirection(1, 'pi-arrow-left')
+  const fileManagerDimensions = await driver.executeScript(() => {
+    const page = document.querySelector('[data-testid="dual-pane-file-manager"]')
+    return page && { clientWidth: page.clientWidth, scrollWidth: page.scrollWidth, clientHeight: page.clientHeight, scrollHeight: page.scrollHeight }
+  })
+  assert.ok(fileManagerDimensions.scrollWidth <= fileManagerDimensions.clientWidth + 1, `dual-pane manager must not scroll horizontally: ${JSON.stringify(fileManagerDimensions)}`)
+  writeFileSync(path.join(artifactDirectory, 'dual-pane-convenience-v1.2.0.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
 
   const fileManagerRoot = path.join(browserFixtureRoot, 'file-manager-real')
   const fileManagerSource = path.join(fileManagerRoot, 'source', 'album')
