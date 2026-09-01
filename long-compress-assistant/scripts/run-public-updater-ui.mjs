@@ -34,6 +34,49 @@ function terminateProcessTree(processId) {
   })
 }
 
+function moveApplicationWindowOffscreen(processId) {
+  const script = `
+Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+public static class LongDecompressUpdaterWindow {
+  [DllImport("user32.dll", SetLastError = true)]
+  public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint flags);
+}
+'@
+$deadline = (Get-Date).AddSeconds(30)
+do {
+  $process = Get-Process -Id ${processId} -ErrorAction SilentlyContinue
+  if ($null -eq $process) { exit 2 }
+  $process.Refresh()
+  if ($process.MainWindowHandle -ne 0) {
+    $moved = [LongDecompressUpdaterWindow]::SetWindowPos(
+      $process.MainWindowHandle,
+      [IntPtr]::Zero,
+      -32000,
+      -32000,
+      1280,
+      800,
+      0x0010
+    )
+    if ($moved) { exit 0 }
+  }
+  Start-Sleep -Milliseconds 100
+} while ((Get-Date) -lt $deadline)
+exit 3
+`
+  const result = spawnSync(
+    'powershell.exe',
+    ['-NoProfile', '-NonInteractive', '-Command', script],
+    { encoding: 'utf8', windowsHide: true },
+  )
+  assert.equal(
+    result.status,
+    0,
+    `failed to move the updater test window offscreen: ${result.stderr || result.stdout}`,
+  )
+}
+
 async function reserveLoopbackPort() {
   const server = createServer()
   await new Promise((resolve, reject) => {
@@ -124,6 +167,7 @@ try {
     'utf8',
   )
 
+  moveApplicationWindowOffscreen(applicationProcess.pid)
   const browserWebSocketUrl = await waitForCdpEndpoint(endpoint)
   browser = await chromium.connectOverCDP(browserWebSocketUrl)
   const context = browser.contexts()[0]

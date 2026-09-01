@@ -24,11 +24,11 @@
 - [x] 同步中英文导航文案、单元测试和桌面/安装态门禁入口。
 - [x] 完成类型、单元、生产构建和真实桌面回归。
 - [x] head `045d9d9` 的 `1.1.18` 正式 CI 候选及归档/图片/视频/PDF 六组安装态门禁通过，主生命周期 64/64、失败 0。
-- [ ] 经受保护主线 CI 合并，创建 annotated 标签并验证公开资产与 `v1.1.17 → v1.1.18` 更新。
+- [x] 经受保护主线 CI 合并，创建 annotated 标签并验证公开资产与 `v1.1.17 → v1.1.18` 更新。
 
 ## 4. 验证证据
 
-- Node.js `v24.19.0`：`npm.cmd run type-check` 通过；`npm.cmd run test:unit` 为 47/47 文件、270/270 用例通过；`npm.cmd run build` 通过。
+- Node.js `v24.14.0`：`npm.cmd run type-check` 通过；`npm.cmd run test:unit` 为 47/47 文件、270/270 用例通过；`npm.cmd run build` 通过。
 - `npm.cmd run test:media-architecture` 检查 17 个媒体生产文件并通过；契约现同时要求三种媒体只由特殊压缩页面路由、压缩中心不得导入媒体工作区。
 - 隔离 Windows Release 使用 `VITE_DESKTOP_E2E=1` 与 `custom-protocol,desktop-e2e` 重建；普通生产包仍不含测试桥。
 - 图片工作区真实门禁通过：JPG/PNG/WebP 3/3 编码、发布、历史、预览、选择器，并验证归档草稿在跨页面后保留、特殊压缩队列不串入压缩中心。
@@ -38,4 +38,4 @@
 
 ## 5. 当前审计结论
 
-功能纠偏已通过静态、单元、生产构建与三类真实 Windows 桌面门禁，没有改动 Rust 媒体引擎、任务/历史 schema、输出事务或公开格式承诺。PR #109 head `045d9d9` 的 CI run `33462432485` 五项全绿；其正式 NSIS 在 Node 24.14.0 下完成归档、图片、视频/PDF 运行时及视频/PDF 工作区六组安装生命周期，主结果 64/64、失败 0，并恢复公开 `1.1.17`。测试过程中发现的 Node 25 崩溃、短视频取消竞态、临时 WebView 占用和桌面弹窗干扰均已按真实原因纠正并在精确最终候选上复验。发布结论保持“进行中”；合并、公开资产和真实更新门禁关闭前，不得把 `v1.1.18` 描述为已发布。详细接续顺序见 [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md) 顶部。
+功能纠偏已通过静态、单元、生产构建与三类真实 Windows 桌面门禁，没有改动 Rust 媒体引擎、任务/历史 schema、输出事务或公开格式承诺。PR #109 head `045d9d9` 的 CI run `33462432485` 五项全绿；其正式 NSIS 在 Node 24.14.0 下完成六组安装生命周期，主结果 64/64、失败 0。PR 已合入 merge commit `0cdb53a`，annotated `v1.1.18` 标签、Release 四资产回下载及真实公开更新 24/24 均通过。测试过程中发现的 Node 25 崩溃、短视频取消竞态、临时 WebView 占用和桌面弹窗干扰均按真实原因纠正。导航纠偏与 `v1.1.18` 发布现已关闭，后续接续点见 [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md) 顶部。
