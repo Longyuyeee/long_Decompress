@@ -1,13 +1,14 @@
 # 开发交接
 
-## 2026-09-02 v1.2.2 候选收口（当前唯一接续点）
+## 2026-09-02 v1.2.2 正式发布关闭（当前基线）
 
-- 当前分支为 `codex/special-compression-file-manager-polish`，八处候选身份已提升为 `1.2.2`；公开稳定版在正式 Release 完成前仍为 `v1.2.1`。六项冻结需求已完成：图片/视频设置 Modal、三类重复文案精简、即时 Tab 入场与按钮动效、文件/压缩包/文件夹统一系统动作、Explorer 精确定位、特殊目录属性友好提示。
+- 六项冻结需求已由公开 `v1.2.2` 完成：图片/视频设置 Modal、三类重复文案精简、即时 Tab 入场与按钮动效、文件/压缩包/文件夹统一系统动作、Explorer 精确定位、特殊目录属性友好提示。
 - Explorer 已不再把手工引号塞进单个参数；文件使用独立 `/select,` 与真实路径，目录使用真实路径。真实 Windows Tauri/WebView2 门禁已打开精确中文空格目录并选中精确中文空格文件，未回落桌面。
 - 功能门禁：类型检查通过，前端 48 文件 280/280，Explorer Rust 6/6，Chromium 11/11，Rust 全量和 Shell 扩展全量通过，严格 Clippy 零告警；隔离 E2E Release 的真实 WebView2 右键链路、Explorer 精确定位、junction 属性提示和设置 Modal 几何全部通过。
-- 候选身份、唯一 `1.2.2` Shell DLL、无测试桥 NSIS 和真实 `v1.2.1 → v1.2.2 → 卸载 → v1.2.1` 49/49 已通过并恢复公开基线。尚未把版本写成公开发布完成；下一步必须完成 PR 五项 CI、合并标签、四资产回下载和公开更新验证。完整接续见 [SPECIAL_COMPRESSION_FILE_MANAGER_POLISH_HANDOFF.md](SPECIAL_COMPRESSION_FILE_MANAGER_POLISH_HANDOFF.md)，差异证据见 [SPECIAL_COMPRESSION_FILE_MANAGER_POLISH_AUDIT.md](SPECIAL_COMPRESSION_FILE_MANAGER_POLISH_AUDIT.md)。
+- 候选身份、唯一 Shell DLL、无测试桥 NSIS 和 `v1.2.1 → v1.2.2 → 卸载 → v1.2.1` 49/49 均通过。PR #114 五项 CI 全绿后合入 `master@6d9012b908e7b1bf24d0fbb32af669021c22b2f4`；annotated `v1.2.2` 和四项资产已发布并回下载一致。
+- 真实公开 `v1.2.1 → v1.2.2` 更新 25/25、失败 0；当前机器安装公开 `1.2.2` 于 `E:\Long\Long解压`，相关进程为 0。下一次开发必须从最新 `master`/公开 `v1.2.2` 重新审计接续目标。完整证据见 [RELEASE_AUDIT_1.2.2.md](RELEASE_AUDIT_1.2.2.md)。
 
-## 2026-09-01 v1.2.1 正式发布关闭（当前基线）
+## 2026-09-01 v1.2.1 正式发布关闭（历史，已由上方 v1.2.2 取代）
 
 - `v1.2.0` 已由 PR #112 合入 `master@c4f1549` 并公开发布，四资产回下载一致；但真实 `v1.1.19 → v1.2.0` 更新在第 19 项发现旧 updater 尾部清理会删掉新进程刚注册的目录菜单，因此没有将公开更新记为通过。
 - 重新启动同一 1.2.0 后，四根菜单在进程内和退出后都保持，确认是时序竞态。`v1.2.1` 增加启动后 2 秒/6 秒延迟复核，测试增加首次完整后 8 秒稳定观察；八处版本身份和唯一 DLL 已提升到 1.2.1。
