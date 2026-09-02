@@ -52,16 +52,17 @@ const handleTemplateDraftCreated = () => {
   <Modal
     :visible="visible"
     @close="handleCancel"
-    size="xl"
+    size="lg"
     title="全局压缩设置"
     description="应用到所有未单独配置的文件和组"
     icon="pi pi-cog"
   >
-    <div class="p-6 space-y-6">
+    <div class="space-y-4">
       <!-- 复用设置面板组件 -->
       <CompressionSettingsPanel
         v-model="localSettings"
         v-model:outputPath="localOutputPath"
+        compact
         :allow-single-file-formats="allowSingleFileFormats"
         :allow-split-archive="allowSplitArchive"
         @template-draft-created="handleTemplateDraftCreated"
@@ -69,8 +70,9 @@ const handleTemplateDraftCreated = () => {
     </div>
 
     <template #footer>
-      <div class="flex gap-3 justify-end px-6 pb-6">
+      <div class="flex gap-3 justify-end">
         <button
+          data-testid="cancel-global-compression-settings"
           @click="handleCancel"
           class="px-6 py-2.5 rounded-xl bg-input border border-subtle text-content text-sm font-bold uppercase tracking-wider hover:border-primary transition-all"
         >

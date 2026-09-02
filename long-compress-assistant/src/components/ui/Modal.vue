@@ -8,7 +8,7 @@
         <Transition name="pop">
           <div
             ref="modalContent"
-            class="relative flex max-h-[calc(100vh-2rem)] w-full transform flex-col overflow-hidden rounded-[2rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
+            class="relative flex max-h-[min(78vh,42rem)] w-full transform flex-col overflow-hidden rounded-[1.4rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
             :class="sizeClasses"
             tabindex="-1"
           >
@@ -21,7 +21,7 @@
               <i class="pi pi-times text-muted hover:text-content text-xs"></i>
             </button>
 
-            <div v-if="title || $slots.title" class="shrink-0 px-8 pt-8 pb-4">
+            <div v-if="title || $slots.title" class="shrink-0 px-6 pt-6 pb-3">
               <div class="flex items-center gap-4">
                 <div v-if="icon" class="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
                    <i :class="[icon, 'text-primary']"></i>
@@ -37,11 +37,11 @@
               </div>
             </div>
 
-            <div class="min-h-0 overflow-y-auto px-8 py-6 text-content custom-scrollbar">
+            <div class="min-h-0 overflow-y-auto px-6 py-4 text-content custom-scrollbar">
               <slot></slot>
             </div>
 
-            <div v-if="showFooter || $slots.footer" class="shrink-0 px-8 pb-8">
+            <div v-if="showFooter || $slots.footer" class="shrink-0 px-6 pb-6 pt-2">
               <div class="flex items-center justify-end gap-3">
                 <slot name="footer">
                   <button v-if="cancelText" @click="handleCancel" class="px-6 py-2.5 rounded-xl bg-input border border-subtle text-muted text-xs font-bold hover:text-content transition-all">
@@ -114,8 +114,8 @@ const sizeClasses = computed(() => {
     xs: 'max-w-[320px]',
     sm: 'max-w-[380px]',
     md: 'max-w-[460px] md:max-w-lg',
-    lg: 'max-w-[92vw] md:max-w-2xl',
-    xl: 'max-w-[95vw] md:max-w-4xl',
+    lg: 'max-w-[min(46rem,calc(100vw-3rem))]',
+    xl: 'max-w-[min(58rem,calc(100vw-3rem))]',
     full: 'max-w-full mx-4'
   }
   return classes[props.size]

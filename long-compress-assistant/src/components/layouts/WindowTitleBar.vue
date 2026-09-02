@@ -1,24 +1,15 @@
 <script setup lang="ts">
 import { appWindow } from '@tauri-apps/api/window'
-import { useAppStore } from '@/stores/app'
-
-const appStore = useAppStore()
-
 const minimize = () => appWindow.minimize()
 const toggleMaximize = () => appWindow.toggleMaximize()
 const closeApp = () => appWindow.close()
+const startDragging = (event: MouseEvent) => {
+  if (event.button === 0 && !(event.target as HTMLElement).closest('.control-btn')) void appWindow.startDragging()
+}
 </script>
 
 <template>
-  <div class="window-titlebar flex items-center justify-between h-11 bg-gradient-to-r from-card/40 via-card/30 to-card/40 backdrop-blur-2xl border-b border-subtle/50 select-none relative z-[100] shadow-sm" data-tauri-drag-region>
-    <!-- 左侧标题 & 动态指示点 -->
-    <div class="flex items-center gap-3.5 px-5" data-tauri-drag-region>
-      <div class="relative">
-        <div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_var(--dynamic-accent)] animate-pulse"></div>
-        <div class="absolute inset-0 w-2 h-2 rounded-full bg-primary/30 animate-ping"></div>
-      </div>
-      <span class="text-sm font-bold text-content/70 tracking-wide">{{ appStore.t('app.name') }}</span>
-    </div>
+  <div class="window-titlebar flex items-center justify-end h-8 bg-gradient-to-r from-card/40 via-card/30 to-card/40 backdrop-blur-2xl border-b border-subtle/50 select-none relative z-[100] shadow-sm" data-tauri-drag-region @mousedown="startDragging">
 
     <!-- 右侧控制组 -->
     <div class="flex h-full items-center">
@@ -26,8 +17,8 @@ const closeApp = () => appWindow.close()
         type="button"
         @click="minimize"
         class="control-btn hover:bg-content/8 active:bg-content/12"
-        :title="appStore.t('common.minimize')"
-        :aria-label="appStore.t('common.minimize')"
+        title="最小化"
+        aria-label="最小化"
       >
         <i class="pi pi-minus text-xs"></i>
       </button>
@@ -35,8 +26,8 @@ const closeApp = () => appWindow.close()
         type="button"
         @click="toggleMaximize"
         class="control-btn hover:bg-content/8 active:bg-content/12"
-        :title="appStore.t('common.maximize')"
-        :aria-label="appStore.t('common.maximize')"
+        title="最大化或还原"
+        aria-label="最大化或还原"
       >
         <i class="pi pi-stop text-xs"></i>
       </button>
@@ -44,8 +35,8 @@ const closeApp = () => appWindow.close()
         type="button"
         @click="closeApp"
         class="control-btn hover:bg-red-500/90 hover:text-white active:bg-red-600 group"
-        :title="appStore.t('common.close')"
-        :aria-label="appStore.t('common.close')"
+        title="关闭"
+        aria-label="关闭"
       >
         <i class="pi pi-times text-xs group-hover:scale-110 transition-transform duration-200"></i>
       </button>

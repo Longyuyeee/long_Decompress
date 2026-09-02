@@ -6,14 +6,28 @@ import MainLayout from '../MainLayout.vue'
 const mocks = vi.hoisted(() => ({
   onFocusChanged: vi.fn(async () => vi.fn()),
   getVersion: vi.fn(async () => '1.1.8'),
-  t: vi.fn((key: string) => key)
+  t: vi.fn((key: string) => key),
+  isMaximized: vi.fn(async () => false),
+  scaleFactor: vi.fn(async () => 1),
+  outerPosition: vi.fn(async () => ({ x: 100, y: 80 })),
+  outerSize: vi.fn(async () => ({ width: 920, height: 620 })),
+  setPosition: vi.fn(async () => undefined),
+  setSize: vi.fn(async () => undefined),
 }))
 
 vi.mock('@tauri-apps/api/app', () => ({ getVersion: mocks.getVersion }))
 
 vi.mock('@tauri-apps/api/window', () => ({
+  LogicalPosition: class { constructor(public x: number, public y: number) {} },
+  LogicalSize: class { constructor(public width: number, public height: number) {} },
   appWindow: {
-    onFocusChanged: mocks.onFocusChanged
+    onFocusChanged: mocks.onFocusChanged,
+    isMaximized: mocks.isMaximized,
+    scaleFactor: mocks.scaleFactor,
+    outerPosition: mocks.outerPosition,
+    outerSize: mocks.outerSize,
+    setPosition: mocks.setPosition,
+    setSize: mocks.setSize,
   }
 }))
 
@@ -79,9 +93,23 @@ describe('MainLayout', () => {
     expect(wrapper.find('aside nav').exists()).toBe(true)
     expect(wrapper.find('main').exists()).toBe(true)
     expect(wrapper.find('[data-test="global-progress"]').exists()).toBe(true)
+    expect(wrapper.findAll('[data-resize-edge]')).toHaveLength(8)
+    expect(wrapper.text()).not.toContain('本地处理 · 隐私优先')
     expect(wrapper.get('[data-testid="sidebar-version-badge"]').text()).toBe('v1.1.8')
     expect(mocks.getVersion).toHaveBeenCalledOnce()
     expect(mocks.onFocusChanged).toHaveBeenCalledOnce()
+  })
+
+  it('resizes a frameless window from the custom south-east edge', async () => {
+    const { wrapper } = await mountLayout()
+    await wrapper.get('[data-resize-edge="se"]').trigger('pointerdown', {
+      button: 0, pointerId: 1, screenX: 1000, screenY: 700,
+    })
+    await flushPromises()
+    window.dispatchEvent(new MouseEvent('pointermove', { screenX: 1040, screenY: 730 }))
+    await vi.waitFor(() => expect(mocks.setSize).toHaveBeenCalled())
+    expect(mocks.setSize.mock.calls.at(-1)?.[0]).toMatchObject({ width: 960, height: 650 })
+    window.dispatchEvent(new MouseEvent('pointerup'))
   })
 
   it('renders the eight product navigation entries with special compression beside the file browser', async () => {

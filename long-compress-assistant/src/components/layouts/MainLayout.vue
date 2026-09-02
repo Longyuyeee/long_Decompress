@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getVersion } from '@tauri-apps/api/app'
-import { appWindow } from '@tauri-apps/api/window'
+import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
 import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
 import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
 import { useAppStore } from '@/stores/app'
@@ -15,6 +15,7 @@ const isFocused = ref(true)
 const appVersion = ref('')
 let unlistenFocus: any = null
 let isUnmounted = false
+let stopResizeDrag: (() => void) | null = null
 
 onMounted(async () => {
   try {
@@ -36,7 +37,80 @@ onMounted(async () => {
 onUnmounted(() => {
   isUnmounted = true
   if (unlistenFocus) unlistenFocus()
+  stopResizeDrag?.()
 })
+
+type ResizeEdge = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw'
+const resizeEdges: ResizeEdge[] = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
+const startResize = async (edge: ResizeEdge, event: PointerEvent) => {
+  if (event.button !== 0) return
+  const source = event.currentTarget as HTMLElement | null
+  const pointerId = event.pointerId
+  const pointerX = event.screenX
+  const pointerY = event.screenY
+  if (await appWindow.isMaximized()) return
+  event.preventDefault()
+  try {
+    source?.setPointerCapture?.(pointerId)
+  } catch {
+    // Pointer capture is an optimization; global listeners still complete the resize.
+  }
+  const [factor, physicalPosition, physicalSize] = await Promise.all([
+    appWindow.scaleFactor(), appWindow.outerPosition(), appWindow.outerSize(),
+  ])
+  const initial = {
+    x: physicalPosition.x / factor,
+    y: physicalPosition.y / factor,
+    width: physicalSize.width / factor,
+    height: physicalSize.height / factor,
+    pointerX,
+    pointerY,
+  }
+  const minimumWidth = 760
+  const minimumHeight = 520
+  let framePending = false
+  let latestEvent = event
+  const applyResize = () => {
+    framePending = false
+    const deltaX = latestEvent.screenX - initial.pointerX
+    const deltaY = latestEvent.screenY - initial.pointerY
+    let x = initial.x
+    let y = initial.y
+    let width = initial.width
+    let height = initial.height
+    if (edge.includes('e')) width = Math.max(minimumWidth, initial.width + deltaX)
+    if (edge.includes('s')) height = Math.max(minimumHeight, initial.height + deltaY)
+    if (edge.includes('w')) {
+      width = Math.max(minimumWidth, initial.width - deltaX)
+      x = initial.x + initial.width - width
+    }
+    if (edge.includes('n')) {
+      height = Math.max(minimumHeight, initial.height - deltaY)
+      y = initial.y + initial.height - height
+    }
+    const updates: Promise<void>[] = [appWindow.setSize(new LogicalSize(width, height))]
+    if (edge.includes('n') || edge.includes('w')) updates.push(appWindow.setPosition(new LogicalPosition(x, y)))
+    void Promise.all(updates)
+  }
+  const onPointerMove = (moveEvent: PointerEvent) => {
+    latestEvent = moveEvent
+    if (!framePending) {
+      framePending = true
+      requestAnimationFrame(applyResize)
+    }
+  }
+  const cleanup = () => {
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', cleanup)
+    window.removeEventListener('pointercancel', cleanup)
+    stopResizeDrag = null
+  }
+  stopResizeDrag?.()
+  stopResizeDrag = cleanup
+  window.addEventListener('pointermove', onPointerMove)
+  window.addEventListener('pointerup', cleanup, { once: true })
+  window.addEventListener('pointercancel', cleanup, { once: true })
+}
 
 const navItems = [
   { name: 'Decompress', icon: 'pi pi-folder-open', label: 'nav.decompress', shortcut: 'Ctrl+O' },
@@ -60,6 +134,7 @@ const navigateTo = (name: string) => {
     class="main-container flex flex-col h-screen w-screen bg-base overflow-hidden"
     style="box-sizing: border-box;"
   >
+    <div v-for="edge in resizeEdges" :key="edge" class="window-resize-handle" :class="`resize-${edge}`" :data-resize-edge="edge" @pointerdown="startResize(edge, $event)"></div>
     <div class="flex-1 flex flex-col overflow-hidden bg-base text-content relative">
 
       <WindowTitleBar class="shrink-0" />
@@ -76,7 +151,7 @@ const navigateTo = (name: string) => {
               <div class="text-xs text-muted tracking-wider mt-0.5">Archive Studio</div>
             </div>
           </div>
-          <nav class="flex-1 flex flex-col gap-2 w-full p-3 overflow-y-auto overflow-x-hidden custom-scrollbar">
+          <nav class="flex-1 min-h-0 flex flex-col gap-2 w-full p-3 overflow-y-auto overflow-x-hidden custom-scrollbar">
             <button v-for="item in navItems" :key="item.name"
                   type="button"
                   @click="navigateTo(item.name)"
@@ -99,14 +174,8 @@ const navigateTo = (name: string) => {
               </div>
             </button>
           </nav>
-          <div class="sidebar-task-area px-3 pb-2 shrink-0">
+          <div class="sidebar-task-area mx-3 mb-2 min-h-[4.1rem] shrink-0 flex items-end">
             <GlobalProgressBar />
-          </div>
-          <div class="sidebar-copy mx-3 mb-3 p-3 rounded-xl bg-input/45 border border-subtle/60">
-            <div class="flex items-center gap-2 text-xs font-bold text-muted">
-              <i class="pi pi-sparkles text-primary"></i>
-              <span>本地处理 · 隐私优先</span>
-            </div>
           </div>
           <div
             v-if="appVersion"
@@ -163,14 +232,14 @@ html, body, #app {
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   background: transparent;
 }
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--dynamic-accent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--text-muted) 38%, transparent) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track,
@@ -184,14 +253,20 @@ html, body, #app {
   height: 0;
 }
 
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--dynamic-accent);
+  background: color-mix(in srgb, var(--text-muted) 38%, transparent);
   border-radius: 10px;
   transition: background 0.3s ease;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--dynamic-accent-alt);
+  background: color-mix(in srgb, var(--dynamic-accent) 72%, transparent);
 }
 </style>
 
@@ -200,6 +275,12 @@ html, body, #app {
   width: 13.5rem;
   transition: width 0.25s ease;
 }
+
+.window-resize-handle{position:fixed;z-index:1000;touch-action:none}
+.resize-n,.resize-s{left:6px;right:6px;height:6px}.resize-n{top:0;cursor:n-resize}.resize-s{bottom:0;cursor:s-resize}
+.resize-e,.resize-w{top:6px;bottom:6px;width:6px}.resize-e{right:0;cursor:e-resize}.resize-w{left:0;cursor:w-resize}
+.resize-ne,.resize-nw,.resize-se,.resize-sw{width:10px;height:10px}
+.resize-ne{right:0;top:0;cursor:ne-resize}.resize-nw{left:0;top:0;cursor:nw-resize}.resize-se{right:0;bottom:0;cursor:se-resize}.resize-sw{left:0;bottom:0;cursor:sw-resize}
 
 .app-main::before {
   content: '';
@@ -217,7 +298,7 @@ html, body, #app {
   .sidebar-copy { display: none; }
   .sidebar-brand { justify-content: center; padding-inline: 0.75rem; }
   .nav-entry { justify-content: center; padding-inline: 0.5rem; }
-  .sidebar-task-area { padding-inline: 1rem; }
+  .sidebar-task-area { margin-inline: 0.5rem; min-height: 3rem; }
   .sidebar-version-row { margin-inline: 0.5rem; padding-inline: 0.25rem; justify-content: center; }
   .sidebar-version-label { display: none; }
   .sidebar-version-badge { padding-inline: 0.35rem; font-size: 0.55rem; letter-spacing: -0.02em; }

@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { open } from '@tauri-apps/api/dialog'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
+import Modal from '@/components/ui/Modal.vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { usePdfOptimizationBatch } from '@/composables/usePdfOptimizationBatch'
 import { useAppStore } from '@/stores/app'
@@ -36,6 +37,8 @@ const pdfBatch = usePdfOptimizationBatch()
 const items = ref<PdfWorkspaceItem[]>([])
 const selectionError = ref('')
 const outputDirectory = ref('')
+const outputDirectoryDraft = ref('')
+const showBatchSettings = ref(false)
 const isRunning = ref(false)
 
 const formatBytes = (bytes: number) => {
@@ -107,6 +110,19 @@ const canRetry = (item: PdfWorkspaceItem) => {
 const runnableItems = computed(() => items.value.filter(item => item.frozen && canRetry(item)))
 const canStart = computed(() => !isRunning.value && runnableItems.value.length > 0)
 
+const openBatchSettings = () => {
+  outputDirectoryDraft.value = outputDirectory.value
+  showBatchSettings.value = true
+}
+const cancelBatchSettings = () => {
+  outputDirectoryDraft.value = outputDirectory.value
+  showBatchSettings.value = false
+}
+const saveBatchSettings = () => {
+  outputDirectory.value = outputDirectoryDraft.value
+  showBatchSettings.value = false
+}
+
 const chooseOutputDirectory = async () => {
   try {
     const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
@@ -115,7 +131,7 @@ const chooseOutputDirectory = async () => {
     const selected = queued === undefined
       ? await open({ directory: true, multiple: false, title: '选择 PDF 输出目录' })
       : queued
-    if (selected && !Array.isArray(selected)) outputDirectory.value = selected
+    if (selected && !Array.isArray(selected)) outputDirectoryDraft.value = selected
   } catch (error) {
     appStore.setError(`无法选择 PDF 输出目录：${String(error)}`)
   }
@@ -171,16 +187,12 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
   <section class="pdf-workspace" data-testid="pdf-compression-workspace">
     <header class="workspace-toolbar">
       <div class="header-actions">
-        <div class="frozen-count"><strong>{{ readyCount }}</strong><span>已锁定配置</span></div>
+        <span v-if="items.length" class="ready-summary">{{ readyCount }} / {{ items.length }} 已锁定</span>
+        <button type="button" class="secondary-action" :aria-expanded="showBatchSettings" data-testid="pdf-toggle-batch-settings" @click="openBatchSettings"><i class="pi pi-sliders-h"></i>批量设置</button>
         <button v-if="isRunning" type="button" class="danger-action" data-testid="pdf-cancel-batch" @click="pdfBatch.cancelPdfBatch()">取消处理</button>
         <button v-else type="button" class="primary-action" data-testid="pdf-start-batch" :disabled="!canStart" @click="startPdfOptimization">开始批量优化</button>
       </div>
     </header>
-
-    <div class="output-directory">
-      <div><span>输出目录</span><strong :title="outputDirectory">{{ outputDirectory || '与源文件同目录' }}</strong></div>
-      <button type="button" :disabled="isRunning" data-testid="pdf-output-directory" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button>
-    </div>
 
     <EnhancedFileDropzone
       :compact="items.length > 0"
@@ -192,7 +204,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
     />
     <p v-if="selectionError" class="selection-error">{{ selectionError }}</p>
 
-    <div v-if="items.length" class="draft-list workspace-scroll-region" data-testid="pdf-workspace-scroll-region">
+    <div v-if="items.length" class="draft-list workspace-scroll-region custom-scrollbar" data-testid="pdf-workspace-scroll-region">
       <article v-for="item in items" :key="item.path" class="draft-card" data-testid="pdf-draft-card">
         <div class="card-title">
           <div class="file-icon"><i class="pi pi-file-pdf"></i></div>
@@ -266,6 +278,17 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
         <p v-if="item.error" class="analysis-error" role="alert">{{ item.error }}</p>
       </article>
     </div>
+
+    <Modal :visible="showBatchSettings" size="md" title="PDF 批量设置" description="统一设置结果保存位置" icon="pi pi-sliders-h" @update:visible="showBatchSettings = $event" @close="cancelBatchSettings">
+      <div class="output-directory dialog-directory">
+        <div><span>输出目录</span><strong :title="outputDirectoryDraft">{{ outputDirectoryDraft || '与源文件同目录' }}</strong></div>
+        <button type="button" :disabled="isRunning" data-testid="pdf-output-directory" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button>
+      </div>
+      <template #footer>
+        <button type="button" class="dialog-cancel" @click="cancelBatchSettings">取消</button>
+        <button type="button" class="dialog-save" data-testid="pdf-save-batch-settings" :disabled="isRunning" @click="saveBatchSettings">保存设置</button>
+      </template>
+    </Modal>
   </section>
 </template>
 
@@ -273,13 +296,12 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
 .pdf-workspace { box-sizing: border-box; display:flex; width: 100%; max-width: 100%; min-width:0; min-height: 0; flex:1; flex-direction:column; overflow: hidden; padding: .1rem; color: var(--text-content); }
 .pdf-workspace > *, .draft-list, .draft-card { box-sizing: border-box; max-width: 100%; min-width: 0; }
 .workspace-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; margin-bottom: .65rem; }
-.frozen-count { min-width: 7rem; border: 1px solid var(--border-subtle); border-radius: 1rem; padding: .65rem; text-align: center; background: var(--bg-input); }
-.frozen-count strong { display: block; font-size: 1.1rem; } .frozen-count span { color: var(--text-muted); font-size: .65rem; }
+.ready-summary{color:var(--text-muted);font-size:.62rem;font-weight:800;white-space:nowrap}
 .header-actions { display: flex; align-items: center; gap: .5rem; }.danger-action { border-radius: .65rem; padding: .55rem .75rem; color: white; background: #ef4444; font-size: .68rem; font-weight: 850; }
 .header-actions button,.output-directory button,.mode-grid button,.card-actions button { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease; }
 .header-actions button:not(:disabled):hover,.output-directory button:not(:disabled):hover,.card-actions button:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 8px 18px -14px rgb(0 0 0 / .55); }
 .header-actions button:not(:disabled):active,.output-directory button:not(:disabled):active,.card-actions button:not(:disabled):active { transform: scale(.98); }
-.output-directory { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .8rem; border: 1px solid var(--border-subtle); border-radius: .75rem; padding: .65rem .75rem; background: var(--bg-input); }.output-directory div { min-width: 0; }.output-directory span,.output-directory strong { display: block; }.output-directory span { color: var(--text-muted); font-size: .58rem; }.output-directory strong { overflow: hidden; margin-top: .1rem; font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }.output-directory button,.execution-result button { flex: 0 0 auto; border: 1px solid var(--border-subtle); border-radius: .55rem; padding: .4rem .55rem; font-size: .6rem; font-weight: 800; }
+.output-directory { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border: 1px solid var(--border-subtle); border-radius: .75rem; padding: .75rem; background: var(--bg-input); }.output-directory div { min-width: 0; }.output-directory span,.output-directory strong { display: block; }.output-directory span { color: var(--text-muted); font-size: .58rem; }.output-directory strong { overflow: hidden; margin-top: .1rem; font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }.output-directory button,.execution-result button { flex: 0 0 auto; border: 1px solid var(--border-subtle); border-radius: .55rem; padding: .4rem .55rem; font-size: .6rem; font-weight: 800; }.dialog-directory{margin:0}.dialog-cancel,.dialog-save{border-radius:.7rem;padding:.58rem .9rem;font-size:.66rem;font-weight:900}.dialog-cancel{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.dialog-save{background:var(--dynamic-accent);color:white}.dialog-save:disabled{opacity:.45}
 .selection-error,.analysis-error { margin-top: .5rem; color: #fb7185; font-size: .7rem; font-weight: 750; }
 .draft-list { display: grid; min-height:0; flex:1; grid-auto-rows:max-content; align-content:start; gap: .8rem; margin-top: .9rem; overflow-x:hidden;overflow-y:auto;padding-right:.25rem }.draft-card { width: 100%; border: 1px solid var(--border-subtle); border-radius: 1.1rem; padding: .9rem; background: var(--bg-card); }
 .card-title { display: flex; align-items: center; gap: .65rem; }.file-icon { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: .7rem; color: #fb7185; background: rgb(244 63 94 / .1); }
@@ -294,6 +316,6 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
 .output-preview { margin-top: .65rem; border-radius: .75rem; padding: .65rem; background: var(--bg-input); }.output-preview strong { display: block; margin: .15rem 0; color: var(--text-content); font-size: .7rem; overflow-wrap: anywhere; }.output-preview small { color: var(--text-muted); font-size: .59rem; }
 .signature-warning { display: flex; gap: .55rem; margin-top: .65rem; border: 1px solid rgb(244 63 94 / .3); border-radius: .75rem; padding: .65rem; color: #fb7185; background: rgb(244 63 94 / .08); }.signature-warning strong { font-size: .7rem; }.signature-warning p { margin-top: .1rem; font-size: .61rem; line-height: 1.4; }.blocking-list { margin: .45rem 0 0 1rem; color: #fb7185; font-size: .6rem; overflow-wrap: anywhere; }.card-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; margin-top: .7rem; }.secondary-action { border: 1px solid var(--border-subtle); background: var(--bg-input); }.execution-result { display: flex; min-width: 0; flex: 1; align-items: center; gap: .5rem; color: var(--text-muted); font-size: .6rem; }.execution-result strong { color: var(--text-content); }
 @media (max-width: 900px) { .fact-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }.password-panel { grid-template-columns: 1fr; } }
-@media (max-width: 620px) { .pdf-workspace { padding: .1rem; }.workspace-toolbar { margin-bottom: .45rem; }.header-actions { justify-content: flex-end; }.frozen-count { min-width: 5rem; }.fact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.mode-grid { grid-template-columns: 1fr; }.status { display: none; }.card-actions { align-items: stretch; flex-direction: column; }.execution-result { flex-wrap: wrap; } }
+@media (max-width: 620px) { .pdf-workspace { padding: .1rem; }.workspace-toolbar { margin-bottom: .45rem; }.header-actions { justify-content: flex-end; }.ready-summary{display:none}.fact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.mode-grid { grid-template-columns: 1fr; }.status { display: none; }.card-actions { align-items: stretch; flex-direction: column; }.execution-result { flex-wrap: wrap; } }
 @media (prefers-reduced-motion: reduce) { .header-actions button,.output-directory button,.mode-grid button,.card-actions button { transition: none; } }
 </style>
