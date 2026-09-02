@@ -60,7 +60,7 @@ const expected = {
   completionSourceBytes: 114_842_332,
   cancelledHistoryRecords: 1,
   completedHistoryRecords: 1,
-  output: { container: 'mp4', videoCodec: 'h264', width: 1280, height: 720, durationSeconds: 32 },
+  output: { container: 'mp4', videoCodec: 'h264', width: 1920, height: 1080, durationSeconds: 32 },
 }
 
 const verify = (name, wanted, actual, predicate = value => value === wanted) => {

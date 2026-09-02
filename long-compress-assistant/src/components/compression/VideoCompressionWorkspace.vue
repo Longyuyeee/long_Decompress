@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { ask, open } from '@tauri-apps/api/dialog'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore, type VideoCompressionItem } from '@/stores/compression'
@@ -18,6 +18,7 @@ const taskStore = useTaskStore()
 const commands = useTauriCommands()
 const videoBatch = useVideoCompressionBatch()
 const inFlight = new Map<string, number>()
+const replanTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const isRunning = ref(false)
 const showGlobalSettings = ref(false)
 const videoSettingsDraft = ref<VideoCompressionSettings>({ ...store.videoGlobalSettings })
@@ -123,8 +124,16 @@ const cancelGlobalSettings = () => {
   showGlobalSettings.value = false
 }
 const updateItemSettings = (item: VideoCompressionItem, settings: VideoCompressionSettings) => {
-  if (!isRunning.value) store.updateVideoItemSettings(item.id, settings)
+  if (isRunning.value) return
+  store.updateVideoItemSettingsDraft(item.id, settings)
+  const previous = replanTimers.get(item.id)
+  if (previous) clearTimeout(previous)
+  replanTimers.set(item.id, setTimeout(() => {
+    replanTimers.delete(item.id)
+    store.retryVideoPlanning(item.id)
+  }, 180))
 }
+onUnmounted(() => replanTimers.forEach(timer => clearTimeout(timer)))
 const toggleOverride = (item: VideoCompressionItem, enabled: boolean) => {
   if (isRunning.value) return
   if (enabled) store.enableVideoItemOverride(item.id)
@@ -257,7 +266,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
       />
     </div>
 
-    <div v-else class="video-list">
+    <div v-else class="video-list workspace-scroll-region" data-testid="video-workspace-scroll-region">
       <article v-for="item in store.videoItems" :key="item.id" class="video-card" :data-status="videoStatusClass(item)" data-testid="video-draft-card">
         <header>
           <button type="button" class="expand" :aria-expanded="item.expanded" @click="item.expanded = !item.expanded"><i :class="item.expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i></button>
@@ -287,7 +296,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
         <div v-if="item.expanded" class="item-settings">
           <label class="override-toggle"><input type="checkbox" :checked="Boolean(item.settings)" @change="toggleOverride(item, ($event.target as HTMLInputElement).checked)"><span>为此视频使用单项配置</span></label>
           <VideoCompressionSettingsPanel v-if="item.settings" :model-value="item.settings" @update:model-value="updateItemSettings(item, $event)" />
-          <p v-else>当前跟随批量配置：{{ store.getEffectiveVideoSettings(item).preset }}。</p>
+          <p v-else>当前跟随批量配置：质量 {{ store.getEffectiveVideoSettings(item).quality }}，{{ store.getEffectiveVideoSettings(item).maxWidth ? `最大 ${store.getEffectiveVideoSettings(item).maxWidth}×${store.getEffectiveVideoSettings(item).maxHeight}` : '保持原尺寸' }}。</p>
           <div v-if="taskForItem(item)" class="execution-facts">
             <div><span>执行阶段</span><strong>{{ taskForItem(item)!.stage || videoStatus(item) }}</strong><small v-if="taskForItem(item)!.heartbeatSecondsSinceProgress !== undefined">仍在编码 · {{ taskForItem(item)!.heartbeatSecondsSinceProgress }} 秒前收到真实进度</small></div>
             <div><span>媒体时间</span><strong>{{ formatDuration(taskForItem(item)!.currentTimeMs || 0) }}</strong><small>{{ taskForItem(item)!.speed || '等待速度样本' }} · ETA {{ formatEta(taskForItem(item)!.etaSeconds) }}</small></div>
@@ -300,7 +309,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
       <EnhancedFileDropzone compact mode="file" accept="mp4,mov,avi,wmv,webm,mkv,m4v" unfiltered-picker hint="继续添加视频" @files-selected="onFilesSelected" />
     </div>
 
-    <Modal :visible="showGlobalSettings" size="xl" title="视频批量设置" description="保存后重新探测尚未单独覆盖的视频" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
+    <Modal :visible="showGlobalSettings" size="xl" title="视频批量设置" description="质量与分辨率分别控制；保存后只重算压缩方案" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
       <div class="special-settings-dialog" :class="{ locked: isRunning }">
         <VideoCompressionSettingsPanel :model-value="videoSettingsDraft" @update:model-value="updateGlobalSettings" />
         <div class="output-directory"><div><span>输出目录</span><strong :title="videoOutputDirectoryDraft">{{ videoOutputDirectoryDraft || '与源文件同目录' }}</strong></div><button type="button" :disabled="isRunning" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button></div>
@@ -324,7 +333,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
 .special-settings-dialog{min-width:0}.locked{pointer-events:none;opacity:.68}.dialog-cancel,.dialog-save{border-radius:.75rem;padding:.65rem 1rem;font-size:.7rem;font-weight:900}.dialog-cancel{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.dialog-save{background:var(--dynamic-accent);color:white;box-shadow:0 10px 24px -15px var(--dynamic-accent)}.dialog-save:disabled{opacity:.45}
 .settings-heading { display: flex; justify-content: space-between; gap: .75rem; margin-bottom: .65rem; color: var(--text-content); font-size: .68rem; font-weight: 900; }.settings-heading small { color: var(--text-muted); font-size: .58rem; font-weight: 650; }
 .output-directory { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .7rem; border-top: 1px solid var(--border-subtle); padding-top: .65rem; }.output-directory div { min-width: 0; }.output-directory span, .output-directory strong { display: block; }.output-directory span { color: var(--text-muted); font-size: .55rem; }.output-directory strong { overflow: hidden; margin-top: .15rem; color: var(--text-content); font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; }.output-directory button, .execution-facts button { flex: 0 0 auto; border: 1px solid var(--border-subtle); border-radius: .55rem; padding: .35rem .55rem; color: var(--text-content); font-size: .58rem; font-weight: 800; }
-.video-empty { display:flex;min-height:0;flex:1; }.video-empty :deep(.drop-area){display:flex;min-height:13rem;width:100%;align-items:center;justify-content:center}.video-list { display: grid; width: 100%; max-width: 100%; min-width: 0; min-height:0; flex:1; align-content:start; gap: .65rem; overflow-x:hidden;overflow-y:auto;padding-right:.25rem }.video-card { overflow: hidden; }
+.video-empty { display:flex;min-height:0;flex:1; }.video-empty :deep(.drop-area){display:flex;min-height:13rem;width:100%;align-items:center;justify-content:center}.video-list { display: grid; width: 100%; max-width: 100%; min-width: 0; min-height:0; flex:1; grid-auto-rows:max-content; align-content:start; gap: .65rem; overflow-x:hidden;overflow-y:auto;padding-right:.25rem }.video-card { overflow: hidden; }
 .video-card header { display: flex; min-width: 0; align-items: center; gap: .55rem; }.expand, .remove { flex: 0 0 auto; width: 1.8rem; height: 1.8rem; border-radius: .55rem; color: var(--text-muted); }.expand:hover, .remove:hover { background: var(--bg-input); color: var(--text-content); }
 .file-identity { min-width: 0; flex: 1; }.file-identity strong, .file-identity small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.file-identity strong { color: var(--text-content); font-size: .72rem; }.file-identity small { margin-top: .12rem; color: var(--text-muted); font-size: .55rem; }
 .status { display: flex; flex: 0 0 auto; align-items: center; gap: .3rem; border-radius: 999px; background: var(--bg-input); padding: .28rem .48rem; color: var(--text-muted); font-size: .58rem; font-weight: 850; }.video-card[data-status="ready"] .status { color: #22c55e; }.video-card[data-status="rejected"] .status { color: #ef4444; }

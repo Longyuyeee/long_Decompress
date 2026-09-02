@@ -1,10 +1,10 @@
+use crate::utils::process;
 use anyhow::{bail, Context, Result};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 #[cfg(windows)]
 use windows_sys::Win32::{
@@ -201,7 +201,7 @@ fn run_probe(executable: &Path, arguments: &[&str], label: &str) -> Result<Strin
     const WINDOWS_STATUS_DLL_INIT_FAILED: i32 = -1_073_741_502;
     const MAX_ATTEMPTS: usize = 2;
     for attempt in 0..MAX_ATTEMPTS {
-        let output = Command::new(executable)
+        let output = process::command(executable)
             .args(arguments)
             .output()
             .with_context(|| {

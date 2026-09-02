@@ -1,5 +1,19 @@
 # 开发交接
 
+## 2026-09-02 v1.2.3 特殊压缩运行时与交互收口
+
+- 当前分支 `codex/pdf-frameless-shell-polish` 已在公开 `v1.2.2` 基线上完成：主题化图片下拉；视频独立质量/分辨率；Windows 媒体子进程隐藏；视频探测缓存、设置防抖与事实保留；三类任务区滚动；全局任务类型；WebView 最外层 1 px 边框清理。
+- 真实 Tauri 图片、视频、PDF 门禁分别通过；视频 10 分钟和 114,842,332 B 大文件矩阵通过；类型检查、49 文件 282/282 单元测试、媒体架构、`cargo test --release` 主库 384/384（10 项显式忽略）及全部集成测试、实际 Release 软件逐屏观察均通过。Playwright CLI 本轮在创建浏览器前异常高 CPU、无用例结果，`--list` 正常列出 55 项；不得把该次运行写成全量通过。
+- 版本身份已提升为 `1.2.3`，版本化 Shell DLL 已重新构建且发布身份门禁通过；无测试桥本地 NSIS 已生成，19,407,306 B，文件/产品版本均为 `1.2.3`。发布前仍需：提交推送、CI 合入、创建 `v1.2.3` 标签与 Release，并回写公开发布结果。
+- 完整需求、预期—实际差异与接续规则见 [SPECIAL_COMPRESSION_RUNTIME_UX_AUDIT_1.2.3.md](SPECIAL_COMPRESSION_RUNTIME_UX_AUDIT_1.2.3.md)；发布说明见 [RELEASE_NOTES_1.2.3.md](RELEASE_NOTES_1.2.3.md)。
+
+## 2026-09-02 v1.2.2 后续 PDF 空态与窗口外框修复（历史，已并入上方 v1.2.3）
+
+- 当前开发分支为 `codex/pdf-frameless-shell-polish`，基线为公开 `v1.2.2` 的 `master@a2553c4`。PDF 空态重复安全说明已经删除；主窗口恢复 `decorations: false` 并重新挂载应用内 `WindowTitleBar`，不再使用 Windows 白色原生标题栏。
+- 历史根因已定位到 2026-07-15 的 `ac28143`：一个解压语法/Clippy 提交意外同时启用原生装饰并删除标题栏。发布身份门禁和主布局单元测试现已补上永久约束。
+- 类型检查、280/280 单元、生产构建、发布身份门禁和新真实 Windows Tauri/WebView2 壳门禁均通过；桌面实测为原生装饰 `false`、3 个窗口按钮、PDF 重复说明不存在、空态纵横溢出均 0，预期—实际差异 0。浏览器矩阵另发现并修正 Mobile Chrome 双栏文件浏览器横向滚动，聚焦复跑通过。
+- 当时记录的候选状态已由上方 `v1.2.3` 节点取代；本轮版本、真实媒体门禁和发布测试以最新章节及 [SPECIAL_COMPRESSION_RUNTIME_UX_AUDIT_1.2.3.md](SPECIAL_COMPRESSION_RUNTIME_UX_AUDIT_1.2.3.md) 为准。
+
 ## 2026-09-02 v1.2.2 正式发布关闭（当前基线）
 
 - 六项冻结需求已由公开 `v1.2.2` 完成：图片/视频设置 Modal、三类重复文案精简、即时 Tab 入场与按钮动效、文件/压缩包/文件夹统一系统动作、Explorer 精确定位、特殊目录属性友好提示。

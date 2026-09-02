@@ -4,6 +4,10 @@ use thiserror::Error;
 
 const MAX_OUTPUT_PIXELS: u64 = 3_840 * 2_160;
 
+const fn default_video_quality() -> u8 {
+    76
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum VideoCompressionPreset {
@@ -17,6 +21,8 @@ pub enum VideoCompressionPreset {
 pub struct VideoCompressionPlanRequest {
     pub path: String,
     pub preset: VideoCompressionPreset,
+    #[serde(default = "default_video_quality")]
+    pub quality: u8,
     pub max_width: Option<u32>,
     pub max_height: Option<u32>,
 }
@@ -26,6 +32,7 @@ pub struct VideoCompressionPlanRequest {
 pub struct VideoPresetFacts {
     pub preset: VideoCompressionPreset,
     pub label: &'static str,
+    pub quality: u8,
     pub video_bits_per_pixel_milli: u32,
     pub minimum_video_bit_rate: u64,
     pub maximum_video_bit_rate: u64,
@@ -77,13 +84,23 @@ pub enum VideoCompressionPlanError {
 }
 
 impl VideoCompressionPreset {
-    fn facts(self, portrait: bool) -> VideoPresetFacts {
-        let (label, bpp_milli, minimum, maximum, audio, landscape_width, landscape_height) =
-            match self {
-                Self::Clear => ("clear", 120, 1_500_000, 12_000_000, 192_000, 1_920, 1_080),
-                Self::Balanced => ("balanced", 75, 800_000, 8_000_000, 128_000, 1_280, 720),
-                Self::Small => ("small", 45, 400_000, 4_000_000, 96_000, 854, 480),
-            };
+    fn facts(self, portrait: bool, requested_quality: u8) -> VideoPresetFacts {
+        let quality = requested_quality.clamp(1, 100);
+        let (label, landscape_width, landscape_height) = match self {
+            Self::Clear => ("clear", 1_920, 1_080),
+            Self::Balanced => ("balanced", 1_280, 720),
+            Self::Small => ("small", 854, 480),
+        };
+        let bpp_milli = 30 + u32::from(quality) * 11 / 10;
+        let minimum = 350_000 + u64::from(quality) * 8_000;
+        let maximum = 2_000_000 + u64::from(quality) * 120_000;
+        let audio = if quality >= 80 {
+            192_000
+        } else if quality >= 50 {
+            128_000
+        } else {
+            96_000
+        };
         let (default_max_width, default_max_height) = if portrait {
             (landscape_height, landscape_width)
         } else {
@@ -92,6 +109,7 @@ impl VideoCompressionPreset {
         VideoPresetFacts {
             preset: self,
             label,
+            quality,
             video_bits_per_pixel_milli: bpp_milli,
             minimum_video_bit_rate: minimum,
             maximum_video_bit_rate: maximum,
@@ -104,10 +122,22 @@ impl VideoCompressionPreset {
 
 fn effective_maximum(
     request: &VideoCompressionPlanRequest,
-    preset: &VideoPresetFacts,
+    input_width: u32,
+    input_height: u32,
 ) -> Result<(u32, u32), VideoCompressionPlanError> {
     let dimensions = match (request.max_width, request.max_height) {
-        (None, None) => (preset.default_max_width, preset.default_max_height),
+        (None, None) => {
+            if input_width <= 3_840
+                && input_height <= 3_840
+                && u64::from(input_width) * u64::from(input_height) <= MAX_OUTPUT_PIXELS
+            {
+                (input_width, input_height)
+            } else if input_height > input_width {
+                (2_160, 3_840)
+            } else {
+                (3_840, 2_160)
+            }
+        }
         (Some(width), Some(height)) => (width, height),
         _ => return Err(VideoCompressionPlanError::MaxResolutionPairRequired),
     };
@@ -153,7 +183,7 @@ fn estimate_bytes(duration_ms: u64, total_bit_rate: u64) -> VideoSizeEstimate {
         is_estimate: true,
         low_bytes: u64::try_from(low).unwrap_or(u64::MAX),
         high_bytes: u64::try_from(high).unwrap_or(u64::MAX),
-        basis: "duration-output-pixels-average-frame-rate-and-preset-bitrate-envelope",
+        basis: "duration-output-pixels-average-frame-rate-and-quality-bitrate-envelope",
         disclaimer: "estimate-only; source complexity, VFR timing and encoder behavior can change the final size",
     }
 }
@@ -164,8 +194,11 @@ pub fn build_video_compression_plan(
 ) -> Result<VideoCompressionPlan, VideoCompressionPlanError> {
     let input_width = probe.primary_video.visible_width;
     let input_height = probe.primary_video.visible_height;
-    let preset = request.preset.facts(input_height > input_width);
-    let (effective_max_width, effective_max_height) = effective_maximum(request, &preset)?;
+    let preset = request
+        .preset
+        .facts(input_height > input_width, request.quality);
+    let (effective_max_width, effective_max_height) =
+        effective_maximum(request, input_width, input_height)?;
     let (output_width, output_height) = output_dimensions(
         input_width,
         input_height,
@@ -257,6 +290,7 @@ mod tests {
         VideoCompressionPlanRequest {
             path: path.display().to_string(),
             preset,
+            quality: 76,
             max_width: None,
             max_height: None,
         }
@@ -312,6 +346,7 @@ mod tests {
             &VideoCompressionPlanRequest {
                 path: "4k.mp4".to_string(),
                 preset: VideoCompressionPreset::Balanced,
+                quality: 76,
                 max_width: Some(1_000),
                 max_height: Some(1_000),
             },
@@ -330,6 +365,7 @@ mod tests {
             &VideoCompressionPlanRequest {
                 path: "video.mp4".to_string(),
                 preset: VideoCompressionPreset::Clear,
+                quality: 92,
                 max_width: Some(1_280),
                 max_height: None,
             },
@@ -343,6 +379,7 @@ mod tests {
             &VideoCompressionPlanRequest {
                 path: "video.mp4".to_string(),
                 preset: VideoCompressionPreset::Clear,
+                quality: 92,
                 max_width: Some(3_840),
                 max_height: Some(3_840),
             },
@@ -354,10 +391,10 @@ mod tests {
     }
 
     #[test]
-    fn presets_are_ordered_and_portrait_defaults_are_rotated() {
-        let clear = VideoCompressionPreset::Clear.facts(true);
-        let balanced = VideoCompressionPreset::Balanced.facts(true);
-        let small = VideoCompressionPreset::Small.facts(true);
+    fn quality_is_ordered_and_legacy_portrait_facts_remain_stable() {
+        let clear = VideoCompressionPreset::Clear.facts(true, 92);
+        let balanced = VideoCompressionPreset::Balanced.facts(true, 76);
+        let small = VideoCompressionPreset::Small.facts(true, 42);
         assert!(clear.video_bits_per_pixel_milli > balanced.video_bits_per_pixel_milli);
         assert!(balanced.video_bits_per_pixel_milli > small.video_bits_per_pixel_milli);
         assert!(clear.audio_bit_rate > balanced.audio_bit_rate);
@@ -377,6 +414,20 @@ mod tests {
     }
 
     #[test]
+    fn quality_changes_bitrate_without_reducing_default_resolution() {
+        let probe = sample_report(1_920, 1_080);
+        let mut low_request = request(Path::new("video.mp4"), VideoCompressionPreset::Small);
+        low_request.quality = 35;
+        let low = build_video_compression_plan(probe.clone(), &low_request).expect("low quality");
+        let mut high_request = request(Path::new("video.mp4"), VideoCompressionPreset::Clear);
+        high_request.quality = 92;
+        let high = build_video_compression_plan(probe, &high_request).expect("high quality");
+        assert_eq!((low.output_width, low.output_height), (1_920, 1_080));
+        assert_eq!((high.output_width, high.output_height), (1_920, 1_080));
+        assert!(high.target_video_bit_rate > low.target_video_bit_rate);
+    }
+
+    #[test]
     fn tauri_json_contract_uses_camel_case_and_estimate_marker() {
         let request: VideoCompressionPlanRequest = serde_json::from_value(serde_json::json!({
             "path": "video.mp4",
@@ -389,7 +440,8 @@ mod tests {
             .expect("serialize plan");
         let json = serde_json::to_value(plan).expect("plan JSON");
         assert_eq!(json["preset"]["preset"], "balanced");
-        assert_eq!(json["effectiveMaxWidth"], 1_280);
+        assert_eq!(json["effectiveMaxWidth"], 1_920);
+        assert_eq!(json["preset"]["quality"], 76);
         assert_eq!(json["estimatedOutput"]["isEstimate"], true);
         assert_eq!(json["willUpscale"], false);
         assert!(json.get("effective_max_width").is_none());

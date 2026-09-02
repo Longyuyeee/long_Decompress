@@ -72,6 +72,7 @@ export type VideoCompressionPreset = 'clear' | 'balanced' | 'small'
 
 export interface VideoCompressionSettings {
   preset: VideoCompressionPreset
+  quality: number
   maxWidth: number | null
   maxHeight: number | null
 }
@@ -83,6 +84,7 @@ export interface VideoCompressionPlanRequest extends VideoCompressionSettings {
 export interface VideoPresetFacts {
   preset: VideoCompressionPreset
   label: VideoCompressionPreset
+  quality: number
   videoBitsPerPixelMilli: number
   minimumVideoBitRate: number
   maximumVideoBitRate: number
@@ -95,7 +97,7 @@ export interface VideoSizeEstimate {
   isEstimate: true
   lowBytes: number
   highBytes: number
-  basis: 'duration-output-pixels-average-frame-rate-and-preset-bitrate-envelope'
+  basis: 'duration-output-pixels-average-frame-rate-and-quality-bitrate-envelope'
   disclaimer: string
 }
 

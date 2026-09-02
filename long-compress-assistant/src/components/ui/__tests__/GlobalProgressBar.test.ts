@@ -143,4 +143,16 @@ describe('GlobalProgressBar', () => {
     expect(wrapper.text()).toContain('2/2')
     expect(wrapper.find('.progress-bar-fill').attributes('style')).toContain('width: 0%')
   })
+
+  it('identifies special-compression workload kinds in the shared task panel', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const taskStore = useTaskStore()
+    for (const [id, workloadKind] of [['image', 'image'], ['video', 'video'], ['pdf', 'pdf']] as const) {
+      taskStore.addTask({ id, name: `${id}.fixture`, type: 'compression', workloadKind, sourceFiles: [`${id}.fixture`], outputPath: '' })
+    }
+    const wrapper = mount(GlobalProgressBar, { global: { plugins: [pinia] } })
+    await wrapper.get('[data-testid="global-progress-summary"]').trigger('click')
+    expect(wrapper.findAll('[data-testid="global-task-kind"]').map(item => item.text())).toEqual(['图片压缩', '视频压缩', 'PDF 优化'])
+  })
 })

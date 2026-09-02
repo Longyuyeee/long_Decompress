@@ -153,7 +153,7 @@ const videoPlan = (preset: 'clear' | 'balanced' | 'small' = 'balanced') => ({
     isEstimate: true,
     lowBytes: 92_800,
     highBytes: 145_000,
-    basis: 'duration-output-pixels-average-frame-rate-and-preset-bitrate-envelope',
+    basis: 'duration-output-pixels-average-frame-rate-and-quality-bitrate-envelope',
     disclaimer: 'estimate-only; source complexity, VFR timing and encoder behavior can change the final size',
   },
   streamChanges: [
@@ -797,6 +797,7 @@ describe('CompressionView', () => {
     expect(pdfWorkspace.text()).not.toContain('PDF · D-04.2')
     expect(pdfWorkspace.text()).not.toContain('安全分析、批量优化与验证发布')
     expect(pdfWorkspace.text()).not.toContain('执行复用统一任务')
+    expect(pdfWorkspace.text()).not.toContain('默认输出为新文件，禁止覆盖源文件')
     expect(useTaskStore().tasks).toHaveLength(0)
 
     expect(useCompressionStore().selectedFiles).toHaveLength(1)
@@ -920,6 +921,7 @@ describe('CompressionView', () => {
     expect(mocks.planVideoCompression).toHaveBeenCalledWith({
       path: 'C:/input/rotated.mp4',
       preset: 'balanced',
+      quality: 76,
       maxWidth: null,
       maxHeight: null,
     })
@@ -929,14 +931,14 @@ describe('CompressionView', () => {
     expect(workspace.text()).toContain('后续执行前必须显式确认')
     expect(useTaskStore().tasks).toHaveLength(0)
 
-    expect(workspace.find('[data-testid="video-preset-small"]').exists()).toBe(false)
+    expect(workspace.find('[data-testid="video-quality-slider"]').exists()).toBe(false)
     await workspace.get('[data-testid="video-toggle-global-settings"]').trigger('click')
-    await workspace.get('[data-testid="video-preset-small"]').trigger('click')
+    await workspace.get('[data-testid="video-quality-slider"]').setValue(42)
     await flushPromises()
-    expect(mocks.planVideoCompression).toHaveBeenLastCalledWith(expect.objectContaining({ preset: 'balanced' }))
+    expect(mocks.planVideoCompression).toHaveBeenLastCalledWith(expect.objectContaining({ preset: 'balanced', quality: 76 }))
     await workspace.get('[data-testid="video-save-global-settings"]').trigger('click')
     await flushPromises()
-    expect(mocks.planVideoCompression).toHaveBeenLastCalledWith(expect.objectContaining({ preset: 'small' }))
+    expect(mocks.planVideoCompression).toHaveBeenLastCalledWith(expect.objectContaining({ preset: 'small', quality: 42 }))
     expect(useCompressionStore().selectedFiles).toHaveLength(0)
     expect(useCompressionStore().imageItems).toHaveLength(0)
     expect(useTaskStore().tasks).toHaveLength(0)

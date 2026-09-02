@@ -1,10 +1,10 @@
+use crate::utils::process;
 use anyhow::{bail, Context, Result};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 const RUNTIME_DIRECTORY: &str = "pdf-engine";
 
@@ -158,7 +158,7 @@ fn inspect_resources(resource_root: &Path) -> Result<(PathBuf, Vec<PdfEngineFile
 }
 
 fn run_probe(executable: &Path, arguments: &[&str], label: &str) -> Result<String> {
-    let output = Command::new(executable)
+    let output = process::command(executable)
         .args(arguments)
         .output()
         .with_context(|| {

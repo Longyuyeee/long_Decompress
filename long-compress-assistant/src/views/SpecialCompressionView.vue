@@ -83,7 +83,14 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
   min-width: 0;
   min-height: 0;
   flex: 1;
+  overflow: hidden;
   animation: workspace-enter .2s ease both;
+}
+
+.special-compression-stage :deep(.workspace-scroll-region) {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scroll-padding-block: .5rem;
 }
 
 @keyframes workspace-enter {

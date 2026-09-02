@@ -1,13 +1,13 @@
 use crate::services::video_compression_plan::VideoCompressionPlan;
 use crate::services::video_encoding::StagedVideoOutput;
 use crate::services::video_probe::probe_video_file;
+use crate::utils::process;
 use serde::Serialize;
 use serde_json::Value;
 use std::path::Path;
 use std::process::Stdio;
 use std::time::Duration;
 use thiserror::Error;
-use tokio::process::Command;
 
 const FRAME_SCAN_TIMEOUT: Duration = Duration::from_secs(120);
 const MAX_FRAME_SCAN_OUTPUT_BYTES: usize = 64 * 1024;
@@ -110,7 +110,7 @@ async fn count_decodable_frames(
     ffprobe: &Path,
     output: &Path,
 ) -> Result<DecodedFrameCounts, VideoOutputValidationError> {
-    let mut command = Command::new(ffprobe);
+    let mut command = process::async_command(ffprobe);
     command
         .args([
             "-v",
@@ -340,6 +340,7 @@ mod tests {
             &VideoCompressionPlanRequest {
                 path: source.to_string_lossy().into_owned(),
                 preset: VideoCompressionPreset::Balanced,
+                quality: 76,
                 max_width: None,
                 max_height: None,
             },

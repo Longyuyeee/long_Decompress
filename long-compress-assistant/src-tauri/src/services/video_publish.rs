@@ -172,6 +172,7 @@ mod tests {
             &VideoCompressionPlanRequest {
                 path: source.to_string_lossy().into_owned(),
                 preset: VideoCompressionPreset::Balanced,
+                quality: 76,
                 max_width: None,
                 max_height: None,
             },

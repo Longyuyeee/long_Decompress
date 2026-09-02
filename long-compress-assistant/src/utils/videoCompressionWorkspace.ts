@@ -9,6 +9,7 @@ export interface VideoCandidate {
 
 export const createDefaultVideoSettings = (): VideoCompressionSettings => ({
   preset: 'balanced',
+  quality: 76,
   maxWidth: null,
   maxHeight: null,
 })

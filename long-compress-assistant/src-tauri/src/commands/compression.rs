@@ -1565,6 +1565,7 @@ mod cancellation_tests {
         let plan_request = VideoCompressionPlanRequest {
             path: source.to_string_lossy().into_owned(),
             preset: VideoCompressionPreset::Balanced,
+            quality: 76,
             max_width: None,
             max_height: None,
         };
@@ -1694,11 +1695,17 @@ mod cancellation_tests {
 
             let preset: VideoCompressionPreset =
                 serde_json::from_value(case["preset"].clone()).expect("deserialize matrix preset");
+            let (max_width, max_height) = match preset {
+                VideoCompressionPreset::Clear => (1_920, 1_080),
+                VideoCompressionPreset::Balanced => (1_280, 720),
+                VideoCompressionPreset::Small => (854, 480),
+            };
             let plan_request = VideoCompressionPlanRequest {
                 path: source.to_string_lossy().into_owned(),
                 preset,
-                max_width: None,
-                max_height: None,
+                quality: 76,
+                max_width: Some(max_width),
+                max_height: Some(max_height),
             };
             let plan = build_video_compression_plan(input, &plan_request)
                 .expect("build product compression plan");
@@ -1794,11 +1801,17 @@ mod cancellation_tests {
 
             let preset: VideoCompressionPreset = serde_json::from_value(case["preset"].clone())
                 .expect("deserialize long/large preset");
+            let (max_width, max_height) = match preset {
+                VideoCompressionPreset::Clear => (1_920, 1_080),
+                VideoCompressionPreset::Balanced => (1_280, 720),
+                VideoCompressionPreset::Small => (854, 480),
+            };
             let plan_request = VideoCompressionPlanRequest {
                 path: source.to_string_lossy().into_owned(),
                 preset,
-                max_width: None,
-                max_height: None,
+                quality: 76,
+                max_width: Some(max_width),
+                max_height: Some(max_height),
             };
             let plan = build_video_compression_plan(input, &plan_request)
                 .expect("build product long/large plan");

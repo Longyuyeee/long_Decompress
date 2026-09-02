@@ -73,6 +73,10 @@ export const collectReleaseIdentity = () => {
 
 export const verifyReleaseIdentity = ({ expected = '', tag = '' } = {}) => {
   const tauriConfig = readJson('src-tauri/tauri.conf.json')
+  const mainWindow = tauriConfig.tauri?.windows?.[0]
+  if (mainWindow?.decorations !== false) {
+    throw new Error('The main window must disable native decorations and use the in-app title bar.')
+  }
   const protocol = tauriConfig.tauri?.allowlist?.protocol
   if (protocol?.asset !== true || !Array.isArray(protocol.assetScope) || protocol.assetScope.length !== 0) {
     throw new Error('Image asset protocol must be enabled with an empty default scope.')

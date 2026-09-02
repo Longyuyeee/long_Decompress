@@ -52,6 +52,22 @@ const runningTask = computed(() => taskStats.value.runningTask)
 
 const currentTaskName = computed(() => runningTask.value?.name || '')
 
+const taskTypeLabel = (task: Task) => {
+  if (task.type === 'decompression') return appStore.t('tasks.type.decompress')
+  if (task.workloadKind === 'image') return '图片压缩'
+  if (task.workloadKind === 'video') return '视频压缩'
+  if (task.workloadKind === 'pdf') return 'PDF 优化'
+  return appStore.t('tasks.type.compress')
+}
+
+const taskTypeClass = (task: Task) => {
+  if (task.type === 'decompression') return 'bg-blue-500/10 text-blue-400'
+  if (task.workloadKind === 'image') return 'bg-cyan-500/10 text-cyan-400'
+  if (task.workloadKind === 'video') return 'bg-violet-500/10 text-violet-400'
+  if (task.workloadKind === 'pdf') return 'bg-rose-500/10 text-rose-400'
+  return 'bg-purple-500/10 text-purple-400'
+}
+
 const formatEta = (seconds?: number) => {
   if (seconds === undefined || !Number.isFinite(seconds)) return ''
   if (seconds < 60) return `${Math.max(1, Math.ceil(seconds))}s`
@@ -171,11 +187,12 @@ const copyToClipboard = async (text: string) => {
 <template>
   <transition name="progress-slide">
     <div v-if="isVisible && !isMinimized"
-         class="global-progress-bar relative z-[600] select-none w-full">
+         class="global-progress-bar relative z-[600] select-none w-full" data-testid="global-progress-bar">
 
       <!-- 紧凑指示器：点击展开 -->
       <div
            @click="isExpanded = !isExpanded"
+           data-testid="global-progress-summary"
            class="progress-summary flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-3xl border border-primary/40 shadow-lg cursor-pointer hover:border-primary/70 transition-all duration-300 w-full min-w-0">
         <!-- 环形进度 -->
         <div class="progress-ring-wrap relative w-9 h-9 shrink-0">
@@ -280,10 +297,9 @@ const copyToClipboard = async (text: string) => {
                   <div class="flex items-center gap-2">
                     <span class="text-sm font-bold text-content truncate">{{ task.name }}</span>
                     <span class="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-md shrink-0"
-                          :class="[
-                            task.type === 'decompression' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
-                          ]">
-                      {{ task.type === 'decompression' ? appStore.t('tasks.type.decompress') : appStore.t('tasks.type.compress') }}
+                          data-testid="global-task-kind"
+                          :class="taskTypeClass(task)">
+                      {{ taskTypeLabel(task) }}
                     </span>
                     <!-- 密码/锁图标 -->
                     <i v-if="task.password" class="pi pi-lock text-xs text-amber-400 shrink-0" :title="appStore.t('progress.password_used')"></i>

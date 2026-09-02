@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getVersion } from '@tauri-apps/api/app'
 import { appWindow } from '@tauri-apps/api/window'
+import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
 import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
 import { useAppStore } from '@/stores/app'
 import brandIcon from '@/assets/long-jieya-icon.png'
@@ -54,13 +55,14 @@ const navigateTo = (name: string) => {
 </script>
 
 <template>
-  <!-- 主容器：通过 p-[1px] 留出系统 Resize 缓冲带 -->
+  <!-- 无系统装饰窗口直接贴合 WebView 边界，避免透明缓冲带露出白边。 -->
   <div 
-    class="main-container flex flex-col h-screen w-screen bg-transparent p-[1px] overflow-hidden"
+    class="main-container flex flex-col h-screen w-screen bg-base overflow-hidden"
     style="box-sizing: border-box;"
   >
-    <div class="flex-1 flex flex-col overflow-hidden bg-base text-content rounded-xl relative border transition-all duration-300"
-         :class="[isFocused ? 'border-primary/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]' : 'border-subtle shadow-sm']">
+    <div class="flex-1 flex flex-col overflow-hidden bg-base text-content relative">
+
+      <WindowTitleBar class="shrink-0" />
 
       <div class="main-layout flex flex-1 overflow-hidden relative">
         <!-- 侧边栏 - 华丽扁平版 -->
