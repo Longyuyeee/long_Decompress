@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.2.4"
+version = "1.2.5"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -26,6 +26,7 @@ tauri = { version = "1.5", features = [
     "window-set-position",
     "window-set-size",
     "window-show",
+    "window-start-dragging",
     "window-unmaximize"
 ] }
 serde = { version = "1.0", features = ["derive"] }

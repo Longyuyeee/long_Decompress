@@ -48,68 +48,121 @@ const startResize = async (edge: ResizeEdge, event: PointerEvent) => {
   const pointerId = event.pointerId
   const pointerX = event.screenX
   const pointerY = event.screenY
-  if (await appWindow.isMaximized()) return
   event.preventDefault()
-  try {
-    source?.setPointerCapture?.(pointerId)
-  } catch {
-    // Pointer capture is an optimization; global listeners still complete the resize.
+  stopResizeDrag?.()
+
+  type ResizeOrigin = {
+    x: number
+    y: number
+    width: number
+    height: number
+    pointerX: number
+    pointerY: number
+    factor: number
   }
-  const [factor, physicalPosition, physicalSize] = await Promise.all([
-    appWindow.scaleFactor(), appWindow.outerPosition(), appWindow.outerSize(),
-  ])
-  const initial = {
-    x: physicalPosition.x / factor,
-    y: physicalPosition.y / factor,
-    width: physicalSize.width / factor,
-    height: physicalSize.height / factor,
-    pointerX,
-    pointerY,
-  }
-  const minimumWidth = 760
-  const minimumHeight = 520
+  let active = true
+  let initial: ResizeOrigin | null = null
   let framePending = false
-  let latestEvent = event
+  let latestEvent: PointerEvent | null = null
+
+  const cleanup = () => {
+    if (!active) return
+    active = false
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerEnd)
+    window.removeEventListener('pointercancel', onPointerEnd)
+    window.removeEventListener('blur', cleanup)
+    source?.removeEventListener('lostpointercapture', cleanup)
+    try {
+      if (source?.hasPointerCapture?.(pointerId)) source.releasePointerCapture(pointerId)
+    } catch {
+      // The browser may already have released capture after pointerup.
+    }
+    if (stopResizeDrag === cleanup) stopResizeDrag = null
+  }
+
   const applyResize = () => {
     framePending = false
-    const deltaX = latestEvent.screenX - initial.pointerX
-    const deltaY = latestEvent.screenY - initial.pointerY
+    if (!active || !initial || !latestEvent) return
+    const deltaX = (latestEvent.screenX - initial.pointerX) / initial.factor
+    const deltaY = (latestEvent.screenY - initial.pointerY) / initial.factor
     let x = initial.x
     let y = initial.y
     let width = initial.width
     let height = initial.height
-    if (edge.includes('e')) width = Math.max(minimumWidth, initial.width + deltaX)
-    if (edge.includes('s')) height = Math.max(minimumHeight, initial.height + deltaY)
+    if (edge.includes('e')) width = Math.max(760, initial.width + deltaX)
+    if (edge.includes('s')) height = Math.max(520, initial.height + deltaY)
     if (edge.includes('w')) {
-      width = Math.max(minimumWidth, initial.width - deltaX)
+      width = Math.max(760, initial.width - deltaX)
       x = initial.x + initial.width - width
     }
     if (edge.includes('n')) {
-      height = Math.max(minimumHeight, initial.height - deltaY)
+      height = Math.max(520, initial.height - deltaY)
       y = initial.y + initial.height - height
     }
     const updates: Promise<void>[] = [appWindow.setSize(new LogicalSize(width, height))]
     if (edge.includes('n') || edge.includes('w')) updates.push(appWindow.setPosition(new LogicalPosition(x, y)))
-    void Promise.all(updates)
+    void Promise.all(updates).catch(error => console.warn('Window resize update failed:', error))
   }
+
   const onPointerMove = (moveEvent: PointerEvent) => {
+    if (moveEvent.pointerId != null && moveEvent.pointerId !== pointerId) return
+    if ((moveEvent.buttons & 1) === 0) {
+      cleanup()
+      return
+    }
+    moveEvent.preventDefault()
     latestEvent = moveEvent
-    if (!framePending) {
+    if (initial && !framePending) {
       framePending = true
       requestAnimationFrame(applyResize)
     }
   }
-  const cleanup = () => {
-    window.removeEventListener('pointermove', onPointerMove)
-    window.removeEventListener('pointerup', cleanup)
-    window.removeEventListener('pointercancel', cleanup)
-    stopResizeDrag = null
+
+  const onPointerEnd = (endEvent: PointerEvent) => {
+    if (endEvent.pointerId != null && endEvent.pointerId !== pointerId) return
+    cleanup()
   }
-  stopResizeDrag?.()
+
   stopResizeDrag = cleanup
   window.addEventListener('pointermove', onPointerMove)
-  window.addEventListener('pointerup', cleanup, { once: true })
-  window.addEventListener('pointercancel', cleanup, { once: true })
+  window.addEventListener('pointerup', onPointerEnd)
+  window.addEventListener('pointercancel', onPointerEnd)
+  window.addEventListener('blur', cleanup, { once: true })
+  source?.addEventListener('lostpointercapture', cleanup, { once: true })
+  try {
+    source?.setPointerCapture?.(pointerId)
+  } catch {
+    // Global listeners still close the resize session when pointer capture is unavailable.
+  }
+
+  try {
+    if (await appWindow.isMaximized()) {
+      cleanup()
+      return
+    }
+    const [factorValue, physicalPosition, physicalSize] = await Promise.all([
+      appWindow.scaleFactor(), appWindow.outerPosition(), appWindow.outerSize(),
+    ])
+    if (!active) return
+    const factor = factorValue > 0 ? factorValue : 1
+    initial = {
+      x: physicalPosition.x / factor,
+      y: physicalPosition.y / factor,
+      width: physicalSize.width / factor,
+      height: physicalSize.height / factor,
+      pointerX,
+      pointerY,
+      factor,
+    }
+    if (latestEvent && !framePending) {
+      framePending = true
+      requestAnimationFrame(applyResize)
+    }
+  } catch (error) {
+    cleanup()
+    console.warn('Window resize session is unavailable:', error)
+  }
 }
 
 const navItems = [
@@ -302,5 +355,15 @@ html, body, #app {
   .sidebar-version-row { margin-inline: 0.5rem; padding-inline: 0.25rem; justify-content: center; }
   .sidebar-version-label { display: none; }
   .sidebar-version-badge { padding-inline: 0.35rem; font-size: 0.55rem; letter-spacing: -0.02em; }
+}
+
+@media (max-height: 640px) {
+  .app-sidebar > nav {
+    gap: .125rem;
+    padding-block: .375rem;
+    scrollbar-width: none;
+  }
+  .app-sidebar > nav::-webkit-scrollbar { display: none; width: 0; }
+  .nav-entry { height: 2rem; min-height: 2rem; }
 }
 </style>

@@ -128,6 +128,27 @@ test.describe('Long Decompress desktop shell', () => {
     await expect(page.getByTestId('nav-SpecialCompression')).toHaveAccessibleName(/特殊压缩.*Ctrl\+Shift\+S/)
   })
 
+  test('fits every sidebar destination at the minimum window height without a navigation scrollbar', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'minimum-height desktop sidebar geometry runs once in desktop Chromium')
+    await page.setViewportSize({ width: 920, height: 520 })
+    const navigation = page.locator('aside nav')
+    await expect(navigation.locator(':scope > button')).toHaveCount(8)
+    const geometry = await navigation.evaluate(element => {
+      const bounds = element.getBoundingClientRect()
+      const buttons = [...element.querySelectorAll(':scope > button')].map(button => {
+        const rect = button.getBoundingClientRect()
+        return { top: rect.top, bottom: rect.bottom }
+      })
+      return {
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+        buttonsInside: buttons.every(button => button.top >= bounds.top - 1 && button.bottom <= bounds.bottom + 1),
+      }
+    })
+    expect(geometry.scrollHeight).toBeLessThanOrEqual(geometry.clientHeight)
+    expect(geometry.buttonsInside).toBe(true)
+  })
+
   test('opens the compact special-compression workspace with its tabs in the title row', async ({ page }) => {
     await page.keyboard.press('Control+Shift+s')
     await page.waitForURL('**/#/special-compression')

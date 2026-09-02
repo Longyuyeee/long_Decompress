@@ -73,9 +73,16 @@ export const collectReleaseIdentity = () => {
 
 export const verifyReleaseIdentity = ({ expected = '', tag = '' } = {}) => {
   const tauriConfig = readJson('src-tauri/tauri.conf.json')
+  const tauriManifest = readText('src-tauri/Cargo.toml')
   const mainWindow = tauriConfig.tauri?.windows?.[0]
   if (mainWindow?.decorations !== false) {
     throw new Error('The main window must disable native decorations and use the in-app title bar.')
+  }
+  if (!tauriManifest.includes('"window-start-dragging"')) {
+    throw new Error('The frameless title bar requires the Tauri window-start-dragging feature.')
+  }
+  if (tauriConfig.tauri?.allowlist?.window?.startDragging !== true) {
+    throw new Error('The frameless title bar requires the Tauri window.startDragging allowlist permission.')
   }
   const protocol = tauriConfig.tauri?.allowlist?.protocol
   if (protocol?.asset !== true || !Array.isArray(protocol.assetScope) || protocol.assetScope.length !== 0) {

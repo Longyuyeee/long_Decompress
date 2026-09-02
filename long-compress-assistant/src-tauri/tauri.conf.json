@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Long解压",
-    "version": "1.2.4"
+    "version": "1.2.5"
   },
   "tauri": {
     "systemTray": {
@@ -35,6 +35,7 @@
         "setPosition": true,
         "setSize": true,
         "show": true,
+        "startDragging": true,
         "unmaximize": true
       },
       "protocol": {
