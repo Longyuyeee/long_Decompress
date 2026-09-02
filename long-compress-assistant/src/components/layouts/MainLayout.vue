@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getVersion } from '@tauri-apps/api/app'
+import { appWindow } from '@tauri-apps/api/window'
 import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
 import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
 import { useAppStore } from '@/stores/app'
@@ -10,7 +11,10 @@ import brandIcon from '@/assets/long-jieya-icon.png'
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
+const isFocused = ref(true)
 const appVersion = ref('')
+let unlistenFocus: any = null
+let isUnmounted = false
 
 onMounted(async () => {
   try {
@@ -18,6 +22,20 @@ onMounted(async () => {
   } catch {
     // 浏览器预览没有原生应用信息；不展示容易误导的硬编码版本。
   }
+  try {
+    const unlisten = await appWindow.onFocusChanged(({ payload: focused }) => {
+      isFocused.value = focused
+    })
+    if (isUnmounted) unlisten()
+    else unlistenFocus = unlisten
+  } catch (error) {
+    console.warn('Window focus listener is unavailable:', error)
+  }
+})
+
+onUnmounted(() => {
+  isUnmounted = true
+  if (unlistenFocus) unlistenFocus()
 })
 
 const navItems = [
