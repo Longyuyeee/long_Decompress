@@ -3,6 +3,8 @@ use crate::system_integration::{
     PermissionManager, PermissionStatus, PermissionType, NOTIFIER,
 };
 use serde::{Deserialize, Serialize};
+#[cfg(target_os = "windows")]
+use std::ffi::OsString;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Mutex,
@@ -179,17 +181,42 @@ pub async fn check_system_integration() -> Result<Vec<(IntegrationType, Integrat
 }
 
 /// 在系统文件管理器中打开指定路径
+#[cfg(target_os = "windows")]
+fn windows_explorer_input_path(path: &str) -> Result<std::path::PathBuf, String> {
+    if path.trim().is_empty() {
+        return Err("EXPLORER_PATH_MUST_NOT_BE_BLANK".to_string());
+    }
+    let path = std::path::PathBuf::from(path);
+    if !path.is_absolute() {
+        return Err("EXPLORER_PATH_MUST_BE_ABSOLUTE".to_string());
+    }
+    Ok(path)
+}
+
+#[cfg(target_os = "windows")]
+fn windows_explorer_arguments(path: &str) -> Result<Vec<OsString>, String> {
+    let path = windows_explorer_input_path(path)?;
+    let metadata = std::fs::metadata(&path)
+        .map_err(|error| format!("EXPLORER_PATH_UNAVAILABLE: {error}"))?;
+    if metadata.is_file() {
+        // Keep the selector and path as separate process arguments. Command handles
+        // quoting for spaces/Unicode; embedding literal quotes makes Explorer fall
+        // back to its default location on some Windows versions.
+        Ok(vec![OsString::from("/select,"), path.into_os_string()])
+    } else if metadata.is_dir() {
+        Ok(vec![path.into_os_string()])
+    } else {
+        Err("EXPLORER_PATH_MUST_BE_FILE_OR_DIRECTORY".to_string())
+    }
+}
+
 #[command]
 pub fn open_in_explorer(_app: AppHandle, path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
-        let target = if std::path::Path::new(&path).is_file() {
-            format!("/select,\"{}\"", path)
-        } else {
-            path
-        };
+        let arguments = windows_explorer_arguments(&path)?;
         crate::utils::process::command("explorer")
-            .arg(&target)
+            .args(arguments)
             .spawn()
             .map_err(|e| format!("Failed to open explorer: {}", e))?;
     }
@@ -311,6 +338,54 @@ mod desktop_behavior_tests {
         validate_video_output_for_default_open, DesktopBehaviorState,
     };
     use std::sync::atomic::Ordering;
+
+    #[cfg(target_os = "windows")]
+    use super::{windows_explorer_arguments, windows_explorer_input_path};
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn explorer_input_preserves_extended_path_bytes_and_rejects_blank_values() {
+        let extended = r"\\?\C:\fixture\trailing ";
+        assert_eq!(
+            windows_explorer_input_path(extended).unwrap(),
+            std::path::PathBuf::from(extended)
+        );
+        assert_eq!(
+            windows_explorer_input_path(" \t ").unwrap_err(),
+            "EXPLORER_PATH_MUST_NOT_BE_BLANK"
+        );
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn explorer_arguments_preserve_unicode_and_spaces_without_embedded_quotes() {
+        let temp = tempfile::tempdir().unwrap();
+        let directory = temp.path().join("中文 空格目录");
+        let file = directory.join("定位 文件.txt");
+        std::fs::create_dir(&directory).unwrap();
+        std::fs::write(&file, b"real explorer target").unwrap();
+
+        assert_eq!(
+            windows_explorer_arguments(&directory.to_string_lossy()).unwrap(),
+            vec![directory.clone().into_os_string()]
+        );
+        assert_eq!(
+            windows_explorer_arguments(&file.to_string_lossy()).unwrap(),
+            vec![std::ffi::OsString::from("/select,"), file.into_os_string()]
+        );
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn explorer_arguments_reject_relative_and_missing_paths() {
+        assert_eq!(
+            windows_explorer_arguments("relative.txt").unwrap_err(),
+            "EXPLORER_PATH_MUST_BE_ABSOLUTE"
+        );
+        assert!(windows_explorer_arguments("C:\\definitely-missing-long-compress-target")
+            .unwrap_err()
+            .starts_with("EXPLORER_PATH_UNAVAILABLE:"));
+    }
 
     #[test]
     fn only_active_tasks_without_close_to_tray_require_exit_confirmation() {

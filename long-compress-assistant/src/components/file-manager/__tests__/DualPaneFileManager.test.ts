@@ -9,6 +9,7 @@ vi.mock('@tauri-apps/api/dialog', () => ({ open: vi.fn() }))
 const leftEntries = [
   { path: 'C:\\left\\Folder', name: 'Folder', size: 0, is_dir: true, extension: null },
   { path: 'C:\\left\\photos.zip', name: 'photos.zip', size: 2048, is_dir: false, extension: 'zip' },
+  { path: 'C:\\left\\notes.txt', name: 'notes.txt', size: 128, is_dir: false, extension: 'txt' },
 ]
 const rightEntries = [
   { path: 'D:\\Target', name: 'Target', size: 0, is_dir: true, extension: null },
@@ -103,6 +104,65 @@ describe('DualPaneFileManager', () => {
     await wrapper.findAll('.file-pane')[1].findAll('.file-row')[0].trigger('contextmenu', { clientX: 30, clientY: 30 })
     move = Array.from(document.body.querySelectorAll('.file-context button')).find(button => button.textContent?.includes('移动到另一栏'))!
     expect(move.querySelector('i')?.classList.contains('pi-arrow-left')).toBe(true)
+    wrapper.unmount()
+  })
+
+  it.each([
+    ['folder', 'Folder', 'C:\\left\\Folder'],
+    ['archive', 'photos.zip', 'C:\\left\\photos.zip'],
+    ['file', 'notes.txt', 'C:\\left\\notes.txt'],
+  ])('opens a %s exact path in the Windows file manager from the context menu', async (_kind, name, path) => {
+    const wrapper = mount(DualPaneFileManager, { attachTo: document.body })
+    await flushPromises()
+    const row = wrapper.findAll('.file-pane')[0].findAll('.file-row').find(candidate => candidate.text().includes(name))!
+    await row.trigger('contextmenu', { clientX: 30, clientY: 30 })
+    const systemOpen = document.body.querySelector('[data-testid="file-manager-open-system"]') as HTMLButtonElement
+    expect(systemOpen).toBeTruthy()
+    expect(systemOpen.textContent).toContain(name === 'Folder' ? '在文件管理器中打开' : '在文件管理器中定位')
+    systemOpen.click()
+    await flushPromises()
+    expect(invoke).toHaveBeenCalledWith('open_in_explorer', { path })
+    wrapper.unmount()
+  })
+
+  it('turns protected-folder property failures into a stable friendly prompt', async () => {
+    let propertyAttempts = 0
+    invoke.mockImplementation((command: string, payload?: any) => {
+      if (command === 'file_manager_locations') return Promise.resolve([
+        { name: '主目录', path: 'C:\\left', kind: 'home' },
+        { name: 'D 盘', path: 'D:\\', kind: 'drive' },
+      ])
+      if (command === 'list_files') return Promise.resolve(payload.path === 'C:\\left' ? leftEntries : rightEntries)
+      if (command === 'file_manager_properties') {
+        propertyAttempts += 1
+        if (propertyAttempts === 1) return Promise.reject(new Error('REPARSE_POINT_DENIED: raw internal backend detail'))
+        return Promise.resolve({
+          path: payload.path, name: 'notes.txt', isDir: false, bytes: 128,
+          files: 1, directories: 0, modifiedUnixMs: 1,
+        })
+      }
+      return Promise.resolve(null)
+    })
+    const wrapper = mount(DualPaneFileManager, { attachTo: document.body })
+    await flushPromises()
+    const folder = wrapper.findAll('.file-pane')[0].findAll('.file-row').find(candidate => candidate.text().includes('Folder'))!
+    await folder.trigger('contextmenu', { clientX: 30, clientY: 30 })
+    const properties = Array.from(document.body.querySelectorAll('.file-context button')).find(button => button.textContent?.includes('属性')) as HTMLButtonElement
+    properties.click()
+    await flushPromises()
+    const notice = wrapper.get('[data-testid="file-manager-notice"]').text()
+    expect(notice).toContain('系统保护或特殊文件夹')
+    expect(notice).toContain('Windows 文件管理器')
+    expect(notice).not.toContain('REPARSE_POINT_DENIED')
+    expect(notice).not.toContain('raw internal backend detail')
+
+    const file = wrapper.findAll('.file-pane')[0].findAll('.file-row').find(candidate => candidate.text().includes('notes.txt'))!
+    await file.trigger('contextmenu', { clientX: 30, clientY: 30 })
+    const nextProperties = Array.from(document.body.querySelectorAll('.file-context button')).find(button => button.textContent?.includes('属性')) as HTMLButtonElement
+    nextProperties.click()
+    await flushPromises()
+    expect(document.body.querySelector('.properties-dialog')).toBeTruthy()
+    expect(wrapper.find('[data-testid="file-manager-notice"]').exists()).toBe(false)
     wrapper.unmount()
   })
 })

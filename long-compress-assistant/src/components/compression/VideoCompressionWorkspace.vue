@@ -9,6 +9,7 @@ import { useVideoCompressionBatch } from '@/composables/useVideoCompressionBatch
 import type { VideoCompressionSettings } from '@/types/video'
 import type { VideoCandidate } from '@/utils/videoCompressionWorkspace'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
+import Modal from '@/components/ui/Modal.vue'
 import VideoCompressionSettingsPanel from './VideoCompressionSettingsPanel.vue'
 
 const appStore = useAppStore()
@@ -19,6 +20,8 @@ const videoBatch = useVideoCompressionBatch()
 const inFlight = new Map<string, number>()
 const isRunning = ref(false)
 const showGlobalSettings = ref(false)
+const videoSettingsDraft = ref<VideoCompressionSettings>({ ...store.videoGlobalSettings })
+const videoOutputDirectoryDraft = ref(store.videoOutputDirectory)
 
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`
@@ -100,8 +103,24 @@ const onFilesSelected = (candidates: VideoCandidate[]) => {
   }
 }
 
+const openGlobalSettings = () => {
+  videoSettingsDraft.value = { ...store.videoGlobalSettings }
+  videoOutputDirectoryDraft.value = store.videoOutputDirectory
+  showGlobalSettings.value = true
+}
 const updateGlobalSettings = (settings: VideoCompressionSettings) => {
-  if (!isRunning.value) store.updateVideoGlobalSettings(settings)
+  if (!isRunning.value) videoSettingsDraft.value = settings
+}
+const saveGlobalSettings = () => {
+  if (isRunning.value) return
+  store.updateVideoGlobalSettings({ ...videoSettingsDraft.value })
+  store.videoOutputDirectory = videoOutputDirectoryDraft.value
+  showGlobalSettings.value = false
+}
+const cancelGlobalSettings = () => {
+  videoSettingsDraft.value = { ...store.videoGlobalSettings }
+  videoOutputDirectoryDraft.value = store.videoOutputDirectory
+  showGlobalSettings.value = false
 }
 const updateItemSettings = (item: VideoCompressionItem, settings: VideoCompressionSettings) => {
   if (!isRunning.value) store.updateVideoItemSettings(item.id, settings)
@@ -128,7 +147,7 @@ const chooseOutputDirectory = async () => {
     const selected = queued === undefined
       ? await open({ directory: true, multiple: false, title: '选择视频输出目录' })
       : queued
-    if (selected && !Array.isArray(selected)) store.videoOutputDirectory = selected
+    if (selected && !Array.isArray(selected)) videoOutputDirectoryDraft.value = selected
   } catch (error) {
     appStore.setError(`无法选择视频输出目录：${String(error)}`)
   }
@@ -213,27 +232,17 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
 <template>
   <section class="video-workspace" data-testid="video-compression-workspace">
     <div class="workspace-toolbar">
-      <div class="min-w-0">
-        <div class="title-line"><i class="pi pi-video"></i><strong>视频压缩工作区</strong><span>真实执行</span></div>
-        <p>执行复用统一任务、取消、验证、原子发布与跨重启历史。</p>
-      </div>
       <div class="toolbar-actions">
-        <button type="button" class="secondary-action" :aria-expanded="showGlobalSettings" data-testid="video-toggle-global-settings" @click="showGlobalSettings = !showGlobalSettings"><i class="pi pi-sliders-h"></i>{{ showGlobalSettings ? '收起设置' : '批量设置' }}</button>
+        <button type="button" class="secondary-action" :aria-expanded="showGlobalSettings" data-testid="video-toggle-global-settings" @click="openGlobalSettings"><i class="pi pi-sliders-h"></i>批量设置</button>
         <button v-if="isRunning" type="button" class="danger-action" @click="cancelVideoCompression"><i class="pi pi-stop-circle"></i>取消视频压缩</button>
         <button v-else type="button" class="primary-action" :disabled="!canStart" @click="startVideoCompression"><i class="pi pi-play-circle"></i>开始视频压缩</button>
       </div>
     </div>
 
-    <div class="truth-boundary">
+    <div v-if="store.videoItems.length" class="truth-boundary">
       <i class="pi pi-shield"></i>
       <span>预计大小始终是估算；字幕、多音轨、章节、封面和 HDR 变化由后端明确报告，不会静默处理。</span>
       <strong v-if="store.videoItems.length">{{ readyCount }} 就绪<span v-if="planningCount"> · {{ planningCount }} 探测中</span></strong>
-    </div>
-
-    <div v-if="showGlobalSettings" class="global-settings-card custom-scrollbar">
-      <div class="settings-heading"><span><i class="pi pi-sliders-h"></i>批量配置</span><small>单项可展开覆盖；修改后重新探测和规划</small></div>
-      <VideoCompressionSettingsPanel :model-value="store.videoGlobalSettings" @update:model-value="updateGlobalSettings" />
-      <div class="output-directory"><div><span>输出目录</span><strong :title="store.videoOutputDirectory">{{ store.videoOutputDirectory || '与源文件同目录' }}</strong></div><button type="button" :disabled="isRunning" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button></div>
     </div>
 
     <div v-if="store.videoItems.length === 0" class="video-empty">
@@ -290,23 +299,29 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
 
       <EnhancedFileDropzone compact mode="file" accept="mp4,mov,avi,wmv,webm,mkv,m4v" unfiltered-picker hint="继续添加视频" @files-selected="onFilesSelected" />
     </div>
+
+    <Modal :visible="showGlobalSettings" size="xl" title="视频批量设置" description="保存后重新探测尚未单独覆盖的视频" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
+      <div class="special-settings-dialog" :class="{ locked: isRunning }">
+        <VideoCompressionSettingsPanel :model-value="videoSettingsDraft" @update:model-value="updateGlobalSettings" />
+        <div class="output-directory"><div><span>输出目录</span><strong :title="videoOutputDirectoryDraft">{{ videoOutputDirectoryDraft || '与源文件同目录' }}</strong></div><button type="button" :disabled="isRunning" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button></div>
+      </div>
+      <template #footer>
+        <button type="button" class="dialog-cancel" @click="cancelGlobalSettings">取消</button>
+        <button type="button" class="dialog-save" data-testid="video-save-global-settings" :disabled="isRunning" @click="saveGlobalSettings">保存设置</button>
+      </template>
+    </Modal>
   </section>
 </template>
 
 <style scoped>
 .video-workspace { box-sizing: border-box; display: flex; width: 100%; max-width: 100%; min-width: 0; min-height: 0; flex: 1; flex-direction: column; gap: .75rem; overflow: hidden; padding: .1rem; }
 .video-workspace > * { box-sizing: border-box; max-width: 100%; min-width: 0; }
-.workspace-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; }
-.workspace-toolbar > div { min-width: 0; flex: 1 1 20rem; }
-.title-line { display: flex; align-items: center; gap: .45rem; color: var(--text-content); }
-.title-line i { color: var(--dynamic-accent); }
-.title-line strong { font-size: .88rem; font-weight: 900; }
-.title-line span { border-radius: 999px; background: color-mix(in srgb, var(--dynamic-accent) 12%, transparent); padding: .18rem .45rem; color: var(--dynamic-accent); font-size: .58rem; font-weight: 900; }
-.workspace-toolbar p { margin-top: .2rem; color: var(--text-muted); font-size: .65rem; }
-.toolbar-actions { display: flex; gap: .5rem; }.primary-action, .danger-action, .secondary-action { border-radius: .75rem; padding: .65rem .8rem; font-size: .65rem; font-weight: 850; }.primary-action, .danger-action { color: white; }.primary-action { background: var(--dynamic-accent); }.danger-action { background: #ef4444; }.secondary-action{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.primary-action:disabled { cursor: not-allowed; opacity: .45; }
+.workspace-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: .75rem 1rem; }
+.toolbar-actions { display: flex; gap: .5rem; }.primary-action, .danger-action, .secondary-action { border-radius: .75rem; padding: .65rem .8rem; font-size: .65rem; font-weight: 850;transition:transform .18s ease,box-shadow .18s ease }.primary-action:hover:not(:disabled),.danger-action:hover:not(:disabled),.secondary-action:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 22px -17px var(--dynamic-accent)}.primary-action:active:not(:disabled),.danger-action:active:not(:disabled),.secondary-action:active:not(:disabled){transform:scale(.97)}.primary-action, .danger-action { color: white; }.primary-action { background: var(--dynamic-accent); }.danger-action { background: #ef4444; }.secondary-action{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.primary-action:disabled { cursor: not-allowed; opacity: .45; }
 .truth-boundary { display: flex; align-items: center; gap: .5rem; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 22%, transparent); border-radius: .8rem; background: color-mix(in srgb, var(--dynamic-accent) 7%, transparent); padding: .6rem .75rem; color: var(--text-muted); font-size: .62rem; line-height: 1.45; }
 .truth-boundary i, .truth-boundary strong { color: var(--dynamic-accent); }.truth-boundary strong { margin-left: auto; white-space: nowrap; }
-.global-settings-card, .video-card { box-sizing: border-box; max-width: 100%; min-width: 0; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-card) 88%, transparent); padding: .85rem; }.global-settings-card{max-height:min(22rem,52vh);flex-shrink:0;overflow-x:hidden;overflow-y:auto}
+.video-card { box-sizing: border-box; max-width: 100%; min-width: 0; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-card) 88%, transparent); padding: .85rem; }
+.special-settings-dialog{min-width:0}.locked{pointer-events:none;opacity:.68}.dialog-cancel,.dialog-save{border-radius:.75rem;padding:.65rem 1rem;font-size:.7rem;font-weight:900}.dialog-cancel{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.dialog-save{background:var(--dynamic-accent);color:white;box-shadow:0 10px 24px -15px var(--dynamic-accent)}.dialog-save:disabled{opacity:.45}
 .settings-heading { display: flex; justify-content: space-between; gap: .75rem; margin-bottom: .65rem; color: var(--text-content); font-size: .68rem; font-weight: 900; }.settings-heading small { color: var(--text-muted); font-size: .58rem; font-weight: 650; }
 .output-directory { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .7rem; border-top: 1px solid var(--border-subtle); padding-top: .65rem; }.output-directory div { min-width: 0; }.output-directory span, .output-directory strong { display: block; }.output-directory span { color: var(--text-muted); font-size: .55rem; }.output-directory strong { overflow: hidden; margin-top: .15rem; color: var(--text-content); font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; }.output-directory button, .execution-facts button { flex: 0 0 auto; border: 1px solid var(--border-subtle); border-radius: .55rem; padding: .35rem .55rem; color: var(--text-content); font-size: .58rem; font-weight: 800; }
 .video-empty { display:flex;min-height:0;flex:1; }.video-empty :deep(.drop-area){display:flex;min-height:13rem;width:100%;align-items:center;justify-content:center}.video-list { display: grid; width: 100%; max-width: 100%; min-width: 0; min-height:0; flex:1; align-content:start; gap: .65rem; overflow-x:hidden;overflow-y:auto;padding-right:.25rem }.video-card { overflow: hidden; }

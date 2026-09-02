@@ -131,7 +131,19 @@ const activate = (pane: PaneState, entry: LocalFileEntry) => {
   activePane.value = pane.id
   if (entry.isDir) void loadPane(pane, entry.path)
   else if (isArchive(entry)) emit('openArchive', entry.path)
-  else void invoke('open_in_explorer', { path: entry.path })
+  else void openInSystemManager(entry)
+}
+
+const openInSystemManager = async (entry: LocalFileEntry) => {
+  context.value = null
+  notice.value = ''
+  try {
+    await invoke('open_in_explorer', { path: entry.path })
+  } catch {
+    notice.value = entry.isDir
+      ? '无法在 Windows 文件管理器中打开此文件夹，请确认该位置仍然存在且有权访问。'
+      : '无法在 Windows 文件管理器中定位此文件，请确认该文件仍然存在且有权访问。'
+  }
 }
 
 const toggle = (pane: PaneState, entry: LocalFileEntry, event: MouseEvent) => {
@@ -222,9 +234,11 @@ const submitEditor = async () => {
 }
 
 const showProperties = async (pane: PaneState, entry: LocalFileEntry) => {
-  context.value = null; busy.value = true
+  context.value = null; properties.value = null; notice.value = ''; busy.value = true
   try { properties.value = await invoke('file_manager_properties', { path: entry.path }) }
-  catch (error) { notice.value = `读取属性失败：${error}` }
+  catch {
+    notice.value = '无法读取此项目的属性。它可能是系统保护或特殊文件夹，可尝试在 Windows 文件管理器中查看。'
+  }
   finally { busy.value = false }
 }
 
@@ -353,7 +367,8 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
       <section v-if="context" class="file-context" :style="{ left: `${context.x}px`, top: `${context.y}px` }" @pointerdown.stop @contextmenu.prevent>
         <header><i :class="context.entry ? icon(context.entry) : 'pi pi-folder-open'"></i><strong class="truncate">{{ context.entry?.name || context.pane.path }}</strong></header>
         <template v-if="context.entry">
-          <button @click="activate(context.pane, context.entry); context = null"><i class="pi pi-folder-open"></i><span>{{ context.entry.isDir ? '打开文件夹' : isArchive(context.entry) ? '浏览压缩包' : '在资源管理器中定位' }}</span></button>
+          <button v-if="context.entry.isDir || isArchive(context.entry)" @click="activate(context.pane, context.entry); context = null"><i class="pi pi-folder-open"></i><span>{{ context.entry.isDir ? '在当前栏打开文件夹' : '浏览压缩包' }}</span></button>
+          <button data-testid="file-manager-open-system" @click="openInSystemManager(context.entry)"><i class="pi pi-external-link"></i><span>{{ context.entry.isDir ? '在文件管理器中打开' : '在文件管理器中定位' }}</span></button>
           <button v-if="context.entry.isDir" data-testid="file-manager-open-folder-other" @click="openInOtherPane(context.pane, context.entry.path)"><i :class="transferIcon(context.pane)"></i><span>在另一栏打开此文件夹 {{ transferDirection(context.pane) }}</span></button>
           <button @click="runTransfer('copy', context.pane, context.entry)"><i class="pi pi-copy"></i><span>复制到另一栏 {{ transferDirection(context.pane) }}</span></button>
           <button @click="runTransfer('move', context.pane, context.entry)"><i :class="transferIcon(context.pane)"></i><span>移动到另一栏 {{ transferDirection(context.pane) }}</span></button>
