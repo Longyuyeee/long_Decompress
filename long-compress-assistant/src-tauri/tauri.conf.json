@@ -35,6 +35,7 @@
         "setPosition": true,
         "setSize": true,
         "show": true,
+        "startDragging": true,
         "unmaximize": true
       },
       "protocol": {

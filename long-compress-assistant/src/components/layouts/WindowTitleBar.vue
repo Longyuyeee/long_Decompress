@@ -4,12 +4,15 @@ const minimize = () => appWindow.minimize()
 const toggleMaximize = () => appWindow.toggleMaximize()
 const closeApp = () => appWindow.close()
 const startDragging = (event: MouseEvent) => {
-  if (event.button === 0 && !(event.target as HTMLElement).closest('.control-btn')) void appWindow.startDragging()
+  if (event.button !== 0 || (event.target as HTMLElement | null)?.closest('.control-btn')) return
+  void appWindow.startDragging().catch(error => {
+    console.warn('Window dragging is unavailable:', error)
+  })
 }
 </script>
 
 <template>
-  <div class="window-titlebar flex items-center justify-end h-8 bg-gradient-to-r from-card/40 via-card/30 to-card/40 backdrop-blur-2xl border-b border-subtle/50 select-none relative z-[100] shadow-sm" data-tauri-drag-region @mousedown="startDragging">
+  <div class="window-titlebar flex items-center justify-end h-8 bg-gradient-to-r from-card/40 via-card/30 to-card/40 backdrop-blur-2xl border-b border-subtle/50 select-none relative z-[100] shadow-sm" @mousedown="startDragging">
 
     <!-- 右侧控制组 -->
     <div class="flex h-full items-center">
@@ -45,13 +48,8 @@ const startDragging = (event: MouseEvent) => {
 </template>
 
 <style scoped>
-.window-titlebar {
-  -webkit-app-region: drag;
-}
-
 .control-btn {
   @apply w-12 h-full flex items-center justify-center text-muted transition-all duration-300 cursor-default;
-  -webkit-app-region: no-drag;
 }
 
 .control-btn:active {

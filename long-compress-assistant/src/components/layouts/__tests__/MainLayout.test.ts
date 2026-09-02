@@ -80,6 +80,15 @@ const mountLayout = async (initialRoute = '/decompress') => {
   return { wrapper, router }
 }
 
+const dispatchPointer = (
+  type: 'pointermove' | 'pointerup',
+  init: MouseEventInit & { pointerId: number },
+) => {
+  const event = new MouseEvent(type, init)
+  Object.defineProperty(event, 'pointerId', { value: init.pointerId })
+  window.dispatchEvent(event)
+}
+
 describe('MainLayout', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -106,10 +115,60 @@ describe('MainLayout', () => {
       button: 0, pointerId: 1, screenX: 1000, screenY: 700,
     })
     await flushPromises()
-    window.dispatchEvent(new MouseEvent('pointermove', { screenX: 1040, screenY: 730 }))
+    dispatchPointer('pointermove', { buttons: 1, pointerId: 1, screenX: 1040, screenY: 730 })
     await vi.waitFor(() => expect(mocks.setSize).toHaveBeenCalled())
     expect(mocks.setSize.mock.calls.at(-1)?.[0]).toMatchObject({ width: 960, height: 650 })
-    window.dispatchEvent(new MouseEvent('pointerup'))
+    dispatchPointer('pointerup', { buttons: 0, pointerId: 1 })
+  })
+
+  it('ends resize when the pointer returns without the left button held', async () => {
+    const { wrapper } = await mountLayout()
+    await wrapper.get('[data-resize-edge="se"]').trigger('pointerdown', {
+      button: 0, buttons: 1, pointerId: 7, screenX: 1000, screenY: 700,
+    })
+    await flushPromises()
+
+    dispatchPointer('pointermove', { buttons: 0, pointerId: 7, screenX: 1080, screenY: 760 })
+    await new Promise(resolve => setTimeout(resolve, 20))
+    expect(mocks.setSize).not.toHaveBeenCalled()
+
+    dispatchPointer('pointermove', { buttons: 1, pointerId: 7, screenX: 1100, screenY: 780 })
+    await new Promise(resolve => setTimeout(resolve, 20))
+    expect(mocks.setSize).not.toHaveBeenCalled()
+  })
+
+  it('does not revive a resize released while native window metrics are still loading', async () => {
+    let resolveMaximized!: (maximized: boolean) => void
+    mocks.isMaximized.mockImplementationOnce(() => new Promise<boolean>(resolve => {
+      resolveMaximized = resolve
+    }))
+    const { wrapper } = await mountLayout()
+
+    void wrapper.get('[data-resize-edge="se"]').trigger('pointerdown', {
+      button: 0, buttons: 1, pointerId: 9, screenX: 1000, screenY: 700,
+    })
+    dispatchPointer('pointerup', { buttons: 0, pointerId: 9, screenX: 1000, screenY: 700 })
+    resolveMaximized(false)
+    await flushPromises()
+
+    dispatchPointer('pointermove', { buttons: 1, pointerId: 9, screenX: 1080, screenY: 760 })
+    await new Promise(resolve => setTimeout(resolve, 20))
+    expect(mocks.setSize).not.toHaveBeenCalled()
+  })
+
+  it('converts physical pointer deltas to logical pixels while resizing', async () => {
+    mocks.scaleFactor.mockResolvedValueOnce(2)
+    mocks.outerPosition.mockResolvedValueOnce({ x: 200, y: 160 })
+    mocks.outerSize.mockResolvedValueOnce({ width: 1840, height: 1240 })
+    const { wrapper } = await mountLayout()
+    await wrapper.get('[data-resize-edge="se"]').trigger('pointerdown', {
+      button: 0, buttons: 1, pointerId: 8, screenX: 1000, screenY: 700,
+    })
+    await flushPromises()
+    dispatchPointer('pointermove', { buttons: 1, pointerId: 8, screenX: 1040, screenY: 730 })
+    await vi.waitFor(() => expect(mocks.setSize).toHaveBeenCalled())
+    expect(mocks.setSize.mock.calls.at(-1)?.[0]).toMatchObject({ width: 940, height: 635 })
+    dispatchPointer('pointerup', { buttons: 0, pointerId: 8 })
   })
 
   it('renders the eight product navigation entries with special compression beside the file browser', async () => {
