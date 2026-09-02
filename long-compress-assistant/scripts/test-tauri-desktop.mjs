@@ -747,7 +747,7 @@ async function runArchiveBrowserDesktopGate() {
   await waitForElement('[role="dialog"]')
   const imageShellAfter = await shellGeometry()
   assertStableShellGeometry(imageShellBefore, imageShellAfter, 'real WebView2 image settings modal')
-  writeFileSync(path.join(artifactDirectory, 'special-compression-settings-modal-v1.2.3.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  writeFileSync(path.join(artifactDirectory, 'special-compression-settings-modal-v1.2.4.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   await driver.actions().sendKeys(Key.ESCAPE).perform()
   await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
   await (await waitForElement('[data-testid="compression-mode-video"]')).click()
@@ -2554,11 +2554,71 @@ async function runShellPolishDesktopGate() {
 
   const titlebar = await waitForElement('.window-titlebar[data-tauri-drag-region]')
   const titlebarControls = await titlebar.findElements(By.css('.control-btn'))
+  const titlebarText = await titlebar.getText()
+  const resizeHandles = await driver.findElements(By.css('[data-resize-edge]'))
   assert.equal(titlebarControls.length, 3, 'the in-app title bar must expose minimize, maximize and close controls')
   assert.equal(tauriConfig.tauri?.windows?.[0]?.decorations, false, 'the main Tauri window must disable native decorations')
+  assert.equal(tauriConfig.tauri?.windows?.[0]?.resizable, true, 'the main Tauri window must remain resizable')
+
+  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
+  console.log('[desktop-e2e] compression center opened')
+  await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
+  const archiveSettingsDialog = await waitForElement('[role="dialog"] > div:last-child > div')
+  console.log('[desktop-e2e] compact global compression settings opened')
+  await new Promise(resolve => setTimeout(resolve, 450))
+  const archiveSettingsSize = await driver.executeScript(element => ({ width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height }), archiveSettingsDialog)
+  writeFileSync(path.join(artifactDirectory, 'shell-polish-archive-settings.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  await (await waitForElement('[data-testid="manage-compression-profiles"]')).click()
+  const profileDialog = await waitForElement('[role="dialog"] .modal-no-glass')
+  console.log('[desktop-e2e] compact compression profile manager opened')
+  await new Promise(resolve => setTimeout(resolve, 450))
+  const profileDialogSize = await driver.executeScript(element => ({ width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height }), profileDialog)
+  const themedProfileScroller = (await profileDialog.findElements(By.css('.profile-dialog-scroll.custom-scrollbar'))).length === 1
+  const profileTitle = await profileDialog.findElement(By.css('#profile-dialog-title'))
+  const profileTitleAudit = {
+    text: (await profileTitle.getText()).trim(),
+    color: await profileTitle.getCssValue('color'),
+    rect: await profileTitle.getRect(),
+  }
+  const profileContentColor = await (await profileDialog.findElement(By.css('article h4'))).getCssValue('color')
+  writeFileSync(path.join(artifactDirectory, 'shell-polish-profile-manager.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  const rootClasses = await driver.executeScript(() => document.documentElement.className)
+  await driver.executeScript(() => {
+    document.documentElement.classList.remove('light')
+    document.documentElement.classList.add('dark')
+  })
+  await new Promise(resolve => setTimeout(resolve, 450))
+  const darkProfileAudit = {
+    titleColor: await profileTitle.getCssValue('color'),
+    contentColor: await (await profileDialog.findElement(By.css('article h4'))).getCssValue('color'),
+    backgroundColor: await profileDialog.getCssValue('background-color'),
+  }
+  writeFileSync(path.join(artifactDirectory, 'shell-polish-profile-manager-dark.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  await driver.executeScript(classes => { document.documentElement.className = classes }, rootClasses)
+  const profileClose = await waitForElement('[data-testid="close-compression-profiles"]')
+  await driver.executeScript(element => element.click(), profileClose)
+  await new Promise(resolve => setTimeout(resolve, 650))
+  const profileCloseApplied = (await driver.findElements(By.css('.modal-no-glass'))).length === 0
+  console.log('[desktop-e2e] compression profile manager closed')
+  await driver.actions().sendKeys(Key.ESCAPE).perform()
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
+  console.log('[desktop-e2e] global compression settings closed')
 
   await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  const modalSizes = {}
+  for (const mode of ['image', 'video', 'pdf']) {
+    await (await waitForElement(`[data-testid="compression-mode-${mode}"]`)).click()
+    await (await waitForElement(`[data-testid="${mode === 'pdf' ? 'pdf-toggle-batch-settings' : `${mode}-toggle-global-settings`}"]`)).click()
+    const dialog = await waitForElement('[role="dialog"] > div:last-child > div')
+    await new Promise(resolve => setTimeout(resolve, 450))
+    modalSizes[mode] = await driver.executeScript(element => ({ width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height }), dialog)
+    writeFileSync(path.join(artifactDirectory, `shell-polish-${mode}-settings.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    await driver.actions().sendKeys(Key.ESCAPE).perform()
+    await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
+  }
+
   await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
   const workspace = await waitForElement('[data-testid="pdf-compression-workspace"]')
   const workspaceText = await workspace.getText()
@@ -2571,23 +2631,81 @@ async function runShellPolishDesktopGate() {
       scrollWidth: target.scrollWidth,
     }
   })
+  const performSyntheticResize = async pointerId => {
+    const southEastHandle = await waitForElement('[data-resize-edge="se"]')
+    await driver.executeScript((element, id) => {
+      element.dispatchEvent(new PointerEvent('pointerdown', {
+        bubbles: true, button: 0, pointerId: id, screenX: 1400, screenY: 860,
+      }))
+    }, southEastHandle, pointerId)
+    await new Promise(resolve => setTimeout(resolve, 150))
+    await driver.executeScript(id => {
+      window.dispatchEvent(new PointerEvent('pointermove', {
+        bubbles: true, button: 0, pointerId: id, screenX: 1440, screenY: 890,
+      }))
+    }, pointerId)
+    await new Promise(resolve => setTimeout(resolve, 350))
+    await driver.executeScript(id => {
+      window.dispatchEvent(new PointerEvent('pointerup', {
+        bubbles: true, button: 0, pointerId: id, screenX: 1440, screenY: 890,
+      }))
+    }, pointerId)
+  }
+  // WebDriver setRect uses physical pixels while Tauri setSize uses logical pixels.
+  // Normalize once, then measure a second identical user-level resize delta.
+  await performSyntheticResize(41)
+  const beforeResize = await driver.executeScript(() => ({ width: window.innerWidth, height: window.innerHeight }))
+  await performSyntheticResize(42)
+  const afterResize = await driver.executeScript(() => ({ width: window.innerWidth, height: window.innerHeight }))
+  const resizeDelta = {
+    width: afterResize.width - beforeResize.width,
+    height: afterResize.height - beforeResize.height,
+  }
 
   const expected = {
     nativeDecorations: false,
+    resizable: true,
     titlebarControls: 3,
+    titlebarDuplicateNamePresent: false,
+    sidebarPrivacyCopyPresent: false,
+    resizeHandles: 8,
+    customResizeApplied: true,
+    compactArchiveSettingsDialog: true,
+    compactProfileDialog: true,
+    themedProfileScroller: true,
+    profileCloseApplied: true,
+    profileTitleVisible: true,
+    profileTitleColorMatchesContent: true,
+    darkProfileThemeApplied: true,
+    compactSettingsDialogs: true,
+    pdfOutputControlsOutsideDialog: false,
     redundantPdfNoticePresent: false,
     verticalOverflow: 0,
     horizontalOverflow: 0,
   }
   const actual = {
     nativeDecorations: tauriConfig.tauri?.windows?.[0]?.decorations,
+    resizable: tauriConfig.tauri?.windows?.[0]?.resizable,
     titlebarControls: titlebarControls.length,
+    titlebarDuplicateNamePresent: titlebarText.includes('Long解压'),
+    sidebarPrivacyCopyPresent: (await (await waitForElement('aside')).getText()).includes('本地处理 · 隐私优先'),
+    resizeHandles: resizeHandles.length,
+    customResizeApplied: resizeDelta.width >= 20 && resizeDelta.height >= 15,
+    compactArchiveSettingsDialog: archiveSettingsSize.width <= 760 && archiveSettingsSize.height <= 720,
+    compactProfileDialog: profileDialogSize.width <= 820 && profileDialogSize.height <= 700,
+    themedProfileScroller,
+    profileCloseApplied,
+    profileTitleVisible: profileTitleAudit.text === '管理压缩配置组' && profileTitleAudit.rect.height > 0,
+    profileTitleColorMatchesContent: profileTitleAudit.color === profileContentColor,
+    darkProfileThemeApplied: darkProfileAudit.titleColor === darkProfileAudit.contentColor && darkProfileAudit.backgroundColor !== 'rgba(255, 255, 255, 1)',
+    compactSettingsDialogs: Object.values(modalSizes).every(size => size.width <= 920 && size.height <= 720),
+    pdfOutputControlsOutsideDialog: (await workspace.findElements(By.css('[data-testid="pdf-output-directory"]'))).length > 0,
     redundantPdfNoticePresent: workspaceText.includes('默认输出为新文件，禁止覆盖源文件'),
     verticalOverflow: Math.max(0, (layout?.scrollHeight ?? 0) - (layout?.clientHeight ?? 0)),
     horizontalOverflow: Math.max(0, (layout?.scrollWidth ?? 0) - (layout?.clientWidth ?? 0)),
   }
   const differences = Object.keys(expected).filter(key => expected[key] !== actual[key])
-  const evidence = { schemaVersion: 1, testKind: 'real-windows-tauri-frameless-shell-and-pdf-empty-state', expected, actual, differences, passed: differences.length === 0 }
+  const evidence = { schemaVersion: 3, testKind: 'real-windows-tauri-special-compression-shell', expected, actual, archiveSettingsSize, profileDialogSize, profileTitleAudit, profileContentColor, darkProfileAudit, modalSizes, resizeDelta, differences, passed: differences.length === 0 }
 
   writeFileSync(path.join(artifactDirectory, 'shell-polish-result.json'), JSON.stringify(evidence, null, 2), 'utf8')
   writeFileSync(path.join(artifactDirectory, 'shell-polish-pdf.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
@@ -3210,18 +3328,29 @@ async function runVideoWorkspaceDesktopGate() {
     return statuses.every(status => status === 'ready')
   }, 30_000)
   console.log('[desktop-e2e] video drafts are initially planned')
-  const text = await workspace.getText()
-  assert.match(text, /预计输出 · 估算/)
-  assert.match(text, /360×640/)
-  assert.match(text, /VFR/)
-  assert.match(text, /字幕流将被移除/)
-  assert.match(text, /额外音轨将被移除/)
-  assert.match(text, /后续执行前必须显式确认/)
+  const collapsedText = await workspace.getText()
+  assert.match(collapsedText, /360×640/)
+  assert.match(collapsedText, /质量 76/)
+  assert.doesNotMatch(collapsedText, /预计输出 · 估算/)
+  assert.doesNotMatch(collapsedText, /字幕流将被移除/)
+  mkdirSync(artifactDirectory, { recursive: true })
+  writeFileSync(
+    path.join(artifactDirectory, 'video-workspace-collapsed.png'),
+    Buffer.from(await driver.takeScreenshot(), 'base64'),
+  )
+  const plannedCards = await driver.findElements(By.css('[data-testid="video-draft-card"]'))
+  for (const card of plannedCards) await card.findElement(By.css('.expand')).click()
+  const expandedText = await workspace.getText()
+  assert.match(expandedText, /预计输出 · 估算/)
+  assert.match(expandedText, /VFR/)
+  assert.match(expandedText, /字幕流将被移除/)
+  assert.match(expandedText, /额外音轨将被移除/)
+  assert.match(expandedText, /后续执行前必须显式确认/)
   const execute = await waitForElement('[data-testid="video-compression-workspace"] .primary-action')
   assert.equal(await execute.getAttribute('disabled'), null, 'verified video drafts must enable real execution')
   assert.equal((await callDesktopBridge('taskHistory')).length, historyBefore, 'planning must not write task history')
 
-  const plannedFirstCard = (await driver.findElements(By.css('[data-testid="video-draft-card"]')))[0]
+  const plannedFirstCard = plannedCards[0]
   if ((await plannedFirstCard.findElement(By.css('.expand')).getAttribute('aria-expanded')) !== 'true') {
     await plannedFirstCard.findElement(By.css('.expand')).click()
   }

@@ -798,6 +798,11 @@ describe('CompressionView', () => {
     expect(pdfWorkspace.text()).not.toContain('安全分析、批量优化与验证发布')
     expect(pdfWorkspace.text()).not.toContain('执行复用统一任务')
     expect(pdfWorkspace.text()).not.toContain('默认输出为新文件，禁止覆盖源文件')
+    expect(pdfWorkspace.find('[data-testid="pdf-output-directory"]').exists()).toBe(false)
+    await pdfWorkspace.get('[data-testid="pdf-toggle-batch-settings"]').trigger('click')
+    expect(pdfWorkspace.get('[data-testid="pdf-output-directory"]').exists()).toBe(true)
+    expect(pdfWorkspace.get('[role="dialog"]').text()).toContain('PDF 批量设置')
+    await pdfWorkspace.get('.dialog-cancel').trigger('click')
     expect(useTaskStore().tasks).toHaveLength(0)
 
     expect(useCompressionStore().selectedFiles).toHaveLength(1)
@@ -927,6 +932,9 @@ describe('CompressionView', () => {
     })
     const workspace = wrapper.get('[data-testid="video-compression-workspace"]')
     expect(workspace.get('[data-testid="video-draft-card"]').text()).toContain('360×640')
+    expect(workspace.text()).not.toContain('预计输出 · 估算')
+    expect(workspace.text()).not.toContain('后续执行前必须显式确认')
+    await workspace.get('.expand').trigger('click')
     expect(workspace.text()).toContain('预计输出 · 估算')
     expect(workspace.text()).toContain('后续执行前必须显式确认')
     expect(useTaskStore().tasks).toHaveLength(0)
@@ -992,6 +1000,8 @@ describe('CompressionView', () => {
         media: { durationMs: 1_000, videoCodec: 'h264', audioCodec: 'aac', container: 'mp4' },
       },
     })
+    expect(workspace.text()).not.toContain('最终输出')
+    await workspace.get('.expand').trigger('click')
     expect(workspace.text()).toContain('最终输出')
     expect(workspace.text()).toContain('11.7 KiB')
     await workspace.get('[data-testid="video-open-default-app"]').trigger('click')

@@ -25,6 +25,7 @@ interface Props {
   allowSingleFileFormats?: boolean
   allowSplitArchive?: boolean
   suggestedFilename?: string
+  compact?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -32,7 +33,8 @@ const props = withDefaults(defineProps<Props>(), {
   outputPath: '',
   allowSingleFileFormats: true,
   allowSplitArchive: true,
-  suggestedFilename: ''
+  suggestedFilename: '',
+  compact: false
 })
 
 interface Emits {
@@ -257,7 +259,7 @@ const handlePasswordGenerated = (password: string) => {
 </script>
 
 <template>
-  <div class="horizontal-settings flex min-w-0 max-w-full flex-col gap-4 overflow-x-hidden">
+  <div class="horizontal-settings flex min-w-0 max-w-full flex-col gap-4 overflow-x-hidden" :class="{ compact }">
     <!-- 第一行：核心必填参数 -->
     <div class="settings-core-grid">
       <!-- 格式选择 -->
@@ -448,18 +450,20 @@ const handlePasswordGenerated = (password: string) => {
   <Teleport to="body">
     <transition name="pop">
       <div v-if="showProfileSelector" class="fixed inset-0 z-[320] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="profile-dialog-title" @click.self="showProfileSelector = false">
-        <div class="modal-no-glass w-full max-w-3xl max-h-[82vh] overflow-y-auto rounded-2xl p-6 text-content shadow-2xl">
-          <div class="flex items-center justify-between mb-5">
+        <div class="modal-no-glass flex max-h-[min(68vh,36rem)] w-full max-w-[min(46rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-[1.4rem] text-content shadow-2xl">
+          <div class="flex shrink-0 items-center justify-between gap-4 px-5 pb-3 pt-5">
             <div>
-              <h3 id="profile-dialog-title" class="text-base font-black">{{ profileDialogMode === 'select' ? '选择压缩配置' : '管理压缩配置组' }}</h3>
+              <h3 id="profile-dialog-title" class="text-base font-black text-content">{{ profileDialogMode === 'select' ? '选择压缩配置' : '管理压缩配置组' }}</h3>
               <p class="text-xs text-muted mt-1">{{ profileDialogMode === 'select' ? '选择后会立即应用格式、压缩级别和高级选项' : '创建、修改或删除可重复使用的配置组' }}</p>
             </div>
-            <button type="button" class="w-8 h-8 rounded-lg bg-input text-muted hover:text-content" @click="showProfileSelector = false"><i class="pi pi-times"></i></button>
+            <button type="button" data-testid="close-compression-profiles" class="w-8 h-8 rounded-lg bg-input text-muted hover:text-content" @click="showProfileSelector = false"><i class="pi pi-times"></i></button>
           </div>
-          <ProfileSelector v-if="profileDialogMode === 'select'" :show-manage-button="true" @apply="applyProfile" @manage="profileDialogMode = 'manage'" />
-          <div v-else>
-            <button type="button" class="mb-4 h-9 px-4 rounded-lg bg-input border border-subtle text-xs font-bold text-muted hover:text-content" @click="profileDialogMode = 'select'"><i class="pi pi-arrow-left mr-2"></i>返回选择配置</button>
-            <ProfileManager @draft-created="handleTemplateDraftCreated" />
+          <div class="profile-dialog-scroll custom-scrollbar min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+            <ProfileSelector v-if="profileDialogMode === 'select'" :show-manage-button="true" @apply="applyProfile" @manage="profileDialogMode = 'manage'" />
+            <div v-else>
+              <button type="button" class="mb-4 h-9 px-4 rounded-lg bg-input border border-subtle text-xs font-bold text-muted hover:text-content" @click="profileDialogMode = 'select'"><i class="pi pi-arrow-left mr-2"></i>返回选择配置</button>
+              <ProfileManager @draft-created="handleTemplateDraftCreated" />
+            </div>
           </div>
         </div>
       </div>
@@ -559,6 +563,11 @@ const handlePasswordGenerated = (password: string) => {
   grid-template-columns: minmax(11rem, 1.05fr) minmax(9rem, 0.75fr) minmax(11rem, 1fr) minmax(11rem, 1fr);
   gap: 1rem;
   align-items: end;
+}
+
+.horizontal-settings.compact .settings-core-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
 .advanced-option {

@@ -140,7 +140,6 @@ const toggleOverride = (item: VideoCompressionItem, enabled: boolean) => {
   else store.disableVideoItemOverride(item.id)
 }
 const planningCount = computed(() => store.videoItems.filter(item => item.status === 'planning').length)
-const readyCount = computed(() => store.videoItems.filter(item => item.status === 'ready').length)
 const taskForItem = (item: VideoCompressionItem): Task | undefined =>
   item.taskId ? taskStore.tasks.find(task => task.id === item.taskId) : undefined
 const canRetryTask = (task?: Task) => !task || task.status === 'failed' || task.status === 'cancelled'
@@ -248,12 +247,6 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
       </div>
     </div>
 
-    <div v-if="store.videoItems.length" class="truth-boundary">
-      <i class="pi pi-shield"></i>
-      <span>预计大小始终是估算；字幕、多音轨、章节、封面和 HDR 变化由后端明确报告，不会静默处理。</span>
-      <strong v-if="store.videoItems.length">{{ readyCount }} 就绪<span v-if="planningCount"> · {{ planningCount }} 探测中</span></strong>
-    </div>
-
     <div v-if="store.videoItems.length === 0" class="video-empty">
       <EnhancedFileDropzone
         mode="file"
@@ -266,18 +259,22 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
       />
     </div>
 
-    <div v-else class="video-list workspace-scroll-region" data-testid="video-workspace-scroll-region">
+    <div v-else class="video-list workspace-scroll-region custom-scrollbar" data-testid="video-workspace-scroll-region">
       <article v-for="item in store.videoItems" :key="item.id" class="video-card" :data-status="videoStatusClass(item)" data-testid="video-draft-card">
         <header>
           <button type="button" class="expand" :aria-expanded="item.expanded" @click="item.expanded = !item.expanded"><i :class="item.expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i></button>
           <div class="file-identity"><strong :title="item.path">{{ item.name }}</strong><small>{{ formatBytes(item.inputSize) }} · {{ item.path }}</small></div>
+          <div v-if="item.plan && !item.expanded" class="video-essentials">
+            <strong>{{ item.plan.probe.primaryVideo.visibleWidth }}×{{ item.plan.probe.primaryVideo.visibleHeight }} · {{ formatDuration(item.plan.probe.durationMs) }}</strong>
+            <small>质量 {{ store.getEffectiveVideoSettings(item).quality }} · 预计 {{ formatBytes(item.plan.estimatedOutput.lowBytes) }}—{{ formatBytes(item.plan.estimatedOutput.highBytes) }}</small>
+          </div>
           <span class="status"><i :class="taskForItem(item)?.status === 'completed' ? 'pi pi-check-circle' : item.status === 'planning' || taskForItem(item)?.status === 'compressing' ? 'pi pi-spin pi-spinner' : item.status === 'ready' ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>{{ videoStatus(item) }}</span>
           <button type="button" class="remove" title="移除" :disabled="isRunning" @click="store.removeVideoItem(item.id)"><i class="pi pi-trash"></i></button>
         </header>
 
         <div v-if="item.error" class="probe-error"><i class="pi pi-exclamation-triangle"></i><span>{{ item.error }}</span><button type="button" @click="store.retryVideoPlanning(item.id)">重试</button></div>
 
-        <template v-if="item.plan">
+        <template v-if="item.plan && item.expanded">
           <div class="facts-grid">
             <div><span>输入事实</span><strong>{{ item.plan.probe.primaryVideo.visibleWidth }}×{{ item.plan.probe.primaryVideo.visibleHeight }}</strong><small>编码矩阵 {{ item.plan.probe.primaryVideo.encodedWidth }}×{{ item.plan.probe.primaryVideo.encodedHeight }} · 旋转 {{ item.plan.probe.primaryVideo.rotationDegrees }}°</small></div>
             <div><span>时长与帧率</span><strong>{{ formatDuration(item.plan.probe.durationMs) }}</strong><small>{{ frameRateLabel(item) }}</small></div>
@@ -309,7 +306,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
       <EnhancedFileDropzone compact mode="file" accept="mp4,mov,avi,wmv,webm,mkv,m4v" unfiltered-picker hint="继续添加视频" @files-selected="onFilesSelected" />
     </div>
 
-    <Modal :visible="showGlobalSettings" size="xl" title="视频批量设置" description="质量与分辨率分别控制；保存后只重算压缩方案" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
+    <Modal :visible="showGlobalSettings" size="lg" title="视频批量设置" description="质量与分辨率分别控制" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
       <div class="special-settings-dialog" :class="{ locked: isRunning }">
         <VideoCompressionSettingsPanel :model-value="videoSettingsDraft" @update:model-value="updateGlobalSettings" />
         <div class="output-directory"><div><span>输出目录</span><strong :title="videoOutputDirectoryDraft">{{ videoOutputDirectoryDraft || '与源文件同目录' }}</strong></div><button type="button" :disabled="isRunning" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button></div>
@@ -327,8 +324,6 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
 .video-workspace > * { box-sizing: border-box; max-width: 100%; min-width: 0; }
 .workspace-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: .75rem 1rem; }
 .toolbar-actions { display: flex; gap: .5rem; }.primary-action, .danger-action, .secondary-action { border-radius: .75rem; padding: .65rem .8rem; font-size: .65rem; font-weight: 850;transition:transform .18s ease,box-shadow .18s ease }.primary-action:hover:not(:disabled),.danger-action:hover:not(:disabled),.secondary-action:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 22px -17px var(--dynamic-accent)}.primary-action:active:not(:disabled),.danger-action:active:not(:disabled),.secondary-action:active:not(:disabled){transform:scale(.97)}.primary-action, .danger-action { color: white; }.primary-action { background: var(--dynamic-accent); }.danger-action { background: #ef4444; }.secondary-action{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.primary-action:disabled { cursor: not-allowed; opacity: .45; }
-.truth-boundary { display: flex; align-items: center; gap: .5rem; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 22%, transparent); border-radius: .8rem; background: color-mix(in srgb, var(--dynamic-accent) 7%, transparent); padding: .6rem .75rem; color: var(--text-muted); font-size: .62rem; line-height: 1.45; }
-.truth-boundary i, .truth-boundary strong { color: var(--dynamic-accent); }.truth-boundary strong { margin-left: auto; white-space: nowrap; }
 .video-card { box-sizing: border-box; max-width: 100%; min-width: 0; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-card) 88%, transparent); padding: .85rem; }
 .special-settings-dialog{min-width:0}.locked{pointer-events:none;opacity:.68}.dialog-cancel,.dialog-save{border-radius:.75rem;padding:.65rem 1rem;font-size:.7rem;font-weight:900}.dialog-cancel{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.dialog-save{background:var(--dynamic-accent);color:white;box-shadow:0 10px 24px -15px var(--dynamic-accent)}.dialog-save:disabled{opacity:.45}
 .settings-heading { display: flex; justify-content: space-between; gap: .75rem; margin-bottom: .65rem; color: var(--text-content); font-size: .68rem; font-weight: 900; }.settings-heading small { color: var(--text-muted); font-size: .58rem; font-weight: 650; }
@@ -336,6 +331,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
 .video-empty { display:flex;min-height:0;flex:1; }.video-empty :deep(.drop-area){display:flex;min-height:13rem;width:100%;align-items:center;justify-content:center}.video-list { display: grid; width: 100%; max-width: 100%; min-width: 0; min-height:0; flex:1; grid-auto-rows:max-content; align-content:start; gap: .65rem; overflow-x:hidden;overflow-y:auto;padding-right:.25rem }.video-card { overflow: hidden; }
 .video-card header { display: flex; min-width: 0; align-items: center; gap: .55rem; }.expand, .remove { flex: 0 0 auto; width: 1.8rem; height: 1.8rem; border-radius: .55rem; color: var(--text-muted); }.expand:hover, .remove:hover { background: var(--bg-input); color: var(--text-content); }
 .file-identity { min-width: 0; flex: 1; }.file-identity strong, .file-identity small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.file-identity strong { color: var(--text-content); font-size: .72rem; }.file-identity small { margin-top: .12rem; color: var(--text-muted); font-size: .55rem; }
+.video-essentials{display:flex;min-width:12rem;max-width:24rem;flex:0 1 24rem;flex-direction:column;align-items:flex-end;gap:.12rem}.video-essentials strong,.video-essentials small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.video-essentials strong{color:var(--text-content);font-size:.62rem}.video-essentials small{color:var(--text-muted);font-size:.54rem}
 .status { display: flex; flex: 0 0 auto; align-items: center; gap: .3rem; border-radius: 999px; background: var(--bg-input); padding: .28rem .48rem; color: var(--text-muted); font-size: .58rem; font-weight: 850; }.video-card[data-status="ready"] .status { color: #22c55e; }.video-card[data-status="rejected"] .status { color: #ef4444; }
 .probe-error { display: flex; align-items: center; gap: .5rem; margin-top: .65rem; border-radius: .7rem; background: color-mix(in srgb, #ef4444 9%, transparent); padding: .6rem; color: #ef4444; font-size: .6rem; }.probe-error span { min-width: 0; flex: 1; overflow-wrap: anywhere; }.probe-error button { border: 1px solid currentColor; border-radius: .5rem; padding: .25rem .45rem; font-weight: 800; }
 .facts-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; margin-top: .7rem; }.facts-grid > div { min-width: 0; border-radius: .7rem; background: var(--bg-input); padding: .6rem; }.facts-grid span, .facts-grid strong, .facts-grid small { display: block; }.facts-grid span { color: var(--text-muted); font-size: .55rem; font-weight: 800; }.facts-grid strong { margin-top: .18rem; color: var(--text-content); font-size: .7rem; overflow-wrap: anywhere; }.facts-grid small { margin-top: .16rem; color: var(--text-muted); font-size: .53rem; line-height: 1.4; }.facts-grid .estimate { outline: 1px solid color-mix(in srgb, var(--dynamic-accent) 22%, transparent); }.facts-grid .estimate span, .facts-grid .estimate strong { color: var(--dynamic-accent); }
@@ -344,5 +340,6 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
 .item-settings { display: grid; gap: .6rem; margin-top: .7rem; border-top: 1px solid var(--border-subtle); padding-top: .7rem; }.override-toggle { display: flex; align-items: center; gap: .4rem; color: var(--text-content); font-size: .62rem; font-weight: 800; }.override-toggle input { accent-color: var(--dynamic-accent); }.item-settings p { color: var(--text-muted); font-size: .58rem; }
 .execution-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: center; gap: .5rem; border-radius: .75rem; background: var(--bg-input); padding: .65rem; }.execution-facts span, .execution-facts strong, .execution-facts small { display: block; }.execution-facts span, .execution-facts small { color: var(--text-muted); font-size: .53rem; }.execution-facts strong { margin: .12rem 0; color: var(--text-content); font-size: .65rem; }
 @media (max-width: 900px) { .facts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 620px) { .workspace-toolbar { align-items: flex-start; flex-direction: column; }.toolbar-actions, .toolbar-actions button { width: 100%; }.truth-boundary { align-items: flex-start; flex-wrap: wrap; }.truth-boundary strong { width: 100%; margin-left: 0; }.facts-grid, .execution-facts { grid-template-columns: minmax(0, 1fr); }.status { font-size: 0; }.status i { font-size: .75rem; }.settings-heading { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 760px) { .video-essentials{display:none} }
+@media (max-width: 620px) { .workspace-toolbar { align-items: flex-start; flex-direction: column; }.toolbar-actions, .toolbar-actions button { width: 100%; }.facts-grid, .execution-facts { grid-template-columns: minmax(0, 1fr); }.status { font-size: 0; }.status i { font-size: .75rem; }.settings-heading { align-items: flex-start; flex-direction: column; } }
 </style>

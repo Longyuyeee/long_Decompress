@@ -265,7 +265,7 @@ export const useCompressionStore = defineStore('compression', () => {
         path: candidate.path,
         inputSize: Math.max(0, candidate.size || 0),
         status: 'planning',
-        expanded: accepted.length === 0 && videoItems.value.length === 0,
+        expanded: false,
         planRevision: 1,
       }
       videoItems.value.push(item)

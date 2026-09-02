@@ -316,7 +316,7 @@ const openResultLocation = async (item: ImageCompressionItem) => {
       <EnhancedFileDropzone compact mode="file" accept="jpg,jpeg,png,webp" picker-title="选择图片文件" unfiltered-picker hint="继续添加图片" :native-drop="false" @files-selected="onFilesSelected" />
     </div>
 
-    <Modal :visible="showGlobalSettings" size="xl" title="图片批量设置" description="应用到尚未单独覆盖的图片" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
+    <Modal :visible="showGlobalSettings" size="lg" title="图片批量设置" description="应用到尚未单独覆盖的图片" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
       <div class="special-settings-dialog" :class="{ locked: isRunning }">
         <ImageCompressionSettingsPanel :model-value="imageSettingsDraft" @update:model-value="updateGlobalSettings" />
         <div class="output-directory">
