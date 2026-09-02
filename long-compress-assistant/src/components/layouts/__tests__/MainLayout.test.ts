@@ -75,6 +75,7 @@ describe('MainLayout', () => {
     const { wrapper } = await mountLayout()
 
     expect(wrapper.find('.main-container').exists()).toBe(true)
+    expect(wrapper.find('[data-test="titlebar"]').exists()).toBe(true)
     expect(wrapper.find('aside nav').exists()).toBe(true)
     expect(wrapper.find('main').exists()).toBe(true)
     expect(wrapper.find('[data-test="global-progress"]').exists()).toBe(true)

@@ -120,6 +120,7 @@ const encryptedRarOnly = process.argv.includes('--encrypted-rar-only')
 const hfsxOnly = process.argv.includes('--hfsx-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const responsiveLayoutOnly = process.argv.includes('--responsive-layout-only')
+const shellPolishOnly = process.argv.includes('--shell-polish-only')
 const imageWorkspaceOnly = process.argv.includes('--image-workspace-only')
 const imageBatchOnly = process.argv.includes('--image-batch-only')
 const imagePickerManualOnly = process.argv.includes('--image-picker-manual-only')
@@ -2528,6 +2529,53 @@ async function runResponsiveTaskDetailDesktopGate() {
   }
 }
 
+async function runShellPolishDesktopGate() {
+  console.log('[desktop-e2e] verifying the frameless shell and compact PDF empty state')
+  await driver.manage().window().setRect({ width: 1440, height: 900 })
+  mkdirSync(artifactDirectory, { recursive: true })
+
+  const titlebar = await waitForElement('.window-titlebar[data-tauri-drag-region]')
+  const titlebarControls = await titlebar.findElements(By.css('.control-btn'))
+  assert.equal(titlebarControls.length, 3, 'the in-app title bar must expose minimize, maximize and close controls')
+  assert.equal(tauriConfig.tauri?.windows?.[0]?.decorations, false, 'the main Tauri window must disable native decorations')
+
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
+  await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
+  const workspace = await waitForElement('[data-testid="pdf-compression-workspace"]')
+  const workspaceText = await workspace.getText()
+  const layout = await driver.executeScript(() => {
+    const target = document.querySelector('[data-testid="pdf-compression-workspace"]')
+    return target && {
+      clientHeight: target.clientHeight,
+      scrollHeight: target.scrollHeight,
+      clientWidth: target.clientWidth,
+      scrollWidth: target.scrollWidth,
+    }
+  })
+
+  const expected = {
+    nativeDecorations: false,
+    titlebarControls: 3,
+    redundantPdfNoticePresent: false,
+    verticalOverflow: 0,
+    horizontalOverflow: 0,
+  }
+  const actual = {
+    nativeDecorations: tauriConfig.tauri?.windows?.[0]?.decorations,
+    titlebarControls: titlebarControls.length,
+    redundantPdfNoticePresent: workspaceText.includes('默认输出为新文件，禁止覆盖源文件'),
+    verticalOverflow: Math.max(0, (layout?.scrollHeight ?? 0) - (layout?.clientHeight ?? 0)),
+    horizontalOverflow: Math.max(0, (layout?.scrollWidth ?? 0) - (layout?.clientWidth ?? 0)),
+  }
+  const differences = Object.keys(expected).filter(key => expected[key] !== actual[key])
+  const evidence = { schemaVersion: 1, testKind: 'real-windows-tauri-frameless-shell-and-pdf-empty-state', expected, actual, differences, passed: differences.length === 0 }
+
+  writeFileSync(path.join(artifactDirectory, 'shell-polish-result.json'), JSON.stringify(evidence, null, 2), 'utf8')
+  writeFileSync(path.join(artifactDirectory, 'shell-polish-pdf.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  assert.deepEqual(actual, expected, `shell polish expected/actual differences remain: ${JSON.stringify(differences)}`)
+}
+
 async function runPdfWorkspaceDesktopGate() {
   console.log('[desktop-e2e] verifying real D-04.3 PDF cancellation, failure isolation, restart history and default-reader UI')
   await driver.manage().window().setRect({ width: 1600, height: 1000 })
@@ -3858,6 +3906,10 @@ try {
     await runResponsiveTaskDetailDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri responsive task-detail gate passed.')
+  } else if (shellPolishOnly) {
+    await runShellPolishDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri frameless-shell and PDF empty-state gate passed.')
   } else if (imageWorkspaceOnly) {
     await runImageWorkspaceDesktopGate()
     completedSuccessfully = true

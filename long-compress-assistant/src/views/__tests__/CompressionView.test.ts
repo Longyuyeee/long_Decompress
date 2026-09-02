@@ -797,6 +797,7 @@ describe('CompressionView', () => {
     expect(pdfWorkspace.text()).not.toContain('PDF · D-04.2')
     expect(pdfWorkspace.text()).not.toContain('安全分析、批量优化与验证发布')
     expect(pdfWorkspace.text()).not.toContain('执行复用统一任务')
+    expect(pdfWorkspace.text()).not.toContain('默认输出为新文件，禁止覆盖源文件')
     expect(useTaskStore().tasks).toHaveLength(0)
 
     expect(useCompressionStore().selectedFiles).toHaveLength(1)

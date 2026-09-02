@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getVersion } from '@tauri-apps/api/app'
 import { appWindow } from '@tauri-apps/api/window'
+import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
 import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
 import { useAppStore } from '@/stores/app'
 import brandIcon from '@/assets/long-jieya-icon.png'
@@ -61,6 +62,8 @@ const navigateTo = (name: string) => {
   >
     <div class="flex-1 flex flex-col overflow-hidden bg-base text-content rounded-xl relative border transition-all duration-300"
          :class="[isFocused ? 'border-primary/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]' : 'border-subtle shadow-sm']">
+
+      <WindowTitleBar class="shrink-0" />
 
       <div class="main-layout flex flex-1 overflow-hidden relative">
         <!-- 侧边栏 - 华丽扁平版 -->
