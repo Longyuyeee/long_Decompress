@@ -150,6 +150,48 @@ test.describe('Long Decompress desktop shell', () => {
     await expectVerticalOnlyScrolling(page, ['[data-testid="pdf-compression-workspace"]'])
   })
 
+  test('keeps the special-compression shell fixed while batch settings use a modal', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'special-compression geometry matrix runs once in Chromium')
+    const viewports = [
+      { width: 1366, height: 768 },
+      { width: 1024, height: 768 },
+      { width: 760, height: 520 },
+    ]
+    await page.keyboard.press('Control+Shift+s')
+    await page.waitForURL('**/#/special-compression')
+
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport)
+      for (const mode of ['image', 'video'] as const) {
+        await page.getByTestId(`compression-mode-${mode}`).click()
+        const workspace = page.getByTestId(`${mode}-compression-workspace`)
+        await expect(workspace).toBeVisible()
+        const shell = page.locator('.special-compression-shell')
+        const before = await shell.boundingBox()
+        const pageBefore = await page.evaluate(() => ({
+          clientHeight: document.documentElement.clientHeight,
+          scrollHeight: document.documentElement.scrollHeight,
+        }))
+
+        await page.getByTestId(`${mode}-toggle-global-settings`).click()
+        await expect(page.getByRole('dialog')).toBeVisible()
+        const after = await shell.boundingBox()
+        const pageAfter = await page.evaluate(() => ({
+          clientHeight: document.documentElement.clientHeight,
+          scrollHeight: document.documentElement.scrollHeight,
+        }))
+        expect(before).not.toBeNull()
+        expect(after).not.toBeNull()
+        expect(Math.abs(after!.width - before!.width)).toBeLessThanOrEqual(0.1)
+        expect(Math.abs(after!.height - before!.height)).toBeLessThanOrEqual(0.1)
+        expect(pageAfter.scrollHeight).toBe(pageBefore.scrollHeight)
+        expect(pageAfter.scrollHeight).toBeLessThanOrEqual(pageAfter.clientHeight)
+        await page.keyboard.press('Escape')
+        await expect(page.getByRole('dialog')).toBeHidden()
+      }
+    }
+  })
+
   test('navigates to settings from the sidebar', async ({ page }) => {
     await page.getByTestId('nav-Settings').click()
     await page.waitForURL('**/#/settings')

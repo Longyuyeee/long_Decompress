@@ -40,9 +40,11 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
     </header>
 
     <main class="special-compression-shell aero-card">
-      <ImageCompressionWorkspace v-if="activeMode === 'image'" />
-      <VideoCompressionWorkspace v-else-if="activeMode === 'video'" />
-      <PdfCompressionWorkspace v-else />
+      <div :key="activeMode" class="special-compression-stage">
+        <ImageCompressionWorkspace v-if="activeMode === 'image'" />
+        <VideoCompressionWorkspace v-else-if="activeMode === 'video'" />
+        <PdfCompressionWorkspace v-else />
+      </div>
     </main>
   </div>
 </template>
@@ -73,6 +75,20 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
   background: color-mix(in srgb, var(--bg-card) 40%, transparent);
   box-shadow: 0 20px 45px -32px rgb(0 0 0 / .35);
   padding: .85rem;
+}
+
+.special-compression-stage {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  animation: workspace-enter .2s ease both;
+}
+
+@keyframes workspace-enter {
+  from { opacity: 0; transform: translateY(6px) scale(.997); }
+  to { opacity: 1; transform: none; }
 }
 
 .special-compression-mode-switch {
@@ -123,5 +139,10 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
   .special-compression-mode-switch { grid-template-columns: repeat(3, 2.4rem); }
   .special-compression-mode-switch button span { display: none; }
   .special-compression-mode-switch button i { font-size: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .special-compression-mode-switch button { transition: none; }
+  .special-compression-stage { animation: none; }
 }
 </style>

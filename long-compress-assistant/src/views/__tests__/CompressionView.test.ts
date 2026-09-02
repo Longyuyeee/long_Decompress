@@ -792,7 +792,11 @@ describe('CompressionView', () => {
     expect(useTaskStore().tasks).toHaveLength(0)
 
     await wrapper.get('[data-testid="compression-mode-pdf"]').trigger('click')
-    expect(wrapper.get('[data-testid="pdf-compression-workspace"]').exists()).toBe(true)
+    const pdfWorkspace = wrapper.get('[data-testid="pdf-compression-workspace"]')
+    expect(pdfWorkspace.exists()).toBe(true)
+    expect(pdfWorkspace.text()).not.toContain('PDF · D-04.2')
+    expect(pdfWorkspace.text()).not.toContain('安全分析、批量优化与验证发布')
+    expect(pdfWorkspace.text()).not.toContain('执行复用统一任务')
     expect(useTaskStore().tasks).toHaveLength(0)
 
     expect(useCompressionStore().selectedFiles).toHaveLength(1)

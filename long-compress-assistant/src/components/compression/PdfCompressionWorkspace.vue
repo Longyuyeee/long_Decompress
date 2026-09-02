@@ -169,12 +169,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
 
 <template>
   <section class="pdf-workspace" data-testid="pdf-compression-workspace">
-    <header class="workspace-header">
-      <div>
-        <span class="eyebrow">PDF · D-04.2</span>
-        <h2>安全分析、批量优化与验证发布</h2>
-        <p>执行复用统一任务、取消、安全发布和跨重启历史；只有验证通过的输出才会标记完成。</p>
-      </div>
+    <header class="workspace-toolbar">
       <div class="header-actions">
         <div class="frozen-count"><strong>{{ readyCount }}</strong><span>已锁定配置</span></div>
         <button v-if="isRunning" type="button" class="danger-action" data-testid="pdf-cancel-batch" @click="pdfBatch.cancelPdfBatch()">取消处理</button>
@@ -282,12 +277,13 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
 <style scoped>
 .pdf-workspace { box-sizing: border-box; display:flex; width: 100%; max-width: 100%; min-width:0; min-height: 0; flex:1; flex-direction:column; overflow: hidden; padding: .1rem; color: var(--text-content); }
 .pdf-workspace > *, .draft-list, .draft-card { box-sizing: border-box; max-width: 100%; min-width: 0; }
-.workspace-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
-.eyebrow { color: var(--dynamic-accent); font-size: .68rem; font-weight: 900; letter-spacing: .12em; }
-h2 { margin: .25rem 0; font-size: 1.15rem; font-weight: 900; } .workspace-header p { color: var(--text-muted); font-size: .72rem; line-height: 1.55; }
+.workspace-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; margin-bottom: .65rem; }
 .frozen-count { min-width: 7rem; border: 1px solid var(--border-subtle); border-radius: 1rem; padding: .65rem; text-align: center; background: var(--bg-input); }
 .frozen-count strong { display: block; font-size: 1.1rem; } .frozen-count span { color: var(--text-muted); font-size: .65rem; }
 .header-actions { display: flex; align-items: center; gap: .5rem; }.danger-action { border-radius: .65rem; padding: .55rem .75rem; color: white; background: #ef4444; font-size: .68rem; font-weight: 850; }
+.header-actions button,.output-directory button,.mode-grid button,.card-actions button { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease; }
+.header-actions button:not(:disabled):hover,.output-directory button:not(:disabled):hover,.card-actions button:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 8px 18px -14px rgb(0 0 0 / .55); }
+.header-actions button:not(:disabled):active,.output-directory button:not(:disabled):active,.card-actions button:not(:disabled):active { transform: scale(.98); }
 .boundary-banner { display: flex; gap: .55rem; align-items: center; margin-bottom: .8rem; border: 1px solid rgb(34 197 94 / .25); border-radius: .8rem; padding: .65rem .8rem; background: rgb(34 197 94 / .08); font-size: .7rem; line-height: 1.45; }
 .output-directory { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .8rem; border: 1px solid var(--border-subtle); border-radius: .75rem; padding: .65rem .75rem; background: var(--bg-input); }.output-directory div { min-width: 0; }.output-directory span,.output-directory strong { display: block; }.output-directory span { color: var(--text-muted); font-size: .58rem; }.output-directory strong { overflow: hidden; margin-top: .1rem; font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }.output-directory button,.execution-result button { flex: 0 0 auto; border: 1px solid var(--border-subtle); border-radius: .55rem; padding: .4rem .55rem; font-size: .6rem; font-weight: 800; }
 .selection-error,.analysis-error { margin-top: .5rem; color: #fb7185; font-size: .7rem; font-weight: 750; }
@@ -304,5 +300,6 @@ h2 { margin: .25rem 0; font-size: 1.15rem; font-weight: 900; } .workspace-header
 .output-preview { margin-top: .65rem; border-radius: .75rem; padding: .65rem; background: var(--bg-input); }.output-preview strong { display: block; margin: .15rem 0; color: var(--text-content); font-size: .7rem; overflow-wrap: anywhere; }.output-preview small { color: var(--text-muted); font-size: .59rem; }
 .signature-warning { display: flex; gap: .55rem; margin-top: .65rem; border: 1px solid rgb(244 63 94 / .3); border-radius: .75rem; padding: .65rem; color: #fb7185; background: rgb(244 63 94 / .08); }.signature-warning strong { font-size: .7rem; }.signature-warning p { margin-top: .1rem; font-size: .61rem; line-height: 1.4; }.blocking-list { margin: .45rem 0 0 1rem; color: #fb7185; font-size: .6rem; overflow-wrap: anywhere; }.card-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; margin-top: .7rem; }.secondary-action { border: 1px solid var(--border-subtle); background: var(--bg-input); }.execution-result { display: flex; min-width: 0; flex: 1; align-items: center; gap: .5rem; color: var(--text-muted); font-size: .6rem; }.execution-result strong { color: var(--text-content); }
 @media (max-width: 900px) { .fact-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }.password-panel { grid-template-columns: 1fr; } }
-@media (max-width: 620px) { .pdf-workspace { padding: .75rem; }.workspace-header,.header-actions,.card-actions { align-items: stretch; flex-direction: column; }.frozen-count { min-width: 5rem; }.fact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.mode-grid { grid-template-columns: 1fr; }.status { display: none; }.execution-result { flex-wrap: wrap; } }
+@media (max-width: 620px) { .pdf-workspace { padding: .1rem; }.workspace-toolbar { margin-bottom: .45rem; }.header-actions { justify-content: flex-end; }.frozen-count { min-width: 5rem; }.fact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.mode-grid { grid-template-columns: 1fr; }.status { display: none; }.card-actions { align-items: stretch; flex-direction: column; }.execution-result { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .header-actions button,.output-directory button,.mode-grid button,.card-actions button { transition: none; } }
 </style>

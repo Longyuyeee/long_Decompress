@@ -231,6 +231,57 @@ function desktopApplicationProcessIds() {
     .filter(Number.isInteger)
 }
 
+function inspectExplorerWindows() {
+  const script = [
+    '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
+    '$shell = New-Object -ComObject Shell.Application',
+    '$items = @($shell.Windows() | ForEach-Object {',
+    '  try {',
+    '    $selected = @($_.Document.SelectedItems() | ForEach-Object { $_.Path })',
+    '    [PSCustomObject]@{ Folder = $_.Document.Folder.Self.Path; Selected = $selected }',
+    '  } catch {}',
+    '})',
+    'ConvertTo-Json -Compress -Depth 4 -InputObject $items',
+  ].join('; ')
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+    encoding: 'utf8', windowsHide: true,
+  })
+  assert.ifError(result.error)
+  assert.equal(result.status, 0, `failed to inspect Explorer windows: ${result.stderr}`)
+  return result.stdout.trim() ? JSON.parse(result.stdout) : []
+}
+
+async function waitForExplorerTarget(targetPath, expectSelection) {
+  const expected = path.resolve(targetPath).toLocaleLowerCase('en-US')
+  const deadline = Date.now() + 15_000
+  while (Date.now() < deadline) {
+    const windows = inspectExplorerWindows()
+    const matched = windows.some(window => expectSelection
+      ? (window.Selected || []).some(selected => path.resolve(selected).toLocaleLowerCase('en-US') === expected)
+      : window.Folder && path.resolve(window.Folder).toLocaleLowerCase('en-US') === expected)
+    if (matched) return windows
+    await new Promise(resolve => setTimeout(resolve, 300))
+  }
+  throw new Error(`Explorer did not ${expectSelection ? 'select' : 'open'} the expected path: ${targetPath}`)
+}
+
+function closeExplorerWindowsUnder(rootPath) {
+  const escapedRoot = path.resolve(rootPath).replaceAll("'", "''")
+  const script = [
+    `$root = [System.IO.Path]::GetFullPath('${escapedRoot}')`,
+    '$shell = New-Object -ComObject Shell.Application',
+    '@($shell.Windows()) | ForEach-Object {',
+    '  try {',
+    '    $folder = [System.IO.Path]::GetFullPath($_.Document.Folder.Self.Path)',
+    '    if ($folder.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) { $_.Quit() }',
+    '  } catch {}',
+    '}',
+  ].join('; ')
+  spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+    encoding: 'utf8', windowsHide: true,
+  })
+}
+
 async function waitForStandaloneFileContent(filePath, expectedContent, timeoutMs = 30_000) {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
@@ -733,6 +784,19 @@ async function runArchiveBrowserDesktopGate() {
   mkdirSync(fileManagerMoveDestination, { recursive: true })
   writeFileSync(path.join(fileManagerSource, 'a.txt'), 'alpha')
   writeFileSync(path.join(fileManagerSource, 'nested', 'b.bin'), Buffer.from([0, 1, 2, 3]))
+  const explorerDirectory = path.join(fileManagerRoot, '中文 空格目录')
+  const explorerFile = path.join(explorerDirectory, '定位 文件.txt')
+  mkdirSync(explorerDirectory, { recursive: true })
+  writeFileSync(explorerFile, 'real Explorer selection target')
+  try {
+    await callDesktopBridge('openInExplorer', explorerDirectory)
+    await waitForExplorerTarget(explorerDirectory, false)
+    await callDesktopBridge('openInExplorer', explorerFile)
+    await waitForExplorerTarget(explorerFile, true)
+    console.log('[desktop-e2e] Explorer opened the exact Unicode directory and selected the exact spaced file')
+  } finally {
+    closeExplorerWindowsUnder(fileManagerRoot)
+  }
   console.log('[desktop-e2e] invoking real copy/move/properties commands')
   const fileManagerResult = await callDesktopBridge(
     'fileManagerCopyMove',

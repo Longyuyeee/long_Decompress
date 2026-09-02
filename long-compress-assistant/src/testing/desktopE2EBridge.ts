@@ -23,6 +23,7 @@ export interface DesktopE2EBridge {
   taskHistory: () => Promise<TaskHistoryRecord[]>
   seedVaultPassword: (name: string, password: string) => Promise<string>
   reset: () => Promise<void>
+  openInExplorer: (path: string) => Promise<void>
   fileManagerCopyMove: (sourcePath: string, copyDestination: string, moveDestination: string) => Promise<{
     copy: { processed: number; files: number; directories: number; bytes: number }
     move: { processed: number; files: number; directories: number; bytes: number }
@@ -431,6 +432,10 @@ export const installDesktopE2EBridge = () => {
       const move = await invoke<any>('file_manager_move', { sources: [copiedPath], destination: moveDestination })
       const properties = await invoke<any>('file_manager_properties', { path: finalPath })
       return { copy, move, finalPath, properties }
+    },
+
+    async openInExplorer(path) {
+      await invoke('open_in_explorer', { path })
     },
 
     async runSevenZipRoundTrip(sourcePath, archivePath, outputPath) {

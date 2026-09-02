@@ -1,12 +1,11 @@
 # 开发交接
 
-## 2026-09-01 特殊压缩与文件浏览器体验修正（当前唯一接续点）
+## 2026-09-02 特殊压缩与文件浏览器体验修正（当前唯一接续点）
 
-- 用户要求暂停并换机。当前分支为 `codex/special-compression-file-manager-polish`，实现提交 `af9fee7`；公开稳定版和版本源仍为 `v1.2.1`，尚未升版、打包或发布。
-- 六项冻结需求：特殊压缩设置不得挤压主区；删除 Tab 已表达的重复文字；视觉和动效对齐压缩/解压中心；文件与文件夹右键均可在系统文件管理器打开；修复定位只打开桌面；特殊目录属性失败显示友好提示。
-- 已完成的仅是图片/视频批量设置 Modal 草稿：取消不写回、保存才生效，视频只在保存后重新规划；删除图片/视频重复工作区标题，并补新的单元合同。PDF 精简、三 Tab 切换动效、Explorer 原生参数、两类右键动作和属性提示均未完成，不得写成关闭。
-- 暂停前类型检查通过；首轮全量单元因旧文案/即时生效假设为 274/276，纠正测试合同后聚焦 36/36、全量 276/276。尚无新的真实 Explorer UI 证据，因为产品修复尚未实现。
-- 下一台电脑必须从 [SPECIAL_COMPRESSION_FILE_MANAGER_POLISH_HANDOFF.md](SPECIAL_COMPRESSION_FILE_MANAGER_POLISH_HANDOFF.md) 的冻结顺序接续，先补文件/目录右键、原生参数和属性失败红灯测试，再实现并跑真实中文/空格路径 Explorer 门禁；不得从本机忽略证据或旧候选分支接续。
+- 当前分支为 `codex/special-compression-file-manager-polish`，公开稳定版仍为 `v1.2.1`。六项冻结需求已完成：图片/视频设置 Modal、三类重复文案精简、即时 Tab 入场与按钮动效、文件/压缩包/文件夹统一系统动作、Explorer 精确定位、特殊目录属性友好提示。
+- Explorer 已不再把手工引号塞进单个参数；文件使用独立 `/select,` 与真实路径，目录使用真实路径。真实 Windows Tauri/WebView2 门禁已打开精确中文空格目录并选中精确中文空格文件，未回落桌面。
+- 最终门禁：类型检查通过，前端 48 文件 280/280，Explorer Rust 5/5，Clippy 零告警，Chromium 特殊压缩 2/2，隔离 E2E Release 构建和真实文件浏览器桌面门禁通过。三档视口中设置 Modal 打开前后外壳宽高与页面滚动高度差均为 0。
+- 本轮没有升版、正式 NSIS、README、标签或 Release；含测试桥的隔离 Release 不能发布。下一步若产品负责人要求候选收口，必须先做无测试桥安装态和 PR/CI 审计。完整接续见 [SPECIAL_COMPRESSION_FILE_MANAGER_POLISH_HANDOFF.md](SPECIAL_COMPRESSION_FILE_MANAGER_POLISH_HANDOFF.md)，差异证据见 [SPECIAL_COMPRESSION_FILE_MANAGER_POLISH_AUDIT.md](SPECIAL_COMPRESSION_FILE_MANAGER_POLISH_AUDIT.md)。
 
 ## 2026-09-01 v1.2.1 正式发布关闭（当前基线）
 
