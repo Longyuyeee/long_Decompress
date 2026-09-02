@@ -2,6 +2,7 @@ use crate::services::output_publish_transaction::{
     cleanup_staged_output_family, staged_output_path, PublishError,
 };
 use crate::services::pdf_analysis::{analyze_pdf_input, PdfAnalysisError, PdfInputAnalysisReport};
+use crate::utils::process;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::ffi::OsString;
@@ -13,7 +14,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use thiserror::Error;
 use tokio::io::AsyncReadExt;
-use tokio::process::Command;
 
 const TRANSFORM_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 const POLL_INTERVAL: Duration = Duration::from_millis(50);
@@ -247,7 +247,7 @@ async fn run_qpdf(
     if cancelled.load(Ordering::Acquire) {
         return Err(PdfTransformError::Cancelled);
     }
-    let mut child = Command::new(qpdf)
+    let mut child = process::async_command(qpdf)
         .args(arguments)
         .stdin(Stdio::null())
         .stdout(Stdio::null())

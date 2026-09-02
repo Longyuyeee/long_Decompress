@@ -177,7 +177,17 @@ test.describe('Long Decompress desktop shell', () => {
         }))
 
         await page.getByTestId(`${mode}-toggle-global-settings`).click()
-        await expect(page.getByRole('dialog')).toBeVisible()
+        const dialog = page.getByRole('dialog')
+        await expect(dialog).toBeVisible()
+        if (mode === 'image') {
+          await expect(dialog.locator('select')).toHaveCount(0)
+          await dialog.getByTestId('image-setting-mode').click()
+          await expect(dialog.getByRole('listbox', { name: '压缩方式' })).toBeVisible()
+          await dialog.getByRole('option', { name: /无损优化/ }).click()
+        } else {
+          await expect(dialog.getByTestId('video-quality-slider')).toBeVisible()
+          await expect(dialog.getByTestId('video-resolution-original')).toHaveAttribute('aria-checked', 'true')
+        }
         const after = await shell.boundingBox()
         const pageAfter = await page.evaluate(() => ({
           clientHeight: document.documentElement.clientHeight,

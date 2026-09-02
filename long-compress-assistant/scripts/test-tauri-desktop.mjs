@@ -747,7 +747,7 @@ async function runArchiveBrowserDesktopGate() {
   await waitForElement('[role="dialog"]')
   const imageShellAfter = await shellGeometry()
   assertStableShellGeometry(imageShellBefore, imageShellAfter, 'real WebView2 image settings modal')
-  writeFileSync(path.join(artifactDirectory, 'special-compression-settings-modal-v1.2.2.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  writeFileSync(path.join(artifactDirectory, 'special-compression-settings-modal-v1.2.3.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   await driver.actions().sendKeys(Key.ESCAPE).perform()
   await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
   await (await waitForElement('[data-testid="compression-mode-video"]')).click()
@@ -2529,6 +2529,24 @@ async function runResponsiveTaskDetailDesktopGate() {
   }
 }
 
+async function assertGlobalTaskKind(expectedLabel) {
+  const bar = await waitForElement('[data-testid="global-progress-bar"]', 30_000)
+  const summary = await bar.findElement(By.css('[data-testid="global-progress-summary"]'))
+  await driver.executeScript(element => element.scrollIntoView({ block: 'center', inline: 'nearest' }), summary)
+  console.log(`[desktop-e2e] opening global task panel for ${expectedLabel}`)
+  await summary.click()
+  console.log(`[desktop-e2e] global task panel opened for ${expectedLabel}`)
+  const visibleTaskLabels = await driver.wait(async () => {
+    const labels = await driver.executeScript(() => [...document.querySelectorAll('[data-testid="global-task-kind"]')]
+      .map(element => element.textContent?.trim() || ''))
+    return labels.includes(expectedLabel) ? labels : false
+  }, 10_000)
+  assert.ok(visibleTaskLabels.includes(expectedLabel), `global task bar must identify ${expectedLabel}`)
+  const refreshedSummary = await waitForElement('[data-testid="global-progress-summary"]')
+  await refreshedSummary.click()
+  await driver.wait(async () => (await driver.findElements(By.css('.progress-panel'))).length === 0, 10_000)
+}
+
 async function runShellPolishDesktopGate() {
   console.log('[desktop-e2e] verifying the frameless shell and compact PDF empty state')
   await driver.manage().window().setRect({ width: 1440, height: 900 })
@@ -2608,18 +2626,29 @@ async function runPdfWorkspaceDesktopGate() {
   let picker = await waitForElement('[data-testid="pdf-compression-workspace"] [data-testid="dropzone-file"]')
   await callDesktopBridge('queueDesktopDialogSelections', [[fixtures['large-image.pdf'].path]])
   await picker.click()
+  console.log('[desktop-e2e] cancellation PDF selected; waiting for analysis')
   await driver.wait(async () => (await workspace.getText()).includes('large-image.pdf') && (await workspace.getText()).includes('可配置'), 30_000)
+  console.log('[desktop-e2e] cancellation PDF analyzed')
   await (await waitForElement('[data-testid="pdf-mode-image"]')).click()
   await (await waitForElement('[data-testid="pdf-risk-confirmation"]')).click()
   await (await waitForElement('[data-testid="pdf-allow-larger-output"]')).click()
   await (await waitForElement('[data-testid="pdf-freeze-configuration"]')).click()
-  await (await waitForElement('[data-testid="pdf-start-batch"]')).click()
+  console.log('[desktop-e2e] cancellation PDF configuration frozen')
+  const cancellationStart = await waitForElement('[data-testid="pdf-start-batch"]')
+  assert.equal(await cancellationStart.getAttribute('disabled'), null, 'frozen cancellation PDF must enable batch execution')
+  await cancellationStart.click()
+  console.log('[desktop-e2e] cancellation PDF batch started')
+  await waitForElement('[data-testid="global-progress-bar"]', 30_000)
+  const pdfProgressText = await driver.executeScript(() => document.querySelector('[data-testid="global-progress-summary"]')?.textContent || '')
+  assert.match(pdfProgressText, /large-image\.pdf/, 'running PDF must appear in the external global task summary')
   const cancelBatch = await waitForElement('[data-testid="pdf-cancel-batch"]', 30_000)
+  console.log('[desktop-e2e] cancellation PDF control visible')
   await cancelBatch.click()
   const cancelledHistory = await driver.wait(async () => {
     const records = await callDesktopBridge('taskHistory')
     return records.find(record => record.workloadKind === 'pdf' && record.status === 'cancelled') || false
   }, 30_000)
+  await assertGlobalTaskKind('PDF 优化')
   assert.equal(existsSync(cancelledHistory.outputPath), false, 'cancelled PDF must not publish a final output')
   assert.equal(fileSha256(fixtures['large-image.pdf'].path), fixtures['large-image.pdf'].sha256, 'cancelled PDF source must remain unchanged')
 
@@ -2719,8 +2748,10 @@ async function runPdfWorkspaceDesktopGate() {
     const layout = await driver.executeScript(() => {
       const main = document.querySelector('main')
       const workspace = document.querySelector('[data-testid="pdf-compression-workspace"]')
-      if (!main || !workspace) return null
+      const list = document.querySelector('[data-testid="pdf-workspace-scroll-region"]')
+      if (!main || !workspace || !list) return null
       workspace.scrollLeft = 0
+      list.scrollTop = list.scrollHeight
       const boundary = workspace.getBoundingClientRect()
       const offenders = [...workspace.querySelectorAll('*')].map(element => {
         const rect = element.getBoundingClientRect()
@@ -2731,11 +2762,16 @@ async function runPdfWorkspaceDesktopGate() {
         workspaceOverflow: workspace.scrollWidth - workspace.clientWidth,
         workspaceClientWidth: workspace.clientWidth,
         workspaceScrollWidth: workspace.scrollWidth,
+        listClientHeight: list.clientHeight,
+        listScrollHeight: list.scrollHeight,
+        listScrollTop: list.scrollTop,
         offenders,
       }
     })
     assert.ok(layout, 'PDF workspace layout must be visible')
     assert.ok(layout.mainOverflow <= 1 && layout.workspaceOverflow <= 1, `PDF workspace must not overflow horizontally: ${JSON.stringify(layout)}`)
+    assert.ok(layout.listScrollHeight > layout.listClientHeight, `populated PDF workspace must require bounded vertical scrolling: ${JSON.stringify(layout)}`)
+    assert.ok(layout.listScrollTop > 0, `populated PDF workspace must accept vertical scrolling: ${JSON.stringify(layout)}`)
     layouts.push({ ...size, ...layout })
     writeFileSync(path.join(artifactDirectory, `pdf-workspace-${size.width}x${size.height}.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
   }
@@ -2857,6 +2893,9 @@ async function runImageWorkspaceDesktopGate() {
   await waitForElement('[data-testid="image-compression-workspace"]')
   const batchSettings = await waitForElement('[data-testid="image-compression-workspace"] .secondary-action')
   await batchSettings.click()
+  await waitForElement('[role="dialog"]')
+  await driver.actions().sendKeys(Key.ESCAPE).perform()
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
   const seed = await callDesktopBridge('seedImageCompressionWorkspace', [
     ...imageFixtures.map(fixture => ({ name: fixture.name, path: fixture.path, size: statSync(fixture.path).size, isDirectory: false })),
     ...rejectedFixtures.map(fixture => ({ name: fixture.name, path: fixture.path, size: statSync(fixture.path).size, isDirectory: false })),
@@ -2885,6 +2924,7 @@ async function runImageWorkspaceDesktopGate() {
   mkdirSync(imageOutputDirectory, { recursive: true })
   await callDesktopBridge('configureImageCompressionWorkspace', imageOutputDirectory)
   await startButton.click()
+  await assertGlobalTaskKind('图片压缩')
   const resultState = await driver.wait(async () => {
     const current = await callDesktopBridge('imageCompressionResultAuditState')
     return current.length === 3 && current.every(item => item.taskStatus === 'completed' && item.hasResultPreview)
@@ -2940,6 +2980,7 @@ async function runImageWorkspaceDesktopGate() {
       const config = document.querySelector('.item-config')
       const comparison = document.querySelector('.comparison-panel')
       if (!main || !workspace || !list || !details || !config || !comparison) return null
+      list.scrollTop = list.scrollHeight
       const configRect = config.getBoundingClientRect()
       const comparisonRect = comparison.getBoundingClientRect()
       return {
@@ -2950,11 +2991,16 @@ async function runImageWorkspaceDesktopGate() {
         sideBySide: comparisonRect.left >= configRect.right - 2,
         configWidth: configRect.width,
         comparisonWidth: comparisonRect.width,
+        listClientHeight: list.clientHeight,
+        listScrollHeight: list.scrollHeight,
+        listScrollTop: list.scrollTop,
       }
     })
     assert.ok(layout, 'image details must be visible')
     assert.equal(layout.sideBySide, true, `image details must remain side by side: ${JSON.stringify(layout)}`)
     assert.ok(layout.configWidth >= 190 && layout.comparisonWidth >= 190, `image detail columns are unreadable: ${JSON.stringify(layout)}`)
+    assert.ok(layout.listScrollHeight > layout.listClientHeight, `populated image workspace must require bounded vertical scrolling: ${JSON.stringify(layout)}`)
+    assert.ok(layout.listScrollTop > 0, `populated image workspace must accept vertical scrolling: ${JSON.stringify(layout)}`)
     for (const [label, overflow] of Object.entries(layout).filter(([key]) => key.endsWith('Overflow'))) {
       assert.ok(overflow <= 1, `image ${label} must not scroll horizontally: ${JSON.stringify(layout)}`)
     }
@@ -2987,7 +3033,6 @@ async function runImageWorkspaceDesktopGate() {
   await callDesktopBridge('reset')
   await driver.wait(async () => (await callDesktopBridge('imageCompressionAuditState')).length === 0, 10_000)
   await driver.manage().window().setRect({ width: 1100, height: 720 })
-  await (await waitForElement('[data-testid="image-compression-workspace"] .secondary-action')).click()
   const nativePickerDropzone = await waitForElement('[data-testid="dropzone-file"]')
   await driver.wait(async () => nativePickerDropzone.isDisplayed(), 10_000)
   const pickerJpeg = path.join(mediaRoot, 'images', 'exif-orientation.jpg')
@@ -3087,27 +3132,37 @@ async function runVideoWorkspaceDesktopGate() {
   let picker = await waitForElement('[data-testid="video-compression-workspace"] [data-testid="dropzone-file"]')
   await callDesktopBridge('queueDesktopDialogSelections', [[cancellationVideo]])
   await picker.click()
+  console.log('[desktop-e2e] cancellation video selected; waiting for planning')
   await driver.wait(async () => {
     const cards = await driver.findElements(By.css('[data-testid="video-draft-card"]'))
     return cards.length === 1 && await cards[0].getAttribute('data-status') === 'ready'
   }, 30_000)
+  console.log('[desktop-e2e] cancellation video planned')
   await callDesktopBridge('queueDesktopDialogSelections', [cancellationOutputDirectory])
-  await (await waitForElement('[data-testid="video-compression-workspace"] .output-directory button')).click()
-  await driver.wait(async () => (await workspace.getText()).includes(cancellationOutputDirectory), 15_000)
+  await (await waitForElement('[data-testid="video-toggle-global-settings"]')).click()
+  let settingsDialog = await waitForElement('[role="dialog"]')
+  await settingsDialog.findElement(By.css('.output-directory button')).click()
+  await driver.wait(async () => (await settingsDialog.getText()).includes(cancellationOutputDirectory), 15_000)
+  await (await waitForElement('[data-testid="video-save-global-settings"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
+  console.log('[desktop-e2e] cancellation output directory selected')
   await (await waitForElement('[data-testid="video-compression-workspace"] .primary-action')).click()
   await driver.wait(async () => {
     const cards = await driver.findElements(By.css('[data-testid="video-draft-card"]'))
     return cards.length === 1 && await cards[0].getAttribute('data-status') === 'compressing'
   }, 30_000)
+  console.log('[desktop-e2e] cancellation video entered compressing state')
   const observedFfmpegProcessIds = await driver.wait(() => {
     const processIds = videoFfmpegProcessIds(cancellationVideo)
     return processIds.length > 0 ? processIds : false
   }, 30_000)
+  console.log('[desktop-e2e] cancellation FFmpeg process observed')
   await (await waitForElement('[data-testid="video-compression-workspace"] .danger-action')).click()
   await driver.wait(async () => {
     const cards = await driver.findElements(By.css('[data-testid="video-draft-card"]'))
     return cards.length === 1 && await cards[0].getAttribute('data-status') === 'cancelled'
   }, 30_000)
+  console.log('[desktop-e2e] cancellation state observed')
   await driver.wait(() => videoFfmpegProcessIds(cancellationVideo).length === 0, 30_000)
   const cancelledHistory = await driver.wait(async () => {
     const record = (await callDesktopBridge('taskHistory')).find(candidate =>
@@ -3166,6 +3221,20 @@ async function runVideoWorkspaceDesktopGate() {
   assert.equal(await execute.getAttribute('disabled'), null, 'verified video drafts must enable real execution')
   assert.equal((await callDesktopBridge('taskHistory')).length, historyBefore, 'planning must not write task history')
 
+  const plannedFirstCard = (await driver.findElements(By.css('[data-testid="video-draft-card"]')))[0]
+  if ((await plannedFirstCard.findElement(By.css('.expand')).getAttribute('aria-expanded')) !== 'true') {
+    await plannedFirstCard.findElement(By.css('.expand')).click()
+  }
+  const probeFactsBeforeOverride = await plannedFirstCard.getText()
+  const overrideToggle = await plannedFirstCard.findElement(By.css('.override-toggle'))
+  await driver.executeScript(element => element.scrollIntoView({ block: 'center', inline: 'nearest' }), overrideToggle)
+  await overrideToggle.click()
+  await waitForElement('[data-testid="video-quality-slider"]')
+  const probeFactsAfterOverride = await plannedFirstCard.getText()
+  assert.match(probeFactsAfterOverride, /360×640/, 'enabling a video override must preserve probe facts')
+  assert.match(probeFactsBeforeOverride, /360×640/, 'video fixture must expose probe facts before override')
+  assert.match(probeFactsAfterOverride, /视频质量/, 'single-video settings must expose independent quality control')
+
   mkdirSync(artifactDirectory, { recursive: true })
   for (const size of [{ width: 1100, height: 720 }, { width: 760, height: 560 }]) {
     await driver.manage().window().setRect(size)
@@ -3175,18 +3244,25 @@ async function runVideoWorkspaceDesktopGate() {
       const workspace = document.querySelector('[data-testid="video-compression-workspace"]')
       const card = document.querySelector('[data-testid="video-draft-card"]')
       const facts = document.querySelector('.facts-grid')
-      if (!main || !workspace || !card || !facts) return null
+      const list = document.querySelector('[data-testid="video-workspace-scroll-region"]')
+      if (!main || !workspace || !card || !facts || !list) return null
+      list.scrollTop = list.scrollHeight
       return {
         mainOverflow: main.scrollWidth - main.clientWidth,
         workspaceOverflow: workspace.scrollWidth - workspace.clientWidth,
         cardOverflow: card.scrollWidth - card.clientWidth,
         factsOverflow: facts.scrollWidth - facts.clientWidth,
+        listClientHeight: list.clientHeight,
+        listScrollHeight: list.scrollHeight,
+        listScrollTop: list.scrollTop,
       }
     })
     assert.ok(layout, 'video planning facts must remain visible')
     for (const [label, overflow] of Object.entries(layout)) {
-      assert.ok(overflow <= 1, `video ${label} must not scroll horizontally: ${JSON.stringify(layout)}`)
+      if (label.endsWith('Overflow')) assert.ok(overflow <= 1, `video ${label} must not scroll horizontally: ${JSON.stringify(layout)}`)
     }
+    assert.ok(layout.listScrollHeight > layout.listClientHeight, `expanded video workspace must require bounded vertical scrolling: ${JSON.stringify(layout)}`)
+    assert.ok(layout.listScrollTop > 0, `expanded video workspace must accept vertical scrolling: ${JSON.stringify(layout)}`)
     writeFileSync(
       path.join(artifactDirectory, `video-workspace-${size.width}x${size.height}.png`),
       Buffer.from(await driver.takeScreenshot(), 'base64'),
@@ -3194,12 +3270,17 @@ async function runVideoWorkspaceDesktopGate() {
   }
 
   await callDesktopBridge('queueDesktopDialogSelections', [videoOutputDirectory])
-  await (await waitForElement('[data-testid="video-compression-workspace"] .output-directory button')).click()
-  await driver.wait(async () => (await workspace.getText()).includes(videoOutputDirectory), 15_000)
+  await (await waitForElement('[data-testid="video-toggle-global-settings"]')).click()
+  settingsDialog = await waitForElement('[role="dialog"]')
+  await settingsDialog.findElement(By.css('.output-directory button')).click()
+  await driver.wait(async () => (await settingsDialog.getText()).includes(videoOutputDirectory), 15_000)
+  await (await waitForElement('[data-testid="video-save-global-settings"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
   console.log('[desktop-e2e] video output directory selected')
   await callDesktopBridge('queueDesktopConfirmations', [true])
   await (await waitForElement('[data-testid="video-compression-workspace"] .primary-action')).click()
   console.log('[desktop-e2e] real video batch started')
+  await assertGlobalTaskKind('视频压缩')
 
   await driver.wait(async () => {
     const cards = await driver.findElements(By.css('[data-testid="video-draft-card"]'))
@@ -3266,6 +3347,7 @@ async function runVideoWorkspaceDesktopGate() {
   assert.doesNotMatch(await firstCard.getText(), /Publishing/)
   const defaultPlayback = firstCard.findElement(By.css('[data-testid="video-open-default-app"]'))
   assert.equal(await defaultPlayback.isDisplayed(), true)
+  await driver.executeScript(element => element.scrollIntoView({ block: 'center', inline: 'nearest' }), defaultPlayback)
   await defaultPlayback.click()
   const defaultPlaybackNotice = await driver.wait(async () => {
     const feedback = await driver.findElements(By.css('[role="status"], [role="alert"]'))

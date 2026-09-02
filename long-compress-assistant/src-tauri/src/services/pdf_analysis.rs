@@ -1,3 +1,4 @@
+use crate::utils::process;
 use serde::Serialize;
 use serde_json::Value;
 use std::ffi::OsString;
@@ -6,7 +7,6 @@ use std::process::Stdio;
 use std::time::Duration;
 use thiserror::Error;
 use tokio::io::AsyncWriteExt;
-use tokio::process::Command;
 
 const ANALYSIS_TIMEOUT: Duration = Duration::from_secs(30);
 const MAX_ANALYSIS_OUTPUT_BYTES: usize = 32 * 1024 * 1024;
@@ -98,7 +98,7 @@ async fn run_boolean_probe(
 ) -> Result<bool, PdfAnalysisError> {
     let output = tokio::time::timeout(
         ANALYSIS_TIMEOUT,
-        Command::new(qpdf)
+        process::async_command(qpdf)
             .arg(option)
             .arg(source)
             .stdin(Stdio::null())
@@ -127,7 +127,7 @@ async fn run_json_probe(
         return Err(PdfAnalysisError::PasswordContainsLineBreak);
     }
 
-    let mut command = Command::new(qpdf);
+    let mut command = process::async_command(qpdf);
     command
         .args(json_arguments(source, password.is_some()))
         .stdin(if password.is_some() {

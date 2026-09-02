@@ -278,7 +278,6 @@ export const useCompressionStore = defineStore('compression', () => {
   const queueVideoPlanning = (item: VideoCompressionItem) => {
     item.planRevision += 1
     item.status = 'planning'
-    item.plan = undefined
     item.error = undefined
   }
 
@@ -294,7 +293,8 @@ export const useCompressionStore = defineStore('compression', () => {
   const failVideoPlanning = (id: string, revision: number, reason: string) => {
     const item = videoItems.value.find(candidate => candidate.id === id)
     if (!item || item.planRevision !== revision) return false
-    item.plan = undefined
+    // Keep the last verified probe facts visible when only the derived plan
+    // fails to refresh. A first-time probe still has no plan to display.
     item.status = 'rejected'
     item.error = reason
     return true
@@ -309,7 +309,6 @@ export const useCompressionStore = defineStore('compression', () => {
     const item = videoItems.value.find(candidate => candidate.id === id)
     if (!item || item.settings) return
     item.settings = cloneVideoSettings(videoGlobalSettings.value)
-    queueVideoPlanning(item)
   }
   const disableVideoItemOverride = (id: string) => {
     const item = videoItems.value.find(candidate => candidate.id === id)
@@ -322,6 +321,10 @@ export const useCompressionStore = defineStore('compression', () => {
     if (!item) return
     item.settings = cloneVideoSettings(settings)
     queueVideoPlanning(item)
+  }
+  const updateVideoItemSettingsDraft = (id: string, settings: VideoCompressionSettings) => {
+    const item = videoItems.value.find(candidate => candidate.id === id)
+    if (item) item.settings = cloneVideoSettings(settings)
   }
   const retryVideoPlanning = (id: string) => {
     const item = videoItems.value.find(candidate => candidate.id === id)
@@ -582,6 +585,7 @@ export const useCompressionStore = defineStore('compression', () => {
     getEffectiveVideoSettings,
     updateVideoGlobalSettings,
     enableVideoItemOverride,
+    updateVideoItemSettingsDraft,
     disableVideoItemOverride,
     updateVideoItemSettings,
     retryVideoPlanning,

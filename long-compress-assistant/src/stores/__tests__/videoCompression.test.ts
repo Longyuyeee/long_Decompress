@@ -22,7 +22,7 @@ const plan = (): VideoCompressionPlan => ({
     warnings: [], blockingReasons: [],
   },
   preset: {
-    preset: 'balanced', label: 'balanced', videoBitsPerPixelMilli: 75, minimumVideoBitRate: 800_000,
+    preset: 'balanced', label: 'balanced', quality: 76, videoBitsPerPixelMilli: 75, minimumVideoBitRate: 800_000,
     maximumVideoBitRate: 8_000_000, audioBitRate: 128_000, defaultMaxWidth: 1_280, defaultMaxHeight: 720,
   },
   effectiveMaxWidth: 1_280, effectiveMaxHeight: 720, outputWidth: 640, outputHeight: 360,
@@ -30,7 +30,7 @@ const plan = (): VideoCompressionPlan => ({
   targetVideoBitRate: 800_000, targetAudioBitRate: null,
   estimatedOutput: {
     isEstimate: true, lowBytes: 80_000, highBytes: 125_000,
-    basis: 'duration-output-pixels-average-frame-rate-and-preset-bitrate-envelope', disclaimer: 'estimate only',
+    basis: 'duration-output-pixels-average-frame-rate-and-quality-bitrate-envelope', disclaimer: 'estimate only',
   },
   streamChanges: [], requiresExplicitConfirmation: false, canEncode: true,
 })
@@ -56,18 +56,23 @@ describe('video compression draft state', () => {
     const store = useCompressionStore()
     const item = store.addVideoCandidates([{ name: 'video.mp4', path: 'C:/video.mp4', size: 100, isDirectory: false }]).accepted[0]
     expect(item.planRevision).toBe(1)
-    store.updateVideoGlobalSettings({ preset: 'small', maxWidth: 854, maxHeight: 480 })
+    store.updateVideoGlobalSettings({ preset: 'small', quality: 42, maxWidth: 854, maxHeight: 480 })
     expect(item.planRevision).toBe(2)
     expect(store.completeVideoPlanning(item.id, 1, plan())).toBe(false)
     expect(store.completeVideoPlanning(item.id, 2, plan())).toBe(true)
 
+    const readyPlan = item.plan
+    const readyRevision = item.planRevision
     store.enableVideoItemOverride(item.id)
     expect(item.settings?.preset).toBe('small')
+    expect(item.planRevision).toBe(readyRevision)
+    expect(item.plan).toBe(readyPlan)
     const overrideRevision = item.planRevision
-    store.updateVideoGlobalSettings({ preset: 'clear', maxWidth: null, maxHeight: null })
+    store.updateVideoGlobalSettings({ preset: 'clear', quality: 92, maxWidth: null, maxHeight: null })
     expect(item.planRevision).toBe(overrideRevision)
-    store.updateVideoItemSettings(item.id, { preset: 'balanced', maxWidth: null, maxHeight: null })
+    store.updateVideoItemSettings(item.id, { preset: 'balanced', quality: 76, maxWidth: null, maxHeight: null })
     expect(item.planRevision).toBe(overrideRevision + 1)
+    expect(item.plan).toBe(readyPlan)
     expect(store.selectedFiles).toHaveLength(0)
     expect(store.imageItems).toHaveLength(0)
   })

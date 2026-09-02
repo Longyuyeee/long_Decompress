@@ -93,7 +93,7 @@ for (const contract of [
   'VIDEO_ENGINE_VERSION_POLICY_MISMATCH',
   'VIDEO_ENGINE_ENCODER_MISSING',
   'VIDEO_ENGINE_FILTER_MISSING',
-  'Command::new(executable)',
+  'process::command(executable)',
   '.args(arguments)',
   'hw_encoding',
   'default false',
@@ -101,6 +101,7 @@ for (const contract of [
   assert(videoEngine.includes(contract), `C-01.2.1 video preflight contract is missing: ${contract}`)
 }
 assert(!videoEngine.includes('cmd.exe') && !videoEngine.includes('powershell'), 'video preflight must not use a shell')
+assert(!videoEngine.includes('Command::new(executable)'), 'video preflight must use the shared hidden-process wrapper')
 assert(
   (main.match(/commands::video_engine::probe_video_input/g) ?? []).length === 1,
   'C-02.1 must expose exactly one authoritative video probe command',
@@ -123,10 +124,13 @@ for (const contract of [
 }
 assert(videoProbe.includes('.args(['), 'video probe arguments must be passed as an argument array')
 assert(videoProbe.includes('.kill_on_drop(true)'), 'timed-out video probes must terminate the child process')
+assert(videoProbe.includes('process::async_command(ffprobe)'), 'video probes must use the shared hidden-process wrapper')
 assert(!videoProbe.includes('cmd.exe') && !videoProbe.includes('powershell'), 'video probe must not use a shell')
 const videoCommands = await read('src-tauri/src/commands/video_engine.rs')
 assert(videoCommands.includes('validate_video_engine(&validation_root)'), 'video probe must validate the admitted runtime first')
 assert(videoCommands.includes('probe_video_file(&ffprobe'), 'video probe command must use the bounded production service')
+assert(videoCommands.includes('cached_video_probe(&cache_key)'), 'video replanning must reuse verified probe facts')
+assert(videoCommands.includes('modified_millis'), 'video probe cache must invalidate when the source identity changes')
 const videoPlan = await read('src-tauri/src/services/video_compression_plan.rs')
 for (const contract of [
   'VideoCompressionPreset',
@@ -215,7 +219,7 @@ assert(
     && !specialCompressionView.includes("'archive'"),
   'special compression must expose exactly the image/video/PDF product modes',
 )
-for (const boundary of ['usePdfOptimizationBatch', 'pdf-risk-confirmation', 'pdf-allow-larger-output', '锁定执行配置', '禁止覆盖源文件']) {
+for (const boundary of ['usePdfOptimizationBatch', 'pdf-risk-confirmation', 'pdf-allow-larger-output', '锁定执行配置', 'proposedOutput']) {
   assert(pdfWorkspace.includes(boundary), `D-04.2 PDF UI boundary is missing: ${boundary}`)
 }
 const pdfBatch = await read('src/composables/usePdfOptimizationBatch.ts')
@@ -274,6 +278,12 @@ assert(
     && !pdfAnalysis.includes('OsString::from("--password=")'),
   'D-02.1 password must use qpdf stdin and stay off the process argument list',
 )
+assert(pdfAnalysis.includes('process::async_command(qpdf)'), 'PDF analysis must use the shared hidden-process wrapper')
+for (const pdfProcessFile of ['pdf_engine.rs', 'pdf_transform.rs', 'pdf_output_validation.rs']) {
+  const source = await read(`src-tauri/src/services/${pdfProcessFile}`)
+  assert(source.includes('process::'), `${pdfProcessFile} must use the shared hidden-process wrapper`)
+}
+assert(videoPlan.includes('requested_quality.clamp(1, 100)'), 'video quality must drive a bounded bitrate policy')
 assert(
   (main.match(/commands::pdf_engine::compress_pdf_file/g) ?? []).length === 1
     && (main.match(/commands::pdf_engine::plan_pdf_optimization_destination/g) ?? []).length === 1,
@@ -388,6 +398,7 @@ assert(!videoWorkspace.includes("invoke('compress_video_file'"), 'video workspac
 const compressionStore = await read('src/stores/compression.ts')
 assert(compressionStore.includes('videoItems'), 'C-02.3 video drafts must reuse the existing compression store')
 assert(compressionStore.includes('planRevision'), 'C-02.3 must reject stale asynchronous video plans')
+assert(!compressionStore.match(/queueVideoPlanning[\s\S]{0,180}item\.plan = undefined/), 'video replanning must preserve verified probe facts')
 assert(
   (main.match(/commands::compression::plan_image_compression_destination/g) ?? []).length === 1,
   'the application must expose exactly one authoritative image destination planner',

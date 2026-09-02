@@ -1,4 +1,5 @@
 use crate::services::pdf_transform::PdfStagedOutput;
+use crate::utils::process;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
@@ -12,7 +13,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use thiserror::Error;
 use tokio::io::AsyncReadExt;
-use tokio::process::Command;
 
 const VALIDATION_TIMEOUT: Duration = Duration::from_secs(2 * 60);
 const POLL_INTERVAL: Duration = Duration::from_millis(50);
@@ -161,7 +161,7 @@ async fn run_qpdf_capture(
     if cancelled.load(Ordering::Acquire) {
         return Err(PdfOutputValidationError::Cancelled);
     }
-    let mut child = Command::new(qpdf)
+    let mut child = process::async_command(qpdf)
         .args(arguments)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())

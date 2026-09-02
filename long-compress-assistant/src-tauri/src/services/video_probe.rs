@@ -1,10 +1,10 @@
+use crate::utils::process;
 use serde::Serialize;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::time::Duration;
 use thiserror::Error;
-use tokio::process::Command;
 
 const PROBE_TIMEOUT: Duration = Duration::from_secs(20);
 const MAX_PROBE_OUTPUT_BYTES: usize = 8 * 1024 * 1024;
@@ -384,7 +384,7 @@ pub async fn probe_video_file(
         return Err(VideoProbeError::SourceEmpty(source.display().to_string()));
     }
 
-    let mut command = Command::new(ffprobe);
+    let mut command = process::async_command(ffprobe);
     command
         .args([
             "-v",

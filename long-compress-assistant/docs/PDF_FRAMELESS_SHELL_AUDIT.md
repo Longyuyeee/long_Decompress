@@ -1,5 +1,7 @@
 # PDF 空态与无原生边框修复审计
 
+> 后续 `v1.2.3` 进一步删除了布局自身的 1 px 透明缓冲、圆角外框与焦点边框；本文件关于“仅关闭系统装饰”的阶段性结论由 [v1.2.3 特殊压缩运行时与交互审计](SPECIAL_COMPRESSION_RUNTIME_UX_AUDIT_1.2.3.md) 补充。
+
 日期：2026-09-02  
 基线：公开 `v1.2.2`，`master@a2553c4`  
 开发分支：`codex/pdf-frameless-shell-polish`
@@ -51,4 +53,3 @@ npm.cmd run test:e2e:desktop:shell-polish
 - 现有 `test:e2e:desktop:responsive-layout` 在 920×620 的真实 Tauri 解压详情中记录到 2 px 横向溢出：详情外框 577 px、client 575 px。它发生在进入本轮 PDF/标题栏页面之前，且不由本轮横向尺寸改动产生；本轮没有扩大范围修改解压详情。
 - 后续若继续开发，先为该 2 px 差异建立独立问题与修复前失败证据，再检查详情边框/box sizing；不要放宽 `overflow <= 1 px` 门禁来掩盖。
 - 本轮保持版本 `1.2.2`，未打包或发布新 Release。若决定以 `v1.2.3` 发布，应从本分支合并后的精确提交重新跑完整 Rust/Shell、NSIS、安装生命周期、公开更新和资产回下载流程，不能把本地桌面测试二进制当作发布候选。
-
