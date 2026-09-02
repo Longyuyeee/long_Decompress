@@ -166,6 +166,9 @@ test.describe('Long Decompress desktop shell', () => {
         await page.getByTestId(`compression-mode-${mode}`).click()
         const workspace = page.getByTestId(`${mode}-compression-workspace`)
         await expect(workspace).toBeVisible()
+        await page.locator('.special-compression-stage').evaluate(async element => {
+          await Promise.all(element.getAnimations().map(animation => animation.finished))
+        })
         const shell = page.locator('.special-compression-shell')
         const before = await shell.boundingBox()
         const pageBefore = await page.evaluate(() => ({

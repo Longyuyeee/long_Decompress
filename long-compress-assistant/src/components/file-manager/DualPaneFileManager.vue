@@ -234,7 +234,7 @@ const submitEditor = async () => {
 }
 
 const showProperties = async (pane: PaneState, entry: LocalFileEntry) => {
-  context.value = null; busy.value = true
+  context.value = null; properties.value = null; notice.value = ''; busy.value = true
   try { properties.value = await invoke('file_manager_properties', { path: entry.path }) }
   catch {
     notice.value = '无法读取此项目的属性。它可能是系统保护或特殊文件夹，可尝试在 Windows 文件管理器中查看。'

@@ -46,6 +46,13 @@ struct TreeStats {
 
 pub fn locations() -> Vec<FileManagerLocation> {
     let mut result = Vec::new();
+    #[cfg(feature = "desktop-e2e")]
+    if let Some(path) = std::env::var_os("LONG_DECOMPRESS_E2E_FILE_MANAGER_ROOT")
+        .map(PathBuf::from)
+        .filter(|path| path.is_absolute() && path.is_dir())
+    {
+        result.push(location("桌面 E2E 文件管理器", path, "e2e"));
+    }
     if let Some(home) = dirs::home_dir() {
         result.push(location("主目录", home, "home"));
     }

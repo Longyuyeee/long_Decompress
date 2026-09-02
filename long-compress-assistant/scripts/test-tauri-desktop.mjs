@@ -10,6 +10,7 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
@@ -60,6 +61,7 @@ const e2eInstanceId =
 const e2eDataDirectory =
   process.env.LONG_DECOMPRESS_E2E_DATA_DIR ||
   path.join(root, 'test-results', `desktop-e2e-data-${e2eInstanceId}`)
+const fileManagerUiFixtureRoot = path.join(e2eDataDirectory, 'file-manager-ui')
 let desktopSessionIndex = 0
 let webviewUserDataDirectory = path.join(e2eDataDirectory, `webview2-session-${desktopSessionIndex}`)
 const bundledSevenZip = path.join(root, 'src-tauri', 'resources', 'archive-engine', '7z.exe')
@@ -330,6 +332,7 @@ async function startTauriDriver() {
       env: {
         ...process.env,
         LONG_DECOMPRESS_E2E_DATA_DIR: e2eDataDirectory,
+        LONG_DECOMPRESS_E2E_FILE_MANAGER_ROOT: fileManagerUiFixtureRoot,
         LONG_DECOMPRESS_E2E_INSTANCE_ID: e2eInstanceId,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -583,6 +586,19 @@ async function runArchiveBrowserDesktopGate() {
   mkdirSync(sourceRoot, { recursive: true })
   mkdirSync(archiveRoot, { recursive: true })
 
+  const resolvedE2eData = path.resolve(e2eDataDirectory)
+  const resolvedUiRoot = path.resolve(fileManagerUiFixtureRoot)
+  assert.equal(path.dirname(resolvedUiRoot), resolvedE2eData, 'file-manager UI fixture must stay inside the isolated E2E data root')
+  if (existsSync(resolvedUiRoot)) rmSync(resolvedUiRoot, { recursive: true, force: true })
+  const explorerDirectory = path.join(resolvedUiRoot, '中文 空格目录')
+  const explorerFile = path.join(explorerDirectory, '定位 文件.txt')
+  const junctionTarget = path.join(resolvedUiRoot, '真实目标')
+  const protectedJunction = path.join(resolvedUiRoot, '系统特殊目录')
+  mkdirSync(explorerDirectory, { recursive: true })
+  mkdirSync(junctionTarget, { recursive: true })
+  writeFileSync(explorerFile, 'real Explorer selection target')
+  symlinkSync(junctionTarget, protectedJunction, 'junction')
+
   const longSegments = Array.from({ length: 8 }, (_, index) => `中文长目录-${index + 1}-${'层级'.repeat(3)}`)
   const zipRootName = '资料集合'
   const zipKeepRelative = path.join(zipRootName, ...longSegments, '保留文件.txt')
@@ -714,6 +730,25 @@ async function runArchiveBrowserDesktopGate() {
   assert.ok(specialLayout.page.scrollHeight <= specialLayout.page.clientHeight + 1, `empty special-compression page must not scroll vertically: ${JSON.stringify(specialLayout)}`)
   assert.ok(specialLayout.page.scrollWidth <= specialLayout.page.clientWidth + 1, `special-compression page must not scroll horizontally: ${JSON.stringify(specialLayout)}`)
   assert.ok(specialLayout.workspace.scrollHeight <= specialLayout.workspace.clientHeight + 1, `empty image workspace must not need vertical scrolling: ${JSON.stringify(specialLayout)}`)
+  const shellGeometry = async () => driver.executeScript(() => {
+    const shell = document.querySelector('.special-compression-shell')?.getBoundingClientRect()
+    const page = document.documentElement
+    return shell && { width: shell.width, height: shell.height, pageClientHeight: page.clientHeight, pageScrollHeight: page.scrollHeight }
+  })
+  const assertStableShellGeometry = (before, after, label) => {
+    assert.ok(Math.abs(after.width - before.width) <= 0.1, `${label} shell width changed: ${JSON.stringify({ before, after })}`)
+    assert.ok(Math.abs(after.height - before.height) <= 0.1, `${label} shell height changed: ${JSON.stringify({ before, after })}`)
+    assert.equal(after.pageClientHeight, before.pageClientHeight, `${label} page client height changed`)
+    assert.equal(after.pageScrollHeight, before.pageScrollHeight, `${label} page scroll height changed`)
+  }
+  const imageShellBefore = await shellGeometry()
+  await (await waitForElement('[data-testid="image-toggle-global-settings"]')).click()
+  await waitForElement('[role="dialog"]')
+  const imageShellAfter = await shellGeometry()
+  assertStableShellGeometry(imageShellBefore, imageShellAfter, 'real WebView2 image settings modal')
+  writeFileSync(path.join(artifactDirectory, 'special-compression-settings-modal-v1.2.2.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  await driver.actions().sendKeys(Key.ESCAPE).perform()
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
   await (await waitForElement('[data-testid="compression-mode-video"]')).click()
   const videoEmptyLayout = await driver.executeScript(() => {
     const workspace = document.querySelector('[data-testid="video-compression-workspace"]')
@@ -721,6 +756,13 @@ async function runArchiveBrowserDesktopGate() {
   })
   assert.equal(videoEmptyLayout.settingsVisible, false, 'video batch settings must be collapsed before files are added')
   assert.ok(videoEmptyLayout.scrollHeight <= videoEmptyLayout.clientHeight + 1, `empty video workspace must not need vertical scrolling: ${JSON.stringify(videoEmptyLayout)}`)
+  const videoShellBefore = await shellGeometry()
+  await (await waitForElement('[data-testid="video-toggle-global-settings"]')).click()
+  await waitForElement('[role="dialog"]')
+  const videoShellAfter = await shellGeometry()
+  assertStableShellGeometry(videoShellBefore, videoShellAfter, 'real WebView2 video settings modal')
+  await driver.actions().sendKeys(Key.ESCAPE).perform()
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
   await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
   const pdfEmptyLayout = await driver.executeScript(() => {
     const workspace = document.querySelector('[data-testid="pdf-compression-workspace"]')
@@ -737,6 +779,73 @@ async function runArchiveBrowserDesktopGate() {
   assert.doesNotMatch(await fileManager.getText(), /把压缩包拖到这里/, 'archive drop must not be the default browser experience')
   assert.equal((await fileManager.findElements(By.css('[data-testid^="file-manager-selection-mode-"]'))).length, 2, 'both panes must expose a direct multi-select toggle')
   assert.equal((await fileManager.findElements(By.css('[data-testid^="file-manager-breadcrumbs-"]'))).length, 2, 'both panes must expose clickable path breadcrumbs')
+  const leftLocation = await fileManager.findElement(By.css('.file-pane select'))
+  await driver.executeScript((select, target) => {
+    select.value = target
+    select.dispatchEvent(new Event('change', { bubbles: true }))
+  }, leftLocation, resolvedUiRoot)
+  await driver.wait(async () => {
+    const strips = await fileManager.findElements(By.css('.path-strip'))
+    return strips.length > 0 && path.resolve(await strips[0].getAttribute('title')) === resolvedUiRoot
+  }, 15_000)
+
+  const contextEntry = async target => {
+    const opened = await driver.executeScript(pathValue => {
+      const row = Array.from(document.querySelectorAll('.file-pane:first-of-type .file-row'))
+        .find(candidate => candidate.dataset.path === pathValue)
+      if (!row) return false
+      row.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 320, clientY: 360 }))
+      return true
+    }, target)
+    assert.equal(opened, true, `file-manager UI row was not found: ${target}`)
+    await waitForElement('.file-context')
+  }
+
+  try {
+    await contextEntry(explorerDirectory)
+    await (await waitForElement('[data-testid="file-manager-open-system"]')).click()
+    await waitForExplorerTarget(explorerDirectory, false)
+
+    await contextEntry(protectedJunction)
+    const propertyActions = await driver.findElements(By.css('.file-context button'))
+    const junctionProperties = await (async () => {
+      for (const action of propertyActions) if ((await action.getText()).includes('属性')) return action
+      return null
+    })()
+    assert.ok(junctionProperties, 'junction context menu must expose properties')
+    await junctionProperties.click()
+    const protectedNotice = await waitForElement('[data-testid="file-manager-notice"]')
+    assert.match(await protectedNotice.getText(), /系统保护或特殊文件夹/)
+    assert.doesNotMatch(await protectedNotice.getText(), /重解析点|REPARSE|backend/i)
+
+    const explorerFolderRow = await driver.executeScript(target => Array.from(document.querySelectorAll('.file-pane:first-of-type .file-row'))
+      .find(candidate => candidate.dataset.path === target) || null, explorerDirectory)
+    assert.ok(explorerFolderRow, 'Explorer fixture folder must remain visible after the junction property rejection')
+    await driver.actions().doubleClick(explorerFolderRow).perform()
+    await driver.wait(async () => {
+      const strips = await fileManager.findElements(By.css('.path-strip'))
+      return strips.length > 0 && path.resolve(await strips[0].getAttribute('title')) === path.resolve(explorerDirectory)
+    }, 15_000)
+
+    await contextEntry(explorerFile)
+    const filePropertyActions = await driver.findElements(By.css('.file-context button'))
+    const fileProperties = await (async () => {
+      for (const action of filePropertyActions) if ((await action.getText()).includes('属性')) return action
+      return null
+    })()
+    assert.ok(fileProperties, 'regular file context menu must expose properties')
+    await fileProperties.click()
+    await waitForElement('.properties-dialog')
+    assert.equal((await driver.findElements(By.css('[data-testid="file-manager-notice"]'))).length, 0, 'successful properties must clear the prior protected-folder notice')
+    await (await waitForElement('.properties-dialog footer button')).click()
+
+    await contextEntry(explorerFile)
+    await (await waitForElement('[data-testid="file-manager-open-system"]')).click()
+    await waitForExplorerTarget(explorerFile, true)
+    console.log('[desktop-e2e] real file-manager context menus opened the exact directory/file and translated a real junction property rejection')
+  } finally {
+    closeExplorerWindowsUnder(resolvedUiRoot)
+  }
   const leftSelectionToggle = await waitForElement('[data-testid="file-manager-selection-mode-left"]')
   await leftSelectionToggle.click()
   assert.equal(await leftSelectionToggle.getAttribute('aria-pressed'), 'true', 'multi-select mode must open explicitly')
@@ -784,19 +893,6 @@ async function runArchiveBrowserDesktopGate() {
   mkdirSync(fileManagerMoveDestination, { recursive: true })
   writeFileSync(path.join(fileManagerSource, 'a.txt'), 'alpha')
   writeFileSync(path.join(fileManagerSource, 'nested', 'b.bin'), Buffer.from([0, 1, 2, 3]))
-  const explorerDirectory = path.join(fileManagerRoot, '中文 空格目录')
-  const explorerFile = path.join(explorerDirectory, '定位 文件.txt')
-  mkdirSync(explorerDirectory, { recursive: true })
-  writeFileSync(explorerFile, 'real Explorer selection target')
-  try {
-    await callDesktopBridge('openInExplorer', explorerDirectory)
-    await waitForExplorerTarget(explorerDirectory, false)
-    await callDesktopBridge('openInExplorer', explorerFile)
-    await waitForExplorerTarget(explorerFile, true)
-    console.log('[desktop-e2e] Explorer opened the exact Unicode directory and selected the exact spaced file')
-  } finally {
-    closeExplorerWindowsUnder(fileManagerRoot)
-  }
   console.log('[desktop-e2e] invoking real copy/move/properties commands')
   const fileManagerResult = await callDesktopBridge(
     'fileManagerCopyMove',

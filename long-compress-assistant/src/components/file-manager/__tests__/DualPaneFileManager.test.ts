@@ -126,13 +126,21 @@ describe('DualPaneFileManager', () => {
   })
 
   it('turns protected-folder property failures into a stable friendly prompt', async () => {
+    let propertyAttempts = 0
     invoke.mockImplementation((command: string, payload?: any) => {
       if (command === 'file_manager_locations') return Promise.resolve([
         { name: '主目录', path: 'C:\\left', kind: 'home' },
         { name: 'D 盘', path: 'D:\\', kind: 'drive' },
       ])
       if (command === 'list_files') return Promise.resolve(payload.path === 'C:\\left' ? leftEntries : rightEntries)
-      if (command === 'file_manager_properties') return Promise.reject(new Error('REPARSE_POINT_DENIED: raw internal backend detail'))
+      if (command === 'file_manager_properties') {
+        propertyAttempts += 1
+        if (propertyAttempts === 1) return Promise.reject(new Error('REPARSE_POINT_DENIED: raw internal backend detail'))
+        return Promise.resolve({
+          path: payload.path, name: 'notes.txt', isDir: false, bytes: 128,
+          files: 1, directories: 0, modifiedUnixMs: 1,
+        })
+      }
       return Promise.resolve(null)
     })
     const wrapper = mount(DualPaneFileManager, { attachTo: document.body })
@@ -147,6 +155,14 @@ describe('DualPaneFileManager', () => {
     expect(notice).toContain('Windows 文件管理器')
     expect(notice).not.toContain('REPARSE_POINT_DENIED')
     expect(notice).not.toContain('raw internal backend detail')
+
+    const file = wrapper.findAll('.file-pane')[0].findAll('.file-row').find(candidate => candidate.text().includes('notes.txt'))!
+    await file.trigger('contextmenu', { clientX: 30, clientY: 30 })
+    const nextProperties = Array.from(document.body.querySelectorAll('.file-context button')).find(button => button.textContent?.includes('属性')) as HTMLButtonElement
+    nextProperties.click()
+    await flushPromises()
+    expect(document.body.querySelector('.properties-dialog')).toBeTruthy()
+    expect(wrapper.find('[data-testid="file-manager-notice"]').exists()).toBe(false)
     wrapper.unmount()
   })
 })

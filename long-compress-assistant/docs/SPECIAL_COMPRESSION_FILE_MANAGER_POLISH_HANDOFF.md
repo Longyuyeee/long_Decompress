@@ -3,7 +3,7 @@
 > 最后更新：2026-09-02
 > 当前公开基线：`v1.2.1`
 > 开发分支：`codex/special-compression-file-manager-polish`
-> 状态：六项体验修正及真实桌面门禁已完成；尚未升版、打安装包、合并或发布
+> 状态：六项体验修正及复审收尾已完成；进入 `v1.2.2` 候选准备，尚未打正式安装包、合并或发布
 
 ## 1. 本轮冻结需求与完成情况
 
@@ -27,15 +27,15 @@
 
 - `npm.cmd run type-check`：通过。
 - `npm.cmd run test:unit`：48 文件、280/280。
-- `cargo test commands::system_integration::desktop_behavior_tests --lib`：5/5，包含中文/空格路径、相对路径和不存在路径。
+- `cargo test commands::system_integration::desktop_behavior_tests --lib`：6/6，包含中文/空格路径、扩展路径原始字节、相对路径和不存在路径。
 - `cargo clippy --all-targets --features custom-protocol,desktop-e2e -- -D warnings`：通过，零告警。
 - Chromium 特殊压缩聚焦门禁：2/2；1366×768、1024×768、760×520 中 Modal 打开前后外壳宽高差均为 0，页面滚动高度不增加。
 - `VITE_DESKTOP_E2E=1` 前端和 `custom-protocol,desktop-e2e` Rust Release：构建通过。
-- 真实 Windows Tauri/WebView2 文件浏览器门禁：通过；Explorer 打开精确中文空格目录，并选中精确中文空格文件；测试窗口随后按测试根目录关闭。
+- 真实 Windows Tauri/WebView2 文件浏览器门禁：从右键 UI 完整触发并通过；Explorer 打开精确中文空格目录、选中精确中文空格文件；真实 junction 属性拒绝显示友好提示，随后普通属性成功且旧提示消失；测试窗口随后按测试根目录关闭。
 
 ## 4. 下一接续点
 
 1. 从本分支最新远端提交继续，确认上述门禁和本文档均存在，不要回到 `af9fee7` 或暂停提交 `e0413e7` 重做。
-2. 本轮尚未提升版本。公开稳定版仍是 `v1.2.1`；只有产品负责人决定形成下一个候选，并完成无测试桥正式 NSIS、安装生命周期和发布审计后，才可改版本、README、标签和 Release。
+2. 产品负责人已授权提升到 `v1.2.2`。公开稳定版在 Release 完成前仍是 `v1.2.1`；必须完成无测试桥正式 NSIS、安装生命周期和发布审计后，才可创建标签和公开 Release。
 3. 若进入候选收口，先审计本分支相对 `master` 的全部提交，再按仓库既有发布流程走 PR/CI/安装态/公开更新；不得把本轮隔离 E2E Release 当正式安装包。
 4. 后续文件管理器功能优先级仍可评估标签页/书签、冲突交互和跨卷低容量恢复，但不属于本轮六项，不能混写为已完成。

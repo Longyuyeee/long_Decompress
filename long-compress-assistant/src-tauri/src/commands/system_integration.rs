@@ -182,11 +182,20 @@ pub async fn check_system_integration() -> Result<Vec<(IntegrationType, Integrat
 
 /// 在系统文件管理器中打开指定路径
 #[cfg(target_os = "windows")]
-fn windows_explorer_arguments(path: &str) -> Result<Vec<OsString>, String> {
-    let path = std::path::PathBuf::from(path.trim());
+fn windows_explorer_input_path(path: &str) -> Result<std::path::PathBuf, String> {
+    if path.trim().is_empty() {
+        return Err("EXPLORER_PATH_MUST_NOT_BE_BLANK".to_string());
+    }
+    let path = std::path::PathBuf::from(path);
     if !path.is_absolute() {
         return Err("EXPLORER_PATH_MUST_BE_ABSOLUTE".to_string());
     }
+    Ok(path)
+}
+
+#[cfg(target_os = "windows")]
+fn windows_explorer_arguments(path: &str) -> Result<Vec<OsString>, String> {
+    let path = windows_explorer_input_path(path)?;
     let metadata = std::fs::metadata(&path)
         .map_err(|error| format!("EXPLORER_PATH_UNAVAILABLE: {error}"))?;
     if metadata.is_file() {
@@ -331,7 +340,21 @@ mod desktop_behavior_tests {
     use std::sync::atomic::Ordering;
 
     #[cfg(target_os = "windows")]
-    use super::windows_explorer_arguments;
+    use super::{windows_explorer_arguments, windows_explorer_input_path};
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn explorer_input_preserves_extended_path_bytes_and_rejects_blank_values() {
+        let extended = r"\\?\C:\fixture\trailing ";
+        assert_eq!(
+            windows_explorer_input_path(extended).unwrap(),
+            std::path::PathBuf::from(extended)
+        );
+        assert_eq!(
+            windows_explorer_input_path(" \t ").unwrap_err(),
+            "EXPLORER_PATH_MUST_NOT_BE_BLANK"
+        );
+    }
 
     #[cfg(target_os = "windows")]
     #[test]
