@@ -5,6 +5,7 @@
 ## 当前接续入口
 
 - [`DEVELOPMENT_HANDOFF.md`](DEVELOPMENT_HANDOFF.md)：跨电脑开发接续总入口，最新记录在文件顶部。
+- [`WORKSPACE_DENSITY_AND_DUAL_PANE_AUDIT_2026-09-03.md`](WORKSPACE_DENSITY_AND_DUAL_PANE_AUDIT_2026-09-03.md)：当前省略文本完整提示、三个核心工作区密度和窄窗口双栏固定布局审计。
 - [`DECOMPRESSION_TASK_LAYOUT_AUDIT_2026-09-03.md`](DECOMPRESSION_TASK_LAYOUT_AUDIT_2026-09-03.md)：v1.2.6 后续任务名称、状态对齐、自然排序、存储预检和低高度版本徽标修复审计。
 - [`DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md`](DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md)：当前解压运行态界面、速度、进度、跨盘事务和密码流程审计。
 - [`../tests/README.md`](../tests/README.md)：当前真实测试目录、命令与证据规则。

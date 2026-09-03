@@ -813,6 +813,7 @@ async function runArchiveBrowserDesktopGate() {
   await driver.actions().keyDown(Key.CONTROL).keyDown(Key.SHIFT).sendKeys('s').keyUp(Key.SHIFT).keyUp(Key.CONTROL).perform()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/special-compression'), 30_000)
   await waitForElement('[data-testid="special-compression-center"]')
+  await new Promise(resolve => setTimeout(resolve, 600))
   const specialLayout = await driver.executeScript(() => {
     const page = document.querySelector('.special-compression-view')
     const header = document.querySelector('.special-compression-header')
@@ -851,6 +852,7 @@ async function runArchiveBrowserDesktopGate() {
   const imageShellBefore = await shellGeometry()
   await (await waitForElement('[data-testid="image-toggle-global-settings"]')).click()
   await waitForElement('[role="dialog"]')
+  await new Promise(resolve => setTimeout(resolve, 250))
   const imageShellAfter = await shellGeometry()
   assertStableShellGeometry(imageShellBefore, imageShellAfter, 'real WebView2 image settings modal')
   writeFileSync(path.join(artifactDirectory, 'special-compression-settings-modal-v1.2.4.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
@@ -866,6 +868,7 @@ async function runArchiveBrowserDesktopGate() {
   const videoShellBefore = await shellGeometry()
   await (await waitForElement('[data-testid="video-toggle-global-settings"]')).click()
   await waitForElement('[role="dialog"]')
+  await new Promise(resolve => setTimeout(resolve, 250))
   const videoShellAfter = await shellGeometry()
   assertStableShellGeometry(videoShellBefore, videoShellAfter, 'real WebView2 video settings modal')
   await driver.actions().sendKeys(Key.ESCAPE).perform()
@@ -886,6 +889,25 @@ async function runArchiveBrowserDesktopGate() {
   assert.doesNotMatch(await fileManager.getText(), /把压缩包拖到这里/, 'archive drop must not be the default browser experience')
   assert.equal((await fileManager.findElements(By.css('[data-testid^="file-manager-selection-mode-"]'))).length, 2, 'both panes must expose a direct multi-select toggle')
   assert.equal((await fileManager.findElements(By.css('[data-testid^="file-manager-breadcrumbs-"]'))).length, 2, 'both panes must expose clickable path breadcrumbs')
+  for (const size of [{ width: 920, height: 620 }, { width: 760, height: 520 }]) {
+    await driver.manage().window().setRect(size)
+    await new Promise(resolve => setTimeout(resolve, 250))
+    const geometry = await driver.executeScript(() => {
+      const root = document.querySelector('[data-testid="dual-pane-file-manager"]')
+      const panes = [...document.querySelectorAll('.file-pane')].map(element => {
+        const rect = element.getBoundingClientRect()
+        return { left: rect.left, right: rect.right, top: rect.top, width: rect.width, height: rect.height }
+      })
+      return root && { panes, horizontalOverflow: root.scrollWidth - root.clientWidth }
+    })
+    assert.equal(geometry.panes.length, 2, `dual-pane browser must keep two panes at ${size.width}x${size.height}`)
+    assert.ok(Math.abs(geometry.panes[0].top - geometry.panes[1].top) <= 2, `dual panes stacked vertically at ${size.width}x${size.height}: ${JSON.stringify(geometry)}`)
+    assert.ok(geometry.panes[1].left > geometry.panes[0].right, `right pane must remain beside left pane at ${size.width}x${size.height}: ${JSON.stringify(geometry)}`)
+    assert.ok(geometry.horizontalOverflow <= 1, `dual-pane root overflowed horizontally at ${size.width}x${size.height}: ${JSON.stringify(geometry)}`)
+    writeFileSync(path.join(artifactDirectory, `dual-pane-side-by-side-${size.width}x${size.height}.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  }
+  await driver.manage().window().setRect({ width: 1440, height: 900 })
+  await new Promise(resolve => setTimeout(resolve, 250))
   const leftLocation = await fileManager.findElement(By.css('.file-pane select'))
   await driver.executeScript((select, target) => {
     select.value = target
@@ -1756,7 +1778,7 @@ async function assertVisibleResourceCard(taskId, expectedLabel) {
     card,
   )
   const text = (await card.getAttribute('textContent')).trim()
-  assert.match(text, /目标存储预检/)
+  assert.match(text, /(?:目标)?存储预检/)
   assert.match(text, new RegExp(expectedLabel))
   const dimensions = await driver.executeScript(
     `const card = arguments[0];

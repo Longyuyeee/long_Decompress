@@ -131,6 +131,36 @@ test.describe('Long Decompress desktop shell', () => {
     await expect(page.locator('[role="button"][tabindex="0"]').first()).toBeVisible()
   })
 
+  test('uses compact headers and keeps the main workspaces anchored near the window edges', async ({ page }) => {
+    const routes = [
+      { nav: 'nav-Decompress', view: '.decompress-view', header: '[data-testid="decompression-header"]', shell: '[data-testid="decompression-workspace-shell"]' },
+      { nav: 'nav-Compress', view: '.compression-view', header: '[data-testid="compression-header"]', shell: '[data-testid="compression-workspace-shell"]' },
+      { nav: 'nav-SpecialCompression', view: '.special-compression-view', header: '[data-testid="special-compression-header"]', shell: '.special-compression-shell' },
+    ]
+    await page.setViewportSize({ width: 920, height: 620 })
+    for (const route of routes) {
+      await page.getByTestId(route.nav).click()
+      const [view, header, shell] = await Promise.all([
+        page.locator(route.view).boundingBox(),
+        page.locator(route.header).boundingBox(),
+        page.locator(route.shell).boundingBox(),
+      ])
+      expect(view).not.toBeNull()
+      expect(header).not.toBeNull()
+      expect(shell).not.toBeNull()
+      const geometry = {
+        topInset: header!.y - view!.y,
+        headerHeight: header!.height,
+        bottomInset: view!.y + view!.height - shell!.y - shell!.height,
+        middleHeight: shell!.height,
+      }
+      expect(geometry.topInset).toBeLessThanOrEqual(17)
+      expect(geometry.headerHeight).toBeLessThanOrEqual(58)
+      expect(geometry.bottomInset).toBeLessThanOrEqual(17)
+      expect(geometry.middleHeight).toBeGreaterThan(480)
+    }
+  })
+
   test('renders eight keyboard-accessible navigation buttons including special compression', async ({ page }) => {
     const navigation = page.locator('aside nav > button')
     await expect(navigation).toHaveCount(8)
@@ -539,6 +569,20 @@ test.describe('Long Decompress desktop shell', () => {
     await expect(page.getByTestId('file-manager-open-same-other')).toContainText('另一栏打开相同文件夹')
     await page.keyboard.press('Escape')
     await expectVerticalOnlyScrolling(page, ['[data-testid="dual-pane-file-manager"]', '.file-pane', '.file-list'])
+    for (const width of [920, 760, 390]) {
+      await page.setViewportSize({ width, height: 800 })
+      const panes = await fileManager.locator('.file-pane').evaluateAll(elements => elements.map(element => {
+        const rect = element.getBoundingClientRect()
+        return { left: rect.left, right: rect.right, top: rect.top, width: rect.width, height: rect.height }
+      }))
+      expect(panes).toHaveLength(2)
+      expect(Math.abs(panes[0].top - panes[1].top)).toBeLessThanOrEqual(2)
+      expect(panes[1].left).toBeGreaterThan(panes[0].right)
+      expect(panes[0].height).toBeGreaterThan(400)
+      expect(panes[1].height).toBeGreaterThan(400)
+      const rootOverflow = await fileManager.evaluate(element => element.scrollWidth - element.clientWidth)
+      expect(rootOverflow).toBeLessThanOrEqual(1)
+    }
     await page.getByTestId('file-manager-open-archive').click()
     await expect(page.locator('.browser-page')).toBeVisible()
     await page.locator('[data-entry-path="art/"]').dblclick()

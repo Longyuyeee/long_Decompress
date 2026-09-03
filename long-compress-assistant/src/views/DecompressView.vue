@@ -479,11 +479,11 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
 </script>
 
 <template>
-  <div class="decompress-view p-6 h-full flex flex-col gap-4 transition-colors duration-700 relative overflow-hidden">
-    <header class="flex justify-between items-center shrink-0">
+  <div class="decompress-view p-3 sm:p-4 h-full flex flex-col gap-2.5 transition-colors duration-700 relative overflow-hidden">
+    <header data-testid="decompression-header" class="compact-workspace-header flex justify-between items-center shrink-0">
       <div>
-        <h1 class="text-2xl md:text-3xl font-black text-content tracking-tight">{{ appStore.t('nav.decompress') }}</h1>
-        <p class="text-xs md:text-sm text-muted font-semibold mt-1">{{ appStore.t('decompress.subtitle') }}</p>
+        <h1 class="text-xl md:text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.decompress') }}</h1>
+        <p class="text-xs text-muted font-semibold mt-0.5">{{ appStore.t('decompress.subtitle') }}</p>
       </div>
       <div class="flex gap-3">
         <button
@@ -513,7 +513,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
       </div>
     </header>
 
-    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
+    <div data-testid="decompression-workspace-shell" class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div class="flex-1 overflow-hidden flex flex-col relative">
         <!-- 显示所有任务，不再过滤只显示 pending -->
         <div v-if="decompressionTasks.length > 0" class="flex-1 min-h-0">
@@ -540,7 +540,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
       </div>
 
       <!-- 底部操作区 -->
-      <div v-if="decompressionTasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-3 flex items-center gap-3 flex-wrap shrink-0">
+      <div v-if="decompressionTasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
         <span class="text-xs font-black text-primary uppercase tracking-widest opacity-80 shrink-0 w-12">{{ appStore.t('decompress.config.output') }}</span>
 
         <button @click="handleGlobalSelectDir"
@@ -557,7 +557,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           <span class="sm:hidden">同目录</span>
         </button>
 
-        <span class="text-xs font-mono text-content font-bold truncate flex-1 min-w-0">
+        <span class="text-xs font-mono text-content font-bold truncate flex-1 min-w-0" :title="isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto'))">
           {{ isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto')) }}
         </span>
 
