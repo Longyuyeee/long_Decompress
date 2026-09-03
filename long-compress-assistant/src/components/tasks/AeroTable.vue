@@ -28,14 +28,21 @@ const emit = defineEmits<{
 const taskStore = useTaskStore()
 const appStore = useAppStore()
 const passwordStore = usePasswordStore()
+const taskNameCollator = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' })
 
 const displayTasks = computed(() => {
   const typedTasks = props.taskType
     ? taskStore.tasks.filter(task => task.type === props.taskType)
     : taskStore.tasks
-  if (!props.statusFilter || props.statusFilter === 'all') return typedTasks
-  const filters = Array.isArray(props.statusFilter) ? props.statusFilter : [props.statusFilter]
-  return typedTasks.filter(t => filters.includes(t.status))
+  const filteredTasks = !props.statusFilter || props.statusFilter === 'all'
+    ? typedTasks
+    : typedTasks.filter(task => {
+        const filters = Array.isArray(props.statusFilter) ? props.statusFilter : [props.statusFilter]
+        return filters.includes(task.status)
+      })
+  return [...filteredTasks].sort((left, right) =>
+    taskNameCollator.compare(left.name || '', right.name || '') || left.id.localeCompare(right.id),
+  )
 })
 const pendingDisplayTasks = computed(() => displayTasks.value.filter(task => task.status === 'pending'))
 const tauriCommands = useTauriCommands()
@@ -229,7 +236,7 @@ const onLeave = (el: any) => {
     <!-- 智慧表格 (重构为极简列表模式) -->
     <div class="glass-table w-full max-w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-x-hidden">
       <!-- 表头 (高度压缩，字体减小) -->
-      <div class="table-header sticky top-0 z-20 flex min-w-0 max-w-full items-center px-6 py-2.5 border-b border-subtle bg-card/95 backdrop-blur-xl text-dim text-xs font-bold tracking-[0.1em] uppercase shrink-0">
+      <div class="table-header sticky top-0 z-20 grid min-w-0 max-w-full items-center px-6 py-2.5 border-b border-subtle bg-card/95 backdrop-blur-xl text-dim text-xs font-bold tracking-[0.1em] uppercase shrink-0">
         <!-- 复选框列 -->
         <div class="w-8 shrink-0 flex items-center justify-center">
           <button
@@ -242,10 +249,9 @@ const onLeave = (el: any) => {
             <i v-if="pendingDisplayTasks.every(t => isSelected(t.id))" class="pi pi-check text-sm text-white"></i>
           </button>
         </div>
-        <div class="flex-[1.5] min-w-0">{{ appStore.t('decompress.column.name') }}</div>
-        <div class="w-60 hidden lg:block">{{ appStore.t('decompress.column.path') }}</div>
-        <div class="flex-1 min-w-0">{{ appStore.t('decompress.column.status') }}</div>
-        <div class="w-10"></div>
+        <div class="min-w-0">{{ appStore.t('decompress.column.name') }}</div>
+        <div class="min-w-0 text-center">{{ appStore.t('decompress.column.status') }}</div>
+        <div class="col-span-2"></div>
       </div>
 
       <!-- 表格内容 (高密度布局 + 物理隔断) -->
@@ -253,7 +259,7 @@ const onLeave = (el: any) => {
         <TransitionGroup name="task-depart">
         <div v-for="task in displayTasks" :key="task.id" class="task-row-container mb-1.5 last:mb-0 group/row">
           <div
-            class="task-row flex min-w-0 max-w-full items-center px-4 py-2 bg-card/40 border border-subtle/40 rounded-lg hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden shadow-sm"
+            class="task-row grid min-w-0 max-w-full items-center px-4 py-2 bg-card/40 border border-subtle/40 rounded-lg hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden shadow-sm"
             data-testid="task-row"
             :data-task-id="task.id"
             @click="toggleExpand(task.id)"
@@ -284,22 +290,20 @@ const onLeave = (el: any) => {
             </div>
 
             <!-- 文件识别区 (极致紧凑) -->
-            <div class="task-name-cell flex-[1.3] min-w-0 overflow-hidden flex items-center gap-3">
-              <div class="text-content font-bold truncate text-sm tracking-tight group-hover/row:text-primary transition-colors leading-tight">{{ task.name }}</div>
+            <div class="task-name-cell min-w-0 overflow-hidden flex items-center gap-3">
+              <div class="min-w-0 flex-1 text-content font-bold truncate text-sm tracking-tight group-hover/row:text-primary transition-colors leading-tight" :title="task.name">{{ task.name }}</div>
               <span class="text-dim text-sm uppercase font-black tracking-widest bg-input/50 px-1 py-0 rounded border border-subtle/20 shrink-0">
                 {{ task.format?.toUpperCase() }}
               </span>
             </div>
 
-            <!-- 物理路径 -->
-            <div class="w-60 text-muted text-xs truncate italic px-4 hidden lg:block font-mono font-light opacity-75">
-              {{ task.sourceFiles[0] }}
-            </div>
-
             <!-- 状态与执行进度 -->
-            <div class="task-status-cell flex-[1.15] min-w-0 flex items-center gap-2">
+            <div
+              class="task-status-cell min-w-0 grid items-center gap-2"
+              :class="{ 'is-terminal': !['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status) }"
+            >
               <!-- 状态图标和文字 -->
-              <div class="flex shrink-0 items-center gap-1.5">
+              <div class="task-status-primary flex min-w-0 items-center justify-center gap-1.5">
                 <span class="text-lg">{{ getStatusIcon(task.status) }}</span>
                 <span
                   class="text-xs font-black uppercase tracking-widest transition-all"
@@ -309,7 +313,7 @@ const onLeave = (el: any) => {
                 </span>
               </div>
 
-              <div v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)" class="min-w-0 flex-1">
+              <div v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)" class="task-status-runtime min-w-0">
                 <div class="flex min-w-0 items-center gap-2 whitespace-nowrap text-xs">
                   <span class="shrink-0 font-bold text-muted">{{ getStageText(task) }}</span>
                   <span v-if="task.currentFile" class="min-w-0 flex-1 truncate font-mono text-dim" :title="task.currentFile">{{ task.currentFile.split(/[\\/]/).pop() }}</span>
@@ -330,7 +334,7 @@ const onLeave = (el: any) => {
               <!-- 进度百分比 -->
               <span
                 v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)"
-                class="text-xs font-mono text-primary font-bold"
+                class="task-status-percent shrink-0 text-xs font-mono text-primary font-bold"
               >
                 <SmoothProgressValue :value="task.progress" />
               </span>
@@ -426,6 +430,8 @@ const onLeave = (el: any) => {
                         </div>
                       </div>
 
+                      <ResourcePreflightCard :report="task.resourcePreflight" compact />
+
                       <div class="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
                         <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
                           <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
@@ -492,7 +498,7 @@ const onLeave = (el: any) => {
                         <span class="text-content">{{ task.compressionOptions?.password ? '已启用' : '关闭' }}</span>
                       </div>
                     </div>
-                    <ResourcePreflightCard :report="task.resourcePreflight" compact />
+                    <ResourcePreflightCard v-if="task.type !== 'decompression'" :report="task.resourcePreflight" compact />
                   </div>
 
                   <!-- 右侧：执行日志 -->
@@ -767,9 +773,28 @@ const onLeave = (el: any) => {
   min-height: 52px;
 }
 
+.table-header,
+.task-row {
+  grid-template-columns: 2rem minmax(15rem, 1.15fr) minmax(20rem, 1fr) 1.5rem 1.5rem;
+  column-gap: 0.75rem;
+}
+
+.task-status-cell {
+  grid-template-columns: minmax(6.5rem, auto) minmax(0, 1fr) auto;
+}
+
+.task-status-cell.is-terminal {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.task-status-cell.is-terminal .task-status-primary {
+  justify-self: center;
+}
+
 @media (max-width: 980px) {
-  .task-detail-layout { grid-template-columns: minmax(16rem, .82fr) minmax(17rem, 1.18fr); }
-  .task-status-cell { flex-basis: 17rem; }
+  .task-detail-layout { grid-template-columns: minmax(16rem, .92fr) minmax(17rem, 1.08fr); }
+  .table-header,
+  .task-row { grid-template-columns: 2rem minmax(12rem, .9fr) minmax(17rem, 1.1fr) 1.5rem 1.5rem; }
 }
 
 .details-drawer {
@@ -791,7 +816,7 @@ const onLeave = (el: any) => {
 
   .table-header,
   .task-row {
-    gap: 0.5rem;
+    column-gap: 0.5rem;
     padding-inline: 0.75rem;
   }
 
@@ -867,21 +892,16 @@ const onLeave = (el: any) => {
   }
 
   .task-row {
-    flex-wrap: wrap;
+    grid-template-columns: 2rem minmax(7.5rem, 1fr) minmax(8rem, 1fr) 1.25rem 1.25rem;
     padding-inline: 0.5rem;
-  }
-
-  .task-name-cell,
-  .task-status-cell {
-    flex-basis: calc(50% - 3rem);
   }
 
   .task-status-cell {
     gap: 0.375rem;
   }
 
-  .task-status-cell > div:nth-child(2),
-  .task-status-cell > span:last-child {
+  .task-status-runtime,
+  .task-status-percent {
     display: none;
   }
 }

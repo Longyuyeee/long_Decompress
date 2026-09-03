@@ -110,9 +110,10 @@ const expectBoundedDetailPanels = async (
   if (resourceMode === 'compact') {
     await expect(resourceMetrics).toContainText('存储预检')
     await expect(resourceMetrics).toContainText(/已通过|需留意|已阻止/)
-    await expect(resourceMetrics).toContainText(/可用\s+\S+/)
-    expect(resourceCard?.height).toBeGreaterThanOrEqual(32)
-    expect(resourceCard?.height).toBeLessThanOrEqual(52)
+    await expect(resourceMetrics).toContainText('剩余可用')
+    await expect(resourceMetrics).toContainText('预计占用')
+    expect(resourceCard?.height).toBeGreaterThanOrEqual(108)
+    expect(resourceCard?.height).toBeLessThanOrEqual(150)
   } else {
     await expect(resourceMetrics.locator('.metric')).toHaveCount(4)
     expect(resourceCard?.height).toBeGreaterThanOrEqual(100)
@@ -328,6 +329,8 @@ test.describe('Long Decompress desktop shell', () => {
         await page.screenshot({ path: testInfo.outputPath(`decompression-${viewport.width}x${viewport.height}.png`), fullPage: false })
       }
       if (viewport.width === 760) {
+        const resourceCard = page.getByTestId('resource-preflight-card')
+        await resourceCard.scrollIntoViewIfNeeded()
         const compactPanel = await page.getByTestId('decompression-config-panel').evaluate(element => {
           element.scrollTop = element.scrollHeight
           return {
@@ -336,8 +339,9 @@ test.describe('Long Decompress desktop shell', () => {
             scrollHeight: element.scrollHeight,
           }
         })
-        expect(compactPanel.scrollTop).toBe(0)
-        expect(compactPanel.scrollHeight).toBeLessThanOrEqual(compactPanel.clientHeight + 1)
+        expect(compactPanel.scrollTop).toBeLessThanOrEqual(32)
+        expect(compactPanel.scrollHeight).toBeLessThanOrEqual(compactPanel.clientHeight + 32)
+        await expect(resourceCard).toBeInViewport({ ratio: 0.7 })
         await page.waitForTimeout(100)
         await page.screenshot({ path: testInfo.outputPath('decompression-resource-760x520.png'), fullPage: false })
       }

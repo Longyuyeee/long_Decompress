@@ -2569,6 +2569,7 @@ async function assertBoundedTaskDetailLayout(type) {
     if (!details || !config || !execution || !log || !resource || !metrics) return null
     config.style.scrollBehavior = 'auto'
     config.scrollTop = config.scrollHeight
+    resource.scrollIntoView({ block: 'nearest', inline: 'nearest' })
     const detailRect = details.getBoundingClientRect()
     const configRect = config.getBoundingClientRect()
     const executionRect = execution.getBoundingClientRect()
@@ -2576,6 +2577,10 @@ async function assertBoundedTaskDetailLayout(type) {
     const visibleResourceHeight = Math.max(
       0,
       Math.min(resourceRect.bottom, configRect.bottom) - Math.max(resourceRect.top, configRect.top),
+    )
+    const viewportVisibleResourceHeight = Math.max(
+      0,
+      Math.min(resourceRect.bottom, window.innerHeight) - Math.max(resourceRect.top, 0),
     )
     return {
       detailWidth: details.clientWidth,
@@ -2597,6 +2602,7 @@ async function assertBoundedTaskDetailLayout(type) {
       resourceWidth: resource.clientWidth,
       resourceHorizontalOverflow: resource.scrollWidth - resource.clientWidth,
       resourceVisibleHeight: visibleResourceHeight,
+      viewportVisibleResourceHeight,
       resourceHeight: resourceRect.height,
       metricColumns: getComputedStyle(metrics).gridTemplateColumns.split(' ').filter(Boolean).length,
       viewportWidth: window.innerWidth,
@@ -2616,6 +2622,7 @@ async function assertBoundedTaskDetailLayout(type) {
   assert.ok(result.logScrollHeight > result.logClientHeight, `${type} log fixture must require vertical scrolling`)
   assert.equal(result.logOverflowY, 'auto', `${type} log must own the vertical scrollbar`)
   assert.ok(result.resourceVisibleHeight >= Math.min(120, result.resourceHeight * 0.7), `${type} resource card is clipped: ${JSON.stringify(result)}`)
+  assert.ok(result.viewportVisibleResourceHeight >= result.resourceHeight * 0.7, `${type} resource card is outside the visible window: ${JSON.stringify(result)}`)
   assert.ok(
     result.metricColumns >= 1 && result.metricColumns <= 2,
     `${type} resource metrics must use a readable one- or two-column layout`,

@@ -20,6 +20,13 @@ const locationLabel = computed(() => ({
   unknown: '位置未知',
 }[props.report?.location || 'unknown']))
 
+const compactLocationLabel = computed(() => ({
+  local: '本地',
+  network: '网络',
+  removable: '移动设备',
+  unknown: '未知',
+}[props.report?.location || 'unknown']))
+
 const mediumLabel = computed(() => ({
   ssd: 'SSD',
   hdd: 'HDD',
@@ -34,11 +41,20 @@ const mediumLabel = computed(() => ({
     class="resource-preflight-card min-w-0 rounded-xl border text-xs"
     :class="[`is-${report.status}`, { 'is-compact': compact }]"
   >
-    <div v-if="compact" data-testid="resource-preflight-metrics" class="compact-preflight flex min-w-0 items-center gap-2 px-3 py-2">
-      <i class="pi pi-database shrink-0 text-primary"></i>
-      <span class="shrink-0 font-black text-content">存储预检</span>
-      <span class="status-badge shrink-0 rounded-full px-2 py-0.5 font-black">{{ statusLabel }}</span>
-      <span class="min-w-0 flex-1 truncate whitespace-nowrap font-mono text-dim" :title="`${report.summary}；可用 ${formatResourceBytes(report.availableBytes)}；预计占用 ${formatResourceBytes(report.estimatedOutputBytes)}`">可用 {{ formatResourceBytes(report.availableBytes) }}</span>
+    <div v-if="compact" data-testid="resource-preflight-metrics" class="compact-preflight min-w-0 px-3 py-2.5">
+      <div class="compact-preflight-heading flex min-w-0 items-center gap-2">
+        <i class="pi pi-database shrink-0 text-primary"></i>
+        <span class="shrink-0 font-black text-content">存储预检</span>
+        <span class="status-badge shrink-0 rounded-full px-2 py-0.5 font-black">{{ statusLabel }}</span>
+        <span class="min-w-0 flex-1 truncate text-right text-dim" :title="`${locationLabel} · ${mediumLabel}`">{{ compactLocationLabel }} · {{ mediumLabel }}</span>
+      </div>
+      <dl class="compact-preflight-grid mt-2 grid min-w-0 grid-cols-2 gap-1.5">
+        <div class="metric"><dt>剩余可用</dt><dd>{{ formatResourceBytes(report.availableBytes) }}</dd></div>
+        <div class="metric"><dt>预计占用</dt><dd>{{ formatResourceBytes(report.estimatedOutputBytes) }}</dd></div>
+      </dl>
+      <div class="mt-2 min-w-0 truncate whitespace-nowrap font-mono text-dim" :title="`${report.summary}；${report.mountPoint || report.probePath}；${report.fileSystem || '文件系统未知'}；预留 ${formatResourceBytes(report.reserveBytes)}`">
+        {{ report.mountPoint || report.probePath }}<span v-if="report.fileSystem"> · {{ report.fileSystem }}</span> · 预留 {{ formatResourceBytes(report.reserveBytes) }}
+      </div>
     </div>
     <template v-else>
     <div class="flex min-w-0 items-start justify-between gap-3">
@@ -82,7 +98,7 @@ const mediumLabel = computed(() => ({
   border-color: color-mix(in srgb, var(--border-subtle) 74%, transparent);
 }
 .resource-preflight-card:not(.is-compact) { padding: 0.75rem; }
-.resource-preflight-card.is-compact { overflow: hidden; }
+.resource-preflight-card.is-compact { min-height: 7.25rem; overflow: hidden; }
 
 .resource-preflight-card.is-ready { border-color: color-mix(in srgb, #22c55e 38%, var(--border-subtle)); }
 .resource-preflight-card.is-warning { border-color: color-mix(in srgb, #f59e0b 44%, var(--border-subtle)); }
