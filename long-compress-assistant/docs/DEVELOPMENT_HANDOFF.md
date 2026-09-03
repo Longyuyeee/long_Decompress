@@ -1,6 +1,13 @@
 # 开发交接
 
-## 2026-09-03 v1.2.7 正式发布关闭（最新接续点）
+## 2026-09-03 v1.2.7 后续压缩任务详情密度修复（最新接续点）
+
+- 当前分支 `codex/compression-detail-density`，基线为已公开 `v1.2.7` 后续的 `master@138688b`；本轮没有升版、打包、打标签或创建 Release。
+- 已关闭此前唯一明确的工作区密度遗留：组任务与单文件任务的压缩详情启用紧凑分析、紧凑设置和紧凑存储预检；760 px 下核心设置由错误的单列恢复为两列，所有业务选项、左右双栏、独立滚动和有界高度均保留。
+- 聚焦组件 10/10、类型检查、Chromium 响应式回归、带测试桥生产前端、Rust Release 构建均通过；真实 Windows Tauri/WebView2 的 920×620 / 760×520 压缩与解压详情门禁通过。
+- 首轮桌面门禁在启动应用前发现默认 Node 22.12.0 不提供脚本顶层导入的 `zstdCompressSync`；用既有发布环境 Node 24.14.0 完成门禁。下一步应先让桌面脚本与 `package.json` 声明的 Node 版本兼容，再继续审计高 DPI 活动态/终态任务。完整证据见 [COMPRESSION_TASK_DETAIL_DENSITY_AUDIT_2026-09-03.md](COMPRESSION_TASK_DETAIL_DENSITY_AUDIT_2026-09-03.md)。
+
+## 2026-09-03 v1.2.7 正式发布关闭（历史基线）
 
 - 功能与发布候选已由 [PR #120](https://github.com/Longyuyeee/long_Decompress/pull/120) 合入 `master@c4d2adc2c1df1237d3674dc7ac76f6507c6979e4`；五项 PR 检查全部通过，annotated tag `v1.2.7` 精确指向该合并提交。
 - [Release workflow 33739220209](https://github.com/Longyuyeee/long_Decompress/actions/runs/33739220209) 已成功完成；[v1.2.7 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.7) 为非草稿、非预发布，安装器、updater ZIP、独立签名和 `latest.json` 四项资产均已公开。

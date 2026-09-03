@@ -26,8 +26,8 @@ const result = {
   reasons: ['文本可压缩性较高'],
 }
 
-const mountCard = (modelValue = options) => mount(CompressionAnalysisCard, {
-  props: { jobId: 'job-1', paths: ['C:/input'], modelValue },
+const mountCard = (modelValue = options, compact = false) => mount(CompressionAnalysisCard, {
+  props: { jobId: 'job-1', paths: ['C:/input'], modelValue, compact },
   global: { plugins: [createPinia()] },
 })
 
@@ -37,6 +37,14 @@ describe('CompressionAnalysisCard', () => {
     vi.clearAllMocks()
     mocks.analyze.mockResolvedValue(result)
     mocks.cancel.mockResolvedValue(undefined)
+  })
+
+  it('renders a shorter but explicit explanation in compact task details', () => {
+    const wrapper = mountCard(options, true)
+
+    expect(wrapper.get('[data-testid="compression-analysis"]').classes()).toContain('is-compact')
+    expect(wrapper.get('.analysis-description').text()).toBe('抽样估算，不自动修改设置')
+    expect(wrapper.get('.analysis-description').attributes('title')).toContain('最多 2 MiB')
   })
 
   it('runs bounded analysis, exposes the real estimate and applies existing settings fields', async () => {

@@ -2626,6 +2626,7 @@ async function assertBoundedTaskDetailLayout(type) {
       resourceVisibleHeight: visibleResourceHeight,
       viewportVisibleResourceHeight,
       resourceHeight: resourceRect.height,
+      resourceCompact: resource.classList.contains('is-compact'),
       metricColumns: getComputedStyle(metrics).gridTemplateColumns.split(' ').filter(Boolean).length,
       viewportWidth: window.innerWidth,
       viewportHeight: window.innerHeight,
@@ -2645,6 +2646,7 @@ async function assertBoundedTaskDetailLayout(type) {
   assert.equal(result.logOverflowY, 'auto', `${type} log must own the vertical scrollbar`)
   assert.ok(result.resourceVisibleHeight >= Math.min(120, result.resourceHeight * 0.7), `${type} resource card is clipped: ${JSON.stringify(result)}`)
   assert.ok(result.viewportVisibleResourceHeight >= result.resourceHeight * 0.7, `${type} resource card is outside the visible window: ${JSON.stringify(result)}`)
+  assert.equal(result.resourceCompact, true, `${type} task detail must use the compact resource card`)
   assert.ok(
     result.metricColumns >= 1 && result.metricColumns <= 2,
     `${type} resource metrics must use a readable one- or two-column layout`,

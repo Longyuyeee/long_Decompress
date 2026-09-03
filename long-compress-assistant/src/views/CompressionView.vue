@@ -744,6 +744,7 @@ const onDetailLeave = (element: Element) => {
                     </h4>
                     <CompressionAnalysisCard
                       class="mb-4"
+                      compact
                       :job-id="group.id"
                       :paths="group.files.map(file => file.path)"
                       :model-value="compressionStore.getEffectiveSettings(group.settings)"
@@ -751,6 +752,7 @@ const onDetailLeave = (element: Element) => {
                       @update:model-value="compressionStore.updateGroupSettings(group.id, $event)"
                     />
                     <CompressionSettingsPanel
+                      compact
                       :modelValue="compressionStore.getEffectiveSettings(group.settings)"
                       :outputPath="compressionStore.getEffectiveOutputPath(group.outputPath)"
                       :allow-single-file-formats="canUseSingleFileFormats(group.files)"
@@ -759,7 +761,11 @@ const onDetailLeave = (element: Element) => {
                       @update:modelValue="compressionStore.updateGroupSettings(group.id, $event)"
                       @update:outputPath="compressionStore.updateGroupOutputPath(group.id, $event)"
                     />
-                    <ResourcePreflightCard :report="taskForJob(group.taskId)?.resourcePreflight" />
+                    <ResourcePreflightCard
+                      :report="taskForJob(group.taskId)?.resourcePreflight"
+                      class="compression-resource-preflight mt-3"
+                      compact
+                    />
                   </div>
 
                   <div class="space-y-2">
@@ -923,6 +929,7 @@ const onDetailLeave = (element: Element) => {
                     </h4>
                     <CompressionAnalysisCard
                       class="mb-4"
+                      compact
                       :job-id="file.path"
                       :paths="[file.path]"
                       :model-value="compressionStore.getEffectiveSettings(file.settings)"
@@ -930,6 +937,7 @@ const onDetailLeave = (element: Element) => {
                       @update:model-value="compressionStore.updateFileSettings(file.path, $event)"
                     />
                     <CompressionSettingsPanel
+                      compact
                       :modelValue="compressionStore.getEffectiveSettings(file.settings)"
                       :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"
                       :allow-single-file-formats="canUseSingleFileFormats([file])"
@@ -938,7 +946,11 @@ const onDetailLeave = (element: Element) => {
                       @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
                       @update:outputPath="compressionStore.updateFileOutputPath(file.path, $event)"
                     />
-                    <ResourcePreflightCard :report="taskForJob(file.taskId)?.resourcePreflight" class="mt-4" />
+                    <ResourcePreflightCard
+                      :report="taskForJob(file.taskId)?.resourcePreflight"
+                      class="compression-resource-preflight mt-3"
+                      compact
+                    />
                   </div>
 
                   <CompressionExecutionPanel :task="taskForJob(file.taskId)" />
@@ -1219,11 +1231,28 @@ const onDetailLeave = (element: Element) => {
 
 @media (max-width: 760px) {
   .compression-config-panel {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .compression-config-panel :deep(.settings-core-grid) {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+
+  .compression-config-panel :deep(.horizontal-settings) {
+    gap: 0.625rem;
+  }
+
+  .compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap) {
+    gap: 0.375rem;
+  }
+
+  .compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap > button) {
+    padding-inline: 0.625rem;
+  }
+
+  .compression-resource-preflight {
+    margin-top: 0.625rem;
   }
 
   .compression-table-header,
@@ -1248,7 +1277,7 @@ const onDetailLeave = (element: Element) => {
   }
 
   .compression-config-panel {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 }
 
