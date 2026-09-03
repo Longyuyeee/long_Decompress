@@ -24,7 +24,7 @@
 
 ## 发布状态
 
-版本身份已提升为 `1.2.6`，正式 NSIS 候选已经生成。PR/CI、标签、GitHub Release、公开资产回下载和更新清单验收的最终结果将在执行后补入本文件；完成前不得把候选写成已公开发布。
+`v1.2.6` 已正式发布：PR [#119](https://github.com/Longyuyeee/long_Decompress/pull/119) 的五项门禁全部通过，合并提交为 `master@0e04574b0e7f0df73a0d9deaf586a59f9678aff6`，annotated tag `v1.2.6` 指向该提交。Release workflow [33714184134](https://github.com/Longyuyeee/long_Decompress/actions/runs/33714184134) 的全部步骤通过，公开 Release 位于 [Long解压 v1.2.6](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.6)。
 
 ## 回归与产物
 
@@ -45,8 +45,19 @@
 
 Shell 扩展：`long_compress_shell_extension_1_2_6.dll`，`246,784` 字节，SHA-256 `F816E29ED4E1A7A0699D54AD84E3D2FAAC8693F2970A7BFF6300038AA6D34C79`。
 
+## 公开资产回下载
+
+| 资产 | 字节 | SHA-256 |
+| --- | ---: | --- |
+| `Long-Decompress_1.2.6_x64-setup.exe` | `19,367,216` | `522EF802D0380062C711979F1DE789E05C4683780832BF2CF8794E84DB658E75` |
+| `Long-Decompress_1.2.6_x64-setup.nsis.zip` | `19,367,374` | `860EE8EA55A13A06E9A8BC2940BCF4B9DE1CC719161EE70734B394B05BC76527` |
+| `Long-Decompress_1.2.6_x64-setup.nsis.zip.sig` | `428` | `800A0ADA7D1E7C4826036F972F007AC7A0065E75A8AE23974A2279BF24490AEE` |
+| `latest.json` | `932` | `FE018D989008088130EB7C967D7C9EA22EE0EBE5653FB2C43AC3142F78DF5D4D` |
+
+公开 `latest.json` 的版本为 `1.2.6`，下载 URL 精确指向公开更新 ZIP，manifest 签名与公开 `.sig` 逐字一致；Release 为非草稿、非预发布，发布说明已替换为本版本完整说明。
+
 ## 明确未伪造为通过的边界
 
 - Windows 11 第一层资源管理器菜单需要生产代码签名证书；当前无签名环境只构建经典菜单资源，不生成 MSIX。
 - `test:context-menu-package` 需要管理员权限并会向本机证书存储写入测试证书，当前非提升会话未执行成功。
-- 安装生命周期脚本会替换/停止当前安装态应用。为保留用户正在运行的正式版，本机未执行该破坏性门禁；发布工作流在干净 Windows Runner 中重新构建、测试并签名生成更新资产。
+- 安装生命周期脚本会替换/停止当前安装态应用。为保留用户正在运行的正式版，本机未执行该破坏性门禁；发布工作流在干净 Windows Runner 中重新构建、测试并生成带 updater 签名的更新资产。
