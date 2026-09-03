@@ -17,7 +17,7 @@ import { homedir, tmpdir } from 'node:os'
 import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { deflateSync, zstdCompressSync } from 'node:zlib'
+import { deflateSync } from 'node:zlib'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -188,6 +188,17 @@ let driverOutput = ''
 let fixtureDirectory
 let completedSuccessfully = false
 let autoStartRegistryOwnedByTest = false
+
+function createRawZstdFrame(payload) {
+  const input = Buffer.from(payload)
+  assert.ok(input.length <= 255, 'the inline Zstandard fixture must fit a one-byte content-size field')
+  const blockHeader = (input.length << 3) | 1
+  return Buffer.concat([
+    Buffer.from([0x28, 0xb5, 0x2f, 0xfd, 0x20, input.length]),
+    Buffer.from([blockHeader & 0xff, (blockHeader >>> 8) & 0xff, (blockHeader >>> 16) & 0xff]),
+    input,
+  ])
+}
 
 function appendDriverOutput(chunk) {
   driverOutput = `${driverOutput}${chunk}`.slice(-32_768)
@@ -800,7 +811,7 @@ async function runArchiveBrowserDesktopGate() {
   const cancellableTar = path.join(archiveRoot, '大量目录项-取消读取.tar')
   createLargeMetadataTar(cancellableTar, 180_000)
   const zstdEntryName = '后端能力来源.zst'
-  writeFileSync(path.join(sourceRoot, zstdEntryName), zstdCompressSync(Buffer.from('backend capability source', 'utf8')))
+  writeFileSync(path.join(sourceRoot, zstdEntryName), createRawZstdFrame('backend capability source'))
   const capabilityOuter = path.join(archiveRoot, '能力来源验证.zip')
   runFixtureCommand(
     bundledSevenZip,

@@ -517,6 +517,8 @@ assert(
   'C-05.1/C-05.3 real desktop video gate is missing its reproducible cancellation fixture',
 )
 const desktopVideoGate = await read('scripts/test-tauri-desktop.mjs')
+assert(!desktopVideoGate.includes('zstdCompressSync'), 'desktop gates must not require a Node zlib API outside the declared engine range')
+assert(desktopVideoGate.includes('function createRawZstdFrame(payload)'), 'desktop gates must create the small Zstandard capability fixture portably')
 assert(desktopVideoGate.includes('runVideoWorkspaceDesktopGate'), 'C-05.1 desktop video gate implementation is missing')
 assert(desktopVideoGate.includes('real video batch started'), 'C-05.1 desktop gate must start the visible product batch')
 assert(desktopVideoGate.includes("record.workloadKind === 'video'"), 'C-05.1 desktop gate must verify unified video history')

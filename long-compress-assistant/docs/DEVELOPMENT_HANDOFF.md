@@ -1,6 +1,13 @@
 # 开发交接
 
-## 2026-09-03 v1.2.7 后续压缩任务详情密度修复（最新接续点）
+## 2026-09-03 桌面门禁 Node 20/22/24 兼容修复（最新接续点）
+
+- `test-tauri-desktop.mjs` 不再顶层导入 Node 22.12.0 尚未提供的 `zstdCompressSync`；25 字节 Zstandard 能力夹具改为标准单段 raw-block frame，保持 `package.json` 已声明的 Node 20/22/24 范围。
+- 默认 Node 22.12.0 已通过真实 Windows Tauri/WebView2 响应式门禁；生成的 34 字节 frame 已由产品随包 7-Zip 26.02 识别并完整校验。媒体架构门禁锁定“不重新引入范围外 zlib API”。
+- 深入运行 `archive-browser-only` 时，在调用新生成器之前发现既有公共往返流程的临时 ZIP 被快速解压删除，后续诊断读取时报 `ENOENT`。该次不记为通过，也不归因给 Zstandard 修复。
+- 下一步应单独修复该聚焦门禁的临时源包生命周期并恢复完整 Zstandard 能力来源桌面证据，然后继续高 DPI 活动态/终态任务审计。完整证据见 [DESKTOP_E2E_NODE_COMPAT_AUDIT_2026-09-03.md](DESKTOP_E2E_NODE_COMPAT_AUDIT_2026-09-03.md)。
+
+## 2026-09-03 v1.2.7 后续压缩任务详情密度修复（已完成）
 
 - 当前分支 `codex/compression-detail-density`，基线为已公开 `v1.2.7` 后续的 `master@138688b`；本轮没有升版、打包、打标签或创建 Release。
 - 已关闭此前唯一明确的工作区密度遗留：组任务与单文件任务的压缩详情启用紧凑分析、紧凑设置和紧凑存储预检；760 px 下核心设置由错误的单列恢复为两列，所有业务选项、左右双栏、独立滚动和有界高度均保留。
