@@ -1,6 +1,30 @@
 # 开发交接
 
-## 2026-09-02 v1.2.4 窗口交互与最小高度修复（当前接续点）
+## 2026-09-03 v1.2.6 发布候选（当前接续点）
+
+- 三项原发布阻断已经闭环：标准 Tauri responsive-layout 在 920×620 / 760×520 下通过；隔离 Windows 逻辑卷根完成真实产品 IPC 解压、字节校验、源包保留和暂存清理；系统级输入验证标题栏移动 `48×28`、窗口缩放 `40×30` 且释放后保持。
+- 标题栏与缩放不再使用前端手工坐标状态机。参考 `Long_MarkDownReader` 的原生窗口原则后，结合本项目 Tauri 1 运行时，统一由 Rust 向 Windows 发送 `WM_NCLBUTTONDOWN`，分别使用 `HTCAPTION` 和八方向命中值进入系统移动/缩放循环。
+- 真实桌面审计首次暴露 920×620 下解压配置栏只有 247 px；断点最小列宽已修正，标准门禁复跑通过。桌面脚本不再回退到可能过期的产品名 EXE，并可从 Selenium 缓存发现/回退 EdgeDriver。
+- 版本身份现为 `1.2.6`，README、Release notes 和发布审计已进入候选状态。下一步只允许完成全量回归、Shell 扩展、无测试桥 NSIS、安装/升级生命周期、PR/CI、合并、标签、GitHub Release、资产回下载与公开更新；若任一项失败，修复后重新从对应门禁开始，不得跳过。
+- 当前证据见 [RELEASE_AUDIT_1.2.6.md](RELEASE_AUDIT_1.2.6.md)、[RELEASE_NOTES_1.2.6.md](RELEASE_NOTES_1.2.6.md)和[解压运行态审计](DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md)。
+
+## 2026-09-03 过期测试/文档清理与发布判定（当前接续点）
+
+- 当前分支仍为 `codex/decompression-runtime-ux`，公开稳定版和代码版本仍为 `v1.2.5`。本轮整理完成但发布门禁未闭环，所以没有提升到 `1.2.6`、没有修改公开版 README、没有打标签或创建 Release。
+- 已删除 4 份 2026-03 旧产品/旧架构文档及 3 个从未被当前配置执行、并引用不存在夹具/选择器/脚本的测试入口；`tests/README.md` 已重写为当前真实命令，`docs/README.md` 已区分当前接续入口与必须保留的历史发布证据。
+- 现行 E2E 已按真实界面区分：压缩详情保留完整四格存储预检，解压详情使用 32–52 px 紧凑卡；760×520 下紧凑配置内容完整时应不滚动，不再沿用旧版强制滚动断言。
+- 最终复验：真实图片夹具 11 图片 + 1 PDF 拒绝边界通过；前端单元 51 文件 289/289、集成 6/6、性能 17/17、Chromium E2E 12/12、生产构建通过；Rust 全量 494 通过、0 失败、14 项专用环境测试显式忽略。首轮图片夹具失败来自与 Playwright 并行清理同一 `test-results`，顺序隔离后通过；首轮 E2E 失败来自上述旧断言，按实际 UI 修正后通过。
+- 唯一接续顺序：在 WebDriver 正常的干净 Windows/CI 运行 `npm run test:e2e:desktop:responsive-layout` → 用隔离真实卷根完成产品 IPC 解压与源回收失败语义 → 用真实鼠标确认候选标题栏拖动 → 全部通过后才提升 `1.2.6`，执行版本身份、NSIS、安装/升级、公开资产回下载、README 和 GitHub Release。完整证据见 [DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md](DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md)，测试入口见 [tests/README.md](../tests/README.md)。
+
+## 2026-09-03 v1.2.5 解压运行态 UX 与跨盘事务修复（历史，已由上方节点取代）
+
+- 当前分支 `codex/decompression-runtime-ux`，基线为公开 `v1.2.5` 的 `master@e4f79d2`；本轮未升版、未打标签、未发布 Release。
+- 已逐项完成：低高度侧栏保留 40 px 导航；左下任务摘要单行化并固定操作按钮；未展开任务增加阶段/当前文件/速度；展开详情改为紧凑双栏、36 px 存储摘要和单行日志；速度等待稳定采样且终态清理；进度数字只在显示层缓动；Windows 盘根暂存保持同卷；254 项密码日志改为抽样但真实验证不减少。
+- 真正的 `os error 17` 根因是 `H:\` 等卷根没有父目录，旧 `ExtractionStaging::create_for` 回退到进程目录后跨卷重命名，并非密码错误。固定加密 RAR（密码 `12345678`）真实错误/正确密码与解压往返 1/1 通过；7Z 自动密码流程 6/6，通过后端真实内容验证。
+- 聚焦前端 5 文件 23/23、速度 2/2、根盘 1/1、日志抽样 1/1、生产构建通过；920×520 无鼠标渲染中导航 `354/354`、详情/配置/执行横向溢出均 0、长日志换行数 0。
+- 本机 Tauri WebDriver 在创建 WebView2 会话前报 `SessionNotCreatedError`，已对齐 EdgeDriver 仍复现，不得把该运行写成真实桌面门禁通过。下一步必须先在干净 Windows/CI 补跑 `npm run test:e2e:desktop:responsive-layout`，再用隔离卷根完成一次产品 IPC 解压；通过后才评估提升 0.01 版本。完整审计见 [DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md](DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md)。
+
+## 2026-09-02 v1.2.4 窗口交互与最小高度修复（历史，已由上方节点取代）
 
 - 当前开发分支为 `codex/window-drag-resize-sidebar-fix`，基线是已公开 `v1.2.4` 后续文档提交 `master@98512a5`；本轮属于 v1.2.4 发布后的缺陷修复，未提升版本、未打包、未发布 Release。
 - 已按实际代码确认三项根因并修复：无边框标题栏此前调用拖动 API 却没有同时开启 Cargo feature 与 Tauri allowlist；手工缩放在异步读取窗口指标前可能漏掉松键，而且把物理屏幕位移直接加到逻辑尺寸；真实 920×520 / 250% DPI 下侧栏导航只有 283 px，而旧项目总高超过该值。
@@ -1002,3 +1026,11 @@
 - 已通过 Rust 真实文件系统 3/3、相关界面/归档回归 41/41、完整单元 273/273、TypeScript/Rust/生产构建和 `1.1.19` 八处身份门禁。本地正式 NSIS 已生成；第一次桌面门禁误用无测试桥正式候选而按设计超时，隔离 E2E 测试体正在用于真实桌面复验，不能把该环境错误写成功能失败或成功证据。
 - 接续顺序：完成隔离真实桌面门禁并记录预期/实际 → 审计最终差异 → 提交推送文档与版本 → 等待 PR CI 全绿并合入主线 → 在合并提交打 annotated `v1.1.19` 标签 → 核验公开 NSIS/updater/signature/latest.json → 运行真实 `v1.1.18 → v1.1.19` 更新 → 将 README 的“发布目标”改为“公开稳定版”。
 - 完整范围和安全边界见 [DUAL_PANE_FILE_BROWSER_AUDIT.md](DUAL_PANE_FILE_BROWSER_AUDIT.md)，发布说明见 [RELEASE_NOTES_1.1.19.md](RELEASE_NOTES_1.1.19.md)。
+
+# 2026-09-03 解压运行态真实桌面复核追加
+
+- 分支仍为 `codex/decompression-runtime-ux`，公开版本仍为 `v1.2.5`；本阶段不升版、不创建标签或 Release。
+- 已使用独立单实例名、独立数据目录和 WebView2 profile 启动真实 Tauri 审计进程；正式安装版进程和用户任务未关闭、未复用。920×620 与原生最小尺寸 760×520 均无文档、任务表、展开详情或日志横向结构溢出。
+- 真实 32 MiB 随机文件 7Z 往返完成，源/输出 SHA-256 一致；后端原始进度跳变时显示值连续缓动，终态速度清空。真实加密 RAR 错误保险箱候选进入明确手动密码态且没有弹窗循环，正确 `12345678` 解出 `foo.txt`/`bar.txt`。
+- 真实界面复核额外发现并修复两项：失败态详情密码控件在 247 px 窄栏内横向溢出；200% DPI 下窗口缩放速度因重复除以缩放倍率而减半。修复后密码栏 `scrollWidth=clientWidth=237`，原生窗口拖动 80×50 会精确缩放 80×50。
+- 最终定向前端测试为 5 文件 20/20；完整证据与预期/实际见 [DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md](DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md)。标准 WebDriver 门禁仍受本机 `SessionNotCreatedError` 阻挡；发布候选前在正常 CI/Windows 主机补跑 `test:e2e:desktop:responsive-layout`，并人工拖动一次标题栏。

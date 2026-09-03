@@ -99,7 +99,11 @@ impl ExtractionStaging {
         let parent = output
             .parent()
             .filter(|parent| !parent.as_os_str().is_empty())
-            .unwrap_or_else(|| Path::new("."));
+            // A Windows volume root (for example H:\\) has no parent. The
+            // staging directory must still live on that volume; falling back
+            // to the process directory makes the final atomic rename cross a
+            // volume and fails with os error 17.
+            .unwrap_or_else(|| if output.is_absolute() { output } else { Path::new(".") });
         std::fs::create_dir_all(parent)?;
         let path = parent.join(format!(".long-extract-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir(&path)?;
@@ -755,6 +759,19 @@ mod tests {
             std::fs::write(path.join("partial.txt"), b"partial").expect("partial");
         }
         assert!(!path.exists());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn volume_root_staging_stays_on_the_selected_volume() {
+        let root = std::env::current_dir()
+            .expect("current directory")
+            .ancestors()
+            .last()
+            .expect("volume root")
+            .to_path_buf();
+        let staging = ExtractionStaging::create_for(&root).expect("root staging");
+        assert_eq!(staging.path().parent(), Some(root.as_path()));
     }
 
     #[cfg(windows)]

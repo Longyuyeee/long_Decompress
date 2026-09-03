@@ -3,7 +3,9 @@ import { computed } from 'vue'
 import type { ResourcePreflightReport } from '@/types/resourcePreflight'
 import { formatResourceBytes } from '@/utils/resourcePreflight'
 
-const props = defineProps<{ report?: ResourcePreflightReport }>()
+const props = withDefaults(defineProps<{ report?: ResourcePreflightReport, compact?: boolean }>(), {
+  compact: false,
+})
 
 const statusLabel = computed(() => ({
   ready: '已通过',
@@ -29,9 +31,16 @@ const mediumLabel = computed(() => ({
   <section
     v-if="report"
     data-testid="resource-preflight-card"
-    class="resource-preflight-card min-w-0 rounded-xl border p-3 text-xs"
-    :class="`is-${report.status}`"
+    class="resource-preflight-card min-w-0 rounded-xl border text-xs"
+    :class="[`is-${report.status}`, { 'is-compact': compact }]"
   >
+    <div v-if="compact" data-testid="resource-preflight-metrics" class="compact-preflight flex min-w-0 items-center gap-2 px-3 py-2">
+      <i class="pi pi-database shrink-0 text-primary"></i>
+      <span class="shrink-0 font-black text-content">存储预检</span>
+      <span class="status-badge shrink-0 rounded-full px-2 py-0.5 font-black">{{ statusLabel }}</span>
+      <span class="min-w-0 flex-1 truncate whitespace-nowrap font-mono text-dim" :title="`${report.summary}；可用 ${formatResourceBytes(report.availableBytes)}；预计占用 ${formatResourceBytes(report.estimatedOutputBytes)}`">可用 {{ formatResourceBytes(report.availableBytes) }}</span>
+    </div>
+    <template v-else>
     <div class="flex min-w-0 items-start justify-between gap-3">
       <div class="min-w-0">
         <div class="flex items-center gap-2 font-black text-content">
@@ -60,6 +69,7 @@ const mediumLabel = computed(() => ({
         <span class="min-w-0 break-words [overflow-wrap:anywhere]">{{ warning }}</span>
       </li>
     </ul>
+    </template>
   </section>
 </template>
 
@@ -71,6 +81,8 @@ const mediumLabel = computed(() => ({
   background: color-mix(in srgb, var(--bg-input) 42%, transparent);
   border-color: color-mix(in srgb, var(--border-subtle) 74%, transparent);
 }
+.resource-preflight-card:not(.is-compact) { padding: 0.75rem; }
+.resource-preflight-card.is-compact { overflow: hidden; }
 
 .resource-preflight-card.is-ready { border-color: color-mix(in srgb, #22c55e 38%, var(--border-subtle)); }
 .resource-preflight-card.is-warning { border-color: color-mix(in srgb, #f59e0b 44%, var(--border-subtle)); }

@@ -2,7 +2,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getVersion } from '@tauri-apps/api/app'
-import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
+import { invoke } from '@tauri-apps/api/tauri'
+import { appWindow } from '@tauri-apps/api/window'
 import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
 import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
 import { useAppStore } from '@/stores/app'
@@ -15,7 +16,6 @@ const isFocused = ref(true)
 const appVersion = ref('')
 let unlistenFocus: any = null
 let isUnmounted = false
-let stopResizeDrag: (() => void) | null = null
 
 onMounted(async () => {
   try {
@@ -37,132 +37,16 @@ onMounted(async () => {
 onUnmounted(() => {
   isUnmounted = true
   if (unlistenFocus) unlistenFocus()
-  stopResizeDrag?.()
 })
 
 type ResizeEdge = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw'
 const resizeEdges: ResizeEdge[] = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
-const startResize = async (edge: ResizeEdge, event: PointerEvent) => {
+const startResize = (edge: ResizeEdge, event: PointerEvent) => {
   if (event.button !== 0) return
-  const source = event.currentTarget as HTMLElement | null
-  const pointerId = event.pointerId
-  const pointerX = event.screenX
-  const pointerY = event.screenY
   event.preventDefault()
-  stopResizeDrag?.()
-
-  type ResizeOrigin = {
-    x: number
-    y: number
-    width: number
-    height: number
-    pointerX: number
-    pointerY: number
-    factor: number
-  }
-  let active = true
-  let initial: ResizeOrigin | null = null
-  let framePending = false
-  let latestEvent: PointerEvent | null = null
-
-  const cleanup = () => {
-    if (!active) return
-    active = false
-    window.removeEventListener('pointermove', onPointerMove)
-    window.removeEventListener('pointerup', onPointerEnd)
-    window.removeEventListener('pointercancel', onPointerEnd)
-    window.removeEventListener('blur', cleanup)
-    source?.removeEventListener('lostpointercapture', cleanup)
-    try {
-      if (source?.hasPointerCapture?.(pointerId)) source.releasePointerCapture(pointerId)
-    } catch {
-      // The browser may already have released capture after pointerup.
-    }
-    if (stopResizeDrag === cleanup) stopResizeDrag = null
-  }
-
-  const applyResize = () => {
-    framePending = false
-    if (!active || !initial || !latestEvent) return
-    const deltaX = (latestEvent.screenX - initial.pointerX) / initial.factor
-    const deltaY = (latestEvent.screenY - initial.pointerY) / initial.factor
-    let x = initial.x
-    let y = initial.y
-    let width = initial.width
-    let height = initial.height
-    if (edge.includes('e')) width = Math.max(760, initial.width + deltaX)
-    if (edge.includes('s')) height = Math.max(520, initial.height + deltaY)
-    if (edge.includes('w')) {
-      width = Math.max(760, initial.width - deltaX)
-      x = initial.x + initial.width - width
-    }
-    if (edge.includes('n')) {
-      height = Math.max(520, initial.height - deltaY)
-      y = initial.y + initial.height - height
-    }
-    const updates: Promise<void>[] = [appWindow.setSize(new LogicalSize(width, height))]
-    if (edge.includes('n') || edge.includes('w')) updates.push(appWindow.setPosition(new LogicalPosition(x, y)))
-    void Promise.all(updates).catch(error => console.warn('Window resize update failed:', error))
-  }
-
-  const onPointerMove = (moveEvent: PointerEvent) => {
-    if (moveEvent.pointerId != null && moveEvent.pointerId !== pointerId) return
-    if ((moveEvent.buttons & 1) === 0) {
-      cleanup()
-      return
-    }
-    moveEvent.preventDefault()
-    latestEvent = moveEvent
-    if (initial && !framePending) {
-      framePending = true
-      requestAnimationFrame(applyResize)
-    }
-  }
-
-  const onPointerEnd = (endEvent: PointerEvent) => {
-    if (endEvent.pointerId != null && endEvent.pointerId !== pointerId) return
-    cleanup()
-  }
-
-  stopResizeDrag = cleanup
-  window.addEventListener('pointermove', onPointerMove)
-  window.addEventListener('pointerup', onPointerEnd)
-  window.addEventListener('pointercancel', onPointerEnd)
-  window.addEventListener('blur', cleanup, { once: true })
-  source?.addEventListener('lostpointercapture', cleanup, { once: true })
-  try {
-    source?.setPointerCapture?.(pointerId)
-  } catch {
-    // Global listeners still close the resize session when pointer capture is unavailable.
-  }
-
-  try {
-    if (await appWindow.isMaximized()) {
-      cleanup()
-      return
-    }
-    const [factorValue, physicalPosition, physicalSize] = await Promise.all([
-      appWindow.scaleFactor(), appWindow.outerPosition(), appWindow.outerSize(),
-    ])
-    if (!active) return
-    const factor = factorValue > 0 ? factorValue : 1
-    initial = {
-      x: physicalPosition.x / factor,
-      y: physicalPosition.y / factor,
-      width: physicalSize.width / factor,
-      height: physicalSize.height / factor,
-      pointerX,
-      pointerY,
-      factor,
-    }
-    if (latestEvent && !framePending) {
-      framePending = true
-      requestAnimationFrame(applyResize)
-    }
-  } catch (error) {
-    cleanup()
-    console.warn('Window resize session is unavailable:', error)
-  }
+  void invoke('start_native_window_resize', { direction: edge }).catch(error => {
+    console.warn('Native window resize is unavailable:', error)
+  })
 }
 
 const navItems = [
@@ -358,12 +242,15 @@ html, body, #app {
 }
 
 @media (max-height: 640px) {
-  .app-sidebar > nav {
-    gap: .125rem;
-    padding-block: .375rem;
-    scrollbar-width: none;
-  }
+  .app-sidebar .sidebar-brand { height: 3.5rem; }
+  .app-sidebar .sidebar-brand img,
+  .app-sidebar .sidebar-brand > div:first-child { width: 2rem; height: 2rem; }
+  .app-sidebar > nav { gap: .125rem; padding: .375rem .625rem; scrollbar-width: none; }
   .app-sidebar > nav::-webkit-scrollbar { display: none; width: 0; }
-  .nav-entry { height: 2rem; min-height: 2rem; }
+  .app-sidebar .nav-entry { height: 2.5rem; min-height: 2.5rem; padding-inline: .5rem; }
+  .app-sidebar .nav-entry > div:nth-of-type(2) { width: 1.75rem; height: 1.75rem; }
+  .app-sidebar .nav-entry .sidebar-copy > div:last-child { display: none; }
+  .app-sidebar .sidebar-version-row { display: none; }
+  .app-sidebar .sidebar-task-area { min-height: 3.75rem; margin-bottom: .375rem; }
 }
 </style>

@@ -5,6 +5,7 @@ import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage } from '@/utils'
 import { formatProgressPercent } from '@/utils/progress'
+import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -195,7 +196,7 @@ const copyToClipboard = async (text: string) => {
            data-testid="global-progress-summary"
            class="progress-summary flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-3xl border border-primary/40 shadow-lg cursor-pointer hover:border-primary/70 transition-all duration-300 w-full min-w-0">
         <!-- 环形进度 -->
-        <div class="progress-ring-wrap relative w-9 h-9 shrink-0">
+        <div class="progress-ring-wrap relative w-10 h-10 shrink-0">
           <svg class="w-9 h-9 -rotate-90" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" class="text-input opacity-75"/>
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-dasharray="62.83"
@@ -203,44 +204,40 @@ const copyToClipboard = async (text: string) => {
                     class="text-primary transition-all duration-1000 progress-ring"/>
           </svg>
           <span class="absolute inset-0 flex items-center justify-center text-xs font-black font-mono text-content">
-            {{ overallProgress }}%
+            <SmoothProgressValue :value="overallProgress" :decimals="0" />
           </span>
         </div>
 
         <!-- 摘要信息 -->
-        <div class="progress-copy flex flex-col min-w-0 flex-1">
-          <div class="flex items-center gap-2">
+        <div class="progress-copy flex min-w-0 flex-1 flex-col gap-1 pr-12">
+          <div class="flex min-w-0 items-center gap-2 whitespace-nowrap">
             <i v-if="hasActiveTasks" class="pi pi-spin pi-spinner text-[0.75rem] text-primary"></i>
             <i v-else class="pi pi-check-circle text-[0.75rem] text-green-400"></i>
             <span class="text-[0.75rem] font-bold text-content whitespace-nowrap">
               {{ hasActiveTasks ? `${activeCount} ${appStore.t('tasks.active')}` : appStore.t('tasks.all_done') }}
             </span>
           </div>
-          <!-- 当前任务名 + 速度 -->
-          <div class="flex items-center gap-2 mt-1">
-            <span v-if="currentTaskName" class="text-sm text-muted truncate max-w-[120px]">{{ currentTaskName }}</span>
-            <span v-if="runningTask?.speed" class="text-xs font-mono text-primary/70 whitespace-nowrap">{{ runningTask!.speed }}</span>
-          </div>
-          <!-- 阶段 + 密码状态 -->
-          <div v-if="runningTask" class="flex items-center gap-2 mt-1">
-            <span v-if="runningTask.stage" class="text-xs text-dim uppercase tracking-tight">{{ stageLabel(runningTask.stage) }}</span>
-            <span v-if="runningTask.currentFile" class="text-xs text-dim truncate max-w-[130px]" :title="runningTask.currentFile">
-              · {{ runningTask.currentFile.split(/[\\/]/).pop() }}
-            </span>
+          <div v-if="runningTask" class="flex min-w-0 items-center gap-1.5 whitespace-nowrap text-xs">
+            <span v-if="currentTaskName" class="min-w-0 flex-1 truncate text-muted" :title="currentTaskName">{{ currentTaskName }}</span>
+            <span v-if="runningTask.stage" class="shrink-0 text-dim">· {{ stageLabel(runningTask.stage) }}</span>
             <i v-if="runningTask.password" class="pi pi-lock text-xs text-amber-400" :title="appStore.t('progress.password_used')"></i>
             <i v-if="runningTask.passwordRequired" class="pi pi-exclamation-triangle text-xs text-rose-400" :title="appStore.t('progress.password_needed')"></i>
           </div>
+          <div v-if="runningTask" class="flex min-w-0 items-center gap-2 whitespace-nowrap text-xs font-mono">
+            <SmoothProgressValue :value="runningTask.progress" class="font-black text-primary" />
+            <span v-if="runningTask.speed" class="shrink-0 text-primary/70">{{ runningTask.speed }}</span>
+            <span v-if="runningTask.currentFile" class="min-w-0 flex-1 truncate text-dim" :title="runningTask.currentFile">{{ runningTask.currentFile.split(/[\\/]/).pop() }}</span>
+          </div>
         </div>
 
-        <i :class="isExpanded ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" class="progress-chevron text-xs text-dim shrink-0"></i>
-
-        <!-- 最小化按钮 -->
-        <button
-          @click.stop="isMinimized = true"
-          class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-content hover:bg-primary/10 transition-all shrink-0"
-          :title="appStore.t('common.minimize')">
-          <i class="pi pi-minus text-sm"></i>
-        </button>
+        <div class="progress-summary-actions absolute right-2 top-2 flex items-center gap-0.5">
+          <span class="w-6 h-6 rounded-md flex items-center justify-center text-dim" :title="isExpanded ? '收起任务监控' : '展开任务监控'">
+            <i :class="isExpanded ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" class="progress-chevron text-xs"></i>
+          </span>
+          <button @click.stop="isMinimized = true" class="w-6 h-6 rounded-md flex items-center justify-center text-dim hover:text-content hover:bg-primary/10 transition-all" :title="appStore.t('common.minimize')">
+            <i class="pi pi-minus text-xs"></i>
+          </button>
+        </div>
       </div>
 
       <!-- 展开的任务列表面板 -->
@@ -308,9 +305,8 @@ const copyToClipboard = async (text: string) => {
                   <!-- 状态 + 进度 -->
                   <div class="flex items-center gap-2 mt-1">
                     <span class="text-sm text-dim uppercase tracking-tight">{{ statusLabel(task.status) }}</span>
-                    <span v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"
-                          class="text-sm font-mono text-primary font-bold">{{ formatProgressPercent(task.progress) }}%</span>
-                    <span v-if="task.speed" class="text-xs font-mono text-dim ml-1">{{ task.speed }}</span>
+                    <SmoothProgressValue v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)" :value="task.progress" class="text-sm font-mono text-primary font-bold" />
+                    <span v-if="task.speed && ACTIVE_STATUSES.has(task.status)" class="text-xs font-mono text-dim ml-1">{{ task.speed }}</span>
                     <span v-if="task.etaSeconds !== undefined" class="text-xs font-mono text-dim ml-1">ETA {{ formatEta(task.etaSeconds) }}</span>
                   </div>
                   <!-- 进度条 -->
@@ -407,6 +403,8 @@ const copyToClipboard = async (text: string) => {
 .global-progress-bar {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+.progress-summary { min-height: 4.5rem; }
 
 .progress-panel {
   left: calc(100% + 0.75rem);
