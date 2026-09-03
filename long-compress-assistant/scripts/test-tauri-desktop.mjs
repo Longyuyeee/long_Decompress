@@ -4466,6 +4466,9 @@ try {
     readFileSync(archivePath).length > 0,
     'the real compression command must create a non-empty ZIP archive',
   )
+  const diagnosticArchivePath = path.join(fixtureDirectory, 'roundtrip-payload-diagnostic-source.zip')
+  copyFileSync(archivePath, diagnosticArchivePath)
+  const diagnosticArchiveHash = fileSha256(diagnosticArchivePath)
   const compressionResourceTask = await waitForResourcePreflightTask(
     'compression',
     task => task.status === 'completed' && normalizedDesktopPath(task.outputPath) === normalizedDesktopPath(archivePath),
@@ -4521,8 +4524,7 @@ try {
   )
 
   console.log('[desktop-e2e] verifying archive diagnosis, non-destructive ZIP repair, and ZIP/TAR image preview')
-  const sourceArchiveHash = fileSha256(archivePath)
-  const diagnosis = await callDesktopBridge('diagnoseArchive', archivePath)
+  const diagnosis = await callDesktopBridge('diagnoseArchive', diagnosticArchivePath)
   assert.equal(diagnosis.actualFormat, 'ZIP')
   assert.equal(diagnosis.status, 'healthy')
   assert.equal(diagnosis.totalFiles, 1)
@@ -4530,13 +4532,13 @@ try {
   assert.equal(diagnosis.canRepair, false, 'a healthy ZIP should not advertise repair as necessary')
 
   const repairedArchivePath = path.join(fixtureDirectory, 'roundtrip-payload-repaired.zip')
-  const repair = await callDesktopBridge('repairZip', archivePath, repairedArchivePath)
+  const repair = await callDesktopBridge('repairZip', diagnosticArchivePath, repairedArchivePath)
   assert.equal(repair.outputPath, repairedArchivePath)
   assert.equal(repair.recoveredFiles, 1)
   assert.equal(repair.recoveredDirectories, 0)
   assert.deepEqual(repair.skippedEntries, [])
   assert.equal(repair.verified, true)
-  assert.equal(fileSha256(archivePath), sourceArchiveHash, 'ZIP repair must not modify the source archive')
+  assert.equal(fileSha256(diagnosticArchivePath), diagnosticArchiveHash, 'ZIP repair must not modify the source archive')
   assert.ok(existsSync(repairedArchivePath), 'ZIP repair must publish a new archive')
   const repairedDiagnosis = await callDesktopBridge('diagnoseArchive', repairedArchivePath)
   assert.equal(repairedDiagnosis.status, 'healthy')
@@ -4669,7 +4671,7 @@ try {
   const blockedOutput = path.join(fixtureDirectory, 'must-not-create-blocked-output')
   const blockedSeed = await callDesktopBridge(
     'seedBlockedResourcePreflight',
-    archivePath,
+    diagnosticArchivePath,
     blockedOutput,
   )
   const blockedResourceTask = await waitForResourcePreflightTask(

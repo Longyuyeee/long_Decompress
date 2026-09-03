@@ -1,11 +1,18 @@
 # 开发交接
 
-## 2026-09-03 桌面门禁 Node 20/22/24 兼容修复（最新接续点）
+## 2026-09-03 归档浏览门禁夹具生命周期修复（最新接续点）
+
+- `archive-browser-only` 原先把一键解压输入继续用于诊断和修复；当真实桌面加载用户“解压后移入系统回收站”偏好时，合法回收会让后续读取报 `ENOENT`。门禁现于解压前创建独立诊断副本，不改变或假设用户偏好。
+- Node 22.12.0 下完整真实 Windows Tauri/WebView2 归档浏览门禁通过：Zstandard 后端能力菜单、180,000 条目 TAR 取消、长路径 ZIP、加密 7Z、固定加密 RAR、选择性解压、预览、默认应用打开和非破坏修复全部完成。
+- 固定外部归档夹具通过项目下载器与清单校验；媒体架构门禁锁定独立副本和哈希契约。下一步回到高 DPI 活动态/终态任务的窄窗视觉审计。完整证据见 [ARCHIVE_BROWSER_FIXTURE_LIFECYCLE_AUDIT_2026-09-03.md](ARCHIVE_BROWSER_FIXTURE_LIFECYCLE_AUDIT_2026-09-03.md)。
+- 用户要求暂停后的精确完成项、证据状态和四步接续顺序见 [CURRENT_DEVELOPMENT_STATUS_AUDIT_2026-09-03.md](CURRENT_DEVELOPMENT_STATUS_AUDIT_2026-09-03.md)；其中最后新增的架构静态断言明确标记为尚未复跑。
+
+## 2026-09-03 桌面门禁 Node 20/22/24 兼容修复（已完成）
 
 - `test-tauri-desktop.mjs` 不再顶层导入 Node 22.12.0 尚未提供的 `zstdCompressSync`；25 字节 Zstandard 能力夹具改为标准单段 raw-block frame，保持 `package.json` 已声明的 Node 20/22/24 范围。
 - 默认 Node 22.12.0 已通过真实 Windows Tauri/WebView2 响应式门禁；生成的 34 字节 frame 已由产品随包 7-Zip 26.02 识别并完整校验。媒体架构门禁锁定“不重新引入范围外 zlib API”。
-- 深入运行 `archive-browser-only` 时，在调用新生成器之前发现既有公共往返流程的临时 ZIP 被快速解压删除，后续诊断读取时报 `ENOENT`。该次不记为通过，也不归因给 Zstandard 修复。
-- 下一步应单独修复该聚焦门禁的临时源包生命周期并恢复完整 Zstandard 能力来源桌面证据，然后继续高 DPI 活动态/终态任务审计。完整证据见 [DESKTOP_E2E_NODE_COMPAT_AUDIT_2026-09-03.md](DESKTOP_E2E_NODE_COMPAT_AUDIT_2026-09-03.md)。
+- 深入运行 `archive-browser-only` 时，在调用新生成器之前发现既有公共往返流程的临时 ZIP 被快速解压删除，后续诊断读取时报 `ENOENT`。该次未记为通过，也未归因给 Zstandard 修复；问题已由上方独立节点关闭。
+- Node 兼容与完整归档浏览证据均已闭环，详细过程见 [DESKTOP_E2E_NODE_COMPAT_AUDIT_2026-09-03.md](DESKTOP_E2E_NODE_COMPAT_AUDIT_2026-09-03.md)。
 
 ## 2026-09-03 v1.2.7 后续压缩任务详情密度修复（已完成）
 

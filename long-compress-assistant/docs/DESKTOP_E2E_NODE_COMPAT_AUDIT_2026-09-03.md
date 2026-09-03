@@ -21,8 +21,8 @@
 - Node `v22.12.0` 生成的 34 字节测试 frame 经产品随包 `7z.exe 26.02` 识别为 `Type = zstd`，解压大小 25 字节，`Everything is Ok`。
 - `npm.cmd run test:media-architecture`：通过，锁定兼容性契约。
 
-尝试用 `test:e2e:desktop:archive-browser` 覆盖完整能力来源路径时，门禁在进入该路径前发现既有公共往返流程会在快速解压后删除临时 `roundtrip-payload.zip`，随后诊断阶段读取源包时报 `ENOENT`。该失败与新 frame 无关（生成器尚未被调用）；不得记为归档浏览通过。后续应单独审计该聚焦入口的源包保留/测试设置隔离，不在本兼容节点顺手改变产品删除语义。
+尝试用 `test:e2e:desktop:archive-browser` 覆盖完整能力来源路径时，门禁在进入该路径前发现既有公共往返流程会在快速解压后删除临时 `roundtrip-payload.zip`，随后诊断阶段读取源包时报 `ENOENT`。该失败与新 frame 无关（生成器尚未被调用），当次未记为通过。后续节点已确认这是门禁对用户“回收源包”偏好的错误假设，并以独立诊断副本修复；完整归档浏览门禁随后在 Node 22.12.0 下通过，见 [归档浏览门禁夹具生命周期审计](ARCHIVE_BROWSER_FIXTURE_LIFECYCLE_AUDIT_2026-09-03.md)。
 
 ## 接续点
 
-下一步先审计并修复 `archive-browser-only` 聚焦入口的临时 ZIP 生命周期，使 Zstandard 能力来源重新由完整真实桌面流程覆盖；完成后独立提交、推送。随后继续高 DPI 与活动态/终态任务的窄窗视觉审计。
+Node 兼容性与完整 Zstandard 能力来源证据均已关闭。下一步继续高 DPI 与活动态/终态任务的窄窗视觉审计。
