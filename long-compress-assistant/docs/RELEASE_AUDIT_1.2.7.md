@@ -47,7 +47,14 @@
 
 ## 发布状态
 
-当前为 `v1.2.7` 发布候选。版本身份、Shell 扩展、Rust Release、PR CI、annotated tag、GitHub Release、四项公开更新资产和回下载校验完成前，不得写成已正式发布。
+### 2026-09-03 换机暂停记录
+
+- [PR #120](https://github.com/Longyuyeee/long_Decompress/pull/120) 的五项 CI 已全部通过，并以 merge commit `c4d2adc2c1df1237d3674dc7ac76f6507c6979e4` 合入 `master`。
+- README、Release Notes 与 `1.2.7` 版本身份已随该提交推送；annotated tag `v1.2.7` 已指向同一提交并推送。
+- tag 已触发 [Release workflow 33739220209](https://github.com/Longyuyeee/long_Decompress/actions/runs/33739220209)。停止观察时，版本身份、依赖安装、类型检查和前端单元测试已通过，Rust Release 测试仍在执行。
+- 当前未确认 workflow 最终结论，未确认 GitHub Release 是否已公开，也未回下载核对安装器、更新 ZIP、签名和 `latest.json`。因此当前仍是“已推送 tag、发布流水线执行中/待确认”，不得写成正式发布完成。
+
+换机后严格按以下顺序接续：确认 workflow 成功 → 确认 Release 非 draft/prerelease → 下载四项公开资产 → 核对版本、URL、签名、大小和 SHA-256 → 再将本审计改为正式发布完成并提交推送。除非另有明确授权，不执行本机安装/升级生命周期。
 
 ## 明确边界
 
