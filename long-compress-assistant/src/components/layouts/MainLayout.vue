@@ -250,7 +250,7 @@ html, body, #app {
   .app-sidebar .nav-entry { height: 2.5rem; min-height: 2.5rem; padding-inline: .5rem; }
   .app-sidebar .nav-entry > div:nth-of-type(2) { width: 1.75rem; height: 1.75rem; }
   .app-sidebar .nav-entry .sidebar-copy > div:last-child { display: none; }
-  .app-sidebar .sidebar-version-row { display: none; }
-  .app-sidebar .sidebar-task-area { min-height: 3.75rem; margin-bottom: .375rem; }
+  .app-sidebar .sidebar-version-row { min-height: 1.5rem; margin-bottom: .25rem; padding-block: .125rem; }
+  .app-sidebar .sidebar-task-area { min-height: 3.5rem; margin-bottom: .25rem; }
 }
 </style>

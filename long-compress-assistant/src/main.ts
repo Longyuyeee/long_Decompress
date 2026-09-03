@@ -11,6 +11,7 @@ import './styles/accessibility.css'
 import './styles/responsive-utilities.css'
 import './styles/animation-utilities.css'
 import 'primeicons/primeicons.css'
+import { installOverflowTitles } from './utils/overflowTitle'
 
 const app = createApp(App)
 
@@ -25,3 +26,4 @@ app.config.globalProperties.$t = (key: string, fallback?: string): string => {
 }
 
 app.mount('#app')
+installOverflowTitles(document)

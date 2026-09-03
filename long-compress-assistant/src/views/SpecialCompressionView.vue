@@ -17,11 +17,11 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
 </script>
 
 <template>
-  <div class="special-compression-view p-4 md:p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative" data-testid="special-compression-center">
-    <header class="special-compression-header shrink-0 min-w-0">
+  <div class="special-compression-view p-3 sm:p-4 h-full flex flex-col gap-2.5 transition-colors duration-700 overflow-hidden relative" data-testid="special-compression-center">
+    <header data-testid="special-compression-header" class="special-compression-header shrink-0 min-w-0">
       <div class="special-compression-heading">
-        <h1 class="text-2xl md:text-3xl font-black text-content tracking-tight">{{ appStore.t('nav.special_compression') }}</h1>
-        <p class="text-xs md:text-sm text-muted font-semibold mt-1">{{ appStore.t('special_compression.subtitle') }}</p>
+        <h1 class="text-xl md:text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.special_compression') }}</h1>
+        <p class="text-xs text-muted font-semibold mt-0.5">{{ appStore.t('special_compression.subtitle') }}</p>
       </div>
       <nav class="special-compression-mode-switch" aria-label="特殊压缩类型" data-testid="special-compression-mode-switch">
         <button
@@ -60,7 +60,7 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
   display: grid;
   grid-template-columns: minmax(13rem, auto) minmax(25rem, 1fr);
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .special-compression-heading { min-width: 0; }
@@ -74,7 +74,7 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
   border: 1px solid var(--border-subtle);
   background: color-mix(in srgb, var(--bg-card) 40%, transparent);
   box-shadow: 0 20px 45px -32px rgb(0 0 0 / .35);
-  padding: .85rem;
+  padding: .65rem;
 }
 
 .special-compression-stage {
@@ -113,7 +113,7 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
 .special-compression-mode-switch button {
   display: flex;
   min-width: 0;
-  height: 2.35rem;
+  height: 2.2rem;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;

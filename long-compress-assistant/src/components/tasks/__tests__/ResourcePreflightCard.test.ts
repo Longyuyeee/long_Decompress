@@ -48,14 +48,16 @@ describe('ResourcePreflightCard', () => {
     expect(wrapper.get('[data-testid="resource-preflight-estimated"]').text()).toBe('预计占用100.0 MiB')
   })
 
-  it('reduces the decompression detail preflight to one non-wrapping status row', () => {
+  it('keeps the decompression detail preflight compact but decision-complete', () => {
     const wrapper = mount(ResourcePreflightCard, { props: { report: report('ready'), compact: true } })
     const card = wrapper.get('[data-testid="resource-preflight-card"]')
     expect(card.classes()).toContain('is-compact')
     expect(card.text()).toContain('存储预检')
     expect(card.text()).toContain('已通过')
-    expect(card.text()).toContain('可用 800.0 MiB')
+    expect(card.text()).toContain('本地 · SSD')
+    expect(card.text()).toContain('剩余可用800.0 MiB')
+    expect(card.text()).toContain('预计占用100.0 MiB')
+    expect(card.text()).toContain('C:/ · NTFS · 预留 128.0 MiB')
     expect(card.text()).not.toContain('目标存储预检')
-    expect(card.text()).not.toContain('预计占用')
   })
 })

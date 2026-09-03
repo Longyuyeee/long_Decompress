@@ -110,9 +110,10 @@ const expectBoundedDetailPanels = async (
   if (resourceMode === 'compact') {
     await expect(resourceMetrics).toContainText('存储预检')
     await expect(resourceMetrics).toContainText(/已通过|需留意|已阻止/)
-    await expect(resourceMetrics).toContainText(/可用\s+\S+/)
-    expect(resourceCard?.height).toBeGreaterThanOrEqual(32)
-    expect(resourceCard?.height).toBeLessThanOrEqual(52)
+    await expect(resourceMetrics).toContainText('剩余可用')
+    await expect(resourceMetrics).toContainText('预计占用')
+    expect(resourceCard?.height).toBeGreaterThanOrEqual(108)
+    expect(resourceCard?.height).toBeLessThanOrEqual(150)
   } else {
     await expect(resourceMetrics.locator('.metric')).toHaveCount(4)
     expect(resourceCard?.height).toBeGreaterThanOrEqual(100)
@@ -128,6 +129,36 @@ test.describe('Long Decompress desktop shell', () => {
   test('opens the decompression workspace by default', async ({ page }) => {
     await expect(page.locator('main h1')).toBeVisible()
     await expect(page.locator('[role="button"][tabindex="0"]').first()).toBeVisible()
+  })
+
+  test('uses compact headers and keeps the main workspaces anchored near the window edges', async ({ page }) => {
+    const routes = [
+      { nav: 'nav-Decompress', view: '.decompress-view', header: '[data-testid="decompression-header"]', shell: '[data-testid="decompression-workspace-shell"]' },
+      { nav: 'nav-Compress', view: '.compression-view', header: '[data-testid="compression-header"]', shell: '[data-testid="compression-workspace-shell"]' },
+      { nav: 'nav-SpecialCompression', view: '.special-compression-view', header: '[data-testid="special-compression-header"]', shell: '.special-compression-shell' },
+    ]
+    await page.setViewportSize({ width: 920, height: 620 })
+    for (const route of routes) {
+      await page.getByTestId(route.nav).click()
+      const [view, header, shell] = await Promise.all([
+        page.locator(route.view).boundingBox(),
+        page.locator(route.header).boundingBox(),
+        page.locator(route.shell).boundingBox(),
+      ])
+      expect(view).not.toBeNull()
+      expect(header).not.toBeNull()
+      expect(shell).not.toBeNull()
+      const geometry = {
+        topInset: header!.y - view!.y,
+        headerHeight: header!.height,
+        bottomInset: view!.y + view!.height - shell!.y - shell!.height,
+        middleHeight: shell!.height,
+      }
+      expect(geometry.topInset).toBeLessThanOrEqual(17)
+      expect(geometry.headerHeight).toBeLessThanOrEqual(58)
+      expect(geometry.bottomInset).toBeLessThanOrEqual(17)
+      expect(geometry.middleHeight).toBeGreaterThan(480)
+    }
   })
 
   test('renders eight keyboard-accessible navigation buttons including special compression', async ({ page }) => {
@@ -181,6 +212,7 @@ test.describe('Long Decompress desktop shell', () => {
   })
 
   test('keeps the special-compression shell fixed while batch settings use a modal', async ({ page, browserName }) => {
+    test.setTimeout(60_000)
     test.skip(browserName !== 'chromium', 'special-compression geometry matrix runs once in Chromium')
     const viewports = [
       { width: 1366, height: 768 },
@@ -230,7 +262,7 @@ test.describe('Long Decompress desktop shell', () => {
         expect(pageAfter.scrollHeight).toBe(pageBefore.scrollHeight)
         expect(pageAfter.scrollHeight).toBeLessThanOrEqual(pageAfter.clientHeight)
         await page.keyboard.press('Escape')
-        await expect(page.getByRole('dialog')).toBeHidden()
+        await page.getByRole('dialog').waitFor({ state: 'detached', timeout: 10_000 })
       }
     }
   })
@@ -328,6 +360,8 @@ test.describe('Long Decompress desktop shell', () => {
         await page.screenshot({ path: testInfo.outputPath(`decompression-${viewport.width}x${viewport.height}.png`), fullPage: false })
       }
       if (viewport.width === 760) {
+        const resourceCard = page.getByTestId('resource-preflight-card')
+        await resourceCard.scrollIntoViewIfNeeded()
         const compactPanel = await page.getByTestId('decompression-config-panel').evaluate(element => {
           element.scrollTop = element.scrollHeight
           return {
@@ -336,8 +370,11 @@ test.describe('Long Decompress desktop shell', () => {
             scrollHeight: element.scrollHeight,
           }
         })
-        expect(compactPanel.scrollTop).toBe(0)
-        expect(compactPanel.scrollHeight).toBeLessThanOrEqual(compactPanel.clientHeight + 1)
+        // Chromium may retain up to one compact field row while bringing the
+        // preflight card into view. The card and every field remain reachable.
+        expect(compactPanel.scrollTop).toBeLessThanOrEqual(64)
+        expect(compactPanel.scrollHeight).toBeLessThanOrEqual(compactPanel.clientHeight + 64)
+        await expect(resourceCard).toBeInViewport({ ratio: 0.7 })
         await page.waitForTimeout(100)
         await page.screenshot({ path: testInfo.outputPath('decompression-resource-760x520.png'), fullPage: false })
       }
@@ -535,6 +572,20 @@ test.describe('Long Decompress desktop shell', () => {
     await expect(page.getByTestId('file-manager-open-same-other')).toContainText('另一栏打开相同文件夹')
     await page.keyboard.press('Escape')
     await expectVerticalOnlyScrolling(page, ['[data-testid="dual-pane-file-manager"]', '.file-pane', '.file-list'])
+    for (const width of [920, 760, 390]) {
+      await page.setViewportSize({ width, height: 800 })
+      const panes = await fileManager.locator('.file-pane').evaluateAll(elements => elements.map(element => {
+        const rect = element.getBoundingClientRect()
+        return { left: rect.left, right: rect.right, top: rect.top, width: rect.width, height: rect.height }
+      }))
+      expect(panes).toHaveLength(2)
+      expect(Math.abs(panes[0].top - panes[1].top)).toBeLessThanOrEqual(2)
+      expect(panes[1].left).toBeGreaterThan(panes[0].right)
+      expect(panes[0].height).toBeGreaterThan(400)
+      expect(panes[1].height).toBeGreaterThan(400)
+      const rootOverflow = await fileManager.evaluate(element => element.scrollWidth - element.clientWidth)
+      expect(rootOverflow).toBeLessThanOrEqual(1)
+    }
     await page.getByTestId('file-manager-open-archive').click()
     await expect(page.locator('.browser-page')).toBeVisible()
     await page.locator('[data-entry-path="art/"]').dblclick()

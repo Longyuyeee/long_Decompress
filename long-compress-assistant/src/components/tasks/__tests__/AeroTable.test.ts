@@ -16,6 +16,45 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('AeroTable', () => {
+  it('sorts imported tasks by natural name and exposes full truncated names', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const taskStore = useTaskStore()
+    for (const [id, name] of [['20', '福建兄弟视频-20.rar'], ['2', '福建兄弟视频-2.rar'], ['10', '福建兄弟视频-10.rar']] as const) {
+      taskStore.addTask({ id, name, type: 'decompression', sourceFiles: [`C:\\fixtures\\${name}`], outputPath: 'C:\\fixtures\\output', format: 'rar' })
+    }
+
+    const wrapper = mount(AeroTable, {
+      props: { taskType: 'decompression' },
+      global: { plugins: [pinia], stubs: { Transition: false, TransitionGroup: false } },
+    })
+
+    const names = wrapper.findAll('.task-name-cell > div').map(item => item.text())
+    expect(names).toEqual(['福建兄弟视频-2.rar', '福建兄弟视频-10.rar', '福建兄弟视频-20.rar'])
+    expect(wrapper.findAll('.task-name-cell > div').map(item => item.attributes('title'))).toEqual(names)
+    expect(wrapper.findAll('[data-testid="task-row"]').every(row => row.classes().includes('grid'))).toBe(true)
+  })
+
+  it('centers terminal status while reserving aligned runtime columns for active tasks', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const taskStore = useTaskStore()
+    taskStore.addTask({ id: 'done', name: 'done.rar', type: 'decompression', sourceFiles: ['done.rar'], outputPath: '', format: 'rar' })
+    taskStore.addTask({ id: 'active', name: 'active.rar', type: 'decompression', sourceFiles: ['active.rar'], outputPath: '', format: 'rar' })
+    taskStore.updateTaskStatus('done', 'completed')
+    taskStore.updateTaskStatus('active', 'extracting')
+
+    const wrapper = mount(AeroTable, {
+      props: { taskType: 'decompression' },
+      global: { plugins: [pinia], stubs: { Transition: false, TransitionGroup: false } },
+    })
+    const rows = wrapper.findAll('[data-testid="task-row"]')
+    expect(rows[0].get('.task-status-cell').classes()).not.toContain('is-terminal')
+    expect(rows[0].find('.task-status-runtime').exists()).toBe(true)
+    expect(rows[1].get('.task-status-cell').classes()).toContain('is-terminal')
+    expect(rows[1].find('.task-status-runtime').exists()).toBe(false)
+  })
+
   it('keeps expanded password recovery controls inside a narrow config column', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)

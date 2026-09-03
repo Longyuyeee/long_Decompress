@@ -604,11 +604,11 @@ const onDetailLeave = (element: Element) => {
 </script>
 
 <template>
-  <div class="compression-view p-4 md:p-6 h-full flex flex-col gap-4 transition-colors duration-700 overflow-hidden relative" data-testid="compression-center">
-    <header class="flex justify-between items-center gap-3 shrink-0">
+  <div class="compression-view p-3 sm:p-4 h-full flex flex-col gap-2.5 transition-colors duration-700 overflow-hidden relative" data-testid="compression-center">
+    <header data-testid="compression-header" class="compact-workspace-header flex justify-between items-center gap-3 shrink-0">
       <div class="min-w-0">
-        <h1 class="text-2xl md:text-3xl font-black text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
-        <p class="text-xs md:text-sm text-muted font-semibold mt-1">{{ appStore.t('compress.subtitle') }}</p>
+        <h1 class="text-xl md:text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
+        <p class="text-xs text-muted font-semibold mt-0.5">{{ appStore.t('compress.subtitle') }}</p>
       </div>
       <CompressionToolbar
         :has-finished="hasFinishedCompressionTasks"
@@ -623,7 +623,7 @@ const onDetailLeave = (element: Element) => {
     </header>
 
     <!-- 主工作区 -->
-    <div class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
+    <div data-testid="compression-workspace-shell" class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div v-if="totalPayload > 0" class="compression-task-list flex-1 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-3 space-y-3">
         <div
           data-testid="compression-table-header"
