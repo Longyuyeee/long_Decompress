@@ -73,6 +73,7 @@ const expectSideBySide = async (
 const expectBoundedDetailPanels = async (
   page: import('@playwright/test').Page,
   selectors: { detail: string; config: string; execution: string; log: string },
+  resourceMode: 'full' | 'compact',
 ) => {
   const measurements = await page.locator([
     selectors.detail,
@@ -105,9 +106,17 @@ const expectBoundedDetailPanels = async (
 
   const resourceMetrics = page.getByTestId('resource-preflight-metrics')
   await expect(resourceMetrics).toBeVisible()
-  await expect(resourceMetrics.locator('.metric')).toHaveCount(4)
   const resourceCard = await page.getByTestId('resource-preflight-card').boundingBox()
-  expect(resourceCard?.height).toBeGreaterThanOrEqual(100)
+  if (resourceMode === 'compact') {
+    await expect(resourceMetrics).toContainText('存储预检')
+    await expect(resourceMetrics).toContainText(/已通过|需留意|已阻止/)
+    await expect(resourceMetrics).toContainText(/可用\s+\S+/)
+    expect(resourceCard?.height).toBeGreaterThanOrEqual(32)
+    expect(resourceCard?.height).toBeLessThanOrEqual(52)
+  } else {
+    await expect(resourceMetrics.locator('.metric')).toHaveCount(4)
+    expect(resourceCard?.height).toBeGreaterThanOrEqual(100)
+  }
 }
 
 test.describe('Long Decompress desktop shell', () => {
@@ -275,7 +284,7 @@ test.describe('Long Decompress desktop shell', () => {
         config: '[data-testid="compression-draft-config"]',
         execution: '[data-testid="compression-draft-execution"]',
         log: '[data-testid="compression-log-viewport"]',
-      })
+      }, 'full')
       await expect(page.locator('.compression-config-panel')).toHaveCSS('pointer-events', 'auto')
       if (viewport.width === 1024 || viewport.width === 920 || viewport.width === 760) {
         await page.screenshot({ path: testInfo.outputPath(`compression-${viewport.width}x${viewport.height}.png`), fullPage: false })
@@ -314,16 +323,21 @@ test.describe('Long Decompress desktop shell', () => {
         config: '[data-testid="decompression-config-panel"]',
         execution: '[data-testid="decompression-execution-panel"]',
         log: '[data-testid="decompression-log-viewport"]',
-      })
+      }, 'compact')
       if (viewport.width === 1024 || viewport.width === 920 || viewport.width === 760) {
         await page.screenshot({ path: testInfo.outputPath(`decompression-${viewport.width}x${viewport.height}.png`), fullPage: false })
       }
       if (viewport.width === 760) {
-        const scrollTop = await page.getByTestId('decompression-config-panel').evaluate(element => {
+        const compactPanel = await page.getByTestId('decompression-config-panel').evaluate(element => {
           element.scrollTop = element.scrollHeight
-          return element.scrollTop
+          return {
+            scrollTop: element.scrollTop,
+            clientHeight: element.clientHeight,
+            scrollHeight: element.scrollHeight,
+          }
         })
-        expect(scrollTop).toBeGreaterThan(0)
+        expect(compactPanel.scrollTop).toBe(0)
+        expect(compactPanel.scrollHeight).toBeLessThanOrEqual(compactPanel.clientHeight + 1)
         await page.waitForTimeout(100)
         await page.screenshot({ path: testInfo.outputPath('decompression-resource-760x520.png'), fullPage: false })
       }
