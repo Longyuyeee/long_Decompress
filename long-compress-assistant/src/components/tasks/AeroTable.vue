@@ -768,7 +768,7 @@ const onLeave = (el: any) => {
 }
 
 @media (max-width: 980px) {
-  .task-detail-layout { grid-template-columns: minmax(15.5rem, .82fr) minmax(17rem, 1.18fr); }
+  .task-detail-layout { grid-template-columns: minmax(16rem, .82fr) minmax(17rem, 1.18fr); }
   .task-status-cell { flex-basis: 17rem; }
 }
 

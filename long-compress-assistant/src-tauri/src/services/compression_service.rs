@@ -1453,7 +1453,7 @@ impl CompressionService {
     }
 
     fn should_log_password_attempt(current: usize, total: usize) -> bool {
-        current <= 3 || current == total || current % 25 == 0
+        current <= 3 || current == total || current.is_multiple_of(25)
     }
 
     async fn password_book_candidates(&self) -> Result<Vec<(String, String, String)>> {

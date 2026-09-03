@@ -512,6 +512,8 @@ fn main() {
             long_compress_assistant::commands::system::check_auto_start,
             long_compress_assistant::commands::system::load_app_settings,
             long_compress_assistant::commands::system::save_app_settings,
+            long_compress_assistant::commands::system::start_native_window_drag,
+            long_compress_assistant::commands::system::start_native_window_resize,
             long_compress_assistant::commands::video_engine::preflight_video_engine,
             long_compress_assistant::commands::video_engine::probe_video_input,
             long_compress_assistant::commands::video_engine::plan_video_compression,

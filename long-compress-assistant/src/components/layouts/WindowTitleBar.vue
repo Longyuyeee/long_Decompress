@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { appWindow } from '@tauri-apps/api/window'
+import { invoke } from '@tauri-apps/api/tauri'
 const minimize = () => appWindow.minimize()
 const toggleMaximize = () => appWindow.toggleMaximize()
 const closeApp = () => appWindow.close()
 const startDragging = (event: MouseEvent) => {
   if (event.button !== 0 || (event.target as HTMLElement | null)?.closest('.control-btn')) return
-  void appWindow.startDragging().catch(error => {
-    console.warn('Window dragging is unavailable:', error)
+  void invoke('start_native_window_drag').catch(error => {
+    console.warn('Native title-bar dragging is unavailable:', error)
   })
 }
 </script>

@@ -3,6 +3,83 @@ use serde::Serialize;
 use sysinfo::System;
 use tauri::{command, AppHandle};
 
+fn native_resize_hit_test(direction: &str) -> Option<u32> {
+    match direction {
+        "w" => Some(10),
+        "e" => Some(11),
+        "n" => Some(12),
+        "nw" => Some(13),
+        "ne" => Some(14),
+        "s" => Some(15),
+        "sw" => Some(16),
+        "se" => Some(17),
+        _ => None,
+    }
+}
+
+#[command]
+pub fn start_native_window_drag(window: tauri::Window) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows_sys::Win32::UI::Input::KeyboardAndMouse::ReleaseCapture;
+        use windows_sys::Win32::UI::WindowsAndMessaging::{SendMessageW, WM_NCLBUTTONDOWN};
+
+        if window
+            .is_maximized()
+            .map_err(|error| format!("无法读取窗口状态: {error}"))?
+        {
+            return Ok(());
+        }
+        let hwnd = window
+            .hwnd()
+            .map_err(|error| format!("无法获取原生窗口句柄: {error}"))?;
+        unsafe {
+            ReleaseCapture();
+            SendMessageW(hwnd.0 as _, WM_NCLBUTTONDOWN, 2, 0);
+        }
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = window;
+        Err("原生窗口拖动目前仅支持 Windows".to_string())
+    }
+}
+
+#[command]
+pub fn start_native_window_resize(window: tauri::Window, direction: String) -> Result<(), String> {
+    let hit_test = native_resize_hit_test(&direction)
+        .ok_or_else(|| "不支持的窗口缩放方向".to_string())?;
+
+    #[cfg(target_os = "windows")]
+    {
+        use windows_sys::Win32::UI::Input::KeyboardAndMouse::ReleaseCapture;
+        use windows_sys::Win32::UI::WindowsAndMessaging::{SendMessageW, WM_NCLBUTTONDOWN};
+
+        if window
+            .is_maximized()
+            .map_err(|error| format!("无法读取窗口状态: {error}"))?
+        {
+            return Ok(());
+        }
+        let hwnd = window
+            .hwnd()
+            .map_err(|error| format!("无法获取原生窗口句柄: {error}"))?;
+        unsafe {
+            ReleaseCapture();
+            SendMessageW(hwnd.0 as _, WM_NCLBUTTONDOWN, hit_test as usize, 0);
+        }
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = (window, hit_test);
+        Err("原生窗口缩放目前仅支持 Windows".to_string())
+    }
+}
+
 #[cfg(target_os = "windows")]
 use winreg::{
     enums::{HKEY_CURRENT_USER, KEY_READ, KEY_WRITE},
@@ -233,5 +310,18 @@ mod tests {
     fn auto_start_command_rejects_relative_or_quoted_paths() {
         assert!(auto_start_command(std::path::Path::new("Long解压.exe")).is_err());
         assert!(auto_start_command(std::path::Path::new("C:\\Apps\\bad\"name.exe")).is_err());
+    }
+
+    #[test]
+    fn native_resize_directions_map_to_windows_hit_tests() {
+        assert_eq!(native_resize_hit_test("w"), Some(10));
+        assert_eq!(native_resize_hit_test("e"), Some(11));
+        assert_eq!(native_resize_hit_test("n"), Some(12));
+        assert_eq!(native_resize_hit_test("nw"), Some(13));
+        assert_eq!(native_resize_hit_test("ne"), Some(14));
+        assert_eq!(native_resize_hit_test("s"), Some(15));
+        assert_eq!(native_resize_hit_test("sw"), Some(16));
+        assert_eq!(native_resize_hit_test("se"), Some(17));
+        assert_eq!(native_resize_hit_test("center"), None);
     }
 }

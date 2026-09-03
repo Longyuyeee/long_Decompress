@@ -28,13 +28,6 @@ const tauriConfig = JSON.parse(
 const mediaFixtureManifest = JSON.parse(
   readFileSync(path.join(root, 'tests', 'fixtures', 'media', 'manifest.json'), 'utf8'),
 )
-const packagedApplication = path.join(
-  root,
-  'src-tauri',
-  'target',
-  'release',
-  `${tauriConfig.package.productName}${executableSuffix}`,
-)
 const cargoApplication = path.join(
   root,
   'src-tauri',
@@ -44,14 +37,24 @@ const cargoApplication = path.join(
 )
 const application =
   process.env.TAURI_APP_BINARY ||
-  (existsSync(cargoApplication) ? cargoApplication : packagedApplication)
+  cargoApplication
 const tauriDriver =
   process.env.TAURI_DRIVER_PATH ||
   path.join(homedir(), '.cargo', 'bin', `tauri-driver${executableSuffix}`)
 const cachedEdgeDriver = path.join(root, 'test-results', 'edge-driver-b02', `msedgedriver${executableSuffix}`)
-const edgeDriver =
-  process.env.EDGE_DRIVER_PATH ||
-  (existsSync(cachedEdgeDriver) ? cachedEdgeDriver : undefined)
+const seleniumEdgeDriverRoot = path.join(homedir(), '.cache', 'selenium', 'msedgedriver', 'win64')
+const discoveredEdgeDrivers = existsSync(seleniumEdgeDriverRoot)
+  ? readdirSync(seleniumEdgeDriverRoot)
+      .sort((left, right) => right.localeCompare(left, undefined, { numeric: true }))
+      .map(version => path.join(seleniumEdgeDriverRoot, version, `msedgedriver${executableSuffix}`))
+      .filter(candidate => existsSync(candidate))
+  : []
+const edgeDriverCandidates = [...new Set([
+  process.env.EDGE_DRIVER_PATH,
+  existsSync(cachedEdgeDriver) ? cachedEdgeDriver : undefined,
+  ...discoveredEdgeDrivers,
+].filter(Boolean))]
+const edgeDriver = edgeDriverCandidates[0]
 const webdriverPort = Number.parseInt(process.env.LONG_DECOMPRESS_WEBDRIVER_PORT || '4723', 10)
 const nativeWebdriverPort = Number.parseInt(process.env.LONG_DECOMPRESS_NATIVE_WEBDRIVER_PORT || '4724', 10)
 const webdriverUrl = `http://127.0.0.1:${webdriverPort}/`
@@ -121,6 +124,7 @@ const hfsxOnly = process.argv.includes('--hfsx-only')
 const tarTelemetryOnly = process.argv.includes('--tar-telemetry-only')
 const responsiveLayoutOnly = process.argv.includes('--responsive-layout-only')
 const shellPolishOnly = process.argv.includes('--shell-polish-only')
+const volumeRootOnly = process.argv.includes('--volume-root-only')
 const imageWorkspaceOnly = process.argv.includes('--image-workspace-only')
 const imageBatchOnly = process.argv.includes('--image-batch-only')
 const imagePickerManualOnly = process.argv.includes('--image-picker-manual-only')
@@ -179,6 +183,7 @@ for (const [label, target] of [
 let driver
 let tauriDriverProcess
 let devToolsPortMirror
+let activeEdgeDriver = edgeDriver
 let driverOutput = ''
 let fixtureDirectory
 let completedSuccessfully = false
@@ -327,7 +332,7 @@ function removeAutoStartRegistryValue() {
 async function startTauriDriver() {
   tauriDriverProcess = spawn(
     tauriDriver,
-    ['--port', String(webdriverPort), '--native-port', String(nativeWebdriverPort), '--native-driver', edgeDriver],
+    ['--port', String(webdriverPort), '--native-port', String(nativeWebdriverPort), '--native-driver', activeEdgeDriver],
     {
       cwd: root,
       env: {
@@ -379,6 +384,107 @@ function runFixtureCommand(command, args, label, options = {}) {
     0,
     `${label} fixture creation failed: ${result.stderr || result.stdout}`,
   )
+}
+
+async function performNativeWindowGesture(element, eventType, startX, startY, deltaX, deltaY) {
+  const processId = desktopApplicationProcessIds()[0]
+  const script = `
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+public static class LongDecompressTitlebarMouse {
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hwnd);
+  [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
+  [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint dx, uint dy, uint data, UIntPtr extraInfo);
+}
+'@
+$original = [System.Windows.Forms.Cursor]::Position
+try {
+  $application = Get-Process -Id ${processId}
+  [LongDecompressTitlebarMouse]::SetForegroundWindow($application.MainWindowHandle) | Out-Null
+  Start-Sleep -Milliseconds 180
+  $dragX = ${startX}; $dragY = ${startY}
+  [LongDecompressTitlebarMouse]::SetCursorPos($dragX, $dragY) | Out-Null
+  Start-Sleep -Milliseconds 120
+  [LongDecompressTitlebarMouse]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero)
+  [LongDecompressTitlebarMouse]::SetForegroundWindow($application.MainWindowHandle) | Out-Null
+  Start-Sleep -Milliseconds 120
+  [Console]::Out.WriteLine('READY')
+  [Console]::Out.Flush()
+  Start-Sleep -Milliseconds 900
+  1..8 | ForEach-Object {
+    $x = $dragX + [Math]::Round(${deltaX} * $_ / 8)
+    $y = $dragY + [Math]::Round(${deltaY} * $_ / 8)
+    [LongDecompressTitlebarMouse]::SetCursorPos($x, $y) | Out-Null
+    Start-Sleep -Milliseconds 45
+  }
+  [LongDecompressTitlebarMouse]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
+  Start-Sleep -Milliseconds 160
+} finally {
+  [LongDecompressTitlebarMouse]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
+  [LongDecompressTitlebarMouse]::SetCursorPos($original.X, $original.Y) | Out-Null
+}`
+  const nativeInput = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  })
+  let stdout = ''
+  let stderr = ''
+  nativeInput.stdout.on('data', chunk => { stdout += chunk })
+  nativeInput.stderr.on('data', chunk => { stderr += chunk })
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('native titlebar pointer-down did not become ready')), 10_000)
+    const inspect = () => {
+      if (!stdout.includes('READY')) return
+      clearTimeout(timeout)
+      nativeInput.stdout.off('data', inspect)
+      resolve()
+    }
+    nativeInput.stdout.on('data', inspect)
+  })
+  await driver.executeScript((target, type) => {
+    const EventType = type === 'pointerdown' ? PointerEvent : MouseEvent
+    target.dispatchEvent(new EventType(type, { bubbles: true, button: 0, buttons: 1, pointerId: 91 }))
+  }, element, eventType)
+  const exitCode = await new Promise((resolve, reject) => {
+    nativeInput.once('error', reject)
+    nativeInput.once('exit', resolve)
+  })
+  assert.equal(exitCode, 0, `native titlebar drag failed: ${stderr || stdout}`)
+}
+
+function readNativeApplicationWindowRect() {
+  const processIds = desktopApplicationProcessIds()
+  assert.equal(processIds.length, 1, `expected one workspace application window, found ${processIds.length}`)
+  const script = `
+Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+public static class LongDecompressNativeWindow {
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+  [StructLayout(LayoutKind.Sequential)] public struct POINT { public int X; public int Y; }
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);
+  [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr hwnd, out RECT rect);
+  [DllImport("user32.dll")] public static extern bool ClientToScreen(IntPtr hwnd, ref POINT point);
+}
+'@
+$process = Get-Process -Id ${processIds[0]}
+$rect = New-Object LongDecompressNativeWindow+RECT
+if (-not [LongDecompressNativeWindow]::GetWindowRect($process.MainWindowHandle, [ref]$rect)) { exit 3 }
+$client = New-Object LongDecompressNativeWindow+RECT
+$origin = New-Object LongDecompressNativeWindow+POINT
+if (-not [LongDecompressNativeWindow]::GetClientRect($process.MainWindowHandle, [ref]$client)) { exit 4 }
+if (-not [LongDecompressNativeWindow]::ClientToScreen($process.MainWindowHandle, [ref]$origin)) { exit 5 }
+[pscustomobject]@{ left=$rect.Left; top=$rect.Top; right=$rect.Right; bottom=$rect.Bottom; width=$rect.Right-$rect.Left; height=$rect.Bottom-$rect.Top; clientLeft=$origin.X; clientTop=$origin.Y; clientRight=$origin.X+$client.Right; clientBottom=$origin.Y+$client.Bottom; clientWidth=$client.Right; clientHeight=$client.Bottom } | ConvertTo-Json -Compress`
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+    encoding: 'utf8',
+    timeout: 10_000,
+    windowsHide: true,
+  })
+  assert.ifError(result.error)
+  assert.equal(result.status, 0, `failed to read native window bounds: ${result.stderr || result.stdout}`)
+  return JSON.parse(result.stdout.trim())
 }
 
 function createZipCompatibleFixture(outputPath, sourcePath) {
@@ -1791,6 +1897,31 @@ async function createDesktopSession(applicationArgs = []) {
   }
 }
 
+async function createDesktopSessionWithDriverFallback(applicationArgs = []) {
+  let lastError
+  for (let index = 0; index < edgeDriverCandidates.length; index += 1) {
+    activeEdgeDriver = edgeDriverCandidates[index]
+    try {
+      await startTauriDriver()
+      return await createDesktopSession(applicationArgs)
+    } catch (error) {
+      lastError = error
+      driverOutput += `\nEdgeDriver candidate failed: ${activeEdgeDriver}\n${error?.stack || error}\n`
+      terminateProcessTree(tauriDriverProcess?.pid)
+      tauriDriverProcess = undefined
+      for (const processId of desktopApplicationProcessIds()) terminateProcessTree(processId)
+      if (index + 1 < edgeDriverCandidates.length) {
+        console.log(`[desktop-e2e] retrying with compatible EdgeDriver: ${edgeDriverCandidates[index + 1]}`)
+        await new Promise(resolve => setTimeout(resolve, 500))
+        desktopSessionIndex += 1
+        webviewUserDataDirectory = path.join(e2eDataDirectory, `webview2-session-${desktopSessionIndex}`)
+        mkdirSync(webviewUserDataDirectory, { recursive: true })
+      }
+    }
+  }
+  throw lastError || new Error('No Microsoft EdgeDriver candidate could create a desktop session.')
+}
+
 async function waitForDesktopReady() {
   if (!pdfWorkspaceOnly) {
     console.log('[desktop-e2e] waiting for desktop heading')
@@ -2559,15 +2690,40 @@ async function runShellPolishDesktopGate() {
   assert.equal(titlebarControls.length, 3, 'the in-app title bar must expose minimize, maximize and close controls')
   assert.equal(tauriConfig.tauri?.windows?.[0]?.decorations, false, 'the main Tauri window must disable native decorations')
   assert.equal(tauriConfig.tauri?.windows?.[0]?.resizable, true, 'the main Tauri window must remain resizable')
+  assert.equal(
+    await driver.executeScript(element => [...element.querySelectorAll('.control-btn')]
+      .every(control => !control.hasAttribute('data-tauri-drag-region')), titlebar),
+    true,
+    'window controls must stay outside the native drag region',
+  )
 
+  await driver.manage().window().setRect({ x: 120, y: 100, width: 1440, height: 900 })
+  await new Promise(resolve => setTimeout(resolve, 250))
   await driver.executeScript(element => {
-    window.__longCompressTitlebarMouseDownCount = 0
-    element.addEventListener('mousedown', () => { window.__longCompressTitlebarMouseDownCount += 1 })
-    element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0, buttons: 1 }))
-    element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, button: 0, buttons: 0 }))
+    window.__longDecompressNativeTitlebarDowns = 0
+    element.addEventListener('mousedown', () => { window.__longDecompressNativeTitlebarDowns += 1 })
   }, titlebar)
-  await new Promise(resolve => setTimeout(resolve, 150))
-  const titlebarMouseDownCount = await driver.executeScript(() => window.__longCompressTitlebarMouseDownCount || 0)
+  const beforeTitlebarDrag = readNativeApplicationWindowRect()
+  const titlebarGeometry = await driver.executeScript(element => {
+    const rect = element.getBoundingClientRect()
+    return { rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height }, devicePixelRatio: window.devicePixelRatio, screenX: window.screenX, screenY: window.screenY, outerWidth: window.outerWidth, outerHeight: window.outerHeight }
+  }, titlebar)
+  console.log(`[desktop-e2e] native titlebar geometry: ${JSON.stringify({ native: beforeTitlebarDrag, webview: titlebarGeometry })}`)
+  await performNativeWindowGesture(
+    titlebar,
+    'mousedown',
+    Math.round(titlebarGeometry.screenX + titlebarGeometry.rect.x + titlebarGeometry.rect.width * 0.42),
+    Math.round(titlebarGeometry.screenY + titlebarGeometry.rect.y + titlebarGeometry.rect.height / 2),
+    48,
+    28,
+  )
+  await new Promise(resolve => setTimeout(resolve, 350))
+  const nativeTitlebarDowns = await driver.executeScript(() => window.__longDecompressNativeTitlebarDowns || 0)
+  const afterTitlebarDrag = readNativeApplicationWindowRect()
+  const titlebarDragDelta = {
+    x: afterTitlebarDrag.left - beforeTitlebarDrag.left,
+    y: afterTitlebarDrag.top - beforeTitlebarDrag.top,
+  }
 
   await (await waitForElement('[data-testid="nav-Compress"]')).click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
@@ -2640,55 +2796,30 @@ async function runShellPolishDesktopGate() {
       scrollWidth: target.scrollWidth,
     }
   })
-  const performSyntheticResize = async pointerId => {
-    const southEastHandle = await waitForElement('[data-resize-edge="se"]')
-    await driver.executeScript((element, id) => {
-      element.dispatchEvent(new PointerEvent('pointerdown', {
-        bubbles: true, button: 0, buttons: 1, pointerId: id, screenX: 1400, screenY: 860,
-      }))
-    }, southEastHandle, pointerId)
-    await new Promise(resolve => setTimeout(resolve, 150))
-    await driver.executeScript(id => {
-      window.dispatchEvent(new PointerEvent('pointermove', {
-        bubbles: true, button: 0, buttons: 1, pointerId: id, screenX: 1440, screenY: 890,
-      }))
-    }, pointerId)
+  const performNativeResize = async () => {
+    const northWestHandle = await waitForElement('[data-resize-edge="nw"]')
+    const rect = readNativeApplicationWindowRect()
+    await performNativeWindowGesture(
+      northWestHandle,
+      'pointerdown',
+      Math.round(rect.clientLeft + rect.clientWidth / 2),
+      Math.round(rect.clientTop + rect.clientHeight / 2),
+      40,
+      30,
+    )
     await new Promise(resolve => setTimeout(resolve, 350))
-    await driver.executeScript(id => {
-      window.dispatchEvent(new PointerEvent('pointerup', {
-        bubbles: true, button: 0, buttons: 0, pointerId: id, screenX: 1440, screenY: 890,
-      }))
-    }, pointerId)
   }
-  // WebDriver setRect uses physical pixels while Tauri setSize uses logical pixels.
-  // Normalize once, then measure a second identical user-level resize delta.
-  await performSyntheticResize(41)
-  const beforeResize = await driver.executeScript(() => ({ width: window.innerWidth, height: window.innerHeight }))
-  await performSyntheticResize(42)
-  const afterResize = await driver.executeScript(() => ({ width: window.innerWidth, height: window.innerHeight }))
+  const beforeResize = readNativeApplicationWindowRect()
+  await performNativeResize()
+  const afterResize = readNativeApplicationWindowRect()
   const resizeDelta = {
     width: afterResize.width - beforeResize.width,
     height: afterResize.height - beforeResize.height,
   }
 
-  const southEastHandle = await waitForElement('[data-resize-edge="se"]')
-  await driver.executeScript(element => {
-    element.dispatchEvent(new PointerEvent('pointerdown', {
-      bubbles: true, button: 0, buttons: 1, pointerId: 43, screenX: 1400, screenY: 860,
-    }))
-    window.dispatchEvent(new PointerEvent('pointermove', {
-      bubbles: true, button: 0, buttons: 0, pointerId: 43, screenX: 1410, screenY: 870,
-    }))
-  }, southEastHandle)
-  await new Promise(resolve => setTimeout(resolve, 200))
-  const beforeReleasedPointerReturn = await driver.executeScript(() => ({ width: window.innerWidth, height: window.innerHeight }))
-  await driver.executeScript(() => {
-    window.dispatchEvent(new PointerEvent('pointermove', {
-      bubbles: true, button: 0, buttons: 1, pointerId: 43, screenX: 1480, screenY: 930,
-    }))
-  })
-  await new Promise(resolve => setTimeout(resolve, 300))
-  const afterReleasedPointerReturn = await driver.executeScript(() => ({ width: window.innerWidth, height: window.innerHeight }))
+  const beforeReleasedPointerReturn = readNativeApplicationWindowRect()
+  await new Promise(resolve => setTimeout(resolve, 500))
+  const afterReleasedPointerReturn = readNativeApplicationWindowRect()
   const releasedResizeStayedIdle = beforeReleasedPointerReturn.width === afterReleasedPointerReturn.width
     && beforeReleasedPointerReturn.height === afterReleasedPointerReturn.height
 
@@ -2716,7 +2847,7 @@ async function runShellPolishDesktopGate() {
     nativeDecorations: false,
     resizable: true,
     titlebarControls: 3,
-    titlebarDragRequestHandled: true,
+    nativeTitlebarDragApplied: true,
     titlebarDuplicateNamePresent: false,
     sidebarPrivacyCopyPresent: false,
     resizeHandles: 8,
@@ -2741,11 +2872,11 @@ async function runShellPolishDesktopGate() {
     nativeDecorations: tauriConfig.tauri?.windows?.[0]?.decorations,
     resizable: tauriConfig.tauri?.windows?.[0]?.resizable,
     titlebarControls: titlebarControls.length,
-    titlebarDragRequestHandled: titlebarMouseDownCount === 1 && tauriConfig.tauri?.allowlist?.window?.startDragging === true,
+    nativeTitlebarDragApplied: Math.abs(titlebarDragDelta.x) >= 16 && Math.abs(titlebarDragDelta.y) >= 8,
     titlebarDuplicateNamePresent: titlebarText.includes('Long解压'),
     sidebarPrivacyCopyPresent: (await (await waitForElement('aside')).getText()).includes('本地处理 · 隐私优先'),
     resizeHandles: resizeHandles.length,
-    customResizeApplied: resizeDelta.width >= 8 && resizeDelta.height >= 6,
+    customResizeApplied: Math.abs(resizeDelta.width) >= 8 && Math.abs(resizeDelta.height) >= 6,
     releasedResizeStayedIdle,
     sidebarNavigationOverflow: Math.max(0, (sidebarLayout?.scrollHeight ?? 0) - (sidebarLayout?.clientHeight ?? 0)),
     sidebarDestinationsVisible: sidebarLayout?.buttonCount === 8 && sidebarLayout?.allButtonsInside === true,
@@ -2763,11 +2894,62 @@ async function runShellPolishDesktopGate() {
     horizontalOverflow: Math.max(0, (layout?.scrollWidth ?? 0) - (layout?.clientWidth ?? 0)),
   }
   const differences = Object.keys(expected).filter(key => expected[key] !== actual[key])
-  const evidence = { schemaVersion: 4, testKind: 'real-windows-tauri-special-compression-shell', expected, actual, titlebarMouseDownCount, resizeDelta, releasedResizeStayedIdle, sidebarLayout, archiveSettingsSize, profileDialogSize, profileTitleAudit, profileContentColor, darkProfileAudit, modalSizes, differences, passed: differences.length === 0 }
+  const evidence = { schemaVersion: 5, testKind: 'real-windows-tauri-special-compression-shell', expected, actual, nativeTitlebarDowns, titlebarDragDelta, resizeDelta, releasedResizeStayedIdle, sidebarLayout, archiveSettingsSize, profileDialogSize, profileTitleAudit, profileContentColor, darkProfileAudit, modalSizes, differences, passed: differences.length === 0 }
 
   writeFileSync(path.join(artifactDirectory, 'shell-polish-result.json'), JSON.stringify(evidence, null, 2), 'utf8')
   writeFileSync(path.join(artifactDirectory, 'shell-polish-pdf.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   assert.deepEqual(actual, expected, `shell polish expected/actual differences remain: ${JSON.stringify(differences)}`)
+}
+
+async function runVolumeRootDesktopGate() {
+  console.log('[desktop-e2e] verifying full product IPC extraction to an isolated Windows volume root')
+  const driveLetter = [...'ZYXWVUTSRQP'].find(letter => !existsSync(`${letter}:\\`))
+  assert.ok(driveLetter, 'no unused drive letter is available for the isolated volume-root gate')
+  const drive = `${driveLetter}:`
+  const outputRoot = `${drive}\\`
+  const isolatedRoot = path.join(fixtureDirectory, 'isolated-volume-root')
+  mkdirSync(isolatedRoot, { recursive: true })
+  const mounted = spawnSync('subst.exe', [drive, isolatedRoot], { encoding: 'utf8', windowsHide: true })
+  assert.ifError(mounted.error)
+  assert.equal(mounted.status, 0, `failed to mount isolated volume root: ${mounted.stderr || mounted.stdout}`)
+
+  try {
+    const sourcePath = path.join(fixtureDirectory, 'volume-root-payload.txt')
+    const archivePath = path.join(fixtureDirectory, 'volume-root-payload.zip')
+    const payload = `Long解压 isolated volume-root IPC ${new Date().toISOString()}\n`
+    writeFileSync(sourcePath, payload, 'utf8')
+    createZipCompatibleFixture(archivePath, sourcePath)
+
+    const extractedPath = await callDesktopBridge('extractArchive', archivePath, outputRoot)
+    const publishedPath = path.join(outputRoot, path.basename(sourcePath))
+    assert.equal(readFileSync(publishedPath, 'utf8'), payload, 'volume-root extraction must publish the exact payload')
+    assert.equal(fileSha256(publishedPath), fileSha256(sourcePath), 'published volume-root bytes must match the source')
+    assert.equal(existsSync(archivePath), true, 'the default extraction path must preserve the source archive')
+    assert.deepEqual(
+      readdirSync(isolatedRoot).filter(name => name.startsWith('.long-extract-')),
+      [],
+      'successful volume-root extraction must clean every transaction staging directory',
+    )
+    const evidence = {
+      schemaVersion: 1,
+      testKind: 'real-windows-tauri-volume-root-ipc',
+      expected: { payloadPublished: true, bytesMatch: true, sourcePreserved: true, stagingDirectories: 0 },
+      actual: {
+        payloadPublished: existsSync(publishedPath),
+        bytesMatch: fileSha256(publishedPath) === fileSha256(sourcePath),
+        sourcePreserved: existsSync(archivePath),
+        stagingDirectories: readdirSync(isolatedRoot).filter(name => name.startsWith('.long-extract-')).length,
+      },
+      extractedPath,
+      outputRoot,
+    }
+    mkdirSync(artifactDirectory, { recursive: true })
+    writeFileSync(path.join(artifactDirectory, 'volume-root-result.json'), JSON.stringify(evidence, null, 2), 'utf8')
+  } finally {
+    const unmounted = spawnSync('subst.exe', [drive, '/d'], { encoding: 'utf8', windowsHide: true })
+    assert.ifError(unmounted.error)
+    assert.equal(unmounted.status, 0, `failed to unmount isolated volume root: ${unmounted.stderr || unmounted.stdout}`)
+  }
 }
 
 async function runPdfWorkspaceDesktopGate() {
@@ -4070,9 +4252,7 @@ try {
     autoStartRegistryOwnedByTest = true
   }
   mkdirSync(webviewUserDataDirectory, { recursive: true })
-  await startTauriDriver()
-
-  driver = await createDesktopSession()
+  driver = await createDesktopSessionWithDriverFallback()
   await waitForDesktopReady()
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
@@ -4179,6 +4359,10 @@ try {
     await runShellPolishDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri frameless-shell and PDF empty-state gate passed.')
+  } else if (volumeRootOnly) {
+    await runVolumeRootDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri isolated volume-root IPC gate passed.')
   } else if (imageWorkspaceOnly) {
     await runImageWorkspaceDesktopGate()
     completedSuccessfully = true

@@ -1,5 +1,13 @@
 # 开发交接
 
+## 2026-09-03 v1.2.6 发布候选（当前接续点）
+
+- 三项原发布阻断已经闭环：标准 Tauri responsive-layout 在 920×620 / 760×520 下通过；隔离 Windows 逻辑卷根完成真实产品 IPC 解压、字节校验、源包保留和暂存清理；系统级输入验证标题栏移动 `48×28`、窗口缩放 `40×30` 且释放后保持。
+- 标题栏与缩放不再使用前端手工坐标状态机。参考 `Long_MarkDownReader` 的原生窗口原则后，结合本项目 Tauri 1 运行时，统一由 Rust 向 Windows 发送 `WM_NCLBUTTONDOWN`，分别使用 `HTCAPTION` 和八方向命中值进入系统移动/缩放循环。
+- 真实桌面审计首次暴露 920×620 下解压配置栏只有 247 px；断点最小列宽已修正，标准门禁复跑通过。桌面脚本不再回退到可能过期的产品名 EXE，并可从 Selenium 缓存发现/回退 EdgeDriver。
+- 版本身份现为 `1.2.6`，README、Release notes 和发布审计已进入候选状态。下一步只允许完成全量回归、Shell 扩展、无测试桥 NSIS、安装/升级生命周期、PR/CI、合并、标签、GitHub Release、资产回下载与公开更新；若任一项失败，修复后重新从对应门禁开始，不得跳过。
+- 当前证据见 [RELEASE_AUDIT_1.2.6.md](RELEASE_AUDIT_1.2.6.md)、[RELEASE_NOTES_1.2.6.md](RELEASE_NOTES_1.2.6.md)和[解压运行态审计](DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md)。
+
 ## 2026-09-03 过期测试/文档清理与发布判定（当前接续点）
 
 - 当前分支仍为 `codex/decompression-runtime-ux`，公开稳定版和代码版本仍为 `v1.2.5`。本轮整理完成但发布门禁未闭环，所以没有提升到 `1.2.6`、没有修改公开版 README、没有打标签或创建 Release。
