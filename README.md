@@ -6,7 +6,7 @@
 
 ### 面向 Windows 的本地压缩、解压、归档浏览与密码管理工具
 
-[![Version](https://img.shields.io/badge/version-1.2.6-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.2.7-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri%20%2B%20Rust-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -23,7 +23,15 @@
 
 Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows 桌面归档工具。它不仅能完成日常压缩与解压，还把批量任务、压缩包浏览、密码保险箱、完整性检查、资源预检、任务模板和资源管理器右键菜单整合在同一个界面中。
 
-当前版本：**v1.2.6**。
+当前版本：**v1.2.7**。
+
+### v1.2.7 任务布局、完整提示与固定双栏
+
+- 解压任务名称、状态与进度重新分配为稳定网格；多文件使用中文数字自然排序，存储预检恢复关键容量和介质信息，低高度侧栏继续显示版本号。
+- 所有真实被省略的单行文字可在悬停或键盘聚焦时查看全文；解压、压缩、特殊压缩标题与上下留白统一收紧，把空间还给中间任务区。
+- 双栏文件浏览器在 920、760、390 px 下始终保持左右布局，窄窗口只隐藏低优先级列和按钮文字，不再变形成上下两栏。
+- 真实 Windows Tauri 已逐图验证 920×620、760×520 的任务详情和双栏布局；前端单元、Chromium 和真实桌面门禁均通过。
+- [查看 v1.2.7 发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.7)
 
 ### v1.2.6 解压运行态、卷根事务与原生窗口交互
 
