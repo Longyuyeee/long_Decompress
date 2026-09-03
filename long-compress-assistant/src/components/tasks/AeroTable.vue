@@ -449,18 +449,18 @@ const onLeave = (el: any) => {
                           <i class="pi pi-lock text-sm text-yellow-400"></i>
                           <span class="text-yellow-400 text-xs font-black uppercase tracking-widest">{{ appStore.t('tasks.password.crack_failed') }}</span>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2">
                           <input
                             :type="showPasswordInput === task.id ? 'text' : 'password'"
                             :value="task.password || ''"
                             @input="(e: Event) => { task.password = (e.target as HTMLInputElement).value }"
                             @click.stop
                             :placeholder="appStore.t('tasks.password.placeholder')"
-                            class="flex-1 h-7 rounded-lg bg-input/50 border border-yellow-500/50 text-sm px-3 font-mono outline-none focus:border-yellow-400 text-yellow-400 placeholder:text-yellow-500/50"
+                            class="col-span-2 h-7 w-full min-w-0 rounded-lg bg-input/50 border border-yellow-500/50 text-sm px-3 font-mono outline-none focus:border-yellow-400 text-yellow-400 placeholder:text-yellow-500/50"
                           />
                           <button
                             @click.stop="() => { const candidates = passwordStore.findCandidatePasswords(task.name || task.sourceFiles[0]?.split(/[\\/]/).pop() || ''); if (candidates.length > 0) { task.password = candidates[0] } }"
-                            class="h-7 w-7 rounded-lg border border-yellow-500/50 bg-yellow-500/10 flex items-center justify-center text-yellow-400 hover:bg-yellow-500/20 transition-colors shrink-0"
+                            class="h-7 w-7 justify-self-start rounded-lg border border-yellow-500/50 bg-yellow-500/10 flex items-center justify-center text-yellow-400 hover:bg-yellow-500/20 transition-colors shrink-0"
                             :title="appStore.t('tasks.password.fill_vault')">
                             <i class="pi pi-key text-xs"></i>
                           </button>

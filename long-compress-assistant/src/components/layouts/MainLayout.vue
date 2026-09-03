@@ -84,8 +84,12 @@ const startResize = async (edge: ResizeEdge, event: PointerEvent) => {
   const applyResize = () => {
     framePending = false
     if (!active || !initial || !latestEvent) return
-    const deltaX = (latestEvent.screenX - initial.pointerX) / initial.factor
-    const deltaY = (latestEvent.screenY - initial.pointerY) / initial.factor
+    // PointerEvent screen coordinates are already expressed in CSS pixels.
+    // Only the native window position/size values need conversion from physical
+    // pixels; dividing the pointer delta again makes resizing run at half speed
+    // on a 200% display (and similarly on any non-100% scale factor).
+    const deltaX = latestEvent.screenX - initial.pointerX
+    const deltaY = latestEvent.screenY - initial.pointerY
     let x = initial.x
     let y = initial.y
     let width = initial.width

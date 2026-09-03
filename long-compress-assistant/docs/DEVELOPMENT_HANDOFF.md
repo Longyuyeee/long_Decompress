@@ -1010,3 +1010,11 @@
 - 已通过 Rust 真实文件系统 3/3、相关界面/归档回归 41/41、完整单元 273/273、TypeScript/Rust/生产构建和 `1.1.19` 八处身份门禁。本地正式 NSIS 已生成；第一次桌面门禁误用无测试桥正式候选而按设计超时，隔离 E2E 测试体正在用于真实桌面复验，不能把该环境错误写成功能失败或成功证据。
 - 接续顺序：完成隔离真实桌面门禁并记录预期/实际 → 审计最终差异 → 提交推送文档与版本 → 等待 PR CI 全绿并合入主线 → 在合并提交打 annotated `v1.1.19` 标签 → 核验公开 NSIS/updater/signature/latest.json → 运行真实 `v1.1.18 → v1.1.19` 更新 → 将 README 的“发布目标”改为“公开稳定版”。
 - 完整范围和安全边界见 [DUAL_PANE_FILE_BROWSER_AUDIT.md](DUAL_PANE_FILE_BROWSER_AUDIT.md)，发布说明见 [RELEASE_NOTES_1.1.19.md](RELEASE_NOTES_1.1.19.md)。
+
+# 2026-09-03 解压运行态真实桌面复核追加
+
+- 分支仍为 `codex/decompression-runtime-ux`，公开版本仍为 `v1.2.5`；本阶段不升版、不创建标签或 Release。
+- 已使用独立单实例名、独立数据目录和 WebView2 profile 启动真实 Tauri 审计进程；正式安装版进程和用户任务未关闭、未复用。920×620 与原生最小尺寸 760×520 均无文档、任务表、展开详情或日志横向结构溢出。
+- 真实 32 MiB 随机文件 7Z 往返完成，源/输出 SHA-256 一致；后端原始进度跳变时显示值连续缓动，终态速度清空。真实加密 RAR 错误保险箱候选进入明确手动密码态且没有弹窗循环，正确 `12345678` 解出 `foo.txt`/`bar.txt`。
+- 真实界面复核额外发现并修复两项：失败态详情密码控件在 247 px 窄栏内横向溢出；200% DPI 下窗口缩放速度因重复除以缩放倍率而减半。修复后密码栏 `scrollWidth=clientWidth=237`，原生窗口拖动 80×50 会精确缩放 80×50。
+- 最终定向前端测试为 5 文件 20/20；完整证据与预期/实际见 [DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md](DECOMPRESSION_RUNTIME_UX_AUDIT_2026-09-03.md)。标准 WebDriver 门禁仍受本机 `SessionNotCreatedError` 阻挡；发布候选前在正常 CI/Windows 主机补跑 `test:e2e:desktop:responsive-layout`，并人工拖动一次标题栏。

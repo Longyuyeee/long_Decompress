@@ -156,7 +156,7 @@ describe('MainLayout', () => {
     expect(mocks.setSize).not.toHaveBeenCalled()
   })
 
-  it('converts physical pointer deltas to logical pixels while resizing', async () => {
+  it('keeps CSS pointer deltas unchanged while converting native window metrics', async () => {
     mocks.scaleFactor.mockResolvedValueOnce(2)
     mocks.outerPosition.mockResolvedValueOnce({ x: 200, y: 160 })
     mocks.outerSize.mockResolvedValueOnce({ width: 1840, height: 1240 })
@@ -167,7 +167,7 @@ describe('MainLayout', () => {
     await flushPromises()
     dispatchPointer('pointermove', { buttons: 1, pointerId: 8, screenX: 1040, screenY: 730 })
     await vi.waitFor(() => expect(mocks.setSize).toHaveBeenCalled())
-    expect(mocks.setSize.mock.calls.at(-1)?.[0]).toMatchObject({ width: 940, height: 635 })
+    expect(mocks.setSize.mock.calls.at(-1)?.[0]).toMatchObject({ width: 960, height: 650 })
     dispatchPointer('pointerup', { buttons: 0, pointerId: 8 })
   })
 
