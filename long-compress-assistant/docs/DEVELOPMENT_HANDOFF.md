@@ -1,19 +1,12 @@
 # 开发交接
 
-## 2026-09-03 v1.2.7 换机发布交接（最新接续点）
+## 2026-09-03 v1.2.7 正式发布关闭（最新接续点）
 
-- 功能与发布候选已经由 [PR #120](https://github.com/Longyuyeee/long_Decompress/pull/120) 合入 `master`，merge commit 为 `c4d2adc2c1df1237d3674dc7ac76f6507c6979e4`；PR 的 Frontend、Browser shell E2E、Rust/Shell、Windows desktop E2E build、Windows installer 五项检查全部通过。
-- README、版本说明和 `1.2.7` 八处版本身份已经包含在上述 merge commit 中并推送。annotated tag `v1.2.7` 已指向同一 merge commit 并推送到 GitHub。
-- tag 已触发 [Release workflow 33739220209](https://github.com/Longyuyeee/long_Decompress/actions/runs/33739220209)。本机停止观察时，版本身份、依赖安装、类型检查和前端单元测试已通过，Rust Release 测试仍在执行；**尚未确认 workflow 最终结果，也尚未核对公开 Release 资产，因此不得把 v1.2.7 写成已完成发布。**
-- 用户要求换电脑，当前机器不再等待、构建、安装或补做验证。用户正在运行的 `E:\Long\Long解压\Long解压.exe` 未被候选安装包替换。
-
-### 新电脑只需完成的收口步骤
-
-1. 拉取 `master` 与 tags，确认 `master` 至少包含 `c4d2adc`，且 `git rev-list -n 1 v1.2.7` 为 `c4d2adc2c1df1237d3674dc7ac76f6507c6979e4`。
-2. 打开 Release workflow `33739220209`：若仍在运行则等待；若失败，只处理失败的发布步骤，不重做已合并功能；若成功再继续。
-3. 打开 [v1.2.7 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.7)，确认不是 draft/prerelease，并确认至少存在安装器、`.nsis.zip`、`.nsis.zip.sig`、`latest.json` 四项公开资产。
-4. 下载四项资产；核对 `latest.json.version == 1.2.7`、下载 URL 指向本次公开 ZIP、manifest 签名与 `.sig` 内容一致，并记录公开资产大小与 SHA-256。
-5. 只有 workflow 成功且公开资产核对通过后，才把 [RELEASE_AUDIT_1.2.7.md](RELEASE_AUDIT_1.2.7.md) 的状态改成“正式发布完成”并提交推送。除非另有明确授权，不执行会停止/替换当前正式版的安装或升级生命周期。
+- 功能与发布候选已由 [PR #120](https://github.com/Longyuyeee/long_Decompress/pull/120) 合入 `master@c4d2adc2c1df1237d3674dc7ac76f6507c6979e4`；五项 PR 检查全部通过，annotated tag `v1.2.7` 精确指向该合并提交。
+- [Release workflow 33739220209](https://github.com/Longyuyeee/long_Decompress/actions/runs/33739220209) 已成功完成；[v1.2.7 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.7) 为非草稿、非预发布，安装器、updater ZIP、独立签名和 `latest.json` 四项资产均已公开。
+- 四项公开资产已回下载。`latest.json.version == 1.2.7`，Windows x86_64 URL 精确指向本标签 updater ZIP，manifest 签名与 `.sig` 的 428 字节内容逐字一致；大小与 SHA-256 见 [RELEASE_AUDIT_1.2.7.md](RELEASE_AUDIT_1.2.7.md)。
+- `v1.2.7` 功能、CI、标签、公开 Release 与资产对账至此关闭。本机没有执行会停止或替换用户正式版的安装/升级生命周期，该项不冒充已通过。
+- 下一功能接续点是公开版之后的压缩任务展开详情密度：先在 920×620、760×520 和高 DPI 下审计真实活动/终态任务，再独立修复配置栏、执行栏、日志与底部操作区的信息层级；不得改变统一任务、历史和发布事务边界。
 
 ## 2026-09-03 v1.2.7 发布候选（当前接续点）
 

@@ -45,16 +45,23 @@
 
 本机候选只用于身份与可构建性审计；正式公开安装包和 updater 资产必须由 tag 触发的干净 GitHub Actions Runner 重新生成并回下载校验。
 
-## 发布状态
+## 正式发布状态
 
-### 2026-09-03 换机暂停记录
+- [PR #120](https://github.com/Longyuyeee/long_Decompress/pull/120) 的五项 CI 全部通过，并以 merge commit `c4d2adc2c1df1237d3674dc7ac76f6507c6979e4` 合入 `master`；annotated tag `v1.2.7` 精确指向该提交。
+- [Release workflow 33739220209](https://github.com/Longyuyeee/long_Decompress/actions/runs/33739220209) 于 2026-09-03 成功完成。正式 [Long解压 v1.2.7](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.7) 已公开，且不是 draft 或 prerelease。
+- 四项公开资产已回下载并逐项核对：
 
-- [PR #120](https://github.com/Longyuyeee/long_Decompress/pull/120) 的五项 CI 已全部通过，并以 merge commit `c4d2adc2c1df1237d3674dc7ac76f6507c6979e4` 合入 `master`。
-- README、Release Notes 与 `1.2.7` 版本身份已随该提交推送；annotated tag `v1.2.7` 已指向同一提交并推送。
-- tag 已触发 [Release workflow 33739220209](https://github.com/Longyuyeee/long_Decompress/actions/runs/33739220209)。停止观察时，版本身份、依赖安装、类型检查和前端单元测试已通过，Rust Release 测试仍在执行。
-- 当前未确认 workflow 最终结论，未确认 GitHub Release 是否已公开，也未回下载核对安装器、更新 ZIP、签名和 `latest.json`。因此当前仍是“已推送 tag、发布流水线执行中/待确认”，不得写成正式发布完成。
+| 公开资产 | 字节 | SHA-256 |
+| --- | ---: | --- |
+| `latest.json` | `932` | `070649E4B5C55004433F883E710A39BA3AA4E4C91FF2AD47DF6727F901E84BEE` |
+| `Long-Decompress_1.2.7_x64-setup.exe` | `19,373,672` | `6494562BD76D53C801C062123EACAC78B78002513CAB529BF894A9D4451E8449` |
+| `Long-Decompress_1.2.7_x64-setup.nsis.zip` | `19,373,830` | `E02663023F47933145C3A8EBB77A637009394925E524529DE04899B503311E16` |
+| `Long-Decompress_1.2.7_x64-setup.nsis.zip.sig` | `428` | `60B932AC890254402F0AA12D565BC0362AD685B2852553A18045F552F7BC5F7D` |
 
-换机后严格按以下顺序接续：确认 workflow 成功 → 确认 Release 非 draft/prerelease → 下载四项公开资产 → 核对版本、URL、签名、大小和 SHA-256 → 再将本审计改为正式发布完成并提交推送。除非另有明确授权，不执行本机安装/升级生命周期。
+- `latest.json.version` 为 `1.2.7`；Windows x86_64 URL 精确指向本标签的 updater ZIP；manifest 内签名与独立 `.sig` 的 428 字节内容逐字一致。GitHub API 公布的四项资产摘要与回下载 SHA-256 全部一致。
+- 本机没有执行会停止或替换用户正式版的安装/升级生命周期，因此不把该项写成通过；它不影响由干净 GitHub Runner 生成并公开的本次发布资产结论。
+
+`v1.2.7` 的功能、回归、CI、版本身份、标签、Release 和公开资产对账至此全部关闭。下一开发节点从最新 `master` 重新立项，不从旧候选分支接续。
 
 ## 明确边界
 
