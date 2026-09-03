@@ -552,7 +552,12 @@ impl CompressionService {
         metric.last_bytes = processed_bytes;
 
         let elapsed = metric.started_at.elapsed().as_secs_f64();
-        let bytes_per_second = if elapsed > f64::EPSILON {
+        // The first/final callback can arrive within a few milliseconds for
+        // cached or tiny work. Reporting a quotient for that interval creates
+        // physically impossible multi-billion MB/s values. Wait for a real
+        // observation window and never publish a terminal one-sample rate.
+        let has_stable_window = elapsed >= 0.25 && progress < 1.0 && processed_bytes < total_bytes;
+        let bytes_per_second = if has_stable_window {
             processed_bytes as f64 / elapsed
         } else {
             0.0
@@ -1401,18 +1406,24 @@ impl CompressionService {
                     );
                     return Some(password);
                 }
-                Ok(false) => self.emit_log(
-                    window,
-                    task_id,
-                    &format!(
-                        "内置字典候选 [{}/{}] · {} → 未匹配（{}）",
-                        current,
-                        total,
-                        descriptor,
-                        Self::elapsed_label(attempt_started_at)
-                    ),
-                    TaskLogSeverity::Info,
-                ),
+                Ok(false) => {
+                    // The live progress payload already exposes every candidate.
+                    // Keep the permanent task log readable by sampling routine
+                    // misses instead of appending hundreds of near-identical rows.
+                    if Self::should_log_password_attempt(current, total) {
+                        self.emit_log(
+                            window,
+                            task_id,
+                            &format!(
+                                "内置字典进度 [{}/{}] · 当前候选未匹配（{}）",
+                                current,
+                                total,
+                                Self::elapsed_label(attempt_started_at)
+                            ),
+                            TaskLogSeverity::Info,
+                        );
+                    }
+                },
                 Err(error) => self.emit_log(
                     window,
                     task_id,
@@ -1439,6 +1450,10 @@ impl CompressionService {
             TaskLogSeverity::Warning,
         );
         None
+    }
+
+    fn should_log_password_attempt(current: usize, total: usize) -> bool {
+        current <= 3 || current == total || current % 25 == 0
     }
 
     async fn password_book_candidates(&self) -> Result<Vec<(String, String, String)>> {
@@ -3587,7 +3602,7 @@ mod tests_continued {
     }
 
     #[tokio::test]
-    async fn progress_telemetry_reports_short_task_throughput() {
+    async fn progress_telemetry_suppresses_unstable_short_task_throughput() {
         let service = CompressionService::for_testing();
         service.begin_progress_telemetry("short-telemetry-task");
         std::thread::sleep(std::time::Duration::from_millis(1));
@@ -3599,8 +3614,16 @@ mod tests_continued {
             4 * 1024 * 1024,
         );
 
-        assert!(speed.is_some());
-        assert_eq!(eta, Some(0));
+        assert_eq!(speed, None);
+        assert_eq!(eta, None);
+    }
+
+    #[test]
+    fn password_attempt_logs_are_sampled_without_hiding_boundaries() {
+        let retained: Vec<_> = (1..=254)
+            .filter(|current| CompressionService::should_log_password_attempt(*current, 254))
+            .collect();
+        assert_eq!(retained, vec![1, 2, 3, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 254]);
     }
 
     #[test]

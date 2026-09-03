@@ -358,12 +358,15 @@ html, body, #app {
 }
 
 @media (max-height: 640px) {
-  .app-sidebar > nav {
-    gap: .125rem;
-    padding-block: .375rem;
-    scrollbar-width: none;
-  }
+  .app-sidebar .sidebar-brand { height: 3.5rem; }
+  .app-sidebar .sidebar-brand img,
+  .app-sidebar .sidebar-brand > div:first-child { width: 2rem; height: 2rem; }
+  .app-sidebar > nav { gap: .125rem; padding: .375rem .625rem; scrollbar-width: none; }
   .app-sidebar > nav::-webkit-scrollbar { display: none; width: 0; }
-  .nav-entry { height: 2rem; min-height: 2rem; }
+  .app-sidebar .nav-entry { height: 2.5rem; min-height: 2.5rem; padding-inline: .5rem; }
+  .app-sidebar .nav-entry > div:nth-of-type(2) { width: 1.75rem; height: 1.75rem; }
+  .app-sidebar .nav-entry .sidebar-copy > div:last-child { display: none; }
+  .app-sidebar .sidebar-version-row { display: none; }
+  .app-sidebar .sidebar-task-area { min-height: 3.75rem; margin-bottom: .375rem; }
 }
 </style>

@@ -6,6 +6,7 @@ import { usePasswordStore } from '@/stores/password'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import Modal from '@/components/ui/Modal.vue'
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
+import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
 import { open } from '@tauri-apps/api/dialog'
 import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
@@ -283,7 +284,7 @@ const onLeave = (el: any) => {
             </div>
 
             <!-- 文件识别区 (极致紧凑) -->
-            <div class="task-name-cell flex-[1.5] min-w-0 overflow-hidden flex items-center gap-3">
+            <div class="task-name-cell flex-[1.3] min-w-0 overflow-hidden flex items-center gap-3">
               <div class="text-content font-bold truncate text-sm tracking-tight group-hover/row:text-primary transition-colors leading-tight">{{ task.name }}</div>
               <span class="text-dim text-sm uppercase font-black tracking-widest bg-input/50 px-1 py-0 rounded border border-subtle/20 shrink-0">
                 {{ task.format?.toUpperCase() }}
@@ -296,9 +297,9 @@ const onLeave = (el: any) => {
             </div>
 
             <!-- 状态与执行进度 -->
-            <div class="task-status-cell flex-1 min-w-0 flex items-center gap-3">
+            <div class="task-status-cell flex-[1.15] min-w-0 flex items-center gap-2">
               <!-- 状态图标和文字 -->
-              <div class="flex items-center gap-2">
+              <div class="flex shrink-0 items-center gap-1.5">
                 <span class="text-lg">{{ getStatusIcon(task.status) }}</span>
                 <span
                   class="text-xs font-black uppercase tracking-widest transition-all"
@@ -308,15 +309,22 @@ const onLeave = (el: any) => {
                 </span>
               </div>
 
+              <div v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)" class="min-w-0 flex-1">
+                <div class="flex min-w-0 items-center gap-2 whitespace-nowrap text-xs">
+                  <span class="shrink-0 font-bold text-muted">{{ getStageText(task) }}</span>
+                  <span v-if="task.currentFile" class="min-w-0 flex-1 truncate font-mono text-dim" :title="task.currentFile">{{ task.currentFile.split(/[\\/]/).pop() }}</span>
+                  <span v-if="task.speed" class="shrink-0 font-mono text-dim">{{ task.speed }}</span>
+                </div>
+
               <!-- 进度条（仅运行时显示） -->
               <div
-                v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)"
-                class="flex-1 h-1.5 bg-input/50 rounded-full overflow-hidden"
+                class="mt-1 h-1.5 bg-input/50 rounded-full overflow-hidden"
               >
                 <div
                   class="archive-progress-fill h-full bg-primary transition-all duration-300 rounded-full"
                   :style="{ width: `${task.progress || 0}%` }"
                 ></div>
+              </div>
               </div>
 
               <!-- 进度百分比 -->
@@ -324,7 +332,7 @@ const onLeave = (el: any) => {
                 v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)"
                 class="text-xs font-mono text-primary font-bold"
               >
-                {{ formatProgressPercent(task.progress) }}%
+                <SmoothProgressValue :value="task.progress" />
               </span>
             </div>
 
@@ -413,7 +421,7 @@ const onLeave = (el: any) => {
                             </button>
                           </div>
                         </div>
-                        <div class="min-w-0 px-3 py-2 rounded-xl bg-input/50 border border-subtle/50 font-mono text-sm text-content/80 break-words [overflow-wrap:anywhere] shadow-inner">
+                        <div class="min-w-0 truncate px-3 py-2 rounded-xl bg-input/50 border border-subtle/50 font-mono text-sm text-content/80 shadow-inner" :title="task.outputPath || appStore.t('decompress.config.output_auto')">
                           {{ task.outputPath || appStore.t('decompress.config.output_auto') }}
                         </div>
                       </div>
@@ -424,14 +432,14 @@ const onLeave = (el: any) => {
                                 :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
                             <i v-if="task.extractToSubfolder" class="pi pi-check text-xs text-white"></i>
                           </span>
-                          <span class="min-w-0 break-words [overflow-wrap:anywhere] text-sm font-bold text-muted group-hover/check:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
+                          <span class="min-w-0 whitespace-nowrap text-sm font-bold text-muted group-hover/check:text-content transition-colors tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
                         </button>
                         <button type="button" role="switch" data-testid="task-recycle-source-switch" :aria-checked="task.recycleSourceAfterExtract" :disabled="task.status !== 'pending'" :title="appStore.t('decompress.config.recycle_source.desc')" class="flex min-w-0 items-center gap-3 cursor-pointer group/recycle text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.recycleSourceAfterExtract = !task.recycleSourceAfterExtract">
                           <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/recycle:border-primary"
                                 :class="task.recycleSourceAfterExtract ? 'bg-primary border-primary' : 'bg-input'">
                             <i v-if="task.recycleSourceAfterExtract" class="pi pi-check text-xs text-white"></i>
                           </span>
-                          <span class="min-w-0 break-words [overflow-wrap:anywhere] text-sm font-bold text-muted group-hover/recycle:text-content transition-colors uppercase tracking-tight">{{ appStore.t('decompress.config.recycle_source') }}</span>
+                          <span class="min-w-0 whitespace-nowrap text-sm font-bold text-muted group-hover/recycle:text-content transition-colors tracking-tight">{{ appStore.t('decompress.config.recycle_source') }}</span>
                         </button>
                       </div>
 
@@ -484,21 +492,21 @@ const onLeave = (el: any) => {
                         <span class="text-content">{{ task.compressionOptions?.password ? '已启用' : '关闭' }}</span>
                       </div>
                     </div>
-                    <ResourcePreflightCard :report="task.resourcePreflight" />
+                    <ResourcePreflightCard :report="task.resourcePreflight" compact />
                   </div>
 
                   <!-- 右侧：执行日志 -->
                   <div data-testid="decompression-execution-panel" class="task-execution-panel min-w-0 p-4 flex flex-col overflow-hidden">
-                    <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
+                    <div class="execution-summary grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">阶段</span>
                         <div class="font-black text-content truncate mt-0.5">{{ getStageText(task) }}</div>
                       </div>
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">进度</span>
-                        <div class="font-mono font-black text-primary mt-0.5">{{ formatProgressPercent(task.progress) }}%<span v-if="task.speed" class="ml-2 text-muted">{{ task.speed }}</span></div>
+                        <div class="mt-0.5 flex min-w-0 items-center gap-2 whitespace-nowrap font-mono font-black text-primary"><SmoothProgressValue :value="task.progress" /><span v-if="task.speed && !['completed', 'failed', 'cancelled'].includes(task.status)" class="min-w-0 truncate text-muted">{{ task.speed }}</span></div>
                       </div>
-                      <div v-if="task.currentFile" class="task-current-file col-span-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentFile">
+                      <div v-if="task.currentFile" class="task-current-file col-span-2 min-w-0 truncate rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 font-mono text-content" :title="task.currentFile">
                         {{ task.currentFile }}
                       </div>
                       <div v-if="task.currentPassword" class="col-span-2 min-w-0 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2">
@@ -515,23 +523,19 @@ const onLeave = (el: any) => {
                       </div>
                       <div
                         v-if="task.type === 'decompression' && (task.outputBytes !== undefined || task.totalBytes)"
-                        class="col-span-2 grid min-w-0 grid-cols-3 gap-2"
+                        class="col-span-2 grid min-w-0 grid-cols-2 gap-2"
                       >
                         <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
-                          <span class="text-muted">已产出内容</span>
+                          <span class="whitespace-nowrap text-muted">已产出</span>
                           <div class="mt-0.5 truncate font-mono font-black text-primary" :title="`${task.outputBytes || 0} B`">
                             {{ task.outputBytesEstimated ? '约 ' : '' }}{{ formatFileSize(task.outputBytes || 0) }}
                           </div>
                         </div>
                         <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
-                          <span class="text-muted">预计展开大小</span>
+                          <span class="whitespace-nowrap text-muted">预计总量</span>
                           <div class="mt-0.5 truncate font-mono font-black text-content" :title="`${task.totalBytes || 0} B`">
                             {{ task.totalBytes ? formatFileSize(task.totalBytes) : '计算中' }}
                           </div>
-                        </div>
-                        <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
-                          <span class="text-muted">展开速度</span>
-                          <div class="mt-0.5 truncate font-mono font-black text-content">{{ task.speed || '计算中' }}</div>
                         </div>
                       </div>
                     </div>
@@ -544,7 +548,7 @@ const onLeave = (el: any) => {
                     <div data-testid="decompression-log-viewport" class="log-viewport flex-1 min-w-0 overflow-y-auto overflow-x-hidden pr-2 space-y-1.5 custom-scrollbar">
                       <div v-for="(log, idx) in task.logs" :key="idx" class="task-log-entry flex min-w-0 gap-3 items-start group/log border-l-2 border-subtle/20 pl-3 py-0.5">
                         <span class="task-log-time text-dim font-mono text-xs mt-0.5 opacity-80 shrink-0">{{ new Date(log.timestamp).toLocaleTimeString([], {hour12: false}) }}</span>
-                        <div class="task-log-message min-w-0 flex-1 break-words [overflow-wrap:anywhere] text-sm leading-relaxed font-mono" :class="getSeverityClass(log.severity)">
+                        <div class="task-log-message min-w-0 flex-1 truncate whitespace-nowrap text-sm leading-relaxed font-mono" :class="getSeverityClass(log.severity)" :title="log.message">
                           {{ log.message }}
                         </div>
                       </div>
@@ -649,7 +653,7 @@ const onLeave = (el: any) => {
 
 .task-detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  grid-template-columns: minmax(16rem, 0.82fr) minmax(19rem, 1.18fr);
   align-items: stretch;
   height: clamp(22rem, 54vh, 32rem);
   min-height: 0;
@@ -707,21 +711,21 @@ const onLeave = (el: any) => {
 }
 
 .task-current-file {
-  display: -webkit-box;
+  display: block;
   overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .task-log-message {
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .task-detail-card:hover {
-  /* 彻底移除位移和缩放，保持物理位置绝对不动 */
-  border: 2px dashed var(--dynamic-accent);
-  border-style: solid; /* 悬浮时变为实线，提供强视觉反馈 */
+  border-color: var(--dynamic-accent);
+  border-style: solid;
   box-shadow: 
     0 25px 50px -12px rgba(0, 0, 0, 0.5),
     0 0 15px color-mix(in srgb, var(--dynamic-accent) 30%, transparent),
@@ -732,8 +736,8 @@ const onLeave = (el: any) => {
 .task-detail-card::after {
   content: '';
   position: absolute;
-  inset: -2px; /* 稍微扩大一点，确保加粗时不被遮挡 */
-  border: 2px dashed var(--dynamic-accent);
+  inset: 0;
+  border: 1px dashed var(--dynamic-accent);
   border-radius: 1.1rem;
   opacity: 0.1;
   pointer-events: none;
@@ -742,7 +746,7 @@ const onLeave = (el: any) => {
 
 .task-detail-card:hover::after {
   opacity: 0.6;
-  inset: -1px;
+  inset: 0;
 }
 
 .aero-drawer-enter-active, .aero-drawer-leave-active {
@@ -759,9 +763,13 @@ const onLeave = (el: any) => {
 }
 
 .task-row {
-  /* 严格控制磁贴高度 */
-  height: 38px;
-  min-height: 38px;
+  height: 52px;
+  min-height: 52px;
+}
+
+@media (max-width: 980px) {
+  .task-detail-layout { grid-template-columns: minmax(15.5rem, .82fr) minmax(17rem, 1.18fr); }
+  .task-status-cell { flex-basis: 17rem; }
 }
 
 .details-drawer {

@@ -259,6 +259,7 @@ export const useTaskStore = defineStore('task', () => {
       }
       if (terminalStatuses.includes(status)) {
         task.endTime = new Date()
+        task.speed = undefined
         task.etaSeconds = undefined
         const historyRecord = createTaskHistoryRecord(task)
         historyPersistence.set(taskId, invoke('save_task_history', { record: historyRecord })
