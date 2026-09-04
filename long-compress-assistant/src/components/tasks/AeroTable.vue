@@ -568,7 +568,7 @@ const onLeave = (el: any) => {
                         <div class="mt-1 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentPassword">
                           {{ task.currentPassword }}
                         </div>
-                        <div class="mt-1 text-xs text-dim">为保护隐私，不在执行日志中记录密码明文</div>
+                        <div class="mt-1 text-xs text-dim">当前实际候选密码会直接显示；匹配成功后会记录本次解压使用的密码</div>
                       </div>
                       <div
                         v-if="task.type === 'decompression' && (task.outputBytes !== undefined || task.totalBytes)"

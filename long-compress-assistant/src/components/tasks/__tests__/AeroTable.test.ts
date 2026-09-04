@@ -120,4 +120,33 @@ describe('AeroTable', () => {
     expect(passwordInput.classes()).toContain('min-w-0')
     expect(configPanel.findAll('button').at(-1)?.text()).toContain('使用密码重试')
   })
+
+  it('shows the actual password candidate in expanded extraction details', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const taskStore = useTaskStore()
+    taskStore.addTask({
+      id: 'password-attempt',
+      name: 'encrypted.rar',
+      type: 'decompression',
+      sourceFiles: ['C:\\fixtures\\encrypted.rar'],
+      outputPath: 'C:\\fixtures\\output',
+      format: 'rar',
+    })
+    taskStore.updateTaskStatus('password-attempt', 'extracting')
+    taskStore.tasks[0].currentPassword = '保险箱「常用密码」· 密码「open-sesame」'
+    taskStore.tasks[0].passwordAttemptCurrent = 2
+    taskStore.tasks[0].passwordAttemptTotal = 5
+
+    const wrapper = mount(AeroTable, {
+      props: { taskType: 'decompression' },
+      global: { plugins: [pinia], stubs: { Transition: false, TransitionGroup: false } },
+    })
+    await wrapper.get('[data-testid="task-row"]').trigger('click')
+
+    const executionPanel = wrapper.get('[data-testid="decompression-execution-panel"]')
+    expect(executionPanel.text()).toContain('密码「open-sesame」')
+    expect(executionPanel.text()).toContain('当前实际候选密码会直接显示')
+    expect(executionPanel.text()).not.toContain('不在执行日志中记录密码明文')
+  })
 })

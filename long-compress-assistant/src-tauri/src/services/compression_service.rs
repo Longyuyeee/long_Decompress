@@ -1288,26 +1288,6 @@ impl CompressionService {
             .get_recommended_strategy(Some(file_name))
     }
 
-    fn password_candidate_descriptor(password: &str) -> String {
-        let mut kinds = Vec::new();
-        if password.chars().any(|ch| ch.is_ascii_alphabetic()) {
-            kinds.push("字母");
-        }
-        if password.chars().any(|ch| ch.is_ascii_digit()) {
-            kinds.push("数字");
-        }
-        if password.chars().any(|ch| ch.is_ascii_punctuation()) {
-            kinds.push("符号");
-        }
-        if !password.is_ascii() {
-            kinds.push("非 ASCII 字符");
-        }
-        if kinds.is_empty() {
-            kinds.push("其他字符");
-        }
-        format!("{} 字符 · {}", password.chars().count(), kinds.join("+"))
-    }
-
     fn elapsed_label(started_at: Instant) -> String {
         let elapsed = started_at.elapsed();
         if elapsed.as_millis() < 1_000 {
@@ -1384,7 +1364,7 @@ impl CompressionService {
             window,
             task_id,
             &format!(
-                "内置密码字典准备完成：共 {} 个候选；实时展示候选特征，不记录密码明文",
+                "内置密码字典准备完成：共 {} 个候选；实时显示正在验证的密码",
                 total
             ),
             TaskLogSeverity::Info,
@@ -1396,13 +1376,12 @@ impl CompressionService {
                 return None;
             }
             let current = index + 1;
-            let descriptor = Self::password_candidate_descriptor(&password);
             self.emit_password_attempt_progress(
                 window,
                 task_id,
                 current,
                 Some(total),
-                format!("内置字典 #{} · {}", current, descriptor),
+                format!("内置字典 #{} · 密码「{}」", current, password),
             );
             let attempt_started_at = Instant::now();
             match self.test_archive_password(file_path, &password).await {
@@ -1411,10 +1390,10 @@ impl CompressionService {
                         window,
                         task_id,
                         &format!(
-                            "内置字典候选 [{}/{}] · {} → 匹配成功（{}）",
+                            "内置字典候选 [{}/{}] · 密码「{}」→ 匹配成功（{}）",
                             current,
                             total,
-                            descriptor,
+                            password,
                             Self::elapsed_label(attempt_started_at)
                         ),
                         TaskLogSeverity::Success,
@@ -1430,9 +1409,10 @@ impl CompressionService {
                             window,
                             task_id,
                             &format!(
-                                "内置字典进度 [{}/{}] · 当前候选未匹配（{}）",
+                                "内置字典进度 [{}/{}] · 密码「{}」未匹配（{}）",
                                 current,
                                 total,
+                                password,
                                 Self::elapsed_label(attempt_started_at)
                             ),
                             TaskLogSeverity::Info,
@@ -1542,7 +1522,7 @@ impl CompressionService {
             window,
             task_id,
             &format!(
-                "密码保险箱已载入 {} 个候选，按收藏、使用频率和最近使用排序；日志不会记录密码明文",
+                "密码保险箱已载入 {} 个候选，按收藏、使用频率和最近使用排序；实时显示正在验证的密码",
                 total
             ),
             TaskLogSeverity::Info,
@@ -1554,13 +1534,12 @@ impl CompressionService {
                 return None;
             }
             let current = idx + 1;
-            let descriptor = Self::password_candidate_descriptor(pwd);
             self.emit_password_attempt_progress(
                 window,
                 task_id,
                 current,
                 Some(total),
-                format!("保险箱「{}」· {}", entry_name, descriptor),
+                format!("保险箱「{}」· 密码「{}」", entry_name, pwd),
             );
             let attempt_started_at = Instant::now();
 
@@ -1570,11 +1549,11 @@ impl CompressionService {
                         window,
                         task_id,
                         &format!(
-                            "保险箱候选 [{}/{}]「{}」· {} → 匹配成功（{}）",
+                            "保险箱候选 [{}/{}]「{}」· 密码「{}」→ 匹配成功（{}）",
                             current,
                             total,
                             entry_name,
-                            descriptor,
+                            pwd,
                             Self::elapsed_label(attempt_started_at)
                         ),
                         TaskLogSeverity::Success,
@@ -1586,11 +1565,11 @@ impl CompressionService {
                     window,
                     task_id,
                     &format!(
-                        "保险箱候选 [{}/{}]「{}」· {} → 未匹配（{}）",
+                        "保险箱候选 [{}/{}]「{}」· 密码「{}」→ 未匹配（{}）",
                         current,
                         total,
                         entry_name,
-                        descriptor,
+                        pwd,
                         Self::elapsed_label(attempt_started_at)
                     ),
                     TaskLogSeverity::Info,
@@ -1665,7 +1644,7 @@ impl CompressionService {
             window,
             task_id,
             &format!(
-                "开始尝试 {} 个导入密码词表；实时展示候选特征，不记录密码明文",
+                "开始尝试 {} 个导入密码词表；实时显示正在验证的密码",
                 wordlists.len()
             ),
             TaskLogSeverity::Info,
@@ -1716,13 +1695,12 @@ impl CompressionService {
                 }
 
                 attempted += 1;
-                let descriptor = Self::password_candidate_descriptor(&password);
                 self.emit_password_attempt_progress(
                     window,
                     task_id,
                     attempted,
                     None,
-                    format!("导入词表 #{} · {}", attempted, descriptor),
+                    format!("导入词表 #{} · 密码「{}」", attempted, password),
                 );
                 let attempt_started_at = Instant::now();
                 match self.test_archive_password(file_path, &password).await {
@@ -1731,9 +1709,9 @@ impl CompressionService {
                             window,
                             task_id,
                             &format!(
-                                "导入词表候选 #{} · {} → 匹配成功（{}）",
+                                "导入词表候选 #{} · 密码「{}」→ 匹配成功（{}）",
                                 attempted,
-                                descriptor,
+                                password,
                                 Self::elapsed_label(attempt_started_at)
                             ),
                             TaskLogSeverity::Success,
@@ -1746,9 +1724,9 @@ impl CompressionService {
                                 window,
                                 task_id,
                                 &format!(
-                                    "导入词表已验证 {} 个候选；当前候选 {} → 未匹配（{}）",
+                                    "导入词表已验证 {} 个候选；密码「{}」未匹配（{}）",
                                     attempted,
-                                    descriptor,
+                                    password,
                                     Self::elapsed_label(attempt_started_at)
                                 ),
                                 TaskLogSeverity::Info,
@@ -1987,7 +1965,12 @@ impl CompressionService {
             if needs_pwd {
                 service.emit_log(&window, &task_id, "检测到加密格式，正在启动自动解锁流程...", TaskLogSeverity::Info);
                 if let Some(smart_pwd) = service.resolve_archive_password(&window, &task_id, &file_path, &options).await {
-                    service.emit_log(&window, &task_id, "已取得有效解压凭据，准备执行安全预检", TaskLogSeverity::Success);
+                    service.emit_log(
+                        &window,
+                        &task_id,
+                        &format!("已取得有效解压凭据：密码「{}」，准备执行安全预检", smart_pwd),
+                        TaskLogSeverity::Success,
+                    );
                     final_password = Some(smart_pwd);
                 } else {
                     service.emit_log(&window, &task_id, "所有已知密码均无效，等待手动输入", TaskLogSeverity::Warning);
@@ -2009,7 +1992,10 @@ impl CompressionService {
             service.emit_log(
                 &window,
                 &task_id,
-                "已收到手动输入的解压密码，正在安全预检；日志不会记录密码明文",
+                &format!(
+                    "已收到手动输入的解压密码「{}」，正在安全预检",
+                    final_password.as_deref().unwrap_or_default()
+                ),
                 TaskLogSeverity::Info,
             );
         }
@@ -2022,7 +2008,10 @@ impl CompressionService {
             service.emit_log(
                 &window,
                 &task_id,
-                "密码验证通过，归档可以解锁",
+                &format!(
+                    "密码验证通过：本次解压使用密码「{}」",
+                    final_password.as_deref().unwrap_or_default()
+                ),
                 TaskLogSeverity::Success,
             );
         }
@@ -3321,7 +3310,7 @@ mod tests {
             "task-1",
             2,
             Some(2),
-            "保险箱候选".to_string(),
+            "保险箱「常用密码」· 密码「open-sesame」".to_string(),
         );
 
         assert_eq!(payload.stage.as_deref(), Some("password-attempt"));
@@ -3330,6 +3319,10 @@ mod tests {
         assert_eq!(payload.total_bytes, 0);
         assert_eq!(payload.password_attempt_current, Some(2));
         assert_eq!(payload.password_attempt_total, Some(2));
+        assert_eq!(
+            payload.current_password.as_deref(),
+            Some("保险箱「常用密码」· 密码「open-sesame」")
+        );
     }
 
     #[test]
@@ -3856,14 +3849,6 @@ mod tests_continued {
     fn test_refined_error_variants() {
         let err1 = CompressionError::PasswordRequired;
         assert_eq!(err1.to_string(), "需要输入密码才能解压");
-    }
-
-    #[test]
-    fn password_candidate_logs_describe_shape_without_exposing_plaintext() {
-        let descriptor = CompressionService::password_candidate_descriptor("Ab12-测试");
-        assert_eq!(descriptor, "7 字符 · 字母+数字+符号+非 ASCII 字符");
-        assert!(!descriptor.contains("Ab12"));
-        assert!(!descriptor.contains("测试"));
     }
 
     #[test]

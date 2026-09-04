@@ -485,6 +485,10 @@ mod tests {
             "保险箱候选 [1/2] → 未匹配"
         );
         assert_eq!(
+            redact_sensitive_text("密码验证通过：本次解压使用密码「open-sesame」"),
+            "密码验证通过：本次解压使用密码「open-sesame」"
+        );
+        assert_eq!(
             redact_sensitive_text("解压密码：open-sesame"),
             "解压密码： [已隐藏]"
         );
