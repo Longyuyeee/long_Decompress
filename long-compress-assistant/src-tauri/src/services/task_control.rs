@@ -255,12 +255,15 @@ mod tests {
                 return Err("Task control refused resume".to_string());
             }
             sync_child_pause(&flag, child.id(), &mut suspended)?;
-            std::thread::sleep(Duration::from_millis(200));
-            if std::fs::metadata(&output)
-                .map_err(|error| error.to_string())?
-                .len()
-                <= paused_size
-            {
+            let resumed = (0..100).any(|_| {
+                let grew =
+                    std::fs::metadata(&output).is_ok_and(|metadata| metadata.len() > paused_size);
+                if !grew {
+                    std::thread::sleep(Duration::from_millis(50));
+                }
+                grew
+            });
+            if !resumed {
                 return Err("Resumed child did not continue writing".to_string());
             }
             Ok(())
