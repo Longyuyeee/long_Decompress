@@ -18,70 +18,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  frontend:
-    name: Frontend checks
-    runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: long-compress-assistant
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: long-compress-assistant/package-lock.json
-      - run: npm ci
-      - run: npm run test:release-identity
-      - run: npm run type-check
-      - run: npm run test:unit:coverage
-      - run: npm run build
-
-  rust:
-    name: Rust and shell-extension checks
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            long-compress-assistant/src-tauri -> target
-            long-compress-assistant/src-tauri/shell-extension -> target
-      - name: Test Tauri backend
-        working-directory: long-compress-assistant/src-tauri
-        run: cargo test --release --all-targets
-      - name: Lint Tauri backend
-        working-directory: long-compress-assistant/src-tauri
-        run: cargo clippy --all-targets -- -D warnings
-      - name: Test Windows shell extension
-        working-directory: long-compress-assistant/src-tauri/shell-extension
-        run: cargo test --release
-      - name: Lint Windows shell extension
-        working-directory: long-compress-assistant/src-tauri/shell-extension
-        run: cargo clippy --all-targets -- -D warnings
-
-  e2e:
-    name: Browser shell E2E
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: long-compress-assistant
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: long-compress-assistant/package-lock.json
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test --project=chromium
-
-  desktop-e2e-build:
-    name: Windows desktop E2E build
+  package:
+    name: Windows package
     runs-on: windows-latest
     timeout-minutes: 30
     defaults:
@@ -97,68 +35,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: long-compress-assistant/src-tauri -> target
-      - run: npm ci
-      - name: Build frontend
-        env:
-          VITE_DESKTOP_E2E: "1"
-        run: npm run build
-      - name: Build real Tauri application
-        working-directory: long-compress-assistant/src-tauri
-        run: cargo build --release --features custom-protocol,desktop-e2e
-      - name: Validate desktop E2E scripts
-        run: |
-          node --check scripts/test-tauri-desktop.mjs
-          $errors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile(
-            (Resolve-Path "scripts/install-edge-driver.ps1"),
-            [ref]$null,
-            [ref]$errors
-          ) | Out-Null
-          if ($errors.Count -gt 0) {
-            $errors | ForEach-Object { Write-Error $_.Message }
-            exit 1
-          }
-      - name: Validate matching Microsoft EdgeDriver
-        run: .\scripts\install-edge-driver.ps1 -Destination (Join-Path $env:RUNNER_TEMP "edge-driver")
-
-  installer:
-    name: Windows installer
-    needs: [frontend, rust, e2e, desktop-e2e-build]
-    runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: long-compress-assistant
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: long-compress-assistant/package-lock.json
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
           workspaces: |
             long-compress-assistant/src-tauri -> target
             long-compress-assistant/src-tauri/shell-extension -> target
       - run: npm ci
+      - name: Verify version identity
+        run: npm run test:release-identity
       - name: Build unsigned NSIS installer
-        run: |
-          $exitCode = 1
-          for ($attempt = 1; $attempt -le 3; $attempt++) {
-            npm run tauri build -- --bundles nsis
-            $exitCode = $LASTEXITCODE
-            if ($exitCode -eq 0) {
-              exit 0
-            }
-            if ($attempt -lt 3) {
-              $delay = 15 * $attempt
-              Write-Warning "NSIS build attempt $attempt failed; retrying in $delay seconds."
-              Start-Sleep -Seconds $delay
-            }
-          }
-          exit $exitCode
+        run: npm run tauri build -- --bundles nsis
       - uses: actions/upload-artifact@v6
         with:
           name: windows-nsis-installer

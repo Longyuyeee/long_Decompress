@@ -29,9 +29,6 @@ jobs:
         shell: pwsh
         run: npm run test:release-identity -- --tag "$env:GITHUB_REF_NAME"
       - run: npm ci
-      - run: npm run type-check
-      - run: npm run test:unit
-      - run: cargo test --release --manifest-path src-tauri/Cargo.toml
       - uses: tauri-apps/tauri-action@v0
         id: tauri
         env:
@@ -49,18 +46,6 @@ jobs:
           updaterJsonPreferNsis: true
           assetNamePattern: Long-Decompress_[version]_[arch][setup][ext]
           args: --bundles nsis,updater
-      - name: Confirm Windows 11 identity packages were skipped
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $packages = @(
-            'src-tauri/resources/long_compress_context_menu_extract.msix',
-            'src-tauri/resources/long_compress_context_menu_pack.msix'
-          )
-          if (@($packages | Where-Object { Test-Path -LiteralPath $_ }).Count -gt 0) {
-            throw 'Unsigned releases must not contain Windows 11 context-menu identity packages.'
-          }
-          Write-Host 'Windows 11 identity packages skipped: no production code-signing certificate is configured.'
       - name: Verify and publish updater manifest
         shell: pwsh
         env:

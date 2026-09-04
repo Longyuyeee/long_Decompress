@@ -9,6 +9,7 @@
 - [PR #122](https://github.com/Longyuyeee/long_Decompress/pull/122) 的前端、Rust/壳扩展、浏览器 E2E、Windows 桌面 E2E 和安装器五项检查全部通过，并以 merge commit `76479f3d50eddd322437884dc597885ca10553f5` 合入 `master`；annotated `v1.2.9` 标签精确指向该提交。
 - [Release workflow 33843995836](https://github.com/Longyuyeee/long_Decompress/actions/runs/33843995836) 全绿；[v1.2.9 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.9) 已公开且非草稿、非预发布。安装器、updater ZIP、独立签名和 `latest.json` 四项资产已回下载，字节与 SHA-256 均匹配 GitHub 元数据；清单版本、URL 和签名逐项对账通过。
 - 发布关闭文档推送后的 master CI 暴露出真实测试稳定性缺口：Windows 子进程暂停测试连续两轮未能在繁忙 Runner 上及时启动 PowerShell 观察进程。观察器已改为轻量 `cmd.exe` 批处理子进程，仍验证真实系统挂起/恢复；本机 Release 定向连续 5/5 通过，最终远端结果以修正提交的 CI 为准。
+- 按产品负责人决定，持续集成与标签发布不再重复运行前端覆盖率、浏览器 E2E、桌面 E2E、Rust 全量/Clippy 和壳扩展全量。普通 CI 只校验版本身份、实际构建 NSIS 并上传安装器；Release 只校验标签版本、实际构建/上传 NSIS 与 updater，并核对公开更新清单。深度测试脚本保留为按需审计入口，不再阻塞每次打包。
 - v1.2.9 发布阶段已关闭。下一轮开发必须从最新 `master` 开始，不得从 PR #122、候选分支或旧发布步骤接续；本机未执行会替换用户当前安装版本的安装/升级生命周期，该边界不冒充通过。说明见 [RELEASE_NOTES_1.2.9.md](RELEASE_NOTES_1.2.9.md)，完整证据见 [RELEASE_AUDIT_1.2.9.md](RELEASE_AUDIT_1.2.9.md)。
 
 ## 2026-09-04 v1.2.8 正式发布关闭（历史基线）
