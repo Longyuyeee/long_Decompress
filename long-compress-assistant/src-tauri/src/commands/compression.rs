@@ -138,7 +138,7 @@ pub async fn extract_file(
 
     let result = service
         .extract(
-            window,
+            window.clone(),
             task_id.clone(),
             file_path,
             output_path,
@@ -147,6 +147,15 @@ pub async fn extract_file(
         )
         .await
         .map_err(|e| e.to_string());
+
+    if let Err(error) = result.as_ref() {
+        service.emit_log(
+            &window,
+            &task_id,
+            &format!("最终失败原因：{}", error),
+            TaskLogSeverity::Error,
+        );
+    }
 
     cleanup_task(&task_id);
     result

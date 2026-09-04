@@ -326,7 +326,7 @@ export const useTauriCommands = () => {
     } catch (error: any) {
       const task = taskStore.tasks.find(item => item.id === taskId)
       if (task && !['cancelled', 'cancelling'].includes(task.status)) {
-        taskStore.updateTaskStatus(taskId, 'failed')
+        taskStore.failTask(taskId, error instanceof Error ? error.message : String(error))
       }
       throw error
     }
@@ -372,7 +372,7 @@ export const useTauriCommands = () => {
       return result
     } catch (error) {
       if (task && !['cancelled', 'cancelling'].includes(task.status)) {
-        taskStore.updateTaskStatus(taskId, 'failed')
+        taskStore.failTask(taskId, error instanceof Error ? error.message : String(error))
       }
       throw error
     }

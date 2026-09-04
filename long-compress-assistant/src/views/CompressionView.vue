@@ -267,8 +267,7 @@ const runCompressionResourcePreflight = async (
     })
     attachResourcePreflight(task, report)
     if (!report.canStart) {
-      task.error = report.summary
-      taskStore.updateTaskStatus(taskId, 'failed')
+      taskStore.failTask(taskId, report.summary)
       appStore.setError(`${appStore.t('common.error')}: ${report.summary}`)
       return false
     }
@@ -470,11 +469,9 @@ const runCompression = async () => {
     } catch (error) {
       const task = taskStore.tasks.find(t => t.id === taskId)
       if (task && !['cancelled', 'cancelling'].includes(task.status)) {
-        taskStore.updateTaskStatus(taskId, 'failed')
-      }
-      if (task && !['cancelled', 'cancelling'].includes(task.status)) {
-        task.error = extractErrorMessage(error)
-        appStore.setError(`${appStore.t('common.error')}: ${extractErrorMessage(error)}`)
+        const finalReason = extractErrorMessage(error)
+        taskStore.failTask(taskId, finalReason)
+        appStore.setError(`${appStore.t('common.error')}: ${finalReason}`)
         failed++
       }
       // 继续处理下一个任务，不中断整个批次

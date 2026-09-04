@@ -314,8 +314,7 @@ const runDecompressionResourcePreflight = async (task: Task) => {
     })
     attachResourcePreflight(task, report)
     if (!report.canStart) {
-      task.error = report.summary
-      taskStore.updateTaskStatus(task.id, 'failed')
+      taskStore.failTask(task.id, report.summary)
       appStore.setError(`${appStore.t('common.error')}: ${report.summary}`)
       return false
     }
@@ -399,25 +398,24 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
         // Password discovery and optional dictionary attempts are owned by the
         // backend state machine. The frontend only exposes the manual retry
         // state, preventing duplicate vault/dictionary attempts and logs.
-        taskStore.updateTaskStatus(task.id, 'failed')
         task.passwordRequired = true
         task.currentPassword = undefined
-        task.error = task.password
+        const finalReason = task.password
           ? appStore.t('tasks.password.wrong')
           : appStore.t('tasks.password.required')
-        if (!task.logs.some(log => log.message === task.error)) {
+        taskStore.failTask(task.id, finalReason)
+        if (!task.logs.some(log => log.message === finalReason)) {
           task.logs.push({
             task_id: task.id,
-            message: task.error,
+            message: finalReason,
             severity: 'warning',
             timestamp: new Date().toISOString()
           })
         }
       } else {
         // 非密码错误，直接失败
-        taskStore.updateTaskStatus(task.id, 'failed')
-        task.error = errorMsg
-        appStore.setError(`${appStore.t('common.error')}: ${task.error}`)
+        taskStore.failTask(task.id, errorMsg)
+        appStore.setError(`${appStore.t('common.error')}: ${errorMsg}`)
       }
     }
       },
