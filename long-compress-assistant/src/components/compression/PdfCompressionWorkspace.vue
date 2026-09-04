@@ -189,8 +189,8 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
       <div class="header-actions">
         <span v-if="items.length" class="ready-summary">{{ readyCount }} / {{ items.length }} 已锁定</span>
         <button type="button" class="secondary-action" :aria-expanded="showBatchSettings" data-testid="pdf-toggle-batch-settings" @click="openBatchSettings"><i class="pi pi-sliders-h"></i>批量设置</button>
-        <button v-if="isRunning" type="button" class="danger-action" data-testid="pdf-cancel-batch" @click="pdfBatch.cancelPdfBatch()">取消处理</button>
-        <button v-else type="button" class="primary-action" data-testid="pdf-start-batch" :disabled="!canStart" @click="startPdfOptimization">开始批量优化</button>
+        <button v-if="isRunning" type="button" class="danger-action" data-testid="pdf-cancel-batch" @click="pdfBatch.cancelPdfBatch()"><i class="pi pi-stop-circle"></i>取消 PDF 压缩</button>
+        <button v-else type="button" class="primary-action" data-testid="pdf-start-batch" :disabled="!canStart" @click="startPdfOptimization"><i class="pi pi-play-circle"></i>开始 PDF 压缩</button>
       </div>
     </header>
 
@@ -297,7 +297,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
 .pdf-workspace > *, .draft-list, .draft-card { box-sizing: border-box; max-width: 100%; min-width: 0; }
 .workspace-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; margin-bottom: .65rem; }
 .ready-summary{color:var(--text-muted);font-size:.62rem;font-weight:800;white-space:nowrap}
-.header-actions { display: flex; align-items: center; gap: .5rem; }.danger-action { border-radius: .65rem; padding: .55rem .75rem; color: white; background: #ef4444; font-size: .68rem; font-weight: 850; }
+.header-actions { display: flex; flex-shrink: 0; align-items: center; gap: .5rem; }.header-actions button { display: flex; height: 2.75rem; align-items: center; justify-content: center; gap: .4rem; border-radius: .8rem; padding: 0 .9rem; font-size: .7rem; font-weight: 900; white-space: nowrap; }.header-actions .secondary-action { width: 7.25rem; }.header-actions .primary-action,.header-actions .danger-action { width: 9.5rem; }.header-actions button i { width: 1rem; flex: 0 0 1rem; text-align: center; }.danger-action { color: white; background: #ef4444; }
 .header-actions button,.output-directory button,.mode-grid button,.card-actions button { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease; }
 .header-actions button:not(:disabled):hover,.output-directory button:not(:disabled):hover,.card-actions button:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 8px 18px -14px rgb(0 0 0 / .55); }
 .header-actions button:not(:disabled):active,.output-directory button:not(:disabled):active,.card-actions button:not(:disabled):active { transform: scale(.98); }
@@ -316,6 +316,6 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
 .output-preview { margin-top: .65rem; border-radius: .75rem; padding: .65rem; background: var(--bg-input); }.output-preview strong { display: block; margin: .15rem 0; color: var(--text-content); font-size: .7rem; overflow-wrap: anywhere; }.output-preview small { color: var(--text-muted); font-size: .59rem; }
 .signature-warning { display: flex; gap: .55rem; margin-top: .65rem; border: 1px solid rgb(244 63 94 / .3); border-radius: .75rem; padding: .65rem; color: #fb7185; background: rgb(244 63 94 / .08); }.signature-warning strong { font-size: .7rem; }.signature-warning p { margin-top: .1rem; font-size: .61rem; line-height: 1.4; }.blocking-list { margin: .45rem 0 0 1rem; color: #fb7185; font-size: .6rem; overflow-wrap: anywhere; }.card-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; margin-top: .7rem; }.secondary-action { border: 1px solid var(--border-subtle); background: var(--bg-input); }.execution-result { display: flex; min-width: 0; flex: 1; align-items: center; gap: .5rem; color: var(--text-muted); font-size: .6rem; }.execution-result strong { color: var(--text-content); }
 @media (max-width: 900px) { .fact-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }.password-panel { grid-template-columns: 1fr; } }
-@media (max-width: 620px) { .pdf-workspace { padding: .1rem; }.workspace-toolbar { margin-bottom: .45rem; }.header-actions { justify-content: flex-end; }.ready-summary{display:none}.fact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.mode-grid { grid-template-columns: 1fr; }.status { display: none; }.card-actions { align-items: stretch; flex-direction: column; }.execution-result { flex-wrap: wrap; } }
+@media (max-width: 620px) { .pdf-workspace { padding: .1rem; }.workspace-toolbar { align-items: flex-start; margin-bottom: .45rem; }.header-actions { width: 100%; flex-direction: column; }.header-actions button { width: 100%; }.ready-summary{display:none}.fact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.mode-grid { grid-template-columns: 1fr; }.status { display: none; }.card-actions { align-items: stretch; flex-direction: column; }.execution-result { flex-wrap: wrap; } }
 @media (prefers-reduced-motion: reduce) { .header-actions button,.output-directory button,.mode-grid button,.card-actions button { transition: none; } }
 </style>
