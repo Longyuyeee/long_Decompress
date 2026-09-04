@@ -80,6 +80,27 @@ const selectedFormat = computed(() => compressionFormats.value.find(format => fo
 const canCreateSplitArchive = computed(() =>
   Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive && !compressionOptions.value.password)
 )
+const splitArchiveUnavailableReason = computed(() => {
+  if (!selectedFormat.value?.supportsSplit) {
+    return `${selectedFormat.value?.name || compressionOptions.value.format.toUpperCase()} 格式暂不支持创建分卷`
+  }
+  if (!props.allowSplitArchive) {
+    return '当前任务包含文件夹；分卷 ZIP 目前仅支持普通文件'
+  }
+  if (compressionOptions.value.password) {
+    return '加密分卷 ZIP 暂不支持，请先清除压缩密码'
+  }
+  return ''
+})
+
+const normalizeSplitSize = () => {
+  const value = Math.max(1, Math.round(Number(compressionOptions.value.splitSize) || 1024))
+  compressionOptions.value.splitSize = String(value)
+}
+
+const updateSplitSize = (event: Event) => {
+  compressionOptions.value.splitSize = (event.target as HTMLInputElement).value
+}
 
 onMounted(() => {
   void archiveEngine.refresh()
@@ -397,6 +418,41 @@ const handlePasswordGenerated = (password: string) => {
       </button>
     </div>
 
+    <section
+      class="split-settings-card"
+      :class="{ unavailable: !canCreateSplitArchive, enabled: compressionOptions.splitArchive }"
+      data-testid="compression-split-settings"
+    >
+      <label class="split-settings-toggle">
+        <input
+          v-model="compressionOptions.splitArchive"
+          data-testid="compression-split-toggle"
+          type="checkbox"
+          :disabled="!canCreateSplitArchive"
+        />
+        <span class="split-settings-icon"><i class="pi pi-clone"></i></span>
+        <span class="split-settings-copy">
+          <strong>{{ appStore.t('preset.split_archive') }}</strong>
+          <small>{{ splitArchiveUnavailableReason || '把大压缩包拆成多个便于传输和存储的 ZIP 分卷' }}</small>
+        </span>
+      </label>
+      <label v-if="compressionOptions.splitArchive" class="split-size-field">
+        <span>每卷大小</span>
+        <input
+          :value="compressionOptions.splitSize"
+          data-testid="compression-split-size"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          step="1"
+          @input="updateSplitSize"
+          @blur="normalizeSplitSize"
+        />
+        <b>MiB</b>
+      </label>
+      <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
+    </section>
+
     <!-- 第二行：高级/路径设置 (条件展开) -->
     <transition name="slide-down">
       <div v-if="showAdvanced" class="space-y-4 pt-4 border-t border-subtle/30">
@@ -429,17 +485,9 @@ const handlePasswordGenerated = (password: string) => {
             <input data-testid="compression-verify-after" v-model="compressionOptions.verifyAfter" type="checkbox" :disabled="compressionOptions.deleteAfter" />
             <span><strong>{{ appStore.t('preset.verify_after') }}</strong><small>{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</small></span>
           </label>
-          <label v-if="canCreateSplitArchive" class="advanced-option">
-            <input v-model="compressionOptions.splitArchive" type="checkbox" />
-            <span><strong>{{ appStore.t('preset.split_archive') }}</strong><small>把大压缩包拆成多个便于传输的分卷</small></span>
-          </label>
           <label v-if="compressionOptions.format === '7z'" class="advanced-option">
             <input v-model="compressionOptions.createSolidArchive" type="checkbox" />
             <span><strong>固实压缩</strong><small>提高同类文件压缩率，但单文件提取更慢</small></span>
-          </label>
-          <label v-if="compressionOptions.splitArchive" class="advanced-option">
-            <span class="w-full"><strong>每个分卷大小</strong><small>单位：MB</small></span>
-            <input v-model.number="compressionOptions.splitSize" type="number" min="1" step="1" class="w-24 h-9 px-3 rounded-lg bg-input border border-subtle text-sm text-content outline-none focus:border-primary" />
           </label>
         </div>
       </div>
@@ -570,6 +618,115 @@ const handlePasswordGenerated = (password: string) => {
   gap: 0.75rem;
 }
 
+.split-settings-card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--bg-input) 58%, transparent);
+  padding: 0.65rem 0.75rem;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.split-settings-card.enabled {
+  border-color: color-mix(in srgb, var(--dynamic-accent) 48%, var(--border-subtle));
+  background: color-mix(in srgb, var(--dynamic-accent) 7%, var(--bg-input));
+}
+
+.split-settings-card.unavailable {
+  opacity: 0.72;
+}
+
+.split-settings-toggle {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+}
+
+.split-settings-toggle:has(input:disabled) {
+  cursor: not-allowed;
+}
+
+.split-settings-toggle > input {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  accent-color: var(--dynamic-accent);
+}
+
+.split-settings-icon {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  place-items: center;
+  border-radius: 0.62rem;
+  background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent);
+  color: var(--dynamic-accent);
+  font-size: 0.72rem;
+}
+
+.split-settings-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.split-settings-copy strong {
+  color: var(--text-base);
+  font-size: 0.72rem;
+}
+
+.split-settings-copy small {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.split-size-field {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns:auto 5.25rem auto;
+  align-items: center;
+  gap: 0.42rem;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.split-size-field input {
+  width: 5.25rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.58rem;
+  background: var(--bg-card);
+  padding: 0 0.55rem;
+  color: var(--text-content);
+  font-size: 0.68rem;
+  font-weight: 800;
+  outline: none;
+}
+
+.split-size-field input:focus {
+  border-color: var(--dynamic-accent);
+}
+
+.split-size-field b,
+.split-settings-state {
+  color: var(--text-muted);
+  font-size: 0.58rem;
+  font-weight: 850;
+}
+
 .advanced-option {
   display: flex;
   min-width: 0;
@@ -618,6 +775,9 @@ const handlePasswordGenerated = (password: string) => {
 
 @media (max-width: 680px) {
   .settings-core-grid { grid-template-columns: minmax(0, 1fr); }
+  .split-settings-card { align-items: stretch; flex-direction: column; }
+  .split-size-field { align-self: flex-end; }
+  .split-settings-state { display: none; }
 }
 </style>
 
