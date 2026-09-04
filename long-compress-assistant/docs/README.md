@@ -5,7 +5,9 @@
 ## 当前接续入口
 
 - [`DEVELOPMENT_HANDOFF.md`](DEVELOPMENT_HANDOFF.md)：跨电脑开发接续总入口，最新记录在文件顶部。
-- [`RELEASE_NOTES_1.3.0.md`](RELEASE_NOTES_1.3.0.md)：当前 v1.3.0 的配置、密码工作流、文件浏览器与完整性工作区发布说明。
+- [`RELEASE_NOTES_1.3.1.md`](RELEASE_NOTES_1.3.1.md)：当前 v1.3.1 的 RAR 密码判定、源文件稳定性与本机失败记录验证说明。
+- [`RAR_PASSWORD_POST_VALIDATION_FIX_AUDIT_2026-09-05.md`](RAR_PASSWORD_POST_VALIDATION_FIX_AUDIT_2026-09-05.md)：RAR 密码终态误分类修复及本机历史失败记录审计。
+- [`RELEASE_NOTES_1.3.0.md`](RELEASE_NOTES_1.3.0.md)：历史 v1.3.0 的配置、密码工作流、文件浏览器与完整性工作区发布说明。
 - [`RELEASE_NOTES_1.2.9.md`](RELEASE_NOTES_1.2.9.md) / [`RELEASE_AUDIT_1.2.9.md`](RELEASE_AUDIT_1.2.9.md)：历史稳定版 v1.2.9 的发布后总审计、真实归档控制复验和正式发布证据。
 - [`RELEASE_NOTES_1.2.8.md`](RELEASE_NOTES_1.2.8.md) / [`RELEASE_AUDIT_1.2.8.md`](RELEASE_AUDIT_1.2.8.md)：历史稳定版 v1.2.8 的归档队列、配置、暂停控制和正式发布证据。
 - [`ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md`](ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md)：归档顺序、并发、配置来源、停止及暂停/恢复的最终实现和真实证据。

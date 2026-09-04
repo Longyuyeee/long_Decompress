@@ -58,14 +58,20 @@ impl RarSupportService {
     fn map_unrar_extraction_error(
         error: unrar::error::UnrarError,
         password_supplied: bool,
+        password_proven: bool,
         context: &str,
     ) -> RarError {
         use unrar::error::{Code, When};
 
-        if matches!(error.code, Code::BadPassword | Code::MissingPassword)
+        let could_be_password_failure = matches!(error.code, Code::BadPassword | Code::MissingPassword)
             || (password_supplied
-                && matches!((error.code, error.when), (Code::BadData, When::Process)))
-        {
+                && matches!((error.code, error.when), (Code::BadData, When::Process)));
+        if could_be_password_failure {
+            if password_proven {
+                return RarError::ExtractionFailed(format!(
+                    "{context}: encrypted content was already decoded successfully; later data is damaged, incomplete, or uses a different entry password: {error:?}"
+                ));
+            }
             return RarError::PasswordError;
         }
         RarError::ExtractionFailed(format!("{context}: {error:?}"))
@@ -184,6 +190,11 @@ impl RarSupportService {
         if !rar_path.exists() {
             return Err(RarError::FileNotFound(rar_path.to_string_lossy().to_string()));
         }
+        if rar_path.metadata().map(|metadata| metadata.len()).unwrap_or(0) == 0 {
+            return Err(RarError::InvalidRarFile(
+                "RAR 文件为空，可能仍在下载、复制或尚未写入完成".to_string(),
+            ));
+        }
 
         // 检测版本信息
         let version_info = self.detect_rar_info_v2(rar_path).await?;
@@ -257,13 +268,16 @@ impl RarSupportService {
             .map_err(|error| Self::map_unrar_extraction_error(
                 error,
                 password.is_some(),
+                false,
                 "打开 RAR 归档失败",
             ))?;
+        let mut password_proven = password.is_some() && open_archive.has_encrypted_headers();
 
         while let Some(header) = open_archive.read_header()
             .map_err(|error| Self::map_unrar_extraction_error(
                 error,
                 password.is_some(),
+                password_proven,
                 "读取 RAR 文件头失败",
             ))? {
             
@@ -298,6 +312,7 @@ impl RarSupportService {
                 open_archive = header.skip()
                     .map_err(|e| RarError::ExtractionFailed(format!("跳过目录失败: {:?}", e)))?;
             } else {
+                let encrypted_entry = entry.is_encrypted();
                 let target_path = Self::resolve_extract_path(&target_path, options)?;
                 if let Some(parent) = target_path.parent() {
                     std::fs::create_dir_all(parent).ok();
@@ -306,8 +321,12 @@ impl RarSupportService {
                     .map_err(|error| Self::map_unrar_extraction_error(
                         error,
                         password.is_some(),
+                        password_proven,
                         "提取 RAR 文件失败",
                     ))?;
+                if encrypted_entry && password.is_some() {
+                    password_proven = true;
+                }
             }
         }
 
@@ -606,7 +625,7 @@ impl RarSupportService {
                 }
             };
 
-            if header.entry().is_directory() {
+            if header.entry().is_directory() || !header.entry().is_encrypted() {
                 open_archive = match header.skip() {
                     Ok(archive) => archive,
                     Err(error) => {
@@ -617,9 +636,10 @@ impl RarSupportService {
                 continue;
             }
 
-            // One successfully decoded file with a valid CRC is sufficient to
-            // prove the password. Testing every entry made password validation
-            // as expensive as extracting the entire archive.
+            // Only an encrypted entry can prove a candidate password. Some RAR
+            // archives mix plain and encrypted files; accepting the first plain
+            // entry made every candidate appear valid before extraction later
+            // failed on the first encrypted payload.
             return match header.test() {
                 Ok(_) => Ok(true),
                 Err(error) => {
@@ -630,7 +650,8 @@ impl RarSupportService {
         }
 
         // Opening and traversing encrypted headers to the end also proves the
-        // candidate, even when the archive contains directories only.
+        // candidate, even when the archive contains directories only. A RAR
+        // with visible headers but no encrypted entry does not prove anything.
         Ok(has_encrypted_headers)
     }
 
@@ -924,20 +945,36 @@ mod tests {
     }
 
     #[test]
-    fn rar_extraction_maps_crc_to_password_error_only_when_a_password_was_supplied() {
+    fn rar_extraction_maps_crc_to_password_error_only_until_password_is_proven() {
         let encrypted_error = RarSupportService::map_unrar_extraction_error(
             UnrarError::from(Code::BadData, When::Process),
             true,
+            false,
             "extract",
         );
-        let plain_error = RarSupportService::map_unrar_extraction_error(
+        let post_validation_error = RarSupportService::map_unrar_extraction_error(
             UnrarError::from(Code::BadData, When::Process),
+            true,
+            true,
+            "extract",
+        );
+        let post_validation_bad_password = RarSupportService::map_unrar_extraction_error(
+            UnrarError::from(Code::BadPassword, When::Process),
+            true,
+            true,
+            "extract",
+        );
+        let unencrypted_error = RarSupportService::map_unrar_extraction_error(
+            UnrarError::from(Code::BadData, When::Process),
+            false,
             false,
             "extract",
         );
 
         assert!(matches!(encrypted_error, RarError::PasswordError));
-        assert!(matches!(plain_error, RarError::ExtractionFailed(_)));
+        assert!(matches!(post_validation_error, RarError::ExtractionFailed(_)));
+        assert!(matches!(post_validation_bad_password, RarError::ExtractionFailed(_)));
+        assert!(matches!(unencrypted_error, RarError::ExtractionFailed(_)));
     }
 
     #[test]
