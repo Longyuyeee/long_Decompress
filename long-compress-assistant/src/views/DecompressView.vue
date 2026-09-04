@@ -425,7 +425,17 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
 }
 
 const hasPendingTasks = computed(() => decompressionTasks.value.some(t => t.status === 'pending'))
-const isRunning = computed(() => decompressionTasks.value.some(t => ['running', 'extracting', 'preparing', 'finalizing', 'cancelling'].includes(t.status)))
+const pausableTasks = computed(() => decompressionTasks.value.filter(t => ['running', 'extracting', 'preparing', 'finalizing'].includes(t.status)))
+const pausedTasks = computed(() => decompressionTasks.value.filter(t => t.status === 'paused'))
+const isRunning = computed(() => decompressionTasks.value.some(t => ['running', 'extracting', 'preparing', 'finalizing', 'paused', 'cancelling'].includes(t.status)))
+
+const pauseAllTasks = async () => {
+  await Promise.all(pausableTasks.value.map(task => taskStore.pauseTask(task.id)))
+}
+
+const resumeAllTasks = async () => {
+  await Promise.all(pausedTasks.value.map(task => taskStore.resumeTask(task.id)))
+}
 
 const retryWithPassword = async (taskId: string) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
@@ -442,7 +452,7 @@ const retryWithPassword = async (taskId: string) => {
 
 const cancelAllTasks = async () => {
   const cancellable = decompressionTasks.value.filter(t =>
-    ['pending', 'running', 'extracting', 'preparing', 'finalizing'].includes(t.status)
+    ['pending', 'running', 'extracting', 'preparing', 'finalizing', 'paused'].includes(t.status)
   )
   // Signal every backend process at once. Waiting for each cleanup in sequence
   // made the global stop appear unresponsive and left later tasks running.
@@ -526,6 +536,24 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           {{ appStore.t('decompress.clear_finished') }}
         </button>
         <button
+          v-if="pausableTasks.length > 0"
+          @click="pauseAllTasks"
+          data-testid="pause-all-archive-tasks"
+          class="h-9 px-4 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-bold uppercase tracking-wider hover:bg-amber-500 hover:text-white transition-all flex items-center gap-2"
+        >
+          <i class="pi pi-pause text-xs"></i>
+          {{ appStore.t('tasks.pause_all') }}
+        </button>
+        <button
+          v-if="pausedTasks.length > 0"
+          @click="resumeAllTasks"
+          data-testid="resume-all-archive-tasks"
+          class="h-9 px-4 rounded-lg bg-green-500/10 text-green-500 border border-green-500/30 text-xs font-bold uppercase tracking-wider hover:bg-green-500 hover:text-white transition-all flex items-center gap-2"
+        >
+          <i class="pi pi-play text-xs"></i>
+          {{ appStore.t('tasks.resume_all') }}
+        </button>
+        <button
           v-if="isRunning"
           @click="cancelAllTasks"
           class="h-9 px-5 rounded-lg bg-red-500/10 text-red-500 border border-red-500/30 text-xs font-bold uppercase tracking-wider hover:bg-red-500 hover:text-white transition-all flex items-center gap-2"
@@ -557,6 +585,8 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           @deselect-all="deselectAll"
           @retry-with-password="retryWithPassword"
           @cancel-task="taskStore.cancelTask"
+          @pause-task="taskStore.pauseTask"
+          @resume-task="taskStore.resumeTask"
           @set-config-mode="setTaskConfigurationMode"
         />
         </div>

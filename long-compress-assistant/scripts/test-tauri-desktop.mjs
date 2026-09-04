@@ -116,6 +116,7 @@ const fileManagerOnly = process.argv.includes('--file-manager-only')
 const markOfWebOnly = process.argv.includes('--mark-of-web-only')
 const compressionVerificationOnly = process.argv.includes('--compression-verification-only')
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
+const pauseControlOnly = process.argv.includes('--pause-control-only')
 const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
 const historyOnly = process.argv.includes('--history-only')
 const vaultUsageOnly = process.argv.includes('--vault-usage-only')
@@ -2223,6 +2224,57 @@ async function runArchiveFlowDesktopGate() {
     readFileSync(path.join(fallbackExtract, 'password-fallback.txt'), 'utf8'),
     readFileSync(fallbackSource, 'utf8'),
   )
+}
+
+async function runPauseControlDesktopGate() {
+  await callDesktopBridge('clearTasks')
+  const outputPath = path.join(fixtureDirectory, 'pause-control.partial')
+  const taskId = await callDesktopBridge('startCancellableTask', outputPath)
+  await waitForNonEmptyFile(outputPath)
+
+  const pauseButton = await waitForElement('[data-testid^="pause-archive-task-"]')
+  await driver.executeScript('arguments[0].click()', pauseButton)
+  await driver.wait(
+    async () => (await callDesktopBridge('taskStatus', taskId)) === 'paused',
+    30_000,
+  )
+
+  await new Promise(resolve => setTimeout(resolve, 350))
+  const pausedSize = statSync(outputPath).size
+  await new Promise(resolve => setTimeout(resolve, 700))
+  assert.equal(
+    statSync(outputPath).size,
+    pausedSize,
+    'a paused desktop task must stop producing output bytes',
+  )
+
+  const resumeButton = await waitForElement('[data-testid^="resume-archive-task-"]')
+  await driver.executeScript('arguments[0].click()', resumeButton)
+  await driver.wait(
+    async () => (await callDesktopBridge('taskStatus', taskId)) !== 'paused',
+    30_000,
+  )
+  await driver.wait(
+    () => existsSync(outputPath) && statSync(outputPath).size > pausedSize,
+    30_000,
+  )
+
+  await driver.executeScript(
+    'arguments[0].click()',
+    await waitForElement('[data-testid="pause-all-archive-tasks"]'),
+  )
+  await driver.wait(
+    async () => (await callDesktopBridge('taskStatus', taskId)) === 'paused',
+    30_000,
+  )
+  await driver.executeScript("document.querySelector('.progress-summary')?.click()")
+  await (await waitForElement('.progress-panel button[data-testid="cancel-task"]')).click()
+  await driver.wait(
+    async () => (await callDesktopBridge('taskStatus', taskId)) === 'cancelled',
+    30_000,
+  )
+  await driver.wait(() => !existsSync(outputPath), 30_000)
+  await callDesktopBridge('clearTasks')
 }
 
 async function runHistoryDesktopGate() {
@@ -4463,6 +4515,10 @@ try {
     await runArchiveFlowDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri archive-flow alignment gate passed.')
+  } else if (pauseControlOnly) {
+    await runPauseControlDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri pause/resume/cancel control gate passed.')
   } else {
 
   forwardContextAction('--quick-pack', [sourcePath])

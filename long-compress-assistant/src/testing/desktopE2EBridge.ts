@@ -2,7 +2,7 @@ import { appWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/tauri'
 import { listen } from '@tauri-apps/api/event'
 import type { UpdateManifest } from '@tauri-apps/api/updater'
-import { useTaskStore, type TaskStatus } from '@/stores/task'
+import { useTaskStore, type TaskStatus, type TaskType } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
 import { useUpdateStore } from '@/stores/update'
 import type { WatchFolderDraftBatch, WatchFolderRegistration } from '@/types/profile'
@@ -18,6 +18,8 @@ export interface DesktopE2EBridge {
   startCancellableTask: (outputPath: string) => Promise<string>
   seedActiveTask: () => Promise<string>
   cancelTask: (taskId: string) => Promise<boolean>
+  pauseTask: (taskId: string) => Promise<boolean>
+  resumeTask: (taskId: string) => Promise<boolean>
   clearTasks: () => Promise<void>
   clearTaskHistory: () => Promise<void>
   taskHistory: () => Promise<TaskHistoryRecord[]>
@@ -285,17 +287,17 @@ export const installDesktopE2EBridge = () => {
     errors: [] as string[],
   }
 
-  const addActiveTask = () => {
+  const addActiveTask = (type: TaskType = 'compression') => {
     taskStore.removeTask(TEST_TASK_ID)
     taskStore.addTask({
       id: TEST_TASK_ID,
       name: 'Desktop E2E lifecycle task',
-      type: 'compression',
+      type,
       sourceFiles: [],
       outputPath: '',
       format: 'zip',
     })
-    taskStore.updateTaskStatus(TEST_TASK_ID, 'compressing')
+    taskStore.updateTaskStatus(TEST_TASK_ID, type === 'decompression' ? 'extracting' : 'compressing')
     return TEST_TASK_ID
   }
 
@@ -365,7 +367,7 @@ export const installDesktopE2EBridge = () => {
     },
 
     async startCancellableTask(outputPath) {
-      const taskId = addActiveTask()
+      const taskId = addActiveTask('decompression')
       const task = taskStore.tasks.find(item => item.id === taskId)
       if (task) task.outputPath = outputPath
       await syncActiveState()
@@ -393,6 +395,14 @@ export const installDesktopE2EBridge = () => {
 
     async cancelTask(taskId) {
       return taskStore.cancelTask(taskId)
+    },
+
+    async pauseTask(taskId) {
+      return taskStore.pauseTask(taskId)
+    },
+
+    async resumeTask(taskId) {
+      return taskStore.resumeTask(taskId)
     },
 
     async clearTasks() {

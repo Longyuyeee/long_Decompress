@@ -52,6 +52,17 @@ const compressionTasks = computed(() => taskStore.tasksFor('compression'))
 const activeCompressionTasks = computed(() =>
   compressionTasks.value.filter(task => !['completed', 'failed', 'cancelled'].includes(task.status))
 )
+const pausableCompressionTasks = computed(() =>
+  compressionTasks.value.filter(task =>
+    (!task.workloadKind || task.workloadKind === 'archive')
+      && ['preparing', 'running', 'compressing', 'finalizing'].includes(task.status)
+  )
+)
+const pausedCompressionTasks = computed(() =>
+  compressionTasks.value.filter(task =>
+    (!task.workloadKind || task.workloadKind === 'archive') && task.status === 'paused'
+  )
+)
 const hasFinishedCompressionTasks = computed(() =>
   compressionTasks.value.some(task => ['completed', 'failed', 'cancelled'].includes(task.status))
 )
@@ -554,6 +565,14 @@ const cancelAllCompressionTasks = async () => {
   await Promise.all(activeCompressionTasks.value.map(task => cancelCompressionTask(task.id)))
 }
 
+const pauseAllCompressionTasks = async () => {
+  await Promise.all(pausableCompressionTasks.value.map(task => taskStore.pauseTask(task.id)))
+}
+
+const resumeAllCompressionTasks = async () => {
+  await Promise.all(pausedCompressionTasks.value.map(task => taskStore.resumeTask(task.id)))
+}
+
 const setFileConfigurationMode = (file: FileObject, mode: 'global' | 'individual') => {
   if (file.taskId) return
   if (mode === 'global') compressionStore.useGlobalFileSettings(file.path)
@@ -630,10 +649,14 @@ const onDetailLeave = (element: Element) => {
       <CompressionToolbar
         :has-finished="hasFinishedCompressionTasks"
         :active-count="activeCompressionTasks.length"
+        :pausable-count="pausableCompressionTasks.length"
+        :paused-count="pausedCompressionTasks.length"
         :pending-count="pendingPayload"
         :busy="isCompressing"
         @clear-finished="clearFinishedCompressionTasks"
         @cancel-active="cancelAllCompressionTasks"
+        @pause-active="pauseAllCompressionTasks"
+        @resume-paused="resumeAllCompressionTasks"
         @open-settings="showGlobalSettingsModal = true"
         @start="handleCompress"
       />
@@ -703,7 +726,7 @@ const onDetailLeave = (element: Element) => {
 
             <CompressionStatusCell :task="taskForJob(group.taskId)" />
 
-            <div class="compression-row-actions w-20 shrink-0 flex items-center justify-end gap-3">
+            <div class="compression-row-actions min-w-20 shrink-0 flex items-center justify-end gap-2">
               <button
                 v-if="!group.taskId"
                 @click.stop="compressionStore.dissolveGroup(group.id)"
@@ -713,7 +736,23 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-trash text-xs"></i>
               </button>
               <button
-                v-else-if="isActiveCompressionStatus(taskForJob(group.taskId)?.status)"
+                v-if="group.taskId && ['preparing', 'running', 'compressing', 'finalizing'].includes(taskForJob(group.taskId)?.status || '')"
+                @click.stop="taskStore.pauseTask(group.taskId)"
+                class="text-amber-400 hover:text-amber-500 transition-colors"
+                :title="appStore.t('tasks.pause_one')"
+              >
+                <i class="pi pi-pause text-xs"></i>
+              </button>
+              <button
+                v-if="group.taskId && taskForJob(group.taskId)?.status === 'paused'"
+                @click.stop="taskStore.resumeTask(group.taskId)"
+                class="text-green-400 hover:text-green-500 transition-colors"
+                :title="appStore.t('tasks.resume_one')"
+              >
+                <i class="pi pi-play text-xs"></i>
+              </button>
+              <button
+                v-if="group.taskId && isActiveCompressionStatus(taskForJob(group.taskId)?.status)"
                 data-testid="compression-job-cancel"
                 @click.stop="cancelCompressionTask(group.taskId)"
                 class="text-red-400 hover:text-red-500 transition-colors"
@@ -722,7 +761,7 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-stop-circle text-xs"></i>
               </button>
               <button
-                v-else-if="isFinishedCompressionStatus(taskForJob(group.taskId)?.status)"
+                v-if="group.taskId && isFinishedCompressionStatus(taskForJob(group.taskId)?.status)"
                 @click.stop="removeFinishedCompressionJob(group.taskId)"
                 class="text-muted hover:text-red-500 transition-colors"
                 title="清除任务"
@@ -896,7 +935,7 @@ const onDetailLeave = (element: Element) => {
 
             <CompressionStatusCell :task="taskForJob(file.taskId)" />
 
-            <div class="compression-row-actions w-20 shrink-0 flex items-center justify-end">
+            <div class="compression-row-actions min-w-20 shrink-0 flex items-center justify-end">
               <button
                 v-if="!file.taskId"
                 @click.stop="compressionStore.removeFile(file.path)"
@@ -906,7 +945,23 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-times text-sm"></i>
               </button>
               <button
-                v-else-if="isActiveCompressionStatus(taskForJob(file.taskId)?.status)"
+                v-if="file.taskId && ['preparing', 'running', 'compressing', 'finalizing'].includes(taskForJob(file.taskId)?.status || '')"
+                @click.stop="taskStore.pauseTask(file.taskId)"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-amber-400 hover:text-amber-500 transition-all"
+                :title="appStore.t('tasks.pause_one')"
+              >
+                <i class="pi pi-pause text-sm"></i>
+              </button>
+              <button
+                v-if="file.taskId && taskForJob(file.taskId)?.status === 'paused'"
+                @click.stop="taskStore.resumeTask(file.taskId)"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-green-400 hover:text-green-500 transition-all"
+                :title="appStore.t('tasks.resume_one')"
+              >
+                <i class="pi pi-play text-sm"></i>
+              </button>
+              <button
+                v-if="file.taskId && isActiveCompressionStatus(taskForJob(file.taskId)?.status)"
                 data-testid="compression-job-cancel"
                 @click.stop="cancelCompressionTask(file.taskId)"
                 class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:text-red-500 transition-all"
@@ -915,7 +970,7 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-stop-circle text-sm"></i>
               </button>
               <button
-                v-else-if="isFinishedCompressionStatus(taskForJob(file.taskId)?.status)"
+                v-if="file.taskId && isFinishedCompressionStatus(taskForJob(file.taskId)?.status)"
                 @click.stop="removeFinishedCompressionJob(file.taskId)"
                 class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-red-500 transition-all"
                 title="清除任务"

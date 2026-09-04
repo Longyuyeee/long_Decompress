@@ -30,7 +30,7 @@ describe('compression task presentation', () => {
     expect(isActiveCompressionStatus()).toBe(false)
     expect(isFinishedCompressionStatus()).toBe(false)
 
-    for (const status of ['pending', 'preparing', 'running', 'compressing', 'finalizing', 'cancelling'] as TaskStatus[]) {
+    for (const status of ['pending', 'preparing', 'running', 'compressing', 'finalizing', 'paused', 'cancelling'] as TaskStatus[]) {
       expect(isActiveCompressionStatus(status)).toBe(true)
       expect(isFinishedCompressionStatus(status)).toBe(false)
     }
@@ -51,6 +51,7 @@ describe('compression task presentation', () => {
     expect(compressionStageTranslationKey(task('running', 'Writing archive'))).toBe('compress.status.compressing')
     expect(compressionStageTranslationKey(task('running', 'Pre-checking'))).toBe('compress.status.preparing')
     expect(compressionStageTranslationKey(task('running', 'Extracting'))).toBe('compress.status.running')
+    expect(compressionStageTranslationKey(task('paused', 'Extracting'))).toBe('compress.status.paused')
   })
 
   it('maps every status to a stable color, icon, and progress policy', () => {
@@ -65,6 +66,9 @@ describe('compression task presentation', () => {
     expect(compressionStatusIcon('cancelled')).toBe('pi-ban')
     expect(compressionStatusClass('cancelling')).toBe('text-orange-400')
     expect(compressionStatusIcon('cancelling')).toBe('pi-spin pi-spinner')
+    expect(compressionStatusClass('paused')).toBe('text-amber-400')
+    expect(compressionStatusIcon('paused')).toBe('pi-pause-circle')
+    expect(showsCompressionProgress('paused')).toBe(true)
 
     for (const status of ['preparing', 'running', 'compressing', 'finalizing'] as TaskStatus[]) {
       expect(compressionStatusClass(status)).toBe('text-primary')

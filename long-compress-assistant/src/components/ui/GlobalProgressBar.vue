@@ -14,10 +14,10 @@ const isExpanded = ref(false)
 const isMinimized = ref(false)
 const retryingTaskId = ref<string | null>(null)
 
-const ACTIVE_STATUSES = new Set(['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'])
+const ACTIVE_STATUSES = new Set(['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'paused', 'cancelling'])
 const FINISHED_STATUSES = new Set(['completed', 'failed', 'cancelled'])
 const STATUS_ORDER: Record<string, number> = {
-  preparing: 0, running: 0, extracting: 0, compressing: 0, finalizing: 0, cancelling: 0,
+  preparing: 0, running: 0, extracting: 0, compressing: 0, finalizing: 0, paused: 0, cancelling: 0,
   pending: 1, failed: 2, completed: 3, cancelled: 4
 }
 
@@ -46,6 +46,10 @@ const taskStats = computed(() => {
 
 const activeCount = computed(() => taskStats.value.activeCount)
 const hasActiveTasks = computed(() => activeCount.value > 0)
+const hasRunningTasks = computed(() => taskStore.tasks.some(task =>
+  ['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)
+))
+const hasPausedTasks = computed(() => taskStore.tasks.some(task => task.status === 'paused'))
 const completedCount = computed(() => taskStats.value.completedCount)
 const totalCount = computed(() => taskStats.value.totalCount)
 const overallProgress = computed(() => taskStats.value.overallProgress)
@@ -69,6 +73,8 @@ const taskTypeClass = (task: Task) => {
   return 'bg-purple-500/10 text-purple-400'
 }
 
+const isArchiveTask = (task: Task) => !task.workloadKind || task.workloadKind === 'archive'
+
 const formatEta = (seconds?: number) => {
   if (seconds === undefined || !Number.isFinite(seconds)) return ''
   if (seconds < 60) return `${Math.max(1, Math.ceil(seconds))}s`
@@ -89,6 +95,7 @@ const statusIcon = (status: string) => {
   if (status === 'completed') return 'pi pi-check-circle text-green-400'
   if (status === 'failed') return 'pi pi-exclamation-circle text-red-400'
   if (status === 'cancelled') return 'pi pi-ban text-muted'
+  if (status === 'paused') return 'pi pi-pause-circle text-amber-400'
   if (['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(status)) return 'pi pi-spin pi-spinner text-primary'
   return 'pi pi-clock text-muted'
 }
@@ -100,6 +107,7 @@ const statusLabel = (status: string) => {
     case 'running': case 'extracting': case 'compressing': return appStore.t('tasks.status.running')
     case 'finalizing': return appStore.t('tasks.status.finalizing')
     case 'cancelling': return appStore.t('tasks.status.cancelling')
+    case 'paused': return appStore.t('tasks.status.paused')
     case 'completed': return appStore.t('tasks.status.completed')
     case 'failed': return appStore.t('tasks.status.failed')
     case 'cancelled': return appStore.t('tasks.status.cancelled')
@@ -180,6 +188,14 @@ const cancelTask = async (task: Task) => {
   await taskStore.cancelTask(task.id)
 }
 
+const pauseTask = async (task: Task) => {
+  await taskStore.pauseTask(task.id)
+}
+
+const resumeTask = async (task: Task) => {
+  await taskStore.resumeTask(task.id)
+}
+
 const copyToClipboard = async (text: string) => {
   try { await navigator.clipboard.writeText(text) } catch { /* ignore */ }
 }
@@ -211,7 +227,8 @@ const copyToClipboard = async (text: string) => {
         <!-- 摘要信息 -->
         <div class="progress-copy flex min-w-0 flex-1 flex-col gap-1 pr-12">
           <div class="flex min-w-0 items-center gap-2 whitespace-nowrap">
-            <i v-if="hasActiveTasks" class="pi pi-spin pi-spinner text-[0.75rem] text-primary"></i>
+            <i v-if="hasRunningTasks" class="pi pi-spin pi-spinner text-[0.75rem] text-primary"></i>
+            <i v-else-if="hasPausedTasks" class="pi pi-pause-circle text-[0.75rem] text-amber-400"></i>
             <i v-else class="pi pi-check-circle text-[0.75rem] text-green-400"></i>
             <span class="text-[0.75rem] font-bold text-content whitespace-nowrap">
               {{ hasActiveTasks ? `${activeCount} ${appStore.t('tasks.active')}` : appStore.t('tasks.all_done') }}
@@ -262,7 +279,7 @@ const copyToClipboard = async (text: string) => {
             <div class="h-2 bg-input rounded-full overflow-hidden relative">
               <div class="h-full bg-primary rounded-full transition-all duration-1000 progress-bar-fill"
                    :style="{ width: `${overallProgress}%` }"></div>
-              <div v-if="hasActiveTasks" class="absolute inset-0 shimmer-overlay"></div>
+              <div v-if="hasRunningTasks" class="absolute inset-0 shimmer-overlay"></div>
             </div>
             <!-- 实时信息摘要栏 -->
             <div v-if="runningTask" class="flex items-center gap-4 mt-2 text-xs text-dim">
@@ -305,16 +322,16 @@ const copyToClipboard = async (text: string) => {
                   <!-- 状态 + 进度 -->
                   <div class="flex items-center gap-2 mt-1">
                     <span class="text-sm text-dim uppercase tracking-tight">{{ statusLabel(task.status) }}</span>
-                    <SmoothProgressValue v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)" :value="task.progress" class="text-sm font-mono text-primary font-bold" />
+                    <SmoothProgressValue v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'paused', 'cancelling'].includes(task.status)" :value="task.progress" class="text-sm font-mono text-primary font-bold" />
                     <span v-if="task.speed && ACTIVE_STATUSES.has(task.status)" class="text-xs font-mono text-dim ml-1">{{ task.speed }}</span>
                     <span v-if="task.etaSeconds !== undefined" class="text-xs font-mono text-dim ml-1">ETA {{ formatEta(task.etaSeconds) }}</span>
                   </div>
                   <!-- 进度条 -->
-                  <div v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"
+                  <div v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'paused', 'cancelling'].includes(task.status)"
                        class="h-1 bg-input rounded-full mt-1.5 overflow-hidden relative">
                     <div class="h-full bg-primary rounded-full transition-all duration-700 progress-bar-fill"
                          :style="{ width: `${task.progress}%` }"></div>
-                    <div class="absolute inset-0 shimmer-overlay"></div>
+                    <div v-if="task.status !== 'paused'" class="absolute inset-0 shimmer-overlay"></div>
                   </div>
                   <!-- 当前处理文件 + 阶段 -->
                   <div v-if="task.currentFile" class="text-xs text-dim font-mono mt-1 truncate opacity-90" :title="task.currentFile">
@@ -352,7 +369,27 @@ const copyToClipboard = async (text: string) => {
                   </button>
 
                   <button
-                    v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)"
+                    v-if="isArchiveTask(task) && ['preparing', 'running', 'extracting', 'compressing', 'finalizing'].includes(task.status)"
+                    @click.stop="pauseTask(task)"
+                    data-testid="pause-task"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-amber-400 hover:bg-amber-500/10 transition-all"
+                    :title="appStore.t('tasks.pause_one')"
+                    :aria-label="appStore.t('tasks.pause_one')">
+                    <i class="pi pi-pause text-[0.75rem]"></i>
+                  </button>
+
+                  <button
+                    v-if="isArchiveTask(task) && task.status === 'paused'"
+                    @click.stop="resumeTask(task)"
+                    data-testid="resume-task"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-green-400 hover:bg-green-500/10 transition-all"
+                    :title="appStore.t('tasks.resume_one')"
+                    :aria-label="appStore.t('tasks.resume_one')">
+                    <i class="pi pi-play text-[0.75rem]"></i>
+                  </button>
+
+                  <button
+                    v-if="['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'paused', 'cancelling'].includes(task.status)"
                     @click.stop="cancelTask(task)"
                     data-testid="cancel-task"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 transition-all"

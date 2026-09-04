@@ -32,6 +32,7 @@ impl<R, F> CancellableProgressReader<R, F> {
 
 impl<R: Read, F: FnMut(u64)> Read for CancellableProgressReader<R, F> {
     fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        crate::services::task_control::wait_if_paused(&self.cancellation_flag);
         if self.cancellation_flag.load(Ordering::Relaxed) {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Interrupted,

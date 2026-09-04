@@ -4,6 +4,8 @@ import { useAppStore } from '@/stores/app'
 defineProps<{
   hasFinished: boolean
   activeCount: number
+  pausableCount: number
+  pausedCount: number
   pendingCount: number
   busy: boolean
 }>()
@@ -11,6 +13,8 @@ defineProps<{
 defineEmits<{
   clearFinished: []
   cancelActive: []
+  pauseActive: []
+  resumePaused: []
   openSettings: []
   start: []
 }>()
@@ -31,6 +35,24 @@ const appStore = useAppStore()
     >
       <i class="pi pi-trash text-xs"></i>
       <span class="hidden md:inline">{{ appStore.t('compress.clear_finished') }}</span>
+    </button>
+    <button
+      v-if="pausableCount > 0"
+      type="button"
+      class="h-8 md:h-9 px-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition-all flex items-center gap-2"
+      @click="$emit('pauseActive')"
+    >
+      <i class="pi pi-pause text-xs"></i>
+      <span class="hidden md:inline">{{ appStore.t('tasks.pause_all') }}</span>
+    </button>
+    <button
+      v-if="pausedCount > 0"
+      type="button"
+      class="h-8 md:h-9 px-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-bold hover:bg-green-500/20 transition-all flex items-center gap-2"
+      @click="$emit('resumePaused')"
+    >
+      <i class="pi pi-play text-xs"></i>
+      <span class="hidden md:inline">{{ appStore.t('tasks.resume_all') }}</span>
     </button>
     <button
       v-if="activeCount > 0"

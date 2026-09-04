@@ -74,12 +74,21 @@ impl UniversalCliEngine {
     }
 
     pub(crate) fn try_zip_password(file_path: &Path, password: &str) -> Result<bool> {
+        Self::try_zip_password_cancellable(file_path, password, || Ok(()))
+    }
+
+    pub(crate) fn try_zip_password_cancellable(
+        file_path: &Path,
+        password: &str,
+        mut check_control: impl FnMut() -> Result<()>,
+    ) -> Result<bool> {
         let file = std::fs::File::open(file_path)?;
         let mut archive = zip_aes::ZipArchive::new(file)?;
         let mut buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
         let mut found_encrypted_entry = false;
 
         for index in 0..archive.len() {
+            check_control()?;
             let encrypted = archive.by_index_raw(index)?.encrypted();
             if !encrypted {
                 continue;
@@ -92,6 +101,7 @@ impl UniversalCliEngine {
                     }
                     let mut sink = std::io::sink();
                     loop {
+                        check_control()?;
                         let read = match entry.read(&mut buffer) {
                             Ok(read) => read,
                             Err(_) => return Ok(false),
@@ -150,6 +160,7 @@ impl UniversalCliEngine {
         std::fs::create_dir_all(output_dir)?;
 
         for index in 0..archive.len() {
+            crate::services::task_control::wait_if_paused(is_cancelled);
             if is_cancelled.load(Ordering::Relaxed) {
                 return Err(CompressionError::Cancelled.into());
             }
@@ -192,6 +203,7 @@ impl UniversalCliEngine {
                 }
                 let mut output = std::fs::File::create(&target)?;
                 loop {
+                    crate::services::task_control::wait_if_paused(is_cancelled);
                     if is_cancelled.load(Ordering::Relaxed) {
                         return Err(CompressionError::Cancelled.into());
                     }
@@ -651,9 +663,20 @@ impl ArchiveEngine for UniversalCliEngine {
         let mut chunk = [0u8; 16 * 1024];
         let mut pending_record = Vec::new();
         let mut last_file = None;
+        let mut suspended = false;
         // 7z 的进度使用回车符刷新同一行，而文件日志使用换行符。
         // 同时解析 \r 与 \n，避免大文件直到进程结束才刷新界面。
         loop {
+            if let Some(process_id) = child.id() {
+                if let Err(error) = crate::services::task_control::sync_child_pause(
+                    &cancel_flag,
+                    process_id,
+                    &mut suspended,
+                ) {
+                    let _ = child.kill().await;
+                    return Err(anyhow::anyhow!(error));
+                }
+            }
             if cancel_flag.load(Ordering::SeqCst) {
                 let _ = child.kill().await;
                 return Err(CompressionError::Cancelled.into());

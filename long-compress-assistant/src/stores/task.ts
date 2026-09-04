@@ -7,7 +7,7 @@ import type { TaskMetrics, WorkloadKind } from '@/types/taskMetrics'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
 import { normalizeProgressPercent } from '@/utils/progress'
 
-export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'cancelling' | 'completed' | 'failed' | 'cancelled'
+export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'paused' | 'cancelling' | 'completed' | 'failed' | 'cancelled'
 export type LogSeverity = 'info' | 'warning' | 'error' | 'success'
 export type TaskType = 'compression' | 'decompression'
 
@@ -50,6 +50,7 @@ export interface Task {
   extractToSubfolder?: boolean
   recycleSourceAfterExtract?: boolean
   configurationMode?: 'global' | 'individual'
+  pausedFromStatus?: TaskStatus
   fileFilter?: string
   selectedEntries?: string[]
   // 增强字段 [FE-INT-001]
@@ -228,6 +229,28 @@ export const useTaskStore = defineStore('task', () => {
         task.conflicts.push(conflict)
       }
     })
+
+    await listen('shortcut_pause_resume_task', () => {
+      const paused = tasks.value.find(task =>
+        task.status === 'paused' && (!task.workloadKind || task.workloadKind === 'archive')
+      )
+      if (paused) {
+        void resumeTask(paused.id)
+        return
+      }
+      const active = tasks.value.find(task =>
+        (!task.workloadKind || task.workloadKind === 'archive')
+          && ['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(task.status)
+      )
+      if (active) void pauseTask(active.id)
+    })
+
+    await listen('shortcut_cancel_task', () => {
+      const active = tasks.value.find(task =>
+        ['preparing', 'running', 'compressing', 'extracting', 'finalizing', 'paused'].includes(task.status)
+      )
+      if (active) void cancelTask(active.id)
+    })
     })().catch((error) => {
       listenerInitialization = null
       throw error
@@ -259,6 +282,7 @@ export const useTaskStore = defineStore('task', () => {
         task.startTime = new Date()
       }
       if (terminalStatuses.includes(status)) {
+        task.pausedFromStatus = undefined
         task.endTime = new Date()
         task.speed = undefined
         task.etaSeconds = undefined
@@ -316,6 +340,45 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
+  const pauseTask = async (taskId: string) => {
+    const task = tasks.value.find(item => item.id === taskId)
+    if (!task || (task.workloadKind && task.workloadKind !== 'archive') || task.status === 'paused'
+      || !['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(task.status)) {
+      return false
+    }
+    const previousStatus = task.status
+    try {
+      const paused = await invoke<boolean>('pause_archive_task', { taskId })
+      if (paused === false) return false
+      task.pausedFromStatus = previousStatus
+      task.status = 'paused'
+      task.speed = undefined
+      task.etaSeconds = undefined
+      return true
+    } catch (error) {
+      task.logs.push({ task_id: taskId, message: `Pause failed: ${error}`, severity: 'error', timestamp: new Date().toISOString() })
+      return false
+    }
+  }
+
+  const resumeTask = async (taskId: string) => {
+    const task = tasks.value.find(item => item.id === taskId)
+    if (!task || (task.workloadKind && task.workloadKind !== 'archive') || task.status !== 'paused') return false
+    try {
+      const resumed = await invoke<boolean>('resume_archive_task', { taskId })
+      if (resumed === false) return false
+      const fallback: TaskStatus = task.type === 'compression' ? 'compressing' : 'extracting'
+      task.status = task.pausedFromStatus && task.pausedFromStatus !== 'paused'
+        ? task.pausedFromStatus
+        : fallback
+      task.pausedFromStatus = undefined
+      return true
+    } catch (error) {
+      task.logs.push({ task_id: taskId, message: `Resume failed: ${error}`, severity: 'error', timestamp: new Date().toISOString() })
+      return false
+    }
+  }
+
   const clearFinishedTasks = (type?: TaskType) => {
     const retainedTasks = tasks.value.filter(task => {
       const isFinished = ['completed', 'failed', 'cancelled'].includes(task.status)
@@ -338,6 +401,8 @@ export const useTaskStore = defineStore('task', () => {
     waitForHistoryPersistence,
     removeTask,
     clearFinishedTasks,
-    cancelTask
+    cancelTask,
+    pauseTask,
+    resumeTask
   }
 })

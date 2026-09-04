@@ -512,6 +512,7 @@ impl CompressionService {
     }
 
     fn check_cancellation(&self) -> Result<()> {
+        crate::services::task_control::wait_if_paused(&self.cancellation_flag);
         if self.cancellation_flag.load(Ordering::Relaxed) {
             return Err(CompressionError::Cancelled.into());
         }
@@ -779,7 +780,20 @@ impl CompressionService {
             bytes
         });
 
+        let mut suspended = false;
         let status = loop {
+            let process_id = child.id();
+            if let Err(error) = crate::services::task_control::sync_child_pause(
+                &self.cancellation_flag,
+                process_id,
+                &mut suspended,
+            ) {
+                let _ = child.kill();
+                let _ = child.wait();
+                let _ = stdout_reader.join();
+                let _ = stderr_reader.join();
+                return Err(CompressionError::CompressionFailed(error).into());
+            }
             if self.cancellation_flag.load(Ordering::SeqCst) {
                 let _ = child.kill();
                 let _ = child.wait();
@@ -983,7 +997,7 @@ impl CompressionService {
     ) -> Result<()> {
         if !split_requested
             && compression_verification::verify_native(route, output, password, || {
-                self.cancellation_flag.load(Ordering::Relaxed)
+                self.check_cancellation().is_err()
             })?
         {
             return Ok(());
@@ -1184,6 +1198,7 @@ impl CompressionService {
                     Some(output_path.clone()),
                 );
             }
+            let res = res.and_then(|_| service.check_cancellation());
             let res = Self::finalize_compression_output(
                 res,
                 &working_output,
@@ -1351,7 +1366,7 @@ impl CompressionService {
 
     async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Option<String> {
         for password in Self::recommended_dictionary(file_path) {
-            if self.cancellation_flag.load(Ordering::SeqCst) {
+            if self.check_cancellation().is_err() {
                 return None;
             }
             if self.test_archive_password(file_path, &password).await.is_ok_and(|matched| matched) {
@@ -1376,7 +1391,7 @@ impl CompressionService {
         );
 
         for (index, password) in passwords.into_iter().enumerate() {
-            if self.cancellation_flag.load(Ordering::SeqCst) {
+            if self.check_cancellation().is_err() {
                 self.emit_log(window, task_id, "内置密码字典尝试已取消", TaskLogSeverity::Warning);
                 return None;
             }
@@ -1484,6 +1499,9 @@ impl CompressionService {
         };
 
         for (entry_id, _entry_name, password) in passwords {
+            if self.check_cancellation().is_err() {
+                return None;
+            }
             match self.test_archive_password(file_path, &password).await {
                 Ok(true) => {
                     let _ = self.encrypted_password_service.increment_use_count(&entry_id).await;
@@ -1531,6 +1549,10 @@ impl CompressionService {
         );
 
         for (idx, (entry_id, entry_name, pwd)) in passwords.iter().enumerate() {
+            if self.check_cancellation().is_err() {
+                self.emit_log(window, task_id, "密码保险箱尝试已取消", TaskLogSeverity::Warning);
+                return None;
+            }
             let current = idx + 1;
             let descriptor = Self::password_candidate_descriptor(pwd);
             self.emit_password_attempt_progress(
@@ -1606,7 +1628,7 @@ impl CompressionService {
         let mut tested = HashSet::new();
 
         for wordlist in wordlists {
-            if self.cancellation_flag.load(Ordering::SeqCst) {
+            if self.check_cancellation().is_err() {
                 return None;
             }
 
@@ -1616,7 +1638,7 @@ impl CompressionService {
             };
 
             for line in BufReader::new(file).lines() {
-                if self.cancellation_flag.load(Ordering::SeqCst) {
+                if self.check_cancellation().is_err() {
                     return None;
                 }
 
@@ -1654,7 +1676,7 @@ impl CompressionService {
         let started_at = Instant::now();
 
         for wordlist in wordlists {
-            if self.cancellation_flag.load(Ordering::SeqCst) {
+            if self.check_cancellation().is_err() {
                 self.emit_log(window, task_id, "导入密码词表尝试已取消", TaskLogSeverity::Warning);
                 return None;
             }
@@ -1676,7 +1698,7 @@ impl CompressionService {
             );
 
             for line in BufReader::new(file).lines() {
-                if self.cancellation_flag.load(Ordering::SeqCst) {
+                if self.check_cancellation().is_err() {
                     self.emit_log(window, task_id, "导入密码词表尝试已取消", TaskLogSeverity::Warning);
                     return None;
                 }
@@ -2368,7 +2390,7 @@ impl CompressionService {
         service.check_cancellation()?;
         if let Some(mark) = mark_of_web.as_ref() {
             match mark_of_web::propagate_to_tree(&out_dir, mark, || {
-                service.cancellation_flag.load(Ordering::Relaxed)
+                service.check_cancellation().is_err()
             }) {
                 Ok(PropagationStatus::Applied(count)) => {
                     service.emit_log(
@@ -3127,7 +3149,9 @@ impl CompressionService {
         }
 
         if format == ArchiveFormat::Zip {
-            return UniversalCliEngine::try_zip_password(path, password);
+            return UniversalCliEngine::try_zip_password_cancellable(path, password, || {
+                self.check_cancellation()
+            });
         }
         if format == ArchiveFormat::Rar {
             return self
@@ -3152,11 +3176,21 @@ impl CompressionService {
                                             _destination: &PathBuf|
                      -> Result<bool, sevenz_rust::Error> {
                         if !entry.is_directory() {
+                            crate::services::task_control::wait_if_paused(&cancellation_flag);
                             if cancellation_flag.load(Ordering::SeqCst) {
                                 return Err(sevenz_rust::Error::other("Password verification cancelled"));
                             }
-                            std::io::copy(reader, &mut std::io::sink())
-                                .map_err(sevenz_rust::Error::io)?;
+                            let mut buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
+                            loop {
+                                crate::services::task_control::wait_if_paused(&cancellation_flag);
+                                if cancellation_flag.load(Ordering::SeqCst) {
+                                    return Err(sevenz_rust::Error::other("Password verification cancelled"));
+                                }
+                                let read = reader.read(&mut buffer).map_err(sevenz_rust::Error::io)?;
+                                if read == 0 {
+                                    break;
+                                }
+                            }
                             tested_file = true;
                         }
                         Ok(true)
@@ -3213,6 +3247,7 @@ impl CompressionService {
                     zip.start_file(entry_name, zip_options)?;
                     let mut f = File::open(path)?;
                     loop {
+                        crate::services::task_control::wait_if_paused(&cancellation_flag);
                         if cancellation_flag.load(Ordering::Relaxed) {
                             return Err(CompressionError::Cancelled.into());
                         }

@@ -24,6 +24,8 @@ const emit = defineEmits<{
   'deselect-all': []
   'retry-with-password': [taskId: string]
   'cancel-task': [taskId: string]
+  'pause-task': [taskId: string]
+  'resume-task': [taskId: string]
   'set-config-mode': [taskId: string, mode: 'global' | 'individual']
 }>()
 
@@ -138,6 +140,7 @@ const getStatusIcon = (status: string) => {
     case 'extracting': return '📦'
     case 'compressing': return '🗜️'
     case 'cancelling': return '⏳'
+    case 'paused': return '⏸️'
     case 'completed': return '✅'
     case 'failed': return '❌'
     case 'cancelled': return '⛔'
@@ -153,6 +156,7 @@ const getStatusColor = (status: string) => {
     case 'extracting': return 'text-blue-500 animate-pulse'
     case 'compressing': return 'text-blue-500 animate-pulse'
     case 'cancelling': return 'text-orange-400 animate-pulse'
+    case 'paused': return 'text-amber-400'
     case 'completed': return 'text-green-500'
     case 'failed': return 'text-red-500'
     case 'cancelled': return 'text-orange-500'
@@ -165,6 +169,7 @@ const getStatusText = (status: string) => {
 }
 
 const getStageText = (task: Task) => {
+  if (task.status === 'paused') return getStatusText(task.status)
   switch (task.stage) {
     case 'password-attempt': return '验证解压密码'
     case 'Pre-checking': return '执行预检'
@@ -331,7 +336,7 @@ const onLeave = (el: any) => {
 
               <!-- 进度百分比 -->
               <span
-                v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)"
+                v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'paused', 'cancelling'].includes(task.status)"
                 class="task-status-percent shrink-0 text-xs font-mono text-primary font-bold"
               >
                 <SmoothProgressValue :value="task.progress" />
@@ -361,7 +366,7 @@ const onLeave = (el: any) => {
             </div>
 
             <!-- 删除按钮 (仅 pending 状态可见) -->
-            <div class="w-6 flex justify-end" @click.stop>
+            <div class="flex min-w-[3.25rem] justify-end gap-1" @click.stop>
               <button
                 v-if="task.status === 'pending'"
                 @click="task.type === 'compression' ? emit('cancel-task', task.id) : handleRemoveTask(task.id)"
@@ -371,6 +376,22 @@ const onLeave = (el: any) => {
               </button>
               <button
                 v-else-if="['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(task.status)"
+                @click="emit('pause-task', task.id)"
+                :data-testid="`pause-archive-task-${task.id}`"
+                class="w-5 h-5 rounded-md flex items-center justify-center text-amber-400 hover:bg-amber-500/10 transition-all"
+                :title="appStore.t('tasks.pause_one')">
+                <i class="pi pi-pause text-xs"></i>
+              </button>
+              <button
+                v-else-if="task.status === 'paused'"
+                @click="emit('resume-task', task.id)"
+                :data-testid="`resume-archive-task-${task.id}`"
+                class="w-5 h-5 rounded-md flex items-center justify-center text-green-400 hover:bg-green-500/10 transition-all"
+                :title="appStore.t('tasks.resume_one')">
+                <i class="pi pi-play text-xs"></i>
+              </button>
+              <button
+                v-if="['preparing', 'running', 'compressing', 'extracting', 'finalizing', 'paused'].includes(task.status)"
                 @click="emit('cancel-task', task.id)"
                 class="w-5 h-5 rounded-md flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-all"
                 :title="appStore.t('tasks.stop_one')">

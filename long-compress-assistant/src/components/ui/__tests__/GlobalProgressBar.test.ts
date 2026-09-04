@@ -155,4 +155,31 @@ describe('GlobalProgressBar', () => {
     await wrapper.get('[data-testid="global-progress-summary"]').trigger('click')
     expect(wrapper.findAll('[data-testid="global-task-kind"]').map(item => item.text())).toEqual(['图片压缩', '视频压缩', 'PDF 优化'])
   })
+
+  it('exposes real pause and resume controls without showing a running spinner while paused', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const taskStore = useTaskStore()
+    taskStore.addTask({
+      id: 'pause-control',
+      name: 'large.rar',
+      type: 'decompression',
+      sourceFiles: ['large.rar'],
+      outputPath: 'C:\\output\\large',
+    })
+    taskStore.updateTaskStatus('pause-control', 'extracting')
+
+    const wrapper = mount(GlobalProgressBar, { global: { plugins: [pinia] } })
+    await wrapper.get('[data-testid="global-progress-summary"]').trigger('click')
+    await wrapper.get('[data-testid="pause-task"]').trigger('click')
+
+    expect(tauriMocks.invoke).toHaveBeenCalledWith('pause_archive_task', { taskId: 'pause-control' })
+    expect(taskStore.tasks[0].status).toBe('paused')
+    expect(wrapper.find('[data-testid="global-progress-summary"] .pi-pause-circle').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="global-progress-summary"] .pi-spinner').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="resume-task"]').trigger('click')
+    expect(tauriMocks.invoke).toHaveBeenCalledWith('resume_archive_task', { taskId: 'pause-control' })
+    expect(taskStore.tasks[0].status).toBe('extracting')
+  })
 })

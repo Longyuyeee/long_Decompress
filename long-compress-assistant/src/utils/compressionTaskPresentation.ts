@@ -6,6 +6,7 @@ const PROGRESS_STATUSES: TaskStatus[] = [
   'compressing',
   'preparing',
   'finalizing',
+  'paused',
   'cancelling',
 ]
 
@@ -20,6 +21,7 @@ export const compressionStatusTranslationKey = (
 ) => `compress.status.${status}`
 
 export const compressionStageTranslationKey = (task?: Task) => {
+  if (task?.status === 'paused') return 'compress.status.paused'
   if (!task?.stage) {
     return compressionStatusTranslationKey(task?.status || 'pending')
   }
@@ -46,6 +48,8 @@ export const compressionStatusClass = (status?: TaskStatus) => {
       return 'text-orange-500'
     case 'cancelling':
       return 'text-orange-400'
+    case 'paused':
+      return 'text-amber-400'
     case 'compressing':
     case 'preparing':
     case 'running':
@@ -65,6 +69,9 @@ export const compressionStatusIcon = (status?: TaskStatus) => {
     case 'cancelled':
       return 'pi-ban'
     case 'cancelling':
+      return 'pi-spin pi-spinner'
+    case 'paused':
+      return 'pi-pause-circle'
     case 'compressing':
     case 'preparing':
     case 'running':
