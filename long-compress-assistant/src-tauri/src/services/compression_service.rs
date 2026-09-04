@@ -9,7 +9,7 @@ use sevenz_rust;
 use thiserror::Error;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Instant;
+use std::time::{Instant, SystemTime};
 use tauri::Window;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -135,6 +135,12 @@ struct PendingExtraction {
 pub struct ArchiveFormatDetectedPayload {
     pub task_id: String,
     pub format: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct SourceFileSnapshot {
+    len: u64,
+    modified: Option<SystemTime>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -1469,6 +1475,18 @@ impl CompressionService {
             .collect())
     }
 
+    async fn mark_matching_vault_password_used(&self, password: &str) {
+        let Ok(passwords) = self.password_book_candidates().await else {
+            return;
+        };
+        if let Some((entry_id, _, _)) = passwords
+            .into_iter()
+            .find(|(_, _, candidate)| candidate == password)
+        {
+            let _ = self.encrypted_password_service.increment_use_count(&entry_id).await;
+        }
+    }
+
     async fn attempt_password_book_candidates(&self, file_path: &str) -> Option<String> {
         let passwords = match self.password_book_candidates().await {
             Ok(passwords) => passwords,
@@ -1478,15 +1496,12 @@ impl CompressionService {
             }
         };
 
-        for (entry_id, _entry_name, password) in passwords {
+        for (_entry_id, _entry_name, password) in passwords {
             if self.check_cancellation().is_err() {
                 return None;
             }
             match self.test_archive_password(file_path, &password).await {
-                Ok(true) => {
-                    let _ = self.encrypted_password_service.increment_use_count(&entry_id).await;
-                    return Some(password);
-                }
+                Ok(true) => return Some(password),
                 _ => continue,
             }
         }
@@ -1528,7 +1543,7 @@ impl CompressionService {
             TaskLogSeverity::Info,
         );
 
-        for (idx, (entry_id, entry_name, pwd)) in passwords.iter().enumerate() {
+        for (idx, (_entry_id, entry_name, pwd)) in passwords.iter().enumerate() {
             if self.check_cancellation().is_err() {
                 self.emit_log(window, task_id, "密码保险箱尝试已取消", TaskLogSeverity::Warning);
                 return None;
@@ -1558,7 +1573,6 @@ impl CompressionService {
                         ),
                         TaskLogSeverity::Success,
                     );
-                    let _ = self.encrypted_password_service.increment_use_count(entry_id).await;
                     return Some(pwd.clone());
                 },
                 Ok(false) => self.emit_log(
@@ -1853,6 +1867,12 @@ impl CompressionService {
         if !path.is_file() {
             return Err(CompressionError::FileNotFound(file_path).into());
         }
+        let source_snapshot = Self::source_file_snapshot(path)?;
+        if source_snapshot.len == 0 {
+            return Err(CompressionError::ExtractionFailed(
+                "压缩包为空，可能仍在下载、复制或尚未写入完成".to_string(),
+            ).into());
+        }
         if !matches!(options.conflict_policy.as_str(), "ask" | "overwrite" | "skip" | "rename") {
             return Err(CompressionError::ExtractionFailed(format!(
                 "Unsupported conflict policy: {}",
@@ -1929,6 +1949,7 @@ impl CompressionService {
         service.emit_log(&window, &task_id, &format!("确定解压格式: {:?} (后缀: {})", format, ext), TaskLogSeverity::Info);
 
         let mut final_password = password.clone();
+        let mut password_verified = false;
         let password_required = if format.supports_password() {
             service.emit_log(
                 &window,
@@ -1972,6 +1993,7 @@ impl CompressionService {
                         TaskLogSeverity::Success,
                     );
                     final_password = Some(smart_pwd);
+                    password_verified = true;
                 } else {
                     service.emit_log(&window, &task_id, "所有已知密码均无效，等待手动输入", TaskLogSeverity::Warning);
                     
@@ -2000,11 +2022,19 @@ impl CompressionService {
             );
         }
 
+        if password_required == Some(true) && final_password.is_some() && !password_verified {
+            let candidate = final_password.as_deref().unwrap_or_default();
+            if !service.test_archive_password(&file_path, candidate).await? {
+                return Err(CompressionError::InvalidPassword.into());
+            }
+            password_verified = true;
+        }
+
         let preflight_stats = service
             .preflight_extraction(path, &format, final_password.as_deref(), &final_out_dir)
             .await?;
         let expected_expanded_bytes = preflight_stats.map(|(_, expanded_bytes)| expanded_bytes);
-        if password_required == Some(true) && final_password.is_some() {
+        if password_required == Some(true) && password_verified {
             service.emit_log(
                 &window,
                 &task_id,
@@ -2014,6 +2044,11 @@ impl CompressionService {
                 ),
                 TaskLogSeverity::Success,
             );
+        }
+        if Self::source_file_changed(path, source_snapshot)? {
+            return Err(CompressionError::ExtractionFailed(
+                "源压缩包在密码检测或预检期间仍在写入，请等待下载或复制完成后重试".to_string(),
+            ).into());
         }
         let mark_of_web = if options.preserve_mark_of_web {
             mark_of_web::read_from(path).map_err(|error| {
@@ -2361,7 +2396,9 @@ impl CompressionService {
             },
         };
 
-        if let Err(error) = result.map_err(Self::normalize_storage_full_error) {
+        let extraction_result = result.map_err(Self::normalize_storage_full_error);
+        let source_changed = Self::source_file_changed(path, source_snapshot)?;
+        if let Err(error) = extraction_result {
             if let Err(cleanup_error) = staging.cleanup() {
                 service.emit_log(
                     &window,
@@ -2370,7 +2407,21 @@ impl CompressionService {
                     TaskLogSeverity::Warning,
                 );
             }
+            if source_changed {
+                return Err(CompressionError::ExtractionFailed(
+                    "源压缩包在解压期间仍在写入，当前结果已丢弃；请等待下载或复制完成后重试".to_string(),
+                ).into());
+            }
             return Err(error);
+        }
+        if source_changed {
+            let _ = staging.cleanup();
+            return Err(CompressionError::ExtractionFailed(
+                "源压缩包在解压期间发生变化，当前结果已丢弃；请等待下载或复制完成后重试".to_string(),
+            ).into());
+        }
+        if let Some(password) = final_password.as_deref() {
+            service.mark_matching_vault_password_used(password).await;
         }
         if let Err(error) = service.prepare_staging_layout(path, &out_dir, &options) {
             let _ = staging.cleanup();
@@ -2467,6 +2518,18 @@ impl CompressionService {
             entry_count,
             expanded_bytes,
         )
+    }
+
+    fn source_file_snapshot(path: &Path) -> Result<SourceFileSnapshot> {
+        let metadata = std::fs::metadata(path)?;
+        Ok(SourceFileSnapshot {
+            len: metadata.len(),
+            modified: metadata.modified().ok(),
+        })
+    }
+
+    fn source_file_changed(path: &Path, original: SourceFileSnapshot) -> Result<bool> {
+        Ok(Self::source_file_snapshot(path)? != original)
     }
 
     fn ensure_no_link_ancestors(path: &Path) -> Result<()> {
@@ -3375,7 +3438,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn resolves_encrypted_archive_from_the_file_backed_password_vault() {
+    async fn password_vault_usage_is_recorded_only_after_explicit_success_marking() {
         use crate::models::password::{PasswordCategory, PasswordEntry};
 
         let temp = tempfile::tempdir().expect("temp dir");
@@ -3413,16 +3476,43 @@ mod tests {
             .await;
 
         assert_eq!(resolved.as_deref(), Some("vault-password"));
-        let updated = service
+        let matched_only = service
             .encrypted_password_service
             .get_password(&saved.id)
             .await
             .expect("read password")
             .expect("password remains in vault");
+        assert_eq!(matched_only.use_count, 0);
+        assert!(matched_only.last_used.is_none());
+
+        service.mark_matching_vault_password_used("vault-password").await;
+        let updated = service
+            .encrypted_password_service
+            .get_password(&saved.id)
+            .await
+            .expect("read updated password")
+            .expect("password remains in vault");
         assert_eq!(updated.use_count, 1);
         assert!(updated.last_used.is_some());
         let local_today = chrono::Local::now().format("%Y-%m-%d").to_string();
         assert_eq!(updated.usage_history.get(&local_today), Some(&1));
+    }
+
+    #[test]
+    fn source_snapshot_detects_archives_that_change_during_extraction() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let archive = temp.path().join("growing.rar");
+        std::fs::write(&archive, b"initial bytes").expect("write fixture");
+        let snapshot = CompressionService::source_file_snapshot(&archive).expect("snapshot");
+
+        assert!(!CompressionService::source_file_changed(&archive, snapshot).expect("unchanged"));
+        std::fs::OpenOptions::new()
+            .append(true)
+            .open(&archive)
+            .expect("open fixture")
+            .write_all(b"more bytes")
+            .expect("grow fixture");
+        assert!(CompressionService::source_file_changed(&archive, snapshot).expect("changed"));
     }
 
     #[test]
