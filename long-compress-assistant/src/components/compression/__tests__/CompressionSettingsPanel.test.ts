@@ -7,6 +7,21 @@ import type { CompressionOptions } from '@/stores/compression'
 const invoke = vi.fn()
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: (...args: unknown[]) => invoke(...args) }))
 
+const vaultEntry = {
+  id: 'vault-1',
+  name: '常用归档密码',
+  password: 'Archive!2026',
+  notes: '项目文件',
+  tags: ['archive'],
+  category: 'Work',
+  created_at: '2026-09-01T00:00:00Z',
+  updated_at: '2026-09-01T00:00:00Z',
+  last_used: null,
+  favorite: true,
+  use_count: 3,
+  usage_history: {},
+}
+
 const settings = (overrides: Partial<CompressionOptions> = {}): CompressionOptions => ({
   format: 'zip',
   level: 6,
@@ -30,6 +45,7 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
       ProfileSelector: true,
       ProfileManager: true,
       Teleport: true,
+      Transition: false,
     },
   },
 })
@@ -51,6 +67,9 @@ describe('CompressionSettingsPanel split archive settings', () => {
           message: '',
         }
       }
+      if (command === 'is_encrypted_password_service_unlocked') return true
+      if (command === 'list_encrypted_passwords') return [vaultEntry]
+      if (command === 'increment_encrypted_password_use_count') return { ...vaultEntry, use_count: 4 }
       return '{}'
     })
   })
@@ -87,5 +106,23 @@ describe('CompressionSettingsPanel split archive settings', () => {
     })
     await flushPromises()
     expect(wrapper.get('[data-testid="compression-split-settings"]').text()).toContain('请先清除压缩密码')
+  })
+
+  it('opens the password vault list on focus and fills the selected password', async () => {
+    const wrapper = mountPanel(settings())
+    await flushPromises()
+
+    await wrapper.get('[data-testid="compression-password-input"]').trigger('focus')
+    const menu = wrapper.get('[data-testid="compression-password-vault-menu"]')
+    expect(menu.text()).toContain('常用归档密码')
+    expect(menu.text()).not.toContain('Archive!2026')
+
+    await wrapper.get('[data-testid="compression-vault-password-vault-1"]').trigger('click')
+    await flushPromises()
+    const emitted = wrapper.emitted('update:modelValue')?.at(-1)?.[0] as CompressionOptions
+    expect(emitted.password).toBe('Archive!2026')
+    expect(invoke).toHaveBeenCalledWith('increment_encrypted_password_use_count', { id: 'vault-1' })
+    await new Promise(resolve => window.setTimeout(resolve, 180))
+    expect(wrapper.find('[data-testid="compression-password-vault-menu"]').exists()).toBe(false)
   })
 })

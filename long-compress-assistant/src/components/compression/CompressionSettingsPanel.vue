@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useAppStore } from '@/stores/app'
 import { useCompressionProfileStore } from '@/stores/compressionProfile'
+import { usePasswordStore, type PasswordEntry } from '@/stores/password'
 import type { CompressionOptions } from '@/stores/compression'
 import type { CompressionProfile } from '@/types/profile'
 import { COMPRESSIBLE_FORMATS, effectiveFormatForPassword, isPasswordSupportedFormat } from '@/utils/compressionFormat'
@@ -15,9 +16,12 @@ import { useArchiveEngine } from '@/composables/useArchiveEngine'
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
 const profileStore = useCompressionProfileStore()
+const passwordStore = usePasswordStore()
 const archiveEngine = useArchiveEngine()
 
 const showPasswordGenerator = ref(false)
+const showVaultPasswords = ref(false)
+const passwordField = ref<HTMLElement | null>(null)
 
 interface Props {
   modelValue?: CompressionOptions
@@ -80,6 +84,14 @@ const selectedFormat = computed(() => compressionFormats.value.find(format => fo
 const canCreateSplitArchive = computed(() =>
   Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive && !compressionOptions.value.password)
 )
+const vaultPasswordEntries = computed(() => [...passwordStore.entries].sort((left, right) => {
+  if (left.favorite !== right.favorite) return left.favorite ? -1 : 1
+  if (left.use_count !== right.use_count) return right.use_count - left.use_count
+  return left.name.localeCompare(right.name, 'zh-CN', { numeric: true })
+}))
+const selectedVaultPasswordName = computed(() =>
+  passwordStore.entries.find(entry => entry.password === compressionOptions.value.password)?.name || ''
+)
 const splitArchiveUnavailableReason = computed(() => {
   if (!selectedFormat.value?.supportsSplit) {
     return `${selectedFormat.value?.name || compressionOptions.value.format.toUpperCase()} 格式暂不支持创建分卷`
@@ -104,6 +116,7 @@ const updateSplitSize = (event: Event) => {
 
 onMounted(() => {
   void archiveEngine.refresh()
+  if (!passwordStore.isInitialized) void passwordStore.checkUnlockStatus()
 })
 
 // ZIP/7Z/RAR 与 .aes 格式原生支持密码；其他格式显式转为加密 7Z 容器。
@@ -277,6 +290,17 @@ const handlePasswordGenerated = (password: string) => {
   showPasswordGenerator.value = false
 }
 
+const selectVaultPassword = async (entry: PasswordEntry) => {
+  compressionOptions.value.password = await passwordStore.usePassword(entry.id) || entry.password
+  showVaultPasswords.value = false
+}
+
+const closeVaultPasswordsAfterFocus = () => {
+  window.setTimeout(() => {
+    if (!passwordField.value?.contains(document.activeElement)) showVaultPasswords.value = false
+  }, 0)
+}
+
 </script>
 
 <template>
@@ -349,18 +373,22 @@ const handlePasswordGenerated = (password: string) => {
       <!-- 密码保护 (主行可见) 带生成器按钮 -->
       <div class="flex flex-col gap-1.5 min-w-0">
         <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('decompress.password') }}</label>
-        <div class="flex gap-1">
-          <div class="relative flex-1">
+        <div ref="passwordField" class="password-field flex gap-1" @focusout="closeVaultPasswordsAfterFocus">
+          <div class="relative min-w-0 flex-1">
             <input
               v-model="compressionOptions.password" type="password"
+              data-testid="compression-password-input"
               class="w-full px-3 py-2 rounded-xl bg-input border text-sm outline-none focus:border-primary transition-all disabled:opacity-85 disabled:cursor-not-allowed"
               :class="compressionOptions.password ? 'border-primary/50' : 'border-subtle'"
               :disabled="!supportsPassword"
               :placeholder="supportsPassword ? (compressionOptions.password ? appStore.t('preset.password_set') : appStore.t('preset.password_optional')) : appStore.t('preset.password_na')"
+              @focus="showVaultPasswords = supportsPassword"
+              @click="showVaultPasswords = supportsPassword"
             />
             <button
               v-if="compressionOptions.password"
-              @click="compressionOptions.password = ''"
+              type="button"
+              @click="compressionOptions.password = ''; showVaultPasswords = true"
               class="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full flex items-center justify-center text-dim hover:text-red-400 transition-colors"
             >
               <i class="pi pi-times text-sm"></i>
@@ -376,6 +404,35 @@ const handlePasswordGenerated = (password: string) => {
           >
             <span class="text-base">🎲</span>
           </button>
+          <Transition name="password-menu">
+            <div
+              v-if="showVaultPasswords && supportsPassword"
+              data-testid="compression-password-vault-menu"
+              class="password-vault-menu"
+            >
+              <div class="password-vault-menu-heading">
+                <span><i class="pi pi-shield"></i>密码保险箱</span>
+                <small>{{ vaultPasswordEntries.length }} 项</small>
+              </div>
+              <div v-if="passwordStore.isLoading" class="password-vault-menu-state"><i class="pi pi-spinner pi-spin"></i>正在读取密码保险箱</div>
+              <div v-else-if="!passwordStore.isUnlocked" class="password-vault-menu-state"><i class="pi pi-lock"></i>密码保险箱当前不可用</div>
+              <div v-else-if="vaultPasswordEntries.length === 0" class="password-vault-menu-state"><i class="pi pi-inbox"></i>还没有保存密码</div>
+              <div v-else class="password-vault-options custom-scrollbar">
+                <button
+                  v-for="entry in vaultPasswordEntries"
+                  :key="entry.id"
+                  type="button"
+                  :data-testid="`compression-vault-password-${entry.id}`"
+                  :class="{ selected: selectedVaultPasswordName === entry.name }"
+                  @click="selectVaultPassword(entry)"
+                >
+                  <span class="password-vault-option-icon"><i :class="entry.favorite ? 'pi pi-star-fill' : 'pi pi-key'"></i></span>
+                  <span><strong>{{ entry.name }}</strong><small>{{ entry.category }}<template v-if="entry.notes"> · {{ entry.notes }}</template></small></span>
+                  <i v-if="selectedVaultPasswordName === entry.name" class="pi pi-check"></i>
+                </button>
+              </div>
+            </div>
+          </Transition>
         </div>
         <p v-if="usesEncrypted7zContainer" data-testid="encrypted-7z-conversion-hint" class="rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-xs leading-5 text-amber-300">
           <i class="pi pi-info-circle mr-1"></i>{{ appStore.t('compress.password_7z_hint') }}
@@ -616,6 +673,143 @@ const handlePasswordGenerated = (password: string) => {
 .horizontal-settings.compact .settings-core-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-vault-menu {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.42rem);
+  right: 0;
+  left: 0;
+  min-width: min(19rem, calc(100vw - 3rem));
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--dynamic-accent) 28%, var(--border-subtle));
+  border-radius: 0.82rem;
+  background: var(--bg-modal);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.32), 0 0 0 1px rgb(255 255 255 / 0.025);
+}
+
+.password-vault-menu-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.58rem 0.7rem;
+}
+
+.password-vault-menu-heading span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-content);
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.password-vault-menu-heading span i {
+  color: var(--dynamic-accent);
+  font-size: 0.65rem;
+}
+
+.password-vault-menu-heading small {
+  color: var(--text-muted);
+  font-size: 0.54rem;
+  font-weight: 800;
+}
+
+.password-vault-options {
+  max-height: 11rem;
+  overflow-y: auto;
+  padding: 0.35rem;
+}
+
+.password-vault-options button {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: 1.7rem minmax(0, 1fr) 0.8rem;
+  align-items: center;
+  gap: 0.48rem;
+  border-radius: 0.62rem;
+  padding: 0.48rem 0.52rem;
+  color: var(--text-muted);
+  text-align: left;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.password-vault-options button:hover,
+.password-vault-options button.selected {
+  background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent);
+  color: var(--dynamic-accent);
+}
+
+.password-vault-option-icon {
+  display: grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: var(--bg-input);
+  color: var(--dynamic-accent);
+  font-size: 0.58rem;
+}
+
+.password-vault-options button > span:nth-child(2) {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.password-vault-options strong,
+.password-vault-options small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.password-vault-options strong {
+  color: var(--text-content);
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+
+.password-vault-options small {
+  color: var(--text-muted);
+  font-size: 0.52rem;
+  font-weight: 650;
+}
+
+.password-vault-options button > i {
+  font-size: 0.52rem;
+}
+
+.password-vault-menu-state {
+  display: flex;
+  min-height: 4.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.58rem;
+  font-weight: 750;
+}
+
+.password-menu-enter-active,
+.password-menu-leave-active {
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.password-menu-enter-from,
+.password-menu-leave-to {
+  opacity: 0;
+  transform: translateY(-0.3rem) scale(0.98);
 }
 
 .split-settings-card {
