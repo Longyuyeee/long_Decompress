@@ -110,6 +110,7 @@ describe('AeroTable', () => {
 
     await wrapper.get('[data-testid="task-row"]').trigger('click')
     const configPanel = wrapper.get('[data-testid="decompression-config-panel"]')
+    expect(configPanel.find('.config-source-switch').exists()).toBe(false)
     const passwordInput = configPanel.get('input[type="password"]')
     const controls = passwordInput.element.parentElement!
 

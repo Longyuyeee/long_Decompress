@@ -35,6 +35,7 @@ const globalOutputPath = ref(appStore.settings.defaultOutputPath)
 const isGlobalSameDir = ref(!appStore.settings.defaultOutputPath) // 默认同目录，用户可通过按钮手动选择
 const globalExtractToSubfolder = ref(appStore.settings.defaultExtractToSubfolder)
 const globalRecycleSourceAfterExtract = ref(appStore.settings.autoDeleteSource)
+const batchConfigurationMode = ref<'global' | 'individual'>('global')
 
 watch(
   () => appStore.settings.autoDeleteSource,
@@ -140,7 +141,7 @@ const onFilesSelected = async (files: any[]) => {
       outputPath: isGlobalSameDir.value ? parentDir : globalOutputPath.value,
       extractToSubfolder: globalExtractToSubfolder.value,
       recycleSourceAfterExtract: globalRecycleSourceAfterExtract.value,
-      configurationMode: 'global',
+      configurationMode: batchConfigurationMode.value,
     })
     createdTaskIds.push(taskId)
     appStore.addRecentFile(sourcePath)
@@ -268,14 +269,17 @@ const applyGlobalConfiguration = (task: Task) => {
   task.recycleSourceAfterExtract = globalRecycleSourceAfterExtract.value
 }
 
-const setTaskConfigurationMode = (taskId: string, mode: 'global' | 'individual') => {
-  const task = decompressionTasks.value.find(candidate => candidate.id === taskId)
-  if (!task || task.status !== 'pending') return
-  task.configurationMode = mode
-  if (mode === 'global') {
-    applyGlobalConfiguration(task)
-    task.extractToSubfolder = globalExtractToSubfolder.value
-  }
+const setBatchConfigurationMode = (mode: 'global' | 'individual') => {
+  if (batchConfigurationMode.value === mode) return
+  batchConfigurationMode.value = mode
+  decompressionTasks.value.forEach(task => {
+    if (task.status !== 'pending') return
+    task.configurationMode = mode
+    if (mode === 'global') {
+      applyGlobalConfiguration(task)
+      task.extractToSubfolder = globalExtractToSubfolder.value
+    }
+  })
 }
 
 const toggleTaskSelection = (taskId: string) => {
@@ -587,7 +591,6 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           @cancel-task="taskStore.cancelTask"
           @pause-task="taskStore.pauseTask"
           @resume-task="taskStore.resumeTask"
-          @set-config-mode="setTaskConfigurationMode"
         />
         </div>
 
@@ -604,49 +607,78 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
 
       <!-- 底部操作区 -->
       <div v-if="decompressionTasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
-        <span class="text-xs font-black text-primary uppercase tracking-widest opacity-80 shrink-0 w-12">{{ appStore.t('decompress.config.output') }}</span>
-
-        <button @click="handleGlobalSelectDir"
-                class="h-6 px-2.5 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-xs font-black flex items-center gap-1 shadow-sm shadow-primary/20 shrink-0">
-          <i class="pi pi-folder-open text-xs"></i>
-          <span class="hidden sm:inline">{{ appStore.t('decompress.config.output_select') }}</span>
-          <span class="sm:hidden">选择</span>
-        </button>
-
-        <button @click="handleGlobalSetSameDir"
-                :class="isGlobalSameDir ? 'bg-primary/10 text-primary border-primary/20 shadow-inner' : 'bg-input/30 text-muted border-subtle/50'"
-                class="h-6 px-2.5 rounded-lg border text-xs font-bold transition-all hover:bg-primary/5 shrink-0">
-          <span class="hidden sm:inline">{{ appStore.t('decompress.config.output_same') }}</span>
-          <span class="sm:hidden">同目录</span>
-        </button>
-
-        <span class="text-xs font-mono text-content font-bold truncate flex-1 min-w-0" :title="isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto'))">
-          {{ isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto')) }}
-        </span>
-
-        <div class="flex items-center gap-2 cursor-pointer shrink-0" @click="toggleGlobalSubfolder">
-          <div class="w-3 h-3 rounded border border-primary/30 flex items-center justify-center"
-               :class="globalExtractToSubfolder ? 'bg-primary border-primary' : 'bg-transparent'">
-            <i v-if="globalExtractToSubfolder" class="pi pi-check text-[0.375rem] text-white"></i>
-          </div>
-          <span class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('decompress.config.output_sub') }}</span>
+        <div class="batch-config-mode-switch" data-testid="decompression-batch-config-mode" role="group" aria-label="解压配置模式">
+          <button
+            type="button"
+            data-testid="decompression-config-mode-global"
+            :class="{ active: batchConfigurationMode === 'global' }"
+            :aria-pressed="batchConfigurationMode === 'global'"
+            @click="setBatchConfigurationMode('global')"
+          >
+            {{ appStore.t('tasks.config.global') }}
+          </button>
+          <button
+            type="button"
+            data-testid="decompression-config-mode-individual"
+            :class="{ active: batchConfigurationMode === 'individual' }"
+            :aria-pressed="batchConfigurationMode === 'individual'"
+            @click="setBatchConfigurationMode('individual')"
+          >
+            {{ appStore.t('tasks.config.individual') }}
+          </button>
         </div>
 
-        <button
-          type="button"
-          role="switch"
-          data-testid="global-recycle-source-switch"
-          :aria-checked="globalRecycleSourceAfterExtract"
-          :title="appStore.t('decompress.config.recycle_source.desc')"
-          class="flex items-center gap-2 shrink-0 text-left"
-          @click="toggleGlobalRecycleSource"
-        >
-          <span class="w-3 h-3 rounded border border-primary/30 flex items-center justify-center"
-                :class="globalRecycleSourceAfterExtract ? 'bg-primary border-primary' : 'bg-transparent'">
-            <i v-if="globalRecycleSourceAfterExtract" class="pi pi-check text-[0.375rem] text-white"></i>
-          </span>
-          <span class="text-xs font-black text-muted uppercase tracking-widest whitespace-nowrap">{{ appStore.t('decompress.config.recycle_source') }}</span>
-        </button>
+        <Transition name="global-config-strip" mode="out-in">
+          <div v-if="batchConfigurationMode === 'global'" key="global" class="global-config-controls">
+            <span class="text-xs font-black text-primary uppercase tracking-widest opacity-80 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
+
+            <button @click="handleGlobalSelectDir"
+                    class="h-6 px-2.5 rounded-lg bg-primary text-white hover:brightness-110 active:scale-95 transition-all text-xs font-black flex items-center gap-1 shadow-sm shadow-primary/20 shrink-0">
+              <i class="pi pi-folder-open text-xs"></i>
+              <span class="hidden sm:inline">{{ appStore.t('decompress.config.output_select') }}</span>
+              <span class="sm:hidden">选择</span>
+            </button>
+
+            <button @click="handleGlobalSetSameDir"
+                    :class="isGlobalSameDir ? 'bg-primary/10 text-primary border-primary/20 shadow-inner' : 'bg-input/30 text-muted border-subtle/50'"
+                    class="h-6 px-2.5 rounded-lg border text-xs font-bold transition-all hover:bg-primary/5 shrink-0">
+              <span class="hidden sm:inline">{{ appStore.t('decompress.config.output_same') }}</span>
+              <span class="sm:hidden">同目录</span>
+            </button>
+
+            <span class="text-xs font-mono text-content font-bold truncate flex-1 min-w-0" :title="isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto'))">
+              {{ isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto')) }}
+            </span>
+
+            <button type="button" class="flex items-center gap-2 shrink-0" @click="toggleGlobalSubfolder">
+              <span class="w-3 h-3 rounded border border-primary/30 flex items-center justify-center"
+                   :class="globalExtractToSubfolder ? 'bg-primary border-primary' : 'bg-transparent'">
+                <i v-if="globalExtractToSubfolder" class="pi pi-check text-[0.375rem] text-white"></i>
+              </span>
+              <span class="text-xs font-black text-muted uppercase tracking-widest whitespace-nowrap">{{ appStore.t('decompress.config.output_sub') }}</span>
+            </button>
+
+            <button
+              type="button"
+              role="switch"
+              data-testid="global-recycle-source-switch"
+              :aria-checked="globalRecycleSourceAfterExtract"
+              :title="appStore.t('decompress.config.recycle_source.desc')"
+              class="flex items-center gap-2 shrink-0 text-left"
+              @click="toggleGlobalRecycleSource"
+            >
+              <span class="w-3 h-3 rounded border border-primary/30 flex items-center justify-center"
+                    :class="globalRecycleSourceAfterExtract ? 'bg-primary border-primary' : 'bg-transparent'">
+                <i v-if="globalRecycleSourceAfterExtract" class="pi pi-check text-[0.375rem] text-white"></i>
+              </span>
+              <span class="text-xs font-black text-muted uppercase tracking-widest whitespace-nowrap">{{ appStore.t('decompress.config.recycle_source') }}</span>
+            </button>
+          </div>
+          <div v-else key="individual" class="individual-config-hint">
+            <i class="pi pi-sliders-h" aria-hidden="true"></i>
+            <span>展开任务详情后分别调整配置</span>
+          </div>
+        </Transition>
 
         <div class="w-px h-5 bg-subtle/20 mx-1 hidden md:block"></div>
 
@@ -670,6 +702,68 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
 </template>
 
 <style scoped>
+.batch-config-mode-switch {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.15rem;
+  padding: 0.15rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  background: var(--bg-input);
+}
+
+.batch-config-mode-switch button {
+  min-width: 2.7rem;
+  height: 1.65rem;
+  padding-inline: 0.65rem;
+  border-radius: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.batch-config-mode-switch button.active {
+  background: var(--dynamic-accent);
+  color: white;
+  box-shadow: 0 6px 16px -9px var(--dynamic-accent);
+}
+
+.global-config-controls {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 36rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.individual-config-hint {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 18rem;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.individual-config-hint i {
+  color: var(--dynamic-accent);
+}
+
+.global-config-strip-enter-active,
+.global-config-strip-leave-active {
+  transition: opacity 160ms ease, transform 180ms ease;
+}
+
+.global-config-strip-enter-from,
+.global-config-strip-leave-to {
+  opacity: 0;
+  transform: translateY(0.35rem);
+}
+
 .decompress-view {
   min-width: 0;
   overflow-x: hidden;

@@ -27,7 +27,6 @@ const emit = defineEmits<{
   'cancel-task': [taskId: string]
   'pause-task': [taskId: string]
   'resume-task': [taskId: string]
-  'set-config-mode': [taskId: string, mode: 'global' | 'individual']
 }>()
 
 const taskStore = useTaskStore()
@@ -450,10 +449,6 @@ const onLeave = (el: any) => {
                         <i class="pi pi-cog text-sm"></i>
                         {{ appStore.t('decompress.column.config') }}
                       </h4>
-                      <div v-if="task.type === 'decompression' && task.status === 'pending'" class="config-source-switch" @click.stop>
-                        <button type="button" :class="{ active: task.configurationMode === 'global' }" @click="emit('set-config-mode', task.id, 'global')">{{ appStore.t('tasks.config.global') }}</button>
-                        <button type="button" :class="{ active: task.configurationMode !== 'global' }" @click="emit('set-config-mode', task.id, 'individual')">{{ appStore.t('tasks.config.individual') }}</button>
-                      </div>
                     </div>
 
                     <div v-if="task.type === 'decompression'" class="space-y-3.5" :class="{ 'config-follows-global': task.configurationMode === 'global' }">
@@ -655,7 +650,7 @@ const onLeave = (el: any) => {
 </template>
 
 <style scoped>
-.config-source-switch{display:flex;flex:0 0 auto;gap:.15rem;border:1px solid var(--border-subtle);border-radius:.65rem;background:var(--bg-input);padding:.15rem}.config-source-switch button{border-radius:.5rem;padding:.3rem .55rem;color:var(--text-muted);font-size:.65rem;font-weight:850;transition:all .18s ease}.config-source-switch button.active{background:var(--dynamic-accent);color:#fff;box-shadow:0 5px 14px -9px var(--dynamic-accent)}.config-follows-global>.inherited-config-control{pointer-events:none;opacity:.58}
+.config-follows-global>.inherited-config-control{pointer-events:none;opacity:.58}
 .aero-table-container {
   /* 解决展开时滚动条出现导致的布局跳动 */
   min-width: 0;

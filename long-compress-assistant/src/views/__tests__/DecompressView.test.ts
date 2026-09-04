@@ -572,7 +572,7 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
-  it('exposes an explicit global or individual configuration mode for extraction tasks', async () => {
+  it('switches the pending extraction batch between global and individual configuration at the footer', async () => {
     const wrapper = mountView()
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
       name: 'configurable.zip',
@@ -582,14 +582,20 @@ describe('DecompressView', () => {
 
     const task = useTaskStore().tasks[0]
     expect(task.configurationMode).toBe('global')
-    wrapper.findComponent({ name: 'AeroTable' }).vm.$emit('set-config-mode', task.id, 'individual')
+    expect(wrapper.findComponent({ name: 'AeroTable' }).attributes('onSet-config-mode')).toBeUndefined()
+    await wrapper.get('[data-testid="decompression-config-mode-individual"]').trigger('click')
     await nextTick()
     expect(task.configurationMode).toBe('individual')
+    await new Promise(resolve => setTimeout(resolve, 220))
+    expect(wrapper.find('[data-testid="global-recycle-source-switch"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('展开任务详情后分别调整配置')
 
-    wrapper.findComponent({ name: 'AeroTable' }).vm.$emit('set-config-mode', task.id, 'global')
+    await wrapper.get('[data-testid="decompression-config-mode-global"]').trigger('click')
     await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 220))
     expect(task.configurationMode).toBe('global')
     expect(task.outputPath).toBe('C:/archives')
+    expect(wrapper.find('[data-testid="global-recycle-source-switch"]').exists()).toBe(true)
     wrapper.unmount()
   })
 
