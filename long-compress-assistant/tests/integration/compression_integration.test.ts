@@ -79,7 +79,15 @@ describe('Tauri compression integration', () => {
     const tasks = useTaskStore()
     await tasks.initListeners()
     await tasks.initListeners()
-    expect(mocks.listen).toHaveBeenCalledTimes(5)
+    expect(mocks.listen.mock.calls.map(([event]) => event)).toEqual([
+      'task-log',
+      'task-progress',
+      'archive-format-detected',
+      'password-required',
+      'file-conflict',
+      'shortcut_pause_resume_task',
+      'shortcut_cancel_task',
+    ])
 
     tasks.addTask({
       id: 'task-2', name: 'demo.zip', type: 'decompression',
