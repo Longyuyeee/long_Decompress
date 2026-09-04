@@ -1,170 +1,59 @@
 <template>
-  <Teleport to="body">
-  <div v-if="isOpen" class="fixed inset-0 z-[400] flex items-center justify-center p-4">
-    <!-- 背景遮罩 -->
-    <div class="absolute inset-0 bg-black/65" @click="closeDialog"></div>
-
-    <!-- 对话框 -->
-    <div class="password-generator-dialog relative w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl shadow-2xl border border-subtle text-content">
-      <!-- 头部 -->
-      <div class="px-5 py-4 border-b border-subtle">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">🎲</span>
-            <h2 class="text-lg font-bold text-primary">{{ $t('password.generator.title', '密码生成器') }}</h2>
-          </div>
-          <button
-            @click="closeDialog"
-            class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-input/50 transition-colors text-muted hover:text-primary"
-          >
-            <span class="text-lg">×</span>
+  <Modal
+    :visible="isOpen"
+    size="md"
+    layer="nested"
+    show-footer
+    :title="$t('password.generator.title', '密码生成器')"
+    description="按用途生成并立即使用"
+    icon="pi pi-key"
+    @close="closeDialog"
+  >
+    <div class="password-generator" data-testid="password-generator">
+      <section class="password-result" data-testid="password-generator-result" aria-live="polite">
+        <div class="result-heading"><span>生成结果</span><strong :class="strengthTextColor">{{ generatedPassword ? strengthLabel : '等待生成' }}</strong></div>
+        <div class="result-value">
+          <code>{{ generatedPassword || appStore.t('password.generator.placeholder', '点击生成密码...') }}</code>
+          <button v-if="generatedPassword" type="button" :title="appStore.t('password.generator.copy', '复制')" @click="copyPassword">
+            <i :class="copied ? 'pi pi-check' : 'pi pi-copy'"></i><span>{{ copied ? '已复制' : appStore.t('password.generator.copy', '复制') }}</span>
           </button>
         </div>
-      </div>
+        <div v-if="generatedPassword" class="strength-meter"><span><i :class="strengthColor" :style="{ width: `${strengthScore}%` }"></i></span><output>{{ strengthScore }}</output></div>
+      </section>
 
-      <!-- 内容 -->
-      <div class="p-5 space-y-4">
-        <!-- 生成的密码显示 -->
-        <div class="relative">
-          <div class="flex items-center gap-2 p-4 bg-input/30 rounded-xl border border-subtle font-mono text-sm break-all select-all">
-            <span class="flex-1 text-primary">{{ generatedPassword || appStore.t('password.generator.placeholder', '点击生成密码...') }}</span>
-            <button
-              v-if="generatedPassword"
-              @click="copyPassword"
-              class="shrink-0 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
-            >
-              {{ copied ? '✓' : appStore.t('password.generator.copy', '复制') }}
-            </button>
-          </div>
-
-          <!-- 密码强度指示 -->
-          <div v-if="generatedPassword" class="mt-2 flex items-center gap-2">
-            <div class="flex-1 h-2 bg-input rounded-full overflow-hidden">
-              <div
-                class="h-full transition-all duration-300"
-                :class="strengthColor"
-                :style="{ width: `${strengthScore}%` }"
-              ></div>
-            </div>
-            <span class="text-xs font-bold" :class="strengthTextColor">
-              {{ strengthLabel }}
-            </span>
-          </div>
+      <section class="generator-section">
+        <header><div><strong>{{ appStore.t('password.generator.mode', '生成模式') }}</strong><small>选择更适合当前用途的密码结构</small></div></header>
+        <div class="mode-grid">
+          <button v-for="mode in modes" :key="mode.value" type="button" :data-testid="`password-mode-${mode.value}`" :class="{ selected: selectedMode === mode.value }" @click="selectedMode = mode.value">
+            <i :class="mode.icon"></i><span>{{ mode.label }}</span><i v-if="selectedMode === mode.value" class="pi pi-check selected-mark"></i>
+          </button>
         </div>
+      </section>
 
-        <!-- 生成模式 -->
-        <div class="space-y-3">
-          <label class="text-xs font-bold text-primary uppercase tracking-wider">
-            {{ appStore.t('password.generator.mode', '生成模式') }}
+      <section v-if="selectedMode === 'standard'" class="generator-section standard-options">
+        <header><div><strong>{{ appStore.t('password.generator.strength', '强度级别') }}</strong><small>强度越高，生成的密码越长</small></div></header>
+        <div class="strength-grid">
+          <button v-for="strength in strengths" :key="strength.value" type="button" :class="{ selected: selectedStrength === strength.value }" @click="selectedStrength = strength.value">{{ strength.label }}</button>
+        </div>
+        <header class="charset-heading"><div><strong>{{ appStore.t('password.generator.charset', '字符集') }}</strong><small>控制密码中允许出现的字符</small></div></header>
+        <div class="charset-grid">
+          <label v-for="option in charsetOptions" :key="option.key" :class="{ wide: option.key === 'excludeAmbiguous' }">
+            <input v-model="charset[option.key]" type="checkbox"><span class="check-box"><i class="pi pi-check"></i></span><span>{{ option.label }}</span>
           </label>
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              v-for="mode in modes"
-              :key="mode.value"
-              @click="selectedMode = mode.value"
-                class="px-4 py-2 rounded-xl border transition-all text-left"
-              :class="selectedMode === mode.value
-                ? 'bg-primary/10 border-primary text-primary'
-                : 'bg-input/30 border-subtle text-muted hover:border-primary/50'"
-            >
-              <div class="flex items-center gap-2">
-                <span>{{ mode.icon }}</span>
-                <span class="text-sm font-bold">{{ mode.label }}</span>
-              </div>
-            </button>
-          </div>
         </div>
+      </section>
 
-        <!-- 标准模式选项 -->
-        <div v-if="selectedMode === 'standard'" class="space-y-4">
-          <!-- 强度选择 -->
-          <div class="space-y-2">
-            <label class="text-xs font-bold text-primary uppercase tracking-wider">
-              {{ appStore.t('password.generator.strength', '强度级别') }}
-            </label>
-            <div class="grid grid-cols-4 gap-2">
-              <button
-                v-for="strength in strengths"
-                :key="strength.value"
-                @click="selectedStrength = strength.value"
-                class="px-3 py-2 rounded-lg border text-xs font-bold transition-all"
-                :class="selectedStrength === strength.value
-                  ? 'bg-primary/10 border-primary text-primary'
-                  : 'bg-input/30 border-subtle text-muted hover:border-primary/50'"
-              >
-                {{ strength.label }}
-              </button>
-            </div>
-          </div>
-
-          <!-- 字符集选项 -->
-          <div class="space-y-2">
-            <label class="text-xs font-bold text-primary uppercase tracking-wider">
-              {{ appStore.t('password.generator.charset', '字符集') }}
-            </label>
-            <div class="space-y-1.5">
-              <label v-for="option in charsetOptions" :key="option.key" class="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  v-model="charset[option.key]"
-                  class="w-4 h-4 rounded border-subtle"
-                />
-                <span class="text-sm text-primary">{{ option.label }}</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- 易记模式选项 -->
-        <div v-if="selectedMode === 'memorable'" class="space-y-2">
-          <label class="text-xs font-bold text-primary uppercase tracking-wider">
-            {{ appStore.t('password.generator.word_count', '单词数量') }}
-          </label>
-          <input
-            v-model.number="wordCount"
-            type="range"
-            min="2"
-            max="5"
-            class="w-full"
-          />
-          <div class="text-center text-sm text-muted">{{ wordCount }} 个单词</div>
-        </div>
-
-        <!-- PIN 模式选项 -->
-        <div v-if="selectedMode === 'pin'" class="space-y-2">
-          <label class="text-xs font-bold text-primary uppercase tracking-wider">
-            {{ appStore.t('password.generator.pin_length', 'PIN 长度') }}
-          </label>
-          <input
-            v-model.number="pinLength"
-            type="range"
-            min="4"
-            max="12"
-            class="w-full"
-          />
-          <div class="text-center text-sm text-muted">{{ pinLength }} 位数字</div>
-        </div>
-      </div>
-
-      <!-- 底部操作 -->
-      <div class="px-5 py-3 border-t border-subtle flex gap-3">
-        <button
-          @click="generatePassword"
-          class="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors"
-        >
-          {{ appStore.t('password.generator.generate', '生成密码') }}
-        </button>
-        <button
-          v-if="generatedPassword"
-          @click="usePassword"
-          class="flex-1 px-4 py-2.5 rounded-xl bg-input/30 border border-subtle text-primary font-bold hover:border-primary transition-colors"
-        >
-          {{ appStore.t('password.generator.use', '使用此密码') }}
-        </button>
-      </div>
+      <section v-else class="generator-section range-section">
+        <header><div><strong>{{ selectedMode === 'memorable' ? appStore.t('password.generator.word_count', '单词数量') : appStore.t('password.generator.pin_length', 'PIN 长度') }}</strong><small>{{ selectedMode === 'memorable' ? '更多单词更难猜测，同时仍便于记忆' : '增加位数可以提高随机组合数量' }}</small></div><output>{{ selectedMode === 'memorable' ? `${wordCount} 个单词` : `${pinLength} 位` }}</output></header>
+        <input v-if="selectedMode === 'memorable'" v-model.number="wordCount" type="range" min="2" max="5">
+        <input v-else v-model.number="pinLength" type="range" min="4" max="12">
+      </section>
     </div>
-  </div>
-  </Teleport>
+    <template #footer>
+      <button type="button" class="generator-secondary" data-testid="password-generate" @click="generatePassword"><i class="pi pi-refresh"></i>{{ appStore.t('password.generator.generate', '重新生成') }}</button>
+      <button type="button" class="generator-primary" data-testid="password-use" :disabled="!generatedPassword" @click="usePassword"><i class="pi pi-check"></i>{{ appStore.t('password.generator.use', '使用此密码') }}</button>
+    </template>
+  </Modal>
 </template>
 
 <script setup lang="ts">
@@ -172,6 +61,7 @@ import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { useAppStore } from '@/stores/app'
 import { getCurrentInstance } from 'vue'
+import Modal from '@/components/ui/Modal.vue'
 
 const appStore = useAppStore()
 const instance = getCurrentInstance()
@@ -205,9 +95,9 @@ const charset = ref({
 })
 
 const modes: Array<{ value: ModeType; label: string; icon: string }> = [
-  { value: 'standard', label: '标准', icon: '🔑' },
-  { value: 'memorable', label: '易记', icon: '💭' },
-  { value: 'pin', label: 'PIN', icon: '🔢' },
+  { value: 'standard', label: '标准', icon: 'pi pi-key' },
+  { value: 'memorable', label: '易记', icon: 'pi pi-book' },
+  { value: 'pin', label: 'PIN', icon: 'pi pi-hashtag' },
 ]
 
 const strengths: Array<{ value: StrengthType; label: string }> = [
@@ -328,13 +218,9 @@ watch(() => props.isOpen, (isOpen) => {
   if (isOpen && !generatedPassword.value) {
     generatePassword()
   }
-})
+}, { immediate: true })
 </script>
 
 <style scoped>
-.password-generator-dialog {
-  background: var(--bg-modal);
-  box-shadow: 0 28px 80px rgb(0 0 0 / 0.55), 0 0 0 1px var(--border-subtle);
-  isolation: isolate;
-}
+.password-generator{display:grid;min-width:0;gap:.7rem}.password-result,.generator-section{min-width:0;border:1px solid var(--border-subtle);border-radius:.9rem;background:color-mix(in srgb,var(--bg-input) 72%,transparent);padding:.75rem}.result-heading,.generator-section>header{display:flex;align-items:center;justify-content:space-between;gap:.75rem}.result-heading span,.generator-section header strong{color:var(--text-content);font-size:.65rem;font-weight:900}.result-heading strong{font-size:.57rem;font-weight:900}.generator-section header small{display:block;margin-top:.08rem;color:var(--text-muted);font-size:.51rem;font-weight:650}.result-value{display:flex;min-width:0;align-items:center;gap:.5rem;margin-top:.5rem;border-radius:.7rem;background:var(--bg-card);padding:.55rem .65rem}.result-value code{min-width:0;flex:1;overflow-wrap:anywhere;color:var(--dynamic-accent);font-size:.72rem;font-weight:850;line-height:1.35;user-select:all}.result-value button{display:flex;height:1.85rem;flex:0 0 auto;align-items:center;gap:.3rem;border-radius:.55rem;background:color-mix(in srgb,var(--dynamic-accent) 10%,transparent);padding:0 .55rem;color:var(--dynamic-accent);font-size:.56rem;font-weight:850}.strength-meter{display:grid;grid-template-columns:minmax(0,1fr) 1.8rem;align-items:center;gap:.45rem;margin-top:.45rem}.strength-meter>span{height:.28rem;overflow:hidden;border-radius:999px;background:var(--bg-card)}.strength-meter i{display:block;height:100%;border-radius:inherit;transition:width .25s ease}.strength-meter output{color:var(--text-muted);font-size:.53rem;font-weight:850;text-align:right}.mode-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem;margin-top:.55rem}.mode-grid button{display:grid;min-width:0;height:2.45rem;grid-template-columns:1rem minmax(0,1fr) .75rem;align-items:center;gap:.3rem;border:1px solid var(--border-subtle);border-radius:.68rem;background:var(--bg-card);padding:0 .55rem;color:var(--text-muted);font-size:.62rem;font-weight:850;text-align:left;transition:border-color .16s ease,background-color .16s ease,color .16s ease}.mode-grid button:hover,.mode-grid button.selected,.strength-grid button:hover,.strength-grid button.selected{border-color:color-mix(in srgb,var(--dynamic-accent) 65%,var(--border-subtle));background:color-mix(in srgb,var(--dynamic-accent) 9%,var(--bg-card));color:var(--dynamic-accent)}.mode-grid button>i:first-child{font-size:.65rem}.mode-grid .selected-mark{font-size:.5rem}.strength-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.35rem;margin-top:.5rem}.strength-grid button{height:2rem;border:1px solid var(--border-subtle);border-radius:.58rem;background:var(--bg-card);color:var(--text-muted);font-size:.58rem;font-weight:850}.charset-heading{margin-top:.7rem}.charset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem;margin-top:.5rem}.charset-grid label{display:flex;min-width:0;min-height:2rem;align-items:center;gap:.45rem;border-radius:.58rem;background:var(--bg-card);padding:.35rem .5rem;color:var(--text-muted);font-size:.56rem;font-weight:750;cursor:pointer}.charset-grid label.wide{grid-column:1/-1}.charset-grid input{position:absolute;width:1px;height:1px;opacity:0}.check-box{display:grid;width:1rem;height:1rem;flex:0 0 1rem;place-items:center;border:1px solid var(--border-subtle);border-radius:.3rem;color:transparent;font-size:.45rem}.charset-grid input:checked+.check-box{border-color:var(--dynamic-accent);background:var(--dynamic-accent);color:white}.range-section header output{flex:0 0 auto;border-radius:999px;background:color-mix(in srgb,var(--dynamic-accent) 12%,transparent);padding:.3rem .55rem;color:var(--dynamic-accent);font-size:.6rem;font-weight:900}.range-section>input{width:100%;margin-top:.75rem;accent-color:var(--dynamic-accent)}.generator-secondary,.generator-primary{display:flex;min-width:7.5rem;height:2.35rem;align-items:center;justify-content:center;gap:.4rem;border-radius:.72rem;padding:0 .85rem;font-size:.64rem;font-weight:900}.generator-secondary{border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-content)}.generator-primary{background:var(--dynamic-accent);color:white;box-shadow:0 10px 24px -16px var(--dynamic-accent)}.generator-primary:disabled{cursor:not-allowed;opacity:.4}@media(max-width:520px){.mode-grid{grid-template-columns:1fr}.strength-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.charset-grid{grid-template-columns:1fr}.charset-grid label.wide{grid-column:auto}.generator-secondary,.generator-primary{min-width:0;flex:1}}
 </style>
