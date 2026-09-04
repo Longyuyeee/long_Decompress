@@ -60,6 +60,10 @@ export interface AppSettings {
   defaultOverwrite: boolean
   defaultDeleteAfter: boolean
   maxConcurrentTasks: number
+  archiveTaskConcurrencyVersion: number
+  defaultCompressionFormat: 'zip' | '7z' | 'tar.gz'
+  defaultCompressionLevel: number
+  defaultExtractToSubfolder: boolean
 
   // 安全设置
   scanForViruses: boolean

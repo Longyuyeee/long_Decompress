@@ -30,6 +30,21 @@ describe('task progress state machine', () => {
     expect(mocks.invoke).not.toHaveBeenCalledWith('list_task_history', expect.anything())
   })
 
+  it('cancels a queued task locally without calling a backend process', async () => {
+    const store = useTaskStore()
+    store.addTask({
+      id: 'queued-task',
+      name: 'queued.zip',
+      type: 'decompression',
+      sourceFiles: ['C:/archives/queued.zip'],
+      outputPath: 'C:/archives',
+    })
+
+    await expect(store.cancelTask('queued-task')).resolves.toBe(true)
+    expect(store.tasks[0].status).toBe('cancelled')
+    expect(mocks.invoke).not.toHaveBeenCalledWith('cancel_compression', expect.anything())
+  })
+
   it('keeps extraction progress at zero while password candidates are being verified', async () => {
     const store = useTaskStore()
     await store.initListeners()

@@ -30,6 +30,9 @@ export interface AppSettings {
   defaultOutputPath: string
   maxConcurrentTasks: number
   archiveTaskConcurrencyVersion: number
+  defaultCompressionFormat: 'zip' | '7z' | 'tar.gz'
+  defaultCompressionLevel: number
+  defaultExtractToSubfolder: boolean
   scanForViruses: boolean
   checkFileExtensions: boolean
   warnLargeFiles: boolean
@@ -98,7 +101,7 @@ export const useAppStore = defineStore('app', () => {
 
   const settings = ref<AppSettings>({
     theme: 'auto', language: 'zh-CN', accentColor: '#0ea5e9', defaultOutputPath: '',
-    maxConcurrentTasks: 1, archiveTaskConcurrencyVersion: 1, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
+    maxConcurrentTasks: 1, archiveTaskConcurrencyVersion: 1, defaultCompressionFormat: 'zip', defaultCompressionLevel: 6, defaultExtractToSubfolder: false, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
     savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
     sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
     bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
@@ -205,7 +208,7 @@ export const useAppStore = defineStore('app', () => {
     const autoStart = settings.value.autoStart
     settings.value = {
       theme: 'auto', language: 'zh-CN', accentColor: '#0ea5e9', defaultOutputPath: '',
-      maxConcurrentTasks: 1, archiveTaskConcurrencyVersion: 1, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
+      maxConcurrentTasks: 1, archiveTaskConcurrencyVersion: 1, defaultCompressionFormat: 'zip', defaultCompressionLevel: 6, defaultExtractToSubfolder: false, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
       savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
@@ -250,6 +253,8 @@ export const useAppStore = defineStore('app', () => {
       merged.archiveTaskConcurrencyVersion = 1
     }
     merged.maxConcurrentTasks = Math.max(1, Math.min(16, merged.maxConcurrentTasks || 1))
+    if (!['zip', '7z', 'tar.gz'].includes(merged.defaultCompressionFormat)) merged.defaultCompressionFormat = 'zip'
+    merged.defaultCompressionLevel = Math.max(1, Math.min(9, merged.defaultCompressionLevel || 6))
     return merged
   }
 

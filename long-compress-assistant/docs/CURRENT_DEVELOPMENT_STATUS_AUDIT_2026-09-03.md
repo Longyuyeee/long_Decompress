@@ -1,5 +1,7 @@
 # 当前开发状态审计（2026-09-03 暂停点）
 
+> 2026-09-04 更新：本文已由 [ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md](ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md) 取代为最新接续点。当前已完成队列自然排序、显式全局/单独配置、默认配置持久化和真实停止接线；运行中暂停与普通 ZIP 终态吞吐回归尚未关闭，因此仍不升版。
+
 ## 当前基线
 
 - 公开稳定版：`v1.2.7`。

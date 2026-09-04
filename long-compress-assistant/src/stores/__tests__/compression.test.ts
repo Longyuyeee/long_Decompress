@@ -81,6 +81,38 @@ describe('Compression Store', () => {
     expect(store.getEffectiveOutputPath(store.selectedFiles[0].outputPath)).toBe('D:/output')
   })
 
+  it('applies persisted archive defaults once without resetting later edits', () => {
+    const store = useCompressionStore()
+
+    store.initializeArchiveDefaults('7z', 8)
+    expect(store.globalSettings.format).toBe('7z')
+    expect(store.globalSettings.level).toBe(8)
+
+    store.globalSettings.level = 3
+    store.initializeArchiveDefaults('zip', 6)
+    expect(store.globalSettings.format).toBe('7z')
+    expect(store.globalSettings.level).toBe(3)
+  })
+
+  it('switches files and groups explicitly between global and individual settings', () => {
+    const store = useCompressionStore()
+    const individual = { ...defaultOptions(), format: '7z' as const, level: 9 }
+    store.addFile(mockFile('loose.txt', 100))
+    store.updateFileSettings('C:/archives/loose.txt', individual)
+    expect(store.getEffectiveSettings(store.selectedFiles[0].settings)).toEqual(individual)
+
+    store.useGlobalFileSettings('C:/archives/loose.txt')
+    expect(store.selectedFiles[0].settings).toBeUndefined()
+    expect(store.getEffectiveSettings(store.selectedFiles[0].settings)).toEqual(store.globalSettings)
+
+    const groupId = store.createGroup(['C:/archives/loose.txt'])
+    store.updateGroupSettings(groupId, individual)
+    expect(store.groups[0].settings).toEqual(individual)
+    store.useGlobalGroupSettings(groupId)
+    expect(store.groups[0].settings).toBeUndefined()
+    expect(store.getEffectiveSettings(store.groups[0].settings)).toEqual(store.globalSettings)
+  })
+
   it('creates, updates, dissolves, and removes groups', () => {
     const store = useCompressionStore()
     const groupOptions = { ...defaultOptions(), format: 'tar.gz' as const, level: 9 }

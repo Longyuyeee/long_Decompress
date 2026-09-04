@@ -30,6 +30,13 @@ const compressionStore = useCompressionStore()
 const tauriCommands = useTauriCommands()
 const taskStore = useTaskStore()
 
+// Apply persisted defaults only once per store lifetime. Navigating away and
+// back must not erase global settings the user already adjusted in this draft.
+compressionStore.initializeArchiveDefaults(
+  appStore.settings.defaultCompressionFormat,
+  appStore.settings.defaultCompressionLevel,
+)
+
 const selectedRows = ref<Set<string>>(new Set())
 const showGlobalSettingsModal = ref(false)
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
@@ -544,9 +551,19 @@ const cancelCompressionTask = async (taskId: string) => {
 }
 
 const cancelAllCompressionTasks = async () => {
-  for (const task of activeCompressionTasks.value) {
-    await cancelCompressionTask(task.id)
-  }
+  await Promise.all(activeCompressionTasks.value.map(task => cancelCompressionTask(task.id)))
+}
+
+const setFileConfigurationMode = (file: FileObject, mode: 'global' | 'individual') => {
+  if (file.taskId) return
+  if (mode === 'global') compressionStore.useGlobalFileSettings(file.path)
+  else if (!file.settings) compressionStore.updateFileSettings(file.path, compressionStore.globalSettings)
+}
+
+const setGroupConfigurationMode = (group: CompressionGroup, mode: 'global' | 'individual') => {
+  if (group.taskId) return
+  if (mode === 'global') compressionStore.useGlobalGroupSettings(group.id)
+  else if (!group.settings) compressionStore.updateGroupSettings(group.id, compressionStore.globalSettings)
 }
 
 const clearFinishedCompressionTasks = () => {
@@ -742,6 +759,15 @@ const onDetailLeave = (element: Element) => {
                         {{ appStore.t('compress.config_submitted') }}
                       </span>
                     </h4>
+                    <div v-if="!group.taskId" class="config-mode-row">
+                      <span>{{ appStore.t('tasks.config.source') }}</span>
+                      <div class="config-mode-switch">
+                        <button type="button" :class="{ active: !group.settings }" @click="setGroupConfigurationMode(group, 'global')">{{ appStore.t('tasks.config.global') }}</button>
+                        <button type="button" :class="{ active: Boolean(group.settings) }" @click="setGroupConfigurationMode(group, 'individual')">{{ appStore.t('tasks.config.individual') }}</button>
+                      </div>
+                    </div>
+                    <Transition name="aero-drawer">
+                    <div v-if="group.settings || group.taskId">
                     <CompressionAnalysisCard
                       class="mb-4"
                       compact
@@ -766,6 +792,8 @@ const onDetailLeave = (element: Element) => {
                       class="compression-resource-preflight mt-3"
                       compact
                     />
+                    </div>
+                    </Transition>
                   </div>
 
                   <div class="space-y-2">
@@ -927,6 +955,15 @@ const onDetailLeave = (element: Element) => {
                         {{ appStore.t('compress.config_submitted') }}
                       </span>
                     </h4>
+                    <div v-if="!file.taskId" class="config-mode-row">
+                      <span>{{ appStore.t('tasks.config.source') }}</span>
+                      <div class="config-mode-switch">
+                        <button type="button" :class="{ active: !file.settings }" @click="setFileConfigurationMode(file, 'global')">{{ appStore.t('tasks.config.global') }}</button>
+                        <button type="button" :class="{ active: Boolean(file.settings) }" @click="setFileConfigurationMode(file, 'individual')">{{ appStore.t('tasks.config.individual') }}</button>
+                      </div>
+                    </div>
+                    <Transition name="aero-drawer">
+                    <div v-if="file.settings || file.taskId">
                     <CompressionAnalysisCard
                       class="mb-4"
                       compact
@@ -951,6 +988,8 @@ const onDetailLeave = (element: Element) => {
                       class="compression-resource-preflight mt-3"
                       compact
                     />
+                    </div>
+                    </Transition>
                   </div>
 
                   <CompressionExecutionPanel :task="taskForJob(file.taskId)" />
@@ -1227,6 +1266,41 @@ const onDetailLeave = (element: Element) => {
   font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 0.16em;
+}
+
+.config-mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.config-mode-switch {
+  display: flex;
+  gap: 0.15rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  background: var(--bg-input);
+  padding: 0.15rem;
+}
+
+.config-mode-switch button {
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 850;
+  transition: all 0.18s ease;
+}
+
+.config-mode-switch button.active {
+  background: var(--dynamic-accent);
+  color: white;
+  box-shadow: 0 5px 14px -9px var(--dynamic-accent);
 }
 
 @media (max-width: 760px) {

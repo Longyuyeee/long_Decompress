@@ -49,6 +49,7 @@ export interface Task {
   conflicts: ConflictInfo[]
   extractToSubfolder?: boolean
   recycleSourceAfterExtract?: boolean
+  configurationMode?: 'global' | 'individual'
   fileFilter?: string
   selectedEntries?: string[]
   // 增强字段 [FE-INT-001]
@@ -286,6 +287,12 @@ export const useTaskStore = defineStore('task', () => {
     const task = tasks.value.find(item => item.id === taskId)
     if (!task || ['completed', 'failed', 'cancelled', 'cancelling'].includes(task.status)) {
       return false
+    }
+    // A queued task has no backend process to cancel. Settle it locally so the
+    // worker snapshot can skip it when a concurrency slot becomes available.
+    if (task.status === 'pending') {
+      updateTaskStatus(taskId, 'cancelled')
+      return true
     }
     const previousStatus = task.status
     updateTaskStatus(taskId, 'cancelling')
