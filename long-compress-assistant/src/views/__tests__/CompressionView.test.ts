@@ -364,6 +364,8 @@ describe('CompressionView', () => {
     expect(header.get('[data-testid="compression-name-header"]').text()).toBe('压缩包名称')
     expect(header.get('[data-testid="compression-source-header"]').text()).toBe('源文件路径')
     expect(header.get('[data-testid="compression-status-header"]').text()).toBe('压缩状态与进度')
+    expect(header.element.parentElement?.classList.contains('compression-task-region')).toBe(true)
+    expect(header.element.nextElementSibling?.classList.contains('compression-task-list')).toBe(true)
 
     const row = wrapper.get('[data-testid="compression-draft-row"]')
     expect(row.get('[data-testid="compression-archive-name"]').text()).toContain('sample.zip')
@@ -492,6 +494,28 @@ describe('CompressionView', () => {
     expect(execution.text()).toContain('0%')
     expect(execution.text()).toContain('实时执行日志')
     expect(execution.text()).toContain('等待开始压缩')
+  })
+
+  it('switches archive drafts as one batch beside global settings instead of inside each row', async () => {
+    const wrapper = mountView()
+    const compressionStore = useCompressionStore()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+    await wrapper.get('[data-testid="compression-draft-row"]').trigger('click')
+
+    expect(wrapper.get('[data-testid="compression-batch-config-mode"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="compression-global-config-summary"]').text()).toContain('使用全局配置')
+    expect(wrapper.find('.config-mode-row').exists()).toBe(false)
+    expect(compressionStore.selectedFiles[0].settings).toBeUndefined()
+
+    await wrapper.get('[data-testid="compression-config-mode-individual"]').trigger('click')
+    await nextTick()
+    expect(compressionStore.selectedFiles[0].settings).toEqual(compressionStore.globalSettings)
+    expect(wrapper.find('[data-testid="compression-global-config-summary"]').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="compression-config-mode-global"]').trigger('click')
+    await nextTick()
+    expect(compressionStore.selectedFiles[0].settings).toBeUndefined()
   })
 
   it('keeps a magnetic group as one task row through compression and cleanup', async () => {

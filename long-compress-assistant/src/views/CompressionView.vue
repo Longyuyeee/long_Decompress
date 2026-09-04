@@ -39,6 +39,7 @@ compressionStore.initializeArchiveDefaults(
 
 const selectedRows = ref<Set<string>>(new Set())
 const showGlobalSettingsModal = ref(false)
+const archiveConfigurationMode = ref<'global' | 'individual'>('global')
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
 const checkingRarSupport = ref(false)
 const isCompressing = ref(false)
@@ -82,13 +83,17 @@ const requestConfirmation = async (message: string, options: Parameters<typeof a
 const onFilesSelected = (files: any[]) => {
   files.forEach(f => {
     // 检查是否已经存在
-    compressionStore.addFile({
+    const added = compressionStore.addFile({
       name: f.name,
       path: f.path,
       size: f.size || 0,
       type: f.type || 'file',
       isDirectory: f.isDirectory || false
     })
+    if (added && archiveConfigurationMode.value === 'individual') {
+      compressionStore.updateFileSettings(f.path, compressionStore.globalSettings)
+      compressionStore.updateFileOutputPath(f.path, compressionStore.globalOutputPath)
+    }
   })
 }
 
@@ -99,7 +104,11 @@ const toggleSelection = (path: string) => {
 
 const handleCreateGroup = () => {
   if (selectedRows.value.size > 0) {
-    compressionStore.createGroup(Array.from(selectedRows.value))
+    const groupId = compressionStore.createGroup(Array.from(selectedRows.value))
+    if (archiveConfigurationMode.value === 'individual') {
+      compressionStore.updateGroupSettings(groupId, compressionStore.globalSettings)
+      compressionStore.updateGroupOutputPath(groupId, compressionStore.globalOutputPath)
+    }
     selectedRows.value.clear()
   }
 }
@@ -573,16 +582,30 @@ const resumeAllCompressionTasks = async () => {
   await Promise.all(pausedCompressionTasks.value.map(task => taskStore.resumeTask(task.id)))
 }
 
-const setFileConfigurationMode = (file: FileObject, mode: 'global' | 'individual') => {
-  if (file.taskId) return
-  if (mode === 'global') compressionStore.useGlobalFileSettings(file.path)
-  else if (!file.settings) compressionStore.updateFileSettings(file.path, compressionStore.globalSettings)
-}
+const setArchiveConfigurationMode = (mode: 'global' | 'individual') => {
+  if (archiveConfigurationMode.value === mode) return
+  archiveConfigurationMode.value = mode
 
-const setGroupConfigurationMode = (group: CompressionGroup, mode: 'global' | 'individual') => {
-  if (group.taskId) return
-  if (mode === 'global') compressionStore.useGlobalGroupSettings(group.id)
-  else if (!group.settings) compressionStore.updateGroupSettings(group.id, compressionStore.globalSettings)
+  compressionStore.groups.forEach(group => {
+    if (group.taskId) return
+    if (mode === 'global') {
+      compressionStore.useGlobalGroupSettings(group.id)
+      group.outputPath = undefined
+    } else {
+      compressionStore.updateGroupSettings(group.id, compressionStore.globalSettings)
+      compressionStore.updateGroupOutputPath(group.id, compressionStore.globalOutputPath)
+    }
+  })
+  compressionStore.selectedFiles.forEach(file => {
+    if (file.taskId) return
+    if (mode === 'global') {
+      compressionStore.useGlobalFileSettings(file.path)
+      file.outputPath = undefined
+    } else {
+      compressionStore.updateFileSettings(file.path, compressionStore.globalSettings)
+      compressionStore.updateFileOutputPath(file.path, compressionStore.globalOutputPath)
+    }
+  })
 }
 
 const clearFinishedCompressionTasks = () => {
@@ -653,21 +676,23 @@ const onDetailLeave = (element: Element) => {
         :paused-count="pausedCompressionTasks.length"
         :pending-count="pendingPayload"
         :busy="isCompressing"
+        :configuration-mode="archiveConfigurationMode"
         @clear-finished="clearFinishedCompressionTasks"
         @cancel-active="cancelAllCompressionTasks"
         @pause-active="pauseAllCompressionTasks"
         @resume-paused="resumeAllCompressionTasks"
         @open-settings="showGlobalSettingsModal = true"
+        @update-configuration-mode="setArchiveConfigurationMode"
         @start="handleCompress"
       />
     </header>
 
     <!-- 主工作区 -->
     <div data-testid="compression-workspace-shell" class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
-      <div v-if="totalPayload > 0" class="compression-task-list flex-1 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-3 space-y-3">
+      <div v-if="totalPayload > 0" class="compression-task-region flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden">
         <div
           data-testid="compression-table-header"
-          class="compression-table-header sticky top-0 z-20 flex items-center px-4 py-2.5 border-b border-subtle bg-card/95 backdrop-blur-xl text-dim text-xs font-bold tracking-[0.1em] uppercase"
+          class="compression-table-header relative z-30 flex shrink-0 items-center px-4 py-2.5 border-b border-subtle bg-card/95 backdrop-blur-xl text-dim text-xs font-bold tracking-[0.1em] uppercase shadow-[0_8px_20px_-16px_rgba(0,0,0,0.75)]"
         >
           <div class="compression-leading-cell w-8 shrink-0"></div>
           <div data-testid="compression-name-header" class="flex-[1.25] min-w-0">压缩包名称</div>
@@ -675,6 +700,8 @@ const onDetailLeave = (element: Element) => {
           <div data-testid="compression-status-header" class="flex-1 min-w-0">压缩状态与进度</div>
           <div class="compression-row-actions w-20 shrink-0"></div>
         </div>
+
+        <div class="compression-task-list flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-3 space-y-3">
 
         <!-- 1. 压缩组列表 -->
         <div v-for="group in compressionStore.groups" :key="group.id" 
@@ -785,30 +812,39 @@ const onDetailLeave = (element: Element) => {
               <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
                 <div
                   data-testid="compression-draft-config"
-                  class="compression-config-panel custom-scrollbar min-w-0 space-y-5"
+                  class="compression-config-panel custom-scrollbar min-w-0"
                   :class="{ 'is-submitted opacity-80': Boolean(group.taskId) }"
                 >
-                  <div>
-                    <h4 class="detail-heading justify-between">
-                      <span class="flex items-center gap-2">
-                        <i class="pi pi-cog text-sm"></i>
-                        {{ appStore.t('decompress.column.config') }}
-                      </span>
-                      <span v-if="group.taskId" class="text-xs font-bold text-muted tracking-normal">
-                        {{ appStore.t('compress.config_submitted') }}
-                      </span>
-                    </h4>
-                    <div v-if="!group.taskId" class="config-mode-row">
-                      <span>{{ appStore.t('tasks.config.source') }}</span>
-                      <div class="config-mode-switch">
-                        <button type="button" :class="{ active: !group.settings }" @click="setGroupConfigurationMode(group, 'global')">{{ appStore.t('tasks.config.global') }}</button>
-                        <button type="button" :class="{ active: Boolean(group.settings) }" @click="setGroupConfigurationMode(group, 'individual')">{{ appStore.t('tasks.config.individual') }}</button>
-                      </div>
+                  <h4 class="detail-heading justify-between">
+                    <span class="flex items-center gap-2">
+                      <i class="pi pi-cog text-sm"></i>
+                      {{ appStore.t('decompress.column.config') }}
+                    </span>
+                    <span v-if="group.taskId" class="text-xs font-bold text-muted tracking-normal">
+                      {{ appStore.t('compress.config_submitted') }}
+                    </span>
+                  </h4>
+
+                  <div
+                    v-if="!group.taskId && archiveConfigurationMode === 'global'"
+                    data-testid="compression-global-config-summary"
+                    class="global-inheritance-card"
+                  >
+                    <div class="global-inheritance-heading">
+                      <span><i class="pi pi-link mr-2"></i>使用全局配置</span>
+                      <button type="button" @click="showGlobalSettingsModal = true">编辑全局设置</button>
                     </div>
-                    <Transition name="aero-drawer">
-                    <div v-if="group.settings || group.taskId">
+                    <div class="global-inheritance-grid">
+                      <div><span>格式</span><strong>{{ compressionStore.globalSettings.format.toUpperCase() }}</strong></div>
+                      <div><span>压缩强度</span><strong>{{ compressionStore.globalSettings.level }} / 9</strong></div>
+                      <div><span>输出位置</span><strong :title="compressionStore.globalOutputPath || '与源文件相同目录'">{{ compressionStore.globalOutputPath || '同目录' }}</strong></div>
+                    </div>
+                    <p>此批次统一跟随全局设置；可在顶部切换为“单独”后分别调整。</p>
+                  </div>
+
+                  <Transition name="aero-drawer">
+                    <div v-if="archiveConfigurationMode === 'individual' || group.taskId" class="compression-settings-stack">
                     <CompressionAnalysisCard
-                      class="mb-4"
                       compact
                       :job-id="group.id"
                       :paths="group.files.map(file => file.path)"
@@ -832,11 +868,10 @@ const onDetailLeave = (element: Element) => {
                       compact
                     />
                     </div>
-                    </Transition>
-                  </div>
+                  </Transition>
 
-                  <div class="space-y-2">
-                    <h4 class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('compress.group_files') }}</h4>
+                  <div class="compression-file-section">
+                    <h4 class="compression-section-title"><i class="pi pi-list"></i>{{ appStore.t('compress.group_files') }}<span>{{ group.files.length }}</span></h4>
                     <div v-for="file in group.files" :key="file.path" class="text-sm text-muted font-mono py-1 px-3 bg-card/40 rounded-lg border border-subtle/50 flex min-w-0 items-center justify-between gap-2 group/file">
                       <div class="flex items-center gap-2 overflow-hidden min-w-0">
                         <i :class="file.isDirectory ? 'pi pi-folder text-primary/60' : 'pi pi-file text-muted/60'" class="text-xs shrink-0"></i>
@@ -1010,17 +1045,25 @@ const onDetailLeave = (element: Element) => {
                         {{ appStore.t('compress.config_submitted') }}
                       </span>
                     </h4>
-                    <div v-if="!file.taskId" class="config-mode-row">
-                      <span>{{ appStore.t('tasks.config.source') }}</span>
-                      <div class="config-mode-switch">
-                        <button type="button" :class="{ active: !file.settings }" @click="setFileConfigurationMode(file, 'global')">{{ appStore.t('tasks.config.global') }}</button>
-                        <button type="button" :class="{ active: Boolean(file.settings) }" @click="setFileConfigurationMode(file, 'individual')">{{ appStore.t('tasks.config.individual') }}</button>
+                    <div
+                      v-if="!file.taskId && archiveConfigurationMode === 'global'"
+                      data-testid="compression-global-config-summary"
+                      class="global-inheritance-card"
+                    >
+                      <div class="global-inheritance-heading">
+                        <span><i class="pi pi-link mr-2"></i>使用全局配置</span>
+                        <button type="button" @click="showGlobalSettingsModal = true">编辑全局设置</button>
                       </div>
+                      <div class="global-inheritance-grid">
+                        <div><span>格式</span><strong>{{ compressionStore.globalSettings.format.toUpperCase() }}</strong></div>
+                        <div><span>压缩强度</span><strong>{{ compressionStore.globalSettings.level }} / 9</strong></div>
+                        <div><span>输出位置</span><strong :title="compressionStore.globalOutputPath || '与源文件相同目录'">{{ compressionStore.globalOutputPath || '同目录' }}</strong></div>
+                      </div>
+                      <p>此任务跟随全局设置；切换到“单独”后可编辑完整参数。</p>
                     </div>
                     <Transition name="aero-drawer">
-                    <div v-if="file.settings || file.taskId">
+                    <div v-if="archiveConfigurationMode === 'individual' || file.taskId" class="compression-settings-stack">
                     <CompressionAnalysisCard
-                      class="mb-4"
                       compact
                       :job-id="file.path"
                       :paths="[file.path]"
@@ -1054,6 +1097,7 @@ const onDetailLeave = (element: Element) => {
           </div>
         </div>
 
+        </div>
       </div>
 
       <!-- 3. 空状态 (引导式双列布局) -->
@@ -1189,12 +1233,22 @@ const onDetailLeave = (element: Element) => {
 .planned-workspace button { flex-shrink: 0; border: 1px solid var(--border-subtle); border-radius: 0.8rem; background: var(--bg-input); padding: 0.7rem 0.9rem; color: var(--text-content); font-size: 0.7rem; font-weight: 850; }
 
 .compression-task-list,
+.compression-task-region,
 .compression-table-header,
 .compression-job-card,
 .compression-job-row,
 .details-drawer {
   min-width: 0;
   max-width: 100%;
+}
+
+.compression-task-region {
+  isolation: isolate;
+}
+
+.compression-task-list {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .pop-enter-active, .pop-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -1279,6 +1333,7 @@ const onDetailLeave = (element: Element) => {
   padding: 1.25rem 1.5rem;
   border-right: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
   scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 
 .compression-detail-grid :deep(.compression-execution-panel) {
@@ -1305,7 +1360,34 @@ const onDetailLeave = (element: Element) => {
 
 .compression-config-panel :deep(.settings-core-grid) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.65rem;
+}
+
+.compression-config-panel :deep(.settings-core-grid > div) {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--bg-input) 52%, transparent);
+}
+
+.compression-config-panel :deep(.settings-core-grid label),
+.compression-config-panel :deep(.settings-core-grid button) {
+  white-space: nowrap;
+}
+
+.compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap > button) {
+  width: 100%;
+  overflow: hidden;
+  padding-inline: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .compression-config-panel :deep(.advanced-option) {
@@ -1323,39 +1405,122 @@ const onDetailLeave = (element: Element) => {
   letter-spacing: 0.16em;
 }
 
-.config-mode-row {
+.compression-settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.global-inheritance-card {
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--dynamic-accent) 28%, var(--border-subtle));
+  border-radius: 1rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--dynamic-accent) 8%, transparent), transparent 62%),
+    color-mix(in srgb, var(--bg-input) 58%, transparent);
+}
+
+.global-inheritance-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: 850;
+  color: var(--dynamic-accent);
+  font-size: 0.75rem;
+  font-weight: 900;
 }
 
-.config-mode-switch {
+.global-inheritance-heading button {
+  flex: 0 0 auto;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--dynamic-accent) 26%, transparent);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--dynamic-accent) 8%, transparent);
+  font-size: 0.66rem;
+  transition: background-color 180ms ease;
+}
+
+.global-inheritance-heading button:hover {
+  background: color-mix(in srgb, var(--dynamic-accent) 16%, transparent);
+}
+
+.global-inheritance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.global-inheritance-grid > div {
+  min-width: 0;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--bg-card) 48%, transparent);
+}
+
+.global-inheritance-grid span,
+.global-inheritance-grid strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-inheritance-grid span {
+  color: var(--text-muted);
+  font-size: 0.63rem;
+  font-weight: 750;
+}
+
+.global-inheritance-grid strong {
+  margin-top: 0.2rem;
+  color: var(--text-content);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.global-inheritance-card > p {
+  margin-top: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.67rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.compression-file-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 65%, transparent);
+}
+
+.compression-file-section > div + div {
+  margin-top: 0.4rem;
+}
+
+.compression-section-title {
   display: flex;
-  gap: 0.15rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 0.65rem;
-  background: var(--bg-input);
-  padding: 0.15rem;
-}
-
-.config-mode-switch button {
-  border-radius: 0.5rem;
-  padding: 0.3rem 0.6rem;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
   color: var(--text-muted);
-  font-size: 0.65rem;
-  font-weight: 850;
-  transition: all 0.18s ease;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.config-mode-switch button.active {
-  background: var(--dynamic-accent);
-  color: white;
-  box-shadow: 0 5px 14px -9px var(--dynamic-accent);
+.compression-section-title i {
+  color: var(--dynamic-accent);
+}
+
+.compression-section-title span {
+  margin-left: auto;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent);
+  color: var(--dynamic-accent);
+  letter-spacing: 0;
 }
 
 @media (max-width: 760px) {
@@ -1373,7 +1538,8 @@ const onDetailLeave = (element: Element) => {
   }
 
   .compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap) {
-    gap: 0.375rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
   }
 
   .compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap > button) {
@@ -1407,6 +1573,11 @@ const onDetailLeave = (element: Element) => {
 
   .compression-config-panel {
     padding: 0.75rem;
+  }
+
+  .compression-config-panel :deep(.settings-core-grid),
+  .global-inheritance-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

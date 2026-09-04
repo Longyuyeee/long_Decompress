@@ -8,6 +8,7 @@ defineProps<{
   pausedCount: number
   pendingCount: number
   busy: boolean
+  configurationMode: 'global' | 'individual'
 }>()
 
 defineEmits<{
@@ -16,6 +17,7 @@ defineEmits<{
   pauseActive: []
   resumePaused: []
   openSettings: []
+  updateConfigurationMode: [mode: 'global' | 'individual']
   start: []
 }>()
 
@@ -63,6 +65,31 @@ const appStore = useAppStore()
       <i class="pi pi-stop-circle text-xs"></i>
       <span class="hidden md:inline">{{ appStore.t('compress.cancel_active') }}</span>
     </button>
+    <div
+      data-testid="compression-batch-config-mode"
+      class="compression-batch-config-mode"
+      role="group"
+      aria-label="压缩配置模式"
+    >
+      <button
+        type="button"
+        data-testid="compression-config-mode-global"
+        :class="{ active: configurationMode === 'global' }"
+        :aria-pressed="configurationMode === 'global'"
+        @click="$emit('updateConfigurationMode', 'global')"
+      >
+        {{ appStore.t('tasks.config.global') }}
+      </button>
+      <button
+        type="button"
+        data-testid="compression-config-mode-individual"
+        :class="{ active: configurationMode === 'individual' }"
+        :aria-pressed="configurationMode === 'individual'"
+        @click="$emit('updateConfigurationMode', 'individual')"
+      >
+        {{ appStore.t('tasks.config.individual') }}
+      </button>
+    </div>
     <button
       data-testid="open-global-compression-settings"
       type="button"
@@ -89,3 +116,39 @@ const appStore = useAppStore()
     </button>
   </div>
 </template>
+
+<style scoped>
+.compression-batch-config-mode {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.15rem;
+  padding: 0.15rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  background: var(--bg-input);
+}
+
+.compression-batch-config-mode button {
+  min-width: 2.65rem;
+  height: 1.65rem;
+  padding-inline: 0.55rem;
+  border-radius: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 850;
+  transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.compression-batch-config-mode button.active {
+  background: var(--dynamic-accent);
+  color: white;
+  box-shadow: 0 6px 16px -9px var(--dynamic-accent);
+}
+
+@media (max-width: 760px) {
+  .compression-batch-config-mode button {
+    min-width: 2.25rem;
+    padding-inline: 0.4rem;
+  }
+}
+</style>
