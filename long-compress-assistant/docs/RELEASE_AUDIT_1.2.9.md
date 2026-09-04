@@ -57,6 +57,12 @@
 
 回下载后重新计算的四项 SHA-256 与 GitHub Release 元数据完全一致。`latest.json.version` 为 `1.2.9`，下载 URL 精确指向 v1.2.9 updater ZIP；清单内 428 字符签名与独立 `.sig` 文件逐字一致。
 
+## 发布关闭后的测试稳定性修正
+
+发布状态文档提交 `ac38db6` 触发的 master CI 中，`windows_child_process_stops_writing_while_suspended_and_resumes` 连续两轮在产品暂停断言之前失败，实际错误均为 PowerShell 观察进程未在等待窗口内开始写入。该测试在本机、PR #122 和标签发布工作流曾通过，但连续复现后不再按偶发 Runner 波动处理。
+
+测试观察器改为由 `cmd.exe` 执行临时批处理文件，直接循环写入隔离临时文件；被挂起的仍是真实 Windows 子进程，暂停期间字节不增长、恢复后继续增长的产品断言没有削弱。本机 Release 定向连续运行 5 次，结果 5/5 通过；最终远端全量结果记录在修正提交 CI 中。
+
 ## 发布关闭与边界
 
 - 版本身份、PR、五项 CI、合并、annotated tag、Release workflow、公开资产及 updater 清单/签名均已完成，v1.2.9 发布阶段关闭。

@@ -212,12 +212,16 @@ mod tests {
     fn windows_child_process_stops_writing_while_suspended_and_resumes() {
         let temp = tempfile::tempdir().unwrap();
         let output = temp.path().join("pause-observation.txt");
-        let escaped = output.to_string_lossy().replace('\'', "''");
-        let script = format!(
-            "$p='{escaped}'; while ($true) {{ [IO.File]::AppendAllText($p, 'x'); Start-Sleep -Milliseconds 20 }}"
-        );
-        let mut child = std::process::Command::new("powershell.exe")
-            .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+        let writer = temp.path().join("pause-observation.cmd");
+        let escaped = output.to_string_lossy().replace('"', "\"\"");
+        std::fs::write(
+            &writer,
+            format!("@echo off\r\n:loop\r\n<nul set /p \"=x\" >> \"{escaped}\"\r\ngoto loop\r\n"),
+        )
+        .unwrap();
+        let mut child = std::process::Command::new("cmd.exe")
+            .args(["/D", "/Q", "/C"])
+            .arg(&writer)
             .spawn()
             .unwrap();
 
@@ -233,7 +237,7 @@ mod tests {
                 ready
             });
             if !started {
-                return Err("PowerShell observation process did not start writing".to_string());
+                return Err("Observation process did not start writing".to_string());
             }
             if !pause(&task_id) {
                 return Err("Task control refused a running pause request".to_string());
