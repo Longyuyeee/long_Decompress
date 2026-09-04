@@ -19,8 +19,8 @@ const showDeleteConfirm = ref(false)
 const deleteTargetId = ref<string | null>(null)
 const selectedEntryForHistory = ref<any>(null)
 const searchQuery = ref('')
-const showAllPasswords = ref(false)
-const visiblePasswordIds = ref<Set<string>>(new Set())
+const allPasswordsLocked = ref(false)
+const lockedPasswordIds = ref<Set<string>>(new Set())
 type AnalyticsRange = '7d' | '30d' | '90d' | 'all'
 const analyticsRange = ref<AnalyticsRange>('30d')
 const analyticsRanges: Array<{ id: AnalyticsRange; labelKey: string }> = [
@@ -177,25 +177,28 @@ const showVaultAnalytics = async () => {
 }
 
 const isPasswordVisible = (id: string) => {
-  return showAllPasswords.value || visiblePasswordIds.value.has(id)
+  return !allPasswordsLocked.value && !lockedPasswordIds.value.has(id)
 }
 
 const maskPassword = (entry: { id: string; password: string }) => {
   if (isPasswordVisible(entry.id)) return entry.password
   if (!entry.password) return '——'
-  return '•'.repeat(Math.min(entry.password.length, 16))
+  return '*'.repeat(Math.min(entry.password.length, 16))
 }
 
 const togglePasswordVisibility = () => {
-  showAllPasswords.value = !showAllPasswords.value
-  if (showAllPasswords.value) visiblePasswordIds.value = new Set()
+  allPasswordsLocked.value = !allPasswordsLocked.value
+  lockedPasswordIds.value = new Set()
 }
 
 const toggleEntryPasswordVisibility = (id: string) => {
-  const next = new Set(visiblePasswordIds.value)
+  const next = allPasswordsLocked.value
+    ? new Set(passwordStore.entries.map(entry => entry.id))
+    : new Set(lockedPasswordIds.value)
+  allPasswordsLocked.value = false
   if (next.has(id)) next.delete(id)
   else next.add(id)
-  visiblePasswordIds.value = next
+  lockedPasswordIds.value = next
 }
 
 const copyPasswordToClipboard = async (entry: PasswordEntry) => {
@@ -564,9 +567,15 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
             <tr>
               <th data-testid="vault-name-header" class="px-4 py-4 text-xs font-black text-muted uppercase tracking-[0.16em] whitespace-nowrap">{{ appStore.t('vault.column.name') }}</th>
               <th data-testid="vault-password-header" class="px-4 py-4 text-xs font-black text-muted uppercase tracking-[0.16em]">
-                <button @click="togglePasswordVisibility" class="flex items-center gap-1.5 hover:text-primary transition-colors">
+                <button
+                  data-testid="vault-toggle-all-passwords"
+                  :aria-label="allPasswordsLocked ? '显示全部密码' : '锁定全部密码'"
+                  :title="allPasswordsLocked ? '显示全部密码' : '锁定全部密码'"
+                  @click="togglePasswordVisibility"
+                  class="flex items-center gap-1.5 hover:text-primary transition-colors"
+                >
                   {{ appStore.t('vault.column.password') }}
-                  <i :class="showAllPasswords ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm"></i>
+                  <i :class="allPasswordsLocked ? 'pi pi-eye' : 'pi pi-eye-slash'" class="text-sm"></i>
                 </button>
               </th>
               <th data-testid="vault-notes-header" class="px-4 py-4 text-xs font-black text-muted uppercase tracking-[0.16em] whitespace-nowrap">{{ appStore.t('vault.column.notes') }}</th>

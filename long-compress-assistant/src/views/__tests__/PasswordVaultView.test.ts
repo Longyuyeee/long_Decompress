@@ -82,7 +82,7 @@ describe('PasswordVaultView', () => {
     expect(wrapper.text()).not.toContain('密码保险箱暂时不可用')
   })
 
-  it('shows and hides an individual password beside its copy action', async () => {
+  it('shows passwords by default and only masks entries explicitly locked by the user', async () => {
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'load_app_settings') return '{}'
       if (command === 'is_encrypted_password_service_unlocked') return true
@@ -117,11 +117,22 @@ describe('PasswordVaultView', () => {
       'vault-col-actions',
     ])
     expect(wrapper.get('[data-testid="vault-usage-header"]').classes()).toContain('whitespace-nowrap')
-    expect(wrapper.text()).not.toContain('Secret!123')
+    expect(wrapper.text()).toContain('Secret!123')
     expect(wrapper.find('[aria-label="复制密码"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="隐藏密码"]').exists()).toBe(true)
+    await wrapper.find('[aria-label="隐藏密码"]').trigger('click')
+    expect(wrapper.text()).not.toContain('Secret!123')
+    expect(wrapper.text()).toContain('**********')
+    expect(wrapper.find('[aria-label="显示密码"]').exists()).toBe(true)
+
     await wrapper.find('[aria-label="显示密码"]').trigger('click')
     expect(wrapper.text()).toContain('Secret!123')
-    expect(wrapper.find('[aria-label="隐藏密码"]').exists()).toBe(true)
+
+    await wrapper.get('[data-testid="vault-toggle-all-passwords"]').trigger('click')
+    expect(wrapper.text()).not.toContain('Secret!123')
+    expect(wrapper.get('[data-testid="vault-toggle-all-passwords"]').attributes('aria-label')).toBe('显示全部密码')
+    await wrapper.get('[data-testid="vault-toggle-all-passwords"]').trigger('click')
+    expect(wrapper.text()).toContain('Secret!123')
   })
 
   it('refreshes backend usage and assigns it to the current local day before opening analytics', async () => {
