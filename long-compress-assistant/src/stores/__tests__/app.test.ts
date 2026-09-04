@@ -92,6 +92,22 @@ describe('App Store Explorer context menu synchronization', () => {
     expect(store.settings.maxConcurrentTasks).toBe(3)
   })
 
+  it('persists validated archive task defaults across computers', () => {
+    localStorage.setItem('app-settings', JSON.stringify({
+      archiveTaskConcurrencyVersion: 1,
+      defaultCompressionFormat: '7z',
+      defaultCompressionLevel: 8,
+      defaultExtractToSubfolder: true,
+    }))
+
+    const store = useAppStore()
+    expect(store.settings).toMatchObject({
+      defaultCompressionFormat: '7z',
+      defaultCompressionLevel: 8,
+      defaultExtractToSubfolder: true,
+    })
+  })
+
   it('loads auto-start display state without touching Windows persistence', () => {
     localStorage.setItem('app-settings', JSON.stringify({ autoStart: true }))
 

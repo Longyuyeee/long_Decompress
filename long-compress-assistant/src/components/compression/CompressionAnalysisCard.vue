@@ -9,6 +9,7 @@ const props = defineProps<{
   paths: string[]
   modelValue: CompressionOptions
   disabled?: boolean
+  compact?: boolean
 }>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: CompressionOptions): void }>()
 const store = useCompressionStore()
@@ -74,11 +75,13 @@ const applyRecommendation = () => {
 </script>
 
 <template>
-  <section data-testid="compression-analysis" class="analysis-card">
+  <section data-testid="compression-analysis" class="analysis-card" :class="{ 'is-compact': compact }">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
         <div class="flex items-center gap-2 text-sm font-black text-content"><i class="pi pi-sparkles text-primary"></i>智能压缩分析</div>
-        <p class="mt-1 text-xs text-muted">仅读取最多 2 MiB 内容样本；结果不会自动修改设置</p>
+        <p class="analysis-description mt-1 text-xs text-muted" title="仅读取最多 2 MiB 内容样本；结果不会自动修改设置">
+          {{ compact ? '抽样估算，不自动修改设置' : '仅读取最多 2 MiB 内容样本；结果不会自动修改设置' }}
+        </p>
       </div>
       <button v-if="state?.status === 'running'" type="button" class="analysis-button is-cancel" @click="cancel"><i class="pi pi-stop-circle"></i>取消分析</button>
       <button v-else type="button" class="analysis-button" :disabled="disabled" @click="analyze"><i class="pi pi-chart-line"></i>{{ result ? '重新分析' : '分析预计体积' }}</button>
@@ -116,6 +119,10 @@ const applyRecommendation = () => {
 
 <style scoped>
 .analysis-card { min-width: 0; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 24%, var(--border-subtle)); border-radius: 1rem; padding: .9rem; background: linear-gradient(145deg, color-mix(in srgb, var(--dynamic-accent) 7%, var(--bg-card)), color-mix(in srgb, var(--bg-input) 55%, transparent)); overflow: hidden; }
+.analysis-card.is-compact { padding: .65rem; border-radius: .75rem; }
+.analysis-card.is-compact > .flex { flex-wrap: nowrap; gap: .5rem; }
+.analysis-card.is-compact .analysis-description { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.analysis-card.is-compact .analysis-button { min-height: 2rem; padding-inline: .6rem; white-space: nowrap; }
 .analysis-button, .analysis-apply { min-height: 2.25rem; padding: 0 .8rem; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border-radius: .7rem; background: var(--dynamic-accent); color: white; font-size: .7rem; font-weight: 900; }
 .analysis-button:disabled, .analysis-apply:disabled { opacity: .45; cursor: not-allowed; }
 .analysis-button.is-cancel { background: color-mix(in srgb, #ef4444 75%, var(--bg-card)); }

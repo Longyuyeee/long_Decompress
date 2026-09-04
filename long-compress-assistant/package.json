@@ -1,7 +1,7 @@
 {
   "name": "long-compress-assistant",
   "private": true,
-  "version": "1.2.7",
+  "version": "1.2.8",
   "author": "Longyuyeee",
   "license": "MIT",
   "type": "module",
@@ -79,6 +79,7 @@
     "test:e2e:desktop:mark-of-web": "node scripts/test-tauri-desktop.mjs --mark-of-web-only",
     "test:e2e:desktop:compression-verification": "node scripts/test-tauri-desktop.mjs --compression-verification-only",
     "test:e2e:desktop:archive-flow": "node scripts/test-tauri-desktop.mjs --archive-flow-only",
+    "test:e2e:desktop:pause-control": "node scripts/test-tauri-desktop.mjs --pause-control-only",
     "test:e2e:desktop:zip-telemetry": "node scripts/test-tauri-desktop.mjs --zip-telemetry-only",
     "test:e2e:desktop:history": "node scripts/test-tauri-desktop.mjs --history-only",
     "test:e2e:desktop:vault-usage": "node scripts/test-tauri-desktop.mjs --vault-usage-only",

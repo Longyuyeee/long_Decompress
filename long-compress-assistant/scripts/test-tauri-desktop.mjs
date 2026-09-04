@@ -17,7 +17,7 @@ import { homedir, tmpdir } from 'node:os'
 import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { deflateSync, zstdCompressSync } from 'node:zlib'
+import { deflateSync } from 'node:zlib'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -116,6 +116,7 @@ const fileManagerOnly = process.argv.includes('--file-manager-only')
 const markOfWebOnly = process.argv.includes('--mark-of-web-only')
 const compressionVerificationOnly = process.argv.includes('--compression-verification-only')
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
+const pauseControlOnly = process.argv.includes('--pause-control-only')
 const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
 const historyOnly = process.argv.includes('--history-only')
 const vaultUsageOnly = process.argv.includes('--vault-usage-only')
@@ -188,6 +189,17 @@ let driverOutput = ''
 let fixtureDirectory
 let completedSuccessfully = false
 let autoStartRegistryOwnedByTest = false
+
+function createRawZstdFrame(payload) {
+  const input = Buffer.from(payload)
+  assert.ok(input.length <= 255, 'the inline Zstandard fixture must fit a one-byte content-size field')
+  const blockHeader = (input.length << 3) | 1
+  return Buffer.concat([
+    Buffer.from([0x28, 0xb5, 0x2f, 0xfd, 0x20, input.length]),
+    Buffer.from([blockHeader & 0xff, (blockHeader >>> 8) & 0xff, (blockHeader >>> 16) & 0xff]),
+    input,
+  ])
+}
 
 function appendDriverOutput(chunk) {
   driverOutput = `${driverOutput}${chunk}`.slice(-32_768)
@@ -800,7 +812,7 @@ async function runArchiveBrowserDesktopGate() {
   const cancellableTar = path.join(archiveRoot, '大量目录项-取消读取.tar')
   createLargeMetadataTar(cancellableTar, 180_000)
   const zstdEntryName = '后端能力来源.zst'
-  writeFileSync(path.join(sourceRoot, zstdEntryName), zstdCompressSync(Buffer.from('backend capability source', 'utf8')))
+  writeFileSync(path.join(sourceRoot, zstdEntryName), createRawZstdFrame('backend capability source'))
   const capabilityOuter = path.join(archiveRoot, '能力来源验证.zip')
   runFixtureCommand(
     bundledSevenZip,
@@ -2105,8 +2117,10 @@ async function runArchiveFlowDesktopGate() {
     const finalTelemetry = byteTelemetry.at(-1)
     assert.equal(finalTelemetry.processedBytes, sourceBytes)
     assert.equal(finalTelemetry.totalBytes, sourceBytes)
-    assert.ok(finalTelemetry.speed, `${label} ZIP must expose measured throughput`)
-    assert.equal(finalTelemetry.etaSeconds, 0)
+    const measuredTelemetry = byteTelemetry.find(item => item.speed && item.etaSeconds !== undefined)
+    assert.ok(measuredTelemetry, `${label} ZIP must expose measured throughput during a stable observation window`)
+    assert.equal(finalTelemetry.speed, null, `${label} ZIP terminal event must not publish a one-sample throughput spike`)
+    assert.equal(finalTelemetry.etaSeconds, null, `${label} ZIP terminal event must not publish an unstable ETA`)
     const outputTelemetry = state.zipTelemetry.filter(item => item.outputBytes > 0)
     assert.ok(outputTelemetry.length > 0, `${label} ZIP must emit its real archive size`)
     assert.equal(outputTelemetry.at(-1).outputBytes, statSync(archivePath).size)
@@ -2210,6 +2224,57 @@ async function runArchiveFlowDesktopGate() {
     readFileSync(path.join(fallbackExtract, 'password-fallback.txt'), 'utf8'),
     readFileSync(fallbackSource, 'utf8'),
   )
+}
+
+async function runPauseControlDesktopGate() {
+  await callDesktopBridge('clearTasks')
+  const outputPath = path.join(fixtureDirectory, 'pause-control.partial')
+  const taskId = await callDesktopBridge('startCancellableTask', outputPath)
+  await waitForNonEmptyFile(outputPath)
+
+  const pauseButton = await waitForElement('[data-testid^="pause-archive-task-"]')
+  await driver.executeScript('arguments[0].click()', pauseButton)
+  await driver.wait(
+    async () => (await callDesktopBridge('taskStatus', taskId)) === 'paused',
+    30_000,
+  )
+
+  await new Promise(resolve => setTimeout(resolve, 350))
+  const pausedSize = statSync(outputPath).size
+  await new Promise(resolve => setTimeout(resolve, 700))
+  assert.equal(
+    statSync(outputPath).size,
+    pausedSize,
+    'a paused desktop task must stop producing output bytes',
+  )
+
+  const resumeButton = await waitForElement('[data-testid^="resume-archive-task-"]')
+  await driver.executeScript('arguments[0].click()', resumeButton)
+  await driver.wait(
+    async () => (await callDesktopBridge('taskStatus', taskId)) !== 'paused',
+    30_000,
+  )
+  await driver.wait(
+    () => existsSync(outputPath) && statSync(outputPath).size > pausedSize,
+    30_000,
+  )
+
+  await driver.executeScript(
+    'arguments[0].click()',
+    await waitForElement('[data-testid="pause-all-archive-tasks"]'),
+  )
+  await driver.wait(
+    async () => (await callDesktopBridge('taskStatus', taskId)) === 'paused',
+    30_000,
+  )
+  await driver.executeScript("document.querySelector('.progress-summary')?.click()")
+  await (await waitForElement('.progress-panel button[data-testid="cancel-task"]')).click()
+  await driver.wait(
+    async () => (await callDesktopBridge('taskStatus', taskId)) === 'cancelled',
+    30_000,
+  )
+  await driver.wait(() => !existsSync(outputPath), 30_000)
+  await callDesktopBridge('clearTasks')
 }
 
 async function runHistoryDesktopGate() {
@@ -2626,6 +2691,7 @@ async function assertBoundedTaskDetailLayout(type) {
       resourceVisibleHeight: visibleResourceHeight,
       viewportVisibleResourceHeight,
       resourceHeight: resourceRect.height,
+      resourceCompact: resource.classList.contains('is-compact'),
       metricColumns: getComputedStyle(metrics).gridTemplateColumns.split(' ').filter(Boolean).length,
       viewportWidth: window.innerWidth,
       viewportHeight: window.innerHeight,
@@ -2645,6 +2711,7 @@ async function assertBoundedTaskDetailLayout(type) {
   assert.equal(result.logOverflowY, 'auto', `${type} log must own the vertical scrollbar`)
   assert.ok(result.resourceVisibleHeight >= Math.min(120, result.resourceHeight * 0.7), `${type} resource card is clipped: ${JSON.stringify(result)}`)
   assert.ok(result.viewportVisibleResourceHeight >= result.resourceHeight * 0.7, `${type} resource card is outside the visible window: ${JSON.stringify(result)}`)
+  assert.equal(result.resourceCompact, true, `${type} task detail must use the compact resource card`)
   assert.ok(
     result.metricColumns >= 1 && result.metricColumns <= 2,
     `${type} resource metrics must use a readable one- or two-column layout`,
@@ -4128,8 +4195,10 @@ async function runZipTelemetryDesktopGate() {
     const finalTelemetry = byteTelemetry.at(-1)
     assert.equal(finalTelemetry.processedBytes, sourceBytes)
     assert.equal(finalTelemetry.totalBytes, sourceBytes)
-    assert.ok(finalTelemetry.speed, `${label} ZIP must expose measured throughput`)
-    assert.equal(finalTelemetry.etaSeconds, 0)
+    const measuredTelemetry = byteTelemetry.find(item => item.speed && item.etaSeconds !== undefined)
+    assert.ok(measuredTelemetry, `${label} ZIP must expose measured throughput during a stable observation window`)
+    assert.equal(finalTelemetry.speed, null, `${label} ZIP terminal event must not publish a one-sample throughput spike`)
+    assert.equal(finalTelemetry.etaSeconds, null, `${label} ZIP terminal event must not publish an unstable ETA`)
     const outputTelemetry = state.zipTelemetry.filter(item => item.outputBytes > 0)
     assert.ok(outputTelemetry.length > 0, `${label} ZIP must emit its real archive size`)
     assert.equal(outputTelemetry.at(-1).outputBytes, statSync(archivePath).size)
@@ -4254,8 +4323,10 @@ async function runTarTelemetryDesktopGate() {
     const finalTelemetry = byteTelemetry.at(-1)
     assert.equal(finalTelemetry.processedBytes, sourceBytes, `${format} final processed bytes`)
     assert.equal(finalTelemetry.totalBytes, sourceBytes, `${format} final total bytes`)
-    assert.ok(finalTelemetry.speed, `${format} must expose measured throughput`)
-    assert.equal(finalTelemetry.etaSeconds, 0)
+    const measuredTelemetry = byteTelemetry.find(item => item.speed && item.etaSeconds !== undefined)
+    assert.ok(measuredTelemetry, `${format} must expose measured throughput during a stable observation window`)
+    assert.equal(finalTelemetry.speed, null, `${format} terminal event must not publish a one-sample throughput spike`)
+    assert.equal(finalTelemetry.etaSeconds, null, `${format} terminal event must not publish an unstable ETA`)
 
     const archiveTest = spawnSync(bundledSevenZip, ['t', '-y', archivePath], {
       encoding: 'utf8', windowsHide: true,
@@ -4444,6 +4515,10 @@ try {
     await runArchiveFlowDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri archive-flow alignment gate passed.')
+  } else if (pauseControlOnly) {
+    await runPauseControlDesktopGate()
+    completedSuccessfully = true
+    console.log('Real Windows Tauri pause/resume/cancel control gate passed.')
   } else {
 
   forwardContextAction('--quick-pack', [sourcePath])
@@ -4453,6 +4528,9 @@ try {
     readFileSync(archivePath).length > 0,
     'the real compression command must create a non-empty ZIP archive',
   )
+  const diagnosticArchivePath = path.join(fixtureDirectory, 'roundtrip-payload-diagnostic-source.zip')
+  copyFileSync(archivePath, diagnosticArchivePath)
+  const diagnosticArchiveHash = fileSha256(diagnosticArchivePath)
   const compressionResourceTask = await waitForResourcePreflightTask(
     'compression',
     task => task.status === 'completed' && normalizedDesktopPath(task.outputPath) === normalizedDesktopPath(archivePath),
@@ -4508,8 +4586,7 @@ try {
   )
 
   console.log('[desktop-e2e] verifying archive diagnosis, non-destructive ZIP repair, and ZIP/TAR image preview')
-  const sourceArchiveHash = fileSha256(archivePath)
-  const diagnosis = await callDesktopBridge('diagnoseArchive', archivePath)
+  const diagnosis = await callDesktopBridge('diagnoseArchive', diagnosticArchivePath)
   assert.equal(diagnosis.actualFormat, 'ZIP')
   assert.equal(diagnosis.status, 'healthy')
   assert.equal(diagnosis.totalFiles, 1)
@@ -4517,13 +4594,13 @@ try {
   assert.equal(diagnosis.canRepair, false, 'a healthy ZIP should not advertise repair as necessary')
 
   const repairedArchivePath = path.join(fixtureDirectory, 'roundtrip-payload-repaired.zip')
-  const repair = await callDesktopBridge('repairZip', archivePath, repairedArchivePath)
+  const repair = await callDesktopBridge('repairZip', diagnosticArchivePath, repairedArchivePath)
   assert.equal(repair.outputPath, repairedArchivePath)
   assert.equal(repair.recoveredFiles, 1)
   assert.equal(repair.recoveredDirectories, 0)
   assert.deepEqual(repair.skippedEntries, [])
   assert.equal(repair.verified, true)
-  assert.equal(fileSha256(archivePath), sourceArchiveHash, 'ZIP repair must not modify the source archive')
+  assert.equal(fileSha256(diagnosticArchivePath), diagnosticArchiveHash, 'ZIP repair must not modify the source archive')
   assert.ok(existsSync(repairedArchivePath), 'ZIP repair must publish a new archive')
   const repairedDiagnosis = await callDesktopBridge('diagnoseArchive', repairedArchivePath)
   assert.equal(repairedDiagnosis.status, 'healthy')
@@ -4656,7 +4733,7 @@ try {
   const blockedOutput = path.join(fixtureDirectory, 'must-not-create-blocked-output')
   const blockedSeed = await callDesktopBridge(
     'seedBlockedResourcePreflight',
-    archivePath,
+    diagnosticArchivePath,
     blockedOutput,
   )
   const blockedResourceTask = await waitForResourcePreflightTask(

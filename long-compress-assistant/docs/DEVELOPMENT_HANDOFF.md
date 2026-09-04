@@ -1,19 +1,47 @@
 # 开发交接
 
-## 2026-09-03 v1.2.7 换机发布交接（最新接续点）
+## 2026-09-04 v1.2.8 归档任务控制收口（最新接续点）
 
-- 功能与发布候选已经由 [PR #120](https://github.com/Longyuyeee/long_Decompress/pull/120) 合入 `master`，merge commit 为 `c4d2adc2c1df1237d3674dc7ac76f6507c6979e4`；PR 的 Frontend、Browser shell E2E、Rust/Shell、Windows desktop E2E build、Windows installer 五项检查全部通过。
-- README、版本说明和 `1.2.7` 八处版本身份已经包含在上述 merge commit 中并推送。annotated tag `v1.2.7` 已指向同一 merge commit 并推送到 GitHub。
-- tag 已触发 [Release workflow 33739220209](https://github.com/Longyuyeee/long_Decompress/actions/runs/33739220209)。本机停止观察时，版本身份、依赖安装、类型检查和前端单元测试已通过，Rust Release 测试仍在执行；**尚未确认 workflow 最终结果，也尚未核对公开 Release 资产，因此不得把 v1.2.7 写成已完成发布。**
-- 用户要求换电脑，当前机器不再等待、构建、安装或补做验证。用户正在运行的 `E:\Long\Long解压\Long解压.exe` 未被候选安装包替换。
+- 归档自然排序、并发上限、同目标安全串行、全局/单独配置来源和默认设置已对齐；实际执行顺序不再与列表顺序分离。
+- 真正暂停/恢复已贯通原生读写、密码尝试、完整性校验、发布前检查及 Windows 外部归档进程。停止会唤醒暂停任务、清理未发布输出并释放队列；特殊压缩不显示伪造的归档暂停。
+- 类型检查、前端 303/303、严格 Clippy、Rust 全量、真实 Windows 子进程暂停、真实 Tauri/WebView2 暂停控制和 archive-flow 均通过。原生 RAR 只在条目边界安全暂停，外部 RAR 可即时挂起。
+- 版本身份已提升至 `1.2.8`，Release notes 与候选审计已建立。下一步只需完成 NSIS 候选产物记录、提交推送、PR/CI、合并、`v1.2.8` 标签、Release workflow 和公开资产回下载；不得从旧的 P0 暂停设计重新开始。完整范围见 [ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md](ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md)，发布状态见 [RELEASE_AUDIT_1.2.8.md](RELEASE_AUDIT_1.2.8.md)。
 
-### 新电脑只需完成的收口步骤
+## 2026-09-04 归档队列、配置来源与停止语义（最新接续点）
 
-1. 拉取 `master` 与 tags，确认 `master` 至少包含 `c4d2adc`，且 `git rev-list -n 1 v1.2.7` 为 `c4d2adc2c1df1237d3674dc7ac76f6507c6979e4`。
-2. 打开 Release workflow `33739220209`：若仍在运行则等待；若失败，只处理失败的发布步骤，不重做已合并功能；若成功再继续。
-3. 打开 [v1.2.7 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.7)，确认不是 draft/prerelease，并确认至少存在安装器、`.nsis.zip`、`.nsis.zip.sig`、`latest.json` 四项公开资产。
-4. 下载四项资产；核对 `latest.json.version == 1.2.7`、下载 URL 指向本次公开 ZIP、manifest 签名与 `.sig` 内容一致，并记录公开资产大小与 SHA-256。
-5. 只有 workflow 成功且公开资产核对通过后，才把 [RELEASE_AUDIT_1.2.7.md](RELEASE_AUDIT_1.2.7.md) 的状态改成“正式发布完成”并提交推送。除非另有明确授权，不执行会停止/替换当前正式版的安装或升级生命周期。
+- 解压列表和真实执行队列已统一使用中文数字自然排序；排队停止不会调用不存在的后端进程，单项停止事件已接线，全局停止会同时通知全部运行任务并结束等待任务。
+- 解压与压缩均新增显式“全局 / 单独”配置来源；设置中心新增持久化默认压缩格式、等级和解压同名文件夹。并发设置本身有效，但同一最终输出目录继续按事务安全边界串行。
+- 相关前端 81/81、类型检查、真实图片夹具、带测试桥前端与 Rust Release 构建通过。真实 Windows Release 应用的 archive-flow 门禁已通过并发压缩、普通/AES ZIP 实测遥测、同目标安全串行、加密固实 7Z 往返和密码格式回退确认；终态不再被错误要求生成单样本速度尖峰。
+- 后端目前只有取消令牌，没有跨 ZIP/7Z/RAR/外部进程的可恢复暂停协议；界面没有伪造暂停。下一步从后端暂停控制器和真实格式矩阵接续，完成前不升版。完整证据与严格接续顺序见 [ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md](ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md)。
+
+## 2026-09-03 归档浏览门禁夹具生命周期修复（最新接续点）
+
+- `archive-browser-only` 原先把一键解压输入继续用于诊断和修复；当真实桌面加载用户“解压后移入系统回收站”偏好时，合法回收会让后续读取报 `ENOENT`。门禁现于解压前创建独立诊断副本，不改变或假设用户偏好。
+- Node 22.12.0 下完整真实 Windows Tauri/WebView2 归档浏览门禁通过：Zstandard 后端能力菜单、180,000 条目 TAR 取消、长路径 ZIP、加密 7Z、固定加密 RAR、选择性解压、预览、默认应用打开和非破坏修复全部完成。
+- 固定外部归档夹具通过项目下载器与清单校验；媒体架构门禁锁定独立副本和哈希契约。下一步回到高 DPI 活动态/终态任务的窄窗视觉审计。完整证据见 [ARCHIVE_BROWSER_FIXTURE_LIFECYCLE_AUDIT_2026-09-03.md](ARCHIVE_BROWSER_FIXTURE_LIFECYCLE_AUDIT_2026-09-03.md)。
+- 用户要求暂停后的精确完成项、证据状态和四步接续顺序见 [CURRENT_DEVELOPMENT_STATUS_AUDIT_2026-09-03.md](CURRENT_DEVELOPMENT_STATUS_AUDIT_2026-09-03.md)；其中最后新增的架构静态断言明确标记为尚未复跑。
+
+## 2026-09-03 桌面门禁 Node 20/22/24 兼容修复（已完成）
+
+- `test-tauri-desktop.mjs` 不再顶层导入 Node 22.12.0 尚未提供的 `zstdCompressSync`；25 字节 Zstandard 能力夹具改为标准单段 raw-block frame，保持 `package.json` 已声明的 Node 20/22/24 范围。
+- 默认 Node 22.12.0 已通过真实 Windows Tauri/WebView2 响应式门禁；生成的 34 字节 frame 已由产品随包 7-Zip 26.02 识别并完整校验。媒体架构门禁锁定“不重新引入范围外 zlib API”。
+- 深入运行 `archive-browser-only` 时，在调用新生成器之前发现既有公共往返流程的临时 ZIP 被快速解压删除，后续诊断读取时报 `ENOENT`。该次未记为通过，也未归因给 Zstandard 修复；问题已由上方独立节点关闭。
+- Node 兼容与完整归档浏览证据均已闭环，详细过程见 [DESKTOP_E2E_NODE_COMPAT_AUDIT_2026-09-03.md](DESKTOP_E2E_NODE_COMPAT_AUDIT_2026-09-03.md)。
+
+## 2026-09-03 v1.2.7 后续压缩任务详情密度修复（已完成）
+
+- 当前分支 `codex/compression-detail-density`，基线为已公开 `v1.2.7` 后续的 `master@138688b`；本轮没有升版、打包、打标签或创建 Release。
+- 已关闭此前唯一明确的工作区密度遗留：组任务与单文件任务的压缩详情启用紧凑分析、紧凑设置和紧凑存储预检；760 px 下核心设置由错误的单列恢复为两列，所有业务选项、左右双栏、独立滚动和有界高度均保留。
+- 聚焦组件 10/10、类型检查、Chromium 响应式回归、带测试桥生产前端、Rust Release 构建均通过；真实 Windows Tauri/WebView2 的 920×620 / 760×520 压缩与解压详情门禁通过。
+- 首轮桌面门禁在启动应用前发现默认 Node 22.12.0 不提供脚本顶层导入的 `zstdCompressSync`；用既有发布环境 Node 24.14.0 完成门禁。下一步应先让桌面脚本与 `package.json` 声明的 Node 版本兼容，再继续审计高 DPI 活动态/终态任务。完整证据见 [COMPRESSION_TASK_DETAIL_DENSITY_AUDIT_2026-09-03.md](COMPRESSION_TASK_DETAIL_DENSITY_AUDIT_2026-09-03.md)。
+
+## 2026-09-03 v1.2.7 正式发布关闭（历史基线）
+
+- 功能与发布候选已由 [PR #120](https://github.com/Longyuyeee/long_Decompress/pull/120) 合入 `master@c4d2adc2c1df1237d3674dc7ac76f6507c6979e4`；五项 PR 检查全部通过，annotated tag `v1.2.7` 精确指向该合并提交。
+- [Release workflow 33739220209](https://github.com/Longyuyeee/long_Decompress/actions/runs/33739220209) 已成功完成；[v1.2.7 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.7) 为非草稿、非预发布，安装器、updater ZIP、独立签名和 `latest.json` 四项资产均已公开。
+- 四项公开资产已回下载。`latest.json.version == 1.2.7`，Windows x86_64 URL 精确指向本标签 updater ZIP，manifest 签名与 `.sig` 的 428 字节内容逐字一致；大小与 SHA-256 见 [RELEASE_AUDIT_1.2.7.md](RELEASE_AUDIT_1.2.7.md)。
+- `v1.2.7` 功能、CI、标签、公开 Release 与资产对账至此关闭。本机没有执行会停止或替换用户正式版的安装/升级生命周期，该项不冒充已通过。
+- 下一功能接续点是公开版之后的压缩任务展开详情密度：先在 920×620、760×520 和高 DPI 下审计真实活动/终态任务，再独立修复配置栏、执行栏、日志与底部操作区的信息层级；不得改变统一任务、历史和发布事务边界。
 
 ## 2026-09-03 v1.2.7 发布候选（当前接续点）
 

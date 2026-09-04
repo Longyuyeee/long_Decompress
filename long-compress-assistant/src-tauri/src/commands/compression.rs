@@ -23,13 +23,16 @@ static ZIP_REPAIR_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(Dash
 static ARCHIVE_BROWSE_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 
 pub(crate) fn register_task_cancellation(task_id: &str) -> Result<Arc<AtomicBool>, String> {
-    let cancellation_flag = Arc::new(AtomicBool::new(false));
+    let cancellation_flag = crate::services::task_control::register(task_id)?;
     match CANCELLATION_FLAGS.entry(task_id.to_string()) {
         Entry::Vacant(entry) => {
             entry.insert(cancellation_flag.clone());
             Ok(cancellation_flag)
         }
-        Entry::Occupied(_) => Err(format!("Task is already running: {task_id}")),
+        Entry::Occupied(_) => {
+            crate::services::task_control::cleanup(task_id);
+            Err(format!("Task is already running: {task_id}"))
+        }
     }
 }
 
@@ -43,6 +46,7 @@ async fn service_for_task(task_id: &str) -> Result<CompressionService, String> {
 
 fn cleanup_task(task_id: &str) {
     CANCELLATION_FLAGS.remove(task_id);
+    crate::services::task_control::cleanup(task_id);
 }
 
 pub(crate) struct TaskCancellationGuard {
@@ -710,6 +714,7 @@ pub async fn cancel_compression(task_id: String) -> Result<(), String> {
         return Err(format!("Task is not active: {task_id}"));
     };
     flag.store(true, Ordering::SeqCst);
+    crate::services::task_control::cancel(&task_id);
     drop(flag);
 
     for _ in 0..200 {
@@ -722,6 +727,48 @@ pub async fn cancel_compression(task_id: String) -> Result<(), String> {
     Err(format!(
         "Timed out waiting for task cancellation: {task_id}"
     ))
+}
+
+#[command]
+pub async fn pause_archive_task(task_id: String) -> Result<(), String> {
+    if crate::services::task_control::pause(&task_id) {
+        Ok(())
+    } else {
+        Err(format!("Task is not active or cannot be paused: {task_id}"))
+    }
+}
+
+#[command]
+pub async fn resume_archive_task(task_id: String) -> Result<(), String> {
+    if crate::services::task_control::resume(&task_id) {
+        Ok(())
+    } else {
+        Err(format!("Task is not active or cannot be resumed: {task_id}"))
+    }
+}
+
+#[command]
+pub async fn pause_archive_tasks(task_ids: Vec<String>) -> Result<(), String> {
+    let failed: Vec<_> = task_ids.into_iter()
+        .filter(|task_id| !crate::services::task_control::pause(task_id))
+        .collect();
+    if failed.is_empty() {
+        Ok(())
+    } else {
+        Err(format!("Unable to pause inactive tasks: {}", failed.join(", ")))
+    }
+}
+
+#[command]
+pub async fn resume_archive_tasks(task_ids: Vec<String>) -> Result<(), String> {
+    let failed: Vec<_> = task_ids.into_iter()
+        .filter(|task_id| !crate::services::task_control::resume(task_id))
+        .collect();
+    if failed.is_empty() {
+        Ok(())
+    } else {
+        Err(format!("Unable to resume inactive tasks: {}", failed.join(", ")))
+    }
 }
 
 /// Runs a deterministic, cancellable file-writing task for the real desktop E2E suite.
@@ -745,14 +792,14 @@ pub async fn desktop_e2e_run_cancellable_task(
         use std::io::Write;
         use std::path::PathBuf;
 
-        let cancellation_flag = Arc::new(AtomicBool::new(false));
-        CANCELLATION_FLAGS.insert(task_id.clone(), cancellation_flag.clone());
+        let cancellation_flag = register_task_cancellation(&task_id)?;
         let _task_guard = TaskCancellationGuard::new(&task_id);
         let output = PathBuf::from(output_path);
         let mut file = std::fs::File::create(&output).map_err(|error| error.to_string())?;
         let chunk = vec![0x5a; 256 * 1024];
 
         for _ in 0..6_000 {
+            crate::services::task_control::wait_if_paused(&cancellation_flag);
             if cancellation_flag.load(Ordering::SeqCst) {
                 drop(file);
                 let _ = std::fs::remove_file(&output);
@@ -773,6 +820,7 @@ pub async fn cancel_tasks_and_wait(task_ids: Vec<String>) -> Result<(), String> 
         if let Some(flag) = CANCELLATION_FLAGS.get(task_id) {
             flag.store(true, Ordering::SeqCst);
         }
+        crate::services::task_control::cancel(task_id);
     }
 
     for _ in 0..200 {

@@ -30,6 +30,63 @@ describe('task progress state machine', () => {
     expect(mocks.invoke).not.toHaveBeenCalledWith('list_task_history', expect.anything())
   })
 
+  it('cancels a queued task locally without calling a backend process', async () => {
+    const store = useTaskStore()
+    store.addTask({
+      id: 'queued-task',
+      name: 'queued.zip',
+      type: 'decompression',
+      sourceFiles: ['C:/archives/queued.zip'],
+      outputPath: 'C:/archives',
+    })
+
+    await expect(store.cancelTask('queued-task')).resolves.toBe(true)
+    expect(store.tasks[0].status).toBe('cancelled')
+    expect(mocks.invoke).not.toHaveBeenCalledWith('cancel_compression', expect.anything())
+  })
+
+  it('pauses, resumes, and can stop the same active archive task', async () => {
+    const store = useTaskStore()
+    store.addTask({
+      id: 'active-task',
+      name: 'active.7z',
+      type: 'compression',
+      sourceFiles: ['C:/archives/source.bin'],
+      outputPath: 'C:/archives/active.7z',
+    })
+    store.updateTaskStatus('active-task', 'compressing')
+
+    await expect(store.pauseTask('active-task')).resolves.toBe(true)
+    expect(store.tasks[0]).toMatchObject({ status: 'paused', pausedFromStatus: 'compressing' })
+    expect(mocks.invoke).toHaveBeenCalledWith('pause_archive_task', { taskId: 'active-task' })
+
+    await expect(store.resumeTask('active-task')).resolves.toBe(true)
+    expect(store.tasks[0].status).toBe('compressing')
+    expect(mocks.invoke).toHaveBeenCalledWith('resume_archive_task', { taskId: 'active-task' })
+
+    await store.pauseTask('active-task')
+    await expect(store.cancelTask('active-task')).resolves.toBe(true)
+    expect(store.tasks[0].status).toBe('cancelled')
+    expect(mocks.invoke).toHaveBeenCalledWith('cancel_compression', { taskId: 'active-task' })
+  })
+
+  it('does not advertise archive pause semantics for special-compression tasks', async () => {
+    const store = useTaskStore()
+    store.addTask({
+      id: 'video-task',
+      name: 'video.mp4',
+      type: 'compression',
+      workloadKind: 'video',
+      sourceFiles: ['C:/video.mp4'],
+      outputPath: 'C:/video-compressed.mp4',
+    })
+    store.updateTaskStatus('video-task', 'compressing')
+
+    await expect(store.pauseTask('video-task')).resolves.toBe(false)
+    expect(store.tasks[0].status).toBe('compressing')
+    expect(mocks.invoke).not.toHaveBeenCalledWith('pause_archive_task', expect.anything())
+  })
+
   it('keeps extraction progress at zero while password candidates are being verified', async () => {
     const store = useTaskStore()
     await store.initListeners()

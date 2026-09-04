@@ -12,6 +12,7 @@ import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath, isPotentialSplitArchivePath } from '@/utils/compressionFormat'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
+import { sortTasksByName } from '@/utils/taskOrdering'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -30,9 +31,9 @@ const supportedArchiveHint = DECOMPRESS_ARCHIVE_HINT
 const decompressionTasks = computed(() => taskStore.tasksFor('decompression'))
 
 // 全局配置状态
-const globalOutputPath = ref('')
-const isGlobalSameDir = ref(true) // 默认同目录，用户可通过按钮手动选择
-const globalExtractToSubfolder = ref(false)
+const globalOutputPath = ref(appStore.settings.defaultOutputPath)
+const isGlobalSameDir = ref(!appStore.settings.defaultOutputPath) // 默认同目录，用户可通过按钮手动选择
+const globalExtractToSubfolder = ref(appStore.settings.defaultExtractToSubfolder)
 const globalRecycleSourceAfterExtract = ref(appStore.settings.autoDeleteSource)
 
 watch(
@@ -71,7 +72,10 @@ const drainPendingContextActions = () => {
         )
         if (request.outputPath) createdTasks.forEach(task => { task.outputPath = request.outputPath! })
         const extractToSubfolder = request.action !== 'context-extract-here'
-        createdTasks.forEach(task => { task.extractToSubfolder = extractToSubfolder })
+        createdTasks.forEach(task => {
+          task.extractToSubfolder = extractToSubfolder
+          task.configurationMode = 'individual'
+        })
         if (createdTasks.length > 0) {
           appStore.setSuccess(
             request.action === 'context-quick-extract'
@@ -135,7 +139,8 @@ const onFilesSelected = async (files: any[]) => {
       sourceFiles: [sourcePath],
       outputPath: isGlobalSameDir.value ? parentDir : globalOutputPath.value,
       extractToSubfolder: globalExtractToSubfolder.value,
-      recycleSourceAfterExtract: globalRecycleSourceAfterExtract.value
+      recycleSourceAfterExtract: globalRecycleSourceAfterExtract.value,
+      configurationMode: 'global',
     })
     createdTaskIds.push(taskId)
     appStore.addRecentFile(sourcePath)
@@ -143,8 +148,11 @@ const onFilesSelected = async (files: any[]) => {
       const task = taskStore.tasks.find(task => task.id === taskId)
       if (!task || task.status !== 'pending') return
       const rootEntries = contents.filter(item => !item.includes('/')).length
-      if (rootEntries > 1) task.extractToSubfolder = true
-      else if (rootEntries === 1) task.extractToSubfolder = false
+      if (rootEntries > 1) {
+        task.extractToSubfolder = true
+      } else if (rootEntries === 1) {
+        task.extractToSubfolder = false
+      }
     }).catch(error => console.debug('Smart extract skipped (unable to list contents):', sourcePath, error))
   }
 
@@ -216,7 +224,7 @@ const handleGlobalSelectDir = async () => {
       isGlobalSameDir.value = false
       // 同步到所有待处理任务
       decompressionTasks.value.forEach(t => {
-        if (t.status === 'pending') t.outputPath = selected
+        if (t.status === 'pending' && t.configurationMode === 'global') t.outputPath = selected
       })
     }
   } catch (err) {
@@ -229,7 +237,7 @@ const handleGlobalSetSameDir = () => {
   globalOutputPath.value = ''
   // 同步到所有待处理任务：设置各自的父目录
   decompressionTasks.value.forEach(t => {
-    if (t.status === 'pending' && t.sourceFiles.length > 0) {
+    if (t.status === 'pending' && t.configurationMode === 'global' && t.sourceFiles.length > 0) {
       const sp = t.sourceFiles[0]
       t.outputPath = sp.substring(0, Math.max(sp.lastIndexOf('/'), sp.lastIndexOf('\\')))
     }
@@ -239,7 +247,7 @@ const handleGlobalSetSameDir = () => {
 const toggleGlobalSubfolder = () => {
   globalExtractToSubfolder.value = !globalExtractToSubfolder.value
   decompressionTasks.value.forEach(t => {
-    if (t.status === 'pending') t.extractToSubfolder = globalExtractToSubfolder.value
+    if (t.status === 'pending' && t.configurationMode === 'global') t.extractToSubfolder = globalExtractToSubfolder.value
   })
 }
 
@@ -247,8 +255,27 @@ const toggleGlobalRecycleSource = () => {
   globalRecycleSourceAfterExtract.value = !globalRecycleSourceAfterExtract.value
   appStore.updateSettings({ autoDeleteSource: globalRecycleSourceAfterExtract.value })
   decompressionTasks.value.forEach(t => {
-    if (t.status === 'pending') t.recycleSourceAfterExtract = globalRecycleSourceAfterExtract.value
+    if (t.status === 'pending' && t.configurationMode === 'global') t.recycleSourceAfterExtract = globalRecycleSourceAfterExtract.value
   })
+}
+
+const applyGlobalConfiguration = (task: Task) => {
+  const sourcePath = task.sourceFiles[0] || ''
+  const separatorIndex = Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\'))
+  task.outputPath = isGlobalSameDir.value
+    ? sourcePath.substring(0, separatorIndex)
+    : globalOutputPath.value
+  task.recycleSourceAfterExtract = globalRecycleSourceAfterExtract.value
+}
+
+const setTaskConfigurationMode = (taskId: string, mode: 'global' | 'individual') => {
+  const task = decompressionTasks.value.find(candidate => candidate.id === taskId)
+  if (!task || task.status !== 'pending') return
+  task.configurationMode = mode
+  if (mode === 'global') {
+    applyGlobalConfiguration(task)
+    task.extractToSubfolder = globalExtractToSubfolder.value
+  }
 }
 
 const toggleTaskSelection = (taskId: string) => {
@@ -298,11 +325,11 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
   // 防止重复点击
   if (isProcessing.value) return
   // 如果有选中的任务，优先处理选中的；否则处理所有 pending 任务
-  const pendingTasks = onlyTaskIds
+  const pendingTasks = sortTasksByName(onlyTaskIds
     ? decompressionTasks.value.filter(t => onlyTaskIds.includes(t.id) && t.status === 'pending')
     : selectedTaskIds.value.size > 0
     ? decompressionTasks.value.filter(t => selectedTaskIds.value.has(t.id) && t.status === 'pending')
-    : decompressionTasks.value.filter(t => t.status === 'pending')
+    : decompressionTasks.value.filter(t => t.status === 'pending'))
   if (pendingTasks.length === 0) return
 
   isProcessing.value = true
@@ -315,6 +342,10 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       pendingTasks,
       appStore.settings.maxConcurrentTasks,
       async task => {
+    // The batch keeps a snapshot of queued tasks. A task cancelled while it is
+    // waiting for a concurrency slot must never start afterwards.
+    if (task.status === 'cancelled') return
+    if (task.configurationMode === 'global') applyGlobalConfiguration(task)
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
       outputPath: task.outputPath,
@@ -394,7 +425,17 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
 }
 
 const hasPendingTasks = computed(() => decompressionTasks.value.some(t => t.status === 'pending'))
-const isRunning = computed(() => decompressionTasks.value.some(t => ['running', 'extracting', 'preparing', 'finalizing', 'cancelling'].includes(t.status)))
+const pausableTasks = computed(() => decompressionTasks.value.filter(t => ['running', 'extracting', 'preparing', 'finalizing'].includes(t.status)))
+const pausedTasks = computed(() => decompressionTasks.value.filter(t => t.status === 'paused'))
+const isRunning = computed(() => decompressionTasks.value.some(t => ['running', 'extracting', 'preparing', 'finalizing', 'paused', 'cancelling'].includes(t.status)))
+
+const pauseAllTasks = async () => {
+  await Promise.all(pausableTasks.value.map(task => taskStore.pauseTask(task.id)))
+}
+
+const resumeAllTasks = async () => {
+  await Promise.all(pausedTasks.value.map(task => taskStore.resumeTask(task.id)))
+}
 
 const retryWithPassword = async (taskId: string) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
@@ -410,14 +451,14 @@ const retryWithPassword = async (taskId: string) => {
 }
 
 const cancelAllTasks = async () => {
-  let cancelled = 0
-  let failed = 0
-  for (const t of decompressionTasks.value) {
-    if (['running', 'extracting', 'preparing', 'finalizing'].includes(t.status)) {
-      const ok = await taskStore.cancelTask(t.id)
-      if (ok) cancelled++; else failed++
-    }
-  }
+  const cancellable = decompressionTasks.value.filter(t =>
+    ['pending', 'running', 'extracting', 'preparing', 'finalizing', 'paused'].includes(t.status)
+  )
+  // Signal every backend process at once. Waiting for each cleanup in sequence
+  // made the global stop appear unresponsive and left later tasks running.
+  const results = await Promise.all(cancellable.map(task => taskStore.cancelTask(task.id)))
+  const cancelled = results.filter(Boolean).length
+  const failed = results.length - cancelled
   if (failed > 0) {
     appStore.setError(appStore.t('decompress.cancel_status').replace('{0}', String(cancelled)).replace('{1}', String(failed)))
   }
@@ -495,12 +536,30 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           {{ appStore.t('decompress.clear_finished') }}
         </button>
         <button
+          v-if="pausableTasks.length > 0"
+          @click="pauseAllTasks"
+          data-testid="pause-all-archive-tasks"
+          class="h-9 px-4 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-bold uppercase tracking-wider hover:bg-amber-500 hover:text-white transition-all flex items-center gap-2"
+        >
+          <i class="pi pi-pause text-xs"></i>
+          {{ appStore.t('tasks.pause_all') }}
+        </button>
+        <button
+          v-if="pausedTasks.length > 0"
+          @click="resumeAllTasks"
+          data-testid="resume-all-archive-tasks"
+          class="h-9 px-4 rounded-lg bg-green-500/10 text-green-500 border border-green-500/30 text-xs font-bold uppercase tracking-wider hover:bg-green-500 hover:text-white transition-all flex items-center gap-2"
+        >
+          <i class="pi pi-play text-xs"></i>
+          {{ appStore.t('tasks.resume_all') }}
+        </button>
+        <button
           v-if="isRunning"
           @click="cancelAllTasks"
           class="h-9 px-5 rounded-lg bg-red-500/10 text-red-500 border border-red-500/30 text-xs font-bold uppercase tracking-wider hover:bg-red-500 hover:text-white transition-all flex items-center gap-2"
         >
           <i class="pi pi-stop-circle text-xs"></i>
-          {{ appStore.t('common.cancel') }}
+          {{ appStore.t('decompress.stop_all') }}
         </button>
         <button
           v-if="hasPendingTasks && !isRunning"
@@ -525,6 +584,10 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           @select-all-pending="selectAllPending"
           @deselect-all="deselectAll"
           @retry-with-password="retryWithPassword"
+          @cancel-task="taskStore.cancelTask"
+          @pause-task="taskStore.pauseTask"
+          @resume-task="taskStore.resumeTask"
+          @set-config-mode="setTaskConfigurationMode"
         />
         </div>
 

@@ -118,7 +118,19 @@ impl SplitCompressionService {
             bytes
         });
 
+        let mut suspended = false;
         let status = loop {
+            if let Some(process_id) = child.id() {
+                if let Err(error) = crate::services::task_control::sync_child_pause(
+                    &cancellation,
+                    process_id,
+                    &mut suspended,
+                ) {
+                    let _ = child.kill().await;
+                    Self::cleanup_parts(output_path);
+                    return Err(anyhow::anyhow!(error));
+                }
+            }
             tokio::select! {
                 result = child.wait() => break result?,
                 _ = tokio::time::sleep(std::time::Duration::from_millis(50)) => {

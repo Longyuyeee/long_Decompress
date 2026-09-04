@@ -94,7 +94,18 @@ impl RarSupportService {
             let _ = stderr.read_to_end(&mut bytes).await;
             bytes
         });
+        let mut suspended = false;
         let status = loop {
+            if let Some(process_id) = child.id() {
+                if let Err(error) = crate::services::task_control::sync_child_pause(
+                    &cancellation,
+                    process_id,
+                    &mut suspended,
+                ) {
+                    let _ = child.kill().await;
+                    return Err(RarError::CommandFailed(error));
+                }
+            }
             tokio::select! {
                 result = child.wait() => break result.map_err(|error| RarError::CommandFailed(error.to_string()))?,
                 _ = tokio::time::sleep(std::time::Duration::from_millis(50)) => {
@@ -256,6 +267,7 @@ impl RarSupportService {
                 "读取 RAR 文件头失败",
             ))? {
             
+            crate::services::task_control::wait_if_paused(&cancellation_flag);
             if cancellation_flag.load(Ordering::SeqCst) {
                 return Err(RarError::CommandFailed("RAR extraction cancelled".to_string()));
             }

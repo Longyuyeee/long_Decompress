@@ -45,6 +45,7 @@ pub mod system_service;
 pub mod storage_preflight;
 pub(crate) mod source_recycle;
 pub mod task_template;
+pub(crate) mod task_control;
 pub mod watch_folder_service;
 pub mod video_engine;
 pub mod video_compression_plan;

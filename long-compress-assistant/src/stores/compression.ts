@@ -141,6 +141,14 @@ export const useCompressionStore = defineStore('compression', () => {
     verifyAfter: true,
     createSolidArchive: false
   })
+  let archiveDefaultsInitialized = false
+
+  const initializeArchiveDefaults = (format: CompressionOptions['format'], level: number) => {
+    if (archiveDefaultsInitialized) return
+    globalSettings.value.format = format
+    globalSettings.value.level = Math.max(1, Math.min(9, level))
+    archiveDefaultsInitialized = true
+  }
   const globalOutputPath = ref('')
   const autoStartRequested = ref(false)
   const imageItems = ref<ImageCompressionItem[]>([])
@@ -369,6 +377,11 @@ export const useCompressionStore = defineStore('compression', () => {
     if (file) file.settings = cloneSettings(settings)
   }
 
+  const useGlobalFileSettings = (path: string) => {
+    const file = selectedFiles.value.find(item => item.path === path)
+    if (file) file.settings = undefined
+  }
+
   const updateFileOutputPath = (path: string, outputPath: string) => {
     const file = selectedFiles.value.find(item => item.path === path)
     if (file) file.outputPath = outputPath
@@ -377,6 +390,11 @@ export const useCompressionStore = defineStore('compression', () => {
   const updateGroupSettings = (groupId: string, settings: CompressionOptions) => {
     const group = groups.value.find(item => item.id === groupId)
     if (group) group.settings = cloneSettings(settings)
+  }
+
+  const useGlobalGroupSettings = (groupId: string) => {
+    const group = groups.value.find(item => item.id === groupId)
+    if (group) group.settings = undefined
   }
 
   const updateGroupOutputPath = (groupId: string, outputPath: string) => {
@@ -555,6 +573,7 @@ export const useCompressionStore = defineStore('compression', () => {
     selectedFiles,
     groups,
     globalSettings,
+    initializeArchiveDefaults,
     globalOutputPath,
     autoStartRequested,
     imageItems,
@@ -597,8 +616,10 @@ export const useCompressionStore = defineStore('compression', () => {
     getEffectiveOutputPath,
     addFile,
     updateFileSettings,
+    useGlobalFileSettings,
     updateFileOutputPath,
     updateGroupSettings,
+    useGlobalGroupSettings,
     updateGroupOutputPath,
     setAnalysisState,
     clearAnalysis,

@@ -327,6 +327,51 @@ const removeWordlist = (index: number) => {
                 />
                 <div class="text-xs text-muted uppercase tracking-tighter">{{ appStore.t('settings.performance.threads.desc') }}</div>
               </div>
+
+              <div class="space-y-4 pt-6 border-t border-subtle" data-testid="archive-default-settings">
+                <div>
+                  <div class="text-xs font-bold text-content">{{ appStore.t('settings.archive_defaults') }}</div>
+                  <div class="text-xs text-muted mt-1 leading-5">{{ appStore.t('settings.archive_defaults.desc') }}</div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="space-y-1.5 text-xs font-bold text-muted">
+                    <span>{{ appStore.t('settings.archive_defaults.format') }}</span>
+                    <select
+                      :value="appStore.settings.defaultCompressionFormat"
+                      class="w-full h-9 rounded-lg border border-subtle bg-input px-3 text-content outline-none focus:border-primary"
+                      @change="appStore.updateSettings({ defaultCompressionFormat: ($event.target as HTMLSelectElement).value as 'zip' | '7z' | 'tar.gz' })"
+                    >
+                      <option value="zip">ZIP</option>
+                      <option value="7z">7Z</option>
+                      <option value="tar.gz">TAR.GZ</option>
+                    </select>
+                  </label>
+                  <label class="space-y-1.5 text-xs font-bold text-muted">
+                    <span>{{ appStore.t('settings.archive_defaults.level') }} · {{ appStore.settings.defaultCompressionLevel }}</span>
+                    <input
+                      :value="appStore.settings.defaultCompressionLevel"
+                      type="range" min="1" max="9" step="1"
+                      class="mt-3 w-full h-1.5 rounded-full accent-primary"
+                      @change="appStore.updateSettings({ defaultCompressionLevel: Number(($event.target as HTMLInputElement).value) })"
+                    />
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  :aria-checked="appStore.settings.defaultExtractToSubfolder"
+                  class="w-full flex items-center justify-between gap-4 text-left"
+                  @click="appStore.updateSettings({ defaultExtractToSubfolder: !appStore.settings.defaultExtractToSubfolder })"
+                >
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-content">{{ appStore.t('settings.archive_defaults.subfolder') }}</div>
+                    <div class="text-xs text-muted mt-1">{{ appStore.t('settings.archive_defaults.subfolder.desc') }}</div>
+                  </div>
+                  <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.defaultExtractToSubfolder }">
+                    <span class="settings-toggle-knob"></span>
+                  </div>
+                </button>
+              </div>
             </div>
           </section>
 

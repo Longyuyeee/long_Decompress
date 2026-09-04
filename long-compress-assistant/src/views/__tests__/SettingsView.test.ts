@@ -97,6 +97,26 @@ describe('SettingsView archive engine diagnostics', () => {
     expect(JSON.parse(localStorage.getItem('app-settings') || '{}').autoStart).toBe(true)
   })
 
+  it('exposes and persists archive compression and extraction defaults', async () => {
+    const wrapper = mount(SettingsView, {
+      global: { plugins: [createPinia()] },
+    })
+    await flushPromises()
+
+    const defaults = wrapper.get('[data-testid="archive-default-settings"]')
+    await defaults.get('select').setValue('7z')
+    await defaults.get('input[type="range"]').setValue('8')
+    await defaults.get('button[role="switch"]').trigger('click')
+    await flushPromises()
+
+    const saved = JSON.parse(localStorage.getItem('app-settings') || '{}')
+    expect(saved).toMatchObject({
+      defaultCompressionFormat: '7z',
+      defaultCompressionLevel: 8,
+      defaultExtractToSubfolder: true,
+    })
+  })
+
   it('keeps the previous setting when Windows registration fails', async () => {
     mocks.invoke.mockImplementation((command: string) => {
       if (command === 'check_auto_start') return Promise.resolve(false)

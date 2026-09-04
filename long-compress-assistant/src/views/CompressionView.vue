@@ -30,6 +30,13 @@ const compressionStore = useCompressionStore()
 const tauriCommands = useTauriCommands()
 const taskStore = useTaskStore()
 
+// Apply persisted defaults only once per store lifetime. Navigating away and
+// back must not erase global settings the user already adjusted in this draft.
+compressionStore.initializeArchiveDefaults(
+  appStore.settings.defaultCompressionFormat,
+  appStore.settings.defaultCompressionLevel,
+)
+
 const selectedRows = ref<Set<string>>(new Set())
 const showGlobalSettingsModal = ref(false)
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
@@ -44,6 +51,17 @@ let resolveRarResolution: ((choice: RarResolution) => void) | null = null
 const compressionTasks = computed(() => taskStore.tasksFor('compression'))
 const activeCompressionTasks = computed(() =>
   compressionTasks.value.filter(task => !['completed', 'failed', 'cancelled'].includes(task.status))
+)
+const pausableCompressionTasks = computed(() =>
+  compressionTasks.value.filter(task =>
+    (!task.workloadKind || task.workloadKind === 'archive')
+      && ['preparing', 'running', 'compressing', 'finalizing'].includes(task.status)
+  )
+)
+const pausedCompressionTasks = computed(() =>
+  compressionTasks.value.filter(task =>
+    (!task.workloadKind || task.workloadKind === 'archive') && task.status === 'paused'
+  )
 )
 const hasFinishedCompressionTasks = computed(() =>
   compressionTasks.value.some(task => ['completed', 'failed', 'cancelled'].includes(task.status))
@@ -544,9 +562,27 @@ const cancelCompressionTask = async (taskId: string) => {
 }
 
 const cancelAllCompressionTasks = async () => {
-  for (const task of activeCompressionTasks.value) {
-    await cancelCompressionTask(task.id)
-  }
+  await Promise.all(activeCompressionTasks.value.map(task => cancelCompressionTask(task.id)))
+}
+
+const pauseAllCompressionTasks = async () => {
+  await Promise.all(pausableCompressionTasks.value.map(task => taskStore.pauseTask(task.id)))
+}
+
+const resumeAllCompressionTasks = async () => {
+  await Promise.all(pausedCompressionTasks.value.map(task => taskStore.resumeTask(task.id)))
+}
+
+const setFileConfigurationMode = (file: FileObject, mode: 'global' | 'individual') => {
+  if (file.taskId) return
+  if (mode === 'global') compressionStore.useGlobalFileSettings(file.path)
+  else if (!file.settings) compressionStore.updateFileSettings(file.path, compressionStore.globalSettings)
+}
+
+const setGroupConfigurationMode = (group: CompressionGroup, mode: 'global' | 'individual') => {
+  if (group.taskId) return
+  if (mode === 'global') compressionStore.useGlobalGroupSettings(group.id)
+  else if (!group.settings) compressionStore.updateGroupSettings(group.id, compressionStore.globalSettings)
 }
 
 const clearFinishedCompressionTasks = () => {
@@ -613,10 +649,14 @@ const onDetailLeave = (element: Element) => {
       <CompressionToolbar
         :has-finished="hasFinishedCompressionTasks"
         :active-count="activeCompressionTasks.length"
+        :pausable-count="pausableCompressionTasks.length"
+        :paused-count="pausedCompressionTasks.length"
         :pending-count="pendingPayload"
         :busy="isCompressing"
         @clear-finished="clearFinishedCompressionTasks"
         @cancel-active="cancelAllCompressionTasks"
+        @pause-active="pauseAllCompressionTasks"
+        @resume-paused="resumeAllCompressionTasks"
         @open-settings="showGlobalSettingsModal = true"
         @start="handleCompress"
       />
@@ -686,7 +726,7 @@ const onDetailLeave = (element: Element) => {
 
             <CompressionStatusCell :task="taskForJob(group.taskId)" />
 
-            <div class="compression-row-actions w-20 shrink-0 flex items-center justify-end gap-3">
+            <div class="compression-row-actions min-w-20 shrink-0 flex items-center justify-end gap-2">
               <button
                 v-if="!group.taskId"
                 @click.stop="compressionStore.dissolveGroup(group.id)"
@@ -696,7 +736,23 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-trash text-xs"></i>
               </button>
               <button
-                v-else-if="isActiveCompressionStatus(taskForJob(group.taskId)?.status)"
+                v-if="group.taskId && ['preparing', 'running', 'compressing', 'finalizing'].includes(taskForJob(group.taskId)?.status || '')"
+                @click.stop="taskStore.pauseTask(group.taskId)"
+                class="text-amber-400 hover:text-amber-500 transition-colors"
+                :title="appStore.t('tasks.pause_one')"
+              >
+                <i class="pi pi-pause text-xs"></i>
+              </button>
+              <button
+                v-if="group.taskId && taskForJob(group.taskId)?.status === 'paused'"
+                @click.stop="taskStore.resumeTask(group.taskId)"
+                class="text-green-400 hover:text-green-500 transition-colors"
+                :title="appStore.t('tasks.resume_one')"
+              >
+                <i class="pi pi-play text-xs"></i>
+              </button>
+              <button
+                v-if="group.taskId && isActiveCompressionStatus(taskForJob(group.taskId)?.status)"
                 data-testid="compression-job-cancel"
                 @click.stop="cancelCompressionTask(group.taskId)"
                 class="text-red-400 hover:text-red-500 transition-colors"
@@ -705,7 +761,7 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-stop-circle text-xs"></i>
               </button>
               <button
-                v-else-if="isFinishedCompressionStatus(taskForJob(group.taskId)?.status)"
+                v-if="group.taskId && isFinishedCompressionStatus(taskForJob(group.taskId)?.status)"
                 @click.stop="removeFinishedCompressionJob(group.taskId)"
                 class="text-muted hover:text-red-500 transition-colors"
                 title="清除任务"
@@ -742,8 +798,18 @@ const onDetailLeave = (element: Element) => {
                         {{ appStore.t('compress.config_submitted') }}
                       </span>
                     </h4>
+                    <div v-if="!group.taskId" class="config-mode-row">
+                      <span>{{ appStore.t('tasks.config.source') }}</span>
+                      <div class="config-mode-switch">
+                        <button type="button" :class="{ active: !group.settings }" @click="setGroupConfigurationMode(group, 'global')">{{ appStore.t('tasks.config.global') }}</button>
+                        <button type="button" :class="{ active: Boolean(group.settings) }" @click="setGroupConfigurationMode(group, 'individual')">{{ appStore.t('tasks.config.individual') }}</button>
+                      </div>
+                    </div>
+                    <Transition name="aero-drawer">
+                    <div v-if="group.settings || group.taskId">
                     <CompressionAnalysisCard
                       class="mb-4"
+                      compact
                       :job-id="group.id"
                       :paths="group.files.map(file => file.path)"
                       :model-value="compressionStore.getEffectiveSettings(group.settings)"
@@ -751,6 +817,7 @@ const onDetailLeave = (element: Element) => {
                       @update:model-value="compressionStore.updateGroupSettings(group.id, $event)"
                     />
                     <CompressionSettingsPanel
+                      compact
                       :modelValue="compressionStore.getEffectiveSettings(group.settings)"
                       :outputPath="compressionStore.getEffectiveOutputPath(group.outputPath)"
                       :allow-single-file-formats="canUseSingleFileFormats(group.files)"
@@ -759,7 +826,13 @@ const onDetailLeave = (element: Element) => {
                       @update:modelValue="compressionStore.updateGroupSettings(group.id, $event)"
                       @update:outputPath="compressionStore.updateGroupOutputPath(group.id, $event)"
                     />
-                    <ResourcePreflightCard :report="taskForJob(group.taskId)?.resourcePreflight" />
+                    <ResourcePreflightCard
+                      :report="taskForJob(group.taskId)?.resourcePreflight"
+                      class="compression-resource-preflight mt-3"
+                      compact
+                    />
+                    </div>
+                    </Transition>
                   </div>
 
                   <div class="space-y-2">
@@ -862,7 +935,7 @@ const onDetailLeave = (element: Element) => {
 
             <CompressionStatusCell :task="taskForJob(file.taskId)" />
 
-            <div class="compression-row-actions w-20 shrink-0 flex items-center justify-end">
+            <div class="compression-row-actions min-w-20 shrink-0 flex items-center justify-end">
               <button
                 v-if="!file.taskId"
                 @click.stop="compressionStore.removeFile(file.path)"
@@ -872,7 +945,23 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-times text-sm"></i>
               </button>
               <button
-                v-else-if="isActiveCompressionStatus(taskForJob(file.taskId)?.status)"
+                v-if="file.taskId && ['preparing', 'running', 'compressing', 'finalizing'].includes(taskForJob(file.taskId)?.status || '')"
+                @click.stop="taskStore.pauseTask(file.taskId)"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-amber-400 hover:text-amber-500 transition-all"
+                :title="appStore.t('tasks.pause_one')"
+              >
+                <i class="pi pi-pause text-sm"></i>
+              </button>
+              <button
+                v-if="file.taskId && taskForJob(file.taskId)?.status === 'paused'"
+                @click.stop="taskStore.resumeTask(file.taskId)"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-green-400 hover:text-green-500 transition-all"
+                :title="appStore.t('tasks.resume_one')"
+              >
+                <i class="pi pi-play text-sm"></i>
+              </button>
+              <button
+                v-if="file.taskId && isActiveCompressionStatus(taskForJob(file.taskId)?.status)"
                 data-testid="compression-job-cancel"
                 @click.stop="cancelCompressionTask(file.taskId)"
                 class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:text-red-500 transition-all"
@@ -881,7 +970,7 @@ const onDetailLeave = (element: Element) => {
                 <i class="pi pi-stop-circle text-sm"></i>
               </button>
               <button
-                v-else-if="isFinishedCompressionStatus(taskForJob(file.taskId)?.status)"
+                v-if="file.taskId && isFinishedCompressionStatus(taskForJob(file.taskId)?.status)"
                 @click.stop="removeFinishedCompressionJob(file.taskId)"
                 class="w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-red-500 transition-all"
                 title="清除任务"
@@ -921,8 +1010,18 @@ const onDetailLeave = (element: Element) => {
                         {{ appStore.t('compress.config_submitted') }}
                       </span>
                     </h4>
+                    <div v-if="!file.taskId" class="config-mode-row">
+                      <span>{{ appStore.t('tasks.config.source') }}</span>
+                      <div class="config-mode-switch">
+                        <button type="button" :class="{ active: !file.settings }" @click="setFileConfigurationMode(file, 'global')">{{ appStore.t('tasks.config.global') }}</button>
+                        <button type="button" :class="{ active: Boolean(file.settings) }" @click="setFileConfigurationMode(file, 'individual')">{{ appStore.t('tasks.config.individual') }}</button>
+                      </div>
+                    </div>
+                    <Transition name="aero-drawer">
+                    <div v-if="file.settings || file.taskId">
                     <CompressionAnalysisCard
                       class="mb-4"
+                      compact
                       :job-id="file.path"
                       :paths="[file.path]"
                       :model-value="compressionStore.getEffectiveSettings(file.settings)"
@@ -930,6 +1029,7 @@ const onDetailLeave = (element: Element) => {
                       @update:model-value="compressionStore.updateFileSettings(file.path, $event)"
                     />
                     <CompressionSettingsPanel
+                      compact
                       :modelValue="compressionStore.getEffectiveSettings(file.settings)"
                       :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"
                       :allow-single-file-formats="canUseSingleFileFormats([file])"
@@ -938,7 +1038,13 @@ const onDetailLeave = (element: Element) => {
                       @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
                       @update:outputPath="compressionStore.updateFileOutputPath(file.path, $event)"
                     />
-                    <ResourcePreflightCard :report="taskForJob(file.taskId)?.resourcePreflight" class="mt-4" />
+                    <ResourcePreflightCard
+                      :report="taskForJob(file.taskId)?.resourcePreflight"
+                      class="compression-resource-preflight mt-3"
+                      compact
+                    />
+                    </div>
+                    </Transition>
                   </div>
 
                   <CompressionExecutionPanel :task="taskForJob(file.taskId)" />
@@ -1217,13 +1323,65 @@ const onDetailLeave = (element: Element) => {
   letter-spacing: 0.16em;
 }
 
+.config-mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.config-mode-switch {
+  display: flex;
+  gap: 0.15rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  background: var(--bg-input);
+  padding: 0.15rem;
+}
+
+.config-mode-switch button {
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 850;
+  transition: all 0.18s ease;
+}
+
+.config-mode-switch button.active {
+  background: var(--dynamic-accent);
+  color: white;
+  box-shadow: 0 5px 14px -9px var(--dynamic-accent);
+}
+
 @media (max-width: 760px) {
   .compression-config-panel {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .compression-config-panel :deep(.settings-core-grid) {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+
+  .compression-config-panel :deep(.horizontal-settings) {
+    gap: 0.625rem;
+  }
+
+  .compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap) {
+    gap: 0.375rem;
+  }
+
+  .compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap > button) {
+    padding-inline: 0.625rem;
+  }
+
+  .compression-resource-preflight {
+    margin-top: 0.625rem;
   }
 
   .compression-table-header,
@@ -1248,7 +1406,7 @@ const onDetailLeave = (element: Element) => {
   }
 
   .compression-config-panel {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 }
 

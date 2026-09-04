@@ -10,6 +10,7 @@ import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
 import { open } from '@tauri-apps/api/dialog'
 import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
+import { sortTasksByName } from '@/utils/taskOrdering'
 
 const props = defineProps<{
   selectedTaskIds?: Set<string>
@@ -23,13 +24,14 @@ const emit = defineEmits<{
   'deselect-all': []
   'retry-with-password': [taskId: string]
   'cancel-task': [taskId: string]
+  'pause-task': [taskId: string]
+  'resume-task': [taskId: string]
+  'set-config-mode': [taskId: string, mode: 'global' | 'individual']
 }>()
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
 const passwordStore = usePasswordStore()
-const taskNameCollator = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' })
-
 const displayTasks = computed(() => {
   const typedTasks = props.taskType
     ? taskStore.tasks.filter(task => task.type === props.taskType)
@@ -40,9 +42,7 @@ const displayTasks = computed(() => {
         const filters = Array.isArray(props.statusFilter) ? props.statusFilter : [props.statusFilter]
         return filters.includes(task.status)
       })
-  return [...filteredTasks].sort((left, right) =>
-    taskNameCollator.compare(left.name || '', right.name || '') || left.id.localeCompare(right.id),
-  )
+  return sortTasksByName(filteredTasks)
 })
 const pendingDisplayTasks = computed(() => displayTasks.value.filter(task => task.status === 'pending'))
 const tauriCommands = useTauriCommands()
@@ -134,12 +134,13 @@ const handleSetSameDir = (task: Task) => {
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'pending': return '⏸️'
+    case 'pending': return '🕒'
     case 'preparing': return '⚙️'
     case 'running': return '▶️'
     case 'extracting': return '📦'
     case 'compressing': return '🗜️'
     case 'cancelling': return '⏳'
+    case 'paused': return '⏸️'
     case 'completed': return '✅'
     case 'failed': return '❌'
     case 'cancelled': return '⛔'
@@ -155,6 +156,7 @@ const getStatusColor = (status: string) => {
     case 'extracting': return 'text-blue-500 animate-pulse'
     case 'compressing': return 'text-blue-500 animate-pulse'
     case 'cancelling': return 'text-orange-400 animate-pulse'
+    case 'paused': return 'text-amber-400'
     case 'completed': return 'text-green-500'
     case 'failed': return 'text-red-500'
     case 'cancelled': return 'text-orange-500'
@@ -167,6 +169,7 @@ const getStatusText = (status: string) => {
 }
 
 const getStageText = (task: Task) => {
+  if (task.status === 'paused') return getStatusText(task.status)
   switch (task.stage) {
     case 'password-attempt': return '验证解压密码'
     case 'Pre-checking': return '执行预检'
@@ -333,7 +336,7 @@ const onLeave = (el: any) => {
 
               <!-- 进度百分比 -->
               <span
-                v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)"
+                v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'paused', 'cancelling'].includes(task.status)"
                 class="task-status-percent shrink-0 text-xs font-mono text-primary font-bold"
               >
                 <SmoothProgressValue :value="task.progress" />
@@ -363,7 +366,7 @@ const onLeave = (el: any) => {
             </div>
 
             <!-- 删除按钮 (仅 pending 状态可见) -->
-            <div class="w-6 flex justify-end" @click.stop>
+            <div class="flex min-w-[3.25rem] justify-end gap-1" @click.stop>
               <button
                 v-if="task.status === 'pending'"
                 @click="task.type === 'compression' ? emit('cancel-task', task.id) : handleRemoveTask(task.id)"
@@ -373,9 +376,25 @@ const onLeave = (el: any) => {
               </button>
               <button
                 v-else-if="['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(task.status)"
+                @click="emit('pause-task', task.id)"
+                :data-testid="`pause-archive-task-${task.id}`"
+                class="w-5 h-5 rounded-md flex items-center justify-center text-amber-400 hover:bg-amber-500/10 transition-all"
+                :title="appStore.t('tasks.pause_one')">
+                <i class="pi pi-pause text-xs"></i>
+              </button>
+              <button
+                v-else-if="task.status === 'paused'"
+                @click="emit('resume-task', task.id)"
+                :data-testid="`resume-archive-task-${task.id}`"
+                class="w-5 h-5 rounded-md flex items-center justify-center text-green-400 hover:bg-green-500/10 transition-all"
+                :title="appStore.t('tasks.resume_one')">
+                <i class="pi pi-play text-xs"></i>
+              </button>
+              <button
+                v-if="['preparing', 'running', 'compressing', 'extracting', 'finalizing', 'paused'].includes(task.status)"
                 @click="emit('cancel-task', task.id)"
                 class="w-5 h-5 rounded-md flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-all"
-                title="取消任务">
+                :title="appStore.t('tasks.stop_one')">
                 <i class="pi pi-stop-circle text-xs"></i>
               </button>
             </div>
@@ -406,11 +425,15 @@ const onLeave = (el: any) => {
                         <i class="pi pi-cog text-sm"></i>
                         {{ appStore.t('decompress.column.config') }}
                       </h4>
+                      <div v-if="task.type === 'decompression' && task.status === 'pending'" class="config-source-switch" @click.stop>
+                        <button type="button" :class="{ active: task.configurationMode === 'global' }" @click="emit('set-config-mode', task.id, 'global')">{{ appStore.t('tasks.config.global') }}</button>
+                        <button type="button" :class="{ active: task.configurationMode !== 'global' }" @click="emit('set-config-mode', task.id, 'individual')">{{ appStore.t('tasks.config.individual') }}</button>
+                      </div>
                     </div>
 
-                    <div v-if="task.type === 'decompression'" class="space-y-3.5">
+                    <div v-if="task.type === 'decompression'" class="space-y-3.5" :class="{ 'config-follows-global': task.configurationMode === 'global' }">
                       <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
-                      <div class="space-y-2">
+                      <div class="inherited-config-control space-y-2">
                         <div class="task-output-row flex min-w-0 items-center justify-between gap-3">
                           <span class="task-output-label text-muted text-xs uppercase font-black tracking-widest opacity-90 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
                           <div class="task-output-actions flex min-w-0 flex-wrap justify-end gap-1.5">
@@ -432,7 +455,7 @@ const onLeave = (el: any) => {
 
                       <ResourcePreflightCard :report="task.resourcePreflight" compact />
 
-                      <div class="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
+                      <div class="inherited-config-control flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
                         <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
                           <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
                                 :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
@@ -607,6 +630,7 @@ const onLeave = (el: any) => {
 </template>
 
 <style scoped>
+.config-source-switch{display:flex;flex:0 0 auto;gap:.15rem;border:1px solid var(--border-subtle);border-radius:.65rem;background:var(--bg-input);padding:.15rem}.config-source-switch button{border-radius:.5rem;padding:.3rem .55rem;color:var(--text-muted);font-size:.65rem;font-weight:850;transition:all .18s ease}.config-source-switch button.active{background:var(--dynamic-accent);color:#fff;box-shadow:0 5px 14px -9px var(--dynamic-accent)}.config-follows-global>.inherited-config-control{pointer-events:none;opacity:.58}
 .aero-table-container {
   /* 解决展开时滚动条出现导致的布局跳动 */
   min-width: 0;

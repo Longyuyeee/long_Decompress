@@ -561,7 +561,7 @@ describe('DecompressView', () => {
 
     const appStore = useAppStore()
     const cancelButton = wrapper.findAll('button').find(
-      button => button.text().includes(appStore.t('common.cancel')),
+      button => button.text().includes(appStore.t('decompress.stop_all')),
     )
     await cancelButton!.trigger('click')
     await flushPromises()
@@ -569,6 +569,61 @@ describe('DecompressView', () => {
     expect(cancelTask).toHaveBeenNthCalledWith(1, 'running-task')
     expect(cancelTask).toHaveBeenNthCalledWith(2, 'blocked-task')
     expect(appStore.error).toContain('1')
+    wrapper.unmount()
+  })
+
+  it('exposes an explicit global or individual configuration mode for extraction tasks', async () => {
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
+      name: 'configurable.zip',
+      path: 'C:/archives/configurable.zip',
+    }])
+    await flushPromises()
+
+    const task = useTaskStore().tasks[0]
+    expect(task.configurationMode).toBe('global')
+    wrapper.findComponent({ name: 'AeroTable' }).vm.$emit('set-config-mode', task.id, 'individual')
+    await nextTick()
+    expect(task.configurationMode).toBe('individual')
+
+    wrapper.findComponent({ name: 'AeroTable' }).vm.$emit('set-config-mode', task.id, 'global')
+    await nextTick()
+    expect(task.configurationMode).toBe('global')
+    expect(task.outputPath).toBe('C:/archives')
+    wrapper.unmount()
+  })
+
+  it('runs the queue in the same natural-name order shown by the task table', async () => {
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    const appStore = useAppStore()
+    appStore.updateSettings({ maxConcurrentTasks: 1 })
+    for (const [id, name] of [
+      ['third', '1 (3)-3.rar'],
+      ['first', '1 (1)-1.rar'],
+      ['second', '1 (2)-2.rar'],
+    ]) {
+      taskStore.addTask({
+        id,
+        name,
+        type: 'decompression',
+        sourceFiles: [`C:/archives/${name}`],
+        outputPath: `C:/outputs/${id}`,
+      })
+    }
+    await nextTick()
+
+    const startButton = wrapper.findAll('button').find(
+      button => button.text().includes(appStore.t('decompress.start_queue')),
+    )
+    await startButton!.trigger('click')
+    await flushPromises()
+
+    expect(mocks.decompressFile.mock.calls.map(([path]) => path)).toEqual([
+      'C:/archives/1 (1)-1.rar',
+      'C:/archives/1 (2)-2.rar',
+      'C:/archives/1 (3)-3.rar',
+    ])
     wrapper.unmount()
   })
 })
