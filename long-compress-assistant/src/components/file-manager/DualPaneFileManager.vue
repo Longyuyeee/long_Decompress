@@ -16,6 +16,8 @@ interface Location { name: string; path: string; kind: string }
 interface PaneState {
   id: 'left' | 'right'
   path: string
+  pathDraft: string
+  locationMenuOpen: boolean
   entries: LocalFileEntry[]
   selected: Set<string>
   history: string[]
@@ -39,7 +41,7 @@ const context = ref<{ pane: PaneState; entry: LocalFileEntry | null; x: number; 
 const properties = ref<any | null>(null)
 const editor = reactive<{ type: '' | 'rename' | 'mkdir' | 'delete'; pane: PaneState | null; entry: LocalFileEntry | null; value: string }>({ type: '', pane: null, entry: null, value: '' })
 
-const createPane = (id: 'left' | 'right'): PaneState => reactive({ id, path: '', entries: [], selected: new Set<string>(), history: [], historyIndex: -1, selectionMode: false, loading: false, error: '' })
+const createPane = (id: 'left' | 'right'): PaneState => reactive({ id, path: '', pathDraft: '', locationMenuOpen: false, entries: [], selected: new Set<string>(), history: [], historyIndex: -1, selectionMode: false, loading: false, error: '' })
 const left = createPane('left')
 const right = createPane('right')
 const otherPane = (pane: PaneState) => pane.id === 'left' ? right : left
@@ -70,16 +72,46 @@ const loadPane = async (pane: PaneState, path: string, pushHistory = true) => {
     const raw = await invoke<any[]>('list_files', { path })
     pane.entries = sortEntries(raw.map(normalizeEntry))
     pane.path = path
+    pane.pathDraft = path
+    pane.locationMenuOpen = false
     pane.selected = new Set()
     if (pushHistory && pane.history[pane.historyIndex] !== path) {
       pane.history = pane.history.slice(0, pane.historyIndex + 1)
       pane.history.push(path)
       pane.historyIndex = pane.history.length - 1
     }
+    return true
   } catch (error) {
     pane.error = String(error)
+    return false
   } finally { pane.loading = false }
 }
+
+const cleanPathInput = (value: string) => value.trim().replace(/^['"]|['"]$/g, '')
+const submitPath = async (pane: PaneState) => {
+  const path = cleanPathInput(pane.pathDraft)
+  if (!path) {
+    pane.pathDraft = pane.path
+    pane.locationMenuOpen = false
+    return
+  }
+  await loadPane(pane, path)
+}
+const selectLocation = async (pane: PaneState, path: string) => {
+  pane.pathDraft = path
+  await loadPane(pane, path)
+}
+const toggleLocationMenu = (pane: PaneState) => {
+  otherPane(pane).locationMenuOpen = false
+  pane.locationMenuOpen = !pane.locationMenuOpen
+}
+const cancelPathEditing = (pane: PaneState) => {
+  pane.pathDraft = pane.path
+  pane.locationMenuOpen = false
+}
+const locationIcon = (location: Location) => location.kind === 'drive'
+  ? 'pi pi-database'
+  : location.kind === 'home' ? 'pi pi-home' : 'pi pi-folder'
 
 const navigateHistory = (pane: PaneState, delta: number) => {
   const index = pane.historyIndex + delta
@@ -274,7 +306,12 @@ const chooseArchive = async () => {
 }
 
 const activePaneState = () => activePane.value === 'left' ? left : right
-const handleGlobalPointer = () => { context.value = null }
+const handleGlobalPointer = () => {
+  context.value = null
+  for (const pane of [left, right]) {
+    if (pane.locationMenuOpen) cancelPathEditing(pane)
+  }
+}
 const handleKeydown = (event: KeyboardEvent) => {
   const target = event.target
   const isEditable = target instanceof Element && target.matches('input, textarea, select, [contenteditable="true"]')
@@ -325,10 +362,47 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
           <button :disabled="pane.historyIndex <= 0" title="后退" @click="navigateHistory(pane, -1)"><i class="pi pi-arrow-left"></i></button>
           <button :disabled="pane.historyIndex >= pane.history.length - 1" title="前进" @click="navigateHistory(pane, 1)"><i class="pi pi-arrow-right"></i></button>
           <button :disabled="parentPath(pane.path) === pane.path" title="上一级" @click="loadPane(pane, parentPath(pane.path))"><i class="pi pi-arrow-up"></i></button>
-          <select :value="pane.path" title="常用位置与磁盘" @change="loadPane(pane, ($event.target as HTMLSelectElement).value)">
-            <option v-for="location in locations" :key="`${pane.id}-${location.path}`" :value="location.path">{{ location.name }} · {{ location.path }}</option>
-            <option v-if="!locations.some(item => item.path === pane.path)" :value="pane.path">{{ pane.path }}</option>
-          </select>
+          <div class="path-combobox" :class="{ open: pane.locationMenuOpen }" @pointerdown.stop>
+            <i class="pi pi-folder path-combobox-icon"></i>
+            <input
+              v-model="pane.pathDraft"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              :aria-label="`${pane.id === 'left' ? '左' : '右'}栏路径`"
+              :aria-expanded="pane.locationMenuOpen"
+              aria-haspopup="listbox"
+              :data-testid="`file-manager-path-input-${pane.id}`"
+              title="输入或粘贴路径，按 Enter 跳转"
+              @focus="pane.locationMenuOpen = true"
+              @keydown.enter.prevent="submitPath(pane)"
+              @keydown.esc.prevent="cancelPathEditing(pane)"
+            >
+            <button
+              type="button"
+              class="path-combobox-toggle"
+              :class="{ open: pane.locationMenuOpen }"
+              title="常用位置与磁盘"
+              :aria-label="pane.locationMenuOpen ? '收起常用位置' : '展开常用位置'"
+              @click="toggleLocationMenu(pane)"
+            ><i class="pi pi-chevron-down"></i></button>
+            <div v-if="pane.locationMenuOpen" class="location-menu" role="listbox" :aria-label="`${pane.id === 'left' ? '左' : '右'}栏常用位置`">
+              <div class="location-menu-heading"><span>常用位置</span><small>也可直接粘贴路径</small></div>
+              <button
+                v-for="location in locations"
+                :key="`${pane.id}-${location.path}`"
+                type="button"
+                role="option"
+                :aria-selected="location.path === pane.path"
+                :class="{ selected: location.path === pane.path }"
+                @click="selectLocation(pane, location.path)"
+              >
+                <i :class="locationIcon(location)"></i>
+                <span><strong>{{ location.name }}</strong><small>{{ location.path }}</small></span>
+                <i v-if="location.path === pane.path" class="pi pi-check selected-mark"></i>
+              </button>
+            </div>
+          </div>
           <button title="刷新" @click="loadPane(pane, pane.path, false)"><i :class="pane.loading ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i></button>
           <button title="新建文件夹" @click="beginEditor('mkdir', pane)"><i class="pi pi-plus"></i></button>
           <button class="selection-mode-button" :class="{ active: pane.selectionMode }" :title="pane.selectionMode ? '退出多选模式（Esc）' : '进入多选模式'" :aria-pressed="pane.selectionMode" :data-testid="`file-manager-selection-mode-${pane.id}`" @click="toggleSelectionMode(pane)"><i :class="pane.selectionMode ? 'pi pi-times' : 'pi pi-check-square'"></i></button>
@@ -416,11 +490,13 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
 .pane-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:.65rem; }
 .file-pane { min-width:0; min-height:0; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--border-subtle); border-radius:1rem; background:color-mix(in srgb,var(--bg-card) 92%,transparent); box-shadow:0 12px 32px rgb(0 0 0 / .08); }
 .file-pane.active { border-color:color-mix(in srgb,var(--dynamic-accent) 58%,var(--border-subtle)); box-shadow:0 0 0 1px color-mix(in srgb,var(--dynamic-accent) 18%,transparent),0 12px 32px rgb(0 0 0 / .1); }
-.pane-nav { display:flex; align-items:center; gap:.3rem; padding:.55rem; border-bottom:1px solid var(--border-subtle); }.pane-nav button{width:2.1rem;height:2.1rem;border-radius:.6rem;color:var(--text-muted)}.pane-nav button:hover:not(:disabled){background:var(--bg-input);color:var(--dynamic-accent)}.pane-nav button:disabled{opacity:.28}.pane-nav button.selection-mode-button.active{background:color-mix(in srgb,var(--dynamic-accent) 14%,transparent);color:var(--dynamic-accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dynamic-accent) 38%,transparent)}.pane-nav select{min-width:0;flex:1;height:2.1rem;padding:0 .55rem;border:1px solid var(--border-subtle);border-radius:.6rem;background:var(--bg-input);color:var(--text-content);font-size:.68rem;font-weight:750}
+.pane-nav { position:relative;display:flex; align-items:center; gap:.3rem; padding:.55rem; border-bottom:1px solid var(--border-subtle); }.pane-nav>button{width:2.1rem;height:2.1rem;border-radius:.6rem;color:var(--text-muted)}.pane-nav>button:hover:not(:disabled){background:var(--bg-input);color:var(--dynamic-accent)}.pane-nav>button:disabled{opacity:.28}.pane-nav>button.selection-mode-button.active{background:color-mix(in srgb,var(--dynamic-accent) 14%,transparent);color:var(--dynamic-accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dynamic-accent) 38%,transparent)}
+.path-combobox{position:relative;display:flex;min-width:5.5rem;height:2.1rem;flex:1;align-items:center;border:1px solid var(--border-subtle);border-radius:.65rem;background:var(--bg-input);transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease}.path-combobox:focus-within,.path-combobox.open{border-color:color-mix(in srgb,var(--dynamic-accent) 65%,var(--border-subtle));background:color-mix(in srgb,var(--dynamic-accent) 5%,var(--bg-input));box-shadow:0 0 0 3px color-mix(in srgb,var(--dynamic-accent) 10%,transparent)}.path-combobox-icon{flex:0 0 auto;margin-left:.65rem;color:var(--dynamic-accent);font-size:.7rem}.path-combobox input{min-width:0;height:100%;flex:1;border:0;background:transparent;padding:0 .45rem;color:var(--text-content);font-size:.67rem;font-weight:780;outline:none;text-overflow:ellipsis}.path-combobox input::selection{background:color-mix(in srgb,var(--dynamic-accent) 28%,transparent)}.path-combobox .path-combobox-toggle{display:grid;width:2rem;height:100%;flex:0 0 2rem;place-items:center;border-left:1px solid transparent;border-radius:0 .6rem .6rem 0;color:var(--text-muted);font-size:.55rem;transition:color .18s ease,background-color .18s ease}.path-combobox .path-combobox-toggle:hover,.path-combobox .path-combobox-toggle.open{background:color-mix(in srgb,var(--dynamic-accent) 10%,transparent);color:var(--dynamic-accent)}.path-combobox .path-combobox-toggle i{transition:transform .18s ease}.path-combobox .path-combobox-toggle.open i{transform:rotate(180deg)}
+.location-menu{position:absolute;z-index:30;top:calc(100% + .45rem);left:0;display:grid;width:max(100%,16rem);max-width:min(23rem,calc(100vw - 5rem));max-height:18rem;gap:.18rem;overflow-x:hidden;overflow-y:auto;border:1px solid color-mix(in srgb,var(--dynamic-accent) 25%,var(--border-subtle));border-radius:.8rem;background:color-mix(in srgb,var(--bg-card) 96%,transparent);padding:.4rem;box-shadow:0 18px 45px rgb(0 0 0 / .28);backdrop-filter:blur(18px)}.location-menu-heading{display:flex;align-items:center;justify-content:space-between;gap:.7rem;padding:.4rem .5rem .5rem;color:var(--text-content);font-size:.6rem;font-weight:900}.location-menu-heading small{color:var(--text-muted);font-size:.52rem;font-weight:700}.location-menu>button{display:grid;width:100%;min-height:2.45rem;grid-template-columns:1.5rem minmax(0,1fr) 1rem;align-items:center;gap:.45rem;border-radius:.58rem;padding:.35rem .45rem;color:var(--text-muted);text-align:left;transition:background-color .15s ease,color .15s ease}.location-menu>button:hover,.location-menu>button.selected{background:color-mix(in srgb,var(--dynamic-accent) 10%,transparent);color:var(--dynamic-accent)}.location-menu>button>i:first-child{display:grid;width:1.5rem;height:1.5rem;place-items:center;border-radius:.45rem;background:color-mix(in srgb,var(--dynamic-accent) 9%,transparent);color:var(--dynamic-accent);font-size:.67rem}.location-menu>button span{display:block;min-width:0}.location-menu strong,.location-menu small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.location-menu strong{color:var(--text-content);font-size:.65rem}.location-menu small{margin-top:.08rem;color:var(--text-muted);font-size:.54rem;font-weight:650}.location-menu .selected-mark{color:var(--dynamic-accent);font-size:.58rem}
 .path-strip { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.45rem; padding:.42rem .75rem; color:var(--text-muted); font-size:.64rem; border-bottom:1px solid color-mix(in srgb,var(--border-subtle) 70%,transparent); }.path-strip>i{color:var(--dynamic-accent)}.path-breadcrumbs{display:flex;min-width:0;align-items:center;gap:.1rem;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}.path-breadcrumbs::-webkit-scrollbar{display:none}.path-breadcrumbs>i{flex:0 0 auto;color:var(--text-muted);font-size:.5rem}.path-breadcrumbs button{flex:0 0 auto;max-width:9rem;overflow:hidden;border-radius:.45rem;padding:.28rem .38rem;color:var(--text-muted);font-size:.63rem;font-weight:800;text-overflow:ellipsis;white-space:nowrap}.path-breadcrumbs button:hover,.path-breadcrumbs button.current{background:color-mix(in srgb,var(--dynamic-accent) 9%,transparent);color:var(--dynamic-accent)}
 .file-head,.file-row { box-sizing:border-box;display:grid;grid-template-columns:minmax(9rem,1fr) 5rem 8rem;gap:.5rem;align-items:center; }.file-head{padding:.5rem .75rem;border-bottom:1px solid var(--border-subtle);color:var(--text-muted);font-size:.62rem;font-weight:900}.file-list{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}.file-row{width:100%;padding:.52rem .75rem;border-bottom:1px solid color-mix(in srgb,var(--border-subtle) 55%,transparent);color:var(--text-muted);font-size:.64rem;text-align:left}.file-row>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-row:hover{background:color-mix(in srgb,var(--dynamic-accent) 6%,transparent)}.file-row.selected{background:color-mix(in srgb,var(--dynamic-accent) 13%,transparent);outline:1px solid color-mix(in srgb,var(--dynamic-accent) 48%,transparent);outline-offset:-1px}.file-name{min-width:0;display:flex;align-items:center;gap:.6rem}.file-name>i{width:1.2rem;color:var(--dynamic-accent);font-size:1rem}.file-name strong,.file-name small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-name strong{color:var(--text-content);font-size:.72rem}.file-name small{margin-top:.12rem;color:var(--text-muted);font-size:.54rem}.pane-empty{height:100%;display:grid;place-items:center;align-content:center;gap:.6rem;color:var(--text-muted);font-size:.7rem}.pane-empty i{font-size:1.6rem;color:var(--dynamic-accent)}.pane-empty.error{padding:2rem;text-align:center;color:#ef4444}.file-pane>footer{display:flex;min-height:2rem;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem .7rem;border-top:1px solid var(--border-subtle);color:var(--text-muted);font-size:.6rem;font-weight:700}.file-pane>footer button{flex:0 0 auto;border-radius:.45rem;background:color-mix(in srgb,var(--dynamic-accent) 10%,transparent);padding:.25rem .45rem;color:var(--dynamic-accent);font-weight:850}
 .transfer-bar{display:flex;align-items:center;justify-content:flex-end;gap:.5rem}.transfer-bar>span{margin-right:auto;color:var(--text-muted);font-size:.7rem}.transfer-bar b{color:var(--dynamic-accent)}.transfer-bar button{height:2.45rem;padding:0 .8rem;border:1px solid var(--border-subtle);border-radius:.72rem;background:var(--bg-input);color:var(--text-content);font-size:.68rem;font-weight:850}.transfer-bar button:hover:not(:disabled){border-color:var(--dynamic-accent);color:var(--dynamic-accent)}.transfer-bar button:disabled{opacity:.35}
-@media(max-width:900px){.file-manager{overflow:hidden;padding:.65rem;gap:.55rem}.manager-header{gap:.65rem}.manager-header h1{font-size:1.15rem}.manager-header p{margin-top:.2rem;font-size:.6rem}.status-pill{display:none}.pane-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:.45rem}.pane-nav{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}.pane-nav button{flex:0 0 1.85rem;width:1.85rem;height:1.85rem}.pane-nav select{flex:1 0 5.5rem;height:1.85rem}.file-head,.file-row{grid-template-columns:minmax(0,1fr) 3.9rem}.file-head span:last-child,.file-row>span:last-child{display:none}.file-pane>footer span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.transfer-bar{gap:.35rem}.transfer-bar button{height:2.15rem;padding:0 .55rem}}
+@media(max-width:900px){.file-manager{overflow:hidden;padding:.65rem;gap:.55rem}.manager-header{gap:.65rem}.manager-header h1{font-size:1.15rem}.manager-header p{margin-top:.2rem;font-size:.6rem}.status-pill{display:none}.pane-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:.45rem}.pane-nav{overflow:visible}.pane-nav>button{flex:0 0 1.85rem;width:1.85rem;height:1.85rem}.path-combobox{height:1.85rem}.file-head,.file-row{grid-template-columns:minmax(0,1fr) 3.9rem}.file-head span:last-child,.file-row>span:last-child{display:none}.file-pane>footer span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.transfer-bar{gap:.35rem}.transfer-bar button{height:2.15rem;padding:0 .55rem}}
 @media(max-width:620px){.manager-actions>button{width:2.2rem;padding:0;justify-content:center}.manager-actions>button span{display:none}.file-head,.file-row{grid-template-columns:minmax(0,1fr)}.file-head span:nth-child(n+2),.file-row>span:nth-child(n+2){display:none}.path-strip{grid-template-columns:auto minmax(0,1fr)}.path-strip>span{display:none}.transfer-bar>span{display:none}.transfer-bar button{width:2.15rem;padding:0;justify-content:center}.transfer-bar button span{display:none}.transfer-bar button i{font-size:.8rem}.file-pane>footer{padding:.35rem .45rem}.file-pane>footer button{display:none}}
 </style>
 

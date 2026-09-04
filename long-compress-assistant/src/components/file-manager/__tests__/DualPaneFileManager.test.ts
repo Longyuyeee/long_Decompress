@@ -33,8 +33,8 @@ describe('DualPaneFileManager', () => {
     const wrapper = mount(DualPaneFileManager, { attachTo: document.body })
     await flushPromises()
     expect(wrapper.findAll('.file-pane')).toHaveLength(2)
-    expect(wrapper.text()).toContain('C:\\left')
-    expect(wrapper.text()).toContain('D:\\')
+    expect((wrapper.get('[data-testid="file-manager-path-input-left"]').element as HTMLInputElement).value).toBe('C:\\left')
+    expect((wrapper.get('[data-testid="file-manager-path-input-right"]').element as HTMLInputElement).value).toBe('D:\\')
     expect(wrapper.text()).toContain('photos.zip')
     expect(wrapper.text()).not.toContain('把压缩包拖到这里')
     wrapper.unmount()
@@ -93,6 +93,25 @@ describe('DualPaneFileManager', () => {
     await flushPromises()
     expect(invoke).toHaveBeenCalledWith('list_files', { path: 'D:\\' })
     wrapper.unmount()
+  })
+
+  it('uses a styled editable location picker and navigates pasted paths with Enter', async () => {
+    const wrapper = mount(DualPaneFileManager)
+    await flushPromises()
+    const input = wrapper.get('[data-testid="file-manager-path-input-left"]')
+    expect(input.attributes('title')).toContain('粘贴路径')
+
+    await input.trigger('focus')
+    expect(wrapper.findAll('.location-menu')).toHaveLength(1)
+    expect(wrapper.get('.location-menu').text()).toContain('主目录')
+    expect(wrapper.get('.location-menu').text()).toContain('D 盘')
+
+    await input.setValue('"E:\\Copied Path"')
+    await input.trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+    expect(invoke).toHaveBeenCalledWith('list_files', { path: 'E:\\Copied Path' })
+    expect((input.element as HTMLInputElement).value).toBe('E:\\Copied Path')
+    expect(wrapper.find('.location-menu').exists()).toBe(false)
   })
 
   it('uses directional move icons for left and right context menus', async () => {
