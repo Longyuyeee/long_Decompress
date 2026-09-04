@@ -1,13 +1,14 @@
 # 开发交接
 
-## 2026-09-04 v1.2.9 发布候选（最新接续点）
+## 2026-09-04 v1.2.9 正式发布关闭（最新接续点）
 
 - 从公开 `v1.2.8` 与最新 `master` 开始执行发布后总审计；标签后只有发布状态文档变化，没有隐藏的产品代码分叉，公开 Issues 为 0。
 - 队列顺序、并发与同目标安全串行、全局/单独配置来源、单项/全部暂停/恢复/停止和清理均完成真实复验，没有发现新的产品缺陷。
 - 本机门禁：生产依赖官方 npm 安全审计 0 漏洞；前端 56 文件 325/325、Chromium 13/13、集成 6/6、性能 17/17；Rust Release 主库 389 通过、10 项专用环境测试明确忽略，其余集成矩阵全部通过；壳扩展 5/5；主库与壳扩展严格 Clippy 通过。
 - 真实 Windows Tauri/WebView2 的 pause-control 与 archive-flow 均通过。首次桌面启动失败来自候选没有按 CI 注入 `VITE_DESKTOP_E2E=1`，按正式门禁重新构建后通过，不归因为产品缺陷。
-- 版本身份已提升为 `1.2.9`。后续严格顺序：生成版本化壳扩展 → 发布身份与候选构建 → 提交/推送 PR → 五项 CI → 合并 → annotated `v1.2.9` 标签 → Release workflow → 四项公开资产回下载与哈希/签名对账 → README/审计改为正式公开状态。
-- 说明见 [RELEASE_NOTES_1.2.9.md](RELEASE_NOTES_1.2.9.md)，候选与正式证据统一写入 [RELEASE_AUDIT_1.2.9.md](RELEASE_AUDIT_1.2.9.md)。
+- [PR #122](https://github.com/Longyuyeee/long_Decompress/pull/122) 的前端、Rust/壳扩展、浏览器 E2E、Windows 桌面 E2E 和安装器五项检查全部通过，并以 merge commit `76479f3d50eddd322437884dc597885ca10553f5` 合入 `master`；annotated `v1.2.9` 标签精确指向该提交。
+- [Release workflow 33843995836](https://github.com/Longyuyeee/long_Decompress/actions/runs/33843995836) 全绿；[v1.2.9 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.9) 已公开且非草稿、非预发布。安装器、updater ZIP、独立签名和 `latest.json` 四项资产已回下载，字节与 SHA-256 均匹配 GitHub 元数据；清单版本、URL 和签名逐项对账通过。
+- v1.2.9 发布阶段已关闭。下一轮开发必须从最新 `master` 开始，不得从 PR #122、候选分支或旧发布步骤接续；本机未执行会替换用户当前安装版本的安装/升级生命周期，该边界不冒充通过。说明见 [RELEASE_NOTES_1.2.9.md](RELEASE_NOTES_1.2.9.md)，完整证据见 [RELEASE_AUDIT_1.2.9.md](RELEASE_AUDIT_1.2.9.md)。
 
 ## 2026-09-04 v1.2.8 正式发布关闭（历史基线）
 

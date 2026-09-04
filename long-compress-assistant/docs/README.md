@@ -5,8 +5,8 @@
 ## 当前接续入口
 
 - [`DEVELOPMENT_HANDOFF.md`](DEVELOPMENT_HANDOFF.md)：跨电脑开发接续总入口，最新记录在文件顶部。
-- [`RELEASE_NOTES_1.2.9.md`](RELEASE_NOTES_1.2.9.md) / [`RELEASE_AUDIT_1.2.9.md`](RELEASE_AUDIT_1.2.9.md)：v1.2.9 维护候选的发布后总审计、真实归档控制复验与发布证据入口。
-- [`RELEASE_NOTES_1.2.8.md`](RELEASE_NOTES_1.2.8.md) / [`RELEASE_AUDIT_1.2.8.md`](RELEASE_AUDIT_1.2.8.md)：当前公开稳定版 v1.2.8 的归档队列、配置、暂停控制和正式发布证据。
+- [`RELEASE_NOTES_1.2.9.md`](RELEASE_NOTES_1.2.9.md) / [`RELEASE_AUDIT_1.2.9.md`](RELEASE_AUDIT_1.2.9.md)：当前公开稳定版 v1.2.9 的发布后总审计、真实归档控制复验和正式发布证据。
+- [`RELEASE_NOTES_1.2.8.md`](RELEASE_NOTES_1.2.8.md) / [`RELEASE_AUDIT_1.2.8.md`](RELEASE_AUDIT_1.2.8.md)：历史稳定版 v1.2.8 的归档队列、配置、暂停控制和正式发布证据。
 - [`ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md`](ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md)：归档顺序、并发、配置来源、停止及暂停/恢复的最终实现和真实证据。
 - [`WORKSPACE_DENSITY_AND_DUAL_PANE_AUDIT_2026-09-03.md`](WORKSPACE_DENSITY_AND_DUAL_PANE_AUDIT_2026-09-03.md)：当前省略文本完整提示、三个核心工作区密度和窄窗口双栏固定布局审计。
 - [`DECOMPRESSION_TASK_LAYOUT_AUDIT_2026-09-03.md`](DECOMPRESSION_TASK_LAYOUT_AUDIT_2026-09-03.md)：v1.2.6 后续任务名称、状态对齐、自然排序、存储预检和低高度版本徽标修复审计。
