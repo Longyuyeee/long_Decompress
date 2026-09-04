@@ -7,6 +7,7 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import Modal from '@/components/ui/Modal.vue'
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
+import OverflowTooltip from '@/components/ui/OverflowTooltip.vue'
 import { open } from '@tauri-apps/api/dialog'
 import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
@@ -295,7 +296,12 @@ const onLeave = (el: any) => {
 
             <!-- 文件识别区 (极致紧凑) -->
             <div class="task-name-cell min-w-0 overflow-hidden flex items-center gap-3">
-              <div class="min-w-0 flex-1 text-content font-bold truncate text-sm tracking-tight group-hover/row:text-primary transition-colors leading-tight" :title="task.name">{{ task.name }}</div>
+              <OverflowTooltip
+                :text="task.name"
+                class="min-w-0 flex-1 text-content font-bold text-sm tracking-tight group-hover/row:text-primary transition-colors leading-tight"
+              >
+                {{ task.name }}
+              </OverflowTooltip>
               <span class="text-dim text-sm uppercase font-black tracking-widest bg-input/50 px-1 py-0 rounded border border-subtle/20 shrink-0">
                 {{ task.format?.toUpperCase() }}
               </span>

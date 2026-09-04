@@ -29,9 +29,10 @@ describe('AeroTable', () => {
       global: { plugins: [pinia], stubs: { Transition: false, TransitionGroup: false } },
     })
 
-    const names = wrapper.findAll('.task-name-cell > div').map(item => item.text())
+    const nameCells = wrapper.findAll('.task-name-cell > .overflow-tooltip-anchor')
+    const names = nameCells.map(item => item.text())
     expect(names).toEqual(['福建兄弟视频-2.rar', '福建兄弟视频-10.rar', '福建兄弟视频-20.rar'])
-    expect(wrapper.findAll('.task-name-cell > div').map(item => item.attributes('title'))).toEqual(names)
+    expect(nameCells.every(item => item.attributes('title') === undefined)).toBe(true)
     expect(wrapper.findAll('[data-testid="task-row"]').every(row => row.classes().includes('grid'))).toBe(true)
   })
 
