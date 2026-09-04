@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-09-05 v1.3.2 正式发布关闭（最新接续点）
+
+- [PR #124](https://github.com/Longyuyeee/long_Decompress/pull/124) 已合入 `master@4cc792ef9b1e754112e07a707c2facecf7560eae`；annotated `v1.3.2` 标签精确指向该提交。
+- [Release workflow 33908245518](https://github.com/Longyuyeee/long_Decompress/actions/runs/33908245518) 用时 15 分 22 秒并成功完成；[v1.3.2 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.2) 已公开、非草稿、非预发布，安装器、updater ZIP、签名和 `latest.json` 四项资产齐全。
+- 本机同批 12 个近期损坏 RAR 真实目录探测 12/12 直接报告损坏或不完整，0 个进入密码搜索；以后所有失败任务均保证错误摘要和最后一条“最终失败原因”日志。修复前错误原文为空的旧历史不能逆向恢复。
+- v1.3.2 阶段已经关闭。下一轮必须从最新 `master` 开始，不得从 PR #124 功能分支或发布标签继续提交。完整证据见 [RELEASE_AUDIT_1.3.2.md](RELEASE_AUDIT_1.3.2.md)。
+
 ## 2026-09-05 失败任务最终原因与损坏 RAR 识别（最新接续点）
 
 - 修复完成后版本身份提升为 `1.3.2`，版本化 Shell 扩展为 `long_compress_shell_extension_1_3_2.dll`；发布标签必须为 annotated `v1.3.2`。
