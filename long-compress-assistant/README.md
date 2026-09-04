@@ -4,7 +4,7 @@
 
 ## 当前开发能力
 
-> 当前发布候选：`v1.2.8`。本版本统一归档显示与执行顺序，明确并发和全局/单独配置来源，并交付真正作用于原生读写和 Windows 外部归档进程的暂停、恢复与停止控制。Windows N 暂不支持，Windows 11 第一层菜单仍受代码签名身份限制。
+> 当前公开稳定版：[`v1.2.8`](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.8)。本版本统一归档显示与执行顺序，明确并发和全局/单独配置来源，并交付真正作用于原生读写和 Windows 外部归档进程的暂停、恢复与停止控制。Windows N 暂不支持，Windows 11 第一层菜单仍受代码签名身份限制。
 
 - 发布后开发分支已完成 S-00.1 至 S-00.4 及跨步骤总验收：Windows 使用当前用户 DPAPI 保护随机安装密钥，解压密码正文以 AES-256-GCM 保存；活动接口、搜索与统计收敛为归档密码语义；任务与历史数据源已分离，格式支持证据和仓库卫生已对齐。真实桌面门禁验证旧数据迁移、磁盘无密码明文、应用完全重启后命中加密 7Z 并更新当天趋势，正式 NSIS 安装态矩阵 48/48 通过。S-00 未单独提升公开版本，随后进入了不接入媒体引擎的 B-00 架构门禁。
 - B-00.1 已完成统一任务/历史模型的向后兼容扩展：保留 `compression | decompression` 顶层类型，增加可选 `archive | image | video | pdf` 工作负载和版本化实测指标。真实用户数据库快照的 4 条历史已从 schema 6 无损迁移到 7，原库字节不变；未新增媒体页面或引擎。
@@ -60,7 +60,7 @@
 - 行内、工具栏和左下任务监控提供单项/全部暂停与恢复。原生归档读写、密码保险箱/词表、ZIP/7Z 密码验证、完整性校验和发布前检查都在安全点等待。
 - Windows 外部 7-Zip、WinRAR/RAR 和分卷进程使用系统级挂起与恢复；停止会唤醒暂停任务、清理暂存并让队列接续。
 - 真实 Windows 子进程、Tauri/WebView2 控件和完整 archive-flow 已验证；特殊压缩不会显示不具备后端协议的伪暂停。
-- 详见 [v1.2.8 Release notes](docs/RELEASE_NOTES_1.2.8.md)、[归档控制审计](docs/ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md)和[发布审计](docs/RELEASE_AUDIT_1.2.8.md)。
+- 详见 [v1.2.8 Release notes](docs/RELEASE_NOTES_1.2.8.md)、[归档控制审计](docs/ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md)和[发布审计](docs/RELEASE_AUDIT_1.2.8.md)。[v1.2.8 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.8) 提供 Windows 安装包和签名自动更新资产。
 
 ## v1.2.7 任务布局、完整提示与固定双栏
 

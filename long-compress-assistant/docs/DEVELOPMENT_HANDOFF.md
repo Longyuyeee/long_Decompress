@@ -1,13 +1,14 @@
 # 开发交接
 
-## 2026-09-04 v1.2.8 归档任务控制收口（最新接续点）
+## 2026-09-04 v1.2.8 正式发布关闭（最新接续点）
 
 - 归档自然排序、并发上限、同目标安全串行、全局/单独配置来源和默认设置已对齐；实际执行顺序不再与列表顺序分离。
 - 真正暂停/恢复已贯通原生读写、密码尝试、完整性校验、发布前检查及 Windows 外部归档进程。停止会唤醒暂停任务、清理未发布输出并释放队列；特殊压缩不显示伪造的归档暂停。
-- 类型检查、前端 303/303、严格 Clippy、Rust 全量、真实 Windows 子进程暂停、真实 Tauri/WebView2 暂停控制和 archive-flow 均通过。原生 RAR 只在条目边界安全暂停，外部 RAR 可即时挂起。
-- 版本身份已提升至 `1.2.8`，Release notes 与候选审计已建立。下一步只需完成 NSIS 候选产物记录、提交推送、PR/CI、合并、`v1.2.8` 标签、Release workflow 和公开资产回下载；不得从旧的 P0 暂停设计重新开始。完整范围见 [ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md](ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md)，发布状态见 [RELEASE_AUDIT_1.2.8.md](RELEASE_AUDIT_1.2.8.md)。
+- 类型检查、前端 303/303、严格 Clippy、Rust 全量、真实 Windows 子进程暂停、真实 Tauri/WebView2 暂停控制和 archive-flow 均通过。PR #121 的前端、Rust/壳扩展、浏览器 E2E、Windows 桌面 E2E 和安装器五项远端检查全绿；原生 RAR 只在条目边界安全暂停，外部 RAR 可即时挂起。
+- PR #121 已合入 `master@bdaf708228d0485b5fdb211c1b17100c9b9feedd`，annotated `v1.2.8` 标签指向该提交。[Release workflow 33837785345](https://github.com/Longyuyeee/long_Decompress/actions/runs/33837785345) 全绿，[v1.2.8 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.2.8) 已公开且四项资产完成回下载哈希、版本、URL 与签名对账。
+- v1.2.8 发布阶段已关闭。下一轮开发必须从最新 `master` 开始，不得从旧 P0 暂停设计或候选发布步骤重新开始；本机未执行会替换用户正式安装的安装/升级生命周期，该边界不冒充通过。完整范围见 [ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md](ARCHIVE_QUEUE_CONFIGURATION_CONTROL_AUDIT_2026-09-04.md)，正式证据见 [RELEASE_AUDIT_1.2.8.md](RELEASE_AUDIT_1.2.8.md)。
 
-## 2026-09-04 归档队列、配置来源与停止语义（最新接续点）
+## 2026-09-04 归档队列、配置来源与停止语义（历史，已由上方正式发布关闭取代）
 
 - 解压列表和真实执行队列已统一使用中文数字自然排序；排队停止不会调用不存在的后端进程，单项停止事件已接线，全局停止会同时通知全部运行任务并结束等待任务。
 - 解压与压缩均新增显式“全局 / 单独”配置来源；设置中心新增持久化默认压缩格式、等级和解压同名文件夹。并发设置本身有效，但同一最终输出目录继续按事务安全边界串行。
