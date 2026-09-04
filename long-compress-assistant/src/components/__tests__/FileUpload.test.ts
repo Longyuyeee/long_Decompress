@@ -175,4 +175,27 @@ describe('EnhancedFileDropzone', () => {
       { name: 'animated.gif', path: 'C:/images/animated.gif', size: 3072, type: 'file', isDirectory: false }
     ])
   })
+
+  it('passes supported extensions to the native file picker by default', async () => {
+    mocks.open.mockResolvedValueOnce(null)
+    const wrapper = mount(EnhancedFileDropzone, {
+      props: {
+        accept: '.zip,.7z,.rar,.001,.z01,.r00',
+        pickerTitle: '选择压缩包',
+      },
+    })
+
+    await wrapper.trigger('click')
+    await flushPromises()
+
+    expect(mocks.open).toHaveBeenCalledWith({
+      directory: false,
+      multiple: true,
+      title: '选择压缩包',
+      filters: [{
+        name: 'Archives',
+        extensions: ['zip', '7z', 'rar', '001', 'z01', 'r00'],
+      }],
+    })
+  })
 })

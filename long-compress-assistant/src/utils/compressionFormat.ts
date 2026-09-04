@@ -119,7 +119,17 @@ export const isPotentialSplitArchivePath = (path: string) => {
     || /\.part\d+(?:\.rar)?$/.test(normalizedPath)
 }
 
-export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_EXTENSIONS
+// Native pickers cannot express the full split-volume patterns used by the
+// runtime detector. Include the conventional first-volume suffixes so users
+// can still select a split archive while unrelated files remain hidden.
+export const DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS = [
+  ...DECOMPRESS_ARCHIVE_EXTENSIONS,
+  '001',
+  'z01',
+  'r00',
+]
+
+export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS
   .map(extension => `.${extension}`)
   .join(',')
 

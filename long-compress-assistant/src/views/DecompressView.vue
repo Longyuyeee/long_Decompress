@@ -599,7 +599,9 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           <EnhancedFileDropzone
             @files-selected="onFilesSelected"
             :accept="supportedArchiveAccept"
-            :unfiltered-picker="true"
+            :hint="appStore.t('decompress.drop_hint')"
+            :sub-hint="supportedArchiveHint"
+            picker-title="选择压缩包"
             class="w-full max-w-lg shadow-sm"
           />
         </div>
@@ -686,7 +688,9 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           @files-selected="onFilesSelected"
           :compact="true"
           :accept="supportedArchiveAccept"
-          :unfiltered-picker="true"
+          :hint="appStore.t('compress.add_files')"
+          :sub-hint="supportedArchiveHint"
+          picker-title="选择压缩包"
           class="flex-1 min-w-[8rem] h-9"
         />
       </div>
