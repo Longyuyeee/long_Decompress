@@ -177,8 +177,9 @@ const retryTask = async (task: Task) => {
       taskStore.updateTaskStatus(task.id, 'completed')
     }
   } catch (error) {
-    taskStore.updateTaskStatus(task.id, 'failed')
-    appStore.setError(`${appStore.t('common.error')}: ${extractErrorMessage(error)}`)
+    const finalReason = extractErrorMessage(error)
+    taskStore.failTask(task.id, finalReason)
+    appStore.setError(`${appStore.t('common.error')}: ${finalReason}`)
   } finally {
     retryingTaskId.value = null
   }

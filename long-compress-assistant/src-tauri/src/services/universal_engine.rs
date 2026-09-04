@@ -303,13 +303,6 @@ impl UniversalCliEngine {
         let combined = format!("{}\n{}", stdout, stderr);
         let stderr_lower = stderr.to_ascii_lowercase();
 
-        if stdout.lines().any(|line| {
-            line.split_once(" = ")
-                .is_some_and(|(key, value)| key.trim() == "Encrypted" && value.trim() == "+")
-        }) {
-            return Ok(true);
-        }
-
         if [
             "cannot open encrypted archive",
             "can not open encrypted archive",
@@ -323,6 +316,9 @@ impl UniversalCliEngine {
             return Ok(true);
         }
 
+        // A truncated RAR can expose an encrypted entry before 7-Zip exits
+        // with an error. Partial metadata is not proof that password discovery
+        // is the correct next action; preserve the corruption result instead.
         if !succeeded {
             return Err(anyhow::anyhow!(
                 "Unable to inspect archive encryption metadata: {}",
@@ -330,7 +326,10 @@ impl UniversalCliEngine {
             ));
         }
 
-        Ok(false)
+        Ok(stdout.lines().any(|line| {
+            line.split_once(" = ")
+                .is_some_and(|(key, value)| key.trim() == "Encrypted" && value.trim() == "+")
+        }))
     }
 
     /// 列出归档文件中的内容条目（通过 7z CLI 的 l 命令）
@@ -804,6 +803,33 @@ mod tests {
             "ERROR: Wrong password",
         )
         .expect("password error"));
+    }
+
+    #[test]
+    fn damaged_partial_rar_listing_cannot_start_password_discovery() {
+        let error = UniversalCliEngine::encryption_state_from_listing_text(
+            false,
+            "Path = partial.bin\nEncrypted = +",
+            "Unexpected end of archive",
+        )
+        .expect_err("partial encrypted metadata must remain a corruption error");
+
+        assert!(error.to_string().contains("Unexpected end of archive"));
+    }
+
+    #[tokio::test]
+    #[ignore = "requires LONG_REAL_DAMAGED_RAR and reads the archive directory only"]
+    async fn real_damaged_rar_does_not_start_password_discovery() {
+        let archive = std::env::var("LONG_REAL_DAMAGED_RAR")
+            .expect("set LONG_REAL_DAMAGED_RAR to a damaged RAR");
+        let error = UniversalCliEngine::new()
+            .requires_password(Path::new(&archive))
+            .await
+            .expect_err("damaged RAR listing must not be accepted as encrypted metadata");
+
+        assert!(error
+            .to_string()
+            .contains("Unable to inspect archive encryption metadata"));
     }
 
     #[tokio::test]

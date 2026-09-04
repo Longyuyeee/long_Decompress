@@ -120,6 +120,11 @@ describe('useTauriCommands', () => {
       name: 'demo.zip',
       status: 'failed',
       progress: 0,
+      error: 'disk full',
+    })
+    expect(tasks.tasks[0].logs.at(-1)).toMatchObject({
+      message: '最终失败原因：disk full',
+      severity: 'error',
     })
     expect(mocks.invoke).toHaveBeenCalledWith('extract_file', expect.objectContaining({
       filePath: 'C:/archives/demo.zip',

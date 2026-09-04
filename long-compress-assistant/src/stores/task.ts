@@ -93,6 +93,29 @@ export const useTaskStore = defineStore('task', () => {
   const tasksFor = (type: TaskType) => tasks.value.filter(task => task.type === type)
   let listenerInitialization: Promise<void> | null = null
   const historyPersistence = new Map<string, Promise<boolean>>()
+  const missingFailureReason = '任务失败：执行流程未返回具体错误原因'
+
+  const persistTerminalHistory = (task: Task) => {
+    const historyRecord = createTaskHistoryRecord(task)
+    historyPersistence.set(task.id, invoke('save_task_history', { record: historyRecord })
+      .then(() => true)
+      .catch((error) => {
+        console.warn('Failed to persist task history:', error)
+        return false
+      }))
+  }
+
+  const setFinalFailureReason = (task: Task, reason?: unknown) => {
+    const normalized = String(reason ?? '').trim() || missingFailureReason
+    task.error = normalized
+    task.logs = task.logs.filter(log => !log.message.startsWith('最终失败原因：'))
+    task.logs.push({
+      task_id: task.id,
+      message: `最终失败原因：${normalized}`,
+      severity: 'error',
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   // 初始化监听器
   const initListeners = () => {
@@ -277,6 +300,7 @@ export const useTaskStore = defineStore('task', () => {
       const terminalStatuses: TaskStatus[] = ['completed', 'failed', 'cancelled']
       if (task.status === status
         || (terminalStatuses.includes(task.status) && terminalStatuses.includes(status))) return
+      if (status === 'failed') setFinalFailureReason(task, task.error)
       task.status = status
       if (['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(status) && !task.startTime) {
         task.startTime = new Date()
@@ -286,15 +310,21 @@ export const useTaskStore = defineStore('task', () => {
         task.endTime = new Date()
         task.speed = undefined
         task.etaSeconds = undefined
-        const historyRecord = createTaskHistoryRecord(task)
-        historyPersistence.set(taskId, invoke('save_task_history', { record: historyRecord })
-          .then(() => true)
-          .catch((error) => {
-            console.warn('Failed to persist task history:', error)
-            return false
-          }))
+        persistTerminalHistory(task)
       }
     }
+  }
+
+  const failTask = (taskId: string, reason?: unknown) => {
+    const task = tasks.value.find(item => item.id === taskId)
+    if (!task || ['completed', 'cancelled'].includes(task.status)) return
+    setFinalFailureReason(task, reason)
+    if (task.status === 'failed') {
+      task.endTime ||= new Date()
+      persistTerminalHistory(task)
+      return
+    }
+    updateTaskStatus(taskId, 'failed')
   }
 
   const waitForHistoryPersistence = (taskId: string) => historyPersistence.get(taskId) || Promise.resolve(true)
@@ -398,6 +428,7 @@ export const useTaskStore = defineStore('task', () => {
     initListeners,
     addTask,
     updateTaskStatus,
+    failTask,
     waitForHistoryPersistence,
     removeTask,
     clearFinishedTasks,

@@ -210,6 +210,21 @@ fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, S
     record.error_message = record.error_message.map(|value| {
         truncate_text(redact_sensitive_text(value.trim()).trim())
     });
+    if record.status == "failed" {
+        let reason = record
+            .error_message
+            .as_deref()
+            .filter(|value| !value.is_empty())
+            .unwrap_or("任务失败：执行流程未返回具体错误原因")
+            .to_string();
+        record.error_message = Some(reason.clone());
+        record.logs.retain(|log| !log.message.starts_with("最终失败原因："));
+        record.logs.push(TaskHistoryLog {
+            timestamp: record.completed_at.clone(),
+            message: format!("最终失败原因：{reason}"),
+            severity: "error".to_string(),
+        });
+    }
     record.source_paths = record
         .source_paths
         .into_iter()
@@ -440,6 +455,40 @@ pub async fn clear_task_history() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn failed_history_always_ends_with_a_final_reason() {
+        let record = TaskHistoryRecord {
+            id: "failed-task".into(),
+            name: "damaged.rar".into(),
+            task_type: "decompression".into(),
+            workload_kind: "archive".into(),
+            metrics: None,
+            status: "failed".into(),
+            source_paths: vec!["C:/damaged.rar".into()],
+            output_path: "C:/output".into(),
+            format: Some("rar".into()),
+            started_at: None,
+            completed_at: Utc::now().to_rfc3339(),
+            duration_ms: 10,
+            processed_bytes: 0,
+            total_bytes: 0,
+            error_message: None,
+            logs: vec![TaskHistoryLog {
+                timestamp: "now".into(),
+                message: "正在检测归档".into(),
+                severity: "info".into(),
+            }],
+        };
+
+        let sanitized = sanitize_record(record).expect("failed history should be accepted");
+        assert!(sanitized.error_message.as_deref().is_some_and(|reason| {
+            reason.contains("未返回具体错误原因")
+        }));
+        assert!(sanitized.logs.last().is_some_and(|log| {
+            log.severity == "error" && log.message.starts_with("最终失败原因：")
+        }));
+    }
 
     #[test]
     fn sanitizes_sensitive_logs_and_limits_payload() {

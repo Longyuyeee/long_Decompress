@@ -1958,10 +1958,12 @@ impl CompressionService {
                 TaskLogSeverity::Info,
             );
             Some(service.archive_requires_password(&file_path, format.clone()).await.map_err(|err| {
-                CompressionError::ExtractionFailed(format!(
-                    "Unable to determine archive encryption state safely: {}",
-                    err
-                ))
+                let message = if format == ArchiveFormat::Rar {
+                    format!("RAR 文件损坏或不完整，无法读取完整目录：{}", err)
+                } else {
+                    format!("Unable to determine archive encryption state safely: {}", err)
+                };
+                CompressionError::ExtractionFailed(message)
             })?)
         } else {
             None

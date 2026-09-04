@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-09-05 失败任务最终原因与损坏 RAR 识别（最新接续点）
+
+- 近期损坏 RAR 能暴露部分 `Encrypted = +` 元数据、但列表命令最终以非零状态结束；旧顺序先信任元数据，错误进入密码尝试。现已改为先确认列表完整成功，纯密码错误仍进入解锁，其他非零结果明确归类为 RAR 损坏或不完整。
+- 所有任务失败现在先写错误摘要，再追加最后一条“最终失败原因”日志，最后落入终态并持久化；后端命令和历史保存层各有一层兜底，失败记录不再只有状态而没有原因。
+- 本机同批 12 个近期损坏 RAR 真实目录探测 12/12 直接报告损坏、0 个进入密码搜索；前端相关 29/29、后端损坏分类与历史兜底测试、类型检查及严格 Clippy 均通过。
+- 完整实现与证据见 [FAILED_TASK_FINAL_REASON_AUDIT_2026-09-05.md](FAILED_TASK_FINAL_REASON_AUDIT_2026-09-05.md)。
+
 ## 2026-09-05 v1.3.1 RAR 密码判定补丁（最新接续点）
 
 - [PR #123](https://github.com/Longyuyeee/long_Decompress/pull/123) 已合入 `master@b4efcfb1a18dc0b68c7d603a070ad4b634c7dad6`；annotated `v1.3.1` 标签指向该提交。[Release workflow 33904390189](https://github.com/Longyuyeee/long_Decompress/actions/runs/33904390189) 全绿，公开 Release 非草稿、非预发布，安装器、updater ZIP、签名和 `latest.json` 四项资产齐全。

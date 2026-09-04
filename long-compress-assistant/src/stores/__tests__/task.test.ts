@@ -30,6 +30,55 @@ describe('task progress state machine', () => {
     expect(mocks.invoke).not.toHaveBeenCalledWith('list_task_history', expect.anything())
   })
 
+  it('persists every failure with an explicit final reason and terminal log', async () => {
+    const store = useTaskStore()
+    store.addTask({
+      id: 'damaged-rar',
+      name: 'damaged.rar',
+      type: 'decompression',
+      sourceFiles: ['C:/archives/damaged.rar'],
+      outputPath: 'C:/output',
+    })
+
+    store.failTask('damaged-rar', 'RAR 文件损坏或不完整')
+    await store.waitForHistoryPersistence('damaged-rar')
+
+    expect(store.tasks[0]).toMatchObject({
+      status: 'failed',
+      error: 'RAR 文件损坏或不完整',
+    })
+    expect(store.tasks[0].logs.at(-1)).toMatchObject({
+      message: '最终失败原因：RAR 文件损坏或不完整',
+      severity: 'error',
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('save_task_history', {
+      record: expect.objectContaining({
+        status: 'failed',
+        errorMessage: 'RAR 文件损坏或不完整',
+        logs: expect.arrayContaining([
+          expect.objectContaining({ message: '最终失败原因：RAR 文件损坏或不完整' }),
+        ]),
+      }),
+    })
+  })
+
+  it('uses a visible fallback when a caller omits the failure reason', async () => {
+    const store = useTaskStore()
+    store.addTask({
+      id: 'unknown-failure',
+      name: 'unknown.zip',
+      type: 'decompression',
+      sourceFiles: ['C:/archives/unknown.zip'],
+      outputPath: 'C:/output',
+    })
+
+    store.updateTaskStatus('unknown-failure', 'failed')
+    await store.waitForHistoryPersistence('unknown-failure')
+
+    expect(store.tasks[0].error).toContain('未返回具体错误原因')
+    expect(store.tasks[0].logs.at(-1)?.message).toContain('最终失败原因：')
+  })
+
   it('cancels a queued task locally without calling a backend process', async () => {
     const store = useTaskStore()
     store.addTask({
