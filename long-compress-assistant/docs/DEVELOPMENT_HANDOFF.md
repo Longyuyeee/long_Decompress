@@ -2,10 +2,11 @@
 
 ## 2026-09-05 v1.3.1 RAR 密码判定补丁（最新接续点）
 
+- [PR #123](https://github.com/Longyuyeee/long_Decompress/pull/123) 已合入 `master@b4efcfb1a18dc0b68c7d603a070ad4b634c7dad6`；annotated `v1.3.1` 标签指向该提交。[Release workflow 33904390189](https://github.com/Longyuyeee/long_Decompress/actions/runs/33904390189) 全绿，公开 Release 非草稿、非预发布，安装器、updater ZIP、签名和 `latest.json` 四项资产齐全。
 - 本机历史界面识别到 29 条解压失败记录，对应 18 个去重 RAR；其中 4 个源文件已不存在，14 个仍可读取。审计没有写入文件名、路径或密码正文。
 - 对 14 个仍存在的源文件逐项执行无落盘完整读取：13 个加密 RAR 与当前保险箱候选不匹配，修复版均直接返回无匹配候选，不再先提示“找到密码”；另 1 个未加密 RAR 的 168 个条目完整读取成功，历史失败发生在后续输出提交阶段，与密码判定缺陷无关。
 - 修复代码的 Rust 主库 389/389、RAR 聚焦 3/3、固定真实加密 RAR 错误/正确密码与完整解压、自动密码来源 6/6、严格 Clippy 均通过。版本身份提升为 `1.3.1`，版本化 Shell 扩展为 `long_compress_shell_extension_1_3_1.dll`。
-- 发布说明见 [RELEASE_NOTES_1.3.1.md](RELEASE_NOTES_1.3.1.md)，完整修复和本机记录证据见 [RAR_PASSWORD_POST_VALIDATION_FIX_AUDIT_2026-09-05.md](RAR_PASSWORD_POST_VALIDATION_FIX_AUDIT_2026-09-05.md)。
+- 发布说明见 [RELEASE_NOTES_1.3.1.md](RELEASE_NOTES_1.3.1.md)，完整修复和本机记录证据见 [RAR_PASSWORD_POST_VALIDATION_FIX_AUDIT_2026-09-05.md](RAR_PASSWORD_POST_VALIDATION_FIX_AUDIT_2026-09-05.md)，发布关闭证据见 [RELEASE_AUDIT_1.3.1.md](RELEASE_AUDIT_1.3.1.md)。
 
 ## 2026-09-05 v1.3.0 后续 RAR 密码终态误分类修复（最新接续点）
 
