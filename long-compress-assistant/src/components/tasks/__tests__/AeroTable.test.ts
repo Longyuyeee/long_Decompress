@@ -55,6 +55,35 @@ describe('AeroTable', () => {
     expect(rows[1].find('.task-status-runtime').exists()).toBe(false)
   })
 
+  it('keeps row controls ordered in one dedicated action cell', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const taskStore = useTaskStore()
+    taskStore.addTask({
+      id: 'long-pending-name',
+      name: 'digital-rural-platform.zip (2 个超长名称测试副本).zip',
+      type: 'decompression',
+      sourceFiles: ['C:\\fixtures\\digital-rural-platform.zip'],
+      outputPath: 'C:\\fixtures\\output',
+      format: 'zip',
+    })
+
+    const wrapper = mount(AeroTable, {
+      props: { taskType: 'decompression' },
+      global: { plugins: [pinia], stubs: { Transition: false, TransitionGroup: false } },
+    })
+
+    const actionCell = wrapper.get('[data-testid="task-action-cell"]')
+    const controls = actionCell.findAll('button')
+    expect(controls).toHaveLength(2)
+    expect(controls[0].attributes('data-testid')).toBe('remove-archive-task-long-pending-name')
+    expect(controls[1].attributes('data-testid')).toBe('toggle-archive-task-long-pending-name')
+    expect(actionCell.find('.task-action-divider').exists()).toBe(true)
+
+    await controls[1].trigger('click')
+    expect(controls[1].attributes('aria-expanded')).toBe('true')
+  })
+
   it('keeps expanded password recovery controls inside a narrow config column', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)

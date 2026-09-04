@@ -254,7 +254,7 @@ const onLeave = (el: any) => {
         </div>
         <div class="min-w-0">{{ appStore.t('decompress.column.name') }}</div>
         <div class="min-w-0 text-center">{{ appStore.t('decompress.column.status') }}</div>
-        <div class="col-span-2"></div>
+        <div aria-hidden="true"></div>
       </div>
 
       <!-- 表格内容 (高密度布局 + 物理隔断) -->
@@ -263,6 +263,7 @@ const onLeave = (el: any) => {
         <div v-for="task in displayTasks" :key="task.id" class="task-row-container mb-1.5 last:mb-0 group/row">
           <div
             class="task-row grid min-w-0 max-w-full items-center px-4 py-2 bg-card/40 border border-subtle/40 rounded-lg hover:border-primary/30 hover:bg-card/60 transition-all duration-200 cursor-pointer relative overflow-hidden shadow-sm"
+            :class="{ 'has-password-input': task.passwordRequired }"
             data-testid="task-row"
             :data-task-id="task.id"
             @click="toggleExpand(task.id)"
@@ -344,7 +345,7 @@ const onLeave = (el: any) => {
             </div>
 
             <!-- 密码内联输入 (自动破解失败时在行内显示) -->
-            <div v-if="task.passwordRequired" class="flex items-center gap-1 shrink-0 px-2" @click.stop>
+            <div v-if="task.passwordRequired" class="task-password-cell flex items-center gap-1 shrink-0 px-2" @click.stop>
               <input
                 :type="showPasswordInput === task.id ? 'text' : 'password'"
                 :value="task.password || ''"
@@ -365,43 +366,61 @@ const onLeave = (el: any) => {
               ><i class="pi pi-play text-xs"></i></button>
             </div>
 
-            <!-- 删除按钮 (仅 pending 状态可见) -->
-            <div class="flex min-w-[3.25rem] justify-end gap-1" @click.stop>
+            <!-- 行级操作：运行控制在前，展开/收起固定在最右侧 -->
+            <div class="task-action-cell" data-testid="task-action-cell" @click.stop>
               <button
                 v-if="task.status === 'pending'"
+                type="button"
                 @click="task.type === 'compression' ? emit('cancel-task', task.id) : handleRemoveTask(task.id)"
-                class="w-5 h-5 rounded-md flex items-center justify-center text-dim hover:text-red-400 hover:bg-red-500/10 transition-all"
+                class="task-row-action text-dim hover:text-red-400 hover:bg-red-500/10"
+                :data-testid="`remove-archive-task-${task.id}`"
                 :title="task.type === 'compression' ? '取消排队任务' : appStore.t('tasks.remove')">
                 <i :class="task.type === 'compression' ? 'pi pi-stop-circle' : 'pi pi-times'" class="text-xs"></i>
               </button>
               <button
                 v-else-if="['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(task.status)"
+                type="button"
                 @click="emit('pause-task', task.id)"
                 :data-testid="`pause-archive-task-${task.id}`"
-                class="w-5 h-5 rounded-md flex items-center justify-center text-amber-400 hover:bg-amber-500/10 transition-all"
+                class="task-row-action text-amber-400 hover:bg-amber-500/10"
                 :title="appStore.t('tasks.pause_one')">
                 <i class="pi pi-pause text-xs"></i>
               </button>
               <button
                 v-else-if="task.status === 'paused'"
+                type="button"
                 @click="emit('resume-task', task.id)"
                 :data-testid="`resume-archive-task-${task.id}`"
-                class="w-5 h-5 rounded-md flex items-center justify-center text-green-400 hover:bg-green-500/10 transition-all"
+                class="task-row-action text-green-400 hover:bg-green-500/10"
                 :title="appStore.t('tasks.resume_one')">
                 <i class="pi pi-play text-xs"></i>
               </button>
               <button
                 v-if="['preparing', 'running', 'compressing', 'extracting', 'finalizing', 'paused'].includes(task.status)"
+                type="button"
                 @click="emit('cancel-task', task.id)"
-                class="w-5 h-5 rounded-md flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-all"
+                class="task-row-action text-red-400 hover:bg-red-500/10"
+                :data-testid="`stop-archive-task-${task.id}`"
                 :title="appStore.t('tasks.stop_one')">
                 <i class="pi pi-stop-circle text-xs"></i>
               </button>
-            </div>
-
-            <div class="w-6 flex justify-end">
-              <i :class="['pi text-sm transition-all duration-500',
-                 expandedTasks.has(task.id) ? 'pi-chevron-up text-primary' : 'pi-chevron-down text-muted']"></i>
+              <span
+                v-if="['pending', 'preparing', 'running', 'compressing', 'extracting', 'finalizing', 'paused'].includes(task.status)"
+                class="task-action-divider"
+                aria-hidden="true"
+              ></span>
+              <button
+                type="button"
+                class="task-row-action task-expand-action text-muted hover:text-primary hover:bg-primary/10"
+                :data-testid="`toggle-archive-task-${task.id}`"
+                :title="expandedTasks.has(task.id) ? '收起任务详情' : '展开任务详情'"
+                :aria-label="expandedTasks.has(task.id) ? '收起任务详情' : '展开任务详情'"
+                :aria-expanded="expandedTasks.has(task.id)"
+                @click="toggleExpand(task.id)"
+              >
+                <i :class="['pi text-sm transition-transform duration-300',
+                   expandedTasks.has(task.id) ? 'pi-chevron-up text-primary' : 'pi-chevron-down']"></i>
+              </button>
             </div>
           </div>
 
@@ -799,8 +818,60 @@ const onLeave = (el: any) => {
 
 .table-header,
 .task-row {
-  grid-template-columns: 2rem minmax(15rem, 1.15fr) minmax(20rem, 1fr) 1.5rem 1.5rem;
+  grid-template-columns: 2rem minmax(15rem, 1.15fr) minmax(20rem, 1fr) minmax(5.75rem, auto);
   column-gap: 0.75rem;
+}
+
+.task-action-cell {
+  grid-column: 4;
+  display: flex;
+  min-width: 5.75rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.task-row-action {
+  display: inline-flex;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+  transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.task-row-action:hover {
+  transform: translateY(-1px);
+}
+
+.task-row-action:focus-visible {
+  outline: 2px solid var(--dynamic-accent);
+  outline-offset: 2px;
+}
+
+.task-action-divider {
+  width: 1px;
+  height: 1rem;
+  flex: 0 0 1px;
+  margin-inline: 0.125rem;
+  background: var(--border-subtle);
+  opacity: 0.75;
+}
+
+.task-password-cell {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  justify-self: end;
+  max-width: 100%;
+}
+
+.task-row.has-password-input {
+  height: auto;
+  min-height: 52px;
+  row-gap: 0.5rem;
 }
 
 .task-status-cell {
@@ -818,7 +889,7 @@ const onLeave = (el: any) => {
 @media (max-width: 980px) {
   .task-detail-layout { grid-template-columns: minmax(16rem, .92fr) minmax(17rem, 1.08fr); }
   .table-header,
-  .task-row { grid-template-columns: 2rem minmax(12rem, .9fr) minmax(17rem, 1.1fr) 1.5rem 1.5rem; }
+  .task-row { grid-template-columns: 2rem minmax(12rem, .9fr) minmax(17rem, 1.1fr) minmax(5.75rem, auto); }
 }
 
 .details-drawer {
@@ -916,7 +987,7 @@ const onLeave = (el: any) => {
   }
 
   .task-row {
-    grid-template-columns: 2rem minmax(7.5rem, 1fr) minmax(8rem, 1fr) 1.25rem 1.25rem;
+    grid-template-columns: 2rem minmax(7.5rem, 1fr) minmax(8rem, 1fr) minmax(5.75rem, auto);
     padding-inline: 0.5rem;
   }
 
