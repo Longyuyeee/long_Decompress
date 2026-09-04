@@ -297,181 +297,152 @@ const copyDiagnosticReport = async () => {
 </script>
 
 <template>
-  <div class="integrity-view flex flex-col h-full p-responsive p-8 transition-colors duration-700 overflow-x-hidden">
+  <div class="integrity-view flex h-full flex-col overflow-x-hidden transition-colors duration-700">
     <!-- 顶部标题栏 -->
-    <header class="shrink-0 mb-8">
-      <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('integrity.title') }}</h1>
-      <p class="text-muted text-sm font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('integrity.subtitle') }}</p>
+    <header class="integrity-header shrink-0">
+      <div>
+        <h1>{{ appStore.t('integrity.title') }}</h1>
+        <p>{{ appStore.t('integrity.subtitle') }}</p>
+      </div>
     </header>
 
     <!-- 主内容区 -->
-    <div class="integrity-scroll flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pr-2 pb-20">
-      <div class="max-w-5xl space-y-8">
+    <div class="integrity-scroll custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+      <div class="integrity-workspace">
         <!-- 模式切换 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <nav class="integrity-mode-switch" aria-label="文件完整性工具">
           <button
             @click="activeMode = 'calculate'; clearResults()"
-            class="aero-card p-8 text-left transition-all hover:scale-[1.02]"
-            :class="activeMode === 'calculate' ? 'ring-2 ring-primary' : ''"
+            :class="{ active: activeMode === 'calculate' }"
           >
-            <div class="text-4xl mb-3">🔢</div>
-            <div class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('integrity.mode.calculate') }}</div>
-            <div class="text-xs text-muted mt-2 uppercase tracking-tighter">计算文件的校验和</div>
+            <span class="mode-icon"><i class="pi pi-hashtag"></i></span>
+            <span><strong>{{ appStore.t('integrity.mode.calculate') }}</strong><small>生成文件指纹</small></span>
+            <i class="pi pi-chevron-right mode-arrow"></i>
           </button>
           <button
             @click="activeMode = 'verify'; clearResults()"
-            class="aero-card p-8 text-left transition-all hover:scale-[1.02]"
-            :class="activeMode === 'verify' ? 'ring-2 ring-primary' : ''"
+            :class="{ active: activeMode === 'verify' }"
           >
-            <div class="text-4xl mb-3">✓</div>
-            <div class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('integrity.mode.verify') }}</div>
-            <div class="text-xs text-muted mt-2 uppercase tracking-tighter">验证校验文件的正确性</div>
+            <span class="mode-icon"><i class="pi pi-check-circle"></i></span>
+            <span><strong>{{ appStore.t('integrity.mode.verify') }}</strong><small>核对校验文件</small></span>
+            <i class="pi pi-chevron-right mode-arrow"></i>
           </button>
           <button
             data-testid="archive-diagnostic-mode"
             @click="activeMode = 'archive'; clearResults()"
-            class="aero-card p-8 text-left transition-all hover:scale-[1.02]"
-            :class="activeMode === 'archive' ? 'ring-2 ring-primary' : ''"
+            :class="{ active: activeMode === 'archive' }"
           >
-            <div class="text-4xl mb-3">🩺</div>
-            <div class="text-sm font-black text-content uppercase tracking-widest">归档诊断</div>
-            <div class="text-xs text-muted mt-2 uppercase tracking-tighter">识别损坏、缺卷与可恢复性</div>
+            <span class="mode-icon"><i class="pi pi-search"></i></span>
+            <span><strong>归档诊断</strong><small>识别损坏与缺卷</small></span>
+            <i class="pi pi-chevron-right mode-arrow"></i>
           </button>
-        </div>
+        </nav>
 
         <!-- 计算模式 -->
-        <div v-if="activeMode === 'calculate'" class="space-y-8">
+        <div v-if="activeMode === 'calculate'" class="integrity-calculate-grid">
           <!-- 选择算法 -->
-          <section class="aero-card p-10">
-            <h2 class="text-sm font-black text-content uppercase tracking-[0.3em] mb-6">
-              {{ appStore.t('integrity.algorithm') }}
-            </h2>
-            <div class="grid grid-cols-3 gap-4">
+          <section class="integrity-panel algorithm-panel">
+            <header class="panel-heading"><span><i class="pi pi-sliders-h"></i>{{ appStore.t('integrity.algorithm') }}</span><small>选择摘要算法</small></header>
+            <div class="algorithm-options">
               <button
                 v-for="algo in algorithms"
                 :key="algo.value"
                 @click="selectedAlgorithm = algo.value as any"
-                class="p-6 rounded-2xl border-2 transition-all text-left hover:scale-[1.02]"
-                :class="selectedAlgorithm === algo.value
-                  ? 'bg-primary/10 border-primary shadow-lg'
-                  : 'bg-input/30 border-subtle hover:border-primary/50'"
+                :class="{ active: selectedAlgorithm === algo.value }"
               >
-                <div class="text-sm font-black text-content uppercase tracking-widest">{{ algo.label }}</div>
-                <div class="text-xs text-muted mt-2 uppercase tracking-tighter">{{ algo.description }}</div>
+                <span><strong>{{ algo.label }}</strong><small>{{ algo.description }}</small></span>
+                <i v-if="selectedAlgorithm === algo.value" class="pi pi-check"></i>
               </button>
             </div>
           </section>
 
           <!-- 选择文件 -->
-          <section class="aero-card p-10">
-            <h2 class="text-sm font-black text-content uppercase tracking-[0.3em] mb-6">
-              {{ appStore.t('integrity.files') }}
-            </h2>
+          <section class="integrity-panel file-panel">
+            <header class="panel-heading"><span><i class="pi pi-file"></i>{{ appStore.t('integrity.files') }}</span><small>{{ selectedFiles.length ? `${selectedFiles.length} 个文件待处理` : '支持批量选择' }}</small></header>
             <button
               @click="selectFiles"
-              class="w-full px-10 py-12 rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-all text-center group"
+              class="integrity-dropzone"
             >
-              <div class="text-5xl mb-4 group-hover:scale-110 transition-transform">📁</div>
-              <div class="text-sm font-black text-content uppercase tracking-widest">
+              <span class="dropzone-icon"><i class="pi pi-folder-open"></i></span>
+              <span>
+                <strong>
                 {{ selectedFiles.length > 0
                   ? `已选择 ${selectedFiles.length} 个文件`
                   : appStore.t('integrity.select_files') }}
-              </div>
+                </strong>
+                <small>{{ selectedFiles.length ? '再次选择可替换当前列表' : '从本地选择一个或多个文件' }}</small>
+              </span>
+              <i class="pi pi-plus"></i>
             </button>
 
             <!-- 操作按钮 -->
-            <div class="flex gap-4 mt-6">
+            <div class="integrity-actions">
               <button
                 @click="calculateChecksums"
                 :disabled="selectedFiles.length === 0 || isCalculating"
-                class="flex-1 px-8 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-sm hover:bg-primary/90 disabled:opacity-80 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none"
+                class="integrity-primary"
               >
+                <i :class="isCalculating ? 'pi pi-spinner pi-spin' : 'pi pi-play'"></i>
                 {{ isCalculating ? appStore.t('integrity.calculating') : appStore.t('integrity.calculate') }}
               </button>
               <button
                 v-if="checksumResults.length > 0"
                 @click="exportChecksumFile"
-                class="px-8 py-4 rounded-2xl bg-input/30 border-2 border-subtle text-content font-black uppercase tracking-widest text-sm hover:border-primary transition-all"
+                class="integrity-secondary"
               >
+                <i class="pi pi-download"></i>
                 {{ appStore.t('integrity.export') }}
               </button>
             </div>
           </section>
 
           <!-- 结果列表 -->
-          <section v-if="checksumResults.length > 0" class="aero-card p-10">
-            <h2 class="text-sm font-black text-content uppercase tracking-[0.3em] mb-6">
-              {{ appStore.t('integrity.results') }}
-            </h2>
-            <!-- 添加滚动容器，限制高度 -->
-            <div class="max-h-[400px] overflow-y-auto custom-scrollbar space-y-3">
+          <section v-if="checksumResults.length > 0" class="integrity-panel result-panel">
+            <header class="panel-heading"><span><i class="pi pi-list"></i>{{ appStore.t('integrity.results') }}</span><small>{{ checksumResults.filter(item => item.status === 'success').length }} / {{ checksumResults.length }} 完成</small></header>
+            <div class="checksum-results custom-scrollbar">
               <div
                 v-for="result in checksumResults"
                 :key="result.path"
-                class="p-6 rounded-2xl bg-input/30 border border-subtle hover:border-primary/50 transition-all"
+                class="checksum-row"
               >
-                <div class="flex items-start justify-between gap-4">
-                  <div class="flex-1 min-w-0">
-                    <!-- 使用 break-all 允许长文件名换行 -->
-                    <div class="text-sm font-black text-content break-all uppercase tracking-widest">{{ result.fileName }}</div>
-                    <div class="mt-3 flex items-start gap-3">
-                      <span class="text-xs text-muted uppercase tracking-widest font-bold shrink-0">{{ result.algorithm }}:</span>
-                      <!-- 校验和允许换行 -->
-                      <code class="text-xs font-mono text-primary break-all">{{ result.checksum || '计算中...' }}</code>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-3 shrink-0">
-                    <span
-                      v-if="result.status === 'success'"
-                      class="text-green-500 text-2xl"
-                    >✓</span>
-                    <span
-                      v-else-if="result.status === 'error'"
-                      class="text-red-500 text-2xl"
-                    >✗</span>
+                <span class="checksum-status" :data-status="result.status"><i :class="result.status === 'success' ? 'pi pi-check' : result.status === 'error' ? 'pi pi-times' : 'pi pi-spinner pi-spin'"></i></span>
+                <div class="checksum-main"><strong :title="result.fileName">{{ result.fileName }}</strong><code :title="result.checksum">{{ result.error || result.checksum || '计算中...' }}</code></div>
+                <span class="checksum-algorithm">{{ result.algorithm }}</span>
                     <button
                       v-if="result.status === 'success'"
                       @click="copyChecksum(result.checksum)"
-                      class="px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-sm font-black uppercase tracking-widest transition-all"
+                  class="checksum-copy"
+                  :title="appStore.t('integrity.copy')"
                     >
-                      {{ appStore.t('integrity.copy') }}
+                  <i class="pi pi-copy"></i><span class="sr-only">{{ appStore.t('integrity.copy') }}</span>
                     </button>
-                  </div>
-                </div>
-                <div v-if="result.error" class="mt-3 text-xs text-red-500 uppercase tracking-tighter break-all">
-                  {{ result.error }}
-                </div>
               </div>
             </div>
           </section>
         </div>
 
         <!-- 验证模式 -->
-        <div v-else-if="activeMode === 'verify'" class="space-y-8">
-          <section class="aero-card p-10">
+        <div v-else-if="activeMode === 'verify'" class="integrity-single-column">
+          <section class="integrity-panel">
             <button
               @click="selectChecksumFile"
               :disabled="isCalculating"
-              class="w-full px-10 py-16 rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-all text-center group"
+              class="integrity-verify-dropzone"
             >
-              <div class="text-6xl mb-6 group-hover:scale-110 transition-transform">✓</div>
-              <div class="text-base font-black text-content uppercase tracking-widest">
-                {{ appStore.t('integrity.select_checksum') }}
-              </div>
-              <div class="text-xs text-muted mt-3 uppercase tracking-tighter">
-                支持 .md5, .sha256, .sfv 格式
-              </div>
+              <span class="dropzone-icon"><i class="pi pi-check-circle"></i></span>
+              <span><strong>{{ appStore.t('integrity.select_checksum') }}</strong><small>支持 .md5、.sha256、.sfv</small></span>
+              <i class="pi pi-folder-open"></i>
             </button>
           </section>
 
           <!-- 验证结果 -->
-          <section v-if="verifyResult" class="aero-card p-10 border-2"
+          <section v-if="verifyResult" class="integrity-panel verify-result"
             :class="verifyResult.valid
               ? 'bg-green-500/5 border-green-500'
               : 'bg-red-500/5 border-red-500'"
           >
-            <div class="flex items-center gap-6">
-              <span class="text-6xl shrink-0">{{ verifyResult.valid ? '✓' : '✗' }}</span>
+            <div class="flex items-center gap-4">
+              <span class="verify-result-icon"><i :class="verifyResult.valid ? 'pi pi-check' : 'pi pi-times'"></i></span>
               <div class="flex-1">
                 <div class="text-lg font-black uppercase tracking-widest"
                   :class="verifyResult.valid ? 'text-green-500' : 'text-red-500'"
@@ -484,8 +455,8 @@ const copyDiagnosticReport = async () => {
           </section>
         </div>
 
-        <div v-else class="min-w-0 space-y-6 overflow-x-hidden" data-testid="archive-diagnostic-panel">
-          <section class="aero-card p-6 md:p-10 min-w-0 overflow-hidden">
+        <div v-else class="integrity-single-column min-w-0 overflow-x-hidden" data-testid="archive-diagnostic-panel">
+          <section class="integrity-panel min-w-0 overflow-hidden">
             <div class="flex flex-col md:flex-row gap-3">
               <button type="button" class="archive-select" @click="selectArchive">
                 <i class="pi pi-folder-open"></i>
@@ -514,7 +485,7 @@ const copyDiagnosticReport = async () => {
             </div>
           </section>
 
-          <section v-if="diagnosticReport" class="aero-card p-6 md:p-10 min-w-0 overflow-hidden" data-testid="diagnostic-report">
+          <section v-if="diagnosticReport" class="integrity-panel min-w-0 overflow-hidden" data-testid="diagnostic-report">
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p class="text-xs font-black tracking-[.22em] text-muted">诊断结论</p>
@@ -554,7 +525,7 @@ const copyDiagnosticReport = async () => {
             </div>
           </section>
 
-          <section v-if="repairResult" class="aero-card p-6 md:p-10 border border-green-500/30" data-testid="repair-result">
+          <section v-if="repairResult" class="integrity-panel border border-green-500/30" data-testid="repair-result">
             <h2 class="text-lg font-black text-green-500">修复文件已通过完整性校验</h2>
             <p class="mt-3 text-xs text-muted break-all">{{ repairResult.outputPath }}</p>
             <p class="mt-3 text-sm text-content">恢复 {{ repairResult.recoveredFiles }} 个文件、{{ repairResult.recoveredDirectories }} 个目录；跳过 {{ repairResult.skippedEntries.length }} 个损坏或不安全条目。</p>
@@ -567,6 +538,64 @@ const copyDiagnosticReport = async () => {
 </template>
 
 <style scoped>
+.integrity-view { padding: 1rem 1.35rem 0; }
+.integrity-header { display: flex; align-items: center; justify-content: space-between; padding: .15rem .15rem .8rem; }
+.integrity-header h1 { color: var(--text-content); font-size: 1.55rem; font-weight: 950; letter-spacing: -.055em; line-height: 1.1; }
+.integrity-header p { margin-top: .22rem; color: var(--text-muted); font-size: .62rem; font-weight: 700; letter-spacing: .04em; }
+.integrity-scroll { padding: 0 .3rem 1.2rem 0; }
+.integrity-workspace { display: grid; width: 100%; min-width: 0; gap: .85rem; }
+.integrity-mode-switch { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; padding: .35rem; border: 1px solid var(--border-subtle); border-radius: .95rem; background: color-mix(in srgb,var(--bg-input) 48%,transparent); }
+.integrity-mode-switch button { display: grid; min-width: 0; min-height: 3.5rem; grid-template-columns: 2rem minmax(0,1fr) .75rem; align-items: center; gap: .55rem; border: 1px solid transparent; border-radius: .72rem; padding: .45rem .65rem; color: var(--text-muted); text-align: left; transition: border-color .16s ease,background-color .16s ease,color .16s ease,transform .16s ease; }
+.integrity-mode-switch button:hover { color: var(--text-content); transform: translateY(-1px); }
+.integrity-mode-switch button.active { border-color: color-mix(in srgb,var(--dynamic-accent) 48%,var(--border-subtle)); background: color-mix(in srgb,var(--dynamic-accent) 9%,var(--bg-card)); color: var(--dynamic-accent); }
+.mode-icon { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: .58rem; background: var(--bg-card); color: currentColor; font-size: .72rem; }
+.integrity-mode-switch button>span:nth-child(2) { display: flex; min-width: 0; flex-direction: column; gap: .1rem; }
+.integrity-mode-switch strong,.integrity-mode-switch small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.integrity-mode-switch strong { color: var(--text-content); font-size: .67rem; font-weight: 900; }
+.integrity-mode-switch small { color: var(--text-muted); font-size: .52rem; font-weight: 650; }
+.mode-arrow { font-size: .5rem; opacity: .45; }
+.integrity-calculate-grid { display: grid; min-width: 0; grid-template-columns: minmax(12rem,.72fr) minmax(19rem,1.45fr); gap: .85rem; }
+.integrity-panel { min-width: 0; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb,var(--bg-card) 92%,transparent); padding: .85rem; box-shadow: 0 14px 34px -28px rgb(0 0 0 / .65); }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .65rem; }
+.panel-heading span { display: flex; align-items: center; gap: .42rem; color: var(--text-content); font-size: .67rem; font-weight: 900; }
+.panel-heading span i { color: var(--dynamic-accent); font-size: .65rem; }
+.panel-heading small { color: var(--text-muted); font-size: .52rem; font-weight: 700; }
+.algorithm-options { display: grid; gap: .38rem; }
+.algorithm-options button { display: flex; min-height: 2.65rem; align-items: center; justify-content: space-between; gap: .5rem; border: 1px solid var(--border-subtle); border-radius: .68rem; background: var(--bg-input); padding: .42rem .62rem; color: var(--text-muted); text-align: left; transition: border-color .15s ease,background-color .15s ease; }
+.algorithm-options button.active,.algorithm-options button:hover { border-color: color-mix(in srgb,var(--dynamic-accent) 55%,var(--border-subtle)); background: color-mix(in srgb,var(--dynamic-accent) 8%,var(--bg-input)); }
+.algorithm-options button span { display: flex; min-width: 0; flex-direction: column; gap: .08rem; }
+.algorithm-options strong { color: var(--text-content); font-size: .64rem; font-weight: 900; }
+.algorithm-options small { color: var(--text-muted); font-size: .51rem; font-weight: 650; }
+.algorithm-options button>i { color: var(--dynamic-accent); font-size: .52rem; }
+.integrity-dropzone,.integrity-verify-dropzone { display: grid; width: 100%; min-width: 0; grid-template-columns: 2.25rem minmax(0,1fr) .8rem; align-items: center; gap: .65rem; border: 1px dashed color-mix(in srgb,var(--dynamic-accent) 38%,var(--border-subtle)); border-radius: .78rem; background: color-mix(in srgb,var(--dynamic-accent) 3%,var(--bg-input)); padding: .62rem .7rem; color: var(--text-muted); text-align: left; transition: border-color .15s ease,background-color .15s ease; }
+.integrity-dropzone:hover,.integrity-verify-dropzone:hover { border-color: var(--dynamic-accent); background: color-mix(in srgb,var(--dynamic-accent) 7%,var(--bg-input)); }
+.dropzone-icon { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: .62rem; background: color-mix(in srgb,var(--dynamic-accent) 12%,transparent); color: var(--dynamic-accent); font-size: .78rem; }
+.integrity-dropzone>span:nth-child(2),.integrity-verify-dropzone>span:nth-child(2) { display: flex; min-width: 0; flex-direction: column; gap: .08rem; }
+.integrity-dropzone strong,.integrity-verify-dropzone strong { overflow: hidden; color: var(--text-content); font-size: .66rem; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.integrity-dropzone small,.integrity-verify-dropzone small { color: var(--text-muted); font-size: .51rem; font-weight: 650; }
+.integrity-dropzone>i,.integrity-verify-dropzone>i { color: var(--dynamic-accent); font-size: .58rem; }
+.integrity-actions { display: flex; justify-content: flex-end; gap: .48rem; margin-top: .58rem; }
+.integrity-primary,.integrity-secondary { display: inline-flex; min-height: 2.2rem; align-items: center; justify-content: center; gap: .38rem; border-radius: .65rem; padding: 0 .8rem; font-size: .6rem; font-weight: 900; }
+.integrity-primary { background: var(--dynamic-accent); color: white; }
+.integrity-primary:disabled { cursor: not-allowed; opacity: .42; }
+.integrity-secondary { border: 1px solid var(--border-subtle); background: var(--bg-input); color: var(--text-content); }
+.result-panel { grid-column: 1/-1; }
+.checksum-results { display: grid; max-height: 16rem; gap: .35rem; overflow-y: auto; }
+.checksum-row { display: grid; min-width: 0; grid-template-columns: 1.7rem minmax(0,1fr) auto 1.8rem; align-items: center; gap: .52rem; border: 1px solid var(--border-subtle); border-radius: .68rem; background: var(--bg-input); padding: .42rem .52rem; }
+.checksum-status { display: grid; width: 1.6rem; height: 1.6rem; place-items: center; border-radius: .48rem; background: color-mix(in srgb,var(--dynamic-accent) 10%,transparent); color: var(--dynamic-accent); font-size: .55rem; }
+.checksum-status[data-status="success"] { background: color-mix(in srgb,#22c55e 12%,transparent); color: #22c55e; }
+.checksum-status[data-status="error"] { background: color-mix(in srgb,#ef4444 12%,transparent); color: #ef4444; }
+.checksum-main { display: flex; min-width: 0; flex-direction: column; gap: .08rem; }
+.checksum-main strong,.checksum-main code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.checksum-main strong { color: var(--text-content); font-size: .61rem; font-weight: 850; }
+.checksum-main code { color: var(--text-muted); font-size: .52rem; }
+.checksum-algorithm { border-radius: 999px; background: color-mix(in srgb,var(--dynamic-accent) 9%,transparent); padding: .2rem .42rem; color: var(--dynamic-accent); font-size: .5rem; font-weight: 900; }
+.checksum-copy { display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border-radius: .5rem; color: var(--text-muted); font-size: .55rem; }
+.checksum-copy:hover { background: color-mix(in srgb,var(--dynamic-accent) 10%,transparent); color: var(--dynamic-accent); }
+.integrity-single-column { display: grid; min-width: 0; gap: .85rem; }
+.integrity-verify-dropzone { min-height: 5.4rem; padding-right: 1rem; }
+.verify-result { border-width: 1px; }
+.verify-result-icon { display: grid; width: 2.5rem; height: 2.5rem; flex: 0 0 2.5rem; place-items: center; border-radius: .7rem; background: var(--bg-input); font-size: 1rem; }
 .archive-select, .archive-password { min-width: 0; min-height: 3rem; border: 1px solid var(--border-subtle); border-radius: .9rem; background: color-mix(in srgb, var(--bg-input) 72%, transparent); color: var(--text-content); }
 .archive-select { flex: 1 1 18rem; display: flex; align-items: center; gap: .65rem; padding: 0 1rem; font-size: .78rem; font-weight: 900; text-align: left; }
 .archive-password { flex: 0 1 18rem; padding: 0 1rem; font-size: .78rem; outline: none; }
@@ -586,5 +615,6 @@ const copyDiagnosticReport = async () => {
 .diagnostic-issue[data-severity="warning"] { border-left-color: #f59e0b; background: color-mix(in srgb, #f59e0b 8%, transparent); }
 .diagnostic-issue strong { color: var(--text-content); font-size: .78rem; }
 .diagnostic-issue p { margin-top: .25rem; color: var(--text-muted); font-size: .7rem; line-height: 1.45; }
-@media (max-width: 850px) { .diagnostic-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-password { flex-basis: 100%; } }
+@media (max-width: 850px) { .integrity-calculate-grid { grid-template-columns: 1fr; } .result-panel { grid-column: auto; } .diagnostic-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-password { flex-basis: 100%; } }
+@media (max-width: 620px) { .integrity-view { padding-inline: .75rem; } .integrity-mode-switch { grid-template-columns: 1fr; } .integrity-mode-switch button { min-height: 3rem; } .checksum-row { grid-template-columns: 1.7rem minmax(0,1fr) 1.8rem; } .checksum-algorithm { display: none; } }
 </style>
