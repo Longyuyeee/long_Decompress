@@ -85,6 +85,8 @@ export interface Task {
     allow_insecure_password_cli?: boolean
   }
   resourcePreflight?: ResourcePreflightReport
+  historySaving?: boolean
+  historySaveError?: string
 }
 
 export const useTaskStore = defineStore('task', () => {
@@ -97,12 +99,25 @@ export const useTaskStore = defineStore('task', () => {
 
   const persistTerminalHistory = (task: Task) => {
     const historyRecord = createTaskHistoryRecord(task)
-    historyPersistence.set(task.id, invoke('save_task_history', { record: historyRecord })
-      .then(() => true)
+    const previous = historyPersistence.get(task.id)
+    task.historySaving = true
+    const save = () => invoke('save_task_history', { record: historyRecord })
+    const pending = (previous ? previous.then(save) : save())
+      .then(() => {
+        if (historyPersistence.get(task.id) === pending) task.historySaveError = undefined
+        return true
+      })
       .catch((error) => {
         console.warn('Failed to persist task history:', error)
+        if (historyPersistence.get(task.id) === pending) {
+          task.historySaveError = '历史记录保存失败，请重试保存；任务执行结果不受影响。'
+        }
         return false
-      }))
+      })
+      .finally(() => {
+        if (historyPersistence.get(task.id) === pending) task.historySaving = false
+      })
+    historyPersistence.set(task.id, pending)
   }
 
   const setFinalFailureReason = (task: Task, reason?: unknown) => {
@@ -329,8 +344,16 @@ export const useTaskStore = defineStore('task', () => {
 
   const waitForHistoryPersistence = (taskId: string) => historyPersistence.get(taskId) || Promise.resolve(true)
 
+  const retryHistoryPersistence = (taskId: string) => {
+    const task = tasks.value.find(item => item.id === taskId)
+    if (!task || !['completed', 'failed', 'cancelled'].includes(task.status)) return Promise.resolve(false)
+    if (!task.historySaving) persistTerminalHistory(task)
+    return waitForHistoryPersistence(taskId)
+  }
+
   const removeTask = (taskId: string) => {
     const index = tasks.value.findIndex(t => t.id === taskId)
+    if (index !== -1 && (tasks.value[index].historySaving || tasks.value[index].historySaveError)) return
     if (index !== -1) {
       tasks.value.splice(index, 1)
       historyPersistence.delete(taskId)
@@ -412,7 +435,7 @@ export const useTaskStore = defineStore('task', () => {
   const clearFinishedTasks = (type?: TaskType) => {
     const retainedTasks = tasks.value.filter(task => {
       const isFinished = ['completed', 'failed', 'cancelled'].includes(task.status)
-      return !isFinished || (type !== undefined && task.type !== type)
+      return !isFinished || task.historySaving || task.historySaveError || (type !== undefined && task.type !== type)
     })
     const retainedTaskIds = new Set(retainedTasks.map(task => task.id))
     for (const taskId of historyPersistence.keys()) {
@@ -430,6 +453,7 @@ export const useTaskStore = defineStore('task', () => {
     updateTaskStatus,
     failTask,
     waitForHistoryPersistence,
+    retryHistoryPersistence,
     removeTask,
     clearFinishedTasks,
     cancelTask,
