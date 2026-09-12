@@ -52,6 +52,8 @@ pub enum CompressionError {
     SourceChangedDuringExtraction,
     #[error("[archive-source:{stage}:{code}] {detail}")]
     SourceAccess { stage: &'static str, code: &'static str, detail: String },
+    #[error("[archive-output:Verifying:verification-failed] 压缩产物校验未通过，未完成后续发布及源文件清理：{0}")]
+    VerificationFailed(#[source] anyhow::Error),
     #[error("需要输入密码才能解压")]
     PasswordRequired,
     #[error("提供的密码不正确")]
@@ -1001,6 +1003,23 @@ impl CompressionService {
     }
 
     fn verify_compression_output(
+        &self,
+        route: CompressionRoute,
+        output: &Path,
+        password: Option<&str>,
+        split_requested: bool,
+    ) -> Result<()> {
+        self.verify_compression_output_inner(route, output, password, split_requested)
+            .map_err(|error| {
+                if matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)) {
+                    error
+                } else {
+                    CompressionError::VerificationFailed(error).into()
+                }
+            })
+    }
+
+    fn verify_compression_output_inner(
         &self,
         route: CompressionRoute,
         output: &Path,
@@ -3907,9 +3926,9 @@ mod tests_continued {
         std::fs::write(&final_output, b"existing archive").expect("existing target");
         let service = CompressionService::new_with_defaults().await;
 
-        assert!(service
-            .verify_compression_output(CompressionRoute::Zip, &working, None, false)
-            .is_err());
+        let error = service.verify_compression_output(CompressionRoute::Zip, &working, None, false).unwrap_err();
+        assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))));
+        assert!(error.to_string().contains("[archive-output:Verifying:verification-failed]"));
         CompressionService::cleanup_unverified_compression_output(
             &working,
             &final_output,
@@ -3919,6 +3938,20 @@ mod tests_continued {
         assert_eq!(std::fs::read(&final_output).unwrap(), b"existing archive");
         assert_eq!(std::fs::read(&source).unwrap(), b"source must survive");
         assert!(!working.exists());
+    }
+
+    #[tokio::test]
+    async fn verification_failure_preserves_io_detail_and_cancellation() {
+        let temp = tempfile::tempdir().unwrap();
+        let missing = temp.path().join("missing.zip");
+        let service = CompressionService::new_with_defaults().await;
+        let error = service.verify_compression_output(CompressionRoute::Zip, &missing, None, false).unwrap_err();
+        assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))));
+        assert!(error.chain().any(|cause| cause.downcast_ref::<std::io::Error>().is_some()));
+        service.cancellation_flag.store(true, Ordering::SeqCst);
+        let cancelled = service.verify_compression_output(CompressionRoute::Zip, &missing, None, false).unwrap_err();
+        assert!(matches!(cancelled.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+        assert!(!cancelled.to_string().contains("verification-failed"));
     }
 
     #[tokio::test]

@@ -16,6 +16,12 @@ pub struct TaskFailureV1 {
 fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
     if record.status != "failed" { return None; }
     let message = record.error_message.as_deref().unwrap_or_default();
+    if message.contains("[archive-output:Verifying:verification-failed]") {
+        return Some(TaskFailureV1 {
+            schema_version: 1, category: "verification-failed".into(),
+            stage: "Verifying".into(), evidence: "recorded-marker".into(),
+        });
+    }
     // Only accept markers emitted at the two confirmed source-snapshot boundaries.
     for stage in ["Pre-checking", "Extracting"] {
         for code in ["source-changed", "source-missing", "source-unavailable", "source-invalid"] {
@@ -568,6 +574,15 @@ mod tests {
                 assert!(rows[0].error_message.as_ref().unwrap().contains("original access detail"));
             }
         }
+        record.error_message = Some(CompressionError::VerificationFailed(anyhow::anyhow!("original verifier detail")).to_string());
+        record.status = "failed".into();
+        save_task_history_to_pool(reopened.pool(), record.clone()).await.unwrap();
+        let rows = list_task_history_from_pool(reopened.pool(), None).await.unwrap();
+        let failure = rows[0].failure.as_ref().unwrap();
+        assert_eq!(failure.category, "verification-failed");
+        assert_eq!(failure.stage, "Verifying");
+        assert_eq!(failure.evidence, "recorded-marker");
+        assert!(rows[0].error_message.as_ref().unwrap().contains("original verifier detail"));
         record.status = "completed".into();
         save_task_history_to_pool(reopened.pool(), record).await.unwrap();
         assert!(list_task_history_from_pool(reopened.pool(), None).await.unwrap()[0].failure.is_none());

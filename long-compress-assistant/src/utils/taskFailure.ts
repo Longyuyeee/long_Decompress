@@ -1,6 +1,7 @@
 import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 export const failureCategories = {
+  'verification-failed': '压缩产物校验未通过',
   'source-changed': '源文件已变化',
   'source-missing': '源文件不存在',
   'source-unavailable': '源文件无法检查',
@@ -31,20 +32,21 @@ export function describeTaskFailure(record: Pick<TaskHistoryRecord, 'status' | '
   const marker = message.match(/\[archive-inspection:([a-z-]+)\]/)?.[1]
   const sourceMarker = message.match(/\[archive-source:(Pre-checking|Extracting):(source-changed|source-missing|source-unavailable|source-invalid)\]/)
   const sourceStage = sourceMarker?.[1]
+  const verification = message.includes('[archive-output:Verifying:verification-failed]')
   const category: FailureCategory = marker && Object.hasOwn(failureCategories, marker)
     ? marker as FailureCategory : 'unknown'
   const inspection = Boolean(marker) || message.includes('归档检测失败：')
   const persisted = record.failure?.schemaVersion === 1 ? record.failure : null
   const savedCategory = persisted && Object.hasOwn(failureCategories, persisted.category)
-    ? persisted.category as FailureCategory : sourceMarker ? sourceMarker[2] as FailureCategory : category
+    ? persisted.category as FailureCategory : verification ? 'verification-failed' : sourceMarker ? sourceMarker[2] as FailureCategory : category
   const stage = persisted && Object.hasOwn(stageLabels, persisted.stage)
-    ? persisted.stage : sourceStage || (inspection ? 'inspection' : 'unknown')
+    ? persisted.stage : verification ? 'Verifying' : sourceStage || (inspection ? 'inspection' : 'unknown')
   return {
     category: savedCategory,
     categoryLabel: failureCategories[savedCategory],
     stage,
     stageLabel: stageLabels[stage] + (persisted?.evidence === 'observed-stage' ? '（最后观测阶段）' : ''),
-    evidence: persisted?.evidence || (marker || sourceStage ? 'recorded-marker' : 'legacy-message'),
+    evidence: persisted?.evidence || (marker || sourceStage || verification ? 'recorded-marker' : 'legacy-message'),
     message,
   }
 }

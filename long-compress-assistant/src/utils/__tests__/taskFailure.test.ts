@@ -2,6 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { describeTaskFailure } from '../taskFailure'
 
 describe('task failure evidence', () => {
+  it('identifies output verification without claiming the archive is damaged', () => {
+    expect(describeTaskFailure({ status: 'failed', errorMessage: '[archive-output:Verifying:verification-failed] engine unavailable' }))
+      .toMatchObject({ category: 'verification-failed', stage: 'Verifying', evidence: 'recorded-marker' })
+    expect(describeTaskFailure({ status: 'failed', failure: {
+      schemaVersion: 1, category: 'verification-failed', stage: 'Verifying', evidence: 'recorded-marker',
+    } })?.categoryLabel).toBe('压缩产物校验未通过')
+    expect(describeTaskFailure({ status: 'cancelled', errorMessage: '[archive-output:Verifying:verification-failed]' })).toBeNull()
+  })
   it.each(['source-missing', 'source-unavailable', 'source-invalid'])('preserves %s across both confirmed stages', category => {
     for (const stage of ['Pre-checking', 'Extracting']) {
       expect(describeTaskFailure({ status: 'failed', errorMessage: `[archive-source:${stage}:${category}] detail` }))

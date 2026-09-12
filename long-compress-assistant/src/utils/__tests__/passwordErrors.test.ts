@@ -16,6 +16,7 @@ describe('isPasswordRelatedError', () => {
 
   it.each([
     '文件不存在',
+    '[archive-output:Verifying:verification-failed] wrong password',
     '[archive-source:Pre-checking:source-missing] wrong password',
     '[archive-source:Extracting:source-unavailable] 密码错误',
     '[archive-source:Pre-checking:source-invalid] encrypted archive',
