@@ -26,3 +26,9 @@
 - 定向压缩页面、任务仓库、底部保存重试共 **52/52**；正式 `npm run test:unit`（含原有 PDF 合同和图片资料准备）**58 文件 372/372**；类型检查、生产构建、diff 检查通过。
 - 未修改/跳过失败断言，未删除测试，未增加测试专用产品分支。第一步曾记录的 368/369 是修复前结果，保留用于追溯。
 - 本轮真实桌面文件选择器定位失败的限制仍有效，不能因单测全绿宣称安装版验收已完成。下一步仍需真实完整/截断/重新下载的 UI 链与输出核对。
+
+## 推送与构建证据
+
+- 两步分别提交并推送：`5f46d9d`（失败原因优先）、`e5cec5c`（清除一致性）。[PR #137](https://github.com/Longyuyeee/long_Decompress/pull/137) 合入 `master@c9fd64a`。
+- 最终代码 `e5cec5c` 的 [Windows package CI 34680346092](https://github.com/Longyuyeee/long_Decompress/actions/runs/34680346092) 成功，耗时 5m38s，版本核对、NSIS 构建及产物上传均通过。随后仅补录此交接证据。
+- 本机最终代码也已通过 `cargo build --release --features custom-protocol,desktop-e2e`，测试程序 SHA-256 为 `7DABB4623D318D3FF421E2B6CE540FB8CAEC160B035DBB2BFEEE68B6A9D74E33`。此程序包含隔离测试功能，不是正式发布安装包；工具故障后没有再次启动进行 UI 验收。
