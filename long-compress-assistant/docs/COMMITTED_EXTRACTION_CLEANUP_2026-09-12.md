@@ -16,7 +16,9 @@
 - 新增 Windows 实际文件占用测试：提交 overwrite 冲突解决结果后，以 share_mode(0) 锁住暂存文件，清理产生明确警告但输出内容正确；释放占用后清理成功且可重复调用。
 - 前端任务、解压页面、命令和历史回归 4 文件 54/54，类型检查通过。冲突恢复成功后，预先收到的清理警告保留在保存载荷中，状态 completed、failure 为 null。
 - 前端使用模拟命令返回和日志，不是完整桌面事件验收；Windows 文件占用测试使用隔离临时目录，不修改用户源文件或使用历史。
-- diff 空白检查通过；CI 与合并证据完成后补录。
+- diff 空白检查和前端生产构建通过。
+- [PR #133](https://github.com/Longyuyeee/long_Decompress/pull/133) 已合入 `master@7dd2f222b16b780213b460af9d03b1bcab0882ed`。
+- [Windows CI 34678368063](https://github.com/Longyuyeee/long_Decompress/actions/runs/34678368063) 通过，用时 6 分 15 秒，安装器产物上传成功；之后交付证据补录仅为文档变更。
 
 ## 接续
 
