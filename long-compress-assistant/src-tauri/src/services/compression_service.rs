@@ -936,6 +936,10 @@ impl CompressionService {
     }
 
     fn normalize_storage_full_error(error: anyhow::Error) -> anyhow::Error {
+        // Verification already carries a confirmed stage; keep its underlying I/O detail.
+        if matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))) {
+            return error;
+        }
         let storage_full = error.chain().any(|cause| {
             cause
                 .downcast_ref::<std::io::Error>()
@@ -3948,6 +3952,13 @@ mod tests_continued {
         let error = service.verify_compression_output(CompressionRoute::Zip, &missing, None, false).unwrap_err();
         assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))));
         assert!(error.chain().any(|cause| cause.downcast_ref::<std::io::Error>().is_some()));
+        let full = CompressionError::VerificationFailed(std::io::Error::from(std::io::ErrorKind::StorageFull).into());
+        let normalized = CompressionService::finalize_compression_output(
+            Err(full.into()), &missing, &temp.path().join("final.zip"), false, false,
+        ).unwrap_err();
+        assert!(matches!(normalized.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))));
+        assert!(normalized.chain().any(|cause| cause.downcast_ref::<std::io::Error>()
+            .is_some_and(|io| io.kind() == std::io::ErrorKind::StorageFull)));
         service.cancellation_flag.store(true, Ordering::SeqCst);
         let cancelled = service.verify_compression_output(CompressionRoute::Zip, &missing, None, false).unwrap_err();
         assert!(matches!(cancelled.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
