@@ -46,6 +46,10 @@ pub enum CompressionError {
     CompressionFailed(String),
     #[error("解压失败: {0}")]
     ExtractionFailed(String),
+    #[error("[archive-source:Pre-checking:source-changed] 源压缩包在密码检测或预检期间发生变化，请等待下载或复制完成后重试")]
+    SourceChangedDuringPrecheck,
+    #[error("[archive-source:Extracting:source-changed] 源压缩包在解压期间发生变化，当前结果已丢弃；请等待下载或复制完成后重试")]
+    SourceChangedDuringExtraction,
     #[error("需要输入密码才能解压")]
     PasswordRequired,
     #[error("提供的密码不正确")]
@@ -2044,9 +2048,7 @@ impl CompressionService {
             );
         }
         if Self::source_file_changed(path, source_snapshot)? {
-            return Err(CompressionError::ExtractionFailed(
-                "源压缩包在密码检测或预检期间仍在写入，请等待下载或复制完成后重试".to_string(),
-            ).into());
+            return Err(CompressionError::SourceChangedDuringPrecheck.into());
         }
         let mark_of_web = if options.preserve_mark_of_web {
             mark_of_web::read_from(path).map_err(|error| {
@@ -2406,17 +2408,13 @@ impl CompressionService {
                 );
             }
             if source_changed {
-                return Err(CompressionError::ExtractionFailed(
-                    "源压缩包在解压期间仍在写入，当前结果已丢弃；请等待下载或复制完成后重试".to_string(),
-                ).into());
+                return Err(CompressionError::SourceChangedDuringExtraction.into());
             }
             return Err(error);
         }
         if source_changed {
             let _ = staging.cleanup();
-            return Err(CompressionError::ExtractionFailed(
-                "源压缩包在解压期间发生变化，当前结果已丢弃；请等待下载或复制完成后重试".to_string(),
-            ).into());
+            return Err(CompressionError::SourceChangedDuringExtraction.into());
         }
         if let Some(password) = final_password.as_deref() {
             service.mark_matching_vault_password_used(password).await;

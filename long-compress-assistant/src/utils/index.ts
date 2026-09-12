@@ -71,7 +71,8 @@ export const isPasswordRelatedError = (error: unknown): boolean => {
   const message = extractErrorMessage(error).toLowerCase()
   // Inspection failure details may quote a password suggestion from the engine.
   // The backend has already classified these as non-password/unknown failures.
-  if (message.includes('[archive-inspection:') || message.includes('归档检测失败：')) return false
+    if (message.includes('[archive-inspection:') || message.includes('归档检测失败：')) return false
+    if (/\[archive-source:(pre-checking|extracting):source-changed\]/.test(message)) return false
   return [
     'passwordrequired',
     'password required',

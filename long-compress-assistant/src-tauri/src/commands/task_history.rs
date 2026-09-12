@@ -16,6 +16,17 @@ pub struct TaskFailureV1 {
 fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
     if record.status != "failed" { return None; }
     let message = record.error_message.as_deref().unwrap_or_default();
+    // Only accept markers emitted at the two confirmed source-snapshot boundaries.
+    for stage in ["Pre-checking", "Extracting"] {
+        if message.contains(&format!("[archive-source:{stage}:source-changed]")) {
+            return Some(TaskFailureV1 {
+                schema_version: 1,
+                category: "source-changed".into(),
+                stage: stage.into(),
+                evidence: "recorded-marker".into(),
+            });
+        }
+    }
     let marker = message.split_once("[archive-inspection:")
         .and_then(|(_, tail)| tail.split_once(']').map(|(code, _)| code));
     let category = marker.filter(|code| matches!(*code,
@@ -527,6 +538,19 @@ mod tests {
         assert_eq!(failure.category, "unknown");
         assert_eq!(failure.stage, "Publishing");
         assert_eq!(failure.evidence, "observed-stage");
+        use crate::services::compression_service::CompressionError;
+        for (error, stage) in [
+            (CompressionError::SourceChangedDuringPrecheck, "Pre-checking"),
+            (CompressionError::SourceChangedDuringExtraction, "Extracting"),
+        ] {
+            record.error_message = Some(error.to_string());
+            save_task_history_to_pool(reopened.pool(), record.clone()).await.unwrap();
+            let rows = list_task_history_from_pool(reopened.pool(), None).await.unwrap();
+            let failure = rows[0].failure.as_ref().unwrap();
+            assert_eq!(failure.category, "source-changed");
+            assert_eq!(failure.stage, stage);
+            assert_eq!(failure.evidence, "recorded-marker");
+        }
         record.status = "completed".into();
         save_task_history_to_pool(reopened.pool(), record).await.unwrap();
         assert!(list_task_history_from_pool(reopened.pool(), None).await.unwrap()[0].failure.is_none());
