@@ -146,6 +146,14 @@ impl ExtractionStaging {
             Err(error) => Err(error),
         }
     }
+
+    /// Call only after a successful commit: cleanup cannot undo published output.
+    pub(crate) fn cleanup_after_commit(&mut self) -> Option<String> {
+        self.cleanup().err().map(|error| format!(
+            "解压输出已提交，但临时目录未能清理；无需重新解压。临时目录：{}；详情：{}",
+            self.path.display(), error,
+        ))
+    }
 }
 
 impl Drop for ExtractionStaging {
@@ -861,6 +869,38 @@ mod tests {
         assert_eq!(std::fs::read_to_string(output.join("skip.txt")).unwrap(), "old-skip.txt");
         assert_eq!(std::fs::read_to_string(output.join("rename.txt")).unwrap(), "old-rename.txt");
         assert_eq!(std::fs::read_to_string(output.join("rename (1).txt")).unwrap(), "new-rename.txt");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn committed_cleanup_lock_warns_without_changing_published_output() {
+        use std::os::windows::fs::OpenOptionsExt;
+        let temp = tempfile::tempdir().unwrap();
+        let output = temp.path().join("output");
+        let mut staging = ExtractionStaging::create_for(&output).unwrap();
+        std::fs::create_dir_all(&output).unwrap();
+        std::fs::write(output.join("same.txt"), b"old").unwrap();
+        std::fs::write(staging.path().join("same.txt"), b"new").unwrap();
+        let options = DecompressOptions { conflict_policy: "ask".into(), ..Default::default() };
+        let resolutions = HashMap::from([
+            (output.join("same.txt").to_string_lossy().into_owned(), "overwrite".into()),
+        ]);
+        commit_staged_extraction_with_resolutions(
+            "archive.zip", staging.path(), &output, &options, &resolutions, None,
+            |_| panic!("resolved conflict must not prompt again"),
+        ).unwrap();
+        let lock_path = staging.path().join("locked.tmp");
+        let handle = std::fs::OpenOptions::new().write(true).create_new(true).share_mode(0).open(&lock_path).unwrap();
+        let warning = staging.cleanup_after_commit().expect("locked staging must report warning");
+        assert!(warning.contains("输出已提交"));
+        assert!(warning.contains("无需重新解压"));
+        assert!(warning.contains(staging.path().to_string_lossy().as_ref()));
+        assert_eq!(std::fs::read(output.join("same.txt")).unwrap(), b"new");
+        drop(handle);
+        assert!(staging.cleanup_after_commit().is_none());
+        assert!(staging.cleanup_after_commit().is_none(), "cleanup remains idempotent");
+        assert!(!staging.path().exists());
+        assert_eq!(std::fs::read(output.join("same.txt")).unwrap(), b"new");
     }
 
     #[test]

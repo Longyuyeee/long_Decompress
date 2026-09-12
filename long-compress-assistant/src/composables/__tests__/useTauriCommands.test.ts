@@ -578,6 +578,9 @@ describe('useTauriCommands', () => {
     })
     const commands = useTauriCommands()
 
+    const warning = '解压输出已提交，但临时目录未能清理；无需重新解压。'
+    tasks.tasks[0].logs.push({ timestamp: new Date().toISOString(), message: warning, severity: 'warning' })
+
     await expect(commands.resolveExtractionConflict(
       'conflict-task',
       [{ destPath: 'C:/output/same.txt', action: 'overwrite' }],
@@ -590,6 +593,12 @@ describe('useTauriCommands', () => {
       fallbackAction: 'rename',
     })
     expect(tasks.tasks[0]).toMatchObject({ status: 'completed', progress: 100 })
+    await tasks.waitForHistoryPersistence('conflict-task')
+    expect(mocks.invoke).toHaveBeenCalledWith('save_task_history', {
+      record: expect.objectContaining({ status: 'completed', failure: null,
+        logs: expect.arrayContaining([expect.objectContaining({ message: warning, severity: 'warning' })]),
+      }),
+    })
   })
 
   it('degrades optional system UI commands safely when native APIs reject', async () => {
