@@ -20,7 +20,9 @@
 - Rust 历史 12/12、源快照 2/2、解压事务 13/13 通过，共 27 项。
 - 真实临时文件创建后删除：复查报告 Extracting/source-missing；临时目录作为来源：报告 Pre-checking/source-invalid；现有增长检测继续通过。
 - 权限拒绝和其他 I/O 错误为可控错误注入，不是实际 ACL/断盘测试。SQLite 用实际错误类型验证三类错误在两个阶段的保存和读回，保留原始详情。
-- 未读取或改写用户使用记录，未执行用户私有归档或手工桌面矩阵。Windows CI 和合并证据完成后补录。
+- 未读取或改写用户使用记录，未执行用户私有归档或手工桌面矩阵。
+- [PR #130](https://github.com/Longyuyeee/long_Decompress/pull/130) 已合入 `master@1160c871ee7651001d567f74ab75473309c055a5`。
+- [Windows CI 34677120465](https://github.com/Longyuyeee/long_Decompress/actions/runs/34677120465) 通过，耗时 6 分 16 秒，安装器产物上传成功。提交后历史命令 12/12 复跑通过；之后的交付证据补录仅为文档变更。
 
 ## 下一步
 
