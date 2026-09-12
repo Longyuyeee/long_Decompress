@@ -56,6 +56,8 @@ pub enum CompressionError {
     VerificationFailed(#[source] anyhow::Error),
     #[error("[archive-output:Publishing:{code}] 输出提交未完成，请检查目标目录和原始详情：{cause}")]
     PublicationFailed { code: &'static str, #[source] cause: anyhow::Error },
+    #[error("[archive-output:Publishing:rollback-incomplete] 解压提交失败且回滚不完整，已停止自动重试。请保留源文件、输出和恢复目录，核对后再处理：{0}")]
+    RollbackIncomplete(String),
     #[error("需要输入密码才能解压")]
     PasswordRequired,
     #[error("提供的密码不正确")]
@@ -370,6 +372,12 @@ impl CompressionService {
         PENDING_EXTRACTIONS.remove(task_id).is_some()
     }
 
+    fn retain_pending_after_commit_error(task_id: &str, mut pending: PendingExtraction, error: &anyhow::Error) {
+        if !pending.staging.retain_after_incomplete_rollback(error) {
+            PENDING_EXTRACTIONS.insert(task_id.to_string(), pending);
+        }
+    }
+
     pub async fn resolve_pending_extraction(
         &self,
         window: &Window,
@@ -413,7 +421,7 @@ impl CompressionService {
             },
         );
         if let Err(error) = commit_result {
-            PENDING_EXTRACTIONS.insert(task_id.to_string(), pending);
+            Self::retain_pending_after_commit_error(task_id, pending, &error);
             return Err(error);
         }
         if let Some(warning) = pending.staging.cleanup_after_commit() {
@@ -2515,7 +2523,9 @@ impl CompressionService {
                 );
                 return Err(error);
             }
-            let _ = staging.cleanup();
+            if !staging.retain_after_incomplete_rollback(&error) {
+                let _ = staging.cleanup();
+            }
             return Err(error);
         }
         if let Some(warning) = staging.cleanup_after_commit() {
@@ -3652,6 +3662,31 @@ mod tests {
             assert!(error.to_string().contains("[archive-output:Publishing:publication-failed]"));
             assert!(error.chain().any(|cause| cause.downcast_ref::<std::io::Error>().is_some_and(|io| io.kind() == kind)));
         }
+    }
+
+    #[test]
+    fn incomplete_rollback_keeps_files_but_removes_pending_retry() {
+        let temp = tempfile::tempdir().unwrap();
+        let output = temp.path().join("output");
+        let staging = ExtractionStaging::create_for(&output).unwrap();
+        let path = staging.path().to_path_buf();
+        std::fs::write(path.join("backup"), b"original data").unwrap();
+        let id = uuid::Uuid::new_v4().to_string();
+        let pending = PendingExtraction { staging, source_archive: temp.path().join("source.zip"), final_output: output,
+            options: DecompressOptions::default(), expected_expanded_bytes: None };
+        let error = CompressionError::RollbackIncomplete(format!("恢复目录：{}", path.display())).into();
+        CompressionService::retain_pending_after_commit_error(&id, pending, &error);
+        assert!(!PENDING_EXTRACTIONS.contains_key(&id));
+        assert!(!CompressionService::discard_pending_extraction(&id));
+        assert_eq!(std::fs::read(path.join("backup")).unwrap(), b"original data");
+        let ordinary_staging = ExtractionStaging::create_for(&temp.path().join("other-output")).unwrap();
+        let ordinary_path = ordinary_staging.path().to_path_buf();
+        let pending = PendingExtraction { staging: ordinary_staging, source_archive: temp.path().join("source.zip"),
+            final_output: temp.path().join("other-output"), options: DecompressOptions::default(), expected_expanded_bytes: None };
+        CompressionService::retain_pending_after_commit_error(&id, pending, &anyhow::anyhow!("ordinary commit failure"));
+        assert!(PENDING_EXTRACTIONS.contains_key(&id));
+        assert!(CompressionService::discard_pending_extraction(&id));
+        assert!(!ordinary_path.exists());
     }
 
 }

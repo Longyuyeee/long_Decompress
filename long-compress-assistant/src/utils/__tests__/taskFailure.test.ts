@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { describeTaskFailure } from '../taskFailure'
 
 describe('task failure evidence', () => {
-  it.each(['output-conflict', 'publication-failed'] as const)('describes confirmed %s without guessing corruption', category => {
+  it.each(['output-conflict', 'publication-failed', 'rollback-incomplete'] as const)('describes confirmed %s without guessing corruption', category => {
     expect(describeTaskFailure({ status: 'failed', errorMessage: `[archive-output:Publishing:${category}] detail` }))
       .toMatchObject({ category, stage: 'Publishing', evidence: 'recorded-marker' })
     expect(describeTaskFailure({ status: 'completed', errorMessage: `[archive-output:Publishing:${category}]` })).toBeNull()

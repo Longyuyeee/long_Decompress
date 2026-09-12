@@ -16,6 +16,7 @@ describe('isPasswordRelatedError', () => {
 
   it.each([
     '文件不存在',
+    '[archive-output:Publishing:rollback-incomplete] wrong password',
     '[archive-output:Publishing:publication-failed] wrong password',
     '[archive-output:Publishing:output-conflict] encrypted archive',
     '[archive-output:Verifying:verification-failed] wrong password',
