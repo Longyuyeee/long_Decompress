@@ -605,19 +605,29 @@ const setArchiveConfigurationMode = (mode: 'global' | 'individual') => {
   })
 }
 
+// The task store owns removal eligibility (including unsaved-history protection).
+// Only discard UI jobs after that store has actually removed their tasks.
+const syncRemovedCompressionJobs = (taskIds: string[]) => {
+  const remainingIds = new Set(taskStore.tasks.map(task => task.id))
+  compressionStore.removeJobsByTaskIds(taskIds.filter(id => !remainingIds.has(id)))
+  if (taskIds.some(id => remainingIds.has(id))) {
+    appStore.setError('部分任务历史仍在保存或保存失败，任务和文件行已保留。请稍后再清除；保存失败时请在底部任务面板点击“重试保存”。')
+  }
+}
+
 const clearFinishedCompressionTasks = () => {
   const finishedTaskIds = compressionTasks.value
     .filter(task => isFinishedCompressionStatus(task.status))
     .map(task => task.id)
-  compressionStore.removeJobsByTaskIds(finishedTaskIds)
   taskStore.clearFinishedTasks('compression')
+  syncRemovedCompressionJobs(finishedTaskIds)
 }
 
 const removeFinishedCompressionJob = (taskId: string) => {
   const task = compressionTaskById.value.get(taskId)
   if (!task || !isFinishedCompressionStatus(task.status)) return
-  compressionStore.removeJobsByTaskIds([taskId])
   taskStore.removeTask(taskId)
+  syncRemovedCompressionJobs([taskId])
 }
 
 const onBeforeDetailEnter = (element: Element) => {
