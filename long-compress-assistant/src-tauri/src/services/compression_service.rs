@@ -50,6 +50,8 @@ pub enum CompressionError {
     SourceChangedDuringPrecheck,
     #[error("[archive-source:Extracting:source-changed] 源压缩包在解压期间发生变化，当前结果已丢弃；请等待下载或复制完成后重试")]
     SourceChangedDuringExtraction,
+    #[error("[archive-source:{stage}:{code}] {detail}")]
+    SourceAccess { stage: &'static str, code: &'static str, detail: String },
     #[error("需要输入密码才能解压")]
     PasswordRequired,
     #[error("提供的密码不正确")]
@@ -1868,10 +1870,7 @@ impl CompressionService {
     pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, options: DecompressOptions) -> Result<String> {
         let service = self.clone();
         let path = Path::new(&file_path);
-        if !path.is_file() {
-            return Err(CompressionError::FileNotFound(file_path).into());
-        }
-        let source_snapshot = Self::source_file_snapshot(path)?;
+        let source_snapshot = Self::source_file_snapshot(path, "Pre-checking")?;
         if source_snapshot.len == 0 {
             return Err(CompressionError::ExtractionFailed(
                 "压缩包为空，可能仍在下载、复制或尚未写入完成".to_string(),
@@ -2047,7 +2046,7 @@ impl CompressionService {
                 TaskLogSeverity::Success,
             );
         }
-        if Self::source_file_changed(path, source_snapshot)? {
+        if Self::source_file_changed(path, source_snapshot, "Pre-checking")? {
             return Err(CompressionError::SourceChangedDuringPrecheck.into());
         }
         let mark_of_web = if options.preserve_mark_of_web {
@@ -2397,7 +2396,7 @@ impl CompressionService {
         };
 
         let extraction_result = result.map_err(Self::normalize_storage_full_error);
-        let source_changed = Self::source_file_changed(path, source_snapshot)?;
+        let source_changed = Self::source_file_changed(path, source_snapshot, "Extracting")?;
         if let Err(error) = extraction_result {
             if let Err(cleanup_error) = staging.cleanup() {
                 service.emit_log(
@@ -2516,16 +2515,30 @@ impl CompressionService {
         )
     }
 
-    fn source_file_snapshot(path: &Path) -> Result<SourceFileSnapshot> {
-        let metadata = std::fs::metadata(path)?;
+    fn source_access_error(error: std::io::Error, stage: &'static str) -> CompressionError {
+        let (code, summary) = if error.kind() == std::io::ErrorKind::NotFound {
+            ("source-missing", "源压缩包不存在或已被移动，请重新选择源文件")
+        } else {
+            ("source-unavailable", "无法检查源压缩包，请确认路径、访问权限和存储设备状态")
+        };
+        CompressionError::SourceAccess { stage, code, detail: format!("{summary}：{error}") }
+    }
+
+    fn source_file_snapshot(path: &Path, stage: &'static str) -> Result<SourceFileSnapshot> {
+        let metadata = std::fs::metadata(path).map_err(|error| Self::source_access_error(error, stage))?;
+        if !metadata.is_file() {
+            return Err(CompressionError::SourceAccess {
+                stage, code: "source-invalid", detail: "源路径不是普通文件，请选择压缩包文件".into(),
+            }.into());
+        }
         Ok(SourceFileSnapshot {
             len: metadata.len(),
             modified: metadata.modified().ok(),
         })
     }
 
-    fn source_file_changed(path: &Path, original: SourceFileSnapshot) -> Result<bool> {
-        Ok(Self::source_file_snapshot(path)? != original)
+    fn source_file_changed(path: &Path, original: SourceFileSnapshot, stage: &'static str) -> Result<bool> {
+        Ok(Self::source_file_snapshot(path, stage)? != original)
     }
 
     fn ensure_no_link_ancestors(path: &Path) -> Result<()> {
@@ -3499,16 +3512,34 @@ mod tests {
         let temp = tempfile::tempdir().expect("temp dir");
         let archive = temp.path().join("growing.rar");
         std::fs::write(&archive, b"initial bytes").expect("write fixture");
-        let snapshot = CompressionService::source_file_snapshot(&archive).expect("snapshot");
+        let snapshot = CompressionService::source_file_snapshot(&archive, "Pre-checking").expect("snapshot");
 
-        assert!(!CompressionService::source_file_changed(&archive, snapshot).expect("unchanged"));
+        assert!(!CompressionService::source_file_changed(&archive, snapshot, "Extracting").expect("unchanged"));
         std::fs::OpenOptions::new()
             .append(true)
             .open(&archive)
             .expect("open fixture")
             .write_all(b"more bytes")
             .expect("grow fixture");
-        assert!(CompressionService::source_file_changed(&archive, snapshot).expect("changed"));
+        assert!(CompressionService::source_file_changed(&archive, snapshot, "Extracting").expect("changed"));
+    }
+
+    #[test]
+    fn source_snapshot_preserves_missing_invalid_and_access_failures() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("removed.rar");
+        std::fs::write(&archive, b"fixture").unwrap();
+        let snapshot = CompressionService::source_file_snapshot(&archive, "Pre-checking").unwrap();
+        std::fs::remove_file(&archive).unwrap();
+        let missing = CompressionService::source_file_changed(&archive, snapshot, "Extracting").unwrap_err();
+        assert!(missing.to_string().contains("[archive-source:Extracting:source-missing]"));
+        let invalid = CompressionService::source_file_snapshot(temp.path(), "Pre-checking").err().unwrap();
+        assert!(invalid.to_string().contains("[archive-source:Pre-checking:source-invalid]"));
+        for kind in [std::io::ErrorKind::PermissionDenied, std::io::ErrorKind::Other] {
+            let error = CompressionService::source_access_error(std::io::Error::new(kind, "injected detail"), "Pre-checking");
+            assert!(error.to_string().contains("[archive-source:Pre-checking:source-unavailable]"));
+            assert!(error.to_string().contains("injected detail"));
+        }
     }
 
     #[test]
