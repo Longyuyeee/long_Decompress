@@ -3,6 +3,10 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useHistoryStore } from '@/stores/history'
 import { useAppStore } from '@/stores/app'
 import type { TaskHistoryRecord, TaskHistoryStatus } from '@/types/taskHistory'
+import { save } from '@tauri-apps/api/dialog'
+import { getVersion } from '@tauri-apps/api/app'
+import { invoke } from '@tauri-apps/api/tauri'
+import { createTaskDiagnosticReport, describeTaskFailure, failureCategories, type FailureCategory } from '@/utils/taskFailure'
 
 type TypeFilter = 'all' | 'compression' | 'decompression'
 type StatusFilter = 'all' | TaskHistoryStatus
@@ -16,6 +20,26 @@ const statusFilter = ref<StatusFilter>('all')
 const rangeFilter = ref<RangeFilter>('30d')
 const selectedRecord = ref<TaskHistoryRecord | null>(null)
 const showClearConfirm = ref(false)
+const failureFilter = ref<'all' | FailureCategory>('all')
+const exporting = ref(false)
+const selectedFailure = computed(() => selectedRecord.value ? describeTaskFailure(selectedRecord.value) : null)
+
+const exportDiagnostic = async () => {
+  const record = selectedRecord.value
+  if (!record || exporting.value) return
+  exporting.value = true
+  try {
+    const content = createTaskDiagnosticReport(record, await getVersion())
+    const path = await save({ title: '导出任务诊断报告', defaultPath: 'task-diagnostic.json', filters: [{ name: 'JSON', extensions: ['json'] }] })
+    if (!path) return
+    await invoke('write_text_file', { path, content })
+    appStore.setSuccess('诊断报告已导出')
+  } catch (error) {
+    appStore.setError(`诊断报告导出失败：${String(error)}`)
+  } finally {
+    exporting.value = false
+  }
+}
 
 const DAY_MS = 86_400_000
 const terminalColor: Record<TaskHistoryStatus, string> = {
@@ -35,11 +59,13 @@ const filteredRecords = computed(() => {
     ? 0
     : Date.now() - Number.parseInt(rangeFilter.value, 10) * DAY_MS
   return historyStore.sortedRecords.filter(record => {
-    const matchesQuery = !normalized || [record.name, record.outputPath, record.format, ...record.sourcePaths]
+    const failure = describeTaskFailure(record)
+    const matchesQuery = !normalized || [record.name, record.outputPath, record.format, record.errorMessage, failure?.categoryLabel, ...record.sourcePaths]
       .some(value => value?.toLowerCase().includes(normalized))
     return matchesQuery
       && (typeFilter.value === 'all' || record.taskType === typeFilter.value)
       && (statusFilter.value === 'all' || record.status === statusFilter.value)
+      && (failureFilter.value === 'all' || failure?.category === failureFilter.value)
       && (!cutoff || safeTime(record.completedAt) >= cutoff)
   })
 })
@@ -214,9 +240,13 @@ onMounted(refresh)
       <section class="history-panel p-3 sm:p-4 flex flex-col xl:flex-row gap-3" aria-label="History filters">
         <label class="relative flex-1 min-w-0">
           <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-dim"></i>
-          <input v-model="query" data-testid="history-search" class="history-control w-full pl-11" :placeholder="appStore.t('history.search_placeholder')">
+          <input v-model="query" data-testid="history-search" class="history-control w-full pl-11" placeholder="搜索任务、路径或失败原因" aria-label="搜索任务、路径或失败原因">
         </label>
-        <div class="grid grid-cols-3 gap-2 xl:flex xl:shrink-0">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 xl:flex xl:shrink-0">
+          <select v-model="failureFilter" class="history-control min-w-0 xl:max-w-48" data-testid="history-failure-filter" aria-label="失败类别">
+            <option value="all">全部失败类别</option>
+            <option v-for="(label, value) in failureCategories" :key="value" :value="value">{{ label }}</option>
+          </select>
           <select v-model="typeFilter" class="history-control min-w-0" data-testid="history-type-filter">
             <option value="all">{{ appStore.t('history.type.all') }}</option><option value="compression">{{ appStore.t('history.type.compression') }}</option><option value="decompression">{{ appStore.t('history.type.decompression') }}</option>
           </select>
@@ -271,7 +301,14 @@ onMounted(refresh)
             <div class="grid grid-cols-2 gap-3 mb-5"><div class="detail-metric"><span>{{ appStore.t('history.detail.status') }}</span><strong :class="terminalColor[selectedRecord.status].split(' ')[0]">{{ statusLabel(selectedRecord) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.duration') }}</span><strong>{{ formatDuration(selectedRecord.durationMs) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.volume') }}</span><strong>{{ formatBytes(Math.max(selectedRecord.processedBytes, selectedRecord.totalBytes)) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.completed_at') }}</span><strong>{{ formatDateTime(selectedRecord.completedAt) }}</strong></div></div>
             <section class="detail-section"><h3><i class="pi pi-sign-in"></i>{{ appStore.t('history.detail.sources') }}</h3><div class="space-y-2 mt-3"><code v-for="source in selectedRecord.sourcePaths" :key="source" class="detail-path">{{ source }}</code><p v-if="!selectedRecord.sourcePaths.length" class="text-sm text-dim">—</p></div></section>
             <section class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code></section>
-            <section v-if="selectedRecord.errorMessage" class="detail-section border-red-500/20 bg-red-500/5"><h3 class="text-red-500"><i class="pi pi-exclamation-circle"></i>{{ appStore.t('history.detail.error') }}</h3><p class="text-sm text-red-500/90 break-words mt-3">{{ selectedRecord.errorMessage }}</p></section>
+            <section v-if="selectedFailure" class="detail-section border-red-500/20 bg-red-500/5">
+              <h3 class="text-red-500">{{ selectedFailure.categoryLabel }} · {{ selectedFailure.stageLabel }}</h3>
+              <p class="text-sm text-red-500/90 break-words mt-3">{{ selectedFailure.message }}</p>
+            </section>
+            <section class="detail-section">
+              <button class="history-control" data-testid="history-export" :disabled="exporting" @click="exportDiagnostic">{{ exporting ? '正在导出…' : '导出诊断报告' }}</button>
+              <p class="text-xs text-muted mt-2">报告包含此任务已保存的文件路径、错误和日志；旧记录缺失的信息不会补写。</p>
+            </section>
             <section class="detail-section"><div class="flex items-center justify-between"><h3><i class="pi pi-list"></i>{{ appStore.t('history.detail.logs') }}</h3><span class="text-xs text-dim">{{ selectedRecord.logs.length }}</span></div><div v-if="selectedRecord.logs.length" class="space-y-2 mt-3"><div v-for="(log, index) in selectedRecord.logs" :key="`${log.timestamp}-${index}`" class="detail-log"><time>{{ formatDateTime(log.timestamp) }}</time><span :class="log.severity === 'error' ? 'text-red-500' : log.severity === 'success' ? 'text-emerald-500' : 'text-content'">{{ log.message }}</span></div></div><p v-else class="text-sm text-dim mt-3">{{ appStore.t('history.detail.no_logs') }}</p></section>
             <button type="button" class="w-full mt-5 py-3 rounded-xl border border-red-500/20 text-red-500 font-black hover:bg-red-500/10 transition-colors" @click="removeSelectedRecord"><i class="pi pi-trash mr-2"></i>{{ appStore.t('history.delete_record') }}</button>
           </aside>

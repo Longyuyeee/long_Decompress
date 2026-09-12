@@ -2,9 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import HistoryView from '../HistoryView.vue'
+import { useAppStore } from '@/stores/app'
 
-const mocks = vi.hoisted(() => ({ invoke: vi.fn() }))
+const mocks = vi.hoisted(() => ({ invoke: vi.fn(), save: vi.fn() }))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
+vi.mock('@tauri-apps/api/dialog', () => ({ save: mocks.save }))
+vi.mock('@tauri-apps/api/app', () => ({ getVersion: vi.fn(async () => '1.3.2') }))
 
 const records = [
   {
@@ -27,6 +30,7 @@ const mountView = () => mount(HistoryView, { global: { plugins: [createPinia()],
 describe('HistoryView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.save.mockResolvedValue(null)
     localStorage.clear()
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'load_app_settings') return '{}'
@@ -66,5 +70,49 @@ describe('HistoryView', () => {
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.get('[data-testid="history-empty"]').text()).toContain('还没有历史任务')
+  })
+
+  it('searches error text and filters legacy failures without inventing their category', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.get('[data-testid="history-search"]').setValue('数据错误')
+    expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
+    expect(wrapper.get('[data-testid="history-list"]').text()).not.toContain('photos.zip')
+    await wrapper.get('[data-testid="history-failure-filter"]').setValue('unknown')
+    await wrapper.find('[data-testid="history-list"] article').trigger('click')
+    expect(wrapper.get('[data-testid="history-detail"]').text()).toContain('未分类 · 阶段未知')
+  })
+
+  it('exports only the selected persisted task and does not write when the dialog is cancelled', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.get('[data-testid="history-type-filter"]').setValue('decompression')
+    await wrapper.find('[data-testid="history-list"] article').trigger('click')
+    await wrapper.get('[data-testid="history-export"]').trigger('click')
+    await flushPromises()
+    expect(mocks.invoke).not.toHaveBeenCalledWith('write_text_file', expect.anything())
+    mocks.save.mockResolvedValue('C:/reports/task.json')
+    await wrapper.get('[data-testid="history-export"]').trigger('click')
+    await flushPromises()
+    const call = mocks.invoke.mock.calls.find(([command]) => command === 'write_text_file')!
+    const report = JSON.parse(call[1].content)
+    expect(call[1].path).toBe('C:/reports/task.json')
+    expect(report.task.id).toBe('extract-1')
+    expect(report.failure.category).toBe('unknown')
+    expect(report.task.errorMessage).toBe('数据错误')
+    expect(call[1].content).not.toContain('photos.zip')
+  })
+
+  it('reports export write failures and allows another attempt', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.find('[data-testid="history-list"] article').trigger('click')
+    mocks.save.mockResolvedValue('C:/reports/task.json')
+    mocks.invoke.mockRejectedValueOnce(new Error('disk full'))
+    await wrapper.get('[data-testid="history-export"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="history-export"]').attributes('disabled')).toBeUndefined()
+    expect(useAppStore().error).toContain('诊断报告导出失败：Error: disk full')
+    expect(wrapper.get('[data-testid="history-detail"]').exists()).toBe(true)
   })
 })
