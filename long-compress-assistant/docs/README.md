@@ -4,6 +4,7 @@
 
 ## 当前接续入口
 
+- [`USER_SCENARIO_AUDIT_2026-09-12.md`](USER_SCENARIO_AUDIT_2026-09-12.md)：用户口吻场景、失败原因优先展示，以及真实桌面未完成/全量回归未通过的明确接续点。
 - [`ROLLBACK_RECOVERY_GUIDANCE_2026-09-12.md`](ROLLBACK_RECOVERY_GUIDANCE_2026-09-12.md)：回滚不完整的历史指引、诊断导出与人工核对边界。
 - [`INCOMPLETE_ROLLBACK_RETENTION_2026-09-12.md`](INCOMPLETE_ROLLBACK_RETENTION_2026-09-12.md)：回滚不完整时保留恢复目录、禁用原暂存重试及验证边界。
 - [`EXTRACTION_ROLLBACK_STAGING_2026-09-12.md`](EXTRACTION_ROLLBACK_STAGING_2026-09-12.md)：部分提交回滚恢复暂存、实际文件占用重试验证，以及回滚不完整边界。
