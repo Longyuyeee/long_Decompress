@@ -16,6 +16,8 @@ describe('isPasswordRelatedError', () => {
 
   it.each([
     '文件不存在',
+    '[archive-source:Pre-checking:source-changed] Wrong password',
+    '[archive-source:Extracting:source-changed] 密码错误',
     '目标磁盘空间不足',
     '归档结构损坏',
     '归档检测失败：[archive-inspection:damaged] Unexpected end of archive; Wrong password',

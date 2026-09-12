@@ -1,6 +1,7 @@
 import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 export const failureCategories = {
+  'source-changed': '源文件已变化',
   damaged: '文件损坏或不完整',
   'missing-volume': '缺失分卷',
   permission: '访问权限',
@@ -25,20 +26,21 @@ export function describeTaskFailure(record: Pick<TaskHistoryRecord, 'status' | '
   if (record.status !== 'failed') return null
   const message = record.errorMessage?.trim() || '原记录未保存具体失败原因'
   const marker = message.match(/\[archive-inspection:([a-z-]+)\]/)?.[1]
+  const sourceStage = message.match(/\[archive-source:(Pre-checking|Extracting):source-changed\]/)?.[1]
   const category: FailureCategory = marker && Object.hasOwn(failureCategories, marker)
     ? marker as FailureCategory : 'unknown'
   const inspection = Boolean(marker) || message.includes('归档检测失败：')
   const persisted = record.failure?.schemaVersion === 1 ? record.failure : null
   const savedCategory = persisted && Object.hasOwn(failureCategories, persisted.category)
-    ? persisted.category as FailureCategory : category
+    ? persisted.category as FailureCategory : sourceStage ? 'source-changed' : category
   const stage = persisted && Object.hasOwn(stageLabels, persisted.stage)
-    ? persisted.stage : inspection ? 'inspection' : 'unknown'
+    ? persisted.stage : sourceStage || (inspection ? 'inspection' : 'unknown')
   return {
     category: savedCategory,
     categoryLabel: failureCategories[savedCategory],
     stage,
     stageLabel: stageLabels[stage] + (persisted?.evidence === 'observed-stage' ? '（最后观测阶段）' : ''),
-    evidence: persisted?.evidence || (marker ? 'recorded-marker' : 'legacy-message'),
+    evidence: persisted?.evidence || (marker || sourceStage ? 'recorded-marker' : 'legacy-message'),
     message,
   }
 }
