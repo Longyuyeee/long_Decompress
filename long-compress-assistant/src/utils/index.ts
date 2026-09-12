@@ -73,6 +73,7 @@ export const isPasswordRelatedError = (error: unknown): boolean => {
   // The backend has already classified these as non-password/unknown failures.
     if (message.includes('[archive-inspection:') || message.includes('归档检测失败：')) return false
     if (message.includes('[archive-output:verifying:verification-failed]')) return false
+    if (/\[archive-output:publishing:(output-conflict|publication-failed)\]/.test(message)) return false
     if (/\[archive-source:(pre-checking|extracting):(source-changed|source-missing|source-unavailable|source-invalid)\]/.test(message)) return false
   return [
     'passwordrequired',
