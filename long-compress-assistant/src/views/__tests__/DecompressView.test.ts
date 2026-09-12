@@ -366,6 +366,7 @@ describe('DecompressView', () => {
         outputPath: 'C:/output',
       })
       taskStore.updateTaskStatus(id, 'completed')
+      await taskStore.waitForHistoryPersistence(id)
     }
     await nextTick()
 
