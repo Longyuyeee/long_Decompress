@@ -31,4 +31,5 @@
 
 - 规划文档提交 `7d82c29` 已推送主线；步骤一 `2c959fe` 和步骤二 `9d17426` 已逐步审计、推送。
 - [PR #125](https://github.com/Longyuyeee/long_Decompress/pull/125) 汇总本轮代码；严格 `cargo clippy --lib --tests -- -D warnings` 通过。
-- 远端安装器构建与合并状态以 PR 检查为准；本轮不创建发布标签。下一轮从包含 PR #125 的最新主线接续。
+- [CI 34674642329](https://github.com/Longyuyeee/long_Decompress/actions/runs/34674642329) 在最新 PR 提交 `eb125eb` 上成功，用时 14 分 36 秒，Windows NSIS 安装器已构建并上传。PR #125 随后正常合入 `master@08451e5`，未绕过所需检查。
+- 本轮不创建发布标签。下一轮从包含 PR #125 的最新主线接续；公开安装版仍为 v1.3.2，CI 产物不等于新版本 Release。
