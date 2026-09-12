@@ -19,7 +19,9 @@
 - Rust 历史命令 12/12 通过：使用实际错误类型生成消息，验证两个阶段覆盖过期调用方阶段并正确读回 SQLite。
 - 现有真实临时文件增长快照测试 1/1 通过；不等同于手工桌面中边下载边解压的端到端验收。
 - 未修改用户历史数据库、未重新运行用户私有样本；schema 仍为 8。
-- `git diff --check` 通过。Windows CI / PR 交付状态完成后补录。
+- 解压事务补充回归 13/13 通过，覆盖暂存清理、冲突处理、回滚与提交。
+- `git diff --check` 通过。[PR #129](https://github.com/Longyuyeee/long_Decompress/pull/129) 已合入 `master@00719ff310eb5b08dd55a80ec427c6089182feec`。
+- [Windows CI 34676741608](https://github.com/Longyuyeee/long_Decompress/actions/runs/34676741608) 通过，耗时 6 分 6 秒，安装器产物上传成功。之后的证据补录是纯文档变更，不另称业务验收。
 
 ## 下一步
 
