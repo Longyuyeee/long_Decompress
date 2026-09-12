@@ -73,6 +73,32 @@ describe('HistoryView', () => {
     expect(wrapper.get('[data-testid="history-empty"]').text()).toContain('还没有历史任务')
   })
 
+  it('我点开失败记录，先看最终原因，再决定是否重新解压', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.get('[data-testid="history-type-filter"]').setValue('decompression')
+    await wrapper.find('[data-testid="history-list"] article').trigger('click')
+    const detail = wrapper.get('[data-testid="history-detail"]')
+    const reason = detail.findAll('section').find(section => section.text().includes('未分类 · 阶段未知'))!
+    const draft = detail.get('[data-testid="history-extraction-draft"]')
+    expect(reason.element.compareDocumentPosition(draft.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(reason.text()).toContain('最终失败原因')
+    expect(reason.text()).toContain('数据错误')
+    expect(reason.element.parentElement?.children[1]).toBe(reason.element)
+    const report = detail.get('[data-testid="history-export"]')
+    expect(report.element.compareDocumentPosition(draft.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(mocks.invoke.mock.calls.every(([command]) => !['decompress_archive', 'save_task_history'].includes(command))).toBe(true)
+  })
+
+  it.each(['completed', 'cancelled'])('任务是 %s 时，不把旧错误当作本次最终失败', async status => {
+    mocks.invoke.mockImplementation(async command => command === 'list_task_history'
+      ? [{ ...records[1], status }] : undefined)
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.find('[data-testid="history-list"] article').trigger('click')
+    expect(wrapper.find('[data-testid="history-final-failure"]').exists()).toBe(false)
+  })
+
   it('searches error text and filters legacy failures without inventing their category', async () => {
     const wrapper = mountView()
     await flushPromises()
@@ -129,6 +155,9 @@ describe('HistoryView', () => {
     await flushPromises()
     await wrapper.find('[data-testid="history-list"] article').trigger('click')
     expect(wrapper.get('[data-testid="history-recovery-guidance"]').text()).toContain('请选择新的空目录')
+    const reason = wrapper.get('[data-testid="history-final-failure"]')
+    const guidance = wrapper.get('[data-testid="history-recovery-guidance"]')
+    expect(reason.element.compareDocumentPosition(guidance.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(wrapper.get('[data-testid="history-detail"]').text()).toContain('D:/recovery')
     expect(mocks.invoke).not.toHaveBeenCalledWith('save_task_history', expect.anything())
     expect(mocks.invoke).not.toHaveBeenCalledWith('open_in_explorer', expect.anything())

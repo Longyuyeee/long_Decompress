@@ -586,6 +586,9 @@ describe('CompressionView', () => {
       outputPath: 'C:/other',
     })
     taskStore.updateTaskStatus('finished-decompression', 'completed')
+    // This case is for saved history. Pending/failed saves are exercised below.
+    await taskStore.waitForHistoryPersistence('finished-compression')
+    await taskStore.waitForHistoryPersistence('finished-decompression')
     await nextTick()
 
     const clear = wrapper.findAll('button').find(button => button.text().includes('清除已结束'))
@@ -593,6 +596,60 @@ describe('CompressionView', () => {
     await clear!.trigger('click')
 
     expect(taskStore.tasks.map(task => task.id)).toEqual(['finished-decompression'])
+  })
+
+  it.each(['bulk', 'single'])('我刚压缩完就点清除（%s），历史没存好时任务和文件行都要留下', async action => {
+    let finishSave!: () => void
+    mocks.invoke.mockImplementation(command => command === 'save_task_history'
+      ? new Promise<void>(resolve => { finishSave = resolve }) : Promise.resolve('{}'))
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    const compressionStore = useCompressionStore()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await flushPromises()
+    taskStore.addTask({ id: 'saving', name: 'sample.zip', type: 'compression', sourceFiles: ['C:/input/sample.txt'], outputPath: 'C:/sample.zip' })
+    compressionStore.selectedFiles[0].taskId = 'saving'
+    taskStore.updateTaskStatus('saving', 'completed')
+    await nextTick()
+    const clickClear = async () => {
+      if (action === 'single') await wrapper.get('button[title="清除任务"]').trigger('click')
+      else await wrapper.findAll('button').find(button => button.text().includes('清除已结束'))!.trigger('click')
+    }
+    await clickClear()
+    expect(taskStore.tasks.map(task => task.id)).toContain('saving')
+    expect(compressionStore.selectedFiles).toHaveLength(1)
+    expect(useAppStore().error).toContain('历史仍在保存')
+    finishSave()
+    await taskStore.waitForHistoryPersistence('saving')
+    await nextTick()
+    await clickClear()
+    expect(taskStore.tasks).toHaveLength(0)
+    expect(compressionStore.selectedFiles).toHaveLength(0)
+  })
+
+  it('历史保存失败后清除不能吞掉文件行，重试保存也不能重跑压缩', async () => {
+    mocks.invoke.mockImplementation(command => command === 'save_task_history'
+      ? Promise.reject(new Error('disk unavailable')) : Promise.resolve('{}'))
+    const wrapper = mountView()
+    const taskStore = useTaskStore()
+    const compressionStore = useCompressionStore()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await flushPromises()
+    taskStore.addTask({ id: 'unsaved', name: 'sample.zip', type: 'compression', sourceFiles: ['C:/input/sample.txt'], outputPath: 'C:/sample.zip' })
+    compressionStore.selectedFiles[0].taskId = 'unsaved'
+    taskStore.updateTaskStatus('unsaved', 'completed')
+    await taskStore.waitForHistoryPersistence('unsaved')
+    await nextTick()
+    await wrapper.get('button[title="清除任务"]').trigger('click')
+    expect(compressionStore.selectedFiles).toHaveLength(1)
+    expect(taskStore.tasks).toHaveLength(1)
+    expect(useAppStore().error).toContain('重试保存')
+    mocks.invoke.mockResolvedValue('{}')
+    await taskStore.retryHistoryPersistence('unsaved')
+    await wrapper.get('button[title="清除任务"]').trigger('click')
+    expect(taskStore.tasks).toHaveLength(0)
+    expect(compressionStore.selectedFiles).toHaveLength(0)
+    expect(mocks.compressFiles).not.toHaveBeenCalled()
   })
 
   it('continues the batch after one compression fails', async () => {

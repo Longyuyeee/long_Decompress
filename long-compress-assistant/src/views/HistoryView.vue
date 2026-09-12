@@ -300,6 +300,11 @@ onMounted(refresh)
         <div v-if="selectedRecord" class="fixed inset-0 z-[360] bg-slate-950/35 backdrop-blur-sm flex justify-end" @click.self="selectedRecord = null">
           <aside class="history-detail history-detail-solid h-full w-full max-w-[520px] overflow-y-auto overflow-x-hidden custom-scrollbar p-5 sm:p-7" data-testid="history-detail">
             <header class="flex items-start justify-between gap-4 mb-6"><div class="min-w-0"><p class="text-xs font-black text-primary uppercase tracking-[0.2em]">{{ appStore.t('history.detail_eyebrow') }}</p><h2 class="text-2xl font-black text-content truncate mt-2">{{ selectedRecord.name }}</h2><p class="text-sm text-muted mt-1">{{ typeLabel(selectedRecord) }} · {{ selectedRecord.format?.toUpperCase() || '—' }}</p></div><button class="history-icon-button" :aria-label="appStore.t('common.close')" @click="selectedRecord = null"><i class="pi pi-times"></i></button></header>
+            <section v-if="selectedFailure" class="detail-section border-red-500/20 bg-red-500/5 mb-5" data-testid="history-final-failure" aria-label="最终失败原因">
+              <h3 class="text-red-500">最终失败原因</h3>
+              <p class="text-sm text-red-500 font-bold mt-2">{{ selectedFailure.categoryLabel }} · {{ selectedFailure.stageLabel }}</p>
+              <p class="text-sm text-red-500/90 break-words mt-3">{{ selectedFailure.message }}</p>
+            </section>
             <div class="grid grid-cols-2 gap-3 mb-5"><div class="detail-metric"><span>{{ appStore.t('history.detail.status') }}</span><strong :class="terminalColor[selectedRecord.status].split(' ')[0]">{{ statusLabel(selectedRecord) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.duration') }}</span><strong>{{ formatDuration(selectedRecord.durationMs) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.volume') }}</span><strong>{{ formatBytes(Math.max(selectedRecord.processedBytes, selectedRecord.totalBytes)) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.completed_at') }}</span><strong>{{ formatDateTime(selectedRecord.completedAt) }}</strong></div></div>
             <section class="detail-section"><h3><i class="pi pi-sign-in"></i>{{ appStore.t('history.detail.sources') }}</h3><div class="space-y-2 mt-3"><code v-for="source in selectedRecord.sourcePaths" :key="source" class="detail-path">{{ source }}</code><p v-if="!selectedRecord.sourcePaths.length" class="text-sm text-dim">—</p></div></section>
             <section class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code></section>
@@ -309,15 +314,11 @@ onMounted(refresh)
                 <li v-for="step in recoveryGuidance.steps" :key="step">{{ step }}</li>
               </ol>
             </section>
-            <HistoryExtractionDraft v-if="selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
-            <section v-if="selectedFailure" class="detail-section border-red-500/20 bg-red-500/5">
-              <h3 class="text-red-500">{{ selectedFailure.categoryLabel }} · {{ selectedFailure.stageLabel }}</h3>
-              <p class="text-sm text-red-500/90 break-words mt-3">{{ selectedFailure.message }}</p>
-            </section>
             <section class="detail-section">
               <button class="history-control" data-testid="history-export" :disabled="exporting" @click="exportDiagnostic">{{ exporting ? '正在导出…' : '导出诊断报告' }}</button>
               <p class="text-xs text-muted mt-2">报告包含此任务已保存的文件路径、错误和日志；旧记录缺失的信息不会补写。</p>
             </section>
+            <HistoryExtractionDraft v-if="selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
             <section class="detail-section"><div class="flex items-center justify-between"><h3><i class="pi pi-list"></i>{{ appStore.t('history.detail.logs') }}</h3><span class="text-xs text-dim">{{ selectedRecord.logs.length }}</span></div><div v-if="selectedRecord.logs.length" class="space-y-2 mt-3"><div v-for="(log, index) in selectedRecord.logs" :key="`${log.timestamp}-${index}`" class="detail-log"><time>{{ formatDateTime(log.timestamp) }}</time><span :class="log.severity === 'error' ? 'text-red-500' : log.severity === 'success' ? 'text-emerald-500' : 'text-content'">{{ log.message }}</span></div></div><p v-else class="text-sm text-dim mt-3">{{ appStore.t('history.detail.no_logs') }}</p></section>
             <button type="button" class="w-full mt-5 py-3 rounded-xl border border-red-500/20 text-red-500 font-black hover:bg-red-500/10 transition-colors" @click="removeSelectedRecord"><i class="pi pi-trash mr-2"></i>{{ appStore.t('history.delete_record') }}</button>
           </aside>
