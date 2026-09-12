@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
@@ -514,9 +514,23 @@ fn rollback_extraction_commit(
     created_files: &[PathBuf],
     created_dirs: &[PathBuf],
     backups: &[(PathBuf, PathBuf)],
+    moved_files: &[(PathBuf, PathBuf)],
 ) -> std::result::Result<(), Vec<String>> {
     let mut errors = Vec::new();
+    let mut unrestored = HashSet::new();
+    for (source, destination) in moved_files.iter().rev() {
+        let result = if source.exists() {
+            Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "staging source already exists"))
+        } else {
+            std::fs::rename(destination, source)
+        };
+        if let Err(error) = result {
+            unrestored.insert(destination.clone());
+            errors.push(format!("restore staging {} from {}: {}", source.display(), destination.display(), error));
+        }
+    }
     for path in created_files.iter().rev() {
+        if unrestored.contains(path) { continue; }
         if let Err(error) = std::fs::remove_file(path) {
             if error.kind() != std::io::ErrorKind::NotFound {
                 errors.push(format!("remove {}: {}", path.display(), error));
@@ -524,6 +538,7 @@ fn rollback_extraction_commit(
         }
     }
     for (destination, backup) in backups.iter().rev() {
+        if unrestored.contains(destination) { continue; }
         if let Err(error) = std::fs::remove_file(destination) {
             if error.kind() != std::io::ErrorKind::NotFound {
                 errors.push(format!("remove {}: {}", destination.display(), error));
@@ -663,6 +678,7 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
     let mut created_files = Vec::new();
     let mut created_dirs = Vec::new();
     let mut backups = Vec::new();
+    let mut moved_files = Vec::new();
     let commit_result = (|| -> Result<()> {
         if !output.exists() {
             std::fs::create_dir_all(output)?;
@@ -731,13 +747,14 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
                 created_files.push(destination.clone());
             }
             std::fs::rename(&source, &destination)?;
+            moved_files.push((source, destination));
         }
         Ok(())
     })();
 
     if let Err(error) = commit_result {
         if let Err(rollback_errors) =
-            rollback_extraction_commit(&created_files, &created_dirs, &backups)
+            rollback_extraction_commit(&created_files, &created_dirs, &backups, &moved_files)
         {
             return Err(CompressionError::ExtractionFailed(format!(
                 "Extraction commit failed: {}. Rollback was incomplete: {}",
@@ -746,6 +763,7 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
             ))
             .into());
         }
+        let _ = std::fs::remove_dir(&rollback_root);
         return Err(error);
     }
     let _ = std::fs::remove_dir_all(&rollback_root);
@@ -910,12 +928,58 @@ mod tests {
         let missing_backup = temp.path().join("missing.bak");
 
         let errors =
-            rollback_extraction_commit(&[], &[], &[(destination.clone(), missing_backup.clone())])
+            rollback_extraction_commit(&[], &[], &[(destination.clone(), missing_backup.clone())], &[])
                 .expect_err("missing backup must be reported");
         assert!(errors.iter().any(|error| {
             error.contains(&destination.to_string_lossy().to_string())
                 && error.contains(&missing_backup.to_string_lossy().to_string())
         }));
+    }
+
+    #[test]
+    fn rollback_does_not_delete_output_when_staging_restore_is_blocked() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source");
+        let destination = temp.path().join("destination");
+        let backup = temp.path().join("backup");
+        std::fs::write(&source, b"unexpected staging occupant").unwrap();
+        std::fs::write(&destination, b"new output").unwrap();
+        std::fs::write(&backup, b"old output").unwrap();
+        assert!(rollback_extraction_commit(&[], &[], &[(destination.clone(), backup.clone())], &[(source.clone(), destination.clone())]).is_err());
+        assert_eq!(std::fs::read(source).unwrap(), b"unexpected staging occupant");
+        assert_eq!(std::fs::read(destination).unwrap(), b"new output");
+        assert_eq!(std::fs::read(backup).unwrap(), b"old output");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn failed_commit_restores_staging_for_a_complete_retry() {
+        use std::os::windows::fs::OpenOptionsExt;
+        let temp = tempfile::tempdir().unwrap();
+        let staging = temp.path().join("staging");
+        let output = temp.path().join("output");
+        std::fs::create_dir_all(&staging).unwrap();
+        std::fs::create_dir_all(&output).unwrap();
+        for name in ["a.txt", "b.txt", "z.txt"] {
+            std::fs::write(staging.join(name), format!("new-{name}")).unwrap();
+        }
+        std::fs::write(output.join("a.txt"), b"original-a").unwrap();
+        std::fs::write(output.join("z.txt"), b"original-z").unwrap();
+        let handle = std::fs::OpenOptions::new().read(true).share_mode(0).open(output.join("z.txt")).unwrap();
+        let options = DecompressOptions { conflict_policy: "overwrite".into(), ..Default::default() };
+        let result = commit_staged_extraction_with_resolutions("archive.zip", &staging, &output, &options, &HashMap::new(), None, |_| {});
+        assert!(result.is_err());
+        assert_eq!(std::fs::read(output.join("a.txt")).unwrap(), b"original-a");
+        assert!(!output.join("b.txt").exists());
+        for name in ["a.txt", "b.txt", "z.txt"] {
+            assert_eq!(std::fs::read(staging.join(name)).unwrap(), format!("new-{name}").as_bytes());
+        }
+        assert!(!staging.join(".rollback").exists());
+        drop(handle);
+        commit_staged_extraction_with_resolutions("archive.zip", &staging, &output, &options, &HashMap::new(), None, |_| {}).unwrap();
+        for name in ["a.txt", "b.txt", "z.txt"] {
+            assert_eq!(std::fs::read(output.join(name)).unwrap(), format!("new-{name}").as_bytes());
+        }
     }
 
     #[cfg(windows)]
