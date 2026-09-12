@@ -57,6 +57,7 @@ describe('HistoryView', () => {
 
     await wrapper.find('[data-testid="history-list"] article').trigger('click')
     expect(wrapper.get('[data-testid="history-detail"]').text()).toContain('数据错误')
+    expect(wrapper.find('[data-testid="history-recovery-guidance"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="history-detail"]').text()).toContain('D:/broken.7z')
     expect(wrapper.get('[data-testid="history-detail"]').classes()).toContain('history-detail-solid')
   })
@@ -114,5 +115,29 @@ describe('HistoryView', () => {
     expect(wrapper.get('[data-testid="history-export"]').attributes('disabled')).toBeUndefined()
     expect(useAppStore().error).toContain('诊断报告导出失败：Error: disk full')
     expect(wrapper.get('[data-testid="history-detail"]').exists()).toBe(true)
+  })
+
+  it('shows and exports read-only rollback guidance without changing history', async () => {
+    const recoveryRecord = { ...records[1], errorMessage: '[archive-output:Publishing:rollback-incomplete] 恢复目录：D:/recovery',
+      failure: { schemaVersion: 1, category: 'rollback-incomplete', stage: 'Publishing', evidence: 'recorded-marker' } }
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'load_app_settings') return '{}'
+      if (command === 'list_task_history') return [recoveryRecord]
+      return undefined
+    })
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.find('[data-testid="history-list"] article').trigger('click')
+    expect(wrapper.get('[data-testid="history-recovery-guidance"]').text()).toContain('请选择新的空目录')
+    expect(wrapper.get('[data-testid="history-detail"]').text()).toContain('D:/recovery')
+    expect(mocks.invoke).not.toHaveBeenCalledWith('save_task_history', expect.anything())
+    expect(mocks.invoke).not.toHaveBeenCalledWith('open_in_explorer', expect.anything())
+    mocks.save.mockResolvedValue('C:/reports/recovery.json')
+    await wrapper.get('[data-testid="history-export"]').trigger('click')
+    await flushPromises()
+    const call = mocks.invoke.mock.calls.find(([command]) => command === 'write_text_file')!
+    const report = JSON.parse(call[1].content)
+    expect(report.recoveryGuidance.steps).toHaveLength(4)
+    expect(report.task.errorMessage).toContain('D:/recovery')
   })
 })

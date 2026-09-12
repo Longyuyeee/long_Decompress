@@ -55,6 +55,19 @@ export function describeTaskFailure(record: Pick<TaskHistoryRecord, 'status' | '
   }
 }
 
+export function getTaskRecoveryGuidance(record: Pick<TaskHistoryRecord, 'status' | 'errorMessage' | 'failure'>) {
+  if (describeTaskFailure(record)?.category !== 'rollback-incomplete') return null
+  return {
+    title: '回滚不完整：先保留文件，再核对',
+    steps: [
+      '保留源压缩包、当前输出目录和错误详情中的恢复目录；恢复目录可能是隐藏目录，不要删除其中的备份。',
+      '导出本任务诊断报告，并按下方保存的来源、输出路径和原始错误核对；旧记录缺少恢复路径时不要猜测目录。',
+      '检查输出是否混有旧文件和新文件，必要时先复制到另一个位置再人工处理；本软件尚不能自动判定每份残留文件应恢复到哪里。',
+      '从历史创建的解压草稿是新任务，不会继续提交旧暂存或恢复旧输出。如需重新解压，请选择新的空目录，不要覆盖尚未核对的输出。',
+    ],
+  }
+}
+
 export function createTaskDiagnosticReport(record: TaskHistoryRecord, appVersion: string) {
   return JSON.stringify({
     schemaVersion: 1,
@@ -63,6 +76,7 @@ export function createTaskDiagnosticReport(record: TaskHistoryRecord, appVersion
     scope: 'single-persisted-task',
     note: '仅包含当前选中任务已保存的信息；日志可能受历史保留上限截断。应用版本为导出时版本，不代表任务执行时版本。类别和阶段优先使用已保存结构化信息，旧记录按标记解析，未知原因不推测。',
     failure: describeTaskFailure(record),
+    recoveryGuidance: getTaskRecoveryGuidance(record),
     task: {
       id: record.id, name: record.name, status: record.status,
       taskType: record.taskType, workloadKind: record.workloadKind || 'archive',
