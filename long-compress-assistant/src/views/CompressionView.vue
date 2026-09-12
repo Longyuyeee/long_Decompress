@@ -49,7 +49,10 @@ const rarResolutionMessage = ref('')
 type RarResolution = 'retry' | 'use-7z' | 'cancel'
 let resolveRarResolution: ((choice: RarResolution) => void) | null = null
 
-const compressionTasks = computed(() => taskStore.tasksFor('compression'))
+// This page owns archive compression only; media tasks live in Special Compression.
+// Legacy tasks without a workload kind are archives.
+const compressionTasks = computed(() => taskStore.tasksFor('compression')
+  .filter(task => !task.workloadKind || task.workloadKind === 'archive'))
 const activeCompressionTasks = computed(() =>
   compressionTasks.value.filter(task => !['completed', 'failed', 'cancelled'].includes(task.status))
 )
@@ -619,7 +622,7 @@ const clearFinishedCompressionTasks = () => {
   const finishedTaskIds = compressionTasks.value
     .filter(task => isFinishedCompressionStatus(task.status))
     .map(task => task.id)
-  taskStore.clearFinishedTasks('compression')
+  finishedTaskIds.forEach(taskId => taskStore.removeTask(taskId))
   syncRemovedCompressionJobs(finishedTaskIds)
 }
 
