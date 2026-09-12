@@ -1786,7 +1786,7 @@ impl CompressionService {
             ArchiveFormat::SevenZip => {
                 native_extraction::seven_zip::requires_password(Path::new(file_path))
             }
-            // RAR 仍交由完整引擎做无密码测试；7Z 可以直接读取 coder 元数据。
+            // RAR 读取 CLI 目录元数据；7Z 可以直接读取 coder 元数据。
             ArchiveFormat::Rar => {
                 self.universal_engine.requires_password(Path::new(file_path)).await
             }
@@ -1958,11 +1958,7 @@ impl CompressionService {
                 TaskLogSeverity::Info,
             );
             Some(service.archive_requires_password(&file_path, format.clone()).await.map_err(|err| {
-                let message = if format == ArchiveFormat::Rar {
-                    format!("RAR 文件损坏或不完整，无法读取完整目录：{}", err)
-                } else {
-                    format!("Unable to determine archive encryption state safely: {}", err)
-                };
+                let message = format!("归档检测失败：{}", err);
                 CompressionError::ExtractionFailed(message)
             })?)
         } else {

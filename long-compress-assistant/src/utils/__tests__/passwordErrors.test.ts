@@ -18,6 +18,9 @@ describe('isPasswordRelatedError', () => {
     '文件不存在',
     '目标磁盘空间不足',
     '归档结构损坏',
+    '归档检测失败：[archive-inspection:damaged] Unexpected end of archive; Wrong password',
+    '[archive-inspection:ambiguous-data] Data error in encrypted file. Wrong password?',
+    '归档检测失败：encrypted archive inspection timed out',
   ])('does not misclassify an unrelated failure: %s', message => {
     expect(isPasswordRelatedError(message)).toBe(false)
   })
