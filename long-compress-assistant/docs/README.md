@@ -4,6 +4,7 @@
 
 ## 当前接续入口
 
+- [`SOURCE_ACCESS_FAILURE_2026-09-12.md`](SOURCE_ACCESS_FAILURE_2026-09-12.md)：源缺失、元数据不可访问、非普通文件分类及阶段，验证与后续边界。
 - [`SOURCE_CHANGE_FAILURE_2026-09-12.md`](SOURCE_CHANGE_FAILURE_2026-09-12.md)：预检和解压期间源变化的明确分类、阶段及验证。
 - [`STRUCTURED_FAILURE_HISTORY_2026-09-12.md`](STRUCTURED_FAILURE_HISTORY_2026-09-12.md)：schema 8 失败类别/阶段持久化、旧数据兼容及下一步边界。
 - [`HISTORY_EXTRACTION_DRAFT_2026-09-12.md`](HISTORY_EXTRACTION_DRAFT_2026-09-12.md)：当前从历史创建完整解压待执行任务的实现、参数边界与验证。

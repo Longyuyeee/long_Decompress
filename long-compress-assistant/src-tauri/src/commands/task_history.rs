@@ -18,13 +18,15 @@ fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
     let message = record.error_message.as_deref().unwrap_or_default();
     // Only accept markers emitted at the two confirmed source-snapshot boundaries.
     for stage in ["Pre-checking", "Extracting"] {
-        if message.contains(&format!("[archive-source:{stage}:source-changed]")) {
-            return Some(TaskFailureV1 {
-                schema_version: 1,
-                category: "source-changed".into(),
-                stage: stage.into(),
-                evidence: "recorded-marker".into(),
-            });
+        for code in ["source-changed", "source-missing", "source-unavailable", "source-invalid"] {
+            if message.contains(&format!("[archive-source:{stage}:{code}]")) {
+                return Some(TaskFailureV1 {
+                    schema_version: 1,
+                    category: code.into(),
+                    stage: stage.into(),
+                    evidence: "recorded-marker".into(),
+                });
+            }
         }
     }
     let marker = message.split_once("[archive-inspection:")
@@ -550,6 +552,21 @@ mod tests {
             assert_eq!(failure.category, "source-changed");
             assert_eq!(failure.stage, stage);
             assert_eq!(failure.evidence, "recorded-marker");
+        }
+        for stage in ["Pre-checking", "Extracting"] {
+            for code in ["source-missing", "source-unavailable", "source-invalid"] {
+                record.status = "failed".into();
+                record.error_message = Some(CompressionError::SourceAccess {
+                    stage, code, detail: "original access detail".into(),
+                }.to_string());
+                save_task_history_to_pool(reopened.pool(), record.clone()).await.unwrap();
+                let rows = list_task_history_from_pool(reopened.pool(), None).await.unwrap();
+                let failure = rows[0].failure.as_ref().unwrap();
+                assert_eq!(failure.category, code);
+                assert_eq!(failure.stage, stage);
+                assert_eq!(failure.evidence, "recorded-marker");
+                assert!(rows[0].error_message.as_ref().unwrap().contains("original access detail"));
+            }
         }
         record.status = "completed".into();
         save_task_history_to_pool(reopened.pool(), record).await.unwrap();

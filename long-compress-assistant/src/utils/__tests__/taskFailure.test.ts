@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { describeTaskFailure } from '../taskFailure'
 
 describe('task failure evidence', () => {
+  it.each(['source-missing', 'source-unavailable', 'source-invalid'])('preserves %s across both confirmed stages', category => {
+    for (const stage of ['Pre-checking', 'Extracting']) {
+      expect(describeTaskFailure({ status: 'failed', errorMessage: `[archive-source:${stage}:${category}] detail` }))
+        .toMatchObject({ category, stage, evidence: 'recorded-marker' })
+    }
+  })
   it.each(['Pre-checking', 'Extracting'])('describes confirmed source changes during %s', stage => {
     expect(describeTaskFailure({ status: 'failed', errorMessage: `[archive-source:${stage}:source-changed] source changed` }))
       .toMatchObject({ category: 'source-changed', categoryLabel: '源文件已变化', stage, evidence: 'recorded-marker' })
