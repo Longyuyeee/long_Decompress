@@ -4,6 +4,7 @@
 
 ## 当前接续入口
 
+- [`STRUCTURED_FAILURE_HISTORY_2026-09-12.md`](STRUCTURED_FAILURE_HISTORY_2026-09-12.md)：schema 8 失败类别/阶段持久化、旧数据兼容及下一步边界。
 - [`HISTORY_EXTRACTION_DRAFT_2026-09-12.md`](HISTORY_EXTRACTION_DRAFT_2026-09-12.md)：当前从历史创建完整解压待执行任务的实现、参数边界与验证。
 - [`HISTORY_DIAGNOSTICS_2026-09-12.md`](HISTORY_DIAGNOSTICS_2026-09-12.md)：历史错误检索、分类筛选和单任务诊断报告导出的当前实现与边界。
 - [`FAILURE_RELIABILITY_FOLLOWUP_2026-09-12.md`](FAILURE_RELIABILITY_FOLLOWUP_2026-09-12.md)：当前错误分类、前端密码重试纠偏、历史保存串行与保存失败恢复的实现和测试。

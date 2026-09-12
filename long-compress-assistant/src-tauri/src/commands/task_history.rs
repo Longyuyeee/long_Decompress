@@ -3,6 +3,40 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use std::collections::HashSet;
 
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskFailureV1 {
+    pub schema_version: u32,
+    pub category: String,
+    pub stage: String,
+    pub evidence: String,
+}
+
+fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
+    if record.status != "failed" { return None; }
+    let message = record.error_message.as_deref().unwrap_or_default();
+    let marker = message.split_once("[archive-inspection:")
+        .and_then(|(_, tail)| tail.split_once(']').map(|(code, _)| code));
+    let category = marker.filter(|code| matches!(*code,
+        "damaged" | "missing-volume" | "permission" | "timeout" |
+        "engine-unavailable" | "engine-start" | "io" | "ambiguous-data"
+    )).unwrap_or("unknown");
+    let observed = record.failure.as_ref().filter(|failure| failure.schema_version == 1)
+        .map(|failure| failure.stage.as_str()).filter(|stage| matches!(*stage,
+            "Pre-checking" | "Extracting" | "Verifying" | "Finalizing" | "password-attempt" |
+            "Probing" | "Encoding" | "Transforming" | "Validating" | "Publishing" | "still-encoding"
+        ));
+    let inspection = marker.is_some() || message.contains("归档检测失败：");
+    Some(TaskFailureV1 {
+        schema_version: 1,
+        category: category.into(),
+        stage: if inspection { "inspection" } else { observed.unwrap_or("unknown") }.into(),
+        evidence: if marker.is_some() { "recorded-marker" }
+            else if observed.is_some() && !inspection { "observed-stage" } else { "unknown" }.into(),
+    })
+}
+
 const MAX_HISTORY_RECORDS: i64 = 500;
 const MAX_SOURCE_PATHS: usize = 128;
 const MAX_LOGS: usize = 200;
@@ -70,6 +104,8 @@ pub struct TaskHistoryMetricsV1 {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskHistoryRecord {
+    #[serde(default)]
+    pub failure: Option<TaskFailureV1>,
     pub id: String,
     pub name: String,
     pub task_type: String,
@@ -92,6 +128,7 @@ pub struct TaskHistoryRecord {
 
 #[derive(Debug, FromRow)]
 struct TaskHistoryRow {
+    failure: Option<String>,
     id: String,
     name: String,
     task_type: String,
@@ -303,7 +340,10 @@ async fn save_task_history_to_pool(
     pool: &sqlx::SqlitePool,
     record: TaskHistoryRecord,
 ) -> Result<(), String> {
-    let record = sanitize_record(record)?;
+    let mut record = sanitize_record(record)?;
+    record.failure = classify_failure(&record);
+    let failure = record.failure.as_ref().map(serde_json::to_string).transpose()
+        .map_err(|error| format!("序列化失败信息失败: {error}"))?;
     let source_paths = serde_json::to_string(&record.source_paths)
         .map_err(|error| format!("序列化来源路径失败: {error}"))?;
     let logs = serde_json::to_string(&record.logs)
@@ -319,8 +359,8 @@ async fn save_task_history_to_pool(
         INSERT INTO task_operation_history (
             id, name, task_type, workload_kind, metrics, status, source_paths, output_path, format,
             started_at, completed_at, duration_ms, processed_bytes, total_bytes,
-            error_message, logs, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            error_message, logs, updated_at, failure
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
             task_type = excluded.task_type,
@@ -337,7 +377,8 @@ async fn save_task_history_to_pool(
             total_bytes = excluded.total_bytes,
             error_message = excluded.error_message,
             logs = excluded.logs,
-            updated_at = excluded.updated_at
+            updated_at = excluded.updated_at,
+            failure = excluded.failure
         "#,
     )
     .bind(&record.id)
@@ -357,6 +398,7 @@ async fn save_task_history_to_pool(
     .bind(&record.error_message)
     .bind(logs)
     .bind(updated_at)
+    .bind(failure)
     .execute(pool)
     .await
     .map_err(|error| format!("保存任务历史失败: {error}"))?;
@@ -387,7 +429,7 @@ async fn list_task_history_from_pool(
         r#"
         SELECT id, name, task_type, workload_kind, metrics, status, source_paths, output_path, format,
                started_at, completed_at, duration_ms, processed_bytes, total_bytes,
-               error_message, logs
+               error_message, logs, failure
         FROM task_operation_history
         ORDER BY completed_at DESC
         LIMIT ?
@@ -401,6 +443,7 @@ async fn list_task_history_from_pool(
     rows.into_iter()
         .map(|row| {
             Ok(TaskHistoryRecord {
+                failure: row.failure.and_then(|value| serde_json::from_str(&value).ok()),
                 id: row.id,
                 name: row.name,
                 task_type: row.task_type,
@@ -456,9 +499,44 @@ pub async fn clear_task_history() -> Result<(), String> {
 mod tests {
     use super::*;
 
+    #[tokio::test]
+    async fn structured_failure_survives_database_reopen_and_terminal_update() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("failure.db");
+        let connection = crate::database::connection::DatabaseConnection::new(&path, None).await.unwrap();
+        let mut record: TaskHistoryRecord = serde_json::from_value(serde_json::json!({
+            "id": "failure", "name": "test.rar", "taskType": "decompression", "status": "failed",
+            "sourcePaths": ["C:/test.rar"], "outputPath": "C:/output", "completedAt": "2026-09-12T00:00:00Z",
+            "durationMs": 1, "processedBytes": 0, "totalBytes": 0,
+            "errorMessage": "[archive-inspection:timeout] inspection timed out", "logs": [],
+            "failure": { "schemaVersion": 1, "category": "damaged", "stage": "Extracting", "evidence": "observed-stage" }
+        })).unwrap();
+        save_task_history_to_pool(connection.pool(), record.clone()).await.unwrap();
+        connection.pool().close().await;
+        let reopened = crate::database::connection::DatabaseConnection::new(&path, None).await.unwrap();
+        let rows = list_task_history_from_pool(reopened.pool(), None).await.unwrap();
+        let failure = rows[0].failure.as_ref().unwrap();
+        assert_eq!(failure.category, "timeout", "backend marker overrides caller category");
+        assert_eq!(failure.stage, "inspection", "inspection overrides stale observed stage");
+        assert_eq!(failure.evidence, "recorded-marker");
+        record.error_message = Some("output failed".into());
+        record.failure.as_mut().unwrap().stage = "Publishing".into();
+        save_task_history_to_pool(reopened.pool(), record.clone()).await.unwrap();
+        let rows = list_task_history_from_pool(reopened.pool(), None).await.unwrap();
+        let failure = rows[0].failure.as_ref().unwrap();
+        assert_eq!(failure.category, "unknown");
+        assert_eq!(failure.stage, "Publishing");
+        assert_eq!(failure.evidence, "observed-stage");
+        record.status = "completed".into();
+        save_task_history_to_pool(reopened.pool(), record).await.unwrap();
+        assert!(list_task_history_from_pool(reopened.pool(), None).await.unwrap()[0].failure.is_none());
+        reopened.pool().close().await;
+    }
+
     #[test]
     fn failed_history_always_ends_with_a_final_reason() {
         let record = TaskHistoryRecord {
+                failure: None,
             id: "failed-task".into(),
             name: "damaged.rar".into(),
             task_type: "decompression".into(),
@@ -493,6 +571,7 @@ mod tests {
     #[test]
     fn sanitizes_sensitive_logs_and_limits_payload() {
         let record = TaskHistoryRecord {
+                failure: None,
             id: "task-1".into(),
             name: "sample.zip".into(),
             task_type: "compression".into(),
@@ -583,6 +662,7 @@ mod tests {
     #[test]
     fn rejects_non_terminal_status() {
         let record = TaskHistoryRecord {
+                failure: None,
             id: "task-1".into(), name: "task".into(), task_type: "decompression".into(),
             workload_kind: "archive".into(), metrics: None,
             status: "running".into(), source_paths: vec![], output_path: String::new(),
@@ -609,6 +689,7 @@ mod tests {
     #[test]
     fn rejects_media_metrics_on_archive_history() {
         let record = TaskHistoryRecord {
+                failure: None,
             id: "task-media".into(), name: "task".into(), task_type: "compression".into(),
             workload_kind: "archive".into(),
             metrics: Some(TaskHistoryMetricsV1 {
@@ -793,6 +874,7 @@ mod tests {
             ((input_bytes as f64 - output_bytes as f64) / input_bytes as f64).clamp(0.0, 1.0)
         };
         let completed = TaskHistoryRecord {
+                failure: None,
             id: "real-image-completed".into(),
             name: "transparent.png".into(),
             task_type: "compression".into(),
@@ -832,6 +914,7 @@ mod tests {
         };
         let terminal_without_metrics =
             |id: &str, status: &str, error: Option<&str>, second: u8| TaskHistoryRecord {
+                failure: None,
                 id: id.into(),
                 name: "photo.webp".into(),
                 task_type: "compression".into(),
