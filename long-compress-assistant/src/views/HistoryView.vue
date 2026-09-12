@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useHistoryStore } from '@/stores/history'
 import { useAppStore } from '@/stores/app'
 import type { TaskHistoryRecord, TaskHistoryStatus } from '@/types/taskHistory'
+import HistoryExtractionDraft from '@/components/tasks/HistoryExtractionDraft.vue'
 import { save } from '@tauri-apps/api/dialog'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -301,6 +302,7 @@ onMounted(refresh)
             <div class="grid grid-cols-2 gap-3 mb-5"><div class="detail-metric"><span>{{ appStore.t('history.detail.status') }}</span><strong :class="terminalColor[selectedRecord.status].split(' ')[0]">{{ statusLabel(selectedRecord) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.duration') }}</span><strong>{{ formatDuration(selectedRecord.durationMs) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.volume') }}</span><strong>{{ formatBytes(Math.max(selectedRecord.processedBytes, selectedRecord.totalBytes)) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.completed_at') }}</span><strong>{{ formatDateTime(selectedRecord.completedAt) }}</strong></div></div>
             <section class="detail-section"><h3><i class="pi pi-sign-in"></i>{{ appStore.t('history.detail.sources') }}</h3><div class="space-y-2 mt-3"><code v-for="source in selectedRecord.sourcePaths" :key="source" class="detail-path">{{ source }}</code><p v-if="!selectedRecord.sourcePaths.length" class="text-sm text-dim">—</p></div></section>
             <section class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code></section>
+            <HistoryExtractionDraft v-if="selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
             <section v-if="selectedFailure" class="detail-section border-red-500/20 bg-red-500/5">
               <h3 class="text-red-500">{{ selectedFailure.categoryLabel }} · {{ selectedFailure.stageLabel }}</h3>
               <p class="text-sm text-red-500/90 break-words mt-3">{{ selectedFailure.message }}</p>
