@@ -7,7 +7,7 @@ import HistoryExtractionDraft from '@/components/tasks/HistoryExtractionDraft.vu
 import { save } from '@tauri-apps/api/dialog'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/tauri'
-import { createTaskDiagnosticReport, describeTaskFailure, failureCategories, type FailureCategory } from '@/utils/taskFailure'
+import { createTaskDiagnosticReport, describeTaskFailure, failureCategories, getTaskRecoveryGuidance, type FailureCategory } from '@/utils/taskFailure'
 
 type TypeFilter = 'all' | 'compression' | 'decompression'
 type StatusFilter = 'all' | TaskHistoryStatus
@@ -24,6 +24,7 @@ const showClearConfirm = ref(false)
 const failureFilter = ref<'all' | FailureCategory>('all')
 const exporting = ref(false)
 const selectedFailure = computed(() => selectedRecord.value ? describeTaskFailure(selectedRecord.value) : null)
+const recoveryGuidance = computed(() => selectedRecord.value ? getTaskRecoveryGuidance(selectedRecord.value) : null)
 
 const exportDiagnostic = async () => {
   const record = selectedRecord.value
@@ -302,6 +303,12 @@ onMounted(refresh)
             <div class="grid grid-cols-2 gap-3 mb-5"><div class="detail-metric"><span>{{ appStore.t('history.detail.status') }}</span><strong :class="terminalColor[selectedRecord.status].split(' ')[0]">{{ statusLabel(selectedRecord) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.duration') }}</span><strong>{{ formatDuration(selectedRecord.durationMs) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.volume') }}</span><strong>{{ formatBytes(Math.max(selectedRecord.processedBytes, selectedRecord.totalBytes)) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.completed_at') }}</span><strong>{{ formatDateTime(selectedRecord.completedAt) }}</strong></div></div>
             <section class="detail-section"><h3><i class="pi pi-sign-in"></i>{{ appStore.t('history.detail.sources') }}</h3><div class="space-y-2 mt-3"><code v-for="source in selectedRecord.sourcePaths" :key="source" class="detail-path">{{ source }}</code><p v-if="!selectedRecord.sourcePaths.length" class="text-sm text-dim">—</p></div></section>
             <section class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code></section>
+            <section v-if="recoveryGuidance" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4" data-testid="history-recovery-guidance" aria-label="回滚不完整处理指引">
+              <h3 class="font-bold">{{ recoveryGuidance.title }}</h3>
+              <ol class="mt-2 list-decimal pl-5 space-y-2 text-sm leading-relaxed">
+                <li v-for="step in recoveryGuidance.steps" :key="step">{{ step }}</li>
+              </ol>
+            </section>
             <HistoryExtractionDraft v-if="selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
             <section v-if="selectedFailure" class="detail-section border-red-500/20 bg-red-500/5">
               <h3 class="text-red-500">{{ selectedFailure.categoryLabel }} · {{ selectedFailure.stageLabel }}</h3>

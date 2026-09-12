@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { describeTaskFailure } from '../taskFailure'
+import { describeTaskFailure, getTaskRecoveryGuidance } from '../taskFailure'
 
 describe('task failure evidence', () => {
+  it('shows recovery guidance for confirmed rollback failures only', () => {
+    const failure = { schemaVersion: 1 as const, category: 'rollback-incomplete', stage: 'Publishing', evidence: 'recorded-marker' as const }
+    expect(getTaskRecoveryGuidance({ status: 'failed', failure })?.steps.join(' ')).toContain('旧记录缺少恢复路径时不要猜测目录')
+    expect(getTaskRecoveryGuidance({ status: 'completed', failure })).toBeNull()
+    expect(getTaskRecoveryGuidance({ status: 'failed', errorMessage: '回滚失败' })).toBeNull()
+    expect(getTaskRecoveryGuidance({ status: 'failed', errorMessage: '[archive-output:Publishing:rollback-incomplete]' })).not.toBeNull()
+  })
   it.each(['output-conflict', 'publication-failed', 'rollback-incomplete'] as const)('describes confirmed %s without guessing corruption', category => {
     expect(describeTaskFailure({ status: 'failed', errorMessage: `[archive-output:Publishing:${category}] detail` }))
       .toMatchObject({ category, stage: 'Publishing', evidence: 'recorded-marker' })
