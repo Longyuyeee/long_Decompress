@@ -416,7 +416,9 @@ impl CompressionService {
             PENDING_EXTRACTIONS.insert(task_id.to_string(), pending);
             return Err(error);
         }
-        pending.staging.cleanup()?;
+        if let Some(warning) = pending.staging.cleanup_after_commit() {
+            self.emit_log(window, task_id, &warning, TaskLogSeverity::Warning);
+        }
         self.emit_log(
             window, task_id,
             "冲突策略已应用，直接提交既有解压暂存结果",
@@ -2516,14 +2518,11 @@ impl CompressionService {
             let _ = staging.cleanup();
             return Err(error);
         }
-        if let Err(error) = staging.cleanup() {
+        if let Some(warning) = staging.cleanup_after_commit() {
             service.emit_log(
                 &window,
                 &task_id,
-                &format!(
-                    "Extraction completed, but the temporary staging directory could not be removed: {}",
-                    error
-                ),
+                &warning,
                 TaskLogSeverity::Warning,
             );
         }
