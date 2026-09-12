@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const _CURRENT_VERSION: i32 = 7;
+const _CURRENT_VERSION: i32 = 8;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -69,6 +69,15 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
     if current < 7 {
         migrate_v7(pool).await?;
         query("INSERT INTO schema_version (version) VALUES (7)").execute(pool).await?;
+    }
+
+    if current < 8 {
+        let mut transaction = pool.begin().await?;
+        query("ALTER TABLE task_operation_history ADD COLUMN failure TEXT")
+            .execute(&mut *transaction).await?;
+        query("INSERT INTO schema_version (version) VALUES (8)")
+            .execute(&mut *transaction).await?;
+        transaction.commit().await?;
     }
 
     Ok(())
@@ -1251,7 +1260,11 @@ mod tests {
         assert_eq!(columns, 2);
         let version: i32 = query_as::<_, (i32,)>("SELECT MAX(version) FROM schema_version")
             .fetch_one(&pool).await.unwrap().0;
-        assert_eq!(version, 7);
+        assert_eq!(version, 8);
+        let failure: Option<String> = query_as::<_, (Option<String>,)>(
+            "SELECT failure FROM task_operation_history WHERE id = 'legacy'",
+        ).fetch_one(&pool).await.unwrap().0;
+        assert!(failure.is_none(), "legacy rows must not acquire invented failure metadata");
     }
 
     #[tokio::test]
@@ -1287,7 +1300,7 @@ mod tests {
         let final_version: i32 = query_as::<_, (i32,)>(
             "SELECT COALESCE(MAX(version), 0) FROM schema_version",
         ).fetch_one(&pool).await.unwrap().0;
-        assert_eq!(final_version, 7);
+        assert_eq!(final_version, 8);
         println!("real history snapshot: {} rows, schema {} -> {}, source {} bytes",
             before_rows.len(), initial_version, final_version, before.len());
         pool.close().await;

@@ -63,6 +63,22 @@ describe('task progress state machine', () => {
     })
   })
 
+  it('persists the last observed stage without inventing an error category', async () => {
+    const store = useTaskStore()
+    await store.initListeners()
+    store.addTask({ id: 'stage-failure', name: 'test.zip', type: 'decompression', sourceFiles: [], outputPath: '' })
+    mocks.listeners.get('task-progress')?.({ payload: {
+      task_id: 'stage-failure', stage: 'Verifying', progress: 0.9,
+    } })
+    store.failTask('stage-failure', 'verification stopped')
+    await store.waitForHistoryPersistence('stage-failure')
+    expect(mocks.invoke).toHaveBeenCalledWith('save_task_history', {
+      record: expect.objectContaining({ failure: {
+        schemaVersion: 1, category: 'unknown', stage: 'Verifying', evidence: 'observed-stage',
+      } }),
+    })
+  })
+
   it('uses a visible fallback when a caller omits the failure reason', async () => {
     const store = useTaskStore()
     store.addTask({

@@ -7,6 +7,13 @@ import {
 
 export type TaskHistoryStatus = 'completed' | 'failed' | 'cancelled'
 
+export interface TaskFailureV1 {
+  schemaVersion: 1
+  category: string
+  stage: string
+  evidence: 'recorded-marker' | 'observed-stage' | 'unknown'
+}
+
 export interface TaskHistoryLog {
   timestamp: string
   message: string
@@ -29,6 +36,7 @@ export interface TaskHistoryRecord {
   processedBytes: number
   totalBytes: number
   errorMessage?: string | null
+  failure?: TaskFailureV1 | null
   logs: TaskHistoryLog[]
 }
 
@@ -61,6 +69,12 @@ export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
     processedBytes: Math.max(0, task.processedBytes || 0),
     totalBytes: Math.max(0, task.totalBytes || 0),
     errorMessage: task.error || null,
+    failure: task.status === 'failed' ? {
+      schemaVersion: 1,
+      category: 'unknown',
+      stage: task.stage || 'unknown',
+      evidence: task.stage ? 'observed-stage' : 'unknown',
+    } : null,
     logs: task.logs.map(log => ({
       timestamp: log.timestamp,
       message: log.message,
