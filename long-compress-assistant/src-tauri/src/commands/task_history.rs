@@ -16,6 +16,14 @@ pub struct TaskFailureV1 {
 fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
     if record.status != "failed" { return None; }
     let message = record.error_message.as_deref().unwrap_or_default();
+    for code in ["output-conflict", "publication-failed"] {
+        if message.contains(&format!("[archive-output:Publishing:{code}]")) {
+            return Some(TaskFailureV1 {
+                schema_version: 1, category: code.into(),
+                stage: "Publishing".into(), evidence: "recorded-marker".into(),
+            });
+        }
+    }
     if message.contains("[archive-output:Verifying:verification-failed]") {
         return Some(TaskFailureV1 {
             schema_version: 1, category: "verification-failed".into(),
@@ -583,6 +591,18 @@ mod tests {
         assert_eq!(failure.stage, "Verifying");
         assert_eq!(failure.evidence, "recorded-marker");
         assert!(rows[0].error_message.as_ref().unwrap().contains("original verifier detail"));
+        for code in ["output-conflict", "publication-failed"] {
+            record.status = "failed".into();
+            record.error_message = Some(CompressionError::PublicationFailed {
+                code, cause: anyhow::anyhow!("publication detail"),
+            }.to_string());
+            save_task_history_to_pool(reopened.pool(), record.clone()).await.unwrap();
+            let rows = list_task_history_from_pool(reopened.pool(), None).await.unwrap();
+            let failure = rows[0].failure.as_ref().unwrap();
+            assert_eq!(failure.category, code);
+            assert_eq!(failure.stage, "Publishing");
+            assert_eq!(failure.evidence, "recorded-marker");
+        }
         record.status = "completed".into();
         save_task_history_to_pool(reopened.pool(), record).await.unwrap();
         assert!(list_task_history_from_pool(reopened.pool(), None).await.unwrap()[0].failure.is_none());

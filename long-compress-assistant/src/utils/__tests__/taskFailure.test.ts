@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { describeTaskFailure } from '../taskFailure'
 
 describe('task failure evidence', () => {
+  it.each(['output-conflict', 'publication-failed'] as const)('describes confirmed %s without guessing corruption', category => {
+    expect(describeTaskFailure({ status: 'failed', errorMessage: `[archive-output:Publishing:${category}] detail` }))
+      .toMatchObject({ category, stage: 'Publishing', evidence: 'recorded-marker' })
+    expect(describeTaskFailure({ status: 'completed', errorMessage: `[archive-output:Publishing:${category}]` })).toBeNull()
+  })
   it('identifies output verification without claiming the archive is damaged', () => {
     expect(describeTaskFailure({ status: 'failed', errorMessage: '[archive-output:Verifying:verification-failed] engine unavailable' }))
       .toMatchObject({ category: 'verification-failed', stage: 'Verifying', evidence: 'recorded-marker' })

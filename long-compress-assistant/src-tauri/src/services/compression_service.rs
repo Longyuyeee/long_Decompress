@@ -54,6 +54,8 @@ pub enum CompressionError {
     SourceAccess { stage: &'static str, code: &'static str, detail: String },
     #[error("[archive-output:Verifying:verification-failed] 压缩产物校验未通过，未完成后续发布及源文件清理：{0}")]
     VerificationFailed(#[source] anyhow::Error),
+    #[error("[archive-output:Publishing:{code}] 输出提交未完成，请检查目标目录和原始详情：{cause}")]
+    PublicationFailed { code: &'static str, #[source] cause: anyhow::Error },
     #[error("需要输入密码才能解压")]
     PasswordRequired,
     #[error("提供的密码不正确")]
@@ -936,8 +938,8 @@ impl CompressionService {
     }
 
     fn normalize_storage_full_error(error: anyhow::Error) -> anyhow::Error {
-        // Verification already carries a confirmed stage; keep its underlying I/O detail.
-        if matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))) {
+        // Typed terminal errors already carry a confirmed stage; preserve their I/O detail.
+        if matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_) | CompressionError::PublicationFailed { .. })) {
             return error;
         }
         let storage_full = error.chain().any(|cause| {
@@ -968,19 +970,7 @@ impl CompressionService {
                         final_output,
                         || cancelled,
                     )
-                    .map_err(|error| -> anyhow::Error {
-                        match error {
-                            PublishError::TargetAppeared(path) => {
-                                CompressionError::CompressionFailed(format!(
-                                    "Output appeared while compression was running; it was not overwritten: {}",
-                                    path.display()
-                                ))
-                                .into()
-                            }
-                            PublishError::Cancelled => CompressionError::Cancelled.into(),
-                            other => CompressionError::CompressionFailed(other.to_string()).into(),
-                        }
-                    })?;
+                    .map_err(Self::publication_error)?;
                 }
                 Ok(())
             })
@@ -990,6 +980,22 @@ impl CompressionService {
             Self::cleanup_failed_compression_outputs(working_output, split_requested);
         }
         result
+    }
+
+    fn publication_error(error: PublishError) -> anyhow::Error {
+        match error {
+            PublishError::Cancelled => CompressionError::Cancelled.into(),
+            PublishError::Io(error) => CompressionError::PublicationFailed {
+                code: "publication-failed", cause: error.into(),
+            }.into(),
+            PublishError::TargetAppeared(path) => CompressionError::PublicationFailed {
+                code: "output-conflict",
+                cause: anyhow::anyhow!("目标文件在处理期间出现，未覆盖已有文件：{}", path.display()),
+            }.into(),
+            other => CompressionError::PublicationFailed {
+                code: "publication-failed", cause: other.into(),
+            }.into(),
+        }
     }
 
     fn cleanup_unverified_compression_output(
@@ -3626,6 +3632,27 @@ mod tests {
         ));
         assert!(!working_output.exists());
         assert!(!final_output.exists());
+    }
+
+    #[test]
+    fn publication_failure_preserves_target_stage_and_io_cause() {
+        let temp = tempfile::tempdir().unwrap();
+        let destination = temp.path().join("output.zip");
+        let staged = CompressionService::temporary_compression_output(&destination).unwrap();
+        std::fs::write(&staged, b"new output").unwrap();
+        std::fs::write(&destination, b"existing output").unwrap();
+        let conflict = CompressionService::finalize_compression_output(Ok(()), &staged, &destination, false, false).unwrap_err();
+        assert!(conflict.to_string().contains("[archive-output:Publishing:output-conflict]"));
+        assert_eq!(std::fs::read(&destination).unwrap(), b"existing output");
+        assert!(!staged.exists());
+        let missing = CompressionService::finalize_compression_output(Ok(()), &staged, &destination, false, false).unwrap_err();
+        assert!(missing.to_string().contains("[archive-output:Publishing:publication-failed]"));
+        for kind in [std::io::ErrorKind::StorageFull, std::io::ErrorKind::PermissionDenied] {
+            let error = CompressionService::publication_error(PublishError::Io(std::io::Error::new(kind, "publish detail")));
+            let error = CompressionService::normalize_storage_full_error(error);
+            assert!(error.to_string().contains("[archive-output:Publishing:publication-failed]"));
+            assert!(error.chain().any(|cause| cause.downcast_ref::<std::io::Error>().is_some_and(|io| io.kind() == kind)));
+        }
     }
 
 }
