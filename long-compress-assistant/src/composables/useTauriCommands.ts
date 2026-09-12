@@ -360,6 +360,9 @@ export const useTauriCommands = () => {
     fallbackAction?: 'overwrite' | 'skip' | 'rename',
   ) => {
     const task = taskStore.tasks.find(item => item.id === taskId)
+    if (task?.error?.includes('[archive-output:Publishing:rollback-incomplete]')) {
+      throw new Error(task.error)
+    }
     try {
       taskStore.updateTaskStatus(taskId, 'finalizing')
       const result = await invoke<string>('resolve_extraction_conflict', {

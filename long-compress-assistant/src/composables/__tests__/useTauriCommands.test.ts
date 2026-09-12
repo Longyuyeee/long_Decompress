@@ -601,6 +601,22 @@ describe('useTauriCommands', () => {
     })
   })
 
+  it('retains recovery details instead of retrying an incomplete rollback', async () => {
+    const tasks = useTaskStore()
+    tasks.addTask({ id: 'incomplete', name: 'archive.zip', type: 'decompression', sourceFiles: ['C:/archive.zip'], outputPath: 'C:/output' })
+    const reason = '[archive-output:Publishing:rollback-incomplete] 恢复目录：C:/recovery'
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'resolve_extraction_conflict') throw new Error(reason)
+      return undefined
+    })
+    const commands = useTauriCommands()
+    await expect(commands.resolveExtractionConflict('incomplete', [], 'overwrite')).rejects.toThrow(reason)
+    await tasks.waitForHistoryPersistence('incomplete')
+    await expect(commands.resolveExtractionConflict('incomplete', [], 'overwrite')).rejects.toThrow(reason)
+    expect(mocks.invoke.mock.calls.filter(([command]) => command === 'resolve_extraction_conflict')).toHaveLength(1)
+    expect(tasks.tasks[0]).toMatchObject({ status: 'failed', error: reason })
+  })
+
   it('degrades optional system UI commands safely when native APIs reject', async () => {
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'get_system_info') throw new Error('system info unavailable')
