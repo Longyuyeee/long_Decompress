@@ -16,7 +16,7 @@ pub struct TaskFailureV1 {
 fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
     if record.status != "failed" { return None; }
     let message = record.error_message.as_deref().unwrap_or_default();
-    for code in ["output-conflict", "publication-failed"] {
+    for code in ["output-conflict", "publication-failed", "rollback-incomplete"] {
         if message.contains(&format!("[archive-output:Publishing:{code}]")) {
             return Some(TaskFailureV1 {
                 schema_version: 1, category: code.into(),
@@ -603,6 +603,13 @@ mod tests {
             assert_eq!(failure.stage, "Publishing");
             assert_eq!(failure.evidence, "recorded-marker");
         }
+        record.status = "failed".into();
+        record.error_message = Some(CompressionError::RollbackIncomplete("恢复目录：C:/recovery；原始详情".into()).to_string());
+        save_task_history_to_pool(reopened.pool(), record.clone()).await.unwrap();
+        let rows = list_task_history_from_pool(reopened.pool(), None).await.unwrap();
+        assert_eq!(rows[0].failure.as_ref().unwrap().category, "rollback-incomplete");
+        assert_eq!(rows[0].failure.as_ref().unwrap().stage, "Publishing");
+        assert!(rows[0].error_message.as_ref().unwrap().contains("C:/recovery"));
         record.status = "completed".into();
         save_task_history_to_pool(reopened.pool(), record).await.unwrap();
         assert!(list_task_history_from_pool(reopened.pool(), None).await.unwrap()[0].failure.is_none());

@@ -1,6 +1,7 @@
 import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 export const failureCategories = {
+  'rollback-incomplete': '回滚不完整（需人工核对）',
   'output-conflict': '输出目标冲突（未覆盖）',
   'publication-failed': '输出提交失败',
   'verification-failed': '压缩产物校验未通过',
@@ -35,7 +36,7 @@ export function describeTaskFailure(record: Pick<TaskHistoryRecord, 'status' | '
   const sourceMarker = message.match(/\[archive-source:(Pre-checking|Extracting):(source-changed|source-missing|source-unavailable|source-invalid)\]/)
   const sourceStage = sourceMarker?.[1]
   const verification = message.includes('[archive-output:Verifying:verification-failed]')
-  const publication = message.match(/\[archive-output:Publishing:(output-conflict|publication-failed)\]/)?.[1] as FailureCategory | undefined
+  const publication = message.match(/\[archive-output:Publishing:(output-conflict|publication-failed|rollback-incomplete)\]/)?.[1] as FailureCategory | undefined
   const category: FailureCategory = marker && Object.hasOwn(failureCategories, marker)
     ? marker as FailureCategory : 'unknown'
   const inspection = Boolean(marker) || message.includes('归档检测失败：')

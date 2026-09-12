@@ -88,10 +88,11 @@ pub(crate) const MAX_EXTRACTED_BYTES: u64 = 512 * 1024 * 1024 * 1024;
 pub(crate) const MAX_EXPANSION_RATIO: u64 = 10_000;
 pub(crate) use super::storage_preflight::DISK_SAFETY_RESERVE;
 
-/// Owns a sibling extraction directory and removes it on every exit path.
+/// Owns a sibling extraction directory; incomplete rollback explicitly retains recovery data.
 pub(crate) struct ExtractionStaging {
     path: PathBuf,
     cleaned: bool,
+    retained_for_recovery: bool,
 }
 
 impl ExtractionStaging {
@@ -117,6 +118,7 @@ impl ExtractionStaging {
         Ok(Self {
             path,
             cleaned: false,
+            retained_for_recovery: false,
         })
     }
 
@@ -125,6 +127,9 @@ impl ExtractionStaging {
     }
 
     pub(crate) fn cleanup(&mut self) -> std::io::Result<()> {
+        if self.retained_for_recovery {
+            return Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied, "recovery data retained after incomplete rollback"));
+        }
         if self.cleaned {
             return Ok(());
         }
@@ -154,11 +159,20 @@ impl ExtractionStaging {
             self.path.display(), error,
         ))
     }
+
+    pub(crate) fn retain_after_incomplete_rollback(&mut self, error: &anyhow::Error) -> bool {
+        if matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::RollbackIncomplete(_))) {
+            self.retained_for_recovery = true;
+        }
+        self.retained_for_recovery
+    }
 }
 
 impl Drop for ExtractionStaging {
     fn drop(&mut self) {
-        let _ = self.cleanup();
+        if !self.retained_for_recovery {
+            let _ = self.cleanup();
+        }
     }
 }
 
@@ -756,8 +770,9 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
         if let Err(rollback_errors) =
             rollback_extraction_commit(&created_files, &created_dirs, &backups, &moved_files)
         {
-            return Err(CompressionError::ExtractionFailed(format!(
-                "Extraction commit failed: {}. Rollback was incomplete: {}",
+            return Err(CompressionError::RollbackIncomplete(format!(
+                "恢复目录：{}；提交详情：{}；回滚详情：{}",
+                staging.display(),
                 error,
                 rollback_errors.join("; ")
             ))
@@ -949,6 +964,20 @@ mod tests {
         assert_eq!(std::fs::read(source).unwrap(), b"unexpected staging occupant");
         assert_eq!(std::fs::read(destination).unwrap(), b"new output");
         assert_eq!(std::fs::read(backup).unwrap(), b"old output");
+    }
+
+    #[test]
+    fn incomplete_rollback_disables_explicit_and_drop_cleanup() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut staging = ExtractionStaging::create_for(&temp.path().join("output")).unwrap();
+        let path = staging.path().to_path_buf();
+        std::fs::write(path.join("backup"), b"keep original").unwrap();
+        assert!(!staging.retain_after_incomplete_rollback(&anyhow::anyhow!("ordinary failure")));
+        let error = CompressionError::RollbackIncomplete(format!("恢复目录：{}", path.display())).into();
+        assert!(staging.retain_after_incomplete_rollback(&error));
+        assert!(staging.cleanup().is_err());
+        drop(staging);
+        assert_eq!(std::fs::read(path.join("backup")).unwrap(), b"keep original");
     }
 
     #[cfg(windows)]
