@@ -303,11 +303,25 @@ impl UniversalCliEngine {
         let combined = format!("{}\n{}", stdout, stderr);
         let stderr_lower = stderr.to_ascii_lowercase();
 
+        // Match diagnostics only: archive entry names in stdout are not errors.
+        // Concrete file/I/O failures take precedence over password suggestions.
+        if !succeeded {
+            for (markers, code, summary) in [
+                (&["missing volume", "cannot find volume", "can not find volume"][..], "missing-volume", "分卷不完整，请补齐缺失分卷"),
+                (&["access is denied", "permission denied"][..], "permission", "无法读取归档，请检查访问权限或文件占用"),
+                (&["unexpected end of archive", "unexpected end of data", "headers error", "is not archive"][..], "damaged", "归档损坏或不完整，无法读取完整目录"),
+                (&["data error in encrypted file", "crc failed in encrypted file"][..], "ambiguous-data", "加密数据校验失败，尚不能确定是密码问题还是文件损坏"),
+            ] {
+                if markers.iter().any(|marker| stderr_lower.contains(marker)) {
+                    return Err(anyhow::anyhow!("[archive-inspection:{}] {}：{}", code, summary, combined.trim()));
+                }
+            }
+        }
+
         if [
             "cannot open encrypted archive",
             "can not open encrypted archive",
             "enter password",
-            "data error in encrypted file",
             "wrong password",
         ]
         .iter()
@@ -321,7 +335,7 @@ impl UniversalCliEngine {
         // is the correct next action; preserve the corruption result instead.
         if !succeeded {
             return Err(anyhow::anyhow!(
-                "Unable to inspect archive encryption metadata: {}",
+                "[archive-inspection:unknown] 无法确认归档加密状态，请查看引擎详情：{}",
                 combined.trim()
             ));
         }
@@ -543,10 +557,9 @@ impl ArchiveEngine for UniversalCliEngine {
     }
 
     async fn requires_password(&self, file_path: &Path) -> Result<bool> {
-        let cmd = match Self::get_7z_command() {
-            Some(c) => c,
-            None => return Ok(false),
-        };
+        let cmd = Self::get_7z_command().ok_or_else(|| {
+            anyhow::anyhow!("[archive-inspection:engine-unavailable] {}", missing_7z_message())
+        })?;
 
         // Encryption detection only needs the archive directory metadata. Using
         // `7z t` here performed a full read of every split volume before any
@@ -565,17 +578,21 @@ impl ArchiveEngine for UniversalCliEngine {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .kill_on_drop(true);
-        let child = command.spawn()?;
+        let child = command.spawn().map_err(|error| {
+            anyhow::anyhow!("[archive-inspection:engine-start] 无法启动归档检测引擎：{}", error)
+        })?;
         let output = match tokio::time::timeout(
             Self::ENCRYPTION_INSPECTION_TIMEOUT,
             child.wait_with_output(),
         )
         .await
         {
-            Ok(result) => result?,
+            Ok(result) => result.map_err(|error| {
+                anyhow::anyhow!("[archive-inspection:io] 归档检测进程读取失败：{}", error)
+            })?,
             Err(_) => {
                 return Err(anyhow::anyhow!(
-                    "Archive encryption metadata inspection timed out after {} seconds",
+                    "[archive-inspection:timeout] 归档检测超过 {} 秒，请确认文件已下载完成或存储设备可正常读取后重试",
                     Self::ENCRYPTION_INSPECTION_TIMEOUT.as_secs()
                 ));
             }
@@ -817,6 +834,45 @@ mod tests {
         assert!(error.to_string().contains("Unexpected end of archive"));
     }
 
+    #[test]
+    fn inspection_diagnostics_override_password_suggestions() {
+        for (diagnostic, code) in [
+            ("Unexpected end of archive\nWrong password?", "damaged"),
+            ("Headers Error\nCannot open encrypted archive", "damaged"),
+            ("Missing volume\nWrong password", "missing-volume"),
+            ("Access is denied\nWrong password", "permission"),
+            ("Data error in encrypted file. Wrong password?", "ambiguous-data"),
+            ("CRC Failed in encrypted file. Wrong password?", "ambiguous-data"),
+            ("Unrecognized engine failure", "unknown"),
+        ] {
+            let error = UniversalCliEngine::encryption_state_from_listing_text(
+                false, "Path = partial.bin\nEncrypted = +", diagnostic,
+            ).expect_err("failed inspection must not trigger password discovery");
+            assert!(error.to_string().contains(&format!("[archive-inspection:{}]", code)));
+        }
+        assert!(UniversalCliEngine::encryption_state_from_listing_text(
+            true, "Path = Headers Error.txt\nEncrypted = +", "",
+        ).expect("entry names must not be treated as diagnostics"));
+    }
+
+    #[tokio::test]
+    #[ignore = "requires pinned external RAR fixtures and bundled 7z"]
+    async fn real_rar_inspection_distinguishes_encryption_and_truncation() {
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../test-results/external-archive-fixtures");
+        let engine = UniversalCliEngine::new();
+        assert!(!engine.requires_password(&fixtures.join("libarchive-rar5-stored.rar"))
+            .await.expect("plain RAR inspection"));
+        let encrypted = fixtures.join("libarchive-rar-encrypted.rar");
+        assert!(engine.requires_password(&encrypted).await.expect("encrypted RAR inspection"));
+        let bytes = std::fs::read(encrypted).expect("pinned encrypted RAR");
+        let directory = tempfile::tempdir().expect("isolated truncated copy");
+        let truncated = directory.path().join("truncated.rar");
+        std::fs::write(&truncated, &bytes[..bytes.len() / 2]).expect("write truncated copy");
+        let error = engine.requires_password(&truncated).await.expect_err("truncated RAR");
+        assert!(error.to_string().contains("[archive-inspection:"));
+    }
+
     #[tokio::test]
     #[ignore = "requires LONG_REAL_DAMAGED_RAR and reads the archive directory only"]
     async fn real_damaged_rar_does_not_start_password_discovery() {
@@ -829,7 +885,7 @@ mod tests {
 
         assert!(error
             .to_string()
-            .contains("Unable to inspect archive encryption metadata"));
+            .contains("[archive-inspection:"));
     }
 
     #[tokio::test]

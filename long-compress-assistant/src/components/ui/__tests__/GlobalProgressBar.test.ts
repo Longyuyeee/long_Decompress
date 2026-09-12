@@ -21,6 +21,27 @@ vi.mock('@/composables/useTauriCommands', () => ({
 vi.mock('@tauri-apps/api/tauri', () => tauriMocks)
 
 describe('GlobalProgressBar', () => {
+  it('shows unsaved history in the summary and retries saving without rerunning the task', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    store.addTask({ id: 'unsaved', name: 'test.rar', type: 'decompression', sourceFiles: [], outputPath: '' })
+    store.failTask('unsaved', 'damaged archive')
+    await store.waitForHistoryPersistence('unsaved')
+    store.tasks[0].historySaveError = '历史记录保存失败'
+    const retry = vi.spyOn(store, 'retryHistoryPersistence')
+    const wrapper = mount(GlobalProgressBar, { global: { plugins: [pinia] } })
+    expect(wrapper.text()).toContain('1 条历史未保存')
+    await wrapper.find('.progress-summary').trigger('click')
+    await wrapper.get('[data-testid="retry-history-save"]').trigger('click')
+    await store.waitForHistoryPersistence('unsaved')
+    await nextTick()
+    expect(retry).toHaveBeenCalledWith('unsaved')
+    expect(wrapper.find('[data-testid="retry-history-save"]').exists()).toBe(false)
+    expect(commandMocks.decompressFile).not.toHaveBeenCalled()
+    expect(store.tasks[0].error).toBe('damaged archive')
+  })
+
   beforeEach(() => {
     commandMocks.openInExplorer.mockReset()
     commandMocks.decompressFile.mockReset()

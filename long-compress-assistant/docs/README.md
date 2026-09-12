@@ -4,6 +4,7 @@
 
 ## 当前接续入口
 
+- [`FAILURE_RELIABILITY_FOLLOWUP_2026-09-12.md`](FAILURE_RELIABILITY_FOLLOWUP_2026-09-12.md)：当前错误分类、前端密码重试纠偏、历史保存串行与保存失败恢复的实现和测试。
 - [`DEVELOPMENT_AUDIT_AND_UPGRADE_PLAN_2026-09-12.md`](DEVELOPMENT_AUDIT_AND_UPGRADE_PLAN_2026-09-12.md)：v1.3.2 当前代码审计、错误分类遗留、同类产品参考和六步升级规划；后续开发优先从此处接续。
 - [`DEVELOPMENT_HANDOFF.md`](DEVELOPMENT_HANDOFF.md)：跨电脑开发接续总入口，最新记录在文件顶部。
 - [`RELEASE_NOTES_1.3.2.md`](RELEASE_NOTES_1.3.2.md) / [`RELEASE_AUDIT_1.3.2.md`](RELEASE_AUDIT_1.3.2.md)：当前 v1.3.2 的损坏 RAR 识别、失败任务最终原因和正式发布证据。

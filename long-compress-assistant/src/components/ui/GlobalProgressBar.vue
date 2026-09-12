@@ -13,6 +13,7 @@ const tauriCommands = useTauriCommands()
 const isExpanded = ref(false)
 const isMinimized = ref(false)
 const retryingTaskId = ref<string | null>(null)
+const unsavedHistoryCount = computed(() => taskStore.tasks.filter(task => task.historySaveError).length)
 
 const ACTIVE_STATUSES = new Set(['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'paused', 'cancelling'])
 const FINISHED_STATUSES = new Set(['completed', 'failed', 'cancelled'])
@@ -227,6 +228,9 @@ const copyToClipboard = async (text: string) => {
 
         <!-- 摘要信息 -->
         <div class="progress-copy flex min-w-0 flex-1 flex-col gap-1 pr-12">
+          <span v-if="unsavedHistoryCount" role="status" class="text-xs text-amber-500">
+            {{ unsavedHistoryCount }} 条历史未保存，展开重试
+          </span>
           <div class="flex min-w-0 items-center gap-2 whitespace-nowrap">
             <i v-if="hasRunningTasks" class="pi pi-spin pi-spinner text-[0.75rem] text-primary"></i>
             <i v-else-if="hasPausedTasks" class="pi pi-pause-circle text-[0.75rem] text-amber-400"></i>
@@ -402,6 +406,15 @@ const copyToClipboard = async (text: string) => {
               </div>
 
               <!-- 失败详情 -->
+              <div v-if="task.historySaveError" role="alert"
+                   class="px-3.5 pb-2.5 text-sm text-amber-500 flex items-center gap-2">
+                <span class="flex-1">{{ task.historySaveError }}</span>
+                <button data-testid="retry-history-save" :disabled="task.historySaving"
+                        class="shrink-0 underline disabled:opacity-50"
+                        @click.stop="taskStore.retryHistoryPersistence(task.id)">
+                  {{ task.historySaving ? '正在保存…' : '重试保存' }}
+                </button>
+              </div>
               <div v-if="task.status === 'failed' && task.error"
                    class="px-3.5 pb-2.5 text-sm text-red-400/80 font-mono break-all">
                 <div class="flex items-start gap-2">

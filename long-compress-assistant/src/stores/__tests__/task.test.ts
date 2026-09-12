@@ -20,7 +20,8 @@ describe('task progress state machine', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     mocks.listeners.clear()
-    mocks.invoke.mockClear()
+    mocks.invoke.mockReset()
+    mocks.invoke.mockResolvedValue(undefined)
   })
 
   it('keeps the live queue separate from persisted history reads', () => {
@@ -77,6 +78,44 @@ describe('task progress state machine', () => {
 
     expect(store.tasks[0].error).toContain('未返回具体错误原因')
     expect(store.tasks[0].logs.at(-1)?.message).toContain('最终失败原因：')
+  })
+
+  it('serializes final-reason snapshots so older writes cannot overwrite newer ones', async () => {
+    let finishFirst!: () => void
+    mocks.invoke.mockImplementationOnce(() => new Promise<void>(resolve => { finishFirst = resolve }))
+    const store = useTaskStore()
+    store.addTask({ id: 'ordered', name: 'test.rar', type: 'decompression', sourceFiles: [], outputPath: '' })
+    store.failTask('ordered', 'initial failure')
+    store.failTask('ordered', 'precise failure')
+    expect(mocks.invoke).toHaveBeenCalledTimes(1)
+    store.clearFinishedTasks()
+    expect(store.tasks).toHaveLength(1)
+    finishFirst()
+    expect(await store.waitForHistoryPersistence('ordered')).toBe(true)
+    expect(mocks.invoke).toHaveBeenNthCalledWith(2, 'save_task_history', {
+      record: expect.objectContaining({ errorMessage: 'precise failure' }),
+    })
+    expect(store.tasks[0].historySaving).toBe(false)
+  })
+
+  it('retains an unsaved task and retries persistence without rerunning extraction', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mocks.invoke.mockRejectedValueOnce(new Error('database unavailable'))
+    const store = useTaskStore()
+    store.addTask({ id: 'unsaved', name: 'test.rar', type: 'decompression', sourceFiles: [], outputPath: '' })
+    store.failTask('unsaved', 'source damaged')
+    expect(await store.waitForHistoryPersistence('unsaved')).toBe(false)
+    expect(store.tasks[0].historySaveError).toContain('历史记录保存失败')
+    store.removeTask('unsaved')
+    store.clearFinishedTasks()
+    expect(store.tasks).toHaveLength(1)
+    expect(await store.retryHistoryPersistence('unsaved')).toBe(true)
+    expect(store.tasks[0].historySaveError).toBeUndefined()
+    expect(store.tasks[0].error).toBe('source damaged')
+    expect(mocks.invoke).toHaveBeenCalledTimes(2)
+    store.clearFinishedTasks()
+    expect(store.tasks).toHaveLength(0)
+    warning.mockRestore()
   })
 
   it('cancels a queued task locally without calling a backend process', async () => {
