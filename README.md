@@ -6,7 +6,7 @@
 
 ### 面向 Windows 的本地压缩、解压、归档浏览与密码管理工具
 
-[![Version](https://img.shields.io/badge/version-1.3.2-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.3.3-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri%20%2B%20Rust-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -23,14 +23,15 @@
 
 Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows 桌面归档工具。它不仅能完成日常压缩与解压，还把批量任务、压缩包浏览、密码保险箱、完整性检查、资源预检、任务模板和资源管理器右键菜单整合在同一个界面中。
 
-当前版本：**v1.3.2**。
+当前版本：**v1.3.3**。
 
-### v1.3.2 失败原因与损坏 RAR 识别
+### v1.3.3 解压诊断、历史找回与跨页面任务控制
 
-- 修复部分损坏 RAR 暴露加密元数据后误入密码尝试的问题；失败任务保存错误摘要和最终原因日志。
-- 延续 v1.3.1 的 RAR 密码候选验证修复，以及此前的队列控制、配置和特殊压缩能力。
-- [查看 v1.3.2 发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.2)。
-- [当前开发审计与后续升级规划（2026-09-12）](long-compress-assistant/docs/DEVELOPMENT_AUDIT_AND_UPGRADE_PLAN_2026-09-12.md)：已实现能力、错误分类遗留和后续版本步骤。
+- 损坏或截断 ZIP 给出中文最终原因；同名文件等待选择时不再提前记作失败。
+- 历史筛选无结果可重置找回已加载记录；从历史创建新解压草稿，保留原失败记录且不自动执行。
+- 压缩中心取消/清除仅影响归档，尊重未保存历史；图片批次切换页面后仍保留进度和取消控制。
+- [查看 v1.3.3 发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.3)。
+- [发布审计与验证边界](long-compress-assistant/docs/RELEASE_AUDIT_1.3.3.md) · [下一版开发顺序](long-compress-assistant/docs/NEXT_VERSION_AFTER_1.3.3.md)。
 
 ### v1.2.7 任务布局、完整提示与固定双栏
 
