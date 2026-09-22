@@ -14,11 +14,15 @@
 
 按图片批次本轮复现路径检查组件生命周期和控制器归属；只修复实际发现的问题。用真实视频/PDF 与归档并行、切页、取消、完成和重启历史检查证明隔离，不把图片通过扩写成三类全部通过。
 
+代码定位：`useVideoCompressionBatch.ts` 和 `usePdfOptimizationBatch.ts` 的 `activeTaskId / stopRequested` 仍在组合函数实例内；两个 Workspace 的 `isRunning` 仍为组件局部 ref，PDF 文件列表也是局部 ref。这是下一轮优先复现的明确风险点，尚未执行对应真实跨页场景，不标为已修复。
+
 ## 3. 历史保留与查询一并设计
 
 用户：“500 条以前的记录去哪了？”
 
 后端已有 500 条保留上限，单加前端分页不能找回已删除记录。先定义容量/保留策略与迁移，再实现服务端筛选、分页及明确计数。验收超过 500 条、跨页筛选、重复时间排序、迁移不丢现存数据；对既往已清理数据如实说明无法恢复。
+
+代码定位：`src-tauri/src/commands/task_history.rs` 保存成功后执行 `DELETE ... NOT IN (... ORDER BY completed_at DESC LIMIT ?)` 并绑定 `MAX_HISTORY_RECORDS = 500`；读取接口也把 limit 限制到 500。迁移只能保留现存数据，不能承诺恢复既往清理的记录。
 
 ## 4. 未保存结果跨重启恢复
 
