@@ -2,7 +2,7 @@
 
 ## 2026-09-22 1.3.3 安装通过与发布（当前接续）
 
-- PR #139 已合入 `17afe4c`，标签 `v1.3.3` 已推送，正式 Release 工作流 `35744575307` 构建中。
+- PR #139 已合入 `17afe4c`，标签 `v1.3.3` 已推送；[公开版本与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.3)，[发布工作流](https://github.com/Longyuyeee/long_Decompress/actions/runs/35744575307)。跨机接续先核对公开资产和工作流最终状态，不把候选哈希套到公开包。
 - 本机已从实际 1.3.1 覆盖升级为 CI 候选 1.3.3，程序与 DLL 身份正确，安装路径和两处应用数据不变；旧安装和数据备份保留于 `test-results/overlay-upgrade-20260922-230223`，不上传用户数据。
 - 379/379 前端单测、Rust 检测 8 通过/3 忽略、历史 12/12 均在 1.3.3 上重跑通过。完整证据与尚未覆盖范围见 [发布审计](RELEASE_AUDIT_1.3.3.md)。
 - 发布后按 [下一轮开发顺序](NEXT_VERSION_AFTER_1.3.3.md) 接续；下文为历史阶段记录。
