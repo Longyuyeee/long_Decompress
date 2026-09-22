@@ -26,7 +26,11 @@ watch(() => props.record.id, () => {
 async function selectPath(directory: boolean) {
   const recordId = props.record.id
   try {
-    const path = await open({ directory, multiple: false, title: directory ? '选择本次输出目录' : '选择归档或首个分卷' })
+    const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
+      ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection()
+      : undefined
+    const path = queued !== undefined ? queued
+      : await open({ directory, multiple: false, title: directory ? '选择本次输出目录' : '选择归档或首个分卷' })
     if (!disposed && props.record.id === recordId && typeof path === 'string') {
       if (directory) destination.value = path
       else source.value = path

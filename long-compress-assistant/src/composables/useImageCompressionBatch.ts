@@ -1,4 +1,5 @@
 import { useTauriCommands } from '@/composables/useTauriCommands'
+import { ref } from 'vue'
 import { useTaskStore, type Task, type TaskLog } from '@/stores/task'
 import { createVerifiedImageTaskMetricsV1 } from '@/types/taskMetrics'
 import {
@@ -85,10 +86,26 @@ export const applyImageBatchResultToTask = (
   taskStore.updateTaskStatus(task.id, 'cancelled')
 }
 
+const createBatchSession = () => ({
+  activeRunner: null as ImageCompressionBatchRunner | null,
+  isRunning: ref(false),
+  batchSettled: ref(0),
+  batchTotal: ref(0),
+  batchPercentage: ref(0),
+})
+// Route components may be destroyed while native work continues. Scope the
+// session to this app's task store, not a page instance or a global singleton.
+const batchSessions = new WeakMap<ReturnType<typeof useTaskStore>, ReturnType<typeof createBatchSession>>()
+
 export const useImageCompressionBatch = () => {
   const taskStore = useTaskStore()
   const commands = useTauriCommands()
-  let activeRunner: ImageCompressionBatchRunner | null = null
+  let session = batchSessions.get(taskStore)
+  if (!session) {
+    session = createBatchSession()
+    batchSessions.set(taskStore, session)
+  }
+  const state = session
 
   const runImageBatch = async (
     sources: ImageBatchSource[],
@@ -96,7 +113,7 @@ export const useImageCompressionBatch = () => {
     requestedBatchId?: string,
     onTaskRegistered?: (itemId: string, taskId: string) => void,
   ) => {
-    if (activeRunner) throw new Error('已有图片批量任务正在运行')
+    if (state.activeRunner) throw new Error('已有图片批量任务正在运行')
     const batchId = requestedBatchId || globalThis.crypto?.randomUUID?.() || `batch-${Date.now()}`
     const taskIds = sources.map((source, index) => createImageTaskId(batchId, source.id, index))
     for (const [index, source] of sources.entries()) {
@@ -130,24 +147,33 @@ export const useImageCompressionBatch = () => {
         if (!cancelled) throw new Error(`无法取消图片任务：${taskId}`)
       },
     }, (_source, index) => taskIds[index])
-    activeRunner = runner
+    state.activeRunner = runner
+    state.isRunning.value = true
+    state.batchSettled.value = 0
+    state.batchTotal.value = sources.length
+    state.batchPercentage.value = 0
 
     try {
       const results = await runner.run(sources, progress => {
         applyImageBatchResultToTask(taskStore, progress.result)
+        state.batchSettled.value = progress.settled
+        state.batchTotal.value = progress.total
+        state.batchPercentage.value = progress.percentage
         onProgress?.(progress)
       })
       const persisted = await Promise.all(results.map(result => taskStore.waitForHistoryPersistence(result.taskId)))
       if (persisted.some(value => !value)) throw new Error('一个或多个图片任务历史未能持久化')
       return results
     } finally {
-      activeRunner = null
+      state.activeRunner = null
+      state.isRunning.value = false
     }
   }
 
   const cancelImageBatch = async () => {
-    if (activeRunner) await activeRunner.cancel()
+    if (state.activeRunner) await state.activeRunner.cancel()
   }
 
-  return { runImageBatch, cancelImageBatch }
+  return { runImageBatch, cancelImageBatch, isRunning: state.isRunning,
+    batchSettled: state.batchSettled, batchTotal: state.batchTotal, batchPercentage: state.batchPercentage }
 }

@@ -130,15 +130,33 @@ describe('useImageCompressionBatch', () => {
     ], undefined, 'cancel-history-batch')
     await vi.waitFor(() => expect(mocks.invoke).toHaveBeenCalledWith('compress_image_file', expect.anything()))
 
-    await batch.cancelImageBatch()
+    // Navigating away and back creates a fresh composable instance in the
+    // same app; it must still control the original running batch.
+    const reopened = useImageCompressionBatch()
+    expect(reopened.isRunning.value).toBe(true)
+    expect(reopened.batchTotal.value).toBe(2)
+    await expect(reopened.runImageBatch([], undefined, 'duplicate')).rejects.toThrow('已有图片批量任务正在运行')
+    await reopened.cancelImageBatch()
     const results = await pending
 
     expect(results.map(result => result.status)).toEqual(['cancelled', 'cancelled'])
+    expect(reopened.isRunning.value).toBe(false)
+    expect(reopened.batchSettled.value).toBe(2)
+    expect(reopened.batchPercentage.value).toBe(100)
     expect(useTaskStore().tasks.map(task => task.status)).toEqual(['cancelled', 'cancelled'])
     expect(useTaskStore().tasks.every(task => task.metrics === undefined)).toBe(true)
     expect(mocks.history).toHaveLength(2)
     expect(mocks.history).toEqual(expect.arrayContaining([
       expect.objectContaining({ status: 'cancelled', workloadKind: 'image', metrics: null }),
     ]))
+  })
+
+  it('does not share progress between separate app stores', () => {
+    const first = useImageCompressionBatch()
+    first.batchTotal.value = 4
+    setActivePinia(createPinia())
+    const second = useImageCompressionBatch()
+    expect(second.batchTotal.value).toBe(0)
+    expect(second.isRunning.value).toBe(false)
   })
 })
