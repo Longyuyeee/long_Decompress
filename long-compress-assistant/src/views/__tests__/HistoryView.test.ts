@@ -25,9 +25,30 @@ const records = [
   },
 ]
 
+const page = (records: unknown[]) => ({ records, nextCursor: null })
 const mountView = () => mount(HistoryView, { global: { plugins: [createPinia()], stubs: { Teleport: true } } })
 
 describe('HistoryView', () => {
+  it('已加载没有匹配时，仍能加载更早记录；查询失败不隐藏已加载结果', async () => {
+    mocks.invoke.mockImplementation(async command => command === 'list_task_history_page'
+      ? { records: [records[0]], nextCursor: { completedAt: records[0].completedAt, id: records[0].id } } : undefined)
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.get('[data-testid="history-search"]').setValue('broken')
+    expect(wrapper.get('[data-testid="history-empty"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="history-retention-policy"]').text()).toContain('不代表全库')
+    mocks.invoke.mockResolvedValueOnce(page([records[1]]))
+    await wrapper.get('[data-testid="history-load-more"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
+    expect(wrapper.find('[data-testid="history-load-more"]').exists()).toBe(false)
+    mocks.invoke.mockRejectedValueOnce(new Error('temporary database error'))
+    await wrapper.findAll('button').find(button => button.text().includes('刷新'))!.trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('temporary database error')
+    expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
+    wrapper.unmount()
+  })
   it.each([
     ['damaged', '重新获取完整文件'],
     ['missing-volume', '不猜测缺失分卷名称'],
@@ -37,7 +58,7 @@ describe('HistoryView', () => {
     const failed = { ...records[1], errorMessage: '已记录的原始详情', failure: {
       schemaVersion: 1, category, stage: category === 'output-conflict' ? 'Publishing' : 'inspection', evidence: 'recorded-marker',
     } }
-    mocks.invoke.mockImplementation(async command => command === 'list_task_history' ? [failed] : undefined)
+    mocks.invoke.mockImplementation(async command => command === 'list_task_history_page' ? page([failed]) : undefined)
     const wrapper = mountView()
     await flushPromises()
     const callsBeforeOpening = [...mocks.invoke.mock.calls]
@@ -66,7 +87,7 @@ describe('HistoryView', () => {
     localStorage.clear()
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'load_app_settings') return '{}'
-      if (command === 'list_task_history') return records
+      if (command === 'list_task_history_page') return page(records)
       return undefined
     })
   })
@@ -91,10 +112,10 @@ describe('HistoryView', () => {
 
   it('最近30天包含边界时刻，早一毫秒的记录只在全部时间显示', async () => {
     const cutoff = Date.now() - 30 * 86_400_000
-    mocks.invoke.mockResolvedValue([
+    mocks.invoke.mockResolvedValue(page([
       { ...records[0], id: 'boundary', name: 'boundary.zip', completedAt: new Date(cutoff).toISOString() },
       { ...records[0], id: 'older', name: 'older.zip', completedAt: new Date(cutoff - 1).toISOString() },
-    ])
+    ]))
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('boundary.zip')
@@ -107,7 +128,7 @@ describe('HistoryView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    expect(mocks.invoke).toHaveBeenCalledWith('list_task_history', { limit: 500 })
+    expect(mocks.invoke).toHaveBeenCalledWith('list_task_history_page', { limit: 100, cursor: null })
     expect(wrapper.get('[data-testid="history-kpis"]').text()).toContain('50%')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('photos.zip')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
@@ -129,7 +150,7 @@ describe('HistoryView', () => {
   it('shows a helpful empty state and can clear persisted history', async () => {
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'load_app_settings') return '{}'
-      if (command === 'list_task_history') return []
+      if (command === 'list_task_history_page') return page([])
       return undefined
     })
     const wrapper = mountView()
@@ -156,8 +177,8 @@ describe('HistoryView', () => {
   })
 
   it.each(['completed', 'cancelled'])('任务是 %s 时，不把旧错误当作本次最终失败', async status => {
-    mocks.invoke.mockImplementation(async command => command === 'list_task_history'
-      ? [{ ...records[1], status }] : undefined)
+    mocks.invoke.mockImplementation(async command => command === 'list_task_history_page'
+      ? page([{ ...records[1], status }]) : undefined)
     const wrapper = mountView()
     await flushPromises()
     await wrapper.find('[data-testid="history-list"] article').trigger('click')
@@ -213,7 +234,7 @@ describe('HistoryView', () => {
       failure: { schemaVersion: 1, category: 'rollback-incomplete', stage: 'Publishing', evidence: 'recorded-marker' } }
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'load_app_settings') return '{}'
-      if (command === 'list_task_history') return [recoveryRecord]
+      if (command === 'list_task_history_page') return page([recoveryRecord])
       return undefined
     })
     const wrapper = mountView()

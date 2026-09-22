@@ -6,7 +6,7 @@
 
 ### 面向 Windows 的本地压缩、解压、归档浏览与密码管理工具
 
-[![Version](https://img.shields.io/badge/version-1.3.5-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.3.6-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri%20%2B%20Rust-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -23,7 +23,14 @@
 
 Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows 桌面归档工具。它不仅能完成日常压缩与解压，还把批量任务、压缩包浏览、密码保险箱、完整性检查、资源预检、任务模板和资源管理器右键菜单整合在同一个界面中。
 
-当前版本：**v1.3.5**。
+当前版本：**v1.3.6**。
+
+### v1.3.6 历史保留与更早记录
+
+- 保存新任务不再静默删除第 500 条之外的历史，保留到用户主动删除或清空；记录会占用本机磁盘，旧版已删除的数据无法恢复。
+- 新增“加载更早记录”，使用稳定游标分页；加载失败保留现有列表，可再次尝试。
+- 明确筛选、统计和趋势只覆盖当前已加载记录，全库搜索尚未实现；刷新/清空时不会被迟到的查询结果覆盖。
+- [发布说明与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.6) · [本版审计](long-compress-assistant/docs/RELEASE_AUDIT_1.3.6.md) · [下一版计划](long-compress-assistant/docs/NEXT_VERSION_AFTER_1.3.6.md)。
 
 ### v1.3.5 失败后的下一步
 
