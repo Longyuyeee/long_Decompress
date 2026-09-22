@@ -4,6 +4,9 @@
 
 ## 当前接续入口
 
+- [`NEXT_VERSION_AFTER_1.3.3.md`](NEXT_VERSION_AFTER_1.3.3.md)：下一轮失败处理、跨页控制、历史保留和恢复的开发顺序及验收条件。
+- [`RELEASE_NOTES_1.3.3.md`](RELEASE_NOTES_1.3.3.md)：1.3.3 候选发布说明，发布状态以交接文档为准。
+
 - [`RELEASE_CLOSURE_2026-09-22.md`](RELEASE_CLOSURE_2026-09-22.md)：历史重试、真实图片并发隔离、跨页面状态修复及安装发布接续。
 
 - [`NEXT_VERSION_USER_PLAN_2026-09-22.md`](NEXT_VERSION_USER_PLAN_2026-09-22.md)：当前审计、历史筛选找回、1.3.3 收尾范围与后续用户痛点优先级。
