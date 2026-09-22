@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { usePdfWorkspaceStore, type PdfWorkspaceItem } from '@/stores/pdfWorkspace'
 import { open } from '@tauri-apps/api/dialog'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import Modal from '@/components/ui/Modal.vue'
@@ -7,7 +9,6 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { usePdfOptimizationBatch } from '@/composables/usePdfOptimizationBatch'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore, type Task } from '@/stores/task'
-import type { PdfInputAnalysisReport } from '@/types/pdf'
 import {
   buildPdfConfigurationDraft,
   isPdfCandidate,
@@ -15,31 +16,17 @@ import {
 } from '@/utils/pdfOptimizationWorkspace'
 
 interface SelectedFile { name: string, path: string, size: number, isDirectory: boolean }
-interface PdfWorkspaceItem {
-  id: string
-  path: string
-  name: string
-  status: 'analyzing' | 'password-required' | 'ready' | 'blocked' | 'failed'
-  report: PdfInputAnalysisReport | null
-  mode: PdfOptimizationMode
-  password: string
-  riskConfirmed: boolean
-  frozen: boolean
-  allowLargerOutput: boolean
-  taskId: string | null
-  error: string
-}
 
 const appStore = useAppStore()
 const taskStore = useTaskStore()
 const commands = useTauriCommands()
 const pdfBatch = usePdfOptimizationBatch()
-const items = ref<PdfWorkspaceItem[]>([])
+const { items, outputDirectory } = storeToRefs(usePdfWorkspaceStore())
+onUnmounted(() => items.value.forEach(item => { item.password = '' }))
 const selectionError = ref('')
-const outputDirectory = ref('')
 const outputDirectoryDraft = ref('')
 const showBatchSettings = ref(false)
-const isRunning = ref(false)
+const { isRunning } = pdfBatch
 
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`
@@ -140,7 +127,6 @@ const chooseOutputDirectory = async () => {
 const startPdfOptimization = async () => {
   const sources = runnableItems.value
   if (!canStart.value) return
-  isRunning.value = true
   try {
     const results = await pdfBatch.runPdfBatch(
       sources.map(item => ({
@@ -166,8 +152,6 @@ const startPdfOptimization = async () => {
     else appStore.setSuccess(summary)
   } catch (error) {
     appStore.setError(`PDF 批量处理失败：${String(error)}`)
-  } finally {
-    isRunning.value = false
   }
 }
 
