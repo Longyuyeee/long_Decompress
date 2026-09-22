@@ -2300,6 +2300,8 @@ async function runHistoryDesktopGate() {
   assert.equal(normalizedDesktopPath(compression?.outputPath), normalizedDesktopPath(archivePath))
   assert.ok(compression?.durationMs >= 0)
   assert.ok(!JSON.stringify(beforeRestart).toLowerCase().includes('password'))
+  assert.equal(fileSha256(path.join(outputPath, path.basename(sourcePath))), fileSha256(sourcePath),
+    'completed extraction must produce the exact original content, not just a completed history row')
 
   await restartDesktopSession()
   const afterRestart = await callDesktopBridge('taskHistory')
@@ -2368,6 +2370,79 @@ async function runHistoryDesktopGate() {
     path.join(artifactDirectory, 'task-history-detail-compact.png'),
     Buffer.from(await driver.takeScreenshot(), 'base64'),
   )
+
+  await (await driver.findElement(By.css('[data-testid="history-detail"] header button'))).click()
+  await runDownloadFailureUserGate()
+}
+
+async function runDownloadFailureUserGate() {
+  console.log('[desktop-e2e] user scenario: downloaded ZIP is incomplete; show the final reason, not a password retry')
+  const scenarioRoot = path.join(fixtureDirectory, 'download-failure-user')
+  mkdirSync(scenarioRoot, { recursive: true })
+  const source = path.join(scenarioRoot, '资料.txt')
+  const intact = path.join(scenarioRoot, '完整资料.zip')
+  const damaged = path.join(scenarioRoot, '下载中断.zip')
+  writeFileSync(source, '我下载了一份资料，希望完整解压；失败时请先告诉我原因。\n'.repeat(100))
+  runFixtureCommand(bundledSevenZip, ['a', '-tzip', '-mx=0', intact, source], 'intact user download')
+  const bytes = readFileSync(intact)
+  writeFileSync(damaged, bytes.subarray(0, Math.floor(bytes.length / 2)))
+  await callDesktopBridge('clearTasks')
+  await (await waitForElement('[data-testid="nav-Decompress"]')).click()
+  // Only the OS picker response is substituted. Task creation, queue start,
+  // real engine, error handling and persistence all use the product's UI path.
+  await callDesktopBridge('queueDesktopDialogSelections', [[damaged, intact]])
+  await (await waitForElement('[data-testid="dropzone-file"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="task-row"]'))).length === 2, 15_000)
+  await (await driver.findElement(By.xpath('//header[@data-testid="decompression-header"]//button[contains(., "开始解压队列")]'))).click()
+  const keepBoth = await driver.wait(async () => {
+    const buttons = await driver.findElements(By.xpath('//button[contains(., "自动重命名保留两者")]'))
+    return buttons[0] && await buttons[0].isDisplayed() ? buttons[0] : false
+  }, 30_000)
+  // The original payload intentionally occupies the output name. Waiting for
+  // the user's keep-both choice must not create a false terminal history row.
+  assert.equal((await callDesktopBridge('taskHistory')).some(record => record.sourcePaths.includes(intact)), false,
+    'a pending file conflict must not already be recorded as a failed extraction')
+  await keepBoth.click()
+  const records = await driver.wait(async () => {
+    const records = (await callDesktopBridge('taskHistory')).filter(record => record.sourcePaths.includes(damaged) || record.sourcePaths.includes(intact))
+    return records.length === 2 ? records : false
+  }, 60_000)
+  const failed = records.find(record => record.sourcePaths.includes(damaged))
+  const completed = records.find(record => record.sourcePaths.includes(intact))
+  assert.equal(failed.status, 'failed')
+  assert.equal(failed.failure?.category, 'damaged')
+  assert.equal(failed.failure?.stage, 'inspection')
+  assert.match(failed.errorMessage || '', /损坏|不完整|截断|unexpected end|corrupt|truncat/iu)
+  assert.ok(failed.logs.some(log => log.severity === 'error' && log.message.includes(failed.errorMessage)),
+    'final failure must be retained in the task log')
+  assert.equal((await driver.findElements(By.css('[data-testid="task-row"].has-password-input'))).length, 0,
+    'an incomplete unencrypted ZIP must not request a password retry')
+  assert.equal(completed.status, 'completed', `the intact download must still succeed after the failed task: ${JSON.stringify(completed)}`)
+  assert.equal(fileSha256(path.join(scenarioRoot, '资料 (1).txt')), fileSha256(source))
+  assert.deepEqual(readdirSync(scenarioRoot).filter(name => name.endsWith('.txt')).sort(), ['资料 (1).txt', '资料.txt'],
+    'only the original and the intact extraction may be published, never the truncated output')
+  await restartDesktopSession()
+  const persisted = await callDesktopBridge('taskHistory')
+  for (const record of records) assert.deepEqual(persisted.find(item => item.id === record.id), record)
+  await (await waitForElement('[data-testid="nav-History"]')).click()
+  const search = await waitForElement('[data-testid="history-search"]')
+  await search.sendKeys('下载中断.zip')
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="history-record-row"]'))).length === 1, 10_000)
+  await (await driver.findElement(By.css('[data-testid="history-record-row"]'))).click()
+  const finalReason = await waitForElement('[data-testid="history-final-failure"]')
+  // Vue mounts the drawer before its entrance transition finishes; require
+  // visible text, not merely a present node or a hidden textContent value.
+  await driver.wait(async () => await finalReason.isDisplayed()
+    && (await finalReason.getText()).replace(/\s+/g, ' ').includes(failed.errorMessage.replace(/\s+/g, ' ')),
+  10_000, 'reopened history must visibly show the actual final reason')
+  writeFileSync(path.join(artifactDirectory, 'download-failure-history.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  writeFileSync(path.join(artifactDirectory, 'download-failure-user-result.json'), JSON.stringify({
+    testKind: 'webdriver-ui-real-engine-picker-response-substituted',
+    binarySha256: fileSha256(application), records,
+    originalContentSha256: fileSha256(source),
+    nativePickerVerified: false, historyDraftRetryVerified: false,
+  }, null, 2))
+  console.log('[desktop-e2e] incomplete/intact ZIP queue, final reason, output bytes and restart history passed')
 }
 
 async function runHfsxDesktopGate() {

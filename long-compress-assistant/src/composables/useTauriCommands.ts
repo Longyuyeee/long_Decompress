@@ -326,7 +326,15 @@ export const useTauriCommands = () => {
     } catch (error: any) {
       const task = taskStore.tasks.find(item => item.id === taskId)
       if (task && !['cancelled', 'cancelling'].includes(task.status)) {
-        taskStore.failTask(taskId, error instanceof Error ? error.message : String(error))
+        const reason = extractErrorMessage(error)
+        if (/File conflict requires resolution/i.test(reason)) {
+          // Awaiting a choice is not terminal. Do not enqueue a failed history
+          // write before the view has a chance to display the conflict dialog.
+          taskStore.updateTaskStatus(taskId, 'pending')
+          task.error = undefined
+        } else {
+          taskStore.failTask(taskId, reason)
+        }
       }
       throw error
     }

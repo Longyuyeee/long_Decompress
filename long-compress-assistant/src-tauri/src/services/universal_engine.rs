@@ -61,16 +61,38 @@ impl UniversalCliEngine {
     }
 
     pub(crate) fn zip_requires_password(file_path: &Path) -> Result<bool> {
-        let file = std::fs::File::open(file_path)?;
-        let mut archive = zip_aes::ZipArchive::new(file)?;
+        let file = std::fs::File::open(file_path)
+            .map_err(|error| Self::zip_inspection_error(error.into()))?;
+        let mut archive = zip_aes::ZipArchive::new(file)
+            .map_err(Self::zip_inspection_error)?;
 
         for index in 0..archive.len() {
-            if archive.by_index_raw(index)?.encrypted() {
+            if archive.by_index_raw(index).map_err(Self::zip_inspection_error)?.encrypted() {
                 return Ok(true);
             }
         }
 
         Ok(false)
+    }
+
+    fn zip_inspection_error(error: zip_aes::result::ZipError) -> anyhow::Error {
+        use zip_aes::result::ZipError;
+        let (code, summary) = match &error {
+            ZipError::InvalidArchive(_) => ("damaged", "ZIP 归档结构损坏或不完整，请确认下载完整后重试"),
+            ZipError::Io(cause) if cause.kind() == std::io::ErrorKind::UnexpectedEof =>
+                ("damaged", "ZIP 数据提前结束，文件可能损坏或下载不完整"),
+            ZipError::Io(cause) if cause.kind() == std::io::ErrorKind::PermissionDenied =>
+                ("permission", "无法读取 ZIP，请检查文件访问权限"),
+            ZipError::Io(_) => ("io", "读取 ZIP 失败，请检查文件是否存在及存储设备是否可用"),
+            ZipError::UnsupportedArchive(_) => ("unknown", "当前无法检测此 ZIP 特性，不能据此判定文件损坏或密码错误"),
+            _ => ("unknown", "无法完成 ZIP 归档检测，请查看原始错误详情"),
+        };
+        // Keep the typed IO cause as well as the ZIP message for diagnostics.
+        let detail = match &error {
+            ZipError::Io(cause) => cause.to_string(),
+            _ => error.to_string(),
+        };
+        anyhow::anyhow!("[archive-inspection:{}] {}：{}", code, summary, detail)
     }
 
     pub(crate) fn try_zip_password(file_path: &Path, password: &str) -> Result<bool> {
@@ -769,6 +791,40 @@ impl ArchiveEngine for UniversalCliEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn zip_inspection_reports_truncated_structure_without_password_retry() {
+        let directory = tempfile::tempdir().unwrap();
+        let intact = directory.path().join("完整.zip");
+        let damaged = directory.path().join("下载中断.zip");
+        let mut writer = zip_aes::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        writer.start_file("资料.txt", zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Stored)).unwrap();
+        writer.write_all(&vec![b'a'; 1024]).unwrap();
+        let bytes = writer.finish().unwrap().into_inner();
+        std::fs::write(&intact, &bytes).unwrap();
+        std::fs::write(&damaged, &bytes[..bytes.len() / 2]).unwrap();
+        assert!(!UniversalCliEngine::zip_requires_password(&intact).unwrap());
+        let error = UniversalCliEngine::zip_requires_password(&damaged).unwrap_err().to_string();
+        assert!(error.contains("[archive-inspection:damaged]"), "{error}");
+        assert!(error.contains("损坏或不完整"), "{error}");
+        assert!(error.contains("Could not find EOCD"), "{error}");
+    }
+
+    #[test]
+    fn zip_inspection_does_not_label_io_or_unsupported_features_as_damage() {
+        use zip_aes::result::ZipError;
+        for (error, code, detail) in [
+            (ZipError::Io(std::io::Error::new(std::io::ErrorKind::PermissionDenied, "access denied")), "permission", "access denied"),
+            (ZipError::Io(std::io::Error::new(std::io::ErrorKind::NotFound, "file disappeared")), "io", "file disappeared"),
+            (ZipError::UnsupportedArchive("unsupported feature"), "unknown", "unsupported feature"),
+            (ZipError::Io(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "short read")), "damaged", "short read"),
+        ] {
+            let diagnostic = UniversalCliEngine::zip_inspection_error(error).to_string();
+            assert!(diagnostic.contains(&format!("[archive-inspection:{code}]")), "{diagnostic}");
+            assert!(diagnostic.contains(detail), "{diagnostic}");
+        }
+    }
 
     #[test]
     fn test_7z_progress_parsing() {
