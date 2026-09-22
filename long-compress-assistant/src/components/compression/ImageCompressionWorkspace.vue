@@ -23,10 +23,7 @@ const taskStore = useTaskStore()
 const imageBatch = useImageCompressionBatch()
 const showGlobalSettings = ref(false)
 const imageSettingsDraft = ref<ImageCompressionSettings>({ ...store.imageGlobalSettings })
-const isRunning = ref(false)
-const batchSettled = ref(0)
-const batchTotal = ref(0)
-const batchPercentage = ref(0)
+const { isRunning, batchSettled, batchTotal, batchPercentage } = imageBatch
 const inspectionsInFlight = new Set<string>()
 
 const formatBytes = (bytes: number) => {
@@ -180,10 +177,6 @@ const authorizeResultPreview = async (result: ImageBatchItemResult) => {
 const startImageCompression = async () => {
   const items = runnableItems.value
   if (items.length === 0 || isRunning.value) return
-  isRunning.value = true
-  batchSettled.value = 0
-  batchTotal.value = items.length
-  batchPercentage.value = 0
   const previews: Promise<void>[] = []
   try {
     const results = await imageBatch.runImageBatch(
@@ -195,9 +188,6 @@ const startImageCompression = async () => {
         settings: { ...store.getEffectiveImageSettings(item) },
       })),
       progress => {
-        batchSettled.value = progress.settled
-        batchTotal.value = progress.total
-        batchPercentage.value = progress.percentage
         previews.push(authorizeResultPreview(progress.result))
       },
       undefined,
@@ -214,8 +204,6 @@ const startImageCompression = async () => {
     else appStore.setSuccess(summary)
   } catch (error) {
     appStore.setError(`图片批量处理失败：${String(error)}`)
-  } finally {
-    isRunning.value = false
   }
 }
 

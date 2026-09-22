@@ -2300,6 +2300,8 @@ async function runHistoryDesktopGate() {
   assert.equal(normalizedDesktopPath(compression?.outputPath), normalizedDesktopPath(archivePath))
   assert.ok(compression?.durationMs >= 0)
   assert.ok(!JSON.stringify(beforeRestart).toLowerCase().includes('password'))
+  assert.equal(fileSha256(path.join(outputPath, path.basename(sourcePath))), fileSha256(sourcePath),
+    'completed extraction must produce the exact original content, not just a completed history row')
 
   await restartDesktopSession()
   const afterRestart = await callDesktopBridge('taskHistory')
@@ -2368,6 +2370,113 @@ async function runHistoryDesktopGate() {
     path.join(artifactDirectory, 'task-history-detail-compact.png'),
     Buffer.from(await driver.takeScreenshot(), 'base64'),
   )
+
+  await (await driver.findElement(By.css('[data-testid="history-detail"] header button'))).click()
+  await runDownloadFailureUserGate()
+}
+
+async function runDownloadFailureUserGate() {
+  console.log('[desktop-e2e] user scenario: downloaded ZIP is incomplete; show the final reason, not a password retry')
+  const scenarioRoot = path.join(fixtureDirectory, 'download-failure-user')
+  mkdirSync(scenarioRoot, { recursive: true })
+  const source = path.join(scenarioRoot, '资料.txt')
+  const intact = path.join(scenarioRoot, '完整资料.zip')
+  const damaged = path.join(scenarioRoot, '下载中断.zip')
+  writeFileSync(source, '我下载了一份资料，希望完整解压；失败时请先告诉我原因。\n'.repeat(100))
+  runFixtureCommand(bundledSevenZip, ['a', '-tzip', '-mx=0', intact, source], 'intact user download')
+  const bytes = readFileSync(intact)
+  writeFileSync(damaged, bytes.subarray(0, Math.floor(bytes.length / 2)))
+  await callDesktopBridge('clearTasks')
+  await (await waitForElement('[data-testid="nav-Decompress"]')).click()
+  // Only the OS picker response is substituted. Task creation, queue start,
+  // real engine, error handling and persistence all use the product's UI path.
+  await callDesktopBridge('queueDesktopDialogSelections', [[damaged, intact]])
+  await (await waitForElement('[data-testid="dropzone-file"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="task-row"]'))).length === 2, 15_000)
+  const recycleSource = await waitForElement('[data-testid="global-recycle-source-switch"]')
+  if (await recycleSource.getAttribute('aria-checked') === 'true') await recycleSource.click()
+  assert.equal(await recycleSource.getAttribute('aria-checked'), 'false', 'this retry scenario keeps downloaded sources')
+  await (await driver.findElement(By.xpath('//header[@data-testid="decompression-header"]//button[contains(., "开始解压队列")]'))).click()
+  const keepBoth = await driver.wait(async () => {
+    const buttons = await driver.findElements(By.xpath('//button[contains(., "自动重命名保留两者")]'))
+    return buttons[0] && await buttons[0].isDisplayed() ? buttons[0] : false
+  }, 30_000)
+  // The original payload intentionally occupies the output name. Waiting for
+  // the user's keep-both choice must not create a false terminal history row.
+  assert.equal((await callDesktopBridge('taskHistory')).some(record => record.sourcePaths.includes(intact)), false,
+    'a pending file conflict must not already be recorded as a failed extraction')
+  await keepBoth.click()
+  const records = await driver.wait(async () => {
+    const records = (await callDesktopBridge('taskHistory')).filter(record => record.sourcePaths.includes(damaged) || record.sourcePaths.includes(intact))
+    return records.length === 2 ? records : false
+  }, 60_000)
+  const failed = records.find(record => record.sourcePaths.includes(damaged))
+  const completed = records.find(record => record.sourcePaths.includes(intact))
+  assert.equal(failed.status, 'failed')
+  assert.equal(failed.failure?.category, 'damaged')
+  assert.equal(failed.failure?.stage, 'inspection')
+  assert.match(failed.errorMessage || '', /损坏|不完整|截断|unexpected end|corrupt|truncat/iu)
+  assert.ok(failed.logs.some(log => log.severity === 'error' && log.message.includes(failed.errorMessage)),
+    'final failure must be retained in the task log')
+  assert.equal((await driver.findElements(By.css('[data-testid="task-row"].has-password-input'))).length, 0,
+    'an incomplete unencrypted ZIP must not request a password retry')
+  assert.equal(completed.status, 'completed', `the intact download must still succeed after the failed task: ${JSON.stringify(completed)}`)
+  assert.equal(fileSha256(path.join(scenarioRoot, '资料 (1).txt')), fileSha256(source))
+  assert.deepEqual(readdirSync(scenarioRoot).filter(name => name.endsWith('.txt')).sort(), ['资料 (1).txt', '资料.txt'],
+    'only the original and the intact extraction may be published, never the truncated output')
+  await restartDesktopSession()
+  const persisted = await callDesktopBridge('taskHistory')
+  for (const record of records) assert.deepEqual(persisted.find(item => item.id === record.id), record)
+  await (await waitForElement('[data-testid="nav-History"]')).click()
+  const search = await waitForElement('[data-testid="history-search"]')
+  await search.sendKeys('下载中断.zip')
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="history-record-row"]'))).length === 1, 10_000)
+  await (await driver.findElement(By.css('[data-testid="history-record-row"]'))).click()
+  const finalReason = await waitForElement('[data-testid="history-final-failure"]')
+  // Vue mounts the drawer before its entrance transition finishes; require
+  // visible text, not merely a present node or a hidden textContent value.
+  await driver.wait(async () => await finalReason.isDisplayed()
+    && (await finalReason.getText()).replace(/\s+/g, ' ').includes(failed.errorMessage.replace(/\s+/g, ' ')),
+  10_000, 'reopened history must visibly show the actual final reason')
+  writeFileSync(path.join(artifactDirectory, 'download-failure-history.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  const retryOutput = path.join(scenarioRoot, '重新下载后')
+  mkdirSync(retryOutput)
+  const draftSource = await waitForElement('[data-testid="history-draft-source"]')
+  await draftSource.sendKeys(Key.chord(Key.CONTROL, 'a'), intact)
+  assert.equal(await draftSource.getAttribute('value'), intact, 'the replacement path must be entered exactly')
+  await callDesktopBridge('queueDesktopDialogSelections', [retryOutput])
+  await (await waitForElement('[data-testid="history-draft-select-output"]')).click()
+  await (await waitForElement('[data-testid="history-draft-create"]')).click()
+  const goToDraft = await driver.wait(async () => {
+    const links = await driver.findElements(By.css('[data-testid="history-extraction-draft"] a'))
+    return links[0] && await links[0].isDisplayed() ? links[0] : false
+  }, 15_000)
+  assert.deepEqual(await callDesktopBridge('taskHistory'), persisted, 'creating a draft must not change saved history')
+  assert.deepEqual(readdirSync(retryOutput), [], 'creating a draft must not start extraction')
+  await goToDraft.click()
+  const pendingRow = await waitForElement('[data-testid="task-row"]')
+  const retryId = await pendingRow.getAttribute('data-task-id')
+  assert.notEqual(retryId, failed.id)
+  assert.equal(await callDesktopBridge('taskStatus', retryId), 'pending')
+  await (await driver.findElement(By.xpath('//header[@data-testid="decompression-header"]//button[contains(., "开始解压队列")]'))).click()
+  const retryRecord = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.id === retryId), 30_000)
+  assert.equal(retryRecord.status, 'completed', JSON.stringify(retryRecord))
+  assert.equal(fileSha256(path.join(retryOutput, '完整资料', '资料.txt')), fileSha256(source))
+  assert.ok(existsSync(intact), 'retry must preserve the downloaded archive')
+  assert.ok(retryRecord.logs.some(log => log.message.includes(failed.id)), 'retry must retain its historical origin')
+  assert.deepEqual((await callDesktopBridge('taskHistory')).find(record => record.id === failed.id), failed,
+    'a successful new task must not rewrite the original failure')
+  await restartDesktopSession()
+  const retryPersisted = await callDesktopBridge('taskHistory')
+  assert.deepEqual(retryPersisted.find(record => record.id === retryId), retryRecord)
+  assert.deepEqual(retryPersisted.find(record => record.id === failed.id), failed)
+  writeFileSync(path.join(artifactDirectory, 'download-failure-user-result.json'), JSON.stringify({
+    testKind: 'webdriver-ui-real-engine-picker-response-substituted',
+    binarySha256: fileSha256(application), records,
+    originalContentSha256: fileSha256(source),
+    nativePickerVerified: false, historyDraftRetryVerified: true, retryRecord,
+  }, null, 2))
+  console.log('[desktop-e2e] incomplete/intact ZIP queue, final reason, output bytes and restart history passed')
 }
 
 async function runHfsxDesktopGate() {
@@ -3974,12 +4083,34 @@ async function runImageBatchDesktopGate() {
   let workspaceText = await (await waitForElement('[data-testid="image-compression-workspace"]')).getText()
   assert.match(workspaceText, /图片任务\s*100/)
   assert.match(workspaceText, /已读取\s*100/)
+  await (await waitForElement('[data-testid="image-save-global-settings"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
 
   const startButton = await waitForElement('[data-testid="image-compression-workspace"] .primary-action')
   assert.equal(await startButton.getAttribute('disabled'), null, '100 verified image drafts must enable real execution')
   await callDesktopBridge('configureImageCompressionWorkspace', imageOutputDirectory)
+  const concurrentArchiveSource = path.join(fixtureDirectory, 'concurrent-archive.bin')
+  const concurrentArchiveOutput = path.join(fixtureDirectory, 'concurrent-archive.7z')
+  writeFileSync(concurrentArchiveSource, randomBytes(128 * 1024 * 1024))
   const startedAt = Date.now()
   await startButton.click()
+  const concurrentArchiveId = await callDesktopBridge('startSevenZipCompression', concurrentArchiveSource, concurrentArchiveOutput)
+  await (await waitForElement('[data-testid="nav-Compress"]')).click()
+  const cancelArchives = await waitForElement('[data-testid="compression-top-actions"] button:has(.pi-stop-circle)')
+  const mediaAtCancel = await callDesktopBridge('imageCompressionResultAuditState')
+  assert.ok(mediaAtCancel.some(item => ['preparing', 'compressing', 'running'].includes(item.taskStatus)),
+    `the isolation check must overlap a real running image task: ${JSON.stringify(mediaAtCancel.map(item => item.taskStatus))}`)
+  await cancelArchives.click()
+  await driver.wait(async () => (await callDesktopBridge('taskStatus', concurrentArchiveId)) === 'cancelled', 30_000)
+  await driver.wait(async () => (await callDesktopBridge('taskHistory')).some(record => record.id === concurrentArchiveId), 15_000)
+  await (await waitForElement('[data-testid="compression-top-actions"] button:has(.pi-trash)')).click()
+  await driver.wait(async () => (await callDesktopBridge('taskStatus', concurrentArchiveId)) === null, 15_000)
+  const mediaAfterClear = await callDesktopBridge('imageCompressionResultAuditState')
+  assert.equal(mediaAfterClear.length, expectedBatchSize)
+  assert.ok(mediaAfterClear.every(item => item.taskStatus && !['cancelled', 'cancelling', 'failed'].includes(item.taskStatus)),
+    'archive cancel/clear must not cancel or remove image tasks')
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await waitForElement('[data-testid="image-compression-workspace"]')
   const resultState = await driver.wait(async () => {
     const current = await callDesktopBridge('imageCompressionResultAuditState')
     return current.length === expectedBatchSize
@@ -4013,12 +4144,15 @@ async function runImageBatchDesktopGate() {
   assert.equal(imageHistory.length, expectedBatchSize, 'every published image must persist one unified history row')
   assert.ok(imageHistory.every(record => record.status === 'completed' && record.metrics?.inputBytes > 0 && record.metrics?.outputBytes > 0))
   workspaceText = await (await waitForElement('[data-testid="image-compression-workspace"]')).getText()
-  assert.match(workspaceText, /100\/100\s*·\s*100\.00%/)
+  const batchProgress = await waitForElement('[data-testid="image-compression-workspace"] .batch-progress')
+  assert.match(await batchProgress.getText(), /已完成\s*100\/100/)
+  assert.equal(await (await batchProgress.findElement(By.css('strong'))).getText(), '100.00%')
   assert.match(await (await waitForElement('body')).getText(), /图片处理完成：100 个结果，0 个跳过，0 个失败，0 个取消/)
 
   mkdirSync(artifactDirectory, { recursive: true })
   const auditResult = {
     scope: 'B-05.2.1 real Windows image batch',
+    archiveIsolation: { concurrentArchiveId, cancelledAndCleared: true, overlappingMediaObserved: true },
     expected: {
       inputs: expectedBatchSize,
       ready: expectedBatchSize,

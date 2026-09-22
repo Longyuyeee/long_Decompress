@@ -147,6 +147,20 @@ describe('useTauriCommands', () => {
     }))
   })
 
+  it('does not persist a failed history row while a user is deciding a file conflict', async () => {
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'extract_file') throw '解压失败: File conflict requires resolution'
+      return undefined
+    })
+    await expect(useTauriCommands().decompressFile('C:/archives/demo.zip', decompressionOptions))
+      .rejects.toBe('解压失败: File conflict requires resolution')
+    const task = useTaskStore().tasks[0]
+    expect(task.status).toBe('pending')
+    expect(task.error).toBeUndefined()
+    expect(task.logs.some(log => log.message.includes('最终失败原因'))).toBe(false)
+    expect(mocks.invoke.mock.calls.some(([command]) => command === 'save_task_history')).toBe(false)
+  })
+
   it('does not overwrite a cancelled task when a late extraction error arrives', async () => {
     const tasks = useTaskStore()
     tasks.addTask({

@@ -24,6 +24,13 @@ const showClearConfirm = ref(false)
 const failureFilter = ref<'all' | FailureCategory>('all')
 const exporting = ref(false)
 const selectedFailure = computed(() => selectedRecord.value ? describeTaskFailure(selectedRecord.value) : null)
+const resetFilters = () => {
+  query.value = ''
+  typeFilter.value = 'all'
+  statusFilter.value = 'all'
+  failureFilter.value = 'all'
+  rangeFilter.value = 'all'
+}
 const recoveryGuidance = computed(() => selectedRecord.value ? getTaskRecoveryGuidance(selectedRecord.value) : null)
 
 const exportDiagnostic = async () => {
@@ -271,6 +278,7 @@ onMounted(refresh)
         <div class="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary"><i class="pi pi-history text-2xl"></i></div>
         <h2 class="font-black text-lg mt-5">{{ historyStore.records.length ? appStore.t('history.no_matches') : appStore.t('history.empty_title') }}</h2>
         <p class="text-sm text-muted mt-2 max-w-md">{{ historyStore.records.length ? appStore.t('history.no_matches_hint') : appStore.t('history.empty_hint') }}</p>
+        <button v-if="historyStore.records.length" type="button" class="history-control mt-4" data-testid="history-reset-filters" @click="resetFilters">{{ appStore.t('history.reset_filters') }}</button>
       </div>
 
       <section v-else class="space-y-5" data-testid="history-list">
