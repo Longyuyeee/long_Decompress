@@ -2501,6 +2501,37 @@ async function runDownloadFailureUserGate() {
     damagedRecoveryGuidanceVerified: true, retryRecord,
   }, null, 2))
   console.log('[desktop-e2e] incomplete/intact ZIP queue, final reason, output bytes and restart history passed')
+  // Synthetic volume of history, real save/read database commands and UI.
+  // These are NOT 505 executed archive operations.
+  const completedAt = new Date().toISOString()
+  await callDesktopBridge('seedHistoryRecords', Array.from({ length: 505 }, (_, index) => ({
+    ...failed, id: `paging-${String(index).padStart(4, '0')}`,
+    name: `分页夹具-${String(index).padStart(4, '0')}.zip`, completedAt,
+  })))
+  await restartDesktopSession()
+  await (await waitForElement('[data-testid="nav-History"]')).click()
+  const pagingSearch = await waitForElement('[data-testid="history-search"]')
+  await pagingSearch.sendKeys('分页夹具-0000.zip')
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="history-empty"]'))).length === 1, 10_000)
+  for (let index = 0; index < 5; index++) {
+    const more = await waitForElement('[data-testid="history-load-more"]')
+    await driver.wait(async () => await more.isEnabled(), 10_000)
+    await more.click()
+    const expectedLoaded = Math.min(100 * (index + 2), 505 + retryPersisted.length)
+    await driver.wait(async () => driver.executeScript(expected =>
+      document.querySelector('[data-testid="history-retention-policy"]')?.textContent.includes(`当前已加载 ${expected} 条`), expectedLoaded),
+    10_000, 'each click must advance the actual loaded-record count')
+  }
+  const oldest = await waitForElement('[data-testid="history-record-row"]')
+  assert.ok((await oldest.getText()).includes('分页夹具-0000.zip'))
+  await oldest.click()
+  const reason = await waitForElement('[data-testid="history-final-failure"]')
+  await driver.wait(async () => (await reason.getText()).includes('文件损坏或不完整'), 10_000)
+  writeFileSync(path.join(artifactDirectory, 'history-paging-result.json'), JSON.stringify({
+    testKind: 'synthetic-505-history-records-real-sqlite-restart-ui-pagination',
+    binarySha256: fileSha256(application), loadedBeyond500: true, oldestFailurePreserved: true,
+  }, null, 2))
+  console.log('[desktop-e2e] 505 retained records, restart, no-match then older-page lookup passed')
 }
 
 async function runHfsxDesktopGate() {

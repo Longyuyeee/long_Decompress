@@ -152,6 +152,9 @@ const statusLabel = (record: TaskHistoryRecord) => appStore.t(`history.status.${
 const refresh = async () => {
   try { await historyStore.fetchHistory() } catch { /* rendered by error state */ }
 }
+const loadMore = async () => {
+  try { await historyStore.loadMore() } catch { /* keep loaded rows and allow retry */ }
+}
 
 const confirmClear = async () => {
   try {
@@ -202,6 +205,11 @@ onMounted(refresh)
         </div>
       </header>
 
+      <p class="history-panel p-4 text-sm text-muted" data-testid="history-retention-policy">
+        历史保留至你主动删除或清空，不再因超过 500 条自动删除；记录会占用本机磁盘。旧版已删除的历史无法恢复。
+        当前已加载 {{ historyStore.records.length }} 条；筛选、统计和趋势仅覆盖已加载记录，不代表全库。更早记录请继续加载，新完成的任务请刷新。
+      </p>
+
       <section class="grid grid-cols-2 xl:grid-cols-4 gap-3" data-testid="history-kpis">
         <article class="history-kpi history-kpi-primary">
           <div><span>{{ appStore.t('history.total_tasks') }}</span><i class="pi pi-inbox"></i></div>
@@ -249,7 +257,7 @@ onMounted(refresh)
       <section class="history-panel p-3 sm:p-4 flex flex-col xl:flex-row gap-3" aria-label="History filters">
         <label class="relative flex-1 min-w-0">
           <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-dim"></i>
-          <input v-model="query" data-testid="history-search" class="history-control w-full pl-11" placeholder="搜索任务、路径或失败原因" aria-label="搜索任务、路径或失败原因">
+          <input v-model="query" data-testid="history-search" class="history-control w-full pl-11" placeholder="搜索已加载的任务、路径或失败原因" aria-label="搜索已加载的任务、路径或失败原因">
         </label>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 xl:flex xl:shrink-0">
           <select v-model="failureFilter" class="history-control min-w-0 xl:max-w-48" data-testid="history-failure-filter" aria-label="失败类别">
@@ -271,17 +279,17 @@ onMounted(refresh)
       <div v-if="historyStore.error" class="history-panel p-8 text-center">
         <i class="pi pi-exclamation-triangle text-red-500 text-2xl"></i><p class="font-black mt-3">{{ appStore.t('history.load_failed') }}</p><p class="text-xs text-muted mt-1 break-all">{{ historyStore.error }}</p>
       </div>
-      <div v-else-if="historyStore.isLoading && !historyStore.isInitialized" class="history-panel p-5 space-y-3" aria-busy="true">
+      <div v-if="historyStore.isLoading && !historyStore.isInitialized" class="history-panel p-5 space-y-3" aria-busy="true">
         <div v-for="index in 5" :key="index" class="h-16 rounded-2xl bg-input/70 animate-pulse"></div>
       </div>
-      <div v-else-if="!filteredRecords.length" class="history-panel min-h-72 flex flex-col items-center justify-center text-center p-8" data-testid="history-empty">
+      <div v-else-if="!filteredRecords.length && !historyStore.error" class="history-panel min-h-72 flex flex-col items-center justify-center text-center p-8" data-testid="history-empty">
         <div class="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary"><i class="pi pi-history text-2xl"></i></div>
         <h2 class="font-black text-lg mt-5">{{ historyStore.records.length ? appStore.t('history.no_matches') : appStore.t('history.empty_title') }}</h2>
         <p class="text-sm text-muted mt-2 max-w-md">{{ historyStore.records.length ? appStore.t('history.no_matches_hint') : appStore.t('history.empty_hint') }}</p>
         <button v-if="historyStore.records.length" type="button" class="history-control mt-4" data-testid="history-reset-filters" @click="resetFilters">{{ appStore.t('history.reset_filters') }}</button>
       </div>
 
-      <section v-else class="space-y-5" data-testid="history-list">
+      <section v-else-if="filteredRecords.length" class="space-y-5" data-testid="history-list">
         <div v-for="group in groupedRecords" :key="group.label">
           <div class="flex items-center gap-3 mb-2 px-1"><h2 class="text-xs font-black uppercase tracking-[0.16em] text-muted">{{ group.label }}</h2><span class="h-px bg-subtle flex-1"></span><span class="text-[10px] text-dim">{{ group.records.length }}</span></div>
           <div class="history-panel divide-y divide-subtle/60 overflow-hidden">
@@ -301,6 +309,11 @@ onMounted(refresh)
           </div>
         </div>
       </section>
+    </div>
+
+    <div v-if="historyStore.hasMore" class="px-6 pb-6 text-center">
+      <p class="text-sm text-muted mb-3">还有更早的记录未加载；当前筛选没有结果时也可以继续加载。</p>
+      <button class="history-control" data-testid="history-load-more" :disabled="historyStore.isLoading" @click="loadMore">{{ historyStore.isLoading ? '正在加载…' : '加载更早记录' }}</button>
     </div>
 
     <Teleport to="body">

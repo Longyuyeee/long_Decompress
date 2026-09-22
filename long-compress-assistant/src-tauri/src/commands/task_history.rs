@@ -64,7 +64,8 @@ fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
     })
 }
 
-const MAX_HISTORY_RECORDS: i64 = 500;
+// Bound each read, not the lifetime of the user's saved history.
+const MAX_HISTORY_PAGE: i64 = 500;
 const MAX_SOURCE_PATHS: usize = 128;
 const MAX_LOGS: usize = 200;
 const MAX_TEXT_CHARS: usize = 4_096;
@@ -430,14 +431,28 @@ async fn save_task_history_to_pool(
     .await
     .map_err(|error| format!("保存任务历史失败: {error}"))?;
 
-    sqlx::query(
-        "DELETE FROM task_operation_history WHERE id NOT IN (SELECT id FROM task_operation_history ORDER BY completed_at DESC LIMIT ?)",
-    )
-    .bind(MAX_HISTORY_RECORDS)
-    .execute(pool)
-    .await
-    .map_err(|error| format!("整理任务历史失败: {error}"))?;
     Ok(())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryCursor {
+    completed_at: String,
+    id: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryPage {
+    records: Vec<TaskHistoryRecord>,
+    next_cursor: Option<HistoryCursor>,
+}
+
+#[tauri::command]
+pub async fn list_task_history_page(limit: Option<i64>, cursor: Option<HistoryCursor>) -> Result<HistoryPage, String> {
+    let pool = crate::database::connection::get_pool().await
+        .map_err(|error| format!("任务历史数据库不可用: {error}"))?;
+    history_page_from_pool(&pool, limit.unwrap_or(100), cursor).await
 }
 
 #[tauri::command]
@@ -452,22 +467,37 @@ async fn list_task_history_from_pool(
     pool: &sqlx::SqlitePool,
     limit: Option<i64>,
 ) -> Result<Vec<TaskHistoryRecord>, String> {
-    let rows = sqlx::query_as::<_, TaskHistoryRow>(
+    Ok(history_page_from_pool(pool, limit.unwrap_or(MAX_HISTORY_PAGE), None).await?.records)
+}
+
+async fn history_page_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Option<HistoryCursor>) -> Result<HistoryPage, String> {
+    let limit = limit.clamp(1, MAX_HISTORY_PAGE);
+    let mut rows = sqlx::query_as::<_, TaskHistoryRow>(
         r#"
         SELECT id, name, task_type, workload_kind, metrics, status, source_paths, output_path, format,
                started_at, completed_at, duration_ms, processed_bytes, total_bytes,
                error_message, logs, failure
         FROM task_operation_history
-        ORDER BY completed_at DESC
+        WHERE (? IS NULL OR completed_at < ? OR (completed_at = ? AND id < ?))
+        ORDER BY completed_at DESC, id DESC
         LIMIT ?
         "#,
     )
-    .bind(limit.unwrap_or(MAX_HISTORY_RECORDS).clamp(1, MAX_HISTORY_RECORDS))
+    .bind(cursor.as_ref().map(|c| c.completed_at.as_str()))
+    .bind(cursor.as_ref().map(|c| c.completed_at.as_str()))
+    .bind(cursor.as_ref().map(|c| c.completed_at.as_str()))
+    .bind(cursor.as_ref().map(|c| c.id.as_str()))
+    .bind(limit + 1)
     .fetch_all(pool)
     .await
     .map_err(|error| format!("读取任务历史失败: {error}"))?;
 
-    rows.into_iter()
+    let has_more = rows.len() > limit as usize;
+    rows.truncate(limit as usize);
+    let next_cursor = if has_more { rows.last().map(|row| HistoryCursor {
+        completed_at: row.completed_at.clone(), id: row.id.clone(),
+    }) } else { None };
+    let records = rows.into_iter()
         .map(|row| {
             Ok(TaskHistoryRecord {
                 failure: row.failure.and_then(|value| serde_json::from_str(&value).ok()),
@@ -494,7 +524,8 @@ async fn list_task_history_from_pool(
                     .map_err(|error| format!("解析任务日志失败: {error}"))?,
             })
         })
-        .collect()
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(HistoryPage { records, next_cursor })
 }
 
 #[tauri::command]
@@ -525,6 +556,55 @@ pub async fn clear_task_history() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn saving_over_500_records_does_not_delete_earlier_failures() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("retention.db");
+        let db = crate::database::connection::DatabaseConnection::new(&path, None).await.unwrap();
+        for index in 0..505 {
+            let record = serde_json::from_value(serde_json::json!({
+                "id": format!("record-{index:04}"), "name": "资料.zip", "taskType": "decompression", "status": "failed",
+                "sourcePaths": ["C:/资料.zip"], "outputPath": "C:/output", "completedAt": "2026-09-23T00:00:00Z",
+                "durationMs": 1, "processedBytes": 0, "totalBytes": 0,
+                "errorMessage": "[archive-inspection:damaged] original failure", "logs": []
+            })).unwrap();
+            save_task_history_to_pool(db.pool(), record).await.unwrap();
+        }
+        db.pool().close().await;
+        let reopened = crate::database::connection::DatabaseConnection::new(&path, None).await.unwrap();
+        let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM task_operation_history")
+            .fetch_one(reopened.pool()).await.unwrap();
+        assert_eq!(count.0, 505, "saving a new task must not silently delete old failures");
+        let first = history_page_from_pool(reopened.pool(), 100, None).await.unwrap();
+        assert_eq!(first.records[0].id, "record-0504");
+        assert_eq!(first.records.len(), 100);
+        assert_eq!(first.records[0].error_message.as_deref(), Some("[archive-inspection:damaged] original failure"));
+        let mut ids: HashSet<String> = first.records.iter().map(|r| r.id.clone()).collect();
+        let mut cursor = first.next_cursor;
+        while cursor.is_some() {
+            let page = history_page_from_pool(reopened.pool(), 100, cursor).await.unwrap();
+            for record in page.records { assert!(ids.insert(record.id), "no duplicate across equal timestamps"); }
+            cursor = page.next_cursor;
+        }
+        assert_eq!(ids.len(), 505);
+        assert!(ids.contains("record-0000"));
+
+        // New rows ahead of the cursor cannot shift older pages, and deleting
+        // the cursor row must not prevent reading the next page.
+        let first = history_page_from_pool(reopened.pool(), 100, None).await.unwrap();
+        let mut newest = first.records[0].clone();
+        newest.id = "zz-new".into();
+        save_task_history_to_pool(reopened.pool(), newest).await.unwrap();
+        sqlx::query("DELETE FROM task_operation_history WHERE id = ?")
+            .bind(&first.next_cursor.as_ref().unwrap().id).execute(reopened.pool()).await.unwrap();
+        let second = history_page_from_pool(reopened.pool(), 100, first.next_cursor).await.unwrap();
+        assert_eq!(second.records[0].id, "record-0404");
+        assert_eq!(second.records[99].id, "record-0305");
+        assert_eq!(history_page_from_pool(reopened.pool(), 1, None).await.unwrap().records[0].id, "zz-new");
+        assert_eq!(history_page_from_pool(reopened.pool(), 0, None).await.unwrap().records.len(), 1);
+        assert_eq!(history_page_from_pool(reopened.pool(), 99999, None).await.unwrap().records.len(), 500);
+    }
 
     #[tokio::test]
     async fn structured_failure_survives_database_reopen_and_terminal_update() {

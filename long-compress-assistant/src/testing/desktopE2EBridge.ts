@@ -23,6 +23,7 @@ export interface DesktopE2EBridge {
   clearTasks: () => Promise<void>
   clearTaskHistory: () => Promise<void>
   taskHistory: () => Promise<TaskHistoryRecord[]>
+  seedHistoryRecords: (records: TaskHistoryRecord[]) => Promise<void>
   seedVaultPassword: (name: string, password: string) => Promise<string>
   reset: () => Promise<void>
   fileManagerCopyMove: (sourcePath: string, copyDestination: string, moveDestination: string) => Promise<{
@@ -768,6 +769,10 @@ export const installDesktopE2EBridge = () => {
 
     async taskHistory() {
       return invoke<TaskHistoryRecord[]>('list_task_history', { limit: 500 })
+    },
+
+    async seedHistoryRecords(records) {
+      for (const record of records) await invoke('save_task_history', { record })
     },
 
     async startZipTelemetryCompression(sourcePath, archivePath, password, format = 'zip') {
