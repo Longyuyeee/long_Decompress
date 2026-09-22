@@ -375,6 +375,14 @@ pub async fn probe_video_file(
     ffprobe: &Path,
     source: &Path,
 ) -> Result<VideoProbeReport, VideoProbeError> {
+    probe_video_file_cancellable(ffprobe, source, &std::sync::atomic::AtomicBool::new(false)).await
+}
+
+pub(crate) async fn probe_video_file_cancellable(
+    ffprobe: &Path,
+    source: &Path,
+    cancelled: &std::sync::atomic::AtomicBool,
+) -> Result<VideoProbeReport, VideoProbeError> {
     let metadata = std::fs::metadata(source)
         .map_err(|_| VideoProbeError::SourceMissing(source.display().to_string()))?;
     if !metadata.is_file() {
@@ -399,10 +407,15 @@ pub async fn probe_video_file(
         .arg(source)
         .stdin(Stdio::null())
         .kill_on_drop(true);
-    let output = tokio::time::timeout(PROBE_TIMEOUT, command.output())
+    let output = process::cancellable_output(&mut command, cancelled, PROBE_TIMEOUT)
         .await
-        .map_err(|_| VideoProbeError::Timeout)?
-        .map_err(|error| VideoProbeError::LaunchFailed(error.to_string()))?;
+        .map_err(|error| {
+            if error.kind() == std::io::ErrorKind::TimedOut {
+                VideoProbeError::Timeout
+            } else {
+                VideoProbeError::LaunchFailed(error.to_string())
+            }
+        })?;
     if !output.status.success() {
         return Err(VideoProbeError::ProcessFailed(bounded_error_detail(
             &output.stderr,

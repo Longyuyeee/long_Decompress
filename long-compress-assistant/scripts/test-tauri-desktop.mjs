@@ -1850,7 +1850,7 @@ async function waitForElement(selector, timeoutMs = 30_000) {
   return driver.wait(async () => {
     const elements = await driver.findElements(By.css(selector))
     return elements[0] || false
-  }, timeoutMs)
+  }, timeoutMs, `Missing element: ${selector}`)
 }
 
 async function waitForLocalFileContent(filePath, expectedContent, timeoutMs = 30_000) {
@@ -3207,12 +3207,15 @@ async function runPdfWorkspaceDesktopGate() {
   assert.match(pdfProgressText, /large-image\.pdf/, 'running PDF must appear in the external global task summary')
   await (await waitForElement('[data-testid="nav-History"]')).click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/history'), 15_000)
+  await driver.wait(async () => (await waitForElement('[data-testid="history-search"]')).isDisplayed(), 15_000)
   await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
   await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
   workspace = await waitForElement('[data-testid="pdf-compression-workspace"]')
+  await driver.wait(async () => /large-image\.pdf/.test(await workspace.getText()), 10_000,
+    'Returned PDF page must visibly retain the original task card')
   assert.match(await workspace.getText(), /large-image\.pdf/, 'PDF task card must survive route destruction')
-  assert.notEqual(await (await waitForElement('[data-testid="pdf-start-batch"]')).getAttribute('disabled'), null,
-    'reopened PDF page must not allow another batch while original is running')
+  assert.equal(await driver.executeScript(() => document.querySelector('[data-testid="pdf-start-batch"]') === null), true,
+    'running PDF toolbar must show cancel instead of another start action')
   const cancelBatch = await waitForElement('[data-testid="pdf-cancel-batch"]', 30_000)
   console.log('[desktop-e2e] cancellation PDF control visible')
   await cancelBatch.click()
@@ -3223,11 +3226,19 @@ async function runPdfWorkspaceDesktopGate() {
   await assertGlobalTaskKind('PDF 优化')
   assert.equal(existsSync(cancelledHistory.outputPath), false, 'cancelled PDF must not publish a final output')
   assert.equal(fileSha256(fixtures['large-image.pdf'].path), fixtures['large-image.pdf'].sha256, 'cancelled PDF source must remain unchanged')
+  assert.equal(readdirSync(path.dirname(cancelledHistory.outputPath)).some(name => name.startsWith('.pdf-transform-')), false,
+    'cancelled PDF must not leave transform staging output')
 
   if (mediaRouteOnly) {
+    assert.equal(await (await waitForElement('[data-testid="pdf-start-batch"]')).isEnabled(), true,
+      'completed cancellation must release the PDF batch lock for a user retry')
+    await restartDesktopSession()
+    assert.deepEqual((await callDesktopBridge('taskHistory')).find(record => record.id === cancelledHistory.id), cancelledHistory,
+      'PDF cancellation history must survive a complete restart')
     writeFileSync(path.join(artifactDirectory, 'pdf-route-cancel-result.json'), JSON.stringify({
       sourceSha256: fixtures['large-image.pdf'].sha256, cancelledHistory,
-      routeRecreated: true, draftRetained: true, sourceUnchanged: true, nativePickerVerified: false,
+      routeRecreated: true, draftRetained: true, sourceUnchanged: true, stagingCleaned: true,
+      restartHistoryVerified: true, nativePickerVerified: false,
     }, null, 2))
     return
   }
@@ -3742,11 +3753,13 @@ async function runVideoWorkspaceDesktopGate() {
   console.log('[desktop-e2e] cancellation FFmpeg process observed')
   await (await waitForElement('[data-testid="nav-History"]')).click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/history'), 15_000)
+  await driver.wait(async () => (await waitForElement('[data-testid="history-search"]')).isDisplayed(), 15_000)
   await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
   await (await waitForElement('[data-testid="compression-mode-video"]')).click()
   assert.equal(await (await waitForElement('[data-testid="video-draft-card"]')).getAttribute('data-status'), 'compressing',
     'video must still be encoding after the user returns, not finish before cancellation is tested')
-  assert.notEqual(await (await waitForElement('[data-testid="video-compression-workspace"] .primary-action')).getAttribute('disabled'), null)
+  assert.equal(await driver.executeScript(() => document.querySelector('[data-testid="video-compression-workspace"] .primary-action') === null), true,
+    'running video toolbar must show cancel instead of another start action')
   await (await waitForElement('[data-testid="video-compression-workspace"] .danger-action')).click()
   await driver.wait(async () => {
     const cards = await driver.findElements(By.css('[data-testid="video-draft-card"]'))
@@ -3782,8 +3795,13 @@ async function runVideoWorkspaceDesktopGate() {
   }
   console.log('[desktop-e2e] real product FFmpeg cancellation cleaned process, staging and final output')
   if (mediaRouteOnly) {
+    assert.equal(await (await waitForElement('[data-testid="video-compression-workspace"] .primary-action')).isEnabled(), true,
+      'completed cancellation must release the video batch lock for a user retry')
+    await restartDesktopSession()
+    assert.deepEqual((await callDesktopBridge('taskHistory')).find(record => record.id === cancelledHistory.id), cancelledHistory,
+      'video cancellation history must survive a complete restart')
     writeFileSync(path.join(artifactDirectory, 'video-route-cancel-result.json'), JSON.stringify({
-      ...cancellationAudit, routeRecreated: true, nativePickerVerified: false,
+      ...cancellationAudit, routeRecreated: true, restartHistoryVerified: true, nativePickerVerified: false,
     }, null, 2))
     return
   }

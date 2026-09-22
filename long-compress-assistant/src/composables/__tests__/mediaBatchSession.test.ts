@@ -5,6 +5,8 @@ import { useVideoCompressionBatch, type VideoBatchSource } from '../useVideoComp
 import { useTaskStore } from '@/stores/task'
 import { useMediaBatchSession } from '../useMediaBatchSession'
 import { usePdfWorkspaceStore } from '@/stores/pdfWorkspace'
+import { shallowMount } from '@vue/test-utils'
+import PdfCompressionWorkspace from '@/components/compression/PdfCompressionWorkspace.vue'
 
 const mocks = vi.hoisted(() => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => vi.fn()) }))
@@ -92,4 +94,25 @@ it('不同工作区和应用实例互不取消，也不共享 PDF 草稿', () =>
   setActivePinia(createPinia())
   expect(useMediaBatchSession('pdf').isRunning.value).toBe(false)
   expect(usePdfWorkspaceStore().outputDirectory).toBe('')
+})
+
+it('PDF 页面销毁重建后仍显示原文件与取消操作，但不保留未提交的密码输入', () => {
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  const workspace = usePdfWorkspaceStore()
+  workspace.items.push({ id: 'draft', path: 'C:/report.pdf', name: '报告.pdf', status: 'ready', report: null,
+    mode: 'lossless-organization', password: 'not-submitted', riskConfirmed: false, frozen: true,
+    allowLargerOutput: false, taskId: 'original-task', error: '' })
+  workspace.outputDirectory = 'C:/chosen'
+  useMediaBatchSession('pdf').isRunning.value = true
+  const first = shallowMount(PdfCompressionWorkspace, { global: { plugins: [pinia] } })
+  first.unmount()
+  expect(workspace.items[0].password).toBe('')
+  const reopened = shallowMount(PdfCompressionWorkspace, { global: { plugins: [pinia] } })
+  expect(reopened.text()).toContain('报告.pdf')
+  expect(reopened.find('[data-testid="pdf-cancel-batch"]').exists()).toBe(true)
+  expect(reopened.find('[data-testid="pdf-start-batch"]').exists()).toBe(false)
+  expect(workspace.outputDirectory).toBe('C:/chosen')
+  expect(workspace.items[0].taskId).toBe('original-task')
+  reopened.unmount()
 })
