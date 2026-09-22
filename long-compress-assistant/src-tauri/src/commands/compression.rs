@@ -549,17 +549,16 @@ where
     observe(VideoCompressionCommandEvent::Stage(
         VideoCompressionStage::Validating,
     ));
-    let verified = await_video_step_or_cancellation(
-        async {
-            crate::services::video_output_validation::validate_staged_video_output(
-                &ffprobe, &plan, &staged,
-            )
-            .await
-            .map_err(|error| error.to_string())
-        },
+    // Kill and reap ffprobe before dropping the staged file owner. Dropping the
+    // validation future alone races Windows file-handle release and cleanup.
+    let verified = crate::services::video_output_validation::validate_staged_video_output_cancellable(
+        &ffprobe,
+        &plan,
+        &staged,
         &cancelled,
     )
-    .await?;
+    .await
+    .map_err(|error| error.to_string())?;
 
     if cancelled.load(Ordering::SeqCst) {
         return Err("VIDEO_COMPRESSION_CANCELLED".to_string());

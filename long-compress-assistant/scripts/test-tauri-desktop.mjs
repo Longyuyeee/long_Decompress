@@ -131,12 +131,13 @@ const imageBatchOnly = process.argv.includes('--image-batch-only')
 const imagePickerManualOnly = process.argv.includes('--image-picker-manual-only')
 const videoWorkspaceOnly = process.argv.includes('--video-workspace-only')
 const pdfWorkspaceOnly = process.argv.includes('--pdf-workspace-only')
+const mediaRouteOnly = process.argv.includes('--media-route-only')
 const autoStartOnly = process.argv.includes('--auto-start-only')
 const missingFullFormatCapabilities = new Set()
 const autoStartRegistryKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
 const autoStartValueName = 'Long解压'
 
-if (videoWorkspaceOnly && path.resolve(application) === path.resolve(cargoApplication)) {
+if ((videoWorkspaceOnly || mediaRouteOnly) && path.resolve(application) === path.resolve(cargoApplication)) {
   // A standalone cargo binary resolves Tauri resources beside the executable,
   // while NSIS/updater bundles preserve the configured resources directory.
   // Mirror the bundle payload for this focused real-desktop gate; production
@@ -148,7 +149,7 @@ if (videoWorkspaceOnly && path.resolve(application) === path.resolve(cargoApplic
   )
 }
 
-if (pdfWorkspaceOnly && path.resolve(application) === path.resolve(cargoApplication)) {
+if ((pdfWorkspaceOnly || mediaRouteOnly) && path.resolve(application) === path.resolve(cargoApplication)) {
   cpSync(
     path.join(root, 'src-tauri', 'resources', 'pdf-engine'),
     path.join(path.dirname(cargoApplication), 'pdf-engine'),
@@ -1849,7 +1850,7 @@ async function waitForElement(selector, timeoutMs = 30_000) {
   return driver.wait(async () => {
     const elements = await driver.findElements(By.css(selector))
     return elements[0] || false
-  }, timeoutMs)
+  }, timeoutMs, `Missing element: ${selector}`)
 }
 
 async function waitForLocalFileContent(filePath, expectedContent, timeoutMs = 30_000) {
@@ -3204,6 +3205,17 @@ async function runPdfWorkspaceDesktopGate() {
   await waitForElement('[data-testid="global-progress-bar"]', 30_000)
   const pdfProgressText = await driver.executeScript(() => document.querySelector('[data-testid="global-progress-summary"]')?.textContent || '')
   assert.match(pdfProgressText, /large-image\.pdf/, 'running PDF must appear in the external global task summary')
+  await (await waitForElement('[data-testid="nav-History"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/history'), 15_000)
+  await driver.wait(async () => (await waitForElement('[data-testid="history-search"]')).isDisplayed(), 15_000)
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await (await waitForElement('[data-testid="compression-mode-pdf"]')).click()
+  workspace = await waitForElement('[data-testid="pdf-compression-workspace"]')
+  await driver.wait(async () => /large-image\.pdf/.test(await workspace.getText()), 10_000,
+    'Returned PDF page must visibly retain the original task card')
+  assert.match(await workspace.getText(), /large-image\.pdf/, 'PDF task card must survive route destruction')
+  assert.equal(await driver.executeScript(() => document.querySelector('[data-testid="pdf-start-batch"]') === null), true,
+    'running PDF toolbar must show cancel instead of another start action')
   const cancelBatch = await waitForElement('[data-testid="pdf-cancel-batch"]', 30_000)
   console.log('[desktop-e2e] cancellation PDF control visible')
   await cancelBatch.click()
@@ -3214,6 +3226,25 @@ async function runPdfWorkspaceDesktopGate() {
   await assertGlobalTaskKind('PDF 优化')
   assert.equal(existsSync(cancelledHistory.outputPath), false, 'cancelled PDF must not publish a final output')
   assert.equal(fileSha256(fixtures['large-image.pdf'].path), fixtures['large-image.pdf'].sha256, 'cancelled PDF source must remain unchanged')
+  assert.equal(readdirSync(path.dirname(cancelledHistory.outputPath)).some(name => name.startsWith('.pdf-transform-')), false,
+    'cancelled PDF must not leave transform staging output')
+
+  if (mediaRouteOnly) {
+    assert.equal(await (await waitForElement('[data-testid="pdf-start-batch"]')).isEnabled(), true,
+      'completed cancellation must release the PDF batch lock for a user retry')
+    await restartDesktopSession()
+    assert.deepEqual((await callDesktopBridge('taskHistory')).find(record => record.id === cancelledHistory.id), cancelledHistory,
+      'PDF cancellation history must survive a complete restart')
+    writeFileSync(path.join(artifactDirectory, 'pdf-route-cancel-result.json'), JSON.stringify({
+      sourceSha256: fixtures['large-image.pdf'].sha256, cancelledHistory,
+      routeRecreated: true, draftRetained: true, sourceUnchanged: true, stagingCleaned: true,
+      restartHistoryVerified: true, nativePickerVerified: false,
+    }, null, 2))
+    return
+  }
+  // The PDF draft now survives navigation. Remove it through the user's control
+  // before beginning the independent full-matrix scenario.
+  await (await waitForElement('[data-testid="pdf-remove"]')).click()
 
   await callDesktopBridge('reset')
   await (await waitForElement('[data-testid="nav-History"]')).click()
@@ -3720,6 +3751,15 @@ async function runVideoWorkspaceDesktopGate() {
     return processIds.length > 0 ? processIds : false
   }, 30_000)
   console.log('[desktop-e2e] cancellation FFmpeg process observed')
+  await (await waitForElement('[data-testid="nav-History"]')).click()
+  await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/history'), 15_000)
+  await driver.wait(async () => (await waitForElement('[data-testid="history-search"]')).isDisplayed(), 15_000)
+  await (await waitForElement('[data-testid="nav-SpecialCompression"]')).click()
+  await (await waitForElement('[data-testid="compression-mode-video"]')).click()
+  assert.equal(await (await waitForElement('[data-testid="video-draft-card"]')).getAttribute('data-status'), 'compressing',
+    'video must still be encoding after the user returns, not finish before cancellation is tested')
+  assert.equal(await driver.executeScript(() => document.querySelector('[data-testid="video-compression-workspace"] .primary-action') === null), true,
+    'running video toolbar must show cancel instead of another start action')
   await (await waitForElement('[data-testid="video-compression-workspace"] .danger-action')).click()
   await driver.wait(async () => {
     const cards = await driver.findElements(By.css('[data-testid="video-draft-card"]'))
@@ -3754,6 +3794,17 @@ async function runVideoWorkspaceDesktopGate() {
     stagingCleaned: true,
   }
   console.log('[desktop-e2e] real product FFmpeg cancellation cleaned process, staging and final output')
+  if (mediaRouteOnly) {
+    assert.equal(await (await waitForElement('[data-testid="video-compression-workspace"] .primary-action')).isEnabled(), true,
+      'completed cancellation must release the video batch lock for a user retry')
+    await restartDesktopSession()
+    assert.deepEqual((await callDesktopBridge('taskHistory')).find(record => record.id === cancelledHistory.id), cancelledHistory,
+      'video cancellation history must survive a complete restart')
+    writeFileSync(path.join(artifactDirectory, 'video-route-cancel-result.json'), JSON.stringify({
+      ...cancellationAudit, routeRecreated: true, restartHistoryVerified: true, nativePickerVerified: false,
+    }, null, 2))
+    return
+  }
 
   await callDesktopBridge('reset')
   const historyBefore = (await callDesktopBridge('taskHistory')).length
@@ -4609,6 +4660,12 @@ try {
     await runManualImagePickerDesktopGate()
     completedSuccessfully = true
     console.log('Attended real Windows Tauri B-02 native image-picker gate passed.')
+  } else if (mediaRouteOnly) {
+    mkdirSync(artifactDirectory, { recursive: true })
+    await runVideoWorkspaceDesktopGate()
+    await runPdfWorkspaceDesktopGate()
+    completedSuccessfully = true
+    console.log('Real video/PDF route recreation and cancellation gate passed.')
   } else if (videoWorkspaceOnly) {
     await runVideoWorkspaceDesktopGate()
     completedSuccessfully = true

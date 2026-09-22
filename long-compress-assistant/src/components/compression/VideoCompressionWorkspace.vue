@@ -19,7 +19,7 @@ const commands = useTauriCommands()
 const videoBatch = useVideoCompressionBatch()
 const inFlight = new Map<string, number>()
 const replanTimers = new Map<string, ReturnType<typeof setTimeout>>()
-const isRunning = ref(false)
+const { isRunning } = videoBatch
 const showGlobalSettings = ref(false)
 const videoSettingsDraft = ref<VideoCompressionSettings>({ ...store.videoGlobalSettings })
 const videoOutputDirectoryDraft = ref(store.videoOutputDirectory)
@@ -197,7 +197,6 @@ const confirmStreamChanges = async (items: VideoCompressionItem[]) => {
 const startVideoCompression = async () => {
   const items = runnableItems.value
   if (!canStart.value || !(await confirmStreamChanges(items))) return
-  isRunning.value = true
   try {
     const results = await videoBatch.runVideoBatch(
       items.map(item => ({
@@ -219,8 +218,6 @@ const startVideoCompression = async () => {
     else appStore.setSuccess(summary)
   } catch (error) {
     appStore.setError(`视频批量处理失败：${String(error)}`)
-  } finally {
-    isRunning.value = false
   }
 }
 

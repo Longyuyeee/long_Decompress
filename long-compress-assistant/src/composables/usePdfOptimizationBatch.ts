@@ -1,3 +1,4 @@
+import { useMediaBatchSession } from './useMediaBatchSession'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useTaskStore, type Task, type TaskLog } from '@/stores/task'
 import { createMeasuredTaskMetricsV1 } from '@/types/taskMetrics'
@@ -53,8 +54,7 @@ export const applyPublishedPdfToTask = (
 export const usePdfOptimizationBatch = () => {
   const taskStore = useTaskStore()
   const commands = useTauriCommands()
-  let activeTaskId: string | null = null
-  let stopRequested = false
+  const session = useMediaBatchSession('pdf')
 
   const runPdfBatch = async (
     sources: PdfBatchSource[],
@@ -62,85 +62,91 @@ export const usePdfOptimizationBatch = () => {
     preserveMarkOfWeb: boolean,
     onTaskRegistered?: (itemId: string, taskId: string) => void,
   ): Promise<PdfBatchResult[]> => {
-    if (activeTaskId) throw new Error('已有 PDF 任务正在运行')
-    stopRequested = false
-    const batchId = globalThis.crypto?.randomUUID?.() || `pdf-batch-${Date.now()}`
-    const reservedDestinations: string[] = []
-    const results: PdfBatchResult[] = []
-    let historyPersistenceFailed = false
+    if (session.isRunning.value) throw new Error('已有 PDF 任务正在运行')
+    session.stopRequested = false
+    session.isRunning.value = true
+    try {
+      const batchId = globalThis.crypto?.randomUUID?.() || `pdf-batch-${Date.now()}`
+      const reservedDestinations: string[] = []
+      const results: PdfBatchResult[] = []
+      let historyPersistenceFailed = false
 
-    for (const [index, source] of sources.entries()) {
-      if (stopRequested) break
-      const taskId = `pdf-${batchId}-${index}`
-      taskStore.addTask({
-        id: taskId,
-        name: source.name,
-        type: 'compression',
-        workloadKind: 'pdf',
-        sourceFiles: [source.path],
-        outputPath: '',
-        format: 'pdf',
-      })
-      taskStore.updateTaskStatus(taskId, 'preparing')
-      onTaskRegistered?.(source.id, taskId)
-      let destination = ''
-
-      try {
-        const plan = await commands.planPdfOptimizationDestination(
-          source.path,
-          source.mode,
-          outputDirectory,
-          [...reservedDestinations],
-        )
-        destination = plan.destination
-        reservedDestinations.push(destination)
-        const task = taskStore.tasks.find(candidate => candidate.id === taskId)
-        if (task) task.outputPath = destination
-        if (stopRequested) {
-          taskStore.updateTaskStatus(taskId, 'cancelled')
-          results.push({ itemId: source.id, taskId, status: 'cancelled', destination })
-          continue
-        }
-        activeTaskId = taskId
-        taskStore.updateTaskStatus(taskId, 'compressing')
-        const outcome = await commands.compressPdfFile(taskId, {
-          source: source.path,
-          destination,
-          mode: source.mode,
-          confirmedLossyImageChanges: source.confirmedLossyImageChanges,
-          preserveMarkOfWeb,
-          allowLargerOutput: source.allowLargerOutput,
+      for (const [index, source] of sources.entries()) {
+        if (session.stopRequested) break
+        const taskId = `pdf-${batchId}-${index}`
+        taskStore.addTask({
+          id: taskId,
+          name: source.name,
+          type: 'compression',
+          workloadKind: 'pdf',
+          sourceFiles: [source.path],
+          outputPath: '',
+          format: 'pdf',
         })
-        applyPublishedPdfToTask(taskStore, taskId, outcome)
-        results.push({ itemId: source.id, taskId, status: 'published', destination, outcome })
-      } catch (error) {
-        const message = String(error)
-        const task = taskStore.tasks.find(candidate => candidate.id === taskId)
-        if (task?.status === 'cancelled' || message.includes('CANCELLED')) {
-          if (task && task.status !== 'cancelled') taskStore.updateTaskStatus(taskId, 'cancelled')
-          results.push({ itemId: source.id, taskId, status: 'cancelled', destination, error: message })
-        } else {
-          if (task) {
-            task.error = message
-            appendTaskLog(task, message, 'error')
+        taskStore.updateTaskStatus(taskId, 'preparing')
+        onTaskRegistered?.(source.id, taskId)
+        let destination = ''
+
+        try {
+          const plan = await commands.planPdfOptimizationDestination(
+            source.path,
+            source.mode,
+            outputDirectory,
+            [...reservedDestinations],
+          )
+          destination = plan.destination
+          reservedDestinations.push(destination)
+          const task = taskStore.tasks.find(candidate => candidate.id === taskId)
+          if (task) task.outputPath = destination
+          if (session.stopRequested) {
+            taskStore.updateTaskStatus(taskId, 'cancelled')
+            results.push({ itemId: source.id, taskId, status: 'cancelled', destination })
+            continue
           }
-          taskStore.updateTaskStatus(taskId, 'failed')
-          results.push({ itemId: source.id, taskId, status: 'failed', destination, error: message })
+          session.activeTaskId = taskId
+          taskStore.updateTaskStatus(taskId, 'compressing')
+          const outcome = await commands.compressPdfFile(taskId, {
+            source: source.path,
+            destination,
+            mode: source.mode,
+            confirmedLossyImageChanges: source.confirmedLossyImageChanges,
+            preserveMarkOfWeb,
+            allowLargerOutput: source.allowLargerOutput,
+          })
+          applyPublishedPdfToTask(taskStore, taskId, outcome)
+          results.push({ itemId: source.id, taskId, status: 'published', destination, outcome })
+        } catch (error) {
+          const message = String(error)
+          const task = taskStore.tasks.find(candidate => candidate.id === taskId)
+          if (task?.status === 'cancelled' || message.includes('CANCELLED')) {
+            if (task && task.status !== 'cancelled') taskStore.updateTaskStatus(taskId, 'cancelled')
+            results.push({ itemId: source.id, taskId, status: 'cancelled', destination, error: message })
+          } else {
+            if (task) {
+              task.error = message
+              appendTaskLog(task, message, 'error')
+            }
+            taskStore.updateTaskStatus(taskId, 'failed')
+            results.push({ itemId: source.id, taskId, status: 'failed', destination, error: message })
+          }
+        } finally {
+          session.activeTaskId = null
+          const persisted = await taskStore.waitForHistoryPersistence(taskId)
+          if (!persisted) historyPersistenceFailed = true
         }
-      } finally {
-        activeTaskId = null
-        const persisted = await taskStore.waitForHistoryPersistence(taskId)
-        if (!persisted) historyPersistenceFailed = true
       }
+      if (historyPersistenceFailed) throw new Error('一个或多个 PDF 任务历史未能持久化')
+      return results
+    } finally {
+      session.activeTaskId = null
+      session.isRunning.value = false
     }
-    if (historyPersistenceFailed) throw new Error('一个或多个 PDF 任务历史未能持久化')
-    return results
   }
 
   const cancelPdfBatch = async () => {
-    stopRequested = true
-    if (activeTaskId) await taskStore.cancelTask(activeTaskId)
+    session.stopRequested = true
+    if (session.activeTaskId) await taskStore.cancelTask(session.activeTaskId)
   }
 
-  return { runPdfBatch, cancelPdfBatch }
+  return { runPdfBatch, cancelPdfBatch, isRunning: session.isRunning }
 }

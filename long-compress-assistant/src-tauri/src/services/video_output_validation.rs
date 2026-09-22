@@ -1,6 +1,6 @@
 use crate::services::video_compression_plan::VideoCompressionPlan;
 use crate::services::video_encoding::StagedVideoOutput;
-use crate::services::video_probe::probe_video_file;
+use crate::services::video_probe::probe_video_file_cancellable;
 use crate::utils::process;
 use serde::Serialize;
 use serde_json::Value;
@@ -109,6 +109,7 @@ struct DecodedFrameCounts {
 async fn count_decodable_frames(
     ffprobe: &Path,
     output: &Path,
+    cancelled: &std::sync::atomic::AtomicBool,
 ) -> Result<DecodedFrameCounts, VideoOutputValidationError> {
     let mut command = process::async_command(ffprobe);
     command
@@ -125,10 +126,15 @@ async fn count_decodable_frames(
         .arg(output)
         .stdin(Stdio::null())
         .kill_on_drop(true);
-    let result = tokio::time::timeout(FRAME_SCAN_TIMEOUT, command.output())
+    let result = process::cancellable_output(&mut command, cancelled, FRAME_SCAN_TIMEOUT)
         .await
-        .map_err(|_| VideoOutputValidationError::FrameScanTimeout)?
-        .map_err(|error| VideoOutputValidationError::FrameScanFailed(error.to_string()))?;
+        .map_err(|error| {
+            if error.kind() == std::io::ErrorKind::TimedOut {
+                VideoOutputValidationError::FrameScanTimeout
+            } else {
+                VideoOutputValidationError::FrameScanFailed(error.to_string())
+            }
+        })?;
     if !result.status.success() {
         return Err(VideoOutputValidationError::FrameScanFailed(
             bounded_error_detail(&result.stderr),
@@ -164,6 +170,21 @@ pub async fn validate_staged_video_output(
     plan: &VideoCompressionPlan,
     staged: &StagedVideoOutput,
 ) -> Result<VerifiedVideoOutput, VideoOutputValidationError> {
+    validate_staged_video_output_cancellable(
+        ffprobe,
+        plan,
+        staged,
+        &std::sync::atomic::AtomicBool::new(false),
+    )
+    .await
+}
+
+pub(crate) async fn validate_staged_video_output_cancellable(
+    ffprobe: &Path,
+    plan: &VideoCompressionPlan,
+    staged: &StagedVideoOutput,
+    cancelled: &std::sync::atomic::AtomicBool,
+) -> Result<VerifiedVideoOutput, VideoOutputValidationError> {
     let metadata = std::fs::symlink_metadata(staged.path())
         .map_err(|_| VideoOutputValidationError::NotRegularFile)?;
     if !metadata.file_type().is_file() || metadata.file_type().is_symlink() {
@@ -178,7 +199,7 @@ pub async fn validate_staged_video_output(
             metadata.len(),
         ));
     }
-    let report = probe_video_file(ffprobe, staged.path())
+    let report = probe_video_file_cancellable(ffprobe, staged.path(), cancelled)
         .await
         .map_err(|error| VideoOutputValidationError::ProbeFailed(error.to_string()))?;
 
@@ -263,7 +284,7 @@ pub async fn validate_staged_video_output(
             tolerance,
         ));
     }
-    let decoded_frames = count_decodable_frames(ffprobe, staged.path()).await?;
+    let decoded_frames = count_decodable_frames(ffprobe, staged.path(), cancelled).await?;
     let minimum_frames = minimum_decoded_frames(plan);
     if decoded_frames.video < minimum_frames {
         return Err(VideoOutputValidationError::DecodedFrameCountTooLow(
