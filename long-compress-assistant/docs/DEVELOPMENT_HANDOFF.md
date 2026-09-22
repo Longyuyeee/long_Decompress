@@ -2,6 +2,8 @@
 
 ## 2026-09-22 1.3.4 媒体跨页修复（最新）
 
+- PR #141 已合入主分支并推送 v1.3.4 标签；CI 候选安装升级已通过且备份保留，详见下方发布审计。公开构建与最终资产状态见 [发布工作流](https://github.com/Longyuyeee/long_Decompress/actions/runs/35749919062) 和 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.4)。
+
 - 视频/PDF 共享批次控制，PDF 本次运行内保留草稿；真实切页后取消发现并修复视频 ffprobe 退出与暂存删除的竞态。
 - 387 前端、405 Rust 库测试通过（12 忽略），真实两类切页/取消/无暂存/源哈希/重启历史通过。代码已冻结为 1.3.4，候选安装与公开资产以 [本版发布审计](RELEASE_AUDIT_1.3.4.md) 和 Release 最终记录为准。
 - 接续按 [1.3.4 后开发顺序](NEXT_VERSION_AFTER_1.3.4.md)，不重复把本轮已修复的跨页风险当未实现；下一优先项是失败后的明确操作。
