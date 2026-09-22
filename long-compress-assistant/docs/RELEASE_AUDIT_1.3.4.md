@@ -17,6 +17,14 @@
 
 公开资产与最终安装记录将在 [v1.3.4 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.4) 维护。候选和公开包是独立构建，不混用哈希。发布完成前不将本页视为公开资产已齐全的证明。
 
-## 后续
+## 已完成的候选升级
+
+- PR #141 以 `b74f8c89db7f78a141570b80b8d27b898d4432b2` 合入，标签 `v1.3.4` 指向该提交；正式发布由 [工作流 35749919062](https://github.com/Longyuyeee/long_Decompress/actions/runs/35749919062) 构建签名更新资产，最终状态与下载记录以 Release 为准。
+- 候选为 `d7a678a95c812e7002253f8a7b7525b73a7bc972` 的 CI `35748987850` 产物，检查通过（6m50s）。NSIS 19,427,714 字节、32 文件完整展开；SHA-256 `34EFE4D331293960465BC46AD23ED9409A81C55C5CC7A5FA1733D78BAA38B752`。
+- 本机从 1.3.3 覆盖升级至候选 1.3.4，安装路径、注册版本、EXE 与唯一 Shell DLL 均正确，两处应用数据全文件指纹不变。EXE SHA-256 `23D8B33992EF275979DA82610102114D1A60F904383F9146D987C6AD3B95D54F`。
+- 旧安装与用户数据备份保留在 `test-results/overlay-upgrade-20260922-234925`，本机 `result.json` 为成功；目录被 Git 忽略，不上传原始用户数据。
+- 上述是候选事实。独立重建的公开包、最终回下载与安装记录随 Release 说明维护，不能复用候选哈希作为公开包哈希。
+
+## 下一步开发
 
 见 [下一轮开发顺序](NEXT_VERSION_AFTER_1.3.4.md)。保留 Windows N 暂不支持、CI 单测 workflow 权限欠项，不隐去已知边界。
