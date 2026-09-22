@@ -4,7 +4,7 @@
 
 ## 当前开发能力
 
-> 当前版本为 [`v1.3.3`](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.3)。本版补强损坏 ZIP 诊断、历史筛选找回与重试、归档操作隔离和图片跨页面控制。验证范围见 [发布审计](docs/RELEASE_AUDIT_1.3.3.md)，后续见 [下一版路线](docs/NEXT_VERSION_AFTER_1.3.3.md)。Windows N 暂不支持，Windows 11 第一层菜单仍受代码签名身份限制。
+> 当前版本为 [`v1.3.4`](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.4)。本版修复视频/PDF 跨页面取消控制、PDF 草稿丢失及视频验证期取消后的暂存残留。验证范围见 [发布审计](docs/RELEASE_AUDIT_1.3.4.md)，后续见 [下一版路线](docs/NEXT_VERSION_AFTER_1.3.4.md)。Windows N 暂不支持，Windows 11 第一层菜单仍受代码签名身份限制。
 
 - 发布后开发分支已完成 S-00.1 至 S-00.4 及跨步骤总验收：Windows 使用当前用户 DPAPI 保护随机安装密钥，解压密码正文以 AES-256-GCM 保存；活动接口、搜索与统计收敛为归档密码语义；任务与历史数据源已分离，格式支持证据和仓库卫生已对齐。真实桌面门禁验证旧数据迁移、磁盘无密码明文、应用完全重启后命中加密 7Z 并更新当天趋势，正式 NSIS 安装态矩阵 48/48 通过。S-00 未单独提升公开版本，随后进入了不接入媒体引擎的 B-00 架构门禁。
 - B-00.1 已完成统一任务/历史模型的向后兼容扩展：保留 `compression | decompression` 顶层类型，增加可选 `archive | image | video | pdf` 工作负载和版本化实测指标。真实用户数据库快照的 4 条历史已从 schema 6 无损迁移到 7，原库字节不变；未新增媒体页面或引擎。
