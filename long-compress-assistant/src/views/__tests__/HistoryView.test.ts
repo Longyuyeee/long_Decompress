@@ -28,6 +28,37 @@ const records = [
 const mountView = () => mount(HistoryView, { global: { plugins: [createPinia()], stubs: { Teleport: true } } })
 
 describe('HistoryView', () => {
+  it.each([
+    ['damaged', '重新获取完整文件'],
+    ['missing-volume', '不猜测缺失分卷名称'],
+    ['permission', '来源读取'],
+    ['output-conflict', '不要覆盖'],
+  ])('我看到 %s 后，可以按指引确认来源和输出，而不是自动重跑', async (category, expected) => {
+    const failed = { ...records[1], errorMessage: '已记录的原始详情', failure: {
+      schemaVersion: 1, category, stage: category === 'output-conflict' ? 'Publishing' : 'inspection', evidence: 'recorded-marker',
+    } }
+    mocks.invoke.mockImplementation(async command => command === 'list_task_history' ? [failed] : undefined)
+    const wrapper = mountView()
+    await flushPromises()
+    const callsBeforeOpening = [...mocks.invoke.mock.calls]
+    await wrapper.get('[data-testid="history-record-row"]').trigger('click')
+    const guidance = wrapper.get('[data-testid="history-recovery-guidance"]')
+    expect(guidance.text()).toContain(expected)
+    expect(guidance.attributes('aria-label')).toBe(guidance.get('h3').text())
+    const draft = wrapper.get('[data-testid="history-extraction-draft"]')
+    expect(draft.text()).toContain('重新选择文件')
+    expect(draft.text()).toContain('选择输出目录')
+    expect(draft.text()).toContain('不会自动开始')
+    expect(guidance.element.compareDocumentPosition(draft.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(mocks.invoke.mock.calls).toEqual(callsBeforeOpening)
+    mocks.save.mockResolvedValue('C:/reports/next-step.json')
+    await wrapper.get('[data-testid="history-export"]').trigger('click')
+    await flushPromises()
+    const report = JSON.parse(mocks.invoke.mock.calls.find(([command]) => command === 'write_text_file')![1].content)
+    expect(report.recoveryGuidance.steps.join(' ')).toContain(expected)
+    expect(report.task.errorMessage).toBe(failed.errorMessage)
+    wrapper.unmount()
+  })
   beforeEach(() => {
     vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-09-12T00:00:00Z'))
     vi.clearAllMocks()
@@ -90,7 +121,7 @@ describe('HistoryView', () => {
 
     await wrapper.find('[data-testid="history-list"] article').trigger('click')
     expect(wrapper.get('[data-testid="history-detail"]').text()).toContain('数据错误')
-    expect(wrapper.find('[data-testid="history-recovery-guidance"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="history-recovery-guidance"]').text()).toContain('原因尚未确定')
     expect(wrapper.get('[data-testid="history-detail"]').text()).toContain('D:/broken.7z')
     expect(wrapper.get('[data-testid="history-detail"]').classes()).toContain('history-detail-solid')
   })

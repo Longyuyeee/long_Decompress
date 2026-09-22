@@ -2,11 +2,38 @@ import { describe, expect, it } from 'vitest'
 import { describeTaskFailure, getTaskRecoveryGuidance } from '../taskFailure'
 
 describe('task failure evidence', () => {
-  it('shows recovery guidance for confirmed rollback failures only', () => {
+  it.each([
+    ['damaged', 'inspection', '重新获取完整文件'],
+    ['missing-volume', 'inspection', '不猜测缺失分卷名称'],
+    ['permission', 'inspection', '来源读取'],
+    ['permission', 'Publishing', '输出目录'],
+    ['permission', 'Extracting', '无法仅凭阶段确定'],
+    ['output-conflict', 'Publishing', '不要覆盖'],
+    ['unknown', 'unknown', '导出诊断报告'],
+  ])('失败分类 %s / %s 给出有依据的下一步', (category, stage, expected) => {
+    const record = { status: 'failed' as const, errorMessage: '原始错误保持不变', failure: {
+      schemaVersion: 1 as const, category, stage, evidence: 'recorded-marker' as const,
+    } }
+    const before = JSON.stringify(record)
+    expect(getTaskRecoveryGuidance(record)?.steps.join(' ')).toContain(expected)
+    expect(JSON.stringify(record)).toBe(before)
+  })
+  it('仅观测到发布阶段不能把权限错误断定为输出权限', () => {
+    expect(getTaskRecoveryGuidance({ status: 'failed', failure: {
+      schemaVersion: 1, category: 'permission', stage: 'Publishing', evidence: 'observed-stage',
+    } })?.steps.join(' ')).toContain('无法仅凭阶段确定')
+  })
+  it('旧记录和未来分类给出未知指引，不从自然语言猜测损坏', () => {
+    for (const errorMessage of ['文件损坏', '[archive-inspection:future-code]']) {
+      expect(getTaskRecoveryGuidance({ status: 'failed', errorMessage })?.title).toContain('原因尚未确定')
+    }
+    expect(getTaskRecoveryGuidance({ status: 'failed', errorMessage: '[archive-inspection:damaged]' })?.title).toContain('损坏')
+  })
+  it('reserves rollback-specific guidance for confirmed rollback failures', () => {
     const failure = { schemaVersion: 1 as const, category: 'rollback-incomplete', stage: 'Publishing', evidence: 'recorded-marker' as const }
     expect(getTaskRecoveryGuidance({ status: 'failed', failure })?.steps.join(' ')).toContain('旧记录缺少恢复路径时不要猜测目录')
     expect(getTaskRecoveryGuidance({ status: 'completed', failure })).toBeNull()
-    expect(getTaskRecoveryGuidance({ status: 'failed', errorMessage: '回滚失败' })).toBeNull()
+    expect(getTaskRecoveryGuidance({ status: 'failed', errorMessage: '回滚失败' })?.title).toContain('原因尚未确定')
     expect(getTaskRecoveryGuidance({ status: 'failed', errorMessage: '[archive-output:Publishing:rollback-incomplete]' })).not.toBeNull()
   })
   it.each(['output-conflict', 'publication-failed', 'rollback-incomplete'] as const)('describes confirmed %s without guessing corruption', category => {

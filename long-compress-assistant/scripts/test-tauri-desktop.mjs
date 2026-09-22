@@ -2439,14 +2439,36 @@ async function runDownloadFailureUserGate() {
   await driver.wait(async () => await finalReason.isDisplayed()
     && (await finalReason.getText()).replace(/\s+/g, ' ').includes(failed.errorMessage.replace(/\s+/g, ' ')),
   10_000, 'reopened history must visibly show the actual final reason')
+  const guidance = await waitForElement('[data-testid="history-recovery-guidance"]')
+  await driver.wait(async () => (await guidance.getText()).includes('重新获取完整文件'), 10_000,
+    'a real damaged archive must offer source recovery guidance, not a password retry')
+  assert.ok((await guidance.getText()).includes('反复尝试密码不能修复文件'))
   writeFileSync(path.join(artifactDirectory, 'download-failure-history.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   const retryOutput = path.join(scenarioRoot, '重新下载后')
   mkdirSync(retryOutput)
   const draftSource = await waitForElement('[data-testid="history-draft-source"]')
-  await draftSource.sendKeys(Key.chord(Key.CONTROL, 'a'), intact)
-  assert.equal(await draftSource.getAttribute('value'), intact, 'the replacement path must be entered exactly')
   await callDesktopBridge('queueDesktopDialogSelections', [retryOutput])
   await (await waitForElement('[data-testid="history-draft-select-output"]')).click()
+  // A real incomplete replacement must be rejected before creating a draft.
+  const splitArchive = path.join(scenarioRoot, '补齐前.7z')
+  runFixtureCommand(bundledSevenZip, ['a', '-t7z', '-mx=0', '-v1k', splitArchive, source], 'split replacement download')
+  const missingPart = `${splitArchive}.002`
+  assert.ok(existsSync(missingPart) && existsSync(`${splitArchive}.003`))
+  const heldPart = `${missingPart}.held`
+  copyFileSync(missingPart, heldPart)
+  rmSync(missingPart)
+  await draftSource.sendKeys(Key.chord(Key.CONTROL, 'a'), `${splitArchive}.001`)
+  await (await waitForElement('[data-testid="history-draft-create"]')).click()
+  await driver.wait(async () => {
+    const alerts = await driver.findElements(By.css('[data-testid="history-extraction-draft"] [role="alert"]'))
+    return alerts[0] && (await alerts[0].getText()).includes('002')
+  }, 15_000, 'incomplete replacement must name the actually detected missing volume')
+  assert.equal((await driver.findElements(By.css('[data-testid="history-extraction-draft"] a'))).length, 0)
+  assert.deepEqual(await callDesktopBridge('taskHistory'), persisted)
+  assert.deepEqual(readdirSync(retryOutput), [])
+  copyFileSync(heldPart, missingPart)
+  await draftSource.sendKeys(Key.chord(Key.CONTROL, 'a'), intact)
+  assert.equal(await draftSource.getAttribute('value'), intact, 'the replacement path must be entered exactly')
   await (await waitForElement('[data-testid="history-draft-create"]')).click()
   const goToDraft = await driver.wait(async () => {
     const links = await driver.findElements(By.css('[data-testid="history-extraction-draft"] a'))
@@ -2475,7 +2497,8 @@ async function runDownloadFailureUserGate() {
     testKind: 'webdriver-ui-real-engine-picker-response-substituted',
     binarySha256: fileSha256(application), records,
     originalContentSha256: fileSha256(source),
-    nativePickerVerified: false, historyDraftRetryVerified: true, retryRecord,
+    nativePickerVerified: false, historyDraftRetryVerified: true, missingVolumeDraftBlocked: true,
+    damagedRecoveryGuidanceVerified: true, retryRecord,
   }, null, 2))
   console.log('[desktop-e2e] incomplete/intact ZIP queue, final reason, output bytes and restart history passed')
 }
