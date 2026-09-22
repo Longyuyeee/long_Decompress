@@ -4,6 +4,7 @@
 
 ## 当前接续入口
 
+- [`NEXT_VERSION_USER_PLAN_2026-09-22.md`](NEXT_VERSION_USER_PLAN_2026-09-22.md)：当前审计、历史筛选找回、1.3.3 收尾范围与后续用户痛点优先级。
 - [`ARCHIVE_CENTER_TASK_SCOPE_2026-09-12.md`](ARCHIVE_CENTER_TASK_SCOPE_2026-09-12.md)：归档页取消/清除不影响特殊压缩，用户场景复现与验证边界。
 - [`COMPRESSION_HISTORY_CLEAR_CONSISTENCY_2026-09-12.md`](COMPRESSION_HISTORY_CLEAR_CONSISTENCY_2026-09-12.md)：压缩清除尊重历史保存状态、用户场景先红后绿，完整单测 372/372。
 - [`USER_SCENARIO_AUDIT_2026-09-12.md`](USER_SCENARIO_AUDIT_2026-09-12.md)：用户口吻场景、失败原因优先展示，以及真实桌面未完成/全量回归未通过的明确接续点。
