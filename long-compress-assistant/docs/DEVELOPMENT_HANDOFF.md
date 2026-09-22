@@ -1,6 +1,12 @@
 # 开发交接
 
-## 2026-09-22 1.3.4 媒体跨页修复（最新）
+## 2026-09-23 1.3.5 失败后操作指引（最新）
+
+- 已完成分类指引、400 项前端回归和真实损坏 ZIP→查看原因→缺卷阻断→完整来源新草稿→手动启动→重启历史检查。
+- 版本身份、README 与发布说明已准备为 1.3.5；公开包与最终安装事实以 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.5) 为准，不把带测试桥的本机 EXE 用于发布。
+- [发布审计](RELEASE_AUDIT_1.3.5.md) · [开发审计](FAILURE_RECOVERY_2026-09-23.md) · [下一版历史保留/分页计划](NEXT_VERSION_AFTER_1.3.5.md)。
+
+## 2026-09-22 1.3.4 媒体跨页修复
 
 - PR #141 已合入主分支并推送 v1.3.4 标签；CI 候选安装升级已通过且备份保留，详见下方发布审计。公开构建与最终资产状态见 [发布工作流](https://github.com/Longyuyeee/long_Decompress/actions/runs/35749919062) 和 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.4)。
 

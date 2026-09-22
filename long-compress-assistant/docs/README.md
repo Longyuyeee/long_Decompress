@@ -4,6 +4,8 @@
 
 ## 当前接续入口
 
+- [1.3.5 发布审计](RELEASE_AUDIT_1.3.5.md)、[失败指引开发审计](FAILURE_RECOVERY_2026-09-23.md)、[下一版计划](NEXT_VERSION_AFTER_1.3.5.md)。以下旧版计划用于追溯，不代表当前待办全部未完成。
+
 - [1.3.4 发布审计](RELEASE_AUDIT_1.3.4.md)、[媒体跨页场景审计](MEDIA_ROUTE_SESSION_2026-09-22.md)、[下一版方向](NEXT_VERSION_AFTER_1.3.4.md)。
 
 - [`NEXT_VERSION_AFTER_1.3.3.md`](NEXT_VERSION_AFTER_1.3.3.md)：下一轮失败处理、跨页控制、历史保留和恢复的开发顺序及验收条件。
