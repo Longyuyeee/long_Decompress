@@ -598,6 +598,52 @@ describe('CompressionView', () => {
     expect(taskStore.tasks.map(task => task.id)).toEqual(['finished-decompression'])
   })
 
+  it('我只清除归档任务，特殊压缩的图片、视频和 PDF 记录不能消失', async () => {
+    const wrapper = mountView()
+    const store = useTaskStore()
+    for (const kind of [undefined, 'archive', 'image', 'video', 'pdf'] as const) {
+      const id = kind || 'legacy'
+      store.addTask({ id, name: id, type: 'compression', workloadKind: kind, sourceFiles: ['C:/source'], outputPath: 'C:/output' })
+      store.updateTaskStatus(id, 'completed')
+      await store.waitForHistoryPersistence(id)
+    }
+    await nextTick()
+    await wrapper.findAll('button').find(button => button.text().includes('清除已结束'))!.trigger('click')
+    expect(store.tasks.map(task => task.id)).toEqual(['image', 'video', 'pdf'])
+  })
+
+  it('我在压缩中心取消归档，后台图片、视频和 PDF 必须继续运行', async () => {
+    const wrapper = mountView()
+    const store = useTaskStore()
+    for (const kind of [undefined, 'archive', 'image', 'video', 'pdf'] as const) {
+      const id = kind || 'legacy'
+      store.addTask({ id, name: id, type: 'compression', workloadKind: kind, sourceFiles: ['C:/source'], outputPath: 'C:/output' })
+      store.updateTaskStatus(id, 'running')
+    }
+    await nextTick()
+    await wrapper.findAll('button').find(button => button.text().includes('取消进行中'))!.trigger('click')
+    await flushPromises()
+    expect(mocks.invoke.mock.calls.filter(([command]) => command === 'cancel_compression').map(([, args]) => args.taskId)).toEqual(['legacy', 'archive'])
+    for (const kind of ['image', 'video', 'pdf']) {
+      expect(store.tasks.find(task => task.id === kind)?.status).toBe('running')
+    }
+    expect(store.tasks.filter(task => ['legacy', 'archive'].includes(task.id)).every(task => task.status === 'cancelled')).toBe(true)
+  })
+
+  it('只有特殊压缩任务时，归档页不要显示会误导我的批量取消和清除按钮', async () => {
+    const wrapper = mountView()
+    const store = useTaskStore()
+    store.addTask({ id: 'video', name: 'video', type: 'compression', workloadKind: 'video', sourceFiles: ['C:/video.mp4'], outputPath: 'C:/out.mp4' })
+    store.updateTaskStatus('video', 'running')
+    store.addTask({ id: 'image', name: 'image', type: 'compression', workloadKind: 'image', sourceFiles: ['C:/image.png'], outputPath: 'C:/out.png' })
+    store.updateTaskStatus('image', 'completed')
+    await store.waitForHistoryPersistence('image')
+    await nextTick()
+    const actions = wrapper.get('[data-testid="compression-top-actions"]').text()
+    expect(actions).not.toContain('取消进行中')
+    expect(actions).not.toContain('清除已结束')
+  })
+
   it.each(['bulk', 'single'])('我刚压缩完就点清除（%s），历史没存好时任务和文件行都要留下', async action => {
     let finishSave!: () => void
     mocks.invoke.mockImplementation(command => command === 'save_task_history'
