@@ -16,6 +16,7 @@ import { sortTasksByName } from '@/utils/taskOrdering'
 import { useDecompressionBatchStore } from '@/stores/decompressionBatch'
 import DecompressionBatchSummary from '@/components/tasks/DecompressionBatchSummary.vue'
 import FailedExtractionRetry from '@/components/tasks/FailedExtractionRetry.vue'
+import { inferExtractionSubfolder } from '@/utils/smartExtraction'
 
 const taskStore = useTaskStore()
 const batchStore = useDecompressionBatchStore()
@@ -54,6 +55,7 @@ const decompressionTasks = computed(() => taskStore.tasksFor('decompression'))
 const globalOutputPath = ref(appStore.settings.defaultOutputPath)
 const isGlobalSameDir = ref(!appStore.settings.defaultOutputPath) // 默认同目录，用户可通过按钮手动选择
 const globalExtractToSubfolder = ref(appStore.settings.defaultExtractToSubfolder)
+let subfolderChoiceRevision = 0
 const globalRecycleSourceAfterExtract = ref(appStore.settings.autoDeleteSource)
 
 watch(
@@ -165,15 +167,13 @@ const onFilesSelected = async (files: any[]) => {
     })
     createdTaskIds.push(taskId)
     appStore.addRecentFile(sourcePath)
+    const requestedRevision = subfolderChoiceRevision
     tauriCommands.listArchiveContents(sourcePath).then((contents: string[]) => {
       const task = taskStore.tasks.find(task => task.id === taskId)
-      if (!task || task.status !== 'pending') return
-      const rootEntries = contents.filter(item => !item.includes('/')).length
-      if (rootEntries > 1) {
-        task.extractToSubfolder = true
-      } else if (rootEntries === 1) {
-        task.extractToSubfolder = false
-      }
+      if (!task || task.status !== 'pending' || task.configurationMode !== 'global'
+        || task.sourceFiles[0] !== sourcePath || requestedRevision !== subfolderChoiceRevision) return
+      const subfolder = inferExtractionSubfolder(contents)
+      if (subfolder !== undefined) task.extractToSubfolder = subfolder
     }).catch(error => console.debug('Smart extract skipped (unable to list contents):', sourcePath, error))
   }
 
@@ -266,6 +266,7 @@ const handleGlobalSetSameDir = () => {
 }
 
 const toggleGlobalSubfolder = () => {
+  subfolderChoiceRevision++
   globalExtractToSubfolder.value = !globalExtractToSubfolder.value
   decompressionTasks.value.forEach(t => {
     if (t.status === 'pending' && t.configurationMode === 'global') t.extractToSubfolder = globalExtractToSubfolder.value
@@ -654,7 +655,7 @@ const unsubConflict = taskStore.$subscribe(openNextConflict)
               {{ isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto')) }}
             </span>
 
-            <button type="button" class="flex items-center gap-2 shrink-0" @click="toggleGlobalSubfolder">
+            <button type="button" data-testid="global-subfolder" class="flex items-center gap-2 shrink-0" @click="toggleGlobalSubfolder">
               <span class="w-3 h-3 rounded border border-primary/30 flex items-center justify-center"
                    :class="globalExtractToSubfolder ? 'bg-primary border-primary' : 'bg-transparent'">
                 <i v-if="globalExtractToSubfolder" class="pi pi-check text-[0.375rem] text-white"></i>

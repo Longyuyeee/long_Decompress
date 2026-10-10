@@ -215,6 +215,39 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
+  it.each(['individual', 'global', 'source'] as const)('does not let a late archive listing undo my %s change', async change => {
+    let finish!: (files: string[]) => void
+    mocks.listArchiveContents.mockImplementationOnce(() => new Promise<string[]>(resolve => { finish = resolve }))
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: 'slow.zip', path: 'C:/slow.zip' }])
+    await flushPromises()
+    const task = useTaskStore().tasks[0]
+    if (change === 'individual') {
+      task.extractToSubfolder = false
+      task.configurationMode = 'individual'
+    } else if (change === 'global') {
+      // Even toggling away and back is an explicit user choice.
+      await wrapper.get('[data-testid="global-subfolder"]').trigger('click')
+      await wrapper.get('[data-testid="global-subfolder"]').trigger('click')
+    } else {
+      task.sourceFiles = ['C:/replacement.zip']
+    }
+    const chosen = task.extractToSubfolder
+    finish(chosen ? ['single.txt'] : ['one/a.txt', 'two/b.txt'])
+    await flushPromises()
+    expect(task.extractToSubfolder).toBe(chosen)
+    wrapper.unmount()
+  })
+
+  it('recognizes two top-level folders even when ZIP lists only their files', async () => {
+    mocks.listArchiveContents.mockResolvedValueOnce(['甲/a.txt', '乙/b.txt'])
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: 'folders.zip', path: 'C:/folders.zip' }])
+    await flushPromises()
+    expect(useTaskStore().tasks[0].extractToSubfolder).toBe(true)
+    wrapper.unmount()
+  })
+
   it('rejects Office document containers before creating extraction tasks', async () => {
     const wrapper = mountView()
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
