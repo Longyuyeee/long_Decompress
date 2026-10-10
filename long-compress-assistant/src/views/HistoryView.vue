@@ -21,6 +21,30 @@ const typeFilter = ref<TypeFilter>('all')
 const statusFilter = ref<StatusFilter>('all')
 const rangeFilter = ref<RangeFilter>('all')
 const selectedRecord = ref<TaskHistoryRecord | null>(null)
+const detailLoading = ref(false)
+const detailError = ref('')
+let detailGeneration = 0
+const loadSelectedLogs = async () => {
+  const record = selectedRecord.value
+  const request = ++detailGeneration
+  detailError.value = ''
+  detailLoading.value = false
+  if (!record || record.logsLoaded !== false) return
+  detailLoading.value = true
+  try {
+    const logs = await invoke<TaskHistoryRecord['logs']>('get_task_history_logs', { id: record.id })
+    if (request !== detailGeneration || selectedRecord.value?.id !== record.id) return
+    if (!Array.isArray(logs)) throw new Error('任务日志响应无效')
+    // Keep details out of the paginated store; closing releases this log list.
+    selectedRecord.value = { ...record, logs, logsLoaded: true }
+  } catch (error) {
+    if (request === detailGeneration) detailError.value = String(error)
+  } finally {
+    if (request === detailGeneration) detailLoading.value = false
+  }
+}
+watch(() => selectedRecord.value?.id, () => { void loadSelectedLogs() })
+onUnmounted(() => { detailGeneration++ })
 const showClearConfirm = ref(false)
 const failureFilter = ref<'all' | FailureCategory>('all')
 const exporting = ref(false)
@@ -43,7 +67,7 @@ const recoveryGuidance = computed(() => selectedRecord.value ? getTaskRecoveryGu
 
 const exportDiagnostic = async () => {
   const record = selectedRecord.value
-  if (!record || exporting.value) return
+  if (!record || record.logsLoaded === false || exporting.value || detailLoading.value || detailError.value) return
   exporting.value = true
   try {
     const content = createTaskDiagnosticReport(record, await getVersion())
@@ -356,11 +380,17 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
               </ol>
             </section>
             <section class="detail-section">
-              <button class="history-control" data-testid="history-export" :disabled="exporting" @click="exportDiagnostic">{{ exporting ? '正在导出…' : '导出诊断报告' }}</button>
+              <button class="history-control" data-testid="history-export" :disabled="exporting || detailLoading || !!detailError" @click="exportDiagnostic">{{ exporting ? '正在导出…' : '导出诊断报告' }}</button>
               <p class="text-xs text-muted mt-2">报告包含此任务已保存的文件路径、错误和日志；旧记录缺失的信息不会补写。</p>
             </section>
             <HistoryExtractionDraft v-if="selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
-            <section class="detail-section"><div class="flex items-center justify-between"><h3><i class="pi pi-list"></i>{{ appStore.t('history.detail.logs') }}</h3><span class="text-xs text-dim">{{ selectedRecord.logs.length }}</span></div><div v-if="selectedRecord.logs.length" class="space-y-2 mt-3"><div v-for="(log, index) in selectedRecord.logs" :key="`${log.timestamp}-${index}`" class="detail-log"><time>{{ formatDateTime(log.timestamp) }}</time><span :class="log.severity === 'error' ? 'text-red-500' : log.severity === 'success' ? 'text-emerald-500' : 'text-content'">{{ log.message }}</span></div></div><p v-else class="text-sm text-dim mt-3">{{ appStore.t('history.detail.no_logs') }}</p></section>
+            <section class="detail-section" data-testid="history-logs">
+              <h3><i class="pi pi-list"></i>{{ appStore.t('history.detail.logs') }}</h3>
+              <p v-if="detailLoading" role="status">正在读取此任务的日志…</p>
+              <div v-else-if="detailError" role="alert"><p>{{ detailError }}</p><button class="history-control" @click="loadSelectedLogs">重试读取日志</button></div>
+              <div v-else-if="selectedRecord.logs.length" class="space-y-2 mt-3"><div v-for="(log, index) in selectedRecord.logs" :key="`${log.timestamp}-${index}`" class="detail-log"><time>{{ formatDateTime(log.timestamp) }}</time><span :class="log.severity === 'error' ? 'text-red-500' : log.severity === 'success' ? 'text-emerald-500' : 'text-content'">{{ log.message }}</span></div></div>
+              <p v-else class="text-sm text-dim mt-3">{{ appStore.t('history.detail.no_logs') }}</p>
+            </section>
             <button type="button" class="w-full mt-5 py-3 rounded-xl border border-red-500/20 text-red-500 font-black hover:bg-red-500/10 transition-colors" @click="removeSelectedRecord"><i class="pi pi-trash mr-2"></i>{{ appStore.t('history.delete_record') }}</button>
           </aside>
         </div>

@@ -55,6 +55,8 @@ export interface TaskHistoryRecord {
   errorMessage?: string | null
   failure?: TaskFailureV1 | null
   logs: TaskHistoryLog[]
+  /** UI-only: a paged summary may defer its logs until opened. */
+  logsLoaded?: boolean
 }
 
 export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {

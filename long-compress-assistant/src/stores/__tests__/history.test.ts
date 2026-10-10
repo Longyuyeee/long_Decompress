@@ -21,7 +21,7 @@ describe('history pagination', () => {
     mocks.invoke.mockResolvedValueOnce({ records: [row('a')], nextCursor: null })
     await store.loadMore()
     expect(mocks.invoke).toHaveBeenLastCalledWith('list_task_history_page', {
-      limit: 100, cursor, query: { text: '旧照片', status: 'completed' },
+      limit: 100, cursor, query: { text: '旧照片', status: 'completed' }, omitLogs: true,
     })
   })
   beforeEach(() => { setActivePinia(createPinia()); vi.resetAllMocks() })
@@ -37,7 +37,7 @@ describe('history pagination', () => {
     await store.loadMore()
     expect(store.records.map(r => r.id)).toEqual(['b', 'a'])
     expect(store.hasMore).toBe(false)
-    expect(mocks.invoke).toHaveBeenLastCalledWith('list_task_history_page', { limit: 100, cursor, query: { text: '' } })
+    expect(mocks.invoke).toHaveBeenLastCalledWith('list_task_history_page', { limit: 100, cursor, query: { text: '' }, omitLogs: true })
   })
   it('刷新期间旧的加载更多响应不能覆盖新列表', async () => {
     const store = useHistoryStore()

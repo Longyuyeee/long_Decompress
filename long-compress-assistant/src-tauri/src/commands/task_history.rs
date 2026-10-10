@@ -477,6 +477,7 @@ pub struct HistoryCursor {
 pub struct HistoryPage {
     records: Vec<TaskHistoryRecord>,
     next_cursor: Option<HistoryCursor>,
+    logs_omitted: bool,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -513,10 +514,26 @@ fn history_failure_category_sql() -> String {
 }
 
 #[tauri::command]
-pub async fn list_task_history_page(limit: Option<i64>, cursor: Option<HistoryCursor>, query: Option<HistoryQuery>) -> Result<HistoryPage, String> {
+pub async fn list_task_history_page(limit: Option<i64>, cursor: Option<HistoryCursor>, query: Option<HistoryQuery>, omit_logs: Option<bool>) -> Result<HistoryPage, String> {
     let pool = crate::database::connection::get_pool().await
         .map_err(|error| format!("任务历史数据库不可用: {error}"))?;
-    history_query_from_pool(&pool, limit.unwrap_or(100), cursor, query.unwrap_or_default()).await
+    history_query_with_logs_from_pool(&pool, limit.unwrap_or(100), cursor, query.unwrap_or_default(), omit_logs.unwrap_or(false)).await
+}
+
+async fn history_logs_from_pool(pool: &sqlx::SqlitePool, id: &str) -> Result<Vec<TaskHistoryLog>, String> {
+    let row: Option<(String,)> = sqlx::query_as("SELECT logs FROM task_operation_history WHERE id = ?")
+        .bind(id).fetch_optional(pool).await.map_err(|error| format!("读取任务日志失败: {error}"))?;
+    let (raw,) = row.ok_or_else(|| "历史记录已不存在，请刷新列表".to_string())?;
+    let mut logs: Vec<TaskHistoryLog> = serde_json::from_str(&raw).map_err(|error| format!("解析任务日志失败: {error}"))?;
+    for log in &mut logs { log.message = redact_sensitive_text(&log.message); }
+    Ok(logs)
+}
+
+#[tauri::command]
+pub async fn get_task_history_logs(id: String) -> Result<Vec<TaskHistoryLog>, String> {
+    let pool = crate::database::connection::get_pool().await
+        .map_err(|error| format!("任务历史数据库不可用: {error}"))?;
+    history_logs_from_pool(&pool, &id).await
 }
 
 #[tauri::command]
@@ -539,16 +556,21 @@ async fn history_page_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Opt
 }
 
 async fn history_query_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Option<HistoryCursor>, query: HistoryQuery) -> Result<HistoryPage, String> {
+    history_query_with_logs_from_pool(pool, limit, cursor, query, false).await
+}
+
+async fn history_query_with_logs_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Option<HistoryCursor>, query: HistoryQuery, omit_logs: bool) -> Result<HistoryPage, String> {
     let limit = limit.clamp(1, MAX_HISTORY_PAGE);
-    let mut sql = QueryBuilder::<Sqlite>::new(
+    let logs_column = if omit_logs { "'[]' AS logs" } else { "logs" };
+    let mut sql = QueryBuilder::<Sqlite>::new(format!(
         r#"
         SELECT id, name, task_type, workload_kind, metrics, status, source_paths, output_path, format,
                started_at, completed_at, duration_ms, processed_bytes, total_bytes,
-               error_message, logs, failure, retry_of_task_id, execution_config
+               error_message, {logs_column}, failure, retry_of_task_id, execution_config
         FROM task_operation_history
         WHERE 1=1
         "#,
-    );
+    ));
     if let Some(cursor) = &cursor {
         sql.push(" AND (COALESCE(julianday(completed_at), 0) < COALESCE(julianday(").push_bind(&cursor.completed_at)
             .push("), 0) OR (COALESCE(julianday(completed_at), 0) = COALESCE(julianday(").push_bind(&cursor.completed_at)
@@ -612,7 +634,7 @@ async fn history_query_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Op
             })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    Ok(HistoryPage { records, next_cursor })
+    Ok(HistoryPage { records, next_cursor, logs_omitted: omit_logs })
 }
 
 #[tauri::command]
@@ -643,6 +665,31 @@ pub async fn clear_task_history() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn summary_defers_logs_without_deleting_them_and_missing_detail_is_explicit() {
+        let dir = tempfile::tempdir().unwrap();
+        let db = crate::database::connection::DatabaseConnection::new(&dir.path().join("summary.db"), None).await.unwrap();
+        let record = serde_json::from_value(serde_json::json!({
+            "id": "summary", "name": "资料.zip", "taskType": "decompression", "status": "failed",
+            "sourcePaths": ["C:/资料.zip"], "outputPath": "C:/output", "completedAt": "2026-10-10T00:00:00Z",
+            "durationMs": 1, "processedBytes": 0, "totalBytes": 0,
+            "errorMessage": "文件损坏", "logs": [{"timestamp": "2026-10-10T00:00:00Z", "message": "原始引擎失败详情", "severity": "error"}]
+        })).unwrap();
+        save_task_history_to_pool(db.pool(), record).await.unwrap();
+        let summary = history_query_with_logs_from_pool(db.pool(), 100, None, HistoryQuery::default(), true).await.unwrap();
+        assert!(summary.logs_omitted);
+        assert!(summary.records[0].logs.is_empty());
+        assert_eq!(summary.records[0].error_message.as_deref(), Some("文件损坏"));
+        let logs = history_logs_from_pool(db.pool(), "summary").await.unwrap();
+        assert_eq!(logs.len(), 2, "failed history also retains the final failure reason");
+        assert_eq!(logs[0].message, "原始引擎失败详情");
+        assert_eq!(logs[1].message, "最终失败原因：文件损坏");
+        let legacy = history_page_from_pool(db.pool(), 100, None).await.unwrap();
+        assert!(!legacy.logs_omitted);
+        assert_eq!(legacy.records[0].logs.len(), 2);
+        assert!(history_logs_from_pool(db.pool(), "missing").await.unwrap_err().contains("不存在"));
+    }
 
     #[tokio::test]
     async fn saving_over_500_records_does_not_delete_earlier_failures() {

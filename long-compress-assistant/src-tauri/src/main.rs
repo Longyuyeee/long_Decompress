@@ -588,6 +588,7 @@ fn main() {
             long_compress_assistant::commands::task_history::save_task_history,
             long_compress_assistant::commands::task_history::list_task_history,
             long_compress_assistant::commands::task_history::list_task_history_page,
+            long_compress_assistant::commands::task_history::get_task_history_logs,
             long_compress_assistant::commands::task_history::delete_task_history,
             long_compress_assistant::commands::task_history::clear_task_history
         ])

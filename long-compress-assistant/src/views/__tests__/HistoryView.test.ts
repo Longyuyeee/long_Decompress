@@ -35,6 +35,52 @@ const settleSearch = async () => { await new Promise(resolve => setTimeout(resol
 const mountView = () => mount(HistoryView, { global: { plugins: [createPinia()], stubs: { Teleport: true } } })
 
 describe('HistoryView', () => {
+  it('loads logs only when I open a record, and does not put an old response into another record', async () => {
+    let finishOld!: (logs: any[]) => void
+    mocks.invoke.mockImplementation(async (command, args) => {
+      if (command === 'list_task_history_page') return { ...page(records.map(record => ({ ...record, logs: [] }))), logsOmitted: true }
+      if (command === 'get_task_history_logs') {
+        if (args.id === 'compress-1') return new Promise(resolve => { finishOld = resolve })
+        return [{ timestamp: '2026-10-10T00:00:00Z', message: '第二条原始日志', severity: 'error' }]
+      }
+    })
+    const wrapper = mountView()
+    await flushPromises()
+    expect(mocks.invoke.mock.calls.some(([command]) => command === 'get_task_history_logs')).toBe(false)
+    await wrapper.findAll('[data-testid="history-record-row"]')[0].trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="history-logs"]').text()).toContain('正在读取')
+    await wrapper.findAll('[data-testid="history-record-row"]')[1].trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="history-logs"]').text()).toContain('第二条原始日志')
+    finishOld([{ timestamp: '2026-10-10T00:00:00Z', message: '不应该出现的旧日志', severity: 'error' }])
+    await flushPromises()
+    expect(wrapper.get('[data-testid="history-logs"]').text()).not.toContain('不应该出现')
+    wrapper.unmount()
+  })
+
+  it('lets me retry a failed log read and never exports a report with silently missing logs', async () => {
+    let attempts = 0
+    mocks.invoke.mockImplementation(async command => {
+      if (command === 'list_task_history_page') return { ...page([{ ...records[1], logs: [] }]), logsOmitted: true }
+      if (command === 'get_task_history_logs') {
+        if (++attempts === 1) throw new Error('数据库暂时不可用')
+        return [{ timestamp: '2026-10-10T00:00:00Z', message: '重试后读取到的原始日志', severity: 'error' }]
+      }
+    })
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.get('[data-testid="history-record-row"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="history-logs"]').text()).toContain('数据库暂时不可用')
+    expect((wrapper.get('[data-testid="history-export"]').element as HTMLButtonElement).disabled).toBe(true)
+    await wrapper.get('[data-testid="history-logs"] button').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="history-logs"]').text()).toContain('重试后读取到的原始日志')
+    expect((wrapper.get('[data-testid="history-export"]').element as HTMLButtonElement).disabled).toBe(false)
+    wrapper.unmount()
+  })
+
   it('搜索直接返回更早的匹配记录，刷新失败仍保留当前结果', async () => {
     mocks.invoke.mockImplementation(async (command, args) => command === 'list_task_history_page'
       ? args.query.text ? page([records[1]], args.query) : { records: [records[0]], nextCursor: { completedAt: records[0].completedAt, id: records[0].id } } : undefined)
@@ -127,7 +173,7 @@ describe('HistoryView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    expect(mocks.invoke).toHaveBeenCalledWith('list_task_history_page', { limit: 100, cursor: null, query: { text: '' } })
+    expect(mocks.invoke).toHaveBeenCalledWith('list_task_history_page', { limit: 100, cursor: null, query: { text: '' }, omitLogs: true })
     expect(wrapper.get('[data-testid="history-kpis"]').text()).toContain('50%')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('photos.zip')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')

@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 interface HistoryCursor { completedAt: string; id: string }
-interface HistoryPage { records: TaskHistoryRecord[]; nextCursor: HistoryCursor | null }
+interface HistoryPage { records: TaskHistoryRecord[]; nextCursor: HistoryCursor | null; logsOmitted?: boolean }
 export interface HistoryQuery {
   text: string
   taskType?: string
@@ -36,10 +36,10 @@ export const useHistoryStore = defineStore('history', () => {
     isLoading.value = true
     error.value = null
     try {
-      const page = await invoke<HistoryPage>('list_task_history_page', { limit: 100, cursor: append ? nextCursor.value : null, query: { ...activeQuery } })
+      const page = await invoke<HistoryPage>('list_task_history_page', { limit: 100, cursor: append ? nextCursor.value : null, query: { ...activeQuery }, omitLogs: true })
       if (request !== generation) return
       const merged = new Map((append ? records.value : []).map(record => [record.id, record]))
-      for (const record of page.records) if (!deletedIds.has(record.id)) merged.set(record.id, record)
+      for (const record of page.records) if (!deletedIds.has(record.id)) merged.set(record.id, { ...record, logsLoaded: !page.logsOmitted })
       records.value = [...merged.values()]
       nextCursor.value = page.nextCursor
       isInitialized.value = true
