@@ -29,6 +29,7 @@ const decompressionOptions = {
 
 describe('useTauriCommands', () => {
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
     vi.clearAllMocks()
     Object.values(mocks).forEach(mock => mock.mockReset())
@@ -36,6 +37,12 @@ describe('useTauriCommands', () => {
     mocks.message.mockResolvedValue(undefined)
     vi.spyOn(console, 'error').mockImplementation(() => undefined)
     vi.spyOn(window, 'prompt').mockReturnValue(null)
+  })
+
+  it.each([false, true])('passes the explicit parallel ZIP setting when a new extraction starts: %s', async enabled => {
+    useAppStore().settings.parallelZipExtraction = enabled
+    await useTauriCommands().decompressFile('C:/test.zip', decompressionOptions)
+    expect(mocks.invoke).toHaveBeenCalledWith('extract_file', expect.objectContaining({ options: expect.objectContaining({ parallel_zip: enabled }) }))
   })
 
   it('selects files while skipping metadata entries that cannot be read', async () => {
@@ -144,6 +151,7 @@ describe('useTauriCommands', () => {
       filePath: 'C:/archives/demo.zip',
       password: null,
       options: {
+        parallel_zip: false,
         preserve_paths: true,
         overwrite_existing: false,
         delete_after: false,

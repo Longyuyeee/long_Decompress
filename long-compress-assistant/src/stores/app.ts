@@ -34,6 +34,7 @@ export interface AppSettings {
   defaultCompressionLevel: number
   defaultExtractToSubfolder: boolean
   smartExtractionDirectory: boolean
+  parallelZipExtraction: boolean
   scanForViruses: boolean
   checkFileExtensions: boolean
   warnLargeFiles: boolean
@@ -102,6 +103,7 @@ export const useAppStore = defineStore('app', () => {
 
   const settings = ref<AppSettings>({
     smartExtractionDirectory: false,
+    parallelZipExtraction: false,
     theme: 'auto', language: 'zh-CN', accentColor: '#0ea5e9', defaultOutputPath: '',
     maxConcurrentTasks: 1, archiveTaskConcurrencyVersion: 1, defaultCompressionFormat: 'zip', defaultCompressionLevel: 6, defaultExtractToSubfolder: false, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
     savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
@@ -210,6 +212,7 @@ export const useAppStore = defineStore('app', () => {
     const autoStart = settings.value.autoStart
     settings.value = {
       smartExtractionDirectory: false,
+      parallelZipExtraction: false,
       theme: 'auto', language: 'zh-CN', accentColor: '#0ea5e9', defaultOutputPath: '',
       maxConcurrentTasks: 1, archiveTaskConcurrencyVersion: 1, defaultCompressionFormat: 'zip', defaultCompressionLevel: 6, defaultExtractToSubfolder: false, scanForViruses: true, checkFileExtensions: true, warnLargeFiles: true,
       savePasswords: false, encryptPasswords: true, autoClearPasswords: true, collectUsageData: false,
@@ -246,6 +249,7 @@ export const useAppStore = defineStore('app', () => {
   const mergeStoredSettings = (parsed: Partial<AppSettings>) => {
     const merged = { ...settings.value, ...parsed }
     merged.smartExtractionDirectory = parsed.smartExtractionDirectory === true
+    merged.parallelZipExtraction = parsed.parallelZipExtraction === true
     // autoStart is display state only. Loading it must never register or repair
     // a Windows startup entry; the settings page refreshes the actual read-only
     // state and only an explicit toggle may invoke set_auto_start.

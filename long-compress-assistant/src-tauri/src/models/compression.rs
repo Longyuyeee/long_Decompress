@@ -131,6 +131,8 @@ pub struct CompressionOptions {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecompressOptions {
+    #[serde(default)]
+    pub parallel_zip: bool,
     pub preserve_paths: bool,
     pub overwrite_existing: bool,
     pub delete_after: bool,
@@ -181,6 +183,7 @@ fn default_true() -> bool {
 impl Default for DecompressOptions {
     fn default() -> Self {
         Self {
+            parallel_zip: false,
             preserve_paths: false,
             overwrite_existing: false,
             delete_after: false,

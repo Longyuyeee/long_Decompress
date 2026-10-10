@@ -276,6 +276,7 @@ fn native_zip_engine_baseline() {
         .expect("product ZIP compression");
         let compression_ms = compression_started.elapsed().as_secs_f64() * 1000.0;
         let extraction_started = Instant::now();
+        let parallel_zip = std::env::var("LONG_NATIVE_ZIP_PARALLEL").as_deref() == Ok("1");
         native_extraction::zip::extract_with_optional_window(
             &service,
             None,
@@ -283,7 +284,7 @@ fn native_zip_engine_baseline() {
             archive.to_str().unwrap(),
             output.to_str().unwrap(),
             None,
-            &DecompressOptions::default(),
+            &DecompressOptions { parallel_zip, preserve_paths: true, ..Default::default() },
         )
         .expect("product ZIP extraction");
         let extraction_ms = extraction_started.elapsed().as_secs_f64() * 1000.0;
@@ -308,6 +309,7 @@ fn native_zip_engine_baseline() {
             "NATIVE_ZIP_JSON {}",
             serde_json::json!({
                 "schema_version": 1, "scenario": scenario,
+                "parallel_zip": parallel_zip,
                 "scope": "native_zip_engine_without_window_or_transaction",
                 "compression": { "method": if fast_pack { "sampled_store_or_deflate" } else { "deflate" }, "fast_pack": fast_pack, "level": 6, "encrypted": false, "preserve_paths": false },
                 "fixture_sha256": fixture_hash, "files": manifest,

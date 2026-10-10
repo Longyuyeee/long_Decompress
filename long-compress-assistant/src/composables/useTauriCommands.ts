@@ -313,6 +313,7 @@ export const useTauriCommands = () => {
         password: options.password || null,
         options: {
           preserve_paths: options.keepStructure,
+          parallel_zip: appStore.settings.parallelZipExtraction === true,
           overwrite_existing: options.overwrite,
           delete_after: options.deleteAfter,
           preserve_timestamps: options.preserveTimestamps ?? true,

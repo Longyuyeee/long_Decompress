@@ -189,6 +189,8 @@ export const translations: Record<string, Record<string, string>> = {
     'settings.archive_defaults.subfolder': '解压默认创建同名文件夹',
     'settings.archive_defaults.subfolder.desc': '新任务使用此默认值；可在任务中手动调整。',
     'settings.smart_directory': '按压缩包结构自动选择解压目录',
+    'settings.parallel_zip': 'ZIP 并行解压（可选）',
+    'settings.parallel_zip.desc': '默认关闭。开启后仅对符合条件的普通 ZIP 使用最多两个工作线程，所有原生 ZIP 任务共享最多四个工作线程。加密、特殊结构和小文件集合保持顺序处理；可能增加瞬时占用，机械硬盘不保证更快。只影响新启动的任务。',
     'settings.smart_directory.desc': '默认关闭。开启后，仅对新任务判断：单个顶层项目直接解压，多项则新建同名文件夹；无法判断时保留原选择。不会覆盖任务中的手动设置，也不会移动已有文件。这是目录结构判断，不是 AI。',
     // 暴力破解
     'settings.bruteforce': '暴力破解引擎',
@@ -929,6 +931,8 @@ export const translations: Record<string, Record<string, string>> = {
     'settings.archive_defaults.subfolder': 'Extract into a same-name folder by default',
     'settings.archive_defaults.subfolder.desc': 'New tasks use this default; you can change it per task.',
     'settings.smart_directory': 'Choose extraction folders from archive structure',
+    'settings.parallel_zip': 'Parallel ZIP extraction (optional)',
+    'settings.parallel_zip.desc': 'Off by default. Eligible ordinary ZIP archives use up to two workers, with at most four shared across native ZIP tasks. Encrypted archives, special structures and small-file collections stay sequential. Resource usage may increase; hard drives may not be faster. Applies to newly started tasks.',
     'settings.smart_directory.desc': 'Off by default. For new tasks only: extract one top-level item directly, or create a same-name folder for multiple items. Keep the original choice if unknown. Never override manual task choices or move existing files. This checks folder structure; it is not AI.',
     // Brute Force
     'settings.bruteforce': 'Brute Force Engine',

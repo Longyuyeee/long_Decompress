@@ -388,6 +388,19 @@ const removeWordlist = (index: number) => {
             </button>
           </section>
 
+          <section class="aero-card p-8">
+            <button type="button" role="switch" data-testid="parallel-zip-switch"
+              :aria-checked="appStore.settings.parallelZipExtraction"
+              class="w-full flex items-center justify-between gap-4 text-left"
+              @click="appStore.updateSettings({ parallelZipExtraction: !appStore.settings.parallelZipExtraction })">
+              <div class="min-w-0">
+                <div class="text-sm font-bold text-content">{{ appStore.t('settings.parallel_zip') }}</div>
+                <p class="text-xs text-muted mt-2">{{ appStore.t('settings.parallel_zip.desc') }}</p>
+              </div>
+              <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.parallelZipExtraction }"><span class="settings-toggle-knob"></span></div>
+            </button>
+          </section>
+
           <!-- 暴力破解引擎设置 -->
           <section class="aero-card p-8">
             <div class="flex justify-between items-center mb-8">

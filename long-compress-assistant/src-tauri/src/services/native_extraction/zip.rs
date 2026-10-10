@@ -66,7 +66,7 @@ fn validate_password_access<R: Read + Seek>(
     Ok(())
 }
 
-pub(crate) fn extract<R: ExtractionRuntime>(
+pub(crate) fn extract<R: ExtractionRuntime + Sync>(
     runtime: &R,
     window: &Window,
     task_id: &str,
@@ -88,7 +88,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
 
 // Keep one engine for desktop use and headless regression measurements. None
 // suppresses only window events, not archive parsing, cancellation or file I/O.
-pub(crate) fn extract_with_optional_window<R: ExtractionRuntime>(
+pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
     runtime: &R,
     window: Option<&Window>,
     task_id: &str,
@@ -97,8 +97,20 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime>(
     password: Option<&str>,
     options: &DecompressOptions,
 ) -> Result<()> {
+    let _worker_slot = super::zip_parallel::WorkerSlot::acquire(runtime)?;
     let mut archive = ZipArchive::new(SmartFileReader::open(file)?)?;
     validate_password_access(&mut archive, password)?;
+    if super::zip_parallel::try_extract(
+        runtime,
+        window,
+        task_id,
+        file,
+        output,
+        &mut archive,
+        options,
+    )? {
+        return Ok(());
+    }
 
     let total_files = archive.len();
     let file_filter = extraction_transaction::compile_file_filter(options.file_filter.as_deref());
@@ -110,7 +122,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime>(
         for index in 0..total_files {
             runtime.check_cancellation()?;
             let (file_name, outpath, is_dir, source_size, source_modified) = {
-                let entry = archive.by_index(index)?;
+                let entry = archive.by_index_raw(index)?;
                 let file_name = entry.name().to_string();
                 let is_dir = entry.is_dir();
                 let relative = match runtime

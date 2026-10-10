@@ -130,6 +130,17 @@ describe('SettingsView archive engine diagnostics', () => {
     wrapper.unmount()
   })
 
+  it('keeps parallel ZIP off until I explicitly enable it', async () => {
+    const wrapper = mount(SettingsView, { global: { plugins: [createPinia()] } })
+    await flushPromises()
+    const toggle = wrapper.get('[data-testid="parallel-zip-switch"]')
+    expect(toggle.attributes('aria-checked')).toBe('false')
+    await toggle.trigger('click')
+    expect(toggle.attributes('aria-checked')).toBe('true')
+    expect(JSON.parse(localStorage.getItem('app-settings') || '{}').parallelZipExtraction).toBe(true)
+    wrapper.unmount()
+  })
+
   it('keeps the previous setting when Windows registration fails', async () => {
     mocks.invoke.mockImplementation((command: string) => {
       if (command === 'check_auto_start') return Promise.resolve(false)

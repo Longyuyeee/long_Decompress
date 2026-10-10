@@ -120,6 +120,18 @@ describe('App Store Explorer context menu synchronization', () => {
     expect(restored.settings.smartExtractionDirectory).toBe(false)
   })
 
+  it('keeps ZIP parallelism opt-in on old settings, reload and reset', () => {
+    localStorage.setItem('app-settings', JSON.stringify({ parallelZipExtraction: 'true' }))
+    const store = useAppStore()
+    expect(store.settings.parallelZipExtraction).toBe(false)
+    store.updateSettings({ parallelZipExtraction: true })
+    setActivePinia(createPinia())
+    const restored = useAppStore()
+    expect(restored.settings.parallelZipExtraction).toBe(true)
+    restored.resetSettings()
+    expect(restored.settings.parallelZipExtraction).toBe(false)
+  })
+
   it('loads auto-start display state without touching Windows persistence', () => {
     localStorage.setItem('app-settings', JSON.stringify({ autoStart: true }))
 
