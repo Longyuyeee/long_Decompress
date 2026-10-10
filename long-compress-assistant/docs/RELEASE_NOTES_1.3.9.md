@@ -16,8 +16,8 @@
 ## 使用提示与范围
 
 - 三项新策略均由用户主动开启，不改变旧设置的默认行为。
-- 并行和快速打包并不保证所有磁盘、文件和压缩率都有收益；详细实测见 [并行基线](PARALLEL_ZIP_BASELINE.md) 和 [快速打包基线](FAST_PACK_BASELINE.md)。
+- 并行和快速打包并不保证所有磁盘、文件和压缩率都有收益；详细实测见 [并行基线](https://github.com/Longyuyeee/long_Decompress/blob/v1.3.9/long-compress-assistant/docs/PARALLEL_ZIP_BASELINE.md) 和 [快速打包基线](https://github.com/Longyuyeee/long_Decompress/blob/v1.3.9/long-compress-assistant/docs/FAST_PACK_BASELINE.md)。
 - 图片、视频、PDF 仍统一位于左侧“特殊压缩”，压缩中心只处理归档压缩。
 - Windows N 暂不保证支持。本版不新增完整多标签文件管理器或更多冷门格式。
 
-发布及安装验证状态以 [开发交接](DEVELOPMENT_HANDOFF.md) 为准；准备本说明不代表 Release 已发布。
+正式安装升级、四类工作区及卸载/恢复流程 62 项检查通过。完整过程和验证边界见 [发布审计](https://github.com/Longyuyeee/long_Decompress/blob/master/long-compress-assistant/docs/RELEASE_AUDIT_1.3.9.md)。

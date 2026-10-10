@@ -1,5 +1,20 @@
 # v1.3.9 发布审计
 
+## 正式发布完成
+
+[Release v1.3.9](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.9) 已公开，非 draft / prerelease，并为 latest。标签代码 `2cfd61a39ccf62fce85eec9792c42b9b26a42968`；[发布工作流](https://github.com/Longyuyeee/long_Decompress/actions/runs/38073168679) 成功，master Windows package `38073167046` 同样通过。
+
+四项附件回下载与 GitHub 公布的 SHA-256 一致；更新 ZIP 内的安装器字节与公开 EXE 一致；更新清单版本、下载地址及签名字段匹配，中文说明已更新。这里只确认字段/文件一致，不宣称本轮重跑了应用内点击自动升级链。
+
+| 公开附件 | SHA-256 |
+| --- | --- |
+| Long-Decompress_1.3.9_x64-setup.exe | `547994fcf85216285ec7572a23b2655bf4f54e36491accba9cb95551dfc68103` |
+| Long-Decompress_1.3.9_x64-setup.nsis.zip | `c9fc5da4b2f97b7af0949cc40169d7c2e9c8b13c0646e5de2f78a51f1b41cd58` |
+| Long-Decompress_1.3.9_x64-setup.nsis.zip.sig | `1f99033282e5dcb09b44323ebac0d791b46dfff6f355df3ff90f2b7601668c89` |
+| latest.json（中文说明更新后） | `7279e81bf4f6d078b04995915bdb91c75aaafd1e04a4a3e08ccd8e3687bdd7a0` |
+
+本机额外使用公开安装器完成 1.3.6 → 1.3.9 覆盖升级，退出 0，安装路径保留，EXE 与注册表版本正确；原始用户数据逐文件哈希仍一致，额外备份保留。此前候选生命周期恢复旧版只是测试步骤，当前实际安装已是 1.3.9。下文保留完整验收过程，不将首次失败抹去。
+
 ## 范围与已完成验证
 
 本轮按 [统一优化计划](NEXT_VERSION_AFTER_1.3.8.md) 执行 O-01 至 O-10，不新增未确认功能。快速打包、智能目录、ZIP 并行均默认关闭。
