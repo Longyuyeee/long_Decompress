@@ -653,6 +653,27 @@ describe('useTauriCommands', () => {
     expect(tasks.tasks[0]).toMatchObject({ status: 'failed', error: reason })
   })
 
+  it('keeps changed conflicts pending with fresh details and does not save a failed history', async () => {
+    const tasks = useTaskStore()
+    tasks.addTask({ id: 'changed-target', name: 'archive.zip', type: 'decompression', sourceFiles: ['C:/archive.zip'], outputPath: 'C:/output' })
+    const oldConflict = { taskId: 'changed-target', fileName: 'same.txt', sourcePath: 'C:/archive.zip', destPath: 'C:/output/same.txt', sourceSize: 10, destSize: 2, sourceModified: 0, destModified: 1 }
+    tasks.tasks[0].conflicts = [oldConflict]
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'resolve_extraction_conflict') {
+        expect(tasks.tasks[0].conflicts).toEqual([])
+        tasks.tasks[0].conflicts.push({ ...oldConflict, destSize: 100, destModified: 2 })
+        throw 'File conflict requires resolution：目标文件在确认期间发生变化，请重新比较并选择；尚未覆盖任何文件。'
+      }
+      return undefined
+    })
+    await expect(useTauriCommands().resolveExtractionConflict('changed-target', [], 'overwrite')).rejects.toContain('目标文件')
+    expect(tasks.tasks[0].status).toBe('pending')
+    expect(tasks.tasks[0].error).toBeUndefined()
+    expect(tasks.tasks[0].conflicts).toHaveLength(1)
+    expect(tasks.tasks[0].conflicts[0].destSize).toBe(100)
+    expect(mocks.invoke.mock.calls.some(([command]) => command === 'save_task_history')).toBe(false)
+  })
+
   it('degrades optional system UI commands safely when native APIs reject', async () => {
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'get_system_info') throw new Error('system info unavailable')

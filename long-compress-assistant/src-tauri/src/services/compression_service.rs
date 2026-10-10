@@ -140,6 +140,32 @@ struct PendingExtraction {
     final_output: PathBuf,
     options: DecompressOptions,
     expected_expanded_bytes: Option<u64>,
+    observed_conflicts: HashMap<PathBuf, ConflictTargetSnapshot>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ConflictTargetSnapshot {
+    len: u64,
+    modified: Option<SystemTime>,
+    created: Option<SystemTime>,
+    is_dir: bool,
+}
+
+impl ConflictTargetSnapshot {
+    fn read(path: &Path) -> Option<Self> {
+        std::fs::symlink_metadata(path).ok().map(|metadata| Self {
+            len: metadata.len(), modified: metadata.modified().ok(),
+            created: metadata.created().ok(), is_dir: metadata.is_dir(),
+        })
+    }
+}
+
+fn conflict_targets_changed(observed: &HashMap<PathBuf, ConflictTargetSnapshot>) -> bool {
+    observed.iter().any(|(path, previous)| {
+        // A removed target needs no overwrite permission. A changed/replaced
+        // existing target must be shown again, including file/directory changes.
+        ConflictTargetSnapshot::read(path).is_some_and(|current| current != *previous)
+    })
 }
 
 #[derive(Clone, Serialize)]
@@ -397,17 +423,24 @@ impl CompressionService {
             anyhow::bail!("Unsupported extraction conflict action");
         }
 
+        let targets_changed = conflict_targets_changed(&pending.observed_conflicts);
         let resolution_map = resolutions.into_iter()
             .map(|item| (item.dest_path, item.action))
             .collect::<HashMap<_, _>>();
+        let empty_resolutions = HashMap::new();
+        let mut refreshed_conflicts = HashMap::new();
         let commit_result = extraction_transaction::commit_staged_extraction_with_resolutions(
             pending.source_archive.to_string_lossy().as_ref(),
             pending.staging.path(),
             &pending.final_output,
             &pending.options,
-            &resolution_map,
-            fallback_action.as_deref(),
+            if targets_changed { &empty_resolutions } else { &resolution_map },
+            if targets_changed { None } else { fallback_action.as_deref() },
             |conflict| {
+                let path = PathBuf::from(&conflict.dest_path);
+                if let Some(snapshot) = ConflictTargetSnapshot::read(&path) {
+                    refreshed_conflicts.insert(path, snapshot);
+                }
                 let _ = window.emit("file-conflict", FileConflictPayload {
                     task_id: task_id.to_string(),
                     file_name: conflict.file_name,
@@ -421,7 +454,14 @@ impl CompressionService {
             },
         );
         if let Err(error) = commit_result {
+            let needs_confirmation = Self::is_conflict_resolution_required(&error);
+            if needs_confirmation {
+                pending.observed_conflicts = refreshed_conflicts;
+            }
             Self::retain_pending_after_commit_error(task_id, pending, &error);
+            if targets_changed && needs_confirmation {
+                anyhow::bail!("File conflict requires resolution：目标文件在确认期间发生变化，请重新比较并选择；尚未覆盖任何文件。");
+            }
             return Err(error);
         }
         if let Some(warning) = pending.staging.cleanup_after_commit() {
@@ -2491,13 +2531,15 @@ impl CompressionService {
             }
         }
         service.check_cancellation()?;
-        if let Err(error) = service.commit_staged_extraction(
+        let mut observed_conflicts = HashMap::new();
+        if let Err(error) = service.commit_staged_extraction_recording(
             Some(&window),
             &task_id,
             &file_path,
             &out_dir,
             &final_out_dir,
             &options,
+            &mut observed_conflicts,
         ) {
             if Self::is_conflict_resolution_required(&error) {
                 service.emit_log(
@@ -2514,6 +2556,7 @@ impl CompressionService {
                         final_output: final_out_dir,
                         options,
                         expected_expanded_bytes,
+                        observed_conflicts,
                     },
                 );
                 return Err(error);
@@ -3385,6 +3428,7 @@ mod tests {
             final_output: output,
             options: DecompressOptions::default(),
             expected_expanded_bytes: Some(7),
+            observed_conflicts: HashMap::new(),
         });
 
         assert!(staging_path.exists());
@@ -3676,7 +3720,7 @@ mod tests {
         std::fs::write(path.join("backup"), b"original data").unwrap();
         let id = uuid::Uuid::new_v4().to_string();
         let pending = PendingExtraction { staging, source_archive: temp.path().join("source.zip"), final_output: output,
-            options: DecompressOptions::default(), expected_expanded_bytes: None };
+            options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
         let error = CompressionError::RollbackIncomplete(format!("恢复目录：{}", path.display())).into();
         CompressionService::retain_pending_after_commit_error(&id, pending, &error);
         assert!(!PENDING_EXTRACTIONS.contains_key(&id));
@@ -3685,7 +3729,7 @@ mod tests {
         let ordinary_staging = ExtractionStaging::create_for(&temp.path().join("other-output")).unwrap();
         let ordinary_path = ordinary_staging.path().to_path_buf();
         let pending = PendingExtraction { staging: ordinary_staging, source_archive: temp.path().join("source.zip"),
-            final_output: temp.path().join("other-output"), options: DecompressOptions::default(), expected_expanded_bytes: None };
+            final_output: temp.path().join("other-output"), options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
         CompressionService::retain_pending_after_commit_error(&id, pending, &anyhow::anyhow!("ordinary commit failure"));
         assert!(PENDING_EXTRACTIONS.contains_key(&id));
         assert!(CompressionService::discard_pending_extraction(&id));
@@ -3700,6 +3744,7 @@ impl CompressionService {
         extraction_transaction::staged_file_is_not_newer(source, destination)
     }
 
+    #[cfg(test)]
     fn commit_staged_extraction(
         &self,
         window: Option<&Window>,
@@ -3709,12 +3754,73 @@ impl CompressionService {
         output: &Path,
         options: &DecompressOptions,
     ) -> Result<()> {
+        self.commit_staged_extraction_recording(window, task_id, source_archive, staging, output, options, &mut HashMap::new())
+    }
+}
+
+#[cfg(test)]
+mod conflict_confirmation_tests {
+    use super::*;
+
+    #[test]
+    fn conflict_confirmation_detects_modified_and_replaced_targets() {
+        let temp = tempfile::tempdir().unwrap();
+        let target = temp.path().join("same.txt");
+        std::fs::write(&target, b"old").unwrap();
+        let observed = HashMap::from([(target.clone(), ConflictTargetSnapshot::read(&target).unwrap())]);
+        assert!(!conflict_targets_changed(&observed));
+        std::fs::write(&target, b"a different file edited while the dialog is open").unwrap();
+        assert!(conflict_targets_changed(&observed));
+        std::fs::remove_file(&target).unwrap();
+        assert!(!conflict_targets_changed(&observed), "deleted targets need no overwrite");
+        std::fs::create_dir(&target).unwrap();
+        assert!(conflict_targets_changed(&observed));
+    }
+
+    #[test]
+    fn changed_conflict_can_be_reprompted_without_reextracting_or_publishing() {
+        let temp = tempfile::tempdir().unwrap();
+        let output = temp.path().join("output");
+        let staging = temp.path().join("staging");
+        std::fs::create_dir_all(&output).unwrap();
+        std::fs::create_dir_all(&staging).unwrap();
+        std::fs::write(staging.join("same.txt"), b"archive contents").unwrap();
+        std::fs::write(output.join("same.txt"), b"old").unwrap();
+        let service = CompressionService::for_testing();
+        let options = DecompressOptions { conflict_policy: "ask".into(), ..Default::default() };
+        let mut observed = HashMap::new();
+        assert!(service.commit_staged_extraction_recording(None, "test", "source.zip", &staging, &output, &options, &mut observed).is_err());
+        std::fs::write(output.join("same.txt"), b"edited after prompt").unwrap();
+        assert!(conflict_targets_changed(&observed));
+        observed.clear();
+        assert!(service.commit_staged_extraction_recording(None, "test", "source.zip", &staging, &output, &options, &mut observed).is_err());
+        assert!(!conflict_targets_changed(&observed));
+        assert_eq!(std::fs::read(output.join("same.txt")).unwrap(), b"edited after prompt");
+        assert_eq!(std::fs::read(staging.join("same.txt")).unwrap(), b"archive contents");
+        extraction_transaction::commit_staged_extraction_with_resolutions("source.zip", &staging, &output, &options,
+            &HashMap::new(), Some("rename"), |_| panic!("confirmed")).unwrap();
+        assert_eq!(std::fs::read(output.join("same (1).txt")).unwrap(), b"archive contents");
+        assert_eq!(std::fs::read(output.join("same.txt")).unwrap(), b"edited after prompt");
+    }
+
+}
+
+impl CompressionService {
+    fn commit_staged_extraction_recording(
+        &self, window: Option<&Window>, task_id: &str, source_archive: &str,
+        staging: &Path, output: &Path, options: &DecompressOptions,
+        observed: &mut HashMap<PathBuf, ConflictTargetSnapshot>,
+    ) -> Result<()> {
         extraction_transaction::commit_staged_extraction(
             source_archive,
             staging,
             output,
             options,
             |conflict| {
+                let path = PathBuf::from(&conflict.dest_path);
+                if let Some(snapshot) = ConflictTargetSnapshot::read(&path) {
+                    observed.insert(path, snapshot);
+                }
                 if let Some(window) = window {
                     let _ = window.emit(
                         "file-conflict",

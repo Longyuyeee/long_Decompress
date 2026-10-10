@@ -385,6 +385,9 @@ export const useTauriCommands = () => {
     }
     try {
       taskStore.updateTaskStatus(taskId, 'finalizing')
+      // Revalidation may emit a fresh conflict list. Do not append it to the
+      // stale choices; the backend retains staging until the user confirms.
+      if (task) task.conflicts = []
       const result = await invoke<string>('resolve_extraction_conflict', {
         taskId,
         resolutions,
@@ -398,7 +401,13 @@ export const useTauriCommands = () => {
       return result
     } catch (error) {
       if (task && !['cancelled', 'cancelling'].includes(task.status)) {
-        taskStore.failTask(taskId, error instanceof Error ? error.message : String(error))
+        const reason = extractErrorMessage(error)
+        if (/File conflict requires resolution/i.test(reason)) {
+          taskStore.updateTaskStatus(taskId, 'pending')
+          task.error = undefined
+        } else {
+          taskStore.failTask(taskId, reason)
+        }
       }
       throw error
     }

@@ -524,8 +524,14 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
     task.currentPassword = undefined
   } catch (e: any) {
     task.conflictSelections = undefined
-    task.error = extractErrorMessage(e) || String(e)
-    appStore.setError(appStore.t('decompress.extract_failed').replace('{0}', e))
+    const reason = extractErrorMessage(e) || String(e)
+    if (/File conflict requires resolution/i.test(reason)) {
+      task.error = undefined
+      appStore.setError(reason.replace(/.*File conflict requires resolution[:：]?\s*/i, '') || '目标文件发生变化，请重新确认冲突。')
+    } else {
+      task.error = reason
+      appStore.setError(appStore.t('decompress.extract_failed').replace('{0}', e))
+    }
   } finally {
     task.conflictResolutionPending = false
     showConflictModal.value = false
