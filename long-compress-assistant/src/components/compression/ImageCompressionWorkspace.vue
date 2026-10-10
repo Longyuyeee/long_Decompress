@@ -188,6 +188,7 @@ const startImageCompression = async () => {
         name: item.name,
         path: item.path,
         inputFormat: item.inputFormat,
+        retryOfTaskId: item.retryOfTaskId,
         settings: { ...store.getEffectiveImageSettings(item) },
       })),
       progress => {

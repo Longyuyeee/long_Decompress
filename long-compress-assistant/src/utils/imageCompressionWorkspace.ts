@@ -66,6 +66,7 @@ export interface ImageDestinationPlanRequest {
 
 export interface ImageBatchSource {
   id: string
+  retryOfTaskId?: string
   name: string
   path: string
   inputFormat: string

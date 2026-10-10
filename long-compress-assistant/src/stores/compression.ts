@@ -86,6 +86,7 @@ export interface CompressionAnalysisState {
 
 export interface ImageCompressionItem {
   id: string
+  retryOfTaskId?: string
   name: string
   path: string
   inputSize: number
@@ -110,6 +111,8 @@ export interface ImageCandidateRejection {
 
 export interface VideoCompressionItem {
   id: string
+  retryOfTaskId?: string
+  outputDirectory?: string
   name: string
   path: string
   inputSize: number

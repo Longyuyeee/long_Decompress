@@ -78,7 +78,7 @@ describe('useImageCompressionBatch', () => {
     const batch = useImageCompressionBatch()
 
     const results = await batch.runImageBatch([
-      { id: 'real-png', name: 'transparent.png', path: pngPath, inputFormat: 'png', settings },
+      { id: 'real-png', retryOfTaskId: 'original-image', name: 'transparent.png', path: pngPath, inputFormat: 'png', settings },
       { id: 'real-failure', name: 'photo.webp', path: webpPath, inputFormat: 'webp', settings },
     ], undefined, 'history-batch')
 
@@ -87,6 +87,8 @@ describe('useImageCompressionBatch', () => {
     expect(new Set(tasks.map(task => task.id)).size).toBe(2)
     expect(tasks.map(task => task.workloadKind)).toEqual(['image', 'image'])
     expect(tasks.map(task => task.status)).toEqual(['completed', 'failed'])
+    expect(tasks[0].retryOfTaskId).toBe('original-image')
+    expect(mocks.history[0]).toMatchObject({ retryOfTaskId: 'original-image', executionConfig: { kind: 'image-compression', settings } })
     expect(tasks[0].metrics).toEqual(expect.objectContaining({
       inputBytes,
       outputBytes,

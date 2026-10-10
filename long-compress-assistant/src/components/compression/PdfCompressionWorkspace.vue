@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePdfWorkspaceStore, type PdfWorkspaceItem } from '@/stores/pdfWorkspace'
 import { open } from '@tauri-apps/api/dialog'
@@ -38,11 +38,18 @@ const formatBytes = (bytes: number) => {
 
 const displayError = (error: unknown) => error instanceof Error ? error.message : String(error)
 const fileName = (path: string) => path.split(/[\\/]/).filter(Boolean).pop() || path
-const draftFor = (item: PdfWorkspaceItem) => item.report
-  ? buildPdfConfigurationDraft(item.report, item.mode, item.riskConfirmed)
-  : null
+const draftFor = (item: PdfWorkspaceItem) => {
+  if (!item.report) return null
+  const draft = buildPdfConfigurationDraft(item.report, item.mode, item.riskConfirmed)
+  const directory = item.outputDirectory ?? outputDirectory.value
+  if (directory.trim()) draft.proposedOutput = `${directory.replace(/[\\/]+$/, '')}/${fileName(draft.proposedOutput)}`
+  return draft
+}
 
+const analyzingIds = new Set<string>()
 const analyze = async (item: PdfWorkspaceItem, password?: string) => {
+  if (analyzingIds.has(item.id)) return
+  analyzingIds.add(item.id)
   item.status = 'analyzing'
   item.error = ''
   item.frozen = false
@@ -58,8 +65,12 @@ const analyze = async (item: PdfWorkspaceItem, password?: string) => {
     item.password = ''
     item.status = item.report?.passwordState === 'required' ? 'password-required' : 'failed'
     item.error = displayError(error)
-  }
+  } finally { analyzingIds.delete(item.id) }
 }
+
+watch(() => items.value.map(item => `${item.id}:${item.status}`).join('|'), () => {
+  items.value.filter(item => item.status === 'analyzing' && !item.report).forEach(item => void analyze(item))
+}, { immediate: true })
 
 const onFilesSelected = async (files: SelectedFile[]) => {
   selectionError.value = ''
@@ -139,6 +150,8 @@ const startPdfOptimization = async () => {
         name: item.name,
         path: item.path,
         mode: item.mode,
+        retryOfTaskId: item.retryOfTaskId,
+        outputDirectory: item.outputDirectory,
         confirmedLossyImageChanges: item.riskConfirmed,
         allowLargerOutput: item.allowLargerOutput,
       })),
@@ -203,6 +216,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
         </div>
 
         <div v-if="item.status === 'analyzing'" class="loading"><i class="pi pi-spin pi-spinner"></i> 正在读取真实 PDF 结构…</div>
+        <label v-if="item.outputDirectory !== undefined" class="block text-xs text-muted my-3">本次独立输出目录（留空使用源目录）<input v-model="item.outputDirectory" :disabled="isRunning || item.frozen" class="w-full min-w-0 mt-1 p-2 rounded-lg border border-subtle bg-card text-content" data-testid="pdf-retry-output" /></label>
 
         <template v-if="item.report">
           <div class="fact-grid">

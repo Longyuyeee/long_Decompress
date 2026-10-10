@@ -6,6 +6,8 @@ import type { PdfOptimizationMode, PublishedPdfOutput } from '@/types/pdf'
 
 export interface PdfBatchSource {
   id: string
+  retryOfTaskId?: string
+  outputDirectory?: string
   name: string
   path: string
   mode: PdfOptimizationMode
@@ -79,7 +81,8 @@ export const usePdfOptimizationBatch = () => {
           name: source.name,
           type: 'compression',
           workloadKind: 'pdf',
-          executionConfig: { schemaVersion: 1, kind: 'pdf-optimization', outputDirectory: outputDirectory || '', mode: source.mode, allowLargerOutput: source.allowLargerOutput },
+          retryOfTaskId: source.retryOfTaskId,
+          executionConfig: { schemaVersion: 1, kind: 'pdf-optimization', outputDirectory: source.outputDirectory ?? outputDirectory ?? '', mode: source.mode, allowLargerOutput: source.allowLargerOutput },
           sourceFiles: [source.path],
           outputPath: '',
           format: 'pdf',
@@ -92,7 +95,7 @@ export const usePdfOptimizationBatch = () => {
           const plan = await commands.planPdfOptimizationDestination(
             source.path,
             source.mode,
-            outputDirectory,
+            source.outputDirectory ?? outputDirectory,
             [...reservedDestinations],
           )
           destination = plan.destination

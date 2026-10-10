@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import ImageCompressionWorkspace from '@/components/compression/ImageCompressionWorkspace.vue'
 import VideoCompressionWorkspace from '@/components/compression/VideoCompressionWorkspace.vue'
@@ -9,6 +10,10 @@ type SpecialCompressionMode = 'image' | 'video' | 'pdf'
 
 const appStore = useAppStore()
 const activeMode = ref<SpecialCompressionMode>('image')
+const route = useRoute()
+watch(() => route?.query.mode, mode => {
+  if (mode === 'image' || mode === 'video' || mode === 'pdf') activeMode.value = mode
+}, { immediate: true })
 const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> = [
   { id: 'image', label: '图片压缩', icon: 'pi pi-images' },
   { id: 'video', label: '视频压缩', icon: 'pi pi-video' },

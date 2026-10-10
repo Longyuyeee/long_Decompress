@@ -6,6 +6,7 @@ import { useAppStore } from '@/stores/app'
 import type { TaskHistoryRecord, TaskHistoryStatus } from '@/types/taskHistory'
 import HistoryExtractionDraft from '@/components/tasks/HistoryExtractionDraft.vue'
 import HistoryCompressionDraft from '@/components/tasks/HistoryCompressionDraft.vue'
+import HistoryMediaDraft from '@/components/tasks/HistoryMediaDraft.vue'
 import { save } from '@tauri-apps/api/dialog'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -53,7 +54,7 @@ const hasFilters = computed(() => !!query.value.trim() || typeFilter.value !== '
 const openRetry = async (record: TaskHistoryRecord) => {
   selectedRecord.value = record
   await nextTick()
-  const draft = document.querySelector<HTMLElement>('[data-testid="history-extraction-draft"], [data-testid="history-compression-draft"]')
+  const draft = document.querySelector<HTMLElement>('[data-testid="history-extraction-draft"], [data-testid="history-compression-draft"], [data-testid="history-media-draft"]')
   draft?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 const selectedFailure = computed(() => selectedRecord.value ? describeTaskFailure(selectedRecord.value) : null)
@@ -344,6 +345,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
                 <div class="min-w-0"><h3 class="font-black text-content truncate">{{ record.name }}</h3><p class="text-xs text-muted truncate mt-0.5">{{ record.outputPath || record.sourcePaths[0] }}</p>
                   <button v-if="record.taskType === 'decompression' && (!record.workloadKind || record.workloadKind === 'archive')" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次解压</button>
                   <button v-if="record.taskType === 'compression' && (!record.workloadKind || record.workloadKind === 'archive')" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-compression-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次压缩</button>
+                  <button v-if="record.taskType === 'compression' && ['image', 'video', 'pdf'].includes(record.workloadKind)" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-media-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次处理</button>
                 </div>
               </div>
               <div class="hidden md:flex items-center gap-2 text-xs text-muted"><span class="history-chip">{{ typeLabel(record) }}</span><span v-if="record.format" class="history-chip uppercase">{{ record.format }}</span></div>
@@ -394,6 +396,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
             </section>
             <HistoryExtractionDraft v-if="selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
             <HistoryCompressionDraft v-if="selectedRecord.taskType === 'compression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
+            <HistoryMediaDraft v-if="selectedRecord.taskType === 'compression' && ['image', 'video', 'pdf'].includes(selectedRecord.workloadKind)" :record="selectedRecord" />
             <section class="detail-section" data-testid="history-logs">
               <h3><i class="pi pi-list"></i>{{ appStore.t('history.detail.logs') }}</h3>
               <p v-if="detailLoading" role="status">正在读取此任务的日志…</p>

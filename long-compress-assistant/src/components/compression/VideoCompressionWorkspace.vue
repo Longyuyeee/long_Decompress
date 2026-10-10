@@ -209,6 +209,8 @@ const startVideoCompression = async () => {
         name: item.name,
         path: item.path,
         plan: item.plan!,
+        retryOfTaskId: item.retryOfTaskId,
+        outputDirectory: item.outputDirectory,
         settings: { ...store.getEffectiveVideoSettings(item) },
       })),
       store.videoOutputDirectory || null,
@@ -293,6 +295,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
         </template>
 
         <div v-if="item.expanded" class="item-settings">
+          <label v-if="item.outputDirectory !== undefined" class="block text-xs text-muted mb-3">本次独立输出目录（留空使用源目录）<input v-model="item.outputDirectory" :disabled="isRunning" class="w-full min-w-0 mt-1 p-2 rounded-lg border border-subtle bg-card text-content" data-testid="video-retry-output" /></label>
           <label class="override-toggle"><input type="checkbox" :checked="Boolean(item.settings)" @change="toggleOverride(item, ($event.target as HTMLInputElement).checked)"><span>为此视频使用单项配置</span></label>
           <VideoCompressionSettingsPanel v-if="item.settings" :model-value="item.settings" @update:model-value="updateItemSettings(item, $event)" />
           <p v-else>当前跟随批量配置：质量 {{ store.getEffectiveVideoSettings(item).quality }}，{{ store.getEffectiveVideoSettings(item).maxWidth ? `最大 ${store.getEffectiveVideoSettings(item).maxWidth}×${store.getEffectiveVideoSettings(item).maxHeight}` : '保持原尺寸' }}。</p>

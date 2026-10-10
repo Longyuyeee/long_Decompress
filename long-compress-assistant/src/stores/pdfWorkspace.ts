@@ -4,6 +4,8 @@ import type { PdfInputAnalysisReport, PdfOptimizationMode } from '@/types/pdf'
 
 export interface PdfWorkspaceItem {
   id: string
+  retryOfTaskId?: string
+  outputDirectory?: string
   path: string
   name: string
   status: 'analyzing' | 'password-required' | 'ready' | 'blocked' | 'failed'

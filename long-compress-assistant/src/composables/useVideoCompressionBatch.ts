@@ -10,6 +10,8 @@ import type {
 
 export interface VideoBatchSource {
   id: string
+  retryOfTaskId?: string
+  outputDirectory?: string
   name: string
   path: string
   plan: VideoCompressionPlan
@@ -89,7 +91,8 @@ export const useVideoCompressionBatch = () => {
           name: source.name,
           type: 'compression',
           workloadKind: 'video',
-          executionConfig: { schemaVersion: 1, kind: 'video-compression', outputDirectory: outputDirectory || '', settings: { ...source.settings } },
+          retryOfTaskId: source.retryOfTaskId,
+          executionConfig: { schemaVersion: 1, kind: 'video-compression', outputDirectory: source.outputDirectory ?? outputDirectory ?? '', settings: { ...source.settings } },
           sourceFiles: [source.path],
           outputPath: '',
           format: 'mp4',
@@ -101,7 +104,7 @@ export const useVideoCompressionBatch = () => {
         try {
           const destinationPlan = await commands.planVideoCompressionDestination(
             source.path,
-            outputDirectory,
+            source.outputDirectory ?? outputDirectory,
             [...reservedDestinations],
           )
           destination = destinationPlan.destination

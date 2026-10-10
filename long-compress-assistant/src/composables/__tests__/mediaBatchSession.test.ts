@@ -29,6 +29,17 @@ const cases = [
 describe.each(cases)('$kind：离开页面再回来仍控制原批次', ({ open, plan, compress, kind }) => {
   beforeEach(() => { setActivePinia(createPinia()); mocks.invoke.mockReset() })
 
+  it('历史草稿的独立目录和原任务关联进入实际执行载荷，不继承其他任务全局目录', async () => {
+    mocks.invoke.mockImplementation(async command => {
+      if (command === plan) throw new Error('test planning failure')
+    })
+    if (kind === 'pdf') await usePdfOptimizationBatch().runPdfBatch([{ ...source, retryOfTaskId: 'old-pdf', outputDirectory: 'E:/restored' }], 'D:/global', true)
+    else await useVideoCompressionBatch().runVideoBatch([{ ...video, retryOfTaskId: 'old-video', outputDirectory: 'E:/restored' }], 'D:/global', true)
+    expect(mocks.invoke).toHaveBeenCalledWith(plan, expect.objectContaining({ outputDirectory: 'E:/restored' }))
+    expect(useTaskStore().tasks[0]).toMatchObject({ retryOfTaskId: `old-${kind}`, executionConfig: { outputDirectory: 'E:/restored' } })
+    expect(mocks.invoke).toHaveBeenCalledWith('save_task_history', expect.objectContaining({ record: expect.objectContaining({ retryOfTaskId: `old-${kind}`, status: 'failed' }) }))
+  })
+
   it('我还在等输出路径规划，回来不能再次启动，并且取消后不应开始编码', async () => {
     let resolvePlan!: (value: unknown) => void
     mocks.invoke.mockImplementation((command: string) => command === plan
