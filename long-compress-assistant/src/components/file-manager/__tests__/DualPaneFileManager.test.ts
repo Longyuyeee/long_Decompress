@@ -16,7 +16,62 @@ const rightEntries = [
 ]
 
 describe('DualPaneFileManager', () => {
+  it('keeps a bookmarked folder after reopening and opens it in the chosen pane only', async () => {
+    let wrapper = mount(DualPaneFileManager)
+    await flushPromises()
+    await wrapper.get('[data-testid="bookmark-current-left"]').trigger('click')
+    expect(wrapper.get('[data-testid="bookmark-current-left"]').attributes('aria-pressed')).toBe('true')
+    wrapper.unmount()
+    wrapper = mount(DualPaneFileManager)
+    await flushPromises()
+    await wrapper.get('[data-testid="file-manager-path-input-right"]').trigger('focus')
+    await wrapper.get('[data-testid="saved-location-right"]').trigger('click')
+    await flushPromises()
+    expect((wrapper.get('[data-testid="file-manager-path-input-right"]').element as HTMLInputElement).value).toBe('C:\\left')
+    expect((wrapper.get('[data-testid="file-manager-path-input-left"]').element as HTMLInputElement).value).toBe('C:\\left')
+    wrapper.unmount()
+  })
+
+  it('ignores an old directory response after I navigate to another location', async () => {
+    const original = invoke.getMockImplementation()!
+    let finish!: (entries: unknown[]) => void
+    invoke.mockImplementation((command, payload) => command === 'list_files' && payload.path === 'C:/slow'
+      ? new Promise(resolve => { finish = resolve }) : original(command, payload))
+    const wrapper = mount(DualPaneFileManager)
+    await flushPromises()
+    const input = wrapper.get('[data-testid="file-manager-path-input-left"]')
+    await input.setValue('C:/slow')
+    await input.trigger('keydown', { key: 'Enter' })
+    await input.setValue('C:/new')
+    await input.trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+    finish([{ path: 'C:/slow/old.txt', name: 'old.txt', is_dir: false, size: 1 }])
+    await flushPromises()
+    expect((input.element as HTMLInputElement).value).toBe('C:/new')
+    expect(wrapper.text()).not.toContain('old.txt')
+    wrapper.unmount()
+  })
+
+  it('lets me remove an unavailable bookmark without deleting files or changing the other pane', async () => {
+    localStorage.setItem('long-saved-locations-v1', JSON.stringify({ bookmarks: ['Z:/missing'], recent: [] }))
+    const original = invoke.getMockImplementation()!
+    invoke.mockImplementation((command, payload) => command === 'list_files' && payload.path === 'Z:/missing'
+      ? Promise.reject(new Error('目录不存在')) : original(command, payload))
+    const wrapper = mount(DualPaneFileManager)
+    await flushPromises()
+    await wrapper.get('[data-testid="file-manager-path-input-left"]').trigger('focus')
+    await wrapper.get('[data-testid="saved-location-left"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.findAll('.file-pane')[0].text()).toContain('目录不存在')
+    expect((wrapper.get('[data-testid="file-manager-path-input-right"]').element as HTMLInputElement).value).toBe('D:\\')
+    await wrapper.get('[data-testid="remove-unavailable-bookmark-left"]').trigger('click')
+    expect(JSON.parse(localStorage.getItem('long-saved-locations-v1')!).bookmarks).toEqual([])
+    expect(invoke.mock.calls.some(([command]) => /delete|recycle/.test(command))).toBe(false)
+    wrapper.unmount()
+  })
+
   beforeEach(() => {
+    localStorage.clear()
     invoke.mockReset()
     invoke.mockImplementation((command: string, payload?: any) => {
       if (command === 'file_manager_locations') return Promise.resolve([

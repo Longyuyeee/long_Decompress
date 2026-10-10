@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { open } from '@tauri-apps/api/dialog'
+import { useSavedLocations } from '@/composables/useSavedLocations'
 
 export interface LocalFileEntry {
   path: string
@@ -34,6 +35,8 @@ const emit = defineEmits<{
 }>()
 
 const locations = ref<Location[]>([])
+const savedLocations = useSavedLocations()
+const paneRequest = { left: 0, right: 0 }
 const activePane = ref<'left' | 'right'>('left')
 const busy = ref(false)
 const notice = ref('')
@@ -66,10 +69,12 @@ const sortEntries = (entries: LocalFileEntry[]) => entries.sort((a, b) => a.isDi
   : a.isDir ? -1 : 1)
 
 const loadPane = async (pane: PaneState, path: string, pushHistory = true) => {
+  const request = ++paneRequest[pane.id]
   pane.loading = true
   pane.error = ''
   try {
     const raw = await invoke<any[]>('list_files', { path })
+    if (request !== paneRequest[pane.id]) return false
     pane.entries = sortEntries(raw.map(normalizeEntry))
     pane.path = path
     pane.pathDraft = path
@@ -80,11 +85,13 @@ const loadPane = async (pane: PaneState, path: string, pushHistory = true) => {
       pane.history.push(path)
       pane.historyIndex = pane.history.length - 1
     }
+    savedLocations.remember(path)
     return true
   } catch (error) {
+    if (request !== paneRequest[pane.id]) return false
     pane.error = String(error)
     return false
-  } finally { pane.loading = false }
+  } finally { if (request === paneRequest[pane.id]) pane.loading = false }
 }
 
 const cleanPathInput = (value: string) => value.trim().replace(/^['"]|['"]$/g, '')
@@ -342,6 +349,8 @@ onMounted(async () => {
   if (second) await loadPane(right, second.path)
 })
 onUnmounted(() => {
+  paneRequest.left++
+  paneRequest.right++
   window.removeEventListener('pointerdown', handleGlobalPointer)
   window.removeEventListener('keydown', handleKeydown)
 })
@@ -356,6 +365,7 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
       <div class="manager-actions"><div class="status-pill"><i class="pi pi-shield"></i><span>不覆盖同名项 · 复制后哈希校验 · 删除进入回收站</span></div><button data-testid="file-manager-open-archive" @click="chooseArchive"><i class="pi pi-box"></i><span>打开压缩包</span></button></div>
     </header>
     <div v-if="notice" class="notice-bar" data-testid="file-manager-notice"><i class="pi pi-info-circle"></i><span>{{ notice }}</span><button @click="notice = ''"><i class="pi pi-times"></i></button></div>
+    <p v-if="savedLocations.error.value" role="alert" class="text-sm text-red-500">{{ savedLocations.error.value }}</p>
     <main class="pane-grid flex-1 min-h-0">
       <section v-for="pane in [left, right]" :key="pane.id" class="file-pane" :class="{ active: activePane === pane.id }" @pointerdown="activePane = pane.id">
         <nav class="pane-nav">
@@ -387,6 +397,11 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
               @click="toggleLocationMenu(pane)"
             ><i class="pi pi-chevron-down"></i></button>
             <div v-if="pane.locationMenuOpen" class="location-menu" role="listbox" :aria-label="`${pane.id === 'left' ? '左' : '右'}栏常用位置`">
+              <div class="location-menu-heading"><span>书签</span><small>仅跳转当前栏</small></div>
+              <button v-for="path in savedLocations.bookmarks.value" :key="`bookmark-${path}`" type="button" role="option" :aria-selected="path === pane.path" :data-testid="`saved-location-${pane.id}`" @click="selectLocation(pane, path)"><i class="pi pi-star-fill"></i><span><strong>{{ path }}</strong></span></button>
+              <p v-if="!savedLocations.bookmarks.value.length" class="px-3 text-xs text-muted">点击地址栏旁的星标收藏当前目录</p>
+              <div class="location-menu-heading"><span>最近使用</span></div>
+              <button v-for="path in savedLocations.recent.value" :key="`recent-${path}`" type="button" role="option" :aria-selected="path === pane.path" @click="selectLocation(pane, path)"><i class="pi pi-history"></i><span><strong>{{ path }}</strong></span></button>
               <div class="location-menu-heading"><span>常用位置</span><small>也可直接粘贴路径</small></div>
               <button
                 v-for="location in locations"
@@ -403,6 +418,7 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
               </button>
             </div>
           </div>
+          <button :disabled="!pane.path || pane.loading" :title="savedLocations.isBookmarked(pane.path) ? '取消收藏当前目录' : '收藏当前目录'" :aria-pressed="savedLocations.isBookmarked(pane.path)" :data-testid="`bookmark-current-${pane.id}`" @click="savedLocations.toggleBookmark(pane.path)"><i :class="savedLocations.isBookmarked(pane.path) ? 'pi pi-star-fill' : 'pi pi-star'"></i></button>
           <button title="刷新" @click="loadPane(pane, pane.path, false)"><i :class="pane.loading ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i></button>
           <button title="新建文件夹" @click="beginEditor('mkdir', pane)"><i class="pi pi-plus"></i></button>
           <button class="selection-mode-button" :class="{ active: pane.selectionMode }" :title="pane.selectionMode ? '退出多选模式（Esc）' : '进入多选模式'" :aria-pressed="pane.selectionMode" :data-testid="`file-manager-selection-mode-${pane.id}`" @click="toggleSelectionMode(pane)"><i :class="pane.selectionMode ? 'pi pi-times' : 'pi pi-check-square'"></i></button>
@@ -424,7 +440,7 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
             <span :title="entry.isDir ? '文件夹' : formatBytes(entry.size)">{{ entry.isDir ? '—' : formatBytes(entry.size) }}</span><span :title="formatDate(entry.modified)">{{ formatDate(entry.modified) }}</span>
           </button>
           <div v-if="pane.loading" class="pane-empty"><i class="pi pi-spin pi-spinner"></i><span>正在读取…</span></div>
-          <div v-else-if="pane.error" class="pane-empty error"><i class="pi pi-exclamation-triangle"></i><span>{{ pane.error }}</span></div>
+          <div v-else-if="pane.error" class="pane-empty error"><i class="pi pi-exclamation-triangle"></i><span>{{ pane.error }}</span><button v-if="savedLocations.isBookmarked(pane.pathDraft)" :data-testid="`remove-unavailable-bookmark-${pane.id}`" @click="savedLocations.toggleBookmark(pane.pathDraft)">移除此位置的书签（不删除文件）</button></div>
           <div v-else-if="!pane.entries.length" class="pane-empty"><i class="pi pi-folder"></i><span>此文件夹为空</span></div>
         </div>
         <footer><span>{{ pane.selected.size ? `已选择 ${pane.selected.size} 项` : pane.selectionMode ? '多选模式 · 单击切换选择 · Esc 退出' : '单击选择 · Ctrl 多选 · 双击打开 · 右键操作' }}</span><button v-if="pane.selectionMode" @click="toggleSelectionMode(pane)">退出多选</button></footer>
@@ -498,6 +514,8 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
 .transfer-bar{display:flex;align-items:center;justify-content:flex-end;gap:.5rem}.transfer-bar>span{margin-right:auto;color:var(--text-muted);font-size:.7rem}.transfer-bar b{color:var(--dynamic-accent)}.transfer-bar button{height:2.45rem;padding:0 .8rem;border:1px solid var(--border-subtle);border-radius:.72rem;background:var(--bg-input);color:var(--text-content);font-size:.68rem;font-weight:850}.transfer-bar button:hover:not(:disabled){border-color:var(--dynamic-accent);color:var(--dynamic-accent)}.transfer-bar button:disabled{opacity:.35}
 @media(max-width:900px){.file-manager{overflow:hidden;padding:.65rem;gap:.55rem}.manager-header{gap:.65rem}.manager-header h1{font-size:1.15rem}.manager-header p{margin-top:.2rem;font-size:.6rem}.status-pill{display:none}.pane-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:.45rem}.pane-nav{overflow:visible}.pane-nav>button{flex:0 0 1.85rem;width:1.85rem;height:1.85rem}.path-combobox{height:1.85rem}.file-head,.file-row{grid-template-columns:minmax(0,1fr) 3.9rem}.file-head span:last-child,.file-row>span:last-child{display:none}.file-pane>footer span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.transfer-bar{gap:.35rem}.transfer-bar button{height:2.15rem;padding:0 .55rem}}
 @media(max-width:620px){.manager-actions>button{width:2.2rem;padding:0;justify-content:center}.manager-actions>button span{display:none}.file-head,.file-row{grid-template-columns:minmax(0,1fr)}.file-head span:nth-child(n+2),.file-row>span:nth-child(n+2){display:none}.path-strip{grid-template-columns:auto minmax(0,1fr)}.path-strip>span{display:none}.transfer-bar>span{display:none}.transfer-bar button{width:2.15rem;padding:0;justify-content:center}.transfer-bar button span{display:none}.transfer-bar button i{font-size:.8rem}.file-pane>footer{padding:.35rem .45rem}.file-pane>footer button{display:none}}
+@media(max-width:1100px){.pane-nav{flex-wrap:wrap}.pane-nav>.path-combobox{order:2;flex:1 0 100%;min-width:0}.pane-nav>button{flex-shrink:0}}
+@media(min-width:901px) and (max-width:1100px){.file-head,.file-row{grid-template-columns:minmax(0,1fr) 4rem 6rem}}
 </style>
 
 <style>
