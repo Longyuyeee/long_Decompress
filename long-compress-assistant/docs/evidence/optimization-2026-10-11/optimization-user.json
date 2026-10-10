@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-10-10T16:42:50.453Z",
+  "binarySha256": "dee359fd8f656d8e13dcc7b717b6a6a44a06c4df39165f808acdd6339af82b0e",
+  "testKind": "real-ui-engine-sqlite-with-seeded-prior-record",
+  "compressionId": "k898xy8ecmv2mhl77",
+  "extractionId": "6hv774d8cmv2mhltg",
+  "fastPack": true,
+  "parallelOptIn": true,
+  "smartOptInPreviewMatchesOutput": true,
+  "draftDidNotExecute": true,
+  "modifiedTargetPreserved": true,
+  "outputHashesMatch": true,
+  "nativePickerVerified": false
+}

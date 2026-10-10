@@ -18,6 +18,8 @@ import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { deflateSync } from 'node:zlib'
+import { runOptimizationDesktopGate, runSavedLocationDesktopGate } from './optimization-desktop-gate.mjs'
+import { runMediaHistoryDesktopGate } from './media-history-desktop-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -59,6 +61,8 @@ const webdriverPort = Number.parseInt(process.env.LONG_DECOMPRESS_WEBDRIVER_PORT
 const nativeWebdriverPort = Number.parseInt(process.env.LONG_DECOMPRESS_NATIVE_WEBDRIVER_PORT || '4724', 10)
 const webdriverUrl = `http://127.0.0.1:${webdriverPort}/`
 const artifactDirectory = path.join(root, 'test-results', 'desktop-e2e')
+const personalSettingsPath = path.join(process.env.APPDATA || homedir(), tauriConfig.tauri.bundle.identifier, 'app_settings.json')
+const personalSettingsBefore = existsSync(personalSettingsPath) ? createHash('sha256').update(readFileSync(personalSettingsPath)).digest('hex') : null
 const e2eInstanceId =
   process.env.LONG_DECOMPRESS_E2E_INSTANCE_ID || randomBytes(12).toString('hex')
 const e2eDataDirectory =
@@ -118,6 +122,9 @@ const compressionVerificationOnly = process.argv.includes('--compression-verific
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
 const pauseControlOnly = process.argv.includes('--pause-control-only')
 const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
+const optimizationOnly = process.argv.includes('--optimization-only')
+const mediaHistoryOnly = process.argv.includes('--media-history-only')
+const savedLocationsOnly = process.argv.includes('--saved-locations-only')
 const historyOnly = process.argv.includes('--history-only')
 const vaultUsageOnly = process.argv.includes('--vault-usage-only')
 const encryptedRarOnly = process.argv.includes('--encrypted-rar-only')
@@ -137,7 +144,7 @@ const missingFullFormatCapabilities = new Set()
 const autoStartRegistryKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
 const autoStartValueName = 'Long解压'
 
-if ((videoWorkspaceOnly || mediaRouteOnly) && path.resolve(application) === path.resolve(cargoApplication)) {
+if ((videoWorkspaceOnly || mediaRouteOnly || mediaHistoryOnly) && path.resolve(application) === path.resolve(cargoApplication)) {
   // A standalone cargo binary resolves Tauri resources beside the executable,
   // while NSIS/updater bundles preserve the configured resources directory.
   // Mirror the bundle payload for this focused real-desktop gate; production
@@ -149,7 +156,7 @@ if ((videoWorkspaceOnly || mediaRouteOnly) && path.resolve(application) === path
   )
 }
 
-if ((pdfWorkspaceOnly || mediaRouteOnly) && path.resolve(application) === path.resolve(cargoApplication)) {
+if ((pdfWorkspaceOnly || mediaRouteOnly || mediaHistoryOnly) && path.resolve(application) === path.resolve(cargoApplication)) {
   cpSync(
     path.join(root, 'src-tauri', 'resources', 'pdf-engine'),
     path.join(path.dirname(cargoApplication), 'pdf-engine'),
@@ -2003,6 +2010,8 @@ async function restartDesktopSession() {
     console.log('[desktop-e2e] previous WebDriver session released')
   }
   terminateProcessTree(tauriDriverProcess?.pid)
+  const personalSettingsAfter = existsSync(personalSettingsPath) ? createHash('sha256').update(readFileSync(personalSettingsPath)).digest('hex') : null
+  assert.equal(personalSettingsAfter, personalSettingsBefore, 'isolated desktop tests must not modify personal app settings')
   tauriDriverProcess = undefined
   console.log('[desktop-e2e] previous tauri-driver service stopped')
   await new Promise((resolve) => setTimeout(resolve, 500))
@@ -2508,6 +2517,11 @@ async function runDownloadFailureUserGate() {
   copyFileSync(heldPart, missingPart)
   await draftSource.sendKeys(Key.chord(Key.CONTROL, 'a'), intact)
   assert.equal(await draftSource.getAttribute('value'), intact, 'the replacement path must be entered exactly')
+  // The saved task explicitly used direct extraction. This retry scenario asks
+  // for a subfolder, so select it rather than assuming the old default is true.
+  const retrySubfolder = await waitForElement('[data-testid="history-draft-subfolder"]')
+  assert.equal(await retrySubfolder.isSelected(), failed.executionConfig.extractToSubfolder)
+  if (!await retrySubfolder.isSelected()) await retrySubfolder.click()
   await (await waitForElement('[data-testid="history-draft-create"]')).click()
   const goToDraft = await driver.wait(async () => {
     const links = await driver.findElements(By.css('[data-testid="history-extraction-draft"] a'))
@@ -2857,6 +2871,11 @@ async function assertBoundedTaskDetailLayout(type) {
     const detailRect = details.getBoundingClientRect()
     const configRect = config.getBoundingClientRect()
     const executionRect = execution.getBoundingClientRect()
+    let container = details.parentElement
+    while (container && getComputedStyle(container).containerType === 'normal') container = container.parentElement
+    const containerStyle = getComputedStyle(container || details)
+    const contentWidth = parseFloat(containerStyle.width) - (containerStyle.boxSizing === 'border-box'
+      ? ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'].reduce((sum, key) => sum + parseFloat(containerStyle[key] || '0'), 0) : 0)
     const resourceRect = resource.getBoundingClientRect()
     const visibleResourceHeight = Math.max(
       0,
@@ -2879,6 +2898,8 @@ async function assertBoundedTaskDetailLayout(type) {
       columnTopDelta: Math.abs(configRect.top - executionRect.top),
       columnHeightDelta: Math.abs(configRect.height - executionRect.height),
       isSideBySide: executionRect.left >= configRect.right - 2,
+      isStacked: executionRect.top >= configRect.bottom - 2 && Math.abs(executionRect.left - configRect.left) <= 2,
+      containerWidthRem: contentWidth / parseFloat(getComputedStyle(document.documentElement).fontSize),
       logClientHeight: log.clientHeight,
       logScrollHeight: log.scrollHeight,
       logHorizontalOverflow: log.scrollWidth - log.clientWidth,
@@ -2897,13 +2918,17 @@ async function assertBoundedTaskDetailLayout(type) {
   }, selectors)
 
   assert.ok(result, `${type} detail layout was not rendered`)
-  assert.equal(result.isSideBySide, true, `${type} detail columns must remain side by side`)
+  const expectedStacked = result.containerWidthRem <= (type === 'compression' ? 47.5 : 38.75)
+  assert.equal(result.isSideBySide, !expectedStacked, `${type} layout must follow its measured container width: ${JSON.stringify(result)}`)
+  if (expectedStacked) assert.equal(result.isStacked, true, `${type} narrow panels must stack without overlap`)
   assert.ok(result.configWidth >= 250, `${type} config panel is too narrow: ${JSON.stringify(result)}`)
   assert.ok(result.executionWidth >= 250, `${type} execution panel is too narrow: ${JSON.stringify(result)}`)
   assert.ok(result.configHeight >= 340, `${type} config viewport is too short: ${JSON.stringify(result)}`)
-  assert.ok(result.detailHeight <= 520, `${type} details grew without a vertical bound: ${JSON.stringify(result)}`)
-  assert.ok(result.columnTopDelta <= 2, `${type} columns are not aligned: ${JSON.stringify(result)}`)
-  assert.ok(result.columnHeightDelta <= 2, `${type} columns do not share one viewport height: ${JSON.stringify(result)}`)
+  if (!expectedStacked) {
+    assert.ok(result.detailHeight <= 520, `${type} wide details grew without a vertical bound: ${JSON.stringify(result)}`)
+    assert.ok(result.columnTopDelta <= 2, `${type} wide columns are not aligned: ${JSON.stringify(result)}`)
+    assert.ok(result.columnHeightDelta <= 2, `${type} wide columns do not share one viewport height: ${JSON.stringify(result)}`)
+  }
   assert.ok(result.logScrollHeight > result.logClientHeight, `${type} log fixture must require vertical scrolling`)
   assert.equal(result.logOverflowY, 'auto', `${type} log must own the vertical scrollbar`)
   assert.ok(result.resourceVisibleHeight >= Math.min(120, result.resourceHeight * 0.7), `${type} resource card is clipped: ${JSON.stringify(result)}`)
@@ -2926,7 +2951,7 @@ async function assertBoundedTaskDetailLayout(type) {
 }
 
 async function runResponsiveTaskDetailDesktopGate() {
-  console.log('[desktop-e2e] verifying bounded side-by-side task details at real window sizes')
+  console.log('[desktop-e2e] verifying wide columns and narrow stacked task details at real window sizes')
   mkdirSync(artifactDirectory, { recursive: true })
 
   for (const type of ['decompression', 'compression']) {
@@ -2941,7 +2966,7 @@ async function runResponsiveTaskDetailDesktopGate() {
       await waitForElement('[data-testid="compression-draft-details"]')
     }
 
-    for (const size of [{ width: 920, height: 620 }, { width: 760, height: 520 }]) {
+    for (const size of [{ width: 1280, height: 800 }, { width: 920, height: 620 }, { width: 760, height: 520 }]) {
       await driver.manage().window().setRect(size)
       await new Promise(resolve => setTimeout(resolve, 250))
       await assertBoundedTaskDetailLayout(type)
@@ -4785,6 +4810,18 @@ try {
     await runHistoryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri task-history persistence gate passed.')
+  } else if (savedLocationsOnly) {
+    await runSavedLocationDesktopGate({ driver, waitForElement, fixtureDirectory, artifactDirectory })
+    completedSuccessfully = true
+    console.log('Real Windows saved-location cross-pane and reload workflow passed.')
+  } else if (mediaHistoryOnly) {
+    await runMediaHistoryDesktopGate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, root, binarySha256: fileSha256(application) })
+    completedSuccessfully = true
+    console.log('Real Windows image/video/PDF history retry workflow passed.')
+  } else if (optimizationOnly) {
+    await runOptimizationDesktopGate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, binarySha256: fileSha256(application) })
+    completedSuccessfully = true
+    console.log('Real Windows optimization user workflow passed.')
   } else if (zipTelemetryOnly) {
     await runZipTelemetryDesktopGate()
     completedSuccessfully = true

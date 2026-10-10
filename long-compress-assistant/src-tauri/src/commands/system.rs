@@ -264,12 +264,17 @@ pub async fn get_app_version() -> Result<String, String> {
 }
 
 /// 从数据目录加载持久化的应用设置 (JSON)
+fn app_settings_directory(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    #[cfg(feature = "desktop-e2e")]
+    if let Some(path) = std::env::var_os("LONG_DECOMPRESS_E2E_DATA_DIR") {
+        return Ok(std::path::PathBuf::from(path).join("app-settings"));
+    }
+    app.path_resolver().app_data_dir().ok_or_else(|| "无法获取数据目录".to_string())
+}
+
 #[command]
 pub async fn load_app_settings(app: AppHandle) -> Result<String, String> {
-    let resolver = app.path_resolver();
-    let data_dir = resolver
-        .app_data_dir()
-        .ok_or_else(|| "无法获取数据目录".to_string())?;
+    let data_dir = app_settings_directory(&app)?;
     let settings_path = data_dir.join("app_settings.json");
     if !settings_path.exists() {
         return Ok("{}".to_string());
@@ -280,10 +285,7 @@ pub async fn load_app_settings(app: AppHandle) -> Result<String, String> {
 /// 将应用设置持久化到数据目录 (JSON)
 #[command]
 pub async fn save_app_settings(app: AppHandle, settings_json: String) -> Result<(), String> {
-    let resolver = app.path_resolver();
-    let data_dir = resolver
-        .app_data_dir()
-        .ok_or_else(|| "无法获取数据目录".to_string())?;
+    let data_dir = app_settings_directory(&app)?;
     std::fs::create_dir_all(&data_dir).map_err(|e| format!("创建数据目录失败: {}", e))?;
     let settings_path = data_dir.join("app_settings.json");
     std::fs::write(&settings_path, &settings_json).map_err(|e| format!("保存设置文件失败: {}", e))

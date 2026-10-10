@@ -1,0 +1,61 @@
+﻿{
+    "verifiedAt":  "2026-10-10T16:42:51.0917135Z",
+    "binarySha256":  "DEE359FD8F656D8E13DCC7B717B6A6A44A06C4DF39165F808ACDD6339AF82B0E",
+    "scope":  "Native process for the entire real UI retry/ZIP/conflict/smart-directory workflow; excludes WebView2 child processes. 75 ms polling; CPU is last observed accumulated CPU seconds, not percent. Includes startup, fixture processing and UI waits; not extraction speed or physical disk I/O.",
+    "samples":  [
+                    {
+                        "round":  1,
+                        "parallel":  false,
+                        "processPeakWorkingSetBytes":  110501888,
+                        "sampledPeakPrivateBytes":  86904832,
+                        "observedCpuSeconds":  0.203125,
+                        "samples":  74,
+                        "workflowWallMs":  8025
+                    },
+                    {
+                        "round":  1,
+                        "parallel":  true,
+                        "processPeakWorkingSetBytes":  109461504,
+                        "sampledPeakPrivateBytes":  87265280,
+                        "observedCpuSeconds":  0.1875,
+                        "samples":  77,
+                        "workflowWallMs":  8283
+                    },
+                    {
+                        "round":  2,
+                        "parallel":  false,
+                        "processPeakWorkingSetBytes":  109457408,
+                        "sampledPeakPrivateBytes":  87085056,
+                        "observedCpuSeconds":  0.109375,
+                        "samples":  74,
+                        "workflowWallMs":  7841
+                    },
+                    {
+                        "round":  2,
+                        "parallel":  true,
+                        "processPeakWorkingSetBytes":  109023232,
+                        "sampledPeakPrivateBytes":  22478848,
+                        "observedCpuSeconds":  0.203125,
+                        "samples":  75,
+                        "workflowWallMs":  7994
+                    },
+                    {
+                        "round":  3,
+                        "parallel":  false,
+                        "processPeakWorkingSetBytes":  109514752,
+                        "sampledPeakPrivateBytes":  87138304,
+                        "observedCpuSeconds":  0.171875,
+                        "samples":  75,
+                        "workflowWallMs":  8044
+                    },
+                    {
+                        "round":  3,
+                        "parallel":  true,
+                        "processPeakWorkingSetBytes":  109559808,
+                        "sampledPeakPrivateBytes":  87281664,
+                        "observedCpuSeconds":  0.125,
+                        "samples":  74,
+                        "workflowWallMs":  7891
+                    }
+                ]
+}

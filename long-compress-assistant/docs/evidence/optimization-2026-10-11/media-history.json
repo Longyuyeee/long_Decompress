@@ -1,0 +1,104 @@
+{
+  "verifiedAt": "2026-10-10T16:45:23.342Z",
+  "binarySha256": "dee359fd8f656d8e13dcc7b717b6a6a44a06c4df39165f808acdd6339af82b0e",
+  "testKind": "real-ui-engine-sqlite-with-seeded-prior-record",
+  "results": [
+    {
+      "kind": "image",
+      "taskId": "image-9cf73c2d-2dab-4645-bbe3-0e0501bc02f7-history-6906caf1-cbbb-4ad0-b937-b6e3fa95e20b-3a7ea4bd-2f72-4144-8bfa-4fbea2d81afd",
+      "sourceHash": "283491a32db52a4742c1fe336bb162b32c829379327f0a9c2db80062307a5e45",
+      "outputHash": "1a02f26b1314982d6c7c82c0d3e175327495442587ecf58d87b2a0458c220e63",
+      "outputBytes": 6390,
+      "metrics": {
+        "inputBytes": 242609,
+        "media": {
+          "audioCodec": null,
+          "container": null,
+          "durationMs": null,
+          "frameCount": null,
+          "hasAlpha": null,
+          "height": null,
+          "image": {
+            "input": {
+              "encodedHeight": 1600,
+              "encodedWidth": 2400,
+              "format": "jpeg",
+              "frameCount": 1,
+              "hasAlpha": false,
+              "orientation": 1,
+              "visibleHeight": 1600,
+              "visibleWidth": 2400
+            },
+            "output": {
+              "encodedHeight": 533,
+              "encodedWidth": 800,
+              "format": "webp",
+              "frameCount": 1,
+              "hasAlpha": false,
+              "orientation": 1,
+              "visibleHeight": 533,
+              "visibleWidth": 800
+            }
+          },
+          "pageCount": null,
+          "videoCodec": null,
+          "width": null
+        },
+        "outputBytes": 6390,
+        "savingsRatio": 0.9736613233639312,
+        "schemaVersion": 1
+      }
+    },
+    {
+      "kind": "video",
+      "taskId": "video-76615ad8-c8ac-48ba-9203-68d2ae4ae560-0",
+      "sourceHash": "aef114d717a4d61b41a3029da7b626b03e01e68dd6b143977fd8dbc743a13dbf",
+      "outputHash": "591f637cf3b7d63b85bce883eadfb074efb51fe139d524850d2ebe5a2ff31ab3",
+      "outputBytes": 118821,
+      "metrics": {
+        "inputBytes": 61329,
+        "media": {
+          "audioCodec": null,
+          "container": "mp4",
+          "durationMs": 1000,
+          "frameCount": null,
+          "hasAlpha": null,
+          "height": 360,
+          "image": null,
+          "pageCount": null,
+          "videoCodec": "h264",
+          "width": 640
+        },
+        "outputBytes": 118821,
+        "savingsRatio": -0.93743579709436,
+        "schemaVersion": 1
+      }
+    },
+    {
+      "kind": "pdf",
+      "taskId": "pdf-03c3f893-f849-48c5-a16e-9288b2cadac2-0",
+      "sourceHash": "682ad85fb3726e3044b397569648bcd38347e0e535215f823fd4fc78cb98a97a",
+      "outputHash": "bd723eb72b0eeab4c3dd37c13b4f5d2ede232585178930ffe6663f07732d4c8f",
+      "outputBytes": 1186,
+      "metrics": {
+        "inputBytes": 1834,
+        "media": {
+          "audioCodec": null,
+          "container": null,
+          "durationMs": null,
+          "frameCount": null,
+          "hasAlpha": null,
+          "height": null,
+          "image": null,
+          "pageCount": 1,
+          "videoCodec": null,
+          "width": null
+        },
+        "outputBytes": 1186,
+        "savingsRatio": 0.3533260632497274,
+        "schemaVersion": 1
+      }
+    }
+  ],
+  "nativePickerVerified": false
+}
