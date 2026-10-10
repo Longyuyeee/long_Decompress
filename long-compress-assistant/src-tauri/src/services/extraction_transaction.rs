@@ -587,6 +587,27 @@ pub(crate) fn staged_file_is_not_newer(source: &Path, destination: &Path) -> boo
     matches!((source_modified, destination_modified), (Ok(source), Ok(destination)) if source <= destination)
 }
 
+fn zip_source_times(source_archive: &str, preserve_paths: bool) -> HashMap<PathBuf, u64> {
+    let mut result = HashMap::new();
+    if !source_archive.to_ascii_lowercase().ends_with(".zip") { return result; }
+    let Ok(file) = std::fs::File::open(source_archive) else { return result };
+    let Ok(mut archive) = zip_aes::ZipArchive::new(file) else { return result };
+    for index in 0..archive.len() {
+        let Ok(entry) = archive.by_index_raw(index) else { continue };
+        if entry.is_dir() { continue; }
+        let Some(relative) = entry.enclosed_name() else { continue };
+        let relative = if preserve_paths { relative.to_path_buf() } else {
+            let Some(name) = relative.file_name() else { continue };
+            PathBuf::from(name)
+        };
+        let modified = entry.last_modified().and_then(|time| super::native_extraction::zip::system_time(
+            time.year(), time.month(), time.day(), time.hour(), time.minute(), time.second(),
+        )).and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok()).map(|time| time.as_millis() as u64);
+        if let Some(modified) = modified { result.insert(relative, modified); }
+    }
+    result
+}
+
 pub(crate) fn commit_staged_extraction(
     source_archive: &str,
     staging: &Path,
@@ -646,6 +667,9 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
     files.sort();
 
     if options.conflict_policy == "ask" && !options.overwrite_existing {
+        // Read ZIP header dates, never treat the staging file's creation time
+        // as the archived modification time. Other/unknown formats stay unknown.
+        let source_times = zip_source_times(source_archive, options.preserve_paths);
         let mut unresolved = false;
         for relative in files.iter().filter(|relative| {
             let destination = output.join(relative);
@@ -672,7 +696,7 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
                     .map(|value| value.len())
                     .unwrap_or(0),
                 dest_size: metadata.as_ref().map(|value| value.len()).unwrap_or(0),
-                source_modified: 0,
+                source_modified: source_times.get(relative).copied().unwrap_or(0),
                 dest_modified: metadata
                     .and_then(|value| value.modified().ok())
                     .and_then(|value| value.duration_since(std::time::UNIX_EPOCH).ok())
@@ -753,6 +777,9 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
             }
 
             if destination.exists() {
+                if destination.is_dir() {
+                    anyhow::bail!("目标位置是文件夹，不能用文件覆盖整个文件夹：{}。请选择保留两份或跳过。", destination.display());
+                }
                 std::fs::create_dir_all(&rollback_root)?;
                 let backup = rollback_root.join(format!("{}.bak", uuid::Uuid::new_v4()));
                 std::fs::rename(&destination, &backup)?;
@@ -868,6 +895,66 @@ mod tests {
         assert_eq!(conflicts.len(), 2);
         assert!(conflicts.iter().any(|item| item.file_name == "same.txt"));
         assert!(conflicts.iter().any(|item| item.file_name == "second.txt"));
+    }
+
+    #[test]
+    fn conflict_dates_come_from_zip_headers_for_nested_and_flat_output() {
+        use std::io::Write;
+        for preserve_paths in [true, false] {
+            let temp = tempfile::tempdir().unwrap();
+            let archive_path = temp.path().join("source.zip");
+            let mut writer = zip_aes::ZipWriter::new(std::fs::File::create(&archive_path).unwrap());
+            writer.start_file("folder/file.txt", zip_aes::write::SimpleFileOptions::default()
+                .last_modified_time(zip_aes::DateTime::from_date_and_time(2020, 3, 4, 5, 6, 8).unwrap())).unwrap();
+            writer.write_all(b"new").unwrap();
+            writer.finish().unwrap();
+            let relative = if preserve_paths { "folder/file.txt" } else { "file.txt" };
+            let staging = temp.path().join("staging");
+            let output = temp.path().join("output");
+            std::fs::create_dir_all(staging.join(relative).parent().unwrap()).unwrap();
+            std::fs::create_dir_all(output.join(relative).parent().unwrap()).unwrap();
+            std::fs::write(staging.join(relative), b"new").unwrap();
+            std::fs::write(output.join(relative), b"old").unwrap();
+            let options = DecompressOptions { preserve_paths, conflict_policy: "ask".into(), ..Default::default() };
+            let mut conflicts = Vec::new();
+            assert!(commit_staged_extraction(archive_path.to_str().unwrap(), &staging, &output, &options, |c| conflicts.push(c)).is_err());
+            assert_eq!(conflicts.len(), 1);
+            let expected = super::super::native_extraction::zip::system_time(2020, 3, 4, 5, 6, 8).unwrap()
+                .duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64;
+            assert_eq!(conflicts[0].source_modified, expected);
+            assert_eq!(std::fs::read(output.join(relative)).unwrap(), b"old");
+        }
+    }
+
+    #[test]
+    fn directory_conflict_never_replaces_contents_and_rolls_back_previous_files() {
+        for action in ["overwrite", "skip", "rename"] {
+            let temp = tempfile::tempdir().unwrap();
+            let staging = temp.path().join("staging");
+            let output = temp.path().join("output");
+            std::fs::create_dir_all(&staging).unwrap();
+            std::fs::create_dir_all(output.join("z.txt/nested")).unwrap();
+            std::fs::write(output.join("z.txt/nested/precious.txt"), b"keep me").unwrap();
+            std::fs::write(output.join("a.txt"), b"original").unwrap();
+            std::fs::write(staging.join("a.txt"), b"replacement").unwrap();
+            std::fs::write(staging.join("z.txt"), b"new file").unwrap();
+            let options = DecompressOptions { conflict_policy: action.into(), ..Default::default() };
+            let result = commit_staged_extraction("archive.zip", &staging, &output, &options, |_| {});
+            assert_eq!(std::fs::read(output.join("z.txt/nested/precious.txt")).unwrap(), b"keep me");
+            if action == "overwrite" {
+                assert!(result.unwrap_err().to_string().contains("不能用文件覆盖整个文件夹"));
+                assert_eq!(std::fs::read(output.join("a.txt")).unwrap(), b"original");
+                assert_eq!(std::fs::read(staging.join("a.txt")).unwrap(), b"replacement");
+                assert_eq!(std::fs::read(staging.join("z.txt")).unwrap(), b"new file");
+            } else {
+                result.unwrap();
+                if action == "rename" {
+                    assert_eq!(std::fs::read(output.join("z (1).txt")).unwrap(), b"new file");
+                } else {
+                    assert!(!output.join("z (1).txt").exists());
+                }
+            }
+        }
     }
 
     #[test]
