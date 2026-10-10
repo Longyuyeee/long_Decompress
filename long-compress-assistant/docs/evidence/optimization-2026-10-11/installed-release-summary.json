@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "candidateCode": "e9c4c7d",
+  "releaseCode": "2cfd61a39ccf62fce85eec9792c42b9b26a42968",
+  "candidateBuildRun": 38071446248,
+  "candidateInstallerSha256": "d37cc3ee49bc3f5a4dd253464cf6ecfdb89839770c45715b065c5baefb2dc1e9",
+  "previousVersion": "1.3.6",
+  "candidateVersion": "1.3.9",
+  "succeeded": true,
+  "checksPassed": 62,
+  "checksFailed": 0,
+  "completedAt": "2026-10-10T17:46:01.8756104Z",
+  "localEvidence": "test-results/installed-release-validation/20261011-014329/result.json",
+  "productionBridgePresent": false,
+  "workspaces": ["archive", "image", "video", "pdf"],
+  "runtimeMatrices": ["video", "pdf"],
+  "lifecycle": ["upgrade", "uninstall", "restore previous version", "restore original user data", "restore context menu and autostart"],
+  "userDataFingerprintsMatchAfterRestore": true,
+  "inputMechanism": "Real fixture paths delivered by production Tauri file-drop IPC, not physical drag or picker",
+  "priorFailedRuns": ["20261011-013802", "20261011-014107", "20261011-014200"],
+  "notes": "Prior failures and restoration repair are described in RELEASE_AUDIT_1.3.9.md. This is a portable summary, not raw user data. Candidate hash is not the separately rebuilt public release hash."
+}
