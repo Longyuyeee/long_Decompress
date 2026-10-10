@@ -14,6 +14,7 @@ pub mod extraction_transaction;
 pub(crate) mod mark_of_web;
 pub(crate) mod native_compression;
 pub(crate) mod native_extraction;
+pub(crate) mod progress_gate;
 pub(crate) mod output_publish_transaction;
 pub mod compression_profile_service;
 pub mod decompression_profile_service;

@@ -2,6 +2,7 @@ use super::ExtractionRuntime;
 use crate::models::compression::{DecompressOptions, TaskLogSeverity};
 use crate::services::compression_service::CompressionError;
 use crate::services::extraction_transaction;
+use crate::services::progress_gate::ProgressGate;
 use crate::utils::io_utils::{ProgressReader, SmartFileReader};
 use anyhow::Result;
 use chrono::{Local, TimeZone};
@@ -103,6 +104,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime>(
     let file_filter = extraction_transaction::compile_file_filter(options.file_filter.as_deref());
     let mut buffer_handle: Option<crate::services::io_buffer_pool::IOBufferHandle> = None;
     let mut last_parent = None;
+    let mut progress_gate = ProgressGate::new();
 
     let extraction_result = (|| -> Result<()> {
         for index in 0..total_files {
@@ -199,7 +201,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime>(
                             };
                             let file_progress = (index as f32 / total_files as f32)
                                 + (entry_progress / total_files as f32);
-                            if let Some(window) = window {
+                            if let Some(window) = window.filter(|_| progress_gate.allow(false)) {
                                 runtime.emit_progress(
                                     window,
                                     task_id,
@@ -242,7 +244,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime>(
                 }
                 return Err(error);
             }
-            if let Some(window) = window {
+            if let Some(window) = window.filter(|_| progress_gate.allow(index + 1 == total_files)) {
                 runtime.emit_progress(
                     window,
                     task_id,

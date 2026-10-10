@@ -3,6 +3,7 @@ use super::CompressionRuntime;
 use crate::models::compression::{CompressionOptions, TaskLogSeverity};
 use crate::services::compression_entries;
 use crate::services::compression_service::CompressionError;
+use crate::services::progress_gate::ProgressGate;
 use crate::services::split_compression::SplitCompressionService;
 use anyhow::Result;
 use std::fs::File;
@@ -48,6 +49,7 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     let entries = compression_entries::collect(sources, preserve_paths, true)?;
     let total_bytes = source_total_bytes(&entries)?;
     let mut progress = ByteProgress::new(total_bytes);
+    let mut progress_gate = ProgressGate::new();
     let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
     let mut stored_files = 0usize;
 
@@ -80,6 +82,9 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
                 &mut copy_buffer,
                 |read| {
                     if let Some((ratio, processed, total)) = progress.record(read, false) {
+                        if !progress_gate.allow(ratio >= 1.0) {
+                            return;
+                        }
                         if let Some((window, task_id)) = progress_context {
                             runtime.emit_progress(
                                 window,
@@ -94,7 +99,9 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
                 },
             )?;
             if let Some((ratio, processed, total)) = progress.record(0, true) {
-                if let Some((window, task_id)) = progress_context {
+                if let Some((window, task_id)) =
+                    progress_context.filter(|_| progress_gate.allow(ratio >= 1.0))
+                {
                     runtime.emit_progress(
                         window,
                         task_id,
@@ -213,6 +220,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
         compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), false)?;
     let total_entries = entries.len().max(1);
     let mut byte_progress = ByteProgress::new(source_total_bytes(&entries)?);
+    let mut progress_gate = ProgressGate::new();
     let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
     let mut stored_files = 0usize;
 
@@ -241,6 +249,9 @@ pub(crate) fn compress<R: CompressionRuntime>(
             &mut copy_buffer,
             |read| {
                 if let Some((ratio, processed, total)) = byte_progress.record(read, false) {
+                    if !progress_gate.allow(ratio >= 1.0) {
+                        return;
+                    }
                     if let Some(window) = window {
                         runtime.emit_progress(
                             window,
@@ -255,7 +266,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
             },
         )?;
         if let Some((ratio, processed, total)) = byte_progress.record(0, true) {
-            if let Some(window) = window {
+            if let Some(window) = window.filter(|_| progress_gate.allow(ratio >= 1.0)) {
                 runtime.emit_progress(
                     window,
                     task_id,
@@ -266,7 +277,8 @@ pub(crate) fn compress<R: CompressionRuntime>(
                 );
             }
         } else if byte_progress.total() == 0 {
-            if let Some(window) = window {
+            if let Some(window) = window.filter(|_| progress_gate.allow(index + 1 == total_entries))
+            {
                 runtime.emit_progress(
                     window,
                     task_id,
