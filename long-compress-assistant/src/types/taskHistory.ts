@@ -1,4 +1,6 @@
 import type { Task } from '@/stores/task'
+import { copyExecutionConfig, type ExecutionConfigV1, type ExtractionConfigV1 } from './executionConfig'
+export type { ExtractionConfigV1 } from './executionConfig'
 import {
   createMeasuredTaskMetricsV1,
   type TaskMetrics,
@@ -6,13 +8,6 @@ import {
 } from '@/types/taskMetrics'
 
 export type TaskHistoryStatus = 'completed' | 'failed' | 'cancelled'
-
-export interface ExtractionConfigV1 {
-  schemaVersion: 1
-  kind: 'archive-extraction'
-  outputDirectory: string
-  extractToSubfolder: boolean
-}
 
 export function restoredExtractionConfig(record: TaskHistoryRecord): ExtractionConfigV1 | null {
   const config = record.executionConfig
@@ -38,7 +33,7 @@ export interface TaskHistoryLog {
 export interface TaskHistoryRecord {
   id: string
   retryOfTaskId?: string | null
-  executionConfig?: ExtractionConfigV1 | null
+  executionConfig?: ExecutionConfigV1 | null
   name: string
   taskType: 'compression' | 'decompression'
   workloadKind: WorkloadKind
@@ -75,11 +70,7 @@ export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
   return {
     id: task.id,
     retryOfTaskId: task.retryOfTaskId || null,
-    executionConfig: task.executionConfig ? {
-      schemaVersion: 1, kind: 'archive-extraction',
-      outputDirectory: task.executionConfig.outputDirectory,
-      extractToSubfolder: task.executionConfig.extractToSubfolder,
-    } : null,
+    executionConfig: copyExecutionConfig(task.executionConfig),
     name: task.name,
     taskType: task.type,
     workloadKind: task.workloadKind || 'archive',

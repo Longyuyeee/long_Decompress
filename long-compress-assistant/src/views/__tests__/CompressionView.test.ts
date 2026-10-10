@@ -298,6 +298,10 @@ describe('CompressionView', () => {
     await flushPromises()
     expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'C:/input/sample.zip', expect.objectContaining({ fast_pack: enabled }))
     expect(useTaskStore().tasks[0].compressionOptions?.fast_pack).toBe(enabled)
+    expect(useTaskStore().tasks[0].executionConfig).toMatchObject({
+      schemaVersion: 1, kind: 'archive-compression', outputDirectory: 'C:/input', passwordRequired: false,
+      settings: { filename: 'sample', format: 'zip', fastPack: enabled },
+    })
     wrapper.unmount()
   })
 

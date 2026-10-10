@@ -89,6 +89,7 @@ export const useVideoCompressionBatch = () => {
           name: source.name,
           type: 'compression',
           workloadKind: 'video',
+          executionConfig: { schemaVersion: 1, kind: 'video-compression', outputDirectory: outputDirectory || '', settings: { ...source.settings } },
           sourceFiles: [source.path],
           outputPath: '',
           format: 'mp4',

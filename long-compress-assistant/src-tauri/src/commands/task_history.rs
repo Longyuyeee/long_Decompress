@@ -133,7 +133,7 @@ pub struct TaskHistoryMetricsV1 {
 #[serde(rename_all = "camelCase")]
 pub struct TaskHistoryRecord {
     #[serde(default)]
-    pub execution_config: Option<ExtractionConfigV1>,
+    pub execution_config: Option<serde_json::Value>,
     #[serde(default)]
     pub retry_of_task_id: Option<String>,
     #[serde(default)]
@@ -156,15 +156,6 @@ pub struct TaskHistoryRecord {
     pub total_bytes: i64,
     pub error_message: Option<String>,
     pub logs: Vec<TaskHistoryLog>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ExtractionConfigV1 {
-    pub schema_version: u32,
-    pub kind: String,
-    pub output_directory: String,
-    pub extract_to_subfolder: bool,
 }
 
 #[derive(Debug, FromRow)]
@@ -285,11 +276,8 @@ fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, S
     }
 
     record.name = truncate_text(record.name.trim());
-    record.execution_config = record.execution_config.filter(|config| {
-        record.task_type == "decompression" && record.workload_kind == "archive"
-            && config.schema_version == 1 && config.kind == "archive-extraction"
-            && !config.output_directory.trim().is_empty()
-    });
+    record.execution_config = record.execution_config.and_then(|config|
+        super::history_execution_config::sanitize(config, &record.task_type, &record.workload_kind));
     if let Some(id) = &record.retry_of_task_id {
         if id.is_empty() || id.len() > 128 || id == &record.id
             || !id.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_')) {
@@ -673,6 +661,48 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    async fn four_compression_snapshots_survive_database_reopen_without_secrets() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("snapshots.db");
+        let db = crate::database::connection::DatabaseConnection::new(&path, None).await.unwrap();
+        let samples = [
+            ("archive", serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"zip","level":8,"filename":"照片","splitArchive":false,"splitSize":"100","keepStructure":true,"verifyAfter":true,"createSolidArchive":false,"fastPack":true,"password":"never-save","deleteAfter":true}})),
+            ("image", serde_json::json!({"schemaVersion":1,"kind":"image-compression","settings":{"mode":"lossy","quality":80,"resizeMode":"keep","maxWidth":1920,"maxHeight":1080,"outputFormat":"webp","preserveMetadata":false,"outputDirectory":"","conflictPolicy":"rename"}})),
+            ("video", serde_json::json!({"schemaVersion":1,"kind":"video-compression","outputDirectory":"D:/视频","settings":{"preset":"balanced","quality":76,"maxWidth":null,"maxHeight":null}})),
+            ("pdf", serde_json::json!({"schemaVersion":1,"kind":"pdf-optimization","outputDirectory":"","mode":"compatible-image-optimization","allowLargerOutput":true,"confirmedLossyImageChanges":true})),
+        ];
+        for (workload, config) in &samples {
+            let record = serde_json::from_value(serde_json::json!({
+                "id":workload,"name":"source","taskType":"compression","workloadKind":workload,
+                "status":"failed","sourcePaths":["D:/source"],"outputPath":"D:/output","completedAt":"2026-10-10T00:00:00Z",
+                "durationMs":1,"processedBytes":0,"totalBytes":0,"logs":[],"errorMessage":"原始失败原因",
+                "executionConfig":config,
+            })).unwrap();
+            save_task_history_to_pool(db.pool(), record).await.unwrap();
+        }
+        db.pool().close().await;
+        let reopened = crate::database::connection::DatabaseConnection::new(&path, None).await.unwrap();
+        let rows = list_task_history_from_pool(reopened.pool(), None).await.unwrap();
+        assert_eq!(rows.len(), 4);
+        for record in &rows {
+            let config = record.execution_config.as_ref().unwrap();
+            let original = &samples.iter().find(|(workload, _)| *workload == record.workload_kind).unwrap().1;
+            assert_eq!(config, &super::super::history_execution_config::sanitize(original.clone(), "compression", &record.workload_kind).unwrap());
+            let encoded = config.to_string();
+            assert!(!encoded.contains("never-save"));
+            assert!(!encoded.contains("deleteAfter"));
+            assert!(!encoded.contains("confirmedLossyImageChanges"));
+            assert_eq!(record.error_message.as_deref(), Some("原始失败原因"));
+        }
+        let mut invalid = rows[0].clone();
+        invalid.execution_config = Some(serde_json::json!({"schemaVersion":99,"kind":"future"}));
+        assert!(sanitize_record(invalid).unwrap().execution_config.is_none());
+        let mut wrong_workload = rows.iter().find(|row| row.workload_kind == "video").unwrap().clone();
+        wrong_workload.workload_kind = "archive".into();
+        assert!(sanitize_record(wrong_workload).unwrap().execution_config.is_none());
+    }
+
+    #[tokio::test]
     async fn summary_defers_logs_without_deleting_them_and_missing_detail_is_explicit() {
         let dir = tempfile::tempdir().unwrap();
         let db = crate::database::connection::DatabaseConnection::new(&dir.path().join("summary.db"), None).await.unwrap();
@@ -885,10 +915,10 @@ mod tests {
         retry.status = "completed".into();
         retry.error_message = None;
         retry.output_path = "C:/new-output".into();
-        retry.execution_config = Some(ExtractionConfigV1 {
-            schema_version: 1, kind: "archive-extraction".into(),
-            output_directory: "D:/saved-root".into(), extract_to_subfolder: false,
-        });
+        retry.execution_config = Some(serde_json::json!({
+            "schemaVersion": 1, "kind": "archive-extraction",
+            "outputDirectory": "D:/saved-root", "extractToSubfolder": false,
+        }));
         save_task_history_to_pool(connection.pool(), retry.clone()).await.unwrap();
         // Simulate an old on-disk record without rewriting or reading user data.
         sqlx::query("UPDATE task_operation_history SET logs = ? WHERE id = 'original-task'")
@@ -904,8 +934,8 @@ mod tests {
         assert!(old.retry_of_task_id.is_none());
         assert!(old.execution_config.is_none());
         let restored = rows.iter().find(|row| row.id == "new-task").unwrap().execution_config.as_ref().unwrap();
-        assert_eq!(restored.output_directory, "D:/saved-root");
-        assert!(!restored.extract_to_subfolder);
+        assert_eq!(restored["outputDirectory"], "D:/saved-root");
+        assert_eq!(restored["extractToSubfolder"], false);
         assert!(!old.logs[0].message.contains("old-secret"));
         assert_eq!(rows.iter().find(|row| row.id == "new-task").unwrap().retry_of_task_id.as_deref(), Some("original-task"));
         retry.retry_of_task_id = Some(retry.id.clone());

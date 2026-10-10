@@ -110,6 +110,8 @@ const handleCreateGroup = () => {
 
 const getParentDir = (path: string) => {
   const index = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
+  if (index === 2 && path[1] === ':') return path.substring(0, 3)
+  if (index === 0) return path.substring(0, 1)
   return index >= 0 ? path.substring(0, index) : '.'
 }
 
@@ -400,6 +402,19 @@ const runCompression = async () => {
       outputPath: job.outputPath,
       format: effectiveFormat,
       password: job.settings.password || undefined,
+      executionConfig: {
+        schemaVersion: 1, kind: 'archive-compression',
+        outputDirectory: getParentDir(job.outputPath),
+        passwordRequired: !!job.settings.password,
+        settings: {
+          format: effectiveFormat as typeof job.settings.format,
+          level: job.settings.level, filename: job.settings.filename || (compressionStore.groups.some(group => group.id === job.id) ? job.name : getBaseName(job.files[0].path)),
+          splitArchive: job.settings.splitArchive, splitSize: job.settings.splitSize,
+          keepStructure: job.settings.keepStructure, verifyAfter: job.settings.verifyAfter,
+          createSolidArchive: effectiveFormat === '7z' && job.settings.createSolidArchive,
+          fastPack: effectiveFormat === 'zip' && !job.settings.splitArchive && job.settings.fastPack === true,
+        },
+      },
       compressionOptions: {
         fast_pack: effectiveFormat === 'zip' && !job.settings.splitArchive && job.settings.fastPack === true,
         format: effectiveFormat,

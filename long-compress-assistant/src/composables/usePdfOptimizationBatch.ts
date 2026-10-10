@@ -79,6 +79,7 @@ export const usePdfOptimizationBatch = () => {
           name: source.name,
           type: 'compression',
           workloadKind: 'pdf',
+          executionConfig: { schemaVersion: 1, kind: 'pdf-optimization', outputDirectory: outputDirectory || '', mode: source.mode, allowLargerOutput: source.allowLargerOutput },
           sourceFiles: [source.path],
           outputPath: '',
           format: 'pdf',

@@ -1,0 +1,32 @@
+import { describe, expect, it } from 'vitest'
+import { copyExecutionConfig, type ExecutionConfigV1 } from '../executionConfig'
+import { createDefaultImageSettings } from '@/utils/imageCompressionWorkspace'
+import { createDefaultVideoSettings } from '@/utils/videoCompressionWorkspace'
+
+describe('actual execution snapshots', () => {
+  const configs: ExecutionConfigV1[] = [
+    { schemaVersion: 1, kind: 'archive-compression', outputDirectory: 'D:/打包', passwordRequired: true,
+      settings: { format: 'zip', level: 8, filename: '照片', splitArchive: false, splitSize: '100', keepStructure: true,
+        verifyAfter: true, createSolidArchive: false, fastPack: true } },
+    { schemaVersion: 1, kind: 'image-compression', settings: createDefaultImageSettings() },
+    { schemaVersion: 1, kind: 'video-compression', outputDirectory: 'D:/视频', settings: createDefaultVideoSettings() },
+    { schemaVersion: 1, kind: 'pdf-optimization', outputDirectory: '', mode: 'compatible-image-optimization', allowLargerOutput: true },
+  ]
+  it.each(configs)('copies $kind without later global mutations or transient secrets', (config) => {
+    const polluted = { ...config, password: 'never-save', deleteAfter: true, confirmedLossyImageChanges: true,
+      ...('settings' in config ? { settings: { ...config.settings, password: 'never-save', deleteAfter: true } } : {}) }
+    const copy = copyExecutionConfig(polluted as ExecutionConfigV1)
+    expect(copy).toEqual(config)
+    expect(JSON.stringify(copy)).not.toContain('never-save')
+    expect(JSON.stringify(copy)).not.toContain('deleteAfter')
+    expect(JSON.stringify(copy)).not.toContain('confirmedLossyImageChanges')
+    if ('settings' in polluted) {
+      Object.assign(polluted.settings, { quality: 1, level: 1 })
+      expect(copy).toEqual(config)
+    }
+  })
+  it('does not pretend unknown versions were restored', () => {
+    expect(copyExecutionConfig({ ...configs[0], schemaVersion: 2 } as unknown as ExecutionConfigV1)).toBeNull()
+    expect(copyExecutionConfig()).toBeNull()
+  })
+})

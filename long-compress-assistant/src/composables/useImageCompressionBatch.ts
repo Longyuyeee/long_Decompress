@@ -123,6 +123,7 @@ export const useImageCompressionBatch = () => {
         name: source.name,
         type: 'compression',
         workloadKind: 'image',
+        executionConfig: { schemaVersion: 1, kind: 'image-compression', settings: { ...source.settings } },
         sourceFiles: [source.path],
         outputPath: '',
         format: resolveImageTargetFormat(source.inputFormat, source.settings),
