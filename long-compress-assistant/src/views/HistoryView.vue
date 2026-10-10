@@ -7,6 +7,7 @@ import type { TaskHistoryRecord, TaskHistoryStatus } from '@/types/taskHistory'
 import HistoryExtractionDraft from '@/components/tasks/HistoryExtractionDraft.vue'
 import HistoryCompressionDraft from '@/components/tasks/HistoryCompressionDraft.vue'
 import HistoryMediaDraft from '@/components/tasks/HistoryMediaDraft.vue'
+import HistoryRetryBatch from '@/components/tasks/HistoryRetryBatch.vue'
 import { save } from '@tauri-apps/api/dialog'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -97,6 +98,22 @@ const safeTime = (value?: string | null) => {
 }
 
 const filteredRecords = computed(() => historyStore.sortedRecords)
+const selectedRetries = ref(new Set<string>())
+const batchBusy = ref(false)
+const batchOpen = ref(false)
+const batchRecords = computed(() => filteredRecords.value.filter(record => selectedRetries.value.has(record.id)))
+const canBatchRetry = (record: TaskHistoryRecord) => record.taskType === 'compression'
+  && ['archive', 'image', 'video', 'pdf'].includes(record.workloadKind || 'archive')
+function toggleRetry(id: string) {
+  if (batchBusy.value) return
+  if (selectedRetries.value.has(id)) selectedRetries.value.delete(id)
+  else selectedRetries.value.add(id)
+}
+watch(filteredRecords, records => {
+  const visible = new Set(records.map(record => record.id))
+  selectedRetries.value = new Set([...selectedRetries.value].filter(id => visible.has(id)))
+  if (!selectedRetries.value.size) batchOpen.value = false
+})
 
 const stats = computed(() => {
   const records = historyStore.records
@@ -336,11 +353,18 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
       </div>
 
       <section v-else-if="filteredRecords.length" class="space-y-5" data-testid="history-list">
+        <div v-if="batchRecords.length" class="flex flex-wrap items-center gap-3">
+          <span class="text-sm">已选 {{ batchRecords.length }} 项</span>
+          <button class="history-control" :disabled="batchBusy" data-testid="history-batch-review" @click="batchOpen = !batchOpen">{{ batchOpen ? '收起批量设置' : '检查所选项并再次执行' }}</button>
+          <button class="history-control" :disabled="batchBusy" @click="selectedRetries.clear(); batchOpen = false">取消选择</button>
+        </div>
+        <HistoryRetryBatch v-if="batchOpen && batchRecords.length" :records="batchRecords" @busy="batchBusy = $event" />
         <div v-for="group in groupedRecords" :key="group.label">
           <div class="flex items-center gap-3 mb-2 px-1"><h2 class="text-xs font-black uppercase tracking-[0.16em] text-muted">{{ group.label }}</h2><span class="h-px bg-subtle flex-1"></span><span class="text-[10px] text-dim">{{ group.records.length }}</span></div>
           <div class="history-panel divide-y divide-subtle/60 overflow-hidden">
             <article v-for="record in group.records" :key="record.id" class="history-row grid gap-3 p-4 cursor-pointer hover:bg-primary/5 transition-colors" tabindex="0" data-testid="history-record-row" @click="selectedRecord = record" @keydown.enter="selectedRecord = record">
               <div class="flex items-center gap-3 min-w-0">
+                <input v-if="canBatchRetry(record)" type="checkbox" :aria-label="`选择再次执行：${record.name}`" data-testid="history-select-retry" :checked="selectedRetries.has(record.id)" :disabled="batchBusy" @click.stop @keydown.enter.stop @change="toggleRetry(record.id)" />
                 <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0"><i :class="record.taskType === 'compression' ? 'pi pi-box' : 'pi pi-folder-open'"></i></div>
                 <div class="min-w-0"><h3 class="font-black text-content truncate">{{ record.name }}</h3><p class="text-xs text-muted truncate mt-0.5">{{ record.outputPath || record.sourcePaths[0] }}</p>
                   <button v-if="record.taskType === 'decompression' && (!record.workloadKind || record.workloadKind === 'archive')" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次解压</button>

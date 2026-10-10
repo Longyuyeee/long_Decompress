@@ -90,6 +90,7 @@ async function createDraft() {
     if (!disposed && generation === request) error.value = `无法创建草稿：${String(cause)}`
   } finally { busy.value = false }
 }
+defineExpose({ createDraft, created, error })
 </script>
 
 <template>
