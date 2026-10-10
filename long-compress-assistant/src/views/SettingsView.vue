@@ -375,6 +375,19 @@ const removeWordlist = (index: number) => {
             </div>
           </section>
 
+          <section class="aero-card p-8">
+            <button type="button" role="switch" data-testid="smart-directory-switch"
+              :aria-checked="appStore.settings.smartExtractionDirectory"
+              class="w-full flex items-center justify-between gap-4 text-left"
+              @click="appStore.updateSettings({ smartExtractionDirectory: !appStore.settings.smartExtractionDirectory })">
+              <div class="min-w-0">
+                <div class="text-sm font-bold text-content">{{ appStore.t('settings.smart_directory') }}</div>
+                <p class="text-xs text-muted mt-2">{{ appStore.t('settings.smart_directory.desc') }}</p>
+              </div>
+              <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.smartExtractionDirectory }"><span class="settings-toggle-knob"></span></div>
+            </button>
+          </section>
+
           <!-- 暴力破解引擎设置 -->
           <section class="aero-card p-8">
             <div class="flex justify-between items-center mb-8">

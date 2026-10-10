@@ -187,7 +187,9 @@ export const translations: Record<string, Record<string, string>> = {
     'settings.archive_defaults.format': '默认压缩格式',
     'settings.archive_defaults.level': '默认压缩等级',
     'settings.archive_defaults.subfolder': '解压默认创建同名文件夹',
-    'settings.archive_defaults.subfolder.desc': '智能分析仍可按压缩包结构给出更安全的单项结果。',
+    'settings.archive_defaults.subfolder.desc': '新任务使用此默认值；可在任务中手动调整。',
+    'settings.smart_directory': '按压缩包结构自动选择解压目录',
+    'settings.smart_directory.desc': '默认关闭。开启后，仅对新任务判断：单个顶层项目直接解压，多项则新建同名文件夹；无法判断时保留原选择。不会覆盖任务中的手动设置，也不会移动已有文件。这是目录结构判断，不是 AI。',
     // 暴力破解
     'settings.bruteforce': '暴力破解引擎',
     'settings.bruteforce.enable': '启用智能密码破解',
@@ -925,7 +927,9 @@ export const translations: Record<string, Record<string, string>> = {
     'settings.archive_defaults.format': 'Default format',
     'settings.archive_defaults.level': 'Default level',
     'settings.archive_defaults.subfolder': 'Extract into a same-name folder by default',
-    'settings.archive_defaults.subfolder.desc': 'Smart analysis may still choose a safer per-archive result from the archive structure.',
+    'settings.archive_defaults.subfolder.desc': 'New tasks use this default; you can change it per task.',
+    'settings.smart_directory': 'Choose extraction folders from archive structure',
+    'settings.smart_directory.desc': 'Off by default. For new tasks only: extract one top-level item directly, or create a same-name folder for multiple items. Keep the original choice if unknown. Never override manual task choices or move existing files. This checks folder structure; it is not AI.',
     // Brute Force
     'settings.bruteforce': 'Brute Force Engine',
     'settings.bruteforce.enable': 'Enable Intelligent Brute Force',

@@ -64,6 +64,7 @@ export interface AppSettings {
   defaultCompressionFormat: 'zip' | '7z' | 'tar.gz'
   defaultCompressionLevel: number
   defaultExtractToSubfolder: boolean
+  smartExtractionDirectory: boolean
 
   // 安全设置
   scanForViruses: boolean

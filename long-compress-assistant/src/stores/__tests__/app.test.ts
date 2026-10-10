@@ -108,6 +108,18 @@ describe('App Store Explorer context menu synchronization', () => {
     })
   })
 
+  it('keeps structural directory selection opt-in for old settings and after reset', () => {
+    localStorage.setItem('app-settings', JSON.stringify({ defaultExtractToSubfolder: true }))
+    const store = useAppStore()
+    expect(store.settings.smartExtractionDirectory).toBe(false)
+    store.updateSettings({ smartExtractionDirectory: true })
+    setActivePinia(createPinia())
+    const restored = useAppStore()
+    expect(restored.settings.smartExtractionDirectory).toBe(true)
+    restored.resetSettings()
+    expect(restored.settings.smartExtractionDirectory).toBe(false)
+  })
+
   it('loads auto-start display state without touching Windows persistence', () => {
     localStorage.setItem('app-settings', JSON.stringify({ autoStart: true }))
 

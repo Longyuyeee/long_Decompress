@@ -56,6 +56,7 @@ const globalOutputPath = ref(appStore.settings.defaultOutputPath)
 const isGlobalSameDir = ref(!appStore.settings.defaultOutputPath) // 默认同目录，用户可通过按钮手动选择
 const globalExtractToSubfolder = ref(appStore.settings.defaultExtractToSubfolder)
 let subfolderChoiceRevision = 0
+watch(() => appStore.settings.smartExtractionDirectory, () => { subfolderChoiceRevision++ }, { flush: 'sync' })
 const globalRecycleSourceAfterExtract = ref(appStore.settings.autoDeleteSource)
 
 watch(
@@ -167,10 +168,11 @@ const onFilesSelected = async (files: any[]) => {
     })
     createdTaskIds.push(taskId)
     appStore.addRecentFile(sourcePath)
+    if (appStore.settings.smartExtractionDirectory !== true) return
     const requestedRevision = subfolderChoiceRevision
     tauriCommands.listArchiveContents(sourcePath).then((contents: string[]) => {
       const task = taskStore.tasks.find(task => task.id === taskId)
-      if (!task || task.status !== 'pending' || task.configurationMode !== 'global'
+      if (appStore.settings.smartExtractionDirectory !== true || !task || task.status !== 'pending' || task.configurationMode !== 'global'
         || task.sourceFiles[0] !== sourcePath || requestedRevision !== subfolderChoiceRevision) return
       const subfolder = inferExtractionSubfolder(contents)
       if (subfolder !== undefined) task.extractToSubfolder = subfolder

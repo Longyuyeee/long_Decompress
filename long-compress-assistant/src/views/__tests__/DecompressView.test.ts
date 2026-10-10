@@ -164,6 +164,7 @@ describe('DecompressView', () => {
   })
 
   beforeEach(() => {
+    localStorage.clear()
     vi.clearAllMocks()
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'detect_split_archive') return null
@@ -197,6 +198,7 @@ describe('DecompressView', () => {
 
   it('adds an archive task and enables smart subfolder extraction for multiple roots', async () => {
     const wrapper = mountView()
+    useAppStore().updateSettings({ smartExtractionDirectory: true })
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
       name: 'bundle.zip',
       path: 'C:/archives/bundle.zip',
@@ -219,6 +221,7 @@ describe('DecompressView', () => {
     let finish!: (files: string[]) => void
     mocks.listArchiveContents.mockImplementationOnce(() => new Promise<string[]>(resolve => { finish = resolve }))
     const wrapper = mountView()
+    useAppStore().updateSettings({ smartExtractionDirectory: true })
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: 'slow.zip', path: 'C:/slow.zip' }])
     await flushPromises()
     const task = useTaskStore().tasks[0]
@@ -242,9 +245,36 @@ describe('DecompressView', () => {
   it('recognizes two top-level folders even when ZIP lists only their files', async () => {
     mocks.listArchiveContents.mockResolvedValueOnce(['甲/a.txt', '乙/b.txt'])
     const wrapper = mountView()
+    useAppStore().updateSettings({ smartExtractionDirectory: true })
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: 'folders.zip', path: 'C:/folders.zip' }])
     await flushPromises()
     expect(useTaskStore().tasks[0].extractToSubfolder).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('does not inspect archive structure unless I enable the setting', async () => {
+    const wrapper = mountView()
+    expect(useAppStore().settings.smartExtractionDirectory).toBe(false)
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: 'bundle.zip', path: 'C:/bundle.zip' }])
+    await flushPromises()
+    expect(mocks.listArchiveContents).not.toHaveBeenCalled()
+    expect(useTaskStore().tasks[0].extractToSubfolder).toBe(false)
+    wrapper.unmount()
+  })
+
+  it.each([false, true])('ignores outstanding analysis after disabling it, even if enabled again: %s', async reenable => {
+    let finish!: (files: string[]) => void
+    mocks.listArchiveContents.mockImplementationOnce(() => new Promise<string[]>(resolve => { finish = resolve }))
+    const wrapper = mountView()
+    const app = useAppStore()
+    app.updateSettings({ smartExtractionDirectory: true })
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: 'slow.zip', path: 'C:/slow.zip' }])
+    await flushPromises()
+    app.updateSettings({ smartExtractionDirectory: false })
+    if (reenable) app.updateSettings({ smartExtractionDirectory: true })
+    finish(['one.txt', 'two.txt'])
+    await flushPromises()
+    expect(useTaskStore().tasks[0].extractToSubfolder).toBe(false)
     wrapper.unmount()
   })
 
@@ -333,6 +363,8 @@ describe('DecompressView', () => {
     await nextTick()
     await nextTick()
 
+    // Explicit user choice after importing, independent of the opt-in analysis.
+    await wrapper.get('[data-testid="global-subfolder"]').trigger('click')
     const appStore = useAppStore()
     const startButton = wrapper.findAll('button').find(button => button.text().includes(appStore.t('decompress.start_queue')))
     await startButton!.trigger('click')
