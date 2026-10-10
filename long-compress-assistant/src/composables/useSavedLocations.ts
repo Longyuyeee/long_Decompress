@@ -18,11 +18,17 @@ export function useSavedLocations(storage: Storage = localStorage) {
   const recent = ref<string[]>([])
   const error = ref('')
   let readable = true
-  try {
+  const refresh = () => { try {
     const saved = JSON.parse(storage.getItem(key) || '{}')
     bookmarks.value = clean(saved?.bookmarks, 50)
     recent.value = clean(saved?.recent, 20)
+    readable = true
+    error.value = ''
+    return true
   } catch { readable = false; error.value = '无法读取已保存位置，已保留原数据；当前目录仍可正常使用。' }
+    return false
+  }
+  refresh()
   const save = (nextBookmarks: string[], nextRecent: string[]) => {
     if (!readable) return false
     try {
@@ -38,11 +44,12 @@ export function useSavedLocations(storage: Storage = localStorage) {
   }
   const isBookmarked = (path: string) => bookmarks.value.some(item => identity(item) === identity(path))
   const toggleBookmark = (path: string) => {
+    if (!refresh()) return false
     if (!path.trim()) return false
     if (isBookmarked(path)) return save(bookmarks.value.filter(item => identity(item) !== identity(path)), recent.value)
     if (bookmarks.value.length >= 50) { error.value = '最多保存 50 个书签，请先移除不用的位置。'; return false }
     return save([...bookmarks.value, path], recent.value)
   }
-  const remember = (path: string) => save(bookmarks.value, clean([path, ...recent.value], 20))
-  return { bookmarks, recent, error, isBookmarked, toggleBookmark, remember }
+  const remember = (path: string) => refresh() && save(bookmarks.value, clean([path, ...recent.value], 20))
+  return { bookmarks, recent, error, refresh, isBookmarked, toggleBookmark, remember }
 }

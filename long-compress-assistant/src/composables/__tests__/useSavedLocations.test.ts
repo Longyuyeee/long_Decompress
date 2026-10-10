@@ -3,6 +3,16 @@ import { useSavedLocations } from '../useSavedLocations'
 
 describe('saved directory locations', () => {
   beforeEach(() => localStorage.clear())
+  it('does not overwrite locations saved by another active component', () => {
+    const first = useSavedLocations()
+    const second = useSavedLocations()
+    first.toggleBookmark('C:/first')
+    second.remember('D:/recent')
+    second.toggleBookmark('E:/second')
+    first.remember('F:/latest')
+    expect(useSavedLocations().bookmarks.value).toEqual(['C:/first', 'E:/second'])
+    expect(useSavedLocations().recent.value).toEqual(['F:/latest', 'D:/recent'])
+  })
   it('persists bookmarks, deduplicates Windows paths and remembers the last 20 successful locations', () => {
     const locations = useSavedLocations()
     expect(locations.toggleBookmark('C:\\资料')).toBe(true)

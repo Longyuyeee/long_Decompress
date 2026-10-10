@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
+import { useSavedLocations } from '@/composables/useSavedLocations'
 import { computed, ref, watch } from 'vue'
 import { convertFileSrc, invoke } from '@tauri-apps/api/tauri'
 import { open } from '@tauri-apps/api/dialog'
@@ -101,6 +103,7 @@ const chooseOutputDirectory = async (item?: ImageCompressionItem) => {
   try {
     const selected = await open({ directory: true, multiple: false, title: '选择图片输出目录' })
     if (!selected || Array.isArray(selected)) return
+    useSavedLocations().remember(selected)
     if (item) {
       store.updateImageItemSettings(item.id, { ...store.getEffectiveImageSettings(item), outputDirectory: selected })
     } else {
@@ -266,6 +269,8 @@ const openResultLocation = async (item: ImageCompressionItem) => {
             <div class="item-config custom-scrollbar" :class="{ locked: isRunning || Boolean(taskForItem(item)?.metrics) }">
               <div class="settings-heading"><span><i class="pi pi-cog"></i>单项配置</span><label><input type="checkbox" :checked="Boolean(item.settings)" @change="toggleOverride(item, ($event.target as HTMLInputElement).checked)">覆盖全局</label></div>
               <ImageCompressionSettingsPanel compact :model-value="store.getEffectiveImageSettings(item)" @update:model-value="updateItemSettings(item, $event)" />
+              <SavedLocationPicker :current="store.getEffectiveImageSettings(item).outputDirectory" :disabled="isRunning || Boolean(taskForItem(item)?.metrics)"
+                @select="store.updateImageItemSettings(item.id, { ...store.getEffectiveImageSettings(item), outputDirectory: $event })" />
               <div class="output-directory">
                 <div class="min-w-0"><span>输出目录</span><strong :title="store.getEffectiveImageSettings(item).outputDirectory">{{ store.getEffectiveImageSettings(item).outputDirectory || '与源文件同目录' }}</strong></div>
                 <button type="button" @click="chooseOutputDirectory(item)"><i class="pi pi-folder-open"></i>选择目录</button>
@@ -311,6 +316,7 @@ const openResultLocation = async (item: ImageCompressionItem) => {
           <div class="min-w-0"><span>输出目录</span><strong :title="imageSettingsDraft.outputDirectory">{{ imageSettingsDraft.outputDirectory || '与源文件同目录' }}</strong></div>
           <button type="button" @click="chooseOutputDirectory()"><i class="pi pi-folder-open"></i>选择目录</button>
         </div>
+        <SavedLocationPicker :current="imageSettingsDraft.outputDirectory" :disabled="isRunning" @select="imageSettingsDraft = { ...imageSettingsDraft, outputDirectory: $event }" />
       </div>
       <template #footer>
         <button type="button" class="dialog-cancel" @click="cancelGlobalSettings">取消</button>

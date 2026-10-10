@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
+import { useSavedLocations } from '@/composables/useSavedLocations'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { ask, open } from '@tauri-apps/api/dialog'
 import { useAppStore } from '@/stores/app'
@@ -155,7 +157,10 @@ const chooseOutputDirectory = async () => {
     const selected = queued === undefined
       ? await open({ directory: true, multiple: false, title: '选择视频输出目录' })
       : queued
-    if (selected && !Array.isArray(selected)) videoOutputDirectoryDraft.value = selected
+    if (selected && !Array.isArray(selected)) {
+      videoOutputDirectoryDraft.value = selected
+      useSavedLocations().remember(selected)
+    }
   } catch (error) {
     appStore.setError(`无法选择视频输出目录：${String(error)}`)
   }
@@ -306,6 +311,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
     <Modal :visible="showGlobalSettings" size="lg" title="视频批量设置" description="质量与分辨率分别控制" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
       <div class="special-settings-dialog" :class="{ locked: isRunning }">
         <VideoCompressionSettingsPanel :model-value="videoSettingsDraft" @update:model-value="updateGlobalSettings" />
+        <SavedLocationPicker :current="videoOutputDirectoryDraft" :disabled="isRunning" @select="videoOutputDirectoryDraft = $event" />
         <div class="output-directory"><div><span>输出目录</span><strong :title="videoOutputDirectoryDraft">{{ videoOutputDirectoryDraft || '与源文件同目录' }}</strong></div><button type="button" :disabled="isRunning" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button></div>
       </div>
       <template #footer>

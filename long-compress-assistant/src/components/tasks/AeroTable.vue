@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
+import { useSavedLocations } from '@/composables/useSavedLocations'
 import { ref, computed, watch } from 'vue'
 import { useTaskStore, type Task, type TaskType } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
@@ -138,6 +140,7 @@ const handleSelectOutputDir = async (task: Task) => {
     if (selected && typeof selected === 'string') {
       task.outputPath = selected
       task.configurationMode = 'individual'
+      useSavedLocations().remember(selected)
     }
   } catch (err) {
     appStore.setError(`${appStore.t('common.error')}: ${err}`)
@@ -461,6 +464,7 @@ async (tasks, _, onCleanup) => {
                     <div v-if="task.type === 'decompression'" class="space-y-3.5">
                       <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
                       <div v-if="task.status === 'pending'" class="inherited-config-control space-y-2">
+                        <SavedLocationPicker :current="task.outputPath" @select="task.outputPath = $event; task.configurationMode = 'individual'" />
                         <div class="task-output-row flex min-w-0 items-center justify-between gap-3">
                           <span class="task-output-label text-muted text-xs uppercase font-black tracking-widest opacity-90 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
                           <div class="task-output-actions flex min-w-0 flex-wrap justify-end gap-1.5">

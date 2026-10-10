@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
+import { useSavedLocations } from '@/composables/useSavedLocations'
 import { computed, onUnmounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePdfWorkspaceStore, type PdfWorkspaceItem } from '@/stores/pdfWorkspace'
@@ -118,7 +120,10 @@ const chooseOutputDirectory = async () => {
     const selected = queued === undefined
       ? await open({ directory: true, multiple: false, title: '选择 PDF 输出目录' })
       : queued
-    if (selected && !Array.isArray(selected)) outputDirectoryDraft.value = selected
+    if (selected && !Array.isArray(selected)) {
+      outputDirectoryDraft.value = selected
+      useSavedLocations().remember(selected)
+    }
   } catch (error) {
     appStore.setError(`无法选择 PDF 输出目录：${String(error)}`)
   }
@@ -264,6 +269,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
     </div>
 
     <Modal :visible="showBatchSettings" size="md" title="PDF 批量设置" description="统一设置结果保存位置" icon="pi pi-sliders-h" @update:visible="showBatchSettings = $event" @close="cancelBatchSettings">
+      <SavedLocationPicker :current="outputDirectoryDraft" :disabled="isRunning" @select="outputDirectoryDraft = $event" />
       <div class="output-directory dialog-directory">
         <div><span>输出目录</span><strong :title="outputDirectoryDraft">{{ outputDirectoryDraft || '与源文件同目录' }}</strong></div>
         <button type="button" :disabled="isRunning" data-testid="pdf-output-directory" @click="chooseOutputDirectory"><i class="pi pi-folder-open"></i>选择目录</button>

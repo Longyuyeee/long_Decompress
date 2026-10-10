@@ -10,6 +10,7 @@ test('bookmark a folder and reopen it in the other pane after a restart', async 
         { name: '资料', path: 'C:/资料', kind: 'home' }, { name: '输出盘', path: 'D:/', kind: 'drive' },
       ]
       if (message.cmd === 'list_files') value = []
+      if (message.cmd === 'inspect_extraction_destination') value = 'empty'
       ;(window as any)[`_${message.callback}`]?.(value)
     }
   })
@@ -31,4 +32,26 @@ test('bookmark a folder and reopen it in the other pane after a restart', async 
       expect(await pane.evaluate(element => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
     }
   }
+  await page.goto('/#/decompress')
+  await page.evaluate(async () => {
+    const path = '/src/stores/task.ts'
+    ;(await import(path)).useTaskStore().addTask({ id: 'saved-output', type: 'decompression', name: '资料.zip', sourceFiles: ['E:/资料.zip'], outputPath: 'E:/', configurationMode: 'global' })
+  })
+  await page.getByTestId('saved-output-select').selectOption('C:/资料')
+  await expect.poll(() => page.evaluate(async () => {
+    const path = '/src/stores/task.ts'
+    return (await import(path)).useTaskStore().tasks.find((task: any) => task.id === 'saved-output')?.outputPath
+  })).toBe('C:/资料')
+  await page.goto('/#/compress')
+  await page.evaluate(async () => {
+    const path = '/src/stores/compression.ts'
+    ;(await import(path)).useCompressionStore().addFile({ name: '资料.txt', path: 'E:/资料.txt', size: 4096, type: 'file', isDirectory: false })
+  })
+  await page.getByRole('button', { name: '展开压缩详情' }).click()
+  await page.getByTestId('compression-advanced-options').click()
+  await page.getByTestId('saved-output-select').selectOption('C:/资料')
+  await expect(page.getByTestId('compression-output-path')).toHaveValue('C:/资料')
+  await page.waitForTimeout(450)
+  await page.getByTestId('compression-output-path').scrollIntoViewIfNeeded()
+  await page.screenshot({ path: testInfo.outputPath('saved-compression-output.png') })
 })

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
+import { useSavedLocations } from '@/composables/useSavedLocations'
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useTaskStore, type Task } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
@@ -235,6 +237,13 @@ const onFilesSelected = async (files: any[]) => {
   return createdTaskIds
 }
 
+const setGlobalOutput = (selected: string) => {
+  globalOutputPath.value = selected
+  isGlobalSameDir.value = false
+  decompressionTasks.value.forEach(t => {
+    if (t.status === 'pending' && t.configurationMode === 'global') t.outputPath = selected
+  })
+}
 const handleGlobalSelectDir = async () => {
   try {
     const selected = await open({
@@ -243,12 +252,8 @@ const handleGlobalSelectDir = async () => {
       title: appStore.t('decompress.config.output_select')
     })
     if (selected && typeof selected === 'string') {
-      globalOutputPath.value = selected
-      isGlobalSameDir.value = false
-      // 同步到所有待处理任务
-      decompressionTasks.value.forEach(t => {
-        if (t.status === 'pending' && t.configurationMode === 'global') t.outputPath = selected
-      })
+      setGlobalOutput(selected)
+      useSavedLocations().remember(selected)
     }
   } catch (err) {
     console.error('Failed to select global dir:', err)
@@ -637,6 +642,7 @@ const unsubConflict = taskStore.$subscribe(openNextConflict)
       <!-- 底部操作区 -->
       <div v-if="decompressionTasks.length > 0 && !batchStore.showingFailures" class="border-t border-subtle bg-input/10 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
           <div class="global-config-controls" aria-label="全局解压设置">
+            <SavedLocationPicker :current="globalOutputPath" @select="setGlobalOutput" />
             <span class="text-xs font-black text-primary uppercase tracking-widest opacity-80 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
 
             <button @click="handleGlobalSelectDir"

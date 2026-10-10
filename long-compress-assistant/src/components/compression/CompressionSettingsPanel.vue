@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
+import { useSavedLocations } from '@/composables/useSavedLocations'
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useAppStore } from '@/stores/app'
@@ -160,6 +162,7 @@ const selectOutputPath = async () => {
     const result = await tauriCommands.selectDirectory()
     if (result && typeof result === 'string') {
       outputPath.value = result
+      useSavedLocations().remember(result)
       emit('update:outputPath', result)
     }
   } catch (error) {
@@ -516,11 +519,12 @@ const closeVaultPasswordsAfterFocus = () => {
         <!-- 目标路径 -->
         <div class="flex flex-col gap-1.5 min-w-0">
           <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.output_path') }}</label>
+          <SavedLocationPicker :current="outputPath" @select="outputPath = $event" />
           <div class="flex gap-2">
             <input 
               data-testid="compression-output-path"
               v-model="outputPath" 
-              class="flex-1 px-4 py-2 rounded-xl bg-input border border-subtle text-sm text-muted outline-none focus:border-primary transition-all font-mono"
+              class="min-w-0 flex-1 px-4 py-2 rounded-xl bg-input border border-subtle text-sm text-muted outline-none focus:border-primary transition-all font-mono"
               :placeholder="appStore.t('preset.default_path')"
             />
             <button @click="selectOutputPath" class="w-9 h-9 rounded-xl bg-input border border-subtle flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all">
