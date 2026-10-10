@@ -40,6 +40,7 @@ const selectRetryDrafts = (ids: string[]) => {
   appStore.setSuccess(`已创建 ${ids.length} 个新任务，请核对后点击开始；原失败记录保留。`)
 }
 const showConflictModal = ref(false)
+const resolvingConflictTaskId = ref<string | null>(null)
 const conflictSelections = new Map<string, Array<{
   destPath: string
   action: 'overwrite' | 'skip' | 'rename'
@@ -481,10 +482,13 @@ const handleConflict = (taskId: string) => {
 
 // 处理冲突解决：收集逐项策略，并直接提交后端保留的暂存结果。
 const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean) => {
+  if (resolvingConflictTaskId.value) return
   const taskId = selectedConflictTaskId.value
   if (!taskId) return
   const task = taskStore.tasks.find(t => t.id === taskId)
   if (!task) return
+
+  if (['failed', 'cancelled', 'cancelling', 'completed', 'finalizing'].includes(task.status)) return
 
   const currentConflict = task.conflicts[0]
   if (!currentConflict) return
@@ -493,14 +497,13 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
   conflictSelections.set(taskId, selections)
 
   // 未选择“应用全部”时，让弹窗继续处理剩余冲突，最后一次再提交。
-  if (!applyToAll && task.conflicts.length > 1) return
-
-  // “应用全部”同时保存为之后任务的默认策略。
-  if (applyToAll) {
-    appStore.updateSettings({ conflictPolicy: action })
+  if (!applyToAll && task.conflicts.length > 1) {
+    task.conflicts.shift()
+    return
   }
-  showConflictModal.value = false
-  selectedConflictTaskId.value = null
+
+  // This choice belongs only to this task; never rewrite global defaults.
+  resolvingConflictTaskId.value = taskId
 
   try {
     task.error = undefined
@@ -517,16 +520,24 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
     conflictSelections.delete(taskId)
     task.error = extractErrorMessage(e) || String(e)
     appStore.setError(appStore.t('decompress.extract_failed').replace('{0}', e))
+  } finally {
+    resolvingConflictTaskId.value = null
+    showConflictModal.value = false
+    selectedConflictTaskId.value = null
+    openNextConflict()
   }
 }
 
 // 监听冲突事件（仅当无弹窗显示时才打开，避免重复）
-const unsubConflict = taskStore.$subscribe((_mutation, state) => {
-  const taskWithConflict = state.tasks.find(t => t.type === 'decompression' && t.conflicts.length > 0)
+const openNextConflict = () => {
+  if (resolvingConflictTaskId.value) return
+  const taskWithConflict = taskStore.tasks.find(t => t.type === 'decompression' && t.conflicts.length > 0
+    && !['failed', 'cancelled', 'cancelling', 'completed', 'finalizing'].includes(t.status))
   if (taskWithConflict && !showConflictModal.value) {
     handleConflict(taskWithConflict.id)
   }
-})
+}
+const unsubConflict = taskStore.$subscribe(openNextConflict)
 </script>
 
 <template>
@@ -685,6 +696,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
       v-if="selectedConflictTaskId"
       v-model:visible="showConflictModal"
       :taskId="selectedConflictTaskId"
+      :busy="resolvingConflictTaskId !== null"
       @resolve="handleConflictResolve"
     />
   </div>

@@ -53,6 +53,92 @@ const mountView = () => mount(DecompressView, {
 })
 
 describe('DecompressView', () => {
+  const addConflictTask = (id: string) => {
+    const store = useTaskStore()
+    store.addTask({ id, name: `${id}.zip`, type: 'decompression', sourceFiles: [`C:/${id}.zip`], outputPath: 'C:/out' })
+    const task = store.tasks.find(item => item.id === id)!
+    task.conflicts = ['first.txt', 'second.txt'].map(fileName => ({
+      taskId: id, fileName, sourcePath: `C:/${id}.zip`, destPath: `C:/out/${fileName}`,
+      sourceSize: 2, destSize: 1, sourceModified: 0, destModified: 0,
+    }))
+    return task
+  }
+
+  it('collects my different per-file choices and commits the staged result only once', async () => {
+    const wrapper = mountView()
+    const task = addConflictTask('mixed')
+    await flushPromises()
+    let dialog = wrapper.findComponent({ name: 'ConflictResolutionModal' })
+    dialog.vm.$emit('resolve', 'skip', false)
+    await flushPromises()
+    expect(task.conflicts.map(item => item.fileName)).toEqual(['second.txt'])
+    expect(mocks.resolveExtractionConflict).not.toHaveBeenCalled()
+    dialog = wrapper.findComponent({ name: 'ConflictResolutionModal' })
+    dialog.vm.$emit('resolve', 'overwrite', false)
+    await flushPromises()
+    expect(mocks.resolveExtractionConflict).toHaveBeenCalledExactlyOnceWith('mixed', [
+      { destPath: 'C:/out/first.txt', action: 'skip' },
+      { destPath: 'C:/out/second.txt', action: 'overwrite' },
+    ], undefined)
+    expect(mocks.decompressFile).not.toHaveBeenCalled()
+    expect(task.conflicts).toEqual([])
+    wrapper.unmount()
+  })
+
+  it('applies overwrite only to this task and waits for publication before showing the next task', async () => {
+    const wrapper = mountView()
+    useAppStore().settings.conflictPolicy = 'ask'
+    const first = addConflictTask('first')
+    addConflictTask('next')
+    await flushPromises()
+    let complete!: () => void
+    mocks.resolveExtractionConflict.mockImplementationOnce(() => new Promise<void>(resolve => { complete = resolve }))
+    const dialog = wrapper.findComponent({ name: 'ConflictResolutionModal' })
+    dialog.vm.$emit('resolve', 'overwrite', true)
+    dialog.vm.$emit('resolve', 'overwrite', true)
+    await flushPromises()
+    expect(mocks.resolveExtractionConflict).toHaveBeenCalledTimes(1)
+    expect(mocks.resolveExtractionConflict).toHaveBeenCalledWith('first', [{ destPath: 'C:/out/first.txt', action: 'overwrite' }], 'overwrite')
+    expect(useAppStore().settings.conflictPolicy).toBe('ask')
+    expect(first.conflicts).toHaveLength(2)
+    expect(dialog.props('busy')).toBe(true)
+    complete()
+    await flushPromises()
+    expect(first.conflicts).toEqual([])
+    const next = wrapper.findComponent({ name: 'ConflictResolutionModal' })
+    expect(next.props('taskId')).toBe('next')
+    expect(next.props('busy')).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('retains failed publication details without automatically asking the same failed task again', async () => {
+    const wrapper = mountView()
+    const task = addConflictTask('failure')
+    await flushPromises()
+    mocks.resolveExtractionConflict.mockImplementationOnce(async () => {
+      useTaskStore().failTask(task.id, '目标文件被占用，无法保存')
+      throw new Error('目标文件被占用，无法保存')
+    })
+    wrapper.findComponent({ name: 'ConflictResolutionModal' }).vm.$emit('resolve', 'rename', true)
+    await flushPromises()
+    expect(task.error).toContain('目标文件被占用')
+    expect(task.conflicts).toHaveLength(2)
+    expect(wrapper.findComponent({ name: 'ConflictResolutionModal' }).exists()).toBe(false)
+    expect(mocks.resolveExtractionConflict).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('does not publish from a stale dialog after I cancel the task', async () => {
+    const wrapper = mountView()
+    const task = addConflictTask('cancelled')
+    await flushPromises()
+    task.status = 'cancelled'
+    wrapper.findComponent({ name: 'ConflictResolutionModal' }).vm.$emit('resolve', 'overwrite', true)
+    await flushPromises()
+    expect(mocks.resolveExtractionConflict).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
   it('lets me inspect only this run failures and return to the full queue without starting hidden tasks', async () => {
     const wrapper = mountView()
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: 'new.zip', path: 'C:/new.zip' }])

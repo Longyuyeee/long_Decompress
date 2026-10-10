@@ -604,8 +604,10 @@ export const translations: Record<string, Record<string, string>> = {
     'conflict.source_modified': '源修改时间',
     'conflict.rename_both': '自动重命名保留两者',
     'conflict.replace': '替换现有文件',
-    'conflict.skip': '放弃本次解压',
-    'conflict.apply_all': '应用到后续所有冲突项',
+    'conflict.skip': '跳过此文件',
+    'conflict.apply_all': '将所选操作应用到本任务剩余冲突（不影响其他任务）',
+    'conflict.time_unknown': '时间未知',
+    'conflict.publishing': '正在按所选操作保存解压结果…',
     'conflict.all_resolved': '处理完毕',
     'conflict.all_resolved_desc': '所有冲突已处理',
     // ===== 预设 =====
@@ -1295,7 +1297,9 @@ export const translations: Record<string, Record<string, string>> = {
     'conflict.rename_both': 'Rename & Keep Both',
     'conflict.replace': 'Replace Existing',
     'conflict.skip': 'Skip This File',
-    'conflict.apply_all': 'Apply to All Conflicts',
+    'conflict.apply_all': 'Apply this action to remaining conflicts in this task only',
+    'conflict.time_unknown': 'Time unknown',
+    'conflict.publishing': 'Saving extracted files with your choices…',
     'conflict.all_resolved': 'All Resolved',
     'conflict.all_resolved_desc': 'All conflicts have been resolved',
     // ===== Presets =====

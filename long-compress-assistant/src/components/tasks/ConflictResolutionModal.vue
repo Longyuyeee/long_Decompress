@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import Modal from '@/components/ui/Modal.vue'
-import { useTaskStore, type ConflictInfo } from '@/stores/task'
+import { useTaskStore } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 
 const props = defineProps<{
   taskId: string
   visible: boolean
+  busy?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -18,6 +19,8 @@ const taskStore = useTaskStore()
 const appStore = useAppStore()
 const task = computed(() => taskStore.tasks.find(t => t.id === props.taskId))
 const currentConflict = computed(() => task.value?.conflicts[0])
+const applyToRemaining = ref(false)
+watch(() => [props.taskId, props.visible], () => { applyToRemaining.value = false })
 
 const formatSize = (bytes: number) => {
   if (bytes === 0) return '0 B'
@@ -28,16 +31,14 @@ const formatSize = (bytes: number) => {
 }
 
 const formatDate = (timestamp: number) => {
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return appStore.t('conflict.time_unknown')
   return new Date(timestamp).toLocaleString()
 }
 
-const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = false) => {
-  emit('resolve', action, applyToAll)
-  if (task.value) {
-    if (applyToAll) task.value.conflicts = []
-    else task.value.conflicts.shift()
-    if (task.value.conflicts.length === 0) emit('update:visible', false)
-  }
+const resolve = (action: 'overwrite' | 'skip' | 'rename') => {
+  if (props.busy || !currentConflict.value) return
+  // The owner advances the queue and waits for the backend before closing.
+  emit('resolve', action, applyToRemaining.value)
 }
 </script>
 
@@ -50,6 +51,7 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
     size="lg"
     :closeOnBackdrop="false"
     :closeOnEscape="false"
+    :showCloseButton="!busy"
   >
     <div v-if="currentConflict" class="conflict-container space-y-8 p-2">
       <!-- 头部提示：强化路径显示 -->
@@ -120,7 +122,7 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
       <div class="actions-section flex flex-col gap-5 pt-4">
         <div class="flex flex-wrap gap-4">
           <!-- 推荐操作：自动重命名 -->
-          <button @click="resolve('rename')" 
+          <button @click="resolve('rename')" :disabled="busy" data-testid="conflict-rename"
                   class="flex-[1.5] min-w-[160px] group relative h-14 rounded-2xl bg-primary text-white overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/20">
             <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             <div class="flex items-center justify-center gap-3 relative z-10">
@@ -130,13 +132,13 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
           </button>
 
           <!-- 覆盖操作：红色警示 -->
-          <button @click="resolve('overwrite')" 
+          <button @click="resolve('overwrite')" :disabled="busy" data-testid="conflict-overwrite"
                   class="flex-1 min-w-[120px] h-14 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 font-black text-sm uppercase tracking-widest">
             {{ appStore.t('conflict.replace') }}
           </button>
 
           <!-- 跳过操作：次要按钮 -->
-          <button @click="resolve('skip')" 
+          <button @click="resolve('skip')" :disabled="busy" data-testid="conflict-skip"
                   class="flex-1 min-w-[120px] h-14 rounded-2xl bg-input border border-subtle text-muted hover:text-content transition-all duration-300 font-black text-sm uppercase tracking-widest">
             {{ appStore.t('conflict.skip') }}
           </button>
@@ -144,14 +146,12 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename', applyToAll: boolean = 
 
         <!-- 批量应用选项 -->
         <div class="flex justify-center">
-          <button @click="resolve('rename', true)" 
-                  class="group flex items-center gap-3 px-6 py-3 rounded-full hover:bg-primary/5 transition-all text-xs font-black text-dim hover:text-primary uppercase tracking-[0.3em]">
-            <div class="w-4 h-4 rounded-full border border-subtle group-hover:border-primary flex items-center justify-center transition-all">
-              <div class="w-1.5 h-1.5 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform"></div>
-            </div>
+          <label class="flex items-center gap-3 text-sm text-muted">
+            <input v-model="applyToRemaining" type="checkbox" :disabled="busy" data-testid="conflict-apply-remaining" />
             {{ appStore.t('conflict.apply_all') }}
-          </button>
+          </label>
         </div>
+        <p v-if="busy" role="status" class="text-sm text-muted">{{ appStore.t('conflict.publishing') }}</p>
       </div>
     </div>
 
