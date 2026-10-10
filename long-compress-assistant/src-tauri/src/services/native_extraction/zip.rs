@@ -74,7 +74,15 @@ pub(crate) fn extract<R: ExtractionRuntime>(
     password: Option<&str>,
     options: &DecompressOptions,
 ) -> Result<()> {
-    extract_with_optional_window(runtime, Some(window), task_id, file, output, password, options)
+    extract_with_optional_window(
+        runtime,
+        Some(window),
+        task_id,
+        file,
+        output,
+        password,
+        options,
+    )
 }
 
 // Keep one engine for desktop use and headless regression measurements. None
@@ -93,139 +101,166 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime>(
 
     let total_files = archive.len();
     let file_filter = extraction_transaction::compile_file_filter(options.file_filter.as_deref());
+    let mut buffer_handle: Option<crate::services::io_buffer_pool::IOBufferHandle> = None;
+    let mut last_parent = None;
 
-    for index in 0..total_files {
-        runtime.check_cancellation()?;
-        let (file_name, outpath, is_dir, source_size, source_modified) = {
-            let entry = archive.by_index(index)?;
-            let file_name = entry.name().to_string();
-            let is_dir = entry.is_dir();
-            let relative = match runtime
-                .normalized_archive_path(&entry.mangled_name(), options.preserve_paths)
-            {
-                Some(path) => path,
-                None => continue,
+    let extraction_result = (|| -> Result<()> {
+        for index in 0..total_files {
+            runtime.check_cancellation()?;
+            let (file_name, outpath, is_dir, source_size, source_modified) = {
+                let entry = archive.by_index(index)?;
+                let file_name = entry.name().to_string();
+                let is_dir = entry.is_dir();
+                let relative = match runtime
+                    .normalized_archive_path(&entry.mangled_name(), options.preserve_paths)
+                {
+                    Some(path) => path,
+                    None => continue,
+                };
+                if !extraction_transaction::matches_compiled_file_filter(&relative, &file_filter) {
+                    continue;
+                }
+                let target = Path::new(output).join(relative);
+                let outpath = if is_dir {
+                    target
+                } else {
+                    extraction_transaction::resolve_extract_path(&target, options)?
+                };
+                let source_modified = entry.last_modified().and_then(|modified| {
+                    system_time(
+                        modified.year(),
+                        modified.month(),
+                        modified.day(),
+                        modified.hour(),
+                        modified.minute(),
+                        modified.second(),
+                    )
+                });
+                (file_name, outpath, is_dir, entry.size(), source_modified)
             };
-            if !extraction_transaction::matches_compiled_file_filter(&relative, &file_filter) {
-                continue;
-            }
-            let target = Path::new(output).join(relative);
-            let outpath = if is_dir {
-                target
-            } else {
-                extraction_transaction::resolve_extract_path(&target, options)?
-            };
-            let source_modified = entry.last_modified().and_then(|modified| {
-                system_time(
-                    modified.year(),
-                    modified.month(),
-                    modified.day(),
-                    modified.hour(),
-                    modified.minute(),
-                    modified.second(),
-                )
-            });
-            (file_name, outpath, is_dir, entry.size(), source_modified)
-        };
 
-        let entry_result = (|| -> Result<()> {
-            if is_dir {
-                std::fs::create_dir_all(&outpath)?;
-                return Ok(());
-            }
-            if let Some(parent) = outpath.parent() {
-                std::fs::create_dir_all(parent)?;
-            }
-
-            let reader = if let Some(password) = password {
-                archive.by_index_decrypt(index, password.as_bytes())?
-            } else {
-                archive.by_index(index)?
-            };
-            let mut outfile = File::create(&outpath)?;
-            let buffer_size = runtime.buffer_pool().recommend_buffer_size(source_size);
-            let mut handle =
-                tauri::async_runtime::block_on(runtime.buffer_pool().acquire(Some(buffer_size)));
-            let mut progress_reader = ProgressReader::new(reader, source_size, Arc::new(|_, _| {}));
-            let mut last_emitted = 0u64;
-
-            let copy_result = (|| -> Result<()> {
-                let buffer = handle.buffer_mut().as_mut_slice();
-                loop {
-                    runtime.check_cancellation()?;
-                    let read = progress_reader.read(buffer)?;
-                    if read == 0 {
-                        break;
-                    }
-                    outfile.write_all(&buffer[..read])?;
-                    let processed = progress_reader.current_pos();
-                    if processed < source_size
-                        && processed.saturating_sub(last_emitted) >= PROGRESS_EMIT_INTERVAL_BYTES
-                    {
-                        last_emitted = processed;
-                        let entry_progress = if source_size == 0 {
-                            1.0
-                        } else {
-                            processed as f32 / source_size as f32
-                        };
-                        let file_progress = (index as f32 / total_files as f32)
-                            + (entry_progress / total_files as f32);
-                        if let Some(window) = window {
-                            runtime.emit_progress(
-                                window,
-                                task_id,
-                                file_progress,
-                                Some(file_name.clone()),
-                                processed,
-                                source_size,
-                            );
-                        }
+            let entry_result = (|| -> Result<()> {
+                if is_dir {
+                    std::fs::create_dir_all(&outpath)?;
+                    return Ok(());
+                }
+                if let Some(parent) = outpath.parent() {
+                    if last_parent.as_deref() != Some(parent) {
+                        std::fs::create_dir_all(parent)?;
+                        last_parent = Some(parent.to_path_buf());
                     }
                 }
-                outfile.flush()?;
+
+                let reader = if let Some(password) = password {
+                    archive.by_index_decrypt(index, password.as_bytes())?
+                } else {
+                    archive.by_index(index)?
+                };
+                let mut outfile = File::create(&outpath)?;
+                let buffer_size = runtime.buffer_pool().recommend_buffer_size(source_size);
+                if buffer_handle
+                    .as_ref()
+                    .is_none_or(|handle| handle.capacity() < buffer_size)
+                {
+                    if let Some(handle) = buffer_handle.take() {
+                        tauri::async_runtime::block_on(handle.release());
+                    }
+                    buffer_handle = Some(tauri::async_runtime::block_on(
+                        runtime.buffer_pool().acquire(Some(buffer_size)),
+                    ));
+                }
+                let mut progress_reader =
+                    ProgressReader::new(reader, source_size, Arc::new(|_, _| {}));
+                let mut last_emitted = 0u64;
+
+                let copy_result = (|| -> Result<()> {
+                    let buffer = buffer_handle
+                        .as_mut()
+                        .expect("acquired copy buffer")
+                        .buffer_mut()
+                        .as_mut_slice();
+                    loop {
+                        runtime.check_cancellation()?;
+                        let read = progress_reader.read(buffer)?;
+                        if read == 0 {
+                            break;
+                        }
+                        outfile.write_all(&buffer[..read])?;
+                        let processed = progress_reader.current_pos();
+                        if processed < source_size
+                            && processed.saturating_sub(last_emitted)
+                                >= PROGRESS_EMIT_INTERVAL_BYTES
+                        {
+                            last_emitted = processed;
+                            let entry_progress = if source_size == 0 {
+                                1.0
+                            } else {
+                                processed as f32 / source_size as f32
+                            };
+                            let file_progress = (index as f32 / total_files as f32)
+                                + (entry_progress / total_files as f32);
+                            if let Some(window) = window {
+                                runtime.emit_progress(
+                                    window,
+                                    task_id,
+                                    file_progress,
+                                    Some(file_name.clone()),
+                                    processed,
+                                    source_size,
+                                );
+                            }
+                        }
+                    }
+                    outfile.flush()?;
+                    Ok(())
+                })();
+
+                copy_result?;
+
+                if options.preserve_timestamps || options.extract_only_newer {
+                    if let Some(source_modified) = source_modified {
+                        filetime::set_file_mtime(
+                            &outpath,
+                            filetime::FileTime::from_system_time(source_modified),
+                        )?;
+                    }
+                }
                 Ok(())
             })();
 
-            tauri::async_runtime::block_on(handle.release());
-            copy_result?;
-
-            if options.preserve_timestamps || options.extract_only_newer {
-                if let Some(source_modified) = source_modified {
-                    filetime::set_file_mtime(
-                        &outpath,
-                        filetime::FileTime::from_system_time(source_modified),
-                    )?;
+            if let Err(error) = entry_result {
+                if options.skip_corrupted {
+                    if let Some(window) = window {
+                        runtime.emit_log(
+                            window,
+                            task_id,
+                            &format!("Skipped entry {file_name}: {error}"),
+                            TaskLogSeverity::Warning,
+                        );
+                    }
+                    continue;
                 }
+                return Err(error);
             }
-            Ok(())
-        })();
-
-        if let Err(error) = entry_result {
-            if options.skip_corrupted {
-                if let Some(window) = window {
-                    runtime.emit_log(
-                        window,
-                        task_id,
-                        &format!("Skipped entry {file_name}: {error}"),
-                        TaskLogSeverity::Warning,
-                    );
-                }
-                continue;
+            if let Some(window) = window {
+                runtime.emit_progress(
+                    window,
+                    task_id,
+                    (index + 1) as f32 / total_files as f32,
+                    Some(file_name),
+                    source_size,
+                    source_size,
+                );
             }
-            return Err(error);
         }
-        if let Some(window) = window {
-            runtime.emit_progress(
-                window,
-                task_id,
-                (index + 1) as f32 / total_files as f32,
-                Some(file_name),
-                source_size,
-                source_size,
-            );
-        }
+        Ok(())
+    })();
+    // Release on success, cancellation and every fallible entry path. Reuse is
+    // bounded to one buffer per archive, not one allocation per input file.
+    if let Some(handle) = buffer_handle.take() {
+        tauri::async_runtime::block_on(handle.release());
     }
-    Ok(())
+    extraction_result
 }
 
 #[cfg(test)]

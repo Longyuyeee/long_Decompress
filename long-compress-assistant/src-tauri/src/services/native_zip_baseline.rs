@@ -119,6 +119,59 @@ fn headless_engine_rejects_invalid_archive_without_creating_output() {
 }
 
 #[test]
+fn small_entries_share_one_buffer_and_release_it_on_output_failure() {
+    use super::native_extraction::ExtractionRuntime;
+    let temp = tempfile::tempdir().unwrap();
+    let archive = temp.path().join("many.zip");
+    let mut writer = zip::ZipWriter::new(std::fs::File::create(&archive).unwrap());
+    for index in 0..20 {
+        writer
+            .start_file(
+                format!("{index:02}.txt"),
+                zip::write::FileOptions::default(),
+            )
+            .unwrap();
+        writer.write_all(b"small payload").unwrap();
+    }
+    writer.finish().unwrap();
+    for fail in [false, true] {
+        let service = CompressionService::for_testing();
+        let output = temp.path().join(if fail { "failed" } else { "success" });
+        std::fs::create_dir(&output).unwrap();
+        // Fail after several successful entries, while the shared buffer is held.
+        if fail {
+            std::fs::create_dir(output.join("05.txt")).unwrap();
+        }
+        let result = native_extraction::zip::extract_with_optional_window(
+            &service,
+            None,
+            "buffers",
+            archive.to_str().unwrap(),
+            output.to_str().unwrap(),
+            None,
+            &DecompressOptions {
+                overwrite_existing: true,
+                ..Default::default()
+            },
+        );
+        assert_eq!(result.is_err(), fail);
+        let statistics = tauri::async_runtime::block_on(service.buffer_pool().get_statistics());
+        assert_eq!(statistics.total_allocations, 1);
+        assert_eq!(statistics.total_releases, 1);
+        assert_eq!(
+            std::fs::read(output.join("00.txt")).unwrap(),
+            b"small payload"
+        );
+        if !fail {
+            assert_eq!(
+                std::fs::read(output.join("19.txt")).unwrap(),
+                b"small payload"
+            );
+        }
+    }
+}
+
+#[test]
 #[ignore = "explicit native ZIP benchmark; no UI or transaction timings"]
 fn native_zip_engine_baseline() {
     let large_mib = bounded_env("LONG_NATIVE_ZIP_MIB", 32, 16, 2048);
