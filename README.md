@@ -6,7 +6,7 @@
 
 ### 面向 Windows 的本地压缩、解压、归档浏览与密码管理工具
 
-[![Version](https://img.shields.io/badge/version-1.3.8-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.3.9-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri%20%2B%20Rust-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -23,7 +23,16 @@
 
 Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows 桌面归档工具。它不仅能完成日常压缩与解压，还把批量任务、压缩包浏览、密码保险箱、完整性检查、资源预检、任务模板和资源管理器右键菜单整合在同一个界面中。
 
-当前版本：**v1.3.8**。
+当前版本：**v1.3.9**。
+
+### v1.3.9 日常处理与性能优化
+
+- 冲突比较、覆盖/跳过/保留两份；目标在确认期间变化会再次询问，禁止文件覆盖整个同名目录。
+- ZIP 快速打包、智能解压目录、受限 ZIP 并行均默认关闭，由用户主动开启；性能收益取决于文件与磁盘。
+- 归档压缩、图片、视频、PDF 历史可恢复参数并创建独立草稿，支持所选项批量纠正，不自动执行或修改原记录。
+- 历史摘要与按需详情、500 条显示窗口和双向翻页保留全库搜索；输出目录增加书签和最近位置。
+- 优化进度刷新和任务展开动画，保留行内编辑与小窗口适配。
+- [发布说明与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.9) · [发布审计](long-compress-assistant/docs/RELEASE_AUDIT_1.3.9.md)。
 
 ### v1.3.8 恢复行内配置
 

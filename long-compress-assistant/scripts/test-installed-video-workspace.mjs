@@ -331,7 +331,9 @@ try {
   verify('installed output dimensions', [expected.output.width, expected.output.height], [video?.width, video?.height], actual => actual[0] === expected.output.width && actual[1] === expected.output.height)
   verify('installed output duration', expected.output.durationSeconds, Number(probe.format.duration), actual => Math.abs(actual - expected.output.durationSeconds) <= 0.32)
 
-  const defaultPlayback = await completedCard.findElement(By.css('[data-testid="video-open-default-app"]'))
+  const expand = await completedCard.findElement(By.css('.expand'))
+  if (await expand.getAttribute('aria-expanded') !== 'true') await expand.click()
+  const defaultPlayback = await waitForElement('[data-testid="video-open-default-app"]')
   const defaultPlaybackActionAvailable = await defaultPlayback.isEnabled()
   verify('published MP4 exposes an enabled default-application action without launching an external window', true, defaultPlaybackActionAvailable)
   const currentHistory = await openHistoryAndWait(2)

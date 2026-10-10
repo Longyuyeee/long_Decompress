@@ -161,35 +161,47 @@ function Backup-UserData {
 }
 
 function Restore-UserData {
+  # Restore individual files into an existing root. Copying/moving whole directories
+  # can nest the snapshot when another component recreates the target directory.
+  # Retain extra test files in the backup instead of deleting the user's root.
   for ($index = 0; $index -lt $appDataPaths.Count; $index += 1) {
     $path = $appDataPaths[$index]
     $backup = Join-Path $backupRoot "data-$index"
+    $allowedPaths = @(
+      [IO.Path]::GetFullPath((Join-Path $env:APPDATA 'LongDecompress')),
+      [IO.Path]::GetFullPath((Join-Path $env:APPDATA 'com.longcompress.assistant'))
+    )
+    if ([IO.Path]::GetFullPath($path) -notin $allowedPaths) {
+      throw "Unexpected user-data restore target: $path"
+    }
+    $expectedFiles = @{}
     if (Test-Path -LiteralPath $backup) {
-      $parent = Split-Path -Parent $path
-      New-Item -ItemType Directory -Path $parent -Force | Out-Null
-      $staging = Join-Path $parent ".long-decompress-restore-$([guid]::NewGuid().ToString('N'))"
-      try {
-        Copy-Item -LiteralPath $backup -Destination $staging -Recurse
-        $expectedFingerprint = Get-DirectoryFingerprint $backup
-        Add-Check "restore staging matches backup for $path" (
-          (Get-DirectoryFingerprint $staging) -eq $expectedFingerprint
-        ) "expected=$expectedFingerprint; actual=$(Get-DirectoryFingerprint $staging)"
-        if (Test-Path -LiteralPath $path) {
-          Remove-Item -LiteralPath $path -Recurse -Force
-        }
-        if (Test-Path -LiteralPath $path) {
-          throw "User-data target was recreated during restore: $path"
-        }
-        Move-Item -LiteralPath $staging -Destination $path
-        Add-Check "restored user data matches backup for $path" (
-          (Get-DirectoryFingerprint $path) -eq $expectedFingerprint
-        ) "expected=$expectedFingerprint; actual=$(Get-DirectoryFingerprint $path)"
-      } finally {
-        if (Test-Path -LiteralPath $staging) {
-          Remove-Item -LiteralPath $staging -Recurse -Force
+      foreach ($file in Get-ChildItem -LiteralPath $backup -Recurse -Force -File) {
+        $relative = $file.FullName.Substring($backup.Length).TrimStart('\')
+        $expectedFiles[$relative] = $true
+        $destination = Join-Path $path $relative
+        New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
+        Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
+      }
+    }
+    if (Test-Path -LiteralPath $path) {
+      foreach ($file in Get-ChildItem -LiteralPath $path -Recurse -Force -File) {
+        $relative = $file.FullName.Substring($path.Length).TrimStart('\')
+        if (-not $expectedFiles.ContainsKey($relative)) {
+          $retained = Join-Path $backupRoot "restore-extra-$index-$([guid]::NewGuid().ToString('N'))"
+          New-Item -ItemType Directory -Path $retained -Force | Out-Null
+          Move-Item -LiteralPath $file.FullName -Destination (Join-Path $retained $file.Name)
         }
       }
+    }
+    if (Test-Path -LiteralPath $backup) {
+      Add-Check "restored user data matches backup for $path" (
+        (Get-DirectoryFingerprint $path) -eq (Get-DirectoryFingerprint $backup)
+      ) 'File paths, lengths and hashes must match the original snapshot.'
     } elseif (Test-Path -LiteralPath $path) {
+      if (@(Get-ChildItem -LiteralPath $path -Recurse -Force -File).Count -ne 0) {
+        throw "Unexpected files remain in originally absent target: $path"
+      }
       Remove-Item -LiteralPath $path -Recurse -Force
     }
   }

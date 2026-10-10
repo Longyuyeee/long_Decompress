@@ -155,6 +155,26 @@ const waitForElement = selector => driver.wait(async () => {
 
 const setControl = async (selector, value) => {
   const control = await waitForElement(selector)
+  if (await control.getTagName() === 'button') {
+    const labels = { lossy: '有损压缩', keep: '保持原格式', limit: '限制最大宽高', rename: '自动重命名' }
+    const label = labels[value]
+    assert.ok(label, `Missing visible option label for ${value}`)
+    await control.click()
+    const option = await driver.wait(async () => {
+      try {
+        const root = await control.findElement(By.xpath('..'))
+        for (const item of await root.findElements(By.css('[role="option"]'))) {
+          if (await item.findElement(By.css('strong')).getText() === label && await item.isDisplayed()) return item
+        }
+      } catch (error) {
+        if (error.name !== 'StaleElementReferenceError') throw error
+      }
+      return false
+    }, 10_000)
+    await option.click()
+    await driver.wait(async () => await control.findElement(By.css('strong')).getText() === label, 10_000)
+    return value
+  }
   await driver.executeScript(`
     const control = arguments[0]
     const value = arguments[1]
@@ -282,6 +302,7 @@ try {
   verify('formal installed executable excludes desktop E2E bridge', expected.productionBridge, bridgePresent)
 
   await navigateToImageWorkspace()
+  await (await waitForElement('[data-testid="image-toggle-global-settings"]')).click()
   const configured = {
     mode: await setControl('[data-testid="image-setting-mode"]', expected.configured.mode),
     quality: await setControl('[data-testid="image-setting-quality"]', expected.configured.quality),
@@ -290,6 +311,7 @@ try {
     conflictPolicy: await setControl('[data-testid="image-setting-conflict"]', expected.configured.conflictPolicy),
   }
   verify('visible global configuration values', expected.configured, configured, actual => JSON.stringify(actual) === JSON.stringify(expected.configured))
+  await (await waitForElement('[data-testid="image-save-global-settings"]')).click()
 
   const dropResult = await emitThroughProductionTauriIpc(sources.map(source => source.path))
   verify('production Tauri file-drop IPC accepted real paths', { ok: true, count: 3 }, dropResult, actual => actual.ok && actual.count === 3)
