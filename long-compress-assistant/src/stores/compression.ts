@@ -45,6 +45,7 @@ export interface CompressionOptions {
 
 export interface CompressionGroup {
   id: string
+  retryOfTaskId?: string
   name: string
   files: FileObject[]
   themeColor: string
@@ -559,6 +560,17 @@ export const useCompressionStore = defineStore('compression', () => {
     return { id, addedCount: accepted.length, skippedCount: files.length - accepted.length }
   }
 
+  const addHistoryDraft = (files: FileObject[], name: string, settings: CompressionOptions, outputPath: string, retryOfTaskId: string) => {
+    const existing = groups.value.find(group => group.retryOfTaskId === retryOfTaskId)
+    if (existing) return existing.id
+    if (!files.length) throw new Error('请至少选择一个来源')
+    const id = `history-${globalThis.crypto.randomUUID()}`
+    groups.value.push({ id, retryOfTaskId, name, files: files.map(file => ({ ...file })),
+      themeColor: '#6366f1', expanded: true, settings: cloneSettings(settings), outputPath })
+    autoStartRequested.value = false
+    return id
+  }
+
   const removeFile = (path: string) => {
     selectedFiles.value = selectedFiles.value.filter(file => file.path !== path)
     clearAnalysis(path)
@@ -642,6 +654,7 @@ export const useCompressionStore = defineStore('compression', () => {
     prepareQuickPacks,
     addQuickPack,
     addTemplateDraft,
+    addHistoryDraft,
     replaceWithQuickPack,
     dissolveGroup,
     removeFileFromGroup,

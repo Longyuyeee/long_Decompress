@@ -305,6 +305,20 @@ describe('CompressionView', () => {
     wrapper.unmount()
   })
 
+  it('starts a history draft only on my click and preserves the original task link', async () => {
+    const wrapper = mountView()
+    const store = useCompressionStore()
+    store.addHistoryDraft([source()], '重试照片', { ...store.globalSettings, filename: '再次打包', fastPack: true }, 'D:/output', 'original-task')
+    await nextTick()
+    expect(mocks.compressFiles).not.toHaveBeenCalled()
+    const start = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('compress.start')))
+    await start!.trigger('click')
+    await flushPromises()
+    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'D:/output/再次打包.zip', expect.objectContaining({ fast_pack: true, delete_after: false }))
+    expect(useTaskStore().tasks[0]).toMatchObject({ retryOfTaskId: 'original-task', executionConfig: { kind: 'archive-compression', settings: { filename: '再次打包', fastPack: true } } })
+    wrapper.unmount()
+  })
+
   it('passes the selected 7z solid mode to the native compression command', async () => {
     const wrapper = mountView()
     const compressionStore = useCompressionStore()

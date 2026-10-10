@@ -282,6 +282,7 @@ const runCompression = async () => {
       const settings = compressionStore.getEffectiveSettings(group.settings)
       return {
         id: group.id,
+        retryOfTaskId: group.retryOfTaskId,
         name: group.name,
         files: group.files,
         settings,
@@ -298,6 +299,7 @@ const runCompression = async () => {
       const settings = compressionStore.getEffectiveSettings(file.settings)
       return {
         id: file.path,
+        retryOfTaskId: undefined as string | undefined,
         name: file.name,
         files: [file],
         settings,
@@ -398,6 +400,7 @@ const runCompression = async () => {
       id: generateId(),
       name: job.name,
       type: 'compression',
+      retryOfTaskId: job.retryOfTaskId,
       sourceFiles: job.files.map(file => file.path),
       outputPath: job.outputPath,
       format: effectiveFormat,
