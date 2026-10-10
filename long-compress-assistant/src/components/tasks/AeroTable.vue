@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useTaskStore, type Task, type TaskType } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { usePasswordStore } from '@/stores/password'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import Modal from '@/components/ui/Modal.vue'
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
+import ExtractionOutputPreview from './ExtractionOutputPreview.vue'
 import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
 import OverflowTooltip from '@/components/ui/OverflowTooltip.vue'
+import { invoke } from '@tauri-apps/api/tauri'
+import CompletedExtractionOutput from './CompletedExtractionOutput.vue'
 import { open } from '@tauri-apps/api/dialog'
 import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
@@ -17,6 +20,7 @@ const props = defineProps<{
   selectedTaskIds?: Set<string>
   statusFilter?: string | string[]
   taskType?: TaskType
+  taskIds?: string[]
 }>()
 
 const emit = defineEmits<{
@@ -42,11 +46,26 @@ const displayTasks = computed(() => {
         const filters = Array.isArray(props.statusFilter) ? props.statusFilter : [props.statusFilter]
         return filters.includes(task.status)
       })
-  return sortTasksByName(filteredTasks)
+  const ids = props.taskIds ? new Set(props.taskIds) : null
+  return sortTasksByName(ids ? filteredTasks.filter(task => ids.has(task.id)) : filteredTasks)
 })
 const pendingDisplayTasks = computed(() => displayTasks.value.filter(task => task.status === 'pending'))
+const previewPaths = ref<Record<string, string>>({})
+const sharedDestinations = computed(() => {
+  const groups = new Map<string, string[]>()
+  for (const task of pendingDisplayTasks.value) {
+    if (task.type !== 'decompression' || (task.workloadKind && task.workloadKind !== 'archive')) continue
+    if (props.selectedTaskIds?.size && !props.selectedTaskIds.has(task.id)) continue
+    const path = previewPaths.value[task.id]
+    if (!path) continue
+    const key = path.replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase()
+    groups.set(key, [...(groups.get(key) || []), task.id])
+  }
+  return new Map([...groups.values()].flatMap(ids => ids.map(id => [id, ids.length] as const)))
+})
 const tauriCommands = useTauriCommands()
 const expandedTasks = ref<Set<string>>(new Set())
+const detailTab = ref<'config' | 'logs'>('config')
 const showPasswordInput = ref<string | null>(null)
 const showContentsModal = ref(false)
 const contentsList = ref<string[]>([])
@@ -104,7 +123,8 @@ const toggleExpand = (taskId: string) => {
   if (expandedTasks.value.has(taskId)) {
     expandedTasks.value.delete(taskId)
   } else {
-    expandedTasks.value.add(taskId)
+    expandedTasks.value = new Set([taskId])
+    detailTab.value = 'config'
   }
 }
 
@@ -117,6 +137,7 @@ const handleSelectOutputDir = async (task: Task) => {
     })
     if (selected && typeof selected === 'string') {
       task.outputPath = selected
+      task.configurationMode = 'individual'
     }
   } catch (err) {
     appStore.setError(`${appStore.t('common.error')}: ${err}`)
@@ -129,6 +150,7 @@ const handleSetSameDir = (task: Task) => {
     // 提取父目录
     const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
     task.outputPath = parentDir
+    task.configurationMode = 'individual'
   }
 }
 
@@ -203,35 +225,25 @@ const getSeverityClass = (severity: string) => {
   }
 }
 
-// 物理高度过渡钩子：解决收缩跳动
-const onBeforeEnter = (el: any) => {
-  el.style.height = '0'
-  el.style.opacity = '0'
-  el.style.marginTop = '0'
-  el.style.marginBottom = '0'
-}
-
-const onEnter = (el: any) => {
-  el.style.height = el.scrollHeight + 'px'
-  el.style.opacity = '1'
-  el.style.marginTop = '4px'
-  el.style.marginBottom = '8px'
-}
-
-const onBeforeLeave = (el: any) => {
-  el.style.height = el.scrollHeight + 'px'
-  el.style.opacity = '1'
-  el.style.marginTop = '4px'
-  el.style.marginBottom = '8px'
-}
-
-const onLeave = (el: any) => {
-  el.offsetHeight // 强制物理重绘
-  el.style.height = '0'
-  el.style.opacity = '0'
-  el.style.marginTop = '0'
-  el.style.marginBottom = '0'
-}
+// Resolve batch destinations only while a detail dialog is open; no directory scans per row.
+watch(() => expandedTasks.value.size ? pendingDisplayTasks.value
+  .filter(task => task.type === 'decompression' && (!task.workloadKind || task.workloadKind === 'archive'))
+  .filter(task => !props.selectedTaskIds?.size || props.selectedTaskIds.has(task.id))
+  .map(task => ({ id: task.id, source: task.sourceFiles[0], output: task.outputPath, subfolder: task.extractToSubfolder ?? false })) : [],
+async (tasks, _, onCleanup) => {
+  let current = true
+  onCleanup(() => { current = false })
+  previewPaths.value = {}
+  const paths = await Promise.all(tasks.map(async task => {
+    try {
+      const path = await invoke<string>('preview_extraction_output', {
+        filePath: task.source, outputPath: task.output, createSubdirectory: task.subfolder,
+      })
+      return [task.id, path] as const
+    } catch { return [task.id, ''] as const }
+  }))
+  if (current) previewPaths.value = Object.fromEntries(paths)
+})
 </script>
 
 <template>
@@ -294,7 +306,7 @@ const onLeave = (el: any) => {
             </div>
 
             <!-- 文件识别区 (极致紧凑) -->
-            <div class="task-name-cell min-w-0 overflow-hidden flex items-center gap-3">
+            <div class="task-name-cell min-w-0 overflow-hidden flex flex-wrap items-center gap-x-3 gap-y-1">
               <OverflowTooltip
                 :text="task.name"
                 class="min-w-0 flex-1 text-content font-bold text-sm tracking-tight group-hover/row:text-primary transition-colors leading-tight"
@@ -304,6 +316,7 @@ const onLeave = (el: any) => {
               <span class="text-dim text-sm uppercase font-black tracking-widest bg-input/50 px-1 py-0 rounded border border-subtle/20 shrink-0">
                 {{ task.format?.toUpperCase() }}
               </span>
+
             </div>
 
             <!-- 状态与执行进度 -->
@@ -364,7 +377,7 @@ const onLeave = (el: any) => {
                 <i class="pi pi-key text-xs"></i>
               </button>
               <button
-                @click.stop="emit('retry-with-password', task.id)"
+                @click.stop="expandedTasks.clear(); emit('retry-with-password', task.id)"
                 :disabled="!task.password"
                 class="h-7 w-7 rounded-lg bg-yellow-500 text-white flex items-center justify-center hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                 :title="appStore.t('tasks.password.retry')"
@@ -418,32 +431,30 @@ const onLeave = (el: any) => {
                 type="button"
                 class="task-row-action task-expand-action text-muted hover:text-primary hover:bg-primary/10"
                 :data-testid="`toggle-archive-task-${task.id}`"
-                :title="expandedTasks.has(task.id) ? '收起任务详情' : '展开任务详情'"
-                :aria-label="expandedTasks.has(task.id) ? '收起任务详情' : '展开任务详情'"
+                :title="expandedTasks.has(task.id) ? '关闭任务详情' : '查看任务详情'"
+                :aria-label="expandedTasks.has(task.id) ? '关闭任务详情' : '查看任务详情'"
                 :aria-expanded="expandedTasks.has(task.id)"
                 @click="toggleExpand(task.id)"
               >
                 <i :class="['pi text-sm transition-transform duration-300',
-                   expandedTasks.has(task.id) ? 'pi-chevron-up text-primary' : 'pi-chevron-down']"></i>
+                   'pi-ellipsis-h']"></i>
               </button>
             </div>
           </div>
 
-          <Transition 
-            name="aero-drawer"
-            @before-enter="onBeforeEnter"
-            @enter="onEnter"
-            @before-leave="onBeforeLeave"
-            @leave="onLeave"
-          >
+          <Modal :visible="expandedTasks.has(task.id) && !showContentsModal" title="任务详情" size="lg" cancel-text="关闭任务详情" @update:visible="expandedTasks.delete(task.id)">
+            <template #title><span class="block max-w-[65vw] truncate pr-10" :title="task.name">{{ task.name || '任务详情' }}</span></template>
             <div v-if="expandedTasks.has(task.id)" class="details-drawer relative min-w-0 max-w-full px-2 md:px-3 pb-4 pt-2">
-              <!-- 交互增强：task-detail-card 增加 hover 动效 -->
+              <div class="mb-3 flex gap-2" role="group" aria-label="任务详情内容">
+                <button type="button" class="rounded-lg px-3 py-2 text-sm" :class="detailTab === 'config' ? 'bg-primary/10 text-primary' : 'text-muted'" :aria-pressed="detailTab === 'config'" @click="detailTab = 'config'">{{ task.status === 'completed' ? '输出结果' : '输出与设置' }}</button>
+                <button type="button" class="rounded-lg px-3 py-2 text-sm" :class="detailTab === 'logs' ? 'bg-primary/10 text-primary' : 'text-muted'" :aria-pressed="detailTab === 'logs'" @click="detailTab = 'logs'">执行日志</button>
+              </div>
               <div data-testid="decompression-task-details" class="task-detail-card rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
 
                 <!-- 详情区内容布局：改为弹性分配，防止溢出 -->
                 <div class="task-detail-layout w-full min-w-0 relative z-10">
                   <!-- 左侧：核心配置 -->
-                  <div data-testid="decompression-config-panel" class="task-config-panel min-w-0 p-4 border-r border-subtle/20 flex flex-col space-y-3 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto overflow-x-hidden custom-scrollbar">
+                  <div v-show="detailTab === 'config'" data-testid="decompression-config-panel" class="task-config-panel min-w-0 p-4 border-r border-subtle/20 flex flex-col space-y-3 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto overflow-x-hidden custom-scrollbar">
                     <div class="flex min-w-0 items-center justify-between">
                       <h4 class="task-config-heading min-w-0 text-primary text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 break-words">
                         <i class="pi pi-cog text-sm"></i>
@@ -453,7 +464,7 @@ const onLeave = (el: any) => {
 
                     <div v-if="task.type === 'decompression'" class="space-y-3.5" :class="{ 'config-follows-global': task.configurationMode === 'global' }">
                       <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
-                      <div class="inherited-config-control space-y-2">
+                      <div v-if="task.status === 'pending'" class="inherited-config-control space-y-2">
                         <div class="task-output-row flex min-w-0 items-center justify-between gap-3">
                           <span class="task-output-label text-muted text-xs uppercase font-black tracking-widest opacity-90 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
                           <div class="task-output-actions flex min-w-0 flex-wrap justify-end gap-1.5">
@@ -473,9 +484,13 @@ const onLeave = (el: any) => {
                         </div>
                       </div>
 
+                      <ExtractionOutputPreview v-if="task.status === 'pending' && (!task.workloadKind || task.workloadKind === 'archive')"
+                        :source="task.sourceFiles[0] || ''" :output="task.outputPath" :subfolder="task.extractToSubfolder ?? false"
+                        :shared-count="sharedDestinations.get(task.id) || 0" @change-output="handleSelectOutputDir(task)" />
+                      <CompletedExtractionOutput v-if="task.status === 'completed' && (!task.workloadKind || task.workloadKind === 'archive')" :path="task.outputPath" />
                       <ResourcePreflightCard :report="task.resourcePreflight" compact />
 
-                      <div class="inherited-config-control flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
+                      <div v-if="task.status === 'pending'" class="inherited-config-control flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
                         <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
                           <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
                                 :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
@@ -514,7 +529,7 @@ const onLeave = (el: any) => {
                             <i class="pi pi-key text-xs"></i>
                           </button>
                           <button
-                            @click.stop="emit('retry-with-password', task.id)"
+                            @click.stop="expandedTasks.clear(); emit('retry-with-password', task.id)"
                             :disabled="!task.password"
                             class="h-7 px-3 rounded-lg bg-yellow-500 text-white text-xs font-bold hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                           >{{ appStore.t('tasks.password.retry') }}</button>
@@ -545,7 +560,7 @@ const onLeave = (el: any) => {
                   </div>
 
                   <!-- 右侧：执行日志 -->
-                  <div data-testid="decompression-execution-panel" class="task-execution-panel min-w-0 p-4 flex flex-col overflow-hidden">
+                  <div v-show="detailTab === 'logs'" data-testid="decompression-execution-panel" class="task-execution-panel min-w-0 p-4 flex flex-col overflow-hidden">
                     <div class="execution-summary grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">阶段</span>
@@ -606,7 +621,7 @@ const onLeave = (el: any) => {
                 </div>
               </div>
             </div>
-          </Transition>
+          </Modal>
 
         </div>
         </TransitionGroup>
@@ -819,7 +834,7 @@ const onLeave = (el: any) => {
 
 .table-header,
 .task-row {
-  grid-template-columns: 2rem minmax(15rem, 1.15fr) minmax(20rem, 1fr) minmax(5.75rem, auto);
+  grid-template-columns: 2rem minmax(0, 1.15fr) minmax(0, 1fr) 5.75rem;
   column-gap: 0.75rem;
 }
 
@@ -875,6 +890,7 @@ const onLeave = (el: any) => {
   row-gap: 0.5rem;
 }
 
+
 .task-status-cell {
   grid-template-columns: minmax(6.5rem, auto) minmax(0, 1fr) auto;
 }
@@ -890,7 +906,7 @@ const onLeave = (el: any) => {
 @media (max-width: 980px) {
   .task-detail-layout { grid-template-columns: minmax(16rem, .92fr) minmax(17rem, 1.08fr); }
   .table-header,
-  .task-row { grid-template-columns: 2rem minmax(12rem, .9fr) minmax(17rem, 1.1fr) minmax(5.75rem, auto); }
+  .task-row { grid-template-columns: 2rem minmax(0, .9fr) minmax(0, 1.1fr) 5.75rem; }
 }
 
 .details-drawer {
@@ -988,7 +1004,7 @@ const onLeave = (el: any) => {
   }
 
   .task-row {
-    grid-template-columns: 2rem minmax(7.5rem, 1fr) minmax(8rem, 1fr) minmax(5.75rem, auto);
+    grid-template-columns: 2rem minmax(0, 1fr) minmax(0, 1fr) 5.75rem;
     padding-inline: 0.5rem;
   }
 
@@ -1001,4 +1017,11 @@ const onLeave = (el: any) => {
     display: none;
   }
 }
+
+.task-detail-layout { display: block; height: auto; }
+.task-detail-card, .task-detail-card:hover { border: 0; box-shadow: none; background: transparent; }
+.task-detail-card::after { display: none; }
+.task-config-panel { border: 0; padding: .5rem; }
+.task-execution-panel { max-height: 24rem; }
+.log-viewport { min-height: 8rem; max-height: 18rem; }
 </style>

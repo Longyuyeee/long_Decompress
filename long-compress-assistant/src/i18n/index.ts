@@ -3,6 +3,15 @@
  */
 export const translations: Record<string, Record<string, string>> = {
   'zh-CN': {
+    'decompress.batch.title': '本次运行 #{0} · {1} 项',
+    'decompress.batch.counts': '成功 {0} · 失败 {1} · 已取消 {2} · 未结束 {3}',
+    'decompress.batch.conflicts': '其中 {0} 项等待冲突选择',
+    'decompress.batch.removed': '已移出队列 {0}',
+    'decompress.batch.show_failures': '查看本批失败项',
+    'decompress.batch.retry_failures': '处理失败项',
+    'decompress.batch.show_all': '返回全部解压任务',
+    'decompress.batch.filtered': '仅显示本次运行中仍在队列的失败项；展开任务查看具体原因。',
+    'decompress.batch.no_visible_failures': '本批失败项已不在当前队列，可到历史任务查看已保存记录。',
     // 应用
     'app.name': 'Long解压',
     'app.tagline': '引擎强大，界面极简',
@@ -730,6 +739,15 @@ export const translations: Record<string, Record<string, string>> = {
     'profiles.auto_apply_label': '🎯 自动应用:',
   },
   'en-US': {
+    'decompress.batch.title': 'Run #{0} · {1} tasks',
+    'decompress.batch.counts': 'Succeeded {0} · Failed {1} · Cancelled {2} · Unfinished {3}',
+    'decompress.batch.conflicts': '{0} awaiting conflict choices',
+    'decompress.batch.removed': 'Removed from queue {0}',
+    'decompress.batch.show_failures': 'View failures in this run',
+    'decompress.batch.retry_failures': 'Resolve failed tasks',
+    'decompress.batch.show_all': 'Back to all extraction tasks',
+    'decompress.batch.filtered': 'Showing failures from this run still in the queue. Expand a task to see its cause.',
+    'decompress.batch.no_visible_failures': 'These failed tasks are no longer in the queue. Saved records are available in task history.',
     // App
     'app.name': 'Long解压',
     'app.tagline': 'Powerful Engine, Minimalist UI',

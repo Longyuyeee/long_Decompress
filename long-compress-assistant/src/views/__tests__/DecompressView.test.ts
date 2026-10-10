@@ -5,6 +5,7 @@ import { createPinia } from 'pinia'
 import DecompressView from '../DecompressView.vue'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
+import { useDecompressionBatchStore } from '@/stores/decompressionBatch'
 
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
@@ -41,16 +42,41 @@ const DropzoneStub = defineComponent({
 const mountView = () => mount(DecompressView, {
   global: {
     plugins: [createPinia()],
-    stubs: {
+    stubs: { Teleport: true,
       EnhancedFileDropzone: DropzoneStub,
       AeroTable: true,
       ConflictResolutionModal: true,
+      RouterLink: true,
       Transition: false,
     },
   },
 })
 
 describe('DecompressView', () => {
+  it('lets me inspect only this run failures and return to the full queue without starting hidden tasks', async () => {
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: 'new.zip', path: 'C:/new.zip' }])
+    await flushPromises()
+    const store = useTaskStore()
+    const task = store.tasks[0]
+    const start = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('decompress.start_queue')))
+    await start!.trigger('click')
+    await flushPromises()
+    store.failTask(task.id, '文件损坏')
+    store.addTask({ id: 'later', name: 'later.zip', type: 'decompression', sourceFiles: ['C:/later.zip'], outputPath: 'C:/out' })
+    await flushPromises()
+    expect(useDecompressionBatchStore().counts.total).toBe(1)
+    await wrapper.get('[data-testid="show-batch-failures"]').trigger('click')
+    expect(wrapper.findComponent({ name: 'AeroTable' }).props('taskIds')).toEqual([task.id])
+    expect(wrapper.find('[data-testid="decompression-batch-config-mode"]').exists()).toBe(false)
+    expect(wrapper.findAll('button').some(button => button.text().includes(useAppStore().t('decompress.clear_finished')))).toBe(false)
+    expect(wrapper.findAll('button').some(button => button.text().includes(useAppStore().t('decompress.start_queue')))).toBe(false)
+    expect(mocks.decompressFile).toHaveBeenCalledTimes(1)
+    await wrapper.get('[data-testid="show-all-decompression-tasks"]').trigger('click')
+    expect(wrapper.findComponent({ name: 'AeroTable' }).props('taskIds')).toBeUndefined()
+    wrapper.unmount()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.invoke.mockImplementation(async (command: string) => {
@@ -212,6 +238,7 @@ describe('DecompressView', () => {
     }])
     await flushPromises()
 
+    await wrapper.get('[data-testid="decompression-settings"]').trigger('click')
     const globalRecycleSwitch = wrapper.get('[data-testid="global-recycle-source-switch"]')
     expect(globalRecycleSwitch.attributes('aria-checked')).toBe('false')
     await globalRecycleSwitch.trigger('click')
@@ -430,7 +457,7 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
-  it('retries a failed encrypted archive with the password entered by the user', async () => {
+  it('opens a new-task confirmation for a supplied password without rewriting the failed task', async () => {
     const wrapper = mountView()
     const taskStore = useTaskStore()
     const taskId = taskStore.addTask({
@@ -449,20 +476,14 @@ describe('DecompressView', () => {
     wrapper.findComponent({ name: 'AeroTable' }).vm.$emit('retry-with-password', taskId)
     await flushPromises()
 
-    expect(mocks.decompressFile).toHaveBeenCalledWith(
-      'C:/archives/encrypted.7z',
-      expect.objectContaining({
-        password: 'correct-password',
-        outputPath: 'C:/archives/output',
-        createSubdirectory: true,
-      }),
-      taskId,
-    )
+    expect(mocks.decompressFile).not.toHaveBeenCalled()
+    expect(taskStore.tasks.find(task => task.id === taskId)?.status).toBe('failed')
+    expect(wrapper.findComponent({ name: 'FailedExtractionRetry' }).props('taskIds')).toEqual([taskId])
+    expect(wrapper.findComponent({ name: 'FailedExtractionRetry' }).props('suppliedPassword')).toBe('correct-password')
     wrapper.unmount()
   })
 
-  it('keeps password entry available after a localized wrong-password failure', async () => {
-    mocks.decompressFile.mockRejectedValueOnce('提供的密码不正确')
+  it('keeps the original password-required state while the correction dialog is open', async () => {
     const wrapper = mountView()
     const taskStore = useTaskStore()
     const taskId = taskStore.addTask({
@@ -573,7 +594,7 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
-  it('switches the pending extraction batch between global and individual configuration at the footer', async () => {
+  it('switches the pending extraction batch between global and individual configuration in the settings dialog', async () => {
     const wrapper = mountView()
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
       name: 'configurable.zip',
@@ -584,12 +605,14 @@ describe('DecompressView', () => {
     const task = useTaskStore().tasks[0]
     expect(task.configurationMode).toBe('global')
     expect(wrapper.findComponent({ name: 'AeroTable' }).attributes('onSet-config-mode')).toBeUndefined()
+    expect(wrapper.find('[data-testid="decompression-config-mode-individual"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="decompression-settings"]').trigger('click')
     await wrapper.get('[data-testid="decompression-config-mode-individual"]').trigger('click')
     await nextTick()
     expect(task.configurationMode).toBe('individual')
     await new Promise(resolve => setTimeout(resolve, 220))
     expect(wrapper.find('[data-testid="global-recycle-source-switch"]').exists()).toBe(false)
-    expect(wrapper.text()).toContain('展开任务详情后分别调整配置')
+    expect(wrapper.text()).toContain('打开任务详情后分别调整配置')
 
     await wrapper.get('[data-testid="decompression-config-mode-global"]').trigger('click')
     await nextTick()

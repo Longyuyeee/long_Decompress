@@ -1,6 +1,6 @@
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
+use sqlx::{FromRow, QueryBuilder, Sqlite};
 use std::collections::HashSet;
 
 
@@ -133,6 +133,10 @@ pub struct TaskHistoryMetricsV1 {
 #[serde(rename_all = "camelCase")]
 pub struct TaskHistoryRecord {
     #[serde(default)]
+    pub execution_config: Option<ExtractionConfigV1>,
+    #[serde(default)]
+    pub retry_of_task_id: Option<String>,
+    #[serde(default)]
     pub failure: Option<TaskFailureV1>,
     pub id: String,
     pub name: String,
@@ -154,8 +158,19 @@ pub struct TaskHistoryRecord {
     pub logs: Vec<TaskHistoryLog>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ExtractionConfigV1 {
+    pub schema_version: u32,
+    pub kind: String,
+    pub output_directory: String,
+    pub extract_to_subfolder: bool,
+}
+
 #[derive(Debug, FromRow)]
 struct TaskHistoryRow {
+    execution_config: Option<String>,
+    retry_of_task_id: Option<String>,
     failure: Option<String>,
     id: String,
     name: String,
@@ -182,7 +197,7 @@ fn truncate_text(value: &str) -> String {
 fn redact_sensitive_text(value: &str) -> String {
     let lower = value.to_ascii_lowercase();
     let ascii_markers = ["password:", "password=", "pwd:", "pwd="];
-    let localized_markers = ["密码：", "密码:"];
+    let localized_markers = ["密码：", "密码:", "密码「"];
     let marker = ascii_markers
         .iter()
         .filter_map(|marker| lower.find(marker).map(|index| (index, marker.len())))
@@ -270,6 +285,17 @@ fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, S
     }
 
     record.name = truncate_text(record.name.trim());
+    record.execution_config = record.execution_config.filter(|config| {
+        record.task_type == "decompression" && record.workload_kind == "archive"
+            && config.schema_version == 1 && config.kind == "archive-extraction"
+            && !config.output_directory.trim().is_empty()
+    });
+    if let Some(id) = &record.retry_of_task_id {
+        if id.is_empty() || id.len() > 128 || id == &record.id
+            || !id.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_')) {
+            return Err("无效的原任务编号".to_string());
+        }
+    }
     record.output_path = truncate_text(record.output_path.trim());
     record.format = record.format.map(|value| truncate_text(value.trim()));
     record.error_message = record.error_message.map(|value| {
@@ -387,8 +413,8 @@ async fn save_task_history_to_pool(
         INSERT INTO task_operation_history (
             id, name, task_type, workload_kind, metrics, status, source_paths, output_path, format,
             started_at, completed_at, duration_ms, processed_bytes, total_bytes,
-            error_message, logs, updated_at, failure
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            error_message, logs, updated_at, failure, retry_of_task_id, execution_config
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
             task_type = excluded.task_type,
@@ -406,7 +432,9 @@ async fn save_task_history_to_pool(
             error_message = excluded.error_message,
             logs = excluded.logs,
             updated_at = excluded.updated_at,
-            failure = excluded.failure
+            failure = excluded.failure,
+            retry_of_task_id = excluded.retry_of_task_id,
+            execution_config = excluded.execution_config
         "#,
     )
     .bind(&record.id)
@@ -427,6 +455,9 @@ async fn save_task_history_to_pool(
     .bind(logs)
     .bind(updated_at)
     .bind(failure)
+    .bind(&record.retry_of_task_id)
+    .bind(record.execution_config.as_ref().map(serde_json::to_string).transpose()
+        .map_err(|error| format!("保存任务设置失败: {error}"))?)
     .execute(pool)
     .await
     .map_err(|error| format!("保存任务历史失败: {error}"))?;
@@ -448,11 +479,44 @@ pub struct HistoryPage {
     next_cursor: Option<HistoryCursor>,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct HistoryQuery {
+    text: String,
+    task_type: Option<String>,
+    status: Option<String>,
+    since: Option<String>,
+    failure_category: Option<String>,
+}
+
+// Match the same recorded categories used by the history detail view, including
+// records saved before structured failure metadata existed.
+fn history_failure_category_sql() -> String {
+    let categories = ["rollback-incomplete", "output-conflict", "publication-failed", "verification-failed",
+        "source-changed", "source-missing", "source-unavailable", "source-invalid", "damaged",
+        "missing-volume", "permission", "timeout", "engine-unavailable", "engine-start", "io", "ambiguous-data", "unknown"];
+    let accepted = categories.iter().map(|value| format!("'{value}'")).collect::<Vec<_>>().join(",");
+    let mut expression = format!("CASE WHEN status != 'failed' THEN NULL WHEN json_valid(failure) THEN CASE WHEN json_extract(failure, '$.schemaVersion') = 1 AND json_extract(failure, '$.category') IN ({accepted}) THEN json_extract(failure, '$.category') END END");
+    let mut fallback = String::from("CASE WHEN status != 'failed' THEN NULL ");
+    for category in categories {
+        let markers = match category {
+            "rollback-incomplete" | "output-conflict" | "publication-failed" => vec![format!("[archive-output:Publishing:{category}]")],
+            "verification-failed" => vec![format!("[archive-output:Verifying:{category}]")],
+            "source-changed" | "source-missing" | "source-unavailable" | "source-invalid" => vec![format!("[archive-source:Pre-checking:{category}]"), format!("[archive-source:Extracting:{category}]")],
+            _ => vec![format!("[archive-inspection:{category}]")],
+        };
+        for marker in markers { fallback.push_str(&format!("WHEN instr(COALESCE(error_message, ''), '{marker}') > 0 THEN '{category}' ")); }
+    }
+    fallback.push_str("ELSE 'unknown' END");
+    expression = format!("COALESCE(({expression}), ({fallback}))");
+    expression
+}
+
 #[tauri::command]
-pub async fn list_task_history_page(limit: Option<i64>, cursor: Option<HistoryCursor>) -> Result<HistoryPage, String> {
+pub async fn list_task_history_page(limit: Option<i64>, cursor: Option<HistoryCursor>, query: Option<HistoryQuery>) -> Result<HistoryPage, String> {
     let pool = crate::database::connection::get_pool().await
         .map_err(|error| format!("任务历史数据库不可用: {error}"))?;
-    history_page_from_pool(&pool, limit.unwrap_or(100), cursor).await
+    history_query_from_pool(&pool, limit.unwrap_or(100), cursor, query.unwrap_or_default()).await
 }
 
 #[tauri::command]
@@ -471,23 +535,43 @@ async fn list_task_history_from_pool(
 }
 
 async fn history_page_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Option<HistoryCursor>) -> Result<HistoryPage, String> {
+    history_query_from_pool(pool, limit, cursor, HistoryQuery::default()).await
+}
+
+async fn history_query_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Option<HistoryCursor>, query: HistoryQuery) -> Result<HistoryPage, String> {
     let limit = limit.clamp(1, MAX_HISTORY_PAGE);
-    let mut rows = sqlx::query_as::<_, TaskHistoryRow>(
+    let mut sql = QueryBuilder::<Sqlite>::new(
         r#"
         SELECT id, name, task_type, workload_kind, metrics, status, source_paths, output_path, format,
                started_at, completed_at, duration_ms, processed_bytes, total_bytes,
-               error_message, logs, failure
+               error_message, logs, failure, retry_of_task_id, execution_config
         FROM task_operation_history
-        WHERE (? IS NULL OR completed_at < ? OR (completed_at = ? AND id < ?))
-        ORDER BY completed_at DESC, id DESC
-        LIMIT ?
+        WHERE 1=1
         "#,
-    )
-    .bind(cursor.as_ref().map(|c| c.completed_at.as_str()))
-    .bind(cursor.as_ref().map(|c| c.completed_at.as_str()))
-    .bind(cursor.as_ref().map(|c| c.completed_at.as_str()))
-    .bind(cursor.as_ref().map(|c| c.id.as_str()))
-    .bind(limit + 1)
+    );
+    if let Some(cursor) = &cursor {
+        sql.push(" AND (COALESCE(julianday(completed_at), 0) < COALESCE(julianday(").push_bind(&cursor.completed_at)
+            .push("), 0) OR (COALESCE(julianday(completed_at), 0) = COALESCE(julianday(").push_bind(&cursor.completed_at)
+            .push("), 0) AND id < ").push_bind(&cursor.id).push("))");
+    }
+    if let Some(value) = &query.task_type { sql.push(" AND task_type = ").push_bind(value); }
+    if let Some(value) = &query.status { sql.push(" AND status = ").push_bind(value); }
+    if let Some(value) = &query.since { sql.push(" AND julianday(completed_at) >= julianday(").push_bind(value).push(")"); }
+    if let Some(value) = &query.failure_category {
+        sql.push(" AND (").push(history_failure_category_sql()).push(") = ").push_bind(value);
+    }
+    let text = query.text.trim().to_lowercase();
+    if !text.is_empty() {
+        // instr treats %, _ and backslashes as literal filename characters.
+        sql.push(" AND (instr(lower(name), ").push_bind(&text).push(") > 0");
+        for column in ["output_path", "format", "error_message"] {
+            sql.push(" OR instr(lower(COALESCE(").push(column).push(", '')), ").push_bind(&text).push(") > 0");
+        }
+        sql.push(" OR EXISTS (SELECT 1 FROM json_each(CASE WHEN json_valid(source_paths) THEN source_paths ELSE '[]' END) WHERE instr(lower(value), ")
+            .push_bind(&text).push(") > 0))");
+    }
+    sql.push(" ORDER BY COALESCE(julianday(completed_at), 0) DESC, id DESC LIMIT ").push_bind(limit + 1);
+    let mut rows = sql.build_query_as::<TaskHistoryRow>()
     .fetch_all(pool)
     .await
     .map_err(|error| format!("读取任务历史失败: {error}"))?;
@@ -500,6 +584,8 @@ async fn history_page_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Opt
     let records = rows.into_iter()
         .map(|row| {
             Ok(TaskHistoryRecord {
+                execution_config: row.execution_config.and_then(|value| serde_json::from_str(&value).ok()),
+                retry_of_task_id: row.retry_of_task_id,
                 failure: row.failure.and_then(|value| serde_json::from_str(&value).ok()),
                 id: row.id,
                 name: row.name,
@@ -519,9 +605,10 @@ async fn history_page_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Opt
                 duration_ms: row.duration_ms,
                 processed_bytes: row.processed_bytes,
                 total_bytes: row.total_bytes,
-                error_message: row.error_message,
-                logs: serde_json::from_str(&row.logs)
-                    .map_err(|error| format!("解析任务日志失败: {error}"))?,
+                error_message: row.error_message.map(|value| redact_sensitive_text(&value)),
+                logs: serde_json::from_str::<Vec<TaskHistoryLog>>(&row.logs)
+                    .map_err(|error| format!("解析任务日志失败: {error}"))?
+                    .into_iter().map(|mut log| { log.message = redact_sensitive_text(&log.message); log }).collect(),
             })
         })
         .collect::<Result<Vec<_>, String>>()?;
@@ -604,6 +691,24 @@ mod tests {
         assert_eq!(history_page_from_pool(reopened.pool(), 1, None).await.unwrap().records[0].id, "zz-new");
         assert_eq!(history_page_from_pool(reopened.pool(), 0, None).await.unwrap().records.len(), 1);
         assert_eq!(history_page_from_pool(reopened.pool(), 99999, None).await.unwrap().records.len(), 500);
+
+        // A filename beyond the first five pages is found without loading them.
+        // Literal %, _, Unicode and decoded Windows paths remain searchable.
+        sqlx::query("UPDATE task_operation_history SET name = '旧照片_100%.zip', failure = NULL, source_paths = ? WHERE id IN ('record-0000', 'record-0001')")
+            .bind(serde_json::json!(["D:\\旅行\\旧照片_100%.zip"]).to_string())
+            .execute(reopened.pool()).await.unwrap();
+        let query = HistoryQuery { text: "旧照片_100%".into(), task_type: Some("decompression".into()),
+            status: Some("failed".into()), failure_category: Some("damaged".into()),
+            since: Some("2026-09-23T08:00:00+08:00".into()) };
+        let first = history_query_from_pool(reopened.pool(), 1, None, query.clone()).await.unwrap();
+        assert_eq!(first.records[0].id, "record-0001");
+        let next = history_query_from_pool(reopened.pool(), 1, first.next_cursor, query.clone()).await.unwrap();
+        assert_eq!(next.records[0].id, "record-0000");
+        assert!(next.next_cursor.is_none());
+        let path_query = HistoryQuery { text: "D:\\旅行\\".into(), ..query.clone() };
+        assert_eq!(history_query_from_pool(reopened.pool(), 100, None, path_query).await.unwrap().records.len(), 2);
+        let absent = HistoryQuery { status: Some("completed".into()), ..query };
+        assert!(history_query_from_pool(reopened.pool(), 100, None, absent).await.unwrap().records.is_empty());
     }
 
     #[tokio::test]
@@ -696,10 +801,58 @@ mod tests {
         reopened.pool().close().await;
     }
 
+    #[tokio::test]
+    async fn retry_origin_survives_reopen_without_overwriting_original_and_old_secrets_are_redacted() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("retry.db");
+        let connection = crate::database::connection::DatabaseConnection::new(&path, None).await.unwrap();
+        let original: TaskHistoryRecord = serde_json::from_value(serde_json::json!({
+            "id":"original-task", "name":"source.zip", "taskType":"decompression", "status":"failed",
+            "sourcePaths":["C:/source.zip"], "outputPath":"C:/old-output", "completedAt":"2026-10-10T00:00:00Z",
+            "durationMs":10,"processedBytes":0,"totalBytes":100,"errorMessage":"source damaged","logs":[]
+        })).unwrap();
+        assert!(original.retry_of_task_id.is_none());
+        save_task_history_to_pool(connection.pool(), original.clone()).await.unwrap();
+        let mut retry = original;
+        retry.id = "new-task".into();
+        retry.retry_of_task_id = Some("original-task".into());
+        retry.status = "completed".into();
+        retry.error_message = None;
+        retry.output_path = "C:/new-output".into();
+        retry.execution_config = Some(ExtractionConfigV1 {
+            schema_version: 1, kind: "archive-extraction".into(),
+            output_directory: "D:/saved-root".into(), extract_to_subfolder: false,
+        });
+        save_task_history_to_pool(connection.pool(), retry.clone()).await.unwrap();
+        // Simulate an old on-disk record without rewriting or reading user data.
+        sqlx::query("UPDATE task_operation_history SET logs = ? WHERE id = 'original-task'")
+            .bind(r#"[{"timestamp":"now","severity":"info","message":"密码验证通过：本次解压使用密码「old-secret」"}]"#)
+            .execute(connection.pool()).await.unwrap();
+        connection.pool().close().await;
+        let reopened = crate::database::connection::DatabaseConnection::new(&path, None).await.unwrap();
+        let rows = list_task_history_from_pool(reopened.pool(), None).await.unwrap();
+        assert_eq!(rows.len(), 2);
+        let old = rows.iter().find(|row| row.id == "original-task").unwrap();
+        assert_eq!(old.status, "failed");
+        assert_eq!(old.output_path, "C:/old-output");
+        assert!(old.retry_of_task_id.is_none());
+        assert!(old.execution_config.is_none());
+        let restored = rows.iter().find(|row| row.id == "new-task").unwrap().execution_config.as_ref().unwrap();
+        assert_eq!(restored.output_directory, "D:/saved-root");
+        assert!(!restored.extract_to_subfolder);
+        assert!(!old.logs[0].message.contains("old-secret"));
+        assert_eq!(rows.iter().find(|row| row.id == "new-task").unwrap().retry_of_task_id.as_deref(), Some("original-task"));
+        retry.retry_of_task_id = Some(retry.id.clone());
+        assert!(sanitize_record(retry).is_err());
+        reopened.pool().close().await;
+    }
+
     #[test]
     fn failed_history_always_ends_with_a_final_reason() {
         let record = TaskHistoryRecord {
                 failure: None,
+                retry_of_task_id: None,
+                execution_config: None,
             id: "failed-task".into(),
             name: "damaged.rar".into(),
             task_type: "decompression".into(),
@@ -735,6 +888,8 @@ mod tests {
     fn sanitizes_sensitive_logs_and_limits_payload() {
         let record = TaskHistoryRecord {
                 failure: None,
+                retry_of_task_id: None,
+                execution_config: None,
             id: "task-1".into(),
             name: "sample.zip".into(),
             task_type: "compression".into(),
@@ -777,7 +932,7 @@ mod tests {
         );
         assert_eq!(
             redact_sensitive_text("密码验证通过：本次解压使用密码「open-sesame」"),
-            "密码验证通过：本次解压使用密码「open-sesame」"
+            "密码验证通过：本次解压使用密码「 [已隐藏]"
         );
         assert_eq!(
             redact_sensitive_text("解压密码：open-sesame"),
@@ -826,6 +981,8 @@ mod tests {
     fn rejects_non_terminal_status() {
         let record = TaskHistoryRecord {
                 failure: None,
+                retry_of_task_id: None,
+                execution_config: None,
             id: "task-1".into(), name: "task".into(), task_type: "decompression".into(),
             workload_kind: "archive".into(), metrics: None,
             status: "running".into(), source_paths: vec![], output_path: String::new(),
@@ -853,6 +1010,8 @@ mod tests {
     fn rejects_media_metrics_on_archive_history() {
         let record = TaskHistoryRecord {
                 failure: None,
+                retry_of_task_id: None,
+                execution_config: None,
             id: "task-media".into(), name: "task".into(), task_type: "compression".into(),
             workload_kind: "archive".into(),
             metrics: Some(TaskHistoryMetricsV1 {
@@ -1038,6 +1197,8 @@ mod tests {
         };
         let completed = TaskHistoryRecord {
                 failure: None,
+                retry_of_task_id: None,
+                execution_config: None,
             id: "real-image-completed".into(),
             name: "transparent.png".into(),
             task_type: "compression".into(),
@@ -1078,6 +1239,8 @@ mod tests {
         let terminal_without_metrics =
             |id: &str, status: &str, error: Option<&str>, second: u8| TaskHistoryRecord {
                 failure: None,
+                retry_of_task_id: None,
+                execution_config: None,
                 id: id.into(),
                 name: "photo.webp".into(),
                 task_type: "compression".into(),

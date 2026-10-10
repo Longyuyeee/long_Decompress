@@ -100,6 +100,19 @@ describe('useTauriCommands', () => {
     await expect(commands.saveFile()).resolves.toBeNull()
   })
 
+  it('stores the committed output separately from the original extraction settings', async () => {
+    mocks.invoke.mockImplementation(async (command: string) => command === 'extract_file' ? 'C:/output/demo' : undefined)
+    const commands = useTauriCommands()
+    const tasks = useTaskStore()
+    await commands.decompressFile('C:/archives/demo.zip', { ...decompressionOptions, createSubdirectory: true })
+    expect(tasks.tasks[0]).toMatchObject({ status: 'completed', outputPath: 'C:/output/demo',
+      executionConfig: { outputDirectory: 'C:/output', extractToSubfolder: true } })
+    await tasks.waitForHistoryPersistence(tasks.tasks[0].id)
+    expect(mocks.invoke).toHaveBeenCalledWith('save_task_history', {
+      record: expect.objectContaining({ outputPath: 'C:/output/demo', executionConfig: expect.objectContaining({ outputDirectory: 'C:/output' }) }),
+    })
+  })
+
   it('marks a decompression task failed when the backend reports a disk error', async () => {
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'extract_file') throw new Error('disk full')
@@ -121,6 +134,7 @@ describe('useTauriCommands', () => {
       status: 'failed',
       progress: 0,
       error: 'disk full',
+      executionConfig: { schemaVersion: 1, kind: 'archive-extraction', outputDirectory: 'C:/output', extractToSubfolder: false },
     })
     expect(tasks.tasks[0].logs.at(-1)).toMatchObject({
       message: '最终失败原因：disk full',

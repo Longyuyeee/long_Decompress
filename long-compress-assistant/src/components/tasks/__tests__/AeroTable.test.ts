@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import AeroTable from '../AeroTable.vue'
 import { useTaskStore } from '@/stores/task'
 
 vi.mock('@tauri-apps/api/dialog', () => ({ open: vi.fn() }))
 vi.mock('@tauri-apps/api/tauri', () => ({
-  invoke: vi.fn(async (command: string) => command === 'load_app_settings' ? '{}' : undefined),
+  invoke: vi.fn(async (command: string) => command === 'load_app_settings' ? '{}' : command === 'preview_extraction_output' ? 'C:/output' : undefined),
 }))
 vi.mock('@/composables/useTauriCommands', () => ({
   useTauriCommands: () => ({
@@ -16,6 +16,47 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('AeroTable', () => {
+  it('只提示本次选中的待执行任务共用目录，忽略大小写和尾部斜杠差异', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    for (const id of ['one', 'two']) store.addTask({ id, name: `${id}.zip`, type: 'decompression', sourceFiles: [`C:/${id}.zip`], outputPath: 'C:/output' })
+    const wrapper = mount(AeroTable, { props: { taskType: 'decompression' }, global: { plugins: [pinia], stubs: { Teleport: true,
+      ExtractionOutputPreview: { name: 'ExtractionOutputPreview', props: ['sharedCount'], template: '<div :data-shared="sharedCount" />' },
+    } } })
+    expect(wrapper.findAllComponents({ name: 'ExtractionOutputPreview' })).toHaveLength(0)
+    await wrapper.get('[data-testid="toggle-archive-task-one"]').trigger('click')
+    await flushPromises()
+    const preview = wrapper.findComponent({ name: 'ExtractionOutputPreview' })
+    expect(preview.props('sharedCount')).toBe(2)
+    expect(wrapper.get('[data-testid="task-row"]').find('[data-shared]').exists()).toBe(false)
+    await wrapper.setProps({ selectedTaskIds: new Set(['one']) })
+    await flushPromises()
+    expect(wrapper.findComponent({ name: 'ExtractionOutputPreview' }).props('sharedCount')).toBe(1)
+    wrapper.unmount()
+  })
+  it('limits failure inspection to explicit task IDs and treats an empty scope as empty', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    for (const id of ['old-failure', 'this-run-failure']) {
+      store.addTask({ id, name: id, type: 'decompression', sourceFiles: [`C:/${id}.zip`], outputPath: 'C:/out' })
+      store.tasks.find(task => task.id === id)!.status = 'failed'
+    }
+    const wrapper = mount(AeroTable, {
+      props: { taskType: 'decompression', taskIds: ['this-run-failure'] },
+      global: { plugins: [pinia], stubs: { Teleport: true, Transition: false, TransitionGroup: false } },
+    })
+    expect(wrapper.findAll('[data-testid="task-row"]')).toHaveLength(1)
+    expect(wrapper.text()).toContain('this-run-failure')
+    expect(wrapper.text()).not.toContain('old-failure')
+    await wrapper.setProps({ taskIds: [] })
+    await vi.waitFor(() => expect(wrapper.findAll('[data-testid="task-row"]')).toHaveLength(0))
+    await wrapper.setProps({ taskIds: undefined })
+    expect(wrapper.findAll('[data-testid="task-row"]')).toHaveLength(2)
+    wrapper.unmount()
+  })
+
   it('sorts imported tasks by natural name and exposes full truncated names', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
@@ -26,7 +67,7 @@ describe('AeroTable', () => {
 
     const wrapper = mount(AeroTable, {
       props: { taskType: 'decompression' },
-      global: { plugins: [pinia], stubs: { Transition: false, TransitionGroup: false } },
+      global: { plugins: [pinia], stubs: { Teleport: true, Transition: false, TransitionGroup: false } },
     })
 
     const nameCells = wrapper.findAll('.task-name-cell > .overflow-tooltip-anchor')
@@ -47,7 +88,7 @@ describe('AeroTable', () => {
 
     const wrapper = mount(AeroTable, {
       props: { taskType: 'decompression' },
-      global: { plugins: [pinia], stubs: { Transition: false, TransitionGroup: false } },
+      global: { plugins: [pinia], stubs: { Teleport: true, Transition: false, TransitionGroup: false } },
     })
     const rows = wrapper.findAll('[data-testid="task-row"]')
     expect(rows[0].get('.task-status-cell').classes()).not.toContain('is-terminal')
@@ -71,7 +112,7 @@ describe('AeroTable', () => {
 
     const wrapper = mount(AeroTable, {
       props: { taskType: 'decompression' },
-      global: { plugins: [pinia], stubs: { Transition: false, TransitionGroup: false } },
+      global: { plugins: [pinia], stubs: { Teleport: true, Transition: false, TransitionGroup: false } },
     })
 
     const actionCell = wrapper.get('[data-testid="task-action-cell"]')
@@ -104,7 +145,7 @@ describe('AeroTable', () => {
       props: { taskType: 'decompression' },
       global: {
         plugins: [pinia],
-        stubs: { Transition: false, TransitionGroup: false },
+        stubs: { Teleport: true, Transition: false, TransitionGroup: false },
       },
     })
 
@@ -140,7 +181,7 @@ describe('AeroTable', () => {
 
     const wrapper = mount(AeroTable, {
       props: { taskType: 'decompression' },
-      global: { plugins: [pinia], stubs: { Transition: false, TransitionGroup: false } },
+      global: { plugins: [pinia], stubs: { Teleport: true, Transition: false, TransitionGroup: false } },
     })
     await wrapper.get('[data-testid="task-row"]').trigger('click')
 

@@ -292,7 +292,14 @@ export const useTauriCommands = () => {
       format: filePath.split('.').pop() || 'zip'
     })
     const trackedTask = taskStore.tasks.find(item => item.id === taskId)
-    if (trackedTask) trackedTask.selectedEntries = options.selectedEntries ? [...options.selectedEntries] : undefined
+    if (trackedTask) {
+      trackedTask.selectedEntries = options.selectedEntries ? [...options.selectedEntries] : undefined
+      // Capture the submitted directory, before execution can report a final output path.
+      trackedTask.executionConfig = !options.fileFilter && !options.selectedEntries?.length ? {
+        schemaVersion: 1, kind: 'archive-extraction', outputDirectory: options.outputPath,
+        extractToSubfolder: options.createSubdirectory ?? false,
+      } : undefined
+    }
 
     try {
       taskStore.updateTaskStatus(taskId, 'preparing')
@@ -320,7 +327,10 @@ export const useTauriCommands = () => {
         }
       })
       const task = taskStore.tasks.find(item => item.id === taskId)
-      if (task) task.progress = 100
+      if (task) {
+        task.progress = 100
+        task.outputPath = result
+      }
       taskStore.updateTaskStatus(taskId, 'completed')
       return result
     } catch (error: any) {
@@ -378,7 +388,10 @@ export const useTauriCommands = () => {
         resolutions,
         fallbackAction: fallbackAction || null,
       })
-      if (task) task.progress = 100
+      if (task) {
+        task.progress = 100
+        task.outputPath = result
+      }
       taskStore.updateTaskStatus(taskId, 'completed')
       return result
     } catch (error) {

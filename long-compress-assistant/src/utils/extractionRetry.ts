@@ -1,0 +1,63 @@
+import { invoke } from '@tauri-apps/api/tauri'
+import type { Task } from '@/stores/task'
+import type { ArchiveDiagnosticReport } from '@/composables/useTauriCommands'
+import { describeTaskFailure, getTaskRecoveryGuidance } from './taskFailure'
+import { isDecompressArchivePath, isPotentialSplitArchivePath } from './compressionFormat'
+
+export function extractionRetryPolicy(task: Task) {
+  const record = { status: task.status === 'failed' ? 'failed' as const : 'cancelled' as const, errorMessage: task.error }
+  const category = describeTaskFailure(record)?.category
+  const blocked = task.type !== 'decompression' || (task.workloadKind && task.workloadKind !== 'archive')
+    || task.status !== 'failed' ? '仅支持已失败的归档解压任务。'
+    : category === 'rollback-incomplete' ? '请先保留并人工核对原输出和恢复目录；此处不能直接重试回滚不完整的任务。'
+    : task.sourceFiles.length !== 1 || task.fileFilter || task.selectedEntries?.length
+      ? '此任务包含特殊来源或局部解压范围，请返回归档浏览重新选择范围。' : ''
+  return { blocked, category, guidance: getTaskRecoveryGuidance(record), requireIntegrity: category === 'damaged' }
+}
+
+export interface ExtractionRetryInput {
+  source: string
+  output: string
+  password: string
+  extractToSubfolder: boolean
+}
+
+export async function validateExtractionRetry(
+  input: ExtractionRetryInput,
+  requireIntegrity: boolean,
+  diagnosticId: string,
+  cancelled: () => boolean,
+) {
+  const check = () => { if (cancelled()) throw new Error('已停止检查，未创建此任务。') }
+  let path = input.source.trim()
+  const outputPath = input.output.trim()
+  if (!path || !outputPath) throw new Error('请确认来源文件与本次输出目录。')
+  if (!isDecompressArchivePath(path) && !isPotentialSplitArchivePath(path)) throw new Error('请选择支持的归档文件或首个分卷。')
+  check()
+  const split = await invoke<{ is_split: boolean; first_part?: string; is_complete?: boolean; missing_parts?: string[] } | null>('detect_split_archive', { path })
+  check()
+  if (split?.is_split) {
+    if (!split.first_part || split.is_complete === false || split.missing_parts?.length) {
+      throw new Error(`分卷仍不完整，请补齐后再检查：${split.missing_parts?.join('、') || '缺少必要分卷'}`)
+    }
+    path = split.first_part
+  } else if (!isDecompressArchivePath(path)) throw new Error('无法确认分卷组，请选择首卷。')
+  const file = await invoke<{ name: string; is_dir: boolean; size: number }>('get_file_info', { path })
+  check()
+  if (file.is_dir || file.size <= 0) throw new Error('来源必须是非空归档文件，请确认已下载或复制完成。')
+  const output = await invoke<{ is_dir: boolean }>('get_file_info', { path: outputPath })
+  check()
+  if (!output.is_dir) throw new Error('输出位置必须是已存在的目录。')
+  if (requireIntegrity) {
+    const report = await invoke<ArchiveDiagnosticReport>('diagnose_archive', {
+      diagnosticId, filePath: path, password: input.password || null,
+    })
+    check()
+    if (report.status !== 'healthy' || !report.integrityTested) {
+      throw new Error(report.status === 'password_required' || report.status === 'wrong_password'
+        ? '检查完整性需要正确密码，请填写后重新检查。'
+        : '来源尚未通过完整性检查，请重新获取完整文件，或先到文件完整性页面诊断。')
+    }
+  }
+  return { path, outputPath, name: file.name }
+}

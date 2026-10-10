@@ -4,7 +4,11 @@
 
 ## 当前接续入口
 
-- [1.3.6 发布审计](RELEASE_AUDIT_1.3.6.md)、[历史保留场景审计](HISTORY_RETENTION_2026-09-23.md)、[下一版全库查询计划](NEXT_VERSION_AFTER_1.3.6.md)。以此为最新接续，旧版计划仅作追溯。
+- [1.3.7 更新说明](RELEASE_NOTES_1.3.7.md)、[发布记录](RELEASE_AUDIT_1.3.7.md)。本版交付归档解压体验增强，后续优先级见产品路线。
+
+- [2026-10-10 用户体验增强路线](PRODUCT_ENHANCEMENT_ROADMAP.md)、[开发交接](DEVELOPMENT_HANDOFF.md)、[下一版更新说明与配套计划](NEXT_VERSION_AFTER_1.3.6.md)。批次处理、历史查找与再次解压、输出预览和成功结果入口已本地实现，当前接续版本与安装包准备。冲突增强、跨类型结果工作区及书签/标签页后续推进；性能作为每版持续工作。
+
+- [1.3.6 发布审计](RELEASE_AUDIT_1.3.6.md)、[历史保留场景审计](HISTORY_RETENTION_2026-09-23.md)。这是已交付基线，开发顺序以顶部路线为准，旧版计划仅作追溯。
 
 - [1.3.5 发布审计](RELEASE_AUDIT_1.3.5.md)、[失败指引开发审计](FAILURE_RECOVERY_2026-09-23.md)、[下一版计划](NEXT_VERSION_AFTER_1.3.5.md)。以下旧版计划用于追溯，不代表当前待办全部未完成。
 

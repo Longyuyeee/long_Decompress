@@ -3,6 +3,57 @@ use crate::services::split_archive_detector::SplitArchiveDetector;
 use serde::Serialize;
 use std::path::Path;
 
+/// Pure path preview: shares execution's naming logic and never creates a directory.
+#[tauri::command]
+pub fn preview_extraction_output(file_path: String, output_path: String, create_subdirectory: bool) -> Result<String, String> {
+    if file_path.trim().is_empty() || output_path.trim().is_empty() {
+        return Err("请选择来源文件和输出目录".into());
+    }
+    Ok(crate::services::compression_service::CompressionService::extraction_output_path(
+        Path::new(&file_path), Some(&output_path), create_subdirectory,
+    ).to_string_lossy().into_owned())
+}
+
+fn destination_state(path: &Path) -> &'static str {
+    match std::fs::metadata(path) {
+        Ok(metadata) if !metadata.is_dir() => "file",
+        Ok(_) => match std::fs::read_dir(path) {
+            Ok(mut entries) => match entries.next() {
+                None => "empty",
+                Some(Ok(_)) => "occupied",
+                Some(Err(_)) => "unavailable",
+            },
+            Err(_) => "unavailable",
+        },
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => "missing",
+        Err(_) => "unavailable",
+    }
+}
+
+#[tauri::command]
+pub async fn inspect_extraction_destination(path: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || destination_state(Path::new(&path)).to_string())
+        .await.map_err(|error| error.to_string())
+}
+
+#[cfg(test)]
+mod destination_tests {
+    use super::*;
+    #[test]
+    fn distinguishes_new_empty_occupied_and_file_without_creating_output() {
+        let temp = tempfile::tempdir().unwrap();
+        let missing = temp.path().join("new");
+        assert_eq!(destination_state(&missing), "missing");
+        assert!(!missing.exists());
+        assert_eq!(destination_state(temp.path()), "empty");
+        let file = temp.path().join("existing.txt");
+        std::fs::write(&file, "original").unwrap();
+        assert_eq!(destination_state(temp.path()), "occupied");
+        assert_eq!(destination_state(&file), "file");
+        assert_eq!(std::fs::read_to_string(file).unwrap(), "original");
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub struct SplitArchiveResponse {
     pub is_split: bool,
