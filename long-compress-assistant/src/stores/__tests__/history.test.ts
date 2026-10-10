@@ -1,12 +1,43 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useHistoryStore } from '../history'
+import { HISTORY_WINDOW_LIMIT, useHistoryStore } from '../history'
 
 const mocks = vi.hoisted(() => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 const row = (id: string) => ({ id, completedAt: '2026-09-23T00:00:00Z', status: 'failed' })
 const cursor = { completedAt: '2026-09-23T00:00:00Z', id: 'b' }
 describe('history pagination', () => {
+  it('bounds the window while I browse 1200 records and can return to the newest without losing any history', async () => {
+    const database = Array.from({ length: 1200 }, (_, i) => row(`record-${String(i).padStart(4, '0')}`)).reverse()
+    mocks.invoke.mockImplementation(async (_command, args) => {
+      let matches = database.filter(record => !args.cursor || (args.newer ? record.id > args.cursor.id : record.id < args.cursor.id))
+      if (args.newer) matches = matches.reverse()
+      const records = matches.slice(0, args.limit)
+      const last = records.at(-1)
+      const nextCursor = matches.length > args.limit && last ? { completedAt: last.completedAt, id: last.id } : null
+      return { records: args.newer ? records.reverse() : records, nextCursor, logsOmitted: true }
+    })
+    const store = useHistoryStore()
+    const seen = new Set<string>()
+    await store.fetchHistory()
+    do {
+      store.records.forEach(record => seen.add(record.id))
+      expect(store.records.length).toBeLessThanOrEqual(HISTORY_WINDOW_LIMIT)
+      if (!store.hasMore) break
+      await store.loadMore()
+    } while (true)
+    expect(seen.size).toBe(1200)
+    expect(store.hasNewer).toBe(true)
+    while (store.hasNewer) {
+      await store.loadNewer()
+      expect(store.records.length).toBeLessThanOrEqual(HISTORY_WINDOW_LIMIT)
+    }
+    expect(store.records[0].id).toBe('record-1199')
+    expect(store.records.at(-1)?.id).toBe('record-0700')
+    expect(store.hasMore).toBe(true)
+    expect(database).toHaveLength(1200)
+    expect(mocks.invoke.mock.calls.every(([command]) => command === 'list_task_history_page')).toBe(true)
+  })
   it('搜索条件变化后丢弃旧响应，下一页沿用当前条件', async () => {
     const store = useHistoryStore()
     let resolve!: (page: unknown) => void

@@ -5,6 +5,7 @@ import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 interface HistoryCursor { completedAt: string; id: string }
 interface HistoryPage { records: TaskHistoryRecord[]; nextCursor: HistoryCursor | null; logsOmitted?: boolean }
+export const HISTORY_WINDOW_LIMIT = 500
 export interface HistoryQuery {
   text: string
   taskType?: string
@@ -20,6 +21,8 @@ export const useHistoryStore = defineStore('history', () => {
   const error = ref<string | null>(null)
   const nextCursor = ref<HistoryCursor | null>(null)
   const hasMore = computed(() => nextCursor.value !== null)
+  const newerCursor = ref<HistoryCursor | null>(null)
+  const hasNewer = computed(() => newerCursor.value !== null)
   let activeQuery: HistoryQuery = { text: '' }
   let generation = 0
   const deletedIds = new Set<string>()
@@ -29,19 +32,28 @@ export const useHistoryStore = defineStore('history', () => {
       || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0),
   ))
 
-  const readPage = async (append: boolean) => {
-    if (append && (isLoading.value || !hasMore.value)) return
+  const readPage = async (append: boolean, newer = false) => {
+    if (append && (isLoading.value || !(newer ? hasNewer.value : hasMore.value))) return
     const request = ++generation
-    if (!append) deletedIds.clear()
+    deletedIds.clear()
     isLoading.value = true
     error.value = null
     try {
-      const page = await invoke<HistoryPage>('list_task_history_page', { limit: 100, cursor: append ? nextCursor.value : null, query: { ...activeQuery }, omitLogs: true })
+      const page = await invoke<HistoryPage>('list_task_history_page', { limit: 100, cursor: append ? (newer ? newerCursor.value : nextCursor.value) : null, query: { ...activeQuery }, omitLogs: true, ...(newer ? { newer: true } : {}) })
       if (request !== generation) return
       const merged = new Map((append ? records.value : []).map(record => [record.id, record]))
       for (const record of page.records) if (!deletedIds.has(record.id)) merged.set(record.id, { ...record, logsLoaded: !page.logsOmitted })
-      records.value = [...merged.values()]
-      nextCursor.value = page.nextCursor
+      const all = [...merged.values()].sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime() || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0))
+      const cursorFor = (record: TaskHistoryRecord): HistoryCursor => ({ completedAt: record.completedAt, id: record.id })
+      records.value = newer ? all.slice(0, HISTORY_WINDOW_LIMIT) : all.slice(-HISTORY_WINDOW_LIMIT)
+      if (newer) {
+        newerCursor.value = page.nextCursor
+        if (all.length > HISTORY_WINDOW_LIMIT) nextCursor.value = cursorFor(records.value.at(-1)!)
+      } else {
+        nextCursor.value = page.nextCursor
+        if (!append) newerCursor.value = null
+        else if (all.length > HISTORY_WINDOW_LIMIT) newerCursor.value = cursorFor(records.value[0])
+      }
       isInitialized.value = true
     } catch (caught) {
       if (request === generation) { error.value = String(caught); throw caught }
@@ -51,11 +63,13 @@ export const useHistoryStore = defineStore('history', () => {
   }
   const fetchHistory = () => readPage(false)
   const loadMore = () => readPage(true)
+  const loadNewer = () => readPage(true, true)
   const prepareQuery = (query: HistoryQuery) => {
     activeQuery = { ...query }
     generation++
     records.value = []
     nextCursor.value = null
+    newerCursor.value = null
     error.value = null
     isLoading.value = true
     isInitialized.value = false
@@ -73,6 +87,7 @@ export const useHistoryStore = defineStore('history', () => {
     isLoading.value = false
     error.value = null
     nextCursor.value = null
+    newerCursor.value = null
     isInitialized.value = true
     deletedIds.clear()
     records.value = []
@@ -87,6 +102,8 @@ export const useHistoryStore = defineStore('history', () => {
     fetchHistory,
     prepareQuery,
     loadMore,
+    loadNewer,
+    hasNewer,
     hasMore,
     deleteRecord,
     clearHistory,

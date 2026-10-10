@@ -187,6 +187,9 @@ onUnmounted(() => clearTimeout(searchTimer))
 const loadMore = async () => {
   try { await historyStore.loadMore() } catch { /* keep loaded rows and allow retry */ }
 }
+const loadNewer = async () => {
+  try { await historyStore.loadNewer() } catch { /* keep this window available for retry */ }
+}
 
 const confirmClear = async () => {
   try {
@@ -238,9 +241,10 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
       </header>
 
       <p class="text-xs text-muted" data-testid="history-retention-policy">
-        搜索和筛选覆盖全部已保存历史，无需逐页寻找。当前显示 {{ historyStore.records.length }} 条{{ historyStore.hasMore ? '，可继续加载更多匹配项' : '' }}。
+        搜索和筛选覆盖全部已保存历史，无需逐页寻找。当前窗口显示 {{ historyStore.records.length }} 条，最多保留 500 条在页面中；更早和更新记录均可继续浏览，未删除历史。
         下方统计和趋势仅针对当前显示的记录。新完成的任务请刷新。
       </p>
+      <button v-if="historyStore.hasNewer" class="history-control" :disabled="historyStore.isLoading" @click="loadNewer">查看较新的记录</button>
 
       <details class="space-y-4">
         <summary class="cursor-pointer text-sm text-muted w-fit">查看当前结果统计与趋势</summary>
@@ -353,6 +357,9 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
       </section>
     </div>
 
+    <div v-if="historyStore.hasNewer" class="px-6 pb-4 text-center">
+      <button class="history-control" data-testid="history-load-newer" :disabled="historyStore.isLoading" @click="loadNewer">查看较新的记录</button>
+    </div>
     <div v-if="historyStore.hasMore" class="px-6 pb-6 text-center">
       <p class="text-sm text-muted mb-3">还有符合当前条件的记录。</p>
       <button class="history-control" data-testid="history-load-more" :disabled="historyStore.isLoading" @click="loadMore">{{ historyStore.isLoading ? '正在加载…' : '加载更多结果' }}</button>

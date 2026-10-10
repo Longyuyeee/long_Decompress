@@ -514,10 +514,10 @@ fn history_failure_category_sql() -> String {
 }
 
 #[tauri::command]
-pub async fn list_task_history_page(limit: Option<i64>, cursor: Option<HistoryCursor>, query: Option<HistoryQuery>, omit_logs: Option<bool>) -> Result<HistoryPage, String> {
+pub async fn list_task_history_page(limit: Option<i64>, cursor: Option<HistoryCursor>, query: Option<HistoryQuery>, omit_logs: Option<bool>, newer: Option<bool>) -> Result<HistoryPage, String> {
     let pool = crate::database::connection::get_pool().await
         .map_err(|error| format!("任务历史数据库不可用: {error}"))?;
-    history_query_with_logs_from_pool(&pool, limit.unwrap_or(100), cursor, query.unwrap_or_default(), omit_logs.unwrap_or(false)).await
+    history_query_direction_from_pool(&pool, limit.unwrap_or(100), cursor, query.unwrap_or_default(), omit_logs.unwrap_or(false), newer.unwrap_or(false)).await
 }
 
 async fn history_logs_from_pool(pool: &sqlx::SqlitePool, id: &str) -> Result<Vec<TaskHistoryLog>, String> {
@@ -560,6 +560,10 @@ async fn history_query_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Op
 }
 
 async fn history_query_with_logs_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Option<HistoryCursor>, query: HistoryQuery, omit_logs: bool) -> Result<HistoryPage, String> {
+    history_query_direction_from_pool(pool, limit, cursor, query, omit_logs, false).await
+}
+
+async fn history_query_direction_from_pool(pool: &sqlx::SqlitePool, limit: i64, cursor: Option<HistoryCursor>, query: HistoryQuery, omit_logs: bool, newer: bool) -> Result<HistoryPage, String> {
     let limit = limit.clamp(1, MAX_HISTORY_PAGE);
     let logs_column = if omit_logs { "'[]' AS logs" } else { "logs" };
     let mut sql = QueryBuilder::<Sqlite>::new(format!(
@@ -572,9 +576,10 @@ async fn history_query_with_logs_from_pool(pool: &sqlx::SqlitePool, limit: i64, 
         "#,
     ));
     if let Some(cursor) = &cursor {
-        sql.push(" AND (COALESCE(julianday(completed_at), 0) < COALESCE(julianday(").push_bind(&cursor.completed_at)
+        let comparison = if newer { " > " } else { " < " };
+        sql.push(" AND (COALESCE(julianday(completed_at), 0)").push(comparison).push("COALESCE(julianday(").push_bind(&cursor.completed_at)
             .push("), 0) OR (COALESCE(julianday(completed_at), 0) = COALESCE(julianday(").push_bind(&cursor.completed_at)
-            .push("), 0) AND id < ").push_bind(&cursor.id).push("))");
+            .push("), 0) AND id").push(comparison).push_bind(&cursor.id).push("))");
     }
     if let Some(value) = &query.task_type { sql.push(" AND task_type = ").push_bind(value); }
     if let Some(value) = &query.status { sql.push(" AND status = ").push_bind(value); }
@@ -592,7 +597,7 @@ async fn history_query_with_logs_from_pool(pool: &sqlx::SqlitePool, limit: i64, 
         sql.push(" OR EXISTS (SELECT 1 FROM json_each(CASE WHEN json_valid(source_paths) THEN source_paths ELSE '[]' END) WHERE instr(lower(value), ")
             .push_bind(&text).push(") > 0))");
     }
-    sql.push(" ORDER BY COALESCE(julianday(completed_at), 0) DESC, id DESC LIMIT ").push_bind(limit + 1);
+    sql.push(if newer { " ORDER BY COALESCE(julianday(completed_at), 0) ASC, id ASC LIMIT " } else { " ORDER BY COALESCE(julianday(completed_at), 0) DESC, id DESC LIMIT " }).push_bind(limit + 1);
     let mut rows = sql.build_query_as::<TaskHistoryRow>()
     .fetch_all(pool)
     .await
@@ -603,6 +608,7 @@ async fn history_query_with_logs_from_pool(pool: &sqlx::SqlitePool, limit: i64, 
     let next_cursor = if has_more { rows.last().map(|row| HistoryCursor {
         completed_at: row.completed_at.clone(), id: row.id.clone(),
     }) } else { None };
+    if newer { rows.reverse(); }
     let records = rows.into_iter()
         .map(|row| {
             Ok(TaskHistoryRecord {
@@ -713,6 +719,19 @@ mod tests {
         let first = history_page_from_pool(reopened.pool(), 100, None).await.unwrap();
         assert_eq!(first.records[0].id, "record-0504");
         assert_eq!(first.records.len(), 100);
+        let backward = history_query_direction_from_pool(reopened.pool(), 100, Some(HistoryCursor {
+            completed_at: first.records[99].completed_at.clone(), id: first.records[99].id.clone(),
+        }), HistoryQuery::default(), true, true).await.unwrap();
+        assert_eq!(backward.records.len(), 99);
+        assert_eq!(backward.records[0].id, "record-0504");
+        assert_eq!(backward.records[98].id, "record-0406");
+        assert!(backward.next_cursor.is_none());
+        let backward_page = history_query_direction_from_pool(reopened.pool(), 100, Some(HistoryCursor {
+            completed_at: first.records[0].completed_at.clone(), id: "record-0000".into(),
+        }), HistoryQuery::default(), true, true).await.unwrap();
+        assert_eq!(backward_page.records[0].id, "record-0100");
+        assert_eq!(backward_page.records[99].id, "record-0001");
+        assert_eq!(backward_page.next_cursor.unwrap().id, "record-0100");
         assert_eq!(first.records[0].error_message.as_deref(), Some("[archive-inspection:damaged] original failure"));
         let mut ids: HashSet<String> = first.records.iter().map(|r| r.id.clone()).collect();
         let mut cursor = first.next_cursor;

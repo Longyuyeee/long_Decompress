@@ -1,5 +1,48 @@
 import { expect, test } from '@playwright/test'
 
+test('browse older history and return without retaining every row or losing search results', async ({ page }) => {
+  await page.addInitScript(() => {
+    const records = Array.from({ length: 650 }, (_, index) => ({
+      id: String(index).padStart(4, '0'), name: `照片-${index}.zip`, taskType: 'decompression',
+      workloadKind: 'archive', status: 'completed', sourcePaths: [`D:/照片-${index}.zip`],
+      outputPath: 'D:/相册', completedAt: '2026-10-10T10:00:00Z', durationMs: 10,
+      processedBytes: 1, totalBytes: 1, logs: [],
+    })).reverse()
+    window.__TAURI_IPC__ = (message: Record<string, any>) => {
+      let value: unknown
+      if (message.cmd === 'load_app_settings') value = '{}'
+      if (message.cmd === 'list_task_history_page') {
+        let matches = records.filter(record => !message.query?.text || record.name.includes(message.query.text))
+        if (message.cursor) matches = matches.filter(record => message.newer ? record.id > message.cursor.id : record.id < message.cursor.id)
+        if (message.newer) matches.reverse()
+        const batch = matches.slice(0, message.limit)
+        const last = batch.at(-1)
+        value = { records: message.newer ? batch.reverse() : batch, logsOmitted: true,
+          nextCursor: matches.length > message.limit && last ? { id: last.id, completedAt: last.completedAt } : null }
+      }
+      ;(window as any)[`_${message.callback}`]?.(value)
+    }
+  })
+  await page.goto('/#/history')
+  const rows = page.getByTestId('history-record-row')
+  await expect(rows).toHaveCount(100)
+  for (let index = 0; index < 6; index++) {
+    await page.getByTestId('history-load-more').click()
+    await expect(rows.last()).toContainText(`照片-${Math.max(0, 650 - (index + 2) * 100)}.zip`)
+    expect(await rows.count()).toBeLessThanOrEqual(500)
+  }
+  await expect(page.getByTestId('history-load-more')).toHaveCount(0)
+  await page.getByTestId('history-load-newer').click()
+  await expect(rows.first()).toContainText('照片-599.zip')
+  await page.getByTestId('history-load-newer').click()
+  await expect(rows.first()).toContainText('照片-649.zip')
+  await expect(rows).toHaveCount(500)
+  await expect(page.getByTestId('history-load-newer')).toHaveCount(0)
+  await page.getByTestId('history-search').fill('照片-0.zip')
+  await expect(rows).toHaveCount(1)
+  await expect(rows).toContainText('照片-0.zip')
+})
+
 test('find an old task and go directly to its extraction settings', async ({ page }, testInfo) => {
   // UI fixture only; the SQLite query is exercised by the Rust history tests.
   await page.addInitScript(() => {
@@ -59,16 +102,16 @@ test('find an old task and go directly to its extraction settings', async ({ pag
   })
   const firstRow = page.getByTestId('task-row').first()
   expect(await firstRow.evaluate(row => row.scrollHeight - row.clientHeight)).toBeLessThanOrEqual(1)
-  await expect(firstRow.getByRole('button', { name: '查看任务详情', exact: true })).toBeInViewport()
+  await expect(firstRow.getByRole('button', { name: '展开任务详情', exact: true })).toBeInViewport()
   expect(await firstRow.evaluate(row => row.scrollWidth - row.clientWidth)).toBeLessThanOrEqual(1)
   await page.screenshot({ path: testInfo.outputPath('queue-preview.png'), animations: 'disabled' })
-  await firstRow.getByRole('button', { name: '查看任务详情', exact: true }).click()
+  await firstRow.getByRole('button', { name: '展开任务详情', exact: true }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(page.getByTestId('extraction-output-path')).toHaveText('E:/新相册/去年旅行照片')
   await expect(page.getByTestId('extraction-shared-destination')).toContainText('2 项任务')
   await page.getByTestId('extraction-output-preview').scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('output-inline.png') })
-  await firstRow.getByRole('button', { name: '关闭任务详情', exact: true }).click()
+  await firstRow.getByRole('button', { name: '收起任务详情', exact: true }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(page.getByTestId('extraction-output-preview')).toHaveCount(0)
 })
