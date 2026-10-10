@@ -52,6 +52,9 @@ export interface Task {
   outputPath: string
   format?: string
   conflicts: ConflictInfo[]
+  /** Session-only staged publication choices; not persisted in task history. */
+  conflictSelections?: Array<{ destPath: string; action: 'overwrite' | 'skip' | 'rename' }>
+  conflictResolutionPending?: boolean
   extractToSubfolder?: boolean
   recycleSourceAfterExtract?: boolean
   configurationMode?: 'global' | 'individual'

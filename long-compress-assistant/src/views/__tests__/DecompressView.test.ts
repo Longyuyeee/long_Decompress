@@ -39,9 +39,9 @@ const DropzoneStub = defineComponent({
   template: '<button type="button">add archive</button>',
 })
 
-const mountView = () => mount(DecompressView, {
+const mountView = (pinia = createPinia()) => mount(DecompressView, {
   global: {
-    plugins: [createPinia()],
+    plugins: [pinia],
     stubs: { Teleport: true,
       EnhancedFileDropzone: DropzoneStub,
       AeroTable: true,
@@ -82,6 +82,61 @@ describe('DecompressView', () => {
     ], undefined)
     expect(mocks.decompressFile).not.toHaveBeenCalled()
     expect(task.conflicts).toEqual([])
+    wrapper.unmount()
+  })
+
+  it('remembers my first choice after leaving the page and publishes it with the remaining choice', async () => {
+    const pinia = createPinia()
+    let wrapper = mountView(pinia)
+    addConflictTask('navigation')
+    await flushPromises()
+    wrapper.findComponent({ name: 'ConflictResolutionModal' }).vm.$emit('resolve', 'skip', false)
+    await flushPromises()
+    wrapper.unmount()
+    wrapper = mountView(pinia)
+    await flushPromises()
+    const dialog = wrapper.findComponent({ name: 'ConflictResolutionModal' })
+    expect(dialog.props('taskId')).toBe('navigation')
+    dialog.vm.$emit('resolve', 'rename', false)
+    await flushPromises()
+    expect(mocks.resolveExtractionConflict).toHaveBeenCalledExactlyOnceWith('navigation', [
+      { destPath: 'C:/out/first.txt', action: 'skip' },
+      { destPath: 'C:/out/second.txt', action: 'rename' },
+    ], undefined)
+    wrapper.unmount()
+  })
+
+  it('does not submit twice after navigating away during publication', async () => {
+    const pinia = createPinia()
+    let wrapper = mountView(pinia)
+    const task = addConflictTask('publishing')
+    await flushPromises()
+    let finish!: () => void
+    mocks.resolveExtractionConflict.mockImplementationOnce(() => new Promise<void>(resolve => { finish = resolve }))
+    wrapper.findComponent({ name: 'ConflictResolutionModal' }).vm.$emit('resolve', 'overwrite', true)
+    await flushPromises()
+    wrapper.unmount()
+    wrapper = mountView(pinia)
+    await flushPromises()
+    expect(wrapper.findComponent({ name: 'ConflictResolutionModal' }).exists()).toBe(false)
+    expect(task.conflictResolutionPending).toBe(true)
+    finish()
+    await flushPromises()
+    expect(task.conflicts).toEqual([])
+    expect(task.conflictResolutionPending).toBe(false)
+    expect(mocks.resolveExtractionConflict).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('does not start extraction again while staged conflicts are waiting for my choices', async () => {
+    const wrapper = mountView()
+    addConflictTask('waiting')
+    await flushPromises()
+    const start = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('decompress.start_queue')))
+    await start!.trigger('click')
+    await flushPromises()
+    expect(mocks.decompressFile).not.toHaveBeenCalled()
+    expect(mocks.preflightOperationResources).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 

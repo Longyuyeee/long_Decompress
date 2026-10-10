@@ -43,11 +43,8 @@ const selectRetryDrafts = (ids: string[]) => {
   appStore.setSuccess(`已创建 ${ids.length} 个新任务，请核对后点击开始；原失败记录保留。`)
 }
 const showConflictModal = ref(false)
-const resolvingConflictTaskId = ref<string | null>(null)
-const conflictSelections = new Map<string, Array<{
-  destPath: string
-  action: 'overwrite' | 'skip' | 'rename'
-}>>()
+const resolvingConflictTaskId = computed(() => taskStore.tasks.find(task => task.conflictResolutionPending)?.id || null)
+let disposed = false
 const selectedTaskIds = ref<Set<string>>(new Set())
 const supportedArchiveAccept = DECOMPRESS_ARCHIVE_ACCEPT
 const supportedArchiveHint = DECOMPRESS_ARCHIVE_HINT
@@ -128,6 +125,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  disposed = true
   unsubConflict()
 })
 
@@ -347,7 +345,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
     ? decompressionTasks.value.filter(t => onlyTaskIds.includes(t.id) && t.status === 'pending')
     : selectedTaskIds.value.size > 0
     ? decompressionTasks.value.filter(t => selectedTaskIds.value.has(t.id) && t.status === 'pending')
-    : decompressionTasks.value.filter(t => t.status === 'pending'))
+    : decompressionTasks.value.filter(t => t.status === 'pending')).filter(task => !task.conflicts.length && !task.conflictResolutionPending)
   if (pendingTasks.length === 0) return
 
   isProcessing.value = true
@@ -500,9 +498,9 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
 
   const currentConflict = task.conflicts[0]
   if (!currentConflict) return
-  const selections = conflictSelections.get(taskId) || []
+  const selections = task.conflictSelections || []
   selections.push({ destPath: currentConflict.destPath, action })
-  conflictSelections.set(taskId, selections)
+  task.conflictSelections = selections
 
   // 未选择“应用全部”时，让弹窗继续处理剩余冲突，最后一次再提交。
   if (!applyToAll && task.conflicts.length > 1) {
@@ -511,7 +509,7 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
   }
 
   // This choice belongs only to this task; never rewrite global defaults.
-  resolvingConflictTaskId.value = taskId
+  task.conflictResolutionPending = true
 
   try {
     task.error = undefined
@@ -521,18 +519,18 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
       applyToAll ? action : undefined,
     )
     task.conflicts = []
-    conflictSelections.delete(taskId)
+    task.conflictSelections = undefined
     task.password = undefined
     task.currentPassword = undefined
   } catch (e: any) {
-    conflictSelections.delete(taskId)
+    task.conflictSelections = undefined
     task.error = extractErrorMessage(e) || String(e)
     appStore.setError(appStore.t('decompress.extract_failed').replace('{0}', e))
   } finally {
-    resolvingConflictTaskId.value = null
+    task.conflictResolutionPending = false
     showConflictModal.value = false
     selectedConflictTaskId.value = null
-    openNextConflict()
+    if (!disposed) openNextConflict()
   }
 }
 
@@ -546,6 +544,7 @@ const openNextConflict = () => {
   }
 }
 const unsubConflict = taskStore.$subscribe(openNextConflict)
+onMounted(openNextConflict)
 </script>
 
 <template>
