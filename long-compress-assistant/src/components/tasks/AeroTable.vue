@@ -7,6 +7,7 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import Modal from '@/components/ui/Modal.vue'
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import ExtractionOutputPreview from './ExtractionOutputPreview.vue'
+import { useDrawerTransition } from '@/composables/useDrawerTransition'
 import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
 import OverflowTooltip from '@/components/ui/OverflowTooltip.vue'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -65,6 +66,7 @@ const sharedDestinations = computed(() => {
 })
 const tauriCommands = useTauriCommands()
 const expandedTasks = ref<Set<string>>(new Set())
+const drawerTransition = useDrawerTransition()
 const showPasswordInput = ref<string | null>(null)
 const showContentsModal = ref(false)
 const contentsList = ref<string[]>([])
@@ -429,18 +431,19 @@ async (tasks, _, onCleanup) => {
                 type="button"
                 class="task-row-action task-expand-action text-muted hover:text-primary hover:bg-primary/10"
                 :data-testid="`toggle-archive-task-${task.id}`"
-                :title="expandedTasks.has(task.id) ? '关闭任务详情' : '查看任务详情'"
-                :aria-label="expandedTasks.has(task.id) ? '关闭任务详情' : '查看任务详情'"
+                :title="expandedTasks.has(task.id) ? '收起任务详情' : '展开任务详情'"
+                :aria-label="expandedTasks.has(task.id) ? '收起任务详情' : '展开任务详情'"
                 :aria-expanded="expandedTasks.has(task.id)"
                 @click="toggleExpand(task.id)"
               >
                 <i :class="['pi text-sm transition-transform duration-300',
-                   'pi-ellipsis-h']"></i>
+                   'pi-chevron-down', { 'rotate-180 text-primary': expandedTasks.has(task.id) }] "></i>
               </button>
             </div>
           </div>
 
-          <Transition name="aero-drawer">
+          <Transition :css="false" @enter="drawerTransition.enter" @leave="drawerTransition.leave"
+            @enter-cancelled="drawerTransition.cancel" @leave-cancelled="drawerTransition.cancel">
             <div v-if="expandedTasks.has(task.id)" class="details-drawer relative min-w-0 max-w-full px-2 md:px-3 pb-4 pt-2">
               <div data-testid="decompression-task-details" class="task-detail-card rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
 
@@ -696,6 +699,7 @@ async (tasks, _, onCleanup) => {
 .details-drawer {
   /* 增加更有深度的内阴影和背景色差，与主行区分 */
   background-color: transparent;
+  container-type: inline-size;
 }
 
 .task-detail-card {
@@ -704,7 +708,7 @@ async (tasks, _, onCleanup) => {
   min-width: 0;
   max-width: 100%;
   background-image: linear-gradient(to bottom, rgba(var(--color-card-rgb), 0.92), rgba(var(--color-card-rgb), 0.98));
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
   border: 1px dashed color-mix(in srgb, var(--dynamic-accent) 20%, transparent);
 }
 
@@ -908,6 +912,12 @@ async (tasks, _, onCleanup) => {
 
 .pop-enter-active, .pop-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.95) translateY(10px); }
+
+@container (max-width: 38.75rem) {
+  .task-detail-layout { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .task-config-panel { height: auto; overflow: visible; border-right: 0; border-bottom: 1px solid var(--border-subtle); }
+  .task-execution-panel { height: 18rem; }
+}
 
 @media (max-width: 760px) {
   .task-config-panel {

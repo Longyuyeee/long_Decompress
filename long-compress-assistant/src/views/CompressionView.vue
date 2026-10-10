@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDrawerTransition } from '@/composables/useDrawerTransition'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore, type CompressionGroup, type FileObject } from '@/stores/compression'
@@ -598,43 +599,7 @@ const removeFinishedCompressionJob = (taskId: string) => {
   syncRemovedCompressionJobs([taskId])
 }
 
-const onBeforeDetailEnter = (element: Element) => {
-  const el = element as HTMLElement
-  el.style.height = '0'
-  el.style.opacity = '0'
-  el.style.marginTop = '0'
-  el.style.marginBottom = '0'
-}
-
-const onDetailEnter = (element: Element) => {
-  const el = element as HTMLElement
-  el.style.height = `${el.scrollHeight}px`
-  el.style.opacity = '1'
-  el.style.marginTop = '0.25rem'
-  el.style.marginBottom = '0.5rem'
-}
-
-const onAfterDetailEnter = (element: Element) => {
-  const el = element as HTMLElement
-  el.style.height = 'auto'
-}
-
-const onBeforeDetailLeave = (element: Element) => {
-  const el = element as HTMLElement
-  el.style.height = `${el.scrollHeight}px`
-  el.style.opacity = '1'
-  el.style.marginTop = '0.25rem'
-  el.style.marginBottom = '0.5rem'
-}
-
-const onDetailLeave = (element: Element) => {
-  const el = element as HTMLElement
-  void el.offsetHeight
-  el.style.height = '0'
-  el.style.opacity = '0'
-  el.style.marginTop = '0'
-  el.style.marginBottom = '0'
-}
+const drawerTransition = useDrawerTransition()
 </script>
 
 <template>
@@ -774,12 +739,9 @@ const onDetailLeave = (element: Element) => {
 
           <!-- 组展开：独立配置面板 -->
           <Transition
-            name="aero-drawer"
-            @before-enter="onBeforeDetailEnter"
-            @enter="onDetailEnter"
-            @after-enter="onAfterDetailEnter"
-            @before-leave="onBeforeDetailLeave"
-            @leave="onDetailLeave"
+            :css="false"
+            @enter="drawerTransition.enter" @leave="drawerTransition.leave"
+            @enter-cancelled="drawerTransition.cancel" @leave-cancelled="drawerTransition.cancel"
           >
             <div v-if="group.expanded" class="details-drawer px-2 md:px-3 pb-4 pt-2">
               <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
@@ -978,12 +940,9 @@ const onDetailLeave = (element: Element) => {
             </div>
 
             <Transition
-              name="aero-drawer"
-              @before-enter="onBeforeDetailEnter"
-              @enter="onDetailEnter"
-              @after-enter="onAfterDetailEnter"
-              @before-leave="onBeforeDetailLeave"
-              @leave="onDetailLeave"
+              :css="false"
+              @enter="drawerTransition.enter" @leave="drawerTransition.leave"
+              @enter-cancelled="drawerTransition.cancel" @leave-cancelled="drawerTransition.cancel"
             >
               <div v-if="file.expanded" class="details-drawer w-full px-2 md:px-3 pb-4 pt-2" @click.stop>
                 <div data-testid="compression-draft-details" class="compression-detail-card compression-detail-grid">
@@ -1204,6 +1163,7 @@ const onDetailLeave = (element: Element) => {
 
 .details-drawer {
   background-color: transparent;
+  container-type: inline-size;
 }
 
 .compression-detail-card {
@@ -1301,6 +1261,7 @@ const onDetailLeave = (element: Element) => {
 .compression-config-panel :deep(.settings-core-grid) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
+  align-items: stretch;
 }
 
 .compression-config-panel :deep(.settings-core-grid > div) {
@@ -1313,21 +1274,23 @@ const onDetailLeave = (element: Element) => {
 
 .compression-config-panel :deep(.settings-core-grid label),
 .compression-config-panel :deep(.settings-core-grid button) {
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
+
+.compression-config-panel :deep(.settings-core-grid > div > div:first-child) { flex-wrap: wrap; gap: 0.35rem; }
 
 .compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap) {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
   gap: 0.55rem;
 }
 
 .compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap > button) {
   width: 100%;
-  overflow: hidden;
   padding-inline: 0.65rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .compression-config-panel :deep(.advanced-option) {
@@ -1451,6 +1414,16 @@ const onDetailLeave = (element: Element) => {
   .compression-config-panel :deep(.settings-core-grid) {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Respond to the available drawer width, including sidebar and UI scaling. */
+@container (max-width: 47.5rem) {
+  .compression-detail-grid { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .compression-config-panel { height: auto; overflow: visible; border-right: 0; border-bottom: 1px solid var(--border-subtle); }
+  .compression-detail-grid :deep(.compression-execution-panel) { height: 18rem; }
+}
+@container (max-width: 28.75rem) {
+  .compression-config-panel :deep(.settings-core-grid) { grid-template-columns: minmax(0, 1fr); }
 }
 
 </style>
