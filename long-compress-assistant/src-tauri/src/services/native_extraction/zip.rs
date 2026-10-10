@@ -74,6 +74,20 @@ pub(crate) fn extract<R: ExtractionRuntime>(
     password: Option<&str>,
     options: &DecompressOptions,
 ) -> Result<()> {
+    extract_with_optional_window(runtime, Some(window), task_id, file, output, password, options)
+}
+
+// Keep one engine for desktop use and headless regression measurements. None
+// suppresses only window events, not archive parsing, cancellation or file I/O.
+pub(crate) fn extract_with_optional_window<R: ExtractionRuntime>(
+    runtime: &R,
+    window: Option<&Window>,
+    task_id: &str,
+    file: &str,
+    output: &str,
+    password: Option<&str>,
+    options: &DecompressOptions,
+) -> Result<()> {
     let mut archive = ZipArchive::new(SmartFileReader::open(file)?)?;
     validate_password_access(&mut archive, password)?;
 
@@ -156,14 +170,16 @@ pub(crate) fn extract<R: ExtractionRuntime>(
                         };
                         let file_progress = (index as f32 / total_files as f32)
                             + (entry_progress / total_files as f32);
-                        runtime.emit_progress(
-                            window,
-                            task_id,
-                            file_progress,
-                            Some(file_name.clone()),
-                            processed,
-                            source_size,
-                        );
+                        if let Some(window) = window {
+                            runtime.emit_progress(
+                                window,
+                                task_id,
+                                file_progress,
+                                Some(file_name.clone()),
+                                processed,
+                                source_size,
+                            );
+                        }
                     }
                 }
                 outfile.flush()?;
@@ -186,24 +202,28 @@ pub(crate) fn extract<R: ExtractionRuntime>(
 
         if let Err(error) = entry_result {
             if options.skip_corrupted {
-                runtime.emit_log(
-                    window,
-                    task_id,
-                    &format!("Skipped entry {file_name}: {error}"),
-                    TaskLogSeverity::Warning,
-                );
+                if let Some(window) = window {
+                    runtime.emit_log(
+                        window,
+                        task_id,
+                        &format!("Skipped entry {file_name}: {error}"),
+                        TaskLogSeverity::Warning,
+                    );
+                }
                 continue;
             }
             return Err(error);
         }
-        runtime.emit_progress(
-            window,
-            task_id,
-            (index + 1) as f32 / total_files as f32,
-            Some(file_name),
-            source_size,
-            source_size,
-        );
+        if let Some(window) = window {
+            runtime.emit_progress(
+                window,
+                task_id,
+                (index + 1) as f32 / total_files as f32,
+                Some(file_name),
+                source_size,
+                source_size,
+            );
+        }
     }
     Ok(())
 }
