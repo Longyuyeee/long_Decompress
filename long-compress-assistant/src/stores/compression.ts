@@ -358,7 +358,7 @@ export const useCompressionStore = defineStore('compression', () => {
   }
 
   const getEffectiveOutputPath = (outputPath?: string): string => {
-    return outputPath || globalOutputPath.value
+    return outputPath ?? globalOutputPath.value
   }
 
   const addFile = (file: FileObject) => {
@@ -374,32 +374,44 @@ export const useCompressionStore = defineStore('compression', () => {
 
   const updateFileSettings = (path: string, settings: CompressionOptions) => {
     const file = selectedFiles.value.find(item => item.path === path)
-    if (file) file.settings = cloneSettings(settings)
+    if (file) {
+      file.outputPath ??= globalOutputPath.value
+      file.settings = cloneSettings(settings)
+    }
   }
 
   const useGlobalFileSettings = (path: string) => {
     const file = selectedFiles.value.find(item => item.path === path)
-    if (file) file.settings = undefined
+    if (file) { file.settings = undefined; file.outputPath = undefined }
   }
 
   const updateFileOutputPath = (path: string, outputPath: string) => {
     const file = selectedFiles.value.find(item => item.path === path)
-    if (file) file.outputPath = outputPath
+    if (file) {
+      file.settings ??= cloneSettings(globalSettings.value)
+      file.outputPath = outputPath
+    }
   }
 
   const updateGroupSettings = (groupId: string, settings: CompressionOptions) => {
     const group = groups.value.find(item => item.id === groupId)
-    if (group) group.settings = cloneSettings(settings)
+    if (group) {
+      group.outputPath ??= globalOutputPath.value
+      group.settings = cloneSettings(settings)
+    }
   }
 
   const useGlobalGroupSettings = (groupId: string) => {
     const group = groups.value.find(item => item.id === groupId)
-    if (group) group.settings = undefined
+    if (group) { group.settings = undefined; group.outputPath = undefined }
   }
 
   const updateGroupOutputPath = (groupId: string, outputPath: string) => {
     const group = groups.value.find(item => item.id === groupId)
-    if (group) group.outputPath = outputPath
+    if (group) {
+      group.settings ??= cloneSettings(globalSettings.value)
+      group.outputPath = outputPath
+    }
   }
 
   const setAnalysisState = (jobId: string, state: CompressionAnalysisState) => {

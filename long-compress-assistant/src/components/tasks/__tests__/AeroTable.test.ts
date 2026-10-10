@@ -16,6 +16,21 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('AeroTable', () => {
+  it('expands in the list and automatically preserves settings only after editing', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    store.addTask({ id: 'inline', name: 'inline.zip', type: 'decompression', sourceFiles: ['C:/inline.zip'], outputPath: 'C:/output', configurationMode: 'global', extractToSubfolder: false })
+    const wrapper = mount(AeroTable, { props: { taskType: 'decompression' }, global: { plugins: [pinia], stubs: { Teleport: true, ExtractionOutputPreview: true } } })
+    await wrapper.get('[data-testid="task-row"]').trigger('click')
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+    expect(wrapper.get('.table-body').find('[data-testid="decompression-task-details"]').exists()).toBe(true)
+    expect(store.tasks[0].configurationMode).toBe('global')
+    await wrapper.get('.task-subfolder-option').trigger('click')
+    expect(store.tasks[0].extractToSubfolder).toBe(true)
+    expect(store.tasks[0].configurationMode).toBe('individual')
+    wrapper.unmount()
+  })
   it('只提示本次选中的待执行任务共用目录，忽略大小写和尾部斜杠差异', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)

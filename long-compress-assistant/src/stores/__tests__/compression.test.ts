@@ -94,6 +94,19 @@ describe('Compression Store', () => {
     expect(store.globalSettings.level).toBe(3)
   })
 
+  it('freezes group defaults on edit and preserves an explicit same-directory destination', () => {
+    const store = useCompressionStore()
+    store.addFile(mockFile('grouped.txt', 100))
+    const id = store.createGroup(['C:/archives/grouped.txt'])
+    store.globalOutputPath = 'D:/default'
+    const level = store.globalSettings.level
+    store.updateGroupOutputPath(id, '')
+    store.globalOutputPath = 'E:/changed'
+    store.globalSettings.level = 1
+    expect(store.getEffectiveOutputPath(store.groups[0].outputPath)).toBe('')
+    expect(store.getEffectiveSettings(store.groups[0].settings).level).toBe(level)
+  })
+
   it('switches files and groups explicitly between global and individual settings', () => {
     const store = useCompressionStore()
     const individual = { ...defaultOptions(), format: '7z' as const, level: 9 }

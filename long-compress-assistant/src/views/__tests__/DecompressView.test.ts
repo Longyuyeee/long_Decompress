@@ -238,7 +238,6 @@ describe('DecompressView', () => {
     }])
     await flushPromises()
 
-    await wrapper.get('[data-testid="decompression-settings"]').trigger('click')
     const globalRecycleSwitch = wrapper.get('[data-testid="global-recycle-source-switch"]')
     expect(globalRecycleSwitch.attributes('aria-checked')).toBe('false')
     await globalRecycleSwitch.trigger('click')
@@ -594,32 +593,17 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
-  it('switches the pending extraction batch between global and individual configuration in the settings dialog', async () => {
+  it('keeps global controls on the page without a required mode switch', async () => {
     const wrapper = mountView()
-    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{
-      name: 'configurable.zip',
-      path: 'C:/archives/configurable.zip',
-    }])
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: 'configurable.zip', path: 'C:/archives/configurable.zip' }])
     await flushPromises()
-
     const task = useTaskStore().tasks[0]
     expect(task.configurationMode).toBe('global')
-    expect(wrapper.findComponent({ name: 'AeroTable' }).attributes('onSet-config-mode')).toBeUndefined()
     expect(wrapper.find('[data-testid="decompression-config-mode-individual"]').exists()).toBe(false)
-    await wrapper.get('[data-testid="decompression-settings"]').trigger('click')
-    await wrapper.get('[data-testid="decompression-config-mode-individual"]').trigger('click')
-    await nextTick()
-    expect(task.configurationMode).toBe('individual')
-    await new Promise(resolve => setTimeout(resolve, 220))
-    expect(wrapper.find('[data-testid="global-recycle-source-switch"]').exists()).toBe(false)
-    expect(wrapper.text()).toContain('打开任务详情后分别调整配置')
-
-    await wrapper.get('[data-testid="decompression-config-mode-global"]').trigger('click')
-    await nextTick()
-    await new Promise(resolve => setTimeout(resolve, 220))
-    expect(task.configurationMode).toBe('global')
-    expect(task.outputPath).toBe('C:/archives')
-    expect(wrapper.find('[data-testid="global-recycle-source-switch"]').exists()).toBe(true)
+    task.configurationMode = 'individual'
+    task.recycleSourceAfterExtract = false
+    await wrapper.get('[data-testid="global-recycle-source-switch"]').trigger('click')
+    expect(task.recycleSourceAfterExtract).toBe(false)
     wrapper.unmount()
   })
 

@@ -7,7 +7,6 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage, generateId, isPasswordRelatedError } from '@/utils'
 import { open } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
-import Modal from '@/components/ui/Modal.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath, isPotentialSplitArchivePath } from '@/utils/compressionFormat'
@@ -41,7 +40,6 @@ const selectRetryDrafts = (ids: string[]) => {
   appStore.setSuccess(`已创建 ${ids.length} 个新任务，请核对后点击开始；原失败记录保留。`)
 }
 const showConflictModal = ref(false)
-const showBatchSettings = ref(false)
 const conflictSelections = new Map<string, Array<{
   destPath: string
   action: 'overwrite' | 'skip' | 'rename'
@@ -56,7 +54,6 @@ const globalOutputPath = ref(appStore.settings.defaultOutputPath)
 const isGlobalSameDir = ref(!appStore.settings.defaultOutputPath) // 默认同目录，用户可通过按钮手动选择
 const globalExtractToSubfolder = ref(appStore.settings.defaultExtractToSubfolder)
 const globalRecycleSourceAfterExtract = ref(appStore.settings.autoDeleteSource)
-const batchConfigurationMode = ref<'global' | 'individual'>('global')
 
 watch(
   () => appStore.settings.autoDeleteSource,
@@ -163,7 +160,7 @@ const onFilesSelected = async (files: any[]) => {
       outputPath: isGlobalSameDir.value ? parentDir : globalOutputPath.value,
       extractToSubfolder: globalExtractToSubfolder.value,
       recycleSourceAfterExtract: globalRecycleSourceAfterExtract.value,
-      configurationMode: batchConfigurationMode.value,
+      configurationMode: 'global',
     })
     createdTaskIds.push(taskId)
     appStore.addRecentFile(sourcePath)
@@ -289,19 +286,6 @@ const applyGlobalConfiguration = (task: Task) => {
     ? sourcePath.substring(0, separatorIndex)
     : globalOutputPath.value
   task.recycleSourceAfterExtract = globalRecycleSourceAfterExtract.value
-}
-
-const setBatchConfigurationMode = (mode: 'global' | 'individual') => {
-  if (batchConfigurationMode.value === mode) return
-  batchConfigurationMode.value = mode
-  decompressionTasks.value.forEach(task => {
-    if (task.status !== 'pending') return
-    task.configurationMode = mode
-    if (mode === 'global') {
-      applyGlobalConfiguration(task)
-      task.extractToSubfolder = globalExtractToSubfolder.value
-    }
-  })
 }
 
 const toggleTaskSelection = (taskId: string) => {
@@ -638,33 +622,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
 
       <!-- 底部操作区 -->
       <div v-if="decompressionTasks.length > 0 && !batchStore.showingFailures" class="border-t border-subtle bg-input/10 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
-        <button type="button" data-testid="decompression-settings" class="shrink-0 rounded-lg border border-subtle px-3 py-2 text-sm text-primary" @click="showBatchSettings = true"><i class="pi pi-cog mr-1"></i>解压设置</button>
-        <span class="min-w-0 flex-1 truncate text-xs text-muted">{{ batchConfigurationMode === 'global' ? '使用全局配置' : '每项任务单独配置' }}</span>
-        <Modal :visible="showBatchSettings" title="解压设置" size="lg" cancel-text="关闭解压设置" @update:visible="showBatchSettings = $event">
-          <div class="space-y-4">
-        <div class="batch-config-mode-switch" data-testid="decompression-batch-config-mode" role="group" aria-label="解压配置模式">
-          <button
-            type="button"
-            data-testid="decompression-config-mode-global"
-            :class="{ active: batchConfigurationMode === 'global' }"
-            :aria-pressed="batchConfigurationMode === 'global'"
-            @click="setBatchConfigurationMode('global')"
-          >
-            {{ appStore.t('tasks.config.global') }}
-          </button>
-          <button
-            type="button"
-            data-testid="decompression-config-mode-individual"
-            :class="{ active: batchConfigurationMode === 'individual' }"
-            :aria-pressed="batchConfigurationMode === 'individual'"
-            @click="setBatchConfigurationMode('individual')"
-          >
-            {{ appStore.t('tasks.config.individual') }}
-          </button>
-        </div>
-
-        <Transition name="global-config-strip" mode="out-in">
-          <div v-if="batchConfigurationMode === 'global'" key="global" class="global-config-controls">
+          <div class="global-config-controls" aria-label="全局解压设置">
             <span class="text-xs font-black text-primary uppercase tracking-widest opacity-80 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
 
             <button @click="handleGlobalSelectDir"
@@ -709,14 +667,6 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
               <span class="text-xs font-black text-muted uppercase tracking-widest whitespace-nowrap">{{ appStore.t('decompress.config.recycle_source') }}</span>
             </button>
           </div>
-          <div v-else key="individual" class="individual-config-hint">
-            <i class="pi pi-sliders-h" aria-hidden="true"></i>
-            <span>打开任务详情后分别调整配置</span>
-          </div>
-        </Transition>
-
-          </div>
-        </Modal>
         <div class="w-px h-5 bg-subtle/20 mx-1 hidden md:block"></div>
 
         <EnhancedFileDropzone
@@ -742,33 +692,6 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
 </template>
 
 <style scoped>
-.batch-config-mode-switch {
-  display: inline-flex;
-  flex: 0 0 auto;
-  gap: 0.15rem;
-  padding: 0.15rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 0.65rem;
-  background: var(--bg-input);
-}
-
-.batch-config-mode-switch button {
-  min-width: 2.7rem;
-  height: 1.65rem;
-  padding-inline: 0.65rem;
-  border-radius: 0.5rem;
-  color: var(--text-muted);
-  font-size: 0.68rem;
-  font-weight: 850;
-  transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
-}
-
-.batch-config-mode-switch button.active {
-  background: var(--dynamic-accent);
-  color: white;
-  box-shadow: 0 6px 16px -9px var(--dynamic-accent);
-}
-
 .global-config-controls {
   display: flex;
   min-width: 0;
@@ -776,32 +699,6 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
-}
-
-.individual-config-hint {
-  display: flex;
-  min-width: 0;
-  flex: 1 1 18rem;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.individual-config-hint i {
-  color: var(--dynamic-accent);
-}
-
-.global-config-strip-enter-active,
-.global-config-strip-leave-active {
-  transition: opacity 160ms ease, transform 180ms ease;
-}
-
-.global-config-strip-enter-from,
-.global-config-strip-leave-to {
-  opacity: 0;
-  transform: translateY(0.35rem);
 }
 
 .decompress-view {

@@ -65,7 +65,6 @@ const sharedDestinations = computed(() => {
 })
 const tauriCommands = useTauriCommands()
 const expandedTasks = ref<Set<string>>(new Set())
-const detailTab = ref<'config' | 'logs'>('config')
 const showPasswordInput = ref<string | null>(null)
 const showContentsModal = ref(false)
 const contentsList = ref<string[]>([])
@@ -123,8 +122,7 @@ const toggleExpand = (taskId: string) => {
   if (expandedTasks.value.has(taskId)) {
     expandedTasks.value.delete(taskId)
   } else {
-    expandedTasks.value = new Set([taskId])
-    detailTab.value = 'config'
+    expandedTasks.value.add(taskId)
   }
 }
 
@@ -225,7 +223,7 @@ const getSeverityClass = (severity: string) => {
   }
 }
 
-// Resolve batch destinations only while a detail dialog is open; no directory scans per row.
+// Resolve batch destinations only while task details are expanded; no directory scans per row.
 watch(() => expandedTasks.value.size ? pendingDisplayTasks.value
   .filter(task => task.type === 'decompression' && (!task.workloadKind || task.workloadKind === 'archive'))
   .filter(task => !props.selectedTaskIds?.size || props.selectedTaskIds.has(task.id))
@@ -442,19 +440,14 @@ async (tasks, _, onCleanup) => {
             </div>
           </div>
 
-          <Modal :visible="expandedTasks.has(task.id) && !showContentsModal" title="任务详情" size="lg" cancel-text="关闭任务详情" @update:visible="expandedTasks.delete(task.id)">
-            <template #title><span class="block max-w-[65vw] truncate pr-10" :title="task.name">{{ task.name || '任务详情' }}</span></template>
+          <Transition name="aero-drawer">
             <div v-if="expandedTasks.has(task.id)" class="details-drawer relative min-w-0 max-w-full px-2 md:px-3 pb-4 pt-2">
-              <div class="mb-3 flex gap-2" role="group" aria-label="任务详情内容">
-                <button type="button" class="rounded-lg px-3 py-2 text-sm" :class="detailTab === 'config' ? 'bg-primary/10 text-primary' : 'text-muted'" :aria-pressed="detailTab === 'config'" @click="detailTab = 'config'">{{ task.status === 'completed' ? '输出结果' : '输出与设置' }}</button>
-                <button type="button" class="rounded-lg px-3 py-2 text-sm" :class="detailTab === 'logs' ? 'bg-primary/10 text-primary' : 'text-muted'" :aria-pressed="detailTab === 'logs'" @click="detailTab = 'logs'">执行日志</button>
-              </div>
               <div data-testid="decompression-task-details" class="task-detail-card rounded-2xl bg-card border border-dashed border-primary/30 shadow-2xl overflow-hidden relative group/detail">
 
                 <!-- 详情区内容布局：改为弹性分配，防止溢出 -->
                 <div class="task-detail-layout w-full min-w-0 relative z-10">
                   <!-- 左侧：核心配置 -->
-                  <div v-show="detailTab === 'config'" data-testid="decompression-config-panel" class="task-config-panel min-w-0 p-4 border-r border-subtle/20 flex flex-col space-y-3 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto overflow-x-hidden custom-scrollbar">
+                  <div data-testid="decompression-config-panel" class="task-config-panel min-w-0 p-4 border-r border-subtle/20 flex flex-col space-y-3 transition-colors group-hover/detail:bg-primary/[0.01] overflow-y-auto overflow-x-hidden custom-scrollbar">
                     <div class="flex min-w-0 items-center justify-between">
                       <h4 class="task-config-heading min-w-0 text-primary text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 break-words">
                         <i class="pi pi-cog text-sm"></i>
@@ -462,7 +455,7 @@ async (tasks, _, onCleanup) => {
                       </h4>
                     </div>
 
-                    <div v-if="task.type === 'decompression'" class="space-y-3.5" :class="{ 'config-follows-global': task.configurationMode === 'global' }">
+                    <div v-if="task.type === 'decompression'" class="space-y-3.5">
                       <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
                       <div v-if="task.status === 'pending'" class="inherited-config-control space-y-2">
                         <div class="task-output-row flex min-w-0 items-center justify-between gap-3">
@@ -491,14 +484,14 @@ async (tasks, _, onCleanup) => {
                       <ResourcePreflightCard :report="task.resourcePreflight" compact />
 
                       <div v-if="task.status === 'pending'" class="inherited-config-control flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
-                        <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder">
+                        <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder; task.configurationMode = 'individual'">
                           <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
                                 :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">
                             <i v-if="task.extractToSubfolder" class="pi pi-check text-xs text-white"></i>
                           </span>
                           <span class="min-w-0 whitespace-nowrap text-sm font-bold text-muted group-hover/check:text-content transition-colors tracking-tight">{{ appStore.t('decompress.config.output_sub') }}</span>
                         </button>
-                        <button type="button" role="switch" data-testid="task-recycle-source-switch" :aria-checked="task.recycleSourceAfterExtract" :disabled="task.status !== 'pending'" :title="appStore.t('decompress.config.recycle_source.desc')" class="flex min-w-0 items-center gap-3 cursor-pointer group/recycle text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.recycleSourceAfterExtract = !task.recycleSourceAfterExtract">
+                        <button type="button" role="switch" data-testid="task-recycle-source-switch" :aria-checked="task.recycleSourceAfterExtract" :disabled="task.status !== 'pending'" :title="appStore.t('decompress.config.recycle_source.desc')" class="flex min-w-0 items-center gap-3 cursor-pointer group/recycle text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.recycleSourceAfterExtract = !task.recycleSourceAfterExtract; task.configurationMode = 'individual'">
                           <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/recycle:border-primary"
                                 :class="task.recycleSourceAfterExtract ? 'bg-primary border-primary' : 'bg-input'">
                             <i v-if="task.recycleSourceAfterExtract" class="pi pi-check text-xs text-white"></i>
@@ -560,7 +553,7 @@ async (tasks, _, onCleanup) => {
                   </div>
 
                   <!-- 右侧：执行日志 -->
-                  <div v-show="detailTab === 'logs'" data-testid="decompression-execution-panel" class="task-execution-panel min-w-0 p-4 flex flex-col overflow-hidden">
+                  <div data-testid="decompression-execution-panel" class="task-execution-panel min-w-0 p-4 flex flex-col overflow-hidden">
                     <div class="execution-summary grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">阶段</span>
@@ -621,7 +614,7 @@ async (tasks, _, onCleanup) => {
                 </div>
               </div>
             </div>
-          </Modal>
+          </Transition>
 
         </div>
         </TransitionGroup>
@@ -665,7 +658,6 @@ async (tasks, _, onCleanup) => {
 </template>
 
 <style scoped>
-.config-follows-global>.inherited-config-control{pointer-events:none;opacity:.58}
 .aero-table-container {
   /* 解决展开时滚动条出现导致的布局跳动 */
   min-width: 0;
@@ -1018,10 +1010,5 @@ async (tasks, _, onCleanup) => {
   }
 }
 
-.task-detail-layout { display: block; height: auto; }
-.task-detail-card, .task-detail-card:hover { border: 0; box-shadow: none; background: transparent; }
-.task-detail-card::after { display: none; }
-.task-config-panel { border: 0; padding: .5rem; }
-.task-execution-panel { max-height: 24rem; }
-.log-viewport { min-height: 8rem; max-height: 18rem; }
+
 </style>

@@ -61,18 +61,65 @@ test('find an old task and go directly to its extraction settings', async ({ pag
   expect(await firstRow.evaluate(row => row.scrollHeight - row.clientHeight)).toBeLessThanOrEqual(1)
   await expect(firstRow.getByRole('button', { name: '查看任务详情', exact: true })).toBeInViewport()
   expect(await firstRow.evaluate(row => row.scrollWidth - row.clientWidth)).toBeLessThanOrEqual(1)
-  await page.getByTestId('decompression-settings').click()
-  await expect(page.getByRole('dialog', { name: '解压设置', exact: true })).toBeVisible()
-  await page.getByRole('dialog').getByRole('button', { name: '关闭解压设置', exact: true }).click()
-  await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.screenshot({ path: testInfo.outputPath('queue-preview.png'), animations: 'disabled' })
   await firstRow.getByRole('button', { name: '查看任务详情', exact: true }).click()
-  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(page.getByTestId('extraction-output-path')).toHaveText('E:/新相册/去年旅行照片')
   await expect(page.getByTestId('extraction-shared-destination')).toContainText('2 项任务')
   await page.getByTestId('extraction-output-preview').scrollIntoViewIfNeeded()
-  await page.screenshot({ path: testInfo.outputPath('output-dialog.png') })
-  await page.getByRole('dialog').getByRole('button', { name: '关闭任务详情', exact: true }).click()
+  await page.screenshot({ path: testInfo.outputPath('output-inline.png') })
+  await firstRow.getByRole('button', { name: '关闭任务详情', exact: true }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(page.getByTestId('extraction-output-preview')).toHaveCount(0)
+})
+
+
+test('inline compression edits keep their settings while untouched rows follow defaults', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 920, height: 620 })
+  await page.addInitScript(() => {
+    window.__TAURI_IPC__ = (message: Record<string, any>) => {
+      let value: unknown
+      if (message.cmd === 'load_app_settings') value = '{}'
+      if (message.cmd === 'check_rar_compression_support') value = { available: false }
+      ;(window as any)[`_${message.callback}`]?.(value)
+    }
+  })
+  await page.goto('/#/compress')
+  await page.evaluate(async () => {
+    const module = '/src/stores/compression.ts'
+    const { useCompressionStore } = await import(module)
+    for (const name of ['one.txt', 'two.txt']) useCompressionStore().addFile({ name, path: 'D:/' + name, size: 10, type: 'file', isDirectory: false })
+  })
+  const row = page.getByTestId('compression-draft-row').first()
+  await row.click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(row.locator('input[type="range"]')).toBeVisible()
+  await page.evaluate(async () => {
+    const module = '/src/stores/compression.ts'
+    const { useCompressionStore } = await import(module)
+    useCompressionStore().globalSettings.level = 4
+  })
+  await expect(row.locator('input[type="range"]')).toHaveValue('4')
+  expect(await page.evaluate(async () => {
+    const module = '/src/stores/compression.ts'
+    const { useCompressionStore } = await import(module)
+    return useCompressionStore().selectedFiles[0].settings
+  })).toBeUndefined()
+  await row.locator('input[type="range"]').fill('8')
+  await page.evaluate(async () => {
+    const module = '/src/stores/compression.ts'
+    const { useCompressionStore } = await import(module)
+    useCompressionStore().globalSettings.level = 2
+    useCompressionStore().globalOutputPath = 'E:/later'
+  })
+  await expect(row.locator('input[type="range"]')).toHaveValue('8')
+  expect(await page.evaluate(async () => {
+    const module = '/src/stores/compression.ts'
+    const { useCompressionStore } = await import(module)
+    const store = useCompressionStore()
+    return [store.getEffectiveOutputPath(store.selectedFiles[0].outputPath), store.getEffectiveSettings(store.selectedFiles[1].settings).level]
+  })).toEqual(['', 2])
+  await page.setViewportSize({ width: 760, height: 520 })
+  expect(await row.evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(1)
+  await page.screenshot({ path: testInfo.outputPath('compression-inline.png'), animations: 'disabled' })
 })

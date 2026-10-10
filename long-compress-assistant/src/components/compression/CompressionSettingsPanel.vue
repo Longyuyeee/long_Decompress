@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useAppStore } from '@/stores/app'
 import { useCompressionProfileStore } from '@/stores/compressionProfile'
@@ -54,7 +54,7 @@ const handleTemplateDraftCreated = () => {
   emit('template-draft-created')
 }
 
-const compressionOptions = ref<CompressionOptions>(props.modelValue || {
+const compressionOptions = ref<CompressionOptions>(props.modelValue ? { ...props.modelValue } : {
   format: 'zip',
   level: 6,
   password: '',
@@ -201,7 +201,7 @@ watch(() => props.modelValue, (newOptions) => {
   if (!newOptions) return
   syncingFromProps = true
   compressionOptions.value = { ...newOptions }
-  Promise.resolve().then(() => {
+  nextTick(() => {
     syncingFromProps = false
   })
 }, { deep: true })
@@ -209,7 +209,7 @@ watch(() => props.modelValue, (newOptions) => {
 watch(() => props.outputPath, (newPath) => {
   syncingFromProps = true
   outputPath.value = newPath || ''
-  Promise.resolve().then(() => {
+  nextTick(() => {
     syncingFromProps = false
   })
 })

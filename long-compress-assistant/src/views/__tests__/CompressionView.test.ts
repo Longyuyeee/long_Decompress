@@ -496,26 +496,23 @@ describe('CompressionView', () => {
     expect(execution.text()).toContain('等待开始压缩')
   })
 
-  it('switches archive drafts as one batch beside global settings instead of inside each row', async () => {
+  it('allows editing inline immediately and keeps edited settings when global defaults change', async () => {
     const wrapper = mountView()
-    const compressionStore = useCompressionStore()
+    const store = useCompressionStore()
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
     await nextTick()
     await wrapper.get('[data-testid="compression-draft-row"]').trigger('click')
-
-    expect(wrapper.get('[data-testid="compression-batch-config-mode"]').exists()).toBe(true)
-    expect(wrapper.get('[data-testid="compression-global-config-summary"]').text()).toContain('使用全局配置')
-    expect(wrapper.find('.config-mode-row').exists()).toBe(false)
-    expect(compressionStore.selectedFiles[0].settings).toBeUndefined()
-
-    await wrapper.get('[data-testid="compression-config-mode-individual"]').trigger('click')
+    expect(wrapper.find('[data-testid="compression-batch-config-mode"]').exists()).toBe(false)
+    expect(store.selectedFiles[0].settings).toBeUndefined()
+    const panel = wrapper.findComponent({ name: 'CompressionSettingsPanel' })
+    expect(panel.exists()).toBe(true)
+    panel.vm.$emit('update:modelValue', { ...store.globalSettings, level: 8 })
     await nextTick()
-    expect(compressionStore.selectedFiles[0].settings).toEqual(compressionStore.globalSettings)
-    expect(wrapper.find('[data-testid="compression-global-config-summary"]').exists()).toBe(false)
-
-    await wrapper.get('[data-testid="compression-config-mode-global"]').trigger('click')
-    await nextTick()
-    expect(compressionStore.selectedFiles[0].settings).toBeUndefined()
+    store.globalSettings.level = 2
+    store.globalOutputPath = 'D:/later'
+    expect(store.selectedFiles[0].settings?.level).toBe(8)
+    expect(store.getEffectiveOutputPath(store.selectedFiles[0].outputPath)).toBe('')
+    wrapper.unmount()
   })
 
   it('keeps a magnetic group as one task row through compression and cleanup', async () => {
