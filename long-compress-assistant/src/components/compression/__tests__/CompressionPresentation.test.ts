@@ -40,7 +40,6 @@ describe('compression presentation components', () => {
       pausedCount: 0,
       pendingCount: 2,
       busy: true,
-      configurationMode: 'global',
     })
     const start = wrapper.get('[data-testid="start-compression"]')
     expect(start.attributes('disabled')).toBeDefined()
@@ -49,16 +48,22 @@ describe('compression presentation components', () => {
     await wrapper.findAll('button')[0].trigger('click')
     await wrapper.findAll('button')[1].trigger('click')
     await wrapper.findAll('button')[2].trigger('click')
-    await wrapper.get('[data-testid="compression-config-mode-individual"]').trigger('click')
     await wrapper.get('[data-testid="open-global-compression-settings"]').trigger('click')
     await start.trigger('click')
 
     expect(wrapper.emitted('clearFinished')).toHaveLength(1)
     expect(wrapper.emitted('pauseActive')).toHaveLength(1)
     expect(wrapper.emitted('cancelActive')).toHaveLength(1)
-    expect(wrapper.emitted('updateConfigurationMode')?.[0]).toEqual(['individual'])
     expect(wrapper.emitted('openSettings')).toHaveLength(1)
     expect(wrapper.emitted('start')).toBeUndefined()
+    expect(wrapper.find('[data-testid="compression-batch-config-mode"]').exists()).toBe(false)
+    await wrapper.setProps({ busy: false, pausableCount: 0, pausedCount: 1 })
+    const resume = wrapper.findAll('button').find(button => button.find('.pi-play').exists())!
+    await resume.trigger('click')
+    await wrapper.get('[data-testid="start-compression"]').trigger('click')
+    expect(wrapper.emitted('resumePaused')).toHaveLength(1)
+    expect(wrapper.emitted('start')).toHaveLength(1)
+    expect(wrapper.find('.pi-pause').exists()).toBe(false)
   })
 
   it('hides optional toolbar actions when there is no matching work', () => {
@@ -69,11 +74,12 @@ describe('compression presentation components', () => {
       pausedCount: 0,
       pendingCount: 0,
       busy: false,
-      configurationMode: 'global',
     })
 
-    expect(wrapper.findAll('button')).toHaveLength(3)
-    expect(wrapper.get('[data-testid="compression-batch-config-mode"]').exists()).toBe(true)
+    expect(wrapper.findAll('button')).toHaveLength(1)
+    expect(wrapper.find('[data-testid="compression-batch-config-mode"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="open-global-compression-settings"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="start-compression"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('全局设置')
   })
 
