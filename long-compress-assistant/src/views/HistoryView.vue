@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import CompletedExtractionOutput from '@/components/tasks/CompletedExtractionOutput.vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useHistoryStore } from '@/stores/history'
 import { useAppStore } from '@/stores/app'
 import type { TaskHistoryRecord, TaskHistoryStatus } from '@/types/taskHistory'
@@ -18,11 +19,18 @@ const appStore = useAppStore()
 const query = ref('')
 const typeFilter = ref<TypeFilter>('all')
 const statusFilter = ref<StatusFilter>('all')
-const rangeFilter = ref<RangeFilter>('30d')
+const rangeFilter = ref<RangeFilter>('all')
 const selectedRecord = ref<TaskHistoryRecord | null>(null)
 const showClearConfirm = ref(false)
 const failureFilter = ref<'all' | FailureCategory>('all')
 const exporting = ref(false)
+const hasFilters = computed(() => !!query.value.trim() || typeFilter.value !== 'all' || statusFilter.value !== 'all' || failureFilter.value !== 'all' || rangeFilter.value !== 'all')
+const openRetry = async (record: TaskHistoryRecord) => {
+  selectedRecord.value = record
+  await nextTick()
+  const draft = document.querySelector<HTMLElement>('[data-testid="history-extraction-draft"]')
+  draft?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 const selectedFailure = computed(() => selectedRecord.value ? describeTaskFailure(selectedRecord.value) : null)
 const resetFilters = () => {
   query.value = ''
@@ -62,22 +70,7 @@ const safeTime = (value?: string | null) => {
   return Number.isNaN(time) ? 0 : time
 }
 
-const filteredRecords = computed(() => {
-  const normalized = query.value.trim().toLowerCase()
-  const cutoff = rangeFilter.value === 'all'
-    ? 0
-    : Date.now() - Number.parseInt(rangeFilter.value, 10) * DAY_MS
-  return historyStore.sortedRecords.filter(record => {
-    const failure = describeTaskFailure(record)
-    const matchesQuery = !normalized || [record.name, record.outputPath, record.format, record.errorMessage, failure?.categoryLabel, ...record.sourcePaths]
-      .some(value => value?.toLowerCase().includes(normalized))
-    return matchesQuery
-      && (typeFilter.value === 'all' || record.taskType === typeFilter.value)
-      && (statusFilter.value === 'all' || record.status === statusFilter.value)
-      && (failureFilter.value === 'all' || failure?.category === failureFilter.value)
-      && (!cutoff || safeTime(record.completedAt) >= cutoff)
-  })
-})
+const filteredRecords = computed(() => historyStore.sortedRecords)
 
 const stats = computed(() => {
   const records = historyStore.records
@@ -150,8 +143,23 @@ const typeLabel = (record: TaskHistoryRecord) => appStore.t(`history.type.${reco
 const statusLabel = (record: TaskHistoryRecord) => appStore.t(`history.status.${record.status}`)
 
 const refresh = async () => {
+  clearTimeout(searchTimer)
   try { await historyStore.fetchHistory() } catch { /* rendered by error state */ }
 }
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+watch([query, typeFilter, statusFilter, rangeFilter, failureFilter], () => {
+  clearTimeout(searchTimer)
+  selectedRecord.value = null
+  historyStore.prepareQuery({
+    text: query.value.trim(),
+    taskType: typeFilter.value === 'all' ? undefined : typeFilter.value,
+    status: statusFilter.value === 'all' ? undefined : statusFilter.value,
+    failureCategory: failureFilter.value === 'all' ? undefined : failureFilter.value,
+    since: rangeFilter.value === 'all' ? undefined : new Date(Date.now() - parseInt(rangeFilter.value, 10) * DAY_MS).toISOString(),
+  })
+  searchTimer = setTimeout(refresh, 250)
+})
+onUnmounted(() => clearTimeout(searchTimer))
 const loadMore = async () => {
   try { await historyStore.loadMore() } catch { /* keep loaded rows and allow retry */ }
 }
@@ -182,7 +190,7 @@ watch(filteredRecords, records => {
   }
 })
 
-onMounted(refresh)
+onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
 </script>
 
 <template>
@@ -205,11 +213,13 @@ onMounted(refresh)
         </div>
       </header>
 
-      <p class="history-panel p-4 text-sm text-muted" data-testid="history-retention-policy">
-        历史保留至你主动删除或清空，不再因超过 500 条自动删除；记录会占用本机磁盘。旧版已删除的历史无法恢复。
-        当前已加载 {{ historyStore.records.length }} 条；筛选、统计和趋势仅覆盖已加载记录，不代表全库。更早记录请继续加载，新完成的任务请刷新。
+      <p class="text-xs text-muted" data-testid="history-retention-policy">
+        搜索和筛选覆盖全部已保存历史，无需逐页寻找。当前显示 {{ historyStore.records.length }} 条{{ historyStore.hasMore ? '，可继续加载更多匹配项' : '' }}。
+        下方统计和趋势仅针对当前显示的记录。新完成的任务请刷新。
       </p>
 
+      <details class="space-y-4">
+        <summary class="cursor-pointer text-sm text-muted w-fit">查看当前结果统计与趋势</summary>
       <section class="grid grid-cols-2 xl:grid-cols-4 gap-3" data-testid="history-kpis">
         <article class="history-kpi history-kpi-primary">
           <div><span>{{ appStore.t('history.total_tasks') }}</span><i class="pi pi-inbox"></i></div>
@@ -254,10 +264,12 @@ onMounted(refresh)
         </div>
       </section>
 
+      </details>
+
       <section class="history-panel p-3 sm:p-4 flex flex-col xl:flex-row gap-3" aria-label="History filters">
         <label class="relative flex-1 min-w-0">
           <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-dim"></i>
-          <input v-model="query" data-testid="history-search" class="history-control w-full pl-11" placeholder="搜索已加载的任务、路径或失败原因" aria-label="搜索已加载的任务、路径或失败原因">
+          <input v-model="query" data-testid="history-search" class="history-control w-full" style="padding-left: 2.75rem" placeholder="搜索全部历史：文件名、路径或失败原因" aria-label="搜索全部历史：文件名、路径或失败原因">
         </label>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 xl:flex xl:shrink-0">
           <select v-model="failureFilter" class="history-control min-w-0 xl:max-w-48" data-testid="history-failure-filter" aria-label="失败类别">
@@ -276,6 +288,11 @@ onMounted(refresh)
         </div>
       </section>
 
+      <div v-if="hasFilters" class="flex items-center justify-between gap-3 text-sm text-muted">
+        <span role="status">{{ historyStore.isLoading ? '正在查找…' : `当前条件下已显示 ${historyStore.records.length} 条${historyStore.hasMore ? '，还有更多' : ''}` }}</span>
+        <button class="history-control shrink-0" data-testid="history-reset-filters" @click="resetFilters">清除筛选</button>
+      </div>
+
       <div v-if="historyStore.error" class="history-panel p-8 text-center">
         <i class="pi pi-exclamation-triangle text-red-500 text-2xl"></i><p class="font-black mt-3">{{ appStore.t('history.load_failed') }}</p><p class="text-xs text-muted mt-1 break-all">{{ historyStore.error }}</p>
       </div>
@@ -284,9 +301,8 @@ onMounted(refresh)
       </div>
       <div v-else-if="!filteredRecords.length && !historyStore.error" class="history-panel min-h-72 flex flex-col items-center justify-center text-center p-8" data-testid="history-empty">
         <div class="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary"><i class="pi pi-history text-2xl"></i></div>
-        <h2 class="font-black text-lg mt-5">{{ historyStore.records.length ? appStore.t('history.no_matches') : appStore.t('history.empty_title') }}</h2>
-        <p class="text-sm text-muted mt-2 max-w-md">{{ historyStore.records.length ? appStore.t('history.no_matches_hint') : appStore.t('history.empty_hint') }}</p>
-        <button v-if="historyStore.records.length" type="button" class="history-control mt-4" data-testid="history-reset-filters" @click="resetFilters">{{ appStore.t('history.reset_filters') }}</button>
+        <h2 class="font-black text-lg mt-5">{{ hasFilters ? appStore.t('history.no_matches') : appStore.t('history.empty_title') }}</h2>
+        <p class="text-sm text-muted mt-2 max-w-md">{{ hasFilters ? '已查找全部保存的历史。试试缩短关键词，或清除筛选条件。' : appStore.t('history.empty_hint') }}</p>
       </div>
 
       <section v-else-if="filteredRecords.length" class="space-y-5" data-testid="history-list">
@@ -296,7 +312,9 @@ onMounted(refresh)
             <article v-for="record in group.records" :key="record.id" class="history-row grid gap-3 p-4 cursor-pointer hover:bg-primary/5 transition-colors" tabindex="0" data-testid="history-record-row" @click="selectedRecord = record" @keydown.enter="selectedRecord = record">
               <div class="flex items-center gap-3 min-w-0">
                 <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0"><i :class="record.taskType === 'compression' ? 'pi pi-box' : 'pi pi-folder-open'"></i></div>
-                <div class="min-w-0"><h3 class="font-black text-content truncate">{{ record.name }}</h3><p class="text-xs text-muted truncate mt-0.5">{{ record.outputPath || record.sourcePaths[0] }}</p></div>
+                <div class="min-w-0"><h3 class="font-black text-content truncate">{{ record.name }}</h3><p class="text-xs text-muted truncate mt-0.5">{{ record.outputPath || record.sourcePaths[0] }}</p>
+                  <button v-if="record.taskType === 'decompression' && (!record.workloadKind || record.workloadKind === 'archive')" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次解压</button>
+                </div>
               </div>
               <div class="hidden md:flex items-center gap-2 text-xs text-muted"><span class="history-chip">{{ typeLabel(record) }}</span><span v-if="record.format" class="history-chip uppercase">{{ record.format }}</span></div>
               <div class="text-xs text-muted"><strong class="block text-content">{{ formatBytes(Math.max(record.processedBytes, record.totalBytes)) }}</strong><span>{{ formatDuration(record.durationMs) }}</span></div>
@@ -312,8 +330,8 @@ onMounted(refresh)
     </div>
 
     <div v-if="historyStore.hasMore" class="px-6 pb-6 text-center">
-      <p class="text-sm text-muted mb-3">还有更早的记录未加载；当前筛选没有结果时也可以继续加载。</p>
-      <button class="history-control" data-testid="history-load-more" :disabled="historyStore.isLoading" @click="loadMore">{{ historyStore.isLoading ? '正在加载…' : '加载更早记录' }}</button>
+      <p class="text-sm text-muted mb-3">还有符合当前条件的记录。</p>
+      <button class="history-control" data-testid="history-load-more" :disabled="historyStore.isLoading" @click="loadMore">{{ historyStore.isLoading ? '正在加载…' : '加载更多结果' }}</button>
     </div>
 
     <Teleport to="body">
@@ -328,7 +346,9 @@ onMounted(refresh)
             </section>
             <div class="grid grid-cols-2 gap-3 mb-5"><div class="detail-metric"><span>{{ appStore.t('history.detail.status') }}</span><strong :class="terminalColor[selectedRecord.status].split(' ')[0]">{{ statusLabel(selectedRecord) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.duration') }}</span><strong>{{ formatDuration(selectedRecord.durationMs) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.volume') }}</span><strong>{{ formatBytes(Math.max(selectedRecord.processedBytes, selectedRecord.totalBytes)) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.completed_at') }}</span><strong>{{ formatDateTime(selectedRecord.completedAt) }}</strong></div></div>
             <section class="detail-section"><h3><i class="pi pi-sign-in"></i>{{ appStore.t('history.detail.sources') }}</h3><div class="space-y-2 mt-3"><code v-for="source in selectedRecord.sourcePaths" :key="source" class="detail-path">{{ source }}</code><p v-if="!selectedRecord.sourcePaths.length" class="text-sm text-dim">—</p></div></section>
-            <section class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code></section>
+            <section v-if="selectedRecord.retryOfTaskId" class="detail-section" data-testid="history-retry-origin"><h3>从失败任务重新创建</h3><p class="text-xs text-muted mt-2">这是独立的新任务，原失败记录保持不变。原任务编号：</p><code class="detail-path mt-2">{{ selectedRecord.retryOfTaskId }}</code></section>
+            <section v-if="selectedRecord.status === 'completed' && selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" class="detail-section"><CompletedExtractionOutput :path="selectedRecord.outputPath" /></section>
+            <section v-else class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code></section>
             <section v-if="recoveryGuidance" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4" data-testid="history-recovery-guidance" :aria-label="recoveryGuidance.title">
               <h3 class="font-bold">{{ recoveryGuidance.title }}</h3>
               <ol class="mt-2 list-decimal pl-5 space-y-2 text-sm leading-relaxed">

@@ -17,17 +17,39 @@ const record: TaskHistoryRecord = {
 const setup = async () => {
   const pinia = createPinia()
   setActivePinia(pinia)
-  const wrapper = mount(HistoryExtractionDraft, { props: { record }, global: { plugins: [pinia] } })
+  const wrapper = mount(HistoryExtractionDraft, { props: { record }, global: { plugins: [pinia], stubs: { ExtractionOutputPreview: true } } })
   await wrapper.get('[data-testid="history-draft-select-output"]').trigger('click')
   await flushPromises()
   return { wrapper, store: useTaskStore() }
 }
 describe('history extraction draft', () => {
+  it('带入已保存的目录和子目录选择，允许修改后创建，再切到旧记录时清空设置', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const saved: TaskHistoryRecord = { ...record, executionConfig: {
+      schemaVersion: 1, kind: 'archive-extraction', outputDirectory: 'D:/上次目录', extractToSubfolder: false,
+    } }
+    const wrapper = mount(HistoryExtractionDraft, { props: { record: saved }, global: { plugins: [pinia], stubs: { ExtractionOutputPreview: true } } })
+    expect(wrapper.get('[data-testid="history-config-restored"]').text()).toContain('已带入')
+    expect((wrapper.get('[data-testid="history-draft-output"]').element as HTMLInputElement).value).toBe('D:/上次目录')
+    expect((wrapper.get('[data-testid="history-draft-subfolder"]').element as HTMLInputElement).checked).toBe(false)
+    await wrapper.get('[data-testid="history-draft-output"]').setValue('D:/这次目录')
+    await wrapper.get('[data-testid="history-draft-password"]').setValue('this-run-only')
+    await wrapper.get('[data-testid="history-draft-create"]').trigger('click')
+    await flushPromises()
+    expect(useTaskStore().tasks[0]).toMatchObject({ outputPath: 'D:/这次目录', extractToSubfolder: false, password: 'this-run-only', status: 'pending' })
+    expect(saved.executionConfig?.outputDirectory).toBe('D:/上次目录')
+    await wrapper.setProps({ record: { ...record, id: 'legacy' } })
+    expect(wrapper.find('[data-testid="history-config-restored"]').exists()).toBe(false)
+    expect((wrapper.get('[data-testid="history-draft-output"]').element as HTMLInputElement).value).toBe('')
+    expect((wrapper.get('[data-testid="history-draft-password"]').element as HTMLInputElement).value).toBe('')
+    wrapper.unmount()
+  })
   beforeEach(() => {
     vi.resetAllMocks()
     mocks.open.mockResolvedValue('D:/output')
-    mocks.invoke.mockImplementation(async command => command === 'detect_split_archive'
-      ? { is_split: false } : { name: 'old.rar', size: 100, is_dir: false })
+    mocks.invoke.mockImplementation(async (command, args) => command === 'detect_split_archive'
+      ? { is_split: false } : { name: 'old.rar', size: 100, is_dir: !args.path.endsWith('.rar') })
   })
   it('creates a new pending individual task without executing or changing history', async () => {
     const { wrapper, store } = await setup()
@@ -36,10 +58,11 @@ describe('history extraction draft', () => {
     expect(store.tasks).toHaveLength(1)
     expect(store.tasks[0]).toMatchObject({ status: 'pending', configurationMode: 'individual', outputPath: 'D:/output', recycleSourceAfterExtract: false, extractToSubfolder: true })
     expect(store.tasks[0].id).not.toBe(record.id)
+    expect(store.tasks[0].retryOfTaskId).toBe(record.id)
     expect(store.tasks[0].password).toBeUndefined()
     expect(store.tasks[0].logs[0].message).toContain(record.id)
     expect(record.status).toBe('failed')
-    expect(mocks.invoke.mock.calls.map(call => call[0])).toEqual(['detect_split_archive', 'get_file_info'])
+    expect(mocks.invoke.mock.calls.map(call => call[0])).toEqual(['detect_split_archive', 'get_file_info', 'get_file_info'])
     await wrapper.get('[data-testid="history-draft-create"]').trigger('click')
     expect(store.tasks).toHaveLength(1)
   })

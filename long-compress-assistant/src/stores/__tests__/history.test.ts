@@ -7,6 +7,23 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 const row = (id: string) => ({ id, completedAt: '2026-09-23T00:00:00Z', status: 'failed' })
 const cursor = { completedAt: '2026-09-23T00:00:00Z', id: 'b' }
 describe('history pagination', () => {
+  it('搜索条件变化后丢弃旧响应，下一页沿用当前条件', async () => {
+    const store = useHistoryStore()
+    let resolve!: (page: unknown) => void
+    mocks.invoke.mockImplementationOnce(() => new Promise(done => { resolve = done }))
+    const old = store.fetchHistory()
+    store.prepareQuery({ text: '旧照片', status: 'completed' })
+    mocks.invoke.mockResolvedValueOnce({ records: [row('b')], nextCursor: cursor })
+    await store.fetchHistory()
+    resolve({ records: [row('unrelated')], nextCursor: null })
+    await old
+    expect(store.records.map(r => r.id)).toEqual(['b'])
+    mocks.invoke.mockResolvedValueOnce({ records: [row('a')], nextCursor: null })
+    await store.loadMore()
+    expect(mocks.invoke).toHaveBeenLastCalledWith('list_task_history_page', {
+      limit: 100, cursor, query: { text: '旧照片', status: 'completed' },
+    })
+  })
   beforeEach(() => { setActivePinia(createPinia()); vi.resetAllMocks() })
   it('加载更早记录并保留第一页；失败可以重试且不重复记录', async () => {
     const store = useHistoryStore()
@@ -20,7 +37,7 @@ describe('history pagination', () => {
     await store.loadMore()
     expect(store.records.map(r => r.id)).toEqual(['b', 'a'])
     expect(store.hasMore).toBe(false)
-    expect(mocks.invoke).toHaveBeenLastCalledWith('list_task_history_page', { limit: 100, cursor })
+    expect(mocks.invoke).toHaveBeenLastCalledWith('list_task_history_page', { limit: 100, cursor, query: { text: '' } })
   })
   it('刷新期间旧的加载更多响应不能覆盖新列表', async () => {
     const store = useHistoryStore()

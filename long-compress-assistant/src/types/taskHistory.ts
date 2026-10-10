@@ -7,6 +7,21 @@ import {
 
 export type TaskHistoryStatus = 'completed' | 'failed' | 'cancelled'
 
+export interface ExtractionConfigV1 {
+  schemaVersion: 1
+  kind: 'archive-extraction'
+  outputDirectory: string
+  extractToSubfolder: boolean
+}
+
+export function restoredExtractionConfig(record: TaskHistoryRecord): ExtractionConfigV1 | null {
+  const config = record.executionConfig
+  return record.taskType === 'decompression' && (!record.workloadKind || record.workloadKind === 'archive')
+    && config?.schemaVersion === 1 && config.kind === 'archive-extraction'
+    && typeof config.outputDirectory === 'string' && !!config.outputDirectory.trim()
+    && typeof config.extractToSubfolder === 'boolean' ? config : null
+}
+
 export interface TaskFailureV1 {
   schemaVersion: 1
   category: string
@@ -22,6 +37,8 @@ export interface TaskHistoryLog {
 
 export interface TaskHistoryRecord {
   id: string
+  retryOfTaskId?: string | null
+  executionConfig?: ExtractionConfigV1 | null
   name: string
   taskType: 'compression' | 'decompression'
   workloadKind: WorkloadKind
@@ -55,6 +72,12 @@ export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
   )
   return {
     id: task.id,
+    retryOfTaskId: task.retryOfTaskId || null,
+    executionConfig: task.executionConfig ? {
+      schemaVersion: 1, kind: 'archive-extraction',
+      outputDirectory: task.executionConfig.outputDirectory,
+      extractToSubfolder: task.executionConfig.extractToSubfolder,
+    } : null,
     name: task.name,
     taskType: task.type,
     workloadKind: task.workloadKind || 'archive',

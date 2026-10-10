@@ -4,7 +4,7 @@ import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { ResourcePreflightReport } from '@/types/resourcePreflight'
 import type { TaskMetrics, WorkloadKind } from '@/types/taskMetrics'
-import { createTaskHistoryRecord } from '@/types/taskHistory'
+import { createTaskHistoryRecord, type ExtractionConfigV1 } from '@/types/taskHistory'
 import { normalizeProgressPercent } from '@/utils/progress'
 
 export type TaskStatus = 'pending' | 'preparing' | 'running' | 'compressing' | 'extracting' | 'finalizing' | 'paused' | 'cancelling' | 'completed' | 'failed' | 'cancelled'
@@ -32,6 +32,11 @@ export interface ConflictInfo {
 export interface Task {
   id: string
   name: string
+  /** Original failed task; persisted on the new task only. */
+  retryOfTaskId?: string
+  executionConfig?: ExtractionConfigV1
+  /** Session-only duplicate submission guard on the original task. */
+  retryDraftId?: string
   type: TaskType
   /** Missing on pre-B00 tasks and interpreted as archive for compatibility. */
   workloadKind?: WorkloadKind

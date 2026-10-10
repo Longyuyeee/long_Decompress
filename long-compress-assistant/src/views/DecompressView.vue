@@ -7,20 +7,41 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage, generateId, isPasswordRelatedError } from '@/utils'
 import { open } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
+import Modal from '@/components/ui/Modal.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath, isPotentialSplitArchivePath } from '@/utils/compressionFormat'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
 import { sortTasksByName } from '@/utils/taskOrdering'
+import { useDecompressionBatchStore } from '@/stores/decompressionBatch'
+import DecompressionBatchSummary from '@/components/tasks/DecompressionBatchSummary.vue'
+import FailedExtractionRetry from '@/components/tasks/FailedExtractionRetry.vue'
 
 const taskStore = useTaskStore()
+const batchStore = useDecompressionBatchStore()
 const appStore = useAppStore()
 const passwordStore = usePasswordStore()
 const tauriCommands = useTauriCommands()
 
 const selectedConflictTaskId = ref<string | null>(null)
+const retryTaskIds = ref<string[] | null>(null)
+const retrySuppliedPassword = ref('')
+const openBatchRetry = () => {
+  retrySuppliedPassword.value = ''
+  retryTaskIds.value = [...batchStore.visibleFailureIds]
+}
+const closeRetry = () => {
+  retryTaskIds.value = null
+  retrySuppliedPassword.value = ''
+}
+const selectRetryDrafts = (ids: string[]) => {
+  batchStore.showingFailures = false
+  selectedTaskIds.value = new Set(ids)
+  appStore.setSuccess(`已创建 ${ids.length} 个新任务，请核对后点击开始；原失败记录保留。`)
+}
 const showConflictModal = ref(false)
+const showBatchSettings = ref(false)
 const conflictSelections = new Map<string, Array<{
   destPath: string
   action: 'overwrite' | 'skip' | 'rename'
@@ -108,6 +129,7 @@ onUnmounted(() => {
 })
 
 const onFilesSelected = async (files: any[]) => {
+  batchStore.showingFailures = false
   const createdTaskIds: string[] = []
   const errors: string[] = []
   let groupedSplitCount = 0
@@ -336,6 +358,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
   if (pendingTasks.length === 0) return
 
   isProcessing.value = true
+  batchStore.begin(pendingTasks.map(task => task.id))
 
   // 启动后清除选择
   selectedTaskIds.value = new Set()
@@ -427,6 +450,10 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
 }
 
 const hasPendingTasks = computed(() => decompressionTasks.value.some(t => t.status === 'pending'))
+const showBatchFailures = () => {
+  selectedTaskIds.value = new Set()
+  batchStore.showingFailures = true
+}
 const pausableTasks = computed(() => decompressionTasks.value.filter(t => ['running', 'extracting', 'preparing', 'finalizing'].includes(t.status)))
 const pausedTasks = computed(() => decompressionTasks.value.filter(t => t.status === 'paused'))
 const isRunning = computed(() => decompressionTasks.value.some(t => ['running', 'extracting', 'preparing', 'finalizing', 'paused', 'cancelling'].includes(t.status)))
@@ -439,17 +466,14 @@ const resumeAllTasks = async () => {
   await Promise.all(pausedTasks.value.map(task => taskStore.resumeTask(task.id)))
 }
 
-const retryWithPassword = async (taskId: string) => {
+const retryWithPassword = (taskId: string) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
   if (!task?.password) {
     appStore.setError(appStore.t('tasks.password.required'))
     return
   }
-  task.error = undefined
-  task.passwordRequired = false
-  taskStore.updateTaskStatus(task.id, 'pending')
-  selectedTaskIds.value = new Set([task.id])
-  await startDecompression()
+  retrySuppliedPassword.value = task.password
+  retryTaskIds.value = [task.id]
 }
 
 const cancelAllTasks = async () => {
@@ -530,7 +554,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
       </div>
       <div class="flex gap-3">
         <button
-          v-if="!isRunning && decompressionTasks.some(t => ['completed', 'failed', 'cancelled'].includes(t.status))"
+          v-if="!batchStore.showingFailures && !isRunning && decompressionTasks.some(t => ['completed', 'failed', 'cancelled'].includes(t.status))"
           @click="taskStore.clearFinishedTasks('decompression')"
           class="h-9 px-5 rounded-lg bg-input border border-subtle text-muted text-xs font-bold uppercase tracking-wider hover:text-red-500 hover:border-red-500/30 transition-all flex items-center gap-2"
         >
@@ -538,7 +562,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           {{ appStore.t('decompress.clear_finished') }}
         </button>
         <button
-          v-if="pausableTasks.length > 0"
+          v-if="pausableTasks.length > 0 && !batchStore.showingFailures"
           @click="pauseAllTasks"
           data-testid="pause-all-archive-tasks"
           class="h-9 px-4 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-bold uppercase tracking-wider hover:bg-amber-500 hover:text-white transition-all flex items-center gap-2"
@@ -547,7 +571,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           {{ appStore.t('tasks.pause_all') }}
         </button>
         <button
-          v-if="pausedTasks.length > 0"
+          v-if="pausedTasks.length > 0 && !batchStore.showingFailures"
           @click="resumeAllTasks"
           data-testid="resume-all-archive-tasks"
           class="h-9 px-4 rounded-lg bg-green-500/10 text-green-500 border border-green-500/30 text-xs font-bold uppercase tracking-wider hover:bg-green-500 hover:text-white transition-all flex items-center gap-2"
@@ -556,7 +580,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           {{ appStore.t('tasks.resume_all') }}
         </button>
         <button
-          v-if="isRunning"
+          v-if="isRunning && !batchStore.showingFailures"
           @click="cancelAllTasks"
           class="h-9 px-5 rounded-lg bg-red-500/10 text-red-500 border border-red-500/30 text-xs font-bold uppercase tracking-wider hover:bg-red-500 hover:text-white transition-all flex items-center gap-2"
         >
@@ -564,7 +588,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           {{ appStore.t('decompress.stop_all') }}
         </button>
         <button
-          v-if="hasPendingTasks && !isRunning"
+          v-if="hasPendingTasks && !isRunning && !batchStore.showingFailures"
           @click="startDecompression()"
           class="h-9 px-6 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-primary/25 flex items-center gap-2"
         >
@@ -575,13 +599,20 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
     </header>
 
     <div data-testid="decompression-workspace-shell" class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
+      <DecompressionBatchSummary @show-failures="showBatchFailures" @show-all="batchStore.showingFailures = false"
+        @retry-failures="openBatchRetry" />
       <div class="flex-1 overflow-hidden flex flex-col relative">
+        <div v-if="batchStore.showingFailures && !batchStore.visibleFailureIds.length" class="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-sm text-muted" data-testid="batch-failures-cleared">
+          <p>{{ appStore.t('decompress.batch.no_visible_failures') }}</p>
+          <RouterLink to="/history" class="text-primary underline">{{ appStore.t('nav.history') }}</RouterLink>
+        </div>
         <!-- 显示所有任务，不再过滤只显示 pending -->
-        <div v-if="decompressionTasks.length > 0" class="flex-1 min-h-0">
+        <div v-else-if="decompressionTasks.length > 0" class="flex-1 min-h-0">
           <AeroTable
           :selectedTaskIds="selectedTaskIds"
           statusFilter="all"
           taskType="decompression"
+          :taskIds="batchStore.showingFailures ? batchStore.visibleFailureIds : undefined"
           @toggle-task="toggleTaskSelection"
           @select-all-pending="selectAllPending"
           @deselect-all="deselectAll"
@@ -606,7 +637,11 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
       </div>
 
       <!-- 底部操作区 -->
-      <div v-if="decompressionTasks.length > 0" class="border-t border-subtle bg-input/10 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
+      <div v-if="decompressionTasks.length > 0 && !batchStore.showingFailures" class="border-t border-subtle bg-input/10 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
+        <button type="button" data-testid="decompression-settings" class="shrink-0 rounded-lg border border-subtle px-3 py-2 text-sm text-primary" @click="showBatchSettings = true"><i class="pi pi-cog mr-1"></i>解压设置</button>
+        <span class="min-w-0 flex-1 truncate text-xs text-muted">{{ batchConfigurationMode === 'global' ? '使用全局配置' : '每项任务单独配置' }}</span>
+        <Modal :visible="showBatchSettings" title="解压设置" size="lg" cancel-text="关闭解压设置" @update:visible="showBatchSettings = $event">
+          <div class="space-y-4">
         <div class="batch-config-mode-switch" data-testid="decompression-batch-config-mode" role="group" aria-label="解压配置模式">
           <button
             type="button"
@@ -676,10 +711,12 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
           </div>
           <div v-else key="individual" class="individual-config-hint">
             <i class="pi pi-sliders-h" aria-hidden="true"></i>
-            <span>展开任务详情后分别调整配置</span>
+            <span>打开任务详情后分别调整配置</span>
           </div>
         </Transition>
 
+          </div>
+        </Modal>
         <div class="w-px h-5 bg-subtle/20 mx-1 hidden md:block"></div>
 
         <EnhancedFileDropzone
@@ -701,6 +738,7 @@ const unsubConflict = taskStore.$subscribe((_mutation, state) => {
       @resolve="handleConflictResolve"
     />
   </div>
+    <FailedExtractionRetry v-if="retryTaskIds" :task-ids="retryTaskIds" :supplied-password="retrySuppliedPassword" @created="selectRetryDrafts" @close="closeRetry" />
 </template>
 
 <style scoped>

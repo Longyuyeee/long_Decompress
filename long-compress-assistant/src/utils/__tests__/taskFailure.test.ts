@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { describeTaskFailure, getTaskRecoveryGuidance } from '../taskFailure'
+import { createTaskDiagnosticReport, describeTaskFailure, getTaskRecoveryGuidance } from '../taskFailure'
+import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 describe('task failure evidence', () => {
+  it('exports retry provenance without leaking legacy plaintext passwords or mutating the record', () => {
+    const record: TaskHistoryRecord = {
+      id: 'new-task', retryOfTaskId: 'old-task', name: 'a.zip', taskType: 'decompression', workloadKind: 'archive', status: 'failed',
+      sourcePaths: ['C:/a.zip'], outputPath: 'C:/out', completedAt: '2026-10-10T00:00:00Z', durationMs: 0, processedBytes: 0, totalBytes: 0,
+      errorMessage: '密码「secret-error」', logs: [{ timestamp: 'now', severity: 'info', message: '使用密码「secret-log」' }],
+    }
+    const before = JSON.stringify(record)
+    const report = createTaskDiagnosticReport(record, '1.3.6')
+    expect(report).not.toContain('secret-error')
+    expect(report).not.toContain('secret-log')
+    expect(JSON.parse(report).task.retryOfTaskId).toBe('old-task')
+    expect(JSON.stringify(record)).toBe(before)
+  })
   it.each([
     ['damaged', 'inspection', '重新获取完整文件'],
     ['missing-volume', 'inspection', '不猜测缺失分卷名称'],

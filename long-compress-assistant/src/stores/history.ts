@@ -5,6 +5,13 @@ import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 interface HistoryCursor { completedAt: string; id: string }
 interface HistoryPage { records: TaskHistoryRecord[]; nextCursor: HistoryCursor | null }
+export interface HistoryQuery {
+  text: string
+  taskType?: string
+  status?: string
+  since?: string
+  failureCategory?: string
+}
 
 export const useHistoryStore = defineStore('history', () => {
   const records = ref<TaskHistoryRecord[]>([])
@@ -13,6 +20,7 @@ export const useHistoryStore = defineStore('history', () => {
   const error = ref<string | null>(null)
   const nextCursor = ref<HistoryCursor | null>(null)
   const hasMore = computed(() => nextCursor.value !== null)
+  let activeQuery: HistoryQuery = { text: '' }
   let generation = 0
   const deletedIds = new Set<string>()
 
@@ -28,7 +36,7 @@ export const useHistoryStore = defineStore('history', () => {
     isLoading.value = true
     error.value = null
     try {
-      const page = await invoke<HistoryPage>('list_task_history_page', { limit: 100, cursor: append ? nextCursor.value : null })
+      const page = await invoke<HistoryPage>('list_task_history_page', { limit: 100, cursor: append ? nextCursor.value : null, query: { ...activeQuery } })
       if (request !== generation) return
       const merged = new Map((append ? records.value : []).map(record => [record.id, record]))
       for (const record of page.records) if (!deletedIds.has(record.id)) merged.set(record.id, record)
@@ -43,6 +51,15 @@ export const useHistoryStore = defineStore('history', () => {
   }
   const fetchHistory = () => readPage(false)
   const loadMore = () => readPage(true)
+  const prepareQuery = (query: HistoryQuery) => {
+    activeQuery = { ...query }
+    generation++
+    records.value = []
+    nextCursor.value = null
+    error.value = null
+    isLoading.value = true
+    isInitialized.value = false
+  }
 
   const deleteRecord = async (id: string) => {
     await invoke('delete_task_history', { id })
@@ -68,6 +85,7 @@ export const useHistoryStore = defineStore('history', () => {
     isInitialized,
     error,
     fetchHistory,
+    prepareQuery,
     loadMore,
     hasMore,
     deleteRecord,

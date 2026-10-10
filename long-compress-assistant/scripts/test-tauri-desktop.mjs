@@ -2376,6 +2376,45 @@ async function runHistoryDesktopGate() {
   await runDownloadFailureUserGate()
 }
 
+async function runBatchFailureRetryGate(failed, intact, source, scenarioRoot) {
+  const destination = path.join(scenarioRoot, '批次失败项重新执行')
+  mkdirSync(destination, { recursive: true })
+  await (await waitForElement('[data-testid="retry-batch-failures"]')).click()
+  const panel = await waitForElement('[data-testid="failed-extraction-retry"]')
+  assert.equal((await panel.findElements(By.css('article'))).length, 1, 'successful tasks must not enter retry corrections')
+  const sourceInput = await panel.findElement(By.css('[data-testid="retry-source"]'))
+  await sourceInput.clear()
+  await sourceInput.sendKeys(intact)
+  const outputInput = await panel.findElement(By.css('[data-testid="retry-output"]'))
+  await outputInput.clear()
+  await outputInput.sendKeys(destination)
+  const subfolder = await panel.findElement(By.css('[data-testid="retry-subfolder"]'))
+  if (!await subfolder.isSelected()) await subfolder.click()
+  await (await waitForElement('[data-testid="create-retry-drafts"]')).click()
+  await driver.wait(async () => (await panel.getText()).includes('已创建新任务'), 60_000)
+  assert.deepEqual(readdirSync(destination), [], 'confirmation creates a draft, never extraction output')
+  assert.deepEqual((await callDesktopBridge('taskHistory')).find(record => record.id === failed.id), failed)
+  writeFileSync(path.join(artifactDirectory, 'batch-retry-confirmed.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  await (await driver.findElement(By.xpath('//button[contains(., "返回队列确认并启动")]'))).click()
+  await (await driver.findElement(By.xpath('//header[@data-testid="decompression-header"]//button[contains(., "开始解压队列")]'))).click()
+  const retry = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.retryOfTaskId === failed.id), 60_000)
+  assert.equal(retry.status, 'completed', JSON.stringify(retry))
+  assert.notEqual(retry.id, failed.id)
+  assert.equal(fileSha256(path.join(destination, '完整资料', '资料.txt')), fileSha256(source))
+  assert.ok(existsSync(intact), 'retry must retain source')
+  assert.deepEqual((await callDesktopBridge('taskHistory')).find(record => record.id === failed.id), failed)
+  await restartDesktopSession()
+  const history = await callDesktopBridge('taskHistory')
+  assert.deepEqual(history.find(record => record.id === retry.id), retry)
+  assert.deepEqual(history.find(record => record.id === failed.id), failed)
+  writeFileSync(path.join(artifactDirectory, 'batch-failure-retry-result.json'), JSON.stringify({
+    testKind: 'webdriver-ui-real-engine-real-sqlite', binarySha256: fileSha256(application),
+    originalId: failed.id, retryId: retry.id, retryOfTaskId: retry.retryOfTaskId,
+    originalPreserved: true, outputSha256: fileSha256(path.join(destination, '完整资料', '资料.txt')),
+    restartVerified: true, sourcePreserved: true, nativePickerVerified: false,
+  }, null, 2))
+}
+
 async function runDownloadFailureUserGate() {
   console.log('[desktop-e2e] user scenario: downloaded ZIP is incomplete; show the final reason, not a password retry')
   const scenarioRoot = path.join(fixtureDirectory, 'download-failure-user')
@@ -2425,7 +2464,7 @@ async function runDownloadFailureUserGate() {
   assert.equal(fileSha256(path.join(scenarioRoot, '资料 (1).txt')), fileSha256(source))
   assert.deepEqual(readdirSync(scenarioRoot).filter(name => name.endsWith('.txt')).sort(), ['资料 (1).txt', '资料.txt'],
     'only the original and the intact extraction may be published, never the truncated output')
-  await restartDesktopSession()
+  await runBatchFailureRetryGate(failed, intact, source, scenarioRoot)
   const persisted = await callDesktopBridge('taskHistory')
   for (const record of records) assert.deepEqual(persisted.find(item => item.id === record.id), record)
   await (await waitForElement('[data-testid="nav-History"]')).click()
@@ -2512,26 +2551,20 @@ async function runDownloadFailureUserGate() {
   await (await waitForElement('[data-testid="nav-History"]')).click()
   const pagingSearch = await waitForElement('[data-testid="history-search"]')
   await pagingSearch.sendKeys('分页夹具-0000.zip')
-  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="history-empty"]'))).length === 1, 10_000)
-  for (let index = 0; index < 5; index++) {
-    const more = await waitForElement('[data-testid="history-load-more"]')
-    await driver.wait(async () => await more.isEnabled(), 10_000)
-    await more.click()
-    const expectedLoaded = Math.min(100 * (index + 2), 505 + retryPersisted.length)
-    await driver.wait(async () => driver.executeScript(expected =>
-      document.querySelector('[data-testid="history-retention-policy"]')?.textContent.includes(`当前已加载 ${expected} 条`), expectedLoaded),
-    10_000, 'each click must advance the actual loaded-record count')
-  }
+  await driver.wait(async () => {
+    const matches = await driver.findElements(By.css('[data-testid="history-record-row"]'))
+    return matches.length === 1 && (await matches[0].getText()).includes('分页夹具-0000.zip')
+  }, 10_000, 'global search must find the old failure without loading intervening pages')
   const oldest = await waitForElement('[data-testid="history-record-row"]')
-  assert.ok((await oldest.getText()).includes('分页夹具-0000.zip'))
+  assert.equal((await driver.findElements(By.css('[data-testid="history-load-more"]'))).length, 0)
   await oldest.click()
   const reason = await waitForElement('[data-testid="history-final-failure"]')
   await driver.wait(async () => (await reason.getText()).includes('文件损坏或不完整'), 10_000)
-  writeFileSync(path.join(artifactDirectory, 'history-paging-result.json'), JSON.stringify({
-    testKind: 'synthetic-505-history-records-real-sqlite-restart-ui-pagination',
-    binarySha256: fileSha256(application), loadedBeyond500: true, oldestFailurePreserved: true,
+  writeFileSync(path.join(artifactDirectory, 'history-search-result.json'), JSON.stringify({
+    testKind: 'synthetic-505-history-records-real-sqlite-restart-global-search',
+    binarySha256: fileSha256(application), oldestFoundBySearch: true, oldestFailurePreserved: true,
   }, null, 2))
-  console.log('[desktop-e2e] 505 retained records, restart, no-match then older-page lookup passed')
+  console.log('[desktop-e2e] 505 retained records, restart and direct oldest-record search passed')
 }
 
 async function runHfsxDesktopGate() {

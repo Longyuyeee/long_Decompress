@@ -1922,12 +1922,7 @@ impl CompressionService {
             )).into());
         }
         Self::validate_recycle_bin_options(&options)?;
-        let mut final_out_dir = output_dir.map(PathBuf::from).unwrap_or_else(|| {
-            path.parent().unwrap_or(Path::new(".")).to_path_buf()
-        });
-        if options.create_subdirectory {
-            final_out_dir = final_out_dir.join(Self::archive_output_dir_name(path));
-        }
+        let final_out_dir = Self::extraction_output_path(path, output_dir.as_deref(), options.create_subdirectory);
 
         if final_out_dir.exists() && !final_out_dir.is_dir() {
             return Err(CompressionError::ExtractionFailed(format!(
@@ -2678,6 +2673,14 @@ impl CompressionService {
         options: &DecompressOptions,
     ) -> Result<()> {
         extraction_transaction::prepare_staging_layout(archive_path, staging, options)
+    }
+
+    pub fn extraction_output_path(path: &Path, output_dir: Option<&str>, create_subdirectory: bool) -> PathBuf {
+        let mut output = output_dir.map(PathBuf::from).unwrap_or_else(|| {
+            path.parent().unwrap_or(Path::new(".")).to_path_buf()
+        });
+        if create_subdirectory { output = output.join(Self::archive_output_dir_name(path)); }
+        output
     }
 
     fn archive_output_dir_name(path: &Path) -> String {
@@ -4192,6 +4195,10 @@ mod tests_continued {
         assert_eq!(CompressionService::archive_output_dir_name(Path::new("project.part01.rar")), "project");
         assert_eq!(CompressionService::archive_output_dir_name(Path::new("project.part1")), "project");
         assert_eq!(CompressionService::archive_output_dir_name(Path::new("project.tar.gz")), "project");
+        for source in ["旅行.zip", "旅行.tar.gz", "旅行.7z.001", "旅行.part02.rar"] {
+            assert_eq!(CompressionService::extraction_output_path(Path::new(source), Some("output"), true), Path::new("output").join("旅行"));
+            assert_eq!(CompressionService::extraction_output_path(Path::new(source), Some("output"), false), PathBuf::from("output"));
+        }
     }
 
     #[test]

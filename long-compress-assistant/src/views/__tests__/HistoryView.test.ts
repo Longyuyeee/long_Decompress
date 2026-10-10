@@ -25,21 +25,24 @@ const records = [
   },
 ]
 
-const page = (records: unknown[]) => ({ records, nextCursor: null })
+const page = (records: any[], query: any = {}) => ({ records: records.filter(record =>
+  (!query.text || [record.name, record.outputPath, record.errorMessage, ...record.sourcePaths].some(value => value?.toLowerCase().includes(query.text.toLowerCase())))
+  && (!query.taskType || record.taskType === query.taskType)
+  && (!query.status || record.status === query.status)
+  && (!query.since || Date.parse(record.completedAt) >= Date.parse(query.since))
+  && (!query.failureCategory || (record.status === 'failed' && (record.failure?.category || 'unknown') === query.failureCategory))), nextCursor: null })
+const settleSearch = async () => { await new Promise(resolve => setTimeout(resolve, 275)); await flushPromises() }
 const mountView = () => mount(HistoryView, { global: { plugins: [createPinia()], stubs: { Teleport: true } } })
 
 describe('HistoryView', () => {
-  it('已加载没有匹配时，仍能加载更早记录；查询失败不隐藏已加载结果', async () => {
-    mocks.invoke.mockImplementation(async command => command === 'list_task_history_page'
-      ? { records: [records[0]], nextCursor: { completedAt: records[0].completedAt, id: records[0].id } } : undefined)
+  it('搜索直接返回更早的匹配记录，刷新失败仍保留当前结果', async () => {
+    mocks.invoke.mockImplementation(async (command, args) => command === 'list_task_history_page'
+      ? args.query.text ? page([records[1]], args.query) : { records: [records[0]], nextCursor: { completedAt: records[0].completedAt, id: records[0].id } } : undefined)
     const wrapper = mountView()
     await flushPromises()
     await wrapper.get('[data-testid="history-search"]').setValue('broken')
-    expect(wrapper.get('[data-testid="history-empty"]').exists()).toBe(true)
-    expect(wrapper.get('[data-testid="history-retention-policy"]').text()).toContain('不代表全库')
-    mocks.invoke.mockResolvedValueOnce(page([records[1]]))
-    await wrapper.get('[data-testid="history-load-more"]').trigger('click')
-    await flushPromises()
+    await settleSearch()
+    expect(wrapper.get('[data-testid="history-retention-policy"]').text()).toContain('覆盖全部')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
     expect(wrapper.find('[data-testid="history-load-more"]').exists()).toBe(false)
     mocks.invoke.mockRejectedValueOnce(new Error('temporary database error'))
@@ -85,50 +88,46 @@ describe('HistoryView', () => {
     vi.clearAllMocks()
     mocks.save.mockResolvedValue(null)
     localStorage.clear()
-    mocks.invoke.mockImplementation(async (command: string) => {
+    mocks.invoke.mockImplementation(async (command: string, args: any) => {
       if (command === 'load_app_settings') return '{}'
-      if (command === 'list_task_history_page') return page(records)
+      if (command === 'list_task_history_page') return page(records, args.query)
       return undefined
     })
   })
 
   afterEach(() => { vi.restoreAllMocks() })
 
-  it('过了一个月记录看不见了，我能重置筛选找回来，而不是重新解压', async () => {
+  it('默认展示全部时间，清除条件后重新查找全部历史', async () => {
     vi.mocked(Date.now).mockReturnValue(Date.parse('2026-09-22T00:00:00Z'))
     const wrapper = mountView()
     await flushPromises()
-    expect(wrapper.get('[data-testid="history-empty"]').text()).toContain('没有符合条件')
+    expect(wrapper.get('[data-testid="history-list"]').text()).toContain('photos.zip')
     await wrapper.get('[data-testid="history-search"]').setValue('不存在的名字')
-    await wrapper.get('[data-testid="history-type-filter"]').setValue('compression')
-    await wrapper.get('[data-testid="history-status-filter"]').setValue('failed')
-    await wrapper.get('[data-testid="history-failure-filter"]').setValue('unknown')
-    const callsBeforeReset = [...mocks.invoke.mock.calls]
+    await settleSearch()
+    expect(wrapper.get('[data-testid="history-empty"]').text()).toContain('没有符合条件')
     await wrapper.get('[data-testid="history-reset-filters"]').trigger('click')
+    await settleSearch()
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('photos.zip')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
-    expect(mocks.invoke.mock.calls).toEqual(callsBeforeReset)
+    wrapper.unmount()
   })
 
-  it('最近30天包含边界时刻，早一毫秒的记录只在全部时间显示', async () => {
-    const cutoff = Date.now() - 30 * 86_400_000
-    mocks.invoke.mockResolvedValue(page([
-      { ...records[0], id: 'boundary', name: 'boundary.zip', completedAt: new Date(cutoff).toISOString() },
-      { ...records[0], id: 'older', name: 'older.zip', completedAt: new Date(cutoff - 1).toISOString() },
-    ]))
+  it('选择最近30天时把时间边界提交到数据库查询', async () => {
     const wrapper = mountView()
     await flushPromises()
-    expect(wrapper.get('[data-testid="history-list"]').text()).toContain('boundary.zip')
-    expect(wrapper.get('[data-testid="history-list"]').text()).not.toContain('older.zip')
-    await wrapper.get('[data-testid="history-range-filter"]').setValue('all')
-    expect(wrapper.get('[data-testid="history-list"]').text()).toContain('older.zip')
+    await wrapper.get('[data-testid="history-range-filter"]').setValue('30d')
+    await settleSearch()
+    expect(mocks.invoke).toHaveBeenLastCalledWith('list_task_history_page', expect.objectContaining({
+      cursor: null, query: expect.objectContaining({ since: new Date(Date.now() - 30 * 86_400_000).toISOString() }),
+    }))
+    wrapper.unmount()
   })
 
   it('renders persisted metrics, real records, filters, and details', async () => {
     const wrapper = mountView()
     await flushPromises()
 
-    expect(mocks.invoke).toHaveBeenCalledWith('list_task_history_page', { limit: 100, cursor: null })
+    expect(mocks.invoke).toHaveBeenCalledWith('list_task_history_page', { limit: 100, cursor: null, query: { text: '' } })
     expect(wrapper.get('[data-testid="history-kpis"]').text()).toContain('50%')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('photos.zip')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
@@ -137,6 +136,7 @@ describe('HistoryView', () => {
     expect(completedBadge?.classes()).toContain('history-status-badge')
 
     await wrapper.get('[data-testid="history-type-filter"]').setValue('decompression')
+    await settleSearch()
     expect(wrapper.get('[data-testid="history-list"]').text()).not.toContain('photos.zip')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
 
@@ -163,6 +163,7 @@ describe('HistoryView', () => {
     const wrapper = mountView()
     await flushPromises()
     await wrapper.get('[data-testid="history-type-filter"]').setValue('decompression')
+    await settleSearch()
     await wrapper.find('[data-testid="history-list"] article').trigger('click')
     const detail = wrapper.get('[data-testid="history-detail"]')
     const reason = detail.findAll('section').find(section => section.text().includes('未分类 · 阶段未知'))!
@@ -189,9 +190,11 @@ describe('HistoryView', () => {
     const wrapper = mountView()
     await flushPromises()
     await wrapper.get('[data-testid="history-search"]').setValue('数据错误')
+    await settleSearch()
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
     expect(wrapper.get('[data-testid="history-list"]').text()).not.toContain('photos.zip')
     await wrapper.get('[data-testid="history-failure-filter"]').setValue('unknown')
+    await settleSearch()
     await wrapper.find('[data-testid="history-list"] article').trigger('click')
     expect(wrapper.get('[data-testid="history-detail"]').text()).toContain('未分类 · 阶段未知')
   })
@@ -200,6 +203,7 @@ describe('HistoryView', () => {
     const wrapper = mountView()
     await flushPromises()
     await wrapper.get('[data-testid="history-type-filter"]').setValue('decompression')
+    await settleSearch()
     await wrapper.find('[data-testid="history-list"] article').trigger('click')
     await wrapper.get('[data-testid="history-export"]').trigger('click')
     await flushPromises()

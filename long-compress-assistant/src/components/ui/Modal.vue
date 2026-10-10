@@ -8,7 +8,7 @@
         <Transition name="pop">
           <div
             ref="modalContent"
-            class="relative flex max-h-[min(78vh,42rem)] w-full transform flex-col overflow-hidden rounded-[1.4rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
+            class="modal-no-glass relative flex max-h-[min(78vh,42rem)] w-full transform flex-col overflow-hidden rounded-[1.4rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
             :class="sizeClasses"
             tabindex="-1"
           >
@@ -139,7 +139,7 @@ const handleKeydown = (e: KeyboardEvent) => {
   if (e.key !== 'Tab' || !props.visible || !modalContent.value) return
 
   const focusable = Array.from(modalContent.value.querySelectorAll<HTMLElement>(
-    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [href], [tabindex]:not([tabindex="-1"])'
   )).filter(element => !element.hasAttribute('aria-hidden'))
   if (focusable.length === 0) {
     e.preventDefault()

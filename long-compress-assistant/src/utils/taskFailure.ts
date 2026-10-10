@@ -112,6 +112,10 @@ export function getTaskRecoveryGuidance(record: Pick<TaskHistoryRecord, 'status'
 }
 
 export function createTaskDiagnosticReport(record: TaskHistoryRecord, appVersion: string) {
+  // Defense in depth for old records supplied by an older backend or importer.
+  const redact = (value: string) => value.replace(/(password[:=]|pwd[:=]|密码[：:「])[\s\S]*/i, '$1 [已隐藏]')
+  record = { ...record, errorMessage: record.errorMessage ? redact(record.errorMessage) : record.errorMessage,
+    logs: record.logs.map(log => ({ ...log, message: redact(log.message) })) }
   return JSON.stringify({
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
@@ -122,6 +126,7 @@ export function createTaskDiagnosticReport(record: TaskHistoryRecord, appVersion
     recoveryGuidance: getTaskRecoveryGuidance(record),
     task: {
       id: record.id, name: record.name, status: record.status,
+      retryOfTaskId: record.retryOfTaskId || null,
       taskType: record.taskType, workloadKind: record.workloadKind || 'archive',
       format: record.format, sourcePaths: record.sourcePaths, outputPath: record.outputPath,
       startedAt: record.startedAt, completedAt: record.completedAt,
