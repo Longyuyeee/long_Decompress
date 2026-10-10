@@ -288,6 +288,19 @@ describe('CompressionView', () => {
     expect(taskStore.tasks).toHaveLength(0)
   })
 
+  it.each([false, true])('passes my explicit fast-packing choice through the real task payload: %s', async enabled => {
+    const wrapper = mountView()
+    useCompressionStore().globalSettings.fastPack = enabled
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+    const start = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('compress.start')))
+    await start!.trigger('click')
+    await flushPromises()
+    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'C:/input/sample.zip', expect.objectContaining({ fast_pack: enabled }))
+    expect(useTaskStore().tasks[0].compressionOptions?.fast_pack).toBe(enabled)
+    wrapper.unmount()
+  })
+
   it('passes the selected 7z solid mode to the native compression command', async () => {
     const wrapper = mountView()
     const compressionStore = useCompressionStore()

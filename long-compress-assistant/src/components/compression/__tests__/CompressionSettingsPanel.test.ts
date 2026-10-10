@@ -92,6 +92,18 @@ describe('CompressionSettingsPanel split archive settings', () => {
     expect(emitted.splitSize).toBe('512')
   })
 
+  it('keeps fast packing off unless I select it, and makes the split limitation explicit', async () => {
+    const wrapper = mountPanel(settings())
+    const toggle = wrapper.get('[data-testid="compression-fast-pack"]')
+    expect((toggle.element as HTMLInputElement).checked).toBe(false)
+    await toggle.setValue(true)
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ fastPack: true })
+    await wrapper.setProps({ modelValue: settings({ splitArchive: true, fastPack: true }) })
+    expect((toggle.element as HTMLInputElement).disabled).toBe(true)
+    expect(wrapper.text()).toContain('分卷及其他格式不启用')
+    wrapper.unmount()
+  })
+
   it('keeps the setting visible and explains why it is unavailable', async () => {
     const wrapper = mountPanel(settings(), false)
     await flushPromises()

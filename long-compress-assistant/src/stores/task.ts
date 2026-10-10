@@ -82,6 +82,7 @@ export interface Task {
   password?: string
   passwordRequired?: boolean
   compressionOptions?: {
+    fast_pack?: boolean
     format?: string
     level: number
     password?: string

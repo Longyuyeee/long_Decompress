@@ -55,6 +55,7 @@ export interface FileInfo {
 }
 
 export interface CompressOptions {
+  fast_pack?: boolean
   format?: string
   level: number
   password?: string

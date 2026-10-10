@@ -401,6 +401,7 @@ const runCompression = async () => {
       format: effectiveFormat,
       password: job.settings.password || undefined,
       compressionOptions: {
+        fast_pack: effectiveFormat === 'zip' && !job.settings.splitArchive && job.settings.fastPack === true,
         format: effectiveFormat,
         level: job.settings.level,
         password: job.settings.password || undefined,
@@ -441,6 +442,7 @@ const runCompression = async () => {
         job.files.map(file => file.path),
         job.outputPath,
         {
+          fast_pack: effectiveFormat === 'zip' && !job.settings.splitArchive && job.settings.fastPack === true,
           format: effectiveFormat,
           level: job.settings.level,
           password: job.settings.password || undefined,

@@ -259,6 +259,7 @@ fn native_zip_engine_baseline() {
             .collect();
         let service = CompressionService::for_testing();
         let compression_started = Instant::now();
+        let fast_pack = std::env::var("LONG_NATIVE_ZIP_FAST_PACK").as_deref() == Ok("1");
         native_compression::zip::compress(
             &service,
             None,
@@ -267,6 +268,7 @@ fn native_zip_engine_baseline() {
             archive.to_str().unwrap(),
             CompressionOptions {
                 level: 6,
+                fast_pack,
                 preserve_paths: Some(false),
                 ..Default::default()
             },
@@ -307,7 +309,7 @@ fn native_zip_engine_baseline() {
             serde_json::json!({
                 "schema_version": 1, "scenario": scenario,
                 "scope": "native_zip_engine_without_window_or_transaction",
-                "compression": { "method": "deflate", "level": 6, "encrypted": false, "preserve_paths": false },
+                "compression": { "method": if fast_pack { "sampled_store_or_deflate" } else { "deflate" }, "fast_pack": fast_pack, "level": 6, "encrypted": false, "preserve_paths": false },
                 "fixture_sha256": fixture_hash, "files": manifest,
                 "input_bytes": input_bytes, "file_count": inputs.len(),
                 "archive_bytes": std::fs::metadata(archive).unwrap().len(),

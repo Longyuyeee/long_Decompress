@@ -513,6 +513,11 @@ const closeVaultPasswordsAfterFocus = () => {
       <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
     </section>
 
+    <label class="advanced-option" :class="{ 'opacity-60': compressionOptions.format !== 'zip' || compressionOptions.splitArchive }">
+      <input data-testid="compression-fast-pack" v-model="compressionOptions.fastPack" type="checkbox" :disabled="compressionOptions.format !== 'zip' || compressionOptions.splitArchive" />
+      <span><strong>快速打包（可选）</strong><small>默认关闭。普通或加密 ZIP 按内容抽样，难压缩文件直接存储，其他文件仍压缩；所有文件均保留，包可能略大。分卷及其他格式不启用。</small></span>
+    </label>
+
     <!-- 第二行：高级/路径设置 (条件展开) -->
     <transition name="slide-down">
       <div v-if="showAdvanced" class="space-y-4 pt-4 border-t border-subtle/30">

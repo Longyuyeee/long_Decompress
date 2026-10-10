@@ -30,6 +30,7 @@ export interface FileObject {
 }
 
 export interface CompressionOptions {
+  fastPack?: boolean
   format: CompressionFormatId
   level: number
   password: string

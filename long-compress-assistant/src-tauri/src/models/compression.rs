@@ -109,6 +109,8 @@ impl CompressionFormat {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionOptions {
     #[serde(default)]
+    pub fast_pack: bool,
+    #[serde(default)]
     pub format: Option<String>,
     pub level: u32,
     pub password: Option<String>,
@@ -158,6 +160,7 @@ fn default_conflict_policy() -> String {
 impl Default for CompressionOptions {
     fn default() -> Self {
         Self {
+            fast_pack: false,
             format: None,
             level: 0,
             password: None,

@@ -36,6 +36,7 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     sources: &[String],
     output: &str,
     preserve_paths: bool,
+    fast_pack: bool,
     progress_context: Option<(&Window, &str)>,
 ) -> Result<u64> {
     let file = File::create(output)?;
@@ -48,6 +49,7 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     let total_bytes = source_total_bytes(&entries)?;
     let mut progress = ByteProgress::new(total_bytes);
     let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
+    let mut stored_files = 0usize;
 
     for entry in entries {
         runtime.check_cancellation()?;
@@ -55,8 +57,21 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
         if entry.is_dir {
             writer.add_directory(archive_name, options)?;
         } else {
-            writer.start_file(archive_name, options)?;
             let mut source = File::open(entry.path)?;
+            let store = fast_pack
+                && crate::services::compression_analysis::fast_pack_store(
+                    &mut source,
+                    &runtime.cancellation_flag(),
+                )?;
+            stored_files += usize::from(store);
+            let entry_options = if store {
+                options
+                    .compression_method(zip_aes::CompressionMethod::Stored)
+                    .compression_level(None)
+            } else {
+                options
+            };
+            writer.start_file(archive_name, entry_options)?;
             let current_name = entry.archive_name.clone();
             copy_cancellable(
                 runtime,
@@ -93,6 +108,18 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
         }
     }
     writer.finish()?;
+    if fast_pack {
+        if let Some((window, task_id)) = progress_context {
+            runtime.emit_log(
+                window,
+                task_id,
+                &format!(
+                    "快速打包：{stored_files} 个文件直接存储，其余文件正常压缩；未跳过输入文件"
+                ),
+                TaskLogSeverity::Info,
+            );
+        }
+    }
     Ok(total_bytes)
 }
 
@@ -160,6 +187,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
             sources,
             output,
             options.preserve_paths.unwrap_or(true),
+            options.fast_pack,
             window.map(|window| (window, task_id)),
         )?;
         if let Some(window) = window {
@@ -186,11 +214,25 @@ pub(crate) fn compress<R: CompressionRuntime>(
     let total_entries = entries.len().max(1);
     let mut byte_progress = ByteProgress::new(source_total_bytes(&entries)?);
     let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
+    let mut stored_files = 0usize;
 
     for (index, entry) in entries.iter().enumerate() {
         runtime.check_cancellation()?;
-        writer.start_file(&entry.archive_name, zip_options)?;
         let mut source = File::open(&entry.path)?;
+        let store = options.fast_pack
+            && crate::services::compression_analysis::fast_pack_store(
+                &mut source,
+                &runtime.cancellation_flag(),
+            )?;
+        stored_files += usize::from(store);
+        let entry_options = if store {
+            zip_options
+                .compression_method(CompressionMethod::Stored)
+                .compression_level(None)
+        } else {
+            zip_options
+        };
+        writer.start_file(&entry.archive_name, entry_options)?;
         let current_name = entry.archive_name.clone();
         copy_cancellable(
             runtime,
@@ -237,6 +279,18 @@ pub(crate) fn compress<R: CompressionRuntime>(
         }
     }
     writer.finish()?;
+    if options.fast_pack {
+        if let Some(window) = window {
+            runtime.emit_log(
+                window,
+                task_id,
+                &format!(
+                    "快速打包：{stored_files} 个文件直接存储，其余文件正常压缩；未跳过输入文件"
+                ),
+                TaskLogSeverity::Info,
+            );
+        }
+    }
     Ok(())
 }
 
@@ -251,6 +305,85 @@ mod tests {
     #[derive(Default)]
     struct TestRuntime {
         cancelled: Arc<AtomicBool>,
+    }
+
+    #[test]
+    fn fast_pack_preserves_all_bytes_and_encryption_without_trusting_extensions() {
+        let legacy: CompressionOptions =
+            serde_json::from_value(serde_json::json!({ "level": 6 })).unwrap();
+        assert!(!legacy.fast_pack);
+        let temp = tempfile::tempdir().unwrap();
+        let mut state = 0x12345678u32;
+        let random: Vec<u8> = (0..1024 * 1024)
+            .map(|_| {
+                state ^= state << 13;
+                state ^= state >> 17;
+                state ^= state << 5;
+                state as u8
+            })
+            .collect();
+        let fixtures = [
+            ("random.txt", random),
+            ("text.jpg", vec![b'A'; 1024 * 1024]),
+            ("small.bin", vec![1, 2, 3, 4]),
+        ];
+        let sources: Vec<String> = fixtures
+            .iter()
+            .map(|(name, bytes)| {
+                let path = temp.path().join(name);
+                std::fs::write(&path, bytes).unwrap();
+                path.to_string_lossy().into_owned()
+            })
+            .collect();
+        let mut cancelled_source = File::open(&sources[0]).unwrap();
+        assert!(crate::services::compression_analysis::fast_pack_store(
+            &mut cancelled_source,
+            &AtomicBool::new(true)
+        )
+        .is_err());
+        for encrypted in [false, true] {
+            for fast_pack in [false, true] {
+                let output = temp.path().join(format!("{encrypted}-{fast_pack}.zip"));
+                compress(
+                    &TestRuntime::default(),
+                    None,
+                    "fast-pack",
+                    &sources,
+                    output.to_str().unwrap(),
+                    CompressionOptions {
+                        fast_pack,
+                        level: 6,
+                        preserve_paths: Some(false),
+                        password: encrypted.then(|| "test-password".into()),
+                        ..Default::default()
+                    },
+                )
+                .unwrap();
+                let mut archive = zip_aes::ZipArchive::new(File::open(&output).unwrap()).unwrap();
+                assert_eq!(archive.len(), fixtures.len());
+                for (name, expected) in &fixtures {
+                    let mut entry = if encrypted {
+                        archive.by_name_decrypt(name, b"test-password").unwrap()
+                    } else {
+                        archive.by_name(name).unwrap()
+                    };
+                    let expected_method = if fast_pack && *name == "random.txt" {
+                        zip_aes::CompressionMethod::Stored
+                    } else {
+                        zip_aes::CompressionMethod::Deflated
+                    };
+                    assert_eq!(entry.compression(), expected_method);
+                    let mut actual = Vec::new();
+                    entry.read_to_end(&mut actual).unwrap();
+                    assert_eq!(&actual, expected);
+                }
+                if encrypted {
+                    assert!(archive
+                        .by_name_decrypt("random.txt", b"wrong-password")
+                        .is_err());
+                }
+            }
+        }
     }
 
     impl CompressionRuntime for TestRuntime {
