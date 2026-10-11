@@ -327,6 +327,7 @@ try {
 
   writeFileSync(path.join(evidenceRoot, 'a06-installed-workspace.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   await runInstalledNumericZipGate({ driver, fixtureRoot, evidenceRoot, run, sevenZip: installedSevenZip, waitForElement, record })
+  await runInstalledNumericZipGate({ driver, fixtureRoot, evidenceRoot, run, sevenZip: installedSevenZip, waitForElement, record, utf8: true })
   writeFileSync(path.join(evidenceRoot, 'result.json'), JSON.stringify({ schemaVersion: 1, application, checks }, null, 2))
   console.log('Real installed Windows archive-workspace matrix passed.')
 } catch (error) {
