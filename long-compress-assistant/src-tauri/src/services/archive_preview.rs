@@ -120,7 +120,7 @@ fn read_text_prefix(reader: &mut dyn Read, total_size: u64) -> Result<TextBytes>
 fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Result<Vec<u8>> {
     let mut archive = zip_aes::ZipArchive::new(File::open(path)?)?;
     let mut entry = match password.filter(|value| !value.is_empty()) {
-        Some(password) => archive.by_name_decrypt(entry_path, password.as_bytes())?,
+        Some(password) => crate::services::zip_password::open_named_entry(&mut archive, entry_path, password)?,
         None => archive.by_name(entry_path)?,
     };
     if entry.is_dir() {
@@ -139,7 +139,7 @@ fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Resu
 fn read_zip_text_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Result<TextBytes> {
     let mut archive = zip_aes::ZipArchive::new(File::open(path)?)?;
     let mut entry = match password.filter(|value| !value.is_empty()) {
-        Some(password) => archive.by_name_decrypt(entry_path, password.as_bytes())?,
+        Some(password) => crate::services::zip_password::open_named_entry(&mut archive, entry_path, password)?,
         None => archive.by_name(entry_path)?,
     };
     if entry.is_dir() {

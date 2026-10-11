@@ -50,7 +50,7 @@ fn validate_password_access<R: Read + Seek>(
         }
 
         match password {
-            Some(password) => match archive.by_index_decrypt(index, password.as_bytes()) {
+            Some(password) => match crate::services::zip_password::open_entry(archive, index, password) {
                 Ok(mut reader) => {
                     let mut probe = [0u8; 4];
                     let _read = reader.read(&mut probe)?;
@@ -166,7 +166,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
                 }
 
                 let reader = if let Some(password) = password {
-                    archive.by_index_decrypt(index, password.as_bytes())?
+                    crate::services::zip_password::open_entry(&mut archive, index, password)?
                 } else {
                     archive.by_index(index)?
                 };

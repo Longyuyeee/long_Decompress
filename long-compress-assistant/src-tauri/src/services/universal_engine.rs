@@ -116,7 +116,7 @@ impl UniversalCliEngine {
                 continue;
             }
             found_encrypted_entry = true;
-            match archive.by_index_decrypt(index, password.as_bytes()) {
+            match crate::services::zip_password::open_entry(&mut archive, index, password) {
                 Ok(mut entry) => {
                     if entry.is_dir() {
                         continue;
@@ -187,7 +187,7 @@ impl UniversalCliEngine {
                 return Err(CompressionError::Cancelled.into());
             }
 
-            let mut entry = match archive.by_index_decrypt(index, password.as_bytes()) {
+            let mut entry = match crate::services::zip_password::open_entry(&mut archive, index, password) {
                 Ok(entry) => entry,
                 Err(zip_aes::result::ZipError::InvalidPassword) => {
                     return Err(CompressionError::InvalidPassword.into());

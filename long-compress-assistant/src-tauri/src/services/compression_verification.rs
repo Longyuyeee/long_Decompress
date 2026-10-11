@@ -63,8 +63,7 @@ fn verify_encrypted_zip(
     let mut buffer = vec![0u8; 256 * 1024];
     for index in 0..archive.len() {
         check_cancelled(is_cancelled)?;
-        let mut entry = archive
-            .by_index_decrypt(index, password.as_bytes())
+        let mut entry = crate::services::zip_password::open_entry(&mut archive, index, password)
             .map_err(|_| {
                 CompressionError::CompressionFailed(
                     "The newly created ZIP could not be opened with its requested password"

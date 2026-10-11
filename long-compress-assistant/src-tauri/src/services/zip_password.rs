@@ -18,6 +18,39 @@ pub fn encode(password: &str, encoding: ZipPasswordEncoding) -> Result<Vec<u8>> 
     }
 }
 
+/// Read historical UTF-8 archives first, then try the current Windows encoding
+/// only for an explicit password mismatch. I/O, corruption and unsupported
+/// methods are never swallowed as a reason to try another encoding.
+pub fn open_entry<'a, R: std::io::Read + std::io::Seek>(
+    archive: &'a mut zip_aes::ZipArchive<R>,
+    index: usize,
+    password: &str,
+) -> zip_aes::result::ZipResult<zip_aes::read::ZipFile<'a, R>> {
+    let local = if password.is_ascii() { None } else {
+        encode(password, ZipPasswordEncoding::WindowsLocal).ok()
+            .filter(|bytes| bytes != password.as_bytes())
+    };
+    let Some(local) = local else {
+        return archive.by_index_decrypt(index, password.as_bytes());
+    };
+    let mismatch = match archive.by_index_decrypt(index, password.as_bytes()) {
+        Ok(_) => false,
+        Err(zip_aes::result::ZipError::InvalidPassword) => true,
+        Err(error) => return Err(error),
+    };
+    if mismatch {
+        return archive.by_index_decrypt(index, &local);
+    }
+    archive.by_index_decrypt(index, password.as_bytes())
+}
+
+pub fn open_named_entry<'a, R: std::io::Read + std::io::Seek>(
+    archive: &'a mut zip_aes::ZipArchive<R>, name: &str, password: &str,
+) -> zip_aes::result::ZipResult<zip_aes::read::ZipFile<'a, R>> {
+    let index = archive.index_for_name(name).ok_or(zip_aes::result::ZipError::FileNotFound)?;
+    open_entry(archive, index, password)
+}
+
 #[cfg(not(windows))]
 fn encode_local(_password: &str) -> Result<Vec<u8>> {
     bail!("Windows ZIP password compatibility is only available on Windows")
@@ -65,6 +98,38 @@ fn encode_local(password: &str) -> Result<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reads_utf8_and_local_archives_without_changing_the_password() {
+        use std::io::{Cursor, Read, Write};
+        for password in ["ASCII + !", "密码 + !测试", "密码🗝️"] {
+            for encoding in [ZipPasswordEncoding::Utf8, ZipPasswordEncoding::WindowsLocal] {
+                let Ok(bytes) = encode(password, encoding) else { continue };
+                let mut writer = zip_aes::ZipWriter::new(Cursor::new(Vec::new()));
+                writer.start_file("资料.txt", zip_aes::write::SimpleFileOptions::default()
+                    .with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &bytes)).unwrap();
+                writer.write_all(b"exact original payload").unwrap();
+                let data = writer.finish().unwrap();
+                let fixture = tempfile::tempdir().unwrap();
+                let path = fixture.path().join("fixture.zip");
+                std::fs::write(&path, data.get_ref()).unwrap();
+                assert!(crate::services::universal_engine::UniversalCliEngine::try_zip_password(&path, password).unwrap());
+                assert!(!crate::services::universal_engine::UniversalCliEngine::try_zip_password(&path, "wrong").unwrap());
+                assert!(crate::services::compression_verification::verify_native(
+                    crate::services::compression_format::CompressionRoute::Zip,
+                    &path, Some(password), || false,
+                ).unwrap());
+                let mut archive = zip_aes::ZipArchive::new(data).unwrap();
+                let mut actual = String::new();
+                open_entry(&mut archive, 0, password).unwrap().read_to_string(&mut actual).unwrap();
+                assert_eq!(actual, "exact original payload");
+                assert!(open_named_entry(&mut archive, "资料.txt", password).is_ok());
+                assert!(matches!(open_named_entry(&mut archive, "missing", password), Err(zip_aes::result::ZipError::FileNotFound)));
+                assert!(matches!(open_entry(&mut archive, 0, "wrong"), Err(zip_aes::result::ZipError::InvalidPassword)));
+                assert!(matches!(open_entry(&mut archive, 99, password), Err(zip_aes::result::ZipError::FileNotFound)));
+            }
+        }
+    }
 
     #[test]
     fn utf8_is_default_and_preserves_every_character() {
