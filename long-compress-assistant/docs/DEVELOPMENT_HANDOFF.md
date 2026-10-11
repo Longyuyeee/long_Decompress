@@ -1,5 +1,15 @@
 # 开发交接
 
+## 2026-10-11 正式候选构建与安装验收前置检查
+
+- 在代码 80693554e4e775421ed676f06fecca2133eb0c68 上执行 npx tauri build（未启用 VITE_DESKTOP_E2E/desktop-e2e）。正式前端、Shell 扩展与 Rust release 编译通过；npm run test:release-identity 通过，版本仍为 1.3.9，本地候选不是公开新版，不提前发布 1.4.0。
+- 正式 EXE：src-tauri/target/release/Long解压.exe，SHA256 2b7289ff2930d76e02c7e64ddb3aa0e1f268f05f99c3dc6d7e111d8dfe1a3cc2。本机 NSIS 打包失败，Tauri 报 os error 2；LOCALAPPDATA/tauri/NSIS/makensis.exe 与 Bin/makensis.exe 均存在，但单独 /VERSION 退出 -1073741515（0xC0000135，运行依赖加载失败），不是业务代码编译失败，未生成本轮安装器。未更改系统运行库或移除现有工具。
+- 代码签名环境变量未配置，Windows 11 菜单身份包构建被脚本跳过；updater 非本轮 bundle 目标，无更新器附件。不把这些记作签名/自动更新验证通过。
+- 当前提交已有 GitHub Windows package 构建：https://github.com/Longyuyeee/long_Decompress/actions/runs/38128789262 。写入本节时正在构建，尚未确认成功或下载候选资产。接续先核对 run 的结论和 artifact，再下载 windows-nsis-installer；远端构建 EXE 不可套用本机 EXE 哈希。本文档提交不改产品，使用 skip ci 避免取消正在进行的候选构建。
+- 已下载公开 v1.3.9 恢复基线：test-results/install-baseline-1.3.9/Long-Decompress_1.3.9_x64-setup.exe，SHA256 547994fcf85216285ec7572a23b2655bf4f54e36491accba9cb95551dfc68103，与发布审计一致。
+- E:/long/Long解压 当前程序运行中，注册版本 1.3.9，现安装 EXE SHA256 bb94637853084a77cc146d057f184b9fd87aa86f88e4612851e081d74b68ac56。已询问用户是否无任务并允许关闭、备份后安装验收，尚未收到本轮确认；未关闭、覆盖、卸载、改写用户数据或注册信息。执行前重新确认进程状态，并额外备份安装目录及用户数据、核对恢复基线，不能仅凭版本相同假定二进制相同。
+- 接续：候选包下载及身份检查→用户确认后备份/安装生命周期与工作区验收→恢复原状态并记录证据。数字卷相关调试专项不能代替正式安装版专项。1.4.0 未封板，其余完整功能范围仍未完成。
+
 ## 2026-10-11 最新冲突界面的 Windows 桌面复核
 
 - 使用当前代码重新执行前端类型检查/构建及 cargo build --features desktop-e2e,custom-protocol --bin long-compress-assistant；扩展 numeric-zip-password-only，在真实密码数字卷冲突弹窗等待阶段切换 920×620、760×520，记录实际 WebView 视口，不只记录请求窗口大小。
