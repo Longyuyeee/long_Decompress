@@ -194,6 +194,9 @@ export const useTaskStore = defineStore('task', () => {
       } = event.payload
       const task = tasks.value.find(t => t.id === task_id)
       if (task) {
+        // Terminal results and their persisted metrics must not be rewritten by
+        // progress events queued before completion, failure or cancellation.
+        if (['completed', 'failed', 'cancelled'].includes(task.status)) return
         const isPasswordAttempt = stage === 'password-attempt'
         if (stage === 'Splitting' && task.stage !== 'Splitting') {
           if (task.type === 'compression' && !task.compressionSourceProgress) {
@@ -344,6 +347,7 @@ export const useTaskStore = defineStore('task', () => {
         || (terminalStatuses.includes(task.status) && terminalStatuses.includes(status))) return
       if (status === 'failed') setFinalFailureReason(task, task.error)
       task.status = status
+      if (status === 'completed') task.progress = 100
       if (['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(status) && !task.startTime) {
         task.startTime = new Date()
       }

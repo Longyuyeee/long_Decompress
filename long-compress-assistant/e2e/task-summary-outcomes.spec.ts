@@ -1,5 +1,40 @@
 import { test, expect } from '@playwright/test'
 
+test('completion immediately settles progress even during animation', async ({ page }, info) => {
+  await page.addInitScript(() => {
+    window.__TAURI_IPC__ = (message: Record<string, any>) => {
+      ;(window as any)[`_${message.callback}`]?.(message.cmd === 'load_app_settings' ? '{}' : undefined)
+    }
+  })
+  await page.goto('/#/decompress')
+  await page.waitForSelector('h1')
+  await page.evaluate(async () => {
+    const path = '/src/stores/task.ts'
+    const store = (await import(path)).useTaskStore()
+    store.addTask({ id: 'finishing', name: '真实目录.zip', type: 'compression', sourceFiles: [], outputPath: '' })
+    store.updateTaskStatus('finishing', 'compressing')
+    store.tasks.find(t => t.id === 'finishing')!.progress = 66
+  })
+  await expect(page.getByTestId('summary-progress-value')).toHaveText('66%')
+  const snapshot = await page.evaluate(async () => {
+    const path = '/src/stores/task.ts'
+    const vue = '/node_modules/.vite/deps/vue.js'
+    const store = (await import(path)).useTaskStore()
+    store.updateTaskStatus('finishing', 'completed')
+    await (await import(vue)).nextTick()
+    return {
+      value: document.querySelector('[data-testid="summary-progress-value"]')?.textContent,
+      duration: getComputedStyle(document.querySelector('[data-testid="summary-progress-ring"]')!).transitionDuration,
+    }
+  })
+  expect(snapshot).toEqual({ value: '100%', duration: '0s' })
+  await expect(page.getByTestId('global-progress-summary')).toHaveAttribute('title', '全部完成')
+  for (const width of [920, 760]) {
+    await page.setViewportSize({ width, height: 620 })
+    await page.screenshot({ path: info.outputPath(`completed-${width}.png`) })
+  }
+})
+
 test('mixed final outcomes remain visible without a success summary', async ({ page }, info) => {
   await page.addInitScript(() => {
     window.__TAURI_IPC__ = (message: Record<string, any>) => {

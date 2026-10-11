@@ -29,7 +29,7 @@ const taskStats = computed(() => {
   let runningTask: Task | undefined
 
   for (const task of taskStore.tasks) {
-    progressTotal += task.progress
+    progressTotal += task.status === 'completed' ? 100 : task.progress
     if (!FINISHED_STATUSES.has(task.status)) activeCount++
     if (task.status === 'completed') completedCount++
     if (!runningTask && ACTIVE_STATUSES.has(task.status)) runningTask = task
@@ -234,10 +234,11 @@ const copyToClipboard = async (text: string) => {
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" class="text-input opacity-75"/>
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-dasharray="62.83"
                     :stroke-dashoffset="62.83 - (62.83 * overallProgress) / 100"
-                    class="text-primary transition-all duration-1000 progress-ring"/>
+                    :style="{ transitionDuration: hasActiveTasks ? undefined : '0s' }"
+                    data-testid="summary-progress-ring" class="text-primary transition-all duration-1000 progress-ring"/>
           </svg>
           <span class="absolute inset-0 flex items-center justify-center text-xs font-black font-mono text-content">
-            <SmoothProgressValue :value="overallProgress" :decimals="0" />
+            <SmoothProgressValue data-testid="summary-progress-value" :value="overallProgress" :decimals="0" :immediate="!hasActiveTasks" />
           </span>
         </div>
 
@@ -301,7 +302,7 @@ const copyToClipboard = async (text: string) => {
             <!-- 总进度条 -->
             <div class="h-2 bg-input rounded-full overflow-hidden relative">
               <div class="h-full bg-primary rounded-full transition-all duration-1000 progress-bar-fill"
-                   :style="{ width: `${overallProgress}%` }"></div>
+                   :style="{ width: `${overallProgress}%`, transitionDuration: hasActiveTasks ? undefined : '0s' }"></div>
               <div v-if="hasRunningTasks" class="absolute inset-0 shimmer-overlay"></div>
             </div>
             <!-- 实时信息摘要栏 -->

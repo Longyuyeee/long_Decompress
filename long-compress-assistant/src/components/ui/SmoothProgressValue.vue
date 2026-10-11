@@ -2,10 +2,11 @@
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { formatProgressPercent } from '@/utils/progress'
 
-const props = withDefaults(defineProps<{ value?: number, suffix?: string, decimals?: 0 | 2 }>(), {
+const props = withDefaults(defineProps<{ value?: number, suffix?: string, decimals?: 0 | 2, immediate?: boolean }>(), {
   value: 0,
   suffix: '%',
   decimals: 2,
+  immediate: false,
 })
 
 const clampPercent = (value?: number) => typeof value === 'number' && Number.isFinite(value)
@@ -19,7 +20,7 @@ const animateTo = (rawTarget: number) => {
   const target = clampPercent(rawTarget)
   const start = displayed.value
   cancelAnimationFrame(frame)
-  if (target <= start || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+  if (props.immediate || target <= start || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
     displayed.value = target
     return
   }
@@ -33,7 +34,7 @@ const animateTo = (rawTarget: number) => {
   frame = requestAnimationFrame(tick)
 }
 
-watch(() => props.value, animateTo)
+watch(() => [props.value, props.immediate], () => animateTo(props.value))
 onBeforeUnmount(() => cancelAnimationFrame(frame))
 
 const formatDisplay = (value: number) => props.decimals === 0

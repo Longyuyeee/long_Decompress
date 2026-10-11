@@ -17,6 +17,18 @@ vi.mock('@tauri-apps/api/event', () => ({
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 
 describe('task progress state machine', () => {
+  it.each(['completed', 'failed', 'cancelled'] as const)('freezes %s progress against late engine events', async status => {
+    const store = useTaskStore()
+    await store.initListeners()
+    store.addTask({ id: 'terminal', name: 'archive.zip', type: 'compression', sourceFiles: [], outputPath: '' })
+    const task = store.tasks[0]
+    task.progress = 66
+    store.updateTaskStatus('terminal', status)
+    expect(task.progress).toBe(status === 'completed' ? 100 : 66)
+    const snapshot = JSON.stringify(task)
+    mocks.listeners.get('task-progress')!({ payload: { task_id: 'terminal', progress: 0.2, stage: 'Splitting', processed_bytes: 20, total_bytes: 100 } })
+    expect(JSON.stringify(task)).toBe(snapshot)
+  })
   it('resets byte telemetry on entering splitting without marking 100% complete', async () => {
     const store = useTaskStore()
     await store.initListeners()

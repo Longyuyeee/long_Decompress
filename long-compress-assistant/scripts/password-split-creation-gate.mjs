@@ -58,6 +58,8 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     return rows.find(row => ['completed', 'failed', 'cancelled'].includes(row.status)) || false
   }, 90_000)
   assert.equal(task.status, 'completed', JSON.stringify(task))
+  const summaryValue = await waitForElement('[data-testid="summary-progress-value"]')
+  assert.equal(await summaryValue.getText(), '100%', 'Completed UI progress must settle without an animation delay')
   assert.equal(productionIpc ? task.executionConfig?.settings?.verifyAfter : task.verifyAfter, true)
   const parts = readdirSync(output).filter(name => /\.zip\.\d+$/.test(name)).sort().map(name => path.join(output, name))
   assert.equal(parts.length, 3, JSON.stringify(readdirSync(output)))
@@ -79,6 +81,7 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   assert.deepEqual(readdirSync(path.join(restored, '空目录')), [])
   assert.deepEqual(readFileSync(path.join(folder, '数据.bin')), payload)
   parts.forEach((file, index) => assert.deepEqual(readFileSync(file), snapshots[index]))
+  assert.equal(await summaryValue.getText(), '100%', 'Late progress must not overwrite completed UI progress')
   writeFileSync(path.join(artifactDirectory, 'password-split-create-result.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   const history = await readHistory()
   assert.ok(history.some(row => row.status === 'completed' && row.sourcePaths.includes(folder)))
