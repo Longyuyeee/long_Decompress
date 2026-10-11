@@ -3291,6 +3291,7 @@ impl CompressionService {
         tokio::task::spawn_blocking(move || {
             match format {
                 ArchiveFormat::SevenZip => {
+                    let archive_reader = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(Path::new(&file))?;
                     let scratch = std::env::temp_dir().join(format!(
                         "long-compress-password-check-{}",
                         uuid::Uuid::new_v4()
@@ -3322,12 +3323,15 @@ impl CompressionService {
                         Ok(true)
                     };
                     let result = sevenz_rust::decompress_with_extract_fn_and_password(
-                        File::open(&file)?,
+                        archive_reader,
                         &scratch,
                         sevenz_rust::Password::from(pwd.as_str()),
                         &mut verify_entry,
                     );
                     let _ = std::fs::remove_dir_all(&scratch);
+                    if cancellation_flag.load(Ordering::SeqCst) {
+                        return Err(CompressionError::Cancelled.into());
+                    }
                     Ok(result.is_ok() && tested_file)
                 },
                 _ => Ok(false)
@@ -4449,6 +4453,18 @@ mod tests_continued {
                     .map(|path| { let data = std::fs::read(&path).unwrap(); assert!(data.len() <= 37); (path, data) }).collect();
                 assert!(volumes.len() > 1);
                 let first = PathBuf::from(format!("{}.001", output.display()));
+                assert_eq!(native_extraction::seven_zip::requires_password(&first).unwrap(), password.is_some());
+                if let Some(password) = password {
+                    assert!(service.verify_archive_password_candidate(&first.to_string_lossy(), password).await.unwrap());
+                    assert!(!service.verify_archive_password_candidate(&first.to_string_lossy(), "wrong").await.unwrap());
+                }
+                let native_output = temp.path().join("原生解压");
+                native_extraction::seven_zip::extract(&service, None, "native-split-read", &first.to_string_lossy(),
+                    &native_output.to_string_lossy(), password, &DecompressOptions { preserve_paths: true, ..Default::default() }).unwrap();
+                assert_eq!(std::fs::read(native_output.join("资料/内容.txt")).unwrap(), b"folder payload");
+                assert_eq!(std::fs::read(native_output.join("资料/空文件.txt")).unwrap(), b"");
+                assert_eq!(std::fs::read(native_output.join("第二份.txt")).unwrap(), b"second payload");
+                assert!(native_output.join("资料/空目录").is_dir());
                 let extracted = temp.path().join("解压结果");
                 std::fs::create_dir(&extracted).unwrap();
                 // Independent bundled 7-Zip. This proves format interoperability,
@@ -4465,6 +4481,14 @@ mod tests_continued {
                 assert_eq!(std::fs::read(folder.join("内容.txt")).unwrap(), b"folder payload");
                 assert_eq!(std::fs::read(&second).unwrap(), b"second payload");
                 for (path, data) in volumes { assert_eq!(std::fs::read(path).unwrap(), data); }
+                std::fs::remove_file(temp.path().join("分享.7z.002")).unwrap();
+                let missing = service.verify_archive_password_candidate(&first.to_string_lossy(), password.unwrap_or("unused"))
+                    .await.unwrap_err().to_string();
+                assert!(missing.contains("[archive-inspection:incomplete]"), "{missing}");
+                let failed_output = temp.path().join("缺卷输出");
+                assert!(native_extraction::seven_zip::extract(&service, None, "missing-volume", &first.to_string_lossy(),
+                    &failed_output.to_string_lossy(), password, &DecompressOptions::default()).is_err());
+                assert!(!failed_output.exists());
                 assert!(std::fs::read_dir(temp.path()).unwrap().all(|entry| !entry.unwrap().file_name().to_string_lossy().starts_with(".split-source-")));
             }
         }

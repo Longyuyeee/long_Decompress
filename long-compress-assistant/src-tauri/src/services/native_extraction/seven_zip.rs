@@ -4,7 +4,8 @@ use crate::services::compression_service::CompressionError;
 use crate::services::extraction_transaction;
 use anyhow::Result;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read, Write, Seek, SeekFrom};
+use crate::services::numeric_volume_reader::ZipInputReader;
 use std::path::{Path, PathBuf};
 use tauri::Window;
 
@@ -37,8 +38,9 @@ impl Drop for IncompleteExtractedFile {
 }
 
 pub(crate) fn requires_password(file_path: &Path) -> Result<bool> {
-    let mut archive_file = File::open(file_path)?;
-    let len = archive_file.metadata()?.len();
+    let mut archive_file = ZipInputReader::open_seven_zip(file_path)?;
+    let len = archive_file.seek(SeekFrom::End(0))?;
+    archive_file.seek(SeekFrom::Start(0))?;
     match sevenz_rust::Archive::read(&mut archive_file, len, &[]) {
         Ok(archive) => Ok(archive.folders.iter().any(|folder| {
             folder.coders.iter().any(|coder| {
@@ -188,10 +190,11 @@ pub(crate) fn extract<R: ExtractionRuntime>(
     let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
     let mut processed = 0usize;
     let total_uncompressed_bytes = {
-        let archive_file = File::open(file);
+        let archive_file = ZipInputReader::open_seven_zip(Path::new(file));
         archive_file
             .and_then(|mut archive_file| {
-                let len = archive_file.metadata()?.len();
+                let len = archive_file.seek(SeekFrom::End(0))?;
+                archive_file.seek(SeekFrom::Start(0))?;
                 let archive = if let Some(password) = password {
                     let password = sevenz_rust::Password::from(password);
                     sevenz_rust::Archive::read(&mut archive_file, len, password.as_slice())
@@ -362,13 +365,13 @@ pub(crate) fn extract<R: ExtractionRuntime>(
 
     let result = if let Some(password) = password {
         sevenz_rust::decompress_with_extract_fn_and_password(
-            File::open(file)?,
+            ZipInputReader::open_seven_zip(Path::new(file))?,
             output,
             sevenz_rust::Password::from(password),
             &mut extract_entry,
         )
     } else {
-        sevenz_rust::decompress_file_with_extract_fn(file, output, &mut extract_entry)
+        sevenz_rust::decompress_with_extract_fn(ZipInputReader::open_seven_zip(Path::new(file))?, output, &mut extract_entry)
     };
 
     if let Err(error) = result {
