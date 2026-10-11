@@ -38,7 +38,7 @@ export async function runSevenZipVolumeReadGate({ driver, waitForElement, callDe
         const failure = await callDesktopBridgeFailure('extractArchive', parts[0], damagedOutput, password)
         assert.ok(failure.includes('[archive-inspection:ambiguous-data]'), failure)
         assert.ok(!existsSync(path.join(damagedOutput, '资料', '内容.txt')))
-        const history = (await callDesktopBridge('taskHistory')).find(record => record.outputPath === damagedOutput)
+        const history = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.outputPath === damagedOutput), 10_000)
         assert.equal(history?.status, 'failed')
         assert.ok(history.errorMessage.includes('[archive-inspection:ambiguous-data]'), JSON.stringify(history))
       } finally {
@@ -70,7 +70,7 @@ export async function runSevenZipVolumeReadGate({ driver, waitForElement, callDe
           const failure = await callDesktopBridgeFailure('extractArchive', parts[0], target, supplied)
           assert.ok(failure.includes(`[archive-inspection:${fault === 'damaged-header' ? 'damaged' : 'incomplete'}]`), failure)
           assert.ok(!existsSync(path.join(target, '资料', '内容.txt')))
-          const history = (await callDesktopBridge('taskHistory')).find(record => record.outputPath === target)
+          const history = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.outputPath === target), 10_000)
           assert.ok(history, `Missing final history for ${target}`)
           assert.equal(history.status, 'failed')
           assert.ok(history.errorMessage?.includes(fault === 'damaged-header' ? '归档头校验失败' : '可能缺少尾卷'), JSON.stringify(history))
@@ -110,7 +110,45 @@ export async function runSevenZipVolumeReadGate({ driver, waitForElement, callDe
     await callDesktopBridge('extractArchive', path.join(root, '分享.7z.001'), target, null)
     assert.deepEqual(readFileSync(path.join(target, '资料', '内容.txt')), readFileSync(path.join(root, '资料', '内容.txt')))
   }
-  for (const [query, expected] of [['missing-tail-password', '可能缺少尾卷'], ['damaged-header-password', '归档头校验失败'], ['damaged-payload-password', '不能确定为密码错误'], ['auto-exhausted', '已尝试 1 个候选']]) {
+  const automaticDamage = []
+  for (const mode of ['content', 'header']) {
+    const root = path.join(fixtureDirectory, `7z-volume-${mode}`)
+    const parts = readdirSync(root).filter(name => /^分享\.7z\.\d+$/.test(name)).sort().map(name => path.join(root, name))
+    const snapshots = parts.map(file => readFileSync(file))
+    const donor = path.join(root, '另一份归档')
+    mkdirSync(donor)
+    writeFileSync(path.join(donor, '不同内容.txt'), '完全不同的用户资料\n'.repeat(100))
+    runFixtureCommand(bundledSevenZip, ['a', '-t7z', '-y', '-v37b', '-p中文密码 + !测试', `-mhe=${mode === 'header' ? 'on' : 'off'}`, path.join(donor, '另一个.7z'), '不同内容.txt'], 'Independent mixed-volume donor', { cwd: donor })
+    const otherVolume = readFileSync(path.join(donor, '另一个.7z.002'))
+    assert.equal(otherVolume.length, snapshots[1].length)
+    assert.notDeepEqual(otherVolume, snapshots[1])
+    for (const fault of ['auto-damaged-data', 'auto-mixed-volumes']) {
+      const target = path.join(root, fault)
+      mkdirSync(target)
+      const existing = path.join(target, '用户原有文件.txt')
+      writeFileSync(existing, '原有内容必须保留')
+      const changed = Buffer.from(snapshots[1]); changed[3] ^= 0x5a
+      writeFileSync(parts[1], fault === 'auto-mixed-volumes' ? otherVolume : changed)
+      try {
+        const failure = await callDesktopBridgeFailure('extractArchive', parts[0], target, null)
+        assert.ok(failure.includes('已尝试 2 个候选'), failure)
+        assert.ok(failure.includes('[archive-inspection:ambiguous-data]'), failure)
+        assert.deepEqual(readdirSync(target), ['用户原有文件.txt'])
+        assert.equal(readFileSync(existing, 'utf8'), '原有内容必须保留')
+        const record = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.outputPath === target), 10_000)
+        assert.equal(record.status, 'failed')
+        assert.ok(record.errorMessage.includes('已尝试 2 个候选'), JSON.stringify(record))
+        automaticDamage.push({ mode, fault, finalReason: record.errorMessage, existingOutputPreserved: true })
+      } finally {
+        writeFileSync(parts[1], snapshots[1])
+      }
+    }
+    parts.forEach((file, index) => assert.deepEqual(readFileSync(file), snapshots[index]))
+    const recovered = path.join(root, '恢复原卷后')
+    await callDesktopBridge('extractArchive', parts[0], recovered, null)
+    assert.deepEqual(readFileSync(path.join(recovered, '资料', '内容.txt')), readFileSync(path.join(root, '资料', '内容.txt')))
+  }
+  for (const [query, expected] of [['missing-tail-password', '可能缺少尾卷'], ['damaged-header-password', '归档头校验失败'], ['damaged-payload-password', '不能确定为密码错误'], ['auto-exhausted', '已尝试 1 个候选'], ['auto-damaged-data', '已尝试 2 个候选'], ['auto-mixed-volumes', '已尝试 2 个候选']]) {
     await driver.navigate().refresh()
     await (await waitForElement('[data-testid="nav-History"]')).click()
     await (await waitForElement('[data-testid="history-search"]')).sendKeys(query)
@@ -125,5 +163,5 @@ export async function runSevenZipVolumeReadGate({ driver, waitForElement, callDe
   }
   await driver.navigate().refresh()
   await waitForElement('[data-testid="nav-History"]')
-  writeFileSync(path.join(artifactDirectory, 'seven-zip-volume-read.json'), JSON.stringify({ via: 'isolated-desktop-production-extract-command', uiImportVerified: false, results }, null, 2))
+  writeFileSync(path.join(artifactDirectory, 'seven-zip-volume-read.json'), JSON.stringify({ via: 'isolated-desktop-production-extract-command', uiImportVerified: false, results, automaticDamage }, null, 2))
 }
