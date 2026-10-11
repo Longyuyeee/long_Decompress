@@ -135,6 +135,7 @@ static DEFAULT_PASSWORD_VAULT: OnceCell<Arc<EncryptedPasswordService>> = OnceCel
 static PENDING_EXTRACTIONS: Lazy<DashMap<String, PendingExtraction>> = Lazy::new(DashMap::new);
 
 struct PendingExtraction {
+    source_times: HashMap<PathBuf, u64>,
     staging: ExtractionStaging,
     source_archive: PathBuf,
     final_output: PathBuf,
@@ -451,7 +452,7 @@ impl CompressionService {
             |conflict| {
                 let path = PathBuf::from(&conflict.dest_path);
                 if let Some(snapshot) = ConflictTargetSnapshot::read(&path) {
-                    refreshed_conflicts.insert(path, snapshot);
+                    refreshed_conflicts.insert(path.clone(), snapshot);
                 }
                 let _ = window.emit("file-conflict", FileConflictPayload {
                     task_id: task_id.to_string(),
@@ -460,7 +461,7 @@ impl CompressionService {
                     dest_path: conflict.dest_path,
                     source_size: conflict.source_size,
                     dest_size: conflict.dest_size,
-                    source_modified: conflict.source_modified,
+                    source_modified: pending.source_times.get(&path).copied().unwrap_or(conflict.source_modified),
                     dest_modified: conflict.dest_modified,
                 });
             },
@@ -2518,7 +2519,10 @@ impl CompressionService {
         }
         service.check_cancellation()?;
         let mut observed_conflicts = HashMap::new();
-        if let Err(error) = service.commit_staged_extraction_recording(
+        let source_times = if effective_format == ArchiveFormat::SevenZip && options.conflict_policy == "ask" {
+            Self::seven_zip_source_times(path, final_password.as_deref(), &final_out_dir, options.preserve_paths).unwrap_or_default()
+        } else { HashMap::new() };
+        if let Err(error) = service.commit_staged_extraction_recording_with_times(
             Some(&window),
             &task_id,
             &file_path,
@@ -2526,6 +2530,7 @@ impl CompressionService {
             &final_out_dir,
             &options,
             &mut observed_conflicts,
+            &source_times,
         ) {
             if Self::is_conflict_resolution_required(&error) {
                 service.emit_log(
@@ -2537,6 +2542,7 @@ impl CompressionService {
                 PENDING_EXTRACTIONS.insert(
                     task_id.clone(),
                     PendingExtraction {
+                        source_times,
                         staging,
                         source_archive: path.to_path_buf(),
                         final_output: final_out_dir,
@@ -3420,6 +3426,7 @@ mod tests {
         std::fs::write(staging_path.join("payload.txt"), b"payload").expect("payload");
         let task_id = format!("pending-{}", uuid::Uuid::new_v4());
         PENDING_EXTRACTIONS.insert(task_id.clone(), PendingExtraction {
+            source_times: HashMap::new(),
             staging,
             source_archive: temp.path().join("archive.zip"),
             final_output: output,
@@ -3768,7 +3775,7 @@ mod tests {
         let path = staging.path().to_path_buf();
         std::fs::write(path.join("backup"), b"original data").unwrap();
         let id = uuid::Uuid::new_v4().to_string();
-        let pending = PendingExtraction { staging, source_archive: temp.path().join("source.zip"), final_output: output,
+        let pending = PendingExtraction { source_times: HashMap::new(), staging, source_archive: temp.path().join("source.zip"), final_output: output,
             options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
         let error = CompressionError::RollbackIncomplete(format!("恢复目录：{}", path.display())).into();
         CompressionService::retain_pending_after_commit_error(&id, pending, &error);
@@ -3777,7 +3784,7 @@ mod tests {
         assert_eq!(std::fs::read(path.join("backup")).unwrap(), b"original data");
         let ordinary_staging = ExtractionStaging::create_for(&temp.path().join("other-output")).unwrap();
         let ordinary_path = ordinary_staging.path().to_path_buf();
-        let pending = PendingExtraction { staging: ordinary_staging, source_archive: temp.path().join("source.zip"),
+        let pending = PendingExtraction { source_times: HashMap::new(), staging: ordinary_staging, source_archive: temp.path().join("source.zip"),
             final_output: temp.path().join("other-output"), options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
         CompressionService::retain_pending_after_commit_error(&id, pending, &anyhow::anyhow!("ordinary commit failure"));
         assert!(PENDING_EXTRACTIONS.contains_key(&id));
@@ -3855,10 +3862,43 @@ mod conflict_confirmation_tests {
 }
 
 impl CompressionService {
+    fn seven_zip_source_times(archive: &Path, password: Option<&str>, output: &Path, preserve_paths: bool) -> Result<HashMap<PathBuf, u64>> {
+        let mut input = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(archive)?;
+        let length = input.seek(SeekFrom::End(0))?;
+        input.seek(SeekFrom::Start(0))?;
+        let password = sevenz_rust::Password::from(password.unwrap_or(""));
+        let metadata = sevenz_rust::Archive::read(&mut input, length, password.as_slice())?;
+        let mut times = HashMap::new();
+        let mut seen = HashSet::new();
+        for entry in metadata.files {
+            if entry.is_directory() { continue; }
+            let Some(relative) = Self::normalized_archive_path(Path::new(entry.name()), preserve_paths) else { continue };
+            let target = output.join(relative);
+            // Flattened duplicate names are ambiguous; never show another entry's date.
+            if !seen.insert(target.clone()) { times.remove(&target); continue; }
+            if entry.has_last_modified_date {
+                let time: SystemTime = entry.last_modified_date().into();
+                if let Ok(duration) = time.duration_since(std::time::UNIX_EPOCH) {
+                    times.insert(target, duration.as_millis() as u64);
+                }
+            }
+        }
+        Ok(times)
+    }
+
+    #[cfg(test)]
     fn commit_staged_extraction_recording(
         &self, window: Option<&Window>, task_id: &str, source_archive: &str,
         staging: &Path, output: &Path, options: &DecompressOptions,
         observed: &mut HashMap<PathBuf, ConflictTargetSnapshot>,
+    ) -> Result<()> {
+        self.commit_staged_extraction_recording_with_times(window, task_id, source_archive, staging, output, options, observed, &HashMap::new())
+    }
+
+    fn commit_staged_extraction_recording_with_times(
+        &self, window: Option<&Window>, task_id: &str, source_archive: &str,
+        staging: &Path, output: &Path, options: &DecompressOptions,
+        observed: &mut HashMap<PathBuf, ConflictTargetSnapshot>, source_times: &HashMap<PathBuf, u64>,
     ) -> Result<()> {
         extraction_transaction::commit_staged_extraction(
             source_archive,
@@ -3868,7 +3908,7 @@ impl CompressionService {
             |conflict| {
                 let path = PathBuf::from(&conflict.dest_path);
                 if let Some(snapshot) = ConflictTargetSnapshot::read(&path) {
-                    observed.insert(path, snapshot);
+                    observed.insert(path.clone(), snapshot);
                 }
                 if let Some(window) = window {
                     let _ = window.emit(
@@ -3880,7 +3920,7 @@ impl CompressionService {
                             dest_path: conflict.dest_path,
                             source_size: conflict.source_size,
                             dest_size: conflict.dest_size,
-                            source_modified: conflict.source_modified,
+                            source_modified: source_times.get(&path).copied().unwrap_or(conflict.source_modified),
                             dest_modified: conflict.dest_modified,
                         },
                     );
@@ -4455,6 +4495,7 @@ mod tests_continued {
                 std::fs::create_dir_all(folder.join("空目录")).unwrap();
                 std::fs::write(folder.join("内容.txt"), b"folder payload").unwrap();
                 std::fs::write(folder.join("空文件.txt"), b"").unwrap();
+                filetime::set_file_mtime(folder.join("内容.txt"), filetime::FileTime::from_unix_time(1_600_000_000, 0)).unwrap();
                 let second = temp.path().join("第二份.txt");
                 std::fs::write(&second, b"second payload").unwrap();
                 let sources = vec![folder.to_string_lossy().into_owned(), second.to_string_lossy().into_owned()];
@@ -4489,6 +4530,10 @@ mod tests_continued {
                     assert!(!service.verify_archive_password_candidate(&first.to_string_lossy(), "wrong").await.unwrap());
                 }
                 let native_output = temp.path().join("原生解压");
+                let times = CompressionService::seven_zip_source_times(&first, password, &native_output, true).unwrap();
+                assert_eq!(times.get(&native_output.join("资料/内容.txt")), Some(&1_600_000_000_000));
+                let flat_times = CompressionService::seven_zip_source_times(&first, password, &native_output, false).unwrap();
+                assert_eq!(flat_times.get(&native_output.join("内容.txt")), Some(&1_600_000_000_000));
                 native_extraction::seven_zip::extract(&service, None, "native-split-read", &first.to_string_lossy(),
                     &native_output.to_string_lossy(), password, &DecompressOptions { preserve_paths: true, ..Default::default() }).unwrap();
                 assert_eq!(std::fs::read(native_output.join("资料/内容.txt")).unwrap(), b"folder payload");

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs'
+import { mkdirSync, writeFileSync, readFileSync, readdirSync, utimesSync } from 'node:fs'
 import path from 'node:path'
 import { By } from 'selenium-webdriver'
 
@@ -9,6 +9,7 @@ export async function runSevenZipVolumeUiGate({ driver, callDesktopBridge, waitF
   const name = '用户资料.txt'
   const payload = '需要原样保留的中文文件\n'.repeat(100)
   writeFileSync(path.join(root, name), payload)
+  utimesSync(path.join(root, name), 1_600_000_000, 1_600_000_000)
   const password = '页面密码 + !独立'
   const archive = path.join(root, '界面密码分卷.7z')
   runFixtureCommand(bundledSevenZip, ['a', '-t7z', '-y', '-mhe=on', `-p${password}`, '-v37b', archive, name], '7Z UI encrypted header', { cwd: root })
@@ -48,6 +49,9 @@ export async function runSevenZipVolumeUiGate({ driver, callDesktopBridge, waitF
   await (await driver.findElement(By.xpath('//button[contains(., "返回队列确认并启动")]'))).click()
   await (await start()).click()
   await waitForElement('[data-testid="conflict-rename"]')
+  const conflictText = await driver.executeScript(() => document.querySelector('[data-testid="conflict-actions"]').closest('[role="dialog"]').innerText)
+  assert.match(conflictText, /2020/, 'Original archived date must be shown, not the staging creation date')
+  assert.ok(!conflictText.includes('时间未知'), conflictText)
   const layouts = []
   for (const size of [{ width: 920, height: 620 }, { width: 760, height: 520 }]) {
     await driver.manage().window().setRect(size)
@@ -68,6 +72,10 @@ export async function runSevenZipVolumeUiGate({ driver, callDesktopBridge, waitF
     layouts.push(layout)
     writeFileSync(path.join(artifactDirectory, `seven-zip-ui-conflict-${size.width}.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
   }
+  const archivedDate = await driver.findElement(By.xpath('//*[@role="dialog"]//span[contains(text(), "2020")]'))
+  await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', archivedDate)
+  assert.equal(await archivedDate.isDisplayed(), true)
+  writeFileSync(path.join(artifactDirectory, 'seven-zip-ui-source-date-760.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   await (await waitForElement('[data-testid="conflict-rename"]')).click()
   const retried = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.retryOfTaskId === original.id), 60_000)
   assert.equal(retried.status, 'completed', JSON.stringify(retried))
