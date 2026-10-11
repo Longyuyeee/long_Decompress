@@ -102,7 +102,7 @@ const splitArchiveUnavailableReason = computed(() => {
     return `${selectedFormat.value?.name || compressionOptions.value.format.toUpperCase()} 格式暂不支持创建分卷`
   }
   if (!props.allowSplitArchive) {
-    return '当前任务包含文件夹；分卷 ZIP 目前仅支持普通文件'
+    return '请先添加需要压缩的文件或文件夹'
   }
   if (compressionOptions.value.password) {
     return '加密分卷 ZIP 暂不支持，请先清除压缩密码'
@@ -178,6 +178,9 @@ const useSuggestedFilename = () => {
 }
 
 watch(compressionOptions, (newOptions) => {
+  // Normalize before emitting: otherwise a parent echo can restore a checked,
+  // disabled split toggle while the password watcher is clearing it.
+  if (!canCreateSplitArchive.value) newOptions.splitArchive = false
   if (syncingFromProps) return
   emit('update:modelValue', { ...newOptions, fastPack: false })
 }, { deep: true })

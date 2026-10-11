@@ -965,11 +965,6 @@ impl CompressionService {
                     }
                 }
             }
-            if split_requested && source_path.is_dir() {
-                return Err(CompressionError::CompressionFailed(
-                    "Split ZIP creation currently supports regular files only".to_string()
-                ).into());
-            }
 
             let resolved_source = source_path.canonicalize()?;
             if resolved_source == resolved_output
@@ -4350,7 +4345,7 @@ mod tests_continued {
     }
 
     #[test]
-    fn rejects_encrypted_or_directory_split_creation() {
+    fn allows_directory_split_but_rejects_password_and_output_inside_source() {
         let temp = tempfile::tempdir().expect("temp dir");
         let source = temp.path().join("source.txt");
         std::fs::write(&source, b"split fixture").expect("source fixture");
@@ -4376,6 +4371,16 @@ mod tests_continued {
         assert!(CompressionService::validate_compression_io_paths(
             &[folder.to_string_lossy().to_string()],
             &output.to_string_lossy(),
+            &directory_split,
+        ).is_ok());
+        assert!(CompressionService::validate_compression_io_paths(
+            &[folder.to_string_lossy().to_string(), source.to_string_lossy().to_string()],
+            &output.to_string_lossy(),
+            &directory_split,
+        ).is_ok());
+        assert!(CompressionService::validate_compression_io_paths(
+            &[folder.to_string_lossy().to_string()],
+            &folder.join("nested.zip").to_string_lossy(),
             &directory_split,
         ).is_err());
     }

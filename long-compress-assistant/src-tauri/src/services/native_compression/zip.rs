@@ -328,6 +328,19 @@ mod tests {
                     assert_eq!(bytes, expected);
                 }
                 assert!(archive.index_for_name("资料/空目录/").is_some());
+                if password.is_none() {
+                    // Exercise the independent engine used by the app for numeric split extraction.
+                    let engine = crate::utils::archive_tools::find_7z_command().expect("7-Zip required for split interoperability");
+                    let extracted = temp.path().join("independent-output");
+                    let result = crate::utils::process::command(engine)
+                        .arg("x").arg("-y").arg("-p-")
+                        .arg(format!("-o{}", extracted.display())).arg(&first)
+                        .output().unwrap();
+                    assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+                    assert!(extracted.join("资料/空目录").is_dir());
+                    assert_eq!(std::fs::read(extracted.join("资料/内容.txt")).unwrap(), b"folder payload");
+                    assert_eq!(std::fs::read(extracted.join("第二份.txt")).unwrap(), b"second payload");
+                }
                 assert!(!output.exists());
                 assert!(std::fs::read_dir(temp.path()).unwrap().all(|entry| !entry.unwrap().file_name().to_string_lossy().starts_with(".split-source-")));
             }

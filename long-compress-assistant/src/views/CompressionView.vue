@@ -132,7 +132,7 @@ const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {
 }
 
 const canUseSplitArchive = (files: Array<{ isDirectory: boolean }>) => {
-  return files.length > 0 && files.every(file => !file.isDirectory)
+  return files.length > 0
 }
 
 const canGlobalUseSingleFileFormats = computed(() => {

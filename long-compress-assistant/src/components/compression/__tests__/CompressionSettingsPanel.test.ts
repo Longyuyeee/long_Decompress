@@ -107,7 +107,7 @@ describe('CompressionSettingsPanel split archive settings', () => {
     const toggle = wrapper.get('[data-testid="compression-split-toggle"]')
     expect(toggle.attributes('disabled')).toBeDefined()
     await wrapper.get('button[aria-label="分卷压缩说明"]').trigger('click')
-    expect(wrapper.get('[data-testid="compression-split-settings"]').text()).toContain('目前仅支持普通文件')
+    expect(wrapper.get('[data-testid="compression-split-settings"]').text()).toContain('请先添加需要压缩的文件或文件夹')
 
     await wrapper.setProps({
       allowSplitArchive: true,
