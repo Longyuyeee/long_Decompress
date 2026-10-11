@@ -43,6 +43,7 @@ export interface CompressionOptions {
   deleteAfter: boolean
   verifyAfter: boolean
   createSolidArchive: boolean
+  encryptFilenames?: boolean
 }
 
 export interface CompressionGroup {

@@ -316,6 +316,10 @@ const runCompression = async () => {
   ]
 
   if (jobs.length === 0) return
+  if (jobs.some(job => job.settings.encryptFilenames && (job.settings.format !== '7z' || !job.settings.password))) {
+    appStore.setError('文件名加密仅支持 7Z，请先填写压缩密码。')
+    return
+  }
 
   if (jobs.some(job => job.settings.format === 'rar')) {
     const support = await ensureRarSupport()
@@ -416,6 +420,7 @@ const runCompression = async () => {
           splitArchive: job.settings.splitArchive, splitSize: job.settings.splitSize,
           keepStructure: job.settings.keepStructure, verifyAfter: job.settings.verifyAfter,
           createSolidArchive: effectiveFormat === '7z' && job.settings.createSolidArchive,
+          encryptFilenames: job.settings.encryptFilenames ?? false,
           zipPasswordEncoding: job.settings.zipPasswordEncoding ?? 'utf8',
           fastPack: false,
         },
@@ -428,6 +433,7 @@ const runCompression = async () => {
         password: job.settings.password || undefined,
         split_size: splitSizeBytes(job.settings.splitArchive, job.settings.splitSize),
         create_solid_archive: effectiveFormat === '7z' && job.settings.createSolidArchive,
+        encrypt_filenames: job.settings.encryptFilenames ?? false,
         preserve_paths: job.settings.keepStructure,
         delete_after: job.settings.deleteAfter,
         verify_after: job.settings.verifyAfter,
@@ -470,6 +476,7 @@ const runCompression = async () => {
           password: job.settings.password || undefined,
           split_size: splitSizeBytes(job.settings.splitArchive, job.settings.splitSize),
           create_solid_archive: effectiveFormat === '7z' && job.settings.createSolidArchive,
+          encrypt_filenames: job.settings.encryptFilenames ?? false,
           preserve_paths: job.settings.keepStructure,
           delete_after: job.settings.deleteAfter,
           verify_after: job.settings.verifyAfter,

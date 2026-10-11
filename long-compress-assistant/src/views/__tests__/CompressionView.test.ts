@@ -327,6 +327,8 @@ describe('CompressionView', () => {
     const compressionStore = useCompressionStore()
     compressionStore.globalSettings.format = '7z'
     compressionStore.globalSettings.createSolidArchive = true
+    compressionStore.globalSettings.encryptFilenames = true
+    compressionStore.globalSettings.password = 'header-password'
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
     await nextTick()
 
@@ -340,8 +342,23 @@ describe('CompressionView', () => {
       expect.any(String),
       ['C:/input/sample.txt'],
       'C:/input/sample.7z',
-      expect.objectContaining({ format: '7z', create_solid_archive: true }),
+      expect.objectContaining({ format: '7z', create_solid_archive: true, encrypt_filenames: true }),
     )
+    expect(useTaskStore().tasks[0].executionConfig).toMatchObject({ settings: { encryptFilenames: true }, passwordRequired: true })
+  })
+
+  it('does not start filename-encrypted compression without a password', async () => {
+    const wrapper = mountView()
+    const store = useCompressionStore()
+    store.globalSettings.format = '7z'
+    store.globalSettings.encryptFilenames = true
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+    await wrapper.get('[data-testid="start-compression"]').trigger('click')
+    await flushPromises()
+    expect(mocks.compressFiles).not.toHaveBeenCalled()
+    expect(useTaskStore().tasks).toHaveLength(0)
+    wrapper.unmount()
   })
 
   it('confirms non-native password formats before creating an encrypted 7z', async () => {

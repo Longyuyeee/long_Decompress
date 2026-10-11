@@ -5,7 +5,8 @@ import path from 'node:path'
 import { By } from 'selenium-webdriver'
 import { spawnSync } from 'node:child_process'
 
-export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip, multipleSources = false, fault = null }) {
+export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip, multipleSources = false, fault = null, encryptFilenames = false }) {
+  assert.ok(!encryptFilenames || (format === '7z' && password && !productionIpc))
   assert.ok(!fault || (!productionIpc && format === '7z' && !multipleSources && ['cancel', 'output-file'].includes(fault)))
   assert.ok(!multipleSources || (!productionIpc && format === '7z'), 'Multi-source gate currently uses the isolated 7Z desktop workflow')
   if (format !== 'zip') {
@@ -16,8 +17,8 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   }
   if (format === '7z') {
     const scenario = `${password ? 'password' : 'plain'}-${solid ? 'solid' : 'non-solid'}${multipleSources ? '-multi-source' : ''}${fault ? `-${fault}` : ''}`
-    fixtureDirectory = path.join(fixtureDirectory, scenario)
-    artifactDirectory = path.join(artifactDirectory, scenario)
+    fixtureDirectory = path.join(fixtureDirectory, scenario + (encryptFilenames ? '-hidden-names' : ''))
+    artifactDirectory = path.join(artifactDirectory, scenario + (encryptFilenames ? '-hidden-names' : ''))
     mkdirSync(fixtureDirectory, { recursive: true })
     mkdirSync(artifactDirectory, { recursive: true })
   }
@@ -74,6 +75,18 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     const input = await waitForElement('[role="dialog"] [data-testid="compression-solid-toggle"]')
     await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', input)
     if ((await input.isSelected()) !== solid) await input.click()
+    const names = await waitForElement('[role="dialog"] [data-testid="compression-encrypt-filenames"]')
+    await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', names)
+    if ((await names.isSelected()) !== encryptFilenames) await names.click()
+    if (encryptFilenames) {
+      const help = await waitForElement('[role="dialog"] button[aria-label="加密文件名说明"]')
+      await help.click()
+      assert.match(await (await waitForElement('[role="note"][aria-label="加密文件名说明"]')).getText(), /查看包内文件名也需要密码/)
+      await driver.wait(() => driver.executeScript(element => element.closest('[role="dialog"]').getAnimations({ subtree: true }).every(animation => animation.playState !== 'running'), names), 10_000)
+      assert.equal(await names.isSelected(), true, 'Help must not toggle filename encryption')
+      writeFileSync(path.join(artifactDirectory, 'filename-encryption-help.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+      await help.click()
+    }
     writeFileSync(path.join(artifactDirectory, 'solid-settings.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   }
   const split = await waitForElement('[role="dialog"] [data-testid="compression-split-toggle"]')
@@ -166,6 +179,11 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     assert.equal(listing.status, 0, listing.stderr || listing.stdout)
     assert.match(listing.stdout, solid ? /Solid = \+/ : /Solid = -/)
     assert.match(listing.stdout, password ? /Encrypted = \+/ : /Encrypted = -/)
+    if (encryptFilenames) {
+      const wrong = spawnSync(bundledSevenZip, ['l', '-slt', '-pwrong-password', parts[0]], { encoding: 'utf8', timeout: 30_000 })
+      assert.notEqual(wrong.status, 0, 'Independent listing must require the header password')
+      assert.ok(!wrong.stdout.includes('说明.txt'), 'Wrong password must not expose filenames')
+    }
   }
   const extracted = path.join(fixtureDirectory, '创建后解压')
   if (productionIpc) {
@@ -189,6 +207,42 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   assert.equal(await summaryValue.getText(), '100%', 'Late progress must not overwrite completed UI progress')
   writeFileSync(path.join(artifactDirectory, 'password-split-create-result.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   const history = await readHistory()
+  if (encryptFilenames) {
+    const saved = history.find(row => row.status === 'completed' && row.sourcePaths.includes(folder))
+    assert.equal(saved?.executionConfig?.settings?.encryptFilenames, true)
+    assert.equal(saved?.executionConfig?.passwordRequired, true)
+    assert.equal(saved?.executionConfig?.settings?.password, undefined)
+    if (!solid) {
+      await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
+      const manage = await waitForElement('[role="dialog"] [data-testid="manage-compression-profiles"]')
+      await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', manage)
+      await manage.click()
+      const editSelector = '//article[.//span[normalize-space(.)="7Z"]]//button[.//i[contains(@class,"pi-pencil")]]'
+      const edit = await driver.wait(async () => (await driver.findElements(By.xpath(editSelector)))[0] || false, 10_000)
+      await edit.click()
+      let toggle = await waitForElement('[data-testid="profile-encrypt-filenames"]')
+      await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', toggle)
+      if (!(await toggle.isSelected())) await toggle.click()
+      const help = await waitForElement('button[aria-label="配置组文件名加密说明"]')
+      await help.click()
+      await waitForElement('[role="note"][aria-label="配置组文件名加密说明"]')
+      await driver.wait(() => driver.executeScript(element => element.closest('[role="dialog"]').getAnimations({ subtree: true }).every(animation => animation.playState !== 'running'), toggle), 10_000)
+      writeFileSync(path.join(artifactDirectory, 'profile-filename-encryption.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+      await help.click()
+      await (await waitForElement('[role="dialog"] form button[type="submit"]')).click()
+      await driver.wait(async () => (await driver.findElements(By.css('[data-testid="profile-encrypt-filenames"]'))).length === 0, 10_000)
+      await (await driver.findElement(By.xpath(editSelector))).click()
+      toggle = await waitForElement('[data-testid="profile-encrypt-filenames"]')
+      assert.equal(await toggle.isSelected(), true, 'Saved profile must restore filename encryption')
+      const close = await toggle.findElement(By.xpath('ancestor::div[@role="dialog"]//button[@aria-label]'))
+      await close.click()
+      await driver.wait(async () => (await driver.findElements(By.css('[data-testid="profile-encrypt-filenames"]'))).length === 0, 10_000)
+      await (await waitForElement('[data-testid="close-compression-profiles"]')).click()
+      await driver.wait(async () => (await driver.findElements(By.css('[data-testid="close-compression-profiles"]'))).length === 0, 10_000)
+      await (await waitForElement('[data-testid="save-global-compression-settings"]')).click()
+      await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
+    }
+  }
   assert.ok(history.some(row => row.status === 'completed' && row.sourcePaths.includes(folder)))
   if (multipleSources) {
     const matching = history.filter(row => row.taskType === 'compression' && row.sourcePaths.includes(folder))
@@ -197,7 +251,7 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     assert.deepEqual([...matching[0].sourcePaths].sort(), [folder, extraSource].sort())
   }
   writeFileSync(path.join(artifactDirectory, 'password-split-create.json'), JSON.stringify({
-    format, encrypted: Boolean(password), solid, multipleSources, volumeCount: parts.length, task, buildKind: productionIpc ? 'installed-production' : 'isolated-desktop-e2e', nativePickerVerified: false, extractionViaProductionCommand: true,
+    format, encrypted: Boolean(password), encryptFilenames, solid, multipleSources, volumeCount: parts.length, task, buildKind: productionIpc ? 'installed-production' : 'isolated-desktop-e2e', nativePickerVerified: false, extractionViaProductionCommand: true,
     checks: ['UI password and split settings', ...(format === '7z' ? ['UI solid toggle', 'independent 7-Zip solid/encryption metadata'] : []), 'UI start compression', 'real directory and multiple files', '1 MiB numeric volumes', 'verified publication', 'extracted payload and empty directory', 'source and volumes preserved', 'completed compression history'],
   }, null, 2))
 }

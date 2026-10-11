@@ -125,10 +125,16 @@ impl<R: Read> Crc32VerifyingReader<R> {
 
 impl<R: Read> Read for Crc32VerifyingReader<R> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        if self.remaining <= 0 {
+        if self.remaining <= 0 || buf.is_empty() {
             return Ok(0);
         }
         let size = self.inner.read(buf)?;
+        if size == 0 {
+            return Err(std::io::Error::new(
+                ErrorKind::UnexpectedEof,
+                Error::ChecksumVerificationFailed,
+            ));
+        }
         if size > 0 {
             self.remaining -= size as i64;
             self.crc_digest.update(&buf[..size]);
@@ -143,6 +149,31 @@ impl<R: Read> Read for Crc32VerifyingReader<R> {
             }
         }
         Ok(size)
+    }
+}
+
+#[cfg(test)]
+mod long_crc_tests {
+    use super::*;
+
+    #[test]
+    fn premature_decoder_eof_must_not_pass_crc_verification() {
+        for bytes in [b"".as_slice(), b"a".as_slice()] {
+            let mut reader = Crc32VerifyingReader::new(bytes, 3, CRC32.checksum(b"abc") as u64);
+            let mut output = Vec::new();
+            assert!(reader.read_to_end(&mut output).is_err(), "A short decoded stream must fail even if its decoder reports normal EOF");
+        }
+    }
+
+    #[test]
+    fn complete_and_empty_buffer_reads_keep_standard_read_semantics() {
+        let mut reader = Crc32VerifyingReader::new(b"abc".as_slice(), 3, CRC32.checksum(b"abc") as u64);
+        assert_eq!(reader.read(&mut []).unwrap(), 0);
+        let mut output = Vec::new();
+        reader.read_to_end(&mut output).unwrap();
+        assert_eq!(output, b"abc");
+        let mut empty = Crc32VerifyingReader::new(b"".as_slice(), 0, CRC32.checksum(b"") as u64);
+        assert_eq!(empty.read(&mut [0; 1]).unwrap(), 0);
     }
 }
 

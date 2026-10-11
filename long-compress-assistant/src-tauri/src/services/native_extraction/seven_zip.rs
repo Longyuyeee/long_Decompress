@@ -657,6 +657,30 @@ mod tests {
     }
 
     #[test]
+    fn mixed_seven_zip_ciphertext_cannot_publish_empty_files_as_success() {
+        // Synthetic independent 7-Zip fixture from the desktop mixed-volume
+        // regression (37-byte .002 replaced by a different encrypted archive).
+        // Fixed bytes retain the early-decoder-EOF case regardless of random IVs.
+        let bytes = hex::decode("377ABCAF271C00046060A0E4D40000000000000022000000000000008E62691070F33A75D3913C3910922144242E7705F052C8293BCE0EFFF5203FE908AFF9E7A4753F1413EAE1D6789BC8654C84D7C48C8A553880FD5289EC9C49699BCFA41F0000813307AE0FD1F2FBFD40BB94643B39A47AE76A2346294B89D0A8C0004B477E30090F9573F1BDF9A2B2EC23CF60FBD9C7A61A05D016B7879189872F2D882B5EEC7BDE9D3C97FB95B5C318829749AA23784C65ACCE674C6978F9736BC011ACD95B48E58E2974C8FDF7BD5654B1A9D162AF34F3250BB42A3B63B12003BB365230C9139E478999D30C78DAD7BEB2432696961E201706400109809400070B01000123030101055D001000000C80CE0A01BEE8891D0000").unwrap();
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("mixed.7z");
+        std::fs::write(&archive, &bytes).unwrap();
+        let output = temp.path().join("output");
+        let error = extract(&TestRuntime::default(), None, "short-decoder", &archive.to_string_lossy(),
+            &output.to_string_lossy(), Some("中文密码 + !测试"), &DecompressOptions::default()).unwrap_err();
+        assert!(error.to_string().contains("[archive-inspection:ambiguous-data]"), "{error}");
+        assert!(!output.join("资料/内容.txt").exists());
+        assert_eq!(std::fs::read(&archive).unwrap(), bytes);
+        #[cfg(windows)]
+        {
+            let engine = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/archive-engine/7z.exe");
+            let result = std::process::Command::new(engine).args(["t", "-p中文密码 + !测试", "-y"])
+                .arg(&archive).output().unwrap();
+            assert!(!result.status.success(), "Independent reader must also reject this fixed corrupt fixture");
+        }
+    }
+
+    #[test]
     fn corrupt_plain_crc_is_not_classified_as_a_password_failure() {
         let errors = [
             sevenz_rust::Error::ChecksumVerificationFailed,

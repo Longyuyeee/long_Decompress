@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import HistoryCompressionDraft from '../HistoryCompressionDraft.vue'
+import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import { useCompressionStore } from '@/stores/compression'
 import type { TaskHistoryRecord } from '@/types/taskHistory'
 
@@ -22,6 +23,24 @@ const setup = (input = record) => {
   return { wrapper: mount(HistoryCompressionDraft, options), options, store: useCompressionStore() }
 }
 describe('create another archive without repeating the failed task', () => {
+  it('restores hidden filenames and requires a fresh password before creating the retry draft', async () => {
+    const input = structuredClone(record)
+    if (input.executionConfig?.kind !== 'archive-compression') throw new Error('fixture')
+    input.executionConfig.passwordRequired = true
+    input.executionConfig.settings.format = '7z'
+    input.executionConfig.settings.encryptFilenames = true
+    const { wrapper, store } = setup(input)
+    const panel = wrapper.findComponent(CompressionSettingsPanel)
+    expect(panel.props('modelValue')).toMatchObject({ encryptFilenames: true, password: '' })
+    await wrapper.get('[data-testid="compression-retry-create"]').trigger('click')
+    expect(store.groups).toHaveLength(0)
+    panel.vm.$emit('update:modelValue', { ...panel.props('modelValue'), password: 'new-password' })
+    await wrapper.get('[data-testid="compression-retry-create"]').trigger('click')
+    await flushPromises()
+    expect(store.groups[0].settings).toMatchObject({ encryptFilenames: true, password: 'new-password' })
+    expect(input.executionConfig.settings).not.toHaveProperty('password')
+    wrapper.unmount()
+  })
   beforeEach(() => {
     vi.resetAllMocks()
     mocks.invoke.mockImplementation(async (_command, args) => ({ name: args.path.split('/').pop(), size: 42, is_dir: !args.path.endsWith('.jpg') }))

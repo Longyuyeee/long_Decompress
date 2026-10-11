@@ -4977,6 +4977,10 @@ try {
       console.log(`[desktop-e2e] 7Z split creation fault=${fault}`)
       await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, format: '7z', solid: true, bundledSevenZip, fault })
     }
+    for (const solid of [false, true]) {
+      await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory,
+        format: '7z', solid, bundledSevenZip, encryptFilenames: true })
+    }
     await runSevenZipVolumeReadGate({ driver, waitForElement, callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
     completedSuccessfully = true
     console.log('Real Windows numeric ZIP password and rename-commit command gate passed.')

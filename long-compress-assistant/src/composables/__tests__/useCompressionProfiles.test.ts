@@ -57,6 +57,7 @@ const profile = (passwordStrategy: PasswordStrategy = { type: 'none' }): Compres
     deleteAfter: true,
     verifyAfter: true,
     createSolidArchive: true,
+    encryptFilenames: false,
     filenameTemplate: '{name}-{date}',
     extraParams: { threads: '4' },
   },
@@ -80,6 +81,17 @@ const profile = (passwordStrategy: PasswordStrategy = { type: 'none' }): Compres
 })
 
 describe('useCompressionProfiles', () => {
+  it('preserves explicit filename encryption when reading and updating profiles', async () => {
+    const raw = rawProfile()
+    mocks.invoke.mockResolvedValueOnce({ ...raw, config: { ...raw.config, format: '7z', encrypt_filenames: true } })
+    const api = useCompressionProfiles()
+    const loaded = await api.getProfileById('profile-1')
+    expect(loaded?.config.encryptFilenames).toBe(true)
+    await api.updateProfile(loaded!)
+    expect(mocks.invoke).toHaveBeenLastCalledWith('update_compression_profile', expect.objectContaining({
+      profile: expect.objectContaining({ config: expect.objectContaining({ encrypt_filenames: true }) }),
+    }))
+  })
   beforeEach(() => {
     vi.clearAllMocks()
   })

@@ -35,6 +35,7 @@ export const buildSafeTemplateDraftSettings = (
   deleteAfter: false,
   verifyAfter: profile.config.verifyAfter,
   createSolidArchive: profile.config.createSolidArchive,
+  encryptFilenames: profile.config.encryptFilenames ?? false,
   ...(profile.config.zipPasswordEncoding ? { zipPasswordEncoding: profile.config.zipPasswordEncoding } : {}),
 })
 

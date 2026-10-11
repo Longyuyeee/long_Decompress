@@ -51,6 +51,18 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('offers opt-in filename encryption only for 7Z and clears it on format change', async () => {
+    const wrapper = mountPanel(settings({ format: '7z' }))
+    await flushPromises()
+    const toggle = wrapper.get('[data-testid="compression-encrypt-filenames"]')
+    expect((toggle.element as HTMLInputElement).checked).toBe(false)
+    await toggle.setValue(true)
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ encryptFilenames: true })
+    await wrapper.setProps({ modelValue: settings({ format: 'zip', encryptFilenames: true }) })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="compression-encrypt-filenames"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
   beforeEach(() => {
     invoke.mockReset()
     invoke.mockImplementation(async (command: string) => {

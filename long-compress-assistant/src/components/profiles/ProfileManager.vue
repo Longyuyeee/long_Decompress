@@ -7,6 +7,7 @@ import { AutoApplyMode, type CompressionProfile, type CreateProfileRequest, type
 import { COMPRESSIBLE_FORMATS, FORMAT_CAPABILITIES, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 import { extractErrorMessage } from '@/utils'
 import Modal from '@/components/ui/Modal.vue'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
 import { useCompressionProfiles } from '@/composables/useCompressionProfiles'
 import { useCompressionStore } from '@/stores/compression'
@@ -105,6 +106,7 @@ watch(() => formData.value.config.format, () => {
     formData.value.config.splitSize = null
   }
   if (!supportsSolid.value) formData.value.config.createSolidArchive = false
+  if (!supportsSolid.value) formData.value.config.encryptFilenames = false
 })
 
 watch(() => formData.value.config.splitArchive, enabled => {
@@ -683,6 +685,7 @@ const formatDate = (timestamp: number | null) =>
           <label class="profile-option" :class="{ 'opacity-70': formData.config.deleteAfter }"><input v-model="formData.config.verifyAfter" type="checkbox" :disabled="formData.config.deleteAfter" /><span><strong>压缩完成后校验</strong><small>{{ formData.config.deleteAfter ? '删除源文件时强制开启' : '发布最终文件前读取并验证归档' }}</small></span></label>
           <label v-if="supportsSplit" class="profile-option"><input v-model="formData.config.splitArchive" type="checkbox" /><span><strong>分卷压缩</strong><small>将压缩包拆分为多个文件</small></span></label>
           <label v-if="supportsSolid" class="profile-option"><input v-model="formData.config.createSolidArchive" type="checkbox" /><span><strong>固实压缩</strong><small>提高同类文件压缩率</small></span></label>
+          <label v-if="supportsSolid" class="profile-option"><input data-testid="profile-encrypt-filenames" v-model="formData.config.encryptFilenames" type="checkbox" /><span><strong>加密文件名 <HelpHint label="配置组文件名加密说明">查看包内文件名也需要密码。仅支持 7Z，运行前请填写密码。</HelpHint></strong></span></label>
         </div>
 
         <label v-if="formData.config.splitArchive" class="block">

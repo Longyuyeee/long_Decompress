@@ -13,8 +13,16 @@ silently exposing filenames despite set_encrypt_header(true).
 
 Application regression: native_compression::seven_zip::tests::
 encrypted_small_header_never_falls_back_to_plaintext (failed on upstream 0.6.1).
-The product still explicitly disables header encryption until its full option
-and acceptance path is implemented. Do not remove that opt-out during upgrades.
+The product uses an explicit opt-in filename-encryption option, default false.
+Do not change that default during upgrades.
 Re-audit this patch and the application's K_ANTI workaround when updating.
 Trailing whitespace in the upstream README and changelog was normalized for
 the repository diff checks; no documentation meaning was changed.
+
+2026-10-11: reader.rs Crc32VerifyingReader rejects decoder EOF while expected
+unpacked bytes remain. Previously it returned normal EOF without checking CRC,
+allowing a mixed encrypted volume to produce an empty file reported as success.
+Empty caller buffers still return zero without consuming data. Regression tests
+in reader::long_crc_tests fail before this fix and pass afterwards. Run with
+`cargo test --manifest-path src-tauri/vendor/sevenz-rust/Cargo.toml --lib long_crc_tests`.
+Keep the real desktop mixed-volume failure assertions unchanged.

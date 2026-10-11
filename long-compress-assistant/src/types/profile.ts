@@ -26,6 +26,7 @@ export interface CompressionConfig {
   deleteAfter: boolean
   verifyAfter: boolean
   createSolidArchive: boolean
+  encryptFilenames?: boolean
   filenameTemplate: string | null
   extraParams: Record<string, string>
 }
@@ -134,6 +135,7 @@ export interface TaskTemplate {
     keepStructure: boolean
     verifyAfter: boolean
     createSolidArchive: boolean
+    encryptFilenames?: boolean
   }
   passwordStrategy: TaskTemplatePasswordStrategy
   exportNotes: string[]

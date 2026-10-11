@@ -195,6 +195,7 @@ watch(() => compressionOptions.value.format, () => {
   }
   if (compressionOptions.value.format !== '7z') {
     compressionOptions.value.createSolidArchive = false
+    compressionOptions.value.encryptFilenames = false
   }
 })
 
@@ -250,6 +251,7 @@ const applyProfile = (profile: CompressionProfile) => {
   compressionOptions.value.deleteAfter = profile.config.deleteAfter
   compressionOptions.value.verifyAfter = profile.config.verifyAfter
   compressionOptions.value.createSolidArchive = profile.config.createSolidArchive
+  compressionOptions.value.encryptFilenames = profile.config.encryptFilenames ?? false
   compressionOptions.value.zipPasswordEncoding = profile.config.zipPasswordEncoding ?? 'utf8'
   showProfileSelector.value = false
   appStore.setSuccess(appStore.t('profiles.applied_success').replace('{0}', profile.name))
@@ -283,6 +285,7 @@ const saveAsNewProfile = async () => {
         deleteAfter: compressionOptions.value.deleteAfter,
         verifyAfter: compressionOptions.value.verifyAfter,
         createSolidArchive: compressionOptions.value.createSolidArchive,
+        encryptFilenames: compressionOptions.value.encryptFilenames ?? false,
         zipPasswordEncoding: compressionOptions.value.zipPasswordEncoding ?? 'utf8',
         filenameTemplate: compressionOptions.value.filename ? `{name}_${compressionOptions.value.filename}` : null,
         extraParams: {}
@@ -539,6 +542,10 @@ const closeVaultPasswordsAfterFocus = () => {
           <label v-if="compressionOptions.format === '7z'" class="advanced-option">
             <input data-testid="compression-solid-toggle" v-model="compressionOptions.createSolidArchive" type="checkbox" />
             <span><strong>固实压缩 <HelpHint label="固实压缩说明">提高同类文件压缩率，但单文件提取更慢</HelpHint></strong></span>
+          </label>
+          <label v-if="compressionOptions.format === '7z'" class="advanced-option">
+            <input data-testid="compression-encrypt-filenames" v-model="compressionOptions.encryptFilenames" type="checkbox" />
+            <span><strong>加密文件名 <HelpHint label="加密文件名说明">开启后，查看包内文件名也需要密码。仅支持 7Z；开始压缩前请填写密码。</HelpHint></strong></span>
           </label>
         </div>
       </div>
