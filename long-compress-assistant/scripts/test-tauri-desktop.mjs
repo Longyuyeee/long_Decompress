@@ -4892,6 +4892,31 @@ try {
     }, 30_000)
     assert.equal((await callDesktopBridge('taskHistory')).some(record => record.retryOfTaskId === original.id), false,
       'waiting for conflict resolution must not save a false failed retry')
+    const conflictLayouts = []
+    for (const size of [{ width: 920, height: 620 }, { width: 760, height: 520 }]) {
+      await driver.manage().window().setRect(size)
+      await driver.wait(async () => driver.executeScript(() => {
+        const actions = document.querySelector('[data-testid="conflict-actions"]')
+        return actions && actions.getAnimations({ subtree: true }).every(animation => animation.playState !== 'running')
+      }), 10_000)
+      const layout = await driver.executeScript(() => {
+        const actions = document.querySelector('[data-testid="conflict-actions"]')
+        const dialog = actions?.closest('[role="dialog"]')
+        const buttons = ['rename', 'overwrite', 'skip'].map(action => {
+          const button = document.querySelector(`[data-testid="conflict-${action}"]`)
+          if (!button) return { action, visible: false, clickable: false }
+          const r = button.getBoundingClientRect()
+          return { action, visible: r.width > 0 && r.height > 0 && r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth,
+            clickable: button.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)) }
+        })
+        return { viewport: { width: innerWidth, height: innerHeight }, buttons,
+          overflow: dialog ? dialog.scrollWidth - dialog.clientWidth : null }
+      })
+      assert.ok(layout.buttons.every(button => button.visible && button.clickable), JSON.stringify(layout))
+      assert.ok(layout.overflow !== null && layout.overflow <= 1, JSON.stringify(layout))
+      conflictLayouts.push({ requested: size, ...layout })
+      writeFileSync(path.join(artifactDirectory, `numeric-zip-conflict-${size.width}.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    }
     writeFileSync(path.join(artifactDirectory, 'numeric-zip-password-conflict.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
     await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', keepBoth)
     writeFileSync(path.join(artifactDirectory, 'numeric-zip-password-conflict-actions.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
@@ -4916,6 +4941,7 @@ try {
       binarySha256: fileSha256(application), buildKind: 'isolated-desktop-e2e',
       volumeCount: parts.length, wrongPasswordError: wrong, missingVolumeError: missing,
       originalTaskId: original.id, retryTaskId: retried.id, restartVerified: true, nativePickerVerified: false,
+      conflictLayouts,
       checks: ['UTF-8 Chinese password', 'existing target preserved', 'rename commit payload equality', 'wrong password', 'missing middle volume', 'UI password retry draft', 'UI conflict keep both', 'SQLite history after restart'],
     }, null, 2))
     completedSuccessfully = true
