@@ -1,6 +1,38 @@
 //! Seekable numeric ZIP volumes, with only one open volume handle at a time.
 use std::{fs::File, io::{self, Read, Seek, SeekFrom}, path::{Path, PathBuf}};
 
+/// ZIP consumers must read the complete numeric volume set, not just its first file.
+pub(crate) enum ZipInputReader {
+    File(File),
+    Volumes(NumericVolumeReader),
+}
+
+impl ZipInputReader {
+    pub(crate) fn is_numeric_first(path: &Path) -> bool {
+        path.to_string_lossy().to_ascii_lowercase().ends_with(".zip.001")
+    }
+
+    pub(crate) fn open(path: &Path) -> anyhow::Result<Self> {
+        if Self::is_numeric_first(path) {
+            Ok(Self::Volumes(NumericVolumeReader::open(path)?))
+        } else {
+            Ok(Self::File(File::open(path)?))
+        }
+    }
+}
+
+impl Read for ZipInputReader {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        match self { Self::File(reader) => reader.read(buffer), Self::Volumes(reader) => reader.read(buffer) }
+    }
+}
+
+impl Seek for ZipInputReader {
+    fn seek(&mut self, position: SeekFrom) -> io::Result<u64> {
+        match self { Self::File(reader) => reader.seek(position), Self::Volumes(reader) => reader.seek(position) }
+    }
+}
+
 pub(crate) struct NumericVolumeReader {
     parts: Vec<(PathBuf, u64, u64)>,
     length: u64,
