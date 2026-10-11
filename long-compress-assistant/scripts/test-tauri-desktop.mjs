@@ -21,6 +21,7 @@ import { deflateSync } from 'node:zlib'
 import { runOptimizationDesktopGate, runSavedLocationDesktopGate } from './optimization-desktop-gate.mjs'
 import { runMediaHistoryDesktopGate } from './media-history-desktop-gate.mjs'
 import { runPasswordSplitCreationGate } from './password-split-creation-gate.mjs'
+import { runArchiveConversionGate } from './archive-conversion-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
 import { runSevenZipVolumeUiGate } from './seven-zip-volume-ui-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
@@ -4835,6 +4836,10 @@ try {
     await runZipTelemetryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
+  } else if (process.argv.includes('--archive-conversion-only')) {
+    await runArchiveConversionGate({ bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
+    completedSuccessfully = true
+    console.log('Real archive conversion command gate passed.')
   } else if (numericZipPasswordOnly) {
     await runSevenZipVolumeUiGate({ driver, callDesktopBridge, waitForElement, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
     await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory })

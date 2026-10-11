@@ -291,6 +291,98 @@ pub struct PublishedArchiveOutput {
     split: bool,
 }
 
+/// Rebuild an archive through private on-disk staging. Source archives are
+/// never compression inputs, so this converts their contents rather than
+/// placing the old archive inside a new one.
+#[command]
+pub async fn convert_archive(
+    window: Window,
+    task_id: String,
+    source_path: String,
+    source_password: Option<String>,
+    output_path: String,
+    options: CompressionOptions,
+) -> Result<PublishedArchiveOutput, String> {
+    validate_conversion_request(&source_path, &output_path, &options)?;
+    let _output_guard = CompressionOutputGuard::acquire(&task_id, &output_path)?;
+    let service = service_for_task(&task_id).await?;
+    let _task_guard = TaskCancellationGuard::new(&task_id);
+    let parent = Path::new(&output_path).parent().ok_or("请选择输出目录")?;
+    let staging = tempfile::Builder::new().prefix(".long-convert-").tempdir_in(parent)
+        .map_err(|error| format!("无法创建转换暂存目录：{error}"))?;
+    service.emit_log(&window, &task_id, "转换归档：先解压至临时目录，再校验并发布新包；保留原包。", TaskLogSeverity::Info);
+    let extraction = DecompressOptions {
+        preserve_paths: true,
+        preserve_timestamps: true,
+        // All remaining defaults prohibit deletion and skipping corrupt data.
+        ..Default::default()
+    };
+    service.extract(window.clone(), task_id.clone(), source_path,
+        Some(staging.path().to_string_lossy().into_owned()), source_password, extraction)
+        .await.map_err(|error| format!("转换读取原包失败：{error}"))?;
+    if service.cancellation_flag.load(Ordering::Relaxed) {
+        return Err("转换已取消，原包保留".to_string());
+    }
+    let mut files = std::fs::read_dir(staging.path())
+        .map_err(|error| format!("无法读取转换暂存内容：{error}"))?
+        .map(|entry| entry.map(|entry| entry.path().to_string_lossy().into_owned()))
+        .collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
+    files.sort();
+    if files.is_empty() { return Err("原包没有可转换的条目".to_string()); }
+    let split = options.split_size.is_some_and(|size| size > 0);
+    service.compress(window, task_id, files, output_path.clone(), options)
+        .await.map_err(|error| format!("转换写入新包失败：{}", compression_command_error(&error)))?;
+    published_archive_output(Path::new(&output_path), split).map_err(|error| error.to_string())
+}
+
+fn validate_conversion_request(source: &str, output: &str, options: &CompressionOptions) -> Result<(), String> {
+    if !Path::new(source).is_file() { return Err("请选择存在的原压缩包".to_string()); }
+    if !Path::new(output).is_absolute() { return Err("转换输出必须是完整路径".to_string()); }
+    if Path::new(output).exists() { return Err("转换不能覆盖已有文件，请选择新的输出名称".to_string()); }
+    if options.delete_after { return Err("转换必须保留原包，不支持删除源文件".to_string()); }
+    if !options.verify_after { return Err("转换必须开启压缩完成后校验".to_string()); }
+    if options.preserve_paths == Some(false) { return Err("转换必须保留归档内的目录结构".to_string()); }
+    let format = crate::services::compression_format::validate_compression_request(
+        &[source.to_string()], output, options,
+    ).map_err(|error| compression_command_error(&error))?;
+    if crate::services::compression_format::compression_route(&format).is_none() {
+        return Err(format!("不支持的目标压缩格式：{format}"));
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod conversion_request_tests {
+    use super::*;
+
+    #[test]
+    fn conversion_preserves_source_and_requires_verified_new_output() {
+        let root = tempfile::tempdir().unwrap();
+        let source = root.path().join("原包.zip");
+        std::fs::write(&source, b"original archive").unwrap();
+        let source = source.to_str().unwrap();
+        let output = root.path().join("新包.7z");
+        let output = output.to_str().unwrap();
+        let mut options = CompressionOptions::default();
+        assert!(validate_conversion_request(source, output, &options).is_ok());
+        assert!(validate_conversion_request(source, source, &options).is_err());
+        assert!(validate_conversion_request(source, "relative.7z", &options).is_err());
+        options.delete_after = true;
+        assert!(validate_conversion_request(source, output, &options).is_err());
+        options.delete_after = false;
+        options.verify_after = false;
+        assert!(validate_conversion_request(source, output, &options).is_err());
+        options.verify_after = true;
+        options.preserve_paths = Some(false);
+        assert!(validate_conversion_request(source, output, &options).is_err());
+        options.preserve_paths = Some(true);
+        options.format = Some("unknown".to_string());
+        assert!(validate_conversion_request(source, output, &options).is_err());
+        assert_eq!(std::fs::read(source).unwrap(), b"original archive");
+        assert!(!Path::new(output).exists());
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishedArchiveFile {
