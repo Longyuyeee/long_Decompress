@@ -921,6 +921,14 @@ impl CompressionService {
         }
 
         let output = Path::new(output_path);
+        for parent in output.ancestors().skip(1) {
+            if parent.exists() && !parent.is_dir() {
+                return Err(CompressionError::CompressionFailed(format!(
+                    "目标保存路径中的“{}”是文件，不是文件夹。请选择其他输出目录。",
+                    parent.display()
+                )).into());
+            }
+        }
         if output.exists() {
             return Err(CompressionError::CompressionFailed(format!(
                 "Output already exists; choose a new path to avoid overwriting data: {}",
@@ -1341,8 +1349,12 @@ impl CompressionService {
                     split_requested,
                 );
                 service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
-            } else {
-                service.emit_log(&window, &task_id, &format!("压缩失败: {:?}", res.as_ref().err()), TaskLogSeverity::Error);
+            } else if let Err(error) = &res {
+                if matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)) {
+                    service.emit_log(&window, &task_id, "压缩已取消", TaskLogSeverity::Info);
+                } else {
+                    service.emit_log(&window, &task_id, &format!("压缩失败: {error}"), TaskLogSeverity::Error);
+                }
             }
             service.clear_compression_progress_output(&task_id);
             res
@@ -4394,6 +4406,30 @@ mod tests_continued {
             std::fs::read(output_dir.join("secret.txt")).expect("extracted file"),
             b"top secret"
         );
+    }
+
+    #[test]
+    fn rejects_file_as_output_directory_with_actionable_reason() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        let blocker = temp.path().join("existing.txt");
+        std::fs::write(&source, b"source").unwrap();
+        std::fs::write(&blocker, b"existing").unwrap();
+        for output in [blocker.join("archive.7z"), blocker.join("missing").join("archive.7z")] {
+            let error = CompressionService::validate_compression_io_paths(
+                &[source.to_string_lossy().into_owned()], &output.to_string_lossy(),
+                &CompressionOptions::default(),
+            ).unwrap_err().to_string();
+            assert!(error.contains("是文件，不是文件夹"), "{error}");
+            assert!(error.contains("请选择其他输出目录"), "{error}");
+        }
+        CompressionService::validate_compression_io_paths(
+            &[source.to_string_lossy().into_owned()],
+            &temp.path().join("new-directory").join("archive.7z").to_string_lossy(),
+            &CompressionOptions::default(),
+        ).unwrap();
+        assert_eq!(std::fs::read(&source).unwrap(), b"source");
+        assert_eq!(std::fs::read(&blocker).unwrap(), b"existing");
     }
 
     #[test]

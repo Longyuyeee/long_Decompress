@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
-import { mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs'
+import { mkdirSync, writeFileSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { By } from 'selenium-webdriver'
 import { spawnSync } from 'node:child_process'
 
-export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip, multipleSources = false }) {
+export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip, multipleSources = false, fault = null }) {
+  assert.ok(!fault || (!productionIpc && format === '7z' && !multipleSources && ['cancel', 'output-file'].includes(fault)))
   assert.ok(!multipleSources || (!productionIpc && format === '7z'), 'Multi-source gate currently uses the isolated 7Z desktop workflow')
   if (format !== 'zip') {
     fixtureDirectory = path.join(fixtureDirectory, format)
@@ -14,7 +15,7 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     mkdirSync(artifactDirectory, { recursive: true })
   }
   if (format === '7z') {
-    const scenario = `${password ? 'password' : 'plain'}-${solid ? 'solid' : 'non-solid'}${multipleSources ? '-multi-source' : ''}`
+    const scenario = `${password ? 'password' : 'plain'}-${solid ? 'solid' : 'non-solid'}${multipleSources ? '-multi-source' : ''}${fault ? `-${fault}` : ''}`
     fixtureDirectory = path.join(fixtureDirectory, scenario)
     artifactDirectory = path.join(artifactDirectory, scenario)
     mkdirSync(fixtureDirectory, { recursive: true })
@@ -22,7 +23,7 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   }
   const folder = path.join(fixtureDirectory, '真实密码分卷目录')
   mkdirSync(path.join(folder, '空目录'), { recursive: true })
-  const payload = randomBytes(2 * 1024 * 1024)
+  const payload = randomBytes((fault === 'cancel' ? 96 : 2) * 1024 * 1024)
   writeFileSync(path.join(folder, '数据.bin'), payload)
   writeFileSync(path.join(folder, '说明.txt'), '中文内容与空格密码')
   const extraSource = path.join(fixtureDirectory, '独立源文件.txt')
@@ -30,6 +31,9 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   if (multipleSources) writeFileSync(extraSource, extraContent)
   const output = path.join(fixtureDirectory, '创建分卷输出')
   mkdirSync(output)
+  const blockedPath = path.join(output, '已有文件不是目录.txt')
+  const existingContent = '用户原有内容，失败后不能覆盖或删除'
+  if (fault === 'output-file') writeFileSync(blockedPath, existingContent)
   if (!productionIpc) {
     await callDesktopBridge('clearCompressionWorkspace')
     await callDesktopBridge('clearTasks')
@@ -77,7 +81,7 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', split)
   if (!(await split.isSelected())) await split.click()
   await fill('compression-split-size', '1')
-  await fill('compression-output-path', output)
+  await fill('compression-output-path', fault === 'output-file' ? blockedPath : output)
   for (const [id, checked] of [['compression-keep-structure', true], ['compression-delete-after', false], ['compression-verify-after', true]]) {
     const input = await waitForElement(`[role="dialog"] [data-testid="${id}"]`)
     await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', input)
@@ -87,6 +91,14 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   writeFileSync(path.join(artifactDirectory, 'password-split-create-settings.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   await (await waitForElement('[data-testid="save-global-compression-settings"]')).click()
   await (await waitForElement('[data-testid="start-compression"]')).click()
+  if (fault === 'cancel') {
+    await driver.wait(() => readdirSync(output).some(name => {
+      try { return statSync(path.join(output, name)).size > 0 } catch { return false }
+    }), 30_000, 'Must observe real archive bytes before cancelling, not cancel a pending task')
+    const state = await callDesktopBridge('compressionVerificationTaskState')
+    assert.ok(state.some(row => ['running', 'compressing'].includes(row.status)), JSON.stringify(state))
+    await (await waitForElement('[data-testid="compression-job-cancel"]')).click()
+  }
   const readHistory = async () => productionIpc
     ? (await productionIpc('list_task_history_page', { limit: 100, query: { text: folder } })).records
     : callDesktopBridge('taskHistory')
@@ -95,6 +107,35 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     const rows = await callDesktopBridge('compressionVerificationTaskState')
     return rows.find(row => ['completed', 'failed', 'cancelled'].includes(row.status)) || false
   }, 90_000)
+  if (fault) {
+    const expectedStatus = fault === 'cancel' ? 'cancelled' : 'failed'
+    assert.equal(task.status, expectedStatus, JSON.stringify(task))
+    const history = await driver.wait(async () => (await readHistory()).find(row => row.taskType === 'compression' && row.sourcePaths.includes(folder) && row.status === expectedStatus) || false, 30_000)
+    if (fault === 'output-file') {
+      assert.ok(task.error?.trim(), 'Failed task must expose a final reason')
+      assert.match(task.error, /是文件，不是文件夹.*请选择其他输出目录/)
+      assert.equal(history.errorMessage, task.error, 'History must retain the final failure reason')
+      assert.equal(readFileSync(blockedPath, 'utf8'), existingContent)
+    }
+    const expectedFiles = fault === 'output-file' ? [path.basename(blockedPath)] : []
+    await driver.wait(() => JSON.stringify(readdirSync(output).sort()) === JSON.stringify(expectedFiles), 30_000, 'No archive, numbered volumes or temporary output may remain')
+    if (fault === 'cancel') {
+      await driver.wait(async () => (await callDesktopBridge('compressionVerificationTaskState')).some(row => row.logs.includes('压缩已取消')), 10_000)
+      const cancelled = (await callDesktopBridge('compressionVerificationTaskState'))[0]
+      assert.ok(cancelled.logs.every(message => !message.startsWith('压缩失败')), JSON.stringify(cancelled))
+      Object.assign(task, cancelled)
+    }
+    assert.deepEqual(readFileSync(path.join(folder, '数据.bin')), payload)
+    assert.equal(readFileSync(path.join(folder, '说明.txt'), 'utf8'), '中文内容与空格密码')
+    assert.deepEqual(readdirSync(path.join(folder, '空目录')), [])
+    await (await waitForElement('[data-testid="compression-draft-row"]')).click()
+    await waitForElement('[data-testid="compression-draft-details"]')
+    await driver.wait(async () => (await (await waitForElement('[data-testid="compression-draft-row"]')).getText()).includes(fault === 'cancel' ? '取消' : '失败'), 10_000)
+    await driver.wait(async () => driver.executeScript('return document.querySelector("[data-testid=compression-draft-details]").getAnimations({subtree:true}).every(a => a.playState !== "running")'), 10_000)
+    writeFileSync(path.join(artifactDirectory, 'failure-or-cancel.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    writeFileSync(path.join(artifactDirectory, 'failure-or-cancel.json'), JSON.stringify({ fault, task, history, outputFiles: readdirSync(output), sourcePreserved: true, buildKind: 'isolated-desktop-e2e', nativePickerVerified: false }, null, 2))
+    return
+  }
   assert.equal(task.status, 'completed', JSON.stringify(task))
   const summaryValue = await waitForElement('[data-testid="summary-progress-value"]')
   assert.equal(await summaryValue.getText(), '100%', 'Completed UI progress must settle without an animation delay')
