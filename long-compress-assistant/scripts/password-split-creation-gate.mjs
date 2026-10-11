@@ -114,6 +114,7 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     if (fault === 'output-file') {
       assert.ok(task.error?.trim(), 'Failed task must expose a final reason')
       assert.match(task.error, /是文件，不是文件夹.*请选择其他输出目录/)
+      assert.equal((task.error.match(/压缩失败[:：]/g) || []).length, 1, 'Exactly one compression failure prefix')
       assert.equal(history.errorMessage, task.error, 'History must retain the final failure reason')
       assert.equal(readFileSync(blockedPath, 'utf8'), existingContent)
     }

@@ -232,6 +232,29 @@ pub async fn extract_multiple(
     Ok(results)
 }
 
+fn compression_command_error(error: &anyhow::Error) -> String {
+    let message = error.to_string();
+    if message.starts_with("压缩失败:") || message.starts_with("压缩失败：") {
+        message
+    } else {
+        format!("压缩失败: {message}")
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn compression_command_error_preserves_reason_without_duplicate_prefix() {
+    use crate::services::compression_service::CompressionError;
+    let error = anyhow::Error::from(CompressionError::CompressionFailed(
+        "目标不是文件夹，请更换目录".into(),
+    ));
+    assert_eq!(compression_command_error(&error), "压缩失败: 目标不是文件夹，请更换目录");
+    assert_eq!(compression_command_error(&anyhow::anyhow!("磁盘写入失败 (os error 112)")),
+        "压缩失败: 磁盘写入失败 (os error 112)");
+    assert_eq!(compression_command_error(&anyhow::anyhow!("压缩失败：保留原始详情")),
+        "压缩失败：保留原始详情");
+}
+
 #[command]
 pub async fn compress_files(
     window: Window,
@@ -252,7 +275,7 @@ pub async fn compress_files(
     {
         Ok(_) => published_archive_output(Path::new(&output_path), split)
             .map_err(|error| format!("压缩产物已发布，但读取结果清单失败；请保留输出并检查：{error}")),
-        Err(e) => Err(format!("压缩失败: {}", e)),
+        Err(e) => Err(compression_command_error(&e)),
     };
 
     cleanup_task(&task_id);
