@@ -1133,7 +1133,13 @@ impl CompressionService {
                 CompressionError::CompressionFailed(missing_7z_message())
             })?;
             let mut command = crate::utils::process::command(engine);
-            command.arg("t").arg("-y").arg("-p-").arg(output);
+            command.arg("t").arg("-y");
+            if let Some(password) = password.filter(|value| !value.is_empty()) {
+                command.arg(format!("-p{password}"));
+            } else {
+                command.arg("-p-");
+            }
+            command.arg(output);
             self.run_command_cancellable(command)?
         };
 
@@ -4406,6 +4412,61 @@ mod tests_continued {
                 Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.is_err());
             assert_eq!(std::fs::read_dir(wrong_output).unwrap().count(), 0);
             for (path, bytes) in volume_snapshot { assert_eq!(std::fs::read(path).unwrap(), bytes); }
+        }
+    }
+
+    #[tokio::test]
+    async fn seven_zip_split_native_creation_verification_publication_and_extraction() {
+        // Public request/UI gates remain closed until the complete task path is validated.
+        for password in [None, Some("中文密码 + !测试")] {
+            for solid in [false, true] {
+                let temp = tempfile::tempdir().unwrap();
+                let folder = temp.path().join("资料");
+                std::fs::create_dir_all(folder.join("空目录")).unwrap();
+                std::fs::write(folder.join("内容.txt"), b"folder payload").unwrap();
+                std::fs::write(folder.join("空文件.txt"), b"").unwrap();
+                let second = temp.path().join("第二份.txt");
+                std::fs::write(&second, b"second payload").unwrap();
+                let sources = vec![folder.to_string_lossy().into_owned(), second.to_string_lossy().into_owned()];
+                let output = temp.path().join("分享.7z");
+                let service = CompressionService::for_testing();
+                let staged = CompressionService::temporary_compression_output(&output).unwrap();
+                native_compression::seven_zip::compress(&service, None, "seven-split", &sources,
+                    &staged.to_string_lossy(), CompressionOptions {
+                        format: Some("7z".into()), password: password.map(str::to_owned),
+                        split_size: Some(37), create_solid_archive: solid, preserve_paths: Some(true), ..Default::default()
+                    }).unwrap();
+                let staged_first = PathBuf::from(format!("{}.001", staged.display()));
+                service.verify_compression_output(CompressionRoute::SevenZip, &staged_first, password, true).unwrap();
+                if password.is_some() {
+                    assert!(service.verify_compression_output(CompressionRoute::SevenZip, &staged_first, Some("wrong"), true).is_err());
+                }
+                CompressionService::finalize_compression_output(Ok(()), &staged, &output, true, false).unwrap();
+                assert!(!staged_first.exists());
+                assert!(!output.exists());
+                let volumes: Vec<_> = std::fs::read_dir(temp.path()).unwrap().map(|entry| entry.unwrap().path())
+                    .filter(|path| path.file_name().unwrap().to_string_lossy().starts_with("分享.7z."))
+                    .map(|path| { let data = std::fs::read(&path).unwrap(); assert!(data.len() <= 37); (path, data) }).collect();
+                assert!(volumes.len() > 1);
+                let first = PathBuf::from(format!("{}.001", output.display()));
+                let extracted = temp.path().join("解压结果");
+                std::fs::create_dir(&extracted).unwrap();
+                // Independent bundled 7-Zip. This proves format interoperability,
+                // not the currently gated application's encrypted 7Z split reader.
+                let mut command = crate::utils::process::command(find_7z_command().unwrap());
+                command.args(["x", "-y"]).arg(format!("-p{}", password.unwrap_or("-")))
+                    .arg(format!("-o{}", extracted.display())).arg(&first);
+                let result = service.run_command_cancellable(command).unwrap();
+                assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+                assert_eq!(std::fs::read(extracted.join("资料/内容.txt")).unwrap(), b"folder payload");
+                assert_eq!(std::fs::read(extracted.join("资料/空文件.txt")).unwrap(), b"");
+                assert_eq!(std::fs::read(extracted.join("第二份.txt")).unwrap(), b"second payload");
+                assert!(extracted.join("资料/空目录").is_dir(), "password={password:?}, solid={solid}, entries={:?}", walkdir::WalkDir::new(&extracted).into_iter().map(|entry| entry.unwrap().path().to_owned()).collect::<Vec<_>>());
+                assert_eq!(std::fs::read(folder.join("内容.txt")).unwrap(), b"folder payload");
+                assert_eq!(std::fs::read(&second).unwrap(), b"second payload");
+                for (path, data) in volumes { assert_eq!(std::fs::read(path).unwrap(), data); }
+                assert!(std::fs::read_dir(temp.path()).unwrap().all(|entry| !entry.unwrap().file_name().to_string_lossy().starts_with(".split-source-")));
+            }
         }
     }
 

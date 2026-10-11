@@ -14,6 +14,16 @@ use tauri::Window;
 
 const PROGRESS_EMIT_INTERVAL_BYTES: u64 = 4 * 1024 * 1024;
 
+fn archive_entry(path: &Path, name: String) -> sevenz_rust::SevenZArchiveEntry {
+    let mut entry = sevenz_rust::SevenZArchiveEntry::from_path(path, name);
+    // sevenz-rust 0.5.4's writer inverts is_anti_item when serializing K_ANTI
+    // for streamless entries. True here makes it OMIT the deletion marker.
+    // Without this writer-only workaround 7-Zip silently deletes empty dirs.
+    // Revisit with any dependency upgrade; external extraction tests guard it.
+    entry.is_anti_item = true;
+    entry
+}
+
 struct CancellableProgressReader<R, F> {
     inner: R,
     cancellation_flag: Arc<AtomicBool>,
@@ -66,6 +76,41 @@ pub(crate) fn compress<R: CompressionRuntime>(
         std::fs::create_dir_all(parent)?;
     }
 
+    if let Some(split_size) = options.split_size.filter(|size| *size > 0) {
+        runtime.check_cancellation()?;
+        // Create the real archive first, then split its bytes. Keep the full
+        // archive on disk rather than buffering it in memory.
+        struct TemporaryArchive(std::path::PathBuf);
+        impl Drop for TemporaryArchive {
+            fn drop(&mut self) { let _ = std::fs::remove_file(&self.0); }
+        }
+        let staged = crate::services::output_publish_transaction::staged_output_path(
+            Path::new(output), "split-source")?;
+        let reservation = std::fs::OpenOptions::new().write(true).create_new(true).open(&staged)?;
+        let temporary = TemporaryArchive(staged);
+        drop(reservation);
+        let mut unsplit = options.clone();
+        unsplit.split_size = None;
+        compress(runtime, window, task_id, sources, &temporary.0.to_string_lossy(), unsplit)?;
+        runtime.check_cancellation()?;
+        let mut progress_gate = crate::services::progress_gate::ProgressGate::new();
+        let result = crate::services::split_compression::SplitCompressionService::split_archive_file_with_progress(
+            &temporary.0, Path::new(output), split_size, || runtime.check_cancellation(),
+            |processed, total| {
+                if processed == 0 || progress_gate.allow(processed >= total) {
+                    if let Some(window) = window {
+                        runtime.emit_split_progress(window, task_id, processed, total);
+                    }
+                }
+            },
+        )?;
+        if let Some(window) = window {
+            runtime.emit_log(window, task_id, &format!("分卷压缩完成：{} 个分卷", result.part_count),
+                crate::models::compression::TaskLogSeverity::Success);
+        }
+        return Ok(());
+    }
+
     let preserve_paths = options.preserve_paths.unwrap_or(true);
     let entries = compression_entries::collect(sources, preserve_paths, true)?;
     let total_bytes = entries
@@ -102,7 +147,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
 
         for entry in &entries {
             runtime.check_cancellation()?;
-            let archive_entry = sevenz_rust::SevenZArchiveEntry::from_path(
+            let archive_entry = archive_entry(
                 &entry.path,
                 entry.archive_name.clone(),
             );
@@ -158,7 +203,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
         for (index, entry) in entries.iter().enumerate() {
             runtime.check_cancellation()?;
             let archive_entry =
-                sevenz_rust::SevenZArchiveEntry::from_path(&entry.path, entry.archive_name.clone());
+                archive_entry(&entry.path, entry.archive_name.clone());
             if entry.is_dir {
                 writer
                     .push_archive_entry::<&[u8]>(archive_entry, None)
@@ -260,6 +305,36 @@ mod tests {
             _total_bytes: u64,
         ) {
         }
+    }
+
+    #[test]
+    fn split_collision_preserves_existing_volume_and_cleans_temporary_archive() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        let output = temp.path().join("archive.7z");
+        let existing = temp.path().join("archive.7z.001");
+        std::fs::write(&source, b"source payload").unwrap();
+        std::fs::write(&existing, b"existing volume").unwrap();
+        assert!(compress(&TestRuntime::default(), None, "collision", &[source.to_string_lossy().into_owned()],
+            &output.to_string_lossy(), CompressionOptions { split_size: Some(37), ..Default::default() }).is_err());
+        assert_eq!(std::fs::read(&existing).unwrap(), b"existing volume");
+        assert_eq!(std::fs::read(&source).unwrap(), b"source payload");
+        assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 2);
+    }
+
+    #[test]
+    fn cancelled_split_leaves_no_archive_or_volumes() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        let output = temp.path().join("archive.7z");
+        std::fs::write(&source, b"source payload").unwrap();
+        let runtime = TestRuntime::default();
+        runtime.cancelled.store(true, Ordering::Relaxed);
+        let error = compress(&runtime, None, "cancelled-split", &[source.to_string_lossy().into_owned()],
+            &output.to_string_lossy(), CompressionOptions { split_size: Some(37), ..Default::default() }).unwrap_err();
+        assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+        assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 1);
+        assert_eq!(std::fs::read(&source).unwrap(), b"source payload");
     }
 
     #[test]
