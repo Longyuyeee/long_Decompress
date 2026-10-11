@@ -5,7 +5,8 @@ import path from 'node:path'
 import { By } from 'selenium-webdriver'
 import { spawnSync } from 'node:child_process'
 
-export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip }) {
+export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip, multipleSources = false }) {
+  assert.ok(!multipleSources || (!productionIpc && format === '7z'), 'Multi-source gate currently uses the isolated 7Z desktop workflow')
   if (format !== 'zip') {
     fixtureDirectory = path.join(fixtureDirectory, format)
     artifactDirectory = path.join(artifactDirectory, format)
@@ -13,7 +14,7 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     mkdirSync(artifactDirectory, { recursive: true })
   }
   if (format === '7z') {
-    const scenario = `${password ? 'password' : 'plain'}-${solid ? 'solid' : 'non-solid'}`
+    const scenario = `${password ? 'password' : 'plain'}-${solid ? 'solid' : 'non-solid'}${multipleSources ? '-multi-source' : ''}`
     fixtureDirectory = path.join(fixtureDirectory, scenario)
     artifactDirectory = path.join(artifactDirectory, scenario)
     mkdirSync(fixtureDirectory, { recursive: true })
@@ -24,6 +25,9 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   const payload = randomBytes(2 * 1024 * 1024)
   writeFileSync(path.join(folder, '数据.bin'), payload)
   writeFileSync(path.join(folder, '说明.txt'), '中文内容与空格密码')
+  const extraSource = path.join(fixtureDirectory, '独立源文件.txt')
+  const extraContent = '这个文件不在源目录中，应与目录一起打入同一个分卷归档。'
+  if (multipleSources) writeFileSync(extraSource, extraContent)
   const output = path.join(fixtureDirectory, '创建分卷输出')
   mkdirSync(output)
   if (!productionIpc) {
@@ -39,13 +43,23 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     await (await waitForElement('[data-testid="dropzone-folder"]')).click()
   }
   await waitForElement('[data-testid="compression-draft-row"]')
+  if (multipleSources) {
+    await callDesktopBridge('queueDesktopDialogSelections', [[extraSource]])
+    await (await waitForElement('[data-testid="dropzone-file"]')).click()
+    await driver.wait(async () => (await driver.findElements(By.css('[data-testid="compression-group-checkbox"]'))).length === 2, 10_000)
+    for (const checkbox of await driver.findElements(By.css('[data-testid="compression-group-checkbox"]'))) await checkbox.click()
+    await (await waitForElement('[data-testid="compression-grouping-actions"] button')).click()
+    await waitForElement('[data-testid="compression-group-row"]')
+    assert.equal((await driver.findElements(By.css('[data-testid="compression-draft-row"]'))).length, 0, 'Both sources must be grouped into one job')
+    writeFileSync(path.join(artifactDirectory, 'multi-source-group.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  }
   await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
   if (format === '7z') {
-    await (await waitForElement('[data-testid="compression-format-select"]')).click()
+    await (await waitForElement('[role="dialog"] [data-testid="compression-format-select"]')).click()
     await (await driver.findElement(By.xpath('//button[@role="option" and normalize-space(.)="7Z"]'))).click()
   }
   const fill = async (id, value) => {
-    const input = await waitForElement(`[data-testid="${id}"]`)
+    const input = await waitForElement(`[role="dialog"] [data-testid="${id}"]`)
     await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', input)
     await input.clear()
     if (value) await input.sendKeys(value)
@@ -53,19 +67,19 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   }
   await fill('compression-password-input', password)
   if (format === '7z') {
-    const input = await waitForElement('[data-testid="compression-solid-toggle"]')
+    const input = await waitForElement('[role="dialog"] [data-testid="compression-solid-toggle"]')
     await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', input)
     if ((await input.isSelected()) !== solid) await input.click()
     writeFileSync(path.join(artifactDirectory, 'solid-settings.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   }
-  const split = await waitForElement('[data-testid="compression-split-toggle"]')
+  const split = await waitForElement('[role="dialog"] [data-testid="compression-split-toggle"]')
   assert.equal(await split.isEnabled(), true)
   await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', split)
   if (!(await split.isSelected())) await split.click()
   await fill('compression-split-size', '1')
   await fill('compression-output-path', output)
   for (const [id, checked] of [['compression-keep-structure', true], ['compression-delete-after', false], ['compression-verify-after', true]]) {
-    const input = await waitForElement(`[data-testid="${id}"]`)
+    const input = await waitForElement(`[role="dialog"] [data-testid="${id}"]`)
     await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', input)
     if ((await input.isSelected()) !== checked) await input.click()
   }
@@ -111,13 +125,24 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   assert.equal(readFileSync(path.join(restored, '说明.txt'), 'utf8'), '中文内容与空格密码')
   assert.deepEqual(readdirSync(path.join(restored, '空目录')), [])
   assert.deepEqual(readFileSync(path.join(folder, '数据.bin')), payload)
+  if (multipleSources) {
+    assert.equal(readFileSync(path.join(extracted, path.basename(extraSource)), 'utf8'), extraContent)
+    assert.equal(readFileSync(extraSource, 'utf8'), extraContent)
+    assert.deepEqual(readdirSync(extracted).sort(), [path.basename(folder), path.basename(extraSource)].sort())
+  }
   parts.forEach((file, index) => assert.deepEqual(readFileSync(file), snapshots[index]))
   assert.equal(await summaryValue.getText(), '100%', 'Late progress must not overwrite completed UI progress')
   writeFileSync(path.join(artifactDirectory, 'password-split-create-result.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   const history = await readHistory()
   assert.ok(history.some(row => row.status === 'completed' && row.sourcePaths.includes(folder)))
+  if (multipleSources) {
+    const matching = history.filter(row => row.taskType === 'compression' && row.sourcePaths.includes(folder))
+    assert.equal(matching.length, 1, 'One group must produce one compression history record')
+    assert.equal(matching[0].status, 'completed')
+    assert.deepEqual([...matching[0].sourcePaths].sort(), [folder, extraSource].sort())
+  }
   writeFileSync(path.join(artifactDirectory, 'password-split-create.json'), JSON.stringify({
-    format, encrypted: Boolean(password), solid, volumeCount: parts.length, task, buildKind: productionIpc ? 'installed-production' : 'isolated-desktop-e2e', nativePickerVerified: false, extractionViaProductionCommand: true,
+    format, encrypted: Boolean(password), solid, multipleSources, volumeCount: parts.length, task, buildKind: productionIpc ? 'installed-production' : 'isolated-desktop-e2e', nativePickerVerified: false, extractionViaProductionCommand: true,
     checks: ['UI password and split settings', ...(format === '7z' ? ['UI solid toggle', 'independent 7-Zip solid/encryption metadata'] : []), 'UI start compression', 'real directory and multiple files', '1 MiB numeric volumes', 'verified publication', 'extracted payload and empty directory', 'source and volumes preserved', 'completed compression history'],
   }, null, 2))
 }

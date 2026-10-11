@@ -4956,6 +4956,7 @@ try {
       for (const solid of [false, true]) {
         console.log(`[desktop-e2e] 7Z split creation encrypted=${Boolean(password)} solid=${solid}`)
         await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, format: '7z', password, solid, bundledSevenZip })
+        await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, format: '7z', password, solid, bundledSevenZip, multipleSources: true })
       }
     }
     await runSevenZipVolumeReadGate({ driver, waitForElement, callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
