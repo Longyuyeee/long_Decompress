@@ -46,7 +46,7 @@ fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
     let marker = message.split_once("[archive-inspection:")
         .and_then(|(_, tail)| tail.split_once(']').map(|(code, _)| code));
     let category = marker.filter(|code| matches!(*code,
-        "damaged" | "missing-volume" | "permission" | "timeout" |
+        "damaged" | "missing-volume" | "incomplete" | "permission" | "timeout" |
         "engine-unavailable" | "engine-start" | "io" | "ambiguous-data"
     )).unwrap_or("unknown");
     let observed = record.failure.as_ref().filter(|failure| failure.schema_version == 1)
@@ -492,7 +492,7 @@ pub struct HistoryQuery {
 fn history_failure_category_sql() -> String {
     let categories = ["rollback-incomplete", "output-conflict", "publication-failed", "verification-failed",
         "source-changed", "source-missing", "source-unavailable", "source-invalid", "damaged",
-        "missing-volume", "permission", "timeout", "engine-unavailable", "engine-start", "io", "ambiguous-data", "unknown"];
+        "missing-volume", "incomplete", "permission", "timeout", "engine-unavailable", "engine-start", "io", "ambiguous-data", "unknown"];
     let accepted = categories.iter().map(|value| format!("'{value}'")).collect::<Vec<_>>().join(",");
     let mut expression = format!("CASE WHEN status != 'failed' THEN NULL WHEN json_valid(failure) THEN CASE WHEN json_extract(failure, '$.schemaVersion') = 1 AND json_extract(failure, '$.category') IN ({accepted}) THEN json_extract(failure, '$.category') END END");
     let mut fallback = String::from("CASE WHEN status != 'failed' THEN NULL ");
@@ -669,6 +669,28 @@ pub async fn clear_task_history() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn incomplete_volume_failure_survives_reopen_and_filtering() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("volume-history.db");
+        let db = crate::database::connection::DatabaseConnection::new(&path, None).await.unwrap();
+        let message = "[archive-inspection:incomplete] 无法读取完整 ZIP 卷组：Missing ZIP volumes: 资料.zip.002";
+        let record = serde_json::from_value(serde_json::json!({
+            "id":"missing-volume", "name":"资料.zip.001", "taskType":"decompression", "workloadKind":"archive",
+            "status":"failed", "sourcePaths":["D:/资料.zip.001"], "outputPath":"D:/output",
+            "completedAt":"2026-10-11T00:00:00Z", "durationMs":1, "processedBytes":0,
+            "totalBytes":0, "logs":[], "errorMessage":message
+        })).unwrap();
+        save_task_history_to_pool(db.pool(), record).await.unwrap();
+        db.pool().close().await;
+        let reopened = crate::database::connection::DatabaseConnection::new(&path, None).await.unwrap();
+        let query = HistoryQuery { failure_category: Some("incomplete".into()), ..Default::default() };
+        let page = history_query_from_pool(reopened.pool(), 100, None, query).await.unwrap();
+        assert_eq!(page.records.len(), 1);
+        assert_eq!(page.records[0].failure.as_ref().unwrap().category, "incomplete");
+        assert_eq!(page.records[0].error_message.as_deref(), Some(message));
+    }
 
     #[tokio::test]
     async fn four_compression_snapshots_survive_database_reopen_without_secrets() {

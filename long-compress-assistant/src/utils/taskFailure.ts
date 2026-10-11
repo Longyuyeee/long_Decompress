@@ -11,6 +11,7 @@ export const failureCategories = {
   'source-invalid': '源路径不是普通文件',
   damaged: '文件损坏或不完整',
   'missing-volume': '缺失分卷',
+  incomplete: '卷组不完整或无效',
   permission: '访问权限',
   timeout: '检测超时',
   'engine-unavailable': '引擎不可用',
@@ -74,6 +75,11 @@ export function getTaskRecoveryGuidance(record: Pick<TaskHistoryRecord, 'status'
       return { title: '文件损坏或不完整：先确认来源', steps: [
         '先重新获取完整文件，或联系提供者核对文件大小与校验值；不要覆盖仍需核对的原文件。',
         '重新选择完整文件后再创建新任务。本次已记录损坏或不完整，反复尝试密码不能修复文件。', report,
+      ] }
+    case 'incomplete':
+      return { title: '卷组不完整或无效：先检查分卷', steps: [
+        '按原始错误核对缺失、空文件或无法读取的分卷；将同一归档的全部分卷放在同一目录，保持原文件名。',
+        '向提供者核对完整分卷列表和大小，补齐或重新获取异常分卷后再选择首卷重试；反复输入密码不能补齐分卷。', report,
       ] }
     case 'missing-volume':
       return { title: '缺失分卷：补齐后重新检查', steps: [
