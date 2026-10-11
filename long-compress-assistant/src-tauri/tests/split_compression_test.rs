@@ -6,6 +6,27 @@ use std::io::Write;
 use anyhow::Result;
 
 #[tokio::test]
+async fn unsupported_split_combinations_fail_without_creating_output() {
+    let temp = tempdir().unwrap();
+    let source = temp.path().join("source.txt");
+    fs::write(&source, b"payload").unwrap();
+    for (input, password, expected) in [
+        (source.clone(), Some("密码测试".to_string()), "Encrypted split ZIP"),
+        (temp.path().to_path_buf(), None, "regular files only"),
+    ] {
+        let output = temp.path().join("unsupported.zip");
+        let error = SplitCompressionService::new().compress_to_split_zips(
+            &[input.to_string_lossy().into_owned()], &output,
+            CompressionOptions { split_size: Some(10), password, ..Default::default() },
+        ).await.unwrap_err();
+        assert!(error.to_string().contains(expected), "{error}");
+        assert!(!output.exists());
+        assert!(!temp.path().join("unsupported.zip.001").exists());
+        assert_eq!(fs::read(&source).unwrap(), b"payload");
+    }
+}
+
+#[tokio::test]
 async fn test_split_compression_basic() {
     let temp_dir = tempdir().unwrap();
     let test_file1 = temp_dir.path().join("test1.txt");
