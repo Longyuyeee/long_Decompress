@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import CompletedExtractionOutput from '@/components/tasks/CompletedExtractionOutput.vue'
+import Modal from '@/components/ui/Modal.vue'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useHistoryStore } from '@/stores/history'
 import { useAppStore } from '@/stores/app'
@@ -49,6 +51,7 @@ const loadSelectedLogs = async () => {
 watch(() => selectedRecord.value?.id, () => { void loadSelectedLogs() })
 onUnmounted(() => { detailGeneration++ })
 const showClearConfirm = ref(false)
+const showStatistics = ref(false)
 const failureFilter = ref<'all' | FailureCategory>('all')
 const exporting = ref(false)
 const hasFilters = computed(() => !!query.value.trim() || typeFilter.value !== 'all' || statusFilter.value !== 'all' || failureFilter.value !== 'all' || rangeFilter.value !== 'all')
@@ -244,11 +247,13 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
     <div class="mx-auto w-full max-w-[1500px] space-y-5 pb-8">
       <header class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p class="text-xs font-black uppercase tracking-[0.24em] text-primary mb-2">{{ appStore.t('history.eyebrow') }}</p>
-          <h1 class="text-3xl lg:text-4xl font-black text-content tracking-tight">{{ appStore.t('nav.history') }}</h1>
-          <p class="text-sm text-muted mt-2">{{ appStore.t('history.subtitle') }}</p>
+          <div class="flex items-center gap-3">
+            <h1 class="text-3xl lg:text-4xl font-black text-content tracking-tight">{{ appStore.t('nav.history') }}</h1>
+            <HelpHint label="历史记录说明"><span data-testid="history-retention-policy">搜索和筛选覆盖全部已保存历史。页面最多显示 500 条，更早和更新记录均可继续浏览，不会删除历史。新完成的任务请刷新；统计仅针对当前显示记录。</span></HelpHint>
+          </div>
         </div>
         <div class="flex gap-2">
+          <button type="button" data-testid="history-open-statistics" class="history-ghost-button" @click="showStatistics = true"><i class="pi pi-chart-bar"></i>统计</button>
           <button type="button" class="history-ghost-button" :disabled="historyStore.isLoading" @click="refresh">
             <i class="pi pi-refresh" :class="{ 'pi-spin': historyStore.isLoading }"></i>
             {{ appStore.t('history.refresh') }}
@@ -259,14 +264,11 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
         </div>
       </header>
 
-      <p class="text-xs text-muted" data-testid="history-retention-policy">
-        搜索和筛选覆盖全部已保存历史，无需逐页寻找。当前窗口显示 {{ historyStore.records.length }} 条，最多保留 500 条在页面中；更早和更新记录均可继续浏览，未删除历史。
-        下方统计和趋势仅针对当前显示的记录。新完成的任务请刷新。
-      </p>
       <button v-if="historyStore.hasNewer" class="history-control" :disabled="historyStore.isLoading" @click="loadNewer">查看较新的记录</button>
 
-      <details class="space-y-4">
-        <summary class="cursor-pointer text-sm text-muted w-fit">查看当前结果统计与趋势</summary>
+      <Modal v-model:visible="showStatistics" title="统计与趋势" size="lg" cancel-text="关闭统计" :show-footer="false">
+      <div class="space-y-4" data-testid="history-statistics-content">
+      <p class="text-sm text-muted">仅统计当前显示的 {{ historyStore.records.length }} 条记录，不代表全部历史；趋势展示其中最近 14 天的任务。</p>
       <section class="grid grid-cols-2 xl:grid-cols-4 gap-3" data-testid="history-kpis">
         <article class="history-kpi history-kpi-primary">
           <div><span>{{ appStore.t('history.total_tasks') }}</span><i class="pi pi-inbox"></i></div>
@@ -311,7 +313,8 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
         </div>
       </section>
 
-      </details>
+      </div>
+      </Modal>
 
       <section class="history-panel p-3 sm:p-4 flex flex-col xl:flex-row gap-3" aria-label="History filters">
         <label class="relative flex-1 min-w-0">
