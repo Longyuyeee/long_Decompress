@@ -1014,7 +1014,11 @@ impl CompressionService {
         let result = route_result
             .map_err(Self::normalize_storage_full_error)
             .and_then(|_| {
-                if !split_requested {
+                if split_requested {
+                    output_publish_transaction::publish_verified_volumes(
+                        working_output, final_output, || cancelled,
+                    ).map_err(Self::publication_error)?;
+                } else {
                     output_publish_transaction::publish_verified_file(
                         working_output,
                         final_output,
@@ -1027,6 +1031,7 @@ impl CompressionService {
             .map_err(Self::normalize_storage_full_error);
 
         if result.is_err() {
+            output_publish_transaction::cleanup_staged_output_family(working_output);
             Self::cleanup_failed_compression_outputs(working_output, split_requested);
         }
         result
@@ -1050,7 +1055,7 @@ impl CompressionService {
 
     fn cleanup_unverified_compression_output(
         working_output: &Path,
-        final_output: &Path,
+        _final_output: &Path,
         split_requested: bool,
         creation_succeeded: bool,
     ) {
@@ -1058,9 +1063,7 @@ impl CompressionService {
         // existing destination, so its files must never be treated as our output.
         if !creation_succeeded { return; }
         if split_requested {
-            crate::services::split_compression::SplitCompressionService::cleanup_parts(
-                final_output,
-            );
+            output_publish_transaction::cleanup_staged_output_family(working_output);
         } else {
             Self::cleanup_failed_compression_outputs(working_output, false);
         }
@@ -1200,11 +1203,7 @@ impl CompressionService {
             let verification_password = options.password.clone();
             let split_requested = options.split_size.is_some_and(|size| size > 0);
             let final_output = PathBuf::from(&output_path);
-            let working_output = if split_requested {
-                final_output.clone()
-            } else {
-                Self::temporary_compression_output(&final_output)?
-            };
+            let working_output = Self::temporary_compression_output(&final_output)?;
             let working_output_string = working_output.to_string_lossy().to_string();
             service.emit_log(&window, &task_id, &format!("开始压缩到: {}", output_path), TaskLogSeverity::Info);
             let route = compression_format::compression_route(&requested_format).ok_or_else(|| {
@@ -1244,7 +1243,7 @@ impl CompressionService {
                 CompressionRoute::Lzma => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
             };
             let verification_output = if split_requested {
-                PathBuf::from(format!("{}.001", output_path))
+                PathBuf::from(format!("{}.001", working_output_string))
             } else {
                 working_output.clone()
             };
@@ -1299,13 +1298,18 @@ impl CompressionService {
                 );
             }
             let res = res.and_then(|_| service.check_cancellation());
-            let res = Self::finalize_compression_output(
+            let res = if split_requested && res.is_ok() {
+                output_publish_transaction::publish_verified_volumes(
+                    &working_output, &final_output,
+                    || service.cancellation_flag.load(Ordering::Relaxed),
+                ).map_err(Self::publication_error)
+            } else { Self::finalize_compression_output(
                 res,
                 &working_output,
                 &final_output,
                 split_requested,
                 service.cancellation_flag.load(Ordering::Relaxed),
-            );
+            ) };
             if res.is_ok() {
                 if delete_after {
                     let verified_output = if split_requested {
@@ -4062,7 +4066,10 @@ mod tests_continued {
         }
         let temp = tempfile::tempdir().expect("temp dir");
         let source = temp.path().join("source.bin");
-        let output = temp.path().join("archive.zip");
+        let final_output = temp.path().join("archive.zip");
+        let output = CompressionService::temporary_compression_output(&final_output).unwrap();
+        let existing = temp.path().join("archive.zip.001");
+        std::fs::write(&existing, b"existing user archive").unwrap();
         let mut state = 0x1234_5678u32;
         let payload: Vec<u8> = (0..256 * 1024)
             .map(|_| {
@@ -4101,9 +4108,10 @@ mod tests_continued {
                 true,
             )
             .is_err());
-        CompressionService::cleanup_unverified_compression_output(&output, &output, true, true);
+        CompressionService::cleanup_unverified_compression_output(&output, &final_output, true, true);
 
         assert!(source.exists(), "verification failure must preserve the source");
+        assert_eq!(std::fs::read(existing).unwrap(), b"existing user archive");
         assert!(result.part_files.iter().all(|part| !part.exists()));
     }
 

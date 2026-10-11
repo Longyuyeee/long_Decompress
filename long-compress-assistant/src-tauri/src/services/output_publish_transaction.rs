@@ -122,9 +122,118 @@ pub(crate) fn publish_verified_file(
     result
 }
 
+/// Publish a numeric volume set without overwriting any destination. This is
+/// rollback-capable, not an atomic multi-file filesystem transaction.
+pub(crate) fn publish_verified_volumes(
+    staged: &Path,
+    destination: &Path,
+    mut is_cancelled: impl FnMut() -> bool,
+) -> Result<(), PublishError> {
+    let mut published = Vec::new();
+    let result = (|| {
+        if staged.parent() != destination.parent() {
+            return Err(PublishError::CrossDirectoryPublish);
+        }
+        if !staged_output_belongs_to_destination(staged, destination) {
+            return Err(PublishError::InvalidStagedOutput(staged.to_path_buf()));
+        }
+        let parent = staged.parent().unwrap_or_else(|| Path::new("."));
+        let prefix = format!("{}.", staged.file_name().unwrap().to_string_lossy());
+        let final_prefix = format!("{}.", destination.file_name().unwrap().to_string_lossy());
+        let mut parts = Vec::new();
+        for entry in std::fs::read_dir(parent)? {
+            let entry = entry?;
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            if name == destination.file_name().unwrap().to_string_lossy()
+                || name.strip_prefix(&final_prefix).is_some_and(|suffix|
+                    !suffix.is_empty() && suffix.bytes().all(|value| value.is_ascii_digit())) {
+                return Err(PublishError::TargetAppeared(entry.path()));
+            }
+            if let Some(suffix) = name.strip_prefix(&prefix) {
+                let index = suffix.parse::<usize>().map_err(|_| PublishError::InvalidStagedOutput(entry.path()))?;
+                let metadata = std::fs::symlink_metadata(entry.path())?;
+                if !metadata.file_type().is_file() || metadata.len() == 0 || suffix != format!("{index:03}") {
+                    return Err(PublishError::InvalidStagedOutput(entry.path()));
+                }
+                parts.push((index, entry.path(), parent.join(format!("{final_prefix}{suffix}"))));
+            }
+        }
+        parts.sort_by_key(|part| part.0);
+        if parts.is_empty() || parts.iter().enumerate().any(|(index, part)| part.0 != index + 1) {
+            return Err(PublishError::InvalidStagedOutput(staged.to_path_buf()));
+        }
+        for (_, source, target) in &parts {
+            if is_cancelled() { return Err(PublishError::Cancelled); }
+            // Explicitly omit REPLACE_EXISTING (std::fs::rename replaces files).
+            // Moving also supports FAT/exFAT without requiring hard links.
+            #[cfg(windows)]
+            let transfer = {
+                use std::os::windows::ffi::OsStrExt;
+                let source_wide: Vec<u16> = source.as_os_str().encode_wide().chain(Some(0)).collect();
+                let target_wide: Vec<u16> = target.as_os_str().encode_wide().chain(Some(0)).collect();
+                let moved = unsafe {
+                    windows_sys::Win32::Storage::FileSystem::MoveFileExW(
+                        source_wide.as_ptr(), target_wide.as_ptr(), 0,
+                    )
+                };
+                if moved == 0 { Err(std::io::Error::last_os_error()) } else { Ok(()) }
+            };
+            #[cfg(not(windows))]
+            let transfer = std::fs::hard_link(source, target);
+            transfer.map_err(|error| {
+                if error.kind() == std::io::ErrorKind::AlreadyExists {
+                    PublishError::TargetAppeared(target.clone())
+                } else { PublishError::Io(error) }
+            })?;
+            published.push(target.clone());
+        }
+        if is_cancelled() { return Err(PublishError::Cancelled); }
+        Ok(())
+    })();
+    if result.is_err() {
+        for path in published { let _ = std::fs::remove_file(path); }
+    }
+    cleanup_staged_output_family(staged);
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn volume_publication_handles_success_conflict_cancellation_and_gaps() {
+        for scenario in ["success", "conflict", "cancel", "gap", "late-conflict"] {
+            let temp = tempfile::tempdir().unwrap();
+            let target = temp.path().join("archive.zip");
+            let staged = staged_output_path(&target, "compress").unwrap();
+            let part = |base: &Path, index: usize| PathBuf::from(format!("{}.{index:03}", base.display()));
+            for index in 1..=3 {
+                if scenario != "gap" || index != 2 {
+                    std::fs::write(part(&staged, index), vec![index as u8; 10]).unwrap();
+                }
+            }
+            if scenario == "conflict" { std::fs::write(part(&target, 2), b"user data").unwrap(); }
+            let mut checks = 0;
+            let result = publish_verified_volumes(&staged, &target, || {
+                checks += 1;
+                if scenario == "late-conflict" && checks == 2 {
+                    std::fs::write(part(&target, 2), b"user data").unwrap();
+                }
+                scenario == "cancel" && checks == 2
+            });
+            assert_eq!(result.is_ok(), scenario == "success", "{scenario}");
+            for index in 1..=3 {
+                assert!(!part(&staged, index).exists());
+                if scenario == "success" {
+                    assert_eq!(std::fs::read(part(&target, index)).unwrap(), vec![index as u8; 10]);
+                } else if (scenario == "conflict" || scenario == "late-conflict") && index == 2 {
+                    assert_eq!(std::fs::read(part(&target, index)).unwrap(), b"user data");
+                } else { assert!(!part(&target, index).exists(), "{scenario}: {index}"); }
+            }
+        }
+    }
 
     #[test]
     fn real_file_publish_preserves_bytes_and_removes_staging() {

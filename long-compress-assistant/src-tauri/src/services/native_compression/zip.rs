@@ -295,13 +295,19 @@ mod tests {
                 std::fs::write(folder.join("内容.txt"), b"folder payload").unwrap();
                 let second = temp.path().join("第二份.txt");
                 std::fs::write(&second, b"second payload").unwrap();
-                let output = temp.path().join("bundle.zip");
+                let final_output = temp.path().join("bundle.zip");
+                let output = crate::services::output_publish_transaction::staged_output_path(&final_output, "compress").unwrap();
                 compress(&TestRuntime::default(), None, "split-test",
                     &[folder.to_string_lossy().into_owned(), second.to_string_lossy().into_owned()],
                     &output.to_string_lossy(), CompressionOptions {
                         password: password.map(str::to_owned), zip_password_encoding: mode,
                         split_size: Some(37), preserve_paths: Some(true), ..Default::default()
                     }).unwrap();
+                let staged_first = std::path::PathBuf::from(format!("{}.001", output.display()));
+                crate::services::compression_verification::verify_numeric_zip(&staged_first, password, || false).unwrap();
+                assert!(!temp.path().join("bundle.zip.001").exists());
+                crate::services::output_publish_transaction::publish_verified_volumes(&output, &final_output, || false).unwrap();
+                assert!(!staged_first.exists());
                 let first = temp.path().join("bundle.zip.001");
                 crate::services::compression_verification::verify_numeric_zip(&first, password, || false).unwrap();
                 let reader = crate::services::numeric_volume_reader::NumericVolumeReader::open(&first).unwrap();
