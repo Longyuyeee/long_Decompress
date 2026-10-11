@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
+import ThemedSelect from '@/components/ui/ThemedSelect.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -322,20 +323,8 @@ const closeVaultPasswordsAfterFocus = () => {
         </div>
 
         <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.format') }}</label>
-        <div class="relative">
-          <select
-            v-model="compressionOptions.format"
-            class="w-full h-10 appearance-none rounded-xl bg-input border border-subtle pl-4 pr-10 text-sm font-black text-content outline-none focus:border-primary"
-          >
-            <option
-              v-for="fmt in compressionFormats"
-              :key="fmt.value"
-              :value="fmt.value"
-              :disabled="isFormatDisabled(fmt)"
-            >{{ fmt.name }}{{ fmt.singleFileOnly ? ` · ${appStore.t('preset.single_file_only')}` : '' }}</option>
-          </select>
-          <i class="pi pi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted pointer-events-none"></i>
-        </div>
+        <ThemedSelect v-model="compressionOptions.format" floating aria-label="目标格式" test-id="compression-format-select"
+          :options="compressionFormats.map(fmt => ({ value: fmt.value, label: fmt.name, disabled: isFormatDisabled(fmt), detail: fmt.singleFileOnly ? appStore.t('preset.single_file_only') : undefined }))" />
         <p class="text-xs text-dim leading-relaxed truncate" :title="selectedFormat?.name">
           {{ compressionOptions.format === 'zip' ? '兼容性最好，适合分享' : compressionOptions.format === '7z' ? '压缩率更高，适合归档' : compressionOptions.format.startsWith('tar') ? '适合 Linux / Unix 环境' : '仅适合单个文件' }}
         </p>
@@ -354,7 +343,7 @@ const closeVaultPasswordsAfterFocus = () => {
       </div>
 
       <!-- 文件名输入 -->
-      <div class="flex flex-col gap-1.5 min-w-0">
+      <div class="archive-name-card flex flex-col gap-1.5 min-w-0">
         <div class="flex items-center justify-between gap-2 ml-1">
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.filename') }}</label>
           <button
@@ -363,18 +352,19 @@ const closeVaultPasswordsAfterFocus = () => {
             @click="useSuggestedFilename"
           >{{ appStore.t('compress.use_same_name') }}</button>
         </div>
-        <div class="relative">
+        <div class="archive-name-field">
           <input 
             v-model="compressionOptions.filename" 
-            class="w-full px-4 py-2 rounded-xl bg-input border border-subtle text-sm text-content outline-none focus:border-primary transition-all placeholder:text-dim"
-            :placeholder="appStore.t('vault.placeholder.name')"
+            data-testid="compression-filename-input" aria-label="压缩包名称"
+            class="min-w-0 w-full px-3 py-2 bg-transparent text-sm text-content outline-none placeholder:text-dim"
+            placeholder="输入压缩包名称"
           />
-          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-dim uppercase">.{{ effectiveOutputExtension }}</span>
+          <span data-testid="compression-filename-extension" class="pr-3 text-xs font-mono text-dim whitespace-nowrap">.{{ effectiveOutputExtension }}</span>
         </div>
       </div>
 
       <!-- 密码保护 (主行可见) 带生成器按钮 -->
-      <div class="flex flex-col gap-1.5 min-w-0">
+      <div class="archive-password-card flex flex-col gap-1.5 min-w-0">
         <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('decompress.password') }}</label>
         <div ref="passwordField" class="password-field flex gap-1" @focusout="closeVaultPasswordsAfterFocus">
           <div class="relative min-w-0 flex-1">
@@ -672,6 +662,8 @@ const closeVaultPasswordsAfterFocus = () => {
 </template>
 
 <style scoped>
+.archive-name-field { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; min-width:0; border:1px solid var(--border-subtle); border-radius:.75rem; background:var(--bg-input); }
+.archive-name-field:focus-within { border-color:var(--dynamic-accent); }
 .settings-core-grid {
   display: grid;
   grid-template-columns: minmax(11rem, 1.05fr) minmax(9rem, 0.75fr) minmax(11rem, 1fr) minmax(11rem, 1fr);

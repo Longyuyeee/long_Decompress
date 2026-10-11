@@ -1230,8 +1230,8 @@ const drawerTransition = useDrawerTransition()
 
 .compression-detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
-  height: clamp(22rem, 54vh, 32rem);
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  height: clamp(17rem, calc(100vh - 20rem), 32rem);
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -1242,6 +1242,7 @@ const drawerTransition = useDrawerTransition()
 }
 
 .compression-config-panel {
+  container: compression-settings / inline-size;
   box-sizing: border-box;
   min-width: 0;
   max-width: 100%;
@@ -1250,7 +1251,7 @@ const drawerTransition = useDrawerTransition()
   max-height: none;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1.25rem 1.5rem;
+  padding: .75rem;
   border-right: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
@@ -1437,7 +1438,11 @@ const drawerTransition = useDrawerTransition()
 }
 
 /* Respond to the available drawer width, including sidebar and UI scaling. */
-@container (max-width: 47.5rem) {
+@container compression-settings (max-width: 24rem) {
+  .compression-config-panel :deep(.archive-name-card),
+  .compression-config-panel :deep(.archive-password-card) { grid-column: 1 / -1; }
+}
+@container (max-width: 32rem) {
   .compression-detail-grid { grid-template-columns: minmax(0, 1fr); height: auto; }
   .compression-config-panel { height: auto; overflow: visible; border-right: 0; border-bottom: 1px solid var(--border-subtle); }
   .compression-detail-grid :deep(.compression-execution-panel) { height: 18rem; }
