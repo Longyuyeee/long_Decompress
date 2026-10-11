@@ -206,7 +206,13 @@ pub(crate) fn validate_resource_limits(
         ))
         .into());
     }
-    let compressed_bytes = std::fs::metadata(archive_path)?.len().max(1);
+    let name = archive_path.to_string_lossy().to_ascii_lowercase();
+    let compressed_bytes = if name.ends_with(".7z.001") || name.ends_with(".zip.001") {
+        use std::io::{Seek, SeekFrom};
+        super::numeric_volume_reader::NumericVolumeReader::open(archive_path)?.seek(SeekFrom::End(0))?
+    } else {
+        std::fs::metadata(archive_path)?.len()
+    }.max(1);
     if expanded_bytes >= 1024 * 1024 * 1024
         && expanded_bytes / compressed_bytes > MAX_EXPANSION_RATIO
     {
@@ -818,6 +824,19 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn numeric_volume_expansion_ratio_uses_the_whole_archive() {
+        let temp = tempfile::tempdir().unwrap();
+        for format in ["7z", "zip"] {
+            let first = temp.path().join(format!("sample.{format}.001"));
+            std::fs::write(&first, [0; 37]).unwrap();
+            let second = temp.path().join(format!("sample.{format}.002"));
+            std::fs::File::create(second).unwrap().set_len(256 * 1024).unwrap();
+            super::validate_resource_limits(&first, 1, 1024 * 1024 * 1024).unwrap();
+            assert!(super::validate_resource_limits(&first, 1, 4 * 1024 * 1024 * 1024).is_err());
+        }
+    }
+
     use super::*;
 
     #[test]

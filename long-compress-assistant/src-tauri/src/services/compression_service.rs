@@ -3,7 +3,7 @@ use anyhow::Result;
 use std::collections::{HashMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 use zip::{write::FileOptions, CompressionMethod};
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufRead, BufReader, Read, Write, Seek, SeekFrom};
 use std::fs::File;
 use sevenz_rust;
 use thiserror::Error;
@@ -1872,10 +1872,10 @@ impl CompressionService {
 
     fn detect_password_format(file_path: &str) -> Result<ArchiveFormat> {
         let path = Path::new(file_path);
-        let mut file = File::open(path)?;
-        let mut header = [0u8; 512];
-        let bytes_read = file.read(&mut header)?;
-        let detected = ArchiveFormat::from_magic(&header[..bytes_read]);
+        let file = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path)?;
+        let mut header = Vec::with_capacity(512);
+        file.take(512).read_to_end(&mut header)?;
+        let detected = ArchiveFormat::from_magic(&header);
         if detected != ArchiveFormat::Unknown {
             return Ok(detected);
         }
@@ -1960,21 +1960,26 @@ impl CompressionService {
             ).into());
         }
         let mut format = ArchiveFormat::Unknown;
-        if let Ok(mut f) = File::open(&file_path) {
+        if let Ok(mut f) = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path) {
             let mut header = [0u8; 32];
             if let Ok(bytes_read) = f.read(&mut header) {
                 if bytes_read > 0 {
-                    format = ArchiveFormat::from_magic(&header);
+                    format = ArchiveFormat::from_magic(&header[..bytes_read]);
                 }
             }
         }
 
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+        if path.to_string_lossy().to_ascii_lowercase().ends_with(".7z.001") {
+            // Read across even very small volumes and propagate missing-volume
+            // errors instead of hiding them as unknown format/password errors.
+            format = Self::detect_password_format(&file_path)?;
+        }
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("未知文件").to_string();
         let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
 
         // 分卷压缩包检测：扩展名为数字编号(.001, .002...)或 .z01/.z02 后缀
-        // 这些文件即使 magic bytes 匹配了 ZIP/7Z，也必须走 7z CLI 才能正确合并解压
+        // 7Z 数字首卷使用可 Seek 的原生卷组读取；其他分卷保留通用路由。
         let is_split_archive = {
             let ext_is_numeric = ext.len() == 3 && ext.chars().all(|c| c.is_ascii_digit());
             let ext_is_zsplit = ext.len() == 3 && ext.starts_with('z') && ext[1..].chars().all(|c| c.is_ascii_digit());
@@ -1983,8 +1988,8 @@ impl CompressionService {
             ext_is_numeric || ext_is_zsplit || stem_has_archive_ext
         };
 
-        // 分卷文件强制走 7z CLI 通用引擎
-        if is_split_archive && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
+        let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
+        if is_split_archive && !native_seven_zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
             service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
             format = ArchiveFormat::Universal;
         }
@@ -2602,6 +2607,10 @@ impl CompressionService {
         extraction_transaction::ensure_no_link_ancestors(path)
     }
 
+    fn uses_native_seven_zip_volumes(path: &Path, format: &ArchiveFormat) -> bool {
+        *format == ArchiveFormat::SevenZip && path.to_string_lossy().to_ascii_lowercase().ends_with(".7z.001")
+    }
+
     async fn preflight_extraction(
         &self,
         archive_path: &Path,
@@ -2624,8 +2633,11 @@ impl CompressionService {
                 Some((archive.len(), expanded))
             }
             ArchiveFormat::SevenZip => {
-                let reader = sevenz_rust::SevenZReader::open(
-                    archive_path,
+                let mut input = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(archive_path)?;
+                let length = input.seek(SeekFrom::End(0))?;
+                input.seek(SeekFrom::Start(0))?;
+                let reader = sevenz_rust::SevenZReader::new(
+                    input, length,
                     sevenz_rust::Password::from(password.unwrap_or("")),
                 )?;
                 let mut expanded = 0u64;
@@ -4419,6 +4431,20 @@ mod tests_continued {
         }
     }
 
+    #[test]
+    fn numeric_seven_zip_routing_reads_magic_across_tiny_volumes() {
+        let temp = tempfile::tempdir().unwrap();
+        for (index, bytes) in [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c].chunks(2).enumerate() {
+            std::fs::write(temp.path().join(format!("tiny.7z.{:03}", index + 1)), bytes).unwrap();
+        }
+        let first = temp.path().join("tiny.7z.001");
+        let format = CompressionService::detect_password_format(&first.to_string_lossy()).unwrap();
+        assert!(CompressionService::uses_native_seven_zip_volumes(&first, &format));
+        assert!(!CompressionService::uses_native_seven_zip_volumes(Path::new("other.zip.001"), &format));
+        assert!(!CompressionService::uses_native_seven_zip_volumes(Path::new("tiny.7z.002"), &format));
+        assert!(!CompressionService::uses_native_seven_zip_volumes(&first, &ArchiveFormat::Zip));
+    }
+
     #[tokio::test]
     async fn seven_zip_split_native_creation_verification_publication_and_extraction() {
         // Public request/UI gates remain closed until the complete task path is validated.
@@ -4453,6 +4479,10 @@ mod tests_continued {
                     .map(|path| { let data = std::fs::read(&path).unwrap(); assert!(data.len() <= 37); (path, data) }).collect();
                 assert!(volumes.len() > 1);
                 let first = PathBuf::from(format!("{}.001", output.display()));
+                let format = CompressionService::detect_password_format(&first.to_string_lossy()).unwrap();
+                assert!(CompressionService::uses_native_seven_zip_volumes(&first, &format));
+                let stats = service.preflight_extraction(&first, &format, password, temp.path()).await.unwrap().unwrap();
+                assert_eq!(stats, (4, 28));
                 assert_eq!(native_extraction::seven_zip::requires_password(&first).unwrap(), password.is_some());
                 if let Some(password) = password {
                     assert!(service.verify_archive_password_candidate(&first.to_string_lossy(), password).await.unwrap());
