@@ -881,9 +881,56 @@ mod tests {
                 progress, log, Arc::new(AtomicBool::new(false))).await.unwrap();
             assert!(output.join("资料/空目录").is_dir());
             assert_eq!(std::fs::read_to_string(output.join("资料/内容.txt")).unwrap(), "跨卷中文内容");
+            // Follow the desktop transaction order with real staged files and an existing target.
+            use crate::services::extraction_transaction::{self, ExtractionStaging};
+            let existing = output.join("资料/内容.txt");
+            std::fs::write(&existing, "existing user content").unwrap();
+            let mut staging = ExtractionStaging::create_for(&output).unwrap();
+            let staging_path = staging.path().to_path_buf();
+            UniversalCliEngine::new().extract_with_progress(first, staging.path(), Some(password), false,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.unwrap();
+            let options = crate::models::compression::DecompressOptions {
+                conflict_policy: "ask".into(), ..Default::default()
+            };
+            let mut conflicts = Vec::new();
+            let error = extraction_transaction::commit_staged_extraction(
+                &first.to_string_lossy(), staging.path(), &output, &options, |c| conflicts.push(c)
+            ).unwrap_err();
+            assert!(!conflicts.is_empty(), "{error}");
+            assert_eq!(std::fs::read_to_string(&existing).unwrap(), "existing user content");
+            assert_eq!(std::fs::read_to_string(staging.path().join("资料/内容.txt")).unwrap(), "跨卷中文内容");
+            let rename_options = crate::models::compression::DecompressOptions {
+                conflict_policy: "rename".into(), ..options
+            };
+            extraction_transaction::commit_staged_extraction(
+                &first.to_string_lossy(), staging.path(), &output, &rename_options, |_| {}
+            ).unwrap();
+            assert_eq!(std::fs::read_to_string(&existing).unwrap(), "existing user content");
+            assert_eq!(std::fs::read_to_string(output.join("资料/内容 (1).txt")).unwrap(), "跨卷中文内容");
+            assert!(staging.cleanup_after_commit().is_none());
+            assert!(!staging_path.exists());
+            let cancelled_staging_path;
+            {
+                let cancelled_staging = ExtractionStaging::create_for(&output).unwrap();
+                cancelled_staging_path = cancelled_staging.path().to_path_buf();
+                let error = UniversalCliEngine::new().extract_with_progress(first, cancelled_staging.path(), Some(password), false,
+                    Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(true))).await.unwrap_err();
+                assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+            }
+            assert!(!cancelled_staging_path.exists());
+            assert_eq!(std::fs::read_to_string(&existing).unwrap(), "existing user content");
             std::fs::remove_file(&split.part_files[1]).unwrap();
             assert!(UniversalCliEngine::zip_requires_password(first).unwrap_err().to_string().contains("incomplete"));
             assert!(UniversalCliEngine::try_zip_password(first, password).is_err());
+            let failed_staging_path;
+            {
+                let failed_staging = ExtractionStaging::create_for(&output).unwrap();
+                failed_staging_path = failed_staging.path().to_path_buf();
+                assert!(UniversalCliEngine::new().extract_with_progress(first, failed_staging.path(), Some(password), false,
+                    Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.is_err());
+            }
+            assert!(!failed_staging_path.exists());
+            assert_eq!(std::fs::read_to_string(&existing).unwrap(), "existing user content");
         }
     }
     use super::*;

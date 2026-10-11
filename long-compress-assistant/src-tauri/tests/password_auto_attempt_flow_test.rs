@@ -166,7 +166,7 @@ async fn resolves_encrypted_archive_password_from_password_book() {
     let resolved = harness
         .service
         .resolve_archive_password_silent(archive.to_str().unwrap(), &DecompressOptions::default())
-        .await;
+        .await.expect("password resolution must not fail");
 
     assert_eq!(resolved.as_deref(), Some("book-hit-2026"));
 }
@@ -187,7 +187,7 @@ async fn resolves_encrypted_archive_password_from_imported_wordlist() {
     let resolved = harness
         .service
         .resolve_archive_password_silent(archive.to_str().unwrap(), &options)
-        .await;
+        .await.expect("password resolution must not fail");
 
     assert_eq!(resolved.as_deref(), Some("wordlist-hit-2026"));
 }
@@ -200,7 +200,7 @@ async fn does_not_run_the_builtin_dictionary_without_explicit_authorization() {
     let resolved = harness
         .service
         .resolve_archive_password_silent(archive.to_str().unwrap(), &DecompressOptions::default())
-        .await;
+        .await.expect("password resolution must not fail");
 
     assert_eq!(resolved, None);
 }
@@ -217,7 +217,7 @@ async fn runs_the_builtin_dictionary_after_explicit_authorization() {
     let resolved = harness
         .service
         .resolve_archive_password_silent(archive.to_str().unwrap(), &options)
-        .await;
+        .await.expect("password resolution must not fail");
 
     assert_eq!(resolved.as_deref(), Some("123456"));
 }
