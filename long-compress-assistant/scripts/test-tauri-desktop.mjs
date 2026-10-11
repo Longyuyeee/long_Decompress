@@ -22,6 +22,7 @@ import { runOptimizationDesktopGate, runSavedLocationDesktopGate } from './optim
 import { runMediaHistoryDesktopGate } from './media-history-desktop-gate.mjs'
 import { runPasswordSplitCreationGate } from './password-split-creation-gate.mjs'
 import { runArchiveConversionGate } from './archive-conversion-gate.mjs'
+import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
 import { runSevenZipVolumeUiGate } from './seven-zip-volume-ui-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
@@ -4836,6 +4837,10 @@ try {
     await runZipTelemetryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
+  } else if (process.argv.includes('--zip-codecs-only')) {
+    await runZipCodecGate({ bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
+    completedSuccessfully = true
+    console.log('ZIP codec and encryption compatibility matrix passed.')
   } else if (process.argv.includes('--zipcrypto-only')) {
     for (const [zipEncoding, password] of [['utf8', 'legacy-password'], ['windows_local', '中文密码 + !测试']]) {
       await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory,

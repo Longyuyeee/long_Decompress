@@ -15,6 +15,26 @@ function draft() {
   return store
 }
 describe('archive conversion lifecycle', () => {
+  it('does not revive a terminal task when cancellation acknowledgement arrives during history persistence', async () => {
+    let rejectConversion!: (reason: string) => void
+    let acknowledgeCancel!: () => void
+    let saveHistory!: () => void
+    mocks.invoke.mockImplementation(command => {
+      if (command === 'convert_archive') return new Promise((_, reject) => { rejectConversion = reject })
+      if (command === 'cancel_compression') return new Promise<void>(resolve => { acknowledgeCancel = resolve })
+      if (command === 'save_task_history') return new Promise<void>(resolve => { saveHistory = resolve })
+      return Promise.resolve()
+    })
+    const store = draft(); const pending = store.start()
+    await vi.waitFor(() => expect(rejectConversion).toBeTypeOf('function'))
+    const cancellation = store.cancel()
+    rejectConversion('转换已取消，原包保留')
+    await vi.waitFor(() => expect(saveHistory).toBeTypeOf('function'))
+    expect(store.task?.status).toBe('cancelled')
+    acknowledgeCancel(); await cancellation
+    expect(store.task?.status).toBe('cancelled')
+    saveHistory(); await pending
+  })
   it('keeps input and output passwords separate and persists only conversion settings', async () => {
     mocks.invoke.mockImplementation(async command => command === 'convert_archive'
       ? { primaryPath: 'C:\\新包.7z.001', files: [], totalBytes: 25, split: true } : undefined)

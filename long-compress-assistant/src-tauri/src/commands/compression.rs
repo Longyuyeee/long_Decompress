@@ -330,6 +330,10 @@ pub async fn convert_archive(
         .collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
     files.sort();
     if files.is_empty() { return Err("原包没有可转换的条目".to_string()); }
+    // Extraction and rebuilding share the destination volume. Recheck after
+    // staging has consumed space, not only before the source was expanded.
+    crate::services::extraction_transaction::validate_staging_disk_reserve(staging.path())
+        .map_err(|error| format!("转换写入新包前空间检查失败：{error}"))?;
     let _ = window.emit("archive-conversion-phase", serde_json::json!({"taskId": task_id, "phase": "writing"}));
     let split = options.split_size.is_some_and(|size| size > 0);
     service.compress(window, task_id, files, output_path.clone(), options)

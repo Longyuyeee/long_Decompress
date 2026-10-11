@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 import { runInstalledNumericZipGate } from './installed-numeric-zip-gate.mjs'
 import { runPasswordSplitCreationGate } from './password-split-creation-gate.mjs'
+import { runArchiveConversionGate } from './archive-conversion-gate.mjs'
+import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const application = process.env.TAURI_APP_BINARY
@@ -343,6 +345,13 @@ try {
   }
   await runPasswordSplitCreationGate({ driver, waitForElement, fixtureDirectory: fixtureRoot, artifactDirectory: evidenceRoot, productionIpc })
   record('installed UI password split creation', 'real directory, UTF-8 password, three 1 MiB-bounded volumes, verified creation, exact extracted payload and empty directory, source preservation, persisted compression history')
+  await runPasswordSplitCreationGate({ driver, waitForElement, fixtureDirectory: fixtureRoot, artifactDirectory: evidenceRoot, productionIpc,
+    bundledSevenZip: installedSevenZip, zipEncryption: 'zipcrypto', zipEncoding: 'windows_local' })
+  record('installed ZipCrypto Chinese compatibility', 'explicit Windows encoding, independent 7-Zip and product extraction')
+  await runArchiveConversionGate({ driver, waitForElement, fixtureDirectory: fixtureRoot, artifactDirectory: evidenceRoot, productionIpc, bundledSevenZip: installedSevenZip })
+  record('installed archive conversion', 'eight targets, UI re-encryption/retry, read/write cancellation, source unchanged')
+  await runArchivePerformanceGate({ invoke: productionIpc, fixtureDirectory: fixtureRoot, artifactDirectory: evidenceRoot, application, buildKind: 'installed-production' })
+  record('installed archive end-to-end performance', 'large/small/mixed workloads with verification, hashes, sampled staging and backend lifetime peak memory')
   writeFileSync(path.join(evidenceRoot, 'result.json'), JSON.stringify({ schemaVersion: 1, application, checks }, null, 2))
   console.log('Real installed Windows archive-workspace matrix passed.')
 } catch (error) {

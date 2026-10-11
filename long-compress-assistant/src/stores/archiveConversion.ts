@@ -104,7 +104,11 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     if (!busy.value || !task.value || task.value.status === 'cancelling') return
     try {
       await invoke('cancel_compression', { taskId: taskId.value })
-      if (busy.value) tasks.updateTaskStatus(taskId.value, 'cancelling')
+      // The engine may settle before the cancellation IPC acknowledges, while
+      // history is still being saved. Never revive its terminal state.
+      if (busy.value && task.value && !['completed', 'failed', 'cancelled'].includes(task.value.status)) {
+        tasks.updateTaskStatus(taskId.value, 'cancelling')
+      }
     } catch (failure) { error.value = `取消请求失败：${String(failure)}` }
   }
   return { visible, sourcePath, sourcePassword, password, outputPath, format, zipEncryption, zipPasswordEncoding, level, splitMiB,

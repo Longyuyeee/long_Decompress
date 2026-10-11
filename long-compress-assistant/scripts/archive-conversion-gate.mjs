@@ -3,9 +3,31 @@ import { mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync } from 
 import { spawnSync } from 'node:child_process'
 import { randomBytes, createHash } from 'node:crypto'
 import path from 'node:path'
-import { By } from 'selenium-webdriver'
+import { By, Key } from 'selenium-webdriver'
 
-export async function runArchiveConversionGate({ driver, waitForElement, bridge, failure, fixtureDirectory, artifactDirectory, bundledSevenZip }) {
+export async function runArchiveConversionGate({ driver, waitForElement, bridge, failure, fixtureDirectory, artifactDirectory, bundledSevenZip, productionIpc }) {
+  if (productionIpc) {
+    bridge = async (method, ...args) => {
+      const taskId = `installed-conversion-${Date.now()}-${Math.random().toString(16).slice(2)}`
+      if (method === 'convertArchive') return productionIpc('convert_archive', {
+        taskId, sourcePath: args[0], sourcePassword: args[1], outputPath: args[2],
+        options: { level: 3, preserve_paths: true, verify_after: true, delete_after: false, ...args[3] },
+      })
+      if (method === 'extractArchive') return productionIpc('extract_file', {
+        taskId, filePath: args[0], outputPath: args[1], password: args[2],
+        options: { preserve_paths: true, create_subdirectory: false, delete_after: false },
+      })
+      if (method === 'taskHistory') return productionIpc('list_task_history', { limit: 500 })
+      throw new Error(`Unsupported production adapter: ${method}`)
+    }
+    failure = async (...args) => { try { await bridge(...args) } catch (error) { return String(error) } throw new Error('Expected failure') }
+  }
+  const fill = async (testId, value) => {
+    const input = await waitForElement(`[data-testid="${testId}"]`)
+    await input.sendKeys(Key.chord(Key.CONTROL, 'a'), Key.BACK_SPACE)
+    if (value) await input.sendKeys(value)
+    assert.equal(await input.getAttribute('value'), value)
+  }
   const root = path.join(fixtureDirectory, 'conversion')
   const source = path.join(root, '原始文件')
   mkdirSync(path.join(source, '中文目录', '空目录'), { recursive: true })
@@ -71,9 +93,14 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
   await (await waitForElement('[data-testid="nav-Compress"]')).click()
   await (await waitForElement('[data-testid="open-archive-conversion"]')).click()
   const uiOutput = path.join(root, '页面改密.7z')
-  await bridge('queueDesktopDialogSelections', [original, uiOutput])
-  await (await waitForElement('[data-testid="conversion-choose-source"]')).click()
-  await (await waitForElement('[data-testid="conversion-choose-output"]')).click()
+  if (productionIpc) {
+    await fill('conversion-source', original)
+    await fill('conversion-output', uiOutput)
+  } else {
+    await bridge('queueDesktopDialogSelections', [original, uiOutput])
+    await (await waitForElement('[data-testid="conversion-choose-source"]')).click()
+    await (await waitForElement('[data-testid="conversion-choose-output"]')).click()
+  }
   await (await waitForElement('[data-testid="conversion-source-password"]')).sendKeys('old-password')
   await (await waitForElement('[data-testid="conversion-password"]')).sendKeys('ui-new-password')
   await (await waitForElement('[data-testid="conversion-hidden-names"]')).click()
@@ -129,8 +156,7 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
   const largeHash = hash(largeArchive)
   const cancelOutput = path.join(root, '取消新包.7z')
   for (const [testId, value] of [['conversion-source', largeArchive], ['conversion-output', cancelOutput], ['conversion-password', 'cancel-password']]) {
-    const input = await waitForElement(`[data-testid="${testId}"]`)
-    await input.clear(); await input.sendKeys(value)
+    await fill(testId, value)
   }
   await (await waitForElement('[data-testid="conversion-start"]')).click()
   await (await waitForElement('[data-testid="conversion-cancel"]')).click()
@@ -140,15 +166,56 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
     return !!cancelled
   }, 60000)
   assert.equal(cancelled.status, 'cancelled', cancelled.errorMessage)
+  assert.doesNotMatch(await (await waitForElement('[data-testid="task-summary-label"]')).getText(), /进行中/)
   assert.equal(existsSync(cancelOutput), false)
   assert.equal(hash(largeArchive), largeHash)
   assert.deepEqual(readdirSync(root).filter(name => name.startsWith('.long-convert-')), [])
   writeFileSync(path.join(artifactDirectory, 'archive-conversion-cancelled.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  const writingCancelOutput = path.join(root, '写入中取消.7z')
+  await fill('conversion-output', writingCancelOutput)
+  await fill('conversion-password', 'cancel-password')
+  await (await waitForElement('[data-testid="conversion-start"]')).click()
+  await driver.wait(async () => /步骤 2\/2/.test(await (await waitForElement('[data-testid="archive-conversion"]')).getText()), 60000)
+  await (await waitForElement('[data-testid="conversion-cancel"]')).click()
+  await driver.wait(async () => {
+    cancelled = (await bridge('taskHistory')).find(item => item.outputPath === writingCancelOutput)
+    return !!cancelled
+  }, 60000)
+  assert.equal(cancelled.status, 'cancelled', cancelled.errorMessage)
+  assert.doesNotMatch(await (await waitForElement('[data-testid="task-summary-label"]')).getText(), /进行中/)
+  assert.equal(existsSync(writingCancelOutput), false)
+  assert.equal(hash(largeArchive), largeHash)
+  assert.deepEqual(readdirSync(root).filter(name => name.startsWith('.long-convert-')), [])
+  writeFileSync(path.join(artifactDirectory, 'archive-conversion-writing-cancelled.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  await fill('conversion-source', original)
+  await fill('conversion-source-password', 'old-password')
+  await (await waitForElement('[data-testid="conversion-format"]')).click()
+  await driver.findElement(By.xpath('//button[@role="option" and normalize-space(.)="ZIP"]')).click()
+  const zipUiOutput = path.join(root, '页面传统兼容.zip')
+  await fill('conversion-output', zipUiOutput)
+  await fill('conversion-password', '中文密码 + !测试')
+  await (await waitForElement('[data-testid="conversion-zip-encryption"]')).click()
+  await driver.findElement(By.xpath('//button[@role="option" and contains(.,"ZipCrypto")]')).click()
+  await (await waitForElement('[data-testid="conversion-zip-encoding"]')).click()
+  await driver.findElement(By.xpath('//button[@role="option" and contains(.,"Windows 兼容")]')).click()
+  writeFileSync(path.join(artifactDirectory, 'archive-conversion-zip-settings.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  await (await waitForElement('[data-testid="conversion-start"]')).click()
+  let zipRecord
+  await driver.wait(async () => {
+    zipRecord = (await bridge('taskHistory')).find(item => item.outputPath === zipUiOutput)
+    return !!zipRecord
+  }, 60000)
+  assert.equal(zipRecord.status, 'completed', zipRecord.errorMessage)
+  assert.equal(zipRecord.executionConfig.zipEncryption, 'zipcrypto')
+  assert.equal(zipRecord.executionConfig.zipPasswordEncoding, 'windows_local')
+  run(['t', zipUiOutput, '-p中文密码 + !测试'])
   writeFileSync(path.join(artifactDirectory, 'archive-conversion.json'), JSON.stringify({
+    buildKind: productionIpc ? 'installed-production' : 'isolated-desktop-e2e', nativePickerVerified: false,
     sourcePreserved: true, contentVerified: true, emptyDirectoryPreserved: true,
     passwordChanged: true, resplit: true, mergedAndDecrypted: true, wrongPasswordRejected: true,
     stagingCleaned: true, corruptInputRejected: true, uiExecutionVerified: true, historyRetryDraftVerified: true,
     historyRetryExecutionVerified: true, actualCancellationVerified: true,
     additionalTargetFormats: formatChecks, numericZipInputVerified: true,
+    writingCancellationVerified: true, zipCryptoChineseUiConversionVerified: true,
   }, null, 2))
 }
