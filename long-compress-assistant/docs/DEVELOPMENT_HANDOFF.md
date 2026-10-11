@@ -1,5 +1,13 @@
 # 开发交接
 
+## 2026-10-11 数字 ZIP 密码真实桌面命令链验证
+
+- 新增 scripts/test-tauri-desktop.mjs --numeric-zip-password-only，复用独立 WebView2、应用数据目录和实例 ID。生产前端构建通过；随后 VITE_DESKTOP_E2E=1 构建前端，并 cargo build --features desktop-e2e,custom-protocol --bin long-compress-assistant 生成当前代码调试验收二进制。未覆盖、关闭或升级用户正在使用的 E:\long\Long解压 安装版。
+- Windows WebView2 154.0.4258.62 + 匹配 EdgeDriver 实测通过：调用真实压缩命令创建 UTF-8 中文密码 ZIP，将人工样本切为 7 个 37 字节数字卷，再调用真实 extract_file 命令，验证已有同名文件保留、重命名输出逐字一致；错误密码返回“提供的密码不正确”，缺 .002 返回 archive-inspection:incomplete 和具体缺卷路径，不误导为密码失败。
+- 这是带隔离测试桥接的真实桌面命令链，不是鼠标完整交互、历史持久化或 NSIS 安装升级验收，也不是密码分卷创建入口验收（仍保持关闭）。首轮因当前编译未完成而启动到旧的无桥接构建，在就绪检查超时；等待编译完成重跑通过，未放宽检查。
+- 已实际查看 test-results/desktop-e2e/numeric-zip-password.png；同目录 JSON 记录产物 SHA256 8cd3d4109025ddf36ac3c55e744dc7365fc6fb517f2001342fc22bc8063d6fdb、卷数和两类错误。脚本可重建证据，截图/临时数据不提交。运行需要 TAURI_APP_BINARY 指向该验收构建、EDGE_DRIVER_PATH 指向匹配驱动；此机驱动位于 long-compress-assistant/msedgedriver/win64/154.0.4258.62/msedgedriver.exe。下载工具生成的仓库根元数据已移除，不提交驱动。
+- 页面观察发现：存在失败任务时汇总仍显示“全部完成”（截图为 50%），应进一步区分全部结束和全部成功，不能凭终态数量误报成功。下一步优先核对该展示及失败详情，再进行真实用户交互、历史和正式安装版验收。完整 1.4.0 计划仍未完成，尚未封板。
+
 ## 2026-10-11 密码分卷暂存与冲突提交组合验收
 
 - 扩展真实数字 ZIP 密码读取测试，使用生产 ExtractionStaging 与 commit_staged_extraction：已有同名目标时 ask 返回冲突，原内容不变，新内容留在暂存目录；随后改为 rename 提交，两份内容逐字比对，空目录保留，提交后清理暂存。UTF-8 中文和本机 Windows 兼容编码分别执行。另覆盖开始前取消、缺中间卷失败后的暂存析构清理及旧文件保留。

@@ -120,6 +120,7 @@ const fileManagerOnly = process.argv.includes('--file-manager-only')
 const markOfWebOnly = process.argv.includes('--mark-of-web-only')
 const compressionVerificationOnly = process.argv.includes('--compression-verification-only')
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
+const numericZipPasswordOnly = process.argv.includes('--numeric-zip-password-only')
 const pauseControlOnly = process.argv.includes('--pause-control-only')
 const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
 const optimizationOnly = process.argv.includes('--optimization-only')
@@ -4817,6 +4818,48 @@ try {
     await runZipTelemetryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
+  } else if (numericZipPasswordOnly) {
+    const source = path.join(fixtureDirectory, '中文内容.txt')
+    const archive = path.join(fixtureDirectory, '密码分卷.zip')
+    const password = '中文密码 + !测试'
+    const payload = '真实桌面数字分卷载荷\n'.repeat(200)
+    writeFileSync(source, payload, 'utf8')
+    const taskId = await callDesktopBridge('startZipTelemetryCompression', source, archive, password)
+    await driver.wait(async () => (await callDesktopBridge('archiveFlowAuditState')).zipDone, 60_000)
+    assert.equal(await callDesktopBridge('taskStatus', taskId), 'completed')
+    const bytes = readFileSync(archive)
+    const parts = []
+    for (let offset = 0, index = 1; offset < bytes.length; offset += 37, index++) {
+      const part = `${archive}.${String(index).padStart(3, '0')}`
+      writeFileSync(part, bytes.subarray(offset, offset + 37))
+      parts.push(part)
+    }
+    assert.ok(parts.length > 2)
+    const output = path.join(fixtureDirectory, '数字卷输出')
+    mkdirSync(output)
+    writeFileSync(path.join(output, '中文内容.txt'), '保留原文件', 'utf8')
+    await callDesktopBridge('extractArchive', parts[0], output, password)
+    assert.equal(readFileSync(path.join(output, '中文内容.txt'), 'utf8'), '保留原文件')
+    assert.equal(readFileSync(path.join(output, '中文内容 (1).txt'), 'utf8'), payload)
+    const wrongOutput = path.join(fixtureDirectory, '错误密码输出')
+    const wrong = await callDesktopBridgeFailure('extractArchive', parts[0], wrongOutput, 'wrong')
+    assert.match(wrong, /密码|password/i)
+    assert.ok(!existsSync(path.join(wrongOutput, '中文内容.txt')))
+    const missingPart = parts[1]
+    const savedPart = readFileSync(missingPart)
+    // Only remove the exact synthetic volume created by this scenario.
+    rmSync(missingPart)
+    const missing = await callDesktopBridgeFailure('extractArchive', parts[0], path.join(fixtureDirectory, '缺卷输出'), password)
+    assert.match(missing, /missing|缺|不完整/i)
+    writeFileSync(missingPart, savedPart)
+    writeFileSync(path.join(artifactDirectory, 'numeric-zip-password.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    writeFileSync(path.join(artifactDirectory, 'numeric-zip-password.json'), JSON.stringify({
+      binarySha256: fileSha256(application), buildKind: 'isolated-desktop-e2e',
+      volumeCount: parts.length, wrongPasswordError: wrong, missingVolumeError: missing,
+      checks: ['UTF-8 Chinese password', 'existing target preserved', 'rename commit payload equality', 'wrong password', 'missing middle volume'],
+    }, null, 2))
+    completedSuccessfully = true
+    console.log('Real Windows numeric ZIP password and rename-commit command gate passed.')
   } else if (archiveFlowOnly) {
     await runArchiveFlowDesktopGate()
     completedSuccessfully = true
