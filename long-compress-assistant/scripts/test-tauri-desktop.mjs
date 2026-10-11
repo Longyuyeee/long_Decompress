@@ -4823,7 +4823,7 @@ try {
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
   } else if (numericZipPasswordOnly) {
     await runSevenZipVolumeUiGate({ driver, callDesktopBridge, waitForElement, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
-    await runSevenZipVolumeReadGate({ callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
+    await runSevenZipVolumeReadGate({ driver, waitForElement, callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
     await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory })
     const source = path.join(fixtureDirectory, '中文内容.txt')
     const archive = path.join(fixtureDirectory, '密码分卷.zip')

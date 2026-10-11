@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import { mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync, rmSync } from 'node:fs'
 import path from 'node:path'
+import { By } from 'selenium-webdriver'
 
 // Independent archives enter the real extract_file command and its resource
 // preflight/staging/commit path. This is not a UI-import or creation-UI test.
-export async function runSevenZipVolumeReadGate({ callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory }) {
+export async function runSevenZipVolumeReadGate({ driver, waitForElement, callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory }) {
   const results = []
   for (const mode of ['plain', 'content', 'header']) {
     const root = path.join(fixtureDirectory, `7z-volume-${mode}`)
@@ -39,9 +40,50 @@ export async function runSevenZipVolumeReadGate({ callDesktopBridge, callDesktop
     } finally {
       writeFileSync(parts[1], snapshots[1])
     }
+    const diagnostics = []
+    for (const fault of ['missing-tail', 'truncated-tail', 'damaged-header']) {
+      const index = fault === 'damaged-header' ? 0 : parts.length - 1
+      if (fault === 'missing-tail') rmSync(parts[index])
+      else if (fault === 'truncated-tail') writeFileSync(parts[index], snapshots[index].subarray(0, -1))
+      else {
+        const damaged = Buffer.from(snapshots[index]); damaged[12] ^= 1
+        writeFileSync(parts[index], damaged)
+      }
+      try {
+        // Also reject structurally broken encrypted archives before asking for a password.
+        for (const supplied of password ? [null, password] : [null]) {
+          const target = path.join(root, `${fault}-${supplied ? 'password' : 'none'}`)
+          const failure = await callDesktopBridgeFailure('extractArchive', parts[0], target, supplied)
+          assert.ok(failure.includes(`[archive-inspection:${fault === 'damaged-header' ? 'damaged' : 'incomplete'}]`), failure)
+          assert.ok(!existsSync(path.join(target, '资料', '内容.txt')))
+          const history = (await callDesktopBridge('taskHistory')).find(record => record.outputPath === target)
+          assert.ok(history, `Missing final history for ${target}`)
+          assert.equal(history.status, 'failed')
+          assert.ok(history.errorMessage?.includes(fault === 'damaged-header' ? '归档头校验失败' : '可能缺少尾卷'), JSON.stringify(history))
+          diagnostics.push({ fault, passwordProvided: Boolean(supplied), error: history.errorMessage })
+        }
+      } finally {
+        writeFileSync(parts[index], snapshots[index])
+      }
+    }
     assert.equal(readFileSync(path.join(source, '内容.txt'), 'utf8'), payload)
     parts.forEach((file, index) => assert.deepEqual(readFileSync(file), snapshots[index]))
-    results.push({ mode, volumes: parts.length, correctOutput: true, wrongPasswordRejected: Boolean(password), missingVolumeRejected: true, sourceAndVolumesPreserved: true })
+    results.push({ mode, volumes: parts.length, correctOutput: true, wrongPasswordRejected: Boolean(password), missingVolumeRejected: true, diagnostics, sourceAndVolumesPreserved: true })
   }
+  for (const [query, expected] of [['missing-tail-password', '可能缺少尾卷'], ['damaged-header-password', '归档头校验失败']]) {
+    await driver.navigate().refresh()
+    await (await waitForElement('[data-testid="nav-History"]')).click()
+    await (await waitForElement('[data-testid="history-search"]')).sendKeys(query)
+    await driver.wait(async () => (await driver.findElements(By.css('[data-testid="history-record-row"]'))).length === 2, 10_000)
+    await (await waitForElement('[data-testid="history-record-row"]')).click()
+    const finalReason = await waitForElement('[data-testid="history-final-failure"]')
+    await driver.wait(async () => driver.executeScript(() => document.getAnimations().every(animation => animation.playState !== 'running')), 10_000)
+    const displayedReason = await finalReason.getText()
+    assert.ok(displayedReason.includes(expected), displayedReason)
+    assert.ok(!displayedReason.includes('密码错误'), displayedReason)
+    writeFileSync(path.join(artifactDirectory, `seven-zip-${query}-history.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  }
+  await driver.navigate().refresh()
+  await waitForElement('[data-testid="nav-History"]')
   writeFileSync(path.join(artifactDirectory, 'seven-zip-volume-read.json'), JSON.stringify({ via: 'isolated-desktop-production-extract-command', uiImportVerified: false, results }, null, 2))
 }

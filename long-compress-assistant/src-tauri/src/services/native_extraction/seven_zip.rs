@@ -40,6 +40,7 @@ impl Drop for IncompleteExtractedFile {
 pub(crate) fn requires_password(file_path: &Path) -> Result<bool> {
     let mut archive_file = ZipInputReader::open_seven_zip(file_path)?;
     let len = archive_file.seek(SeekFrom::End(0))?;
+    validate_archive_extent(&mut archive_file, len)?;
     archive_file.seek(SeekFrom::Start(0))?;
     match sevenz_rust::Archive::read(&mut archive_file, len, &[]) {
         Ok(archive) => Ok(archive.folders.iter().any(|folder| {
@@ -62,6 +63,35 @@ pub(crate) fn requires_password(file_path: &Path) -> Result<bool> {
             }
         }
     }
+}
+
+// The volume numbering cannot reveal a missing final volume. Check the size
+// declared by a CRC-validated start header before interpreting encrypted data.
+fn validate_archive_extent(reader: &mut (impl Read + Seek), length: u64) -> Result<()> {
+    reader.seek(SeekFrom::Start(0))?;
+    let mut header = [0u8; 32];
+    if let Err(error) = reader.read_exact(&mut header) {
+        if error.kind() == std::io::ErrorKind::UnexpectedEof {
+            anyhow::bail!("[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档头被截断，请重新下载或补齐分卷");
+        }
+        return Err(error.into());
+    }
+    // Leave unsupported signatures/versions to the archive decoder.
+    if &header[..6] != b"7z\xbc\xaf\x27\x1c" || header[6] != 0 {
+        return Ok(());
+    }
+    let expected_crc = u32::from_le_bytes(header[8..12].try_into().unwrap());
+    if crc32fast::hash(&header[12..]) != expected_crc {
+        anyhow::bail!("[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头");
+    }
+    let offset = u64::from_le_bytes(header[12..20].try_into().unwrap());
+    let size = u64::from_le_bytes(header[20..28].try_into().unwrap());
+    let end = 32u64.checked_add(offset).and_then(|value| value.checked_add(size))
+        .ok_or_else(|| anyhow::anyhow!("[archive-inspection:damaged] 7Z 归档头长度无效：文件已损坏"))?;
+    if end > length {
+        anyhow::bail!("[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 {end} 字节，实际只有 {length} 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载");
+    }
+    Ok(())
 }
 
 fn classify_error(
@@ -409,6 +439,27 @@ pub(crate) fn extract<R: ExtractionRuntime>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn start_header_extent_rejects_truncation_corruption_and_overflow() {
+        fn header(offset: u64, size: u64) -> Vec<u8> {
+            let mut bytes = vec![0u8; 32];
+            bytes[..6].copy_from_slice(b"7z\xbc\xaf\x27\x1c");
+            bytes[12..20].copy_from_slice(&offset.to_le_bytes());
+            bytes[20..28].copy_from_slice(&size.to_le_bytes());
+            let crc = crc32fast::hash(&bytes[12..]);
+            bytes[8..12].copy_from_slice(&crc.to_le_bytes());
+            bytes
+        }
+        let bytes = header(100, 20);
+        assert!(validate_archive_extent(&mut std::io::Cursor::new(&bytes), 152).is_ok());
+        assert!(validate_archive_extent(&mut std::io::Cursor::new(&bytes), 200).is_ok());
+        let error = validate_archive_extent(&mut std::io::Cursor::new(&bytes), 151).unwrap_err().to_string();
+        assert!(error.contains("[archive-inspection:incomplete]"), "{error}");
+        let mut corrupt = bytes.clone(); corrupt[12] ^= 1;
+        assert!(validate_archive_extent(&mut std::io::Cursor::new(corrupt), 152).unwrap_err().to_string().contains("[archive-inspection:damaged]"));
+        assert!(validate_archive_extent(&mut std::io::Cursor::new(header(u64::MAX, 1)), u64::MAX).unwrap_err().to_string().contains("[archive-inspection:damaged]"));
+        assert!(validate_archive_extent(&mut std::io::Cursor::new(&bytes[..20]), 20).unwrap_err().to_string().contains("[archive-inspection:incomplete]"));
+    }
     use crate::services::extraction_transaction::ExtractionStaging;
     use crate::services::io_buffer_pool::IOBufferPool;
     use crate::utils::archive_tools::find_7z_command;
