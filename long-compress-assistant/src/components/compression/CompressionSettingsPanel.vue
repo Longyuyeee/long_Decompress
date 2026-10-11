@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import ThemedSelect from '@/components/ui/ThemedSelect.vue'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -33,6 +34,7 @@ interface Props {
   allowSplitArchive?: boolean
   suggestedFilename?: string
   compact?: boolean
+  showOutputPath?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -41,7 +43,8 @@ const props = withDefaults(defineProps<Props>(), {
   allowSingleFileFormats: true,
   allowSplitArchive: true,
   suggestedFilename: '',
-  compact: false
+  compact: false,
+  showOutputPath: true
 })
 
 interface Emits {
@@ -71,7 +74,6 @@ const compressionOptions = ref<CompressionOptions>(props.modelValue ? { ...props
 })
 
 const outputPath = ref(props.outputPath)
-const showAdvanced = ref(false)
 const showProfileSelector = ref(false)
 const profileDialogMode = ref<'select' | 'manage'>('select')
 let syncingFromProps = false
@@ -322,12 +324,9 @@ const closeVaultPasswordsAfterFocus = () => {
           </span>
         </div>
 
-        <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.format') }}</label>
+        <div class="flex items-center gap-2 ml-1"><label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.format') }}</label><HelpHint label="目标格式说明">{{ compressionOptions.format === 'zip' ? '兼容性较好，适合分享；加密和编码方式会影响其他软件的支持。' : compressionOptions.format === '7z' ? '压缩率通常较高，适合归档。' : selectedFormat?.singleFileOnly ? '仅支持单个文件；多个文件或目录请使用 TAR 组合或 ZIP、7Z。' : '按用途选择归档格式；可用能力以当前引擎和任务设置为准。' }}</HelpHint></div>
         <ThemedSelect v-model="compressionOptions.format" floating aria-label="目标格式" test-id="compression-format-select"
           :options="compressionFormats.map(fmt => ({ value: fmt.value, label: fmt.name, disabled: isFormatDisabled(fmt), detail: fmt.singleFileOnly ? appStore.t('preset.single_file_only') : undefined }))" />
-        <p class="text-xs text-dim leading-relaxed truncate" :title="selectedFormat?.name">
-          {{ compressionOptions.format === 'zip' ? '兼容性最好，适合分享' : compressionOptions.format === '7z' ? '压缩率更高，适合归档' : compressionOptions.format.startsWith('tar') ? '适合 Linux / Unix 环境' : '仅适合单个文件' }}
-        </p>
       </div>
 
       <!-- 压缩强度 (精致 Range) -->
@@ -435,17 +434,6 @@ const closeVaultPasswordsAfterFocus = () => {
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <!-- 高级开关按钮 -->
-      <button
-        data-testid="compression-advanced-options"
-        @click="showAdvanced = !showAdvanced"
-        class="min-w-0 max-w-full px-4 py-2 rounded-xl border border-subtle text-xs font-black leading-5 transition-all"
-        :class="showAdvanced ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-input text-muted hover:text-content'"
-      >
-        <i class="pi pi-cog mr-2" :class="{ 'animate-spin-slow': showAdvanced }"></i>
-        {{ appStore.t('preset.advanced_options', '输出与高级选项') }}
-      </button>
-
       <!-- 配置组选择按钮 -->
       <button
         data-testid="manage-compression-profiles"
@@ -482,8 +470,7 @@ const closeVaultPasswordsAfterFocus = () => {
         />
         <span class="split-settings-icon"><i class="pi pi-clone"></i></span>
         <span class="split-settings-copy">
-          <strong>{{ appStore.t('preset.split_archive') }}</strong>
-          <small>{{ splitArchiveUnavailableReason || '把大压缩包拆成多个便于传输和存储的 ZIP 分卷' }}</small>
+          <strong>{{ appStore.t('preset.split_archive') }} <HelpHint label="分卷压缩说明">{{ splitArchiveUnavailableReason || '把大压缩包拆成多个便于传输和存储的 ZIP 分卷' }}</HelpHint></strong>
         </span>
       </label>
       <label v-if="compressionOptions.splitArchive" class="split-size-field">
@@ -504,11 +491,10 @@ const closeVaultPasswordsAfterFocus = () => {
     </section>
 
 
-    <!-- 第二行：高级/路径设置 (条件展开) -->
-    <transition name="slide-down">
-      <div v-if="showAdvanced" class="space-y-4 pt-4 border-t border-subtle/30">
+    <!-- 输出与高级选项始终可见，不再需要二次展开。 -->
+      <div data-testid="compression-advanced-settings" class="space-y-3 pt-3 border-t border-subtle/30">
         <!-- 目标路径 -->
-        <div class="flex flex-col gap-1.5 min-w-0">
+        <div v-if="showOutputPath" class="flex flex-col gap-1.5 min-w-0">
           <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.output_path') }}</label>
           <SavedLocationPicker :current="outputPath" @select="outputPath = $event" />
           <div class="flex gap-2">
@@ -526,24 +512,23 @@ const closeVaultPasswordsAfterFocus = () => {
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
           <label class="advanced-option">
-            <input v-model="compressionOptions.keepStructure" type="checkbox" />
-            <span><strong>{{ appStore.t('preset.keep_structure') }}</strong><small>保留源文件夹的层级关系</small></span>
+            <input data-testid="compression-keep-structure" v-model="compressionOptions.keepStructure" type="checkbox" />
+            <span><strong>{{ appStore.t('preset.keep_structure') }} <HelpHint label="保持目录结构说明">保留源文件夹的层级关系</HelpHint></strong></span>
           </label>
           <label class="advanced-option advanced-option-danger">
             <input data-testid="compression-delete-after" v-model="compressionOptions.deleteAfter" type="checkbox" />
-            <span><strong>{{ appStore.t('preset.delete_after') }}</strong><small>{{ appStore.t('preset.delete_after.desc') }}</small></span>
+            <span><strong>{{ appStore.t('preset.delete_after') }} <HelpHint label="完成后删除源文件说明">{{ appStore.t('preset.delete_after.desc') }}</HelpHint></strong></span>
           </label>
           <label class="advanced-option" :class="{ 'opacity-70': compressionOptions.deleteAfter }">
             <input data-testid="compression-verify-after" v-model="compressionOptions.verifyAfter" type="checkbox" :disabled="compressionOptions.deleteAfter" />
-            <span><strong>{{ appStore.t('preset.verify_after') }}</strong><small>{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</small></span>
+            <span><strong>{{ appStore.t('preset.verify_after') }} <HelpHint label="压缩完成后校验说明">{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</HelpHint></strong></span>
           </label>
           <label v-if="compressionOptions.format === '7z'" class="advanced-option">
             <input v-model="compressionOptions.createSolidArchive" type="checkbox" />
-            <span><strong>固实压缩</strong><small>提高同类文件压缩率，但单文件提取更慢</small></span>
+            <span><strong>固实压缩 <HelpHint label="固实压缩说明">提高同类文件压缩率，但单文件提取更慢</HelpHint></strong></span>
           </label>
         </div>
       </div>
-    </transition>
   </div>
 
   <!-- 配置组管理弹窗 -->
@@ -945,6 +930,9 @@ const closeVaultPasswordsAfterFocus = () => {
 }
 
 .advanced-option strong {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
   color: var(--text-base);
   font-size: 0.75rem;
 }

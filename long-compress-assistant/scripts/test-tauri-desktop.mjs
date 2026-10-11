@@ -1636,9 +1636,6 @@ async function runCompressionVerificationDesktopGate() {
     }, 30_000)
 
     await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
-    if ((await driver.findElements(By.css('[data-testid="compression-output-path"]'))).length === 0) {
-      await (await waitForElement('[data-testid="compression-advanced-options"]')).click()
-    }
     const outputInput = await waitForElement('[data-testid="compression-output-path"]')
     await driver.executeScript(
       'const input = arguments[0], value = arguments[1]; input.value = value; input.dispatchEvent(new Event("input", { bubbles: true }));',
@@ -1700,12 +1697,6 @@ async function runCompressionVerificationDesktopGate() {
     deleteAfter: true,
   })
   await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
-  if ((await driver.findElements(By.css('[data-testid="compression-delete-after"]'))).length === 0) {
-    const advancedButton = await waitForElement('[data-testid="compression-advanced-options"]')
-    await driver.executeScript('arguments[0].scrollIntoView({ block: "center" });', advancedButton)
-    await driver.wait(async () => advancedButton.isDisplayed(), 10_000)
-    await driver.executeScript('arguments[0].click();', advancedButton)
-  }
   const deleteCheckbox = await waitForElement('[data-testid="compression-delete-after"]')
   const verifyCheckbox = await waitForElement('[data-testid="compression-verify-after"]')
   if (await deleteCheckbox.isSelected()) await driver.executeScript('arguments[0].click();', deleteCheckbox)

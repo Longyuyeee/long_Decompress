@@ -98,7 +98,7 @@ test('bookmark a folder and reopen it in the other pane after a restart', async 
     ;(await import(path)).useCompressionStore().addFile({ name: '资料.txt', path: 'E:/资料.txt', size: 4096, type: 'file', isDirectory: false })
   })
   await page.getByRole('button', { name: '展开压缩详情' }).click()
-  await page.getByTestId('compression-advanced-options').click()
+  await expect(page.getByTestId('compression-advanced-options')).toHaveCount(0)
   await page.getByTestId('saved-output-select').click()
   await expect(page.getByRole('menu', { name: '常用目录' })).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('compress-location-menu.png') })
