@@ -112,6 +112,8 @@ pub struct CompressionOptions {
     #[serde(skip)]
     pub fast_pack: bool,
     #[serde(default)]
+    pub zip_password_encoding: crate::services::zip_password::ZipPasswordEncoding,
+    #[serde(default)]
     pub format: Option<String>,
     pub level: u32,
     pub password: Option<String>,
@@ -164,6 +166,7 @@ impl Default for CompressionOptions {
     fn default() -> Self {
         Self {
             fast_pack: false,
+            zip_password_encoding: Default::default(),
             format: None,
             level: 0,
             password: None,

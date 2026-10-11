@@ -19,6 +19,7 @@ fn compression_options(format: Option<&str>) -> CompressionOptions {
         verify_after: true,
         allow_insecure_password_cli: false,
         fast_pack: false,
+        zip_password_encoding: Default::default(),
     }
 }
 

@@ -33,6 +33,7 @@ fn copy_cancellable<R: CompressionRuntime, Rd: Read, Wr: Write>(
 pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     runtime: &R,
     password: &str,
+    password_encoding: crate::services::zip_password::ZipPasswordEncoding,
     level: u32,
     sources: &[String],
     output: &str,
@@ -40,12 +41,14 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     _legacy_fast_pack: bool,
     progress_context: Option<(&Window, &str)>,
 ) -> Result<u64> {
+    // Resolve before creating output so unrepresentable passwords leave no file.
+    let password_bytes = crate::services::zip_password::encode(password, password_encoding)?;
     let file = File::create(output)?;
     let mut writer = zip_aes::ZipWriter::new(file);
     let options = zip_aes::write::SimpleFileOptions::default()
         .compression_method(zip_aes::CompressionMethod::Deflated)
         .compression_level(Some(level.clamp(1, 9) as i64))
-        .with_aes_encryption(zip_aes::AesMode::Aes256, password);
+        .with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &password_bytes);
     let entries = compression_entries::collect(sources, preserve_paths, true)?;
     let total_bytes = source_total_bytes(&entries)?;
     let mut progress = ByteProgress::new(total_bytes);
@@ -164,6 +167,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
         let total_bytes = create_encrypted_zip(
             runtime,
             password,
+            options.zip_password_encoding,
             options.level.clamp(1, 9),
             sources,
             output,
@@ -265,6 +269,62 @@ mod tests {
     #[derive(Default)]
     struct TestRuntime {
         cancelled: Arc<AtomicBool>,
+    }
+
+    #[test]
+    fn requested_password_encoding_flows_through_real_creation_and_verification() {
+        use crate::services::zip_password::{encode, ZipPasswordEncoding};
+        let temp = tempfile::tempdir().unwrap();
+        let folder = temp.path().join("资料");
+        std::fs::create_dir_all(folder.join("空目录")).unwrap();
+        std::fs::write(folder.join("内容.txt"), b"real creation payload").unwrap();
+        let password = "密码 + !测试";
+        for encoding in [ZipPasswordEncoding::Utf8, ZipPasswordEncoding::WindowsLocal] {
+            if encode(password, encoding).is_err() { continue; }
+            let output = temp.path().join(format!("{encoding:?}.zip"));
+            compress(&TestRuntime::default(), None, "encoding-test",
+                &[folder.to_string_lossy().into_owned()], &output.to_string_lossy(),
+                CompressionOptions { password: Some(password.into()), zip_password_encoding: encoding,
+                    preserve_paths: Some(true), level: 6, ..Default::default() }).unwrap();
+            assert!(crate::services::compression_verification::verify_native(
+                crate::services::compression_format::CompressionRoute::Zip,
+                &output, Some(password), || false).unwrap());
+            assert!(crate::services::universal_engine::UniversalCliEngine::try_zip_password(&output, password).unwrap());
+            assert!(!crate::services::universal_engine::UniversalCliEngine::try_zip_password(&output, "wrong").unwrap());
+            if encoding == ZipPasswordEncoding::WindowsLocal {
+                let engine = crate::utils::archive_tools::find_7z_command().expect("7-Zip interoperability engine");
+                let destination = temp.path().join("independent");
+                // Only this synthetic test password goes to argv, never a user's password.
+                let result = crate::utils::process::command(engine).arg("x").arg("-y")
+                    .arg(format!("-p{password}")).arg(format!("-o{}", destination.display()))
+                    .arg(&output).output().unwrap();
+                assert!(result.status.success(), "independent extraction failed");
+                assert_eq!(std::fs::read(destination.join("资料/内容.txt")).unwrap(), b"real creation payload");
+                assert!(destination.join("资料/空目录").is_dir());
+            }
+        }
+        let old: CompressionOptions = serde_json::from_value(serde_json::json!({"level":6})).unwrap();
+        assert_eq!(old.zip_password_encoding, ZipPasswordEncoding::Utf8);
+        assert!(serde_json::from_value::<CompressionOptions>(serde_json::json!({"level":6,"zip_password_encoding":"unknown"})).is_err());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn unrepresentable_local_password_leaves_no_archive() {
+        use crate::services::zip_password::{encode, ZipPasswordEncoding};
+        let password = "🗝️";
+        if encode(password, ZipPasswordEncoding::WindowsLocal).is_ok() { return; }
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        std::fs::write(&source, b"keep").unwrap();
+        let output = temp.path().join("bad.zip");
+        let result = compress(&TestRuntime::default(), None, "encoding-test",
+            &[source.to_string_lossy().into_owned()], &output.to_string_lossy(),
+            CompressionOptions { password: Some(password.into()),
+                zip_password_encoding: ZipPasswordEncoding::WindowsLocal, ..Default::default() });
+        assert!(result.is_err());
+        assert!(!output.exists());
+        assert_eq!(std::fs::read(source).unwrap(), b"keep");
     }
 
     #[test]

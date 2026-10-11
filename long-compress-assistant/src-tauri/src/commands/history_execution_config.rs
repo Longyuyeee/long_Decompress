@@ -34,7 +34,13 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     };
     if !settings_fields.is_empty() {
         let mut settings = project(value.get("settings")?, settings_fields)?;
-        if kind == "archive-compression" { settings.insert("fastPack".into(), Value::Bool(false)); }
+        if kind == "archive-compression" {
+            settings.insert("fastPack".into(), Value::Bool(false));
+            if let Some(encoding) = value.get("settings")?.get("zipPasswordEncoding") {
+                if !matches!(encoding.as_str(), Some("utf8" | "windows_local")) { return None; }
+                settings.insert("zipPasswordEncoding".into(), encoding.clone());
+            }
+        }
         output.insert("settings".into(), Value::Object(settings));
     }
     Some(Value::Object(output))
@@ -49,4 +55,29 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
         };
         valid.then(|| (key.to_string(), field.clone()))
     }).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn zip_encoding_snapshot_is_optional_validated_and_does_not_store_passwords() {
+        let original = serde_json::json!({"schemaVersion":1,"kind":"archive-compression",
+            "outputDirectory":"D:/out","passwordRequired":true,"settings":{
+            "format":"zip","level":6,"filename":"archive","splitArchive":false,
+            "splitSize":"100","keepStructure":true,"verifyAfter":true,"createSolidArchive":false,
+            "password":"never persist"}});
+        let old = super::sanitize(original.clone(), "compression", "archive").unwrap();
+        assert!(old["settings"].get("zipPasswordEncoding").is_none());
+        assert!(old["settings"].get("password").is_none());
+        for mode in ["utf8", "windows_local"] {
+            let mut current = original.clone();
+            current["settings"]["zipPasswordEncoding"] = mode.into();
+            let saved = super::sanitize(current, "compression", "archive").unwrap();
+            assert_eq!(saved["settings"]["zipPasswordEncoding"], mode);
+            assert!(saved["settings"].get("password").is_none());
+        }
+        let mut invalid = original;
+        invalid["settings"]["zipPasswordEncoding"] = "unknown".into();
+        assert!(super::sanitize(invalid, "compression", "archive").is_none());
+    }
 }

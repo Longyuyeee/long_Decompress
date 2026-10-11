@@ -4222,6 +4222,7 @@ mod tests_continued {
         native_compression::zip::create_encrypted_zip(
             &service,
             "open-sesame",
+            Default::default(),
             6,
             &[source.to_string_lossy().to_string()],
             &archive.to_string_lossy(),
