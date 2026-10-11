@@ -16,11 +16,18 @@ fn numeric_split_ascii_password_interoperability() {
 }
 
 #[test]
-#[ignore = "Diagnostic only: requires a Windows 7-Zip process using CP936; not a product encoding policy"]
-fn diagnose_cp936_zip_password_interoperability() {
+#[cfg(windows)]
+fn windows_local_zip_password_interoperability() {
     let password = "密码 + !测试";
-    let (encoded, _, errors) = encoding_rs::GBK.encode(password);
-    assert!(!errors);
+    use long_compress_assistant::services::zip_password::{encode, ZipPasswordEncoding};
+    let encoded = match encode(password, ZipPasswordEncoding::WindowsLocal) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            // A machine whose ACP cannot represent Chinese must reject, not substitute.
+            assert!(error.to_string().contains("unavailable") || error.to_string().contains("replacement"));
+            return;
+        }
+    };
     check_encrypted_split_interoperability(password, &encoded);
 }
 
