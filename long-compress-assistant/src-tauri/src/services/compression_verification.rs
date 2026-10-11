@@ -81,6 +81,25 @@ fn verify_encrypted_zip(
     Ok(())
 }
 
+pub(crate) fn verify_numeric_zip(path: &Path, password: Option<&str>, is_cancelled: impl Fn() -> bool) -> Result<()> {
+    check_cancelled(&is_cancelled)?;
+    let reader = super::numeric_volume_reader::NumericVolumeReader::open(path)?;
+    let mut archive = zip_aes::ZipArchive::new(reader)?;
+    let mut buffer = vec![0u8; 256 * 1024];
+    for index in 0..archive.len() {
+        check_cancelled(&is_cancelled)?;
+        let mut entry = match password.filter(|value| !value.is_empty()) {
+            Some(password) => super::zip_password::open_entry(&mut archive, index, password)?,
+            None => archive.by_index(index)?,
+        };
+        loop {
+            check_cancelled(&is_cancelled)?;
+            if entry.read(&mut buffer)? == 0 { break; }
+        }
+    }
+    Ok(())
+}
+
 fn verify_seven_zip(
     path: &Path,
     password: Option<&str>,
@@ -298,6 +317,40 @@ pub(crate) fn verify_native(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn numeric_zip_verification_covers_passwords_corruption_missing_tail_and_cancel() {
+        use std::io::Write;
+        use crate::services::split_compression::SplitCompressionService;
+        use crate::services::zip_password::{encode, ZipPasswordEncoding};
+        for mode in [ZipPasswordEncoding::Utf8, ZipPasswordEncoding::WindowsLocal] {
+            let password = "密码 + !测试";
+            let Ok(bytes) = encode(password, mode) else { continue };
+            let temp = tempfile::tempdir().unwrap();
+            let source = temp.path().join("source.zip");
+            let mut writer = zip_aes::ZipWriter::new(File::create(&source).unwrap());
+            writer.start_file("资料.txt", zip_aes::write::SimpleFileOptions::default()
+                .compression_method(zip_aes::CompressionMethod::Stored)
+                .with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &bytes)).unwrap();
+            writer.write_all(&vec![42; 8192]).unwrap();
+            writer.finish().unwrap();
+            let result = SplitCompressionService::split_archive_file(&source, &temp.path().join("out.zip"), 256, || Ok(())).unwrap();
+            let first = &result.part_files[0];
+            verify_numeric_zip(first, Some(password), || false).unwrap();
+            assert!(verify_numeric_zip(first, Some("wrong"), || false).is_err());
+            assert!(verify_numeric_zip(first, None, || false).is_err());
+            let cancelled = verify_numeric_zip(first, Some(password), || true).unwrap_err();
+            assert!(matches!(cancelled.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+            let middle = &result.part_files[3];
+            let original = std::fs::read(middle).unwrap();
+            let mut damaged = original.clone(); damaged[10] ^= 1;
+            std::fs::write(middle, damaged).unwrap();
+            assert!(verify_numeric_zip(first, Some(password), || false).is_err());
+            std::fs::write(middle, original).unwrap();
+            std::fs::remove_file(result.part_files.last().unwrap()).unwrap();
+            assert!(verify_numeric_zip(first, Some(password), || false).is_err());
+        }
+    }
     use crate::models::compression::CompressionOptions;
     use crate::models::compression::TaskLogSeverity;
     use crate::services::native_compression::{self, CompressionRuntime};

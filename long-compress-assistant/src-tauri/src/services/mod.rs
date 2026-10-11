@@ -39,6 +39,7 @@ mod performance_regression;
 #[cfg(test)]
 mod native_zip_baseline;
 pub mod split_compression;
+pub(crate) mod numeric_volume_reader;
 pub mod zip_password;
 pub mod split_archive_detector;
 pub mod rar_support;

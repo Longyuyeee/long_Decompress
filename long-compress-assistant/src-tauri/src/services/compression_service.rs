@@ -1052,7 +1052,11 @@ impl CompressionService {
         working_output: &Path,
         final_output: &Path,
         split_requested: bool,
+        creation_succeeded: bool,
     ) {
+        // Creation owns its failure cleanup. Validation may have rejected an
+        // existing destination, so its files must never be treated as our output.
+        if !creation_succeeded { return; }
         if split_requested {
             crate::services::split_compression::SplitCompressionService::cleanup_parts(
                 final_output,
@@ -1086,6 +1090,9 @@ impl CompressionService {
         password: Option<&str>,
         split_requested: bool,
     ) -> Result<()> {
+        if split_requested && route == CompressionRoute::Zip {
+            return compression_verification::verify_numeric_zip(output, password, || self.check_cancellation().is_err());
+        }
         if !split_requested
             && compression_verification::verify_native(route, output, password, || {
                 self.check_cancellation().is_err()
@@ -1241,6 +1248,7 @@ impl CompressionService {
             } else {
                 working_output.clone()
             };
+            let creation_succeeded = res.is_ok();
             let res = res.and_then(|_| {
                 if verify_after {
                     service.emit_compression_stage(
@@ -1279,6 +1287,7 @@ impl CompressionService {
                     &working_output,
                     &final_output,
                     split_requested,
+                    creation_succeeded,
                 );
             }
             if res.is_ok() {
@@ -3846,6 +3855,16 @@ mod tests_continued {
     use super::*;
 
     #[test]
+    fn failed_zip_creation_does_not_clean_preexisting_volume_set() {
+        let temp = tempfile::tempdir().unwrap();
+        let output = temp.path().join("existing.zip");
+        let first = temp.path().join("existing.zip.001");
+        std::fs::write(&first, b"user volume").unwrap();
+        CompressionService::cleanup_unverified_compression_output(&output, &output, true, false);
+        assert_eq!(std::fs::read(first).unwrap(), b"user volume");
+    }
+
+    #[test]
     fn recycle_bin_source_resolution_includes_every_split_volume() {
         let temp = tempfile::tempdir().expect("temp dir");
         let first = temp.path().join("bundle.zip.001");
@@ -4082,7 +4101,7 @@ mod tests_continued {
                 true,
             )
             .is_err());
-        CompressionService::cleanup_unverified_compression_output(&output, &output, true);
+        CompressionService::cleanup_unverified_compression_output(&output, &output, true, true);
 
         assert!(source.exists(), "verification failure must preserve the source");
         assert!(result.part_files.iter().all(|part| !part.exists()));
@@ -4107,6 +4126,7 @@ mod tests_continued {
             &working,
             &final_output,
             false,
+            true,
         );
 
         assert_eq!(std::fs::read(&final_output).unwrap(), b"existing archive");
