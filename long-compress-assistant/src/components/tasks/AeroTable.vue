@@ -286,8 +286,8 @@ async (tasks, _, onCleanup) => {
             role="button"
             tabindex="0"
             :aria-expanded="expandedTasks.has(task.id)"
-            @keydown.enter="toggleExpand(task.id)"
-            @keydown.space.prevent="toggleExpand(task.id)"
+            @keydown.enter.self="toggleExpand(task.id)"
+            @keydown.space.self.prevent="toggleExpand(task.id)"
           >
             <!-- 状态指示条 -->
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover/row:opacity-100 transition-opacity duration-200"></div>

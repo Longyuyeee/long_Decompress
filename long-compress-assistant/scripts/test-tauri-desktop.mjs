@@ -4852,11 +4852,71 @@ try {
     const missing = await callDesktopBridgeFailure('extractArchive', parts[0], path.join(fixtureDirectory, '缺卷输出'), password)
     assert.match(missing, /missing|缺|不完整/i)
     writeFileSync(missingPart, savedPart)
+    // Exercise the product queue and retry UI, not the extraction bridge.
+    await callDesktopBridge('clearTasks')
+    await (await waitForElement('[data-testid="nav-Decompress"]')).click()
+    await callDesktopBridge('queueDesktopDialogSelections', [[parts[0]]])
+    await (await waitForElement('[data-testid="dropzone-file"]')).click()
+    await driver.wait(async () => (await driver.findElements(By.css('[data-testid="task-row"]'))).length === 1, 15_000)
+    const recycle = await waitForElement('[data-testid="global-recycle-source-switch"]')
+    if (await recycle.getAttribute('aria-checked') === 'true') await recycle.click()
+    const startQueue = () => driver.findElement(By.xpath('//header[@data-testid="decompression-header"]//button[contains(., "开始解压队列")]'))
+    await (await startQueue()).click()
+    const passwordInput = await waitForElement('.task-password-cell input')
+    const original = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.sourcePaths.includes(parts[0])), 30_000)
+    assert.equal(original.status, 'failed', 'missing password must preserve its original failed history')
+    await passwordInput.sendKeys(password)
+    assert.equal(await passwordInput.getAttribute('value'), password, 'typing must retain every password space')
+    assert.equal(await (await driver.findElement(By.css('[data-testid="task-row"]'))).getAttribute('aria-expanded'), 'false',
+      'typing a password must not expand the task row')
+    writeFileSync(path.join(artifactDirectory, 'numeric-zip-password-input.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    await (await driver.findElement(By.css('.task-password-cell button:last-child'))).click()
+    const retryPanel = await waitForElement('[data-testid="failed-extraction-retry"]')
+    const retryOutput = path.join(fixtureDirectory, '用户选择输出')
+    mkdirSync(retryOutput)
+    writeFileSync(path.join(retryOutput, '中文内容.txt'), '保留原文件', 'utf8')
+    const outputInput = await retryPanel.findElement(By.css('[data-testid="retry-output"]'))
+    await outputInput.clear()
+    await outputInput.sendKeys(retryOutput)
+    const subfolder = await retryPanel.findElement(By.css('[data-testid="retry-subfolder"]'))
+    if (await subfolder.isSelected()) await subfolder.click()
+    assert.equal(await (await retryPanel.findElement(By.css('[data-testid="retry-password"]'))).getAttribute('value'), password)
+    await (await waitForElement('[data-testid="create-retry-drafts"]')).click()
+    await driver.wait(async () => (await retryPanel.getText()).includes('已创建新任务'), 30_000)
+    assert.deepEqual(readdirSync(retryOutput), ['中文内容.txt'], 'draft creation must not extract')
+    await (await driver.findElement(By.xpath('//button[contains(., "返回队列确认并启动")]'))).click()
+    await (await startQueue()).click()
+    const keepBoth = await driver.wait(async () => {
+      const buttons = await driver.findElements(By.xpath('//button[contains(., "自动重命名保留两者")]'))
+      return buttons[0] && await buttons[0].isDisplayed() ? buttons[0] : false
+    }, 30_000)
+    assert.equal((await callDesktopBridge('taskHistory')).some(record => record.retryOfTaskId === original.id), false,
+      'waiting for conflict resolution must not save a false failed retry')
+    writeFileSync(path.join(artifactDirectory, 'numeric-zip-password-conflict.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', keepBoth)
+    writeFileSync(path.join(artifactDirectory, 'numeric-zip-password-conflict-actions.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    await keepBoth.click()
+    const retried = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.retryOfTaskId === original.id), 60_000)
+    assert.equal(retried.status, 'completed', JSON.stringify(retried))
+    assert.equal(readFileSync(path.join(retryOutput, '中文内容.txt'), 'utf8'), '保留原文件')
+    assert.equal(readFileSync(path.join(retryOutput, '中文内容 (1).txt'), 'utf8'), payload)
+    for (const part of parts) assert.ok(existsSync(part), 'all source volumes must remain')
+    await restartDesktopSession()
+    const reopened = await callDesktopBridge('taskHistory')
+    assert.deepEqual(reopened.find(record => record.id === original.id), original)
+    assert.deepEqual(reopened.find(record => record.id === retried.id), retried)
+    await (await waitForElement('[data-testid="nav-History"]')).click()
+    await (await waitForElement('[data-testid="history-search"]')).sendKeys('密码分卷.zip.001')
+    // Earlier direct-command checks also persist history through global events.
+    const matchingCount = reopened.filter(record => record.sourcePaths.includes(parts[0])).length
+    assert.ok(matchingCount >= 2)
+    await driver.wait(async () => (await driver.findElements(By.css('[data-testid="history-record-row"]'))).length === matchingCount, 10_000)
     writeFileSync(path.join(artifactDirectory, 'numeric-zip-password.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
     writeFileSync(path.join(artifactDirectory, 'numeric-zip-password.json'), JSON.stringify({
       binarySha256: fileSha256(application), buildKind: 'isolated-desktop-e2e',
       volumeCount: parts.length, wrongPasswordError: wrong, missingVolumeError: missing,
-      checks: ['UTF-8 Chinese password', 'existing target preserved', 'rename commit payload equality', 'wrong password', 'missing middle volume'],
+      originalTaskId: original.id, retryTaskId: retried.id, restartVerified: true, nativePickerVerified: false,
+      checks: ['UTF-8 Chinese password', 'existing target preserved', 'rename commit payload equality', 'wrong password', 'missing middle volume', 'UI password retry draft', 'UI conflict keep both', 'SQLite history after restart'],
     }, null, 2))
     completedSuccessfully = true
     console.log('Real Windows numeric ZIP password and rename-commit command gate passed.')

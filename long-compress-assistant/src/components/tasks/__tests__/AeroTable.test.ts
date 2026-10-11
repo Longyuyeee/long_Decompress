@@ -16,6 +16,30 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('AeroTable', () => {
+  it('does not intercept spaces or Enter from row controls while preserving row keyboard expansion', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    store.addTask({ id: 'password-space', name: '资料.zip.001', type: 'decompression', sourceFiles: ['C:/资料.zip.001'], outputPath: 'C:/out' })
+    store.tasks[0].status = 'failed'
+    store.tasks[0].passwordRequired = true
+    const wrapper = mount(AeroTable, { props: { taskType: 'decompression' }, global: { plugins: [pinia], stubs: { Teleport: true, ExtractionOutputPreview: true } } })
+    const row = wrapper.get('[data-testid="task-row"]')
+    for (const control of [wrapper.get('.task-password-cell input'), wrapper.get('.task-password-cell button')]) {
+      for (const key of [' ', 'Enter']) {
+        const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+        control.element.dispatchEvent(event)
+        await flushPromises()
+        expect(event.defaultPrevented).toBe(false)
+        expect(row.attributes('aria-expanded')).toBe('false')
+      }
+    }
+    await row.trigger('keydown', { key: ' ' })
+    expect(row.attributes('aria-expanded')).toBe('true')
+    await row.trigger('keydown', { key: 'Enter' })
+    expect(row.attributes('aria-expanded')).toBe('false')
+    wrapper.unmount()
+  })
   it('expands in the list and automatically preserves settings only after editing', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
