@@ -1,5 +1,15 @@
 # 开发交接
 
+## 2026-10-11 当前正式安装候选 84e3a0b 验证完成
+
+- 候选代码：`84e3a0ba7bce30c13c777bdc06b9b1ff94468767`。GitHub Actions [38134973580](https://github.com/Longyuyeee/long_Decompress/actions/runs/38134973580) Windows package 成功（7m32s），版本一致性检查通过。保持 1.3.9，未封板、未创建 Release。
+- 安装包：`test-results/candidate-84e3a0b/Long解压_1.3.9_x64-setup.exe`，19,579,379 字节；SHA256 `d68fc6850e6ee9f2ace344557381670f11616dbea0f24eded298ebc8fb202af7`。从包内提取的正式 EXE：`test-results/candidate-84e3a0b-extracted/Long解压.exe`，SHA256 `07763b8cf7fde8f9ac37539d95089f15a40b54e0b1cc2ade607ff8fef0e86776`，安装后字节一致。运行程序确认无 desktop E2E 测试桥。
+- 本机旧版未运行，备份应用数据后执行 `test-installed-release.ps1 -AllowExistingInstall -RunArchiveWorkspaceMatrix`：生命周期 **52/52**、正式归档工作区 **15/15**。证据：`test-results/installed-release-validation/20261011-192624/result.json` 和 `test-results/installed-archive-workspace/result.json`。
+- 正式页面验证覆盖 150% 缩放、预览/选定解压、加密 7Z/RAR、三层 ZIP→加密 7Z→ZIP、损坏归档、取消、ASCII/UTF-8 ZIP 分卷密码重试与冲突、真实目录密码分卷创建。已实际查看本轮 `installed-numeric-utf8-conflict.png` 和 `password-split-create-result.png`：冲突按钮完整可见，完成页环形进度为 100%。这些截图位于 `test-results/installed-archive-workspace/`；勿把该目录旧的 failure 截图当成本轮失败。
+- 验收后候选已卸载、基线重新安装，`E:\long\Long解压\Long解压.exe` SHA256 恢复为 `bb94637853084a77cc146d057f184b9fd87aa86f88e4612851e081d74b68ac56`；两处应用数据指纹、菜单模式/目标和开机启动项恢复检查全部通过，程序未运行。脚本成功后清理自己的临时恢复备份；安装包和结果证据保留本地。
+- 范围边界：安装升级和现有工作区矩阵已通过，不把它说成全部 7Z 数字卷故障场景的安装态重测；前面混卷/损坏专项仍是隔离 debug 证据。本轮仅补验收文档，不改生产代码。GitHub 构建附件保存 7 天，换机可按提交重新构建；本地私有应用数据未上传。
+- **下一步：推进 7Z 分卷创建的产品能力表/请求入口/UI，按真实页面与创建→校验→解压闭环验证；其余 1.4.0 必做项仍按计划继续，尚未封板。**
+
 ## 2026-10-11 混卷及损坏数据自动解锁回归完成
 
 - 在外部 7-Zip 生成的内容加密、文件头加密数字卷上各新增两类故障：修改密文字节、替换为另一份独立归档的同编号 `.002` 卷。供体卷与原卷长度相同、字节不同；不是缺卷测试的重复。隔离保险箱同时保留错误和正确密码。
