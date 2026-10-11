@@ -57,12 +57,17 @@ export interface TaskHistoryRecord {
 export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
   const completedAt = task.endTime || new Date()
   const startedAt = task.startTime
+  const sourceProgress = task.type === 'compression' ? task.compressionSourceProgress : undefined
+  const processedBytes = sourceProgress?.processedBytes ?? task.processedBytes ?? 0
+  const totalBytes = sourceProgress?.totalBytes ?? task.totalBytes ?? 0
+  const discardedSplitOutput = Boolean(sourceProgress && task.status !== 'completed')
   const measuredMetrics = task.metrics || (
     task.type === 'compression'
+    && !discardedSplitOutput
     && task.outputBytes !== undefined
     && !task.outputBytesEstimated
       ? createMeasuredTaskMetricsV1(
-          Math.max(0, task.totalBytes || task.processedBytes || 0),
+          Math.max(0, sourceProgress ? totalBytes : totalBytes || processedBytes),
           task.outputBytes,
         )
       : null
@@ -82,8 +87,8 @@ export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
     startedAt: startedAt?.toISOString() || null,
     completedAt: completedAt.toISOString(),
     durationMs: startedAt ? Math.max(0, completedAt.getTime() - startedAt.getTime()) : 0,
-    processedBytes: Math.max(0, task.processedBytes || 0),
-    totalBytes: Math.max(0, task.totalBytes || 0),
+    processedBytes: Math.max(0, processedBytes),
+    totalBytes: Math.max(0, totalBytes),
     errorMessage: task.error || null,
     failure: task.status === 'failed' ? {
       schemaVersion: 1,

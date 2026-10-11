@@ -33,11 +33,13 @@ describe('task progress state machine', () => {
     expect(task).toMatchObject({ stage: 'Splitting', progress: 0, processedBytes: 0, totalBytes: 1000, outputBytes: 0 })
     expect(task.speed).toBeUndefined()
     expect(task.etaSeconds).toBeUndefined()
+    expect(task.compressionSourceProgress).toEqual({ processedBytes: 10000, totalBytes: 10000 })
     mocks.listeners.get('task-progress')?.({ payload: {
       task_id: 'split', stage: 'Splitting', progress: 1, processed_bytes: 1000, total_bytes: 1000,
     } })
     expect(task.status).toBe('compressing')
     expect(task.processedBytes).toBe(1000)
+    expect(task.compressionSourceProgress).toEqual({ processedBytes: 10000, totalBytes: 10000 })
   })
 
   beforeEach(() => {

@@ -71,6 +71,8 @@ export interface Task {
   speed?: string
   processedBytes?: number
   totalBytes?: number
+  /** Source transfer facts retained when live progress switches to volume copying. */
+  compressionSourceProgress?: { processedBytes: number; totalBytes: number }
   outputBytes?: number
   outputBytesEstimated?: boolean
   etaSeconds?: number
@@ -193,6 +195,12 @@ export const useTaskStore = defineStore('task', () => {
       if (task) {
         const isPasswordAttempt = stage === 'password-attempt'
         if (stage === 'Splitting' && task.stage !== 'Splitting') {
+          if (task.type === 'compression' && !task.compressionSourceProgress) {
+            task.compressionSourceProgress = {
+              processedBytes: task.processedBytes ?? 0,
+              totalBytes: task.totalBytes ?? task.processedBytes ?? 0,
+            }
+          }
           task.processedBytes = 0
           task.totalBytes = 0
           task.outputBytes = 0
