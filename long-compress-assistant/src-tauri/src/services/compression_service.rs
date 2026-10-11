@@ -4541,8 +4541,8 @@ mod tests_continued {
 
     #[tokio::test]
     async fn seven_zip_split_native_creation_verification_publication_and_extraction() {
-        // Public request/UI gates remain closed until the complete task path is validated.
-        for password in [None, Some("中文密码 + !测试")] {
+        // Keep legacy contents-only combinations alongside explicit filename encryption.
+        for (password, encrypt_filenames) in [(None, false), (Some("中文密码 + !测试"), false), (Some("中文密码 + !测试"), true)] {
             for solid in [false, true] {
                 let temp = tempfile::tempdir().unwrap();
                 let folder = temp.path().join("资料");
@@ -4559,7 +4559,7 @@ mod tests_continued {
                 native_compression::seven_zip::compress(&service, None, "seven-split", &sources,
                     &staged.to_string_lossy(), CompressionOptions {
                         format: Some("7z".into()), password: password.map(str::to_owned),
-                        split_size: Some(37), create_solid_archive: solid, preserve_paths: Some(true), ..Default::default()
+                        split_size: Some(37), create_solid_archive: solid, encrypt_filenames, preserve_paths: Some(true), ..Default::default()
                     }).unwrap();
                 let staged_first = PathBuf::from(format!("{}.001", staged.display()));
                 service.verify_compression_output(CompressionRoute::SevenZip, &staged_first, password, true).unwrap();
@@ -4574,6 +4574,11 @@ mod tests_continued {
                     .map(|path| { let data = std::fs::read(&path).unwrap(); assert!(data.len() <= 37); (path, data) }).collect();
                 assert!(volumes.len() > 1);
                 let first = PathBuf::from(format!("{}.001", output.display()));
+                let mut header_reader = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(&first).unwrap();
+                let header_length = std::io::Seek::seek(&mut header_reader, std::io::SeekFrom::End(0)).unwrap();
+                std::io::Seek::seek(&mut header_reader, std::io::SeekFrom::Start(0)).unwrap();
+                assert_eq!(sevenz_rust::Archive::read(&mut header_reader, header_length, &[]).is_ok(), !encrypt_filenames,
+                    "Only explicitly encrypted filenames should require a header password");
                 let format = CompressionService::detect_password_format(&first.to_string_lossy()).unwrap();
                 assert!(CompressionService::uses_native_seven_zip_volumes(&first, &format));
                 let stats = service.preflight_extraction(&first, &format, password, temp.path()).await.unwrap().unwrap();

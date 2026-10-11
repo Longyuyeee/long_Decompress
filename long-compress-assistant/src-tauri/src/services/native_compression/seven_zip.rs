@@ -65,6 +65,11 @@ pub(crate) fn compress<R: CompressionRuntime>(
     output: &str,
     options: CompressionOptions,
 ) -> Result<()> {
+    if options.encrypt_filenames && !options.password.as_deref().is_some_and(|password| !password.is_empty()) {
+        return Err(CompressionError::CompressionFailed(
+            "文件名加密必须设置压缩密码。".to_string(),
+        ).into());
+    }
     if !output.to_ascii_lowercase().ends_with(".7z") {
         return Err(CompressionError::CompressionFailed(
             "7z compression output path must end with .7z".to_string(),
@@ -123,9 +128,9 @@ pub(crate) fn compress<R: CompressionRuntime>(
     let mut processed_bytes = 0u64;
     let mut writer = sevenz_rust::SevenZWriter::create(output)
         .map_err(|error| CompressionError::CompressionFailed(error.to_string()))?;
-    // Preserve the existing contents-only encryption contract while the
-    // explicit filename-encryption option is being integrated.
-    writer.set_encrypt_header(false);
+    // Legacy requests default to contents-only encryption; hiding filenames
+    // must be explicitly requested and requires the password checked above.
+    writer.set_encrypt_header(options.encrypt_filenames);
 
     let level = options.level.clamp(1, 9);
     let lzma_options = sevenz_rust::lzma::LZMA2Options::with_preset(level);
@@ -298,6 +303,22 @@ mod tests {
                 .args(["l", "-slt", "-pheader-password", "-y"]).arg(&archive).output().unwrap();
             assert!(correct.status.success(), "{}", String::from_utf8_lossy(&correct.stderr));
             assert!(String::from_utf8_lossy(&correct.stdout).contains("Path = x"));
+        }
+    }
+
+    #[test]
+    fn filename_encryption_without_password_fails_before_creating_output() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        std::fs::write(&source, b"keep source").unwrap();
+        for password in [None, Some(String::new())] {
+            let output = temp.path().join("not-created/archive.7z");
+            let error = compress(&TestRuntime::default(), None, "no-password",
+                &[source.to_string_lossy().into_owned()], &output.to_string_lossy(),
+                CompressionOptions { encrypt_filenames: true, password, ..Default::default() }).unwrap_err();
+            assert!(error.to_string().contains("文件名加密必须设置压缩密码"));
+            assert!(!output.parent().unwrap().exists());
+            assert_eq!(std::fs::read(&source).unwrap(), b"keep source");
         }
     }
 

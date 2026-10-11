@@ -120,6 +120,9 @@ pub struct CompressionOptions {
     pub split_size: Option<u64>,
     #[serde(default)]
     pub create_solid_archive: bool,
+    /// Explicit opt-in; legacy requests continue to encrypt contents only.
+    #[serde(default)]
+    pub encrypt_filenames: bool,
     #[serde(default)]
     pub preserve_paths: Option<bool>,
     #[serde(default)]
@@ -172,6 +175,7 @@ impl Default for CompressionOptions {
             password: None,
             split_size: None,
             create_solid_archive: false,
+            encrypt_filenames: false,
             preserve_paths: None,
             delete_after: false,
             verify_after: true,
