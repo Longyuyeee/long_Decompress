@@ -92,15 +92,11 @@ describe('CompressionSettingsPanel split archive settings', () => {
     expect(emitted.splitSize).toBe('512')
   })
 
-  it('keeps fast packing off unless I select it, and makes the split limitation explicit', async () => {
-    const wrapper = mountPanel(settings())
-    const toggle = wrapper.get('[data-testid="compression-fast-pack"]')
-    expect((toggle.element as HTMLInputElement).checked).toBe(false)
-    await toggle.setValue(true)
-    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ fastPack: true })
+  it('removes fast packing even when an old configuration enables it', async () => {
+    const wrapper = mountPanel(settings({ fastPack: true }))
+    expect(wrapper.find('[data-testid="compression-fast-pack"]').exists()).toBe(false)
     await wrapper.setProps({ modelValue: settings({ splitArchive: true, fastPack: true }) })
-    expect((toggle.element as HTMLInputElement).disabled).toBe(true)
-    expect(wrapper.text()).toContain('分卷及其他格式不启用')
+    expect(wrapper.text()).not.toContain('快速打包')
     wrapper.unmount()
   })
 

@@ -27,13 +27,15 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     output.extend(project(&value, fields)?);
     if kind == "archive-extraction" && output["outputDirectory"].as_str()?.trim().is_empty() { return None; }
     let settings_fields: &[(&str, char)] = match kind {
-        "archive-compression" => &[("format", 's'), ("level", 'n'), ("filename", 's'), ("splitArchive", 'b'), ("splitSize", 's'), ("keepStructure", 'b'), ("verifyAfter", 'b'), ("createSolidArchive", 'b'), ("fastPack", 'b')],
+        "archive-compression" => &[("format", 's'), ("level", 'n'), ("filename", 's'), ("splitArchive", 'b'), ("splitSize", 's'), ("keepStructure", 'b'), ("verifyAfter", 'b'), ("createSolidArchive", 'b')],
         "image-compression" => &[("mode", 's'), ("quality", 'n'), ("resizeMode", 's'), ("maxWidth", 'n'), ("maxHeight", 'n'), ("outputFormat", 's'), ("preserveMetadata", 'b'), ("outputDirectory", 's'), ("conflictPolicy", 's')],
         "video-compression" => &[("preset", 's'), ("quality", 'n'), ("maxWidth", '?'), ("maxHeight", '?')],
         _ => &[],
     };
     if !settings_fields.is_empty() {
-        output.insert("settings".into(), Value::Object(project(value.get("settings")?, settings_fields)?));
+        let mut settings = project(value.get("settings")?, settings_fields)?;
+        if kind == "archive-compression" { settings.insert("fastPack".into(), Value::Bool(false)); }
+        output.insert("settings".into(), Value::Object(settings));
     }
     Some(Value::Object(output))
 }

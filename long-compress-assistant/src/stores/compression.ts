@@ -30,6 +30,7 @@ export interface FileObject {
 }
 
 export interface CompressionOptions {
+  /** Legacy compatibility only. New drafts and execution always disable this retired option. */
   fastPack?: boolean
   format: CompressionFormatId
   level: number
@@ -356,7 +357,7 @@ export const useCompressionStore = defineStore('compression', () => {
   }
 
   // 磁吸打组逻辑
-  const cloneSettings = (settings: CompressionOptions): CompressionOptions => ({ ...settings })
+  const cloneSettings = (settings: CompressionOptions): CompressionOptions => ({ ...settings, ...('fastPack' in settings ? { fastPack: false } : {}) })
 
   const getEffectiveSettings = (settings?: CompressionOptions): CompressionOptions => {
     return settings || globalSettings.value

@@ -4,7 +4,7 @@
 
 ## 当前开发能力
 
-> 当前版本为 [`v1.3.9`](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.9)。新增默认关闭的 ZIP 快速打包、智能目录与受限并行；完善冲突重新确认、四类历史草稿、书签、历史有界窗口和展开动效。详见 [发布说明](docs/RELEASE_NOTES_1.3.9.md)、[发布审计](docs/RELEASE_AUDIT_1.3.9.md) 和 [后续建议](docs/NEXT_VERSION_AFTER_1.3.9.md)。
+> 当前发布版本为 [`v1.3.9`](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.9)。发布内容见 [发布说明](docs/RELEASE_NOTES_1.3.9.md) 与 [发布审计](docs/RELEASE_AUDIT_1.3.9.md)。**1.4.0 开发分支已按用户要求移除快速打包，旧参数不会重新启用；预计体积分析保留。** 其他界面与归档升级进度见 [1.4.0 计划](docs/V1.4.0_DEVELOPMENT_PLAN.md)，尚未发布。
 
 - 发布后开发分支已完成 S-00.1 至 S-00.4 及跨步骤总验收：Windows 使用当前用户 DPAPI 保护随机安装密钥，解压密码正文以 AES-256-GCM 保存；活动接口、搜索与统计收敛为归档密码语义；任务与历史数据源已分离，格式支持证据和仓库卫生已对齐。真实桌面门禁验证旧数据迁移、磁盘无密码明文、应用完全重启后命中加密 7Z 并更新当天趋势，正式 NSIS 安装态矩阵 48/48 通过。S-00 未单独提升公开版本，随后进入了不接入媒体引擎的 B-00 架构门禁。
 - B-00.1 已完成统一任务/历史模型的向后兼容扩展：保留 `compression | decompression` 顶层类型，增加可选 `archive | image | video | pdf` 工作负载和版本化实测指标。真实用户数据库快照的 4 条历史已从 schema 6 无损迁移到 7，原库字节不变；未新增媒体页面或引擎。

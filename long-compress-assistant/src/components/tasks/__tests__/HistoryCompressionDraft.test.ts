@@ -34,7 +34,7 @@ describe('create another archive without repeating the failed task', () => {
     await flushPromises()
     expect(store.groups).toHaveLength(1)
     expect(store.groups[0]).toMatchObject({ retryOfTaskId: record.id, outputPath: 'E:/new', settings: {
-      level: 8, fastPack: true, password: '', deleteAfter: false, filename: '照片合集',
+      level: 8, fastPack: false, password: '', deleteAfter: false, filename: '照片合集',
     } })
     expect(store.groups[0].files.map(file => file.path)).toEqual(record.sourcePaths)
     expect(store.groups[0].taskId).toBeUndefined()

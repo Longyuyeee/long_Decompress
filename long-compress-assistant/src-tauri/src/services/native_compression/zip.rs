@@ -37,7 +37,7 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     sources: &[String],
     output: &str,
     preserve_paths: bool,
-    fast_pack: bool,
+    _legacy_fast_pack: bool,
     progress_context: Option<(&Window, &str)>,
 ) -> Result<u64> {
     let file = File::create(output)?;
@@ -51,7 +51,6 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     let mut progress = ByteProgress::new(total_bytes);
     let mut progress_gate = ProgressGate::new();
     let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
-    let mut stored_files = 0usize;
 
     for entry in entries {
         runtime.check_cancellation()?;
@@ -60,20 +59,7 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
             writer.add_directory(archive_name, options)?;
         } else {
             let mut source = File::open(entry.path)?;
-            let store = fast_pack
-                && crate::services::compression_analysis::fast_pack_store(
-                    &mut source,
-                    &runtime.cancellation_flag(),
-                )?;
-            stored_files += usize::from(store);
-            let entry_options = if store {
-                options
-                    .compression_method(zip_aes::CompressionMethod::Stored)
-                    .compression_level(None)
-            } else {
-                options
-            };
-            writer.start_file(archive_name, entry_options)?;
+            writer.start_file(archive_name, options)?;
             let current_name = entry.archive_name.clone();
             copy_cancellable(
                 runtime,
@@ -115,18 +101,6 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
         }
     }
     writer.finish()?;
-    if fast_pack {
-        if let Some((window, task_id)) = progress_context {
-            runtime.emit_log(
-                window,
-                task_id,
-                &format!(
-                    "快速打包：{stored_files} 个文件直接存储，其余文件正常压缩；未跳过输入文件"
-                ),
-                TaskLogSeverity::Info,
-            );
-        }
-    }
     Ok(total_bytes)
 }
 
@@ -222,25 +196,11 @@ pub(crate) fn compress<R: CompressionRuntime>(
     let mut byte_progress = ByteProgress::new(source_total_bytes(&entries)?);
     let mut progress_gate = ProgressGate::new();
     let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
-    let mut stored_files = 0usize;
 
     for (index, entry) in entries.iter().enumerate() {
         runtime.check_cancellation()?;
         let mut source = File::open(&entry.path)?;
-        let store = options.fast_pack
-            && crate::services::compression_analysis::fast_pack_store(
-                &mut source,
-                &runtime.cancellation_flag(),
-            )?;
-        stored_files += usize::from(store);
-        let entry_options = if store {
-            zip_options
-                .compression_method(CompressionMethod::Stored)
-                .compression_level(None)
-        } else {
-            zip_options
-        };
-        writer.start_file(&entry.archive_name, entry_options)?;
+        writer.start_file(&entry.archive_name, zip_options)?;
         let current_name = entry.archive_name.clone();
         copy_cancellable(
             runtime,
@@ -291,18 +251,6 @@ pub(crate) fn compress<R: CompressionRuntime>(
         }
     }
     writer.finish()?;
-    if options.fast_pack {
-        if let Some(window) = window {
-            runtime.emit_log(
-                window,
-                task_id,
-                &format!(
-                    "快速打包：{stored_files} 个文件直接存储，其余文件正常压缩；未跳过输入文件"
-                ),
-                TaskLogSeverity::Info,
-            );
-        }
-    }
     Ok(())
 }
 
@@ -320,10 +268,11 @@ mod tests {
     }
 
     #[test]
-    fn fast_pack_preserves_all_bytes_and_encryption_without_trusting_extensions() {
+    fn retired_fast_pack_is_ignored_and_zip_payloads_remain_intact() {
         let legacy: CompressionOptions =
-            serde_json::from_value(serde_json::json!({ "level": 6 })).unwrap();
+            serde_json::from_value(serde_json::json!({ "level": 6, "fast_pack": true })).unwrap();
         assert!(!legacy.fast_pack);
+        assert!(serde_json::to_value(&legacy).unwrap().get("fast_pack").is_none());
         let temp = tempfile::tempdir().unwrap();
         let mut state = 0x12345678u32;
         let random: Vec<u8> = (0..1024 * 1024)
@@ -347,12 +296,6 @@ mod tests {
                 path.to_string_lossy().into_owned()
             })
             .collect();
-        let mut cancelled_source = File::open(&sources[0]).unwrap();
-        assert!(crate::services::compression_analysis::fast_pack_store(
-            &mut cancelled_source,
-            &AtomicBool::new(true)
-        )
-        .is_err());
         for encrypted in [false, true] {
             for fast_pack in [false, true] {
                 let output = temp.path().join(format!("{encrypted}-{fast_pack}.zip"));
@@ -379,11 +322,7 @@ mod tests {
                     } else {
                         archive.by_name(name).unwrap()
                     };
-                    let expected_method = if fast_pack && *name == "random.txt" {
-                        zip_aes::CompressionMethod::Stored
-                    } else {
-                        zip_aes::CompressionMethod::Deflated
-                    };
+                    let expected_method = zip_aes::CompressionMethod::Deflated;
                     assert_eq!(entry.compression(), expected_method);
                     let mut actual = Vec::new();
                     entry.read_to_end(&mut actual).unwrap();

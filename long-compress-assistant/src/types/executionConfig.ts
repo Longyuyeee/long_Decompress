@@ -48,7 +48,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
         passwordRequired: config.passwordRequired, settings: {
           format: s.format, level: s.level, filename: s.filename, splitArchive: s.splitArchive,
           splitSize: s.splitSize, keepStructure: s.keepStructure, verifyAfter: s.verifyAfter,
-          createSolidArchive: s.createSolidArchive, fastPack: s.fastPack === true,
+          createSolidArchive: s.createSolidArchive, fastPack: false,
         } }
     }
     case 'image-compression': {

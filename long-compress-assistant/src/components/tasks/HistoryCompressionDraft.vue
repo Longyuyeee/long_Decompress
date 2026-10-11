@@ -27,7 +27,7 @@ const restored = computed(() => {
     || !Number.isInteger(s.level) || s.level < 0 || s.level > 9
     || typeof config.outputDirectory !== 'string' || typeof config.passwordRequired !== 'boolean'
     || typeof s.filename !== 'string' || typeof s.splitSize !== 'string'
-    || [s.splitArchive, s.keepStructure, s.verifyAfter, s.createSolidArchive, s.fastPack].some(v => typeof v !== 'boolean')) return null
+    || [s.splitArchive, s.keepStructure, s.verifyAfter, s.createSolidArchive].some(v => typeof v !== 'boolean')) return null
   return config
 })
 const created = computed(() => store.groups.some(group => group.retryOfTaskId === props.record.id)

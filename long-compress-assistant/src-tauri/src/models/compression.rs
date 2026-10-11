@@ -108,7 +108,8 @@ impl CompressionFormat {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionOptions {
-    #[serde(default)]
+    // Retired in 1.4.0: accept old payloads, but never deserialize or emit this option.
+    #[serde(skip)]
     pub fast_pack: bool,
     #[serde(default)]
     pub format: Option<String>,

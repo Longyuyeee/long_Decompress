@@ -259,7 +259,7 @@ fn native_zip_engine_baseline() {
             .collect();
         let service = CompressionService::for_testing();
         let compression_started = Instant::now();
-        let fast_pack = std::env::var("LONG_NATIVE_ZIP_FAST_PACK").as_deref() == Ok("1");
+        let fast_pack = false; // Retired option; benchmark the actual Deflate execution path.
         native_compression::zip::compress(
             &service,
             None,

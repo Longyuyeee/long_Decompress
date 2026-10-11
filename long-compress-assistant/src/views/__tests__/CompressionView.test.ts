@@ -288,7 +288,7 @@ describe('CompressionView', () => {
     expect(taskStore.tasks).toHaveLength(0)
   })
 
-  it.each([false, true])('passes my explicit fast-packing choice through the real task payload: %s', async enabled => {
+  it.each([false, true])('ignores retired fast-packing settings in real task payloads: %s', async enabled => {
     const wrapper = mountView()
     useCompressionStore().globalSettings.fastPack = enabled
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
@@ -296,11 +296,11 @@ describe('CompressionView', () => {
     const start = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('compress.start')))
     await start!.trigger('click')
     await flushPromises()
-    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'C:/input/sample.zip', expect.objectContaining({ fast_pack: enabled }))
-    expect(useTaskStore().tasks[0].compressionOptions?.fast_pack).toBe(enabled)
+    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'C:/input/sample.zip', expect.objectContaining({ fast_pack: false }))
+    expect(useTaskStore().tasks[0].compressionOptions?.fast_pack).toBe(false)
     expect(useTaskStore().tasks[0].executionConfig).toMatchObject({
       schemaVersion: 1, kind: 'archive-compression', outputDirectory: 'C:/input', passwordRequired: false,
-      settings: { filename: 'sample', format: 'zip', fastPack: enabled },
+      settings: { filename: 'sample', format: 'zip', fastPack: false },
     })
     wrapper.unmount()
   })
@@ -314,8 +314,8 @@ describe('CompressionView', () => {
     const start = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('compress.start')))
     await start!.trigger('click')
     await flushPromises()
-    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'D:/output/再次打包.zip', expect.objectContaining({ fast_pack: true, delete_after: false }))
-    expect(useTaskStore().tasks[0]).toMatchObject({ retryOfTaskId: 'original-task', executionConfig: { kind: 'archive-compression', settings: { filename: '再次打包', fastPack: true } } })
+    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'D:/output/再次打包.zip', expect.objectContaining({ fast_pack: false, delete_after: false }))
+    expect(useTaskStore().tasks[0]).toMatchObject({ retryOfTaskId: 'original-task', executionConfig: { kind: 'archive-compression', settings: { filename: '再次打包', fastPack: false } } })
     wrapper.unmount()
   })
 
