@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url'
 import { deflateSync } from 'node:zlib'
 import { runOptimizationDesktopGate, runSavedLocationDesktopGate } from './optimization-desktop-gate.mjs'
 import { runMediaHistoryDesktopGate } from './media-history-desktop-gate.mjs'
+import { runPasswordSplitCreationGate } from './password-split-creation-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -4819,6 +4820,7 @@ try {
     completedSuccessfully = true
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
   } else if (numericZipPasswordOnly) {
+    await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory })
     const source = path.join(fixtureDirectory, '中文内容.txt')
     const archive = path.join(fixtureDirectory, '密码分卷.zip')
     const password = '中文密码 + !测试'
@@ -4855,6 +4857,7 @@ try {
     // Exercise the product queue and retry UI, not the extraction bridge.
     await callDesktopBridge('clearTasks')
     await (await waitForElement('[data-testid="nav-Decompress"]')).click()
+    await waitForElement('[data-testid="decompression-header"]')
     await callDesktopBridge('queueDesktopDialogSelections', [[parts[0]]])
     await (await waitForElement('[data-testid="dropzone-file"]')).click()
     await driver.wait(async () => (await driver.findElements(By.css('[data-testid="task-row"]'))).length === 1, 15_000)

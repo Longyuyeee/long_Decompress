@@ -8,6 +8,7 @@ import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage, generateId } from '@/utils'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
+import { splitSizeBytes } from '@/utils/archiveSizeUnits'
 import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
 import {
   compressionStatusClass,
@@ -425,7 +426,7 @@ const runCompression = async () => {
         format: effectiveFormat,
         level: job.settings.level,
         password: job.settings.password || undefined,
-        split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
+        split_size: splitSizeBytes(job.settings.splitArchive, job.settings.splitSize),
         create_solid_archive: effectiveFormat === '7z' && job.settings.createSolidArchive,
         preserve_paths: job.settings.keepStructure,
         delete_after: job.settings.deleteAfter,
@@ -467,7 +468,7 @@ const runCompression = async () => {
           format: effectiveFormat,
           level: job.settings.level,
           password: job.settings.password || undefined,
-          split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
+          split_size: splitSizeBytes(job.settings.splitArchive, job.settings.splitSize),
           create_solid_archive: effectiveFormat === '7z' && job.settings.createSolidArchive,
           preserve_paths: job.settings.keepStructure,
           delete_after: job.settings.deleteAfter,

@@ -486,9 +486,13 @@ pub(crate) fn prepare_staging_layout(
         std::fs::rename(&source, destination)?;
     }
 
-    directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
-    for directory in directories {
-        let _ = std::fs::remove_dir(&directory);
+    // A full extraction that preserves paths must also preserve archived empty
+    // folders. Prune empty remnants only after flattening or filtering entries.
+    if !options.preserve_paths || !file_filter.is_empty() || !options.selected_entries.is_empty() {
+        directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
+        for directory in directories {
+            let _ = std::fs::remove_dir(&directory);
+        }
     }
     if !options.selected_entries.is_empty() && retained_file_count == 0 {
         return Err(CompressionError::ExtractionFailed(
@@ -855,6 +859,21 @@ mod tests {
         assert_ne!(attributes, INVALID_FILE_ATTRIBUTES);
         assert_ne!(attributes & FILE_ATTRIBUTE_HIDDEN, 0);
         assert_ne!(attributes & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED, 0);
+    }
+
+    #[test]
+    fn full_extraction_preserves_empty_directories_but_filtered_layout_prunes_them() {
+        for (preserve_paths, filter, expected) in [(true, None, true), (false, None, false), (true, Some("*.txt"), false)] {
+            let temp = tempfile::tempdir().unwrap();
+            let staging = temp.path().join("staging");
+            std::fs::create_dir_all(staging.join("资料/空目录")).unwrap();
+            std::fs::write(temp.path().join("source.zip"), b"resource-size fixture").unwrap();
+            let options = DecompressOptions {
+                preserve_paths, file_filter: filter.map(str::to_owned), ..Default::default()
+            };
+            prepare_staging_layout(&temp.path().join("source.zip"), &staging, &options).unwrap();
+            assert_eq!(staging.join("资料/空目录").is_dir(), expected);
+        }
     }
 
     #[test]

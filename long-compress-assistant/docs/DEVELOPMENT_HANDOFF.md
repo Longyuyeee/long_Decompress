@@ -1,5 +1,14 @@
 # 开发交接
 
+## 2026-10-11 真实创建闭环发现并修复单位与空目录问题
+
+- 新增 scripts/password-split-creation-gate.mjs，接入 --numeric-zip-password-only。通过真实压缩中心选择人工目录、全局设置填写中文含空格密码、1 MiB 分卷并点击开始；目录含 2 MiB 随机数据、中文文本和空目录。文件选择返回值由隔离测试桥提供，不宣称操作物理文件选择器；压缩实际由页面提交生产命令，解压由测试桥调用生产 extract_file。
+- 首次实测发现两处 IPC 参数把 MiB 直接当字节，1 MiB 变成 1 字节、产生大量小卷并超时；修复 CompressionView 的任务参数与执行参数，统一用 splitSizeBytes 转换，配置/模板/重试草稿仍保留 MiB。单位回归 4/4。失败临时样本 C:/Users/Administrator/AppData/Local/Temp/long-decompress-desktop-e2e-jaibd8 保留：测试进程已退出，精确目录清理被工具策略拒绝，未绕过限制；不是用户归档，不上传。
+- 第二次实测发现正式解压事务 prepare_staging_layout 无条件移除空目录。修复完整且保留路径的解压保留空目录；扁平化/筛选仍清理空残留。extraction_transaction 回归 20/20（新增测试首次遗漏源文件大小夹具，补齐后通过；未放宽断言）。
+- 新构建桌面最终专项通过：真实创建恰好 3 卷，前两卷各 1048576 字节；校验后发布；解压逐字节还原随机数据、中文文本及空目录，源文件和全部分卷未变，压缩成功历史存在。随后既有错误密码、缺中间卷、UI 重试草稿、冲突保留两者、920×620/760×520 按钮命中与进程重启后历史保持专项通过。串联后补等待解压页标题再点选文件，避免跨页面同名选择器竞态。
+- 已实际查看设置、完成结果、窄窗口冲突截图，分卷单位/数值清楚，固定冲突操作可见。完成结果截图中全局环形进度仍可能处于动画中（显示 65% 而文字已完成），本轮不宣称该视觉时序已排除。证据 test-results/desktop-e2e/password-split-create.json、password-split-create-settings.png、password-split-create-result.png 与 numeric-zip-password.json；二进制 SHA256 d367bde4777e879b71d3cbb80af03531e6bbb8a7b32d0997edbb7dd7f69a1bfb。
+- 前端类型检查/构建、Rust desktop-e2e/custom-protocol 构建和脚本语法检查通过。本轮为隔离调试桌面，不是正式安装包；未覆盖现有安装或用户数据。下一步新正式候选的创建闭环验收，随后继续 7Z 分卷/文件名加密等既定范围；外部 UTF-8 中文密码互操作限制仍在。1.4.0 未封板、未发布。
+
 ## 2026-10-11 压缩中心 ZIP 密码分卷开关接通
 
 - 前端 CompressionSettingsPanel 与上轮后端 ZIP 例外对齐：ZIP 输入密码后仍可选择分卷，输入、更换或清空密码不清除已选卷大小/分卷状态；其他格式仍按实际能力禁用，不开放 7Z 分卷。配置从父组件恢复时保留 ZIP 密码与分卷组合，不修改 UTF-8 默认编码或模板不存密码的规则。
