@@ -1,5 +1,14 @@
 # 开发交接
 
+## 2026-10-11 中文 ZIP 密码互操作根因确认（待策略选择）
+
+- 核对 `zip` 8.6 的创建 API：字符串密码转 UTF-8 字节；核对 7-Zip 官方 `ZipHandler.cpp`：ZIP 解密使用 `UnicodeStringToMultiByte2(..., CP_ACP)`，不是文件名代码页参数。来源：https://github.com/ip7z/7zip/blob/main/CPP/7zip/Archive/Zip/ZipHandler.cpp 。
+- 本机注册表 ACP=936。新增明确限定 CP936 Windows 环境的诊断对照：将同一人工中文密码编码成 GBK 字节创建 AES ZIP，再由相同 7-Zip 读取原包和首卷，全部成功且中文目录、空目录、多文件内容一致。确认是密码字节编码差异，不是分卷损坏、空格/标点参数传递问题或 AES 强度问题。
+- 对照命令：`cargo test --manifest-path src-tauri/Cargo.toml --test split_compression_test diagnose_cp936 -- --ignored --nocapture`，1 项通过。新增环境限定诊断默认 ignore，必须显式运行；原有 UTF-8 中文密码失败用例仍启用，未改成预期失败、未绕过断言，原有 ASCII 对照不变。
+- 这是诊断修正，不是产品修复；没有改变创建/读取密码策略、没有改 UI。不能将 CP936 对照成功写成全部兼容成功。
+- 待用户选择：建议保留现有 UTF-8 默认，增加显式 Windows 本地编码兼容模式（标明跨语言系统限制；读取兼容历史 UTF-8；无法无损编码的字符明确拒绝），或仅保留 UTF-8 并提示中文密码分享优先使用 7Z。不能悄悄改变所有新包的密码编码、丢弃字符或修改已生成包。
+- 选择后再实现设置、创建/读取/校验一致性及实际页面检查；数字分卷主链仍未接通，1.4.0 不可封板。
+
 ## 2026-10-11 ARCH-02 数字切卷底层与中文密码互操作失败（未收口）
 
 - 新增 `SplitCompressionService::split_archive_file`：对已创建归档做有界 64 KiB 字节切卷，保持原归档内容不变，按数值顺序返回卷，支持取消回调；create_new 避免覆盖，失败只删除本调用成功创建的文件，不清理其他任务随后生成的冲突卷。

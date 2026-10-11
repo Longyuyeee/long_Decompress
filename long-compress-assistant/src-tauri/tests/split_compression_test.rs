@@ -7,22 +7,31 @@ use anyhow::Result;
 
 #[test]
 fn numeric_split_preserves_encrypted_zip_directories_and_multiple_files() {
-    check_encrypted_split_interoperability("密码 + !测试");
+    check_encrypted_split_interoperability("密码 + !测试", "密码 + !测试".as_bytes());
 }
 
 #[test]
 fn numeric_split_ascii_password_interoperability() {
-    check_encrypted_split_interoperability("password + !test");
+    check_encrypted_split_interoperability("password + !test", b"password + !test");
 }
 
-fn check_encrypted_split_interoperability(password: &str) {
+#[test]
+#[ignore = "Diagnostic only: requires a Windows 7-Zip process using CP936; not a product encoding policy"]
+fn diagnose_cp936_zip_password_interoperability() {
+    let password = "密码 + !测试";
+    let (encoded, _, errors) = encoding_rs::GBK.encode(password);
+    assert!(!errors);
+    check_encrypted_split_interoperability(password, &encoded);
+}
+
+fn check_encrypted_split_interoperability(password: &str, password_bytes: &[u8]) {
     use std::io::Read;
     let temp = tempdir().unwrap();
     let archive = temp.path().join("private.zip");
     let mut zip = zip_aes::ZipWriter::new(File::create(&archive).unwrap());
     let options = zip_aes::write::SimpleFileOptions::default()
         .compression_method(zip_aes::CompressionMethod::Deflated)
-        .with_aes_encryption(zip_aes::AesMode::Aes256, password);
+        .with_aes_encryption_bytes(zip_aes::AesMode::Aes256, password_bytes);
     zip.add_directory("资料/空目录/", options).unwrap();
     for (name, payload) in [("资料/说明.txt", "中文内容"), ("第二份.txt", "another file")] {
         zip.start_file(name, options).unwrap();
@@ -39,10 +48,10 @@ fn check_encrypted_split_interoperability(password: &str) {
     assert_eq!(joined, fs::read(&archive).unwrap());
     assert_eq!(result.total_size, joined.len() as u64);
     let mut reader = zip_aes::ZipArchive::new(std::io::Cursor::new(joined)).unwrap();
-    assert!(reader.by_name_decrypt("资料/空目录/", password.as_bytes()).unwrap().is_dir());
+    assert!(reader.by_name_decrypt("资料/空目录/", password_bytes).unwrap().is_dir());
     assert!(reader.by_name_decrypt("资料/说明.txt", b"wrong").is_err());
     for (name, expected) in [("资料/说明.txt", "中文内容"), ("第二份.txt", "another file")] {
-        let mut entry = reader.by_name_decrypt(name, password.as_bytes()).unwrap();
+        let mut entry = reader.by_name_decrypt(name, password_bytes).unwrap();
         let mut actual = String::new();
         entry.read_to_string(&mut actual).unwrap();
         assert_eq!(actual, expected);
