@@ -1,0 +1,63 @@
+{
+  "buildKind": "installed-production",
+  "results": [
+    {
+      "kind": "large",
+      "inputBytes": 67108864,
+      "fileCount": 1,
+      "compressionMs": 1140.866100000003,
+      "extractionMs": 113.08009999999922,
+      "totalMs": 1253.9462000000021,
+      "peakTemporaryBytes": 67119564,
+      "peakWorkspaceBytes": 268446156,
+      "sampleIntervalMs": 50,
+      "samples": 21,
+      "processMemory": {
+        "Id": 22560,
+        "PeakWorkingSet64": 170938368,
+        "WorkingSet64": 105086976
+      },
+      "memoryScope": "backend process lifetime peak; not per-case delta or full process tree",
+      "payloadHashesVerified": true
+    },
+    {
+      "kind": "small",
+      "inputBytes": 2048000,
+      "fileCount": 2000,
+      "compressionMs": 543.7790000000023,
+      "extractionMs": 2703.3853000000017,
+      "totalMs": 3247.164300000004,
+      "peakTemporaryBytes": 2048000,
+      "peakWorkspaceBytes": 4418732,
+      "sampleIntervalMs": 50,
+      "samples": 44,
+      "processMemory": {
+        "Id": 22560,
+        "PeakWorkingSet64": 170938368,
+        "WorkingSet64": 103239680
+      },
+      "memoryScope": "backend process lifetime peak; not per-case delta or full process tree",
+      "payloadHashesVerified": true
+    },
+    {
+      "kind": "mixed",
+      "inputBytes": 18825216,
+      "fileCount": 2001,
+      "compressionMs": 784.9897000000055,
+      "extractionMs": 3117.779999999999,
+      "totalMs": 3902.7697000000044,
+      "peakTemporaryBytes": 18825216,
+      "peakWorkspaceBytes": 54751085,
+      "sampleIntervalMs": 50,
+      "samples": 50,
+      "processMemory": {
+        "Id": 22560,
+        "PeakWorkingSet64": 170938368,
+        "WorkingSet64": 103993344
+      },
+      "memoryScope": "backend process lifetime peak; not per-case delta or full process tree",
+      "payloadHashesVerified": true
+    }
+  ],
+  "scope": "one local-volume run per workload; sampled temporary logical file sizes may miss short peaks; no speedup claim"
+}
