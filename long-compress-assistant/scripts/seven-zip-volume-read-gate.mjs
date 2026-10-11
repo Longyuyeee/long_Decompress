@@ -28,8 +28,22 @@ export async function runSevenZipVolumeReadGate({ driver, waitForElement, callDe
     if (password) {
       const wrongOutput = path.join(root, '错误密码')
       const wrong = await callDesktopBridgeFailure('extractArchive', parts[0], wrongOutput, 'wrong')
-      assert.match(wrong, /密码|password/i)
+      assert.ok(wrong.includes('[archive-inspection:ambiguous-data]'), wrong)
       assert.ok(!existsSync(path.join(wrongOutput, '资料', '内容.txt')))
+      // Byte 40 lies in packed encrypted data, not the CRC-protected start header.
+      const damaged = Buffer.from(snapshots[1]); damaged[3] ^= 0x5a
+      writeFileSync(parts[1], damaged)
+      try {
+        const damagedOutput = path.join(root, 'damaged-payload-password')
+        const failure = await callDesktopBridgeFailure('extractArchive', parts[0], damagedOutput, password)
+        assert.ok(failure.includes('[archive-inspection:ambiguous-data]'), failure)
+        assert.ok(!existsSync(path.join(damagedOutput, '资料', '内容.txt')))
+        const history = (await callDesktopBridge('taskHistory')).find(record => record.outputPath === damagedOutput)
+        assert.equal(history?.status, 'failed')
+        assert.ok(history.errorMessage.includes('[archive-inspection:ambiguous-data]'), JSON.stringify(history))
+      } finally {
+        writeFileSync(parts[1], snapshots[1])
+      }
     }
     rmSync(parts[1]) // Exact synthetic middle volume owned by this test.
     try {
@@ -70,7 +84,7 @@ export async function runSevenZipVolumeReadGate({ driver, waitForElement, callDe
     parts.forEach((file, index) => assert.deepEqual(readFileSync(file), snapshots[index]))
     results.push({ mode, volumes: parts.length, correctOutput: true, wrongPasswordRejected: Boolean(password), missingVolumeRejected: true, diagnostics, sourceAndVolumesPreserved: true })
   }
-  for (const [query, expected] of [['missing-tail-password', '可能缺少尾卷'], ['damaged-header-password', '归档头校验失败']]) {
+  for (const [query, expected] of [['missing-tail-password', '可能缺少尾卷'], ['damaged-header-password', '归档头校验失败'], ['damaged-payload-password', '不能确定为密码错误']]) {
     await driver.navigate().refresh()
     await (await waitForElement('[data-testid="nav-History"]')).click()
     await (await waitForElement('[data-testid="history-search"]')).sendKeys(query)
@@ -80,7 +94,7 @@ export async function runSevenZipVolumeReadGate({ driver, waitForElement, callDe
     await driver.wait(async () => driver.executeScript(() => document.getAnimations().every(animation => animation.playState !== 'running')), 10_000)
     const displayedReason = await finalReason.getText()
     assert.ok(displayedReason.includes(expected), displayedReason)
-    assert.ok(!displayedReason.includes('密码错误'), displayedReason)
+    if (query !== 'damaged-payload-password') assert.ok(!displayedReason.includes('密码错误'), displayedReason)
     writeFileSync(path.join(artifactDirectory, `seven-zip-${query}-history.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
   }
   await driver.navigate().refresh()

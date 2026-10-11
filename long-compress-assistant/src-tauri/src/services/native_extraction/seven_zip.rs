@@ -94,6 +94,10 @@ fn validate_archive_extent(reader: &mut (impl Read + Seek), length: u64) -> Resu
     Ok(())
 }
 
+pub(crate) fn ambiguous_password_error() -> CompressionError {
+    CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] 7Z 加密数据未能通过解码或完整性校验：可能是密码不匹配，也可能是文件损坏或分卷混用，不能确定为密码错误。请核对密码，并检查分卷是否来自同一份完整归档；必要时重新下载。".to_string())
+}
+
 fn classify_error(
     error: sevenz_rust::Error,
     archive_encrypted: bool,
@@ -125,7 +129,7 @@ fn classify_error(
             || error_message.contains("checksumverificationfailed")
             || error_message.contains("corrupted input data");
         if password_failure {
-            return CompressionError::InvalidPassword;
+            return ambiguous_password_error();
         }
     }
 
@@ -671,7 +675,7 @@ mod tests {
         ));
         assert!(matches!(
             classify_error(sevenz_rust::Error::ChecksumVerificationFailed, true, true,),
-            CompressionError::InvalidPassword
+            CompressionError::ExtractionFailed(message) if message.contains("[archive-inspection:ambiguous-data]")
         ));
         assert!(matches!(
             classify_error(
@@ -681,7 +685,7 @@ mod tests {
                 true,
                 true,
             ),
-            CompressionError::InvalidPassword
+            CompressionError::ExtractionFailed(message) if message.contains("[archive-inspection:ambiguous-data]")
         ));
     }
 
@@ -751,7 +755,7 @@ mod tests {
         assert!(
             matches!(
                 classify_error(wrong, true, true),
-                CompressionError::InvalidPassword
+                CompressionError::ExtractionFailed(message) if message.contains("[archive-inspection:ambiguous-data]")
             ),
             "unexpected wrong-password error: {wrong_debug}"
         );

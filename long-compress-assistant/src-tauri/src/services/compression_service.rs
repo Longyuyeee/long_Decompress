@@ -2057,7 +2057,12 @@ impl CompressionService {
                     final_password = Some(smart_pwd);
                     password_verified = true;
                 } else {
-                    service.emit_log(&window, &task_id, "所有已知密码均无效，等待手动输入", TaskLogSeverity::Warning);
+                    let unresolved_message = if format == ArchiveFormat::SevenZip {
+                        "未取得能完整验证此 7Z 归档的密码；请手动核对密码，并检查文件或分卷是否损坏"
+                    } else {
+                        "所有已知密码均无效，等待手动输入"
+                    };
+                    service.emit_log(&window, &task_id, unresolved_message, TaskLogSeverity::Warning);
                     
                     // 主动发射事件触发前端 UI 弹窗
                     let _ = window.emit("password-required", PasswordRequiredPayload {
@@ -2087,6 +2092,12 @@ impl CompressionService {
         if password_required == Some(true) && final_password.is_some() && !password_verified {
             let candidate = final_password.as_deref().unwrap_or_default();
             if !service.test_archive_password(&file_path, candidate).await? {
+                // 7Z has no independent password verifier: failed decoding can
+                // also mean damaged ciphertext. Candidate iteration may continue,
+                // but the final user-facing result must not assert a wrong password.
+                if format == ArchiveFormat::SevenZip {
+                    return Err(native_extraction::seven_zip::ambiguous_password_error().into());
+                }
                 return Err(CompressionError::InvalidPassword.into());
             }
             password_verified = true;
