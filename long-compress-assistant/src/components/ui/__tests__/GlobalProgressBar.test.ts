@@ -21,6 +21,22 @@ vi.mock('@/composables/useTauriCommands', () => ({
 vi.mock('@tauri-apps/api/tauri', () => tauriMocks)
 
 describe('GlobalProgressBar', () => {
+  it.each([
+    ['failed', '1 项失败'], ['cancelled', '1 项取消'], ['completed', '全部完成'],
+    ['pending', '1'], ['paused', '1'],
+  ] as const)('does not report %s tasks as all successful', async (status, expected) => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    store.addTask({ id: 'summary', name: 'archive.zip', type: 'decompression', sourceFiles: [], outputPath: '' })
+    store.tasks[0].status = status
+    const wrapper = mount(GlobalProgressBar, { global: { plugins: [pinia] } })
+    expect(wrapper.get('[data-testid="task-summary-label"]').text()).toContain(expected)
+    if (status !== 'completed') expect(wrapper.get('[data-testid="task-summary-label"]').text()).not.toContain('全部完成')
+    if (status === 'failed') expect(wrapper.find('[data-testid="summary-failed-icon"]').exists()).toBe(true)
+    if (status === 'cancelled') expect(wrapper.find('[data-testid="summary-cancelled-icon"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
   it('shows unsaved history in the summary and retries saving without rerunning the task', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)

@@ -47,6 +47,14 @@ const taskStats = computed(() => {
 
 const activeCount = computed(() => taskStats.value.activeCount)
 const hasActiveTasks = computed(() => activeCount.value > 0)
+const failedCount = computed(() => taskStore.tasks.filter(task => task.status === 'failed').length)
+const cancelledCount = computed(() => taskStore.tasks.filter(task => task.status === 'cancelled').length)
+const summaryLabel = computed(() => {
+  if (hasActiveTasks.value) return `${activeCount.value} ${appStore.t('tasks.active')}`
+  if (failedCount.value) return appStore.t('tasks.finished_failed').replace('{count}', String(failedCount.value))
+  if (cancelledCount.value) return appStore.t('tasks.finished_cancelled').replace('{count}', String(cancelledCount.value))
+  return appStore.t('tasks.all_done')
+})
 const hasRunningTasks = computed(() => taskStore.tasks.some(task =>
   ['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)
 ))
@@ -218,6 +226,7 @@ const copyToClipboard = async (text: string) => {
       <div
            @click="isExpanded = !isExpanded"
            data-testid="global-progress-summary"
+           :title="summaryLabel"
            class="progress-summary flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-3xl border border-primary/40 shadow-lg cursor-pointer hover:border-primary/70 transition-all duration-300 w-full min-w-0">
         <!-- 环形进度 -->
         <div class="progress-ring-wrap relative w-10 h-10 shrink-0">
@@ -240,9 +249,12 @@ const copyToClipboard = async (text: string) => {
           <div class="flex min-w-0 items-center gap-2 whitespace-nowrap">
             <i v-if="hasRunningTasks" class="pi pi-spin pi-spinner text-[0.75rem] text-primary"></i>
             <i v-else-if="hasPausedTasks" class="pi pi-pause-circle text-[0.75rem] text-amber-400"></i>
+            <i v-else-if="hasActiveTasks" class="pi pi-clock text-[0.75rem] text-muted"></i>
+            <i v-else-if="failedCount" data-testid="summary-failed-icon" class="pi pi-exclamation-circle text-[0.75rem] text-red-400"></i>
+            <i v-else-if="cancelledCount" data-testid="summary-cancelled-icon" class="pi pi-ban text-[0.75rem] text-muted"></i>
             <i v-else class="pi pi-check-circle text-[0.75rem] text-green-400"></i>
-            <span class="text-[0.75rem] font-bold text-content whitespace-nowrap">
-              {{ hasActiveTasks ? `${activeCount} ${appStore.t('tasks.active')}` : appStore.t('tasks.all_done') }}
+            <span data-testid="task-summary-label" class="text-[0.75rem] font-bold text-content whitespace-nowrap">
+              {{ summaryLabel }}
             </span>
           </div>
           <div v-if="runningTask" class="flex min-w-0 items-center gap-1.5 whitespace-nowrap text-xs">
