@@ -17,6 +17,60 @@ pub struct SplitCompressionResult {
 pub struct SplitCompressionService;
 
 impl SplitCompressionService {
+    /// Split an already-created archive into numeric volumes, without interpreting
+    /// its entries or password. The caller must verify the archive before publishing
+    /// success. On failure only files created by this call are removed.
+    pub fn split_archive_file(
+        source: &Path,
+        output: &Path,
+        split_size: u64,
+        mut check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<SplitCompressionResult> {
+        use std::io::{Read, Write};
+        anyhow::ensure!(split_size > 0, "Volume size must be positive");
+        check_cancellation()?;
+        let mut reader = std::fs::File::open(source)?;
+        anyhow::ensure!(reader.metadata()?.is_file(), "Archive source must be a file");
+        anyhow::ensure!(!output.exists() && Self::discover_parts(output)?.is_empty(), "Split archive output already exists");
+        let mut parts = Vec::new();
+        let result = (|| -> Result<u64> {
+            let mut total = 0u64;
+            let mut buffer = vec![0u8; 64 * 1024];
+            loop {
+                check_cancellation()?;
+                let count = reader.read(&mut buffer[..(split_size.min(64 * 1024) as usize)])?;
+                if count == 0 { break; }
+                let mut name = output.as_os_str().to_os_string();
+                name.push(format!(".{:03}", parts.len() + 1));
+                let path = PathBuf::from(name);
+                let mut writer = std::fs::OpenOptions::new().write(true).create_new(true).open(&path)?;
+                parts.push(path);
+                writer.write_all(&buffer[..count])?;
+                let mut written = count as u64;
+                while written < split_size {
+                    check_cancellation()?;
+                    let limit = (split_size - written).min(buffer.len() as u64) as usize;
+                    let count = reader.read(&mut buffer[..limit])?;
+                    if count == 0 { break; }
+                    writer.write_all(&buffer[..count])?;
+                    written += count as u64;
+                }
+                writer.flush()?;
+                total = total.checked_add(written).context("Archive size overflow")?;
+            }
+            check_cancellation()?;
+            anyhow::ensure!(!parts.is_empty(), "Archive is empty");
+            Ok(total)
+        })();
+        match result {
+            Ok(total_size) => Ok(SplitCompressionResult { part_count: parts.len(), part_files: parts, total_size }),
+            Err(error) => {
+                for part in parts { let _ = std::fs::remove_file(part); }
+                Err(error)
+            }
+        }
+    }
+
     pub fn new() -> Self {
         Self
     }
