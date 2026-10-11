@@ -929,9 +929,10 @@ impl CompressionService {
         let resolved_output = Self::canonicalize_with_missing_tail(output)?;
         let split_requested = options.split_size.is_some_and(|size| size > 0);
         let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
-        if split_requested && has_password {
+        let format = Self::infer_compression_format(output_path, options.format.as_deref());
+        if split_requested && has_password && format != "zip" {
             return Err(CompressionError::CompressionFailed(
-                "Encrypted split archives are not supported safely; disable splitting or remove the password".to_string()
+                "Encrypted split archive creation is currently supported only for ZIP; choose ZIP or disable splitting".to_string()
             ).into());
         }
 
@@ -4350,8 +4351,66 @@ mod tests_continued {
         }
     }
 
+    #[tokio::test]
+    async fn encrypted_zip_split_creation_publication_and_extraction_roundtrip() {
+        use crate::services::zip_password::{encode, ZipPasswordEncoding};
+        for encoding in [ZipPasswordEncoding::Utf8, ZipPasswordEncoding::WindowsLocal] {
+            let password = "中文密码 + !测试";
+            if let Err(error) = encode(password, encoding) {
+                assert!(matches!(encoding, ZipPasswordEncoding::WindowsLocal), "{error}");
+                eprintln!("Windows-local encoding unavailable on this host: {error}");
+                continue;
+            }
+            let temp = tempfile::tempdir().unwrap();
+            let folder = temp.path().join("资料");
+            std::fs::create_dir_all(folder.join("空目录")).unwrap();
+            std::fs::write(folder.join("内容.txt"), b"folder payload").unwrap();
+            let second = temp.path().join("第二份.txt");
+            std::fs::write(&second, b"second payload").unwrap();
+            let sources = vec![folder.to_string_lossy().into_owned(), second.to_string_lossy().into_owned()];
+            let output = temp.path().join("分享.zip");
+            let options = CompressionOptions {
+                format: Some("zip".into()), password: Some(password.into()),
+                zip_password_encoding: encoding, split_size: Some(37),
+                preserve_paths: Some(true), ..Default::default()
+            };
+            assert_eq!(CompressionService::validate_compression_request(&sources, &output.to_string_lossy(), &options).unwrap(), "zip");
+            CompressionService::validate_compression_io_paths(&sources, &output.to_string_lossy(), &options).unwrap();
+            let service = CompressionService::for_testing();
+            let staged = CompressionService::temporary_compression_output(&output).unwrap();
+            native_compression::zip::compress(&service, None, "encrypted-split", &sources, &staged.to_string_lossy(), options).unwrap();
+            let staged_first = PathBuf::from(format!("{}.001", staged.display()));
+            service.verify_compression_output_inner(CompressionRoute::Zip, &staged_first, Some(password), true).unwrap();
+            CompressionService::finalize_compression_output(Ok(()), &staged, &output, true, false).unwrap();
+            assert!(!staged_first.exists());
+            let first = PathBuf::from(format!("{}.001", output.display()));
+            let volume_snapshot: Vec<_> = std::fs::read_dir(temp.path()).unwrap()
+                .map(|entry| entry.unwrap().path())
+                .filter(|path| path.file_name().unwrap().to_string_lossy().starts_with("分享.zip."))
+                .map(|path| { let bytes = std::fs::read(&path).unwrap(); assert!(bytes.len() <= 37); (path, bytes) })
+                .collect();
+            assert!(volume_snapshot.len() > 1);
+            let extracted = temp.path().join("解压结果");
+            std::fs::create_dir(&extracted).unwrap();
+            UniversalCliEngine::new().extract_with_progress(&first, &extracted, Some(password), false,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(std::fs::read(extracted.join("资料/内容.txt")).unwrap(), b"folder payload");
+            assert_eq!(std::fs::read(extracted.join("第二份.txt")).unwrap(), b"second payload");
+            assert!(extracted.join("资料/空目录").is_dir());
+            assert_eq!(std::fs::read(folder.join("内容.txt")).unwrap(), b"folder payload");
+            assert_eq!(std::fs::read(&second).unwrap(), b"second payload");
+            assert!(first.exists());
+            let wrong_output = temp.path().join("错误密码");
+            std::fs::create_dir(&wrong_output).unwrap();
+            assert!(UniversalCliEngine::new().extract_with_progress(&first, &wrong_output, Some("wrong"), false,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.is_err());
+            assert_eq!(std::fs::read_dir(wrong_output).unwrap().count(), 0);
+            for (path, bytes) in volume_snapshot { assert_eq!(std::fs::read(path).unwrap(), bytes); }
+        }
+    }
+
     #[test]
-    fn allows_directory_split_but_rejects_password_and_output_inside_source() {
+    fn allows_encrypted_zip_directory_split_but_rejects_other_formats_and_nested_output() {
         let temp = tempfile::tempdir().expect("temp dir");
         let source = temp.path().join("source.txt");
         std::fs::write(&source, b"split fixture").expect("source fixture");
@@ -4366,7 +4425,13 @@ mod tests_continued {
             &[source.to_string_lossy().to_string()],
             &output.to_string_lossy(),
             &encrypted_split,
-        ).is_err());
+        ).is_ok());
+        for format in ["7z", "rar", "tar"] {
+            let unsupported = CompressionOptions { format: Some(format.into()), ..encrypted_split.clone() };
+            assert!(CompressionService::validate_compression_io_paths(
+                &[source.to_string_lossy().to_string()], &output.to_string_lossy(), &unsupported,
+            ).is_err());
+        }
 
         let folder = temp.path().join("folder");
         std::fs::create_dir_all(&folder).expect("source folder");
