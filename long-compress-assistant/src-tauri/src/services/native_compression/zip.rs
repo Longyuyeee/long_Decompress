@@ -143,8 +143,16 @@ pub(crate) fn compress<R: CompressionRuntime>(
         unsplit.split_size = None;
         compress(runtime, window, task_id, sources, &temporary.0.to_string_lossy(), unsplit)?;
         runtime.check_cancellation()?;
-        let result = SplitCompressionService::split_archive_file(
+        let mut split_progress_gate = ProgressGate::new();
+        let result = SplitCompressionService::split_archive_file_with_progress(
             &temporary.0, Path::new(output), split_size, || runtime.check_cancellation(),
+            |processed, total| {
+                if processed == 0 || split_progress_gate.allow(processed >= total) {
+                    if let Some(window) = window {
+                        runtime.emit_split_progress(window, task_id, processed, total);
+                    }
+                }
+            },
         )?;
         if let Some(window) = window {
             runtime.emit_log(
@@ -153,7 +161,6 @@ pub(crate) fn compress<R: CompressionRuntime>(
                 &format!("分卷压缩完成：{} 个分卷", result.part_count),
                 TaskLogSeverity::Success,
             );
-            runtime.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
         }
         return Ok(());
     }

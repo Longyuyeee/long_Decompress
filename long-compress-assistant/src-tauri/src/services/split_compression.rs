@@ -26,8 +26,16 @@ impl SplitCompressionService {
         split_size: u64,
         check_cancellation: impl FnMut() -> Result<()>,
     ) -> Result<SplitCompressionResult> {
+        Self::split_archive_file_with_progress(source, output, split_size, check_cancellation, |_, _| {})
+    }
+
+    pub fn split_archive_file_with_progress(
+        source: &Path, output: &Path, split_size: u64,
+        check_cancellation: impl FnMut() -> Result<()>,
+        progress: impl FnMut(u64, u64),
+    ) -> Result<SplitCompressionResult> {
         Self::split_archive_file_with_space_probe(source, output, split_size,
-            check_cancellation, crate::services::storage_preflight::available_disk_space)
+            check_cancellation, crate::services::storage_preflight::available_disk_space, progress)
     }
 
     fn split_archive_file_with_space_probe(
@@ -36,6 +44,7 @@ impl SplitCompressionService {
         split_size: u64,
         mut check_cancellation: impl FnMut() -> Result<()>,
         available_space: impl FnOnce(&Path) -> Option<u64>,
+        mut progress: impl FnMut(u64, u64),
     ) -> Result<SplitCompressionResult> {
         use std::io::{Read, Write};
         anyhow::ensure!(split_size > 0, "Volume size must be positive");
@@ -58,6 +67,7 @@ impl SplitCompressionService {
             }
         }
         let mut parts = Vec::new();
+        progress(0, metadata.len());
         let result = (|| -> Result<u64> {
             let mut total = 0u64;
             let mut buffer = vec![0u8; 64 * 1024];
@@ -72,6 +82,7 @@ impl SplitCompressionService {
                 parts.push(path);
                 writer.write_all(&buffer[..count])?;
                 let mut written = count as u64;
+                progress(total + written, metadata.len());
                 while written < split_size {
                     check_cancellation()?;
                     let limit = (split_size - written).min(buffer.len() as u64) as usize;
@@ -79,6 +90,7 @@ impl SplitCompressionService {
                     if count == 0 { break; }
                     writer.write_all(&buffer[..count])?;
                     written += count as u64;
+                    progress(total + written, metadata.len());
                 }
                 writer.flush()?;
                 total = total.checked_add(written).context("Archive size overflow")?;
@@ -298,6 +310,24 @@ mod space_tests {
     use crate::services::storage_preflight::DISK_SAFETY_RESERVE;
 
     #[test]
+    fn split_progress_reports_written_bytes_across_volume_boundaries() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.zip");
+        std::fs::write(&source, vec![42; 200_003]).unwrap();
+        let mut events = Vec::new();
+        let result = SplitCompressionService::split_archive_file_with_space_probe(
+            &source, &temp.path().join("result.zip"), 100_000,
+            || Ok(()), |_| None, |done, total| events.push((done, total)),
+        ).unwrap();
+        assert_eq!(result.part_count, 3);
+        assert_eq!(events.first(), Some(&(0, 200_003)));
+        assert_eq!(events.last(), Some(&(200_003, 200_003)));
+        assert!(events.len() > 4);
+        assert!(events.windows(2).all(|pair| pair[1].0 > pair[0].0));
+        assert!(events.iter().all(|(done, total)| *total == 200_003 && done <= total));
+    }
+
+    #[test]
     fn split_space_preflight_checks_actual_additional_bytes_before_first_volume() {
         let required = 200 + DISK_SAFETY_RESERVE;
         for available in [Some(0), Some(required - 1), Some(required), None] {
@@ -310,7 +340,7 @@ mod space_tests {
                 &source, &output, 50, || Ok(()), |path| {
                     assert_eq!(path, temp.path());
                     available
-                },
+                }, |_, _| {},
             );
             if available.is_some_and(|bytes| bytes < required) {
                 let error = result.unwrap_err();
@@ -337,11 +367,11 @@ mod space_tests {
         std::fs::write(&existing, b"existing bytes").unwrap();
         let cancelled = SplitCompressionService::split_archive_file_with_space_probe(
             &source, &output, 50, || Err(CompressionError::Cancelled.into()),
-            |_| panic!("cancellation must precede disk probing"),
+            |_| panic!("cancellation must precede disk probing"), |_, _| {},
         ).unwrap_err();
         assert!(matches!(cancelled.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
         assert!(SplitCompressionService::split_archive_file_with_space_probe(
-            &source, &output, 50, || Ok(()), |_| panic!("conflict must precede disk probing"),
+            &source, &output, 50, || Ok(()), |_| panic!("conflict must precede disk probing"), |_, _| {},
         ).is_err());
         assert_eq!(std::fs::read(existing).unwrap(), b"existing bytes");
     }

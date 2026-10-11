@@ -123,6 +123,7 @@ const stageLabel = (stage?: string) => {
     case 'Pre-checking': return appStore.t('tasks.status.preparing')
     case 'Extracting': return appStore.t('tasks.status.running')
     case 'Verifying': return '验证输出'
+    case 'Splitting': return appStore.t('compress.status.splitting')
     case 'Finalizing': return appStore.t('tasks.status.finalizing')
     case 'password-attempt': return '验证解压密码'
     case 'Probing': return '重新探测'

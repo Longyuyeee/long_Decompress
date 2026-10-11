@@ -245,6 +245,18 @@ impl ExtractionRuntime for CompressionService {
 }
 
 impl CompressionRuntime for CompressionService {
+    fn emit_split_progress(&self, window: &Window, task_id: &str, processed: u64, total: u64) {
+        if processed == 0 { self.begin_progress_telemetry(task_id); }
+        let progress = if total == 0 { 0.0 } else { processed as f32 / total as f32 };
+        let (speed, eta_seconds) = self.progress_telemetry(task_id, progress, processed, total);
+        let _ = window.emit("task-progress", TaskProgress {
+            task_id: task_id.to_string(), stage: Some("Splitting".to_string()),
+            current_password: None, progress, current_file: None,
+            processed_bytes: processed, total_bytes: total,
+            output_bytes: processed, output_bytes_estimated: false,
+            speed, eta_seconds, password_attempt_current: None, password_attempt_total: None,
+        });
+    }
     fn check_cancellation(&self) -> Result<()> {
         CompressionService::check_cancellation(self)
     }

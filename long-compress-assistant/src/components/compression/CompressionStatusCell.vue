@@ -7,6 +7,7 @@ import {
   compressionStatusClass,
   compressionStatusIcon,
   compressionStatusTranslationKey,
+  compressionStageTranslationKey,
   showsCompressionProgress,
 } from '@/utils/compressionTaskPresentation'
 
@@ -30,7 +31,7 @@ const progress = computed(() => props.task?.progress || 0)
         class="text-xs font-black tracking-wider"
         :class="compressionStatusClass(status)"
       >
-        {{ appStore.t(compressionStatusTranslationKey(status)) }}
+        {{ appStore.t(['running', 'compressing'].includes(status) ? compressionStageTranslationKey(task) : compressionStatusTranslationKey(status)) }}
       </span>
     </div>
     <div
@@ -52,6 +53,21 @@ const progress = computed(() => props.task?.progress || 0)
 </template>
 
 <style scoped>
+.compression-status-cell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 0.5rem;
+  row-gap: 0.3rem;
+}
+.compression-status-cell > div:nth-child(2) {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.compression-status-cell > span {
+  grid-row: 1;
+  grid-column: 2;
+}
 @media (max-width: 520px) {
   .compression-status-cell {
     flex-basis: 5.5rem;

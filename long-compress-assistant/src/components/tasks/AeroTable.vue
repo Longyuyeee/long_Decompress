@@ -200,6 +200,7 @@ const getStageText = (task: Task) => {
     case 'Pre-checking': return '执行预检'
     case 'Extracting': return '正在解压'
     case 'Verifying': return '验证输出'
+    case 'Splitting': return '正在分卷'
     case 'Finalizing': return '提交结果'
     case 'Probing': return '重新探测'
     case 'Encoding': return '视频编码'

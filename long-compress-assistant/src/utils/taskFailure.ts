@@ -24,7 +24,7 @@ export type FailureCategory = keyof typeof failureCategories
 
 const stageLabels: Record<string, string> = {
   inspection: '归档检测', unknown: '阶段未知', 'Pre-checking': '预检', Extracting: '解压',
-  Verifying: '校验', Finalizing: '完成处理', 'password-attempt': '密码验证',
+  Verifying: '校验', Splitting: '分卷', Finalizing: '完成处理', 'password-attempt': '密码验证',
   Probing: '媒体探测', Encoding: '编码', Transforming: '转换', Validating: '输出校验',
   Publishing: '发布输出', 'still-encoding': '编码',
 }

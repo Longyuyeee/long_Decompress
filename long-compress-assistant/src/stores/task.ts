@@ -63,7 +63,7 @@ export interface Task {
   fileFilter?: string
   selectedEntries?: string[]
   // 增强字段 [FE-INT-001]
-  stage?: 'Pre-checking' | 'Extracting' | 'Verifying' | 'Finalizing' | 'password-attempt' | 'Probing' | 'Encoding' | 'Transforming' | 'Validating' | 'Publishing' | 'still-encoding'
+  stage?: 'Pre-checking' | 'Extracting' | 'Splitting' | 'Verifying' | 'Finalizing' | 'password-attempt' | 'Probing' | 'Encoding' | 'Transforming' | 'Validating' | 'Publishing' | 'still-encoding'
   currentFile?: string
   currentPassword?: string
   passwordAttemptCurrent?: number
@@ -192,6 +192,13 @@ export const useTaskStore = defineStore('task', () => {
       const task = tasks.value.find(t => t.id === task_id)
       if (task) {
         const isPasswordAttempt = stage === 'password-attempt'
+        if (stage === 'Splitting' && task.stage !== 'Splitting') {
+          task.processedBytes = 0
+          task.totalBytes = 0
+          task.outputBytes = 0
+          task.speed = undefined
+          task.etaSeconds = undefined
+        }
         // Candidate count is not decompression progress. Keep this defensive
         // frontend guard even though the backend also emits zero for this stage.
         task.progress = isPasswordAttempt ? 0 : normalizeProgressPercent(progress)
