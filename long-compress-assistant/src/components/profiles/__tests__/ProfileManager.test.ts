@@ -106,6 +106,7 @@ describe('ProfileManager', () => {
           keepStructure: true,
           verifyAfter: true,
           createSolidArchive: true,
+          encryptFilenames: true,
         },
         passwordStrategy: { mode: 'prompt_at_runtime' },
         exportNotes: ['固定密码已替换为执行时询问'],
@@ -125,6 +126,7 @@ describe('ProfileManager', () => {
     expect(wrapper.text()).toContain('确认后只创建配置组')
     expect(preview.text()).toContain('固定密码、删除源文件和额外引擎参数')
     expect(preview.text()).toContain('执行时询问密码')
+    expect(preview.get('[data-testid="template-filename-encryption"]').text()).toContain('开启')
     expect(preview.text()).toContain('自动匹配规则导入后默认保持关闭')
     expect(mocks.importTaskTemplate).not.toHaveBeenCalled()
 
