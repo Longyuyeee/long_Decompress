@@ -132,7 +132,18 @@ impl UniversalCliEngine {
                         check_control()?;
                         let read = match entry.read(&mut buffer) {
                             Ok(read) => read,
-                            Err(_) => return Ok(false),
+                            Err(error) => {
+                                let code = match error.kind() {
+                                    std::io::ErrorKind::PermissionDenied => "permission",
+                                    std::io::ErrorKind::InvalidData | std::io::ErrorKind::UnexpectedEof => "ambiguous-data",
+                                    _ => "io",
+                                };
+                                let message = format!(
+                                    "[archive-inspection:{}] ZIP 条目「{}」读取或完整性校验失败，不能仅判定为密码不匹配：{}",
+                                    code, entry.name(), error
+                                );
+                                return Err(anyhow::Error::new(error).context(message));
+                            },
                         };
                         if read == 0 {
                             break;
@@ -800,6 +811,42 @@ impl ArchiveEngine for UniversalCliEngine {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn corrupted_encrypted_zip_payload_is_not_a_password_miss() {
+        use super::*;
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("damaged.zip");
+        let mut writer = zip_aes::ZipWriter::new(std::fs::File::create(&source).unwrap());
+        let options = zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Stored)
+            .with_aes_encryption(zip_aes::AesMode::Aes256, "correct");
+        writer.start_file("payload.txt", options).unwrap();
+        writer.write_all(b"actual encrypted payload").unwrap();
+        writer.finish().unwrap();
+        assert!(UniversalCliEngine::try_zip_password(&source, "correct").unwrap());
+        assert!(!UniversalCliEngine::try_zip_password(&source, "wrong").unwrap());
+        let auth_tail = {
+            let mut reader = zip_aes::ZipArchive::new(std::fs::File::open(&source).unwrap()).unwrap();
+            let entry = reader.by_index_raw(0).unwrap();
+            (entry.data_start().unwrap() + entry.compressed_size() - 1) as usize
+        };
+        let mut bytes = std::fs::read(&source).unwrap();
+        bytes[auth_tail] ^= 1;
+        std::fs::write(&source, bytes).unwrap();
+        let split = crate::services::split_compression::SplitCompressionService::split_archive_file(
+            &source, &temp.path().join("damaged-split.zip"), 37, || Ok(())
+        ).unwrap();
+        for path in [&source, &split.part_files[0]] {
+            assert!(UniversalCliEngine::zip_requires_password(path).unwrap());
+            let error = UniversalCliEngine::try_zip_password(path, "correct").unwrap_err();
+            assert!(error.to_string().contains("archive-inspection:"));
+            assert!(error.to_string().contains("payload.txt"));
+            assert!(error.downcast_ref::<std::io::Error>().is_some());
+            assert!(error.to_string().contains("Invalid authentication code"), "{error:#}");
+            assert!(error.to_string().contains("[archive-inspection:ambiguous-data]"));
+        }
+    }
+
     #[tokio::test]
     async fn numeric_zip_password_probe_and_extraction_read_all_volumes() {
         use super::*;
