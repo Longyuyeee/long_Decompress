@@ -5,6 +5,7 @@ import { nextTick } from 'vue'
 import GlobalProgressBar from '../GlobalProgressBar.vue'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
+import { useArchiveConversionStore } from '@/stores/archiveConversion'
 
 const commandMocks = vi.hoisted(() => ({
   openInExplorer: vi.fn(),
@@ -21,6 +22,24 @@ vi.mock('@/composables/useTauriCommands', () => ({
 vi.mock('@tauri-apps/api/tauri', () => tauriMocks)
 
 describe('GlobalProgressBar', () => {
+  it('restores a conversion draft instead of compressing the old archive as a file', async () => {
+    const pinia = createPinia(); setActivePinia(pinia)
+    const tasks = useTaskStore()
+    tasks.addTask({ id: 'conversion', name: '归档转换', type: 'compression', workloadKind: 'archive', sourceFiles: ['C:\\old.zip'], outputPath: 'C:\\new.7z',
+      executionConfig: { schemaVersion: 1, kind: 'archive-conversion', outputPath: 'C:\\new.7z', format: '7z', level: 6, splitSize: 0, encryptFilenames: true, passwordRequired: true } })
+    tasks.tasks[0].status = 'cancelled'
+    const wrapper = mount(GlobalProgressBar, { global: { plugins: [pinia] } })
+    await wrapper.find('.progress-summary').trigger('click')
+    await wrapper.findAll('button').find(button => button.attributes('title') === useAppStore().t('tasks.retry'))!.trigger('click')
+    const conversion = useArchiveConversionStore()
+    expect(conversion.visible).toBe(true)
+    expect(conversion.sourcePath).toBe('C:\\old.zip')
+    expect(conversion.outputPath).toBe('')
+    expect(conversion.encryptFilenames).toBe(true)
+    expect(tasks.tasks[0].status).toBe('cancelled')
+    expect(commandMocks.compressFiles).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
   it.each([
     ['failed', '1 项失败'], ['cancelled', '1 项取消'], ['completed', '全部完成'],
     ['pending', '1'], ['paused', '1'],

@@ -23,6 +23,7 @@ import { runMediaHistoryDesktopGate } from './media-history-desktop-gate.mjs'
 import { runPasswordSplitCreationGate } from './password-split-creation-gate.mjs'
 import { runArchiveConversionGate } from './archive-conversion-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
+import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
 import { runSevenZipVolumeUiGate } from './seven-zip-volume-ui-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
@@ -4837,6 +4838,21 @@ try {
     await runZipTelemetryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
+  } else if (process.argv.includes('--archive-performance-only')) {
+    const invoke = async (command, args) => {
+      const result = await driver.executeAsyncScript(`
+        const [cmd,args,done]=arguments;
+        const ids=crypto.getRandomValues(new Uint32Array(2));
+        const cleanup=()=>ids.forEach(id=>Reflect.deleteProperty(window,'_'+id));
+        window['_'+ids[0]]=value=>{cleanup();done({ok:true,value})};
+        window['_'+ids[1]]=error=>{cleanup();done({ok:false,error:String(error)})};
+        window.__TAURI_IPC__({cmd,...args,callback:ids[0],error:ids[1]});
+      `, command, args)
+      assert.ok(result.ok, result.error)
+      return result.value
+    }
+    await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
+    completedSuccessfully = true
   } else if (process.argv.includes('--zip-codecs-only')) {
     await runZipCodecGate({ bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
     completedSuccessfully = true

@@ -9,6 +9,8 @@ use tempfile::tempdir;
 
 fn compression_options(format: Option<&str>) -> CompressionOptions {
     CompressionOptions {
+        encrypt_filenames: false,
+        zip_encryption: Default::default(),
         format: format.map(str::to_string),
         level: 6,
         password: None,
@@ -132,11 +134,19 @@ fn validates_split_archive_support() {
 }
 
 #[test]
-fn non_zip_formats_do_not_claim_split_creation() {
+fn only_zip_and_seven_zip_claim_split_creation() {
     let temp = tempdir().unwrap();
     let source = temp.path().join("source.txt");
     fs::write(&source, b"payload").unwrap();
-    for format in ["7z", "rar", "tar", "wim", "tar.aes"] {
+    for format in ["zip", "7z"] {
+        let mut options = compression_options(Some(format));
+        options.split_size = Some(1024);
+        assert!(CompressionService::validate_compression_request(
+            &[source.to_string_lossy().into_owned()],
+            &temp.path().join(format!("archive.{format}")).to_string_lossy(), &options,
+        ).is_ok());
+    }
+    for format in ["rar", "tar", "wim", "tar.aes"] {
         let mut options = compression_options(Some(format));
         options.split_size = Some(1024);
         let error = CompressionService::validate_compression_request(
@@ -231,7 +241,7 @@ fn exposes_backend_compression_capability_matrix() {
     assert!(capabilities.iter().any(|capability| capability.format == "lzma" && capability.requires_7za));
     assert!(capabilities.iter().any(|capability| capability.format == "rar" && capability.requires_winrar));
     assert!(capabilities.iter().any(|capability| capability.format == "zip" && capability.supports_split));
-    assert!(capabilities.iter().any(|capability| capability.format == "7z" && !capability.supports_split));
+    assert!(capabilities.iter().any(|capability| capability.format == "7z" && capability.supports_split));
     assert!(capabilities.iter().any(|capability| capability.format == "wim" && capability.requires_7za));
 }
 

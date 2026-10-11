@@ -27,8 +27,9 @@ pub fn encode(password: &str, encoding: ZipPasswordEncoding) -> Result<Vec<u8>> 
 }
 
 /// Read historical UTF-8 archives first, then try the current Windows encoding
-/// only for an explicit password mismatch. I/O, corruption and unsupported
-/// methods are never swallowed as a reason to try another encoding.
+/// for an explicit password mismatch. If both short encryption headers accept
+/// the password, disambiguate with full integrity validation before choosing.
+/// A failed second validation must never make corrupt content acceptable.
 pub fn open_entry<'a, R: std::io::Read + std::io::Seek>(
     archive: &'a mut zip_aes::ZipArchive<R>,
     index: usize,
@@ -48,6 +49,24 @@ pub fn open_entry<'a, R: std::io::Read + std::io::Seek>(
     };
     if mismatch {
         return archive.by_index_decrypt(index, &local);
+    }
+    // ZipCrypto's short header can accept incorrect UTF-8 bytes even when the
+    // real password was encoded in ACP. Most entries need only header checks;
+    // stream content only in the ambiguous double-match case.
+    let local_also_matches = archive.by_index_decrypt(index, &local).is_ok();
+    if local_also_matches {
+        let utf8_integrity = {
+            let mut reader = archive.by_index_decrypt(index, password.as_bytes())?;
+            std::io::copy(&mut reader, &mut std::io::sink())
+        };
+        if let Err(utf8_error) = utf8_integrity {
+            let local_integrity = {
+                let mut reader = archive.by_index_decrypt(index, &local)?;
+                std::io::copy(&mut reader, &mut std::io::sink())
+            };
+            if local_integrity.is_err() { return Err(utf8_error.into()); }
+            return archive.by_index_decrypt(index, &local);
+        }
     }
     archive.by_index_decrypt(index, password.as_bytes())
 }
@@ -146,6 +165,42 @@ mod tests {
             assert_eq!(encode(value, ZipPasswordEncoding::default()).unwrap(), value.as_bytes());
         }
         assert!(serde_json::from_str::<ZipPasswordEncoding>("\"unknown\"").is_err());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn zipcrypto_short_header_collision_does_not_hide_valid_local_password() {
+        use std::io::{Cursor, Read, Write};
+        use zip_aes::unstable::write::FileOptionsExt;
+        // ZipCrypto has only a short password check. Find a real collision,
+        // then require full content validation to choose the correct encoding.
+        for index in 0..8192 {
+            let password = format!("中文密码{index}");
+            let Ok(local) = encode(&password, ZipPasswordEncoding::WindowsLocal) else { return };
+            if local == password.as_bytes() { return; }
+            let mut writer = zip_aes::ZipWriter::new(Cursor::new(Vec::new()));
+            let options = zip_aes::write::SimpleFileOptions::default()
+                .compression_method(zip_aes::CompressionMethod::Stored)
+                .with_deprecated_encryption(&local).unwrap();
+            writer.start_file("payload.txt", options).unwrap();
+            writer.write_all(b"exact nonempty original payload").unwrap();
+            let data = writer.finish().unwrap();
+            let mut archive = zip_aes::ZipArchive::new(data.clone()).unwrap();
+            if archive.by_index_decrypt(0, password.as_bytes()).is_err() { continue; }
+            let mut contents = Vec::new();
+            open_entry(&mut archive, 0, &password).unwrap().read_to_end(&mut contents).unwrap();
+            assert_eq!(contents, b"exact nonempty original payload");
+            let data_start = archive.by_index_raw(0).unwrap().data_start().unwrap() as usize;
+            let mut damaged = data.into_inner();
+            damaged[data_start + 15] ^= 0x40;
+            let mut damaged = zip_aes::ZipArchive::new(Cursor::new(damaged)).unwrap();
+            let accepted = open_entry(&mut damaged, 0, &password).is_ok_and(|mut entry| {
+                std::io::copy(&mut entry, &mut std::io::sink()).is_ok()
+            });
+            assert!(!accepted, "Encoding fallback must not accept damaged content");
+            return;
+        }
+        panic!("Failed to construct a ZipCrypto short-header collision");
     }
 
     #[cfg(windows)]

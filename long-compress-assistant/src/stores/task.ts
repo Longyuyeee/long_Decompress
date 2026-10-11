@@ -408,11 +408,13 @@ export const useTaskStore = defineStore('task', () => {
     updateTaskStatus(taskId, 'cancelling')
     try {
       await invoke('cancel_compression', { taskId })
-      updateTaskStatus(taskId, 'cancelled')
+      // Conversion spans extraction and rebuilding; its command owner settles
+      // the task only after the staging directory and publication have settled.
+      if (task.executionConfig?.kind !== 'archive-conversion') updateTaskStatus(taskId, 'cancelled')
       return true
     } catch (e) {
       console.error('Failed to cancel task:', e)
-      updateTaskStatus(taskId, previousStatus)
+      if (!['completed', 'failed', 'cancelled'].includes(task.status)) updateTaskStatus(taskId, previousStatus)
       // 将错误信息记录到任务的日志中
       if (task) {
         task.logs.push({

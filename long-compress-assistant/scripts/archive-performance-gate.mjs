@@ -41,11 +41,13 @@ export async function runArchivePerformanceGate({ invoke, fixtureDirectory, arti
       compressionMs = performance.now() - start
       const extractStart = performance.now()
       await invoke('extract_file', { taskId: `perf-extract-${kind}-${Date.now()}`, filePath: archive, outputPath: restored, password: null,
-        options: { preserve_paths: true, delete_after: false, create_subdirectory: false, overwrite_existing: false, conflict_policy: 'rename' } })
+        options: { preserve_paths: true, preserve_timestamps: true, skip_corrupted: false, extract_only_newer: false,
+          file_filter: null, enable_bruteforce: false, bruteforce_wordlists: [],
+          delete_after: false, create_subdirectory: false, overwrite_existing: false, conflict_policy: 'rename' } })
       extractionMs = performance.now() - extractStart
     } finally { sample(); clearInterval(timer) }
-    // A single source directory is stored without an extra wrapper by this API.
-    for (const [name, hash] of Object.entries(expected)) assert.equal(digest(path.join(restored, name)), hash)
+    // Preserve-paths compression keeps the selected source directory itself.
+    for (const [name, hash] of Object.entries(expected)) assert.equal(digest(path.join(restored, 'source', name)), hash)
     const memory = spawnSync('powershell.exe', ['-NoProfile', '-Command',
       'Get-Process | Where-Object { $_.Path -eq $env:LONG_PERF_APP } | Select-Object Id,PeakWorkingSet64,WorkingSet64 | ConvertTo-Json -Compress'],
       { encoding: 'utf8', windowsHide: true, env: { ...process.env, LONG_PERF_APP: application } })

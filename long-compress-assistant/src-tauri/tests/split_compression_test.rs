@@ -67,13 +67,26 @@ fn check_encrypted_split_interoperability(password: &str, password_bytes: &[u8])
     let engine = long_compress_assistant::utils::archive_tools::find_7z_command().expect("7-Zip required for interoperability");
     let direct = long_compress_assistant::utils::process::command(&engine)
         .arg("t").arg(format!("-p{password}")).arg(&archive).output().unwrap();
-    eprintln!("Unsplit AES ZIP independent test: success={}", direct.status.success());
+    // Windows 7-Zip converts CLI passwords to ACP bytes. The explicit local
+    // mode is the interoperability contract; UTF-8 remains a separate dialect.
+    // Assert that boundary instead of requiring a CP936 process to use UTF-8.
+    #[cfg(windows)]
+    let independent_expected = long_compress_assistant::services::zip_password::encode(
+        password, long_compress_assistant::services::zip_password::ZipPasswordEncoding::WindowsLocal,
+    ).is_ok_and(|bytes| bytes == password_bytes);
+    #[cfg(not(windows))]
+    let independent_expected = true;
+    assert_eq!(direct.status.success(), independent_expected, "single archive encoding contract");
     let extracted = temp.path().join("independent");
     let result = long_compress_assistant::utils::process::command(engine)
         .arg("x").arg("-y").arg(format!("-p{password}"))
         .arg(format!("-o{}", extracted.display())).arg(&result.part_files[0])
         .output().unwrap();
-    assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+    assert_eq!(result.status.success(), independent_expected, "{}", String::from_utf8_lossy(&result.stderr));
+    if !independent_expected {
+        assert!(String::from_utf8_lossy(&result.stderr).contains("Wrong password"));
+        return; // Native full-payload assertions above are still mandatory.
+    }
     assert!(extracted.join("资料/空目录").is_dir());
     assert_eq!(fs::read_to_string(extracted.join("资料/说明.txt")).unwrap(), "中文内容");
     assert_eq!(fs::read_to_string(extracted.join("第二份.txt")).unwrap(), "another file");

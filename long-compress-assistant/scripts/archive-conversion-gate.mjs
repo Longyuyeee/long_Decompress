@@ -15,7 +15,9 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
       })
       if (method === 'extractArchive') return productionIpc('extract_file', {
         taskId, filePath: args[0], outputPath: args[1], password: args[2],
-        options: { preserve_paths: true, create_subdirectory: false, delete_after: false },
+        options: { preserve_paths: true, preserve_timestamps: true, skip_corrupted: false, extract_only_newer: false,
+          file_filter: null, enable_bruteforce: false, bruteforce_wordlists: [],
+          create_subdirectory: false, overwrite_existing: false, conflict_policy: 'rename', delete_after: false },
       })
       if (method === 'taskHistory') return productionIpc('list_task_history', { limit: 500 })
       throw new Error(`Unsupported production adapter: ${method}`)
@@ -187,6 +189,14 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
   assert.equal(hash(largeArchive), largeHash)
   assert.deepEqual(readdirSync(root).filter(name => name.startsWith('.long-convert-')), [])
   writeFileSync(path.join(artifactDirectory, 'archive-conversion-writing-cancelled.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  await driver.findElement(By.css('[role="dialog"] button[aria-label="Close dialog"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 5000)
+  await (await waitForElement('[data-testid="global-progress-summary"]')).click()
+  await (await waitForElement('[data-testid="global-progress-bar"] button:has(.pi-refresh)')).click()
+  assert.equal(await (await waitForElement('[data-testid="conversion-output"]')).getAttribute('value'), '')
+  assert.equal(await (await waitForElement('[data-testid="conversion-password"]')).getAttribute('value'), '')
+  assert.equal(existsSync(writingCancelOutput), false)
+  writeFileSync(path.join(artifactDirectory, 'archive-conversion-global-retry.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   await fill('conversion-source', original)
   await fill('conversion-source-password', 'old-password')
   await (await waitForElement('[data-testid="conversion-format"]')).click()
@@ -217,5 +227,6 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
     historyRetryExecutionVerified: true, actualCancellationVerified: true,
     additionalTargetFormats: formatChecks, numericZipInputVerified: true,
     writingCancellationVerified: true, zipCryptoChineseUiConversionVerified: true,
+    globalRetryRestoresConversionDraft: true,
   }, null, 2))
 }

@@ -6,6 +6,8 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage } from '@/utils'
 import { formatProgressPercent } from '@/utils/progress'
 import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
+import { useArchiveConversionStore } from '@/stores/archiveConversion'
+import { createTaskHistoryRecord } from '@/types/taskHistory'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -150,6 +152,11 @@ const openTaskFolder = (task: Task) => {
 }
 
 const retryTask = async (task: Task) => {
+  if (task.executionConfig?.kind === 'archive-conversion') {
+    useArchiveConversionStore().restore(createTaskHistoryRecord(task))
+    isExpanded.value = false
+    return
+  }
   if (retryingTaskId.value) return
   retryingTaskId.value = task.id
 

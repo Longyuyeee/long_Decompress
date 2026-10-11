@@ -76,4 +76,16 @@ describe('archive conversion lifecycle', () => {
     rejectConversion('转换已取消，原包保留'); await pending
     expect(store.busy).toBe(false); expect(store.task?.status).toBe('cancelled')
   })
+  it('also waits for cleanup when cancelled from the global task controls', async () => {
+    let rejectConversion!: (reason: string) => void
+    mocks.invoke.mockImplementation(async command => command === 'convert_archive'
+      ? new Promise((_, reject) => { rejectConversion = reject }) : undefined)
+    const store = draft(); const pending = store.start()
+    await vi.waitFor(() => expect(rejectConversion).toBeTypeOf('function'))
+    await useTaskStore().cancelTask(store.task!.id)
+    expect(store.task?.status).toBe('cancelling')
+    expect(mocks.invoke.mock.calls.some(([command]) => command === 'save_task_history')).toBe(false)
+    rejectConversion('转换已取消，原包保留'); await pending
+    expect(store.task?.status).toBe('cancelled')
+  })
 })
