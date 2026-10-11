@@ -5,6 +5,7 @@ import type { Task, TaskStatus } from '@/stores/task'
 import CompressionExecutionPanel from '../CompressionExecutionPanel.vue'
 import CompressionStatusCell from '../CompressionStatusCell.vue'
 import CompressionToolbar from '../CompressionToolbar.vue'
+import { useArchiveConversionStore } from '@/stores/archiveConversion'
 
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: vi.fn().mockResolvedValue('{}') }))
 
@@ -65,10 +66,12 @@ describe('compression presentation components', () => {
     const start = wrapper.get('[data-testid="start-compression"]')
     expect(start.attributes('disabled')).toBeDefined()
     expect(start.find('i').classes()).toContain('pi-spinner')
+    await wrapper.get('[data-testid="open-archive-conversion"]').trigger('click')
+    expect(useArchiveConversionStore().visible).toBe(true)
 
-    await wrapper.findAll('button')[0].trigger('click')
-    await wrapper.findAll('button')[1].trigger('click')
-    await wrapper.findAll('button')[2].trigger('click')
+    await wrapper.get('button:has(.pi-trash)').trigger('click')
+    await wrapper.get('button:has(.pi-pause)').trigger('click')
+    await wrapper.get('button:has(.pi-stop-circle)').trigger('click')
     await wrapper.get('[data-testid="open-global-compression-settings"]').trigger('click')
     await start.trigger('click')
 
@@ -97,7 +100,8 @@ describe('compression presentation components', () => {
       busy: false,
     })
 
-    expect(wrapper.findAll('button')).toHaveLength(1)
+    expect(wrapper.findAll('button')).toHaveLength(2)
+    expect(wrapper.get('[data-testid="open-archive-conversion"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="compression-batch-config-mode"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="open-global-compression-settings"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="start-compression"]').exists()).toBe(false)

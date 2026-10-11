@@ -34,12 +34,25 @@ export interface PdfConfigV1 {
   mode: PdfOptimizationMode
   allowLargerOutput: boolean
 }
-export type ExecutionConfigV1 = ExtractionConfigV1 | ArchiveCompressionConfigV1 | ImageConfigV1 | VideoConfigV1 | PdfConfigV1
+export interface ArchiveConversionConfigV1 {
+  schemaVersion: 1
+  kind: 'archive-conversion'
+  outputPath: string
+  format: string
+  level: number
+  splitSize: number
+  encryptFilenames: boolean
+  passwordRequired: boolean
+}
+export type ExecutionConfigV1 = ExtractionConfigV1 | ArchiveCompressionConfigV1 | ArchiveConversionConfigV1 | ImageConfigV1 | VideoConfigV1 | PdfConfigV1
 
 /** Explicit fields only: never serialize passwords, deletion or transient consent. */
 export function copyExecutionConfig(config?: ExecutionConfigV1 | null): ExecutionConfigV1 | null {
   if (!config || config.schemaVersion !== 1) return null
   switch (config.kind) {
+    case 'archive-conversion': return { schemaVersion: 1, kind: config.kind,
+      outputPath: config.outputPath, format: config.format, level: config.level,
+      splitSize: config.splitSize, encryptFilenames: config.encryptFilenames, passwordRequired: config.passwordRequired }
     case 'archive-extraction': return { schemaVersion: 1, kind: config.kind,
       outputDirectory: config.outputDirectory, extractToSubfolder: config.extractToSubfolder }
     case 'archive-compression': {

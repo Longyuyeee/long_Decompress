@@ -317,6 +317,7 @@ pub async fn convert_archive(
         // All remaining defaults prohibit deletion and skipping corrupt data.
         ..Default::default()
     };
+    let _ = window.emit("archive-conversion-phase", serde_json::json!({"taskId": task_id, "phase": "reading"}));
     service.extract(window.clone(), task_id.clone(), source_path,
         Some(staging.path().to_string_lossy().into_owned()), source_password, extraction)
         .await.map_err(|error| format!("转换读取原包失败：{error}"))?;
@@ -329,6 +330,7 @@ pub async fn convert_archive(
         .collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
     files.sort();
     if files.is_empty() { return Err("原包没有可转换的条目".to_string()); }
+    let _ = window.emit("archive-conversion-phase", serde_json::json!({"taskId": task_id, "phase": "writing"}));
     let split = options.split_size.is_some_and(|size| size > 0);
     service.compress(window, task_id, files, output_path.clone(), options)
         .await.map_err(|error| format!("转换写入新包失败：{}", compression_command_error(&error)))?;

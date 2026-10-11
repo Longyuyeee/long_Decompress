@@ -4837,7 +4837,7 @@ try {
     completedSuccessfully = true
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
   } else if (process.argv.includes('--archive-conversion-only')) {
-    await runArchiveConversionGate({ bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
+    await runArchiveConversionGate({ driver, waitForElement, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
     completedSuccessfully = true
     console.log('Real archive conversion command gate passed.')
   } else if (numericZipPasswordOnly) {

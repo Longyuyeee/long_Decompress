@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useAppStore } from '@/stores/app'
+import { useArchiveConversionStore } from '@/stores/archiveConversion'
+const conversion = useArchiveConversionStore()
 
 defineProps<{
   hasFinished: boolean
@@ -27,6 +29,7 @@ const appStore = useAppStore()
     data-testid="compression-top-actions"
     class="flex items-center gap-2 md:gap-3 shrink-0"
   >
+    <button type="button" data-testid="open-archive-conversion" class="h-8 md:h-9 px-3 rounded-lg bg-input border border-subtle text-content text-xs font-bold" @click="conversion.show">转换压缩包</button>
     <button
       v-if="hasFinished"
       type="button"

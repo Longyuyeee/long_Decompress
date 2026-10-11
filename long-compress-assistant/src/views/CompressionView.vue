@@ -53,7 +53,7 @@ let resolveRarResolution: ((choice: RarResolution) => void) | null = null
 // This page owns archive compression only; media tasks live in Special Compression.
 // Legacy tasks without a workload kind are archives.
 const compressionTasks = computed(() => taskStore.tasksFor('compression')
-  .filter(task => !task.workloadKind || task.workloadKind === 'archive'))
+  .filter(task => (!task.workloadKind || task.workloadKind === 'archive') && task.executionConfig?.kind !== 'archive-conversion'))
 const activeCompressionTasks = computed(() =>
   compressionTasks.value.filter(task => !['completed', 'failed', 'cancelled'].includes(task.status))
 )

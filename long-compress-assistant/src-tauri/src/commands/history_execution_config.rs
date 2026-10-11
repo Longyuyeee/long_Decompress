@@ -8,6 +8,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     let expected = match kind {
         "archive-extraction" => ("decompression", "archive"),
         "archive-compression" => ("compression", "archive"),
+        "archive-conversion" => ("compression", "archive"),
         "image-compression" => ("compression", "image"),
         "video-compression" => ("compression", "video"),
         "pdf-optimization" => ("compression", "pdf"),
@@ -20,6 +21,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     let fields: &[(&str, char)] = match kind {
         "archive-extraction" => &[("outputDirectory", 's'), ("extractToSubfolder", 'b')],
         "archive-compression" => &[("outputDirectory", 's'), ("passwordRequired", 'b')],
+        "archive-conversion" => &[("outputPath", 's'), ("format", 's'), ("level", 'n'), ("splitSize", 'n'), ("encryptFilenames", 'b'), ("passwordRequired", 'b')],
         "video-compression" => &[("outputDirectory", 's')],
         "pdf-optimization" => &[("outputDirectory", 's'), ("mode", 's'), ("allowLargerOutput", 'b')],
         _ => &[],
@@ -65,6 +67,18 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn conversion_snapshot_keeps_its_identity_without_passwords() {
+        let input = serde_json::json!({"schemaVersion": 1, "kind": "archive-conversion",
+            "outputPath": "C:/new.7z", "format": "7z", "level": 6, "splitSize": 65536,
+            "encryptFilenames": true, "passwordRequired": true,
+            "password": "target-secret", "sourcePassword": "input-secret"});
+        let saved = super::sanitize(input.clone(), "compression", "archive").unwrap();
+        assert_eq!(saved["kind"], "archive-conversion");
+        assert_eq!(saved["splitSize"], 65536);
+        assert!(!saved.to_string().contains("secret"));
+        assert!(super::sanitize(input, "decompression", "archive").is_none());
+    }
     #[test]
     fn zip_encoding_snapshot_is_optional_validated_and_does_not_store_passwords() {
         let original = serde_json::json!({"schemaVersion":1,"kind":"archive-compression",
