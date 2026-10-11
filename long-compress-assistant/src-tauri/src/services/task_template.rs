@@ -98,6 +98,8 @@ pub struct TemplateCompression {
     pub keep_structure: bool,
     pub verify_after: bool,
     pub create_solid_archive: bool,
+    #[serde(default)]
+    pub encrypt_filenames: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -229,6 +231,7 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             keep_structure: profile.config.keep_structure,
             verify_after: profile.config.verify_after,
             create_solid_archive: profile.config.create_solid_archive,
+            encrypt_filenames: profile.config.encrypt_filenames,
         },
         password_strategy,
         export_notes,
@@ -316,6 +319,10 @@ fn validate_template(template: &TaskTemplate) -> Result<Vec<String>> {
         anyhow::bail!("只有 7Z 模板可以启用固实压缩");
     }
     validate_filename_template(template.target_rule.filename_template.as_deref())?;
+    if template.compression.encrypt_filenames && (capability.format != "7z"
+        || matches!(template.password_strategy, TemplatePasswordStrategy::None)) {
+        anyhow::bail!("文件名加密模板必须使用 7Z 并设置密码策略");
+    }
     if template.source_rules.include_patterns.len() + template.source_rules.exclude_patterns.len()
         > MAX_PATTERNS
     {
@@ -794,6 +801,7 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
             delete_after: false,
             verify_after: template.compression.verify_after,
             create_solid_archive: template.compression.create_solid_archive,
+            encrypt_filenames: template.compression.encrypt_filenames,
             filename_template: template.target_rule.filename_template,
             extra_params: template.compression.zip_password_encoding.map(|encoding| {
                 let value = match encoding {
@@ -832,6 +840,33 @@ mod tests {
     use super::*;
     use crate::models::compression_profile::{AutoApplyRule, ProfileStats};
 
+    #[test]
+    fn filename_encryption_template_round_trip_and_legacy_default() {
+        let mut original = profile();
+        original.config.encrypt_filenames = true;
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("names.json");
+        export_profile_template(&original, &path).unwrap();
+        let preview = preview_template_file(&path).unwrap();
+        assert!(preview.template.compression.encrypt_filenames);
+        let imported = import_template_profile(&path, &preview.content_sha256).unwrap();
+        assert!(imported.config.encrypt_filenames);
+        assert!(imported.config.password.is_none());
+        assert!(!std::fs::read_to_string(&path).unwrap().contains("must-never-export"));
+        let mut value = serde_json::to_value(&preview.template).unwrap();
+        value["compression"].as_object_mut().unwrap().remove("encryptFilenames");
+        assert!(!parse_template(&serde_json::to_vec(&value).unwrap()).unwrap().compression.encrypt_filenames);
+        value["compression"]["encryptFilenames"] = serde_json::json!("true");
+        assert!(parse_template(&serde_json::to_vec(&value).unwrap()).is_err());
+        value["compression"]["encryptFilenames"] = serde_json::json!(true);
+        value["compression"]["format"] = serde_json::json!("zip");
+        value["compression"]["createSolidArchive"] = serde_json::json!(false);
+        assert!(parse_template(&serde_json::to_vec(&value).unwrap()).unwrap_err().to_string().contains("文件名加密"));
+        value["compression"]["format"] = serde_json::json!("7z");
+        value["passwordStrategy"] = serde_json::json!({"mode":"none"});
+        assert!(parse_template(&serde_json::to_vec(&value).unwrap()).unwrap_err().to_string().contains("文件名加密"));
+    }
+
     fn profile() -> CompressionProfile {
         CompressionProfile {
             id: "profile-1".to_string(),
@@ -848,6 +883,7 @@ mod tests {
                 delete_after: true,
                 verify_after: true,
                 create_solid_archive: true,
+                encrypt_filenames: false,
                 filename_template: Some("{name}-{date}".to_string()),
                 extra_params: [("unsafe".to_string(), "ignored".to_string())].into(),
             },

@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const _CURRENT_VERSION: i32 = 11;
+const _CURRENT_VERSION: i32 = 12;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -102,6 +102,14 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
         query("ALTER TABLE task_operation_history ADD COLUMN archive_output TEXT")
             .execute(&mut *transaction).await?;
         query("INSERT INTO schema_version (version) VALUES (11)")
+            .execute(&mut *transaction).await?;
+        transaction.commit().await?;
+    }
+    if current < 12 {
+        let mut transaction = pool.begin().await?;
+        query("ALTER TABLE compression_profiles ADD COLUMN config_encrypt_filenames BOOLEAN NOT NULL DEFAULT FALSE")
+            .execute(&mut *transaction).await?;
+        query("INSERT INTO schema_version (version) VALUES (12)")
             .execute(&mut *transaction).await?;
         transaction.commit().await?;
     }
@@ -1258,6 +1266,7 @@ mod tests {
         query("CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)")
             .execute(&pool).await.unwrap();
         migrate_v6(&pool).await.unwrap();
+        migrate_v2(&pool).await.unwrap();
         query("INSERT INTO schema_version (version) VALUES (6)").execute(&pool).await.unwrap();
         query(r#"
             INSERT INTO task_operation_history (
@@ -1285,7 +1294,7 @@ mod tests {
         assert_eq!(columns, 2);
         let version: i32 = query_as::<_, (i32,)>("SELECT MAX(version) FROM schema_version")
             .fetch_one(&pool).await.unwrap().0;
-        assert_eq!(version, 11);
+        assert_eq!(version, _CURRENT_VERSION);
         let archive_output: Option<String> = query_as::<_, (Option<String>,)>(
             "SELECT archive_output FROM task_operation_history WHERE id = 'legacy'",
         ).fetch_one(&pool).await.unwrap().0;
@@ -1298,6 +1307,23 @@ mod tests {
             "SELECT retry_of_task_id FROM task_operation_history WHERE id = 'legacy'",
         ).fetch_one(&pool).await.unwrap().0;
         assert!(retry_origin.is_none(), "legacy rows must not acquire an invented retry origin");
+    }
+
+    #[tokio::test]
+    async fn v11_profiles_gain_disabled_filename_encryption_without_losing_settings() {
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+        query("CREATE TABLE schema_version (version INTEGER PRIMARY KEY)").execute(&pool).await.unwrap();
+        migrate_v2(&pool).await.unwrap();
+        query("INSERT INTO schema_version (version) VALUES (11)").execute(&pool).await.unwrap();
+        query("INSERT INTO compression_profiles (id, name, icon, description, config_format, config_level, created_at) VALUES ('legacy', '保留配置', 'box', 'unchanged', '7z', 7, 123)")
+            .execute(&pool).await.unwrap();
+        init_tables(&pool).await.unwrap();
+        init_tables(&pool).await.unwrap();
+        let row: (String, String, i64, bool) = query_as("SELECT name, config_format, config_level, config_encrypt_filenames FROM compression_profiles WHERE id = 'legacy'")
+            .fetch_one(&pool).await.unwrap();
+        assert_eq!(row, ("保留配置".into(), "7z".into(), 7, false));
+        let version: (i32,) = query_as("SELECT MAX(version) FROM schema_version").fetch_one(&pool).await.unwrap();
+        assert_eq!(version.0, _CURRENT_VERSION);
     }
 
     #[tokio::test]
@@ -1333,7 +1359,7 @@ mod tests {
         let final_version: i32 = query_as::<_, (i32,)>(
             "SELECT COALESCE(MAX(version), 0) FROM schema_version",
         ).fetch_one(&pool).await.unwrap().0;
-        assert_eq!(final_version, 10);
+        assert_eq!(final_version, _CURRENT_VERSION);
         println!("real history snapshot: {} rows, schema {} -> {}, source {} bytes",
             before_rows.len(), initial_version, final_version, before.len());
         pool.close().await;

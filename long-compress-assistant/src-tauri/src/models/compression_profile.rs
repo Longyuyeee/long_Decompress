@@ -65,6 +65,8 @@ pub struct CompressionConfig {
 
     /// 是否创建固实归档（7z 专属）
     pub create_solid_archive: bool,
+    #[serde(default)]
+    pub encrypt_filenames: bool,
 
     /// 输出文件名模板（支持变量：{name}, {date}, {time}）
     pub filename_template: Option<String>,
@@ -242,6 +244,7 @@ pub fn create_default_profiles() -> Vec<CompressionProfile> {
                 delete_after: false,
                 verify_after: true,
                 create_solid_archive: true,
+                encrypt_filenames: false,
                 filename_template: Some("{name}_极限压缩_{date}".to_string()),
                 extra_params: HashMap::new(),
             },
@@ -260,6 +263,7 @@ pub fn create_default_profiles() -> Vec<CompressionProfile> {
                 delete_after: false,
                 verify_after: true,
                 create_solid_archive: false,
+                encrypt_filenames: false,
                 filename_template: Some("{name}_快速_{date}".to_string()),
                 extra_params: HashMap::new(),
             },
@@ -278,6 +282,7 @@ pub fn create_default_profiles() -> Vec<CompressionProfile> {
                 delete_after: false,
                 verify_after: true,
                 create_solid_archive: false,
+                encrypt_filenames: false,
                 filename_template: Some("{name}_加密_{date}".to_string()),
                 extra_params: HashMap::new(),
             },
@@ -296,6 +301,7 @@ pub fn create_default_profiles() -> Vec<CompressionProfile> {
                 delete_after: false,
                 verify_after: true,
                 create_solid_archive: false,
+                encrypt_filenames: false,
                 filename_template: Some("{name}_分卷_{date}".to_string()),
                 extra_params: HashMap::new(),
             },
@@ -314,6 +320,7 @@ pub fn create_default_profiles() -> Vec<CompressionProfile> {
                 delete_after: false,
                 verify_after: true,
                 create_solid_archive: false,
+                encrypt_filenames: false,
                 filename_template: Some("{name}_归档_{date}".to_string()),
                 extra_params: HashMap::new(),
             },

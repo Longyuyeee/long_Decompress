@@ -32,6 +32,8 @@ struct CreateCompressionConfig {
     #[serde(default = "default_verify_after")]
     verify_after: bool,
     create_solid_archive: bool,
+    #[serde(default)]
+    encrypt_filenames: bool,
     filename_template: Option<String>,
     #[serde(default)]
     extra_params: HashMap<String, String>,
@@ -53,6 +55,7 @@ impl From<CreateCompressionConfig> for CompressionConfig {
             delete_after: config.delete_after,
             verify_after: config.verify_after,
             create_solid_archive: config.create_solid_archive,
+            encrypt_filenames: config.encrypt_filenames,
             filename_template: config.filename_template,
             extra_params: config.extra_params,
         }
@@ -397,6 +400,22 @@ mod tests {
         assert_eq!(request.config.format, "zip");
         assert!(request.config.keep_structure);
         assert!(!request.config.verify_after);
+        assert!(!request.config.encrypt_filenames);
         assert_eq!(request.auto_apply.unwrap().exclude_patterns, vec!["*.tmp"]);
+    }
+
+    #[test]
+    fn filename_encryption_survives_create_request_conversion() {
+        let config: super::CreateCompressionConfig = serde_json::from_value(serde_json::json!({
+            "format":"7z", "level":6, "password":null, "splitArchive":false,
+            "splitSize":null, "keepStructure":true, "deleteAfter":false,
+            "createSolidArchive":false, "encryptFilenames":true, "filenameTemplate":null
+        })).unwrap();
+        let converted = super::CompressionConfig::from(config);
+        assert!(converted.encrypt_filenames);
+        let mut old = serde_json::to_value(&converted).unwrap();
+        old.as_object_mut().unwrap().remove("encrypt_filenames");
+        let restored: super::CompressionConfig = serde_json::from_value(old).unwrap();
+        assert!(!restored.encrypt_filenames);
     }
 }

@@ -36,6 +36,12 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         let mut settings = project(value.get("settings")?, settings_fields)?;
         if kind == "archive-compression" {
             settings.insert("fastPack".into(), Value::Bool(false));
+            if let Some(encrypted_names) = value.get("settings")?.get("encryptFilenames") {
+                if !encrypted_names.is_boolean() { return None; }
+                if encrypted_names.as_bool()? && (settings.get("format")?.as_str()? != "7z"
+                    || !value.get("passwordRequired")?.as_bool()?) { return None; }
+                settings.insert("encryptFilenames".into(), encrypted_names.clone());
+            }
             if let Some(encoding) = value.get("settings")?.get("zipPasswordEncoding") {
                 if !matches!(encoding.as_str(), Some("utf8" | "windows_local")) { return None; }
                 settings.insert("zipPasswordEncoding".into(), encoding.clone());
@@ -69,6 +75,24 @@ mod tests {
         let old = super::sanitize(original.clone(), "compression", "archive").unwrap();
         assert!(old["settings"].get("zipPasswordEncoding").is_none());
         assert!(old["settings"].get("password").is_none());
+        assert!(old["settings"].get("encryptFilenames").is_none());
+        for enabled in [false, true] {
+            let mut current = original.clone();
+            current["settings"]["format"] = "7z".into();
+            current["settings"]["encryptFilenames"] = enabled.into();
+            let saved = super::sanitize(current.clone(), "compression", "archive").unwrap();
+            assert_eq!(saved["settings"]["encryptFilenames"], enabled);
+            assert!(saved["settings"].get("password").is_none());
+            if enabled {
+                current["passwordRequired"] = false.into();
+                assert!(super::sanitize(current, "compression", "archive").is_none());
+            }
+        }
+        for invalid in [serde_json::json!("true"), serde_json::json!(null), serde_json::json!(true)] {
+            let mut current = original.clone();
+            current["settings"]["encryptFilenames"] = invalid;
+            assert!(super::sanitize(current, "compression", "archive").is_none());
+        }
         for mode in ["utf8", "windows_local"] {
             let mut current = original.clone();
             current["settings"]["zipPasswordEncoding"] = mode.into();
