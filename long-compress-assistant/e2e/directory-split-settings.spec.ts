@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('directory ZIP splitting stays available while password and format restrictions remain explicit', async ({ page }, info) => {
+test('directory ZIP splitting preserves password settings while unsupported formats stay disabled', async ({ page }, info) => {
   await page.setViewportSize({ width: 920, height: 620 })
   await page.addInitScript(() => {
     window.__TAURI_IPC__ = (message: Record<string, any>) => {
@@ -22,6 +22,8 @@ test('directory ZIP splitting stays available while password and format restrict
   await toggle.check()
   await drawer.getByTestId('compression-split-size').fill('128')
   await drawer.getByTestId('compression-split-size').blur()
+  await drawer.getByTestId('compression-password-input').fill('中文密码 + !测试')
+  await expect(toggle).toBeEnabled()
   for (const width of [920, 760]) {
     await page.setViewportSize({ width, height: 620 })
     await toggle.scrollIntoViewIfNeeded()
@@ -30,21 +32,19 @@ test('directory ZIP splitting stays available while password and format restrict
     expect(await drawer.evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(1)
     await page.screenshot({ path: info.outputPath(`directory-split-${width}.png`) })
   }
-  await drawer.getByTestId('compression-password-input').fill('密码测试')
-  await expect(toggle).toBeDisabled()
-  await expect(toggle).not.toBeChecked()
+  await expect(drawer.getByTestId('compression-password-input')).toHaveValue('中文密码 + !测试')
   expect(await page.evaluate(async () => {
     const path = '/src/stores/compression.ts'
     const store = (await import(path)).useCompressionStore()
     return store.getEffectiveSettings(store.selectedFiles[0].settings).splitArchive
-  })).toBe(false)
-  await drawer.getByRole('button', { name: '分卷压缩说明', exact: true }).click()
-  await expect(page.getByRole('note')).toContainText('请先清除压缩密码')
-  await page.keyboard.press('Escape')
+  })).toBe(true)
   await drawer.getByTestId('compression-password-input').fill('')
   await expect(toggle).toBeEnabled()
-  await expect(toggle).not.toBeChecked()
+  await expect(toggle).toBeChecked()
   await drawer.getByTestId('compression-format-select').click()
   await page.getByRole('option', { name: '7Z', exact: true }).click()
   await expect(toggle).toBeDisabled()
+  await expect(toggle).not.toBeChecked()
+  await drawer.getByRole('button', { name: '分卷压缩说明', exact: true }).click()
+  await expect(page.getByRole('note')).toContainText('暂不支持创建分卷')
 })

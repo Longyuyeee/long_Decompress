@@ -87,7 +87,8 @@ const newProfileDescription = ref('')
 const compressionFormats = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
 const selectedFormat = computed(() => compressionFormats.value.find(format => format.value === compressionOptions.value.format))
 const canCreateSplitArchive = computed(() =>
-  Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive && !compressionOptions.value.password)
+  Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive &&
+    (!compressionOptions.value.password || compressionOptions.value.format === 'zip'))
 )
 const vaultPasswordEntries = computed(() => [...passwordStore.entries].sort((left, right) => {
   if (left.favorite !== right.favorite) return left.favorite ? -1 : 1
@@ -105,7 +106,7 @@ const splitArchiveUnavailableReason = computed(() => {
     return '请先添加需要压缩的文件或文件夹'
   }
   if (compressionOptions.value.password) {
-    return '加密分卷 ZIP 暂不支持，请先清除压缩密码'
+    return '此格式暂不支持加密分卷，请选择 ZIP 或关闭分卷'
   }
   return ''
 })
@@ -179,7 +180,7 @@ const useSuggestedFilename = () => {
 
 watch(compressionOptions, (newOptions) => {
   // Normalize before emitting: otherwise a parent echo can restore a checked,
-  // disabled split toggle while the password watcher is clearing it.
+  // disabled split toggle after switching to an unsupported format.
   if (!canCreateSplitArchive.value) newOptions.splitArchive = false
   if (syncingFromProps) return
   emit('update:modelValue', { ...newOptions, fastPack: false })
