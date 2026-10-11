@@ -61,8 +61,14 @@ impl UniversalCliEngine {
     }
 
     pub(crate) fn zip_requires_password(file_path: &Path) -> Result<bool> {
-        let file = std::fs::File::open(file_path)
-            .map_err(|error| Self::zip_inspection_error(error.into()))?;
+        let file = crate::services::numeric_volume_reader::ZipInputReader::open(file_path)
+            .map_err(|error| {
+                if let Some(cause) = error.downcast_ref::<std::io::Error>() {
+                    Self::zip_inspection_error(std::io::Error::new(cause.kind(), cause.to_string()).into())
+                } else {
+                    anyhow::anyhow!("[archive-inspection:incomplete] 无法读取完整 ZIP 卷组：{}", error)
+                }
+            })?;
         let mut archive = zip_aes::ZipArchive::new(file)
             .map_err(Self::zip_inspection_error)?;
 
@@ -104,7 +110,7 @@ impl UniversalCliEngine {
         password: &str,
         mut check_control: impl FnMut() -> Result<()>,
     ) -> Result<bool> {
-        let file = std::fs::File::open(file_path)?;
+        let file = crate::services::numeric_volume_reader::ZipInputReader::open(file_path)?;
         let mut archive = zip_aes::ZipArchive::new(file)?;
         let mut buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
         let mut found_encrypted_entry = false;
@@ -116,7 +122,7 @@ impl UniversalCliEngine {
                 continue;
             }
             found_encrypted_entry = true;
-            match archive.by_index_decrypt(index, password.as_bytes()) {
+            match crate::services::zip_password::open_entry(&mut archive, index, password) {
                 Ok(mut entry) => {
                     if entry.is_dir() {
                         continue;
@@ -126,7 +132,18 @@ impl UniversalCliEngine {
                         check_control()?;
                         let read = match entry.read(&mut buffer) {
                             Ok(read) => read,
-                            Err(_) => return Ok(false),
+                            Err(error) => {
+                                let code = match error.kind() {
+                                    std::io::ErrorKind::PermissionDenied => "permission",
+                                    std::io::ErrorKind::InvalidData | std::io::ErrorKind::UnexpectedEof => "ambiguous-data",
+                                    _ => "io",
+                                };
+                                let message = format!(
+                                    "[archive-inspection:{}] ZIP 条目「{}」读取或完整性校验失败，不能仅判定为密码不匹配：{}",
+                                    code, entry.name(), error
+                                );
+                                return Err(anyhow::Error::new(error).context(message));
+                            },
                         };
                         if read == 0 {
                             break;
@@ -175,7 +192,7 @@ impl UniversalCliEngine {
         on_log: &Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
         is_cancelled: &Arc<AtomicBool>,
     ) -> Result<()> {
-        let file = std::fs::File::open(file_path)?;
+        let file = crate::services::numeric_volume_reader::ZipInputReader::open(file_path)?;
         let mut archive = zip_aes::ZipArchive::new(file)?;
         let total = archive.len().max(1);
         let mut buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
@@ -187,7 +204,7 @@ impl UniversalCliEngine {
                 return Err(CompressionError::Cancelled.into());
             }
 
-            let mut entry = match archive.by_index_decrypt(index, password.as_bytes()) {
+            let mut entry = match crate::services::zip_password::open_entry(&mut archive, index, password) {
                 Ok(entry) => entry,
                 Err(zip_aes::result::ZipError::InvalidPassword) => {
                     return Err(CompressionError::InvalidPassword.into());
@@ -579,6 +596,9 @@ impl ArchiveEngine for UniversalCliEngine {
     }
 
     async fn requires_password(&self, file_path: &Path) -> Result<bool> {
+        if crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(file_path) {
+            return Self::zip_requires_password(file_path);
+        }
         let cmd = Self::get_7z_command().ok_or_else(|| {
             anyhow::anyhow!("[archive-inspection:engine-unavailable] {}", missing_7z_message())
         })?;
@@ -638,6 +658,7 @@ impl ArchiveEngine for UniversalCliEngine {
                 .extension()
                 .and_then(|extension| extension.to_str())
                 .is_some_and(|extension| extension.eq_ignore_ascii_case("zip"))
+                || crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(file_path)
             {
                 return Self::extract_zip_with_password(
                     file_path,
@@ -790,6 +811,128 @@ impl ArchiveEngine for UniversalCliEngine {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn corrupted_encrypted_zip_payload_is_not_a_password_miss() {
+        use super::*;
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("damaged.zip");
+        let mut writer = zip_aes::ZipWriter::new(std::fs::File::create(&source).unwrap());
+        let options = zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Stored)
+            .with_aes_encryption(zip_aes::AesMode::Aes256, "correct");
+        writer.start_file("payload.txt", options).unwrap();
+        writer.write_all(b"actual encrypted payload").unwrap();
+        writer.finish().unwrap();
+        assert!(UniversalCliEngine::try_zip_password(&source, "correct").unwrap());
+        assert!(!UniversalCliEngine::try_zip_password(&source, "wrong").unwrap());
+        let auth_tail = {
+            let mut reader = zip_aes::ZipArchive::new(std::fs::File::open(&source).unwrap()).unwrap();
+            let entry = reader.by_index_raw(0).unwrap();
+            (entry.data_start().unwrap() + entry.compressed_size() - 1) as usize
+        };
+        let mut bytes = std::fs::read(&source).unwrap();
+        bytes[auth_tail] ^= 1;
+        std::fs::write(&source, bytes).unwrap();
+        let split = crate::services::split_compression::SplitCompressionService::split_archive_file(
+            &source, &temp.path().join("damaged-split.zip"), 37, || Ok(())
+        ).unwrap();
+        for path in [&source, &split.part_files[0]] {
+            assert!(UniversalCliEngine::zip_requires_password(path).unwrap());
+            let error = UniversalCliEngine::try_zip_password(path, "correct").unwrap_err();
+            assert!(error.to_string().contains("archive-inspection:"));
+            assert!(error.to_string().contains("payload.txt"));
+            assert!(error.downcast_ref::<std::io::Error>().is_some());
+            assert!(error.to_string().contains("Invalid authentication code"), "{error:#}");
+            assert!(error.to_string().contains("[archive-inspection:ambiguous-data]"));
+        }
+    }
+
+    #[tokio::test]
+    async fn numeric_zip_password_probe_and_extraction_read_all_volumes() {
+        use super::*;
+        use crate::services::zip_password::{encode, ZipPasswordEncoding};
+        for mode in [ZipPasswordEncoding::Utf8, ZipPasswordEncoding::WindowsLocal] {
+            let password = "密码 + !测试";
+            let Ok(encoded) = encode(password, mode) else { continue };
+            let temp = tempfile::tempdir().unwrap();
+            let source = temp.path().join("source.zip");
+            let mut writer = zip_aes::ZipWriter::new(std::fs::File::create(&source).unwrap());
+            let options = zip_aes::write::SimpleFileOptions::default()
+                .with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &encoded);
+            writer.add_directory("资料/空目录/", options).unwrap();
+            writer.start_file("资料/内容.txt", options).unwrap();
+            writer.write_all("跨卷中文内容".as_bytes()).unwrap();
+            writer.finish().unwrap();
+            let split = crate::services::split_compression::SplitCompressionService::split_archive_file(
+                &source, &temp.path().join("分享.zip"), 37, || Ok(())
+            ).unwrap();
+            let first = &split.part_files[0];
+            assert!(UniversalCliEngine::zip_requires_password(first).unwrap());
+            assert!(UniversalCliEngine::new().requires_password(first).await.unwrap());
+            assert!(UniversalCliEngine::try_zip_password(first, password).unwrap());
+            assert!(!UniversalCliEngine::try_zip_password(first, "wrong").unwrap());
+            assert!(UniversalCliEngine::try_zip_password_cancellable(first, password, || {
+                Err(CompressionError::Cancelled.into())
+            }).unwrap_err().downcast_ref::<CompressionError>().is_some());
+            let output = temp.path().join("extracted");
+            let progress: Arc<dyn Fn(f32) + Send + Sync> = Arc::new(|_| {});
+            let log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync> = Arc::new(|_, _| {});
+            UniversalCliEngine::new().extract_with_progress(first, &output, Some(password), false,
+                progress, log, Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert!(output.join("资料/空目录").is_dir());
+            assert_eq!(std::fs::read_to_string(output.join("资料/内容.txt")).unwrap(), "跨卷中文内容");
+            // Follow the desktop transaction order with real staged files and an existing target.
+            use crate::services::extraction_transaction::{self, ExtractionStaging};
+            let existing = output.join("资料/内容.txt");
+            std::fs::write(&existing, "existing user content").unwrap();
+            let mut staging = ExtractionStaging::create_for(&output).unwrap();
+            let staging_path = staging.path().to_path_buf();
+            UniversalCliEngine::new().extract_with_progress(first, staging.path(), Some(password), false,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.unwrap();
+            let options = crate::models::compression::DecompressOptions {
+                conflict_policy: "ask".into(), ..Default::default()
+            };
+            let mut conflicts = Vec::new();
+            let error = extraction_transaction::commit_staged_extraction(
+                &first.to_string_lossy(), staging.path(), &output, &options, |c| conflicts.push(c)
+            ).unwrap_err();
+            assert!(!conflicts.is_empty(), "{error}");
+            assert_eq!(std::fs::read_to_string(&existing).unwrap(), "existing user content");
+            assert_eq!(std::fs::read_to_string(staging.path().join("资料/内容.txt")).unwrap(), "跨卷中文内容");
+            let rename_options = crate::models::compression::DecompressOptions {
+                conflict_policy: "rename".into(), ..options
+            };
+            extraction_transaction::commit_staged_extraction(
+                &first.to_string_lossy(), staging.path(), &output, &rename_options, |_| {}
+            ).unwrap();
+            assert_eq!(std::fs::read_to_string(&existing).unwrap(), "existing user content");
+            assert_eq!(std::fs::read_to_string(output.join("资料/内容 (1).txt")).unwrap(), "跨卷中文内容");
+            assert!(staging.cleanup_after_commit().is_none());
+            assert!(!staging_path.exists());
+            let cancelled_staging_path;
+            {
+                let cancelled_staging = ExtractionStaging::create_for(&output).unwrap();
+                cancelled_staging_path = cancelled_staging.path().to_path_buf();
+                let error = UniversalCliEngine::new().extract_with_progress(first, cancelled_staging.path(), Some(password), false,
+                    Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(true))).await.unwrap_err();
+                assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+            }
+            assert!(!cancelled_staging_path.exists());
+            assert_eq!(std::fs::read_to_string(&existing).unwrap(), "existing user content");
+            std::fs::remove_file(&split.part_files[1]).unwrap();
+            assert!(UniversalCliEngine::zip_requires_password(first).unwrap_err().to_string().contains("incomplete"));
+            assert!(UniversalCliEngine::try_zip_password(first, password).is_err());
+            let failed_staging_path;
+            {
+                let failed_staging = ExtractionStaging::create_for(&output).unwrap();
+                failed_staging_path = failed_staging.path().to_path_buf();
+                assert!(UniversalCliEngine::new().extract_with_progress(first, failed_staging.path(), Some(password), false,
+                    Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.is_err());
+            }
+            assert!(!failed_staging_path.exists());
+            assert_eq!(std::fs::read_to_string(&existing).unwrap(), "existing user content");
+        }
+    }
     use super::*;
 
     #[test]

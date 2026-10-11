@@ -5,6 +5,170 @@ use std::fs::{self, File};
 use std::io::Write;
 use anyhow::Result;
 
+#[test]
+fn numeric_split_preserves_encrypted_zip_directories_and_multiple_files() {
+    check_encrypted_split_interoperability("密码 + !测试", "密码 + !测试".as_bytes());
+}
+
+#[test]
+fn numeric_split_ascii_password_interoperability() {
+    check_encrypted_split_interoperability("password + !test", b"password + !test");
+}
+
+#[test]
+#[cfg(windows)]
+fn windows_local_zip_password_interoperability() {
+    let password = "密码 + !测试";
+    use long_compress_assistant::services::zip_password::{encode, ZipPasswordEncoding};
+    let encoded = match encode(password, ZipPasswordEncoding::WindowsLocal) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            // A machine whose ACP cannot represent Chinese must reject, not substitute.
+            assert!(error.to_string().contains("unavailable") || error.to_string().contains("replacement"));
+            return;
+        }
+    };
+    check_encrypted_split_interoperability(password, &encoded);
+}
+
+fn check_encrypted_split_interoperability(password: &str, password_bytes: &[u8]) {
+    use std::io::Read;
+    let temp = tempdir().unwrap();
+    let archive = temp.path().join("private.zip");
+    let mut zip = zip_aes::ZipWriter::new(File::create(&archive).unwrap());
+    let options = zip_aes::write::SimpleFileOptions::default()
+        .compression_method(zip_aes::CompressionMethod::Deflated)
+        .with_aes_encryption_bytes(zip_aes::AesMode::Aes256, password_bytes);
+    zip.add_directory("资料/空目录/", options).unwrap();
+    for (name, payload) in [("资料/说明.txt", "中文内容"), ("第二份.txt", "another file")] {
+        zip.start_file(name, options).unwrap();
+        zip.write_all(payload.as_bytes()).unwrap();
+    }
+    zip.finish().unwrap();
+    let result = SplitCompressionService::split_archive_file(&archive, &temp.path().join("分享.zip"), 17, || Ok(())).unwrap();
+    assert!(result.part_count > 1);
+    let joined: Vec<u8> = result.part_files.iter().flat_map(|p| {
+        let bytes = fs::read(p).unwrap();
+        assert!(bytes.len() <= 17);
+        bytes
+    }).collect();
+    assert_eq!(joined, fs::read(&archive).unwrap());
+    assert_eq!(result.total_size, joined.len() as u64);
+    let mut reader = zip_aes::ZipArchive::new(std::io::Cursor::new(joined)).unwrap();
+    assert!(reader.by_name_decrypt("资料/空目录/", password_bytes).unwrap().is_dir());
+    assert!(reader.by_name_decrypt("资料/说明.txt", b"wrong").is_err());
+    for (name, expected) in [("资料/说明.txt", "中文内容"), ("第二份.txt", "another file")] {
+        let mut entry = reader.by_name_decrypt(name, password_bytes).unwrap();
+        let mut actual = String::new();
+        entry.read_to_string(&mut actual).unwrap();
+        assert_eq!(actual, expected);
+    }
+    // Synthetic fixture password only; production creation does not use CLI passwords.
+    let engine = long_compress_assistant::utils::archive_tools::find_7z_command().expect("7-Zip required for interoperability");
+    let direct = long_compress_assistant::utils::process::command(&engine)
+        .arg("t").arg(format!("-p{password}")).arg(&archive).output().unwrap();
+    // Windows 7-Zip converts CLI passwords to ACP bytes. The explicit local
+    // mode is the interoperability contract; UTF-8 remains a separate dialect.
+    // Assert that boundary instead of requiring a CP936 process to use UTF-8.
+    #[cfg(windows)]
+    let independent_expected = long_compress_assistant::services::zip_password::encode(
+        password, long_compress_assistant::services::zip_password::ZipPasswordEncoding::WindowsLocal,
+    ).is_ok_and(|bytes| bytes == password_bytes);
+    #[cfg(not(windows))]
+    let independent_expected = true;
+    assert_eq!(direct.status.success(), independent_expected, "single archive encoding contract");
+    let extracted = temp.path().join("independent");
+    let result = long_compress_assistant::utils::process::command(engine)
+        .arg("x").arg("-y").arg(format!("-p{password}"))
+        .arg(format!("-o{}", extracted.display())).arg(&result.part_files[0])
+        .output().unwrap();
+    assert_eq!(result.status.success(), independent_expected, "{}", String::from_utf8_lossy(&result.stderr));
+    if !independent_expected {
+        assert!(String::from_utf8_lossy(&result.stderr).contains("Wrong password"));
+        return; // Native full-payload assertions above are still mandatory.
+    }
+    assert!(extracted.join("资料/空目录").is_dir());
+    assert_eq!(fs::read_to_string(extracted.join("资料/说明.txt")).unwrap(), "中文内容");
+    assert_eq!(fs::read_to_string(extracted.join("第二份.txt")).unwrap(), "another file");
+}
+
+#[test]
+fn numeric_split_rolls_back_on_cancellation_and_preserves_late_collisions() {
+    let temp = tempdir().unwrap();
+    let source = temp.path().join("source.zip");
+    fs::write(&source, vec![42u8; 200]).unwrap();
+    let output = temp.path().join("result.zip");
+    let mut checks = 0;
+    let result = SplitCompressionService::split_archive_file(&source, &output, 50, || {
+        checks += 1;
+        if checks == 3 { anyhow::bail!("cancelled"); }
+        Ok(())
+    });
+    assert!(result.is_err());
+    assert!(!temp.path().join("result.zip.001").exists());
+    let collision = temp.path().join("result.zip.002");
+    let mut checks = 0;
+    let result = SplitCompressionService::split_archive_file(&source, &output, 50, || {
+        checks += 1;
+        if checks == 3 { fs::write(&collision, b"someone else's output")?; }
+        Ok(())
+    });
+    assert!(result.is_err());
+    assert!(!temp.path().join("result.zip.001").exists());
+    assert_eq!(fs::read(&collision).unwrap(), b"someone else's output");
+    assert_eq!(fs::read(&source).unwrap(), vec![42u8; 200]);
+}
+
+#[test]
+fn numeric_split_handles_exact_boundaries_and_more_than_999_parts() {
+    let temp = tempdir().unwrap();
+    let source = temp.path().join("source.zip");
+    fs::write(&source, vec![7; 1001]).unwrap();
+    let output = temp.path().join("many.zip");
+    assert!(SplitCompressionService::split_archive_file(&source, &output, 0, || Ok(())).is_err());
+    let result = SplitCompressionService::split_archive_file(&source, &output, 1, || Ok(())).unwrap();
+    assert_eq!(result.part_count, 1001);
+    assert_eq!(result.part_files[999], temp.path().join("many.zip.1000"));
+    assert!(!temp.path().join("many.zip.1002").exists());
+}
+
+#[test]
+fn numeric_split_rejects_empty_sources_and_existing_volume_sets() {
+    let temp = tempdir().unwrap();
+    let source = temp.path().join("empty.zip");
+    fs::write(&source, b"").unwrap();
+    let output = temp.path().join("output.zip");
+    assert!(SplitCompressionService::split_archive_file(&source, &output, 10, || Ok(())).is_err());
+    assert!(!temp.path().join("output.zip.001").exists());
+    fs::write(&source, b"archive").unwrap();
+    let existing = temp.path().join("output.zip.003");
+    fs::write(&existing, b"keep me").unwrap();
+    assert!(SplitCompressionService::split_archive_file(&source, &output, 10, || Ok(())).is_err());
+    assert_eq!(fs::read(existing).unwrap(), b"keep me");
+    assert!(!temp.path().join("output.zip.001").exists());
+}
+
+#[tokio::test]
+async fn unsupported_split_combinations_fail_without_creating_output() {
+    let temp = tempdir().unwrap();
+    let source = temp.path().join("source.txt");
+    fs::write(&source, b"payload").unwrap();
+    for (input, password, expected) in [
+        (source.clone(), Some("密码测试".to_string()), "Encrypted split ZIP"),
+        (temp.path().to_path_buf(), None, "regular files only"),
+    ] {
+        let output = temp.path().join("unsupported.zip");
+        let error = SplitCompressionService::new().compress_to_split_zips(
+            &[input.to_string_lossy().into_owned()], &output,
+            CompressionOptions { split_size: Some(10), password, ..Default::default() },
+        ).await.unwrap_err();
+        assert!(error.to_string().contains(expected), "{error}");
+        assert!(!output.exists());
+        assert!(!temp.path().join("unsupported.zip.001").exists());
+        assert_eq!(fs::read(&source).unwrap(), b"payload");
+    }
+}
+
 #[tokio::test]
 async fn test_split_compression_basic() {
     let temp_dir = tempdir().unwrap();

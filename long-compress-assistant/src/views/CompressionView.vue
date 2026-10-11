@@ -8,6 +8,7 @@ import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage, generateId } from '@/utils'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
+import { splitSizeBytes } from '@/utils/archiveSizeUnits'
 import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
 import {
   compressionStatusClass,
@@ -52,7 +53,7 @@ let resolveRarResolution: ((choice: RarResolution) => void) | null = null
 // This page owns archive compression only; media tasks live in Special Compression.
 // Legacy tasks without a workload kind are archives.
 const compressionTasks = computed(() => taskStore.tasksFor('compression')
-  .filter(task => !task.workloadKind || task.workloadKind === 'archive'))
+  .filter(task => (!task.workloadKind || task.workloadKind === 'archive') && task.executionConfig?.kind !== 'archive-conversion'))
 const activeCompressionTasks = computed(() =>
   compressionTasks.value.filter(task => !['completed', 'failed', 'cancelled'].includes(task.status))
 )
@@ -132,7 +133,7 @@ const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {
 }
 
 const canUseSplitArchive = (files: Array<{ isDirectory: boolean }>) => {
-  return files.length > 0 && files.every(file => !file.isDirectory)
+  return files.length > 0
 }
 
 const canGlobalUseSingleFileFormats = computed(() => {
@@ -315,6 +316,13 @@ const runCompression = async () => {
   ]
 
   if (jobs.length === 0) return
+  const filenamePasswordError = '文件名加密仅支持 7Z，请先填写压缩密码。'
+  if (jobs.some(job => job.settings.encryptFilenames && (job.settings.format !== '7z' || !job.settings.password))) {
+    appStore.setError(filenamePasswordError)
+    return
+  }
+  // Clear only this resolved validation error, not errors from concurrent tasks.
+  if (appStore.error === filenamePasswordError) appStore.clearError()
 
   if (jobs.some(job => job.settings.format === 'rar')) {
     const support = await ensureRarSupport()
@@ -415,16 +423,22 @@ const runCompression = async () => {
           splitArchive: job.settings.splitArchive, splitSize: job.settings.splitSize,
           keepStructure: job.settings.keepStructure, verifyAfter: job.settings.verifyAfter,
           createSolidArchive: effectiveFormat === '7z' && job.settings.createSolidArchive,
-          fastPack: effectiveFormat === 'zip' && !job.settings.splitArchive && job.settings.fastPack === true,
+          encryptFilenames: job.settings.encryptFilenames ?? false,
+          zipPasswordEncoding: job.settings.zipPasswordEncoding ?? 'utf8',
+          zipEncryption: job.settings.zipEncryption ?? 'aes256',
+          fastPack: false,
         },
       },
       compressionOptions: {
-        fast_pack: effectiveFormat === 'zip' && !job.settings.splitArchive && job.settings.fastPack === true,
+        fast_pack: false,
+        zip_password_encoding: effectiveFormat === 'zip' ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
+        zip_encryption: effectiveFormat === 'zip' ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
         format: effectiveFormat,
         level: job.settings.level,
         password: job.settings.password || undefined,
-        split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
+        split_size: splitSizeBytes(job.settings.splitArchive, job.settings.splitSize),
         create_solid_archive: effectiveFormat === '7z' && job.settings.createSolidArchive,
+        encrypt_filenames: job.settings.encryptFilenames ?? false,
         preserve_paths: job.settings.keepStructure,
         delete_after: job.settings.deleteAfter,
         verify_after: job.settings.verifyAfter,
@@ -455,17 +469,20 @@ const runCompression = async () => {
         return
       }
       taskStore.updateTaskStatus(taskId, 'compressing')
-      await tauriCommands.compressFiles(
+      const publishedOutput = await tauriCommands.compressFiles(
         taskId,
         job.files.map(file => file.path),
         job.outputPath,
         {
-          fast_pack: effectiveFormat === 'zip' && !job.settings.splitArchive && job.settings.fastPack === true,
+          fast_pack: false,
+          zip_password_encoding: effectiveFormat === 'zip' ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
+          zip_encryption: effectiveFormat === 'zip' ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
           format: effectiveFormat,
           level: job.settings.level,
           password: job.settings.password || undefined,
-          split_size: job.settings.splitArchive ? Number(job.settings.splitSize) : null,
+          split_size: splitSizeBytes(job.settings.splitArchive, job.settings.splitSize),
           create_solid_archive: effectiveFormat === '7z' && job.settings.createSolidArchive,
+          encrypt_filenames: job.settings.encryptFilenames ?? false,
           preserve_paths: job.settings.keepStructure,
           delete_after: job.settings.deleteAfter,
           verify_after: job.settings.verifyAfter,
@@ -474,6 +491,11 @@ const runCompression = async () => {
       )
       const finishedTask = taskStore.tasks.find(task => task.id === taskId)
       if (finishedTask && !['cancelled', 'cancelling'].includes(finishedTask.status)) {
+        finishedTask.archiveOutput = publishedOutput
+        if (publishedOutput) {
+          finishedTask.outputBytes = publishedOutput.totalBytes
+          finishedTask.outputBytesEstimated = false
+        }
         taskStore.updateTaskStatus(taskId, 'completed')
         if (!job.settings.splitArchive && compressionStore.compressionAnalysis[job.id]?.result) {
           const outputInfo = await tauriCommands.getFileInfo(job.outputPath)
@@ -1230,8 +1252,8 @@ const drawerTransition = useDrawerTransition()
 
 .compression-detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
-  height: clamp(22rem, 54vh, 32rem);
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  height: clamp(17rem, calc(100vh - 20rem), 32rem);
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -1242,6 +1264,7 @@ const drawerTransition = useDrawerTransition()
 }
 
 .compression-config-panel {
+  container: compression-settings / inline-size;
   box-sizing: border-box;
   min-width: 0;
   max-width: 100%;
@@ -1250,7 +1273,7 @@ const drawerTransition = useDrawerTransition()
   max-height: none;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1.25rem 1.5rem;
+  padding: .75rem;
   border-right: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
@@ -1437,7 +1460,11 @@ const drawerTransition = useDrawerTransition()
 }
 
 /* Respond to the available drawer width, including sidebar and UI scaling. */
-@container (max-width: 47.5rem) {
+@container compression-settings (max-width: 24rem) {
+  .compression-config-panel :deep(.archive-name-card),
+  .compression-config-panel :deep(.archive-password-card) { grid-column: 1 / -1; }
+}
+@container (max-width: 32rem) {
   .compression-detail-grid { grid-template-columns: minmax(0, 1fr); height: auto; }
   .compression-config-panel { height: auto; overflow: visible; border-right: 0; border-bottom: 1px solid var(--border-subtle); }
   .compression-detail-grid :deep(.compression-execution-panel) { height: 18rem; }

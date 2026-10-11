@@ -57,6 +57,7 @@ const profile = (passwordStrategy: PasswordStrategy = { type: 'none' }): Compres
     deleteAfter: true,
     verifyAfter: true,
     createSolidArchive: true,
+    encryptFilenames: false,
     filenameTemplate: '{name}-{date}',
     extraParams: { threads: '4' },
   },
@@ -80,6 +81,17 @@ const profile = (passwordStrategy: PasswordStrategy = { type: 'none' }): Compres
 })
 
 describe('useCompressionProfiles', () => {
+  it('preserves explicit filename encryption when reading and updating profiles', async () => {
+    const raw = rawProfile()
+    mocks.invoke.mockResolvedValueOnce({ ...raw, config: { ...raw.config, format: '7z', encrypt_filenames: true } })
+    const api = useCompressionProfiles()
+    const loaded = await api.getProfileById('profile-1')
+    expect(loaded?.config.encryptFilenames).toBe(true)
+    await api.updateProfile(loaded!)
+    expect(mocks.invoke).toHaveBeenLastCalledWith('update_compression_profile', expect.objectContaining({
+      profile: expect.objectContaining({ config: expect.objectContaining({ encrypt_filenames: true }) }),
+    }))
+  })
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -152,6 +164,21 @@ describe('useCompressionProfiles', () => {
 
     mocks.invoke.mockResolvedValueOnce(null)
     await expect(useCompressionProfiles().getProfileById('missing')).resolves.toBeNull()
+  })
+
+  it('retains ZIP encoding across persisted profile creation and reload', async () => {
+    const api = useCompressionProfiles()
+    const config = { ...profile().config, zipPasswordEncoding: 'windows_local' as const, zipEncryption: 'zipcrypto' as const }
+    mocks.invoke.mockResolvedValueOnce('new-id')
+    await api.createProfile({ name: '兼容', icon: 'Z', description: '', config })
+    expect(mocks.invoke.mock.calls.at(-1)?.[1].profile.config.extraParams.zip_encryption).toBe('zipcrypto')
+    expect(mocks.invoke).toHaveBeenLastCalledWith('create_compression_profile', { profile: expect.objectContaining({ config: expect.objectContaining({ extraParams: expect.objectContaining({ zip_password_encoding: 'windows_local' }) }) }) })
+    const raw = rawProfile()
+    raw.config.extra_params = { ...raw.config.extra_params, zip_password_encoding: 'windows_local', zip_encryption: 'zipcrypto' } as any
+    mocks.invoke.mockResolvedValueOnce(raw)
+    const loaded = await api.getProfileById('profile-1')
+    expect(loaded?.config.zipPasswordEncoding).toBe('windows_local')
+    expect(loaded?.config.zipEncryption).toBe('zipcrypto')
   })
 
   it('creates, updates, deletes, records, and suggests profiles with backend-safe payloads', async () => {

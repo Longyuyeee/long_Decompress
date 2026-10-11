@@ -3,6 +3,7 @@
     <MainLayout />
     <ToastContainer />
     <UpdateDialog />
+    <ArchiveConversionModal />
     <Modal
       :visible="showExitConfirmation"
       :title="appStore.t('exit.confirm.title')"
@@ -36,6 +37,7 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
+import ArchiveConversionModal from '@/components/compression/ArchiveConversionModal.vue'
 import Modal from '@/components/ui/Modal.vue'
 import UpdateDialog from '@/components/update/UpdateDialog.vue'
 import { useTaskStore } from '@/stores/task'
@@ -96,8 +98,13 @@ const cancelTasksAndExit = async () => {
   }
 }
 
+let currentErrorToast: string | undefined
 watch(() => appStore.error, message => {
-  if (message) uiStore.showToast('error', message, 5000)
+  if (message) currentErrorToast = uiStore.showToast('error', message, 5000)
+  else if (currentErrorToast) {
+    uiStore.removeToast(currentErrorToast)
+    currentErrorToast = undefined
+  }
 })
 
 watch(() => appStore.successMessage, message => {

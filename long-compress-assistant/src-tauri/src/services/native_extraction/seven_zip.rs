@@ -4,7 +4,8 @@ use crate::services::compression_service::CompressionError;
 use crate::services::extraction_transaction;
 use anyhow::Result;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read, Write, Seek, SeekFrom};
+use crate::services::numeric_volume_reader::ZipInputReader;
 use std::path::{Path, PathBuf};
 use tauri::Window;
 
@@ -37,8 +38,10 @@ impl Drop for IncompleteExtractedFile {
 }
 
 pub(crate) fn requires_password(file_path: &Path) -> Result<bool> {
-    let mut archive_file = File::open(file_path)?;
-    let len = archive_file.metadata()?.len();
+    let mut archive_file = ZipInputReader::open_seven_zip(file_path)?;
+    let len = archive_file.seek(SeekFrom::End(0))?;
+    validate_archive_extent(&mut archive_file, len)?;
+    archive_file.seek(SeekFrom::Start(0))?;
     match sevenz_rust::Archive::read(&mut archive_file, len, &[]) {
         Ok(archive) => Ok(archive.folders.iter().any(|folder| {
             folder.coders.iter().any(|coder| {
@@ -59,6 +62,60 @@ pub(crate) fn requires_password(file_path: &Path) -> Result<bool> {
                 .into())
             }
         }
+    }
+}
+
+// The volume numbering cannot reveal a missing final volume. Check the size
+// declared by a CRC-validated start header before interpreting encrypted data.
+fn validate_archive_extent(reader: &mut (impl Read + Seek), length: u64) -> Result<()> {
+    reader.seek(SeekFrom::Start(0))?;
+    let mut header = [0u8; 32];
+    if let Err(error) = reader.read_exact(&mut header) {
+        if error.kind() == std::io::ErrorKind::UnexpectedEof {
+            anyhow::bail!("[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档头被截断，请重新下载或补齐分卷");
+        }
+        return Err(error.into());
+    }
+    // Leave unsupported signatures/versions to the archive decoder.
+    if &header[..6] != b"7z\xbc\xaf\x27\x1c" || header[6] != 0 {
+        return Ok(());
+    }
+    let expected_crc = u32::from_le_bytes(header[8..12].try_into().unwrap());
+    if crc32fast::hash(&header[12..]) != expected_crc {
+        anyhow::bail!("[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头");
+    }
+    let offset = u64::from_le_bytes(header[12..20].try_into().unwrap());
+    let size = u64::from_le_bytes(header[20..28].try_into().unwrap());
+    let end = 32u64.checked_add(offset).and_then(|value| value.checked_add(size))
+        .ok_or_else(|| anyhow::anyhow!("[archive-inspection:damaged] 7Z 归档头长度无效：文件已损坏"))?;
+    if end > length {
+        anyhow::bail!("[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 {end} 字节，实际只有 {length} 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载");
+    }
+    Ok(())
+}
+
+pub(crate) fn ambiguous_password_error() -> CompressionError {
+    CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] 7Z 加密数据未能通过解码或完整性校验：可能是密码不匹配，也可能是文件损坏或分卷混用，不能确定为密码错误。请核对密码，并检查分卷是否来自同一份完整归档；必要时重新下载。".to_string())
+}
+
+/// Decoder errors may be password-dependent; operating-system failures are not.
+/// Preserve the latter instead of trying another password against an unreadable file.
+pub(crate) fn password_candidate_result(
+    result: std::result::Result<(), sevenz_rust::Error>,
+    tested_file: bool,
+) -> Result<bool> {
+    match result {
+        Ok(()) => Ok(tested_file),
+        Err(sevenz_rust::Error::Io(error, context))
+            if error.raw_os_error().is_some() || matches!(error.kind(),
+                std::io::ErrorKind::PermissionDenied | std::io::ErrorKind::NotFound
+                | std::io::ErrorKind::StorageFull | std::io::ErrorKind::TimedOut
+                | std::io::ErrorKind::Interrupted | std::io::ErrorKind::BrokenPipe) => {
+            let category = if error.kind() == std::io::ErrorKind::PermissionDenied { "permission" } else { "io" };
+            let message = format!("[archive-inspection:{category}] 7Z 密码验证过程中读取失败，不能判定为密码不匹配：{error}；{context}");
+            Err(anyhow::Error::new(error).context(message))
+        }
+        Err(_) => Ok(false),
     }
 }
 
@@ -93,7 +150,7 @@ fn classify_error(
             || error_message.contains("checksumverificationfailed")
             || error_message.contains("corrupted input data");
         if password_failure {
-            return CompressionError::InvalidPassword;
+            return ambiguous_password_error();
         }
     }
 
@@ -188,10 +245,11 @@ pub(crate) fn extract<R: ExtractionRuntime>(
     let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
     let mut processed = 0usize;
     let total_uncompressed_bytes = {
-        let archive_file = File::open(file);
+        let archive_file = ZipInputReader::open_seven_zip(Path::new(file));
         archive_file
             .and_then(|mut archive_file| {
-                let len = archive_file.metadata()?.len();
+                let len = archive_file.seek(SeekFrom::End(0))?;
+                archive_file.seek(SeekFrom::Start(0))?;
                 let archive = if let Some(password) = password {
                     let password = sevenz_rust::Password::from(password);
                     sevenz_rust::Archive::read(&mut archive_file, len, password.as_slice())
@@ -362,13 +420,13 @@ pub(crate) fn extract<R: ExtractionRuntime>(
 
     let result = if let Some(password) = password {
         sevenz_rust::decompress_with_extract_fn_and_password(
-            File::open(file)?,
+            ZipInputReader::open_seven_zip(Path::new(file))?,
             output,
             sevenz_rust::Password::from(password),
             &mut extract_entry,
         )
     } else {
-        sevenz_rust::decompress_file_with_extract_fn(file, output, &mut extract_entry)
+        sevenz_rust::decompress_with_extract_fn(ZipInputReader::open_seven_zip(Path::new(file))?, output, &mut extract_entry)
     };
 
     if let Err(error) = result {
@@ -406,6 +464,42 @@ pub(crate) fn extract<R: ExtractionRuntime>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn candidate_verification_preserves_operating_system_errors() {
+        for kind in [std::io::ErrorKind::PermissionDenied, std::io::ErrorKind::NotFound,
+            std::io::ErrorKind::StorageFull, std::io::ErrorKind::TimedOut] {
+            let error = password_candidate_result(Err(sevenz_rust::Error::io(
+                std::io::Error::new(kind, "fixture read failure"))), false).unwrap_err();
+            assert_eq!(error.downcast_ref::<std::io::Error>().unwrap().kind(), kind);
+            assert!(error.to_string().contains("fixture read failure"));
+        }
+        assert!(!password_candidate_result(Err(sevenz_rust::Error::ChecksumVerificationFailed), false).unwrap());
+        assert!(!password_candidate_result(Err(sevenz_rust::Error::io(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput, "corrupted input data"))), false).unwrap());
+        assert!(password_candidate_result(Ok(()), true).unwrap());
+        assert!(!password_candidate_result(Ok(()), false).unwrap());
+    }
+    #[test]
+    fn start_header_extent_rejects_truncation_corruption_and_overflow() {
+        fn header(offset: u64, size: u64) -> Vec<u8> {
+            let mut bytes = vec![0u8; 32];
+            bytes[..6].copy_from_slice(b"7z\xbc\xaf\x27\x1c");
+            bytes[12..20].copy_from_slice(&offset.to_le_bytes());
+            bytes[20..28].copy_from_slice(&size.to_le_bytes());
+            let crc = crc32fast::hash(&bytes[12..]);
+            bytes[8..12].copy_from_slice(&crc.to_le_bytes());
+            bytes
+        }
+        let bytes = header(100, 20);
+        assert!(validate_archive_extent(&mut std::io::Cursor::new(&bytes), 152).is_ok());
+        assert!(validate_archive_extent(&mut std::io::Cursor::new(&bytes), 200).is_ok());
+        let error = validate_archive_extent(&mut std::io::Cursor::new(&bytes), 151).unwrap_err().to_string();
+        assert!(error.contains("[archive-inspection:incomplete]"), "{error}");
+        let mut corrupt = bytes.clone(); corrupt[12] ^= 1;
+        assert!(validate_archive_extent(&mut std::io::Cursor::new(corrupt), 152).unwrap_err().to_string().contains("[archive-inspection:damaged]"));
+        assert!(validate_archive_extent(&mut std::io::Cursor::new(header(u64::MAX, 1)), u64::MAX).unwrap_err().to_string().contains("[archive-inspection:damaged]"));
+        assert!(validate_archive_extent(&mut std::io::Cursor::new(&bytes[..20]), 20).unwrap_err().to_string().contains("[archive-inspection:incomplete]"));
+    }
     use crate::services::extraction_transaction::ExtractionStaging;
     use crate::services::io_buffer_pool::IOBufferPool;
     use crate::utils::archive_tools::find_7z_command;
@@ -563,6 +657,30 @@ mod tests {
     }
 
     #[test]
+    fn mixed_seven_zip_ciphertext_cannot_publish_empty_files_as_success() {
+        // Synthetic independent 7-Zip fixture from the desktop mixed-volume
+        // regression (37-byte .002 replaced by a different encrypted archive).
+        // Fixed bytes retain the early-decoder-EOF case regardless of random IVs.
+        let bytes = hex::decode("377ABCAF271C00046060A0E4D40000000000000022000000000000008E62691070F33A75D3913C3910922144242E7705F052C8293BCE0EFFF5203FE908AFF9E7A4753F1413EAE1D6789BC8654C84D7C48C8A553880FD5289EC9C49699BCFA41F0000813307AE0FD1F2FBFD40BB94643B39A47AE76A2346294B89D0A8C0004B477E30090F9573F1BDF9A2B2EC23CF60FBD9C7A61A05D016B7879189872F2D882B5EEC7BDE9D3C97FB95B5C318829749AA23784C65ACCE674C6978F9736BC011ACD95B48E58E2974C8FDF7BD5654B1A9D162AF34F3250BB42A3B63B12003BB365230C9139E478999D30C78DAD7BEB2432696961E201706400109809400070B01000123030101055D001000000C80CE0A01BEE8891D0000").unwrap();
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("mixed.7z");
+        std::fs::write(&archive, &bytes).unwrap();
+        let output = temp.path().join("output");
+        let error = extract(&TestRuntime::default(), None, "short-decoder", &archive.to_string_lossy(),
+            &output.to_string_lossy(), Some("中文密码 + !测试"), &DecompressOptions::default()).unwrap_err();
+        assert!(error.to_string().contains("[archive-inspection:ambiguous-data]"), "{error}");
+        assert!(!output.join("资料/内容.txt").exists());
+        assert_eq!(std::fs::read(&archive).unwrap(), bytes);
+        #[cfg(windows)]
+        {
+            let engine = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/archive-engine/7z.exe");
+            let result = std::process::Command::new(engine).args(["t", "-p中文密码 + !测试", "-y"])
+                .arg(&archive).output().unwrap();
+            assert!(!result.status.success(), "Independent reader must also reject this fixed corrupt fixture");
+        }
+    }
+
+    #[test]
     fn corrupt_plain_crc_is_not_classified_as_a_password_failure() {
         let errors = [
             sevenz_rust::Error::ChecksumVerificationFailed,
@@ -617,7 +735,7 @@ mod tests {
         ));
         assert!(matches!(
             classify_error(sevenz_rust::Error::ChecksumVerificationFailed, true, true,),
-            CompressionError::InvalidPassword
+            CompressionError::ExtractionFailed(message) if message.contains("[archive-inspection:ambiguous-data]")
         ));
         assert!(matches!(
             classify_error(
@@ -627,7 +745,7 @@ mod tests {
                 true,
                 true,
             ),
-            CompressionError::InvalidPassword
+            CompressionError::ExtractionFailed(message) if message.contains("[archive-inspection:ambiguous-data]")
         ));
     }
 
@@ -697,7 +815,7 @@ mod tests {
         assert!(
             matches!(
                 classify_error(wrong, true, true),
-                CompressionError::InvalidPassword
+                CompressionError::ExtractionFailed(message) if message.contains("[archive-inspection:ambiguous-data]")
             ),
             "unexpected wrong-password error: {wrong_debug}"
         );

@@ -108,8 +108,13 @@ impl CompressionFormat {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionOptions {
-    #[serde(default)]
+    // Retired in 1.4.0: accept old payloads, but never deserialize or emit this option.
+    #[serde(skip)]
     pub fast_pack: bool,
+    #[serde(default)]
+    pub zip_password_encoding: crate::services::zip_password::ZipPasswordEncoding,
+    #[serde(default)]
+    pub zip_encryption: crate::services::zip_password::ZipEncryption,
     #[serde(default)]
     pub format: Option<String>,
     pub level: u32,
@@ -117,6 +122,9 @@ pub struct CompressionOptions {
     pub split_size: Option<u64>,
     #[serde(default)]
     pub create_solid_archive: bool,
+    /// Explicit opt-in; legacy requests continue to encrypt contents only.
+    #[serde(default)]
+    pub encrypt_filenames: bool,
     #[serde(default)]
     pub preserve_paths: Option<bool>,
     #[serde(default)]
@@ -163,11 +171,14 @@ impl Default for CompressionOptions {
     fn default() -> Self {
         Self {
             fast_pack: false,
+            zip_password_encoding: Default::default(),
+            zip_encryption: Default::default(),
             format: None,
             level: 0,
             password: None,
             split_size: None,
             create_solid_archive: false,
+            encrypt_filenames: false,
             preserve_paths: None,
             delete_after: false,
             verify_after: true,

@@ -464,6 +464,7 @@ fn main() {
             long_compress_assistant::commands::compression::verify_archive_password,
             long_compress_assistant::commands::compression::extract_multiple,
             long_compress_assistant::commands::compression::compress_files,
+            long_compress_assistant::commands::compression::convert_archive,
             long_compress_assistant::commands::compression::compress_image_file,
             long_compress_assistant::commands::compression::compress_video_file,
             long_compress_assistant::commands::compression::plan_video_compression_destination,

@@ -21,12 +21,14 @@ export const compressionStatusTranslationKey = (
 ) => `compress.status.${status}`
 
 export const compressionStageTranslationKey = (task?: Task) => {
+  if (isFinishedCompressionStatus(task?.status)) return compressionStatusTranslationKey(task?.status)
   if (task?.status === 'paused') return 'compress.status.paused'
   if (!task?.stage) {
     return compressionStatusTranslationKey(task?.status || 'pending')
   }
 
   const normalized = String(task.stage).toLowerCase()
+  if (normalized === 'splitting') return 'compress.status.splitting'
   if (normalized.includes('verif')) return 'compress.status.verifying'
   if (normalized.includes('final')) return 'compress.status.finalizing'
   if (normalized.includes('compress') || normalized.includes('writ')) {

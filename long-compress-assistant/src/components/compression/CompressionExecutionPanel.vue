@@ -4,6 +4,7 @@ import { useAppStore } from '@/stores/app'
 import type { Task } from '@/stores/task'
 import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
+import ArchiveOutputSummary from './ArchiveOutputSummary.vue'
 import {
   compressionLogSeverityClass,
   compressionStageTranslationKey,
@@ -13,9 +14,12 @@ import {
 
 const props = defineProps<{ task?: Task }>()
 const appStore = useAppStore()
+const sourceBytes = computed(() => props.task?.compressionSourceProgress?.processedBytes ?? props.task?.processedBytes ?? 0)
+const pendingSplitResult = computed(() => Boolean(props.task?.compressionSourceProgress && props.task.status !== 'completed'))
 
 const liveRatio = computed(() => {
-  const input = props.task?.processedBytes || 0
+  if (pendingSplitResult.value) return undefined
+  const input = sourceBytes.value
   const output = props.task?.outputBytes || 0
   return input > 0 && output > 0 ? output / input * 100 : undefined
 })
@@ -28,6 +32,7 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
     data-testid="compression-draft-execution"
     class="pending-execution-panel compression-execution-panel custom-scrollbar"
   >
+    <ArchiveOutputSummary v-if="task?.status === 'completed' && task.archiveOutput" :output="task.archiveOutput" />
     <div class="grid grid-cols-2 gap-2">
       <div class="pending-stat-card">
         <span class="text-muted">{{ appStore.t('progress.stage') }}</span>
@@ -50,10 +55,10 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
     >
       <div class="pending-stat-card">
         <span class="text-muted">已读取源数据</span>
-        <div class="font-mono font-black text-content mt-0.5">{{ formatFileSize(task?.processedBytes || 0) }}</div>
+        <div class="font-mono font-black text-content mt-0.5">{{ formatFileSize(sourceBytes) }}</div>
       </div>
       <div class="pending-stat-card">
-        <span class="text-muted">当前压缩包大小</span>
+        <span class="text-muted">{{ task?.compressionSourceProgress ? '已写分卷' : '当前压缩包大小' }}</span>
         <div class="font-mono font-black text-primary mt-0.5">{{ formatFileSize(task?.outputBytes || 0) }}</div>
       </div>
       <div class="pending-stat-card">
@@ -63,7 +68,8 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
       <div class="pending-stat-card">
         <span class="text-muted">空间变化</span>
         <div class="font-mono font-black mt-0.5" :class="savedRatio !== undefined && savedRatio >= 0 ? 'text-green-500' : 'text-amber-500'">
-          <template v-if="savedRatio === undefined">计算中</template>
+          <template v-if="pendingSplitResult">{{ task?.status === 'failed' || task?.status === 'cancelled' ? '未生成有效结果' : '完成后统计' }}</template>
+          <template v-else-if="savedRatio === undefined">计算中</template>
           <template v-else-if="savedRatio >= 0">节省 {{ savedRatio.toFixed(2) }}%</template>
           <template v-else>增加 {{ Math.abs(savedRatio).toFixed(2) }}%</template>
         </div>

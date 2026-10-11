@@ -15,6 +15,8 @@ import type { TaskHistoryRecord } from '@/types/taskHistory'
 const TEST_TASK_ID = 'desktop-e2e-lifecycle-task'
 
 export interface DesktopE2EBridge {
+  convertArchive: (sourcePath: string, sourcePassword: string | null, outputPath: string,
+    options: Record<string, unknown>) => Promise<unknown>
   startCancellableTask: (outputPath: string) => Promise<string>
   seedActiveTask: () => Promise<string>
   cancelTask: (taskId: string) => Promise<boolean>
@@ -346,6 +348,13 @@ export const installDesktopE2EBridge = () => {
   }
 
   const bridge: DesktopE2EBridge = {
+    async convertArchive(sourcePath, sourcePassword, outputPath, options) {
+      return invoke('convert_archive', {
+        taskId: `desktop-e2e-conversion-${Date.now()}`,
+        sourcePath, sourcePassword, outputPath,
+        options: { ...sevenZipOptions, verify_after: true, ...options },
+      })
+    },
     async seedVaultPassword(name, password) {
       const isUnlocked = await invoke<boolean>('is_encrypted_password_service_unlocked')
       if (!isUnlocked) {

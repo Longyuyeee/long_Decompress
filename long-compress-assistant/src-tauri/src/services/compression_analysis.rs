@@ -201,29 +201,6 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
     Ok(encoder.finish()?.len())
 }
 
-/// Bounded per-file probe for opt-in ZIP packing. Sampling never replaces copying the input.
-/// Reuse the analysis reader and Deflate estimator; do not infer content from extensions.
-pub(crate) fn fast_pack_store(file: &mut File, cancelled: &AtomicBool) -> Result<bool> {
-    let size = file.metadata()?.len();
-    if size < 256 * 1024 {
-        return Ok(false);
-    }
-    let chunk = 32 * 1024;
-    let mut sample = Vec::with_capacity(chunk * 3);
-    let result = (|| {
-        for offset in [0, size / 2, size.saturating_sub(chunk as u64)] {
-            check_cancelled(cancelled)?;
-            read_chunk(file, offset, chunk, &mut sample)?;
-        }
-        check_cancelled(cancelled)?;
-        Ok(!sample.is_empty()
-            && compressed_sample_size(&sample, "zip", 1)? as f64 / sample.len() as f64 >= 0.98)
-    })();
-    // The regular product copy must always start at byte zero, including after probing.
-    file.seek(SeekFrom::Start(0))?;
-    result
-}
-
 fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) -> (u64, u64) {
     let base_mib_per_second = match format {
         "7z" | "xz" | "tar.xz" | "lzma" => 45.0,

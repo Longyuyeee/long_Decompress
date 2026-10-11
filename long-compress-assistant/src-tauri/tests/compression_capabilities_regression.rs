@@ -9,6 +9,8 @@ use tempfile::tempdir;
 
 fn compression_options(format: Option<&str>) -> CompressionOptions {
     CompressionOptions {
+        encrypt_filenames: false,
+        zip_encryption: Default::default(),
         format: format.map(str::to_string),
         level: 6,
         password: None,
@@ -18,6 +20,8 @@ fn compression_options(format: Option<&str>) -> CompressionOptions {
         delete_after: false,
         verify_after: true,
         allow_insecure_password_cli: false,
+        fast_pack: false,
+        zip_password_encoding: Default::default(),
     }
 }
 
@@ -76,7 +80,7 @@ fn validates_password_support_per_format() {
 
     let mut zip_options = compression_options(Some("zip"));
     zip_options.password = Some("secret".to_string());
-    // ZIP 现在支持密码（通过 7z CLI）
+    // ZIP 密码创建由原生 AES 路径实现；这里仅验证请求能力。
     assert_eq!(
         CompressionService::validate_compression_request(
             std::slice::from_ref(&source),
@@ -127,6 +131,31 @@ fn validates_split_archive_support() {
     assert!(
         CompressionService::validate_compression_request(&[source], &output, &options).is_ok()
     );
+}
+
+#[test]
+fn only_zip_and_seven_zip_claim_split_creation() {
+    let temp = tempdir().unwrap();
+    let source = temp.path().join("source.txt");
+    fs::write(&source, b"payload").unwrap();
+    for format in ["zip", "7z"] {
+        let mut options = compression_options(Some(format));
+        options.split_size = Some(1024);
+        assert!(CompressionService::validate_compression_request(
+            &[source.to_string_lossy().into_owned()],
+            &temp.path().join(format!("archive.{format}")).to_string_lossy(), &options,
+        ).is_ok());
+    }
+    for format in ["rar", "tar", "wim", "tar.aes"] {
+        let mut options = compression_options(Some(format));
+        options.split_size = Some(1024);
+        let error = CompressionService::validate_compression_request(
+            &[source.to_string_lossy().into_owned()],
+            &temp.path().join(format!("archive.{format}")).to_string_lossy(),
+            &options,
+        ).unwrap_err();
+        assert!(error.to_string().contains("does not support split"), "{format}: {error}");
+    }
 }
 
 #[test]
@@ -212,7 +241,7 @@ fn exposes_backend_compression_capability_matrix() {
     assert!(capabilities.iter().any(|capability| capability.format == "lzma" && capability.requires_7za));
     assert!(capabilities.iter().any(|capability| capability.format == "rar" && capability.requires_winrar));
     assert!(capabilities.iter().any(|capability| capability.format == "zip" && capability.supports_split));
-    assert!(capabilities.iter().any(|capability| capability.format == "7z" && !capability.supports_split));
+    assert!(capabilities.iter().any(|capability| capability.format == "7z" && capability.supports_split));
     assert!(capabilities.iter().any(|capability| capability.format == "wim" && capability.requires_7za));
 }
 

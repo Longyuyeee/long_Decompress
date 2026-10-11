@@ -89,7 +89,7 @@ describe('task failure evidence', () => {
       schemaVersion: 1, category: 'unknown', stage: 'Publishing', evidence: 'observed-stage',
     } })?.stageLabel).toBe('发布输出（最后观测阶段）')
   })
-  it.each(['damaged', 'missing-volume', 'permission', 'timeout', 'engine-unavailable', 'engine-start', 'io', 'ambiguous-data'])('uses recorded %s classification', category => {
+  it.each(['damaged', 'missing-volume', 'incomplete', 'permission', 'timeout', 'engine-unavailable', 'engine-start', 'io', 'ambiguous-data'])('uses recorded %s classification', category => {
     expect(describeTaskFailure({ status: 'failed', errorMessage: `归档检测失败：[archive-inspection:${category}] raw detail` }))
       .toMatchObject({ category, stage: 'inspection', evidence: 'recorded-marker' })
   })

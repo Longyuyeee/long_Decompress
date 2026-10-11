@@ -39,12 +39,15 @@ describe('CompressionAnalysisCard', () => {
     mocks.cancel.mockResolvedValue(undefined)
   })
 
-  it('renders a shorter but explicit explanation in compact task details', () => {
+  it('shows the analysis explanation only when requested', async () => {
     const wrapper = mountCard(options, true)
 
     expect(wrapper.get('[data-testid="compression-analysis"]').classes()).toContain('is-compact')
-    expect(wrapper.get('.analysis-description').text()).toBe('抽样估算，不自动修改设置')
-    expect(wrapper.get('.analysis-description').attributes('title')).toContain('最多 2 MiB')
+    expect(wrapper.text()).not.toContain('最多 2 MiB')
+    await wrapper.get('button[aria-label="智能压缩分析说明"]').trigger('click')
+    expect(document.querySelector('[role="note"]')?.textContent).toContain('最多 2 MiB')
+    expect(document.querySelector('[role="note"]')?.textContent).toContain('不会自动修改设置')
+    wrapper.unmount()
   })
 
   it('runs bounded analysis, exposes the real estimate and applies existing settings fields', async () => {

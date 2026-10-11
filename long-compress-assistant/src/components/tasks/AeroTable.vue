@@ -200,6 +200,7 @@ const getStageText = (task: Task) => {
     case 'Pre-checking': return '执行预检'
     case 'Extracting': return '正在解压'
     case 'Verifying': return '验证输出'
+    case 'Splitting': return '正在分卷'
     case 'Finalizing': return '提交结果'
     case 'Probing': return '重新探测'
     case 'Encoding': return '视频编码'
@@ -285,8 +286,8 @@ async (tasks, _, onCleanup) => {
             role="button"
             tabindex="0"
             :aria-expanded="expandedTasks.has(task.id)"
-            @keydown.enter="toggleExpand(task.id)"
-            @keydown.space.prevent="toggleExpand(task.id)"
+            @keydown.enter.self="toggleExpand(task.id)"
+            @keydown.space.self.prevent="toggleExpand(task.id)"
           >
             <!-- 状态指示条 -->
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover/row:opacity-100 transition-opacity duration-200"></div>
@@ -568,7 +569,7 @@ async (tasks, _, onCleanup) => {
                       </div>
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">进度</span>
-                        <div class="mt-0.5 flex min-w-0 items-center gap-2 whitespace-nowrap font-mono font-black text-primary"><SmoothProgressValue :value="task.progress" /><span v-if="task.speed && !['completed', 'failed', 'cancelled'].includes(task.status)" class="min-w-0 truncate text-muted">{{ task.speed }}</span></div>
+                        <div class="mt-0.5 flex min-w-0 items-center gap-2 whitespace-nowrap font-mono font-black text-primary"><SmoothProgressValue data-testid="decompression-detail-progress" :value="task.progress" :immediate="['completed', 'failed', 'cancelled'].includes(task.status)" /><span v-if="task.speed && !['completed', 'failed', 'cancelled'].includes(task.status)" class="min-w-0 truncate text-muted">{{ task.speed }}</span></div>
                       </div>
                       <div v-if="task.currentFile" class="task-current-file col-span-2 min-w-0 truncate rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 font-mono text-content" :title="task.currentFile">
                         {{ task.currentFile }}
@@ -718,9 +719,10 @@ async (tasks, _, onCleanup) => {
 
 .task-detail-layout {
   display: grid;
-  grid-template-columns: minmax(16rem, 0.82fr) minmax(19rem, 1.18fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   align-items: stretch;
-  height: clamp(22rem, 54vh, 32rem);
+  /* Leave room for the page header, task row and fixed queue toolbar. */
+  height: clamp(15rem, calc(100vh - 23rem), 32rem);
   min-height: 0;
   overflow-x: hidden;
 }
@@ -904,7 +906,7 @@ async (tasks, _, onCleanup) => {
 }
 
 @media (max-width: 980px) {
-  .task-detail-layout { grid-template-columns: minmax(16rem, .92fr) minmax(17rem, 1.08fr); }
+  .task-detail-layout { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
   .table-header,
   .task-row { grid-template-columns: 2rem minmax(0, .9fr) minmax(0, 1.1fr) 5.75rem; }
 }
@@ -917,7 +919,7 @@ async (tasks, _, onCleanup) => {
 .pop-enter-active, .pop-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.95) translateY(10px); }
 
-@container (max-width: 38.75rem) {
+@container (max-width: 32rem) {
   .task-detail-layout { grid-template-columns: minmax(0, 1fr); height: auto; }
   .task-config-panel { height: auto; overflow: visible; border-right: 0; border-bottom: 1px solid var(--border-subtle); }
   .task-execution-panel { height: 18rem; }

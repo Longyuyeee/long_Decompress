@@ -16,6 +16,57 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('AeroTable', () => {
+  it('settles detail progress on terminal status without waiting for animation', async () => {
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1))
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    store.addTask({ id: 'terminal-progress', name: '资料.zip', type: 'decompression', sourceFiles: ['C:/资料.zip'], outputPath: 'C:/out' })
+    store.tasks[0].status = 'extracting'
+    store.tasks[0].progress = 20
+    const wrapper = mount(AeroTable, { props: { taskType: 'decompression' }, global: { plugins: [pinia], stubs: { Teleport: true, ExtractionOutputPreview: true } } })
+    try {
+      await wrapper.get('[data-testid="task-row"]').trigger('click')
+      store.tasks[0].progress = 66
+      await flushPromises()
+      expect(wrapper.get('[data-testid="decompression-detail-progress"]').text()).toBe('20.00%')
+      store.tasks[0].status = 'failed'
+      await flushPromises()
+      expect(wrapper.get('[data-testid="decompression-detail-progress"]').text()).toBe('66.00%')
+      store.tasks[0].status = 'completed'
+      store.tasks[0].progress = 100
+      await flushPromises()
+      expect(wrapper.get('[data-testid="decompression-detail-progress"]').text()).toBe('100%')
+    } finally {
+      wrapper.unmount()
+      vi.unstubAllGlobals()
+    }
+  })
+  it('does not intercept spaces or Enter from row controls while preserving row keyboard expansion', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    store.addTask({ id: 'password-space', name: '资料.zip.001', type: 'decompression', sourceFiles: ['C:/资料.zip.001'], outputPath: 'C:/out' })
+    store.tasks[0].status = 'failed'
+    store.tasks[0].passwordRequired = true
+    const wrapper = mount(AeroTable, { props: { taskType: 'decompression' }, global: { plugins: [pinia], stubs: { Teleport: true, ExtractionOutputPreview: true } } })
+    const row = wrapper.get('[data-testid="task-row"]')
+    for (const control of [wrapper.get('.task-password-cell input'), wrapper.get('.task-password-cell button')]) {
+      for (const key of [' ', 'Enter']) {
+        const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+        control.element.dispatchEvent(event)
+        await flushPromises()
+        expect(event.defaultPrevented).toBe(false)
+        expect(row.attributes('aria-expanded')).toBe('false')
+      }
+    }
+    await row.trigger('keydown', { key: ' ' })
+    expect(row.attributes('aria-expanded')).toBe('true')
+    await row.trigger('keydown', { key: 'Enter' })
+    expect(row.attributes('aria-expanded')).toBe('false')
+    wrapper.unmount()
+  })
   it('expands in the list and automatically preserves settings only after editing', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)

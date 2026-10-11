@@ -6,6 +6,7 @@ import App from '../App.vue'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import { useTaskStore } from '@/stores/task'
+import { useUIStore } from '@/stores/ui'
 
 const mocks = vi.hoisted(() => {
   const listeners = new Map<string, (event: any) => void>()
@@ -113,6 +114,24 @@ describe('App orchestration', () => {
       if (command === 'path_exists') return false
       return undefined
     })
+  })
+
+  it('removes the resolved app error toast without discarding other notifications', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const wrapper = mount(App, { global: { plugins: [pinia], stubs: { MainLayout: true, ToastContainer: true, UpdateDialog: true, Modal: true } } })
+    await flushPromises()
+    const app = useAppStore()
+    const ui = useUIStore()
+    ui.showToast('error', '另一个任务失败')
+    app.setError('请填写密码')
+    await nextTick()
+    expect(ui.toasts.some(toast => toast.message === '请填写密码')).toBe(true)
+    app.clearError()
+    await nextTick()
+    expect(ui.toasts.some(toast => toast.message === '请填写密码')).toBe(false)
+    expect(ui.toasts.some(toast => toast.message === '另一个任务失败')).toBe(true)
+    wrapper.unmount()
   })
 
   it('drains context actions, handles shortcuts, and safely resolves exit requests', async () => {

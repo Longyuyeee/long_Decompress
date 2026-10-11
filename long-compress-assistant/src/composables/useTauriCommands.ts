@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri'
+import type { PublishedArchiveOutput } from '@/types/archiveOutput'
 import { message, open, save, ask } from '@tauri-apps/api/dialog'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
@@ -56,11 +57,14 @@ export interface FileInfo {
 
 export interface CompressOptions {
   fast_pack?: boolean
+  zip_password_encoding?: 'utf8' | 'windows_local'
+  zip_encryption?: 'aes256' | 'zipcrypto'
   format?: string
   level: number
   password?: string
   split_size?: number | null
   create_solid_archive?: boolean
+  encrypt_filenames?: boolean
   preserve_paths?: boolean
   delete_after?: boolean
   verify_after?: boolean
@@ -419,7 +423,7 @@ export const useTauriCommands = () => {
     outputPath: string,
     options: CompressOptions
   ) => {
-    return await invoke<string>('compress_files', {
+    return await invoke<PublishedArchiveOutput>('compress_files', {
       taskId,
       files,
       outputPath,

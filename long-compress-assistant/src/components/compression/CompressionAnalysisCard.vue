@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed } from 'vue'
 import { useCompressionStore, type CompressionOptions } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -78,10 +79,7 @@ const applyRecommendation = () => {
   <section data-testid="compression-analysis" class="analysis-card" :class="{ 'is-compact': compact }">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
-        <div class="flex items-center gap-2 text-sm font-black text-content"><i class="pi pi-sparkles text-primary"></i>智能压缩分析</div>
-        <p class="analysis-description mt-1 text-xs text-muted" title="仅读取最多 2 MiB 内容样本；结果不会自动修改设置">
-          {{ compact ? '抽样估算，不自动修改设置' : '仅读取最多 2 MiB 内容样本；结果不会自动修改设置' }}
-        </p>
+        <div class="flex items-center gap-2 text-sm font-black text-content"><i class="pi pi-sparkles text-primary"></i>智能压缩分析<HelpHint label="智能压缩分析说明">仅读取最多 2 MiB 内容样本；结果不会自动修改设置。</HelpHint></div>
       </div>
       <button v-if="state?.status === 'running'" type="button" class="analysis-button is-cancel" @click="cancel"><i class="pi pi-stop-circle"></i>取消分析</button>
       <button v-else type="button" class="analysis-button" :disabled="disabled" @click="analyze"><i class="pi pi-chart-line"></i>{{ result ? '重新分析' : '分析预计体积' }}</button>

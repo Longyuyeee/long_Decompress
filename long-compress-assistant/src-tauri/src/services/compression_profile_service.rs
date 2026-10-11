@@ -49,6 +49,7 @@ impl CompressionProfileService {
                    config_format, config_level, config_password,
                    config_split_archive, config_split_size, config_keep_structure,
                    config_delete_after, config_verify_after, config_create_solid_archive,
+                   config_encrypt_filenames,
                    config_filename_template, config_extra_params,
                    auto_apply_enabled, auto_apply_mode, auto_apply_file_patterns,
                    auto_apply_exclude_patterns,
@@ -83,6 +84,7 @@ impl CompressionProfileService {
                    config_format, config_level, config_password,
                    config_split_archive, config_split_size, config_keep_structure,
                    config_delete_after, config_verify_after, config_create_solid_archive,
+                   config_encrypt_filenames,
                    config_filename_template, config_extra_params,
                    auto_apply_enabled, auto_apply_mode, auto_apply_file_patterns,
                    auto_apply_exclude_patterns,
@@ -145,6 +147,7 @@ impl CompressionProfileService {
                 config_format, config_level, config_password,
                 config_split_archive, config_split_size, config_keep_structure,
                 config_delete_after, config_verify_after, config_create_solid_archive,
+                config_encrypt_filenames,
                 config_filename_template, config_extra_params,
                 auto_apply_enabled, auto_apply_mode, auto_apply_file_patterns,
                 auto_apply_exclude_patterns,
@@ -154,7 +157,7 @@ impl CompressionProfileService {
                 stats_use_count, stats_success_count, stats_failure_count,
                 stats_total_files_processed, stats_total_bytes_processed,
                 display_order, created_at, last_used_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#
         )
         .bind(&profile.id)
@@ -170,6 +173,7 @@ impl CompressionProfileService {
         .bind(profile.config.delete_after)
         .bind(profile.config.verify_after)
         .bind(profile.config.create_solid_archive)
+        .bind(profile.config.encrypt_filenames)
         .bind(&profile.config.filename_template)
         .bind(&extra_params)
         .bind(profile.auto_apply.enabled)
@@ -216,6 +220,7 @@ impl CompressionProfileService {
                 config_format = ?, config_level = ?, config_password = ?,
                 config_split_archive = ?, config_split_size = ?, config_keep_structure = ?,
                 config_delete_after = ?, config_verify_after = ?, config_create_solid_archive = ?,
+                config_encrypt_filenames = ?,
                 config_filename_template = ?, config_extra_params = ?,
                 auto_apply_enabled = ?, auto_apply_mode = ?, auto_apply_file_patterns = ?,
                 auto_apply_exclude_patterns = ?,
@@ -237,6 +242,7 @@ impl CompressionProfileService {
         .bind(profile.config.delete_after)
         .bind(profile.config.verify_after)
         .bind(profile.config.create_solid_archive)
+        .bind(profile.config.encrypt_filenames)
         .bind(&profile.config.filename_template)
         .bind(&extra_params)
         .bind(profile.auto_apply.enabled)
@@ -416,6 +422,7 @@ impl CompressionProfileService {
             delete_after: config_delete_after,
             verify_after: config_verify_after,
             create_solid_archive: config_create_solid_archive,
+            encrypt_filenames: row.try_get("config_encrypt_filenames")?,
             filename_template: config_filename_template,
             extra_params,
         };
@@ -539,6 +546,32 @@ impl CompressionProfileService {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn filename_encryption_survives_profile_create_update_and_reopen() {
+        let directory = tempfile::tempdir().unwrap();
+        let options = sqlx::sqlite::SqliteConnectOptions::new()
+            .filename(directory.path().join("profiles.db")).create_if_missing(true);
+        let pool = SqlitePool::connect_with(options.clone()).await.unwrap();
+        crate::database::migrations::init_tables(&pool).await.unwrap();
+        let service = CompressionProfileService::new(pool.clone());
+        let mut profile = create_default_profiles().remove(0);
+        assert!(!profile.config.encrypt_filenames);
+        let id = profile.id.clone();
+        profile.config.encrypt_filenames = true;
+        service.create_profile(profile.clone()).await.unwrap();
+        assert!(service.get_profile_by_id(&id).await.unwrap().unwrap().config.encrypt_filenames);
+        profile.config.encrypt_filenames = false;
+        service.update_profile(&id, profile.clone()).await.unwrap();
+        assert!(!service.get_all_profiles().await.unwrap()[0].config.encrypt_filenames);
+        profile.config.encrypt_filenames = true;
+        service.update_profile(&id, profile).await.unwrap();
+        pool.close().await;
+        let reopened = SqlitePool::connect_with(options).await.unwrap();
+        crate::database::migrations::init_tables(&reopened).await.unwrap();
+        assert!(CompressionProfileService::new(reopened.clone()).get_all_profiles().await.unwrap()[0].config.encrypt_filenames);
+        reopened.close().await;
+    }
 
     #[tokio::test]
     async fn verify_after_round_trips_through_profile_storage() {

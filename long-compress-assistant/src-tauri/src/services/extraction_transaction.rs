@@ -206,7 +206,13 @@ pub(crate) fn validate_resource_limits(
         ))
         .into());
     }
-    let compressed_bytes = std::fs::metadata(archive_path)?.len().max(1);
+    let name = archive_path.to_string_lossy().to_ascii_lowercase();
+    let compressed_bytes = if name.ends_with(".7z.001") || name.ends_with(".zip.001") {
+        use std::io::{Seek, SeekFrom};
+        super::numeric_volume_reader::NumericVolumeReader::open(archive_path)?.seek(SeekFrom::End(0))?
+    } else {
+        std::fs::metadata(archive_path)?.len()
+    }.max(1);
     if expanded_bytes >= 1024 * 1024 * 1024
         && expanded_bytes / compressed_bytes > MAX_EXPANSION_RATIO
     {
@@ -486,9 +492,13 @@ pub(crate) fn prepare_staging_layout(
         std::fs::rename(&source, destination)?;
     }
 
-    directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
-    for directory in directories {
-        let _ = std::fs::remove_dir(&directory);
+    // A full extraction that preserves paths must also preserve archived empty
+    // folders. Prune empty remnants only after flattening or filtering entries.
+    if !options.preserve_paths || !file_filter.is_empty() || !options.selected_entries.is_empty() {
+        directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
+        for directory in directories {
+            let _ = std::fs::remove_dir(&directory);
+        }
     }
     if !options.selected_entries.is_empty() && retained_file_count == 0 {
         return Err(CompressionError::ExtractionFailed(
@@ -814,6 +824,19 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn numeric_volume_expansion_ratio_uses_the_whole_archive() {
+        let temp = tempfile::tempdir().unwrap();
+        for format in ["7z", "zip"] {
+            let first = temp.path().join(format!("sample.{format}.001"));
+            std::fs::write(&first, [0; 37]).unwrap();
+            let second = temp.path().join(format!("sample.{format}.002"));
+            std::fs::File::create(second).unwrap().set_len(256 * 1024).unwrap();
+            super::validate_resource_limits(&first, 1, 1024 * 1024 * 1024).unwrap();
+            assert!(super::validate_resource_limits(&first, 1, 4 * 1024 * 1024 * 1024).is_err());
+        }
+    }
+
     use super::*;
 
     #[test]
@@ -855,6 +878,21 @@ mod tests {
         assert_ne!(attributes, INVALID_FILE_ATTRIBUTES);
         assert_ne!(attributes & FILE_ATTRIBUTE_HIDDEN, 0);
         assert_ne!(attributes & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED, 0);
+    }
+
+    #[test]
+    fn full_extraction_preserves_empty_directories_but_filtered_layout_prunes_them() {
+        for (preserve_paths, filter, expected) in [(true, None, true), (false, None, false), (true, Some("*.txt"), false)] {
+            let temp = tempfile::tempdir().unwrap();
+            let staging = temp.path().join("staging");
+            std::fs::create_dir_all(staging.join("资料/空目录")).unwrap();
+            std::fs::write(temp.path().join("source.zip"), b"resource-size fixture").unwrap();
+            let options = DecompressOptions {
+                preserve_paths, file_filter: filter.map(str::to_owned), ..Default::default()
+            };
+            prepare_staging_layout(&temp.path().join("source.zip"), &staging, &options).unwrap();
+            assert_eq!(staging.join("资料/空目录").is_dir(), expected);
+        }
     }
 
     #[test]

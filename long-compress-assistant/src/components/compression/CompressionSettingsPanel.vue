@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
+import ThemedSelect from '@/components/ui/ThemedSelect.vue'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -32,6 +34,7 @@ interface Props {
   allowSplitArchive?: boolean
   suggestedFilename?: string
   compact?: boolean
+  showOutputPath?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -40,7 +43,8 @@ const props = withDefaults(defineProps<Props>(), {
   allowSingleFileFormats: true,
   allowSplitArchive: true,
   suggestedFilename: '',
-  compact: false
+  compact: false,
+  showOutputPath: true
 })
 
 interface Emits {
@@ -56,7 +60,7 @@ const handleTemplateDraftCreated = () => {
   emit('template-draft-created')
 }
 
-const compressionOptions = ref<CompressionOptions>(props.modelValue ? { ...props.modelValue } : {
+const compressionOptions = ref<CompressionOptions>(props.modelValue ? { ...props.modelValue, fastPack: false } : {
   format: 'zip',
   level: 6,
   password: '',
@@ -70,7 +74,6 @@ const compressionOptions = ref<CompressionOptions>(props.modelValue ? { ...props
 })
 
 const outputPath = ref(props.outputPath)
-const showAdvanced = ref(false)
 const showProfileSelector = ref(false)
 const profileDialogMode = ref<'select' | 'manage'>('select')
 let syncingFromProps = false
@@ -84,7 +87,8 @@ const newProfileDescription = ref('')
 const compressionFormats = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
 const selectedFormat = computed(() => compressionFormats.value.find(format => format.value === compressionOptions.value.format))
 const canCreateSplitArchive = computed(() =>
-  Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive && !compressionOptions.value.password)
+  Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive &&
+    (!compressionOptions.value.password || ['zip', '7z'].includes(compressionOptions.value.format)))
 )
 const vaultPasswordEntries = computed(() => [...passwordStore.entries].sort((left, right) => {
   if (left.favorite !== right.favorite) return left.favorite ? -1 : 1
@@ -99,10 +103,10 @@ const splitArchiveUnavailableReason = computed(() => {
     return `${selectedFormat.value?.name || compressionOptions.value.format.toUpperCase()} 格式暂不支持创建分卷`
   }
   if (!props.allowSplitArchive) {
-    return '当前任务包含文件夹；分卷 ZIP 目前仅支持普通文件'
+    return '请先添加需要压缩的文件或文件夹'
   }
-  if (compressionOptions.value.password) {
-    return '加密分卷 ZIP 暂不支持，请先清除压缩密码'
+  if (compressionOptions.value.password && !['zip', '7z'].includes(compressionOptions.value.format)) {
+    return '此格式暂不支持加密分卷，请选择 ZIP、7Z 或关闭分卷'
   }
   return ''
 })
@@ -175,8 +179,11 @@ const useSuggestedFilename = () => {
 }
 
 watch(compressionOptions, (newOptions) => {
+  // Normalize before emitting: otherwise a parent echo can restore a checked,
+  // disabled split toggle after switching to an unsupported format.
+  if (!canCreateSplitArchive.value) newOptions.splitArchive = false
   if (syncingFromProps) return
-  emit('update:modelValue', newOptions)
+  emit('update:modelValue', { ...newOptions, fastPack: false })
 }, { deep: true })
 
 watch(() => compressionOptions.value.format, () => {
@@ -188,6 +195,7 @@ watch(() => compressionOptions.value.format, () => {
   }
   if (compressionOptions.value.format !== '7z') {
     compressionOptions.value.createSolidArchive = false
+    compressionOptions.value.encryptFilenames = false
   }
 })
 
@@ -203,7 +211,7 @@ watch(outputPath, (newPath) => {
 watch(() => props.modelValue, (newOptions) => {
   if (!newOptions) return
   syncingFromProps = true
-  compressionOptions.value = { ...newOptions }
+  compressionOptions.value = { ...newOptions, fastPack: false }
   nextTick(() => {
     syncingFromProps = false
   })
@@ -243,6 +251,9 @@ const applyProfile = (profile: CompressionProfile) => {
   compressionOptions.value.deleteAfter = profile.config.deleteAfter
   compressionOptions.value.verifyAfter = profile.config.verifyAfter
   compressionOptions.value.createSolidArchive = profile.config.createSolidArchive
+  compressionOptions.value.encryptFilenames = profile.config.encryptFilenames ?? false
+  compressionOptions.value.zipPasswordEncoding = profile.config.zipPasswordEncoding ?? 'utf8'
+  compressionOptions.value.zipEncryption = profile.config.zipEncryption ?? 'aes256'
   showProfileSelector.value = false
   appStore.setSuccess(appStore.t('profiles.applied_success').replace('{0}', profile.name))
 }
@@ -275,6 +286,9 @@ const saveAsNewProfile = async () => {
         deleteAfter: compressionOptions.value.deleteAfter,
         verifyAfter: compressionOptions.value.verifyAfter,
         createSolidArchive: compressionOptions.value.createSolidArchive,
+        encryptFilenames: compressionOptions.value.encryptFilenames ?? false,
+        zipPasswordEncoding: compressionOptions.value.zipPasswordEncoding ?? 'utf8',
+        zipEncryption: compressionOptions.value.zipEncryption ?? 'aes256',
         filenameTemplate: compressionOptions.value.filename ? `{name}_${compressionOptions.value.filename}` : null,
         extraParams: {}
       }
@@ -321,24 +335,9 @@ const closeVaultPasswordsAfterFocus = () => {
           </span>
         </div>
 
-        <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.format') }}</label>
-        <div class="relative">
-          <select
-            v-model="compressionOptions.format"
-            class="w-full h-10 appearance-none rounded-xl bg-input border border-subtle pl-4 pr-10 text-sm font-black text-content outline-none focus:border-primary"
-          >
-            <option
-              v-for="fmt in compressionFormats"
-              :key="fmt.value"
-              :value="fmt.value"
-              :disabled="isFormatDisabled(fmt)"
-            >{{ fmt.name }}{{ fmt.singleFileOnly ? ` · ${appStore.t('preset.single_file_only')}` : '' }}</option>
-          </select>
-          <i class="pi pi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted pointer-events-none"></i>
-        </div>
-        <p class="text-xs text-dim leading-relaxed truncate" :title="selectedFormat?.name">
-          {{ compressionOptions.format === 'zip' ? '兼容性最好，适合分享' : compressionOptions.format === '7z' ? '压缩率更高，适合归档' : compressionOptions.format.startsWith('tar') ? '适合 Linux / Unix 环境' : '仅适合单个文件' }}
-        </p>
+        <div class="flex items-center gap-2 ml-1"><label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.format') }}</label><HelpHint label="目标格式说明">{{ compressionOptions.format === 'zip' ? '兼容性较好，适合分享；加密和编码方式会影响其他软件的支持。' : compressionOptions.format === '7z' ? '压缩率通常较高，适合归档。' : selectedFormat?.singleFileOnly ? '仅支持单个文件；多个文件或目录请使用 TAR 组合或 ZIP、7Z。' : '按用途选择归档格式；可用能力以当前引擎和任务设置为准。' }}</HelpHint></div>
+        <ThemedSelect v-model="compressionOptions.format" floating aria-label="目标格式" test-id="compression-format-select"
+          :options="compressionFormats.map(fmt => ({ value: fmt.value, label: fmt.name, disabled: isFormatDisabled(fmt), detail: fmt.singleFileOnly ? appStore.t('preset.single_file_only') : undefined }))" />
       </div>
 
       <!-- 压缩强度 (精致 Range) -->
@@ -354,7 +353,7 @@ const closeVaultPasswordsAfterFocus = () => {
       </div>
 
       <!-- 文件名输入 -->
-      <div class="flex flex-col gap-1.5 min-w-0">
+      <div class="archive-name-card flex flex-col gap-1.5 min-w-0">
         <div class="flex items-center justify-between gap-2 ml-1">
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.filename') }}</label>
           <button
@@ -363,18 +362,19 @@ const closeVaultPasswordsAfterFocus = () => {
             @click="useSuggestedFilename"
           >{{ appStore.t('compress.use_same_name') }}</button>
         </div>
-        <div class="relative">
+        <div class="archive-name-field">
           <input 
             v-model="compressionOptions.filename" 
-            class="w-full px-4 py-2 rounded-xl bg-input border border-subtle text-sm text-content outline-none focus:border-primary transition-all placeholder:text-dim"
-            :placeholder="appStore.t('vault.placeholder.name')"
+            data-testid="compression-filename-input" aria-label="压缩包名称"
+            class="min-w-0 w-full px-3 py-2 bg-transparent text-sm text-content outline-none placeholder:text-dim"
+            placeholder="输入压缩包名称"
           />
-          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-dim uppercase">.{{ effectiveOutputExtension }}</span>
+          <span data-testid="compression-filename-extension" class="pr-3 text-xs font-mono text-dim whitespace-nowrap">.{{ effectiveOutputExtension }}</span>
         </div>
       </div>
 
       <!-- 密码保护 (主行可见) 带生成器按钮 -->
-      <div class="flex flex-col gap-1.5 min-w-0">
+      <div class="archive-password-card flex flex-col gap-1.5 min-w-0">
         <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('decompress.password') }}</label>
         <div ref="passwordField" class="password-field flex gap-1" @focusout="closeVaultPasswordsAfterFocus">
           <div class="relative min-w-0 flex-1">
@@ -387,6 +387,8 @@ const closeVaultPasswordsAfterFocus = () => {
               :placeholder="supportsPassword ? (compressionOptions.password ? appStore.t('preset.password_set') : appStore.t('preset.password_optional')) : appStore.t('preset.password_na')"
               @focus="showVaultPasswords = supportsPassword"
               @click="showVaultPasswords = supportsPassword"
+              @input="showVaultPasswords = false"
+              @keydown.esc.stop="showVaultPasswords = false"
             />
             <button
               v-if="compressionOptions.password"
@@ -437,6 +439,20 @@ const closeVaultPasswordsAfterFocus = () => {
             </div>
           </Transition>
         </div>
+        <div v-if="compressionOptions.format === 'zip' && compressionOptions.password" class="flex items-center gap-2 min-w-0">
+          <ThemedSelect test-id="zip-encryption" aria-label="ZIP 加密方式" class="min-w-0 flex-1"
+            :model-value="compressionOptions.zipEncryption ?? 'aes256'"
+            @update:model-value="compressionOptions.zipEncryption = $event as 'aes256' | 'zipcrypto'"
+            :options="[{ value: 'aes256', label: 'AES-256（推荐）' }, { value: 'zipcrypto', label: 'ZipCrypto（传统兼容，较弱）' }]" floating />
+          <HelpHint label="ZIP 加密方式说明">AES-256 为默认。只有旧软件无法读取 AES 压缩包时才选择 ZipCrypto，其密码保护较弱；程序不会自动降级。</HelpHint>
+        </div>
+        <div v-if="compressionOptions.format === 'zip' && compressionOptions.password" class="flex items-center gap-2 min-w-0" data-testid="zip-password-encoding-row">
+          <ThemedSelect test-id="zip-password-encoding" aria-label="ZIP 密码编码" class="min-w-0 flex-1"
+            :model-value="compressionOptions.zipPasswordEncoding ?? 'utf8'"
+            @update:model-value="compressionOptions.zipPasswordEncoding = $event as 'utf8' | 'windows_local'"
+            :options="[{ value: 'utf8', label: '密码编码：UTF-8' }, { value: 'windows_local', label: '密码编码：Windows 兼容' }]" floating />
+          <HelpHint label="ZIP 密码编码说明">默认使用 UTF-8。中文密码在部分 Windows 解压软件中可能不兼容；Windows 兼容模式使用本机代码页，跨语言系统仍可能无法读取。无法表示的字符会报错，不会替换字符。跨系统分享中文密码可优先选择 7Z。</HelpHint>
+        </div>
         <p v-if="usesEncrypted7zContainer" data-testid="encrypted-7z-conversion-hint" class="rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-xs leading-5 text-amber-300">
           <i class="pi pi-info-circle mr-1"></i>{{ appStore.t('compress.password_7z_hint') }}
         </p>
@@ -445,17 +461,6 @@ const closeVaultPasswordsAfterFocus = () => {
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <!-- 高级开关按钮 -->
-      <button
-        data-testid="compression-advanced-options"
-        @click="showAdvanced = !showAdvanced"
-        class="min-w-0 max-w-full px-4 py-2 rounded-xl border border-subtle text-xs font-black leading-5 transition-all"
-        :class="showAdvanced ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-input text-muted hover:text-content'"
-      >
-        <i class="pi pi-cog mr-2" :class="{ 'animate-spin-slow': showAdvanced }"></i>
-        {{ appStore.t('preset.advanced_options', '输出与高级选项') }}
-      </button>
-
       <!-- 配置组选择按钮 -->
       <button
         data-testid="manage-compression-profiles"
@@ -492,8 +497,7 @@ const closeVaultPasswordsAfterFocus = () => {
         />
         <span class="split-settings-icon"><i class="pi pi-clone"></i></span>
         <span class="split-settings-copy">
-          <strong>{{ appStore.t('preset.split_archive') }}</strong>
-          <small>{{ splitArchiveUnavailableReason || '把大压缩包拆成多个便于传输和存储的 ZIP 分卷' }}</small>
+          <strong>{{ appStore.t('preset.split_archive') }} <HelpHint label="分卷压缩说明">{{ splitArchiveUnavailableReason || '把大压缩包拆成多个便于传输和存储的分卷；解压时请将全部分卷放在同一目录' }}</HelpHint></strong>
         </span>
       </label>
       <label v-if="compressionOptions.splitArchive" class="split-size-field">
@@ -513,16 +517,11 @@ const closeVaultPasswordsAfterFocus = () => {
       <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
     </section>
 
-    <label class="advanced-option" :class="{ 'opacity-60': compressionOptions.format !== 'zip' || compressionOptions.splitArchive }">
-      <input data-testid="compression-fast-pack" v-model="compressionOptions.fastPack" type="checkbox" :disabled="compressionOptions.format !== 'zip' || compressionOptions.splitArchive" />
-      <span><strong>快速打包（可选）</strong><small>默认关闭。普通或加密 ZIP 按内容抽样，难压缩文件直接存储，其他文件仍压缩；所有文件均保留，包可能略大。分卷及其他格式不启用。</small></span>
-    </label>
 
-    <!-- 第二行：高级/路径设置 (条件展开) -->
-    <transition name="slide-down">
-      <div v-if="showAdvanced" class="space-y-4 pt-4 border-t border-subtle/30">
+    <!-- 输出与高级选项始终可见，不再需要二次展开。 -->
+      <div data-testid="compression-advanced-settings" class="space-y-3 pt-3 border-t border-subtle/30">
         <!-- 目标路径 -->
-        <div class="flex flex-col gap-1.5 min-w-0">
+        <div v-if="showOutputPath" class="flex flex-col gap-1.5 min-w-0">
           <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.output_path') }}</label>
           <SavedLocationPicker :current="outputPath" @select="outputPath = $event" />
           <div class="flex gap-2">
@@ -540,24 +539,27 @@ const closeVaultPasswordsAfterFocus = () => {
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
           <label class="advanced-option">
-            <input v-model="compressionOptions.keepStructure" type="checkbox" />
-            <span><strong>{{ appStore.t('preset.keep_structure') }}</strong><small>保留源文件夹的层级关系</small></span>
+            <input data-testid="compression-keep-structure" v-model="compressionOptions.keepStructure" type="checkbox" />
+            <span><strong>{{ appStore.t('preset.keep_structure') }} <HelpHint label="保持目录结构说明">保留源文件夹的层级关系</HelpHint></strong></span>
           </label>
           <label class="advanced-option advanced-option-danger">
             <input data-testid="compression-delete-after" v-model="compressionOptions.deleteAfter" type="checkbox" />
-            <span><strong>{{ appStore.t('preset.delete_after') }}</strong><small>{{ appStore.t('preset.delete_after.desc') }}</small></span>
+            <span><strong>{{ appStore.t('preset.delete_after') }} <HelpHint label="完成后删除源文件说明">{{ appStore.t('preset.delete_after.desc') }}</HelpHint></strong></span>
           </label>
           <label class="advanced-option" :class="{ 'opacity-70': compressionOptions.deleteAfter }">
             <input data-testid="compression-verify-after" v-model="compressionOptions.verifyAfter" type="checkbox" :disabled="compressionOptions.deleteAfter" />
-            <span><strong>{{ appStore.t('preset.verify_after') }}</strong><small>{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</small></span>
+            <span><strong>{{ appStore.t('preset.verify_after') }} <HelpHint label="压缩完成后校验说明">{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</HelpHint></strong></span>
           </label>
           <label v-if="compressionOptions.format === '7z'" class="advanced-option">
-            <input v-model="compressionOptions.createSolidArchive" type="checkbox" />
-            <span><strong>固实压缩</strong><small>提高同类文件压缩率，但单文件提取更慢</small></span>
+            <input data-testid="compression-solid-toggle" v-model="compressionOptions.createSolidArchive" type="checkbox" />
+            <span><strong>固实压缩 <HelpHint label="固实压缩说明">提高同类文件压缩率，但单文件提取更慢</HelpHint></strong></span>
+          </label>
+          <label v-if="compressionOptions.format === '7z'" class="advanced-option">
+            <input data-testid="compression-encrypt-filenames" v-model="compressionOptions.encryptFilenames" type="checkbox" />
+            <span><strong>加密文件名 <HelpHint label="加密文件名说明">开启后，查看包内文件名也需要密码。仅支持 7Z；开始压缩前请填写密码。</HelpHint></strong></span>
           </label>
         </div>
       </div>
-    </transition>
   </div>
 
   <!-- 配置组管理弹窗 -->
@@ -672,6 +674,9 @@ const closeVaultPasswordsAfterFocus = () => {
 </template>
 
 <style scoped>
+.password-menu-leave-active { pointer-events: none; }
+.archive-name-field { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; min-width:0; border:1px solid var(--border-subtle); border-radius:.75rem; background:var(--bg-input); }
+.archive-name-field:focus-within { border-color:var(--dynamic-accent); }
 .settings-core-grid {
   display: grid;
   grid-template-columns: minmax(11rem, 1.05fr) minmax(9rem, 0.75fr) minmax(11rem, 1fr) minmax(11rem, 1fr);
@@ -957,6 +962,9 @@ const closeVaultPasswordsAfterFocus = () => {
 }
 
 .advanced-option strong {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
   color: var(--text-base);
   font-size: 0.75rem;
 }

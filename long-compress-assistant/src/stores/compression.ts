@@ -30,7 +30,10 @@ export interface FileObject {
 }
 
 export interface CompressionOptions {
+  /** Legacy compatibility only. New drafts and execution always disable this retired option. */
   fastPack?: boolean
+  zipPasswordEncoding?: 'utf8' | 'windows_local'
+  zipEncryption?: 'aes256' | 'zipcrypto'
   format: CompressionFormatId
   level: number
   password: string
@@ -41,6 +44,7 @@ export interface CompressionOptions {
   deleteAfter: boolean
   verifyAfter: boolean
   createSolidArchive: boolean
+  encryptFilenames?: boolean
 }
 
 export interface CompressionGroup {
@@ -356,7 +360,7 @@ export const useCompressionStore = defineStore('compression', () => {
   }
 
   // 磁吸打组逻辑
-  const cloneSettings = (settings: CompressionOptions): CompressionOptions => ({ ...settings })
+  const cloneSettings = (settings: CompressionOptions): CompressionOptions => ({ ...settings, ...('fastPack' in settings ? { fastPack: false } : {}) })
 
   const getEffectiveSettings = (settings?: CompressionOptions): CompressionOptions => {
     return settings || globalSettings.value

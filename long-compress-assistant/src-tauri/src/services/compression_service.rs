@@ -3,7 +3,7 @@ use anyhow::Result;
 use std::collections::{HashMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 use zip::{write::FileOptions, CompressionMethod};
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufRead, BufReader, Read, Write, Seek, SeekFrom};
 use std::fs::File;
 use sevenz_rust;
 use thiserror::Error;
@@ -135,6 +135,7 @@ static DEFAULT_PASSWORD_VAULT: OnceCell<Arc<EncryptedPasswordService>> = OnceCel
 static PENDING_EXTRACTIONS: Lazy<DashMap<String, PendingExtraction>> = Lazy::new(DashMap::new);
 
 struct PendingExtraction {
+    source_times: HashMap<PathBuf, u64>,
     staging: ExtractionStaging,
     source_archive: PathBuf,
     final_output: PathBuf,
@@ -245,6 +246,18 @@ impl ExtractionRuntime for CompressionService {
 }
 
 impl CompressionRuntime for CompressionService {
+    fn emit_split_progress(&self, window: &Window, task_id: &str, processed: u64, total: u64) {
+        if processed == 0 { self.begin_progress_telemetry(task_id); }
+        let progress = if total == 0 { 0.0 } else { processed as f32 / total as f32 };
+        let (speed, eta_seconds) = self.progress_telemetry(task_id, progress, processed, total);
+        let _ = window.emit("task-progress", TaskProgress {
+            task_id: task_id.to_string(), stage: Some("Splitting".to_string()),
+            current_password: None, progress, current_file: None,
+            processed_bytes: processed, total_bytes: total,
+            output_bytes: processed, output_bytes_estimated: false,
+            speed, eta_seconds, password_attempt_current: None, password_attempt_total: None,
+        });
+    }
     fn check_cancellation(&self) -> Result<()> {
         CompressionService::check_cancellation(self)
     }
@@ -439,7 +452,7 @@ impl CompressionService {
             |conflict| {
                 let path = PathBuf::from(&conflict.dest_path);
                 if let Some(snapshot) = ConflictTargetSnapshot::read(&path) {
-                    refreshed_conflicts.insert(path, snapshot);
+                    refreshed_conflicts.insert(path.clone(), snapshot);
                 }
                 let _ = window.emit("file-conflict", FileConflictPayload {
                     task_id: task_id.to_string(),
@@ -448,7 +461,7 @@ impl CompressionService {
                     dest_path: conflict.dest_path,
                     source_size: conflict.source_size,
                     dest_size: conflict.dest_size,
-                    source_modified: conflict.source_modified,
+                    source_modified: pending.source_times.get(&path).copied().unwrap_or(conflict.source_modified),
                     dest_modified: conflict.dest_modified,
                 });
             },
@@ -908,6 +921,14 @@ impl CompressionService {
         }
 
         let output = Path::new(output_path);
+        for parent in output.ancestors().skip(1) {
+            if parent.exists() && !parent.is_dir() {
+                return Err(CompressionError::CompressionFailed(format!(
+                    "目标保存路径中的“{}”是文件，不是文件夹。请选择其他输出目录。",
+                    parent.display()
+                )).into());
+            }
+        }
         if output.exists() {
             return Err(CompressionError::CompressionFailed(format!(
                 "Output already exists; choose a new path to avoid overwriting data: {}",
@@ -917,9 +938,10 @@ impl CompressionService {
         let resolved_output = Self::canonicalize_with_missing_tail(output)?;
         let split_requested = options.split_size.is_some_and(|size| size > 0);
         let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
-        if split_requested && has_password {
+        let format = Self::infer_compression_format(output_path, options.format.as_deref());
+        if split_requested && has_password && !matches!(format.as_str(), "zip" | "7z") {
             return Err(CompressionError::CompressionFailed(
-                "Encrypted split archives are not supported safely; disable splitting or remove the password".to_string()
+                "Encrypted split archive creation is currently supported only for ZIP and 7Z; choose either format or disable splitting".to_string()
             ).into());
         }
 
@@ -952,11 +974,6 @@ impl CompressionService {
                         )).into());
                     }
                 }
-            }
-            if split_requested && source_path.is_dir() {
-                return Err(CompressionError::CompressionFailed(
-                    "Split ZIP creation currently supports regular files only".to_string()
-                ).into());
             }
 
             let resolved_source = source_path.canonicalize()?;
@@ -1014,7 +1031,11 @@ impl CompressionService {
         let result = route_result
             .map_err(Self::normalize_storage_full_error)
             .and_then(|_| {
-                if !split_requested {
+                if split_requested {
+                    output_publish_transaction::publish_verified_volumes(
+                        working_output, final_output, || cancelled,
+                    ).map_err(Self::publication_error)?;
+                } else {
                     output_publish_transaction::publish_verified_file(
                         working_output,
                         final_output,
@@ -1027,6 +1048,7 @@ impl CompressionService {
             .map_err(Self::normalize_storage_full_error);
 
         if result.is_err() {
+            output_publish_transaction::cleanup_staged_output_family(working_output);
             Self::cleanup_failed_compression_outputs(working_output, split_requested);
         }
         result
@@ -1050,13 +1072,15 @@ impl CompressionService {
 
     fn cleanup_unverified_compression_output(
         working_output: &Path,
-        final_output: &Path,
+        _final_output: &Path,
         split_requested: bool,
+        creation_succeeded: bool,
     ) {
+        // Creation owns its failure cleanup. Validation may have rejected an
+        // existing destination, so its files must never be treated as our output.
+        if !creation_succeeded { return; }
         if split_requested {
-            crate::services::split_compression::SplitCompressionService::cleanup_parts(
-                final_output,
-            );
+            output_publish_transaction::cleanup_staged_output_family(working_output);
         } else {
             Self::cleanup_failed_compression_outputs(working_output, false);
         }
@@ -1086,6 +1110,9 @@ impl CompressionService {
         password: Option<&str>,
         split_requested: bool,
     ) -> Result<()> {
+        if split_requested && route == CompressionRoute::Zip {
+            return compression_verification::verify_numeric_zip(output, password, || self.check_cancellation().is_err());
+        }
         if !split_requested
             && compression_verification::verify_native(route, output, password, || {
                 self.check_cancellation().is_err()
@@ -1115,7 +1142,13 @@ impl CompressionService {
                 CompressionError::CompressionFailed(missing_7z_message())
             })?;
             let mut command = crate::utils::process::command(engine);
-            command.arg("t").arg("-y").arg("-p-").arg(output);
+            command.arg("t").arg("-y");
+            if let Some(password) = password.filter(|value| !value.is_empty()) {
+                command.arg(format!("-p{password}"));
+            } else {
+                command.arg("-p-");
+            }
+            command.arg(output);
             self.run_command_cancellable(command)?
         };
 
@@ -1193,11 +1226,7 @@ impl CompressionService {
             let verification_password = options.password.clone();
             let split_requested = options.split_size.is_some_and(|size| size > 0);
             let final_output = PathBuf::from(&output_path);
-            let working_output = if split_requested {
-                final_output.clone()
-            } else {
-                Self::temporary_compression_output(&final_output)?
-            };
+            let working_output = Self::temporary_compression_output(&final_output)?;
             let working_output_string = working_output.to_string_lossy().to_string();
             service.emit_log(&window, &task_id, &format!("开始压缩到: {}", output_path), TaskLogSeverity::Info);
             let route = compression_format::compression_route(&requested_format).ok_or_else(|| {
@@ -1237,10 +1266,11 @@ impl CompressionService {
                 CompressionRoute::Lzma => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
             };
             let verification_output = if split_requested {
-                PathBuf::from(format!("{}.001", output_path))
+                PathBuf::from(format!("{}.001", working_output_string))
             } else {
                 working_output.clone()
             };
+            let creation_succeeded = res.is_ok();
             let res = res.and_then(|_| {
                 if verify_after {
                     service.emit_compression_stage(
@@ -1279,6 +1309,7 @@ impl CompressionService {
                     &working_output,
                     &final_output,
                     split_requested,
+                    creation_succeeded,
                 );
             }
             if res.is_ok() {
@@ -1290,13 +1321,18 @@ impl CompressionService {
                 );
             }
             let res = res.and_then(|_| service.check_cancellation());
-            let res = Self::finalize_compression_output(
+            let res = if split_requested && res.is_ok() {
+                output_publish_transaction::publish_verified_volumes(
+                    &working_output, &final_output,
+                    || service.cancellation_flag.load(Ordering::Relaxed),
+                ).map_err(Self::publication_error)
+            } else { Self::finalize_compression_output(
                 res,
                 &working_output,
                 &final_output,
                 split_requested,
                 service.cancellation_flag.load(Ordering::Relaxed),
-            );
+            ) };
             if res.is_ok() {
                 if delete_after {
                     let verified_output = if split_requested {
@@ -1313,8 +1349,12 @@ impl CompressionService {
                     split_requested,
                 );
                 service.emit_progress(&window, &task_id, 1.0, None, 0, 0);
-            } else {
-                service.emit_log(&window, &task_id, &format!("压缩失败: {:?}", res.as_ref().err()), TaskLogSeverity::Error);
+            } else if let Err(error) = &res {
+                if matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)) {
+                    service.emit_log(&window, &task_id, "压缩已取消", TaskLogSeverity::Info);
+                } else {
+                    service.emit_log(&window, &task_id, &format!("压缩失败: {error}"), TaskLogSeverity::Error);
+                }
             }
             service.clear_compression_progress_output(&task_id);
             res
@@ -1322,7 +1362,9 @@ impl CompressionService {
     }
 
     /// 智能尝试密码本中的密码
-    async fn resolve_archive_password(&self, window: &Window, task_id: &str, file_path: &str, options: &DecompressOptions) -> Option<String> {
+    async fn resolve_archive_password(&self, window: &Window, task_id: &str, file_path: &str, options: &DecompressOptions) -> Result<Option<String>> {
+        self.check_cancellation()?;
+        let mut attempts = 0usize;
         self.emit_log(
             window,
             task_id,
@@ -1333,41 +1375,45 @@ impl CompressionService {
             },
             TaskLogSeverity::Info,
         );
-        if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path).await {
-            return Some(password);
+        if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path, &mut attempts).await? {
+            return Ok(Some(password));
         }
 
         if options.enable_bruteforce {
             if !options.bruteforce_wordlists.is_empty() {
-                if let Some(password) = self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists).await {
-                    return Some(password);
+                if let Some(password) = self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists, &mut attempts).await? {
+                    return Ok(Some(password));
                 }
             }
-            if let Some(password) = self.attempt_recommended_dictionary(window, task_id, file_path).await {
-                return Some(password);
+            if let Some(password) = self.attempt_recommended_dictionary(window, task_id, file_path, &mut attempts).await? {
+                return Ok(Some(password));
             }
         }
 
-        None
+        if attempts > 0 && Self::detect_password_format(file_path)? == ArchiveFormat::SevenZip {
+            return Err(anyhow::anyhow!("已尝试 {attempts} 个候选但未能完整验证归档。{}", native_extraction::seven_zip::ambiguous_password_error()));
+        }
+        Ok(None)
     }
 
-    pub async fn resolve_archive_password_silent(&self, file_path: &str, options: &DecompressOptions) -> Option<String> {
-        if let Some(password) = self.attempt_password_book_candidates(file_path).await {
-            return Some(password);
+    pub async fn resolve_archive_password_silent(&self, file_path: &str, options: &DecompressOptions) -> Result<Option<String>> {
+        self.check_cancellation()?;
+        if let Some(password) = self.attempt_password_book_candidates(file_path).await? {
+            return Ok(Some(password));
         }
 
         if options.enable_bruteforce {
             if !options.bruteforce_wordlists.is_empty() {
-                if let Some(password) = self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists).await {
-                    return Some(password);
+                if let Some(password) = self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists).await? {
+                    return Ok(Some(password));
                 }
             }
-            if let Some(password) = self.attempt_recommended_dictionary_silent(file_path).await {
-                return Some(password);
+            if let Some(password) = self.attempt_recommended_dictionary_silent(file_path).await? {
+                return Ok(Some(password));
             }
         }
 
-        None
+        Ok(None)
     }
 
     fn recommended_dictionary(file_path: &str) -> Vec<String> {
@@ -1435,19 +1481,17 @@ impl CompressionService {
         }
     }
 
-    async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Option<String> {
+    async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Result<Option<String>> {
         for password in Self::recommended_dictionary(file_path) {
-            if self.check_cancellation().is_err() {
-                return None;
-            }
-            if self.test_archive_password(file_path, &password).await.is_ok_and(|matched| matched) {
-                return Some(password);
+            self.check_cancellation()?;
+            if self.test_archive_password(file_path, &password).await? {
+                return Ok(Some(password));
             }
         }
-        None
+        Ok(None)
     }
 
-    async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
+    async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str, attempts: &mut usize) -> Result<Option<String>> {
         let passwords = Self::recommended_dictionary(file_path);
         let total = passwords.len();
         let started_at = Instant::now();
@@ -1462,10 +1506,7 @@ impl CompressionService {
         );
 
         for (index, password) in passwords.into_iter().enumerate() {
-            if self.check_cancellation().is_err() {
-                self.emit_log(window, task_id, "内置密码字典尝试已取消", TaskLogSeverity::Warning);
-                return None;
-            }
+            self.check_cancellation()?;
             let current = index + 1;
             self.emit_password_attempt_progress(
                 window,
@@ -1475,8 +1516,9 @@ impl CompressionService {
                 format!("内置字典 #{} · 密码「{}」", current, password),
             );
             let attempt_started_at = Instant::now();
-            match self.test_archive_password(file_path, &password).await {
-                Ok(true) => {
+            *attempts += 1;
+            match self.test_archive_password(file_path, &password).await? {
+                true => {
                     self.emit_log(
                         window,
                         task_id,
@@ -1489,9 +1531,9 @@ impl CompressionService {
                         ),
                         TaskLogSeverity::Success,
                     );
-                    return Some(password);
+                    return Ok(Some(password));
                 }
-                Ok(false) => {
+                false => {
                     // The live progress payload already exposes every candidate.
                     // Keep the permanent task log readable by sampling routine
                     // misses instead of appending hundreds of near-identical rows.
@@ -1510,18 +1552,6 @@ impl CompressionService {
                         );
                     }
                 },
-                Err(error) => self.emit_log(
-                    window,
-                    task_id,
-                    &format!(
-                        "内置字典候选 [{}/{}] 验证异常，已跳过（{}）：{}",
-                        current,
-                        total,
-                        Self::elapsed_label(attempt_started_at),
-                        error
-                    ),
-                    TaskLogSeverity::Warning,
-                ),
             }
         }
 
@@ -1535,7 +1565,7 @@ impl CompressionService {
             ),
             TaskLogSeverity::Warning,
         );
-        None
+        Ok(None)
     }
 
     fn should_log_password_attempt(current: usize, total: usize) -> bool {
@@ -1572,29 +1602,27 @@ impl CompressionService {
         }
     }
 
-    async fn attempt_password_book_candidates(&self, file_path: &str) -> Option<String> {
+    async fn attempt_password_book_candidates(&self, file_path: &str) -> Result<Option<String>> {
         let passwords = match self.password_book_candidates().await {
             Ok(passwords) => passwords,
             Err(err) => {
                 log::error!("Failed to read password book candidates: {}", err);
-                return None;
+                return Ok(None);
             }
         };
 
         for (_entry_id, _entry_name, password) in passwords {
-            if self.check_cancellation().is_err() {
-                return None;
-            }
-            match self.test_archive_password(file_path, &password).await {
-                Ok(true) => return Some(password),
-                _ => continue,
+            self.check_cancellation()?;
+            match self.test_archive_password(file_path, &password).await? {
+                true => return Ok(Some(password)),
+                false => continue,
             }
         }
 
-        None
+        Ok(None)
     }
 
-    async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
+    async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str, attempts: &mut usize) -> Result<Option<String>> {
         self.emit_log(window, task_id, "正在检索密码保险箱...", TaskLogSeverity::Info);
         let started_at = Instant::now();
 
@@ -1608,14 +1636,14 @@ impl CompressionService {
                     &format!("密码保险箱读取失败，已跳过保险箱尝试：{}", e),
                     TaskLogSeverity::Warning,
                 );
-                return None;
+                return Ok(None);
             }
         };
 
         let total = passwords.len();
         if total == 0 {
             self.emit_log(window, task_id, "密码保险箱为空，跳过尝试", TaskLogSeverity::Info);
-            return None;
+            return Ok(None);
         }
 
         self.emit_log(
@@ -1629,10 +1657,7 @@ impl CompressionService {
         );
 
         for (idx, (_entry_id, entry_name, pwd)) in passwords.iter().enumerate() {
-            if self.check_cancellation().is_err() {
-                self.emit_log(window, task_id, "密码保险箱尝试已取消", TaskLogSeverity::Warning);
-                return None;
-            }
+            self.check_cancellation()?;
             let current = idx + 1;
             self.emit_password_attempt_progress(
                 window,
@@ -1643,8 +1668,9 @@ impl CompressionService {
             );
             let attempt_started_at = Instant::now();
 
-            match self.test_archive_password(file_path, pwd).await {
-                Ok(true) => {
+            *attempts += 1;
+            match self.test_archive_password(file_path, pwd).await? {
+                true => {
                     self.emit_log(
                         window,
                         task_id,
@@ -1658,9 +1684,9 @@ impl CompressionService {
                         ),
                         TaskLogSeverity::Success,
                     );
-                    return Some(pwd.clone());
+                    return Ok(Some(pwd.clone()));
                 },
-                Ok(false) => self.emit_log(
+                false => self.emit_log(
                     window,
                     task_id,
                     &format!(
@@ -1672,19 +1698,6 @@ impl CompressionService {
                         Self::elapsed_label(attempt_started_at)
                     ),
                     TaskLogSeverity::Info,
-                ),
-                Err(error) => self.emit_log(
-                    window,
-                    task_id,
-                    &format!(
-                        "保险箱候选 [{}/{}]「{}」验证异常，已跳过（{}）：{}",
-                        current,
-                        total,
-                        entry_name,
-                        Self::elapsed_label(attempt_started_at),
-                        error
-                    ),
-                    TaskLogSeverity::Warning,
                 ),
             }
         }
@@ -1699,16 +1712,14 @@ impl CompressionService {
             ),
             TaskLogSeverity::Warning,
         );
-        None
+        Ok(None)
     }
 
-    async fn attempt_bruteforce_wordlists_silent(&self, file_path: &str, wordlists: &[String]) -> Option<String> {
+    async fn attempt_bruteforce_wordlists_silent(&self, file_path: &str, wordlists: &[String]) -> Result<Option<String>> {
         let mut tested = HashSet::new();
 
         for wordlist in wordlists {
-            if self.check_cancellation().is_err() {
-                return None;
-            }
+            self.check_cancellation()?;
 
             let file = match File::open(Path::new(wordlist)) {
                 Ok(file) => file,
@@ -1716,9 +1727,7 @@ impl CompressionService {
             };
 
             for line in BufReader::new(file).lines() {
-                if self.check_cancellation().is_err() {
-                    return None;
-                }
+                self.check_cancellation()?;
 
                 let password = match line {
                     Ok(value) => value.trim().trim_end_matches('\u{feff}').to_string(),
@@ -1729,16 +1738,16 @@ impl CompressionService {
                     continue;
                 }
 
-                if matches!(self.test_archive_password(file_path, &password).await, Ok(true)) {
-                    return Some(password);
+                if self.test_archive_password(file_path, &password).await? {
+                    return Ok(Some(password));
                 }
             }
         }
 
-        None
+        Ok(None)
     }
 
-    async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String]) -> Option<String> {
+    async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String], attempts: &mut usize) -> Result<Option<String>> {
         self.emit_log(
             window,
             task_id,
@@ -1754,10 +1763,7 @@ impl CompressionService {
         let started_at = Instant::now();
 
         for wordlist in wordlists {
-            if self.check_cancellation().is_err() {
-                self.emit_log(window, task_id, "导入密码词表尝试已取消", TaskLogSeverity::Warning);
-                return None;
-            }
+            self.check_cancellation()?;
 
             let path = Path::new(wordlist);
             let file = match File::open(path) {
@@ -1776,10 +1782,7 @@ impl CompressionService {
             );
 
             for line in BufReader::new(file).lines() {
-                if self.check_cancellation().is_err() {
-                    self.emit_log(window, task_id, "导入密码词表尝试已取消", TaskLogSeverity::Warning);
-                    return None;
-                }
+                self.check_cancellation()?;
 
                 let password = match line {
                     Ok(value) => value.trim().trim_end_matches('\u{feff}').to_string(),
@@ -1802,8 +1805,9 @@ impl CompressionService {
                     format!("导入词表 #{} · 密码「{}」", attempted, password),
                 );
                 let attempt_started_at = Instant::now();
-                match self.test_archive_password(file_path, &password).await {
-                    Ok(true) => {
+                *attempts += 1;
+                match self.test_archive_password(file_path, &password).await? {
+                    true => {
                         self.emit_log(
                             window,
                             task_id,
@@ -1815,9 +1819,9 @@ impl CompressionService {
                             ),
                             TaskLogSeverity::Success,
                         );
-                        return Some(password);
+                        return Ok(Some(password));
                     }
-                    Ok(false) => {
+                    false => {
                         if attempted == 1 || attempted.is_multiple_of(25) {
                             self.emit_log(
                                 window,
@@ -1831,9 +1835,6 @@ impl CompressionService {
                                 TaskLogSeverity::Info,
                             );
                         }
-                    }
-                    Err(err) => {
-                        self.emit_log(window, task_id, &format!("导入词表候选 #{} 验证异常，已跳过：{}", attempted, err), TaskLogSeverity::Warning);
                     }
                 }
             }
@@ -1849,7 +1850,7 @@ impl CompressionService {
             ),
             TaskLogSeverity::Warning,
         );
-        None
+        Ok(None)
     }
 
     async fn archive_requires_password(&self, file_path: &str, format: ArchiveFormat) -> Result<bool> {
@@ -1891,10 +1892,10 @@ impl CompressionService {
 
     fn detect_password_format(file_path: &str) -> Result<ArchiveFormat> {
         let path = Path::new(file_path);
-        let mut file = File::open(path)?;
-        let mut header = [0u8; 512];
-        let bytes_read = file.read(&mut header)?;
-        let detected = ArchiveFormat::from_magic(&header[..bytes_read]);
+        let file = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path)?;
+        let mut header = Vec::with_capacity(512);
+        file.take(512).read_to_end(&mut header)?;
+        let detected = ArchiveFormat::from_magic(&header);
         if detected != ArchiveFormat::Unknown {
             return Ok(detected);
         }
@@ -1979,21 +1980,26 @@ impl CompressionService {
             ).into());
         }
         let mut format = ArchiveFormat::Unknown;
-        if let Ok(mut f) = File::open(&file_path) {
+        if let Ok(mut f) = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path) {
             let mut header = [0u8; 32];
             if let Ok(bytes_read) = f.read(&mut header) {
                 if bytes_read > 0 {
-                    format = ArchiveFormat::from_magic(&header);
+                    format = ArchiveFormat::from_magic(&header[..bytes_read]);
                 }
             }
         }
 
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+        if path.to_string_lossy().to_ascii_lowercase().ends_with(".7z.001") {
+            // Read across even very small volumes and propagate missing-volume
+            // errors instead of hiding them as unknown format/password errors.
+            format = Self::detect_password_format(&file_path)?;
+        }
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("未知文件").to_string();
         let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
 
         // 分卷压缩包检测：扩展名为数字编号(.001, .002...)或 .z01/.z02 后缀
-        // 这些文件即使 magic bytes 匹配了 ZIP/7Z，也必须走 7z CLI 才能正确合并解压
+        // 7Z 数字首卷使用可 Seek 的原生卷组读取；其他分卷保留通用路由。
         let is_split_archive = {
             let ext_is_numeric = ext.len() == 3 && ext.chars().all(|c| c.is_ascii_digit());
             let ext_is_zsplit = ext.len() == 3 && ext.starts_with('z') && ext[1..].chars().all(|c| c.is_ascii_digit());
@@ -2002,8 +2008,8 @@ impl CompressionService {
             ext_is_numeric || ext_is_zsplit || stem_has_archive_ext
         };
 
-        // 分卷文件强制走 7z CLI 通用引擎
-        if is_split_archive && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
+        let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
+        if is_split_archive && !native_seven_zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
             service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
             format = ArchiveFormat::Universal;
         }
@@ -2060,7 +2066,7 @@ impl CompressionService {
 
             if needs_pwd {
                 service.emit_log(&window, &task_id, "检测到加密格式，正在启动自动解锁流程...", TaskLogSeverity::Info);
-                if let Some(smart_pwd) = service.resolve_archive_password(&window, &task_id, &file_path, &options).await {
+                if let Some(smart_pwd) = service.resolve_archive_password(&window, &task_id, &file_path, &options).await? {
                     service.emit_log(
                         &window,
                         &task_id,
@@ -2070,7 +2076,12 @@ impl CompressionService {
                     final_password = Some(smart_pwd);
                     password_verified = true;
                 } else {
-                    service.emit_log(&window, &task_id, "所有已知密码均无效，等待手动输入", TaskLogSeverity::Warning);
+                    let unresolved_message = if format == ArchiveFormat::SevenZip {
+                        "未取得能完整验证此 7Z 归档的密码；请手动核对密码，并检查文件或分卷是否损坏"
+                    } else {
+                        "所有已知密码均无效，等待手动输入"
+                    };
+                    service.emit_log(&window, &task_id, unresolved_message, TaskLogSeverity::Warning);
                     
                     // 主动发射事件触发前端 UI 弹窗
                     let _ = window.emit("password-required", PasswordRequiredPayload {
@@ -2100,6 +2111,12 @@ impl CompressionService {
         if password_required == Some(true) && final_password.is_some() && !password_verified {
             let candidate = final_password.as_deref().unwrap_or_default();
             if !service.test_archive_password(&file_path, candidate).await? {
+                // 7Z has no independent password verifier: failed decoding can
+                // also mean damaged ciphertext. Candidate iteration may continue,
+                // but the final user-facing result must not assert a wrong password.
+                if format == ArchiveFormat::SevenZip {
+                    return Err(native_extraction::seven_zip::ambiguous_password_error().into());
+                }
                 return Err(CompressionError::InvalidPassword.into());
             }
             password_verified = true;
@@ -2532,7 +2549,10 @@ impl CompressionService {
         }
         service.check_cancellation()?;
         let mut observed_conflicts = HashMap::new();
-        if let Err(error) = service.commit_staged_extraction_recording(
+        let source_times = if effective_format == ArchiveFormat::SevenZip && options.conflict_policy == "ask" {
+            Self::seven_zip_source_times(path, final_password.as_deref(), &final_out_dir, options.preserve_paths).unwrap_or_default()
+        } else { HashMap::new() };
+        if let Err(error) = service.commit_staged_extraction_recording_with_times(
             Some(&window),
             &task_id,
             &file_path,
@@ -2540,6 +2560,7 @@ impl CompressionService {
             &final_out_dir,
             &options,
             &mut observed_conflicts,
+            &source_times,
         ) {
             if Self::is_conflict_resolution_required(&error) {
                 service.emit_log(
@@ -2551,6 +2572,7 @@ impl CompressionService {
                 PENDING_EXTRACTIONS.insert(
                     task_id.clone(),
                     PendingExtraction {
+                        source_times,
                         staging,
                         source_archive: path.to_path_buf(),
                         final_output: final_out_dir,
@@ -2621,6 +2643,10 @@ impl CompressionService {
         extraction_transaction::ensure_no_link_ancestors(path)
     }
 
+    fn uses_native_seven_zip_volumes(path: &Path, format: &ArchiveFormat) -> bool {
+        *format == ArchiveFormat::SevenZip && path.to_string_lossy().to_ascii_lowercase().ends_with(".7z.001")
+    }
+
     async fn preflight_extraction(
         &self,
         archive_path: &Path,
@@ -2643,8 +2669,11 @@ impl CompressionService {
                 Some((archive.len(), expanded))
             }
             ArchiveFormat::SevenZip => {
-                let reader = sevenz_rust::SevenZReader::open(
-                    archive_path,
+                let mut input = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(archive_path)?;
+                let length = input.seek(SeekFrom::End(0))?;
+                input.seek(SeekFrom::Start(0))?;
+                let reader = sevenz_rust::SevenZReader::new(
+                    input, length,
                     sevenz_rust::Password::from(password.unwrap_or("")),
                 )?;
                 let mut expanded = 0u64;
@@ -3310,6 +3339,7 @@ impl CompressionService {
         tokio::task::spawn_blocking(move || {
             match format {
                 ArchiveFormat::SevenZip => {
+                    let archive_reader = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(Path::new(&file))?;
                     let scratch = std::env::temp_dir().join(format!(
                         "long-compress-password-check-{}",
                         uuid::Uuid::new_v4()
@@ -3341,13 +3371,16 @@ impl CompressionService {
                         Ok(true)
                     };
                     let result = sevenz_rust::decompress_with_extract_fn_and_password(
-                        File::open(&file)?,
+                        archive_reader,
                         &scratch,
                         sevenz_rust::Password::from(pwd.as_str()),
                         &mut verify_entry,
                     );
                     let _ = std::fs::remove_dir_all(&scratch);
-                    Ok(result.is_ok() && tested_file)
+                    if cancellation_flag.load(Ordering::SeqCst) {
+                        return Err(CompressionError::Cancelled.into());
+                    }
+                    native_extraction::seven_zip::password_candidate_result(result.map(|_| ()), tested_file)
                 },
                 _ => Ok(false)
             }
@@ -3423,6 +3456,7 @@ mod tests {
         std::fs::write(staging_path.join("payload.txt"), b"payload").expect("payload");
         let task_id = format!("pending-{}", uuid::Uuid::new_v4());
         PENDING_EXTRACTIONS.insert(task_id.clone(), PendingExtraction {
+            source_times: HashMap::new(),
             staging,
             source_archive: temp.path().join("archive.zip"),
             final_output: output,
@@ -3532,6 +3566,58 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn automatic_password_candidates_preserve_corruption_and_cancellation() {
+        use crate::models::password::{PasswordCategory, PasswordEntry};
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("archive.zip");
+        let password = CompressionService::recommended_dictionary(&source.to_string_lossy())[0].clone();
+        let mut writer = zip_aes::ZipWriter::new(File::create(&source).unwrap());
+        let options = zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Stored)
+            .with_aes_encryption(zip_aes::AesMode::Aes256, &password);
+        writer.start_file("payload.txt", options).unwrap();
+        writer.write_all(b"encrypted content").unwrap();
+        writer.finish().unwrap();
+        let mut vault = EncryptedPasswordService::new(&temp.path().join("vault"));
+        vault.initialize("test-key").await.unwrap();
+        vault.add_password(PasswordEntry::new("fixture".into(), password.clone(), PasswordCategory::Other)).await.unwrap();
+        let service = CompressionService::new(CompressionServiceConfig::default(),
+            Arc::new(IOBufferPool::default()), Arc::new(RarSupportService::new()),
+            Arc::new(UniversalCliEngine::new()), Arc::new(vault));
+        let words = temp.path().join("words.txt");
+        std::fs::write(&words, format!("wrong-first\n{password}\nunused-last\n")).unwrap();
+        let wordlists = vec![words.to_string_lossy().into_owned()];
+        assert_eq!(service.attempt_bruteforce_wordlists_silent(&source.to_string_lossy(), &wordlists).await.unwrap(), Some(password.clone()));
+        assert_eq!(service.resolve_archive_password_silent(&source.to_string_lossy(), &DecompressOptions::default()).await.unwrap(), Some(password));
+        let tail = {
+            let mut zip = zip_aes::ZipArchive::new(File::open(&source).unwrap()).unwrap();
+            let entry = zip.by_index_raw(0).unwrap();
+            (entry.data_start().unwrap() + entry.compressed_size() - 1) as usize
+        };
+        let mut bytes = std::fs::read(&source).unwrap();
+        bytes[tail] ^= 1;
+        std::fs::write(&source, bytes).unwrap();
+        let split = crate::services::split_compression::SplitCompressionService::split_archive_file(
+            &source, &temp.path().join("split.zip"), 37, || Ok(())).unwrap();
+        for path in [&source, &split.part_files[0]] {
+            let path = path.to_string_lossy();
+            let errors = [
+                service.resolve_archive_password_silent(&path, &DecompressOptions::default()).await.unwrap_err(),
+                service.attempt_bruteforce_wordlists_silent(&path, &wordlists).await.unwrap_err(),
+            ];
+            for error in errors {
+                assert!(error.to_string().contains("[archive-inspection:ambiguous-data]"));
+                assert!(error.to_string().contains("payload.txt"));
+            }
+        }
+        assert!(service.attempt_recommended_dictionary_silent(&source.to_string_lossy()).await.unwrap_err()
+            .to_string().contains("[archive-inspection:ambiguous-data]"));
+        service.cancellation_flag.store(true, Ordering::SeqCst);
+        let error = service.resolve_archive_password_silent(&source.to_string_lossy(), &DecompressOptions::default()).await.unwrap_err();
+        assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+    }
+
+    #[tokio::test]
     async fn password_vault_usage_is_recorded_only_after_explicit_success_marking() {
         use crate::models::password::{PasswordCategory, PasswordEntry};
 
@@ -3567,7 +3653,7 @@ mod tests {
 
         let resolved = service
             .resolve_archive_password_silent(&encrypted.to_string_lossy(), &options)
-            .await;
+            .await.expect("resolve vault password");
 
         assert_eq!(resolved.as_deref(), Some("vault-password"));
         let matched_only = service
@@ -3719,7 +3805,7 @@ mod tests {
         let path = staging.path().to_path_buf();
         std::fs::write(path.join("backup"), b"original data").unwrap();
         let id = uuid::Uuid::new_v4().to_string();
-        let pending = PendingExtraction { staging, source_archive: temp.path().join("source.zip"), final_output: output,
+        let pending = PendingExtraction { source_times: HashMap::new(), staging, source_archive: temp.path().join("source.zip"), final_output: output,
             options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
         let error = CompressionError::RollbackIncomplete(format!("恢复目录：{}", path.display())).into();
         CompressionService::retain_pending_after_commit_error(&id, pending, &error);
@@ -3728,7 +3814,7 @@ mod tests {
         assert_eq!(std::fs::read(path.join("backup")).unwrap(), b"original data");
         let ordinary_staging = ExtractionStaging::create_for(&temp.path().join("other-output")).unwrap();
         let ordinary_path = ordinary_staging.path().to_path_buf();
-        let pending = PendingExtraction { staging: ordinary_staging, source_archive: temp.path().join("source.zip"),
+        let pending = PendingExtraction { source_times: HashMap::new(), staging: ordinary_staging, source_archive: temp.path().join("source.zip"),
             final_output: temp.path().join("other-output"), options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
         CompressionService::retain_pending_after_commit_error(&id, pending, &anyhow::anyhow!("ordinary commit failure"));
         assert!(PENDING_EXTRACTIONS.contains_key(&id));
@@ -3806,10 +3892,43 @@ mod conflict_confirmation_tests {
 }
 
 impl CompressionService {
+    fn seven_zip_source_times(archive: &Path, password: Option<&str>, output: &Path, preserve_paths: bool) -> Result<HashMap<PathBuf, u64>> {
+        let mut input = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(archive)?;
+        let length = input.seek(SeekFrom::End(0))?;
+        input.seek(SeekFrom::Start(0))?;
+        let password = sevenz_rust::Password::from(password.unwrap_or(""));
+        let metadata = sevenz_rust::Archive::read(&mut input, length, password.as_slice())?;
+        let mut times = HashMap::new();
+        let mut seen = HashSet::new();
+        for entry in metadata.files {
+            if entry.is_directory() { continue; }
+            let Some(relative) = Self::normalized_archive_path(Path::new(entry.name()), preserve_paths) else { continue };
+            let target = output.join(relative);
+            // Flattened duplicate names are ambiguous; never show another entry's date.
+            if !seen.insert(target.clone()) { times.remove(&target); continue; }
+            if entry.has_last_modified_date {
+                let time: SystemTime = entry.last_modified_date().into();
+                if let Ok(duration) = time.duration_since(std::time::UNIX_EPOCH) {
+                    times.insert(target, duration.as_millis() as u64);
+                }
+            }
+        }
+        Ok(times)
+    }
+
+    #[cfg(test)]
     fn commit_staged_extraction_recording(
         &self, window: Option<&Window>, task_id: &str, source_archive: &str,
         staging: &Path, output: &Path, options: &DecompressOptions,
         observed: &mut HashMap<PathBuf, ConflictTargetSnapshot>,
+    ) -> Result<()> {
+        self.commit_staged_extraction_recording_with_times(window, task_id, source_archive, staging, output, options, observed, &HashMap::new())
+    }
+
+    fn commit_staged_extraction_recording_with_times(
+        &self, window: Option<&Window>, task_id: &str, source_archive: &str,
+        staging: &Path, output: &Path, options: &DecompressOptions,
+        observed: &mut HashMap<PathBuf, ConflictTargetSnapshot>, source_times: &HashMap<PathBuf, u64>,
     ) -> Result<()> {
         extraction_transaction::commit_staged_extraction(
             source_archive,
@@ -3819,7 +3938,7 @@ impl CompressionService {
             |conflict| {
                 let path = PathBuf::from(&conflict.dest_path);
                 if let Some(snapshot) = ConflictTargetSnapshot::read(&path) {
-                    observed.insert(path, snapshot);
+                    observed.insert(path.clone(), snapshot);
                 }
                 if let Some(window) = window {
                     let _ = window.emit(
@@ -3831,7 +3950,7 @@ impl CompressionService {
                             dest_path: conflict.dest_path,
                             source_size: conflict.source_size,
                             dest_size: conflict.dest_size,
-                            source_modified: conflict.source_modified,
+                            source_modified: source_times.get(&path).copied().unwrap_or(conflict.source_modified),
                             dest_modified: conflict.dest_modified,
                         },
                     );
@@ -3844,6 +3963,16 @@ impl CompressionService {
 #[cfg(test)]
 mod tests_continued {
     use super::*;
+
+    #[test]
+    fn failed_zip_creation_does_not_clean_preexisting_volume_set() {
+        let temp = tempfile::tempdir().unwrap();
+        let output = temp.path().join("existing.zip");
+        let first = temp.path().join("existing.zip.001");
+        std::fs::write(&first, b"user volume").unwrap();
+        CompressionService::cleanup_unverified_compression_output(&output, &output, true, false);
+        assert_eq!(std::fs::read(first).unwrap(), b"user volume");
+    }
 
     #[test]
     fn recycle_bin_source_resolution_includes_every_split_volume() {
@@ -4043,7 +4172,10 @@ mod tests_continued {
         }
         let temp = tempfile::tempdir().expect("temp dir");
         let source = temp.path().join("source.bin");
-        let output = temp.path().join("archive.zip");
+        let final_output = temp.path().join("archive.zip");
+        let output = CompressionService::temporary_compression_output(&final_output).unwrap();
+        let existing = temp.path().join("archive.zip.001");
+        std::fs::write(&existing, b"existing user archive").unwrap();
         let mut state = 0x1234_5678u32;
         let payload: Vec<u8> = (0..256 * 1024)
             .map(|_| {
@@ -4082,9 +4214,10 @@ mod tests_continued {
                 true,
             )
             .is_err());
-        CompressionService::cleanup_unverified_compression_output(&output, &output, true);
+        CompressionService::cleanup_unverified_compression_output(&output, &final_output, true, true);
 
         assert!(source.exists(), "verification failure must preserve the source");
+        assert_eq!(std::fs::read(existing).unwrap(), b"existing user archive");
         assert!(result.part_files.iter().all(|part| !part.exists()));
     }
 
@@ -4107,6 +4240,7 @@ mod tests_continued {
             &working,
             &final_output,
             false,
+            true,
         );
 
         assert_eq!(std::fs::read(&final_output).unwrap(), b"existing archive");
@@ -4222,6 +4356,8 @@ mod tests_continued {
         native_compression::zip::create_encrypted_zip(
             &service,
             "open-sesame",
+            Default::default(),
+            Default::default(),
             6,
             &[source.to_string_lossy().to_string()],
             &archive.to_string_lossy(),
@@ -4274,6 +4410,30 @@ mod tests_continued {
     }
 
     #[test]
+    fn rejects_file_as_output_directory_with_actionable_reason() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        let blocker = temp.path().join("existing.txt");
+        std::fs::write(&source, b"source").unwrap();
+        std::fs::write(&blocker, b"existing").unwrap();
+        for output in [blocker.join("archive.7z"), blocker.join("missing").join("archive.7z")] {
+            let error = CompressionService::validate_compression_io_paths(
+                &[source.to_string_lossy().into_owned()], &output.to_string_lossy(),
+                &CompressionOptions::default(),
+            ).unwrap_err().to_string();
+            assert!(error.contains("是文件，不是文件夹"), "{error}");
+            assert!(error.contains("请选择其他输出目录"), "{error}");
+        }
+        CompressionService::validate_compression_io_paths(
+            &[source.to_string_lossy().into_owned()],
+            &temp.path().join("new-directory").join("archive.7z").to_string_lossy(),
+            &CompressionOptions::default(),
+        ).unwrap();
+        assert_eq!(std::fs::read(&source).unwrap(), b"source");
+        assert_eq!(std::fs::read(&blocker).unwrap(), b"existing");
+    }
+
+    #[test]
     fn rejects_dangerous_compression_output_paths() {
         let temp = tempfile::tempdir().expect("temp dir");
         let source = temp.path().join("source.txt");
@@ -4308,8 +4468,169 @@ mod tests_continued {
         }
     }
 
+    #[tokio::test]
+    async fn encrypted_zip_split_creation_publication_and_extraction_roundtrip() {
+        use crate::services::zip_password::{encode, ZipPasswordEncoding};
+        for encoding in [ZipPasswordEncoding::Utf8, ZipPasswordEncoding::WindowsLocal] {
+            let password = "中文密码 + !测试";
+            if let Err(error) = encode(password, encoding) {
+                assert!(matches!(encoding, ZipPasswordEncoding::WindowsLocal), "{error}");
+                eprintln!("Windows-local encoding unavailable on this host: {error}");
+                continue;
+            }
+            let temp = tempfile::tempdir().unwrap();
+            let folder = temp.path().join("资料");
+            std::fs::create_dir_all(folder.join("空目录")).unwrap();
+            std::fs::write(folder.join("内容.txt"), b"folder payload").unwrap();
+            let second = temp.path().join("第二份.txt");
+            std::fs::write(&second, b"second payload").unwrap();
+            let sources = vec![folder.to_string_lossy().into_owned(), second.to_string_lossy().into_owned()];
+            let output = temp.path().join("分享.zip");
+            let options = CompressionOptions {
+                format: Some("zip".into()), password: Some(password.into()),
+                zip_password_encoding: encoding, split_size: Some(37),
+                preserve_paths: Some(true), ..Default::default()
+            };
+            assert_eq!(CompressionService::validate_compression_request(&sources, &output.to_string_lossy(), &options).unwrap(), "zip");
+            CompressionService::validate_compression_io_paths(&sources, &output.to_string_lossy(), &options).unwrap();
+            let service = CompressionService::for_testing();
+            let staged = CompressionService::temporary_compression_output(&output).unwrap();
+            native_compression::zip::compress(&service, None, "encrypted-split", &sources, &staged.to_string_lossy(), options).unwrap();
+            let staged_first = PathBuf::from(format!("{}.001", staged.display()));
+            service.verify_compression_output_inner(CompressionRoute::Zip, &staged_first, Some(password), true).unwrap();
+            CompressionService::finalize_compression_output(Ok(()), &staged, &output, true, false).unwrap();
+            assert!(!staged_first.exists());
+            let first = PathBuf::from(format!("{}.001", output.display()));
+            let volume_snapshot: Vec<_> = std::fs::read_dir(temp.path()).unwrap()
+                .map(|entry| entry.unwrap().path())
+                .filter(|path| path.file_name().unwrap().to_string_lossy().starts_with("分享.zip."))
+                .map(|path| { let bytes = std::fs::read(&path).unwrap(); assert!(bytes.len() <= 37); (path, bytes) })
+                .collect();
+            assert!(volume_snapshot.len() > 1);
+            let extracted = temp.path().join("解压结果");
+            std::fs::create_dir(&extracted).unwrap();
+            UniversalCliEngine::new().extract_with_progress(&first, &extracted, Some(password), false,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(std::fs::read(extracted.join("资料/内容.txt")).unwrap(), b"folder payload");
+            assert_eq!(std::fs::read(extracted.join("第二份.txt")).unwrap(), b"second payload");
+            assert!(extracted.join("资料/空目录").is_dir());
+            assert_eq!(std::fs::read(folder.join("内容.txt")).unwrap(), b"folder payload");
+            assert_eq!(std::fs::read(&second).unwrap(), b"second payload");
+            assert!(first.exists());
+            let wrong_output = temp.path().join("错误密码");
+            std::fs::create_dir(&wrong_output).unwrap();
+            assert!(UniversalCliEngine::new().extract_with_progress(&first, &wrong_output, Some("wrong"), false,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.is_err());
+            assert_eq!(std::fs::read_dir(wrong_output).unwrap().count(), 0);
+            for (path, bytes) in volume_snapshot { assert_eq!(std::fs::read(path).unwrap(), bytes); }
+        }
+    }
+
     #[test]
-    fn rejects_encrypted_or_directory_split_creation() {
+    fn numeric_seven_zip_routing_reads_magic_across_tiny_volumes() {
+        let temp = tempfile::tempdir().unwrap();
+        for (index, bytes) in [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c].chunks(2).enumerate() {
+            std::fs::write(temp.path().join(format!("tiny.7z.{:03}", index + 1)), bytes).unwrap();
+        }
+        let first = temp.path().join("tiny.7z.001");
+        let format = CompressionService::detect_password_format(&first.to_string_lossy()).unwrap();
+        assert!(CompressionService::uses_native_seven_zip_volumes(&first, &format));
+        assert!(!CompressionService::uses_native_seven_zip_volumes(Path::new("other.zip.001"), &format));
+        assert!(!CompressionService::uses_native_seven_zip_volumes(Path::new("tiny.7z.002"), &format));
+        assert!(!CompressionService::uses_native_seven_zip_volumes(&first, &ArchiveFormat::Zip));
+    }
+
+    #[tokio::test]
+    async fn seven_zip_split_native_creation_verification_publication_and_extraction() {
+        // Keep legacy contents-only combinations alongside explicit filename encryption.
+        for (password, encrypt_filenames) in [(None, false), (Some("中文密码 + !测试"), false), (Some("中文密码 + !测试"), true)] {
+            for solid in [false, true] {
+                let temp = tempfile::tempdir().unwrap();
+                let folder = temp.path().join("资料");
+                std::fs::create_dir_all(folder.join("空目录")).unwrap();
+                std::fs::write(folder.join("内容.txt"), b"folder payload").unwrap();
+                std::fs::write(folder.join("空文件.txt"), b"").unwrap();
+                filetime::set_file_mtime(folder.join("内容.txt"), filetime::FileTime::from_unix_time(1_600_000_000, 0)).unwrap();
+                let second = temp.path().join("第二份.txt");
+                std::fs::write(&second, b"second payload").unwrap();
+                let sources = vec![folder.to_string_lossy().into_owned(), second.to_string_lossy().into_owned()];
+                let output = temp.path().join("分享.7z");
+                let service = CompressionService::for_testing();
+                let staged = CompressionService::temporary_compression_output(&output).unwrap();
+                native_compression::seven_zip::compress(&service, None, "seven-split", &sources,
+                    &staged.to_string_lossy(), CompressionOptions {
+                        format: Some("7z".into()), password: password.map(str::to_owned),
+                        split_size: Some(37), create_solid_archive: solid, encrypt_filenames, preserve_paths: Some(true), ..Default::default()
+                    }).unwrap();
+                let staged_first = PathBuf::from(format!("{}.001", staged.display()));
+                service.verify_compression_output(CompressionRoute::SevenZip, &staged_first, password, true).unwrap();
+                if password.is_some() {
+                    assert!(service.verify_compression_output(CompressionRoute::SevenZip, &staged_first, Some("wrong"), true).is_err());
+                }
+                CompressionService::finalize_compression_output(Ok(()), &staged, &output, true, false).unwrap();
+                assert!(!staged_first.exists());
+                assert!(!output.exists());
+                let volumes: Vec<_> = std::fs::read_dir(temp.path()).unwrap().map(|entry| entry.unwrap().path())
+                    .filter(|path| path.file_name().unwrap().to_string_lossy().starts_with("分享.7z."))
+                    .map(|path| { let data = std::fs::read(&path).unwrap(); assert!(data.len() <= 37); (path, data) }).collect();
+                assert!(volumes.len() > 1);
+                let first = PathBuf::from(format!("{}.001", output.display()));
+                let mut header_reader = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(&first).unwrap();
+                let header_length = std::io::Seek::seek(&mut header_reader, std::io::SeekFrom::End(0)).unwrap();
+                std::io::Seek::seek(&mut header_reader, std::io::SeekFrom::Start(0)).unwrap();
+                assert_eq!(sevenz_rust::Archive::read(&mut header_reader, header_length, &[]).is_ok(), !encrypt_filenames,
+                    "Only explicitly encrypted filenames should require a header password");
+                let format = CompressionService::detect_password_format(&first.to_string_lossy()).unwrap();
+                assert!(CompressionService::uses_native_seven_zip_volumes(&first, &format));
+                let stats = service.preflight_extraction(&first, &format, password, temp.path()).await.unwrap().unwrap();
+                assert_eq!(stats, (4, 28));
+                assert_eq!(native_extraction::seven_zip::requires_password(&first).unwrap(), password.is_some());
+                if let Some(password) = password {
+                    assert!(service.verify_archive_password_candidate(&first.to_string_lossy(), password).await.unwrap());
+                    assert!(!service.verify_archive_password_candidate(&first.to_string_lossy(), "wrong").await.unwrap());
+                }
+                let native_output = temp.path().join("原生解压");
+                let times = CompressionService::seven_zip_source_times(&first, password, &native_output, true).unwrap();
+                assert_eq!(times.get(&native_output.join("资料/内容.txt")), Some(&1_600_000_000_000));
+                let flat_times = CompressionService::seven_zip_source_times(&first, password, &native_output, false).unwrap();
+                assert_eq!(flat_times.get(&native_output.join("内容.txt")), Some(&1_600_000_000_000));
+                native_extraction::seven_zip::extract(&service, None, "native-split-read", &first.to_string_lossy(),
+                    &native_output.to_string_lossy(), password, &DecompressOptions { preserve_paths: true, ..Default::default() }).unwrap();
+                assert_eq!(std::fs::read(native_output.join("资料/内容.txt")).unwrap(), b"folder payload");
+                assert_eq!(std::fs::read(native_output.join("资料/空文件.txt")).unwrap(), b"");
+                assert_eq!(std::fs::read(native_output.join("第二份.txt")).unwrap(), b"second payload");
+                assert!(native_output.join("资料/空目录").is_dir());
+                let extracted = temp.path().join("解压结果");
+                std::fs::create_dir(&extracted).unwrap();
+                // Independent bundled 7-Zip. This proves format interoperability,
+                // not the currently gated application's encrypted 7Z split reader.
+                let mut command = crate::utils::process::command(find_7z_command().unwrap());
+                command.args(["x", "-y"]).arg(format!("-p{}", password.unwrap_or("-")))
+                    .arg(format!("-o{}", extracted.display())).arg(&first);
+                let result = service.run_command_cancellable(command).unwrap();
+                assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+                assert_eq!(std::fs::read(extracted.join("资料/内容.txt")).unwrap(), b"folder payload");
+                assert_eq!(std::fs::read(extracted.join("资料/空文件.txt")).unwrap(), b"");
+                assert_eq!(std::fs::read(extracted.join("第二份.txt")).unwrap(), b"second payload");
+                assert!(extracted.join("资料/空目录").is_dir(), "password={password:?}, solid={solid}, entries={:?}", walkdir::WalkDir::new(&extracted).into_iter().map(|entry| entry.unwrap().path().to_owned()).collect::<Vec<_>>());
+                assert_eq!(std::fs::read(folder.join("内容.txt")).unwrap(), b"folder payload");
+                assert_eq!(std::fs::read(&second).unwrap(), b"second payload");
+                for (path, data) in volumes { assert_eq!(std::fs::read(path).unwrap(), data); }
+                std::fs::remove_file(temp.path().join("分享.7z.002")).unwrap();
+                let missing = service.verify_archive_password_candidate(&first.to_string_lossy(), password.unwrap_or("unused"))
+                    .await.unwrap_err().to_string();
+                assert!(missing.contains("[archive-inspection:incomplete]"), "{missing}");
+                let failed_output = temp.path().join("缺卷输出");
+                assert!(native_extraction::seven_zip::extract(&service, None, "missing-volume", &first.to_string_lossy(),
+                    &failed_output.to_string_lossy(), password, &DecompressOptions::default()).is_err());
+                assert!(!failed_output.exists());
+                assert!(std::fs::read_dir(temp.path()).unwrap().all(|entry| !entry.unwrap().file_name().to_string_lossy().starts_with(".split-source-")));
+            }
+        }
+    }
+
+    #[test]
+    fn allows_encrypted_zip_directory_split_but_rejects_other_formats_and_nested_output() {
         let temp = tempfile::tempdir().expect("temp dir");
         let source = temp.path().join("source.txt");
         std::fs::write(&source, b"split fixture").expect("source fixture");
@@ -4324,7 +4645,17 @@ mod tests_continued {
             &[source.to_string_lossy().to_string()],
             &output.to_string_lossy(),
             &encrypted_split,
-        ).is_err());
+        ).is_ok());
+        let seven_zip = CompressionOptions { format: Some("7z".into()), ..encrypted_split.clone() };
+        assert!(CompressionService::validate_compression_io_paths(
+            &[source.to_string_lossy().to_string()], &temp.path().join("archive.7z").to_string_lossy(), &seven_zip,
+        ).is_ok());
+        for format in ["rar", "tar"] {
+            let unsupported = CompressionOptions { format: Some(format.into()), ..encrypted_split.clone() };
+            assert!(CompressionService::validate_compression_io_paths(
+                &[source.to_string_lossy().to_string()], &output.to_string_lossy(), &unsupported,
+            ).is_err());
+        }
 
         let folder = temp.path().join("folder");
         std::fs::create_dir_all(&folder).expect("source folder");
@@ -4335,6 +4666,16 @@ mod tests_continued {
         assert!(CompressionService::validate_compression_io_paths(
             &[folder.to_string_lossy().to_string()],
             &output.to_string_lossy(),
+            &directory_split,
+        ).is_ok());
+        assert!(CompressionService::validate_compression_io_paths(
+            &[folder.to_string_lossy().to_string(), source.to_string_lossy().to_string()],
+            &output.to_string_lossy(),
+            &directory_split,
+        ).is_ok());
+        assert!(CompressionService::validate_compression_io_paths(
+            &[folder.to_string_lossy().to_string()],
+            &folder.join("nested.zip").to_string_lossy(),
             &directory_split,
         ).is_err());
     }

@@ -17,6 +17,43 @@ vi.mock('@tauri-apps/api/event', () => ({
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 
 describe('task progress state machine', () => {
+  it.each(['completed', 'failed', 'cancelled'] as const)('freezes %s progress against late engine events', async status => {
+    const store = useTaskStore()
+    await store.initListeners()
+    store.addTask({ id: 'terminal', name: 'archive.zip', type: 'compression', sourceFiles: [], outputPath: '' })
+    const task = store.tasks[0]
+    task.progress = 66
+    store.updateTaskStatus('terminal', status)
+    expect(task.progress).toBe(status === 'completed' ? 100 : 66)
+    const snapshot = JSON.stringify(task)
+    mocks.listeners.get('task-progress')!({ payload: { task_id: 'terminal', progress: 0.2, stage: 'Splitting', processed_bytes: 20, total_bytes: 100 } })
+    expect(JSON.stringify(task)).toBe(snapshot)
+  })
+  it('resets byte telemetry on entering splitting without marking 100% complete', async () => {
+    const store = useTaskStore()
+    await store.initListeners()
+    store.addTask({ id: 'split', name: '资料.zip', type: 'compression', sourceFiles: [], outputPath: '' })
+    const task = store.tasks[0]
+    task.status = 'compressing'
+    task.processedBytes = 10000
+    task.totalBytes = 10000
+    task.speed = 800
+    task.etaSeconds = 1
+    mocks.listeners.get('task-progress')?.({ payload: {
+      task_id: 'split', stage: 'Splitting', progress: 0, processed_bytes: 0, total_bytes: 1000, output_bytes: 0,
+    } })
+    expect(task).toMatchObject({ stage: 'Splitting', progress: 0, processedBytes: 0, totalBytes: 1000, outputBytes: 0 })
+    expect(task.speed).toBeUndefined()
+    expect(task.etaSeconds).toBeUndefined()
+    expect(task.compressionSourceProgress).toEqual({ processedBytes: 10000, totalBytes: 10000 })
+    mocks.listeners.get('task-progress')?.({ payload: {
+      task_id: 'split', stage: 'Splitting', progress: 1, processed_bytes: 1000, total_bytes: 1000,
+    } })
+    expect(task.status).toBe('compressing')
+    expect(task.processedBytes).toBe(1000)
+    expect(task.compressionSourceProgress).toEqual({ processedBytes: 10000, totalBytes: 10000 })
+  })
+
   beforeEach(() => {
     setActivePinia(createPinia())
     mocks.listeners.clear()

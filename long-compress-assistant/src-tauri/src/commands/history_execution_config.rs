@@ -8,6 +8,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     let expected = match kind {
         "archive-extraction" => ("decompression", "archive"),
         "archive-compression" => ("compression", "archive"),
+        "archive-conversion" => ("compression", "archive"),
         "image-compression" => ("compression", "image"),
         "video-compression" => ("compression", "video"),
         "pdf-optimization" => ("compression", "pdf"),
@@ -20,20 +21,47 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     let fields: &[(&str, char)] = match kind {
         "archive-extraction" => &[("outputDirectory", 's'), ("extractToSubfolder", 'b')],
         "archive-compression" => &[("outputDirectory", 's'), ("passwordRequired", 'b')],
+        "archive-conversion" => &[("outputPath", 's'), ("format", 's'), ("level", 'n'), ("splitSize", 'n'), ("encryptFilenames", 'b'), ("passwordRequired", 'b')],
         "video-compression" => &[("outputDirectory", 's')],
         "pdf-optimization" => &[("outputDirectory", 's'), ("mode", 's'), ("allowLargerOutput", 'b')],
         _ => &[],
     };
     output.extend(project(&value, fields)?);
+    if kind == "archive-conversion" {
+        for (key, default, allowed) in [("zipEncryption", "aes256", ["aes256", "zipcrypto"]),
+            ("zipPasswordEncoding", "utf8", ["utf8", "windows_local"])] {
+            let selected = value.get(key).and_then(Value::as_str).unwrap_or(default);
+            if !allowed.contains(&selected) { return None; }
+            output.insert(key.into(), selected.into());
+        }
+    }
     if kind == "archive-extraction" && output["outputDirectory"].as_str()?.trim().is_empty() { return None; }
     let settings_fields: &[(&str, char)] = match kind {
-        "archive-compression" => &[("format", 's'), ("level", 'n'), ("filename", 's'), ("splitArchive", 'b'), ("splitSize", 's'), ("keepStructure", 'b'), ("verifyAfter", 'b'), ("createSolidArchive", 'b'), ("fastPack", 'b')],
+        "archive-compression" => &[("format", 's'), ("level", 'n'), ("filename", 's'), ("splitArchive", 'b'), ("splitSize", 's'), ("keepStructure", 'b'), ("verifyAfter", 'b'), ("createSolidArchive", 'b')],
         "image-compression" => &[("mode", 's'), ("quality", 'n'), ("resizeMode", 's'), ("maxWidth", 'n'), ("maxHeight", 'n'), ("outputFormat", 's'), ("preserveMetadata", 'b'), ("outputDirectory", 's'), ("conflictPolicy", 's')],
         "video-compression" => &[("preset", 's'), ("quality", 'n'), ("maxWidth", '?'), ("maxHeight", '?')],
         _ => &[],
     };
     if !settings_fields.is_empty() {
-        output.insert("settings".into(), Value::Object(project(value.get("settings")?, settings_fields)?));
+        let mut settings = project(value.get("settings")?, settings_fields)?;
+        if kind == "archive-compression" {
+            if let Some(encryption) = value.get("settings")?.get("zipEncryption") {
+                if !matches!(encryption.as_str(), Some("aes256" | "zipcrypto")) { return None; }
+                settings.insert("zipEncryption".into(), encryption.clone());
+            }
+            settings.insert("fastPack".into(), Value::Bool(false));
+            if let Some(encrypted_names) = value.get("settings")?.get("encryptFilenames") {
+                if !encrypted_names.is_boolean() { return None; }
+                if encrypted_names.as_bool()? && (settings.get("format")?.as_str()? != "7z"
+                    || !value.get("passwordRequired")?.as_bool()?) { return None; }
+                settings.insert("encryptFilenames".into(), encrypted_names.clone());
+            }
+            if let Some(encoding) = value.get("settings")?.get("zipPasswordEncoding") {
+                if !matches!(encoding.as_str(), Some("utf8" | "windows_local")) { return None; }
+                settings.insert("zipPasswordEncoding".into(), encoding.clone());
+            }
+        }
+        output.insert("settings".into(), Value::Object(settings));
     }
     Some(Value::Object(output))
 }
@@ -47,4 +75,65 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
         };
         valid.then(|| (key.to_string(), field.clone()))
     }).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn conversion_snapshot_keeps_its_identity_without_passwords() {
+        let input = serde_json::json!({"schemaVersion": 1, "kind": "archive-conversion",
+            "outputPath": "C:/new.7z", "format": "7z", "level": 6, "splitSize": 65536,
+            "encryptFilenames": true, "passwordRequired": true,
+            "password": "target-secret", "sourcePassword": "input-secret"});
+        let saved = super::sanitize(input.clone(), "compression", "archive").unwrap();
+        assert_eq!(saved["kind"], "archive-conversion");
+        assert_eq!(saved["splitSize"], 65536);
+        assert!(!saved.to_string().contains("secret"));
+        assert!(super::sanitize(input, "decompression", "archive").is_none());
+    }
+    #[test]
+    fn zip_encoding_snapshot_is_optional_validated_and_does_not_store_passwords() {
+        let original = serde_json::json!({"schemaVersion":1,"kind":"archive-compression",
+            "outputDirectory":"D:/out","passwordRequired":true,"settings":{
+            "format":"zip","level":6,"filename":"archive","splitArchive":false,
+            "splitSize":"100","keepStructure":true,"verifyAfter":true,"createSolidArchive":false,
+            "password":"never persist"}});
+        let old = super::sanitize(original.clone(), "compression", "archive").unwrap();
+        for mode in ["aes256", "zipcrypto"] {
+            let mut current = original.clone();
+            current["settings"]["zipEncryption"] = mode.into();
+            let saved = super::sanitize(current, "compression", "archive").unwrap();
+            assert_eq!(saved["settings"]["zipEncryption"], mode);
+        }
+        assert!(old["settings"].get("zipPasswordEncoding").is_none());
+        assert!(old["settings"].get("password").is_none());
+        assert!(old["settings"].get("encryptFilenames").is_none());
+        for enabled in [false, true] {
+            let mut current = original.clone();
+            current["settings"]["format"] = "7z".into();
+            current["settings"]["encryptFilenames"] = enabled.into();
+            let saved = super::sanitize(current.clone(), "compression", "archive").unwrap();
+            assert_eq!(saved["settings"]["encryptFilenames"], enabled);
+            assert!(saved["settings"].get("password").is_none());
+            if enabled {
+                current["passwordRequired"] = false.into();
+                assert!(super::sanitize(current, "compression", "archive").is_none());
+            }
+        }
+        for invalid in [serde_json::json!("true"), serde_json::json!(null), serde_json::json!(true)] {
+            let mut current = original.clone();
+            current["settings"]["encryptFilenames"] = invalid;
+            assert!(super::sanitize(current, "compression", "archive").is_none());
+        }
+        for mode in ["utf8", "windows_local"] {
+            let mut current = original.clone();
+            current["settings"]["zipPasswordEncoding"] = mode.into();
+            let saved = super::sanitize(current, "compression", "archive").unwrap();
+            assert_eq!(saved["settings"]["zipPasswordEncoding"], mode);
+            assert!(saved["settings"].get("password").is_none());
+        }
+        let mut invalid = original;
+        invalid["settings"]["zipPasswordEncoding"] = "unknown".into();
+        assert!(super::sanitize(invalid, "compression", "archive").is_none());
+    }
 }

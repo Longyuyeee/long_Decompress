@@ -197,7 +197,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: true,
         single_file_only: false,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -405,6 +405,12 @@ pub fn validate_compression_request(
         .as_deref()
         .is_some_and(|password| !password.is_empty());
     let split_requested = options.split_size.is_some_and(|size| size > 0);
+
+    if options.encrypt_filenames && (requested_format != "7z" || !has_password) {
+        return Err(CompressionError::CompressionFailed(
+            "文件名加密仅支持 7Z，且必须设置压缩密码。".to_string(),
+        ).into());
+    }
 
     if split_requested && !capability.is_some_and(|capability| capability.supports_split) {
         return Err(CompressionError::CompressionFailed(format!(
@@ -661,10 +667,37 @@ mod tests {
             "archive.7z",
             &split_7z,
         )
-        .is_err());
+        .is_ok());
 
         let mut solid_zip = options(Some("zip"));
         solid_zip.create_solid_archive = true;
         assert!(validate_compression_request(&[source], "archive.zip", &solid_zip).is_err());
+    }
+
+    #[test]
+    fn filename_encryption_requires_explicit_seven_zip_password() {
+        let temp = tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        fs::write(&source, b"source").unwrap();
+        let sources = vec![source.to_string_lossy().into_owned()];
+        for (format, password, valid) in [
+            ("7z", None, false), ("7z", Some(""), false),
+            ("zip", Some("password"), false), ("tar.aes", Some("password"), false),
+            ("7z", Some("中文密码 + !测试"), true), ("7z", Some(" "), true),
+        ] {
+            let mut request = options(Some(format));
+            request.encrypt_filenames = true;
+            request.password = password.map(str::to_owned);
+            let result = validate_compression_request(&sources, &format!("archive.{format}"), &request);
+            assert_eq!(result.is_ok(), valid, "format={format}");
+            if !valid { assert!(result.unwrap_err().to_string().contains("文件名加密仅支持 7Z")); }
+        }
+        let legacy: CompressionOptions = serde_json::from_value(serde_json::json!({"level":6})).unwrap();
+        assert!(!legacy.encrypt_filenames);
+        assert!(!CompressionOptions::default().encrypt_filenames);
+        let mut request = legacy;
+        request.encrypt_filenames = true;
+        let restored: CompressionOptions = serde_json::from_value(serde_json::to_value(request).unwrap()).unwrap();
+        assert!(restored.encrypt_filenames);
     }
 }

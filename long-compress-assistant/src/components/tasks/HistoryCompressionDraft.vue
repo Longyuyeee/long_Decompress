@@ -23,11 +23,13 @@ const restored = computed(() => {
   const config = props.record.executionConfig
   if (config?.schemaVersion !== 1 || config.kind !== 'archive-compression' || !config.settings) return null
   const s = config.settings
+  if (s.encryptFilenames !== undefined && (typeof s.encryptFilenames !== 'boolean'
+    || (s.encryptFilenames && (s.format !== '7z' || !config.passwordRequired)))) return null
   if (!COMPRESSIBLE_FORMATS.some(format => format.value === s.format)
     || !Number.isInteger(s.level) || s.level < 0 || s.level > 9
     || typeof config.outputDirectory !== 'string' || typeof config.passwordRequired !== 'boolean'
     || typeof s.filename !== 'string' || typeof s.splitSize !== 'string'
-    || [s.splitArchive, s.keepStructure, s.verifyAfter, s.createSolidArchive, s.fastPack].some(v => typeof v !== 'boolean')) return null
+    || [s.splitArchive, s.keepStructure, s.verifyAfter, s.createSolidArchive].some(v => typeof v !== 'boolean')) return null
   return config
 })
 const created = computed(() => store.groups.some(group => group.retryOfTaskId === props.record.id)
@@ -80,7 +82,7 @@ defineExpose({ createDraft, created, error })
     <fieldset :disabled="busy || created" class="min-w-0 space-y-3">
       <label class="block text-sm">来源文件或目录（每行一个）<textarea v-model="sources" data-testid="compression-retry-sources" class="retry-path w-full" rows="3" /></label>
       <label class="block text-sm">本次输出目录<input v-model="output" data-testid="compression-retry-output" class="retry-path w-full" /></label>
-      <CompressionSettingsPanel v-model="settings" v-model:output-path="output" :compact="true" />
+      <CompressionSettingsPanel v-model="settings" v-model:output-path="output" :compact="true" :show-output-path="false" />
       <button class="retry-path w-full" data-testid="compression-retry-create" @click="createDraft">{{ busy ? '正在检查来源…' : '创建待执行压缩草稿' }}</button>
     </fieldset>
     <p v-if="error" role="alert" class="text-sm text-red-500 mt-2 break-words">{{ error }}</p>

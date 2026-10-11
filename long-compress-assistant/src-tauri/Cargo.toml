@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.3.9"
+version = "1.4.0"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -10,6 +10,7 @@ edition = "2021"
 tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
+tempfile = "3.10"
 tauri = { version = "1.5", features = [
     "dialog-message",
     "dialog-open",
@@ -47,7 +48,7 @@ env_logger = "0.11"
 regex = "1.10"
 zip = "0.6"
 zip_aes = { package = "zip", version = "8.6", default-features = false, features = ["aes-crypto", "bzip2", "deflate64", "deflate-flate2", "lzma", "xz", "zstd"] }
-sevenz-rust = { version = "0.5", features = ["aes256"] }
+sevenz-rust = { version = "=0.6.1", features = ["aes256"] }
 unrar = "0.5"
 memmap2 = "0.9"
 lazy_static = "1.4"
@@ -93,6 +94,7 @@ img-parts = { version = "=0.4.0", default-features = false, features = ["std"] }
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
     "Win32_Foundation",
+    "Win32_Globalization",
     "Win32_Security_Cryptography",
     "Win32_Storage_FileSystem",
     "Win32_System_JobObjects",
@@ -103,7 +105,6 @@ windows-sys = { version = "0.59", features = [
 ] }
 
 [dev-dependencies]
-tempfile = "3.10"
 mockall = "0.12"
 criterion = "0.5"
 assert_fs = "1.0"
@@ -115,3 +116,6 @@ proptest = "1.4"
 default = []
 custom-protocol = ["tauri/custom-protocol"]
 desktop-e2e = []
+
+[patch.crates-io]
+sevenz-rust = { path = "vendor/sevenz-rust" }

@@ -15,6 +15,9 @@ pub(crate) trait CompressionRuntime {
     fn cancellation_flag(&self) -> Arc<AtomicBool>;
     fn copy_buffer_size(&self) -> usize;
     fn emit_log(&self, window: &Window, task_id: &str, message: &str, severity: TaskLogSeverity);
+    fn emit_split_progress(&self, window: &Window, task_id: &str, processed: u64, total: u64) {
+        self.emit_progress(window, task_id, if total == 0 { 0.0 } else { processed as f32 / total as f32 }, None, processed, total);
+    }
     fn emit_progress(
         &self,
         window: &Window,

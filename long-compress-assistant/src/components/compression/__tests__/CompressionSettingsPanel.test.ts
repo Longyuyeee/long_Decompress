@@ -51,6 +51,40 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('dismisses vault suggestions when the user types their own password', async () => {
+    const wrapper = mountPanel(settings())
+    await flushPromises()
+    const input = wrapper.get('[data-testid="compression-password-input"]')
+    await input.trigger('focus')
+    expect(wrapper.find('.password-vault-menu').exists()).toBe(true)
+    await input.setValue('my-password')
+    await vi.waitFor(() => expect(wrapper.find('.password-vault-menu').exists()).toBe(false))
+    wrapper.unmount()
+  })
+  it('defaults to AES and exposes weaker ZipCrypto only as an explicit selection', async () => {
+    const wrapper = mountPanel(settings({ password: 'secret' }))
+    await flushPromises()
+    const select = wrapper.get('[data-testid="zip-encryption"]')
+    expect(select.text()).toContain('AES-256')
+    await select.trigger('click')
+    const choice = wrapper.findAll('[role="option"]').find(item => item.text().includes('ZipCrypto'))
+    expect(choice).toBeTruthy()
+    await choice!.trigger('click'); await flushPromises()
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ zipEncryption: 'zipcrypto' })
+    wrapper.unmount()
+  })
+  it('offers opt-in filename encryption only for 7Z and clears it on format change', async () => {
+    const wrapper = mountPanel(settings({ format: '7z' }))
+    await flushPromises()
+    const toggle = wrapper.get('[data-testid="compression-encrypt-filenames"]')
+    expect((toggle.element as HTMLInputElement).checked).toBe(false)
+    await toggle.setValue(true)
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ encryptFilenames: true })
+    await wrapper.setProps({ modelValue: settings({ format: 'zip', encryptFilenames: true }) })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="compression-encrypt-filenames"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
   beforeEach(() => {
     invoke.mockReset()
     invoke.mockImplementation(async (command: string) => {
@@ -92,15 +126,11 @@ describe('CompressionSettingsPanel split archive settings', () => {
     expect(emitted.splitSize).toBe('512')
   })
 
-  it('keeps fast packing off unless I select it, and makes the split limitation explicit', async () => {
-    const wrapper = mountPanel(settings())
-    const toggle = wrapper.get('[data-testid="compression-fast-pack"]')
-    expect((toggle.element as HTMLInputElement).checked).toBe(false)
-    await toggle.setValue(true)
-    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ fastPack: true })
+  it('removes fast packing even when an old configuration enables it', async () => {
+    const wrapper = mountPanel(settings({ fastPack: true }))
+    expect(wrapper.find('[data-testid="compression-fast-pack"]').exists()).toBe(false)
     await wrapper.setProps({ modelValue: settings({ splitArchive: true, fastPack: true }) })
-    expect((toggle.element as HTMLInputElement).disabled).toBe(true)
-    expect(wrapper.text()).toContain('分卷及其他格式不启用')
+    expect(wrapper.text()).not.toContain('快速打包')
     wrapper.unmount()
   })
 
@@ -110,14 +140,31 @@ describe('CompressionSettingsPanel split archive settings', () => {
 
     const toggle = wrapper.get('[data-testid="compression-split-toggle"]')
     expect(toggle.attributes('disabled')).toBeDefined()
-    expect(wrapper.get('[data-testid="compression-split-settings"]').text()).toContain('目前仅支持普通文件')
+    await wrapper.get('button[aria-label="分卷压缩说明"]').trigger('click')
+    expect(wrapper.get('[data-testid="compression-split-settings"]').text()).toContain('请先添加需要压缩的文件或文件夹')
 
     await wrapper.setProps({
       allowSplitArchive: true,
       modelValue: settings({ password: 'secret' }),
     })
     await flushPromises()
-    expect(wrapper.get('[data-testid="compression-split-settings"]').text()).toContain('请先清除压缩密码')
+    expect(toggle.attributes('disabled')).toBeUndefined()
+  })
+
+  it.each(['zip', '7z'])('preserves %s split settings when entering, changing or clearing a password', async (format) => {
+    const wrapper = mountPanel(settings({ format, splitArchive: true, splitSize: '128' }))
+    await flushPromises()
+    for (const password of ['中文密码 + !测试', 'second secret', '']) {
+      await wrapper.get('[data-testid="compression-password-input"]').setValue(password)
+      await flushPromises()
+      const emitted = wrapper.emitted('update:modelValue')?.at(-1)?.[0] as CompressionOptions
+      expect(emitted).toMatchObject({ password, splitArchive: true, splitSize: '128' })
+      expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeUndefined()
+    }
+    await wrapper.setProps({ modelValue: settings({ format, password: 'template secret', splitArchive: true, splitSize: '256' }) })
+    await flushPromises()
+    expect((wrapper.get('[data-testid="compression-split-toggle"]').element as HTMLInputElement).checked).toBe(true)
+    expect((wrapper.get('[data-testid="compression-split-size"]').element as HTMLInputElement).value).toBe('256')
   })
 
   it('opens the password vault list on focus and fills the selected password', async () => {

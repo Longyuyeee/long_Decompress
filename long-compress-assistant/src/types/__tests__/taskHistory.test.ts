@@ -3,6 +3,27 @@ import { createTaskHistoryRecord } from '../taskHistory'
 import type { Task } from '@/stores/task'
 
 describe('createTaskHistoryRecord', () => {
+  it('keeps source metrics separate from volume copying and discards failed output metrics', () => {
+    const task: Task = {
+      id: 'split', name: 'archive.zip', type: 'compression', status: 'completed', progress: 100,
+      sourceFiles: ['C:/source'], outputPath: 'C:/archive.zip', conflicts: [], logs: [],
+      compressionSourceProgress: { processedBytes: 10000, totalBytes: 10000 },
+      processedBytes: 1000, totalBytes: 1000, outputBytes: 1000,
+    }
+    const record = createTaskHistoryRecord(task)
+    expect(record).toMatchObject({ processedBytes: 10000, totalBytes: 10000 })
+    expect(record.metrics).toMatchObject({ inputBytes: 10000, outputBytes: 1000, savingsRatio: 0.9 })
+    expect(createTaskHistoryRecord({ ...task, archiveOutput: {
+      primaryPath: 'C:/archive.zip.001', totalBytes: 1000, split: true,
+      files: [{ path: 'C:/archive.zip.001', bytes: 1000 }],
+    } }).outputPath).toBe('C:/archive.zip.001')
+    for (const status of ['cancelled', 'failed'] as const) {
+      expect(createTaskHistoryRecord({ ...task, status }).metrics).toBeNull()
+    }
+    expect(createTaskHistoryRecord({ ...task, compressionSourceProgress: { processedBytes: 0, totalBytes: 0 } }).metrics)
+      .toMatchObject({ inputBytes: 0, outputBytes: 1000, savingsRatio: 0 })
+  })
+
   it('keeps operational metadata and excludes password fields', () => {
     const task: Task = {
       id: 'task-1', name: 'archive.zip', type: 'compression', status: 'completed', progress: 100,

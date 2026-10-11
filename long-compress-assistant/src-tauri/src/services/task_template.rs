@@ -89,6 +89,10 @@ pub enum TemplateTargetMode {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TemplateCompression {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zip_encryption: Option<crate::services::zip_password::ZipEncryption>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zip_password_encoding: Option<crate::services::zip_password::ZipPasswordEncoding>,
     pub format: String,
     pub level: u8,
     pub split_archive: bool,
@@ -96,6 +100,8 @@ pub struct TemplateCompression {
     pub keep_structure: bool,
     pub verify_after: bool,
     pub create_solid_archive: bool,
+    #[serde(default)]
+    pub encrypt_filenames: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -188,6 +194,10 @@ fn password_strategy(
             notes.push("配置中的密码已移除；导入后需要运行时输入密码".to_string());
             TemplatePasswordStrategy::PromptAtRuntime
         }
+        _ if profile.config.encrypt_filenames => {
+            notes.push("文件名加密需要密码；导入后需要运行时输入密码".to_string());
+            TemplatePasswordStrategy::PromptAtRuntime
+        }
         _ => TemplatePasswordStrategy::None,
     }
 }
@@ -215,6 +225,16 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             filename_template: profile.config.filename_template.clone(),
         },
         compression: TemplateCompression {
+            zip_encryption: if profile.config.format.eq_ignore_ascii_case("zip") {
+                profile.config.extra_params.get("zip_encryption").map(|value|
+                    if value == "zipcrypto" { crate::services::zip_password::ZipEncryption::Zipcrypto }
+                    else { crate::services::zip_password::ZipEncryption::Aes256 })
+            } else { None },
+            zip_password_encoding: if profile.config.format.eq_ignore_ascii_case("zip") {
+                profile.config.extra_params.get("zip_password_encoding").map(|value|
+                    if value == "windows_local" { crate::services::zip_password::ZipPasswordEncoding::WindowsLocal }
+                    else { crate::services::zip_password::ZipPasswordEncoding::Utf8 })
+            } else { None },
             format: profile.config.format.clone(),
             level: profile.config.level,
             split_archive: profile.config.split_archive,
@@ -222,6 +242,7 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             keep_structure: profile.config.keep_structure,
             verify_after: profile.config.verify_after,
             create_solid_archive: profile.config.create_solid_archive,
+            encrypt_filenames: profile.config.encrypt_filenames,
         },
         password_strategy,
         export_notes,
@@ -309,6 +330,10 @@ fn validate_template(template: &TaskTemplate) -> Result<Vec<String>> {
         anyhow::bail!("只有 7Z 模板可以启用固实压缩");
     }
     validate_filename_template(template.target_rule.filename_template.as_deref())?;
+    if template.compression.encrypt_filenames && (capability.format != "7z"
+        || matches!(template.password_strategy, TemplatePasswordStrategy::None)) {
+        anyhow::bail!("文件名加密模板必须使用 7Z 并设置密码策略");
+    }
     if template.source_rules.include_patterns.len() + template.source_rules.exclude_patterns.len()
         > MAX_PATTERNS
     {
@@ -787,8 +812,25 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
             delete_after: false,
             verify_after: template.compression.verify_after,
             create_solid_archive: template.compression.create_solid_archive,
+            encrypt_filenames: template.compression.encrypt_filenames,
             filename_template: template.target_rule.filename_template,
-            extra_params: Default::default(),
+            extra_params: {
+              let mut params = template.compression.zip_password_encoding.map(|encoding| {
+                let value = match encoding {
+                    crate::services::zip_password::ZipPasswordEncoding::Utf8 => "utf8",
+                    crate::services::zip_password::ZipPasswordEncoding::WindowsLocal => "windows_local",
+                };
+                [("zip_password_encoding".to_string(), value.to_string())].into()
+              }).unwrap_or_else(std::collections::HashMap::new);
+              if let Some(encryption) = template.compression.zip_encryption {
+                  let value = match encryption {
+                      crate::services::zip_password::ZipEncryption::Aes256 => "aes256",
+                      crate::services::zip_password::ZipEncryption::Zipcrypto => "zipcrypto",
+                  };
+                  params.insert("zip_encryption".into(), value.into());
+              }
+              params
+            },
         },
     );
     profile.auto_apply = AutoApplyRule {
@@ -819,6 +861,51 @@ mod tests {
     use super::*;
     use crate::models::compression_profile::{AutoApplyRule, ProfileStats};
 
+    #[test]
+    fn filename_encryption_without_saved_password_can_export_and_reexport() {
+        let mut original = profile();
+        original.config.encrypt_filenames = true;
+        original.config.password = None;
+        original.password_strategy = PasswordStrategy::None;
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("prompt.json");
+        export_profile_template(&original, &path).unwrap();
+        let preview = preview_template_file(&path).unwrap();
+        assert!(matches!(preview.template.password_strategy, TemplatePasswordStrategy::PromptAtRuntime));
+        let imported = import_template_profile(&path, &preview.content_sha256).unwrap();
+        assert!(imported.config.encrypt_filenames);
+        assert!(imported.config.password.is_none());
+        export_profile_template(&imported, &path).unwrap();
+        assert!(matches!(preview_template_file(&path).unwrap().template.password_strategy, TemplatePasswordStrategy::PromptAtRuntime));
+    }
+
+    #[test]
+    fn filename_encryption_template_round_trip_and_legacy_default() {
+        let mut original = profile();
+        original.config.encrypt_filenames = true;
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("names.json");
+        export_profile_template(&original, &path).unwrap();
+        let preview = preview_template_file(&path).unwrap();
+        assert!(preview.template.compression.encrypt_filenames);
+        let imported = import_template_profile(&path, &preview.content_sha256).unwrap();
+        assert!(imported.config.encrypt_filenames);
+        assert!(imported.config.password.is_none());
+        assert!(!std::fs::read_to_string(&path).unwrap().contains("must-never-export"));
+        let mut value = serde_json::to_value(&preview.template).unwrap();
+        value["compression"].as_object_mut().unwrap().remove("encryptFilenames");
+        assert!(!parse_template(&serde_json::to_vec(&value).unwrap()).unwrap().compression.encrypt_filenames);
+        value["compression"]["encryptFilenames"] = serde_json::json!("true");
+        assert!(parse_template(&serde_json::to_vec(&value).unwrap()).is_err());
+        value["compression"]["encryptFilenames"] = serde_json::json!(true);
+        value["compression"]["format"] = serde_json::json!("zip");
+        value["compression"]["createSolidArchive"] = serde_json::json!(false);
+        assert!(parse_template(&serde_json::to_vec(&value).unwrap()).unwrap_err().to_string().contains("文件名加密"));
+        value["compression"]["format"] = serde_json::json!("7z");
+        value["passwordStrategy"] = serde_json::json!({"mode":"none"});
+        assert!(parse_template(&serde_json::to_vec(&value).unwrap()).unwrap_err().to_string().contains("文件名加密"));
+    }
+
     fn profile() -> CompressionProfile {
         CompressionProfile {
             id: "profile-1".to_string(),
@@ -835,6 +922,7 @@ mod tests {
                 delete_after: true,
                 verify_after: true,
                 create_solid_archive: true,
+                encrypt_filenames: false,
                 filename_template: Some("{name}-{date}".to_string()),
                 extra_params: [("unsafe".to_string(), "ignored".to_string())].into(),
             },
@@ -863,6 +951,42 @@ mod tests {
         assert!(!json.contains("unsafe"));
         assert!(json.contains("prompt_at_runtime"));
         assert!(json.contains("固定密码已移除"));
+    }
+
+    #[test]
+    fn zip_template_encoding_and_split_settings_round_trip_with_legacy_defaults() {
+        use crate::services::zip_password::ZipPasswordEncoding;
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("zip.longtask.json");
+        for encoding in [None, Some("utf8"), Some("windows_local")] {
+            let mut original = profile();
+            original.config.format = "zip".into();
+            original.config.create_solid_archive = false;
+            original.config.split_archive = true;
+            original.config.split_size = Some(128);
+            original.config.extra_params.insert("zip_encryption".into(), "zipcrypto".into());
+            if let Some(value) = encoding {
+                original.config.extra_params.insert("zip_password_encoding".into(), value.into());
+            }
+            export_profile_template(&original, &path).unwrap();
+            let preview = preview_template_file(&path).unwrap();
+            let imported = import_template_profile(&path, &preview.content_sha256).unwrap();
+            assert_eq!(imported.config.extra_params.get("zip_encryption").map(String::as_str), Some("zipcrypto"));
+            assert_eq!(imported.config.extra_params.get("zip_password_encoding").map(String::as_str), encoding);
+            assert!(imported.config.split_archive);
+            assert_eq!(imported.config.split_size, Some(128));
+            assert!(imported.config.password.is_none());
+            assert!(!imported.config.extra_params.contains_key("unsafe"));
+            if encoding == Some("windows_local") {
+                assert_eq!(preview.template.compression.zip_password_encoding, Some(ZipPasswordEncoding::WindowsLocal));
+            }
+            let text = std::fs::read_to_string(&path).unwrap();
+            assert!(!text.contains("must-never-export"));
+            if encoding.is_none() { assert!(!text.contains("zipPasswordEncoding")); }
+        }
+        let mut invalid = serde_json::to_value(template_from_profile(&profile())).unwrap();
+        invalid["compression"]["zipPasswordEncoding"] = serde_json::json!("unknown");
+        assert!(parse_template(&serde_json::to_vec(&invalid).unwrap()).is_err());
     }
 
     #[test]

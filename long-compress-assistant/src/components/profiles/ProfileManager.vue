@@ -7,6 +7,7 @@ import { AutoApplyMode, type CompressionProfile, type CreateProfileRequest, type
 import { COMPRESSIBLE_FORMATS, FORMAT_CAPABILITIES, isPasswordSupportedFormat } from '@/utils/compressionFormat'
 import { extractErrorMessage } from '@/utils'
 import Modal from '@/components/ui/Modal.vue'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
 import { useCompressionProfiles } from '@/composables/useCompressionProfiles'
 import { useCompressionStore } from '@/stores/compression'
@@ -105,6 +106,7 @@ watch(() => formData.value.config.format, () => {
     formData.value.config.splitSize = null
   }
   if (!supportsSolid.value) formData.value.config.createSolidArchive = false
+  if (!supportsSolid.value) formData.value.config.encryptFilenames = false
 })
 
 watch(() => formData.value.config.splitArchive, enabled => {
@@ -672,7 +674,7 @@ const formatDate = (timestamp: number | null) =>
         <label v-if="supportsPassword" class="block">
           <span class="mb-2 block text-xs font-black text-muted">固定密码（可选）</span>
           <div class="flex gap-2">
-            <input v-model="formData.config.password" :type="showPassword ? 'text' : 'password'" class="h-10 min-w-0 flex-1 rounded-xl border border-subtle bg-input px-3 font-mono text-sm text-content outline-none focus:border-primary" placeholder="留空表示不加密" />
+              <input v-model="formData.config.password" :type="showPassword ? 'text' : 'password'" class="h-10 min-w-0 flex-1 rounded-xl border border-subtle bg-input px-3 font-mono text-sm text-content outline-none focus:border-primary" :placeholder="formData.config.encryptFilenames ? '运行前需填写密码' : '留空表示不加密'" />
             <button type="button" class="h-10 w-10 shrink-0 rounded-xl border border-subtle bg-input text-muted hover:text-content" @click="showPassword = !showPassword"><i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i></button>
           </div>
         </label>
@@ -683,6 +685,7 @@ const formatDate = (timestamp: number | null) =>
           <label class="profile-option" :class="{ 'opacity-70': formData.config.deleteAfter }"><input v-model="formData.config.verifyAfter" type="checkbox" :disabled="formData.config.deleteAfter" /><span><strong>压缩完成后校验</strong><small>{{ formData.config.deleteAfter ? '删除源文件时强制开启' : '发布最终文件前读取并验证归档' }}</small></span></label>
           <label v-if="supportsSplit" class="profile-option"><input v-model="formData.config.splitArchive" type="checkbox" /><span><strong>分卷压缩</strong><small>将压缩包拆分为多个文件</small></span></label>
           <label v-if="supportsSolid" class="profile-option"><input v-model="formData.config.createSolidArchive" type="checkbox" /><span><strong>固实压缩</strong><small>提高同类文件压缩率</small></span></label>
+          <label v-if="supportsSolid" class="profile-option"><input data-testid="profile-encrypt-filenames" v-model="formData.config.encryptFilenames" type="checkbox" /><span><strong>加密文件名 <HelpHint label="配置组文件名加密说明">查看包内文件名也需要密码。仅支持 7Z，运行前请填写密码。</HelpHint></strong></span></label>
         </div>
 
         <label v-if="formData.config.splitArchive" class="block">
@@ -745,6 +748,8 @@ const formatDate = (timestamp: number | null) =>
               <span v-if="templatePreview.template.compression.createSolidArchive" class="rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-400">固实</span>
             </div>
             <dl class="mt-3 space-y-2 text-xs">
+              <div data-testid="template-filename-encryption" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">文件名加密</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.encryptFilenames ? '开启' : '关闭' }}</dd></div>
+              <div v-if="templatePreview.template.compression.format === 'zip'" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 加密方式</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipEncryption === 'zipcrypto' ? 'ZipCrypto（传统兼容，较弱）' : 'AES-256' }}</dd></div>
               <div class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">完整性校验</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.verifyAfter ? '开启' : '关闭' }}</dd></div>
               <div class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">目录结构</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.keepStructure ? '保留' : '不保留' }}</dd></div>
             </dl>

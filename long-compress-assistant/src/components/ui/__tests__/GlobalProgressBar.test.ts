@@ -5,6 +5,7 @@ import { nextTick } from 'vue'
 import GlobalProgressBar from '../GlobalProgressBar.vue'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
+import { useArchiveConversionStore } from '@/stores/archiveConversion'
 
 const commandMocks = vi.hoisted(() => ({
   openInExplorer: vi.fn(),
@@ -21,6 +22,40 @@ vi.mock('@/composables/useTauriCommands', () => ({
 vi.mock('@tauri-apps/api/tauri', () => tauriMocks)
 
 describe('GlobalProgressBar', () => {
+  it('restores a conversion draft instead of compressing the old archive as a file', async () => {
+    const pinia = createPinia(); setActivePinia(pinia)
+    const tasks = useTaskStore()
+    tasks.addTask({ id: 'conversion', name: '归档转换', type: 'compression', workloadKind: 'archive', sourceFiles: ['C:\\old.zip'], outputPath: 'C:\\new.7z',
+      executionConfig: { schemaVersion: 1, kind: 'archive-conversion', outputPath: 'C:\\new.7z', format: '7z', level: 6, splitSize: 0, encryptFilenames: true, passwordRequired: true } })
+    tasks.tasks[0].status = 'cancelled'
+    const wrapper = mount(GlobalProgressBar, { global: { plugins: [pinia] } })
+    await wrapper.find('.progress-summary').trigger('click')
+    await wrapper.findAll('button').find(button => button.attributes('title') === useAppStore().t('tasks.retry'))!.trigger('click')
+    const conversion = useArchiveConversionStore()
+    expect(conversion.visible).toBe(true)
+    expect(conversion.sourcePath).toBe('C:\\old.zip')
+    expect(conversion.outputPath).toBe('')
+    expect(conversion.encryptFilenames).toBe(true)
+    expect(tasks.tasks[0].status).toBe('cancelled')
+    expect(commandMocks.compressFiles).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+  it.each([
+    ['failed', '1 项失败'], ['cancelled', '1 项取消'], ['completed', '全部完成'],
+    ['pending', '1'], ['paused', '1'],
+  ] as const)('does not report %s tasks as all successful', async (status, expected) => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    store.addTask({ id: 'summary', name: 'archive.zip', type: 'decompression', sourceFiles: [], outputPath: '' })
+    store.tasks[0].status = status
+    const wrapper = mount(GlobalProgressBar, { global: { plugins: [pinia] } })
+    expect(wrapper.get('[data-testid="task-summary-label"]').text()).toContain(expected)
+    if (status !== 'completed') expect(wrapper.get('[data-testid="task-summary-label"]').text()).not.toContain('全部完成')
+    if (status === 'failed') expect(wrapper.find('[data-testid="summary-failed-icon"]').exists()).toBe(true)
+    if (status === 'cancelled') expect(wrapper.find('[data-testid="summary-cancelled-icon"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
   it('shows unsaved history in the summary and retries saving without rerunning the task', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)

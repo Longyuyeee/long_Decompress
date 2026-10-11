@@ -197,7 +197,14 @@ fn windows_explorer_input_path(path: &str) -> Result<std::path::PathBuf, String>
 fn windows_explorer_arguments(path: &str) -> Result<Vec<OsString>, String> {
     let path = windows_explorer_input_path(path)?;
     let metadata = std::fs::metadata(&path)
-        .map_err(|error| format!("EXPLORER_PATH_UNAVAILABLE: {error}"))?;
+        .map_err(|error| {
+            let kind = match error.kind() {
+                std::io::ErrorKind::NotFound => "not-found",
+                std::io::ErrorKind::PermissionDenied => "permission-denied",
+                _ => "unavailable",
+            };
+            format!("EXPLORER_PATH_UNAVAILABLE:{kind}: {error}")
+        })?;
     if metadata.is_file() {
         // Keep the selector and path as separate process arguments. Command handles
         // quoting for spaces/Unicode; embedding literal quotes makes Explorer fall
@@ -384,7 +391,7 @@ mod desktop_behavior_tests {
         );
         assert!(windows_explorer_arguments("C:\\definitely-missing-long-compress-target")
             .unwrap_err()
-            .starts_with("EXPLORER_PATH_UNAVAILABLE:"));
+            .starts_with("EXPLORER_PATH_UNAVAILABLE:not-found:"));
     }
 
     #[test]

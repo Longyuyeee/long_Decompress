@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import CompletedExtractionOutput from '@/components/tasks/CompletedExtractionOutput.vue'
+import ArchiveOutputSummary from '@/components/compression/ArchiveOutputSummary.vue'
+import Modal from '@/components/ui/Modal.vue'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useHistoryStore } from '@/stores/history'
 import { useAppStore } from '@/stores/app'
 import type { TaskHistoryRecord, TaskHistoryStatus } from '@/types/taskHistory'
 import HistoryExtractionDraft from '@/components/tasks/HistoryExtractionDraft.vue'
 import HistoryCompressionDraft from '@/components/tasks/HistoryCompressionDraft.vue'
+import { useArchiveConversionStore } from '@/stores/archiveConversion'
+const conversion = useArchiveConversionStore()
+const isConversion = (record: TaskHistoryRecord) => record.executionConfig?.kind === 'archive-conversion'
+const retryConversion = (record: TaskHistoryRecord) => { selectedRecord.value = null; conversion.restore(record) }
 import HistoryMediaDraft from '@/components/tasks/HistoryMediaDraft.vue'
 import HistoryRetryBatch from '@/components/tasks/HistoryRetryBatch.vue'
 import { save } from '@tauri-apps/api/dialog'
@@ -49,6 +56,7 @@ const loadSelectedLogs = async () => {
 watch(() => selectedRecord.value?.id, () => { void loadSelectedLogs() })
 onUnmounted(() => { detailGeneration++ })
 const showClearConfirm = ref(false)
+const showStatistics = ref(false)
 const failureFilter = ref<'all' | FailureCategory>('all')
 const exporting = ref(false)
 const hasFilters = computed(() => !!query.value.trim() || typeFilter.value !== 'all' || statusFilter.value !== 'all' || failureFilter.value !== 'all' || rangeFilter.value !== 'all')
@@ -103,6 +111,7 @@ const batchBusy = ref(false)
 const batchOpen = ref(false)
 const batchRecords = computed(() => filteredRecords.value.filter(record => selectedRetries.value.has(record.id)))
 const canBatchRetry = (record: TaskHistoryRecord) => record.taskType === 'compression'
+  && !isConversion(record)
   && ['archive', 'image', 'video', 'pdf'].includes(record.workloadKind || 'archive')
 function toggleRetry(id: string) {
   if (batchBusy.value) return
@@ -182,7 +191,7 @@ const formatDateTime = (value?: string | null) => {
   }).format(time) : '—'
 }
 
-const typeLabel = (record: TaskHistoryRecord) => appStore.t(`history.type.${record.taskType}`)
+const typeLabel = (record: TaskHistoryRecord) => isConversion(record) ? '归档转换' : appStore.t(`history.type.${record.taskType}`)
 const statusLabel = (record: TaskHistoryRecord) => appStore.t(`history.status.${record.status}`)
 
 const refresh = async () => {
@@ -244,11 +253,13 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
     <div class="mx-auto w-full max-w-[1500px] space-y-5 pb-8">
       <header class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p class="text-xs font-black uppercase tracking-[0.24em] text-primary mb-2">{{ appStore.t('history.eyebrow') }}</p>
-          <h1 class="text-3xl lg:text-4xl font-black text-content tracking-tight">{{ appStore.t('nav.history') }}</h1>
-          <p class="text-sm text-muted mt-2">{{ appStore.t('history.subtitle') }}</p>
+          <div class="flex items-center gap-3">
+            <h1 class="text-3xl lg:text-4xl font-black text-content tracking-tight">{{ appStore.t('nav.history') }}</h1>
+            <HelpHint label="历史记录说明"><span data-testid="history-retention-policy">搜索和筛选覆盖全部已保存历史。页面最多显示 500 条，更早和更新记录均可继续浏览，不会删除历史。新完成的任务请刷新；统计仅针对当前显示记录。</span></HelpHint>
+          </div>
         </div>
         <div class="flex gap-2">
+          <button type="button" data-testid="history-open-statistics" class="history-ghost-button" @click="showStatistics = true"><i class="pi pi-chart-bar"></i>统计</button>
           <button type="button" class="history-ghost-button" :disabled="historyStore.isLoading" @click="refresh">
             <i class="pi pi-refresh" :class="{ 'pi-spin': historyStore.isLoading }"></i>
             {{ appStore.t('history.refresh') }}
@@ -259,14 +270,11 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
         </div>
       </header>
 
-      <p class="text-xs text-muted" data-testid="history-retention-policy">
-        搜索和筛选覆盖全部已保存历史，无需逐页寻找。当前窗口显示 {{ historyStore.records.length }} 条，最多保留 500 条在页面中；更早和更新记录均可继续浏览，未删除历史。
-        下方统计和趋势仅针对当前显示的记录。新完成的任务请刷新。
-      </p>
       <button v-if="historyStore.hasNewer" class="history-control" :disabled="historyStore.isLoading" @click="loadNewer">查看较新的记录</button>
 
-      <details class="space-y-4">
-        <summary class="cursor-pointer text-sm text-muted w-fit">查看当前结果统计与趋势</summary>
+      <Modal v-model:visible="showStatistics" title="统计与趋势" size="lg" cancel-text="关闭统计" :show-footer="false">
+      <div class="space-y-4" data-testid="history-statistics-content">
+      <p class="text-sm text-muted">仅统计当前显示的 {{ historyStore.records.length }} 条记录，不代表全部历史；趋势展示其中最近 14 天的任务。</p>
       <section class="grid grid-cols-2 xl:grid-cols-4 gap-3" data-testid="history-kpis">
         <article class="history-kpi history-kpi-primary">
           <div><span>{{ appStore.t('history.total_tasks') }}</span><i class="pi pi-inbox"></i></div>
@@ -311,7 +319,8 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
         </div>
       </section>
 
-      </details>
+      </div>
+      </Modal>
 
       <section class="history-panel p-3 sm:p-4 flex flex-col xl:flex-row gap-3" aria-label="History filters">
         <label class="relative flex-1 min-w-0">
@@ -368,7 +377,8 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
                 <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0"><i :class="record.taskType === 'compression' ? 'pi pi-box' : 'pi pi-folder-open'"></i></div>
                 <div class="min-w-0"><h3 class="font-black text-content truncate">{{ record.name }}</h3><p class="text-xs text-muted truncate mt-0.5">{{ record.outputPath || record.sourcePaths[0] }}</p>
                   <button v-if="record.taskType === 'decompression' && (!record.workloadKind || record.workloadKind === 'archive')" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次解压</button>
-                  <button v-if="record.taskType === 'compression' && (!record.workloadKind || record.workloadKind === 'archive')" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-compression-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次压缩</button>
+                  <button v-if="isConversion(record)" :disabled="conversion.busy" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-conversion-retry" @click.stop="retryConversion(record)">再次转换</button>
+                  <button v-else-if="record.taskType === 'compression' && (!record.workloadKind || record.workloadKind === 'archive')" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-compression-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次压缩</button>
                   <button v-if="record.taskType === 'compression' && ['image', 'video', 'pdf'].includes(record.workloadKind)" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-media-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次处理</button>
                 </div>
               </div>
@@ -407,7 +417,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
             <section class="detail-section"><h3><i class="pi pi-sign-in"></i>{{ appStore.t('history.detail.sources') }}</h3><div class="space-y-2 mt-3"><code v-for="source in selectedRecord.sourcePaths" :key="source" class="detail-path">{{ source }}</code><p v-if="!selectedRecord.sourcePaths.length" class="text-sm text-dim">—</p></div></section>
             <section v-if="selectedRecord.retryOfTaskId" class="detail-section" data-testid="history-retry-origin"><h3>从失败任务重新创建</h3><p class="text-xs text-muted mt-2">这是独立的新任务，原失败记录保持不变。原任务编号：</p><code class="detail-path mt-2">{{ selectedRecord.retryOfTaskId }}</code></section>
             <section v-if="selectedRecord.status === 'completed' && selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" class="detail-section"><CompletedExtractionOutput :path="selectedRecord.outputPath" /></section>
-            <section v-else class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code></section>
+            <section v-else class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code><ArchiveOutputSummary v-if="selectedRecord.status === 'completed' && selectedRecord.archiveOutput" :output="selectedRecord.archiveOutput" /></section>
             <section v-if="recoveryGuidance" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4" data-testid="history-recovery-guidance" :aria-label="recoveryGuidance.title">
               <h3 class="font-bold">{{ recoveryGuidance.title }}</h3>
               <ol class="mt-2 list-decimal pl-5 space-y-2 text-sm leading-relaxed">
@@ -419,7 +429,8 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
               <p class="text-xs text-muted mt-2">报告包含此任务已保存的文件路径、错误和日志；旧记录缺失的信息不会补写。</p>
             </section>
             <HistoryExtractionDraft v-if="selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
-            <HistoryCompressionDraft v-if="selectedRecord.taskType === 'compression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
+            <button v-if="isConversion(selectedRecord)" :disabled="conversion.busy" class="history-chip text-primary" @click="retryConversion(selectedRecord)">再次转换</button>
+            <HistoryCompressionDraft v-else-if="selectedRecord.taskType === 'compression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
             <HistoryMediaDraft v-if="selectedRecord.taskType === 'compression' && ['image', 'video', 'pdf'].includes(selectedRecord.workloadKind)" :record="selectedRecord" />
             <section class="detail-section" data-testid="history-logs">
               <h3><i class="pi pi-list"></i>{{ appStore.t('history.detail.logs') }}</h3>

@@ -14,6 +14,16 @@ use tauri::Window;
 
 const PROGRESS_EMIT_INTERVAL_BYTES: u64 = 4 * 1024 * 1024;
 
+fn archive_entry(path: &Path, name: String) -> sevenz_rust::SevenZArchiveEntry {
+    let mut entry = sevenz_rust::SevenZArchiveEntry::from_path(path, name);
+    // sevenz-rust 0.6.1 still inverts is_anti_item when serializing K_ANTI
+    // for streamless entries. True here makes it OMIT the deletion marker.
+    // Without this writer-only workaround 7-Zip silently deletes empty dirs.
+    // Revisit with any dependency upgrade; external extraction tests guard it.
+    entry.is_anti_item = true;
+    entry
+}
+
 struct CancellableProgressReader<R, F> {
     inner: R,
     cancellation_flag: Arc<AtomicBool>,
@@ -55,6 +65,11 @@ pub(crate) fn compress<R: CompressionRuntime>(
     output: &str,
     options: CompressionOptions,
 ) -> Result<()> {
+    if options.encrypt_filenames && !options.password.as_deref().is_some_and(|password| !password.is_empty()) {
+        return Err(CompressionError::CompressionFailed(
+            "文件名加密必须设置压缩密码。".to_string(),
+        ).into());
+    }
     if !output.to_ascii_lowercase().ends_with(".7z") {
         return Err(CompressionError::CompressionFailed(
             "7z compression output path must end with .7z".to_string(),
@@ -64,6 +79,41 @@ pub(crate) fn compress<R: CompressionRuntime>(
 
     if let Some(parent) = Path::new(output).parent() {
         std::fs::create_dir_all(parent)?;
+    }
+
+    if let Some(split_size) = options.split_size.filter(|size| *size > 0) {
+        runtime.check_cancellation()?;
+        // Create the real archive first, then split its bytes. Keep the full
+        // archive on disk rather than buffering it in memory.
+        struct TemporaryArchive(std::path::PathBuf);
+        impl Drop for TemporaryArchive {
+            fn drop(&mut self) { let _ = std::fs::remove_file(&self.0); }
+        }
+        let staged = crate::services::output_publish_transaction::staged_output_path(
+            Path::new(output), "split-source")?;
+        let reservation = std::fs::OpenOptions::new().write(true).create_new(true).open(&staged)?;
+        let temporary = TemporaryArchive(staged);
+        drop(reservation);
+        let mut unsplit = options.clone();
+        unsplit.split_size = None;
+        compress(runtime, window, task_id, sources, &temporary.0.to_string_lossy(), unsplit)?;
+        runtime.check_cancellation()?;
+        let mut progress_gate = crate::services::progress_gate::ProgressGate::new();
+        let result = crate::services::split_compression::SplitCompressionService::split_archive_file_with_progress(
+            &temporary.0, Path::new(output), split_size, || runtime.check_cancellation(),
+            |processed, total| {
+                if processed == 0 || progress_gate.allow(processed >= total) {
+                    if let Some(window) = window {
+                        runtime.emit_split_progress(window, task_id, processed, total);
+                    }
+                }
+            },
+        )?;
+        if let Some(window) = window {
+            runtime.emit_log(window, task_id, &format!("分卷压缩完成：{} 个分卷", result.part_count),
+                crate::models::compression::TaskLogSeverity::Success);
+        }
+        return Ok(());
     }
 
     let preserve_paths = options.preserve_paths.unwrap_or(true);
@@ -78,6 +128,9 @@ pub(crate) fn compress<R: CompressionRuntime>(
     let mut processed_bytes = 0u64;
     let mut writer = sevenz_rust::SevenZWriter::create(output)
         .map_err(|error| CompressionError::CompressionFailed(error.to_string()))?;
+    // Legacy requests default to contents-only encryption; hiding filenames
+    // must be explicitly requested and requires the password checked above.
+    writer.set_encrypt_header(options.encrypt_filenames);
 
     let level = options.level.clamp(1, 9);
     let lzma_options = sevenz_rust::lzma::LZMA2Options::with_preset(level);
@@ -102,7 +155,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
 
         for entry in &entries {
             runtime.check_cancellation()?;
-            let archive_entry = sevenz_rust::SevenZArchiveEntry::from_path(
+            let archive_entry = archive_entry(
                 &entry.path,
                 entry.archive_name.clone(),
             );
@@ -158,7 +211,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
         for (index, entry) in entries.iter().enumerate() {
             runtime.check_cancellation()?;
             let archive_entry =
-                sevenz_rust::SevenZArchiveEntry::from_path(&entry.path, entry.archive_name.clone());
+                archive_entry(&entry.path, entry.archive_name.clone());
             if entry.is_dir {
                 writer
                     .push_archive_entry::<&[u8]>(archive_entry, None)
@@ -219,6 +272,96 @@ mod tests {
     use super::*;
     use crate::models::compression::TaskLogSeverity;
 
+    #[test]
+    fn encrypted_small_header_never_falls_back_to_plaintext() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("hidden.7z");
+        let mut writer = sevenz_rust::SevenZWriter::create(&archive).unwrap();
+        writer.set_content_methods(vec![
+            sevenz_rust::AesEncoderOptions::new("header-password".into()).into(),
+            sevenz_rust::lzma::LZMA2Options::with_preset(1).into(),
+        ]);
+        writer.set_encrypt_header(true);
+        let mut entry = sevenz_rust::SevenZArchiveEntry::default();
+        entry.name = "x".into();
+        entry.is_directory = true;
+        entry.is_anti_item = true;
+        writer.push_archive_entry::<std::io::Empty>(entry, None).unwrap();
+        writer.finish().unwrap();
+        assert!(sevenz_rust::SevenZReader::open(&archive, sevenz_rust::Password::empty()).is_err(),
+            "filename encryption must not silently expose even a tiny empty-directory header");
+        let reader = sevenz_rust::SevenZReader::open(&archive, "header-password".into()).unwrap();
+        assert_eq!(reader.archive().files[0].name(), "x");
+        assert!(sevenz_rust::SevenZReader::open(&archive, "wrong-password".into()).is_err());
+        #[cfg(windows)]
+        {
+            let engine = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/archive-engine/7z.exe");
+            let wrong = std::process::Command::new(&engine)
+                .args(["l", "-slt", "-pwrong-password", "-y"]).arg(&archive).output().unwrap();
+            assert!(!wrong.status.success(), "independent reader must reject wrong header password");
+            let correct = std::process::Command::new(&engine)
+                .args(["l", "-slt", "-pheader-password", "-y"]).arg(&archive).output().unwrap();
+            assert!(correct.status.success(), "{}", String::from_utf8_lossy(&correct.stderr));
+            assert!(String::from_utf8_lossy(&correct.stdout).contains("Path = x"));
+        }
+    }
+
+    #[test]
+    fn filename_encryption_without_password_fails_before_creating_output() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        std::fs::write(&source, b"keep source").unwrap();
+        for password in [None, Some(String::new())] {
+            let output = temp.path().join("not-created/archive.7z");
+            let error = compress(&TestRuntime::default(), None, "no-password",
+                &[source.to_string_lossy().into_owned()], &output.to_string_lossy(),
+                CompressionOptions { encrypt_filenames: true, password, ..Default::default() }).unwrap_err();
+            assert!(error.to_string().contains("文件名加密必须设置压缩密码"));
+            assert!(!output.parent().unwrap().exists());
+            assert_eq!(std::fs::read(&source).unwrap(), b"keep source");
+        }
+    }
+
+    #[test]
+    fn encrypted_header_preserves_empty_and_unicode_archives() {
+        for (name, payload) in [(None, b"".as_slice()), (Some("x"), b"".as_slice()),
+            (Some("中文 空格.txt"), b"header and content round trip".as_slice())] {
+            let temp = tempfile::tempdir().unwrap();
+            let archive = temp.path().join("hidden.7z");
+            let mut writer = sevenz_rust::SevenZWriter::create(&archive).unwrap();
+            writer.set_content_methods(vec![
+                sevenz_rust::AesEncoderOptions::new("header-password".into()).into(),
+                sevenz_rust::lzma::LZMA2Options::with_preset(1).into(),
+            ]);
+            writer.set_encrypt_header(true);
+            if let Some(name) = name {
+                let mut entry = sevenz_rust::SevenZArchiveEntry::default();
+                entry.name = name.into();
+                entry.is_anti_item = true;
+                writer.push_archive_entry(entry, Some(std::io::Cursor::new(payload))).unwrap();
+            }
+            writer.finish().unwrap();
+            assert!(sevenz_rust::SevenZReader::open(&archive, sevenz_rust::Password::empty()).is_err());
+            assert!(sevenz_rust::SevenZReader::open(&archive, "wrong-password".into()).is_err());
+            let reader = sevenz_rust::SevenZReader::open(&archive, "header-password".into()).unwrap();
+            let names: Vec<_> = reader.archive().files.iter().map(|entry| entry.name()).collect();
+            assert_eq!(names, name.into_iter().collect::<Vec<_>>());
+            let output = temp.path().join("restored");
+            sevenz_rust::decompress_file_with_password(&archive, &output, "header-password".into()).unwrap();
+            if let Some(name) = name { assert_eq!(std::fs::read(output.join(name)).unwrap(), payload); }
+            #[cfg(windows)]
+            {
+                let engine = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/archive-engine/7z.exe");
+                let independent = temp.path().join("independent");
+                let result = std::process::Command::new(&engine)
+                    .args(["x", "-pheader-password", "-y"])
+                    .arg(format!("-o{}", independent.display())).arg(&archive).output().unwrap();
+                assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+                if let Some(name) = name { assert_eq!(std::fs::read(independent.join(name)).unwrap(), payload); }
+            }
+        }
+    }
+
     #[derive(Default)]
     struct TestRuntime {
         cancelled: Arc<AtomicBool>,
@@ -260,6 +403,36 @@ mod tests {
             _total_bytes: u64,
         ) {
         }
+    }
+
+    #[test]
+    fn split_collision_preserves_existing_volume_and_cleans_temporary_archive() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        let output = temp.path().join("archive.7z");
+        let existing = temp.path().join("archive.7z.001");
+        std::fs::write(&source, b"source payload").unwrap();
+        std::fs::write(&existing, b"existing volume").unwrap();
+        assert!(compress(&TestRuntime::default(), None, "collision", &[source.to_string_lossy().into_owned()],
+            &output.to_string_lossy(), CompressionOptions { split_size: Some(37), ..Default::default() }).is_err());
+        assert_eq!(std::fs::read(&existing).unwrap(), b"existing volume");
+        assert_eq!(std::fs::read(&source).unwrap(), b"source payload");
+        assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 2);
+    }
+
+    #[test]
+    fn cancelled_split_leaves_no_archive_or_volumes() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        let output = temp.path().join("archive.7z");
+        std::fs::write(&source, b"source payload").unwrap();
+        let runtime = TestRuntime::default();
+        runtime.cancelled.store(true, Ordering::Relaxed);
+        let error = compress(&runtime, None, "cancelled-split", &[source.to_string_lossy().into_owned()],
+            &output.to_string_lossy(), CompressionOptions { split_size: Some(37), ..Default::default() }).unwrap_err();
+        assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+        assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 1);
+        assert_eq!(std::fs::read(&source).unwrap(), b"source payload");
     }
 
     #[test]
@@ -309,6 +482,9 @@ mod tests {
             options,
         )
         .expect("create encrypted 7z");
+        let visible_header = sevenz_rust::SevenZReader::open(&archive, sevenz_rust::Password::empty())
+            .expect("existing password setting must keep filenames readable without a password");
+        assert!(visible_header.archive().files.iter().any(|entry| entry.name() == "secret.txt"));
         assert!(
             sevenz_rust::decompress_file_with_password(
                 &archive,

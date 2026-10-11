@@ -17,7 +17,7 @@ describe('ConflictResolutionModal user choices', () => {
     store.tasks[0].conflicts.push({ taskId: 'one', fileName: '照片.jpg', sourcePath: 'C:/照片.zip', destPath: 'C:/out/照片.jpg', sourceSize: 2048, destSize: 1024, sourceModified: 0, destModified: 1700000000000 })
     const wrapper = mount(ConflictResolutionModal, {
       props: { taskId: 'one', visible: true },
-      global: { stubs: { Modal: { template: '<div><slot /></div>' } } },
+      global: { stubs: { Modal: { template: '<div><slot /><slot name="footer" /></div>' } } },
     })
     return { wrapper, store }
   }

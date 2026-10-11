@@ -710,6 +710,7 @@ mod tests {
                 delete_after: true,
                 verify_after: true,
                 create_solid_archive: true,
+                encrypt_filenames: false,
                 filename_template: Some("{name}-{date}".to_string()),
                 extra_params: HashMap::from([(
                     "unsafe".to_string(),

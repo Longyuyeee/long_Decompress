@@ -7,7 +7,7 @@ describe('actual execution snapshots', () => {
   const configs: ExecutionConfigV1[] = [
     { schemaVersion: 1, kind: 'archive-compression', outputDirectory: 'D:/打包', passwordRequired: true,
       settings: { format: 'zip', level: 8, filename: '照片', splitArchive: false, splitSize: '100', keepStructure: true,
-        verifyAfter: true, createSolidArchive: false, fastPack: true } },
+        verifyAfter: true, createSolidArchive: false, fastPack: false, zipPasswordEncoding: 'windows_local' } },
     { schemaVersion: 1, kind: 'image-compression', settings: createDefaultImageSettings() },
     { schemaVersion: 1, kind: 'video-compression', outputDirectory: 'D:/视频', settings: createDefaultVideoSettings() },
     { schemaVersion: 1, kind: 'pdf-optimization', outputDirectory: '', mode: 'compatible-image-optimization', allowLargerOutput: true },
@@ -24,6 +24,12 @@ describe('actual execution snapshots', () => {
       Object.assign(polluted.settings, { quality: 1, level: 1 })
       expect(copy).toEqual(config)
     }
+  })
+  it('disables retired fast packing without rewriting the original history', () => {
+    const original = { ...configs[0], settings: { ...(configs[0] as any).settings, fastPack: true } } as ExecutionConfigV1
+    const restored = copyExecutionConfig(original)
+    expect((restored as any).settings.fastPack).toBe(false)
+    expect((original as any).settings.fastPack).toBe(true)
   })
   it('does not pretend unknown versions were restored', () => {
     expect(copyExecutionConfig({ ...configs[0], schemaVersion: 2 } as unknown as ExecutionConfigV1)).toBeNull()

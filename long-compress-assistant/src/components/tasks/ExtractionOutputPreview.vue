@@ -2,6 +2,7 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { useAppStore } from '@/stores/app'
+import HelpHint from '@/components/ui/HelpHint.vue'
 
 const props = defineProps<{ source: string; output: string; subfolder: boolean; compact?: boolean; sharedCount?: number }>()
 const emit = defineEmits<{ resolved: [path: string | null]; 'change-output': [] }>()
@@ -68,16 +69,15 @@ async function copyPath() {
   <div data-testid="extraction-output-preview" class="min-w-0 text-xs" :class="compact ? 'w-full text-muted' : 'rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2'">
     <div class="flex items-start gap-2 min-w-0">
       <span class="shrink-0" :class="{ 'font-bold text-primary': !compact }">预计解压到</span>
+      <HelpHint v-if="!compact" label="解压目录说明">{{ subfolder ? '在输出目录内创建同名子目录。' : '直接解压到此目录，不另建同名子目录。' }}同名文件：{{ conflictLabel }}。归档内的文件夹会保留。</HelpHint>
       <span v-if="path" class="min-w-0 flex-1 select-text" :class="compact ? 'truncate' : 'break-all'" :title="path" data-testid="extraction-output-path">{{ path }}</span>
       <span v-else class="text-muted" role="status">{{ loading ? '正在更新…' : error || '选择来源和输出目录后显示' }}</span>
       <button v-if="path" type="button" class="shrink-0 text-primary hover:underline" :aria-label="copied ? '路径已复制' : '复制输出路径'" @click.stop="copyPath" @keydown.stop>{{ copied ? '已复制' : '复制' }}</button>
     </div>
-    <p v-if="!compact" class="text-muted">{{ subfolder ? '在输出目录内创建同名子目录。' : '直接解压到此目录，不另建同名子目录。' }}同名文件：{{ conflictLabel }}。归档内的文件夹会保留。</p>
     <div v-if="destinationMessage || (sharedCount || 0) > 1" data-testid="extraction-destination-notice" class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1" :class="needsAttention ? 'text-amber-600 dark:text-amber-400' : 'text-muted'">
-      <span v-if="destinationMessage" :title="destinationState === 'occupied' ? `已有内容不代表一定有同名文件；若有同名文件，将${conflictLabel}。` : undefined">{{ destinationMessage }}</span>
+      <span v-if="destinationMessage" class="inline-flex items-center gap-1" :title="destinationState === 'occupied' ? `已有内容不代表一定有同名文件；若有同名文件，将${conflictLabel}。` : undefined">{{ destinationMessage }}<HelpHint v-if="!compact && destinationState === 'occupied'" label="目录已有内容说明">新内容会放入已有目录；是否存在同名文件，将在解压时确认。</HelpHint></span>
       <span v-if="(sharedCount || 0) > 1" data-testid="extraction-shared-destination" title="这些待执行任务会写入同一目录。如需分开放置，可更换目录或调整同名子目录选项。">{{ sharedCount }} 项任务共用此目录</span>
       <button v-if="needsAttention" type="button" class="text-primary hover:underline" @click.stop="emit('change-output')" @keydown.stop>更换目录</button>
-      <p v-if="!compact && destinationState === 'occupied'" class="w-full text-muted">新内容会放入已有目录；是否存在同名文件，将在解压时确认。</p>
     </div>
   </div>
 </template>

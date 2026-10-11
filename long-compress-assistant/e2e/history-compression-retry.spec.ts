@@ -23,10 +23,11 @@ test('retry a saved archive with its old parameters as an editable, non-running 
   await page.getByTestId('history-compression-retry').click()
   const draft = page.getByTestId('history-compression-draft')
   await expect(draft).toContainText('已带入上次执行参数')
-  await expect(draft.getByTestId('compression-fast-pack')).toBeChecked()
+  await expect(draft.getByTestId('compression-fast-pack')).toHaveCount(0)
   await expect(draft.locator('input[type="range"]')).toHaveValue('8')
+  await expect(draft.getByTestId('compression-output-path')).toHaveCount(0)
+  await expect(draft.getByTestId('compression-keep-structure')).toBeChecked()
   await page.getByTestId('compression-retry-output').fill('E:/新目录')
-  await draft.getByTestId('compression-fast-pack').uncheck()
   await page.setViewportSize({ width: 760, height: 620 })
   await draft.scrollIntoViewIfNeeded()
   expect(await draft.evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(1)
@@ -35,6 +36,11 @@ test('retry a saved archive with its old parameters as an editable, non-running 
   await expect(draft).toContainText('草稿已创建')
   await page.getByRole('link', { name: '前往压缩中心确认并启动' }).click()
   await expect(page.getByTestId('compression-group-row')).toHaveCount(1)
+  await expect(page.getByTestId('compression-fast-pack')).toHaveCount(0)
+  await expect(page.getByText('快速打包', { exact: false })).toHaveCount(0)
+  await expect(page.getByTestId('compression-advanced-options')).toHaveCount(0)
+  await page.getByTestId('compression-output-path').scrollIntoViewIfNeeded()
+  await page.screenshot({ path: info.outputPath('compression-without-fast-pack.png') })
   const state = await page.evaluate(async () => {
     const compressionModule = '/src/stores/compression.ts'
     const taskModule = '/src/stores/task.ts'

@@ -20,6 +20,12 @@ import { fileURLToPath } from 'node:url'
 import { deflateSync } from 'node:zlib'
 import { runOptimizationDesktopGate, runSavedLocationDesktopGate } from './optimization-desktop-gate.mjs'
 import { runMediaHistoryDesktopGate } from './media-history-desktop-gate.mjs'
+import { runPasswordSplitCreationGate } from './password-split-creation-gate.mjs'
+import { runArchiveConversionGate } from './archive-conversion-gate.mjs'
+import { runZipCodecGate } from './zip-codec-gate.mjs'
+import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
+import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
+import { runSevenZipVolumeUiGate } from './seven-zip-volume-ui-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -120,6 +126,7 @@ const fileManagerOnly = process.argv.includes('--file-manager-only')
 const markOfWebOnly = process.argv.includes('--mark-of-web-only')
 const compressionVerificationOnly = process.argv.includes('--compression-verification-only')
 const archiveFlowOnly = process.argv.includes('--archive-flow-only')
+const numericZipPasswordOnly = process.argv.includes('--numeric-zip-password-only')
 const pauseControlOnly = process.argv.includes('--pause-control-only')
 const zipTelemetryOnly = process.argv.includes('--zip-telemetry-only')
 const optimizationOnly = process.argv.includes('--optimization-only')
@@ -1636,9 +1643,6 @@ async function runCompressionVerificationDesktopGate() {
     }, 30_000)
 
     await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
-    if ((await driver.findElements(By.css('[data-testid="compression-output-path"]'))).length === 0) {
-      await (await waitForElement('[data-testid="compression-advanced-options"]')).click()
-    }
     const outputInput = await waitForElement('[data-testid="compression-output-path"]')
     await driver.executeScript(
       'const input = arguments[0], value = arguments[1]; input.value = value; input.dispatchEvent(new Event("input", { bubbles: true }));',
@@ -1700,12 +1704,6 @@ async function runCompressionVerificationDesktopGate() {
     deleteAfter: true,
   })
   await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
-  if ((await driver.findElements(By.css('[data-testid="compression-delete-after"]'))).length === 0) {
-    const advancedButton = await waitForElement('[data-testid="compression-advanced-options"]')
-    await driver.executeScript('arguments[0].scrollIntoView({ block: "center" });', advancedButton)
-    await driver.wait(async () => advancedButton.isDisplayed(), 10_000)
-    await driver.executeScript('arguments[0].click();', advancedButton)
-  }
   const deleteCheckbox = await waitForElement('[data-testid="compression-delete-after"]')
   const verifyCheckbox = await waitForElement('[data-testid="compression-verify-after"]')
   if (await deleteCheckbox.isSelected()) await driver.executeScript('arguments[0].click();', deleteCheckbox)
@@ -1891,6 +1889,9 @@ async function captureFailure() {
   }
   mkdirSync(artifactDirectory, { recursive: true })
   writeFileSync(path.join(artifactDirectory, 'tauri-driver.log'), driverOutput, 'utf8')
+  const failureDirectory = path.join(artifactDirectory, `failure-${new Date().toISOString().replace(/[:.]/g, '-')}`)
+  mkdirSync(failureDirectory, { recursive: true })
+  writeFileSync(path.join(failureDirectory, 'tauri-driver.log'), driverOutput, 'utf8')
   if (driver) {
     try {
       const screenshot = await driver.takeScreenshot()
@@ -1898,6 +1899,17 @@ async function captureFailure() {
         path.join(artifactDirectory, 'desktop-e2e-failure.png'),
         Buffer.from(screenshot, 'base64'),
       )
+      writeFileSync(path.join(failureDirectory, 'desktop-e2e-failure.png'), Buffer.from(screenshot, 'base64'))
+      const geometry = await driver.executeScript(() => ({
+        viewport: { width: innerWidth, height: innerHeight, devicePixelRatio, scale: visualViewport?.scale },
+        heading: document.querySelector('main h1')?.textContent,
+        buttons: Array.from(document.querySelectorAll('button[data-testid]')).map(element => {
+          const rect = element.getBoundingClientRect()
+          return { id: element.getAttribute('data-testid'), rect: rect.toJSON(),
+            centerHitsTarget: element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)) }
+        }),
+      }))
+      writeFileSync(path.join(failureDirectory, 'geometry.json'), JSON.stringify(geometry, null, 2))
     } catch {
       // The session may already be unavailable.
     }
@@ -4826,6 +4838,185 @@ try {
     await runZipTelemetryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
+  } else if (process.argv.includes('--archive-performance-only')) {
+    const invoke = async (command, args) => {
+      const result = await driver.executeAsyncScript(`
+        const [cmd,args,done]=arguments;
+        const ids=crypto.getRandomValues(new Uint32Array(2));
+        const cleanup=()=>ids.forEach(id=>Reflect.deleteProperty(window,'_'+id));
+        window['_'+ids[0]]=value=>{cleanup();done({ok:true,value})};
+        window['_'+ids[1]]=error=>{cleanup();done({ok:false,error:String(error)})};
+        window.__TAURI_IPC__({cmd,...args,callback:ids[0],error:ids[1]});
+      `, command, args)
+      assert.ok(result.ok, result.error)
+      return result.value
+    }
+    await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--zip-codecs-only')) {
+    await runZipCodecGate({ bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
+    completedSuccessfully = true
+    console.log('ZIP codec and encryption compatibility matrix passed.')
+  } else if (process.argv.includes('--zipcrypto-only')) {
+    for (const [zipEncoding, password] of [['utf8', 'legacy-password'], ['windows_local', '中文密码 + !测试']]) {
+      await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory,
+        bundledSevenZip, zipEncryption: 'zipcrypto', zipEncoding, password })
+    }
+    completedSuccessfully = true
+    console.log('ZIP ZipCrypto UI creation and independent compatibility gate passed.')
+  } else if (process.argv.includes('--archive-conversion-only')) {
+    await runArchiveConversionGate({ driver, waitForElement, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
+    completedSuccessfully = true
+    console.log('Real archive conversion command gate passed.')
+  } else if (numericZipPasswordOnly) {
+    await runSevenZipVolumeUiGate({ driver, callDesktopBridge, waitForElement, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
+    await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory })
+    const source = path.join(fixtureDirectory, '中文内容.txt')
+    const archive = path.join(fixtureDirectory, '密码分卷.zip')
+    const password = '中文密码 + !测试'
+    const payload = '真实桌面数字分卷载荷\n'.repeat(200)
+    writeFileSync(source, payload, 'utf8')
+    const taskId = await callDesktopBridge('startZipTelemetryCompression', source, archive, password)
+    await driver.wait(async () => (await callDesktopBridge('archiveFlowAuditState')).zipDone, 60_000)
+    assert.equal(await callDesktopBridge('taskStatus', taskId), 'completed')
+    const bytes = readFileSync(archive)
+    const parts = []
+    for (let offset = 0, index = 1; offset < bytes.length; offset += 37, index++) {
+      const part = `${archive}.${String(index).padStart(3, '0')}`
+      writeFileSync(part, bytes.subarray(offset, offset + 37))
+      parts.push(part)
+    }
+    assert.ok(parts.length > 2)
+    const output = path.join(fixtureDirectory, '数字卷输出')
+    mkdirSync(output)
+    writeFileSync(path.join(output, '中文内容.txt'), '保留原文件', 'utf8')
+    await callDesktopBridge('extractArchive', parts[0], output, password)
+    assert.equal(readFileSync(path.join(output, '中文内容.txt'), 'utf8'), '保留原文件')
+    assert.equal(readFileSync(path.join(output, '中文内容 (1).txt'), 'utf8'), payload)
+    const wrongOutput = path.join(fixtureDirectory, '错误密码输出')
+    const wrong = await callDesktopBridgeFailure('extractArchive', parts[0], wrongOutput, 'wrong')
+    assert.match(wrong, /密码|password/i)
+    assert.ok(!existsSync(path.join(wrongOutput, '中文内容.txt')))
+    const missingPart = parts[1]
+    const savedPart = readFileSync(missingPart)
+    // Only remove the exact synthetic volume created by this scenario.
+    rmSync(missingPart)
+    const missing = await callDesktopBridgeFailure('extractArchive', parts[0], path.join(fixtureDirectory, '缺卷输出'), password)
+    assert.match(missing, /missing|缺|不完整/i)
+    writeFileSync(missingPart, savedPart)
+    // Exercise the product queue and retry UI, not the extraction bridge.
+    await callDesktopBridge('clearTasks')
+    await (await waitForElement('[data-testid="nav-Decompress"]')).click()
+    await waitForElement('[data-testid="decompression-header"]')
+    await callDesktopBridge('queueDesktopDialogSelections', [[parts[0]]])
+    await (await waitForElement('[data-testid="dropzone-file"]')).click()
+    await driver.wait(async () => (await driver.findElements(By.css('[data-testid="task-row"]'))).length === 1, 15_000)
+    const recycle = await waitForElement('[data-testid="global-recycle-source-switch"]')
+    if (await recycle.getAttribute('aria-checked') === 'true') await recycle.click()
+    const startQueue = () => driver.findElement(By.xpath('//header[@data-testid="decompression-header"]//button[contains(., "开始解压队列")]'))
+    await (await startQueue()).click()
+    const passwordInput = await waitForElement('.task-password-cell input')
+    const original = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.sourcePaths.includes(parts[0])), 30_000)
+    assert.equal(original.status, 'failed', 'missing password must preserve its original failed history')
+    await passwordInput.sendKeys(password)
+    assert.equal(await passwordInput.getAttribute('value'), password, 'typing must retain every password space')
+    assert.equal(await (await driver.findElement(By.css('[data-testid="task-row"]'))).getAttribute('aria-expanded'), 'false',
+      'typing a password must not expand the task row')
+    writeFileSync(path.join(artifactDirectory, 'numeric-zip-password-input.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    await (await driver.findElement(By.css('.task-password-cell button:last-child'))).click()
+    const retryPanel = await waitForElement('[data-testid="failed-extraction-retry"]')
+    const retryOutput = path.join(fixtureDirectory, '用户选择输出')
+    mkdirSync(retryOutput)
+    writeFileSync(path.join(retryOutput, '中文内容.txt'), '保留原文件', 'utf8')
+    const outputInput = await retryPanel.findElement(By.css('[data-testid="retry-output"]'))
+    await outputInput.clear()
+    await outputInput.sendKeys(retryOutput)
+    const subfolder = await retryPanel.findElement(By.css('[data-testid="retry-subfolder"]'))
+    if (await subfolder.isSelected()) await subfolder.click()
+    assert.equal(await (await retryPanel.findElement(By.css('[data-testid="retry-password"]'))).getAttribute('value'), password)
+    await (await waitForElement('[data-testid="create-retry-drafts"]')).click()
+    await driver.wait(async () => (await retryPanel.getText()).includes('已创建新任务'), 30_000)
+    assert.deepEqual(readdirSync(retryOutput), ['中文内容.txt'], 'draft creation must not extract')
+    await (await driver.findElement(By.xpath('//button[contains(., "返回队列确认并启动")]'))).click()
+    await (await startQueue()).click()
+    const keepBoth = await driver.wait(async () => {
+      const buttons = await driver.findElements(By.xpath('//button[contains(., "自动重命名保留两者")]'))
+      return buttons[0] && await buttons[0].isDisplayed() ? buttons[0] : false
+    }, 30_000)
+    assert.equal((await callDesktopBridge('taskHistory')).some(record => record.retryOfTaskId === original.id), false,
+      'waiting for conflict resolution must not save a false failed retry')
+    const conflictLayouts = []
+    for (const size of [{ width: 920, height: 620 }, { width: 760, height: 520 }]) {
+      await driver.manage().window().setRect(size)
+      await driver.wait(async () => driver.executeScript(() => {
+        const actions = document.querySelector('[data-testid="conflict-actions"]')
+        return actions && actions.getAnimations({ subtree: true }).every(animation => animation.playState !== 'running')
+      }), 10_000)
+      const layout = await driver.executeScript(() => {
+        const actions = document.querySelector('[data-testid="conflict-actions"]')
+        const dialog = actions?.closest('[role="dialog"]')
+        const buttons = ['rename', 'overwrite', 'skip'].map(action => {
+          const button = document.querySelector(`[data-testid="conflict-${action}"]`)
+          if (!button) return { action, visible: false, clickable: false }
+          const r = button.getBoundingClientRect()
+          return { action, visible: r.width > 0 && r.height > 0 && r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth,
+            clickable: button.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)) }
+        })
+        return { viewport: { width: innerWidth, height: innerHeight }, buttons,
+          overflow: dialog ? dialog.scrollWidth - dialog.clientWidth : null }
+      })
+      assert.ok(layout.buttons.every(button => button.visible && button.clickable), JSON.stringify(layout))
+      assert.ok(layout.overflow !== null && layout.overflow <= 1, JSON.stringify(layout))
+      conflictLayouts.push({ requested: size, ...layout })
+      writeFileSync(path.join(artifactDirectory, `numeric-zip-conflict-${size.width}.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    }
+    writeFileSync(path.join(artifactDirectory, 'numeric-zip-password-conflict.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', keepBoth)
+    writeFileSync(path.join(artifactDirectory, 'numeric-zip-password-conflict-actions.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    await keepBoth.click()
+    const retried = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.retryOfTaskId === original.id), 60_000)
+    assert.equal(retried.status, 'completed', JSON.stringify(retried))
+    assert.equal(readFileSync(path.join(retryOutput, '中文内容.txt'), 'utf8'), '保留原文件')
+    assert.equal(readFileSync(path.join(retryOutput, '中文内容 (1).txt'), 'utf8'), payload)
+    for (const part of parts) assert.ok(existsSync(part), 'all source volumes must remain')
+    await restartDesktopSession()
+    const reopened = await callDesktopBridge('taskHistory')
+    assert.deepEqual(reopened.find(record => record.id === original.id), original)
+    assert.deepEqual(reopened.find(record => record.id === retried.id), retried)
+    await (await waitForElement('[data-testid="nav-History"]')).click()
+    await (await waitForElement('[data-testid="history-search"]')).sendKeys('密码分卷.zip.001')
+    // Earlier direct-command checks also persist history through global events.
+    const matchingCount = reopened.filter(record => record.sourcePaths.includes(parts[0])).length
+    assert.ok(matchingCount >= 2)
+    await driver.wait(async () => (await driver.findElements(By.css('[data-testid="history-record-row"]'))).length === matchingCount, 10_000)
+    writeFileSync(path.join(artifactDirectory, 'numeric-zip-password.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+    writeFileSync(path.join(artifactDirectory, 'numeric-zip-password.json'), JSON.stringify({
+      binarySha256: fileSha256(application), buildKind: 'isolated-desktop-e2e',
+      volumeCount: parts.length, wrongPasswordError: wrong, missingVolumeError: missing,
+      originalTaskId: original.id, retryTaskId: retried.id, restartVerified: true, nativePickerVerified: false,
+      conflictLayouts,
+      checks: ['UTF-8 Chinese password', 'existing target preserved', 'rename commit payload equality', 'wrong password', 'missing middle volume', 'UI password retry draft', 'UI conflict keep both', 'SQLite history after restart'],
+    }, null, 2))
+    // This gate seeds an isolated password vault; run it last so those candidates
+    // cannot auto-unlock fixtures whose earlier UI checks require manual input.
+    for (const password of ['', '中文密码 + !测试']) {
+      for (const solid of [false, true]) {
+        console.log(`[desktop-e2e] 7Z split creation encrypted=${Boolean(password)} solid=${solid}`)
+        await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, format: '7z', password, solid, bundledSevenZip })
+        await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, format: '7z', password, solid, bundledSevenZip, multipleSources: true })
+      }
+    }
+    for (const fault of ['output-file', 'cancel']) {
+      console.log(`[desktop-e2e] 7Z split creation fault=${fault}`)
+      await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, format: '7z', solid: true, bundledSevenZip, fault })
+    }
+    for (const solid of [false, true]) {
+      await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory,
+        format: '7z', solid, bundledSevenZip, encryptFilenames: true })
+    }
+    await runSevenZipVolumeReadGate({ driver, waitForElement, callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
+    completedSuccessfully = true
+    console.log('Real Windows numeric ZIP password and rename-commit command gate passed.')
   } else if (archiveFlowOnly) {
     await runArchiveFlowDesktopGate()
     completedSuccessfully = true
@@ -6414,6 +6605,7 @@ try {
   }
   }
 } catch (error) {
+  driverOutput += `\nTest failure: ${error?.stack || error}\n`
   await captureFailure()
   throw error
 } finally {

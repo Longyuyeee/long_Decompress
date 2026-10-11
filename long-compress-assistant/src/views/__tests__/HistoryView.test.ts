@@ -88,6 +88,7 @@ describe('HistoryView', () => {
     await flushPromises()
     await wrapper.get('[data-testid="history-search"]').setValue('broken')
     await settleSearch()
+    await wrapper.get('button[aria-label="历史记录说明"]').trigger('click')
     expect(wrapper.get('[data-testid="history-retention-policy"]').text()).toContain('覆盖全部')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
     expect(wrapper.find('[data-testid="history-load-more"]').exists()).toBe(false)
@@ -174,7 +175,10 @@ describe('HistoryView', () => {
     await flushPromises()
 
     expect(mocks.invoke).toHaveBeenCalledWith('list_task_history_page', { limit: 100, cursor: null, query: { text: '' }, omitLogs: true })
+    expect(wrapper.find('[data-testid="history-kpis"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="history-open-statistics"]').trigger('click')
     expect(wrapper.get('[data-testid="history-kpis"]').text()).toContain('50%')
+    await wrapper.get('button[aria-label="关闭统计"]').trigger('click')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('photos.zip')
     expect(wrapper.get('[data-testid="history-list"]').text()).toContain('broken.7z')
     const completedBadge = wrapper.findAll('[data-testid="history-status-badge"]')

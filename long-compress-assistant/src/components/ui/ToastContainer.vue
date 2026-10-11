@@ -1,5 +1,5 @@
 <template>
-  <div class="toast-stack fixed z-[9999] flex flex-col gap-3 pointer-events-none" aria-live="polite" aria-atomic="false">
+  <div class="toast-stack fixed flex flex-col gap-3 pointer-events-none" :class="uiStore.toasts.some(item => item.type === 'error' || item.type === 'warning') ? 'z-[9999]' : 'z-[250]'" aria-live="polite" aria-atomic="false">
     <transition-group name="aero-toast">
       <div 
         v-for="toast in uiStore.toasts" 

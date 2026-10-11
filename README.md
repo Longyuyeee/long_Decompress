@@ -6,7 +6,7 @@
 
 ### 面向 Windows 的本地压缩、解压、归档浏览与密码管理工具
 
-[![Version](https://img.shields.io/badge/version-1.3.9-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.4.0-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri%20%2B%20Rust-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -23,12 +23,22 @@
 
 Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows 桌面归档工具。它不仅能完成日常压缩与解压，还把批量任务、压缩包浏览、密码保险箱、完整性检查、资源预检、任务模板和资源管理器右键菜单整合在同一个界面中。
 
-当前版本：**v1.3.9**。
+当前版本：**v1.4.0**。
+
+### v1.4.0 密码分卷与归档转换
+
+- ZIP/7Z 支持目录、多文件、密码和数字分卷；7Z 提供固实压缩与文件名加密。
+- ZIP 默认 AES-256，可主动选择传统 ZipCrypto；与 Windows 7-Zip 共享中文密码包时，可显式选择 Windows 本地密码编码，不会自动降低加密方式。
+- 新增“转换压缩包”：转换格式、更换或移除密码、重新分卷或合卷，保留原包；支持 ZIP、7Z、TAR、TGZ、TBZ、TXZ、TZST、WIM 目标。
+- 修正缺卷、损坏及密码失败原因，保留最终诊断；转换支持取消、历史再次转换与全局重试草稿。
+- 两个中心保留紧凑行内展开与动效，常用目录和格式使用统一菜单，长名称不再遮挡后缀；说明收进问号，高级选项直接显示，历史统计改为弹窗。
+- 移除快速打包及旧参数激活路径；智能目录与 ZIP 并行仍默认关闭，预计体积分析保留。
+- [发布说明与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.0) · [发布说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.0.md) · [封板与交接](long-compress-assistant/docs/DEVELOPMENT_HANDOFF.md)。
 
 ### v1.3.9 日常处理与性能优化
 
 - 冲突比较、覆盖/跳过/保留两份；目标在确认期间变化会再次询问，禁止文件覆盖整个同名目录。
-- ZIP 快速打包、智能解压目录、受限 ZIP 并行均默认关闭，由用户主动开启；性能收益取决于文件与磁盘。
+- 智能解压目录、受限 ZIP 并行默认关闭，由用户主动开启；性能收益取决于文件与磁盘。1.3.9 提供的快速打包已在 1.4.0 移除，旧参数不再启用该策略。
 - 归档压缩、图片、视频、PDF 历史可恢复参数并创建独立草稿，支持所选项批量纠正，不自动执行或修改原记录。
 - 历史摘要与按需详情、500 条显示窗口和双向翻页保留全库搜索；输出目录增加书签和最近位置。
 - 优化进度刷新和任务展开动画，保留行内编辑与小窗口适配。
@@ -225,7 +235,7 @@ Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows �
 
 1. 打开“压缩中心”，添加文件、文件夹或一组待归档内容。
 2. 选择 ZIP、7Z、TAR 系列等格式，并设置压缩等级、输出目录和压缩包名称。
-3. 可使用“同名压缩包”、密码、分卷、固实压缩、压缩后校验和删除源文件等选项；分卷创建当前限无密码 ZIP 普通文件，固实压缩限 7Z。
+3. 可使用“同名压缩包”、密码、分卷、固实压缩、压缩后校验和删除源文件等选项；ZIP/7Z 支持密码数字分卷、目录与多文件，固实压缩和文件名加密限 7Z。
 4. 开启删除源文件时，Long解压会强制执行压缩后完整性校验；只有校验成功后才允许清理源文件。
 5. 为没有原生密码容器的格式设置密码时，界面会显示最终 `.7z` 扩展名并在提交前确认，不会静默改变格式。
 

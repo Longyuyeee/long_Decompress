@@ -28,6 +28,22 @@ const profile = {
 } satisfies CompressionProfile
 
 describe('safe task-template drafts', () => {
+  it('preserves filename encryption but requires a fresh runtime password', () => {
+    expect(buildSafeTemplateDraftSettings({ ...profile, config: { ...profile.config, encryptFilenames: true } }, []))
+      .toMatchObject({ encryptFilenames: true, password: '', deleteAfter: false })
+    expect(buildSafeTemplateDraftSettings(profile, []).encryptFilenames).toBe(false)
+  })
+  it('restores explicit ZIP encoding and split settings without supplying a password', () => {
+    const imported: CompressionProfile = { ...profile, config: {
+      ...profile.config, format: 'zip', zipPasswordEncoding: 'windows_local',
+      splitArchive: true, splitSize: 128, createSolidArchive: false,
+    } }
+    expect(buildSafeTemplateDraftSettings(imported, [])).toMatchObject({
+      zipPasswordEncoding: 'windows_local', splitArchive: true, splitSize: '128', password: '', deleteAfter: false,
+    })
+    expect(buildSafeTemplateDraftSettings(profile, [])).not.toHaveProperty('zipPasswordEncoding')
+  })
+
   it('never carries passwords, source deletion, or extra engine parameters', () => {
     const candidates = [{ path: 'C:/logs/app.log', name: 'app.log', size: 12, isDirectory: false }]
     const settings = buildSafeTemplateDraftSettings(profile, candidates, new Date('2026-08-10T01:02:03'))

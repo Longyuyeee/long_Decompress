@@ -288,19 +288,22 @@ describe('CompressionView', () => {
     expect(taskStore.tasks).toHaveLength(0)
   })
 
-  it.each([false, true])('passes my explicit fast-packing choice through the real task payload: %s', async enabled => {
+  it.each([false, true])('ignores retired fast-packing settings in real task payloads: %s', async enabled => {
     const wrapper = mountView()
     useCompressionStore().globalSettings.fastPack = enabled
+    useCompressionStore().globalSettings.zipPasswordEncoding = 'windows_local'
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
     await nextTick()
     const start = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('compress.start')))
     await start!.trigger('click')
     await flushPromises()
-    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'C:/input/sample.zip', expect.objectContaining({ fast_pack: enabled }))
-    expect(useTaskStore().tasks[0].compressionOptions?.fast_pack).toBe(enabled)
+    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'C:/input/sample.zip', expect.objectContaining({ fast_pack: false }))
+    expect(useTaskStore().tasks[0].compressionOptions?.fast_pack).toBe(false)
+    expect(useTaskStore().tasks[0].compressionOptions?.zip_password_encoding).toBe('windows_local')
+    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), expect.any(Array), expect.any(String), expect.objectContaining({ zip_password_encoding: 'windows_local' }))
     expect(useTaskStore().tasks[0].executionConfig).toMatchObject({
       schemaVersion: 1, kind: 'archive-compression', outputDirectory: 'C:/input', passwordRequired: false,
-      settings: { filename: 'sample', format: 'zip', fastPack: enabled },
+      settings: { filename: 'sample', format: 'zip', fastPack: false },
     })
     wrapper.unmount()
   })
@@ -314,8 +317,8 @@ describe('CompressionView', () => {
     const start = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('compress.start')))
     await start!.trigger('click')
     await flushPromises()
-    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'D:/output/再次打包.zip', expect.objectContaining({ fast_pack: true, delete_after: false }))
-    expect(useTaskStore().tasks[0]).toMatchObject({ retryOfTaskId: 'original-task', executionConfig: { kind: 'archive-compression', settings: { filename: '再次打包', fastPack: true } } })
+    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'D:/output/再次打包.zip', expect.objectContaining({ fast_pack: false, delete_after: false }))
+    expect(useTaskStore().tasks[0]).toMatchObject({ retryOfTaskId: 'original-task', executionConfig: { kind: 'archive-compression', settings: { filename: '再次打包', fastPack: false } } })
     wrapper.unmount()
   })
 
@@ -324,6 +327,8 @@ describe('CompressionView', () => {
     const compressionStore = useCompressionStore()
     compressionStore.globalSettings.format = '7z'
     compressionStore.globalSettings.createSolidArchive = true
+    compressionStore.globalSettings.encryptFilenames = true
+    compressionStore.globalSettings.password = 'header-password'
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
     await nextTick()
 
@@ -337,8 +342,29 @@ describe('CompressionView', () => {
       expect.any(String),
       ['C:/input/sample.txt'],
       'C:/input/sample.7z',
-      expect.objectContaining({ format: '7z', create_solid_archive: true }),
+      expect.objectContaining({ format: '7z', create_solid_archive: true, encrypt_filenames: true }),
     )
+    expect(useTaskStore().tasks[0].executionConfig).toMatchObject({ settings: { encryptFilenames: true }, passwordRequired: true })
+  })
+
+  it('does not start filename-encrypted compression without a password', async () => {
+    const wrapper = mountView()
+    const store = useCompressionStore()
+    store.globalSettings.format = '7z'
+    store.globalSettings.encryptFilenames = true
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+    await wrapper.get('[data-testid="start-compression"]').trigger('click')
+    await flushPromises()
+    expect(mocks.compressFiles).not.toHaveBeenCalled()
+    expect(useTaskStore().tasks).toHaveLength(0)
+    expect(useAppStore().error).toContain('请先填写压缩密码')
+    store.globalSettings.password = 'new password'
+    await wrapper.get('[data-testid="start-compression"]').trigger('click')
+    await flushPromises()
+    expect(mocks.compressFiles).toHaveBeenCalledTimes(1)
+    expect(useAppStore().error).toBeNull()
+    wrapper.unmount()
   })
 
   it('confirms non-native password formats before creating an encrypted 7z', async () => {

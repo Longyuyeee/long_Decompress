@@ -51,6 +51,7 @@ export interface Task {
   logs: TaskLog[]
   sourceFiles: string[]
   outputPath: string
+  archiveOutput?: import('@/types/archiveOutput').PublishedArchiveOutput
   format?: string
   conflicts: ConflictInfo[]
   /** Session-only staged publication choices; not persisted in task history. */
@@ -63,7 +64,7 @@ export interface Task {
   fileFilter?: string
   selectedEntries?: string[]
   // 增强字段 [FE-INT-001]
-  stage?: 'Pre-checking' | 'Extracting' | 'Verifying' | 'Finalizing' | 'password-attempt' | 'Probing' | 'Encoding' | 'Transforming' | 'Validating' | 'Publishing' | 'still-encoding'
+  stage?: 'Pre-checking' | 'Extracting' | 'Splitting' | 'Verifying' | 'Finalizing' | 'password-attempt' | 'Probing' | 'Encoding' | 'Transforming' | 'Validating' | 'Publishing' | 'still-encoding'
   currentFile?: string
   currentPassword?: string
   passwordAttemptCurrent?: number
@@ -71,6 +72,8 @@ export interface Task {
   speed?: string
   processedBytes?: number
   totalBytes?: number
+  /** Source transfer facts retained when live progress switches to volume copying. */
+  compressionSourceProgress?: { processedBytes: number; totalBytes: number }
   outputBytes?: number
   outputBytesEstimated?: boolean
   etaSeconds?: number
@@ -84,11 +87,14 @@ export interface Task {
   passwordRequired?: boolean
   compressionOptions?: {
     fast_pack?: boolean
+    zip_password_encoding?: 'utf8' | 'windows_local'
+    zip_encryption?: 'aes256' | 'zipcrypto'
     format?: string
     level: number
     password?: string
     split_size?: number | null
     create_solid_archive?: boolean
+    encrypt_filenames?: boolean
     preserve_paths?: boolean
     delete_after?: boolean
     verify_after?: boolean
@@ -190,7 +196,23 @@ export const useTaskStore = defineStore('task', () => {
       } = event.payload
       const task = tasks.value.find(t => t.id === task_id)
       if (task) {
+        // Terminal results and their persisted metrics must not be rewritten by
+        // progress events queued before completion, failure or cancellation.
+        if (['completed', 'failed', 'cancelled'].includes(task.status)) return
         const isPasswordAttempt = stage === 'password-attempt'
+        if (stage === 'Splitting' && task.stage !== 'Splitting') {
+          if (task.type === 'compression' && !task.compressionSourceProgress) {
+            task.compressionSourceProgress = {
+              processedBytes: task.processedBytes ?? 0,
+              totalBytes: task.totalBytes ?? task.processedBytes ?? 0,
+            }
+          }
+          task.processedBytes = 0
+          task.totalBytes = 0
+          task.outputBytes = 0
+          task.speed = undefined
+          task.etaSeconds = undefined
+        }
         // Candidate count is not decompression progress. Keep this defensive
         // frontend guard even though the backend also emits zero for this stage.
         task.progress = isPasswordAttempt ? 0 : normalizeProgressPercent(progress)
@@ -327,6 +349,7 @@ export const useTaskStore = defineStore('task', () => {
         || (terminalStatuses.includes(task.status) && terminalStatuses.includes(status))) return
       if (status === 'failed') setFinalFailureReason(task, task.error)
       task.status = status
+      if (status === 'completed') task.progress = 100
       if (['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(status) && !task.startTime) {
         task.startTime = new Date()
       }
@@ -385,11 +408,13 @@ export const useTaskStore = defineStore('task', () => {
     updateTaskStatus(taskId, 'cancelling')
     try {
       await invoke('cancel_compression', { taskId })
-      updateTaskStatus(taskId, 'cancelled')
+      // Conversion spans extraction and rebuilding; its command owner settles
+      // the task only after the staging directory and publication have settled.
+      if (task.executionConfig?.kind !== 'archive-conversion') updateTaskStatus(taskId, 'cancelled')
       return true
     } catch (e) {
       console.error('Failed to cancel task:', e)
-      updateTaskStatus(taskId, previousStatus)
+      if (!['completed', 'failed', 'cancelled'].includes(task.status)) updateTaskStatus(taskId, previousStatus)
       // 将错误信息记录到任务的日志中
       if (task) {
         task.logs.push({

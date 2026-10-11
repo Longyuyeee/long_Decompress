@@ -118,8 +118,12 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename') => {
         </div>
       </div>
 
-      <!-- 操作动作区 -->
-      <div class="actions-section flex flex-col gap-5 pt-4">
+    </div>
+
+    <div v-else class="py-4 text-center text-muted">{{ appStore.t('conflict.all_resolved') }}</div>
+    <template #footer>
+      <!-- Keep choices outside the scrolling comparison area. -->
+      <div v-if="currentConflict" data-testid="conflict-actions" class="actions-section w-full flex flex-col gap-3">
         <div class="flex flex-wrap gap-4">
           <!-- 推荐操作：自动重命名 -->
           <button @click="resolve('rename')" :disabled="busy" data-testid="conflict-rename"
@@ -153,23 +157,25 @@ const resolve = (action: 'overwrite' | 'skip' | 'rename') => {
         </div>
         <p v-if="busy" role="status" class="text-sm text-muted">{{ appStore.t('conflict.publishing') }}</p>
       </div>
-    </div>
-
-    <!-- 完成状态 (空槽位) -->
-    <div v-else class="py-20 text-center space-y-6">
-      <div class="relative inline-block">
-        <div class="absolute inset-0 animate-ping bg-primary/20 rounded-full"></div>
-        <i class="pi pi-check-circle text-6xl text-primary relative z-10"></i>
-      </div>
-      <div class="space-y-2">
-        <p class="text-lg font-black text-content">{{ appStore.t('conflict.all_resolved') }}</p>
-        <p class="text-sm text-muted uppercase tracking-[0.2em]">{{ appStore.t('conflict.all_resolved_desc') }}</p>
-      </div>
-    </div>
+    </template>
   </Modal>
 </template>
 
 <style scoped>
+.conflict-container { padding: 0; }
+.conflict-container > * + * { margin-top: 0.75rem; }
+.header-section { padding: 0.75rem; }
+.compare-card { padding: 0.75rem; border-radius: 1rem; min-width: 0; }
+.compare-card > .flex { margin-bottom: 0.5rem; }
+.compare-card .space-y-4 > * + * { margin-top: 0.5rem; }
+.compare-card .font-mono { overflow-wrap: anywhere; }
+.actions-section > .flex { gap: 0.5rem; }
+.actions-section button { height: auto; min-height: 2.75rem; padding: 0.5rem; border-radius: 0.75rem; letter-spacing: normal; }
+.actions-section button span { letter-spacing: normal; }
+.actions-section label { font-size: 0.75rem; }
+@media (min-width: 560px) {
+  .conflict-container > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+}
 .compare-card {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
 }

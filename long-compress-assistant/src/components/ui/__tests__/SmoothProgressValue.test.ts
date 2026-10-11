@@ -4,6 +4,18 @@ import { nextTick } from 'vue'
 import SmoothProgressValue from '../SmoothProgressValue.vue'
 
 describe('SmoothProgressValue', () => {
+  it('settles a pending animation immediately when the task becomes terminal', async () => {
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1))
+    const cancel = vi.fn()
+    vi.stubGlobal('cancelAnimationFrame', cancel)
+    const wrapper = mount(SmoothProgressValue, { props: { value: 66, decimals: 0 } })
+    await wrapper.setProps({ value: 100 })
+    expect(wrapper.text()).toBe('66%')
+    await wrapper.setProps({ immediate: true })
+    expect(wrapper.text()).toBe('100%')
+    expect(cancel).toHaveBeenCalledWith(1)
+    wrapper.unmount()
+  })
   afterEach(() => vi.unstubAllGlobals())
 
   it('eases a forward jump instead of replacing the visible number immediately', async () => {

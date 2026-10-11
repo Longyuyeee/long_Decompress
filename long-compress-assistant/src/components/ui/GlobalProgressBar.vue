@@ -6,6 +6,8 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { extractErrorMessage } from '@/utils'
 import { formatProgressPercent } from '@/utils/progress'
 import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
+import { useArchiveConversionStore } from '@/stores/archiveConversion'
+import { createTaskHistoryRecord } from '@/types/taskHistory'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -29,7 +31,7 @@ const taskStats = computed(() => {
   let runningTask: Task | undefined
 
   for (const task of taskStore.tasks) {
-    progressTotal += task.progress
+    progressTotal += task.status === 'completed' ? 100 : task.progress
     if (!FINISHED_STATUSES.has(task.status)) activeCount++
     if (task.status === 'completed') completedCount++
     if (!runningTask && ACTIVE_STATUSES.has(task.status)) runningTask = task
@@ -47,6 +49,14 @@ const taskStats = computed(() => {
 
 const activeCount = computed(() => taskStats.value.activeCount)
 const hasActiveTasks = computed(() => activeCount.value > 0)
+const failedCount = computed(() => taskStore.tasks.filter(task => task.status === 'failed').length)
+const cancelledCount = computed(() => taskStore.tasks.filter(task => task.status === 'cancelled').length)
+const summaryLabel = computed(() => {
+  if (hasActiveTasks.value) return `${activeCount.value} ${appStore.t('tasks.active')}`
+  if (failedCount.value) return appStore.t('tasks.finished_failed').replace('{count}', String(failedCount.value))
+  if (cancelledCount.value) return appStore.t('tasks.finished_cancelled').replace('{count}', String(cancelledCount.value))
+  return appStore.t('tasks.all_done')
+})
 const hasRunningTasks = computed(() => taskStore.tasks.some(task =>
   ['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'cancelling'].includes(task.status)
 ))
@@ -123,6 +133,7 @@ const stageLabel = (stage?: string) => {
     case 'Pre-checking': return appStore.t('tasks.status.preparing')
     case 'Extracting': return appStore.t('tasks.status.running')
     case 'Verifying': return '验证输出'
+    case 'Splitting': return appStore.t('compress.status.splitting')
     case 'Finalizing': return appStore.t('tasks.status.finalizing')
     case 'password-attempt': return '验证解压密码'
     case 'Probing': return '重新探测'
@@ -141,6 +152,11 @@ const openTaskFolder = (task: Task) => {
 }
 
 const retryTask = async (task: Task) => {
+  if (task.executionConfig?.kind === 'archive-conversion') {
+    useArchiveConversionStore().restore(createTaskHistoryRecord(task))
+    isExpanded.value = false
+    return
+  }
   if (retryingTaskId.value) return
   retryingTaskId.value = task.id
 
@@ -169,12 +185,17 @@ const retryTask = async (task: Task) => {
         level: 6,
         password: task.password || undefined
       }
-      await tauriCommands.compressFiles(
+      const publishedOutput = await tauriCommands.compressFiles(
         task.id,
         task.sourceFiles,
         task.outputPath,
         options
       )
+      task.archiveOutput = publishedOutput
+      if (publishedOutput) {
+        task.outputBytes = publishedOutput.totalBytes
+        task.outputBytesEstimated = false
+      }
       taskStore.updateTaskStatus(task.id, 'completed')
     }
   } catch (error) {
@@ -212,6 +233,7 @@ const copyToClipboard = async (text: string) => {
       <div
            @click="isExpanded = !isExpanded"
            data-testid="global-progress-summary"
+           :title="summaryLabel"
            class="progress-summary flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-3xl border border-primary/40 shadow-lg cursor-pointer hover:border-primary/70 transition-all duration-300 w-full min-w-0">
         <!-- 环形进度 -->
         <div class="progress-ring-wrap relative w-10 h-10 shrink-0">
@@ -219,10 +241,11 @@ const copyToClipboard = async (text: string) => {
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" class="text-input opacity-75"/>
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-dasharray="62.83"
                     :stroke-dashoffset="62.83 - (62.83 * overallProgress) / 100"
-                    class="text-primary transition-all duration-1000 progress-ring"/>
+                    :style="{ transitionDuration: hasActiveTasks ? undefined : '0s' }"
+                    data-testid="summary-progress-ring" class="text-primary transition-all duration-1000 progress-ring"/>
           </svg>
           <span class="absolute inset-0 flex items-center justify-center text-xs font-black font-mono text-content">
-            <SmoothProgressValue :value="overallProgress" :decimals="0" />
+            <SmoothProgressValue data-testid="summary-progress-value" :value="overallProgress" :decimals="0" :immediate="!hasActiveTasks" />
           </span>
         </div>
 
@@ -234,9 +257,12 @@ const copyToClipboard = async (text: string) => {
           <div class="flex min-w-0 items-center gap-2 whitespace-nowrap">
             <i v-if="hasRunningTasks" class="pi pi-spin pi-spinner text-[0.75rem] text-primary"></i>
             <i v-else-if="hasPausedTasks" class="pi pi-pause-circle text-[0.75rem] text-amber-400"></i>
+            <i v-else-if="hasActiveTasks" class="pi pi-clock text-[0.75rem] text-muted"></i>
+            <i v-else-if="failedCount" data-testid="summary-failed-icon" class="pi pi-exclamation-circle text-[0.75rem] text-red-400"></i>
+            <i v-else-if="cancelledCount" data-testid="summary-cancelled-icon" class="pi pi-ban text-[0.75rem] text-muted"></i>
             <i v-else class="pi pi-check-circle text-[0.75rem] text-green-400"></i>
-            <span class="text-[0.75rem] font-bold text-content whitespace-nowrap">
-              {{ hasActiveTasks ? `${activeCount} ${appStore.t('tasks.active')}` : appStore.t('tasks.all_done') }}
+            <span data-testid="task-summary-label" class="text-[0.75rem] font-bold text-content whitespace-nowrap">
+              {{ summaryLabel }}
             </span>
           </div>
           <div v-if="runningTask" class="flex min-w-0 items-center gap-1.5 whitespace-nowrap text-xs">
@@ -283,7 +309,7 @@ const copyToClipboard = async (text: string) => {
             <!-- 总进度条 -->
             <div class="h-2 bg-input rounded-full overflow-hidden relative">
               <div class="h-full bg-primary rounded-full transition-all duration-1000 progress-bar-fill"
-                   :style="{ width: `${overallProgress}%` }"></div>
+                   :style="{ width: `${overallProgress}%`, transitionDuration: hasActiveTasks ? undefined : '0s' }"></div>
               <div v-if="hasRunningTasks" class="absolute inset-0 shimmer-overlay"></div>
             </div>
             <!-- 实时信息摘要栏 -->
