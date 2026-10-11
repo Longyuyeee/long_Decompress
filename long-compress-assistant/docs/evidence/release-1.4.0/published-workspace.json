@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "application": "E:\\long\\Long解压\\Long解压.exe",
+  "checks": [
+    {
+      "name": "Explorer classic browse command",
+      "passed": true,
+      "detail": "Unicode target and --browse-archive \"%1\" matched the installed executable"
+    },
+    {
+      "name": "formal installed executable",
+      "passed": true,
+      "detail": "normal production build; desktop E2E bridge absent"
+    },
+    {
+      "name": "150% scale responsive layout",
+      "passed": true,
+      "detail": "{\"body\":[1280,1280],\"dpr\":1.5,\"page\":[1064,1064]}"
+    },
+    {
+      "name": "bounded installed text preview",
+      "passed": true,
+      "detail": "real ZIP entry rendered through the internal viewer"
+    },
+    {
+      "name": "active-content negative gate",
+      "passed": true,
+      "detail": "CMD stayed unopened until explicit confirmation; cancel path passed"
+    },
+    {
+      "name": "installed selected extraction",
+      "passed": true,
+      "detail": "long Chinese path output matched byte-for-byte"
+    },
+    {
+      "name": "installed encrypted 7Z extraction",
+      "passed": true,
+      "detail": "password-protected real payload matched"
+    },
+    {
+      "name": "installed TAR family browsing",
+      "passed": true,
+      "detail": "real TAR and TAR.GZ metadata loaded"
+    },
+    {
+      "name": "installed encrypted RAR extraction",
+      "passed": true,
+      "detail": "correct password produced both files and foo.txt matched pinned SHA-256"
+    },
+    {
+      "name": "installed three-level nested workspace",
+      "passed": true,
+      "detail": "ZIP → encrypted 7Z → ZIP with per-layer password passed"
+    },
+    {
+      "name": "damaged archive negative gate",
+      "passed": true,
+      "detail": "错误\n压缩包结构损坏或内容不完整"
+    },
+    {
+      "name": "installed large-archive cancellation",
+      "passed": true,
+      "detail": "64 ms"
+    },
+    {
+      "name": "installed numeric ZIP ascii password retry and conflict",
+      "passed": true,
+      "detail": "AES ZIP, ASCII password with spaces, 9 volumes; UI retry/rename; exact payload and original preserved; history retained after WebView reload (not process restart)"
+    },
+    {
+      "name": "installed numeric ZIP utf8 password retry and conflict",
+      "passed": true,
+      "detail": "AES ZIP, UTF-8 Chinese (independent HMAC verified) password with spaces, 7 volumes; UI retry/rename; exact payload and original preserved; history retained after WebView reload (not process restart)"
+    },
+    {
+      "name": "installed UI password split creation",
+      "passed": true,
+      "detail": "real directory, UTF-8 password, three 1 MiB-bounded volumes, verified creation, exact extracted payload and empty directory, source preservation, persisted compression history"
+    },
+    {
+      "name": "installed ZipCrypto Chinese compatibility",
+      "passed": true,
+      "detail": "explicit Windows encoding, independent 7-Zip and product extraction"
+    },
+    {
+      "name": "installed archive conversion",
+      "passed": true,
+      "detail": "eight targets, UI re-encryption/retry, read/write cancellation, source unchanged"
+    },
+    {
+      "name": "installed archive end-to-end performance",
+      "passed": true,
+      "detail": "large/small/mixed workloads with verification, hashes, sampled staging and backend lifetime peak memory"
+    }
+  ]
+}

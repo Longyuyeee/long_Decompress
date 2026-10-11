@@ -33,7 +33,7 @@ Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows �
 - 修正缺卷、损坏及密码失败原因，保留最终诊断；转换支持取消、历史再次转换与全局重试草稿。
 - 两个中心保留紧凑行内展开与动效，常用目录和格式使用统一菜单，长名称不再遮挡后缀；说明收进问号，高级选项直接显示，历史统计改为弹窗。
 - 移除快速打包及旧参数激活路径；智能目录与 ZIP 并行仍默认关闭，预计体积分析保留。
-- [发布说明与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.0) · [发布说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.0.md) · [封板与交接](long-compress-assistant/docs/DEVELOPMENT_HANDOFF.md)。
+- [发布说明与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.0) · [发布审计](long-compress-assistant/docs/RELEASE_AUDIT_1.4.0.md) · [封板与交接](long-compress-assistant/docs/DEVELOPMENT_HANDOFF.md)。
 
 ### v1.3.9 日常处理与性能优化
 

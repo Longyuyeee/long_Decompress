@@ -1,0 +1,24 @@
+{
+  "version": "1.4.0",
+  "tag": "v1.4.0",
+  "commit": "6a1a02bfca531617b83ad22f00d15f122cd7c5f0",
+  "releaseUrl": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.0",
+  "workflowRun": 38161217441,
+  "workflowConclusion": "success",
+  "publishedAtUtc": "2026-10-11T17:59:31Z",
+  "installer": {
+    "name": "Long-Decompress_1.4.0_x64-setup.exe",
+    "bytes": 19606359,
+    "sha256": "36d48e52e848fa0a7eaad107602060519dc1a161fae04accc09783e274ce71ed",
+    "executableSha256": "3d1621b7f67c3d753f024950871abcf18344de50c6c391f4d7eb57ed2387d2a8"
+  },
+  "updater": {
+    "manifestUrl": "https://github.com/Longyuyeee/long_Decompress/releases/latest/download/latest.json",
+    "versionVerified": true,
+    "publishedSignaturePresent": true,
+    "releaseNotesSynchronized": true,
+    "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.4.0/Long-Decompress_1.4.0_x64-setup.nsis.zip",
+    "zipSha256FromGitHub": "ea8d1beb8b221b3ecdce98e7954c089fdf26bd13b7b2f83097d461977481d30d",
+    "applicationUpdaterExecuted": false
+  }
+}

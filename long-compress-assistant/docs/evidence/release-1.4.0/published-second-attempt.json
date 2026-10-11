@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 2,
+  "startedAt": "2026-10-11T18:02:39.3250276Z",
+  "machine": {
+    "windows": "Microsoft Windows NT 10.0.22621.0",
+    "architecture": "X64"
+  },
+  "previousVersion": "1.3.9",
+  "candidateVersion": "1.4.0",
+  "checks": [
+    {
+      "name": "release-test Node.js runtime uses an admitted LTS major",
+      "passed": true,
+      "detail": "actual=22.12.0; admitted=20|22|24"
+    },
+    {
+      "name": "previous release is installed",
+      "passed": true,
+      "detail": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Long解压"
+    },
+    {
+      "name": "installed baseline version matches",
+      "passed": true,
+      "detail": "expected=1.3.9; actual=1.3.9"
+    },
+    {
+      "name": "no installed application process is running",
+      "passed": true,
+      "detail": "Close Long解压 before running installed-release validation."
+    },
+    {
+      "name": "baseline context-menu mode is valid",
+      "passed": true,
+      "detail": "actual=legacy"
+    },
+    {
+      "name": "installed workspace EdgeDriver prerequisite exists",
+      "passed": true,
+      "detail": "Set EDGE_DRIVER_PATH using scripts/install-edge-driver.ps1 before changing the installed application."
+    },
+    {
+      "name": "installed workspace tauri-driver prerequisite exists",
+      "passed": true,
+      "detail": "expected=C:\\Users\\Administrator\\.cargo\\bin\\tauri-driver.exe"
+    },
+    {
+      "name": "installed workspace encrypted RAR fixture exists",
+      "passed": true,
+      "detail": "Run npm.cmd run test:fixtures:archives first; expected=E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\external-archive-fixtures\\libarchive-rar-encrypted.rar"
+    },
+    {
+      "name": "installer exits successfully: Long-Decompress_1.4.0_x64-setup.exe",
+      "passed": true,
+      "detail": "exitCode=0"
+    },
+    {
+      "name": "uninstall registry key exists",
+      "passed": true,
+      "detail": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Long解压"
+    },
+    {
+      "name": "installed version matches",
+      "passed": true,
+      "detail": "expected=1.4.0; actual=1.4.0"
+    },
+    {
+      "name": "install location is preserved",
+      "passed": true,
+      "detail": "expected=E:\\long\\Long解压; actual=E:\\long\\Long解压"
+    },
+    {
+      "name": "installed executable exists",
+      "passed": true,
+      "detail": "E:\\long\\Long解压\\Long解压.exe"
+    },
+    {
+      "name": "installed uninstaller exists",
+      "passed": true,
+      "detail": "E:\\long\\Long解压\\uninstall.exe"
+    },
+    {
+      "name": "executable product version matches",
+      "passed": true,
+      "detail": "expected=1.4.0; actual=1.4.0"
+    },
+    {
+      "name": "one shell extension is installed",
+      "passed": true,
+      "detail": "found=long_compress_shell_extension_1_4_0.dll"
+    },
+    {
+      "name": "shell extension version matches",
+      "passed": true,
+      "detail": "expected=long_compress_shell_extension_1_4_0.dll; actual=long_compress_shell_extension_1_4_0.dll"
+    },
+    {
+      "name": "installed executable matches candidate build bytes",
+      "passed": true,
+      "detail": "expected=3D1621B7F67C3D753F024950871ABCF18344DE50C6C391F4D7EB57ED2387D2A8; actual=3D1621B7F67C3D753F024950871ABCF18344DE50C6C391F4D7EB57ED2387D2A8"
+    },
+    {
+      "name": "overlay install preserves C:\\Users\\Administrator\\AppData\\Roaming\\LongDecompress",
+      "passed": true,
+      "detail": "expected=D3FC55DF2E8C1C94012038E0458C5A2558AB993F3165BC10598A47E27FD72275; actual=D3FC55DF2E8C1C94012038E0458C5A2558AB993F3165BC10598A47E27FD72275"
+    },
+    {
+      "name": "overlay install preserves C:\\Users\\Administrator\\AppData\\Roaming\\com.longcompress.assistant",
+      "passed": true,
+      "detail": "expected=99D26F4FC452D462690B9870188004A338AB01B05A3DC7F645B38F7FE04E1371; actual=99D26F4FC452D462690B9870188004A338AB01B05A3DC7F645B38F7FE04E1371"
+    },
+    {
+      "name": "classic context-menu root is registered",
+      "passed": true,
+      "detail": "HKCU:\\Software\\Classes\\*\\shell\\LongDecompress"
+    },
+    {
+      "name": "unsigned native context-menu root is absent",
+      "passed": true,
+      "detail": "HKCU:\\Software\\Classes\\*\\shell\\LongDecompressNative"
+    },
+    {
+      "name": "classic context-menu submenus are complete and target current executable",
+      "passed": true,
+      "detail": "roots=4; commands=17; quickActions=4"
+    },
+    {
+      "name": "installed archive workspace matrix exits successfully",
+      "passed": false,
+      "detail": "exitCode=1; executable=E:\\long\\Long解压\\Long解压.exe"
+    },
+    {
+      "name": "installer exits successfully: Long-Decompress_1.3.9_x64-setup.exe",
+      "passed": true,
+      "detail": "exitCode=0"
+    },
+    {
+      "name": "restored user data matches backup for C:\\Users\\Administrator\\AppData\\Roaming\\LongDecompress",
+      "passed": true,
+      "detail": "File paths, lengths and hashes must match the original snapshot."
+    },
+    {
+      "name": "restored user data matches backup for C:\\Users\\Administrator\\AppData\\Roaming\\com.longcompress.assistant",
+      "passed": true,
+      "detail": "File paths, lengths and hashes must match the original snapshot."
+    },
+    {
+      "name": "baseline context-menu mode is restored",
+      "passed": true,
+      "detail": "expected=legacy; actual=legacy"
+    },
+    {
+      "name": "baseline context-menu target is restored",
+      "passed": true,
+      "detail": "expected=\"E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\debug\\long-compress-assistant.exe\" --browse-archive \"%1\"; actual=\"E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\debug\\long-compress-assistant.exe\" --browse-archive \"%1\""
+    },
+    {
+      "name": "baseline auto-start registration is restored",
+      "passed": true,
+      "detail": "expected=\"E:\\long\\Long解压\\Long解压.exe\" --autostart; actual=\"E:\\long\\Long解压\\Long解压.exe\" --autostart"
+    }
+  ],
+  "baselineContextMenuMode": "legacy",
+  "baselineAutoStartRegistration": "\"E:\\long\\Long解压\\Long解压.exe\" --autostart",
+  "baselineDataFingerprints": {
+    "C:\\Users\\Administrator\\AppData\\Roaming\\LongDecompress": "D3FC55DF2E8C1C94012038E0458C5A2558AB993F3165BC10598A47E27FD72275",
+    "C:\\Users\\Administrator\\AppData\\Roaming\\com.longcompress.assistant": "99D26F4FC452D462690B9870188004A338AB01B05A3DC7F645B38F7FE04E1371"
+  },
+  "recovery": "Previous installer and user-data backup restored after failure.",
+  "completedAt": "2026-10-11T18:03:35.7675179Z",
+  "succeeded": false
+}

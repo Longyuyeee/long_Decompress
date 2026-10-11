@@ -1,0 +1,29 @@
+{
+  "buildKind": "installed-production",
+  "nativePickerVerified": false,
+  "sourcePreserved": true,
+  "contentVerified": true,
+  "emptyDirectoryPreserved": true,
+  "passwordChanged": true,
+  "resplit": true,
+  "mergedAndDecrypted": true,
+  "wrongPasswordRejected": true,
+  "stagingCleaned": true,
+  "corruptInputRejected": true,
+  "uiExecutionVerified": true,
+  "historyRetryDraftVerified": true,
+  "historyRetryExecutionVerified": true,
+  "actualCancellationVerified": true,
+  "additionalTargetFormats": [
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "tar.xz",
+    "tar.zst",
+    "wim"
+  ],
+  "numericZipInputVerified": true,
+  "writingCancellationVerified": true,
+  "zipCryptoChineseUiConversionVerified": true,
+  "globalRetryRestoresConversionDraft": true
+}

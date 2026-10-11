@@ -1,0 +1,63 @@
+{
+  "buildKind": "installed-production",
+  "results": [
+    {
+      "kind": "large",
+      "inputBytes": 67108864,
+      "fileCount": 1,
+      "compressionMs": 1228.6259999999966,
+      "extractionMs": 130.03209999999672,
+      "totalMs": 1358.6580999999933,
+      "peakTemporaryBytes": 67108864,
+      "peakWorkspaceBytes": 201337292,
+      "sampleIntervalMs": 50,
+      "samples": 23,
+      "processMemory": {
+        "Id": 46404,
+        "PeakWorkingSet64": 169263104,
+        "WorkingSet64": 106344448
+      },
+      "memoryScope": "backend process lifetime peak; not per-case delta or full process tree",
+      "payloadHashesVerified": true
+    },
+    {
+      "kind": "small",
+      "inputBytes": 2048000,
+      "fileCount": 2000,
+      "compressionMs": 532.7215999999971,
+      "extractionMs": 3456.5016000000032,
+      "totalMs": 3989.2232000000004,
+      "peakTemporaryBytes": 2048000,
+      "peakWorkspaceBytes": 4417708,
+      "sampleIntervalMs": 50,
+      "samples": 45,
+      "processMemory": {
+        "Id": 46404,
+        "PeakWorkingSet64": 169263104,
+        "WorkingSet64": 102850560
+      },
+      "memoryScope": "backend process lifetime peak; not per-case delta or full process tree",
+      "payloadHashesVerified": true
+    },
+    {
+      "kind": "mixed",
+      "inputBytes": 18825216,
+      "fileCount": 2001,
+      "compressionMs": 949.2483999999968,
+      "extractionMs": 3439.4672000000064,
+      "totalMs": 4388.715600000003,
+      "peakTemporaryBytes": 18825216,
+      "peakWorkspaceBytes": 54753133,
+      "sampleIntervalMs": 50,
+      "samples": 53,
+      "processMemory": {
+        "Id": 46404,
+        "PeakWorkingSet64": 169263104,
+        "WorkingSet64": 103714816
+      },
+      "memoryScope": "backend process lifetime peak; not per-case delta or full process tree",
+      "payloadHashesVerified": true
+    }
+  ],
+  "scope": "one local-volume run per workload; sampled temporary logical file sizes may miss short peaks; no speedup claim"
+}

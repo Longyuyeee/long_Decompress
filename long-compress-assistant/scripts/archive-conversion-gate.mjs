@@ -25,10 +25,21 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
     failure = async (...args) => { try { await bridge(...args) } catch (error) { return String(error) } throw new Error('Expected failure') }
   }
   const fill = async (testId, value) => {
-    const input = await waitForElement(`[data-testid="${testId}"]`)
-    await input.sendKeys(Key.chord(Key.CONTROL, 'a'), Key.BACK_SPACE)
-    if (value) await input.sendKeys(value)
-    assert.equal(await input.getAttribute('value'), value)
+    // Vue can replace a form node while terminal task feedback settles. Only
+    // retry detached WebDriver references; keep exact input/content assertions.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const input = await waitForElement(`[data-testid="${testId}"]`)
+        await driver.wait(() => input.isEnabled(), 5000)
+        await input.sendKeys(Key.chord(Key.CONTROL, 'a'), Key.BACK_SPACE)
+        if (value) await input.sendKeys(value)
+        assert.equal(await (await waitForElement(`[data-testid="${testId}"]`)).getAttribute('value'), value)
+        return
+      } catch (error) {
+        if (error.name !== 'StaleElementReferenceError' || attempt === 2) throw error
+        console.log(`[archive-conversion] reacquire detached input: ${testId}`)
+      }
+    }
   }
   const root = path.join(fixtureDirectory, 'conversion')
   const source = path.join(root, '原始文件')
@@ -129,6 +140,7 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
   assert.deepEqual(readFileSync(path.join(uiRestored, '中文目录', '内容.bin')), payload)
   writeFileSync(path.join(artifactDirectory, 'archive-conversion-completed.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   await driver.findElement(By.css('[role="dialog"] button[aria-label="Close dialog"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="archive-conversion"]'))).length === 0, 5000)
   const historyBeforeRetry = await bridge('taskHistory')
   await (await waitForElement('[data-testid="nav-History"]')).click()
   await (await waitForElement('[data-testid="history-conversion-retry"]')).click()
