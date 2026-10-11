@@ -1886,6 +1886,9 @@ async function captureFailure() {
   }
   mkdirSync(artifactDirectory, { recursive: true })
   writeFileSync(path.join(artifactDirectory, 'tauri-driver.log'), driverOutput, 'utf8')
+  const failureDirectory = path.join(artifactDirectory, `failure-${new Date().toISOString().replace(/[:.]/g, '-')}`)
+  mkdirSync(failureDirectory, { recursive: true })
+  writeFileSync(path.join(failureDirectory, 'tauri-driver.log'), driverOutput, 'utf8')
   if (driver) {
     try {
       const screenshot = await driver.takeScreenshot()
@@ -1893,6 +1896,17 @@ async function captureFailure() {
         path.join(artifactDirectory, 'desktop-e2e-failure.png'),
         Buffer.from(screenshot, 'base64'),
       )
+      writeFileSync(path.join(failureDirectory, 'desktop-e2e-failure.png'), Buffer.from(screenshot, 'base64'))
+      const geometry = await driver.executeScript(() => ({
+        viewport: { width: innerWidth, height: innerHeight, devicePixelRatio, scale: visualViewport?.scale },
+        heading: document.querySelector('main h1')?.textContent,
+        buttons: Array.from(document.querySelectorAll('button[data-testid]')).map(element => {
+          const rect = element.getBoundingClientRect()
+          return { id: element.getAttribute('data-testid'), rect: rect.toJSON(),
+            centerHitsTarget: element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)) }
+        }),
+      }))
+      writeFileSync(path.join(failureDirectory, 'geometry.json'), JSON.stringify(geometry, null, 2))
     } catch {
       // The session may already be unavailable.
     }
@@ -6554,6 +6568,7 @@ try {
   }
   }
 } catch (error) {
+  driverOutput += `\nTest failure: ${error?.stack || error}\n`
   await captureFailure()
   throw error
 } finally {

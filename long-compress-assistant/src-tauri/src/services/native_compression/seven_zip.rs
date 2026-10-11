@@ -301,6 +301,46 @@ mod tests {
         }
     }
 
+    #[test]
+    fn encrypted_header_preserves_empty_and_unicode_archives() {
+        for (name, payload) in [(None, b"".as_slice()), (Some("x"), b"".as_slice()),
+            (Some("中文 空格.txt"), b"header and content round trip".as_slice())] {
+            let temp = tempfile::tempdir().unwrap();
+            let archive = temp.path().join("hidden.7z");
+            let mut writer = sevenz_rust::SevenZWriter::create(&archive).unwrap();
+            writer.set_content_methods(vec![
+                sevenz_rust::AesEncoderOptions::new("header-password".into()).into(),
+                sevenz_rust::lzma::LZMA2Options::with_preset(1).into(),
+            ]);
+            writer.set_encrypt_header(true);
+            if let Some(name) = name {
+                let mut entry = sevenz_rust::SevenZArchiveEntry::default();
+                entry.name = name.into();
+                entry.is_anti_item = true;
+                writer.push_archive_entry(entry, Some(std::io::Cursor::new(payload))).unwrap();
+            }
+            writer.finish().unwrap();
+            assert!(sevenz_rust::SevenZReader::open(&archive, sevenz_rust::Password::empty()).is_err());
+            assert!(sevenz_rust::SevenZReader::open(&archive, "wrong-password".into()).is_err());
+            let reader = sevenz_rust::SevenZReader::open(&archive, "header-password".into()).unwrap();
+            let names: Vec<_> = reader.archive().files.iter().map(|entry| entry.name()).collect();
+            assert_eq!(names, name.into_iter().collect::<Vec<_>>());
+            let output = temp.path().join("restored");
+            sevenz_rust::decompress_file_with_password(&archive, &output, "header-password".into()).unwrap();
+            if let Some(name) = name { assert_eq!(std::fs::read(output.join(name)).unwrap(), payload); }
+            #[cfg(windows)]
+            {
+                let engine = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/archive-engine/7z.exe");
+                let independent = temp.path().join("independent");
+                let result = std::process::Command::new(&engine)
+                    .args(["x", "-pheader-password", "-y"])
+                    .arg(format!("-o{}", independent.display())).arg(&archive).output().unwrap();
+                assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+                if let Some(name) = name { assert_eq!(std::fs::read(independent.join(name)).unwrap(), payload); }
+            }
+        }
+    }
+
     #[derive(Default)]
     struct TestRuntime {
         cancelled: Arc<AtomicBool>,

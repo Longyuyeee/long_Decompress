@@ -90,6 +90,19 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', split)
   writeFileSync(path.join(artifactDirectory, 'password-split-create-settings.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   await (await waitForElement('[data-testid="save-global-compression-settings"]')).click()
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0,
+    10_000, 'Settings dialog must finish closing before starting compression')
+  const clickGeometry = await driver.executeScript(() => {
+    const buttons = ['start-compression', 'open-global-compression-settings'].map(id => {
+      const element = document.querySelector(`[data-testid="${id}"]`)
+      const rect = element.getBoundingClientRect()
+      const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
+      return { id, rect: rect.toJSON(), centerHitsTarget: element.contains(hit), hitTestId: hit?.closest('[data-testid]')?.getAttribute('data-testid') }
+    })
+    return { viewport: { width: innerWidth, height: innerHeight, devicePixelRatio, scale: visualViewport?.scale }, buttons }
+  })
+  writeFileSync(path.join(artifactDirectory, 'start-click-geometry.json'), JSON.stringify(clickGeometry, null, 2))
+  assert.ok(clickGeometry.buttons.every(button => button.centerHitsTarget), JSON.stringify(clickGeometry))
   await (await waitForElement('[data-testid="start-compression"]')).click()
   if (fault === 'cancel') {
     await driver.wait(() => readdirSync(output).some(name => {
