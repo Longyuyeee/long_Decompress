@@ -1,5 +1,15 @@
 # 开发交接
 
+## 2026-10-11 当前候选安装生命周期与归档工作区通过
+
+- GitHub CI 38128789262 成功，候选对应代码 80693554e4e775421ed676f06fecca2133eb0c68；67232c3 仅交接文档变更。下载 windows-nsis-installer 至 test-results/candidate-8069355/Long解压_1.3.9_x64-setup.exe，19552822 B，SHA256 93e16e4bd4824bc30d837caefe02e140d4dff7305cd30fdf214fcf97149220f0；解出的正式 EXE SHA256 a22b593a6f9204e50ef56e86ebcf1b3d12ed27662405fdc5dc8a9cf1520c0dd9。未发布或升版。
+- 先确认公开 1.3.9 恢复安装器内 EXE 与当前安装 EXE 字节一致，再按用户继续确认执行关闭/备份。额外备份 test-results/pre-candidate-8069355-20261011-173949：安装目录 26 文件、两处数据目录 9/1 文件逐一哈希核对，保留本机，不上传用户数据。
+- 执行 test-installed-release.ps1，PreviousVersion/CandidateVersion 均为 1.3.9（未封板候选），CandidateExecutable 指向远端安装器实际解出的 EXE，并启用 AllowExistingInstall、RunArchiveWorkspaceMatrix。不是用本机不同构建的哈希比较远端安装包。
+- 安装生命周期 **52/52，通过**，证据 test-results/installed-release-validation/20261011-173958/result.json，UTC 09:39:58—09:41:49（北京时间 17:39:58—17:41:49）。覆盖覆盖安装、候选 EXE 字节匹配、启动/菜单注册、归档工作区、卸载、恢复基线及用户数据/菜单/自启动状态核对。
+- 正式安装版归档工作区 **12/12，通过**：正式程序无测试桥、Explorer 入口、150% 缩放无横向溢出、内部文本预览、主动内容取消、长中文路径选中解压、加密 7Z/RAR、TAR/TAR.GZ、三层 ZIP→加密7Z→ZIP、损坏提示、18万条目取消（57ms）。实际查看 a06-installed-workspace.png，取消反馈与损坏提示可见。证据 test-results/installed-archive-workspace/result.json 与 PNG；当前脚本通过正式入口供应路径，不宣称物理文件选择器验证。
+- 当前已恢复 E:/long/Long解压 原安装版 1.3.9，EXE SHA256 bb94637853084a77cc146d057f184b9fd87aa86f88e4612851e081d74b68ac56 与执行前一致；数据指纹、菜单及自启动核对通过。程序测试进程已退出，未自动重新打开用户工作窗口。脚本成功后清理自身临时样本和内部备份；上述额外备份保留，可用于恢复。
+- 边界：这不是全部 1.4.0 封板，也不是公开 1.3.9→1.4.0 升级验证；本轮未重跑媒体三类工作区。密码数字 ZIP 的完整重试/冲突链目前为隔离桌面专项通过，正式安装版专项尚需补齐，再评估开放创建入口；7Z 分卷及其余完整范围继续推进。
+
 ## 2026-10-11 正式候选构建与安装验收前置检查
 
 - 在代码 80693554e4e775421ed676f06fecca2133eb0c68 上执行 npx tauri build（未启用 VITE_DESKTOP_E2E/desktop-e2e）。正式前端、Shell 扩展与 Rust release 编译通过；npm run test:release-identity 通过，版本仍为 1.3.9，本地候选不是公开新版，不提前发布 1.4.0。
