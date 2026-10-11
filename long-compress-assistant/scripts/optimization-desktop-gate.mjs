@@ -67,7 +67,8 @@ export async function runOptimizationDesktopGate({ driver, bridge, waitForElemen
   await bridge('seedHistoryRecords', [original])
   await (await waitForElement('[data-testid="nav-History"]')).click()
   await (await waitForElement('[data-testid="history-compression-retry"]')).click()
-  assert.ok(await (await waitForElement('[data-testid="compression-fast-pack"]')).isSelected())
+  await waitForElement('[data-testid="history-compression-draft"]')
+  assert.equal((await driver.findElements(By.css('[data-testid="compression-fast-pack"]'))).length, 0, 'Removed fast-pack option must not return for legacy history')
   await clickVisible(await waitForElement('[data-testid="compression-retry-create"]'))
   await driver.wait(async () => (await driver.findElements(By.css('[data-testid="history-compression-draft"] a'))).length > 0, 15_000)
   assert.deepEqual(readdirSync(output), [], 'draft creation must not execute')
@@ -75,7 +76,7 @@ export async function runOptimizationDesktopGate({ driver, bridge, waitForElemen
   await clickVisible(draftLink)
   await (await waitForElement('[data-testid="start-compression"]')).click()
   const compression = await driver.wait(async () => (await bridge('taskHistory')).find(row => row.retryOfTaskId === original.id && row.status === 'completed'), 60_000)
-  assert.equal(compression.executionConfig.settings.fastPack, true)
+  assert.equal(compression.executionConfig.settings.fastPack, false, 'Legacy fastPack=true must not be enabled by retry')
   assert.deepEqual(compression.sourcePaths, files)
   const archive = compression.outputPath
   const savedOriginal = (await bridge('taskHistory')).find(row => row.id === original.id)
@@ -143,7 +144,7 @@ export async function runOptimizationDesktopGate({ driver, bridge, waitForElemen
   for (const source of files) assert.equal(hash(path.join(planned, path.basename(source))), hash(source))
   writeFileSync(path.join(artifactDirectory, 'optimization-user-result.json'), JSON.stringify({
     verifiedAt: new Date().toISOString(), binarySha256, testKind: 'real-ui-engine-sqlite-with-seeded-prior-record',
-    compressionId: compression.id, extractionId: extraction.id, fastPack: true, parallelOptIn: parallelEnabled, smartOptInPreviewMatchesOutput: true,
+    compressionId: compression.id, extractionId: extraction.id, fastPack: false, legacyFastPackDisabled: true, parallelOptIn: parallelEnabled, smartOptInPreviewMatchesOutput: true,
     draftDidNotExecute: true, modifiedTargetPreserved: true, outputHashesMatch: true,
     nativePickerVerified: false,
   }, null, 2))
