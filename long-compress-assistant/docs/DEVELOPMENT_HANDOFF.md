@@ -1,5 +1,13 @@
 # 开发交接
 
+## 2026-10-11 文件名加密前置：7Z 引擎兼容升级
+
+- 原锁定 sevenz-rust 0.5.4 无文件头加密设置；固定升级到 0.6.1，并在原生写入器创建时显式 `set_encrypt_header(false)`，保持已有“密码只保护内容”的行为，不能利用上游默认 true 悄悄改变用户结果。[上游 API](https://docs.rs/sevenz-rust/0.6.1/sevenz_rust/struct.SevenZWriter.html) 明示该接口及默认值。
+- 更新锁文件仅涉及 sevenz-rust 及其 bit-set/bit-vec、filetime_creation、nt-time 依赖。审查 0.6.1 源码确认 streamless entry 的 K_ANTI 序列化仍取反，保留空目录 writer-only 兼容处理并更新注释。新增既有密码压缩产物无密码仍可读文件名的断言，原错误密码拒绝、正确密码还原继续保留；7Z 相关 27 项测试通过。
+- 重要未解决边界：0.6.1 `writer.rs::write_encoded_header` 在编码头大小 + 20 不小于原头时仍直接写回原头，该分支没有以加密开关为条件。文件名加密正式开放前必须增加小归档/空目录/不同文件名的独立读取验收并解决该回退风险；不能只调用 true 就宣称文件名受保护。本轮不增加 UI 开关，功能尚未完成。
+- Debug 构建通过，SHA256 `1ea5e1d81068b5b154c212569236413756b80a4b10b13f67d3bf8e7f4a3d8a31`。完整 `--numeric-zip-password-only` 桌面回归通过（exit 0），包括单目录/多源密码固实组合、分卷还原、空目录、路径失败、运行中取消和原解锁/损坏诊断。实际查看 `test-results/desktop-e2e/7z/password-solid-multi-source/password-split-create-result.png`，两个源、三个分卷及 100% 进度正常可见。本轮无 UI 布局变化，隔离桌面回归不替代正式安装。
+- 运行中出现一次 Explorer 菜单刷新重试 os error 1018 日志，未阻断本专项；本轮不把 shell 注册行为算作已重新验收。下一步处理上述文件头写入边界后接入明确选项、配置保存/历史重试及实际页面验证；正式安装和其他 1.4.0 必做项继续保留。**未封板，不发布。**
+
 ## 2026-10-11 压缩错误前缀去重
 
 - 查明重复来源：CompressionFailed 的 Display 已带“压缩失败:”，compress_files 命令再次包裹同一前缀。命令层现在保留已有中文/英文冒号前缀，仅对没有前缀的原始错误补充操作说明，不删除原因、路径或系统错误码，不改变错误类型或取消流程。

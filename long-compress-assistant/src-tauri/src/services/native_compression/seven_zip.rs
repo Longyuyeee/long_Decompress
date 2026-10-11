@@ -16,7 +16,7 @@ const PROGRESS_EMIT_INTERVAL_BYTES: u64 = 4 * 1024 * 1024;
 
 fn archive_entry(path: &Path, name: String) -> sevenz_rust::SevenZArchiveEntry {
     let mut entry = sevenz_rust::SevenZArchiveEntry::from_path(path, name);
-    // sevenz-rust 0.5.4's writer inverts is_anti_item when serializing K_ANTI
+    // sevenz-rust 0.6.1 still inverts is_anti_item when serializing K_ANTI
     // for streamless entries. True here makes it OMIT the deletion marker.
     // Without this writer-only workaround 7-Zip silently deletes empty dirs.
     // Revisit with any dependency upgrade; external extraction tests guard it.
@@ -123,6 +123,9 @@ pub(crate) fn compress<R: CompressionRuntime>(
     let mut processed_bytes = 0u64;
     let mut writer = sevenz_rust::SevenZWriter::create(output)
         .map_err(|error| CompressionError::CompressionFailed(error.to_string()))?;
+    // Preserve the existing contents-only encryption contract while the
+    // explicit filename-encryption option is being integrated.
+    writer.set_encrypt_header(false);
 
     let level = options.level.clamp(1, 9);
     let lzma_options = sevenz_rust::lzma::LZMA2Options::with_preset(level);
@@ -384,6 +387,9 @@ mod tests {
             options,
         )
         .expect("create encrypted 7z");
+        let visible_header = sevenz_rust::SevenZReader::open(&archive, sevenz_rust::Password::empty())
+            .expect("existing password setting must keep filenames readable without a password");
+        assert!(visible_header.archive().files.iter().any(|entry| entry.name() == "secret.txt"));
         assert!(
             sevenz_rust::decompress_file_with_password(
                 &archive,
