@@ -1,5 +1,14 @@
 # 开发交接
 
+## 2026-10-11 正式安装版密码数字 ZIP 重试与冲突专项
+
+- 新增 scripts/installed-numeric-zip-gate.mjs，接入正式安装版归档工作区脚本。独立随包 7-Zip 创建 ASCII 含空格密码 AES ZIP，再切成 9 个 37 字节数字卷；使用生产 Tauri 文件拖入事件供应首卷路径，通过真实页面启动、填写密码、确认重试草稿、再次启动和选择“保留两者”。不使用开发测试桥或修改 store 伪造结果；查询历史使用生产命令并限定人工来源路径。
+- 实测通过：密码空格不丢失；创建草稿不立即解压；冲突等待阶段不保存伪失败重试记录；默认 920×620 下重命名按钮可见且可命中；已有文件内容不变，新文件逐字匹配，全部源卷保留。WebView 刷新后，原失败与新成功记录逐字段一致，历史页面检索恰好两条。这里是页面刷新，不夸大为进程重启。
+- 实际查看 test-results/installed-archive-workspace/installed-numeric-conflict.png 和 installed-numeric-history.png。固定按钮可操作，历史正确区分原失败与重试成功；截图仍出现前一损坏样本残留的错误通知，且错误存在时整组通知前置（既有设计），不宣称提示上下文与遮挡全部解决。
+- 使用上一轮同一正式候选（代码 8069355、安装器 SHA256 93e16e4bd4824bc30d837caefe02e140d4dff7305cd30fdf214fcf97149220f0），本轮只增加验收脚本。安装生命周期再次 **52/52**，工作区 **13/13**；test-results/installed-release-validation/20261011-174411/result.json，UTC 09:44:11—09:46:12；归档证据 test-results/installed-archive-workspace/result.json。脚本语法与 git diff --check 通过。
+- 已恢复原安装版 EXE，SHA256 bb94637853084a77cc146d057f184b9fd87aa86f88e4612851e081d74b68ac56；用户数据、菜单、自启动核对通过，测试进程退出。额外备份 pre-candidate-8069355-20261011-173949 仍保留本机；临时人工归档与安装验收内部备份按成功路径清理。
+- 边界与下一步：正式安装版本轮覆盖 ASCII 含空格密码；UTF-8 中文密码完整界面链目前仅隔离调试专项通过，仍需把相同编码样本带入正式安装版验证，再评估开放创建入口。密码分卷创建、7Z 分卷及其他既定功能并未因本轮测试自动完成。当前发布版 1.3.9，1.4.0 未封板。
+
 ## 2026-10-11 当前候选安装生命周期与归档工作区通过
 
 - GitHub CI 38128789262 成功，候选对应代码 80693554e4e775421ed676f06fecca2133eb0c68；67232c3 仅交接文档变更。下载 windows-nsis-installer 至 test-results/candidate-8069355/Long解压_1.3.9_x64-setup.exe，19552822 B，SHA256 93e16e4bd4824bc30d837caefe02e140d4dff7305cd30fdf214fcf97149220f0；解出的正式 EXE SHA256 a22b593a6f9204e50ef56e86ebcf1b3d12ed27662405fdc5dc8a9cf1520c0dd9。未发布或升版。

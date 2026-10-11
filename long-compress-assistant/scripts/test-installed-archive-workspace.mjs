@@ -6,6 +6,7 @@ import { tmpdir, homedir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
+import { runInstalledNumericZipGate } from './installed-numeric-zip-gate.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const application = process.env.TAURI_APP_BINARY
@@ -325,6 +326,7 @@ try {
   record('installed large-archive cancellation', `${Date.now() - cancelStartedAt} ms`)
 
   writeFileSync(path.join(evidenceRoot, 'a06-installed-workspace.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  await runInstalledNumericZipGate({ driver, fixtureRoot, evidenceRoot, run, sevenZip: installedSevenZip, waitForElement, record })
   writeFileSync(path.join(evidenceRoot, 'result.json'), JSON.stringify({ schemaVersion: 1, application, checks }, null, 2))
   console.log('Real installed Windows archive-workspace matrix passed.')
 } catch (error) {
