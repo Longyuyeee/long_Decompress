@@ -22,6 +22,7 @@ import { runOptimizationDesktopGate, runSavedLocationDesktopGate } from './optim
 import { runMediaHistoryDesktopGate } from './media-history-desktop-gate.mjs'
 import { runPasswordSplitCreationGate } from './password-split-creation-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
+import { runSevenZipVolumeUiGate } from './seven-zip-volume-ui-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -4821,6 +4822,7 @@ try {
     completedSuccessfully = true
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
   } else if (numericZipPasswordOnly) {
+    await runSevenZipVolumeUiGate({ driver, callDesktopBridge, waitForElement, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
     await runSevenZipVolumeReadGate({ callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
     await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory })
     const source = path.join(fixtureDirectory, '中文内容.txt')
