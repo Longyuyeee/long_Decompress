@@ -116,3 +116,6 @@ proptest = "1.4"
 default = []
 custom-protocol = ["tauri/custom-protocol"]
 desktop-e2e = []
+
+[patch.crates-io]
+sevenz-rust = { path = "vendor/sevenz-rust" }

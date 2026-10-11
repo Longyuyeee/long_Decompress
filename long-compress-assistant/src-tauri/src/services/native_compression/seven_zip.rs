@@ -267,6 +267,40 @@ mod tests {
     use super::*;
     use crate::models::compression::TaskLogSeverity;
 
+    #[test]
+    fn encrypted_small_header_never_falls_back_to_plaintext() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("hidden.7z");
+        let mut writer = sevenz_rust::SevenZWriter::create(&archive).unwrap();
+        writer.set_content_methods(vec![
+            sevenz_rust::AesEncoderOptions::new("header-password".into()).into(),
+            sevenz_rust::lzma::LZMA2Options::with_preset(1).into(),
+        ]);
+        writer.set_encrypt_header(true);
+        let mut entry = sevenz_rust::SevenZArchiveEntry::default();
+        entry.name = "x".into();
+        entry.is_directory = true;
+        entry.is_anti_item = true;
+        writer.push_archive_entry::<std::io::Empty>(entry, None).unwrap();
+        writer.finish().unwrap();
+        assert!(sevenz_rust::SevenZReader::open(&archive, sevenz_rust::Password::empty()).is_err(),
+            "filename encryption must not silently expose even a tiny empty-directory header");
+        let reader = sevenz_rust::SevenZReader::open(&archive, "header-password".into()).unwrap();
+        assert_eq!(reader.archive().files[0].name(), "x");
+        assert!(sevenz_rust::SevenZReader::open(&archive, "wrong-password".into()).is_err());
+        #[cfg(windows)]
+        {
+            let engine = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/archive-engine/7z.exe");
+            let wrong = std::process::Command::new(&engine)
+                .args(["l", "-slt", "-pwrong-password", "-y"]).arg(&archive).output().unwrap();
+            assert!(!wrong.status.success(), "independent reader must reject wrong header password");
+            let correct = std::process::Command::new(&engine)
+                .args(["l", "-slt", "-pheader-password", "-y"]).arg(&archive).output().unwrap();
+            assert!(correct.status.success(), "{}", String::from_utf8_lossy(&correct.stderr));
+            assert!(String::from_utf8_lossy(&correct.stdout).contains("Path = x"));
+        }
+    }
+
     #[derive(Default)]
     struct TestRuntime {
         cancelled: Arc<AtomicBool>,

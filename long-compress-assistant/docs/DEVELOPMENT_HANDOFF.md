@@ -1,5 +1,14 @@
 # 开发交接
 
+## 2026-10-11 7Z 加密文件头明文回退修复
+
+- 已实际复现上轮风险：直接请求 `set_encrypt_header(true)`，只加入名称为 x 的空目录，上游 0.6.1 仍可无密码读取文件名；新增 `encrypted_small_header_never_falls_back_to_plaintext` 在未修复依赖上失败，保留该断言作为回归，不以增加文件名长度绕过问题。
+- 将固定版本 sevenz-rust 0.6.1 源码、示例及 Apache-2.0 许可证纳入 `src-tauri/vendor/sevenz-rust`，用 Cargo patch 指向仓库内依赖，不修改机器缓存；锁文件改为本地依赖。补丁仅在写头时识别 AES 方法，禁止已加密文件头因体积较大回退明文，未加密头仍保留原回退规则。`LONG_PATCHES.md` 记录来源校验和、范围与升级注意事项；逐文件 SHA256 对比确认除 writer.rs 和新增说明外，所纳入上游文件未改。
+- 回归现已通过：无密码/错误密码无法打开文件头，正确密码读回 x；本机随包独立 7-Zip 同样拒绝错误密码、正确密码列出 x。7Z 相关 28/28 测试通过。当前测试重点是原先失败的极小空目录归档，尚不把它视为完整产品开关验收。提交审计另清理了上游 README/CHANGELOG 的原有行尾空白，正文未改，已记录在补丁说明。
+- 产品仍显式 `set_encrypt_header(false)`，保持已有行为，没有新增 UI 开关。Debug 构建通过，SHA256 `27efcdae96594504fc019fd4c43c48e58a97a9a6fea6e04b1c1adec7280eff64`；依赖原有未使用 trait 和 lifetime 写法警告未改。
+- **本轮完整桌面回归未通过，不沿用上轮结论。** 首次在 ZIP 密码重试等待 failed-extraction-retry 超时，实际查看截图时位于特殊压缩页；原样重跑已通过该段并完成进程重启，但在首个 7Z 创建场景点击 start-compression 时被 open-global-compression-settings 拦截。已查看第二次截图，两按钮视觉分开，任务尚等待，不能直接判断产品布局回归或外部窗口/缩放变化。没有强制点击、放宽断言或修改布局掩盖失败。最新截图 `test-results/desktop-e2e/desktop-e2e-failure.png` 为第二次失败；第一次截图被脚本同名输出覆盖，首次原因以本条记录为准。
+- 下一步先定位桌面坐标/窗口稳定性问题并补跑完整回归，再继续零条目、不同文件名/内容的加密文件头边界，随后落实选项、配置、历史重试和真实页面。正式安装及其他 1.4.0 必做项仍待完成，**未封板**。
+
 ## 2026-10-11 文件名加密前置：7Z 引擎兼容升级
 
 - 原锁定 sevenz-rust 0.5.4 无文件头加密设置；固定升级到 0.6.1，并在原生写入器创建时显式 `set_encrypt_header(false)`，保持已有“密码只保护内容”的行为，不能利用上游默认 true 悄悄改变用户结果。[上游 API](https://docs.rs/sevenz-rust/0.6.1/sevenz_rust/struct.SevenZWriter.html) 明示该接口及默认值。
