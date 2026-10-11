@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-10-11 独立 .longtask 模板 ZIP 编码恢复
+
+- 审计发现配置组 extra_params 中的 zip_password_encoding 未进入独立模板，导入又重建空 extra_params，导致 Windows 兼容模式丢失。TemplateCompression 新增可选强类型 zipPasswordEncoding，ZIP 导出只携带此明确字段，导入恢复到既有配置组参数链，不打包其他引擎参数。
+- 旧模板缺字段时仍保持无显式编码，应用默认 UTF-8；未知编码值拒绝解析。新字段仍使用 v1 可选扩展，旧版严格解析器可能拒绝带字段的新模板，不承诺旧应用向后读取新字段。密码内容仍不随模板保存。
+- 验证：实际人工模板文件导出→预览→摘要确认导入，覆盖无字段、显式 UTF-8、Windows 兼容及 128 MiB 分卷，密码/额外参数不携带。Rust task_template 9/9；前端 taskTemplateDraft 2/2，覆盖编码与分卷设置恢复；类型检查通过。
+- 本轮未修改 UI，未新增页面验收，不声称模板导入界面的完整交互已重测。接续目录/密码分卷组合入口开放与端到端验收，其他 1.4.0 完整计划继续保留；尚未封板。
+
 ## 2026-10-11 产物失效反馈与路径复制
 
 - Windows 定位文件的元数据错误增加稳定子码，区分 not-found、permission-denied、unavailable，保留原 EXPLORER_PATH_UNAVAILABLE 前缀及底层详情。前端分别提示找不到记录文件、权限不足、其他访问问题，不把未知磁盘/网络错误断言成文件已删除。

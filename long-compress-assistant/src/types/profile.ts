@@ -130,6 +130,7 @@ export interface TaskTemplate {
     level: number
     splitArchive: boolean
     splitSizeMib: number | null
+    zipPasswordEncoding?: 'utf8' | 'windows_local'
     keepStructure: boolean
     verifyAfter: boolean
     createSolidArchive: boolean
