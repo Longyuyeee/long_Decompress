@@ -196,6 +196,7 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
   assert.equal(await (await waitForElement('[data-testid="conversion-output"]')).getAttribute('value'), '')
   assert.equal(await (await waitForElement('[data-testid="conversion-password"]')).getAttribute('value'), '')
   assert.equal(existsSync(writingCancelOutput), false)
+  await driver.wait(() => driver.executeScript(`const d=document.querySelector('[role="dialog"]');return !!d && getComputedStyle(d).opacity==='1' && d.getAnimations({subtree:true}).every(a=>a.playState!=='running')`), 5000)
   writeFileSync(path.join(artifactDirectory, 'archive-conversion-global-retry.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   await fill('conversion-source', original)
   await fill('conversion-source-password', 'old-password')

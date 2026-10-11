@@ -42,6 +42,11 @@ pub fn open_entry<'a, R: std::io::Read + std::io::Seek>(
     let Some(local) = local else {
         return archive.by_index_decrypt(index, password.as_bytes());
     };
+    // In a mixed archive a supplied password also reaches plain entries. They
+    // accept any password bytes; that is not an ambiguous encryption header.
+    if !archive.by_index_raw(index)?.encrypted() {
+        return archive.by_index(index);
+    }
     let mismatch = match archive.by_index_decrypt(index, password.as_bytes()) {
         Ok(_) => false,
         Err(zip_aes::result::ZipError::InvalidPassword) => true,
@@ -165,6 +170,25 @@ mod tests {
             assert_eq!(encode(value, ZipPasswordEncoding::default()).unwrap(), value.as_bytes());
         }
         assert!(serde_json::from_str::<ZipPasswordEncoding>("\"unknown\"").is_err());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn plain_entries_are_not_fully_read_during_encoding_selection() {
+        use std::io::{Cursor, Read, Write};
+        let mut writer = zip_aes::ZipWriter::new(Cursor::new(Vec::new()));
+        writer.start_file("plain", zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Stored)).unwrap();
+        writer.write_all(b"nonempty payload").unwrap();
+        let data = writer.finish().unwrap();
+        let mut archive = zip_aes::ZipArchive::new(data.clone()).unwrap();
+        let start = archive.by_index_raw(0).unwrap().data_start().unwrap() as usize;
+        let mut damaged = data.into_inner(); damaged[start] ^= 1;
+        let mut archive = zip_aes::ZipArchive::new(Cursor::new(damaged)).unwrap();
+        // Opening an unencrypted entry does not pre-read its whole payload;
+        // the subsequent real read must still reject the broken CRC.
+        let mut entry = open_entry(&mut archive, 0, "中文密码").unwrap();
+        assert!(entry.read_to_end(&mut Vec::new()).is_err());
     }
 
     #[cfg(windows)]
