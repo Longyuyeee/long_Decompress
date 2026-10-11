@@ -21,6 +21,7 @@ export const compressionStatusTranslationKey = (
 ) => `compress.status.${status}`
 
 export const compressionStageTranslationKey = (task?: Task) => {
+  if (isFinishedCompressionStatus(task?.status)) return compressionStatusTranslationKey(task?.status)
   if (task?.status === 'paused') return 'compress.status.paused'
   if (!task?.stage) {
     return compressionStatusTranslationKey(task?.status || 'pending')

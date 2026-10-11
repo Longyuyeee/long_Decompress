@@ -28,6 +28,27 @@ const mountWithPinia = (component: Parameters<typeof mount>[0], props: Record<st
   })
 
 describe('compression presentation components', () => {
+  it('separates source size from splitting bytes and waits for a published result', async () => {
+    const base = task('compressing', {
+      stage: 'Splitting', processedBytes: 1024 * 1024, totalBytes: 2 * 1024 * 1024,
+      outputBytes: 1024 * 1024,
+      compressionSourceProgress: { processedBytes: 10 * 1024 * 1024, totalBytes: 10 * 1024 * 1024 },
+    })
+    const wrapper = mountWithPinia(CompressionExecutionPanel, { task: base })
+    expect(wrapper.text()).toContain('10 MB')
+    expect(wrapper.text()).toContain('已写分卷')
+    expect(wrapper.text()).toContain('完成后统计')
+    expect(wrapper.text()).not.toContain('节省')
+    await wrapper.setProps({ task: { ...base, status: 'completed', stage: 'Finalizing', outputBytes: 2 * 1024 * 1024 } })
+    expect(wrapper.text()).toContain('已完成')
+    expect(wrapper.text()).toContain('节省 80.00%')
+    for (const status of ['failed', 'cancelled']) {
+      await wrapper.setProps({ task: { ...base, status } })
+      expect(wrapper.text()).toContain('未生成有效结果')
+      expect(wrapper.text()).not.toContain('节省')
+    }
+  })
+
   beforeEach(() => {
     setActivePinia(createPinia())
   })
