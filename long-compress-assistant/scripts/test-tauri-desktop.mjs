@@ -4952,7 +4952,12 @@ try {
     }, null, 2))
     // This gate seeds an isolated password vault; run it last so those candidates
     // cannot auto-unlock fixtures whose earlier UI checks require manual input.
-    await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, format: '7z' })
+    for (const password of ['', '中文密码 + !测试']) {
+      for (const solid of [false, true]) {
+        console.log(`[desktop-e2e] 7Z split creation encrypted=${Boolean(password)} solid=${solid}`)
+        await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, format: '7z', password, solid, bundledSevenZip })
+      }
+    }
     await runSevenZipVolumeReadGate({ driver, waitForElement, callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
     completedSuccessfully = true
     console.log('Real Windows numeric ZIP password and rename-commit command gate passed.')

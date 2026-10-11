@@ -537,7 +537,7 @@ const closeVaultPasswordsAfterFocus = () => {
             <span><strong>{{ appStore.t('preset.verify_after') }} <HelpHint label="压缩完成后校验说明">{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</HelpHint></strong></span>
           </label>
           <label v-if="compressionOptions.format === '7z'" class="advanced-option">
-            <input v-model="compressionOptions.createSolidArchive" type="checkbox" />
+            <input data-testid="compression-solid-toggle" v-model="compressionOptions.createSolidArchive" type="checkbox" />
             <span><strong>固实压缩 <HelpHint label="固实压缩说明">提高同类文件压缩率，但单文件提取更慢</HelpHint></strong></span>
           </label>
         </div>

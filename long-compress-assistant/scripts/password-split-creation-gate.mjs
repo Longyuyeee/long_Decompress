@@ -3,11 +3,19 @@ import { mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { By } from 'selenium-webdriver'
+import { spawnSync } from 'node:child_process'
 
-export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip' }) {
+export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip }) {
   if (format !== 'zip') {
     fixtureDirectory = path.join(fixtureDirectory, format)
     artifactDirectory = path.join(artifactDirectory, format)
+    mkdirSync(fixtureDirectory, { recursive: true })
+    mkdirSync(artifactDirectory, { recursive: true })
+  }
+  if (format === '7z') {
+    const scenario = `${password ? 'password' : 'plain'}-${solid ? 'solid' : 'non-solid'}`
+    fixtureDirectory = path.join(fixtureDirectory, scenario)
+    artifactDirectory = path.join(artifactDirectory, scenario)
     mkdirSync(fixtureDirectory, { recursive: true })
     mkdirSync(artifactDirectory, { recursive: true })
   }
@@ -40,11 +48,16 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     const input = await waitForElement(`[data-testid="${id}"]`)
     await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', input)
     await input.clear()
-    await input.sendKeys(value)
+    if (value) await input.sendKeys(value)
     return input
   }
-  const password = '中文密码 + !测试'
   await fill('compression-password-input', password)
+  if (format === '7z') {
+    const input = await waitForElement('[data-testid="compression-solid-toggle"]')
+    await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', input)
+    if ((await input.isSelected()) !== solid) await input.click()
+    writeFileSync(path.join(artifactDirectory, 'solid-settings.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  }
   const split = await waitForElement('[data-testid="compression-split-toggle"]')
   assert.equal(await split.isEnabled(), true)
   await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', split)
@@ -78,6 +91,13 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   assert.ok(snapshots.every(bytes => bytes.length <= 1024 * 1024))
   assert.equal(snapshots[0].length, 1024 * 1024)
   assert.equal(snapshots[1].length, 1024 * 1024)
+  if (format === '7z') {
+    assert.ok(bundledSevenZip, '7Z matrix needs an independent archive metadata check')
+    const listing = spawnSync(bundledSevenZip, ['l', '-slt', ...(password ? [`-p${password}`] : []), parts[0]], { encoding: 'utf8', timeout: 30_000 })
+    assert.equal(listing.status, 0, listing.stderr || listing.stdout)
+    assert.match(listing.stdout, solid ? /Solid = \+/ : /Solid = -/)
+    assert.match(listing.stdout, password ? /Encrypted = \+/ : /Encrypted = -/)
+  }
   const extracted = path.join(fixtureDirectory, '创建后解压')
   if (productionIpc) {
     await productionIpc('extract_file', { taskId: `installed-create-roundtrip-${Date.now()}`, filePath: parts[0], outputPath: extracted, password,
@@ -97,7 +117,7 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   const history = await readHistory()
   assert.ok(history.some(row => row.status === 'completed' && row.sourcePaths.includes(folder)))
   writeFileSync(path.join(artifactDirectory, 'password-split-create.json'), JSON.stringify({
-    volumeCount: parts.length, task, buildKind: productionIpc ? 'installed-production' : 'isolated-desktop-e2e', nativePickerVerified: false, extractionViaProductionCommand: true,
-    checks: ['UI password and split settings', 'UI start compression', 'real directory and multiple files', '1 MiB numeric volumes', 'verified publication', 'extracted payload and empty directory', 'source and volumes preserved', 'completed compression history'],
+    format, encrypted: Boolean(password), solid, volumeCount: parts.length, task, buildKind: productionIpc ? 'installed-production' : 'isolated-desktop-e2e', nativePickerVerified: false, extractionViaProductionCommand: true,
+    checks: ['UI password and split settings', ...(format === '7z' ? ['UI solid toggle', 'independent 7-Zip solid/encryption metadata'] : []), 'UI start compression', 'real directory and multiple files', '1 MiB numeric volumes', 'verified publication', 'extracted payload and empty directory', 'source and volumes preserved', 'completed compression history'],
   }, null, 2))
 }
