@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 
-export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory }) {
+export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc }) {
   const folder = path.join(fixtureDirectory, '真实密码分卷目录')
   mkdirSync(path.join(folder, '空目录'), { recursive: true })
   const payload = randomBytes(2 * 1024 * 1024)
@@ -11,12 +11,18 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   writeFileSync(path.join(folder, '说明.txt'), '中文内容与空格密码')
   const output = path.join(fixtureDirectory, '创建分卷输出')
   mkdirSync(output)
-  await callDesktopBridge('clearCompressionWorkspace')
-  await callDesktopBridge('clearTasks')
+  if (!productionIpc) {
+    await callDesktopBridge('clearCompressionWorkspace')
+    await callDesktopBridge('clearTasks')
+  }
   await (await waitForElement('[data-testid="nav-Compress"]')).click()
   await waitForElement('[data-testid="compression-header"]')
-  await callDesktopBridge('queueDesktopDialogSelections', [[folder]])
-  await (await waitForElement('[data-testid="dropzone-folder"]')).click()
+  if (productionIpc) {
+    await productionIpc('tauri', { __tauriModule: 'Event', message: { cmd: 'emit', event: 'tauri://file-drop', windowLabel: null, payload: [folder] } })
+  } else {
+    await callDesktopBridge('queueDesktopDialogSelections', [[folder]])
+    await (await waitForElement('[data-testid="dropzone-folder"]')).click()
+  }
   await waitForElement('[data-testid="compression-draft-row"]')
   await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
   const fill = async (id, value) => {
@@ -43,12 +49,16 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   writeFileSync(path.join(artifactDirectory, 'password-split-create-settings.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
   await (await waitForElement('[data-testid="save-global-compression-settings"]')).click()
   await (await waitForElement('[data-testid="start-compression"]')).click()
+  const readHistory = async () => productionIpc
+    ? (await productionIpc('list_task_history_page', { limit: 100, query: { text: folder } })).records
+    : callDesktopBridge('taskHistory')
   const task = await driver.wait(async () => {
+    if (productionIpc) return (await readHistory()).find(row => row.sourcePaths.includes(folder)) || false
     const rows = await callDesktopBridge('compressionVerificationTaskState')
     return rows.find(row => ['completed', 'failed', 'cancelled'].includes(row.status)) || false
   }, 90_000)
   assert.equal(task.status, 'completed', JSON.stringify(task))
-  assert.equal(task.verifyAfter, true)
+  assert.equal(productionIpc ? task.executionConfig?.settings?.verifyAfter : task.verifyAfter, true)
   const parts = readdirSync(output).filter(name => /\.zip\.\d+$/.test(name)).sort().map(name => path.join(output, name))
   assert.equal(parts.length, 3, JSON.stringify(readdirSync(output)))
   const snapshots = parts.map(file => readFileSync(file))
@@ -56,7 +66,13 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   assert.equal(snapshots[0].length, 1024 * 1024)
   assert.equal(snapshots[1].length, 1024 * 1024)
   const extracted = path.join(fixtureDirectory, '创建后解压')
-  await callDesktopBridge('extractArchive', parts[0], extracted, password)
+  if (productionIpc) {
+    await productionIpc('extract_file', { taskId: `installed-create-roundtrip-${Date.now()}`, filePath: parts[0], outputPath: extracted, password,
+      options: { preserve_paths: true, create_subdirectory: false, delete_after: false, conflict_policy: 'rename',
+        overwrite_existing: false, preserve_timestamps: true, skip_corrupted: false, extract_only_newer: false, file_filter: null } })
+  } else {
+    await callDesktopBridge('extractArchive', parts[0], extracted, password)
+  }
   const restored = path.join(extracted, path.basename(folder))
   assert.deepEqual(readFileSync(path.join(restored, '数据.bin')), payload)
   assert.equal(readFileSync(path.join(restored, '说明.txt'), 'utf8'), '中文内容与空格密码')
@@ -64,10 +80,10 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   assert.deepEqual(readFileSync(path.join(folder, '数据.bin')), payload)
   parts.forEach((file, index) => assert.deepEqual(readFileSync(file), snapshots[index]))
   writeFileSync(path.join(artifactDirectory, 'password-split-create-result.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
-  const history = await callDesktopBridge('taskHistory')
+  const history = await readHistory()
   assert.ok(history.some(row => row.status === 'completed' && row.sourcePaths.includes(folder)))
   writeFileSync(path.join(artifactDirectory, 'password-split-create.json'), JSON.stringify({
-    volumeCount: parts.length, task, nativePickerVerified: false, extractionViaProductionCommand: true,
+    volumeCount: parts.length, task, buildKind: productionIpc ? 'installed-production' : 'isolated-desktop-e2e', nativePickerVerified: false, extractionViaProductionCommand: true,
     checks: ['UI password and split settings', 'UI start compression', 'real directory and multiple files', '1 MiB numeric volumes', 'verified publication', 'extracted payload and empty directory', 'source and volumes preserved', 'completed compression history'],
   }, null, 2))
 }

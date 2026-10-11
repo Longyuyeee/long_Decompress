@@ -1,5 +1,13 @@
 # 开发交接
 
+## 2026-10-11 新正式安装版密码分卷创建闭环通过
+
+- 为修复提交 0a3aa2c 手动触发 CI 38131166702，Windows package 成功（5m19s）。候选 test-results/candidate-0a3aa2c/Long解压_1.3.9_x64-setup.exe，19561428 字节，SHA256 8d673de3714e2977c2fce965c4064ade4276e23cf5fdaf936d42dce885bff785；解出 EXE SHA256 a6bc4819c40fa86c9631ef9c45e916b5cffcc0be93b0e29b71116c207028d538。仍为未发布候选 1.3.9，不是已封板 1.4.0。
+- 将 password-split-creation-gate 复用于正式安装测试：生产文件拖入事件供应人工目录路径，其后页面填写中文含空格密码、1 MiB 分卷与输出目录、保留结构/不删源/完成后校验，点击保存和开始。通过生产分页历史命令确认终态及 verifyAfter；实际生成恰好 3 卷，前两卷各 1048576 字节，第三卷不超过此大小。生产 extract_file 命令解压后随机载荷、中文文本和空目录正确，源文件与卷内容不变。正式应用无 desktop-e2e 测试桥；不宣称物理拖拽或原生选择器操作，也不将命令解压描述为全程解压页面操作。
+- 安装生命周期 52/52、工作区 15/15 通过。证据 test-results/installed-release-validation/20261011-182006/result.json（北京时间 18:20:06—18:22:02），test-results/installed-archive-workspace/result.json 及 password-split-create.json。已实际查看 password-split-create-settings.png 和 password-split-create-result.png，设置与完成状态可见。脚本共享改动的隔离桌面 numeric-zip-password-only 回归也通过，脚本语法及 diff 检查通过。
+- 已恢复原安装版 EXE 哈希 bb94637853084a77cc146d057f184b9fd87aa86f88e4612851e081d74b68ac56，用户数据、菜单和自启动逐项核对通过；未自动打开用户工作窗口。成功验收的临时人工样本与脚本内部备份由既有脚本清理，原有额外备份保留；上一轮被拒绝清理的失败人工样本未另行处理。
+- 页面待修：正式结果截图再次显示“全部完成”与环形 66% 并存。当前仅确认实际截图不一致，不能认定只是动画；下一步检查终态进度和迟到事件、动画显示，并实际页面复核。随后继续 7Z 分卷/文件名加密、密码兼容及转换等既定范围。新正式 ZIP 创建闭环通过不代表外部 UTF-8 中文密码互操作或全部版本范围完成，1.4.0 仍未封板。
+
 ## 2026-10-11 真实创建闭环发现并修复单位与空目录问题
 
 - 新增 scripts/password-split-creation-gate.mjs，接入 --numeric-zip-password-only。通过真实压缩中心选择人工目录、全局设置填写中文含空格密码、1 MiB 分卷并点击开始；目录含 2 MiB 随机数据、中文文本和空目录。文件选择返回值由隔离测试桥提供，不宣称操作物理文件选择器；压缩实际由页面提交生产命令，解压由测试桥调用生产 extract_file。
