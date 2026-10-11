@@ -53,7 +53,7 @@ describe('compression format helpers', () => {
     expect(COMPRESSIBLE_FORMATS.some(format => format.value === 'lzma' && format.requires7za)).toBe(true)
     expect(COMPRESSIBLE_FORMATS.some(format => format.value === 'wim' && format.engineFormat === 'wim')).toBe(true)
     expect(COMPRESSIBLE_FORMATS.find(format => format.value === 'zip')?.supportsSplit).toBe(true)
-    expect(COMPRESSIBLE_FORMATS.find(format => format.value === '7z')?.supportsSplit).toBe(false)
+    expect(COMPRESSIBLE_FORMATS.find(format => format.value === '7z')?.supportsSplit).toBe(true)
   })
 
   it('builds decompression accept list from supported extensions', () => {

@@ -117,8 +117,8 @@ describe('CompressionSettingsPanel split archive settings', () => {
     expect(toggle.attributes('disabled')).toBeUndefined()
   })
 
-  it('preserves ZIP split settings when entering, changing or clearing a password', async () => {
-    const wrapper = mountPanel(settings({ splitArchive: true, splitSize: '128' }))
+  it.each(['zip', '7z'])('preserves %s split settings when entering, changing or clearing a password', async (format) => {
+    const wrapper = mountPanel(settings({ format, splitArchive: true, splitSize: '128' }))
     await flushPromises()
     for (const password of ['中文密码 + !测试', 'second secret', '']) {
       await wrapper.get('[data-testid="compression-password-input"]').setValue(password)
@@ -127,7 +127,7 @@ describe('CompressionSettingsPanel split archive settings', () => {
       expect(emitted).toMatchObject({ password, splitArchive: true, splitSize: '128' })
       expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeUndefined()
     }
-    await wrapper.setProps({ modelValue: settings({ password: 'template secret', splitArchive: true, splitSize: '256' }) })
+    await wrapper.setProps({ modelValue: settings({ format, password: 'template secret', splitArchive: true, splitSize: '256' }) })
     await flushPromises()
     expect((wrapper.get('[data-testid="compression-split-toggle"]').element as HTMLInputElement).checked).toBe(true)
     expect((wrapper.get('[data-testid="compression-split-size"]').element as HTMLInputElement).value).toBe('256')

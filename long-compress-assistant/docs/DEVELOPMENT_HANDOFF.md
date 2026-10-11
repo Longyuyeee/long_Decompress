@@ -1,5 +1,14 @@
 # 开发交接
 
+## 2026-10-11 7Z 分卷创建入口接通
+
+- 基于此前已验证的原生 7Z 创建/读取路径，前后端能力表开启 7Z 分卷；请求校验允许 ZIP/7Z 密码分卷，RAR/TAR 限制不变。压缩设置允许 7Z 同时启用密码和分卷，帮助说明改为通用分卷及同目录要求，移除“仅 ZIP”的过时描述。没有新建文件名加密选项，也未宣称该项已完成。
+- 前端格式/设置测试 14/14，Rust 格式测试 8/8，服务测试 53 通过/1 原有忽略，vue-tsc/Vite 与 desktop-e2e debug 构建通过。保留其他不支持组合的拒绝断言。
+- 扩展 `password-split-creation-gate.mjs` 支持明确选择 7Z。实际页面添加目录（2 MiB 随机文件、中文文本及空目录），选择 7Z、中文空格特殊字符密码、1 MiB 分卷、保持结构、完成校验、不删除源文件；生成 3 卷，前两卷精确 1 MiB，每卷均不超过限制。生产命令解压后文件逐字节一致、空目录恢复，源数据及卷字节不变、历史完成记录存在。完整 `--numeric-zip-password-only`（含新的 7Z 创建专项）通过。
+- 已实际查看 `test-results/desktop-e2e/7z/password-split-create-settings.png` 与 `password-split-create-result.png`：7Z 后缀、密码与分卷可同时设置，保存按钮可见，完成页 100%。结构化证据同目录 `password-split-create.json`。这是隔离桌面页面 + 生产命令，文件选择返回值由测试提供；不是物理选择器或本次正式安装包验收。
+- Debug EXE SHA256：`c05b97b84d14d85a7bab06bf7ef8244beebd4a12d6ef0b663a2d6854d90fb36a`。上次正式候选 84e3a0b 不包含本轮入口变更，不沿用其安装通过结论覆盖本轮。
+- 下一步补 7Z 创建组合（无密码/固实/多源任务及失败取消）实际入口覆盖，并推进明确文件名加密选项；随后再汇总正式安装验收。其余 1.4.0 范围未完成，**尚未封板，不升版发布**。
+
 ## 2026-10-11 当前正式安装候选 84e3a0b 验证完成
 
 - 候选代码：`84e3a0ba7bce30c13c777bdc06b9b1ff94468767`。GitHub Actions [38134973580](https://github.com/Longyuyeee/long_Decompress/actions/runs/38134973580) Windows package 成功（7m32s），版本一致性检查通过。保持 1.3.9，未封板、未创建 Release。

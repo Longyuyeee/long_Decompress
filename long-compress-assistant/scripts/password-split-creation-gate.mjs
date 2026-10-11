@@ -2,8 +2,15 @@ import assert from 'node:assert/strict'
 import { mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
+import { By } from 'selenium-webdriver'
 
-export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc }) {
+export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip' }) {
+  if (format !== 'zip') {
+    fixtureDirectory = path.join(fixtureDirectory, format)
+    artifactDirectory = path.join(artifactDirectory, format)
+    mkdirSync(fixtureDirectory, { recursive: true })
+    mkdirSync(artifactDirectory, { recursive: true })
+  }
   const folder = path.join(fixtureDirectory, '真实密码分卷目录')
   mkdirSync(path.join(folder, '空目录'), { recursive: true })
   const payload = randomBytes(2 * 1024 * 1024)
@@ -25,6 +32,10 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   }
   await waitForElement('[data-testid="compression-draft-row"]')
   await (await waitForElement('[data-testid="open-global-compression-settings"]')).click()
+  if (format === '7z') {
+    await (await waitForElement('[data-testid="compression-format-select"]')).click()
+    await (await driver.findElement(By.xpath('//button[@role="option" and normalize-space(.)="7Z"]'))).click()
+  }
   const fill = async (id, value) => {
     const input = await waitForElement(`[data-testid="${id}"]`)
     await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', input)
@@ -61,7 +72,7 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   const summaryValue = await waitForElement('[data-testid="summary-progress-value"]')
   assert.equal(await summaryValue.getText(), '100%', 'Completed UI progress must settle without an animation delay')
   assert.equal(productionIpc ? task.executionConfig?.settings?.verifyAfter : task.verifyAfter, true)
-  const parts = readdirSync(output).filter(name => /\.zip\.\d+$/.test(name)).sort().map(name => path.join(output, name))
+  const parts = readdirSync(output).filter(name => new RegExp(`\\.${format}\\.\\d+$`).test(name)).sort().map(name => path.join(output, name))
   assert.equal(parts.length, 3, JSON.stringify(readdirSync(output)))
   const snapshots = parts.map(file => readFileSync(file))
   assert.ok(snapshots.every(bytes => bytes.length <= 1024 * 1024))

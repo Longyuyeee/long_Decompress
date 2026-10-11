@@ -88,7 +88,7 @@ const compressionFormats = computed(() => COMPRESSIBLE_FORMATS.filter(format => 
 const selectedFormat = computed(() => compressionFormats.value.find(format => format.value === compressionOptions.value.format))
 const canCreateSplitArchive = computed(() =>
   Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive &&
-    (!compressionOptions.value.password || compressionOptions.value.format === 'zip'))
+    (!compressionOptions.value.password || ['zip', '7z'].includes(compressionOptions.value.format)))
 )
 const vaultPasswordEntries = computed(() => [...passwordStore.entries].sort((left, right) => {
   if (left.favorite !== right.favorite) return left.favorite ? -1 : 1
@@ -105,8 +105,8 @@ const splitArchiveUnavailableReason = computed(() => {
   if (!props.allowSplitArchive) {
     return '请先添加需要压缩的文件或文件夹'
   }
-  if (compressionOptions.value.password) {
-    return '此格式暂不支持加密分卷，请选择 ZIP 或关闭分卷'
+  if (compressionOptions.value.password && !['zip', '7z'].includes(compressionOptions.value.format)) {
+    return '此格式暂不支持加密分卷，请选择 ZIP、7Z 或关闭分卷'
   }
   return ''
 })
@@ -483,7 +483,7 @@ const closeVaultPasswordsAfterFocus = () => {
         />
         <span class="split-settings-icon"><i class="pi pi-clone"></i></span>
         <span class="split-settings-copy">
-          <strong>{{ appStore.t('preset.split_archive') }} <HelpHint label="分卷压缩说明">{{ splitArchiveUnavailableReason || '把大压缩包拆成多个便于传输和存储的 ZIP 分卷' }}</HelpHint></strong>
+          <strong>{{ appStore.t('preset.split_archive') }} <HelpHint label="分卷压缩说明">{{ splitArchiveUnavailableReason || '把大压缩包拆成多个便于传输和存储的分卷；解压时请将全部分卷放在同一目录' }}</HelpHint></strong>
         </span>
       </label>
       <label v-if="compressionOptions.splitArchive" class="split-size-field">

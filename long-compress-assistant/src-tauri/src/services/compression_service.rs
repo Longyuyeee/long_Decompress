@@ -931,9 +931,9 @@ impl CompressionService {
         let split_requested = options.split_size.is_some_and(|size| size > 0);
         let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
         let format = Self::infer_compression_format(output_path, options.format.as_deref());
-        if split_requested && has_password && format != "zip" {
+        if split_requested && has_password && !matches!(format.as_str(), "zip" | "7z") {
             return Err(CompressionError::CompressionFailed(
-                "Encrypted split archive creation is currently supported only for ZIP; choose ZIP or disable splitting".to_string()
+                "Encrypted split archive creation is currently supported only for ZIP and 7Z; choose either format or disable splitting".to_string()
             ).into());
         }
 
@@ -4604,7 +4604,11 @@ mod tests_continued {
             &output.to_string_lossy(),
             &encrypted_split,
         ).is_ok());
-        for format in ["7z", "rar", "tar"] {
+        let seven_zip = CompressionOptions { format: Some("7z".into()), ..encrypted_split.clone() };
+        assert!(CompressionService::validate_compression_io_paths(
+            &[source.to_string_lossy().to_string()], &temp.path().join("archive.7z").to_string_lossy(), &seven_zip,
+        ).is_ok());
+        for format in ["rar", "tar"] {
             let unsupported = CompressionOptions { format: Some(format.into()), ..encrypted_split.clone() };
             assert!(CompressionService::validate_compression_io_paths(
                 &[source.to_string_lossy().to_string()], &output.to_string_lossy(), &unsupported,

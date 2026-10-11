@@ -197,7 +197,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: true,
         single_file_only: false,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -661,7 +661,7 @@ mod tests {
             "archive.7z",
             &split_7z,
         )
-        .is_err());
+        .is_ok());
 
         let mut solid_zip = options(Some("zip"));
         solid_zip.create_solid_archive = true;
