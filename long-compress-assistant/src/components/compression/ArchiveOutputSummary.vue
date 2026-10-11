@@ -21,7 +21,7 @@ async function locate() {
   <button class="mt-2 shrink-0 rounded-lg border border-subtle px-3 py-2 text-xs text-primary text-left" type="button" @click="visible = true">
     查看产物 · {{ output.files.length }} {{ output.split ? '卷' : '个文件' }} · {{ formatFileSize(output.totalBytes) }}
   </button>
-  <Modal :visible="visible" @update:visible="visible = $event" title="压缩产物" cancel-text="关闭产物清单">
+  <Modal :visible="visible" @update:visible="visible = $event" title="压缩产物" cancel-text="关闭产物清单" layer="nested">
     <div class="space-y-3 min-w-0" data-testid="archive-output-summary">
       <p class="text-sm">{{ output.split ? '首卷' : '输出文件' }}</p>
       <code class="block text-xs break-all select-text">{{ output.primaryPath }}</code>

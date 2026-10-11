@@ -31,6 +31,7 @@ export interface TaskHistoryLog {
 }
 
 export interface TaskHistoryRecord {
+  archiveOutput?: import('./archiveOutput').PublishedArchiveOutput | null
   id: string
   retryOfTaskId?: string | null
   executionConfig?: ExecutionConfigV1 | null
@@ -73,6 +74,8 @@ export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
       : null
   )
   return {
+    archiveOutput: task.status === 'completed' && task.type === 'compression' && task.archiveOutput
+      ? { ...task.archiveOutput, files: task.archiveOutput.files.map(file => ({ ...file })) } : null,
     id: task.id,
     retryOfTaskId: task.retryOfTaskId || null,
     executionConfig: copyExecutionConfig(task.executionConfig),

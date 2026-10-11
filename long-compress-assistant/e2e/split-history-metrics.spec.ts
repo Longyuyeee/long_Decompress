@@ -20,6 +20,8 @@ test('split history retains source workload rather than copied archive size', as
       sourceFiles: ['C:/资料'], outputPath: 'D:/资料备份.zip', conflicts: [], logs: [],
       processedBytes: 1048576, totalBytes: 1048576, outputBytes: 1048576,
       compressionSourceProgress: { processedBytes: 10485760, totalBytes: 10485760 },
+      archiveOutput: { primaryPath: 'D:/资料备份.zip.001', totalBytes: 1048576, split: true,
+        files: [{ path: 'D:/资料备份.zip.001', bytes: 524288 }, { path: 'D:/资料备份.zip.002', bytes: 524288 }] },
     })
     ;(window as any).__splitRecord = record
     window.location.hash = '#/history'
@@ -34,4 +36,16 @@ test('split history retains source workload rather than copied archive size', as
     await page.waitForTimeout(350)
     await page.screenshot({ path: info.outputPath(`split-history-${width}.png`) })
   }
+  await row.click()
+  await page.getByRole('button', { name: /查看产物/ }).click()
+  const dialog = page.getByRole('dialog', { name: '压缩产物', exact: true })
+  await expect(dialog).toContainText('共 2 卷')
+  await expect(dialog).toContainText('D:/资料备份.zip.002')
+  for (const width of [920, 760]) {
+    await page.setViewportSize({ width, height: 620 })
+    await page.waitForTimeout(350)
+    await page.screenshot({ path: info.outputPath(`history-manifest-${width}.png`) })
+  }
+  await dialog.getByRole('button', { name: '关闭产物清单' }).click()
+  await expect(dialog).toHaveCount(0)
 })

@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const _CURRENT_VERSION: i32 = 10;
+const _CURRENT_VERSION: i32 = 11;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -94,6 +94,14 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
         query("ALTER TABLE task_operation_history ADD COLUMN execution_config TEXT")
             .execute(&mut *transaction).await?;
         query("INSERT INTO schema_version (version) VALUES (10)")
+            .execute(&mut *transaction).await?;
+        transaction.commit().await?;
+    }
+    if current < 11 {
+        let mut transaction = pool.begin().await?;
+        query("ALTER TABLE task_operation_history ADD COLUMN archive_output TEXT")
+            .execute(&mut *transaction).await?;
+        query("INSERT INTO schema_version (version) VALUES (11)")
             .execute(&mut *transaction).await?;
         transaction.commit().await?;
     }
@@ -1277,7 +1285,11 @@ mod tests {
         assert_eq!(columns, 2);
         let version: i32 = query_as::<_, (i32,)>("SELECT MAX(version) FROM schema_version")
             .fetch_one(&pool).await.unwrap().0;
-        assert_eq!(version, 10);
+        assert_eq!(version, 11);
+        let archive_output: Option<String> = query_as::<_, (Option<String>,)>(
+            "SELECT archive_output FROM task_operation_history WHERE id = 'legacy'",
+        ).fetch_one(&pool).await.unwrap().0;
+        assert!(archive_output.is_none(), "legacy rows must not acquire invented volume manifests");
         let failure: Option<String> = query_as::<_, (Option<String>,)>(
             "SELECT failure FROM task_operation_history WHERE id = 'legacy'",
         ).fetch_one(&pool).await.unwrap().0;

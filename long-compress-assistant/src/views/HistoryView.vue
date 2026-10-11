@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CompletedExtractionOutput from '@/components/tasks/CompletedExtractionOutput.vue'
+import ArchiveOutputSummary from '@/components/compression/ArchiveOutputSummary.vue'
 import Modal from '@/components/ui/Modal.vue'
 import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -410,7 +411,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
             <section class="detail-section"><h3><i class="pi pi-sign-in"></i>{{ appStore.t('history.detail.sources') }}</h3><div class="space-y-2 mt-3"><code v-for="source in selectedRecord.sourcePaths" :key="source" class="detail-path">{{ source }}</code><p v-if="!selectedRecord.sourcePaths.length" class="text-sm text-dim">—</p></div></section>
             <section v-if="selectedRecord.retryOfTaskId" class="detail-section" data-testid="history-retry-origin"><h3>从失败任务重新创建</h3><p class="text-xs text-muted mt-2">这是独立的新任务，原失败记录保持不变。原任务编号：</p><code class="detail-path mt-2">{{ selectedRecord.retryOfTaskId }}</code></section>
             <section v-if="selectedRecord.status === 'completed' && selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" class="detail-section"><CompletedExtractionOutput :path="selectedRecord.outputPath" /></section>
-            <section v-else class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code></section>
+            <section v-else class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code><ArchiveOutputSummary v-if="selectedRecord.status === 'completed' && selectedRecord.archiveOutput" :output="selectedRecord.archiveOutput" /></section>
             <section v-if="recoveryGuidance" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4" data-testid="history-recovery-guidance" :aria-label="recoveryGuidance.title">
               <h3 class="font-bold">{{ recoveryGuidance.title }}</h3>
               <ol class="mt-2 list-decimal pl-5 space-y-2 text-sm leading-relaxed">

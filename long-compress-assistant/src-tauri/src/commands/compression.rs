@@ -259,7 +259,7 @@ pub async fn compress_files(
     result
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishedArchiveOutput {
     primary_path: String,
@@ -268,7 +268,7 @@ pub struct PublishedArchiveOutput {
     split: bool,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishedArchiveFile {
     path: String,
