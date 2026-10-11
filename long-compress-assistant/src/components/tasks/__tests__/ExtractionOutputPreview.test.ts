@@ -23,7 +23,9 @@ it('改变目录后不显示旧预览，并使用当前子目录选择重新查�
   oldReply('D:/旧目录/照片')
   await flushPromises()
   expect(wrapper.get('[data-testid="extraction-output-path"]').text()).toBe('E:/新目录')
-  expect(wrapper.text()).toContain('不另建同名子目录')
+  expect(wrapper.text()).not.toContain('不另建同名子目录')
+  await wrapper.get('button[aria-label="解压目录说明"]').trigger('click')
+  expect(document.body.textContent).toContain('不另建同名子目录')
   expect(mocks.invoke).toHaveBeenCalledWith('preview_extraction_output', {
     filePath: 'C:/照片.tar.gz', outputPath: 'E:/新目录', createSubdirectory: false,
   })
