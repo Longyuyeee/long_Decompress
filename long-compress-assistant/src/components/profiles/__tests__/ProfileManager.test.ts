@@ -351,6 +351,22 @@ describe('ProfileManager', () => {
     expect(mocks.setSuccess).toHaveBeenCalledWith('配置组保存成功')
   })
 
+  it('explains the password requirement when filename encryption is selected', async () => {
+    const wrapper = mountManager()
+    await flushPromises()
+    await wrapper.findAll('button').find(button => button.text().includes('新建配置组'))!.trigger('click')
+    await wrapper.get('select').setValue('7z')
+    expect(wrapper.get('input[type="password"]').attributes('placeholder')).toBe('留空表示不加密')
+    await wrapper.get('[data-testid="profile-encrypt-filenames"]').setValue(true)
+    expect(wrapper.get('input[type="password"]').attributes('placeholder')).toBe('运行前需填写密码')
+    await wrapper.get('[data-testid="profile-encrypt-filenames"]').setValue(false)
+    expect(wrapper.get('input[type="password"]').attributes('placeholder')).toBe('留空表示不加密')
+    await wrapper.get('[data-testid="profile-encrypt-filenames"]').setValue(true)
+    await wrapper.get('select').setValue('zip')
+    expect(wrapper.find('[data-testid="profile-encrypt-filenames"]').exists()).toBe(false)
+    expect(wrapper.get('input[type="password"]').attributes('placeholder')).toBe('留空表示不加密')
+  })
+
   it('preserves an existing auto-apply enabled state while editing', async () => {
     mocks.profiles.push({
       id: 'existing', name: '现有配置', icon: '📦', description: '',

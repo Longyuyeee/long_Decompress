@@ -674,7 +674,7 @@ const formatDate = (timestamp: number | null) =>
         <label v-if="supportsPassword" class="block">
           <span class="mb-2 block text-xs font-black text-muted">固定密码（可选）</span>
           <div class="flex gap-2">
-            <input v-model="formData.config.password" :type="showPassword ? 'text' : 'password'" class="h-10 min-w-0 flex-1 rounded-xl border border-subtle bg-input px-3 font-mono text-sm text-content outline-none focus:border-primary" placeholder="留空表示不加密" />
+              <input v-model="formData.config.password" :type="showPassword ? 'text' : 'password'" class="h-10 min-w-0 flex-1 rounded-xl border border-subtle bg-input px-3 font-mono text-sm text-content outline-none focus:border-primary" :placeholder="formData.config.encryptFilenames ? '运行前需填写密码' : '留空表示不加密'" />
             <button type="button" class="h-10 w-10 shrink-0 rounded-xl border border-subtle bg-input text-muted hover:text-content" @click="showPassword = !showPassword"><i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i></button>
           </div>
         </label>
