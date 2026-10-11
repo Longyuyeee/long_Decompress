@@ -126,19 +126,26 @@ pub(crate) fn compress<R: CompressionRuntime>(
         std::fs::create_dir_all(parent)?;
     }
 
-    if options.split_size.is_some_and(|size| size > 0) {
-        let split_service = SplitCompressionService::new();
-        let handle = tokio::runtime::Handle::current();
-        let result = handle.block_on(async {
-            split_service
-                .compress_to_split_zips_cancellable(
-                    sources,
-                    Path::new(output),
-                    options.clone(),
-                    runtime.cancellation_flag(),
-                )
-                .await
-        })?;
+    if let Some(split_size) = options.split_size.filter(|size| *size > 0) {
+        runtime.check_cancellation()?;
+        // Reuse the real ZIP writer for directories, path layout and encryption.
+        // A temporary complete archive costs disk space, not archive-sized RAM.
+        struct TemporaryZip(std::path::PathBuf);
+        impl Drop for TemporaryZip {
+            fn drop(&mut self) { let _ = std::fs::remove_file(&self.0); }
+        }
+        let staged = crate::services::output_publish_transaction::staged_output_path(
+            Path::new(output), "split-source")?;
+        let reservation = std::fs::OpenOptions::new().write(true).create_new(true).open(&staged)?;
+        let temporary = TemporaryZip(staged);
+        drop(reservation);
+        let mut unsplit = options.clone();
+        unsplit.split_size = None;
+        compress(runtime, window, task_id, sources, &temporary.0.to_string_lossy(), unsplit)?;
+        runtime.check_cancellation()?;
+        let result = SplitCompressionService::split_archive_file(
+            &temporary.0, Path::new(output), split_size, || runtime.check_cancellation(),
+        )?;
         if let Some(window) = window {
             runtime.emit_log(
                 window,
@@ -195,7 +202,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
         .compression_method(CompressionMethod::Deflated)
         .compression_level(Some(options.level.clamp(1, 9) as i32));
     let entries =
-        compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), false)?;
+        compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), true)?;
     let total_entries = entries.len().max(1);
     let mut byte_progress = ByteProgress::new(source_total_bytes(&entries)?);
     let mut progress_gate = ProgressGate::new();
@@ -203,6 +210,10 @@ pub(crate) fn compress<R: CompressionRuntime>(
 
     for (index, entry) in entries.iter().enumerate() {
         runtime.check_cancellation()?;
+        if entry.is_dir {
+            writer.add_directory(entry.archive_name.replace('\\', "/"), zip_options)?;
+            continue;
+        }
         let mut source = File::open(&entry.path)?;
         writer.start_file(&entry.archive_name, zip_options)?;
         let current_name = entry.archive_name.clone();
@@ -269,6 +280,79 @@ mod tests {
     #[derive(Default)]
     struct TestRuntime {
         cancelled: Arc<AtomicBool>,
+        cancel_after: std::cell::Cell<Option<usize>>,
+    }
+
+    #[test]
+    fn native_split_creation_preserves_directories_passwords_and_cleans_temporary_zip() {
+        use crate::services::zip_password::{encode, ZipPasswordEncoding};
+        for mode in [ZipPasswordEncoding::Utf8, ZipPasswordEncoding::WindowsLocal] {
+            for password in [None, Some("密码 + !测试")] {
+                if password.is_some_and(|value| encode(value, mode).is_err()) { continue; }
+                let temp = tempfile::tempdir().unwrap();
+                let folder = temp.path().join("资料");
+                std::fs::create_dir_all(folder.join("空目录")).unwrap();
+                std::fs::write(folder.join("内容.txt"), b"folder payload").unwrap();
+                let second = temp.path().join("第二份.txt");
+                std::fs::write(&second, b"second payload").unwrap();
+                let output = temp.path().join("bundle.zip");
+                compress(&TestRuntime::default(), None, "split-test",
+                    &[folder.to_string_lossy().into_owned(), second.to_string_lossy().into_owned()],
+                    &output.to_string_lossy(), CompressionOptions {
+                        password: password.map(str::to_owned), zip_password_encoding: mode,
+                        split_size: Some(37), preserve_paths: Some(true), ..Default::default()
+                    }).unwrap();
+                let first = temp.path().join("bundle.zip.001");
+                crate::services::compression_verification::verify_numeric_zip(&first, password, || false).unwrap();
+                let reader = crate::services::numeric_volume_reader::NumericVolumeReader::open(&first).unwrap();
+                let mut archive = zip_aes::ZipArchive::new(reader).unwrap();
+                for (name, expected) in [("资料/内容.txt", b"folder payload".as_slice()), ("第二份.txt", b"second payload".as_slice())] {
+                    let mut entry = match password {
+                        Some(value) => crate::services::zip_password::open_named_entry(&mut archive, name, value).unwrap(),
+                        None => archive.by_name(name).unwrap(),
+                    };
+                    let mut bytes = Vec::new(); entry.read_to_end(&mut bytes).unwrap();
+                    assert_eq!(bytes, expected);
+                }
+                assert!(archive.index_for_name("资料/空目录/").is_some());
+                assert!(!output.exists());
+                assert!(std::fs::read_dir(temp.path()).unwrap().all(|entry| !entry.unwrap().file_name().to_string_lossy().starts_with(".split-source-")));
+            }
+        }
+    }
+
+    #[test]
+    fn native_split_collision_preserves_existing_volume_and_removes_temporary_archive() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        std::fs::write(&source, b"source payload").unwrap();
+        let output = temp.path().join("bundle.zip");
+        let first = temp.path().join("bundle.zip.001");
+        std::fs::write(&first, b"existing user data").unwrap();
+        let result = compress(&TestRuntime::default(), None, "split-test",
+            &[source.to_string_lossy().into_owned()], &output.to_string_lossy(),
+            CompressionOptions { split_size: Some(37), ..Default::default() });
+        assert!(result.is_err());
+        assert_eq!(std::fs::read(first).unwrap(), b"existing user data");
+        assert_eq!(std::fs::read(source).unwrap(), b"source payload");
+        assert!(std::fs::read_dir(temp.path()).unwrap().all(|entry| !entry.unwrap().file_name().to_string_lossy().starts_with(".split-source-")));
+    }
+
+    #[test]
+    fn native_split_cancellation_leaves_no_temporary_or_partial_output() {
+        for checks in [0, 3] {
+            let temp = tempfile::tempdir().unwrap();
+            let source = temp.path().join("source.bin");
+            std::fs::write(&source, vec![42; 1024 * 1024]).unwrap();
+            let runtime = TestRuntime::default();
+            runtime.cancel_after.set(Some(checks));
+            let result = compress(&runtime, None, "cancel-split",
+                &[source.to_string_lossy().into_owned()], &temp.path().join("result.zip").to_string_lossy(),
+                CompressionOptions { split_size: Some(10), ..Default::default() });
+            assert!(matches!(result.unwrap_err().downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+            let remaining: Vec<_> = std::fs::read_dir(temp.path()).unwrap().map(|entry| entry.unwrap().path()).collect();
+            assert_eq!(remaining, vec![source]);
+        }
     }
 
     #[test]
@@ -399,6 +483,10 @@ mod tests {
 
     impl CompressionRuntime for TestRuntime {
         fn check_cancellation(&self) -> Result<()> {
+            if let Some(remaining) = self.cancel_after.get() {
+                if remaining == 0 { self.cancelled.store(true, Ordering::SeqCst); }
+                else { self.cancel_after.set(Some(remaining - 1)); }
+            }
             if self.cancelled.load(Ordering::Relaxed) {
                 Err(CompressionError::Cancelled.into())
             } else {
