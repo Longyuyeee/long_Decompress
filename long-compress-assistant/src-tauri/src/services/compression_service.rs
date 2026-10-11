@@ -1342,7 +1342,8 @@ impl CompressionService {
     }
 
     /// 智能尝试密码本中的密码
-    async fn resolve_archive_password(&self, window: &Window, task_id: &str, file_path: &str, options: &DecompressOptions) -> Option<String> {
+    async fn resolve_archive_password(&self, window: &Window, task_id: &str, file_path: &str, options: &DecompressOptions) -> Result<Option<String>> {
+        self.check_cancellation()?;
         self.emit_log(
             window,
             task_id,
@@ -1353,41 +1354,42 @@ impl CompressionService {
             },
             TaskLogSeverity::Info,
         );
-        if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path).await {
-            return Some(password);
+        if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path).await? {
+            return Ok(Some(password));
         }
 
         if options.enable_bruteforce {
             if !options.bruteforce_wordlists.is_empty() {
-                if let Some(password) = self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists).await {
-                    return Some(password);
+                if let Some(password) = self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists).await? {
+                    return Ok(Some(password));
                 }
             }
-            if let Some(password) = self.attempt_recommended_dictionary(window, task_id, file_path).await {
-                return Some(password);
+            if let Some(password) = self.attempt_recommended_dictionary(window, task_id, file_path).await? {
+                return Ok(Some(password));
             }
         }
 
-        None
+        Ok(None)
     }
 
-    pub async fn resolve_archive_password_silent(&self, file_path: &str, options: &DecompressOptions) -> Option<String> {
-        if let Some(password) = self.attempt_password_book_candidates(file_path).await {
-            return Some(password);
+    pub async fn resolve_archive_password_silent(&self, file_path: &str, options: &DecompressOptions) -> Result<Option<String>> {
+        self.check_cancellation()?;
+        if let Some(password) = self.attempt_password_book_candidates(file_path).await? {
+            return Ok(Some(password));
         }
 
         if options.enable_bruteforce {
             if !options.bruteforce_wordlists.is_empty() {
-                if let Some(password) = self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists).await {
-                    return Some(password);
+                if let Some(password) = self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists).await? {
+                    return Ok(Some(password));
                 }
             }
-            if let Some(password) = self.attempt_recommended_dictionary_silent(file_path).await {
-                return Some(password);
+            if let Some(password) = self.attempt_recommended_dictionary_silent(file_path).await? {
+                return Ok(Some(password));
             }
         }
 
-        None
+        Ok(None)
     }
 
     fn recommended_dictionary(file_path: &str) -> Vec<String> {
@@ -1455,19 +1457,17 @@ impl CompressionService {
         }
     }
 
-    async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Option<String> {
+    async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Result<Option<String>> {
         for password in Self::recommended_dictionary(file_path) {
-            if self.check_cancellation().is_err() {
-                return None;
-            }
-            if self.test_archive_password(file_path, &password).await.is_ok_and(|matched| matched) {
-                return Some(password);
+            self.check_cancellation()?;
+            if self.test_archive_password(file_path, &password).await? {
+                return Ok(Some(password));
             }
         }
-        None
+        Ok(None)
     }
 
-    async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
+    async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str) -> Result<Option<String>> {
         let passwords = Self::recommended_dictionary(file_path);
         let total = passwords.len();
         let started_at = Instant::now();
@@ -1482,10 +1482,7 @@ impl CompressionService {
         );
 
         for (index, password) in passwords.into_iter().enumerate() {
-            if self.check_cancellation().is_err() {
-                self.emit_log(window, task_id, "内置密码字典尝试已取消", TaskLogSeverity::Warning);
-                return None;
-            }
+            self.check_cancellation()?;
             let current = index + 1;
             self.emit_password_attempt_progress(
                 window,
@@ -1495,8 +1492,8 @@ impl CompressionService {
                 format!("内置字典 #{} · 密码「{}」", current, password),
             );
             let attempt_started_at = Instant::now();
-            match self.test_archive_password(file_path, &password).await {
-                Ok(true) => {
+            match self.test_archive_password(file_path, &password).await? {
+                true => {
                     self.emit_log(
                         window,
                         task_id,
@@ -1509,9 +1506,9 @@ impl CompressionService {
                         ),
                         TaskLogSeverity::Success,
                     );
-                    return Some(password);
+                    return Ok(Some(password));
                 }
-                Ok(false) => {
+                false => {
                     // The live progress payload already exposes every candidate.
                     // Keep the permanent task log readable by sampling routine
                     // misses instead of appending hundreds of near-identical rows.
@@ -1530,18 +1527,6 @@ impl CompressionService {
                         );
                     }
                 },
-                Err(error) => self.emit_log(
-                    window,
-                    task_id,
-                    &format!(
-                        "内置字典候选 [{}/{}] 验证异常，已跳过（{}）：{}",
-                        current,
-                        total,
-                        Self::elapsed_label(attempt_started_at),
-                        error
-                    ),
-                    TaskLogSeverity::Warning,
-                ),
             }
         }
 
@@ -1555,7 +1540,7 @@ impl CompressionService {
             ),
             TaskLogSeverity::Warning,
         );
-        None
+        Ok(None)
     }
 
     fn should_log_password_attempt(current: usize, total: usize) -> bool {
@@ -1592,29 +1577,27 @@ impl CompressionService {
         }
     }
 
-    async fn attempt_password_book_candidates(&self, file_path: &str) -> Option<String> {
+    async fn attempt_password_book_candidates(&self, file_path: &str) -> Result<Option<String>> {
         let passwords = match self.password_book_candidates().await {
             Ok(passwords) => passwords,
             Err(err) => {
                 log::error!("Failed to read password book candidates: {}", err);
-                return None;
+                return Ok(None);
             }
         };
 
         for (_entry_id, _entry_name, password) in passwords {
-            if self.check_cancellation().is_err() {
-                return None;
-            }
-            match self.test_archive_password(file_path, &password).await {
-                Ok(true) => return Some(password),
-                _ => continue,
+            self.check_cancellation()?;
+            match self.test_archive_password(file_path, &password).await? {
+                true => return Ok(Some(password)),
+                false => continue,
             }
         }
 
-        None
+        Ok(None)
     }
 
-    async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str) -> Option<String> {
+    async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str) -> Result<Option<String>> {
         self.emit_log(window, task_id, "正在检索密码保险箱...", TaskLogSeverity::Info);
         let started_at = Instant::now();
 
@@ -1628,14 +1611,14 @@ impl CompressionService {
                     &format!("密码保险箱读取失败，已跳过保险箱尝试：{}", e),
                     TaskLogSeverity::Warning,
                 );
-                return None;
+                return Ok(None);
             }
         };
 
         let total = passwords.len();
         if total == 0 {
             self.emit_log(window, task_id, "密码保险箱为空，跳过尝试", TaskLogSeverity::Info);
-            return None;
+            return Ok(None);
         }
 
         self.emit_log(
@@ -1649,10 +1632,7 @@ impl CompressionService {
         );
 
         for (idx, (_entry_id, entry_name, pwd)) in passwords.iter().enumerate() {
-            if self.check_cancellation().is_err() {
-                self.emit_log(window, task_id, "密码保险箱尝试已取消", TaskLogSeverity::Warning);
-                return None;
-            }
+            self.check_cancellation()?;
             let current = idx + 1;
             self.emit_password_attempt_progress(
                 window,
@@ -1663,8 +1643,8 @@ impl CompressionService {
             );
             let attempt_started_at = Instant::now();
 
-            match self.test_archive_password(file_path, pwd).await {
-                Ok(true) => {
+            match self.test_archive_password(file_path, pwd).await? {
+                true => {
                     self.emit_log(
                         window,
                         task_id,
@@ -1678,9 +1658,9 @@ impl CompressionService {
                         ),
                         TaskLogSeverity::Success,
                     );
-                    return Some(pwd.clone());
+                    return Ok(Some(pwd.clone()));
                 },
-                Ok(false) => self.emit_log(
+                false => self.emit_log(
                     window,
                     task_id,
                     &format!(
@@ -1692,19 +1672,6 @@ impl CompressionService {
                         Self::elapsed_label(attempt_started_at)
                     ),
                     TaskLogSeverity::Info,
-                ),
-                Err(error) => self.emit_log(
-                    window,
-                    task_id,
-                    &format!(
-                        "保险箱候选 [{}/{}]「{}」验证异常，已跳过（{}）：{}",
-                        current,
-                        total,
-                        entry_name,
-                        Self::elapsed_label(attempt_started_at),
-                        error
-                    ),
-                    TaskLogSeverity::Warning,
                 ),
             }
         }
@@ -1719,16 +1686,14 @@ impl CompressionService {
             ),
             TaskLogSeverity::Warning,
         );
-        None
+        Ok(None)
     }
 
-    async fn attempt_bruteforce_wordlists_silent(&self, file_path: &str, wordlists: &[String]) -> Option<String> {
+    async fn attempt_bruteforce_wordlists_silent(&self, file_path: &str, wordlists: &[String]) -> Result<Option<String>> {
         let mut tested = HashSet::new();
 
         for wordlist in wordlists {
-            if self.check_cancellation().is_err() {
-                return None;
-            }
+            self.check_cancellation()?;
 
             let file = match File::open(Path::new(wordlist)) {
                 Ok(file) => file,
@@ -1736,9 +1701,7 @@ impl CompressionService {
             };
 
             for line in BufReader::new(file).lines() {
-                if self.check_cancellation().is_err() {
-                    return None;
-                }
+                self.check_cancellation()?;
 
                 let password = match line {
                     Ok(value) => value.trim().trim_end_matches('\u{feff}').to_string(),
@@ -1749,16 +1712,16 @@ impl CompressionService {
                     continue;
                 }
 
-                if matches!(self.test_archive_password(file_path, &password).await, Ok(true)) {
-                    return Some(password);
+                if self.test_archive_password(file_path, &password).await? {
+                    return Ok(Some(password));
                 }
             }
         }
 
-        None
+        Ok(None)
     }
 
-    async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String]) -> Option<String> {
+    async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String]) -> Result<Option<String>> {
         self.emit_log(
             window,
             task_id,
@@ -1774,10 +1737,7 @@ impl CompressionService {
         let started_at = Instant::now();
 
         for wordlist in wordlists {
-            if self.check_cancellation().is_err() {
-                self.emit_log(window, task_id, "导入密码词表尝试已取消", TaskLogSeverity::Warning);
-                return None;
-            }
+            self.check_cancellation()?;
 
             let path = Path::new(wordlist);
             let file = match File::open(path) {
@@ -1796,10 +1756,7 @@ impl CompressionService {
             );
 
             for line in BufReader::new(file).lines() {
-                if self.check_cancellation().is_err() {
-                    self.emit_log(window, task_id, "导入密码词表尝试已取消", TaskLogSeverity::Warning);
-                    return None;
-                }
+                self.check_cancellation()?;
 
                 let password = match line {
                     Ok(value) => value.trim().trim_end_matches('\u{feff}').to_string(),
@@ -1822,8 +1779,8 @@ impl CompressionService {
                     format!("导入词表 #{} · 密码「{}」", attempted, password),
                 );
                 let attempt_started_at = Instant::now();
-                match self.test_archive_password(file_path, &password).await {
-                    Ok(true) => {
+                match self.test_archive_password(file_path, &password).await? {
+                    true => {
                         self.emit_log(
                             window,
                             task_id,
@@ -1835,9 +1792,9 @@ impl CompressionService {
                             ),
                             TaskLogSeverity::Success,
                         );
-                        return Some(password);
+                        return Ok(Some(password));
                     }
-                    Ok(false) => {
+                    false => {
                         if attempted == 1 || attempted.is_multiple_of(25) {
                             self.emit_log(
                                 window,
@@ -1851,9 +1808,6 @@ impl CompressionService {
                                 TaskLogSeverity::Info,
                             );
                         }
-                    }
-                    Err(err) => {
-                        self.emit_log(window, task_id, &format!("导入词表候选 #{} 验证异常，已跳过：{}", attempted, err), TaskLogSeverity::Warning);
                     }
                 }
             }
@@ -1869,7 +1823,7 @@ impl CompressionService {
             ),
             TaskLogSeverity::Warning,
         );
-        None
+        Ok(None)
     }
 
     async fn archive_requires_password(&self, file_path: &str, format: ArchiveFormat) -> Result<bool> {
@@ -2080,7 +2034,7 @@ impl CompressionService {
 
             if needs_pwd {
                 service.emit_log(&window, &task_id, "检测到加密格式，正在启动自动解锁流程...", TaskLogSeverity::Info);
-                if let Some(smart_pwd) = service.resolve_archive_password(&window, &task_id, &file_path, &options).await {
+                if let Some(smart_pwd) = service.resolve_archive_password(&window, &task_id, &file_path, &options).await? {
                     service.emit_log(
                         &window,
                         &task_id,
@@ -3552,6 +3506,58 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn automatic_password_candidates_preserve_corruption_and_cancellation() {
+        use crate::models::password::{PasswordCategory, PasswordEntry};
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("archive.zip");
+        let password = CompressionService::recommended_dictionary(&source.to_string_lossy())[0].clone();
+        let mut writer = zip_aes::ZipWriter::new(File::create(&source).unwrap());
+        let options = zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Stored)
+            .with_aes_encryption(zip_aes::AesMode::Aes256, &password);
+        writer.start_file("payload.txt", options).unwrap();
+        writer.write_all(b"encrypted content").unwrap();
+        writer.finish().unwrap();
+        let mut vault = EncryptedPasswordService::new(&temp.path().join("vault"));
+        vault.initialize("test-key").await.unwrap();
+        vault.add_password(PasswordEntry::new("fixture".into(), password.clone(), PasswordCategory::Other)).await.unwrap();
+        let service = CompressionService::new(CompressionServiceConfig::default(),
+            Arc::new(IOBufferPool::default()), Arc::new(RarSupportService::new()),
+            Arc::new(UniversalCliEngine::new()), Arc::new(vault));
+        let words = temp.path().join("words.txt");
+        std::fs::write(&words, format!("wrong-first\n{password}\nunused-last\n")).unwrap();
+        let wordlists = vec![words.to_string_lossy().into_owned()];
+        assert_eq!(service.attempt_bruteforce_wordlists_silent(&source.to_string_lossy(), &wordlists).await.unwrap(), Some(password.clone()));
+        assert_eq!(service.resolve_archive_password_silent(&source.to_string_lossy(), &DecompressOptions::default()).await.unwrap(), Some(password));
+        let tail = {
+            let mut zip = zip_aes::ZipArchive::new(File::open(&source).unwrap()).unwrap();
+            let entry = zip.by_index_raw(0).unwrap();
+            (entry.data_start().unwrap() + entry.compressed_size() - 1) as usize
+        };
+        let mut bytes = std::fs::read(&source).unwrap();
+        bytes[tail] ^= 1;
+        std::fs::write(&source, bytes).unwrap();
+        let split = crate::services::split_compression::SplitCompressionService::split_archive_file(
+            &source, &temp.path().join("split.zip"), 37, || Ok(())).unwrap();
+        for path in [&source, &split.part_files[0]] {
+            let path = path.to_string_lossy();
+            let errors = [
+                service.resolve_archive_password_silent(&path, &DecompressOptions::default()).await.unwrap_err(),
+                service.attempt_bruteforce_wordlists_silent(&path, &wordlists).await.unwrap_err(),
+            ];
+            for error in errors {
+                assert!(error.to_string().contains("[archive-inspection:ambiguous-data]"));
+                assert!(error.to_string().contains("payload.txt"));
+            }
+        }
+        assert!(service.attempt_recommended_dictionary_silent(&source.to_string_lossy()).await.unwrap_err()
+            .to_string().contains("[archive-inspection:ambiguous-data]"));
+        service.cancellation_flag.store(true, Ordering::SeqCst);
+        let error = service.resolve_archive_password_silent(&source.to_string_lossy(), &DecompressOptions::default()).await.unwrap_err();
+        assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+    }
+
+    #[tokio::test]
     async fn password_vault_usage_is_recorded_only_after_explicit_success_marking() {
         use crate::models::password::{PasswordCategory, PasswordEntry};
 
@@ -3587,7 +3593,7 @@ mod tests {
 
         let resolved = service
             .resolve_archive_password_silent(&encrypted.to_string_lossy(), &options)
-            .await;
+            .await.expect("resolve vault password");
 
         assert_eq!(resolved.as_deref(), Some("vault-password"));
         let matched_only = service

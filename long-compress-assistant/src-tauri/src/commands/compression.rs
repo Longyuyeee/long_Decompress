@@ -1102,7 +1102,7 @@ pub async fn browse_archive(
             let service = CompressionService::new_with_defaults().await;
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
-                .await
+                .await.map_err(|error| error.to_string())?
         }
     };
     let browse_id = browse_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
@@ -1163,7 +1163,7 @@ pub async fn preview_archive_image(
             let service = CompressionService::new_with_defaults().await;
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
-                .await
+                .await.map_err(|error| error.to_string())?
         }
     };
     crate::services::archive_preview::preview_archive_image(
@@ -1226,7 +1226,7 @@ pub async fn preview_archive_text(
             let service = CompressionService::new_with_defaults().await;
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
-                .await
+                .await.map_err(|error| error.to_string())?
         }
     };
     crate::services::archive_preview::preview_archive_text(
@@ -1263,7 +1263,7 @@ pub async fn materialize_nested_archive(
         None => {
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
-                .await
+                .await.map_err(|error| error.to_string())?
         }
     };
     let metadata =
@@ -1378,7 +1378,7 @@ pub async fn open_archive_entry(
         None => {
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
-                .await
+                .await.map_err(|error| error.to_string())?
         }
     };
     let metadata =
