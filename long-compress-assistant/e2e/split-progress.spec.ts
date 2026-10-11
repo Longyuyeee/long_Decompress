@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test'
 test('split stage is visible without claiming task completion', async ({ page }, info) => {
   await page.addInitScript(() => {
     window.__TAURI_IPC__ = (message: Record<string, any>) => {
+      if (message.cmd === 'open_in_explorer') (window as any).__locatedArchive = message.path
       ;(window as any)[`_${message.callback}`]?.(message.cmd === 'load_app_settings' ? '{}' : undefined)
     }
   })
@@ -51,8 +52,24 @@ test('split stage is visible without claiming task completion', async ({ page },
     const path = '/src/stores/task.ts'
     const store = (await import(path)).useTaskStore()
     Object.assign(store.tasks[0], { status: 'completed', outputBytes: 104857600 })
+    store.tasks[0].archiveOutput = {
+      primaryPath: 'C:/输出/备份.zip.001', totalBytes: 104857600, split: true,
+      files: [1, 2].map(index => ({ path: `C:/输出/备份.zip.00${index}`, bytes: 52428800 })),
+    }
   })
   await expect(metrics).toContainText('节省 50.00%')
   await expect(page.getByTestId('compression-draft-execution')).toContainText('已完成')
   await page.screenshot({ path: info.outputPath('split-detail-completed.png') })
+  await page.getByRole('button', { name: /查看产物/ }).click()
+  const result = page.getByRole('dialog', { name: '压缩产物', exact: true })
+  await expect(result).toContainText('共 2 卷')
+  await result.getByRole('button', { name: '定位首卷' }).click()
+  expect(await page.evaluate(() => (window as any).__locatedArchive)).toBe('C:/输出/备份.zip.001')
+  for (const width of [920, 760]) {
+    await page.setViewportSize({ width, height: 620 })
+    await page.waitForTimeout(350)
+    await page.screenshot({ path: info.outputPath(`split-output-${width}.png`) })
+  }
+  await page.keyboard.press('Escape')
+  await expect(result).toHaveCount(0)
 })

@@ -13,6 +13,10 @@ describe('createTaskHistoryRecord', () => {
     const record = createTaskHistoryRecord(task)
     expect(record).toMatchObject({ processedBytes: 10000, totalBytes: 10000 })
     expect(record.metrics).toMatchObject({ inputBytes: 10000, outputBytes: 1000, savingsRatio: 0.9 })
+    expect(createTaskHistoryRecord({ ...task, archiveOutput: {
+      primaryPath: 'C:/archive.zip.001', totalBytes: 1000, split: true,
+      files: [{ path: 'C:/archive.zip.001', bytes: 1000 }],
+    } }).outputPath).toBe('C:/archive.zip.001')
     for (const status of ['cancelled', 'failed'] as const) {
       expect(createTaskHistoryRecord({ ...task, status }).metrics).toBeNull()
     }

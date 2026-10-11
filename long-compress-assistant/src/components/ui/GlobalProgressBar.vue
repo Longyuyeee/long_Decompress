@@ -170,12 +170,17 @@ const retryTask = async (task: Task) => {
         level: 6,
         password: task.password || undefined
       }
-      await tauriCommands.compressFiles(
+      const publishedOutput = await tauriCommands.compressFiles(
         task.id,
         task.sourceFiles,
         task.outputPath,
         options
       )
+      task.archiveOutput = publishedOutput
+      if (publishedOutput) {
+        task.outputBytes = publishedOutput.totalBytes
+        task.outputBytesEstimated = false
+      }
       taskStore.updateTaskStatus(task.id, 'completed')
     }
   } catch (error) {

@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri'
+import type { PublishedArchiveOutput } from '@/types/archiveOutput'
 import { message, open, save, ask } from '@tauri-apps/api/dialog'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
@@ -420,7 +421,7 @@ export const useTauriCommands = () => {
     outputPath: string,
     options: CompressOptions
   ) => {
-    return await invoke<string>('compress_files', {
+    return await invoke<PublishedArchiveOutput>('compress_files', {
       taskId,
       files,
       outputPath,

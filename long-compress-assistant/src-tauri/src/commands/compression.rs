@@ -239,22 +239,87 @@ pub async fn compress_files(
     files: Vec<String>,
     output_path: String,
     options: Option<CompressionOptions>,
-) -> Result<String, String> {
+) -> Result<PublishedArchiveOutput, String> {
     let _output_guard = CompressionOutputGuard::acquire(&task_id, &output_path)?;
     let service = service_for_task(&task_id).await?;
     let _task_guard = TaskCancellationGuard::new(&task_id);
     let opts = options.unwrap_or_default();
+    let split = opts.split_size.is_some_and(|size| size > 0);
 
     let result = match service
         .compress(window, task_id.clone(), files, output_path.clone(), opts)
         .await
     {
-        Ok(_) => Ok(format!("压缩成功: {}", output_path)),
+        Ok(_) => published_archive_output(Path::new(&output_path), split)
+            .map_err(|error| format!("压缩产物已发布，但读取结果清单失败；请保留输出并检查：{error}")),
         Err(e) => Err(format!("压缩失败: {}", e)),
     };
 
     cleanup_task(&task_id);
     result
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublishedArchiveOutput {
+    primary_path: String,
+    files: Vec<PublishedArchiveFile>,
+    total_bytes: u64,
+    split: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublishedArchiveFile {
+    path: String,
+    bytes: u64,
+}
+
+fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<PublishedArchiveOutput> {
+    let paths = if split {
+        let mut first = output.as_os_str().to_os_string();
+        first.push(".001");
+        let info = crate::services::split_archive_detector::SplitArchiveDetector::detect_split_archive(Path::new(&first))?
+            .ok_or_else(|| anyhow::anyhow!("找不到已发布的首卷"))?;
+        anyhow::ensure!(info.missing_parts.is_empty(), "已发布分卷存在缺卷");
+        info.parts
+    } else { vec![output.to_path_buf()] };
+    let mut files = Vec::new();
+    let mut total_bytes = 0u64;
+    for path in paths {
+        let metadata = std::fs::symlink_metadata(&path)?;
+        anyhow::ensure!(metadata.file_type().is_file(), "产物不是普通文件：{}", path.display());
+        anyhow::ensure!(!split || metadata.len() > 0, "分卷为空：{}", path.display());
+        total_bytes = total_bytes.checked_add(metadata.len()).ok_or_else(|| anyhow::anyhow!("产物大小溢出"))?;
+        files.push(PublishedArchiveFile { path: path.to_string_lossy().into_owned(), bytes: metadata.len() });
+    }
+    let primary_path = files.first().ok_or_else(|| anyhow::anyhow!("产物清单为空"))?.path.clone();
+    Ok(PublishedArchiveOutput { primary_path, files, total_bytes, split })
+}
+
+#[cfg(test)]
+mod published_archive_tests {
+    use super::*;
+    #[test]
+    fn published_archive_result_uses_real_files_and_numeric_order() {
+        let temp = tempfile::tempdir().unwrap();
+        let output = temp.path().join("资料.zip");
+        assert!(published_archive_output(&output, false).is_err());
+        std::fs::write(&output, b"ordinary").unwrap();
+        let ordinary = published_archive_output(&output, false).unwrap();
+        assert_eq!(ordinary.total_bytes, 8);
+        assert_eq!(ordinary.files.len(), 1);
+        for index in 1..=1001 {
+            std::fs::write(temp.path().join(format!("资料.zip.{index:03}")), b"x").unwrap();
+        }
+        let split = published_archive_output(&output, true).unwrap();
+        assert_eq!(split.total_bytes, 1001);
+        assert!(split.primary_path.ends_with(".zip.001"));
+        assert!(split.files[999].path.ends_with(".zip.1000"));
+        assert_eq!(split.files.len(), 1001);
+        std::fs::remove_file(temp.path().join("资料.zip.002")).unwrap();
+        assert!(published_archive_output(&output, true).is_err());
+    }
 }
 
 #[command]

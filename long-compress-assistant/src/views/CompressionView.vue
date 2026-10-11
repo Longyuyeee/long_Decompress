@@ -457,7 +457,7 @@ const runCompression = async () => {
         return
       }
       taskStore.updateTaskStatus(taskId, 'compressing')
-      await tauriCommands.compressFiles(
+      const publishedOutput = await tauriCommands.compressFiles(
         taskId,
         job.files.map(file => file.path),
         job.outputPath,
@@ -477,6 +477,11 @@ const runCompression = async () => {
       )
       const finishedTask = taskStore.tasks.find(task => task.id === taskId)
       if (finishedTask && !['cancelled', 'cancelling'].includes(finishedTask.status)) {
+        finishedTask.archiveOutput = publishedOutput
+        if (publishedOutput) {
+          finishedTask.outputBytes = publishedOutput.totalBytes
+          finishedTask.outputBytesEstimated = false
+        }
         taskStore.updateTaskStatus(taskId, 'completed')
         if (!job.settings.splitArchive && compressionStore.compressionAnalysis[job.id]?.result) {
           const outputInfo = await tauriCommands.getFileInfo(job.outputPath)

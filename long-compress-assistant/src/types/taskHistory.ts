@@ -82,7 +82,7 @@ export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
     metrics: measuredMetrics,
     status: task.status as TaskHistoryStatus,
     sourcePaths: [...task.sourceFiles],
-    outputPath: task.outputPath,
+    outputPath: task.archiveOutput?.primaryPath ?? task.outputPath,
     format: task.format || task.compressionOptions?.format || null,
     startedAt: startedAt?.toISOString() || null,
     completedAt: completedAt.toISOString(),

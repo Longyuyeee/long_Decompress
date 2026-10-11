@@ -51,6 +51,7 @@ export interface Task {
   logs: TaskLog[]
   sourceFiles: string[]
   outputPath: string
+  archiveOutput?: import('@/types/archiveOutput').PublishedArchiveOutput
   format?: string
   conflicts: ConflictInfo[]
   /** Session-only staged publication choices; not persisted in task history. */
