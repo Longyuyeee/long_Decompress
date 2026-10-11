@@ -3361,7 +3361,7 @@ impl CompressionService {
                     if cancellation_flag.load(Ordering::SeqCst) {
                         return Err(CompressionError::Cancelled.into());
                     }
-                    Ok(result.is_ok() && tested_file)
+                    native_extraction::seven_zip::password_candidate_result(result.map(|_| ()), tested_file)
                 },
                 _ => Ok(false)
             }

@@ -98,6 +98,27 @@ pub(crate) fn ambiguous_password_error() -> CompressionError {
     CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] 7Z 加密数据未能通过解码或完整性校验：可能是密码不匹配，也可能是文件损坏或分卷混用，不能确定为密码错误。请核对密码，并检查分卷是否来自同一份完整归档；必要时重新下载。".to_string())
 }
 
+/// Decoder errors may be password-dependent; operating-system failures are not.
+/// Preserve the latter instead of trying another password against an unreadable file.
+pub(crate) fn password_candidate_result(
+    result: std::result::Result<(), sevenz_rust::Error>,
+    tested_file: bool,
+) -> Result<bool> {
+    match result {
+        Ok(()) => Ok(tested_file),
+        Err(sevenz_rust::Error::Io(error, context))
+            if error.raw_os_error().is_some() || matches!(error.kind(),
+                std::io::ErrorKind::PermissionDenied | std::io::ErrorKind::NotFound
+                | std::io::ErrorKind::StorageFull | std::io::ErrorKind::TimedOut
+                | std::io::ErrorKind::Interrupted | std::io::ErrorKind::BrokenPipe) => {
+            let category = if error.kind() == std::io::ErrorKind::PermissionDenied { "permission" } else { "io" };
+            let message = format!("[archive-inspection:{category}] 7Z 密码验证过程中读取失败，不能判定为密码不匹配：{error}；{context}");
+            Err(anyhow::Error::new(error).context(message))
+        }
+        Err(_) => Ok(false),
+    }
+}
+
 fn classify_error(
     error: sevenz_rust::Error,
     archive_encrypted: bool,
@@ -443,6 +464,21 @@ pub(crate) fn extract<R: ExtractionRuntime>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn candidate_verification_preserves_operating_system_errors() {
+        for kind in [std::io::ErrorKind::PermissionDenied, std::io::ErrorKind::NotFound,
+            std::io::ErrorKind::StorageFull, std::io::ErrorKind::TimedOut] {
+            let error = password_candidate_result(Err(sevenz_rust::Error::io(
+                std::io::Error::new(kind, "fixture read failure"))), false).unwrap_err();
+            assert_eq!(error.downcast_ref::<std::io::Error>().unwrap().kind(), kind);
+            assert!(error.to_string().contains("fixture read failure"));
+        }
+        assert!(!password_candidate_result(Err(sevenz_rust::Error::ChecksumVerificationFailed), false).unwrap());
+        assert!(!password_candidate_result(Err(sevenz_rust::Error::io(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput, "corrupted input data"))), false).unwrap());
+        assert!(password_candidate_result(Ok(()), true).unwrap());
+        assert!(!password_candidate_result(Ok(()), false).unwrap());
+    }
     #[test]
     fn start_header_extent_rejects_truncation_corruption_and_overflow() {
         fn header(offset: u64, size: u64) -> Vec<u8> {
