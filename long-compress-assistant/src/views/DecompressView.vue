@@ -414,21 +414,17 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
         // state, preventing duplicate vault/dictionary attempts and logs.
         task.passwordRequired = true
         task.currentPassword = undefined
-        const finalReason = task.password
-          ? appStore.t('tasks.password.wrong')
-          : appStore.t('tasks.password.required')
-        taskStore.failTask(task.id, finalReason)
-        if (!task.logs.some(log => log.message === finalReason)) {
-          task.logs.push({
-            task_id: task.id,
-            message: finalReason,
-            severity: 'warning',
-            timestamp: new Date().toISOString()
-          })
+        // The command owner has already persisted its final error. Expose the
+        // retry UI without rewriting that record with a generic localized hint.
+        if (task.status !== 'failed' || !task.error) {
+          const finalReason = task.password
+            ? appStore.t('tasks.password.wrong')
+            : appStore.t('tasks.password.required')
+          taskStore.failTask(task.id, finalReason)
         }
       } else {
         // 非密码错误，直接失败
-        taskStore.failTask(task.id, errorMsg)
+        if (task.status !== 'failed' || !task.error) taskStore.failTask(task.id, errorMsg)
         appStore.setError(`${appStore.t('common.error')}: ${errorMsg}`)
       }
     }

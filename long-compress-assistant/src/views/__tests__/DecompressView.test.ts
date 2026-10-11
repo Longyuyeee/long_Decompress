@@ -743,6 +743,27 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
+  it('does not rewrite a password failure already persisted by the command owner', async () => {
+    let originalLogs: unknown
+    mocks.decompressFile.mockImplementationOnce(async () => {
+      const store = useTaskStore()
+      const task = store.tasks[0]
+      store.failTask(task.id, '需要输入密码才能解压')
+      await store.waitForHistoryPersistence(task.id)
+      originalLogs = JSON.parse(JSON.stringify(task.logs))
+      throw '需要输入密码才能解压'
+    })
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: 'encrypted.zip', path: 'C:/encrypted.zip' }])
+    await flushPromises()
+    await wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('decompress.start_queue')))!.trigger('click')
+    await flushPromises()
+    expect(useTaskStore().tasks[0]).toMatchObject({ status: 'failed', passwordRequired: true, error: '需要输入密码才能解压' })
+    expect(useTaskStore().tasks[0].logs).toEqual(originalLogs)
+    expect(mocks.invoke.mock.calls.filter(([command]) => command === 'save_task_history')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
   it('keeps a non-password backend failure visible on both the task and workspace', async () => {
     mocks.decompressFile.mockRejectedValueOnce({ message: 'disk full' })
     const wrapper = mountView()
