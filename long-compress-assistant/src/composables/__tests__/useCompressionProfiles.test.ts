@@ -154,6 +154,18 @@ describe('useCompressionProfiles', () => {
     await expect(useCompressionProfiles().getProfileById('missing')).resolves.toBeNull()
   })
 
+  it('retains ZIP encoding across persisted profile creation and reload', async () => {
+    const api = useCompressionProfiles()
+    const config = { ...profile().config, zipPasswordEncoding: 'windows_local' as const }
+    mocks.invoke.mockResolvedValueOnce('new-id')
+    await api.createProfile({ name: '兼容', icon: 'Z', description: '', config })
+    expect(mocks.invoke).toHaveBeenLastCalledWith('create_compression_profile', { profile: expect.objectContaining({ config: expect.objectContaining({ extraParams: expect.objectContaining({ zip_password_encoding: 'windows_local' }) }) }) })
+    const raw = rawProfile()
+    raw.config.extra_params = { ...raw.config.extra_params, zip_password_encoding: 'windows_local' } as any
+    mocks.invoke.mockResolvedValueOnce(raw)
+    expect((await api.getProfileById('profile-1'))?.config.zipPasswordEncoding).toBe('windows_local')
+  })
+
   it('creates, updates, deletes, records, and suggests profiles with backend-safe payloads', async () => {
     const api = useCompressionProfiles()
     const createRequest: CreateProfileRequest = {

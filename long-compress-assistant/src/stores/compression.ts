@@ -32,6 +32,7 @@ export interface FileObject {
 export interface CompressionOptions {
   /** Legacy compatibility only. New drafts and execution always disable this retired option. */
   fastPack?: boolean
+  zipPasswordEncoding?: 'utf8' | 'windows_local'
   format: CompressionFormatId
   level: number
   password: string

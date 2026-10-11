@@ -291,6 +291,7 @@ describe('CompressionView', () => {
   it.each([false, true])('ignores retired fast-packing settings in real task payloads: %s', async enabled => {
     const wrapper = mountView()
     useCompressionStore().globalSettings.fastPack = enabled
+    useCompressionStore().globalSettings.zipPasswordEncoding = 'windows_local'
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
     await nextTick()
     const start = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('compress.start')))
@@ -298,6 +299,8 @@ describe('CompressionView', () => {
     await flushPromises()
     expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], 'C:/input/sample.zip', expect.objectContaining({ fast_pack: false }))
     expect(useTaskStore().tasks[0].compressionOptions?.fast_pack).toBe(false)
+    expect(useTaskStore().tasks[0].compressionOptions?.zip_password_encoding).toBe('windows_local')
+    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), expect.any(Array), expect.any(String), expect.objectContaining({ zip_password_encoding: 'windows_local' }))
     expect(useTaskStore().tasks[0].executionConfig).toMatchObject({
       schemaVersion: 1, kind: 'archive-compression', outputDirectory: 'C:/input', passwordRequired: false,
       settings: { filename: 'sample', format: 'zip', fastPack: false },

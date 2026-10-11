@@ -73,6 +73,7 @@ const normalizeProfile = (raw: any): CompressionProfile => {
     deleteAfter: raw.config.deleteAfter ?? raw.config.delete_after ?? false,
     verifyAfter: raw.config.verifyAfter ?? raw.config.verify_after ?? true,
     createSolidArchive: raw.config.createSolidArchive ?? raw.config.create_solid_archive ?? false,
+    ...((raw.config.zipPasswordEncoding ?? raw.config.extra_params?.zip_password_encoding ?? raw.config.extraParams?.zip_password_encoding) === 'windows_local' ? { zipPasswordEncoding: 'windows_local' as const } : {}),
     filenameTemplate: raw.config.filenameTemplate ?? raw.config.filename_template ?? null,
     extraParams: raw.config.extraParams ?? raw.config.extra_params ?? {},
   },
@@ -112,7 +113,7 @@ const toBackendProfile = (profile: CompressionProfile) => ({
     verify_after: profile.config.verifyAfter,
     create_solid_archive: profile.config.createSolidArchive,
     filename_template: profile.config.filenameTemplate,
-    extra_params: profile.config.extraParams,
+    extra_params: { ...profile.config.extraParams, zip_password_encoding: profile.config.zipPasswordEncoding ?? 'utf8' },
   },
   auto_apply: {
     enabled: profile.autoApply.enabled,
@@ -179,7 +180,9 @@ export const useCompressionProfiles = () => {
           size_range: input.autoApply.sizeRange,
         },
       } : input
-      return await invoke<string>('create_compression_profile', { profile })
+      return await invoke<string>('create_compression_profile', { profile: { ...profile,
+        config: { ...input.config, extraParams: { ...input.config.extraParams,
+          zip_password_encoding: input.config.zipPasswordEncoding ?? 'utf8' } } } })
     } catch (error) {
       console.error('[useCompressionProfiles] Failed to create profile:', error)
       throw new Error(extractErrorMessage(error))

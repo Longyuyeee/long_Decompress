@@ -16,6 +16,7 @@ export interface CompressionProfile {
 }
 
 export interface CompressionConfig {
+  zipPasswordEncoding?: 'utf8' | 'windows_local'
   format: string
   level: number
   password: string | null
