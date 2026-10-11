@@ -192,6 +192,10 @@ fn password_strategy(
             notes.push("配置中的密码已移除；导入后需要运行时输入密码".to_string());
             TemplatePasswordStrategy::PromptAtRuntime
         }
+        _ if profile.config.encrypt_filenames => {
+            notes.push("文件名加密需要密码；导入后需要运行时输入密码".to_string());
+            TemplatePasswordStrategy::PromptAtRuntime
+        }
         _ => TemplatePasswordStrategy::None,
     }
 }
@@ -839,6 +843,24 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
 mod tests {
     use super::*;
     use crate::models::compression_profile::{AutoApplyRule, ProfileStats};
+
+    #[test]
+    fn filename_encryption_without_saved_password_can_export_and_reexport() {
+        let mut original = profile();
+        original.config.encrypt_filenames = true;
+        original.config.password = None;
+        original.password_strategy = PasswordStrategy::None;
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("prompt.json");
+        export_profile_template(&original, &path).unwrap();
+        let preview = preview_template_file(&path).unwrap();
+        assert!(matches!(preview.template.password_strategy, TemplatePasswordStrategy::PromptAtRuntime));
+        let imported = import_template_profile(&path, &preview.content_sha256).unwrap();
+        assert!(imported.config.encrypt_filenames);
+        assert!(imported.config.password.is_none());
+        export_profile_template(&imported, &path).unwrap();
+        assert!(matches!(preview_template_file(&path).unwrap().template.password_strategy, TemplatePasswordStrategy::PromptAtRuntime));
+    }
 
     #[test]
     fn filename_encryption_template_round_trip_and_legacy_default() {

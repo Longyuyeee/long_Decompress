@@ -239,6 +239,44 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
       const close = await toggle.findElement(By.xpath('ancestor::div[@role="dialog"]//button[@aria-label]'))
       await close.click()
       await driver.wait(async () => (await driver.findElements(By.css('[data-testid="profile-encrypt-filenames"]'))).length === 0, 10_000)
+      const templatePath = path.join(fixtureDirectory, '隐藏名称.longtask.json')
+      const reexportPath = path.join(fixtureDirectory, '再次导出.longtask.json')
+      await callDesktopBridge('queueTaskTemplateDialogSelections', [templatePath, templatePath, reexportPath])
+      const exportSelector = '[data-testid^="export-task-template-"]'
+      const previousExportIds = new Set(await Promise.all((await driver.findElements(By.css(exportSelector))).map(button => button.getAttribute('data-testid'))))
+      const sourceExport = await driver.findElement(By.xpath('//article[.//span[normalize-space(.)="7Z"]]//button[starts-with(@data-testid,"export-task-template-")]'))
+      await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', sourceExport)
+      await sourceExport.click()
+      const readTemplate = async file => driver.wait(() => {
+        try { return JSON.parse(readFileSync(file, 'utf8')) } catch { return false }
+      }, 10_000)
+      const exported = await readTemplate(templatePath)
+      assert.equal(exported.compression.encryptFilenames, true)
+      assert.equal(exported.passwordStrategy.mode, 'prompt_at_runtime')
+      assert.ok(!readFileSync(templatePath, 'utf8').includes(password))
+      const importButton = await waitForElement('[data-testid="import-task-template"]')
+      await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', importButton)
+      await importButton.click()
+      const preview = await waitForElement('[data-testid="task-template-preview"]')
+      await driver.wait(() => driver.executeScript(element => element.closest('[role="dialog"]').getAnimations({subtree:true}).every(animation => animation.playState !== 'running'), preview), 10_000)
+      await driver.wait(() => preview.isDisplayed(), 10_000)
+      assert.match(await preview.getText(), /执行时询问密码/)
+      writeFileSync(path.join(artifactDirectory, 'filename-template-preview.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+      await (await waitForElement('[data-testid="confirm-task-template-import"]')).click()
+      await driver.wait(async () => (await driver.findElements(By.css('[data-testid="task-template-preview"]'))).length === 0, 10_000)
+      const importedExport = await driver.wait(async () => {
+        for (const button of await driver.findElements(By.css(exportSelector))) {
+          if (!previousExportIds.has(await button.getAttribute('data-testid'))) return button
+        }
+        return false
+      }, 10_000)
+      await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', importedExport)
+      await importedExport.click()
+      const reexported = await readTemplate(reexportPath)
+      assert.equal(reexported.compression.encryptFilenames, true)
+      assert.equal(reexported.passwordStrategy.mode, 'prompt_at_runtime')
+      assert.equal(await callDesktopBridge('taskTemplateDialogQueueLength'), 0)
+      writeFileSync(path.join(artifactDirectory, 'filename-template-roundtrip.json'), JSON.stringify({ exported, reexported, executionVerified: false }, null, 2))
       await (await waitForElement('[data-testid="close-compression-profiles"]')).click()
       await driver.wait(async () => (await driver.findElements(By.css('[data-testid="close-compression-profiles"]'))).length === 0, 10_000)
       await (await waitForElement('[data-testid="save-global-compression-settings"]')).click()

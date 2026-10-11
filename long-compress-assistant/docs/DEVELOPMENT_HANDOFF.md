@@ -1,5 +1,15 @@
 # 开发交接
 
+## 2026-10-11 文件名加密模板无固定密码导出修复
+
+- 发现真实逻辑缺口：仅开启文件名加密、未保存固定密码的配置组被导出为 None 密码策略，随后模板校验拒绝；导入模板会清空固定密码，因此再次导出也会遇到相同问题。新增回归先实际失败，错误为“文件名加密模板必须使用 7Z 并设置密码策略”。
+- 修复仅在现有策略回退分支将 encrypt_filenames=true 转为 PromptAtRuntime，并附运行时输入密码的说明；不写出固定密码，不改变已有保险箱/随机密码策略，也不放宽格式与密码策略校验。新增不存密码配置的导出、预览、导入、再次导出回归；模板测试 11/11，通过 debug 构建，EXE SHA256 `96a7330a331fbbdd8d889a72ed584dd6b94394a86b3b721fd782cfa882049e3b`。
+- 新增真实页面导出→预览导入→再次导出检查。首轮完整密码专项尚未到该步骤即失败：旧失败历史原因从“需要输入密码才能解压”变化为“请输入解压密码后再重试”，触发原记录 deepEqual 断言。失败证据 `test-results/desktop-e2e/failure-2026-10-11T15-12-16-793Z/`；代码中后端失败事件与 DecompressView 密码错误 catch 会分别持久化终态，需要后续收敛时序。本轮不删除/放宽原断言，不将重跑成功等同竞态消失。
+- 第二轮成功导出后，在预览弹窗尚不可见时 getText 返回空字符串，文字断言失败；证据 `failure-2026-10-11T15-14-31-372Z`。脚本改为等待当前弹窗动画完成且元素可见后再读取，未改产品动画或放宽文字断言。
+- 第三轮完整 `--numeric-zip-password-only` exit 0，包含模板页面往返和既有密码/分卷/损坏/历史重试。`7z/password-non-solid-hidden-names/filename-template-roundtrip.json` 的 exported/reexported 均 encryptFilenames=true、passwordStrategy.mode=prompt_at_runtime；executionVerified=false 明确此次未运行导入模板的压缩任务。
+- 实际查看相邻 `filename-template-preview.png`：导入预览正常渲染，7Z/固实/运行时计划可见；密码策略文字断言通过，但位于截图折叠以下，不能称该截图直接显示它。页面压缩方案摘要仍未显示文件名加密状态，后续应补齐。未改产品 UI，本轮不宣称全页/全 DPI 验收。
+- 下一步优先收敛历史失败原因重复持久化时序，再补导入模板创建草稿并真实执行、模板预览文件名加密摘要、通知呈现审查及正式安装。**未封板，版本保持 1.3.9，不发布。**
+
 ## 2026-10-11 解压详情终态进度即时同步
 
 - 核对实际代码确认：AeroTable 详情的 SmoothProgressValue 未传 immediate，终态仍使用最长 900ms 的数字补间，导致阶段已经完成时短暂显示 66.74%。本次在 completed/failed/cancelled 时同步实际 task.progress，运行中保留原补间；不把失败或取消进度伪装成 100%，不修改引擎进度数据。
