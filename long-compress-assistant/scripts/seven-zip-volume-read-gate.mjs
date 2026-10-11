@@ -84,7 +84,33 @@ export async function runSevenZipVolumeReadGate({ driver, waitForElement, callDe
     parts.forEach((file, index) => assert.deepEqual(readFileSync(file), snapshots[index]))
     results.push({ mode, volumes: parts.length, correctOutput: true, wrongPasswordRejected: Boolean(password), missingVolumeRejected: true, diagnostics, sourceAndVolumesPreserved: true })
   }
-  for (const [query, expected] of [['missing-tail-password', '可能缺少尾卷'], ['damaged-header-password', '归档头校验失败'], ['damaged-payload-password', '不能确定为密码错误']]) {
+  // Isolated profile only: distinguish zero candidates, exhausted candidates,
+  // and a later usable password without changing any user vault.
+  for (const mode of ['content', 'header']) {
+    const root = path.join(fixtureDirectory, `7z-volume-${mode}`)
+    const failure = await callDesktopBridgeFailure('extractArchive', path.join(root, '分享.7z.001'), path.join(root, 'auto-no-candidates'), null)
+    assert.ok(!failure.includes('[archive-inspection:ambiguous-data]'), failure)
+    assert.match(failure, /密码|password/i)
+  }
+  await callDesktopBridge('seedVaultPassword', '7Z 错误候选', 'not-the-7z-password')
+  for (const mode of ['content', 'header']) {
+    const root = path.join(fixtureDirectory, `7z-volume-${mode}`)
+    const target = path.join(root, 'auto-exhausted')
+    const failure = await callDesktopBridgeFailure('extractArchive', path.join(root, '分享.7z.001'), target, null)
+    assert.ok(failure.includes('已尝试 1 个候选'), failure)
+    assert.ok(failure.includes('[archive-inspection:ambiguous-data]'), failure)
+    assert.ok(!existsSync(path.join(target, '资料', '内容.txt')))
+    const record = await driver.wait(async () => (await callDesktopBridge('taskHistory')).find(record => record.outputPath === target), 10_000)
+    assert.ok(record?.errorMessage.includes('已尝试 1 个候选'), JSON.stringify(record))
+  }
+  await callDesktopBridge('seedVaultPassword', '7Z 正确候选', '中文密码 + !测试')
+  for (const mode of ['content', 'header']) {
+    const root = path.join(fixtureDirectory, `7z-volume-${mode}`)
+    const target = path.join(root, 'auto-resolved')
+    await callDesktopBridge('extractArchive', path.join(root, '分享.7z.001'), target, null)
+    assert.deepEqual(readFileSync(path.join(target, '资料', '内容.txt')), readFileSync(path.join(root, '资料', '内容.txt')))
+  }
+  for (const [query, expected] of [['missing-tail-password', '可能缺少尾卷'], ['damaged-header-password', '归档头校验失败'], ['damaged-payload-password', '不能确定为密码错误'], ['auto-exhausted', '已尝试 1 个候选']]) {
     await driver.navigate().refresh()
     await (await waitForElement('[data-testid="nav-History"]')).click()
     await (await waitForElement('[data-testid="history-search"]')).sendKeys(query)
@@ -94,7 +120,7 @@ export async function runSevenZipVolumeReadGate({ driver, waitForElement, callDe
     await driver.wait(async () => driver.executeScript(() => document.getAnimations().every(animation => animation.playState !== 'running')), 10_000)
     const displayedReason = await finalReason.getText()
     assert.ok(displayedReason.includes(expected), displayedReason)
-    if (query !== 'damaged-payload-password') assert.ok(!displayedReason.includes('密码错误'), displayedReason)
+    if (query === 'missing-tail-password' || query === 'damaged-header-password') assert.ok(!displayedReason.includes('密码错误'), displayedReason)
     writeFileSync(path.join(artifactDirectory, `seven-zip-${query}-history.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
   }
   await driver.navigate().refresh()

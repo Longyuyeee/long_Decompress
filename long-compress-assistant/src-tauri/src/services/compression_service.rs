@@ -1352,6 +1352,7 @@ impl CompressionService {
     /// 智能尝试密码本中的密码
     async fn resolve_archive_password(&self, window: &Window, task_id: &str, file_path: &str, options: &DecompressOptions) -> Result<Option<String>> {
         self.check_cancellation()?;
+        let mut attempts = 0usize;
         self.emit_log(
             window,
             task_id,
@@ -1362,21 +1363,24 @@ impl CompressionService {
             },
             TaskLogSeverity::Info,
         );
-        if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path).await? {
+        if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path, &mut attempts).await? {
             return Ok(Some(password));
         }
 
         if options.enable_bruteforce {
             if !options.bruteforce_wordlists.is_empty() {
-                if let Some(password) = self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists).await? {
+                if let Some(password) = self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists, &mut attempts).await? {
                     return Ok(Some(password));
                 }
             }
-            if let Some(password) = self.attempt_recommended_dictionary(window, task_id, file_path).await? {
+            if let Some(password) = self.attempt_recommended_dictionary(window, task_id, file_path, &mut attempts).await? {
                 return Ok(Some(password));
             }
         }
 
+        if attempts > 0 && Self::detect_password_format(file_path)? == ArchiveFormat::SevenZip {
+            return Err(anyhow::anyhow!("已尝试 {attempts} 个候选但未能完整验证归档。{}", native_extraction::seven_zip::ambiguous_password_error()));
+        }
         Ok(None)
     }
 
@@ -1475,7 +1479,7 @@ impl CompressionService {
         Ok(None)
     }
 
-    async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str) -> Result<Option<String>> {
+    async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str, attempts: &mut usize) -> Result<Option<String>> {
         let passwords = Self::recommended_dictionary(file_path);
         let total = passwords.len();
         let started_at = Instant::now();
@@ -1500,6 +1504,7 @@ impl CompressionService {
                 format!("内置字典 #{} · 密码「{}」", current, password),
             );
             let attempt_started_at = Instant::now();
+            *attempts += 1;
             match self.test_archive_password(file_path, &password).await? {
                 true => {
                     self.emit_log(
@@ -1605,7 +1610,7 @@ impl CompressionService {
         Ok(None)
     }
 
-    async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str) -> Result<Option<String>> {
+    async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str, attempts: &mut usize) -> Result<Option<String>> {
         self.emit_log(window, task_id, "正在检索密码保险箱...", TaskLogSeverity::Info);
         let started_at = Instant::now();
 
@@ -1651,6 +1656,7 @@ impl CompressionService {
             );
             let attempt_started_at = Instant::now();
 
+            *attempts += 1;
             match self.test_archive_password(file_path, pwd).await? {
                 true => {
                     self.emit_log(
@@ -1729,7 +1735,7 @@ impl CompressionService {
         Ok(None)
     }
 
-    async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String]) -> Result<Option<String>> {
+    async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String], attempts: &mut usize) -> Result<Option<String>> {
         self.emit_log(
             window,
             task_id,
@@ -1787,6 +1793,7 @@ impl CompressionService {
                     format!("导入词表 #{} · 密码「{}」", attempted, password),
                 );
                 let attempt_started_at = Instant::now();
+                *attempts += 1;
                 match self.test_archive_password(file_path, &password).await? {
                     true => {
                         self.emit_log(

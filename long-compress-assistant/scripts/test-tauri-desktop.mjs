@@ -4823,7 +4823,6 @@ try {
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
   } else if (numericZipPasswordOnly) {
     await runSevenZipVolumeUiGate({ driver, callDesktopBridge, waitForElement, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
-    await runSevenZipVolumeReadGate({ driver, waitForElement, callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
     await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory })
     const source = path.join(fixtureDirectory, '中文内容.txt')
     const archive = path.join(fixtureDirectory, '密码分卷.zip')
@@ -4951,6 +4950,9 @@ try {
       conflictLayouts,
       checks: ['UTF-8 Chinese password', 'existing target preserved', 'rename commit payload equality', 'wrong password', 'missing middle volume', 'UI password retry draft', 'UI conflict keep both', 'SQLite history after restart'],
     }, null, 2))
+    // This gate seeds an isolated password vault; run it last so those candidates
+    // cannot auto-unlock fixtures whose earlier UI checks require manual input.
+    await runSevenZipVolumeReadGate({ driver, waitForElement, callDesktopBridge, callDesktopBridgeFailure, runFixtureCommand, bundledSevenZip, fixtureDirectory, artifactDirectory })
     completedSuccessfully = true
     console.log('Real Windows numeric ZIP password and rename-commit command gate passed.')
   } else if (archiveFlowOnly) {
