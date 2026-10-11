@@ -24,14 +24,39 @@ impl SplitCompressionService {
         source: &Path,
         output: &Path,
         split_size: u64,
+        check_cancellation: impl FnMut() -> Result<()>,
+    ) -> Result<SplitCompressionResult> {
+        Self::split_archive_file_with_space_probe(source, output, split_size,
+            check_cancellation, crate::services::storage_preflight::available_disk_space)
+    }
+
+    fn split_archive_file_with_space_probe(
+        source: &Path,
+        output: &Path,
+        split_size: u64,
         mut check_cancellation: impl FnMut() -> Result<()>,
+        available_space: impl FnOnce(&Path) -> Option<u64>,
     ) -> Result<SplitCompressionResult> {
         use std::io::{Read, Write};
         anyhow::ensure!(split_size > 0, "Volume size must be positive");
         check_cancellation()?;
         let mut reader = std::fs::File::open(source)?;
-        anyhow::ensure!(reader.metadata()?.is_file(), "Archive source must be a file");
+        let metadata = reader.metadata()?;
+        anyhow::ensure!(metadata.is_file(), "Archive source must be a file");
         anyhow::ensure!(!output.exists() && Self::discover_parts(output)?.is_empty(), "Split archive output already exists");
+        // The complete archive is already allocated. Check only the additional
+        // volume payload plus the existing application reserve, not source size
+        // or twice the archive size. Unknown capacity is not zero capacity.
+        let required = metadata.len().checked_add(crate::services::storage_preflight::DISK_SAFETY_RESERVE)
+            .context("Split archive space requirement overflow")?;
+        if let Some(available) = available_space(output.parent().unwrap_or_else(|| Path::new("."))) {
+            if available < required {
+                return Err(anyhow::Error::new(CompressionError::DiskFull).context(format!(
+                    "分卷前空间不足：完整临时包已占用 {} 字节，切卷还需至少 {} 字节（含 128 MiB 预留），当前可用 {} 字节；尚未创建分卷",
+                    metadata.len(), required, available,
+                )));
+            }
+        }
         let mut parts = Vec::new();
         let result = (|| -> Result<u64> {
             let mut total = 0u64;
@@ -264,5 +289,60 @@ impl SplitCompressionService {
 impl Default for SplitCompressionService {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod space_tests {
+    use super::*;
+    use crate::services::storage_preflight::DISK_SAFETY_RESERVE;
+
+    #[test]
+    fn split_space_preflight_checks_actual_additional_bytes_before_first_volume() {
+        let required = 200 + DISK_SAFETY_RESERVE;
+        for available in [Some(0), Some(required - 1), Some(required), None] {
+            let temp = tempfile::tempdir().unwrap();
+            let source = temp.path().join("complete.zip");
+            let output = temp.path().join("result.zip");
+            let payload = vec![42u8; 200];
+            std::fs::write(&source, &payload).unwrap();
+            let result = SplitCompressionService::split_archive_file_with_space_probe(
+                &source, &output, 50, || Ok(()), |path| {
+                    assert_eq!(path, temp.path());
+                    available
+                },
+            );
+            if available.is_some_and(|bytes| bytes < required) {
+                let error = result.unwrap_err();
+                assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::DiskFull)));
+                assert!(error.to_string().contains("尚未创建分卷"));
+                assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 1);
+            } else {
+                let result = result.unwrap();
+                assert_eq!(result.part_count, 4);
+                let restored: Vec<u8> = result.part_files.iter().flat_map(|path| std::fs::read(path).unwrap()).collect();
+                assert_eq!(restored, payload);
+            }
+            assert_eq!(std::fs::read(source).unwrap(), payload);
+        }
+    }
+
+    #[test]
+    fn split_space_preflight_does_not_mask_cancellation_or_existing_output() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.zip");
+        let output = temp.path().join("result.zip");
+        let existing = temp.path().join("result.zip.001");
+        std::fs::write(&source, b"source bytes").unwrap();
+        std::fs::write(&existing, b"existing bytes").unwrap();
+        let cancelled = SplitCompressionService::split_archive_file_with_space_probe(
+            &source, &output, 50, || Err(CompressionError::Cancelled.into()),
+            |_| panic!("cancellation must precede disk probing"),
+        ).unwrap_err();
+        assert!(matches!(cancelled.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+        assert!(SplitCompressionService::split_archive_file_with_space_probe(
+            &source, &output, 50, || Ok(()), |_| panic!("conflict must precede disk probing"),
+        ).is_err());
+        assert_eq!(std::fs::read(existing).unwrap(), b"existing bytes");
     }
 }
