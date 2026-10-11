@@ -181,6 +181,7 @@ export const useUIStore = defineStore('ui', () => {
     if (toasts.value.length > 5) {
       toasts.value = toasts.value.slice(1)
     }
+    return toast.id
   }
 
   const removeToast = (id: string) => {

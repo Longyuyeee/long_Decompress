@@ -316,10 +316,13 @@ const runCompression = async () => {
   ]
 
   if (jobs.length === 0) return
+  const filenamePasswordError = '文件名加密仅支持 7Z，请先填写压缩密码。'
   if (jobs.some(job => job.settings.encryptFilenames && (job.settings.format !== '7z' || !job.settings.password))) {
-    appStore.setError('文件名加密仅支持 7Z，请先填写压缩密码。')
+    appStore.setError(filenamePasswordError)
     return
   }
+  // Clear only this resolved validation error, not errors from concurrent tasks.
+  if (appStore.error === filenamePasswordError) appStore.clearError()
 
   if (jobs.some(job => job.settings.format === 'rar')) {
     const support = await ensureRarSupport()

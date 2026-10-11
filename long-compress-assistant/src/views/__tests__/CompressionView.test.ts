@@ -358,6 +358,12 @@ describe('CompressionView', () => {
     await flushPromises()
     expect(mocks.compressFiles).not.toHaveBeenCalled()
     expect(useTaskStore().tasks).toHaveLength(0)
+    expect(useAppStore().error).toContain('请先填写压缩密码')
+    store.globalSettings.password = 'new password'
+    await wrapper.get('[data-testid="start-compression"]').trigger('click')
+    await flushPromises()
+    expect(mocks.compressFiles).toHaveBeenCalledTimes(1)
+    expect(useAppStore().error).toBeNull()
     wrapper.unmount()
   })
 

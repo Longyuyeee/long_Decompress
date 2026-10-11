@@ -370,6 +370,7 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
       assert.equal(templateRun.executionConfig.settings.encryptFilenames, true)
       assert.equal(templateRun.executionConfig.settings.password, undefined)
       assert.equal(templateRun.executionConfig.passwordRequired, true)
+      assert.ok(!(await driver.findElement(By.css('body')).getText()).includes('文件名加密仅支持 7Z，请先填写压缩密码'), 'Resolved validation error must not remain beside successful output')
       const denied = spawnSync(bundledSevenZip, ['l', '-slt', '-pwrong-password', templateRun.outputPath], { encoding: 'utf8', timeout: 30_000 })
       assert.notEqual(denied.status, 0)
       assert.ok(!denied.stdout.includes('说明.txt'))
