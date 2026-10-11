@@ -569,7 +569,7 @@ async (tasks, _, onCleanup) => {
                       </div>
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">进度</span>
-                        <div class="mt-0.5 flex min-w-0 items-center gap-2 whitespace-nowrap font-mono font-black text-primary"><SmoothProgressValue :value="task.progress" /><span v-if="task.speed && !['completed', 'failed', 'cancelled'].includes(task.status)" class="min-w-0 truncate text-muted">{{ task.speed }}</span></div>
+                        <div class="mt-0.5 flex min-w-0 items-center gap-2 whitespace-nowrap font-mono font-black text-primary"><SmoothProgressValue data-testid="decompression-detail-progress" :value="task.progress" :immediate="['completed', 'failed', 'cancelled'].includes(task.status)" /><span v-if="task.speed && !['completed', 'failed', 'cancelled'].includes(task.status)" class="min-w-0 truncate text-muted">{{ task.speed }}</span></div>
                       </div>
                       <div v-if="task.currentFile" class="task-current-file col-span-2 min-w-0 truncate rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 font-mono text-content" :title="task.currentFile">
                         {{ task.currentFile }}

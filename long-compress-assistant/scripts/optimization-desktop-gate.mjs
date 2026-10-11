@@ -142,6 +142,7 @@ export async function runOptimizationDesktopGate({ driver, bridge, waitForElemen
   await (await driver.findElement(By.xpath('//header[@data-testid="decompression-header"]//button[contains(., "开始解压队列")]'))).click()
   await driver.wait(async () => (await bridge('taskHistory')).find(row => row.sourcePaths.includes(smartArchive) && row.status === 'completed'), 60_000)
   for (const source of files) assert.equal(hash(path.join(planned, path.basename(source))), hash(source))
+  assert.equal(await (await waitForElement('[data-testid="decompression-detail-progress"]')).getText(), '100%', 'Completed detail must settle immediately, without waiting for numeric animation')
   writeFileSync(path.join(artifactDirectory, 'optimization-user-result.json'), JSON.stringify({
     verifiedAt: new Date().toISOString(), binarySha256, testKind: 'real-ui-engine-sqlite-with-seeded-prior-record',
     compressionId: compression.id, extractionId: extraction.id, fastPack: false, legacyFastPackDisabled: true, parallelOptIn: parallelEnabled, smartOptInPreviewMatchesOutput: true,

@@ -16,6 +16,33 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('AeroTable', () => {
+  it('settles detail progress on terminal status without waiting for animation', async () => {
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1))
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    store.addTask({ id: 'terminal-progress', name: '资料.zip', type: 'decompression', sourceFiles: ['C:/资料.zip'], outputPath: 'C:/out' })
+    store.tasks[0].status = 'extracting'
+    store.tasks[0].progress = 20
+    const wrapper = mount(AeroTable, { props: { taskType: 'decompression' }, global: { plugins: [pinia], stubs: { Teleport: true, ExtractionOutputPreview: true } } })
+    try {
+      await wrapper.get('[data-testid="task-row"]').trigger('click')
+      store.tasks[0].progress = 66
+      await flushPromises()
+      expect(wrapper.get('[data-testid="decompression-detail-progress"]').text()).toBe('20.00%')
+      store.tasks[0].status = 'failed'
+      await flushPromises()
+      expect(wrapper.get('[data-testid="decompression-detail-progress"]').text()).toBe('66.00%')
+      store.tasks[0].status = 'completed'
+      store.tasks[0].progress = 100
+      await flushPromises()
+      expect(wrapper.get('[data-testid="decompression-detail-progress"]').text()).toBe('100%')
+    } finally {
+      wrapper.unmount()
+      vi.unstubAllGlobals()
+    }
+  })
   it('does not intercept spaces or Enter from row controls while preserving row keyboard expansion', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
