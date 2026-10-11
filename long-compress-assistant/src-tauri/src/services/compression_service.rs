@@ -4357,6 +4357,7 @@ mod tests_continued {
             &service,
             "open-sesame",
             Default::default(),
+            Default::default(),
             6,
             &[source.to_string_lossy().to_string()],
             &archive.to_string_lossy(),

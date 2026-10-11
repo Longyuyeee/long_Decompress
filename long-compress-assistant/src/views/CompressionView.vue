@@ -425,12 +425,14 @@ const runCompression = async () => {
           createSolidArchive: effectiveFormat === '7z' && job.settings.createSolidArchive,
           encryptFilenames: job.settings.encryptFilenames ?? false,
           zipPasswordEncoding: job.settings.zipPasswordEncoding ?? 'utf8',
+          zipEncryption: job.settings.zipEncryption ?? 'aes256',
           fastPack: false,
         },
       },
       compressionOptions: {
         fast_pack: false,
         zip_password_encoding: effectiveFormat === 'zip' ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
+        zip_encryption: effectiveFormat === 'zip' ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
         format: effectiveFormat,
         level: job.settings.level,
         password: job.settings.password || undefined,
@@ -474,6 +476,7 @@ const runCompression = async () => {
         {
           fast_pack: false,
           zip_password_encoding: effectiveFormat === 'zip' ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
+          zip_encryption: effectiveFormat === 'zip' ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
           format: effectiveFormat,
           level: job.settings.level,
           password: job.settings.password || undefined,

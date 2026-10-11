@@ -19,6 +19,8 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   const password = ref('')
   const outputPath = ref('')
   const format = ref('7z')
+  const zipEncryption = ref<'aes256' | 'zipcrypto'>('aes256')
+  const zipPasswordEncoding = ref<'utf8' | 'windows_local'>('utf8')
   const level = ref(6)
   const splitMiB = ref(0)
   const encryptFilenames = ref(false)
@@ -36,6 +38,8 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     sourcePath.value = record.sourcePaths[0] || ''
     outputPath.value = '' // Require a new destination, never overwrite the previous result.
     format.value = config.format
+    zipEncryption.value = config.zipEncryption ?? 'aes256'
+    zipPasswordEncoding.value = config.zipPasswordEncoding ?? 'utf8'
     level.value = config.level
     splitMiB.value = config.splitSize / 1048576
     encryptFilenames.value = config.encryptFilenames
@@ -54,6 +58,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     if (!supportsPassword.value && (password.value || splitMiB.value > 0)) { error.value = '此格式不支持密码或分卷，请选择 ZIP 或 7Z'; return }
     if (!outputPath.value.toLowerCase().endsWith(`.${format.value}`)) { error.value = `新包名称必须以 .${format.value} 结尾`; return }
     const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
+      zipEncryption: zipEncryption.value, zipPasswordEncoding: zipPasswordEncoding.value,
       outputPath: outputPath.value.trim(), format: format.value, level: level.value,
       splitSize: splitMiB.value * 1048576, encryptFilenames: encryptFilenames.value, passwordRequired: !!password.value }
     const source = sourcePath.value.trim()
@@ -77,6 +82,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
         const output = await invoke<PublishedArchiveOutput>('convert_archive', {
           taskId: id, sourcePath: source, sourcePassword: inputPassword, outputPath: config.outputPath,
           options: { format: config.format, level: config.level, password: targetPassword,
+            zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
             split_size: config.splitSize || null, encrypt_filenames: config.encryptFilenames,
             preserve_paths: true, delete_after: false, verify_after: true },
         })
@@ -101,6 +107,6 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       if (busy.value) tasks.updateTaskStatus(taskId.value, 'cancelling')
     } catch (failure) { error.value = `取消请求失败：${String(failure)}` }
   }
-  return { visible, sourcePath, sourcePassword, password, outputPath, format, level, splitMiB,
+  return { visible, sourcePath, sourcePassword, password, outputPath, format, zipEncryption, zipPasswordEncoding, level, splitMiB,
     encryptFilenames, error, busy, task, phase, supportsPassword, show, restore, start, cancel }
 })

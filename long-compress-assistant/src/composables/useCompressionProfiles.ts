@@ -75,6 +75,7 @@ const normalizeProfile = (raw: any): CompressionProfile => {
     createSolidArchive: raw.config.createSolidArchive ?? raw.config.create_solid_archive ?? false,
     encryptFilenames: raw.config.encryptFilenames ?? raw.config.encrypt_filenames ?? false,
     ...((raw.config.zipPasswordEncoding ?? raw.config.extra_params?.zip_password_encoding ?? raw.config.extraParams?.zip_password_encoding) === 'windows_local' ? { zipPasswordEncoding: 'windows_local' as const } : {}),
+    ...((raw.config.zipEncryption ?? raw.config.extra_params?.zip_encryption ?? raw.config.extraParams?.zip_encryption) === 'zipcrypto' ? { zipEncryption: 'zipcrypto' as const } : {}),
     filenameTemplate: raw.config.filenameTemplate ?? raw.config.filename_template ?? null,
     extraParams: raw.config.extraParams ?? raw.config.extra_params ?? {},
   },
@@ -115,7 +116,7 @@ const toBackendProfile = (profile: CompressionProfile) => ({
     create_solid_archive: profile.config.createSolidArchive,
     encrypt_filenames: profile.config.encryptFilenames ?? false,
     filename_template: profile.config.filenameTemplate,
-    extra_params: { ...profile.config.extraParams, zip_password_encoding: profile.config.zipPasswordEncoding ?? 'utf8' },
+    extra_params: { ...profile.config.extraParams, zip_password_encoding: profile.config.zipPasswordEncoding ?? 'utf8', zip_encryption: profile.config.zipEncryption ?? 'aes256' },
   },
   auto_apply: {
     enabled: profile.autoApply.enabled,
@@ -184,7 +185,7 @@ export const useCompressionProfiles = () => {
       } : input
       return await invoke<string>('create_compression_profile', { profile: { ...profile,
         config: { ...input.config, extraParams: { ...input.config.extraParams,
-          zip_password_encoding: input.config.zipPasswordEncoding ?? 'utf8' } } } })
+          zip_password_encoding: input.config.zipPasswordEncoding ?? 'utf8', zip_encryption: input.config.zipEncryption ?? 'aes256' } } } })
     } catch (error) {
       console.error('[useCompressionProfiles] Failed to create profile:', error)
       throw new Error(extractErrorMessage(error))

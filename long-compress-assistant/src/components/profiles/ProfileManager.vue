@@ -749,6 +749,7 @@ const formatDate = (timestamp: number | null) =>
             </div>
             <dl class="mt-3 space-y-2 text-xs">
               <div data-testid="template-filename-encryption" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">文件名加密</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.encryptFilenames ? '开启' : '关闭' }}</dd></div>
+              <div v-if="templatePreview.template.compression.format === 'zip'" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 加密方式</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipEncryption === 'zipcrypto' ? 'ZipCrypto（传统兼容，较弱）' : 'AES-256' }}</dd></div>
               <div class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">完整性校验</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.verifyAfter ? '开启' : '关闭' }}</dd></div>
               <div class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">目录结构</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.keepStructure ? '保留' : '不保留' }}</dd></div>
             </dl>

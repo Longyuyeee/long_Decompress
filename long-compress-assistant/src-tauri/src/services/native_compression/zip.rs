@@ -34,6 +34,7 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     runtime: &R,
     password: &str,
     password_encoding: crate::services::zip_password::ZipPasswordEncoding,
+    encryption: crate::services::zip_password::ZipEncryption,
     level: u32,
     sources: &[String],
     output: &str,
@@ -47,8 +48,14 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     let mut writer = zip_aes::ZipWriter::new(file);
     let options = zip_aes::write::SimpleFileOptions::default()
         .compression_method(zip_aes::CompressionMethod::Deflated)
-        .compression_level(Some(level.clamp(1, 9) as i64))
-        .with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &password_bytes);
+        .compression_level(Some(level.clamp(1, 9) as i64));
+    let options = match encryption {
+        crate::services::zip_password::ZipEncryption::Aes256 => options.with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &password_bytes),
+        crate::services::zip_password::ZipEncryption::Zipcrypto => {
+            use zip_aes::unstable::write::FileOptionsExt;
+            options.with_deprecated_encryption(&password_bytes)?
+        }
+    };
     let entries = compression_entries::collect(sources, preserve_paths, true)?;
     let total_bytes = source_total_bytes(&entries)?;
     let mut progress = ByteProgress::new(total_bytes);
@@ -174,7 +181,10 @@ pub(crate) fn compress<R: CompressionRuntime>(
             runtime.emit_log(
                 window,
                 task_id,
-                "使用原生引擎创建 AES-256 加密 ZIP...",
+                match options.zip_encryption {
+                    crate::services::zip_password::ZipEncryption::Aes256 => "使用原生引擎创建 AES-256 加密 ZIP...",
+                    crate::services::zip_password::ZipEncryption::Zipcrypto => "使用用户选择的传统 ZipCrypto 兼容加密（保护较弱）...",
+                },
                 TaskLogSeverity::Info,
             );
         }
@@ -182,6 +192,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
             runtime,
             password,
             options.zip_password_encoding,
+            options.zip_encryption,
             options.level.clamp(1, 9),
             sources,
             output,
@@ -279,6 +290,37 @@ pub(crate) fn compress<R: CompressionRuntime>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn zipcrypto_is_explicit_and_roundtrips_with_both_password_encodings() {
+        use crate::services::zip_password::{ZipEncryption, ZipPasswordEncoding, encode};
+        for mode in [ZipPasswordEncoding::Utf8, ZipPasswordEncoding::WindowsLocal] {
+            for encryption in [ZipEncryption::Aes256, ZipEncryption::Zipcrypto] {
+                let password = "密码 + !测试";
+                let Ok(bytes) = encode(password, mode) else { continue };
+                let root = tempfile::tempdir().unwrap();
+                let source = root.path().join("内容.txt");
+                std::fs::write(&source, b"payload content").unwrap();
+                let output = root.path().join("out.zip");
+                create_encrypted_zip(&TestRuntime::default(), password, mode, encryption, 6,
+                    &[source.to_string_lossy().into_owned()], &output.to_string_lossy(), true, false, None).unwrap();
+                let mut zip = zip_aes::ZipArchive::new(File::open(&output).unwrap()).unwrap();
+                let wrong_failed = match zip.by_index_decrypt(0, b"wrong-password") {
+                    Err(_) => true,
+                    Ok(mut entry) => entry.read_to_end(&mut Vec::new()).is_err(),
+                };
+                assert!(wrong_failed);
+                let mut entry = zip.by_index_decrypt(0, &bytes).unwrap();
+                let mut restored = Vec::new();
+                entry.read_to_end(&mut restored).unwrap();
+                assert_eq!(restored, b"payload content");
+                let data = std::fs::read(output).unwrap();
+                assert_eq!(u16::from_le_bytes([data[8], data[9]]), if encryption == ZipEncryption::Aes256 { 99 } else { 8 });
+            }
+        }
+        let legacy: CompressionOptions = serde_json::from_value(serde_json::json!({"level":6,"password":"x","split_size":null})).unwrap();
+        assert_eq!(legacy.zip_encryption, ZipEncryption::Aes256);
+        assert!(serde_json::from_value::<CompressionOptions>(serde_json::json!({"level":6,"zip_encryption":"unknown"})).is_err());
+    }
     use std::sync::{
         atomic::{AtomicBool, Ordering},
         Arc,

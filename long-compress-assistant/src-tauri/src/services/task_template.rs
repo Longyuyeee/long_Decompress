@@ -90,6 +90,8 @@ pub enum TemplateTargetMode {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TemplateCompression {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zip_encryption: Option<crate::services::zip_password::ZipEncryption>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_password_encoding: Option<crate::services::zip_password::ZipPasswordEncoding>,
     pub format: String,
     pub level: u8,
@@ -223,6 +225,11 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             filename_template: profile.config.filename_template.clone(),
         },
         compression: TemplateCompression {
+            zip_encryption: if profile.config.format.eq_ignore_ascii_case("zip") {
+                profile.config.extra_params.get("zip_encryption").map(|value|
+                    if value == "zipcrypto" { crate::services::zip_password::ZipEncryption::Zipcrypto }
+                    else { crate::services::zip_password::ZipEncryption::Aes256 })
+            } else { None },
             zip_password_encoding: if profile.config.format.eq_ignore_ascii_case("zip") {
                 profile.config.extra_params.get("zip_password_encoding").map(|value|
                     if value == "windows_local" { crate::services::zip_password::ZipPasswordEncoding::WindowsLocal }
@@ -807,13 +814,23 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
             create_solid_archive: template.compression.create_solid_archive,
             encrypt_filenames: template.compression.encrypt_filenames,
             filename_template: template.target_rule.filename_template,
-            extra_params: template.compression.zip_password_encoding.map(|encoding| {
+            extra_params: {
+              let mut params = template.compression.zip_password_encoding.map(|encoding| {
                 let value = match encoding {
                     crate::services::zip_password::ZipPasswordEncoding::Utf8 => "utf8",
                     crate::services::zip_password::ZipPasswordEncoding::WindowsLocal => "windows_local",
                 };
                 [("zip_password_encoding".to_string(), value.to_string())].into()
-            }).unwrap_or_default(),
+              }).unwrap_or_else(std::collections::HashMap::new);
+              if let Some(encryption) = template.compression.zip_encryption {
+                  let value = match encryption {
+                      crate::services::zip_password::ZipEncryption::Aes256 => "aes256",
+                      crate::services::zip_password::ZipEncryption::Zipcrypto => "zipcrypto",
+                  };
+                  params.insert("zip_encryption".into(), value.into());
+              }
+              params
+            },
         },
     );
     profile.auto_apply = AutoApplyRule {
@@ -947,12 +964,14 @@ mod tests {
             original.config.create_solid_archive = false;
             original.config.split_archive = true;
             original.config.split_size = Some(128);
+            original.config.extra_params.insert("zip_encryption".into(), "zipcrypto".into());
             if let Some(value) = encoding {
                 original.config.extra_params.insert("zip_password_encoding".into(), value.into());
             }
             export_profile_template(&original, &path).unwrap();
             let preview = preview_template_file(&path).unwrap();
             let imported = import_template_profile(&path, &preview.content_sha256).unwrap();
+            assert_eq!(imported.config.extra_params.get("zip_encryption").map(String::as_str), Some("zipcrypto"));
             assert_eq!(imported.config.extra_params.get("zip_password_encoding").map(String::as_str), encoding);
             assert!(imported.config.split_archive);
             assert_eq!(imported.config.split_size, Some(128));

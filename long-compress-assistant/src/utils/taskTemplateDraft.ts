@@ -37,6 +37,7 @@ export const buildSafeTemplateDraftSettings = (
   createSolidArchive: profile.config.createSolidArchive,
   encryptFilenames: profile.config.encryptFilenames ?? false,
   ...(profile.config.zipPasswordEncoding ? { zipPasswordEncoding: profile.config.zipPasswordEncoding } : {}),
+  ...(profile.config.zipEncryption ? { zipEncryption: profile.config.zipEncryption } : {}),
 })
 
 export const taskTemplateCandidatesToFiles = (

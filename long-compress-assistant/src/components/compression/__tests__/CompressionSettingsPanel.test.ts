@@ -51,6 +51,28 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('dismisses vault suggestions when the user types their own password', async () => {
+    const wrapper = mountPanel(settings())
+    await flushPromises()
+    const input = wrapper.get('[data-testid="compression-password-input"]')
+    await input.trigger('focus')
+    expect(wrapper.find('.password-vault-menu').exists()).toBe(true)
+    await input.setValue('my-password')
+    await vi.waitFor(() => expect(wrapper.find('.password-vault-menu').exists()).toBe(false))
+    wrapper.unmount()
+  })
+  it('defaults to AES and exposes weaker ZipCrypto only as an explicit selection', async () => {
+    const wrapper = mountPanel(settings({ password: 'secret' }))
+    await flushPromises()
+    const select = wrapper.get('[data-testid="zip-encryption"]')
+    expect(select.text()).toContain('AES-256')
+    await select.trigger('click')
+    const choice = wrapper.findAll('[role="option"]').find(item => item.text().includes('ZipCrypto'))
+    expect(choice).toBeTruthy()
+    await choice!.trigger('click'); await flushPromises()
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ zipEncryption: 'zipcrypto' })
+    wrapper.unmount()
+  })
   it('offers opt-in filename encryption only for 7Z and clears it on format change', async () => {
     const wrapper = mountPanel(settings({ format: '7z' }))
     await flushPromises()

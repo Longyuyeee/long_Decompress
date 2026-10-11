@@ -253,6 +253,7 @@ const applyProfile = (profile: CompressionProfile) => {
   compressionOptions.value.createSolidArchive = profile.config.createSolidArchive
   compressionOptions.value.encryptFilenames = profile.config.encryptFilenames ?? false
   compressionOptions.value.zipPasswordEncoding = profile.config.zipPasswordEncoding ?? 'utf8'
+  compressionOptions.value.zipEncryption = profile.config.zipEncryption ?? 'aes256'
   showProfileSelector.value = false
   appStore.setSuccess(appStore.t('profiles.applied_success').replace('{0}', profile.name))
 }
@@ -287,6 +288,7 @@ const saveAsNewProfile = async () => {
         createSolidArchive: compressionOptions.value.createSolidArchive,
         encryptFilenames: compressionOptions.value.encryptFilenames ?? false,
         zipPasswordEncoding: compressionOptions.value.zipPasswordEncoding ?? 'utf8',
+        zipEncryption: compressionOptions.value.zipEncryption ?? 'aes256',
         filenameTemplate: compressionOptions.value.filename ? `{name}_${compressionOptions.value.filename}` : null,
         extraParams: {}
       }
@@ -385,6 +387,8 @@ const closeVaultPasswordsAfterFocus = () => {
               :placeholder="supportsPassword ? (compressionOptions.password ? appStore.t('preset.password_set') : appStore.t('preset.password_optional')) : appStore.t('preset.password_na')"
               @focus="showVaultPasswords = supportsPassword"
               @click="showVaultPasswords = supportsPassword"
+              @input="showVaultPasswords = false"
+              @keydown.esc.stop="showVaultPasswords = false"
             />
             <button
               v-if="compressionOptions.password"
@@ -434,6 +438,13 @@ const closeVaultPasswordsAfterFocus = () => {
               </div>
             </div>
           </Transition>
+        </div>
+        <div v-if="compressionOptions.format === 'zip' && compressionOptions.password" class="flex items-center gap-2 min-w-0">
+          <ThemedSelect test-id="zip-encryption" aria-label="ZIP 加密方式" class="min-w-0 flex-1"
+            :model-value="compressionOptions.zipEncryption ?? 'aes256'"
+            @update:model-value="compressionOptions.zipEncryption = $event as 'aes256' | 'zipcrypto'"
+            :options="[{ value: 'aes256', label: 'AES-256（推荐）' }, { value: 'zipcrypto', label: 'ZipCrypto（传统兼容，较弱）' }]" floating />
+          <HelpHint label="ZIP 加密方式说明">AES-256 为默认。只有旧软件无法读取 AES 压缩包时才选择 ZipCrypto，其密码保护较弱；程序不会自动降级。</HelpHint>
         </div>
         <div v-if="compressionOptions.format === 'zip' && compressionOptions.password" class="flex items-center gap-2 min-w-0" data-testid="zip-password-encoding-row">
           <ThemedSelect test-id="zip-password-encoding" aria-label="ZIP 密码编码" class="min-w-0 flex-1"
@@ -663,6 +674,7 @@ const closeVaultPasswordsAfterFocus = () => {
 </template>
 
 <style scoped>
+.password-menu-leave-active { pointer-events: none; }
 .archive-name-field { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; min-width:0; border:1px solid var(--border-subtle); border-radius:.75rem; background:var(--bg-input); }
 .archive-name-field:focus-within { border-color:var(--dynamic-accent); }
 .settings-core-grid {

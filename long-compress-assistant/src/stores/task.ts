@@ -88,6 +88,7 @@ export interface Task {
   compressionOptions?: {
     fast_pack?: boolean
     zip_password_encoding?: 'utf8' | 'windows_local'
+    zip_encryption?: 'aes256' | 'zipcrypto'
     format?: string
     level: number
     password?: string

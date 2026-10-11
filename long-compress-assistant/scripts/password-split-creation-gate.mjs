@@ -2,10 +2,15 @@ import assert from 'node:assert/strict'
 import { mkdirSync, writeFileSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
-import { By } from 'selenium-webdriver'
+import { By, Key } from 'selenium-webdriver'
 import { spawnSync } from 'node:child_process'
 
-export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip, multipleSources = false, fault = null, encryptFilenames = false }) {
+export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip, multipleSources = false, fault = null, encryptFilenames = false, zipEncryption = 'aes256', zipEncoding = 'utf8' }) {
+  if (zipEncryption === 'zipcrypto') {
+    fixtureDirectory = path.join(fixtureDirectory, `zipcrypto-${zipEncoding}`)
+    artifactDirectory = path.join(artifactDirectory, `zipcrypto-${zipEncoding}`)
+    mkdirSync(fixtureDirectory, { recursive: true }); mkdirSync(artifactDirectory, { recursive: true })
+  }
   assert.ok(!encryptFilenames || (format === '7z' && password && !productionIpc))
   assert.ok(!fault || (!productionIpc && format === '7z' && !multipleSources && ['cancel', 'output-file'].includes(fault)))
   assert.ok(!multipleSources || (!productionIpc && format === '7z'), 'Multi-source gate currently uses the isolated 7Z desktop workflow')
@@ -66,11 +71,21 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   const fill = async (id, value) => {
     const input = await waitForElement(`[role="dialog"] [data-testid="${id}"]`)
     await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', input)
-    await input.clear()
+    await input.sendKeys(Key.chord(Key.CONTROL, 'a'), Key.BACK_SPACE)
     if (value) await input.sendKeys(value)
+    assert.equal(await input.getAttribute('value'), value, `User input must replace the previous value: ${id}`)
     return input
   }
   await fill('compression-password-input', password)
+  if (format === 'zip' && zipEncryption === 'zipcrypto') {
+    await (await waitForElement('[role="dialog"] [data-testid="zip-encryption"]')).click()
+    await driver.findElement(By.xpath('//button[@role="option" and contains(.,"ZipCrypto")]')).click()
+    if (zipEncoding === 'windows_local') {
+      await (await waitForElement('[role="dialog"] [data-testid="zip-password-encoding"]')).click()
+      await driver.findElement(By.xpath('//button[@role="option" and contains(.,"Windows 兼容")]')).click()
+    }
+    writeFileSync(path.join(artifactDirectory, 'zipcrypto-settings.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  }
   if (format === '7z') {
     const input = await waitForElement('[role="dialog"] [data-testid="compression-solid-toggle"]')
     await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', input)
@@ -186,6 +201,15 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     }
   }
   const extracted = path.join(fixtureDirectory, '创建后解压')
+  if (zipEncryption === 'zipcrypto') {
+    const joined = path.join(fixtureDirectory, '独立检查.zip')
+    writeFileSync(joined, Buffer.concat(snapshots))
+    const listing = spawnSync(bundledSevenZip, ['l', '-slt', joined], { encoding: 'utf8', timeout: 30000, windowsHide: true })
+    assert.equal(listing.status, 0, listing.stderr)
+    assert.match(listing.stdout, /ZipCrypto/)
+    const independent = spawnSync(bundledSevenZip, ['t', `-p${password}`, joined], { encoding: 'utf8', timeout: 30000, windowsHide: true })
+    assert.equal(independent.status, 0, independent.stdout + independent.stderr)
+  }
   if (productionIpc) {
     await productionIpc('extract_file', { taskId: `installed-create-roundtrip-${Date.now()}`, filePath: parts[0], outputPath: extracted, password,
       options: { preserve_paths: true, create_subdirectory: false, delete_after: false, conflict_policy: 'rename',

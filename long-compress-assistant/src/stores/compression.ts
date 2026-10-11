@@ -33,6 +33,7 @@ export interface CompressionOptions {
   /** Legacy compatibility only. New drafts and execution always disable this retired option. */
   fastPack?: boolean
   zipPasswordEncoding?: 'utf8' | 'windows_local'
+  zipEncryption?: 'aes256' | 'zipcrypto'
   format: CompressionFormatId
   level: number
   password: string

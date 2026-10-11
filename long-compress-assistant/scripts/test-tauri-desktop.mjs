@@ -4836,6 +4836,13 @@ try {
     await runZipTelemetryDesktopGate()
     completedSuccessfully = true
     console.log('Real Windows Tauri ZIP telemetry gate passed.')
+  } else if (process.argv.includes('--zipcrypto-only')) {
+    for (const [zipEncoding, password] of [['utf8', 'legacy-password'], ['windows_local', '中文密码 + !测试']]) {
+      await runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory,
+        bundledSevenZip, zipEncryption: 'zipcrypto', zipEncoding, password })
+    }
+    completedSuccessfully = true
+    console.log('ZIP ZipCrypto UI creation and independent compatibility gate passed.')
   } else if (process.argv.includes('--archive-conversion-only')) {
     await runArchiveConversionGate({ driver, waitForElement, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
     completedSuccessfully = true

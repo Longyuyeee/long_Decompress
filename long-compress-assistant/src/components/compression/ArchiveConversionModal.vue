@@ -60,6 +60,10 @@ watch(() => store.format, (format, old) => {
           <label class="block text-sm">新包密码<input v-model="store.password" :disabled="!store.supportsPassword || store.busy" type="password" autocomplete="new-password" data-testid="conversion-password" class="conversion-input w-full mt-1" placeholder="留空不加密" /></label>
           <label class="block text-sm">分卷大小（MiB）<input v-model.number="store.splitMiB" :disabled="!store.supportsPassword || store.busy" type="number" min="0" data-testid="conversion-split" class="conversion-input w-full mt-1" /><span class="text-xs text-muted">0 表示不分卷</span></label>
           <label class="block text-sm">压缩强度 {{ store.level }} / 9<input v-model.number="store.level" type="range" min="0" max="9" class="w-full" /></label>
+          <template v-if="store.format === 'zip' && store.password">
+            <label class="text-sm">ZIP 加密方式<ThemedSelect :model-value="store.zipEncryption" @update:model-value="store.zipEncryption = $event as 'aes256' | 'zipcrypto'" :disabled="store.busy" :options="[{ value: 'aes256', label: 'AES-256（推荐）' }, { value: 'zipcrypto', label: 'ZipCrypto（传统兼容，较弱）' }]" test-id="conversion-zip-encryption" floating /></label>
+            <label class="text-sm">密码编码<ThemedSelect :model-value="store.zipPasswordEncoding" @update:model-value="store.zipPasswordEncoding = $event as 'utf8' | 'windows_local'" :disabled="store.busy" :options="[{ value: 'utf8', label: 'UTF-8' }, { value: 'windows_local', label: 'Windows 兼容' }]" test-id="conversion-zip-encoding" floating /></label>
+          </template>
           <label v-if="store.format === '7z'" class="flex items-center gap-2 text-sm"><input v-model="store.encryptFilenames" type="checkbox" data-testid="conversion-hidden-names" />加密文件名</label>
         </div>
         <label class="block text-sm">新包保存位置<div class="flex gap-2 mt-1"><input v-model="store.outputPath" data-testid="conversion-output" class="conversion-input min-w-0 flex-1" :placeholder="`新文件名.${store.format}`" /><button class="conversion-button" data-testid="conversion-choose-output" @click="chooseOutput">另存为</button></div></label>

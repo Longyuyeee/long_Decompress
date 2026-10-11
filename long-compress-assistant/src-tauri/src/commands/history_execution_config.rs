@@ -27,6 +27,14 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         _ => &[],
     };
     output.extend(project(&value, fields)?);
+    if kind == "archive-conversion" {
+        for (key, default, allowed) in [("zipEncryption", "aes256", ["aes256", "zipcrypto"]),
+            ("zipPasswordEncoding", "utf8", ["utf8", "windows_local"])] {
+            let selected = value.get(key).and_then(Value::as_str).unwrap_or(default);
+            if !allowed.contains(&selected) { return None; }
+            output.insert(key.into(), selected.into());
+        }
+    }
     if kind == "archive-extraction" && output["outputDirectory"].as_str()?.trim().is_empty() { return None; }
     let settings_fields: &[(&str, char)] = match kind {
         "archive-compression" => &[("format", 's'), ("level", 'n'), ("filename", 's'), ("splitArchive", 'b'), ("splitSize", 's'), ("keepStructure", 'b'), ("verifyAfter", 'b'), ("createSolidArchive", 'b')],
@@ -37,6 +45,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     if !settings_fields.is_empty() {
         let mut settings = project(value.get("settings")?, settings_fields)?;
         if kind == "archive-compression" {
+            if let Some(encryption) = value.get("settings")?.get("zipEncryption") {
+                if !matches!(encryption.as_str(), Some("aes256" | "zipcrypto")) { return None; }
+                settings.insert("zipEncryption".into(), encryption.clone());
+            }
             settings.insert("fastPack".into(), Value::Bool(false));
             if let Some(encrypted_names) = value.get("settings")?.get("encryptFilenames") {
                 if !encrypted_names.is_boolean() { return None; }
@@ -87,6 +99,12 @@ mod tests {
             "splitSize":"100","keepStructure":true,"verifyAfter":true,"createSolidArchive":false,
             "password":"never persist"}});
         let old = super::sanitize(original.clone(), "compression", "archive").unwrap();
+        for mode in ["aes256", "zipcrypto"] {
+            let mut current = original.clone();
+            current["settings"]["zipEncryption"] = mode.into();
+            let saved = super::sanitize(current, "compression", "archive").unwrap();
+            assert_eq!(saved["settings"]["zipEncryption"], mode);
+        }
         assert!(old["settings"].get("zipPasswordEncoding").is_none());
         assert!(old["settings"].get("password").is_none());
         assert!(old["settings"].get("encryptFilenames").is_none());

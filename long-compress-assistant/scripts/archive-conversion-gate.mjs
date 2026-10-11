@@ -42,6 +42,21 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
   assert.deepEqual(readFileSync(path.join(plainRestored, '中文目录', '内容.bin')), payload)
   assert.ok(existsSync(path.join(plainRestored, '中文目录', '空目录')))
   assert.deepEqual(readFileSync(path.join(plainRestored, '说明.txt')), readFileSync(path.join(source, '说明.txt')))
+  const formatChecks = []
+  for (const format of ['tar', 'tar.gz', 'tar.bz2', 'tar.xz', 'tar.zst', 'wim']) {
+    const output = path.join(root, `格式兼容.${format}`)
+    await bridge('convertArchive', original, 'old-password', output, { format, password: null })
+    run(['t', output])
+    const destination = path.join(root, `还原-${format}`)
+    await bridge('extractArchive', output, destination, null)
+    assert.deepEqual(readFileSync(path.join(destination, '中文目录', '内容.bin')), payload)
+    assert.deepEqual(readFileSync(path.join(destination, '说明.txt')), readFileSync(path.join(source, '说明.txt')))
+    assert.ok(existsSync(path.join(destination, '中文目录', '空目录')))
+    formatChecks.push(format)
+  }
+  const splitZip = await bridge('convertArchive', original, 'old-password', path.join(root, '换卷.zip'), { format: 'zip', split_size: 65536 })
+  await bridge('convertArchive', splitZip.primaryPath, null, path.join(root, 'ZIP分卷转7Z.7z'), { format: '7z' })
+  run(['t', path.join(root, 'ZIP分卷转7Z.7z')])
   const wrongOutput = path.join(root, '错误密码.7z')
   assert.match(await failure('convertArchive', original, 'wrong-password', wrongOutput, { format: '7z' }), /转换读取原包失败/)
   assert.equal(existsSync(wrongOutput), false)
@@ -134,5 +149,6 @@ export async function runArchiveConversionGate({ driver, waitForElement, bridge,
     passwordChanged: true, resplit: true, mergedAndDecrypted: true, wrongPasswordRejected: true,
     stagingCleaned: true, corruptInputRejected: true, uiExecutionVerified: true, historyRetryDraftVerified: true,
     historyRetryExecutionVerified: true, actualCancellationVerified: true,
+    additionalTargetFormats: formatChecks, numericZipInputVerified: true,
   }, null, 2))
 }
