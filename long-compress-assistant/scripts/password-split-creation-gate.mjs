@@ -243,6 +243,60 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
       await driver.wait(async () => (await driver.findElements(By.css('[data-testid="close-compression-profiles"]'))).length === 0, 10_000)
       await (await waitForElement('[data-testid="save-global-compression-settings"]')).click()
       await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"]'))).length === 0, 10_000)
+      // Retry the real completed record, not a fabricated history entry.
+      const clickVisible = async element => {
+        await driver.executeScript('arguments[0].scrollIntoView({block:"center",behavior:"instant"})', element)
+        await driver.wait(() => driver.executeScript(el => {
+          const r = el.getBoundingClientRect()
+          return el.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2))
+        }, element), 10_000)
+        await element.click()
+      }
+      await (await waitForElement('[data-testid="nav-History"]')).click()
+      const retryRow = await driver.wait(async () => {
+        for (const row of await driver.findElements(By.css('[data-testid="history-record-row"]'))) {
+          if ((await row.getText()).includes(saved.outputPath)) return row
+        }
+        return false
+      }, 10_000)
+      await clickVisible(await retryRow.findElement(By.css('[data-testid="history-compression-retry"]')))
+      const draft = '[data-testid="history-compression-draft"]'
+      assert.equal(await (await waitForElement(`${draft} [data-testid="compression-encrypt-filenames"]`)).isSelected(), true)
+      const retryPassword = await waitForElement(`${draft} [data-testid="compression-password-input"]`)
+      assert.equal(await retryPassword.getAttribute('value'), '', 'History must not restore a password')
+      await clickVisible(await waitForElement('[data-testid="compression-retry-create"]'))
+      assert.match(await (await waitForElement(`${draft} [role="alert"]`)).getText(), /重新填写本次密码/)
+      const retryOutput = path.join(fixtureDirectory, '历史再次压缩')
+      mkdirSync(retryOutput)
+      const destination = await waitForElement('[data-testid="compression-retry-output"]')
+      await destination.clear()
+      await destination.sendKeys(retryOutput)
+      await clickVisible(retryPassword)
+      await retryPassword.sendKeys(password)
+      await clickVisible(await waitForElement('[data-testid="compression-retry-create"]'))
+      const link = await waitForElement(`${draft} a`)
+      assert.deepEqual(readdirSync(retryOutput), [], 'Creating a draft must not execute it')
+      writeFileSync(path.join(artifactDirectory, 'history-retry-draft.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+      await clickVisible(link)
+      await (await waitForElement('[data-testid="start-compression"]')).click()
+      const retried = await driver.wait(async () => (await readHistory()).find(row => row.retryOfTaskId === saved.id && row.status === 'completed'), 60_000)
+      assert.equal(retried.executionConfig.settings.encryptFilenames, true)
+      assert.equal(retried.executionConfig.passwordRequired, true)
+      assert.equal(retried.executionConfig.settings.password, undefined)
+      assert.deepEqual((await readHistory()).find(row => row.id === saved.id), saved, 'Original history must remain unchanged')
+      const retryParts = readdirSync(retryOutput).filter(name => /\.7z\.\d+$/.test(name)).sort()
+      assert.equal(retryParts.length, 3)
+      const retryArchive = path.join(retryOutput, retryParts[0])
+      const wrongRetry = spawnSync(bundledSevenZip, ['l', '-slt', '-pwrong-password', retryArchive], { encoding: 'utf8', timeout: 30_000 })
+      assert.notEqual(wrongRetry.status, 0)
+      assert.ok(!wrongRetry.stdout.includes('说明.txt'))
+      const retryRestored = path.join(fixtureDirectory, '历史重试还原')
+      await callDesktopBridge('extractArchive', retryArchive, retryRestored, password)
+      assert.deepEqual(readFileSync(path.join(retryRestored, path.basename(folder), '数据.bin')), payload)
+      assert.equal(readFileSync(path.join(retryRestored, path.basename(folder), '说明.txt'), 'utf8'), '中文内容与空格密码')
+      assert.deepEqual(readdirSync(path.join(retryRestored, path.basename(folder), '空目录')), [])
+      parts.forEach((file, index) => assert.deepEqual(readFileSync(file), snapshots[index]))
+      writeFileSync(path.join(artifactDirectory, 'history-retry-result.json'), JSON.stringify({ originalId: saved.id, retryId: retried.id, passwordRequired: true, encryptFilenames: true, volumeCount: retryParts.length, payloadMatches: true, originalUnchanged: true }, null, 2))
     }
   }
   assert.ok(history.some(row => row.status === 'completed' && row.sourcePaths.includes(folder)))
