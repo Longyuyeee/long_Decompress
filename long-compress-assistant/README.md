@@ -4,7 +4,9 @@
 
 ## 当前开发能力
 
-> 当前版本为 [`v1.4.0`](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.0)。发布内容见 [发布说明](docs/RELEASE_NOTES_1.4.0.md)，验收与接续见 [开发交接](docs/DEVELOPMENT_HANDOFF.md)。本版补齐现有格式兼容，不新增格式；快速打包已移除，预计体积分析保留。
+> 当前版本为 [`v1.4.1`](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.1)。发布内容见 [发布说明](docs/RELEASE_NOTES_1.4.1.md)，封板与接续见 [开发交接](docs/DEVELOPMENT_HANDOFF.md)。本版聚焦批量配置、统一结果操作和 Windows 压缩包右键入口。
+
+- `v1.4.1` 支持压缩文件/组和待解压任务的行内批量配置，只修改指定字段，保留各自其他设置；继续点击任务行在下方展开，单条或批量编辑后自动保留配置。压缩、解压、转换、媒体、历史和全局任务面板复用结果操作，提供目录打开、文件/首卷定位和路径复制，批量打开目录去重。Windows 右键新增转换格式与密码/分卷调整入口，多选原包可逐个配置后启动。批量栏随列表滚动，适配窄窗口。
 
 - `v1.4.0` 支持 ZIP/7Z 目录、多源和密码数字分卷，7Z 固实/文件名加密；ZIP 默认 AES-256，显式提供 ZipCrypto 和 Windows 本地密码编码。转换支持 ZIP/7Z/TAR/TGZ/TBZ/TXZ/TZST/WIM 目标、改密/去密码、重新分卷/合卷、取消和历史再次转换，始终保留原包。界面统一菜单、问号说明和紧凑布局，名称后缀独立显示，高级选项常显，历史统计使用弹窗。下方版本日志保留各版本当时的能力边界，不覆盖本版说明。
 
