@@ -38,6 +38,7 @@ import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import ArchiveConversionModal from '@/components/compression/ArchiveConversionModal.vue'
+import { useArchiveConversionStore } from '@/stores/archiveConversion'
 import Modal from '@/components/ui/Modal.vue'
 import UpdateDialog from '@/components/update/UpdateDialog.vue'
 import { useTaskStore } from '@/stores/task'
@@ -245,6 +246,12 @@ onMounted(async () => {
     if (request.action === 'context-browse-archive') {
       appStore.openArchiveInBrowser(files[0])
       void router.push('/browser')
+      return
+    }
+
+    if (request.action === 'context-convert-archive' || request.action === 'context-reconfigure-archive') {
+      useArchiveConversionStore().openFromExplorer(files, request.action === 'context-reconfigure-archive' ? 'reconfigure' : 'convert')
+      void router.push('/compress')
       return
     }
 

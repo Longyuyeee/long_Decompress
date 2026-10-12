@@ -94,6 +94,8 @@ fn parse_context_action(args: &[String]) -> Option<ContextAction> {
         ("--compress-7z", "context-compress-7z"),
         ("--compress-custom", "context-compress-custom"),
         ("--browse-archive", "context-browse-archive"),
+        ("--convert-archive", "context-convert-archive"),
+        ("--reconfigure-archive", "context-reconfigure-archive"),
         ("--open", "context-open"),
         ("--context-menu", "context-open"),
     ];

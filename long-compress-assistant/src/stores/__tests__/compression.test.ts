@@ -38,6 +38,51 @@ describe('Compression Store', () => {
     expect(store.totalOriginalSize).toBe(0)
   })
 
+  it('changes only selected fields on file/group drafts and freezes their other settings', () => {
+    const store = useCompressionStore()
+    const first = mockFile('first.txt', 10), second = mockFile('second.txt', 20), untouched = mockFile('untouched.txt', 30)
+    ;[first, second, untouched].forEach(file => store.addFile(file))
+    const groupId = store.createGroup([second.path])
+    store.updateFileSettings(first.path, { ...defaultOptions(), password: 'first-secret', filename: 'custom', level: 2 })
+    store.updateGroupSettings(groupId, { ...defaultOptions(), password: 'group-secret', level: 4 })
+    store.updateFileOutputPath(first.path, 'E:/first')
+    store.globalOutputPath = 'D:/default'
+    expect(store.applyBatchConfiguration([first.path, groupId], { level: 9 })).toBe(2)
+    expect(store.selectedFiles[0]).toMatchObject({ outputPath: 'E:/first', settings: { level: 9, password: 'first-secret', filename: 'custom' } })
+    expect(store.groups[0]).toMatchObject({ outputPath: '', settings: { level: 9, password: 'group-secret' } })
+    expect(store.selectedFiles[1].settings).toBeUndefined()
+    store.globalSettings.level = 1
+    store.globalOutputPath = 'F:/later'
+    expect(store.selectedFiles[0].settings?.level).toBe(9)
+    expect(store.groups[0].settings?.level).toBe(9)
+    expect(store.globalSettings.password).toBe('')
+  })
+
+  it('keeps explicit source-directory output and excludes submitted tasks and empty patches', () => {
+    const store = useCompressionStore()
+    const first = mockFile('first.txt', 10), submitted = mockFile('submitted.txt', 20)
+    store.addFile(first); store.addFile(submitted)
+    store.globalOutputPath = 'D:/default'
+    store.bindJobTask(submitted.path, 'running', defaultOptions(), 'E:/running.zip')
+    expect(store.applyBatchConfiguration([first.path, submitted.path], {})).toBe(0)
+    expect(store.selectedFiles[0].settings).toBeUndefined()
+    expect(store.applyBatchConfiguration([first.path, submitted.path], { outputDirectory: '' })).toBe(1)
+    expect(store.selectedFiles[0].outputPath).toBe('')
+    expect(store.selectedFiles[1].outputPath).toBe('E:/running.zip')
+    store.globalOutputPath = 'F:/later'
+    expect(store.getEffectiveOutputPath(store.selectedFiles[0].outputPath)).toBe('')
+  })
+
+  it('explains incompatible filename encryption before changing any selected draft', () => {
+    const store = useCompressionStore()
+    const first = mockFile('first.txt', 10), encrypted = mockFile('encrypted.txt', 20)
+    store.addFile(first); store.addFile(encrypted)
+    store.updateFileSettings(encrypted.path, { ...defaultOptions(), format: '7z', password: 'secret', encryptFilenames: true })
+    expect(() => store.applyBatchConfiguration([first.path, encrypted.path], { format: 'zip', level: 9 })).toThrow('文件名加密')
+    expect(store.selectedFiles[0].settings).toBeUndefined()
+    expect(store.selectedFiles[1].settings).toMatchObject({ format: '7z', password: 'secret', level: 6, encryptFilenames: true })
+  })
+
   it('adds files and ignores duplicate paths', () => {
     const store = useCompressionStore()
     const file = mockFile('sample.zip', 1024)

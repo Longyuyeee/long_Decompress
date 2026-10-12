@@ -31,10 +31,41 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   const phase = ref('')
   const task = computed(() => tasks.tasks.find(task => task.id === taskId.value))
   const supportsPassword = computed(() => ['zip', '7z'].includes(format.value))
+  const contextIntent = ref<'convert' | 'reconfigure'>('convert')
+  const contextSources = ref<string[]>([])
+  const contextIntents = ref<Record<string, 'convert' | 'reconfigure'>>({})
+  function chooseContextSource(path: string, intent = contextIntents.value[path] || 'convert') {
+    if (busy.value || (sourcePath.value === path && contextIntent.value === intent && !taskId.value)) return
+    sourcePath.value = path
+    contextIntent.value = intent
+    format.value = intent === 'reconfigure' && /\.zip(?:\.\d+)?$/i.test(path) ? 'zip' : '7z'
+    outputPath.value = ''; sourcePassword.value = ''; password.value = ''
+    zipEncryption.value = 'aes256'; zipPasswordEncoding.value = 'utf8'
+    level.value = 6; splitMiB.value = 0; encryptFilenames.value = false
+    error.value = ''; taskId.value = ''; retryOfTaskId.value = undefined
+  }
+  function selectSource(path: string) {
+    if (busy.value) return
+    sourcePath.value = path
+    if (contextSources.value.length) {
+      if (!contextSources.value.includes(path)) contextSources.value.push(path)
+      contextIntents.value[path] = contextIntent.value
+    }
+  }
+  function openFromExplorer(paths: string[], intent: 'convert' | 'reconfigure') {
+    const files = [...new Set(paths.filter(path => path.trim()))]
+    if (!files.length) return
+    const keepCurrent = busy.value || (!!sourcePath.value && !taskId.value)
+    contextSources.value = [...new Set([...(keepCurrent && sourcePath.value ? [sourcePath.value, ...contextSources.value] : []), ...files])]
+    contextIntents.value = { ...(keepCurrent ? contextIntents.value : {}), ...Object.fromEntries(files.map(path => [path, intent])) }
+    if (!keepCurrent) chooseContextSource(files[0]!, intent)
+    visible.value = true
+  }
   function show() { visible.value = true }
   function restore(record: TaskHistoryRecord) {
     if (busy.value || record.executionConfig?.kind !== 'archive-conversion') return
     const config = record.executionConfig
+    contextSources.value = []; contextIntents.value = {}; contextIntent.value = 'convert'
     sourcePath.value = record.sourcePaths[0] || ''
     outputPath.value = '' // Require a new destination, never overwrite the previous result.
     format.value = config.format
@@ -112,5 +143,5 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     } catch (failure) { error.value = `取消请求失败：${String(failure)}` }
   }
   return { visible, sourcePath, sourcePassword, password, outputPath, format, zipEncryption, zipPasswordEncoding, level, splitMiB,
-    encryptFilenames, error, busy, task, phase, supportsPassword, show, restore, start, cancel }
+    encryptFilenames, error, busy, task, phase, supportsPassword, contextIntent, contextSources, chooseContextSource, selectSource, openFromExplorer, show, restore, start, cancel }
 })

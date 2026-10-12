@@ -5,6 +5,7 @@ import type { Task } from '@/stores/task'
 import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
 import ArchiveOutputSummary from './ArchiveOutputSummary.vue'
+import ResultActions from '@/components/tasks/ResultActions.vue'
 import {
   compressionLogSeverityClass,
   compressionStageTranslationKey,
@@ -33,6 +34,7 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
     class="pending-execution-panel compression-execution-panel custom-scrollbar"
   >
     <ArchiveOutputSummary v-if="task?.status === 'completed' && task.archiveOutput" :output="task.archiveOutput" />
+    <ResultActions v-else-if="task?.status === 'completed' && task.outputPath" :path="task.outputPath" show-path class="mb-3" />
     <div class="grid grid-cols-2 gap-2">
       <div class="pending-stat-card">
         <span class="text-muted">{{ appStore.t('progress.stage') }}</span>

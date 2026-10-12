@@ -103,6 +103,8 @@ const ARCHIVE_VERBS: &[&str] = &[
     "LongDecompress.extractHere",
     "LongDecompress.extractTo",
     "LongDecompress.testArchive",
+    "LongDecompress.convertArchive",
+    "LongDecompress.reconfigureArchive",
     "LongDecompress.compressZip",
     "LongDecompress.compress7z",
     "LongDecompress.compressCustom",
@@ -142,6 +144,16 @@ fn verbs() -> Vec<VerbDef> {
             verb: "LongDecompress.testArchive",
             label: "测试归档完整性",
             cli: "--test-archive \"%1\"",
+        },
+        VerbDef {
+            verb: "LongDecompress.convertArchive",
+            label: "转换压缩包格式...",
+            cli: "--convert-archive \"%1\"",
+        },
+        VerbDef {
+            verb: "LongDecompress.reconfigureArchive",
+            label: "修改密码 / 调整分卷...",
+            cli: "--reconfigure-archive \"%1\"",
         },
         VerbDef {
             verb: "LongDecompress.compressZip",

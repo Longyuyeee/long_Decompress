@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ResultActions from '@/components/tasks/ResultActions.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
 import { computed, onUnmounted, ref, watch } from 'vue'
@@ -303,6 +304,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
             <div><span>执行阶段</span><strong>{{ taskForItem(item)!.stage || videoStatus(item) }}</strong><small v-if="taskForItem(item)!.heartbeatSecondsSinceProgress !== undefined">仍在编码 · {{ taskForItem(item)!.heartbeatSecondsSinceProgress }} 秒前收到真实进度</small></div>
             <div><span>媒体时间</span><strong>{{ formatDuration(taskForItem(item)!.currentTimeMs || 0) }}</strong><small>{{ taskForItem(item)!.speed || '等待速度样本' }} · ETA {{ formatEta(taskForItem(item)!.etaSeconds) }}</small></div>
             <div><span>{{ taskForItem(item)!.outputBytesEstimated ? '临时输出' : '最终输出' }}</span><strong>{{ formatBytes(taskForItem(item)!.outputBytes || 0) }}</strong><small>{{ taskForItem(item)!.outputToInputRatio === undefined ? '等待真实比例' : `输入的 ${(taskForItem(item)!.outputToInputRatio! * 100).toFixed(1)}%` }}</small></div>
+            <ResultActions v-if="taskForItem(item)!.status === 'completed'" :path="taskForItem(item)!.outputPath" />
             <button v-if="taskForItem(item)!.status === 'completed'" type="button" data-testid="video-open-default-app" @click="playResultWithDefaultApplication(item)"><i class="pi pi-play"></i>默认应用播放</button>
           </div>
         </div>

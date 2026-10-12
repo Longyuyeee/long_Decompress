@@ -8,6 +8,9 @@ import { formatProgressPercent } from '@/utils/progress'
 import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
 import { useArchiveConversionStore } from '@/stores/archiveConversion'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
+import ResultActions from '@/components/tasks/ResultActions.vue'
+import BatchResultActions from '@/components/tasks/BatchResultActions.vue'
+import { resultLocation } from '@/utils/resultLocation'
 
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -16,6 +19,10 @@ const isExpanded = ref(false)
 const isMinimized = ref(false)
 const retryingTaskId = ref<string | null>(null)
 const unsavedHistoryCount = computed(() => taskStore.tasks.filter(task => task.historySaveError).length)
+const completedLocations = computed(() => taskStore.tasks.flatMap(task => {
+  const location = resultLocation(task)
+  return location ? [location] : []
+}))
 
 const ACTIVE_STATUSES = new Set(['preparing', 'running', 'extracting', 'compressing', 'finalizing', 'paused', 'cancelling'])
 const FINISHED_STATUSES = new Set(['completed', 'failed', 'cancelled'])
@@ -69,6 +76,7 @@ const runningTask = computed(() => taskStats.value.runningTask)
 const currentTaskName = computed(() => runningTask.value?.name || '')
 
 const taskTypeLabel = (task: Task) => {
+  if (task.executionConfig?.kind === 'archive-conversion') return '压缩包转换'
   if (task.type === 'decompression') return appStore.t('tasks.type.decompress')
   if (task.workloadKind === 'image') return '图片压缩'
   if (task.workloadKind === 'video') return '视频压缩'
@@ -142,12 +150,6 @@ const stageLabel = (stage?: string) => {
     case 'Publishing': return '原子发布'
     case 'still-encoding': return '仍在编码'
     default: return stage
-  }
-}
-
-const openTaskFolder = (task: Task) => {
-  if (task.outputPath) {
-    tauriCommands.openInExplorer(task.outputPath)
   }
 }
 
@@ -325,6 +327,7 @@ const copyToClipboard = async (text: string) => {
 
           <!-- 任务列表 -->
           <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1.5">
+            <BatchResultActions :locations="completedLocations" class="mb-2" />
             <div v-for="task in sortedTasks" :key="task.id"
                  class="rounded-xl border transition-all"
                  :class="[
@@ -378,18 +381,11 @@ const copyToClipboard = async (text: string) => {
                   <div class="text-xs text-dim font-mono mt-1 truncate opacity-85" :title="task.outputPath">
                     → {{ task.outputPath || appStore.t('decompress.config.output_auto') }}
                   </div>
+                  <ResultActions v-if="resultLocation(task)" class="mt-2" :path="task.archiveOutput?.primaryPath || task.outputPath" :directory="task.type === 'decompression'" :split="task.archiveOutput?.split" />
                 </div>
 
                 <!-- 操作按钮组 -->
                 <div class="flex items-center gap-1.5 shrink-0">
-                  <button
-                    v-if="task.outputPath"
-                    @click.stop="openTaskFolder(task)"
-                    class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all"
-                    :title="appStore.t('tasks.open_folder')">
-                    <i class="pi pi-folder-open text-[0.75rem]"></i>
-                  </button>
-
                   <button
                     v-if="['failed', 'cancelled'].includes(task.status) && (!task.workloadKind || task.workloadKind === 'archive')"
                     @click.stop="retryTask(task)"

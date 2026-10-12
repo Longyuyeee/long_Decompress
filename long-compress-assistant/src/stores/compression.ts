@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import type { BatchConfigPatch } from '@/types/batchConfig'
 import type { CompressionFormatId } from '@/utils/compressionFormat'
 import type { CompressionAnalysisResult } from '@/composables/useTauriCommands'
 import type { VideoCompressionPlan, VideoCompressionSettings } from '@/types/video'
@@ -152,10 +153,11 @@ export const useCompressionStore = defineStore('compression', () => {
   })
   let archiveDefaultsInitialized = false
 
-  const initializeArchiveDefaults = (format: CompressionOptions['format'], level: number) => {
+  const initializeArchiveDefaults = (format: CompressionOptions['format'], level: number, outputDirectory?: string) => {
     if (archiveDefaultsInitialized) return
     globalSettings.value.format = format
     globalSettings.value.level = Math.max(1, Math.min(9, level))
+    if (outputDirectory !== undefined && !globalOutputPath.value) globalOutputPath.value = outputDirectory
     archiveDefaultsInitialized = true
   }
   const globalOutputPath = ref('')
@@ -423,6 +425,28 @@ export const useCompressionStore = defineStore('compression', () => {
     }
   }
 
+  const applyBatchConfiguration = (ids: string[], patch: BatchConfigPatch) => {
+    const selected = new Set(ids)
+    if (patch.format === undefined && patch.level === undefined && patch.outputDirectory === undefined) return 0
+    let count = 0
+    const drafts = [...selectedFiles.value.map(file => ({ id: file.path, draft: file })),
+      ...groups.value.map(group => ({ id: group.id, draft: group }))]
+    if (patch.format === 'zip' && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).encryptFilenames)) {
+      throw new Error('所选任务中有已开启文件名加密的 7Z 任务。请保持 7Z 格式，或先在该条配置中关闭文件名加密。')
+    }
+    for (const { id, draft } of drafts) {
+      if (!selected.has(id) || draft.taskId) continue
+      const settings = cloneSettings(getEffectiveSettings(draft.settings))
+      if (patch.format !== undefined) settings.format = patch.format
+      if (patch.level !== undefined) settings.level = patch.level
+      draft.outputPath = patch.outputDirectory ?? getEffectiveOutputPath(draft.outputPath)
+      draft.settings = settings
+      if (patch.format !== undefined || patch.level !== undefined) clearAnalysis(id)
+      count++
+    }
+    return count
+  }
+
   const setAnalysisState = (jobId: string, state: CompressionAnalysisState) => {
     compressionAnalysis.value[jobId] = state
   }
@@ -644,6 +668,7 @@ export const useCompressionStore = defineStore('compression', () => {
     removeVideoItem,
     clearVideoDrafts,
     cloneSettings,
+    applyBatchConfiguration,
     getEffectiveSettings,
     getEffectiveOutputPath,
     addFile,

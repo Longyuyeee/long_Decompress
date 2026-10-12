@@ -6,7 +6,7 @@
 
 ### 面向 Windows 的本地压缩、解压、归档浏览与密码管理工具
 
-[![Version](https://img.shields.io/badge/version-1.4.0-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.4.1-6366f1?style=flat-square)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=flat-square&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri%20%2B%20Rust-1.5-f59e0b?style=flat-square&logo=tauri)](https://tauri.app)
@@ -23,7 +23,16 @@
 
 Long解压是一款强调本地处理、清晰进度和安全落盘的 Windows 桌面归档工具。它不仅能完成日常压缩与解压，还把批量任务、压缩包浏览、密码保险箱、完整性检查、资源预检、任务模板和资源管理器右键菜单整合在同一个界面中。
 
-当前版本：**v1.4.0**。
+当前版本：**v1.4.1**。
+
+### v1.4.1 批量配置与结果操作
+
+- 压缩文件、压缩组和待解压任务支持勾选后在列表内批量修改配置；每项默认“保持各自设置”，只修改指定参数，保留其他设置、密码和文件名。
+- 继续点击任务行在下方展开编辑。全局配置提供默认值，编辑单条或所选任务后自动保留各自配置，无需切换“全局 / 单独”模式。
+- 压缩、解压、转换、图片/视频/PDF、历史和全局任务面板统一提供结果操作：打开目录、定位文件或首卷、复制实际路径。分卷清单原地展开，批量打开相同目录只打开一次。
+- Windows 压缩包右键增加“转换压缩包格式…”和“修改密码 / 调整分卷…”，带入原包配置；多选原包可逐个切换，配置后由用户启动。
+- 批量配置栏随列表滚动，窄窗口可换行，选中后才显示操作，延续原有主题与紧凑布局。
+- [发布说明与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.1) · [本轮开发记录](long-compress-assistant/docs/BATCH_CONFIG_AND_RESULTS_PLAN.md) · [封板与交接](long-compress-assistant/docs/DEVELOPMENT_HANDOFF.md)。
 
 ### v1.4.0 密码分卷与归档转换
 
