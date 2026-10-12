@@ -181,29 +181,30 @@ const removeWordlist = (index: number) => {
 </script>
 
 <template>
-  <div class="settings-view p-responsive p-8 h-screen flex flex-col gap-8 transition-colors duration-700 overflow-hidden">
+  <div class="settings-view flex flex-col transition-colors duration-700 overflow-hidden">
     <header class="shrink-0">
       <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('settings.title') }}</h1>
       <p class="text-muted text-sm font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('settings.subtitle') }}</p>
     </header>
 
-    <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-20">
-      <div class="max-w-5xl space-y-6">
-        <!-- 风格大一统：外观个性化 (左右分栏布局) -->
-        <section class="aero-card p-10 overflow-hidden">
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <div class="lg:col-span-4 space-y-2">
+    <div class="settings-scroll flex-1 overflow-y-auto custom-scrollbar">
+      <div class="settings-content">
+        <!-- 外观：标签与控件对齐，窄窗口自动单列 -->
+        <section class="aero-card settings-appearance">
+          <div class="settings-group">
+            <div class="settings-group-heading">
               <h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('settings.appearance') }}</h2>
               <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.appearance.desc') }}</p>
             </div>
             
-            <div class="lg:col-span-8 space-y-10">
-              <!-- 模式切换 (进化版) -->
-              <div class="space-y-4">
+            <div class="settings-group-body">
+              <!-- 模式切换 -->
+              <div class="settings-option-row">
                 <label class="text-xs font-black text-muted uppercase tracking-[0.2em] block ml-1">{{ appStore.t('settings.theme') }}</label>
-                <div class="grid grid-cols-2 sm:grid-cols-3 p-1 rounded-2xl bg-input border border-subtle gap-1">
+                <div class="settings-theme-options">
                   <button
                     v-for="m in themeModes" :key="m.value"
+                    :aria-pressed="appStore.theme === m.value"
                     @click="appStore.theme = m.value as any; appStore.saveSettingsToStorage()"
                     class="py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2"
                     :class="appStore.theme === m.value ? 'bg-primary text-white shadow-lg' : 'text-muted hover:bg-white/5'"
@@ -215,12 +216,12 @@ const removeWordlist = (index: number) => {
               </div>
 
               <!-- 强调色选择 -->
-              <div class="space-y-4">
-                <div class="flex items-center justify-between gap-4 ml-1">
+              <div class="settings-option-row">
+                <div class="settings-accent-label">
                   <label class="text-xs font-black text-muted uppercase tracking-[0.2em]">{{ appStore.t('settings.accent') }}</label>
                   <span class="rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-primary">{{ selectedAccentName }}</span>
                 </div>
-                <div class="flex flex-wrap gap-3 rounded-2xl border border-subtle bg-input/35 p-3">
+                <div class="settings-accent-options flex flex-wrap">
                   <button 
                     v-for="(hex, name) in themeColors" :key="name"
                     @click="appStore.accentColor = hex; appStore.saveSettingsToStorage()"
@@ -234,9 +235,9 @@ const removeWordlist = (index: number) => {
               </div>
 
               <!-- 语言选择 -->
-              <div class="pt-6 border-t border-subtle flex items-center justify-between">
+              <div class="settings-option-row settings-language border-t border-subtle">
                 <span class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.language') }}</span>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                   <button @click="appStore.language = 'zh-CN'; appStore.saveSettingsToStorage()" 
                           class="px-4 py-1.5 rounded-lg text-sm font-black transition-all border border-subtle"
                           :class="appStore.language === 'zh-CN' ? 'bg-primary text-white border-primary' : 'bg-input text-muted'">{{ appStore.t('settings.lang.zh') }}</button>
@@ -247,7 +248,7 @@ const removeWordlist = (index: number) => {
               </div>
 
               <!-- UI 缩放 -->
-              <div class="pt-6 border-t border-subtle space-y-3">
+              <div class="settings-scale border-t border-subtle">
                 <div class="flex justify-between items-center">
                   <div>
                     <span class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.ui_scale') }}</span>
@@ -259,6 +260,7 @@ const removeWordlist = (index: number) => {
                 </div>
                 <input
                   type="range"
+                  :aria-label="appStore.t('settings.ui_scale')"
                   v-model.number="appStore.settings.uiScale"
                   min="60" max="200" step="5"
                   @change="validateAndUpdateUIScale(appStore.settings.uiScale)"
@@ -273,22 +275,22 @@ const removeWordlist = (index: number) => {
         </section>
 
         <!-- 可访问性设置 -->
-        <section class="aero-card p-10 overflow-hidden">
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <div class="lg:col-span-4 space-y-2">
+        <section class="aero-card">
+          <div class="settings-group">
+            <div class="settings-group-heading">
               <h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('accessibility.title') }}</h2>
               <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('accessibility.subtitle') }}</p>
             </div>
 
-            <div class="lg:col-span-8">
+            <div class="settings-group-body">
               <AccessibilitySettings />
             </div>
           </div>
         </section>
 
         <!-- 核心功能：常规与性能 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <section class="aero-card p-8">
+        <div class="settings-performance-grid">
+          <section class="aero-card">
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-8">{{ appStore.t('settings.performance') }}</h2>
             <div class="space-y-6">
               <button
@@ -320,6 +322,7 @@ const removeWordlist = (index: number) => {
                 </div>
                 <input
                   type="range"
+                  :aria-label="appStore.t('settings.performance.threads')"
                   v-model.number="appStore.settings.maxConcurrentTasks"
                   min="1" max="16" step="1"
                   @change="validateAndUpdateThreads(appStore.settings.maxConcurrentTasks)"
@@ -375,7 +378,7 @@ const removeWordlist = (index: number) => {
             </div>
           </section>
 
-          <section class="aero-card p-8">
+          <section class="aero-card">
             <button type="button" role="switch" data-testid="smart-directory-switch"
               :aria-checked="appStore.settings.smartExtractionDirectory"
               class="w-full flex items-center justify-between gap-4 text-left"
@@ -388,7 +391,7 @@ const removeWordlist = (index: number) => {
             </button>
           </section>
 
-          <section class="aero-card p-8">
+          <section class="aero-card">
             <button type="button" role="switch" data-testid="parallel-zip-switch"
               :aria-checked="appStore.settings.parallelZipExtraction"
               class="w-full flex items-center justify-between gap-4 text-left"
@@ -402,7 +405,7 @@ const removeWordlist = (index: number) => {
           </section>
 
           <!-- 暴力破解引擎设置 -->
-          <section class="aero-card p-8">
+          <section class="aero-card">
             <div class="flex justify-between items-center mb-8">
               <h2 class="text-sm font-black text-muted uppercase tracking-[0.3em]">{{ appStore.t('settings.bruteforce') }}</h2>
               <button type="button" role="switch" :aria-checked="appStore.settings.enableBruteForce" :aria-label="appStore.t('settings.bruteforce')" class="settings-toggle-track cursor-pointer"
@@ -438,9 +441,9 @@ const removeWordlist = (index: number) => {
             </div>
           </section>
           <!-- 行为设置 -->
-          <section class="aero-card p-8">
+          <section class="aero-card settings-behavior">
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">{{ appStore.t('settings.behavior') }}</h2>
-            <div class="space-y-5">
+            <div class="settings-behavior-options">
               <button type="button" role="switch" :aria-checked="appStore.settings.closeToTray" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ closeToTray: !appStore.settings.closeToTray })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.close_to_tray') }}</div>
@@ -491,13 +494,13 @@ const removeWordlist = (index: number) => {
         </div>
 
         <!-- 软件更新 -->
-        <section class="aero-card p-10 overflow-hidden">
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <div class="lg:col-span-4 space-y-2">
+        <section class="aero-card">
+          <div class="settings-group">
+            <div class="settings-group-heading">
               <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.update.title') }}</h2>
               <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.update.desc') }}</p>
             </div>
-            <div class="lg:col-span-8 space-y-5">
+            <div class="settings-group-body">
               <div class="flex flex-col gap-4 rounded-2xl border border-subtle bg-input/30 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div class="text-xs font-black uppercase tracking-widest text-muted">{{ appStore.t('settings.update.current') }}</div>
@@ -549,14 +552,14 @@ const removeWordlist = (index: number) => {
         </section>
 
         <!-- 格式支持统计 -->
-        <section class="aero-card p-10 overflow-hidden">
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <div class="lg:col-span-4 space-y-2">
+        <section class="aero-card">
+          <div class="settings-group">
+            <div class="settings-group-heading">
               <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.formats.title') }}</h2>
               <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.formats.desc') }}</p>
             </div>
 
-            <div class="lg:col-span-8 space-y-8">
+            <div class="settings-group-body">
               <div class="rounded-2xl border border-subtle bg-input/30 p-5">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div class="min-w-0">
@@ -716,8 +719,4 @@ const removeWordlist = (index: number) => {
   </div>
 </template>
 
-<style scoped>
-.settings-view {
-  background: radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--dynamic-accent) 3%, transparent) 0%, transparent 50%);
-}
-</style>
+<style scoped src="./settings-view.css"></style>

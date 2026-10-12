@@ -1,7 +1,7 @@
 <template>
-  <div class="accessibility-settings space-y-8">
+  <div class="accessibility-settings">
     <!-- 字体大小 -->
-    <section class="aero-card p-10">
+    <section class="accessibility-row accessibility-choice-row accessibility-font">
       <h3 class="text-sm font-black text-content uppercase tracking-[0.3em] mb-6">
         {{ appStore.t('accessibility.fontSize') }}
       </h3>
@@ -9,6 +9,7 @@
         <button
           v-for="size in fontSizes"
           :key="size.value"
+          :aria-pressed="appStore.settings.accessibility?.fontSize === size.value"
           @click="updateAccessibility({ fontSize: size.value as 'normal' | 'large' | 'x-large' })"
           class="p-6 rounded-2xl border-2 transition-all text-center hover:scale-[1.02]"
           :class="appStore.settings.accessibility?.fontSize === size.value
@@ -23,7 +24,7 @@
     </section>
 
     <!-- 高对比度 -->
-    <section class="aero-card p-10">
+    <section class="accessibility-row">
       <div class="flex items-center justify-between mb-6">
         <div>
           <h3 class="text-sm font-black text-content uppercase tracking-[0.3em]">
@@ -48,7 +49,7 @@
     </section>
 
     <!-- 色盲模式 -->
-    <section class="aero-card p-10">
+    <section class="accessibility-row accessibility-choice-row accessibility-color">
       <h3 class="text-sm font-black text-content uppercase tracking-[0.3em] mb-6">
         {{ appStore.t('accessibility.colorBlind') }}
       </h3>
@@ -56,6 +57,7 @@
         <button
           v-for="mode in colorBlindModes"
           :key="mode.value"
+          :aria-pressed="appStore.settings.accessibility?.colorBlindMode === mode.value"
           @click="updateAccessibility({ colorBlindMode: mode.value as 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' })"
           class="p-6 rounded-2xl border-2 transition-all text-left hover:scale-[1.02]"
           :class="appStore.settings.accessibility?.colorBlindMode === mode.value
@@ -70,7 +72,7 @@
     </section>
 
     <!-- 减少动画 -->
-    <section class="aero-card p-10">
+    <section class="accessibility-row">
       <div class="flex items-center justify-between">
         <div>
           <h3 class="text-sm font-black text-content uppercase tracking-[0.3em]">
@@ -95,7 +97,7 @@
     </section>
 
     <!-- 焦点指示器 -->
-    <section class="aero-card p-10">
+    <section class="accessibility-row">
       <div class="flex items-center justify-between">
         <div>
           <h3 class="text-sm font-black text-content uppercase tracking-[0.3em]">
@@ -158,3 +160,34 @@ const updateAccessibility = (updates: Partial<typeof appStore.settings.accessibi
   appStore.saveSettingsToStorage()
 }
 </script>
+
+<style scoped>
+.accessibility-row { padding: .75rem 0; min-width: 0; }
+.accessibility-row:first-child { padding-top: 0; }
+.accessibility-row:last-child { padding-bottom: 0; }
+.accessibility-row + .accessibility-row { border-top: 1px solid var(--border-subtle); }
+.accessibility-choice-row { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 1rem; align-items: center; }
+.accessibility-row h3 { margin: 0; font-size: .8125rem; font-weight: 650; letter-spacing: 0; text-transform: none; }
+.accessibility-row .grid { gap: .6rem; min-width: 0; }
+.accessibility-color > .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.accessibility-row .grid > button { padding: .6rem .75rem; border-width: 1px; border-radius: .7rem; box-shadow: none; min-width: 0; }
+.accessibility-font .grid > button { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .35rem .8rem; min-height: 2.75rem; }
+.accessibility-row .grid > button > div { margin: 0; letter-spacing: 0; text-transform: none; }
+.accessibility-font .grid > button > div:first-child { font-size: 1.1rem; color: var(--dynamic-accent); font-weight: 650; }
+.accessibility-row .grid > button > div:last-child { font-size: .6875rem; }
+.accessibility-color .grid > button { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); align-items: center; gap: .2rem .5rem; }
+.accessibility-color .grid > button > div:first-child { font-size: 1rem; grid-row: 1 / 3; }
+.accessibility-color .grid > button > div:last-child { grid-column: 2; font-size: .625rem; }
+.accessibility-row button[aria-pressed="true"] { border-color: color-mix(in srgb, var(--dynamic-accent) 48%, transparent); }
+.accessibility-row > .flex { gap: 1rem; margin: 0; }
+.accessibility-row p { font-size: .75rem; line-height: 1.5; margin-top: .25rem; letter-spacing: 0; text-transform: none; }
+.accessibility-row .settings-toggle-track { flex-shrink: 0; box-shadow: none; }
+@container (max-width: 48rem) {
+  .accessibility-choice-row { grid-template-columns: 7rem minmax(0, 1fr); gap: .7rem; }
+  .accessibility-color > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container (max-width: 32rem) {
+  .accessibility-choice-row { grid-template-columns: minmax(0, 1fr); }
+  .accessibility-font .grid > button { flex-direction: column; }
+}
+</style>
