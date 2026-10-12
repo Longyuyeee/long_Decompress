@@ -1,0 +1,84 @@
+/* Settings-only implementation of design/settings-style; no global theme overrides. */
+.settings-view {
+  height: 100%; min-height: 0; min-width: 0; padding: 1rem 1.35rem 0; gap: .9rem;
+  background: radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--dynamic-accent) 3%, transparent) 0%, transparent 50%);
+}
+.settings-view > header { padding: .15rem .15rem 0; }
+.settings-view > header h1 { font-size: 1.55rem; font-weight: 950; letter-spacing: -.055em; line-height: 1.1; margin-bottom: .3rem; }
+.settings-view > header p { font-size: .7rem; letter-spacing: .04em; font-weight: 600; margin-left: 0; }
+.settings-scroll { min-height: 0; min-width: 0; padding-right: .3rem; padding-bottom: 1.2rem; container-type: inline-size; }
+.settings-content > * + * { margin-top: .9rem; }
+.settings-view section.aero-card {
+  min-width: 0; padding: 1.15rem; border-radius: 1rem;
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  box-shadow: 0 14px 34px -28px rgba(15, 23, 42, .28);
+}
+.settings-view :is(h2, h3, label, .font-black) { letter-spacing: 0; text-transform: none; font-weight: 650; }
+.settings-view h2 { font-size: .875rem; font-weight: 750; color: var(--text-base); }
+.settings-view h3 { font-size: .8125rem; }
+.settings-view .uppercase { text-transform: none; letter-spacing: 0; }
+.settings-view .text-xs { font-size: .75rem; }
+.settings-view .text-sm { font-size: .8125rem; }
+.settings-view .text-muted { line-height: 1.5; }
+.settings-group-heading {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: .8rem;
+  margin-bottom: .95rem; padding-bottom: .8rem; border-bottom: 1px solid var(--border-subtle);
+}
+.settings-group-heading h2 { display: flex; align-items: center; gap: .55rem; }
+.settings-group-heading h2::before { content: ''; flex: 0 0 .25rem; height: .9rem; border-radius: .25rem; background: var(--dynamic-accent); }
+.settings-group-heading p { font-size: .75rem; }
+.settings-group-body > * + * { margin-top: .9rem; }
+.settings-option-row { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 1rem; align-items: center; }
+.settings-option-row > * { min-width: 0; margin: 0; }
+.settings-appearance label { font-size: .8125rem; color: var(--text-base); }
+.settings-theme-options {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; padding: .3rem;
+  border: 1px solid var(--border-subtle); border-radius: .75rem; background: color-mix(in srgb, var(--bg-input) 65%, transparent);
+}
+.settings-theme-options button { min-height: 2.15rem; padding: .4rem .5rem; border-radius: .55rem; border: 1px solid transparent; font-size: .75rem; font-weight: 600; box-shadow: none; }
+.settings-appearance button.bg-primary {
+  background: color-mix(in srgb, var(--dynamic-accent) 10%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--dynamic-accent) 48%, transparent); color: var(--dynamic-accent); box-shadow: none;
+}
+.settings-accent-label { display: flex; flex-direction: column; align-items: flex-start; gap: .3rem; }
+.settings-accent-label span { font-size: .65rem; padding: .05rem .45rem; border-radius: .4rem; }
+.settings-accent-options { padding: .35rem; gap: .7rem; }
+.settings-accent-options button { height: 1.85rem; width: 1.85rem; border-radius: .6rem; opacity: 1; box-shadow: none; }
+.settings-accent-options button[aria-pressed="true"] { border-color: white; transform: none; box-shadow: 0 0 0 2px var(--dynamic-accent), 0 3px 8px color-mix(in srgb, var(--dynamic-accent) 20%, transparent); }
+.settings-language { padding-top: .8rem; }
+.settings-language button { min-height: 2rem; font-size: .75rem; }
+.settings-scale { padding-top: .8rem; display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: .55rem 1rem; }
+.settings-scale > div:first-child { grid-column: 1 / -1; gap: .75rem; }
+.settings-scale > div:first-child > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1.2rem; }
+.settings-scale > input, .settings-scale > div:last-child { grid-column: 2; margin: 0; }
+.settings-scale > div:last-child { font-size: .625rem; }
+.settings-performance-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; align-items: start; }
+.settings-performance-grid > section:first-child { grid-row: span 3; }
+.settings-behavior { grid-column: 1 / -1; }
+.settings-behavior-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 2rem; }
+.settings-performance-grid h2 { margin-bottom: 1rem; }
+.settings-performance-grid .flex > h2 { margin-bottom: 0; }
+.settings-performance-grid :is(.space-y-6, .space-y-5) > * + * { margin-top: 1rem; }
+.settings-performance-grid .pt-6 { padding-top: 1rem; }
+.settings-performance-grid .mb-8 { margin-bottom: 1rem; }
+.settings-view [role="switch"] { gap: 1rem; }
+.settings-view [role="switch"] > div:first-child { min-width: 0; }
+.settings-view .settings-toggle-track { flex-shrink: 0; box-shadow: none; }
+.settings-view .settings-toggle-track.is-on { box-shadow: 0 2px 6px color-mix(in srgb, var(--dynamic-accent) 18%, transparent); }
+.settings-view [type="range"] { height: .3rem; min-width: 0; }
+.settings-group-body { min-width: 0; overflow-wrap: anywhere; }
+/* Respond to actual content width, including sidebar and UI scaling. */
+@container (max-width: 48rem) {
+  .settings-option-row { grid-template-columns: 7rem minmax(0, 1fr); gap: .7rem; }
+  .settings-theme-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .settings-performance-grid { grid-template-columns: minmax(0, 1fr); }
+  .settings-performance-grid > section:first-child { grid-row: auto; }
+  .settings-behavior-options { grid-template-columns: minmax(0, 1fr); }
+}
+@container (max-width: 32rem) {
+  .settings-option-row, .settings-scale { grid-template-columns: minmax(0, 1fr); }
+  .settings-scale > input, .settings-scale > div:last-child { grid-column: 1; }
+  .settings-group-heading { gap: .35rem; }
+  .settings-group-body .grid { grid-template-columns: minmax(0, 1fr); }
+  .settings-performance-grid [data-testid="archive-default-settings"] > .grid { grid-template-columns: minmax(0, 1fr); }
+}
