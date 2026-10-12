@@ -65,6 +65,8 @@ enum CommandKind {
     ExtractHere,
     ExtractTo,
     TestArchive,
+    ConvertArchive,
+    ReconfigureArchive,
     QuickPack,
     CompressZip,
     Compress7z,
@@ -77,6 +79,8 @@ const SUBCOMMANDS: &[CommandKind] = &[
     CommandKind::ExtractHere,
     CommandKind::ExtractTo,
     CommandKind::TestArchive,
+    CommandKind::ConvertArchive,
+    CommandKind::ReconfigureArchive,
     CommandKind::QuickPack,
     CommandKind::CompressZip,
     CommandKind::Compress7z,
@@ -92,6 +96,8 @@ impl CommandKind {
             Self::ExtractHere => "解压到此处",
             Self::ExtractTo => "解压到同名文件夹",
             Self::TestArchive => "测试压缩包完整性",
+            Self::ConvertArchive => "转换压缩包格式…",
+            Self::ReconfigureArchive => "修改密码 / 调整分卷…",
             Self::QuickPack => "一键打包为 ZIP",
             Self::CompressZip => "压缩为 ZIP",
             Self::Compress7z => "压缩为 7Z",
@@ -107,6 +113,8 @@ impl CommandKind {
             Self::ExtractHere => Some("--extract-here"),
             Self::ExtractTo => Some("--extract-to"),
             Self::TestArchive => Some("--test-archive"),
+            Self::ConvertArchive => Some("--convert-archive"),
+            Self::ReconfigureArchive => Some("--reconfigure-archive"),
             Self::QuickPack => Some("--quick-pack"),
             Self::CompressZip => Some("--compress-zip"),
             Self::Compress7z => Some("--compress-7z"),
@@ -122,6 +130,8 @@ impl CommandKind {
                 | Self::ExtractHere
                 | Self::ExtractTo
                 | Self::TestArchive
+                | Self::ConvertArchive
+                | Self::ReconfigureArchive
         )
     }
 
@@ -133,6 +143,8 @@ impl CommandKind {
             Self::ExtractHere => 2,
             Self::ExtractTo => 3,
             Self::TestArchive => 4,
+            Self::ConvertArchive => 20,
+            Self::ReconfigureArchive => 21,
             Self::QuickPack => 5,
             Self::CompressZip => 6,
             Self::Compress7z => 7,
@@ -445,11 +457,13 @@ mod tests {
 
     #[test]
     fn native_menu_contains_expected_commands() {
-        assert_eq!(SUBCOMMANDS.len(), 9);
+        assert_eq!(SUBCOMMANDS.len(), 11);
         assert_eq!(SUBCOMMANDS[0], CommandKind::BrowseArchive);
         assert_eq!(SUBCOMMANDS[1], CommandKind::QuickExtract);
-        assert_eq!(SUBCOMMANDS[5], CommandKind::QuickPack);
-        assert_eq!(SUBCOMMANDS[8], CommandKind::CompressCustom);
+        assert_eq!(SUBCOMMANDS[5], CommandKind::ConvertArchive);
+        assert_eq!(SUBCOMMANDS[6], CommandKind::ReconfigureArchive);
+        assert_eq!(SUBCOMMANDS[7], CommandKind::QuickPack);
+        assert_eq!(SUBCOMMANDS[10], CommandKind::CompressCustom);
         assert!(is_archive_path(r"C:\archives\sample.ZIP"));
         assert!(!is_archive_path(r"C:\documents\sample.txt"));
     }

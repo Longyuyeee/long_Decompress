@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import Modal from '@/components/ui/Modal.vue'
 import CompletedExtractionOutput from './CompletedExtractionOutput.vue'
+import BatchResultActions from './BatchResultActions.vue'
 import { useDecompressionBatchStore } from '@/stores/decompressionBatch'
 import { useAppStore } from '@/stores/app'
 
@@ -44,6 +45,7 @@ const emit = defineEmits<{ 'show-failures': []; 'show-all': []; 'retry-failures'
   <Modal v-model:visible="showResults" title="本批成功结果" size="lg" cancel-text="关闭成功结果">
     <div class="space-y-3" data-testid="batch-success-results">
       <p class="text-sm text-muted">已完成 {{ batch.completedResults.length }} 项，选择需要查看的输出目录。</p>
+      <BatchResultActions :locations="batch.completedResults.map(result => ({ path: result.outputPath, directory: true }))" />
       <CompletedExtractionOutput v-for="result in batch.completedResults" :key="result.id"
         :title="result.name" :path="result.outputPath" />
     </div>

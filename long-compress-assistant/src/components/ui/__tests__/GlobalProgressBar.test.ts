@@ -126,11 +126,11 @@ describe('GlobalProgressBar', () => {
     expect(wrapper.text()).toContain('done.zip')
     expect(wrapper.text()).toContain('1/2')
 
-    const openButtons = wrapper.findAll('button').filter(
-      button => button.attributes('title') === appStore.t('tasks.open_folder'),
-    )
-    await openButtons[0].trigger('click')
-    expect(commandMocks.openInExplorer).toHaveBeenCalledWith('C:\\output\\running')
+    const results = wrapper.findAll('[data-testid="result-actions"]')
+    expect(results).toHaveLength(1)
+    await results[0].get('button').trigger('click')
+    expect(tauriMocks.invoke).toHaveBeenCalledWith('open_in_explorer', { path: 'C:\\output\\done.zip' })
+    expect(tauriMocks.invoke).not.toHaveBeenCalledWith('open_in_explorer', { path: 'C:\\output\\running' })
 
     const clearButton = wrapper.findAll('button').find(
       button => button.text() === appStore.t('tasks.clear_done'),

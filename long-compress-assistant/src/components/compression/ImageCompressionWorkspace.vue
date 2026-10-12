@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ResultActions from '@/components/tasks/ResultActions.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
 import { computed, ref, watch } from 'vue'
@@ -215,15 +216,6 @@ const cancelImageCompression = async () => {
   await imageBatch.cancelImageBatch()
 }
 
-const openResultLocation = async (item: ImageCompressionItem) => {
-  const path = taskForItem(item)?.outputPath
-  if (!path) return
-  try {
-    await invoke('open_in_explorer', { path })
-  } catch (error) {
-    appStore.setError(`无法打开结果位置：${String(error)}`)
-  }
-}
 </script>
 
 <template>
@@ -294,7 +286,7 @@ const openResultLocation = async (item: ImageCompressionItem) => {
                   <small v-if="taskForItem(item)?.metrics">{{ resultFacts(item)?.visibleWidth }} × {{ resultFacts(item)?.visibleHeight }} · {{ formatBytes(taskForItem(item)!.metrics!.outputBytes) }}</small>
                   <small v-else>不会使用原图或预计值伪装结果</small>
                   <small v-if="taskForItem(item)?.metrics" class="result-path" :title="taskForItem(item)?.outputPath">{{ taskForItem(item)?.outputPath }}</small>
-                  <button v-if="taskForItem(item)?.metrics" type="button" class="open-result" @click="openResultLocation(item)"><i class="pi pi-folder-open"></i>打开结果位置</button>
+                  <ResultActions v-if="taskForItem(item)?.status === 'completed' && taskForItem(item)?.metrics" :path="taskForItem(item)!.outputPath" />
                 </div>
               </div>
               <div v-if="estimateFor(item) && !taskForItem(item)?.metrics" class="estimate-card">

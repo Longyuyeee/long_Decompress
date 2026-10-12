@@ -19,6 +19,9 @@ import { useDecompressionBatchStore } from '@/stores/decompressionBatch'
 import DecompressionBatchSummary from '@/components/tasks/DecompressionBatchSummary.vue'
 import FailedExtractionRetry from '@/components/tasks/FailedExtractionRetry.vue'
 import { inferExtractionSubfolder } from '@/utils/smartExtraction'
+import BatchConfigBar from '@/components/tasks/BatchConfigBar.vue'
+import type { BatchConfigPatch } from '@/types/batchConfig'
+import { parentDirectory } from '@/utils/resultLocation'
 
 const taskStore = useTaskStore()
 const batchStore = useDecompressionBatchStore()
@@ -49,6 +52,24 @@ const selectedTaskIds = ref<Set<string>>(new Set())
 const supportedArchiveAccept = DECOMPRESS_ARCHIVE_ACCEPT
 const supportedArchiveHint = DECOMPRESS_ARCHIVE_HINT
 const decompressionTasks = computed(() => taskStore.tasksFor('decompression'))
+const selectedPendingTasks = computed(() => decompressionTasks.value.filter(task => task.status === 'pending' && selectedTaskIds.value.has(task.id)))
+watch(() => decompressionTasks.value.filter(task => task.status === 'pending').map(task => task.id), ids => {
+  const valid = new Set(ids)
+  selectedTaskIds.value = new Set([...selectedTaskIds.value].filter(id => valid.has(id)))
+})
+function applySelectedConfiguration(patch: BatchConfigPatch) {
+  if (patch.outputDirectory === undefined && patch.extractToSubfolder === undefined) return
+  const selected = selectedPendingTasks.value
+  for (const task of selected) {
+    if (patch.outputDirectory !== undefined) {
+      const source = task.sourceFiles[0] || ''
+      task.outputPath = patch.outputDirectory || parentDirectory(source)
+    }
+    if (patch.extractToSubfolder !== undefined) task.extractToSubfolder = patch.extractToSubfolder
+    task.configurationMode = 'individual'
+  }
+  if (selected.length) appStore.setSuccess(`已更新 ${selected.length} 项配置，其他设置保持不变。`)
+}
 
 // 全局配置状态
 const globalOutputPath = ref(appStore.settings.defaultOutputPath)
@@ -624,7 +645,11 @@ onMounted(openNextConflict)
           @cancel-task="taskStore.cancelTask"
           @pause-task="taskStore.pauseTask"
           @resume-task="taskStore.resumeTask"
-        />
+          >
+            <template #before-tasks>
+              <BatchConfigBar v-if="selectedPendingTasks.length && !batchStore.showingFailures" class="mb-3" :count="selectedPendingTasks.length" mode="decompression" @apply="applySelectedConfiguration" @clear="deselectAll" />
+            </template>
+          </AeroTable>
         </div>
 
         <!-- 空状态 -->

@@ -44,7 +44,7 @@ const mountView = (pinia = createPinia()) => mount(DecompressView, {
     plugins: [pinia],
     stubs: { Teleport: true,
       EnhancedFileDropzone: DropzoneStub,
-      AeroTable: true,
+      AeroTable: defineComponent({ name: 'AeroTable', props: ['selectedTaskIds', 'statusFilter', 'taskType', 'taskIds'], template: '<div><slot name="before-tasks" /></div>' }),
       ConflictResolutionModal: true,
       RouterLink: true,
       Transition: false,
@@ -53,6 +53,27 @@ const mountView = (pinia = createPinia()) => mount(DecompressView, {
 })
 
 describe('DecompressView', () => {
+  it('changes selected pending configuration without rewriting passwords, defaults or running tasks', async () => {
+    const wrapper = mountView()
+    const store = useTaskStore()
+    for (const id of ['first', 'second', 'other', 'running']) store.addTask({ id, name: `${id}.zip`, type: 'decompression', sourceFiles: [`C:/${id}.zip`], outputPath: `D:/${id}`, extractToSubfolder: true, password: `${id}-secret`, configurationMode: 'global' })
+    store.tasks.find(task => task.id === 'running')!.status = 'extracting'
+    await nextTick()
+    const table = wrapper.findComponent({ name: 'AeroTable' })
+    table.vm.$emit('toggle-task', 'first'); table.vm.$emit('toggle-task', 'second'); table.vm.$emit('toggle-task', 'running')
+    await nextTick()
+    const bar = wrapper.findComponent({ name: 'BatchConfigBar' })
+    expect(bar.props('count')).toBe(2)
+    bar.vm.$emit('apply', { outputDirectory: '', extractToSubfolder: false })
+    await nextTick()
+    expect(store.tasks[0]).toMatchObject({ outputPath: 'C:/', extractToSubfolder: false, password: 'first-secret', configurationMode: 'individual' })
+    expect(store.tasks[1]).toMatchObject({ outputPath: 'C:/', extractToSubfolder: false, password: 'second-secret' })
+    expect(store.tasks[2]).toMatchObject({ outputPath: 'D:/other', extractToSubfolder: true, configurationMode: 'global' })
+    expect(store.tasks[3]).toMatchObject({ status: 'extracting', outputPath: 'D:/running', extractToSubfolder: true })
+    await wrapper.get('[data-testid="global-subfolder"]').trigger('click')
+    expect(store.tasks[0].extractToSubfolder).toBe(false)
+    wrapper.unmount()
+  })
   const addConflictTask = (id: string) => {
     const store = useTaskStore()
     store.addTask({ id, name: `${id}.zip`, type: 'decompression', sourceFiles: [`C:/${id}.zip`], outputPath: 'C:/out' })
@@ -566,7 +587,7 @@ describe('DecompressView', () => {
     await nextTick()
 
     const table = wrapper.findComponent({ name: 'AeroTable' })
-    expect(table.attributes('tasktype')).toBe('decompression')
+    expect(table.props('taskType')).toBe('decompression')
 
     const startButton = wrapper.findAll('button').find(
       button => button.text().includes(useAppStore().t('decompress.start_queue')),

@@ -1311,7 +1311,7 @@ describe('CompressionView', () => {
     })
     const workspace = wrapper.get('[data-testid="image-compression-workspace"]')
     expect(workspace.text()).toContain('C:/output/transparent.compressed.png')
-    expect(workspace.text()).toContain('节省 546 B')
+    expect(workspace.text()).toContain(`节省 ${inputBytes - outputBytes} B`)
     expect(workspace.text()).not.toContain('B-03')
     expect(compressionStore.imageItems[0].resultPreviewUrl).toContain('transparent.compressed.png')
   })

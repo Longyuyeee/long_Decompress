@@ -15,6 +15,38 @@ function draft() {
   return store
 }
 describe('archive conversion lifecycle', () => {
+  it('opens Explorer sources as explicit drafts and preserves ZIP for password/split changes', () => {
+    const store = useArchiveConversionStore()
+    store.openFromExplorer(['C:/旧包.zip.001', 'C:/another.7z', 'C:/旧包.zip.001'], 'reconfigure')
+    expect(store.visible).toBe(true)
+    expect(store.sourcePath).toBe('C:/旧包.zip.001')
+    expect(store.format).toBe('zip')
+    expect(store.contextSources).toHaveLength(2)
+    expect(store.password).toBe(''); expect(store.sourcePassword).toBe('')
+    store.outputPath = 'D:/新包.zip'; store.password = 'new-secret'
+    store.chooseContextSource(store.sourcePath)
+    expect(store.password).toBe('new-secret'); expect(store.outputPath).toBe('D:/新包.zip')
+    store.selectSource('E:/手动选择.zip')
+    expect(store.sourcePath).toBe('E:/手动选择.zip')
+    expect(store.contextSources).toContain('E:/手动选择.zip')
+    expect(useTaskStore().tasks).toHaveLength(0)
+    expect(mocks.invoke).not.toHaveBeenCalled()
+  })
+  it('keeps an open or running conversion when a new Explorer request arrives', () => {
+    const store = draft()
+    store.openFromExplorer(['D:/new.zip'], 'reconfigure')
+    expect(store.sourcePath).toBe('C:\\原包.zip')
+    expect(store.password).toBe('output-secret')
+    expect(store.contextSources).toEqual(['C:\\原包.zip', 'D:/new.zip'])
+    store.busy = true
+    store.chooseContextSource('D:/new.zip')
+    expect(store.sourcePath).toBe('C:\\原包.zip')
+    store.busy = false
+    store.chooseContextSource('D:/new.zip')
+    expect(store.sourcePath).toBe('D:/new.zip')
+    expect(store.format).toBe('zip')
+    expect(store.password).toBe(''); expect(store.outputPath).toBe('')
+  })
   it('does not revive a terminal task when cancellation acknowledgement arrives during history persistence', async () => {
     let rejectConversion!: (reason: string) => void
     let acknowledgeCancel!: () => void

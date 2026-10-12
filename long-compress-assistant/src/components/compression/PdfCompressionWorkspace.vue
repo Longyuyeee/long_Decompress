@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ResultActions from '@/components/tasks/ResultActions.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
 import { computed, onUnmounted, ref, watch } from 'vue'
@@ -272,6 +273,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
                 <span>{{ taskFor(item)!.stage || taskFor(item)!.status }}</span>
                 <strong v-if="taskFor(item)!.outputBytes">{{ formatBytes(taskFor(item)!.outputBytes || 0) }} · {{ taskFor(item)!.metrics?.media?.pageCount ?? item.report.pageCount }} 页</strong>
                 <button v-if="taskFor(item)!.status === 'completed'" type="button" data-testid="pdf-open-default-app" @click="openPublishedPdf(item)">默认阅读器打开</button>
+                <ResultActions v-if="taskFor(item)!.status === 'completed'" :path="taskFor(item)!.outputPath" />
               </div>
               <button v-if="item.frozen" type="button" class="secondary-action" :disabled="isRunning" @click="item.frozen = false">解除锁定</button>
               <button v-else type="button" class="primary-action" data-testid="pdf-freeze-configuration" :disabled="!draftFor(item)?.canFreeze || isRunning" @click="freeze(item)">锁定执行配置</button>

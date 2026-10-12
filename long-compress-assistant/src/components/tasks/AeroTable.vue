@@ -275,6 +275,7 @@ async (tasks, _, onCleanup) => {
 
       <!-- 表格内容 (高密度布局 + 物理隔断) -->
       <div class="table-body flex-1 min-w-0 max-w-full overflow-y-auto overflow-x-hidden custom-scrollbar p-3">
+        <slot name="before-tasks"></slot>
         <TransitionGroup name="task-depart">
         <div v-for="task in displayTasks" :key="task.id" class="task-row-container mb-1.5 last:mb-0 group/row">
           <div
@@ -296,9 +297,11 @@ async (tasks, _, onCleanup) => {
             <div class="w-8 shrink-0 flex items-center justify-center" @click.stop>
               <button
                 v-if="props.selectedTaskIds && task.status === 'pending'"
+                type="button" role="checkbox" :aria-checked="isSelected(task.id)" :aria-label="`选择 ${task.name}`" data-testid="task-select"
                 class="w-4 h-4 rounded border flex items-center justify-center transition-all"
                 :class="isSelected(task.id) ? 'bg-primary border-primary' : 'border-subtle/50 bg-input/50 hover:border-primary'"
                 @click="emit('toggle-task', task.id)"
+                @keydown.stop
               >
                 <i v-if="isSelected(task.id)" class="pi pi-check text-sm text-white"></i>
               </button>

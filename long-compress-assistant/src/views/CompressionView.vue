@@ -22,6 +22,10 @@ import CompressionSettingsPanel from '@/components/compression/CompressionSettin
 import CompressionStatusCell from '@/components/compression/CompressionStatusCell.vue'
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import CompressionToolbar from '@/components/compression/CompressionToolbar.vue'
+import BatchConfigBar from '@/components/tasks/BatchConfigBar.vue'
+import type { BatchConfigPatch } from '@/types/batchConfig'
+import BatchResultActions from '@/components/tasks/BatchResultActions.vue'
+import { resultLocation } from '@/utils/resultLocation'
 import GlobalSettingsModal from '@/components/compression/GlobalSettingsModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import Modal from '@/components/ui/Modal.vue'
@@ -37,9 +41,26 @@ const taskStore = useTaskStore()
 compressionStore.initializeArchiveDefaults(
   appStore.settings.defaultCompressionFormat,
   appStore.settings.defaultCompressionLevel,
+  appStore.settings.defaultOutputPath,
 )
 
 const selectedRows = ref<Set<string>>(new Set())
+const selectableJobIds = computed(() => [...compressionStore.groups.filter(group => !group.taskId).map(group => group.id),
+  ...compressionStore.selectedFiles.filter(file => !file.taskId).map(file => file.path)])
+const selectedFileCount = computed(() => compressionStore.selectedFiles.filter(file => !file.taskId && selectedRows.value.has(file.path)).length)
+watch(selectableJobIds, ids => {
+  const valid = new Set(ids)
+  selectedRows.value = new Set([...selectedRows.value].filter(id => valid.has(id)))
+})
+function selectAllDrafts() {
+  selectedRows.value = selectedRows.value.size === selectableJobIds.value.length ? new Set() : new Set(selectableJobIds.value)
+}
+function applySelectedConfiguration(patch: BatchConfigPatch) {
+  try {
+    const count = compressionStore.applyBatchConfiguration([...selectedRows.value], patch)
+    if (count) appStore.setSuccess(`已更新 ${count} 项配置，其他设置保持不变。`)
+  } catch (error) { appStore.setError(extractErrorMessage(error)) }
+}
 const showGlobalSettingsModal = ref(false)
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
 const checkingRarSupport = ref(false)
@@ -54,6 +75,10 @@ let resolveRarResolution: ((choice: RarResolution) => void) | null = null
 // Legacy tasks without a workload kind are archives.
 const compressionTasks = computed(() => taskStore.tasksFor('compression')
   .filter(task => (!task.workloadKind || task.workloadKind === 'archive') && task.executionConfig?.kind !== 'archive-conversion'))
+const completedLocations = computed(() => compressionTasks.value.flatMap(task => {
+  const location = resultLocation(task)
+  return location ? [location] : []
+}))
 const activeCompressionTasks = computed(() =>
   compressionTasks.value.filter(task => !['completed', 'failed', 'cancelled'].includes(task.status))
 )
@@ -104,7 +129,7 @@ const toggleSelection = (path: string) => {
 
 const handleCreateGroup = () => {
   if (selectedRows.value.size > 0) {
-    compressionStore.createGroup(Array.from(selectedRows.value))
+    compressionStore.createGroup(compressionStore.selectedFiles.filter(file => !file.taskId && selectedRows.value.has(file.path)).map(file => file.path))
     selectedRows.value.clear()
   }
 }
@@ -188,7 +213,7 @@ watch(usesRarFormat, (usesRar) => {
 }, { immediate: true })
 
 const buildOutputPath = (baseOutputPath: string, fallbackSourcePath: string, archiveName: string, format: string, password?: string) => {
-  const outputDir = baseOutputPath || appStore.settings.defaultOutputPath || getParentDir(fallbackSourcePath)
+  const outputDir = baseOutputPath || getParentDir(fallbackSourcePath)
   const extension = extensionForFormat(format, password)
   const cleanName = archiveName.trim() || getBaseName(fallbackSourcePath)
   return joinPath(outputDir, cleanName.endsWith(`.${extension}`) ? cleanName : `${cleanName}.${extension}`)
@@ -674,7 +699,7 @@ const drawerTransition = useDrawerTransition()
           data-testid="compression-table-header"
           class="compression-table-header relative z-30 flex shrink-0 items-center px-4 py-2.5 border-b border-subtle bg-card/95 backdrop-blur-xl text-dim text-xs font-bold tracking-[0.1em] uppercase shadow-[0_8px_20px_-16px_rgba(0,0,0,0.75)]"
         >
-          <div class="compression-leading-cell w-8 shrink-0"></div>
+          <button type="button" class="compression-leading-cell w-8 shrink-0 text-primary" aria-label="选择全部待压缩任务" :disabled="!selectableJobIds.length" :aria-pressed="Boolean(selectableJobIds.length && selectedRows.size === selectableJobIds.length)" @click="selectAllDrafts"><i :class="selectableJobIds.length && selectedRows.size === selectableJobIds.length ? 'pi pi-check-square' : 'pi pi-stop'" aria-hidden="true"></i></button>
           <div data-testid="compression-name-header" class="flex-[1.25] min-w-0">压缩包名称</div>
           <div data-testid="compression-source-header" class="flex-1 min-w-0 px-4 hidden md:block">源文件路径</div>
           <div data-testid="compression-status-header" class="flex-1 min-w-0">压缩状态与进度</div>
@@ -682,6 +707,8 @@ const drawerTransition = useDrawerTransition()
         </div>
 
         <div class="compression-task-list flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-3 space-y-3">
+        <BatchConfigBar v-if="selectedRows.size" :count="selectedRows.size" mode="compression" @apply="applySelectedConfiguration" @clear="selectedRows = new Set()" />
+        <BatchResultActions :locations="completedLocations" />
 
         <!-- 1. 压缩组列表 -->
         <div v-for="group in compressionStore.groups" :key="group.id" 
@@ -699,7 +726,11 @@ const drawerTransition = useDrawerTransition()
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover/header:opacity-100 transition-opacity duration-200"></div>
 
             <div class="compression-leading-cell w-8 shrink-0 flex items-center justify-center">
+              <button v-if="!group.taskId" type="button" role="checkbox" :aria-checked="selectedRows.has(group.id)" :aria-label="`选择 ${group.name}`" class="flex h-7 w-7 items-center justify-center" data-testid="compression-draft-group-checkbox" @click.stop="toggleSelection(group.id)" @keydown.stop>
+                <span class="flex h-4 w-4 items-center justify-center rounded border" :class="selectedRows.has(group.id) ? 'border-primary bg-primary text-white' : 'border-subtle bg-card'"><i v-if="selectedRows.has(group.id)" class="pi pi-check text-xs" aria-hidden="true"></i></span>
+              </button>
               <div
+                v-else
                 class="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm transition-transform group-hover/header:rotate-6"
                 :style="{ backgroundColor: `${group.themeColor}20`, color: group.themeColor, border: `1px solid ${group.themeColor}40` }"
               >
@@ -863,12 +894,12 @@ const drawerTransition = useDrawerTransition()
             <h3 class="text-xs font-black text-muted uppercase tracking-[0.3em]">{{ appStore.t('compress.add_files') }}</h3>
             <transition name="pop">
               <button
-                v-if="selectedRows.size > 0"
+                v-if="selectedFileCount > 0"
                 @click="handleCreateGroup"
                 class="h-8 px-3 rounded-lg bg-primary text-white text-xs font-bold tracking-wider shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 shrink-0"
               >
                 <i class="pi pi-box text-xs"></i>
-                <span>{{ appStore.t('compress.create_group') }}（{{ selectedRows.size }}）</span>
+                <span>{{ appStore.t('compress.create_group') }}（{{ selectedFileCount }}）</span>
               </button>
             </transition>
           </div>
@@ -885,7 +916,8 @@ const drawerTransition = useDrawerTransition()
               type="button"
               data-testid="compression-group-checkbox"
               class="compression-leading-cell w-8 flex shrink-0 items-center justify-center"
-              :aria-label="`选择 ${file.name} 用于打组`"
+              role="checkbox" :aria-checked="selectedRows.has(file.path)"
+              :aria-label="`选择 ${file.name}`"
               @click.stop="toggleSelection(file.path)"
             >
               <div class="w-4 h-4 rounded border border-subtle flex items-center justify-center transition-all"
