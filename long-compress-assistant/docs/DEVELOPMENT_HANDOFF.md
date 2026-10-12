@@ -1,5 +1,12 @@
 # 开发交接
 
+## 2026-10-12 v1.4.2 已封板、合入并推送正式标签
+
+- 功能封板提交 `ed503bb1dcf08365568f0455c5437b7c59719164`；发布 PR [#152](https://github.com/Longyuyeee/long_Decompress/pull/152) 的 [Windows package 检查](https://github.com/Longyuyeee/long_Decompress/actions/runs/38246758755) 成功后已合入。
+- **正式标签 `v1.4.2` 指向 `244ad0771d957e6a5e3d8aa6ff522c4758a5fc56`**。版本身份、两份 README、版本化原生菜单 DLL 与中文发布说明均已同步。标签后没有追加功能修改。
+- [Release 页面](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.2) 已创建并写入中文说明；[正式发布工作流](https://github.com/Longyuyeee/long_Decompress/actions/runs/38247451441) 负责生成与上传安装器、更新 ZIP、签名和 `latest.json`。页面创建不等于附件就绪，安装器下载以该页面实际附件和工作流最终状态为准。
+- 设置 UI 与批量转换/草稿恢复已完成本轮范围，不再沿用下方“等待设计实现/等待合入”的历史状态。后续优先接收真实使用反馈，不自动增加功能或重新执行格式全矩阵；本机已安装程序与用户数据未改动。
+
 ## 2026-10-12 v1.4.2 功能封板与发布工程
 
 - 用户批准封板、合入、升级到 v1.4.2 并发布。PR #151 已合入，功能封板提交 **`ed503bb1dcf08365568f0455c5437b7c59719164`**，设置实现提交 `a4e3682` 的 Windows package 检查成功。封板范围为批量转换、归档待处理草稿恢复、多选弹窗配置与设置页样式统一。
