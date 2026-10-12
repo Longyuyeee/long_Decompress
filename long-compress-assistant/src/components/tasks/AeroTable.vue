@@ -14,6 +14,7 @@ import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
 import OverflowTooltip from '@/components/ui/OverflowTooltip.vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import CompletedExtractionOutput from './CompletedExtractionOutput.vue'
+import DraftRecoveryNotice from './DraftRecoveryNotice.vue'
 import { open } from '@tauri-apps/api/dialog'
 import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
@@ -338,7 +339,7 @@ async (tasks, _, onCleanup) => {
                   class="text-xs font-black uppercase tracking-widest transition-all"
                   :class="getStatusColor(task.status)"
                 >
-                  {{ getStatusText(task.status) }}
+                  {{ task.sourceIssue || task.draftPasswordRequired ? '需要调整' : getStatusText(task.status) }}
                 </span>
               </div>
 
@@ -466,6 +467,9 @@ async (tasks, _, onCleanup) => {
                     </div>
 
                     <div v-if="task.type === 'decompression'" class="space-y-3.5">
+                      <DraftRecoveryNotice v-if="task.status === 'pending'" :sources="task.sourceFiles.map(path => ({ path, issue: task.sourceIssue }))" :needs-password="task.draftPasswordRequired"
+                        @replace="(index, path) => { task.sourceFiles[index] = path; task.name = path.split(/[\\/]/).pop() || path; task.sourceIssue = undefined }"
+                        @password="task.password = $event; task.draftPasswordRequired = false" />
                       <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
                       <div v-if="task.status === 'pending'" class="inherited-config-control space-y-2">
                         <SavedLocationPicker :current="task.outputPath" @select="task.outputPath = $event; task.configurationMode = 'individual'" />

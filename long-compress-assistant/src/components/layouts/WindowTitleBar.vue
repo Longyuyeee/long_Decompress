@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { appWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/tauri'
+import { usePendingDraftStore } from '@/stores/pendingDrafts'
 const minimize = () => appWindow.minimize()
 const toggleMaximize = () => appWindow.toggleMaximize()
-const closeApp = () => appWindow.close()
+const closeApp = () => { usePendingDraftStore().flush(); return appWindow.close() }
 const startDragging = (event: MouseEvent) => {
   if (event.button !== 0 || (event.target as HTMLElement | null)?.closest('.control-btn')) return
   void invoke('start_native_window_drag').catch(error => {

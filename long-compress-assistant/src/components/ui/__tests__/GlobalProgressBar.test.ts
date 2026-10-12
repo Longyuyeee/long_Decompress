@@ -34,7 +34,7 @@ describe('GlobalProgressBar', () => {
     const conversion = useArchiveConversionStore()
     expect(conversion.visible).toBe(true)
     expect(conversion.sourcePath).toBe('C:\\old.zip')
-    expect(conversion.outputPath).toBe('')
+    expect(conversion.outputPath).toBe('C:/old_转换.7z')
     expect(conversion.encryptFilenames).toBe(true)
     expect(tasks.tasks[0].status).toBe('cancelled')
     expect(commandMocks.compressFiles).not.toHaveBeenCalled()

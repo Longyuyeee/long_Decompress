@@ -33,6 +33,8 @@ export interface ConflictInfo {
 export interface Task {
   id: string
   name: string
+  sourceIssue?: string
+  draftPasswordRequired?: boolean
   /** Original failed task; persisted on the new task only. */
   retryOfTaskId?: string
   executionConfig?: ExecutionConfigV1

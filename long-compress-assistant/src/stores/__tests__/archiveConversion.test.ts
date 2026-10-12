@@ -15,6 +15,63 @@ function draft() {
   return store
 }
 describe('archive conversion lifecycle', () => {
+  it('runs selected items sequentially, keeps individual settings and continues after a failure', async () => {
+    mocks.invoke.mockImplementation(async (command, args) => {
+      if (command !== 'convert_archive') return
+      if (args.sourcePath.endsWith('first.zip')) throw '原包损坏'
+      return { primaryPath: args.outputPath, files: [], totalBytes: 123, split: false }
+    })
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/first.zip', 'C:/second.zip', 'C:/third.zip'])
+    store.updateItem(store.items[1].id, { format: 'zip', level: 2, password: 'personal-secret' })
+    store.items[2].selected = false
+    store.applySelected({ outputDirectory: 'D:/结果' })
+    await store.start()
+    const calls = mocks.invoke.mock.calls.filter(([command]) => command === 'convert_archive')
+    expect(calls.map(([, args]) => args.sourcePath)).toEqual(['C:/first.zip', 'C:/second.zip'])
+    expect(calls[1][1]).toMatchObject({ outputPath: 'D:/结果/second_转换.zip', options: { format: 'zip', level: 2, password: 'personal-secret' } })
+    expect(store.taskFor(store.items[0])?.status).toBe('failed')
+    expect(store.taskFor(store.items[1])?.status).toBe('completed')
+    expect(store.pending.map(item => item.sourcePath)).toEqual(['C:/third.zip'])
+    expect(JSON.stringify(mocks.invoke.mock.calls.filter(([cmd]) => cmd === 'save_task_history'))).not.toContain('personal-secret')
+  })
+  it('stops the batch after cancellation and retains unstarted settings', async () => {
+    let settle!: (error: string) => void
+    mocks.invoke.mockImplementation(async command => command === 'convert_archive' ? new Promise((_, reject) => { settle = reject }) : undefined)
+    const store = useArchiveConversionStore()
+    store.defaults.password = 'shared-secret'
+    store.addSources(['C:/first.zip', 'C:/second.zip'])
+    const run = store.start()
+    await vi.waitFor(() => expect(settle).toBeTypeOf('function'))
+    store.openFromExplorer(['C:/new.zip'], 'convert')
+    await store.cancel(); settle('转换已取消'); await run
+    expect(mocks.invoke.mock.calls.filter(([cmd]) => cmd === 'convert_archive')).toHaveLength(1)
+    expect(store.pending).toHaveLength(2)
+    expect(store.effectiveSettings(store.pending[0]).password).toBe('shared-secret')
+    expect(store.taskFor(store.items[0])?.status).toBe('cancelled')
+  })
+  it('shows duplicate output errors before starting any item and retains settings when switching rows', async () => {
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/first.zip', 'D:/first.zip'])
+    store.applySelected({ outputDirectory: 'E:/结果' })
+    store.chooseContextSource('C:/first.zip'); store.sourcePassword = 'original'
+    store.chooseContextSource('D:/first.zip'); store.chooseContextSource('C:/first.zip')
+    expect(store.sourcePassword).toBe('original')
+    await store.start()
+    expect(store.items[1].error).toContain('重复')
+    expect(useTaskStore().tasks).toHaveLength(0)
+  })
+  it('keeps each custom filename when changing directories and lets defaults follow actual edits', () => {
+    const store = useArchiveConversionStore()
+    store.openFromExplorer(['C:/a.zip', 'C:/b.7z'], 'reconfigure')
+    store.updateItem(store.items[0].id, { outputPath: 'D:/自定义.zip', level: 2 })
+    store.applySelected({ outputDirectory: 'E:/统一', format: '7z' })
+    expect(store.outputFor(store.items[0])).toBe('E:/统一/自定义.7z')
+    store.addSources(['C:/c.zip'], 'reconfigure')
+    store.updateDefaults({ format: '7z', level: 9 })
+    expect(store.effectiveSettings(store.items[0]).level).toBe(2)
+    expect(store.effectiveSettings(store.items[2])).toMatchObject({ format: '7z', level: 9 })
+  })
   it('opens Explorer sources as explicit drafts and preserves ZIP for password/split changes', () => {
     const store = useArchiveConversionStore()
     store.openFromExplorer(['C:/旧包.zip.001', 'C:/another.7z', 'C:/旧包.zip.001'], 'reconfigure')
@@ -45,7 +102,7 @@ describe('archive conversion lifecycle', () => {
     store.chooseContextSource('D:/new.zip')
     expect(store.sourcePath).toBe('D:/new.zip')
     expect(store.format).toBe('zip')
-    expect(store.password).toBe(''); expect(store.outputPath).toBe('')
+    expect(store.password).toBe(''); expect(store.outputPath).toBe('D:/new_调整.zip')
   })
   it('does not revive a terminal task when cancellation acknowledgement arrives during history persistence', async () => {
     let rejectConversion!: (reason: string) => void
@@ -79,7 +136,7 @@ describe('archive conversion lifecycle', () => {
     expect(record.status).toBe('completed')
     expect(store.password).toBe(''); expect(store.sourcePassword).toBe('')
     store.restore(record)
-    expect(store.outputPath).toBe(''); expect(store.sourcePath).toBe('C:\\原包.zip')
+    expect(store.outputPath).toBe('C:/原包_转换.7z'); expect(store.sourcePath).toBe('C:\\原包.zip')
     expect(store.splitMiB).toBe(1)
   })
   it('blocks incomplete configuration without creating a task', async () => {

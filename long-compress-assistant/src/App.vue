@@ -43,6 +43,7 @@ import Modal from '@/components/ui/Modal.vue'
 import UpdateDialog from '@/components/update/UpdateDialog.vue'
 import { useTaskStore } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
+import { usePendingDraftStore } from '@/stores/pendingDrafts'
 import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
 import { useUpdateStore } from '@/stores/update'
@@ -58,6 +59,8 @@ import { buildSafeTemplateDraftSettings, taskTemplateCandidatesToFiles } from '@
 const router = useRouter()
 const taskStore = useTaskStore()
 const compressionStore = useCompressionStore()
+const pendingDrafts = usePendingDraftStore()
+pendingDrafts.initialize()
 const appStore = useAppStore()
 const uiStore = useUIStore()
 const updateStore = useUpdateStore()
@@ -86,6 +89,7 @@ const continueInBackground = async () => {
 const cancelTasksAndExit = async () => {
   if (exitInProgress.value) return
   exitInProgress.value = true
+  pendingDrafts.flush()
   const unfinished = taskStore.tasks.filter(
     task => !['completed', 'failed', 'cancelled'].includes(task.status)
   )
@@ -428,6 +432,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  pendingDrafts.dispose()
   isUnmounted = true
   window.removeEventListener('keydown', handleKeydown)
   if (saveWindowTimer) clearTimeout(saveWindowTimer)
