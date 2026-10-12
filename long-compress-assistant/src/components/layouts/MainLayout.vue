@@ -6,6 +6,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 import { appWindow } from '@tauri-apps/api/window'
 import WindowTitleBar from '@/components/layouts/WindowTitleBar.vue'
 import GlobalProgressBar from '@/components/ui/GlobalProgressBar.vue'
+import PendingDraftRecovery from '@/components/tasks/PendingDraftRecovery.vue'
 import { useAppStore } from '@/stores/app'
 import brandIcon from '@/assets/long-jieya-icon.png'
 
@@ -125,10 +126,11 @@ const navigateTo = (name: string) => {
         </aside>
 
         <!-- 主内容区 -->
-        <main class="app-main flex-1 relative h-full overflow-hidden min-w-0 z-10 bg-base">
+        <main class="app-main flex flex-col flex-1 relative h-full overflow-hidden min-w-0 z-10 bg-base">
+          <PendingDraftRecovery />
           <router-view v-slot="{ Component }">
             <transition name="aero-page" mode="out-in">
-              <div :key="route.path" class="h-full w-full overflow-hidden">
+              <div :key="route.path" class="min-h-0 flex-1 w-full overflow-hidden">
                 <component :is="Component" />
               </div>
             </transition>

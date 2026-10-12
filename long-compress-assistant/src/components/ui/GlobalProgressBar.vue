@@ -59,6 +59,7 @@ const hasActiveTasks = computed(() => activeCount.value > 0)
 const failedCount = computed(() => taskStore.tasks.filter(task => task.status === 'failed').length)
 const cancelledCount = computed(() => taskStore.tasks.filter(task => task.status === 'cancelled').length)
 const summaryLabel = computed(() => {
+  if (hasActiveTasks.value && !taskStats.value.runningTask) return `${activeCount.value} ${appStore.t('tasks.status.pending')}`
   if (hasActiveTasks.value) return `${activeCount.value} ${appStore.t('tasks.active')}`
   if (failedCount.value) return appStore.t('tasks.finished_failed').replace('{count}', String(failedCount.value))
   if (cancelledCount.value) return appStore.t('tasks.finished_cancelled').replace('{count}', String(cancelledCount.value))

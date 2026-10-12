@@ -28,6 +28,8 @@ export interface FileObject {
   settings?: CompressionOptions
   outputPath?: string
   taskId?: string
+  sourceIssue?: string
+  draftPasswordRequired?: boolean
 }
 
 export interface CompressionOptions {
@@ -58,6 +60,7 @@ export interface CompressionGroup {
   settings?: CompressionOptions
   outputPath?: string
   taskId?: string
+  draftPasswordRequired?: boolean
 }
 
 export interface CompressionTask {
@@ -161,6 +164,11 @@ export const useCompressionStore = defineStore('compression', () => {
     archiveDefaultsInitialized = true
   }
   const globalOutputPath = ref('')
+  const restoreArchiveDefaults = (settings: CompressionOptions, outputDirectory: string) => {
+    globalSettings.value = cloneSettings(settings)
+    globalOutputPath.value = outputDirectory
+    archiveDefaultsInitialized = true
+  }
   const autoStartRequested = ref(false)
   const imageItems = ref<ImageCompressionItem[]>([])
   const imageGlobalSettings = ref<ImageCompressionSettings>(createDefaultImageSettings())
@@ -630,6 +638,7 @@ export const useCompressionStore = defineStore('compression', () => {
     groups,
     globalSettings,
     initializeArchiveDefaults,
+    restoreArchiveDefaults,
     globalOutputPath,
     autoStartRequested,
     imageItems,

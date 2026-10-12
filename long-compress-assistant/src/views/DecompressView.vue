@@ -22,6 +22,8 @@ import { inferExtractionSubfolder } from '@/utils/smartExtraction'
 import BatchConfigBar from '@/components/tasks/BatchConfigBar.vue'
 import type { BatchConfigPatch } from '@/types/batchConfig'
 import { parentDirectory } from '@/utils/resultLocation'
+import { storeToRefs } from 'pinia'
+import { useDecompressionPreferences } from '@/stores/decompressionPreferences'
 
 const taskStore = useTaskStore()
 const batchStore = useDecompressionBatchStore()
@@ -73,12 +75,10 @@ function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (error?:
 }
 
 // 全局配置状态
-const globalOutputPath = ref(appStore.settings.defaultOutputPath)
-const isGlobalSameDir = ref(!appStore.settings.defaultOutputPath) // 默认同目录，用户可通过按钮手动选择
-const globalExtractToSubfolder = ref(appStore.settings.defaultExtractToSubfolder)
+const { outputPath: globalOutputPath, sameDirectory: isGlobalSameDir,
+  extractToSubfolder: globalExtractToSubfolder, recycleSource: globalRecycleSourceAfterExtract } = storeToRefs(useDecompressionPreferences())
 let subfolderChoiceRevision = 0
 watch(() => appStore.settings.smartExtractionDirectory, () => { subfolderChoiceRevision++ }, { flush: 'sync' })
-const globalRecycleSourceAfterExtract = ref(appStore.settings.autoDeleteSource)
 
 watch(
   () => appStore.settings.autoDeleteSource,
@@ -384,6 +384,10 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
     // The batch keeps a snapshot of queued tasks. A task cancelled while it is
     // waiting for a concurrency slot must never start afterwards.
     if (task.status === 'cancelled') return
+    if (task.sourceIssue || task.draftPasswordRequired) {
+      appStore.setError(task.sourceIssue || '此任务的密码未保存在草稿中，请展开条目重新填写。')
+      return
+    }
     if (task.configurationMode === 'global') applyGlobalConfiguration(task)
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {

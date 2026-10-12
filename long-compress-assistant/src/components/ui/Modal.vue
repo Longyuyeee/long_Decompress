@@ -135,6 +135,11 @@ const handleConfirm = () => { emit('confirm'); }
 const handleBackdropClick = () => { if (props.closeOnBackdrop) handleClose(); }
 
 const handleKeydown = (e: KeyboardEvent) => {
+  if (!props.visible || e.defaultPrevented) return
+  const ownDialog = modalContent.value?.closest('[role="dialog"]')
+  const dialogs = Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')).filter(dialog => dialog.getClientRects().length)
+  const topDialog = dialogs.reduce<HTMLElement | undefined>((top, dialog) => !top || Number(getComputedStyle(dialog).zIndex) >= Number(getComputedStyle(top).zIndex) ? dialog : top, undefined)
+  if (topDialog && ownDialog !== topDialog) return
   if (props.closeOnEscape && e.key === 'Escape' && props.visible) handleClose();
   if (e.key !== 'Tab' || !props.visible || !modalContent.value) return
 

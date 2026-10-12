@@ -21,6 +21,7 @@ import CompressionAnalysisCard from '@/components/compression/CompressionAnalysi
 import CompressionSettingsPanel from '@/components/compression/CompressionSettingsPanel.vue'
 import CompressionStatusCell from '@/components/compression/CompressionStatusCell.vue'
 import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
+import DraftRecoveryNotice from '@/components/tasks/DraftRecoveryNotice.vue'
 import CompressionToolbar from '@/components/compression/CompressionToolbar.vue'
 import BatchConfigBar from '@/components/tasks/BatchConfigBar.vue'
 import type { BatchConfigPatch } from '@/types/batchConfig'
@@ -314,6 +315,7 @@ const runCompression = async () => {
       return {
         id: group.id,
         retryOfTaskId: group.retryOfTaskId,
+        draftPasswordRequired: group.draftPasswordRequired,
         name: group.name,
         files: group.files,
         settings,
@@ -331,6 +333,7 @@ const runCompression = async () => {
       return {
         id: file.path,
         retryOfTaskId: undefined as string | undefined,
+        draftPasswordRequired: file.draftPasswordRequired,
         name: file.name,
         files: [file],
         settings,
@@ -405,6 +408,13 @@ const runCompression = async () => {
   )
 
   for (const job of jobs) {
+    if (job.files.some(file => file.sourceIssue) || job.draftPasswordRequired) {
+      const draft = compressionStore.groups.find(group => group.id === job.id) || compressionStore.selectedFiles.find(file => file.path === job.id)
+      if (draft) draft.expanded = true
+      appStore.setError(job.files.find(file => file.sourceIssue)?.sourceIssue || '此任务的密码未保存在草稿中，请展开条目重新填写。')
+      failed++
+      continue
+    }
     const effectiveFormat = effectiveFormatForPassword(job.settings.format, job.settings.password)
     const normalizedOutputPath = normalizeOutputPath(job.outputPath)
     if (outputPaths.has(normalizedOutputPath)) {
@@ -767,7 +777,8 @@ const drawerTransition = useDrawerTransition()
               <span v-if="group.files.length > 1" class="shrink-0 text-primary font-bold">+{{ group.files.length - 1 }}</span>
             </div>
 
-            <CompressionStatusCell :task="taskForJob(group.taskId)" />
+            <span v-if="group.files.some(file => file.sourceIssue) || group.draftPasswordRequired" class="shrink-0 text-xs text-amber-600">需要调整</span>
+            <CompressionStatusCell v-else :task="taskForJob(group.taskId)" />
 
             <div class="compression-row-actions min-w-20 shrink-0 flex items-center justify-end gap-2">
               <button
@@ -840,6 +851,9 @@ const drawerTransition = useDrawerTransition()
 
                   <Transition name="aero-drawer">
                     <div class="compression-settings-stack">
+                    <DraftRecoveryNotice :sources="group.files.map(file => ({ path: file.path, issue: file.sourceIssue, isDirectory: file.isDirectory }))" :needs-password="group.draftPasswordRequired"
+                      @replace="(index, path, metadata) => Object.assign(group.files[index], { path, name: metadata.name, size: metadata.size, isDirectory: metadata.is_dir, sourceIssue: undefined })"
+                      @password="compressionStore.updateGroupSettings(group.id, { ...compressionStore.getEffectiveSettings(group.settings), password: $event, encryptFilenames: $event ? compressionStore.getEffectiveSettings(group.settings).encryptFilenames : false }); group.draftPasswordRequired = false" />
                     <CompressionAnalysisCard
                       compact
                       :job-id="group.id"
@@ -965,7 +979,8 @@ const drawerTransition = useDrawerTransition()
               {{ file.path }}
             </div>
 
-            <CompressionStatusCell :task="taskForJob(file.taskId)" />
+            <span v-if="file.sourceIssue || file.draftPasswordRequired" class="shrink-0 text-xs text-amber-600">需要调整</span>
+            <CompressionStatusCell v-else :task="taskForJob(file.taskId)" />
 
             <div class="compression-row-actions min-w-20 shrink-0 flex items-center justify-end">
               <button
@@ -1041,6 +1056,9 @@ const drawerTransition = useDrawerTransition()
                     </h4>
                     <Transition name="aero-drawer">
                     <div class="compression-settings-stack">
+                    <DraftRecoveryNotice :sources="[{ path: file.path, issue: file.sourceIssue, isDirectory: file.isDirectory }]" :needs-password="file.draftPasswordRequired"
+                      @replace="(_index, path, metadata) => Object.assign(file, { path, name: metadata.name, size: metadata.size, isDirectory: metadata.is_dir, sourceIssue: undefined })"
+                      @password="compressionStore.updateFileSettings(file.path, { ...compressionStore.getEffectiveSettings(file.settings), password: $event, encryptFilenames: $event ? compressionStore.getEffectiveSettings(file.settings).encryptFilenames : false }); file.draftPasswordRequired = false" />
                     <CompressionAnalysisCard
                       compact
                       :job-id="file.path"

@@ -94,6 +94,8 @@ docs/                  开发路线、格式说明与历史记录
 
 当前公开版本为 [v1.4.1](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.1)，完整变化见 [中文发布说明](docs/RELEASE_NOTES_1.4.1.md)与 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。发布后，主分支将所选任务的批量配置调整为弹窗，单条任务继续行内展开；这项交互调整随下一版交付。
 
+v1.4.2 功能已收口：一次转换多个压缩包，关闭后恢复尚未开始的归档任务，并分别提示恢复原包和新包密码。版本号暂为 1.4.1，尚未发布新安装包；详情见 [发布说明草稿](docs/RELEASE_NOTES_1.4.2.md)与 [实施记录](docs/BATCH_CONVERSION_AND_DRAFT_RECOVERY_PLAN.md)。
+
 <details>
 <summary><strong>展开历史版本开发记录</strong></summary>
 

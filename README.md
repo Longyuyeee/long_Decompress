@@ -219,6 +219,7 @@ Windows 11 请在 **“显示更多选项”** 中使用经典菜单；当前公
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.4.2（待发布）** | 多包批量转换、待处理草稿恢复、多选弹窗配置 | [发布说明草稿](long-compress-assistant/docs/RELEASE_NOTES_1.4.2.md) |
 | **v1.4.1** | 批量修改配置、统一结果操作、Windows 压缩包右键增强 | [发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.1) |
 | v1.4.0 | ZIP/7Z 密码分卷、归档转换、密码兼容与界面整理 | [发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.0) |
 | v1.3.9 | 文件冲突处理、历史再次执行、常用位置与日常性能优化 | [发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.9) |
