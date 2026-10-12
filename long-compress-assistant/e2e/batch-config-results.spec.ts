@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
-test('batch edits files and groups inline while preserving their other configuration', async ({ page }, info) => {
+test('batch edits use a dialog while single rows stay inline and other configuration is preserved', async ({ page }, info) => {
   await page.setViewportSize({ width: 1100, height: 760 })
   await page.goto('/#/compress')
   await page.waitForSelector('h1')
@@ -29,13 +29,29 @@ test('batch edits files and groups inline while preserving their other configura
   })
   await page.getByTestId('compression-group-checkbox').first().click()
   await page.getByTestId('compression-draft-group-checkbox').click()
-  await page.getByRole('button', { name: /修改所选配置/ }).click()
   const bar = page.getByTestId('batch-config-bar')
   await expect(bar).toContainText('已选 2 项')
-  await expect(bar.getByTestId('batch-config-apply')).toBeDisabled()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(bar.getByTestId('batch-config-fields')).toHaveCount(0)
+  expect(await bar.evaluate(element => element.getBoundingClientRect().height)).toBeLessThan(80)
+  await page.getByRole('button', { name: /修改所选配置/ }).click()
+  const dialog = page.getByRole('dialog', { name: '修改所选压缩配置' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByTestId('batch-config-apply')).toBeDisabled()
   await page.getByTestId('batch-level').click()
   await page.getByRole('option', { name: '9 · 最小体积', exact: true }).click()
-  await bar.getByTestId('batch-config-apply').click()
+  await dialog.getByTestId('batch-config-cancel').click()
+  await expect(dialog).toHaveCount(0)
+  expect(await page.evaluate(async () => {
+    const path = '/src/stores/compression.ts'
+    return (await import(path)).useCompressionStore().selectedFiles[0].settings?.level
+  })).toBe(2)
+  await page.getByRole('button', { name: /修改所选配置/ }).click()
+  await expect(dialog.getByTestId('batch-level')).toContainText('保持各自设置')
+  await page.getByTestId('batch-level').click()
+  await page.getByRole('option', { name: '9 · 最小体积', exact: true }).click()
+  await dialog.getByTestId('batch-config-apply').click()
+  await expect(dialog).toHaveCount(0)
   const state = await page.evaluate(async () => {
     const modulePath = '/src/stores/compression.ts'
     const store = (await import(modulePath)).useCompressionStore()
@@ -53,15 +69,27 @@ test('batch edits files and groups inline while preserving their other configura
     const modulePath = '/src/stores/compression.ts'
     return (await import(modulePath)).useCompressionStore().selectedFiles[1].settings
   })).toBeUndefined()
+  await page.evaluate(async () => {
+    const path = '/src/stores/app.ts'
+    ;(await import(path)).useAppStore().setSuccess(null)
+  })
   for (const width of [1100, 760]) {
     await page.setViewportSize({ width, height: 760 })
     await bar.scrollIntoViewIfNeeded()
     expect(await bar.evaluate(element => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
     await page.screenshot({ path: info.outputPath(`compression-batch-${width}.png`) })
+    await bar.getByRole('button', { name: /修改所选配置/ }).click()
+    await dialog.evaluate(async element => {
+      await Promise.all(element.getAnimations({ subtree: true }).filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => undefined)))
+    })
+    await expect(dialog).not.toHaveClass(/fade-enter-active/)
+    await expect(dialog.locator('.modal-no-glass')).not.toHaveClass(/pop-enter-active/)
+    await page.screenshot({ path: info.outputPath(`compression-batch-dialog-${width}.png`) })
+    await dialog.getByTestId('batch-config-cancel').click()
   }
 })
 
-test('extraction batch edits stay inline and result folders are opened once', async ({ page }, info) => {
+test('extraction batch edits use a dialog without filling the list and result folders are opened once', async ({ page }, info) => {
   await page.setViewportSize({ width: 920, height: 700 })
   await page.goto('/#/decompress')
   await page.waitForSelector('h1')
@@ -71,19 +99,36 @@ test('extraction batch edits stay inline and result folders are opened once', as
     for (let index = 0; index < 3; index++) store.addTask({ id: `selected-${index}`, name: `项目资料_${index}.zip`, type: 'decompression', sourceFiles: [`C:/资料/${index}.zip`], outputPath: `D:/各自目录/${index}`, password: `password-${index}`, extractToSubfolder: true, configurationMode: 'global' })
   })
   await page.getByTestId('task-row').first().locator('input[type="checkbox"], button[role="checkbox"]').first().click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  expect(await page.getByTestId('batch-config-bar').evaluate(element => element.getBoundingClientRect().height)).toBeLessThan(80)
   await page.getByRole('button', { name: /修改所选配置/ }).click()
+  const dialog = page.getByRole('dialog', { name: '修改所选解压配置' })
+  await expect(dialog).toBeVisible()
   await page.getByTestId('batch-subfolder').click()
   await page.getByRole('option', { name: '直接放入输出目录', exact: true }).click()
   await page.getByTestId('batch-config-apply').click()
+  await expect(dialog).toHaveCount(0)
   expect(await page.evaluate(async () => {
     const path = '/src/stores/task.ts'
     const task = (await import(path)).useTaskStore().tasks[0]
     return { outputPath: task.outputPath, password: task.password, subfolder: task.extractToSubfolder }
   })).toEqual({ outputPath: 'D:/各自目录/0', password: 'password-0', subfolder: false })
+  await page.evaluate(async () => {
+    const path = '/src/stores/app.ts'
+    ;(await import(path)).useAppStore().setSuccess(null)
+  })
   for (const width of [920, 760]) {
     await page.setViewportSize({ width, height: 700 })
     expect(await page.getByTestId('batch-config-bar').evaluate(element => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
     await page.screenshot({ path: info.outputPath(`decompression-batch-${width}.png`) })
+    await page.getByRole('button', { name: /修改所选配置/ }).click()
+    await dialog.evaluate(async element => {
+      await Promise.all(element.getAnimations({ subtree: true }).filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => undefined)))
+    })
+    await expect(dialog).not.toHaveClass(/fade-enter-active/)
+    await expect(dialog.locator('.modal-no-glass')).not.toHaveClass(/pop-enter-active/)
+    await page.screenshot({ path: info.outputPath(`decompression-batch-dialog-${width}.png`) })
+    await dialog.getByTestId('batch-config-cancel').click()
   }
   await page.evaluate(async () => {
     const path = '/src/stores/task.ts'

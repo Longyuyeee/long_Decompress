@@ -57,7 +57,7 @@ watch(() => decompressionTasks.value.filter(task => task.status === 'pending').m
   const valid = new Set(ids)
   selectedTaskIds.value = new Set([...selectedTaskIds.value].filter(id => valid.has(id)))
 })
-function applySelectedConfiguration(patch: BatchConfigPatch) {
+function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (error?: string) => void) {
   if (patch.outputDirectory === undefined && patch.extractToSubfolder === undefined) return
   const selected = selectedPendingTasks.value
   for (const task of selected) {
@@ -69,6 +69,7 @@ function applySelectedConfiguration(patch: BatchConfigPatch) {
     task.configurationMode = 'individual'
   }
   if (selected.length) appStore.setSuccess(`已更新 ${selected.length} 项配置，其他设置保持不变。`)
+  complete?.()
 }
 
 // 全局配置状态

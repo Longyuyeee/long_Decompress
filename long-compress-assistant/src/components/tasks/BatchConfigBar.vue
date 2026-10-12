@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { open } from '@tauri-apps/api/dialog'
+import Modal from '@/components/ui/Modal.vue'
 import ThemedSelect from '@/components/ui/ThemedSelect.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
 import { useAppStore } from '@/stores/app'
 import type { BatchConfigPatch } from '@/types/batchConfig'
 
+defineOptions({ inheritAttrs: false })
 const props = defineProps<{ count: number; mode: 'compression' | 'decompression' }>()
-const emit = defineEmits<{ apply: [patch: BatchConfigPatch]; clear: [] }>()
+const emit = defineEmits<{ apply: [patch: BatchConfigPatch, complete?: (error?: string) => void]; clear: [] }>()
 const app = useAppStore()
-const expanded = ref(false)
+const visible = ref(false)
+const applyError = ref('')
+let editingSession = 0
 const format = ref('keep')
 const level = ref('keep')
 const subfolder = ref('keep')
@@ -23,10 +27,20 @@ const subfolders = [keep, { value: 'yes', label: '创建同名子文件夹' }, {
 const hasChanges = computed(() => destination.value !== 'keep' || (props.mode === 'compression'
   ? format.value !== 'keep' || level.value !== 'keep' : subfolder.value !== 'keep'))
 const canApply = computed(() => hasChanges.value && (destination.value !== 'custom' || !!outputDirectory.value.trim()))
+function openConfiguration() {
+  editingSession++
+  format.value = level.value = subfolder.value = 'keep'
+  destination.value = 'keep'
+  outputDirectory.value = applyError.value = ''
+  visible.value = true
+}
+watch(() => props.count, count => { if (!count) visible.value = false })
 function setOutput(path: string) { outputDirectory.value = path; destination.value = 'custom' }
 async function chooseOutput() {
+  const session = editingSession
   try {
     const path = await open({ directory: true, multiple: false, title: '选择所选任务的输出目录' })
+    if (!visible.value || session !== editingSession) return
     if (typeof path === 'string') { setOutput(path); useSavedLocations().remember(path) }
   } catch { app.setError('无法选择输出目录，请重试。') }
 }
@@ -38,20 +52,26 @@ function apply() {
     if (format.value === 'zip' || format.value === '7z') patch.format = format.value
     if (level.value !== 'keep') patch.level = Number(level.value)
   } else if (subfolder.value !== 'keep') patch.extractToSubfolder = subfolder.value === 'yes'
-  emit('apply', patch)
+  applyError.value = ''
+  emit('apply', patch, error => {
+    if (error) applyError.value = error
+    else visible.value = false
+  })
 }
 </script>
 
 <template>
-  <section v-if="count" class="batch-config-bar min-w-0 rounded-xl border border-primary/25 bg-primary/5 p-3" data-testid="batch-config-bar">
+  <section v-if="count" v-bind="$attrs" class="batch-config-bar min-w-0 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2" data-testid="batch-config-bar">
     <div class="flex flex-wrap items-center gap-2">
       <span class="mr-auto text-sm font-semibold text-content">已选 {{ count }} 项</span>
-      <button type="button" class="batch-button bg-primary text-white" :aria-expanded="expanded" @click="expanded = !expanded">
-        <i class="pi pi-sliders-h" aria-hidden="true"></i>修改所选配置<i :class="expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" aria-hidden="true"></i>
+      <button type="button" class="batch-button bg-primary text-white" aria-haspopup="dialog" @click="openConfiguration">
+        <i class="pi pi-sliders-h" aria-hidden="true"></i>修改所选配置
       </button>
       <button type="button" class="batch-button text-muted hover:bg-input" @click="emit('clear')">取消选择</button>
     </div>
-    <div v-if="expanded" class="mt-3 space-y-3 border-t border-primary/15 pt-3" data-testid="batch-config-fields">
+  </section>
+  <Modal v-model:visible="visible" :title="mode === 'compression' ? '修改所选压缩配置' : '修改所选解压配置'" :description="`已选 ${count} 项任务`" icon="pi pi-sliders-h" size="md" cancel-text="关闭批量配置">
+    <div class="space-y-4" data-testid="batch-config-fields">
       <p class="text-xs leading-relaxed text-muted">只修改下面指定的项目，其他配置保持各自原值。</p>
       <div class="grid min-w-0 gap-3 sm:grid-cols-2">
         <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩格式
@@ -73,11 +93,13 @@ function apply() {
         </div>
         <p v-if="destination === 'custom'" class="select-text break-words rounded-lg bg-input/60 px-3 py-2 text-xs text-content [overflow-wrap:anywhere]" :title="outputDirectory">{{ outputDirectory }}</p>
       </div>
-      <div class="flex flex-wrap items-center justify-end gap-2">
-        <button type="button" class="batch-button bg-primary font-semibold text-white disabled:opacity-40" data-testid="batch-config-apply" :disabled="!canApply" @click="apply">应用到 {{ count }} 项</button>
-      </div>
+      <p v-if="applyError" class="rounded-lg border border-danger/20 bg-danger/5 px-3 py-2 text-xs leading-relaxed text-danger" role="alert">{{ applyError }}</p>
     </div>
-  </section>
+    <template #footer>
+      <button type="button" class="batch-button border border-subtle text-muted hover:bg-input" data-testid="batch-config-cancel" @click="visible = false">取消</button>
+      <button type="button" class="batch-button bg-primary font-semibold text-white disabled:opacity-40" data-testid="batch-config-apply" :disabled="!canApply" @click="apply">应用到 {{ count }} 项</button>
+    </template>
+  </Modal>
 </template>
 
 <style scoped>
