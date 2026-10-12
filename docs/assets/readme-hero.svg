@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title description">
+  <title id="title">Long解压 · 让文件处理更顺手</title>
+  <desc id="description">面向 Windows 的本地压缩、解压、归档浏览与媒体压缩工具。深蓝渐变背景、蓝紫色文件夹与拉链图案。</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1">
+      <stop stop-color="#0b1229"/>
+      <stop offset=".55" stop-color="#18224b"/>
+      <stop offset="1" stop-color="#16304b"/>
+    </linearGradient>
+    <linearGradient id="folder" x2=".85" y2="1">
+      <stop stop-color="#8796ff"/>
+      <stop offset=".5" stop-color="#6266ef"/>
+      <stop offset="1" stop-color="#405bd6"/>
+    </linearGradient>
+    <linearGradient id="front" x2="1" y2="1">
+      <stop stop-color="#889cff"/>
+      <stop offset="1" stop-color="#508ee8"/>
+    </linearGradient>
+    <linearGradient id="file" x2="1" y2="1">
+      <stop stop-color="#eef4ff"/>
+      <stop offset="1" stop-color="#b9d4ff"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop stop-color="#6678ff" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#6678ff" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#b4c4ff" stroke-opacity=".055"/>
+    </pattern>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="220%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#040c27" flood-opacity=".4"/>
+    </filter>
+    <clipPath id="bounds"><rect width="1280" height="360" rx="26"/></clipPath>
+  </defs>
+  <g clip-path="url(#bounds)">
+    <rect width="1280" height="360" fill="url(#background)"/>
+    <rect width="1280" height="360" fill="url(#grid)"/>
+    <circle cx="1030" cy="130" r="320" fill="url(#glow)"/>
+    <circle cx="28" cy="355" r="210" fill="url(#glow)" opacity=".45"/>
+    <path d="M810 316C904 330 1131 326 1254 222" fill="none" stroke="#82c4ff" stroke-opacity=".2"/>
+    <path d="M842 336C959 360 1167 334 1286 246" fill="none" stroke="#82c4ff" stroke-opacity=".12"/>
+    <g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif">
+      <rect x="64" y="44" width="7" height="7" rx="3.5" fill="#77e2dd"/>
+      <text x="84" y="52" fill="#aebde3" font-size="12" font-weight="600" letter-spacing="3">YOUR FILES. YOUR WORKSPACE.</text>
+      <text x="64" y="151" fill="#f5f7ff" font-size="68" font-weight="750" letter-spacing="-2">Long解压</text>
+      <text x="68" y="205" fill="#d4defa" font-size="23" font-weight="500">让压缩、解压与文件整理，更顺手。</text>
+      <text x="69" y="238" fill="#96a9d3" font-size="15">一个工作区，处理归档、常用密码与图片 / 视频 / PDF。</text>
+      <g font-size="13" font-weight="600" fill="#dce5ff">
+        <rect x="68" y="274" width="105" height="34" rx="17" fill="#7085ff" fill-opacity=".13" stroke="#879bfc" stroke-opacity=".25"/>
+        <text x="89" y="296">Windows x64</text>
+        <rect x="184" y="274" width="98" height="34" rx="17" fill="#7085ff" fill-opacity=".13" stroke="#879bfc" stroke-opacity=".25"/>
+        <text x="207" y="296">本地处理</text>
+        <rect x="294" y="274" width="98" height="34" rx="17" fill="#7085ff" fill-opacity=".13" stroke="#879bfc" stroke-opacity=".25"/>
+        <text x="317" y="296">批量任务</text>
+        <rect x="404" y="274" width="105" height="34" rx="17" fill="#7085ff" fill-opacity=".13" stroke="#879bfc" stroke-opacity=".25"/>
+        <text x="425" y="296">ZIP · 7Z · RAR</text>
+      </g>
+    </g>
+    <g filter="url(#shadow)" transform="translate(855 54) rotate(-7 145 133)">
+      <path d="M14 71Q14 55 30 55H99L118 72H261Q278 72 278 89V227Q278 244 261 244H30Q14 244 14 227Z" fill="url(#folder)" stroke="#a3b0ff" stroke-opacity=".65"/>
+      <g transform="translate(104 3) rotate(12 78 120)">
+        <path d="M0 15Q0 0 15 0H103L147 44V201Q147 216 132 216H15Q0 216 0 201Z" fill="url(#file)" stroke="#f3f8ff" stroke-opacity=".7"/>
+        <path d="M103 0V29Q103 44 118 44H147" fill="#94b5eb"/>
+        <path d="M57 16V151" stroke="#5170af" stroke-width="12"/>
+        <path d="M51 21H57M57 31H63M51 41H57M57 51H63M51 61H57M57 71H63M51 81H57M57 91H63M51 101H57M57 111H63M51 121H57M57 131H63" stroke="#e5efff" stroke-width="5"/>
+        <rect x="42" y="136" width="30" height="43" rx="9" fill="#4065a7" stroke="#e6efff" stroke-width="2"/>
+        <rect x="51" y="149" width="12" height="18" rx="5" fill="#cde0ff"/>
+      </g>
+      <path d="M7 139Q7 123 24 123H282Q299 123 295 141L276 234Q274 246 259 246H31Q17 246 16 232Z" fill="url(#front)" stroke="#b4c9ff" stroke-opacity=".7"/>
+      <path d="M32 143H264" stroke="#c7d8ff" stroke-opacity=".35" stroke-width="2"/>
+      <text x="45" y="204" fill="#eef3ff" font-family="Segoe UI, sans-serif" font-size="31" font-weight="700" letter-spacing="2">ZIP / 7Z</text>
+    </g>
+    <g fill="#a6dcff">
+      <path d="M1164 54V72M1155 63H1173" stroke="#a6dcff" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="833" cy="221" r="3" opacity=".7"/>
+      <circle cx="1184" cy="284" r="4" opacity=".6"/>
+      <circle cx="803" cy="74" r="2" opacity=".55"/>
+    </g>
+  </g>
+</svg>

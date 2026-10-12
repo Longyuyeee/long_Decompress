@@ -55,11 +55,16 @@ watch(selectableJobIds, ids => {
 function selectAllDrafts() {
   selectedRows.value = selectedRows.value.size === selectableJobIds.value.length ? new Set() : new Set(selectableJobIds.value)
 }
-function applySelectedConfiguration(patch: BatchConfigPatch) {
+function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (error?: string) => void) {
   try {
     const count = compressionStore.applyBatchConfiguration([...selectedRows.value], patch)
     if (count) appStore.setSuccess(`已更新 ${count} 项配置，其他设置保持不变。`)
-  } catch (error) { appStore.setError(extractErrorMessage(error)) }
+    complete?.()
+  } catch (error) {
+    const message = extractErrorMessage(error)
+    if (complete) complete(message)
+    else appStore.setError(message)
+  }
 }
 const showGlobalSettingsModal = ref(false)
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
