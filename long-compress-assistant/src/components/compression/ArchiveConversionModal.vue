@@ -83,9 +83,11 @@ function toggle(id: string) {
             <p v-if="item.error || item.sourceIssue" role="alert" class="break-words text-xs text-red-500">{{ item.error || item.sourceIssue }}</p>
             <template v-if="!item.taskId">
               <div v-if="item.sourceIssue" class="flex items-center gap-2"><button type="button" class="conversion-button" @click="chooseSource(item.id)">重新选择来源</button></div>
-              <div v-if="item.passwordRequired" class="flex flex-wrap items-center gap-2 rounded-lg bg-amber-500/5 p-2 text-xs text-amber-600"><span class="mr-auto">密码未保存在草稿中，请重新填写；不再需要时可留空确认。</span><button type="button" class="conversion-button" @click="item.passwordRequired = false">确认当前密码设置</button></div>
+              <p v-if="item.passwordRequired" class="rounded-lg bg-amber-500/5 p-2 text-xs text-amber-600">密码未保存在草稿中，请在对应输入框重新填写；不再需要时可选择下方的免密码选项。</p>
               <label class="block min-w-0 text-sm">新包保存位置<div class="mt-1 flex min-w-0 gap-2"><input :value="store.outputFor(item)" data-testid="conversion-output" class="conversion-input min-w-0 flex-1" :disabled="store.busy" @input="store.updateItem(item.id, { outputPath: ($event.target as HTMLInputElement).value })" /><button type="button" class="conversion-button" :disabled="store.busy" @click="chooseOutput(item.id)">另存为</button></div></label>
-              <ConversionSettingsFields :settings="store.effectiveSettings(item)" :disabled="store.busy" @update="store.updateItem(item.id, $event)" />
+              <ConversionSettingsFields :settings="store.effectiveSettings(item)" :disabled="store.busy"
+                :source-password-required="store.passwordRequirements(item).source" :target-password-required="store.passwordRequirements(item).target"
+                @update="store.updateItem(item.id, $event)" />
             </template>
             <template v-else>
               <div v-if="store.taskFor(item)?.status === 'completed' && store.taskFor(item)?.archiveOutput" data-testid="conversion-result" class="space-y-2"><p class="text-sm font-semibold text-emerald-600">转换完成 · 原压缩包已保留</p><ArchiveOutputSummary :output="store.taskFor(item)!.archiveOutput!" /></div>

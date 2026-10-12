@@ -33,6 +33,10 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   }
   function outputFor(item: ConversionDraft) { return conversionOutputPath(item.sourcePath, effectiveSettings(item), item.intent) }
   function taskFor(item: ConversionDraft) { return tasks.tasks.find(task => task.id === item.taskId) }
+  function passwordRequirements(item: ConversionDraft) {
+    const legacy = !!item.passwordRequired && item.sourcePasswordRequired === undefined && item.targetPasswordRequired === undefined
+    return { source: item.sourcePasswordRequired ?? legacy, target: item.targetPasswordRequired ?? legacy }
+  }
   const task = computed(() => active.value ? taskFor(active.value) : undefined)
   const contextSources = computed(() => items.value.map(item => item.sourcePath))
   const contextIntent = computed(() => active.value?.intent || 'convert')
@@ -48,7 +52,10 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       const directory = patch.outputDirectory || parentDirectory(item.sourcePath)
       item.settings.outputPath = directory.replace(/[\\/]$/, '') + '/' + filename
     }
-    if (patch.sourcePassword !== undefined || patch.password !== undefined) item.passwordRequired = false
+    const requirements = passwordRequirements(item)
+    item.sourcePasswordRequired = patch.sourcePassword !== undefined ? false : requirements.source
+    item.targetPasswordRequired = patch.password !== undefined || !['zip', '7z'].includes(item.settings.format) ? false : requirements.target
+    item.passwordRequired = item.sourcePasswordRequired || item.targetPasswordRequired
     item.error = undefined
   }
   function field<K extends keyof ConversionSettings>(key: K) {
@@ -116,19 +123,34 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   }
   function restore(record: TaskHistoryRecord) {
     if (busy.value || record.executionConfig?.kind !== 'archive-conversion') return
+    const existing = pending.value.find(item => item.retryOfTaskId === record.id)
+    if (existing) {
+      existing.expanded = existing.selected = true; activeId.value = existing.id; visible.value = true
+      return
+    }
     const config = record.executionConfig
-    const item = addSources([record.sourcePaths[0] || ''])[0] || pending.value.find(item => item.sourcePath === record.sourcePaths[0])
-    if (!item) return
-    item.settings = { ...defaultConversionSettings(), outputPath: '', format: config.format,
+    const source = record.sourcePaths[0]
+    if (!source) return
+    const item: ConversionDraft = { id: 'conversion-draft-' + crypto.randomUUID(), sourcePath: source,
+      intent: 'convert', expanded: true, selected: true, retryOfTaskId: record.id,
+      targetPasswordRequired: config.passwordRequired, sourcePasswordRequired: false, passwordRequired: config.passwordRequired,
+      settings: { ...defaultConversionSettings(), outputPath: '', format: config.format,
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
-      level: config.level, splitMiB: config.splitSize / 1048576, encryptFilenames: config.encryptFilenames }
-    item.retryOfTaskId = record.id; item.expanded = true; item.selected = true
+      level: config.level, splitMiB: config.splitSize / 1048576, encryptFilenames: config.encryptFilenames } }
+    const occupied = new Set([...pending.value.map(outputFor), record.outputPath].map(pathKey))
+    const proposed = outputFor(item)
+    for (let suffix = 2; occupied.has(pathKey(outputFor(item))); suffix++) {
+      item.settings!.outputPath = proposed.slice(0, -(config.format.length + 1)) + '_' + suffix + '.' + config.format
+    }
+    items.value.push(item)
     activeId.value = item.id; error.value = ''; visible.value = true
   }
   function validate(item: ConversionDraft) {
     const settings = effectiveSettings(item), output = outputFor(item)
     if (item.sourceIssue) return item.sourceIssue
-    if (item.passwordRequired) return '此草稿使用过密码，请重新填写原包或新包密码。'
+    const passwords = passwordRequirements(item)
+    if (passwords.source) return '请重新填写原包密码，或明确选择原包无需密码。'
+    if (passwords.target) return '请重新填写新包密码，或明确选择新包不加密。'
     if (!item.sourcePath.trim() || !output.trim()) return '请选择原压缩包和新包保存位置'
     if (!conversionFormats.some(format => format.value === settings.format)) return '请选择支持的目标格式'
     if (!Number.isInteger(settings.level) || settings.level < 0 || settings.level > 9) return '压缩强度应为 0～9'
@@ -224,7 +246,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   }
   return { visible, items, defaults, pending, selected, activeId, sourcePath, sourcePassword, password, outputPath,
     format, zipEncryption, zipPasswordEncoding, level, splitMiB, encryptFilenames, error, busy, task, phase,
-    supportsPassword, contextIntent, contextSources, stopRequested, effectiveSettings, outputFor, taskFor,
+    supportsPassword, contextIntent, contextSources, stopRequested, effectiveSettings, outputFor, taskFor, passwordRequirements,
     addSources, chooseContextSource, selectSource, openFromExplorer, show, restore, start, cancel,
     updateItem, applySelected, updateDefaults, remove, replaceSource }
 })

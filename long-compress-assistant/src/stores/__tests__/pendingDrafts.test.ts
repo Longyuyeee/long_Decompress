@@ -14,6 +14,24 @@ afterEach(() => { session?.dispose(); session = undefined })
 function file(path: string) { return { path, name: path.split('/').pop()!, size: 20, type: 'file', isDirectory: false } }
 function reopen() { session?.dispose(); setActivePinia(createPinia()); session = usePendingDraftStore(); session.initialize(); return session }
 describe('pending archive draft recovery', () => {
+  it('retains the new package password requirement after only the source password was reentered', async () => {
+    session = usePendingDraftStore(); session.initialize()
+    const conversion = useArchiveConversionStore()
+    conversion.addSources(['C:/encrypted.zip'])
+    conversion.sourcePassword = 'source-secret'; conversion.password = 'target-secret'
+    session.flush()
+    const restored = reopen(); await restored.restore()
+    const recoveredConversion = useArchiveConversionStore(), item = recoveredConversion.pending[0]
+    expect(recoveredConversion.passwordRequirements(item)).toEqual({ source: true, target: true })
+    recoveredConversion.updateItem(item.id, { sourcePassword: 'source-again' })
+    restored.flush()
+    const stored = JSON.parse(localStorage.getItem(PENDING_DRAFTS_KEY)!).conversion.items[0]
+    expect(stored).toMatchObject({ sourcePasswordRequired: true, targetPasswordRequired: true, passwordRequired: true })
+    expect(stored.settings).toMatchObject({ sourcePassword: '', password: '' })
+    expect(recoveredConversion.passwordRequirements(item)).toEqual({ source: false, target: true })
+    await recoveredConversion.start()
+    expect(item.error).toContain('新包密码')
+  })
   it('recovers files, groups, extraction and conversion without passwords or automatic execution', async () => {
     session = usePendingDraftStore(); session.initialize()
     const compression = useCompressionStore(), tasks = useTaskStore(), conversion = useArchiveConversionStore()

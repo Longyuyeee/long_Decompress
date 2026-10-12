@@ -15,6 +15,43 @@ function draft() {
   return store
 }
 describe('archive conversion lifecycle', () => {
+  it('requires both restored passwords separately and respects an explicit unencrypted output choice', async () => {
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/加密原包.zip'])
+    const item = store.items[0]
+    item.passwordRequired = true
+    store.updateItem(item.id, { sourcePassword: 'original-again' })
+    expect(store.passwordRequirements(item)).toEqual({ source: false, target: true })
+    await store.start()
+    expect(item.error).toContain('新包密码')
+    expect(mocks.invoke).not.toHaveBeenCalled()
+    store.updateItem(item.id, { password: 'new-again' })
+    expect(store.passwordRequirements(item)).toEqual({ source: false, target: false })
+    item.targetPasswordRequired = item.passwordRequired = true
+    store.updateItem(item.id, { password: '', encryptFilenames: false })
+    expect(store.passwordRequirements(item)).toEqual({ source: false, target: false })
+  })
+  it('adds history replay without overwriting an edited draft and reuses that replay on a repeated click', () => {
+    const store = draft()
+    const original = store.items[0]
+    const originalSettings = { ...original.settings! }
+    const tasks = useTaskStore()
+    tasks.addTask({ id: 'previous-conversion', name: '上次转换', type: 'compression', workloadKind: 'archive',
+      sourceFiles: [original.sourcePath], outputPath: store.outputFor(original),
+      executionConfig: { schemaVersion: 1, kind: 'archive-conversion', outputPath: store.outputFor(original),
+        format: 'zip', level: 1, splitSize: 0, encryptFilenames: false, passwordRequired: true } })
+    tasks.tasks[0].status = 'failed'
+    const record = createTaskHistoryRecord(tasks.tasks[0])
+    store.restore(record)
+    expect(store.items).toHaveLength(2)
+    expect(original.settings).toEqual(originalSettings)
+    const replay = store.items[1]
+    expect(store.effectiveSettings(replay)).toMatchObject({ format: 'zip', level: 1, password: '' })
+    store.updateItem(replay.id, { level: 4, password: 'replay-secret' })
+    store.restore(record)
+    expect(store.items).toHaveLength(2)
+    expect(store.effectiveSettings(replay)).toMatchObject({ level: 4, password: 'replay-secret' })
+  })
   it('runs selected items sequentially, keeps individual settings and continues after a failure', async () => {
     mocks.invoke.mockImplementation(async (command, args) => {
       if (command !== 'convert_archive') return

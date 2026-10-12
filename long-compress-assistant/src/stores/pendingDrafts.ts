@@ -74,6 +74,8 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
       conversion: { defaults: cleanConversion(conversion.defaults), items: conversion.pending.map(item => ({
         id: item.id, sourcePath: item.sourcePath, intent: item.intent, defaultFormat: item.defaultFormat, expanded: item.expanded, selected: item.selected,
         settings: item.settings ? cleanConversion(item.settings) : undefined, retryOfTaskId: item.retryOfTaskId,
+        sourcePasswordRequired: conversion.passwordRequirements(item).source || !!conversion.effectiveSettings(item).sourcePassword,
+        targetPasswordRequired: conversion.passwordRequirements(item).target || !!conversion.effectiveSettings(item).password,
         passwordRequired: item.passwordRequired || !!conversion.effectiveSettings(item).password || !!conversion.effectiveSettings(item).sourcePassword })) },
     }
   }

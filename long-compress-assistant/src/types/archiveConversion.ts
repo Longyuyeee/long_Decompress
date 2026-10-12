@@ -23,5 +23,7 @@ export interface ConversionDraft {
   error?: string
   sourceIssue?: string
   passwordRequired?: boolean
+  sourcePasswordRequired?: boolean
+  targetPasswordRequired?: boolean
 }
 export type ConversionPatch = Partial<ConversionSettings>
