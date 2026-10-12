@@ -1,0 +1,163 @@
+/* Static design study. Injected only by render-preview.mjs; not imported by the app. */
+.settings-view {
+  height: 100%; min-height: 0; padding: 1rem 1.35rem 0; gap: .9rem;
+}
+.settings-view > header { padding: .15rem .15rem 0; }
+.settings-view > header h1 {
+  font-size: 1.55rem; font-weight: 950; letter-spacing: -.055em; line-height: 1.1; margin-bottom: .3rem;
+}
+.settings-view > header p { font-size: .7rem; letter-spacing: .04em; font-weight: 600; margin-left: 0; }
+.settings-view > div { padding-right: .3rem; padding-bottom: 1.2rem; }
+.settings-view > div > div { max-width: none; }
+.settings-view > div > div > * + * { margin-top: .9rem; }
+.settings-view section.aero-card {
+  padding: 1.15rem; border-radius: 1rem;
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  box-shadow: 0 14px 34px -28px rgba(15, 23, 42, .28);
+}
+.settings-view [class*="tracking-"] { letter-spacing: 0; text-transform: none; }
+.settings-view .uppercase { text-transform: none; }
+.settings-view h2 { font-size: .875rem; font-weight: 750; color: var(--text-base); }
+.settings-view h3 { font-size: .8125rem; font-weight: 650; }
+.settings-view label, .settings-view .font-black { font-weight: 650; }
+.settings-view .text-xs { font-size: .75rem; }
+.settings-view .text-sm { font-size: .8125rem; }
+.settings-view .text-muted { line-height: 1.5; }
+.settings-view section.aero-card > .grid[class*="grid-cols-12"] { display: block; }
+.settings-view section.aero-card > .grid[class*="grid-cols-12"] > div:first-child {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: .8rem;
+  margin-bottom: .95rem; padding-bottom: .8rem; border-bottom: 1px solid var(--border-subtle);
+}
+.settings-view section.aero-card > .grid[class*="grid-cols-12"] > div:first-child > * { margin: 0; }
+.settings-view section.aero-card > .grid[class*="grid-cols-12"] > div:first-child h2 {
+  display: flex; align-items: center; gap: .55rem;
+}
+.settings-view section.aero-card > .grid[class*="grid-cols-12"] > div:first-child h2::before {
+  content: ''; display: inline-block; width: .25rem; height: .9rem; border-radius: .25rem; background: var(--dynamic-accent);
+}
+.settings-view section.aero-card > .grid[class*="grid-cols-12"] > div:first-child p { font-size: .75rem; }
+.settings-view section.aero-card > .grid[class*="grid-cols-12"] > div:last-child > * + * { margin-top: .9rem; }
+
+/* Appearance: the same six themes and thirteen accent colors, on aligned rows. */
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(-n+3) {
+  display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 1rem; align-items: center;
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(-n+3) > * { margin: 0; }
+.settings-view > div > div > section:first-child label { font-size: .8125rem; color: var(--text-base); }
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:first-child > .grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .35rem; padding: .3rem; border-radius: .75rem;
+  background: color-mix(in srgb, var(--bg-input) 65%, transparent);
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:first-child button {
+  min-height: 2.15rem; padding: .4rem .5rem; border-radius: .55rem; border: 1px solid transparent;
+  font-size: .75rem; font-weight: 600; box-shadow: none;
+}
+.settings-view > div > div > section:first-child button.bg-primary {
+  background: color-mix(in srgb, var(--dynamic-accent) 10%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--dynamic-accent) 48%, transparent);
+  color: var(--dynamic-accent); box-shadow: none;
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(2) > div:first-child {
+  flex-direction: column; align-items: flex-start; justify-content: center; gap: .3rem;
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(2) > div:first-child span {
+  font-size: .65rem; padding: .05rem .45rem; border-radius: .4rem;
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(2) > div:last-child {
+  padding: .35rem; gap: .7rem; border: 0; border-radius: .75rem; background: transparent;
+}
+.settings-view > div > div > section:first-child button[title] {
+  height: 1.85rem; width: 1.85rem; border-radius: .6rem; opacity: 1; box-shadow: none;
+}
+.settings-view > div > div > section:first-child button[aria-pressed="true"] {
+  border-color: white; transform: none;
+  box-shadow: 0 0 0 2px var(--dynamic-accent), 0 3px 8px color-mix(in srgb, var(--dynamic-accent) 20%, transparent);
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(3) {
+  padding-top: .8rem;
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(3) > div { justify-self: start; }
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(3) button { min-height: 2rem; font-size: .75rem; }
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(4) {
+  padding-top: .8rem; display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: .55rem 1rem;
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(4) > div:first-child {
+  grid-column: 1 / -1; margin: 0;
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(4) > div:first-child > div {
+  display: flex; align-items: baseline; gap: 1.2rem;
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(4) > input {
+  grid-column: 2; margin: 0; align-self: center;
+}
+.settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(4) > div:last-child {
+  grid-column: 2; font-size: .625rem; margin: 0;
+}
+
+/* Accessibility: remove nested card borders, keep every existing choice. */
+.settings-view .accessibility-settings > section.aero-card {
+  border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: .75rem 0; margin: 0;
+}
+.settings-view .accessibility-settings > section.aero-card:first-child { padding-top: 0; }
+.settings-view .accessibility-settings > section.aero-card:last-child { padding-bottom: 0; }
+.settings-view .accessibility-settings > section.aero-card + section.aero-card { border-top: 1px solid var(--border-subtle); }
+.settings-view .accessibility-settings > section:nth-child(1),
+.settings-view .accessibility-settings > section:nth-child(3) {
+  display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 1rem; align-items: center;
+}
+.settings-view .accessibility-settings h3 { margin: 0; }
+.settings-view .accessibility-settings .grid { gap: .6rem; }
+.settings-view .accessibility-settings > section:nth-child(3) > .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.settings-view .accessibility-settings .grid > button {
+  padding: .6rem .75rem; border-width: 1px; border-radius: .7rem; box-shadow: none;
+}
+.settings-view .accessibility-settings > section:first-child .grid > button {
+  display: flex; align-items: center; justify-content: center; gap: .8rem; min-height: 2.75rem;
+}
+.settings-view .accessibility-settings .grid > button > div { margin: 0; }
+.settings-view .accessibility-settings > section:first-child .grid > button > div:first-child {
+  font-size: 1.1rem; color: var(--dynamic-accent); font-weight: 650;
+}
+.settings-view .accessibility-settings .grid > button > div:last-child { font-size: .6875rem; }
+.settings-view .accessibility-settings > section:nth-child(3) .grid > button {
+  display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); align-items: center; gap: .2rem .5rem;
+}
+.settings-view .accessibility-settings > section:nth-child(3) .grid > button > div:first-child {
+  font-size: 1rem; grid-row: 1 / 3;
+}
+.settings-view .accessibility-settings > section:nth-child(3) .grid > button > div:last-child { grid-column: 2; font-size: .625rem; }
+.settings-view .accessibility-settings [class*="bg-primary/"] { border-color: color-mix(in srgb, var(--dynamic-accent) 48%, transparent); }
+.settings-view .accessibility-settings .mb-6 { margin-bottom: 0; }
+.settings-view .accessibility-settings p { font-size: .75rem; margin-top: .25rem; }
+
+/* All lower groups share the same title, padding, row spacing and controls. */
+.settings-view > div > div > .grid { gap: .9rem; align-items: start; }
+.settings-view > div > div > .grid > section:nth-child(1) { grid-column: 1; grid-row: 1 / 4; }
+.settings-view > div > div > .grid > section:nth-child(2) { grid-column: 2; grid-row: 1; }
+.settings-view > div > div > .grid > section:nth-child(3) { grid-column: 2; grid-row: 2; }
+.settings-view > div > div > .grid > section:nth-child(4) { grid-column: 2; grid-row: 3; }
+.settings-view > div > div > .grid > section:nth-child(5) { grid-column: 1 / -1; grid-row: 4; }
+.settings-view > div > div > .grid > section:nth-child(5) > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 2rem; }
+.settings-view > div > div > .grid > section:nth-child(5) > div > * { margin: 0; }
+.settings-view > div > div > .grid h2 { margin-bottom: 1rem; }
+.settings-view > div > div > .grid .space-y-6 > * + *,
+.settings-view > div > div > .grid .space-y-5 > * + * { margin-top: 1rem; }
+.settings-view > div > div > .grid .pt-6 { padding-top: 1rem; }
+.settings-view > div > div > .grid .mb-8 { margin-bottom: 1rem; }
+.settings-view > div > div > .grid [role="switch"] { gap: 1rem; }
+.settings-view .settings-toggle-track { box-shadow: none; }
+.settings-view .settings-toggle-track.is-on { box-shadow: 0 2px 6px color-mix(in srgb, var(--dynamic-accent) 18%, transparent); }
+.settings-view [type="range"] { height: .3rem; }
+@media (max-width: 1120px) {
+  .settings-view > div > div > section:first-child > .grid > div:last-child > div:first-child > .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .settings-view > div > div > section:first-child > .grid > div:last-child > div:nth-child(-n+3),
+  .settings-view .accessibility-settings > section:nth-child(1),
+  .settings-view .accessibility-settings > section:nth-child(3) { grid-template-columns: 7rem minmax(0, 1fr); gap: .7rem; }
+  .settings-view .accessibility-settings > section:nth-child(3) > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .settings-view > div > div > .grid { display: flex; flex-direction: column; }
+  .settings-view > div > div > .grid > section { width: 100%; }
+  .settings-view > div > div > .grid > section:nth-child(5) > div { grid-template-columns: 1fr; }
+}

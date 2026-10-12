@@ -4,6 +4,14 @@
 
 ## 当前接续入口
 
+- [2026-10-12 开发情况审计](DEVELOPMENT_STATUS_AUDIT_2026-10-12.md)、[开发交接](DEVELOPMENT_HANDOFF.md)、[产品增强路线](PRODUCT_ENHANCEMENT_ROADMAP.md)：功能基线为主线 `6f9e85b`，公开版本为 [v1.4.1](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.1)。
+- [v1.4.2 批量转换与待处理草稿恢复](BATCH_CONVERSION_AND_DRAFT_RECOVERY_PLAN.md)、[待发布说明](RELEASE_NOTES_1.4.2.md)：功能已合入主线，尚未升版或发布新安装包。
+- [设置页样式统一计划](UI_VISUAL_REFRESH_PLAN.md)、[静态示意图](../design/settings-style/README.md)：整体重构已取消，只优化设置页；示意已完成，正式样式尚未应用。
+
+## 历史接续记录
+
+以下保留当时的发布与开发决策，不作为当前待办或版本状态。
+
 - [1.3.7 更新说明](RELEASE_NOTES_1.3.7.md)、[发布记录](RELEASE_AUDIT_1.3.7.md)。本版交付归档解压体验增强，后续优先级见产品路线。
 
 - [2026-10-10 用户体验增强路线](PRODUCT_ENHANCEMENT_ROADMAP.md)、[开发交接](DEVELOPMENT_HANDOFF.md)、[下一版更新说明与配套计划](NEXT_VERSION_AFTER_1.3.6.md)。批次处理、历史查找与再次解压、输出预览和成功结果入口已本地实现，当前接续版本与安装包准备。冲突增强、跨类型结果工作区及书签/标签页后续推进；性能作为每版持续工作。
