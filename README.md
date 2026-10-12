@@ -8,7 +8,7 @@
 
 打包文件 · 解压归档 · 浏览内容 · 管理密码 · 压缩图片、视频与 PDF
 
-[![Version](https://img.shields.io/badge/version-1.4.1-6366f1?style=for-the-badge)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0ea5e9?style=for-the-badge&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Local](https://img.shields.io/badge/文件处理-在本机完成-14b8a6?style=for-the-badge)](#privacy) [![License](https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.4.2-6366f1?style=for-the-badge)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0ea5e9?style=for-the-badge&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Local](https://img.shields.io/badge/文件处理-在本机完成-14b8a6?style=for-the-badge)](#privacy) [![License](https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge)](LICENSE)
 
 ### [⬇ 下载最新版](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 
@@ -100,7 +100,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 </details>
 
-<sub>上方任务与弹窗图片展示当前开发界面，使用演示数据；批量配置弹窗为 v1.4.1 发布后的交互调整。点击图片可查看大图。</sub>
+<sub>上方任务与弹窗图片使用演示数据；批量配置弹窗随 v1.4.2 交付，单条详情仍行内展开。点击图片可查看大图。</sub>
 
 <a id="quick-start"></a>
 
@@ -219,7 +219,7 @@ Windows 11 请在 **“显示更多选项”** 中使用经典菜单；当前公
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
-| **v1.4.2（待发布）** | 多包批量转换、待处理草稿恢复、多选弹窗配置 | [发布说明草稿](long-compress-assistant/docs/RELEASE_NOTES_1.4.2.md) |
+| **v1.4.2** | 多包批量转换、待处理草稿恢复、多选弹窗配置、设置界面优化 | [发布说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.2.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.2) |
 | **v1.4.1** | 批量修改配置、统一结果操作、Windows 压缩包右键增强 | [发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.1) |
 | v1.4.0 | ZIP/7Z 密码分卷、归档转换、密码兼容与界面整理 | [发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.0) |
 | v1.3.9 | 文件冲突处理、历史再次执行、常用位置与日常性能优化 | [发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.3.9) |
