@@ -206,13 +206,10 @@ pub(crate) fn validate_resource_limits(
         ))
         .into());
     }
-    let name = archive_path.to_string_lossy().to_ascii_lowercase();
-    let compressed_bytes = if name.ends_with(".7z.001") || name.ends_with(".zip.001") {
-        use std::io::{Seek, SeekFrom};
-        super::numeric_volume_reader::NumericVolumeReader::open(archive_path)?.seek(SeekFrom::End(0))?
-    } else {
-        std::fs::metadata(archive_path)?.len()
-    }.max(1);
+    let compressed_bytes = if let Some(group) = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(archive_path)? {
+        anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{:?}", group.missing_parts);
+        group.total_size
+    } else { std::fs::metadata(archive_path)?.len() }.max(1);
     if expanded_bytes >= 1024 * 1024 * 1024
         && expanded_bytes / compressed_bytes > MAX_EXPANSION_RATIO
     {
@@ -827,7 +824,7 @@ mod tests {
     #[test]
     fn numeric_volume_expansion_ratio_uses_the_whole_archive() {
         let temp = tempfile::tempdir().unwrap();
-        for format in ["7z", "zip"] {
+        for format in ["7z", "zip", "zipx", "tar.gz"] {
             let first = temp.path().join(format!("sample.{format}.001"));
             std::fs::write(&first, [0; 37]).unwrap();
             let second = temp.path().join(format!("sample.{format}.002"));
@@ -835,6 +832,11 @@ mod tests {
             super::validate_resource_limits(&first, 1, 1024 * 1024 * 1024).unwrap();
             assert!(super::validate_resource_limits(&first, 1, 4 * 1024 * 1024 * 1024).is_err());
         }
+        let terminal = temp.path().join("standard.zip");
+        std::fs::write(&terminal, [0; 37]).unwrap();
+        std::fs::File::create(temp.path().join("standard.z01")).unwrap().set_len(256 * 1024).unwrap();
+        super::validate_resource_limits(&terminal, 1, 1024 * 1024 * 1024).unwrap();
+        assert!(super::validate_resource_limits(&terminal, 1, 4 * 1024 * 1024 * 1024).is_err());
     }
 
     use super::*;

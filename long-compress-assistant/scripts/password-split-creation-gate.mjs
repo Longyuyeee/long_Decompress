@@ -5,7 +5,12 @@ import path from 'node:path'
 import { By, Key } from 'selenium-webdriver'
 import { spawnSync } from 'node:child_process'
 
-export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip, multipleSources = false, fault = null, encryptFilenames = false, zipEncryption = 'aes256', zipEncoding = 'utf8' }) {
+export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, productionIpc, format = 'zip', password = '中文密码 + !测试', solid = false, bundledSevenZip, multipleSources = false, fault = null, encryptFilenames = false, zipEncryption = 'aes256', zipEncoding = 'utf8', zipSplitMode = 'numeric' }) {
+  if (zipSplitMode === 'standard') {
+    fixtureDirectory = path.join(fixtureDirectory, 'standard-zip-' + (password ? `${zipEncryption}-${zipEncoding}` : 'plain'))
+    artifactDirectory = path.join(artifactDirectory, 'standard-zip-' + (password ? `${zipEncryption}-${zipEncoding}` : 'plain'))
+    mkdirSync(fixtureDirectory, { recursive: true }); mkdirSync(artifactDirectory, { recursive: true })
+  }
   if (zipEncryption === 'zipcrypto') {
     fixtureDirectory = path.join(fixtureDirectory, `zipcrypto-${zipEncoding}`)
     artifactDirectory = path.join(artifactDirectory, `zipcrypto-${zipEncoding}`)
@@ -80,11 +85,11 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   if (format === 'zip' && zipEncryption === 'zipcrypto') {
     await (await waitForElement('[role="dialog"] [data-testid="zip-encryption"]')).click()
     await driver.findElement(By.xpath('//button[@role="option" and contains(.,"ZipCrypto")]')).click()
-    if (zipEncoding === 'windows_local') {
-      await (await waitForElement('[role="dialog"] [data-testid="zip-password-encoding"]')).click()
-      await driver.findElement(By.xpath('//button[@role="option" and contains(.,"Windows 兼容")]')).click()
-    }
     writeFileSync(path.join(artifactDirectory, 'zipcrypto-settings.png'), Buffer.from(await driver.takeScreenshot(), 'base64'))
+  }
+  if (format === 'zip' && password && zipEncoding === 'windows_local') {
+    await (await waitForElement('[role="dialog"] [data-testid="zip-password-encoding"]')).click()
+    await driver.findElement(By.xpath('//button[@role="option" and contains(.,"Windows 兼容")]')).click()
   }
   if (format === '7z') {
     const input = await waitForElement('[role="dialog"] [data-testid="compression-solid-toggle"]')
@@ -109,6 +114,29 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', split)
   if (!(await split.isSelected())) await split.click()
   await fill('compression-split-size', '1')
+  if (format === 'zip' && zipSplitMode === 'standard') {
+    const choice = await waitForElement('[data-testid="compression-zip-split-mode"]')
+    await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', choice)
+    await choice.click()
+    await (await driver.findElement(By.xpath('//button[@role="option" and contains(.,"标准 ZIP")]'))).click()
+    for (const width of [1100, 760]) {
+      await driver.manage().window().setRect({ width, height: 760 })
+      await driver.executeScript('arguments[0].scrollIntoView({block:"center"})', choice)
+      await driver.wait(() => driver.executeScript(element => {
+        const rect = element.getBoundingClientRect()
+        return element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)) &&
+          element.closest('[role="dialog"]').getAnimations({ subtree: true }).every(animation => animation.playState !== 'running')
+      }, choice), 5000)
+      const bounds = await driver.executeScript(element => ({ width: element.clientWidth, scroll: element.scrollWidth, height: element.getBoundingClientRect().height,
+        rootFont: parseFloat(getComputedStyle(document.documentElement).fontSize) }), choice)
+      assert.ok(bounds.scroll <= bounds.width + 1 && bounds.height <= bounds.rootFont * 6, JSON.stringify(bounds))
+      await choice.click()
+      await driver.wait(async () => (await driver.findElements(By.xpath('//button[@role="option" and contains(.,"标准 ZIP")]'))).length > 0, 5000)
+      await driver.wait(() => driver.executeScript('return [...document.querySelectorAll("[role=listbox]")].every(menu => menu.getAnimations({subtree:true}).every(animation => animation.playState !== "running"))'), 5000)
+      writeFileSync(path.join(artifactDirectory, `standard-zip-choice-${width}.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
+      await choice.click()
+    }
+  }
   await fill('compression-output-path', fault === 'output-file' ? blockedPath : output)
   for (const [id, checked] of [['compression-keep-structure', true], ['compression-delete-after', false], ['compression-verify-after', true]]) {
     const input = await waitForElement(`[role="dialog"] [data-testid="${id}"]`)
@@ -182,12 +210,22 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   const summaryValue = await waitForElement('[data-testid="summary-progress-value"]')
   assert.equal(await summaryValue.getText(), '100%', 'Completed UI progress must settle without an animation delay')
   assert.equal(productionIpc ? task.executionConfig?.settings?.verifyAfter : task.verifyAfter, true)
-  const parts = readdirSync(output).filter(name => new RegExp(`\\.${format}\\.\\d+$`).test(name)).sort().map(name => path.join(output, name))
+  const parts = readdirSync(output).filter(name => zipSplitMode === 'standard'
+    ? /\.(z\d{2,5}|zip)$/i.test(name) : new RegExp(`\\.${format}\\.\\d+$`).test(name))
+    .sort((a, b) => zipSplitMode === 'standard' ? Number(/\.zip$/i.test(a)) - Number(/\.zip$/i.test(b)) || a.localeCompare(b, undefined, { numeric: true }) : a.localeCompare(b))
+    .map(name => path.join(output, name))
   assert.equal(parts.length, 3, JSON.stringify(readdirSync(output)))
   const snapshots = parts.map(file => readFileSync(file))
   assert.ok(snapshots.every(bytes => bytes.length <= 1024 * 1024))
-  assert.equal(snapshots[0].length, 1024 * 1024)
-  assert.equal(snapshots[1].length, 1024 * 1024)
+  if (zipSplitMode === 'numeric') {
+    assert.equal(snapshots[0].length, 1024 * 1024)
+    assert.equal(snapshots[1].length, 1024 * 1024)
+  } else {
+    assert.ok(snapshots.slice(0, 2).every(bytes => bytes.length >= 1024 * 1024 - 65536), 'Record boundaries may leave a small amount of unused space')
+    assert.equal(snapshots[0].readUInt32LE(0), 0x08074b50)
+    const checked = spawnSync(bundledSevenZip, ['t', ...(password ? [`-p${password}`] : []), parts.at(-1)], { encoding: 'utf8', timeout: 30000, windowsHide: true })
+    assert.equal(checked.status, 0, checked.stdout + checked.stderr)
+  }
   if (format === '7z') {
     assert.ok(bundledSevenZip, '7Z matrix needs an independent archive metadata check')
     const listing = spawnSync(bundledSevenZip, ['l', '-slt', ...(password ? [`-p${password}`] : []), parts[0]], { encoding: 'utf8', timeout: 30_000 })
@@ -203,11 +241,12 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
   const extracted = path.join(fixtureDirectory, '创建后解压')
   if (zipEncryption === 'zipcrypto') {
     const joined = path.join(fixtureDirectory, '独立检查.zip')
-    writeFileSync(joined, Buffer.concat(snapshots))
-    const listing = spawnSync(bundledSevenZip, ['l', '-slt', joined], { encoding: 'utf8', timeout: 30000, windowsHide: true })
+    if (zipSplitMode === 'numeric') writeFileSync(joined, Buffer.concat(snapshots))
+    const independentInput = zipSplitMode === 'standard' ? parts.at(-1) : joined
+    const listing = spawnSync(bundledSevenZip, ['l', '-slt', independentInput], { encoding: 'utf8', timeout: 30000, windowsHide: true })
     assert.equal(listing.status, 0, listing.stderr)
     assert.match(listing.stdout, /ZipCrypto/)
-    const independent = spawnSync(bundledSevenZip, ['t', `-p${password}`, joined], { encoding: 'utf8', timeout: 30000, windowsHide: true })
+    const independent = spawnSync(bundledSevenZip, ['t', `-p${password}`, independentInput], { encoding: 'utf8', timeout: 30000, windowsHide: true })
     assert.equal(independent.status, 0, independent.stdout + independent.stderr)
   }
   if (productionIpc) {
@@ -416,7 +455,14 @@ export async function runPasswordSplitCreationGate({ driver, callDesktopBridge, 
     assert.deepEqual([...matching[0].sourcePaths].sort(), [folder, extraSource].sort())
   }
   writeFileSync(path.join(artifactDirectory, 'password-split-create.json'), JSON.stringify({
-    format, encrypted: Boolean(password), encryptFilenames, solid, multipleSources, volumeCount: parts.length, task, buildKind: productionIpc ? 'installed-production' : 'isolated-desktop-e2e', nativePickerVerified: false, extractionViaProductionCommand: true,
-    checks: ['UI password and split settings', ...(format === '7z' ? ['UI solid toggle', 'independent 7-Zip solid/encryption metadata'] : []), 'UI start compression', 'real directory and multiple files', '1 MiB numeric volumes', 'verified publication', 'extracted payload and empty directory', 'source and volumes preserved', 'completed compression history'],
+    format, zipSplitMode, encrypted: Boolean(password), encryptFilenames, solid, multipleSources, volumeCount: parts.length, task, buildKind: productionIpc ? 'installed-production' : 'isolated-desktop-e2e', nativePickerVerified: false, extractionViaProductionCommand: true,
+    checks: ['UI password and split settings', ...(format === '7z' ? ['UI solid toggle', 'independent 7-Zip solid/encryption metadata'] : []), 'UI start compression', 'real directory and multiple files', `1 MiB ${zipSplitMode} volumes`, 'verified publication', 'extracted payload and empty directory', 'source and volumes preserved', 'completed compression history'],
   }, null, 2))
+  if (zipSplitMode === 'standard') {
+    const record = history.find(row => row.status === 'completed' && row.sourcePaths.includes(folder))
+    assert.equal(record.executionConfig.settings.zipSplitMode, 'standard')
+    assert.equal(record.archiveOutput.primaryPath, parts.at(-1))
+    assert.equal(record.archiveOutput.files[0].path, parts.at(-1))
+  }
+  return { folder, output, parts, payload, password }
 }

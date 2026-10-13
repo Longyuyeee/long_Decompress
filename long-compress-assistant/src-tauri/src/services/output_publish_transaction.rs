@@ -129,6 +129,12 @@ pub(crate) fn publish_verified_volumes(
     destination: &Path,
     mut is_cancelled: impl FnMut() -> bool,
 ) -> Result<(), PublishError> {
+    if staged.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("zip"))
+        && (staged.is_file() || crate::services::archive_volumes::volume_paths(staged).is_ok_and(|paths|
+            paths.iter().any(|(_, path)| path.extension().is_some_and(|ext| ext.to_string_lossy().starts_with('z')))))
+    {
+        return publish_standard_zip(staged, destination, is_cancelled);
+    }
     let mut published = Vec::new();
     let result = (|| {
         if staged.parent() != destination.parent() {
@@ -173,25 +179,7 @@ pub(crate) fn publish_verified_volumes(
             if is_cancelled() { return Err(PublishError::Cancelled); }
             // Explicitly omit REPLACE_EXISTING (std::fs::rename replaces files).
             // Moving also supports FAT/exFAT without requiring hard links.
-            #[cfg(windows)]
-            let transfer = {
-                use std::os::windows::ffi::OsStrExt;
-                let source_wide: Vec<u16> = source.as_os_str().encode_wide().chain(Some(0)).collect();
-                let target_wide: Vec<u16> = target.as_os_str().encode_wide().chain(Some(0)).collect();
-                let moved = unsafe {
-                    windows_sys::Win32::Storage::FileSystem::MoveFileExW(
-                        source_wide.as_ptr(), target_wide.as_ptr(), 0,
-                    )
-                };
-                if moved == 0 { Err(std::io::Error::last_os_error()) } else { Ok(()) }
-            };
-            #[cfg(not(windows))]
-            let transfer = std::fs::hard_link(source, target);
-            transfer.map_err(|error| {
-                if error.kind() == std::io::ErrorKind::AlreadyExists {
-                    PublishError::TargetAppeared(target.clone())
-                } else { PublishError::Io(error) }
-            })?;
+            transfer_no_replace(source, target)?;
             published.push(target.clone());
         }
         if is_cancelled() { return Err(PublishError::Cancelled); }
@@ -202,6 +190,50 @@ pub(crate) fn publish_verified_volumes(
     }
     cleanup_staged_output_family(staged);
     result
+}
+
+pub(crate) fn transfer_no_replace(source: &Path, target: &Path) -> Result<(), PublishError> {
+    #[cfg(windows)]
+    let transfer = {
+        use std::os::windows::ffi::OsStrExt;
+        let source_wide: Vec<u16> = source.as_os_str().encode_wide().chain(Some(0)).collect();
+        let target_wide: Vec<u16> = target.as_os_str().encode_wide().chain(Some(0)).collect();
+        // Deliberately omit REPLACE_EXISTING; supports FAT/exFAT too.
+        let moved = unsafe { windows_sys::Win32::Storage::FileSystem::MoveFileExW(source_wide.as_ptr(), target_wide.as_ptr(), 0) };
+        if moved == 0 { Err(std::io::Error::last_os_error()) } else { Ok(()) }
+    };
+    #[cfg(not(windows))]
+    let transfer = std::fs::hard_link(source, target);
+    transfer.map_err(|error| if error.kind() == std::io::ErrorKind::AlreadyExists {
+        PublishError::TargetAppeared(target.to_path_buf())
+    } else { PublishError::Io(error) })
+}
+
+fn publish_standard_zip(staged: &Path, destination: &Path, mut cancelled: impl FnMut() -> bool) -> Result<(), PublishError> {
+    let mut published = Vec::new();
+    let result = (|| {
+        if staged.parent() != destination.parent() { return Err(PublishError::CrossDirectoryPublish); }
+        if !staged_output_belongs_to_destination(staged, destination) { return Err(PublishError::InvalidStagedOutput(staged.to_path_buf())); }
+        if destination.exists() { return Err(PublishError::TargetAppeared(destination.to_path_buf())); }
+        if let Some((_, path)) = crate::services::archive_volumes::volume_paths(destination)
+            .map_err(|_| PublishError::InvalidStagedOutput(destination.to_path_buf()))?.first() {
+            return Err(PublishError::TargetAppeared(path.clone()));
+        }
+        let paths = crate::services::archive_volumes::complete_volume_paths(staged)
+            .map_err(|_| PublishError::InvalidStagedOutput(staged.to_path_buf()))?;
+        for source in paths {
+            if cancelled() { return Err(PublishError::Cancelled); }
+            let metadata = std::fs::symlink_metadata(&source)?;
+            if !metadata.file_type().is_file() { return Err(PublishError::InvalidStagedOutput(source)); }
+            let target = if source == staged { destination.to_path_buf() }
+                else { destination.with_extension(source.extension().unwrap()) };
+            transfer_no_replace(&source, &target)?; published.push(target);
+        }
+        if cancelled() { return Err(PublishError::Cancelled); }
+        Ok(())
+    })();
+    if result.is_err() { for path in published { let _ = std::fs::remove_file(path); } }
+    cleanup_staged_output_family(staged); result
 }
 
 #[cfg(test)]

@@ -60,6 +60,7 @@ export interface CompressOptions {
   fast_pack?: boolean
   zip_password_encoding?: 'utf8' | 'windows_local'
   zip_encryption?: 'aes256' | 'zipcrypto'
+  zip_split_mode?: 'numeric' | 'standard'
   format?: string
   level: number
   password?: string
@@ -203,6 +204,8 @@ export interface ZipRepairResult {
   recoveredDirectories: number
   skippedEntries: string[]
   verified: boolean
+  partial: boolean
+  directoryRebuilt: boolean
 }
 
 interface WordlistValidationResult {

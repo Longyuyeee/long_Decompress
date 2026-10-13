@@ -29,7 +29,8 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     output.extend(project(&value, fields)?);
     if kind == "archive-conversion" {
         for (key, default, allowed) in [("zipEncryption", "aes256", ["aes256", "zipcrypto"]),
-            ("zipPasswordEncoding", "utf8", ["utf8", "windows_local"])] {
+            ("zipPasswordEncoding", "utf8", ["utf8", "windows_local"]),
+            ("zipSplitMode", "numeric", ["numeric", "standard"])] {
             let selected = value.get(key).and_then(Value::as_str).unwrap_or(default);
             if !allowed.contains(&selected) { return None; }
             output.insert(key.into(), selected.into());
@@ -45,6 +46,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     if !settings_fields.is_empty() {
         let mut settings = project(value.get("settings")?, settings_fields)?;
         if kind == "archive-compression" {
+            if let Some(mode) = value.get("settings")?.get("zipSplitMode") {
+                if !matches!(mode.as_str(), Some("numeric" | "standard")) { return None; }
+                settings.insert("zipSplitMode".into(), mode.clone());
+            }
             if let Some(encryption) = value.get("settings")?.get("zipEncryption") {
                 if !matches!(encryption.as_str(), Some("aes256" | "zipcrypto")) { return None; }
                 settings.insert("zipEncryption".into(), encryption.clone());
@@ -89,6 +94,12 @@ mod tests {
         assert_eq!(saved["kind"], "archive-conversion");
         assert_eq!(saved["splitSize"], 65536);
         assert!(!saved.to_string().contains("secret"));
+        assert_eq!(saved["zipSplitMode"], "numeric");
+        let mut standard = input.clone();
+        standard["zipSplitMode"] = "standard".into();
+        assert_eq!(super::sanitize(standard.clone(), "compression", "archive").unwrap()["zipSplitMode"], "standard");
+        standard["zipSplitMode"] = "invalid".into();
+        assert!(super::sanitize(standard, "compression", "archive").is_none());
         assert!(super::sanitize(input, "decompression", "archive").is_none());
     }
     #[test]
@@ -108,6 +119,15 @@ mod tests {
         assert!(old["settings"].get("zipPasswordEncoding").is_none());
         assert!(old["settings"].get("password").is_none());
         assert!(old["settings"].get("encryptFilenames").is_none());
+        assert!(old["settings"].get("zipSplitMode").is_none());
+        for mode in ["numeric", "standard"] {
+            let mut current = original.clone();
+            current["settings"]["zipSplitMode"] = mode.into();
+            assert_eq!(super::sanitize(current, "compression", "archive").unwrap()["settings"]["zipSplitMode"], mode);
+        }
+        let mut invalid_mode = original.clone();
+        invalid_mode["settings"]["zipSplitMode"] = "other".into();
+        assert!(super::sanitize(invalid_mode, "compression", "archive").is_none());
         for enabled in [false, true] {
             let mut current = original.clone();
             current["settings"]["format"] = "7z".into();

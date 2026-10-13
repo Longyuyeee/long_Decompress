@@ -37,7 +37,7 @@ fn check_cancelled(is_cancelled: &impl Fn() -> bool) -> Result<()> {
 
 fn verify_plain_zip(path: &Path, is_cancelled: &impl Fn() -> bool) -> Result<()> {
     let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
-    let mut archive = zip::ZipArchive::new(file)?;
+    let mut archive = zip_aes::ZipArchive::new(file)?;
     let mut buffer = vec![0u8; 256 * 1024];
     for index in 0..archive.len() {
         check_cancelled(is_cancelled)?;
@@ -63,13 +63,7 @@ fn verify_encrypted_zip(
     let mut buffer = vec![0u8; 256 * 1024];
     for index in 0..archive.len() {
         check_cancelled(is_cancelled)?;
-        let mut entry = crate::services::zip_password::open_entry(&mut archive, index, password)
-            .map_err(|_| {
-                CompressionError::CompressionFailed(
-                    "The newly created ZIP could not be opened with its requested password"
-                        .to_string(),
-                )
-            })?;
+        let mut entry = crate::services::zip_password::open_entry(&mut archive, index, password)?;
         while !entry.is_dir() {
             check_cancelled(is_cancelled)?;
             let read = entry.read(&mut buffer)?;
@@ -83,7 +77,9 @@ fn verify_encrypted_zip(
 
 pub(crate) fn verify_numeric_zip(path: &Path, password: Option<&str>, is_cancelled: impl Fn() -> bool) -> Result<()> {
     check_cancelled(&is_cancelled)?;
-    let reader = super::numeric_volume_reader::NumericVolumeReader::open(path)?;
+    // Compression can publish either numeric chunks or real ZIP disks. Use
+    // the same logical view as extraction instead of requiring a .001 path.
+    let reader = super::numeric_volume_reader::ZipInputReader::open(path)?;
     let mut archive = zip_aes::ZipArchive::new(reader)?;
     let mut buffer = vec![0u8; 256 * 1024];
     for index in 0..archive.len() {

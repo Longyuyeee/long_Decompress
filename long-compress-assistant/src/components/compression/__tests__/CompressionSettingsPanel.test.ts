@@ -51,6 +51,19 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('keeps legacy numeric ZIP volumes by default and exposes standard disks as an explicit choice', async () => {
+    const wrapper = mountPanel(settings({ splitArchive: true }))
+    await flushPromises()
+    const select = wrapper.get('[data-testid="compression-zip-split-mode"]')
+    expect(select.text()).toContain('.zip.001')
+    await select.trigger('click')
+    await wrapper.findAll('[role="option"]').find(item => item.text().includes('标准 ZIP'))!.trigger('click')
+    await flushPromises()
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ zipSplitMode: 'standard', splitArchive: true })
+    await wrapper.setProps({ modelValue: settings({ format: '7z', splitArchive: true }) })
+    expect(wrapper.find('[data-testid="compression-zip-split-mode"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
   it('dismisses vault suggestions when the user types their own password', async () => {
     const wrapper = mountPanel(settings())
     await flushPromises()

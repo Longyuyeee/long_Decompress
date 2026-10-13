@@ -254,6 +254,7 @@ const applyProfile = (profile: CompressionProfile) => {
   compressionOptions.value.encryptFilenames = profile.config.encryptFilenames ?? false
   compressionOptions.value.zipPasswordEncoding = profile.config.zipPasswordEncoding ?? 'utf8'
   compressionOptions.value.zipEncryption = profile.config.zipEncryption ?? 'aes256'
+  compressionOptions.value.zipSplitMode = profile.config.zipSplitMode ?? 'numeric'
   showProfileSelector.value = false
   appStore.setSuccess(appStore.t('profiles.applied_success').replace('{0}', profile.name))
 }
@@ -289,6 +290,7 @@ const saveAsNewProfile = async () => {
         encryptFilenames: compressionOptions.value.encryptFilenames ?? false,
         zipPasswordEncoding: compressionOptions.value.zipPasswordEncoding ?? 'utf8',
         zipEncryption: compressionOptions.value.zipEncryption ?? 'aes256',
+        zipSplitMode: compressionOptions.value.zipSplitMode ?? 'numeric',
         filenameTemplate: compressionOptions.value.filename ? `{name}_${compressionOptions.value.filename}` : null,
         extraParams: {}
       }
@@ -515,6 +517,11 @@ const closeVaultPasswordsAfterFocus = () => {
         <b>MiB</b>
       </label>
       <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
+      <div v-if="compressionOptions.splitArchive && compressionOptions.format === 'zip'" class="zip-split-kind">
+        <span class="shrink-0 text-xs">ZIP 卷型</span>
+        <ThemedSelect :model-value="compressionOptions.zipSplitMode ?? 'numeric'" :options="[{ value: 'numeric', label: '数字切卷 · .zip.001' }, { value: 'standard', label: '标准 ZIP · .z01/.zip' }]" test-id="compression-zip-split-mode" floating @update:model-value="compressionOptions.zipSplitMode = $event as 'numeric' | 'standard'" />
+        <HelpHint label="ZIP 卷型说明">标准 ZIP 分卷供其他支持该卷型的软件打开，入口是 .zip；数字切卷保留旧版方式。两种方式解压都需要全部分卷。</HelpHint>
+      </div>
     </section>
 
 
@@ -828,6 +835,7 @@ const closeVaultPasswordsAfterFocus = () => {
 
 .split-settings-card {
   display: flex;
+  flex-wrap: wrap;
   min-width: 0;
   align-items: center;
   gap: 0.75rem;
@@ -837,6 +845,8 @@ const closeVaultPasswordsAfterFocus = () => {
   padding: 0.65rem 0.75rem;
   transition: border-color 160ms ease, background-color 160ms ease;
 }
+
+.zip-split-kind { display: grid; flex: 0 0 100%; min-width: 0; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .75rem; }
 
 .split-settings-card.enabled {
   border-color: color-mix(in srgb, var(--dynamic-accent) 48%, var(--border-subtle));

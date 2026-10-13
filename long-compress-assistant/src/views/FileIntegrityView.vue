@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAppStore } from '@/stores/app'
+import { useUIStore } from '@/stores/ui'
 import { useTauriCommands, type ArchiveDiagnosticReport, type ZipRepairResult } from '@/composables/useTauriCommands'
 import { open, save } from '@tauri-apps/api/dialog'
 
 const appStore = useAppStore()
+const uiStore = useUIStore()
 const tauriCommands = useTauriCommands()
 
 interface ChecksumResult {
@@ -191,7 +193,9 @@ const clearResults = () => {
 }
 
 const selectArchive = async () => {
-  const file = await open({ multiple: false, title: '选择要诊断的压缩包' })
+  const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
+    ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
+  const file = queued === undefined ? await open({ multiple: false, title: '选择要诊断的压缩包' }) : queued
   if (typeof file === 'string') {
     archivePath.value = file
     diagnosticReport.value = null
@@ -202,6 +206,7 @@ const selectArchive = async () => {
 const diagnoseArchive = async () => {
   if (!archivePath.value || isDiagnosing.value) return
   isDiagnosing.value = true
+  diagnosticReport.value = null
   repairResult.value = null
   diagnosticId.value = `diagnostic-${Date.now()}-${Math.random().toString(36).slice(2)}`
   try {
@@ -227,17 +232,21 @@ const defaultRepairPath = () => archivePath.value.replace(/\.zip$/i, '') + '.rep
 
 const repairArchive = async () => {
   if (!diagnosticReport.value?.canRepair || isRepairing.value) return
-  const outputPath = await save({
+  const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
+    ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
+  const outputPath = queued === undefined ? await save({
     title: '保存修复后的 ZIP',
     defaultPath: defaultRepairPath(),
     filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
-  }) as string | null
-  if (!outputPath) return
+  }) : queued
+  if (typeof outputPath !== 'string' || !outputPath) return
   isRepairing.value = true
   repairId.value = `repair-${Date.now()}-${Math.random().toString(36).slice(2)}`
   try {
     repairResult.value = await tauriCommands.repairZip(repairId.value, archivePath.value, outputPath)
-    appStore.setSuccess('ZIP 已重建到新文件并通过完整性校验')
+    if (repairResult.value.partial || repairResult.value.skippedEntries.length) {
+      uiStore.showToast('warning', '部分恢复：已恢复可读条目，请核对内容是否齐全', 6000)
+    } else { appStore.setSuccess('ZIP 已重建到新文件并通过完整性校验') }
   } catch (error) {
     if (!String(error).toLocaleLowerCase().includes('cancel')) {
       appStore.setError(`ZIP 修复失败：${String(error)}`)
@@ -257,6 +266,9 @@ const statusLabel = (status: string) => ({
   healthy: '完整性正常', password_required: '需要密码', wrong_password: '密码错误',
   missing_volume: '缺少分卷', crc_error: '内容校验失败', truncated: '归档被截断',
   damaged: '归档损坏', checking: '检查中',
+  ambiguous_data: '密码或加密内容异常', unsupported_feature: '暂不支持此归档特性',
+  permission_error: '无法读取归档', unknown_failure: '暂不能确定失败原因',
+  source_unavailable: '来源文件不可用', io_error: '读取归档失败',
   structure_only: '仅完成结构诊断', verification_unavailable: '无法完成内容校验',
 }[status] || status)
 
@@ -269,6 +281,9 @@ const formatBytes = (value: number) => {
   return `${size.toFixed(size >= 100 ? 0 : size >= 10 ? 1 : 2)} ${units[index]}`
 }
 
+const encryptionLabel = (report: ArchiveDiagnosticReport) => report.encrypted ? '是'
+  : report.status === 'missing_volume' || (!report.integrityTested && !report.totalFiles && !report.canRepair) ? '未检查' : '否'
+
 const reportText = () => {
   const report = diagnosticReport.value
   if (!report) return ''
@@ -278,7 +293,7 @@ const reportText = () => {
     `格式：${report.actualFormat}`,
     `状态：${statusLabel(report.status)}`,
     `大小：${report.fileSize} bytes`,
-    `加密：${report.encrypted ? '是' : '否'}`,
+    `加密：${encryptionLabel(report)}`,
     `分卷：${report.splitArchive ? `是（发现 ${report.volumesFound} 卷）` : '否'}`,
     `条目：${report.totalFiles} 个文件 / ${report.totalDirectories} 个目录`,
     ...report.issues.map(issue => `[${issue.severity}] ${issue.title}：${issue.detail}`),
@@ -457,8 +472,8 @@ const copyDiagnosticReport = async () => {
 
         <div v-else class="integrity-single-column min-w-0 overflow-x-hidden" data-testid="archive-diagnostic-panel">
           <section class="integrity-panel min-w-0 overflow-hidden">
-            <div class="flex flex-col md:flex-row gap-3">
-              <button type="button" class="archive-select" @click="selectArchive">
+            <div class="archive-inputs">
+              <button type="button" class="archive-select" :disabled="isDiagnosing || isRepairing" @click="selectArchive">
                 <i class="pi pi-folder-open"></i>
                 <span class="min-w-0 truncate">{{ archivePath ? archivePath.split(/[\\/]/).pop() : '选择压缩包' }}</span>
               </button>
@@ -500,7 +515,7 @@ const copyDiagnosticReport = async () => {
               <div><span>归档大小</span><strong>{{ formatBytes(diagnosticReport.fileSize) }}</strong></div>
               <div><span>文件 / 目录</span><strong>{{ diagnosticReport.totalFiles }} / {{ diagnosticReport.totalDirectories }}</strong></div>
               <div><span>展开大小</span><strong>{{ formatBytes(diagnosticReport.totalUncompressedSize) }}</strong></div>
-              <div><span>加密 / 分卷</span><strong>{{ diagnosticReport.encrypted ? '是' : '否' }} / {{ diagnosticReport.splitArchive ? diagnosticReport.volumesFound + ' 卷' : '否' }}</strong></div>
+              <div><span>加密 / 分卷</span><strong>{{ encryptionLabel(diagnosticReport) }} / {{ diagnosticReport.splitArchive ? diagnosticReport.volumesFound + ' 卷' : '否' }}</strong></div>
             </div>
 
             <div v-if="diagnosticReport.issues.length" class="mt-6 space-y-3">
@@ -525,10 +540,11 @@ const copyDiagnosticReport = async () => {
             </div>
           </section>
 
-          <section v-if="repairResult" class="integrity-panel border border-green-500/30" data-testid="repair-result">
-            <h2 class="text-lg font-black text-green-500">修复文件已通过完整性校验</h2>
+          <section v-if="repairResult" class="integrity-panel border" :class="repairResult.partial || repairResult.skippedEntries.length ? 'border-amber-500/30' : 'border-green-500/30'" data-testid="repair-result">
+            <h2 class="text-lg font-black" :class="repairResult.partial || repairResult.skippedEntries.length ? 'text-amber-600' : 'text-green-500'">{{ repairResult.partial || repairResult.skippedEntries.length ? '部分恢复 · 新文件已通过校验' : '修复文件已通过完整性校验' }}</h2>
             <p class="mt-3 text-xs text-muted break-all">{{ repairResult.outputPath }}</p>
-            <p class="mt-3 text-sm text-content">恢复 {{ repairResult.recoveredFiles }} 个文件、{{ repairResult.recoveredDirectories }} 个目录；跳过 {{ repairResult.skippedEntries.length }} 个损坏或不安全条目。</p>
+            <p class="mt-3 text-sm text-content">恢复 {{ repairResult.recoveredFiles }} 个文件、{{ repairResult.recoveredDirectories }} 个目录；未恢复说明 {{ repairResult.skippedEntries.length }} 项。</p>
+            <p v-if="repairResult.directoryRebuilt" class="mt-2 text-xs text-amber-600">目录信息已重建，原包总条目数无法确认，请核对内容是否齐全。</p>
             <ul v-if="repairResult.skippedEntries.length" class="mt-3 space-y-1 text-xs text-amber-500 break-all"><li v-for="entry in repairResult.skippedEntries" :key="entry">· {{ entry }}</li></ul>
           </section>
         </div>
@@ -597,6 +613,7 @@ const copyDiagnosticReport = async () => {
 .verify-result { border-width: 1px; }
 .verify-result-icon { display: grid; width: 2.5rem; height: 2.5rem; flex: 0 0 2.5rem; place-items: center; border-radius: .7rem; background: var(--bg-input); font-size: 1rem; }
 .archive-select, .archive-password { min-width: 0; min-height: 3rem; border: 1px solid var(--border-subtle); border-radius: .9rem; background: color-mix(in srgb, var(--bg-input) 72%, transparent); color: var(--text-content); }
+.archive-inputs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(12rem, .85fr); gap: .75rem; }
 .archive-select { flex: 1 1 18rem; display: flex; align-items: center; gap: .65rem; padding: 0 1rem; font-size: .78rem; font-weight: 900; text-align: left; }
 .archive-password { flex: 0 1 18rem; padding: 0 1rem; font-size: .78rem; outline: none; }
 .archive-password:focus, .archive-select:hover { border-color: var(--dynamic-accent); }
@@ -615,6 +632,6 @@ const copyDiagnosticReport = async () => {
 .diagnostic-issue[data-severity="warning"] { border-left-color: #f59e0b; background: color-mix(in srgb, #f59e0b 8%, transparent); }
 .diagnostic-issue strong { color: var(--text-content); font-size: .78rem; }
 .diagnostic-issue p { margin-top: .25rem; color: var(--text-muted); font-size: .7rem; line-height: 1.45; }
-@media (max-width: 850px) { .integrity-calculate-grid { grid-template-columns: 1fr; } .result-panel { grid-column: auto; } .diagnostic-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-password { flex-basis: 100%; } }
+@media (max-width: 850px) { .integrity-calculate-grid { grid-template-columns: 1fr; } .result-panel { grid-column: auto; } .diagnostic-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-inputs { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 620px) { .integrity-view { padding-inline: .75rem; } .integrity-mode-switch { grid-template-columns: 1fr; } .integrity-mode-switch button { min-height: 3rem; } .checksum-row { grid-template-columns: 1.7rem minmax(0,1fr) 1.8rem; } .checksum-algorithm { display: none; } }
 </style>

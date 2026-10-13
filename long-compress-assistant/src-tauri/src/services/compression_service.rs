@@ -1960,8 +1960,18 @@ impl CompressionService {
         Ok(())
     }
 
+    fn resolve_extraction_source(selected: &Path) -> Result<String> {
+        Self::source_file_snapshot(selected, "Pre-checking")?;
+        let path = if let Some(group) = SplitArchiveDetector::detect_split_archive(selected)? {
+            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{:?}", group.missing_parts);
+            group.first_part
+        } else { selected.to_path_buf() };
+        Ok(path.to_string_lossy().into_owned())
+    }
+
     pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, options: DecompressOptions) -> Result<String> {
         let service = self.clone();
+        let file_path = Self::resolve_extraction_source(Path::new(&file_path))?;
         let path = Path::new(&file_path);
         let source_snapshot = Self::source_file_snapshot(path, "Pre-checking")?;
         if source_snapshot.len == 0 {
@@ -4606,6 +4616,30 @@ mod tests_continued {
             std::fs::read(output_dir.join("secret.txt")).expect("extracted file"),
             b"top secret"
         );
+        for suffix in ["zipx", "jar", "bin"] {
+            let renamed = temp.path().join(format!("renamed.{suffix}"));
+            std::fs::copy(&archive, &renamed).unwrap();
+            assert!(engine.try_password(&renamed, "open-sesame").await.unwrap());
+            let destination = temp.path().join(format!("extract-{suffix}"));
+            engine.extract_with_progress(&renamed, &destination, Some("open-sesame"), true,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(std::fs::read(destination.join("secret.txt")).unwrap(), b"top secret");
+        }
+    }
+
+    #[test]
+    fn extraction_resolves_middle_volumes_and_reports_missing_first_before_passwords() {
+        let temp = tempfile::tempdir().unwrap();
+        for (first, second) in [("new.part1.rar", "new.part2.rar"), ("old.rar", "old.r00"), ("numeric.zip.001", "numeric.zip.002")] {
+            let first = temp.path().join(first); let second = temp.path().join(second);
+            std::fs::write(&first, b"Rar!\x1a\x07\x00first").unwrap();
+            std::fs::write(&second, b"Rar!\x1a\x07\x00second").unwrap();
+            assert_eq!(CompressionService::resolve_extraction_source(&second).unwrap(), first.to_string_lossy());
+            std::fs::remove_file(&first).unwrap();
+            let error = CompressionService::resolve_extraction_source(&second).unwrap_err().to_string();
+            assert!(error.contains("缺少分卷"), "{error}");
+            assert_eq!(std::fs::read(&second).unwrap(), b"Rar!\x1a\x07\x00second");
+        }
     }
 
     #[test]

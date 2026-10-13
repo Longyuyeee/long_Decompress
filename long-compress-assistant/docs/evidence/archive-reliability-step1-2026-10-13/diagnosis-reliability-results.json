@@ -1,0 +1,214 @@
+{
+  "version": "development-after-1.4.3",
+  "binarySha256": "07a65853bc3e2618011a39bbf3f319a0f85e6ac37e619629876f855ca048fdca",
+  "testKind": "real-webview-real-engine-picker-response-substituted",
+  "nativePickerVerified": false,
+  "records": [
+    {
+      "scenario": "收到标准分卷-plain",
+      "report": {
+        "actualFormat": "ZIP",
+        "canRepair": false,
+        "encrypted": false,
+        "evidence": [
+          "Archive size: 164966 bytes",
+          "Magic/extension format: ZIP",
+          "Entries: 3 files, 2 directories",
+          "Integrity test completed without errors"
+        ],
+        "filePath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-plain.z01",
+        "fileSize": 164966,
+        "integrityTested": true,
+        "issues": [],
+        "missingVolumes": [],
+        "recoverability": "not_needed",
+        "splitArchive": true,
+        "status": "healthy",
+        "totalDirectories": 2,
+        "totalFiles": 3,
+        "totalUncompressedSize": 164006,
+        "volumesFound": 2
+      }
+    },
+    {
+      "scenario": "收到标准分卷-zipcrypto",
+      "report": {
+        "actualFormat": "ZIP",
+        "canRepair": false,
+        "encrypted": true,
+        "evidence": [
+          "Archive size: 165050 bytes",
+          "Magic/extension format: ZIP",
+          "Entries: 3 files, 2 directories",
+          "Integrity test completed without errors"
+        ],
+        "filePath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-zipcrypto.z01",
+        "fileSize": 165050,
+        "integrityTested": true,
+        "issues": [],
+        "missingVolumes": [],
+        "recoverability": "not_needed",
+        "splitArchive": true,
+        "status": "healthy",
+        "totalDirectories": 2,
+        "totalFiles": 3,
+        "totalUncompressedSize": 164006,
+        "volumesFound": 2
+      }
+    },
+    {
+      "scenario": "收到标准分卷-aes",
+      "report": {
+        "actualFormat": "ZIP",
+        "canRepair": false,
+        "encrypted": true,
+        "evidence": [
+          "Archive size: 165164 bytes",
+          "Magic/extension format: ZIP",
+          "Entries: 3 files, 2 directories",
+          "Integrity test completed without errors"
+        ],
+        "filePath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-aes.z01",
+        "fileSize": 165164,
+        "integrityTested": true,
+        "issues": [],
+        "missingVolumes": [],
+        "recoverability": "not_needed",
+        "splitArchive": true,
+        "status": "healthy",
+        "totalDirectories": 2,
+        "totalFiles": 3,
+        "totalUncompressedSize": 164006,
+        "volumesFound": 2
+      }
+    },
+    {
+      "scenario": "收到标准分卷-zip64",
+      "report": {
+        "actualFormat": "ZIP",
+        "canRepair": false,
+        "encrypted": false,
+        "evidence": [
+          "Archive size: 165042 bytes",
+          "Magic/extension format: ZIP",
+          "Entries: 3 files, 2 directories",
+          "Integrity test completed without errors"
+        ],
+        "filePath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-zip64.z01",
+        "fileSize": 165042,
+        "integrityTested": true,
+        "issues": [],
+        "missingVolumes": [],
+        "recoverability": "not_needed",
+        "splitArchive": true,
+        "status": "healthy",
+        "totalDirectories": 2,
+        "totalFiles": 3,
+        "totalUncompressedSize": 164006,
+        "volumesFound": 2
+      }
+    },
+    {
+      "scenario": "缺少最后编号卷",
+      "report": {
+        "actualFormat": "ZIP",
+        "canRepair": false,
+        "encrypted": false,
+        "evidence": [
+          "Archive size: 99430 bytes"
+        ],
+        "filePath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\下载少了一卷\\下载资料-plain.zip",
+        "fileSize": 99430,
+        "integrityTested": false,
+        "issues": [
+          {
+            "code": "missing_volume",
+            "detail": "缺少：下载资料-plain.z01。请补齐到同一目录后重新检查，不必反复尝试密码。",
+            "severity": "error",
+            "title": "缺少分卷"
+          }
+        ],
+        "missingVolumes": [
+          "下载资料-plain.z01"
+        ],
+        "recoverability": "diagnostic_only",
+        "splitArchive": true,
+        "status": "missing_volume",
+        "totalDirectories": 0,
+        "totalFiles": 0,
+        "totalUncompressedSize": 0,
+        "volumesFound": 1
+      }
+    },
+    {
+      "scenario": "正确密码但密文损坏",
+      "independentEngineRejected": true,
+      "report": {
+        "actualFormat": "ZIP",
+        "canRepair": false,
+        "encrypted": true,
+        "evidence": [
+          "Archive size: 165164 bytes",
+          "Magic/extension format: ZIP",
+          "Entries: 3 files, 2 directories",
+          "Integrity failure class: ambiguous_data"
+        ],
+        "filePath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\密码正确但收到坏包\\下载资料-aes.zip",
+        "fileSize": 165164,
+        "integrityTested": true,
+        "issues": [
+          {
+            "code": "ambiguous_data",
+            "detail": "当前无法区分密码错误与加密内容损坏；若已确认密码正确，请重新获取完整文件，反复尝试密码不能修复损坏",
+            "severity": "error",
+            "title": "密码或加密内容异常"
+          }
+        ],
+        "missingVolumes": [],
+        "recoverability": "diagnostic_only",
+        "splitArchive": true,
+        "status": "ambiguous_data",
+        "totalDirectories": 2,
+        "totalFiles": 3,
+        "totalUncompressedSize": 164006,
+        "volumesFound": 2
+      }
+    }
+  ],
+  "sourceHashes": [
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-plain.z01",
+      "sha256": "e09ce59e8b992681fcf2c610911ed55728555e00df82916eff18bf779d252f08"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-plain.zip",
+      "sha256": "c4e93eced6a7a1c9ffe3f077bec796ce71454e876b332c5d38a6d950a2495721"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-zipcrypto.z01",
+      "sha256": "ca4a4e05e024e9314ef5a85f46474602fdea3386650e7f4eed8f10f9149b3343"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-zipcrypto.zip",
+      "sha256": "d76a83f5bd08c4ab08adb92eae4d52032bae91c90efe11e8fa1f7b5096d19b4a"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-aes.z01",
+      "sha256": "c656d66fbe649a26aa0b8e926ef53a6b858593c5a04d30f1726a18c08d706d5b"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-aes.zip",
+      "sha256": "79243b2d88377666b23d31e58e6bf0073b37a88ed30a7ab5c294e9fa7a11265d"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-zip64.z01",
+      "sha256": "e09ce59e8b992681fcf2c610911ed55728555e00df82916eff18bf779d252f08"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-99fbSn\\诊断一致性\\下载资料-zip64.zip",
+      "sha256": "a4d7da6c2dcf7380997175c0361ff4a8d375b0ebea52be6dcccd9723af8fe749"
+    }
+  ],
+  "missingVolumeThenSupplementVerified": true,
+  "damagedThenReplacementVerified": true
+}

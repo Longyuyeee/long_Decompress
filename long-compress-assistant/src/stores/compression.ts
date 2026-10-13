@@ -37,6 +37,7 @@ export interface CompressionOptions {
   fastPack?: boolean
   zipPasswordEncoding?: 'utf8' | 'windows_local'
   zipEncryption?: 'aes256' | 'zipcrypto'
+  zipSplitMode?: 'numeric' | 'standard'
   format: CompressionFormatId
   level: number
   password: string

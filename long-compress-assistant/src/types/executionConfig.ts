@@ -36,6 +36,7 @@ export interface PdfConfigV1 {
 }
 export interface ArchiveConversionConfigV1 {
   zipEncryption?: 'aes256' | 'zipcrypto'
+  zipSplitMode?: 'numeric' | 'standard'
   zipPasswordEncoding?: 'utf8' | 'windows_local'
   schemaVersion: 1
   kind: 'archive-conversion'
@@ -54,6 +55,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
   switch (config.kind) {
     case 'archive-conversion': return { schemaVersion: 1, kind: config.kind,
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
+      ...(config.zipSplitMode ? { zipSplitMode: config.zipSplitMode } : {}),
       outputPath: config.outputPath, format: config.format, level: config.level,
       splitSize: config.splitSize, encryptFilenames: config.encryptFilenames, passwordRequired: config.passwordRequired }
     case 'archive-extraction': return { schemaVersion: 1, kind: config.kind,
@@ -68,6 +70,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
           ...(s.encryptFilenames !== undefined ? { encryptFilenames: s.encryptFilenames } : {}),
           ...(s.zipPasswordEncoding ? { zipPasswordEncoding: s.zipPasswordEncoding } : {}),
           ...(s.zipEncryption ? { zipEncryption: s.zipEncryption } : {}),
+          ...(s.zipSplitMode ? { zipSplitMode: s.zipSplitMode } : {}),
         } }
     }
     case 'image-compression': {

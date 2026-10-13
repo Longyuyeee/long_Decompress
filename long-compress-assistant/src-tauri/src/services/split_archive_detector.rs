@@ -139,16 +139,16 @@ impl SplitArchiveDetector {
 
     fn is_zip_split(name: &str) -> bool {
         name.to_lowercase().ends_with(".zip")
-            || Regex::new(r"(?i)\.z\d{2,3}$").unwrap().is_match(name)
+            || Regex::new(r"(?i)\.z\d{2,5}$").unwrap().is_match(name)
     }
 
     fn detect_zip_split(path: &Path, parent: &Path) -> Result<Option<SplitArchiveInfo>> {
         let name = Self::file_name(path)?;
-        let base = Regex::new(r"(?i)\.(?:zip|z\d{2,3})$")
+        let base = Regex::new(r"(?i)\.(?:zip|z\d{2,5})$")
             .unwrap()
             .replace(name, "")
             .to_string();
-        let matcher = Regex::new(&format!(r"(?i)^{}\.z(\d{{2,3}})$", regex::escape(&base)))?;
+        let matcher = Regex::new(&format!(r"(?i)^{}\.z(\d{{2,5}})$", regex::escape(&base)))?;
         let indexed = Self::collect_indexed(parent, &matcher)?;
         let width = Self::number_width(&indexed, &matcher, 2);
         let mut max = indexed.last().map(|item| item.0).unwrap_or(0);

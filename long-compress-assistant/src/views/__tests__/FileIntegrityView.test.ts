@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import FileIntegrityView from '../FileIntegrityView.vue'
 import { useAppStore } from '@/stores/app'
+import { useUIStore } from '@/stores/ui'
 
 const mocks = vi.hoisted(() => ({
   open: vi.fn(),
@@ -147,7 +148,7 @@ describe('FileIntegrityView', () => {
     })
     mocks.repairZip.mockResolvedValue({
       outputPath: 'C:\\data\\damaged.repaired.zip', recoveredFiles: 1,
-      recoveredDirectories: 0, skippedEntries: ['bad.txt: CRC mismatch'], verified: true,
+      recoveredDirectories: 0, skippedEntries: ['bad.txt: CRC mismatch'], verified: true, partial: true, directoryRebuilt: true,
     })
     mocks.clipboardWrite.mockResolvedValue(undefined)
     const wrapper = mount(FileIntegrityView, { global: { plugins: [pinia] } })
@@ -173,6 +174,47 @@ describe('FileIntegrityView', () => {
       expect.stringMatching(/^repair-/), 'C:\\data\\damaged.zip', 'C:\\data\\damaged.repaired.zip',
     )
     expect(wrapper.get('[data-testid="repair-result"]').text()).toContain('恢复 1 个文件')
+    expect(wrapper.get('[data-testid="repair-result"]').text()).toContain('部分恢复')
+    expect(wrapper.get('[data-testid="repair-result"]').text()).toContain('原包总条目数无法确认')
+    expect(useUIStore().toasts).toContainEqual(expect.objectContaining({ type: 'warning', message: expect.stringContaining('部分恢复') }))
     expect(wrapper.text()).toContain('原压缩包不会被覆盖或删除')
+  })
+
+  it('shows an ambiguous encrypted-content report without offering repair or silently retrying', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    mocks.open.mockResolvedValue('C:\\下载\\资料.zip.003')
+    const returnedReport = {
+      filePath: 'C:\\下载\\资料.zip.003', fileSize: 8192, actualFormat: 'ZIP',
+      status: 'ambiguous_data', encrypted: true, splitArchive: true, volumesFound: 3,
+      missingVolumes: [], totalFiles: 2, totalDirectories: 0, totalUncompressedSize: 1024,
+      integrityTested: true, canRepair: false, recoverability: 'diagnostic_only',
+      issues: [{ code: 'ambiguous_data', severity: 'error', title: '密码或加密内容异常',
+        detail: '无法区分密码错误与加密内容损坏；反复尝试密码不能修复损坏' }], evidence: [],
+    }
+    mocks.diagnoseArchive.mockResolvedValue(returnedReport)
+    const wrapper = mount(FileIntegrityView, { global: { plugins: [pinia] } })
+    await wrapper.get('[data-testid="archive-diagnostic-mode"]').trigger('click')
+    await wrapper.get('.archive-select').trigger('click')
+    await flushPromises()
+    await wrapper.get('.archive-password').setValue('local-secret')
+    await wrapper.get('.archive-primary').trigger('click')
+    await flushPromises()
+    const report = wrapper.get('[data-testid="diagnostic-report"]')
+    expect(report.get('h2').text()).toBe('密码或加密内容异常')
+    expect(report.text()).toContain('反复尝试密码不能修复损坏')
+    expect(report.text()).not.toContain('ambiguous_data')
+    expect(wrapper.text()).not.toContain('选择位置并修复')
+    expect(mocks.diagnoseArchive).toHaveBeenCalledTimes(1)
+    expect(mocks.repairZip).not.toHaveBeenCalled()
+
+    let finish!: (report: any) => void
+    mocks.diagnoseArchive.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+    await wrapper.get('.archive-primary').trigger('click')
+    expect(wrapper.find('[data-testid="diagnostic-report"]').exists()).toBe(false)
+    expect(wrapper.get('.archive-select').attributes('disabled')).toBeDefined()
+    finish(returnedReport)
+    await flushPromises()
+    expect(wrapper.get('.archive-select').attributes('disabled')).toBeUndefined()
   })
 })

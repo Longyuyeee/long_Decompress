@@ -24,6 +24,10 @@ import { runPasswordSplitCreationGate } from './password-split-creation-gate.mjs
 import { runArchiveConversionGate } from './archive-conversion-gate.mjs'
 import { runArchiveUpgradeGate } from './archive-upgrade-gate.mjs'
 import { runStandardZipDesktopGate } from './standard-zip-desktop-gate.mjs'
+import { runArchiveDiagnosisReliabilityGate } from './archive-diagnosis-reliability-gate.mjs'
+import { runStandardZipCreateDesktopGate } from './standard-zip-create-desktop-gate.mjs'
+import { runArchivePasswordCompatibilityGate } from './archive-password-compatibility-gate.mjs'
+import { runZipRecoveryDesktopGate } from './zip-recovery-desktop-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
@@ -1937,6 +1941,10 @@ async function createDesktopSession(applicationArgs = []) {
   }
   if (process.env.CI) {
     webviewOptions.additionalBrowserArguments = ['--headless=new', '--disable-gpu']
+  } else if (process.env.LONG_E2E_SOFTWARE_RENDERING === '1') {
+    // Optional diagnostic for local WebView2 renderer startup hangs. Keep the
+    // real visible desktop; do not change the production application's flags.
+    webviewOptions.additionalBrowserArguments = ['--disable-gpu']
   }
   capabilities.set('tauri:options', { application, args: applicationArgs, webviewOptions })
   devToolsPortMirror = setInterval(mirrorDevToolsActivePort, 50)
@@ -4855,6 +4863,21 @@ try {
     }
     await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
     completedSuccessfully = true
+  } else if (process.argv.includes('--zip-recovery-only')) {
+    await runZipRecoveryDesktopGate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application })
+    completedSuccessfully = true
+    console.log('ZIP recovery real user workflows passed.')
+  } else if (process.argv.includes('--password-compatibility-only')) {
+    const diagnose = async (filePath, password) => {
+      const result = await driver.executeAsyncScript(`const [filePath,password,done]=arguments, ids=crypto.getRandomValues(new Uint32Array(2));
+        const clean=()=>ids.forEach(id=>Reflect.deleteProperty(window,'_'+id));
+        window['_'+ids[0]]=value=>{clean();done({ok:true,value})};window['_'+ids[1]]=error=>{clean();done({ok:false,error})};
+        window.__TAURI_IPC__({cmd:'diagnose_archive',diagnosticId:'compat-'+Date.now(),filePath,password,callback:ids[0],error:ids[1]});`, filePath,password)
+      assert.ok(result.ok, JSON.stringify(result.error)); return result.value
+    }
+    await runArchivePasswordCompatibilityGate({ bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip, root, diagnose })
+    completedSuccessfully = true
+    console.log('Archive password/algorithm/volume compatibility checks passed.')
   } else if (process.argv.includes('--zip-codecs-only')) {
     await runZipCodecGate({ bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
     completedSuccessfully = true
@@ -4866,6 +4889,14 @@ try {
     }
     completedSuccessfully = true
     console.log('ZIP ZipCrypto UI creation and independent compatibility gate passed.')
+  } else if (process.argv.includes('--standard-zip-create-only')) {
+    await runStandardZipCreateDesktopGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip })
+    completedSuccessfully = true
+    console.log('Standard ZIP creation, conversion and profile user workflows passed.')
+  } else if (process.argv.includes('--diagnosis-reliability-only')) {
+    await runArchiveDiagnosisReliabilityGate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, root, application })
+    completedSuccessfully = true
+    console.log('Archive diagnosis real user workflows passed.')
   } else if (process.argv.includes('--standard-zip-only')) {
     await runStandardZipDesktopGate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, root })
     completedSuccessfully = true
