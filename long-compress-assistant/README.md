@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="../docs/assets/readme-hero.svg" width="100%" alt="Long解压：本地归档与媒体压缩工作区">
+<img src="../icon.png" width="120" height="120" alt="Long解压软件图标">
 
 # Long解压 · 开发说明
 

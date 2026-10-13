@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/readme-hero.svg" width="100%" alt="Long解压：让压缩、解压与文件整理更顺手">
+<img src="icon.png" width="120" height="120" alt="Long解压软件图标">
 
 # Long解压
 
