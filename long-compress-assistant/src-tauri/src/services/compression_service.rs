@@ -1903,6 +1903,9 @@ impl CompressionService {
     fn detect_password_format(file_path: &str) -> Result<ArchiveFormat> {
         let path = Path::new(file_path);
         let file = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path)?;
+        if matches!(&file, crate::services::numeric_volume_reader::ZipInputReader::StandardZip(_)) {
+            return Ok(ArchiveFormat::Zip);
+        }
         let mut header = Vec::with_capacity(512);
         file.take(512).read_to_end(&mut header)?;
         let detected = ArchiveFormat::from_magic(&header);

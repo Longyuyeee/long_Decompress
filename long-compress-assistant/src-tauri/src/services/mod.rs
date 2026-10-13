@@ -1,5 +1,6 @@
 pub mod archive_engine;
 pub mod archive_browser;
+pub(crate) mod standard_zip_reader;
 pub mod archive_diagnostics;
 pub mod archive_preview;
 pub mod archive_entry_open;

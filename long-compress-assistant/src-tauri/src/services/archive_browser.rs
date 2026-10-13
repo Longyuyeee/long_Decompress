@@ -46,6 +46,9 @@ fn summarize(format: &str, entries: Vec<ArchiveEntryInfo>) -> ArchiveBrowseResul
 
 fn detect_format(path: &Path) -> Result<ArchiveFormat> {
     let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
+    if matches!(&file, super::numeric_volume_reader::ZipInputReader::StandardZip(_)) {
+        return Ok(ArchiveFormat::Zip);
+    }
     let mut header = [0u8; 560];
     let mut bytes = Vec::with_capacity(header.len());
     file.take(header.len() as u64).read_to_end(&mut bytes)?;

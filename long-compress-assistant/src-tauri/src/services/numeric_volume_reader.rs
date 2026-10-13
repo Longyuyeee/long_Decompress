@@ -5,6 +5,7 @@ use std::{fs::File, io::{self, Read, Seek, SeekFrom}, path::{Path, PathBuf}};
 pub(crate) enum ZipInputReader {
     File(File),
     Volumes(NumericVolumeReader),
+    StandardZip(super::standard_zip_reader::StandardZipReader),
 }
 
 impl ZipInputReader {
@@ -13,7 +14,7 @@ impl ZipInputReader {
             Ok(Self::Volumes(NumericVolumeReader::open(path).map_err(|error|
                 anyhow::anyhow!("[archive-inspection:incomplete] 无法读取完整 7Z 卷组：{error}"))?))
         } else {
-            Ok(Self::File(File::open(path)?))
+            Self::open(path)
         }
     }
 
@@ -26,6 +27,9 @@ impl ZipInputReader {
         if Self::is_numeric_first(path) {
             Ok(Self::Volumes(NumericVolumeReader::open(path)?))
         } else {
+            if let Some(reader) = super::standard_zip_reader::StandardZipReader::try_open(path)? {
+                return Ok(Self::StandardZip(reader));
+            }
             Ok(Self::File(File::open(path)?))
         }
     }
@@ -33,13 +37,13 @@ impl ZipInputReader {
 
 impl Read for ZipInputReader {
     fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
-        match self { Self::File(reader) => reader.read(buffer), Self::Volumes(reader) => reader.read(buffer) }
+        match self { Self::File(reader) => reader.read(buffer), Self::Volumes(reader) => reader.read(buffer), Self::StandardZip(reader) => reader.read(buffer) }
     }
 }
 
 impl Seek for ZipInputReader {
     fn seek(&mut self, position: SeekFrom) -> io::Result<u64> {
-        match self { Self::File(reader) => reader.seek(position), Self::Volumes(reader) => reader.seek(position) }
+        match self { Self::File(reader) => reader.seek(position), Self::Volumes(reader) => reader.seek(position), Self::StandardZip(reader) => reader.seek(position) }
     }
 }
 
@@ -57,16 +61,20 @@ impl NumericVolumeReader {
         let info = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(first)?
             .ok_or_else(|| anyhow::anyhow!("Numeric {format} volumes not found"))?;
         anyhow::ensure!(info.missing_parts.is_empty(), "Missing {format} volumes: {:?}", info.missing_parts);
+        Self::from_paths(info.parts)
+    }
+
+    pub(crate) fn from_paths(paths: Vec<PathBuf>) -> anyhow::Result<Self> {
         let mut length = 0u64;
         let mut parts = Vec::new();
-        for path in info.parts {
+        for path in paths {
             let metadata = path.metadata()?;
-            anyhow::ensure!(metadata.is_file() && metadata.len() > 0, "Invalid {format} volume: {}", path.display());
+            anyhow::ensure!(metadata.is_file() && metadata.len() > 0, "Invalid archive volume: {}", path.display());
             let start = length;
-            length = length.checked_add(metadata.len()).ok_or_else(|| anyhow::anyhow!("{format} size overflow"))?;
+            length = length.checked_add(metadata.len()).ok_or_else(|| anyhow::anyhow!("Archive size overflow"))?;
             parts.push((path, start, length));
         }
-        anyhow::ensure!(!parts.is_empty(), "No {format} volumes found");
+        anyhow::ensure!(!parts.is_empty(), "No archive volumes found");
         Ok(Self { parts, length, position: 0, current: None })
     }
 }

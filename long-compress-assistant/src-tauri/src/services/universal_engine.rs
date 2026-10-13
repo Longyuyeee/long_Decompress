@@ -582,6 +582,10 @@ impl ArchiveEngine for UniversalCliEngine {
     }
 
     async fn try_password(&self, file_path: &Path, password: &str) -> Result<bool> {
+        if crate::services::split_archive_detector::SplitArchiveDetector::detect_split_archive(file_path)?
+            .is_some_and(|group| group.format == crate::services::split_archive_detector::SplitFormat::ZipSplit) {
+            return Self::try_zip_password(file_path, password);
+        }
         if file_path
             .extension()
             .and_then(|extension| extension.to_str())
@@ -596,6 +600,10 @@ impl ArchiveEngine for UniversalCliEngine {
     }
 
     async fn requires_password(&self, file_path: &Path) -> Result<bool> {
+        if crate::services::split_archive_detector::SplitArchiveDetector::detect_split_archive(file_path)?
+            .is_some_and(|group| group.format == crate::services::split_archive_detector::SplitFormat::ZipSplit) {
+            return Self::zip_requires_password(file_path);
+        }
         if crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(file_path) {
             return Self::zip_requires_password(file_path);
         }
@@ -654,11 +662,14 @@ impl ArchiveEngine for UniversalCliEngine {
         is_cancelled: Arc<AtomicBool>,
     ) -> Result<()> {
         if let Some(password) = password {
+            let standard_zip = crate::services::split_archive_detector::SplitArchiveDetector::detect_split_archive(file_path)?
+                .is_some_and(|group| group.format == crate::services::split_archive_detector::SplitFormat::ZipSplit);
             if file_path
                 .extension()
                 .and_then(|extension| extension.to_str())
                 .is_some_and(|extension| extension.eq_ignore_ascii_case("zip"))
                 || crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(file_path)
+                || standard_zip
             {
                 return Self::extract_zip_with_password(
                     file_path,

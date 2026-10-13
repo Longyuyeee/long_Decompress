@@ -219,6 +219,9 @@ fn preview_format(path: &Path) -> Result<&'static str> {
     if name.ends_with(".tar.br") { return Ok("TAR.BR"); }
     let mut header = [0u8; 560];
     let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
+    if matches!(&file, super::numeric_volume_reader::ZipInputReader::StandardZip(_)) {
+        return Ok("ZIP");
+    }
     let mut bytes = Vec::with_capacity(header.len());
     file.take(header.len() as u64).read_to_end(&mut bytes)?;
     let read = bytes.len(); header[..read].copy_from_slice(&bytes);

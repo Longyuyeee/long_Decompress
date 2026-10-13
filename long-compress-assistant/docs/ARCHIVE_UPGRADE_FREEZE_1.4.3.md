@@ -1,5 +1,13 @@
 # v1.4.3 归档升级实现与检查记录（开发暂停）
 
+## 2026-10-13 恢复开发：标准 ZIP 多卷读取
+
+用户已授权恢复并推进到发布。标准 `.z01/.../.zip` 的共享只读读取层已接通浏览、图片/文本预览、密码验证与原生密码解压；按 ZIP/ZIP64 的磁盘相对偏移定位原文件，只重建目录元数据，不合并复制载荷。终卷目录声明的卷数用于识别缺失的最高编号卷，避免误报完整。
+
+标准 ZIP 定向 3 项通过（显式包含外部样本检查）：跨卷中央目录、任意卷浏览/预览、ZipCrypto/AES 正误密码、ZIP64 尾记录及缺失最后 `.zNN`；外部 WinRAR 7.23 生成真实多卷，并由随包 7-Zip 独立检查通过。卷组检测原有 5 项通过。数字卷回归发现 `open_seven_zip` 的错误分类前缀曾被重构丢失，已恢复原有语义，随后复核。ZIP64 当前证据为小载荷强制 ZIP64 目录，不宣称完成全部 >4 GiB 物理档案组合。
+
+桌面使用链与最后 RAR 同名来源/默认格式刷新复核仍在接续，尚未据此给最终封板结论。格式参照 [PKWARE ZIP specification](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT)；复现外部样本用 `scripts/standard-zip-fixtures.mjs`，原生显式检查设置 `LONG_STANDARD_ZIP_FIXTURES` 后运行 `cargo test --manifest-path src-tauri/Cargo.toml --lib standard_zip -- --include-ignored`。
+
 基线：已发布 v1.4.2，主线 `fa611a8`。实施分支：`codex/archive-compatibility-upgrade`。本轮主要功能已实现，用户已要求暂停，尚未最终封板；正式 Release 仍为 v1.4.2，未创建 v1.4.3 标签。
 
 当前状态及剩余工作见 [暂停审计](DEVELOPMENT_PAUSED_AUDIT_2026-10-13.md)。本记录描述已经发生的实现和检查，不代表已经发布。

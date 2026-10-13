@@ -154,9 +154,29 @@ impl SplitArchiveDetector {
         if indexed.is_empty() {
             return Ok(None);
         }
-        let max = indexed.last().map(|item| item.0).unwrap_or(0);
+        let mut max = indexed.last().map(|item| item.0).unwrap_or(0);
         let expected_main = parent.join(format!("{base}.zip"));
         let actual_main = Self::actual_case_insensitive(parent, &format!("{base}.zip"))?;
+        // The final directory declares the disk count. A missing highest .zNN
+        // member would otherwise look complete when only existing names count.
+        if let Some(main) = &actual_main {
+            use std::io::{Read, Seek, SeekFrom};
+            let mut file = fs::File::open(main)?;
+            let size = file.metadata()?.len();
+            let tail_size = size.min(65_557) as usize;
+            file.seek(SeekFrom::End(-(tail_size as i64)))?;
+            let mut tail = vec![0; tail_size]; file.read_exact(&mut tail)?;
+            if let Some(index) = (0..tail.len().saturating_sub(21)).rev().find(|&index|
+                &tail[index..index + 4] == b"PK\x05\x06"
+                    && index + 22 + u16::from_le_bytes(tail[index + 20..index + 22].try_into().unwrap()) as usize == tail.len()) {
+                let disk = u16::from_le_bytes(tail[index + 4..index + 6].try_into().unwrap()) as usize;
+                let declared = if index >= 20 && &tail[index - 20..index - 16] == b"PK\x06\x07" {
+                    (u32::from_le_bytes(tail[index - 4..index].try_into().unwrap()) as usize).saturating_sub(1)
+                } else { disk };
+                anyhow::ensure!(declared <= 65_535, "ZIP 卷数超过可读取范围");
+                max = max.max(declared);
+            }
+        }
         let mut parts: Vec<PathBuf> = indexed.iter().map(|(_, part)| part.clone()).collect();
         if let Some(main) = &actual_main {
             parts.push(main.clone());
