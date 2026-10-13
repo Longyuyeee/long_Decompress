@@ -38,6 +38,7 @@ export const buildSafeTemplateDraftSettings = (
   encryptFilenames: profile.config.encryptFilenames ?? false,
   ...(profile.config.zipPasswordEncoding ? { zipPasswordEncoding: profile.config.zipPasswordEncoding } : {}),
   ...(profile.config.zipEncryption ? { zipEncryption: profile.config.zipEncryption } : {}),
+  ...(profile.config.zipSplitMode ? { zipSplitMode: profile.config.zipSplitMode } : {}),
 })
 
 export const taskTemplateCandidatesToFiles = (

@@ -1,0 +1,11 @@
+{
+  "buildKind": "isolated-release-desktop",
+  "nativePickerVerified": false,
+  "createPlainAesZipCrypto": true,
+  "independentSevenZipVerified": true,
+  "uiPasswordChange": true,
+  "standardToNumericToMerged": true,
+  "payloadPreserved": true,
+  "historyVolumeModePreserved": true,
+  "profileAndPortableTemplateModePreserved": true
+}

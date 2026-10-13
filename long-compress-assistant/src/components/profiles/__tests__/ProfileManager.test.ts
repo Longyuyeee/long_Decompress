@@ -315,8 +315,10 @@ describe('ProfileManager', () => {
     await wrapper.get('select').setValue('rar')
     expect(wrapper.find('input[type="password"]').exists()).toBe(true)
 
-    await wrapper.get('select').setValue('tar')
+    await wrapper.get('select').setValue('lzma')
     expect(wrapper.text()).not.toContain('将压缩包拆分为多个文件')
+    await wrapper.get('select').setValue('tar')
+    expect(wrapper.text()).toContain('将压缩包拆分为多个文件')
     expect(wrapper.text()).not.toContain('提高同类文件压缩率')
 
     const deleteSource = wrapper.findAll('label').find(label => label.text().includes('完成后删除源文件'))

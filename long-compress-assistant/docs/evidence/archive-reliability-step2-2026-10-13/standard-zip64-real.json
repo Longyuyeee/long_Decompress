@@ -1,0 +1,10 @@
+{
+  "kind": "real-native-rust-zip64-creation-and-read",
+  "inputBytes": 4294979641,
+  "archiveBytes": 4294980017,
+  "volumes": 5,
+  "nativeFullCrcRead": true,
+  "largeOffsetFollowingEntryPreserved": true,
+  "independentSevenZipVerified": true,
+  "passwordVariantsTestedAtThisSize": false
+}

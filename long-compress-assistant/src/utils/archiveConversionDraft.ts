@@ -5,7 +5,7 @@ import { supportsNativePassword, supportsArchiveSplit, supportsFilenameEncryptio
 
 export function defaultConversionSettings(): ConversionSettings {
   return { format: '7z', level: 6, outputDirectory: '', outputPath: '', sourcePassword: '', password: '',
-    splitMiB: 0, encryptFilenames: false, zipEncryption: 'aes256', zipPasswordEncoding: 'utf8' }
+    splitMiB: 0, encryptFilenames: false, zipEncryption: 'aes256', zipPasswordEncoding: 'utf8', zipSplitMode: 'numeric' }
 }
 export function conversionOutputPath(source: string, settings: ConversionSettings, intent = 'convert'): string {
   if (settings.outputPath) return settings.outputPath

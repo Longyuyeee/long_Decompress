@@ -8,9 +8,11 @@ const mocks = vi.hoisted(() => ({
   minimize: vi.fn(),
   toggleMaximize: vi.fn(),
   close: vi.fn(),
+  flushDrafts: vi.fn(),
 }))
 
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
+vi.mock('@/stores/pendingDrafts', () => ({ usePendingDraftStore: () => ({ flush: mocks.flushDrafts }) }))
 vi.mock('@tauri-apps/api/window', () => ({
   appWindow: {
     minimize: mocks.minimize,
@@ -56,6 +58,8 @@ describe('WindowTitleBar', () => {
     expect(mocks.minimize).toHaveBeenCalledOnce()
     expect(mocks.toggleMaximize).toHaveBeenCalledOnce()
     expect(mocks.close).toHaveBeenCalledOnce()
+    expect(mocks.flushDrafts).toHaveBeenCalledOnce()
+    expect(mocks.flushDrafts.mock.invocationCallOrder[0]).toBeLessThan(mocks.close.mock.invocationCallOrder[0])
     expect(mocks.invoke).toHaveBeenCalledTimes(1)
     wrapper.unmount()
   })

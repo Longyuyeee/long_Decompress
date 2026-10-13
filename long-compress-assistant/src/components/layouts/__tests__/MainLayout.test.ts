@@ -37,6 +37,12 @@ vi.mock('@/components/ui/PerformanceMeter.vue', () => ({
   default: { template: '<div data-test="performance-meter" />' }
 }))
 
+// Recovery behavior has its own store tests; shell tests do not initialize
+// native draft persistence or Pinia behind an otherwise mocked child shell.
+vi.mock('@/components/tasks/PendingDraftRecovery.vue', () => ({
+  default: { template: '<div data-test="pending-draft-recovery" />' }
+}))
+
 const routes = [
   { path: '/', redirect: { name: 'Decompress' } },
   { path: '/decompress', name: 'Decompress', component: { template: '<div>Decompress</div>' } },

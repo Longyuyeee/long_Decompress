@@ -16,6 +16,16 @@ function draft() {
   return store
 }
 describe('archive conversion lifecycle', () => {
+  it('executes and records the explicitly selected ZIP disk layout', async () => {
+    mocks.invoke.mockImplementation(async (command, args) => command === 'convert_archive' ? { primaryPath: args.outputPath, files: [], totalBytes: 20, split: true } : undefined)
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/原包.zip'])
+    store.updateItem(store.pending[0].id, { format: 'zip', splitMiB: 1, zipSplitMode: 'standard' })
+    await store.start()
+    const call = mocks.invoke.mock.calls.find(([command]) => command === 'convert_archive')
+    expect(call?.[1].options).toMatchObject({ zip_split_mode: 'standard', split_size: 1048576 })
+    expect(useTaskStore().tasks[0].executionConfig).toMatchObject({ zipSplitMode: 'standard' })
+  })
   it('keeps my changed defaults when metadata is refreshed and resumes a restored source', async () => {
     mocks.invoke.mockImplementation(async (command, args) => {
       if (command === 'detect_split_archive') return { is_split: false, archive_format: 'zip' }

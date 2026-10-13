@@ -8,6 +8,7 @@ export interface ConversionSettings {
   splitMiB: number
   encryptFilenames: boolean
   zipEncryption: 'aes256' | 'zipcrypto'
+  zipSplitMode?: 'numeric' | 'standard'
   zipPasswordEncoding: 'utf8' | 'windows_local'
 }
 export interface ConversionDraft {

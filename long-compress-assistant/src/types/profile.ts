@@ -18,6 +18,7 @@ export interface CompressionProfile {
 export interface CompressionConfig {
   zipPasswordEncoding?: 'utf8' | 'windows_local'
   zipEncryption?: 'aes256' | 'zipcrypto'
+  zipSplitMode?: 'numeric' | 'standard'
   format: string
   level: number
   password: string | null
@@ -134,6 +135,7 @@ export interface TaskTemplate {
     splitSizeMib: number | null
     zipPasswordEncoding?: 'utf8' | 'windows_local'
     zipEncryption?: 'aes256' | 'zipcrypto'
+    zipSplitMode?: 'numeric' | 'standard'
     keepStructure: boolean
     verifyAfter: boolean
     createSolidArchive: boolean

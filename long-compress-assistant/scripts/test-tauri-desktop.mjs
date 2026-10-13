@@ -25,6 +25,7 @@ import { runArchiveConversionGate } from './archive-conversion-gate.mjs'
 import { runArchiveUpgradeGate } from './archive-upgrade-gate.mjs'
 import { runStandardZipDesktopGate } from './standard-zip-desktop-gate.mjs'
 import { runArchiveDiagnosisReliabilityGate } from './archive-diagnosis-reliability-gate.mjs'
+import { runStandardZipCreateDesktopGate } from './standard-zip-create-desktop-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
@@ -1938,6 +1939,10 @@ async function createDesktopSession(applicationArgs = []) {
   }
   if (process.env.CI) {
     webviewOptions.additionalBrowserArguments = ['--headless=new', '--disable-gpu']
+  } else if (process.env.LONG_E2E_SOFTWARE_RENDERING === '1') {
+    // Optional diagnostic for local WebView2 renderer startup hangs. Keep the
+    // real visible desktop; do not change the production application's flags.
+    webviewOptions.additionalBrowserArguments = ['--disable-gpu']
   }
   capabilities.set('tauri:options', { application, args: applicationArgs, webviewOptions })
   devToolsPortMirror = setInterval(mirrorDevToolsActivePort, 50)
@@ -4867,6 +4872,10 @@ try {
     }
     completedSuccessfully = true
     console.log('ZIP ZipCrypto UI creation and independent compatibility gate passed.')
+  } else if (process.argv.includes('--standard-zip-create-only')) {
+    await runStandardZipCreateDesktopGate({ driver, callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip })
+    completedSuccessfully = true
+    console.log('Standard ZIP creation, conversion and profile user workflows passed.')
   } else if (process.argv.includes('--diagnosis-reliability-only')) {
     await runArchiveDiagnosisReliabilityGate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, root, application })
     completedSuccessfully = true

@@ -92,6 +92,8 @@ pub struct TemplateCompression {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_encryption: Option<crate::services::zip_password::ZipEncryption>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zip_split_mode: Option<crate::services::standard_zip_writer::ZipSplitMode>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_password_encoding: Option<crate::services::zip_password::ZipPasswordEncoding>,
     pub format: String,
     pub level: u8,
@@ -234,6 +236,11 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
                 profile.config.extra_params.get("zip_password_encoding").map(|value|
                     if value == "windows_local" { crate::services::zip_password::ZipPasswordEncoding::WindowsLocal }
                     else { crate::services::zip_password::ZipPasswordEncoding::Utf8 })
+            } else { None },
+            zip_split_mode: if profile.config.format.eq_ignore_ascii_case("zip") {
+                profile.config.extra_params.get("zip_split_mode").map(|value| if value == "standard" {
+                    crate::services::standard_zip_writer::ZipSplitMode::Standard
+                } else { crate::services::standard_zip_writer::ZipSplitMode::Numeric })
             } else { None },
             format: profile.config.format.clone(),
             level: profile.config.level,
@@ -829,6 +836,9 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
                   };
                   params.insert("zip_encryption".into(), value.into());
               }
+              if let Some(mode) = template.compression.zip_split_mode {
+                  params.insert("zip_split_mode".into(), if mode == crate::services::standard_zip_writer::ZipSplitMode::Standard { "standard" } else { "numeric" }.into());
+              }
               params
             },
         },
@@ -965,6 +975,9 @@ mod tests {
             original.config.split_archive = true;
             original.config.split_size = Some(128);
             original.config.extra_params.insert("zip_encryption".into(), "zipcrypto".into());
+            if encoding.is_some() {
+                original.config.extra_params.insert("zip_split_mode".into(), "standard".into());
+            }
             if let Some(value) = encoding {
                 original.config.extra_params.insert("zip_password_encoding".into(), value.into());
             }
@@ -975,6 +988,7 @@ mod tests {
             assert_eq!(imported.config.extra_params.get("zip_password_encoding").map(String::as_str), encoding);
             assert!(imported.config.split_archive);
             assert_eq!(imported.config.split_size, Some(128));
+            assert_eq!(imported.config.extra_params.get("zip_split_mode").map(String::as_str), encoding.map(|_| "standard"));
             assert!(imported.config.password.is_none());
             assert!(!imported.config.extra_params.contains_key("unsafe"));
             if encoding == Some("windows_local") {
@@ -983,6 +997,7 @@ mod tests {
             let text = std::fs::read_to_string(&path).unwrap();
             assert!(!text.contains("must-never-export"));
             if encoding.is_none() { assert!(!text.contains("zipPasswordEncoding")); }
+            if encoding.is_none() { assert!(!text.contains("zipSplitMode")); }
         }
         let mut invalid = serde_json::to_value(template_from_profile(&profile())).unwrap();
         invalid["compression"]["zipPasswordEncoding"] = serde_json::json!("unknown");

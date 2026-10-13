@@ -397,9 +397,10 @@ pub struct PublishedArchiveFile {
 }
 
 fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<PublishedArchiveOutput> {
-    let paths = if split {
+    let mut paths = if split {
         crate::services::archive_volumes::complete_volume_paths(output)?
     } else { vec![output.to_path_buf()] };
+    if split && paths.last().is_some_and(|path| path == output) { paths.rotate_right(1); }
     let mut files = Vec::new();
     let mut total_bytes = 0u64;
     for path in paths {
@@ -410,6 +411,7 @@ fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<Publis
         files.push(PublishedArchiveFile { path: path.to_string_lossy().into_owned(), bytes: metadata.len() });
     }
     let primary_path = files.first().ok_or_else(|| anyhow::anyhow!("产物清单为空"))?.path.clone();
+    let split = split && (files.len() > 1 || primary_path != output.to_string_lossy());
     Ok(PublishedArchiveOutput { primary_path, files, total_bytes, split })
 }
 

@@ -202,6 +202,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       targetPasswordRequired: config.passwordRequired, sourcePasswordRequired: false, passwordRequired: config.passwordRequired,
       settings: { ...defaultConversionSettings(), outputPath: '', format: config.format,
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
+      zipSplitMode: config.zipSplitMode ?? 'numeric',
       level: config.level, splitMiB: config.splitSize / 1048576, encryptFilenames: config.encryptFilenames } }
     const occupied = new Set([...pending.value.map(outputFor), record.outputPath].map(pathKey))
     const proposed = outputFor(item)
@@ -225,6 +226,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     if (settings.format.endsWith('.aes') && !settings.password) return '此加密格式需要填写新包密码'
     if (settings.password && !supportsNativePassword(settings.format)) return '此格式不支持原生密码，请选择 ZIP、7Z、RAR 或加密包装格式'
     if (settings.splitMiB > 0 && !supportsArchiveSplit(settings.format)) return '此格式暂不支持分卷'
+    if (settings.format === 'zip' && settings.zipSplitMode === 'standard' && settings.splitMiB > 0 && (settings.splitMiB < 0.0625 || settings.splitMiB >= 4096)) return '标准 ZIP 每卷大小需要在 64 KiB 至 4 GiB（不含）之间'
     if (!output.toLowerCase().endsWith('.' + settings.format)) return '新包名称必须以 .' + settings.format + ' 结尾'
     if (pathKey(output) === pathKey(item.sourcePath)) return '请为新包设置不同的名称或保存位置'
     if (/[<>:"|?*]/.test(output.split(/[\\/]/).pop() || '')) return '新包名称包含不可用字符，请修改名称'
@@ -235,6 +237,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     const id = 'conversion-' + crypto.randomUUID()
     const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
       zipEncryption: settings.zipEncryption, zipPasswordEncoding: settings.zipPasswordEncoding,
+      zipSplitMode: settings.zipSplitMode ?? 'numeric',
       outputPath, format: settings.format, level: settings.level, splitSize: settings.splitMiB * 1048576,
       encryptFilenames: settings.encryptFilenames, passwordRequired: !!settings.password }
     try {
@@ -251,6 +254,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
           sourcePassword: settings.sourcePassword || null, outputPath,
           options: { format: config.format, level: config.level, password: settings.password || null,
             zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
+            zip_split_mode: config.zipSplitMode,
             split_size: config.splitSize || null, encrypt_filenames: config.encryptFilenames,
             preserve_paths: true, delete_after: false, verify_after: true, allow_insecure_password_cli: allowRarPasswordCli } })
         const current = taskFor(item)!

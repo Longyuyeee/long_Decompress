@@ -77,7 +77,9 @@ fn verify_encrypted_zip(
 
 pub(crate) fn verify_numeric_zip(path: &Path, password: Option<&str>, is_cancelled: impl Fn() -> bool) -> Result<()> {
     check_cancelled(&is_cancelled)?;
-    let reader = super::numeric_volume_reader::NumericVolumeReader::open(path)?;
+    // Compression can publish either numeric chunks or real ZIP disks. Use
+    // the same logical view as extraction instead of requiring a .001 path.
+    let reader = super::numeric_volume_reader::ZipInputReader::open(path)?;
     let mut archive = zip_aes::ZipArchive::new(reader)?;
     let mut buffer = vec![0u8; 256 * 1024];
     for index in 0..archive.len() {

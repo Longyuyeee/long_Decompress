@@ -47,8 +47,8 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     let file = File::create(output)?;
     let mut writer = zip_aes::ZipWriter::new(file);
     let options = zip_aes::write::SimpleFileOptions::default()
-        .compression_method(zip_aes::CompressionMethod::Deflated)
-        .compression_level(Some(level.clamp(1, 9) as i64));
+        .compression_method(if level == 0 { zip_aes::CompressionMethod::Stored } else { zip_aes::CompressionMethod::Deflated })
+        .compression_level(if level == 0 { None } else { Some(level.clamp(1, 9) as i64) });
     let options = match encryption {
         crate::services::zip_password::ZipEncryption::Aes256 => options.with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &password_bytes),
         crate::services::zip_password::ZipEncryption::Zipcrypto => {
@@ -69,7 +69,7 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
             writer.add_directory(archive_name, options)?;
         } else {
             let mut source = File::open(entry.path)?;
-            writer.start_file(archive_name, options)?;
+            writer.start_file(archive_name, options.large_file(source.metadata()?.len() >= u32::MAX as u64))?;
             let current_name = entry.archive_name.clone();
             copy_cancellable(
                 runtime,
@@ -151,16 +151,18 @@ pub(crate) fn compress<R: CompressionRuntime>(
         compress(runtime, window, task_id, sources, &temporary.0.to_string_lossy(), unsplit)?;
         runtime.check_cancellation()?;
         let mut split_progress_gate = ProgressGate::new();
-        let result = SplitCompressionService::split_archive_file_with_progress(
-            &temporary.0, Path::new(output), split_size, || runtime.check_cancellation(),
-            |processed, total| {
+        let on_progress = |processed, total| {
                 if processed == 0 || split_progress_gate.allow(processed >= total) {
                     if let Some(window) = window {
                         runtime.emit_split_progress(window, task_id, processed, total);
                     }
                 }
-            },
-        )?;
+            };
+        let result = if options.zip_split_mode == crate::services::standard_zip_writer::ZipSplitMode::Standard {
+            crate::services::standard_zip_writer::split(&temporary.0, Path::new(output), split_size, || runtime.check_cancellation(), on_progress)?
+        } else {
+            SplitCompressionService::split_archive_file_with_progress(&temporary.0, Path::new(output), split_size, || runtime.check_cancellation(), on_progress)?
+        };
         if let Some(window) = window {
             runtime.emit_log(
                 window,
@@ -193,7 +195,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
             password,
             options.zip_password_encoding,
             options.zip_encryption,
-            options.level.clamp(1, 9),
+            options.level.min(9),
             sources,
             output,
             options.preserve_paths.unwrap_or(true),
@@ -217,8 +219,8 @@ pub(crate) fn compress<R: CompressionRuntime>(
     let file = File::create(output)?;
     let mut writer = zip::ZipWriter::new(file);
     let zip_options = FileOptions::default()
-        .compression_method(CompressionMethod::Deflated)
-        .compression_level(Some(options.level.clamp(1, 9) as i32));
+        .compression_method(if options.level == 0 { CompressionMethod::Stored } else { CompressionMethod::Deflated })
+        .compression_level(if options.level == 0 { None } else { Some(options.level.clamp(1, 9) as i32) });
     let entries =
         compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), true)?;
     let total_entries = entries.len().max(1);
@@ -233,7 +235,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
             continue;
         }
         let mut source = File::open(&entry.path)?;
-        writer.start_file(&entry.archive_name, zip_options)?;
+        writer.start_file(&entry.archive_name, zip_options.large_file(source.metadata()?.len() >= u32::MAX as u64))?;
         let current_name = entry.archive_name.clone();
         copy_cancellable(
             runtime,
