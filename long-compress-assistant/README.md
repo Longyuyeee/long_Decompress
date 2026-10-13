@@ -92,9 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-本版为 [v1.4.3](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.3)，完整变化见 [中文发布说明](docs/RELEASE_NOTES_1.4.3.md)与 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。安装附件以 Release 页面实际上传结果为准。
+本版为 [v1.4.4](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.4)，完整变化见 [中文发布说明](docs/RELEASE_NOTES_1.4.4.md)与 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。安装附件以 Release 页面实际上传结果为准。
 
-v1.4.3 补齐标准 ZIP 多卷的浏览、预览、密码读取与转换，支持 RAR 密码分卷及同名来源保留，新增 LZ4/Brotli/TAR 组合与数字切卷。修复转换路径编辑、预览层级、缺卷和 RAR 小于一卷时的产物识别。真实桌面场景与证据见 [封板记录](docs/ARCHIVE_UPGRADE_FREEZE_1.4.3.md)。
+v1.4.4 新增真正标准 ZIP 分卷创建及配置组/历史/模板卷型保存，补齐 PPMd 与加密 ZIPX、直接选择 RAR 中间卷的兼容，修正大文件按小终卷误判容量比率；ZIP 目录丢失时恢复可信的完整条目，部分恢复明确提示。真实桌面、原始失败和范围边界见 [本版审计](docs/ARCHIVE_RELIABILITY_1.4.4.md)及 [封板记录](docs/ARCHIVE_RELIABILITY_FREEZE_1.4.4.md)。数字切卷和密码编码默认值保持不变；密码 ZIP、缺卷和未知边界不承诺修复。
 
 v1.4.2 支持一次转换多个压缩包、关闭后恢复尚未开始的归档任务，并分别提示补填原包和新包密码。所选任务批量配置使用弹窗，单条任务继续行内展开；设置中心按设计稿统一布局，保留全部设置和即时生效行为。详情见 [实施记录](docs/BATCH_CONVERSION_AND_DRAFT_RECOVERY_PLAN.md)与 [设置页记录](docs/UI_VISUAL_REFRESH_PLAN.md)。
 
