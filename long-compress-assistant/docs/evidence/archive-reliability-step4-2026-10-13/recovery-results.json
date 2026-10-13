@@ -1,0 +1,15 @@
+{
+  "binarySha256": "e94a96afa9269febbb70c43186fd6e9e74e86857644bfec8dc5af7faf3c085e4",
+  "testKind": "real-visible-release-desktop-native-engine-picker-response-substituted",
+  "nativePickerVerified": false,
+  "lostDirectoryAndCorruptEntryRecovered": true,
+  "onlyTwoIntactFilesPublished": true,
+  "partialResultVisible": true,
+  "unknownOriginalTotalVisible": true,
+  "independentSevenZipOpenedResult": true,
+  "sourcePreserved": true,
+  "passwordRecoveryNotClaimed": true,
+  "saveCancellationProducesNoOutput": true,
+  "runningCancellationProducesNoOutput": true,
+  "existingOutputPreserved": true
+}

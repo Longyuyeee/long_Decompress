@@ -204,6 +204,8 @@ export interface ZipRepairResult {
   recoveredDirectories: number
   skippedEntries: string[]
   verified: boolean
+  partial: boolean
+  directoryRebuilt: boolean
 }
 
 interface WordlistValidationResult {

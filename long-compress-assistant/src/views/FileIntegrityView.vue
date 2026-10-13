@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAppStore } from '@/stores/app'
+import { useUIStore } from '@/stores/ui'
 import { useTauriCommands, type ArchiveDiagnosticReport, type ZipRepairResult } from '@/composables/useTauriCommands'
 import { open, save } from '@tauri-apps/api/dialog'
 
 const appStore = useAppStore()
+const uiStore = useUIStore()
 const tauriCommands = useTauriCommands()
 
 interface ChecksumResult {
@@ -230,17 +232,21 @@ const defaultRepairPath = () => archivePath.value.replace(/\.zip$/i, '') + '.rep
 
 const repairArchive = async () => {
   if (!diagnosticReport.value?.canRepair || isRepairing.value) return
-  const outputPath = await save({
+  const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
+    ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
+  const outputPath = queued === undefined ? await save({
     title: '保存修复后的 ZIP',
     defaultPath: defaultRepairPath(),
     filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
-  }) as string | null
-  if (!outputPath) return
+  }) : queued
+  if (typeof outputPath !== 'string' || !outputPath) return
   isRepairing.value = true
   repairId.value = `repair-${Date.now()}-${Math.random().toString(36).slice(2)}`
   try {
     repairResult.value = await tauriCommands.repairZip(repairId.value, archivePath.value, outputPath)
-    appStore.setSuccess('ZIP 已重建到新文件并通过完整性校验')
+    if (repairResult.value.partial || repairResult.value.skippedEntries.length) {
+      uiStore.showToast('warning', '部分恢复：已恢复可读条目，请核对内容是否齐全', 6000)
+    } else { appStore.setSuccess('ZIP 已重建到新文件并通过完整性校验') }
   } catch (error) {
     if (!String(error).toLocaleLowerCase().includes('cancel')) {
       appStore.setError(`ZIP 修复失败：${String(error)}`)
@@ -276,7 +282,7 @@ const formatBytes = (value: number) => {
 }
 
 const encryptionLabel = (report: ArchiveDiagnosticReport) => report.encrypted ? '是'
-  : report.status === 'missing_volume' ? '未检查' : '否'
+  : report.status === 'missing_volume' || (!report.integrityTested && !report.totalFiles && !report.canRepair) ? '未检查' : '否'
 
 const reportText = () => {
   const report = diagnosticReport.value
@@ -534,10 +540,11 @@ const copyDiagnosticReport = async () => {
             </div>
           </section>
 
-          <section v-if="repairResult" class="integrity-panel border border-green-500/30" data-testid="repair-result">
-            <h2 class="text-lg font-black text-green-500">修复文件已通过完整性校验</h2>
+          <section v-if="repairResult" class="integrity-panel border" :class="repairResult.partial || repairResult.skippedEntries.length ? 'border-amber-500/30' : 'border-green-500/30'" data-testid="repair-result">
+            <h2 class="text-lg font-black" :class="repairResult.partial || repairResult.skippedEntries.length ? 'text-amber-600' : 'text-green-500'">{{ repairResult.partial || repairResult.skippedEntries.length ? '部分恢复 · 新文件已通过校验' : '修复文件已通过完整性校验' }}</h2>
             <p class="mt-3 text-xs text-muted break-all">{{ repairResult.outputPath }}</p>
-            <p class="mt-3 text-sm text-content">恢复 {{ repairResult.recoveredFiles }} 个文件、{{ repairResult.recoveredDirectories }} 个目录；跳过 {{ repairResult.skippedEntries.length }} 个损坏或不安全条目。</p>
+            <p class="mt-3 text-sm text-content">恢复 {{ repairResult.recoveredFiles }} 个文件、{{ repairResult.recoveredDirectories }} 个目录；未恢复说明 {{ repairResult.skippedEntries.length }} 项。</p>
+            <p v-if="repairResult.directoryRebuilt" class="mt-2 text-xs text-amber-600">目录信息已重建，原包总条目数无法确认，请核对内容是否齐全。</p>
             <ul v-if="repairResult.skippedEntries.length" class="mt-3 space-y-1 text-xs text-amber-500 break-all"><li v-for="entry in repairResult.skippedEntries" :key="entry">· {{ entry }}</li></ul>
           </section>
         </div>

@@ -27,6 +27,7 @@ import { runStandardZipDesktopGate } from './standard-zip-desktop-gate.mjs'
 import { runArchiveDiagnosisReliabilityGate } from './archive-diagnosis-reliability-gate.mjs'
 import { runStandardZipCreateDesktopGate } from './standard-zip-create-desktop-gate.mjs'
 import { runArchivePasswordCompatibilityGate } from './archive-password-compatibility-gate.mjs'
+import { runZipRecoveryDesktopGate } from './zip-recovery-desktop-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
@@ -4862,6 +4863,10 @@ try {
     }
     await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
     completedSuccessfully = true
+  } else if (process.argv.includes('--zip-recovery-only')) {
+    await runZipRecoveryDesktopGate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application })
+    completedSuccessfully = true
+    console.log('ZIP recovery real user workflows passed.')
   } else if (process.argv.includes('--password-compatibility-only')) {
     const diagnose = async (filePath, password) => {
       const result = await driver.executeAsyncScript(`const [filePath,password,done]=arguments, ids=crypto.getRandomValues(new Uint32Array(2));

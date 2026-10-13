@@ -11,7 +11,7 @@ use crate::services::split_archive_detector::{SplitArchiveDetector, SplitFormat}
 use crate::services::universal_engine::UniversalCliEngine;
 use anyhow::{Context, Result};
 use serde::Serialize;
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 use std::io::{Read, Seek, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -55,6 +55,8 @@ pub struct ZipRepairResult {
     pub recovered_directories: usize,
     pub skipped_entries: Vec<String>,
     pub verified: bool,
+    pub partial: bool,
+    pub directory_rebuilt: bool,
 }
 
 struct UnpublishedFile(Option<PathBuf>);
@@ -207,7 +209,7 @@ fn classify_failure(
     }
 }
 
-fn record_failure(report: &mut ArchiveDiagnosticReport, error: &anyhow::Error, password_supplied: bool, readable_directory: bool) {
+fn record_failure(report: &mut ArchiveDiagnosticReport, error: &anyhow::Error, password_supplied: bool, readable_directory: bool, source: &Path) {
     let io_kind = error.chain().find_map(|cause| {
         cause.downcast_ref::<std::io::Error>().map(|cause| cause.kind())
             .or_else(|| match cause.downcast_ref::<zip_aes::result::ZipError>() {
@@ -224,10 +226,11 @@ fn record_failure(report: &mut ArchiveDiagnosticReport, error: &anyhow::Error, p
         _ => classify_failure(&format!("{error:#}"), report.encrypted, password_supplied),
     };
     report.status = code.to_string();
-    // The existing rebuilder cannot read a volume set or a lost directory.
-    report.can_repair = report.actual_format == "ZIP" && readable_directory
-        && !report.encrypted && !report.split_archive && matches!(code, "crc_error" | "damaged");
-    report.recoverability = if report.can_repair { "repairable" }
+    report.can_repair = report.actual_format == "ZIP" && !report.encrypted
+        && matches!(code, "crc_error" | "damaged" | "truncated")
+        && (readable_directory || super::zip_recovery_reader::can_scan_local(source));
+    report.recoverability = if report.can_repair && !readable_directory { "local_entries" }
+        else if report.can_repair { "repairable" }
         else if matches!(code, "password_required" | "wrong_password") { "password_required" }
         else { "diagnostic_only" }.to_string();
     report.issues.push(DiagnosticIssue { code: code.to_string(), severity: "error".to_string(),
@@ -301,7 +304,7 @@ pub async fn diagnose_archive(
     })();
     let actual_format = match inspected {
         Ok(format) => format,
-        Err(error) => { record_failure(&mut report, &error, password.is_some(), false); return Ok(report); }
+        Err(error) => { record_failure(&mut report, &error, password.is_some(), false, source); return Ok(report); }
     };
     report.actual_format = actual_format.clone();
     report.evidence.push(format!("Magic/extension format: {actual_format}"));
@@ -332,7 +335,7 @@ pub async fn diagnose_archive(
     if actual_format == "ZIP" {
         match UniversalCliEngine::zip_requires_password(source) {
             Ok(encrypted) => report.encrypted = encrypted,
-            Err(error) => { record_failure(&mut report, &error, password.is_some(), false); return Ok(report); }
+            Err(error) => { record_failure(&mut report, &error, password.is_some(), false, source); return Ok(report); }
         }
     } else if actual_format == "7Z" {
         report.encrypted = seven_zip::requires_password(source).unwrap_or(report.encrypted);
@@ -401,7 +404,7 @@ pub async fn diagnose_archive(
             if message.to_ascii_lowercase().contains("cancel") {
                 return Err(error);
             }
-            record_failure(&mut report, &error, password.is_some(), metadata.is_ok());
+            record_failure(&mut report, &error, password.is_some(), metadata.is_ok(), source);
         }
     }
     Ok(report)
@@ -428,23 +431,14 @@ pub fn repair_zip_to_new(
     if source_canonical == output_absolute {
         anyhow::bail!("ZIP repair must write to a new file");
     }
-    if UniversalCliEngine::zip_requires_password(path)? {
-        anyhow::bail!(
-            "Encrypted ZIP repair is not supported; the original archive was not modified"
-        );
-    }
-
-    let mut source = zip::ZipArchive::new(File::open(path)?)
-        .context("ZIP central directory is unreadable; no repair output was created")?;
-    let entry_count = source.len();
-    let mut declared_expanded_bytes = 0u64;
-    for index in 0..entry_count {
-        let entry = source.by_index(index)?;
-        if !entry.is_dir() {
-            declared_expanded_bytes = declared_expanded_bytes.saturating_add(entry.size());
-        }
-    }
-    extraction_transaction::validate_resource_limits(path, entry_count, declared_expanded_bytes)?;
+    let group = SplitArchiveDetector::detect_split_archive(path)?;
+    if let Some(group) = &group { anyhow::ensure!(group.is_complete, "缺少分卷，补齐后再尝试恢复：{:?}", group.missing_parts); }
+    let input = group.as_ref().map(|group| group.first_part.as_path()).unwrap_or(path);
+    let mut source = super::zip_recovery_reader::RecoveryReader::open(input, cancelled)?;
+    let entry_count = source.names.len();
+    let declared_expanded_bytes = source.expanded_bytes;
+    let directory_rebuilt = source.directory_rebuilt;
+    extraction_transaction::validate_resource_limits(input, entry_count, declared_expanded_bytes)?;
 
     let parent = output.parent().unwrap_or_else(|| Path::new("."));
     std::fs::create_dir_all(parent)?;
@@ -453,7 +447,7 @@ pub fn repair_zip_to_new(
         parent,
         declared_expanded_bytes.saturating_mul(2),
     )?;
-    let temporary = parent.join(format!(".long-repair-{}.zip", uuid::Uuid::new_v4()));
+    let temporary = super::output_publish_transaction::staged_output_path(output, "long-repair")?;
     let mut guard = UnpublishedFile(Some(temporary.clone()));
     let temp_file = OpenOptions::new()
         .write(true)
@@ -463,11 +457,15 @@ pub fn repair_zip_to_new(
     let mut recovered_files = 0usize;
     let mut recovered_directories = 0usize;
     let mut recovered_bytes = 0u64;
-    let mut skipped_entries = Vec::new();
+    let mut skipped_entries = source.notes.clone();
 
-    for index in 0..source.len() {
+    for index in 0..entry_count {
         check_cancelled(cancelled)?;
-        let mut entry = source.by_index(index)?;
+        let label = source.names[index].clone();
+        let mut entry = match source.entry(index) {
+            Ok(entry) => entry,
+            Err(error) => { skipped_entries.push(format!("{label}: {error}")); continue; }
+        };
         let name = entry.name().replace('\\', "/");
         let declared_entry_size = entry.size();
         if entry.enclosed_name().is_none() {
@@ -475,7 +473,8 @@ pub fn repair_zip_to_new(
             continue;
         }
         let options =
-            zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+            zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated)
+                .large_file(declared_entry_size >= u32::MAX as u64);
         if entry.is_dir() {
             writer.add_directory(name, options)?;
             recovered_directories += 1;
@@ -504,13 +503,21 @@ pub fn repair_zip_to_new(
                 if error.to_string().to_ascii_lowercase().contains("cancelled") {
                     return Err(error);
                 }
-                skipped_entries.push(format!("{name}: {error}"));
+                let detail = error.to_string();
+                let reason = if detail.to_ascii_lowercase().contains("checksum") || detail.to_ascii_lowercase().contains("crc") {
+                    "内容校验失败".to_string()
+                } else { detail };
+                skipped_entries.push(format!("{name}: {reason}，未恢复此条目"));
                 continue;
             }
         };
+        if copied != declared_entry_size {
+            skipped_entries.push(format!("{name}: 条目声明大小与实际读取大小不一致，未恢复"));
+            continue;
+        }
         let next_recovered_bytes = recovered_bytes.saturating_add(copied);
         extraction_transaction::validate_resource_limits(
-            path,
+            input,
             recovered_files + recovered_directories + 1,
             next_recovered_bytes,
         )?;
@@ -530,20 +537,26 @@ pub fn repair_zip_to_new(
         cancelled.load(Ordering::SeqCst)
     })
     .context("Rebuilt ZIP failed integrity verification")?;
-    std::fs::rename(&temporary, output)?;
+    check_cancelled(cancelled)?;
+    super::output_publish_transaction::transfer_no_replace(&temporary, output)?;
+    #[cfg(not(windows))] std::fs::remove_file(&temporary)?;
     guard.0.take();
+    let partial = directory_rebuilt || !skipped_entries.is_empty();
     Ok(ZipRepairResult {
         output_path: output.to_string_lossy().to_string(),
         recovered_files,
         recovered_directories,
         skipped_entries,
         verified: true,
+        partial,
+        directory_rebuilt,
     })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs::File;
     use crate::models::compression::{CompressionOptions, TaskLogSeverity};
     use crate::services::native_compression::{self, CompressionRuntime};
     use sha2::{Digest, Sha256};
@@ -705,8 +718,10 @@ mod tests {
         let mut bytes = std::fs::read(&archive).unwrap();
         let local = bytes.windows(4).position(|value| value == b"PK\x03\x04").unwrap();
         let central = bytes.windows(4).position(|value| value == b"PK\x01\x02").unwrap();
-        bytes[local + 8..local + 10].copy_from_slice(&98u16.to_le_bytes());
-        bytes[central + 10..central + 12].copy_from_slice(&98u16.to_le_bytes());
+        // PPMd (98) is now supported; use a genuinely unknown method while
+        // retaining the strict not-damaged/not-repairable assertions.
+        bytes[local + 8..local + 10].copy_from_slice(&60000u16.to_le_bytes());
+        bytes[central + 10..central + 12].copy_from_slice(&60000u16.to_le_bytes());
         std::fs::write(&archive, bytes).unwrap();
         let report = diagnose_archive(&archive, None, Arc::new(AtomicBool::new(false))).await.unwrap();
         assert_eq!(report.status, "unsupported_feature", "{report:?}");
@@ -769,7 +784,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn truncated_zip_is_diagnostic_only_and_repair_leaves_no_output() {
+    async fn truncated_directory_is_reported_and_complete_entries_are_recovered() {
         let temp = tempfile::tempdir().unwrap();
         let archive = temp.path().join("truncated.zip");
         let output = temp.path().join("should-not-exist.zip");
@@ -783,10 +798,124 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(report.status, "truncated");
-        assert!(!report.can_repair);
-        assert!(repair_zip_to_new(&archive, &output, &AtomicBool::new(false)).is_err());
-        assert!(!output.exists());
+        assert!(report.can_repair);
+        let result = repair_zip_to_new(&archive, &output, &AtomicBool::new(false)).unwrap();
+        assert_eq!(result.recovered_files, 2);
+        assert!(result.verified && result.directory_rebuilt && result.partial);
         assert_eq!(hash(&archive), before);
+    }
+
+    #[test]
+    fn lost_directory_recovery_preserves_complete_entries_and_excludes_bad_payloads() {
+        let temp = tempfile::tempdir().unwrap();
+        for corrupt in [false, true] {
+            let archive = temp.path().join(format!("lost-{corrupt}.zip"));
+            create_stored_zip(&archive);
+            let mut bytes = std::fs::read(&archive).unwrap();
+            assert_eq!(&bytes[bytes.len()-22..bytes.len()-18], b"PK\x05\x06");
+            let central = u32::from_le_bytes(bytes[bytes.len()-6..bytes.len()-2].try_into().unwrap());
+            bytes.truncate(central as usize);
+            if corrupt {
+                let needle = b"unique-damaged-payload-0123456789";
+                let at = bytes.windows(needle.len()).position(|part| part == needle).unwrap();
+                bytes[at] ^= 1;
+            }
+            std::fs::write(&archive, bytes).unwrap();
+            let before = hash(&archive); let output = archive.with_extension("recovered.zip");
+            let result = repair_zip_to_new(&archive, &output, &AtomicBool::new(false)).unwrap();
+            assert!(result.partial && result.directory_rebuilt && result.verified);
+            assert_eq!(result.recovered_files, if corrupt { 1 } else { 2 });
+            assert_eq!(hash(&archive), before);
+            let mut rebuilt = zip::ZipArchive::new(File::open(output).unwrap()).unwrap();
+            let mut good = String::new(); rebuilt.by_name("good.txt").unwrap().read_to_string(&mut good).unwrap();
+            assert_eq!(good, "known-good-entry");
+            if corrupt { assert!(rebuilt.by_name("bad.txt").is_err()); }
+        }
+    }
+
+    #[test]
+    fn recovery_does_not_guess_descriptor_boundaries_or_publish_truncated_first_payload() {
+        let temp = tempfile::tempdir().unwrap();
+        for scenario in ["descriptor", "truncated", "bad-zip64", "cancel", "existing"] {
+            let archive = temp.path().join(format!("{scenario}.zip"));
+            create_stored_zip(&archive); let mut bytes = std::fs::read(&archive).unwrap();
+            let central = u32::from_le_bytes(bytes[bytes.len()-6..bytes.len()-2].try_into().unwrap()) as usize;
+            let (first_data, second_header) = {
+                let mut zip = zip_aes::ZipArchive::new(File::open(&archive).unwrap()).unwrap();
+                let first = zip.by_index_raw(0).unwrap();
+                (first.data_start().unwrap() as usize, (first.data_start().unwrap()+first.compressed_size()) as usize)
+            };
+            bytes.truncate(central);
+            if scenario == "descriptor" { bytes[second_header+6..second_header+8].copy_from_slice(&8u16.to_le_bytes()); }
+            if scenario == "bad-zip64" { bytes[second_header+18..second_header+26].fill(255); }
+            if scenario == "truncated" { bytes.truncate(first_data+2); }
+            std::fs::write(&archive, &bytes).unwrap(); let before = hash(&archive);
+            let output = archive.with_extension("recovered.zip");
+            if scenario == "existing" { std::fs::write(&output, b"keep this file").unwrap(); }
+            let result = repair_zip_to_new(&archive, &output, &AtomicBool::new(scenario == "cancel"));
+            if matches!(scenario, "descriptor" | "bad-zip64") {
+                let result = result.unwrap(); assert_eq!(result.recovered_files, 1);
+                assert!(result.partial && result.directory_rebuilt && !result.skipped_entries.is_empty());
+            } else {
+                assert!(result.is_err());
+                if scenario == "existing" { assert_eq!(std::fs::read(&output).unwrap(), b"keep this file"); }
+                else { assert!(!output.exists()); }
+            }
+            assert_eq!(hash(&archive), before);
+            assert!(!std::fs::read_dir(temp.path()).unwrap().any(|entry| entry.unwrap().file_name().to_string_lossy().starts_with(".long-repair")));
+        }
+    }
+
+    #[tokio::test]
+    async fn complete_plain_standard_disks_can_recover_good_entries_after_crc_damage() {
+        let temp = tempfile::tempdir().unwrap(); let original = temp.path().join("original.zip");
+        let mut writer = zip_aes::ZipWriter::new(File::create(&original).unwrap());
+        let options = zip_aes::write::SimpleFileOptions::default().compression_method(zip_aes::CompressionMethod::Stored);
+        writer.start_file("good.txt", options).unwrap(); writer.write_all(b"known-good-entry").unwrap();
+        writer.start_file("bad.txt", options).unwrap(); writer.write_all(&vec![65;90000]).unwrap(); writer.finish().unwrap();
+        let output = temp.path().join("parts.zip");
+        let parts = super::super::standard_zip_writer::split(&original, &output, 65536, || Ok(()), |_,_| {}).unwrap().part_files;
+        let mut first = std::fs::read(&parts[0]).unwrap();
+        let at = first.windows(32).position(|part| part == [65;32]).unwrap(); first[at] ^= 1; std::fs::write(&parts[0], first).unwrap();
+        let before: Vec<_> = parts.iter().map(|path| hash(path)).collect();
+        let report = diagnose_archive(&parts[0], None, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert!(report.can_repair && report.split_archive); assert_eq!(report.status, "crc_error");
+        let recovered = temp.path().join("recovered.zip");
+        let result = repair_zip_to_new(&parts[0], &recovered, &AtomicBool::new(false)).unwrap();
+        assert_eq!(result.recovered_files, 1); assert!(result.partial && !result.directory_rebuilt && result.verified);
+        assert_eq!(parts.iter().map(|path| hash(path)).collect::<Vec<_>>(), before);
+    }
+
+    #[tokio::test]
+    async fn lost_directory_with_plain_folder_then_encrypted_file_never_offers_plaintext_repair() {
+        let temp = tempfile::tempdir().unwrap(); let archive = temp.path().join("mixed.zip");
+        let mut writer = zip_aes::ZipWriter::new(File::create(&archive).unwrap());
+        writer.add_directory("plain-folder/", zip_aes::write::SimpleFileOptions::default()).unwrap();
+        writer.start_file("secret.txt", zip_aes::write::SimpleFileOptions::default().with_aes_encryption(zip_aes::AesMode::Aes256,"secret")).unwrap();
+        writer.write_all(b"must stay encrypted").unwrap(); writer.finish().unwrap();
+        let mut bytes = std::fs::read(&archive).unwrap();
+        let central = u32::from_le_bytes(bytes[bytes.len()-6..bytes.len()-2].try_into().unwrap()) as usize;
+        bytes.truncate(central); std::fs::write(&archive, bytes).unwrap(); let before = hash(&archive);
+        let report = diagnose_archive(&archive, None, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert!(!report.can_repair);
+        let output = temp.path().join("must-not-exist.zip");
+        assert!(repair_zip_to_new(&archive,&output,&AtomicBool::new(false)).is_err());
+        assert!(!output.exists()); assert_eq!(hash(&archive), before);
+    }
+
+    #[tokio::test]
+    async fn lost_directory_recovery_reads_tiny_complete_numeric_volumes() {
+        let temp = tempfile::tempdir().unwrap(); let source = temp.path().join("lost.zip"); create_stored_zip(&source);
+        let mut bytes = std::fs::read(&source).unwrap();
+        let central = u32::from_le_bytes(bytes[bytes.len()-6..bytes.len()-2].try_into().unwrap()) as usize;
+        bytes.truncate(central); std::fs::write(&source,bytes).unwrap();
+        let volumes = super::super::split_compression::SplitCompressionService::split_archive_file(&source,&temp.path().join("numeric.zip"),11,|| Ok(())).unwrap().part_files;
+        let before: Vec<_> = volumes.iter().map(|file| hash(file)).collect();
+        let report = diagnose_archive(&volumes[2], None, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert!(report.can_repair && report.split_archive);
+        let result = repair_zip_to_new(&volumes[2],&temp.path().join("recovered.zip"),&AtomicBool::new(false)).unwrap();
+        assert_eq!(result.recovered_files,2); assert!(result.partial && result.directory_rebuilt && result.verified);
+        assert_eq!(volumes.iter().map(|file| hash(file)).collect::<Vec<_>>(),before);
     }
 
     #[tokio::test]

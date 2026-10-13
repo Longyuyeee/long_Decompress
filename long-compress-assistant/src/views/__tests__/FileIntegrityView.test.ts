@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import FileIntegrityView from '../FileIntegrityView.vue'
 import { useAppStore } from '@/stores/app'
+import { useUIStore } from '@/stores/ui'
 
 const mocks = vi.hoisted(() => ({
   open: vi.fn(),
@@ -147,7 +148,7 @@ describe('FileIntegrityView', () => {
     })
     mocks.repairZip.mockResolvedValue({
       outputPath: 'C:\\data\\damaged.repaired.zip', recoveredFiles: 1,
-      recoveredDirectories: 0, skippedEntries: ['bad.txt: CRC mismatch'], verified: true,
+      recoveredDirectories: 0, skippedEntries: ['bad.txt: CRC mismatch'], verified: true, partial: true, directoryRebuilt: true,
     })
     mocks.clipboardWrite.mockResolvedValue(undefined)
     const wrapper = mount(FileIntegrityView, { global: { plugins: [pinia] } })
@@ -173,6 +174,9 @@ describe('FileIntegrityView', () => {
       expect.stringMatching(/^repair-/), 'C:\\data\\damaged.zip', 'C:\\data\\damaged.repaired.zip',
     )
     expect(wrapper.get('[data-testid="repair-result"]').text()).toContain('恢复 1 个文件')
+    expect(wrapper.get('[data-testid="repair-result"]').text()).toContain('部分恢复')
+    expect(wrapper.get('[data-testid="repair-result"]').text()).toContain('原包总条目数无法确认')
+    expect(useUIStore().toasts).toContainEqual(expect.objectContaining({ type: 'warning', message: expect.stringContaining('部分恢复') }))
     expect(wrapper.text()).toContain('原压缩包不会被覆盖或删除')
   })
 
