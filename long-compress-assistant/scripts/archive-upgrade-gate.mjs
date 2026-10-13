@@ -55,6 +55,25 @@ export async function runArchiveUpgradeGate({ driver, bridge, failure, fixtureDi
     records.push({ format, payloadSha256: hash(path.join(destination, path.basename(payload))) })
   }
   assert.equal(hash(original), originalHash)
+  // "两个位置都有说明.txt，打进 RAR 后不能少掉其中一个。"
+  const other = path.join(root, '另一来源')
+  mkdirSync(other, { recursive: true })
+  const duplicate = path.join(other, '说明.txt')
+  writeFileSync(duplicate, '另一来源内容不能被同名文件覆盖。')
+  const compressed = await driver.executeAsyncScript(`
+    const [args,done]=arguments, ids=crypto.getRandomValues(new Uint32Array(2));
+    const cleanup=()=>ids.forEach(id=>Reflect.deleteProperty(window,'_'+id));
+    window['_'+ids[0]]=value=>{cleanup();done({ok:true,value})};
+    window['_'+ids[1]]=error=>{cleanup();done({ok:false,error:String(error)})};
+    window.__TAURI_IPC__({cmd:'compress_files',...args,callback:ids[0],error:ids[1]});
+  `, { taskId: 'rar-duplicate-desktop', files: [path.join(source, '说明.txt'), duplicate], outputPath: path.join(root, '同名来源.rar'),
+    options: { format: 'rar', level: 3, preserve_paths: true, verify_after: true, delete_after: false, password: '中文 密码+!🔐', encrypt_filenames: true, allow_insecure_password_cli: true, split_size: 32768 } })
+  assert.ok(compressed.ok, compressed.error)
+  const duplicatedOutput = path.join(root, '同名来源回解')
+  await bridge('extractArchive', compressed.value.primaryPath, duplicatedOutput, '中文 密码+!🔐')
+  const restoredTexts = readdirSync(duplicatedOutput).map(name => readFileSync(path.join(duplicatedOutput, name), 'utf8')).sort()
+  assert.deepEqual(restoredTexts, [readFileSync(path.join(source, '说明.txt'), 'utf8'), readFileSync(duplicate, 'utf8')].sort())
+  records.push({ format: 'rar-duplicate-sources', preservedFiles: restoredTexts.length })
   await driver.takeScreenshot().then(base64 => writeFileSync(path.join(artifactDirectory, 'archive-upgrade-desktop.png'), Buffer.from(base64, 'base64')))
   writeFileSync(path.join(artifactDirectory, 'archive-upgrade-results.json'), JSON.stringify({ version: '1.4.3', originalHash, records }, null, 2))
 }

@@ -1,6 +1,6 @@
 # 文档导航与维护规则
 
-- **当前入口：[2026-10-13 暂停审计与下一步](DEVELOPMENT_PAUSED_AUDIT_2026-10-13.md)**。已保存 1.4.3 开发进度，尚未最终封板或发布。
+- **当前入口：[1.4.3 最终封板记录](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)**。标准 ZIP 多卷和最新桌面使用链已复核，接续合入与发布；[暂停审计](DEVELOPMENT_PAUSED_AUDIT_2026-10-13.md)仅为历史快照。
 
 - [v1.4.3 归档升级收口](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)、[更新说明](RELEASE_NOTES_1.4.3.md)：卷组一致性、RAR 分卷与 Unicode 密码、LZ4/Brotli 及通用数字分卷。
 

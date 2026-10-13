@@ -151,9 +151,6 @@ impl SplitArchiveDetector {
         let matcher = Regex::new(&format!(r"(?i)^{}\.z(\d{{2,3}})$", regex::escape(&base)))?;
         let indexed = Self::collect_indexed(parent, &matcher)?;
         let width = Self::number_width(&indexed, &matcher, 2);
-        if indexed.is_empty() {
-            return Ok(None);
-        }
         let mut max = indexed.last().map(|item| item.0).unwrap_or(0);
         let expected_main = parent.join(format!("{base}.zip"));
         let actual_main = Self::actual_case_insensitive(parent, &format!("{base}.zip"))?;
@@ -177,6 +174,7 @@ impl SplitArchiveDetector {
                 max = max.max(declared);
             }
         }
+        if max == 0 && indexed.is_empty() { return Ok(None); }
         let mut parts: Vec<PathBuf> = indexed.iter().map(|(_, part)| part.clone()).collect();
         if let Some(main) = &actual_main {
             parts.push(main.clone());

@@ -3343,6 +3343,15 @@ impl CompressionService {
             return Err(CompressionError::CompressionFailed(format!("RAR compression failed: {}", message)).into());
         }
 
+        // RAR can emit a plain .rar when a requested volume size holds the
+        // whole payload. Keep one actual part in the same naming contract as
+        // larger sets so verification, publication and results find that file.
+        if options.split_size.is_some_and(|size| size > 0)
+            && Path::new(output).is_file()
+            && crate::services::archive_volumes::volume_paths(Path::new(output))?.is_empty()
+        {
+            std::fs::rename(output, crate::services::archive_volumes::first_volume_path(Path::new(output)))?;
+        }
         if let Some(window) = window { self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0); }
         Ok(())
     }
