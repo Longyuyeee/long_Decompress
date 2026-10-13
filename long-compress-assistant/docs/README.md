@@ -1,16 +1,24 @@
 # 文档导航与维护规则
 
+- **当前入口：[2026-10-13 暂停审计与下一步](DEVELOPMENT_PAUSED_AUDIT_2026-10-13.md)**。已保存 1.4.3 开发进度，尚未最终封板或发布。
+
+- [v1.4.3 归档升级收口](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)、[更新说明](RELEASE_NOTES_1.4.3.md)：卷组一致性、RAR 分卷与 Unicode 密码、LZ4/Brotli 及通用数字分卷。
+
 `docs/` 同时保存当前接续文档和历史发布证据。历史审计不是当前需求清单，但它们用于追溯真实测试、版本决策和公开资产，因此不得仅因日期较早而删除。
 
 ## 当前接续入口
 
-- [2026-10-12 开发情况审计](DEVELOPMENT_STATUS_AUDIT_2026-10-12.md)、[开发交接](DEVELOPMENT_HANDOFF.md)、[产品增强路线](PRODUCT_ENHANCEMENT_ROADMAP.md)：功能基线为主线 `6f9e85b`，公开版本为 [v1.4.1](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.1)。
-- [v1.4.2 批量转换与待处理草稿恢复](BATCH_CONVERSION_AND_DRAFT_RECOVERY_PLAN.md)、[待发布说明](RELEASE_NOTES_1.4.2.md)：功能已合入主线，尚未升版或发布新安装包。
-- [设置页样式统一计划](UI_VISUAL_REFRESH_PLAN.md)、[静态示意图](../design/settings-style/README.md)：整体重构已取消，只优化设置页；示意已完成，正式样式尚未应用。
+- [下一轮归档升级方向提案](ARCHIVE_COMPATIBILITY_AND_WORKFLOW_UPGRADE_PROPOSAL_2026-10-13.md)：卷组流程统一、RAR 分卷与转换、常见兼容修正及新格式候选，主要功能已实现，当前已暂停；未完成范围以顶部暂停审计为准。
+
+- [2026-10-13 开发情况审计](DEVELOPMENT_STATUS_AUDIT_2026-10-13.md)、[开发交接](DEVELOPMENT_HANDOFF.md)、[产品增强路线](PRODUCT_ENHANCEMENT_ROADMAP.md)：已同步主线 `fa611a8`，当前正式版本为 [v1.4.2](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.2)，安装器和更新附件已上传。
+- [v1.4.2 批量转换与待处理草稿恢复](BATCH_CONVERSION_AND_DRAFT_RECOVERY_PLAN.md)、[发布说明](RELEASE_NOTES_1.4.2.md)：已合入并正式发布，保留单条行内展开和多选弹窗配置。
+- [设置页样式实施记录](UI_VISUAL_REFRESH_PLAN.md)、[原静态示意图](../design/settings-style/README.md)：设置样式已实现并随 v1.4.2 交付；整体 UI 重构继续取消。
 
 ## 历史接续记录
 
 以下保留当时的发布与开发决策，不作为当前待办或版本状态。
+
+- [2026-10-12 开发情况审计](DEVELOPMENT_STATUS_AUDIT_2026-10-12.md)：设置页实施和 v1.4.2 发布之前的快照，当前状态以 2026-10-13 审计为准。
 
 - [1.3.7 更新说明](RELEASE_NOTES_1.3.7.md)、[发布记录](RELEASE_AUDIT_1.3.7.md)。本版交付归档解压体验增强，后续优先级见产品路线。
 

@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Long解压",
-    "version": "1.4.2"
+    "version": "1.4.3"
   },
   "tauri": {
     "systemTray": {
@@ -61,6 +61,8 @@
         "resources/archive-engine/7z.dll",
         "resources/archive-engine/7-Zip-License.txt",
         "resources/archive-engine/7-Zip-Readme.txt",
+        "resources/archive-engine/SOURCE.md",
+        "resources/archive-engine/licenses/*",
         "resources/video-engine/ffmpeg.exe",
         "resources/video-engine/ffprobe.exe",
         "resources/video-engine/SOURCE.txt",

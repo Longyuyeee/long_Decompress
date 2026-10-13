@@ -21,7 +21,7 @@ const subfolder = ref('keep')
 const destination = ref<'keep' | 'source' | 'custom'>('keep')
 const outputDirectory = ref('')
 const keep = { value: 'keep', label: '保持各自设置' }
-const formats = [keep, { value: 'zip', label: 'ZIP' }, { value: '7z', label: '7Z' }]
+const formats = [keep, { value: 'zip', label: 'ZIP' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }]
 const levels = [keep, ...Array.from({ length: 10 }, (_, value) => ({ value: String(value), label: `${value}${value === 0 ? ' · 仅存储' : value === 9 ? ' · 最小体积' : value === 1 ? ' · 更快' : ''}` }))]
 const subfolders = [keep, { value: 'yes', label: '创建同名子文件夹' }, { value: 'no', label: '直接放入输出目录' }]
 const hasChanges = computed(() => destination.value !== 'keep' || (props.mode === 'compression'
@@ -49,7 +49,7 @@ function apply() {
   const patch: BatchConfigPatch = {}
   if (destination.value !== 'keep') patch.outputDirectory = destination.value === 'source' ? '' : outputDirectory.value.trim()
   if (props.mode === 'compression') {
-    if (format.value === 'zip' || format.value === '7z') patch.format = format.value
+    if (format.value === 'zip' || format.value === '7z' || format.value === 'rar') patch.format = format.value
     if (level.value !== 'keep') patch.level = Number(level.value)
   } else if (subfolder.value !== 'keep') patch.extractToSubfolder = subfolder.value === 'yes'
   applyError.value = ''

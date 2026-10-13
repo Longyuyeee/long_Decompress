@@ -9,7 +9,7 @@ pub(crate) enum ZipInputReader {
 
 impl ZipInputReader {
     pub(crate) fn open_seven_zip(path: &Path) -> anyhow::Result<Self> {
-        if path.to_string_lossy().to_ascii_lowercase().ends_with(".7z.001") {
+        if Self::is_numeric_first(path) {
             Ok(Self::Volumes(NumericVolumeReader::open(path).map_err(|error|
                 anyhow::anyhow!("[archive-inspection:incomplete] 无法读取完整 7Z 卷组：{error}"))?))
         } else {
@@ -18,7 +18,8 @@ impl ZipInputReader {
     }
 
     pub(crate) fn is_numeric_first(path: &Path) -> bool {
-        path.to_string_lossy().to_ascii_lowercase().ends_with(".zip.001")
+        path.extension().and_then(|value| value.to_str()).is_some_and(|value|
+            value.len() >= 3 && value.bytes().all(|byte| byte.is_ascii_digit()) && value.parse::<usize>().ok() == Some(1))
     }
 
     pub(crate) fn open(path: &Path) -> anyhow::Result<Self> {
@@ -51,9 +52,8 @@ pub(crate) struct NumericVolumeReader {
 
 impl NumericVolumeReader {
     pub(crate) fn open(first: &Path) -> anyhow::Result<Self> {
-        let name = first.to_string_lossy().to_ascii_lowercase();
-        anyhow::ensure!(name.ends_with(".zip.001") || name.ends_with(".7z.001"), "Expected first numeric ZIP/7Z volume (.001)");
-        let format = if name.ends_with(".7z.001") { "7Z" } else { "ZIP" };
+        anyhow::ensure!(ZipInputReader::is_numeric_first(first), "Expected first numeric volume (number 1)");
+        let format = "archive";
         let info = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(first)?
             .ok_or_else(|| anyhow::anyhow!("Numeric {format} volumes not found"))?;
         anyhow::ensure!(info.missing_parts.is_empty(), "Missing {format} volumes: {:?}", info.missing_parts);
@@ -105,6 +105,19 @@ impl Seek for NumericVolumeReader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn generic_four_digit_volumes_preserve_padding_and_cross_tiny_headers() {
+        let temp = tempfile::tempdir().unwrap();
+        for (index, bytes) in [b"ab", b"cd", b"ef"].iter().enumerate() {
+            std::fs::write(temp.path().join(format!("原包.zipx.{:04}", index + 1)), bytes).unwrap();
+        }
+        let first = temp.path().join("原包.zipx.0001");
+        let mut reader = ZipInputReader::open(&first).unwrap();
+        let mut bytes = Vec::new(); reader.read_to_end(&mut bytes).unwrap();
+        assert_eq!(bytes, b"abcdef"); drop(reader);
+        std::fs::remove_file(temp.path().join("原包.zipx.0002")).unwrap();
+        assert!(ZipInputReader::open(&first).err().unwrap().to_string().contains("原包.zipx.0002"));
+    }
     #[test]
     fn seven_zip_volume_reader_seeks_and_reports_missing_middle_volume() {
         let temp = tempfile::tempdir().unwrap();

@@ -3,10 +3,11 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useArchiveConversionStore } from '../archiveConversion'
 import { useTaskStore } from '../task'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
-const mocks = vi.hoisted(() => ({ invoke: vi.fn() }))
+const mocks = vi.hoisted(() => ({ invoke: vi.fn(), ask: vi.fn() }))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => vi.fn()) }))
-beforeEach(() => { setActivePinia(createPinia()); mocks.invoke.mockReset() })
+vi.mock('@tauri-apps/api/dialog', () => ({ ask: mocks.ask }))
+beforeEach(() => { setActivePinia(createPinia()); mocks.invoke.mockReset(); mocks.ask.mockReset(); mocks.ask.mockResolvedValue(true) })
 function draft() {
   const store = useArchiveConversionStore()
   store.sourcePath = 'C:\\原包.zip'; store.outputPath = 'C:\\新包.7z'
@@ -15,6 +16,155 @@ function draft() {
   return store
 }
 describe('archive conversion lifecycle', () => {
+  it('keeps my changed defaults when metadata is refreshed and resumes a restored source', async () => {
+    mocks.invoke.mockImplementation(async (command, args) => {
+      if (command === 'detect_split_archive') return { is_split: false, archive_format: 'zip' }
+      if (command === 'convert_archive') return { primaryPath: args.outputPath, files: [], totalBytes: 20, split: false }
+    })
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/资料.zip'], 'reconfigure')
+    store.updateDefaults({ format: 'tar.br', level: 3 })
+    store.items[0].sourceIssue = '来源曾经不存在'
+    await store.start()
+    expect(mocks.invoke.mock.calls.find(([cmd]) => cmd === 'convert_archive')?.[1].options).toMatchObject({ format: 'tar.br', level: 3 })
+    expect(store.items[0].sourceIssue).toBeUndefined()
+  })
+  it('detects a standard ZIP volume group even when only its .zip member was selected', async () => {
+    mocks.invoke.mockImplementation(async (command, args) => {
+      if (command === 'detect_split_archive') return { is_split: true, archive_format: 'zip', first_part: 'C:/照片.zip', parts: ['C:/照片.z01', 'C:/照片.zip'], is_complete: true, missing_parts: [] }
+      if (command === 'convert_archive') return { primaryPath: args.outputPath, files: [], totalBytes: 20, split: false }
+    })
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/照片.zip'], 'reconfigure')
+    await store.start()
+    expect(store.items).toHaveLength(1)
+    expect(useTaskStore().tasks[0].sourceFiles).toEqual(['C:/照片.zip', 'C:/照片.z01'])
+    expect(useTaskStore().tasks[0].format).toBe('zip')
+  })
+  it.each(['tar.lz4', 'tar.br', 'tar.gz'])('converts to plain numeric TAR volumes without silently changing the requested format: %s', async format => {
+    mocks.invoke.mockImplementation(async (command, args) => command === 'convert_archive' ? { primaryPath: args.outputPath + '.001', files: [], totalBytes: 20, split: true } : undefined)
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/原包.zip']); store.format = format; store.splitMiB = 1
+    await store.start()
+    expect(mocks.invoke.mock.calls.find(([cmd]) => cmd === 'convert_archive')?.[1].options).toMatchObject({ format, split_size: 1048576, password: null })
+    expect(useTaskStore().tasks[0].archiveOutput?.primaryPath).toBe(`C:/原包_转换.${format}.001`)
+  })
+  it('asks for an AES wrapper password before starting conversion and retains the configuration', async () => {
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/原包.zip']); store.format = 'tar.gz.aes'
+    await store.start()
+    expect(store.error).toContain('需要填写新包密码')
+    expect(mocks.invoke.mock.calls.some(([cmd]) => cmd === 'convert_archive')).toBe(false)
+    expect(store.format).toBe('tar.gz.aes'); expect(store.pending).toHaveLength(1)
+    mocks.invoke.mockImplementation(async (command, args) => command === 'convert_archive' ? { primaryPath: args.outputPath, files: [], totalBytes: 20, split: false } : undefined)
+    store.password = 'new-password'; await store.start()
+    expect(mocks.invoke.mock.calls.find(([cmd]) => cmd === 'convert_archive')?.[1].options).toMatchObject({ format: 'tar.gz.aes', password: 'new-password' })
+  })
+  it('converts to password-protected RAR volumes and records reusable settings without transient consent', async () => {
+    mocks.invoke.mockImplementation(async (command, args) => {
+      if (command === 'check_rar_compression_support') return { available: true }
+      if (command === 'convert_archive') return { primaryPath: args.outputPath.replace(/\.rar$/, '.part1.rar'), files: [], totalBytes: 20, split: true }
+    })
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/原包.zip'])
+    store.updateItem(store.items[0].id, { format: 'rar', password: 'new-password', splitMiB: 1, encryptFilenames: true })
+    await store.start()
+    expect(mocks.ask).toHaveBeenCalledTimes(1)
+    expect(mocks.invoke.mock.calls.find(([cmd]) => cmd === 'convert_archive')?.[1].options).toMatchObject({
+      format: 'rar', password: 'new-password', split_size: 1048576, encrypt_filenames: true, allow_insecure_password_cli: true })
+    const record = mocks.invoke.mock.calls.find(([cmd]) => cmd === 'save_task_history')?.[1].record
+    expect(record.executionConfig).toMatchObject({ format: 'rar', splitSize: 1048576, encryptFilenames: true, passwordRequired: true })
+    expect(JSON.stringify(record)).not.toMatch(/new-password|allow_insecure/)
+  })
+  it('retains my RAR configuration when the encoder is missing or I cancel the existing password notice', async () => {
+    mocks.invoke.mockImplementation(async command => command === 'check_rar_compression_support' ? { available: false } : undefined)
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/原包.rar'], 'reconfigure')
+    expect(store.format).toBe('rar')
+    store.password = 'new-password'; store.splitMiB = 1
+    await store.start()
+    expect(store.error).toContain('WinRAR')
+    expect(store.pending).toHaveLength(1)
+    mocks.invoke.mockImplementation(async command => command === 'check_rar_compression_support' ? { available: true } : undefined)
+    mocks.ask.mockResolvedValue(false)
+    await store.start()
+    expect(mocks.invoke.mock.calls.some(([cmd]) => cmd === 'convert_archive')).toBe(false)
+    expect(store.password).toBe('new-password')
+  })
+  it('treats several selected numeric volumes as one archive and executes from its real first volume', async () => {
+    mocks.invoke.mockImplementation(async (command, args) => {
+      if (command === 'detect_split_archive') return { is_split: true, first_part: 'C:/旅行.zip.001',
+        parts: ['C:/旅行.zip.001', 'C:/旅行.zip.002'], total_parts: 2, is_complete: true, missing_parts: [] }
+      if (command === 'convert_archive') return { primaryPath: args.outputPath, files: [], totalBytes: 20, split: false }
+    })
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/旅行.zip.002', 'C:/旅行.zip.001', 'C:/旅行.zip.002'], 'reconfigure')
+    expect(store.items).toHaveLength(1)
+    expect(store.outputFor(store.items[0])).toBe('C:/旅行_调整.zip')
+    store.updateItem(store.items[0].id, { level: 2 })
+    await store.start()
+    const calls = mocks.invoke.mock.calls.filter(([command]) => command === 'convert_archive')
+    expect(calls).toHaveLength(1)
+    expect(calls[0][1]).toMatchObject({ sourcePath: 'C:/旅行.zip.001', options: { format: 'zip', level: 2 } })
+    expect(store.taskFor(store.items[0])?.sourceFiles).toEqual(['C:/旅行.zip.001', 'C:/旅行.zip.002'])
+  })
+  it('keeps ZIP and a clean package name when adjusting a standard ZIP volume', async () => {
+    mocks.invoke.mockImplementation(async (command, args) => {
+      if (command === 'detect_split_archive') return { is_split: true, first_part: 'C:/照片.zip',
+        parts: ['C:/照片.z01', 'C:/照片.zip'], total_parts: 2, is_complete: true, missing_parts: [] }
+      if (command === 'convert_archive') return { primaryPath: args.outputPath, files: [], totalBytes: 20, split: false }
+    })
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/照片.z01', 'C:/照片.zip'], 'reconfigure')
+    expect(store.items).toHaveLength(1)
+    expect(store.format).toBe('zip')
+    expect(store.outputFor(store.items[0])).toBe('C:/照片_调整.zip')
+    await store.start()
+    expect(mocks.invoke.mock.calls.find(([cmd]) => cmd === 'convert_archive')?.[1].sourcePath).toBe('C:/照片.zip')
+  })
+  it('lets me add a missing volume and retry the same edited task', async () => {
+    let complete = false
+    mocks.invoke.mockImplementation(async (command, args) => {
+      if (command === 'detect_split_archive') return { is_split: true, first_part: 'C:/资料.7z.001',
+        parts: ['C:/资料.7z.001', 'C:/资料.7z.003'], total_parts: 3, is_complete: complete,
+        missing_parts: complete ? [] : ['C:/资料.7z.002'] }
+      if (command === 'convert_archive') return { primaryPath: args.outputPath, files: [], totalBytes: 20, split: false }
+    })
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/资料.7z.003'])
+    const id = store.items[0].id
+    store.updateItem(id, { level: 3, outputPath: 'D:/我的资料.7z' })
+    await store.start()
+    expect(store.items[0].sourceIssue).toContain('资料.7z.002')
+    expect(mocks.invoke.mock.calls.some(([cmd]) => cmd === 'convert_archive')).toBe(false)
+    complete = true
+    await store.start()
+    expect(store.items[0].id).toBe(id)
+    expect(store.items[0].sourceIssue).toBeUndefined()
+    expect(mocks.invoke.mock.calls.find(([cmd]) => cmd === 'convert_archive')?.[1]).toMatchObject({
+      outputPath: 'D:/我的资料.7z', options: { level: 3 } })
+  })
+  it('does not include new Explorer work arriving while the selected volume group is being read', async () => {
+    let finish!: (group: unknown) => void
+    mocks.invoke.mockImplementation(async (command, args) => {
+      if (command === 'detect_split_archive' && args.path.includes('原包')) return new Promise(resolve => { finish = resolve })
+      if (command === 'detect_split_archive') return { is_split: false }
+      if (command === 'convert_archive') return { primaryPath: args.outputPath, files: [], totalBytes: 20, split: false }
+    })
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/原包.zip.002'])
+    const run = store.start()
+    await vi.waitFor(() => expect(finish).toBeTypeOf('function'))
+    store.openFromExplorer(['C:/新收到.zip'], 'convert')
+    finish({ is_split: true, first_part: 'C:/原包.zip.001', parts: ['C:/原包.zip.001', 'C:/原包.zip.002'],
+      is_complete: true, missing_parts: [] })
+    await vi.waitFor(() => expect(mocks.invoke.mock.calls.filter(([cmd, args]) => cmd === 'detect_split_archive' && args.path.includes('原包'))).toHaveLength(2))
+    finish({ is_split: true, first_part: 'C:/原包.zip.001', parts: ['C:/原包.zip.001', 'C:/原包.zip.002'],
+      is_complete: true, missing_parts: [] })
+    await run
+    expect(mocks.invoke.mock.calls.filter(([cmd]) => cmd === 'convert_archive')).toHaveLength(1)
+    expect(store.pending.map(item => item.sourcePath)).toEqual(['C:/新收到.zip'])
+  })
   it('requires both restored passwords separately and respects an explicit unencrypted output choice', async () => {
     const store = useArchiveConversionStore()
     store.addSources(['C:/加密原包.zip'])
@@ -24,7 +174,7 @@ describe('archive conversion lifecycle', () => {
     expect(store.passwordRequirements(item)).toEqual({ source: false, target: true })
     await store.start()
     expect(item.error).toContain('新包密码')
-    expect(mocks.invoke).not.toHaveBeenCalled()
+    expect(mocks.invoke.mock.calls.some(([command]) => command === 'convert_archive')).toBe(false)
     store.updateItem(item.id, { password: 'new-again' })
     expect(store.passwordRequirements(item)).toEqual({ source: false, target: false })
     item.targetPasswordRequired = item.passwordRequired = true
@@ -124,7 +274,7 @@ describe('archive conversion lifecycle', () => {
     expect(store.sourcePath).toBe('E:/手动选择.zip')
     expect(store.contextSources).toContain('E:/手动选择.zip')
     expect(useTaskStore().tasks).toHaveLength(0)
-    expect(mocks.invoke).not.toHaveBeenCalled()
+    expect(mocks.invoke.mock.calls.some(([command]) => command === 'convert_archive')).toBe(false)
   })
   it('keeps an open or running conversion when a new Explorer request arrives', () => {
     const store = draft()
@@ -181,7 +331,7 @@ describe('archive conversion lifecycle', () => {
     await store.start()
     expect(store.error).toContain('新包密码')
     expect(useTaskStore().tasks).toHaveLength(0)
-    expect(mocks.invoke).not.toHaveBeenCalled()
+    expect(mocks.invoke.mock.calls.some(([command]) => command === 'convert_archive')).toBe(false)
   })
   it('persists the real final failure and no output', async () => {
     mocks.invoke.mockImplementation(async command => { if (command === 'convert_archive') throw '转换读取原包失败：文件损坏' })

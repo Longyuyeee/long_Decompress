@@ -2,6 +2,22 @@ use crate::services::password_dictionary_service::PasswordDictionaryService;
 use crate::services::split_archive_detector::SplitArchiveDetector;
 use serde::Serialize;
 use std::path::Path;
+use std::io::Read;
+
+fn input_archive_format(path: &Path) -> Option<String> {
+    let reader = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path).ok()?;
+    let mut header = Vec::with_capacity(512);
+    reader.take(512).read_to_end(&mut header).ok()?;
+    let mut format = crate::services::archive_format::ArchiveFormat::from_magic(&header);
+    if format == crate::services::archive_format::ArchiveFormat::Unknown {
+        let logical = if crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(path) {
+            Path::new(path.file_stem()?.to_str()?)
+        } else { path };
+        format = crate::services::archive_format::ArchiveFormat::from_extension(logical.extension()?.to_str()?);
+    }
+    if format == crate::services::archive_format::ArchiveFormat::Unknown { return None }
+    Some(crate::services::compression_service::CompressionService::extraction_history_format(path, &format))
+}
 
 /// Pure path preview: shares execution's naming logic and never creates a directory.
 #[tauri::command]
@@ -58,6 +74,7 @@ mod destination_tests {
 pub struct SplitArchiveResponse {
     pub is_split: bool,
     pub format: Option<String>,
+    pub archive_format: Option<String>,
     pub base_name: Option<String>,
     pub parts: Vec<String>,
     pub first_part: Option<String>,
@@ -75,6 +92,7 @@ pub async fn detect_split_archive(path: String) -> Result<SplitArchiveResponse, 
         Ok(match info {
             Some(info) => SplitArchiveResponse {
                 is_split: true,
+                archive_format: input_archive_format(&info.first_part),
                 format: Some(format!("{:?}", info.format)),
                 base_name: Some(info.base_name),
                 parts: info
@@ -94,6 +112,7 @@ pub async fn detect_split_archive(path: String) -> Result<SplitArchiveResponse, 
             },
             None => SplitArchiveResponse {
                 is_split: false,
+                archive_format: input_archive_format(Path::new(&path)),
                 format: None,
                 base_name: None,
                 parts: Vec::new(),

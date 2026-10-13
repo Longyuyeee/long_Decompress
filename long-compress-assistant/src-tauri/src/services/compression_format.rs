@@ -137,7 +137,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: false,
         single_file_only: false,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -149,7 +149,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: false,
         single_file_only: false,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -161,7 +161,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: false,
         single_file_only: false,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -173,7 +173,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: false,
         single_file_only: false,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -209,7 +209,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: true,
         single_file_only: false,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: true,
     },
@@ -233,7 +233,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: false,
         single_file_only: false,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -245,7 +245,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: false,
         single_file_only: true,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -257,7 +257,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: false,
         single_file_only: true,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -269,7 +269,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: false,
         single_file_only: true,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -281,7 +281,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: true,
         supports_password_extract: false,
         single_file_only: true,
-        supports_split: false,
+        supports_split: true,
         requires_7za: false,
         requires_winrar: false,
     },
@@ -297,6 +297,10 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         requires_7za: true,
         requires_winrar: false,
     },
+    CompressionFormatCapability { format: "tar.lz4", extensions: &["tar.lz4"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.br", extensions: &["tar.br"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "lz4", extensions: &["lz4"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "br", extensions: &["br"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
 ];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -324,6 +328,10 @@ pub(crate) enum CompressionRoute {
     Zstd,
     TarZstd,
     Lzma,
+    Lz4,
+    Brotli,
+    TarLz4,
+    TarBrotli,
 }
 
 pub fn normalize_compression_format(format: &str) -> String {
@@ -406,9 +414,9 @@ pub fn validate_compression_request(
         .is_some_and(|password| !password.is_empty());
     let split_requested = options.split_size.is_some_and(|size| size > 0);
 
-    if options.encrypt_filenames && (requested_format != "7z" || !has_password) {
+    if options.encrypt_filenames && (!matches!(requested_format.as_str(), "7z" | "rar") || !has_password) {
         return Err(CompressionError::CompressionFailed(
-            "文件名加密仅支持 7Z，且必须设置压缩密码。".to_string(),
+            "文件名加密仅支持 7Z/RAR，且必须设置压缩密码。".to_string(),
         ).into());
     }
 
@@ -420,9 +428,9 @@ pub fn validate_compression_request(
         .into());
     }
 
-    if options.create_solid_archive && requested_format != "7z" {
+    if options.create_solid_archive && !matches!(requested_format.as_str(), "7z" | "rar") {
         return Err(CompressionError::CompressionFailed(
-            "Solid compression is only supported for 7Z archives.".to_string(),
+            "Solid compression is only supported for 7Z/RAR archives.".to_string(),
         )
         .into());
     }
@@ -481,21 +489,30 @@ pub(crate) fn compression_route(format: &str) -> Option<CompressionRoute> {
         "zst" => Some(CompressionRoute::Zstd),
         "tar.zst" => Some(CompressionRoute::TarZstd),
         "lzma" => Some(CompressionRoute::Lzma),
+        "lz4" => Some(CompressionRoute::Lz4),
+        "br" => Some(CompressionRoute::Brotli),
+        "tar.lz4" => Some(CompressionRoute::TarLz4),
+        "tar.br" => Some(CompressionRoute::TarBrotli),
         _ => None,
     }
 }
 
 pub fn is_tar_wrapped_archive(path: &Path, format: &str) -> bool {
-    let file_name = path
+    let mut file_name = path
         .file_name()
         .and_then(|name| name.to_str())
         .unwrap_or_default()
         .to_ascii_lowercase();
+    if let Some((base, number)) = file_name.rsplit_once('.') {
+        if number.len() >= 3 && number.bytes().all(|byte| byte.is_ascii_digit()) { file_name = base.to_string(); }
+    }
     let suffixes: &[&str] = match normalize_compression_format(format).as_str() {
         "tar.gz" => &[".tar.gz", ".tgz", ".tpz"],
         "tar.bz2" => &[".tar.bz2", ".tbz", ".tbz2"],
         "tar.xz" => &[".tar.xz", ".txz"],
         "tar.zst" => &[".tar.zst", ".tzst"],
+        "tar.lz4" => &[".tar.lz4"],
+        "tar.br" => &[".tar.br"],
         _ => return false,
     };
     suffixes.iter().any(|suffix| file_name.ends_with(suffix))

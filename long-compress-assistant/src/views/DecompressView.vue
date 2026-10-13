@@ -12,6 +12,7 @@ import AeroTable from '@/components/tasks/AeroTable.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
 import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath, isPotentialSplitArchivePath } from '@/utils/compressionFormat'
+import { detectArchiveGroup } from '@/utils/archiveSource'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
 import { sortTasksByName } from '@/utils/taskOrdering'
@@ -208,7 +209,7 @@ const onFilesSelected = async (files: any[]) => {
     handledPaths.add(normalizedSource)
 
     try {
-      const splitInfo = await tauriCommands.invoke<any>('detect_split_archive', { path: sourcePath })
+      const splitInfo = await detectArchiveGroup(sourcePath)
       if (splitInfo && splitInfo.is_split) {
         const groupPaths = Array.isArray(splitInfo.parts) ? splitInfo.parts : []
         groupPaths.forEach((part: string) => handledPaths.add(normalizePath(part)))

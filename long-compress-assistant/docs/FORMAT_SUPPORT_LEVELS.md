@@ -1,6 +1,6 @@
 # 归档格式支持等级（当前权威口径）
 
-更新时间：2026-08-27。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级；旧版本发布记录仅描述当时状态，不覆盖本表。
+更新时间：2026-10-13（v1.4.3 开发分支已暂停，尚未最终封板；公开正式版本仍为 1.4.2）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级；旧版本发布记录仅描述当时状态，不覆盖本表。
 
 ## 等级定义
 
@@ -20,11 +20,14 @@
 - ZIP、7Z、WIM；
 - TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST；
 - GZ、BZ2、XZ、ZST/ZSTD、LZMA；
+- LZ4、Brotli、TAR.LZ4、TAR.BR（v1.4.3 新增，真实 Windows Release Tauri 逐字节回解通过）；
 - 加密 ZIP、加密 7Z；
 - TAR.AES、TAR.GZ.AES、TAR.BZ2.AES、TAR.XZ.AES、TAR.ZST.AES；
 - GZ.AES、BZ2.AES、XZ.AES、ZST.AES。
 
-RAR 创建属于条件能力：必须使用用户自行安装并授权的 WinRAR/Rar.exe；无编码器时只能保持明确失败或由用户主动改用 7Z。RAR 解压属于 B 级，并有固定加密 RAR 的正确/错误密码门禁。
+RAR 创建属于条件能力：必须使用用户自行安装并授权的 WinRAR/Rar.exe；v1.4.3 接通内容/文件名密码及原生分卷，转换—回解—合卷通过真实 Windows Release Tauri 载荷对比；无编码器时只能保持明确失败或由用户主动改用 7Z。RAR 解压属于 B 级，并有固定加密 RAR 的正确/错误密码门禁。
+
+本轮新增格式及卷组证据见 [v1.4.3 收口记录](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)。普通 TAR/TGZ/TBZ/TXZ/TZST 与 GZ/BZ2/XZ/ZST、LZ4/Brotli 的数字切卷可由应用整组回解；它们不是上述格式的原生卷标准。普通 TAR 和流格式没有原生密码，7Z 容器和本应用 AES 包装的兼容范围单独说明。
 
 ### B：非空真实载荷只读闭环
 

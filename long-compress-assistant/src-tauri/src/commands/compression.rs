@@ -398,12 +398,7 @@ pub struct PublishedArchiveFile {
 
 fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<PublishedArchiveOutput> {
     let paths = if split {
-        let mut first = output.as_os_str().to_os_string();
-        first.push(".001");
-        let info = crate::services::split_archive_detector::SplitArchiveDetector::detect_split_archive(Path::new(&first))?
-            .ok_or_else(|| anyhow::anyhow!("找不到已发布的首卷"))?;
-        anyhow::ensure!(info.missing_parts.is_empty(), "已发布分卷存在缺卷");
-        info.parts
+        crate::services::archive_volumes::complete_volume_paths(output)?
     } else { vec![output.to_path_buf()] };
     let mut files = Vec::new();
     let mut total_bytes = 0u64;

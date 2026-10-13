@@ -2,6 +2,7 @@ use crate::services::archive_format::ArchiveFormat;
 use anyhow::{Context, Result};
 use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
+#[cfg(test)]
 use std::fs::File;
 use std::io::{self, Read};
 use std::path::Path;
@@ -118,7 +119,7 @@ fn read_text_prefix(reader: &mut dyn Read, total_size: u64) -> Result<TextBytes>
 }
 
 fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Result<Vec<u8>> {
-    let mut archive = zip_aes::ZipArchive::new(File::open(path)?)?;
+    let mut archive = zip_aes::ZipArchive::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?;
     let mut entry = match password.filter(|value| !value.is_empty()) {
         Some(password) => crate::services::zip_password::open_named_entry(&mut archive, entry_path, password)?,
         None => archive.by_name(entry_path)?,
@@ -137,7 +138,7 @@ fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Resu
 }
 
 fn read_zip_text_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Result<TextBytes> {
-    let mut archive = zip_aes::ZipArchive::new(File::open(path)?)?;
+    let mut archive = zip_aes::ZipArchive::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?;
     let mut entry = match password.filter(|value| !value.is_empty()) {
         Some(password) => crate::services::zip_password::open_named_entry(&mut archive, entry_path, password)?,
         None => archive.by_name(entry_path)?,
@@ -192,7 +193,8 @@ fn read_tar_text_entry<R: Read>(reader: R, entry_path: &str) -> Result<TextBytes
 }
 
 fn preview_format(path: &Path) -> Result<&'static str> {
-    let name = path
+    let logical = if super::numeric_volume_reader::ZipInputReader::is_numeric_first(path) { Path::new(path.file_stem().unwrap()) } else { path };
+    let name = logical
         .file_name()
         .and_then(|value| value.to_str())
         .unwrap_or("")
@@ -213,9 +215,13 @@ fn preview_format(path: &Path) -> Result<&'static str> {
         return Ok("TAR.ZST");
     }
 
+    if name.ends_with(".tar.lz4") { return Ok("TAR.LZ4"); }
+    if name.ends_with(".tar.br") { return Ok("TAR.BR"); }
     let mut header = [0u8; 560];
-    let mut file = File::open(path)?;
-    let read = file.read(&mut header)?;
+    let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
+    let mut bytes = Vec::with_capacity(header.len());
+    file.take(header.len() as u64).read_to_end(&mut bytes)?;
+    let read = bytes.len(); header[..read].copy_from_slice(&bytes);
     if ArchiveFormat::from_magic(&header[..read]) == ArchiveFormat::Zip {
         return Ok("ZIP");
     }
@@ -226,12 +232,14 @@ fn preview_format(path: &Path) -> Result<&'static str> {
 
 fn read_tar_family(path: &Path, format: &str, entry_path: &str) -> Result<Vec<u8>> {
     match format {
-        "TAR" => read_tar_entry(File::open(path)?, entry_path),
-        "TAR.GZ" => read_tar_entry(flate2::read::GzDecoder::new(File::open(path)?), entry_path),
-        "TAR.BZ2" => read_tar_entry(bzip2::read::BzDecoder::new(File::open(path)?), entry_path),
-        "TAR.XZ" => read_tar_entry(xz2::read::XzDecoder::new(File::open(path)?), entry_path),
+        "TAR.LZ4" => read_tar_entry(super::codec_stream::decoder(path, "lz4")?, entry_path),
+        "TAR.BR" => read_tar_entry(super::codec_stream::decoder(path, "br")?, entry_path),
+        "TAR" => read_tar_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
+        "TAR.GZ" => read_tar_entry(flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path),
+        "TAR.BZ2" => read_tar_entry(bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path),
+        "TAR.XZ" => read_tar_entry(xz2::read::XzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path),
         "TAR.ZST" => read_tar_entry(
-            zstd::stream::read::Decoder::new(File::open(path)?)?,
+            zstd::stream::read::Decoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?,
             entry_path,
         ),
         _ => anyhow::bail!(
@@ -242,16 +250,18 @@ fn read_tar_family(path: &Path, format: &str, entry_path: &str) -> Result<Vec<u8
 
 fn read_tar_family_text(path: &Path, format: &str, entry_path: &str) -> Result<TextBytes> {
     match format {
-        "TAR" => read_tar_text_entry(File::open(path)?, entry_path),
+        "TAR.LZ4" => read_tar_text_entry(super::codec_stream::decoder(path, "lz4")?, entry_path),
+        "TAR.BR" => read_tar_text_entry(super::codec_stream::decoder(path, "br")?, entry_path),
+        "TAR" => read_tar_text_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
         "TAR.GZ" => {
-            read_tar_text_entry(flate2::read::GzDecoder::new(File::open(path)?), entry_path)
+            read_tar_text_entry(flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path)
         }
         "TAR.BZ2" => {
-            read_tar_text_entry(bzip2::read::BzDecoder::new(File::open(path)?), entry_path)
+            read_tar_text_entry(bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path)
         }
-        "TAR.XZ" => read_tar_text_entry(xz2::read::XzDecoder::new(File::open(path)?), entry_path),
+        "TAR.XZ" => read_tar_text_entry(xz2::read::XzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path),
         "TAR.ZST" => read_tar_text_entry(
-            zstd::stream::read::Decoder::new(File::open(path)?)?,
+            zstd::stream::read::Decoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?,
             entry_path,
         ),
         _ => anyhow::bail!(

@@ -6,6 +6,7 @@ import { useTaskStore } from './task'
 import { useArchiveConversionStore } from './archiveConversion'
 import { useDecompressionPreferences } from './decompressionPreferences'
 import type { ConversionDraft, ConversionSettings } from '@/types/archiveConversion'
+import { archiveGroupKey } from '@/utils/archiveSource'
 
 export const PENDING_DRAFTS_KEY = 'long-pending-archive-drafts-v1'
 interface ExtractionDraft {
@@ -72,7 +73,7 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
             configurationMode: task.configurationMode, fileFilter: task.fileFilter, selectedEntries: task.selectedEntries,
             retryOfTaskId: task.retryOfTaskId, draftPasswordRequired: task.draftPasswordRequired || !!task.password })) },
       conversion: { defaults: cleanConversion(conversion.defaults), items: conversion.pending.map(item => ({
-        id: item.id, sourcePath: item.sourcePath, intent: item.intent, defaultFormat: item.defaultFormat, expanded: item.expanded, selected: item.selected,
+        id: item.id, sourcePath: item.sourcePath, sourceParts: item.sourceParts, sourceReference: item.sourceReference, intent: item.intent, defaultFormat: item.defaultFormat, expanded: item.expanded, selected: item.selected,
         settings: item.settings ? cleanConversion(item.settings) : undefined, retryOfTaskId: item.retryOfTaskId,
         sourcePasswordRequired: conversion.passwordRequirements(item).source || !!conversion.effectiveSettings(item).sourcePassword,
         targetPasswordRequired: conversion.passwordRequirements(item).target || !!conversion.effectiveSettings(item).password,
@@ -174,7 +175,7 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
         extractSources.add(sourceKey); restored++
       }
       for (const item of saved.conversion.items) {
-        if (conversion.pending.some(current => key(current.sourcePath) === key(item.sourcePath))) continue
+        if (conversion.pending.some(current => archiveGroupKey(current.sourcePath) === archiveGroupKey(item.sourcePath))) continue
         conversion.items.push({ ...item, id: 'recovered-' + crypto.randomUUID(), taskId: undefined,
           settings: item.settings ? cleanConversion(item.settings) : hadConversion ? { ...cleanConversion(saved.conversion.defaults), format: item.defaultFormat || saved.conversion.defaults.format } : undefined,
           sourceIssue: missing.has(item.sourcePath) ? '来源不存在或无法访问，请重新选择。' : undefined })

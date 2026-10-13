@@ -129,10 +129,10 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 能力 | 主要格式与说明 |
 | --- | --- |
-| 创建归档 | ZIP、7Z、TAR / TGZ / TBZ / TXZ / TZST、GZ、BZ2、XZ、ZST、LZMA、WIM |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、TAR 系列，以及 CAB、ISO、DMG、VHD / VHDX 等镜像与容器 |
-| 密码与分卷 | ZIP / 7Z 支持密码和数字分卷；7Z 支持固实压缩与文件名加密 |
-| 转换归档 | ZIP、7Z、TAR、TGZ、TBZ、TXZ、TZST、WIM，可配合更换密码和调整分卷 |
+| 创建归档 | ZIP、7Z、RAR（需要 WinRAR）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、WIM |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、TAR 系列、LZ4、Brotli，以及 CAB、ISO、DMG、VHD / VHDX 等镜像与容器 |
+| 密码与分卷 | ZIP / 7Z 支持密码数字分卷；RAR 支持原生密码分卷；7Z / RAR 可加密文件名；普通 TAR 与常用单文件流可数字切卷 |
+| 转换归档 | ZIP、7Z、RAR、TAR 系列（含 LZ4/Brotli 组合和既有 AES 包装）、WIM，可配合更换密码和调整分卷 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
 | 视频压缩 | MP4、MOV、AVI、WMV、WebM、MKV、M4V 等受支持输入，输出 MP4 / H.264 |
 | PDF 优化 | 分析结构、优化体积；是否适合处理会在分析后显示 |
@@ -143,7 +143,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 <summary><strong>更多格式与使用范围</strong></summary>
 
 - 还可读取已支持的应用包、传统归档、文件系统与安装容器，例如 APK、APPX、JAR、DEB、RPM、MSI、LZH、CPIO、XAR、APFS、EXT、HFS/HFSX。具体能力以应用的实际检测和 [格式支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)为准。
-- ZIP/7Z 创建的是 `.zip.001` / `.7z.001` 数字分卷。转换目标限上表列出的格式。
+- ZIP/7Z 创建 `.zip.001` / `.7z.001` 数字分卷，RAR 创建 `.partN.rar` 原生分卷。普通 TAR/流格式的数字切卷可在本应用合并回解，外部工具的兼容能力不同。LZ4/Brotli 本身没有密码功能；TAR/流格式使用密码时会先提示并改用 7Z 容器，既有 `.aes` 格式属于本应用的加密包装。
 - ZIP 默认 AES-256，可主动选择 ZipCrypto；与 Windows 7-Zip 交换非 ASCII 密码的归档时，可显式选择匹配的 Windows 密码编码。
 - DOCX、XLSX、PPTX、ODT、ODS、EPUB 属于文档容器，不作为普通压缩包导入。
 - 预览、嵌套浏览及压缩参数随格式而异。体积优化效果取决于文件内容，已充分压缩的文件可能没有明显收益。
@@ -219,6 +219,7 @@ Windows 11 请在 **“显示更多选项”** 中使用经典菜单；当前公
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.4.3（待发布）** | 卷组一致性、RAR 密码分卷、LZ4/Brotli、TAR 数字切卷与兼容修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.3.md) |
 | **v1.4.2** | 多包批量转换、待处理草稿恢复、多选弹窗配置、设置界面优化 | [发布说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.2.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.2) |
 | **v1.4.1** | 批量修改配置、统一结果操作、Windows 压缩包右键增强 | [发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.1) |
 | v1.4.0 | ZIP/7Z 密码分卷、归档转换、密码兼容与界面整理 | [发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.0) |

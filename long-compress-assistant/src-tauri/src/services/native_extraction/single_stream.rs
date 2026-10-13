@@ -16,6 +16,9 @@ pub(crate) fn output_name(path: &Path, suffixes: &[&str]) -> String {
         .file_name()
         .and_then(|name| name.to_str())
         .unwrap_or("output");
+    let file_name = if let Some((base, number)) = file_name.rsplit_once('.') {
+        if number.len() >= 3 && number.bytes().all(|byte| byte.is_ascii_digit()) { base } else { file_name }
+    } else { file_name };
     let lower_name = file_name.to_lowercase();
     for suffix in suffixes {
         if lower_name.ends_with(suffix) && file_name.len() > suffix.len() {
@@ -33,20 +36,24 @@ pub(crate) fn extract<R: ExtractionRuntime, T: Read>(
     runtime: &R,
     window: &Window,
     task_id: &str,
-    mut reader: T,
+    reader: T,
     output: &Path,
     output_name: String,
     options: &DecompressOptions,
 ) -> Result<()> {
+    extract_inner(runtime, Some(window), task_id, reader, output, output_name, options)
+}
+
+pub(crate) fn extract_inner<R: ExtractionRuntime, T: Read>(runtime: &R, window: Option<&Window>, task_id: &str, mut reader: T, output: &Path, output_name: String, options: &DecompressOptions) -> Result<()> {
     let relative = PathBuf::from(output_name);
     let file_filter = extraction_transaction::compile_file_filter(options.file_filter.as_deref());
     if !extraction_transaction::matches_compiled_file_filter(&relative, &file_filter) {
-        runtime.emit_log(
+        if let Some(window) = window { runtime.emit_log(
             window,
             task_id,
             "Single-file archive skipped by current file filter.",
             TaskLogSeverity::Warning,
-        );
+        ); }
         return Ok(());
     }
 
@@ -83,17 +90,17 @@ pub(crate) fn extract<R: ExtractionRuntime, T: Read>(
         outfile.write_all(&buffer[..read])?;
         if processed.saturating_sub(last_emitted) >= PROGRESS_EMIT_INTERVAL {
             last_emitted = processed;
-            runtime.emit_progress(window, task_id, 0.5, None, processed, 0);
+            if let Some(window) = window { runtime.emit_progress(window, task_id, 0.5, None, processed, 0); }
         }
     }
     outfile.flush()?;
 
-    runtime.emit_log(
+    if let Some(window) = window { runtime.emit_log(
         window,
         task_id,
         &format!("Extracted single-file stream to {}", target.display()),
         TaskLogSeverity::Success,
-    );
+    ); }
     Ok(())
 }
 
@@ -105,7 +112,7 @@ pub(crate) fn extract_gzip<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = flate2::read::GzDecoder::new(File::open(file)?);
+    let decoder = flate2::read::GzDecoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?);
     extract(
         runtime,
         window,
@@ -125,7 +132,7 @@ pub(crate) fn extract_bzip2<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = bzip2::read::BzDecoder::new(File::open(file)?);
+    let decoder = bzip2::read::BzDecoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?);
     extract(
         runtime,
         window,
@@ -145,7 +152,7 @@ pub(crate) fn extract_xz<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = xz2::read::XzDecoder::new(File::open(file)?);
+    let decoder = xz2::read::XzDecoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?);
     extract(
         runtime,
         window,
@@ -165,7 +172,7 @@ pub(crate) fn extract_zstandard<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = zstd::stream::read::Decoder::new(File::open(file)?)?;
+    let decoder = zstd::stream::read::Decoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?)?;
     extract(
         runtime,
         window,

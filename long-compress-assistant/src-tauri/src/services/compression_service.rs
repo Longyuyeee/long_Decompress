@@ -280,9 +280,12 @@ impl CompressionRuntime for CompressionService {
 }
 
 impl CompressionService {
-    fn extraction_history_format(path: &Path, format: &ArchiveFormat) -> String {
-        let name = path.file_name().and_then(|value| value.to_str())
+    pub(crate) fn extraction_history_format(path: &Path, format: &ArchiveFormat) -> String {
+        let mut name = path.file_name().and_then(|value| value.to_str())
             .unwrap_or_default().to_ascii_lowercase();
+        if let Some((base, number)) = name.rsplit_once('.') {
+            if number.len() >= 3 && number.bytes().all(|byte| byte.is_ascii_digit()) { name = base.to_string(); }
+        }
         let wrapped = |suffixes: &[&str], canonical: &str| {
             suffixes.iter().any(|suffix| name.ends_with(suffix)).then(|| canonical.to_string())
         };
@@ -305,6 +308,8 @@ impl CompressionService {
             ArchiveFormat::Zstd => wrapped(&[".tar.zst", ".tzst"], "tar.zst")
                 .unwrap_or_else(|| "zst".to_string()),
             ArchiveFormat::Lzma => "lzma".to_string(),
+            ArchiveFormat::Lz4 => wrapped(&[".tar.lz4"], "tar.lz4").unwrap_or_else(|| "lz4".to_string()),
+            ArchiveFormat::Brotli => wrapped(&[".tar.br"], "tar.br").unwrap_or_else(|| "br".to_string()),
             ArchiveFormat::Iso => "iso".to_string(),
             ArchiveFormat::Cab => "cab".to_string(),
             ArchiveFormat::Lzh => "lzh".to_string(),
@@ -694,21 +699,9 @@ impl CompressionService {
             return std::fs::metadata(output.path).ok().map(|metadata| metadata.len());
         }
 
-        let parent = output.path.parent().unwrap_or(Path::new("."));
-        let base_name = output.path.file_name()?.to_string_lossy();
-        let prefix = format!("{}.", base_name);
         let mut total = 0u64;
-        for entry in std::fs::read_dir(parent).ok()?.flatten() {
-            let name = entry.file_name();
-            let name = name.to_string_lossy();
-            let Some(volume) = name.strip_prefix(&prefix) else {
-                continue;
-            };
-            if volume.len() == 3 && volume.chars().all(|ch| ch.is_ascii_digit()) {
-                if let Ok(metadata) = entry.metadata() {
-                    total = total.saturating_add(metadata.len());
-                }
-            }
+        for (_, path) in crate::services::archive_volumes::volume_paths(&output.path).ok()? {
+            if let Ok(metadata) = path.metadata() { total = total.saturating_add(metadata.len()); }
         }
         Some(total)
     }
@@ -939,9 +932,9 @@ impl CompressionService {
         let split_requested = options.split_size.is_some_and(|size| size > 0);
         let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
         let format = Self::infer_compression_format(output_path, options.format.as_deref());
-        if split_requested && has_password && !matches!(format.as_str(), "zip" | "7z") {
+        if split_requested && has_password && !matches!(format.as_str(), "zip" | "7z" | "rar") {
             return Err(CompressionError::CompressionFailed(
-                "Encrypted split archive creation is currently supported only for ZIP and 7Z; choose either format or disable splitting".to_string()
+                "Encrypted split archive creation is currently supported only for ZIP, 7Z and RAR; choose a supported format or disable splitting".to_string()
             ).into());
         }
 
@@ -989,7 +982,7 @@ impl CompressionService {
         Ok(())
     }
 
-    fn temporary_compression_output(output: &Path) -> Result<PathBuf> {
+    pub(crate) fn temporary_compression_output(output: &Path) -> Result<PathBuf> {
         output_publish_transaction::staged_output_path(output, "long-compress")
             .map_err(|error| CompressionError::CompressionFailed(error.to_string()).into())
     }
@@ -1021,7 +1014,7 @@ impl CompressionService {
         }
     }
 
-    fn finalize_compression_output(
+    pub(crate) fn finalize_compression_output(
         route_result: Result<()>,
         working_output: &Path,
         final_output: &Path,
@@ -1113,7 +1106,7 @@ impl CompressionService {
         if split_requested && route == CompressionRoute::Zip {
             return compression_verification::verify_numeric_zip(output, password, || self.check_cancellation().is_err());
         }
-        if !split_requested
+        if (!split_requested || route != CompressionRoute::Rar)
             && compression_verification::verify_native(route, output, password, || {
                 self.check_cancellation().is_err()
             })?
@@ -1240,6 +1233,10 @@ impl CompressionService {
                 working_output.clone(),
                 split_requested,
             );
+            let generic_split = split_requested && !matches!(route, CompressionRoute::Zip | CompressionRoute::SevenZip | CompressionRoute::Rar);
+            let split_size = options.split_size.unwrap_or(0);
+            let mut options = options;
+            if generic_split { options.split_size = None; }
             let res = match route {
                 CompressionRoute::TarAes => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarGzipAes => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
@@ -1264,9 +1261,22 @@ impl CompressionService {
                 CompressionRoute::Zstd => service.do_compress_zstd(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarZstd => service.do_compress_tar_zstd(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::Lzma => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli => {
+                    crate::services::codec_stream::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, &requested_format)
+                },
             };
+            let res = res.and_then(|_| {
+                if generic_split {
+                    crate::services::split_compression::SplitCompressionService::split_archive_file_with_progress(
+                        &working_output, &working_output, split_size, || service.check_cancellation(), |processed, total| {
+                            service.emit_split_progress(&window, &task_id, processed, total);
+                        })?;
+                    std::fs::remove_file(&working_output)?;
+                }
+                Ok(())
+            });
             let verification_output = if split_requested {
-                PathBuf::from(format!("{}.001", working_output_string))
+                crate::services::archive_volumes::first_volume_path(&working_output)
             } else {
                 working_output.clone()
             };
@@ -1336,7 +1346,7 @@ impl CompressionService {
             if res.is_ok() {
                 if delete_after {
                     let verified_output = if split_requested {
-                        format!("{}.001", output_path)
+                        crate::services::archive_volumes::first_volume_path(&final_output).to_string_lossy().into_owned()
                     } else {
                         output_path.clone()
                     };
@@ -1979,15 +1989,10 @@ impl CompressionService {
                 "Extraction output cannot be a symbolic link or reparse point".to_string()
             ).into());
         }
-        let mut format = ArchiveFormat::Unknown;
-        if let Ok(mut f) = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path) {
-            let mut header = [0u8; 32];
-            if let Ok(bytes_read) = f.read(&mut header) {
-                if bytes_read > 0 {
-                    format = ArchiveFormat::from_magic(&header[..bytes_read]);
-                }
-            }
-        }
+        let reader = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path)?;
+        let mut header = Vec::with_capacity(512);
+        reader.take(512).read_to_end(&mut header)?;
+        let mut format = ArchiveFormat::from_magic(&header);
 
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
         if path.to_string_lossy().to_ascii_lowercase().ends_with(".7z.001") {
@@ -1998,18 +2003,31 @@ impl CompressionService {
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("未知文件").to_string();
         let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
 
+        // The .zip member is the final directory volume in standard ZIP sets;
+        // it must not be treated as a standalone ZIP after UI canonicalization.
+        let standard_zip_group = SplitArchiveDetector::detect_split_archive(path)?
+            .filter(|group| group.format == crate::services::split_archive_detector::SplitFormat::ZipSplit);
+        if let Some(group) = standard_zip_group {
+            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少 ZIP 分卷：{:?}", group.missing_parts);
+            format = ArchiveFormat::Universal;
+        }
+
         // 分卷压缩包检测：扩展名为数字编号(.001, .002...)或 .z01/.z02 后缀
         // 7Z 数字首卷使用可 Seek 的原生卷组读取；其他分卷保留通用路由。
         let is_split_archive = {
-            let ext_is_numeric = ext.len() == 3 && ext.chars().all(|c| c.is_ascii_digit());
+            let ext_is_numeric = ext.len() >= 3 && ext.chars().all(|c| c.is_ascii_digit());
             let ext_is_zsplit = ext.len() == 3 && ext.starts_with('z') && ext[1..].chars().all(|c| c.is_ascii_digit());
             // 也检查 stem 是否以 .zip / .7z / .rar 结尾（如 test_split.zip.001）
             let stem_has_archive_ext = file_stem.ends_with(".zip") || file_stem.ends_with(".7z") || file_stem.ends_with(".rar");
             ext_is_numeric || ext_is_zsplit || stem_has_archive_ext
         };
 
+        if format == ArchiveFormat::Unknown && crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(path) {
+            format = ArchiveFormat::from_extension(Path::new(file_stem).extension().and_then(|value| value.to_str()).unwrap_or(""));
+        }
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
-        if is_split_archive && !native_seven_zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
+        let native_stream = matches!(format, ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli);
+        if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
             service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
             format = ArchiveFormat::Universal;
         }
@@ -2353,6 +2371,25 @@ impl CompressionService {
                 let w = window.clone();
                 tokio::task::spawn_blocking(move || srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, None, &opts)).await?
             },
+            ref codec_format @ (ArchiveFormat::Lz4 | ArchiveFormat::Brotli) => {
+                let srv = service.clone();
+                let f_path = file_path.clone();
+                let o_dir = out_dir.clone();
+                let opts = options.clone();
+                let t_id = task_id.clone();
+                let w = window.clone();
+                let codec = if *codec_format == ArchiveFormat::Lz4 { "lz4" } else { "br" };
+                tokio::task::spawn_blocking(move || {
+                    let decoder = crate::services::codec_stream::decoder(Path::new(&f_path), codec)?;
+                    if compression_format::is_tar_wrapped_archive(Path::new(&f_path), &format!("tar.{codec}")) {
+                        srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, Some(decoder), &opts)
+                    } else {
+                        let original = Path::new(&f_path);
+                        let name = native_extraction::single_stream::output_name(original, &[&format!(".{codec}")]);
+                        native_extraction::single_stream::extract(&srv, &w, &t_id, decoder, &o_dir, name, &opts)
+                    }
+                }).await?
+            },
             ArchiveFormat::Gzip => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
@@ -2644,7 +2681,7 @@ impl CompressionService {
     }
 
     fn uses_native_seven_zip_volumes(path: &Path, format: &ArchiveFormat) -> bool {
-        *format == ArchiveFormat::SevenZip && path.to_string_lossy().to_ascii_lowercase().ends_with(".7z.001")
+        *format == ArchiveFormat::SevenZip && crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(path)
     }
 
     async fn preflight_extraction(
@@ -2780,7 +2817,7 @@ impl CompressionService {
         }
 
         for suffix in [
-            ".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst", ".zip", ".zipx", ".7z", ".rar",
+            ".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst", ".tar.lz4", ".tar.br", ".lz4", ".br", ".zip", ".zipx", ".7z", ".rar",
             ".tar", ".wim",
         ] {
             if candidate.to_lowercase().ends_with(suffix) {
@@ -3215,6 +3252,10 @@ impl CompressionService {
     }
 
     fn do_compress_rar(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        self.do_compress_rar_inner(Some(window), task_id, sources, output, options)
+    }
+
+    fn do_compress_rar_inner(&self, window: Option<&Window>, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if !output.to_lowercase().ends_with(".rar") {
             return Err(CompressionError::CompressionFailed(
                 "RAR compression output path must end with .rar".to_string()
@@ -3231,14 +3272,39 @@ impl CompressionService {
             )
         })?;
 
+        // -ep1 gives RAR the same source-relative layout as other encoders.
+        // For colliding root names, use the existing entry-name allocator so
+        // RAR cannot silently replace one source with another inside the archive.
+        let mut names = HashSet::new();
+        let collisions = sources.iter().any(|source| {
+            !names.insert(Path::new(source).file_name().unwrap_or_default().to_string_lossy().to_lowercase())
+        });
+        let prepared = if collisions {
+            let directory = tempfile::Builder::new().prefix(".long-rar-input-").tempdir_in(Path::new(output).parent().unwrap_or(Path::new(".")))?;
+            let layout = crate::services::compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), true)?;
+            let naming = DecompressOptions { conflict_policy: "rename".into(), ..Default::default() };
+            for entry in layout {
+                self.check_cancellation()?;
+                let destination = directory.path().join(entry.archive_name);
+                if entry.is_dir { std::fs::create_dir_all(&destination)?; continue; }
+                if let Some(parent) = destination.parent() { std::fs::create_dir_all(parent)?; }
+                let destination = extraction_transaction::resolve_extract_path(&destination, &naming)?;
+                if std::fs::hard_link(&entry.path, &destination).is_err() { std::fs::copy(&entry.path, &destination)?; }
+            }
+            Some(directory)
+        } else { None };
         let mut command = crate::utils::process::command(encoder);
         command.arg("a");
         command.arg("-idq");
         command.arg("-y");
         command.arg(format!("-m{}", options.level.clamp(1, 5)));
+        if options.create_solid_archive { command.arg("-s"); }
 
         if options.preserve_paths == Some(false) {
             command.arg("-ep");
+        } else {
+            // Keep source-relative paths, never the temporary conversion root.
+            command.arg("-ep1");
         }
 
         if let Some(password) = options.password.as_deref().filter(|password| !password.is_empty()) {
@@ -3247,13 +3313,22 @@ impl CompressionService {
                     "Password-protected RAR creation requires explicit approval because RAR.exe exposes the password briefly in local process arguments. Use encrypted ZIP or 7Z to avoid this risk.".to_string()
                 ).into());
             }
-            command.arg(format!("-hp{}", password));
+            command.arg(format!("-{}{}", if options.encrypt_filenames { "hp" } else { "p" }, password));
+        }
+
+        if let Some(size) = options.split_size.filter(|size| *size > 0) {
+            command.arg(format!("-v{size}b"));
         }
 
         command.arg(output);
-        for source in sources {
-            self.check_cancellation()?;
-            command.arg(source);
+        if let Some(directory) = &prepared {
+            command.current_dir(directory.path());
+            for source in std::fs::read_dir(directory.path())? { command.arg(source?.file_name()); }
+        } else {
+            for source in sources {
+                self.check_cancellation()?;
+                command.arg(source);
+            }
         }
 
         let output_result = self.run_command_cancellable(command)?;
@@ -3265,7 +3340,7 @@ impl CompressionService {
             return Err(CompressionError::CompressionFailed(format!("RAR compression failed: {}", message)).into());
         }
 
-        self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
+        if let Some(window) = window { self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0); }
         Ok(())
     }
 
@@ -3446,6 +3521,118 @@ impl CompressionService {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn standard_zip_main_volume_reads_complete_set_with_real_engine() {
+        use std::io::Write;
+        use crate::services::archive_engine::ArchiveEngine;
+        let temp = tempfile::tempdir().unwrap();
+        let original = temp.path().join("original.zip");
+        let expected = (0..32_771).map(|index| ((index * 31 + index / 17) % 251) as u8).collect::<Vec<_>>();
+        let mut writer = zip::ZipWriter::new(File::create(&original).unwrap());
+        writer.start_file("中文目录/载荷.bin", zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Stored)).unwrap();
+        writer.write_all(&expected).unwrap();
+        writer.add_directory("中文目录/空目录/", zip::write::FileOptions::default()).unwrap();
+        writer.finish().unwrap();
+        let bytes = std::fs::read(&original).unwrap();
+        let eocd = bytes.len() - 22;
+        assert_eq!(&bytes[eocd..eocd + 4], b"PK\x05\x06");
+        let central = u32::from_le_bytes(bytes[eocd + 16..eocd + 20].try_into().unwrap()) as usize;
+        let cut = 8192;
+        let main = temp.path().join("标准分卷.zip");
+        let first = temp.path().join("标准分卷.z01");
+        let mut last = bytes[cut..].to_vec();
+        let mut cursor = central - cut;
+        while &last[cursor..cursor + 4] == b"PK\x01\x02" {
+            let offset = u32::from_le_bytes(last[cursor + 42..cursor + 46].try_into().unwrap()) as usize;
+            let disk = if offset < cut { 0u16 } else { 1u16 };
+            let relative = if disk == 0 { offset + 4 } else { offset - cut };
+            last[cursor + 34..cursor + 36].copy_from_slice(&disk.to_le_bytes());
+            last[cursor + 42..cursor + 46].copy_from_slice(&(relative as u32).to_le_bytes());
+            let variable = [28, 30, 32].iter().map(|index| u16::from_le_bytes(last[cursor + index..cursor + index + 2].try_into().unwrap()) as usize).sum::<usize>();
+            cursor += 46 + variable;
+        }
+        let tail = eocd - cut;
+        last[tail + 4..tail + 6].copy_from_slice(&1u16.to_le_bytes());
+        last[tail + 6..tail + 8].copy_from_slice(&1u16.to_le_bytes());
+        last[tail + 16..tail + 20].copy_from_slice(&((central - cut) as u32).to_le_bytes());
+        let mut start = b"PK\x07\x08".to_vec(); start.extend_from_slice(&bytes[..cut]);
+        std::fs::write(&first, start).unwrap(); std::fs::write(&main, last).unwrap();
+        let group = SplitArchiveDetector::detect_split_archive(&main).unwrap().unwrap();
+        assert_eq!(group.format, crate::services::split_archive_detector::SplitFormat::ZipSplit);
+        assert!(group.is_complete); assert_eq!(group.first_part, main);
+        let output = temp.path().join("还原");
+        UniversalCliEngine::new().extract_with_progress(&main, &output, None, false, Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(std::fs::read(output.join("中文目录/载荷.bin")).unwrap(), expected);
+        assert!(output.join("中文目录/空目录").is_dir());
+    }
+
+    #[tokio::test]
+    #[ignore = "Requires an external RAR encoder on PATH; run with the archive upgrade tools"]
+    async fn rar_native_volumes_roundtrip_with_content_and_header_passwords() {
+        use rand::{RngCore, SeedableRng};
+        let encoder = CompressionService::find_rar_encoder().expect("RAR encoder required for this explicit real test");
+        let temp = tempfile::tempdir().unwrap();
+        let folder = temp.path().join("资料");
+        std::fs::create_dir_all(folder.join("空目录")).unwrap();
+        let source = folder.join("中文资料.bin");
+        let companion = temp.path().join("说明.txt");
+        std::fs::write(&companion, b"keep directory layout").unwrap();
+        let other = temp.path().join("另一位置"); std::fs::create_dir(&other).unwrap();
+        let same = other.join("说明.txt"); std::fs::write(&same, b"keep the other file too").unwrap();
+        let sources = vec![folder.to_string_lossy().into_owned(), companion.to_string_lossy().into_owned(), same.to_string_lossy().into_owned()];
+        let mut expected = vec![0u8; 128 * 1024 + 39];
+        rand::rngs::StdRng::seed_from_u64(47).fill_bytes(&mut expected);
+        std::fs::write(&source, &expected).unwrap();
+        let service = CompressionService::new(CompressionServiceConfig::default(), Arc::new(IOBufferPool::default()),
+            Arc::new(RarSupportService::new()), Arc::new(UniversalCliEngine::new()),
+            Arc::new(EncryptedPasswordService::new(&temp.path().join("private-vault"))));
+        for mode in 0..3 {
+            eprintln!("RAR mode {mode}: create and verify");
+            let password = if mode == 0 { None } else { Some("中文 密码+!🔐".to_string()) };
+            let target = temp.path().join(format!("归档-{mode}.rar"));
+            let staged = CompressionService::temporary_compression_output(&target).unwrap();
+            let options = CompressionOptions { format: Some("rar".into()), password: password.clone(),
+                split_size: Some(16 * 1024), preserve_paths: Some(true), encrypt_filenames: mode == 2, allow_insecure_password_cli: true,
+                ..Default::default() };
+            CompressionService::validate_compression_request(&sources, &target.to_string_lossy(), &options).unwrap();
+            service.do_compress_rar_inner(None, "rar-real", &sources, &staged.to_string_lossy(), options).unwrap();
+            let first = crate::services::archive_volumes::first_volume_path(&staged);
+            service.verify_compression_output(CompressionRoute::Rar, &first, password.as_deref(), true).unwrap();
+            CompressionService::finalize_compression_output(Ok(()), &staged, &target, true, false).unwrap();
+            let parts = crate::services::archive_volumes::complete_volume_paths(&target).unwrap();
+            assert!(parts.len() > 1);
+            let decoded = temp.path().join(format!("还原-{mode}"));
+            let mut command = crate::utils::process::command(&encoder);
+            command.arg("x").arg("-idq").arg("-y").arg(format!("-p{}", password.as_deref().unwrap_or("-")))
+                .arg(&parts[0]).arg(format!("{}\\", decoded.display()));
+            assert!(command.status().unwrap().success());
+            let payload = walkdir::WalkDir::new(&decoded).into_iter().filter_map(Result::ok)
+                .find(|entry| entry.file_type().is_file() && entry.file_name() == source.file_name().unwrap()).unwrap();
+            assert_eq!(std::fs::read(payload.path()).unwrap(), expected);
+            eprintln!("RAR mode {mode}: native extraction");
+            let app_output = temp.path().join(format!("应用还原-{mode}"));
+            RarSupportService::new().extract_rar(&parts[0], &app_output, password.as_deref(), &DecompressOptions { preserve_paths: true, ..Default::default() }, Arc::new(AtomicBool::new(false))).await.unwrap();
+            let app_payload = walkdir::WalkDir::new(&app_output).into_iter().filter_map(Result::ok)
+                .find(|entry| entry.file_type().is_file() && entry.file_name() == source.file_name().unwrap()).unwrap();
+            assert_eq!(std::fs::read(app_payload.path()).unwrap(), expected);
+            eprintln!("RAR mode {mode}: native metadata");
+            let browse = crate::services::archive_browser::browse_archive(&parts[0], password.as_deref()).await.unwrap();
+            assert_eq!(browse.total_files, 3);
+            assert_eq!(std::fs::read(app_output.join("资料/中文资料.bin")).unwrap(), expected);
+            assert!(app_output.join("资料/空目录").is_dir());
+            assert_eq!(std::fs::read(app_output.join("说明.txt")).unwrap(), b"keep directory layout");
+            assert_eq!(std::fs::read(app_output.join("说明 (1).txt")).unwrap(), b"keep the other file too");
+            if mode > 0 {
+                eprintln!("RAR mode {mode}: correct/wrong password checks");
+                assert!(service.verify_compression_output(CompressionRoute::Rar, &parts[0], Some("wrong-password"), true).is_err());
+                let rar = RarSupportService::new();
+                assert!(rar.verify_rar_password(&parts[0], password.as_deref().unwrap()).await.unwrap());
+                assert!(!rar.verify_rar_password(&parts[0], "wrong-password").await.unwrap());
+                assert!(rar.extract_rar(&parts[0], &temp.path().join(format!("错误密码-{mode}")), Some("wrong-password"), &DecompressOptions::default(), Arc::new(AtomicBool::new(false))).await.is_err());
+            }
+        }
+    }
 
     #[test]
     fn pending_conflict_owns_staging_until_cancelled() {
@@ -4535,7 +4722,7 @@ mod tests_continued {
         let first = temp.path().join("tiny.7z.001");
         let format = CompressionService::detect_password_format(&first.to_string_lossy()).unwrap();
         assert!(CompressionService::uses_native_seven_zip_volumes(&first, &format));
-        assert!(!CompressionService::uses_native_seven_zip_volumes(Path::new("other.zip.001"), &format));
+        assert!(CompressionService::uses_native_seven_zip_volumes(Path::new("other.zip.001"), &format));
         assert!(!CompressionService::uses_native_seven_zip_volumes(Path::new("tiny.7z.002"), &format));
         assert!(!CompressionService::uses_native_seven_zip_volumes(&first, &ArchiveFormat::Zip));
     }

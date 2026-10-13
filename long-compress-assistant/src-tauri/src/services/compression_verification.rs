@@ -36,7 +36,7 @@ fn check_cancelled(is_cancelled: &impl Fn() -> bool) -> Result<()> {
 }
 
 fn verify_plain_zip(path: &Path, is_cancelled: &impl Fn() -> bool) -> Result<()> {
-    let file = File::open(path)?;
+    let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
     let mut archive = zip::ZipArchive::new(file)?;
     let mut buffer = vec![0u8; 256 * 1024];
     for index in 0..archive.len() {
@@ -58,7 +58,7 @@ fn verify_encrypted_zip(
     password: &str,
     is_cancelled: &impl Fn() -> bool,
 ) -> Result<()> {
-    let file = File::open(path)?;
+    let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
     let mut archive = zip_aes::ZipArchive::new(file)?;
     let mut buffer = vec![0u8; 256 * 1024];
     for index in 0..archive.len() {
@@ -123,7 +123,7 @@ fn verify_seven_zip(
         Ok(true)
     };
     let result = sevenz_rust::decompress_with_extract_fn_and_password(
-        File::open(path)?,
+        super::numeric_volume_reader::ZipInputReader::open(path)?,
         scratch.path(),
         sevenz_rust::Password::from(password.unwrap_or_default()),
         &mut verify_entry,
@@ -156,6 +156,7 @@ fn verify_tar_reader(reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Res
         check_cancelled(is_cancelled)?;
         drain_reader(entry?, is_cancelled)?;
     }
+    drain_reader(archive.into_inner(), is_cancelled)?;
     Ok(())
 }
 
@@ -216,6 +217,13 @@ pub(crate) fn verify_native(
 ) -> Result<bool> {
     check_cancelled(&is_cancelled)?;
     match route {
+        CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli => {
+            let codec = if matches!(route, CompressionRoute::Lz4 | CompressionRoute::TarLz4) { "lz4" } else { "br" };
+            let reader = super::codec_stream::decoder(path, codec)?;
+            if matches!(route, CompressionRoute::TarLz4 | CompressionRoute::TarBrotli) { verify_tar_reader(reader, &is_cancelled)?; }
+            else { drain_reader(reader, &is_cancelled)?; }
+            Ok(true)
+        },
         CompressionRoute::Zip => {
             if let Some(password) = password.filter(|value| !value.is_empty()) {
                 verify_encrypted_zip(path, password, &is_cancelled)?;
@@ -229,55 +237,55 @@ pub(crate) fn verify_native(
             Ok(true)
         }
         CompressionRoute::Tar => {
-            verify_tar_reader(File::open(path)?, &is_cancelled)?;
+            verify_tar_reader(super::numeric_volume_reader::ZipInputReader::open(path)?, &is_cancelled)?;
             Ok(true)
         }
         CompressionRoute::TarGzip => {
             verify_tar_reader(
-                flate2::read::GzDecoder::new(File::open(path)?),
+                flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
                 &is_cancelled,
             )?;
             Ok(true)
         }
         CompressionRoute::TarBzip2 => {
             verify_tar_reader(
-                bzip2::read::BzDecoder::new(File::open(path)?),
+                bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
                 &is_cancelled,
             )?;
             Ok(true)
         }
         CompressionRoute::TarXz => {
-            verify_tar_reader(xz2::read::XzDecoder::new(File::open(path)?), &is_cancelled)?;
+            verify_tar_reader(xz2::read::XzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), &is_cancelled)?;
             Ok(true)
         }
         CompressionRoute::TarZstd => {
             verify_tar_reader(
-                zstd::stream::read::Decoder::new(File::open(path)?)?,
+                zstd::stream::read::Decoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?,
                 &is_cancelled,
             )?;
             Ok(true)
         }
         CompressionRoute::Gzip => {
             drain_reader(
-                flate2::read::GzDecoder::new(File::open(path)?),
+                flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
                 &is_cancelled,
             )?;
             Ok(true)
         }
         CompressionRoute::Bzip2 => {
             drain_reader(
-                bzip2::read::BzDecoder::new(File::open(path)?),
+                bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
                 &is_cancelled,
             )?;
             Ok(true)
         }
         CompressionRoute::Xz => {
-            drain_reader(xz2::read::XzDecoder::new(File::open(path)?), &is_cancelled)?;
+            drain_reader(xz2::read::XzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), &is_cancelled)?;
             Ok(true)
         }
         CompressionRoute::Zstd => {
             drain_reader(
-                zstd::stream::read::Decoder::new(File::open(path)?)?,
+                zstd::stream::read::Decoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?,
                 &is_cancelled,
             )?;
             Ok(true)
