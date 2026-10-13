@@ -1,5 +1,12 @@
 # 开发交接
 
+## 最新发布接续：v1.4.3 已合入并推送正式标签（2026-10-13）
+
+- 功能封板提交 `bab76e664509736eaa89c4aa2ba491e5a04cd34c`；发布 PR [#154](https://github.com/Longyuyeee/long_Decompress/pull/154) 的 [Windows package 检查](https://github.com/Longyuyeee/long_Decompress/actions/runs/38396532308) 成功后合入主线。
+- **正式标签 `v1.4.3` 指向 `b7cceb0398e6502c9fb436633f393dea0f885165`**。版本身份、两份 README、中文 Release、许可证和原生菜单资源同步，标签后没有追加功能。
+- [Release 页面](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.3) 已建立，中文正文与仓库发布说明一致；[正式发布工作流](https://github.com/Longyuyeee/long_Decompress/actions/runs/38397485452) 上传安装器、更新 ZIP、签名及 `latest.json`，应用内说明沿用同一正文。附件是否已就绪以该页面实际上传结果和工作流最终状态为准。
+- 原始标准 ZIP/RAR 使用链、修复、首次失败和范围边界均在 [封板审计](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)，关键截图/结果在 `docs/evidence/freeze-1.4.3/`。后续接收真实使用反馈；下方“开发暂停/待合入/等待封板”均为历史状态。
+
 ## 最新：1.4.3 已完成封板验证，接续合入与发布（2026-10-13）
 
 **功能封板提交：`bab76e664509736eaa89c4aa2ba491e5a04cd34c`**，已推送至 `codex/archive-compatibility-upgrade`；标准 ZIP 第一步修复为 `22d6826`。封板后只更新 README/发布交接，不再追加功能。源码身份已是 1.4.3，普通生产构建和版本一致性检查通过；正式标签将以通过 CI 的 PR 主线合并提交为准。
