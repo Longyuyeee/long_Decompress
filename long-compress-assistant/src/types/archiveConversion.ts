@@ -13,6 +13,8 @@ export interface ConversionSettings {
 export interface ConversionDraft {
   id: string
   sourcePath: string
+  sourceParts?: string[]
+  sourceReference?: string
   intent: 'convert' | 'reconfigure'
   defaultFormat?: string
   expanded: boolean

@@ -1,0 +1,12 @@
+[package]
+name = "unrar"
+version = "0.5.8"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/muja/unrar.rs"
+description = "list and extract RAR archives"
+[dependencies]
+bitflags = "2"
+regex = "1"
+unrar_sys = "0.5"
+widestring = "1"

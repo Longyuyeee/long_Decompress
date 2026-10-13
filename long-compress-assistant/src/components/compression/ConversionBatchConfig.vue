@@ -7,6 +7,7 @@ import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { conversionFormats, useArchiveConversionStore } from '@/stores/archiveConversion'
 import ConversionSettingsFields from './ConversionSettingsFields.vue'
 import { normalizeConversionSettings } from '@/utils/archiveConversionDraft'
+import { supportsNativePassword, supportsArchiveSplit } from '@/utils/compressionFormat'
 const store = useArchiveConversionStore()
 const visible = ref(false)
 const applyError = ref('')
@@ -49,11 +50,11 @@ function apply() {
 </script>
 <template>
   <div class="flex flex-wrap items-center gap-2">
-    <button type="button" class="conversion-button text-muted" :disabled="store.busy" @click="show('defaults')"><i class="pi pi-sliders-h" aria-hidden="true"></i>默认配置</button>
+    <button type="button" class="conversion-button text-muted" :disabled="store.busy || store.preparing" @click="show('defaults')"><i class="pi pi-sliders-h" aria-hidden="true"></i>默认配置</button>
     <div v-if="store.selected.length" class="flex flex-wrap items-center gap-2 rounded-xl border border-primary/25 bg-primary/5 px-3 py-1.5" data-testid="conversion-batch-bar">
       <span class="text-xs font-semibold text-primary">已选 {{ store.selected.length }} 项</span>
-      <button type="button" class="conversion-button bg-primary text-white" :disabled="store.busy" data-testid="conversion-batch-config" @click="show('selected')">修改所选配置</button>
-      <button type="button" class="conversion-button text-muted" :disabled="store.busy" @click="store.pending.forEach(item => item.selected = false)">取消选择</button>
+      <button type="button" class="conversion-button bg-primary text-white" :disabled="store.busy || store.preparing" data-testid="conversion-batch-config" @click="show('selected')">修改所选配置</button>
+      <button type="button" class="conversion-button text-muted" :disabled="store.busy || store.preparing" @click="store.pending.forEach(item => item.selected = false)">取消选择</button>
     </div>
   </div>
   <Modal v-model:visible="visible" :title="mode === 'selected' ? '修改所选转换配置' : '转换默认配置'" icon="pi pi-sliders-h" layer="nested" size="lg">
@@ -66,11 +67,11 @@ function apply() {
       </template>
       <template v-else>
         <p class="text-xs text-muted">只修改指定参数；名称、目录、密码等未指定的配置保持各自原值。</p>
-        <p v-if="format !== 'keep' && !['zip', '7z'].includes(format)" class="text-xs text-amber-600">此格式不支持密码和分卷，应用时会关闭这两项。</p>
+        <p v-if="format !== 'keep' && (!supportsNativePassword(format) || !supportsArchiveSplit(format))" class="text-xs text-amber-600">此格式不支持的密码或分卷选项会关闭，其余配置保留。</p>
         <div class="grid min-w-0 gap-4 sm:grid-cols-2">
           <label class="min-w-0 text-sm">目标格式<ThemedSelect v-model="format" :options="[keep, ...conversionFormats]" test-id="conversion-batch-format" floating /></label>
           <label class="min-w-0 text-sm">压缩强度<ThemedSelect v-model="level" :options="[keep, ...Array.from({ length: 10 }, (_, n) => ({ value: String(n), label: String(n) }))]" test-id="conversion-batch-level" floating /></label>
-          <label class="min-w-0 text-sm">文件名加密<ThemedSelect v-model="hiddenNames" :options="[keep, { value: 'yes', label: '启用（7Z，需要新包密码）' }, { value: 'no', label: '关闭' }]" floating /></label>
+          <label class="min-w-0 text-sm">文件名加密<ThemedSelect v-model="hiddenNames" :options="[keep, { value: 'yes', label: '启用（7Z/RAR，需要新包密码）' }, { value: 'no', label: '关闭' }]" floating /></label>
           <div class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changeSplit" type="checkbox" />修改分卷大小</label><input v-if="changeSplit" v-model.number="splitMiB" type="number" min="0" class="conversion-input w-full" placeholder="0 表示不分卷" /></div>
           <div class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changeSourcePassword" type="checkbox" />填写共用原包密码</label><input v-if="changeSourcePassword" v-model="sourcePassword" type="password" autocomplete="off" class="conversion-input w-full" placeholder="原包未加密可留空" /></div>
           <div class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changePassword" type="checkbox" />修改新包密码</label><input v-if="changePassword" v-model="password" type="password" autocomplete="new-password" class="conversion-input w-full" placeholder="留空则新包不加密" /></div>

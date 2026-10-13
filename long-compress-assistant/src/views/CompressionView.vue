@@ -9,7 +9,7 @@ import { extractErrorMessage, generateId } from '@/utils'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
 import { splitSizeBytes } from '@/utils/archiveSizeUnits'
-import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat } from '@/utils/compressionFormat'
+import { effectiveFormatForPassword, extensionForFormat, isPasswordSupportedFormat, isSingleFileStreamFormat, supportsFilenameEncryption, supportsSolidCompression } from '@/utils/compressionFormat'
 import {
   compressionStatusClass,
   compressionStatusIcon,
@@ -152,6 +152,9 @@ const getBaseName = (path: string) => {
   return fileName.replace(/\.[^/.]+$/, '') || fileName
 }
 
+const defaultArchiveName = (path: string, format: string) => isSingleFileStreamFormat(format)
+  ? path.split(/[\\/]/).pop() || 'archive' : getBaseName(path)
+
 const joinPath = (dir: string, fileName: string) => {
   const separator = dir.includes('\\') ? '\\' : '/'
   return dir.endsWith('/') || dir.endsWith('\\') ? `${dir}${fileName}` : `${dir}${separator}${fileName}`
@@ -221,7 +224,7 @@ watch(usesRarFormat, (usesRar) => {
 const buildOutputPath = (baseOutputPath: string, fallbackSourcePath: string, archiveName: string, format: string, password?: string) => {
   const outputDir = baseOutputPath || getParentDir(fallbackSourcePath)
   const extension = extensionForFormat(format, password)
-  const cleanName = archiveName.trim() || getBaseName(fallbackSourcePath)
+  const cleanName = archiveName.trim() || defaultArchiveName(fallbackSourcePath, format)
   return joinPath(outputDir, cleanName.endsWith(`.${extension}`) ? cleanName : `${cleanName}.${extension}`)
 }
 
@@ -249,7 +252,7 @@ const getFileArchivePath = (file: FileObject) => {
   return buildOutputPath(
     compressionStore.getEffectiveOutputPath(file.outputPath),
     file.path,
-    settings.filename || getBaseName(file.path),
+    settings.filename || defaultArchiveName(file.path, settings.format),
     settings.format,
     settings.password
   )
@@ -340,7 +343,7 @@ const runCompression = async () => {
         outputPath: buildOutputPath(
           compressionStore.getEffectiveOutputPath(file.outputPath),
           file.path,
-          settings.filename || getBaseName(file.path),
+          settings.filename || defaultArchiveName(file.path, settings.format),
           settings.format,
           settings.password
         )
@@ -349,8 +352,8 @@ const runCompression = async () => {
   ]
 
   if (jobs.length === 0) return
-  const filenamePasswordError = '文件名加密仅支持 7Z，请先填写压缩密码。'
-  if (jobs.some(job => job.settings.encryptFilenames && (job.settings.format !== '7z' || !job.settings.password))) {
+  const filenamePasswordError = '文件名加密仅支持 7Z/RAR，请先填写压缩密码。'
+  if (jobs.some(job => job.settings.encryptFilenames && (!supportsFilenameEncryption(job.settings.format) || !job.settings.password))) {
     appStore.setError(filenamePasswordError)
     return
   }
@@ -459,10 +462,10 @@ const runCompression = async () => {
         passwordRequired: !!job.settings.password,
         settings: {
           format: effectiveFormat as typeof job.settings.format,
-          level: job.settings.level, filename: job.settings.filename || (compressionStore.groups.some(group => group.id === job.id) ? job.name : getBaseName(job.files[0].path)),
+          level: job.settings.level, filename: job.settings.filename || (compressionStore.groups.some(group => group.id === job.id) ? job.name : defaultArchiveName(job.files[0].path, job.settings.format)),
           splitArchive: job.settings.splitArchive, splitSize: job.settings.splitSize,
           keepStructure: job.settings.keepStructure, verifyAfter: job.settings.verifyAfter,
-          createSolidArchive: effectiveFormat === '7z' && job.settings.createSolidArchive,
+          createSolidArchive: supportsSolidCompression(effectiveFormat) && job.settings.createSolidArchive,
           encryptFilenames: job.settings.encryptFilenames ?? false,
           zipPasswordEncoding: job.settings.zipPasswordEncoding ?? 'utf8',
           zipEncryption: job.settings.zipEncryption ?? 'aes256',
@@ -477,7 +480,7 @@ const runCompression = async () => {
         level: job.settings.level,
         password: job.settings.password || undefined,
         split_size: splitSizeBytes(job.settings.splitArchive, job.settings.splitSize),
-        create_solid_archive: effectiveFormat === '7z' && job.settings.createSolidArchive,
+        create_solid_archive: supportsSolidCompression(effectiveFormat) && job.settings.createSolidArchive,
         encrypt_filenames: job.settings.encryptFilenames ?? false,
         preserve_paths: job.settings.keepStructure,
         delete_after: job.settings.deleteAfter,
@@ -521,7 +524,7 @@ const runCompression = async () => {
           level: job.settings.level,
           password: job.settings.password || undefined,
           split_size: splitSizeBytes(job.settings.splitArchive, job.settings.splitSize),
-          create_solid_archive: effectiveFormat === '7z' && job.settings.createSolidArchive,
+          create_solid_archive: supportsSolidCompression(effectiveFormat) && job.settings.createSolidArchive,
           encrypt_filenames: job.settings.encryptFilenames ?? false,
           preserve_paths: job.settings.keepStructure,
           delete_after: job.settings.deleteAfter,
@@ -1073,7 +1076,7 @@ const drawerTransition = useDrawerTransition()
                       :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"
                       :allow-single-file-formats="canUseSingleFileFormats([file])"
                       :allow-split-archive="canUseSplitArchive([file])"
-                      :suggested-filename="getBaseName(file.path)"
+                      :suggested-filename="defaultArchiveName(file.path, compressionStore.getEffectiveSettings(file.settings).format)"
                       @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
                       @update:outputPath="compressionStore.updateFileOutputPath(file.path, $event)"
                     />

@@ -1,5 +1,6 @@
 pub mod archive_engine;
 pub mod archive_browser;
+pub(crate) mod standard_zip_reader;
 pub mod archive_diagnostics;
 pub mod archive_preview;
 pub mod archive_entry_open;
@@ -42,6 +43,8 @@ pub mod split_compression;
 pub(crate) mod numeric_volume_reader;
 pub mod zip_password;
 pub mod split_archive_detector;
+pub(crate) mod archive_volumes;
+pub(crate) mod codec_stream;
 pub mod rar_support;
 pub mod tar_aes_engine;
 pub mod aes_wrapper;

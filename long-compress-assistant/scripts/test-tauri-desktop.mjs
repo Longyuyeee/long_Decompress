@@ -22,6 +22,8 @@ import { runOptimizationDesktopGate, runSavedLocationDesktopGate } from './optim
 import { runMediaHistoryDesktopGate } from './media-history-desktop-gate.mjs'
 import { runPasswordSplitCreationGate } from './password-split-creation-gate.mjs'
 import { runArchiveConversionGate } from './archive-conversion-gate.mjs'
+import { runArchiveUpgradeGate } from './archive-upgrade-gate.mjs'
+import { runStandardZipDesktopGate } from './standard-zip-desktop-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
@@ -4864,6 +4866,14 @@ try {
     }
     completedSuccessfully = true
     console.log('ZIP ZipCrypto UI creation and independent compatibility gate passed.')
+  } else if (process.argv.includes('--standard-zip-only')) {
+    await runStandardZipDesktopGate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, root })
+    completedSuccessfully = true
+    console.log('Standard ZIP disks user workflow passed.')
+  } else if (process.argv.includes('--archive-upgrade-only')) {
+    await runArchiveUpgradeGate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
+    completedSuccessfully = true
+    console.log('Real archive upgrade roundtrips passed.')
   } else if (process.argv.includes('--archive-conversion-only')) {
     await runArchiveConversionGate({ driver, waitForElement, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, fixtureDirectory, artifactDirectory, bundledSevenZip })
     completedSuccessfully = true

@@ -608,7 +608,7 @@ const removeWordlist = (index: number) => {
                   <div>
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.archives') }}</div>
                     <div class="text-xs text-content leading-relaxed font-mono">
-                      ZIP · ZIPX · 7Z · RAR · TAR · TAR.GZ · TGZ · TAR.BZ2 · TBZ · TAR.XZ · TXZ · TAR.ZST · TZST · GZ · GZIP · BZ2 · BZIP2 · XZ · ZST · ZSTD · LZMA · OVA
+                      ZIP · ZIPX · 7Z · RAR · TAR · TAR.GZ · TGZ · TAR.BZ2 · TBZ · TAR.XZ · TXZ · TAR.ZST · TZST · GZ · GZIP · BZ2 · BZIP2 · XZ · ZST · ZSTD · LZMA · LZ4 · Brotli · TAR.LZ4 · TAR.BR · OVA
                     </div>
                   </div>
                   <div>
@@ -651,7 +651,7 @@ const removeWordlist = (index: number) => {
                   <div>
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.via_7z') }}</div>
                     <div class="text-xs text-content leading-relaxed font-mono">
-                      TAR.ZST · ZST · ZSTD · LZMA · WIM
+                      TAR.ZST · ZST · ZSTD · LZMA · LZ4 · Brotli · TAR.LZ4 · TAR.BR · WIM
                     </div>
                   </div>
                   <div>

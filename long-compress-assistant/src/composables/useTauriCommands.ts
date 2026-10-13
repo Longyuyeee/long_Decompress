@@ -4,6 +4,7 @@ import { message, open, save, ask } from '@tauri-apps/api/dialog'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage } from '@/utils'
+import { DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS } from '@/utils/compressionFormat'
 import type { ResourcePreflightReport, ResourcePreflightRequest } from '@/types/resourcePreflight'
 import type {
   PublishedVideoOutput,
@@ -225,14 +226,7 @@ export const useTauriCommands = () => {
         filters: filters || [
           {
             name: appStore.t('dialog.compress_files'),
-            extensions: [
-              'zip', 'zipx', 'rar', '7z',
-              'tar', 'gz', 'gzip', 'bz2', 'bzip2', 'xz', 'zst', 'zstd', 'lzma',
-              'tgz', 'tpz', 'tbz', 'tbz2', 'txz', 'tzst',
-              'jar', 'xpi', 'ipa', 'apk', 'appx',
-              'iso', 'img', 'cab', 'lzh', 'lha', 'arj', 'dmg', 'wim', 'vhd', 'vhdx', 'chm',
-              'deb', 'rpm', 'squashfs', 'sfs', 'msi', 'nsis', 'xar', 'cpio'
-            ]
+            extensions: DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS
           },
           {
             name: appStore.t('dialog.all_files'),

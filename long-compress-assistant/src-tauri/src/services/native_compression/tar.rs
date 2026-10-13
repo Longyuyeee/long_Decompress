@@ -73,7 +73,7 @@ fn emit_forced_progress<R: CompressionRuntime>(
     }
 }
 
-fn write_entries<R: CompressionRuntime, W: Write>(
+pub(crate) fn write_entries<R: CompressionRuntime, W: Write>(
     runtime: &R,
     window: Option<&Window>,
     task_id: &str,

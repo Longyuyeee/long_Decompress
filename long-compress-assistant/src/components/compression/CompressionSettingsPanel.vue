@@ -10,7 +10,7 @@ import { useCompressionProfileStore } from '@/stores/compressionProfile'
 import { usePasswordStore, type PasswordEntry } from '@/stores/password'
 import type { CompressionOptions } from '@/stores/compression'
 import type { CompressionProfile } from '@/types/profile'
-import { COMPRESSIBLE_FORMATS, effectiveFormatForPassword, isPasswordSupportedFormat } from '@/utils/compressionFormat'
+import { COMPRESSIBLE_FORMATS, effectiveFormatForPassword, isPasswordSupportedFormat, supportsNativePassword, supportsFilenameEncryption, supportsSolidCompression } from '@/utils/compressionFormat'
 import ProfileSelector from '@/components/profiles/ProfileSelector.vue'
 import ProfileManager from '@/components/profiles/ProfileManager.vue'
 import PasswordGeneratorDialog from '@/components/password/PasswordGeneratorDialog.vue'
@@ -88,7 +88,7 @@ const compressionFormats = computed(() => COMPRESSIBLE_FORMATS.filter(format => 
 const selectedFormat = computed(() => compressionFormats.value.find(format => format.value === compressionOptions.value.format))
 const canCreateSplitArchive = computed(() =>
   Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive &&
-    (!compressionOptions.value.password || ['zip', '7z'].includes(compressionOptions.value.format)))
+    (!compressionOptions.value.password || supportsNativePassword(compressionOptions.value.format)))
 )
 const vaultPasswordEntries = computed(() => [...passwordStore.entries].sort((left, right) => {
   if (left.favorite !== right.favorite) return left.favorite ? -1 : 1
@@ -105,8 +105,8 @@ const splitArchiveUnavailableReason = computed(() => {
   if (!props.allowSplitArchive) {
     return '请先添加需要压缩的文件或文件夹'
   }
-  if (compressionOptions.value.password && !['zip', '7z'].includes(compressionOptions.value.format)) {
-    return '此格式暂不支持加密分卷，请选择 ZIP、7Z 或关闭分卷'
+  if (compressionOptions.value.password && !supportsNativePassword(compressionOptions.value.format)) {
+    return '此格式暂不支持加密分卷，请选择 ZIP、7Z、RAR 或关闭分卷'
   }
   return ''
 })
@@ -193,10 +193,10 @@ watch(() => compressionOptions.value.format, () => {
   if (!canCreateSplitArchive.value) {
     compressionOptions.value.splitArchive = false
   }
-  if (compressionOptions.value.format !== '7z') {
+  if (!supportsSolidCompression(compressionOptions.value.format)) {
     compressionOptions.value.createSolidArchive = false
-    compressionOptions.value.encryptFilenames = false
   }
+  if (!supportsFilenameEncryption(compressionOptions.value.format)) compressionOptions.value.encryptFilenames = false
 })
 
 watch(() => compressionOptions.value.deleteAfter, (deleteAfter) => {
@@ -344,10 +344,10 @@ const closeVaultPasswordsAfterFocus = () => {
       <div class="flex flex-col gap-1.5 min-w-0">
         <div class="flex justify-between items-center px-1">
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.level') }}</label>
-          <span class="text-xs font-mono text-primary font-black">{{ compressionOptions.level }} / 9</span>
+          <span class="text-xs font-mono text-primary font-black">{{ compressionOptions.format.endsWith('lz4') ? '快速模式' : `${compressionOptions.level} / 9` }}</span>
         </div>
         <input
-          type="range" v-model.number="compressionOptions.level" min="1" max="9" step="1"
+          type="range" :disabled="compressionOptions.format.endsWith('lz4')" v-model.number="compressionOptions.level" min="1" max="9" step="1"
           class="w-full h-1 bg-input border border-subtle rounded-full appearance-none cursor-pointer accent-primary"
         />
       </div>
@@ -550,13 +550,13 @@ const closeVaultPasswordsAfterFocus = () => {
             <input data-testid="compression-verify-after" v-model="compressionOptions.verifyAfter" type="checkbox" :disabled="compressionOptions.deleteAfter" />
             <span><strong>{{ appStore.t('preset.verify_after') }} <HelpHint label="压缩完成后校验说明">{{ compressionOptions.deleteAfter ? appStore.t('preset.verify_after.required') : appStore.t('preset.verify_after.desc') }}</HelpHint></strong></span>
           </label>
-          <label v-if="compressionOptions.format === '7z'" class="advanced-option">
+          <label v-if="supportsSolidCompression(compressionOptions.format)" class="advanced-option">
             <input data-testid="compression-solid-toggle" v-model="compressionOptions.createSolidArchive" type="checkbox" />
             <span><strong>固实压缩 <HelpHint label="固实压缩说明">提高同类文件压缩率，但单文件提取更慢</HelpHint></strong></span>
           </label>
-          <label v-if="compressionOptions.format === '7z'" class="advanced-option">
+          <label v-if="supportsFilenameEncryption(compressionOptions.format)" class="advanced-option">
             <input data-testid="compression-encrypt-filenames" v-model="compressionOptions.encryptFilenames" type="checkbox" />
-            <span><strong>加密文件名 <HelpHint label="加密文件名说明">开启后，查看包内文件名也需要密码。仅支持 7Z；开始压缩前请填写密码。</HelpHint></strong></span>
+            <span><strong>加密文件名 <HelpHint label="加密文件名说明">开启后，查看包内文件名也需要密码。支持 7Z/RAR；开始压缩前请填写密码。</HelpHint></strong></span>
           </label>
         </div>
       </div>

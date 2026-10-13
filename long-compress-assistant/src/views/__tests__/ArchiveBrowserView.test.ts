@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { DOMWrapper, flushPromises, mount } from '@vue/test-utils'
 import ArchiveBrowserView from '../ArchiveBrowserView.vue'
 
 const mocks = vi.hoisted(() => ({
@@ -321,13 +321,15 @@ describe('ArchiveBrowserView', () => {
     expect(mocks.previewArchiveImage).toHaveBeenCalledWith(
       'C:/archives/demo.zip', 'image.png', '',
     )
-    expect(wrapper.get('[data-testid="archive-image-preview"] img').attributes('src'))
+    const preview = new DOMWrapper(document.body)
+    expect(preview.get('[data-testid="archive-image-preview"] img').attributes('src'))
       .toBe('data:image/png;base64,c2FmZQ==')
-    expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('只读 · 未写入磁盘')
+    expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('只读 · 未写入磁盘')
     expect(wrapper.find('footer').text()).toContain('已选择 2 / 2 个文件')
 
-    await wrapper.get('[aria-label="关闭预览"]').trigger('click')
-    expect(wrapper.find('[data-testid="archive-image-preview"]').exists()).toBe(false)
+    await preview.get('[aria-label="关闭预览"]').trigger('click')
+    expect(preview.find('[data-testid="archive-image-preview"]').exists()).toBe(false)
+    wrapper.unmount()
   })
 
   it('previews bounded decoded text and explains internal versus default opening', async () => {
@@ -342,12 +344,13 @@ describe('ArchiveBrowserView', () => {
     expect(mocks.previewArchiveText).toHaveBeenCalledWith(
       'C:/archives/demo.zip', 'docs/readme.txt', '',
     )
-    expect(wrapper.get('[data-testid="archive-text-preview"]').text()).toContain('你好，归档文本')
-    expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('UTF-8')
-    expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('完整显示')
-    expect(wrapper.get('[data-testid="archive-entry-preview"]').text()).toContain('默认应用打开')
+    const preview = new DOMWrapper(document.body)
+    expect(preview.get('[data-testid="archive-text-preview"]').text()).toContain('你好，归档文本')
+    expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('UTF-8')
+    expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('完整显示')
+    expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('默认应用打开')
     await wrapper.get('.browser-page').trigger('keydown', { key: 'Escape' })
-    expect(wrapper.find('[data-testid="archive-entry-preview"]').exists()).toBe(false)
+    expect(preview.find('[data-testid="archive-entry-preview"]').exists()).toBe(false)
     wrapper.unmount()
   })
 

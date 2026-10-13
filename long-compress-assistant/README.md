@@ -19,7 +19,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
-| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z 密码分卷、智能体积分析、配置模板和归档转换 |
+| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 密码分卷、LZ4/Brotli 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、受支持预览与选择性解压 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-本版为 [v1.4.2](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.2)，完整变化见 [中文发布说明](docs/RELEASE_NOTES_1.4.2.md)与 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。安装附件以 Release 页面实际上传结果为准。
+本版为 [v1.4.3](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.3)，完整变化见 [中文发布说明](docs/RELEASE_NOTES_1.4.3.md)与 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。安装附件以 Release 页面实际上传结果为准。
+
+v1.4.3 补齐标准 ZIP 多卷的浏览、预览、密码读取与转换，支持 RAR 密码分卷及同名来源保留，新增 LZ4/Brotli/TAR 组合与数字切卷。修复转换路径编辑、预览层级、缺卷和 RAR 小于一卷时的产物识别。真实桌面场景与证据见 [封板记录](docs/ARCHIVE_UPGRADE_FREEZE_1.4.3.md)。
 
 v1.4.2 支持一次转换多个压缩包、关闭后恢复尚未开始的归档任务，并分别提示补填原包和新包密码。所选任务批量配置使用弹窗，单条任务继续行内展开；设置中心按设计稿统一布局，保留全部设置和即时生效行为。详情见 [实施记录](docs/BATCH_CONVERSION_AND_DRAFT_RECOVERY_PLAN.md)与 [设置页记录](docs/UI_VISUAL_REFRESH_PLAN.md)。
 

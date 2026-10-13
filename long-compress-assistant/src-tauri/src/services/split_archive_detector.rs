@@ -91,6 +91,13 @@ impl SplitArchiveDetector {
         Ok(found)
     }
 
+    fn number_width(indexed: &[(usize, PathBuf)], matcher: &Regex, fallback: usize) -> usize {
+        indexed.iter().filter_map(|(_, path)| {
+            let name = path.file_name()?.to_str()?;
+            Some(matcher.captures(name)?.get(1)?.as_str().len())
+        }).min().unwrap_or(fallback)
+    }
+
     fn actual_case_insensitive(parent: &Path, expected_name: &str) -> Result<Option<PathBuf>> {
         for entry in fs::read_dir(parent)? {
             let entry = entry?;
@@ -143,12 +150,31 @@ impl SplitArchiveDetector {
             .to_string();
         let matcher = Regex::new(&format!(r"(?i)^{}\.z(\d{{2,3}})$", regex::escape(&base)))?;
         let indexed = Self::collect_indexed(parent, &matcher)?;
-        if indexed.is_empty() {
-            return Ok(None);
-        }
-        let max = indexed.last().map(|item| item.0).unwrap_or(0);
+        let width = Self::number_width(&indexed, &matcher, 2);
+        let mut max = indexed.last().map(|item| item.0).unwrap_or(0);
         let expected_main = parent.join(format!("{base}.zip"));
         let actual_main = Self::actual_case_insensitive(parent, &format!("{base}.zip"))?;
+        // The final directory declares the disk count. A missing highest .zNN
+        // member would otherwise look complete when only existing names count.
+        if let Some(main) = &actual_main {
+            use std::io::{Read, Seek, SeekFrom};
+            let mut file = fs::File::open(main)?;
+            let size = file.metadata()?.len();
+            let tail_size = size.min(65_557) as usize;
+            file.seek(SeekFrom::End(-(tail_size as i64)))?;
+            let mut tail = vec![0; tail_size]; file.read_exact(&mut tail)?;
+            if let Some(index) = (0..tail.len().saturating_sub(21)).rev().find(|&index|
+                &tail[index..index + 4] == b"PK\x05\x06"
+                    && index + 22 + u16::from_le_bytes(tail[index + 20..index + 22].try_into().unwrap()) as usize == tail.len()) {
+                let disk = u16::from_le_bytes(tail[index + 4..index + 6].try_into().unwrap()) as usize;
+                let declared = if index >= 20 && &tail[index - 20..index - 16] == b"PK\x06\x07" {
+                    (u32::from_le_bytes(tail[index - 4..index].try_into().unwrap()) as usize).saturating_sub(1)
+                } else { disk };
+                anyhow::ensure!(declared <= 65_535, "ZIP 卷数超过可读取范围");
+                max = max.max(declared);
+            }
+        }
+        if max == 0 && indexed.is_empty() { return Ok(None); }
         let mut parts: Vec<PathBuf> = indexed.iter().map(|(_, part)| part.clone()).collect();
         if let Some(main) = &actual_main {
             parts.push(main.clone());
@@ -156,7 +182,7 @@ impl SplitArchiveDetector {
         let mut missing = Vec::new();
         for index in 1..=max {
             if !indexed.iter().any(|(found, _)| *found == index) {
-                missing.push(parent.join(format!("{base}.z{index:02}")));
+                missing.push(parent.join(format!("{base}.z{index:0width$}")));
             }
         }
         if actual_main.is_none() {
@@ -180,20 +206,22 @@ impl SplitArchiveDetector {
 
     fn detect_rar_split(path: &Path, parent: &Path) -> Result<Option<SplitArchiveInfo>> {
         let name = Self::file_name(path)?;
-        if let Some(captures) = Regex::new(r"(?i)^(.+)\.part\d+\.rar$")
+        if let Some(captures) = Regex::new(r"(?i)^(.+)\.part(\d+)\.rar$")
             .unwrap()
             .captures(name)
         {
             let base = captures[1].to_string();
+
             let matcher = Regex::new(&format!(r"(?i)^{}\.part(\d+)\.rar$", regex::escape(&base)))?;
             let indexed = Self::collect_indexed(parent, &matcher)?;
+        let width = Self::number_width(&indexed, &matcher, 2);
             return Self::indexed_info(
                 SplitFormat::RarSplit,
                 base,
                 parent,
                 indexed,
                 1,
-                |base, index| format!("{base}.part{index}.rar"),
+                |base, index| format!("{base}.part{index:0width$}.rar"),
             );
         }
         let base = Regex::new(r"(?i)\.(?:rar|r\d{2,3})$")
@@ -202,6 +230,7 @@ impl SplitArchiveDetector {
             .to_string();
         let matcher = Regex::new(&format!(r"(?i)^{}\.r(\d{{2,3}})$", regex::escape(&base)))?;
         let indexed = Self::collect_indexed(parent, &matcher)?;
+        let width = Self::number_width(&indexed, &matcher, 2);
         if indexed.is_empty() {
             return Ok(None);
         }
@@ -219,7 +248,7 @@ impl SplitArchiveDetector {
         }
         for index in 0..=max {
             if !indexed.iter().any(|(found, _)| *found == index) {
-                missing.push(parent.join(format!("{base}.r{index:02}")));
+                missing.push(parent.join(format!("{base}.r{index:0width$}")));
             }
         }
         Ok(Some(Self::finalize(
@@ -242,13 +271,15 @@ impl SplitArchiveDetector {
             .replace(name, "")
             .to_string();
         let matcher = Regex::new(&format!(r"(?i)^{}\.7z\.(\d{{3,}})$", regex::escape(&base)))?;
+        let indexed = Self::collect_indexed(parent, &matcher)?;
+        let width = Self::number_width(&indexed, &matcher, name.rsplit('.').next().unwrap().len());
         Self::indexed_info(
             SplitFormat::SevenZipSplit,
             base,
             parent,
-            Self::collect_indexed(parent, &matcher)?,
+            indexed,
             1,
-            |base, index| format!("{base}.7z.{index:03}"),
+            |base, index| format!("{base}.7z.{index:0width$}"),
         )
     }
 
@@ -265,13 +296,15 @@ impl SplitArchiveDetector {
             .replace(name, "")
             .to_string();
         let matcher = Regex::new(&format!(r"(?i)^{}\.(\d{{3,}})$", regex::escape(&base)))?;
+        let indexed = Self::collect_indexed(parent, &matcher)?;
+        let width = Self::number_width(&indexed, &matcher, name.rsplit('.').next().unwrap().len());
         Self::indexed_info(
             SplitFormat::GenericNumeric,
             base,
             parent,
-            Self::collect_indexed(parent, &matcher)?,
+            indexed,
             1,
-            |base, index| format!("{base}.{index:03}"),
+            |base, index| format!("{base}.{index:0width$}"),
         )
     }
 

@@ -2,8 +2,8 @@ use crate::models::compression::{ArchiveBrowseResult, ArchiveEntryInfo};
 use crate::services::archive_format::ArchiveFormat;
 use crate::services::universal_engine::UniversalCliEngine;
 use anyhow::{Context, Result};
-use std::fs::File;
-use std::io::Read;
+
+use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -45,14 +45,21 @@ fn summarize(format: &str, entries: Vec<ArchiveEntryInfo>) -> ArchiveBrowseResul
 }
 
 fn detect_format(path: &Path) -> Result<ArchiveFormat> {
-    let mut file = File::open(path)?;
+    let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
+    if matches!(&file, super::numeric_volume_reader::ZipInputReader::StandardZip(_)) {
+        return Ok(ArchiveFormat::Zip);
+    }
     let mut header = [0u8; 560];
-    let read = file.read(&mut header)?;
+    let mut bytes = Vec::with_capacity(header.len());
+    file.take(header.len() as u64).read_to_end(&mut bytes)?;
+    let read = bytes.len();
+    header[..read].copy_from_slice(&bytes);
     let magic = ArchiveFormat::from_magic(&header[..read]);
     if magic != ArchiveFormat::Unknown {
         return Ok(magic);
     }
-    Ok(path
+    let logical = if super::numeric_volume_reader::ZipInputReader::is_numeric_first(path) { Path::new(path.file_stem().unwrap()) } else { path };
+    Ok(logical
         .extension()
         .and_then(|value| value.to_str())
         .map(ArchiveFormat::from_extension)
@@ -60,7 +67,7 @@ fn detect_format(path: &Path) -> Result<ArchiveFormat> {
 }
 
 fn browse_zip(path: &Path, cancelled: &AtomicBool) -> Result<ArchiveBrowseResult> {
-    let mut archive = zip_aes::ZipArchive::new(File::open(path)?)?;
+    let mut archive = zip_aes::ZipArchive::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?;
     let mut entries = Vec::with_capacity(archive.len());
     for index in 0..archive.len() {
         ensure_not_cancelled(cancelled)?;
@@ -97,8 +104,9 @@ fn browse_7z(
     cancelled: &AtomicBool,
 ) -> Result<ArchiveBrowseResult> {
     ensure_not_cancelled(cancelled)?;
-    let mut file = File::open(path)?;
-    let length = file.metadata()?.len();
+    let mut file = super::numeric_volume_reader::ZipInputReader::open(path)?;
+    let length = file.seek(SeekFrom::End(0))?;
+    file.seek(SeekFrom::Start(0))?;
     let password = password.map(sevenz_rust::Password::from);
     let archive = sevenz_rust::Archive::read(
         &mut file,
@@ -205,13 +213,14 @@ fn browse_tar_family(
     path: &Path,
     cancelled: &AtomicBool,
 ) -> Result<Option<ArchiveBrowseResult>> {
-    let name = path.file_name().and_then(|value| value.to_str()).unwrap_or("").to_ascii_lowercase();
+    let logical = if super::numeric_volume_reader::ZipInputReader::is_numeric_first(path) { Path::new(path.file_stem().unwrap()) } else { path };
+    let name = logical.file_name().and_then(|value| value.to_str()).unwrap_or("").to_ascii_lowercase();
     if name.ends_with(".tar") || name.ends_with(".ova") {
-        return browse_tar_reader(File::open(path)?, "TAR", cancelled).map(Some);
+        return browse_tar_reader(super::numeric_volume_reader::ZipInputReader::open(path)?, "TAR", cancelled).map(Some);
     }
     if name.ends_with(".tar.gz") || name.ends_with(".tgz") || name.ends_with(".tpz") {
         return browse_tar_reader(
-            flate2::read::GzDecoder::new(File::open(path)?),
+            flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
             "TAR.GZ",
             cancelled,
         )
@@ -219,7 +228,7 @@ fn browse_tar_family(
     }
     if name.ends_with(".tar.bz2") || name.ends_with(".tbz") || name.ends_with(".tbz2") {
         return browse_tar_reader(
-            bzip2::read::BzDecoder::new(File::open(path)?),
+            bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
             "TAR.BZ2",
             cancelled,
         )
@@ -227,7 +236,7 @@ fn browse_tar_family(
     }
     if name.ends_with(".tar.xz") || name.ends_with(".txz") {
         return browse_tar_reader(
-            xz2::read::XzDecoder::new(File::open(path)?),
+            xz2::read::XzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
             "TAR.XZ",
             cancelled,
         )
@@ -235,11 +244,16 @@ fn browse_tar_family(
     }
     if name.ends_with(".tar.zst") || name.ends_with(".tzst") {
         return browse_tar_reader(
-            zstd::stream::read::Decoder::new(File::open(path)?)?,
+            zstd::stream::read::Decoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?,
             "TAR.ZST",
             cancelled,
         )
         .map(Some);
+    }
+    for codec in ["lz4", "br"] {
+        if name.ends_with(&format!(".tar.{codec}")) {
+            return browse_tar_reader(super::codec_stream::decoder(path, codec)?, &format!("TAR.{}", codec.to_uppercase()), cancelled).map(Some);
+        }
     }
     Ok(None)
 }
@@ -263,14 +277,15 @@ pub async fn browse_archive_cancellable(
     }
     ensure_not_cancelled(&cancelled)?;
     let path = path.to_path_buf();
-    let name = path
+    let logical = if super::numeric_volume_reader::ZipInputReader::is_numeric_first(&path) { Path::new(path.file_stem().unwrap()) } else { &path };
+    let name = logical
         .file_name()
         .and_then(|value| value.to_str())
         .unwrap_or("")
         .to_ascii_lowercase();
     let is_tar_family = [
         ".tar", ".ova", ".tar.gz", ".tgz", ".tpz", ".tar.bz2", ".tbz", ".tbz2",
-        ".tar.xz", ".txz", ".tar.zst", ".tzst",
+        ".tar.xz", ".txz", ".tar.zst", ".tzst", ".tar.lz4", ".tar.br",
     ]
     .iter()
     .any(|suffix| name.ends_with(suffix));
@@ -281,7 +296,7 @@ pub async fn browse_archive_cancellable(
         if is_tar_family
             || matches!(
                 format,
-                ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar
+                ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Lz4 | ArchiveFormat::Brotli
             )
         {
             let native_cancelled = operation_cancelled.clone();
@@ -301,6 +316,21 @@ pub async fn browse_archive_cancellable(
                         &native_cancelled,
                     )
                     .context("Unable to read RAR metadata"),
+                    ArchiveFormat::Lz4 | ArchiveFormat::Brotli => {
+                        let codec = if format == ArchiveFormat::Lz4 { "lz4" } else { "br" };
+                        let mut reader = super::codec_stream::decoder(&path, codec)?;
+                        let mut buffer = [0u8; 64 * 1024];
+                        let mut size = 0u64;
+                        loop {
+                            ensure_not_cancelled(&native_cancelled)?;
+                            let count = reader.read(&mut buffer)?;
+                            if count == 0 { break; }
+                            size = size.checked_add(count as u64).context("Stream size overflow")?;
+                            anyhow::ensure!(size <= super::extraction_transaction::MAX_EXTRACTED_BYTES, "Stream is too large");
+                        }
+                        let name = super::native_extraction::single_stream::output_name(&path, &[&format!(".{codec}")]);
+                        Ok(summarize(&codec.to_uppercase(), vec![ArchiveEntryInfo { name: name.clone(), path: name, size, compressed_size: None, modified: None, crc: None, encrypted: false, is_dir: false }]))
+                    }
                     _ => anyhow::bail!("Unsupported native archive route"),
                 }
             })

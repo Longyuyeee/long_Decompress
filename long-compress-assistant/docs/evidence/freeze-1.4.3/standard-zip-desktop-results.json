@@ -1,0 +1,69 @@
+{
+  "version": "1.4.3",
+  "binarySha256": "6119538b1efadb1672596f65ffdf23cfbec5918c4cbad332adb29173eec3815a",
+  "nativePickerVerified": false,
+  "testKind": "real-webview-real-engine-picker-response-substituted",
+  "records": [
+    {
+      "mode": "plain",
+      "importedMember": "下载资料-plain.z01",
+      "files": 3,
+      "payloadSha256": "8eddeb7c7d388e1c9f9c8a1cc4566a68666d95f58f1ecda2f97b2c4768936af2"
+    },
+    {
+      "mode": "zipcrypto",
+      "importedMember": "下载资料-zipcrypto.z01",
+      "files": 3,
+      "payloadSha256": "8eddeb7c7d388e1c9f9c8a1cc4566a68666d95f58f1ecda2f97b2c4768936af2"
+    },
+    {
+      "mode": "aes",
+      "importedMember": "下载资料-aes.z01",
+      "files": 3,
+      "payloadSha256": "8eddeb7c7d388e1c9f9c8a1cc4566a68666d95f58f1ecda2f97b2c4768936af2"
+    },
+    {
+      "mode": "zip64",
+      "importedMember": "下载资料-zip64.z01",
+      "files": 3,
+      "payloadSha256": "8eddeb7c7d388e1c9f9c8a1cc4566a68666d95f58f1ecda2f97b2c4768936af2"
+    }
+  ],
+  "sourceHashes": [
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-7ovuFa\\收到的分卷资料\\下载资料-plain.z01",
+      "hash": "c551c9878ab3425c8920eeae6b527e115367ff72092108ae8a194234d997d56f"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-7ovuFa\\收到的分卷资料\\下载资料-plain.zip",
+      "hash": "2269c1a90a371539d7330b65625a6c7bb3cedeb3f067699e5dcbc6f8adad798c"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-7ovuFa\\收到的分卷资料\\下载资料-zipcrypto.z01",
+      "hash": "7c1a78269ce871d3acb701ba3ba8c558b8e0c2496c01b1442e26426c3f2432a6"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-7ovuFa\\收到的分卷资料\\下载资料-zipcrypto.zip",
+      "hash": "0f149815b45a97e6394d7f255610920cc2a308df11dd8ceab374ae852754bfc3"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-7ovuFa\\收到的分卷资料\\下载资料-aes.z01",
+      "hash": "e16c576d23dde8f967d7fdbac4a18c7260de081a77f038a1ecee116cad482f2c"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-7ovuFa\\收到的分卷资料\\下载资料-aes.zip",
+      "hash": "83c7c00ee1b4cfd301e7f74ee457cc69f7103bf23c241074dcfdbb97db45b78b"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-7ovuFa\\收到的分卷资料\\下载资料-zip64.z01",
+      "hash": "c551c9878ab3425c8920eeae6b527e115367ff72092108ae8a194234d997d56f"
+    },
+    {
+      "file": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-7ovuFa\\收到的分卷资料\\下载资料-zip64.zip",
+      "hash": "c5dc67f95100121205ce1a43a2642d646e45b23738d7a6088bdeabc4f2b82254"
+    }
+  ],
+  "defaultFormatPreserved": true,
+  "volumeDedupeVerified": true,
+  "conversionResults": 4
+}

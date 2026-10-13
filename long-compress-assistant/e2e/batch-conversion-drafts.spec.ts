@@ -6,6 +6,11 @@ test.beforeEach(async ({ page }) => {
       let result: unknown
       if (message.cmd === 'load_app_settings') result = '{}'
       if (message.cmd === 'get_file_info') result = { name: message.path.split(/[\\/]/).pop(), size: 1024, is_dir: false }
+      if (message.cmd === 'check_rar_compression_support') result = { available: true }
+      if (message.cmd === 'detect_split_archive' && /卷组/.test(message.path)) result = {
+        is_split: true, archive_format: 'rar', first_part: 'C:/用户资料/卷组.part01.rar',
+        parts: ['C:/用户资料/卷组.part01.rar', 'C:/用户资料/卷组.part02.rar'], is_complete: true, missing_parts: [],
+      }
       if (message.cmd === 'convert_archive') {
         ;(window as any).__conversionCalls.push({ source: message.sourcePath, output: message.outputPath })
         result = { primaryPath: message.outputPath, files: [{ path: message.outputPath, bytes: 1024 }], totalBytes: 1024, split: false }
@@ -13,6 +18,39 @@ test.beforeEach(async ({ page }) => {
       ;(window as any)[`_${message.callback}`]?.(result)
     }
   })
+})
+test('RAR groups retain inline configuration and new TAR codecs work in the batch dialog', async ({ page }, info) => {
+  await page.setViewportSize({ width: 1100, height: 820 })
+  await page.goto('/#/compress'); await page.waitForSelector('h1')
+  await page.evaluate(async () => {
+    const path = '/src/stores/archiveConversion.ts', store = (await import(path)).useArchiveConversionStore()
+    store.openFromExplorer(['C:/用户资料/卷组.part02.rar', 'C:/用户资料/卷组.part01.rar', 'C:/用户资料/普通资料.zip'], 'reconfigure')
+  })
+  const dialog = page.getByRole('dialog', { name: '压缩包转换', exact: true })
+  await expect(dialog.getByTestId('conversion-row')).toHaveCount(2)
+  await dialog.getByTestId('conversion-row').first().click()
+  const details = dialog.getByTestId('conversion-details').first()
+  await expect(details).toContainText('已检测到 RAR 编码器')
+  await expect(details.getByTestId('conversion-split')).toBeEnabled()
+  await expect(details.getByTestId('conversion-hidden-names')).toBeVisible()
+  await expect(page.getByRole('dialog')).toHaveCount(1)
+  await page.screenshot({ path: info.outputPath('rar-inline-volume-settings.png') })
+  await page.getByTestId('conversion-batch-config').click()
+  const batch = page.getByRole('dialog', { name: '修改所选转换配置', exact: true })
+  await batch.getByTestId('conversion-batch-format').click()
+  await page.getByRole('option', { name: 'TAR.BR（Brotli）', exact: true }).click()
+  await batch.getByTestId('conversion-batch-apply').click()
+  await expect(batch).toHaveCount(0)
+  await expect(details.getByTestId('conversion-format')).toContainText('TAR.BR')
+  await expect(details.getByTestId('conversion-password')).toBeDisabled()
+  await expect(details.getByTestId('conversion-split')).toBeEnabled()
+  await expect(details.getByTestId('conversion-output')).toHaveValue('C:/用户资料/卷组_调整.tar.br')
+  await page.setViewportSize({ width: 760, height: 820 })
+  expect(await dialog.locator('.modal-no-glass').evaluate(element => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
+  await page.screenshot({ path: info.outputPath('tar-brotli-inline-settings-760.png') })
+  await dialog.getByTestId('conversion-start').click()
+  await expect(page.getByTestId('batch-result-actions')).toContainText('已完成结果 · 2 项')
+  expect(await page.evaluate(() => (window as any).__conversionCalls[0])).toEqual({ source: 'C:/用户资料/卷组.part01.rar', output: 'C:/用户资料/卷组_调整.tar.br' })
 })
 test('conversion rows expand inline, batch edits are modal, then selected items generate separate results', async ({ page }, info) => {
   await page.setViewportSize({ width: 1100, height: 780 })

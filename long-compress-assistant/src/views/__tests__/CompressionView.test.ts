@@ -288,6 +288,18 @@ describe('CompressionView', () => {
     expect(taskStore.tasks).toHaveLength(0)
   })
 
+  it.each(['gz', 'bz2', 'xz', 'zst', 'lz4', 'br'])('preserves the source suffix in default single-stream names: %s', async format => {
+    const wrapper = mountView()
+    useCompressionStore().globalSettings.format = format as any
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
+    await nextTick()
+    const start = wrapper.findAll('button').find(button => button.text().includes(useAppStore().t('compress.start')))
+    await start!.trigger('click'); await flushPromises()
+    expect(mocks.compressFiles).toHaveBeenCalledWith(expect.any(String), ['C:/input/sample.txt'], `C:/input/sample.txt.${format}`, expect.objectContaining({ format }))
+    expect(useTaskStore().tasks[0].executionConfig).toMatchObject({ settings: { filename: 'sample.txt' } })
+    wrapper.unmount()
+  })
+
   it.each([false, true])('ignores retired fast-packing settings in real task payloads: %s', async enabled => {
     const wrapper = mountView()
     useCompressionStore().globalSettings.fastPack = enabled

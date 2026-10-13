@@ -786,6 +786,7 @@ const extractSelected = async () => {
       <div><i class="pi pi-cloud-upload"></i><strong>松开即可浏览压缩包</strong><span>将替换当前打开的压缩包</span></div>
     </div>
 
+    <Teleport to="body">
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
         <header class="preview-header">
@@ -809,6 +810,7 @@ const extractSelected = async () => {
       </section>
     </div>
 
+    </Teleport>
     <Teleport to="body">
       <div v-if="contextMenu" class="archive-context-layer" @pointerdown.self="closeContextMenu" @contextmenu.prevent>
         <section
@@ -945,7 +947,7 @@ const extractSelected = async () => {
 .browser-drop-overlay i { color: var(--dynamic-accent); font-size: 3rem; }
 .browser-drop-overlay strong { color: var(--text-content); font-size: 1.15rem; }
 .browser-drop-overlay span { font-size: .75rem; font-weight: 700; }
-.preview-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; min-width: 0; padding: clamp(.75rem, 3vw, 2rem); background: color-mix(in srgb, #08141f 58%, transparent); backdrop-filter: blur(14px); overflow-x: hidden; }
+.preview-backdrop { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; min-width: 0; padding: clamp(.75rem, 3vw, 2rem); background: color-mix(in srgb, #08141f 58%, transparent); backdrop-filter: blur(14px); overflow-x: hidden; }
 .preview-dialog { width: min(52rem, 100%); max-height: 100%; min-width: 0; overflow-x: hidden; overflow-y: auto; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 24%, var(--border-subtle)); border-radius: 1.5rem; background: color-mix(in srgb, var(--bg-card) 94%, transparent); box-shadow: 0 28px 80px rgba(0, 0, 0, .34); }
 .preview-header { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-subtle); }
 .preview-close { flex: 0 0 auto; width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border-radius: .75rem; color: var(--text-muted); background: var(--bg-input); }

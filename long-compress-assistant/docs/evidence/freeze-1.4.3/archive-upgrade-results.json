@@ -1,0 +1,42 @@
+{
+  "version": "1.4.3",
+  "originalHash": "94f947313811e9a6615b3791d6401c59524f7c72d8ec5325ef25dfe5a52d314b",
+  "records": [
+    {
+      "format": "rar",
+      "volumes": 5,
+      "totalBytes": 133998,
+      "payloadSha256": "fc712b9701116e53dc54a632df92b2ed1212f1e013689c33e46511d9b26fa5d5"
+    },
+    {
+      "format": "tar.lz4",
+      "volumes": 5,
+      "totalBytes": 131742,
+      "payloadSha256": "fc712b9701116e53dc54a632df92b2ed1212f1e013689c33e46511d9b26fa5d5"
+    },
+    {
+      "format": "tar.br",
+      "volumes": 5,
+      "totalBytes": 131354,
+      "payloadSha256": "fc712b9701116e53dc54a632df92b2ed1212f1e013689c33e46511d9b26fa5d5"
+    },
+    {
+      "format": "tar.gz",
+      "volumes": 5,
+      "totalBytes": 131541,
+      "payloadSha256": "fc712b9701116e53dc54a632df92b2ed1212f1e013689c33e46511d9b26fa5d5"
+    },
+    {
+      "format": "lz4",
+      "payloadSha256": "fc712b9701116e53dc54a632df92b2ed1212f1e013689c33e46511d9b26fa5d5"
+    },
+    {
+      "format": "br",
+      "payloadSha256": "fc712b9701116e53dc54a632df92b2ed1212f1e013689c33e46511d9b26fa5d5"
+    },
+    {
+      "format": "rar-duplicate-sources",
+      "preservedFiles": 2
+    }
+  ]
+}

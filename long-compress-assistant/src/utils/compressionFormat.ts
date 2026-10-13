@@ -23,6 +23,10 @@ export type CompressionFormatId =
   | 'xz.aes'
   | 'zst.aes'
   | 'lzma'
+  | 'lz4'
+  | 'br'
+  | 'tar.lz4'
+  | 'tar.br'
 
 export interface CompressionFormatCapability {
   format: CompressionFormatId
@@ -44,27 +48,31 @@ export interface CompressionFormatCapability {
 export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
   { format: 'zip', displayName: 'ZIP', extensions: ['zip', 'zipx'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: '7z', displayName: '7Z', extensions: ['7z'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
-  { format: 'rar', displayName: 'RAR', extensions: ['rar'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: true, fallbackEngine: 'winrar', knownLimitations: 'RAR creation, including encrypted RAR, requires user-installed WinRAR/RAR command line tools.' },
+  { format: 'rar', displayName: 'RAR', extensions: ['rar'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: true, fallbackEngine: 'winrar', knownLimitations: 'RAR creation, including encrypted RAR, requires user-installed WinRAR/RAR command line tools.' },
   { format: 'wim', displayName: 'WIM', extensions: ['wim'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: true, requiresWinRar: false, fallbackEngine: '7za', engineFormat: 'wim', knownLimitations: 'WIM creation requires the bundled full 7-Zip engine and does not support password encryption.' },
-  { format: 'tar', displayName: 'TAR', extensions: ['tar', 'ova'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
-  { format: 'tar.gz', displayName: 'TGZ', extensions: ['tar.gz', 'tgz', 'tpz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
-  { format: 'tar.bz2', displayName: 'TBZ', extensions: ['tar.bz2', 'tbz', 'tbz2'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
-  { format: 'tar.xz', displayName: 'TXZ', extensions: ['tar.xz', 'txz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
-  { format: 'tar.zst', displayName: 'TZST', extensions: ['tar.zst', 'tzst'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'tar', displayName: 'TAR', extensions: ['tar', 'ova'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'tar.gz', displayName: 'TGZ', extensions: ['tar.gz', 'tgz', 'tpz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'tar.bz2', displayName: 'TBZ', extensions: ['tar.bz2', 'tbz', 'tbz2'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'tar.xz', displayName: 'TXZ', extensions: ['tar.xz', 'txz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'tar.zst', displayName: 'TZST', extensions: ['tar.zst', 'tzst'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.aes', displayName: 'TAR.AES 🔒', extensions: ['tar.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'AES-256-GCM encrypted TAR archive. Password required.' },
   { format: 'tar.gz.aes', displayName: 'TGZ.AES 🔒', extensions: ['tar.gz.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'AES-256-GCM encrypted GZIP+TAR archive. Password required.' },
   { format: 'tar.bz2.aes', displayName: 'TBZ.AES 🔒', extensions: ['tar.bz2.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'AES-256-GCM encrypted BZ2+TAR archive. Password required.' },
   { format: 'tar.xz.aes', displayName: 'TXZ.AES 🔒', extensions: ['tar.xz.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'AES-256-GCM encrypted XZ+TAR archive. Password required.' },
   { format: 'tar.zst.aes', displayName: 'TZST.AES 🔒', extensions: ['tar.zst.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'AES-256-GCM encrypted Zstd+TAR archive. Password required.' },
-  { format: 'gz', displayName: 'GZ', extensions: ['gz', 'gzip'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
-  { format: 'bz2', displayName: 'BZ2', extensions: ['bz2', 'bzip2'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
-  { format: 'xz', displayName: 'XZ', extensions: ['xz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
-  { format: 'zst', displayName: 'ZST', extensions: ['zst', 'zstd'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'gz', displayName: 'GZ', extensions: ['gz', 'gzip'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'bz2', displayName: 'BZ2', extensions: ['bz2', 'bzip2'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'xz', displayName: 'XZ', extensions: ['xz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'zst', displayName: 'ZST', extensions: ['zst', 'zstd'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'gz.aes', displayName: 'GZ.AES 🔒', extensions: ['gz.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'AES-256-GCM encrypted GZIP file. Password required.' },
   { format: 'bz2.aes', displayName: 'BZ2.AES 🔒', extensions: ['bz2.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'AES-256-GCM encrypted BZ2 file. Password required.' },
   { format: 'xz.aes', displayName: 'XZ.AES 🔒', extensions: ['xz.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'AES-256-GCM encrypted XZ file. Password required.' },
   { format: 'zst.aes', displayName: 'ZST.AES 🔒', extensions: ['zst.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'AES-256-GCM encrypted Zstd file. Password required.' },
   { format: 'lzma', displayName: 'LZMA', extensions: ['lzma'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: false, requires7za: true, requiresWinRar: false, fallbackEngine: '7za' },
+  { format: 'tar.lz4', displayName: 'TAR.LZ4', extensions: ['tar.lz4'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'tar.br', displayName: 'TAR.BR', extensions: ['tar.br'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'lz4', displayName: 'LZ4', extensions: ['lz4'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'br', displayName: 'Brotli', extensions: ['br'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
 ]
 
 export interface ExtractOnlyFormatCapability {
@@ -133,9 +141,9 @@ export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS
   .map(extension => `.${extension}`)
   .join(',')
 
-export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · APK · IPA · LZH · CPIO · XAR + 更多'
+export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · APK · IPA · LZH · CPIO · XAR + 更多'
 
-export const COMPRESSION_FORMAT_HINT = 'ZIP · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZMA · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
+export const COMPRESSION_FORMAT_HINT = 'ZIP · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZMA · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
 
 const TAR_FORMATS = new Set(
   FORMAT_CAPABILITIES
@@ -173,3 +181,8 @@ export const isSingleFileStreamFormat = (format: string) => {
   const normalized = normalizeFormatId(format)
   return normalized ? FORMAT_BY_ID.get(normalized)?.singleFileOnly ?? false : false
 }
+
+export const supportsNativePassword = (format: string) => NATIVE_PASSWORD_FORMATS.has(normalizeFormatId(format) || format)
+export const supportsArchiveSplit = (format: string) => FORMAT_BY_ID.get(normalizeFormatId(format)!)?.supportsSplit ?? false
+export const supportsFilenameEncryption = (format: string) => ['7z', 'rar'].includes(format)
+export const supportsSolidCompression = (format: string) => ['7z', 'rar'].includes(format)

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
+import { ask } from '@tauri-apps/api/dialog'
 import { useTaskStore } from './task'
 import type { TaskHistoryRecord } from '@/types/taskHistory'
 import type { ArchiveConversionConfigV1 } from '@/types/executionConfig'
@@ -9,10 +10,15 @@ import type { PublishedArchiveOutput } from '@/types/archiveOutput'
 import type { ConversionDraft, ConversionPatch, ConversionSettings } from '@/types/archiveConversion'
 import { conversionOutputPath, defaultConversionSettings, normalizeConversionSettings } from '@/utils/archiveConversionDraft'
 import { parentDirectory } from '@/utils/resultLocation'
+import { archiveGroupKey, archiveSourceFormat, detectArchiveGroup } from '@/utils/archiveSource'
+import { isPotentialSplitArchivePath, supportsNativePassword, supportsArchiveSplit, supportsFilenameEncryption } from '@/utils/compressionFormat'
 
 export const conversionFormats = [
-  ['zip', 'ZIP'], ['7z', '7Z'], ['tar', 'TAR'], ['tar.gz', 'TGZ'],
-  ['tar.bz2', 'TBZ'], ['tar.xz', 'TXZ'], ['tar.zst', 'TZST'], ['wim', 'WIM'],
+  ['zip', 'ZIP'], ['7z', '7Z'], ['rar', 'RAR（需要 WinRAR）'], ['tar', 'TAR'], ['tar.gz', 'TGZ'],
+  ['tar.bz2', 'TBZ'], ['tar.xz', 'TXZ'], ['tar.zst', 'TZST'],
+  ['tar.lz4', 'TAR.LZ4（快速）'], ['tar.br', 'TAR.BR（Brotli）'],
+  ['tar.aes', 'TAR.AES（加密）'], ['tar.gz.aes', 'TGZ.AES（加密）'],
+  ['tar.bz2.aes', 'TBZ.AES（加密）'], ['tar.xz.aes', 'TXZ.AES（加密）'], ['tar.zst.aes', 'TZST.AES（加密）'], ['wim', 'WIM'],
 ].map(([value, label]) => ({ value, label }))
 const pathKey = (path: string) => path.replace(/\\/g, '/').toLowerCase()
 export const useArchiveConversionStore = defineStore('archiveConversion', () => {
@@ -26,6 +32,18 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   const phase = ref('')
   const runningTaskId = ref('')
   const stopRequested = ref(false)
+  const preparing = ref(false)
+  const rarSupport = ref<{ available: boolean; message?: string } | null>(null)
+  let rarCheck: Promise<void> | undefined
+  async function refreshRarSupport() {
+    if (rarCheck) return rarCheck
+    rarCheck = invoke<{ available: boolean; message?: string }>('check_rar_compression_support')
+      .then(support => { rarSupport.value = support || { available: false } })
+      .catch(failure => { rarSupport.value = { available: false, message: String(failure) } })
+      .finally(() => { rarCheck = undefined })
+    return rarCheck
+  }
+  const sourceResolutions = new Map<string, Promise<void>>()
   const active = computed(() => items.value.find(item => item.id === activeId.value))
   function effectiveSettings(item: ConversionDraft): ConversionSettings {
     const settings = item.settings || defaults.value
@@ -54,7 +72,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     }
     const requirements = passwordRequirements(item)
     item.sourcePasswordRequired = patch.sourcePassword !== undefined ? false : requirements.source
-    item.targetPasswordRequired = patch.password !== undefined || !['zip', '7z'].includes(item.settings.format) ? false : requirements.target
+    item.targetPasswordRequired = patch.password !== undefined || !supportsNativePassword(item.settings.format) ? false : requirements.target
     item.passwordRequired = item.sourcePasswordRequired || item.targetPasswordRequired
     item.error = undefined
   }
@@ -69,23 +87,67 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   const sourcePassword = field('sourcePassword'), password = field('password'), outputPath = field('outputPath')
   const format = field('format'), zipEncryption = field('zipEncryption'), zipPasswordEncoding = field('zipPasswordEncoding')
   const level = field('level'), splitMiB = field('splitMiB'), encryptFilenames = field('encryptFilenames')
-  const supportsPassword = computed(() => ['zip', '7z'].includes(format.value))
+  const supportsPassword = computed(() => supportsNativePassword(format.value))
   function addSources(paths: string[], intent: ConversionDraft['intent'] = 'convert') {
     const added: ConversionDraft[] = []
     for (const path of paths.map(path => path.trim()).filter(Boolean)) {
-      const existing = items.value.find(item => pathKey(item.sourcePath) === pathKey(path) && !item.taskId)
-      if (existing) { existing.selected = true; continue }
+      const existing = items.value.find(item => archiveGroupKey(item.sourcePath) === archiveGroupKey(path) && !item.taskId)
+      if (existing) { existing.selected = true; queueSourceResolution(existing, path); continue }
+      const sourceFormat = archiveSourceFormat(path)
       const item: ConversionDraft = { id: 'conversion-draft-' + crypto.randomUUID(), sourcePath: path, intent,
-        defaultFormat: intent === 'reconfigure' ? /\.zip(?:\.\d+)?$/i.test(path) ? 'zip' : '7z' : undefined,
+        defaultFormat: intent === 'reconfigure' ? conversionFormats.some(option => option.value === sourceFormat) ? sourceFormat : '7z' : undefined,
         expanded: false, selected: true }
       items.value.push(item); added.push(item)
+      queueSourceResolution(item, path)
     }
     if (!active.value && items.value.length) activeId.value = items.value[0].id
     return added
   }
+  function queueSourceResolution(item: ConversionDraft, reference = item.sourceReference || item.sourcePath) {
+    const original = item.sourcePath
+    const resolution = (sourceResolutions.get(item.id) || Promise.resolve()).then(async () => {
+      const current = items.value.find(current => current.id === item.id)
+      if (!current || current.sourcePath !== original || current.taskId) return
+      item = current
+      try {
+        const group = await detectArchiveGroup(reference)
+        // Undefined is only possible in browser previews without native IPC.
+        if (!group) return
+        if (!group.is_split) {
+          if (isPotentialSplitArchivePath(reference)) throw new Error('没有找到完整卷组，请重新选择来源。')
+          item.sourceIssue = undefined
+          if (item.intent === 'reconfigure' && !item.settings && item.defaultFormat !== undefined && group.archive_format && conversionFormats.some(option => option.value === group.archive_format)) item.defaultFormat = group.archive_format
+          return
+        }
+        if (!group.first_part) throw new Error('没有找到完整卷组，请重新选择来源。')
+        item.sourcePath = group.first_part
+        item.sourceReference = reference
+        item.sourceParts = group.parts
+        if (item.intent === 'reconfigure' && !item.settings && item.defaultFormat !== undefined) {
+          const format = group.archive_format || archiveSourceFormat(group.first_part)
+          if (format && conversionFormats.some(option => option.value === format)) item.defaultFormat = format
+        }
+        const duplicate = items.value.find(current => current.id !== item.id && !current.taskId
+          && archiveGroupKey(current.sourcePath) === archiveGroupKey(item.sourcePath))
+        if (duplicate) {
+          duplicate.selected ||= item.selected
+          duplicate.settings ||= item.settings
+          if (activeId.value === item.id) activeId.value = duplicate.id
+          items.value = items.value.filter(current => current.id !== item.id)
+          return
+        }
+        const missing = group.missing_parts || []
+        item.sourceIssue = group.is_complete === false || missing.length
+          ? '分卷不完整，请补齐：' + (missing.map(path => path.split(/[\\/]/).pop()).join('、') || '缺失分卷') : undefined
+        if (item.sourceIssue) item.expanded = true
+      } catch (failure) { item.sourceIssue = String(failure); item.expanded = true }
+    })
+    sourceResolutions.set(item.id, resolution)
+    void resolution.finally(() => { if (sourceResolutions.get(item.id) === resolution) sourceResolutions.delete(item.id) })
+  }
   function chooseContextSource(path: string) {
     if (busy.value) return
-    const item = items.value.find(item => item.sourcePath === path)
+    const item = items.value.find(item => archiveGroupKey(item.sourcePath) === archiveGroupKey(path))
     if (item) { activeId.value = item.id; item.expanded = true }
   }
   function selectSource(path: string) {
@@ -100,8 +162,8 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   function show() { visible.value = true }
   function applySelected(patch: ConversionPatch) {
     if (busy.value) return '转换正在进行，请稍后修改。'
-    if (patch.encryptFilenames && selected.value.some(item => (patch.format || effectiveSettings(item).format) !== '7z')) {
-      return '文件名加密只支持 7Z，请将所选任务的目标格式设为 7Z。'
+    if (patch.encryptFilenames && selected.value.some(item => !supportsFilenameEncryption(patch.format || effectiveSettings(item).format))) {
+      return '文件名加密只支持 7Z/RAR，请调整所选任务的目标格式。'
     }
     for (const item of selected.value) updateItem(item.id, patch)
     return ''
@@ -120,6 +182,9 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     const item = items.value.find(item => item.id === id)
     if (!item || busy.value || item.taskId) return
     item.sourcePath = path; item.sourceIssue = undefined; item.error = undefined
+    item.sourceParts = undefined
+    item.sourceReference = undefined
+    queueSourceResolution(item)
   }
   function restore(record: TaskHistoryRecord) {
     if (busy.value || record.executionConfig?.kind !== 'archive-conversion') return
@@ -132,6 +197,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     const source = record.sourcePaths[0]
     if (!source) return
     const item: ConversionDraft = { id: 'conversion-draft-' + crypto.randomUUID(), sourcePath: source,
+      sourceParts: record.sourcePaths.length > 1 ? [...record.sourcePaths] : undefined,
       intent: 'convert', expanded: true, selected: true, retryOfTaskId: record.id,
       targetPasswordRequired: config.passwordRequired, sourcePasswordRequired: false, passwordRequired: config.passwordRequired,
       settings: { ...defaultConversionSettings(), outputPath: '', format: config.format,
@@ -155,14 +221,16 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     if (!conversionFormats.some(format => format.value === settings.format)) return '请选择支持的目标格式'
     if (!Number.isInteger(settings.level) || settings.level < 0 || settings.level > 9) return '压缩强度应为 0～9'
     if (!Number.isFinite(settings.splitMiB) || settings.splitMiB < 0 || !Number.isSafeInteger(settings.splitMiB * 1048576)) return '请输入有效分卷大小'
-    if (settings.encryptFilenames && (settings.format !== '7z' || !settings.password)) return '文件名加密需要选择 7Z 并填写新包密码'
-    if (!['zip', '7z'].includes(settings.format) && (settings.password || settings.splitMiB > 0)) return '此格式不支持密码或分卷，请选择 ZIP 或 7Z'
+    if (settings.encryptFilenames && (!supportsFilenameEncryption(settings.format) || !settings.password)) return '文件名加密需要选择 7Z/RAR 并填写新包密码'
+    if (settings.format.endsWith('.aes') && !settings.password) return '此加密格式需要填写新包密码'
+    if (settings.password && !supportsNativePassword(settings.format)) return '此格式不支持原生密码，请选择 ZIP、7Z、RAR 或加密包装格式'
+    if (settings.splitMiB > 0 && !supportsArchiveSplit(settings.format)) return '此格式暂不支持分卷'
     if (!output.toLowerCase().endsWith('.' + settings.format)) return '新包名称必须以 .' + settings.format + ' 结尾'
     if (pathKey(output) === pathKey(item.sourcePath)) return '请为新包设置不同的名称或保存位置'
     if (/[<>:"|?*]/.test(output.split(/[\\/]/).pop() || '')) return '新包名称包含不可用字符，请修改名称'
     return ''
   }
-  async function execute(item: ConversionDraft, settings: ConversionSettings, outputPath: string) {
+  async function execute(item: ConversionDraft, settings: ConversionSettings, outputPath: string, allowRarPasswordCli = false) {
     let unlisten: UnlistenFn | undefined
     const id = 'conversion-' + crypto.randomUUID()
     const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
@@ -176,7 +244,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       })
       item.taskId = id; runningTaskId.value = id
       tasks.addTask({ id, name: '归档转换 · ' + item.sourcePath.split(/[\\/]/).pop(), type: 'compression', workloadKind: 'archive',
-        sourceFiles: [item.sourcePath], outputPath, format: config.format, executionConfig: config, retryOfTaskId: item.retryOfTaskId })
+        sourceFiles: [item.sourcePath, ...(item.sourceParts || []).filter(path => pathKey(path) !== pathKey(item.sourcePath))], outputPath, format: config.format, executionConfig: config, retryOfTaskId: item.retryOfTaskId })
       tasks.updateTaskStatus(id, 'running')
       try {
         const output = await invoke<PublishedArchiveOutput>('convert_archive', { taskId: id, sourcePath: item.sourcePath,
@@ -184,7 +252,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
           options: { format: config.format, level: config.level, password: settings.password || null,
             zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
             split_size: config.splitSize || null, encrypt_filenames: config.encryptFilenames,
-            preserve_paths: true, delete_after: false, verify_after: true } })
+            preserve_paths: true, delete_after: false, verify_after: true, allow_insecure_password_cli: allowRarPasswordCli } })
         const current = taskFor(item)!
         current.archiveOutput = output; current.outputBytes = output.totalBytes; current.outputBytesEstimated = false
         tasks.updateTaskStatus(id, 'completed')
@@ -202,9 +270,17 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     }
   }
   async function start() {
-    if (busy.value) return
+    if (busy.value || preparing.value) return
+    const batchIds = new Set(selected.value.map(item => item.id))
+    preparing.value = true
+    try {
+      await Promise.all([...batchIds].map(id => sourceResolutions.get(id)))
+      // Recheck the group on retry, including volumes added since the failure.
+      for (const item of selected.value) if (batchIds.has(item.id)) queueSourceResolution(item)
+      await Promise.all([...batchIds].map(id => sourceResolutions.get(id)))
+    } finally { preparing.value = false }
     error.value = ''
-    const targets = [...selected.value]
+    const targets = selected.value.filter(item => batchIds.has(item.id))
     if (!targets.length) { error.value = '请选择要转换的压缩包'; return }
     const outputs = new Set<string>()
     for (const item of targets) {
@@ -215,6 +291,22 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       if (item.error) item.expanded = true
     }
     if (targets.some(item => item.error)) { error.value = targets.length === 1 ? targets[0].error! : '请先调整展开条目中的配置，再开始转换。'; return }
+    let allowRarPasswordCli = false
+    if (targets.some(item => effectiveSettings(item).format === 'rar')) {
+      preparing.value = true
+      try {
+        await refreshRarSupport()
+        if (!rarSupport.value?.available) {
+          error.value = '未检测到 WinRAR/Rar.exe。请安装 WinRAR 后再开始，或将目标格式改为 ZIP/7Z。'
+          return
+        }
+        if (targets.some(item => effectiveSettings(item).format === 'rar' && effectiveSettings(item).password)) {
+          allowRarPasswordCli = await ask('RAR 编码器会在本机进程参数中短暂使用密码。是否继续创建加密 RAR？', { title: '加密 RAR', type: 'warning' })
+          if (!allowRarPasswordCli) return
+        }
+      } catch (failure) { error.value = String(failure); return }
+      finally { preparing.value = false }
+    }
     const jobs = targets.map(item => {
       const output = outputFor(item), settings = { ...effectiveSettings(item), outputPath: output }
       item.settings = { ...settings }
@@ -227,7 +319,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
         if (stopRequested.value) break
         const job = jobs[index]
         activeId.value = job.item.id
-        await execute(job.item, job.settings, job.output)
+        await execute(job.item, job.settings, job.output, allowRarPasswordCli && job.settings.format === 'rar')
       }
       error.value = targets.length === 1 ? targets[0].error || '' : ''
     } catch (failure) { error.value = String(failure) }
@@ -246,7 +338,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   }
   return { visible, items, defaults, pending, selected, activeId, sourcePath, sourcePassword, password, outputPath,
     format, zipEncryption, zipPasswordEncoding, level, splitMiB, encryptFilenames, error, busy, task, phase,
-    supportsPassword, contextIntent, contextSources, stopRequested, effectiveSettings, outputFor, taskFor, passwordRequirements,
+    supportsPassword, contextIntent, contextSources, stopRequested, preparing, rarSupport, refreshRarSupport, effectiveSettings, outputFor, taskFor, passwordRequirements,
     addSources, chooseContextSource, selectSource, openFromExplorer, show, restore, start, cancel,
     updateItem, applySelected, updateDefaults, remove, replaceSource }
 })

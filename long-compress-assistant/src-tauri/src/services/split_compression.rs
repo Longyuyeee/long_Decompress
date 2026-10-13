@@ -52,7 +52,9 @@ impl SplitCompressionService {
         let mut reader = std::fs::File::open(source)?;
         let metadata = reader.metadata()?;
         anyhow::ensure!(metadata.is_file(), "Archive source must be a file");
-        anyhow::ensure!(!output.exists() && Self::discover_parts(output)?.is_empty(), "Split archive output already exists");
+        // A staged archive may be cut beside itself. The reader stays intact;
+        // only newly created numbered parts are owned by this operation.
+        anyhow::ensure!((source == output || !output.exists()) && Self::discover_parts(output)?.is_empty(), "Split archive output already exists");
         // The complete archive is already allocated. Check only the additional
         // volume payload plus the existing application reserve, not source size
         // or twice the archive size. Unknown capacity is not zero capacity.

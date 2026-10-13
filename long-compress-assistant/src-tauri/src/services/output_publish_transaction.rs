@@ -138,22 +138,28 @@ pub(crate) fn publish_verified_volumes(
             return Err(PublishError::InvalidStagedOutput(staged.to_path_buf()));
         }
         let parent = staged.parent().unwrap_or_else(|| Path::new("."));
-        let prefix = format!("{}.", staged.file_name().unwrap().to_string_lossy());
-        let final_prefix = format!("{}.", destination.file_name().unwrap().to_string_lossy());
+        let rar = destination.extension().is_some_and(|extension| extension.eq_ignore_ascii_case("rar"));
+        let prefix = if rar { format!("{}.part", staged.file_stem().unwrap().to_string_lossy()) }
+            else { format!("{}.", staged.file_name().unwrap().to_string_lossy()) };
+        let final_prefix = if rar { format!("{}.part", destination.file_stem().unwrap().to_string_lossy()) }
+            else { format!("{}.", destination.file_name().unwrap().to_string_lossy()) };
         let mut parts = Vec::new();
         for entry in std::fs::read_dir(parent)? {
             let entry = entry?;
             let name = entry.file_name();
             let name = name.to_string_lossy();
             if name == destination.file_name().unwrap().to_string_lossy()
-                || name.strip_prefix(&final_prefix).is_some_and(|suffix|
-                    !suffix.is_empty() && suffix.bytes().all(|value| value.is_ascii_digit())) {
+                || name.to_ascii_lowercase().strip_prefix(&final_prefix.to_ascii_lowercase()).is_some_and(|suffix| {
+                    let number = if rar { suffix.strip_suffix(".rar").unwrap_or("") } else { suffix };
+                    !number.is_empty() && number.bytes().all(|value| value.is_ascii_digit())
+                }) {
                 return Err(PublishError::TargetAppeared(entry.path()));
             }
             if let Some(suffix) = name.strip_prefix(&prefix) {
-                let index = suffix.parse::<usize>().map_err(|_| PublishError::InvalidStagedOutput(entry.path()))?;
+                let number = if rar { suffix.rsplit_once('.').filter(|(_, ext)| ext.eq_ignore_ascii_case("rar")).map(|(number, _)| number).unwrap_or("") } else { suffix };
+                let index = number.parse::<usize>().map_err(|_| PublishError::InvalidStagedOutput(entry.path()))?;
                 let metadata = std::fs::symlink_metadata(entry.path())?;
-                if !metadata.file_type().is_file() || metadata.len() == 0 || suffix != format!("{index:03}") {
+                if !metadata.file_type().is_file() || metadata.len() == 0 || (!rar && suffix != format!("{index:03}")) {
                     return Err(PublishError::InvalidStagedOutput(entry.path()));
                 }
                 parts.push((index, entry.path(), parent.join(format!("{final_prefix}{suffix}"))));
@@ -201,6 +207,29 @@ pub(crate) fn publish_verified_volumes(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rar_volumes_publish_together_and_preserve_existing_parts_on_failure() {
+        for scenario in ["success", "conflict", "gap", "cancel"] {
+            let temp = tempfile::tempdir().unwrap();
+            let target = temp.path().join("资料.rar");
+            let staged = staged_output_path(&target, "rar").unwrap();
+            let part = |base: &Path, index: usize| base.with_file_name(format!("{}.part{index:02}.rar", base.file_stem().unwrap().to_string_lossy()));
+            for index in 1..=3 {
+                if scenario != "gap" || index != 2 { std::fs::write(part(&staged, index), [index as u8; 8]).unwrap(); }
+            }
+            if scenario == "conflict" { std::fs::write(part(&target, 2), b"existing").unwrap(); }
+            let mut checks = 0;
+            let result = publish_verified_volumes(&staged, &target, || { checks += 1; scenario == "cancel" && checks == 2 });
+            assert_eq!(result.is_ok(), scenario == "success");
+            for index in 1..=3 {
+                assert!(!part(&staged, index).exists());
+                if scenario == "success" { assert_eq!(std::fs::read(part(&target, index)).unwrap(), [index as u8; 8]); }
+                else if scenario == "conflict" && index == 2 { assert_eq!(std::fs::read(part(&target, index)).unwrap(), b"existing"); }
+                else { assert!(!part(&target, index).exists()); }
+            }
+        }
+    }
 
     #[test]
     fn volume_publication_handles_success_conflict_cancellation_and_gaps() {
