@@ -2,6 +2,8 @@
 
 功能冻结提交：**`23d2790`**（2026-10-13）。后续仅版本身份、README/Release、构建资源与发布交接，不追加功能。
 
+发布准备提交 `2461c9b` 的 [Windows package 检查](https://github.com/Longyuyeee/long_Decompress/actions/runs/38425234325) 成功，PR #156 已合入。正式标签 `v1.4.4` 固定在 **`f1562f1a246d01cc904c08dfd93d1180701f7344`**；[正式发布工作流](https://github.com/Longyuyeee/long_Decompress/actions/runs/38426389014)与 [Release 页面](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.4)记录附件生成结果。标签之后没有追加功能。
+
 ## 已完成范围
 
 诊断与解压共用卷组/内容读取、真正标准 ZIP 分卷创建及全部配置链、PPMd 与加密 ZIPX/RAR 中间卷兼容、ZIP 目录丢失和完整条目救援。默认数字切卷及密码编码保持不变。完整实施、首次失败和纠偏见 [本版审计](ARCHIVE_RELIABILITY_1.4.4.md)。

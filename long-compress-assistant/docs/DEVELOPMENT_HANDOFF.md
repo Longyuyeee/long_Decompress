@@ -1,5 +1,13 @@
 # 开发交接
 
+## 正式发布接续：v1.4.4 已合入并推送标签（2026-10-13）
+
+- 功能冻结提交为 `23d279026b475d5bf5c1ee7edd6f40f136f245d2`；发布准备提交 `2461c9b` 的 [Windows package 检查](https://github.com/Longyuyeee/long_Decompress/actions/runs/38425234325) 成功后，PR [#156](https://github.com/Longyuyeee/long_Decompress/pull/156) 已合入。
+- **正式标签 `v1.4.4` 指向 `f1562f1a246d01cc904c08dfd93d1180701f7344`**。两份 README、中文发布说明、npm/Tauri/Rust/右键资源统一；标签之后只更新交接，不追加功能。
+- [Release 页面](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.4) 已建立并写入中文说明；[正式发布工作流](https://github.com/Longyuyeee/long_Decompress/actions/runs/38426389014) 负责生成与上传安装器、更新 ZIP、签名及 `latest.json`。页面建立不等于附件已就绪，下载请以该页面实际附件和工作流最终状态为准。
+- 四阶段实施、真实失败和兼容边界见 [本版审计](ARCHIVE_RELIABILITY_1.4.4.md)，封板结论见 [封板记录](ARCHIVE_RELIABILITY_FREEZE_1.4.4.md)。证据在 `docs/evidence/archive-reliability-step1-2026-10-13/` 至 `step4-2026-10-13/`，不需要搬运巨大临时归档；隔离复验脚本、样本来源/哈希和二进制身份均已保存。
+- 接下来接收真实反馈；密码 ZIP 修复、标准磁盘卷丢目录重建、RAR 冗余恢复、ARJ/Z/UDF 仍是候选，不当作本版漏项或自动开启下一版本。已安装程序、个人设置、保险箱和历史未改动。下方“未封板/等待合入”均为历史快照。
+
 ## 最新：v1.4.4 已封板，接续合入与正式发布（2026-10-13）
 
 **功能冻结提交 `23d2790`**。最终普通 Release 构建与 80 文件/619 项前端回归通过；恢复页面与部分恢复警告实看并重跑通过。四项范围均完成，见 [封板记录](ARCHIVE_RELIABILITY_FREEZE_1.4.4.md)。不再追加功能，也不把候选格式/恢复机制重新作为门禁。
