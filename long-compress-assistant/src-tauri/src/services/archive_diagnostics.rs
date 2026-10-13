@@ -6,6 +6,8 @@ use crate::services::compression_format::{
 use crate::services::compression_verification::verify_native;
 use crate::services::extraction_transaction;
 use crate::services::native_extraction::seven_zip;
+use crate::services::numeric_volume_reader::ZipInputReader;
+use crate::services::split_archive_detector::{SplitArchiveDetector, SplitFormat};
 use crate::services::universal_engine::UniversalCliEngine;
 use anyhow::{Context, Result};
 use serde::Serialize;
@@ -132,105 +134,14 @@ fn format_label(path: &Path, header: &[u8]) -> String {
     }
 }
 
+#[cfg(test)]
 fn split_evidence(path: &Path) -> Result<(bool, usize, Vec<String>)> {
-    let parent = path.parent().unwrap_or_else(|| Path::new("."));
-    let name = path
-        .file_name()
-        .and_then(|value| value.to_str())
-        .unwrap_or("")
-        .to_ascii_lowercase();
-    let mut indices = Vec::new();
-    let mut prefix = String::new();
-    let mut suffix = String::new();
-    let mut number_width = 3usize;
-
-    if let Some(position) = name.rfind(".7z.") {
-        prefix = name[..position + 4].to_string();
-        suffix = String::new();
-        number_width = name[position + 4..].len().max(1);
-    } else if let Some(position) = name.rfind(".part") {
-        if name.ends_with(".rar") {
-            prefix = name[..position + 5].to_string();
-            suffix = ".rar".to_string();
-            number_width = name[position + 5..name.len() - 4].len().max(1);
-        }
-    } else if name.ends_with(".rar")
-        || name.rsplit_once('.').is_some_and(|(_, ext)| {
-            ext.starts_with('r') && ext[1..].chars().all(|c| c.is_ascii_digit())
-        })
-    {
-        let stem = name.rsplit_once('.').map(|(stem, _)| stem).unwrap_or(&name);
-        for entry in std::fs::read_dir(parent)? {
-            let candidate = entry?.file_name().to_string_lossy().to_ascii_lowercase();
-            if let Some(extension) = candidate.strip_prefix(&format!("{stem}.r")) {
-                if let Ok(index) = extension.parse::<usize>() {
-                    indices.push(index);
-                }
-            }
-        }
-        if indices.is_empty() {
-            return Ok((false, 1, Vec::new()));
-        }
-        let terminal = parent.join(format!("{stem}.rar")).exists();
-        let max = *indices.iter().max().unwrap_or(&0);
-        let mut missing = (0..=max)
-            .filter(|index| !indices.contains(index))
-            .map(|index| format!("{stem}.r{index:02}"))
-            .collect::<Vec<_>>();
-        if !terminal {
-            missing.push(format!("{stem}.rar"));
-        }
-        return Ok((true, indices.len() + usize::from(terminal), missing));
-    } else if name.ends_with(".zip")
-        || name.rsplit_once('.').is_some_and(|(_, ext)| {
-            ext.starts_with('z') && ext[1..].chars().all(|c| c.is_ascii_digit())
-        })
-    {
-        let stem = name.rsplit_once('.').map(|(stem, _)| stem).unwrap_or(&name);
-        for entry in std::fs::read_dir(parent)? {
-            let candidate = entry?.file_name().to_string_lossy().to_ascii_lowercase();
-            if let Some(extension) = candidate.strip_prefix(&format!("{stem}.z")) {
-                if let Ok(index) = extension.parse::<usize>() {
-                    indices.push(index);
-                }
-            }
-        }
-        if indices.is_empty() {
-            return Ok((false, 1, Vec::new()));
-        }
-        let terminal = parent.join(format!("{stem}.zip")).exists();
-        let max = *indices.iter().max().unwrap_or(&0);
-        let mut missing = (1..=max)
-            .filter(|index| !indices.contains(index))
-            .map(|index| format!("{stem}.z{index:02}"))
-            .collect::<Vec<_>>();
-        if !terminal {
-            missing.push(format!("{stem}.zip"));
-        }
-        return Ok((true, indices.len() + usize::from(terminal), missing));
-    }
-
-    if prefix.is_empty() {
+    let Some(group) = SplitArchiveDetector::detect_split_archive(path)? else {
         return Ok((false, 1, Vec::new()));
-    }
-    for entry in std::fs::read_dir(parent)? {
-        let candidate = entry?.file_name().to_string_lossy().to_ascii_lowercase();
-        if candidate.starts_with(&prefix) && candidate.ends_with(&suffix) {
-            let number = candidate[prefix.len()..candidate.len() - suffix.len()].parse::<usize>();
-            if let Ok(number) = number {
-                indices.push(number);
-            }
-        }
-    }
-    if indices.is_empty() {
-        return Ok((true, 0, vec![name]));
-    }
-    let max = *indices.iter().max().unwrap();
-    let missing = (1..=max)
-        .filter(|index| !indices.contains(index))
-        .map(|index| format!("{prefix}{index:0number_width$}{suffix}"))
-        .collect();
-    Ok((true, indices.len(), missing))
+    };
+    Ok((true, group.parts.len(), group.missing_parts.iter().map(|part|
+        part.file_name().unwrap_or_default().to_string_lossy().to_string()
+    ).collect()))
 }
 
 fn classify_failure(
@@ -239,7 +150,33 @@ fn classify_failure(
     password_supplied: bool,
 ) -> (&'static str, &'static str, &'static str) {
     let lower = message.to_ascii_lowercase();
-    if lower.contains("password") || lower.contains("encrypted") {
+    // Structural/IO evidence and explicit ambiguous markers outrank incidental
+    // words such as "encrypted" or "wrong password?" in an engine's message.
+    if lower.contains("[archive-inspection:incomplete]") || lower.contains("missing disk") {
+        ("missing_volume", "缺少分卷", "卷组不完整；请补齐分卷后重新检查，不必反复尝试密码")
+    } else if lower.contains("permission denied") || lower.contains("[archive-inspection:permission]") {
+        ("permission_error", "无法读取归档", "请确认文件访问权限或占用情况，处理后重新检查")
+    } else if lower.contains("[archive-inspection:engine-unavailable]")
+        || lower.contains(&crate::utils::archive_tools::missing_7z_message().to_ascii_lowercase())
+        || lower.contains("7z command failed")
+    {
+        ("verification_unavailable", "无法完成内容校验", "归档引擎不可用，不能据此判定文件损坏或密码错误")
+    } else if lower.contains("[archive-inspection:ambiguous-data]") || lower.contains("invalid authentication code") {
+        ("ambiguous_data", "密码或加密内容异常", "当前无法区分密码错误与加密内容损坏；若已确认密码正确，请重新获取完整文件，反复尝试密码不能修复损坏")
+    } else if lower.contains("eof") || lower.contains("central directory")
+        || lower.contains("eocd") || lower.contains("end of central")
+        || lower.contains("truncated") || lower.contains("unexpected end")
+        || lower.contains("数据提前结束")
+    {
+        ("truncated", "归档被截断", "归档结构或数据不完整；请确认下载、复制已完成，必要时重新获取文件")
+    } else if lower.contains("[archive-inspection:damaged]") {
+        ("damaged", "归档损坏", "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏")
+    } else if lower.contains("unsupported") || lower.contains("not supported") {
+        ("unsupported_feature", "暂不支持此归档特性", "当前引擎无法读取此算法或归档特性；这不等于文件损坏或密码错误")
+    } else if lower.contains("passwordrequired") || lower.contains("password required")
+        || lower.contains("invalidpassword") || lower.contains("invalid password")
+        || lower.contains("wrong password") || lower.contains("password is incorrect")
+    {
         if encrypted && !password_supplied {
             (
                 "password_required",
@@ -251,9 +188,9 @@ fn classify_failure(
         }
     } else if encrypted && password_supplied {
         (
-            "wrong_password",
-            "密码错误或密文损坏",
-            "7Z 无法区分错误密码与加密数据损坏；请先确认密码，若密码正确则归档已损坏",
+            "ambiguous_data",
+            "密码或加密内容异常",
+            "当前无法区分密码错误与加密内容损坏；若已确认密码正确，请重新获取完整文件，反复尝试密码不能修复损坏",
         )
     } else if lower.contains("crc") || lower.contains("checksum") || lower.contains("invalid data")
     {
@@ -262,17 +199,40 @@ fn classify_failure(
             "内容校验失败",
             "至少一个条目的 CRC 或解压数据校验失败",
         )
-    } else if lower.contains("eof")
-        || lower.contains("central directory")
-        || lower.contains("eocd")
-        || lower.contains("end of central")
-        || lower.contains("truncated")
-        || lower.contains("unexpected end")
-    {
-        ("truncated", "归档被截断", "归档尾部或中央目录不完整")
-    } else {
+    } else if lower.contains("data error") || lower.contains("corrupt")
+        || lower.contains("[archive-inspection:damaged]") || lower.contains("invalid archive") {
         ("damaged", "归档损坏", "归档结构或内容无法通过完整性测试")
+    } else {
+        ("unknown_failure", "暂不能确定失败原因", "当前检查未能确认完整性；请保留原文件和诊断报告，不要仅据此反复尝试密码")
     }
+}
+
+fn record_failure(report: &mut ArchiveDiagnosticReport, error: &anyhow::Error, password_supplied: bool, readable_directory: bool) {
+    let io_kind = error.chain().find_map(|cause| {
+        cause.downcast_ref::<std::io::Error>().map(|cause| cause.kind())
+            .or_else(|| match cause.downcast_ref::<zip_aes::result::ZipError>() {
+                Some(zip_aes::result::ZipError::Io(cause)) => Some(cause.kind()), _ => None,
+            })
+    });
+    let (code, title, detail) = match io_kind {
+        Some(std::io::ErrorKind::PermissionDenied) =>
+            ("permission_error", "无法读取归档", "请确认文件访问权限或占用情况，处理后重新检查"),
+        Some(std::io::ErrorKind::NotFound) =>
+            ("source_unavailable", "来源文件不可用", "检查期间来源文件或分卷已不可用；请确认路径和存储设备后重新检查"),
+        Some(std::io::ErrorKind::Other | std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut) =>
+            ("io_error", "读取归档失败", "无法完成文件读取；请确认文件占用情况和存储设备后重新检查"),
+        _ => classify_failure(&format!("{error:#}"), report.encrypted, password_supplied),
+    };
+    report.status = code.to_string();
+    // The existing rebuilder cannot read a volume set or a lost directory.
+    report.can_repair = report.actual_format == "ZIP" && readable_directory
+        && !report.encrypted && !report.split_archive && matches!(code, "crc_error" | "damaged");
+    report.recoverability = if report.can_repair { "repairable" }
+        else if matches!(code, "password_required" | "wrong_password") { "password_required" }
+        else { "diagnostic_only" }.to_string();
+    report.issues.push(DiagnosticIssue { code: code.to_string(), severity: "error".to_string(),
+        title: title.to_string(), detail: detail.to_string() });
+    report.evidence.push(format!("Integrity failure class: {code}"));
 }
 
 pub async fn diagnose_archive(
@@ -287,25 +247,24 @@ pub async fn diagnose_archive(
             path.display()
         );
     }
-    let file_size = path.metadata()?.len();
-    let mut header = [0u8; 560];
-    let read = File::open(path)?.read(&mut header)?;
-    let actual_format = format_label(path, &header[..read]);
-    let requested_format = match actual_format.as_str() {
-        "ZIP" => "zip".to_string(),
-        "7Z" => "7z".to_string(),
-        "RAR" => "rar".to_string(),
-        _ => infer_compression_format(path.to_string_lossy().as_ref(), None),
-    };
-    let (split_archive, volumes_found, missing_volumes) = split_evidence(path)?;
+    let password = password.filter(|value| !value.is_empty());
+    let group = SplitArchiveDetector::detect_split_archive(path)?;
+    let source = group.as_ref().map(|group| group.first_part.as_path()).unwrap_or(path);
+    let logical = if group.as_ref().is_some_and(|group|
+        matches!(group.format, SplitFormat::SevenZipSplit | SplitFormat::GenericNumeric)) {
+        Path::new(source.file_stem().unwrap_or_default())
+    } else { source };
+    let missing_volumes = group.as_ref().map(|group| group.missing_parts.iter()
+        .map(|part| part.file_name().unwrap_or_default().to_string_lossy().to_string())
+        .collect()).unwrap_or_default();
     let mut report = ArchiveDiagnosticReport {
         file_path: path.to_string_lossy().to_string(),
-        file_size,
-        actual_format: actual_format.clone(),
+        file_size: group.as_ref().map(|group| group.total_size).unwrap_or(path.metadata()?.len()),
+        actual_format: format_label(logical, &[]),
         status: "checking".to_string(),
         encrypted: false,
-        split_archive,
-        volumes_found,
+        split_archive: group.is_some(),
+        volumes_found: group.as_ref().map(|group| group.parts.len()).unwrap_or(1),
         missing_volumes,
         total_files: 0,
         total_directories: 0,
@@ -318,23 +277,40 @@ pub async fn diagnose_archive(
     };
     report
         .evidence
-        .push(format!("Magic/extension format: {actual_format}"));
-    report
-        .evidence
-        .push(format!("Archive size: {file_size} bytes"));
+        .push(format!("Archive size: {} bytes", report.file_size));
     if !report.missing_volumes.is_empty() {
         report.status = "missing_volume".to_string();
-        report.recoverability = "unrecoverable".to_string();
+        report.recoverability = "diagnostic_only".to_string();
         report.issues.push(DiagnosticIssue {
             code: "missing_volume".to_string(),
             severity: "error".to_string(),
             title: "缺少分卷".to_string(),
-            detail: format!("缺少：{}", report.missing_volumes.join("、")),
+            detail: format!("缺少：{}。请补齐到同一目录后重新检查，不必反复尝试密码。", report.missing_volumes.join("、")),
         });
         return Ok(report);
     }
 
-    let metadata = archive_browser::browse_archive(path, password).await;
+    // Read across tiny numeric volumes and use the same standard ZIP view as
+    // extraction. Keep the user's selected member in the exported report.
+    let inspected = (|| -> Result<String> {
+        let reader = ZipInputReader::open(source)?;
+        if matches!(&reader, ZipInputReader::StandardZip(_)) { return Ok("ZIP".to_string()); }
+        let mut header = Vec::new();
+        reader.take(560).read_to_end(&mut header)?;
+        Ok(format_label(logical, &header))
+    })();
+    let actual_format = match inspected {
+        Ok(format) => format,
+        Err(error) => { record_failure(&mut report, &error, password.is_some(), false); return Ok(report); }
+    };
+    report.actual_format = actual_format.clone();
+    report.evidence.push(format!("Magic/extension format: {actual_format}"));
+    let requested_format = match actual_format.as_str() {
+        "ZIP" => "zip".to_string(), "7Z" => "7z".to_string(), "RAR" => "rar".to_string(),
+        _ => infer_compression_format(logical.to_string_lossy().as_ref(), None),
+    };
+
+    let metadata = archive_browser::browse_archive(source, password).await;
     if let Ok(metadata) = &metadata {
         if metadata.format != report.actual_format {
             report
@@ -354,10 +330,12 @@ pub async fn diagnose_archive(
     check_cancelled(&cancelled)?;
 
     if actual_format == "ZIP" {
-        report.encrypted =
-            UniversalCliEngine::zip_requires_password(path).unwrap_or(report.encrypted);
+        match UniversalCliEngine::zip_requires_password(source) {
+            Ok(encrypted) => report.encrypted = encrypted,
+            Err(error) => { record_failure(&mut report, &error, password.is_some(), false); return Ok(report); }
+        }
     } else if actual_format == "7Z" {
-        report.encrypted = seven_zip::requires_password(path).unwrap_or(report.encrypted);
+        report.encrypted = seven_zip::requires_password(source).unwrap_or(report.encrypted);
     }
     if report.encrypted && password.filter(|value| !value.is_empty()).is_none() {
         report.status = "password_required".to_string();
@@ -371,23 +349,8 @@ pub async fn diagnose_archive(
         return Ok(report);
     }
 
-    if actual_format == "ZIP"
-        && report.encrypted
-        && !UniversalCliEngine::try_zip_password(path, password.unwrap_or_default())?
-    {
-        report.status = "wrong_password".to_string();
-        report.recoverability = "password_required".to_string();
-        report.issues.push(DiagnosticIssue {
-            code: "wrong_password".to_string(),
-            severity: "error".to_string(),
-            title: "密码错误".to_string(),
-            detail: "提供的密码无法读取加密 ZIP 内容".to_string(),
-        });
-        return Ok(report);
-    }
-
     let route = compression_route(&requested_format);
-    let verify_path = path.to_path_buf();
+    let verify_path = source.to_path_buf();
     let verify_password = password.map(str::to_string);
     let verify_cancelled = cancelled.clone();
     let verification = match route {
@@ -409,7 +372,7 @@ pub async fn diagnose_archive(
         }
         _ if password.is_none() => {
             report.integrity_tested = true;
-            UniversalCliEngine::test_integrity(path, None).await
+            UniversalCliEngine::test_integrity(source, None).await
         }
         _ => {
             report.issues.push(DiagnosticIssue {
@@ -434,42 +397,11 @@ pub async fn diagnose_archive(
                 .push("Integrity test completed without errors".to_string());
         }
         Err(error) => {
-            let message = error.to_string();
+            let message = format!("{error:#}");
             if message.to_ascii_lowercase().contains("cancel") {
                 return Err(error);
             }
-            let lower = message.to_ascii_lowercase();
-            if lower.contains("7-zip") || lower.contains("archive engine") {
-                report.status = "verification_unavailable".to_string();
-                report.recoverability = "diagnostic_only".to_string();
-                report.issues.push(DiagnosticIssue {
-                    code: "verification_unavailable".to_string(),
-                    severity: "warning".to_string(),
-                    title: "无法完成内容校验".to_string(),
-                    detail: "当前归档引擎不可用；已保留结构诊断结果，不能据此宣称归档完整"
-                        .to_string(),
-                });
-                return Ok(report);
-            }
-            let (code, title, detail) =
-                classify_failure(&message, report.encrypted, password.is_some());
-            report.status = code.to_string();
-            report.can_repair = actual_format == "ZIP" && !report.encrypted && code != "truncated";
-            report.recoverability = if report.can_repair {
-                "repairable"
-            } else {
-                "diagnostic_only"
-            }
-            .to_string();
-            report.issues.push(DiagnosticIssue {
-                code: code.to_string(),
-                severity: "error".to_string(),
-                title: title.to_string(),
-                detail: detail.to_string(),
-            });
-            report
-                .evidence
-                .push(format!("Integrity failure class: {code}"));
+            record_failure(&mut report, &error, password.is_some(), metadata.is_ok());
         }
     }
     Ok(report)
@@ -685,6 +617,122 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn diagnosis_accepts_any_tiny_numeric_zip_volume_and_checks_the_whole_group() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("收到的资料.zip");
+        create_stored_zip(&archive);
+        let volumes = crate::services::split_compression::SplitCompressionService::split_archive_file(
+            &archive, &temp.path().join("分卷资料.zip"), 29, || Ok(()),
+        ).unwrap();
+        let selected = &volumes.part_files[2];
+        let report = diagnose_archive(selected, None, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(report.file_path, selected.to_string_lossy());
+        assert_eq!(report.status, "healthy", "{report:?}");
+        assert_eq!(report.actual_format, "ZIP");
+        assert!(report.split_archive && report.integrity_tested);
+        assert_eq!(report.volumes_found, volumes.part_files.len());
+        assert_eq!(report.file_size, std::fs::metadata(&archive).unwrap().len());
+        assert_eq!(report.total_files, 2);
+        assert!(!report.can_repair);
+
+        std::fs::remove_file(&volumes.part_files[1]).unwrap();
+        let missing = diagnose_archive(selected, None, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(missing.status, "missing_volume");
+        assert_eq!(missing.missing_volumes, vec!["分卷资料.zip.002"]);
+        assert!(!missing.integrity_tested);
+    }
+
+    #[tokio::test]
+    async fn diagnosis_reports_zip_declared_missing_disks_even_with_only_the_terminal_file() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("只收到终卷.zip");
+        let mut end = vec![0u8; 22];
+        end[..4].copy_from_slice(b"PK\x05\x06");
+        end[4..6].copy_from_slice(&2u16.to_le_bytes());
+        std::fs::write(&archive, end).unwrap();
+        let report = diagnose_archive(&archive, Some("不用试密码"), Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(report.status, "missing_volume");
+        assert_eq!(report.missing_volumes, vec!["只收到终卷.z01", "只收到终卷.z02"]);
+        assert!(!report.integrity_tested && !report.can_repair);
+        assert!(!serde_json::to_string(&report).unwrap().contains("不用试密码"));
+    }
+
+    #[tokio::test]
+    async fn corrupted_encrypted_zip_returns_a_report_instead_of_requesting_another_password() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("密码正确但文件坏了.zip");
+        let mut writer = zip_aes::ZipWriter::new(File::create(&archive).unwrap());
+        writer.start_file("受损文件.txt", zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Stored)
+            .with_aes_encryption(zip_aes::AesMode::Aes256, "真实密码")).unwrap();
+        writer.write_all(&vec![42u8; 128]).unwrap();
+        writer.finish().unwrap();
+        let data_start = zip_aes::ZipArchive::new(File::open(&archive).unwrap()).unwrap()
+            .by_index_raw(0).unwrap().data_start().unwrap() as usize;
+        let mut bytes = std::fs::read(&archive).unwrap();
+        bytes[data_start + 25] ^= 1;
+        std::fs::write(&archive, bytes).unwrap();
+        let before = hash(&archive);
+        let report = diagnose_archive(&archive, Some("真实密码"), Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(report.status, "ambiguous_data", "{report:?}");
+        assert!(report.encrypted && report.integrity_tested);
+        assert!(!report.can_repair);
+        assert!(report.issues.iter().any(|issue| issue.detail.contains("反复尝试密码")));
+        assert!(!serde_json::to_string(&report).unwrap().contains("真实密码"));
+        assert_eq!(hash(&archive), before);
+    }
+
+    #[tokio::test]
+    async fn plain_zip_with_zstd_entries_uses_the_same_reader_as_extraction() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("新算法.zipx");
+        let mut writer = zip_aes::ZipWriter::new(File::create(&archive).unwrap());
+        writer.start_file("说明.txt", zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Zstd)).unwrap();
+        writer.write_all(b"actual zstd entry payload").unwrap();
+        writer.finish().unwrap();
+        let report = diagnose_archive(&archive, None, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(report.status, "healthy", "{report:?}");
+        assert_eq!(report.total_files, 1);
+        assert!(report.integrity_tested);
+    }
+
+    #[tokio::test]
+    async fn unsupported_zip_method_is_not_advertised_as_damage_or_repairable() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("未知算法.zip");
+        create_stored_zip(&archive);
+        let mut bytes = std::fs::read(&archive).unwrap();
+        let local = bytes.windows(4).position(|value| value == b"PK\x03\x04").unwrap();
+        let central = bytes.windows(4).position(|value| value == b"PK\x01\x02").unwrap();
+        bytes[local + 8..local + 10].copy_from_slice(&98u16.to_le_bytes());
+        bytes[central + 10..central + 12].copy_from_slice(&98u16.to_le_bytes());
+        std::fs::write(&archive, bytes).unwrap();
+        let report = diagnose_archive(&archive, None, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(report.status, "unsupported_feature", "{report:?}");
+        assert!(!report.can_repair);
+    }
+
+    #[tokio::test]
+    async fn diagnosis_reads_tiny_tar_gzip_numeric_volumes_as_one_archive() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("目录.tar.gz");
+        let encoder = flate2::write::GzEncoder::new(File::create(&archive).unwrap(), flate2::Compression::default());
+        let mut tar = tar::Builder::new(encoder);
+        let mut header = tar::Header::new_gnu();
+        header.set_size(18); header.set_mode(0o644); header.set_cksum();
+        tar.append_data(&mut header, "说明.txt", &b"tar volume payload"[..]).unwrap();
+        tar.into_inner().unwrap().finish().unwrap();
+        let volumes = crate::services::split_compression::SplitCompressionService::split_archive_file(
+            &archive, &temp.path().join("目录分卷.tar.gz"), 11, || Ok(()),
+        ).unwrap();
+        let report = diagnose_archive(&volumes.part_files[2], None, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(report.status, "healthy", "{report:?}");
+        assert_eq!(report.total_files, 1);
+        assert!(report.split_archive && report.integrity_tested);
+    }
+
+    #[tokio::test]
     async fn corrupted_entry_is_rebuilt_to_a_new_verified_zip_without_mutating_source() {
         let temp = tempfile::tempdir().unwrap();
         let archive = temp.path().join("damaged.zip");
@@ -831,7 +879,7 @@ mod tests {
         )
         .await
         .unwrap();
-        assert_eq!(wrong.status, "wrong_password", "report: {wrong:?}");
+        assert_eq!(wrong.status, "ambiguous_data", "7Z decoder failure cannot prove a wrong password: {wrong:?}");
         assert!(!serde_json::to_string(&wrong).unwrap().contains("wrong-7z"));
     }
 
@@ -845,11 +893,28 @@ mod tests {
             "Decoder returned an implementation-specific failure",
         ] {
             let (code, title, detail) = classify_failure(message, true, true);
-            assert_eq!(code, "wrong_password");
+            assert_eq!(code, "ambiguous_data");
             assert!(title.contains("密码"));
-            assert!(detail.contains("密码正确则归档已损坏"));
+            assert!(detail.contains("无法区分密码错误与加密内容损坏"));
         }
         assert_eq!(classify_failure("Data Error", false, false).0, "damaged");
+    }
+
+    #[test]
+    fn structural_and_capability_failures_do_not_turn_into_password_requests() {
+        for (message, expected) in [
+            ("[archive-inspection:incomplete] missing ZIP disks; wrong password?", "missing_volume"),
+            ("Unexpected end of archive; wrong password?", "truncated"),
+            ("[archive-inspection:damaged] broken ZIP structure; wrong password?", "damaged"),
+            ("Unsupported compression method for encrypted entry", "unsupported_feature"),
+            ("Permission denied reading encrypted archive", "permission_error"),
+            ("[archive-inspection:ambiguous-data] invalid password or damaged content", "ambiguous_data"),
+            ("7-Zip integrity test failed: CRC error", "ambiguous_data"),
+        ] {
+            assert_eq!(classify_failure(message, true, true).0, expected, "{message}");
+        }
+        assert_eq!(classify_failure("Implementation-specific verification failure", false, false).0, "unknown_failure");
+        assert_eq!(classify_failure("InvalidPassword", true, true).0, "wrong_password");
     }
 
     #[test]

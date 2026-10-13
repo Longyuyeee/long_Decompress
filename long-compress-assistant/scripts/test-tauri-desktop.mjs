@@ -24,6 +24,7 @@ import { runPasswordSplitCreationGate } from './password-split-creation-gate.mjs
 import { runArchiveConversionGate } from './archive-conversion-gate.mjs'
 import { runArchiveUpgradeGate } from './archive-upgrade-gate.mjs'
 import { runStandardZipDesktopGate } from './standard-zip-desktop-gate.mjs'
+import { runArchiveDiagnosisReliabilityGate } from './archive-diagnosis-reliability-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
@@ -4866,6 +4867,10 @@ try {
     }
     completedSuccessfully = true
     console.log('ZIP ZipCrypto UI creation and independent compatibility gate passed.')
+  } else if (process.argv.includes('--diagnosis-reliability-only')) {
+    await runArchiveDiagnosisReliabilityGate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, root, application })
+    completedSuccessfully = true
+    console.log('Archive diagnosis real user workflows passed.')
   } else if (process.argv.includes('--standard-zip-only')) {
     await runStandardZipDesktopGate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, root })
     completedSuccessfully = true
