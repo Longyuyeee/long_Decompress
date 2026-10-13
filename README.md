@@ -8,7 +8,7 @@
 
 打包文件 · 解压归档 · 浏览内容 · 管理密码 · 压缩图片、视频与 PDF
 
-[![Version](https://img.shields.io/badge/version-1.4.2-6366f1?style=for-the-badge)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0ea5e9?style=for-the-badge&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Local](https://img.shields.io/badge/文件处理-在本机完成-14b8a6?style=for-the-badge)](#privacy) [![License](https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.4.3-6366f1?style=for-the-badge)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0ea5e9?style=for-the-badge&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Local](https://img.shields.io/badge/文件处理-在本机完成-14b8a6?style=for-the-badge)](#privacy) [![License](https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge)](LICENSE)
 
 ### [⬇ 下载最新版](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 
@@ -219,7 +219,7 @@ Windows 11 请在 **“显示更多选项”** 中使用经典菜单；当前公
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
-| **v1.4.3（待发布）** | 卷组一致性、RAR 密码分卷、LZ4/Brotli、TAR 数字切卷与兼容修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.3.md) |
+| **v1.4.3** | 标准 ZIP 多卷浏览/密码/转换、RAR 密码分卷、LZ4/Brotli、TAR 数字切卷与实际操作修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.3.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.3) |
 | **v1.4.2** | 多包批量转换、待处理草稿恢复、多选弹窗配置、设置界面优化 | [发布说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.2.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.2) |
 | **v1.4.1** | 批量修改配置、统一结果操作、Windows 压缩包右键增强 | [发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.1) |
 | v1.4.0 | ZIP/7Z 密码分卷、归档转换、密码兼容与界面整理 | [发布说明](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.0) |
