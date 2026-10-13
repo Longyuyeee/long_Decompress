@@ -767,6 +767,7 @@ mod tests {
             .sum();
         assert!(archive_bytes > u32::MAX as u64);
         assert_eq!(parts.len(), 5);
+        super::super::extraction_transaction::validate_resource_limits(&output, 2, length + 128).unwrap();
         let mut archive = zip_aes::ZipArchive::new(
             super::super::numeric_volume_reader::ZipInputReader::open(&output).unwrap(),
         )
@@ -803,7 +804,7 @@ mod tests {
         );
         assert_eq!(input.metadata().unwrap().len(), length);
         let evidence = serde_json::json!({ "kind": "real-native-rust-zip64-creation-and-read", "inputBytes": length, "archiveBytes": archive_bytes,
-            "volumes": parts.len(), "nativeFullCrcRead": true, "largeOffsetFollowingEntryPreserved": true, "independentSevenZipVerified": true, "passwordVariantsTestedAtThisSize": false });
+            "volumes": parts.len(), "nativeFullCrcRead": true, "largeOffsetFollowingEntryPreserved": true, "independentSevenZipVerified": true, "aggregateVolumeResourcePreflight": true, "passwordVariantsTestedAtThisSize": false });
         if let Ok(path) = std::env::var("LONG_ZIP64_EVIDENCE") {
             std::fs::write(path, serde_json::to_vec_pretty(&evidence).unwrap()).unwrap();
         }

@@ -6,5 +6,6 @@
   "nativeFullCrcRead": true,
   "largeOffsetFollowingEntryPreserved": true,
   "independentSevenZipVerified": true,
+  "aggregateVolumeResourcePreflight": true,
   "passwordVariantsTestedAtThisSize": false
 }

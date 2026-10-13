@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
-import { mkdirSync, writeFileSync, readFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync, readFileSync, copyFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 
-export async function runZipCodecGate({ bridge, failure, fixtureDirectory, artifactDirectory, bundledSevenZip }) {
+export async function runZipCodecGate({ bridge, failure, fixtureDirectory, artifactDirectory, bundledSevenZip, diagnose }) {
   const root = path.join(fixtureDirectory, 'zip-codecs')
   const source = path.join(root, 'source')
   mkdirSync(source, { recursive: true })
@@ -12,7 +12,7 @@ export async function runZipCodecGate({ bridge, failure, fixtureDirectory, artif
   writeFileSync(path.join(source, '中文 data.bin'), payload)
   const results = []
   // 7-Zip's encoder is independent of the product's native ZIP reader.
-  for (const codec of ['Copy', 'Deflate', 'Deflate64', 'BZip2', 'LZMA', 'XZ']) {
+  for (const codec of ['PPMd', 'Copy', 'Deflate', 'Deflate64', 'BZip2', 'LZMA', 'XZ']) {
     for (const encryption of ['none', 'AES256', 'ZipCrypto']) {
       const name = `${codec}-${encryption}`
       const archive = path.join(root, `${name}.zip`)
@@ -21,9 +21,19 @@ export async function runZipCodecGate({ bridge, failure, fixtureDirectory, artif
       if (password) args.push(`-p${password}`, `-mem=${encryption}`)
       const created = spawnSync(bundledSevenZip, args, { cwd: source, encoding: 'utf8', windowsHide: true })
       assert.equal(created.status, 0, `${name}: ${created.stdout}${created.stderr}`)
+      const independent = spawnSync(bundledSevenZip, ['t', ...(password ? [`-p${password}`] : []), archive], { encoding: 'utf8', windowsHide: true })
+      assert.equal(independent.status, 0, independent.stdout + independent.stderr)
       const output = path.join(root, `${name}-out`)
       await bridge('extractArchive', archive, output, password)
       assert.deepEqual(readFileSync(path.join(output, '中文 data.bin')), payload, name)
+      const zipx = archive.replace(/\.zip$/, '.zipx')
+      copyFileSync(archive, zipx)
+      const zipxOutput = path.join(root, `${name}-zipx-out`)
+      await bridge('extractArchive', zipx, zipxOutput, password)
+      assert.deepEqual(readFileSync(path.join(zipxOutput, '中文 data.bin')), payload, `${name} ZIPX alias`)
+      const diagnostic = diagnose ? await diagnose(archive, password) : await bridge('diagnoseArchive', archive)
+      const expectedStatus = password && !diagnose ? 'password_required' : 'healthy'
+      assert.equal(diagnostic.status, expectedStatus, JSON.stringify(diagnostic))
       if (password) {
         const error = await failure('extractArchive', archive, path.join(root, `${name}-wrong`), 'wrong-password')
         assert.ok(error.length > 0, `${name}: wrong password must fail`)
@@ -36,7 +46,7 @@ export async function runZipCodecGate({ bridge, failure, fixtureDirectory, artif
       const splitOutput = path.join(root, `${name}-split-out`)
       await bridge('extractArchive', firstPart, splitOutput, password)
       assert.deepEqual(readFileSync(path.join(splitOutput, '中文 data.bin')), payload, `${name} numeric volumes`)
-      results.push({ codec, encryption, single: true, numericVolumes: true, wrongPasswordRejected: !!password })
+      results.push({ codec, encryption, single: true, zipxAlias: true, diagnosticStatus: expectedStatus, numericVolumes: true, wrongPasswordRejected: !!password })
       console.log(`[zip-codecs] ${name} single + numeric volumes passed`)
       writeFileSync(path.join(artifactDirectory, 'zip-codecs.json'), JSON.stringify({ results, complete: false }, null, 2))
     }

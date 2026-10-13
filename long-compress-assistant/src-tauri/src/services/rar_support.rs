@@ -481,7 +481,7 @@ impl RarSupportService {
         command.arg("x"); // 解压
 
         command.arg("-y"); // 全部回答Yes
-        command.arg("-o").arg(output_dir);
+        command.arg(format!("-o{}", output_dir.display()));
         command.arg(if options.overwrite_existing { "-aoa" } else { "-aou" });
         command.arg(rar_path);
 

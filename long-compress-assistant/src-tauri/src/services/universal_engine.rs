@@ -29,6 +29,20 @@ impl UniversalCliEngine {
         Self
     }
 
+    fn is_zip_password_input(path: &Path) -> Result<bool> {
+        // ZIPX and renamed ZIPs must use the same native password path. The
+        // logical reader also recognizes numeric and standard disk groups.
+        if crate::services::archive_format::ArchiveFormat::from_extension(path.extension().and_then(|value| value.to_str()).unwrap_or(""))
+            == crate::services::archive_format::ArchiveFormat::Zip { return Ok(true); }
+        let mut reader = crate::services::numeric_volume_reader::ZipInputReader::open(path)?;
+        let mut header = [0u8; 4];
+        match reader.read_exact(&mut header) {
+            Ok(()) => Ok(matches!(&header, b"PK\x03\x04" | b"PK\x05\x06" | b"PK\x07\x08")),
+            Err(error) if error.kind() == std::io::ErrorKind::UnexpectedEof => Ok(false),
+            Err(error) => Err(error.into()),
+        }
+    }
+
     pub fn overwrite_mode_arg(overwrite_existing: bool) -> &'static str {
         if overwrite_existing { "-aoa" } else { "-aou" }
     }
@@ -582,15 +596,7 @@ impl ArchiveEngine for UniversalCliEngine {
     }
 
     async fn try_password(&self, file_path: &Path, password: &str) -> Result<bool> {
-        if crate::services::split_archive_detector::SplitArchiveDetector::detect_split_archive(file_path)?
-            .is_some_and(|group| group.format == crate::services::split_archive_detector::SplitFormat::ZipSplit) {
-            return Self::try_zip_password(file_path, password);
-        }
-        if file_path
-            .extension()
-            .and_then(|extension| extension.to_str())
-            .is_some_and(|extension| extension.eq_ignore_ascii_case("zip"))
-        {
+        if Self::is_zip_password_input(file_path)? {
             return Self::try_zip_password(file_path, password);
         }
 
@@ -662,15 +668,7 @@ impl ArchiveEngine for UniversalCliEngine {
         is_cancelled: Arc<AtomicBool>,
     ) -> Result<()> {
         if let Some(password) = password {
-            let standard_zip = crate::services::split_archive_detector::SplitArchiveDetector::detect_split_archive(file_path)?
-                .is_some_and(|group| group.format == crate::services::split_archive_detector::SplitFormat::ZipSplit);
-            if file_path
-                .extension()
-                .and_then(|extension| extension.to_str())
-                .is_some_and(|extension| extension.eq_ignore_ascii_case("zip"))
-                || crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(file_path)
-                || standard_zip
-            {
+            if Self::is_zip_password_input(file_path)? {
                 return Self::extract_zip_with_password(
                     file_path,
                     output_dir,
