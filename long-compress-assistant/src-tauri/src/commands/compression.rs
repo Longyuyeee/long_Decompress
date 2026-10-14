@@ -1585,6 +1585,7 @@ pub async fn repair_zip(
     repair_id: String,
     file_path: String,
     output_path: String,
+    password: Option<String>,
 ) -> Result<crate::services::archive_diagnostics::ZipRepairResult, String> {
     let cancelled = Arc::new(AtomicBool::new(false));
     match ZIP_REPAIR_FLAGS.entry(repair_id.clone()) {
@@ -1595,9 +1596,10 @@ pub async fn repair_zip(
     }
     let _guard = ZipRepairGuard { repair_id };
     tauri::async_runtime::spawn_blocking(move || {
-        crate::services::archive_diagnostics::repair_zip_to_new(
+        crate::services::archive_diagnostics::repair_zip_with_password_to_new(
             std::path::Path::new(&file_path),
             std::path::Path::new(&output_path),
+            password.as_deref(),
             &cancelled,
         )
     })

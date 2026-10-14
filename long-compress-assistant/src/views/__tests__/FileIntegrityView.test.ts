@@ -172,12 +172,44 @@ describe('FileIntegrityView', () => {
     await flushPromises()
     expect(mocks.repairZip).toHaveBeenCalledWith(
       expect.stringMatching(/^repair-/), 'C:\\data\\damaged.zip', 'C:\\data\\damaged.repaired.zip',
+      'local-secret',
     )
     expect(wrapper.get('[data-testid="repair-result"]').text()).toContain('恢复 1 个文件')
     expect(wrapper.get('[data-testid="repair-result"]').text()).toContain('部分恢复')
     expect(wrapper.get('[data-testid="repair-result"]').text()).toContain('原包总条目数无法确认')
     expect(useUIStore().toasts).toContainEqual(expect.objectContaining({ type: 'warning', message: expect.stringContaining('部分恢复') }))
     expect(wrapper.text()).toContain('原压缩包不会被覆盖或删除')
+  })
+
+  it('rescues encrypted entries with the entered password and shows the new package encryption', async () => {
+    const pinia = createPinia(); setActivePinia(pinia)
+    mocks.open.mockResolvedValue('C:/下载/资料.zip.002')
+    mocks.save.mockResolvedValue('C:/下载/资料.repaired.zip')
+    mocks.diagnoseArchive.mockResolvedValue({
+      actualFormat: 'ZIP', fileSize: 1000, status: 'ambiguous_data', encrypted: true,
+      splitArchive: true, volumesFound: 3, totalFiles: 3, totalDirectories: 1,
+      totalUncompressedSize: 3000, canRepair: true, issues: [], evidence: [],
+    })
+    mocks.repairZip.mockResolvedValue({outputPath:'C:/下载/资料.repaired.zip', recoveredFiles:2,
+      recoveredDirectories:1, skippedEntries:['坏文件: 内容校验失败'], partial:true,
+      verified:true, directoryRebuilt:false, outputEncrypted:true})
+    const wrapper = mount(FileIntegrityView, {global:{plugins:[pinia]}})
+    await wrapper.get('[data-testid="archive-diagnostic-mode"]').trigger('click')
+    await wrapper.get('.archive-select').trigger('click'); await flushPromises()
+    await wrapper.get('.archive-password').setValue('救援密码')
+    await wrapper.get('.archive-primary').trigger('click'); await flushPromises()
+    expect(wrapper.get('[data-testid="repair-password-note"]').text()).toContain('AES-256')
+    await wrapper.findAll('button').find(button => button.text().includes('选择位置并修复'))?.trigger('click')
+    await flushPromises()
+    expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({defaultPath:'C:/下载/资料.repaired.zip'}))
+    expect(mocks.repairZip).toHaveBeenCalledWith(expect.stringMatching(/^repair-/),
+      'C:/下载/资料.zip.002','C:/下载/资料.repaired.zip','救援密码')
+    expect(wrapper.get('[data-testid="repair-output-encryption"]').text()).toContain('密码与恢复时填写的一致')
+    expect(wrapper.get('[data-testid="repair-result"]').text()).not.toContain('救援密码')
+    await wrapper.findAll('button').find(button => button.text().includes('定位新包'))?.trigger('click')
+    expect(mocks.invoke).toHaveBeenCalledWith('open_in_explorer',{path:'C:/下载/资料.repaired.zip'})
+    await wrapper.get('.archive-password').setValue('纠正后的密码'); await flushPromises()
+    expect(wrapper.find('[data-testid="diagnostic-report"]').exists()).toBe(false)
   })
 
   it('shows an ambiguous encrypted-content report without offering repair or silently retrying', async () => {

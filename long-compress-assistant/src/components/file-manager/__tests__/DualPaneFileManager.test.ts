@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { open } from '@tauri-apps/api/dialog'
 import DualPaneFileManager from '../DualPaneFileManager.vue'
 
 const invoke = vi.fn()
@@ -16,6 +17,34 @@ const rightEntries = [
 ]
 
 describe('DualPaneFileManager', () => {
+  it.each(['ARJ', 'Z', 'UDF'])('opens %s by double click and exposes cross-pane extraction', async extension => {
+    const original = invoke.getMockImplementation()!
+    const path = 'C:\\left\\资料.' + extension
+    invoke.mockImplementation((command, payload) => command === 'list_files' && payload.path === 'C:\\left'
+      ? Promise.resolve([{ path, name: '资料.' + extension, size: 128, is_dir: false }]) : original(command, payload))
+    const wrapper = mount(DualPaneFileManager, { attachTo: document.body })
+    await flushPromises()
+    const row = wrapper.findAll('.file-row').find(row => row.text().includes('资料.'))!
+    await row.trigger('dblclick')
+    expect(wrapper.emitted('openArchive')?.[0]).toEqual([path])
+    await row.trigger('contextmenu', { clientX: 20, clientY: 20 }); await flushPromises()
+    const extract = Array.from(document.body.querySelectorAll('.file-context button')).find(button => button.textContent?.includes('解压到另一栏')) as HTMLButtonElement
+    expect(extract).toBeTruthy(); extract.click(); await flushPromises()
+    expect(wrapper.emitted('extract')?.[0]).toEqual([[path], 'D:\\'])
+    wrapper.unmount()
+  })
+
+  it('uses the shared archive filters when choosing a package from disk', async () => {
+    vi.mocked(open).mockResolvedValueOnce('C:/资料.udf')
+    const wrapper = mount(DualPaneFileManager); await flushPromises()
+    await wrapper.get('[data-testid="file-manager-open-archive"]').trigger('click'); await flushPromises()
+    expect(open).toHaveBeenCalledWith(expect.objectContaining({ filters: [expect.objectContaining({
+      extensions: expect.arrayContaining(['arj', 'z', 'udf']),
+    })] }))
+    expect(wrapper.emitted('openArchive')?.[0]).toEqual(['C:/资料.udf'])
+    wrapper.unmount()
+  })
+
   it('keeps a bookmarked folder after reopening and opens it in the chosen pane only', async () => {
     let wrapper = mount(DualPaneFileManager)
     await flushPromises()

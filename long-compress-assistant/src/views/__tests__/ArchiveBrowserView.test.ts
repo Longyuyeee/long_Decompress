@@ -113,6 +113,19 @@ describe('ArchiveBrowserView', () => {
     expect(mocks.setSuccess).toHaveBeenCalledWith('已解压 1 个所选文件')
   })
 
+  it('shows unknown Z expanded size without treating the single file as empty', async () => {
+    mocks.browseArchive.mockResolvedValueOnce({format:'Z',totalFiles:1,totalDirectories:0,
+      totalUncompressedSize:0,totalCompressedSize:6,encrypted:false,entries:[{
+        path:'说明.txt',name:'说明.txt',size:0,sizeKnown:false,compressedSize:6,
+        modified:null,crc:null,encrypted:false,isDir:false,
+      }]})
+    const wrapper=mount(ArchiveBrowserView)
+    await wrapper.find('header .browser-primary').trigger('click'); await flushPromises()
+    expect(wrapper.get('[data-entry-path="说明.txt"]').text()).toContain('大小未知')
+    expect(wrapper.get('.browser-summary').text()).toContain('大小未知')
+    expect(wrapper.get('.browser-summary').text()).not.toContain('展开后 0 B')
+  })
+
   it('cancels an active archive metadata read and shows a clear idle result', async () => {
     mocks.browseArchive.mockReturnValueOnce(new Promise(() => undefined))
     const wrapper = mount(ArchiveBrowserView)

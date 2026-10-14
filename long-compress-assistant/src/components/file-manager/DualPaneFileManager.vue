@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { open } from '@tauri-apps/api/dialog'
 import { useSavedLocations } from '@/composables/useSavedLocations'
+import { DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS, isDecompressArchivePath } from '@/utils/compressionFormat'
 
 export interface LocalFileEntry {
   path: string
@@ -48,7 +49,7 @@ const createPane = (id: 'left' | 'right'): PaneState => reactive({ id, path: '',
 const left = createPane('left')
 const right = createPane('right')
 const otherPane = (pane: PaneState) => pane.id === 'left' ? right : left
-const isArchive = (entry: LocalFileEntry) => /\.(zip|7z|rar|tar|gz|tgz|bz2|xz|zst|cab|iso|wim)$/i.test(entry.name)
+const isArchive = (entry: LocalFileEntry) => !entry.isDir && isDecompressArchivePath(entry.path)
 const selectedEntries = (pane: PaneState) => pane.entries.filter(entry => pane.selected.has(entry.path))
 const operationEntries = (pane: PaneState, entry?: LocalFileEntry | null) => {
   const selected = selectedEntries(pane)
@@ -307,7 +308,7 @@ const icon = (entry: LocalFileEntry) => entry.isDir ? 'pi pi-folder' : isArchive
 const chooseArchive = async () => {
   const queued = import.meta.env.VITE_DESKTOP_E2E ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
   const selected = queued === undefined
-    ? await open({ multiple: false, filters: [{ name: '压缩包', extensions: ['zip', '7z', 'rar', 'tar', 'gz', 'tgz', 'bz2', 'xz', 'zst', 'cab', 'iso', 'wim'] }] })
+    ? await open({ multiple: false, filters: [{ name: '压缩包', extensions: DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS }] })
     : Array.isArray(queued) ? queued[0] : queued
   if (typeof selected === 'string') emit('openArchive', selected)
 }

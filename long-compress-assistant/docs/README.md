@@ -1,6 +1,6 @@
 # 文档导航与维护规则
 
-- **当前入口：[1.4.3 最终封板记录](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)**。标准 ZIP 多卷和最新桌面使用链已复核，接续合入与发布；[暂停审计](DEVELOPMENT_PAUSED_AUDIT_2026-10-13.md)仅为历史快照。
+- **当前开发入口：[v1.4.5 密码救援与格式扩展](PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)**、[更新说明](RELEASE_NOTES_1.4.5.md)。源码候选为 1.4.5，正式公开版本为 [v1.4.4](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.4)。
 
 - [v1.4.3 归档升级收口](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)、[更新说明](RELEASE_NOTES_1.4.3.md)：卷组一致性、RAR 分卷与 Unicode 密码、LZ4/Brotli 及通用数字分卷。
 
@@ -8,9 +8,11 @@
 
 ## 当前接续入口
 
-- [下一轮归档升级方向提案](ARCHIVE_COMPATIBILITY_AND_WORKFLOW_UPGRADE_PROPOSAL_2026-10-13.md)：卷组流程统一、RAR 分卷与转换、常见兼容修正及新格式候选，主要功能已实现，当前已暂停；未完成范围以顶部暂停审计为准。
+- [开发交接](DEVELOPMENT_HANDOFF.md)、[产品增强路线](PRODUCT_ENHANCEMENT_ROADMAP.md)：当前接续状态及后续候选。
+- [v1.4.4 实施审计](ARCHIVE_RELIABILITY_1.4.4.md)、[封板记录](ARCHIVE_RELIABILITY_FREEZE_1.4.4.md)：标准 ZIP 创建、密码兼容和无密码 ZIP 完整条目恢复，已发布。
+- [归档升级方向提案](ARCHIVE_COMPATIBILITY_AND_WORKFLOW_UPGRADE_PROPOSAL_2026-10-13.md)、[暂停审计](DEVELOPMENT_PAUSED_AUDIT_2026-10-13.md)：v1.4.3 开发过程的历史记录，不覆盖当前状态。
 
-- [2026-10-13 开发情况审计](DEVELOPMENT_STATUS_AUDIT_2026-10-13.md)、[开发交接](DEVELOPMENT_HANDOFF.md)、[产品增强路线](PRODUCT_ENHANCEMENT_ROADMAP.md)：已同步主线 `fa611a8`，当前正式版本为 [v1.4.2](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.2)，安装器和更新附件已上传。
+- [2026-10-13 开发情况审计](DEVELOPMENT_STATUS_AUDIT_2026-10-13.md)：当时主线 `fa611a8` / v1.4.2 的历史快照。
 - [v1.4.2 批量转换与待处理草稿恢复](BATCH_CONVERSION_AND_DRAFT_RECOVERY_PLAN.md)、[发布说明](RELEASE_NOTES_1.4.2.md)：已合入并正式发布，保留单条行内展开和多选弹窗配置。
 - [设置页样式实施记录](UI_VISUAL_REFRESH_PLAN.md)、[原静态示意图](../design/settings-style/README.md)：设置样式已实现并随 v1.4.2 交付；整体 UI 重构继续取消。
 

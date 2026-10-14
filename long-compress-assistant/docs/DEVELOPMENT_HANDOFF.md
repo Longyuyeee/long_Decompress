@@ -1,5 +1,12 @@
 # 开发交接
 
+## 当前：v1.4.5 功能已完成，可封板（2026-10-14）
+
+分支 `codex/password-zip-rescue-formats`，源码身份 1.4.5，正式公开版本仍为 v1.4.4。本轮完成目录可读的密码 ZIP 救援、ARJ/Unix `.Z`/UDF 读取及双栏/右键入口统一，保留单条展开、多选弹窗。完整范围及实际检查见 [封板记录](PASSWORD_ZIP_RESCUE_FREEZE_1.4.5.md)、[实施记录](PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)与 [待发布说明](RELEASE_NOTES_1.4.5.md)。
+
+前端六个相关文件的定向检查、Rust 恢复/引擎及追加重名回归、真实桌面主要新增链均通过；最后双栏入口与重名处理另做定向检查，并纳入最终普通生产构建。新包沿用填写的密码、统一 AES-256 / UTF-8；密码包丢目录、缺卷、RAR `.rev` 留后续。未发布安装器，下一步按用户发布指令接续合入/发布，不自动扩大功能或重复无关矩阵。下方 v1.4.4 和更早状态为历史。
+
+
 ## 正式发布接续：v1.4.4 已合入并推送标签（2026-10-13）
 
 - 功能冻结提交为 `23d279026b475d5bf5c1ee7edd6f40f136f245d2`；发布准备提交 `2461c9b` 的 [Windows package 检查](https://github.com/Longyuyeee/long_Decompress/actions/runs/38425234325) 成功后，PR [#156](https://github.com/Longyuyeee/long_Decompress/pull/156) 已合入。

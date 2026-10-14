@@ -53,19 +53,20 @@ export interface DesktopE2EBridge {
     outputPath: string,
     password?: string | null,
   ) => Promise<string>
-  diagnoseArchive: (filePath: string) => Promise<{
+  diagnoseArchive: (filePath: string, password?: string) => Promise<{
     actualFormat: string
     status: string
     totalFiles: number
     integrityTested: boolean
     canRepair: boolean
   }>
-  repairZip: (filePath: string, outputPath: string) => Promise<{
+  repairZip: (filePath: string, outputPath: string, password?: string) => Promise<{
     outputPath: string
     recoveredFiles: number
     recoveredDirectories: number
     skippedEntries: string[]
     verified: boolean
+    outputEncrypted: boolean
   }>
   previewArchiveImage: (filePath: string, entryPath: string) => Promise<{
     entryPath: string
@@ -558,16 +559,17 @@ export const installDesktopE2EBridge = () => {
       }
     },
 
-    diagnoseArchive: filePath => invoke('diagnose_archive', {
+    diagnoseArchive: (filePath, password) => invoke('diagnose_archive', {
       diagnosticId: `desktop-e2e-diagnosis-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       filePath,
-      password: null,
+      password: password || null,
     }),
 
-    repairZip: (filePath, outputPath) => invoke('repair_zip', {
+    repairZip: (filePath, outputPath, password) => invoke('repair_zip', {
       repairId: `desktop-e2e-repair-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       filePath,
       outputPath,
+      password: password || null,
     }),
 
     previewArchiveImage: (filePath, entryPath) => invoke('preview_archive_image', {

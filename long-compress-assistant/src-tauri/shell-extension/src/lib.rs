@@ -36,7 +36,7 @@ const ARCHIVE_EXTENSIONS: &[&str] = &[
     "appx", "iso", "img", "dmg", "vhd", "vhdx", "qcow", "qcow2", "qcow2c", "vdi", "vmdk", "cab",
     "deb", "udeb", "rpm", "msi", "msp", "msm", "nsis", "apfs", "ext", "ext2", "ext3", "ext4",
     "gpt", "mbr", "uefif", "cramfs", "fat", "ntfs", "hfs", "hfsx", "ar", "a", "lzh", "lha",
-    "squashfs", "sfs", "xar", "cpio", "ihex",
+    "squashfs", "sfs", "xar", "cpio", "ihex", "arj", "z", "udf",
 ];
 
 static OBJECT_COUNT: AtomicU32 = AtomicU32::new(0);

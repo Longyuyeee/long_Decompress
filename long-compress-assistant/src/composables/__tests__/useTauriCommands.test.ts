@@ -588,7 +588,7 @@ describe('useTauriCommands', () => {
       diagnosticId: 'diagnostic-1',
     })
     expect(mocks.invoke).toHaveBeenCalledWith('repair_zip', {
-      repairId: 'repair-1', filePath: 'a.zip', outputPath: 'a.repaired.zip',
+      repairId: 'repair-1', filePath: 'a.zip', outputPath: 'a.repaired.zip', password: null,
     })
     expect(mocks.invoke).toHaveBeenCalledWith('cancel_zip_repair', { repairId: 'repair-1' })
     expect(mocks.invoke).toHaveBeenCalledWith('analyze_compression_sources', {

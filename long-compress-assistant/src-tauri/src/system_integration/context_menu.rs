@@ -79,7 +79,7 @@ const ARCHIVE_EXTENSIONS: &[&str] = &[
     ".dmg", ".vhd", ".vhdx", ".qcow", ".qcow2", ".qcow2c", ".vdi", ".vmdk", ".cab",
     ".deb", ".udeb", ".rpm", ".msi", ".msp", ".msm", ".nsis", ".apfs", ".ext", ".ext2",
     ".ext3", ".ext4", ".gpt", ".mbr", ".uefif", ".cramfs", ".fat", ".ntfs", ".hfs",
-    ".hfsx", ".ar", ".a", ".lzh", ".lha", ".squashfs", ".sfs", ".xar", ".cpio", ".ihex",
+    ".hfsx", ".ar", ".a", ".arj", ".z", ".udf", ".lzh", ".lha", ".squashfs", ".sfs", ".xar", ".cpio", ".ihex",
 ];
 
 #[cfg(target_os = "windows")]

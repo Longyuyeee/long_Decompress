@@ -121,6 +121,7 @@ export interface ArchiveEntryInfo {
   path: string
   name: string
   size: number
+  sizeKnown?: boolean
   compressedSize: number | null
   modified: string | null
   crc: string | null
@@ -191,6 +192,7 @@ export interface ArchiveDiagnosticReport {
   totalFiles: number
   totalDirectories: number
   totalUncompressedSize: number
+  totalUncompressedSizeKnown?: boolean
   integrityTested: boolean
   canRepair: boolean
   recoverability: string
@@ -206,6 +208,7 @@ export interface ZipRepairResult {
   verified: boolean
   partial: boolean
   directoryRebuilt: boolean
+  outputEncrypted: boolean
 }
 
 interface WordlistValidationResult {
@@ -863,8 +866,8 @@ export const useTauriCommands = () => {
     await invoke('cancel_archive_diagnosis', { diagnosticId })
   }
 
-  const repairZip = async (repairId: string, filePath: string, outputPath: string) => {
-    return await invoke<ZipRepairResult>('repair_zip', { repairId, filePath, outputPath })
+  const repairZip = async (repairId: string, filePath: string, outputPath: string, password?: string) => {
+    return await invoke<ZipRepairResult>('repair_zip', { repairId, filePath, outputPath, password: password || null })
   }
 
   const cancelZipRepair = async (repairId: string) => {
