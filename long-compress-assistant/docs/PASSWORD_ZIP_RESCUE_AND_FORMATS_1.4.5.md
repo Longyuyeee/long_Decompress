@@ -2,6 +2,8 @@
 
 日期：2026-10-14（香港时间）。基线 `master / 18c4a65`，分支 `codex/password-zip-rescue-formats`。目标为本轮功能可封板；正式公开版本仍是 v1.4.4，不自动创建发布标签。
 
+上述为开发启动时状态。功能已在 `13c22fb` 封板，用户随后要求正式发版；本轮只更新 README/发布说明并接续 CI、合入和标签。当前公开下载以 [v1.4.5 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5) 实际附件及 [最新交接](DEVELOPMENT_HANDOFF.md)为准，以下未发布状态为封板时记录。
+
 ## 当前实现
 
 ### 密码 ZIP 完整文件救援

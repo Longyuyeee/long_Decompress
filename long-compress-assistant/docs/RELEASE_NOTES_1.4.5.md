@@ -1,4 +1,4 @@
-# Long解压 v1.4.5（待发布）
+# Long解压 v1.4.5
 
 这版围绕“有密码的坏包还能救回文件、更多归档能直接处理”升级，沿用原有单条展开和多选弹窗操作。
 
@@ -21,4 +21,4 @@
 
 新包使用 AES-256 / UTF-8；它的加密方式可能不同于原包的 ZipCrypto 或 Windows 密码编码，与旧软件交换时可使用既有归档转换功能调整。ARJ、`.Z`、UDF 本版为读取能力，不新增这些格式的创建、密码或原生分卷。`.Z` 解出其单个文件；内层若为 TAR，可继续用已有 TAR 功能处理。
 
-开发路线、实际检查及封板结论见 [本版记录](PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)。目前尚未发布安装器。
+实际检查与完整范围见 [本版记录](https://github.com/Longyuyeee/long_Decompress/blob/v1.4.5/long-compress-assistant/docs/PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)。安装器、签名更新包与更新清单由正式发布流程生成，下载以本 Release 实际附件为准。

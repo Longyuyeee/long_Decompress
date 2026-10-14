@@ -1,6 +1,6 @@
 # 文档导航与维护规则
 
-- **当前开发入口：[v1.4.5 密码救援与格式扩展](PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)**、[更新说明](RELEASE_NOTES_1.4.5.md)。源码候选为 1.4.5，正式公开版本为 [v1.4.4](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.4)。
+- **当前入口：[v1.4.5 密码救援与格式扩展](PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)**、[中文发布说明](RELEASE_NOTES_1.4.5.md)、[发布交接](DEVELOPMENT_HANDOFF.md)。源码版本为 1.4.5，安装包就绪情况见 [v1.4.5 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5)。
 
 - [v1.4.3 归档升级收口](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)、[更新说明](RELEASE_NOTES_1.4.3.md)：卷组一致性、RAR 分卷与 Unicode 密码、LZ4/Brotli 及通用数字分卷。
 
