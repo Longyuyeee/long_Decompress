@@ -188,7 +188,7 @@ export interface DesktopE2EBridge {
     outputPaths: string[]
   }
   showAvailableUpdate: () => void
-  seedResponsiveWorkspace: (type: 'compression' | 'decompression', state?: 'running' | 'completed') => string
+  seedResponsiveWorkspace: (type: 'compression' | 'decompression', state?: 'running' | 'completed', typical?: boolean) => string
   setCloseToTray: (enabled: boolean) => Promise<void>
   setAutoStart: (enabled: boolean) => Promise<boolean>
   checkAutoStart: () => Promise<boolean>
@@ -982,20 +982,20 @@ export const installDesktopE2EBridge = () => {
       })
     },
 
-    seedResponsiveWorkspace(type, state) {
+    seedResponsiveWorkspace(type, state, typical = false) {
       const taskId = `responsive-${type}`
-      const longSourcePath = `C:\\Users\\ResponsiveFixture\\Documents\\${'deep-folder\\'.repeat(8)}source-file-with-a-very-long-name.bin`
-      const longOutputPath = `C:\\Users\\ResponsiveFixture\\Archives\\${'nested-output\\'.repeat(6)}responsive-output.${type === 'compression' ? 'zip' : 'folder'}`
+      const longSourcePath = typical ? `C:\\用户资料\\项目资料${type === 'decompression' ? '.zip' : ''}` : `C:\\Users\\ResponsiveFixture\\Documents\\${'deep-folder\\'.repeat(8)}source-file-with-a-very-long-name.bin`
+      const longOutputPath = typical ? `C:\\用户资料\\输出\\项目资料${type === 'compression' ? '.zip' : ''}` : `C:\\Users\\ResponsiveFixture\\Archives\\${'nested-output\\'.repeat(6)}responsive-output.${type === 'compression' ? 'zip' : 'folder'}`
 
       taskStore.tasks = []
       compressionStore.prepareQuickPacks()
       taskStore.addTask({
         id: taskId,
-        name: type === 'compression' ? 'responsive-output.zip' : 'responsive-input.7z',
+        name: typical ? '项目资料.zip' : type === 'compression' ? 'responsive-output.zip' : 'responsive-input.7z',
         type,
         sourceFiles: [longSourcePath],
         outputPath: longOutputPath,
-        format: type === 'compression' ? 'zip' : '7z',
+        format: typical || type === 'compression' ? 'zip' : '7z',
         compressionOptions: type === 'compression'
           ? { format: 'zip', level: 6, preserve_paths: true }
           : undefined,
@@ -1004,7 +1004,7 @@ export const installDesktopE2EBridge = () => {
       taskStore.updateTaskStatus(taskId, 'completed')
       task.progress = 100
       task.stage = 'Finalizing'
-      task.currentFile = longSourcePath
+      task.currentFile = typical ? 'C:\\用户资料\\项目资料\\设计稿\\首页.png' : longSourcePath
       task.resourcePreflight = {
         operation: type,
         outputPath: longOutputPath,
@@ -1028,8 +1028,8 @@ export const installDesktopE2EBridge = () => {
       task.logs = Array.from({ length: 18 }, (_, index) => ({
         task_id: taskId,
         timestamp: new Date(Date.now() + index * 1000).toISOString(),
-        message: `${index + 1}: ${longSourcePath} -> ${longOutputPath}`,
-        severity: index === 17 ? 'success' as const : 'info' as const,
+        message: typical ? ['已读取项目资料，开始处理文件。', `正在${type === 'compression' ? '压缩' : '解压'}：设计稿/首页.png`, '已处理：项目说明.md', `当前输出：${longOutputPath}`, `已写入 453 MB，${state === 'completed' ? '任务已完成。' : '任务继续进行中。'}`][index % 5] : `${index + 1}: ${longSourcePath} -> ${longOutputPath}`,
+        severity: index === 17 && (!typical || state === 'completed') ? 'success' as const : 'info' as const,
       }))
 
       if (state) {
@@ -1047,7 +1047,7 @@ export const installDesktopE2EBridge = () => {
             files: [{ path: longOutputPath, bytes: task.outputBytes }],
           }
         }
-        if (type === 'decompression' && state === 'running') {
+        if (type === 'decompression' && state === 'running' && !typical) {
           task.currentPassword = '正在尝试的长密码'.repeat(12)
           task.passwordAttemptCurrent = 4
           task.passwordAttemptTotal = 20
@@ -1056,18 +1056,18 @@ export const installDesktopE2EBridge = () => {
 
       if (type === 'compression') {
         compressionStore.addFile({
-          name: 'source-file-with-a-very-long-name.bin',
+          name: typical ? '项目资料' : 'source-file-with-a-very-long-name.bin',
           path: longSourcePath,
           size: 4096,
           type: 'file',
-          isDirectory: false,
+          isDirectory: typical,
         })
         const file = compressionStore.selectedFiles[0]
         file.expanded = true
         compressionStore.bindJobTask(
           longSourcePath,
           taskId,
-          { ...compressionStore.globalSettings, filename: 'responsive-output' },
+          { ...compressionStore.globalSettings, filename: typical ? '项目资料' : 'responsive-output' },
           longOutputPath,
         )
       }

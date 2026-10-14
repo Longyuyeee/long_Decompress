@@ -35,6 +35,7 @@ for (const type of ['compression', 'decompression'] as const) {
       await expect(panel).toBeVisible()
 
       for (const viewport of [
+        { width: 1280, height: 800, scale: '100%' },
         { width: 920, height: 620, scale: '100%' },
         { width: 920, height: 620, scale: '125%' },
         { width: 760, height: 520, scale: '100%' },
@@ -47,6 +48,10 @@ for (const type of ['compression', 'decompression'] as const) {
         }
         await panel.evaluate(el => { el.scrollTop = 0; el.scrollIntoView({ block: 'start' }) })
         await page.waitForTimeout(450)
+        const overview = panel.getByTestId('task-execution-overview')
+        const visualProgress = await overview.locator('.execution-progress-track > div').evaluate(el => Number.parseFloat((el as HTMLElement).style.width))
+        expect(visualProgress, 'the summary bar must match the displayed progress').toBe(state === 'completed' ? 100 : 46)
+        await page.screenshot({ path: info.outputPath(`${type}-${state}-${viewport.width}-${viewport.scale}-overview.png`) })
         const point = await visibleSummaryPoint(panel)
         await page.mouse.move(point.x, point.y)
         await page.mouse.wheel(0, 2000)
@@ -103,6 +108,22 @@ for (const type of ['compression', 'decompression'] as const) {
         await page.mouse.wheel(0, -2000)
         await expect.poll(() => panel.evaluate(el => el.scrollTop)).toBe(0)
       }
+    }
+
+    await page.evaluate(type => window.__LONG_DECOMPRESS_DESKTOP_E2E__!.seedResponsiveWorkspace(type, 'running', true), type)
+    for (const width of [1280, 920]) {
+      await page.setViewportSize({ width, height: width === 1280 ? 800 : 620 })
+      await page.evaluate(() => {
+        document.documentElement.style.fontSize = '100%'
+        document.querySelector('.compression-task-list, .table-body')!.scrollTop = 0
+      })
+      await page.waitForTimeout(450)
+      if (type === 'compression' && width === 920) {
+        const fields = await page.locator('.settings-core-grid > div').evaluateAll(elements => elements.slice(0, 2).map(el => el.getBoundingClientRect().toJSON()))
+        expect(fields[0].width, 'narrow configuration fields use a full readable row').toBeGreaterThan(200)
+        expect(fields[1].y).toBeGreaterThanOrEqual(fields[0].bottom + 8)
+      }
+      await page.screenshot({ path: info.outputPath(`${type}-structured-${width}.png`) })
     }
   })
 }

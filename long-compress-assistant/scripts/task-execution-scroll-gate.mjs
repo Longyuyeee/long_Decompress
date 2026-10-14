@@ -30,7 +30,7 @@ export async function runTaskExecutionScrollGate({ driver, callDesktopBridge, wa
 
   for (const type of ['compression', 'decompression']) {
     for (const state of ['completed', 'running']) {
-      await callDesktopBridge('seedResponsiveWorkspace', type, state)
+      await callDesktopBridge('seedResponsiveWorkspace', type, state, true)
       await (await waitForElement(`[data-testid="nav-${type === 'compression' ? 'Compress' : 'Decompress'}"]`)).click()
       if (type === 'decompression' && !(await driver.findElements(By.css('[data-testid="decompression-task-details"]'))).length) {
         await (await waitForElement('[data-task-id="responsive-decompression"]')).click()
@@ -39,6 +39,7 @@ export async function runTaskExecutionScrollGate({ driver, callDesktopBridge, wa
       const log = await waitForElement(`[data-testid="${type}-log-viewport"]`)
 
       for (const size of [
+        { width: 1280, height: 800, scale: '100%' },
         { width: 920, height: 620, scale: '100%' },
         { width: 920, height: 620, scale: '125%' },
         { width: 760, height: 520, scale: '100%' },
@@ -47,19 +48,30 @@ export async function runTaskExecutionScrollGate({ driver, callDesktopBridge, wa
         await driver.executeScript((el, scale) => {
           document.documentElement.style.fontSize = scale
           el.scrollTop = 0
-          el.scrollIntoView({ block: 'start' })
+          el.parentElement.closest('.compression-task-list, .table-body').scrollTop = 0
         }, panel, size.scale)
         await new Promise(resolve => setTimeout(resolve, 450))
+        writeFileSync(path.join(artifactDirectory, `task-overview-${type}-${state}-${size.width}-${size.scale}.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
+        await driver.executeScript(el => el.scrollIntoView({ block: 'start' }), panel)
+        await new Promise(resolve => setTimeout(resolve, 150))
         await wheelOver(panel, 2000, true)
-        const pane = await driver.executeScript(el => ({
-          overflowY: getComputedStyle(el).overflowY,
-          scrollTop: el.scrollTop,
-          overflow: el.scrollHeight - el.clientHeight,
-          horizontalOverflow: el.scrollWidth - el.clientWidth,
-        }), panel)
+        const pane = await driver.executeScript(el => {
+          const config = el.parentElement.querySelector('.compression-config-panel, .task-config-panel').getBoundingClientRect()
+          const r = el.getBoundingClientRect()
+          return {
+            overflowY: getComputedStyle(el).overflowY,
+            scrollTop: el.scrollTop,
+            overflow: el.scrollHeight - el.clientHeight,
+            horizontalOverflow: el.scrollWidth - el.clientWidth,
+            columnWidthDifference: r.left >= config.right - 1 ? Math.abs(r.width - config.width) : null,
+            visualProgress: Number.parseFloat(el.querySelector('.execution-progress-track > div').style.width),
+          }
+        }, panel)
         assert.equal(pane.overflowY, 'auto', `${type} execution must allow wheel scrolling`)
         if (pane.overflow > 1) assert.ok(pane.scrollTop > 0, `${type} execution wheel did not move: ${JSON.stringify(pane)}`)
         assert.ok(pane.horizontalOverflow <= 1)
+        if (pane.columnWidthDifference !== null) assert.ok(pane.columnWidthDifference <= 1)
+        assert.equal(pane.visualProgress, state === 'completed' ? 100 : 46)
 
         await driver.executeScript(el => { el.scrollIntoView({ block: 'center' }); el.scrollTop = 0 }, log)
         await new Promise(resolve => setTimeout(resolve, 150))

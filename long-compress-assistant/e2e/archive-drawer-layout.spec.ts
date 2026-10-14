@@ -122,8 +122,10 @@ for (const center of ['decompress', 'compress'] as const) {
       const overflow = await drawer.locator(center === 'decompress' ? '.task-detail-layout' : '.compression-detail-grid').evaluate(el => el.scrollWidth - el.clientWidth)
       if (!process.env.DRAWER_CAPTURE_ONLY) expect.soft(overflow, `${center} ${width}: details must not crop columns`).toBeLessThanOrEqual(1)
       if (center === 'compress' && !process.env.DRAWER_CAPTURE_ONLY) {
-        const fields = await drawer.locator('.settings-core-grid > div').evaluateAll(elements => elements.map(el => ({ top: el.getBoundingClientRect().top, width: el.getBoundingClientRect().width })))
-        expect.soft(Math.abs(fields[0].top - fields[1].top), 'first two parameter cards align').toBeLessThanOrEqual(1)
+        const fields = await drawer.locator('.settings-core-grid > div').evaluateAll(elements => elements.map(el => ({ top: el.getBoundingClientRect().top, width: el.getBoundingClientRect().width, height: el.getBoundingClientRect().height })))
+        if (Math.abs(fields[0].top - fields[1].top) > 1) {
+          expect.soft(fields[1].top, 'stacked fields retain a readable gap').toBeGreaterThanOrEqual(fields[0].top + fields[0].height + 8)
+        }
         for (const field of fields) expect.soft(field.width, 'fields remain usable').toBeGreaterThan(140)
       }
     }
