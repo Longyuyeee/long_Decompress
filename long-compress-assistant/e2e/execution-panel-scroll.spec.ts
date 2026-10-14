@@ -15,6 +15,7 @@ async function visibleSummaryPoint(panel: Locator) {
 
 for (const type of ['compression', 'decompression'] as const) {
   test(`${type}: wheel reaches execution logs below all status cards`, async ({ page }, info) => {
+    await page.emulateMedia({ colorScheme: 'dark' })
     await page.addInitScript(() => {
       window.__TAURI_IPC__ = (message: Record<string, any>) => {
         ;(window as any)[`_${message.callback}`]?.(message.cmd === 'load_app_settings' ? '{}' : undefined)
@@ -59,6 +60,8 @@ for (const type of ['compression', 'decompression'] as const) {
           const log = el.querySelector('[data-testid$="-log-viewport"]')!
           const panelRect = el.getBoundingClientRect()
           const logRect = log.getBoundingClientRect()
+          const configRect = el.parentElement!.querySelector('.compression-config-panel, .task-config-panel')!.getBoundingClientRect()
+          const row = log.firstElementChild!
           return {
             overflowY: getComputedStyle(el).overflowY,
             scrollTop: el.scrollTop,
@@ -66,6 +69,9 @@ for (const type of ['compression', 'decompression'] as const) {
             logHeight: log.clientHeight,
             visibleLog: Math.max(0, Math.min(panelRect.bottom, logRect.bottom, innerHeight) - Math.max(panelRect.top, logRect.top, 0)),
             horizontalOverflow: el.scrollWidth - el.clientWidth,
+            columnWidthDifference: panelRect.left >= configRect.right - 1 ? Math.abs(panelRect.width - configRect.width) : null,
+            logRowDirection: getComputedStyle(row).flexDirection,
+            logMessageWhiteSpace: getComputedStyle(row.lastElementChild!).whiteSpace,
           }
         })
         await info.attach(`${state}-${viewport.width}-${viewport.scale}`, { body: JSON.stringify(geometry), contentType: 'application/json' })
@@ -75,6 +81,12 @@ for (const type of ['compression', 'decompression'] as const) {
         expect(geometry.logHeight, 'status cards must leave a readable log viewport').toBeGreaterThanOrEqual(120)
         expect(geometry.visibleLog, 'logs must be reachable inside the visible execution pane').toBeGreaterThanOrEqual(100)
         expect(geometry.horizontalOverflow).toBeLessThanOrEqual(1)
+        if (geometry.columnWidthDifference !== null) {
+          expect(geometry.columnWidthDifference, 'side-by-side configuration and execution panes must share the width equally').toBeLessThanOrEqual(1)
+        }
+        if (geometry.logRowDirection === 'column') {
+          expect(geometry.logMessageWhiteSpace, 'narrow logs must wrap their full message').not.toBe('nowrap')
+        }
 
         await log.evaluate(el => { el.scrollTop = 0 })
         const logBox = (await log.boundingBox())!

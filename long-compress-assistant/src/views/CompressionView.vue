@@ -1313,7 +1313,7 @@ const drawerTransition = useDrawerTransition()
 
 .compression-detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   height: clamp(17rem, calc(100vh - 20rem), 32rem);
   width: 100%;
   box-sizing: border-box;

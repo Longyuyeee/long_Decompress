@@ -137,6 +137,7 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
 }
 
 .compression-execution-panel {
+  container: compression-execution / inline-size;
   height: 100%;
   min-height: 0;
   max-height: none;
@@ -193,6 +194,13 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+}
+
+@container compression-execution (max-width: 20rem) {
+  .pending-log-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
 }
 
 @media (max-width: 520px) {

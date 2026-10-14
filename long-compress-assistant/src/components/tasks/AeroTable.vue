@@ -726,7 +726,7 @@ async (tasks, _, onCleanup) => {
 
 .task-detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
   /* Leave room for the page header, task row and fixed queue toolbar. */
   height: clamp(15rem, calc(100vh - 23rem), 32rem);
@@ -754,6 +754,7 @@ async (tasks, _, onCleanup) => {
 }
 
 .task-execution-panel {
+  container: task-execution / inline-size;
   overflow-y: auto;
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
@@ -803,6 +804,19 @@ async (tasks, _, onCleanup) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@container task-execution (max-width: 20rem) {
+  .task-log-entry {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .task-log-message {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 .task-detail-card:hover {
@@ -921,7 +935,7 @@ async (tasks, _, onCleanup) => {
 }
 
 @media (max-width: 980px) {
-  .task-detail-layout { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+  .task-detail-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .table-header,
   .task-row { grid-template-columns: 2rem minmax(0, .9fr) minmax(0, 1.1fr) 5.75rem; }
 }
