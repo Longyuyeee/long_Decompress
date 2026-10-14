@@ -219,13 +219,10 @@ describe('AeroTable', () => {
     const configPanel = wrapper.get('[data-testid="decompression-config-panel"]')
     expect(configPanel.find('.config-source-switch').exists()).toBe(false)
     const passwordInput = configPanel.get('input[type="password"]')
-    const controls = passwordInput.element.parentElement!
-
-    expect(controls.classList.contains('grid')).toBe(true)
-    expect(controls.className).toContain('grid-cols-[minmax(0,1fr)_auto]')
-    expect(passwordInput.classes()).toContain('col-span-2')
-    expect(passwordInput.classes()).toContain('min-w-0')
-    expect(configPanel.findAll('button').at(-1)?.text()).toContain('使用密码重试')
+    expect(configPanel.find('[data-testid="inline-extraction-recovery"]').exists()).toBe(true)
+    expect(passwordInput.attributes('data-testid')).toBe('retry-password')
+    expect(configPanel.get('[data-testid="create-retry-drafts"]').text()).toContain('检查并加入待处理队列')
+    expect(configPanel.find('.retry-fields').exists()).toBe(true)
   })
 
   it('shows the actual password candidate in expanded extraction details', async () => {

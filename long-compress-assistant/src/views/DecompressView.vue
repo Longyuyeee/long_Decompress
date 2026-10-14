@@ -648,6 +648,7 @@ onMounted(openNextConflict)
           @select-all-pending="selectAllPending"
           @deselect-all="deselectAll"
           @retry-with-password="retryWithPassword"
+          @retry-created="selectRetryDrafts"
           @cancel-task="taskStore.cancelTask"
           @pause-task="taskStore.pauseTask"
           @resume-task="taskStore.resumeTask"

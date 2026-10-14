@@ -16,6 +16,7 @@ import OverflowTooltip from '@/components/ui/OverflowTooltip.vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import CompletedExtractionOutput from './CompletedExtractionOutput.vue'
 import DraftRecoveryNotice from './DraftRecoveryNotice.vue'
+import FailedExtractionRetry from './FailedExtractionRetry.vue'
 import { open } from '@tauri-apps/api/dialog'
 import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
@@ -36,6 +37,7 @@ const emit = defineEmits<{
   'cancel-task': [taskId: string]
   'pause-task': [taskId: string]
   'resume-task': [taskId: string]
+  'retry-created': [taskIds: string[]]
 }>()
 
 const taskStore = useTaskStore()
@@ -499,6 +501,7 @@ async (tasks, _, onCleanup) => {
                         :shared-count="sharedDestinations.get(task.id) || 0" @change-output="handleSelectOutputDir(task)" />
                       <CompletedExtractionOutput v-if="task.status === 'completed' && (!task.workloadKind || task.workloadKind === 'archive')" :path="task.outputPath" />
                       <ResourcePreflightCard :report="task.resourcePreflight" compact />
+                      <FailedExtractionRetry v-if="task.status === 'failed' && (!task.workloadKind || task.workloadKind === 'archive')" :task-ids="[task.id]" inline @created="emit('retry-created', $event)" />
 
                       <div v-if="task.status === 'pending'" class="inherited-config-control flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
                         <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder; task.configurationMode = 'individual'">
@@ -518,7 +521,7 @@ async (tasks, _, onCleanup) => {
                       </div>
 
                       <!-- 密码输入区 (仅在自动破解失败时显示) -->
-                      <div v-if="task.passwordRequired" class="space-y-1.5 p-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5">
+                      <div v-if="task.passwordRequired && task.status !== 'failed'" class="space-y-1.5 p-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5">
                         <div class="flex items-center gap-2">
                           <i class="pi pi-lock text-sm text-yellow-400"></i>
                           <span class="text-yellow-400 text-xs font-black uppercase tracking-widest">{{ appStore.t('tasks.password.crack_failed') }}</span>

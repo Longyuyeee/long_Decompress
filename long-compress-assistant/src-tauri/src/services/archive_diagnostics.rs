@@ -342,6 +342,46 @@ pub async fn diagnose_archive(
     check_cancelled(&cancelled)?;
 
     if actual_format == "ZIP" {
+        if metadata.is_err() {
+            if let Ok(mut local) = super::zip_recovery_reader::RecoveryReader::open(source, &cancelled) {
+                if local.directory_rebuilt {
+                    report.encrypted = local.encrypted;
+                    report.total_directories = local.names.iter().filter(|name| name.ends_with(['/', '\\'])).count();
+                    report.total_files = local.names.len() - report.total_directories;
+                    report.total_uncompressed_size = local.expanded_bytes;
+                    report.total_uncompressed_size_known = false;
+                    report.status = "directory_lost".to_string();
+                    report.recoverability = "local_entries".to_string();
+                    report.can_repair = !local.encrypted || password.is_some();
+                    report.issues.push(DiagnosticIssue { code: "directory_lost".to_string(), severity: "warning".to_string(),
+                        title: "目录信息已丢失，可尝试救回完整文件".to_string(),
+                        detail: format!("已找到 {} 个具有明确边界的文件条目，原包总条目数无法确认。只恢复完整读取并通过校验的文件，原包保留。", report.total_files) });
+                    if local.encrypted {
+                        if let Some(password) = password {
+                            if let Err(error) = local.check_password_headers(password) {
+                                report.can_repair = false;
+                                let wrong = matches!(error, zip_aes::result::ZipError::InvalidPassword);
+                                report.status = if wrong { "wrong_password" } else { "ambiguous_data" }.to_string();
+                                report.issues.push(DiagnosticIssue { code: report.status.clone(), severity: "error".to_string(),
+                                    title: if wrong { "密码无法打开已找到的加密条目" } else { "暂不能读取已找到的加密条目" }.to_string(),
+                                    detail: "请确认密码与来源完整性，填写后可重新检查；未创建新文件".to_string() });
+                            }
+                        } else {
+                            report.status = "password_required".to_string();
+                            report.issues.push(DiagnosticIssue { code: "password_required".to_string(), severity: "warning".to_string(),
+                                title: "需要原压缩包密码".to_string(), detail: "找到的本地条目包含加密文件，填写密码后可尝试救援".to_string() });
+                        }
+                    }
+                    report.evidence.push("Local ZIP metadata rebuilt; file content will be verified during recovery".to_string());
+                    report.issues.extend(local.notes.into_iter().enumerate().map(|(index, detail)| DiagnosticIssue {
+                        code: format!("local_boundary_{index}"), severity: "warning".to_string(), title: "部分内容无法确认".to_string(), detail,
+                    }));
+                    check_cancelled(&cancelled)?;
+                    return Ok(report);
+                }
+            }
+        }
+        check_cancelled(&cancelled)?;
         match UniversalCliEngine::zip_requires_password(source) {
             Ok(encrypted) => report.encrypted = encrypted,
             Err(error) => { record_failure(&mut report, &error, password.is_some(), false, source); return Ok(report); }
@@ -646,6 +686,99 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn lost_directory_password_zip_recovers_intact_encrypted_files_and_rejects_wrong_password() {
+        for aes in [true, false] {
+            let temp = tempfile::tempdir().unwrap();
+            let input = temp.path().join("密码目录丢失.zip");
+            let password = "救援密码 + !";
+            let plain = zip_aes::write::SimpleFileOptions::default().compression_method(zip_aes::CompressionMethod::Stored).large_file(aes);
+            let secret = if aes { plain.with_aes_encryption(zip_aes::AesMode::Aes256, password) }
+                else { plain };
+            let mut writer = zip_aes::ZipWriter::new(File::create(&input).unwrap());
+            writer.start_file("公开说明.txt", plain).unwrap(); writer.write_all(b"public").unwrap();
+            writer.add_directory("资料/", plain.large_file(false)).unwrap();
+            writer.start_file("坏文件.bin", secret).unwrap(); writer.write_all(&vec![31; 4096]).unwrap();
+            writer.start_file("资料/完整.txt", secret).unwrap(); writer.write_all(b"complete secret").unwrap();
+            writer.finish().unwrap();
+            let mut archive = zip_aes::ZipArchive::new(File::open(&input).unwrap()).unwrap();
+            let index = archive.index_for_name("坏文件.bin").unwrap();
+            let data = archive.by_index_raw(index).unwrap().data_start().unwrap() as usize;
+            drop(archive);
+            let mut bytes = std::fs::read(&input).unwrap();
+            let central = u32::from_le_bytes(bytes[bytes.len()-6..bytes.len()-2].try_into().unwrap()) as usize;
+            bytes.truncate(central);
+            if aes { bytes[data + 50] ^= 1; }
+            else { bytes = zipcrypto_local_fixture(&bytes, password); }
+            std::fs::write(&input, &bytes).unwrap();
+            let report = diagnose_archive(&input, None, Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(report.status, "password_required", "AES={aes}: {report:?}"); assert!(report.encrypted && !report.can_repair);
+            let wrong = diagnose_archive(&input, Some("wrong"), Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(wrong.status, "wrong_password", "AES={aes}: {:?}", super::super::zip_recovery_reader::RecoveryReader::open(&input, &AtomicBool::new(false)).unwrap().check_password_headers("wrong")); assert!(!wrong.can_repair);
+            let parts = super::super::split_compression::SplitCompressionService::split_archive_file(
+                &input, &temp.path().join("数字.zip"), 97, || Ok(())).unwrap().part_files;
+            for (route, path) in [("single", &input), ("numeric", &parts[1])] {
+                let report = diagnose_archive(path, Some(password), Arc::new(AtomicBool::new(false))).await.unwrap();
+                assert_eq!(report.status, "directory_lost"); assert!(report.encrypted && report.can_repair && !report.integrity_tested);
+                assert_eq!(report.total_files, 3); assert_eq!(report.total_directories, 1);
+                let output = temp.path().join(format!("{route}-new.zip"));
+                assert!(repair_zip_with_password_to_new(path, &output, Some("wrong"), &AtomicBool::new(false)).is_err());
+                assert!(!output.exists());
+                let result = repair_zip_with_password_to_new(path, &output, Some(password), &AtomicBool::new(false)).unwrap();
+                assert!(result.directory_rebuilt && result.output_encrypted && result.partial && result.verified);
+                assert_eq!(result.recovered_files, 2); assert_eq!(result.recovered_directories, 1);
+                assert!(result.skipped_entries.iter().any(|note| note.contains("坏文件.bin")));
+                let mut archive = zip_aes::ZipArchive::new(File::open(&output).unwrap()).unwrap();
+                let mut restored = Vec::new();
+                super::super::zip_password::open_named_entry(&mut archive, "资料/完整.txt", password).unwrap().read_to_end(&mut restored).unwrap();
+                assert_eq!(restored, b"complete secret"); assert!(archive.index_for_name("坏文件.bin").is_none());
+                assert_eq!(std::fs::read(&input).unwrap(), bytes);
+            }
+        }
+    }
+
+    // The zip 8.6 writer always uses unknown-size descriptors for ZipCrypto.
+    // Construct declared-size records here; external 7-Zip covers this path in
+    // the desktop check so the fixture implementation is not the only oracle.
+    fn zipcrypto_local_fixture(input: &[u8], password: &str) -> Vec<u8> {
+        fn crc(mut value: u32, byte: u8) -> u32 {
+            value ^= byte as u32;
+            for _ in 0..8 { value = if value & 1 != 0 { (value >> 1) ^ 0xedb88320 } else { value >> 1 }; }
+            value
+        }
+        fn update(keys: &mut [u32; 3], byte: u8) {
+            keys[0] = crc(keys[0], byte);
+            keys[1] = keys[1].wrapping_add(keys[0] & 255).wrapping_mul(134775813).wrapping_add(1);
+            keys[2] = crc(keys[2], (keys[1] >> 24) as u8);
+        }
+        let mut result = Vec::new(); let mut at = 0;
+        while at < input.len() {
+            let size = u32::from_le_bytes(input[at+18..at+22].try_into().unwrap()) as usize;
+            let name_len = u16::from_le_bytes(input[at+26..at+28].try_into().unwrap()) as usize;
+            let header_len = 30 + name_len + u16::from_le_bytes(input[at+28..at+30].try_into().unwrap()) as usize;
+            let name = String::from_utf8_lossy(&input[at+30..at+30+name_len]);
+            let mut header = input[at..at+header_len].to_vec();
+            if name.contains("坏文件") || name.contains("完整") {
+                let flags = u16::from_le_bytes(header[6..8].try_into().unwrap()) | 1;
+                header[6..8].copy_from_slice(&flags.to_le_bytes());
+                header[18..22].copy_from_slice(&((size+12) as u32).to_le_bytes());
+                let mut keys = [0x12345678, 0x23456789, 0x34567890];
+                for byte in password.bytes() { update(&mut keys, byte); }
+                let mut clear = vec![19; 12]; clear[11] = header[17];
+                clear.extend_from_slice(&input[at+header_len..at+header_len+size]);
+                let mut encrypted: Vec<u8> = clear.into_iter().map(|byte| {
+                    let temp = (keys[2] as u16 | 2) as u32;
+                    let cipher = byte ^ (temp.wrapping_mul(temp ^ 1) >> 8) as u8;
+                    update(&mut keys, byte); cipher
+                }).collect();
+                if name.contains("坏文件") { encrypted[50] ^= 1; }
+                result.extend_from_slice(&header); result.extend_from_slice(&encrypted);
+            } else { result.extend_from_slice(&input[at..at+header_len+size]); }
+            at += header_len + size;
+        }
+        result
+    }
+
+    #[tokio::test]
     async fn encrypted_zip_rescue_preserves_password_and_only_intact_files_across_volume_types() {
         use crate::services::zip_password::{encode, ZipPasswordEncoding};
         use zip_aes::unstable::write::FileOptionsExt;
@@ -931,7 +1064,7 @@ mod tests {
         let report = diagnose_archive(&archive, None, Arc::new(AtomicBool::new(false)))
             .await
             .unwrap();
-        assert_eq!(report.status, "truncated");
+        assert_eq!(report.status, "directory_lost");
         assert!(report.can_repair);
         let result = repair_zip_to_new(&archive, &output, &AtomicBool::new(false)).unwrap();
         assert_eq!(result.recovered_files, 2);

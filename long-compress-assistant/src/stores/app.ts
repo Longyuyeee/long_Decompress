@@ -77,6 +77,7 @@ export const useAppStore = defineStore('app', () => {
   const decompressTasks = ref<DecompressTask[]>([])
   const pendingContextActions = ref<Array<{ action: string; files: string[]; outputPath?: string }>>([])
   const pendingArchiveBrowserPath = ref('')
+  const pendingArchiveDiagnosis = ref<{ path: string; taskId?: string; password?: string } | null>(null)
   let errorTimer: ReturnType<typeof setTimeout> | null = null
   let successTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -328,7 +329,7 @@ export const useAppStore = defineStore('app', () => {
 
   return {
     theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings,
-    pendingContextActions, pendingArchiveBrowserPath,
+    pendingContextActions, pendingArchiveBrowserPath, pendingArchiveDiagnosis,
     recentFiles, addRecentFile,
     compressionPresets, saveCompressionPreset, deleteCompressionPreset,
     currentTheme, activeTasks, completedTasks, totalProgress, t,
@@ -346,6 +347,7 @@ export const useAppStore = defineStore('app', () => {
     enqueueContextAction: (action: { action: string; files: string[]; outputPath?: string }) => pendingContextActions.value.push(action),
     takeContextActions: () => pendingContextActions.value.splice(0),
     openArchiveInBrowser: (path: string) => { pendingArchiveBrowserPath.value = path },
+    openArchiveForDiagnosis: (request: { path: string; taskId?: string; password?: string }) => { pendingArchiveDiagnosis.value = request },
     takeArchiveBrowserPath: () => {
       const path = pendingArchiveBrowserPath.value
       pendingArchiveBrowserPath.value = ''
