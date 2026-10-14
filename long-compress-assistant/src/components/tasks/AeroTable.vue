@@ -331,14 +331,15 @@ async (tasks, _, onCleanup) => {
             <!-- 状态与执行进度 -->
             <div
               class="task-status-cell min-w-0 grid items-center gap-2"
-              :class="{ 'is-terminal': !['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status) }"
+              :class="{ 'is-terminal': !['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'paused', 'cancelling'].includes(task.status) }"
             >
               <!-- 状态图标和文字 -->
               <div class="task-status-primary flex min-w-0 items-center justify-center gap-1.5">
-                <span class="text-lg">{{ getStatusIcon(task.status) }}</span>
+                <span class="shrink-0 text-lg">{{ getStatusIcon(task.status) }}</span>
                 <span
-                  class="text-xs font-black uppercase tracking-widest transition-all"
+                  class="min-w-0 truncate text-xs font-black uppercase tracking-widest transition-all"
                   :class="getStatusColor(task.status)"
+                  :title="task.sourceIssue || task.draftPasswordRequired ? '需要调整' : getStatusText(task.status)"
                 >
                   {{ task.sourceIssue || task.draftPasswordRequired ? '需要调整' : getStatusText(task.status) }}
                 </span>
@@ -346,7 +347,7 @@ async (tasks, _, onCleanup) => {
 
               <div v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)" class="task-status-runtime min-w-0">
                 <div class="flex min-w-0 items-center gap-2 whitespace-nowrap text-xs">
-                  <span class="shrink-0 font-bold text-muted">{{ getStageText(task) }}</span>
+                  <span class="task-runtime-stage font-bold text-muted" :title="getStageText(task)">{{ getStageText(task) }}</span>
                   <span v-if="task.currentFile" class="min-w-0 flex-1 truncate font-mono text-dim" :title="task.currentFile">{{ task.currentFile.split(/[\\/]/).pop() }}</span>
                   <span v-if="task.speed" class="shrink-0 font-mono text-dim">{{ task.speed }}</span>
                 </div>
@@ -867,7 +868,7 @@ async (tasks, _, onCleanup) => {
 }
 
 .task-row {
-  height: 52px;
+  height: auto;
   min-height: 52px;
 }
 
@@ -931,7 +932,32 @@ async (tasks, _, onCleanup) => {
 
 
 .task-status-cell {
-  grid-template-columns: minmax(6.5rem, auto) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 0.25rem;
+}
+
+.task-status-primary {
+  grid-column: 1;
+  grid-row: 1;
+  justify-content: flex-start;
+}
+
+.task-status-runtime {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.task-status-percent {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.task-runtime-stage {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .task-status-cell.is-terminal {

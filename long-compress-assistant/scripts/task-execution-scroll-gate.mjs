@@ -16,10 +16,11 @@ export async function runTaskExecutionScrollGate({ driver, callDesktopBridge, wa
     const point = await driver.executeScript((el, exclude) => {
       const r = el.getBoundingClientRect()
       const log = el.querySelector('[data-testid$="-log-viewport"]')
-      const x = r.x + r.width / 2
-      for (let y = Math.max(0, r.top) + 8; y < Math.min(innerHeight, r.bottom); y += 12) {
-        const hit = document.elementFromPoint(x, y)
-        if (hit && el.contains(hit) && (!exclude || !log?.contains(hit))) return { x: Math.round(x), y: Math.round(y) }
+      for (const x of [r.x + r.width / 2, r.left + 8, r.right - 20]) {
+        for (let y = Math.max(0, r.top) + 8; y < Math.min(innerHeight, r.bottom); y += 12) {
+          const hit = document.elementFromPoint(x, y)
+          if (hit && el.contains(hit) && (!exclude || !log?.contains(hit))) return { x: Math.round(x), y: Math.round(y) }
+        }
       }
       return null
     }, element, excludeLogs)
@@ -43,6 +44,7 @@ export async function runTaskExecutionScrollGate({ driver, callDesktopBridge, wa
         { width: 920, height: 620, scale: '100%' },
         { width: 920, height: 620, scale: '125%' },
         { width: 760, height: 520, scale: '100%' },
+        { width: 760, height: 520, scale: '125%' },
       ]) {
         await driver.manage().window().setRect({ width: size.width, height: size.height })
         await driver.executeScript((el, scale) => {
@@ -51,6 +53,23 @@ export async function runTaskExecutionScrollGate({ driver, callDesktopBridge, wa
           el.parentElement.closest('.compression-task-list, .table-body').scrollTop = 0
         }, panel, size.scale)
         await new Promise(resolve => setTimeout(resolve, 450))
+        const taskRow = type === 'decompression' && state === 'running' ? await driver.executeScript(() => {
+          const row = document.querySelector('[data-task-id="responsive-decompression"]')
+          const stage = row.querySelector('.task-runtime-stage').getBoundingClientRect()
+          const percent = row.querySelector('.task-status-percent').getBoundingClientRect()
+          const runtime = row.querySelector('.task-status-runtime').getBoundingClientRect()
+          const outer = row.getBoundingClientRect()
+          return {
+            textOverlap: Math.max(0, Math.min(stage.right, percent.right) - Math.max(stage.left, percent.left)) * Math.max(0, Math.min(stage.bottom, percent.bottom) - Math.max(stage.top, percent.top)),
+            stageOverflow: stage.right - runtime.right,
+            rowOverflow: runtime.bottom - outer.bottom,
+          }
+        }) : null
+        if (taskRow) {
+          assert.ok(taskRow.textOverlap <= 1, `Task stage and percentage overlap: ${JSON.stringify(taskRow)}`)
+          assert.ok(taskRow.stageOverflow <= 1, `Task stage leaves its area: ${JSON.stringify(taskRow)}`)
+          assert.ok(taskRow.rowOverflow <= 1, `Task runtime is clipped: ${JSON.stringify(taskRow)}`)
+        }
         writeFileSync(path.join(artifactDirectory, `task-overview-${type}-${state}-${size.width}-${size.scale}.png`), Buffer.from(await driver.takeScreenshot(), 'base64'))
         await driver.executeScript(el => el.scrollIntoView({ block: 'start' }), panel)
         await new Promise(resolve => setTimeout(resolve, 150))
@@ -106,7 +125,7 @@ export async function runTaskExecutionScrollGate({ driver, callDesktopBridge, wa
         assert.equal(await driver.executeScript(el => el.scrollTop, log), 0, `${type} log must scroll back to its first entry`)
         await wheelOver(panel, -2000, true)
         assert.equal(await driver.executeScript(el => el.scrollTop, panel), 0, `${type} execution must scroll back to its summary`)
-        results.push({ type, state, ...size, pane, log: logLayout, scrollBackToTop: true, screenshot })
+        results.push({ type, state, ...size, taskRow, pane, log: logLayout, scrollBackToTop: true, screenshot })
       }
     }
   }

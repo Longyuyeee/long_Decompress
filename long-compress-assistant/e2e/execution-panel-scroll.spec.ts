@@ -4,17 +4,39 @@ async function visibleSummaryPoint(panel: Locator) {
   return panel.evaluate(el => {
     const r = el.getBoundingClientRect()
     const log = el.querySelector('[data-testid$="-log-viewport"]')!
-    const x = r.x + r.width / 2
-    for (let y = Math.max(0, r.top) + 8; y < Math.min(innerHeight, r.bottom); y += 12) {
-      const hit = document.elementFromPoint(x, y)
-      if (hit && el.contains(hit) && !log.contains(hit)) return { x, y }
+    for (const x of [r.x + r.width / 2, r.left + 8, r.right - 20]) {
+      for (let y = Math.max(0, r.top) + 8; y < Math.min(innerHeight, r.bottom); y += 12) {
+        const hit = document.elementFromPoint(x, y)
+        if (hit && el.contains(hit) && !log.contains(hit)) return { x, y }
+      }
     }
     throw new Error('No visible execution summary to scroll over')
   })
 }
 
+async function expectReadableTaskRow(row: Locator) {
+  const layout = await row.evaluate(el => {
+    const stage = el.querySelector('.task-status-runtime > div > span')!
+    const percent = el.querySelector('.task-status-percent')!
+    const runtime = el.querySelector('.task-status-runtime')!
+    const a = stage.getBoundingClientRect()
+    const b = percent.getBoundingClientRect()
+    const r = runtime.getBoundingClientRect()
+    const outer = el.getBoundingClientRect()
+    return {
+      textOverlap: Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)),
+      stageOverflow: a.right - r.right,
+      rowOverflow: r.bottom - outer.bottom,
+    }
+  })
+  expect(layout.textOverlap, 'stage and percentage must not overlap').toBeLessThanOrEqual(1)
+  expect(layout.stageOverflow, 'stage text must stay in its own area').toBeLessThanOrEqual(1)
+  expect(layout.rowOverflow, 'runtime information must fit the task row').toBeLessThanOrEqual(1)
+}
+
 for (const type of ['compression', 'decompression'] as const) {
   test(`${type}: wheel reaches execution logs below all status cards`, async ({ page }, info) => {
+    test.setTimeout(60_000)
     await page.emulateMedia({ colorScheme: 'dark' })
     await page.addInitScript(() => {
       window.__TAURI_IPC__ = (message: Record<string, any>) => {
@@ -39,6 +61,7 @@ for (const type of ['compression', 'decompression'] as const) {
         { width: 920, height: 620, scale: '100%' },
         { width: 920, height: 620, scale: '125%' },
         { width: 760, height: 520, scale: '100%' },
+        { width: 760, height: 520, scale: '125%' },
       ]) {
         await page.setViewportSize(viewport)
         await page.evaluate(scale => { document.documentElement.style.fontSize = scale }, viewport.scale)
@@ -48,6 +71,9 @@ for (const type of ['compression', 'decompression'] as const) {
         }
         await panel.evaluate(el => { el.scrollTop = 0; el.scrollIntoView({ block: 'start' }) })
         await page.waitForTimeout(450)
+        if (type === 'decompression' && state === 'running') {
+          await expectReadableTaskRow(page.locator('[data-task-id="responsive-decompression"]'))
+        }
         const overview = panel.getByTestId('task-execution-overview')
         const visualProgress = await overview.locator('.execution-progress-track > div').evaluate(el => Number.parseFloat((el as HTMLElement).style.width))
         expect(visualProgress, 'the summary bar must match the displayed progress').toBe(state === 'completed' ? 100 : 46)

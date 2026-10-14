@@ -26,3 +26,21 @@
 | [小窗口滚动后](evidence/task-details-structured-2026-10-14/compression-compact.png) | [小窗口滚动后](evidence/task-details-structured-2026-10-14/decompression-compact.png) |
 
 本轮仍在 `codex/task-details-scroll` / PR #160，源码版本仍为 1.4.5；未创建新发布标签或安装包，不重复归档引擎、媒体或安装检查。
+
+## 追加：小窗口与放大后的任务行（2026-10-14）
+
+用户追问小窗口是否变形。复查上一轮真实桌面截图发现遗漏：详情区可滚动，但解压任务行仍将状态、执行阶段和百分比挤在三列，`920×620 + 125%` 时阶段文字与百分比重叠。旧检查只看详情区溢出，没有检查任务行文字相交，因此上面的 16 场景记录不能作为任务行无重叠的依据。
+
+现已将任务行状态和百分比放在第一行，执行阶段、文件与进度条放在第二行，行高按内容展开。长文本可省略并通过悬停查看完整信息，暂停状态仍保留百分比；操作按钮、单条展开和多选弹窗不变。详情区宽度足够时保持左右各半，窄时上下排列，内容通过纵向滚动访问。
+
+补充 `760×520 + 125%` 场景并加入阶段/百分比相交、阶段越界和行高裁剪的几何检查。浏览器 2 项相关页面检查（20 场景）、`AeroTable` 既有 10 项组件检查、最终普通生产构建均通过。Windows WebView2 同样覆盖两个中心 × 运行中/已完成 × 五种窗口设置，共 20 场景通过；任务行、摘要及滚到日志末尾的代表截图已实际查看。测试任务仍为展示夹具，不计为新的归档引擎验证。
+
+最新记录见 [small-window-results.json](evidence/task-details-small-window-2026-10-14/desktop-results.json)，对应测试二进制 SHA-256：`1b38d2d21b2e3915d5b2b5c61c11de2913ec3290b25e0509d2780d7724465529`。应用最小窗口为 `760×520`；结论限于本次检查范围，不承诺所有文字比例和语言组合均已检查。
+
+| 显示场景 | 实际桌面截图 |
+| --- | --- |
+| 压缩中心最小窗口、125% | [配置区](evidence/task-details-small-window-2026-10-14/compression-minimum-125.png) |
+| 解压中心最小窗口、125% | [任务行](evidence/task-details-small-window-2026-10-14/decompression-minimum-125.png)、[日志末尾](evidence/task-details-small-window-2026-10-14/decompression-minimum-log-125.png) |
+| 解压中心常用窗口、125% | [阶段与百分比不再相交](evidence/task-details-small-window-2026-10-14/decompression-row-125.png) |
+
+本修正继续纳入 PR #160，尚未发布新安装包。
