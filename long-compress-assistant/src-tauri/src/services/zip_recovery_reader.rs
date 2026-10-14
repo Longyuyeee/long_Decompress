@@ -16,6 +16,7 @@ pub(crate) struct RecoveryReader {
     local: Option<(ZipInputReader, Vec<LocalRecord>)>,
     pub names: Vec<String>,
     pub expanded_bytes: u64,
+    pub encrypted: bool,
     pub directory_rebuilt: bool,
     pub notes: Vec<String>,
 }
@@ -39,10 +40,11 @@ impl RecoveryReader {
         if let Ok(mut archive) = zip_aes::ZipArchive::new(ZipInputReader::open(path)?) {
             let mut names = Vec::new();
             let mut expanded_bytes = 0u64;
+            let mut encrypted = false;
             for index in 0..archive.len() {
                 ensure!(!cancelled.load(Ordering::SeqCst), "ZIP recovery cancelled");
                 let raw = archive.by_index_raw(index)?;
-                ensure!(!raw.encrypted(), "暂不支持密码 ZIP 重建；原压缩包未修改");
+                encrypted |= raw.encrypted();
                 names.push(raw.name().to_string());
                 expanded_bytes = expanded_bytes.saturating_add(raw.size());
             }
@@ -51,6 +53,7 @@ impl RecoveryReader {
                 local: None,
                 names,
                 expanded_bytes,
+                encrypted,
                 directory_rebuilt: false,
                 notes: Vec::new(),
             });
@@ -183,6 +186,7 @@ impl RecoveryReader {
             local: Some((reader, records)),
             names,
             expanded_bytes,
+            encrypted: false,
             directory_rebuilt: true,
             notes,
         })
@@ -190,9 +194,13 @@ impl RecoveryReader {
     pub fn entry(
         &mut self,
         index: usize,
+        password: Option<&str>,
     ) -> zip_aes::result::ZipResult<zip_aes::read::ZipFile<'_, ZipInputReader>> {
         if let Some(archive) = self.archive.as_mut() {
-            return archive.by_index(index);
+            return match password {
+                Some(password) => super::zip_password::open_entry(archive, index, password),
+                None => archive.by_index(index),
+            };
         }
         let (reader, records) = self.local.as_mut().unwrap();
         reader.seek(SeekFrom::Start(records[index].offset))?;

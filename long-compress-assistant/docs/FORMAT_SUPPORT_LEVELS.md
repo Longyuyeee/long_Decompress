@@ -1,6 +1,6 @@
 # 归档格式支持等级（当前权威口径）
 
-更新时间：2026-10-13（v1.4.4 功能已封板，正式发布接续中）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级；旧版本发布记录仅描述当时状态，不覆盖本表。
+更新时间：2026-10-14（v1.4.5 功能封板及正式发布收尾）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级；旧版本发布记录仅描述当时状态，不覆盖本表。安装附件以 [v1.4.5 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5) 为准。
 
 ## 等级定义
 
@@ -31,9 +31,11 @@ RAR 创建属于条件能力：必须使用用户自行安装并授权的 WinRAR
 
 v1.4.4 增加标准 ZIP `.z01/…/.zip` 真正创建闭环，普通/AES/ZipCrypto 桌面创建与独立回解已验证；旧默认仍是数字切卷。ZIP/ZIPX 的 PPMd 等常用 7 方法 × 3 加密模式已实测，Zstandard 另有无密码样本，不宣称所有 ZIPX 专有方法、加密 Zstandard 或全部 >4 GiB 密码组合都已覆盖。真实 >4 GiB 无密码 ZIP64、RAR4/5 新旧卷型与 7Z 固实/加密组合见 [本版审计](ARCHIVE_RELIABILITY_1.4.4.md)。
 
-ZIP 恢复为独立能力：普通 ZIP/完整数字卷的可信本地头目录重建，以及目录仍可读的普通标准卷完整条目救援。只确认新文件内容校验通过，原包总数不明或存在未恢复项时明确部分恢复；密码 ZIP、缺卷、未知边界/数据描述符猜测恢复不支持。不是增加一种可创建容器，也不把新候选格式升级为 A/B。
+ZIP 恢复为独立能力：普通 ZIP/完整数字卷的可信本地头目录重建，以及目录仍可读的普通标准卷完整条目救援。1.4.5进一步接通目录可读的 AES/ZipCrypto ZIP（含 ZIPX、混合包、完整数字卷和标准卷），用户提供密码后只救回完整文件，新包沿用填写的密码并使用 AES-256 / UTF-8。必须至少有一个完整加密文件通过校验，混合包的明文文件不能证明密码正确。原包总数不明或存在未恢复项时明确部分恢复；密码包丢目录、缺卷、未知边界/数据描述符猜测恢复仍不支持。这不是新建一种容器。
 
 ### B：非空真实载荷只读闭环
+
+1.4.5新增 **ARJ、Unix `.Z`、UDF**：真实 Windows Release Tauri 浏览、解压、转换 ZIP 后回解均逐字节通过。ARJ 有存储及方法 1～4 的固定样本；UDF 有包含目录和实际文件的 1.02 镜像；Unix `.Z` 是单文件压缩流，不提供展开大小时页面显示未知。固定来源/哈希及证据见 [本版记录](PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)。不宣称创建、原生密码/分卷、所有 UDF 变体或任意 ARJ 扩展特性。
 
 严格桌面矩阵已覆盖应用包、传统归档、镜像、虚拟磁盘、文件系统、Windows Installer 和固件，包括 JAR/XPI/IPA/APK/APPX、CAB、AR/A、ISO、CPIO、XAR、RAR5、LHA/LZH、RPM、DEB/UDEB、DMG/HFS+、EXT2/3/4、QCOW/QCOW2、VDI、VMDK、VHD/VHDX、FAT、NTFS、SquashFS/SFS、APFS、MSI/MSM/MSP、NSIS、GPT/MBR、UEFI、CramFS、IHex、HFS 和 HFSX。
 

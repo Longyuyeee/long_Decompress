@@ -221,6 +221,8 @@ pub struct ArchiveEntryInfo {
     pub path: String,
     pub name: String,
     pub size: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size_known: Option<bool>,
     pub compressed_size: Option<u64>,
     pub modified: Option<String>,
     pub crc: Option<String>,

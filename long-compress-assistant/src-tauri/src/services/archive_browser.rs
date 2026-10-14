@@ -84,7 +84,7 @@ fn browse_zip(path: &Path, cancelled: &AtomicBool) -> Result<ArchiveBrowseResult
             )
         });
         let entry_path = entry.name().replace('\\', "/");
-        entries.push(ArchiveEntryInfo {
+        entries.push(ArchiveEntryInfo { size_known: None,
             name: entry_name(&entry_path),
             path: entry_path,
             size: entry.size(),
@@ -133,7 +133,7 @@ fn browse_7z(
                 let value: std::time::SystemTime = entry.last_modified_date.into();
                 chrono::DateTime::<chrono::Utc>::from(value).to_rfc3339()
             });
-            Ok(ArchiveEntryInfo {
+            Ok(ArchiveEntryInfo { size_known: None,
                 name: entry_name(&path),
                 path,
                 size: entry.size,
@@ -163,7 +163,7 @@ fn browse_rar(
             ensure_not_cancelled(cancelled)?;
             let entry = entry?;
             let path = entry.filename.to_string_lossy().replace('\\', "/");
-            Ok(ArchiveEntryInfo {
+            Ok(ArchiveEntryInfo { size_known: None,
                 name: entry_name(&path),
                 path,
                 size: entry.unpacked_size,
@@ -195,7 +195,7 @@ fn browse_tar_reader<R: Read>(
             chrono::DateTime::<chrono::Utc>::from_timestamp(seconds as i64, 0)
                 .map(|value| value.to_rfc3339())
         });
-        entries.push(ArchiveEntryInfo {
+        entries.push(ArchiveEntryInfo { size_known: None,
             name: entry_name(&path),
             path,
             size: if is_dir { 0 } else { header.size().unwrap_or(0) },
@@ -329,7 +329,7 @@ pub async fn browse_archive_cancellable(
                             anyhow::ensure!(size <= super::extraction_transaction::MAX_EXTRACTED_BYTES, "Stream is too large");
                         }
                         let name = super::native_extraction::single_stream::output_name(&path, &[&format!(".{codec}")]);
-                        Ok(summarize(&codec.to_uppercase(), vec![ArchiveEntryInfo { name: name.clone(), path: name, size, compressed_size: None, modified: None, crc: None, encrypted: false, is_dir: false }]))
+                        Ok(summarize(&codec.to_uppercase(), vec![ArchiveEntryInfo { size_known: None, name: name.clone(), path: name, size, compressed_size: None, modified: None, crc: None, encrypted: false, is_dir: false }]))
                     }
                     _ => anyhow::bail!("Unsupported native archive route"),
                 }

@@ -69,7 +69,11 @@ describe('compression format helpers', () => {
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.hfsx')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.cramfs')
     expect(DECOMPRESS_ARCHIVE_ACCEPT).not.toContain('.ppkg')
-    expect(DECOMPRESS_ARCHIVE_ACCEPT).not.toContain('.arj')
+    for (const extension of ['arj', 'z', 'udf']) {
+      expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.' + extension)
+      expect(isDecompressArchivePath('C:/下载/资料.' + extension.toUpperCase())).toBe(true)
+      expect(COMPRESSIBLE_FORMATS.some(format => format.value === extension)).toBe(false)
+    }
   })
 
   it('accepts archives case-insensitively and rejects document containers', () => {

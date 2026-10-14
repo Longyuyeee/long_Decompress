@@ -23,10 +23,12 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、受支持预览与选择性解压 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
-| 文件完整性 | CRC32/MD5/SHA256 校验、归档诊断，以及保留原包的 ZIP 修复 |
+| 文件完整性 | CRC32/MD5/SHA256 校验、归档诊断，以及保留原包的 ZIP 完整文件救援，支持目录可读的密码包 |
 | 历史与系统集成 | 搜索和再次执行、统一结果操作、托盘、资源管理器经典菜单与应用内更新 |
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
+
+当前源码版本为 **1.4.5**：密码 ZIP 救援及 ARJ、Unix `.Z`、UDF 读取，相关双栏/右键入口同步。普通生产构建与功能收口情况见 [本版记录](docs/PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)；下载安装以 [v1.4.5 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5) 的实际附件为准。
 
 ## 本地开发
 
@@ -92,7 +94,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-本版为 [v1.4.4](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.4)，完整变化见 [中文发布说明](docs/RELEASE_NOTES_1.4.4.md)与 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。安装附件以 Release 页面实际上传结果为准。
+本版为 [v1.4.5](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5)，完整变化见 [中文发布说明](docs/RELEASE_NOTES_1.4.5.md)与 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。安装附件以 Release 页面实际上传结果为准。
+
+v1.4.5 接通目录可读的密码 ZIP 救援，新包保留填写的密码并使用 AES-256 / UTF-8；新增 ARJ、Unix `.Z`、UDF 读取及双栏/右键入口。新增结果加密提示、定位与复制，保留单条展开和多选弹窗。范围与实际检查见 [本版记录](docs/PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)和 [封板记录](docs/PASSWORD_ZIP_RESCUE_FREEZE_1.4.5.md)。
 
 v1.4.4 新增真正标准 ZIP 分卷创建及配置组/历史/模板卷型保存，补齐 PPMd 与加密 ZIPX、直接选择 RAR 中间卷的兼容，修正大文件按小终卷误判容量比率；ZIP 目录丢失时恢复可信的完整条目，部分恢复明确提示。真实桌面、原始失败和范围边界见 [本版审计](docs/ARCHIVE_RELIABILITY_1.4.4.md)及 [封板记录](docs/ARCHIVE_RELIABILITY_FREEZE_1.4.4.md)。数字切卷和密码编码默认值保持不变；密码 ZIP、缺卷和未知边界不承诺修复。
 

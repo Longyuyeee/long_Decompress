@@ -40,6 +40,7 @@ pub struct ArchiveDiagnosticReport {
     pub total_files: usize,
     pub total_directories: usize,
     pub total_uncompressed_size: u64,
+    pub total_uncompressed_size_known: bool,
     pub integrity_tested: bool,
     pub can_repair: bool,
     pub recoverability: String,
@@ -57,6 +58,7 @@ pub struct ZipRepairResult {
     pub verified: bool,
     pub partial: bool,
     pub directory_rebuilt: bool,
+    pub output_encrypted: bool,
 }
 
 struct UnpublishedFile(Option<PathBuf>);
@@ -226,9 +228,14 @@ fn record_failure(report: &mut ArchiveDiagnosticReport, error: &anyhow::Error, p
         _ => classify_failure(&format!("{error:#}"), report.encrypted, password_supplied),
     };
     report.status = code.to_string();
-    report.can_repair = report.actual_format == "ZIP" && !report.encrypted
-        && matches!(code, "crc_error" | "damaged" | "truncated")
-        && (readable_directory || super::zip_recovery_reader::can_scan_local(source));
+    report.can_repair = report.actual_format == "ZIP"
+        && if report.encrypted {
+            password_supplied && readable_directory
+                && matches!(code, "crc_error" | "damaged" | "truncated" | "ambiguous_data")
+        } else {
+            matches!(code, "crc_error" | "damaged" | "truncated")
+                && (readable_directory || super::zip_recovery_reader::can_scan_local(source))
+        };
     report.recoverability = if report.can_repair && !readable_directory { "local_entries" }
         else if report.can_repair { "repairable" }
         else if matches!(code, "password_required" | "wrong_password") { "password_required" }
@@ -272,6 +279,7 @@ pub async fn diagnose_archive(
         total_files: 0,
         total_directories: 0,
         total_uncompressed_size: 0,
+        total_uncompressed_size_known: false,
         integrity_tested: false,
         can_repair: false,
         recoverability: "diagnostic_only".to_string(),
@@ -325,6 +333,7 @@ pub async fn diagnose_archive(
         report.total_files = metadata.total_files;
         report.total_directories = metadata.total_directories;
         report.total_uncompressed_size = metadata.total_uncompressed_size;
+        report.total_uncompressed_size_known = metadata.entries.iter().all(|entry| entry.is_dir || entry.size_known != Some(false));
         report.evidence.push(format!(
             "Entries: {} files, {} directories",
             metadata.total_files, metadata.total_directories
@@ -415,6 +424,15 @@ pub fn repair_zip_to_new(
     output: &Path,
     cancelled: &AtomicBool,
 ) -> Result<ZipRepairResult> {
+    repair_zip_with_password_to_new(path, output, None, cancelled)
+}
+
+pub fn repair_zip_with_password_to_new(
+    path: &Path,
+    output: &Path,
+    password: Option<&str>,
+    cancelled: &AtomicBool,
+) -> Result<ZipRepairResult> {
     check_cancelled(cancelled)?;
     if !path.is_file() {
         anyhow::bail!("ZIP source does not exist: {}", path.display());
@@ -435,6 +453,10 @@ pub fn repair_zip_to_new(
     if let Some(group) = &group { anyhow::ensure!(group.is_complete, "缺少分卷，补齐后再尝试恢复：{:?}", group.missing_parts); }
     let input = group.as_ref().map(|group| group.first_part.as_path()).unwrap_or(path);
     let mut source = super::zip_recovery_reader::RecoveryReader::open(input, cancelled)?;
+    let output_encrypted = source.encrypted;
+    let password = password.filter(|value| !value.is_empty());
+    anyhow::ensure!(!output_encrypted || password.is_some(), "需要原压缩包密码才能恢复文件；未创建新文件");
+    let output_password = if output_encrypted { password } else { None };
     let entry_count = source.names.len();
     let declared_expanded_bytes = source.expanded_bytes;
     let directory_rebuilt = source.directory_rebuilt;
@@ -453,29 +475,44 @@ pub fn repair_zip_to_new(
         .write(true)
         .create_new(true)
         .open(&temporary)?;
-    let mut writer = zip::ZipWriter::new(temp_file);
+    let mut writer = zip_aes::ZipWriter::new(temp_file);
     let mut recovered_files = 0usize;
     let mut recovered_directories = 0usize;
     let mut recovered_bytes = 0u64;
+    let mut recovered_encrypted_files = 0usize;
     let mut skipped_entries = source.notes.clone();
+    let mut written_names = std::collections::HashSet::new();
 
     for index in 0..entry_count {
         check_cancelled(cancelled)?;
         let label = source.names[index].clone();
-        let mut entry = match source.entry(index) {
+        let mut entry = match source.entry(index, password) {
             Ok(entry) => entry,
-            Err(error) => { skipped_entries.push(format!("{label}: {error}")); continue; }
+            Err(error) => {
+                let reason = match error {
+                    zip_aes::result::ZipError::InvalidPassword => "密码无法打开此条目，未恢复".to_string(),
+                    zip_aes::result::ZipError::UnsupportedArchive(_) => "当前不支持此条目的压缩或加密方法，未恢复".to_string(),
+                    other => format!("无法读取此条目，未恢复：{other}"),
+                };
+                skipped_entries.push(format!("{label}: {reason}")); continue;
+            }
         };
         let name = entry.name().replace('\\', "/");
         let declared_entry_size = entry.size();
+        let entry_encrypted = entry.encrypted();
         if entry.enclosed_name().is_none() {
             skipped_entries.push(format!("{name}: unsafe path"));
             continue;
         }
         let options =
-            zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated)
+            zip_aes::write::SimpleFileOptions::default().compression_method(zip_aes::CompressionMethod::Deflated)
                 .large_file(declared_entry_size >= u32::MAX as u64);
+        let options = match output_password {
+            Some(password) => options.with_aes_encryption(zip_aes::AesMode::Aes256, password),
+            None => options,
+        };
         if entry.is_dir() {
+            if !written_names.insert(name.clone()) { continue; }
             writer.add_directory(name, options)?;
             recovered_directories += 1;
             continue;
@@ -506,6 +543,8 @@ pub fn repair_zip_to_new(
                 let detail = error.to_string();
                 let reason = if detail.to_ascii_lowercase().contains("checksum") || detail.to_ascii_lowercase().contains("crc") {
                     "内容校验失败".to_string()
+                } else if detail.to_ascii_lowercase().contains("authentication") {
+                    "加密内容校验失败".to_string()
                 } else { detail };
                 skipped_entries.push(format!("{name}: {reason}，未恢复此条目"));
                 continue;
@@ -513,6 +552,10 @@ pub fn repair_zip_to_new(
         };
         if copied != declared_entry_size {
             skipped_entries.push(format!("{name}: 条目声明大小与实际读取大小不一致，未恢复"));
+            continue;
+        }
+        if !written_names.insert(name.clone()) {
+            skipped_entries.push(format!("{name}: 包内名称重复，未恢复此条目"));
             continue;
         }
         let next_recovered_bytes = recovered_bytes.saturating_add(copied);
@@ -526,14 +569,19 @@ pub fn repair_zip_to_new(
         copy_cancellable(&mut spool, &mut writer, cancelled)?;
         recovered_bytes = next_recovered_bytes;
         recovered_files += 1;
+        if entry_encrypted { recovered_encrypted_files += 1; }
         std::fs::remove_file(&spool_path)?;
         spool_guard.0.take();
     }
+    // A plain file in a mixed ZIP cannot prove that the supplied password works.
+    // Publish only after a complete encrypted file passes its content check.
+    anyhow::ensure!(!output_encrypted || recovered_encrypted_files > 0,
+        "未能用此密码完整读取任何加密文件；请确认密码和文件完整性，未创建新文件");
     if recovered_files == 0 {
         anyhow::bail!("No complete file entries could be recovered; no repair output was created");
     }
     writer.finish()?.sync_all()?;
-    verify_native(CompressionRoute::Zip, &temporary, None, || {
+    verify_native(CompressionRoute::Zip, &temporary, output_password, || {
         cancelled.load(Ordering::SeqCst)
     })
     .context("Rebuilt ZIP failed integrity verification")?;
@@ -550,6 +598,7 @@ pub fn repair_zip_to_new(
         verified: true,
         partial,
         directory_rebuilt,
+        output_encrypted,
     })
 }
 
@@ -594,6 +643,91 @@ mod tests {
         }
         fn emit_log(&self, _: &Window, _: &str, _: &str, _: TaskLogSeverity) {}
         fn emit_progress(&self, _: &Window, _: &str, _: f32, _: Option<String>, _: u64, _: u64) {}
+    }
+
+    #[tokio::test]
+    async fn encrypted_zip_rescue_preserves_password_and_only_intact_files_across_volume_types() {
+        use crate::services::zip_password::{encode, ZipPasswordEncoding};
+        use zip_aes::unstable::write::FileOptionsExt;
+        for aes in [true, false] {
+            for encoding in [ZipPasswordEncoding::Utf8, ZipPasswordEncoding::WindowsLocal] {
+                let password = "救援密码 + 测试!";
+                let Ok(encoded) = encode(password, encoding) else { continue };
+                let temp = tempfile::tempdir().unwrap();
+                let archive = temp.path().join("收到的密码.zipx");
+                let plain = zip_aes::write::SimpleFileOptions::default()
+                    .compression_method(zip_aes::CompressionMethod::Stored);
+                let options = if aes {
+                    plain.with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &encoded)
+                } else { plain.with_deprecated_encryption(&encoded).unwrap() };
+                let mut writer = zip_aes::ZipWriter::new(File::create(&archive).unwrap());
+                writer.start_file("公开说明.txt", plain).unwrap();
+                writer.write_all(b"a plain file must not prove the password").unwrap();
+                writer.add_directory("资料/空目录/", plain).unwrap();
+                writer.start_file("坏文件.bin", options).unwrap();
+                writer.write_all(&vec![17; 140_000]).unwrap();
+                writer.start_file("资料/完整.txt", options).unwrap();
+                writer.write_all(b"intact secret contents").unwrap();
+                writer.finish().unwrap();
+                let mut reader = zip_aes::ZipArchive::new(File::open(&archive).unwrap()).unwrap();
+                let bad_index = reader.index_for_name("坏文件.bin").unwrap();
+                let at = reader.by_index_raw(bad_index).unwrap().data_start().unwrap() as usize;
+                drop(reader);
+                let mut bytes = std::fs::read(&archive).unwrap(); bytes[at + 50] ^= 1;
+                std::fs::write(&archive, bytes).unwrap();
+                let numeric = super::super::split_compression::SplitCompressionService::split_archive_file(
+                    &archive, &temp.path().join("数字.zip"), 65536, || Ok(())).unwrap().part_files;
+                let standard = super::super::standard_zip_writer::split(
+                    &archive, &temp.path().join("标准.zip"), 65536, || Ok(()), |_,_| {}).unwrap().part_files;
+                for (route, input) in [("single", &archive), ("numeric", &numeric[1]), ("standard", &standard[1])] {
+                    let before: Vec<_> = std::iter::once(&archive).chain(numeric.iter()).chain(standard.iter()).map(|path| hash(path)).collect();
+                    let report = diagnose_archive(input, Some(password), Arc::new(AtomicBool::new(false))).await.unwrap();
+                    assert!(report.can_repair && report.encrypted, "{aes}/{encoding:?}/{route}: {report:?}");
+                    let absent = temp.path().join(format!("{route}-missing.zip"));
+                    assert!(repair_zip_with_password_to_new(input, &absent, None, &AtomicBool::new(false)).unwrap_err().to_string().contains("密码"));
+                    assert!(!absent.exists());
+                    let wrong = temp.path().join(format!("{route}-wrong.zip"));
+                    assert!(repair_zip_with_password_to_new(input, &wrong, Some("wrong"), &AtomicBool::new(false)).is_err());
+                    assert!(!wrong.exists(), "plain entry must not allow a wrong password to publish");
+                    let output = temp.path().join(format!("{route}-recovered.zip"));
+                    let result = repair_zip_with_password_to_new(input, &output, Some(password), &AtomicBool::new(false)).unwrap();
+                    assert!(result.output_encrypted && result.partial && result.verified && !result.directory_rebuilt);
+                    assert_eq!(result.recovered_files, 2);
+                    assert!(result.skipped_entries.iter().any(|note| note.contains("坏文件.bin")));
+                    let mut recovered = zip_aes::ZipArchive::new(File::open(&output).unwrap()).unwrap();
+                    assert!(recovered.by_name("资料/完整.txt").is_err());
+                    assert!(recovered.index_for_name("坏文件.bin").is_none());
+                    let public_index = recovered.index_for_name("公开说明.txt").unwrap();
+                    assert!(recovered.by_index_raw(public_index).unwrap().encrypted());
+                    let mut content = String::new();
+                    super::super::zip_password::open_named_entry(&mut recovered, "资料/完整.txt", password).unwrap().read_to_string(&mut content).unwrap();
+                    assert_eq!(content, "intact secret contents");
+                    assert_eq!(std::iter::once(&archive).chain(numeric.iter()).chain(standard.iter()).map(|path| hash(path)).collect::<Vec<_>>(), before);
+                    assert!(!std::fs::read_dir(temp.path()).unwrap().any(|entry| entry.unwrap().file_name().to_string_lossy().starts_with(".long-repair")));
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn duplicate_local_names_do_not_abort_the_whole_recovery() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("duplicates.zip");
+        let mut writer = zip::ZipWriter::new(File::create(&archive).unwrap());
+        for contents in ["first intact file", "second intact file"] {
+            writer.start_file("same.txt", zip::write::FileOptions::default()
+                .compression_method(zip::CompressionMethod::Stored)).unwrap();
+            writer.write_all(contents.as_bytes()).unwrap();
+        }
+        writer.finish().unwrap();
+        let mut bytes = std::fs::read(&archive).unwrap();
+        let end = bytes.len() - 22;
+        let central = u32::from_le_bytes(bytes[end + 16..end + 20].try_into().unwrap()) as usize;
+        bytes.truncate(central); std::fs::write(&archive, bytes).unwrap();
+        let result = repair_zip_to_new(&archive, &temp.path().join("new.zip"), &AtomicBool::new(false)).unwrap();
+        assert!(result.verified && result.partial);
+        assert_eq!(result.recovered_files, 1);
+        assert!(result.skipped_entries.iter().any(|note| note.contains("名称重复")));
     }
 
     fn create_stored_zip(path: &Path) {
@@ -689,7 +823,7 @@ mod tests {
         let report = diagnose_archive(&archive, Some("真实密码"), Arc::new(AtomicBool::new(false))).await.unwrap();
         assert_eq!(report.status, "ambiguous_data", "{report:?}");
         assert!(report.encrypted && report.integrity_tested);
-        assert!(!report.can_repair);
+        assert!(report.can_repair);
         assert!(report.issues.iter().any(|issue| issue.detail.contains("反复尝试密码")));
         assert!(!serde_json::to_string(&report).unwrap().contains("真实密码"));
         assert_eq!(hash(&archive), before);

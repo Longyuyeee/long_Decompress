@@ -696,7 +696,7 @@ const extractSelected = async () => {
       <section class="browser-summary shrink-0" aria-label="压缩包摘要">
         <span><b>{{ result.format }}</b> 格式</span>
         <span><b>{{ result.totalFiles }}</b> 个文件</span>
-        <span>展开后 <b>{{ formatBytes(result.totalUncompressedSize) }}</b></span>
+        <span>展开后 <b>{{ result.entries.some(entry => entry.sizeKnown === false && !entry.isDir) ? '大小未知' : formatBytes(result.totalUncompressedSize) }}</b></span>
         <span><i :class="result.encrypted ? 'pi pi-lock' : 'pi pi-lock-open'"></i> {{ result.encrypted ? '已加密' : '未加密' }}</span>
       </section>
 
@@ -762,7 +762,7 @@ const extractSelected = async () => {
                   @click.stop="openPreview(entry)"
                 ><i class="pi pi-eye"></i></button>
               </span>
-              <span class="hidden md:block text-left text-muted">{{ entry.isDir ? '文件夹' : formatBytes(entry.size) }}</span>
+              <span class="hidden md:block text-left text-muted">{{ entry.isDir ? '文件夹' : entry.sizeKnown === false ? '大小未知' : formatBytes(entry.size) }}</span>
               <span class="hidden lg:block text-left text-muted truncate">{{ entry.modified || '—' }}</span>
               <span class="hidden xl:block text-left font-mono text-muted truncate">{{ entry.crc || '—' }}</span>
             </div>
@@ -853,7 +853,7 @@ const extractSelected = async () => {
           <div class="archive-details-metrics">
             <article><span>条目</span><strong>{{ detailEntries.length }}</strong></article>
             <article><span>包含文件</span><strong>{{ detailFiles.length }}</strong></article>
-            <article><span>展开大小</span><strong>{{ formatBytes(detailTotalSize) }}</strong></article>
+            <article><span>展开大小</span><strong>{{ detailFiles.some(entry => entry.sizeKnown === false) ? '大小未知' : formatBytes(detailTotalSize) }}</strong></article>
             <article><span>归档内大小</span><strong>{{ detailCompressedSize ? formatBytes(detailCompressedSize) : '未知' }}</strong></article>
           </div>
           <dl v-if="detailEntries.length === 1" class="archive-details-grid">

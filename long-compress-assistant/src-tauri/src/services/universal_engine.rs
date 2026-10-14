@@ -13,6 +13,12 @@ use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 
 pub struct UniversalCliEngine;
 
+fn is_unix_compress(path: &Path) -> bool {
+    let mut header = [0u8; 3];
+    std::fs::File::open(path).and_then(|mut file| file.read_exact(&mut header)).is_ok()
+        && header[..2] == [0x1f, 0x9d]
+}
+
 impl Default for UniversalCliEngine {
     fn default() -> Self {
         Self::new()
@@ -422,6 +428,10 @@ impl UniversalCliEngine {
             return Ok(entries);
         }
 
+        if is_unix_compress(file_path) {
+            return Ok(vec![file_path.file_stem().unwrap_or_default().to_string_lossy().to_string()]);
+        }
+
         // 回退：解析普通列表模式的最后列
         Ok(stdout.lines()
             .filter(|line| {
@@ -449,12 +459,14 @@ impl UniversalCliEngine {
             };
             let path = path.replace('\\', "/");
             let attributes = current.get("Attributes").map(String::as_str).unwrap_or("");
-            let is_dir = attributes.contains('D') || path.ends_with('/');
+            let is_dir = current.get("Folder").is_some_and(|value| value == "+")
+                || attributes.contains('D') || path.ends_with('/');
             let name = path.trim_end_matches('/').rsplit('/').next().unwrap_or(&path).to_string();
             entries.push(ArchiveEntryInfo {
                 name,
                 path,
                 size: current.get("Size").and_then(|value| value.parse().ok()).unwrap_or(0),
+                size_known: Some(is_dir || current.get("Size").is_some_and(|value| value.parse::<u64>().is_ok())),
                 compressed_size: current.get("Packed Size").and_then(|value| value.parse().ok()),
                 modified: current.get("Modified").cloned(),
                 crc: current.get("CRC").cloned().filter(|value| !value.is_empty()),
@@ -520,7 +532,20 @@ impl UniversalCliEngine {
         if !output.status.success() {
             anyhow::bail!("Unable to read archive metadata safely");
         }
-        let result = Self::parse_metadata_listing(&String::from_utf8_lossy(&output.stdout), format);
+        let is_z = is_unix_compress(file_path);
+        let mut result = Self::parse_metadata_listing(&String::from_utf8_lossy(&output.stdout), if is_z { "Z".into() } else { format.to_ascii_uppercase() });
+        // Unix compress stores neither the original file name nor expanded size.
+        // Keep browsing instantaneous and show an unknown size, rather than
+        // decompressing the whole stream just to populate a file-list row.
+        if is_z && result.entries.is_empty() {
+            let name = file_path.file_stem().unwrap_or_default().to_string_lossy().to_string();
+            let packed = file_path.metadata()?.len();
+            result.entries.push(ArchiveEntryInfo { name: name.clone(), path: name, size: 0,
+                size_known: Some(false), compressed_size: Some(packed), modified: None,
+                crc: None, encrypted: false, is_dir: false });
+            result.total_files = 1;
+            result.total_compressed_size = packed;
+        }
         if result.entries.is_empty() {
             anyhow::bail!("The archive did not expose any browseable entries");
         }

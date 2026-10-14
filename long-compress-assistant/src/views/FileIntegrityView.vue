@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
 import { useTauriCommands, type ArchiveDiagnosticReport, type ZipRepairResult } from '@/composables/useTauriCommands'
@@ -32,6 +32,8 @@ const diagnosticId = ref('')
 const isDiagnosing = ref(false)
 const isRepairing = ref(false)
 const repairId = ref('')
+
+watch(archivePassword, () => { diagnosticReport.value = null })
 
 const algorithms = [
   { value: 'crc32', label: 'CRC32', description: '快速校验' },
@@ -204,7 +206,7 @@ const selectArchive = async () => {
 }
 
 const diagnoseArchive = async () => {
-  if (!archivePath.value || isDiagnosing.value) return
+  if (!archivePath.value || isDiagnosing.value || isRepairing.value) return
   isDiagnosing.value = true
   diagnosticReport.value = null
   repairResult.value = null
@@ -228,7 +230,7 @@ const cancelDiagnosis = async () => {
   try { await tauriCommands.cancelArchiveDiagnosis(diagnosticId.value) } catch { /* command may have just completed */ }
 }
 
-const defaultRepairPath = () => archivePath.value.replace(/\.zip$/i, '') + '.repaired.zip'
+const defaultRepairPath = () => archivePath.value.replace(/(?:\.z\d+|\.\d{3,})$/i, '').replace(/\.zipx?$/i, '') + '.repaired.zip'
 
 const repairArchive = async () => {
   if (!diagnosticReport.value?.canRepair || isRepairing.value) return
@@ -243,7 +245,8 @@ const repairArchive = async () => {
   isRepairing.value = true
   repairId.value = `repair-${Date.now()}-${Math.random().toString(36).slice(2)}`
   try {
-    repairResult.value = await tauriCommands.repairZip(repairId.value, archivePath.value, outputPath)
+    repairResult.value = null
+    repairResult.value = await tauriCommands.repairZip(repairId.value, archivePath.value, outputPath, archivePassword.value)
     if (repairResult.value.partial || repairResult.value.skippedEntries.length) {
       uiStore.showToast('warning', '部分恢复：已恢复可读条目，请核对内容是否齐全', 6000)
     } else { appStore.setSuccess('ZIP 已重建到新文件并通过完整性校验') }
@@ -260,6 +263,12 @@ const repairArchive = async () => {
 const cancelRepair = async () => {
   if (!repairId.value) return
   try { await tauriCommands.cancelZipRepair(repairId.value) } catch { /* repair may have just completed */ }
+}
+
+const locateRepair = async () => {
+  if (!repairResult.value) return
+  try { await tauriCommands.invoke('open_in_explorer', { path: repairResult.value.outputPath }) }
+  catch { appStore.setError('无法定位恢复文件，请确认文件仍在原位置') }
 }
 
 const statusLabel = (status: string) => ({
@@ -328,6 +337,7 @@ const copyDiagnosticReport = async () => {
         <nav class="integrity-mode-switch" aria-label="文件完整性工具">
           <button
             @click="activeMode = 'calculate'; clearResults()"
+            :disabled="isDiagnosing || isRepairing"
             :class="{ active: activeMode === 'calculate' }"
           >
             <span class="mode-icon"><i class="pi pi-hashtag"></i></span>
@@ -336,6 +346,7 @@ const copyDiagnosticReport = async () => {
           </button>
           <button
             @click="activeMode = 'verify'; clearResults()"
+            :disabled="isDiagnosing || isRepairing"
             :class="{ active: activeMode === 'verify' }"
           >
             <span class="mode-icon"><i class="pi pi-check-circle"></i></span>
@@ -345,6 +356,7 @@ const copyDiagnosticReport = async () => {
           <button
             data-testid="archive-diagnostic-mode"
             @click="activeMode = 'archive'; clearResults()"
+            :disabled="isDiagnosing || isRepairing"
             :class="{ active: activeMode === 'archive' }"
           >
             <span class="mode-icon"><i class="pi pi-search"></i></span>
@@ -483,12 +495,12 @@ const copyDiagnosticReport = async () => {
                 autocomplete="off"
                 class="archive-password"
                 placeholder="密码（可选，不写入报告）"
-                :disabled="isDiagnosing"
+                :disabled="isDiagnosing || isRepairing"
               />
             </div>
             <p v-if="archivePath" class="mt-3 text-xs text-muted break-all">{{ archivePath }}</p>
             <div class="mt-5 flex flex-wrap gap-3">
-              <button v-if="!isDiagnosing" type="button" class="archive-primary" :disabled="!archivePath" @click="diagnoseArchive">
+              <button v-if="!isDiagnosing" type="button" class="archive-primary" :disabled="!archivePath || isRepairing" @click="diagnoseArchive">
                 <i class="pi pi-search"></i>开始诊断
               </button>
               <button v-else type="button" class="archive-danger" @click="cancelDiagnosis">
@@ -514,7 +526,7 @@ const copyDiagnosticReport = async () => {
             <div class="diagnostic-metrics mt-6">
               <div><span>归档大小</span><strong>{{ formatBytes(diagnosticReport.fileSize) }}</strong></div>
               <div><span>文件 / 目录</span><strong>{{ diagnosticReport.totalFiles }} / {{ diagnosticReport.totalDirectories }}</strong></div>
-              <div><span>展开大小</span><strong>{{ formatBytes(diagnosticReport.totalUncompressedSize) }}</strong></div>
+              <div><span>展开大小</span><strong>{{ diagnosticReport.totalUncompressedSizeKnown === false ? '大小未知' : formatBytes(diagnosticReport.totalUncompressedSize) }}</strong></div>
               <div><span>加密 / 分卷</span><strong>{{ encryptionLabel(diagnosticReport) }} / {{ diagnosticReport.splitArchive ? diagnosticReport.volumesFound + ' 卷' : '否' }}</strong></div>
             </div>
 
@@ -529,8 +541,9 @@ const copyDiagnosticReport = async () => {
             </div>
 
             <div v-if="diagnosticReport.canRepair" class="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
-              <strong class="text-sm text-content">可尝试安全重建 ZIP</strong>
+              <strong class="text-sm text-content">{{ diagnosticReport.encrypted ? '可尝试救回密码 ZIP 中的完整文件' : '可尝试恢复 ZIP 中的完整文件' }}</strong>
               <p class="mt-2 text-xs leading-5 text-muted">只把仍能完整读取的条目写入新文件，跳过损坏条目；原压缩包不会被覆盖或删除。</p>
+              <p v-if="diagnosticReport.encrypted" class="repair-password-note mt-3" data-testid="repair-password-note"><i class="pi pi-lock"></i><span>新包沿用填写的密码，使用 AES-256 加密（UTF-8）。</span></p>
               <button v-if="!isRepairing" type="button" class="archive-primary mt-4" @click="repairArchive">
                 <i class="pi pi-wrench"></i>选择位置并修复
               </button>
@@ -544,8 +557,10 @@ const copyDiagnosticReport = async () => {
             <h2 class="text-lg font-black" :class="repairResult.partial || repairResult.skippedEntries.length ? 'text-amber-600' : 'text-green-500'">{{ repairResult.partial || repairResult.skippedEntries.length ? '部分恢复 · 新文件已通过校验' : '修复文件已通过完整性校验' }}</h2>
             <p class="mt-3 text-xs text-muted break-all">{{ repairResult.outputPath }}</p>
             <p class="mt-3 text-sm text-content">恢复 {{ repairResult.recoveredFiles }} 个文件、{{ repairResult.recoveredDirectories }} 个目录；未恢复说明 {{ repairResult.skippedEntries.length }} 项。</p>
+            <p class="repair-password-note mt-3" data-testid="repair-output-encryption"><i :class="repairResult.outputEncrypted ? 'pi pi-lock' : 'pi pi-folder'"></i><span>{{ repairResult.outputEncrypted ? '新包已使用 AES-256 加密，密码与恢复时填写的一致（UTF-8）。' : '新包未设置密码。' }}</span></p>
             <p v-if="repairResult.directoryRebuilt" class="mt-2 text-xs text-amber-600">目录信息已重建，原包总条目数无法确认，请核对内容是否齐全。</p>
             <ul v-if="repairResult.skippedEntries.length" class="mt-3 space-y-1 text-xs text-amber-500 break-all"><li v-for="entry in repairResult.skippedEntries" :key="entry">· {{ entry }}</li></ul>
+            <div class="mt-4 flex flex-wrap gap-3"><button type="button" class="archive-secondary" @click="locateRepair"><i class="pi pi-folder-open"></i>定位新包</button><button type="button" class="archive-secondary" @click="copyChecksum(repairResult.outputPath)"><i class="pi pi-copy"></i>复制路径</button></div>
           </section>
         </div>
       </div>
@@ -554,6 +569,8 @@ const copyDiagnosticReport = async () => {
 </template>
 
 <style scoped>
+.repair-password-note { display: flex; align-items: flex-start; gap: .6rem; padding: .75rem .9rem; border-radius: .75rem; background: color-mix(in srgb, var(--dynamic-accent) 8%, transparent); color: var(--text-content); font-size: .75rem; line-height: 1.6; }
+.repair-password-note i { flex: none; margin-top: .2rem; color: var(--dynamic-accent); }
 .integrity-view { padding: 1rem 1.35rem 0; }
 .integrity-header { display: flex; align-items: center; justify-content: space-between; padding: .15rem .15rem .8rem; }
 .integrity-header h1 { color: var(--text-content); font-size: 1.55rem; font-weight: 950; letter-spacing: -.055em; line-height: 1.1; }

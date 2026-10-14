@@ -83,10 +83,10 @@ export interface ExtractOnlyFormatCapability {
 
 export const EXTRACT_ONLY_FORMATS: ExtractOnlyFormatCapability[] = [
   { displayName: 'Application packages', extensions: ['jar', 'xpi', 'ipa', 'apk', 'appx'], requires7za: false },
-  { displayName: 'Disk images', extensions: ['iso', 'img', 'dmg', 'vhd', 'vhdx', 'qcow', 'qcow2', 'qcow2c', 'vdi', 'vmdk'], requires7za: true },
+  { displayName: 'Disk images', extensions: ['iso', 'img', 'udf', 'dmg', 'vhd', 'vhdx', 'qcow', 'qcow2', 'qcow2c', 'vdi', 'vmdk'], requires7za: true },
   { displayName: 'Installers and packages', extensions: ['cab', 'deb', 'udeb', 'rpm', 'msi', 'msp', 'msm', 'nsis'], requires7za: true },
   { displayName: 'Filesystems and firmware', extensions: ['apfs', 'ext', 'ext2', 'ext3', 'ext4', 'gpt', 'mbr', 'uefif', 'cramfs', 'fat', 'ntfs', 'hfs', 'hfsx'], requires7za: true },
-  { displayName: 'Legacy archives', extensions: ['ar', 'a', 'lzh', 'lha', 'squashfs', 'sfs', 'xar', 'cpio', 'ihex'], requires7za: true },
+  { displayName: 'Legacy archives', extensions: ['ar', 'a', 'arj', 'z', 'lzh', 'lha', 'squashfs', 'sfs', 'xar', 'cpio', 'ihex'], requires7za: true },
 ]
 
 export const COMPRESSIBLE_FORMATS = FORMAT_CAPABILITIES

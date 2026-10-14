@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri'
-import { FORMAT_CAPABILITIES } from './compressionFormat'
+import { FORMAT_CAPABILITIES, EXTRACT_ONLY_FORMATS } from './compressionFormat'
 
 export interface ArchiveVolumeGroup {
   is_split: boolean
@@ -31,13 +31,14 @@ export function archiveSourceFormat(path: string): string | undefined {
   const formats = FORMAT_CAPABILITIES.flatMap(format => format.extensions.map(extension => ({ extension, format: format.format })))
     .sort((a, b) => b.extension.length - a.extension.length)
   return formats.find(format => name.endsWith('.' + format.extension))?.format
+    ?? EXTRACT_ONLY_FORMATS.flatMap(format => format.extensions).find(extension => name.endsWith('.' + extension))
 }
 
 export function archiveSourceStem(path: string): string {
   let name = path.split(/[\\/]/).pop() || 'archive'
   name = name.replace(/\.part\d+\.rar$/i, '.rar').replace(/\.r\d{2,3}$/i, '.rar').replace(/\.z\d{2,5}$/i, '.zip')
     .replace(/\.\d{3,}$|\.part\d+$/i, '')
-  const extensions = FORMAT_CAPABILITIES.flatMap(format => format.extensions).sort((a, b) => b.length - a.length)
+  const extensions = [...FORMAT_CAPABILITIES.flatMap(format => format.extensions), ...EXTRACT_ONLY_FORMATS.flatMap(format => format.extensions)].sort((a, b) => b.length - a.length)
   const extension = extensions.find(extension => name.toLowerCase().endsWith('.' + extension))
   return extension ? name.slice(0, -(extension.length + 1)) : name
 }
