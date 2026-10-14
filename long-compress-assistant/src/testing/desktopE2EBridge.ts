@@ -188,7 +188,7 @@ export interface DesktopE2EBridge {
     outputPaths: string[]
   }
   showAvailableUpdate: () => void
-  seedResponsiveWorkspace: (type: 'compression' | 'decompression') => string
+  seedResponsiveWorkspace: (type: 'compression' | 'decompression', state?: 'running' | 'completed') => string
   setCloseToTray: (enabled: boolean) => Promise<void>
   setAutoStart: (enabled: boolean) => Promise<boolean>
   checkAutoStart: () => Promise<boolean>
@@ -982,7 +982,7 @@ export const installDesktopE2EBridge = () => {
       })
     },
 
-    seedResponsiveWorkspace(type) {
+    seedResponsiveWorkspace(type, state) {
       const taskId = `responsive-${type}`
       const longSourcePath = `C:\\Users\\ResponsiveFixture\\Documents\\${'deep-folder\\'.repeat(8)}source-file-with-a-very-long-name.bin`
       const longOutputPath = `C:\\Users\\ResponsiveFixture\\Archives\\${'nested-output\\'.repeat(6)}responsive-output.${type === 'compression' ? 'zip' : 'folder'}`
@@ -1031,6 +1031,28 @@ export const installDesktopE2EBridge = () => {
         message: `${index + 1}: ${longSourcePath} -> ${longOutputPath}`,
         severity: index === 17 ? 'success' as const : 'info' as const,
       }))
+
+      if (state) {
+        task.status = state === 'completed' ? 'completed' : type === 'compression' ? 'compressing' : 'extracting'
+        task.stage = state === 'completed' ? 'Finalizing' : type === 'compression' ? undefined : 'Extracting'
+        task.progress = state === 'completed' ? 100 : 46
+        task.processedBytes = 480 * 1024 * 1024
+        task.totalBytes = 1024 * 1024 * 1024
+        task.outputBytes = 453 * 1024 * 1024
+        if (type === 'compression' && state === 'completed') {
+          task.archiveOutput = {
+            primaryPath: longOutputPath,
+            totalBytes: task.outputBytes,
+            split: false,
+            files: [{ path: longOutputPath, bytes: task.outputBytes }],
+          }
+        }
+        if (type === 'decompression' && state === 'running') {
+          task.currentPassword = '正在尝试的长密码'.repeat(12)
+          task.passwordAttemptCurrent = 4
+          task.passwordAttemptTotal = 20
+        }
+      }
 
       if (type === 'compression') {
         compressionStore.addFile({

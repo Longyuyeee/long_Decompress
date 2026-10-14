@@ -1,0 +1,272 @@
+{
+  "testKind": "real-windows-webview2-task-execution-scroll",
+  "fixtureTasks": true,
+  "binarySha256": "737303a9c96d1983fe63c5ccab2ccdc4e5c3fecba3c8b8fa6d5e639a85ff929a",
+  "results": [
+    {
+      "type": "compression",
+      "state": "completed",
+      "width": 920,
+      "height": 620,
+      "scale": "100%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 616,
+        "overflowY": "auto",
+        "scrollTop": 616.5
+      },
+      "log": {
+        "height": 160,
+        "lastLogText": "15:07:2518: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.zip",
+        "lastLogVisible": true,
+        "scrollHeight": 17748,
+        "scrollTop": 17588
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-completed-920-100%.png"
+    },
+    {
+      "type": "compression",
+      "state": "completed",
+      "width": 920,
+      "height": 620,
+      "scale": "125%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 540,
+        "overflowY": "auto",
+        "scrollTop": 540
+      },
+      "log": {
+        "height": 200,
+        "lastLogText": "15:07:2518: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.zip",
+        "lastLogVisible": true,
+        "scrollHeight": 5513,
+        "scrollTop": 5312.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-completed-920-125%.png"
+    },
+    {
+      "type": "compression",
+      "state": "completed",
+      "width": 760,
+      "height": 520,
+      "scale": "100%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 644,
+        "overflowY": "auto",
+        "scrollTop": 644.5
+      },
+      "log": {
+        "height": 160,
+        "lastLogText": "15:07:2518: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.zip",
+        "lastLogVisible": true,
+        "scrollHeight": 17748,
+        "scrollTop": 17588
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-completed-760-100%.png"
+    },
+    {
+      "type": "compression",
+      "state": "running",
+      "width": 920,
+      "height": 620,
+      "scale": "100%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 269,
+        "overflowY": "auto",
+        "scrollTop": 269
+      },
+      "log": {
+        "height": 160,
+        "lastLogText": "15:07:3818: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.zip",
+        "lastLogVisible": true,
+        "scrollHeight": 17748,
+        "scrollTop": 17588
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-running-920-100%.png"
+    },
+    {
+      "type": "compression",
+      "state": "running",
+      "width": 920,
+      "height": 620,
+      "scale": "125%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 299,
+        "overflowY": "auto",
+        "scrollTop": 298.5
+      },
+      "log": {
+        "height": 200,
+        "lastLogText": "15:07:3818: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.zip",
+        "lastLogVisible": true,
+        "scrollHeight": 5513,
+        "scrollTop": 5312.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-running-920-125%.png"
+    },
+    {
+      "type": "compression",
+      "state": "running",
+      "width": 760,
+      "height": 520,
+      "scale": "100%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 297,
+        "overflowY": "auto",
+        "scrollTop": 297
+      },
+      "log": {
+        "height": 160,
+        "lastLogText": "15:07:3818: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.zip",
+        "lastLogVisible": true,
+        "scrollHeight": 17748,
+        "scrollTop": 17588
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-running-760-100%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "completed",
+      "width": 920,
+      "height": 620,
+      "scale": "100%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 134,
+        "overflowY": "auto",
+        "scrollTop": 134
+      },
+      "log": {
+        "height": 160,
+        "lastLogText": "15:07:4918: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.folder",
+        "lastLogVisible": true,
+        "scrollHeight": 584,
+        "scrollTop": 423.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-completed-920-100%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "completed",
+      "width": 920,
+      "height": 620,
+      "scale": "125%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 121,
+        "overflowY": "auto",
+        "scrollTop": 121
+      },
+      "log": {
+        "height": 200,
+        "lastLogText": "15:07:4918: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.folder",
+        "lastLogVisible": true,
+        "scrollHeight": 729,
+        "scrollTop": 529.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-completed-920-125%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "completed",
+      "width": 760,
+      "height": 520,
+      "scale": "100%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 146,
+        "overflowY": "auto",
+        "scrollTop": 146
+      },
+      "log": {
+        "height": 160,
+        "lastLogText": "15:07:4918: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.folder",
+        "lastLogVisible": true,
+        "scrollHeight": 584,
+        "scrollTop": 423.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-completed-760-100%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "running",
+      "width": 920,
+      "height": 620,
+      "scale": "100%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 312,
+        "overflowY": "auto",
+        "scrollTop": 312
+      },
+      "log": {
+        "height": 160,
+        "lastLogText": "15:08:0118: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.folder",
+        "lastLogVisible": true,
+        "scrollHeight": 584,
+        "scrollTop": 423.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-running-920-100%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "running",
+      "width": 920,
+      "height": 620,
+      "scale": "125%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 303,
+        "overflowY": "auto",
+        "scrollTop": 303
+      },
+      "log": {
+        "height": 200,
+        "lastLogText": "15:08:0118: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.folder",
+        "lastLogVisible": true,
+        "scrollHeight": 729,
+        "scrollTop": 529.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-running-920-125%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "running",
+      "width": 760,
+      "height": 520,
+      "scale": "100%",
+      "pane": {
+        "horizontalOverflow": 0,
+        "overflow": 324,
+        "overflowY": "auto",
+        "scrollTop": 324
+      },
+      "log": {
+        "height": 160,
+        "lastLogText": "15:08:0118: C:\\Users\\ResponsiveFixture\\Documents\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\deep-folder\\source-file-with-a-very-long-name.bin -> C:\\Users\\ResponsiveFixture\\Archives\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\nested-output\\responsive-output.folder",
+        "lastLogVisible": true,
+        "scrollHeight": 584,
+        "scrollTop": 423.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-running-760-100%.png"
+    }
+  ],
+  "passed": true
+}

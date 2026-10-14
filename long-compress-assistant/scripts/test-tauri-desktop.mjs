@@ -33,6 +33,7 @@ import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
 import { runSevenZipVolumeUiGate } from './seven-zip-volume-ui-gate.mjs'
+import { runTaskExecutionScrollGate } from './task-execution-scroll-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -4771,6 +4772,10 @@ try {
     }
     completedSuccessfully = true
     console.log('Real Windows Tauri explicit auto-start gate passed.')
+  } else if (process.argv.includes('--task-execution-scroll-only')) {
+    await runTaskExecutionScrollGate({ driver, callDesktopBridge, waitForElement, artifactDirectory, application })
+    completedSuccessfully = true
+    console.log('Real Windows Tauri compression and decompression execution scrolling passed.')
   } else if (responsiveLayoutOnly) {
     await runResponsiveTaskDetailDesktopGate()
     completedSuccessfully = true

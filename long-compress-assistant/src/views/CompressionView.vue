@@ -692,8 +692,8 @@ const drawerTransition = useDrawerTransition()
 
 <template>
   <div class="compression-view p-3 sm:p-4 h-full flex flex-col gap-2.5 transition-colors duration-700 overflow-hidden relative" data-testid="compression-center">
-    <header data-testid="compression-header" class="compact-workspace-header flex justify-between items-center gap-3 shrink-0">
-      <div class="min-w-0">
+    <header data-testid="compression-header" class="compact-workspace-header flex flex-wrap justify-between items-center gap-3 shrink-0">
+      <div class="min-w-0 shrink-0">
         <h1 class="text-xl md:text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
         <p class="text-xs text-muted font-semibold mt-0.5">{{ appStore.t('compress.subtitle') }}</p>
       </div>
@@ -1348,7 +1348,7 @@ const drawerTransition = useDrawerTransition()
   min-height: 0;
   max-height: none;
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .compression-config-panel.is-submitted :deep(input),

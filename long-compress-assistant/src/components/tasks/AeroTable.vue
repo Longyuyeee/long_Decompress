@@ -568,7 +568,7 @@ async (tasks, _, onCleanup) => {
                   </div>
 
                   <!-- 右侧：执行日志 -->
-                  <div data-testid="decompression-execution-panel" class="task-execution-panel min-w-0 p-4 flex flex-col overflow-hidden">
+                  <div data-testid="decompression-execution-panel" class="task-execution-panel min-w-0 p-4 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar">
                     <div class="execution-summary grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
                         <span class="text-muted">阶段</span>
@@ -754,11 +754,19 @@ async (tasks, _, onCleanup) => {
 }
 
 .task-execution-panel {
-  overflow: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.task-execution-panel > * {
+  flex-shrink: 0;
 }
 
 .log-viewport {
-  min-height: 0;
+  /* Scroll the whole pane before allowing the log viewport to collapse. */
+  flex: 1 0 10rem;
+  min-height: 10rem;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }

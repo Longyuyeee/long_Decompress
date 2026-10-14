@@ -27,7 +27,7 @@ const appStore = useAppStore()
 <template>
   <div
     data-testid="compression-top-actions"
-    class="flex items-center gap-2 md:gap-3 shrink-0"
+    class="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2 md:gap-3"
   >
     <button type="button" data-testid="open-archive-conversion" class="h-8 md:h-9 px-3 rounded-lg bg-input border border-subtle text-content text-xs font-bold" @click="conversion.show">转换压缩包</button>
     <button

@@ -140,8 +140,14 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
   height: 100%;
   min-height: 0;
   max-height: none;
-  overflow-y: hidden;
+  overflow-y: auto;
   padding: 1.25rem;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.compression-execution-panel > * {
+  flex-shrink: 0;
 }
 
 .pending-stat-card {
@@ -158,8 +164,9 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
-  flex: 1;
-  min-height: 0;
+  /* Keep logs usable when result cards and live metrics exceed the pane height. */
+  flex: 1 0 10rem;
+  min-height: 10rem;
   max-height: none;
   padding: 0.75rem;
   border-left: 2px solid color-mix(in srgb, var(--dynamic-accent) 28%, transparent);
