@@ -8,17 +8,17 @@ import { useUIStore } from '@/stores/ui'
 const props = defineProps<{ paths: string[] }>()
 const emit = defineEmits<{busy:[value:boolean]; inspect:[row:ArchiveRecoveryRow]; recoveryVolumes:[row:ArchiveRecoveryRow]}>()
 const batch = useArchiveRecoveryBatch()
-const {rows,busy,preparing,selected,repairable,queueable,completed} = batch
+const {rows,busy,preparing,selected,repairable,queueable,completed,rootDirectory:root,saveError} = batch
 const ui = useUIStore()
-const error = ref(''), root = ref(''), configuring = ref(false), changePassword = ref(false), sharedPassword = ref(''), changeExtract = ref(false), extractDirectory = ref(''), repairDirectory = ref('')
+const error = ref(''), configuring = ref(false), changePassword = ref(false), sharedPassword = ref(''), changeExtract = ref(false), extractDirectory = ref(''), repairDirectory = ref('')
 watch(configuring, visible => { if (!visible) sharedPassword.value = '' })
 const allSelected = computed(() => !!rows.value.length && rows.value.every(row => row.selected))
-const summary = computed(() => ({healthy:rows.value.filter(row => row.report?.status === 'healthy').length,missing:rows.value.filter(row => row.report?.status === 'missing_volume').length,password:rows.value.filter(row => ['password_required','wrong_password','ambiguous_data'].includes(row.report?.status || '')).length,repairable:rows.value.filter(row => row.report?.canRepair && !row.result).length}))
+const summary = computed(() => ({healthy:rows.value.filter(row => !row.needsRecheck && row.report?.status === 'healthy').length,missing:rows.value.filter(row => !row.needsRecheck && row.report?.status === 'missing_volume').length,password:rows.value.filter(row => !row.needsRecheck && ['password_required','wrong_password','ambiguous_data'].includes(row.report?.status || '')).length,repairable:repairable.value.length}))
 watch(() => props.paths, async paths => { error.value = ''; try { await batch.load(paths) } catch (failure) { error.value = String(failure) } }, {immediate:true})
 watch(() => busy.value || preparing.value, value => emit('busy', value), {immediate:true})
 onUnmounted(() => { emit('busy', false); sharedPassword.value = '' })
 const labels: Record<string,string> = {healthy:'正常',missing_volume:'缺少分卷',password_required:'需要密码',wrong_password:'请核对密码',ambiguous_data:'密码或内容异常',directory_lost:'目录丢失，可救援',crc_error:'内容校验失败',damaged:'归档损坏',truncated:'归档被截断',unsupported_feature:'暂不支持此特性',structure_only:'仅检查结构'}
-const status = (row:ArchiveRecoveryRow) => row.queuedId ? '已加入解压队列' : row.state === 'checking' ? '检查中…' : row.state === 'repairing' ? '修复中…' : row.state === 'cancelled' ? '已停止，可重试' : row.error ? '处理未完成' : row.result ? row.result.partial ? '已部分恢复' : '已修复' : labels[row.report?.status || ''] || (row.report ? '请查看详情' : '待检查')
+const status = (row:ArchiveRecoveryRow) => row.queuedId ? '已加入解压队列' : row.state === 'checking' ? '检查中…' : row.state === 'repairing' ? '修复中…' : row.state === 'cancelled' ? '已停止，可重试' : row.error ? '处理未完成' : row.result ? row.result.partial ? '已部分恢复' : '已修复' : row.needsRecheck ? '已恢复配置，请重新检查' : labels[row.report?.status || ''] || (row.report ? '请查看详情' : '待检查')
 function toggleAll() { const value = !allSelected.value; rows.value.forEach(row => { row.selected = value }) }
 async function locate(path:string) { try { await invoke('open_in_explorer',{path}) } catch { ui.showToast('error','无法定位结果，请确认文件仍在原位置') } }
 async function chooseDirectory() {
@@ -38,7 +38,7 @@ function apply() {
   for (const row of selected.value) batch.update(row, {...(changePassword.value ? {password:sharedPassword.value} : {}),...(repairDirectory.value.trim() ? {outputDirectory:repairDirectory.value.trim()} : {}),...(changeExtract.value ? {extractDirectory:extractDirectory.value.trim()} : {})})
   configuring.value = false; sharedPassword.value = ''
 }
-function queue() { const count = batch.queue(); if (count) ui.showToast('success',`已加入 ${count} 项待处理任务，请核对后开始解压`) }
+async function queue() { try { const count = await batch.queue(); if (count) ui.showToast('success',`已加入 ${count} 项待处理任务，请核对后开始解压`) } catch (failure) { error.value = String(failure) } }
 function updatePassword(row:ArchiveRecoveryRow, event:Event) { batch.update(row, {password:(event.target as HTMLInputElement).value}) }
 </script>
 <template>
@@ -59,7 +59,7 @@ function updatePassword(row:ArchiveRecoveryRow, event:Event) { batch.update(row,
         <button class="batch-action border border-primary/30 text-primary" :disabled="!queueable.length" data-testid="batch-queue-recovered" @click="queue">加入恢复结果（{{ queueable.length }}）</button>
       </template>
     </div>
-    <p v-if="error" role="alert" class="mb-3 break-words rounded-xl bg-red-500/10 p-3 text-xs text-red-500">{{ error }}</p>
+    <p v-if="error || saveError" role="alert" class="mb-3 break-words rounded-xl bg-red-500/10 p-3 text-xs text-red-500">{{ error || saveError }}</p>
     <div v-if="rows.length" class="mb-2 flex items-center gap-2 text-xs text-muted"><label class="flex items-center gap-2"><input type="checkbox" :checked="allSelected" :disabled="busy" aria-label="选择全部压缩包" @change="toggleAll" />已选 {{ selected.length }} 组</label><button type="button" class="ml-auto text-primary" :disabled="busy" @click="rows.forEach(row => row.selected = row.report?.status !== 'healthy' && !row.result)">仅选待处理</button></div>
     <div class="space-y-2">
       <article v-for="row in rows" :key="row.id" class="overflow-hidden rounded-xl border border-subtle" :data-source="row.path" data-testid="archive-batch-row">
@@ -73,13 +73,14 @@ function updatePassword(row:ArchiveRecoveryRow, event:Event) { batch.update(row,
         <div v-if="row.expanded" class="space-y-3 border-t border-subtle bg-input/20 p-3 sm:p-4" data-testid="archive-batch-detail">
           <p class="break-all text-xs text-muted">{{ row.path }}</p>
           <p v-if="row.error" role="alert" class="break-words text-xs text-red-500">{{ row.error }}</p>
+          <p v-if="row.needsRecheck" class="text-xs text-amber-600">上次检查结果仅供参考，请重新检查当前文件。</p>
           <ul v-if="row.report?.issues.length" class="space-y-2 text-xs leading-relaxed text-muted"><li v-for="(issue,index) in row.report.issues" :key="index"><strong class="text-content">{{ issue.title }}</strong>：{{ issue.detail }}</li></ul>
           <div class="grid min-w-0 gap-3 sm:grid-cols-2">
             <label class="min-w-0 space-y-1 text-xs text-muted">原包密码<input :value="row.password" type="password" autocomplete="off" :disabled="busy" placeholder="修改后重新检查" class="batch-input" data-testid="archive-batch-password" @input="updatePassword(row, $event)" /></label>
             <label class="min-w-0 space-y-1 text-xs text-muted">恢复文件保存目录<input v-model="row.outputDirectory" :disabled="busy" placeholder="修复时可统一选择" class="batch-input" /></label>
           </div>
-          <div v-if="row.result" class="rounded-xl bg-green-500/5 p-3 text-xs leading-relaxed" data-testid="archive-batch-result"><p class="font-bold text-green-600">已恢复 {{ row.result.recoveredFiles }} 个文件{{ row.result.partial ? ' · 部分恢复，请核对内容' : '' }}</p><p class="mt-1 break-all text-muted">{{ row.result.outputPath }}</p><button class="mt-2 font-semibold text-primary" @click="locate(row.result.outputPath)">定位恢复结果</button></div>
-          <div class="flex flex-wrap gap-2"><button class="batch-action border border-subtle" :disabled="busy" @click="batch.check([row])">重新检查此项</button><button v-if="row.report" class="batch-action border border-subtle" :disabled="busy" @click="emit('inspect', row)">查看完整诊断</button><button v-if="row.report?.actualFormat === 'RAR' && row.report.status === 'healthy' && row.report.volumesFound > 1" class="batch-action border border-primary/30 text-primary" :disabled="busy" @click="emit('recoveryVolumes', row)">创建恢复卷</button></div>
+          <div v-if="row.result" class="space-y-2 rounded-xl bg-green-500/5 p-3 text-xs leading-relaxed" data-testid="archive-batch-result"><p class="font-bold text-green-600">已恢复 {{ row.result.recoveredFiles }} 个文件{{ row.result.partial ? ' · 部分恢复，请核对内容' : '' }}</p><p class="mt-1 break-all text-muted">{{ row.result.outputPath }}</p><label v-if="row.resultPasswordRequired && !row.queuedId" class="block text-muted">恢复结果密码<input v-model="row.resultPassword" type="password" autocomplete="off" placeholder="重启后需重新填写，不保存密码" :disabled="busy" class="batch-input mt-1" data-testid="archive-batch-result-password" /></label><div class="flex flex-wrap gap-3"><button class="font-semibold text-primary" @click="locate(row.result.outputPath)">定位恢复结果</button><button v-if="!row.queuedId" class="text-muted" :disabled="busy" @click="batch.forgetResult(row)">重新修复原包</button></div></div>
+          <div class="flex flex-wrap gap-2"><button class="batch-action border border-subtle" :disabled="busy" @click="batch.check([row])">重新检查此项</button><button v-if="row.report" class="batch-action border border-subtle" :disabled="busy" @click="emit('inspect', row)">查看完整诊断</button><button v-if="!row.needsRecheck && row.report?.actualFormat === 'RAR' && row.report.status === 'healthy' && row.report.volumesFound > 1" class="batch-action border border-primary/30 text-primary" :disabled="busy" @click="emit('recoveryVolumes', row)">创建恢复卷</button></div>
         </div>
       </article>
     </div>

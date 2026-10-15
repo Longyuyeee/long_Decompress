@@ -1,4 +1,6 @@
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { defineStore, storeToRefs } from 'pinia'
+import { invoke } from '@tauri-apps/api/tauri'
 import { useTauriCommands, type ArchiveDiagnosticReport, type ZipRepairResult } from './useTauriCommands'
 import { useTaskStore } from '@/stores/task'
 import { generateId } from '@/utils'
@@ -10,24 +12,74 @@ export interface ArchiveRecoveryRow {
   password: string; outputDirectory: string; extractDirectory: string
   state: 'pending' | 'checking' | 'checked' | 'repairing' | 'repaired' | 'error' | 'cancelled'
   report?: ArchiveDiagnosticReport; result?: ZipRepairResult; resultPassword?: string; queuedId?: string; error?: string
+  needsRecheck?: boolean; resultPasswordRequired?: boolean
 }
-export function useArchiveRecoveryBatch() {
+export const ARCHIVE_RECOVERY_DRAFT_KEY = 'long-archive-recovery-workspace-v1'
+interface RecoverySnapshot { version: 1; paths: string[]; rootDirectory: string; rows: ArchiveRecoveryRow[] }
+const pathKey = (path:string) => path.replace(/\\/g,'/').toLowerCase()
+function readSnapshot(): RecoverySnapshot | null {
+  const raw = localStorage.getItem(ARCHIVE_RECOVERY_DRAFT_KEY)
+  if (!raw) return null
+  const saved = JSON.parse(raw) as RecoverySnapshot
+  if (saved.version !== 1 || !Array.isArray(saved.paths) || !saved.paths.every(path => typeof path === 'string') || typeof saved.rootDirectory !== 'string'
+    || !Array.isArray(saved.rows) || !saved.rows.length || !saved.rows.every(row => row && typeof row.id === 'string' && typeof row.path === 'string'
+      && typeof row.outputDirectory === 'string' && typeof row.extractDirectory === 'string'
+      && (!row.result || typeof row.result.outputPath === 'string') && (!row.report || Array.isArray(row.report.issues)))) throw new Error('检查修复草稿无法读取，可丢弃后重新选择压缩包')
+  return saved
+}
+export const useArchiveRecoveryStore = defineStore('archiveRecovery', () => {
   const commands = useTauriCommands(), tasks = useTaskStore()
   const rows = ref<ArchiveRecoveryRow[]>([]), busy = ref(false), preparing = ref(false)
+  const sourcePaths = ref<string[]>([]), rootDirectory = ref(''), saveError = ref('')
+  const recovery = ref<RecoverySnapshot | null>(null)
+  try { recovery.value = readSnapshot() } catch (error) { saveError.value = String(error) }
+  const recoveryCount = computed(() => recovery.value?.rows.length || 0)
+  function persist() {
+    // Keep the unopened previous-session offer until the user restores/discards it.
+    if (recovery.value) return
+    try {
+      if (!rows.value.length) localStorage.removeItem(ARCHIVE_RECOVERY_DRAFT_KEY)
+      else localStorage.setItem(ARCHIVE_RECOVERY_DRAFT_KEY, JSON.stringify({version:1, paths:sourcePaths.value, rootDirectory:rootDirectory.value,
+        rows:rows.value.map(({password: _password, resultPassword: _resultPassword, ...row}) => row)}))
+      saveError.value = ''
+    } catch { saveError.value = '检查修复进度未能保存，请勿依赖重启恢复' }
+  }
+  watch([rows, sourcePaths, rootDirectory], persist, {deep:true,flush:'sync'})
+  function restore() {
+    if (busy.value || preparing.value || !recovery.value) return
+    const saved = recovery.value
+    const current = new Set(rows.value.map(row => pathKey(row.path)))
+    const restored = saved.rows.filter(row => !current.has(pathKey(row.path))).map(row => ({...row,password:'',resultPassword:'',
+      resultPasswordRequired:!!row.result?.outputEncrypted,needsRecheck:!!row.report,
+      state:(row.result ? 'repaired' : 'pending') as ArchiveRecoveryRow['state']}))
+    recovery.value = null
+    sourcePaths.value = [...new Set([...saved.paths,...sourcePaths.value])]
+    rootDirectory.value ||= saved.rootDirectory
+    rows.value = [...restored,...rows.value]
+    persist()
+  }
+  function discardPrevious() { if (busy.value || preparing.value) return; recovery.value = null; persist() }
+  function clear() {
+    if (busy.value || preparing.value) return
+    for (const row of rows.value) { row.password = ''; row.resultPassword = '' }
+    rows.value = []; sourcePaths.value = []; rootDirectory.value = ''; persist()
+  }
   const selected = computed(() => rows.value.filter(row => row.selected))
-  const repairable = computed(() => selected.value.filter(row => row.report?.canRepair && !row.result))
+  const repairable = computed(() => selected.value.filter(row => row.report?.canRepair && !row.needsRecheck && !row.result))
   const queueable = computed(() => selected.value.filter(row => row.result && !row.queuedId))
-  const completed = computed(() => rows.value.filter(row => row.report || row.error).length)
+  const completed = computed(() => rows.value.filter(row => !row.needsRecheck && (row.report || row.error)).length)
   let stopped = false, generation = 0
   let active: {id: string; kind: 'check' | 'repair'} | null = null
   async function load(paths: string[]) {
+    if (sourcePaths.value.length === paths.length && paths.every((path,index) => pathKey(path) === pathKey(sourcePaths.value[index]))) return
+    if (busy.value || preparing.value) throw new Error('请等待当前检查修复结束或停止后再选择压缩包')
     const current = ++generation
-    for (const row of rows.value) { row.password = ''; row.resultPassword = '' }
-    rows.value = []
     preparing.value = true
     try {
       const groups = await commands.groupArchiveDiagnosisSources(paths)
       if (current !== generation) return
+      for (const row of rows.value) { row.password = ''; row.resultPassword = '' }
+      sourcePaths.value = [...paths]
       rows.value = groups.map(group => ({id:generateId(),path:group.path,selectedMembers:group.selectedMembers,selected:true,expanded:false,password:'',outputDirectory:'',extractDirectory:'',state:'pending'}))
     } finally { if (current === generation) preparing.value = false }
   }
@@ -47,7 +99,7 @@ export function useArchiveRecoveryBatch() {
         if (stopped) break
         row.error = ''; row.report = undefined; row.state = 'checking'
         active = {id:`batch-check-${generateId()}`,kind:'check'}
-        try { row.report = await commands.diagnoseArchive(active.id, row.path, row.password); row.state = 'checked' }
+        try { row.report = await commands.diagnoseArchive(active.id, row.path, row.password); row.needsRecheck = false; row.state = 'checked' }
         catch (error) { row.state = stopped || String(error).toLowerCase().includes('cancel') ? 'cancelled' : 'error'; row.error = row.state === 'error' ? String(error) : '' }
         finally { active = null }
       }
@@ -65,31 +117,42 @@ export function useArchiveRecoveryBatch() {
         active = {id:`batch-repair-${generateId()}`,kind:'repair'}
         try {
           const result = await commands.repairArchiveBatchItem(active.id, row.path, row.outputDirectory || fallbackDirectory, row.report!.actualFormat, row.password)
-          row.result = result; row.resultPassword = result.outputEncrypted ? row.password : ''; row.queuedId = undefined; row.state = 'repaired'; row.expanded = true
+          row.result = result; row.resultPassword = result.outputEncrypted ? row.password : ''; row.resultPasswordRequired = false; row.queuedId = undefined; row.state = 'repaired'; row.expanded = true
         } catch (error) { row.state = stopped || String(error).toLowerCase().includes('cancel') ? 'cancelled' : 'error'; row.error = row.state === 'error' ? String(error) : '' }
         finally { active = null }
       }
     } finally { busy.value = false }
   }
-  function queue() {
+  async function queue() {
+    if (busy.value || preparing.value) return 0
     let count = 0
-    for (const row of queueable.value) {
+    const candidates = [...queueable.value]
+    busy.value = true
+    try { for (const row of candidates) {
       const result = row.result!
+      if (row.resultPasswordRequired && !row.resultPassword) { row.error = '请填写恢复结果密码后再加入解压队列'; row.expanded = true; continue }
+      try {
+        for (const path of result.outputFiles?.length ? result.outputFiles : [result.outputPath]) await invoke('get_file_info',{path})
+      } catch { row.error = '恢复结果已移动、删除或无法读取，请定位结果或重新检查并修复原包'; row.expanded = true; continue }
       const id = generateId()
       const destination = row.extractDirectory || parentDirectory(row.path)
       const stem = archiveSourceStem(row.path)
       const peers = rows.value.filter(other => (other.extractDirectory || parentDirectory(other.path)).replace(/\\/g,'/').toLowerCase() === destination.replace(/\\/g,'/').toLowerCase() && archiveSourceStem(other.path).toLowerCase() === stem.toLowerCase())
       const outputPath = peers.length > 1 ? `${destination.replace(/[\\/]$/,'')}/${stem}-恢复-${peers.indexOf(row)+1}` : destination
       tasks.addTask({id,name:result.outputPath.split(/[\\/]/).pop() || result.outputPath,type:'decompression',workloadKind:'archive',sourceFiles:[result.outputPath],outputPath,extractToSubfolder:true,configurationMode:'individual',recycleSourceAfterExtract:false,password:row.resultPassword || undefined})
-      row.queuedId = id; count++
-    }
+      row.error = ''; row.queuedId = id; count++
+    } } finally { busy.value = false }
     return count
   }
+  function forgetResult(row:ArchiveRecoveryRow) { if (busy.value) return; row.result = undefined; row.resultPassword = ''; row.queuedId = undefined; row.error = ''; row.needsRecheck = true; row.state = 'pending' }
   function update(row: ArchiveRecoveryRow, patch: Partial<Pick<ArchiveRecoveryRow,'password'|'outputDirectory'|'extractDirectory'>>) {
     if (busy.value) return
     if (patch.password !== undefined && patch.password !== row.password) { row.report = undefined; row.error = ''; row.state = row.result ? 'repaired' : 'pending' }
     Object.assign(row, patch)
   }
-  onUnmounted(() => { generation++; void stop(); for (const row of rows.value) { row.password = ''; row.resultPassword = '' } })
-  return {rows,busy,preparing,selected,repairable,queueable,completed,load,check,repair,stop,queue,update}
+  return {rows,busy,preparing,selected,repairable,queueable,completed,sourcePaths,rootDirectory,saveError,recoveryCount,restore,discardPrevious,clear,load,check,repair,stop,queue,update,forgetResult}
+})
+export function useArchiveRecoveryBatch() {
+  const store = useArchiveRecoveryStore()
+  return {...storeToRefs(store),load:store.load,check:store.check,repair:store.repair,stop:store.stop,queue:store.queue,update:store.update,forgetResult:store.forgetResult}
 }
