@@ -1,5 +1,9 @@
 # Long解压产品增强路线
 
+## 当前开发：v1.4.10 ZIP 兼容与选择性解压（2026-10-16）
+
+用户已批准 [v1.4.10 至后续版本的归档格式与流程路线](ARCHIVE_FORMAT_AND_WORKFLOW_ROADMAP_2026-10-16.md)，从已发布 v1.4.9 / `083082e` 开始。先修选择性解压密码/范围一致性，再补加密 Zstandard、ZIP64 密码卷型的实际缺口；每步审计、提交推送，本版封板后更新 README/Release 并发布。当前尚未实现或封板，见 [本版实施审计](ARCHIVE_COMPATIBILITY_1.4.10.md)。下方早期状态为历史快照，后续版本不作为本版门禁。
+
 ## 当前：v1.4.9 正式发布接续（2026-10-16）
 
 用户已批准最后复核通过后正式发版。功能冻结 `24d780f` 保持，前端 22 项/不同 Rust 9 项、类型/身份及同一程序的完整桌面用户链再次通过；一次启动超时及不改条件的完整重试均见 [实施记录](ARCHIVE_CONTINUITY_1.4.9.md)。本轮只同步 README/发布文档，沿用 [PR #163](https://github.com/Longyuyeee/long_Decompress/pull/163) 最新普通安装器检查收口、合入和正式发布。准确身份与实际附件见 PR 及 [v1.4.9 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.9)，不追加新功能或无关矩阵。下方“未获发布授权/仍为 v1.4.8”是历史快照。
