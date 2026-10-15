@@ -1,0 +1,64 @@
+{
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "binarySha256": "b9be98618026e06388c41d0854065e27676a4b0100d10f2d30d536740b3a8362",
+  "navigationRetained": true,
+  "sameProfileNativeRestart": true,
+  "automaticWorkAfterRestart": false,
+  "passwordsPersisted": false,
+  "recoveredGroups": 2,
+  "independentVerification": 2,
+  "queuedAndExtracted": 2,
+  "originalsUnchanged": true,
+  "nativePickerVerified": false,
+  "screenshots": [
+    {
+      "name": "continuity-navigation-1100.png",
+      "client": 834,
+      "right": 1100,
+      "scroll": 834,
+      "viewport": 1100
+    },
+    {
+      "name": "continuity-restore-offer-760.png",
+      "client": 634,
+      "right": 760,
+      "scroll": 634,
+      "viewport": 760
+    },
+    {
+      "name": "continuity-result-password-760.png",
+      "client": 624,
+      "right": 760,
+      "scroll": 624,
+      "viewport": 760
+    },
+    {
+      "name": "continuity-password-field-760.png",
+      "client": 525,
+      "right": 760,
+      "scroll": 525,
+      "viewport": 760
+    },
+    {
+      "name": "continuity-result-small-125.png",
+      "client": 593,
+      "right": 760,
+      "scroll": 593,
+      "viewport": 760
+    },
+    {
+      "name": "continuity-config-small-125.png",
+      "client": 388,
+      "right": 760,
+      "scroll": 388,
+      "viewport": 760
+    },
+    {
+      "name": "continuity-completed-1100.png",
+      "client": 824,
+      "right": 1100,
+      "scroll": 824,
+      "viewport": 1100
+    }
+  ]
+}

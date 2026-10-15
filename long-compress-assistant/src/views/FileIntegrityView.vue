@@ -45,6 +45,7 @@ const recoveryVolumesSource = ref(''), recoveryVolumesPassword = ref('')
 function showRecoveryVolumes(path: string, password: string) { recoveryVolumesSource.value = path; recoveryVolumesPassword.value = password; recoveryVolumesVisible.value = true }
 watch(recoveryVolumesVisible, visible => { if (!visible) recoveryVolumesPassword.value = '' })
 async function inspectBatchItem(row: ArchiveRecoveryRow) {
+  if (row.needsRecheck) return
   archivePath.value = row.path; archivePassword.value = row.password; repairResult.value = null
   recoveryTaskId.value = ''; recoveryOptions.value = {}; recoveredDraftId.value = ''; recoveredPassword.value = ''
   batchDetailOpen.value = true

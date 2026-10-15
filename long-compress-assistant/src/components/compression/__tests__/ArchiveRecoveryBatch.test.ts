@@ -129,6 +129,9 @@ describe('archive batch recovery user flow', () => {
     expect(next.rows[0]).toMatchObject({password:'',resultPassword:'',resultPasswordRequired:true,outputDirectory:'D:/repair',extractDirectory:'D:/extract'})
     expect(next.repairable).toHaveLength(0)
     expect(next.completed).toBe(0)
+    const reopened=mount(ArchiveRecoveryBatch,{props:{paths:[...next.sourcePaths]},global:{plugins:[getActivePinia()!],stubs:{Teleport:true,Transition:false}}})
+    await flushPromises()
+    expect(reopened.findAll('button').filter(button=>button.text()==='查看完整诊断').every(button=>button.attributes('disabled')!==undefined)).toBe(true)
     expect(await next.queue()).toBe(0)
     expect(next.rows[0].error).toContain('恢复结果密码')
     next.rows[0].resultPassword='recovered archive password'
@@ -136,6 +139,7 @@ describe('archive batch recovery user flow', () => {
     expect(useTaskStore().tasks[0]).toMatchObject({password:'recovered archive password',outputPath:'D:/extract'})
     expect(localStorage.getItem(ARCHIVE_RECOVERY_DRAFT_KEY)).not.toContain('recovered archive password')
     expect(await next.queue()).toBe(0)
+    reopened.unmount()
   })
 
   it('does not queue a deleted recovered volume and lets the user recheck and repair the original', async () => {

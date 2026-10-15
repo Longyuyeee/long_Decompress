@@ -32,6 +32,7 @@ import { runPasswordRescueFormatsGate } from './password-rescue-formats-gate.mjs
 import { runFailureZipRecoveryGate } from './failure-zip-recovery-gate.mjs'
 import { runRarRecoveryGate } from './rar-recovery-gate.mjs'
 import { runArchiveRecoveryUpgradeGate } from './archive-recovery-148-gate.mjs'
+import { runArchiveContinuityGate } from './archive-continuity-149-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
@@ -2006,7 +2007,7 @@ async function waitForDesktopReady() {
   console.log('[desktop-e2e] desktop E2E bridge is ready')
 }
 
-async function restartDesktopSession() {
+async function restartDesktopSession({ preserveProfile = false } = {}) {
   if (driver) {
     const previousDriver = driver
     const previousApplicationProcessIds = desktopApplicationProcessIds()
@@ -2045,10 +2046,9 @@ async function restartDesktopSession() {
   await startTauriDriver()
   console.log('[desktop-e2e] replacement tauri-driver service is ready')
   desktopSessionIndex += 1
-  webviewUserDataDirectory = path.join(
-    e2eDataDirectory,
-    `webview2-session-${desktopSessionIndex}`,
-  )
+  // The continuity gate must reopen the same isolated profile like a real
+  // application restart, rather than injecting/copying localStorage into a new one.
+  if (!preserveProfile) webviewUserDataDirectory = path.join(e2eDataDirectory, `webview2-session-${desktopSessionIndex}`)
   mkdirSync(webviewUserDataDirectory, { recursive: true })
   console.log('[desktop-e2e] creating replacement desktop session')
   if (autoStartOnly) {
@@ -4872,6 +4872,10 @@ try {
     }
     await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
     completedSuccessfully = true
+  } else if (process.argv.includes('--archive-continuity-only')) {
+    await runArchiveContinuityGate({ getDriver: () => driver, restart: () => restartDesktopSession({preserveProfile:true}), bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })
+    completedSuccessfully = true
+    console.log('Archive recovery navigation, same-profile restart, password refill and extraction passed.')
   } else if (process.argv.includes('--archive-recovery-upgrade-only')) {
     await runArchiveRecoveryUpgradeGate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })
     completedSuccessfully = true
