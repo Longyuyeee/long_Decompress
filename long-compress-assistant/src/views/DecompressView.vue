@@ -16,6 +16,7 @@ import { detectArchiveGroup } from '@/utils/archiveSource'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
 import { sortTasksByName } from '@/utils/taskOrdering'
+import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
 import { useDecompressionBatchStore } from '@/stores/decompressionBatch'
 import DecompressionBatchSummary from '@/components/tasks/DecompressionBatchSummary.vue'
 import FailedExtractionRetry from '@/components/tasks/FailedExtractionRetry.vue'
@@ -239,12 +240,12 @@ const onFilesSelected = async (files: any[]) => {
       }
     } catch (error) {
       if (isPotentialSfxPath(sourcePath)) {
-        const detail = extractErrorMessage(error).replace(/\[archive-inspection:[^\]]+\]\s*/g, '')
+        const detail = archiveInspectionMessageForDisplay(extractErrorMessage(error))
         errors.push(`${file.name || sourcePath}：${detail}`)
         continue
       }
       if (isPotentialSplitArchivePath(sourcePath)) {
-        const detail = extractErrorMessage(error).replace(/\[archive-inspection:[^\]]+\]\s*/g, '')
+        const detail = archiveInspectionMessageForDisplay(extractErrorMessage(error))
         errors.push(appStore.t('decompress.split.detection_failed')
           .replace('{0}', file.name || sourcePath)
           .replace('{1}', detail))
@@ -461,7 +462,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       } else {
         // 非密码错误，直接失败
         if (task.status !== 'failed' || !task.error) taskStore.failTask(task.id, errorMsg)
-        appStore.setError(`${appStore.t('common.error')}: ${errorMsg}`)
+        appStore.setError(`${appStore.t('common.error')}: ${archiveInspectionMessageForDisplay(errorMsg)}`)
       }
     }
       },

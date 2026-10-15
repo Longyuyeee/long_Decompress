@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { createTaskDiagnosticReport, describeTaskFailure, getTaskRecoveryGuidance } from '../taskFailure'
+import { archiveInspectionMessageForDisplay, createTaskDiagnosticReport, describeTaskFailure, getTaskRecoveryGuidance } from '../taskFailure'
 import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 describe('task failure evidence', () => {
+  it.each([
+    ['[archive-inspection:incomplete] 缺少分卷：资料.z02', '缺少分卷：资料.z02'],
+    ['最终失败原因：[archive-inspection:damaged] CRC 校验未通过', '最终失败原因：CRC 校验未通过'],
+    ['[archive-inspection:future-code] 不支持此方法', '不支持此方法'],
+    ['provided password is incorrect', 'provided password is incorrect'],
+    ['文件 [01] 读取失败', '文件 [01] 读取失败'],
+    ['[archive-inspection:incomplete]', '归档检测未通过，未提供具体原因。'],
+    ['', ''],
+  ])('only removes inspection routing markers from display text: %s', (original, readable) => {
+    expect(archiveInspectionMessageForDisplay(original)).toBe(readable)
+  })
   it('exports retry provenance without leaking legacy plaintext passwords or mutating the record', () => {
     const record: TaskHistoryRecord = {
       id: 'new-task', retryOfTaskId: 'old-task', name: 'a.zip', taskType: 'decompression', workloadKind: 'archive', status: 'failed',

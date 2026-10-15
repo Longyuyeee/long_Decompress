@@ -66,8 +66,7 @@ impl StandardZipReader {
         ensure!(
             group.is_complete,
             "[archive-inspection:incomplete] 缺少 ZIP 分卷：{}",
-            group.missing_parts.iter().map(|part| part.file_name().unwrap_or(part.as_os_str())
-                .to_string_lossy()).collect::<Vec<_>>().join("、")
+            group.missing_part_names()
         );
         let mut starts = vec![0u64];
         for part in &group.parts {

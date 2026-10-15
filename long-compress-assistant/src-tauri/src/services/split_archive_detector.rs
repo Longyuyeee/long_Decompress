@@ -27,6 +27,15 @@ pub struct SplitArchiveInfo {
     pub missing_parts: Vec<PathBuf>,
 }
 
+impl SplitArchiveInfo {
+    /// All members belong in one source directory. Display the exact missing
+    /// names without Rust's debug-list syntax or escaped absolute paths.
+    pub(crate) fn missing_part_names(&self) -> String {
+        self.missing_parts.iter().map(|part| part.file_name().unwrap_or(part.as_os_str())
+            .to_string_lossy()).collect::<Vec<_>>().join("、")
+    }
+}
+
 impl SplitArchiveDetector {
     fn file_name(path: &Path) -> Result<&str> {
         path.file_name()
@@ -474,6 +483,7 @@ mod tests {
         assert_eq!(info.total_parts, 3);
         assert_eq!(info.missing_parts.len(), 1);
         assert!(info.missing_parts[0].ends_with("project.002"));
+        assert_eq!(info.missing_part_names(), "project.002");
     }
 
     #[test]

@@ -862,6 +862,20 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
+  it('keeps inspection evidence on the failed task but hides routing markers in its toast', async () => {
+    const reason = '[archive-inspection:incomplete] 缺少分卷：收到的密码资料.z02'
+    mocks.decompressFile.mockRejectedValueOnce({ message: reason })
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: '资料.zip', path: 'C:/资料.zip' }])
+    await flushPromises()
+    await wrapper.get('[data-testid="start-decompression-queue"]').trigger('click')
+    await flushPromises()
+    expect(useTaskStore().tasks[0]).toMatchObject({ status: 'failed', error: reason, passwordRequired: false })
+    expect(useAppStore().error).toContain('缺少分卷：收到的密码资料.z02')
+    expect(useAppStore().error).not.toContain('[archive-inspection:')
+    wrapper.unmount()
+  })
+
   it('reports partial cancellation when one active task cannot be stopped', async () => {
     const wrapper = mountView()
     const taskStore = useTaskStore()

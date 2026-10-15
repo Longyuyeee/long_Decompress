@@ -207,7 +207,7 @@ pub(crate) fn validate_resource_limits(
         .into());
     }
     let compressed_bytes = if let Some(group) = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(archive_path)? {
-        anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{:?}", group.missing_parts);
+        anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{}", group.missing_part_names());
         group.total_size
     } else { std::fs::metadata(archive_path)?.len() }.max(1);
     if expanded_bytes >= 1024 * 1024 * 1024

@@ -1974,7 +1974,7 @@ impl CompressionService {
     fn resolve_extraction_source(selected: &Path) -> Result<String> {
         Self::source_file_snapshot(selected, "Pre-checking")?;
         let path = if let Some(group) = SplitArchiveDetector::detect_split_archive(selected)? {
-            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{:?}", group.missing_parts);
+            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{}", group.missing_part_names());
             group.first_part
         } else { selected.to_path_buf() };
         Ok(path.to_string_lossy().into_owned())
@@ -2035,7 +2035,7 @@ impl CompressionService {
         let standard_zip_group = SplitArchiveDetector::detect_split_archive(path)?
             .filter(|group| group.format == crate::services::split_archive_detector::SplitFormat::ZipSplit);
         if let Some(group) = standard_zip_group {
-            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少 ZIP 分卷：{:?}", group.missing_parts);
+            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少 ZIP 分卷：{}", group.missing_part_names());
             format = ArchiveFormat::Zip;
         }
 
@@ -4725,6 +4725,7 @@ mod tests_continued {
             std::fs::remove_file(&first).unwrap();
             let error = CompressionService::resolve_extraction_source(&second).unwrap_err().to_string();
             assert!(error.contains("缺少分卷"), "{error}");
+            assert_eq!(error, format!("[archive-inspection:incomplete] 缺少分卷：{}", first.file_name().unwrap().to_string_lossy()));
             assert_eq!(std::fs::read(&second).unwrap(), b"Rar!\x1a\x07\x00second");
         }
     }
