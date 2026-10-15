@@ -12,7 +12,8 @@ export async function runArchiveRecoveryUpgradeGate({driver,bridge,waitForElemen
   const source=path.join(root,'原始资料'); mkdirSync(source)
   const payload=randomBytes(180000), text=Buffer.from('ZIP 分卷与 RAR 恢复卷应能继续完成解压。')
   writeFileSync(path.join(source,'payload.bin'),payload); writeFileSync(path.join(source,'说明.txt'),text)
-  const password='中文 recovery + !', hash=file=>createHash('sha256').update(readFileSync(file)).digest('hex')
+  const password='中文 recovery + !', zipPassword='ZIP recovery + !', hash=file=>createHash('sha256').update(readFileSync(file)).digest('hex')
+  const screenshots=[]
   const command=(binary,args,cwd=source)=>{const r=spawnSync(binary,args,{cwd,windowsHide:true,timeout:60000,encoding:'utf8'});assert.ifError(r.error);assert.equal(r.status,0,r.stdout+r.stderr)}
   const click=async selector=>{const el=await waitForElement(selector);await driver.wait(()=>el.isEnabled(),15000);await driver.executeScript(el=>el.scrollIntoView({block:'center'}),el);await el.click()}
   const fill=async(selector,value)=>{const el=await waitForElement(selector);await driver.wait(()=>el.isEnabled(),15000);await driver.executeScript(el=>el.scrollIntoView({block:'center'}),el);await el.sendKeys(Key.chord(Key.CONTROL,'a'),Key.BACK_SPACE);if(value)await el.sendKeys(value)}
@@ -20,7 +21,16 @@ export async function runArchiveRecoveryUpgradeGate({driver,bridge,waitForElemen
     for(const close of await driver.findElements(By.css('.toast-item button'))){try{await close.click()}catch{}}
     const el=await waitForElement(selector);await driver.executeScript(el=>el.scrollIntoView({block:'start'}),el);await new Promise(resolve=>setTimeout(resolve,500))
     const bounds=await driver.executeScript(el=>({client:el.clientWidth,scroll:el.scrollWidth}),el);assert.ok(bounds.scroll<=bounds.client+1,name+' overflows')
+    const viewport=await driver.executeScript(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,right:document.querySelector('.main-container').getBoundingClientRect().right}));assert.ok(viewport.scroll<=viewport.width+1&&viewport.right<=viewport.width+1,name+' leaves the window: '+JSON.stringify(viewport))
     writeFileSync(path.join(artifactDirectory,name+'.png'),Buffer.from(await driver.takeScreenshot(),'base64'))
+    screenshots.push({name:name+'.png',content:bounds,viewport,fontScale:await driver.executeScript(()=>document.documentElement.style.fontSize||'100%')})
+  }
+  const minimumShot=async(name,selector)=>{
+    await driver.manage().window().setRect({width:760,height:520})
+    // Match the application's uiScale setting (stores/app.ts), not CSS zoom,
+    // which enlarges 100vw/100vh beyond the WebView instead of changing text scale.
+    await driver.executeScript(()=>document.documentElement.style.fontSize='125%')
+    try { await shot(name,selector) } finally { await driver.executeScript(()=>document.documentElement.style.fontSize='');await driver.manage().window().setRect({width:760,height:700}) }
   }
   // Use the real compression button and the new persisted option.
   const automatic=path.join(root,'应用创建');mkdirSync(automatic)
@@ -28,11 +38,17 @@ export async function runArchiveRecoveryUpgradeGate({driver,bridge,waitForElemen
   await bridge('seedRarRecoveryDraft',path.join(source,'payload.bin'),automatic,{filename:'应用保护',password,encryptFilenames:true,level:0,splitArchive:true,splitSize:'0.0625',rarRecoveryVolumes:2})
   await click('[data-testid="nav-Compress"]')
   for(const width of [1100,760]){await driver.manage().window().setRect({width,height:700});await shot('recovery-options-'+width,'[data-testid="rar-recovery-settings"]')}
+  await minimumShot('recovery-options-small-125','[data-testid="rar-recovery-settings"]')
   await bridge('queueDesktopConfirmations',[true]);await click('[data-testid="start-compression"]')
   const created=await driver.wait(async()=>{const tasks=await bridge('compressionVerificationTaskState');if(tasks.some(t=>t.status==='failed'))throw Error(JSON.stringify(tasks));return tasks.length&&tasks.every(t=>t.status==='completed')?tasks[0]:false},60000)
-  const savedHistory=await driver.wait(async()=>(await bridge('taskHistory')).find(item=>item.outputPath===created.outputPath&&item.executionConfig?.kind==='archive-compression')||false,15000)
-  assert.equal(savedHistory.executionConfig.settings.rarRecoveryVolumes,2,'history must retain the recovery-volume option')
   const rarParts=readdirSync(automatic).filter(name=>/\.part\d+\.rar$/i.test(name)).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).map(name=>path.join(automatic,name))
+  assert.ok(rarParts.length>1,'the real compression must produce multiple data volumes')
+  // History points to the published first volume, not the pre-split requested .rar path.
+  const savedHistory=await driver.wait(async()=>(await bridge('taskHistory')).find(item=>path.resolve(item.outputPath)===path.resolve(rarParts[0])&&item.executionConfig?.kind==='archive-compression')||false,15000)
+  assert.equal(savedHistory.executionConfig.settings.rarRecoveryVolumes,2,'history must retain the recovery-volume option')
+  assert.equal(savedHistory.processedBytes,payload.length,'completed RAR history must report its actual source bytes')
+  assert.equal(savedHistory.totalBytes,payload.length,'completed RAR history must not retain a zero-byte input total')
+  await shot('recovery-compression-completed-760','[data-testid="compression-live-metrics"]')
   const automaticRevs=readdirSync(automatic).filter(name=>/\.rev$/i.test(name));assert.ok(rarParts.length>1);assert.equal(automaticRevs.length,2)
   const originalRar=rarParts.map(file=>({file,hash:hash(file)}));command(tool,['t','-idq',`-p${password}`,rarParts[0]])
   console.log('[recovery-148] actual compression UI created data and recovery volumes')
@@ -46,6 +62,7 @@ export async function runArchiveRecoveryUpgradeGate({driver,bridge,waitForElemen
   await click('[data-testid="create-recovery-count"]')
   await driver.findElement(By.xpath('//button[@role="option" and contains(.,"2 个恢复卷")]')).click()
   await shot('recovery-create-dialog-760','[data-testid="create-recovery-volumes-dialog"]')
+  await minimumShot('recovery-create-dialog-small-125','[data-testid="create-recovery-volumes-dialog"]')
   await click('[data-testid="confirm-create-recovery"]');await waitForElement('[data-testid="created-recovery-volumes"]')
   const newRevs=readdirSync(additional);assert.equal(newRevs.length,2);assert.ok(newRevs.every(name=>name.endsWith('.rev')))
   await shot('recovery-created-760','[data-testid="create-recovery-volumes-dialog"]')
@@ -61,7 +78,9 @@ export async function runArchiveRecoveryUpgradeGate({driver,bridge,waitForElemen
   const cases=[]
   for(const mode of ['plain','AES256','ZipCrypto']) {
     const folder=path.join(root,'ZIP-'+mode);mkdirSync(folder)
-    const single=path.join(folder,'完整.zip'), secret=mode==='plain'?null:password
+    // Upstream 7-Zip ZipHandlerOut.cpp rejects non-ASCII creation passwords.
+    // Keep Unicode coverage on RAR, and exercise different per-archive passwords below.
+    const single=path.join(folder,'完整.zip'), secret=mode==='plain'?null:zipPassword
     command(bundledSevenZip,['a','-tzip','-mm=Copy',...(secret?[`-mem=${mode}`,`-p${secret}`]:[]),single,'.\\*'])
     const bytes=readFileSync(single),end=bytes.length-22,central=bytes.readUInt32LE(end+16),limit=65536
     assert.equal(bytes.readUInt32LE(end),0x06054b50)
@@ -111,11 +130,18 @@ export async function runArchiveRecoveryUpgradeGate({driver,bridge,waitForElemen
   for(let index=0;index<rows.length;index++){const checkbox=await rows[index].findElement(By.css('input[type="checkbox"]'));if((await checkbox.isSelected())!==[0,1,3].includes(index))await checkbox.click()}
   await click('[data-testid="batch-recovery-config"]')
   const config=await waitForElement('[data-testid="archive-batch-config-dialog"]'),toggles=await config.findElements(By.css('input[type="checkbox"]'))
-  await toggles[0].click();await fill('[data-testid="archive-batch-shared-password"]',password)
+  await toggles[0].click();await fill('[data-testid="archive-batch-shared-password"]',zipPassword)
   const saved=path.join(root,'批量恢复'),extracted=path.join(root,'统一解压');mkdirSync(saved);mkdirSync(extracted)
   await fill('[data-testid="archive-batch-output"]',saved);await toggles[1].click();await fill('input[placeholder="留空则使用各自原包目录"]',extracted)
   await shot('batch-config-dialog-760','[data-testid="archive-batch-config-dialog"]')
+  await minimumShot('batch-config-dialog-small-125','[data-testid="archive-batch-config-dialog"]')
   await click('[data-testid="archive-batch-config-apply"]');await click('[data-testid="batch-diagnose"]')
+  await driver.wait(async()=>!await driver.findElement(By.css('[data-testid="batch-diagnose"]')).getAttribute('disabled'),30000)
+  // This RAR has a different Unicode password: correct only its inline field,
+  // leaving the shared ZIP password and all three output directories intact.
+  await click('[data-testid="archive-batch-row"]:nth-child(2) [data-testid="archive-batch-expand"]')
+  await fill('[data-testid="archive-batch-row"]:nth-child(2) [data-testid="archive-batch-password"]',password)
+  await rows[1].findElement(By.xpath('.//button[normalize-space(.)="重新检查此项"]')).click()
   await driver.wait(async()=>!await driver.findElement(By.css('[data-testid="batch-diagnose"]')).getAttribute('disabled'),30000)
   for(const checkbox of await driver.findElements(By.css('[data-testid="archive-batch-row"] > div > input[type="checkbox"]'))){if(!await checkbox.isSelected())await checkbox.click()}
   for(const width of [1100,760]){await driver.manage().window().setRect({width,height:700});await shot('batch-diagnosis-'+width,'[data-testid="archive-recovery-batch"]')}
@@ -123,16 +149,19 @@ export async function runArchiveRecoveryUpgradeGate({driver,bridge,waitForElemen
   await driver.wait(async()=>(await driver.findElements(By.css('[data-testid="archive-batch-result"]'))).length===5,60000)
   await driver.wait(async()=>!await driver.findElement(By.css('[data-testid="batch-diagnose"]')).getAttribute('disabled'),15000)
   await shot('batch-recovery-results-760','[data-testid="archive-recovery-batch"]')
-  await driver.manage().window().setRect({width:760,height:520});await driver.executeScript(()=>document.documentElement.style.zoom='1.25')
-  await shot('batch-recovery-small-125','[data-testid="archive-recovery-batch"]');await driver.executeScript(()=>document.documentElement.style.zoom='')
+  await minimumShot('batch-recovery-small-125','[data-testid="archive-recovery-batch"]')
   await driver.manage().window().setRect({width:1100,height:700})
   await click('[data-testid="batch-queue-recovered"]')
   const queued=await bridge('extractionRecoveryTasks');assert.equal(queued.length,5);assert.equal(queued.filter(t=>t.hasPassword).length,3);assert.equal(queued.filter(t=>t.output.startsWith(extracted)).length,3)
   const encryptedZipDestinations=queued.filter(t=>t.hasPassword&&t.source.endsWith('.zip')).map(t=>t.output);assert.equal(new Set(encryptedZipDestinations).size,2,'same-name encrypted ZIP results need separate extraction directories')
+  for(const task of queued){
+    if(task.source.toLowerCase().endsWith('.zip')) command(bundledSevenZip,['t',task.source,...(task.hasPassword?[`-p${zipPassword}`]:[])])
+    else command(tool,['t','-idq',`-p${password}`,task.source])
+  }
   await click('[data-testid="nav-Decompress"]');await click('[data-testid="start-decompression-queue"]')
   await driver.wait(async()=>{const tasks=await bridge('extractionRecoveryTasks');if(tasks.some(t=>t.status==='failed'))throw Error(JSON.stringify(tasks));return tasks.every(t=>t.status==='completed')},60000)
   const walk=folder=>readdirSync(folder,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(path.join(folder,entry.name)):[path.join(folder,entry.name)])
   for(const task of queued){const files=walk(task.output);assert.ok(files.some(file=>path.basename(file)==='payload.bin'&&readFileSync(file).equals(payload)),'payload not found: '+task.source)}
   originals.forEach(item=>assert.equal(hash(item.file),item.hash));originalRar.forEach(item=>assert.equal(hash(item.file),item.hash));assert.equal(existsSync(missingFirst),false)
-  writeFileSync(path.join(artifactDirectory,'archive-recovery-148-results.json'),JSON.stringify({application,binarySha256:hash(application),externalToolSha256:hash(tool),uiCompressionCreatedRecoveryVolumes:true,existingRarRecoveryCreation:true,standardZipLostDirectoryModes:cases.map(item=>item.mode),streamedDeflateRescue:true,selectedMembers:9,groupedArchives:7,recoveredGroups:5,queuedAndExtracted:5,passwordAndOutputRetained:true,originalsUnchanged:true,nativePickerVerified:false},null,2))
+  writeFileSync(path.join(artifactDirectory,'archive-recovery-148-results.json'),JSON.stringify({application,binarySha256:hash(application),externalToolSha256:hash(tool),uiCompressionCreatedRecoveryVolumes:true,completedRarInputBytes:savedHistory.totalBytes,existingRarRecoveryCreation:true,standardZipLostDirectoryModes:cases.map(item=>item.mode),zipFixturePassword:'ASCII (upstream 7-Zip creation restriction)',unicodeRarPassword:true,perArchivePasswordOverride:true,streamedDeflateRescue:true,selectedMembers:9,groupedArchives:7,recoveredGroups:5,independentRepairedArchiveVerification:5,queuedAndExtracted:5,passwordAndOutputRetained:true,originalsUnchanged:true,nativePickerVerified:false,screenshots},null,2))
 }

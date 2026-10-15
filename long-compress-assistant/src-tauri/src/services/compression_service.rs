@@ -3296,6 +3296,19 @@ impl CompressionService {
         // -ep1 gives RAR the same source-relative layout as other encoders.
         // For colliding root names, use the existing entry-name allocator so
         // RAR cannot silently replace one source with another inside the archive.
+        // RAR does not stream source-byte progress. Snapshot the actual input
+        // entries and report their total only after the encoder has succeeded.
+        // Walk incrementally so large trees do not need a second in-memory list.
+        let mut input_bytes = 0u64;
+        for source in sources {
+            for entry in walkdir::WalkDir::new(source) {
+                self.check_cancellation()?;
+                let entry = entry?;
+                if entry.file_type().is_file() {
+                    input_bytes = input_bytes.checked_add(entry.metadata()?.len()).ok_or_else(|| anyhow::anyhow!("RAR 源文件体积溢出"))?;
+                }
+            }
+        }
         let mut names = HashSet::new();
         let collisions = sources.iter().any(|source| {
             !names.insert(Path::new(source).file_name().unwrap_or_default().to_string_lossy().to_lowercase())
@@ -3385,7 +3398,7 @@ impl CompressionService {
             if data_count > 1 { anyhow::ensure!(recovery.len() == options.rar_recovery_volumes as usize, "恢复卷没有完整生成，请检查 WinRAR 版本与剩余空间"); }
             if let Some(window) = window { self.emit_log(window, task_id, &if recovery.is_empty() { "本次只生成一个数据包，没有附带恢复卷；恢复卷仅用于多个 RAR 分包".into() } else { format!("已生成 {} 个 .rev 恢复卷，请与 RAR 分包整组保留", recovery.len()) }, TaskLogSeverity::Info); }
         }
-        if let Some(window) = window { self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0); }
+        if let Some(window) = window { self.emit_progress(window, task_id, 1.0, Some(output.to_string()), input_bytes, input_bytes); }
         Ok(())
     }
 
