@@ -106,6 +106,8 @@ pub struct TemplateCompression {
     pub encrypt_filenames: bool,
     #[serde(default, skip_serializing_if = "no_rar_recovery")]
     pub rar_recovery_percent: u32,
+    #[serde(default, skip_serializing_if = "no_rar_recovery")]
+    pub rar_recovery_volumes: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -253,6 +255,7 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             create_solid_archive: profile.config.create_solid_archive,
             encrypt_filenames: profile.config.encrypt_filenames,
             rar_recovery_percent: if profile.config.format == "rar" { profile.config.extra_params.get("rar_recovery_percent").and_then(|v| v.parse().ok()).unwrap_or(0) } else { 0 },
+            rar_recovery_volumes: if profile.config.format == "rar" { profile.config.extra_params.get("rar_recovery_volumes").and_then(|v| v.parse().ok()).unwrap_or(0) } else { 0 },
         },
         password_strategy,
         export_notes,
@@ -347,6 +350,7 @@ fn validate_template(template: &TaskTemplate) -> Result<Vec<String>> {
         anyhow::bail!("只有 7Z / RAR 模板可以启用固实压缩");
     }
     ensure_rar_recovery(template.compression.rar_recovery_percent, capability.format)?;
+    anyhow::ensure!(template.compression.rar_recovery_volumes == 0 || (capability.format == "rar" && template.compression.rar_recovery_volumes <= 10), "恢复卷仅适用于 RAR，数量请选择 1 至 10 个");
     validate_filename_template(template.target_rule.filename_template.as_deref())?;
     if template.compression.encrypt_filenames && (!matches!(capability.format, "7z" | "rar")
         || matches!(template.password_strategy, TemplatePasswordStrategy::None)) {
@@ -851,6 +855,7 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
                   params.insert("zip_split_mode".into(), if mode == crate::services::standard_zip_writer::ZipSplitMode::Standard { "standard" } else { "numeric" }.into());
               }
               params.insert("rar_recovery_percent".into(), template.compression.rar_recovery_percent.to_string());
+              params.insert("rar_recovery_volumes".into(), template.compression.rar_recovery_volumes.to_string());
               params
             },
         },
@@ -934,11 +939,13 @@ mod tests {
         original.config.format = "rar".into();
         original.config.encrypt_filenames = true;
         original.config.extra_params.insert("rar_recovery_percent".into(), "5".into());
+        original.config.extra_params.insert("rar_recovery_volumes".into(), "2".into());
         let template = template_from_profile(&original);
         let text = serde_json::to_vec(&template).unwrap();
         assert!(!String::from_utf8_lossy(&text).contains("must-never-export"));
         let parsed = parse_template(&text).unwrap();
         assert_eq!(parsed.compression.rar_recovery_percent, 5);
+        assert_eq!(parsed.compression.rar_recovery_volumes, 2);
     }
 
     fn profile() -> CompressionProfile {

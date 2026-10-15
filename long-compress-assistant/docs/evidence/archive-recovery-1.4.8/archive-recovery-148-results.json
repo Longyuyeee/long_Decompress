@@ -1,0 +1,196 @@
+{
+  "application": "E:/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/src-tauri/target/release/long-compress-assistant.exe",
+  "binarySha256": "e8f313da4625d08475997baa2695776201e5b041a1bd853784f9fcd93d137f5a",
+  "externalToolSha256": "f561764bc3e9ed208744321a89a819b562edeaf06e203c02a06976121fda1991",
+  "uiCompressionCreatedRecoveryVolumes": true,
+  "completedRarInputBytes": 180000,
+  "existingRarRecoveryCreation": true,
+  "standardZipLostDirectoryModes": [
+    "plain",
+    "AES256",
+    "ZipCrypto"
+  ],
+  "zipFixturePassword": "ASCII (upstream 7-Zip creation restriction)",
+  "unicodeRarPassword": true,
+  "perArchivePasswordOverride": true,
+  "streamedDeflateRescue": true,
+  "selectedMembers": 9,
+  "groupedArchives": 7,
+  "recoveredGroups": 5,
+  "independentRepairedArchiveVerification": 5,
+  "queuedAndExtracted": 5,
+  "passwordAndOutputRetained": true,
+  "originalsUnchanged": true,
+  "nativePickerVerified": false,
+  "screenshots": [
+    {
+      "name": "recovery-options-1100.png",
+      "content": {
+        "client": 334,
+        "scroll": 334
+      },
+      "viewport": {
+        "right": 1100,
+        "scroll": 1100,
+        "width": 1100
+      },
+      "fontScale": "100%"
+    },
+    {
+      "name": "recovery-options-760.png",
+      "content": {
+        "client": 250,
+        "scroll": 250
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "100%"
+    },
+    {
+      "name": "recovery-options-small-125.png",
+      "content": {
+        "client": 499,
+        "scroll": 499
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "125%"
+    },
+    {
+      "name": "recovery-compression-completed-760.png",
+      "content": {
+        "client": 219,
+        "scroll": 219
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "100%"
+    },
+    {
+      "name": "recovery-create-dialog-760.png",
+      "content": {
+        "client": 410,
+        "scroll": 410
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "100%"
+    },
+    {
+      "name": "recovery-create-dialog-small-125.png",
+      "content": {
+        "client": 388,
+        "scroll": 388
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "125%"
+    },
+    {
+      "name": "recovery-created-760.png",
+      "content": {
+        "client": 400,
+        "scroll": 400
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "100%"
+    },
+    {
+      "name": "batch-config-dialog-760.png",
+      "content": {
+        "client": 410,
+        "scroll": 410
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "100%"
+    },
+    {
+      "name": "batch-config-dialog-small-125.png",
+      "content": {
+        "client": 388,
+        "scroll": 388
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "125%"
+    },
+    {
+      "name": "batch-diagnosis-1100.png",
+      "content": {
+        "client": 824,
+        "scroll": 824
+      },
+      "viewport": {
+        "right": 1100,
+        "scroll": 1100,
+        "width": 1100
+      },
+      "fontScale": "100%"
+    },
+    {
+      "name": "batch-diagnosis-760.png",
+      "content": {
+        "client": 624,
+        "scroll": 624
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "100%"
+    },
+    {
+      "name": "batch-recovery-results-760.png",
+      "content": {
+        "client": 624,
+        "scroll": 624
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "100%"
+    },
+    {
+      "name": "batch-recovery-small-125.png",
+      "content": {
+        "client": 593,
+        "scroll": 593
+      },
+      "viewport": {
+        "right": 760,
+        "scroll": 760,
+        "width": 760
+      },
+      "fontScale": "125%"
+    }
+  ]
+}

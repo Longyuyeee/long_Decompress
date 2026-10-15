@@ -50,6 +50,7 @@ export interface CompressionOptions {
   createSolidArchive: boolean
   encryptFilenames?: boolean
   rarRecoveryPercent?: number
+  rarRecoveryVolumes?: number
 }
 
 export interface CompressionGroup {
@@ -437,11 +438,12 @@ export const useCompressionStore = defineStore('compression', () => {
 
   const applyBatchConfiguration = (ids: string[], patch: BatchConfigPatch) => {
     const selected = new Set(ids)
-    if (patch.format === undefined && patch.level === undefined && patch.rarRecoveryPercent === undefined && patch.outputDirectory === undefined) return 0
+    if (patch.format === undefined && patch.level === undefined && patch.rarRecoveryPercent === undefined && patch.rarRecoveryVolumes === undefined && patch.outputDirectory === undefined) return 0
     let count = 0
     const drafts = [...selectedFiles.value.map(file => ({ id: file.path, draft: file })),
       ...groups.value.map(group => ({ id: group.id, draft: group }))]
     if (patch.rarRecoveryPercent && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && (patch.format || getEffectiveSettings(draft.settings).format) !== 'rar')) throw new Error('恢复保护只适用于 RAR，请先将所选任务设为 RAR，或保持各自恢复设置。')
+    if (patch.rarRecoveryVolumes && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && (patch.format || getEffectiveSettings(draft.settings).format) !== 'rar')) throw new Error('恢复卷只适用于 RAR 分包，请先调整目标格式。')
     if (patch.format === 'zip' && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).encryptFilenames)) {
       throw new Error('所选任务中有已开启文件名加密的 7Z 任务。请保持 7Z 格式，或先在该条配置中关闭文件名加密。')
     }
@@ -451,6 +453,7 @@ export const useCompressionStore = defineStore('compression', () => {
       if (patch.format !== undefined) settings.format = patch.format
       if (patch.level !== undefined) settings.level = patch.level
       if (patch.rarRecoveryPercent !== undefined) settings.rarRecoveryPercent = patch.rarRecoveryPercent
+      if (patch.rarRecoveryVolumes !== undefined) settings.rarRecoveryVolumes = patch.rarRecoveryVolumes
       draft.outputPath = patch.outputDirectory ?? getEffectiveOutputPath(draft.outputPath)
       draft.settings = settings
       if (patch.format !== undefined || patch.level !== undefined) clearAnalysis(id)

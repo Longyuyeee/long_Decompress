@@ -183,7 +183,7 @@ export interface DesktopE2EBridge {
   queueDesktopConfirmations: (choices: boolean[]) => void
   takeDesktopConfirmation: () => boolean | undefined
   seedPasswordFallbackWorkspace: (sourcePath: string, outputPath: string) => string
-  seedRarRecoveryDraft: (sourcePath:string, outputPath:string) => Promise<void>
+  seedRarRecoveryDraft: (sourcePath:string, outputPath:string, settings?:Partial<import('@/stores/compression').CompressionOptions>) => Promise<void>
   compressionWorkspaceAuditState: () => {
     taskCount: number
     pendingGroupCount: number
@@ -968,11 +968,11 @@ export const installDesktopE2EBridge = () => {
       return draft.id
     },
 
-    async seedRarRecoveryDraft(sourcePath, outputPath) {
+    async seedRarRecoveryDraft(sourcePath, outputPath, settings) {
       const info = await invoke<{size:number}>('get_file_info', {path:sourcePath})
       compressionStore.groups = []
       compressionStore.selectedFiles = [{path:sourcePath,name:sourcePath.split(/[\\/]/).pop() || sourcePath,size:info.size,type:'file',isDirectory:false,expanded:true,outputPath,
-        settings:{...compressionStore.globalSettings,format:'rar',rarRecoveryPercent:5,password:''}}]
+        settings:{...compressionStore.globalSettings,format:'rar',rarRecoveryPercent:5,password:'',...settings}}]
     },
     compressionWorkspaceAuditState() {
       const pendingGroups = compressionStore.groups.filter(group => !group.taskId)

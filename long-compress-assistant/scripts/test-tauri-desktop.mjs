@@ -31,6 +31,7 @@ import { runZipRecoveryDesktopGate } from './zip-recovery-desktop-gate.mjs'
 import { runPasswordRescueFormatsGate } from './password-rescue-formats-gate.mjs'
 import { runFailureZipRecoveryGate } from './failure-zip-recovery-gate.mjs'
 import { runRarRecoveryGate } from './rar-recovery-gate.mjs'
+import { runArchiveRecoveryUpgradeGate } from './archive-recovery-148-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
@@ -4871,6 +4872,10 @@ try {
     }
     await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
     completedSuccessfully = true
+  } else if (process.argv.includes('--archive-recovery-upgrade-only')) {
+    await runArchiveRecoveryUpgradeGate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })
+    completedSuccessfully = true
+    console.log('Standard ZIP rescue, recovery-volume creation and batch recovery workflows passed.')
   } else if (process.argv.includes('--rar-recovery-only')) {
     await runRarRecoveryGate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })
     completedSuccessfully = true

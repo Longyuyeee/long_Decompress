@@ -20,6 +20,8 @@
 
 Long解压把日常文件处理放在一个顺手的工作区里。收到一批压缩包，可以一起解压；只想找里面某个文件，可以直接浏览；需要分享资料，可以打包、加密和分卷。图片、视频与 PDF 的体积优化也有各自独立的入口。
 
+**v1.4.8** 带来 ZIP 分卷救援、RAR 恢复卷创建与批量检查修复。查看 [本版更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.8.md)、[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.8)或 [封板记录](long-compress-assistant/docs/ARCHIVE_RECOVERY_FREEZE_1.4.8.md)；安装器及自动更新附件以 Release 页面实际内容为准。
+
 <a id="features"></a>
 
 ## ✨ 好用，从少做几步开始
@@ -162,7 +164,7 @@ Windows 11 请在 **“显示更多选项”** 中使用经典菜单；当前公
 
 ## 🔒 文件留在本机，处理过程看得见
 
-文件处理、归档浏览、密码匹配和完整性校验在本机完成。密码保险箱加密保存常用解压密码，任务展示当前阶段与日志；遇到同名文件可选择覆盖、跳过或保留两份。文件完整性中心还提供校验、归档诊断和输出新文件的 ZIP 修复。
+文件处理、归档浏览、密码匹配和完整性校验在本机完成。密码保险箱加密保存常用解压密码，任务展示当前阶段与日志；遇到同名文件可选择覆盖、跳过或保留两份。文件完整性中心还提供校验、ZIP/RAR 诊断与修复；v1.4.8 增加批量处理，恢复结果保存到新位置后可继续加入解压队列。
 
 ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复原因会明确列出，原包保留。部分恢复不代表全部找回；需要正确密码与完整来源，缺卷、本地尺寸未知及标准磁盘 ZIP 卷丢目录暂不支持救援。
 
@@ -223,7 +225,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
-| **v1.4.7（待发布）** | RAR 修复与 .rev 补卷、可选恢复保护、Windows 右键检查修复入口 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.7.md) |
+| **v1.4.8** | ZIP 分卷救援扩展、RAR 恢复卷创建、批量检查修复与统一入队，修正 RAR 结果体积统计 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.8.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.8) |
+| **v1.4.7** | RAR 修复与 .rev 补卷、可选恢复保护、Windows 右键检查修复入口 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.7.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.7) |
 | **v1.4.6** | 失败任务行内纠正、缺卷处理、密码 ZIP 丢目录救援、恢复新包继续解压、等宽详情与日志显示优化 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.6.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.6) |
 | **v1.4.5** | 密码 ZIP 完整文件救援、ARJ / Unix `.Z` / UDF 读取、双栏与右键入口统一、结果密码提示与定位 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.5.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5) |
 | **v1.4.4** | 标准 ZIP 分卷创建、PPMd/加密 ZIPX 与卷入口兼容、ZIP 目录重建与完整条目救援 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.4.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.4) |

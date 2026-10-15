@@ -28,6 +28,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     };
     output.extend(project(&value, fields)?);
     if kind == "archive-conversion" {
+        if let Some(count) = value.get("rarRecoveryVolumes") {
+            if !count.as_u64().is_some_and(|n| n <= 10) { return None; }
+            output.insert("rarRecoveryVolumes".into(), count.clone());
+        }
         if let Some(percent) = value.get("rarRecoveryPercent") {
             if !matches!(percent.as_u64(), Some(0 | 3 | 5 | 10)) { return None; }
             output.insert("rarRecoveryPercent".into(), percent.clone());
@@ -50,6 +54,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     if !settings_fields.is_empty() {
         let mut settings = project(value.get("settings")?, settings_fields)?;
         if kind == "archive-compression" {
+            if let Some(count) = value.get("settings")?.get("rarRecoveryVolumes") {
+                if !count.as_u64().is_some_and(|n| n <= 10) { return None; }
+                settings.insert("rarRecoveryVolumes".into(), count.clone());
+            }
             if let Some(percent) = value.get("settings")?.get("rarRecoveryPercent") {
                 if !matches!(percent.as_u64(), Some(0 | 3 | 5 | 10)) { return None; }
                 settings.insert("rarRecoveryPercent".into(), percent.clone());

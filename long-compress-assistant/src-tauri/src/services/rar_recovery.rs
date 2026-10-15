@@ -58,6 +58,10 @@ struct Group {
     data: Vec<PathBuf>,
     recovery: Vec<PathBuf>,
 }
+pub(crate) fn diagnosis_group_path(path: &Path) -> Result<PathBuf> {
+    let group = collect(path)?;
+    Ok(group.data.first().or(group.recovery.first()).cloned().unwrap_or_else(|| path.to_path_buf()))
+}
 fn collect(path: &Path) -> Result<Group> {
     let key = family(path.file_name().and_then(|n| n.to_str()).unwrap_or(""))
         .context("不是 RAR 或恢复卷")?;
@@ -422,6 +426,10 @@ async fn run(
     )
     .await?;
     cancelled(flag)?;
+    if operation.starts_with("rv") {
+        ensure!(output.status.success(), "恢复卷创建未完成，请确认密码、WinRAR 版本和可用空间（退出码 {:?}）", output.status.code());
+        return Ok(());
+    }
     if operation == "rc" && output.status.code() == Some(11) {
         anyhow::bail!("RAR 无法验证原包密码，请填写或修改密码后重新检查；未保存不完整卷组");
     }
@@ -430,6 +438,72 @@ async fn run(
     // supplied password before publishing; no password enters process arguments.
     ensure!(matches!(output.status.code(), Some(0 | 1 | 11)), "RAR 修复未完成：恢复记录或恢复卷可能不足，或来源损坏超出恢复能力（退出码 {:?}）。原件保持不变。", output.status.code());
     Ok(())
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RecoveryVolumesResult {
+    pub output_files: Vec<String>,
+    pub total_bytes: u64,
+    pub data_volumes: usize,
+}
+
+pub async fn create_recovery_volumes(path: &Path, destination: &Path, count: u32, password: Option<&str>, flag: Arc<AtomicBool>) -> Result<RecoveryVolumesResult> {
+    ensure!((1..=10).contains(&count), "恢复卷数量请选择 1 至 10 个");
+    cancelled(&flag)?;
+    let source = fs::canonicalize(path)?;
+    let display_root = std::path::absolute(destination)?;
+    let destination = fs::canonicalize(destination)?;
+    ensure!(destination.is_dir(), "请选择恢复卷保存目录");
+    let group = collect(&source)?;
+    ensure!(group.data.len() >= 2, "恢复卷用于多个 RAR 分包，请选择完整分包中的任意一卷");
+    let selected = group.data[0].clone();
+    let split = SplitArchiveDetector::detect_split_archive(&selected)?.context("没有找到 RAR 分卷组")?;
+    ensure!(split.is_complete, "请先补齐分卷：{:?}", split.missing_parts);
+    ensure!(collect(&destination.join(selected.file_name().unwrap()))?.recovery.is_empty(), "保存目录已存在同组恢复卷，请选择其他位置，原文件不会被覆盖");
+    let tool = CompressionService::find_rar_encoder().context("创建恢复卷需要本机安装 WinRAR/Rar.exe")?;
+    let work = tempfile::Builder::new().prefix(".long-rar-recovery-").tempdir_in(&destination)?;
+    let copy_paths = group.data.clone();
+    let root = work.path().to_path_buf();
+    let copy_flag = flag.clone();
+    let verify_password = password.map(str::to_owned);
+    let verify_name = selected.file_name().unwrap().to_owned();
+    tauri::async_runtime::spawn_blocking(move || -> Result<()> {
+        let mut buffer = vec![0u8; 256 * 1024];
+        for file in copy_paths {
+            cancelled(&copy_flag)?;
+            let target = root.join(file.file_name().unwrap());
+            // The rv command only reads data volumes. NTFS links avoid copying
+            // a large complete set; other filesystems use cancellable copies.
+            if fs::hard_link(&file, &target).is_err() {
+                let mut input = fs::File::open(file)?;
+                let mut output = fs::File::create(target)?;
+                loop { cancelled(&copy_flag)?; let len = input.read(&mut buffer)?; if len == 0 { break; } output.write_all(&buffer[..len])?; }
+            }
+        }
+        let contents = verify(&root.join(verify_name), verify_password.as_deref(), &copy_flag)?;
+        ensure!(contents.volume && contents.files + contents.directories > 0, "原分包未通过完整读取，请先检查或修复后再创建恢复卷");
+        Ok(())
+    }).await??;
+    run(&tool, &format!("rv{count}"), &selected, work.path(), password, &flag).await?;
+    let generated = collect(&work.path().join(selected.file_name().unwrap()))?.recovery;
+    ensure!(generated.len() == count as usize, "没有完整生成所选数量的恢复卷，请确认 WinRAR 版本");
+    let mut published = Vec::new();
+    let mut bytes = 0u64;
+    let result = (|| -> Result<()> {
+        for file in generated {
+            cancelled(&flag)?;
+            let size = file.metadata()?.len(); ensure!(size > 0, "生成的恢复卷为空");
+            let target = destination.join(file.file_name().unwrap());
+            super::output_publish_transaction::transfer_no_replace(&file, &target)?;
+            bytes = bytes.saturating_add(size);
+            published.push(target);
+        }
+        cancelled(&flag)?;
+        Ok(())
+    })();
+    if let Err(error) = result { for file in published { let _ = fs::remove_file(file); } return Err(error); }
+    Ok(RecoveryVolumesResult { output_files: published.iter().map(|p| display_root.join(p.file_name().unwrap()).to_string_lossy().to_string()).collect(), total_bytes: bytes, data_volumes: group.data.len() })
 }
 
 pub async fn repair(
@@ -764,6 +838,35 @@ mod tests {
                     "wrong password published an output"
                 );
             }
+        }
+    }
+
+    #[tokio::test]
+    #[ignore = "Requires external Rar.exe for application recovery-volume creation"]
+    async fn created_recovery_volumes_restore_a_missing_first_part_without_changing_retained_data() {
+        let tool = CompressionService::find_rar_encoder().expect("Rar.exe required");
+        for encrypted in [false, true] {
+            let dir = tempfile::tempdir().unwrap();
+            let input = dir.path().join("payload.bin"); fs::write(&input, vec![42u8; 180_000]).unwrap();
+            let target = dir.path().join("parts.rar");
+            let mut args = vec!["a", "-idq", "-y", "-cfg-", "-m0", "-v60000b"];
+            if encrypted { args.push("-hp中文 recovery + !"); }
+            args.extend([target.to_str().unwrap(), input.to_str().unwrap()]);
+            command(&tool, &args);
+            let first = dir.path().join("parts.part1.rar");
+            let originals = collect(&first).unwrap().data.into_iter().map(|p| { let bytes = fs::read(&p).unwrap(); (p, bytes) }).collect::<Vec<_>>();
+            let password = encrypted.then_some("中文 recovery + !");
+            if encrypted { assert!(create_recovery_volumes(&first, dir.path(), 2, Some("wrong"), Arc::new(AtomicBool::new(false))).await.is_err()); }
+            let result = create_recovery_volumes(&first, dir.path(), 2, password, Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(result.output_files.len(), 2); assert_eq!(result.data_volumes, originals.len()); assert!(result.total_bytes > 0);
+            assert!(create_recovery_volumes(&first, dir.path(), 1, password, Arc::new(AtomicBool::new(false))).await.is_err());
+            for (file, bytes) in &originals { assert_eq!(fs::read(file).unwrap(), *bytes); }
+            fs::remove_file(&first).unwrap();
+            let out = dir.path().join("restored"); fs::create_dir(&out).unwrap();
+            let restored = repair(Path::new(&result.output_files[0]), &out, password, Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(fs::read(&restored.output_path).unwrap(), originals[0].1);
+            assert!(!first.exists());
+            for (file, bytes) in originals.iter().skip(1) { assert_eq!(fs::read(file).unwrap(), *bytes); }
         }
     }
 

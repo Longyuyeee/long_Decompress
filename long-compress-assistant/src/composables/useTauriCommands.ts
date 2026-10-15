@@ -68,6 +68,7 @@ export interface CompressOptions {
   create_solid_archive?: boolean
   encrypt_filenames?: boolean
   rar_recovery_percent?: number
+  rar_recovery_volumes?: number
   preserve_paths?: boolean
   delete_after?: boolean
   verify_after?: boolean
@@ -875,6 +876,9 @@ export const useTauriCommands = () => {
   const repairRar = async (repairId: string, filePath: string, outputDirectory: string, password?: string) => {
     return invoke<ZipRepairResult>('repair_rar', { repairId, filePath, outputDirectory, password: password || null })
   }
+  const groupArchiveDiagnosisSources = (paths: string[]) => invoke<Array<{path: string; selectedMembers: number}>>('group_archive_diagnosis_sources', {paths})
+  const repairArchiveBatchItem = (operationId: string, filePath: string, outputDirectory: string, format: string, password?: string) => invoke<ZipRepairResult>('repair_archive_batch_item', {operationId, filePath, outputDirectory, format, password: password || null})
+  const createRarRecoveryVolumes = (operationId: string, filePath: string, outputDirectory: string, count: number, password?: string) => invoke<{outputFiles: string[]; totalBytes: number; dataVolumes: number}>('create_rar_recovery_volumes', {operationId, filePath, outputDirectory, count, password: password || null})
 
   const cancelZipRepair = async (repairId: string) => {
     await invoke('cancel_zip_repair', { repairId })
@@ -942,6 +946,9 @@ export const useTauriCommands = () => {
     cancelArchiveDiagnosis,
     repairZip,
     repairRar,
+    groupArchiveDiagnosisSources,
+    repairArchiveBatchItem,
+    createRarRecoveryVolumes,
     cancelZipRepair,
     cancelCompression,
     registerContextMenu: () => invoke<boolean>('register_context_menu'),

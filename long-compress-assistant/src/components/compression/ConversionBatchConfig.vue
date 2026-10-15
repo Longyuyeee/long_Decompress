@@ -15,12 +15,14 @@ const mode = ref<'selected' | 'defaults'>('selected')
 const format = ref('keep'), level = ref('keep'), destination = ref('keep'), directory = ref('')
 const changePassword = ref(false), password = ref(''), changeSourcePassword = ref(false), sourcePassword = ref('')
 const changeSplit = ref(false), splitMiB = ref(0), hiddenNames = ref('keep'), recovery = ref('keep')
+const recoveryVolumes = ref('keep')
 const defaults = ref({ ...store.defaults })
 const keep = { value: 'keep', label: '保持各自设置' }
-const changed = computed(() => format.value !== 'keep' || level.value !== 'keep' || destination.value !== 'keep' || changePassword.value || changeSourcePassword.value || changeSplit.value || hiddenNames.value !== 'keep' || recovery.value !== 'keep')
+const changed = computed(() => format.value !== 'keep' || level.value !== 'keep' || destination.value !== 'keep' || changePassword.value || changeSourcePassword.value || changeSplit.value || hiddenNames.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep')
 const valid = computed(() => (mode.value === 'defaults' || changed.value) && (destination.value !== 'custom' || !!directory.value.trim()) && (!changeSplit.value || Number.isFinite(splitMiB.value) && splitMiB.value >= 0))
 function show(nextMode: 'selected' | 'defaults') {
   mode.value = nextMode; format.value = level.value = destination.value = hiddenNames.value = recovery.value = 'keep'
+  recoveryVolumes.value = 'keep'
   directory.value = password.value = sourcePassword.value = ''
   changePassword.value = changeSourcePassword.value = changeSplit.value = false; splitMiB.value = 0
   defaults.value = { ...store.defaults }; visible.value = true
@@ -44,6 +46,7 @@ function apply() {
     ...(changeSplit.value ? { splitMiB: splitMiB.value } : {}),
     ...(hiddenNames.value === 'keep' ? {} : { encryptFilenames: hiddenNames.value === 'yes' }),
     ...(recovery.value === 'keep' ? {} : { rarRecoveryPercent: Number(recovery.value) }),
+    ...(recoveryVolumes.value === 'keep' ? {} : { rarRecoveryVolumes: Number(recoveryVolumes.value) }),
   })
   if (applyError.value) return
   visible.value = false
@@ -73,6 +76,7 @@ function apply() {
           <label class="min-w-0 text-sm">目标格式<ThemedSelect v-model="format" :options="[keep, ...conversionFormats]" test-id="conversion-batch-format" floating /></label>
           <label class="min-w-0 text-sm">压缩强度<ThemedSelect v-model="level" :options="[keep, ...Array.from({ length: 10 }, (_, n) => ({ value: String(n), label: String(n) }))]" test-id="conversion-batch-level" floating /></label>
           <label class="min-w-0 text-sm">RAR 恢复保护<ThemedSelect v-model="recovery" :options="[keep, {value:'0',label:'关闭'}, {value:'3',label:'3%'}, {value:'5',label:'5%'}, {value:'10',label:'10%'}]" test-id="conversion-batch-rar-recovery" floating /></label>
+          <label class="min-w-0 text-sm">RAR 分包恢复卷<ThemedSelect v-model="recoveryVolumes" :options="[keep, ...[0,1,2,3,5,10].map(value => ({value:String(value),label:value ? `${value} 个 .rev 恢复卷` : '不生成恢复卷'}))]" test-id="conversion-batch-rar-recovery-volumes" floating /></label>
           <label class="min-w-0 text-sm">文件名加密<ThemedSelect v-model="hiddenNames" :options="[keep, { value: 'yes', label: '启用（7Z/RAR，需要新包密码）' }, { value: 'no', label: '关闭' }]" floating /></label>
           <div class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changeSplit" type="checkbox" />修改分卷大小</label><input v-if="changeSplit" v-model.number="splitMiB" type="number" min="0" class="conversion-input w-full" placeholder="0 表示不分卷" /></div>
           <div class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changeSourcePassword" type="checkbox" />填写共用原包密码</label><input v-if="changeSourcePassword" v-model="sourcePassword" type="password" autocomplete="off" class="conversion-input w-full" placeholder="原包未加密可留空" /></div>

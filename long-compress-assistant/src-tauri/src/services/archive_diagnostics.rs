@@ -311,6 +311,10 @@ pub async fn diagnose_archive(
     // Read across tiny numeric volumes and use the same standard ZIP view as
     // extraction. Keep the user's selected member in the exported report.
     let inspected = (|| -> Result<String> {
+        if group.as_ref().is_some_and(|group| group.format == SplitFormat::ZipSplit) {
+            ZipInputReader::open_recovery(source)?;
+            return Ok("ZIP".to_string());
+        }
         let reader = ZipInputReader::open(source)?;
         if matches!(&reader, ZipInputReader::StandardZip(_)) { return Ok("ZIP".to_string()); }
         let mut header = Vec::new();
@@ -690,6 +694,48 @@ mod tests {
         }
         fn emit_log(&self, _: &Window, _: &str, _: &str, _: TaskLogSeverity) {}
         fn emit_progress(&self, _: &Window, _: &str, _: f32, _: Option<String>, _: u64, _: u64) {}
+    }
+
+    #[tokio::test]
+    async fn lost_standard_zip_directory_recovers_cross_disk_plain_and_password_files() {
+        for encrypted in [false, true] {
+            let temp = tempfile::tempdir().unwrap();
+            let input = temp.path().join("original.zip");
+            let password = "中文 secret + !";
+            let plain = zip_aes::write::SimpleFileOptions::default().compression_method(zip_aes::CompressionMethod::Stored);
+            let options = if encrypted { plain.with_aes_encryption(zip_aes::AesMode::Aes256, password) } else { plain };
+            let content = vec![23u8; 180_000];
+            let mut writer = zip_aes::ZipWriter::new(File::create(&input).unwrap());
+            writer.start_file("跨卷.bin", options).unwrap(); writer.write_all(&content).unwrap();
+            writer.start_file("完整.txt", options).unwrap(); writer.write_all(b"complete").unwrap(); writer.finish().unwrap();
+            let parts = super::super::standard_zip_writer::split(&input, &temp.path().join("分卷.zip"), 65_536, || Ok(()), |_, _| {}).unwrap().part_files;
+            assert!(parts.len() >= 3);
+            let originals: Vec<Vec<u8>> = parts.iter().map(|p| std::fs::read(p).unwrap()).collect();
+            let last = originals.last().unwrap();
+            let end = last.len() - 22;
+            let cd_disk = u16::from_le_bytes(last[end+6..end+8].try_into().unwrap()) as usize;
+            let cd_relative = u32::from_le_bytes(last[end+16..end+20].try_into().unwrap()) as usize;
+            let cd_start = originals.iter().take(cd_disk).map(Vec::len).sum::<usize>() + cd_relative;
+            let mut bytes = originals.concat(); bytes[cd_start..].fill(0);
+            let mut at = 0;
+            for (part, original) in parts.iter().zip(&originals) { std::fs::write(part, &bytes[at..at+original.len()]).unwrap(); at += original.len(); }
+            let report = diagnose_archive(&parts[1], encrypted.then_some(password), Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(report.status, "directory_lost", "{report:?}"); assert!(report.can_repair && report.split_archive);
+            let output = temp.path().join("rescued.zip");
+            if encrypted { assert!(repair_zip_with_password_to_new(&parts[1], &output, Some("wrong"), &AtomicBool::new(false)).is_err()); assert!(!output.exists()); }
+            let result = repair_zip_with_password_to_new(&parts[1], &output, encrypted.then_some(password), &AtomicBool::new(false)).unwrap();
+            assert!(result.partial && result.verified && result.directory_rebuilt); assert_eq!(result.recovered_files, 2);
+            assert_eq!(result.output_encrypted, encrypted);
+            let mut archive = zip_aes::ZipArchive::new(File::open(output).unwrap()).unwrap();
+            let mut restored = Vec::new();
+            if encrypted { super::super::zip_password::open_named_entry(&mut archive, "跨卷.bin", password).unwrap().read_to_end(&mut restored).unwrap(); }
+            else { archive.by_name("跨卷.bin").unwrap().read_to_end(&mut restored).unwrap(); }
+            assert_eq!(restored, content);
+            assert_eq!(parts.iter().flat_map(|p| std::fs::read(p).unwrap()).collect::<Vec<_>>(), bytes);
+            std::fs::remove_file(&parts[1]).unwrap();
+            let missing = diagnose_archive(parts.last().unwrap(), Some(password), Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(missing.status, "missing_volume"); assert!(!missing.can_repair);
+        }
     }
 
     #[tokio::test]

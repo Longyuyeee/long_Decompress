@@ -75,6 +75,7 @@ const normalizeProfile = (raw: any): CompressionProfile => {
     createSolidArchive: raw.config.createSolidArchive ?? raw.config.create_solid_archive ?? false,
     encryptFilenames: raw.config.encryptFilenames ?? raw.config.encrypt_filenames ?? false,
     ...((raw.config.rarRecoveryPercent ?? raw.config.extra_params?.rar_recovery_percent ?? raw.config.extraParams?.rar_recovery_percent) ? { rarRecoveryPercent: Number(raw.config.rarRecoveryPercent ?? raw.config.extra_params?.rar_recovery_percent ?? raw.config.extraParams?.rar_recovery_percent) } : {}),
+    ...((raw.config.rarRecoveryVolumes ?? raw.config.extra_params?.rar_recovery_volumes ?? raw.config.extraParams?.rar_recovery_volumes) ? { rarRecoveryVolumes: Number(raw.config.rarRecoveryVolumes ?? raw.config.extra_params?.rar_recovery_volumes ?? raw.config.extraParams?.rar_recovery_volumes) } : {}),
     ...((raw.config.zipPasswordEncoding ?? raw.config.extra_params?.zip_password_encoding ?? raw.config.extraParams?.zip_password_encoding) === 'windows_local' ? { zipPasswordEncoding: 'windows_local' as const } : {}),
     ...((raw.config.zipEncryption ?? raw.config.extra_params?.zip_encryption ?? raw.config.extraParams?.zip_encryption) === 'zipcrypto' ? { zipEncryption: 'zipcrypto' as const } : {}),
     ...((raw.config.zipSplitMode ?? raw.config.extra_params?.zip_split_mode ?? raw.config.extraParams?.zip_split_mode) === 'standard' ? { zipSplitMode: 'standard' as const } : {}),
@@ -120,7 +121,8 @@ const toBackendProfile = (profile: CompressionProfile) => ({
     filename_template: profile.config.filenameTemplate,
     extra_params: { ...profile.config.extraParams, zip_password_encoding: profile.config.zipPasswordEncoding ?? 'utf8', zip_encryption: profile.config.zipEncryption ?? 'aes256',
       ...(profile.config.zipSplitMode ? { zip_split_mode: profile.config.zipSplitMode } : {}),
-      ...(profile.config.rarRecoveryPercent ? { rar_recovery_percent: String(profile.config.rarRecoveryPercent) } : {}) },
+      ...(profile.config.rarRecoveryPercent ? { rar_recovery_percent: String(profile.config.rarRecoveryPercent) } : {}),
+      ...(profile.config.rarRecoveryVolumes ? { rar_recovery_volumes: String(profile.config.rarRecoveryVolumes) } : {}) },
   },
   auto_apply: {
     enabled: profile.autoApply.enabled,
@@ -190,7 +192,7 @@ export const useCompressionProfiles = () => {
       return await invoke<string>('create_compression_profile', { profile: { ...profile,
         config: { ...input.config, extraParams: { ...input.config.extraParams,
           zip_password_encoding: input.config.zipPasswordEncoding ?? 'utf8', zip_encryption: input.config.zipEncryption ?? 'aes256',
-          ...(input.config.zipSplitMode ? { zip_split_mode: input.config.zipSplitMode } : {}), ...(input.config.rarRecoveryPercent ? { rar_recovery_percent: String(input.config.rarRecoveryPercent) } : {}) } } } })
+          ...(input.config.zipSplitMode ? { zip_split_mode: input.config.zipSplitMode } : {}), ...(input.config.rarRecoveryPercent ? { rar_recovery_percent: String(input.config.rarRecoveryPercent) } : {}), ...(input.config.rarRecoveryVolumes ? { rar_recovery_volumes: String(input.config.rarRecoveryVolumes) } : {}) } } } })
     } catch (error) {
       console.error('[useCompressionProfiles] Failed to create profile:', error)
       throw new Error(extractErrorMessage(error))

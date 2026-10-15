@@ -28,7 +28,7 @@ const value = (event: Event) => (event.target as HTMLInputElement).value
       <label class="conversion-label">ZIP 加密方式<ThemedSelect :model-value="settings.zipEncryption" :disabled="disabled" :options="[{ value: 'aes256', label: 'AES-256' }, { value: 'zipcrypto', label: 'ZipCrypto（传统兼容）' }]" floating @update:model-value="emit('update', { zipEncryption: $event as ConversionSettings['zipEncryption'] })" /></label>
       <label class="conversion-label">密码编码<ThemedSelect :model-value="settings.zipPasswordEncoding" :disabled="disabled" :options="[{ value: 'utf8', label: 'UTF-8' }, { value: 'windows_local', label: 'Windows 兼容' }]" floating @update:model-value="emit('update', { zipPasswordEncoding: $event as ConversionSettings['zipPasswordEncoding'] })" /></label>
     </template>
-    <RarRecoveryField v-if="settings.format === 'rar'" class="sm:col-span-2" :model-value="settings.rarRecoveryPercent" :disabled="disabled" @update:model-value="emit('update', { rarRecoveryPercent: $event })" />
+    <RarRecoveryField v-if="settings.format === 'rar'" class="sm:col-span-2" :model-value="settings.rarRecoveryPercent" :recovery-volumes="settings.rarRecoveryVolumes" :disabled="disabled" @update:model-value="emit('update', { rarRecoveryPercent: $event })" @update:recovery-volumes="emit('update', { rarRecoveryVolumes: $event })" />
   </fieldset>
 </template>
 <style scoped>
