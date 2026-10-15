@@ -2,14 +2,13 @@
 import { computed } from 'vue'
 import { useAppStore } from '@/stores/app'
 import type { Task } from '@/stores/task'
-import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
 import ArchiveOutputSummary from './ArchiveOutputSummary.vue'
 import ResultActions from '@/components/tasks/ResultActions.vue'
+import TaskExecutionOverview from '@/components/tasks/TaskExecutionOverview.vue'
 import {
   compressionLogSeverityClass,
   compressionStageTranslationKey,
-  compressionStatusClass,
   emptyCompressionLogTranslationKey,
 } from '@/utils/compressionTaskPresentation'
 
@@ -35,56 +34,25 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
   >
     <ArchiveOutputSummary v-if="task?.status === 'completed' && task.archiveOutput" :output="task.archiveOutput" />
     <ResultActions v-else-if="task?.status === 'completed' && task.outputPath" :path="task.outputPath" show-path class="mb-3" />
-    <div class="grid grid-cols-2 gap-2">
-      <div class="pending-stat-card">
-        <span class="text-muted">{{ appStore.t('progress.stage') }}</span>
-        <div class="font-black mt-0.5" :class="compressionStatusClass(task?.status)">
-          {{ appStore.t(compressionStageTranslationKey(task)) }}
-        </div>
-      </div>
-      <div class="pending-stat-card">
-        <span class="text-muted">{{ appStore.t('progress.percent') }}</span>
-        <div class="font-mono font-black text-primary mt-0.5">
-          {{ formatProgressPercent(task?.progress) }}%
-          <span v-if="task?.speed" class="ml-2 text-muted">{{ task.speed }}</span>
-        </div>
-      </div>
-    </div>
-    <div
-      v-if="task?.processedBytes !== undefined || task?.outputBytes !== undefined"
-      class="grid grid-cols-2 gap-2 mt-2"
-      data-testid="compression-live-metrics"
+    <TaskExecutionOverview
+      :stage="appStore.t(compressionStageTranslationKey(task))"
+      :status="task?.status" :progress="task?.progress" :speed="task?.speed" :current-file="task?.currentFile"
     >
-      <div class="pending-stat-card">
-        <span class="text-muted">已读取源数据</span>
-        <div class="font-mono font-black text-content mt-0.5">{{ formatFileSize(sourceBytes) }}</div>
-      </div>
-      <div class="pending-stat-card">
-        <span class="text-muted">{{ task?.compressionSourceProgress ? '已写分卷' : '当前压缩包大小' }}</span>
-        <div class="font-mono font-black text-primary mt-0.5">{{ formatFileSize(task?.outputBytes || 0) }}</div>
-      </div>
-      <div class="pending-stat-card">
-        <span class="text-muted">实时压缩比</span>
-        <div class="font-mono font-black text-content mt-0.5">{{ liveRatio === undefined ? '计算中' : `${liveRatio.toFixed(2)}%` }}</div>
-      </div>
-      <div class="pending-stat-card">
-        <span class="text-muted">空间变化</span>
-        <div class="font-mono font-black mt-0.5" :class="savedRatio !== undefined && savedRatio >= 0 ? 'text-green-500' : 'text-amber-500'">
-          <template v-if="pendingSplitResult">{{ task?.status === 'failed' || task?.status === 'cancelled' ? '未生成有效结果' : '完成后统计' }}</template>
-          <template v-else-if="savedRatio === undefined">计算中</template>
-          <template v-else-if="savedRatio >= 0">节省 {{ savedRatio.toFixed(2) }}%</template>
-          <template v-else>增加 {{ Math.abs(savedRatio).toFixed(2) }}%</template>
+      <dl v-if="task?.processedBytes !== undefined || task?.outputBytes !== undefined" class="execution-metrics" data-testid="compression-live-metrics">
+        <div class="execution-metric"><dt>已读取源数据</dt><dd>{{ formatFileSize(sourceBytes) }}</dd></div>
+        <div class="execution-metric"><dt>{{ task?.compressionSourceProgress ? '已写分卷' : '当前压缩包大小' }}</dt><dd class="text-primary">{{ formatFileSize(task?.outputBytes || 0) }}</dd></div>
+        <div class="execution-metric"><dt>实时压缩比</dt><dd>{{ liveRatio === undefined ? '计算中' : `${liveRatio.toFixed(2)}%` }}</dd></div>
+        <div class="execution-metric"><dt>空间变化</dt>
+          <dd :class="savedRatio !== undefined && savedRatio >= 0 ? 'text-green-500' : 'text-amber-500'">
+            <template v-if="pendingSplitResult">{{ task?.status === 'failed' || task?.status === 'cancelled' ? '未生成有效结果' : '完成后统计' }}</template>
+            <template v-else-if="savedRatio === undefined">计算中</template>
+            <template v-else-if="savedRatio >= 0">节省 {{ savedRatio.toFixed(2) }}%</template>
+            <template v-else>增加 {{ Math.abs(savedRatio).toFixed(2) }}%</template>
+          </dd>
         </div>
-      </div>
-    </div>
-    <div
-      v-if="task?.currentFile"
-      class="current-file-path mt-2 min-w-0 rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 break-words [overflow-wrap:anywhere] font-mono text-xs text-content"
-      :title="task.currentFile"
-    >
-      {{ task.currentFile }}
-    </div>
-    <h4 class="detail-heading mt-5">
+      </dl>
+    </TaskExecutionOverview>
+    <h4 class="detail-heading execution-log-heading">
       <i class="pi pi-align-left text-xs"></i>
       {{ appStore.t('decompress.config.logs_title') }}
     </h4>
@@ -137,19 +105,34 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
 }
 
 .compression-execution-panel {
+  container: compression-execution / inline-size;
   height: 100%;
   min-height: 0;
   max-height: none;
-  overflow-y: hidden;
-  padding: 1.25rem;
+  overflow-y: auto;
+  padding: 1rem;
+  scrollbar-gutter: stable;
+  overscroll-behavior: auto;
 }
 
-.pending-stat-card {
-  padding: 0.625rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
-  border-radius: 0.625rem;
-  background: color-mix(in srgb, var(--bg-input) 55%, transparent);
-  font-size: 0.75rem;
+.compression-execution-panel > * {
+  flex-shrink: 0;
+}
+
+.compression-execution-panel :deep([data-testid="result-actions"] > p:not([role="alert"])) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.execution-log-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: .875rem 0 .625rem;
+  padding: .375rem 0;
+  background: var(--bg-card);
 }
 
 .pending-log {
@@ -158,12 +141,13 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
-  flex: 1;
-  min-height: 0;
+  /* Keep logs usable when result cards and live metrics exceed the pane height. */
+  flex: 1 0 12rem;
+  min-height: 12rem;
   max-height: none;
   padding: 0.75rem;
-  border-left: 2px solid color-mix(in srgb, var(--dynamic-accent) 28%, transparent);
-  border-radius: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+  border-radius: .875rem;
   background: color-mix(in srgb, var(--bg-input) 35%, transparent);
   font-size: 0.75rem;
   overscroll-behavior: contain;
@@ -179,13 +163,15 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
 .pending-log-row > :last-child {
   white-space: pre-wrap;
   word-break: break-word;
+  font-size: .8125rem;
+  line-height: 1.65;
 }
 
-.current-file-path {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+@container compression-execution (max-width: 20rem) {
+  .pending-log-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
 }
 
 @media (max-width: 520px) {

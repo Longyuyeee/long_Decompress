@@ -1,0 +1,528 @@
+{
+  "testKind": "real-windows-webview2-task-execution-scroll",
+  "fixtureTasks": true,
+  "binarySha256": "1b38d2d21b2e3915d5b2b5c61c11de2913ec3290b25e0509d2780d7724465529",
+  "results": [
+    {
+      "type": "compression",
+      "state": "completed",
+      "width": 1280,
+      "height": 800,
+      "scale": "100%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 64,
+        "overflowY": "auto",
+        "scrollTop": 64,
+        "visualProgress": 100
+      },
+      "log": {
+        "height": 190,
+        "lastLogText": "16:33:42已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 584,
+        "scrollTop": 394
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-completed-1280-100%.png"
+    },
+    {
+      "type": "compression",
+      "state": "completed",
+      "width": 920,
+      "height": 620,
+      "scale": "100%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 281,
+        "overflowY": "auto",
+        "scrollTop": 281,
+        "visualProgress": 100
+      },
+      "log": {
+        "height": 190,
+        "lastLogText": "16:33:42已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 1008,
+        "scrollTop": 818
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-completed-920-100%.png"
+    },
+    {
+      "type": "compression",
+      "state": "completed",
+      "width": 920,
+      "height": 620,
+      "scale": "125%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": null,
+        "horizontalOverflow": 0,
+        "overflow": 196,
+        "overflowY": "auto",
+        "scrollTop": 196.5,
+        "visualProgress": 100
+      },
+      "log": {
+        "height": 238,
+        "lastLogText": "16:33:42已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 811,
+        "scrollTop": 572.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-completed-920-125%.png"
+    },
+    {
+      "type": "compression",
+      "state": "completed",
+      "width": 760,
+      "height": 520,
+      "scale": "100%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 310,
+        "overflowY": "auto",
+        "scrollTop": 310.5,
+        "visualProgress": 100
+      },
+      "log": {
+        "height": 190,
+        "lastLogText": "16:33:42已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 1008,
+        "scrollTop": 818.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-completed-760-100%.png"
+    },
+    {
+      "type": "compression",
+      "state": "completed",
+      "width": 760,
+      "height": 520,
+      "scale": "125%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": null,
+        "horizontalOverflow": 0,
+        "overflow": 196,
+        "overflowY": "auto",
+        "scrollTop": 196.5,
+        "visualProgress": 100
+      },
+      "log": {
+        "height": 238,
+        "lastLogText": "16:33:42已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 730,
+        "scrollTop": 492
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-completed-760-125%.png"
+    },
+    {
+      "type": "compression",
+      "state": "running",
+      "width": 1280,
+      "height": 800,
+      "scale": "100%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 0,
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "visualProgress": 46
+      },
+      "log": {
+        "height": 262,
+        "lastLogText": "16:34:05已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 584,
+        "scrollTop": 322.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-running-1280-100%.png"
+    },
+    {
+      "type": "compression",
+      "state": "running",
+      "width": 920,
+      "height": 620,
+      "scale": "100%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 145,
+        "overflowY": "auto",
+        "scrollTop": 145.5,
+        "visualProgress": 46
+      },
+      "log": {
+        "height": 190,
+        "lastLogText": "16:34:05已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 1073,
+        "scrollTop": 882.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-running-920-100%.png"
+    },
+    {
+      "type": "compression",
+      "state": "running",
+      "width": 920,
+      "height": 620,
+      "scale": "125%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": null,
+        "horizontalOverflow": 0,
+        "overflow": 28,
+        "overflowY": "auto",
+        "scrollTop": 28,
+        "visualProgress": 46
+      },
+      "log": {
+        "height": 238,
+        "lastLogText": "16:34:05已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 811,
+        "scrollTop": 572.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-running-920-125%.png"
+    },
+    {
+      "type": "compression",
+      "state": "running",
+      "width": 760,
+      "height": 520,
+      "scale": "100%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 175,
+        "overflowY": "auto",
+        "scrollTop": 175,
+        "visualProgress": 46
+      },
+      "log": {
+        "height": 190,
+        "lastLogText": "16:34:05已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 1073,
+        "scrollTop": 882.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-running-760-100%.png"
+    },
+    {
+      "type": "compression",
+      "state": "running",
+      "width": 760,
+      "height": 520,
+      "scale": "125%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": null,
+        "horizontalOverflow": 0,
+        "overflow": 28,
+        "overflowY": "auto",
+        "scrollTop": 28,
+        "visualProgress": 46
+      },
+      "log": {
+        "height": 238,
+        "lastLogText": "16:34:05已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 730,
+        "scrollTop": 492
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-compression-running-760-125%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "completed",
+      "width": 1280,
+      "height": 800,
+      "scale": "100%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 0,
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "visualProgress": 100
+      },
+      "log": {
+        "height": 300,
+        "lastLogText": "16:34:25已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 584,
+        "scrollTop": 284.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-completed-1280-100%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "completed",
+      "width": 920,
+      "height": 620,
+      "scale": "100%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 70,
+        "overflowY": "auto",
+        "scrollTop": 70.5,
+        "visualProgress": 100
+      },
+      "log": {
+        "height": 190,
+        "lastLogText": "16:34:25已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 1044,
+        "scrollTop": 854
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-completed-920-100%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "completed",
+      "width": 920,
+      "height": 620,
+      "scale": "125%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": null,
+        "horizontalOverflow": 0,
+        "overflow": 0,
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "visualProgress": 100
+      },
+      "log": {
+        "height": 255,
+        "lastLogText": "16:34:25已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 730,
+        "scrollTop": 475
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-completed-920-125%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "completed",
+      "width": 760,
+      "height": 520,
+      "scale": "100%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 82,
+        "overflowY": "auto",
+        "scrollTop": 82.5,
+        "visualProgress": 100
+      },
+      "log": {
+        "height": 190,
+        "lastLogText": "16:34:25已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 1044,
+        "scrollTop": 854
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-completed-760-100%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "completed",
+      "width": 760,
+      "height": 520,
+      "scale": "125%",
+      "taskRow": null,
+      "pane": {
+        "columnWidthDifference": null,
+        "horizontalOverflow": 0,
+        "overflow": 0,
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "visualProgress": 100
+      },
+      "log": {
+        "height": 255,
+        "lastLogText": "16:34:25已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 730,
+        "scrollTop": 475
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-completed-760-125%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "running",
+      "width": 1280,
+      "height": 800,
+      "scale": "100%",
+      "taskRow": {
+        "rowOverflow": -9,
+        "stageOverflow": -318.640625,
+        "textOverlap": 0
+      },
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 0,
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "visualProgress": 46
+      },
+      "log": {
+        "height": 300,
+        "lastLogText": "16:34:46已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 584,
+        "scrollTop": 284.5
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-running-1280-100%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "running",
+      "width": 920,
+      "height": 620,
+      "scale": "100%",
+      "taskRow": {
+        "rowOverflow": -9,
+        "stageOverflow": -187.4453125,
+        "textOverlap": 0
+      },
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 70,
+        "overflowY": "auto",
+        "scrollTop": 70.5,
+        "visualProgress": 46
+      },
+      "log": {
+        "height": 190,
+        "lastLogText": "16:34:46已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 1044,
+        "scrollTop": 854
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-running-920-100%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "running",
+      "width": 920,
+      "height": 620,
+      "scale": "125%",
+      "taskRow": {
+        "rowOverflow": -11,
+        "stageOverflow": -111.796875,
+        "textOverlap": 0
+      },
+      "pane": {
+        "columnWidthDifference": null,
+        "horizontalOverflow": 0,
+        "overflow": 0,
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "visualProgress": 46
+      },
+      "log": {
+        "height": 255,
+        "lastLogText": "16:34:46已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 730,
+        "scrollTop": 475
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-running-920-125%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "running",
+      "width": 760,
+      "height": 520,
+      "scale": "100%",
+      "taskRow": {
+        "rowOverflow": -9,
+        "stageOverflow": -187.4453125,
+        "textOverlap": 0
+      },
+      "pane": {
+        "columnWidthDifference": 0,
+        "horizontalOverflow": 0,
+        "overflow": 82,
+        "overflowY": "auto",
+        "scrollTop": 82.5,
+        "visualProgress": 46
+      },
+      "log": {
+        "height": 190,
+        "lastLogText": "16:34:46已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 1044,
+        "scrollTop": 854
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-running-760-100%.png"
+    },
+    {
+      "type": "decompression",
+      "state": "running",
+      "width": 760,
+      "height": 520,
+      "scale": "125%",
+      "taskRow": {
+        "rowOverflow": -11,
+        "stageOverflow": -133.796875,
+        "textOverlap": 0
+      },
+      "pane": {
+        "columnWidthDifference": null,
+        "horizontalOverflow": 0,
+        "overflow": 0,
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "visualProgress": 46
+      },
+      "log": {
+        "height": 255,
+        "lastLogText": "16:34:46已处理：项目说明.md",
+        "lastLogVisible": true,
+        "scrollHeight": 730,
+        "scrollTop": 475
+      },
+      "scrollBackToTop": true,
+      "screenshot": "task-scroll-decompression-running-760-125%.png"
+    }
+  ],
+  "passed": true
+}

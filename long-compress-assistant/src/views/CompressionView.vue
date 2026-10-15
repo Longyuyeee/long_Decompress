@@ -692,8 +692,8 @@ const drawerTransition = useDrawerTransition()
 
 <template>
   <div class="compression-view p-3 sm:p-4 h-full flex flex-col gap-2.5 transition-colors duration-700 overflow-hidden relative" data-testid="compression-center">
-    <header data-testid="compression-header" class="compact-workspace-header flex justify-between items-center gap-3 shrink-0">
-      <div class="min-w-0">
+    <header data-testid="compression-header" class="compact-workspace-header flex flex-wrap justify-between items-center gap-3 shrink-0">
+      <div class="min-w-0 shrink-0">
         <h1 class="text-xl md:text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.compress') }}</h1>
         <p class="text-xs text-muted font-semibold mt-0.5">{{ appStore.t('compress.subtitle') }}</p>
       </div>
@@ -1313,8 +1313,8 @@ const drawerTransition = useDrawerTransition()
 
 .compression-detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
-  height: clamp(17rem, calc(100vh - 20rem), 32rem);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  height: clamp(20rem, calc(100vh - 18rem), 40rem);
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -1334,7 +1334,7 @@ const drawerTransition = useDrawerTransition()
   max-height: none;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: .75rem;
+  padding: 1rem;
   border-right: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
@@ -1348,7 +1348,7 @@ const drawerTransition = useDrawerTransition()
   min-height: 0;
   max-height: none;
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .compression-config-panel.is-submitted :deep(input),
@@ -1364,17 +1364,20 @@ const drawerTransition = useDrawerTransition()
 
 .compression-config-panel :deep(.settings-core-grid) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
+  gap: 1rem;
   align-items: stretch;
 }
 
 .compression-config-panel :deep(.settings-core-grid > div) {
   min-width: 0;
-  padding: 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
-  border-radius: 0.85rem;
-  background: color-mix(in srgb, var(--bg-input) 52%, transparent);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
+
+.compression-config-panel :deep(.archive-name-card),
+.compression-config-panel :deep(.archive-password-card) { grid-column: 1 / -1; }
 
 .compression-config-panel :deep(.settings-core-grid label),
 .compression-config-panel :deep(.settings-core-grid button) {
@@ -1386,7 +1389,7 @@ const drawerTransition = useDrawerTransition()
 
 .compression-config-panel :deep(.horizontal-settings > .flex.flex-wrap) {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr));
   gap: 0.55rem;
 }
 
@@ -1522,13 +1525,14 @@ const drawerTransition = useDrawerTransition()
 
 /* Respond to the available drawer width, including sidebar and UI scaling. */
 @container compression-settings (max-width: 24rem) {
-  .compression-config-panel :deep(.archive-name-card),
-  .compression-config-panel :deep(.archive-password-card) { grid-column: 1 / -1; }
+  .compression-config-panel :deep(.settings-core-grid) { grid-template-columns: minmax(0, 1fr); }
+  .compression-config-panel :deep(.analysis-header) { flex-direction: column; align-items: stretch; gap: .75rem; }
+  .compression-config-panel :deep(.analysis-button) { width: 100%; }
 }
 @container (max-width: 32rem) {
   .compression-detail-grid { grid-template-columns: minmax(0, 1fr); height: auto; }
   .compression-config-panel { height: auto; overflow: visible; border-right: 0; border-bottom: 1px solid var(--border-subtle); }
-  .compression-detail-grid :deep(.compression-execution-panel) { height: 18rem; }
+  .compression-detail-grid :deep(.compression-execution-panel) { height: 26rem; }
 }
 @container (max-width: 28.75rem) {
   .compression-config-panel :deep(.settings-core-grid) { grid-template-columns: minmax(0, 1fr); }

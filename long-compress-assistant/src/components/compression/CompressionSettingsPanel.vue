@@ -994,6 +994,10 @@ const closeVaultPasswordsAfterFocus = () => {
   .settings-core-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+@container compression-settings (max-width: 24rem) {
+  .horizontal-settings.compact .settings-core-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media (max-width: 680px) {
   .settings-core-grid { grid-template-columns: minmax(0, 1fr); }
   .split-settings-card { align-items: stretch; flex-direction: column; }

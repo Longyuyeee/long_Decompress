@@ -77,9 +77,9 @@ const applyRecommendation = () => {
 
 <template>
   <section data-testid="compression-analysis" class="analysis-card" :class="{ 'is-compact': compact }">
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="analysis-header flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
-        <div class="flex items-center gap-2 text-sm font-black text-content"><i class="pi pi-sparkles text-primary"></i>智能压缩分析<HelpHint label="智能压缩分析说明">仅读取最多 2 MiB 内容样本；结果不会自动修改设置。</HelpHint></div>
+        <div class="analysis-title flex items-center gap-2 text-sm font-black text-content"><i class="pi pi-sparkles text-primary"></i>智能压缩分析<HelpHint label="智能压缩分析说明">仅读取最多 2 MiB 内容样本；结果不会自动修改设置。</HelpHint></div>
       </div>
       <button v-if="state?.status === 'running'" type="button" class="analysis-button is-cancel" @click="cancel"><i class="pi pi-stop-circle"></i>取消分析</button>
       <button v-else type="button" class="analysis-button" :disabled="disabled" @click="analyze"><i class="pi pi-chart-line"></i>{{ result ? '重新分析' : '分析预计体积' }}</button>
@@ -119,6 +119,7 @@ const applyRecommendation = () => {
 .analysis-card { min-width: 0; border: 1px solid color-mix(in srgb, var(--dynamic-accent) 24%, var(--border-subtle)); border-radius: 1rem; padding: .9rem; background: linear-gradient(145deg, color-mix(in srgb, var(--dynamic-accent) 7%, var(--bg-card)), color-mix(in srgb, var(--bg-input) 55%, transparent)); overflow: hidden; }
 .analysis-card.is-compact { padding: .65rem; border-radius: .75rem; }
 .analysis-card.is-compact > .flex { flex-wrap: nowrap; gap: .5rem; }
+.analysis-title { white-space: nowrap; }
 .analysis-card.is-compact .analysis-description { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .analysis-card.is-compact .analysis-button { min-height: 2rem; padding-inline: .6rem; white-space: nowrap; }
 .analysis-button, .analysis-apply { min-height: 2.25rem; padding: 0 .8rem; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border-radius: .7rem; background: var(--dynamic-accent); color: white; font-size: .7rem; font-weight: 900; }

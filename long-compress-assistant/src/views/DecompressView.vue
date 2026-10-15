@@ -620,6 +620,7 @@ onMounted(openNextConflict)
         </button>
         <button
           v-if="hasPendingTasks && !isRunning && !batchStore.showingFailures"
+          data-testid="start-decompression-queue"
           @click="startDecompression()"
           class="h-9 px-6 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-primary/25 flex items-center gap-2"
         >
@@ -648,6 +649,7 @@ onMounted(openNextConflict)
           @select-all-pending="selectAllPending"
           @deselect-all="deselectAll"
           @retry-with-password="retryWithPassword"
+          @retry-created="selectRetryDrafts"
           @cancel-task="taskStore.cancelTask"
           @pause-task="taskStore.pauseTask"
           @resume-task="taskStore.resumeTask"

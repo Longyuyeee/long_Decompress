@@ -29,10 +29,12 @@ import { runStandardZipCreateDesktopGate } from './standard-zip-create-desktop-g
 import { runArchivePasswordCompatibilityGate } from './archive-password-compatibility-gate.mjs'
 import { runZipRecoveryDesktopGate } from './zip-recovery-desktop-gate.mjs'
 import { runPasswordRescueFormatsGate } from './password-rescue-formats-gate.mjs'
+import { runFailureZipRecoveryGate } from './failure-zip-recovery-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
 import { runSevenZipVolumeUiGate } from './seven-zip-volume-ui-gate.mjs'
+import { runTaskExecutionScrollGate } from './task-execution-scroll-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -4771,6 +4773,10 @@ try {
     }
     completedSuccessfully = true
     console.log('Real Windows Tauri explicit auto-start gate passed.')
+  } else if (process.argv.includes('--task-execution-scroll-only')) {
+    await runTaskExecutionScrollGate({ driver, callDesktopBridge, waitForElement, artifactDirectory, application })
+    completedSuccessfully = true
+    console.log('Real Windows Tauri compression and decompression execution scrolling passed.')
   } else if (responsiveLayoutOnly) {
     await runResponsiveTaskDetailDesktopGate()
     completedSuccessfully = true
@@ -4864,6 +4870,10 @@ try {
     }
     await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
     completedSuccessfully = true
+  } else if (process.argv.includes('--failure-zip-recovery-only')) {
+    await runFailureZipRecoveryGate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application })
+    completedSuccessfully = true
+    console.log('Failure correction and lost-directory password ZIP rescue passed.')
   } else if (process.argv.includes('--password-rescue-formats-only')) {
     await runPasswordRescueFormatsGate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application })
     completedSuccessfully = true

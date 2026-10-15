@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { open } from '@tauri-apps/api/dialog'
 import { invoke } from '@tauri-apps/api/tauri'
-import Modal from '@/components/ui/Modal.vue'
+import ExtractionRecoveryPanel from './ExtractionRecoveryPanel.vue'
 import ExtractionOutputPreview from './ExtractionOutputPreview.vue'
 import { useTaskStore } from '@/stores/task'
 import { extractionRetryPolicy, validateExtractionRetry } from '@/utils/extractionRetry'
 import { extractErrorMessage, generateId } from '@/utils'
+import { useAppStore } from '@/stores/app'
+import { parentDirectory } from '@/utils/resultLocation'
 
-const props = defineProps<{ taskIds: string[]; suppliedPassword?: string }>()
+const props = defineProps<{ taskIds: string[]; suppliedPassword?: string; inline?: boolean }>()
 const emit = defineEmits<{ close: []; created: [ids: string[]] }>()
 const store = useTaskStore()
+const appStore = useAppStore()
 const rows = ref(props.taskIds.flatMap(id => {
   const task = store.tasks.find(item => item.id === id)
   if (!task) return []
@@ -26,7 +29,7 @@ const rows = ref(props.taskIds.flatMap(id => {
     // The single-row password action can explicitly hand off the user's input.
     password: props.taskIds.length === 1 ? props.suppliedPassword || '' : '',
     extractToSubfolder: task.extractToSubfolder ?? true,
-    createdId: task.retryDraftId || '', error: '', checking: false }]
+    createdId: task.retryDraftId || '', error: '', checking: false, missing: [] as string[] }]
 }))
 const busy = ref(false)
 const stopped = ref(false)
@@ -43,13 +46,35 @@ const cancelChecks = () => {
 }
 onUnmounted(() => { disposed = true; cancelChecks(); rows.value.forEach(row => { row.password = '' }) })
 
+onMounted(async () => {
+  for (const row of rows.value) {
+    if (!['missing-volume', 'incomplete'].includes(row.policy.category || '')) continue
+    const source = row.source
+    try {
+      const split = await invoke<{ missing_parts?: string[] } | null>('detect_split_archive', { path: source })
+      if (!disposed && row.source === source) row.missing = split?.missing_parts?.map(path => path.split(/[\\/]/).pop() || path) || []
+    } catch { /* The user can reselect a moved or unreadable source below. */ }
+  }
+})
+
+async function openSourceFolder(row: typeof rows.value[number]) {
+  try { await invoke('open_folder_in_explorer', { path: parentDirectory(row.source) }) }
+  catch (error) { row.error = extractErrorMessage(error) }
+}
+function rescueSource(row: typeof rows.value[number]) {
+  if (busy.value || pickerBusy.value || !row.source.trim()) return
+  appStore.openArchiveForDiagnosis({ path: row.source.trim(), taskId: row.id, password: row.password, outputPath: row.output.trim(), extractToSubfolder: row.extractToSubfolder })
+  row.password = ''
+  close()
+}
+
 async function choosePath(directory: boolean, row?: typeof rows.value[number]) {
   pickerBusy.value = true
   pickerError.value = ''
   try {
     const selected = await open({ directory, multiple: false, title: directory ? '选择本次输出目录' : '选择归档或首个分卷' })
     if (disposed || typeof selected !== 'string') return
-    if (row) { if (directory) row.output = selected; else row.source = selected }
+    if (row) { if (directory) row.output = selected; else { row.source = selected; row.missing = [] } }
     else sharedOutput.value = selected
   } catch (error) { pickerError.value = extractErrorMessage(error) }
   finally { pickerBusy.value = false }
@@ -79,6 +104,7 @@ async function createDrafts() {
           ? await store.retryHistoryPersistence(parent.id) : await store.waitForHistoryPersistence(parent.id)
         if (!saved) throw new Error('原失败记录尚未保存成功，请先重试保存历史；本项未创建。')
         if (disposed || stopped.value) break
+        row.missing = []
         activeDiagnosticId = generateId()
         const result = await validateExtractionRetry(row, policy.requireIntegrity, activeDiagnosticId, () => disposed || stopped.value)
         if (disposed || stopped.value) break
@@ -101,7 +127,10 @@ async function createDrafts() {
         if (!disposed) row.error = extractErrorMessage(error) || '无法创建，请核对来源和目录。'
       } finally { row.checking = false; activeDiagnosticId = null }
     }
-  } finally { busy.value = false }
+  } finally {
+    busy.value = false
+    if (props.inline && newIds.value.length) emit('created', [...newIds.value])
+  }
 }
 function close() {
   if (busy.value || pickerBusy.value) return
@@ -111,18 +140,17 @@ function close() {
 </script>
 
 <template>
-  <Modal :visible="true" title="处理本批失败项" size="lg" :show-close-button="!busy && !pickerBusy"
-    :close-on-backdrop="false" :close-on-escape="!busy && !pickerBusy" @close="close">
-    <div data-testid="failed-extraction-retry" class="failed-extraction-retry-workspace space-y-3 min-w-0">
-      <p class="text-sm text-muted">选择要重试的文件，修改后添加到队列。返回队列时由你开始解压，原失败记录保留。</p>
+  <ExtractionRecoveryPanel :inline="inline" :busy="busy || pickerBusy" @close="close">
+    <div data-testid="failed-extraction-retry" :data-inline="!!inline" class="failed-extraction-retry-workspace space-y-3 min-w-0" :class="{ 'is-inline': inline }">
+      <p class="text-xs leading-relaxed text-muted">{{ inline ? '修改需要调整的设置，检查后加入待处理队列；原配置和失败记录保留。' : '选择要重试的文件，修改后添加到队列。返回队列时由你开始解压，原失败记录保留。' }}</p>
       <fieldset v-if="rows.length > 1" :disabled="busy || pickerBusy" class="flex flex-wrap items-center gap-2 text-sm">
         <button class="retry-button" @click="choosePath(true)">选择共用输出目录</button>
         <span class="min-w-0 break-all flex-1">{{ sharedOutput || '仅应用到勾选的未创建项' }}</span>
         <button class="retry-button" :disabled="!sharedOutput || !selectedCount" @click="applyOutput">应用到勾选项</button>
       </fieldset>
       <p v-if="pickerError" role="alert" class="text-red-500 text-sm break-words">{{ pickerError }}</p>
-      <article v-for="row in rows" :key="row.id" :data-retry-source-id="row.id" class="border border-subtle rounded-xl p-3 min-w-0 space-y-2">
-        <label class="flex items-start gap-2 font-bold text-sm break-all">
+      <article v-for="row in rows" :key="row.id" :data-retry-source-id="row.id" class="retry-item border border-subtle rounded-xl p-3 min-w-0 space-y-2">
+        <label v-if="!inline" class="flex items-start gap-2 font-bold text-sm break-all">
           <input v-model="row.selected" type="checkbox" :disabled="busy || pickerBusy || !!row.policy.blocked || !!row.createdId" class="mt-1" />
           {{ row.name }}
         </label>
@@ -133,9 +161,15 @@ function close() {
         </details>
         <p v-if="row.policy.blocked" class="text-sm text-amber-500">{{ row.policy.blocked }}</p>
         <template v-else-if="!row.createdId">
+          <div v-if="['missing-volume', 'incomplete'].includes(row.policy.category || '')" class="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 space-y-2">
+            <p class="text-xs text-muted">把缺失分卷补到原目录，保持文件名，再点击下方检查。</p>
+            <p v-if="row.missing.length" data-testid="retry-missing-volumes" class="text-xs font-mono text-amber-500 break-words">缺少：{{ row.missing.join('、') }}</p>
+            <button class="retry-button" :disabled="busy || pickerBusy" @click="openSourceFolder(row)"><i class="pi pi-folder-open mr-1"></i>打开分卷目录</button>
+          </div>
+          <button v-if="['damaged', 'ambiguous-data', 'unknown'].includes(row.policy.category || '')" data-testid="retry-rescue" class="retry-button text-primary" :disabled="busy || pickerBusy" @click="rescueSource(row)"><i class="pi pi-wrench mr-1"></i>检查并尝试救援</button>
           <p v-if="row.policy.requireIntegrity" class="text-xs text-muted">请重新选择下载完整的文件。添加前会检查完整性，大文件可能需要一些时间。</p>
           <p v-else-if="row.nextStep" class="text-xs text-muted">{{ row.nextStep }}</p>
-          <fieldset :disabled="busy || pickerBusy || !row.selected" class="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+          <fieldset :disabled="busy || pickerBusy || !row.selected" class="retry-fields grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
             <div class="min-w-0 space-y-2">
               <label class="block text-xs">来源文件
                 <input v-model="row.source" data-testid="retry-source" class="retry-input" />
@@ -169,12 +203,12 @@ function close() {
         <span v-if="newIds.length" role="status" class="mr-auto">本次已创建 {{ newIds.length }} 项</span>
         <button v-if="busy" class="retry-button" :disabled="stopped" @click="cancelChecks">{{ stopped ? '正在停止…' : '停止检查' }}</button>
         <template v-else>
-          <button class="retry-button" :disabled="pickerBusy" @click="close">{{ newIds.length ? '返回队列确认并启动' : '关闭' }}</button>
-          <button data-testid="create-retry-drafts" class="retry-button text-primary" :disabled="!selectedCount || pickerBusy" @click="createDrafts">确认并创建 {{ selectedCount }} 项待执行任务</button>
+          <button v-if="!inline" class="retry-button" :disabled="pickerBusy" @click="close">{{ newIds.length ? '返回队列确认并启动' : '关闭' }}</button>
+          <button data-testid="create-retry-drafts" class="retry-button text-primary" :disabled="!selectedCount || pickerBusy" @click="createDrafts">{{ inline ? '检查并加入待处理队列' : `确认并创建 ${selectedCount} 项待执行任务` }}</button>
         </template>
       </div>
     </template>
-  </Modal>
+  </ExtractionRecoveryPanel>
 </template>
 
 <style scoped>
@@ -182,7 +216,10 @@ function close() {
 .retry-button { padding:.45rem .65rem; border:1px solid var(--border-subtle); border-radius:.5rem; background:var(--bg-input); font-size:.75rem; }
 .retry-button:disabled, fieldset:disabled { opacity:.6; }
 .retry-button:not(:disabled):hover { border-color:var(--dynamic-accent); }
+.is-inline .retry-item { border:0; padding:0; }
+.is-inline .retry-fields { grid-template-columns:minmax(0,1fr); }
+.is-inline .retry-fields > * { grid-column:1; }
 /* Keep background task notices behind this focused correction window.
    Errors from the correction itself are displayed beside the affected file. */
-:global(body:has(.failed-extraction-retry-workspace) .toast-stack) { z-index:250; }
+:global(body:has(.failed-extraction-retry-workspace[data-inline="false"]) .toast-stack) { z-index:250; }
 </style>

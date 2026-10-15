@@ -1,0 +1,54 @@
+{
+  "testKind": "real-windows-webview2-failure-and-lost-directory-password-zip",
+  "binarySha256": "60fdaa59e772e4616be18960d23fe1ab4fac35d967ee004fb0c06674d0a018c9",
+  "records": [
+    {
+      "mode": "AES256",
+      "route": "single",
+      "originalSha256": "2b82360afbe0148b632c245086d0d7257b2e60cd41aa5495765f3f7db365ced6",
+      "outputSha256": "0827ff56892c3c36765c7bf6cbed8beb44a91efc7505e0807dc1bb65d8002685",
+      "recoveredFiles": 1,
+      "outputEncrypted": true,
+      "partial": true,
+      "originalPreserved": true,
+      "independentExtraction": true
+    },
+    {
+      "mode": "AES256",
+      "route": "numeric",
+      "originalSha256": "2b82360afbe0148b632c245086d0d7257b2e60cd41aa5495765f3f7db365ced6",
+      "outputSha256": "bcb287e6e9311869b2e5b065a12e7688d6525b21bbb10e077ab6486d4f9be90a",
+      "recoveredFiles": 1,
+      "outputEncrypted": true,
+      "partial": true,
+      "originalPreserved": true,
+      "independentExtraction": true
+    },
+    {
+      "mode": "ZipCrypto",
+      "route": "single",
+      "originalSha256": "e9170f99f2f01b237d01bf348f5fb9ad0437a38d79f47259d0ce38a7ad31e71f",
+      "outputSha256": "9a34aa43db07fc6db83aa3c50ca4f3890d786e13a9fe72638070900018fa74dd",
+      "recoveredFiles": 1,
+      "outputEncrypted": true,
+      "partial": true,
+      "originalPreserved": true,
+      "independentExtraction": true
+    },
+    {
+      "mode": "ZipCrypto",
+      "route": "numeric",
+      "originalSha256": "e9170f99f2f01b237d01bf348f5fb9ad0437a38d79f47259d0ce38a7ad31e71f",
+      "outputSha256": "8a24c4a19f0cbe26bda9f55dfcbf87aa3de5b0ed8d0e0b401c63b2c3c89877a7",
+      "recoveredFiles": 1,
+      "outputEncrypted": true,
+      "partial": true,
+      "originalPreserved": true,
+      "independentExtraction": true
+    }
+  ],
+  "realFailedTaskToRescueToExtraction": true,
+  "editedOutputPreserved": true,
+  "realMissingVolumeToCorrectionToExtraction": true,
+  "passed": true
+}

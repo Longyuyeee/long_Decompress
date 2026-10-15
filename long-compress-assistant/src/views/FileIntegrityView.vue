@@ -1,13 +1,21 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
 import { useTauriCommands, type ArchiveDiagnosticReport, type ZipRepairResult } from '@/composables/useTauriCommands'
 import { open, save } from '@tauri-apps/api/dialog'
+import { useTaskStore } from '@/stores/task'
+import { generateId } from '@/utils'
+import { parentDirectory } from '@/utils/resultLocation'
 
 const appStore = useAppStore()
 const uiStore = useUIStore()
 const tauriCommands = useTauriCommands()
+const taskStore = useTaskStore()
+const recoveryTaskId = ref('')
+const recoveredDraftId = ref('')
+const recoveredPassword = ref('')
+const recoveryOptions = ref<{ outputPath?: string; extractToSubfolder?: boolean }>({})
 
 interface ChecksumResult {
   path: string
@@ -192,6 +200,10 @@ const clearResults = () => {
   archivePassword.value = ''
   diagnosticReport.value = null
   repairResult.value = null
+  recoveryTaskId.value = ''
+  recoveryOptions.value = {}
+  recoveredDraftId.value = ''
+  recoveredPassword.value = ''
 }
 
 const selectArchive = async () => {
@@ -202,6 +214,10 @@ const selectArchive = async () => {
     archivePath.value = file
     diagnosticReport.value = null
     repairResult.value = null
+    recoveryTaskId.value = ''
+    recoveryOptions.value = {}
+    recoveredDraftId.value = ''
+    recoveredPassword.value = ''
   }
 }
 
@@ -247,6 +263,8 @@ const repairArchive = async () => {
   try {
     repairResult.value = null
     repairResult.value = await tauriCommands.repairZip(repairId.value, archivePath.value, outputPath, archivePassword.value)
+    recoveredPassword.value = repairResult.value.outputEncrypted ? archivePassword.value : ''
+    recoveredDraftId.value = ''
     if (repairResult.value.partial || repairResult.value.skippedEntries.length) {
       uiStore.showToast('warning', '部分恢复：已恢复可读条目，请核对内容是否齐全', 6000)
     } else { appStore.setSuccess('ZIP 已重建到新文件并通过完整性校验') }
@@ -273,6 +291,7 @@ const locateRepair = async () => {
 
 const statusLabel = (status: string) => ({
   healthy: '完整性正常', password_required: '需要密码', wrong_password: '密码错误',
+  directory_lost: '目录信息丢失，可尝试救援',
   missing_volume: '缺少分卷', crc_error: '内容校验失败', truncated: '归档被截断',
   damaged: '归档损坏', checking: '检查中',
   ambiguous_data: '密码或加密内容异常', unsupported_feature: '暂不支持此归档特性',
@@ -318,6 +337,46 @@ const copyDiagnosticReport = async () => {
     appStore.setError('复制诊断报告失败')
   }
 }
+
+watch(() => appStore.pendingArchiveDiagnosis, request => {
+  if (!request || isDiagnosing.value || isRepairing.value) return
+  appStore.pendingArchiveDiagnosis = null
+  clearResults()
+  activeMode.value = 'archive'
+  archivePath.value = request.path
+  archivePassword.value = request.password || ''
+  recoveryTaskId.value = request.taskId || ''
+  recoveryOptions.value = { outputPath: request.outputPath, extractToSubfolder: request.extractToSubfolder }
+  void diagnoseArchive()
+}, { immediate: true })
+
+const queueRecoveredArchive = async () => {
+  const result = repairResult.value
+  if (!result || recoveredDraftId.value) return
+  const original = taskStore.tasks.find(task => task.id === recoveryTaskId.value)
+  if (original && !await (original.historySaveError ? taskStore.retryHistoryPersistence(original.id) : taskStore.waitForHistoryPersistence(original.id))) {
+    appStore.setError('原失败记录尚未保存，请先重试保存历史后再添加。')
+    return
+  }
+  if (recoveredDraftId.value || result !== repairResult.value) return
+  const id = generateId()
+  taskStore.addTask({ id, name: result.outputPath.split(/[\\/]/).pop() || result.outputPath,
+    type: 'decompression', workloadKind: 'archive', sourceFiles: [result.outputPath],
+    outputPath: recoveryOptions.value.outputPath || original?.outputPath || parentDirectory(result.outputPath),
+    extractToSubfolder: recoveryOptions.value.extractToSubfolder ?? original?.extractToSubfolder ?? true, configurationMode: 'individual',
+    recycleSourceAfterExtract: false, password: recoveredPassword.value || undefined,
+    retryOfTaskId: original?.id })
+  recoveredDraftId.value = id
+  if (original) original.retryDraftId = id
+  appStore.setSuccess('已加入解压队列，原输出设置已保留；请核对后开始解压。')
+}
+
+onUnmounted(() => {
+  void cancelDiagnosis()
+  void cancelRepair()
+  archivePassword.value = ''
+  recoveredPassword.value = ''
+})
 </script>
 
 <template>
@@ -483,6 +542,7 @@ const copyDiagnosticReport = async () => {
         </div>
 
         <div v-else class="integrity-single-column min-w-0 overflow-x-hidden" data-testid="archive-diagnostic-panel">
+          <div v-if="recoveryTaskId" class="repair-password-note" data-testid="recovery-task-context"><i class="pi pi-wrench"></i><span>正在处理失败的解压任务。救回新包后可直接加入解压队列，原输出设置会保留。</span></div>
           <section class="integrity-panel min-w-0 overflow-hidden">
             <div class="archive-inputs">
               <button type="button" class="archive-select" :disabled="isDiagnosing || isRepairing" @click="selectArchive">
@@ -525,7 +585,7 @@ const copyDiagnosticReport = async () => {
 
             <div class="diagnostic-metrics mt-6">
               <div><span>归档大小</span><strong>{{ formatBytes(diagnosticReport.fileSize) }}</strong></div>
-              <div><span>文件 / 目录</span><strong>{{ diagnosticReport.totalFiles }} / {{ diagnosticReport.totalDirectories }}</strong></div>
+              <div><span>{{ diagnosticReport.recoverability === 'local_entries' ? '已找到文件 / 目录' : '文件 / 目录' }}</span><strong>{{ diagnosticReport.totalFiles }} / {{ diagnosticReport.totalDirectories }}</strong></div>
               <div><span>展开大小</span><strong>{{ diagnosticReport.totalUncompressedSizeKnown === false ? '大小未知' : formatBytes(diagnosticReport.totalUncompressedSize) }}</strong></div>
               <div><span>加密 / 分卷</span><strong>{{ encryptionLabel(diagnosticReport) }} / {{ diagnosticReport.splitArchive ? diagnosticReport.volumesFound + ' 卷' : '否' }}</strong></div>
             </div>
@@ -561,6 +621,7 @@ const copyDiagnosticReport = async () => {
             <p v-if="repairResult.directoryRebuilt" class="mt-2 text-xs text-amber-600">目录信息已重建，原包总条目数无法确认，请核对内容是否齐全。</p>
             <ul v-if="repairResult.skippedEntries.length" class="mt-3 space-y-1 text-xs text-amber-500 break-all"><li v-for="entry in repairResult.skippedEntries" :key="entry">· {{ entry }}</li></ul>
             <div class="mt-4 flex flex-wrap gap-3"><button type="button" class="archive-secondary" @click="locateRepair"><i class="pi pi-folder-open"></i>定位新包</button><button type="button" class="archive-secondary" @click="copyChecksum(repairResult.outputPath)"><i class="pi pi-copy"></i>复制路径</button></div>
+            <div class="mt-3 flex flex-wrap items-center gap-3"><button type="button" data-testid="queue-recovered-archive" class="archive-primary" :disabled="!!recoveredDraftId" @click="queueRecoveredArchive"><i class="pi pi-plus"></i>{{ recoveredDraftId ? '已加入解压队列' : '将新包加入解压队列' }}</button><a v-if="recoveredDraftId" href="#/decompress" class="text-sm font-bold text-primary">返回解压中心</a></div>
           </section>
         </div>
       </div>

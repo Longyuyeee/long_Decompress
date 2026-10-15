@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import FileIntegrityView from '../FileIntegrityView.vue'
 import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
+import { useTaskStore } from '@/stores/task'
 
 const mocks = vi.hoisted(() => ({
   open: vi.fn(),
@@ -32,6 +33,32 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('FileIntegrityView', () => {
+  it('opens rescue from a failed task and queues the encrypted rebuilt archive with its original output choices', async () => {
+    const pinia = createPinia(); setActivePinia(pinia)
+    const tasks = useTaskStore()
+    tasks.addTask({ id:'rescue-original', name:'broken.zip', type:'decompression', sourceFiles:['C:/broken.zip'], outputPath:'C:/chosen', extractToSubfolder:false })
+    tasks.failTask('rescue-original','[archive-inspection:damaged] 目录丢失')
+    const persisted = vi.spyOn(tasks,'waitForHistoryPersistence').mockResolvedValue(true)
+    mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/broken.zip',fileSize:8000,actualFormat:'ZIP',status:'directory_lost',encrypted:true,splitArchive:false,volumesFound:1,missingVolumes:[],totalFiles:1,totalDirectories:0,totalUncompressedSize:100,totalUncompressedSizeKnown:false,integrityTested:false,canRepair:true,recoverability:'local_entries',issues:[],evidence:[]})
+    mocks.repairZip.mockResolvedValue({outputPath:'C:/rescued.zip',recoveredFiles:1,recoveredDirectories:0,skippedEntries:[],partial:true,verified:true,directoryRebuilt:true,outputEncrypted:true})
+    mocks.save.mockResolvedValue('C:/rescued.zip')
+    useAppStore().openArchiveForDiagnosis({path:'C:/broken.zip',taskId:'rescue-original',password:'correct secret',outputPath:'D:/edited-output',extractToSubfolder:true})
+    const wrapper=mount(FileIntegrityView,{global:{plugins:[pinia]}})
+    await flushPromises()
+    expect(useAppStore().pendingArchiveDiagnosis).toBeNull()
+    expect(mocks.diagnoseArchive).toHaveBeenCalledWith(expect.any(String),'C:/broken.zip','correct secret')
+    expect(wrapper.get('[data-testid="recovery-task-context"]').text()).toContain('失败的解压任务')
+    expect(wrapper.get('[data-testid="diagnostic-report"]').text()).toContain('已找到文件 / 目录')
+    await wrapper.findAll('button').find(button=>button.text().includes('选择位置并修复'))!.trigger('click'); await flushPromises()
+    await wrapper.get('.archive-password').setValue('later edit')
+    await wrapper.get('[data-testid="queue-recovered-archive"]').trigger('click'); await flushPromises()
+    expect(tasks.tasks[1]).toMatchObject({status:'pending',sourceFiles:['C:/rescued.zip'],outputPath:'D:/edited-output',extractToSubfolder:true,password:'correct secret',retryOfTaskId:'rescue-original'})
+    await wrapper.get('[data-testid="queue-recovered-archive"]').trigger('click'); await flushPromises()
+    expect(tasks.tasks).toHaveLength(2)
+    expect(persisted).toHaveBeenCalledWith('rescue-original')
+    wrapper.unmount()
+  })
+
   beforeEach(() => {
     localStorage.clear()
     mocks.open.mockReset()

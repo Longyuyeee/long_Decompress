@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import FailedExtractionRetry from '../FailedExtractionRetry.vue'
 import { useTaskStore } from '@/stores/task'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
+import { useAppStore } from '@/stores/app'
 
 const mocks = vi.hoisted(() => ({ invoke: vi.fn(), open: vi.fn() }))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
@@ -35,6 +36,44 @@ beforeEach(() => {
 })
 
 describe('failed extraction corrections', () => {
+  it('keeps a single correction inline and hands the chosen source and fresh password to rescue', async () => {
+    const { wrapper, store, ids, pinia } = setup()
+    wrapper.unmount()
+    const inline = mount(FailedExtractionRetry, { props: { taskIds: ids, inline: true }, global: { plugins: [pinia], stubs: { ExtractionOutputPreview: true } } })
+    expect(inline.find('[data-testid="inline-extraction-recovery"]').exists()).toBe(true)
+    expect(inline.find('[role="dialog"]').exists()).toBe(false)
+    await inline.get('[data-testid="retry-source"]').setValue('C:/complete/reselected.zip')
+    await inline.get('[data-testid="retry-password"]').setValue('new rescue password')
+    await inline.get('[data-testid="retry-rescue"]').trigger('click')
+    expect(useAppStore().pendingArchiveDiagnosis).toMatchObject({ path: 'C:/complete/reselected.zip', taskId: ids[0], password: 'new rescue password', outputPath: 'C:/output' })
+    expect(store.tasks[0].sourceFiles).toEqual(['C:/original-0.zip'])
+    expect((inline.get('[data-testid="retry-password"]').element as HTMLInputElement).value).toBe('')
+    inline.unmount()
+  })
+
+  it('shows detected missing volumes and queues a correction after they are supplied, preserving output choices', async () => {
+    mocks.invoke.mockImplementation(async (cmd: string, args: any) => {
+      if (cmd === 'detect_split_archive') return { is_split: true, first_part: args.path, is_complete: false, missing_parts: ['C:/part.zip.002'] }
+      return undefined
+    })
+    const { wrapper, store, ids, pinia } = setup(['[archive-inspection:missing-volume] 缺失分卷'])
+    await flushPromises()
+    expect(wrapper.get('[data-testid="retry-missing-volumes"]').text()).toContain('part.zip.002')
+    wrapper.unmount()
+    store.tasks[0].extractToSubfolder = false
+    mocks.invoke.mockImplementation(async (cmd: string, args: any) => {
+      if (cmd === 'detect_split_archive') return { is_split: true, first_part: args.path, is_complete: true, missing_parts: [] }
+      if (cmd === 'get_file_info') return { name: 'part.zip.001', is_dir: args.path === 'C:/output', size: 100 }
+      return undefined
+    })
+    const inline = mount(FailedExtractionRetry, { props: { taskIds: ids, inline: true }, global: { plugins: [pinia], stubs: { ExtractionOutputPreview: true } } })
+    await inline.get('[data-testid="create-retry-drafts"]').trigger('click'); await flushPromises()
+    expect(store.tasks[1]).toMatchObject({ status: 'pending', outputPath: 'C:/output', extractToSubfolder: false, retryOfTaskId: ids[0] })
+    expect(inline.emitted('created')?.[0]).toEqual([[store.tasks[1].id]])
+    expect(mocks.invoke.mock.calls.some(([cmd]) => cmd === 'diagnose_archive' || cmd === 'decompress_file')).toBe(false)
+    inline.unmount()
+  })
+
   it('does not silently reuse a failed password when opened from the batch', async () => {
     const { wrapper, store, ids, pinia } = setup(['密码错误'])
     wrapper.unmount()

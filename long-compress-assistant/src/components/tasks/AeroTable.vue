@@ -11,10 +11,12 @@ import ResourcePreflightCard from '@/components/tasks/ResourcePreflightCard.vue'
 import ExtractionOutputPreview from './ExtractionOutputPreview.vue'
 import { useDrawerTransition } from '@/composables/useDrawerTransition'
 import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
+import TaskExecutionOverview from './TaskExecutionOverview.vue'
 import OverflowTooltip from '@/components/ui/OverflowTooltip.vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import CompletedExtractionOutput from './CompletedExtractionOutput.vue'
 import DraftRecoveryNotice from './DraftRecoveryNotice.vue'
+import FailedExtractionRetry from './FailedExtractionRetry.vue'
 import { open } from '@tauri-apps/api/dialog'
 import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
@@ -35,6 +37,7 @@ const emit = defineEmits<{
   'cancel-task': [taskId: string]
   'pause-task': [taskId: string]
   'resume-task': [taskId: string]
+  'retry-created': [taskIds: string[]]
 }>()
 
 const taskStore = useTaskStore()
@@ -330,14 +333,15 @@ async (tasks, _, onCleanup) => {
             <!-- 状态与执行进度 -->
             <div
               class="task-status-cell min-w-0 grid items-center gap-2"
-              :class="{ 'is-terminal': !['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status) }"
+              :class="{ 'is-terminal': !['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'paused', 'cancelling'].includes(task.status) }"
             >
               <!-- 状态图标和文字 -->
               <div class="task-status-primary flex min-w-0 items-center justify-center gap-1.5">
-                <span class="text-lg">{{ getStatusIcon(task.status) }}</span>
+                <span class="shrink-0 text-lg">{{ getStatusIcon(task.status) }}</span>
                 <span
-                  class="text-xs font-black uppercase tracking-widest transition-all"
+                  class="min-w-0 truncate text-xs font-black uppercase tracking-widest transition-all"
                   :class="getStatusColor(task.status)"
+                  :title="task.sourceIssue || task.draftPasswordRequired ? '需要调整' : getStatusText(task.status)"
                 >
                   {{ task.sourceIssue || task.draftPasswordRequired ? '需要调整' : getStatusText(task.status) }}
                 </span>
@@ -345,7 +349,7 @@ async (tasks, _, onCleanup) => {
 
               <div v-if="['running', 'extracting', 'compressing', 'preparing', 'finalizing', 'cancelling'].includes(task.status)" class="task-status-runtime min-w-0">
                 <div class="flex min-w-0 items-center gap-2 whitespace-nowrap text-xs">
-                  <span class="shrink-0 font-bold text-muted">{{ getStageText(task) }}</span>
+                  <span class="task-runtime-stage font-bold text-muted" :title="getStageText(task)">{{ getStageText(task) }}</span>
                   <span v-if="task.currentFile" class="min-w-0 flex-1 truncate font-mono text-dim" :title="task.currentFile">{{ task.currentFile.split(/[\\/]/).pop() }}</span>
                   <span v-if="task.speed" class="shrink-0 font-mono text-dim">{{ task.speed }}</span>
                 </div>
@@ -497,6 +501,7 @@ async (tasks, _, onCleanup) => {
                         :shared-count="sharedDestinations.get(task.id) || 0" @change-output="handleSelectOutputDir(task)" />
                       <CompletedExtractionOutput v-if="task.status === 'completed' && (!task.workloadKind || task.workloadKind === 'archive')" :path="task.outputPath" />
                       <ResourcePreflightCard :report="task.resourcePreflight" compact />
+                      <FailedExtractionRetry v-if="task.status === 'failed' && (!task.workloadKind || task.workloadKind === 'archive')" :task-ids="[task.id]" inline @created="emit('retry-created', $event)" />
 
                       <div v-if="task.status === 'pending'" class="inherited-config-control flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
                         <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder; task.configurationMode = 'individual'">
@@ -516,7 +521,7 @@ async (tasks, _, onCleanup) => {
                       </div>
 
                       <!-- 密码输入区 (仅在自动破解失败时显示) -->
-                      <div v-if="task.passwordRequired" class="space-y-1.5 p-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5">
+                      <div v-if="task.passwordRequired && task.status !== 'failed'" class="space-y-1.5 p-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5">
                         <div class="flex items-center gap-2">
                           <i class="pi pi-lock text-sm text-yellow-400"></i>
                           <span class="text-yellow-400 text-xs font-black uppercase tracking-widest">{{ appStore.t('tasks.password.crack_failed') }}</span>
@@ -568,49 +573,30 @@ async (tasks, _, onCleanup) => {
                   </div>
 
                   <!-- 右侧：执行日志 -->
-                  <div data-testid="decompression-execution-panel" class="task-execution-panel min-w-0 p-4 flex flex-col overflow-hidden">
-                    <div class="execution-summary grid grid-cols-2 gap-2 mb-3 text-xs">
-                      <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
-                        <span class="text-muted">阶段</span>
-                        <div class="font-black text-content truncate mt-0.5">{{ getStageText(task) }}</div>
-                      </div>
-                      <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2">
-                        <span class="text-muted">进度</span>
-                        <div class="mt-0.5 flex min-w-0 items-center gap-2 whitespace-nowrap font-mono font-black text-primary"><SmoothProgressValue data-testid="decompression-detail-progress" :value="task.progress" :immediate="['completed', 'failed', 'cancelled'].includes(task.status)" /><span v-if="task.speed && !['completed', 'failed', 'cancelled'].includes(task.status)" class="min-w-0 truncate text-muted">{{ task.speed }}</span></div>
-                      </div>
-                      <div v-if="task.currentFile" class="task-current-file col-span-2 min-w-0 truncate rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 font-mono text-content" :title="task.currentFile">
-                        {{ task.currentFile }}
-                      </div>
-                      <div v-if="task.currentPassword" class="col-span-2 min-w-0 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2">
-                        <div class="flex min-w-0 items-center justify-between gap-3">
-                          <span class="text-muted">正在验证</span>
-                          <span v-if="task.passwordAttemptCurrent" class="shrink-0 font-mono font-black text-primary">
-                            {{ task.passwordAttemptCurrent }}<template v-if="task.passwordAttemptTotal"> / {{ task.passwordAttemptTotal }}</template>
-                          </span>
-                        </div>
-                        <div class="mt-1 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentPassword">
-                          {{ task.currentPassword }}
-                        </div>
-                        <div class="mt-1 text-xs text-dim">当前实际候选密码会直接显示；匹配成功后会记录本次解压使用的密码</div>
-                      </div>
-                      <div
-                        v-if="task.type === 'decompression' && (task.outputBytes !== undefined || task.totalBytes)"
-                        class="col-span-2 grid min-w-0 grid-cols-2 gap-2"
-                      >
-                        <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
-                          <span class="whitespace-nowrap text-muted">已产出</span>
-                          <div class="mt-0.5 truncate font-mono font-black text-primary" :title="`${task.outputBytes || 0} B`">
-                            {{ task.outputBytesEstimated ? '约 ' : '' }}{{ formatFileSize(task.outputBytes || 0) }}
+                  <div data-testid="decompression-execution-panel" class="task-execution-panel min-w-0 p-4 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar">
+                    <TaskExecutionOverview
+                      :stage="getStageText(task)" :status="task.status" :progress="task.progress"
+                      :speed="!['completed', 'failed', 'cancelled'].includes(task.status) ? task.speed : undefined"
+                      :current-file="task.currentFile"
+                    >
+                      <template #progress><SmoothProgressValue data-testid="decompression-detail-progress" :value="task.progress" :immediate="['completed', 'failed', 'cancelled'].includes(task.status)" /></template>
+                      <dl v-if="task.type === 'decompression' && (task.outputBytes !== undefined || task.totalBytes)" class="execution-metrics">
+                        <div class="execution-metric"><dt>已产出</dt><dd class="text-primary" :title="(task.outputBytes || 0) + ' B'">{{ task.outputBytesEstimated ? '约 ' : '' }}{{ formatFileSize(task.outputBytes || 0) }}</dd></div>
+                        <div class="execution-metric"><dt>预计总量</dt><dd :title="(task.totalBytes || 0) + ' B'">{{ task.totalBytes ? formatFileSize(task.totalBytes) : '计算中' }}</dd></div>
+                      </dl>
+                      <template #extra>
+                        <div v-if="task.currentPassword" class="execution-password">
+                          <div class="flex min-w-0 items-center justify-between gap-3">
+                            <span class="text-muted">正在验证</span>
+                            <span v-if="task.passwordAttemptCurrent" class="shrink-0 font-mono font-black text-primary">
+                              {{ task.passwordAttemptCurrent }}<template v-if="task.passwordAttemptTotal"> / {{ task.passwordAttemptTotal }}</template>
+                            </span>
                           </div>
+                          <div class="execution-password-value mt-1 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-content" :title="task.currentPassword">{{ task.currentPassword }}</div>
+                          <div class="mt-1 text-xs text-dim">当前实际候选密码会直接显示；匹配成功后会记录本次解压使用的密码</div>
                         </div>
-                        <div class="rounded-lg bg-input/40 border border-subtle/40 px-3 py-2 min-w-0">
-                          <span class="whitespace-nowrap text-muted">预计总量</span>
-                          <div class="mt-0.5 truncate font-mono font-black text-content" :title="`${task.totalBytes || 0} B`">
-                            {{ task.totalBytes ? formatFileSize(task.totalBytes) : '计算中' }}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      </template>
+                    </TaskExecutionOverview>
                     <h4 class="task-log-heading text-muted text-xs font-black uppercase tracking-[0.2em] mb-3 flex items-center justify-between opacity-90">
                       <span class="flex items-center gap-2">
                         <i class="pi pi-align-left text-xs"></i>
@@ -726,10 +712,10 @@ async (tasks, _, onCleanup) => {
 
 .task-detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
   /* Leave room for the page header, task row and fixed queue toolbar. */
-  height: clamp(15rem, calc(100vh - 23rem), 32rem);
+  height: clamp(20rem, calc(100vh - 18rem), 40rem);
   min-height: 0;
   overflow-x: hidden;
 }
@@ -753,12 +739,27 @@ async (tasks, _, onCleanup) => {
   flex-shrink: 0;
 }
 
+.task-config-panel { container: extraction-settings / inline-size; }
+
 .task-execution-panel {
-  overflow: hidden;
+  container: task-execution / inline-size;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: auto;
+}
+
+.task-execution-panel > * {
+  flex-shrink: 0;
 }
 
 .log-viewport {
-  min-height: 0;
+  /* Scroll the whole pane before allowing the log viewport to collapse. */
+  flex: 1 0 12rem;
+  min-height: 12rem;
+  padding: .75rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+  border-radius: .875rem;
+  background: color-mix(in srgb, var(--bg-input) 35%, transparent);
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
@@ -792,9 +793,42 @@ async (tasks, _, onCleanup) => {
 }
 
 .task-log-message {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: .8125rem;
+  line-height: 1.65;
+  overflow: visible;
+}
+
+.task-log-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: .875rem 0 .625rem;
+  padding: .375rem 0;
+  color: var(--dynamic-accent);
+  background: var(--bg-card);
+}
+
+.execution-password { border-left: 2px solid var(--dynamic-accent); padding: .5rem .75rem; background: color-mix(in srgb, var(--dynamic-accent) 5%, transparent); font-size: .75rem; }
+.execution-password-value { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+@container extraction-settings (max-width: 24rem) {
+  .task-output-row { flex-direction: column; align-items: stretch; }
+  .task-output-actions { justify-content: flex-start; }
+}
+
+@container task-execution (max-width: 20rem) {
+  .task-log-entry {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .task-log-message {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 .task-detail-card:hover {
@@ -837,7 +871,7 @@ async (tasks, _, onCleanup) => {
 }
 
 .task-row {
-  height: 52px;
+  height: auto;
   min-height: 52px;
 }
 
@@ -901,7 +935,32 @@ async (tasks, _, onCleanup) => {
 
 
 .task-status-cell {
-  grid-template-columns: minmax(6.5rem, auto) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 0.25rem;
+}
+
+.task-status-primary {
+  grid-column: 1;
+  grid-row: 1;
+  justify-content: flex-start;
+}
+
+.task-status-runtime {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.task-status-percent {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.task-runtime-stage {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .task-status-cell.is-terminal {
@@ -913,7 +972,7 @@ async (tasks, _, onCleanup) => {
 }
 
 @media (max-width: 980px) {
-  .task-detail-layout { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+  .task-detail-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .table-header,
   .task-row { grid-template-columns: 2rem minmax(0, .9fr) minmax(0, 1.1fr) 5.75rem; }
 }
@@ -929,7 +988,7 @@ async (tasks, _, onCleanup) => {
 @container (max-width: 32rem) {
   .task-detail-layout { grid-template-columns: minmax(0, 1fr); height: auto; }
   .task-config-panel { height: auto; overflow: visible; border-right: 0; border-bottom: 1px solid var(--border-subtle); }
-  .task-execution-panel { height: 18rem; }
+  .task-execution-panel { height: 26rem; }
 }
 
 @media (max-width: 760px) {
