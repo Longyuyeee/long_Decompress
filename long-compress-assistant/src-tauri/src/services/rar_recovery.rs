@@ -330,59 +330,29 @@ pub struct RarRepairResult {
     pub output_encrypted: bool,
 }
 
+#[cfg(windows)]
+fn password_bytes_for_codepage(password: &str, codepage: u32) -> Result<Vec<u8>> {
+    use windows_sys::Win32::Globalization::{WideCharToMultiByte, WC_NO_BEST_FIT_CHARS};
+    if codepage == 65001 { return Ok(password.as_bytes().to_vec()); }
+    let wide: Vec<u16> = password.encode_utf16().collect();
+    let length = i32::try_from(wide.len())?;
+    let mut substituted = 0;
+    let size = unsafe { WideCharToMultiByte(codepage, WC_NO_BEST_FIT_CHARS, wide.as_ptr(), length, std::ptr::null_mut(), 0, std::ptr::null(), &mut substituted) };
+    ensure!(size > 0 && substituted == 0, "当前 RAR 工具输入编码无法表示该密码，请在 WinRAR 修复后重新导入");
+    let mut result = vec![0; size as usize];
+    let written = unsafe { WideCharToMultiByte(codepage, WC_NO_BEST_FIT_CHARS, wide.as_ptr(), length, result.as_mut_ptr(), size, std::ptr::null(), &mut substituted) };
+    ensure!(written == size && substituted == 0, "RAR 修复密码无法使用当前工具输入编码传递");
+    Ok(result)
+}
+
 fn password_input(password: &str) -> Result<Vec<u8>> {
     ensure!(
         !password.contains(['\r', '\n', '\0']),
         "RAR 修复暂不支持包含换行或空字符的密码"
     );
     #[cfg(windows)]
-    let mut bytes = {
-        use windows_sys::Win32::Globalization::{
-            GetOEMCP, WideCharToMultiByte, WC_NO_BEST_FIT_CHARS,
-        };
-        let codepage = unsafe { GetOEMCP() };
-        if codepage == 65001 {
-            password.as_bytes().to_vec()
-        } else {
-            let wide: Vec<u16> = password.encode_utf16().collect();
-            let length = i32::try_from(wide.len())?;
-            let mut substituted = 0;
-            let size = unsafe {
-                WideCharToMultiByte(
-                    codepage,
-                    WC_NO_BEST_FIT_CHARS,
-                    wide.as_ptr(),
-                    length,
-                    std::ptr::null_mut(),
-                    0,
-                    std::ptr::null(),
-                    &mut substituted,
-                )
-            };
-            ensure!(
-                size > 0 && substituted == 0,
-                "当前 RAR 控制台编码无法表示该密码，请在 WinRAR 修复后重新导入"
-            );
-            let mut result = vec![0u8; size as usize];
-            let written = unsafe {
-                WideCharToMultiByte(
-                    codepage,
-                    WC_NO_BEST_FIT_CHARS,
-                    wide.as_ptr(),
-                    length,
-                    result.as_mut_ptr(),
-                    size,
-                    std::ptr::null(),
-                    &mut substituted,
-                )
-            };
-            ensure!(
-                written == size && substituted == 0,
-                "RAR 修复密码无法使用当前控制台编码传递"
-            );
-            result
-        }
-    };
+    // RAR's redirected getwstr -> CharToWide uses CP_ACP, not the console OEM CP.
+    let mut bytes = password_bytes_for_codepage(password, unsafe { windows_sys::Win32::Globalization::GetACP() })?;
     #[cfg(not(windows))]
     let mut bytes = password.as_bytes().to_vec();
     bytes.extend_from_slice(b"\r\n");
@@ -673,6 +643,15 @@ pub async fn repair(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(windows)]
+    #[test]
+    fn redirected_password_uses_ansi_not_console_oem_encoding() {
+        assert_eq!(password_bytes_for_codepage("café €", 1252).unwrap(), b"caf\xe9 \x80");
+        assert_eq!(password_bytes_for_codepage("中文", 936).unwrap(), [0xd6, 0xd0, 0xce, 0xc4]);
+        assert_eq!(password_bytes_for_codepage("中文 🔑", 65001).unwrap(), "中文 🔑".as_bytes());
+        assert!(password_bytes_for_codepage("中文 🔑", 1252).is_err());
+        assert!(password_input("secret\nnext").is_err());
+    }
     fn command(tool: &str, args: &[&str]) {
         let output = crate::utils::process::command(tool)
             .args(args)

@@ -12,6 +12,10 @@
 
 ## 实施与审计
 
-当前只冻结上述本轮范围，尚未实现或封板。源码保持 1.4.8，完成后再统一升至 1.4.9。每项完成后记录真实结果并提交推送；最终只到可封板，正式合入/Release 按用户明确发布指令接续。
+第一步完成：恢复命令的密码输入使用 Windows ANSI 代码页，与 RAR 管道读取一致；无法表示的字符仍明确报错。新增固定 CP1252（é/€）、CP936（中文）、UTF-8 及不可表示字符检查，避免只在本机 ANSI/OEM 相同的环境误判全部兼容。
+
+`cargo test --manifest-path src-tauri/Cargo.toml --lib services::rar_recovery::tests -- --include-ignored` 实际 **7 项通过**，包含真实 Rar.exe 恢复记录修复、恢复卷创建/首中末卷补齐、普通/内容密码/中文文件名密码。工具仍使用隔离的 RAR 7.23；这不代表已验证另一台 ANSI/OEM 不同机器，也不扩大 RAR4 或任意 Unicode 管道密码承诺。原有 sevenz-rust 两项警告未在本轮修改。
+
+其他两步尚未完成，尚未封板。源码保持 1.4.8，完成后再统一升至 1.4.9。每项完成后记录真实结果并提交推送；最终只到可封板，正式合入/Release 按用户明确发布指令接续。
 
 参考：RAR 工具随附 UnRAR 源码 `consio.cpp` / `unicode.cpp`（本机 `unrar_sys 0.5.8`）；[上游输入处理](https://github.com/pmachapman/unrar/blob/master/consio.cpp)。
