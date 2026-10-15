@@ -44,7 +44,7 @@ fn summarize(format: &str, entries: Vec<ArchiveEntryInfo>) -> ArchiveBrowseResul
     }
 }
 
-fn detect_format(path: &Path) -> Result<ArchiveFormat> {
+pub(crate) fn detect_format(path: &Path) -> Result<ArchiveFormat> {
     let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
     if matches!(&file, super::numeric_volume_reader::ZipInputReader::StandardZip(_)) {
         return Ok(ArchiveFormat::Zip);

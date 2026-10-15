@@ -165,8 +165,8 @@ pub(super) fn try_extract<R: ExtractionRuntime + Sync, Rd: Read + Seek>(
     };
     // Prepare readers before any output is written. After writing starts an I/O
     // or CRC error is returned, never hidden by a second sequential extraction.
-    let first = ZipArchive::new(File::open(file)?)?;
-    let second = ZipArchive::new(File::open(file)?)?;
+    let first = ZipArchive::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?)?;
+    let second = ZipArchive::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?)?;
     if let Some(window) = window {
         runtime.emit_log(window, task_id, "ZIP 并行解压：使用 2 个共享预算工作线程；完成后仍按原冲突策略提交结果", crate::models::compression::TaskLogSeverity::Info);
     }
@@ -178,7 +178,7 @@ pub(super) fn try_extract<R: ExtractionRuntime + Sync, Rd: Read + Seek>(
         .try_fold(0u64, |sum, entry| sum.checked_add(entry.size))
         .ok_or_else(|| anyhow::anyhow!("ZIP entry sizes exceed supported total"))?;
     let progress = Mutex::new((0usize, 0u64, ProgressGate::new()));
-    let worker = |mut reader: ZipArchive<File>| {
+    let worker = |mut reader: ZipArchive<crate::services::numeric_volume_reader::ZipInputReader>| {
         let result = (|| -> Result<()> {
             let mut buffer = vec![0u8; 256 * 1024];
             loop {

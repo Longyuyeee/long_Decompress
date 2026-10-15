@@ -1388,17 +1388,17 @@ impl CompressionService {
             },
             TaskLogSeverity::Info,
         );
-        if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path, &mut attempts).await? {
+        if let Some(password) = self.attempt_passwords_smartly(window, task_id, file_path, options, &mut attempts).await? {
             return Ok(Some(password));
         }
 
         if options.enable_bruteforce {
             if !options.bruteforce_wordlists.is_empty() {
-                if let Some(password) = self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists, &mut attempts).await? {
+                if let Some(password) = self.attempt_bruteforce_wordlists(window, task_id, file_path, &options.bruteforce_wordlists, options, &mut attempts).await? {
                     return Ok(Some(password));
                 }
             }
-            if let Some(password) = self.attempt_recommended_dictionary(window, task_id, file_path, &mut attempts).await? {
+            if let Some(password) = self.attempt_recommended_dictionary(window, task_id, file_path, options, &mut attempts).await? {
                 return Ok(Some(password));
             }
         }
@@ -1411,17 +1411,22 @@ impl CompressionService {
 
     pub async fn resolve_archive_password_silent(&self, file_path: &str, options: &DecompressOptions) -> Result<Option<String>> {
         self.check_cancellation()?;
-        if let Some(password) = self.attempt_password_book_candidates(file_path).await? {
+        if Self::detect_password_format(file_path)? == ArchiveFormat::Zip
+            && !UniversalCliEngine::zip_requires_password_for_selection(Path::new(file_path), options)?
+        {
+            return Ok(None);
+        }
+        if let Some(password) = self.attempt_password_book_candidates(file_path, options).await? {
             return Ok(Some(password));
         }
 
         if options.enable_bruteforce {
             if !options.bruteforce_wordlists.is_empty() {
-                if let Some(password) = self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists).await? {
+                if let Some(password) = self.attempt_bruteforce_wordlists_silent(file_path, &options.bruteforce_wordlists, options).await? {
                     return Ok(Some(password));
                 }
             }
-            if let Some(password) = self.attempt_recommended_dictionary_silent(file_path).await? {
+            if let Some(password) = self.attempt_recommended_dictionary_silent(file_path, options).await? {
                 return Ok(Some(password));
             }
         }
@@ -1494,17 +1499,17 @@ impl CompressionService {
         }
     }
 
-    async fn attempt_recommended_dictionary_silent(&self, file_path: &str) -> Result<Option<String>> {
+    async fn attempt_recommended_dictionary_silent(&self, file_path: &str, options: &DecompressOptions) -> Result<Option<String>> {
         for password in Self::recommended_dictionary(file_path) {
             self.check_cancellation()?;
-            if self.test_archive_password(file_path, &password).await? {
+            if self.test_extraction_password(file_path, &password, options).await? {
                 return Ok(Some(password));
             }
         }
         Ok(None)
     }
 
-    async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str, attempts: &mut usize) -> Result<Option<String>> {
+    async fn attempt_recommended_dictionary(&self, window: &Window, task_id: &str, file_path: &str, options: &DecompressOptions, attempts: &mut usize) -> Result<Option<String>> {
         let passwords = Self::recommended_dictionary(file_path);
         let total = passwords.len();
         let started_at = Instant::now();
@@ -1530,7 +1535,7 @@ impl CompressionService {
             );
             let attempt_started_at = Instant::now();
             *attempts += 1;
-            match self.test_archive_password(file_path, &password).await? {
+            match self.test_extraction_password(file_path, &password, options).await? {
                 true => {
                     self.emit_log(
                         window,
@@ -1615,7 +1620,7 @@ impl CompressionService {
         }
     }
 
-    async fn attempt_password_book_candidates(&self, file_path: &str) -> Result<Option<String>> {
+    async fn attempt_password_book_candidates(&self, file_path: &str, options: &DecompressOptions) -> Result<Option<String>> {
         let passwords = match self.password_book_candidates().await {
             Ok(passwords) => passwords,
             Err(err) => {
@@ -1626,7 +1631,7 @@ impl CompressionService {
 
         for (_entry_id, _entry_name, password) in passwords {
             self.check_cancellation()?;
-            match self.test_archive_password(file_path, &password).await? {
+            match self.test_extraction_password(file_path, &password, options).await? {
                 true => return Ok(Some(password)),
                 false => continue,
             }
@@ -1635,7 +1640,7 @@ impl CompressionService {
         Ok(None)
     }
 
-    async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str, attempts: &mut usize) -> Result<Option<String>> {
+    async fn attempt_passwords_smartly(&self, window: &Window, task_id: &str, file_path: &str, options: &DecompressOptions, attempts: &mut usize) -> Result<Option<String>> {
         self.emit_log(window, task_id, "正在检索密码保险箱...", TaskLogSeverity::Info);
         let started_at = Instant::now();
 
@@ -1682,7 +1687,7 @@ impl CompressionService {
             let attempt_started_at = Instant::now();
 
             *attempts += 1;
-            match self.test_archive_password(file_path, pwd).await? {
+            match self.test_extraction_password(file_path, pwd, options).await? {
                 true => {
                     self.emit_log(
                         window,
@@ -1728,7 +1733,7 @@ impl CompressionService {
         Ok(None)
     }
 
-    async fn attempt_bruteforce_wordlists_silent(&self, file_path: &str, wordlists: &[String]) -> Result<Option<String>> {
+    async fn attempt_bruteforce_wordlists_silent(&self, file_path: &str, wordlists: &[String], options: &DecompressOptions) -> Result<Option<String>> {
         let mut tested = HashSet::new();
 
         for wordlist in wordlists {
@@ -1751,7 +1756,7 @@ impl CompressionService {
                     continue;
                 }
 
-                if self.test_archive_password(file_path, &password).await? {
+                if self.test_extraction_password(file_path, &password, options).await? {
                     return Ok(Some(password));
                 }
             }
@@ -1760,7 +1765,7 @@ impl CompressionService {
         Ok(None)
     }
 
-    async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String], attempts: &mut usize) -> Result<Option<String>> {
+    async fn attempt_bruteforce_wordlists(&self, window: &Window, task_id: &str, file_path: &str, wordlists: &[String], options: &DecompressOptions, attempts: &mut usize) -> Result<Option<String>> {
         self.emit_log(
             window,
             task_id,
@@ -1819,7 +1824,7 @@ impl CompressionService {
                 );
                 let attempt_started_at = Instant::now();
                 *attempts += 1;
-                match self.test_archive_password(file_path, &password).await? {
+                match self.test_extraction_password(file_path, &password, options).await? {
                     true => {
                         self.emit_log(
                             window,
@@ -2025,7 +2030,7 @@ impl CompressionService {
             .filter(|group| group.format == crate::services::split_archive_detector::SplitFormat::ZipSplit);
         if let Some(group) = standard_zip_group {
             anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少 ZIP 分卷：{:?}", group.missing_parts);
-            format = ArchiveFormat::Universal;
+            format = ArchiveFormat::Zip;
         }
 
         // 分卷压缩包检测：扩展名为数字编号(.001, .002...)或 .z01/.z02 后缀
@@ -2043,7 +2048,7 @@ impl CompressionService {
         }
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
         let native_stream = matches!(format, ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli);
-        if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
+        if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
             service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
             format = ArchiveFormat::Universal;
         }
@@ -2067,7 +2072,10 @@ impl CompressionService {
 
         let mut final_password = password.clone();
         let mut password_verified = false;
-        let password_required = if format.supports_password() {
+        let scoped_zip = format == ArchiveFormat::Zip && crate::services::zip_selection::has_selection(&options);
+        let password_required = if scoped_zip {
+            Some(UniversalCliEngine::zip_requires_password_for_selection(path, &options)?)
+        } else if format.supports_password() {
             service.emit_log(
                 &window,
                 &task_id,
@@ -2084,13 +2092,13 @@ impl CompressionService {
 
         if password_required == Some(false) {
             if final_password.is_some() {
-                service.emit_log(&window, &task_id, "归档未加密，已忽略多余的密码参数", TaskLogSeverity::Info);
+                service.emit_log(&window, &task_id, "本次解压内容无需密码，已忽略多余的密码参数", TaskLogSeverity::Info);
                 final_password = None;
             }
             service.emit_log(
                 &window,
                 &task_id,
-                "加密状态检测完成：归档未加密，正在准备解压...",
+                "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
                 TaskLogSeverity::Success,
             );
         }
@@ -2146,7 +2154,7 @@ impl CompressionService {
 
         if password_required == Some(true) && final_password.is_some() && !password_verified {
             let candidate = final_password.as_deref().unwrap_or_default();
-            if !service.test_archive_password(&file_path, candidate).await? {
+            if !service.test_extraction_password(&file_path, candidate, &options).await? {
                 // 7Z has no independent password verifier: failed decoding can
                 // also mean damaged ciphertext. Candidate iteration may continue,
                 // but the final user-facing result must not assert a wrong password.
@@ -2162,7 +2170,7 @@ impl CompressionService {
         }
 
         let preflight_stats = service
-            .preflight_extraction(path, &format, final_password.as_deref(), &final_out_dir)
+            .preflight_extraction(path, &format, final_password.as_deref(), &final_out_dir, &options)
             .await?;
         let expected_expanded_bytes = preflight_stats.map(|(_, expanded_bytes)| expanded_bytes);
         if password_required == Some(true) && password_verified {
@@ -2282,12 +2290,10 @@ impl CompressionService {
         // engine-specific callback. This is the exact point extraction begins.
         service.emit_progress(&window, &task_id, 0.0, None, 0, expected_expanded_bytes.unwrap_or(0));
 
-        let effective_format = if format == ArchiveFormat::Zip && final_password.is_some() {
-            service.emit_log(&window, &task_id, "检测到加密 ZIP，使用内置加密 ZIP 兼容引擎解压", TaskLogSeverity::Info);
-            ArchiveFormat::Universal
-        } else {
-            format
-        };
+        // ZIP, encrypted ZIP and both volume layouts share one selected-entry
+        // reader. Routing encrypted ZIP through the option-less CLI interface
+        // would read unselected entries before the staging filter can run.
+        let effective_format = format;
 
         let result = match effective_format {
             ArchiveFormat::Zip => {
@@ -2711,20 +2717,14 @@ impl CompressionService {
         format: &ArchiveFormat,
         password: Option<&str>,
         output: &Path,
+        options: &DecompressOptions,
     ) -> Result<Option<(usize, u64)>> {
         let stats = match format {
             ArchiveFormat::Zip => {
-                let file = File::open(archive_path)?;
+                let file = crate::services::numeric_volume_reader::ZipInputReader::open(archive_path)?;
                 let mut archive = zip_aes::ZipArchive::new(file)?;
-                let mut expanded = 0u64;
-                for index in 0..archive.len() {
-                    expanded = expanded
-                        .checked_add(archive.by_index_raw(index)?.size())
-                        .ok_or_else(|| CompressionError::ExtractionFailed(
-                            "Archive expanded size overflowed the supported range".to_string(),
-                        ))?;
-                }
-                Some((archive.len(), expanded))
+                let selection = crate::services::zip_selection::ZipSelection::read(&mut archive, options, || self.check_cancellation())?;
+                Some((selection.indices.len(), selection.expanded_bytes))
             }
             ArchiveFormat::SevenZip => {
                 let mut input = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(archive_path)?;
@@ -3431,6 +3431,16 @@ impl CompressionService {
         Ok(())
     }
 
+    async fn test_extraction_password(&self, file_path: &str, password: &str, options: &DecompressOptions) -> Result<bool> {
+        if crate::services::zip_selection::has_selection(options)
+            && Self::detect_password_format(file_path)? == ArchiveFormat::Zip
+        {
+            return UniversalCliEngine::try_zip_password_for_selection_cancellable(
+                Path::new(file_path), password, options, || self.check_cancellation());
+        }
+        self.test_archive_password(file_path, password).await
+    }
+
     pub async fn test_archive_password(&self, file_path: &str, password: &str) -> Result<bool> {
         self.check_cancellation()?;
         let file = file_path.to_string();
@@ -3813,6 +3823,35 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn selected_zip_service_preflight_and_wordlist_use_the_same_range() {
+        use zip::unstable::write::FileOptionsExt;
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("混合.zip");
+        let mut writer = zip::ZipWriter::new(File::create(&source).unwrap());
+        for (name, password, bytes) in [("说明.txt", None, b"public".as_slice()), ("甲方.bin", Some("alpha"), b"alpha".as_slice()), ("乙方.bin", Some("beta"), b"beta".as_slice())] {
+            let options = zip::write::FileOptions::default();
+            let options = password.map_or(options, |password| options.with_deprecated_encryption(password.as_bytes()));
+            writer.start_file(name, options).unwrap(); writer.write_all(bytes).unwrap();
+        }
+        writer.finish().unwrap();
+        let service = CompressionService::for_testing();
+        let words = temp.path().join("words.txt");
+        std::fs::write(&words, "beta\nalpha\n").unwrap();
+        let options = DecompressOptions {
+            selected_entries: vec!["甲方.bin".into()], enable_bruteforce: true,
+            bruteforce_wordlists: vec![words.to_string_lossy().into_owned()], ..Default::default()
+        };
+        let stats = service.preflight_extraction(&source, &ArchiveFormat::Zip, Some("alpha"), temp.path(), &options).await.unwrap().unwrap();
+        assert_eq!(stats, (1, 5));
+        assert_eq!(service.resolve_archive_password_silent(source.to_str().unwrap(), &options).await.unwrap(), Some("alpha".into()));
+        assert!(!service.test_archive_password(source.to_str().unwrap(), "alpha").await.unwrap(), "不能把所选文件的密码说成整个包的密码");
+        let public = DecompressOptions { file_filter: Some("*.txt".into()), ..options.clone() };
+        let public = DecompressOptions { selected_entries: vec![], ..public };
+        assert_eq!(service.resolve_archive_password_silent(source.to_str().unwrap(), &public).await.unwrap(), None);
+        assert_eq!(service.preflight_extraction(&source, &ArchiveFormat::Zip, None, temp.path(), &public).await.unwrap(), Some((1, 6)));
+    }
+
+    #[tokio::test]
     async fn automatic_password_candidates_preserve_corruption_and_cancellation() {
         use crate::models::password::{PasswordCategory, PasswordEntry};
         let temp = tempfile::tempdir().unwrap();
@@ -3834,7 +3873,7 @@ mod tests {
         let words = temp.path().join("words.txt");
         std::fs::write(&words, format!("wrong-first\n{password}\nunused-last\n")).unwrap();
         let wordlists = vec![words.to_string_lossy().into_owned()];
-        assert_eq!(service.attempt_bruteforce_wordlists_silent(&source.to_string_lossy(), &wordlists).await.unwrap(), Some(password.clone()));
+        assert_eq!(service.attempt_bruteforce_wordlists_silent(&source.to_string_lossy(), &wordlists, &DecompressOptions::default()).await.unwrap(), Some(password.clone()));
         assert_eq!(service.resolve_archive_password_silent(&source.to_string_lossy(), &DecompressOptions::default()).await.unwrap(), Some(password));
         let tail = {
             let mut zip = zip_aes::ZipArchive::new(File::open(&source).unwrap()).unwrap();
@@ -3850,14 +3889,14 @@ mod tests {
             let path = path.to_string_lossy();
             let errors = [
                 service.resolve_archive_password_silent(&path, &DecompressOptions::default()).await.unwrap_err(),
-                service.attempt_bruteforce_wordlists_silent(&path, &wordlists).await.unwrap_err(),
+                service.attempt_bruteforce_wordlists_silent(&path, &wordlists, &DecompressOptions::default()).await.unwrap_err(),
             ];
             for error in errors {
                 assert!(error.to_string().contains("[archive-inspection:ambiguous-data]"));
                 assert!(error.to_string().contains("payload.txt"));
             }
         }
-        assert!(service.attempt_recommended_dictionary_silent(&source.to_string_lossy()).await.unwrap_err()
+        assert!(service.attempt_recommended_dictionary_silent(&source.to_string_lossy(), &DecompressOptions::default()).await.unwrap_err()
             .to_string().contains("[archive-inspection:ambiguous-data]"));
         service.cancellation_flag.store(true, Ordering::SeqCst);
         let error = service.resolve_archive_password_silent(&source.to_string_lossy(), &DecompressOptions::default()).await.unwrap_err();
@@ -4853,7 +4892,7 @@ mod tests_continued {
                     "Only explicitly encrypted filenames should require a header password");
                 let format = CompressionService::detect_password_format(&first.to_string_lossy()).unwrap();
                 assert!(CompressionService::uses_native_seven_zip_volumes(&first, &format));
-                let stats = service.preflight_extraction(&first, &format, password, temp.path()).await.unwrap().unwrap();
+                let stats = service.preflight_extraction(&first, &format, password, temp.path(), &DecompressOptions::default()).await.unwrap().unwrap();
                 assert_eq!(stats, (4, 28));
                 assert_eq!(native_extraction::seven_zip::requires_password(&first).unwrap(), password.is_some());
                 if let Some(password) = password {
@@ -4901,7 +4940,7 @@ mod tests_continued {
     }
 
     #[test]
-    fn allows_encrypted_zip_directory_split_but_rejects_other_formats_and_nested_output() {
+    fn allows_supported_splits_but_rejects_unsupported_formats_and_nested_output() {
         let temp = tempfile::tempdir().expect("temp dir");
         let source = temp.path().join("source.txt");
         std::fs::write(&source, b"split fixture").expect("source fixture");
@@ -4921,7 +4960,9 @@ mod tests_continued {
         assert!(CompressionService::validate_compression_io_paths(
             &[source.to_string_lossy().to_string()], &temp.path().join("archive.7z").to_string_lossy(), &seven_zip,
         ).is_ok());
-        for format in ["rar", "tar"] {
+        // RAR and TAR gained splitting in v1.4.3. Keep this rejection test on
+        // formats that still genuinely lack the requested password/split mode.
+        for format in ["wim", "lzma"] {
             let unsupported = CompressionOptions { format: Some(format.into()), ..encrypted_split.clone() };
             assert!(CompressionService::validate_compression_io_paths(
                 &[source.to_string_lossy().to_string()], &output.to_string_lossy(), &unsupported,
