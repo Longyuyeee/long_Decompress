@@ -501,6 +501,71 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires HaoZipC.exe via LONG_HAOZIP_C; native standard ZIP disks, not forum-mode evidence"]
+    async fn haozip_cli_zipcrypto_disks_preserve_passwords_and_payloads() {
+        // Let the external encoder create its own headers, disk offsets and
+        // encryption. Do not rename its standard .zNN/.zip output to forum names.
+        let encoder = std::path::PathBuf::from(std::env::var("LONG_HAOZIP_C").unwrap());
+        assert!(encoder.is_file(), "LONG_HAOZIP_C must name the actual HaoZip CLI");
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("原始资料");
+        std::fs::create_dir_all(source.join("中文目录/空目录")).unwrap();
+        let text = "收到分卷后，先输错密码，再纠正并完整解压。\n";
+        let payload = (0..163_871).map(|index| (index % 251) as u8).collect::<Vec<_>>();
+        std::fs::write(source.join("说明.txt"), text).unwrap();
+        std::fs::write(source.join("中文目录/原文件.bin"), &payload).unwrap();
+        let main = temp.path().join("好压原生密码卷.zip");
+        let password = "HaoZip sample + !";
+        let mut command = std::process::Command::new(encoder);
+        command.current_dir(&source).args(["a", "-tzip", "-mx=0", "-v64k", "-mem=ZipCrypto", "-y"])
+            .arg(format!("-p{password}")).arg(&main).arg("*");
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            command.creation_flags(0x08000000);
+        }
+        let encoded = command.output().unwrap();
+        assert!(encoded.status.success(), "HaoZip must finish before its files are accepted: {:?}", encoded.status);
+        if let Some(validator) = std::env::var_os("LONG_BANDIZIP_C") {
+            let mut verify = std::process::Command::new(validator);
+            verify.args(["t", &format!("-p:{password}")]).arg(&main);
+            #[cfg(windows)]
+            {
+                use std::os::windows::process::CommandExt;
+                verify.creation_flags(0x08000000);
+            }
+            let verified = verify.output().unwrap();
+            assert!(verified.status.success(), "Independent Bandizip check failed: {:?}", verified.status);
+            eprintln!("Independent Bandizip verified all generated payloads");
+        }
+        let members = [main.with_extension("z01"), main.with_extension("z02"), main.clone()];
+        let original = members.iter().map(std::fs::read).collect::<std::io::Result<Vec<_>>>().unwrap();
+        for (index, member) in members.iter().enumerate() {
+            let group = SplitArchiveDetector::detect_split_archive(member).unwrap().unwrap();
+            assert!(group.is_complete);
+            assert_eq!(group.total_parts, 3);
+            assert_eq!(group.parts, members);
+            assert!(UniversalCliEngine::zip_requires_password(member).unwrap());
+            assert!(!UniversalCliEngine::try_zip_password(member, "wrong password").is_ok_and(|accepted| accepted),
+                "A short header collision must not accept a wrong password");
+            assert!(UniversalCliEngine::try_zip_password(member, password).unwrap());
+            let metadata = browse_archive(member, Some(password)).await.unwrap();
+            assert_eq!(metadata.total_files, 2);
+            assert!(metadata.encrypted);
+            assert_eq!(preview_archive_text(member, "说明.txt", Some(password)).await.unwrap().content, text);
+            let output = temp.path().join(format!("从第{}卷解压", index + 1));
+            UniversalCliEngine::new().extract_with_progress(member, &output, Some(password), false,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(std::fs::read_to_string(output.join("说明.txt")).unwrap(), text);
+            assert_eq!(std::fs::read(output.join("中文目录/原文件.bin")).unwrap(), payload);
+            assert!(output.join("中文目录/空目录").is_dir());
+        }
+        for (member, before) in members.iter().zip(original) {
+            assert_eq!(std::fs::read(member).unwrap(), before);
+        }
+    }
+
+    #[tokio::test]
     #[ignore = "Requires externally generated standard ZIP disks"]
     async fn standard_zip_external_winrar_disks_read_exact_payloads() {
         let root = std::path::PathBuf::from(std::env::var("LONG_STANDARD_ZIP_FIXTURES").unwrap());

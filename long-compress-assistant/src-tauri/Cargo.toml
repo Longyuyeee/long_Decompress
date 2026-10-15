@@ -120,5 +120,6 @@ custom-protocol = ["tauri/custom-protocol"]
 desktop-e2e = []
 
 [patch.crates-io]
+zip = { path = "vendor/zip" }
 sevenz-rust = { path = "vendor/sevenz-rust" }
 unrar = { path = "vendor/unrar" }

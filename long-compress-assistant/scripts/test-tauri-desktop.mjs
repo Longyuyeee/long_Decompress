@@ -36,6 +36,7 @@ import { runArchiveContinuityGate } from './archive-continuity-149-gate.mjs'
 import { runZipSelection1410Gate } from './zip-selection-1410-gate.mjs'
 import { runSfx1411Gate } from './sfx-1411-gate.mjs'
 import { runHaozip1411Gate } from './haozip-1411-gate.mjs'
+import { runHaozipZipcrypto1411Gate } from './haozip-zipcrypto-1411-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
@@ -4874,6 +4875,9 @@ try {
       return result.value
     }
     await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--haozip-zipcrypto-only')) {
+    await runHaozipZipcrypto1411Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
     completedSuccessfully = true
   } else if (process.argv.includes('--haozip-only')) {
     await runHaozip1411Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })

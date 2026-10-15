@@ -1,0 +1,78 @@
+{
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "binarySha256": "712b2c306c40624d0b64e18aa223c51142848aea48594a50f980904a4a6a43e3",
+  "encoderSha256": "7ed88c6a87df06fdfcf079968b39fd4c5e2541aa17b71980ab6be78fe4aeb758",
+  "encoderArguments": [
+    "a",
+    "-tzip",
+    "-mx=0",
+    "-v64k",
+    "-mem=ZipCrypto",
+    "-p<test-password>",
+    "-y",
+    "<archive>",
+    "*"
+  ],
+  "independentBandizipSha256": "d69bc4d2605f0ecac20e8cfae11e313fb011649ed7f182cfcb25d6be73dcf4e2",
+  "sourcePayloads": [
+    {
+      "path": "说明.txt",
+      "sha256": "4e29a210d120078c73d71911358d5c67d59f32187cd961cceb626ca88ff023d8"
+    },
+    {
+      "path": "中文目录/原文件.bin",
+      "sha256": "d57a9983853a1137a068df3e1189907e30bcb4320a92986736cf3f0665bdda6c"
+    }
+  ],
+  "originalVolumes": [
+    {
+      "name": "收到的密码资料.z01",
+      "sha256": "35e1999df732e5f9d239ebf614eea843999b67f1cf91831c93f9c0f3c6d34b63"
+    },
+    {
+      "name": "收到的密码资料.z02",
+      "sha256": "684339e5a7538b23e97af142e28ba7df0963774235a16d406bef7d057aada0c5"
+    },
+    {
+      "name": "收到的密码资料.zip",
+      "sha256": "1f7170762fec0415966b8ce797db4109a7bd776cf542f5229f039630edd56702"
+    }
+  ],
+  "records": [
+    {
+      "member": "收到的密码资料.z01",
+      "wrongPasswordRejected": true,
+      "correctPasswordExtracted": true,
+      "integrityTested": true,
+      "convertedAndIndependentlyRead": true
+    },
+    {
+      "member": "收到的密码资料.z02",
+      "wrongPasswordRejected": true,
+      "correctPasswordExtracted": true,
+      "integrityTested": true,
+      "convertedAndIndependentlyRead": true
+    },
+    {
+      "member": "收到的密码资料.zip",
+      "wrongPasswordRejected": true,
+      "correctPasswordExtracted": true,
+      "integrityTested": true,
+      "convertedAndIndependentlyRead": true
+    }
+  ],
+  "ui": {
+    "middleMemberOpened": true,
+    "wrongPasswordPreviewRejected": true,
+    "correctedPreview": true,
+    "completeSelectedExtraction": true,
+    "minimumWindowActionReachable": true,
+    "screenshots": [
+      "haozip-zipcrypto-1411-wrong-password.png",
+      "haozip-zipcrypto-1411-corrected-preview.png",
+      "haozip-zipcrypto-1411-completed-1100x700.png",
+      "haozip-zipcrypto-1411-completed-760x520.png"
+    ]
+  },
+  "genuineFixtureScope": "HaoZip CLI ZipCrypto native standard ZIP disks; NOT GUI-generated encrypted forum volumes"
+}

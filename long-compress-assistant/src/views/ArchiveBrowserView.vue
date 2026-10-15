@@ -234,7 +234,11 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
       if (sequence === previewSequence) textPreview.value = value
     }
   } catch (error) {
-    if (sequence === previewSequence) previewError.value = String(error)
+    if (sequence === previewSequence) {
+      const raw = String(error).replace(/^Error:\s*/i, '').trim()
+      previewError.value = /^provided password is incorrect$/i.test(raw)
+        ? '密码不正确，请修改密码后重试。' : String(error)
+    }
   } finally {
     if (sequence === previewSequence) previewLoading.value = false
   }
