@@ -41,7 +41,7 @@ export async function validateExtractionRetry(
       throw new Error(`分卷仍不完整，请补齐后再检查：${split.missing_parts?.join('、') || '缺少必要分卷'}`)
     }
     path = split.first_part
-  } else if (!isDecompressArchivePath(path) && !(isPotentialSfxPath(path) && split?.archive_format)) throw new Error('无法确认分卷组，请选择首卷。')
+  } else if (isPotentialSplitArchivePath(path) || (!isDecompressArchivePath(path) && !(isPotentialSfxPath(path) && split?.archive_format))) throw new Error('无法确认分卷组，请选择首卷。')
   const file = await invoke<{ name: string; is_dir: boolean; size: number }>('get_file_info', { path })
   check()
   if (file.is_dir || file.size <= 0) throw new Error('来源必须是非空归档文件，请确认已下载或复制完成。')

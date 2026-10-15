@@ -125,7 +125,8 @@ export const isPotentialSfxPath = (path: string) => /\.exe$/i.test(path.trim())
 // sibling volumes before a task is created.
 export const isPotentialSplitArchivePath = (path: string) => {
   const normalizedPath = path.trim().toLowerCase()
-  return /(?:\.7z)?\.\d{3,}$/.test(normalizedPath)
+  return /(?:^|[\\/.])haozip\d{2,5}\.zip$/.test(normalizedPath)
+    || /(?:\.7z)?\.\d{3,}$/.test(normalizedPath)
     || /\.z\d{2,5}$/.test(normalizedPath)
     || /\.r\d{2,3}$/.test(normalizedPath)
     || /\.part\d+(?:\.rar)?$/.test(normalizedPath)

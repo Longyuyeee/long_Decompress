@@ -23,6 +23,7 @@ describe('useArchiveBrowseRequest', () => {
 
   it('maps structured backend failures to user-facing text', () => {
     expect(describeArchiveBrowseError('ARCHIVE_BROWSE_TIMEOUT|读取超时|detail')).toBe('读取超时')
+    expect(describeArchiveBrowseError('ARCHIVE_BROWSE_INCOMPLETE|缺少 ZIP 分卷：资料.haozip01.zip|detail')).toBe('缺少 ZIP 分卷：资料.haozip01.zip')
     expect(describeArchiveBrowseError(new Error('raw parser detail'))).toContain('确认文件完整')
   })
 })

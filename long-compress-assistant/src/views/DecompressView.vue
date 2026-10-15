@@ -243,15 +243,16 @@ const onFilesSelected = async (files: any[]) => {
         errors.push(`${file.name || sourcePath}：${detail}`)
         continue
       }
-      if (isPotentialSplitArchivePath(sourcePath) && !isDecompressArchivePath(sourcePath)) {
+      if (isPotentialSplitArchivePath(sourcePath)) {
+        const detail = extractErrorMessage(error).replace(/\[archive-inspection:[^\]]+\]\s*/g, '')
         errors.push(appStore.t('decompress.split.detection_failed')
           .replace('{0}', file.name || sourcePath)
-          .replace('{1}', String(error)))
+          .replace('{1}', detail))
         continue
       }
       console.debug('Split archive detection skipped:', error)
     }
-    if (isPotentialSplitArchivePath(sourcePath) && !isDecompressArchivePath(sourcePath)) {
+    if (isPotentialSplitArchivePath(sourcePath)) {
       errors.push(appStore.t('decompress.split.group_not_found').replace('{0}', file.name || sourcePath))
       continue
     }

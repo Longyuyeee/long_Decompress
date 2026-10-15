@@ -9,6 +9,17 @@ describe('ToastContainer', () => {
     setActivePinia(createPinia())
   })
 
+  it('keeps long missing-volume names readable without removing the close action', () => {
+    const message = '缺少 ZIP 分卷：' + 'download-'.repeat(40) + '.haozip01.zip'
+    useUIStore().toasts.push({id:'missing-volume',type:'error',message,duration:0})
+    const wrapper = mount(ToastContainer)
+    expect(wrapper.get('[role="alert"] p').text()).toBe(message)
+    expect(wrapper.get('[role="alert"] p').classes()).toContain('[overflow-wrap:anywhere]')
+    expect(wrapper.get('[role="alert"] p').element.parentElement?.classList.contains('min-w-0')).toBe(true)
+    expect(wrapper.get('button[aria-label="关闭错误提示"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
   it('lets pointer input pass through the toast body while keeping close interactive', async () => {
     const uiStore = useUIStore()
     uiStore.toasts.push({

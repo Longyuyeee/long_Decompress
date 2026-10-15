@@ -1241,7 +1241,7 @@ pub async fn browse_archive(
             let service = CompressionService::new_with_defaults().await;
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
-                .await.map_err(|error| error.to_string())?
+                .await.map_err(|error| classify_archive_browse_error(&format!("{error:#}")))?
         }
     };
     let browse_id = browse_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
@@ -1335,6 +1335,10 @@ fn classify_archive_browse_error(error: &str) -> String {
     }
     if error.contains("ARCHIVE_BROWSE_TIMEOUT") {
         return "ARCHIVE_BROWSE_TIMEOUT|读取压缩包内容超过 30 秒，已停止等待；归档可能损坏或所在设备响应过慢".to_string();
+    }
+    if error.contains("[archive-inspection:incomplete]") {
+        let message = error.replace("[archive-inspection:incomplete]", "");
+        return format!("ARCHIVE_BROWSE_INCOMPLETE|{}|{error}", message.trim().replace('|', " / "));
     }
     if lower.contains("unsupported") || lower.contains("did not expose any browseable") {
         return format!("ARCHIVE_BROWSE_UNSUPPORTED|该文件不是受支持的可浏览归档|{error}");
@@ -2255,6 +2259,11 @@ mod cancellation_tests {
 
     #[test]
     fn archive_browse_errors_are_classified_for_the_ui() {
+        let missing = classify_archive_browse_error("[archive-inspection:incomplete] 缺少 ZIP 分卷：资料.haozip01.zip");
+        assert_eq!(missing.split('|').nth(1), Some("缺少 ZIP 分卷：资料.haozip01.zip"));
+        assert!(missing.starts_with("ARCHIVE_BROWSE_INCOMPLETE|"));
+        assert!(classify_archive_browse_error("[archive-inspection:incomplete] 未找到可读的终卷目录；总卷数无法确认")
+            .starts_with("ARCHIVE_BROWSE_INCOMPLETE|未找到可读的终卷目录"));
         assert!(classify_archive_browse_error("ARCHIVE_BROWSE_TIMEOUT")
             .starts_with("ARCHIVE_BROWSE_TIMEOUT|"));
         assert!(classify_archive_browse_error("ChecksumVerificationFailed")

@@ -1,0 +1,69 @@
+{
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "binarySha256": "6f25c746f1dc395f32533e60b4f531b5bf288b53362a786471c8aca1a7dc0051",
+  "source": "https://github.com/xiaolincoder/CS-Base/issues/210",
+  "sourceHashes": [
+    "8be787946b66587ad7ac9529d6780cdeee92bb516ad4f645c3e6aae7f2411117",
+    "ecc96ac9fb045bc779442ca1f67578b87967db455f2ab0a97898ef5ff728cde0"
+  ],
+  "expectedPayloadSha256": "151a4929baf7f7d0e0626c3d865e26882ee45de330d868b6f26422df0c505900",
+  "records": [
+    {
+      "member": "图解计算机基础（小林）.haozip01.zip",
+      "grouped": true,
+      "outerFiles": 1,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "convertedAndIndependentlyRead": true
+    },
+    {
+      "member": "图解计算机基础（小林）.haozip02.zip",
+      "grouped": true,
+      "outerFiles": 1,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "convertedAndIndependentlyRead": true
+    }
+  ],
+  "missing": [
+    {
+      "missing": "图解计算机基础（小林）.haozip01.zip",
+      "queued": false,
+      "passwordNotRequested": true,
+      "reason": "图解计算机基础（小林）.haozip01.zip"
+    },
+    {
+      "missing": "图解计算机基础（小林）.haozip02.zip",
+      "queued": false,
+      "passwordNotRequested": true,
+      "reason": "终卷目录"
+    }
+  ],
+  "ui": {
+    "lastMemberOpenAndExtract": true,
+    "unorderedDedupe": true,
+    "individualOutputPreserved": true,
+    "subfolderStem": true,
+    "minimumWindowNoDetailOverflow": true,
+    "conversionDedupeAndDefaultsPreserved": true,
+    "conversionCompleted": true,
+    "missingReasonVisibleInBrowser": true,
+    "reimportAfterSupplyingVolumes": true,
+    "screenshots": [
+      "haozip-1411-last-member-browser.png",
+      "haozip-1411-decompression-1100x700.png",
+      "haozip-1411-decompression-760x520.png",
+      "haozip-1411-queue-completed.png",
+      "haozip-1411-conversion-1100x700.png",
+      "haozip-1411-conversion-760x520.png",
+      "haozip-1411-conversion-completed.png",
+      "haozip-1411-missing-first.png",
+      "haozip-1411-browser-missing-first.png",
+      "haozip-1411-browser-missing-first-760x520.png",
+      "haozip-1411-missing-terminal.png",
+      "haozip-1411-browser-missing-terminal.png",
+      "haozip-1411-supplied-volumes-reimported.png"
+    ]
+  },
+  "genuineFixtureScope": "one public unencrypted HaoZip forum ZIP set; encrypted/ZIP64 layout regressions are separately synthetic, not genuine HaoZip output"
+}

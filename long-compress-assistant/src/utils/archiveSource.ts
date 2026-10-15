@@ -17,6 +17,7 @@ export const detectArchiveGroup = (path: string) => invoke<ArchiveVolumeGroup>('
 
 export function archiveGroupKey(path: string): string {
   return path.replace(/\\/g, '/').toLowerCase()
+    .replace(/(^|[/.])haozip\d{2,5}\.zip$/, '$1haozip01.zip')
     .replace(/\.part\d+\.rar$/, '.rar')
     .replace(/\.r\d{2,3}$/, '.rar')
     .replace(/\.z\d{2,5}$/, '.zip')
@@ -36,6 +37,7 @@ export function archiveSourceFormat(path: string): string | undefined {
 
 export function archiveSourceStem(path: string): string {
   let name = path.split(/[\\/]/).pop() || 'archive'
+  name = name.replace(/^(.*\.)?haozip\d{2,5}\.zip$/i, (_, prefix) => prefix ? prefix + 'zip' : 'archive.zip')
   name = name.replace(/\.part\d+\.rar$/i, '.rar').replace(/\.r\d{2,3}$/i, '.rar').replace(/\.z\d{2,5}$/i, '.zip')
     .replace(/\.\d{3,}$|\.part\d+$/i, '')
   const extensions = [...FORMAT_CAPABILITIES.flatMap(format => format.extensions), ...EXTRACT_ONLY_FORMATS.flatMap(format => format.extensions)].sort((a, b) => b.length - a.length)

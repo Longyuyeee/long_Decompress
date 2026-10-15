@@ -65,7 +65,7 @@ async function createDraft() {
         throw new Error(`分卷不完整，请补齐后重试：${split.missing_parts?.join('、') || '缺少首卷或必要分卷'}`)
       }
       path = split.first_part
-    } else if (!isDecompressArchivePath(path) && !(isPotentialSfxPath(path) && split?.archive_format)) {
+    } else if (isPotentialSplitArchivePath(path) || (!isDecompressArchivePath(path) && !(isPotentialSfxPath(path) && split?.archive_format))) {
       throw new Error('无法确认分卷组，请选择归档首卷')
     }
     const file = await invoke<{ name: string; is_dir: boolean; size: number }>('get_file_info', { path })

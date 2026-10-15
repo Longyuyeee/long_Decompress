@@ -23,6 +23,16 @@ const setup = async () => {
   return { wrapper, store: useTaskStore() }
 }
 describe('history extraction draft', () => {
+  it('rejects an unconfirmed forum member instead of creating a standalone ZIP draft', async () => {
+    const {wrapper,store} = await setup()
+    await wrapper.get('[data-testid="history-draft-source"]').setValue('C:/资料.haozip02.zip')
+    mocks.invoke.mockResolvedValue({is_split:false})
+    await wrapper.get('[data-testid="history-draft-create"]').trigger('click')
+    await flushPromises()
+    expect(store.tasks).toHaveLength(0)
+    expect(wrapper.text()).toContain('无法确认分卷组')
+    wrapper.unmount()
+  })
   it('带入已保存的目录和子目录选择，允许修改后创建，再切到旧记录时清空设置', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)

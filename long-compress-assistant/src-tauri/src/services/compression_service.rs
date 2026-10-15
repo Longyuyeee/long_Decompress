@@ -2822,6 +2822,10 @@ impl CompressionService {
     fn archive_output_dir_name(path: &Path) -> String {
         let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("archive");
         let mut candidate = file_name.to_string();
+        if let Some(captures) = regex::Regex::new(r"(?i)^(.*\.)?haozip\d{2,5}\.zip$").unwrap().captures(file_name) {
+            return captures.get(1).map(|prefix| prefix.as_str().trim_end_matches('.'))
+                .filter(|base| !base.is_empty()).unwrap_or("archive").to_string();
+        }
         let lower = candidate.to_lowercase();
         if let Some((_, extension)) = lower.rsplit_once('.') {
             if extension.len() >= 3 && extension.chars().all(|character| character.is_ascii_digit()) {
