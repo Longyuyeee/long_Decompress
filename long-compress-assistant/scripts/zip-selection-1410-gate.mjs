@@ -192,6 +192,20 @@ export async function runZipSelection1410Gate({ driver, bridge, waitForElement, 
     results.push({codec,sourceUrl:url,sha256:createHash('sha256').update(bytes).digest('hex'),independentSevenZipVerified:codec!=='reduce',publishedOriginalBytesVerified:codec==='reduce',applicationFullExtraction:true,files:count,passwordVariantsTested:false})
   }
 
+  const corruptRoot=path.join(root,'corrupt-entry');mkdirSync(corruptRoot)
+  writeFileSync(path.join(corruptRoot,'bad.txt'),Buffer.alloc(100000,42));writeFileSync(path.join(corruptRoot,'good.txt'),'good')
+  const corruptZip=path.join(corruptRoot,'部分损坏.zip')
+  command(bundledSevenZip,['a','-tzip','-mm=Copy',corruptZip,'bad.txt','good.txt'],{cwd:corruptRoot})
+  const damaged=readFileSync(corruptZip),dataStart=30+damaged.readUInt16LE(26)+damaged.readUInt16LE(28)
+  assert.equal(damaged.subarray(30,30+damaged.readUInt16LE(26)).toString(),'bad.txt');damaged[dataStart+23]^=1;writeFileSync(corruptZip,damaged)
+  const detected=spawnSync(bundledSevenZip,['t',corruptZip],{encoding:'utf8',windowsHide:true});assert.notEqual(detected.status,0);assert.match(detected.stdout+detected.stderr,/CRC|Checksum/i)
+  const invokeExtraction=async(skip,output)=>driver.executeAsyncScript(`const [filePath,outputPath,skip,done]=arguments,ids=crypto.getRandomValues(new Uint32Array(2));const clean=()=>ids.forEach(id=>Reflect.deleteProperty(window,'_'+id));window['_'+ids[0]]=value=>{clean();done({ok:true,value})};window['_'+ids[1]]=error=>{clean();done({ok:false,error:String(error)})};window.__TAURI_IPC__({cmd:'extract_file',taskId:'crc-'+Date.now(),filePath,outputPath,password:null,options:{preserve_paths:true,preserve_timestamps:true,skip_corrupted:skip,extract_only_newer:false,file_filter:null,enable_bruteforce:false,bruteforce_wordlists:[],delete_after:false,create_subdirectory:false,overwrite_existing:false,conflict_policy:'rename'},callback:ids[0],error:ids[1]});`,corruptZip,output,skip)
+  const tolerant=path.join(corruptRoot,'skip-output'),strict=path.join(corruptRoot,'strict-output')
+  const skipped=await invokeExtraction(true,tolerant);assert.ok(skipped.ok,JSON.stringify(skipped))
+  assert.deepEqual(readdirSync(tolerant),['good.txt']);assert.equal(readFileSync(path.join(tolerant,'good.txt'),'utf8'),'good')
+  const rejected=await invokeExtraction(false,strict);assert.equal(rejected.ok,false);assert.equal(existsSync(strict),false)
+  results.push({corruptEntry:true,independentCrcFailure:true,skipPublishesOnlyIntactFiles:true,strictModeRejectsWithoutPublishedOutput:true,interface:'real Tauri extract_file backend option; no new UI switch'})
+
   if (process.env.LONG_ZIP1410_REAL_ZIP64 === '1') {
     const large=path.join(root,'real-zip64');mkdirSync(large)
     const length=2**32+12345, largeFile=path.join(large,'大文件.bin')

@@ -1,6 +1,6 @@
 {
   "version": "1.4.10",
-  "binarySha256": "7b178baac409d0f185a9bb6da7d02a94cd84f8ce5d49bf9fb129ce6a8c982fef",
+  "binarySha256": "60295f80ef474968ac76a6e484826f0a364e4aa9afe13cf7c52cdab8ec2d8b07",
   "results": [
     {
       "encryption": "AES256",
@@ -97,6 +97,13 @@
       "applicationFullExtraction": true,
       "files": 1,
       "passwordVariantsTested": false
+    },
+    {
+      "corruptEntry": true,
+      "independentCrcFailure": true,
+      "skipPublishesOnlyIntactFiles": true,
+      "strictModeRejectsWithoutPublishedOutput": true,
+      "interface": "real Tauri extract_file backend option; no new UI switch"
     },
     {
       "realZip64": true,

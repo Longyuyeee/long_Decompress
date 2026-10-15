@@ -16,6 +16,11 @@ use zip_aes::ZipArchive;
 
 const PROGRESS_EMIT_INTERVAL_BYTES: u64 = 4 * 1024 * 1024;
 
+fn skippable_corruption(error: &anyhow::Error) -> bool {
+    error.chain().any(|cause| cause.downcast_ref::<std::io::Error>().is_some_and(|error|
+        matches!(error.kind(), std::io::ErrorKind::InvalidData | std::io::ErrorKind::UnexpectedEof)))
+}
+
 pub(crate) fn system_time(
     year: u16,
     month: u8,
@@ -153,6 +158,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
                 (file_name, outpath, is_dir, entry.size(), source_modified)
             };
 
+            let mut created_file = false;
             let entry_result = (|| -> Result<()> {
                 if is_dir {
                     std::fs::create_dir_all(&outpath)?;
@@ -171,6 +177,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
                     archive.by_index(index)?
                 };
                 let mut outfile = File::create(&outpath)?;
+                created_file = true;
                 let buffer_size = runtime.buffer_pool().recommend_buffer_size(source_size);
                 if buffer_handle
                     .as_ref()
@@ -243,12 +250,16 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
             })();
 
             if let Err(error) = entry_result {
-                if options.skip_corrupted {
+                if options.skip_corrupted && skippable_corruption(&error) {
+                    if created_file {
+                        std::fs::remove_file(&outpath).map_err(|cleanup|
+                            anyhow::anyhow!("无法清理未完成的 ZIP 条目「{file_name}」：{cleanup}；原始错误：{error}"))?;
+                    }
                     if let Some(window) = window {
                         runtime.emit_log(
                             window,
                             task_id,
-                            &format!("Skipped entry {file_name}: {error}"),
+                            &format!("已跳过损坏条目「{file_name}」，未保留不完整文件：{error}"),
                             TaskLogSeverity::Warning,
                         );
                     }
@@ -389,6 +400,33 @@ mod tests {
             writer.write_all(payload.as_bytes()).unwrap();
         }
         writer.finish().unwrap();
+    }
+
+    #[test]
+    fn selected_zip_skip_corruption_discards_incomplete_file_and_keeps_good_entries() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("部分损坏.zip");
+        let mut writer = ModernZipWriter::new(std::fs::File::create(&source).unwrap());
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Stored);
+        writer.start_file("bad.txt", options).unwrap(); writer.write_all(&vec![42; 100_000]).unwrap();
+        writer.start_file("good.txt", options).unwrap(); writer.write_all(b"good").unwrap(); writer.finish().unwrap();
+        let offset = ZipArchive::new(std::fs::File::open(&source).unwrap()).unwrap().by_index_raw(0).unwrap().data_start().unwrap() as usize;
+        let mut bytes = std::fs::read(&source).unwrap(); bytes[offset+23] ^= 1; std::fs::write(&source, bytes).unwrap();
+        let output = temp.path().join("out");
+        super::extract_with_optional_window(&crate::services::compression_service::CompressionService::for_testing(), None, "skip-corrupt", source.to_str().unwrap(), output.to_str().unwrap(), None,
+            &crate::models::compression::DecompressOptions { skip_corrupted: true, ..Default::default() }).unwrap();
+        assert_eq!(std::fs::read(output.join("good.txt")).unwrap(), b"good");
+        assert!(!output.join("bad.txt").exists(), "跳过损坏文件不能发布已写出的半截内容");
+    }
+
+    #[test]
+    fn selected_zip_skip_corruption_never_hides_cancellation_or_storage_errors() {
+        assert!(super::skippable_corruption(&std::io::Error::new(std::io::ErrorKind::InvalidData, "bad CRC").into()));
+        assert!(super::skippable_corruption(&std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "truncated").into()));
+        for kind in [std::io::ErrorKind::PermissionDenied, std::io::ErrorKind::StorageFull, std::io::ErrorKind::Interrupted] {
+            assert!(!super::skippable_corruption(&std::io::Error::new(kind, "not corrupt data").into()));
+        }
+        assert!(!super::skippable_corruption(&CompressionError::Cancelled.into()));
     }
 
     #[test]
