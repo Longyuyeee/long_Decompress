@@ -8,7 +8,7 @@
 
 打包文件 · 解压归档 · 浏览内容 · 管理密码 · 压缩图片、视频与 PDF
 
-[![Version](https://img.shields.io/badge/version-1.4.5-6366f1?style=for-the-badge)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0ea5e9?style=for-the-badge&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Local](https://img.shields.io/badge/文件处理-在本机完成-14b8a6?style=for-the-badge)](#privacy) [![License](https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.4.6-6366f1?style=for-the-badge)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0ea5e9?style=for-the-badge&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Local](https://img.shields.io/badge/文件处理-在本机完成-14b8a6?style=for-the-badge)](#privacy) [![License](https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge)](LICENSE)
 
 ### [⬇ 下载最新版](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 
@@ -146,7 +146,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 - ZIP 默认保留 `.zip.001` 数字切卷，可主动选择标准 `.z01/…/.zip`（入口为 `.zip`）；7Z 创建 `.7z.001`，RAR 创建 `.partN.rar`。解压时把整组放在同一目录。普通 TAR/流格式数字切卷的外部兼容能力不同；它们使用密码时可改用 7Z 容器，既有 `.aes` 属于本应用包装。
 - ZIP/ZIPX 已验证常用 Store、Deflate、Deflate64、BZip2、LZMA、XZ、PPMd 及部分 Zstandard 读取组合；不等于支持所有 ZIPX 专有算法。
 - ZIP 默认 AES-256，可主动选择 ZipCrypto；与 Windows 7-Zip 交换非 ASCII 密码的归档时，可显式选择匹配的 Windows 密码编码。
-- 密码 ZIP 可尝试救回完整文件：目录可读时提供密码，救回通过校验的文件；新包沿用填写的密码，统一使用 AES-256 / UTF-8，并显示部分恢复及未恢复原因。
+- 密码 ZIP 可尝试救回完整文件：目录可读或丢目录后仍能确定本地文件边界时，提供密码救回通过校验的文件；新包沿用填写的密码，统一使用 AES-256 / UTF-8，并显示部分恢复及未恢复原因。
 - DOCX、XLSX、PPTX、ODT、ODS、EPUB 属于文档容器，不作为普通压缩包导入。
 - 预览、嵌套浏览及压缩参数随格式而异。体积优化效果取决于文件内容，已充分压缩的文件可能没有明显收益。
 
@@ -164,7 +164,7 @@ Windows 11 请在 **“显示更多选项”** 中使用经典菜单；当前公
 
 文件处理、归档浏览、密码匹配和完整性校验在本机完成。密码保险箱加密保存常用解压密码，任务展示当前阶段与日志；遇到同名文件可选择覆盖、跳过或保留两份。文件完整性中心还提供校验、归档诊断和输出新文件的 ZIP 修复。
 
-ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复原因会明确列出，原包保留。部分恢复不代表全部找回，密码包、缺卷及未知边界不承诺修复。
+ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复原因会明确列出，原包保留。部分恢复不代表全部找回；需要正确密码与完整来源，缺卷、本地尺寸未知及标准磁盘 ZIP 卷丢目录暂不支持救援。
 
 <details>
 <summary><strong>常用快捷键</strong></summary>
@@ -223,6 +223,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.4.6（待发布）** | 失败任务行内纠正、缺卷处理、密码 ZIP 丢目录救援、恢复新包继续解压、等宽详情与日志显示优化 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.6.md) |
 | **v1.4.5** | 密码 ZIP 完整文件救援、ARJ / Unix `.Z` / UDF 读取、双栏与右键入口统一、结果密码提示与定位 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.5.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5) |
 | **v1.4.4** | 标准 ZIP 分卷创建、PPMd/加密 ZIPX 与卷入口兼容、ZIP 目录重建与完整条目救援 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.4.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.4) |
 | v1.4.3 | 标准 ZIP 多卷浏览/密码/转换、RAR 密码分卷、LZ4/Brotli、TAR 数字切卷与实际操作修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.3.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.3) |

@@ -736,6 +736,50 @@ mod tests {
         }
     }
 
+    // A later uncertain entry must not change the trust of the intact prefix.
+    #[tokio::test]
+    async fn lost_directory_keeps_only_complete_encrypted_prefix_and_never_uses_plain_files_as_password_proof() {
+        for first_encrypted in [true, false] {
+            for descriptor in [true, false] {
+                let temp = tempfile::tempdir().unwrap();
+                let input = temp.path().join("不完整的密码包.zip");
+                let password = "correct password";
+                let plain = zip_aes::write::SimpleFileOptions::default().compression_method(zip_aes::CompressionMethod::Stored);
+                let encrypted = plain.with_aes_encryption(zip_aes::AesMode::Aes256, password);
+                let mut writer = zip_aes::ZipWriter::new(File::create(&input).unwrap());
+                writer.start_file("first.txt", if first_encrypted { encrypted } else { plain }).unwrap();
+                writer.write_all(b"intact prefix contents").unwrap();
+                writer.start_file("second.txt", encrypted).unwrap(); writer.write_all(&vec![17; 4096]).unwrap();
+                writer.finish().unwrap();
+                let mut archive = zip_aes::ZipArchive::new(File::open(&input).unwrap()).unwrap();
+                let index = archive.index_for_name("second.txt").unwrap();
+                let second = archive.by_index_raw(index).unwrap();
+                let start = second.header_start() as usize;
+                let data = second.data_start().unwrap() as usize;
+                drop(second); drop(archive);
+                let mut bytes = std::fs::read(&input).unwrap();
+                if descriptor {
+                    let central = u32::from_le_bytes(bytes[bytes.len()-6..bytes.len()-2].try_into().unwrap()) as usize;
+                    bytes.truncate(central);
+                    let flags = u16::from_le_bytes(bytes[start+6..start+8].try_into().unwrap()) | 8;
+                    bytes[start+6..start+8].copy_from_slice(&flags.to_le_bytes());
+                    bytes[start+14..start+26].fill(0);
+                } else { bytes.truncate(data + 100); }
+                std::fs::write(&input, &bytes).unwrap();
+                let report = diagnose_archive(&input, Some(password), Arc::new(AtomicBool::new(false))).await.unwrap();
+                assert!(report.encrypted);
+                assert_eq!(report.can_repair, first_encrypted, "{report:?}");
+                let output = temp.path().join("new.zip");
+                let result = repair_zip_with_password_to_new(&input, &output, Some(password), &AtomicBool::new(false));
+                if first_encrypted {
+                    let result = result.unwrap(); assert!(result.output_encrypted && result.partial);
+                    assert_eq!(result.recovered_files, 1); assert!(!result.skipped_entries.is_empty());
+                } else { assert!(result.is_err()); assert!(!output.exists()); }
+                assert_eq!(std::fs::read(&input).unwrap(), bytes);
+            }
+        }
+    }
+
     // The zip 8.6 writer always uses unknown-size descriptors for ZipCrypto.
     // Construct declared-size records here; external 7-Zip covers this path in
     // the desktop check so the fixture implementation is not the only oracle.

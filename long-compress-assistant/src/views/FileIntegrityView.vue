@@ -15,6 +15,7 @@ const taskStore = useTaskStore()
 const recoveryTaskId = ref('')
 const recoveredDraftId = ref('')
 const recoveredPassword = ref('')
+const recoveryOptions = ref<{ outputPath?: string; extractToSubfolder?: boolean }>({})
 
 interface ChecksumResult {
   path: string
@@ -200,6 +201,7 @@ const clearResults = () => {
   diagnosticReport.value = null
   repairResult.value = null
   recoveryTaskId.value = ''
+  recoveryOptions.value = {}
   recoveredDraftId.value = ''
   recoveredPassword.value = ''
 }
@@ -213,6 +215,7 @@ const selectArchive = async () => {
     diagnosticReport.value = null
     repairResult.value = null
     recoveryTaskId.value = ''
+    recoveryOptions.value = {}
     recoveredDraftId.value = ''
     recoveredPassword.value = ''
   }
@@ -343,6 +346,7 @@ watch(() => appStore.pendingArchiveDiagnosis, request => {
   archivePath.value = request.path
   archivePassword.value = request.password || ''
   recoveryTaskId.value = request.taskId || ''
+  recoveryOptions.value = { outputPath: request.outputPath, extractToSubfolder: request.extractToSubfolder }
   void diagnoseArchive()
 }, { immediate: true })
 
@@ -350,16 +354,16 @@ const queueRecoveredArchive = async () => {
   const result = repairResult.value
   if (!result || recoveredDraftId.value) return
   const original = taskStore.tasks.find(task => task.id === recoveryTaskId.value)
-  if (original && !await taskStore.waitForHistoryPersistence(original.id)) {
+  if (original && !await (original.historySaveError ? taskStore.retryHistoryPersistence(original.id) : taskStore.waitForHistoryPersistence(original.id))) {
     appStore.setError('原失败记录尚未保存，请先重试保存历史后再添加。')
     return
   }
-  if (recoveredDraftId.value) return
+  if (recoveredDraftId.value || result !== repairResult.value) return
   const id = generateId()
   taskStore.addTask({ id, name: result.outputPath.split(/[\\/]/).pop() || result.outputPath,
     type: 'decompression', workloadKind: 'archive', sourceFiles: [result.outputPath],
-    outputPath: original?.outputPath || parentDirectory(result.outputPath),
-    extractToSubfolder: original?.extractToSubfolder ?? true, configurationMode: 'individual',
+    outputPath: recoveryOptions.value.outputPath || original?.outputPath || parentDirectory(result.outputPath),
+    extractToSubfolder: recoveryOptions.value.extractToSubfolder ?? original?.extractToSubfolder ?? true, configurationMode: 'individual',
     recycleSourceAfterExtract: false, password: recoveredPassword.value || undefined,
     retryOfTaskId: original?.id })
   recoveredDraftId.value = id

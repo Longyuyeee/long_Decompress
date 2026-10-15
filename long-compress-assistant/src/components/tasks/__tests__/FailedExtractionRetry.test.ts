@@ -45,7 +45,7 @@ describe('failed extraction corrections', () => {
     await inline.get('[data-testid="retry-source"]').setValue('C:/complete/reselected.zip')
     await inline.get('[data-testid="retry-password"]').setValue('new rescue password')
     await inline.get('[data-testid="retry-rescue"]').trigger('click')
-    expect(useAppStore().pendingArchiveDiagnosis).toEqual({ path: 'C:/complete/reselected.zip', taskId: ids[0], password: 'new rescue password' })
+    expect(useAppStore().pendingArchiveDiagnosis).toMatchObject({ path: 'C:/complete/reselected.zip', taskId: ids[0], password: 'new rescue password', outputPath: 'C:/output' })
     expect(store.tasks[0].sourceFiles).toEqual(['C:/original-0.zip'])
     expect((inline.get('[data-testid="retry-password"]').element as HTMLInputElement).value).toBe('')
     inline.unmount()

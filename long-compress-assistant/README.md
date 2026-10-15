@@ -28,7 +28,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-当前源码版本为 **1.4.5**：密码 ZIP 救援及 ARJ、Unix `.Z`、UDF 读取，相关双栏/右键入口同步。普通生产构建与功能收口情况见 [本版记录](docs/PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)；下载安装以 [v1.4.5 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5) 的实际附件为准。
+当前源码版本为 **1.4.6（待发布）**：失败任务行内处理、密码 ZIP 丢目录救援、恢复新包继续解压，以及详情滚动和小窗口显示优化。范围见 [中文发布说明](docs/RELEASE_NOTES_1.4.6.md)，实际下载安装以 [正式 Releases](https://github.com/Longyuyeee/long_Decompress/releases) 的附件为准。
 
 ## 本地开发
 
@@ -94,7 +94,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-本版为 [v1.4.5](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5)，完整变化见 [中文发布说明](docs/RELEASE_NOTES_1.4.5.md)与 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。安装附件以 Release 页面实际上传结果为准。
+本轮准备 **v1.4.6**，完整变化见 [中文发布说明](docs/RELEASE_NOTES_1.4.6.md)与 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。源码准备不等于安装包已发布，下载以 Release 页面实际附件为准。
+
+v1.4.6 将失败任务的补卷、换来源和密码纠正放在单条展开区，多选仍使用弹窗；支持边界明确的密码 ZIP 丢目录救援，新包可保留输出设置加入解压队列。压缩/解压详情统一等宽、紧凑摘要和可滚动日志，并修复小窗口文字重叠。
 
 v1.4.5 接通目录可读的密码 ZIP 救援，新包保留填写的密码并使用 AES-256 / UTF-8；新增 ARJ、Unix `.Z`、UDF 读取及双栏/右键入口。新增结果加密提示、定位与复制，保留单条展开和多选弹窗。范围与实际检查见 [本版记录](docs/PASSWORD_ZIP_RESCUE_AND_FORMATS_1.4.5.md)和 [封板记录](docs/PASSWORD_ZIP_RESCUE_FREEZE_1.4.5.md)。
 

@@ -49,9 +49,10 @@ onUnmounted(() => { disposed = true; cancelChecks(); rows.value.forEach(row => {
 onMounted(async () => {
   for (const row of rows.value) {
     if (!['missing-volume', 'incomplete'].includes(row.policy.category || '')) continue
+    const source = row.source
     try {
-      const split = await invoke<{ missing_parts?: string[] } | null>('detect_split_archive', { path: row.source })
-      if (!disposed) row.missing = split?.missing_parts?.map(path => path.split(/[\\/]/).pop() || path) || []
+      const split = await invoke<{ missing_parts?: string[] } | null>('detect_split_archive', { path: source })
+      if (!disposed && row.source === source) row.missing = split?.missing_parts?.map(path => path.split(/[\\/]/).pop() || path) || []
     } catch { /* The user can reselect a moved or unreadable source below. */ }
   }
 })
@@ -62,7 +63,7 @@ async function openSourceFolder(row: typeof rows.value[number]) {
 }
 function rescueSource(row: typeof rows.value[number]) {
   if (busy.value || pickerBusy.value || !row.source.trim()) return
-  appStore.openArchiveForDiagnosis({ path: row.source.trim(), taskId: row.id, password: row.password })
+  appStore.openArchiveForDiagnosis({ path: row.source.trim(), taskId: row.id, password: row.password, outputPath: row.output.trim(), extractToSubfolder: row.extractToSubfolder })
   row.password = ''
   close()
 }
