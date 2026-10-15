@@ -162,7 +162,10 @@ fn verify(path: &Path, password: Option<&str>, flag: &AtomicBool) -> Result<Cont
         } else {
             contents.files += 1;
             contents.size = contents.size.saturating_add(header.entry().unpacked_size);
-            archive = header.test().map_err(error)?;
+            archive = header.test_with_cancel(flag).map_err(|failure| {
+                if flag.load(Ordering::SeqCst) { anyhow::anyhow!("RAR recovery cancelled") }
+                else { error(failure) }
+            })?;
         }
     }
     cancelled(flag)?;
@@ -663,6 +666,32 @@ mod tests {
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr)
         );
+    }
+    #[test]
+    #[ignore = "Requires an external Rar.exe; creates an isolated 128 MiB single-entry archive"]
+    fn native_large_entry_check_can_cancel_without_waiting_for_the_entry() {
+        let tool = CompressionService::find_rar_encoder().expect("Rar.exe required");
+        let dir = tempfile::tempdir().unwrap();
+        let source = dir.path().join("large.bin");
+        let mut file = fs::File::create(&source).unwrap();
+        let block = vec![0x5a; 1024 * 1024];
+        for _ in 0..128 { file.write_all(&block).unwrap(); }
+        drop(file);
+        let path = dir.path().join("large.rar");
+        command(&tool, &["a", "-m0", "-idq", "-cfg-", path.to_str().unwrap(), source.to_str().unwrap()]);
+        let original = fs::metadata(&path).unwrap().len();
+        let entry = unrar::Archive::new(&path).open_for_processing().unwrap().read_header().unwrap().unwrap();
+        let flag = Arc::new(AtomicBool::new(false));
+        let signal = flag.clone();
+        let started = std::time::Instant::now();
+        let cancel = std::thread::spawn(move || { std::thread::sleep(std::time::Duration::from_millis(1)); signal.store(true, Ordering::SeqCst); });
+        let result = entry.test_with_cancel(&flag);
+        cancel.join().unwrap();
+        assert!(result.is_err(), "cancel was ignored while processing the single entry");
+        assert!(started.elapsed() < std::time::Duration::from_secs(2));
+        assert_eq!(fs::metadata(&path).unwrap().len(), original);
+        flag.store(false, Ordering::SeqCst);
+        assert_eq!(verify(&path, None, &flag).unwrap().size, 128 * 1024 * 1024);
     }
     #[test]
     fn recovery_members_share_only_the_exact_family() {
