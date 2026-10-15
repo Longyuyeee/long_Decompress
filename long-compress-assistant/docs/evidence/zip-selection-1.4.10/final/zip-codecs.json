@@ -1,0 +1,201 @@
+{
+  "results": [
+    {
+      "codec": "PPMd",
+      "encryption": "none",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": false
+    },
+    {
+      "codec": "PPMd",
+      "encryption": "AES256",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "PPMd",
+      "encryption": "ZipCrypto",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "Copy",
+      "encryption": "none",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": false
+    },
+    {
+      "codec": "Copy",
+      "encryption": "AES256",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "Copy",
+      "encryption": "ZipCrypto",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "Deflate",
+      "encryption": "none",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": false
+    },
+    {
+      "codec": "Deflate",
+      "encryption": "AES256",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "Deflate",
+      "encryption": "ZipCrypto",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "Deflate64",
+      "encryption": "none",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": false
+    },
+    {
+      "codec": "Deflate64",
+      "encryption": "AES256",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "Deflate64",
+      "encryption": "ZipCrypto",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "BZip2",
+      "encryption": "none",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": false
+    },
+    {
+      "codec": "BZip2",
+      "encryption": "AES256",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "BZip2",
+      "encryption": "ZipCrypto",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "LZMA",
+      "encryption": "none",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": false
+    },
+    {
+      "codec": "LZMA",
+      "encryption": "AES256",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "LZMA",
+      "encryption": "ZipCrypto",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "XZ",
+      "encryption": "none",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": false
+    },
+    {
+      "codec": "XZ",
+      "encryption": "AES256",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "XZ",
+      "encryption": "ZipCrypto",
+      "single": true,
+      "zipxAlias": true,
+      "diagnosticStatus": "healthy",
+      "numericVolumes": true,
+      "wrongPasswordRejected": true
+    },
+    {
+      "codec": "Zstd",
+      "encryption": "none",
+      "single": true,
+      "fixture": "independent raw-block, externally verified",
+      "encryptedVariants": "not externally generated"
+    }
+  ],
+  "complete": true
+}

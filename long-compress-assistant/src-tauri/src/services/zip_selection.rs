@@ -213,4 +213,37 @@ mod tests {
             assert!(!output.join("公开说明.txt").exists());
         }
     }
+
+    #[test]
+    #[ignore = "exports real encrypted Zstandard ZIP fixtures for independent-tool and desktop checks"]
+    fn export_zip_1410_compatibility_fixtures() {
+        use rand::RngCore;
+        use zip_aes::unstable::write::FileOptionsExt;
+        let root = std::path::PathBuf::from(std::env::var("LONG_ZIP1410_FIXTURE_ROOT").expect("isolated fixture output required"));
+        assert!(root.is_absolute() && !root.exists(), "use a new absolute fixture directory");
+        std::fs::create_dir_all(&root).unwrap();
+        let mut payload = vec![0; 180_000]; rand::thread_rng().fill_bytes(&mut payload);
+        std::fs::write(root.join("expected.bin"), &payload).unwrap();
+        let mut cases = Vec::new();
+        for mode in ["AES256", "ZipCrypto"] {
+            let file = root.join(format!("Zstandard-{mode}.zip"));
+            let plain = zip_aes::write::SimpleFileOptions::default().compression_method(zip_aes::CompressionMethod::Zstd);
+            let encrypted = if mode == "AES256" { plain.with_aes_encryption(zip_aes::AesMode::Aes256, "zstd-password + !") }
+                else { plain.with_deprecated_encryption(b"zstd-password + !").unwrap() };
+            let mut writer = zip_aes::ZipWriter::new(std::fs::File::create(&file).unwrap());
+            writer.start_file("资料/内容.bin", encrypted).unwrap(); writer.write_all(&payload).unwrap(); writer.finish().unwrap();
+            let standard = root.join(format!("Zstandard-{mode}-standard.zip"));
+            crate::services::standard_zip_writer::split(&file, &standard, 65_536, || Ok(()), |_, _| {}).unwrap();
+            let bytes = std::fs::read(&file).unwrap();
+            let numeric = root.join(format!("Zstandard-{mode}-numeric.zip.001"));
+            for (index, chunk) in bytes.chunks(65_536).enumerate() {
+                std::fs::write(root.join(format!("Zstandard-{mode}-numeric.zip.{:03}", index+1)), chunk).unwrap();
+            }
+            for (layout, source) in [("single", file), ("numeric", numeric), ("standard", standard)] {
+                cases.push(serde_json::json!({"encryption":mode, "layout":layout, "file":source, "password":"zstd-password + !", "entry":"资料/内容.bin"}));
+            }
+        }
+        std::fs::write(root.join("manifest.json"), serde_json::to_vec_pretty(&serde_json::json!({"producer":"zip-rs 8.6 fixture writer; independent verification required", "cases":cases})).unwrap()).unwrap();
+        println!("ZIP1410_FIXTURES={}", root.display());
+    }
 }
