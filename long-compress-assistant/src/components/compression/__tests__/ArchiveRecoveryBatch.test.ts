@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
+import { createPinia, getActivePinia, setActivePinia } from 'pinia'
+import { ARCHIVE_RECOVERY_DRAFT_KEY, useArchiveRecoveryStore } from '@/composables/useArchiveRecoveryBatch'
 import ArchiveRecoveryBatch from '../ArchiveRecoveryBatch.vue'
 import { useTaskStore } from '@/stores/task'
 const mocks = vi.hoisted(() => ({group:vi.fn(),diagnose:vi.fn(),repair:vi.fn(),cancelDiagnosis:vi.fn(),cancelRepair:vi.fn(),invoke:vi.fn(),open:vi.fn()}))
@@ -91,5 +92,90 @@ describe('archive batch recovery user flow', () => {
     expect(wrapper.text()).toContain('已停止，可重试')
     expect(wrapper.findAll('[data-testid="archive-batch-status"]')[1].text()).toBe('待检查')
     wrapper.unmount()
+  })
+
+  it('retains the current list, independent settings and passwords when the page is recreated without starting work', async () => {
+    const wrapper=setup(); await flushPromises()
+    const store=useArchiveRecoveryStore()
+    store.update(store.rows[0],{password:'only in memory',outputDirectory:'D:/mine'})
+    store.rows[0].expanded=true
+    const id=store.rows[0].id, pinia=getActivePinia()!
+    wrapper.unmount()
+    const reopened=mount(ArchiveRecoveryBatch,{props:{paths:[...store.sourcePaths]},global:{plugins:[pinia],stubs:{Teleport:true,Transition:false}}})
+    await flushPromises()
+    expect(store.rows[0]).toMatchObject({id,password:'only in memory',outputDirectory:'D:/mine',expanded:true})
+    expect(mocks.group).toHaveBeenCalledOnce()
+    expect(mocks.diagnose).not.toHaveBeenCalled()
+    expect(localStorage.getItem(ARCHIVE_RECOVERY_DRAFT_KEY)).not.toContain('only in memory')
+    reopened.unmount()
+  })
+
+  it('offers restart recovery without passwords or automatic work, requires recheck and separately requests the recovered result password', async () => {
+    setActivePinia(createPinia())
+    const old=useArchiveRecoveryStore()
+    await old.load(['C:/a.rar','C:/b.zip'])
+    old.update(old.rows[0],{password:'original password',outputDirectory:'D:/repair',extractDirectory:'D:/extract'})
+    old.update(old.rows[1],{password:'original password',outputDirectory:'D:/repair'})
+    await old.check()
+    mocks.repair.mockResolvedValueOnce({outputPath:'D:/repair/a.rar',recoveredFiles:1,skippedEntries:[],outputEncrypted:true})
+      .mockRejectedValueOnce(new Error('文件损坏'))
+    await old.repair('D:/repair')
+    expect(localStorage.getItem(ARCHIVE_RECOVERY_DRAFT_KEY)).not.toContain('original password')
+    vi.clearAllMocks(); setActivePinia(createPinia())
+    const next=useArchiveRecoveryStore()
+    expect(next.rows).toHaveLength(0); expect(next.recoveryCount).toBe(2)
+    expect(mocks.diagnose).not.toHaveBeenCalled(); expect(mocks.repair).not.toHaveBeenCalled()
+    next.restore()
+    expect(next.rows[0]).toMatchObject({password:'',resultPassword:'',resultPasswordRequired:true,outputDirectory:'D:/repair',extractDirectory:'D:/extract'})
+    expect(next.repairable).toHaveLength(0)
+    expect(next.completed).toBe(0)
+    const reopened=mount(ArchiveRecoveryBatch,{props:{paths:[...next.sourcePaths]},global:{plugins:[getActivePinia()!],stubs:{Teleport:true,Transition:false}}})
+    await flushPromises()
+    expect(reopened.findAll('button').filter(button=>button.text()==='查看完整诊断').every(button=>button.attributes('disabled')!==undefined)).toBe(true)
+    expect(await next.queue()).toBe(0)
+    expect(next.rows[0].error).toContain('恢复结果密码')
+    next.rows[0].resultPassword='recovered archive password'
+    expect(await next.queue()).toBe(1)
+    expect(useTaskStore().tasks[0]).toMatchObject({password:'recovered archive password',outputPath:'D:/extract'})
+    expect(localStorage.getItem(ARCHIVE_RECOVERY_DRAFT_KEY)).not.toContain('recovered archive password')
+    expect(await next.queue()).toBe(0)
+    reopened.unmount()
+  })
+
+  it('does not queue a deleted recovered volume and lets the user recheck and repair the original', async () => {
+    setActivePinia(createPinia())
+    const store=useArchiveRecoveryStore()
+    await store.load(['C:/a.rar','C:/b.zip'])
+    store.rows[0].result={outputPath:'D:/a.part1.rar',outputFiles:['D:/a.part1.rar','D:/a.part2.rar'],recoveredFiles:1,recoveredDirectories:0,skippedEntries:[],verified:true,partial:false,directoryRebuilt:false,outputEncrypted:false}
+    mocks.invoke.mockImplementation(async (_command,args) => {if(args?.path==='D:/a.part2.rar')throw Error('not found')})
+    expect(await store.queue()).toBe(0)
+    expect(useTaskStore().tasks).toHaveLength(0)
+    expect(store.rows[0].error).toContain('已移动、删除或无法读取')
+    store.forgetResult(store.rows[0])
+    expect(store.rows[0].result).toBeUndefined()
+    expect(store.rows[0].needsRecheck).toBe(true)
+  })
+
+  it('does not lose a saved workspace when new grouping fails and rejects replacing a running batch', async () => {
+    setActivePinia(createPinia())
+    const store=useArchiveRecoveryStore()
+    await store.load(['C:/a.rar','C:/b.zip'])
+    const id=store.rows[0].id
+    mocks.group.mockRejectedValueOnce(new Error('folder unavailable'))
+    await expect(store.load(['D:/new.zip'])).rejects.toThrow('folder unavailable')
+    expect(store.rows[0].id).toBe(id)
+    store.busy=true
+    await expect(store.load(['D:/new.zip'])).rejects.toThrow('等待')
+    store.busy=false
+  })
+
+  it('lets malformed previous-session records be discarded without starting work', async () => {
+    localStorage.setItem(ARCHIVE_RECOVERY_DRAFT_KEY,'{"version":1,"rows":[{}]}')
+    setActivePinia(createPinia())
+    const store=useArchiveRecoveryStore()
+    expect(store.saveError).toContain('草稿无法读取')
+    store.discardPrevious()
+    expect(localStorage.getItem(ARCHIVE_RECOVERY_DRAFT_KEY)).toBeNull()
+    expect(mocks.diagnose).not.toHaveBeenCalled()
   })
 })

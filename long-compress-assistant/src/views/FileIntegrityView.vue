@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { useArchiveRecoveryStore } from '@/composables/useArchiveRecoveryBatch'
 import ArchiveRecoveryBatch from '@/components/compression/ArchiveRecoveryBatch.vue'
 import RarRecoveryVolumesDialog from '@/components/compression/RarRecoveryVolumesDialog.vue'
 import type { ArchiveRecoveryRow } from '@/composables/useArchiveRecoveryBatch'
@@ -33,15 +34,18 @@ const selectedFiles = ref<string[]>([])
 const selectedAlgorithm = ref<'crc32' | 'md5' | 'sha256'>('sha256')
 const checksumResults = ref<ChecksumResult[]>([])
 const isCalculating = ref(false)
-const activeMode = ref<'calculate' | 'verify' | 'archive'>('calculate')
+const recoveryWorkspace = useArchiveRecoveryStore()
+const activeMode = ref<'calculate' | 'verify' | 'archive'>(recoveryWorkspace.rows.length ? 'archive' : 'calculate')
 const verifyResult = ref<{ valid: boolean; message: string } | null>(null)
-const archivePath = ref('')
-const diagnosticSources = ref<string[]>([])
-const batchBusy = ref(false), batchDetailOpen = ref(false), recoveryVolumesVisible = ref(false)
+const archivePath = ref(recoveryWorkspace.sourcePaths[0] || '')
+const diagnosticSources = ref<string[]>([...recoveryWorkspace.sourcePaths])
+const batchBusy = computed(() => recoveryWorkspace.busy || recoveryWorkspace.preparing)
+const batchDetailOpen = ref(false), recoveryVolumesVisible = ref(false)
 const recoveryVolumesSource = ref(''), recoveryVolumesPassword = ref('')
 function showRecoveryVolumes(path: string, password: string) { recoveryVolumesSource.value = path; recoveryVolumesPassword.value = password; recoveryVolumesVisible.value = true }
 watch(recoveryVolumesVisible, visible => { if (!visible) recoveryVolumesPassword.value = '' })
 async function inspectBatchItem(row: ArchiveRecoveryRow) {
+  if (row.needsRecheck) return
   archivePath.value = row.path; archivePassword.value = row.password; repairResult.value = null
   recoveryTaskId.value = ''; recoveryOptions.value = {}; recoveredDraftId.value = ''; recoveredPassword.value = ''
   batchDetailOpen.value = true
@@ -225,12 +229,27 @@ const clearResults = () => {
   recoveredPassword.value = ''
 }
 
+function resumeRecoveryWorkspace() {
+  recoveryWorkspace.restore()
+  activeMode.value = 'archive'
+  diagnosticSources.value = [...recoveryWorkspace.sourcePaths]
+  archivePath.value = diagnosticSources.value[0] || ''
+  batchDetailOpen.value = false
+}
+function openArchiveMode() {
+  clearResults()
+  activeMode.value = 'archive'
+  diagnosticSources.value = [...recoveryWorkspace.sourcePaths]
+  archivePath.value = diagnosticSources.value[0] || ''
+}
+
 const selectArchive = async () => {
   const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
     ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
   const file = queued === undefined ? await open({ multiple: true, title: '选择要诊断的压缩包，可多选' }) : queued
   const paths = Array.isArray(file) ? file : typeof file === 'string' ? [file] : []
   if (paths.length) {
+    if (paths.length === 1) recoveryWorkspace.clear()
     archivePath.value = paths[0]
     diagnosticSources.value = paths
     batchDetailOpen.value = false
@@ -372,6 +391,7 @@ watch(() => isDiagnosing.value || isRepairing.value || batchBusy.value ? null : 
   activeMode.value = 'archive'
   archivePath.value = request.path
   diagnosticSources.value = request.paths || [request.path]
+  if (diagnosticSources.value.length < 2) recoveryWorkspace.clear()
   archivePassword.value = request.password || ''
   recoveryTaskId.value = request.taskId || ''
   recoveryOptions.value = { outputPath: request.outputPath, extractToSubfolder: request.extractToSubfolder }
@@ -420,6 +440,11 @@ onUnmounted(() => {
     <!-- 主内容区 -->
     <div class="integrity-scroll custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
       <div class="integrity-workspace">
+        <div v-if="recoveryWorkspace.recoveryCount || recoveryWorkspace.saveError" class="flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs" data-testid="archive-recovery-resume">
+          <span class="min-w-0 flex-1 text-content">{{ recoveryWorkspace.saveError || `上次还有 ${recoveryWorkspace.recoveryCount} 组检查修复记录` }}</span>
+          <button v-if="recoveryWorkspace.recoveryCount" class="archive-secondary" :disabled="recoveryWorkspace.busy || recoveryWorkspace.preparing || isDiagnosing || isRepairing" data-testid="archive-recovery-restore" @click="resumeRecoveryWorkspace">恢复工作区</button>
+          <button class="archive-secondary" :disabled="recoveryWorkspace.busy || recoveryWorkspace.preparing" data-testid="archive-recovery-discard" @click="recoveryWorkspace.discardPrevious">丢弃上次记录</button>
+        </div>
         <!-- 模式切换 -->
         <nav class="integrity-mode-switch" aria-label="文件完整性工具">
           <button
@@ -442,7 +467,7 @@ onUnmounted(() => {
           </button>
           <button
             data-testid="archive-diagnostic-mode"
-            @click="activeMode = 'archive'; clearResults()"
+            @click="openArchiveMode"
             :disabled="isDiagnosing || isRepairing"
             :class="{ active: activeMode === 'archive' }"
           >
@@ -573,8 +598,9 @@ onUnmounted(() => {
           <div v-if="diagnosticSources.length > 1" class="flex flex-wrap items-center justify-between gap-2">
             <button v-if="batchDetailOpen" class="archive-secondary" @click="batchDetailOpen = false"><i class="pi pi-arrow-left"></i>返回批量列表</button>
             <button class="archive-secondary" :disabled="batchBusy || isDiagnosing || isRepairing" @click="selectArchive"><i class="pi pi-folder-open"></i>重新选择压缩包</button>
+            <button class="archive-secondary" :disabled="batchBusy" data-testid="archive-recovery-clear" @click="recoveryWorkspace.clear(); clearResults()">清空本批记录</button>
           </div>
-          <div v-if="diagnosticSources.length > 1" v-show="!batchDetailOpen"><ArchiveRecoveryBatch :paths="diagnosticSources" @busy="batchBusy = $event" @inspect="inspectBatchItem" @recovery-volumes="showRecoveryVolumes($event.path, $event.password)" /></div>
+          <div v-if="diagnosticSources.length > 1" v-show="!batchDetailOpen"><ArchiveRecoveryBatch :paths="diagnosticSources" @inspect="inspectBatchItem" @recovery-volumes="showRecoveryVolumes($event.path, $event.password)" /></div>
           <div v-if="recoveryTaskId" class="repair-password-note" data-testid="recovery-task-context"><i class="pi pi-wrench"></i><span>正在处理失败的解压任务。救回新包后可直接加入解压队列，原输出设置会保留。</span></div>
           <section v-show="diagnosticSources.length < 2 || batchDetailOpen" class="integrity-panel min-w-0 overflow-hidden">
             <div class="archive-inputs">

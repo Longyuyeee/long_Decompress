@@ -1,0 +1,6 @@
+
+Test failure: TimeoutError: Wait timed out after 30825ms
+    at E:\ProjectSave\ClaudeProject\Long-Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:929:22
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+DevToolsActivePort: nested=true mirrored=true
