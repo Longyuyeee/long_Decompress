@@ -22,6 +22,8 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 **v1.4.8** 带来 ZIP 分卷救援、RAR 恢复卷创建与批量检查修复。查看 [本版更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.8.md)、[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.8)或 [封板记录](long-compress-assistant/docs/ARCHIVE_RECOVERY_FREEZE_1.4.8.md)；安装器及自动更新附件以 Release 页面实际内容为准。
 
+开发接续：**v1.4.9 功能已封板，尚未正式发布**，改进批量检查修复的切页/重启接续、RAR 管道密码兼容与大文件校验取消。见 [候选更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.9.md)及 [封板记录](long-compress-assistant/docs/ARCHIVE_CONTINUITY_FREEZE_1.4.9.md)；当前正式下载仍为上面的 v1.4.8。
+
 <a id="features"></a>
 
 ## ✨ 好用，从少做几步开始

@@ -28,7 +28,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-当前源码版本为 **1.4.8**：ZIP 分卷丢目录救援扩展、RAR 恢复卷创建、批量检查修复和统一入队已完成新增真实桌面用户链及常用/窄窗口显示复核，并修正 RAR 完成后的源字节与压缩比显示。身份及证据见 [封板记录](docs/ARCHIVE_RECOVERY_FREEZE_1.4.8.md)和 [中文发布说明](docs/RELEASE_NOTES_1.4.8.md)。用户已批准正式发布；安装器及签名更新附件见 [v1.4.8 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.8)，准确合入/标签身份和构建结果见 [PR #162](https://github.com/Longyuyeee/long_Decompress/pull/162)。
+当前源码候选为 **1.4.9**：RAR 管道密码编码修正、批量检查修复切页/重启接续、大文件 RAR 校验取消已完成，功能冻结 `24d780f`。身份、实际桌面链及显示证据见 [本版封板记录](docs/ARCHIVE_CONTINUITY_FREEZE_1.4.9.md)、[实施审计](docs/ARCHIVE_CONTINUITY_1.4.9.md)和 [中文发布说明](docs/RELEASE_NOTES_1.4.9.md)。普通安装器以本分支 PR 必需的 Windows package 检查为准，不自动正式发布。当前公开版仍为 [v1.4.8](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.8)，其合入/标签身份及构建结果见 [PR #162](https://github.com/Longyuyeee/long_Decompress/pull/162)。
 
 ## 本地开发
 
