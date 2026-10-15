@@ -46,6 +46,7 @@ export interface ArchiveConversionConfigV1 {
   splitSize: number
   encryptFilenames: boolean
   rarRecoveryPercent?: number
+  rarRecoveryVolumes?: number
   passwordRequired: boolean
 }
 export type ExecutionConfigV1 = ExtractionConfigV1 | ArchiveCompressionConfigV1 | ArchiveConversionConfigV1 | ImageConfigV1 | VideoConfigV1 | PdfConfigV1
@@ -59,6 +60,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       ...(config.zipSplitMode ? { zipSplitMode: config.zipSplitMode } : {}),
       outputPath: config.outputPath, format: config.format, level: config.level,
       rarRecoveryPercent: config.rarRecoveryPercent ?? 0,
+      rarRecoveryVolumes: config.rarRecoveryVolumes ?? 0,
       splitSize: config.splitSize, encryptFilenames: config.encryptFilenames, passwordRequired: config.passwordRequired }
     case 'archive-extraction': return { schemaVersion: 1, kind: config.kind,
       outputDirectory: config.outputDirectory, extractToSubfolder: config.extractToSubfolder }
@@ -70,6 +72,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
           splitSize: s.splitSize, keepStructure: s.keepStructure, verifyAfter: s.verifyAfter,
           createSolidArchive: s.createSolidArchive, fastPack: false,
           ...(s.rarRecoveryPercent !== undefined ? { rarRecoveryPercent: s.rarRecoveryPercent } : {}),
+          ...(s.rarRecoveryVolumes !== undefined ? { rarRecoveryVolumes: s.rarRecoveryVolumes } : {}),
           ...(s.encryptFilenames !== undefined ? { encryptFilenames: s.encryptFilenames } : {}),
           ...(s.zipPasswordEncoding ? { zipPasswordEncoding: s.zipPasswordEncoding } : {}),
           ...(s.zipEncryption ? { zipEncryption: s.zipEncryption } : {}),

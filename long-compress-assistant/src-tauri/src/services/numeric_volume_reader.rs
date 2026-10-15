@@ -9,6 +9,17 @@ pub(crate) enum ZipInputReader {
 }
 
 impl ZipInputReader {
+    /// Recovery must read original disks even when their central directory is lost.
+    pub(crate) fn open_recovery(path: &Path) -> anyhow::Result<Self> {
+        if let Some(group) = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?
+            .filter(|group| group.format == super::split_archive_detector::SplitFormat::ZipSplit)
+        {
+            anyhow::ensure!(group.is_complete, "缺少 ZIP 分卷：{:?}", group.missing_parts);
+            return Ok(Self::Volumes(NumericVolumeReader::from_paths(group.parts)?));
+        }
+        Self::open(path)
+    }
+
     pub(crate) fn open_seven_zip(path: &Path) -> anyhow::Result<Self> {
         if Self::is_numeric_first(path) {
             Ok(Self::Volumes(NumericVolumeReader::open(path).map_err(|error|

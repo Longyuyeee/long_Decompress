@@ -223,7 +223,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
-| **v1.4.7（待发布）** | RAR 修复与 .rev 补卷、可选恢复保护、Windows 右键检查修复入口 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.7.md) |
+| **v1.4.8（待发布）** | ZIP 分卷救援扩展、RAR 恢复卷创建、批量检查修复与统一入队 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.8.md) |
+| **v1.4.7** | RAR 修复与 .rev 补卷、可选恢复保护、Windows 右键检查修复入口 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.7.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.7) |
 | **v1.4.6** | 失败任务行内纠正、缺卷处理、密码 ZIP 丢目录救援、恢复新包继续解压、等宽详情与日志显示优化 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.6.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.6) |
 | **v1.4.5** | 密码 ZIP 完整文件救援、ARJ / Unix `.Z` / UDF 读取、双栏与右键入口统一、结果密码提示与定位 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.5.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5) |
 | **v1.4.4** | 标准 ZIP 分卷创建、PPMd/加密 ZIPX 与卷入口兼容、ZIP 目录重建与完整条目救援 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.4.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.4) |

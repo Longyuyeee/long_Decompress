@@ -11,6 +11,54 @@ pub(crate) struct RecoveryZipInput {
     directory: Vec<u8>,
     position: u64,
 }
+
+#[cfg(test)]
+mod streamed_tests {
+    use super::*;
+    use std::io::Write;
+
+    fn streamed(zip64: bool, signed: bool) -> (Vec<u8>, Vec<u8>) {
+        let content = b"streamed payload with PK\x07\x08 inside the content".repeat(300);
+        let mut encoder = flate2::write::DeflateEncoder::new(Vec::new(), flate2::Compression::default());
+        encoder.write_all(&content).unwrap();
+        let compressed = encoder.finish().unwrap();
+        let mut header = [0u8; 30];
+        header[..4].copy_from_slice(b"PK\x03\x04");
+        put_word(&mut header, 4, if zip64 { 45 } else { 20 });
+        put_word(&mut header, 6, 8);
+        put_word(&mut header, 8, 8);
+        put_word(&mut header, 26, 8);
+        if zip64 { put_dword(&mut header, 18, u32::MAX); put_dword(&mut header, 22, u32::MAX); put_word(&mut header, 28, 20); }
+        let mut bytes = header.to_vec();
+        bytes.extend_from_slice(b"file.txt");
+        if zip64 { bytes.extend_from_slice(&1u16.to_le_bytes()); bytes.extend_from_slice(&16u16.to_le_bytes()); bytes.extend_from_slice(&[0; 16]); }
+        bytes.extend_from_slice(&compressed);
+        if signed { bytes.extend_from_slice(b"PK\x07\x08"); }
+        bytes.extend_from_slice(&crc32fast::hash(&content).to_le_bytes());
+        if zip64 { bytes.extend_from_slice(&(compressed.len() as u64).to_le_bytes()); bytes.extend_from_slice(&(content.len() as u64).to_le_bytes()); }
+        else { bytes.extend_from_slice(&(compressed.len() as u32).to_le_bytes()); bytes.extend_from_slice(&(content.len() as u32).to_le_bytes()); }
+        (bytes, content)
+    }
+
+    #[test]
+    fn streamed_deflate_descriptors_recover_without_searching_for_payload_signatures() {
+        let dir = tempfile::tempdir().unwrap();
+        for zip64 in [false, true] { for signed in [false, true] {
+            let (bytes, content) = streamed(zip64, signed);
+            let path = dir.path().join("stream.zip");
+            std::fs::write(&path, &bytes).unwrap();
+            let mut reader = RecoveryReader::open(&path, &AtomicBool::new(false)).unwrap();
+            let mut restored = Vec::new(); reader.entry(0, None).unwrap().read_to_end(&mut restored).unwrap();
+            assert_eq!(restored, content);
+            assert!(reader.directory_rebuilt);
+            let mut truncated = bytes.clone(); truncated.pop(); std::fs::write(&path, truncated).unwrap();
+            assert!(RecoveryReader::open(&path, &AtomicBool::new(false)).is_err());
+            let mut wrong_crc = bytes; let at = wrong_crc.len() - if zip64 { 20 } else { 12 }; wrong_crc[at] ^= 1;
+            std::fs::write(&path, wrong_crc).unwrap();
+            assert!(RecoveryReader::open(&path, &AtomicBool::new(false)).is_err());
+        } }
+    }
+}
 impl RecoveryZipInput {
     fn original(path: &Path) -> Result<Self> {
         let mut source = ZipInputReader::open(path)?;
@@ -64,6 +112,61 @@ fn word(bytes: &[u8], at: usize) -> u16 { u16::from_le_bytes(bytes[at..at + 2].t
 fn dword(bytes: &[u8], at: usize) -> u32 { u32::from_le_bytes(bytes[at..at + 4].try_into().unwrap()) }
 fn put_word(bytes: &mut [u8], at: usize, value: u16) { bytes[at..at + 2].copy_from_slice(&value.to_le_bytes()); }
 fn put_dword(bytes: &mut [u8], at: usize, value: u32) { bytes[at..at + 4].copy_from_slice(&value.to_le_bytes()); }
+
+fn deflate_boundary(reader: &mut ZipInputReader, start: u64, cancelled: &AtomicBool) -> Result<(u64, u64, u32)> {
+    let mut decoder = flate2::Decompress::new(false);
+    let mut crc = crc32fast::Hasher::new();
+    let mut input = [0u8; 65536];
+    let mut output = [0u8; 65536];
+    loop {
+        ensure!(!cancelled.load(Ordering::SeqCst), "ZIP recovery cancelled");
+        reader.seek(SeekFrom::Start(start.checked_add(decoder.total_in()).context("ZIP offset overflow")?))?;
+        let length = reader.read(&mut input)?;
+        ensure!(length > 0, "Deflate 数据被截断");
+        let mut at = 0;
+        loop {
+            ensure!(!cancelled.load(Ordering::SeqCst), "ZIP recovery cancelled");
+            let before_in = decoder.total_in();
+            let before_out = decoder.total_out();
+            let status = decoder.decompress(&input[at..length], &mut output, flate2::FlushDecompress::None)?;
+            let used = (decoder.total_in() - before_in) as usize;
+            let produced = (decoder.total_out() - before_out) as usize;
+            crc.update(&output[..produced]);
+            ensure!(decoder.total_out() <= extraction_transaction::MAX_EXTRACTED_BYTES, "ZIP 条目展开体积超过读取上限");
+            at += used;
+            if status == flate2::Status::StreamEnd { return Ok((decoder.total_in(), decoder.total_out(), crc.finalize())); }
+            ensure!(used > 0 || produced > 0, "Deflate 数据无效或被截断");
+            if at == length { break; }
+        }
+    }
+}
+
+// Match a descriptor against a declared size or a decoded stream boundary.
+// Never search payload bytes for a magic signature to guess where a file ends.
+fn descriptor(reader: &mut ZipInputReader, at: u64, compressed: u64, expanded: Option<u64>, crc: Option<u32>, zip64: bool) -> Result<(u64, u64, u32)> {
+    reader.seek(SeekFrom::Start(at))?;
+    let mut bytes = [0u8; 24];
+    let mut length = 0;
+    while length < bytes.len() {
+        let read = reader.read(&mut bytes[length..])?;
+        if read == 0 { break; }
+        length += read;
+    }
+    for prefix in [4usize, 0] {
+        if prefix == 4 && (length < 4 || &bytes[..4] != b"PK\x07\x08") { continue; }
+        let width = if zip64 { 8 } else { 4 };
+        let needed = prefix + 4 + width * 2;
+        if needed > length { continue; }
+        let actual_crc = dword(&bytes, prefix);
+        let size = |offset| if width == 8 { u64::from_le_bytes(bytes[offset..offset + 8].try_into().unwrap()) } else { dword(&bytes, offset) as u64 };
+        let actual_compressed = size(prefix + 4);
+        let actual_expanded = size(prefix + 4 + width);
+        if actual_compressed == compressed && expanded.is_none_or(|value| value == actual_expanded) && crc.is_none_or(|value| value == actual_crc) {
+            return Ok((at + needed as u64, actual_expanded, actual_crc));
+        }
+    }
+    anyhow::bail!("数据描述符与文件内容或声明体积不一致，未恢复此条目")
+}
 
 // Keep AES/Unicode/time metadata, but rebuild ZIP64 fields for the central
 // header's size/offset layout rather than copying the local layout verbatim.
@@ -159,12 +262,12 @@ impl RecoveryReader {
         Ok(Self { archive, names, expanded_bytes, encrypted, directory_rebuilt, notes })
     }
     pub fn open(path: &Path, cancelled: &AtomicBool) -> Result<Self> {
-        if let Ok(archive) = zip_aes::ZipArchive::new(RecoveryZipInput::original(path)?) {
-            return Self::from_archive(archive, false, Vec::new(), cancelled);
+        if let Ok(input) = RecoveryZipInput::original(path) {
+            if let Ok(archive) = zip_aes::ZipArchive::new(input) {
+                return Self::from_archive(archive, false, Vec::new(), cancelled);
+            }
         }
-        let mut reader = ZipInputReader::open(path)?;
-        // The standard multi-disk view needs its original central directory.
-        ensure!(!matches!(&reader, ZipInputReader::StandardZip(_)), "标准 ZIP 分卷丢目录重建暂不支持，请保留原卷组");
+        let mut reader = ZipInputReader::open_recovery(path)?;
         let length = reader.seek(SeekFrom::End(0))?;
         let mut position = 0u64;
         let mut count = 0usize;
@@ -179,6 +282,8 @@ impl RecoveryReader {
             if length - position < 4 { notes.push(format!("尾部在偏移 {position} 被截断，后续内容无法确认")); break; }
             let mut signature = [0; 4];
             reader.read_exact(&mut signature)?;
+            // APPNOTE spanning marker belongs to the volume set, not a file.
+            if position == 0 && &signature == b"PK\x07\x08" { position = 4; continue; }
             if &signature == b"PK\x01\x02" { break; }
             if &signature != b"PK\x03\x04" { notes.push(format!("偏移 {position} 不是可信本地文件头，未扫描后续内容")); break; }
             ensure!(count < extraction_transaction::MAX_EXTRACTED_ENTRIES, "ZIP 可恢复条目数超过读取上限");
@@ -197,9 +302,6 @@ impl RecoveryReader {
             let label = String::from_utf8_lossy(&name);
             let flags = word(&header, 6);
             observed_encrypted |= flags & 1 != 0;
-            if flags & 8 != 0 {
-                notes.push(format!("{label}: 使用数据描述符，缺少目录后无法可靠确定条目边界；未扫描后续内容")); break;
-            }
             if flags & (0x40 | 0x2000) != 0 {
                 notes.push(format!("{label}: 当前不支持此加密或隐藏元数据方式，未扫描后续内容")); break;
             }
@@ -232,12 +334,32 @@ impl RecoveryReader {
                 }
                 Ok((expanded, compressed))
             })();
-            let (expanded, compressed) = match sizes {
+            let (mut expanded, mut compressed) = match sizes {
                 Ok(sizes) => sizes,
                 Err(error) => { notes.push(format!("{label}: {error}；未扫描后续内容")); break; }
             };
-            let Some(end) = header_end.checked_add(compressed) else { notes.push(format!("{label}: 本地条目范围溢出，未扫描后续内容")); break; };
+            let mut decoded_crc = None;
+            if flags & 8 != 0 && compressed == 0 && !name.ends_with(b"/") {
+                if flags & 1 == 0 && word(&header, 8) == 8 {
+                    match deflate_boundary(&mut reader, header_end, cancelled) {
+                        Ok((input, output, crc)) => { compressed = input; expanded = output; decoded_crc = Some(crc); }
+                        Err(error) => { notes.push(format!("{label}: {error}；未扫描后续内容")); break; }
+                    }
+                } else {
+                    notes.push(format!("{label}: 数据描述符缺少可确定的文件边界，未扫描后续内容")); break;
+                }
+            }
+            let Some(mut end) = header_end.checked_add(compressed) else { notes.push(format!("{label}: 本地条目范围溢出，未扫描后续内容")); break; };
             if end > length { notes.push(format!("{label}: 内容被截断，未恢复此条目和后续内容")); break; }
+            if flags & 8 != 0 {
+                let known_crc = decoded_crc.or_else(|| (dword(&header, 14) != 0).then(|| dword(&header, 14)));
+                let zip64 = dword(&header, 18) == u32::MAX || dword(&header, 22) == u32::MAX;
+                let expected_expanded = (expanded != 0 || decoded_crc.is_some() || name.ends_with(b"/")).then_some(expanded);
+                match descriptor(&mut reader, end, compressed, expected_expanded, known_crc, zip64) {
+                    Ok((next, size, crc)) => { end = next; expanded = size; put_dword(&mut header, 14, crc); }
+                    Err(error) => { notes.push(format!("{label}: {error}；未扫描后续内容")); break; }
+                }
+            }
             if !seen_names.insert(name.clone()) {
                 notes.push(format!("{label}: 包内名称重复，未恢复此条目"));
                 position = end;

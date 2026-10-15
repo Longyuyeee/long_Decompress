@@ -401,6 +401,7 @@ fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<Publis
         crate::services::archive_volumes::complete_volume_paths(output)?
     } else { vec![output.to_path_buf()] };
     if split && paths.last().is_some_and(|path| path == output) { paths.rotate_right(1); }
+    if split { paths.extend(crate::services::archive_volumes::recovery_volume_paths(output)?); }
     let mut files = Vec::new();
     let mut total_bytes = 0u64;
     for path in paths {
@@ -418,6 +419,24 @@ fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<Publis
 #[cfg(test)]
 mod published_archive_tests {
     use super::*;
+    #[tokio::test]
+    async fn batch_diagnosis_groups_selected_members_and_retains_missing_sources() {
+        let temp = tempfile::tempdir().unwrap();
+        let paths = ["one.part1.rar", "one.part2.rar", "one.part1.rev", "two.zip", "missing.zip"].map(|name| temp.path().join(name));
+        for path in paths.iter().take(4) { std::fs::write(path, b"fixture").unwrap(); }
+        let groups = group_archive_diagnosis_sources(paths.iter().map(|p| p.to_string_lossy().to_string()).collect()).await.unwrap();
+        assert_eq!(groups.len(), 3); assert_eq!(groups[0].selected_members, 3);
+        assert!(groups[2].path.ends_with("missing.zip"));
+    }
+
+    #[test]
+    fn rar_results_include_recovery_volumes_without_using_them_as_the_entry_point() {
+        let temp = tempfile::tempdir().unwrap();
+        let target = temp.path().join("parts.rar");
+        for name in ["parts.part1.rar", "parts.part2.rar", "parts.part1.rev", "parts.part2.rev"] { std::fs::write(temp.path().join(name), b"data").unwrap(); }
+        let result = published_archive_output(&target, true).unwrap();
+        assert_eq!(result.files.len(), 4); assert_eq!(result.total_bytes, 16); assert!(result.primary_path.ends_with("parts.part1.rar"));
+    }
     #[test]
     fn published_archive_result_uses_real_files_and_numeric_order() {
         let temp = tempfile::tempdir().unwrap();
@@ -1615,6 +1634,69 @@ pub async fn cancel_zip_repair(repair_id: String) -> Result<(), String> {
         .ok_or_else(|| format!("ZIP repair is not active: {repair_id}"))?;
     flag.store(true, Ordering::SeqCst);
     Ok(())
+}
+
+#[command]
+pub async fn create_rar_recovery_volumes(operation_id: String, file_path: String, output_directory: String, count: u32, password: Option<String>) -> Result<crate::services::rar_recovery::RecoveryVolumesResult, String> {
+    let cancelled = Arc::new(AtomicBool::new(false));
+    match ZIP_REPAIR_FLAGS.entry(operation_id.clone()) {
+        Entry::Vacant(entry) => { entry.insert(cancelled.clone()); },
+        Entry::Occupied(_) => return Err("Recovery-volume creation is already running".into()),
+    }
+    let _guard = ZipRepairGuard { repair_id: operation_id };
+    crate::services::rar_recovery::create_recovery_volumes(Path::new(&file_path), Path::new(&output_directory), count, password.as_deref(), cancelled).await.map_err(|e| format!("{e:#}"))
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArchiveDiagnosisSource {
+    path: String,
+    selected_members: usize,
+}
+
+#[command]
+pub async fn group_archive_diagnosis_sources(paths: Vec<String>) -> Result<Vec<ArchiveDiagnosisSource>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut groups: Vec<(String, ArchiveDiagnosisSource)> = Vec::new();
+        for path in paths {
+            let source = Path::new(&path);
+            let identity = if crate::services::rar_recovery::is_candidate(source) {
+                crate::services::rar_recovery::diagnosis_group_path(source).unwrap_or_else(|_| source.to_path_buf())
+            } else {
+                crate::services::split_archive_detector::SplitArchiveDetector::detect_split_archive(source).ok().flatten().map(|group| group.first_part).unwrap_or_else(|| source.to_path_buf())
+            };
+            let identity = std::fs::canonicalize(&identity).unwrap_or(identity).to_string_lossy().replace('/', "\\").to_lowercase();
+            if let Some((_, group)) = groups.iter_mut().find(|(key, _)| *key == identity) { group.selected_members += 1; }
+            else { groups.push((identity, ArchiveDiagnosisSource { path, selected_members: 1 })); }
+        }
+        groups.into_iter().map(|(_, group)| group).collect()
+    }).await.map_err(|e| e.to_string())
+}
+
+#[command]
+pub async fn repair_archive_batch_item(operation_id: String, file_path: String, output_directory: String, format: String, password: Option<String>) -> Result<serde_json::Value, String> {
+    let cancelled = Arc::new(AtomicBool::new(false));
+    match ZIP_REPAIR_FLAGS.entry(operation_id.clone()) {
+        Entry::Vacant(entry) => { entry.insert(cancelled.clone()); },
+        Entry::Occupied(_) => return Err("Repair is already running".into()),
+    }
+    let _guard = ZipRepairGuard { repair_id: operation_id };
+    let root = Path::new(&output_directory);
+    if !root.is_dir() { return Err("请选择用于保存恢复结果的文件夹".into()); }
+    if !matches!(format.as_str(), "RAR" | "ZIP") { return Err("当前仅支持 ZIP / RAR 修复".into()); }
+    let label: String = Path::new(&file_path).file_stem().unwrap_or_default().to_string_lossy().chars().take(50).collect();
+    let folder = root.join(format!("{label}.恢复-{}", &uuid::Uuid::new_v4().to_string()[..8]));
+    std::fs::create_dir(&folder).map_err(|e| e.to_string())?;
+    let result = if format == "RAR" {
+        crate::services::rar_recovery::repair(Path::new(&file_path), &folder, password.as_deref(), cancelled).await.and_then(|r| Ok(serde_json::to_value(r)?))
+    } else {
+        tauri::async_runtime::spawn_blocking({ let folder = folder.clone(); move || {
+            let result = crate::services::archive_diagnostics::repair_zip_with_password_to_new(Path::new(&file_path), &folder.join(format!("{label}.repaired.zip")), password.as_deref(), &cancelled)?;
+            Ok::<_, anyhow::Error>(serde_json::to_value(result)?)
+        }}).await.map_err(anyhow::Error::from).and_then(|r| r)
+    };
+    if result.is_err() { let _ = std::fs::remove_dir(&folder); }
+    result.map_err(|e| format!("{e:#}"))
 }
 
 #[command]

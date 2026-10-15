@@ -254,6 +254,7 @@ const applyProfile = (profile: CompressionProfile) => {
   compressionOptions.value.createSolidArchive = profile.config.createSolidArchive
   compressionOptions.value.encryptFilenames = profile.config.encryptFilenames ?? false
   compressionOptions.value.rarRecoveryPercent = profile.config.rarRecoveryPercent ?? 0
+  compressionOptions.value.rarRecoveryVolumes = profile.config.rarRecoveryVolumes ?? 0
   compressionOptions.value.zipPasswordEncoding = profile.config.zipPasswordEncoding ?? 'utf8'
   compressionOptions.value.zipEncryption = profile.config.zipEncryption ?? 'aes256'
   compressionOptions.value.zipSplitMode = profile.config.zipSplitMode ?? 'numeric'
@@ -291,6 +292,7 @@ const saveAsNewProfile = async () => {
         createSolidArchive: compressionOptions.value.createSolidArchive,
         encryptFilenames: compressionOptions.value.encryptFilenames ?? false,
         rarRecoveryPercent: compressionOptions.value.rarRecoveryPercent ?? 0,
+        rarRecoveryVolumes: compressionOptions.value.rarRecoveryVolumes ?? 0,
         zipPasswordEncoding: compressionOptions.value.zipPasswordEncoding ?? 'utf8',
         zipEncryption: compressionOptions.value.zipEncryption ?? 'aes256',
         zipSplitMode: compressionOptions.value.zipSplitMode ?? 'numeric',
@@ -530,7 +532,7 @@ const closeVaultPasswordsAfterFocus = () => {
 
     <!-- 输出与高级选项始终可见，不再需要二次展开。 -->
       <div data-testid="compression-advanced-settings" class="space-y-3 pt-3 border-t border-subtle/30">
-        <RarRecoveryField v-if="compressionOptions.format === 'rar'" v-model="compressionOptions.rarRecoveryPercent" />
+        <RarRecoveryField v-if="compressionOptions.format === 'rar'" v-model="compressionOptions.rarRecoveryPercent" v-model:recovery-volumes="compressionOptions.rarRecoveryVolumes" />
         <!-- 目标路径 -->
         <div v-if="showOutputPath" class="flex flex-col gap-1.5 min-w-0">
           <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('compress.output_path') }}</label>

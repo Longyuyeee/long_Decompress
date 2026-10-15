@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   repairZip: vi.fn(),
   repairRar: vi.fn(),
   cancelZipRepair: vi.fn(),
+  createRarRecoveryVolumes: vi.fn(),
 }))
 
 vi.mock('@tauri-apps/api/dialog', () => ({
@@ -31,10 +32,25 @@ vi.mock('@/composables/useTauriCommands', () => ({
     repairZip: mocks.repairZip,
     repairRar: mocks.repairRar,
     cancelZipRepair: mocks.cancelZipRepair,
+    createRarRecoveryVolumes: mocks.createRarRecoveryVolumes,
   }),
 }))
 
 describe('FileIntegrityView', () => {
+  it('creates recovery volumes for a healthy RAR group in a compact dialog', async () => {
+    const pinia=createPinia(); setActivePinia(pinia)
+    mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/parts.part1.rar',fileSize:8000,actualFormat:'RAR',status:'healthy',encrypted:true,splitArchive:true,volumesFound:3,missingVolumes:[],totalFiles:1,totalDirectories:0,totalUncompressedSize:100,integrityTested:true,canRepair:false,recoverability:'healthy',issues:[],evidence:[]})
+    mocks.createRarRecoveryVolumes.mockResolvedValue({outputFiles:['D:/parts.part1.rev'],totalBytes:2000,dataVolumes:3})
+    useAppStore().openArchiveForDiagnosis({path:'C:/parts.part1.rar',password:'original secret'})
+    const wrapper=mount(FileIntegrityView,{global:{plugins:[pinia],stubs:{Teleport:true,Transition:false}}}); await flushPromises()
+    expect(wrapper.find('[data-testid="create-recovery-volumes-dialog"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="open-create-recovery-volumes"]').trigger('click'); await flushPromises()
+    await wrapper.get('[data-testid="create-recovery-directory"]').setValue('D:/')
+    await wrapper.get('[data-testid="confirm-create-recovery"]').trigger('click'); await flushPromises()
+    expect(mocks.createRarRecoveryVolumes).toHaveBeenCalledWith(expect.any(String),'C:/parts.part1.rar','D:/',1,'original secret')
+    expect(wrapper.get('[data-testid="created-recovery-volumes"]').text()).toContain('3 个数据卷生成 1 个恢复卷')
+    wrapper.unmount()
+  })
   it('opens rescue from a failed task and queues the encrypted rebuilt archive with its original output choices', async () => {
     const pinia = createPinia(); setActivePinia(pinia)
     const tasks = useTaskStore()
@@ -91,6 +107,7 @@ describe('FileIntegrityView', () => {
     mocks.repairZip.mockReset()
     mocks.repairRar.mockReset()
     mocks.cancelZipRepair.mockReset()
+    mocks.createRarRecoveryVolumes.mockReset()
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText: mocks.clipboardWrite },

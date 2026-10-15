@@ -150,18 +150,27 @@ pub(crate) fn publish_verified_volumes(
         let final_prefix = if rar { format!("{}.part", destination.file_stem().unwrap().to_string_lossy()) }
             else { format!("{}.", destination.file_name().unwrap().to_string_lossy()) };
         let mut parts = Vec::new();
+        let mut recovery = Vec::new();
         for entry in std::fs::read_dir(parent)? {
             let entry = entry?;
             let name = entry.file_name();
             let name = name.to_string_lossy();
             if name == destination.file_name().unwrap().to_string_lossy()
                 || name.to_ascii_lowercase().strip_prefix(&final_prefix.to_ascii_lowercase()).is_some_and(|suffix| {
-                    let number = if rar { suffix.strip_suffix(".rar").unwrap_or("") } else { suffix };
+                    let number = if rar { suffix.strip_suffix(".rar").or_else(|| suffix.strip_suffix(".rev")).unwrap_or("") } else { suffix };
                     !number.is_empty() && number.bytes().all(|value| value.is_ascii_digit())
                 }) {
                 return Err(PublishError::TargetAppeared(entry.path()));
             }
             if let Some(suffix) = name.strip_prefix(&prefix) {
+                if rar && suffix.to_ascii_lowercase().ends_with(".rev") {
+                    let number = &suffix[..suffix.len()-4];
+                    let index = number.parse::<usize>().map_err(|_| PublishError::InvalidStagedOutput(entry.path()))?;
+                    let metadata = std::fs::symlink_metadata(entry.path())?;
+                    if index == 0 || !metadata.file_type().is_file() || metadata.len() == 0 { return Err(PublishError::InvalidStagedOutput(entry.path())); }
+                    recovery.push((index, entry.path(), parent.join(format!("{final_prefix}{suffix}"))));
+                    continue;
+                }
                 let number = if rar { suffix.rsplit_once('.').filter(|(_, ext)| ext.eq_ignore_ascii_case("rar")).map(|(number, _)| number).unwrap_or("") } else { suffix };
                 let index = number.parse::<usize>().map_err(|_| PublishError::InvalidStagedOutput(entry.path()))?;
                 let metadata = std::fs::symlink_metadata(entry.path())?;
@@ -175,6 +184,9 @@ pub(crate) fn publish_verified_volumes(
         if parts.is_empty() || parts.iter().enumerate().any(|(index, part)| part.0 != index + 1) {
             return Err(PublishError::InvalidStagedOutput(staged.to_path_buf()));
         }
+        recovery.sort_by_key(|part| part.0);
+        if recovery.iter().enumerate().any(|(index, part)| part.0 != index + 1) { return Err(PublishError::InvalidStagedOutput(staged.to_path_buf())); }
+        parts.extend(recovery);
         for (_, source, target) in &parts {
             if is_cancelled() { return Err(PublishError::Cancelled); }
             // Explicitly omit REPLACE_EXISTING (std::fs::rename replaces files).
@@ -242,7 +254,7 @@ mod tests {
 
     #[test]
     fn rar_volumes_publish_together_and_preserve_existing_parts_on_failure() {
-        for scenario in ["success", "conflict", "gap", "cancel"] {
+        for scenario in ["success", "conflict", "gap", "cancel", "recovery-conflict", "recovery-cancel"] {
             let temp = tempfile::tempdir().unwrap();
             let target = temp.path().join("资料.rar");
             let staged = staged_output_path(&target, "rar").unwrap();
@@ -250,15 +262,24 @@ mod tests {
             for index in 1..=3 {
                 if scenario != "gap" || index != 2 { std::fs::write(part(&staged, index), [index as u8; 8]).unwrap(); }
             }
+            let recovery = |base: &Path, index: usize| base.with_file_name(format!("{}.part{index:02}.rev", base.file_stem().unwrap().to_string_lossy()));
+            for index in 1..=2 { std::fs::write(recovery(&staged, index), b"recovery").unwrap(); }
             if scenario == "conflict" { std::fs::write(part(&target, 2), b"existing").unwrap(); }
+            if scenario == "recovery-conflict" { std::fs::write(recovery(&target, 2), b"existing recovery").unwrap(); }
             let mut checks = 0;
-            let result = publish_verified_volumes(&staged, &target, || { checks += 1; scenario == "cancel" && checks == 2 });
+            let result = publish_verified_volumes(&staged, &target, || { checks += 1; (scenario == "cancel" && checks == 2) || (scenario == "recovery-cancel" && checks == 5) });
             assert_eq!(result.is_ok(), scenario == "success");
             for index in 1..=3 {
                 assert!(!part(&staged, index).exists());
                 if scenario == "success" { assert_eq!(std::fs::read(part(&target, index)).unwrap(), [index as u8; 8]); }
                 else if scenario == "conflict" && index == 2 { assert_eq!(std::fs::read(part(&target, index)).unwrap(), b"existing"); }
                 else { assert!(!part(&target, index).exists()); }
+            }
+            for index in 1..=2 {
+                assert!(!recovery(&staged, index).exists());
+                if scenario == "success" { assert_eq!(std::fs::read(recovery(&target, index)).unwrap(), b"recovery"); }
+                else if scenario == "recovery-conflict" && index == 2 { assert_eq!(std::fs::read(recovery(&target, index)).unwrap(), b"existing recovery"); }
+                else { assert!(!recovery(&target, index).exists()); }
             }
         }
     }

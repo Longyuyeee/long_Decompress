@@ -703,6 +703,9 @@ impl CompressionService {
         for (_, path) in crate::services::archive_volumes::volume_paths(&output.path).ok()? {
             if let Ok(metadata) = path.metadata() { total = total.saturating_add(metadata.len()); }
         }
+        for path in crate::services::archive_volumes::recovery_volume_paths(&output.path).ok()? {
+            if let Ok(metadata) = path.metadata() { total = total.saturating_add(metadata.len()); }
+        }
         Some(total)
     }
 
@@ -3322,6 +3325,10 @@ impl CompressionService {
             anyhow::ensure!(matches!(options.rar_recovery_percent, 3 | 5 | 10), "RAR 恢复保护请选择 3%、5% 或 10%");
             command.arg(format!("-rr{}p", options.rar_recovery_percent));
         }
+        if options.rar_recovery_volumes > 0 {
+            anyhow::ensure!(options.rar_recovery_volumes <= 10 && options.split_size.is_some_and(|size| size > 0), "恢复卷需要启用 RAR 分包，数量请选择 1 至 10 个");
+            command.arg(format!("-rv{}", options.rar_recovery_volumes));
+        }
 
         if options.preserve_paths == Some(false) {
             command.arg("-ep");
@@ -3371,6 +3378,12 @@ impl CompressionService {
             && crate::services::archive_volumes::volume_paths(Path::new(output))?.is_empty()
         {
             std::fs::rename(output, crate::services::archive_volumes::first_volume_path(Path::new(output)))?;
+        }
+        if options.rar_recovery_volumes > 0 {
+            let recovery = crate::services::archive_volumes::recovery_volume_paths(Path::new(output))?;
+            let data_count = crate::services::archive_volumes::volume_paths(Path::new(output))?.len();
+            if data_count > 1 { anyhow::ensure!(recovery.len() == options.rar_recovery_volumes as usize, "恢复卷没有完整生成，请检查 WinRAR 版本与剩余空间"); }
+            if let Some(window) = window { self.emit_log(window, task_id, &if recovery.is_empty() { "本次只生成一个数据包，没有附带恢复卷；恢复卷仅用于多个 RAR 分包".into() } else { format!("已生成 {} 个 .rev 恢复卷，请与 RAR 分包整组保留", recovery.len()) }, TaskLogSeverity::Info); }
         }
         if let Some(window) = window { self.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0); }
         Ok(())
@@ -3626,6 +3639,7 @@ mod tests {
             let staged = CompressionService::temporary_compression_output(&target).unwrap();
             let options = CompressionOptions { format: Some("rar".into()), password: password.clone(),
                 split_size: Some(16 * 1024), preserve_paths: Some(true), encrypt_filenames: mode == 2, allow_insecure_password_cli: true,
+                rar_recovery_volumes: 2,
                 ..Default::default() };
             CompressionService::validate_compression_request(&sources, &target.to_string_lossy(), &options).unwrap();
             service.do_compress_rar_inner(None, "rar-real", &sources, &staged.to_string_lossy(), options).unwrap();
@@ -3634,6 +3648,7 @@ mod tests {
             CompressionService::finalize_compression_output(Ok(()), &staged, &target, true, false).unwrap();
             let parts = crate::services::archive_volumes::complete_volume_paths(&target).unwrap();
             assert!(parts.len() > 1);
+            assert_eq!(crate::services::archive_volumes::recovery_volume_paths(&target).unwrap().len(), 2);
             let decoded = temp.path().join(format!("还原-{mode}"));
             let mut command = crate::utils::process::command(&encoder);
             command.arg("x").arg("-idq").arg("-y").arg(format!("-p{}", password.as_deref().unwrap_or("-")))

@@ -1,6 +1,21 @@
 use anyhow::{ensure, Result};
 use std::path::{Path, PathBuf};
 
+pub(crate) fn recovery_volume_paths(output: &Path) -> Result<Vec<PathBuf>> {
+    if !output.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("rar")) { return Ok(Vec::new()); }
+    let matcher = regex::Regex::new(&format!(r"(?i)^{}\.part(\d+)\.rev$", regex::escape(&output.file_stem().unwrap().to_string_lossy())))?;
+    let mut files = Vec::new();
+    for entry in std::fs::read_dir(output.parent().unwrap_or(Path::new(".")))? {
+        let entry = entry?;
+        if let Some(captures) = matcher.captures(&entry.file_name().to_string_lossy()) {
+            ensure!(entry.file_type()?.is_file() && entry.metadata()?.len() > 0, "恢复卷不是有效文件：{}", entry.path().display());
+            files.push((captures[1].parse::<usize>()?, entry.path()));
+        }
+    }
+    files.sort_by_key(|(index, _)| *index);
+    Ok(files.into_iter().map(|(_, path)| path).collect())
+}
+
 /// Actual volume names, shared by publication, progress and result collection.
 pub(crate) fn volume_paths(output: &Path) -> Result<Vec<(usize, PathBuf)>> {
     let name = output

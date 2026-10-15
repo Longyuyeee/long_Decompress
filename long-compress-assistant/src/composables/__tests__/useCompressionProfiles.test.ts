@@ -81,6 +81,15 @@ const profile = (passwordStrategy: PasswordStrategy = { type: 'none' }): Compres
 })
 
 describe('useCompressionProfiles', () => {
+  it('retains RAR recovery-volume configuration across profile load and update', async () => {
+    const raw=rawProfile(); raw.config.format='rar'; raw.config.extra_params={...raw.config.extra_params,rar_recovery_volumes:'2'} as typeof raw.config.extra_params
+    mocks.invoke.mockResolvedValueOnce([raw])
+    const api=useCompressionProfiles(), loaded=await api.getAllProfiles()
+    expect(loaded[0].config.rarRecoveryVolumes).toBe(2)
+    mocks.invoke.mockResolvedValueOnce(undefined)
+    await api.updateProfile(loaded[0])
+    expect(mocks.invoke).toHaveBeenLastCalledWith('update_compression_profile',expect.objectContaining({profile:expect.objectContaining({config:expect.objectContaining({extra_params:expect.objectContaining({rar_recovery_volumes:'2'})})})}))
+  })
   it('preserves explicit filename encryption when reading and updating profiles', async () => {
     const raw = rawProfile()
     mocks.invoke.mockResolvedValueOnce({ ...raw, config: { ...raw.config, format: '7z', encrypt_filenames: true } })

@@ -30,6 +30,7 @@ export interface CompressionConfig {
   createSolidArchive: boolean
   encryptFilenames?: boolean
   rarRecoveryPercent?: number
+  rarRecoveryVolumes?: number
   filenameTemplate: string | null
   extraParams: Record<string, string>
 }
@@ -142,6 +143,7 @@ export interface TaskTemplate {
     createSolidArchive: boolean
     encryptFilenames?: boolean
     rarRecoveryPercent?: number
+    rarRecoveryVolumes?: number
   }
   passwordStrategy: TaskTemplatePasswordStrategy
   exportNotes: string[]

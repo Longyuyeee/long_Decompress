@@ -130,6 +130,8 @@ pub struct CompressionOptions {
     #[serde(default)]
     pub rar_recovery_percent: u32,
     #[serde(default)]
+    pub rar_recovery_volumes: u32,
+    #[serde(default)]
     pub preserve_paths: Option<bool>,
     #[serde(default)]
     pub delete_after: bool,
@@ -185,6 +187,7 @@ impl Default for CompressionOptions {
             create_solid_archive: false,
             encrypt_filenames: false,
             rar_recovery_percent: 0,
+            rar_recovery_volumes: 0,
             preserve_paths: None,
             delete_after: false,
             verify_after: true,

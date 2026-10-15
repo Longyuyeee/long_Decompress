@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
-import ThemedSelect from '@/components/ui/ThemedSelect.vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import ArchiveRecoveryBatch from '@/components/compression/ArchiveRecoveryBatch.vue'
+import RarRecoveryVolumesDialog from '@/components/compression/RarRecoveryVolumesDialog.vue'
+import type { ArchiveRecoveryRow } from '@/composables/useArchiveRecoveryBatch'
 import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
 import { useTauriCommands, type ArchiveDiagnosticReport, type ZipRepairResult } from '@/composables/useTauriCommands'
@@ -35,6 +37,17 @@ const activeMode = ref<'calculate' | 'verify' | 'archive'>('calculate')
 const verifyResult = ref<{ valid: boolean; message: string } | null>(null)
 const archivePath = ref('')
 const diagnosticSources = ref<string[]>([])
+const batchBusy = ref(false), batchDetailOpen = ref(false), recoveryVolumesVisible = ref(false)
+const recoveryVolumesSource = ref(''), recoveryVolumesPassword = ref('')
+function showRecoveryVolumes(path: string, password: string) { recoveryVolumesSource.value = path; recoveryVolumesPassword.value = password; recoveryVolumesVisible.value = true }
+watch(recoveryVolumesVisible, visible => { if (!visible) recoveryVolumesPassword.value = '' })
+async function inspectBatchItem(row: ArchiveRecoveryRow) {
+  archivePath.value = row.path; archivePassword.value = row.password; repairResult.value = null
+  recoveryTaskId.value = ''; recoveryOptions.value = {}; recoveredDraftId.value = ''; recoveredPassword.value = ''
+  batchDetailOpen.value = true
+  await nextTick()
+  diagnosticReport.value = row.report || null
+}
 const isRar = computed(() => diagnosticReport.value?.actualFormat === 'RAR')
 const archivePassword = ref('')
 const diagnosticReport = ref<ArchiveDiagnosticReport | null>(null)
@@ -202,6 +215,7 @@ const clearResults = () => {
   verifyResult.value = null
   archivePath.value = ''
   diagnosticSources.value = []
+  batchDetailOpen.value = false
   archivePassword.value = ''
   diagnosticReport.value = null
   repairResult.value = null
@@ -214,10 +228,12 @@ const clearResults = () => {
 const selectArchive = async () => {
   const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
     ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
-  const file = queued === undefined ? await open({ multiple: false, title: '选择要诊断的压缩包' }) : queued
-  if (typeof file === 'string') {
-    archivePath.value = file
-    diagnosticSources.value = []
+  const file = queued === undefined ? await open({ multiple: true, title: '选择要诊断的压缩包，可多选' }) : queued
+  const paths = Array.isArray(file) ? file : typeof file === 'string' ? [file] : []
+  if (paths.length) {
+    archivePath.value = paths[0]
+    diagnosticSources.value = paths
+    batchDetailOpen.value = false
     diagnosticReport.value = null
     repairResult.value = null
     recoveryTaskId.value = ''
@@ -349,8 +365,8 @@ const copyDiagnosticReport = async () => {
   }
 }
 
-watch(() => isDiagnosing.value || isRepairing.value ? null : appStore.pendingArchiveDiagnosis, request => {
-  if (!request || isDiagnosing.value || isRepairing.value) return
+watch(() => isDiagnosing.value || isRepairing.value || batchBusy.value ? null : appStore.pendingArchiveDiagnosis, request => {
+  if (!request || isDiagnosing.value || isRepairing.value || batchBusy.value) return
   appStore.pendingArchiveDiagnosis = null
   clearResults()
   activeMode.value = 'archive'
@@ -359,7 +375,7 @@ watch(() => isDiagnosing.value || isRepairing.value ? null : appStore.pendingArc
   archivePassword.value = request.password || ''
   recoveryTaskId.value = request.taskId || ''
   recoveryOptions.value = { outputPath: request.outputPath, extractToSubfolder: request.extractToSubfolder }
-  void diagnoseArchive()
+  if (diagnosticSources.value.length < 2) void diagnoseArchive()
 }, { immediate: true })
 
 const queueRecoveredArchive = async () => {
@@ -554,12 +570,13 @@ onUnmounted(() => {
         </div>
 
         <div v-else class="integrity-single-column min-w-0 overflow-x-hidden" data-testid="archive-diagnostic-panel">
+          <div v-if="diagnosticSources.length > 1" class="flex flex-wrap items-center justify-between gap-2">
+            <button v-if="batchDetailOpen" class="archive-secondary" @click="batchDetailOpen = false"><i class="pi pi-arrow-left"></i>返回批量列表</button>
+            <button class="archive-secondary" :disabled="batchBusy || isDiagnosing || isRepairing" @click="selectArchive"><i class="pi pi-folder-open"></i>重新选择压缩包</button>
+          </div>
+          <div v-if="diagnosticSources.length > 1" v-show="!batchDetailOpen"><ArchiveRecoveryBatch :paths="diagnosticSources" @busy="batchBusy = $event" @inspect="inspectBatchItem" @recovery-volumes="showRecoveryVolumes($event.path, $event.password)" /></div>
           <div v-if="recoveryTaskId" class="repair-password-note" data-testid="recovery-task-context"><i class="pi pi-wrench"></i><span>正在处理失败的解压任务。救回新包后可直接加入解压队列，原输出设置会保留。</span></div>
-          <section class="integrity-panel min-w-0 overflow-hidden">
-            <div v-if="diagnosticSources.length > 1" class="mb-4 space-y-2">
-              <p class="text-xs text-muted">已从资源管理器选择 {{ diagnosticSources.length }} 项，可逐项检查和修复。</p>
-              <ThemedSelect :model-value="archivePath" :disabled="isDiagnosing || isRepairing" :options="diagnosticSources.map(path => ({value:path,label:path.split(/[\\/]/).pop() || path}))" test-id="repair-source-selection" floating @update:model-value="archivePath = $event; archivePassword = ''; diagnosticReport = null; repairResult = null; recoveredDraftId = ''; recoveredPassword = ''; diagnoseArchive()" />
-            </div>
+          <section v-show="diagnosticSources.length < 2 || batchDetailOpen" class="integrity-panel min-w-0 overflow-hidden">
             <div class="archive-inputs">
               <button type="button" class="archive-select" :disabled="isDiagnosing || isRepairing" @click="selectArchive">
                 <i class="pi pi-folder-open"></i>
@@ -588,7 +605,7 @@ onUnmounted(() => {
             </div>
           </section>
 
-          <section v-if="diagnosticReport" class="integrity-panel min-w-0 overflow-hidden" data-testid="diagnostic-report">
+          <section v-if="diagnosticReport" v-show="diagnosticSources.length < 2 || batchDetailOpen" class="integrity-panel min-w-0 overflow-hidden" data-testid="diagnostic-report">
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p class="text-xs font-black tracking-[.22em] text-muted">诊断结论</p>
@@ -599,6 +616,7 @@ onUnmounted(() => {
               <span class="diagnostic-format">{{ diagnosticReport.actualFormat }}</span>
             </div>
 
+            <button v-if="isRar && diagnosticReport.status === 'healthy' && diagnosticReport.volumesFound > 1" class="archive-secondary mt-4" data-testid="open-create-recovery-volumes" @click="showRecoveryVolumes(archivePath, archivePassword)"><i class="pi pi-shield"></i>为这组分包创建恢复卷</button>
             <div class="diagnostic-metrics mt-6">
               <div><span>归档大小</span><strong>{{ formatBytes(diagnosticReport.fileSize) }}</strong></div>
               <div><span>{{ diagnosticReport.recoverability === 'local_entries' ? '已找到文件 / 目录' : '文件 / 目录' }}</span><strong>{{ diagnosticReport.integrityTested || diagnosticReport.totalFiles || diagnosticReport.totalDirectories ? `${diagnosticReport.totalFiles} / ${diagnosticReport.totalDirectories}` : '未能确认' }}</strong></div>
@@ -629,7 +647,7 @@ onUnmounted(() => {
             </div>
           </section>
 
-          <section v-if="repairResult" class="integrity-panel border" :class="repairResult.partial || repairResult.skippedEntries.length ? 'border-amber-500/30' : 'border-green-500/30'" data-testid="repair-result">
+          <section v-if="repairResult" v-show="diagnosticSources.length < 2 || batchDetailOpen" class="integrity-panel border" :class="repairResult.partial || repairResult.skippedEntries.length ? 'border-amber-500/30' : 'border-green-500/30'" data-testid="repair-result">
             <h2 class="text-lg font-black" :class="repairResult.partial || repairResult.skippedEntries.length ? 'text-amber-600' : 'text-green-500'">{{ repairResult.partial || repairResult.skippedEntries.length ? '部分恢复 · 新文件已通过校验' : '修复文件已通过完整性校验' }}</h2>
             <p class="mt-3 text-xs text-muted break-all">{{ repairResult.outputPath }}</p>
             <p class="mt-3 text-sm text-content">恢复 {{ repairResult.recoveredFiles }} 个文件、{{ repairResult.recoveredDirectories }} 个目录；未恢复说明 {{ repairResult.skippedEntries.length }} 项。</p>
@@ -644,6 +662,7 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
+  <RarRecoveryVolumesDialog v-model:visible="recoveryVolumesVisible" :path="recoveryVolumesSource" :password="recoveryVolumesPassword" />
 </template>
 
 <style scoped>

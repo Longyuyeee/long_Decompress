@@ -99,6 +99,7 @@ export interface Task {
     create_solid_archive?: boolean
     encrypt_filenames?: boolean
     rar_recovery_percent?: number
+    rar_recovery_volumes?: number
     preserve_paths?: boolean
     delete_after?: boolean
     verify_after?: boolean
