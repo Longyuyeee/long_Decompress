@@ -1,6 +1,6 @@
 # 文档导航与维护规则
 
-- **当前入口：[v1.4.8 分卷救援与批量处理](ARCHIVE_RECOVERY_1.4.8.md)**、[封板记录](ARCHIVE_RECOVERY_FREEZE_1.4.8.md)、[中文发布说明](RELEASE_NOTES_1.4.8.md)、[发布交接](DEVELOPMENT_HANDOFF.md)。源码版本 1.4.8，功能已封板；普通安装器以本分支 PR 最新 Windows package 为准。当前正式公开版为 [v1.4.7](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.7)，不将待发版源码当作已发布安装包。
+- **当前入口：[v1.4.8 分卷救援与批量处理](ARCHIVE_RECOVERY_1.4.8.md)**、[封板记录](ARCHIVE_RECOVERY_FREEZE_1.4.8.md)、[中文发布说明](RELEASE_NOTES_1.4.8.md)、[发布交接](DEVELOPMENT_HANDOFF.md)。源码版本 1.4.8，功能已封板且用户已批准正式发布；准确合入/标签与构建结果见 [PR #162](https://github.com/Longyuyeee/long_Decompress/pull/162)，安装器和签名更新附件以 [v1.4.8 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.8)实际内容为准。
 
 - [v1.4.3 归档升级收口](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)、[更新说明](RELEASE_NOTES_1.4.3.md)：卷组一致性、RAR 分卷与 Unicode 密码、LZ4/Brotli 及通用数字分卷。
 

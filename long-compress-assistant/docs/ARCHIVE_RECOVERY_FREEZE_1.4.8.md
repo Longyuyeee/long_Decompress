@@ -23,7 +23,7 @@
 
 本分支 PR 最新 **Windows package 成功**即满足剩余构建条件，产物为 `windows-nsis-installer`，不启用 `desktop-e2e`。准确运行链接、结果和产物记录在 PR 说明中，不为文档回写反复构建同一源码。
 
-两份 README、格式口径、交接、路线及 [中文 Release 正文](RELEASE_NOTES_1.4.8.md)已准备。用户本次要求可发版，不自动合并或推送正式标签/Release；当前公开版仍为 v1.4.7。后续在安装器成功基础上合入冻结范围、推送 `v1.4.8`，沿用既有签名更新发布流程即可，不再扩大检查。
+两份 README、格式口径、交接、路线及 [中文 Release 正文](RELEASE_NOTES_1.4.8.md)已准备。用户在功能封板后已追加要求正式发布：在普通安装器检查成功基础上合入 [PR #162](https://github.com/Longyuyeee/long_Decompress/pull/162)，从合并提交推送 `v1.4.8`，沿用既有签名更新发布流程，不再扩大检查。准确合入/标签身份及构建结果记录在该 PR，安装器和更新附件以 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.8)为准。
 
 ## 保留边界
 
