@@ -2,7 +2,7 @@
 
 ## 当前：v1.4.10 功能收口，接续正式发布（2026-10-16）
 
-用户批准从 [多版本路线](ARCHIVE_FORMAT_AND_WORKFLOW_ROADMAP_2026-10-16.md)按顺序开发并封板发布。ZIP 选择性解压与密码范围统一、旧 ZIP 方法接入及浏览页返回按钮遮挡修正完成；加密 Zstandard 6 组、真实超过 4 GiB 的 AES/ZipCrypto ZIP64 数字卷、实际桌面用户链与页面均核对。前端 20 项、不同后端 69 项通过，版本及 Shell 资源统一 1.4.10。
+用户批准从 [多版本路线](ARCHIVE_FORMAT_AND_WORKFLOW_ROADMAP_2026-10-16.md)按顺序开发并封板发布。ZIP 选择性解压与密码范围统一、旧 ZIP 方法接入及浏览页返回按钮遮挡修正完成；封板复审补上内部容错残留清理。加密 Zstandard 6 组、真实超过 4 GiB 的 AES/ZipCrypto ZIP64 数字卷、实际桌面用户链与页面均核对。前端 20 项、不同后端 71 项通过，版本及 Shell 资源统一 1.4.10，最终冻结 `4c573ff`。
 
 范围、实际失败和证据见 [实施审计](ARCHIVE_COMPATIBILITY_1.4.10.md)，准确冻结提交及普通安装包/合入/发布见 [封板记录](ARCHIVE_COMPATIBILITY_FREEZE_1.4.10.md)。本轮已获发布授权，接续必需 Windows package，成功后合入并从合并提交创建标签，中文 Release 用 [本版说明](RELEASE_NOTES_1.4.10.md)。不为文档状态回写重复打包；实际下载附件以 Release 为准。下一轮为 v1.4.11 SFX 只读及特殊卷型，未开始实现。下方旧“当前”均为历史快照。
 
