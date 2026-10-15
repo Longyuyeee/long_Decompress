@@ -19,6 +19,6 @@
 
 ## 发布接续
 
-源码已统一为 1.4.9，README 保留 v1.4.8 正式下载并说明新候选，[中文 Release 正文](RELEASE_NOTES_1.4.9.md)已准备。接续本分支 PR 的 **Windows package 成功**即可满足普通 NSIS 构建要求，准确运行与产物记在 PR 正文；不为状态回写重复打包。
+2026-10-16 用户已追加正式发布要求。最后定向复核前端 22 项、不同 Rust 9 项、类型/身份及同一冻结程序完整桌面链通过；首次启动超时与未定位边界如实保留在 [实施审计](ARCHIVE_CONTINUITY_1.4.9.md)，未修改代码或放宽断言。两份 README 与 [中文 Release 正文](RELEASE_NOTES_1.4.9.md)已切换为本版发布口径。
 
-用户本次只要求到下一次封板，不自动合入/推正式标签/发布。RAR4 恢复、任意 Unicode 管道密码及 ZIP 任意缺卷/未知边界不纳入本版承诺。未修改已安装软件、个人任务或品牌图标。
+原普通 Windows package 已在 `5fed581` 成功；发布文档更新后，沿用 [PR #163](https://github.com/Longyuyeee/long_Decompress/pull/163) 必需检查收口并合入，从合并提交创建 `v1.4.9`，发布安装器及签名更新附件。准确合入/标签、最新构建及附件结果记在该 PR 和 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.9)，不为状态回写反复打包。RAR4 恢复、任意 Unicode 管道密码及 ZIP 任意缺卷/未知边界不纳入本版承诺。未修改已安装软件、个人任务或品牌图标。

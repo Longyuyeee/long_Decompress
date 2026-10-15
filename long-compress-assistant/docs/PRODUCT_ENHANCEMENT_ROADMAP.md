@@ -1,5 +1,9 @@
 # Long解压产品增强路线
 
+## 当前：v1.4.9 正式发布接续（2026-10-16）
+
+用户已批准最后复核通过后正式发版。功能冻结 `24d780f` 保持，前端 22 项/不同 Rust 9 项、类型/身份及同一程序的完整桌面用户链再次通过；一次启动超时及不改条件的完整重试均见 [实施记录](ARCHIVE_CONTINUITY_1.4.9.md)。本轮只同步 README/发布文档，沿用 [PR #163](https://github.com/Longyuyeee/long_Decompress/pull/163) 最新普通安装器检查收口、合入和正式发布。准确身份与实际附件见 PR 及 [v1.4.9 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.9)，不追加新功能或无关矩阵。下方“未获发布授权/仍为 v1.4.8”是历史快照。
+
 ## 当前：v1.4.9 功能封板（2026-10-15）
 
 三项批准方向完成，冻结 `24d780f`：RAR 管道密码编码修正、批量检查修复切页/重启接续、RAR 大条目校验取消。相关前端 22 项/不同 Rust 9 项、实际 Windows 重启恢复至解压链及常用/窄窗口 7 张截图完成。仅接续本分支 PR 的普通 Windows package 构建成功及用户的正式发布决定，见 [封板记录](ARCHIVE_CONTINUITY_FREEZE_1.4.9.md)。公开正式版仍是 v1.4.8。
