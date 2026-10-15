@@ -7,6 +7,7 @@ export interface ConversionSettings {
   password: string
   splitMiB: number
   encryptFilenames: boolean
+  rarRecoveryPercent?: number
   zipEncryption: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
   zipPasswordEncoding: 'utf8' | 'windows_local'

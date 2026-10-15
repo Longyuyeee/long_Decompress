@@ -1,0 +1,13 @@
+{
+  "application": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "binarySha256": "015dafbcefab15047541a9fc4428218af6bf7555521628e3c0d69eb65f5a1f87",
+  "externalToolSha256": "f561764bc3e9ed208744321a89a819b562edeaf06e203c02a06976121fda1991",
+  "appCreatedRecoveryRecord": true,
+  "encryptedHeadersAndChinesePassword": true,
+  "inlineFailureRepairAndOutputRetention": true,
+  "damagedRarDoesNotAssertWrongPassword": true,
+  "wrongPasswordNoOutput": true,
+  "explorerCliAndMultiSelection": true,
+  "revMissingFirstRestoredAndExtracted": true,
+  "originalFilesUnchanged": true
+}

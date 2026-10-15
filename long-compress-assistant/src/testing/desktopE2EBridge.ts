@@ -61,6 +61,7 @@ export interface DesktopE2EBridge {
     integrityTested: boolean
     canRepair: boolean
   }>
+  repairRar: (filePath: string, outputDirectory: string, password?: string) => Promise<{outputPath:string;outputFiles:string[];verified:boolean;outputEncrypted:boolean;recoveredFiles:number}>
   repairZip: (filePath: string, outputPath: string, password?: string) => Promise<{
     outputPath: string
     recoveredFiles: number
@@ -182,6 +183,7 @@ export interface DesktopE2EBridge {
   queueDesktopConfirmations: (choices: boolean[]) => void
   takeDesktopConfirmation: () => boolean | undefined
   seedPasswordFallbackWorkspace: (sourcePath: string, outputPath: string) => string
+  seedRarRecoveryDraft: (sourcePath:string, outputPath:string) => Promise<void>
   compressionWorkspaceAuditState: () => {
     taskCount: number
     pendingGroupCount: number
@@ -568,6 +570,10 @@ export const installDesktopE2EBridge = () => {
       diagnosticId: `desktop-e2e-diagnosis-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       filePath,
       password: password || null,
+    }),
+
+    repairRar: (filePath, outputDirectory, password) => invoke('repair_rar', {
+      repairId: `desktop-e2e-rar-${Date.now()}`, filePath, outputDirectory, password: password || null,
     }),
 
     repairZip: (filePath, outputPath, password) => invoke('repair_zip', {
@@ -962,6 +968,12 @@ export const installDesktopE2EBridge = () => {
       return draft.id
     },
 
+    async seedRarRecoveryDraft(sourcePath, outputPath) {
+      const info = await invoke<{size:number}>('get_file_info', {path:sourcePath})
+      compressionStore.groups = []
+      compressionStore.selectedFiles = [{path:sourcePath,name:sourcePath.split(/[\\/]/).pop() || sourcePath,size:info.size,type:'file',isDirectory:false,expanded:true,outputPath,
+        settings:{...compressionStore.globalSettings,format:'rar',rarRecoveryPercent:5,password:''}}]
+    },
     compressionWorkspaceAuditState() {
       const pendingGroups = compressionStore.groups.filter(group => !group.taskId)
       return {

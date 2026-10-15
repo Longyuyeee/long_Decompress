@@ -2109,6 +2109,8 @@ impl CompressionService {
                 } else {
                     let unresolved_message = if format == ArchiveFormat::SevenZip {
                         "未取得能完整验证此 7Z 归档的密码；请手动核对密码，并检查文件或分卷是否损坏"
+                    } else if format == ArchiveFormat::Rar {
+                        "未取得能完整验证此 RAR 归档的密码；请核对密码，或检查归档及分卷是否损坏"
                     } else {
                         "所有已知密码均无效，等待手动输入"
                     };
@@ -2147,6 +2149,9 @@ impl CompressionService {
                 // but the final user-facing result must not assert a wrong password.
                 if format == ArchiveFormat::SevenZip {
                     return Err(native_extraction::seven_zip::ambiguous_password_error().into());
+                }
+                if format == ArchiveFormat::Rar {
+                    return Err(CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] RAR 密码预检未能通过内容校验：可能是密码不匹配，也可能是归档损坏或分卷混用。请核对密码，或检查并尝试修复。".into()).into());
                 }
                 return Err(CompressionError::InvalidPassword.into());
             }
@@ -3308,10 +3313,15 @@ impl CompressionService {
         } else { None };
         let mut command = crate::utils::process::command(encoder);
         command.arg("a");
+        command.arg("-cfg-");
         command.arg("-idq");
         command.arg("-y");
         command.arg(format!("-m{}", options.level.clamp(1, 5)));
         if options.create_solid_archive { command.arg("-s"); }
+        if options.rar_recovery_percent > 0 {
+            anyhow::ensure!(matches!(options.rar_recovery_percent, 3 | 5 | 10), "RAR 恢复保护请选择 3%、5% 或 10%");
+            command.arg(format!("-rr{}p", options.rar_recovery_percent));
+        }
 
         if options.preserve_paths == Some(false) {
             command.arg("-ep");

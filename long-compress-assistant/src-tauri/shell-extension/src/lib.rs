@@ -65,6 +65,7 @@ enum CommandKind {
     ExtractHere,
     ExtractTo,
     TestArchive,
+    RepairArchive,
     ConvertArchive,
     ReconfigureArchive,
     QuickPack,
@@ -79,6 +80,7 @@ const SUBCOMMANDS: &[CommandKind] = &[
     CommandKind::ExtractHere,
     CommandKind::ExtractTo,
     CommandKind::TestArchive,
+    CommandKind::RepairArchive,
     CommandKind::ConvertArchive,
     CommandKind::ReconfigureArchive,
     CommandKind::QuickPack,
@@ -96,6 +98,7 @@ impl CommandKind {
             Self::ExtractHere => "解压到此处",
             Self::ExtractTo => "解压到同名文件夹",
             Self::TestArchive => "测试压缩包完整性",
+            Self::RepairArchive => "检查与尝试修复…",
             Self::ConvertArchive => "转换压缩包格式…",
             Self::ReconfigureArchive => "修改密码 / 调整分卷…",
             Self::QuickPack => "一键打包为 ZIP",
@@ -113,6 +116,7 @@ impl CommandKind {
             Self::ExtractHere => Some("--extract-here"),
             Self::ExtractTo => Some("--extract-to"),
             Self::TestArchive => Some("--test-archive"),
+            Self::RepairArchive => Some("--repair-archive"),
             Self::ConvertArchive => Some("--convert-archive"),
             Self::ReconfigureArchive => Some("--reconfigure-archive"),
             Self::QuickPack => Some("--quick-pack"),
@@ -143,6 +147,7 @@ impl CommandKind {
             Self::ExtractHere => 2,
             Self::ExtractTo => 3,
             Self::TestArchive => 4,
+            Self::RepairArchive => 22,
             Self::ConvertArchive => 20,
             Self::ReconfigureArchive => 21,
             Self::QuickPack => 5,
@@ -199,7 +204,10 @@ impl IExplorerCommand_Impl for ShellCommand_Impl {
         if count == 0 {
             return Ok(ECS_DISABLED.0 as u32);
         }
-        if self.kind.requires_archive() {
+        if self.kind == CommandKind::RepairArchive {
+            let paths = selected_paths(selection).unwrap_or_default();
+            if paths.is_empty() || !paths.iter().all(|path| is_repair_path(path)) { return Ok(ECS_HIDDEN.0 as u32); }
+        } else if self.kind.requires_archive() {
             let paths = selected_paths(selection).unwrap_or_default();
             if paths.is_empty() || !paths.iter().all(|path| is_archive_path(path)) {
                 return Ok(ECS_HIDDEN.0 as u32);
@@ -323,6 +331,14 @@ fn selected_paths(items: &IShellItemArray) -> Result<Vec<String>> {
     Ok(paths)
 }
 
+fn is_repair_path(path: &str) -> bool {
+    if is_archive_path(path) { return true; }
+    let extension = std::path::Path::new(path).extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
+    extension == "rev" || extension.strip_prefix('r').is_some_and(|n| (2..=3).contains(&n.len()) && n.bytes().all(|b| b.is_ascii_digit()))
+        || extension.strip_prefix('z').is_some_and(|n| n.len() >= 2 && n.bytes().all(|b| b.is_ascii_digit()))
+        || (extension.len() >= 3 && extension.bytes().all(|b| b.is_ascii_digit()))
+}
+
 fn is_archive_path(path: &str) -> bool {
     std::path::Path::new(path)
         .extension()
@@ -432,7 +448,7 @@ mod tests {
     use windows::Win32::UI::Shell::{IExplorerCommand, ECF_DEFAULT, ECF_HASSUBCOMMANDS};
 
     use super::{
-        is_archive_path, CommandKind, DllCanUnloadNow, DllGetClassObject, EXPLORER_COMMAND_CLSID,
+        is_archive_path, is_repair_path, CommandKind, DllCanUnloadNow, DllGetClassObject, EXPLORER_COMMAND_CLSID,
         EXPLORER_COMMAND_GUID, QUICK_EXTRACT_COMMAND_CLSID, QUICK_EXTRACT_COMMAND_GUID,
         QUICK_PACK_COMMAND_CLSID, QUICK_PACK_COMMAND_GUID, SUBCOMMANDS,
     };
@@ -457,15 +473,19 @@ mod tests {
 
     #[test]
     fn native_menu_contains_expected_commands() {
-        assert_eq!(SUBCOMMANDS.len(), 11);
+        assert_eq!(SUBCOMMANDS.len(), 12);
         assert_eq!(SUBCOMMANDS[0], CommandKind::BrowseArchive);
         assert_eq!(SUBCOMMANDS[1], CommandKind::QuickExtract);
-        assert_eq!(SUBCOMMANDS[5], CommandKind::ConvertArchive);
-        assert_eq!(SUBCOMMANDS[6], CommandKind::ReconfigureArchive);
-        assert_eq!(SUBCOMMANDS[7], CommandKind::QuickPack);
-        assert_eq!(SUBCOMMANDS[10], CommandKind::CompressCustom);
+        assert_eq!(SUBCOMMANDS[6], CommandKind::ConvertArchive);
+        assert_eq!(SUBCOMMANDS[7], CommandKind::ReconfigureArchive);
+        assert_eq!(SUBCOMMANDS[8], CommandKind::QuickPack);
+        assert_eq!(SUBCOMMANDS[11], CommandKind::CompressCustom);
         assert!(is_archive_path(r"C:\archives\sample.ZIP"));
         assert!(!is_archive_path(r"C:\documents\sample.txt"));
+        assert_eq!(SUBCOMMANDS[5], CommandKind::RepairArchive);
+        assert!(is_repair_path(r"C:\archives\parts.part1.rev"));
+        assert!(is_repair_path(r"C:\archives\parts.r00"));
+        assert!(!is_repair_path(r"C:\documents\sample.txt"));
     }
 
     #[test]

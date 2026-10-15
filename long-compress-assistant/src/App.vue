@@ -250,6 +250,12 @@ onMounted(async () => {
     const files = request.files.filter(file => file && !file.startsWith('%'))
     if (files.length === 0) return
 
+    if (request.action === 'context-repair-archive') {
+      appStore.openArchiveForDiagnosis({ path: files[0], paths: files })
+      void router.push('/integrity')
+      return
+    }
+
     if (request.action === 'context-browse-archive') {
       appStore.openArchiveInBrowser(files[0])
       void router.push('/browser')

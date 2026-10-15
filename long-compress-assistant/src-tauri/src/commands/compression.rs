@@ -1617,6 +1617,17 @@ pub async fn cancel_zip_repair(repair_id: String) -> Result<(), String> {
     Ok(())
 }
 
+#[command]
+pub async fn repair_rar(repair_id: String, file_path: String, output_directory: String, password: Option<String>) -> Result<crate::services::rar_recovery::RarRepairResult, String> {
+    let cancelled = Arc::new(AtomicBool::new(false));
+    match ZIP_REPAIR_FLAGS.entry(repair_id.clone()) {
+        Entry::Vacant(entry) => { entry.insert(cancelled.clone()); },
+        Entry::Occupied(_) => return Err("Repair is already running".into()),
+    }
+    let _guard = ZipRepairGuard { repair_id };
+    crate::services::rar_recovery::repair(std::path::Path::new(&file_path), std::path::Path::new(&output_directory), password.as_deref(), cancelled).await.map_err(|e| format!("{e:#}"))
+}
+
 #[cfg(test)]
 mod cancellation_tests {
     use super::{

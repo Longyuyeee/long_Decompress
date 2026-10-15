@@ -67,6 +67,7 @@ export interface CompressOptions {
   split_size?: number | null
   create_solid_archive?: boolean
   encrypt_filenames?: boolean
+  rar_recovery_percent?: number
   preserve_paths?: boolean
   delete_after?: boolean
   verify_after?: boolean
@@ -201,6 +202,8 @@ export interface ArchiveDiagnosticReport {
 }
 
 export interface ZipRepairResult {
+  format?: string
+  outputFiles?: string[]
   outputPath: string
   recoveredFiles: number
   recoveredDirectories: number
@@ -869,6 +872,9 @@ export const useTauriCommands = () => {
   const repairZip = async (repairId: string, filePath: string, outputPath: string, password?: string) => {
     return await invoke<ZipRepairResult>('repair_zip', { repairId, filePath, outputPath, password: password || null })
   }
+  const repairRar = async (repairId: string, filePath: string, outputDirectory: string, password?: string) => {
+    return invoke<ZipRepairResult>('repair_rar', { repairId, filePath, outputDirectory, password: password || null })
+  }
 
   const cancelZipRepair = async (repairId: string) => {
     await invoke('cancel_zip_repair', { repairId })
@@ -935,6 +941,7 @@ export const useTauriCommands = () => {
     diagnoseArchive,
     cancelArchiveDiagnosis,
     repairZip,
+    repairRar,
     cancelZipRepair,
     cancelCompression,
     registerContextMenu: () => invoke<boolean>('register_context_menu'),

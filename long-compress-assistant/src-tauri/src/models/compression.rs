@@ -128,13 +128,15 @@ pub struct CompressionOptions {
     #[serde(default)]
     pub encrypt_filenames: bool,
     #[serde(default)]
+    pub rar_recovery_percent: u32,
+    #[serde(default)]
     pub preserve_paths: Option<bool>,
     #[serde(default)]
     pub delete_after: bool,
     #[serde(default = "default_true")]
     pub verify_after: bool,
-    /// RAR.exe has no stdin or environment-variable password channel. This must
-    /// be explicitly approved by the UI before a password is placed in argv.
+    /// RAR creation currently uses argv for full Unicode password compatibility.
+    /// The UI must approve this explicitly; repair uses a separate OEM stdin channel.
     #[serde(default)]
     pub allow_insecure_password_cli: bool,
 }
@@ -182,6 +184,7 @@ impl Default for CompressionOptions {
             split_size: None,
             create_solid_archive: false,
             encrypt_filenames: false,
+            rar_recovery_percent: 0,
             preserve_paths: None,
             delete_after: false,
             verify_after: true,

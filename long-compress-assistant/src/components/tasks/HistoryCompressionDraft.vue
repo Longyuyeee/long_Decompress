@@ -24,7 +24,7 @@ const restored = computed(() => {
   if (config?.schemaVersion !== 1 || config.kind !== 'archive-compression' || !config.settings) return null
   const s = config.settings
   if (s.encryptFilenames !== undefined && (typeof s.encryptFilenames !== 'boolean'
-    || (s.encryptFilenames && (s.format !== '7z' || !config.passwordRequired)))) return null
+    || (s.encryptFilenames && (!['7z', 'rar'].includes(s.format) || !config.passwordRequired)))) return null
   if (!COMPRESSIBLE_FORMATS.some(format => format.value === s.format)
     || !Number.isInteger(s.level) || s.level < 0 || s.level > 9
     || typeof config.outputDirectory !== 'string' || typeof config.passwordRequired !== 'boolean'

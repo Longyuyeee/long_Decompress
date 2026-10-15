@@ -731,6 +731,7 @@ FunctionEnd
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.extractHere"
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.extractTo"
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.testArchive"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.repairArchive"
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.convertArchive"
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.reconfigureArchive"
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.compressZip"
@@ -745,6 +746,17 @@ FunctionEnd
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.zipx\shell\LongDecompress"
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.7z\shell\LongDecompress"
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.rar\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.rev\shell\LongDecompress"
+  ; Recovery-only menu entries on classic RAR data volumes, .r00 through .r99.
+  Push $R0
+  Push $R1
+  StrCpy $R0 0
+  IntFmt $R1 ".r%02d" $R0
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\$R1\shell\LongDecompress"
+  IntOp $R0 $R0 + 1
+  IntCmp $R0 100 0 -3 0
+  Pop $R1
+  Pop $R0
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.tar\shell\LongDecompress"
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.gz\shell\LongDecompress"
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.gzip\shell\LongDecompress"
@@ -889,6 +901,14 @@ FunctionEnd
 
   ; Refresh Explorer's association cache without restarting Explorer.
   System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, p 0, p 0)'
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.lz4\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.lz4\shell\LongDecompressQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.br\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.br\shell\LongDecompressQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.arj\shell\LongDecompressQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.z\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.z\shell\LongDecompressQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.udf\shell\LongDecompressQuickExtract"
 !macroend
 
 Section Uninstall

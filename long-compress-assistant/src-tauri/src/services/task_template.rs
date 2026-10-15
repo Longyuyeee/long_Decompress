@@ -104,6 +104,8 @@ pub struct TemplateCompression {
     pub create_solid_archive: bool,
     #[serde(default)]
     pub encrypt_filenames: bool,
+    #[serde(default, skip_serializing_if = "no_rar_recovery")]
+    pub rar_recovery_percent: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -250,10 +252,18 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             verify_after: profile.config.verify_after,
             create_solid_archive: profile.config.create_solid_archive,
             encrypt_filenames: profile.config.encrypt_filenames,
+            rar_recovery_percent: if profile.config.format == "rar" { profile.config.extra_params.get("rar_recovery_percent").and_then(|v| v.parse().ok()).unwrap_or(0) } else { 0 },
         },
         password_strategy,
         export_notes,
     }
+}
+
+fn no_rar_recovery(value: &u32) -> bool { *value == 0 }
+
+fn ensure_rar_recovery(percent: u32, format: &str) -> Result<()> {
+    anyhow::ensure!(percent == 0 || (format == "rar" && matches!(percent, 3 | 5 | 10)), "恢复保护仅适用于 RAR，比例请选择 3%、5% 或 10%");
+    Ok(())
 }
 
 fn validate_filename_template(value: Option<&str>) -> Result<()> {
@@ -333,13 +343,14 @@ fn validate_template(template: &TaskTemplate) -> Result<Vec<String>> {
             anyhow::bail!("启用分卷时必须提供大于 0 MiB 的分卷大小");
         }
     }
-    if template.compression.create_solid_archive && capability.format != "7z" {
-        anyhow::bail!("只有 7Z 模板可以启用固实压缩");
+    if template.compression.create_solid_archive && !matches!(capability.format, "7z" | "rar") {
+        anyhow::bail!("只有 7Z / RAR 模板可以启用固实压缩");
     }
+    ensure_rar_recovery(template.compression.rar_recovery_percent, capability.format)?;
     validate_filename_template(template.target_rule.filename_template.as_deref())?;
-    if template.compression.encrypt_filenames && (capability.format != "7z"
+    if template.compression.encrypt_filenames && (!matches!(capability.format, "7z" | "rar")
         || matches!(template.password_strategy, TemplatePasswordStrategy::None)) {
-        anyhow::bail!("文件名加密模板必须使用 7Z 并设置密码策略");
+        anyhow::bail!("文件名加密模板必须使用 7Z / RAR 并设置密码策略");
     }
     if template.source_rules.include_patterns.len() + template.source_rules.exclude_patterns.len()
         > MAX_PATTERNS
@@ -839,6 +850,7 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
               if let Some(mode) = template.compression.zip_split_mode {
                   params.insert("zip_split_mode".into(), if mode == crate::services::standard_zip_writer::ZipSplitMode::Standard { "standard" } else { "numeric" }.into());
               }
+              params.insert("rar_recovery_percent".into(), template.compression.rar_recovery_percent.to_string());
               params
             },
         },
@@ -914,6 +926,19 @@ mod tests {
         value["compression"]["format"] = serde_json::json!("7z");
         value["passwordStrategy"] = serde_json::json!({"mode":"none"});
         assert!(parse_template(&serde_json::to_vec(&value).unwrap()).unwrap_err().to_string().contains("文件名加密"));
+    }
+
+    #[test]
+    fn rar_recovery_record_survives_template_roundtrip_without_exporting_password() {
+        let mut original = profile();
+        original.config.format = "rar".into();
+        original.config.encrypt_filenames = true;
+        original.config.extra_params.insert("rar_recovery_percent".into(), "5".into());
+        let template = template_from_profile(&original);
+        let text = serde_json::to_vec(&template).unwrap();
+        assert!(!String::from_utf8_lossy(&text).contains("must-never-export"));
+        let parsed = parse_template(&text).unwrap();
+        assert_eq!(parsed.compression.rar_recovery_percent, 5);
     }
 
     fn profile() -> CompressionProfile {

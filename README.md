@@ -8,7 +8,7 @@
 
 打包文件 · 解压归档 · 浏览内容 · 管理密码 · 压缩图片、视频与 PDF
 
-[![Version](https://img.shields.io/badge/version-1.4.6-6366f1?style=for-the-badge)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0ea5e9?style=for-the-badge&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Local](https://img.shields.io/badge/文件处理-在本机完成-14b8a6?style=for-the-badge)](#privacy) [![License](https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/Longyuyeee/long_Decompress?style=for-the-badge&color=6366f1&label=version)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0ea5e9?style=for-the-badge&logo=windows)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![Local](https://img.shields.io/badge/文件处理-在本机完成-14b8a6?style=for-the-badge)](#privacy) [![License](https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge)](LICENSE)
 
 ### [⬇ 下载最新版](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 
@@ -223,7 +223,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
-| **v1.4.6（待发布）** | 失败任务行内纠正、缺卷处理、密码 ZIP 丢目录救援、恢复新包继续解压、等宽详情与日志显示优化 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.6.md) |
+| **v1.4.7（待发布）** | RAR 修复与 .rev 补卷、可选恢复保护、Windows 右键检查修复入口 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.7.md) |
+| **v1.4.6** | 失败任务行内纠正、缺卷处理、密码 ZIP 丢目录救援、恢复新包继续解压、等宽详情与日志显示优化 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.6.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.6) |
 | **v1.4.5** | 密码 ZIP 完整文件救援、ARJ / Unix `.Z` / UDF 读取、双栏与右键入口统一、结果密码提示与定位 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.5.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.5) |
 | **v1.4.4** | 标准 ZIP 分卷创建、PPMd/加密 ZIPX 与卷入口兼容、ZIP 目录重建与完整条目救援 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.4.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.4) |
 | v1.4.3 | 标准 ZIP 多卷浏览/密码/转换、RAR 密码分卷、LZ4/Brotli、TAR 数字切卷与实际操作修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.3.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.3) |

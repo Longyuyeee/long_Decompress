@@ -313,6 +313,7 @@ mod tests {
             include_patterns: vec!["*.txt".to_string(), "*.md".to_string()],
             create_subdirectories: false,
             overwrite_existing: true,
+            ..Default::default()
         };
 
         let serialized = serde_json::to_string(&options).unwrap();

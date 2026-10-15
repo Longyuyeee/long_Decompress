@@ -166,7 +166,7 @@ function close() {
             <p v-if="row.missing.length" data-testid="retry-missing-volumes" class="text-xs font-mono text-amber-500 break-words">缺少：{{ row.missing.join('、') }}</p>
             <button class="retry-button" :disabled="busy || pickerBusy" @click="openSourceFolder(row)"><i class="pi pi-folder-open mr-1"></i>打开分卷目录</button>
           </div>
-          <button v-if="['damaged', 'ambiguous-data', 'unknown'].includes(row.policy.category || '')" data-testid="retry-rescue" class="retry-button text-primary" :disabled="busy || pickerBusy" @click="rescueSource(row)"><i class="pi pi-wrench mr-1"></i>检查并尝试救援</button>
+          <button v-if="['damaged', 'ambiguous-data', 'unknown', 'missing-volume', 'incomplete'].includes(row.policy.category || '')" data-testid="retry-rescue" class="retry-button text-primary" :disabled="busy || pickerBusy" @click="rescueSource(row)"><i class="pi pi-wrench mr-1"></i>检查并尝试救援</button>
           <p v-if="row.policy.requireIntegrity" class="text-xs text-muted">请重新选择下载完整的文件。添加前会检查完整性，大文件可能需要一些时间。</p>
           <p v-else-if="row.nextStep" class="text-xs text-muted">{{ row.nextStep }}</p>
           <fieldset :disabled="busy || pickerBusy || !row.selected" class="retry-fields grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
