@@ -193,6 +193,10 @@ fn read_tar_text_entry<R: Read>(reader: R, entry_path: &str) -> Result<TextBytes
 }
 
 fn preview_format(path: &Path) -> Result<&'static str> {
+    if super::sfx_archive::is_executable_path(path)
+        && super::archive_browser::detect_format(path)? == ArchiveFormat::Zip {
+        return Ok("ZIP");
+    }
     let logical = if super::numeric_volume_reader::ZipInputReader::is_numeric_first(path) { Path::new(path.file_stem().unwrap()) } else { path };
     let name = logical
         .file_name()
@@ -685,6 +689,20 @@ mod tests {
         assert_eq!(preview.line_count, 2);
         assert!(!preview.truncated);
         assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 1);
+    }
+
+    #[tokio::test]
+    async fn previews_zip_sfx_text_using_the_detected_payload_format() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("original.zip");
+        write_zip(&archive, "说明.txt", "不执行程序即可读取".as_bytes());
+        let mut bytes = b"MZ offset regression fixture".to_vec();
+        bytes.extend(std::fs::read(&archive).unwrap());
+        let sfx = temp.path().join("资料.exe"); std::fs::write(&sfx, &bytes).unwrap();
+        let preview = preview_archive_text(&sfx, "说明.txt", None).await.unwrap();
+        assert_eq!(preview.content, "不执行程序即可读取");
+        assert_eq!(std::fs::read(&sfx).unwrap(), bytes);
+        assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 2);
     }
 
     #[tokio::test]

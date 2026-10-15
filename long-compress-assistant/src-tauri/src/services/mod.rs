@@ -46,6 +46,7 @@ pub mod split_compression;
 pub(crate) mod numeric_volume_reader;
 pub mod zip_password;
 pub(crate) mod zip_selection;
+pub(crate) mod sfx_archive;
 pub mod split_archive_detector;
 pub(crate) mod archive_volumes;
 pub(crate) mod codec_stream;

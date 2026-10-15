@@ -180,7 +180,12 @@ pub async fn diagnose(
     let path = fs::canonicalize(path)?;
     let password = password.map(str::to_owned);
     tauri::async_runtime::spawn_blocking(move || {
-        let group = collect(&path)?;
+        let sfx = super::sfx_archive::is_executable_path(&path);
+        let group = if sfx {
+            ensure!(super::sfx_archive::detect(&path)?.is_some_and(|(format, _)|
+                format == super::archive_format::ArchiveFormat::Rar), "不是可读取的 RAR 自解压归档");
+            Group { files: vec![path.clone()], data: vec![path.clone()], recovery: vec![] }
+        } else { collect(&path)? };
         let tool = CompressionService::find_rar_encoder().is_some();
         let first = group.data.first();
         let split = first
@@ -293,6 +298,10 @@ pub async fn diagnose(
                 title: "只找到了恢复卷".into(),
                 detail: "请把仍保留的同组 RAR 分卷与恢复卷放在同一目录，再重新检查。".into(),
             });
+        }
+        if sfx {
+            report.evidence.push("自解压包仅做只读完整性检查，不提供自解压模块修复或恢复卷处理".into());
+            return Ok(report);
         }
         if !tool {
             report.issues.push(DiagnosticIssue {

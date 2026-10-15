@@ -36,6 +36,9 @@ impl UniversalCliEngine {
     }
 
     fn is_zip_password_input(path: &Path) -> Result<bool> {
+        if super::sfx_archive::is_executable_path(path) {
+            return Ok(super::archive_browser::detect_format(path)? == super::archive_format::ArchiveFormat::Zip);
+        }
         // ZIPX and renamed ZIPs must use the same native password path. The
         // logical reader also recognizes numeric and standard disk groups.
         if crate::services::archive_format::ArchiveFormat::from_extension(path.extension().and_then(|value| value.to_str()).unwrap_or(""))

@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 import type { Task } from '@/stores/task'
 import type { ArchiveDiagnosticReport } from '@/composables/useTauriCommands'
 import { describeTaskFailure, getTaskRecoveryGuidance } from './taskFailure'
-import { isDecompressArchivePath, isPotentialSplitArchivePath } from './compressionFormat'
+import { isDecompressArchivePath, isPotentialSplitArchivePath, isPotentialSfxPath } from './compressionFormat'
 
 export function extractionRetryPolicy(task: Task) {
   const record = { status: task.status === 'failed' ? 'failed' as const : 'cancelled' as const, errorMessage: task.error }
@@ -32,16 +32,16 @@ export async function validateExtractionRetry(
   let path = input.source.trim()
   const outputPath = input.output.trim()
   if (!path || !outputPath) throw new Error('请确认来源文件与本次输出目录。')
-  if (!isDecompressArchivePath(path) && !isPotentialSplitArchivePath(path)) throw new Error('请选择支持的归档文件或首个分卷。')
+  if (!isDecompressArchivePath(path) && !isPotentialSplitArchivePath(path) && !isPotentialSfxPath(path)) throw new Error('请选择支持的归档文件或首个分卷。')
   check()
-  const split = await invoke<{ is_split: boolean; first_part?: string; is_complete?: boolean; missing_parts?: string[] } | null>('detect_split_archive', { path })
+  const split = await invoke<{ is_split: boolean; archive_format?: string; first_part?: string; is_complete?: boolean; missing_parts?: string[] } | null>('detect_split_archive', { path })
   check()
   if (split?.is_split) {
     if (!split.first_part || split.is_complete === false || split.missing_parts?.length) {
       throw new Error(`分卷仍不完整，请补齐后再检查：${split.missing_parts?.join('、') || '缺少必要分卷'}`)
     }
     path = split.first_part
-  } else if (!isDecompressArchivePath(path)) throw new Error('无法确认分卷组，请选择首卷。')
+  } else if (!isDecompressArchivePath(path) && !(isPotentialSfxPath(path) && split?.archive_format)) throw new Error('无法确认分卷组，请选择首卷。')
   const file = await invoke<{ name: string; is_dir: boolean; size: number }>('get_file_info', { path })
   check()
   if (file.is_dir || file.size <= 0) throw new Error('来源必须是非空归档文件，请确认已下载或复制完成。')

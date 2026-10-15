@@ -53,6 +53,26 @@ const mountView = (pinia = createPinia()) => mount(DecompressView, {
 })
 
 describe('DecompressView', () => {
+  it('imports only verified SFX and never queues an ordinary executable', async () => {
+    const wrapper = mountView()
+    mocks.invoke.mockImplementation(async (command: string, args: any) => {
+      if (command === 'detect_split_archive') {
+        if (args.path.endsWith('program.exe')) throw new Error('[archive-inspection:unsupported] 不是可读取的 ZIP、7Z 或 RAR 自解压归档')
+        return { is_split: false, archive_format: '7z' }
+      }
+      return []
+    })
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [
+      {name:'收到的资料.exe',path:'C:/收到的资料.exe'},
+      {name:'program.exe',path:'C:/program.exe'},
+    ])
+    await flushPromises()
+    expect(useTaskStore().tasks.map(task=>task.sourceFiles[0])).toEqual(['C:/收到的资料.exe'])
+    expect(useAppStore().error).toContain('不是可读取')
+    expect(useAppStore().error).not.toContain('[archive-inspection:')
+    wrapper.unmount()
+  })
+
   it('changes selected pending configuration without rewriting passwords, defaults or running tasks', async () => {
     const wrapper = mountView()
     const store = useTaskStore()

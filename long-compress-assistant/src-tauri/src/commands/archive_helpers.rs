@@ -5,6 +5,10 @@ use std::path::Path;
 use std::io::Read;
 
 fn input_archive_format(path: &Path) -> Option<String> {
+    if crate::services::sfx_archive::is_executable_path(path) {
+        return crate::services::archive_browser::detect_format(path).ok().map(|format|
+            crate::services::compression_service::CompressionService::extraction_history_format(path, &format));
+    }
     let reader = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path).ok()?;
     let mut header = Vec::with_capacity(512);
     reader.take(512).read_to_end(&mut header).ok()?;
@@ -87,6 +91,9 @@ pub struct SplitArchiveResponse {
 #[tauri::command]
 pub async fn detect_split_archive(path: String) -> Result<SplitArchiveResponse, String> {
     tauri::async_runtime::spawn_blocking(move || {
+        if crate::services::sfx_archive::is_executable_path(Path::new(&path)) {
+            crate::services::archive_browser::detect_format(Path::new(&path)).map_err(|error| error.to_string())?;
+        }
         let info = SplitArchiveDetector::detect_split_archive(Path::new(&path))
             .map_err(|error| error.to_string())?;
         Ok(match info {

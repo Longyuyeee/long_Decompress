@@ -1,0 +1,105 @@
+{
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "sha256": "80920375bd81e4c5a4c5dc0ce58502e6c7f28d2b146895680a4f449d8da65ee6",
+  "cases": [
+    {
+      "format": "ZIP",
+      "mode": "plain",
+      "file": "ZIP-plain.exe",
+      "sourceSha256": "2fa4b1eb6b1bd4c9c7f4e00301f24a40835a2b0ce80d8b69ac03b4b9bf269022",
+      "wrongPasswordRejected": false,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "converted": true,
+      "originalUnchanged": true
+    },
+    {
+      "format": "ZIP",
+      "mode": "zipcrypto",
+      "file": "ZIP-zipcrypto.exe",
+      "sourceSha256": "36200a068c354c18e488167d6755a8abcb23de9970e07b49b29f13a110108781",
+      "wrongPasswordRejected": true,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "converted": true,
+      "originalUnchanged": true
+    },
+    {
+      "format": "ZIP",
+      "mode": "aes",
+      "file": "ZIP-aes.exe",
+      "sourceSha256": "fcbfdeb59be0ba906331a936d94caf1be110dc168aad699c5819c0c6d9963ce6",
+      "wrongPasswordRejected": true,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "converted": true,
+      "originalUnchanged": true
+    },
+    {
+      "format": "7Z",
+      "mode": "plain",
+      "file": "7Z-plain.exe",
+      "sourceSha256": "99cf84557a0129231b565398ea2e45c77088126d8efa87455fcc1117345e5b6d",
+      "wrongPasswordRejected": false,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "converted": true,
+      "originalUnchanged": true
+    },
+    {
+      "format": "7Z",
+      "mode": "contents",
+      "file": "7Z-contents.exe",
+      "sourceSha256": "417839494d249f7fb97af001416dcce868a0f9adb3bc1158daf15093fd6a019e",
+      "wrongPasswordRejected": true,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "converted": true,
+      "originalUnchanged": true
+    },
+    {
+      "format": "7Z",
+      "mode": "headers",
+      "file": "7Z-headers.exe",
+      "sourceSha256": "5c8bf5f37d9d04538b6b058ec9af091555bf336ab77412ec86d8e38f85fc306d",
+      "wrongPasswordRejected": true,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "converted": true,
+      "originalUnchanged": true
+    },
+    {
+      "format": "RAR",
+      "mode": "plain",
+      "file": "RAR-plain.exe",
+      "sourceSha256": "73142def3949675f862d9b1855cc8c862809a989cddbcbe4e030434970fc2258",
+      "wrongPasswordRejected": false,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "converted": true,
+      "originalUnchanged": true
+    },
+    {
+      "format": "RAR",
+      "mode": "contents",
+      "file": "RAR-contents.exe",
+      "sourceSha256": "c356f12123bb31558defe2ca82310fe51473fbc36a26391178056af8f166b850",
+      "wrongPasswordRejected": true,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "converted": true,
+      "originalUnchanged": true
+    },
+    {
+      "format": "RAR",
+      "mode": "headers",
+      "file": "RAR-headers.exe",
+      "sourceSha256": "c190b23f2365a791907053b7c50a11ea434889f2174731d0ced26aaeaa52fab8",
+      "wrongPasswordRejected": true,
+      "extracted": true,
+      "diagnosedHealthy": true,
+      "converted": true,
+      "originalUnchanged": true
+    }
+  ]
+}

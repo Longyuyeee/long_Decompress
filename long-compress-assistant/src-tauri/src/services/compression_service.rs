@@ -1910,6 +1910,9 @@ impl CompressionService {
 
     fn detect_password_format(file_path: &str) -> Result<ArchiveFormat> {
         let path = Path::new(file_path);
+        if crate::services::sfx_archive::is_executable_path(path) {
+            return crate::services::archive_browser::detect_format(path);
+        }
         let file = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path)?;
         if matches!(&file, crate::services::numeric_volume_reader::ZipInputReader::StandardZip(_)) {
             return Ok(ArchiveFormat::Zip);
@@ -2014,6 +2017,9 @@ impl CompressionService {
         let mut header = Vec::with_capacity(512);
         reader.take(512).read_to_end(&mut header)?;
         let mut format = ArchiveFormat::from_magic(&header);
+        if crate::services::sfx_archive::is_executable_path(path) {
+            format = crate::services::archive_browser::detect_format(path)?;
+        }
 
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
         if path.to_string_lossy().to_ascii_lowercase().ends_with(".7z.001") {

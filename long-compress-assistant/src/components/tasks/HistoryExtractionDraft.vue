@@ -5,7 +5,7 @@ import { open } from '@tauri-apps/api/dialog'
 import { restoredExtractionConfig, type TaskHistoryRecord } from '@/types/taskHistory'
 import { useTaskStore } from '@/stores/task'
 import { generateId, extractErrorMessage } from '@/utils'
-import { isDecompressArchivePath, isPotentialSplitArchivePath } from '@/utils/compressionFormat'
+import { isDecompressArchivePath, isPotentialSplitArchivePath, isPotentialSfxPath } from '@/utils/compressionFormat'
 import ExtractionOutputPreview from './ExtractionOutputPreview.vue'
 
 const props = defineProps<{ record: TaskHistoryRecord }>()
@@ -53,19 +53,19 @@ async function createDraft() {
   const confirmedPassword = password.value
   const recordId = props.record.id
   if (!path || !outputPath) { error.value = '请确认来源文件并选择本次输出目录'; return }
-  if (!isDecompressArchivePath(path) && !isPotentialSplitArchivePath(path)) {
+  if (!isDecompressArchivePath(path) && !isPotentialSplitArchivePath(path) && !isPotentialSfxPath(path)) {
     error.value = '请选择支持的归档文件或首个分卷'
     return
   }
   busy.value = true
   try {
-    const split = await invoke<{ is_split: boolean; first_part?: string; is_complete?: boolean; missing_parts?: string[] }>('detect_split_archive', { path })
+    const split = await invoke<{ is_split: boolean; archive_format?: string; first_part?: string; is_complete?: boolean; missing_parts?: string[] }>('detect_split_archive', { path })
     if (split?.is_split) {
       if (!split.first_part || split.is_complete === false || split.missing_parts?.length) {
         throw new Error(`分卷不完整，请补齐后重试：${split.missing_parts?.join('、') || '缺少首卷或必要分卷'}`)
       }
       path = split.first_part
-    } else if (!isDecompressArchivePath(path)) {
+    } else if (!isDecompressArchivePath(path) && !(isPotentialSfxPath(path) && split?.archive_format)) {
       throw new Error('无法确认分卷组，请选择归档首卷')
     }
     const file = await invoke<{ name: string; is_dir: boolean; size: number }>('get_file_info', { path })

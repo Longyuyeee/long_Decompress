@@ -656,6 +656,10 @@ impl RarSupportService {
     }
 
     fn is_valid_rar_file_sync(file_path: &Path) -> bool {
+        if super::sfx_archive::is_executable_path(file_path) {
+            return super::sfx_archive::detect(file_path).ok().flatten()
+                .is_some_and(|(format, _)| format == super::archive_format::ArchiveFormat::Rar);
+        }
         let extension = file_path.extension()
             .and_then(|ext| ext.to_str())
             .unwrap_or("")
@@ -752,6 +756,10 @@ impl RarSupportService {
 
     /// 检测文件是否是有效的RAR文件
     pub async fn is_valid_rar_file(&self, file_path: &Path) -> bool {
+        if super::sfx_archive::is_executable_path(file_path) {
+            let path = file_path.to_path_buf();
+            return tokio::task::spawn_blocking(move || Self::is_valid_rar_file_sync(&path)).await.unwrap_or(false);
+        }
         log::debug!("检测文件是否是有效的RAR文件: {:?}", file_path);
 
         // 检查文件扩展名
@@ -839,9 +847,18 @@ impl RarSupportService {
 
     /// 检测RAR文件版本及加密状态
     pub async fn detect_rar_info_v2(&self, rar_path: &Path) -> Result<RarVersionInfo, RarError> {
-        use tokio::io::AsyncReadExt;
+        use tokio::io::{AsyncReadExt, AsyncSeekExt};
         let mut file = tokio::fs::File::open(rar_path).await
             .map_err(|_e| RarError::FileNotFound(rar_path.to_string_lossy().to_string()))?;
+        if super::sfx_archive::is_executable_path(rar_path) {
+            let source = rar_path.to_path_buf();
+            let offset = tokio::task::spawn_blocking(move || super::sfx_archive::detect(&source))
+                .await.map_err(|error| RarError::InvalidRarFile(error.to_string()))?
+                .map_err(|error| RarError::InvalidRarFile(error.to_string()))?
+                .filter(|(format, _)| *format == super::archive_format::ArchiveFormat::Rar)
+                .map(|(_, offset)| offset).ok_or_else(|| RarError::InvalidRarFile("不是可读取的 RAR 自解压归档".into()))?;
+            file.seek(std::io::SeekFrom::Start(offset)).await?;
+        }
         
         let mut header = [0u8; 32];
         let n = file.read(&mut header).await.map_err(RarError::IoError)?;

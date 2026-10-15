@@ -40,5 +40,5 @@ export function archiveSourceStem(path: string): string {
     .replace(/\.\d{3,}$|\.part\d+$/i, '')
   const extensions = [...FORMAT_CAPABILITIES.flatMap(format => format.extensions), ...EXTRACT_ONLY_FORMATS.flatMap(format => format.extensions)].sort((a, b) => b.length - a.length)
   const extension = extensions.find(extension => name.toLowerCase().endsWith('.' + extension))
-  return extension ? name.slice(0, -(extension.length + 1)) : name
+  return extension ? name.slice(0, -(extension.length + 1)) : name.replace(/\.exe$/i, '')
 }
