@@ -192,6 +192,7 @@ mod tests {
             password: None,
             compression_level: Some(6),
             create_subdirectories: Some(true),
+            ..Default::default()
         };
 
         assert_eq!(options.password, None);
@@ -205,6 +206,7 @@ mod tests {
             password: Some("test123".to_string()),
             compression_level: Some(9),
             create_subdirectories: Some(false),
+            ..Default::default()
         };
 
         assert_eq!(options.password, Some("test123".to_string()));

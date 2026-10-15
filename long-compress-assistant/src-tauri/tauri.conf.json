@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Long解压",
-    "version": "1.4.6"
+    "version": "1.4.7"
   },
   "tauri": {
     "systemTray": {
@@ -45,7 +45,9 @@
     },
     "bundle": {
       "active": true,
-      "targets": ["nsis"],
+      "targets": [
+        "nsis"
+      ],
       "identifier": "com.longcompress.assistant",
       "icon": [
         "icons/32x32.png",
@@ -93,7 +95,10 @@
         },
         "nsis": {
           "template": "installer.nsi",
-          "languages": ["SimpChinese", "English"],
+          "languages": [
+            "SimpChinese",
+            "English"
+          ],
           "installMode": "currentUser"
         }
       },

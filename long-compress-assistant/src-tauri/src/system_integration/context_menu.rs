@@ -103,6 +103,7 @@ const ARCHIVE_VERBS: &[&str] = &[
     "LongDecompress.extractHere",
     "LongDecompress.extractTo",
     "LongDecompress.testArchive",
+    "LongDecompress.repairArchive",
     "LongDecompress.convertArchive",
     "LongDecompress.reconfigureArchive",
     "LongDecompress.compressZip",
@@ -116,6 +117,11 @@ const BACKGROUND_VERBS: &[&str] = &[
     "LongDecompress.compress7zHere",
     "LongDecompress.compressCustomHere",
 ];
+
+#[cfg(target_os = "windows")]
+fn recovery_extensions() -> Vec<String> {
+    std::iter::once(".rev".to_string()).chain((0..100).map(|n| format!(".r{n:02}"))).collect()
+}
 
 #[cfg(target_os = "windows")]
 fn verbs() -> Vec<VerbDef> {
@@ -139,6 +145,11 @@ fn verbs() -> Vec<VerbDef> {
             verb: "LongDecompress.extractTo",
             label: "解压到同名文件夹",
             cli: "--extract-to \"%1\"",
+        },
+        VerbDef {
+            verb: "LongDecompress.repairArchive",
+            label: "检查与尝试修复...",
+            cli: "--repair-archive \"%1\"",
         },
         VerbDef {
             verb: "LongDecompress.testArchive",
@@ -283,6 +294,10 @@ fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
         )?;
     }
 
+    for extension in recovery_extensions() {
+        reg_shell_entry(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension),
+            &all_verbs, &["LongDecompress.repairArchive"], app_path)?;
+    }
     // 文件夹和文件夹空白处压缩菜单。
     reg_shell_entry(
         hkcu,
@@ -560,6 +575,9 @@ fn unregister_native_menu(hkcu: &RegKey) -> Result<()> {
 
 #[cfg(target_os = "windows")]
 fn unregister_legacy_menu(hkcu: &RegKey) -> Result<()> {
+    for extension in recovery_extensions() {
+        delete_tree_if_present(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension))?;
+    }
     let store_base = r"Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell";
     for verb in verbs() {
         delete_tree_if_present(hkcu, &format!("{}\\{}", store_base, verb.verb))?;
@@ -887,7 +905,9 @@ pub fn is_context_menu_registered() -> bool {
             "--quick-extract \"%1\"",
             &app_path,
         )
-    })
+    }) && recovery_extensions().iter().all(|extension| legacy_shell_entry_is_current(&hkcu,
+        &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension),
+        &all_verbs, &["LongDecompress.repairArchive"], &app_path))
 }
 
 // 非 Windows 空实现

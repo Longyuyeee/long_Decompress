@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
+import ThemedSelect from '@/components/ui/ThemedSelect.vue'
 import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
 import { useTauriCommands, type ArchiveDiagnosticReport, type ZipRepairResult } from '@/composables/useTauriCommands'
@@ -33,6 +34,8 @@ const isCalculating = ref(false)
 const activeMode = ref<'calculate' | 'verify' | 'archive'>('calculate')
 const verifyResult = ref<{ valid: boolean; message: string } | null>(null)
 const archivePath = ref('')
+const diagnosticSources = ref<string[]>([])
+const isRar = computed(() => diagnosticReport.value?.actualFormat === 'RAR')
 const archivePassword = ref('')
 const diagnosticReport = ref<ArchiveDiagnosticReport | null>(null)
 const repairResult = ref<ZipRepairResult | null>(null)
@@ -40,6 +43,7 @@ const diagnosticId = ref('')
 const isDiagnosing = ref(false)
 const isRepairing = ref(false)
 const repairId = ref('')
+const isCancellingRepair = ref(false)
 
 watch(archivePassword, () => { diagnosticReport.value = null })
 
@@ -197,6 +201,7 @@ const clearResults = () => {
   checksumResults.value = []
   verifyResult.value = null
   archivePath.value = ''
+  diagnosticSources.value = []
   archivePassword.value = ''
   diagnosticReport.value = null
   repairResult.value = null
@@ -212,6 +217,7 @@ const selectArchive = async () => {
   const file = queued === undefined ? await open({ multiple: false, title: '选择要诊断的压缩包' }) : queued
   if (typeof file === 'string') {
     archivePath.value = file
+    diagnosticSources.value = []
     diagnosticReport.value = null
     repairResult.value = null
     recoveryTaskId.value = ''
@@ -252,34 +258,39 @@ const repairArchive = async () => {
   if (!diagnosticReport.value?.canRepair || isRepairing.value) return
   const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
     ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
-  const outputPath = queued === undefined ? await save({
+  const outputPath = queued === undefined ? isRar.value ? await open({ directory: true, multiple: false, title: '选择修复结果保存目录' }) : await save({
     title: '保存修复后的 ZIP',
     defaultPath: defaultRepairPath(),
     filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
   }) : queued
   if (typeof outputPath !== 'string' || !outputPath) return
+  isCancellingRepair.value = false
   isRepairing.value = true
   repairId.value = `repair-${Date.now()}-${Math.random().toString(36).slice(2)}`
   try {
     repairResult.value = null
-    repairResult.value = await tauriCommands.repairZip(repairId.value, archivePath.value, outputPath, archivePassword.value)
+    repairResult.value = isRar.value
+      ? await tauriCommands.repairRar(repairId.value, archivePath.value, outputPath, archivePassword.value)
+      : await tauriCommands.repairZip(repairId.value, archivePath.value, outputPath, archivePassword.value)
     recoveredPassword.value = repairResult.value.outputEncrypted ? archivePassword.value : ''
     recoveredDraftId.value = ''
     if (repairResult.value.partial || repairResult.value.skippedEntries.length) {
       uiStore.showToast('warning', '部分恢复：已恢复可读条目，请核对内容是否齐全', 6000)
-    } else { appStore.setSuccess('ZIP 已重建到新文件并通过完整性校验') }
+    } else { appStore.setSuccess('修复结果已另存并通过完整性校验') }
   } catch (error) {
     if (!String(error).toLocaleLowerCase().includes('cancel')) {
-      appStore.setError(`ZIP 修复失败：${String(error)}`)
+      appStore.setError(`修复未完成：${String(error)}`)
     }
   } finally {
     isRepairing.value = false
     repairId.value = ''
+    isCancellingRepair.value = false
   }
 }
 
 const cancelRepair = async () => {
-  if (!repairId.value) return
+  if (!repairId.value || isCancellingRepair.value) return
+  isCancellingRepair.value = true
   try { await tauriCommands.cancelZipRepair(repairId.value) } catch { /* repair may have just completed */ }
 }
 
@@ -338,12 +349,13 @@ const copyDiagnosticReport = async () => {
   }
 }
 
-watch(() => appStore.pendingArchiveDiagnosis, request => {
+watch(() => isDiagnosing.value || isRepairing.value ? null : appStore.pendingArchiveDiagnosis, request => {
   if (!request || isDiagnosing.value || isRepairing.value) return
   appStore.pendingArchiveDiagnosis = null
   clearResults()
   activeMode.value = 'archive'
   archivePath.value = request.path
+  diagnosticSources.value = request.paths || [request.path]
   archivePassword.value = request.password || ''
   recoveryTaskId.value = request.taskId || ''
   recoveryOptions.value = { outputPath: request.outputPath, extractToSubfolder: request.extractToSubfolder }
@@ -544,6 +556,10 @@ onUnmounted(() => {
         <div v-else class="integrity-single-column min-w-0 overflow-x-hidden" data-testid="archive-diagnostic-panel">
           <div v-if="recoveryTaskId" class="repair-password-note" data-testid="recovery-task-context"><i class="pi pi-wrench"></i><span>正在处理失败的解压任务。救回新包后可直接加入解压队列，原输出设置会保留。</span></div>
           <section class="integrity-panel min-w-0 overflow-hidden">
+            <div v-if="diagnosticSources.length > 1" class="mb-4 space-y-2">
+              <p class="text-xs text-muted">已从资源管理器选择 {{ diagnosticSources.length }} 项，可逐项检查和修复。</p>
+              <ThemedSelect :model-value="archivePath" :disabled="isDiagnosing || isRepairing" :options="diagnosticSources.map(path => ({value:path,label:path.split(/[\\/]/).pop() || path}))" test-id="repair-source-selection" floating @update:model-value="archivePath = $event; archivePassword = ''; diagnosticReport = null; repairResult = null; recoveredDraftId = ''; recoveredPassword = ''; diagnoseArchive()" />
+            </div>
             <div class="archive-inputs">
               <button type="button" class="archive-select" :disabled="isDiagnosing || isRepairing" @click="selectArchive">
                 <i class="pi pi-folder-open"></i>
@@ -560,7 +576,7 @@ onUnmounted(() => {
             </div>
             <p v-if="archivePath" class="mt-3 text-xs text-muted break-all">{{ archivePath }}</p>
             <div class="mt-5 flex flex-wrap gap-3">
-              <button v-if="!isDiagnosing" type="button" class="archive-primary" :disabled="!archivePath || isRepairing" @click="diagnoseArchive">
+              <button v-if="!isDiagnosing" data-testid="start-archive-diagnosis" type="button" class="archive-primary" :disabled="!archivePath || isRepairing" @click="diagnoseArchive">
                 <i class="pi pi-search"></i>开始诊断
               </button>
               <button v-else type="button" class="archive-danger" @click="cancelDiagnosis">
@@ -585,7 +601,7 @@ onUnmounted(() => {
 
             <div class="diagnostic-metrics mt-6">
               <div><span>归档大小</span><strong>{{ formatBytes(diagnosticReport.fileSize) }}</strong></div>
-              <div><span>{{ diagnosticReport.recoverability === 'local_entries' ? '已找到文件 / 目录' : '文件 / 目录' }}</span><strong>{{ diagnosticReport.totalFiles }} / {{ diagnosticReport.totalDirectories }}</strong></div>
+              <div><span>{{ diagnosticReport.recoverability === 'local_entries' ? '已找到文件 / 目录' : '文件 / 目录' }}</span><strong>{{ diagnosticReport.integrityTested || diagnosticReport.totalFiles || diagnosticReport.totalDirectories ? `${diagnosticReport.totalFiles} / ${diagnosticReport.totalDirectories}` : '未能确认' }}</strong></div>
               <div><span>展开大小</span><strong>{{ diagnosticReport.totalUncompressedSizeKnown === false ? '大小未知' : formatBytes(diagnosticReport.totalUncompressedSize) }}</strong></div>
               <div><span>加密 / 分卷</span><strong>{{ encryptionLabel(diagnosticReport) }} / {{ diagnosticReport.splitArchive ? diagnosticReport.volumesFound + ' 卷' : '否' }}</strong></div>
             </div>
@@ -601,14 +617,14 @@ onUnmounted(() => {
             </div>
 
             <div v-if="diagnosticReport.canRepair" class="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
-              <strong class="text-sm text-content">{{ diagnosticReport.encrypted ? '可尝试救回密码 ZIP 中的完整文件' : '可尝试恢复 ZIP 中的完整文件' }}</strong>
-              <p class="mt-2 text-xs leading-5 text-muted">只把仍能完整读取的条目写入新文件，跳过损坏条目；原压缩包不会被覆盖或删除。</p>
-              <p v-if="diagnosticReport.encrypted" class="repair-password-note mt-3" data-testid="repair-password-note"><i class="pi pi-lock"></i><span>新包沿用填写的密码，使用 AES-256 加密（UTF-8）。</span></p>
-              <button v-if="!isRepairing" type="button" class="archive-primary mt-4" @click="repairArchive">
+              <strong class="text-sm text-content">{{ isRar ? diagnosticReport.recoverability === 'rar_recovery_volumes' ? '可尝试使用恢复卷补齐或修复 RAR' : '可尝试修复 RAR' : diagnosticReport.encrypted ? '可尝试救回密码 ZIP 中的完整文件' : '可尝试恢复 ZIP 中的完整文件' }}</strong>
+              <p class="mt-2 text-xs leading-5 text-muted">{{ isRar ? '在副本中使用本机 RAR 工具处理，完整校验通过后保存到新的 .repaired 文件夹；原件保持不变。恢复数据不足时可能无法修复。' : '只把仍能完整读取的条目写入新文件，跳过损坏条目；原压缩包不会被覆盖或删除。' }}</p>
+              <p v-if="diagnosticReport.encrypted && !isRar" class="repair-password-note mt-3" data-testid="repair-password-note"><i class="pi pi-lock"></i><span>新包沿用填写的密码，使用 AES-256 加密（UTF-8）。</span></p>
+              <button v-if="!isRepairing" data-testid="start-archive-repair" type="button" class="archive-primary mt-4" @click="repairArchive">
                 <i class="pi pi-wrench"></i>选择位置并修复
               </button>
-              <button v-else type="button" class="archive-danger mt-4" @click="cancelRepair">
-                <i class="pi pi-stop-circle"></i>取消修复
+              <button v-else type="button" class="archive-danger mt-4" :disabled="isCancellingRepair" @click="cancelRepair">
+                <i class="pi pi-stop-circle"></i>{{ isCancellingRepair ? '正在取消…' : '取消修复' }}
               </button>
             </div>
           </section>
@@ -617,7 +633,8 @@ onUnmounted(() => {
             <h2 class="text-lg font-black" :class="repairResult.partial || repairResult.skippedEntries.length ? 'text-amber-600' : 'text-green-500'">{{ repairResult.partial || repairResult.skippedEntries.length ? '部分恢复 · 新文件已通过校验' : '修复文件已通过完整性校验' }}</h2>
             <p class="mt-3 text-xs text-muted break-all">{{ repairResult.outputPath }}</p>
             <p class="mt-3 text-sm text-content">恢复 {{ repairResult.recoveredFiles }} 个文件、{{ repairResult.recoveredDirectories }} 个目录；未恢复说明 {{ repairResult.skippedEntries.length }} 项。</p>
-            <p class="repair-password-note mt-3" data-testid="repair-output-encryption"><i :class="repairResult.outputEncrypted ? 'pi pi-lock' : 'pi pi-folder'"></i><span>{{ repairResult.outputEncrypted ? '新包已使用 AES-256 加密，密码与恢复时填写的一致（UTF-8）。' : '新包未设置密码。' }}</span></p>
+            <p class="repair-password-note mt-3" data-testid="repair-output-encryption"><i :class="repairResult.outputEncrypted ? 'pi pi-lock' : 'pi pi-folder'"></i><span>{{ repairResult.outputEncrypted ? repairResult.format === 'RAR' ? '修复后的 RAR 保留原加密方式与密码。' : '新包已使用 AES-256 加密，密码与恢复时填写的一致（UTF-8）。' : '新包未设置密码。' }}</span></p>
+            <p v-if="repairResult.outputFiles && repairResult.outputFiles.length > 1" class="mt-2 text-xs text-muted" data-testid="rar-repair-volumes">已保存 {{ repairResult.outputFiles.length }} 个数据卷，请整组保留；加入队列时会自动从首卷解压。</p>
             <p v-if="repairResult.directoryRebuilt" class="mt-2 text-xs text-amber-600">目录信息已重建，原包总条目数无法确认，请核对内容是否齐全。</p>
             <ul v-if="repairResult.skippedEntries.length" class="mt-3 space-y-1 text-xs text-amber-500 break-all"><li v-for="entry in repairResult.skippedEntries" :key="entry">· {{ entry }}</li></ul>
             <div class="mt-4 flex flex-wrap gap-3"><button type="button" class="archive-secondary" @click="locateRepair"><i class="pi pi-folder-open"></i>定位新包</button><button type="button" class="archive-secondary" @click="copyChecksum(repairResult.outputPath)"><i class="pi pi-copy"></i>复制路径</button></div>

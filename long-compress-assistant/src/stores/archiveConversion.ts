@@ -162,6 +162,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   function show() { visible.value = true }
   function applySelected(patch: ConversionPatch) {
     if (busy.value) return '转换正在进行，请稍后修改。'
+    if (patch.rarRecoveryPercent && selected.value.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复保护只适用于 RAR，请调整所选任务的目标格式。'
     if (patch.encryptFilenames && selected.value.some(item => !supportsFilenameEncryption(patch.format || effectiveSettings(item).format))) {
       return '文件名加密只支持 7Z/RAR，请调整所选任务的目标格式。'
     }
@@ -202,7 +203,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       targetPasswordRequired: config.passwordRequired, sourcePasswordRequired: false, passwordRequired: config.passwordRequired,
       settings: { ...defaultConversionSettings(), outputPath: '', format: config.format,
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
-      zipSplitMode: config.zipSplitMode ?? 'numeric',
+      zipSplitMode: config.zipSplitMode ?? 'numeric', rarRecoveryPercent: config.rarRecoveryPercent ?? 0,
       level: config.level, splitMiB: config.splitSize / 1048576, encryptFilenames: config.encryptFilenames } }
     const occupied = new Set([...pending.value.map(outputFor), record.outputPath].map(pathKey))
     const proposed = outputFor(item)
@@ -239,6 +240,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       zipEncryption: settings.zipEncryption, zipPasswordEncoding: settings.zipPasswordEncoding,
       zipSplitMode: settings.zipSplitMode ?? 'numeric',
       outputPath, format: settings.format, level: settings.level, splitSize: settings.splitMiB * 1048576,
+      rarRecoveryPercent: settings.format === 'rar' ? (settings.rarRecoveryPercent ?? 0) : 0,
       encryptFilenames: settings.encryptFilenames, passwordRequired: !!settings.password }
     try {
       phase.value = '步骤 1/2：读取原包'
@@ -254,7 +256,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
           sourcePassword: settings.sourcePassword || null, outputPath,
           options: { format: config.format, level: config.level, password: settings.password || null,
             zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
-            zip_split_mode: config.zipSplitMode,
+            zip_split_mode: config.zipSplitMode, rar_recovery_percent: config.rarRecoveryPercent ?? 0,
             split_size: config.splitSize || null, encrypt_filenames: config.encryptFilenames,
             preserve_paths: true, delete_after: false, verify_after: true, allow_insecure_password_cli: allowRarPasswordCli } })
         const current = taskFor(item)!

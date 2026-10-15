@@ -17,6 +17,7 @@ const applyError = ref('')
 let editingSession = 0
 const format = ref('keep')
 const level = ref('keep')
+const recovery = ref('keep')
 const subfolder = ref('keep')
 const destination = ref<'keep' | 'source' | 'custom'>('keep')
 const outputDirectory = ref('')
@@ -25,11 +26,11 @@ const formats = [keep, { value: 'zip', label: 'ZIP' }, { value: '7z', label: '7Z
 const levels = [keep, ...Array.from({ length: 10 }, (_, value) => ({ value: String(value), label: `${value}${value === 0 ? ' · 仅存储' : value === 9 ? ' · 最小体积' : value === 1 ? ' · 更快' : ''}` }))]
 const subfolders = [keep, { value: 'yes', label: '创建同名子文件夹' }, { value: 'no', label: '直接放入输出目录' }]
 const hasChanges = computed(() => destination.value !== 'keep' || (props.mode === 'compression'
-  ? format.value !== 'keep' || level.value !== 'keep' : subfolder.value !== 'keep'))
+  ? format.value !== 'keep' || level.value !== 'keep' || recovery.value !== 'keep' : subfolder.value !== 'keep'))
 const canApply = computed(() => hasChanges.value && (destination.value !== 'custom' || !!outputDirectory.value.trim()))
 function openConfiguration() {
   editingSession++
-  format.value = level.value = subfolder.value = 'keep'
+  format.value = level.value = subfolder.value = recovery.value = 'keep'
   destination.value = 'keep'
   outputDirectory.value = applyError.value = ''
   visible.value = true
@@ -51,6 +52,7 @@ function apply() {
   if (props.mode === 'compression') {
     if (format.value === 'zip' || format.value === '7z' || format.value === 'rar') patch.format = format.value
     if (level.value !== 'keep') patch.level = Number(level.value)
+    if (recovery.value !== 'keep') patch.rarRecoveryPercent = Number(recovery.value)
   } else if (subfolder.value !== 'keep') patch.extractToSubfolder = subfolder.value === 'yes'
   applyError.value = ''
   emit('apply', patch, error => {
@@ -84,6 +86,10 @@ function apply() {
           <ThemedSelect v-model="subfolder" :options="subfolders" aria-label="批量解压子文件夹" test-id="batch-subfolder" floating />
         </label>
       </div>
+      <label v-if="mode === 'compression'" class="block min-w-0 space-y-1.5 text-xs text-muted">RAR 恢复保护
+        <ThemedSelect v-model="recovery" :options="[keep, {value:'0',label:'关闭'}, {value:'3',label:'3%'}, {value:'5',label:'5%'}, {value:'10',label:'10%'}]" test-id="batch-rar-recovery" floating />
+        <span class="block text-xs leading-relaxed">启用时所选任务需为 RAR；其他配置保持原值。</span>
+      </label>
       <div class="min-w-0 space-y-2">
         <p class="text-xs text-muted">输出目录</p>
         <div class="flex flex-wrap items-center gap-2">

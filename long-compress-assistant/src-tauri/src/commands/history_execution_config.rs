@@ -28,6 +28,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     };
     output.extend(project(&value, fields)?);
     if kind == "archive-conversion" {
+        if let Some(percent) = value.get("rarRecoveryPercent") {
+            if !matches!(percent.as_u64(), Some(0 | 3 | 5 | 10)) { return None; }
+            output.insert("rarRecoveryPercent".into(), percent.clone());
+        }
         for (key, default, allowed) in [("zipEncryption", "aes256", ["aes256", "zipcrypto"]),
             ("zipPasswordEncoding", "utf8", ["utf8", "windows_local"]),
             ("zipSplitMode", "numeric", ["numeric", "standard"])] {
@@ -46,6 +50,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     if !settings_fields.is_empty() {
         let mut settings = project(value.get("settings")?, settings_fields)?;
         if kind == "archive-compression" {
+            if let Some(percent) = value.get("settings")?.get("rarRecoveryPercent") {
+                if !matches!(percent.as_u64(), Some(0 | 3 | 5 | 10)) { return None; }
+                settings.insert("rarRecoveryPercent".into(), percent.clone());
+            }
             if let Some(mode) = value.get("settings")?.get("zipSplitMode") {
                 if !matches!(mode.as_str(), Some("numeric" | "standard")) { return None; }
                 settings.insert("zipSplitMode".into(), mode.clone());
@@ -57,7 +65,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             settings.insert("fastPack".into(), Value::Bool(false));
             if let Some(encrypted_names) = value.get("settings")?.get("encryptFilenames") {
                 if !encrypted_names.is_boolean() { return None; }
-                if encrypted_names.as_bool()? && (settings.get("format")?.as_str()? != "7z"
+                if encrypted_names.as_bool()? && (!matches!(settings.get("format")?.as_str()?, "7z" | "rar")
                     || !value.get("passwordRequired")?.as_bool()?) { return None; }
                 settings.insert("encryptFilenames".into(), encrypted_names.clone());
             }

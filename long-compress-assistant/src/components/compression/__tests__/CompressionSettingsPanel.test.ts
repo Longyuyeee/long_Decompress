@@ -51,6 +51,16 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('keeps RAR recovery protection collapsed until selected and emits it without changing other options', async () => {
+    const wrapper=mountPanel(settings({format:'rar'})); await flushPromises()
+    expect(wrapper.get('[data-testid="rar-recovery-settings"]').attributes('open')).toBeUndefined()
+    await wrapper.get('[data-testid="rar-recovery-percent"]').trigger('click')
+    await wrapper.findAll('[role="option"]').find(option=>option.text().includes('5%'))!.trigger('click'); await flushPromises()
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({format:'rar',rarRecoveryPercent:5,password:'',keepStructure:true})
+    await wrapper.setProps({modelValue:settings({format:'zip'})})
+    expect(wrapper.find('[data-testid="rar-recovery-settings"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
   it('keeps legacy numeric ZIP volumes by default and exposes standard disks as an explicit choice', async () => {
     const wrapper = mountPanel(settings({ splitArchive: true }))
     await flushPromises()

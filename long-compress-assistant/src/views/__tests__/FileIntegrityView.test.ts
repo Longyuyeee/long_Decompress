@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   diagnoseArchive: vi.fn(),
   cancelArchiveDiagnosis: vi.fn(),
   repairZip: vi.fn(),
+  repairRar: vi.fn(),
   cancelZipRepair: vi.fn(),
 }))
 
@@ -28,6 +29,7 @@ vi.mock('@/composables/useTauriCommands', () => ({
     diagnoseArchive: mocks.diagnoseArchive,
     cancelArchiveDiagnosis: mocks.cancelArchiveDiagnosis,
     repairZip: mocks.repairZip,
+    repairRar: mocks.repairRar,
     cancelZipRepair: mocks.cancelZipRepair,
   }),
 }))
@@ -59,6 +61,25 @@ describe('FileIntegrityView', () => {
     wrapper.unmount()
   })
 
+  it('repairs a RAR group to a new folder and queues its first volume with the original password', async () => {
+    const pinia = createPinia(); setActivePinia(pinia)
+    mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/parts.part2.rar',fileSize:8000,actualFormat:'RAR',status:'missing_volume',encrypted:false,splitArchive:true,volumesFound:1,missingVolumes:['parts.part1.rar'],totalFiles:0,totalDirectories:0,totalUncompressedSize:0,integrityTested:false,canRepair:true,recoverability:'rar_recovery_volumes',issues:[],evidence:[]})
+    mocks.repairRar.mockResolvedValue({format:'RAR',outputPath:'D:/saved/parts.repaired/parts.part1.rar',outputFiles:['part1','part2'],recoveredFiles:2,recoveredDirectories:0,skippedEntries:[],partial:false,verified:true,directoryRebuilt:false,outputEncrypted:true})
+    mocks.open.mockResolvedValue('D:/saved')
+    useAppStore().openArchiveForDiagnosis({path:'C:/parts.part2.rar',password:'original secret'})
+    const wrapper=mount(FileIntegrityView,{global:{plugins:[pinia]}}); await flushPromises()
+    expect(wrapper.text()).toContain('恢复卷补齐或修复 RAR')
+    await wrapper.findAll('button').find(button=>button.text().includes('选择位置并修复'))!.trigger('click'); await flushPromises()
+    expect(mocks.open).toHaveBeenCalledWith(expect.objectContaining({directory:true}))
+    expect(mocks.repairRar).toHaveBeenCalledWith(expect.any(String),'C:/parts.part2.rar','D:/saved','original secret')
+    expect(mocks.repairZip).not.toHaveBeenCalled()
+    expect(wrapper.get('[data-testid="rar-repair-volumes"]').text()).toContain('2 个数据卷')
+    expect(wrapper.get('[data-testid="repair-output-encryption"]').text()).toContain('保留原加密方式与密码')
+    await wrapper.get('[data-testid="queue-recovered-archive"]').trigger('click'); await flushPromises()
+    expect(useTaskStore().tasks[0]).toMatchObject({status:'pending',sourceFiles:['D:/saved/parts.repaired/parts.part1.rar'],password:'original secret'})
+    wrapper.unmount()
+  })
+
   beforeEach(() => {
     localStorage.clear()
     mocks.open.mockReset()
@@ -68,6 +89,7 @@ describe('FileIntegrityView', () => {
     mocks.diagnoseArchive.mockReset()
     mocks.cancelArchiveDiagnosis.mockReset()
     mocks.repairZip.mockReset()
+    mocks.repairRar.mockReset()
     mocks.cancelZipRepair.mockReset()
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,

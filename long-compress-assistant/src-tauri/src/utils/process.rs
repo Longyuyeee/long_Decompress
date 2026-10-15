@@ -25,19 +25,41 @@ pub async fn cancellable_output(
     cancelled: &std::sync::atomic::AtomicBool,
     timeout: std::time::Duration,
 ) -> std::io::Result<std::process::Output> {
+    cancellable_output_with_stdin(command, cancelled, timeout, None).await
+}
+
+/// RAR's interactive password prompt reads redirected stdin in the OEM charset.
+/// Close the pipe after one line so an unexpected second prompt cannot hang.
+pub async fn cancellable_output_with_stdin(
+    command: &mut tokio::process::Command,
+    cancelled: &std::sync::atomic::AtomicBool,
+    timeout: std::time::Duration,
+    input: Option<Vec<u8>>,
+) -> std::io::Result<std::process::Output> {
     use std::{io, process::Stdio, sync::atomic::Ordering};
-    use tokio::io::AsyncReadExt;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
     if cancelled.load(Ordering::Acquire) {
         return Err(io::Error::new(
             io::ErrorKind::Interrupted,
             "VIDEO_COMPRESSION_CANCELLED",
         ));
     }
+    if input.is_some() { command.stdin(Stdio::piped()); }
     let mut child = command
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .kill_on_drop(true)
         .spawn()?;
+    if let Some(mut bytes) = input {
+        let mut stdin = child.stdin.take().expect("piped stdin");
+        let result = stdin.write_all(&bytes).await;
+        bytes.fill(0);
+        // Some operations repair encrypted bytes without asking a password.
+        // BrokenPipe then simply means the child has already finished.
+        if let Err(error) = result {
+            if error.kind() != io::ErrorKind::BrokenPipe { let _ = child.kill().await; return Err(error); }
+        }
+    }
     let mut stdout = child.stdout.take().expect("piped stdout");
     let mut stderr = child.stderr.take().expect("piped stderr");
     let stdout_reader = tokio::spawn(async move {

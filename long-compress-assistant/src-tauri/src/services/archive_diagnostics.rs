@@ -258,6 +258,13 @@ pub async fn diagnose_archive(
         );
     }
     let password = password.filter(|value| !value.is_empty());
+    if super::rar_recovery::is_candidate(path) {
+        let mut header = [0u8; 16];
+        let len = std::fs::File::open(path)?.read(&mut header)?;
+        if matches!(ArchiveFormat::from_magic(&header[..len]), ArchiveFormat::Rar | ArchiveFormat::Unknown) {
+            return super::rar_recovery::diagnose(path, password, cancelled).await;
+        }
+    }
     let group = SplitArchiveDetector::detect_split_archive(path)?;
     let source = group.as_ref().map(|group| group.first_part.as_path()).unwrap_or(path);
     let logical = if group.as_ref().is_some_and(|group|
