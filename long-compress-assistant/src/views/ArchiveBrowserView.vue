@@ -642,9 +642,12 @@ const extractSelected = async () => {
         <h1 class="browser-title font-black text-content tracking-tighter">压缩包浏览中心</h1>
         <p class="text-muted text-xs font-bold mt-1">像文件夹一样浏览压缩包，只解压真正需要的内容</p>
       </div>
-      <button class="browser-primary" type="button" @click="chooseArchive">
-        <i class="pi pi-folder-open"></i><span>打开压缩包</span>
-      </button>
+      <div class="browser-header-actions flex min-w-0 flex-wrap items-center gap-2">
+        <slot name="header-actions" />
+        <button class="browser-primary" type="button" @click="chooseArchive">
+          <i class="pi pi-folder-open"></i><span>打开压缩包</span>
+        </button>
+      </div>
     </header>
 
     <nav v-if="archivePath" class="archive-chain shrink-0" aria-label="嵌套归档链" data-testid="archive-chain">

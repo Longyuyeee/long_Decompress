@@ -91,6 +91,12 @@ describe('ArchiveBrowserView', () => {
     })
   })
 
+  it('keeps parent navigation actions inside the wrapping header', () => {
+    const wrapper = mount(ArchiveBrowserView, { slots: { 'header-actions': '<button data-testid="parent-navigation">返回双栏</button>' } })
+    expect(wrapper.get('header .browser-header-actions [data-testid="parent-navigation"]').text()).toBe('返回双栏')
+    expect(wrapper.get('header .browser-primary').text()).toContain('打开压缩包')
+  })
+
   it('loads structured entries and extracts only the checked files', async () => {
     const wrapper = mount(ArchiveBrowserView)
     await wrapper.find('header .browser-primary').trigger('click')

@@ -81,6 +81,10 @@ impl UniversalCliEngine {
     }
 
     pub(crate) fn zip_requires_password(file_path: &Path) -> Result<bool> {
+        Self::zip_requires_password_for_selection(file_path, &crate::models::compression::DecompressOptions::default())
+    }
+
+    pub(crate) fn zip_requires_password_for_selection(file_path: &Path, options: &crate::models::compression::DecompressOptions) -> Result<bool> {
         let file = crate::services::numeric_volume_reader::ZipInputReader::open(file_path)
             .map_err(|error| {
                 if let Some(cause) = error.downcast_ref::<std::io::Error>() {
@@ -92,13 +96,7 @@ impl UniversalCliEngine {
         let mut archive = zip_aes::ZipArchive::new(file)
             .map_err(Self::zip_inspection_error)?;
 
-        for index in 0..archive.len() {
-            if archive.by_index_raw(index).map_err(Self::zip_inspection_error)?.encrypted() {
-                return Ok(true);
-            }
-        }
-
-        Ok(false)
+        Ok(crate::services::zip_selection::ZipSelection::read(&mut archive, options, || Ok(()))?.password_required)
     }
 
     fn zip_inspection_error(error: zip_aes::result::ZipError) -> anyhow::Error {
@@ -128,6 +126,16 @@ impl UniversalCliEngine {
     pub(crate) fn try_zip_password_cancellable(
         file_path: &Path,
         password: &str,
+        check_control: impl FnMut() -> Result<()>,
+    ) -> Result<bool> {
+        Self::try_zip_password_for_selection_cancellable(file_path, password,
+            &crate::models::compression::DecompressOptions::default(), check_control)
+    }
+
+    pub(crate) fn try_zip_password_for_selection_cancellable(
+        file_path: &Path,
+        password: &str,
+        options: &crate::models::compression::DecompressOptions,
         mut check_control: impl FnMut() -> Result<()>,
     ) -> Result<bool> {
         let file = crate::services::numeric_volume_reader::ZipInputReader::open(file_path)?;
@@ -135,7 +143,8 @@ impl UniversalCliEngine {
         let mut buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
         let mut found_encrypted_entry = false;
 
-        for index in 0..archive.len() {
+        let selection = crate::services::zip_selection::ZipSelection::read(&mut archive, options, &mut check_control)?;
+        for index in selection.indices {
             check_control()?;
             let encrypted = archive.by_index_raw(index)?.encrypted();
             if !encrypted {
@@ -172,7 +181,7 @@ impl UniversalCliEngine {
                     }
                 }
                 Err(zip_aes::result::ZipError::InvalidPassword) => return Ok(false),
-                Err(error) => return Err(error.into()),
+                Err(error) => return Err(Self::zip_inspection_error(error)),
             }
         }
 

@@ -33,6 +33,7 @@ import { runFailureZipRecoveryGate } from './failure-zip-recovery-gate.mjs'
 import { runRarRecoveryGate } from './rar-recovery-gate.mjs'
 import { runArchiveRecoveryUpgradeGate } from './archive-recovery-148-gate.mjs'
 import { runArchiveContinuityGate } from './archive-continuity-149-gate.mjs'
+import { runZipSelection1410Gate } from './zip-selection-1410-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
 import { runArchivePerformanceGate } from './archive-performance-gate.mjs'
 import { runSevenZipVolumeReadGate } from './seven-zip-volume-read-gate.mjs'
@@ -4871,6 +4872,9 @@ try {
       return result.value
     }
     await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--zip-selection-only')) {
+    await runZipSelection1410Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
     completedSuccessfully = true
   } else if (process.argv.includes('--archive-continuity-only')) {
     await runArchiveContinuityGate({ getDriver: () => driver, restart: () => restartDesktopSession({preserveProfile:true}), bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })

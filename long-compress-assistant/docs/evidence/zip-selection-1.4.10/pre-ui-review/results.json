@@ -1,0 +1,106 @@
+{
+  "version": "1.4.10",
+  "binarySha256": "ac0cc213516373cc13f568f6e5f96c1e7479cc801d8be79b3499ee3cc6c240a4",
+  "results": [
+    {
+      "encryption": "AES256",
+      "publicWithoutPassword": true,
+      "wrongPasswordRejected": true,
+      "correctedSelectionCompleted": true,
+      "vaultSelection": true,
+      "numericMixedPasswordSelection": true,
+      "originalUnchanged": true
+    },
+    {
+      "encryption": "ZipCrypto",
+      "publicWithoutPassword": true,
+      "wrongPasswordRejected": true,
+      "correctedSelectionCompleted": true,
+      "vaultSelection": false,
+      "numericMixedPasswordSelection": true,
+      "originalUnchanged": true
+    },
+    {
+      "codec": "Zstandard",
+      "encryption": "AES256",
+      "layout": "single",
+      "producer": "zip-rs 8.6 fixture writer; independent verification required",
+      "independentSevenZipVerified": true,
+      "applicationFullExtraction": true
+    },
+    {
+      "codec": "Zstandard",
+      "encryption": "AES256",
+      "layout": "numeric",
+      "producer": "zip-rs 8.6 fixture writer; independent verification required",
+      "independentSevenZipVerified": true,
+      "applicationFullExtraction": true
+    },
+    {
+      "codec": "Zstandard",
+      "encryption": "AES256",
+      "layout": "standard",
+      "producer": "zip-rs 8.6 fixture writer; independent verification required",
+      "independentSevenZipVerified": true,
+      "applicationFullExtraction": true
+    },
+    {
+      "codec": "Zstandard",
+      "encryption": "ZipCrypto",
+      "layout": "single",
+      "producer": "zip-rs 8.6 fixture writer; independent verification required",
+      "independentSevenZipVerified": true,
+      "applicationFullExtraction": true
+    },
+    {
+      "codec": "Zstandard",
+      "encryption": "ZipCrypto",
+      "layout": "numeric",
+      "producer": "zip-rs 8.6 fixture writer; independent verification required",
+      "independentSevenZipVerified": true,
+      "applicationFullExtraction": true
+    },
+    {
+      "codec": "Zstandard",
+      "encryption": "ZipCrypto",
+      "layout": "standard",
+      "producer": "zip-rs 8.6 fixture writer; independent verification required",
+      "independentSevenZipVerified": true,
+      "applicationFullExtraction": true
+    },
+    {
+      "realZip64": true,
+      "inputBytes": 4294979641,
+      "encryption": "AES256",
+      "layout": "numeric",
+      "independentProducer": "7-Zip 26.04 Copy ZIP",
+      "independentFullVerification": true,
+      "applicationFullExtraction": true,
+      "largePayloadSha256": "59ead87e2e32370612861365e7dcf1543fb29afaa0b29432c37eab5373fed514",
+      "followingEntryPreserved": true
+    },
+    {
+      "realZip64": true,
+      "inputBytes": 4294979641,
+      "encryption": "ZipCrypto",
+      "layout": "numeric",
+      "independentProducer": "7-Zip 26.04 Copy ZIP",
+      "independentFullVerification": true,
+      "applicationFullExtraction": true,
+      "largePayloadSha256": "59ead87e2e32370612861365e7dcf1543fb29afaa0b29432c37eab5373fed514",
+      "followingEntryPreserved": true
+    }
+  ],
+  "screenshots": [
+    "zip-selection-AES256-public.png",
+    "zip-selection-AES256-wrong-password.png",
+    "zip-selection-workspace-1100x700.png",
+    "zip-selection-footer-1100x700.png",
+    "zip-selection-workspace-760x520.png",
+    "zip-selection-footer-760x520.png",
+    "zip-selection-ZipCrypto-public.png",
+    "zip-selection-ZipCrypto-wrong-password.png",
+    "zip-selection-final-workspace.png"
+  ],
+  "complete": true
+}

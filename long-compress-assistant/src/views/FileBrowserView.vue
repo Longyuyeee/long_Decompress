@@ -36,11 +36,14 @@ const extract = (paths: string[], destination: string) => {
 <template>
   <DualPaneFileManager v-if="mode === 'files'" @open-archive="openArchive" @compress="compress" @extract="extract" />
   <div v-else class="h-full min-w-0 relative">
-    <button class="return-files" type="button" data-testid="return-to-file-manager" @click="mode = 'files'"><i class="pi pi-arrow-left"></i><span>返回双栏文件浏览器</span></button>
-    <ArchiveBrowserView />
+    <ArchiveBrowserView>
+      <template #header-actions>
+        <button class="return-files" type="button" data-testid="return-to-file-manager" @click="mode = 'files'"><i class="pi pi-arrow-left"></i><span>返回双栏文件浏览器</span></button>
+      </template>
+    </ArchiveBrowserView>
   </div>
 </template>
 
 <style scoped>
-.return-files{position:absolute;z-index:40;top:1.55rem;right:12.5rem;height:2.85rem;padding:0 .85rem;display:flex;align-items:center;gap:.45rem;border:1px solid var(--border-subtle);border-radius:.9rem;background:var(--bg-input);color:var(--text-muted);font-size:.68rem;font-weight:850}.return-files:hover{border-color:var(--dynamic-accent);color:var(--dynamic-accent)}
+.return-files{min-height:2.85rem;padding:.5rem .85rem;display:flex;align-items:center;gap:.45rem;border:1px solid var(--border-subtle);border-radius:.9rem;background:var(--bg-input);color:var(--text-muted);font-size:.68rem;font-weight:850}.return-files:hover{border-color:var(--dynamic-accent);color:var(--dynamic-accent)}
 </style>

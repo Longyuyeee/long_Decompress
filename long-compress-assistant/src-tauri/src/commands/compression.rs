@@ -1235,6 +1235,8 @@ pub async fn browse_archive(
 ) -> Result<crate::models::compression::ArchiveBrowseResult, String> {
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
+        None if crate::services::archive_browser::detect_format(std::path::Path::new(&file_path))
+            .is_ok_and(|format| format == crate::services::archive_format::ArchiveFormat::Zip) => None,
         None => {
             let service = CompressionService::new_with_defaults().await;
             service
@@ -1299,7 +1301,9 @@ pub async fn preview_archive_image(
         None => {
             let service = CompressionService::new_with_defaults().await;
             service
-                .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+                .resolve_archive_password_silent(&file_path, &DecompressOptions {
+                    selected_entries: vec![entry_path.clone()], ..Default::default()
+                })
                 .await.map_err(|error| error.to_string())?
         }
     };
@@ -1362,7 +1366,9 @@ pub async fn preview_archive_text(
         None => {
             let service = CompressionService::new_with_defaults().await;
             service
-                .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+                .resolve_archive_password_silent(&file_path, &DecompressOptions {
+                    selected_entries: vec![entry_path.clone()], ..Default::default()
+                })
                 .await.map_err(|error| error.to_string())?
         }
     };
@@ -1399,7 +1405,9 @@ pub async fn materialize_nested_archive(
         Some(password) => Some(password),
         None => {
             service
-                .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+                .resolve_archive_password_silent(&file_path, &DecompressOptions {
+                    selected_entries: vec![entry_path.clone()], ..Default::default()
+                })
                 .await.map_err(|error| error.to_string())?
         }
     };
@@ -1514,7 +1522,9 @@ pub async fn open_archive_entry(
         Some(password) => Some(password),
         None => {
             service
-                .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+                .resolve_archive_password_silent(&file_path, &DecompressOptions {
+                    selected_entries: vec![entry_path.clone()], ..Default::default()
+                })
                 .await.map_err(|error| error.to_string())?
         }
     };

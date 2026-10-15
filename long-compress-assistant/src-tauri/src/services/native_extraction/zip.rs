@@ -3,7 +3,7 @@ use crate::models::compression::{DecompressOptions, TaskLogSeverity};
 use crate::services::compression_service::CompressionError;
 use crate::services::extraction_transaction;
 use crate::services::progress_gate::ProgressGate;
-use crate::utils::io_utils::{ProgressReader, SmartFileReader};
+use crate::utils::io_utils::ProgressReader;
 use anyhow::Result;
 use chrono::{Local, TimeZone};
 use std::fs::File;
@@ -15,6 +15,11 @@ use zip_aes::result::ZipError;
 use zip_aes::ZipArchive;
 
 const PROGRESS_EMIT_INTERVAL_BYTES: u64 = 4 * 1024 * 1024;
+
+fn skippable_corruption(error: &anyhow::Error) -> bool {
+    error.chain().any(|cause| cause.downcast_ref::<std::io::Error>().is_some_and(|error|
+        matches!(error.kind(), std::io::ErrorKind::InvalidData | std::io::ErrorKind::UnexpectedEof)))
+}
 
 pub(crate) fn system_time(
     year: u16,
@@ -36,8 +41,9 @@ pub(crate) fn system_time(
 fn validate_password_access<R: Read + Seek>(
     archive: &mut ZipArchive<R>,
     password: Option<&str>,
+    indices: &[usize],
 ) -> Result<()> {
-    for index in 0..archive.len() {
+    for &index in indices {
         let requires_password = match archive.by_index(index) {
             Ok(_) => false,
             Err(ZipError::UnsupportedArchive(detail)) if detail == ZipError::PASSWORD_REQUIRED => {
@@ -98,8 +104,9 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
     options: &DecompressOptions,
 ) -> Result<()> {
     let _worker_slot = super::zip_parallel::WorkerSlot::acquire(runtime)?;
-    let mut archive = ZipArchive::new(SmartFileReader::open(file)?)?;
-    validate_password_access(&mut archive, password)?;
+    let mut archive = ZipArchive::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?)?;
+    let selection = crate::services::zip_selection::ZipSelection::read(&mut archive, options, || runtime.check_cancellation())?;
+    validate_password_access(&mut archive, password, &selection.indices)?;
     if super::zip_parallel::try_extract(
         runtime,
         window,
@@ -112,28 +119,26 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
         return Ok(());
     }
 
-    let total_files = archive.len();
-    let file_filter = extraction_transaction::compile_file_filter(options.file_filter.as_deref());
+    let total_files = selection.indices.len();
     let mut buffer_handle: Option<crate::services::io_buffer_pool::IOBufferHandle> = None;
     let mut last_parent = None;
     let mut progress_gate = ProgressGate::new();
 
     let extraction_result = (|| -> Result<()> {
-        for index in 0..total_files {
+        for (position, &index) in selection.indices.iter().enumerate() {
             runtime.check_cancellation()?;
             let (file_name, outpath, is_dir, source_size, source_modified) = {
                 let entry = archive.by_index_raw(index)?;
                 let file_name = entry.name().to_string();
                 let is_dir = entry.is_dir();
                 let relative = match runtime
-                    .normalized_archive_path(&entry.mangled_name(), options.preserve_paths)
+                    .normalized_archive_path(&entry.mangled_name(), true)
                 {
                     Some(path) => path,
                     None => continue,
                 };
-                if !extraction_transaction::matches_compiled_file_filter(&relative, &file_filter) {
-                    continue;
-                }
+                // Keep archive paths in staging. Selection and filtering use
+                // those paths; flattening happens once at transactional commit.
                 let target = Path::new(output).join(relative);
                 let outpath = if is_dir {
                     target
@@ -153,6 +158,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
                 (file_name, outpath, is_dir, entry.size(), source_modified)
             };
 
+            let mut created_file = false;
             let entry_result = (|| -> Result<()> {
                 if is_dir {
                     std::fs::create_dir_all(&outpath)?;
@@ -171,6 +177,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
                     archive.by_index(index)?
                 };
                 let mut outfile = File::create(&outpath)?;
+                created_file = true;
                 let buffer_size = runtime.buffer_pool().recommend_buffer_size(source_size);
                 if buffer_handle
                     .as_ref()
@@ -211,7 +218,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
                             } else {
                                 processed as f32 / source_size as f32
                             };
-                            let file_progress = (index as f32 / total_files as f32)
+                            let file_progress = (position as f32 / total_files as f32)
                                 + (entry_progress / total_files as f32);
                             if let Some(window) = window.filter(|_| progress_gate.allow(false)) {
                                 runtime.emit_progress(
@@ -243,12 +250,16 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
             })();
 
             if let Err(error) = entry_result {
-                if options.skip_corrupted {
+                if options.skip_corrupted && skippable_corruption(&error) {
+                    if created_file {
+                        std::fs::remove_file(&outpath).map_err(|cleanup|
+                            anyhow::anyhow!("无法清理未完成的 ZIP 条目「{file_name}」：{cleanup}；原始错误：{error}"))?;
+                    }
                     if let Some(window) = window {
                         runtime.emit_log(
                             window,
                             task_id,
-                            &format!("Skipped entry {file_name}: {error}"),
+                            &format!("已跳过损坏条目「{file_name}」，未保留不完整文件：{error}"),
                             TaskLogSeverity::Warning,
                         );
                     }
@@ -256,11 +267,11 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
                 }
                 return Err(error);
             }
-            if let Some(window) = window.filter(|_| progress_gate.allow(index + 1 == total_files)) {
+            if let Some(window) = window.filter(|_| progress_gate.allow(position + 1 == total_files)) {
                 runtime.emit_progress(
                     window,
                     task_id,
-                    (index + 1) as f32 / total_files as f32,
+                    (position + 1) as f32 / total_files as f32,
                     Some(file_name),
                     source_size,
                     source_size,
@@ -346,7 +357,7 @@ mod tests {
 
     #[test]
     fn password_preflight_scans_entries_beyond_the_old_probe_limit() {
-        let error = validate_password_access(&mut mixed_encryption_archive(), None)
+        let error = validate_password_access(&mut mixed_encryption_archive(), None, &(0..9).collect::<Vec<_>>())
             .expect_err("late encrypted entry must require a password");
         assert!(
             matches!(
@@ -360,7 +371,7 @@ mod tests {
     #[test]
     fn password_preflight_validates_every_entry_in_mixed_archives() {
         let error =
-            validate_password_access(&mut mixed_encryption_archive(), Some("wrong-password"))
+            validate_password_access(&mut mixed_encryption_archive(), Some("wrong-password"), &(0..9).collect::<Vec<_>>())
                 .expect_err("wrong password must fail on the late encrypted entry");
         assert!(
             matches!(
@@ -370,7 +381,89 @@ mod tests {
             "{error:?}"
         );
 
-        validate_password_access(&mut mixed_encryption_archive(), Some("correct-password"))
+        validate_password_access(&mut mixed_encryption_archive(), Some("correct-password"), &(0..9).collect::<Vec<_>>())
             .expect("correct password must unlock every entry");
+    }
+
+    fn selection_fixture(path: &std::path::Path) {
+        let mut writer = ZipWriter::new(std::fs::File::create(path).unwrap());
+        for (name, password, payload) in [
+            ("资料/公开说明.txt", None, "公开内容"),
+            ("资料/甲方/合同.bin", Some("alpha"), "甲方内容"),
+            ("资料/乙方/合同.bin", Some("beta"), "乙方内容"),
+        ] {
+            let options = match password {
+                Some(password) => FileOptions::default().with_deprecated_encryption(password.as_bytes()),
+                None => FileOptions::default(),
+            };
+            writer.start_file(name, options).unwrap();
+            writer.write_all(payload.as_bytes()).unwrap();
+        }
+        writer.finish().unwrap();
+    }
+
+    #[test]
+    fn selected_zip_skip_corruption_discards_incomplete_file_and_keeps_good_entries() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("部分损坏.zip");
+        let mut writer = ModernZipWriter::new(std::fs::File::create(&source).unwrap());
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Stored);
+        writer.start_file("bad.txt", options).unwrap(); writer.write_all(&vec![42; 100_000]).unwrap();
+        writer.start_file("good.txt", options).unwrap(); writer.write_all(b"good").unwrap(); writer.finish().unwrap();
+        let offset = ZipArchive::new(std::fs::File::open(&source).unwrap()).unwrap().by_index_raw(0).unwrap().data_start().unwrap() as usize;
+        let mut bytes = std::fs::read(&source).unwrap(); bytes[offset+23] ^= 1; std::fs::write(&source, bytes).unwrap();
+        let output = temp.path().join("out");
+        super::extract_with_optional_window(&crate::services::compression_service::CompressionService::for_testing(), None, "skip-corrupt", source.to_str().unwrap(), output.to_str().unwrap(), None,
+            &crate::models::compression::DecompressOptions { skip_corrupted: true, ..Default::default() }).unwrap();
+        assert_eq!(std::fs::read(output.join("good.txt")).unwrap(), b"good");
+        assert!(!output.join("bad.txt").exists(), "跳过损坏文件不能发布已写出的半截内容");
+    }
+
+    #[test]
+    fn selected_zip_skip_corruption_never_hides_cancellation_or_storage_errors() {
+        assert!(super::skippable_corruption(&std::io::Error::new(std::io::ErrorKind::InvalidData, "bad CRC").into()));
+        assert!(super::skippable_corruption(&std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "truncated").into()));
+        for kind in [std::io::ErrorKind::PermissionDenied, std::io::ErrorKind::StorageFull, std::io::ErrorKind::Interrupted] {
+            assert!(!super::skippable_corruption(&std::io::Error::new(kind, "not corrupt data").into()));
+        }
+        assert!(!super::skippable_corruption(&CompressionError::Cancelled.into()));
+    }
+
+    #[test]
+    fn selected_zip_public_file_ignores_unselected_encryption() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("混合.zip");
+        selection_fixture(&source);
+        let output = temp.path().join("out");
+        let options = crate::models::compression::DecompressOptions {
+            selected_entries: vec!["资料/公开说明.txt".into()],
+            ..Default::default()
+        };
+        super::extract_with_optional_window(
+            &crate::services::compression_service::CompressionService::for_testing(),
+            None, "public", source.to_str().unwrap(), output.to_str().unwrap(), None, &options,
+        ).expect("只要公开说明，不应要求其他文件的密码");
+        assert_eq!(std::fs::read_to_string(output.join("资料/公开说明.txt")).unwrap(), "公开内容");
+        assert!(!output.join("资料/甲方").exists());
+        assert!(!output.join("资料/乙方").exists());
+    }
+
+    #[test]
+    fn selected_zip_password_ignores_other_password_entry() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("混合.zip");
+        selection_fixture(&source);
+        let output = temp.path().join("out");
+        let options = crate::models::compression::DecompressOptions {
+            selected_entries: vec!["资料/甲方".into()],
+            ..Default::default()
+        };
+        super::extract_with_optional_window(
+            &crate::services::compression_service::CompressionService::for_testing(),
+            None, "alpha", source.to_str().unwrap(), output.to_str().unwrap(), Some("alpha"), &options,
+        ).expect("只要甲方文件夹，乙方的不同密码不应阻止操作");
+        assert_eq!(std::fs::read_to_string(output.join("资料/甲方/合同.bin")).unwrap(), "甲方内容");
+        assert!(!output.join("资料/公开说明.txt").exists());
+        assert!(!output.join("资料/乙方").exists());
     }
 }
