@@ -2,7 +2,7 @@
 
 日期：2026-10-15。基线为正式 v1.4.7 / `5ab93aa914c4359ba99d1ea33d5207bd2e2337d8`，分支 `codex/zip-recovery-rev-batch-1-4-8`。用户要求按 ZIP 分卷救援、`.rev` 创建、批量检查修复的顺序推进到可发版，未要求本轮直接正式发布。
 
-**最新状态：用户已于 2026-10-15 明确恢复，要求接续到可发版。** 从 `37d9aed` 补本轮真实桌面用户链、页面检查和普通安装器，尚未封板或发布；不自动创建正式标签/Release。此前快照及准确待办见 [暂停记录](DEVELOPMENT_PAUSED_ARCHIVE_RECOVERY_2026-10-15.md)。
+**最新状态：功能与新增真实桌面用户链已封板，冻结提交 `8d3fcc7126e4ac3c446e958f6a41dd03d761cf48`。** 从 `37d9aed` 补齐用户链和页面检查，普通安装器以 PR 最新 Windows package 为准；不自动创建正式标签/Release。详见 [封板记录](ARCHIVE_RECOVERY_FREEZE_1.4.8.md)，此前快照见 [暂停记录](DEVELOPMENT_PAUSED_ARCHIVE_RECOVERY_2026-10-15.md)。
 
 ## 实现范围
 
