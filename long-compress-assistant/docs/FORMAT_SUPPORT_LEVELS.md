@@ -1,8 +1,10 @@
 # 归档格式支持等级（当前权威口径）
 
-更新时间：2026-10-16（当前正式版 v1.4.13）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.13 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)，历次能力按对应实现和实际产物记录。
+更新时间：2026-10-17（当前正式版 v1.4.13）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.13 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)，历次能力按对应实现和实际产物记录。
 
 ## 当前边界速查（覆盖下方历次演变描述）
+
+- v1.4.15 候选功能已封板，优化 ZIP 重复预检、TAR.LZ4 / TAR.BR 流式创建及 RAR 预检查任务控制，继承下述 v1.4.14 候选能力。不新增格式、不扩大密码/卷型承诺；完整校验、真实错误与默认设置保留。见[实施审计](ARCHIVE_PERFORMANCE_1.4.15.md)和[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)，尚未计入公开正式版。
 
 - v1.4.14 候选新增 ZIP Zstandard 与 ZIPX（XZ）创建。ZIP Zstandard 保留普通/AES/ZipCrypto 及数字/标准分卷；ZIPX 创建提供普通包和密码数字分卷，标准 ZIPX 创建暂不开放。方法跟随转换、批量配置、配置组/模板、草稿和历史保存。证据与可发布状态见 [实施记录](ZIP_OUTPUT_METHODS_1.4.14.md)和 [封板记录](ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)，尚未计入 v1.4.13 正式版。
 

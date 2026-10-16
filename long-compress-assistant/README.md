@@ -94,7 +94,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.4.14 候选** 增加 ZIP Zstandard 和 ZIPX（XZ）创建，接通密码、数字分卷和转换，保留批量、配置组、模板、预设、草稿及历史的方法。ZIP Zstandard 另支持标准分卷，ZIPX 标准分卷暂不提供。当前公开稳定版仍为 v1.4.13，见 [实施记录](docs/ZIP_OUTPUT_METHODS_1.4.14.md)、[封板记录](docs/ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)及 [中文更新草案](docs/RELEASE_NOTES_1.4.14.md)。
+**v1.4.15 候选已封板**：减少 ZIP 重复预检，TAR.LZ4 / TAR.BR 流式创建，改善 RAR 预检查暂停/取消和矮窗口归档列表。保留完整校验，不承诺整条流程固定百分比提速；当前公开稳定版仍为 v1.4.13。见 [实施审计](docs/ARCHIVE_PERFORMANCE_1.4.15.md)、[封板记录](docs/ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)及 [中文更新草案](docs/RELEASE_NOTES_1.4.15.md)。
+
+**v1.4.14 候选** 增加 ZIP Zstandard 和 ZIPX（XZ）创建，接通密码、数字分卷和转换，保留批量、配置组、模板、预设、草稿及历史的方法。ZIP Zstandard 另支持标准分卷，ZIPX 标准分卷暂不提供。该轮尚未单独发布，能力已被 v1.4.15 候选继承，见 [实施记录](docs/ZIP_OUTPUT_METHODS_1.4.14.md)、[封板记录](docs/ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)及 [中文更新草案](docs/RELEASE_NOTES_1.4.14.md)。
 
 **v1.4.13** 增加标准 ZIP 缺卷部分抢救、密码包救援与恢复清单，打通失败任务救援后继续解压，见 [更新说明](docs/RELEASE_NOTES_1.4.13.md)和 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。缺卷救援要求目录仍完整可读，不补造缺失数据。
 

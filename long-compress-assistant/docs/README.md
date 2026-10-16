@@ -1,6 +1,6 @@
 # 文档导航与维护规则
 
-- **当前接续：[v1.4.15 性能与取消响应](ARCHIVE_PERFORMANCE_1.4.15.md)**、[十二版本路线](ARCHIVE_ROADMAP_1.4.15_TO_1.5.5.md)、[开发交接](DEVELOPMENT_HANDOFF.md)。ZIP 重复预检、TAR 有界流式创建和 RAR 暂停/取消已接入，真实桌面与完整应用资源观察已完成，接续封板/候选安装包。原“全部暂停”已由用户后续开发授权解除；v1.4.14 PR #168 仍未合入/发布，发布顺序待确认，旧记录见[暂停快照](DEVELOPMENT_PAUSED_1.4.14_2026-10-16.md)。
+- **当前候选：[v1.4.15 封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)**、[实施审计](ARCHIVE_PERFORMANCE_1.4.15.md)、[中文 Release 草案](RELEASE_NOTES_1.4.15.md)、[十二版本路线](ARCHIVE_ROADMAP_1.4.15_TO_1.5.5.md)。功能、真实桌面和资源观察已封板，版本统一 1.4.15，接续普通候选安装包。原暂停已解除；v1.4.14 PR #168 仍未合入/发布，发布顺序待确认，准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
 
 - **当前正式版：[v1.4.13 缺卷 ZIP 部分抢救](PARTIAL_ZIP_RECOVERY_1.4.13.md)**、[封板与发布记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)、[中文更新说明](RELEASE_NOTES_1.4.13.md)、[开发交接](DEVELOPMENT_HANDOFF.md)。[PR #167](https://github.com/Longyuyeee/long_Decompress/pull/167) 已合入，标准 ZIP 缺卷、密码包与恢复结果接续已交付，单条展开、多选弹窗保持；安装器及签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。后续开发以顶部接续为准。
 
