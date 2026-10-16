@@ -2752,42 +2752,16 @@ impl CompressionService {
                 Some((reader.archive().files.len(), expanded))
             }
             ArchiveFormat::Rar => {
-                let path = archive_path.to_str().ok_or_else(|| {
-                    CompressionError::ExtractionFailed("RAR path is not valid Unicode".to_string())
-                })?;
-                let archive = if let Some(password) = password {
-                    unrar::Archive::with_password(path, password)
-                } else {
-                    unrar::Archive::new(path)
-                };
-                let mut archive = archive.open_for_processing().map_err(|error| {
-                    CompressionError::ExtractionFailed(format!(
-                        "Unable to inspect RAR metadata safely: {:?}",
-                        error
-                    ))
-                })?;
-                let mut entries = 0usize;
-                let mut expanded = 0u64;
-                while let Some(header) = archive.read_header().map_err(|error| {
-                    CompressionError::ExtractionFailed(format!(
-                        "Unable to inspect RAR entry metadata: {:?}",
-                        error
-                    ))
-                })? {
-                    entries = entries.saturating_add(1);
-                    expanded = expanded.checked_add(header.entry().unpacked_size).ok_or_else(|| {
-                        CompressionError::ExtractionFailed(
-                            "RAR expanded size overflowed the supported range".to_string(),
-                        )
-                    })?;
-                    archive = header.skip().map_err(|error| {
-                        CompressionError::ExtractionFailed(format!(
-                            "Unable to continue RAR metadata inspection: {:?}",
-                            error
-                        ))
-                    })?;
-                }
-                Some((entries, expanded))
+                let service = self.clone();
+                let path = archive_path.to_path_buf();
+                let password = password.map(str::to_owned);
+                // Header walking and pause gates must not occupy an async
+                // runtime worker. Keep full stats and the resource checks below.
+                Some(tokio::task::spawn_blocking(move || {
+                    crate::services::rar_preflight::stats(&path, password.as_deref(), || service.check_cancellation())
+                }).await.map_err(|error| CompressionError::ExtractionFailed(
+                    format!("RAR 预检查线程异常退出: {error}")
+                ))??)
             }
             _ if password.is_none() => {
                 UniversalCliEngine::archive_uncompressed_stats(archive_path).await.ok()
@@ -3831,6 +3805,58 @@ mod tests {
             .test_archive_password(&encrypted.to_string_lossy(), "wrong-password")
             .await
             .expect("wrong password check"));
+    }
+
+    #[tokio::test]
+    async fn rar_preflight_service_cancellation_and_reset_preserve_real_stats() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("实际资料.rar");
+        std::fs::copy(Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../tests/fixtures/archives/rar-preflight-1415/stored.rar"), &source).unwrap();
+        let service = CompressionService::for_testing();
+        service.cancel();
+        let error = service.preflight_extraction(&source, &ArchiveFormat::Rar, None, temp.path(), &DecompressOptions::default()).await.unwrap_err();
+        assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+        service.reset_cancellation();
+        assert_eq!(service.preflight_extraction(&source, &ArchiveFormat::Rar, None, temp.path(), &DecompressOptions::default()).await.unwrap(), Some((1, 29)));
+        assert!(!temp.path().join("helloworld.txt").exists(), "preflight must not extract any content");
+    }
+
+    // The single-thread async test can still run its timer while the real RAR
+    // preflight is paused. A synchronous pause gate here would block that timer.
+    #[tokio::test]
+    async fn rar_preflight_pause_does_not_block_async_runtime_and_can_cancel() {
+        use crate::services::task_control;
+        use std::time::Duration;
+        struct ControlGuard(String);
+        impl Drop for ControlGuard {
+            fn drop(&mut self) { task_control::cleanup(&self.0); }
+        }
+        let task_id = format!("rar-preflight-{}", uuid::Uuid::new_v4());
+        let mut service = CompressionService::for_testing();
+        service.cancellation_flag = task_control::register(&task_id).unwrap();
+        let _guard = ControlGuard(task_id.clone());
+        let source = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../tests/fixtures/archives/rar-preflight-1415/stored.rar");
+        let temp = tempfile::tempdir().unwrap();
+        for cancel in [false, true] {
+            assert!(task_control::pause(&task_id));
+            let service = service.clone();
+            let source = source.clone();
+            let output = temp.path().to_path_buf();
+            let mut worker = tokio::spawn(async move {
+                service.preflight_extraction(&source, &ArchiveFormat::Rar, None, &output, &DecompressOptions::default()).await
+            });
+            assert!(tokio::time::timeout(Duration::from_millis(40), &mut worker).await.is_err(), "paused preflight must not complete");
+            if cancel { assert!(task_control::cancel(&task_id)); }
+            else { assert!(task_control::resume(&task_id)); }
+            let result = tokio::time::timeout(Duration::from_secs(2), worker).await.unwrap().unwrap();
+            if cancel {
+                assert!(matches!(result.unwrap_err().downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+            } else {
+                assert_eq!(result.unwrap(), Some((1, 29)));
+            }
+        }
     }
 
     #[tokio::test]

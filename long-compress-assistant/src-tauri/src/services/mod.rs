@@ -52,6 +52,7 @@ pub mod split_archive_detector;
 pub(crate) mod archive_volumes;
 pub(crate) mod codec_stream;
 pub mod rar_support;
+pub(crate) mod rar_preflight;
 pub mod tar_aes_engine;
 pub mod aes_wrapper;
 pub mod aes_stream_v2;
