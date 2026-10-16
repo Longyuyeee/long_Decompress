@@ -16,6 +16,29 @@ function draft() {
   return store
 }
 describe('archive conversion lifecycle', () => {
+  it('does not detach inherited non-ZIP conversion drafts when only ZIP methods change', () => {
+    const store = useArchiveConversionStore(); store.addSources(['C:/one.zip', 'C:/two.7z'])
+    store.updateItem(store.pending[0].id, { format: 'zip' })
+    expect(store.applySelected({ zipMethod: 'zstd' })).toBe('')
+    expect(store.pending[0].settings).toMatchObject({ format: 'zip', zipMethod: 'zstd' })
+    expect(store.pending[1].settings).toBeUndefined()
+    store.pending[0].selected = false
+    expect(store.applySelected({ zipMethod: 'zstd' })).toContain('没有 ZIP')
+  })
+  it.each(['zip', 'zipx'])('keeps %s method/password/standard volumes through conversion and history retry', async format => {
+    mocks.invoke.mockImplementation(async (command, args) => command === 'convert_archive' ? { primaryPath: args.outputPath, files: [], totalBytes: 20, split: true } : undefined)
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/原包.7z'])
+    store.updateItem(store.pending[0].id, { format, zipMethod: 'zstd', password: 'target-secret', sourcePassword: 'old-secret', splitMiB: 1, zipSplitMode: 'standard', zipEncryption: 'zipcrypto' })
+    await store.start()
+    const task = useTaskStore().tasks[0]
+    expect(mocks.invoke.mock.calls.find(([cmd]) => cmd === 'convert_archive')?.[1]).toMatchObject({ sourcePassword: 'old-secret', options: { format, zip_method: format === 'zip' ? 'zstd' : 'deflate', zip_encryption: 'zipcrypto', zip_split_mode: format === 'zip' ? 'standard' : 'numeric', split_size: 1048576 } })
+    expect(task.executionConfig).toMatchObject({ format, zipMethod: format === 'zip' ? 'zstd' : 'deflate', passwordRequired: true })
+    expect(JSON.stringify(task.executionConfig)).not.toMatch(/target-secret|old-secret/)
+    store.restore(createTaskHistoryRecord(task))
+    expect(store.pending.at(-1)?.settings).toMatchObject({ format, zipMethod: format === 'zip' ? 'zstd' : 'deflate', zipSplitMode: format === 'zip' ? 'standard' : 'numeric', password: '' })
+    expect(store.pending.at(-1)?.targetPasswordRequired).toBe(true)
+  })
   it('executes and records the explicitly selected ZIP disk layout', async () => {
     mocks.invoke.mockImplementation(async (command, args) => command === 'convert_archive' ? { primaryPath: args.outputPath, files: [], totalBytes: 20, split: true } : undefined)
     const store = useArchiveConversionStore()

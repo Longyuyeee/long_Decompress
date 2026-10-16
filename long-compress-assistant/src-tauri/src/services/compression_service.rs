@@ -290,7 +290,7 @@ impl CompressionService {
             suffixes.iter().any(|suffix| name.ends_with(suffix)).then(|| canonical.to_string())
         };
         match format {
-            ArchiveFormat::Zip => "zip".to_string(),
+            ArchiveFormat::Zip => if name.ends_with(".zipx") { "zipx" } else { "zip" }.to_string(),
             ArchiveFormat::SevenZip => "7z".to_string(),
             ArchiveFormat::Rar => "rar".to_string(),
             ArchiveFormat::AesEncrypted => [
@@ -936,7 +936,7 @@ impl CompressionService {
         let split_requested = options.split_size.is_some_and(|size| size > 0);
         let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
         let format = Self::infer_compression_format(output_path, options.format.as_deref());
-        if split_requested && has_password && !matches!(format.as_str(), "zip" | "7z" | "rar") {
+        if split_requested && has_password && !matches!(format.as_str(), "zip" | "zipx" | "7z" | "rar") {
             return Err(CompressionError::CompressionFailed(
                 "Encrypted split archive creation is currently supported only for ZIP, 7Z and RAR; choose a supported format or disable splitting".to_string()
             ).into());

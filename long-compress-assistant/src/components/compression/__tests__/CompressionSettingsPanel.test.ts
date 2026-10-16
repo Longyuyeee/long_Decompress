@@ -51,6 +51,21 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('keeps inherited ZIP defaults until I change its method and preserves ZIPX password/split controls', async () => {
+    const wrapper = mountPanel(settings({ splitArchive: true, password: 'secret' }))
+    await flushPromises()
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    await wrapper.get('[data-testid="compression-zip-method"]').trigger('click')
+    await wrapper.findAll('[role="option"]').find(option => option.text().includes('Zstandard'))!.trigger('click')
+    await flushPromises()
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ format: 'zip', zipMethod: 'zstd', password: 'secret', splitArchive: true })
+    await wrapper.setProps({ modelValue: settings({ format: 'zipx', password: 'secret', splitArchive: true, zipSplitMode: 'standard' }) })
+    expect(wrapper.get('[data-testid="compression-zip-method"]').text()).toContain('XZ')
+    expect(wrapper.get('[data-testid="compression-filename-extension"]').text()).toBe('.zipx')
+    expect(wrapper.get('[data-testid="compression-zip-split-mode"]').text()).toContain('.zipx.001')
+    expect(wrapper.find('[data-testid="zip-encryption"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
   it('does not detach valid inherited settings merely by opening a LZIP row', async () => {
     const wrapper = mountPanel(settings({ format: 'tar.lz' }))
     await flushPromises()

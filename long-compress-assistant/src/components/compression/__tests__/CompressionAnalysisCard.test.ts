@@ -32,6 +32,14 @@ const mountCard = (modelValue = options, compact = false) => mount(CompressionAn
 })
 
 describe('CompressionAnalysisCard', () => {
+  it.each([['zip', 'zst'], ['zipx', 'xz']])('samples %s with its actual method and marks changed methods stale', async (format, sampleFormat) => {
+    const wrapper = mountCard({ ...options, format: format as CompressionOptions['format'], zipMethod: 'zstd' })
+    await wrapper.get('.analysis-button').trigger('click'); await flushPromises()
+    expect(mocks.analyze).toHaveBeenCalledWith(expect.any(String), ['C:/input'], sampleFormat, 6)
+    await wrapper.setProps({ modelValue: { ...options, format: format as CompressionOptions['format'], zipMethod: 'deflate' } })
+    expect(wrapper.find('.analysis-stale').exists()).toBe(format === 'zip')
+    wrapper.unmount()
+  })
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()

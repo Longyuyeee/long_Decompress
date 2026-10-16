@@ -179,7 +179,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
     },
     CompressionFormatCapability {
         format: "zip",
-        extensions: &["zip", "zipx"],
+        extensions: &["zip"],
         can_compress: true,
         can_extract: true,
         supports_password_compress: true,
@@ -188,6 +188,11 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_split: true,
         requires_7za: false,
         requires_winrar: false,
+    },
+    CompressionFormatCapability {
+        format: "zipx", extensions: &["zipx"], can_compress: true, can_extract: true,
+        supports_password_compress: true, supports_password_extract: true,
+        single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false,
     },
     CompressionFormatCapability {
         format: "7z",
@@ -391,6 +396,7 @@ pub fn has_native_password_container(format: &str) -> bool {
     matches!(
         normalize_compression_format(format).as_str(),
         "zip"
+            | "zipx"
             | "7z"
             | "rar"
             | "tar.aes"
@@ -418,6 +424,9 @@ pub fn validate_compression_request(
         .is_some_and(|password| !password.is_empty());
     let split_requested = options.split_size.is_some_and(|size| size > 0);
 
+    if requested_format == "zipx" && split_requested && options.zip_split_mode == super::standard_zip_writer::ZipSplitMode::Standard {
+        anyhow::bail!("本版 ZIPX 创建请使用数字分卷（.zipx.001）；标准分卷可选择 ZIP 格式。");
+    }
     if options.encrypt_filenames && (!matches!(requested_format.as_str(), "7z" | "rar") || !has_password) {
         return Err(CompressionError::CompressionFailed(
             "文件名加密仅支持 7Z/RAR，且必须设置压缩密码。".to_string(),
@@ -479,7 +488,7 @@ pub(crate) fn compression_route(format: &str) -> Option<CompressionRoute> {
         "bz2.aes" => Some(CompressionRoute::Bzip2Aes),
         "xz.aes" => Some(CompressionRoute::XzAes),
         "zst.aes" => Some(CompressionRoute::ZstdAes),
-        "zip" => Some(CompressionRoute::Zip),
+        "zip" | "zipx" => Some(CompressionRoute::Zip),
         "tar" => Some(CompressionRoute::Tar),
         "tar.gz" => Some(CompressionRoute::TarGzip),
         "tar.bz2" => Some(CompressionRoute::TarBzip2),
@@ -571,7 +580,7 @@ mod tests {
         );
         assert_eq!(
             infer_compression_format("C:/output/archive.ZIPX", None),
-            "zip"
+            "zipx"
         );
         assert_eq!(
             infer_compression_format("C:/output/archive.unknown", None),
@@ -638,8 +647,8 @@ mod tests {
                 "archive.zipx",
                 &options(Some("zipx")),
             )
-            .expect("zipx alias"),
-            "zip"
+            .expect("zipx creation"),
+            "zipx"
         );
 
         let multi_source = vec![source.clone(), source.clone()];

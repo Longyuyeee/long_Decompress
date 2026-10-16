@@ -263,13 +263,14 @@ const getCompressionEstimate = (
   files: FileObject[],
   format: string,
   level: number,
+  zipMethod?: 'deflate' | 'zstd',
 ) => {
   const analysis = compressionStore.compressionAnalysis[jobId]
   if (
     analysis?.status === 'completed' &&
     analysis.result &&
     analysis.format === format &&
-    analysis.level === level
+    analysis.level === level && (format !== 'zip' || (analysis.zipMethod ?? 'deflate') === (zipMethod ?? 'deflate'))
   ) {
     return { estimatedOutputBytes: analysis.result.estimatedSize, estimateReliable: false }
   }
@@ -283,14 +284,14 @@ const getCompressionEstimate = (
 
 const runCompressionResourcePreflight = async (
   taskId: string,
-  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number } },
+  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, zipMethod?: 'deflate' | 'zstd' } },
 ) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
   if (!task) return false
 
   taskStore.updateTaskStatus(taskId, 'preparing')
   try {
-    const estimate = getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level)
+    const estimate = getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level, job.settings.zipMethod)
     const report = await tauriCommands.preflightOperationResources({
       operation: 'compression',
       outputPath: job.outputPath,
@@ -470,6 +471,7 @@ const runCompression = async () => {
           rarRecoveryPercent: job.settings.format === 'rar' ? (job.settings.rarRecoveryPercent ?? 0) : 0,
           rarRecoveryVolumes: job.settings.format === 'rar' ? (job.settings.rarRecoveryVolumes ?? 0) : 0,
           zipPasswordEncoding: job.settings.zipPasswordEncoding ?? 'utf8',
+          zipMethod: job.settings.zipMethod ?? 'deflate',
           zipEncryption: job.settings.zipEncryption ?? 'aes256',
           zipSplitMode: job.settings.zipSplitMode ?? 'numeric',
           fastPack: false,
@@ -477,9 +479,10 @@ const runCompression = async () => {
       },
       compressionOptions: {
         fast_pack: false,
-        zip_password_encoding: effectiveFormat === 'zip' ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
-        zip_encryption: effectiveFormat === 'zip' ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
-        zip_split_mode: effectiveFormat === 'zip' ? (job.settings.zipSplitMode ?? 'numeric') : 'numeric',
+        zip_password_encoding: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
+        zip_method: job.settings.zipMethod ?? 'deflate',
+        zip_encryption: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
+        zip_split_mode: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipSplitMode ?? 'numeric') : 'numeric',
         format: effectiveFormat,
         level: job.settings.level,
         password: job.settings.password || undefined,
@@ -524,9 +527,10 @@ const runCompression = async () => {
         job.outputPath,
         {
           fast_pack: false,
-          zip_password_encoding: effectiveFormat === 'zip' ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
-          zip_encryption: effectiveFormat === 'zip' ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
-          zip_split_mode: effectiveFormat === 'zip' ? (job.settings.zipSplitMode ?? 'numeric') : 'numeric',
+          zip_password_encoding: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
+          zip_method: job.settings.zipMethod ?? 'deflate',
+          zip_encryption: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
+          zip_split_mode: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipSplitMode ?? 'numeric') : 'numeric',
           format: effectiveFormat,
           level: job.settings.level,
           password: job.settings.password || undefined,

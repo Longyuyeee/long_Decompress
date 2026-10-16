@@ -21,7 +21,7 @@ const rawProfile = (passwordStrategy: unknown = 'none') => ({
     verify_after: true,
     create_solid_archive: true,
     filename_template: '{name}-{date}',
-    extra_params: { threads: '4' },
+    extra_params: { threads: '4', zip_method: 'zstd' },
   },
   auto_apply: {
     enabled: true,
@@ -59,7 +59,8 @@ const profile = (passwordStrategy: PasswordStrategy = { type: 'none' }): Compres
     createSolidArchive: true,
     encryptFilenames: false,
     filenameTemplate: '{name}-{date}',
-    extraParams: { threads: '4' },
+    zipMethod: 'zstd',
+    extraParams: { threads: '4', zip_method: 'zstd' },
   },
   autoApply: {
     enabled: true,

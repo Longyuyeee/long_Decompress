@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { open } from '@tauri-apps/api/dialog'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import Modal from '@/components/ui/Modal.vue'
 import ThemedSelect from '@/components/ui/ThemedSelect.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
@@ -15,14 +16,14 @@ const mode = ref<'selected' | 'defaults'>('selected')
 const format = ref('keep'), level = ref('keep'), destination = ref('keep'), directory = ref('')
 const changePassword = ref(false), password = ref(''), changeSourcePassword = ref(false), sourcePassword = ref('')
 const changeSplit = ref(false), splitMiB = ref(0), hiddenNames = ref('keep'), recovery = ref('keep')
-const recoveryVolumes = ref('keep')
+const recoveryVolumes = ref('keep'), zipMethod = ref('keep')
 const defaults = ref({ ...store.defaults })
 const keep = { value: 'keep', label: '保持各自设置' }
-const changed = computed(() => format.value !== 'keep' || level.value !== 'keep' || destination.value !== 'keep' || changePassword.value || changeSourcePassword.value || changeSplit.value || hiddenNames.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep')
+const changed = computed(() => format.value !== 'keep' || zipMethod.value !== 'keep' || level.value !== 'keep' || destination.value !== 'keep' || changePassword.value || changeSourcePassword.value || changeSplit.value || hiddenNames.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep')
 const valid = computed(() => (mode.value === 'defaults' || changed.value) && (destination.value !== 'custom' || !!directory.value.trim()) && (!changeSplit.value || Number.isFinite(splitMiB.value) && splitMiB.value >= 0))
 function show(nextMode: 'selected' | 'defaults') {
   mode.value = nextMode; format.value = level.value = destination.value = hiddenNames.value = recovery.value = 'keep'
-  recoveryVolumes.value = 'keep'
+  recoveryVolumes.value = zipMethod.value = 'keep'
   directory.value = password.value = sourcePassword.value = ''
   changePassword.value = changeSourcePassword.value = changeSplit.value = false; splitMiB.value = 0
   defaults.value = { ...store.defaults }; visible.value = true
@@ -39,6 +40,7 @@ function apply() {
   if (mode.value === 'defaults') store.updateDefaults(defaults.value)
   else applyError.value = store.applySelected({
     ...(format.value === 'keep' ? {} : { format: format.value }),
+    ...(zipMethod.value === 'keep' || (format.value !== 'keep' && format.value !== 'zip') ? {} : { zipMethod: zipMethod.value as 'deflate' | 'zstd' }),
     ...(level.value === 'keep' ? {} : { level: Number(level.value) }),
     ...(destination.value === 'keep' ? {} : { outputDirectory: destination.value === 'source' ? '' : directory.value.trim() }),
     ...(changePassword.value ? { password: password.value } : {}),
@@ -73,7 +75,8 @@ function apply() {
         <p class="text-xs text-muted">只修改指定参数；名称、目录、密码等未指定的配置保持各自原值。</p>
         <p v-if="format !== 'keep' && (!supportsNativePassword(format) || !supportsArchiveSplit(format))" class="text-xs text-amber-600">此格式不支持的密码或分卷选项会关闭，其余配置保留。</p>
         <div class="grid min-w-0 gap-4 sm:grid-cols-2">
-          <label class="min-w-0 text-sm">目标格式<ThemedSelect v-model="format" :options="[keep, ...conversionFormats]" test-id="conversion-batch-format" floating /></label>
+          <label class="min-w-0 text-sm">目标格式 <HelpHint v-if="format === 'zipx'" label="ZIPX 分卷说明">ZIPX 使用 XZ，分卷采用 .zipx.001 数字卷；标准分卷可选择 ZIP。</HelpHint><ThemedSelect v-model="format" :options="[keep, ...conversionFormats]" test-id="conversion-batch-format" floating /></label>
+          <label v-if="format === 'keep' || format === 'zip'" class="min-w-0 text-sm">ZIP 压缩方法<ThemedSelect v-model="zipMethod" :options="[keep, { value: 'deflate', label: '兼容 ZIP · Deflate' }, { value: 'zstd', label: 'Zstandard' }]" test-id="conversion-batch-zip-method" floating /><span class="text-xs text-muted">仅修改 ZIP 任务；ZIPX 使用 XZ。</span></label>
           <label class="min-w-0 text-sm">压缩强度<ThemedSelect v-model="level" :options="[keep, ...Array.from({ length: 10 }, (_, n) => ({ value: String(n), label: String(n) }))]" test-id="conversion-batch-level" floating /></label>
           <label class="min-w-0 text-sm">RAR 恢复保护<ThemedSelect v-model="recovery" :options="[keep, {value:'0',label:'关闭'}, {value:'3',label:'3%'}, {value:'5',label:'5%'}, {value:'10',label:'10%'}]" test-id="conversion-batch-rar-recovery" floating /></label>
           <label class="min-w-0 text-sm">RAR 分包恢复卷<ThemedSelect v-model="recoveryVolumes" :options="[keep, ...[0,1,2,3,5,10].map(value => ({value:String(value),label:value ? `${value} 个 .rev 恢复卷` : '不生成恢复卷'}))]" test-id="conversion-batch-rar-recovery-volumes" floating /></label>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ZipMethodField from '@/components/compression/ZipMethodField.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import RarRecoveryField from './RarRecoveryField.vue'
 import ThemedSelect from '@/components/ui/ThemedSelect.vue'
@@ -141,9 +142,10 @@ const effectiveOutputExtension = computed(() =>
 
 const presets = computed(() => appStore.compressionPresets)
 
-const applyPreset = (preset: { name: string; format: string; level: number; password?: string }) => {
+const applyPreset = (preset: { name: string; format: string; level: number; password?: string; zipMethod?: 'deflate' | 'zstd' }) => {
   compressionOptions.value.format = preset.format as any
   compressionOptions.value.level = preset.level
+  compressionOptions.value.zipMethod = preset.zipMethod ?? 'deflate'
   if (preset.password) compressionOptions.value.password = preset.password
 }
 
@@ -153,7 +155,7 @@ const savePreset = () => {
 }
 const confirmSavePreset = () => {
   if (presetNameInput.value.trim()) {
-    appStore.saveCompressionPreset(presetNameInput.value.trim(), compressionOptions.value.format, compressionOptions.value.level, compressionOptions.value.password)
+    appStore.saveCompressionPreset(presetNameInput.value.trim(), compressionOptions.value.format, compressionOptions.value.level, compressionOptions.value.password, compressionOptions.value.zipMethod)
   }
   showPresetModal.value = false
 }
@@ -188,6 +190,8 @@ watch(compressionOptions, (newOptions) => {
 }, { deep: true })
 
 watch(() => compressionOptions.value.format, () => {
+  if (compressionOptions.value.format === 'zipx' && compressionOptions.value.zipSplitMode === 'standard') compressionOptions.value.zipSplitMode = 'numeric'
+
   if (!supportsPassword.value && compressionOptions.value.password) {
     compressionOptions.value.password = ''
   }
@@ -256,6 +260,7 @@ const applyProfile = (profile: CompressionProfile) => {
   compressionOptions.value.rarRecoveryPercent = profile.config.rarRecoveryPercent ?? 0
   compressionOptions.value.rarRecoveryVolumes = profile.config.rarRecoveryVolumes ?? 0
   compressionOptions.value.zipPasswordEncoding = profile.config.zipPasswordEncoding ?? 'utf8'
+  compressionOptions.value.zipMethod = profile.config.zipMethod ?? 'deflate'
   compressionOptions.value.zipEncryption = profile.config.zipEncryption ?? 'aes256'
   compressionOptions.value.zipSplitMode = profile.config.zipSplitMode ?? 'numeric'
   showProfileSelector.value = false
@@ -294,6 +299,7 @@ const saveAsNewProfile = async () => {
         rarRecoveryPercent: compressionOptions.value.rarRecoveryPercent ?? 0,
         rarRecoveryVolumes: compressionOptions.value.rarRecoveryVolumes ?? 0,
         zipPasswordEncoding: compressionOptions.value.zipPasswordEncoding ?? 'utf8',
+        zipMethod: compressionOptions.value.zipMethod ?? 'deflate',
         zipEncryption: compressionOptions.value.zipEncryption ?? 'aes256',
         zipSplitMode: compressionOptions.value.zipSplitMode ?? 'numeric',
         filenameTemplate: compressionOptions.value.filename ? `{name}_${compressionOptions.value.filename}` : null,
@@ -345,6 +351,7 @@ const closeVaultPasswordsAfterFocus = () => {
         <div class="flex items-center gap-2 ml-1"><label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.format') }}</label><HelpHint label="目标格式说明">{{ ['lz', 'tar.lz'].includes(compressionOptions.format) ? selectedFormat?.knownLimitations : compressionOptions.format === 'zip' ? '兼容性较好，适合分享；加密和编码方式会影响其他软件的支持。' : compressionOptions.format === '7z' ? '压缩率通常较高，适合归档。' : selectedFormat?.singleFileOnly ? '仅支持单个文件；多个文件或目录请使用 TAR 组合或 ZIP、7Z。' : '按用途选择归档格式；可用能力以当前引擎和任务设置为准。' }}</HelpHint></div>
         <ThemedSelect v-model="compressionOptions.format" floating aria-label="目标格式" test-id="compression-format-select"
           :options="compressionFormats.map(fmt => ({ value: fmt.value, label: fmt.name, disabled: isFormatDisabled(fmt), detail: fmt.singleFileOnly ? appStore.t('preset.single_file_only') : undefined }))" />
+        <ZipMethodField v-model="compressionOptions.zipMethod" :format="compressionOptions.format" test-id="compression-zip-method" />
       </div>
 
       <!-- 压缩强度 (精致 Range) -->
@@ -446,14 +453,14 @@ const closeVaultPasswordsAfterFocus = () => {
             </div>
           </Transition>
         </div>
-        <div v-if="compressionOptions.format === 'zip' && compressionOptions.password" class="flex items-center gap-2 min-w-0">
+        <div v-if="['zip', 'zipx'].includes(compressionOptions.format) && compressionOptions.password" class="flex items-center gap-2 min-w-0">
           <ThemedSelect test-id="zip-encryption" aria-label="ZIP 加密方式" class="min-w-0 flex-1"
             :model-value="compressionOptions.zipEncryption ?? 'aes256'"
             @update:model-value="compressionOptions.zipEncryption = $event as 'aes256' | 'zipcrypto'"
             :options="[{ value: 'aes256', label: 'AES-256（推荐）' }, { value: 'zipcrypto', label: 'ZipCrypto（传统兼容，较弱）' }]" floating />
           <HelpHint label="ZIP 加密方式说明">AES-256 为默认。只有旧软件无法读取 AES 压缩包时才选择 ZipCrypto，其密码保护较弱；程序不会自动降级。</HelpHint>
         </div>
-        <div v-if="compressionOptions.format === 'zip' && compressionOptions.password" class="flex items-center gap-2 min-w-0" data-testid="zip-password-encoding-row">
+        <div v-if="['zip', 'zipx'].includes(compressionOptions.format) && compressionOptions.password" class="flex items-center gap-2 min-w-0" data-testid="zip-password-encoding-row">
           <ThemedSelect test-id="zip-password-encoding" aria-label="ZIP 密码编码" class="min-w-0 flex-1"
             :model-value="compressionOptions.zipPasswordEncoding ?? 'utf8'"
             @update:model-value="compressionOptions.zipPasswordEncoding = $event as 'utf8' | 'windows_local'"
@@ -522,9 +529,9 @@ const closeVaultPasswordsAfterFocus = () => {
         <b>MiB</b>
       </label>
       <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
-      <div v-if="compressionOptions.splitArchive && compressionOptions.format === 'zip'" class="zip-split-kind">
+      <div v-if="compressionOptions.splitArchive && ['zip', 'zipx'].includes(compressionOptions.format)" class="zip-split-kind">
         <span class="shrink-0 text-xs">ZIP 卷型</span>
-        <ThemedSelect :model-value="compressionOptions.zipSplitMode ?? 'numeric'" :options="[{ value: 'numeric', label: '数字切卷 · .zip.001' }, { value: 'standard', label: '标准 ZIP · .z01/.zip' }]" test-id="compression-zip-split-mode" floating @update:model-value="compressionOptions.zipSplitMode = $event as 'numeric' | 'standard'" />
+        <ThemedSelect :model-value="compressionOptions.zipSplitMode ?? 'numeric'" :options="compressionOptions.format === 'zipx' ? [{ value: 'numeric', label: '数字切卷 · .zipx.001' }] : [{ value: 'numeric', label: '数字切卷 · .zip.001' }, { value: 'standard', label: '标准 ZIP · .z01/.zip' }]" test-id="compression-zip-split-mode" floating @update:model-value="compressionOptions.zipSplitMode = $event as 'numeric' | 'standard'" />
         <HelpHint label="ZIP 卷型说明">标准 ZIP 分卷供其他支持该卷型的软件打开，入口是 .zip；数字切卷保留旧版方式。两种方式解压都需要全部分卷。</HelpHint>
       </div>
     </section>

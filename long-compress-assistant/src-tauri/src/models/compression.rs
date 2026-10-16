@@ -54,6 +54,7 @@ impl Default for CompressionTask {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CompressionFormat {
     Zip,
+    Zipx,
     SevenZip,
     Rar,
     Tar,
@@ -73,6 +74,7 @@ pub enum CompressionFormat {
 impl CompressionFormat {
     pub fn from_extension(ext: &str) -> Self {
         match ext.to_lowercase().as_str() {
+            "zipx" => Self::Zipx,
             "7z" => Self::SevenZip,
             "rar" => Self::Rar,
             "tar" => Self::Tar,
@@ -94,6 +96,7 @@ impl CompressionFormat {
     pub fn extension(&self) -> &'static str {
         match self {
             Self::Zip => "zip",
+            Self::Zipx => "zipx",
             Self::SevenZip => "7z",
             Self::Rar => "rar",
             Self::Tar => "tar",
@@ -114,6 +117,8 @@ impl CompressionFormat {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionOptions {
+    #[serde(default)]
+    pub zip_method: crate::services::zip_method::ZipMethod,
     // Retired in 1.4.0: accept old payloads, but never deserialize or emit this option.
     #[serde(skip)]
     pub fast_pack: bool,
@@ -182,6 +187,7 @@ fn default_conflict_policy() -> String {
 impl Default for CompressionOptions {
     fn default() -> Self {
         Self {
+            zip_method: Default::default(),
             fast_pack: false,
             zip_password_encoding: Default::default(),
             zip_encryption: Default::default(),

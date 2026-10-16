@@ -1,5 +1,9 @@
 # Long解压产品增强路线
 
+## 当前开发：v1.4.14 压缩输出方法增强（2026-10-16）
+
+按用户批准顺序接入 ZIP Zstandard、ZIPX（XZ），接通密码分卷、转换及配置保存。ZIPX 标准多卷的独立互通未完成，本版提供数字切卷；ZIP Zstandard 保留数字与标准卷。单条展开、多选弹窗、左右等宽保持，已通过且未受影响的结果直接复用。实施、检查与最终候选见 [本版记录](ZIP_OUTPUT_METHODS_1.4.14.md)和 [封板记录](ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)。收尾后下一版按原顺序做 v1.4.15 大包/海量文件流程优化；下方为历史快照。
+
 ## 当前：v1.4.13 缺卷 ZIP 部分抢救已正式发布（2026-10-16）
 
 已交付目录可读的标准 ZIP 缺卷救援、密码包与恢复结果接续，单项/批量结果补按需展开的文件和原因清单；单条行内展开、多选弹窗保持。六组缺卷救援、独立回解和实际桌面链已完成，8 张最终截图已查看。[PR #167](https://github.com/Longyuyeee/long_Decompress/pull/167) 已合入，安装器、签名更新包及中文说明见 [v1.4.13 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)，定向检查与发布身份见 [实施记录](PARTIAL_ZIP_RECOVERY_1.4.13.md)及 [封板记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)。不猜缺失数据或数字卷长度，不扩大 RAR4 恢复承诺；v1.4.14 尚未启动，下方为历史状态。

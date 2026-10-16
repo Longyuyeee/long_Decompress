@@ -4,10 +4,15 @@ import { createDefaultImageSettings } from '@/utils/imageCompressionWorkspace'
 import { createDefaultVideoSettings } from '@/utils/videoCompressionWorkspace'
 
 describe('actual execution snapshots', () => {
+  it('retains the explicit ZIP method when copying a conversion history', () => {
+    const config = { schemaVersion: 1 as const, kind: 'archive-conversion' as const, format: 'zip', level: 6,
+      outputPath: 'D:/new.zip', splitSize: 1048576, zipMethod: 'zstd' as const, encryptFilenames: false, passwordRequired: true }
+    expect(copyExecutionConfig(config)).toMatchObject({ zipMethod: 'zstd', format: 'zip', splitSize: 1048576 })
+  })
   const configs: ExecutionConfigV1[] = [
     { schemaVersion: 1, kind: 'archive-compression', outputDirectory: 'D:/打包', passwordRequired: true,
       settings: { format: 'zip', level: 8, filename: '照片', splitArchive: false, splitSize: '100', keepStructure: true,
-        verifyAfter: true, createSolidArchive: false, fastPack: false, zipPasswordEncoding: 'windows_local', zipSplitMode: 'standard' } },
+        verifyAfter: true, createSolidArchive: false, fastPack: false, zipMethod: 'zstd', zipPasswordEncoding: 'windows_local', zipSplitMode: 'standard' } },
     { schemaVersion: 1, kind: 'image-compression', settings: createDefaultImageSettings() },
     { schemaVersion: 1, kind: 'video-compression', outputDirectory: 'D:/视频', settings: createDefaultVideoSettings() },
     { schemaVersion: 1, kind: 'pdf-optimization', outputDirectory: '', mode: 'compatible-image-optimization', allowLargerOutput: true },

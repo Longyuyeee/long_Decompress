@@ -24,6 +24,29 @@ const mockFile = (name: string, size: number): FileObject => ({
 })
 
 describe('Compression Store', () => {
+  it('does not detach inherited non-ZIP drafts when only selected ZIP methods change', () => {
+    const store = useCompressionStore(), first = mockFile('one', 1), other = mockFile('two', 1)
+    store.globalSettings.format = '7z'; store.addFile(first); store.addFile(other)
+    store.updateFileSettings(first.path, defaultOptions())
+    expect(store.applyBatchConfiguration([first.path, other.path], { zipMethod: 'zstd' })).toBe(1)
+    expect(store.selectedFiles[0].settings?.zipMethod).toBe('zstd')
+    expect(store.selectedFiles[1].settings).toBeUndefined()
+    expect(() => store.applyBatchConfiguration([other.path], { zipMethod: 'zstd' })).toThrow('没有 ZIP')
+  })
+  it('changes methods only for selected ZIP drafts and creates ZIPX without touching defaults', () => {
+    const store = useCompressionStore()
+    const zip = mockFile('zip.txt', 10), zipx = mockFile('zipx.txt', 10), untouched = mockFile('untouched.txt', 10)
+    ;[zip, zipx, untouched].forEach(file => store.addFile(file))
+    store.updateFileSettings(zipx.path, { ...defaultOptions(), format: 'zipx', password: 'keep', splitArchive: true })
+    store.applyBatchConfiguration([zip.path, zipx.path], { zipMethod: 'zstd' })
+    expect(store.selectedFiles[0].settings).toMatchObject({ format: 'zip', zipMethod: 'zstd' })
+    expect(store.selectedFiles[1].settings).toMatchObject({ format: 'zipx', password: 'keep', splitArchive: true })
+    expect(store.selectedFiles[1].settings?.zipMethod).toBeUndefined()
+    expect(store.selectedFiles[2].settings).toBeUndefined()
+    expect(store.globalSettings.zipMethod).toBeUndefined()
+    store.applyBatchConfiguration([zip.path], { format: 'zipx' })
+    expect(store.selectedFiles[0].settings?.format).toBe('zipx')
+  })
   beforeEach(() => {
     setActivePinia(createPinia())
   })

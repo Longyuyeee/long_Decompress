@@ -4,6 +4,8 @@
 
 ## 当前边界速查（覆盖下方历次演变描述）
 
+- v1.4.14 候选新增 ZIP Zstandard 与 ZIPX（XZ）创建。ZIP Zstandard 保留普通/AES/ZipCrypto 及数字/标准分卷；ZIPX 创建提供普通包和密码数字分卷，标准 ZIPX 创建暂不开放。方法跟随转换、批量配置、配置组/模板、草稿和历史保存。证据与可发布状态见 [实施记录](ZIP_OUTPUT_METHODS_1.4.14.md)和 [封板记录](ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)，尚未计入 v1.4.13 正式版。
+
 - v1.4.13 已交付目录完整可读的标准 `.z01/…/.zip` 缺卷部分救援，普通/AES/ZipCrypto 的缺首卷和中间卷按现有连续卷读取完整文件；跨缺失卷、不完整或校验失败的条目不恢复。终卷或目录缺失、未知数字卷长度、好压论坛卷缺卷仍不承诺救援。实际证据见 [本版记录](PARTIAL_ZIP_RECOVERY_1.4.13.md)，正式安装器与发布身份见 [封板记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)，下方“任意缺卷不支持”不代表本版的有限救援范围。
 
 - v1.4.12 已交付 LZIP v1 / TAR.LZIP 的内置创建、浏览、解压、检查与转换，兼容 `.lz`、`.tar.lz`、`.tlz`，读取连续多成员 LZIP；不提供原生密码、分卷创建或损坏数据恢复。自有载荷由独立 GNU lzip 生成并由应用读取，应用创建/转换另经 GNU lzip / tar 回解；准确页面及程序身份见 [本版记录](LZIP_AND_TAR_LZIP_1.4.12.md)，正式安装器和发布身份见 [封板记录](LZIP_AND_TAR_LZIP_FREEZE_1.4.12.md)。

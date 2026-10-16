@@ -38,6 +38,7 @@ describe('pending archive draft recovery', () => {
     compression.globalSettings.level = 3; compression.globalOutputPath = 'D:/默认'
     compression.globalSettings.password = 'global-secret'
     compression.globalSettings.zipSplitMode = 'standard'
+    compression.globalSettings.zipMethod = 'zstd'
     compression.addFile(file('C:/first.txt')); compression.addFile(file('C:/group.txt'))
     const group = compression.createGroup(['C:/group.txt'])
     compression.updateGroupSettings(group, { ...compression.globalSettings, format: '7z', password: 'group-secret' })
@@ -54,6 +55,7 @@ describe('pending archive draft recovery', () => {
     useCompressionStore().initializeArchiveDefaults('zip', 9, 'X:/其他')
     expect(useCompressionStore().globalSettings.level).toBe(3)
     expect(useCompressionStore().globalSettings.zipSplitMode).toBe('standard')
+    expect(useCompressionStore().globalSettings.zipMethod).toBe('zstd')
     expect(useTaskStore().tasks[0]).toMatchObject({ status: 'pending', outputPath: 'E:/结果', draftPasswordRequired: true })
     expect(useArchiveConversionStore().pending[0].passwordRequired).toBe(true)
     expect(useCompressionStore().autoStartRequested).toBe(false)

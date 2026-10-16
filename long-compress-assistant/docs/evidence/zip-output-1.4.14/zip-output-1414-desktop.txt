@@ -1,0 +1,33 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[zip-output-1414] zip-none-none passed
+[zip-output-1414] zip-none-numeric passed
+[zip-output-1414] zip-none-standard passed
+[zip-output-1414] zip-aes256-none passed
+[zip-output-1414] zip-aes256-numeric passed
+[zip-output-1414] zip-aes256-standard passed
+[zip-output-1414] zip-zipcrypto-none passed
+[zip-output-1414] zip-zipcrypto-numeric passed
+[zip-output-1414] zip-zipcrypto-standard passed
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: compress_files: 压缩失败: [archive-output:Verifying:verification-failed] 压缩产物校验未通过，未完成后续发布及源文件清理：index CRC32 mismatch
+
+false !== true
+
+    at ipc (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/zip-output-1414-gate.mjs:31:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async runZipOutput1414Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/zip-output-1414-gate.mjs:55:25)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4883:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

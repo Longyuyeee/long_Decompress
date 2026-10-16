@@ -90,6 +90,7 @@ export interface Task {
   compressionOptions?: {
     fast_pack?: boolean
     zip_password_encoding?: 'utf8' | 'windows_local'
+    zip_method?: 'deflate' | 'zstd'
     zip_encryption?: 'aes256' | 'zipcrypto'
     zip_split_mode?: 'numeric' | 'standard'
     format?: string

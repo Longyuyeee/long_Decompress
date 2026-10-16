@@ -1,5 +1,6 @@
 export type CompressionFormatId =
   | 'zip'
+  | 'zipx'
   | '7z'
   | 'rar'
   | 'wim'
@@ -48,7 +49,8 @@ export interface CompressionFormatCapability {
 }
 
 export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
-  { format: 'zip', displayName: 'ZIP', extensions: ['zip', 'zipx'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
+  { format: 'zip', displayName: 'ZIP', extensions: ['zip'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
+  { format: 'zipx', knownLimitations: '使用 XZ 方法；分卷采用 .zipx.001 数字卷。', displayName: 'ZIPX（XZ）', extensions: ['zipx'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: '7z', displayName: '7Z', extensions: ['7z'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: 'rar', displayName: 'RAR', extensions: ['rar'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: true, fallbackEngine: 'winrar', knownLimitations: 'RAR creation, including encrypted RAR, requires user-installed WinRAR/RAR command line tools.' },
   { format: 'wim', displayName: 'WIM', extensions: ['wim'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: true, requiresWinRar: false, fallbackEngine: '7za', engineFormat: 'wim', knownLimitations: 'WIM creation requires the bundled full 7-Zip engine and does not support password encryption.' },
@@ -153,7 +155,7 @@ export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS
 
 export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · LZIP · TAR.LZIP · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · APK · IPA · LZH · CPIO · XAR + 更多'
 
-export const COMPRESSION_FORMAT_HINT = 'ZIP · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · LZMA · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
+export const COMPRESSION_FORMAT_HINT = 'ZIP · ZIPX（XZ） · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · LZMA · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
 
 const TAR_FORMATS = new Set(
   FORMAT_CAPABILITIES
@@ -162,7 +164,7 @@ const TAR_FORMATS = new Set(
 )
 // RAR stays in this set so a stale RAR+password configuration is rejected as
 // unsupported instead of silently changing the requested output format to 7Z.
-const NATIVE_PASSWORD_FORMATS = new Set(['zip', '7z', 'rar', 'tar.aes', 'tar.gz.aes', 'tar.bz2.aes', 'tar.xz.aes', 'tar.zst.aes', 'gz.aes', 'bz2.aes', 'xz.aes', 'zst.aes'])
+const NATIVE_PASSWORD_FORMATS = new Set(['zip', 'zipx', '7z', 'rar', 'tar.aes', 'tar.gz.aes', 'tar.bz2.aes', 'tar.xz.aes', 'tar.zst.aes', 'gz.aes', 'bz2.aes', 'xz.aes', 'zst.aes'])
 const FORMAT_BY_ID = new Map(FORMAT_CAPABILITIES.map(format => [format.format, format]))
 
 const normalizeFormatId = (format: string): CompressionFormatId | null => {

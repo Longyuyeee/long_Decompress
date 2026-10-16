@@ -4,3 +4,4 @@ long-compress-assistant/src-tauri/resources/pdf-engine/** -text
 long-compress-assistant/src-tauri/resources/pdf-engine/licenses/* -whitespace
 long-compress-assistant/tests/fixtures/archives/partial-zip-1413/** -text
 long-compress-assistant/tests/fixtures/archives/partial-zip-1413/*/*.z* binary
+long-compress-assistant/docs/evidence/zip-output-1.4.14/*.txt -text -whitespace

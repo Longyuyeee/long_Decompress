@@ -90,6 +90,8 @@ pub enum TemplateTargetMode {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TemplateCompression {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zip_method: Option<crate::services::zip_method::ZipMethod>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_encryption: Option<crate::services::zip_password::ZipEncryption>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_split_mode: Option<crate::services::standard_zip_writer::ZipSplitMode>,
@@ -231,17 +233,19 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             filename_template: profile.config.filename_template.clone(),
         },
         compression: TemplateCompression {
-            zip_encryption: if profile.config.format.eq_ignore_ascii_case("zip") {
+            zip_method: profile.config.extra_params.get("zip_method").map(|value|
+                if value == "zstd" { crate::services::zip_method::ZipMethod::Zstd } else { crate::services::zip_method::ZipMethod::Deflate }),
+            zip_encryption: if matches!(profile.config.format.to_ascii_lowercase().as_str(), "zip" | "zipx") {
                 profile.config.extra_params.get("zip_encryption").map(|value|
                     if value == "zipcrypto" { crate::services::zip_password::ZipEncryption::Zipcrypto }
                     else { crate::services::zip_password::ZipEncryption::Aes256 })
             } else { None },
-            zip_password_encoding: if profile.config.format.eq_ignore_ascii_case("zip") {
+            zip_password_encoding: if matches!(profile.config.format.to_ascii_lowercase().as_str(), "zip" | "zipx") {
                 profile.config.extra_params.get("zip_password_encoding").map(|value|
                     if value == "windows_local" { crate::services::zip_password::ZipPasswordEncoding::WindowsLocal }
                     else { crate::services::zip_password::ZipPasswordEncoding::Utf8 })
             } else { None },
-            zip_split_mode: if profile.config.format.eq_ignore_ascii_case("zip") {
+            zip_split_mode: if matches!(profile.config.format.to_ascii_lowercase().as_str(), "zip" | "zipx") {
                 profile.config.extra_params.get("zip_split_mode").map(|value| if value == "standard" {
                     crate::services::standard_zip_writer::ZipSplitMode::Standard
                 } else { crate::services::standard_zip_writer::ZipSplitMode::Numeric })
@@ -844,6 +848,9 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
                 };
                 [("zip_password_encoding".to_string(), value.to_string())].into()
               }).unwrap_or_else(std::collections::HashMap::new);
+              if let Some(method) = template.compression.zip_method {
+                  params.insert("zip_method".into(), if method == crate::services::zip_method::ZipMethod::Zstd { "zstd" } else { "deflate" }.into());
+              }
               if let Some(encryption) = template.compression.zip_encryption {
                   let value = match encryption {
                       crate::services::zip_password::ZipEncryption::Aes256 => "aes256",
@@ -993,6 +1000,27 @@ mod tests {
         assert!(!json.contains("unsafe"));
         assert!(json.contains("prompt_at_runtime"));
         assert!(json.contains("固定密码已移除"));
+    }
+
+    #[test]
+    fn zip_output_1414_template_methods_round_trip() {
+        let temp = tempfile::tempdir().unwrap();
+        for (format, method) in [("zip", "zstd"), ("zipx", "deflate")] {
+            let path = temp.path().join(format!("{format}.longtask.json"));
+            let mut original = profile();
+            original.config.format = format.into(); original.config.create_solid_archive = false;
+            original.config.extra_params.insert("zip_method".into(), method.into());
+            original.config.extra_params.insert("zip_encryption".into(), "zipcrypto".into());
+            let mode = if format == "zipx" { "numeric" } else { "standard" };
+            original.config.extra_params.insert("zip_split_mode".into(), mode.into());
+            export_profile_template(&original, &path).unwrap();
+            let preview = preview_template_file(&path).unwrap();
+            let imported = import_template_profile(&path, &preview.content_sha256).unwrap();
+            assert_eq!(imported.config.format, format);
+            assert_eq!(imported.config.extra_params["zip_method"], method);
+            assert_eq!(imported.config.extra_params["zip_encryption"], "zipcrypto");
+            assert_eq!(imported.config.extra_params["zip_split_mode"], mode);
+        }
     }
 
     #[test]
