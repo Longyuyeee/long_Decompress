@@ -1,5 +1,26 @@
 # v1.4.11 加密论坛卷样本交接
 
+## 2026-10-16 当前机器接续
+
+本次在 `E:\Project\AIProject\GeminiProject\long_Decompress` 接续。旧文档下面的 `E:\ProjectSave\ClaudeProject` 目录属于另一台机器，本机不存在；请使用新准备的目录：
+
+`E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\haozip-forum-manual-iCzUI4`
+
+已通过已安装的 `E:\Haozip\HaoZip.exe`（6.5.3.11255）进入 `原文件` 并选中中文目录和说明文件。关联提示已取消。鼠标点击“添加”被操作工具两次判定为落在 `Weixin.exe`，重新激活并刷新后仍失败，停止该点击路径，未生成论坛卷。已向用户请求完成一次生成；无需再次确认允许启动，也不要求重新安装软件。好压命令行帮助只有标准分卷参数，未发现论坛模式入口，没有猜参数生成替代样本。
+
+新增桌面入口 `--haozip-forum-encrypted-only` 复用已有用户链，只更换为真实论坛卷输入。运行前设置 `LONG_HAOZIP_FORUM_MANIFEST` 为上述目录的 `fixture-inputs.json`，`LONG_HAOZIP_GUI` 为实际生成器，`LONG_BANDIZIP_C` 为独立校验工具。脚本校对原输入哈希和连续卷名，将原始论坛卷按原名复制到隔离目录，检查所有成员的错密码、正确密码、解压、完整性及转换，再检查补卷重试、独立目录和原失败保留；最终核对原生成物未变。没有样本时明确失败，不自动创建或改名标准卷。
+
+该入口已完成脚本语法检查，尚未执行真实样本，不能计作兼容完成。截图与结果文件使用独立的 `haozip-forum-encrypted-1411` 前缀，不覆盖先前标准卷证据。
+
+```powershell
+$env:LONG_HAOZIP_FORUM_MANIFEST = (Resolve-Path 'test-results/haozip-forum-manual-iCzUI4/fixture-inputs.json').Path
+$env:LONG_HAOZIP_GUI = 'E:/Haozip/HaoZip.exe'
+$env:LONG_BANDIZIP_C = (Resolve-Path 'test-results/bandizip-forum-validator/current/bz.x64.exe').Path
+node scripts/test-tauri-desktop.mjs --haozip-forum-encrypted-only
+```
+
+其中 Bandizip 使用从官方 7.47 安装包解出的命令行工具及同目录库，只用作测试，不运行安装器。桌面运行仍需现有 `EDGE_DRIVER_PATH`、WebView2 及隔离 E2E 程序配置。
+
 ## 当前需要完成的操作
 
 请用好压把下面的非私人测试文件生成一组**真正的加密论坛 ZIP 分卷**，保留全部原始卷名，再告知保存目录。本机操作工具两次把条目点击判定到其他程序，按恢复限制不能继续点击；并非缺少启动许可，也不要求换电脑。应用的完整兼容验收仍由开发端完成。

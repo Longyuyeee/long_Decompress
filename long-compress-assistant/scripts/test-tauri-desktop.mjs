@@ -4876,6 +4876,10 @@ try {
     }
     await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
     completedSuccessfully = true
+  } else if (process.argv.includes('--haozip-forum-encrypted-only')) {
+    assert.ok(process.env.LONG_HAOZIP_FORUM_MANIFEST,'requires prepared inputs and genuine GUI forum volumes via LONG_HAOZIP_FORUM_MANIFEST')
+    await runHaozipZipcrypto1411Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root, forumManifestPath: process.env.LONG_HAOZIP_FORUM_MANIFEST })
+    completedSuccessfully = true
   } else if (process.argv.includes('--haozip-zipcrypto-only')) {
     await runHaozipZipcrypto1411Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
     completedSuccessfully = true

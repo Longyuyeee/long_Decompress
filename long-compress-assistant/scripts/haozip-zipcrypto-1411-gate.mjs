@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync, existsSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync, existsSync } from 'node:fs'
 import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { By, Key } from 'selenium-webdriver'
@@ -17,20 +17,44 @@ const run = (tool,args,cwd) => {
   assert.equal(result.status,0,`${tool} must finish successfully: ${result.stdout}\n${result.stderr}`)
 }
 
-// Genuine HaoZip CLI standard disks. Never rename them to .haozipNN.zip or
-// count this control as evidence of the GUI's encrypted forum output.
-export async function runHaozipZipcrypto1411Gate({driver,bridge,waitForElement,fixtureDirectory,artifactDirectory,bundledSevenZip,application,root:projectRoot}) {
-  const root=path.join(fixtureDirectory,'好压原生密码分卷'),source=path.join(root,'原文件')
-  mkdirSync(path.join(source,'中文目录','空目录'),{recursive:true})
-  writeFileSync(path.join(source,'说明.txt'),'我从第二卷打开，先输错密码，再改好并解压全部资料。\n')
-  writeFileSync(path.join(source,'中文目录','原文件.bin'),randomBytes(163871))
-  const expected=tree(source),password='HaoZip sample + !',main=path.join(root,'收到的密码资料.zip')
-  const encoder=process.env.LONG_HAOZIP_C || path.join(projectRoot,'test-results/haozip-tools/portable/HaoZipC.exe')
+// Keep genuine CLI standard disks and imported GUI forum disks separate.
+// The forum mode only copies original names/bytes; it never manufactures them.
+export async function runHaozipZipcrypto1411Gate({driver,bridge,waitForElement,fixtureDirectory,artifactDirectory,bundledSevenZip,application,root:projectRoot,forumManifestPath}) {
+  const forum=forumManifestPath ? JSON.parse(readFileSync(forumManifestPath,'utf8')) : null
+  const prefix=forum ? 'haozip-forum-encrypted-1411' : 'haozip-zipcrypto-1411'
+  const root=path.join(fixtureDirectory,forum ? '好压原生加密论坛分卷' : '好压原生密码分卷')
+  const source=forum ? forum.sourceDirectory : path.join(root,'原文件')
+  mkdirSync(root,{recursive:true})
+  if(!forum) {
+    mkdirSync(path.join(source,'中文目录','空目录'),{recursive:true})
+    writeFileSync(path.join(source,'说明.txt'),'我从第二卷打开，先输错密码，再改好并解压全部资料。\n')
+    writeFileSync(path.join(source,'中文目录','原文件.bin'),randomBytes(163871))
+  }
+  const expected=tree(source),password=forum ? forum.testPassword : 'HaoZip sample + !'
+  const encoder=forum ? process.env.LONG_HAOZIP_GUI : (process.env.LONG_HAOZIP_C || path.join(projectRoot,'test-results/haozip-tools/portable/HaoZipC.exe'))
   const validator=process.env.LONG_BANDIZIP_C || 'E:/Bandzip/Bandizip/bz.exe'
-  assert.ok(existsSync(encoder),'requires the real HaoZip CLI')
+  assert.ok(encoder&&existsSync(encoder),'requires the actual HaoZip generator path for provenance')
   assert.ok(existsSync(validator),'requires independent Bandizip validation')
-  run(encoder,['a','-tzip','-mx=0','-v64k','-mem=ZipCrypto',`-p${password}`,'-y',main,'*'],source)
-  const members=[main.replace(/\.zip$/,'.z01'),main.replace(/\.zip$/,'.z02'),main]
+  let members,main
+  if(forum) {
+    assert.equal(forum.fixtureKind,'manual-HaoZip-forum-creation-inputs-only')
+    assert.ok(password,'a genuine encrypted fixture must have a test password')
+    assert.deepEqual(expected,forum.expectedFiles.map(file=>({path:file.path,sha256:file.sha256})).sort((a,b)=>a.path.localeCompare(b.path)),'source files must match the prepared manifest')
+    const names=readdirSync(forum.archiveOutputDirectory).filter(name=>/\.haozip\d{2,5}\.zip$/i.test(name)).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))
+    assert.ok(names.length>=3,'requires a complete genuine forum group with a middle volume; never rename standard ZIP disks')
+    const group=names[0].replace(/haozip\d{2,5}\.zip$/i,'')
+    names.forEach((name,index)=>{
+      const match=name.match(/^(.*)haozip(\d{2,5})\.zip$/i)
+      assert.equal(match[1],group,'only one original forum group is allowed')
+      assert.equal(Number(match[2]),index+1,'all original numbered members must be present')
+    })
+    members=names.map(name=>{const destination=path.join(root,name);copyFileSync(path.join(forum.archiveOutputDirectory,name),destination);return destination})
+    main=members[0]
+  } else {
+    main=path.join(root,'收到的密码资料.zip')
+    run(encoder,['a','-tzip','-mx=0','-v64k','-mem=ZipCrypto',`-p${password}`,'-y',main,'*'],source)
+    members=[main.replace(/\.zip$/,'.z01'),main.replace(/\.zip$/,'.z02'),main]
+  }
   members.forEach(member=>assert.ok(existsSync(member)))
   const before=members.map(member=>({name:path.basename(member),sha256:sha(member)}))
   run(validator,['t',`-p:${password}`,main])
@@ -45,7 +69,7 @@ export async function runHaozipZipcrypto1411Gate({driver,bridge,waitForElement,f
   }
   const fill=async(selector,value)=>{const element=await waitForElement(selector);await element.sendKeys(Key.chord(Key.CONTROL,'a'),Key.BACK_SPACE);if(value)await element.sendKeys(value)}
   const screenshots=[]
-  const shot=async name=>{writeFileSync(path.join(artifactDirectory,name+'.png'),Buffer.from(await driver.takeScreenshot(),'base64'));screenshots.push(name+'.png')}
+  const shot=async name=>{name=name.replace('haozip-zipcrypto-1411',prefix);writeFileSync(path.join(artifactDirectory,name+'.png'),Buffer.from(await driver.takeScreenshot(),'base64'));screenshots.push(name+'.png')}
   const records=[]
   for(const [index,member] of members.entries()) {
     const output=path.join(root,`第${index+1}卷实际回解`);mkdirSync(output)
@@ -112,7 +136,7 @@ export async function runHaozipZipcrypto1411Gate({driver,bridge,waitForElement,f
   await click('[data-testid="bookmark-current-left"]')
   await driver.wait(async()=>await (await waitForElement('[data-testid="bookmark-current-left"]')).getAttribute('aria-pressed')==='true',10000)
   await bridge('clearTasks');await click('[data-testid="nav-Decompress"]')
-  await bridge('queueDesktopDialogSelections',[[members[1],members[0],members[2]]])
+  await bridge('queueDesktopDialogSelections',[[members[1],members[0],...members.slice(2)]])
   await click('.decompress-view [data-testid="dropzone-file"]')
   await driver.wait(async()=>(await bridge('archiveBrowserTaskState')).length===1,10000)
   await click('[data-testid^="toggle-archive-task-"]')
@@ -137,7 +161,7 @@ export async function runHaozipZipcrypto1411Gate({driver,bridge,waitForElement,f
     assert.doesNotMatch(missingTask.error,/密码不正确|需要密码|wrong password|password required/i)
     assert.deepEqual(tree(retryOutput),[],'missing disks must not publish partial results')
     await waitForElement('[data-testid="failed-extraction-retry"]')
-    assert.match(await (await waitForElement('[data-testid="retry-missing-volumes"]')).getText(),/\.z02/)
+    assert.ok((await (await waitForElement('[data-testid="retry-missing-volumes"]')).getText()).includes(path.basename(members[1])))
     const alerts=await driver.findElements(By.css('.toast-stack [role="alert"]'))
     assert.ok(alerts.length,'the execution failure must also be visible in a toast')
     for(const alert of alerts) assert.doesNotMatch(await alert.getText(),/\[archive-inspection:/)
@@ -189,5 +213,6 @@ export async function runHaozipZipcrypto1411Gate({driver,bridge,waitForElement,f
   await driver.executeScript(el=>el.scrollIntoView({block:'center',behavior:'instant'}),rows.at(-1))
   await shot('haozip-zipcrypto-1411-supplied-volume-retried')
   members.forEach((member,index)=>assert.equal(sha(member),before[index].sha256))
-  writeFileSync(path.join(artifactDirectory,'haozip-zipcrypto-1411-results.json'),JSON.stringify({application,binarySha256:sha(application),encoderSha256:sha(encoder),encoderArguments:['a','-tzip','-mx=0','-v64k','-mem=ZipCrypto','-p<test-password>','-y','<archive>','*'],independentBandizipSha256:sha(validator),sourcePayloads:expected,originalVolumes:before,records,ui:{middleMemberOpened:true,wrongPasswordPreviewRejected:true,correctedPreview:true,completeSelectedExtraction:true,minimumWindowActionReachable:true,movedVolumeFinalReason:missingTask.error,suppliedVolumeRetried:true,individualRetryOutputPreserved:true,originalFailureRetained:true,screenshots},genuineFixtureScope:'HaoZip CLI ZipCrypto native standard ZIP disks; NOT GUI-generated encrypted forum volumes'},null,2))
+  if(forum) members.forEach((member,index)=>assert.equal(sha(path.join(forum.archiveOutputDirectory,path.basename(member))),before[index].sha256,'original GUI output must remain unchanged'))
+  writeFileSync(path.join(artifactDirectory,prefix+'-results.json'),JSON.stringify({application,binarySha256:sha(application),encoderSha256:sha(encoder),encoderArguments:forum ? null : ['a','-tzip','-mx=0','-v64k','-mem=ZipCrypto','-p<test-password>','-y','<archive>','*'],fixtureManifestSha256:forum ? sha(forumManifestPath) : null,independentBandizipSha256:sha(validator),sourcePayloads:expected,originalVolumes:before,records,ui:{middleMemberOpened:true,wrongPasswordPreviewRejected:true,correctedPreview:true,completeSelectedExtraction:true,minimumWindowActionReachable:true,movedVolumeFinalReason:missingTask.error,suppliedVolumeRetried:true,individualRetryOutputPreserved:true,originalFailureRetained:true,screenshots},genuineFixtureScope:forum ? 'Original GUI-generated encrypted HaoZip forum ZIP disks; no renaming or payload editing' : 'HaoZip CLI ZipCrypto native standard ZIP disks; NOT GUI-generated encrypted forum volumes'},null,2))
 }
