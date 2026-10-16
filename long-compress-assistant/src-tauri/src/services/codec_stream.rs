@@ -6,6 +6,10 @@ use std::io::{Read, Write};
 use std::path::Path;
 use tauri::Window;
 
+#[cfg(test)]
+#[path = "codec_stream_measurement.rs"]
+mod measurements;
+
 struct TarPreparation<'a, R>(&'a R);
 impl<R: CompressionRuntime> CompressionRuntime for TarPreparation<'_, R> {
     fn check_cancellation(&self) -> Result<()> {
