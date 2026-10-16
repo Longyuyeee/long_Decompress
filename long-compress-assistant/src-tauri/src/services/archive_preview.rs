@@ -1,4 +1,5 @@
 use crate::services::archive_format::ArchiveFormat;
+use crate::services::zip_password::ZipPasswordEncoding;
 use anyhow::{Context, Result};
 use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
@@ -118,10 +119,10 @@ fn read_text_prefix(reader: &mut dyn Read, total_size: u64) -> Result<TextBytes>
     Ok(TextBytes { bytes, total_size })
 }
 
-fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Result<Vec<u8>> {
+fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>, encoding: Option<ZipPasswordEncoding>) -> Result<Vec<u8>> {
     let mut archive = zip_aes::ZipArchive::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?;
     let mut entry = match password.filter(|value| !value.is_empty()) {
-        Some(password) => crate::services::zip_password::open_named_entry(&mut archive, entry_path, password)?,
+        Some(password) => crate::services::zip_password::open_named_entry_with_encoding(&mut archive, entry_path, password, encoding)?,
         None => archive.by_name(entry_path)?,
     };
     if entry.is_dir() {
@@ -137,10 +138,10 @@ fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Resu
     read_bounded(&mut entry, expected_bytes)
 }
 
-fn read_zip_text_entry(path: &Path, entry_path: &str, password: Option<&str>) -> Result<TextBytes> {
+fn read_zip_text_entry(path: &Path, entry_path: &str, password: Option<&str>, encoding: Option<ZipPasswordEncoding>) -> Result<TextBytes> {
     let mut archive = zip_aes::ZipArchive::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?;
     let mut entry = match password.filter(|value| !value.is_empty()) {
-        Some(password) => crate::services::zip_password::open_named_entry(&mut archive, entry_path, password)?,
+        Some(password) => crate::services::zip_password::open_named_entry_with_encoding(&mut archive, entry_path, password, encoding)?,
         None => archive.by_name(entry_path)?,
     };
     if entry.is_dir() {
@@ -398,11 +399,12 @@ fn preview_archive_image_sync(
     archive_path: &Path,
     entry_path: &str,
     password: Option<&str>,
+    encoding: Option<ZipPasswordEncoding>,
 ) -> Result<ArchiveImagePreview> {
     let entry_path = normalized_entry_path(entry_path)?;
     let format = preview_format(archive_path)?;
     let bytes = match format {
-        "ZIP" => read_zip_entry(archive_path, &entry_path, password)?,
+        "ZIP" => read_zip_entry(archive_path, &entry_path, password, encoding)?,
         format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path)?,
         _ => anyhow::bail!(
             "Safe bounded preview is currently available for ZIP and TAR-family archives only"
@@ -427,11 +429,20 @@ pub async fn preview_archive_image(
     entry_path: &str,
     password: Option<&str>,
 ) -> Result<ArchiveImagePreview> {
+    preview_archive_image_with_encoding(archive_path, entry_path, password, None).await
+}
+
+pub async fn preview_archive_image_with_encoding(
+    archive_path: &Path,
+    entry_path: &str,
+    password: Option<&str>,
+    encoding: Option<ZipPasswordEncoding>,
+) -> Result<ArchiveImagePreview> {
     let archive_path = archive_path.to_path_buf();
     let entry_path = entry_path.to_string();
     let password = password.map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
-        preview_archive_image_sync(&archive_path, &entry_path, password.as_deref())
+        preview_archive_image_sync(&archive_path, &entry_path, password.as_deref(), encoding)
     })
     .await
     .context("Archive image preview worker failed")?
@@ -509,11 +520,12 @@ fn preview_archive_text_sync(
     archive_path: &Path,
     entry_path: &str,
     password: Option<&str>,
+    password_encoding: Option<ZipPasswordEncoding>,
 ) -> Result<ArchiveTextPreview> {
     let entry_path = normalized_entry_path(entry_path)?;
     let format = preview_format(archive_path)?;
     let text_bytes = match format {
-        "ZIP" => read_zip_text_entry(archive_path, &entry_path, password)?,
+        "ZIP" => read_zip_text_entry(archive_path, &entry_path, password, password_encoding)?,
         format if format.starts_with("TAR") => {
             read_tar_family_text(archive_path, format, &entry_path)?
         }
@@ -544,11 +556,20 @@ pub async fn preview_archive_text(
     entry_path: &str,
     password: Option<&str>,
 ) -> Result<ArchiveTextPreview> {
+    preview_archive_text_with_encoding(archive_path, entry_path, password, None).await
+}
+
+pub async fn preview_archive_text_with_encoding(
+    archive_path: &Path,
+    entry_path: &str,
+    password: Option<&str>,
+    encoding: Option<ZipPasswordEncoding>,
+) -> Result<ArchiveTextPreview> {
     let archive_path = archive_path.to_path_buf();
     let entry_path = entry_path.to_string();
     let password = password.map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
-        preview_archive_text_sync(&archive_path, &entry_path, password.as_deref())
+        preview_archive_text_sync(&archive_path, &entry_path, password.as_deref(), encoding)
     })
     .await
     .context("Archive text preview worker failed")?
@@ -558,6 +579,65 @@ pub async fn preview_archive_text(
 mod tests {
     use super::*;
     use std::io::Write;
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn fixed_password_encoding_previews_original_infozip_text_and_numeric_slices() {
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/legacy-zip-password-1416");
+        let expected = std::fs::read_to_string(fixtures.join("payload.txt")).unwrap();
+        for (encoding, password) in [
+            (ZipPasswordEncoding::Cp932, "日本語パスワード+!1416"),
+            (ZipPasswordEncoding::Cp936, "简体密码测试+!1416"),
+            (ZipPasswordEncoding::Cp950, "繁體密碼測試+!1416"),
+        ] {
+            let temp = tempfile::tempdir().unwrap();
+            let original = fixtures.join(format!("{}.zip", encoding.as_str()));
+            let before = std::fs::read(&original).unwrap();
+            let split = crate::services::split_compression::SplitCompressionService::split_archive_file(
+                &original, &temp.path().join("slices.zip"), 37, || Ok(())).unwrap();
+            let files_before = std::fs::read_dir(temp.path()).unwrap().count();
+            for source in [&original, &split.part_files[0]] {
+                let preview = preview_archive_text_with_encoding(source, "payload.txt", Some(password), Some(encoding)).await.unwrap();
+                assert_eq!(preview.content, expected);
+                assert_eq!(preview.total_size, expected.len() as u64);
+                assert!(!preview.truncated);
+                assert!(preview_archive_text_with_encoding(source, "payload.txt", Some(password), Some(ZipPasswordEncoding::Utf8)).await.is_err());
+                let error = preview_archive_text_with_encoding(source, "payload.txt", Some("🔑"), Some(encoding)).await.unwrap_err();
+                assert!(crate::services::zip_password::encoding_error(&error).unwrap().is_unrepresentable());
+            }
+            assert_eq!(std::fs::read(&original).unwrap(), before);
+            assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), files_before, "preview must not materialize entries");
+        }
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn fixed_password_encoding_image_and_text_previews_keep_entry_scope_and_bounds() {
+        for (encoding, password) in [
+            (ZipPasswordEncoding::Cp932, "日本語パスワード+!1416"),
+            (ZipPasswordEncoding::Cp936, "简体密码测试+!1416"),
+            (ZipPasswordEncoding::Cp950, "繁體密碼測試+!1416"),
+        ] {
+            let temp = tempfile::tempdir().unwrap();
+            let source = temp.path().join("preview.zip");
+            let bytes = crate::services::zip_password::encode(password, encoding).unwrap();
+            let mut writer = zip_aes::ZipWriter::new(File::create(&source).unwrap());
+            let options = zip_aes::write::SimpleFileOptions::default()
+                .with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &bytes);
+            writer.start_file("图片.png", options).unwrap(); writer.write_all(PNG_1X1).unwrap();
+            writer.start_file("large.txt", options).unwrap(); writer.write_all(&vec![b'x'; MAX_TEXT_PREVIEW_BYTES as usize + 12]).unwrap();
+            writer.start_file("other.txt", zip_aes::write::SimpleFileOptions::default()
+                .with_aes_encryption(zip_aes::AesMode::Aes256, "different password")).unwrap();
+            writer.write_all(b"not selected").unwrap(); writer.finish().unwrap();
+            let preview = preview_archive_image_with_encoding(&source, "图片.png", Some(password), Some(encoding)).await.unwrap();
+            assert_eq!((preview.width, preview.height, preview.byte_size), (1, 1, PNG_1X1.len() as u64));
+            let text = preview_archive_text_with_encoding(&source, "large.txt", Some(password), Some(encoding)).await.unwrap();
+            assert!(text.truncated);
+            assert_eq!(text.byte_size, MAX_TEXT_PREVIEW_BYTES);
+            assert!(preview_archive_image_with_encoding(&source, "图片.png", Some(password), Some(ZipPasswordEncoding::Utf8)).await.is_err());
+            assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 1);
+        }
+    }
 
     const PNG_1X1: &[u8] = &[
         137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6,

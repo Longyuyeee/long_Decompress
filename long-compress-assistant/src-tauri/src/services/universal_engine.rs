@@ -604,6 +604,18 @@ impl UniversalCliEngine {
 
     /// 检测归档文件的完整性（通过 7z CLI 的 t 命令）
     pub async fn test_integrity(file_path: &Path, password: Option<&str>) -> Result<()> {
+        Self::test_integrity_with_zip_encoding(file_path, password, None).await
+    }
+
+    pub async fn test_integrity_with_zip_encoding(file_path: &Path, password: Option<&str>, encoding: Option<super::zip_password::ZipPasswordEncoding>) -> Result<()> {
+        if Self::is_zip_password_input(file_path)? {
+            let path = file_path.to_path_buf();
+            let password = password.map(str::to_owned);
+            return tokio::task::spawn_blocking(move || {
+                super::compression_verification::verify_native_with_zip_encoding(
+                    super::compression_format::CompressionRoute::Zip, &path, password.as_deref(), encoding, || false).map(|_| ())
+            }).await?;
+        }
         let mut args = vec!["t".to_string()];
         if password.is_some() {
             args.push("-p".to_string()); // 使用环境变量传递密码

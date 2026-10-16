@@ -2,6 +2,7 @@ use crate::models::compression::{CompressionOptions, DecompressOptions, TaskLog,
 use crate::services::compression_service::CompressionService;
 use crate::services::compression_service::FileConflictResolution;
 use crate::services::compression_service::RarCompressionSupport;
+use crate::services::zip_password::ZipPasswordEncoding;
 use crate::services::video_compression_plan::VideoCompressionPlanRequest;
 use crate::services::video_encoding::{VideoEncodingEvent, VideoProgressSnapshot};
 use crate::services::video_publish::PublishedVideoOutput;
@@ -181,11 +182,12 @@ pub async fn verify_archive_password(
     task_id: String,
     file_path: String,
     password: String,
+    zip_password_encoding: Option<ZipPasswordEncoding>,
 ) -> Result<bool, String> {
     let service = service_for_task(&task_id).await?;
     let _task_guard = TaskCancellationGuard::new(&task_id);
     service
-        .verify_archive_password_candidate(&file_path, &password)
+        .verify_archive_password_candidate_with_encoding(&file_path, &password, zip_password_encoding)
         .await
         .map_err(|error| error.to_string())
 }
@@ -300,6 +302,7 @@ pub async fn convert_archive(
     task_id: String,
     source_path: String,
     source_password: Option<String>,
+    source_zip_password_encoding: Option<ZipPasswordEncoding>,
     output_path: String,
     options: CompressionOptions,
 ) -> Result<PublishedArchiveOutput, String> {
@@ -311,12 +314,7 @@ pub async fn convert_archive(
     let staging = tempfile::Builder::new().prefix(".long-convert-").tempdir_in(parent)
         .map_err(|error| format!("无法创建转换暂存目录：{error}"))?;
     service.emit_log(&window, &task_id, "转换归档：先解压至临时目录，再校验并发布新包；保留原包。", TaskLogSeverity::Info);
-    let extraction = DecompressOptions {
-        preserve_paths: true,
-        preserve_timestamps: true,
-        // All remaining defaults prohibit deletion and skipping corrupt data.
-        ..Default::default()
-    };
+    let extraction = conversion_extraction_options(source_zip_password_encoding);
     let _ = window.emit("archive-conversion-phase", serde_json::json!({"taskId": task_id, "phase": "reading"}));
     service.extract(window.clone(), task_id.clone(), source_path,
         Some(staging.path().to_string_lossy().into_owned()), source_password, extraction)
@@ -341,6 +339,12 @@ pub async fn convert_archive(
     published_archive_output(Path::new(&output_path), split).map_err(|error| error.to_string())
 }
 
+fn conversion_extraction_options(encoding: Option<ZipPasswordEncoding>) -> DecompressOptions {
+    DecompressOptions { zip_password_encoding: encoding, preserve_paths: true, preserve_timestamps: true,
+        // Never inherit output/password options or allow partial source conversion.
+        ..Default::default() }
+}
+
 fn validate_conversion_request(source: &str, output: &str, options: &CompressionOptions) -> Result<(), String> {
     if !Path::new(source).is_file() { return Err("请选择存在的原压缩包".to_string()); }
     if !Path::new(output).is_absolute() { return Err("转换输出必须是完整路径".to_string()); }
@@ -360,6 +364,17 @@ fn validate_conversion_request(source: &str, output: &str, options: &Compression
 #[cfg(test)]
 mod conversion_request_tests {
     use super::*;
+
+    #[test]
+    fn conversion_source_encoding_is_optional_and_separate_from_target_settings() {
+        for source in [None, Some(ZipPasswordEncoding::Cp932), Some(ZipPasswordEncoding::Cp950)] {
+            let extraction = conversion_extraction_options(source);
+            assert_eq!(extraction.zip_password_encoding, source);
+            assert!(extraction.preserve_paths && extraction.preserve_timestamps);
+            assert!(!extraction.delete_after && !extraction.skip_corrupted);
+            assert_eq!(CompressionOptions::default().zip_password_encoding, ZipPasswordEncoding::Utf8);
+        }
+    }
 
     #[test]
     fn conversion_preserves_source_and_requires_verified_new_output() {
@@ -1195,6 +1210,7 @@ pub async fn diagnose_archive(
     diagnostic_id: String,
     file_path: String,
     password: Option<String>,
+    zip_password_encoding: Option<ZipPasswordEncoding>,
 ) -> Result<crate::services::archive_diagnostics::ArchiveDiagnosticReport, String> {
     let cancelled = Arc::new(AtomicBool::new(false));
     match ARCHIVE_DIAGNOSTIC_FLAGS.entry(diagnostic_id.clone()) {
@@ -1208,9 +1224,10 @@ pub async fn diagnose_archive(
         }
     }
     let _guard = ArchiveDiagnosticGuard { diagnostic_id };
-    crate::services::archive_diagnostics::diagnose_archive(
+    crate::services::archive_diagnostics::diagnose_archive_with_encoding(
         std::path::Path::new(&file_path),
         password.as_deref(),
+        zip_password_encoding,
         cancelled,
     )
     .await
@@ -1232,6 +1249,7 @@ pub async fn browse_archive(
     file_path: String,
     password: Option<String>,
     browse_id: Option<String>,
+    zip_password_encoding: Option<ZipPasswordEncoding>,
 ) -> Result<crate::models::compression::ArchiveBrowseResult, String> {
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
@@ -1240,7 +1258,7 @@ pub async fn browse_archive(
         None => {
             let service = CompressionService::new_with_defaults().await;
             service
-                .resolve_archive_password_silent(&file_path, &DecompressOptions::default())
+                .resolve_archive_password_silent(&file_path, &DecompressOptions { zip_password_encoding, ..Default::default() })
                 .await.map_err(|error| classify_archive_browse_error(&format!("{error:#}")))?
         }
     };
@@ -1297,6 +1315,7 @@ pub async fn preview_archive_image(
     file_path: String,
     entry_path: String,
     password: Option<String>,
+    zip_password_encoding: Option<ZipPasswordEncoding>,
 ) -> Result<crate::services::archive_preview::ArchiveImagePreview, String> {
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
@@ -1304,18 +1323,19 @@ pub async fn preview_archive_image(
             let service = CompressionService::new_with_defaults().await;
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions {
-                    selected_entries: vec![entry_path.clone()], ..Default::default()
+                    zip_password_encoding, selected_entries: vec![entry_path.clone()], ..Default::default()
                 })
                 .await.map_err(|error| error.to_string())?
         }
     };
-    crate::services::archive_preview::preview_archive_image(
+    crate::services::archive_preview::preview_archive_image_with_encoding(
         std::path::Path::new(&file_path),
         &entry_path,
         resolved_password.as_deref(),
+        zip_password_encoding,
     )
     .await
-    .map_err(|error| error.to_string())
+    .map_err(|error| format!("{error:#}"))
 }
 
 struct ArchiveBrowseGuard {
@@ -1375,6 +1395,7 @@ pub async fn preview_archive_text(
     file_path: String,
     entry_path: String,
     password: Option<String>,
+    zip_password_encoding: Option<ZipPasswordEncoding>,
 ) -> Result<crate::services::archive_preview::ArchiveTextPreview, String> {
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
@@ -1382,18 +1403,19 @@ pub async fn preview_archive_text(
             let service = CompressionService::new_with_defaults().await;
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions {
-                    selected_entries: vec![entry_path.clone()], ..Default::default()
+                    zip_password_encoding, selected_entries: vec![entry_path.clone()], ..Default::default()
                 })
                 .await.map_err(|error| error.to_string())?
         }
     };
-    crate::services::archive_preview::preview_archive_text(
+    crate::services::archive_preview::preview_archive_text_with_encoding(
         std::path::Path::new(&file_path),
         &entry_path,
         resolved_password.as_deref(),
+        zip_password_encoding,
     )
     .await
-    .map_err(|error| error.to_string())
+    .map_err(|error| format!("{error:#}"))
 }
 
 /// Safely materializes one nested archive into the shared session cache without
@@ -1405,6 +1427,7 @@ pub async fn materialize_nested_archive(
     file_path: String,
     entry_path: String,
     password: Option<String>,
+    zip_password_encoding: Option<ZipPasswordEncoding>,
     target_depth: usize,
     ancestor_hashes: Vec<String>,
 ) -> Result<crate::services::archive_entry_open::NestedArchiveMaterializeResult, String> {
@@ -1421,7 +1444,7 @@ pub async fn materialize_nested_archive(
         None => {
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions {
-                    selected_entries: vec![entry_path.clone()], ..Default::default()
+                    zip_password_encoding, selected_entries: vec![entry_path.clone()], ..Default::default()
                 })
                 .await.map_err(|error| error.to_string())?
         }
@@ -1440,7 +1463,7 @@ pub async fn materialize_nested_archive(
         .create_entry_dir(expected_bytes)
         .map_err(|error| error.to_string())?;
     let options = DecompressOptions {
-        zip_password_encoding: None,
+        zip_password_encoding,
         parallel_zip: false,
         preserve_paths: true,
         overwrite_existing: false,
@@ -1514,6 +1537,7 @@ pub async fn open_archive_entry(
     file_path: String,
     entry_path: String,
     password: Option<String>,
+    zip_password_encoding: Option<ZipPasswordEncoding>,
     allow_dangerous: bool,
 ) -> Result<crate::services::archive_entry_open::ArchiveEntryOpenResult, String> {
     use crate::services::archive_entry_open::{
@@ -1539,7 +1563,7 @@ pub async fn open_archive_entry(
         None => {
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions {
-                    selected_entries: vec![entry_path.clone()], ..Default::default()
+                    zip_password_encoding, selected_entries: vec![entry_path.clone()], ..Default::default()
                 })
                 .await.map_err(|error| error.to_string())?
         }
@@ -1559,7 +1583,7 @@ pub async fn open_archive_entry(
         .map_err(|error| error.to_string())?;
 
     let options = DecompressOptions {
-        zip_password_encoding: None,
+        zip_password_encoding,
         parallel_zip: false,
         preserve_paths: true,
         overwrite_existing: false,
@@ -1615,14 +1639,15 @@ pub async fn open_archive_entry(
 pub async fn test_archive_integrity(
     file_path: String,
     password: Option<String>,
+    zip_password_encoding: Option<ZipPasswordEncoding>,
 ) -> Result<String, String> {
     use crate::services::universal_engine::UniversalCliEngine;
 
     let path = std::path::Path::new(&file_path);
-    UniversalCliEngine::test_integrity(path, password.as_deref())
+    UniversalCliEngine::test_integrity_with_zip_encoding(path, password.as_deref(), zip_password_encoding)
         .await
         .map(|_| "Archive integrity verified".to_string())
-        .map_err(|e| e.to_string())
+        .map_err(|e| format!("{e:#}"))
 }
 
 /// 将 ZIP 中仍可完整读取的条目重建到一个新的、已校验的归档。
@@ -1632,6 +1657,7 @@ pub async fn repair_zip(
     file_path: String,
     output_path: String,
     password: Option<String>,
+    zip_password_encoding: Option<ZipPasswordEncoding>,
 ) -> Result<crate::services::archive_diagnostics::ZipRepairResult, String> {
     let cancelled = Arc::new(AtomicBool::new(false));
     match ZIP_REPAIR_FLAGS.entry(repair_id.clone()) {
@@ -1642,10 +1668,11 @@ pub async fn repair_zip(
     }
     let _guard = ZipRepairGuard { repair_id };
     tauri::async_runtime::spawn_blocking(move || {
-        crate::services::archive_diagnostics::repair_zip_with_password_to_new(
+        crate::services::archive_diagnostics::repair_zip_with_encoding_to_new(
             std::path::Path::new(&file_path),
             std::path::Path::new(&output_path),
             password.as_deref(),
+            zip_password_encoding,
             &cancelled,
         )
     })
@@ -1701,7 +1728,7 @@ pub async fn group_archive_diagnosis_sources(paths: Vec<String>) -> Result<Vec<A
 }
 
 #[command]
-pub async fn repair_archive_batch_item(operation_id: String, file_path: String, output_directory: String, format: String, password: Option<String>) -> Result<serde_json::Value, String> {
+pub async fn repair_archive_batch_item(operation_id: String, file_path: String, output_directory: String, format: String, password: Option<String>, zip_password_encoding: Option<ZipPasswordEncoding>) -> Result<serde_json::Value, String> {
     let cancelled = Arc::new(AtomicBool::new(false));
     match ZIP_REPAIR_FLAGS.entry(operation_id.clone()) {
         Entry::Vacant(entry) => { entry.insert(cancelled.clone()); },
@@ -1718,7 +1745,7 @@ pub async fn repair_archive_batch_item(operation_id: String, file_path: String, 
         crate::services::rar_recovery::repair(Path::new(&file_path), &folder, password.as_deref(), cancelled).await.and_then(|r| Ok(serde_json::to_value(r)?))
     } else {
         tauri::async_runtime::spawn_blocking({ let folder = folder.clone(); move || {
-            let result = crate::services::archive_diagnostics::repair_zip_with_password_to_new(Path::new(&file_path), &folder.join(format!("{label}.repaired.zip")), password.as_deref(), &cancelled)?;
+            let result = crate::services::archive_diagnostics::repair_zip_with_encoding_to_new(Path::new(&file_path), &folder.join(format!("{label}.repaired.zip")), password.as_deref(), zip_password_encoding, &cancelled)?;
             Ok::<_, anyhow::Error>(serde_json::to_value(result)?)
         }}).await.map_err(anyhow::Error::from).and_then(|r| r)
     };

@@ -1946,7 +1946,16 @@ impl CompressionService {
     }
 
     pub async fn verify_archive_password_candidate(&self, file_path: &str, password: &str) -> Result<bool> {
+        self.verify_archive_password_candidate_with_encoding(file_path, password, None).await
+    }
+
+    pub async fn verify_archive_password_candidate_with_encoding(&self, file_path: &str, password: &str, encoding: Option<ZipPasswordEncoding>) -> Result<bool> {
         self.check_cancellation()?;
+        if Self::detect_password_format(file_path)? == ArchiveFormat::Zip {
+            return self.test_extraction_password(file_path, password, &DecompressOptions {
+                zip_password_encoding: encoding, ..Default::default()
+            }).await;
+        }
         let format = Self::detect_password_format(file_path)?;
 
         if !self.archive_requires_password(file_path, format).await? {
@@ -3918,6 +3927,55 @@ mod tests {
         let public = DecompressOptions { selected_entries: vec![], ..public };
         assert_eq!(service.resolve_archive_password_silent(source.to_str().unwrap(), &public).await.unwrap(), None);
         assert_eq!(service.preflight_extraction(&source, &ArchiveFormat::Zip, None, temp.path(), &public).await.unwrap(), Some((1, 6)));
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn legacy_zip_cross_encoding_rebuild_keeps_source_and_target_independent() {
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/legacy-zip-password-1416");
+        let expected = std::fs::read(fixtures.join("payload.txt")).unwrap();
+        let cases = [(ZipPasswordEncoding::Cp932, "日本語パスワード+!1416"),
+            (ZipPasswordEncoding::Cp936, "简体密码测试+!1416"),
+            (ZipPasswordEncoding::Cp950, "繁體密碼測試+!1416")];
+        for (index, &(source_encoding, source_password)) in cases.iter().enumerate() {
+            let (target_encoding, target_password) = cases[(index + 1) % cases.len()];
+            let temp = tempfile::tempdir().unwrap();
+            let source = fixtures.join(format!("{}.zip", source_encoding.as_str()));
+            let before = std::fs::read(&source).unwrap();
+            let service = CompressionService::for_testing();
+            assert!(service.verify_archive_password_candidate_with_encoding(source.to_str().unwrap(), source_password, Some(source_encoding)).await.unwrap());
+            assert!(!service.verify_archive_password_candidate_with_encoding(source.to_str().unwrap(), source_password, Some(ZipPasswordEncoding::Utf8)).await.unwrap());
+            let (runtime, input, root) = (service.clone(), source.clone(), temp.path().to_path_buf());
+            let output = tokio::task::spawn_blocking(move || {
+                let extracted = root.join("source-contents");
+                native_extraction::zip::extract_with_optional_window(&runtime, None, "1416-convert-read",
+                    input.to_str().unwrap(), extracted.to_str().unwrap(), Some(source_password),
+                    &DecompressOptions { zip_password_encoding: Some(source_encoding), preserve_paths: true, ..Default::default() }).unwrap();
+                let output = root.join("new.zip");
+                let staged = CompressionService::temporary_compression_output(&output).unwrap();
+                native_compression::zip::compress(&runtime, None, "1416-convert-write",
+                    &[extracted.join("payload.txt").to_string_lossy().into_owned()], staged.to_str().unwrap(),
+                    CompressionOptions { level: 6, password: Some(target_password.into()),
+                        zip_password_encoding: target_encoding, ..Default::default() }).unwrap();
+                runtime.verify_compression_output(CompressionRoute::Zip, &staged, Some(target_password), Some(target_encoding), false).unwrap();
+                CompressionService::finalize_compression_output(Ok(()), &staged, &output, false, false).unwrap();
+                output
+            }).await.unwrap();
+            assert!(service.verify_archive_password_candidate_with_encoding(output.to_str().unwrap(), target_password, Some(target_encoding)).await.unwrap());
+            assert!(!service.verify_archive_password_candidate_with_encoding(output.to_str().unwrap(), target_password, Some(ZipPasswordEncoding::Utf8)).await.unwrap());
+            let mut archive = zip_aes::ZipArchive::new(File::open(&output).unwrap()).unwrap();
+            let mut bytes = Vec::new();
+            crate::services::zip_password::open_named_entry_with_encoding(&mut archive, "payload.txt", target_password, Some(target_encoding)).unwrap().read_to_end(&mut bytes).unwrap();
+            assert_eq!(bytes, expected);
+            if let Some(tools) = std::env::var_os("LONG_ZIP_1416_INTEROP_TOOLS") {
+                let destination = temp.path().join("independent");
+                let result = crate::utils::process::command(PathBuf::from(tools).join(target_encoding.as_str()).join("7z.exe"))
+                    .arg("x").arg("-y").arg(format!("-p{target_password}")).arg(format!("-o{}", destination.display())).arg(&output).output().unwrap();
+                assert!(result.status.success(), "independent cross-encoding extraction failed: {}", String::from_utf8_lossy(&result.stderr));
+                assert_eq!(std::fs::read(destination.join("payload.txt")).unwrap(), expected);
+            }
+            assert_eq!(std::fs::read(&source).unwrap(), before);
+        }
     }
 
     #[cfg(windows)]
