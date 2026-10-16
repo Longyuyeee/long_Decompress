@@ -1,0 +1,113 @@
+{
+  "retainedInputs": [
+    {
+      "path": "plain\\缺卷1\\完整卷组.z02",
+      "size": 19160,
+      "sha256": "e7f4a9c62e04eadfc446506406b544ff655e42283ba02862ea46aae0702cb688",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "plain\\缺卷1\\完整卷组.z03",
+      "size": 9805,
+      "sha256": "4f5cb5d155c7d4ef094e0e6990f8a28b166dfef6dc595143adb480a1fe6e3a3d",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "plain\\缺卷1\\完整卷组.zip",
+      "size": 10062,
+      "sha256": "100751572778eca9d6bbdae410499a4d945bba78275e0eb131c8954110a45566",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "plain\\缺卷2\\完整卷组.z01",
+      "size": 9809,
+      "sha256": "efb0b608511d6489849c83372e1b30bb1d45bcdb38333d9e385a2bd3e7b2fb0e",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "plain\\缺卷2\\完整卷组.z03",
+      "size": 9805,
+      "sha256": "4f5cb5d155c7d4ef094e0e6990f8a28b166dfef6dc595143adb480a1fe6e3a3d",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "plain\\缺卷2\\完整卷组.zip",
+      "size": 10062,
+      "sha256": "100751572778eca9d6bbdae410499a4d945bba78275e0eb131c8954110a45566",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "AES256\\缺卷1\\完整卷组.z02",
+      "size": 19238,
+      "sha256": "567c0b7a7b5c5d155732cb6198d2ba2d4ff729cbea96d327ff1ab749d9a2e442",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "AES256\\缺卷1\\完整卷组.z03",
+      "size": 9844,
+      "sha256": "246ee2669a6516e267091623bbae54da63d2135163d05e94b29d382e9e2f26e3",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "AES256\\缺卷1\\完整卷组.zip",
+      "size": 10156,
+      "sha256": "c8124e232e3771c9b0b126dc8a85bdd7b71b7984c501ae1fdb14be03f092eb8b",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "AES256\\缺卷2\\完整卷组.z01",
+      "size": 9848,
+      "sha256": "7c8514adf57038b9d8cac5b25628682e18d2f1c94f465276599021b2be7d1674",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "AES256\\缺卷2\\完整卷组.z03",
+      "size": 9844,
+      "sha256": "246ee2669a6516e267091623bbae54da63d2135163d05e94b29d382e9e2f26e3",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "AES256\\缺卷2\\完整卷组.zip",
+      "size": 10156,
+      "sha256": "c8124e232e3771c9b0b126dc8a85bdd7b71b7984c501ae1fdb14be03f092eb8b",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "ZipCrypto\\缺卷1\\完整卷组.z02",
+      "size": 19184,
+      "sha256": "0e5a685726ecf7bd1e96d44846cb729baeb3ce88227364cb096d02b19d8ae025",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "ZipCrypto\\缺卷1\\完整卷组.z03",
+      "size": 9817,
+      "sha256": "874b354755d014913987ebf7594d6a7363ea34224e65a3e662e4060ff89428ec",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "ZipCrypto\\缺卷1\\完整卷组.zip",
+      "size": 10074,
+      "sha256": "7eb010bf7365578444297a0865fb4beedd9320b325e1d82755aa932ad4d64d80",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "ZipCrypto\\缺卷2\\完整卷组.z01",
+      "size": 9821,
+      "sha256": "4c4935ea18d05e1f7f52a6937c8619f1d44e3b76b6b549503f2881dfec2e469b",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "ZipCrypto\\缺卷2\\完整卷组.z03",
+      "size": 9817,
+      "sha256": "874b354755d014913987ebf7594d6a7363ea34224e65a3e662e4060ff89428ec",
+      "matchesOriginalVolume": true
+    },
+    {
+      "path": "ZipCrypto\\缺卷2\\完整卷组.zip",
+      "size": 10074,
+      "sha256": "7eb010bf7365578444297a0865fb4beedd9320b325e1d82755aa932ad4d64d80",
+      "matchesOriginalVolume": true
+    }
+  ],
+  "allSurvivingVolumesUnchanged": true
+}

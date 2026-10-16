@@ -225,6 +225,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.4.13（待发布）** | 标准 ZIP 缺卷部分抢救、AES / ZipCrypto 密码包、按需展开的恢复文件与原因清单 | [候选说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.13.md) · [实施进度](long-compress-assistant/docs/PARTIAL_ZIP_RECOVERY_1.4.13.md) |
 | **v1.4.12** | LZIP / TAR.LZIP 创建与读取、`.tlz` 别名及多成员、批量配置和转换、浏览失败原因保留 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.12.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12) |
 | **v1.4.11** | 自解压包直接读取、好压论坛 ZIP 密码分卷、正确密码兼容与缺卷补回继续处理 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.11.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11) |
 | **v1.4.10** | ZIP 所选内容独立解锁与读取、旧 ZIP 方法兼容、Zstandard 密码分卷和真实 ZIP64 大包回解 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.10.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.10) |

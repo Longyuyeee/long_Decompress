@@ -10,6 +10,7 @@ use anyhow::{ensure, Context, Result};
 use std::{
     io::{self, Read, Seek, SeekFrom},
     path::Path,
+    sync::atomic::{AtomicBool, Ordering},
 };
 
 pub(crate) struct StandardZipReader {
@@ -17,6 +18,31 @@ pub(crate) struct StandardZipReader {
     directory_start: u64,
     directory: Vec<u8>,
     position: u64,
+    pub(crate) recovery_notes: Vec<String>,
+    pub(crate) recovery_encrypted: bool,
+}
+
+// Compact positions are private to this view. Missing disk lengths are never
+// inferred: every candidate must fit within consecutive, physically present disks.
+struct DiskLayout {
+    starts: Vec<u64>,
+    indices: Vec<Option<usize>>,
+}
+impl DiskLayout {
+    fn absolute(&self, disk: u32, relative: u64) -> Result<u64> {
+        let index = self.indices.get(disk as usize).copied().flatten()
+            .context("文件涉及缺失分卷")?;
+        absolute(&self.starts, index as u32, relative)
+    }
+    fn contiguous_end(&self, disk: u32) -> Result<u64> {
+        let mut index = self.indices.get(disk as usize).copied().flatten()
+            .context("文件涉及缺失分卷")?;
+        for next in self.indices.iter().skip(disk as usize + 1) {
+            if *next != Some(index + 1) { break; }
+            index += 1;
+        }
+        Ok(self.starts[index + 1])
+    }
 }
 
 fn u16_at(bytes: &[u8], index: usize) -> u16 {
@@ -47,6 +73,14 @@ fn absolute(starts: &[u64], disk: u32, relative: u64) -> Result<u64> {
 
 impl StandardZipReader {
     pub(crate) fn try_open(path: &Path) -> Result<Option<Self>> {
+        Self::open(path, false, None)
+    }
+
+    pub(crate) fn try_open_recovery(path: &Path, cancelled: &AtomicBool) -> Result<Option<Self>> {
+        Self::open(path, true, Some(cancelled))
+    }
+
+    fn open(path: &Path, allow_missing: bool, cancelled: Option<&AtomicBool>) -> Result<Option<Self>> {
         let extension = path
             .extension()
             .and_then(|value| value.to_str())
@@ -64,12 +98,30 @@ impl StandardZipReader {
             return Ok(None);
         };
         ensure!(
-            group.is_complete,
+            group.is_complete || allow_missing,
             "[archive-inspection:incomplete] 缺少 ZIP 分卷：{}",
             group.missing_part_names()
         );
+        let partial = !group.is_complete;
+        let mut indices = vec![None; group.total_parts];
+        if partial {
+            ensure!(group.first_part.is_file()
+                && group.first_part.file_stem().and_then(|name| name.to_str())
+                    .is_some_and(|name| name.eq_ignore_ascii_case(&group.base_name)),
+                "缺卷救援需要标准 ZIP 的可读终卷 .zip；请补齐终卷，论坛卷暂不提供缺卷救援");
+        }
         let mut starts = vec![0u64];
-        for part in &group.parts {
+        for (index, part) in group.parts.iter().enumerate() {
+            let disk = if !partial { index } else if part == &group.first_part {
+                group.total_parts - 1
+            } else {
+                part.extension().and_then(|extension| extension.to_str())
+                    .and_then(|extension| extension.get(1..))
+                    .and_then(|number| number.parse::<usize>().ok())
+                    .and_then(|number| number.checked_sub(1)).context("无法确定 ZIP 分卷编号")?
+            };
+            ensure!(disk < indices.len() && indices[disk].is_none(), "ZIP 分卷编号重复或越界");
+            indices[disk] = Some(index);
             starts.push(
                 starts
                     .last()
@@ -79,8 +131,11 @@ impl StandardZipReader {
             );
         }
         let length = *starts.last().unwrap();
+        let layout = DiskLayout { starts, indices };
+        let missing_names = group.missing_part_names();
+        let terminal_start = layout.absolute((group.total_parts - 1) as u32, 0)?;
         let mut source = NumericVolumeReader::from_paths(group.parts)?;
-        let tail_start = length.saturating_sub(65_557);
+        let tail_start = length.saturating_sub(65_557).max(if partial { terminal_start } else { 0 });
         let tail = read_at(&mut source, tail_start, (length - tail_start) as usize)?;
         let eocd = (0..tail.len().saturating_sub(21))
             .rev()
@@ -97,16 +152,20 @@ impl StandardZipReader {
         let mut cd_size = u32_at(footer, 12) as u64;
         let mut cd_relative = u32_at(footer, 16) as u64;
         // ZIP64 locator can exist even when the small ZIP fields aren't saturated.
-        if eocd_position >= 20 {
+        if eocd_position >= 20 && (!partial || eocd_position - 20 >= terminal_start) {
             let locator = read_at(&mut source, eocd_position - 20, 20)?;
             if &locator[..4] == b"PK\x06\x07" {
                 ensure!(
-                    u32_at(&locator, 16) as usize == starts.len() - 1,
+                    u32_at(&locator, 16) as usize == layout.indices.len(),
                     "[archive-inspection:incomplete] ZIP64 卷数与实际文件不符"
                 );
+                let record_disk = u32_at(&locator, 4);
+                let record_at = layout.absolute(record_disk, u64_at(&locator, 8))?;
+                ensure!(record_at.checked_add(56).is_some_and(|end| end <= layout.contiguous_end(record_disk).unwrap_or(0)),
+                    "ZIP64 目录信息涉及缺失分卷，请补齐后重试");
                 let record = read_at(
                     &mut source,
-                    absolute(&starts, u32_at(&locator, 4), u64_at(&locator, 8))?,
+                    record_at,
                     56,
                 )?;
                 ensure!(
@@ -121,16 +180,18 @@ impl StandardZipReader {
             }
         }
         ensure!(
-            last_disk as usize + 1 == starts.len() - 1,
+            last_disk as usize + 1 == layout.indices.len(),
             "[archive-inspection:incomplete] ZIP 终卷声明的卷数与实际文件不符"
         );
-        let directory_start = absolute(&starts, cd_disk, cd_relative)?;
+        let directory_start = layout.absolute(cd_disk, cd_relative)?;
         ensure!(
             directory_start
                 .checked_add(cd_size)
                 .is_some_and(|end| end <= eocd_position),
             "Invalid ZIP directory range"
         );
+        ensure!(directory_start.checked_add(cd_size).is_some_and(|end| end <= layout.contiguous_end(cd_disk).unwrap_or(0)),
+            "ZIP 目录涉及缺失分卷，无法确定完整文件清单；请补齐分卷后重试");
         ensure!(
             cd_size <= 256 * 1024 * 1024,
             "ZIP directory exceeds the metadata reading limit"
@@ -138,7 +199,14 @@ impl StandardZipReader {
         let original = read_at(&mut source, directory_start, cd_size as usize)?;
         let mut directory = Vec::with_capacity(original.len());
         let mut cursor = 0usize;
+        let mut retained = 0u64;
+        let mut recovery_notes = Vec::new();
+        let mut recovery_encrypted = false;
+        if partial {
+            recovery_notes.push(format!("缺少：{missing_names}。本次仅救回现有连续分卷中内容完整的文件，原卷保持不变。"));
+        }
         for _ in 0..count {
+            ensure!(!cancelled.is_some_and(|flag| flag.load(Ordering::SeqCst)), "ZIP recovery cancelled");
             ensure!(
                 cursor + 46 <= original.len() && &original[cursor..cursor + 4] == b"PK\x01\x02",
                 "Invalid ZIP central entry"
@@ -153,6 +221,8 @@ impl StandardZipReader {
                 &original[cursor + 46 + name_len..cursor + 46 + name_len + extra_len];
             let mut offset = u32_at(&header, 42) as u64;
             let mut disk = u16_at(&header, 34) as u32;
+            let mut compressed = u32_at(&header, 20) as u64;
+            recovery_encrypted |= u16_at(&header, 8) & 1 != 0;
             let large_size = u32_at(&header, 24) == u32::MAX;
             let large_compressed = u32_at(&header, 20) == u32::MAX;
             let large_offset = offset == u32::MAX as u64;
@@ -180,6 +250,7 @@ impl StandardZipReader {
                         "Missing ZIP64 values"
                     );
                     sizes.extend_from_slice(&data[..size_bytes]);
+                    if large_compressed { compressed = u64_at(data, large_size as usize * 8); }
                     if large_offset {
                         offset = u64_at(data, size_bytes);
                     }
@@ -195,8 +266,35 @@ impl StandardZipReader {
                 !(large_size || large_compressed || large_offset || large_disk) || found_zip64,
                 "Missing ZIP64 extra field"
             );
-            let offset = absolute(&starts, disk, offset)?;
-            ensure!(offset < directory_start, "ZIP entry points outside payload");
+            let entry_offset = (|| -> Result<u64> {
+                let offset = layout.absolute(disk, offset)?;
+                ensure!(offset < directory_start, "ZIP entry points outside payload");
+                if partial {
+                    let available = layout.contiguous_end(disk)?.min(directory_start);
+                    ensure!(offset.checked_add(30).is_some_and(|end| end <= available), "文件头涉及缺失分卷或被截断");
+                    let local = read_at(&mut source, offset, 30)?;
+                    ensure!(&local[..4] == b"PK\x03\x04", "文件头损坏");
+                    ensure!(u16_at(&local, 6) == u16_at(&header, 8)
+                        && u16_at(&local, 8) == u16_at(&header, 10), "文件头与目录记录不一致");
+                    let name_size = u16_at(&local, 26) as u64;
+                    let data_start = offset + 30 + name_size + u16_at(&local, 28) as u64;
+                    ensure!(data_start.checked_add(compressed).is_some_and(|end| end <= available),
+                        "内容涉及缺失分卷或被截断，请补齐原卷后重试");
+                    let name = read_at(&mut source, offset + 30, name_size as usize)?;
+                    ensure!(name == original[cursor + 46..cursor + 46 + name_len], "文件名与目录记录不一致");
+                }
+                Ok(offset)
+            })();
+            let offset = match entry_offset {
+                Ok(offset) => offset,
+                Err(error) if partial => {
+                    let name = String::from_utf8_lossy(&original[cursor + 46..cursor + 46 + name_len]);
+                    recovery_notes.push(format!("{name}：{error}，未恢复"));
+                    cursor = entry_end;
+                    continue;
+                }
+                Err(error) => return Err(error),
+            };
             // Use ZIP64 offsets for every entry, including >4 GiB aggregate disk sets.
             header[34..36].copy_from_slice(&0u16.to_le_bytes());
             header[42..46].copy_from_slice(&u32::MAX.to_le_bytes());
@@ -216,7 +314,10 @@ impl StandardZipReader {
             directory.extend_from_slice(&extra);
             directory.extend_from_slice(&original[entry_end - comment_len..entry_end]);
             cursor = entry_end;
+            retained += 1;
         }
+        ensure!(!partial || retained > 0, "现有卷中未找到可完整读取的条目，请补齐所缺分卷后重试");
+        let count = retained;
         let size = directory.len() as u64;
         let zip64_position = directory_start + size;
         directory.extend_from_slice(b"PK\x06\x06");
@@ -245,6 +346,8 @@ impl StandardZipReader {
             directory_start,
             directory,
             position: 0,
+            recovery_notes,
+            recovery_encrypted,
         }))
     }
 }
@@ -352,6 +455,125 @@ mod tests {
         )?;
         std::fs::write(main, &joined[boundaries[2]..])?;
         Ok(())
+    }
+
+    // Five files: one before the hole, one crossing it, one inside it,
+    // one after it, and one spanning two consecutive surviving disks.
+    fn partial_fixture(root: &Path, mode: &str) -> (std::path::PathBuf, Vec<Vec<u8>>) {
+        let source = root.join("original.zip");
+        let main = root.join("待救资料.zip");
+        let payloads = (0..5).map(|index| format!("中文文件 {index} 的完整内容\n").repeat(100).into_bytes()).collect::<Vec<_>>();
+        let mut writer = zip_aes::ZipWriter::new(File::create(&source).unwrap());
+        let options = zip_aes::write::SimpleFileOptions::default().compression_method(zip_aes::CompressionMethod::Stored);
+        let options = match mode {
+            "aes" => options.with_aes_encryption(zip_aes::AesMode::Aes256, "rescue-password"),
+            "zipcrypto" => options.with_deprecated_encryption(b"rescue-password").unwrap(),
+            _ => options,
+        };
+        for (index, data) in payloads.iter().enumerate() {
+            writer.start_file(format!("中文目录/文件{index}.txt"), options).unwrap();
+            writer.write_all(data).unwrap();
+        }
+        writer.add_directory("中文目录/空目录/", zip_aes::write::SimpleFileOptions::default()).unwrap();
+        writer.finish().unwrap();
+        let bytes = std::fs::read(source).unwrap();
+        let eocd = bytes.len() - 22;
+        let central = u32_at(&bytes, eocd + 16) as usize;
+        let mut offsets = Vec::new();
+        let mut cursor = central;
+        while cursor < eocd {
+            offsets.push(u32_at(&bytes, cursor + 42) as usize + 4);
+            cursor += 46 + u16_at(&bytes, cursor + 28) as usize + u16_at(&bytes, cursor + 30) as usize + u16_at(&bytes, cursor + 32) as usize;
+        }
+        let boundaries = [0, offsets[1] + 100, offsets[3], offsets[4] + 100];
+        let mut joined = b"PK\x07\x08".to_vec();
+        joined.extend_from_slice(&bytes[..eocd]);
+        cursor = central + 4;
+        for offset in offsets {
+            let disk = boundaries.partition_point(|start| *start <= offset) - 1;
+            joined[cursor + 34..cursor + 36].copy_from_slice(&(disk as u16).to_le_bytes());
+            joined[cursor + 42..cursor + 46].copy_from_slice(&((offset - boundaries[disk]) as u32).to_le_bytes());
+            cursor += 46 + u16_at(&joined, cursor + 28) as usize + u16_at(&joined, cursor + 30) as usize + u16_at(&joined, cursor + 32) as usize;
+        }
+        let cd = central + 4 - boundaries[3];
+        if mode == "zip64" {
+            let record = joined.len() - boundaries[3];
+            joined.extend_from_slice(b"PK\x06\x06"); joined.extend_from_slice(&44u64.to_le_bytes());
+            joined.extend_from_slice(&45u16.to_le_bytes()); joined.extend_from_slice(&45u16.to_le_bytes());
+            joined.extend_from_slice(&3u32.to_le_bytes()); joined.extend_from_slice(&3u32.to_le_bytes());
+            joined.extend_from_slice(&6u64.to_le_bytes()); joined.extend_from_slice(&6u64.to_le_bytes());
+            joined.extend_from_slice(&(u32_at(&bytes, eocd + 12) as u64).to_le_bytes()); joined.extend_from_slice(&(cd as u64).to_le_bytes());
+            joined.extend_from_slice(b"PK\x06\x07"); joined.extend_from_slice(&3u32.to_le_bytes());
+            joined.extend_from_slice(&(record as u64).to_le_bytes()); joined.extend_from_slice(&4u32.to_le_bytes());
+        }
+        let mut footer = bytes[eocd..].to_vec();
+        footer[4..6].copy_from_slice(&3u16.to_le_bytes()); footer[6..8].copy_from_slice(&3u16.to_le_bytes());
+        footer[16..20].copy_from_slice(&(cd as u32).to_le_bytes());
+        if mode == "zip64" { footer[10..20].fill(255); }
+        joined.extend_from_slice(&footer);
+        for index in 0..3 { std::fs::write(main.with_extension(format!("z{:02}", index + 1)), &joined[boundaries[index]..boundaries[index + 1]]).unwrap(); }
+        std::fs::write(&main, &joined[boundaries[3]..]).unwrap();
+        (main, payloads)
+    }
+
+    #[tokio::test]
+    async fn partial_zip_recovery_preserves_files_on_both_sides_of_missing_disks_and_passwords() {
+        use crate::services::archive_diagnostics::{diagnose_archive, repair_zip_with_password_to_new};
+        for mode in ["plain", "aes", "zipcrypto", "zip64"] {
+            for missing in ["z01", "z02"] {
+                let root = tempfile::tempdir().unwrap();
+                let (main, payloads) = partial_fixture(root.path(), mode);
+                std::fs::remove_file(main.with_extension(missing)).unwrap();
+                let before = std::fs::read(&main).unwrap();
+                let password = matches!(mode, "aes" | "zipcrypto").then_some("rescue-password");
+                assert!(StandardZipReader::try_open(&main).is_err(), "normal extraction must still require the full set");
+                let report = diagnose_archive(&main.with_extension("z03"), password, Arc::new(AtomicBool::new(false))).await.unwrap();
+                assert_eq!(report.status, "partial_recovery", "{mode} {missing}: {report:?}");
+                assert!(report.can_repair && !report.integrity_tested);
+                assert_eq!(report.total_files, 3);
+                if password.is_some() {
+                    let required = diagnose_archive(&main, None, Arc::new(AtomicBool::new(false))).await.unwrap();
+                    assert_eq!(required.status, "password_required"); assert!(!required.can_repair);
+                    let wrong = root.path().join("wrong.zip");
+                    assert!(repair_zip_with_password_to_new(&main, &wrong, Some("wrong"), &AtomicBool::new(false)).is_err());
+                    assert!(!wrong.exists());
+                }
+                let output = root.path().join("recovered.zip");
+                let result = repair_zip_with_password_to_new(&main, &output, password, &AtomicBool::new(false)).unwrap();
+                assert!(result.partial && result.verified && !result.directory_rebuilt);
+                assert_eq!(result.output_encrypted, password.is_some()); assert_eq!(result.recovered_files, 3);
+                assert!(result.skipped_entries.iter().any(|note| note.contains("文件1.txt")));
+                let mut zip = zip_aes::ZipArchive::new(File::open(output).unwrap()).unwrap();
+                for index in if missing == "z02" { vec![0, 3, 4] } else { vec![2, 3, 4] } {
+                    let name = format!("中文目录/文件{index}.txt");
+                    let mut data = Vec::new();
+                    match password {
+                        Some(password) => zip.by_name_decrypt(&name, password.as_bytes()).unwrap().read_to_end(&mut data).unwrap(),
+                        None => zip.by_name(&name).unwrap().read_to_end(&mut data).unwrap(),
+                    };
+                    assert_eq!(data, payloads[index]);
+                }
+                assert_eq!(std::fs::read(&main).unwrap(), before);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn partial_zip_recovery_rejects_missing_directory_and_skips_corrupt_content() {
+        use crate::services::archive_diagnostics::{diagnose_archive, repair_zip_with_password_to_new};
+        let root = tempfile::tempdir().unwrap();
+        let (main, _) = partial_fixture(root.path(), "plain");
+        std::fs::remove_file(main.with_extension("z02")).unwrap();
+        let part = main.with_extension("z03");
+        let mut bytes = std::fs::read(&part).unwrap(); bytes[100] ^= 0x40; std::fs::write(&part, bytes).unwrap();
+        let result = repair_zip_with_password_to_new(&main, &root.path().join("partial.zip"), None, &AtomicBool::new(false)).unwrap();
+        assert_eq!(result.recovered_files, 2);
+        assert!(result.skipped_entries.iter().any(|note| note.contains("文件3.txt") && note.contains("校验")));
+        std::fs::remove_file(&main).unwrap();
+        let report = diagnose_archive(&part, None, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(report.status, "missing_volume"); assert!(!report.can_repair);
+        assert!(repair_zip_with_password_to_new(&part, &root.path().join("unavailable.zip"), None, &AtomicBool::new(false)).is_err());
+        assert!(!root.path().join("unavailable.zip").exists());
     }
 
     #[tokio::test]

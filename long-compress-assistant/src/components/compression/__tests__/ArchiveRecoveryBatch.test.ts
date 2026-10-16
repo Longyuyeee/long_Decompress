@@ -20,6 +20,21 @@ beforeEach(() => {
   mocks.diagnose.mockImplementation(async (_id,path,password) => path.endsWith('.rar') ? report('RAR',password ? 'damaged' : 'password_required',!!password) : report('ZIP','directory_lost',true))
 })
 describe('archive batch recovery user flow', () => {
+  it('recognizes missing-disk rescue and shows folded result details in the expanded row', async () => {
+    mocks.group.mockResolvedValue([{path:'C:/parts.zip',selectedMembers:2}])
+    mocks.diagnose.mockResolvedValue({...report('ZIP','partial_recovery',true),missingVolumes:['parts.z02'],recoverability:'missing_volume_entries'})
+    const wrapper = setup(); await flushPromises()
+    await wrapper.get('[data-testid="batch-diagnose"]').trigger('click'); await flushPromises()
+    expect(wrapper.get('[data-testid="archive-batch-status"]').text()).toContain('缺卷，可部分救援')
+    mocks.open.mockResolvedValue('D:/recovered')
+    mocks.repair.mockResolvedValue({outputPath:'D:/recovered/parts.zip',recoveredFiles:1,recoveredDirectories:0,recoveredEntries:['资料/说明.txt'],skippedEntries:['图片.bin：缺少 parts.z02'],partial:true,verified:true,directoryRebuilt:false,outputEncrypted:false})
+    await wrapper.get('[data-testid="batch-repair"]').trigger('click'); await flushPromises()
+    expect(wrapper.get('[data-testid="archive-batch-detail"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="recovery-file-details"]').text()).toContain('资料/说明.txt')
+    expect(wrapper.get('[data-testid="recovery-skipped-details"]').attributes('open')).toBeUndefined()
+    expect(wrapper.get('[data-testid="archive-batch-result"]').classes()).toContain('bg-amber-500/5')
+    wrapper.unmount()
+  })
   it('groups volumes, expands individual rows and keeps bulk configuration inside a dialog', async () => {
     const wrapper=setup(); await flushPromises()
     expect(wrapper.findAll('[data-testid="archive-batch-row"]')).toHaveLength(2)

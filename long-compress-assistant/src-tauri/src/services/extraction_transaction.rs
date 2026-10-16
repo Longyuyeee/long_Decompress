@@ -192,6 +192,20 @@ pub(crate) fn validate_resource_limits(
     entry_count: usize,
     expanded_bytes: u64,
 ) -> Result<()> {
+    let compressed_bytes = if let Some(group) = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(archive_path)? {
+        anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{}", group.missing_part_names());
+        group.total_size
+    } else { std::fs::metadata(archive_path)?.len() }.max(1);
+    validate_resource_limits_for_size(compressed_bytes, entry_count, expanded_bytes)
+}
+
+// Recovery supplies only the sizes of physically present disks. The normal
+// extraction entry point above continues to require a complete volume set.
+pub(crate) fn validate_resource_limits_for_size(
+    compressed_bytes: u64,
+    entry_count: usize,
+    expanded_bytes: u64,
+) -> Result<()> {
     if entry_count > MAX_EXTRACTED_ENTRIES {
         return Err(CompressionError::ExtractionFailed(format!(
             "Archive contains too many entries ({} > {})",
@@ -206,10 +220,7 @@ pub(crate) fn validate_resource_limits(
         ))
         .into());
     }
-    let compressed_bytes = if let Some(group) = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(archive_path)? {
-        anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{}", group.missing_part_names());
-        group.total_size
-    } else { std::fs::metadata(archive_path)?.len() }.max(1);
+    let compressed_bytes = compressed_bytes.max(1);
     if expanded_bytes >= 1024 * 1024 * 1024
         && expanded_bytes / compressed_bytes > MAX_EXPANSION_RATIO
     {

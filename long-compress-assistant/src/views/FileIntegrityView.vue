@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ArchiveRecoveryDetails from '@/components/compression/ArchiveRecoveryDetails.vue'
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useArchiveRecoveryStore } from '@/composables/useArchiveRecoveryBatch'
 import ArchiveRecoveryBatch from '@/components/compression/ArchiveRecoveryBatch.vue'
@@ -338,6 +339,7 @@ const locateRepair = async () => {
 const statusLabel = (status: string) => ({
   healthy: '完整性正常', password_required: '需要密码', wrong_password: '密码错误',
   directory_lost: '目录信息丢失，可尝试救援',
+  partial_recovery: '缺少分卷，可尝试部分救援',
   missing_volume: '缺少分卷', crc_error: '内容校验失败', truncated: '归档被截断',
   damaged: '归档损坏', checking: '检查中',
   ambiguous_data: '密码或加密内容异常', unsupported_feature: '暂不支持此归档特性',
@@ -635,7 +637,7 @@ onUnmounted(() => {
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p class="text-xs font-black tracking-[.22em] text-muted">诊断结论</p>
-                <h2 class="mt-2 text-2xl font-black" :class="diagnosticReport.status === 'healthy' ? 'text-green-500' : diagnosticReport.status === 'password_required' ? 'text-amber-500' : 'text-red-500'">
+                <h2 class="mt-2 text-2xl font-black" :class="diagnosticReport.status === 'healthy' ? 'text-green-500' : ['password_required', 'partial_recovery'].includes(diagnosticReport.status) ? 'text-amber-500' : 'text-red-500'">
                   {{ statusLabel(diagnosticReport.status) }}
                 </h2>
               </div>
@@ -645,7 +647,7 @@ onUnmounted(() => {
             <button v-if="isRar && diagnosticReport.status === 'healthy' && diagnosticReport.volumesFound > 1" class="archive-secondary mt-4" data-testid="open-create-recovery-volumes" @click="showRecoveryVolumes(archivePath, archivePassword)"><i class="pi pi-shield"></i>为这组分包创建恢复卷</button>
             <div class="diagnostic-metrics mt-6">
               <div><span>归档大小</span><strong>{{ formatBytes(diagnosticReport.fileSize) }}</strong></div>
-              <div><span>{{ diagnosticReport.recoverability === 'local_entries' ? '已找到文件 / 目录' : '文件 / 目录' }}</span><strong>{{ diagnosticReport.integrityTested || diagnosticReport.totalFiles || diagnosticReport.totalDirectories ? `${diagnosticReport.totalFiles} / ${diagnosticReport.totalDirectories}` : '未能确认' }}</strong></div>
+              <div><span>{{ diagnosticReport.recoverability === 'missing_volume_entries' ? '可尝试文件 / 目录' : diagnosticReport.recoverability === 'local_entries' ? '已找到文件 / 目录' : '文件 / 目录' }}</span><strong>{{ diagnosticReport.integrityTested || diagnosticReport.totalFiles || diagnosticReport.totalDirectories ? `${diagnosticReport.totalFiles} / ${diagnosticReport.totalDirectories}` : '未能确认' }}</strong></div>
               <div><span>展开大小</span><strong>{{ diagnosticReport.totalUncompressedSizeKnown === false ? '大小未知' : formatBytes(diagnosticReport.totalUncompressedSize) }}</strong></div>
               <div><span>加密 / 分卷</span><strong>{{ encryptionLabel(diagnosticReport) }} / {{ diagnosticReport.splitArchive ? diagnosticReport.volumesFound + ' 卷' : '否' }}</strong></div>
             </div>
@@ -680,7 +682,7 @@ onUnmounted(() => {
             <p class="repair-password-note mt-3" data-testid="repair-output-encryption"><i :class="repairResult.outputEncrypted ? 'pi pi-lock' : 'pi pi-folder'"></i><span>{{ repairResult.outputEncrypted ? repairResult.format === 'RAR' ? '修复后的 RAR 保留原加密方式与密码。' : '新包已使用 AES-256 加密，密码与恢复时填写的一致（UTF-8）。' : '新包未设置密码。' }}</span></p>
             <p v-if="repairResult.outputFiles && repairResult.outputFiles.length > 1" class="mt-2 text-xs text-muted" data-testid="rar-repair-volumes">已保存 {{ repairResult.outputFiles.length }} 个数据卷，请整组保留；加入队列时会自动从首卷解压。</p>
             <p v-if="repairResult.directoryRebuilt" class="mt-2 text-xs text-amber-600">目录信息已重建，原包总条目数无法确认，请核对内容是否齐全。</p>
-            <ul v-if="repairResult.skippedEntries.length" class="mt-3 space-y-1 text-xs text-amber-500 break-all"><li v-for="entry in repairResult.skippedEntries" :key="entry">· {{ entry }}</li></ul>
+            <ArchiveRecoveryDetails class="mt-3" :recovered-entries="repairResult.recoveredEntries" :skipped-entries="repairResult.skippedEntries" />
             <div class="mt-4 flex flex-wrap gap-3"><button type="button" class="archive-secondary" @click="locateRepair"><i class="pi pi-folder-open"></i>定位新包</button><button type="button" class="archive-secondary" @click="copyChecksum(repairResult.outputPath)"><i class="pi pi-copy"></i>复制路径</button></div>
             <div class="mt-3 flex flex-wrap items-center gap-3"><button type="button" data-testid="queue-recovered-archive" class="archive-primary" :disabled="!!recoveredDraftId" @click="queueRecoveredArchive"><i class="pi pi-plus"></i>{{ recoveredDraftId ? '已加入解压队列' : '将新包加入解压队列' }}</button><a v-if="recoveredDraftId" href="#/decompress" class="text-sm font-bold text-primary">返回解压中心</a></div>
           </section>
