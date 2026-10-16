@@ -1,6 +1,6 @@
 # v1.4.11 自解压包与特殊卷型
 
-**最新状态（2026-10-16）：原生好压加密论坛三卷及完整桌面接续链已经完成，功能范围收口、版本统一 1.4.11。** 最终普通安装包以 [PR #165](https://github.com/Longyuyeee/long_Decompress/pull/165) 对应版本准备提交的 Windows package 为准，见 [封板记录](SFX_AND_VOLUME_FREEZE_1.4.11.md)。本次只到可发版，不自动合并发布。下方缺样本、未升版与工具失败为过程记录，阶段五给出最后结果。
+**最新状态（2026-10-16）：v1.4.11 已正式发布。** 原生好压加密论坛三卷及完整桌面接续链完成，[PR #165](https://github.com/Longyuyeee/long_Decompress/pull/165) 最终 Windows package 通过并合入；安装器及签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)。发布身份和中文说明同步记录见 [封板记录](SFX_AND_VOLUME_FREEZE_1.4.11.md)。下方缺样本、未升版与未获发布授权等为过程记录，阶段五给出最后功能结果。
 
 ## 接续范围
 

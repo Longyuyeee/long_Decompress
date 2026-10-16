@@ -28,7 +28,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-当前源码版本为 **1.4.11（待发布）**：ZIP/7Z/RAR 自解压包只读处理、好压论坛 ZIP 分卷及密码兼容、缺卷补回继续处理均已收口，单条展开和多选弹窗保持。真实生成物、实际桌面和常用/窄窗口记录见 [实施审计](docs/SFX_AND_VOLUME_COMPATIBILITY_1.4.11.md)、[封板记录](docs/SFX_AND_VOLUME_FREEZE_1.4.11.md)及 [中文更新说明](docs/RELEASE_NOTES_1.4.11.md)。普通安装包以 [PR #165](https://github.com/Longyuyeee/long_Decompress/pull/165) 最终版本提交的 Windows package 为准，当前正式下载仍是 [v1.4.10](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.10)。
+当前稳定版为 **1.4.11**：ZIP/7Z/RAR 自解压包只读处理、好压论坛 ZIP 分卷及密码兼容、缺卷补回继续处理，保留单条展开和多选弹窗。真实生成物、实际桌面和常用/窄窗口记录见 [实施审计](docs/SFX_AND_VOLUME_COMPATIBILITY_1.4.11.md)、[封板记录](docs/SFX_AND_VOLUME_FREEZE_1.4.11.md)及 [中文更新说明](docs/RELEASE_NOTES_1.4.11.md)，安装器和应用内更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)。
 
 ## 本地开发
 
@@ -94,7 +94,7 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-候选版本 **v1.4.11**，完整变化见 [中文更新说明](docs/RELEASE_NOTES_1.4.11.md)和 [封板记录](docs/SFX_AND_VOLUME_FREEZE_1.4.11.md)。当前正式版 **v1.4.10** 已发布，下载以 [Release 页面](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.10)实际附件为准。
+当前正式版 **v1.4.11**，完整变化见 [中文更新说明](docs/RELEASE_NOTES_1.4.11.md)和 [封板记录](docs/SFX_AND_VOLUME_FREEZE_1.4.11.md)，下载以 [Release 页面](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)实际附件为准。
 
 v1.4.11 可以直接处理 ZIP/7Z/RAR 自解压包，增加好压论坛 ZIP 的明文与已核对的密码分卷读取，修正部分跨卷正确密码误判，并完善缺卷提示及补回重试；不创建 SFX，不新增好压 7Z 论坛卷支持。
 

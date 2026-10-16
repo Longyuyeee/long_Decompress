@@ -1,8 +1,8 @@
 # Long解压产品增强路线
 
-## 当前：v1.4.11 功能收口，接续安装包（2026-10-16）
+## 当前：v1.4.11 已正式发布（2026-10-16）
 
-已完成 SFX 只读链、好压论坛 ZIP 明文与 GUI 原生 ZipCrypto 密码分卷、跨卷正确密码兼容、缺卷补回继续处理，以及常用/窄窗口页面收口。原始密码论坛三卷与实际桌面证据已保存，不再等待手动样本；单条展开、多选弹窗保持，旧已通过检查复用。版本统一为 1.4.11，范围和最终安装包条件见 [封板记录](SFX_AND_VOLUME_FREEZE_1.4.11.md)及 [实施审计](SFX_AND_VOLUME_COMPATIBILITY_1.4.11.md)。本次到可发版，不自动合并发布；公开正式版仍为 v1.4.10。下一轮按 [多版本路线](ARCHIVE_FORMAT_AND_WORKFLOW_ROADMAP_2026-10-16.md)接续 LZIP/TAR.LZIP，尚未启动。下方旧“当前开发”均为历史快照。
+已交付 SFX 只读链、好压论坛 ZIP 明文与 GUI 原生 ZipCrypto 密码分卷、跨卷正确密码兼容、缺卷补回继续处理，以及常用/窄窗口页面收口。原始密码论坛三卷与实际桌面证据已保存；单条展开、多选弹窗保持，已通过检查直接复用。[PR #165](https://github.com/Longyuyeee/long_Decompress/pull/165) 已合入，安装器、签名更新包和中文说明见 [v1.4.11 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)，准确发布身份见 [封板记录](SFX_AND_VOLUME_FREEZE_1.4.11.md)。下一轮按 [多版本路线](ARCHIVE_FORMAT_AND_WORKFLOW_ROADMAP_2026-10-16.md)接续 LZIP/TAR.LZIP，尚未启动。下方旧“当前开发”均为历史快照。
 
 ## 当前开发：v1.4.10 ZIP 兼容与选择性解压（2026-10-16）
 

@@ -1,5 +1,13 @@
 # 开发交接
 
+## 最新：v1.4.11 已合入并正式发布（2026-10-16）
+
+[PR #165](https://github.com/Longyuyeee/long_Decompress/pull/165) 已合并至 `bf84cc2be6343b0bdaf7f649d1ac3329c54a5f57`。正式标签 `v1.4.11` 指向 `d92106a015c77ccb294753a70bb50b3b762d6fb9`，仅补发布文档，产品内容与已通过的最终封板提交 `be5ddac` 一致。合并说明继承 `[skip ci]` 导致首次标签未触发，已在生成任何 Release 前修正；不回写或重发已发布资产。
+
+[正式发布构建](https://github.com/Longyuyeee/long_Decompress/actions/runs/38851199030) 已生成安装器、签名更新包及 `latest.json`，中文 Release 与更新清单说明已同步，下载见 [v1.4.11](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)。普通安装包检查沿用 [38850156863](https://github.com/Longyuyeee/long_Decompress/actions/runs/38850156863)，重复主线 CI `38851198648` 已取消，没有重跑已通过的功能或桌面矩阵。两份 README、格式说明和路线状态已更新。
+
+本版交付 SFX 只读、好压论坛 ZIP 密码分卷、跨卷正确密码兼容和缺卷补回继续处理；范围仍见 [封板记录](SFX_AND_VOLUME_FREEZE_1.4.11.md)。下一步按 [多版本路线](ARCHIVE_FORMAT_AND_WORKFLOW_ROADMAP_2026-10-16.md)做 v1.4.12 LZIP/TAR.LZIP，尚未开始。下方“待发布/不自动发布/缺样本”均为历史状态。
+
 ## 最新：v1.4.11 功能已收口，接续最终普通安装包（2026-10-16）
 
 好压 GUI 原生加密论坛 ZIP 三卷已实际生成并完成各成员错密码/正确密码、浏览、解压、检查、转换及独立回解；导入后移走中卷、补回、保留目录创建新任务并继续完成的桌面链通过。7 张常用/窄窗口新截图已查看，原卷与载荷哈希一致，固定原始样本已随仓库保存。此前阻挡鼠标的原因是 `Alt+A` 触发的微信截图浮层；取消该浮层、直接点击好压按钮即可完成，不再需要用户手动提供样本。

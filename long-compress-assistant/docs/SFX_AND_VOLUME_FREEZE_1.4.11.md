@@ -2,9 +2,24 @@
 
 日期：2026-10-16（Asia/Hong_Kong）。基线为正式 v1.4.10 / `b1587d6`，分支 `codex/sfx-volume-compatibility-1-4-11`，接续 [PR #165](https://github.com/Longyuyeee/long_Decompress/pull/165)。
 
-## 正式发布接续（2026-10-16）
+## 正式发布完成（2026-10-16）
 
-用户要求继续推进发布，PR #165 已合并至 `bf84cc2be6343b0bdaf7f649d1ac3329c54a5f57`。最终版本准备提交 `be5ddac` 的 [Windows package](https://github.com/Longyuyeee/long_Decompress/actions/runs/38850156863) 已通过，沿用已有功能和桌面结果，不重复运行。合并说明继承历史提交的 `[skip ci]`，首次标签未触发 Release；补充本次纯发布文档提交后，将尚未生成 Release 的 `v1.4.11` 标签指向该提交，功能内容不变。正式打包完成后同步中文 Release、更新清单和文档状态；下方“未授权发布”为封板时快照。
+PR #165 已合并至 `bf84cc2be6343b0bdaf7f649d1ac3329c54a5f57`，正式标签 `v1.4.11` 指向 `d92106a015c77ccb294753a70bb50b3b762d6fb9`。最终版本准备提交 `be5ddac` 的 [Windows package](https://github.com/Longyuyeee/long_Decompress/actions/runs/38850156863) 已通过；正式标签相较该提交只差两份发布文档，程序源码及资源相同，沿用已有功能和桌面结果。
+
+合并说明继承历史提交的 `[skip ci]`，首次标签未触发 Release；在生成任何 Release 前补充纯发布文档提交并修正标签，功能内容不变。[正式发布构建 38851199030](https://github.com/Longyuyeee/long_Decompress/actions/runs/38851199030) 成功，重复主线 CI `38851198648` 已取消，没有重跑已通过矩阵。
+
+[v1.4.11 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11) 于 2026-10-16 12:48:07（Asia/Hong_Kong）公开，非草稿、非预发布，包含以下四项附件：
+
+| 附件 | 大小（字节） |
+| --- | ---: |
+| `Long-Decompress_1.4.11_x64-setup.exe` | 20,167,539 |
+| `Long-Decompress_1.4.11_x64-setup.nsis.zip` | 20,167,699 |
+| `Long-Decompress_1.4.11_x64-setup.nsis.zip.sig` | 428 |
+| `latest.json`（中文说明同步后） | 3,081 |
+
+GitHub 资产元数据登记的正式安装器 SHA256 为 `3cb0cd9394c92987cff9ed099dfa5aa3e37aaa22f356dd7b77d7e0a069847f1a`；此处不是重新下载安装器的本机校验记录。
+
+中文 Release 与应用内更新说明已同步；公开更新清单的版本、签名、更新包 URL 和中文说明一致。此处只记录发布资产和说明同步，不计作重新安装或应用内升级运行测试。两份 README、格式说明、开发交接与路线已更新；下方为功能封板时快照，旧“未授权发布”不再表示当前状态。
 
 **本轮功能范围已收口，源码与版本化 Shell 资源统一为 1.4.11。** 最后一次产品行为修改为 `b55bab622fd9b266a1c8958c8ae3e9ca8f93d379`；之后只补真实论坛密码卷、测试接续、证据和版本文档。准确版本准备提交及普通安装包结果以 PR #165 最新提交和检查为准，不为回填提交哈希重复打包。
 
@@ -28,7 +43,7 @@
 
 完整经过、生成器快捷键误触截图浮层的发现及各阶段边界见 [实施审计](SFX_AND_VOLUME_COMPATIBILITY_1.4.11.md)。
 
-## 剩余发布动作
+## 功能封板时的发布条件（历史）
 
 两份 README、格式支持口径、开发交接、路线及 [中文 Release 正文](RELEASE_NOTES_1.4.11.md)已整理。**最终版本提交的 Windows package 成功后即达到本次可发版目标**，准确运行、提交与安装器附件写在 PR #165 说明中；不重跑已通过的功能矩阵或为文档状态回写重新构建。
 
