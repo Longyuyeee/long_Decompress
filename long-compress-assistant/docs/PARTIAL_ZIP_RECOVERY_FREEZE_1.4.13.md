@@ -1,6 +1,27 @@
-# v1.4.13 缺卷 ZIP 部分抢救封板
+# v1.4.13 缺卷 ZIP 部分抢救封板与正式发布
 
 日期：2026-10-16（Asia/Hong_Kong）。基线为 v1.4.12 发布后主线 `9856d50`，分支 `codex/partial-zip-recovery-1-4-13`。
+
+## 正式发布
+
+[PR #167](https://github.com/Longyuyeee/long_Decompress/pull/167) 已合并，合并提交及正式标签 `v1.4.13` 均指向 `fd4cd0e4a2c7c935b95de2e5a35544c1de2f1ab8`。文件树与已通过检查的最终候选 `3954973221ee293f75032d71e00503cb3395b349` 完全一致；产品功能提交为 `437a15a`，后续只补固定样本的字节属性。
+
+[最终候选 Windows package](https://github.com/Longyuyeee/long_Decompress/actions/runs/38867595976) 于 2026-10-16 15:44:48（Asia/Hong_Kong）成功结束；附件 `12032283233` 为 `windows-nsis-installer`，候选 ZIP 20,182,129 字节。该大小不代表正式 EXE 大小。
+
+[正式发布构建](https://github.com/Longyuyeee/long_Decompress/actions/runs/38869842338) 从上述标签生成 Windows x64 安装器、更新 ZIP、更新签名和 `latest.json`，下载见 [v1.4.13](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。中文 Release 和应用内更新说明已同步，更新清单保留构建生成的更新包地址及签名。
+
+正式版于 2026-10-16 16:06:06（Asia/Hong_Kong）公开，发布构建于 16:06:43 成功结束，Release 为稳定版且已设为最新版本。按公开附件的原始 UTF-8 内容确认，`latest.json` 的版本、中文说明、更新包地址及签名均与正式发布一致。
+
+| 公开附件 | 大小（字节） |
+| --- | ---: |
+| `Long-Decompress_1.4.13_x64-setup.exe` | 20,205,375 |
+| `Long-Decompress_1.4.13_x64-setup.nsis.zip` | 20,205,535 |
+| `Long-Decompress_1.4.13_x64-setup.nsis.zip.sig` | 428 |
+| `latest.json` | 2,435 |
+
+安装器 GitHub SHA-256 为 `17e85132c1ba536854408400b242df057c223b359b2c64847ae49e0f744d2d74`。只同步发布说明与更新清单，未重传安装器或重新运行功能检查。
+
+重复主线 CI `38869818717` 已取消，未重跑下述功能、桌面或安装生命周期检查。两份 README、格式说明、路线和交接已同步；v1.4.14 尚未启动。
 
 ## 已完成
 
@@ -13,10 +34,10 @@
 
 前端相关 19 项、两个新增后端定向测试及两个受影响的正常 ZIP/论坛布局回归通过；类型/前端构建、实际 Release 桌面程序及八处版本与 Shell DLL 身份通过。六组外部来源的缺卷输入分别救援并独立回解，同一实际程序完成单项/批量页面操作；最终 8 张常用及最小窗口截图已查看，包含 125% 字号。原始失败、来源、阶段复用和程序哈希见 [实施记录](PARTIAL_ZIP_RECOVERY_1.4.13.md)。
 
-普通安装包以本分支 PR **最新提交的 Windows package 成功**为最后构建条件；准确提交、运行及附件记入 PR 描述，不为回填状态再提交或重复打包。两份 README、路线、格式说明、交接和 [中文 Release](RELEASE_NOTES_1.4.13.md)已同步。
+普通安装包以本分支 PR **最新提交的 Windows package 成功**为最后构建条件，该条件已由上述最终候选运行满足；准确提交、运行及附件也已记入 PR 描述。用户随后授权合入与正式发布，没有为状态回填重复打包。
 
 ## 边界与后续
 
 终卷或目录缺失、不完整目录、未知数字切卷长度和好压论坛卷缺卷不提供部分救援；不补造丢失数据，不新增 RAR4 恢复承诺。RAR4 次要候选不阻塞本版，v1.4.14 输出方法增强未启动。Windows N 暂不保证支持。
 
-本轮授权到可发版，不自动合并、打标签或正式发布，当前正式下载仍为 [v1.4.12](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)。
+正式发布身份与附件见上方“正式发布”，具体能力仍按本记录及 [中文更新说明](RELEASE_NOTES_1.4.13.md)限定的范围提供。

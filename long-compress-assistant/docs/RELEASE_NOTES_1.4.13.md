@@ -1,6 +1,6 @@
 # Long解压 v1.4.13
 
-> 候选版说明：本版功能与实际界面已收口，最终普通安装包以 PR 最新 Windows package 为准，尚未正式发布。正式下载仍为 [v1.4.12](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)，见 [实施记录](PARTIAL_ZIP_RECOVERY_1.4.13.md)及 [封板记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)。
+Windows x64 正式版：[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/download/v1.4.13/Long-Decompress_1.4.13_x64-setup.exe)，也可在设置中心检查更新。
 
 收到一组 ZIP 分卷却缺少其中一卷时，可以先尝试救出其他卷中的完整文件。恢复后查看文件和未恢复原因，再把新包加入解压队列继续处理。
 

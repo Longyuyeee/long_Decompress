@@ -166,7 +166,9 @@ Windows 11 请在 **“显示更多选项”** 中使用经典菜单；当前公
 
 文件处理、归档浏览、密码匹配和完整性校验在本机完成。密码保险箱加密保存常用解压密码，任务展示当前阶段与日志；遇到同名文件可选择覆盖、跳过或保留两份。文件完整性中心还提供校验、ZIP/RAR 诊断与修复；v1.4.8 增加批量处理，恢复结果保存到新位置后可继续加入解压队列。
 
-ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复原因会明确列出，原包保留。部分恢复不代表全部找回；需要正确密码与完整来源，缺卷、本地尺寸未知及标准磁盘 ZIP 卷丢目录暂不支持救援。
+ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复原因会明确列出，原包保留。标准 ZIP `.z01/…/.zip` 缺少首卷或中间卷时，若目录仍完整可读，可以先救出现有连续卷中的完整文件，支持普通、AES 和 ZipCrypto 密码包。已恢复文件和未恢复原因按需展开，新包可直接加入解压队列。
+
+部分恢复不代表全部找回。缺卷救援仍需要完整可读的目录；终卷或目录缺失、未知数字切卷长度及无法确定的加密边界需补齐来源后再处理。具体范围见 [格式支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
 
 <details>
 <summary><strong>常用快捷键</strong></summary>
@@ -225,7 +227,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
-| **v1.4.13（待发布）** | 标准 ZIP 缺卷部分抢救、AES / ZipCrypto 密码包、按需展开的恢复文件与原因清单 | [候选说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.13.md) · [实施进度](long-compress-assistant/docs/PARTIAL_ZIP_RECOVERY_1.4.13.md) |
+| **v1.4.13** | 标准 ZIP 缺卷部分抢救、AES / ZipCrypto 密码包、按需展开的恢复文件与原因清单 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.13.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13) |
 | **v1.4.12** | LZIP / TAR.LZIP 创建与读取、`.tlz` 别名及多成员、批量配置和转换、浏览失败原因保留 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.12.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12) |
 | **v1.4.11** | 自解压包直接读取、好压论坛 ZIP 密码分卷、正确密码兼容与缺卷补回继续处理 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.11.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11) |
 | **v1.4.10** | ZIP 所选内容独立解锁与读取、旧 ZIP 方法兼容、Zstandard 密码分卷和真实 ZIP64 大包回解 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.10.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.10) |

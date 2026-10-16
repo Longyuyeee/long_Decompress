@@ -1,6 +1,6 @@
 # v1.4.13 缺卷 ZIP 部分抢救
 
-日期：2026-10-16。基线为 v1.4.12 发布后文档提交 `9856d50`，分支 `codex/partial-zip-recovery-1-4-13`。用户批准按缺卷救援、密码包、恢复结果的顺序推进到可发版；本轮不自动合入或正式发布。
+日期：2026-10-16。基线为 v1.4.12 发布后文档提交 `9856d50`，分支 `codex/partial-zip-recovery-1-4-13`。按缺卷救援、密码包、恢复结果顺序完成后，用户已授权合入并正式发布。[PR #167](https://github.com/Longyuyeee/long_Decompress/pull/167) 已合并，正式标签 `v1.4.13` 与合并提交均为 `fd4cd0e4a2c7c935b95de2e5a35544c1de2f1ab8`，安装器与签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。
 
 ## 用户目标与范围
 
@@ -27,7 +27,7 @@
 - 诊断、密码与修复已接入；新包保留成功恢复的文件名清单。单项与批量结果采用同一按需展开的列表，部分恢复用提示色区分。
 - 前端相关两文件 19 项通过，类型检查及前端构建通过；后端两个定向测试覆盖普通/AES/ZipCrypto/ZIP64 目录、缺首/中卷、跨缺卷与跨连续卷文件、错误密码、损坏条目及缺终卷，均通过。
 - 新后端测试首次被既有资源检查的完整卷组条件阻挡；已将体积检查抽为共用实现，救援提供现有卷总大小，正常解压仍要求完整卷组。修正后仅重跑失败的两个定向测试。标准 ZIP/ZIP64 和论坛布局两个受影响的共用读取回归另各执行一次并通过；没有重跑旧全格式矩阵。
-- 版本与 Shell 资源已统一为 1.4.13，身份核对通过。实际桌面链与页面已完成，最后只接续最终 PR 最新提交的普通安装包；[封板记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)和 [中文说明](RELEASE_NOTES_1.4.13.md)已备好，公开版本仍为 v1.4.12。
+- 版本与 Shell 资源统一为 1.4.13，身份核对通过。实际桌面链与页面已完成，最终候选 `3954973` 的 [Windows package](https://github.com/Longyuyeee/long_Decompress/actions/runs/38867595976) 成功；合入后只执行 [正式发布打包](https://github.com/Longyuyeee/long_Decompress/actions/runs/38869842338)，没有重跑已通过功能检查。发布身份及范围见 [封板记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)和 [中文说明](RELEASE_NOTES_1.4.13.md)。
 
 ## 实际桌面与独立回解
 

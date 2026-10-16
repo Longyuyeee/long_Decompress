@@ -1,5 +1,13 @@
 # 开发交接
 
+## 最新：v1.4.13 已合入并正式发布（2026-10-16）
+
+[PR #167](https://github.com/Longyuyeee/long_Decompress/pull/167) 已合并，正式标签 `v1.4.13` 与合并提交均为 `fd4cd0e4a2c7c935b95de2e5a35544c1de2f1ab8`，文件树与最终候选 `3954973` 一致。本版交付目录可读的标准 ZIP 缺卷部分救援、AES/ZipCrypto 密码包、按需展开的文件与原因清单，以及失败任务救援后保留密码和目录继续解压；单条展开、多选弹窗和既有详情布局保持。
+
+[候选安装包](https://github.com/Longyuyeee/long_Decompress/actions/runs/38867595976) 已通过，正式发布仅执行 [构建 38869842338](https://github.com/Longyuyeee/long_Decompress/actions/runs/38869842338)，重复主线 CI `38869818717` 已取消。安装器、签名更新包与 `latest.json` 见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)；中文 Release、应用内更新说明、两份 README、格式口径和路线已同步，未重跑已通过的功能或实际页面检查。
+
+准确证据及发布身份见 [实施记录](PARTIAL_ZIP_RECOVERY_1.4.13.md)和 [封板记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)。v1.4.14 输出方法增强尚未启动；下方“接续安装器/未合入/公开 v1.4.12”等为历史状态。
+
 ## 最新：v1.4.13 功能与实际页面收口，接续最终安装器（2026-10-16）
 
 用户批准从 `9856d50` 按缺卷 ZIP、密码与恢复结果顺序推进到可发版。标准 ZIP 仅救援模式、诊断、密码读取与新包保存已接入，文件与原因清单在原单项/批量结果中按需展开。前端 19 项、后端两个新增定向测试及两个受影响的正常读取回归通过；首轮资源检查阻挡及修正如实记录。版本和 Shell 资源已统一 1.4.13；六组实际缺卷救援经独立回解，失败任务救援到真实解压及批量弹窗/恢复通过，8 张最终常用/最小窗口截图已查看。只接续最终 PR 最新提交的 Windows package，准确提交、运行和附件记入 PR 描述，不为文档回填重复打包。见 [实施记录](PARTIAL_ZIP_RECOVERY_1.4.13.md)及 [封板记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)。不自动合入发布，公开版本仍为 v1.4.12；下方为历史状态。

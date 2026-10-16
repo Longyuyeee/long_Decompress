@@ -23,16 +23,14 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、受支持预览与选择性解压 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
-| 文件完整性 | CRC32/MD5/SHA256 校验、归档诊断，以及保留原包的 ZIP 完整文件救援，支持目录可读的密码包 |
+| 文件完整性 | CRC32/MD5/SHA256 校验、归档诊断，以及保留原包的 ZIP 完整文件救援，支持密码包与目录可读的标准 ZIP 缺卷部分抢救 |
 | 历史与系统集成 | 搜索和再次执行、统一结果操作、托盘、资源管理器经典菜单与应用内更新 |
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-当前稳定版为 **1.4.12**：新增 LZIP / TAR.LZIP 创建、读取、检查和转换，兼容 `.tlz` 与多成员 LZIP，接入原有多选弹窗配置，并保留浏览失败原因。单条展开、多选弹窗及等宽详情布局保持。实施与实际检查见 [本版记录](docs/LZIP_AND_TAR_LZIP_1.4.12.md)、[封板记录](docs/LZIP_AND_TAR_LZIP_FREEZE_1.4.12.md)及 [中文更新说明](docs/RELEASE_NOTES_1.4.12.md)，安装器和签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)。
+当前稳定版为 **1.4.13**：目录可读的标准 ZIP 缺卷部分抢救，接通 AES / ZipCrypto 密码包，恢复文件和原因清单按需展开，新包可保留密码与目录继续解压。单条展开、多选弹窗及等宽详情布局保持。实施与实际检查见 [本版记录](docs/PARTIAL_ZIP_RECOVERY_1.4.13.md)、[封板记录](docs/PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)及 [中文更新说明](docs/RELEASE_NOTES_1.4.13.md)，安装器和签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。
 
 ## 本地开发
-
-当前源码候选版为 **1.4.13**：目录可读的标准 ZIP 缺卷部分抢救、AES / ZipCrypto 密码包与恢复结果接续，保留单条展开和多选弹窗。实际进度见 [实施记录](docs/PARTIAL_ZIP_RECOVERY_1.4.13.md)和 [候选说明](docs/RELEASE_NOTES_1.4.13.md)，尚未正式发布，正式下载仍为 v1.4.12。
 
 Windows 构建需要受支持的 Node.js（20.19+、22.12+ 或 24）、npm、稳定版 Rust、MSVC C++ 构建工具及 WebView2。
 
@@ -95,6 +93,8 @@ docs/                  开发路线、格式说明与历史记录
 项目代码使用 [MIT License](../LICENSE)。随包 7-Zip、视频与 PDF 引擎分别遵循各自许可，相关材料位于 `src-tauri/resources/archive-engine/`、`video-engine/licenses/` 和 `pdf-engine/licenses/`。WinRAR 编码器不随项目分发。
 
 ## 更新记录
+
+**v1.4.13** 增加标准 ZIP 缺卷部分抢救、密码包救援与恢复清单，打通失败任务救援后继续解压，见 [更新说明](docs/RELEASE_NOTES_1.4.13.md)和 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。缺卷救援要求目录仍完整可读，不补造缺失数据。
 
 **v1.4.12** 新增 LZIP / TAR.LZIP 的完整用户流程及错误提示改善，见 [更新说明](docs/RELEASE_NOTES_1.4.12.md)和 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)。这两种新格式不提供密码或分卷创建。
 
