@@ -41,20 +41,15 @@ pub(crate) fn system_time(
 fn validate_password_access<R: Read + Seek>(
     archive: &mut ZipArchive<R>,
     password: Option<&str>,
-    indices: &[usize],
+    selection: &crate::services::zip_selection::ZipSelection,
+    mut check_control: impl FnMut() -> Result<()>,
 ) -> Result<()> {
-    for &index in indices {
-        let requires_password = match archive.by_index(index) {
-            Ok(_) => false,
-            Err(ZipError::UnsupportedArchive(detail)) if detail == ZipError::PASSWORD_REQUIRED => {
-                true
-            }
-            Err(error) => return Err(error.into()),
-        };
-        if !requires_password {
-            continue;
-        }
-
+    check_control()?;
+    // Selection already checked metadata/methods and identified every selected
+    // encrypted entry. Opening plain entries again initialized codecs and did
+    // extra seeks without validating any password or reading their CRCs.
+    for &index in &selection.encrypted_indices {
+        check_control()?;
         match password {
             Some(password) => match crate::services::zip_password::open_entry(archive, index, password) {
                 Ok(mut reader) => {
@@ -106,7 +101,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
     let _worker_slot = super::zip_parallel::WorkerSlot::acquire(runtime)?;
     let mut archive = ZipArchive::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?)?;
     let selection = crate::services::zip_selection::ZipSelection::read(&mut archive, options, || runtime.check_cancellation())?;
-    validate_password_access(&mut archive, password, &selection.indices)?;
+    validate_password_access(&mut archive, password, &selection, || runtime.check_cancellation())?;
     if super::zip_parallel::try_extract(
         runtime,
         window,
@@ -355,9 +350,18 @@ mod tests {
         ZipArchive::new(Cursor::new(cursor.into_inner())).expect("read mixed archive")
     }
 
+    fn validate_all_passwords<R: std::io::Read + std::io::Seek>(
+        archive: &mut ZipArchive<R>, password: Option<&str>,
+    ) -> anyhow::Result<()> {
+        let selection = crate::services::zip_selection::ZipSelection::read(
+            archive, &crate::models::compression::DecompressOptions::default(), || Ok(()),
+        )?;
+        validate_password_access(archive, password, &selection, || Ok(()))
+    }
+
     #[test]
     fn password_preflight_scans_entries_beyond_the_old_probe_limit() {
-        let error = validate_password_access(&mut mixed_encryption_archive(), None, &(0..9).collect::<Vec<_>>())
+        let error = validate_all_passwords(&mut mixed_encryption_archive(), None)
             .expect_err("late encrypted entry must require a password");
         assert!(
             matches!(
@@ -371,7 +375,7 @@ mod tests {
     #[test]
     fn password_preflight_validates_every_entry_in_mixed_archives() {
         let error =
-            validate_password_access(&mut mixed_encryption_archive(), Some("wrong-password"), &(0..9).collect::<Vec<_>>())
+            validate_all_passwords(&mut mixed_encryption_archive(), Some("wrong-password"))
                 .expect_err("wrong password must fail on the late encrypted entry");
         assert!(
             matches!(
@@ -381,8 +385,164 @@ mod tests {
             "{error:?}"
         );
 
-        validate_password_access(&mut mixed_encryption_archive(), Some("correct-password"), &(0..9).collect::<Vec<_>>())
+        validate_all_passwords(&mut mixed_encryption_archive(), Some("correct-password"))
             .expect("correct password must unlock every entry");
+    }
+
+    #[test]
+    fn password_preflight_checks_later_distinct_password_before_creating_output() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("两个密码.zip");
+        let mut writer = ModernZipWriter::new(std::fs::File::create(&source).unwrap());
+        for (name, password) in [("甲方.txt", "alpha"), ("乙方.txt", "beta")] {
+            writer.start_file(name, SimpleFileOptions::default()
+                .with_aes_encryption(zip_aes::AesMode::Aes256, password)).unwrap();
+            writer.write_all(b"distinct AES passwords").unwrap();
+        }
+        writer.finish().unwrap();
+        let output = temp.path().join("out");
+        let error = super::extract_with_optional_window(
+            &crate::services::compression_service::CompressionService::for_testing(),
+            None, "mixed-passwords", source.to_str().unwrap(), output.to_str().unwrap(), Some("alpha"),
+            &crate::models::compression::DecompressOptions::default(),
+        ).unwrap_err();
+        assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::InvalidPassword)), "{error:?}");
+        assert!(!output.exists(), "later selected password mismatch must fail before writing even public entries");
+    }
+
+    #[test]
+    fn password_preflight_cancellation_is_not_a_password_error() {
+        let mut archive = mixed_encryption_archive();
+        let selection = crate::services::zip_selection::ZipSelection::read(
+            &mut archive, &crate::models::compression::DecompressOptions::default(), || Ok(()),
+        ).unwrap();
+        let mut checks = 0;
+        let error = validate_password_access(&mut archive, Some("correct-password"), &selection, || {
+            checks += 1;
+            if checks == 2 { return Err(CompressionError::Cancelled.into()); }
+            Ok(())
+        }).unwrap_err();
+        assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+        assert_eq!(checks, 2);
+    }
+
+    // Frozen implementation from f2a22b2, for same-process A/B measurements
+    // only. Production always uses validate_password_access above.
+    fn legacy_password_preflight<R: std::io::Read + std::io::Seek>(
+        archive: &mut ZipArchive<R>, password: Option<&str>, indices: &[usize],
+    ) -> anyhow::Result<()> {
+        for &index in indices {
+            let required = match archive.by_index(index) {
+                Ok(_) => false,
+                Err(zip_aes::result::ZipError::UnsupportedArchive(detail))
+                    if detail == zip_aes::result::ZipError::PASSWORD_REQUIRED => true,
+                Err(error) => return Err(error.into()),
+            };
+            if !required { continue; }
+            match password {
+                Some(password) => match crate::services::zip_password::open_entry(archive, index, password) {
+                    Ok(mut reader) => { reader.read(&mut [0u8; 4])?; }
+                    Err(zip_aes::result::ZipError::InvalidPassword) => return Err(CompressionError::InvalidPassword.into()),
+                    Err(error) => return Err(error.into()),
+                },
+                None => return Err(CompressionError::PasswordRequired.into()),
+            }
+        }
+        Ok(())
+    }
+
+    #[derive(Default)]
+    struct ReadCounts {
+        bytes: std::cell::Cell<u64>,
+        reads: std::cell::Cell<u64>,
+        seeks: std::cell::Cell<u64>,
+    }
+    struct CountedInput<R> {
+        reader: R,
+        counts: std::rc::Rc<ReadCounts>,
+    }
+    impl<R: Read> Read for CountedInput<R> {
+        fn read(&mut self, bytes: &mut [u8]) -> std::io::Result<usize> {
+            let read = self.reader.read(bytes)?;
+            self.counts.reads.set(self.counts.reads.get() + 1);
+            self.counts.bytes.set(self.counts.bytes.get() + read as u64);
+            Ok(read)
+        }
+    }
+    impl<R: std::io::Seek> std::io::Seek for CountedInput<R> {
+        fn seek(&mut self, position: std::io::SeekFrom) -> std::io::Result<u64> {
+            self.counts.seeks.set(self.counts.seeks.get() + 1);
+            self.reader.seek(position)
+        }
+    }
+
+    #[test]
+    fn password_preflight_does_not_reopen_selected_plain_entries() {
+        let counts = std::rc::Rc::new(ReadCounts::default());
+        let mut archive = ZipArchive::new(CountedInput {
+            reader: Cursor::new(mixed_encryption_archive().into_inner().into_inner()), counts: counts.clone(),
+        }).unwrap();
+        let options = crate::models::compression::DecompressOptions {
+            file_filter: Some("public-*.txt".into()), ..Default::default()
+        };
+        let selection = crate::services::zip_selection::ZipSelection::read(&mut archive, &options, || Ok(())).unwrap();
+        assert_eq!(selection.indices.len(), 8);
+        assert!(!selection.password_required);
+        let before = (counts.bytes.get(), counts.reads.get(), counts.seeks.get());
+        validate_password_access(&mut archive, None, &selection, || Ok(())).unwrap();
+        assert_eq!((counts.bytes.get(), counts.reads.get(), counts.seeks.get()), before,
+            "password preflight must not initialize codecs/seek/read plain selected entries again");
+    }
+
+    #[test]
+    #[ignore = "explicit disk-backed password preflight A/B, not extraction or physical I/O timing"]
+    fn zip_password_preflight_measurement() {
+        use sha2::{Digest, Sha256};
+        use std::time::Instant;
+        let temp = tempfile::tempdir().unwrap();
+        for encrypted in [false, true] {
+            let source = temp.path().join(if encrypted { "mixed.zip" } else { "plain.zip" });
+            let mut writer = ZipWriter::new(std::fs::File::create(&source).unwrap());
+            for index in 0..5000 {
+                writer.start_file(format!("资料/小文件-{index:05}.txt"), FileOptions::default()).unwrap();
+                writer.write_all(&[42; 4096]).unwrap();
+            }
+            if encrypted {
+                writer.start_file("资料/最后的密码文件.txt", FileOptions::default().with_deprecated_encryption(b"correct-password")).unwrap();
+                writer.write_all(b"the late encrypted entry must still be checked").unwrap();
+            }
+            writer.finish().unwrap();
+            let fixture_sha256 = format!("{:x}", Sha256::digest(std::fs::read(&source).unwrap()));
+            // Alternate execution order, including warm-up. Every observation
+            // uses the same file and fresh archive/selection, never a global cache.
+            for round in 0..6 {
+                for legacy in if round % 2 == 0 { [true, false] } else { [false, true] } {
+                    let counts = std::rc::Rc::new(ReadCounts::default());
+                    let mut archive = ZipArchive::new(CountedInput {
+                        reader: std::fs::File::open(&source).unwrap(), counts: counts.clone(),
+                    }).unwrap();
+                    let selection = crate::services::zip_selection::ZipSelection::read(
+                        &mut archive, &crate::models::compression::DecompressOptions::default(), || Ok(()),
+                    ).unwrap();
+                    let before = (counts.bytes.get(), counts.reads.get(), counts.seeks.get());
+                    let started = Instant::now();
+                    if legacy {
+                        legacy_password_preflight(&mut archive, Some("correct-password"), &selection.indices).unwrap();
+                    } else {
+                        validate_password_access(&mut archive, Some("correct-password"), &selection, || Ok(())).unwrap();
+                    }
+                    let elapsed_ms = started.elapsed().as_secs_f64() * 1000.0;
+                    if round > 0 {
+                        println!("ZIP_PREFLIGHT_JSON {}", serde_json::json!({
+                            "scenario": if encrypted { "5000_plain_plus_one_zipcrypto" } else { "5000_plain" },
+                            "legacy": legacy, "round": round, "fixture_sha256": fixture_sha256,
+                            "elapsed_ms": elapsed_ms, "logical_read_bytes": counts.bytes.get() - before.0,
+                            "read_calls": counts.reads.get() - before.1, "seek_calls": counts.seeks.get() - before.2,
+                        }));
+                    }
+                }
+            }
+        }
     }
 
     fn selection_fixture(path: &std::path::Path) {

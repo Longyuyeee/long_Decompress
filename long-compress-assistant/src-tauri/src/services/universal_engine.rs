@@ -143,26 +143,21 @@ impl UniversalCliEngine {
     ) -> Result<bool> {
         let file = crate::services::numeric_volume_reader::ZipInputReader::open(file_path)?;
         let mut archive = zip_aes::ZipArchive::new(file)?;
-        let mut buffer = vec![0u8; Self::COPY_BUFFER_SIZE];
-        let mut found_encrypted_entry = false;
-
         let selection = crate::services::zip_selection::ZipSelection::read(&mut archive, options, &mut check_control)?;
-        for index in selection.indices {
+        let found_encrypted_entry = !selection.encrypted_indices.is_empty();
+        let mut buffer = None;
+        for index in selection.encrypted_indices {
             check_control()?;
-            let encrypted = archive.by_index_raw(index)?.encrypted();
-            if !encrypted {
-                continue;
-            }
-            found_encrypted_entry = true;
             match crate::services::zip_password::open_entry(&mut archive, index, password) {
                 Ok(mut entry) => {
                     if entry.is_dir() {
                         continue;
                     }
                     let mut sink = std::io::sink();
+                    let buffer = buffer.get_or_insert_with(|| vec![0u8; Self::COPY_BUFFER_SIZE]);
                     loop {
                         check_control()?;
-                        let read = match entry.read(&mut buffer) {
+                        let read = match entry.read(buffer) {
                             Ok(read) => read,
                             Err(error) => {
                                 let code = match error.kind() {
