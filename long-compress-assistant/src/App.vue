@@ -62,6 +62,9 @@ const compressionStore = useCompressionStore()
 const pendingDrafts = usePendingDraftStore()
 pendingDrafts.initialize()
 const appStore = useAppStore()
+watch(() => appStore.pendingArchiveBrowserPath, path => {
+  if (path) void router.push('/browser')
+})
 watch(() => appStore.pendingArchiveDiagnosis, request => {
   if (request) void router.push('/integrity')
 })

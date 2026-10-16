@@ -82,6 +82,17 @@ const modalStub = {
 }
 
 describe('App orchestration', () => {
+  it('routes a recovered archive handoff to the browser without consuming its credentials', async () => {
+    const pinia=createPinia(); setActivePinia(pinia)
+    const wrapper=mount(App,{global:{plugins:[pinia],stubs:{MainLayout:true,ToastContainer:true,UpdateDialog:true,Modal:true}}})
+    await flushPromises(); mocks.routerPush.mockClear()
+    const app=useAppStore()
+    app.openArchiveInBrowser('D:/recovered.zip',{password:'session password',zipPasswordEncoding:'cp950'})
+    await nextTick()
+    expect(mocks.routerPush).toHaveBeenCalledWith('/browser')
+    expect(app.takeArchiveBrowserOptions()).toEqual({password:'session password',zipPasswordEncoding:'cp950'})
+    wrapper.unmount()
+  })
   beforeEach(() => {
     localStorage.clear()
     mocks.listeners.clear()

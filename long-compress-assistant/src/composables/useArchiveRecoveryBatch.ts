@@ -6,6 +6,8 @@ import { useTaskStore } from '@/stores/task'
 import { generateId } from '@/utils'
 import { parentDirectory } from '@/utils/resultLocation'
 import { archiveSourceStem } from '@/utils/archiveSource'
+import { isZipPasswordEncoding, zipPasswordEncodingArguments, type ZipPasswordEncoding } from '@/types/zipPassword'
+import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 
 export interface ArchiveRecoveryRow {
   id: string; path: string; selectedMembers: number; selected: boolean; expanded: boolean
@@ -13,6 +15,7 @@ export interface ArchiveRecoveryRow {
   state: 'pending' | 'checking' | 'checked' | 'repairing' | 'repaired' | 'error' | 'cancelled'
   report?: ArchiveDiagnosticReport; result?: ZipRepairResult; resultPassword?: string; queuedId?: string; error?: string
   needsRecheck?: boolean; resultPasswordRequired?: boolean
+  zipPasswordEncoding?: ZipPasswordEncoding; resultZipPasswordEncoding?: ZipPasswordEncoding; sourceFormat?: string
 }
 export const ARCHIVE_RECOVERY_DRAFT_KEY = 'long-archive-recovery-workspace-v1'
 interface RecoverySnapshot { version: 1; paths: string[]; rootDirectory: string; rows: ArchiveRecoveryRow[] }
@@ -24,6 +27,8 @@ function readSnapshot(): RecoverySnapshot | null {
   if (saved.version !== 1 || !Array.isArray(saved.paths) || !saved.paths.every(path => typeof path === 'string') || typeof saved.rootDirectory !== 'string'
     || !Array.isArray(saved.rows) || !saved.rows.length || !saved.rows.every(row => row && typeof row.id === 'string' && typeof row.path === 'string'
       && typeof row.outputDirectory === 'string' && typeof row.extractDirectory === 'string'
+      && (row.zipPasswordEncoding === undefined || isZipPasswordEncoding(row.zipPasswordEncoding))
+      && (row.resultZipPasswordEncoding === undefined || isZipPasswordEncoding(row.resultZipPasswordEncoding))
       && (!row.result || typeof row.result.outputPath === 'string') && (!row.report || Array.isArray(row.report.issues)))) throw new Error('检查修复草稿无法读取，可丢弃后重新选择压缩包')
   return saved
 }
@@ -99,7 +104,11 @@ export const useArchiveRecoveryStore = defineStore('archiveRecovery', () => {
         if (stopped) break
         row.error = ''; row.report = undefined; row.state = 'checking'
         active = {id:`batch-check-${generateId()}`,kind:'check'}
-        try { row.report = await commands.diagnoseArchive(active.id, row.path, row.password); row.needsRecheck = false; row.state = 'checked' }
+        try {
+          const encoding = row.sourceFormat ? zipPasswordEncodingForSource(row.path, row.zipPasswordEncoding, row.sourceFormat) : row.zipPasswordEncoding
+          row.report = await commands.diagnoseArchive(active.id, row.path, row.password, ...zipPasswordEncodingArguments(encoding))
+          row.sourceFormat = row.report.actualFormat; row.needsRecheck = false; row.state = 'checked'
+        }
         catch (error) { row.state = stopped || String(error).toLowerCase().includes('cancel') ? 'cancelled' : 'error'; row.error = row.state === 'error' ? String(error) : '' }
         finally { active = null }
       }
@@ -116,7 +125,10 @@ export const useArchiveRecoveryStore = defineStore('archiveRecovery', () => {
         row.error = ''; row.state = 'repairing'
         active = {id:`batch-repair-${generateId()}`,kind:'repair'}
         try {
-          const result = await commands.repairArchiveBatchItem(active.id, row.path, row.outputDirectory || fallbackDirectory, row.report!.actualFormat, row.password)
+          const format = row.report!.actualFormat
+          const encoding = zipPasswordEncodingForSource(row.path, row.zipPasswordEncoding, format)
+          const result = await commands.repairArchiveBatchItem(active.id, row.path, row.outputDirectory || fallbackDirectory, format, row.password, ...zipPasswordEncodingArguments(encoding))
+          row.resultZipPasswordEncoding = result.outputEncrypted && supportsZipPasswordEncoding(row.path, format) ? encoding ?? 'utf8' : undefined
           row.result = result; row.resultPassword = result.outputEncrypted ? row.password : ''; row.resultPasswordRequired = false; row.queuedId = undefined; row.state = 'repaired'; row.expanded = true
         } catch (error) { row.state = stopped || String(error).toLowerCase().includes('cancel') ? 'cancelled' : 'error'; row.error = row.state === 'error' ? String(error) : '' }
         finally { active = null }
@@ -139,15 +151,17 @@ export const useArchiveRecoveryStore = defineStore('archiveRecovery', () => {
       const stem = archiveSourceStem(row.path)
       const peers = rows.value.filter(other => (other.extractDirectory || parentDirectory(other.path)).replace(/\\/g,'/').toLowerCase() === destination.replace(/\\/g,'/').toLowerCase() && archiveSourceStem(other.path).toLowerCase() === stem.toLowerCase())
       const outputPath = peers.length > 1 ? `${destination.replace(/[\\/]$/,'')}/${stem}-恢复-${peers.indexOf(row)+1}` : destination
-      tasks.addTask({id,name:result.outputPath.split(/[\\/]/).pop() || result.outputPath,type:'decompression',workloadKind:'archive',sourceFiles:[result.outputPath],outputPath,extractToSubfolder:true,configurationMode:'individual',recycleSourceAfterExtract:false,password:row.resultPassword || undefined})
+      tasks.addTask({id,name:result.outputPath.split(/[\\/]/).pop() || result.outputPath,type:'decompression',workloadKind:'archive',sourceFiles:[result.outputPath],outputPath,extractToSubfolder:true,configurationMode:'individual',recycleSourceAfterExtract:false,password:row.resultPassword || undefined,
+        zipPasswordEncoding:result.outputEncrypted && supportsZipPasswordEncoding(result.outputPath,result.format) ? row.resultZipPasswordEncoding ?? 'utf8' : undefined})
       row.error = ''; row.queuedId = id; count++
     } } finally { busy.value = false }
     return count
   }
-  function forgetResult(row:ArchiveRecoveryRow) { if (busy.value) return; row.result = undefined; row.resultPassword = ''; row.queuedId = undefined; row.error = ''; row.needsRecheck = true; row.state = 'pending' }
-  function update(row: ArchiveRecoveryRow, patch: Partial<Pick<ArchiveRecoveryRow,'password'|'outputDirectory'|'extractDirectory'>>) {
+  function forgetResult(row:ArchiveRecoveryRow) { if (busy.value) return; row.result = undefined; row.resultPassword = ''; row.resultZipPasswordEncoding = undefined; row.queuedId = undefined; row.error = ''; row.needsRecheck = true; row.state = 'pending' }
+  function update(row: ArchiveRecoveryRow, patch: Partial<Pick<ArchiveRecoveryRow,'password'|'outputDirectory'|'extractDirectory'|'zipPasswordEncoding'>>) {
     if (busy.value) return
-    if (patch.password !== undefined && patch.password !== row.password) { row.report = undefined; row.error = ''; row.state = row.result ? 'repaired' : 'pending' }
+    if ((patch.password !== undefined && patch.password !== row.password)
+      || (Object.hasOwn(patch,'zipPasswordEncoding') && patch.zipPasswordEncoding !== row.zipPasswordEncoding)) { row.report = undefined; row.error = ''; row.state = row.result ? 'repaired' : 'pending' }
     Object.assign(row, patch)
   }
   return {rows,busy,preparing,selected,repairable,queueable,completed,sourcePaths,rootDirectory,saveError,recoveryCount,restore,discardPrevious,clear,load,check,repair,stop,queue,update,forgetResult}

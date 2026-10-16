@@ -13,3 +13,12 @@ export const ZIP_PASSWORD_ENCODING_OPTIONS = [
 export function isZipPasswordEncoding(value: unknown): value is ZipPasswordEncoding {
   return typeof value === 'string' && (ZIP_PASSWORD_ENCODINGS as readonly string[]).includes(value)
 }
+
+/** Keep legacy calls unchanged when no explicit input override was chosen. */
+export function zipPasswordEncodingArguments(encoding?: ZipPasswordEncoding): [] | [ZipPasswordEncoding] {
+  return encoding === undefined ? [] : [encoding]
+}
+
+export function zipPasswordEncodingLabel(encoding: ZipPasswordEncoding) {
+  return ZIP_PASSWORD_ENCODING_OPTIONS.find(option => option.value === encoding)!.label
+}

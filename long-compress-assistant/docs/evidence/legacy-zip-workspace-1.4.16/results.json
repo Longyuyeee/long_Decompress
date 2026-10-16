@@ -1,0 +1,76 @@
+{
+  "verifiedAt": "2026-10-16T20:09:15.110Z",
+  "applicationSha256": "f00d69649ff6139b3e8a782840cff867b16f18db588819972192e718cbc27904",
+  "source": "pinned, unmodified Info-ZIP originals; damaged copies remove central directory only",
+  "results": [
+    {
+      "scenario": "original-preview-selected-extraction",
+      "code": "cp932",
+      "sourceHash": "a9991d69d4f7d5ab41e1290ccaaa1f4adf91acae54ecc59ebae52d0038677123",
+      "outputHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea"
+    },
+    {
+      "scenario": "original-preview-selected-extraction",
+      "code": "cp936",
+      "sourceHash": "df332d71bb85cb40de348e07d52dd7417d8de6dd983b2689b516edaf4add48c9",
+      "outputHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea"
+    },
+    {
+      "scenario": "original-preview-selected-extraction",
+      "code": "cp950",
+      "sourceHash": "0aeb6674db3b100761f05205e6c239f96501478af8c9824ef4eb625b4f8e071c",
+      "outputHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea"
+    },
+    {
+      "scenario": "nested-parent-cp932-child-cp950",
+      "restoredParent": true
+    },
+    {
+      "scenario": "single-repair-independent-read-browse-queue",
+      "code": "cp932",
+      "taskId": "hso9h21zkmvbehtoq",
+      "repairedHash": "de6aca1e0630538d81b0efd395806a5b0b548b69ef2662456680b184981fcc86"
+    },
+    {
+      "scenario": "batch-repair-independent-full-read",
+      "code": "cp932",
+      "repairedHash": "c00c90bd38de863d4f14f13f2dda4209878323e9edc1127ca8a5d7afa90c317b"
+    },
+    {
+      "scenario": "batch-repair-independent-full-read",
+      "code": "cp936",
+      "repairedHash": "aae8bc72cbabe54d664079c3897893313b9cedb9a2a9bc8aabfee667581af7ed"
+    },
+    {
+      "scenario": "batch-repair-independent-full-read",
+      "code": "cp950",
+      "repairedHash": "716ed79e4d9ecaeb998e18000aa94e8d2fb17cb7fba677e4d6893630e36d6d25"
+    },
+    {
+      "scenario": "repaired-batch-real-queue",
+      "taskIds": [
+        "3grqhya7vmvbei5o1",
+        "1gicqehozmvbei5o5",
+        "ewjvxvhn6mvbei5o6"
+      ],
+      "outputHashes": [
+        "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea",
+        "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea",
+        "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea"
+      ]
+    }
+  ],
+  "screenshots": [
+    "browser-menu-1100x700.png",
+    "browser-menu-920x620.png",
+    "browser-menu-760x520.png",
+    "diagnosis-menu-1100x700.png",
+    "diagnosis-menu-760x520.png",
+    "single-repair-result.png",
+    "recovery-row-menu-1100x700.png",
+    "recovery-row-menu-760x520.png",
+    "recovery-batch-menu-1100x700.png",
+    "recovery-batch-menu-760x520.png",
+    "batch-repair-results.png"
+  ]
+}

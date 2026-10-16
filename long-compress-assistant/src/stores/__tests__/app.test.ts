@@ -7,6 +7,15 @@ const mocks = vi.hoisted(() => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 
 describe('App Store Explorer context menu synchronization', () => {
+  it('consumes archive input credentials once and does not carry them into an unrelated open', () => {
+    const store=useAppStore()
+    store.openArchiveInBrowser('C:/repaired.zip',{password:'session-only-secret',zipPasswordEncoding:'cp932'})
+    expect(store.takeArchiveBrowserOptions()).toEqual({password:'session-only-secret',zipPasswordEncoding:'cp932'})
+    expect(store.takeArchiveBrowserPath()).toBe('C:/repaired.zip')
+    store.openArchiveInBrowser('C:/other.zip')
+    expect(store.takeArchiveBrowserOptions()).toEqual({})
+    expect(localStorage.getItem('app-settings') || '').not.toContain('session-only-secret')
+  })
   let registered = false
 
   beforeEach(() => {

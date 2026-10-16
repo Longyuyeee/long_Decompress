@@ -12,6 +12,9 @@ import { open, save } from '@tauri-apps/api/dialog'
 import { useTaskStore } from '@/stores/task'
 import { generateId } from '@/utils'
 import { parentDirectory } from '@/utils/resultLocation'
+import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
+import { zipPasswordEncodingArguments, zipPasswordEncodingLabel, type ZipPasswordEncoding } from '@/types/zipPassword'
+import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 
 const appStore = useAppStore()
 const uiStore = useUIStore()
@@ -20,6 +23,11 @@ const taskStore = useTaskStore()
 const recoveryTaskId = ref('')
 const recoveredDraftId = ref('')
 const recoveredPassword = ref('')
+const recoveredZipPasswordEncoding = ref<ZipPasswordEncoding>()
+const archiveZipPasswordEncoding = ref<ZipPasswordEncoding>()
+const sourceFormat = ref<string>()
+const sourceEncoding = computed(() => sourceFormat.value
+  ? zipPasswordEncodingForSource(archivePath.value, archiveZipPasswordEncoding.value, sourceFormat.value) : archiveZipPasswordEncoding.value)
 const recoveryOptions = ref<{ outputPath?: string; extractToSubfolder?: boolean }>({})
 
 interface ChecksumResult {
@@ -48,6 +56,7 @@ watch(recoveryVolumesVisible, visible => { if (!visible) recoveryVolumesPassword
 async function inspectBatchItem(row: ArchiveRecoveryRow) {
   if (row.needsRecheck) return
   archivePath.value = row.path; archivePassword.value = row.password; repairResult.value = null
+  archiveZipPasswordEncoding.value = row.zipPasswordEncoding; sourceFormat.value = row.report?.actualFormat
   recoveryTaskId.value = ''; recoveryOptions.value = {}; recoveredDraftId.value = ''; recoveredPassword.value = ''
   batchDetailOpen.value = true
   await nextTick()
@@ -63,7 +72,7 @@ const isRepairing = ref(false)
 const repairId = ref('')
 const isCancellingRepair = ref(false)
 
-watch(archivePassword, () => { diagnosticReport.value = null })
+watch([archivePassword, archiveZipPasswordEncoding], () => { diagnosticReport.value = null })
 
 const algorithms = [
   { value: 'crc32', label: 'CRC32', description: '快速校验' },
@@ -222,12 +231,15 @@ const clearResults = () => {
   diagnosticSources.value = []
   batchDetailOpen.value = false
   archivePassword.value = ''
+  archiveZipPasswordEncoding.value = undefined
+  sourceFormat.value = undefined
   diagnosticReport.value = null
   repairResult.value = null
   recoveryTaskId.value = ''
   recoveryOptions.value = {}
   recoveredDraftId.value = ''
   recoveredPassword.value = ''
+  recoveredZipPasswordEncoding.value = undefined
 }
 
 function resumeRecoveryWorkspace() {
@@ -252,6 +264,9 @@ const selectArchive = async () => {
   if (paths.length) {
     if (paths.length === 1) recoveryWorkspace.clear()
     archivePath.value = paths[0]
+    archivePassword.value = ''
+    archiveZipPasswordEncoding.value = undefined
+    sourceFormat.value = undefined
     diagnosticSources.value = paths
     batchDetailOpen.value = false
     diagnosticReport.value = null
@@ -272,7 +287,9 @@ const diagnoseArchive = async () => {
   try {
     diagnosticReport.value = await tauriCommands.diagnoseArchive(
       diagnosticId.value, archivePath.value, archivePassword.value,
+      ...zipPasswordEncodingArguments(sourceEncoding.value),
     )
+    sourceFormat.value = diagnosticReport.value.actualFormat
   } catch (error) {
     if (!String(error).toLocaleLowerCase().includes('cancel')) {
       appStore.setError(`归档诊断失败：${String(error)}`)
@@ -292,6 +309,8 @@ const defaultRepairPath = () => archivePath.value.replace(/(?:\.z\d+|\.\d{3,})$/
 
 const repairArchive = async () => {
   if (!diagnosticReport.value?.canRepair || isRepairing.value) return
+  const report = diagnosticReport.value
+  const source = archivePath.value, secret = archivePassword.value, encoding = sourceEncoding.value
   const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
     ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
   const outputPath = queued === undefined ? isRar.value ? await open({ directory: true, multiple: false, title: '选择修复结果保存目录' }) : await save({
@@ -300,6 +319,7 @@ const repairArchive = async () => {
     filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
   }) : queued
   if (typeof outputPath !== 'string' || !outputPath) return
+  if (diagnosticReport.value !== report || archivePath.value !== source || archivePassword.value !== secret || sourceEncoding.value !== encoding) return
   isCancellingRepair.value = false
   isRepairing.value = true
   repairId.value = `repair-${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -307,8 +327,9 @@ const repairArchive = async () => {
     repairResult.value = null
     repairResult.value = isRar.value
       ? await tauriCommands.repairRar(repairId.value, archivePath.value, outputPath, archivePassword.value)
-      : await tauriCommands.repairZip(repairId.value, archivePath.value, outputPath, archivePassword.value)
+      : await tauriCommands.repairZip(repairId.value, source, outputPath, secret, ...zipPasswordEncodingArguments(encoding))
     recoveredPassword.value = repairResult.value.outputEncrypted ? archivePassword.value : ''
+    recoveredZipPasswordEncoding.value = repairResult.value.outputEncrypted && repairResult.value.format !== 'RAR' ? encoding ?? 'utf8' : undefined
     recoveredDraftId.value = ''
     if (repairResult.value.partial || repairResult.value.skippedEntries.length) {
       uiStore.showToast('warning', '部分恢复：已恢复可读条目，请核对内容是否齐全', 6000)
@@ -336,8 +357,16 @@ const locateRepair = async () => {
   catch { appStore.setError('无法定位恢复文件，请确认文件仍在原位置') }
 }
 
+const browseRepair = () => {
+  if (!repairResult.value) return
+  appStore.openArchiveInBrowser(repairResult.value.outputPath, {
+    password: recoveredPassword.value, zipPasswordEncoding: recoveredZipPasswordEncoding.value,
+  })
+}
+
 const statusLabel = (status: string) => ({
   healthy: '完整性正常', password_required: '需要密码', wrong_password: '密码错误',
+  password_encoding: 'ZIP 密码编码不兼容',
   directory_lost: '目录信息丢失，可尝试救援',
   partial_recovery: '缺少分卷，可尝试部分救援',
   missing_volume: '缺少分卷', crc_error: '内容校验失败', truncated: '归档被截断',
@@ -395,6 +424,7 @@ watch(() => isDiagnosing.value || isRepairing.value || batchBusy.value ? null : 
   diagnosticSources.value = request.paths || [request.path]
   if (diagnosticSources.value.length < 2) recoveryWorkspace.clear()
   archivePassword.value = request.password || ''
+  archiveZipPasswordEncoding.value = request.zipPasswordEncoding
   recoveryTaskId.value = request.taskId || ''
   recoveryOptions.value = { outputPath: request.outputPath, extractToSubfolder: request.extractToSubfolder }
   if (diagnosticSources.value.length < 2) void diagnoseArchive()
@@ -415,6 +445,7 @@ const queueRecoveredArchive = async () => {
     outputPath: recoveryOptions.value.outputPath || original?.outputPath || parentDirectory(result.outputPath),
     extractToSubfolder: recoveryOptions.value.extractToSubfolder ?? original?.extractToSubfolder ?? true, configurationMode: 'individual',
     recycleSourceAfterExtract: false, password: recoveredPassword.value || undefined,
+    zipPasswordEncoding: recoveredZipPasswordEncoding.value,
     retryOfTaskId: original?.id })
   recoveredDraftId.value = id
   if (original) original.retryDraftId = id
@@ -619,6 +650,7 @@ onUnmounted(() => {
                 :disabled="isDiagnosing || isRepairing"
               />
             </div>
+            <ZipPasswordEncodingField v-if="archivePath && (supportsZipPasswordEncoding(archivePath, sourceFormat) || (!sourceFormat && archiveZipPasswordEncoding !== undefined))" v-model="archiveZipPasswordEncoding" :disabled="isDiagnosing || isRepairing" class="mt-3 max-w-sm" test-id="diagnosis-zip-password-encoding" />
             <p v-if="archivePath" class="mt-3 text-xs text-muted break-all">{{ archivePath }}</p>
             <div class="mt-5 flex flex-wrap gap-3">
               <button v-if="!isDiagnosing" data-testid="start-archive-diagnosis" type="button" class="archive-primary" :disabled="!archivePath || isRepairing" @click="diagnoseArchive">
@@ -665,7 +697,7 @@ onUnmounted(() => {
             <div v-if="diagnosticReport.canRepair" class="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
               <strong class="text-sm text-content">{{ isRar ? diagnosticReport.recoverability === 'rar_recovery_volumes' ? '可尝试使用恢复卷补齐或修复 RAR' : '可尝试修复 RAR' : diagnosticReport.encrypted ? '可尝试救回密码 ZIP 中的完整文件' : '可尝试恢复 ZIP 中的完整文件' }}</strong>
               <p class="mt-2 text-xs leading-5 text-muted">{{ isRar ? '在副本中使用本机 RAR 工具处理，完整校验通过后保存到新的 .repaired 文件夹；原件保持不变。恢复数据不足时可能无法修复。' : '只把仍能完整读取的条目写入新文件，跳过损坏条目；原压缩包不会被覆盖或删除。' }}</p>
-              <p v-if="diagnosticReport.encrypted && !isRar" class="repair-password-note mt-3" data-testid="repair-password-note"><i class="pi pi-lock"></i><span>新包沿用填写的密码，使用 AES-256 加密（UTF-8）。</span></p>
+              <p v-if="diagnosticReport.encrypted && !isRar" class="repair-password-note mt-3" data-testid="repair-password-note"><i class="pi pi-lock"></i><span>新包沿用填写的密码，使用 AES-256 加密（{{ zipPasswordEncodingLabel(sourceEncoding ?? 'utf8') }}）。</span></p>
               <button v-if="!isRepairing" data-testid="start-archive-repair" type="button" class="archive-primary mt-4" @click="repairArchive">
                 <i class="pi pi-wrench"></i>选择位置并修复
               </button>
@@ -679,11 +711,11 @@ onUnmounted(() => {
             <h2 class="text-lg font-black" :class="repairResult.partial || repairResult.skippedEntries.length ? 'text-amber-600' : 'text-green-500'">{{ repairResult.partial || repairResult.skippedEntries.length ? '部分恢复 · 新文件已通过校验' : '修复文件已通过完整性校验' }}</h2>
             <p class="mt-3 text-xs text-muted break-all">{{ repairResult.outputPath }}</p>
             <p class="mt-3 text-sm text-content">恢复 {{ repairResult.recoveredFiles }} 个文件、{{ repairResult.recoveredDirectories }} 个目录；未恢复说明 {{ repairResult.skippedEntries.length }} 项。</p>
-            <p class="repair-password-note mt-3" data-testid="repair-output-encryption"><i :class="repairResult.outputEncrypted ? 'pi pi-lock' : 'pi pi-folder'"></i><span>{{ repairResult.outputEncrypted ? repairResult.format === 'RAR' ? '修复后的 RAR 保留原加密方式与密码。' : '新包已使用 AES-256 加密，密码与恢复时填写的一致（UTF-8）。' : '新包未设置密码。' }}</span></p>
+            <p class="repair-password-note mt-3" data-testid="repair-output-encryption"><i :class="repairResult.outputEncrypted ? 'pi pi-lock' : 'pi pi-folder'"></i><span>{{ repairResult.outputEncrypted ? repairResult.format === 'RAR' ? '修复后的 RAR 保留原加密方式与密码。' : `新包已使用 AES-256 加密，密码与恢复时填写的一致（${zipPasswordEncodingLabel(recoveredZipPasswordEncoding ?? 'utf8')}）。` : '新包未设置密码。' }}</span></p>
             <p v-if="repairResult.outputFiles && repairResult.outputFiles.length > 1" class="mt-2 text-xs text-muted" data-testid="rar-repair-volumes">已保存 {{ repairResult.outputFiles.length }} 个数据卷，请整组保留；加入队列时会自动从首卷解压。</p>
             <p v-if="repairResult.directoryRebuilt" class="mt-2 text-xs text-amber-600">目录信息已重建，原包总条目数无法确认，请核对内容是否齐全。</p>
             <ArchiveRecoveryDetails class="mt-3" :recovered-entries="repairResult.recoveredEntries" :skipped-entries="repairResult.skippedEntries" />
-            <div class="mt-4 flex flex-wrap gap-3"><button type="button" class="archive-secondary" @click="locateRepair"><i class="pi pi-folder-open"></i>定位新包</button><button type="button" class="archive-secondary" @click="copyChecksum(repairResult.outputPath)"><i class="pi pi-copy"></i>复制路径</button></div>
+            <div class="mt-4 flex flex-wrap gap-3"><button type="button" class="archive-secondary" @click="locateRepair"><i class="pi pi-folder-open"></i>定位新包</button><button type="button" class="archive-secondary" data-testid="browse-repaired-archive" @click="browseRepair"><i class="pi pi-box"></i>浏览新包</button><button type="button" class="archive-secondary" @click="copyChecksum(repairResult.outputPath)"><i class="pi pi-copy"></i>复制路径</button></div>
             <div class="mt-3 flex flex-wrap items-center gap-3"><button type="button" data-testid="queue-recovered-archive" class="archive-primary" :disabled="!!recoveredDraftId" @click="queueRecoveredArchive"><i class="pi pi-plus"></i>{{ recoveredDraftId ? '已加入解压队列' : '将新包加入解压队列' }}</button><a v-if="recoveredDraftId" href="#/decompress" class="text-sm font-bold text-primary">返回解压中心</a></div>
           </section>
         </div>

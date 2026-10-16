@@ -2,6 +2,12 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { translations } from '../i18n'
 import { invoke } from '@tauri-apps/api/tauri'
+import type { ZipPasswordEncoding } from '@/types/zipPassword'
+
+export interface ArchiveReadOptions { password?: string; zipPasswordEncoding?: ZipPasswordEncoding }
+export interface ArchiveDiagnosisRequest extends ArchiveReadOptions {
+  path: string; paths?: string[]; taskId?: string; outputPath?: string; extractToSubfolder?: boolean
+}
 
 export interface DecompressTask {
   id: string
@@ -77,7 +83,8 @@ export const useAppStore = defineStore('app', () => {
   const decompressTasks = ref<DecompressTask[]>([])
   const pendingContextActions = ref<Array<{ action: string; files: string[]; outputPath?: string }>>([])
   const pendingArchiveBrowserPath = ref('')
-  const pendingArchiveDiagnosis = ref<{ path: string; paths?: string[]; taskId?: string; password?: string; outputPath?: string; extractToSubfolder?: boolean } | null>(null)
+  const pendingArchiveBrowserOptions = ref<ArchiveReadOptions>({})
+  const pendingArchiveDiagnosis = ref<ArchiveDiagnosisRequest | null>(null)
   let errorTimer: ReturnType<typeof setTimeout> | null = null
   let successTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -346,11 +353,13 @@ export const useAppStore = defineStore('app', () => {
     clearError: () => { error.value = null; if (errorTimer) clearTimeout(errorTimer) },
     enqueueContextAction: (action: { action: string; files: string[]; outputPath?: string }) => pendingContextActions.value.push(action),
     takeContextActions: () => pendingContextActions.value.splice(0),
-    openArchiveInBrowser: (path: string) => { pendingArchiveBrowserPath.value = path },
-    openArchiveForDiagnosis: (request: { path: string; paths?: string[]; taskId?: string; password?: string; outputPath?: string; extractToSubfolder?: boolean }) => { pendingArchiveDiagnosis.value = request },
+    openArchiveInBrowser: (path: string, options: ArchiveReadOptions = {}) => { pendingArchiveBrowserOptions.value = { ...options }; pendingArchiveBrowserPath.value = path },
+    takeArchiveBrowserOptions: () => { const options = pendingArchiveBrowserOptions.value; pendingArchiveBrowserOptions.value = {}; return options },
+    openArchiveForDiagnosis: (request: ArchiveDiagnosisRequest) => { pendingArchiveDiagnosis.value = request },
     takeArchiveBrowserPath: () => {
       const path = pendingArchiveBrowserPath.value
       pendingArchiveBrowserPath.value = ''
+      pendingArchiveBrowserOptions.value = {}
       return path
     },
     createDecompressTask, updateTaskProgress, markTaskAsError, clearCompletedTasks, updateSettings, resetSettings, saveSettingsToStorage,

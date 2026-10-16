@@ -67,7 +67,7 @@ async function openSourceFolder(row: typeof rows.value[number]) {
 }
 function rescueSource(row: typeof rows.value[number]) {
   if (busy.value || pickerBusy.value || !row.source.trim()) return
-  appStore.openArchiveForDiagnosis({ path: row.source.trim(), taskId: row.id, password: row.password, outputPath: row.output.trim(), extractToSubfolder: row.extractToSubfolder })
+  appStore.openArchiveForDiagnosis({ path: row.source.trim(), taskId: row.id, password: row.password, zipPasswordEncoding: row.zipPasswordEncoding, outputPath: row.output.trim(), extractToSubfolder: row.extractToSubfolder })
   row.password = ''
   close()
 }

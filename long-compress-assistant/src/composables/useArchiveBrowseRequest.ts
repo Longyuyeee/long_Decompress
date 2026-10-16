@@ -1,7 +1,8 @@
 import { ref } from 'vue'
 import type { ArchiveBrowseResult } from '@/composables/useTauriCommands'
+import { zipPasswordEncodingArguments, type ZipPasswordEncoding } from '@/types/zipPassword'
 
-type BrowseArchive = (filePath: string, password?: string, browseId?: string) => Promise<ArchiveBrowseResult>
+type BrowseArchive = (filePath: string, password?: string, browseId?: string, encoding?: ZipPasswordEncoding) => Promise<ArchiveBrowseResult>
 type CancelArchiveBrowse = (browseId: string) => Promise<void>
 
 const createBrowseId = () => globalThis.crypto?.randomUUID?.()
@@ -23,13 +24,13 @@ export const useArchiveBrowseRequest = (
   const notice = ref('')
   let activeBrowseId = ''
 
-  const run = async (filePath: string, password?: string) => {
+  const run = async (filePath: string, password?: string, encoding?: ZipPasswordEncoding) => {
     const browseId = createBrowseId()
     activeBrowseId = browseId
     loading.value = true
     notice.value = ''
     try {
-      return await browseArchive(filePath, password, browseId)
+      return await browseArchive(filePath, password, browseId, ...zipPasswordEncodingArguments(encoding))
     } catch (error) {
       if (activeBrowseId === browseId) notice.value = describeArchiveBrowseError(error)
       throw error

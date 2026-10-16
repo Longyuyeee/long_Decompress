@@ -2,6 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { describeArchiveBrowseError, useArchiveBrowseRequest } from '../useArchiveBrowseRequest'
 
 describe('useArchiveBrowseRequest', () => {
+  it('forwards an explicit ZIP input codepage with the same cancellable request id', async () => {
+    const browse=vi.fn().mockResolvedValue({entries:[]})
+    const request=useArchiveBrowseRequest(browse,vi.fn())
+    await request.run('C:/old.zip','source secret','cp932')
+    expect(browse).toHaveBeenCalledWith('C:/old.zip','source secret',expect.any(String),'cp932')
+  })
   it('keeps a failed read reason on the page and clears it on the next attempt', async () => {
     const browse = vi.fn().mockRejectedValueOnce('ARCHIVE_BROWSE_CORRUPTED|LZIP 校验未通过，请重新获取完整文件|CRC32 mismatch').mockResolvedValueOnce({ entries: [] })
     const request = useArchiveBrowseRequest(browse, vi.fn())
