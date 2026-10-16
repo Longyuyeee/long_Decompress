@@ -104,6 +104,14 @@ impl UniversalCliEngine {
 
     fn zip_inspection_error(error: zip_aes::result::ZipError) -> anyhow::Error {
         use zip_aes::result::ZipError;
+        if let ZipError::Io(cause) = &error {
+            if let Some(encoding) = cause.get_ref().and_then(|cause| cause.downcast_ref::<super::zip_password::ZipPasswordEncodingError>()) {
+                let summary = if encoding.is_unrepresentable() { "此密码无法按所选 ZIP 编码无损表示，请更换编码" }
+                    else { "ZIP 密码编码转换失败，请查看原始错误后重试" };
+                let message = format!("[archive-inspection:password-encoding] {summary}：{cause}");
+                return anyhow::Error::new(error).context(message);
+            }
+        }
         let (code, summary) = match &error {
             ZipError::InvalidArchive(_) => ("damaged", "ZIP 归档结构损坏或不完整，请确认下载完整后重试"),
             ZipError::Io(cause) if cause.kind() == std::io::ErrorKind::UnexpectedEof =>
@@ -148,7 +156,8 @@ impl UniversalCliEngine {
         let mut buffer = None;
         for index in selection.encrypted_indices {
             check_control()?;
-            match crate::services::zip_password::open_entry(&mut archive, index, password) {
+            match crate::services::zip_password::open_entry_with_encoding(
+                &mut archive, index, password, options.zip_password_encoding) {
                 Ok(mut entry) => {
                     if entry.is_dir() {
                         continue;

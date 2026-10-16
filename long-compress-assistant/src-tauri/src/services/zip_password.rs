@@ -1,6 +1,8 @@
 //! ZIP password byte encoding. UTF-8 remains the default; local compatibility
 //! must be selected explicitly and must never replace unrepresentable characters.
-use anyhow::{bail, Result};
+use anyhow::Result;
+#[cfg(not(windows))]
+use anyhow::bail;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -53,6 +55,16 @@ pub struct ZipPasswordEncodingError {
     source: anyhow::Error,
 }
 
+#[derive(Debug, thiserror::Error)]
+#[error("{0}")]
+struct UnrepresentablePassword(String);
+
+impl ZipPasswordEncodingError {
+    pub(crate) fn is_unrepresentable(&self) -> bool {
+        self.source.downcast_ref::<UnrepresentablePassword>().is_some()
+    }
+}
+
 impl std::fmt::Display for ZipPasswordEncodingError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.source.fmt(formatter)
@@ -63,6 +75,14 @@ impl std::error::Error for ZipPasswordEncodingError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         Some(self.source.as_ref())
     }
+}
+
+pub(crate) fn encoding_error(error: &anyhow::Error) -> Option<&ZipPasswordEncodingError> {
+    error.chain().find_map(|cause| {
+        cause.downcast_ref::<ZipPasswordEncodingError>().or_else(|| {
+            cause.downcast_ref::<std::io::Error>()?.get_ref()?.downcast_ref::<ZipPasswordEncodingError>()
+        })
+    })
 }
 
 pub fn encode(password: &str, encoding: ZipPasswordEncoding) -> Result<Vec<u8>> {
@@ -223,9 +243,9 @@ fn encode_windows_code_page(password: &str, code_page: u32, require_round_trip: 
     }
     if substituted != 0 {
         if !require_round_trip {
-            bail!("ZIP password contains characters unavailable in Windows code page {code_page}; use UTF-8 or 7Z");
+            return Err(UnrepresentablePassword(format!("ZIP password contains characters unavailable in Windows code page {code_page}; use UTF-8 or 7Z")).into());
         }
-        bail!("ZIP 密码含有 Windows 代码页 {code_page} 无法表示的字符；请选择 UTF-8 或 7Z，不会替换字符");
+        return Err(UnrepresentablePassword(format!("ZIP 密码含有 Windows 代码页 {code_page} 无法表示的字符；请选择 UTF-8 或 7Z，不会替换字符")).into());
     }
     let mut bytes = vec![0; size as usize];
     // SAFETY: input remains valid; output has exactly the size requested above.
@@ -238,9 +258,9 @@ fn encode_windows_code_page(password: &str, code_page: u32, require_round_trip: 
     }
     if substituted != 0 {
         if !require_round_trip {
-            bail!("ZIP password cannot be encoded without character replacement");
+            return Err(UnrepresentablePassword("ZIP password cannot be encoded without character replacement".into()).into());
         }
-        bail!("ZIP 密码无法无损使用 Windows 代码页 {code_page}，不会替换字符");
+        return Err(UnrepresentablePassword(format!("ZIP 密码无法无损使用 Windows 代码页 {code_page}，不会替换字符")).into());
     }
     bytes.truncate(written as usize);
     if require_round_trip {
@@ -258,7 +278,7 @@ fn encode_windows_code_page(password: &str, code_page: u32, require_round_trip: 
         if restored_count <= 0 { return Err(std::io::Error::last_os_error().into()); }
         restored.truncate(restored_count as usize);
         if restored != wide {
-            bail!("ZIP 密码无法无损使用 Windows 代码页 {code_page}，不会替换字符");
+            return Err(UnrepresentablePassword(format!("ZIP 密码无法无损使用 Windows 代码页 {code_page}，不会替换字符")).into());
         }
     }
     Ok(bytes)
@@ -267,6 +287,20 @@ fn encode_windows_code_page(password: &str, code_page: u32, require_round_trip: 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn candidate_encoding_error_distinguishes_lossy_text_from_system_failures() {
+        for unrepresentable in [false, true] {
+            let cause: anyhow::Error = if unrepresentable { UnrepresentablePassword("cannot encode".into()).into() }
+                else { std::io::Error::new(std::io::ErrorKind::Other, "codepage conversion system failure").into() };
+            let error = anyhow::Error::new(zip_aes::result::ZipError::Io(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput, ZipPasswordEncodingError { encoding: ZipPasswordEncoding::Cp932, source: cause })))
+                .context("password inspection");
+            let encoding = encoding_error(&error).unwrap();
+            assert_eq!(encoding.encoding, ZipPasswordEncoding::Cp932);
+            assert_eq!(encoding.is_unrepresentable(), unrepresentable);
+        }
+    }
 
     #[cfg(windows)]
     fn legacy_fixture_cases() -> [(u32, &'static str, &'static [u8]); 3] {

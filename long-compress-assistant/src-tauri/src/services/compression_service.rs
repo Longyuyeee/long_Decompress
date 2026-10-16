@@ -34,6 +34,13 @@ use crate::services::native_extraction::{self, ExtractionRuntime};
 use crate::services::output_publish_transaction::{self, PublishError};
 use crate::services::split_archive_detector::SplitArchiveDetector;
 
+#[derive(Debug, PartialEq, Eq)]
+enum PasswordCandidateOutcome {
+    Matched,
+    Mismatch,
+    Unrepresentable(ZipPasswordEncoding),
+}
+
 pub use crate::services::archive_format::ArchiveFormat;
 pub use crate::services::compression_format::{
     CompressionFormatCapability, COMPRESSION_FORMAT_CAPABILITIES,
@@ -1509,7 +1516,7 @@ impl CompressionService {
     async fn attempt_recommended_dictionary_silent(&self, file_path: &str, options: &DecompressOptions) -> Result<Option<String>> {
         for password in Self::recommended_dictionary(file_path) {
             self.check_cancellation()?;
-            if self.test_extraction_password(file_path, &password, options).await? {
+            if self.test_password_candidate(file_path, &password, options).await? == PasswordCandidateOutcome::Matched {
                 return Ok(Some(password));
             }
         }
@@ -1542,8 +1549,8 @@ impl CompressionService {
             );
             let attempt_started_at = Instant::now();
             *attempts += 1;
-            match self.test_extraction_password(file_path, &password, options).await? {
-                true => {
+            match self.test_password_candidate(file_path, &password, options).await? {
+                PasswordCandidateOutcome::Matched => {
                     self.emit_log(
                         window,
                         task_id,
@@ -1558,7 +1565,7 @@ impl CompressionService {
                     );
                     return Ok(Some(password));
                 }
-                false => {
+                PasswordCandidateOutcome::Mismatch => {
                     // The live progress payload already exposes every candidate.
                     // Keep the permanent task log readable by sampling routine
                     // misses instead of appending hundreds of near-identical rows.
@@ -1577,6 +1584,7 @@ impl CompressionService {
                         );
                     }
                 },
+                PasswordCandidateOutcome::Unrepresentable(encoding) => self.emit_unrepresentable_candidate(window, task_id, encoding),
             }
         }
 
@@ -1584,7 +1592,7 @@ impl CompressionService {
             window,
             task_id,
             &format!(
-                "内置密码字典已完成 {} 次尝试，未找到匹配项；总耗时 {}",
+                "内置密码字典已检查 {} 个候选，未找到匹配项；总耗时 {}",
                 total,
                 Self::elapsed_label(started_at)
             ),
@@ -1638,9 +1646,9 @@ impl CompressionService {
 
         for (_entry_id, _entry_name, password) in passwords {
             self.check_cancellation()?;
-            match self.test_extraction_password(file_path, &password, options).await? {
-                true => return Ok(Some(password)),
-                false => continue,
+            match self.test_password_candidate(file_path, &password, options).await? {
+                PasswordCandidateOutcome::Matched => return Ok(Some(password)),
+                PasswordCandidateOutcome::Mismatch | PasswordCandidateOutcome::Unrepresentable(_) => continue,
             }
         }
 
@@ -1694,8 +1702,8 @@ impl CompressionService {
             let attempt_started_at = Instant::now();
 
             *attempts += 1;
-            match self.test_extraction_password(file_path, pwd, options).await? {
-                true => {
+            match self.test_password_candidate(file_path, pwd, options).await? {
+                PasswordCandidateOutcome::Matched => {
                     self.emit_log(
                         window,
                         task_id,
@@ -1711,7 +1719,7 @@ impl CompressionService {
                     );
                     return Ok(Some(pwd.clone()));
                 },
-                false => self.emit_log(
+                PasswordCandidateOutcome::Mismatch => self.emit_log(
                     window,
                     task_id,
                     &format!(
@@ -1724,6 +1732,7 @@ impl CompressionService {
                     ),
                     TaskLogSeverity::Info,
                 ),
+                PasswordCandidateOutcome::Unrepresentable(encoding) => self.emit_unrepresentable_candidate(window, task_id, encoding),
             }
         }
         
@@ -1763,7 +1772,7 @@ impl CompressionService {
                     continue;
                 }
 
-                if self.test_extraction_password(file_path, &password, options).await? {
+                if self.test_password_candidate(file_path, &password, options).await? == PasswordCandidateOutcome::Matched {
                     return Ok(Some(password));
                 }
             }
@@ -1831,8 +1840,8 @@ impl CompressionService {
                 );
                 let attempt_started_at = Instant::now();
                 *attempts += 1;
-                match self.test_extraction_password(file_path, &password, options).await? {
-                    true => {
+                match self.test_password_candidate(file_path, &password, options).await? {
+                    PasswordCandidateOutcome::Matched => {
                         self.emit_log(
                             window,
                             task_id,
@@ -1846,7 +1855,7 @@ impl CompressionService {
                         );
                         return Ok(Some(password));
                     }
-                    false => {
+                    PasswordCandidateOutcome::Mismatch => {
                         if attempted == 1 || attempted.is_multiple_of(25) {
                             self.emit_log(
                                 window,
@@ -1861,6 +1870,7 @@ impl CompressionService {
                             );
                         }
                     }
+                    PasswordCandidateOutcome::Unrepresentable(encoding) => self.emit_unrepresentable_candidate(window, task_id, encoding),
                 }
             }
         }
@@ -1869,7 +1879,7 @@ impl CompressionService {
             window,
             task_id,
             &format!(
-                "导入密码词表已完成 {} 次有效尝试，未找到匹配项；总耗时 {}",
+                "导入密码词表已检查 {} 个候选，未找到匹配项；总耗时 {}",
                 attempted,
                 Self::elapsed_label(started_at)
             ),
@@ -3423,13 +3433,29 @@ impl CompressionService {
     }
 
     async fn test_extraction_password(&self, file_path: &str, password: &str, options: &DecompressOptions) -> Result<bool> {
-        if crate::services::zip_selection::has_selection(options)
-            && Self::detect_password_format(file_path)? == ArchiveFormat::Zip
-        {
+        self.check_cancellation()?;
+        if Self::detect_password_format(file_path)? == ArchiveFormat::Zip {
             return UniversalCliEngine::try_zip_password_for_selection_cancellable(
                 Path::new(file_path), password, options, || self.check_cancellation());
         }
         self.test_archive_password(file_path, password).await
+    }
+
+    async fn test_password_candidate(&self, file_path: &str, password: &str, options: &DecompressOptions) -> Result<PasswordCandidateOutcome> {
+        match self.test_extraction_password(file_path, password, options).await {
+            Ok(true) => Ok(PasswordCandidateOutcome::Matched),
+            Ok(false) => Ok(PasswordCandidateOutcome::Mismatch),
+            Err(error) => match crate::services::zip_password::encoding_error(&error) {
+                Some(cause) if cause.is_unrepresentable() => Ok(PasswordCandidateOutcome::Unrepresentable(cause.encoding)),
+                _ => Err(error),
+            },
+        }
+    }
+
+    fn emit_unrepresentable_candidate(&self, window: &Window, task_id: &str, encoding: ZipPasswordEncoding) {
+        self.emit_log(window, task_id, &format!(
+            "候选密码无法按所选 ZIP 编码 {} 无损表示，已跳过；不会据此判定密码错误或文件损坏", encoding.as_str()),
+            TaskLogSeverity::Info);
     }
 
     pub async fn test_archive_password(&self, file_path: &str, password: &str) -> Result<bool> {
@@ -3892,6 +3918,164 @@ mod tests {
         let public = DecompressOptions { selected_entries: vec![], ..public };
         assert_eq!(service.resolve_archive_password_silent(source.to_str().unwrap(), &public).await.unwrap(), None);
         assert_eq!(service.preflight_extraction(&source, &ArchiveFormat::Zip, None, temp.path(), &public).await.unwrap(), Some((1, 6)));
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn fixed_zip_input_options_read_real_originals_and_numeric_volumes_without_fallback() {
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/legacy-zip-password-1416");
+        let expected = std::fs::read(fixtures.join("payload.txt")).unwrap();
+        for (encoding, password) in [
+            (ZipPasswordEncoding::Cp932, "日本語パスワード+!1416"),
+            (ZipPasswordEncoding::Cp936, "简体密码测试+!1416"),
+            (ZipPasswordEncoding::Cp950, "繁體密碼測試+!1416"),
+        ] {
+            let temp = tempfile::tempdir().unwrap();
+            let original = fixtures.join(format!("{}.zip", encoding.as_str()));
+            let before = std::fs::read(&original).unwrap();
+            let split = crate::services::split_compression::SplitCompressionService::split_archive_file(
+                &original, &temp.path().join("numeric.zip"), 37, || Ok(())).unwrap();
+            let service = CompressionService::for_testing();
+            for (layout, input) in [("original", &original), ("numeric", &split.part_files[0])] {
+                for selected in [false, true] {
+                    let options = DecompressOptions { zip_password_encoding: Some(encoding),
+                        selected_entries: if selected { vec!["payload.txt".into()] } else { vec![] },
+                        parallel_zip: true, skip_corrupted: true, ..Default::default() };
+                    let source = input.to_str().unwrap();
+                    assert!(service.test_extraction_password(source, password, &options).await.unwrap());
+                    let wrong_encoding = DecompressOptions { zip_password_encoding: Some(ZipPasswordEncoding::Utf8), ..options.clone() };
+                    assert!(!service.test_extraction_password(source, password, &wrong_encoding).await.unwrap());
+                    assert!(!service.test_extraction_password(source, "wrong", &options).await.unwrap());
+                    let error = service.test_extraction_password(source, "🔑", &options).await.unwrap_err();
+                    assert!(error.to_string().contains("[archive-inspection:password-encoding]"));
+                    assert_eq!(crate::services::zip_password::encoding_error(&error).unwrap().encoding, encoding);
+                    let rejected = temp.path().join(format!("{layout}-{selected}-rejected"));
+                    let error = native_extraction::zip::extract_with_optional_window(&service, None, "1416-invalid-encoding",
+                        source, rejected.to_str().unwrap(), Some("🔑"), &options).unwrap_err();
+                    assert!(crate::services::zip_password::encoding_error(&error).is_some());
+                    assert!(!rejected.exists(), "encoding errors cannot be skipped as corrupt entries");
+                    let restored = temp.path().join(format!("{layout}-{selected}"));
+                    let (runtime, input_path, target, settings) = (service.clone(), input.to_path_buf(), restored.clone(), options.clone());
+                    tokio::task::spawn_blocking(move || native_extraction::zip::extract_with_optional_window(
+                        &runtime, None, "1416-original", input_path.to_str().unwrap(), target.to_str().unwrap(), Some(password), &settings))
+                        .await.unwrap().unwrap();
+                    assert_eq!(std::fs::read(restored.join("payload.txt")).unwrap(), expected);
+                    assert_eq!(std::fs::read_dir(&restored).unwrap().count(), 1);
+                }
+            }
+            assert_eq!(std::fs::read(&original).unwrap(), before);
+        }
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn fixed_zip_candidate_encoding_skips_only_unrepresentable_candidates() {
+        use crate::models::password::{PasswordCategory, PasswordEntry};
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/legacy-zip-password-1416");
+        for (encoding, password) in [
+            (ZipPasswordEncoding::Cp932, "日本語パスワード+!1416"),
+            (ZipPasswordEncoding::Cp936, "简体密码测试+!1416"),
+            (ZipPasswordEncoding::Cp950, "繁體密碼測試+!1416"),
+        ] {
+            let temp = tempfile::tempdir().unwrap();
+            let source = fixtures.join(format!("{}.zip", encoding.as_str()));
+            let source = source.to_str().unwrap();
+            let mut vault = EncryptedPasswordService::new(&temp.path().join("vault"));
+            vault.initialize("test-key").await.unwrap();
+            let mut first = PasswordEntry::new("unrepresentable".into(), "🔑".into(), PasswordCategory::Other);
+            first.favorite = true;
+            vault.add_password(first).await.unwrap();
+            vault.add_password(PasswordEntry::new("correct".into(), password.into(), PasswordCategory::Other)).await.unwrap();
+            let service = CompressionService::new(CompressionServiceConfig::default(), Arc::new(IOBufferPool::default()),
+                Arc::new(RarSupportService::new()), Arc::new(UniversalCliEngine::new()), Arc::new(vault));
+            let options = DecompressOptions { zip_password_encoding: Some(encoding), ..Default::default() };
+            assert_eq!(service.test_password_candidate(source, "🔑", &options).await.unwrap(), PasswordCandidateOutcome::Unrepresentable(encoding));
+            assert_eq!(service.test_password_candidate(source, "wrong", &options).await.unwrap(), PasswordCandidateOutcome::Mismatch);
+            assert_eq!(service.test_password_candidate(source, password, &options).await.unwrap(), PasswordCandidateOutcome::Matched);
+            assert_eq!(service.resolve_archive_password_silent(source, &options).await.unwrap().as_deref(), Some(password));
+            let words = temp.path().join("words.txt");
+            std::fs::write(&words, format!("🔑\nwrong\n{password}\nunused-last\n")).unwrap();
+            let wordlists = vec![words.to_string_lossy().into_owned()];
+            assert_eq!(service.attempt_bruteforce_wordlists_silent(source, &wordlists, &options).await.unwrap().as_deref(), Some(password));
+            // A candidate-local encoding failure may be skipped; a source read,
+            // content-integrity failure or cancellation must stop the search.
+            let damaged = temp.path().join("damaged.zip");
+            let mut bytes = std::fs::read(source).unwrap();
+            let mut archive = zip_aes::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
+            let entry = archive.by_index_raw(0).unwrap();
+            let tail = (entry.data_start().unwrap() + entry.compressed_size() - 1) as usize;
+            drop(entry); drop(archive);
+            bytes[tail] ^= 1;
+            std::fs::write(&damaged, bytes).unwrap();
+            let error = service.attempt_bruteforce_wordlists_silent(damaged.to_str().unwrap(), &wordlists, &options).await.unwrap_err();
+            assert!(error.to_string().contains("[archive-inspection:ambiguous-data]"));
+            assert!(crate::services::zip_password::encoding_error(&error).is_none());
+            let missing = temp.path().join("missing.zip");
+            assert!(service.test_password_candidate(missing.to_str().unwrap(), "🔑", &options).await.is_err());
+            service.cancellation_flag.store(true, Ordering::SeqCst);
+            let error = service.test_password_candidate(source, "🔑", &options).await.unwrap_err();
+            assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+        }
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn fixed_zip_input_encoding_and_selection_are_task_local() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("mixed.zip");
+        let mut writer = zip_aes::ZipWriter::new(File::create(&source).unwrap());
+        let cases = [("日文/内容.txt", ZipPasswordEncoding::Cp932, "日本語パスワード+!1416"),
+            ("繁体/内容.txt", ZipPasswordEncoding::Cp950, "繁體密碼測試+!1416")];
+        for (name, encoding, password) in cases {
+            let bytes = crate::services::zip_password::encode(password, encoding).unwrap();
+            writer.start_file(name, zip_aes::write::SimpleFileOptions::default()
+                .with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &bytes)).unwrap();
+            writer.write_all(name.as_bytes()).unwrap();
+        }
+        writer.start_file("public.txt", zip_aes::write::SimpleFileOptions::default()).unwrap();
+        writer.write_all(b"public").unwrap();
+        writer.finish().unwrap();
+        let service = CompressionService::for_testing();
+        for (name, encoding, password) in cases {
+            let options = DecompressOptions { zip_password_encoding: Some(encoding), selected_entries: vec![name.into()], ..Default::default() };
+            assert!(service.test_extraction_password(source.to_str().unwrap(), password, &options).await.unwrap());
+            let all = DecompressOptions { selected_entries: vec![], ..options.clone() };
+            assert!(!service.test_extraction_password(source.to_str().unwrap(), password, &all).await.unwrap());
+            let restored = temp.path().join(encoding.as_str());
+            let (runtime, input, target) = (service.clone(), source.clone(), restored.clone());
+            tokio::task::spawn_blocking(move || native_extraction::zip::extract_with_optional_window(
+                &runtime, None, "1416-selected", input.to_str().unwrap(), target.to_str().unwrap(), Some(password), &options))
+                .await.unwrap().unwrap();
+            assert_eq!(std::fs::read(restored.join(name)).unwrap(), name.as_bytes());
+            assert!(!restored.join("public.txt").exists());
+            assert_eq!(std::fs::read_dir(&restored).unwrap().count(), 1);
+        }
+        let public = DecompressOptions { zip_password_encoding: Some(ZipPasswordEncoding::Cp932),
+            selected_entries: vec!["public.txt".into()], ..Default::default() };
+        assert!(!service.test_extraction_password(source.to_str().unwrap(), "🔑", &public).await.unwrap());
+        let restored = temp.path().join("public-only");
+        let target = restored.clone();
+        tokio::task::spawn_blocking(move || native_extraction::zip::extract_with_optional_window(&service, None, "1416-public",
+            source.to_str().unwrap(), target.to_str().unwrap(), Some("🔑"), &public)).await.unwrap().unwrap();
+        assert_eq!(std::fs::read(restored.join("public.txt")).unwrap(), b"public");
+        assert_eq!(std::fs::read_dir(restored).unwrap().count(), 1);
+    }
+
+    #[test]
+    fn zip_input_encoding_serialization_keeps_automatic_old_requests() {
+        let old = serde_json::to_value(DecompressOptions::default()).unwrap();
+        assert!(old.get("zip_password_encoding").is_none());
+        assert_eq!(serde_json::from_value::<DecompressOptions>(old.clone()).unwrap().zip_password_encoding, None);
+        for mode in ["utf8", "windows_local", "cp932", "cp936", "cp950"] {
+            let mut request = old.clone();
+            request["zip_password_encoding"] = mode.into();
+            let options: DecompressOptions = serde_json::from_value(request).unwrap();
+            assert_eq!(options.zip_password_encoding.unwrap().as_str(), mode);
+            assert_eq!(serde_json::to_value(options).unwrap()["zip_password_encoding"], mode);
+        }
+        let mut invalid = old;
+        invalid["zip_password_encoding"] = "unknown".into();
+        assert!(serde_json::from_value::<DecompressOptions>(invalid).is_err());
     }
 
     #[tokio::test]
@@ -4906,6 +5090,14 @@ mod tests_continued {
                         assert!(archive.by_name("资料/空目录/").unwrap().is_dir());
                         let empty_index = archive.index_for_name("资料/空文件.txt").unwrap();
                         assert_eq!(archive.by_index_raw(empty_index).unwrap().size(), 0);
+                        let extracted = temp.path().join("native-restored");
+                        native_extraction::zip::extract_with_optional_window(&service, None, "1416-read",
+                            published.to_str().unwrap(), extracted.to_str().unwrap(), Some(password),
+                            &DecompressOptions { zip_password_encoding: Some(encoding), preserve_paths: true,
+                                parallel_zip: true, ..Default::default() }).unwrap();
+                        assert_eq!(std::fs::read(extracted.join("资料/内容.bin")).unwrap(), payload);
+                        assert_eq!(std::fs::read(extracted.join("资料/空文件.txt")).unwrap(), b"");
+                        assert!(extracted.join("资料/空目录").is_dir());
                         if let Some(tools) = &independent {
                             let engine = tools.join(encoding.as_str()).join("7z.exe");
                             assert!(engine.is_file(), "missing independent verifier: {}", engine.display());

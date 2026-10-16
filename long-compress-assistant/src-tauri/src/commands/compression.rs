@@ -1440,6 +1440,7 @@ pub async fn materialize_nested_archive(
         .create_entry_dir(expected_bytes)
         .map_err(|error| error.to_string())?;
     let options = DecompressOptions {
+        zip_password_encoding: None,
         parallel_zip: false,
         preserve_paths: true,
         overwrite_existing: false,
@@ -1558,6 +1559,7 @@ pub async fn open_archive_entry(
         .map_err(|error| error.to_string())?;
 
     let options = DecompressOptions {
+        zip_password_encoding: None,
         parallel_zip: false,
         preserve_paths: true,
         overwrite_existing: false,

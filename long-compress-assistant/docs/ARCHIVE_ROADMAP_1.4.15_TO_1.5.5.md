@@ -2,7 +2,7 @@
 
 批准日期：2026-10-17。用户要求将规划写入开发文档并继续开发。
 
-当前：v1.4.15 已封板并正式发布，PR #169 已合入，正式标签指向 `138a07f`，见[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)及 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。v1.4.14 改进一并交付，不单独发布旧候选。v1.4.16 已完成独立原包、显式固定代码页基础及创建后完整校验，本轮 34 项定向用例和 66 个有效创建组合的独立回解通过，见[实施审计](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)；输入服务和前端用户流程尚未贯通，未封板。
+当前：v1.4.15 已封板并正式发布，PR #169 已合入，正式标签指向 `138a07f`，见[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)及 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。v1.4.14 改进一并交付，不单独发布旧候选。v1.4.16 已完成独立原包、创建后完整校验、任务输入与候选分类及原生解压，最终 70 项 Rust、24 项错误识别回归和 66 个有效创建组合的独立回解通过，见[实施审计](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)；浏览/检查/转换命令及前端用户流程尚未贯通，未封板。
 
 ## 基线与顺序
 

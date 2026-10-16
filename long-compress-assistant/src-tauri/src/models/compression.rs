@@ -156,6 +156,10 @@ pub struct CompressionOptions {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecompressOptions {
+    /// None retains automatic UTF-8/current-Windows password compatibility.
+    /// A chosen codepage applies only to this ZIP task, never to filenames.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zip_password_encoding: Option<crate::services::zip_password::ZipPasswordEncoding>,
     #[serde(default)]
     pub parallel_zip: bool,
     pub preserve_paths: bool,
@@ -215,6 +219,7 @@ fn default_true() -> bool {
 impl Default for DecompressOptions {
     fn default() -> Self {
         Self {
+            zip_password_encoding: None,
             parallel_zip: false,
             preserve_paths: false,
             overwrite_existing: false,

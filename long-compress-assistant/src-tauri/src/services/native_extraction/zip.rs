@@ -41,6 +41,7 @@ pub(crate) fn system_time(
 fn validate_password_access<R: Read + Seek>(
     archive: &mut ZipArchive<R>,
     password: Option<&str>,
+    encoding: Option<crate::services::zip_password::ZipPasswordEncoding>,
     selection: &crate::services::zip_selection::ZipSelection,
     mut check_control: impl FnMut() -> Result<()>,
 ) -> Result<()> {
@@ -51,7 +52,7 @@ fn validate_password_access<R: Read + Seek>(
     for &index in &selection.encrypted_indices {
         check_control()?;
         match password {
-            Some(password) => match crate::services::zip_password::open_entry(archive, index, password) {
+            Some(password) => match crate::services::zip_password::open_entry_with_encoding(archive, index, password, encoding) {
                 Ok(mut reader) => {
                     let mut probe = [0u8; 4];
                     let _read = reader.read(&mut probe)?;
@@ -101,7 +102,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
     let _worker_slot = super::zip_parallel::WorkerSlot::acquire(runtime)?;
     let mut archive = ZipArchive::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?)?;
     let selection = crate::services::zip_selection::ZipSelection::read(&mut archive, options, || runtime.check_cancellation())?;
-    validate_password_access(&mut archive, password, &selection, || runtime.check_cancellation())?;
+    validate_password_access(&mut archive, password, options.zip_password_encoding, &selection, || runtime.check_cancellation())?;
     if super::zip_parallel::try_extract(
         runtime,
         window,
@@ -167,7 +168,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
                 }
 
                 let reader = if let Some(password) = password {
-                    crate::services::zip_password::open_entry(&mut archive, index, password)?
+                    crate::services::zip_password::open_entry_with_encoding(&mut archive, index, password, options.zip_password_encoding)?
                 } else {
                     archive.by_index(index)?
                 };
@@ -356,7 +357,7 @@ mod tests {
         let selection = crate::services::zip_selection::ZipSelection::read(
             archive, &crate::models::compression::DecompressOptions::default(), || Ok(()),
         )?;
-        validate_password_access(archive, password, &selection, || Ok(()))
+        validate_password_access(archive, password, None, &selection, || Ok(()))
     }
 
     #[test]
@@ -417,7 +418,7 @@ mod tests {
             &mut archive, &crate::models::compression::DecompressOptions::default(), || Ok(()),
         ).unwrap();
         let mut checks = 0;
-        let error = validate_password_access(&mut archive, Some("correct-password"), &selection, || {
+        let error = validate_password_access(&mut archive, Some("correct-password"), None, &selection, || {
             checks += 1;
             if checks == 2 { return Err(CompressionError::Cancelled.into()); }
             Ok(())
@@ -489,7 +490,7 @@ mod tests {
         assert_eq!(selection.indices.len(), 8);
         assert!(!selection.password_required);
         let before = (counts.bytes.get(), counts.reads.get(), counts.seeks.get());
-        validate_password_access(&mut archive, None, &selection, || Ok(())).unwrap();
+        validate_password_access(&mut archive, None, None, &selection, || Ok(())).unwrap();
         assert_eq!((counts.bytes.get(), counts.reads.get(), counts.seeks.get()), before,
             "password preflight must not initialize codecs/seek/read plain selected entries again");
     }
@@ -529,7 +530,7 @@ mod tests {
                     if legacy {
                         legacy_password_preflight(&mut archive, Some("correct-password"), &selection.indices).unwrap();
                     } else {
-                        validate_password_access(&mut archive, Some("correct-password"), &selection, || Ok(())).unwrap();
+                        validate_password_access(&mut archive, Some("correct-password"), None, &selection, || Ok(())).unwrap();
                     }
                     let elapsed_ms = started.elapsed().as_secs_f64() * 1000.0;
                     if round > 0 {

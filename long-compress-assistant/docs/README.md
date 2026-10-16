@@ -1,6 +1,6 @@
 # 文档导航与维护规则
 
-- **当前开发：[v1.4.16 旧密码编码](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)**。已固定真实原包、补显式读取和后端保存，并贯通创建后完整校验；本轮 34 项定向用例通过，66 个有效创建组合经独立 7-Zip 回解。接续输入服务、配置恢复及真实页面，尚未封板发布。当前正式版仍见下方。
+- **当前开发：[v1.4.16 旧密码编码](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)**。已贯通创建后完整校验、任务整包/所选密码检测及原生解压，候选不可编码与实际错误分开；最终 70 项 Rust、24 项错误识别回归通过，66 个有效组合经原生解压和独立 7-Zip 回解。接续浏览/检查/转换命令、配置恢复及真实页面，尚未封板发布。当前正式版仍见下方。
 
 - **当前正式版：[v1.4.15 封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)**、[实施审计](ARCHIVE_PERFORMANCE_1.4.15.md)、[中文更新说明](RELEASE_NOTES_1.4.15.md)、[十二版本路线](ARCHIVE_ROADMAP_1.4.15_TO_1.5.5.md)。PR #169 及所含 PR #168 已合入，两轮改进统一由 v1.4.15 交付，不单独发布 v1.4.14；安装器、签名更新包与更新清单见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。下一步为旧工具密码编码兼容，准确接续见[开发交接](DEVELOPMENT_HANDOFF.md)。
 
