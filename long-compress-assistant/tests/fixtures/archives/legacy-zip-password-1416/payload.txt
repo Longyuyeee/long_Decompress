@@ -1,0 +1,5 @@
+Long archive password compatibility fixture 1.4.16
+简体内容：密码正确后必须读取完整文件，不能只验证加密头。
+繁體內容：這是自行建立的驗收資料，不含任何第三方內容。
+日本語の内容：最後の行まで元のデータと一致すること。
+Final line: exact original bytes, punctuation + ! and spaces.

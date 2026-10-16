@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-17",
+  "producer": {
+    "name": "Info-ZIP Zip 3.0",
+    "source_url": "https://sourceforge.net/projects/infozip/files/Zip%203.x%20%28latest%29/3.0/zip30.zip/download",
+    "source_sha256": "7061ceac0407682b6dc54bb480347205f680f4e56cf34fe1423df2309f18968a",
+    "source_bytes": 1287223,
+    "compiler": "MSVC 19.44 x64 / Windows SDK 10.0.26100.0",
+    "arguments": [
+      "-X",
+      "-j",
+      "-P",
+      "<public fixture password>",
+      "<new output>",
+      "payload.txt"
+    ],
+    "unmodified_source_files": 362,
+    "programs": [
+      {
+        "name": "infozip-source/zip30/zip.exe",
+        "sha256": "382b421501583bc94ecec6c5f0f76fd626edc090c4e9ee86a33d8f328986a390",
+        "bytes": 463872,
+        "pe_machine": "8664"
+      },
+      {
+        "name": "zip-ja-JP.exe",
+        "sha256": "b820e50809dfa341431a7aa8b58fbd9000b0ed6755d3b70b15ab43da4364e262",
+        "bytes": 464384,
+        "pe_machine": "8664"
+      },
+      {
+        "name": "zip-zh-TW.exe",
+        "sha256": "5978980e14da092ffb0376152e160494c84cb08f7ebb3d799a26789fdba3c899",
+        "bytes": 464384,
+        "pe_machine": "8664"
+      }
+    ]
+  },
+  "process_profiles": [
+    {
+      "locale": "default",
+      "acp": 936,
+      "oemcp": 936
+    },
+    {
+      "locale": "ja-JP",
+      "acp": 932,
+      "oemcp": 932
+    },
+    {
+      "locale": "zh-TW",
+      "acp": 950,
+      "oemcp": 950
+    }
+  ],
+  "verifier": "Python stdlib zipfile (independent of the application)",
+  "payload_bytes": 359,
+  "payload_sha256": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea",
+  "cases": [
+    {
+      "encoding": "cp932",
+      "password_hex": "93fa967b8cea83708358838f815b83682b2131343136",
+      "zip_sha256": "a9991d69d4f7d5ab41e1290ccaaa1f4adf91acae54ecc59ebae52d0038677123",
+      "zip_bytes": 471,
+      "rejected": [
+        "utf8",
+        "cp936",
+        "cp950:unrepresentable",
+        "wrong"
+      ]
+    },
+    {
+      "encoding": "cp936",
+      "password_hex": "bcf2cce5c3dcc2ebb2e2cad42b2131343136",
+      "zip_sha256": "df332d71bb85cb40de348e07d52dd7417d8de6dd983b2689b516edaf4add48c9",
+      "zip_bytes": 471,
+      "rejected": [
+        "utf8",
+        "cp932:unrepresentable",
+        "cp950:unrepresentable",
+        "wrong"
+      ]
+    },
+    {
+      "encoding": "cp950",
+      "password_hex": "c163c5e9b14bbd58b4fab8d52b2131343136",
+      "zip_sha256": "0aeb6674db3b100761f05205e6c239f96501478af8c9824ef4eb625b4f8e071c",
+      "zip_bytes": 471,
+      "rejected": [
+        "utf8",
+        "cp932",
+        "cp936",
+        "wrong"
+      ]
+    }
+  ]
+}

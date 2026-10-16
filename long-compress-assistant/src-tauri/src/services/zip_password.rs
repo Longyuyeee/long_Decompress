@@ -138,6 +138,36 @@ fn encode_local(password: &str) -> Result<Vec<u8>> {
 mod tests {
     use super::*;
 
+    #[cfg(windows)]
+    #[test]
+    fn real_infozip_fixtures_show_the_current_machine_codepage_boundary() {
+        use std::io::{Cursor, Read};
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../tests/fixtures/archives/legacy-zip-password-1416");
+        let expected = std::fs::read(root.join("payload.txt")).unwrap();
+        let cases: [(u32, &str, &[u8]); 3] = [
+            (932, "日本語パスワード+!1416", b"\x93\xfa\x96\x7b\x8c\xea\x83\x70\x83\x58\x83\x8f\x81\x5b\x83\x68+!1416"),
+            (936, "简体密码测试+!1416", b"\xbc\xf2\xcc\xe5\xc3\xdc\xc2\xeb\xb2\xe2\xca\xd4+!1416"),
+            (950, "繁體密碼測試+!1416", b"\xc1\x63\xc5\xe9\xb1\x4b\xbd\x58\xb4\xfa\xb8\xd5+!1416"),
+        ];
+        for (codepage, password, known_bytes) in cases {
+            let bytes = std::fs::read(root.join(format!("cp{codepage}.zip"))).unwrap();
+            let mut archive = zip_aes::ZipArchive::new(Cursor::new(bytes.clone())).unwrap();
+            let mut content = Vec::new();
+            archive.by_index_decrypt(0, known_bytes).unwrap().read_to_end(&mut content).unwrap();
+            assert_eq!(content, expected, "the original external archive must be fully valid");
+
+            let mut archive = zip_aes::ZipArchive::new(Cursor::new(bytes)).unwrap();
+            let accepted = open_entry(&mut archive, 0, password).is_ok_and(|mut entry| {
+                let mut content = Vec::new();
+                entry.read_to_end(&mut content).is_ok() && content == expected
+            });
+            let current = unsafe { windows_sys::Win32::Globalization::GetACP() };
+            assert_eq!(accepted, current == codepage,
+                "legacy automatic mode must retain its current UTF-8/local-only behavior: ACP={current}, fixture={codepage}");
+        }
+    }
+
     #[test]
     fn legacy_descriptor_crc_header_still_requires_complete_payload_integrity() {
         use std::io::{Cursor, Read, Write};

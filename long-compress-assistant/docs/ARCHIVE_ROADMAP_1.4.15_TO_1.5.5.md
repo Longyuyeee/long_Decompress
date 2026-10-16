@@ -2,7 +2,7 @@
 
 批准日期：2026-10-17。用户要求将规划写入开发文档并继续开发。
 
-当前：v1.4.15 已封板并正式发布，PR #169 已合入，正式标签指向 `138a07f`，见[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)及 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。v1.4.14 改进一并交付，不单独发布旧候选；下一步 v1.4.16 只做了代码入口核对，尚未实现新编码。
+当前：v1.4.15 已封板并正式发布，PR #169 已合入，正式标签指向 `138a07f`，见[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)及 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。v1.4.14 改进一并交付，不单独发布旧候选。v1.4.16 已开始原始编码样本和应用基线，见[实施审计](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)，尚未完成服务/UI 接入或封板。
 
 ## 基线与顺序
 
