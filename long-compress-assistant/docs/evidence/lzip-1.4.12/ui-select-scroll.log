@@ -1,0 +1,22 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[lzip-1412] resuming UI only; original native assertions and files reused
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Option not found: LZIP
+    at select (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/lzip-1412-gate.mjs:46:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async runLzip1412Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/lzip-1412-gate.mjs:159:3)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4881:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: undefined,
+  expected: undefined,
+  operator: 'fail',
+  diff: 'simple'
+}
+
+Node.js v24.14.0
