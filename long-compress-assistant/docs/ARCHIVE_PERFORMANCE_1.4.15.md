@@ -143,11 +143,29 @@ Windows 10.0.22621、Ryzen 7 9700X（16 逻辑线程）、Rust 1.93.1、Release�
 - 暂停用例在原生扫描停住时仍能执行异步定时器，并分别恢复得到 `(1, 29)` 和取消退出；未写出包内文件。这证明异步线程不被暂停门占用，不等于测出了海量 RAR 吞吐收益。单次 SDK/系统 I/O 调用内部仍不可被这些检查立即打断，不宣传无条件即时取消。
 - 仅后端任务控制改动，无 UI 重设计或版本号变更。TAR/RAR 的真实桌面链接续执行，不能用这些定向检查替代正式安装器。
 
+## 阶段九：新 TAR 创建与 RAR 预检查的真实桌面链
+
+### 程序和实际操作
+
+前端类型检查/构建与 Release `desktop-e2e,custom-protocol` 编译通过。产品源码为 `5f41e2724398e9a7f342dbd89467d351bdbb627b`，程序 SHA256 `02bd530ea55057c4299ad4b77c52bcffdeb10a81ddd5a25366db45ca6d21aa5f`，仍显示基线 v1.4.14。独立数据/WebView 目录为 `test-results/archive-performance-1415/desktop-tar-rar-{profile,webview}`，不是正式安装器。没有直接写成功状态或调用测试桥注入结果。
+
+1. 从正常 `--compress-custom` Shell 入口加入中文资料文件夹，在真实压缩中心展开单条配置，用实际格式菜单分别选 TAR.LZ4、TAR.BR，保持 level 6 与默认完成后校验，点击开始。两次均真正生成产物，日志包含完整性校验通过，未提前跳过后续阶段。
+2. 实际浏览刚创建的两种归档，均显示三个文件及中文目录。TAR.LZ4 用原生目录选择器改到独立空目录，点击“解压所选文件”，三个文件字节逐一与源文件一致。此入口按所选文件工作，不把未选择的空目录算作其验收。
+3. 将已创建 TAR.BR 原样复制到本轮空目录，经正常 `--extract-to` Shell 入口运行整包解压队列。三个文件内容及空目录保持，统计真实产出 131141 字节。复制的是本轮产物，未覆盖原输入或伪造新格式。
+4. 同样用原始 RAR5 固定样本运行 `--extract-to`，实际走解压服务预检查和队列；统计 1 项/29 字节并完成。`helloworld.txt` 与独立 7-Zip `x -so` 内容逐字节相同，SHA256 `fef9ad8cf601b43f76c6320075f62267c6e5c0a526d750a70b80c919a4a0aad8`。小样本完成太快，不冒称已在 GUI 测出扫描取消延迟；暂停/取消结论来自阶段八确定性测试。
+
+### 独立内容与页面证据
+
+- 桌面生成的两份归档再由独立 LZ4/Brotli 解码器读取；完整 TAR 字节仍与阶段七参考相同，bsdtar 显式 UTF-8 提取后核对全部载荷/空目录。见[桌面产物独立回解](evidence/archive-performance-1.4.15/tar-desktop-independent.json)。脚本新增 `--desktop` 仅核对已有 GUI 产物，不重新生成替代品；复跑用导出目录的独立副本（尚未生成 `desktop-verification.json`）执行 `node scripts/verify-tar-stream-outputs.mjs <目录> --desktop`，Python 需 lz4.frame，不覆盖已有报告。
+- 文件级真实输出、独立 RAR 读取及程序身份见[载荷报告](evidence/archive-performance-1.4.15/desktop-tar-rar-payloads.json)。TAR 创建、读取/校验、独立回解均通过，不宣称测得完整应用加速比例。
+- 实看 [TAR.LZ4 创建](evidence/archive-performance-1.4.15/desktop-tar-lz4-created.png)、[所选解压](evidence/archive-performance-1.4.15/desktop-tar-lz4-extracted.png)、[TAR.BR 创建](evidence/archive-performance-1.4.15/desktop-tar-br-created.png)、[浏览](evidence/archive-performance-1.4.15/desktop-tar-br-browser.png)、[整包解压](evidence/archive-performance-1.4.15/desktop-tar-br-extracted.png)、[RAR 队列](evidence/archive-performance-1.4.15/desktop-rar-queue.png)。常用窗口 1536×816；还原至 920×620 后实际滚动到输出目录按钮与日志，见[短窗口](evidence/archive-performance-1.4.15/desktop-tar-rar-narrow.png)。单条行内展开与左右详情保留，本阶段无 UI 源码修改。
+- 工具最初显示上轮残留截图，Raise 后才取得正确页面；控件索引点击及目录对话框缓存索引存在失效，刷新后改用实际截图/键盘路径定位，确认目标已更新才解压。最大化/还原和详情动画首帧的重影没有作为最终证据。未为工具问题修改产品或验收断言。
+- 本轮自建测试进程 PID 42576，核对路径后关闭，产物保留供接续；没有改用户安装、任务和历史。该后端进程生命周期峰值工作集观察值 169058304 字节，不含 WebView 子进程、没有前后配对，不用作内存改善结论。
+
 ## 接续点与尚未完成
 
-- 整条应用与资源峰值实测；不能把预检局部收益冒称整条应用提速。
-- RAR 预检查已补任务控制与阻塞隔离；真实桌面读取/解压仍需本轮确认，不夸大为 SDK 内部可中断。
-- TAR 新路径真实应用链；LZIP 本轮明确不改，不扩大已完成回归矩阵。
+- 补大文件/海量小文件完整应用流程的可重复资源观察，区分后端与 WebView 进程，不用当前单 PID 峰值代替配对结论；不能把 ZIP 预检局部收益冒称整条应用提速。
+- TAR 新路径与 RAR 队列已做真实桌面，复用本轮内容/页面证据。RAR 不夸大为 SDK 内部可中断；LZIP 明确不改，不扩大已完成回归矩阵。
 - 最终封板、版本统一和正式发布；现有桌面检查不替代最终安装生命周期。
 
-下一步做本版尚缺的真实应用与资源观察。ZIP 本轮收益只确认局部预检，不把尚未测量的 I/O/内存或吞吐收益写成完成。新格式、特殊卷和下一版密码编码不混入 v1.4.15。
+下一步只补上述资源观察并作最终封板审计；通过后统一版本、接续 README/Release/安装包流程。ZIP 本轮收益只确认局部预检，不把尚未测量的 I/O/内存或吞吐收益写成完成。新格式、特殊卷和下一版密码编码不混入 v1.4.15。

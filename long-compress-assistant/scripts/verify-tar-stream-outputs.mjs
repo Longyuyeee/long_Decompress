@@ -7,8 +7,13 @@ import { fileURLToPath } from 'node:url'
 import { brotliDecompressSync } from 'node:zlib'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// --desktop only verifies existing GUI-created files; it never creates or
+// overwrites those archives, injects task state, or reruns the native exporter.
+const desktop = process.argv[3] === '--desktop'
 const outputRoot = resolve(root, process.argv[2] || `test-results/archive-performance-1415/independent-${Date.now()}`)
-assert.ok(!existsSync(outputRoot), 'Use a new isolated directory')
+const prefix = desktop ? 'desktop-' : ''
+assert.equal(existsSync(outputRoot), desktop, desktop ? 'Desktop fixture directory is required' : 'Use a new isolated directory')
+assert.ok(!existsSync(join(outputRoot, `${prefix}verification.json`)), 'Verification report must not already exist')
 const run = (command, args, options = {}) => {
   const result = spawnSync(command, args, { cwd: root, maxBuffer: 8 * 1024 * 1024, ...options })
   assert.ifError(result.error)
@@ -20,7 +25,7 @@ const sourcePaths = ['src-tauri/src/services/codec_stream.rs', 'src-tauri/src/se
   'src-tauri/src/services/native_compression/tar.rs']
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
 const sourceSha256 = Object.fromEntries(sourcePaths.map(file => [file, digest(readFileSync(join(root, file)))]))
-run('cargo', ['test', '--release', '--manifest-path', 'src-tauri/Cargo.toml', '--lib',
+if (!desktop) run('cargo', ['test', '--release', '--manifest-path', 'src-tauri/Cargo.toml', '--lib',
   'services::codec_stream::measurements::export_tar_stream_fixtures', '--', '--ignored', '--exact', '--nocapture'],
 { env: { ...process.env, LONG_TAR1415_EXPORT_ROOT: outputRoot } })
 const reference = readFileSync(join(outputRoot, 'reference.tar'))
@@ -30,13 +35,13 @@ const pythonEnv = { ...process.env, PYTHONPATH: [tools, process.env.PYTHONPATH].
 const pythonVersion = run(python, ['-c', 'import sys,lz4; print(sys.version); print(lz4.__version__)'], { env: pythonEnv }).toString('utf8').trim()
 const results = []
 for (const format of ['tar.lz4', 'tar.br']) {
-  const input = join(outputRoot, `实际产物.${format}`)
+  const input = join(outputRoot, `${desktop ? '中文资料' : '实际产物'}.${format}`)
   const decoded = format === 'tar.br' ? brotliDecompressSync(readFileSync(input))
     : run(python, ['-c', 'import sys,lz4.frame; sys.stdout.buffer.write(lz4.frame.decompress(open(sys.argv[1], "rb").read()))', input], { env: pythonEnv })
   assert.deepEqual(decoded, reference, 'Independent decoder must reproduce the complete reference TAR')
-  const tarFile = join(outputRoot, `${format}.decoded.tar`)
+  const tarFile = join(outputRoot, `${prefix}${format}.decoded.tar`)
   writeFileSync(tarFile, decoded)
-  const extracted = join(outputRoot, `${format}-independent`)
+  const extracted = join(outputRoot, `${prefix}${format}-independent`)
   mkdirSync(extracted)
   // Windows bsdtar 3.7.2 otherwise interprets legacy GNU TAR names using ACP.
   // State this reader setting explicitly; never relax payload/name assertions.
@@ -54,9 +59,10 @@ assert.deepEqual(Object.fromEntries(sourcePaths.map(file => [file, digest(readFi
 assert.equal(run('git', ['rev-parse', 'HEAD']).toString('utf8').trim(), git)
 const report = {
   verified_at: new Date().toISOString(), git_commit: git, source_sha256: sourceSha256,
-  scope: 'Actual native streamed outputs; Python lz4.frame / Node Brotli independently decode full TAR bytes; Windows bsdtar with explicit hdrcharset=UTF-8 extracts and verifies all payloads and the empty directory. Not desktop or installed-release evidence.',
+  scope: `${desktop ? 'Existing GUI-created archives' : 'Actual native streamed outputs'}; Python lz4.frame / Node Brotli independently decode full TAR bytes; Windows bsdtar with explicit hdrcharset=UTF-8 extracts and verifies all payloads and the empty directory. Not installed-release evidence.`,
+  ...(desktop ? { desktop_binary_sha256: digest(readFileSync(join(root, 'src-tauri/target/release/long-compress-assistant.exe'))) } : {}),
   unicode_reader_boundary: 'Windows bsdtar 3.7.2 default ACP produced garbled names. UTF-8 was explicitly selected; complete decoded TAR bytes equal the pre-existing native TAR reference. This does not claim default Unicode interoperability with every reader.',
   python_lz4: pythonVersion, node: process.version, bsdtar: run('tar', ['--version']).toString('utf8').trim(), results,
 }
-writeFileSync(join(outputRoot, 'verification.json'), JSON.stringify(report, null, 2) + '\n')
+writeFileSync(join(outputRoot, `${prefix}verification.json`), JSON.stringify(report, null, 2) + '\n')
 console.log(JSON.stringify(report, null, 2))

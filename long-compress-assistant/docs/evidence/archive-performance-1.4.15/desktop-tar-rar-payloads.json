@@ -1,0 +1,53 @@
+{
+  "verified_at": "2026-10-16T18:04:44.340Z",
+  "git_commit": "5f41e2724398e9a7f342dbd89467d351bdbb627b",
+  "desktop_binary_sha256": "02bd530ea55057c4299ad4b77c52bcffdeb10a81ddd5a25366db45ca6d21aa5f",
+  "scope": "Actual user-triggered desktop output files, not injected task status. TAR.LZ4 browser selection restores all three files; TAR.BR shell action runs full queue extraction and preserves the empty directory. RAR shell action exercises service preflight and queue extraction; compared with independent 7-Zip payload. Does not measure GUI cancellation timing or installed-release lifecycle.",
+  "tar_files": [
+    {
+      "flow": "lz4-browser",
+      "name": "说明.txt",
+      "bytes": 52,
+      "sha256": "3e1445592cce13e37ebecf77779a8fce2f4242fdf73708d405ed3f89a8cd0425"
+    },
+    {
+      "flow": "br-queue",
+      "name": "说明.txt",
+      "bytes": 52,
+      "sha256": "3e1445592cce13e37ebecf77779a8fce2f4242fdf73708d405ed3f89a8cd0425"
+    },
+    {
+      "flow": "lz4-browser",
+      "name": "空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "flow": "br-queue",
+      "name": "空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "flow": "lz4-browser",
+      "name": "子目录/内容.bin",
+      "bytes": 131089,
+      "sha256": "dddaa03afe51ee657c6cde5b8d96f28b9d7388050f8194d3dade15e95c0ca2a8"
+    },
+    {
+      "flow": "br-queue",
+      "name": "子目录/内容.bin",
+      "bytes": 131089,
+      "sha256": "dddaa03afe51ee657c6cde5b8d96f28b9d7388050f8194d3dade15e95c0ca2a8"
+    }
+  ],
+  "br_empty_directory_preserved": true,
+  "rar": {
+    "input_sha256": "35d75e315d164d2e329afc28f7d844f013271b4fcffd4ddd78efcdd114a383a7",
+    "bytes": 29,
+    "payload_sha256": "fef9ad8cf601b43f76c6320075f62267c6e5c0a526d750a70b80c919a4a0aad8",
+    "independent_reader": "Bundled 7-Zip, x -so"
+  },
+  "backend_process_lifetime_peak_working_set_bytes_observed": 169058304,
+  "memory_boundary": "Single backend PID observation; excludes WebView children and has no paired before/after baseline, so no memory gain is claimed."
+}
