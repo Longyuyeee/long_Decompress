@@ -1,0 +1,62 @@
+{
+  "verified_at": "2026-10-16T17:53:01.175Z",
+  "git_commit": "e5559c714b0458bcd96a9311aafd2f78ca1d8177",
+  "source_sha256": {
+    "src-tauri/src/services/codec_stream.rs": "4d9df3b3608be5239bad93df8b54864bb8d7cc5e7effa269822d46a2cdab8747",
+    "src-tauri/src/services/tar_codec_stream.rs": "01b8699c960734a489685c3638233e4c344386d0317e0578b0e21f8ed7246fe0",
+    "src-tauri/src/services/native_compression/tar.rs": "ee455c6d2ac380e1508850b390253dacacd3ecfbc407940fb56baeeb8e9b2691"
+  },
+  "scope": "Actual native streamed outputs; Python lz4.frame / Node Brotli independently decode full TAR bytes; Windows bsdtar with explicit hdrcharset=UTF-8 extracts and verifies all payloads and the empty directory. Not desktop or installed-release evidence.",
+  "unicode_reader_boundary": "Windows bsdtar 3.7.2 default ACP produced garbled names. UTF-8 was explicitly selected; complete decoded TAR bytes equal the pre-existing native TAR reference. This does not claim default Unicode interoperability with every reader.",
+  "python_lz4": "3.13.12 (tags/v3.13.12:1cbe481, Feb  3 2026, 18:22:25) [MSC v.1944 64 bit (AMD64)]\r\n4.4.5",
+  "node": "v22.12.0",
+  "bsdtar": "bsdtar 3.7.2 - libarchive 3.7.2 zlib/1.2.5.f-ipp liblzma/5.4.3 bz2lib/1.0.8 libzstd/1.5.4",
+  "results": [
+    {
+      "format": "tar.lz4",
+      "input_sha256": "3090a97e33e50c3c12f5bbbfd036911de52ca46f28db23f4ffc3452da9ee084a",
+      "decoded_tar_sha256": "c5e9a14915946dc20d80b7d628a3da51c9faae9b12c1673fd1910e1c396d7b4d",
+      "files": [
+        {
+          "name": "说明.txt",
+          "bytes": 52,
+          "sha256": "3e1445592cce13e37ebecf77779a8fce2f4242fdf73708d405ed3f89a8cd0425"
+        },
+        {
+          "name": "空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "子目录/内容.bin",
+          "bytes": 131089,
+          "sha256": "dddaa03afe51ee657c6cde5b8d96f28b9d7388050f8194d3dade15e95c0ca2a8"
+        }
+      ],
+      "empty_directory_preserved": true
+    },
+    {
+      "format": "tar.br",
+      "input_sha256": "81c0f3b4b7e94ff7205501d837012a31f5e45555179e91693c98463c3a19995d",
+      "decoded_tar_sha256": "c5e9a14915946dc20d80b7d628a3da51c9faae9b12c1673fd1910e1c396d7b4d",
+      "files": [
+        {
+          "name": "说明.txt",
+          "bytes": 52,
+          "sha256": "3e1445592cce13e37ebecf77779a8fce2f4242fdf73708d405ed3f89a8cd0425"
+        },
+        {
+          "name": "空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "子目录/内容.bin",
+          "bytes": 131089,
+          "sha256": "dddaa03afe51ee657c6cde5b8d96f28b9d7388050f8194d3dade15e95c0ca2a8"
+        }
+      ],
+      "empty_directory_preserved": true
+    }
+  ]
+}

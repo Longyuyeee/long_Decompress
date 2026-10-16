@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import os from 'node:os'
@@ -16,7 +16,8 @@ const run = (command, args) => {
 const commit = run('git', ['rev-parse', 'HEAD'])
 const dirty = !!run('git', ['status', '--porcelain'])
 const paths = ['src-tauri/src/services/codec_stream.rs', 'src-tauri/src/services/codec_stream_measurement.rs',
-  'src-tauri/src/services/native_compression/tar.rs', 'scripts/measure-tar-creation.mjs']
+  'src-tauri/src/services/native_compression/tar.rs', 'src-tauri/src/services/tar_codec_stream.rs',
+  'scripts/measure-tar-creation.mjs'].filter(file => existsSync(resolve(root, file)))
 const hashes = () => Object.fromEntries(paths.map(file => [file, createHash('sha256').update(readFileSync(resolve(root, file))).digest('hex')]))
 const sourceHashes = hashes()
 const stdout = run('cargo', ['test', '--release', '--manifest-path', 'src-tauri/Cargo.toml', '--lib',

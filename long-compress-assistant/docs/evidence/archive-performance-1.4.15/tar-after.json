@@ -1,0 +1,207 @@
+{
+  "generated_at": "2026-10-16T17:52:11.281Z",
+  "git": {
+    "commit": "e5559c714b0458bcd96a9311aafd2f78ca1d8177",
+    "dirty_at_start": true
+  },
+  "source_sha256": {
+    "src-tauri/src/services/codec_stream.rs": "4d9df3b3608be5239bad93df8b54864bb8d7cc5e7effa269822d46a2cdab8747",
+    "src-tauri/src/services/codec_stream_measurement.rs": "87b5e1e50a53f2101aa18904c83128499093606d2f86067a39bf0ebc2bd9a6af",
+    "src-tauri/src/services/native_compression/tar.rs": "ee455c6d2ac380e1508850b390253dacacd3ecfbc407940fb56baeeb8e9b2691",
+    "src-tauri/src/services/tar_codec_stream.rs": "01b8699c960734a489685c3638233e4c344386d0317e0578b0e21f8ed7246fe0",
+    "scripts/measure-tar-creation.mjs": "4cd9b614e8692f7fbffdcf777d8aaee5c9897554cfb637d6b291aaef49c3140d"
+  },
+  "machine": {
+    "platform": "win32",
+    "release": "10.0.22621",
+    "cpu": "AMD Ryzen 7 9700X 8-Core Processor             ",
+    "memory_bytes": 50588549120
+  },
+  "rustc": "rustc 1.93.1 (01f6ddf75 2026-02-11)",
+  "profile": "release",
+  "scope": "Native creation only, level 6. 32 MiB seeded bytes and 1000 x 4 KiB seeded files. Separate untimed per-control-check temporary-file observation; excludes source and output. Three timed rounds without directory sampling; output SHA256 checked outside timing. OS cache not flushed; excludes desktop, verification/publication, physical I/O and peak memory.",
+  "summary": {
+    "large:tar.lz4": {
+      "median_ms": 32.926700000000004,
+      "min_ms": 31.7123,
+      "max_ms": 33.6479,
+      "temporary_peak_bytes_untimed": 0
+    },
+    "large:tar.br": {
+      "median_ms": 231.9046,
+      "min_ms": 230.59720000000002,
+      "max_ms": 240.0577,
+      "temporary_peak_bytes_untimed": 0
+    },
+    "small:tar.lz4": {
+      "median_ms": 56.8322,
+      "min_ms": 55.4381,
+      "max_ms": 59.451499999999996,
+      "temporary_peak_bytes_untimed": 0
+    },
+    "small:tar.br": {
+      "median_ms": 88.6652,
+      "min_ms": 87.3575,
+      "max_ms": 90.2339,
+      "temporary_peak_bytes_untimed": 0
+    }
+  },
+  "records": [
+    {
+      "scenario": "large",
+      "format": "tar.lz4",
+      "round": 1,
+      "level": 6,
+      "input_bytes": 33554432,
+      "files": 1,
+      "fixture_sha256": "a44d8224566822d07c13134b45d2d5ad8f65b2a521361bb253dab903f07e3794",
+      "compression_ms": 33.6479,
+      "output_bytes": 33556885,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "large",
+      "format": "tar.lz4",
+      "round": 2,
+      "level": 6,
+      "input_bytes": 33554432,
+      "files": 1,
+      "fixture_sha256": "a44d8224566822d07c13134b45d2d5ad8f65b2a521361bb253dab903f07e3794",
+      "compression_ms": 32.926700000000004,
+      "output_bytes": 33556885,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "large",
+      "format": "tar.lz4",
+      "round": 3,
+      "level": 6,
+      "input_bytes": 33554432,
+      "files": 1,
+      "fixture_sha256": "a44d8224566822d07c13134b45d2d5ad8f65b2a521361bb253dab903f07e3794",
+      "compression_ms": 31.7123,
+      "output_bytes": 33556885,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "large",
+      "format": "tar.br",
+      "round": 1,
+      "level": 6,
+      "input_bytes": 33554432,
+      "files": 1,
+      "fixture_sha256": "a44d8224566822d07c13134b45d2d5ad8f65b2a521361bb253dab903f07e3794",
+      "compression_ms": 240.0577,
+      "output_bytes": 33556040,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "large",
+      "format": "tar.br",
+      "round": 2,
+      "level": 6,
+      "input_bytes": 33554432,
+      "files": 1,
+      "fixture_sha256": "a44d8224566822d07c13134b45d2d5ad8f65b2a521361bb253dab903f07e3794",
+      "compression_ms": 231.9046,
+      "output_bytes": 33556040,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "large",
+      "format": "tar.br",
+      "round": 3,
+      "level": 6,
+      "input_bytes": 33554432,
+      "files": 1,
+      "fixture_sha256": "a44d8224566822d07c13134b45d2d5ad8f65b2a521361bb253dab903f07e3794",
+      "compression_ms": 230.59720000000002,
+      "output_bytes": 33556040,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "small",
+      "format": "tar.lz4",
+      "round": 1,
+      "level": 6,
+      "input_bytes": 4096000,
+      "files": 1000,
+      "fixture_sha256": "d65ebb3ba5adbbdbe5b00aa7e95e2772f48c0fc5941e8c2a2067ac79d47cfcd1",
+      "compression_ms": 59.451499999999996,
+      "output_bytes": 4139976,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "small",
+      "format": "tar.lz4",
+      "round": 2,
+      "level": 6,
+      "input_bytes": 4096000,
+      "files": 1000,
+      "fixture_sha256": "d65ebb3ba5adbbdbe5b00aa7e95e2772f48c0fc5941e8c2a2067ac79d47cfcd1",
+      "compression_ms": 56.8322,
+      "output_bytes": 4139976,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "small",
+      "format": "tar.lz4",
+      "round": 3,
+      "level": 6,
+      "input_bytes": 4096000,
+      "files": 1000,
+      "fixture_sha256": "d65ebb3ba5adbbdbe5b00aa7e95e2772f48c0fc5941e8c2a2067ac79d47cfcd1",
+      "compression_ms": 55.4381,
+      "output_bytes": 4139976,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "small",
+      "format": "tar.br",
+      "round": 1,
+      "level": 6,
+      "input_bytes": 4096000,
+      "files": 1000,
+      "fixture_sha256": "d65ebb3ba5adbbdbe5b00aa7e95e2772f48c0fc5941e8c2a2067ac79d47cfcd1",
+      "compression_ms": 88.6652,
+      "output_bytes": 4106683,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "small",
+      "format": "tar.br",
+      "round": 2,
+      "level": 6,
+      "input_bytes": 4096000,
+      "files": 1000,
+      "fixture_sha256": "d65ebb3ba5adbbdbe5b00aa7e95e2772f48c0fc5941e8c2a2067ac79d47cfcd1",
+      "compression_ms": 90.2339,
+      "output_bytes": 4106683,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    },
+    {
+      "scenario": "small",
+      "format": "tar.br",
+      "round": 3,
+      "level": 6,
+      "input_bytes": 4096000,
+      "files": 1000,
+      "fixture_sha256": "d65ebb3ba5adbbdbe5b00aa7e95e2772f48c0fc5941e8c2a2067ac79d47cfcd1",
+      "compression_ms": 87.3575,
+      "output_bytes": 4106683,
+      "temporary_peak_bytes_untimed": 0,
+      "payload_hashes_verified": true
+    }
+  ]
+}

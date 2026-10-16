@@ -99,3 +99,27 @@ fn tar_creation_measurement() {
         }
     }
 }
+
+#[test]
+#[ignore = "exports actual streamed TAR codec outputs for independent readers"]
+fn export_tar_stream_fixtures() {
+    let root = PathBuf::from(std::env::var_os("LONG_TAR1415_EXPORT_ROOT").expect("new isolated export directory required"));
+    assert!(root.is_absolute() && !root.exists(), "use a new absolute export directory");
+    let source = root.join("中文资料");
+    std::fs::create_dir_all(source.join("子目录/空目录")).unwrap();
+    std::fs::write(source.join("说明.txt"), "我想打包这些资料，再完整解压回来。\n").unwrap();
+    std::fs::write(source.join("空文件.txt"), []).unwrap();
+    use rand::{RngCore, SeedableRng};
+    let mut bytes = vec![0u8; 128 * 1024 + 17];
+    rand::rngs::StdRng::seed_from_u64(1415).fill_bytes(&mut bytes);
+    std::fs::write(source.join("子目录/内容.bin"), bytes).unwrap();
+    let sources = [source.to_string_lossy().into_owned()];
+    let options = CompressionOptions { level: 6, preserve_paths: Some(true), ..Default::default() };
+    tar::compress_tar(&Runtime::default(), None, "reference", &sources,
+        root.join("reference.tar").to_str().unwrap(), options.clone()).unwrap();
+    for format in ["tar.lz4", "tar.br"] {
+        compress(&Runtime::default(), None, "stream-export", &sources,
+            root.join(format!("实际产物.{format}")).to_str().unwrap(), options.clone(), format).unwrap();
+    }
+    println!("TAR1415_EXPORT={}", root.display());
+}

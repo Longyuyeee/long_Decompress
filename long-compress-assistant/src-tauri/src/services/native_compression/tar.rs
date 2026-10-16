@@ -83,6 +83,16 @@ pub(crate) fn write_entries<R: CompressionRuntime, W: Write>(
 ) -> Result<()> {
     let entries =
         compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), true)?;
+    write_collected_entries(runtime, window, task_id, &entries, builder)
+}
+
+pub(crate) fn write_collected_entries<R: CompressionRuntime, W: Write>(
+    runtime: &R,
+    window: Option<&Window>,
+    task_id: &str,
+    entries: &[compression_entries::CompressionEntry],
+    builder: &mut tar::Builder<W>,
+) -> Result<()> {
     let total_entries = entries.len().max(1);
     let mut progress = ByteProgress::new(source_total_bytes(&entries)?);
     for (index, entry) in entries.iter().enumerate() {
