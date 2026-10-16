@@ -35,6 +35,7 @@ import { runArchiveRecoveryUpgradeGate } from './archive-recovery-148-gate.mjs'
 import { runArchiveContinuityGate } from './archive-continuity-149-gate.mjs'
 import { runZipSelection1410Gate } from './zip-selection-1410-gate.mjs'
 import { runSfx1411Gate } from './sfx-1411-gate.mjs'
+import { runLzip1412Gate } from './lzip-1412-gate.mjs'
 import { runHaozip1411Gate } from './haozip-1411-gate.mjs'
 import { runHaozipZipcrypto1411Gate } from './haozip-zipcrypto-1411-gate.mjs'
 import { runZipCodecGate } from './zip-codec-gate.mjs'
@@ -4875,6 +4876,9 @@ try {
       return result.value
     }
     await runArchivePerformanceGate({ invoke, fixtureDirectory, artifactDirectory, application, buildKind: 'debug-desktop-e2e' })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--lzip-only')) {
+    await runLzip1412Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
     completedSuccessfully = true
   } else if (process.argv.includes('--haozip-forum-encrypted-only')) {
     assert.ok(process.env.LONG_HAOZIP_FORUM_MANIFEST,'requires prepared inputs and genuine GUI forum volumes via LONG_HAOZIP_FORUM_MANIFEST')

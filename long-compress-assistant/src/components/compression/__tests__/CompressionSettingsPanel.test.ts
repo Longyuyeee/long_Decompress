@@ -51,6 +51,21 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('does not detach valid inherited settings merely by opening a LZIP row', async () => {
+    const wrapper = mountPanel(settings({ format: 'tar.lz' }))
+    await flushPromises()
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    wrapper.unmount()
+  })
+  it.each(['lz', 'tar.lz'])('clears inherited encryption and split settings when opening %s', async format => {
+    const wrapper = mountPanel(settings({ format, password: 'previous ZIP password', splitArchive: true, createSolidArchive: true, encryptFilenames: true }))
+    await flushPromises()
+    const changed = wrapper.emitted('update:modelValue')?.at(-1)?.[0]
+    expect(changed).toMatchObject({ format, password: '', splitArchive: false, createSolidArchive: false, encryptFilenames: false })
+    expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-testid="compression-password-input"]').attributes('disabled')).toBeDefined()
+    wrapper.unmount()
+  })
   it('keeps RAR recovery protection collapsed until selected and emits it without changing other options', async () => {
     const wrapper=mountPanel(settings({format:'rar'})); await flushPromises()
     expect(wrapper.get('[data-testid="rar-recovery-settings"]').attributes('open')).toBeUndefined()

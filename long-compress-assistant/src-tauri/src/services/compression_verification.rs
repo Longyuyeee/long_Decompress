@@ -213,10 +213,10 @@ pub(crate) fn verify_native(
 ) -> Result<bool> {
     check_cancelled(&is_cancelled)?;
     match route {
-        CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli => {
-            let codec = if matches!(route, CompressionRoute::Lz4 | CompressionRoute::TarLz4) { "lz4" } else { "br" };
+        CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli | CompressionRoute::Lzip | CompressionRoute::TarLzip => {
+            let codec = match route { CompressionRoute::Lz4 | CompressionRoute::TarLz4 => "lz4", CompressionRoute::Lzip | CompressionRoute::TarLzip => "lz", _ => "br" };
             let reader = super::codec_stream::decoder(path, codec)?;
-            if matches!(route, CompressionRoute::TarLz4 | CompressionRoute::TarBrotli) { verify_tar_reader(reader, &is_cancelled)?; }
+            if matches!(route, CompressionRoute::TarLz4 | CompressionRoute::TarBrotli | CompressionRoute::TarLzip) { verify_tar_reader(reader, &is_cancelled)?; }
             else { drain_reader(reader, &is_cancelled)?; }
             Ok(true)
         },

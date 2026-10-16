@@ -23,7 +23,7 @@ const subfolder = ref('keep')
 const destination = ref<'keep' | 'source' | 'custom'>('keep')
 const outputDirectory = ref('')
 const keep = { value: 'keep', label: '保持各自设置' }
-const formats = [keep, { value: 'zip', label: 'ZIP' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }]
+const formats = [keep, { value: 'zip', label: 'ZIP' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }, { value: 'tar.lz', label: 'TAR.LZIP（无加密）' }]
 const levels = [keep, ...Array.from({ length: 10 }, (_, value) => ({ value: String(value), label: `${value}${value === 0 ? ' · 仅存储' : value === 9 ? ' · 最小体积' : value === 1 ? ' · 更快' : ''}` }))]
 const subfolders = [keep, { value: 'yes', label: '创建同名子文件夹' }, { value: 'no', label: '直接放入输出目录' }]
 const hasChanges = computed(() => destination.value !== 'keep' || (props.mode === 'compression'
@@ -52,7 +52,7 @@ function apply() {
   const patch: BatchConfigPatch = {}
   if (destination.value !== 'keep') patch.outputDirectory = destination.value === 'source' ? '' : outputDirectory.value.trim()
   if (props.mode === 'compression') {
-    if (format.value === 'zip' || format.value === '7z' || format.value === 'rar') patch.format = format.value
+    if (format.value === 'zip' || format.value === '7z' || format.value === 'rar' || format.value === 'tar.lz') patch.format = format.value
     if (level.value !== 'keep') patch.level = Number(level.value)
     if (recovery.value !== 'keep') patch.rarRecoveryPercent = Number(recovery.value)
     if (recoveryVolumes.value !== 'keep') patch.rarRecoveryVolumes = Number(recoveryVolumes.value)
@@ -77,6 +77,7 @@ function apply() {
   </section>
   <Modal v-model:visible="visible" :title="mode === 'compression' ? '修改所选压缩配置' : '修改所选解压配置'" :description="`已选 ${count} 项任务`" icon="pi pi-sliders-h" size="md" cancel-text="关闭批量配置">
     <div class="space-y-4" data-testid="batch-config-fields">
+      <p v-if="format === 'tar.lz'" class="text-xs text-muted">TAR.LZIP 不提供密码和分卷，应用到所选任务时会关闭这些选项。</p>
       <p class="text-xs leading-relaxed text-muted">只修改下面指定的项目，其他配置保持各自原值。</p>
       <div class="grid min-w-0 gap-3 sm:grid-cols-2">
         <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩格式

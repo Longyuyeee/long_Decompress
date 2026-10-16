@@ -210,6 +210,13 @@ fn browse_tar_reader<R: Read>(
             is_dir,
         });
     }
+    // TAR stops at zero blocks; read the enclosing stream's trailer as well.
+    let mut tail = archive.into_inner();
+    let mut buffer = [0u8; 64 * 1024];
+    loop {
+        ensure_not_cancelled(cancelled)?;
+        if tail.read(&mut buffer)? == 0 { break; }
+    }
     Ok(summarize(format, entries))
 }
 
@@ -254,9 +261,10 @@ fn browse_tar_family(
         )
         .map(Some);
     }
-    for codec in ["lz4", "br"] {
-        if name.ends_with(&format!(".tar.{codec}")) {
-            return browse_tar_reader(super::codec_stream::decoder(path, codec)?, &format!("TAR.{}", codec.to_uppercase()), cancelled).map(Some);
+    for codec in ["lz4", "br", "lz"] {
+        if super::compression_format::is_tar_wrapped_archive(path, &format!("tar.{codec}")) {
+            let label = if codec == "lz" { "TAR.LZIP".to_string() } else { format!("TAR.{}", codec.to_uppercase()) };
+            return browse_tar_reader(super::codec_stream::decoder(path, codec)?, &label, cancelled).map(Some);
         }
     }
     Ok(None)
@@ -289,7 +297,7 @@ pub async fn browse_archive_cancellable(
         .to_ascii_lowercase();
     let is_tar_family = [
         ".tar", ".ova", ".tar.gz", ".tgz", ".tpz", ".tar.bz2", ".tbz", ".tbz2",
-        ".tar.xz", ".txz", ".tar.zst", ".tzst", ".tar.lz4", ".tar.br",
+        ".tar.xz", ".txz", ".tar.zst", ".tzst", ".tar.lz4", ".tar.br", ".tar.lz", ".tlz",
     ]
     .iter()
     .any(|suffix| name.ends_with(suffix));
@@ -300,7 +308,7 @@ pub async fn browse_archive_cancellable(
         if is_tar_family
             || matches!(
                 format,
-                ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Lz4 | ArchiveFormat::Brotli
+                ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip
             )
         {
             let native_cancelled = operation_cancelled.clone();
@@ -320,8 +328,8 @@ pub async fn browse_archive_cancellable(
                         &native_cancelled,
                     )
                     .context("Unable to read RAR metadata"),
-                    ArchiveFormat::Lz4 | ArchiveFormat::Brotli => {
-                        let codec = if format == ArchiveFormat::Lz4 { "lz4" } else { "br" };
+                    ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip => {
+                        let codec = match format { ArchiveFormat::Lz4 => "lz4", ArchiveFormat::Lzip => "lz", _ => "br" };
                         let mut reader = super::codec_stream::decoder(&path, codec)?;
                         let mut buffer = [0u8; 64 * 1024];
                         let mut size = 0u64;
@@ -333,7 +341,8 @@ pub async fn browse_archive_cancellable(
                             anyhow::ensure!(size <= super::extraction_transaction::MAX_EXTRACTED_BYTES, "Stream is too large");
                         }
                         let name = super::native_extraction::single_stream::output_name(&path, &[&format!(".{codec}")]);
-                        Ok(summarize(&codec.to_uppercase(), vec![ArchiveEntryInfo { size_known: None, name: name.clone(), path: name, size, compressed_size: None, modified: None, crc: None, encrypted: false, is_dir: false }]))
+                        let label = if codec == "lz" { "LZIP".to_string() } else { codec.to_uppercase() };
+                        Ok(summarize(&label, vec![ArchiveEntryInfo { size_known: None, name: name.clone(), path: name, size, compressed_size: None, modified: None, crc: None, encrypted: false, is_dir: false }]))
                     }
                     _ => anyhow::bail!("Unsupported native archive route"),
                 }

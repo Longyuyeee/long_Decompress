@@ -1,0 +1,83 @@
+{
+  "application": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "sha256": "69bd1acaa54864555bd68473a9f6dbdd3931723958d21821ea1a17e5f1d95a74",
+  "version": "1.4.12",
+  "generator": {
+    "generator": "lzip 1.24.1",
+    "generatorPath": "/mnt/e/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/test-results/lzip-tools/unpacked/usr/bin/lzip.lzip",
+    "generatorSha256": "fb52c41132a98d22ea2b7969b268407ab5c272e7654ff78bf975f573357d48fd",
+    "files": [
+      {
+        "name": "说明.txt.lz",
+        "sha256": "55fe1be5f56c3f153213b661c54a78a3d5d3ae9502c470ef6e140e032e8aebf7",
+        "size": 94
+      },
+      {
+        "name": "资料.tar.lz",
+        "sha256": "15c3e893d64bbc97e20ec65c2489945f5a9261f2a1ef82763612bfce7748e645",
+        "size": 14291
+      },
+      {
+        "name": "资料别名.tlz",
+        "sha256": "15c3e893d64bbc97e20ec65c2489945f5a9261f2a1ef82763612bfce7748e645",
+        "size": 14291
+      },
+      {
+        "name": "多成员.txt.lz",
+        "sha256": "b527766a731b1865b14b9a187e0d86aec1f75449e70929a42788c460988b1fc5",
+        "size": 178
+      }
+    ],
+    "payloads": [
+      {
+        "name": "说明.txt",
+        "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579",
+        "size": 58
+      },
+      {
+        "name": "中文目录/数据.bin",
+        "sha256": "188d0669b8eb413c579bf4acc7e9c860e8c99fb0e7eb3c5c0a392cfdd4787258",
+        "size": 32791
+      },
+      {
+        "name": "空文件.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      }
+    ],
+    "multiContentSha256": "57e825179857c18793bd4dcadfe12f3a89774570d1c0d30e1fee90f88692df21",
+    "note": ".tlz is a byte-identical conventional alias of the generated .tar.lz. GNU lzip is a test tool only and is not distributed with the application."
+  },
+  "results": [
+    {
+      "reusedNativePhase": true,
+      "evidence": "Initial run reached the first TLZ UI summary after every native assertion; see first-run.log and retained output manifest."
+    }
+  ],
+  "resumedUiOnly": true,
+  "resumedUiFrom": "conversion",
+  "retainedRoot": "C:/Users/39633/AppData/Local/Temp/long-decompress-desktop-e2e-DXKngY/lzip-1412",
+  "ui": {
+    "tlzBrowseAndTextPreview": true,
+    "selectedExtraction": true,
+    "corruptionNotice": true,
+    "singleInlineCreation": true,
+    "unsupportedOptionsDisabled": true,
+    "compressionMultiSelectionModalConfiguration": true,
+    "multiSelectionModalConversion": true,
+    "ordinaryAndMinimumWindow": true,
+    "screenshots": [
+      "lzip-1412-tlz-preview.png",
+      "lzip-1412-corrupted-read-notice.png",
+      "lzip-1412-inline-1100x700.png",
+      "lzip-1412-inline-760x520.png",
+      "lzip-1412-ui-created.png",
+      "lzip-1412-compression-batch-1100x700.png",
+      "lzip-1412-compression-batch-760x520.png",
+      "lzip-1412-batch-modal-1100x700.png",
+      "lzip-1412-batch-modal-760x520.png",
+      "lzip-1412-batch-completed-760x520.png"
+    ]
+  },
+  "scope": "LZIP v1 single/multi-member and TAR.LZIP/.tlz; no native password or multi-volume creation; picker responses isolated; native commands and filesystem outputs real"
+}

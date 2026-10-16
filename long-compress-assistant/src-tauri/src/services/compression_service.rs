@@ -310,6 +310,7 @@ impl CompressionService {
             ArchiveFormat::Lzma => "lzma".to_string(),
             ArchiveFormat::Lz4 => wrapped(&[".tar.lz4"], "tar.lz4").unwrap_or_else(|| "lz4".to_string()),
             ArchiveFormat::Brotli => wrapped(&[".tar.br"], "tar.br").unwrap_or_else(|| "br".to_string()),
+            ArchiveFormat::Lzip => wrapped(&[".tar.lz", ".tlz"], "tar.lz").unwrap_or_else(|| "lz".to_string()),
             ArchiveFormat::Iso => "iso".to_string(),
             ArchiveFormat::Cab => "cab".to_string(),
             ArchiveFormat::Lzh => "lzh".to_string(),
@@ -1264,7 +1265,7 @@ impl CompressionService {
                 CompressionRoute::Zstd => service.do_compress_zstd(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarZstd => service.do_compress_tar_zstd(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::Lzma => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
-                CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli => {
+                CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli | CompressionRoute::Lzip | CompressionRoute::TarLzip => {
                     crate::services::codec_stream::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, &requested_format)
                 },
             };
@@ -2053,7 +2054,7 @@ impl CompressionService {
             format = ArchiveFormat::from_extension(Path::new(file_stem).extension().and_then(|value| value.to_str()).unwrap_or(""));
         }
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
-        let native_stream = matches!(format, ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli);
+        let native_stream = matches!(format, ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip);
         if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
             service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
             format = ArchiveFormat::Universal;
@@ -2404,14 +2405,14 @@ impl CompressionService {
                 let w = window.clone();
                 tokio::task::spawn_blocking(move || srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, None, &opts)).await?
             },
-            ref codec_format @ (ArchiveFormat::Lz4 | ArchiveFormat::Brotli) => {
+            ref codec_format @ (ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip) => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
                 let o_dir = out_dir.clone();
                 let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                let codec = if *codec_format == ArchiveFormat::Lz4 { "lz4" } else { "br" };
+                let codec = match codec_format { ArchiveFormat::Lz4 => "lz4", ArchiveFormat::Lzip => "lz", _ => "br" };
                 tokio::task::spawn_blocking(move || {
                     let decoder = crate::services::codec_stream::decoder(Path::new(&f_path), codec)?;
                     if compression_format::is_tar_wrapped_archive(Path::new(&f_path), &format!("tar.{codec}")) {
@@ -2848,7 +2849,7 @@ impl CompressionService {
         }
 
         for suffix in [
-            ".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst", ".tar.lz4", ".tar.br", ".lz4", ".br", ".zip", ".zipx", ".7z", ".rar",
+            ".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst", ".tar.lz4", ".tar.br", ".tar.lz", ".tlz", ".lz4", ".br", ".lz", ".zip", ".zipx", ".7z", ".rar",
             ".tar", ".wim",
         ] {
             if candidate.to_lowercase().ends_with(suffix) {

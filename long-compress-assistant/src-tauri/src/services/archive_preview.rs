@@ -221,6 +221,7 @@ fn preview_format(path: &Path) -> Result<&'static str> {
 
     if name.ends_with(".tar.lz4") { return Ok("TAR.LZ4"); }
     if name.ends_with(".tar.br") { return Ok("TAR.BR"); }
+    if name.ends_with(".tar.lz") || name.ends_with(".tlz") { return Ok("TAR.LZIP"); }
     let mut header = [0u8; 560];
     let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
     if matches!(&file, super::numeric_volume_reader::ZipInputReader::StandardZip(_)) {
@@ -241,6 +242,7 @@ fn read_tar_family(path: &Path, format: &str, entry_path: &str) -> Result<Vec<u8
     match format {
         "TAR.LZ4" => read_tar_entry(super::codec_stream::decoder(path, "lz4")?, entry_path),
         "TAR.BR" => read_tar_entry(super::codec_stream::decoder(path, "br")?, entry_path),
+        "TAR.LZIP" => read_tar_entry(super::codec_stream::decoder(path, "lz")?, entry_path),
         "TAR" => read_tar_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
         "TAR.GZ" => read_tar_entry(flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path),
         "TAR.BZ2" => read_tar_entry(bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path),
@@ -259,6 +261,7 @@ fn read_tar_family_text(path: &Path, format: &str, entry_path: &str) -> Result<T
     match format {
         "TAR.LZ4" => read_tar_text_entry(super::codec_stream::decoder(path, "lz4")?, entry_path),
         "TAR.BR" => read_tar_text_entry(super::codec_stream::decoder(path, "br")?, entry_path),
+        "TAR.LZIP" => read_tar_text_entry(super::codec_stream::decoder(path, "lz")?, entry_path),
         "TAR" => read_tar_text_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
         "TAR.GZ" => {
             read_tar_text_entry(flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path)

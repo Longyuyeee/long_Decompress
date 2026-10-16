@@ -1,5 +1,7 @@
 # 文档导航与维护规则
 
+- **当前开发：[v1.4.12 LZIP / TAR.LZIP](LZIP_AND_TAR_LZIP_1.4.12.md)**、[中文更新说明](RELEASE_NOTES_1.4.12.md)。源码候选版本 1.4.12，读取/创建、批量配置和转换已接入，实际桌面和安装包收口状态以本版记录为准；尚未正式发布。下面 v1.4.11 已发布状态继续有效。
+
 - **当前入口：[v1.4.11 自解压包与好压分卷](SFX_AND_VOLUME_COMPATIBILITY_1.4.11.md)**、[封板记录](SFX_AND_VOLUME_FREEZE_1.4.11.md)、[中文发布说明](RELEASE_NOTES_1.4.11.md)、[开发交接](DEVELOPMENT_HANDOFF.md)。[PR #165](https://github.com/Longyuyeee/long_Decompress/pull/165) 已合入，当前正式版为 [v1.4.11](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)，安装器及签名更新附件已发布。下一版按路线接续 LZIP/TAR.LZIP，尚未启动；下方旧版本记录仅供追溯。
 
 - [v1.4.3 归档升级收口](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)、[更新说明](RELEASE_NOTES_1.4.3.md)：卷组一致性、RAR 分卷与 Unicode 密码、LZ4/Brotli 及通用数字分卷。

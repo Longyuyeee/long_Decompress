@@ -27,11 +27,11 @@ pub struct ArchiveEngineCapabilities {
 
 const NATIVE_BROWSE_EXTENSIONS: &[&str] = &[
     "7z", "rar", "r00", "zip", "zipx", "jar", "epub", "apk", "appx", "tar", "ova",
-    "tgz", "tpz", "tbz", "tbz2", "txz", "tzst", "lz4", "br",
+    "tgz", "tpz", "tbz", "tbz2", "txz", "tzst", "lz4", "br", "lz", "tlz",
 ];
 const NESTED_ARCHIVE_EXTENSIONS: &[&str] = &[
     "zip", "zipx", "7z", "rar", "r00", "tar", "tgz", "tpz", "gz", "tbz", "tbz2",
-    "bz2", "txz", "xz", "tzst", "zst", "lz4", "br", "cab", "iso", "jar", "epub", "apk", "appx", "arj", "z", "udf",
+    "bz2", "txz", "xz", "tzst", "zst", "lz4", "br", "lz", "tlz", "cab", "iso", "jar", "epub", "apk", "appx", "arj", "z", "udf",
 ];
 const BOUNDED_PREVIEW_FORMATS: &[&str] = &["ZIP", "TAR"];
 const IMAGE_PREVIEW_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp"];

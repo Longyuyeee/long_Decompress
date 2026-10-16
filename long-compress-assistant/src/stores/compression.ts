@@ -399,6 +399,7 @@ export const useCompressionStore = defineStore('compression', () => {
     if (file) {
       file.outputPath ??= globalOutputPath.value
       file.settings = cloneSettings(settings)
+      if (settings.format === 'lz' || settings.format === 'tar.lz') file.draftPasswordRequired = false
     }
   }
 
@@ -420,6 +421,7 @@ export const useCompressionStore = defineStore('compression', () => {
     if (group) {
       group.outputPath ??= globalOutputPath.value
       group.settings = cloneSettings(settings)
+      if (settings.format === 'lz' || settings.format === 'tar.lz') group.draftPasswordRequired = false
     }
   }
 
@@ -451,6 +453,15 @@ export const useCompressionStore = defineStore('compression', () => {
       if (!selected.has(id) || draft.taskId) continue
       const settings = cloneSettings(getEffectiveSettings(draft.settings))
       if (patch.format !== undefined) settings.format = patch.format
+      if (patch.format === 'tar.lz') {
+        draft.draftPasswordRequired = false
+        settings.password = ''
+        settings.splitArchive = false
+        settings.encryptFilenames = false
+        settings.createSolidArchive = false
+        settings.rarRecoveryPercent = 0
+        settings.rarRecoveryVolumes = 0
+      }
       if (patch.level !== undefined) settings.level = patch.level
       if (patch.rarRecoveryPercent !== undefined) settings.rarRecoveryPercent = patch.rarRecoveryPercent
       if (patch.rarRecoveryVolumes !== undefined) settings.rarRecoveryVolumes = patch.rarRecoveryVolumes

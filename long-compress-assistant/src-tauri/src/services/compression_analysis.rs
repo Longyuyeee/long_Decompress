@@ -187,6 +187,14 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
         encoder.write_all(sample)?;
         return Ok(encoder.finish()?.len());
     }
+    if matches!(format, "lz" | "tar.lz") {
+        let mut settings = lzma_rust2::LzipOptions::with_preset(level);
+        settings.lzma_options.dict_size = settings.lzma_options.dict_size
+            .min(sample.len().clamp(4096, 512 * 1024 * 1024).next_power_of_two() as u32);
+        let mut encoder = lzma_rust2::LzipWriter::new(Vec::new(), settings);
+        encoder.write_all(sample)?;
+        return Ok(encoder.finish()?.len());
+    }
     if format.contains("xz") || format == "7z" || format == "lzma" {
         let mut encoder = xz2::write::XzEncoder::new(Vec::new(), level);
         encoder.write_all(sample)?;
@@ -203,7 +211,7 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
 
 fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) -> (u64, u64) {
     let base_mib_per_second = match format {
-        "7z" | "xz" | "tar.xz" | "lzma" => 45.0,
+        "7z" | "xz" | "tar.xz" | "lzma" | "lz" | "tar.lz" => 45.0,
         "bz2" | "tar.bz2" => 35.0,
         "zst" | "zstd" | "tar.zst" => 180.0,
         "tar" => 350.0,

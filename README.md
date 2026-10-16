@@ -146,6 +146,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 - ZIP 默认保留 `.zip.001` 数字切卷，可主动选择标准 `.z01/…/.zip`（入口为 `.zip`）；7Z 创建 `.7z.001`，RAR 创建 `.partN.rar`。解压时把整组放在同一目录。普通 TAR/流格式数字切卷的外部兼容能力不同；它们使用密码时可改用 7Z 容器，既有 `.aes` 属于本应用包装。
 - ZIP/ZIPX 已验证常用 Store、Deflate、Deflate64、BZip2、LZMA、XZ、PPMd 及部分 Zstandard 读取组合；不等于支持所有 ZIPX 专有算法。
 - 可直接浏览、解压和转换 ZIP/7Z/RAR 自解压 EXE；好压论坛 ZIP 分卷按整组读取，支持已核对的明文与 ZipCrypto 密码样本。收到多个分卷时，把整组放在同一目录即可。具体格式范围见[支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
+- v1.4.12 候选版新增 LZIP（单文件）与 TAR.LZIP（目录/多文件）的创建、浏览、解压和转换，兼容 `.lz`、`.tar.lz`、`.tlz`；本版不提供这两种格式的密码或分卷创建。当前正式下载仍是 v1.4.11，候选版状态见下方更新说明。
 - ZIP 默认 AES-256，可主动选择 ZipCrypto；与 Windows 7-Zip 交换非 ASCII 密码的归档时，可显式选择匹配的 Windows 密码编码。
 - 密码 ZIP 可尝试救回完整文件：目录可读或丢目录后仍能确定本地文件边界时，提供密码救回通过校验的文件；新包沿用填写的密码，统一使用 AES-256 / UTF-8，并显示部分恢复及未恢复原因。
 - DOCX、XLSX、PPTX、ODT、ODS、EPUB 属于文档容器，不作为普通压缩包导入。
@@ -224,6 +225,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.4.12（待发布）** | LZIP / TAR.LZIP 创建与读取、`.tlz` 别名及多成员、批量配置和转换、浏览失败原因保留 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.12.md) · [实施记录](long-compress-assistant/docs/LZIP_AND_TAR_LZIP_1.4.12.md) |
 | **v1.4.11** | 自解压包直接读取、好压论坛 ZIP 密码分卷、正确密码兼容与缺卷补回继续处理 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.11.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11) |
 | **v1.4.10** | ZIP 所选内容独立解锁与读取、旧 ZIP 方法兼容、Zstandard 密码分卷和真实 ZIP64 大包回解 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.10.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.10) |
 | **v1.4.9** | 批量检查修复切页/重启接续、RAR 管道密码兼容、大文件校验中途取消 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.9.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.9) |

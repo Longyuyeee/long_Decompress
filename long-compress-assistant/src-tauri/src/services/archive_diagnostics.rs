@@ -339,6 +339,7 @@ pub async fn diagnose_archive(
     report.evidence.push(format!("Magic/extension format: {actual_format}"));
     let requested_format = match actual_format.as_str() {
         "ZIP" => "zip".to_string(), "7Z" => "7z".to_string(), "RAR" => "rar".to_string(),
+        "LZIP" => if super::compression_format::is_tar_wrapped_archive(logical, "tar.lz") { "tar.lz" } else { "lz" }.to_string(),
         _ => infer_compression_format(logical.to_string_lossy().as_ref(), None),
     };
 

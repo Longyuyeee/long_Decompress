@@ -1,0 +1,46 @@
+{
+  "generator": "lzip 1.24.1",
+  "generatorPath": "/mnt/e/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/test-results/lzip-tools/unpacked/usr/bin/lzip.lzip",
+  "generatorSha256": "fb52c41132a98d22ea2b7969b268407ab5c272e7654ff78bf975f573357d48fd",
+  "files": [
+    {
+      "name": "说明.txt.lz",
+      "sha256": "55fe1be5f56c3f153213b661c54a78a3d5d3ae9502c470ef6e140e032e8aebf7",
+      "size": 94
+    },
+    {
+      "name": "资料.tar.lz",
+      "sha256": "591452fefb62c8145e609120299668096c36b947bbc173921305e9a92853514b",
+      "size": 12843
+    },
+    {
+      "name": "资料别名.tlz",
+      "sha256": "591452fefb62c8145e609120299668096c36b947bbc173921305e9a92853514b",
+      "size": 12843
+    },
+    {
+      "name": "多成员.txt.lz",
+      "sha256": "b527766a731b1865b14b9a187e0d86aec1f75449e70929a42788c460988b1fc5",
+      "size": 178
+    }
+  ],
+  "payloads": [
+    {
+      "name": "说明.txt",
+      "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579",
+      "size": 58
+    },
+    {
+      "name": "中文目录/数据.bin",
+      "sha256": "188d0669b8eb413c579bf4acc7e9c860e8c99fb0e7eb3c5c0a392cfdd4787258",
+      "size": 32791
+    },
+    {
+      "name": "空文件.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    }
+  ],
+  "multiContentSha256": "57e825179857c18793bd4dcadfe12f3a89774570d1c0d30e1fee90f88692df21",
+  "note": ".tlz is a byte-identical conventional alias of the generated .tar.lz. GNU lzip is a test tool only and is not distributed with the application."
+}

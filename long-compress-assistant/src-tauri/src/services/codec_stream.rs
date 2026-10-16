@@ -1,6 +1,6 @@
 use super::native_compression::{tar, CompressionRuntime};
 use crate::models::compression::CompressionOptions;
-use anyhow::{ensure, Result};
+use anyhow::{ensure, Context, Result};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
@@ -134,6 +134,15 @@ pub(crate) fn compress<R: CompressionRuntime>(
         let mut encoder = lz4_flex::frame::FrameEncoder::with_frame_info(info, destination);
         std::io::copy(&mut input, &mut encoder)?;
         encoder.finish()?.sync_all()?;
+    } else if format.ends_with(".lz") || format == "lz" {
+        let mut settings = lzma_rust2::LzipOptions::with_preset(options.level.clamp(0, 9) as u32);
+        // A small input should not allocate the preset's full dictionary.
+        settings.lzma_options.dict_size = settings.lzma_options.dict_size
+            .min(total.clamp(4096, 512 * 1024 * 1024).next_power_of_two() as u32);
+        let mut encoder = lzma_rust2::LzipWriter::new(destination, settings);
+        std::io::copy(&mut input, &mut encoder)?;
+        runtime.check_cancellation()?;
+        encoder.finish()?.sync_all()?;
     } else {
         let mut destination = destination;
         let params = brotli::enc::BrotliEncoderParams {
@@ -161,10 +170,26 @@ pub(crate) fn compress<R: CompressionRuntime>(
     Ok(())
 }
 
+struct LzipReader<R>(lzma_rust2::LzipReader<R>);
+impl<R: Read> Read for LzipReader<R> {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        self.0.read(buffer).map_err(|error| std::io::Error::new(error.kind(), format!("LZIP 读取失败：{error}")))
+    }
+}
+
 pub(crate) fn decoder(path: &Path, format: &str) -> Result<Box<dyn Read + Send>> {
-    let input = super::numeric_volume_reader::ZipInputReader::open(path)?;
+    let mut input = super::numeric_volume_reader::ZipInputReader::open(path)?;
     Ok(if format.ends_with("lz4") {
         Box::new(lz4_flex::frame::FrameDecoder::new(input))
+    } else if format == "lz" || format.ends_with(".lz") {
+        // A real .lz contains at least one member; reject empty input before
+        // the decoder can interpret it as a clean end of stream.
+        use std::io::{Seek, SeekFrom};
+        let mut header = [0u8; 6];
+        input.read_exact(&mut header).context("LZIP 文件头不完整")?;
+        ensure!(header.starts_with(b"LZIP"), "文件不是有效的 LZIP 压缩流");
+        input.seek(SeekFrom::Start(0))?;
+        Box::new(LzipReader(lzma_rust2::LzipReader::new(input)))
     } else {
         Box::new(brotli::Decompressor::new(input, 64 * 1024))
     })
@@ -230,6 +255,96 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn reads_fixed_gnu_lzip_members_and_tar_alias() {
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/lzip-1412");
+        let temp = tempfile::tempdir().unwrap();
+        let text = std::fs::read(fixtures.join("原文件/说明.txt")).unwrap();
+        for name in ["说明.txt.lz", "资料.tar.lz", "资料别名.tlz", "多成员.txt.lz"] {
+            let input = fixtures.join(name);
+            let is_tar = name.ends_with(".tar.lz") || name.ends_with(".tlz");
+            let browse = crate::services::archive_browser::browse_archive(&input, None).await.unwrap();
+            assert_eq!(browse.format, if is_tar { "TAR.LZIP" } else { "LZIP" });
+            let route = if is_tar { CompressionRoute::TarLzip } else { CompressionRoute::Lzip };
+            assert!(compression_verification::verify_native(route, &input, None, || false).unwrap());
+            let output = temp.path().join(name);
+            std::fs::create_dir(&output).unwrap();
+            if is_tar {
+                native_extraction::tar::extract_inner(&Runtime::default(), None, "reference", &input.to_string_lossy(), &output, Some(decoder(&input, "lz").unwrap()), &DecompressOptions { preserve_paths: true, ..Default::default() }).unwrap();
+                for payload in ["说明.txt", "中文目录/数据.bin", "空文件.txt"] {
+                    assert_eq!(std::fs::read(output.join(payload)).unwrap(), std::fs::read(fixtures.join("原文件").join(payload)).unwrap());
+                }
+                assert!(output.join("中文目录/空目录").is_dir());
+            } else {
+                let mut expected = text.clone();
+                if name.starts_with("多成员") { expected.extend_from_slice("第二成员：两个成员还原成同一个文件。\n".as_bytes()); }
+                let output_name = native_extraction::single_stream::output_name(&input, &[".lz"]);
+                native_extraction::single_stream::extract_inner(&Runtime::default(), None, "reference", decoder(&input, "lz").unwrap(), &output, output_name.clone(), &DecompressOptions::default()).unwrap();
+                assert_eq!(std::fs::read(output.join(output_name)).unwrap(), expected);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn lzip_rejects_bad_trailers_even_after_tar_entries_have_ended() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("说明.txt");
+        std::fs::write(&source, "完整内容需要正确的 LZIP 校验尾部。".repeat(200)).unwrap();
+        for (format, route) in [("lz", CompressionRoute::Lzip), ("tar.lz", CompressionRoute::TarLzip)] {
+            let good = temp.path().join(format!("正常.{format}"));
+            compress(&Runtime::default(), None, "lzip", &[source.to_string_lossy().into_owned()], &good.to_string_lossy(), CompressionOptions { level: 1, ..Default::default() }, format).unwrap();
+            let bytes = std::fs::read(&good).unwrap();
+            for mutation in ["crc", "data-size", "member-size", "truncated", "next-header"] {
+                let mut bad = bytes.clone();
+                let len = bad.len();
+                match mutation {
+                    "crc" => bad[len - 20] ^= 1,
+                    "data-size" => bad[len - 16] ^= 1,
+                    "member-size" => bad[len - 8] ^= 1,
+                    "truncated" => { bad.truncate(len - 1); },
+                    _ => bad.extend_from_slice(b"LZIP\x01"),
+                }
+                let path = temp.path().join(format!("{mutation}.{format}"));
+                std::fs::write(&path, bad).unwrap();
+                assert!(compression_verification::verify_native(route, &path, None, || false).is_err(), "{format} {mutation}");
+                assert!(crate::services::archive_browser::browse_archive(&path, None).await.is_err(), "{format} {mutation} browse");
+            }
+        }
+        let empty = temp.path().join("空文件.lz");
+        std::fs::write(&empty, []).unwrap();
+        assert!(decoder(&empty, "lz").is_err());
+    }
+
+    #[tokio::test]
+    async fn lzip_multimember_and_tlz_alias_preserve_content() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("说明.txt");
+        let mut members = Vec::new();
+        let mut expected = Vec::new();
+        for content in ["第一段中文内容。", "Second member, same logical file."] {
+            std::fs::write(&source, content).unwrap();
+            let member = temp.path().join("成员.lz");
+            compress(&Runtime::default(), None, "member", &[source.to_string_lossy().into_owned()], &member.to_string_lossy(), CompressionOptions { level: 1, ..Default::default() }, "lz").unwrap();
+            members.extend(std::fs::read(member).unwrap());
+            expected.extend_from_slice(content.as_bytes());
+        }
+        let joined = temp.path().join("说明.txt.lz");
+        std::fs::write(&joined, members).unwrap();
+        let mut decoded = Vec::new();
+        decoder(&joined, "lz").unwrap().read_to_end(&mut decoded).unwrap();
+        assert_eq!(decoded, expected);
+        let browse = crate::services::archive_browser::browse_archive(&joined, None).await.unwrap();
+        assert_eq!(browse.format, "LZIP");
+        assert_eq!(browse.total_uncompressed_size, expected.len() as u64);
+
+        let alias = temp.path().join("中文资料.TLZ");
+        compress(&Runtime::default(), None, "alias", &[source.to_string_lossy().into_owned()], &alias.to_string_lossy(), CompressionOptions { level: 1, ..Default::default() }, "tar.lz").unwrap();
+        let browse = crate::services::archive_browser::browse_archive(&alias, None).await.unwrap();
+        assert_eq!(browse.format, "TAR.LZIP");
+        let preview = crate::services::archive_preview::preview_archive_text(&alias, "说明.txt", None).await.unwrap();
+        assert_eq!(preview.content, "Second member, same logical file.");
+    }
+
+    #[tokio::test]
     async fn tar_codec_numeric_volumes_preview_text_without_extracting_to_disk() {
         let temp = tempfile::tempdir().unwrap();
         let source = temp.path().join("说明.txt");
@@ -254,8 +369,9 @@ mod tests {
         rand::rngs::StdRng::seed_from_u64(91).fill_bytes(&mut bytes);
         let payload = source.join("原始.txt");
         std::fs::write(&payload, &bytes).unwrap();
-        for format in ["lz4", "br", "tar.lz4", "tar.br"] {
+        for format in ["lz4", "br", "tar.lz4", "tar.br", "lz", "tar.lz"] {
             for split in [false, true] {
+                if split && matches!(format, "lz" | "tar.lz") { continue; }
                 let target = temp.path().join(format!("原始.txt-{split}.{format}"));
                 let staged = crate::services::compression_service::CompressionService::temporary_compression_output(&target).unwrap();
                 let sources = vec![if format.starts_with("tar.") {
@@ -288,6 +404,8 @@ mod tests {
                     "lz4" => CompressionRoute::Lz4,
                     "br" => CompressionRoute::Brotli,
                     "tar.lz4" => CompressionRoute::TarLz4,
+                    "lz" => CompressionRoute::Lzip,
+                    "tar.lz" => CompressionRoute::TarLzip,
                     _ => CompressionRoute::TarBrotli,
                 };
                 assert!(

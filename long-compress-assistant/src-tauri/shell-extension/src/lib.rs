@@ -32,7 +32,7 @@ const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 const ARCHIVE_EXTENSIONS: &[&str] = &[
     "zip", "zipx", "7z", "rar", "wim", "tar", "ova", "gz", "gzip", "tgz", "tpz", "bz2", "bzip2",
-    "tbz", "tbz2", "xz", "txz", "zst", "zstd", "tzst", "aes", "lzma", "lz4", "br", "jar", "xpi", "ipa", "apk",
+    "tbz", "tbz2", "xz", "txz", "zst", "zstd", "tzst", "aes", "lzma", "lz4", "br", "lz", "tlz", "jar", "xpi", "ipa", "apk",
     "appx", "iso", "img", "dmg", "vhd", "vhdx", "qcow", "qcow2", "qcow2c", "vdi", "vmdk", "cab",
     "deb", "udeb", "rpm", "msi", "msp", "msm", "nsis", "apfs", "ext", "ext2", "ext3", "ext4",
     "gpt", "mbr", "uefif", "cramfs", "fat", "ntfs", "hfs", "hfsx", "ar", "a", "lzh", "lha",
