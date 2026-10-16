@@ -1,0 +1,15 @@
+libpng warning: iCCP: known incorrect sRGB profile
+libpng warning: iCCP: known incorrect sRGB profile
+libpng warning: iCCP: known incorrect sRGB profile
+libpng warning: iCCP: known incorrect sRGB profile
+libpng warning: iCCP: known incorrect sRGB profile
+libpng warning: iCCP: known incorrect sRGB profile
+libpng warning: iCCP: known incorrect sRGB profile
+libpng warning: iCCP: known incorrect sRGB profile
+libpng warning: tRNS: invalid with alpha channel
+libpng warning: tRNS: invalid with alpha channel
+libpng warning: tRNS: invalid with alpha channel
+
+thread 'main' (15848) panicked at src\main.rs:604:10:
+error while running tauri application: Runtime(CreateWebview(WebView2Error(WindowsError(Error { code: 0x80070002, message: 系统找不到指定的文件。 }))))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

@@ -16,6 +16,23 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('AeroTable', () => {
+  it('displays a readable final reason without changing the original log evidence', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTaskStore()
+    store.addTask({ id: 'missing-after-import', name: '资料.zip', type: 'decompression', sourceFiles: ['C:/资料.zip'], outputPath: 'C:/out' })
+    const original = '最终失败原因：[archive-inspection:incomplete] 缺少分卷：资料.z02'
+    store.tasks[0].status = 'failed'
+    store.tasks[0].logs.push({ task_id: 'missing-after-import', message: original, severity: 'error', timestamp: new Date().toISOString() })
+    const wrapper = mount(AeroTable, { props: { taskType: 'decompression' }, global: { plugins: [pinia], stubs: { Teleport: true, ExtractionOutputPreview: true, FailedExtractionRetry: true } } })
+    await wrapper.get('[data-testid="toggle-archive-task-missing-after-import"]').trigger('click')
+    await flushPromises()
+    const log = wrapper.get('[data-testid="decompression-log-viewport"] .task-log-message')
+    expect(log.text()).toBe('最终失败原因：缺少分卷：资料.z02')
+    expect(log.attributes('title')).toBe(log.text())
+    expect(store.tasks[0].logs[0].message).toBe(original)
+    wrapper.unmount()
+  })
   it('settles detail progress on terminal status without waiting for animation', async () => {
     vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1))
     vi.stubGlobal('cancelAnimationFrame', vi.fn())

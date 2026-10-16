@@ -1,0 +1,76 @@
+{
+  "application": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "binarySha256": "4985c730e3d44f2b2405742c14c4252b1c1fba16fdc917b58884dbc1824d4597",
+  "encoderSha256": "481a449be1e6de4d0217f06de0836a6297068d152bdbc8a22feab55d1a2332c2",
+  "encoderArguments": null,
+  "fixtureManifestSha256": "04ab554e9f220358cc96aef51c9e1472063fbac225c89809958e7159ac26dc80",
+  "independentBandizipSha256": "3000d3f4ff1ba2c8fad9f895a53bd63acd3417affd04925e9b7fa0ce8e60bda5",
+  "sourcePayloads": [
+    {
+      "path": "说明.txt",
+      "sha256": "b70dfbde85c5ad302aae256db376bb19c84c991ca9c25de18696e93f1178910b"
+    },
+    {
+      "path": "中文目录/原文件.bin",
+      "sha256": "47eb7c96a9dea6493faca0336c5225f1d83e0d3e987e96c2287e764b669002c6"
+    }
+  ],
+  "originalVolumes": [
+    {
+      "name": "论坛密码验收.haozip01.zip",
+      "sha256": "01b1bc7a94131e46a7b82068d30a817dd4d665bf1cb0b017de6475a56cd017c5"
+    },
+    {
+      "name": "论坛密码验收.haozip02.zip",
+      "sha256": "7d9945d4bc247bdcc57c6bf9b3f690ba7d92fade36e7ef139ab893d6b9c98f5c"
+    },
+    {
+      "name": "论坛密码验收.haozip03.zip",
+      "sha256": "dcc18b4810c3f5c52a762e4f6aa811b4195b47bd0cecd61a9cb7101660a4a7cf"
+    }
+  ],
+  "records": [
+    {
+      "member": "论坛密码验收.haozip01.zip",
+      "wrongPasswordRejected": true,
+      "correctPasswordExtracted": true,
+      "integrityTested": true,
+      "convertedAndIndependentlyRead": true
+    },
+    {
+      "member": "论坛密码验收.haozip02.zip",
+      "wrongPasswordRejected": true,
+      "correctPasswordExtracted": true,
+      "integrityTested": true,
+      "convertedAndIndependentlyRead": true
+    },
+    {
+      "member": "论坛密码验收.haozip03.zip",
+      "wrongPasswordRejected": true,
+      "correctPasswordExtracted": true,
+      "integrityTested": true,
+      "convertedAndIndependentlyRead": true
+    }
+  ],
+  "ui": {
+    "middleMemberOpened": true,
+    "wrongPasswordPreviewRejected": true,
+    "correctedPreview": true,
+    "completeSelectedExtraction": true,
+    "minimumWindowActionReachable": true,
+    "movedVolumeFinalReason": "[archive-inspection:incomplete] 缺少分卷：论坛密码验收.haozip02.zip",
+    "suppliedVolumeRetried": true,
+    "individualRetryOutputPreserved": true,
+    "originalFailureRetained": true,
+    "screenshots": [
+      "haozip-forum-encrypted-1411-wrong-password.png",
+      "haozip-forum-encrypted-1411-corrected-preview.png",
+      "haozip-forum-encrypted-1411-completed-1100x700.png",
+      "haozip-forum-encrypted-1411-completed-760x520.png",
+      "haozip-forum-encrypted-1411-moved-volume-failure-1100x700.png",
+      "haozip-forum-encrypted-1411-moved-volume-failure-760x520.png",
+      "haozip-forum-encrypted-1411-supplied-volume-retried.png"
+    ]
+  },
+  "genuineFixtureScope": "Original GUI-generated encrypted HaoZip forum ZIP disks; no renaming or payload editing"
+}

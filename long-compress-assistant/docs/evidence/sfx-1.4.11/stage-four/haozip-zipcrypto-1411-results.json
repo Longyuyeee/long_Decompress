@@ -1,0 +1,85 @@
+{
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "binarySha256": "358e78a118adb964372cff7887c31b22f3b1c1ac63ebf3c2f846dd7cf0d7867a",
+  "encoderSha256": "7ed88c6a87df06fdfcf079968b39fd4c5e2541aa17b71980ab6be78fe4aeb758",
+  "encoderArguments": [
+    "a",
+    "-tzip",
+    "-mx=0",
+    "-v64k",
+    "-mem=ZipCrypto",
+    "-p<test-password>",
+    "-y",
+    "<archive>",
+    "*"
+  ],
+  "independentBandizipSha256": "d69bc4d2605f0ecac20e8cfae11e313fb011649ed7f182cfcb25d6be73dcf4e2",
+  "sourcePayloads": [
+    {
+      "path": "说明.txt",
+      "sha256": "4e29a210d120078c73d71911358d5c67d59f32187cd961cceb626ca88ff023d8"
+    },
+    {
+      "path": "中文目录/原文件.bin",
+      "sha256": "888d3e92cff03a3aec93d925f90083193aabb716add7de03aff98e1dd962a628"
+    }
+  ],
+  "originalVolumes": [
+    {
+      "name": "收到的密码资料.z01",
+      "sha256": "44fa73604e5fd56c11b8a398ad4b437a182173a3a3dbeb271d94eac58f269b10"
+    },
+    {
+      "name": "收到的密码资料.z02",
+      "sha256": "9eb0fcfec62989bd8ea0bbd3d88e2eb29e35e4c55093c257150fe4aee9fec488"
+    },
+    {
+      "name": "收到的密码资料.zip",
+      "sha256": "1dc8925114f19ce9888372a52c96d7ccc6b9da0e219ccf44993ab6d8fa051999"
+    }
+  ],
+  "records": [
+    {
+      "member": "收到的密码资料.z01",
+      "wrongPasswordRejected": true,
+      "correctPasswordExtracted": true,
+      "integrityTested": true,
+      "convertedAndIndependentlyRead": true
+    },
+    {
+      "member": "收到的密码资料.z02",
+      "wrongPasswordRejected": true,
+      "correctPasswordExtracted": true,
+      "integrityTested": true,
+      "convertedAndIndependentlyRead": true
+    },
+    {
+      "member": "收到的密码资料.zip",
+      "wrongPasswordRejected": true,
+      "correctPasswordExtracted": true,
+      "integrityTested": true,
+      "convertedAndIndependentlyRead": true
+    }
+  ],
+  "ui": {
+    "middleMemberOpened": true,
+    "wrongPasswordPreviewRejected": true,
+    "correctedPreview": true,
+    "completeSelectedExtraction": true,
+    "minimumWindowActionReachable": true,
+    "movedVolumeFinalReason": "[archive-inspection:incomplete] 缺少分卷：收到的密码资料.z02",
+    "suppliedVolumeRetried": true,
+    "individualRetryOutputPreserved": true,
+    "originalFailureRetained": true,
+    "screenshots": [
+      "haozip-zipcrypto-1411-wrong-password.png",
+      "haozip-zipcrypto-1411-corrected-preview.png",
+      "haozip-zipcrypto-1411-completed-1100x700.png",
+      "haozip-zipcrypto-1411-completed-760x520.png",
+      "haozip-zipcrypto-1411-moved-volume-failure-1100x700.png",
+      "haozip-zipcrypto-1411-moved-volume-failure-760x520.png",
+      "haozip-zipcrypto-1411-supplied-volume-retried.png"
+    ]
+  },
+  "genuineFixtureScope": "HaoZip CLI ZipCrypto native standard ZIP disks; NOT GUI-generated encrypted forum volumes"
+}

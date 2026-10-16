@@ -7,11 +7,18 @@ import {
   extensionForFormat,
   isDecompressArchivePath,
   isPotentialSplitArchivePath,
+  isPotentialSfxPath,
   isPasswordSupportedFormat,
   isSingleFileStreamFormat,
 } from '../compressionFormat'
 
 describe('compression format helpers', () => {
+  it('treats EXE as an inspection candidate, not an archive format', () => {
+    expect(isPotentialSfxPath('C:/收到的文件.EXE')).toBe(true)
+    expect(isDecompressArchivePath('C:/program.exe')).toBe(false)
+    expect(FORMAT_CAPABILITIES.some(format=>format.extensions.includes('exe'))).toBe(false)
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.exe')
+  })
   it('keeps native password formats unchanged', () => {
     expect(extensionForFormat('zip', 'secret')).toBe('zip')
     expect(extensionForFormat('7z', 'secret')).toBe('7z')

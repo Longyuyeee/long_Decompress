@@ -119,7 +119,7 @@ fn verify_seven_zip(
         Ok(true)
     };
     let result = sevenz_rust::decompress_with_extract_fn_and_password(
-        super::numeric_volume_reader::ZipInputReader::open(path)?,
+        super::numeric_volume_reader::ZipInputReader::open_seven_zip(path)?,
         scratch.path(),
         sevenz_rust::Password::from(password.unwrap_or_default()),
         &mut verify_entry,

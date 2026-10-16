@@ -11,11 +11,12 @@ import { open } from '@tauri-apps/api/dialog'
 import AeroTable from '@/components/tasks/AeroTable.vue'
 import ConflictResolutionModal from '@/components/tasks/ConflictResolutionModal.vue'
 import EnhancedFileDropzone from '@/components/ui/EnhancedFileDropzone.vue'
-import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath, isPotentialSplitArchivePath } from '@/utils/compressionFormat'
+import { DECOMPRESS_ARCHIVE_ACCEPT, DECOMPRESS_ARCHIVE_HINT, isDecompressArchivePath, isPotentialSplitArchivePath, isPotentialSfxPath } from '@/utils/compressionFormat'
 import { detectArchiveGroup } from '@/utils/archiveSource'
 import { appendResourcePreflightFallback, attachResourcePreflight } from '@/utils/resourcePreflight'
 import { runArchiveTasks } from '@/utils/taskConcurrency'
 import { sortTasksByName } from '@/utils/taskOrdering'
+import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
 import { useDecompressionBatchStore } from '@/stores/decompressionBatch'
 import DecompressionBatchSummary from '@/components/tasks/DecompressionBatchSummary.vue'
 import FailedExtractionRetry from '@/components/tasks/FailedExtractionRetry.vue'
@@ -165,7 +166,7 @@ const onFilesSelected = async (files: any[]) => {
       unsupportedCount++
       continue
     }
-    if (!isDecompressArchivePath(file.path) && !isPotentialSplitArchivePath(file.path)) {
+    if (!isDecompressArchivePath(file.path) && !isPotentialSplitArchivePath(file.path) && !isPotentialSfxPath(file.path)) {
       unsupportedCount++
       continue
     }
@@ -210,6 +211,9 @@ const onFilesSelected = async (files: any[]) => {
 
     try {
       const splitInfo = await detectArchiveGroup(sourcePath)
+      if (isPotentialSfxPath(sourcePath) && !splitInfo?.archive_format) {
+        throw new Error('不是可读取的 ZIP、7Z 或 RAR 自解压归档；不会执行此程序')
+      }
       if (splitInfo && splitInfo.is_split) {
         const groupPaths = Array.isArray(splitInfo.parts) ? splitInfo.parts : []
         groupPaths.forEach((part: string) => handledPaths.add(normalizePath(part)))
@@ -235,15 +239,21 @@ const onFilesSelected = async (files: any[]) => {
         continue
       }
     } catch (error) {
-      if (isPotentialSplitArchivePath(sourcePath) && !isDecompressArchivePath(sourcePath)) {
+      if (isPotentialSfxPath(sourcePath)) {
+        const detail = archiveInspectionMessageForDisplay(extractErrorMessage(error))
+        errors.push(`${file.name || sourcePath}：${detail}`)
+        continue
+      }
+      if (isPotentialSplitArchivePath(sourcePath)) {
+        const detail = archiveInspectionMessageForDisplay(extractErrorMessage(error))
         errors.push(appStore.t('decompress.split.detection_failed')
           .replace('{0}', file.name || sourcePath)
-          .replace('{1}', String(error)))
+          .replace('{1}', detail))
         continue
       }
       console.debug('Split archive detection skipped:', error)
     }
-    if (isPotentialSplitArchivePath(sourcePath) && !isDecompressArchivePath(sourcePath)) {
+    if (isPotentialSplitArchivePath(sourcePath)) {
       errors.push(appStore.t('decompress.split.group_not_found').replace('{0}', file.name || sourcePath))
       continue
     }
@@ -452,7 +462,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       } else {
         // 非密码错误，直接失败
         if (task.status !== 'failed' || !task.error) taskStore.failTask(task.id, errorMsg)
-        appStore.setError(`${appStore.t('common.error')}: ${errorMsg}`)
+        appStore.setError(`${appStore.t('common.error')}: ${archiveInspectionMessageForDisplay(errorMsg)}`)
       }
     }
       },

@@ -65,8 +65,8 @@ impl StandardZipReader {
         };
         ensure!(
             group.is_complete,
-            "[archive-inspection:incomplete] 缺少 ZIP 分卷：{:?}",
-            group.missing_parts
+            "[archive-inspection:incomplete] 缺少 ZIP 分卷：{}",
+            group.missing_part_names()
         );
         let mut starts = vec![0u64];
         for part in &group.parts {
@@ -437,6 +437,130 @@ mod tests {
                 .unwrap()
                 .to_string()
                 .contains("缺少 ZIP 分卷"));
+        }
+    }
+
+    #[tokio::test]
+    async fn forum_zip_layout_regression_preserves_passwords_and_native_offsets() {
+        // Renamed standards-based fixtures test the shared reader only. They
+        // are deliberately NOT evidence of HaoZip-generated encrypted output.
+        let temp = tempfile::tempdir().unwrap();
+        for mode in ["plain", "zipcrypto", "aes", "zip64"] {
+            let source = temp.path().join(format!("source-{mode}.zip"));
+            let main = temp.path().join(format!("layout-{mode}.zip"));
+            let mut writer = zip_aes::ZipWriter::new(File::create(&source).unwrap());
+            let options = zip_aes::write::SimpleFileOptions::default().compression_method(zip_aes::CompressionMethod::Stored);
+            let options = match mode {
+                "zipcrypto" => options.with_deprecated_encryption(b"forum-password").unwrap(),
+                "aes" => options.with_aes_encryption(zip_aes::AesMode::Aes256, "forum-password"),
+                _ => options,
+            };
+            let text = "请从任意一卷打开，再把资料完整解压。\n".repeat(700);
+            writer.start_file("中文说明.txt", options).unwrap();
+            writer.write_all(text.as_bytes()).unwrap(); writer.finish().unwrap();
+            split(&source, &main, mode == "zip64").unwrap();
+            let members = [main.with_extension("z01"), main.with_extension("z02"), main.clone()];
+            let forum = (1..=3).map(|index| temp.path().join(format!("资料-{mode}.haozip{index:02}.zip"))).collect::<Vec<_>>();
+            for (old, new) in members.iter().zip(&forum) { std::fs::rename(old, new).unwrap(); }
+            let password = matches!(mode, "aes" | "zipcrypto").then_some("forum-password");
+            for member in &forum {
+                let result = browse_archive(member, password).await.unwrap();
+                assert_eq!(result.total_files, 1);
+                assert_eq!(preview_archive_text(member, "中文说明.txt", password).await.unwrap().content, text);
+                assert_eq!(UniversalCliEngine::zip_requires_password(member).unwrap(), password.is_some());
+                if password.is_some() { assert!(!UniversalCliEngine::try_zip_password(member, "wrong").unwrap()); }
+            }
+            let output = temp.path().join(format!("output-{mode}"));
+            UniversalCliEngine::new().extract_with_progress(&forum[2], &output, Some(password.unwrap_or("unused")), false,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(std::fs::read_to_string(output.join("中文说明.txt")).unwrap(), text);
+        }
+    }
+
+    #[tokio::test]
+    #[ignore = "Requires the genuine public HaoZip fixture; see v1.4.11 audit source URLs"]
+    async fn forum_zip_public_fixture_reads_outer_epub_not_embedded_directory() {
+        use sha2::{Digest, Sha256};
+        let root = std::path::PathBuf::from(std::env::var("LONG_HAOZIP_FIXTURES").unwrap());
+        let temp = tempfile::tempdir().unwrap();
+        for index in 1..=2 {
+            let member = root.join(format!("图解计算机基础（小林）.haozip{index:02}.zip"));
+            let before = std::fs::read(&member).unwrap();
+            let metadata = browse_archive(&member, None).await.unwrap();
+            assert_eq!(metadata.total_files, 1, "must read outer archive, not 1635 embedded EPUB entries");
+            assert!(!metadata.encrypted);
+            let output = temp.path().join(index.to_string());
+            UniversalCliEngine::new().extract_with_progress(&member, &output, Some("unused"), false,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.unwrap();
+            let data = std::fs::read(output.join("图解计算机基础（小林）.epub")).unwrap();
+            assert_eq!(data.len(), 32_607_587);
+            assert_eq!(format!("{:x}", Sha256::digest(data)), "151a4929baf7f7d0e0626c3d865e26882ee45de330d868b6f26422df0c505900");
+            assert_eq!(std::fs::read(member).unwrap(), before);
+        }
+    }
+
+    #[tokio::test]
+    #[ignore = "Requires HaoZipC.exe via LONG_HAOZIP_C; native standard ZIP disks, not forum-mode evidence"]
+    async fn haozip_cli_zipcrypto_disks_preserve_passwords_and_payloads() {
+        // Let the external encoder create its own headers, disk offsets and
+        // encryption. Do not rename its standard .zNN/.zip output to forum names.
+        let encoder = std::path::PathBuf::from(std::env::var("LONG_HAOZIP_C").unwrap());
+        assert!(encoder.is_file(), "LONG_HAOZIP_C must name the actual HaoZip CLI");
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("原始资料");
+        std::fs::create_dir_all(source.join("中文目录/空目录")).unwrap();
+        let text = "收到分卷后，先输错密码，再纠正并完整解压。\n";
+        let payload = (0..163_871).map(|index| (index % 251) as u8).collect::<Vec<_>>();
+        std::fs::write(source.join("说明.txt"), text).unwrap();
+        std::fs::write(source.join("中文目录/原文件.bin"), &payload).unwrap();
+        let main = temp.path().join("好压原生密码卷.zip");
+        let password = "HaoZip sample + !";
+        let mut command = std::process::Command::new(encoder);
+        command.current_dir(&source).args(["a", "-tzip", "-mx=0", "-v64k", "-mem=ZipCrypto", "-y"])
+            .arg(format!("-p{password}")).arg(&main).arg("*");
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            command.creation_flags(0x08000000);
+        }
+        let encoded = command.output().unwrap();
+        assert!(encoded.status.success(), "HaoZip must finish before its files are accepted: {:?}", encoded.status);
+        if let Some(validator) = std::env::var_os("LONG_BANDIZIP_C") {
+            let mut verify = std::process::Command::new(validator);
+            verify.args(["t", &format!("-p:{password}")]).arg(&main);
+            #[cfg(windows)]
+            {
+                use std::os::windows::process::CommandExt;
+                verify.creation_flags(0x08000000);
+            }
+            let verified = verify.output().unwrap();
+            assert!(verified.status.success(), "Independent Bandizip check failed: {:?}", verified.status);
+            eprintln!("Independent Bandizip verified all generated payloads");
+        }
+        let members = [main.with_extension("z01"), main.with_extension("z02"), main.clone()];
+        let original = members.iter().map(std::fs::read).collect::<std::io::Result<Vec<_>>>().unwrap();
+        for (index, member) in members.iter().enumerate() {
+            let group = SplitArchiveDetector::detect_split_archive(member).unwrap().unwrap();
+            assert!(group.is_complete);
+            assert_eq!(group.total_parts, 3);
+            assert_eq!(group.parts, members);
+            assert!(UniversalCliEngine::zip_requires_password(member).unwrap());
+            assert!(!UniversalCliEngine::try_zip_password(member, "wrong password").is_ok_and(|accepted| accepted),
+                "A short header collision must not accept a wrong password");
+            assert!(UniversalCliEngine::try_zip_password(member, password).unwrap());
+            let metadata = browse_archive(member, Some(password)).await.unwrap();
+            assert_eq!(metadata.total_files, 2);
+            assert!(metadata.encrypted);
+            assert_eq!(preview_archive_text(member, "说明.txt", Some(password)).await.unwrap().content, text);
+            let output = temp.path().join(format!("从第{}卷解压", index + 1));
+            UniversalCliEngine::new().extract_with_progress(member, &output, Some(password), false,
+                Arc::new(|_| {}), Arc::new(|_, _| {}), Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(std::fs::read_to_string(output.join("说明.txt")).unwrap(), text);
+            assert_eq!(std::fs::read(output.join("中文目录/原文件.bin")).unwrap(), payload);
+            assert!(output.join("中文目录/空目录").is_dir());
+        }
+        for (member, before) in members.iter().zip(original) {
+            assert_eq!(std::fs::read(member).unwrap(), before);
         }
     }
 

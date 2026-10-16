@@ -258,6 +258,10 @@ pub async fn diagnose_archive(
         );
     }
     let password = password.filter(|value| !value.is_empty());
+    if super::sfx_archive::is_executable_path(path)
+        && archive_browser::detect_format(path)? == ArchiveFormat::Rar {
+        return super::rar_recovery::diagnose(path, password, cancelled).await;
+    }
     if super::rar_recovery::is_candidate(path) {
         let mut header = [0u8; 16];
         let len = std::fs::File::open(path)?.read(&mut header)?;
@@ -311,6 +315,12 @@ pub async fn diagnose_archive(
     // Read across tiny numeric volumes and use the same standard ZIP view as
     // extraction. Keep the user's selected member in the exported report.
     let inspected = (|| -> Result<String> {
+        if super::sfx_archive::is_executable_path(source) {
+            return Ok(match archive_browser::detect_format(source)? {
+                ArchiveFormat::Zip => "ZIP", ArchiveFormat::SevenZip => "7Z", ArchiveFormat::Rar => "RAR",
+                _ => anyhow::bail!("Unsupported SFX payload"),
+            }.to_string());
+        }
         if group.as_ref().is_some_and(|group| group.format == SplitFormat::ZipSplit) {
             ZipInputReader::open_recovery(source)?;
             return Ok("ZIP".to_string());

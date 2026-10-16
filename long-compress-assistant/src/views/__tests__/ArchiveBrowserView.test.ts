@@ -351,6 +351,25 @@ describe('ArchiveBrowserView', () => {
     wrapper.unmount()
   })
 
+  it.each([
+    ['provided password is incorrect', '密码不正确，请修改密码后重试。'],
+    ['CRC32 checksum failed', 'CRC32 checksum failed'],
+    ['unsupported compression method', 'unsupported compression method'],
+  ])('explains the exact native preview error without relabeling damage: %s', async (error, expected) => {
+    mocks.previewArchiveImage.mockRejectedValueOnce(new Error(error))
+    const wrapper = mount(ArchiveBrowserView, { attachTo: document.body })
+    await wrapper.find('header .browser-primary').trigger('click')
+    await flushPromises()
+    await wrapper.get('.preview-trigger').trigger('click')
+    await flushPromises()
+    const preview = new DOMWrapper(document.body)
+    expect(preview.get('.preview-stage').text()).toContain(expected)
+    expect(preview.find('[data-testid="archive-image-preview"]').exists()).toBe(false)
+    if (error !== 'provided password is incorrect') expect(preview.get('.preview-stage').text()).not.toContain('密码')
+    await preview.get('[aria-label="关闭预览"]').trigger('click')
+    wrapper.unmount()
+  })
+
   it('previews bounded decoded text and explains internal versus default opening', async () => {
     const wrapper = mount(ArchiveBrowserView, { attachTo: document.body })
     await wrapper.find('header .browser-primary').trigger('click')

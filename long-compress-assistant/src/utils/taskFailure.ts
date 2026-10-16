@@ -23,6 +23,13 @@ export const failureCategories = {
 
 export type FailureCategory = keyof typeof failureCategories
 
+// Classification markers remain in task/history evidence for recovery routing.
+// Only the ordinary toast/log presentation removes them; never mutate records.
+export function archiveInspectionMessageForDisplay(message: string): string {
+  const readable = message.replace(/\[archive-inspection:[^\]]+\]\s*/g, '').trim()
+  return readable || (message ? '归档检测未通过，未提供具体原因。' : '')
+}
+
 const stageLabels: Record<string, string> = {
   inspection: '归档检测', unknown: '阶段未知', 'Pre-checking': '预检', Extracting: '解压',
   Verifying: '校验', Splitting: '分卷', Finalizing: '完成处理', 'password-attempt': '密码验证',

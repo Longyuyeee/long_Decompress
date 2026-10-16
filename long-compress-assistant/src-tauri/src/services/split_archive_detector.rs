@@ -27,6 +27,15 @@ pub struct SplitArchiveInfo {
     pub missing_parts: Vec<PathBuf>,
 }
 
+impl SplitArchiveInfo {
+    /// All members belong in one source directory. Display the exact missing
+    /// names without Rust's debug-list syntax or escaped absolute paths.
+    pub(crate) fn missing_part_names(&self) -> String {
+        self.missing_parts.iter().map(|part| part.file_name().unwrap_or(part.as_os_str())
+            .to_string_lossy()).collect::<Vec<_>>().join("、")
+    }
+}
+
 impl SplitArchiveDetector {
     fn file_name(path: &Path) -> Result<&str> {
         path.file_name()
@@ -54,7 +63,9 @@ impl SplitArchiveDetector {
         }
         let name = Self::file_name(path)?;
         let parent = path.parent().ok_or_else(|| anyhow!("无法获取父目录"))?;
-        if Self::is_zip_split(name) {
+        if Self::is_haozip_split(name) {
+            Self::detect_haozip_split(path, parent)
+        } else if Self::is_zip_split(name) {
             Self::detect_zip_split(path, parent)
         } else if Self::is_rar_split(name) {
             Self::detect_rar_split(path, parent)
@@ -140,6 +151,59 @@ impl SplitArchiveDetector {
     fn is_zip_split(name: &str) -> bool {
         name.to_lowercase().ends_with(".zip")
             || Regex::new(r"(?i)\.z\d{2,5}$").unwrap().is_match(name)
+    }
+
+    // HaoZip's forum ZIPs are native ZIP disks, not independent ZIP files or
+    // numeric byte slices. Their terminal EOCD declares the actual disk count.
+    fn is_haozip_split(name: &str) -> bool {
+        Regex::new(r"(?i)^(?:.*\.)?haozip\d{2,5}\.zip$").unwrap().is_match(name)
+    }
+
+    fn detect_haozip_split(path: &Path, parent: &Path) -> Result<Option<SplitArchiveInfo>> {
+        use std::io::{Read, Seek, SeekFrom};
+        let name = Self::file_name(path)?;
+        let captures = Regex::new(r"(?i)^(.*?)(haozip)(\d{2,5})\.zip$").unwrap()
+            .captures(name).ok_or_else(|| anyhow!("无效的好压论坛分卷名称"))?;
+        let prefix = captures[1].to_string();
+        let marker = captures[2].to_string();
+        let base = prefix.trim_end_matches('.').to_string();
+        let matcher = Regex::new(&format!(r"(?i)^{}haozip(\d{{2,5}})\.zip$", regex::escape(&prefix)))?;
+        let indexed = Self::collect_indexed(parent, &matcher)?;
+        let width = Self::number_width(&indexed, &matcher, 2);
+        anyhow::ensure!(indexed.iter().all(|(index, _)| *index > 0)
+            && indexed.windows(2).all(|pair| pair[0].0 != pair[1].0),
+            "[archive-inspection:incomplete] 好压论坛分卷编号为 0 或重复，请检查同目录文件");
+        let (highest, last) = indexed.last().ok_or_else(|| anyhow!("没有找到好压论坛分卷"))?;
+        let mut file = fs::File::open(last)?;
+        let size = file.metadata()?.len();
+        let tail_size = size.min(65_557) as usize;
+        file.seek(SeekFrom::End(-(tail_size as i64)))?;
+        let mut tail = vec![0; tail_size];
+        file.read_exact(&mut tail)?;
+        let end = (0..tail.len().saturating_sub(21)).rev().find(|&index|
+            &tail[index..index + 4] == b"PK\x05\x06"
+                && index + 22 + u16::from_le_bytes(tail[index + 20..index + 22].try_into().unwrap()) as usize == tail.len());
+        let missing_name = |index| parent.join(format!("{prefix}{marker}{index:0width$}.zip"));
+        let mut total = *highest;
+        if let Some(end) = end {
+            let last_disk = u16::from_le_bytes(tail[end + 4..end + 6].try_into().unwrap()) as usize;
+            total = if end >= 20 && &tail[end - 20..end - 16] == b"PK\x06\x07" {
+                u32::from_le_bytes(tail[end - 4..end].try_into().unwrap()) as usize
+            } else { last_disk + 1 };
+            anyhow::ensure!(total >= *highest && total <= 65_536,
+                "[archive-inspection:damaged] 好压论坛分卷终卷编号与 ZIP 目录不符，请检查是否混入其他卷组");
+        }
+        let missing = (1..=total).filter(|index| !indexed.iter().any(|(found, _)| found == index))
+            .map(missing_name).collect::<Vec<_>>();
+        // A continuous list of names is not proof that the terminal disk exists.
+        // Report known gaps first; never invent a terminal filename/count.
+        anyhow::ensure!(end.is_some() || !missing.is_empty(),
+            "[archive-inspection:incomplete] 好压论坛分卷未找到可读的终卷目录，可能缺少后续卷或终卷已损坏；总卷数无法确认，请补齐原始分卷后重试");
+        let first = indexed.iter().find(|(index, _)| *index == 1)
+            .map(|(_, path)| path.clone()).unwrap_or_else(|| missing_name(1));
+        Ok(Some(Self::finalize(SplitFormat::ZipSplit,
+            if base.is_empty() { "archive".into() } else { base },
+            indexed.into_iter().map(|(_, path)| path).collect(), first, total, missing)))
     }
 
     fn detect_zip_split(path: &Path, parent: &Path) -> Result<Option<SplitArchiveInfo>> {
@@ -419,6 +483,7 @@ mod tests {
         assert_eq!(info.total_parts, 3);
         assert_eq!(info.missing_parts.len(), 1);
         assert!(info.missing_parts[0].ends_with("project.002"));
+        assert_eq!(info.missing_part_names(), "project.002");
     }
 
     #[test]
@@ -468,5 +533,70 @@ mod tests {
     #[test]
     fn invalid_file_names_return_an_error_instead_of_panicking() {
         assert!(SplitArchiveDetector::file_name(Path::new("/")).is_err());
+    }
+
+    fn forum_end(path: &Path, last_disk: u16) {
+        let mut bytes = b"PK\x05\x06".to_vec();
+        bytes.extend_from_slice(&last_disk.to_le_bytes());
+        bytes.extend_from_slice(&last_disk.to_le_bytes());
+        bytes.extend_from_slice(&[0; 14]);
+        fs::write(path, bytes).unwrap();
+    }
+
+    #[test]
+    fn forum_zip_any_member_uses_first_volume_and_exact_missing_names() {
+        let dir = tempdir().unwrap();
+        let first = dir.path().join("下载资料.HaoZip01.ZIP");
+        let middle = dir.path().join("下载资料.haozip02.zip");
+        let last = dir.path().join("下载资料.haozip03.zip");
+        touch(&first); touch(&middle); forum_end(&last, 2);
+        for selected in [&first, &middle, &last] {
+            let info = SplitArchiveDetector::detect_split_archive(selected).unwrap().unwrap();
+            assert_eq!(info.format, SplitFormat::ZipSplit);
+            assert_eq!(info.first_part, first);
+            assert_eq!(info.base_name, "下载资料");
+            assert_eq!(info.parts, vec![first.clone(), middle.clone(), last.clone()]);
+            assert!(info.is_complete); assert_eq!(info.total_parts, 3);
+        }
+        fs::remove_file(&middle).unwrap();
+        let info = SplitArchiveDetector::detect_split_archive(&last).unwrap().unwrap();
+        assert!(!info.is_complete);
+        assert_eq!(info.missing_parts, vec![middle]);
+        fs::remove_file(&first).unwrap();
+        let info = SplitArchiveDetector::detect_split_archive(&last).unwrap().unwrap();
+        assert_eq!(info.missing_parts.len(), 2);
+        assert!(info.missing_parts[0].ends_with("下载资料.haozip01.zip"));
+    }
+
+    #[test]
+    fn forum_zip_continuous_names_do_not_prove_the_final_volume_exists() {
+        let dir = tempdir().unwrap();
+        let first = dir.path().join("haozip01.zip"); touch(&first);
+        let error = SplitArchiveDetector::detect_split_archive(&first).unwrap_err().to_string();
+        assert!(error.contains("终卷目录"), "{error}");
+        assert!(error.contains("总卷数无法确认"), "{error}");
+        let last = dir.path().join("haozip02.zip"); forum_end(&last, 1);
+        assert!(SplitArchiveDetector::detect_split_archive(&first).unwrap().unwrap().is_complete);
+        // A similarly named ordinary ZIP must not be joined to this group.
+        let plain = dir.path().join("下载资料.zip"); forum_end(&plain, 0);
+        assert!(SplitArchiveDetector::detect_split_archive(&plain).unwrap().is_none());
+        forum_end(&last, 0);
+        assert!(SplitArchiveDetector::detect_split_archive(&last).unwrap_err().to_string().contains("编号"));
+    }
+
+    #[test]
+    fn forum_zip_rejects_duplicate_numeric_members() {
+        let dir = tempdir().unwrap();
+        let first = dir.path().join("资料.haozip01.zip"); touch(&first);
+        touch(&dir.path().join("资料.haozip001.zip"));
+        assert!(SplitArchiveDetector::detect_split_archive(&first).unwrap_err().to_string().contains("重复"));
+    }
+
+    #[test]
+    fn forum_zip_output_preview_removes_the_volume_marker() {
+        use crate::services::compression_service::CompressionService;
+        for source in ["资料.haozip01.zip", "资料.HAOZIP02.ZIP"] {
+            assert_eq!(CompressionService::extraction_output_path(Path::new(source), Some("output"), true), Path::new("output").join("资料"));
+        }
     }
 }

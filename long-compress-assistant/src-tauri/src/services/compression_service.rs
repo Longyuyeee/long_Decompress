@@ -1910,6 +1910,9 @@ impl CompressionService {
 
     fn detect_password_format(file_path: &str) -> Result<ArchiveFormat> {
         let path = Path::new(file_path);
+        if crate::services::sfx_archive::is_executable_path(path) {
+            return crate::services::archive_browser::detect_format(path);
+        }
         let file = crate::services::numeric_volume_reader::ZipInputReader::open_seven_zip(path)?;
         if matches!(&file, crate::services::numeric_volume_reader::ZipInputReader::StandardZip(_)) {
             return Ok(ArchiveFormat::Zip);
@@ -1971,7 +1974,7 @@ impl CompressionService {
     fn resolve_extraction_source(selected: &Path) -> Result<String> {
         Self::source_file_snapshot(selected, "Pre-checking")?;
         let path = if let Some(group) = SplitArchiveDetector::detect_split_archive(selected)? {
-            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{:?}", group.missing_parts);
+            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{}", group.missing_part_names());
             group.first_part
         } else { selected.to_path_buf() };
         Ok(path.to_string_lossy().into_owned())
@@ -2014,6 +2017,9 @@ impl CompressionService {
         let mut header = Vec::with_capacity(512);
         reader.take(512).read_to_end(&mut header)?;
         let mut format = ArchiveFormat::from_magic(&header);
+        if crate::services::sfx_archive::is_executable_path(path) {
+            format = crate::services::archive_browser::detect_format(path)?;
+        }
 
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
         if path.to_string_lossy().to_ascii_lowercase().ends_with(".7z.001") {
@@ -2029,7 +2035,7 @@ impl CompressionService {
         let standard_zip_group = SplitArchiveDetector::detect_split_archive(path)?
             .filter(|group| group.format == crate::services::split_archive_detector::SplitFormat::ZipSplit);
         if let Some(group) = standard_zip_group {
-            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少 ZIP 分卷：{:?}", group.missing_parts);
+            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少 ZIP 分卷：{}", group.missing_part_names());
             format = ArchiveFormat::Zip;
         }
 
@@ -2816,6 +2822,10 @@ impl CompressionService {
     fn archive_output_dir_name(path: &Path) -> String {
         let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("archive");
         let mut candidate = file_name.to_string();
+        if let Some(captures) = regex::Regex::new(r"(?i)^(.*\.)?haozip\d{2,5}\.zip$").unwrap().captures(file_name) {
+            return captures.get(1).map(|prefix| prefix.as_str().trim_end_matches('.'))
+                .filter(|base| !base.is_empty()).unwrap_or("archive").to_string();
+        }
         let lower = candidate.to_lowercase();
         if let Some((_, extension)) = lower.rsplit_once('.') {
             if extension.len() >= 3 && extension.chars().all(|character| character.is_ascii_digit()) {
@@ -4715,6 +4725,7 @@ mod tests_continued {
             std::fs::remove_file(&first).unwrap();
             let error = CompressionService::resolve_extraction_source(&second).unwrap_err().to_string();
             assert!(error.contains("缺少分卷"), "{error}");
+            assert_eq!(error, format!("[archive-inspection:incomplete] 缺少分卷：{}", first.file_name().unwrap().to_string_lossy()));
             assert_eq!(std::fs::read(&second).unwrap(), b"Rar!\x1a\x07\x00second");
         }
     }

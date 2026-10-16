@@ -1,0 +1,18 @@
+import { describe, expect, it } from 'vitest'
+import { archiveGroupKey, archiveSourceFormat, archiveSourceStem } from '../archiveSource'
+import { isPotentialSplitArchivePath } from '../compressionFormat'
+
+describe('HaoZip forum ZIP sources', () => {
+  it('normalizes any member without merging a same-basename ordinary ZIP', () => {
+    const first = 'F:\\下载\\资料.haozip01.zip'
+    const last = 'F:\\下载\\资料.HAOZIP03.ZIP'
+    expect(archiveGroupKey(first)).toBe(archiveGroupKey(last))
+    expect(archiveGroupKey(first)).not.toBe(archiveGroupKey('F:\\下载\\资料.zip'))
+    expect(archiveSourceFormat(last)).toBe('zip')
+    expect(archiveSourceStem(last)).toBe('资料')
+    expect(archiveSourceStem('F:\\下载\\haozip02.zip')).toBe('archive')
+    expect(isPotentialSplitArchivePath(last)).toBe(true)
+    expect(isPotentialSplitArchivePath('F:\\下载\\haozip02.zip')).toBe(true)
+    expect(isPotentialSplitArchivePath('F:\\下载\\not-haozip02.zip')).toBe(false)
+  })
+})

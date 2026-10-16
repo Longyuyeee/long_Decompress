@@ -26,6 +26,13 @@ pub fn encode(password: &str, encoding: ZipPasswordEncoding) -> Result<Vec<u8>> 
     }
 }
 
+fn decrypt_compatible<'a, R: std::io::Read + std::io::Seek>(
+    archive: &'a mut zip_aes::ZipArchive<R>, index: usize, password: &[u8],
+) -> zip_aes::result::ZipResult<zip_aes::read::ZipFile<'a, R>> {
+    archive.by_index_with_options(index, zip_aes::ZipReadOptions::new()
+        .password(Some(password)).zipcrypto_crc_with_descriptor(true))
+}
+
 /// Read historical UTF-8 archives first, then try the current Windows encoding
 /// for an explicit password mismatch. If both short encryption headers accept
 /// the password, disambiguate with full integrity validation before choosing.
@@ -40,40 +47,40 @@ pub fn open_entry<'a, R: std::io::Read + std::io::Seek>(
             .filter(|bytes| bytes != password.as_bytes())
     };
     let Some(local) = local else {
-        return archive.by_index_decrypt(index, password.as_bytes());
+        return decrypt_compatible(archive, index, password.as_bytes());
     };
     // In a mixed archive a supplied password also reaches plain entries. They
     // accept any password bytes; that is not an ambiguous encryption header.
     if !archive.by_index_raw(index)?.encrypted() {
         return archive.by_index(index);
     }
-    let mismatch = match archive.by_index_decrypt(index, password.as_bytes()) {
+    let mismatch = match decrypt_compatible(archive, index, password.as_bytes()) {
         Ok(_) => false,
         Err(zip_aes::result::ZipError::InvalidPassword) => true,
         Err(error) => return Err(error),
     };
     if mismatch {
-        return archive.by_index_decrypt(index, &local);
+        return decrypt_compatible(archive, index, &local);
     }
     // ZipCrypto's short header can accept incorrect UTF-8 bytes even when the
     // real password was encoded in ACP. Most entries need only header checks;
     // stream content only in the ambiguous double-match case.
-    let local_also_matches = archive.by_index_decrypt(index, &local).is_ok();
+    let local_also_matches = decrypt_compatible(archive, index, &local).is_ok();
     if local_also_matches {
         let utf8_integrity = {
-            let mut reader = archive.by_index_decrypt(index, password.as_bytes())?;
+            let mut reader = decrypt_compatible(archive, index, password.as_bytes())?;
             std::io::copy(&mut reader, &mut std::io::sink())
         };
         if let Err(utf8_error) = utf8_integrity {
             let local_integrity = {
-                let mut reader = archive.by_index_decrypt(index, &local)?;
+                let mut reader = decrypt_compatible(archive, index, &local)?;
                 std::io::copy(&mut reader, &mut std::io::sink())
             };
             if local_integrity.is_err() { return Err(utf8_error.into()); }
-            return archive.by_index_decrypt(index, &local);
+            return decrypt_compatible(archive, index, &local);
         }
     }
-    archive.by_index_decrypt(index, password.as_bytes())
+    decrypt_compatible(archive, index, password.as_bytes())
 }
 
 pub fn open_named_entry<'a, R: std::io::Read + std::io::Seek>(
@@ -130,6 +137,50 @@ fn encode_local(password: &str) -> Result<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn legacy_descriptor_crc_header_still_requires_complete_payload_integrity() {
+        use std::io::{Cursor, Read, Write};
+        use zip_aes::unstable::write::FileOptionsExt;
+        let payload = (0..1000).map(|index| format!("original complete content, including the final bytes {index}").into_bytes())
+            .find(|bytes| (1..=191).contains(&(crc32fast::hash(bytes) >> 24))).unwrap();
+        let check = (crc32fast::hash(&payload) >> 24) as u8;
+        let mut writer = zip_aes::ZipWriter::new(Cursor::new(Vec::new()));
+        writer.start_file("资料.txt", zip_aes::write::SimpleFileOptions::default()
+            .last_modified_time(zip_aes::DateTime::from_date_and_time(2001, 1, 1, check >> 3, (check & 7) << 3, 0).unwrap())
+            .compression_method(zip_aes::CompressionMethod::Stored)
+            .with_deprecated_encryption(b"correct").unwrap()).unwrap();
+        writer.write_all(&payload).unwrap();
+        let mut bytes = writer.finish().unwrap().into_inner();
+        let end = bytes.len() - 22;
+        let central = u32::from_le_bytes(bytes[end+16..end+20].try_into().unwrap()) as usize;
+        let crc = u32::from_le_bytes(bytes[central+16..central+20].try_into().unwrap());
+        assert_eq!((crc >> 24) as u8, check);
+        assert_ne!(bytes[6] & 8, 0, "writer already emits a real data descriptor");
+        // The writer uses the timestamp convention. Its chosen high byte was
+        // equal to the payload CRC high byte; now change only the metadata time
+        // to distinguish CRC from time, leaving encryption and content intact.
+        bytes[10..12].copy_from_slice(&0u16.to_le_bytes());
+        bytes[central+12..central+14].copy_from_slice(&0u16.to_le_bytes());
+        let mut archive = zip_aes::ZipArchive::new(Cursor::new(bytes.clone())).unwrap();
+        // The dependency remains strict by default; only the shared application
+        // reader explicitly accepts the observed legacy header convention.
+        let strict = archive.by_index_decrypt(0, b"correct").map(|_| ());
+        assert!(matches!(strict, Err(zip_aes::result::ZipError::InvalidPassword)), "strict reader result: {strict:?}");
+        let mut actual = Vec::new();
+        open_entry(&mut archive, 0, "correct").unwrap().read_to_end(&mut actual).unwrap();
+        assert_eq!(actual, payload);
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("legacy.zip");
+        std::fs::write(&path, &bytes).unwrap();
+        assert!(crate::services::universal_engine::UniversalCliEngine::try_zip_password(&path, "correct").unwrap());
+        assert!(!crate::services::universal_engine::UniversalCliEngine::try_zip_password(&path, "wrong").is_ok_and(|accepted| accepted));
+        let data_start = archive.by_index_raw(0).unwrap().data_start().unwrap() as usize;
+        bytes[data_start + 15] ^= 0x40;
+        std::fs::write(&path, bytes).unwrap();
+        let error = crate::services::universal_engine::UniversalCliEngine::try_zip_password(&path, "correct").unwrap_err();
+        assert!(error.to_string().contains("ambiguous-data"), "corrupt content is not a verified password: {error}");
+    }
 
     #[test]
     fn reads_utf8_and_local_archives_without_changing_the_password() {

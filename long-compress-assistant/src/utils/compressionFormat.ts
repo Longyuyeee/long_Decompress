@@ -116,12 +116,17 @@ export const isDecompressArchivePath = (path: string) => {
   return DECOMPRESS_ARCHIVE_SUFFIXES.some(suffix => normalizedPath.endsWith(suffix))
 }
 
+// Candidates only: native code verifies the embedded ZIP/7Z/RAR before import.
+// Do not add EXE to format capabilities or system file associations.
+export const isPotentialSfxPath = (path: string) => /\.exe$/i.test(path.trim())
+
 // These names cannot be represented reliably by a short native file-dialog
 // extension filter. They are only candidates: the Rust detector verifies the
 // sibling volumes before a task is created.
 export const isPotentialSplitArchivePath = (path: string) => {
   const normalizedPath = path.trim().toLowerCase()
-  return /(?:\.7z)?\.\d{3,}$/.test(normalizedPath)
+  return /(?:^|[\\/.])haozip\d{2,5}\.zip$/.test(normalizedPath)
+    || /(?:\.7z)?\.\d{3,}$/.test(normalizedPath)
     || /\.z\d{2,5}$/.test(normalizedPath)
     || /\.r\d{2,3}$/.test(normalizedPath)
     || /\.part\d+(?:\.rar)?$/.test(normalizedPath)
@@ -135,6 +140,7 @@ export const DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS = [
   '001',
   'z01',
   'r00',
+  'exe',
 ]
 
 export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS

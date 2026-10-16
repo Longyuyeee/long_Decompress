@@ -21,6 +21,7 @@ import { open } from '@tauri-apps/api/dialog'
 import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
 import { sortTasksByName } from '@/utils/taskOrdering'
+import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
 
 const props = defineProps<{
   selectedTaskIds?: Set<string>
@@ -606,8 +607,8 @@ async (tasks, _, onCleanup) => {
                     <div data-testid="decompression-log-viewport" class="log-viewport flex-1 min-w-0 overflow-y-auto overflow-x-hidden pr-2 space-y-1.5 custom-scrollbar">
                       <div v-for="(log, idx) in task.logs" :key="idx" class="task-log-entry flex min-w-0 gap-3 items-start group/log border-l-2 border-subtle/20 pl-3 py-0.5">
                         <span class="task-log-time text-dim font-mono text-xs mt-0.5 opacity-80 shrink-0">{{ new Date(log.timestamp).toLocaleTimeString([], {hour12: false}) }}</span>
-                        <div class="task-log-message min-w-0 flex-1 truncate whitespace-nowrap text-sm leading-relaxed font-mono" :class="getSeverityClass(log.severity)" :title="log.message">
-                          {{ log.message }}
+                        <div class="task-log-message min-w-0 flex-1 truncate whitespace-nowrap text-sm leading-relaxed font-mono" :class="getSeverityClass(log.severity)" :title="archiveInspectionMessageForDisplay(log.message)">
+                          {{ archiveInspectionMessageForDisplay(log.message) }}
                         </div>
                       </div>
                     </div>

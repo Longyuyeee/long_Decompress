@@ -4,6 +4,7 @@ use std::{fs::File, io::{self, Read, Seek, SeekFrom}, path::{Path, PathBuf}};
 /// Archive consumers must read the complete numeric volume set, not just its first file.
 pub(crate) enum ZipInputReader {
     File(File),
+    SevenZipSfx { file: File, start: u64, length: u64, position: u64 },
     Volumes(NumericVolumeReader),
     StandardZip(super::standard_zip_reader::StandardZipReader),
 }
@@ -21,6 +22,15 @@ impl ZipInputReader {
     }
 
     pub(crate) fn open_seven_zip(path: &Path) -> anyhow::Result<Self> {
+        if super::sfx_archive::is_executable_path(path) {
+            if let Some((super::archive_format::ArchiveFormat::SevenZip, start)) = super::sfx_archive::detect(path)? {
+                let mut file = File::open(path)?;
+                let length = file.metadata()?.len().checked_sub(start)
+                    .ok_or_else(|| anyhow::anyhow!("[archive-inspection:incomplete] 自解压文件在读取期间被截断，请确认下载完成后重试"))?;
+                file.seek(SeekFrom::Start(start))?;
+                return Ok(Self::SevenZipSfx { file, start, length, position: 0 });
+            }
+        }
         if Self::is_numeric_first(path) {
             Ok(Self::Volumes(NumericVolumeReader::open(path).map_err(|error|
                 anyhow::anyhow!("[archive-inspection:incomplete] 无法读取完整 7Z 卷组：{error}"))?))
@@ -48,13 +58,26 @@ impl ZipInputReader {
 
 impl Read for ZipInputReader {
     fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
-        match self { Self::File(reader) => reader.read(buffer), Self::Volumes(reader) => reader.read(buffer), Self::StandardZip(reader) => reader.read(buffer) }
+        if let Self::SevenZipSfx { file, length, position, .. } = self {
+            let limit = length.saturating_sub(*position).min(buffer.len() as u64) as usize;
+            let read = file.read(&mut buffer[..limit])?;
+            *position += read as u64;
+            return Ok(read);
+        }
+        match self { Self::File(reader) => reader.read(buffer), Self::Volumes(reader) => reader.read(buffer), Self::StandardZip(reader) => reader.read(buffer), Self::SevenZipSfx { .. } => unreachable!() }
     }
 }
 
 impl Seek for ZipInputReader {
     fn seek(&mut self, position: SeekFrom) -> io::Result<u64> {
-        match self { Self::File(reader) => reader.seek(position), Self::Volumes(reader) => reader.seek(position), Self::StandardZip(reader) => reader.seek(position) }
+        if let Self::SevenZipSfx { file, start, length, position: current } = self {
+            let target = match position { SeekFrom::Start(value) => value as i128, SeekFrom::End(delta) => *length as i128 + delta as i128, SeekFrom::Current(delta) => *current as i128 + delta as i128 };
+            let target = u64::try_from(target).map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "Invalid SFX seek"))?;
+            let physical = start.checked_add(target).ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "SFX seek overflow"))?;
+            file.seek(SeekFrom::Start(physical))?;
+            *current = target; return Ok(target);
+        }
+        match self { Self::File(reader) => reader.seek(position), Self::Volumes(reader) => reader.seek(position), Self::StandardZip(reader) => reader.seek(position), Self::SevenZipSfx { .. } => unreachable!() }
     }
 }
 

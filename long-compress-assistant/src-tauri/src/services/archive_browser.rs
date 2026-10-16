@@ -45,6 +45,10 @@ fn summarize(format: &str, entries: Vec<ArchiveEntryInfo>) -> ArchiveBrowseResul
 }
 
 pub(crate) fn detect_format(path: &Path) -> Result<ArchiveFormat> {
+    if super::sfx_archive::is_executable_path(path) {
+        if let Some((format, _)) = super::sfx_archive::detect(path)? { return Ok(format); }
+        anyhow::bail!("[archive-inspection:unsupported] 不是可读取的 ZIP、7Z 或 RAR 自解压归档，或归档头已损坏；不会执行此程序");
+    }
     let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
     if matches!(&file, super::numeric_volume_reader::ZipInputReader::StandardZip(_)) {
         return Ok(ArchiveFormat::Zip);
@@ -104,7 +108,7 @@ fn browse_7z(
     cancelled: &AtomicBool,
 ) -> Result<ArchiveBrowseResult> {
     ensure_not_cancelled(cancelled)?;
-    let mut file = super::numeric_volume_reader::ZipInputReader::open(path)?;
+    let mut file = super::numeric_volume_reader::ZipInputReader::open_seven_zip(path)?;
     let length = file.seek(SeekFrom::End(0))?;
     file.seek(SeekFrom::Start(0))?;
     let password = password.map(sevenz_rust::Password::from);
@@ -368,6 +372,25 @@ mod tests {
     use std::io::Write;
     use std::sync::atomic::AtomicBool;
     use std::sync::Arc;
+
+    #[tokio::test]
+    async fn browses_zip_sfx_payload_instead_of_executable_resources() {
+        let temp = tempfile::tempdir().unwrap();
+        let plain = temp.path().join("plain.zip");
+        let mut writer = zip::ZipWriter::new(std::fs::File::create(&plain).unwrap());
+        writer.start_file("说明.txt", zip::write::FileOptions::default()).unwrap();
+        writer.write_all(b"read without executing").unwrap();
+        writer.finish().unwrap();
+        // Offset regression fixture, not a claim of an externally generated SFX.
+        let mut bytes = vec![0u8; 4096]; bytes[..2].copy_from_slice(b"MZ");
+        bytes.extend(std::fs::read(&plain).unwrap());
+        let executable = temp.path().join("收到的自解压包.exe");
+        std::fs::write(&executable, bytes).unwrap();
+        let result = browse_archive(&executable, None).await.unwrap();
+        assert_eq!(result.format, "ZIP");
+        assert_eq!(result.entries.len(), 1);
+        assert_eq!(result.entries[0].path, "说明.txt");
+    }
 
     #[tokio::test]
     async fn browses_real_zip_metadata_without_extracting() {

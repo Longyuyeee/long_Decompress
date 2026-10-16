@@ -53,6 +53,58 @@ const mountView = (pinia = createPinia()) => mount(DecompressView, {
 })
 
 describe('DecompressView', () => {
+  it('does not downgrade an unconfirmed forum volume to an ordinary ZIP', async () => {
+    const wrapper = mountView()
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'detect_split_archive') throw new Error('[archive-inspection:incomplete] 未找到可读的终卷目录；总卷数无法确认')
+      return []
+    })
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{name:'资料.haozip01.zip',path:'C:/资料.haozip01.zip'}])
+    await flushPromises()
+    expect(useTaskStore().tasks).toHaveLength(0)
+    expect(useAppStore().error).toContain('终卷目录')
+    expect(useAppStore().error).not.toContain('[archive-inspection:')
+    mocks.invoke.mockImplementation(async () => ({is_split:false}))
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{name:'资料.haozip02.zip',path:'C:/资料.haozip02.zip'}])
+    await flushPromises()
+    expect(useTaskStore().tasks).toHaveLength(0)
+    wrapper.unmount()
+  })
+
+  it('deduplicates genuine forum member names using the detector canonical source', async () => {
+    const parts = ['C:/资料.haozip01.zip', 'C:/资料.haozip02.zip']
+    const wrapper = mountView()
+    mocks.invoke.mockImplementation(async (command: string) => command === 'detect_split_archive' ? {
+      is_split:true, format:'ZipSplit', base_name:'资料', first_part:parts[0], parts,
+      total_parts:2, is_complete:true, missing_parts:[],
+    } : [])
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [parts[1],parts[0]].map(path=>({name:path.split('/').pop(),path})))
+    await flushPromises()
+    expect(useTaskStore().tasks).toHaveLength(1)
+    expect(useTaskStore().tasks[0]).toMatchObject({sourceFiles:[parts[0]],name:'资料 (2 个分卷)'})
+    wrapper.unmount()
+  })
+
+  it('imports only verified SFX and never queues an ordinary executable', async () => {
+    const wrapper = mountView()
+    mocks.invoke.mockImplementation(async (command: string, args: any) => {
+      if (command === 'detect_split_archive') {
+        if (args.path.endsWith('program.exe')) throw new Error('[archive-inspection:unsupported] 不是可读取的 ZIP、7Z 或 RAR 自解压归档')
+        return { is_split: false, archive_format: '7z' }
+      }
+      return []
+    })
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [
+      {name:'收到的资料.exe',path:'C:/收到的资料.exe'},
+      {name:'program.exe',path:'C:/program.exe'},
+    ])
+    await flushPromises()
+    expect(useTaskStore().tasks.map(task=>task.sourceFiles[0])).toEqual(['C:/收到的资料.exe'])
+    expect(useAppStore().error).toContain('不是可读取')
+    expect(useAppStore().error).not.toContain('[archive-inspection:')
+    wrapper.unmount()
+  })
+
   it('changes selected pending configuration without rewriting passwords, defaults or running tasks', async () => {
     const wrapper = mountView()
     const store = useTaskStore()
@@ -807,6 +859,20 @@ describe('DecompressView', () => {
       passwordRequired: false,
     })
     expect(appStore.error).toContain('disk full')
+    wrapper.unmount()
+  })
+
+  it('keeps inspection evidence on the failed task but hides routing markers in its toast', async () => {
+    const reason = '[archive-inspection:incomplete] 缺少分卷：收到的密码资料.z02'
+    mocks.decompressFile.mockRejectedValueOnce({ message: reason })
+    const wrapper = mountView()
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: '资料.zip', path: 'C:/资料.zip' }])
+    await flushPromises()
+    await wrapper.get('[data-testid="start-decompression-queue"]').trigger('click')
+    await flushPromises()
+    expect(useTaskStore().tasks[0]).toMatchObject({ status: 'failed', error: reason, passwordRequired: false })
+    expect(useAppStore().error).toContain('缺少分卷：收到的密码资料.z02')
+    expect(useAppStore().error).not.toContain('[archive-inspection:')
     wrapper.unmount()
   })
 
