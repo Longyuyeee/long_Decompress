@@ -2,6 +2,10 @@
 
 日期：2026-10-16（Asia/Hong_Kong）。基线为正式 v1.4.10 / `b1587d6`，分支 `codex/sfx-volume-compatibility-1-4-11`，接续 [PR #165](https://github.com/Longyuyeee/long_Decompress/pull/165)。
 
+## 正式发布接续（2026-10-16）
+
+用户要求继续推进发布，PR #165 已合并至 `bf84cc2be6343b0bdaf7f649d1ac3329c54a5f57`。最终版本准备提交 `be5ddac` 的 [Windows package](https://github.com/Longyuyeee/long_Decompress/actions/runs/38850156863) 已通过，沿用已有功能和桌面结果，不重复运行。合并说明继承历史提交的 `[skip ci]`，首次标签未触发 Release；补充本次纯发布文档提交后，将尚未生成 Release 的 `v1.4.11` 标签指向该提交，功能内容不变。正式打包完成后同步中文 Release、更新清单和文档状态；下方“未授权发布”为封板时快照。
+
 **本轮功能范围已收口，源码与版本化 Shell 资源统一为 1.4.11。** 最后一次产品行为修改为 `b55bab622fd9b266a1c8958c8ae3e9ca8f93d379`；之后只补真实论坛密码卷、测试接续、证据和版本文档。准确版本准备提交及普通安装包结果以 PR #165 最新提交和检查为准，不为回填提交哈希重复打包。
 
 ## 冻结范围
