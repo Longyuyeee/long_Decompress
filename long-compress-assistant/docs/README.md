@@ -1,6 +1,6 @@
 # 文档导航与维护规则
 
-- **当前开发：[v1.4.14 ZIP / ZIPX 输出方法](ZIP_OUTPUT_METHODS_1.4.14.md)**、[封板记录](ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)、[中文 Release 草案](RELEASE_NOTES_1.4.14.md)。ZIP Zstandard、ZIPX（XZ）、密码分卷与转换按批准方向收尾；正式合入发布另行执行。下方 v1.4.13 条目中的“下一版未启动”为该次发布时快照。
+- **当前全部暂停：[v1.4.14 暂停交接](DEVELOPMENT_PAUSED_1.4.14_2026-10-16.md)**。已完成、暂停中与后续待办已记录，仅文档推送。功能、实际页面与候选安装器已完成，PR #168 未合并、未正式发布；[实施记录](ZIP_OUTPUT_METHODS_1.4.14.md)、[封板记录](ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)、[中文 Release 草案](RELEASE_NOTES_1.4.14.md)。下方 v1.4.13 条目中的“下一版未启动”为该次发布时快照。
 
 - **当前正式版：[v1.4.13 缺卷 ZIP 部分抢救](PARTIAL_ZIP_RECOVERY_1.4.13.md)**、[封板与发布记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)、[中文更新说明](RELEASE_NOTES_1.4.13.md)、[开发交接](DEVELOPMENT_HANDOFF.md)。[PR #167](https://github.com/Longyuyeee/long_Decompress/pull/167) 已合入，标准 ZIP 缺卷、密码包与恢复结果接续已交付，单条展开、多选弹窗保持；安装器及签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。v1.4.14 尚未启动。
 

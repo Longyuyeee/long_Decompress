@@ -1,6 +1,6 @@
 # v1.4.14 封板记录
 
-状态：功能与实际页面已封板；普通安装器结果以候选 PR 最新提交检查为准。范围见 [实施记录](ZIP_OUTPUT_METHODS_1.4.14.md)，发布说明见 [中文 Release 草案](RELEASE_NOTES_1.4.14.md)。公开正式版仍为 v1.4.13。
+状态：功能与实际页面已封板，候选普通安装器已成功；按用户要求全部工作暂停，尚未合并或正式发布。已完成与后续待办见 [暂停交接](DEVELOPMENT_PAUSED_1.4.14_2026-10-16.md)，范围见 [实施记录](ZIP_OUTPUT_METHODS_1.4.14.md)，发布说明见 [中文 Release 草案](RELEASE_NOTES_1.4.14.md)。公开正式版仍为 v1.4.13。
 
 ## 本版范围
 
@@ -14,9 +14,9 @@
 - [x] 功能与版本 1.4.14 接入。
 - [x] 相关前端、后端定向检查与前端构建；版本来源和 Shell DLL 一致。
 - [x] 15 组真实压缩、3 个转换与独立回解；3 个未开放组合明确拒绝；12 张截图已查看。
-候选普通安装器的最终条件为 PR 最新提交的 **Windows package 成功**。构建结果及运行身份在 PR 描述回填，不为文档回填重复打包。
+- [x] 候选 `16106b4f49f39d0788dd48d8e860563589c03b6b` 的 [Windows package / 38878587465](https://github.com/Longyuyeee/long_Decompress/actions/runs/38878587465) 成功，17:20:18（香港时间）结束；[安装器附件 12036523615](https://github.com/Longyuyeee/long_Decompress/actions/runs/38878587465/artifacts/12036523615) 为 `windows-nsis-installer`，20,166,373 字节。
 
-候选提交、构建运行、安装器附件及后续正式发布身份以本版 PR 的最新描述为准；文档状态回填不触发重复功能检查。
+暂停时提出取消，构建已结束，因此没有取消成功或重跑。上述结果对应 `16106b4`，暂停文档提交使用 `[skip ci]`，不另触发检查。[PR #168](https://github.com/Longyuyeee/long_Decompress/pull/168) 保持未合并，正式标签、Release 与更新附件尚未创建；恢复与发布待用户后续指令。
 
 代码冻结提交：`5227fb15fd8f25b100e656ffa1495a6111ae212e`。此后只整理候选状态文档，实际归档、界面和已通过检查保持。候选提交完整身份见 PR。
 
