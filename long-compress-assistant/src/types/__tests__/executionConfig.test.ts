@@ -2,8 +2,24 @@ import { describe, expect, it } from 'vitest'
 import { copyExecutionConfig, type ExecutionConfigV1 } from '../executionConfig'
 import { createDefaultImageSettings } from '@/utils/imageCompressionWorkspace'
 import { createDefaultVideoSettings } from '@/utils/videoCompressionWorkspace'
+import { ZIP_PASSWORD_ENCODINGS, isZipPasswordEncoding } from '../zipPassword'
 
 describe('actual execution snapshots', () => {
+  it.each(ZIP_PASSWORD_ENCODINGS)('keeps %s input separately from output encoding and without secrets', encoding => {
+    const input: ExecutionConfigV1 = { schemaVersion: 1, kind: 'archive-extraction',
+      outputDirectory: 'D:/out', extractToSubfolder: true, zipPasswordEncoding: encoding }
+    expect(copyExecutionConfig(input)).toEqual(input)
+    const conversion: ExecutionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
+      sourceZipPasswordEncoding: encoding, zipPasswordEncoding: 'utf8', format: 'zip', level: 6,
+      outputPath: 'D:/new.zip', splitSize: 0, encryptFilenames: false, passwordRequired: true }
+    expect(copyExecutionConfig(conversion)).toMatchObject({ sourceZipPasswordEncoding: encoding, zipPasswordEncoding: 'utf8' })
+    expect(isZipPasswordEncoding(encoding)).toBe(true)
+    for (const invalid of ['unknown', 'CP932', 932, true]) {
+      expect(isZipPasswordEncoding(invalid)).toBe(false)
+      expect(copyExecutionConfig({ ...input, zipPasswordEncoding: invalid } as unknown as ExecutionConfigV1)).toBeNull()
+      expect(copyExecutionConfig({ ...conversion, sourceZipPasswordEncoding: invalid } as unknown as ExecutionConfigV1)).toBeNull()
+    }
+  })
   it('retains the explicit ZIP method when copying a conversion history', () => {
     const config = { schemaVersion: 1 as const, kind: 'archive-conversion' as const, format: 'zip', level: 6,
       outputPath: 'D:/new.zip', splitSize: 1048576, zipMethod: 'zstd' as const, encryptFilenames: false, passwordRequired: true }

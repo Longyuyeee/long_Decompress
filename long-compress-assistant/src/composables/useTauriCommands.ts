@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import type { PublishedArchiveOutput } from '@/types/archiveOutput'
+import type { ZipPasswordEncoding } from '@/types/zipPassword'
 import { message, open, save, ask } from '@tauri-apps/api/dialog'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
@@ -28,7 +29,11 @@ import type {
   ImageDestinationPlanRequest,
 } from '@/utils/imageCompressionWorkspace'
 
+const zipPasswordArguments = (encoding?: ZipPasswordEncoding) => encoding === undefined ? {} : { zipPasswordEncoding: encoding }
+
 export interface DecompressOptions {
+  /** Omitted means the existing automatic UTF-8/current-Windows input mode. */
+  zipPasswordEncoding?: ZipPasswordEncoding
   outputPath: string
   password?: string
   keepStructure: boolean
@@ -58,7 +63,7 @@ export interface FileInfo {
 
 export interface CompressOptions {
   fast_pack?: boolean
-  zip_password_encoding?: 'utf8' | 'windows_local'
+  zip_password_encoding?: ZipPasswordEncoding
   zip_method?: 'deflate' | 'zstd'
   zip_encryption?: 'aes256' | 'zipcrypto'
   zip_split_mode?: 'numeric' | 'standard'
@@ -305,10 +310,12 @@ export const useTauriCommands = () => {
     const trackedTask = taskStore.tasks.find(item => item.id === taskId)
     if (trackedTask) {
       trackedTask.selectedEntries = options.selectedEntries ? [...options.selectedEntries] : undefined
+      trackedTask.zipPasswordEncoding = options.zipPasswordEncoding
       // Capture the submitted directory, before execution can report a final output path.
       trackedTask.executionConfig = !options.fileFilter && !options.selectedEntries?.length ? {
         schemaVersion: 1, kind: 'archive-extraction', outputDirectory: options.outputPath,
         extractToSubfolder: options.createSubdirectory ?? false,
+        ...(options.zipPasswordEncoding ? { zipPasswordEncoding: options.zipPasswordEncoding } : {}),
       } : undefined
     }
 
@@ -322,6 +329,7 @@ export const useTauriCommands = () => {
         outputPath: options.outputPath,
         password: options.password || null,
         options: {
+          ...(options.zipPasswordEncoding === undefined ? {} : { zip_password_encoding: options.zipPasswordEncoding }),
           preserve_paths: options.keepStructure,
           parallel_zip: appStore.settings.parallelZipExtraction === true,
           overwrite_existing: options.overwrite,
@@ -805,11 +813,12 @@ export const useTauriCommands = () => {
     await invoke('cancel_compression_analysis', { analysisId })
   }
 
-  const browseArchive = async (filePath: string, password?: string, browseId?: string) => {
+  const browseArchive = async (filePath: string, password?: string, browseId?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
     return await invoke<ArchiveBrowseResult>('browse_archive', {
       filePath,
       password: password || null,
       browseId: browseId || null,
+      ...zipPasswordArguments(zipPasswordEncoding),
     })
   }
 
@@ -826,21 +835,21 @@ export const useTauriCommands = () => {
     await invoke('cancel_archive_browse', { browseId })
   }
 
-  const previewArchiveImage = async (filePath: string, entryPath: string, password?: string) => {
+  const previewArchiveImage = async (filePath: string, entryPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
     return await invoke<ArchiveImagePreview>('preview_archive_image', {
-      filePath, entryPath, password: password || null,
+      filePath, entryPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding),
     })
   }
 
-  const previewArchiveText = async (filePath: string, entryPath: string, password?: string) => {
+  const previewArchiveText = async (filePath: string, entryPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
     return await invoke<ArchiveTextPreview>('preview_archive_text', {
-      filePath, entryPath, password: password || null,
+      filePath, entryPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding),
     })
   }
 
-  const openArchiveEntry = async (filePath: string, entryPath: string, password?: string, allowDangerous = false) => {
+  const openArchiveEntry = async (filePath: string, entryPath: string, password?: string, allowDangerous = false, zipPasswordEncoding?: ZipPasswordEncoding) => {
     return await invoke<ArchiveEntryOpenResult>('open_archive_entry', {
-      filePath, entryPath, password: password || null, allowDangerous,
+      filePath, entryPath, password: password || null, allowDangerous, ...zipPasswordArguments(zipPasswordEncoding),
     })
   }
 
@@ -850,21 +859,23 @@ export const useTauriCommands = () => {
     password: string | undefined,
     targetDepth: number,
     ancestorHashes: string[],
+    zipPasswordEncoding?: ZipPasswordEncoding,
   ) => invoke<NestedArchiveMaterializeResult>('materialize_nested_archive', {
     filePath,
     entryPath,
     password: password || null,
     targetDepth,
     ancestorHashes,
+    ...zipPasswordArguments(zipPasswordEncoding),
   })
 
-  const testArchiveIntegrity = async (filePath: string, password?: string) => {
-    return await invoke<string>('test_archive_integrity', { filePath, password: password || null })
+  const testArchiveIntegrity = async (filePath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
+    return await invoke<string>('test_archive_integrity', { filePath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding) })
   }
 
-  const diagnoseArchive = async (diagnosticId: string, filePath: string, password?: string) => {
+  const diagnoseArchive = async (diagnosticId: string, filePath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
     return await invoke<ArchiveDiagnosticReport>('diagnose_archive', {
-      diagnosticId, filePath, password: password || null,
+      diagnosticId, filePath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding),
     })
   }
 
@@ -872,14 +883,14 @@ export const useTauriCommands = () => {
     await invoke('cancel_archive_diagnosis', { diagnosticId })
   }
 
-  const repairZip = async (repairId: string, filePath: string, outputPath: string, password?: string) => {
-    return await invoke<ZipRepairResult>('repair_zip', { repairId, filePath, outputPath, password: password || null })
+  const repairZip = async (repairId: string, filePath: string, outputPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
+    return await invoke<ZipRepairResult>('repair_zip', { repairId, filePath, outputPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding) })
   }
   const repairRar = async (repairId: string, filePath: string, outputDirectory: string, password?: string) => {
     return invoke<ZipRepairResult>('repair_rar', { repairId, filePath, outputDirectory, password: password || null })
   }
   const groupArchiveDiagnosisSources = (paths: string[]) => invoke<Array<{path: string; selectedMembers: number}>>('group_archive_diagnosis_sources', {paths})
-  const repairArchiveBatchItem = (operationId: string, filePath: string, outputDirectory: string, format: string, password?: string) => invoke<ZipRepairResult>('repair_archive_batch_item', {operationId, filePath, outputDirectory, format, password: password || null})
+  const repairArchiveBatchItem = (operationId: string, filePath: string, outputDirectory: string, format: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding) => invoke<ZipRepairResult>('repair_archive_batch_item', {operationId, filePath, outputDirectory, format, password: password || null, ...zipPasswordArguments(zipPasswordEncoding)})
   const createRarRecoveryVolumes = (operationId: string, filePath: string, outputDirectory: string, count: number, password?: string) => invoke<{outputFiles: string[]; totalBytes: number; dataVolumes: number}>('create_rar_recovery_volumes', {operationId, filePath, outputDirectory, count, password: password || null})
 
   const cancelZipRepair = async (repairId: string) => {

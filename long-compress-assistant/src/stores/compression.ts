@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import type { ZipPasswordEncoding } from '@/types/zipPassword'
 import { ref, computed } from 'vue'
 import type { BatchConfigPatch } from '@/types/batchConfig'
 import type { CompressionFormatId } from '@/utils/compressionFormat'
@@ -35,7 +36,7 @@ export interface FileObject {
 export interface CompressionOptions {
   /** Legacy compatibility only. New drafts and execution always disable this retired option. */
   fastPack?: boolean
-  zipPasswordEncoding?: 'utf8' | 'windows_local'
+  zipPasswordEncoding?: ZipPasswordEncoding
   zipMethod?: 'deflate' | 'zstd'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'

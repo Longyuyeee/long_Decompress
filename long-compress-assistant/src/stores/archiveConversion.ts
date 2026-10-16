@@ -86,6 +86,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   }
   const sourcePath = computed({ get: () => active.value?.sourcePath || '', set: (path: string) => selectSource(path) })
   const sourcePassword = field('sourcePassword'), password = field('password'), outputPath = field('outputPath')
+  const sourceZipPasswordEncoding = field('sourceZipPasswordEncoding')
   const format = field('format'), zipEncryption = field('zipEncryption'), zipPasswordEncoding = field('zipPasswordEncoding')
   const level = field('level'), splitMiB = field('splitMiB'), encryptFilenames = field('encryptFilenames')
   const supportsPassword = computed(() => supportsNativePassword(format.value))
@@ -206,6 +207,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       intent: 'convert', expanded: true, selected: true, retryOfTaskId: record.id,
       targetPasswordRequired: config.passwordRequired, sourcePasswordRequired: false, passwordRequired: config.passwordRequired,
       settings: { ...defaultConversionSettings(), outputPath: '', format: config.format,
+      ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
       zipMethod: config.zipMethod ?? 'deflate',
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
       zipSplitMode: config.zipSplitMode ?? 'numeric', rarRecoveryPercent: config.rarRecoveryPercent ?? 0,
@@ -243,6 +245,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     let unlisten: UnlistenFn | undefined
     const id = 'conversion-' + crypto.randomUUID()
     const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
+      ...(settings.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: settings.sourceZipPasswordEncoding } : {}),
       zipMethod: settings.zipMethod ?? 'deflate',
       zipEncryption: settings.zipEncryption, zipPasswordEncoding: settings.zipPasswordEncoding,
       zipSplitMode: settings.zipSplitMode ?? 'numeric',
@@ -261,6 +264,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       tasks.updateTaskStatus(id, 'running')
       try {
         const output = await invoke<PublishedArchiveOutput>('convert_archive', { taskId: id, sourcePath: item.sourcePath,
+          ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
           sourcePassword: settings.sourcePassword || null, outputPath,
           options: { format: config.format, level: config.level, password: settings.password || null,
             zip_method: config.zipMethod ?? 'deflate', zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
@@ -352,7 +356,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     } catch (failure) { stopRequested.value = false; error.value = '取消请求失败：' + String(failure) }
   }
   return { visible, items, defaults, pending, selected, activeId, sourcePath, sourcePassword, password, outputPath,
-    format, zipEncryption, zipPasswordEncoding, level, splitMiB, encryptFilenames, error, busy, task, phase,
+    format, zipEncryption, zipPasswordEncoding, sourceZipPasswordEncoding, level, splitMiB, encryptFilenames, error, busy, task, phase,
     supportsPassword, contextIntent, contextSources, stopRequested, preparing, rarSupport, refreshRarSupport, effectiveSettings, outputFor, taskFor, passwordRequirements,
     addSources, chooseContextSource, selectSource, openFromExplorer, show, restore, start, cancel,
     updateItem, applySelected, updateDefaults, remove, replaceSource }

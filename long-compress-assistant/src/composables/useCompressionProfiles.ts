@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { extractErrorMessage } from '@/utils'
+import { isZipPasswordEncoding } from '@/types/zipPassword'
 import type { CompressionProfile, CreateProfileRequest, PasswordStrategy, TaskTemplate, TaskTemplateDraftPlan, TaskTemplatePreview, TaskTemplateWatchFolderPreview, WatchFolderDraftBatch, WatchFolderRegistration, WatchFolderStatus } from '@/types'
 
 interface ApplyProfileParams {
@@ -58,6 +59,7 @@ const toBackendPasswordStrategy = (strategy: PasswordStrategy) => {
 
 const normalizeProfile = (raw: any): CompressionProfile => {
   const autoApply = raw.autoApply ?? raw.auto_apply ?? {}
+  const zipEncoding = raw.config.zipPasswordEncoding ?? raw.config.extra_params?.zip_password_encoding ?? raw.config.extraParams?.zip_password_encoding
   return ({
   id: raw.id,
   name: raw.name,
@@ -76,7 +78,7 @@ const normalizeProfile = (raw: any): CompressionProfile => {
     encryptFilenames: raw.config.encryptFilenames ?? raw.config.encrypt_filenames ?? false,
     ...((raw.config.rarRecoveryPercent ?? raw.config.extra_params?.rar_recovery_percent ?? raw.config.extraParams?.rar_recovery_percent) ? { rarRecoveryPercent: Number(raw.config.rarRecoveryPercent ?? raw.config.extra_params?.rar_recovery_percent ?? raw.config.extraParams?.rar_recovery_percent) } : {}),
     ...((raw.config.rarRecoveryVolumes ?? raw.config.extra_params?.rar_recovery_volumes ?? raw.config.extraParams?.rar_recovery_volumes) ? { rarRecoveryVolumes: Number(raw.config.rarRecoveryVolumes ?? raw.config.extra_params?.rar_recovery_volumes ?? raw.config.extraParams?.rar_recovery_volumes) } : {}),
-    ...((raw.config.zipPasswordEncoding ?? raw.config.extra_params?.zip_password_encoding ?? raw.config.extraParams?.zip_password_encoding) === 'windows_local' ? { zipPasswordEncoding: 'windows_local' as const } : {}),
+    ...(isZipPasswordEncoding(zipEncoding) ? { zipPasswordEncoding: zipEncoding } : {}),
     ...((raw.config.zipMethod ?? raw.config.extra_params?.zip_method ?? raw.config.extraParams?.zip_method) === 'zstd' ? { zipMethod: 'zstd' as const } : {}),
     ...((raw.config.zipEncryption ?? raw.config.extra_params?.zip_encryption ?? raw.config.extraParams?.zip_encryption) === 'zipcrypto' ? { zipEncryption: 'zipcrypto' as const } : {}),
     ...((raw.config.zipSplitMode ?? raw.config.extra_params?.zip_split_mode ?? raw.config.extraParams?.zip_split_mode) === 'standard' ? { zipSplitMode: 'standard' as const } : {}),

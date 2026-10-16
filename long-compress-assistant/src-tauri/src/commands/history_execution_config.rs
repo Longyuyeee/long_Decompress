@@ -27,6 +27,17 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         _ => &[],
     };
     output.extend(project(&value, fields)?);
+    let input_encoding_key = match kind {
+        "archive-extraction" => Some("zipPasswordEncoding"),
+        "archive-conversion" => Some("sourceZipPasswordEncoding"),
+        _ => None,
+    };
+    if let Some(key) = input_encoding_key {
+        if let Some(selected) = value.get(key).filter(|selected| !selected.is_null()) {
+            let encoding = crate::services::zip_password::ZipPasswordEncoding::from_setting(selected.as_str()?)?;
+            output.insert(key.into(), encoding.as_str().into());
+        }
+    }
     if kind == "archive-conversion" {
         if let Some(count) = value.get("rarRecoveryVolumes") {
             if !count.as_u64().is_some_and(|n| n <= 10) { return None; }
@@ -108,6 +119,29 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn input_zip_encoding_snapshots_keep_auto_and_explicit_modes_without_passwords() {
+        for (input, task_type, key) in [
+            (serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":true,"password":"not-persisted"}), "decompression", "zipPasswordEncoding"),
+            (serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/new.zip","format":"zip","level":6,"splitSize":0,"encryptFilenames":false,"passwordRequired":true,"sourcePassword":"not-persisted"}), "compression", "sourceZipPasswordEncoding"),
+        ] {
+            assert!(super::sanitize(input.clone(), task_type, "archive").unwrap().get(key).is_none());
+            let mut automatic = input.clone(); automatic[key] = serde_json::Value::Null;
+            assert!(super::sanitize(automatic, task_type, "archive").unwrap().get(key).is_none());
+            for mode in ["utf8", "windows_local", "cp932", "cp936", "cp950"] {
+                let mut configured = input.clone(); configured[key] = mode.into();
+                let saved = super::sanitize(configured, task_type, "archive").unwrap();
+                assert_eq!(saved[key], mode);
+                assert!(!saved.to_string().contains("not-persisted"));
+                if task_type == "compression" { assert_eq!(saved["zipPasswordEncoding"], "utf8"); }
+            }
+            for invalid in [serde_json::json!("unknown"), serde_json::json!(true), serde_json::json!(932)] {
+                let mut configured = input.clone(); configured[key] = invalid;
+                assert!(super::sanitize(configured, task_type, "archive").is_none());
+            }
+        }
+    }
+
     #[test]
     fn conversion_password_encoding_keeps_fixed_pages_and_rejects_invalid_values() {
         let input = serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/new.zip",

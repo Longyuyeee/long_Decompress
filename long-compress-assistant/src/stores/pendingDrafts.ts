@@ -7,9 +7,11 @@ import { useArchiveConversionStore } from './archiveConversion'
 import { useDecompressionPreferences } from './decompressionPreferences'
 import type { ConversionDraft, ConversionSettings } from '@/types/archiveConversion'
 import { archiveGroupKey } from '@/utils/archiveSource'
+import type { ZipPasswordEncoding } from '@/types/zipPassword'
 
 export const PENDING_DRAFTS_KEY = 'long-pending-archive-drafts-v1'
 interface ExtractionDraft {
+  zipPasswordEncoding?: ZipPasswordEncoding
   id: string; name: string; sourceFiles: string[]; outputPath: string
   extractToSubfolder?: boolean; recycleSourceAfterExtract?: boolean
   configurationMode?: 'global' | 'individual'; fileFilter?: string; selectedEntries?: string[]
@@ -71,6 +73,7 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
           .map(task => ({ id: task.id, name: task.name, sourceFiles: [...task.sourceFiles], outputPath: task.outputPath,
             extractToSubfolder: task.extractToSubfolder, recycleSourceAfterExtract: task.recycleSourceAfterExtract,
             configurationMode: task.configurationMode, fileFilter: task.fileFilter, selectedEntries: task.selectedEntries,
+            zipPasswordEncoding: task.zipPasswordEncoding,
             retryOfTaskId: task.retryOfTaskId, draftPasswordRequired: task.draftPasswordRequired || !!task.password })) },
       conversion: { defaults: cleanConversion(conversion.defaults), items: conversion.pending.map(item => ({
         id: item.id, sourcePath: item.sourcePath, sourceParts: item.sourceParts, sourceReference: item.sourceReference, intent: item.intent, defaultFormat: item.defaultFormat, expanded: item.expanded, selected: item.selected,

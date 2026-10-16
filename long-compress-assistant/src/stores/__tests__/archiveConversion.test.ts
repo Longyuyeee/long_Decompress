@@ -16,6 +16,22 @@ function draft() {
   return store
 }
 describe('archive conversion lifecycle', () => {
+  it.each([['cp932', 'cp950'], ['cp950', 'cp936'], ['cp936', 'cp932']] as const)('keeps input %s separate from target %s through execution and history retry', async (sourceEncoding, targetEncoding) => {
+    mocks.invoke.mockImplementation(async (command, args) => command === 'convert_archive' ? { primaryPath: args.outputPath, files: [], totalBytes: 20, split: false } : undefined)
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/old.zip'])
+    store.updateItem(store.pending[0].id, { format: 'zip', outputPath: 'C:/new.zip',
+      sourcePassword: 'input-secret', password: 'output-secret', sourceZipPasswordEncoding: sourceEncoding, zipPasswordEncoding: targetEncoding })
+    await store.start()
+    expect(mocks.invoke.mock.calls.find(([command]) => command === 'convert_archive')?.[1]).toMatchObject({
+      sourceZipPasswordEncoding: sourceEncoding, options: { zip_password_encoding: targetEncoding },
+    })
+    const task = useTaskStore().tasks[0]
+    expect(task.executionConfig).toMatchObject({ sourceZipPasswordEncoding: sourceEncoding, zipPasswordEncoding: targetEncoding })
+    expect(JSON.stringify(task.executionConfig)).not.toMatch(/input-secret|output-secret/)
+    store.restore(createTaskHistoryRecord(task))
+    expect(store.pending.at(-1)?.settings).toMatchObject({ sourceZipPasswordEncoding: sourceEncoding, zipPasswordEncoding: targetEncoding, sourcePassword: '', password: '' })
+  })
   it('does not detach inherited non-ZIP conversion drafts when only ZIP methods change', () => {
     const store = useArchiveConversionStore(); store.addSources(['C:/one.zip', 'C:/two.7z'])
     store.updateItem(store.pending[0].id, { format: 'zip' })
