@@ -26,6 +26,7 @@ use crate::services::aes_wrapper::AesWrapper;
 use crate::utils::archive_tools::{find_7z_command, missing_7z_message};
 use crate::services::compression_format::{self, CompressionRoute};
 use crate::services::compression_verification;
+use crate::services::zip_password::ZipPasswordEncoding;
 use crate::services::extraction_transaction::{self, ExtractionStaging};
 use crate::services::mark_of_web::{self, PropagationStatus};
 use crate::services::native_compression::{self, CompressionRuntime};
@@ -1088,9 +1089,10 @@ impl CompressionService {
         route: CompressionRoute,
         output: &Path,
         password: Option<&str>,
+        zip_password_encoding: Option<ZipPasswordEncoding>,
         split_requested: bool,
     ) -> Result<()> {
-        self.verify_compression_output_inner(route, output, password, split_requested)
+        self.verify_compression_output_inner(route, output, password, zip_password_encoding, split_requested)
             .map_err(|error| {
                 if matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)) {
                     error
@@ -1105,13 +1107,15 @@ impl CompressionService {
         route: CompressionRoute,
         output: &Path,
         password: Option<&str>,
+        zip_password_encoding: Option<ZipPasswordEncoding>,
         split_requested: bool,
     ) -> Result<()> {
         if split_requested && route == CompressionRoute::Zip {
-            return compression_verification::verify_numeric_zip(output, password, || self.check_cancellation().is_err());
+            return compression_verification::verify_numeric_zip_with_encoding(
+                output, password, zip_password_encoding, || self.check_cancellation().is_err());
         }
         if (!split_requested || route != CompressionRoute::Rar)
-            && compression_verification::verify_native(route, output, password, || {
+            && compression_verification::verify_native_with_zip_encoding(route, output, password, zip_password_encoding, || {
                 self.check_cancellation().is_err()
             })?
         {
@@ -1221,6 +1225,7 @@ impl CompressionService {
             let requested_verify_after = options.verify_after;
             let verify_after = requested_verify_after || delete_after;
             let verification_password = options.password.clone();
+            let verification_encoding = options.zip_password_encoding;
             let split_requested = options.split_size.is_some_and(|size| size > 0);
             let final_output = PathBuf::from(&output_path);
             let working_output = Self::temporary_compression_output(&final_output)?;
@@ -1307,6 +1312,7 @@ impl CompressionService {
                         route,
                         &verification_output,
                         verification_password.as_deref(),
+                        Some(verification_encoding),
                         split_requested,
                     )?;
                     service.emit_log(
@@ -3652,7 +3658,7 @@ mod tests {
             CompressionService::validate_compression_request(&sources, &target.to_string_lossy(), &options).unwrap();
             service.do_compress_rar_inner(None, "rar-real", &sources, &staged.to_string_lossy(), options).unwrap();
             let first = crate::services::archive_volumes::first_volume_path(&staged);
-            service.verify_compression_output(CompressionRoute::Rar, &first, password.as_deref(), true).unwrap();
+            service.verify_compression_output(CompressionRoute::Rar, &first, password.as_deref(), None, true).unwrap();
             CompressionService::finalize_compression_output(Ok(()), &staged, &target, true, false).unwrap();
             let parts = crate::services::archive_volumes::complete_volume_paths(&target).unwrap();
             assert!(parts.len() > 1);
@@ -3680,7 +3686,7 @@ mod tests {
             assert_eq!(std::fs::read(app_output.join("说明 (1).txt")).unwrap(), b"keep the other file too");
             if mode > 0 {
                 eprintln!("RAR mode {mode}: correct/wrong password checks");
-                assert!(service.verify_compression_output(CompressionRoute::Rar, &parts[0], Some("wrong-password"), true).is_err());
+                assert!(service.verify_compression_output(CompressionRoute::Rar, &parts[0], Some("wrong-password"), None, true).is_err());
                 let rar = RarSupportService::new();
                 assert!(rar.verify_rar_password(&parts[0], password.as_deref().unwrap()).await.unwrap());
                 assert!(!rar.verify_rar_password(&parts[0], "wrong-password").await.unwrap());
@@ -4534,6 +4540,7 @@ mod tests_continued {
                 CompressionRoute::Zip,
                 &first_volume,
                 None,
+                None,
                 true,
             )
             .is_err());
@@ -4556,7 +4563,7 @@ mod tests_continued {
         std::fs::write(&final_output, b"existing archive").expect("existing target");
         let service = CompressionService::new_with_defaults().await;
 
-        let error = service.verify_compression_output(CompressionRoute::Zip, &working, None, false).unwrap_err();
+        let error = service.verify_compression_output(CompressionRoute::Zip, &working, None, None, false).unwrap_err();
         assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))));
         assert!(error.to_string().contains("[archive-output:Verifying:verification-failed]"));
         CompressionService::cleanup_unverified_compression_output(
@@ -4576,7 +4583,7 @@ mod tests_continued {
         let temp = tempfile::tempdir().unwrap();
         let missing = temp.path().join("missing.zip");
         let service = CompressionService::new_with_defaults().await;
-        let error = service.verify_compression_output(CompressionRoute::Zip, &missing, None, false).unwrap_err();
+        let error = service.verify_compression_output(CompressionRoute::Zip, &missing, None, None, false).unwrap_err();
         assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))));
         assert!(error.chain().any(|cause| cause.downcast_ref::<std::io::Error>().is_some()));
         let full = CompressionError::VerificationFailed(std::io::Error::from(std::io::ErrorKind::StorageFull).into());
@@ -4587,7 +4594,7 @@ mod tests_continued {
         assert!(normalized.chain().any(|cause| cause.downcast_ref::<std::io::Error>()
             .is_some_and(|io| io.kind() == std::io::ErrorKind::StorageFull)));
         service.cancellation_flag.store(true, Ordering::SeqCst);
-        let cancelled = service.verify_compression_output(CompressionRoute::Zip, &missing, None, false).unwrap_err();
+        let cancelled = service.verify_compression_output(CompressionRoute::Zip, &missing, None, None, false).unwrap_err();
         assert!(matches!(cancelled.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
         assert!(!cancelled.to_string().contains("verification-failed"));
     }
@@ -4816,6 +4823,161 @@ mod tests_continued {
         }
     }
 
+    #[cfg(windows)]
+    #[test]
+    fn fixed_zip_encodings_verify_before_publication_for_existing_methods_and_volumes() {
+        use crate::services::{zip_method::ZipMethod, zip_password::ZipEncryption, standard_zip_writer::ZipSplitMode};
+        // Optional independent 7-Zip test copies use process-local codepage
+        // manifests. Never change the system locale or the shipped executable.
+        let independent = std::env::var_os("LONG_ZIP_1416_INTEROP_TOOLS").map(PathBuf::from);
+        let mut seed = 1416u32;
+        let payload: Vec<u8> = (0..140_000).map(|_| {
+            seed ^= seed << 13; seed ^= seed >> 17; seed ^= seed << 5; seed as u8
+        }).collect();
+        for (encoding, password) in [
+            (ZipPasswordEncoding::Cp932, "日本語パスワード+!1416"),
+            (ZipPasswordEncoding::Cp936, "简体密码测试+!1416"),
+            (ZipPasswordEncoding::Cp950, "繁體密碼測試+!1416"),
+        ] {
+            for encryption in [ZipEncryption::Aes256, ZipEncryption::Zipcrypto] {
+                for (format, method, level) in [
+                    ("zip", ZipMethod::Deflate, 0), ("zip", ZipMethod::Deflate, 6),
+                    ("zip", ZipMethod::Zstd, 6), ("zipx", ZipMethod::Deflate, 6),
+                ] {
+                    for split in [None, Some(ZipSplitMode::Numeric), Some(ZipSplitMode::Standard)] {
+                        let temp = tempfile::tempdir().unwrap();
+                        let folder = temp.path().join("资料");
+                        std::fs::create_dir_all(folder.join("空目录")).unwrap();
+                        std::fs::write(folder.join("内容.bin"), &payload).unwrap();
+                        std::fs::write(folder.join("空文件.txt"), []).unwrap();
+                        let output = temp.path().join(format!("分享.{format}"));
+                        let sources = vec![folder.to_string_lossy().into_owned()];
+                        let options = CompressionOptions {
+                            format: Some(format.into()), level, zip_method: method,
+                            password: Some(password.into()), zip_password_encoding: encoding,
+                            zip_encryption: encryption, zip_split_mode: split.unwrap_or_default(),
+                            split_size: split.map(|_| 65_536), preserve_paths: Some(true),
+                            ..Default::default()
+                        };
+                        assert!(options.verify_after);
+                        let service = CompressionService::for_testing();
+                        let staged = CompressionService::temporary_compression_output(&output).unwrap();
+                        if format == "zipx" && split == Some(ZipSplitMode::Standard) {
+                            let error = native_compression::zip::compress(&service, None, "1416",
+                                &sources, &staged.to_string_lossy(), options).unwrap_err();
+                            assert!(error.to_string().contains("数字分卷"));
+                            assert!(!staged.exists());
+                            continue;
+                        }
+                        CompressionService::validate_compression_request(&sources, &output.to_string_lossy(), &options).unwrap();
+                        native_compression::zip::compress(&service, None, "1416", &sources,
+                            &staged.to_string_lossy(), options).unwrap();
+                        let input = if split.is_some() { crate::services::archive_volumes::first_volume_path(&staged) }
+                            else { staged.clone() };
+                        assert!(!output.exists(), "not published before verification");
+                        for (candidate, mode) in [(password, ZipPasswordEncoding::Utf8), ("wrong", encoding)] {
+                            let error = service.verify_compression_output(CompressionRoute::Zip, &input,
+                                Some(candidate), Some(mode), split.is_some()).unwrap_err();
+                            assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))));
+                        }
+                        service.verify_compression_output(CompressionRoute::Zip, &input,
+                            Some(password), Some(encoding), split.is_some()).unwrap();
+                        if split.is_some() {
+                            output_publish_transaction::publish_verified_volumes(&staged, &output, || false).unwrap();
+                        } else {
+                            CompressionService::finalize_compression_output(Ok(()), &staged, &output, false, false).unwrap();
+                        }
+                        let published = if split.is_some() { crate::services::archive_volumes::first_volume_path(&output) }
+                            else { output.clone() };
+                        service.verify_compression_output(CompressionRoute::Zip, &published,
+                            Some(password), Some(encoding), split.is_some()).unwrap();
+                        let reader = crate::services::numeric_volume_reader::ZipInputReader::open(&published).unwrap();
+                        let mut archive = zip_aes::ZipArchive::new(reader).unwrap();
+                        let mut restored = Vec::new();
+                        let mut entry = crate::services::zip_password::open_named_entry_with_encoding(
+                            &mut archive, "资料/内容.bin", password, Some(encoding)).unwrap();
+                        entry.read_to_end(&mut restored).unwrap();
+                        assert_eq!(restored, payload);
+                        assert_eq!(entry.compression(), if format == "zipx" { zip_aes::CompressionMethod::Xz }
+                            else if method == ZipMethod::Zstd { zip_aes::CompressionMethod::Zstd }
+                            else if level == 0 { zip_aes::CompressionMethod::Stored }
+                            else { zip_aes::CompressionMethod::Deflated });
+                        drop(entry);
+                        assert!(archive.by_name("资料/空目录/").unwrap().is_dir());
+                        let empty_index = archive.index_for_name("资料/空文件.txt").unwrap();
+                        assert_eq!(archive.by_index_raw(empty_index).unwrap().size(), 0);
+                        if let Some(tools) = &independent {
+                            let engine = tools.join(encoding.as_str()).join("7z.exe");
+                            assert!(engine.is_file(), "missing independent verifier: {}", engine.display());
+                            let destination = temp.path().join("independent");
+                            let result = crate::utils::process::command(engine).arg("x").arg("-y")
+                                .arg(format!("-p{password}")).arg(format!("-o{}", destination.display()))
+                                .arg(&published).output().unwrap();
+                            assert!(result.status.success(), "{encoding:?}/{encryption:?}/{format}/{method:?}/{level}/{split:?}: {} {}",
+                                String::from_utf8_lossy(&result.stdout), String::from_utf8_lossy(&result.stderr));
+                            assert_eq!(std::fs::read(destination.join("资料/内容.bin")).unwrap(), payload);
+                            assert_eq!(std::fs::read(destination.join("资料/空文件.txt")).unwrap(), b"");
+                            assert!(destination.join("资料/空目录").is_dir());
+                        }
+                        assert_eq!(std::fs::read(folder.join("内容.bin")).unwrap(), payload);
+                    }
+                }
+            }
+        }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn fixed_zip_encoding_verification_failures_preserve_sources_targets_and_typed_causes() {
+        use crate::services::zip_password::ZipEncryption;
+        for (encoding, password) in [
+            (ZipPasswordEncoding::Cp932, "日本語パスワード+!1416"),
+            (ZipPasswordEncoding::Cp936, "简体密码测试+!1416"),
+            (ZipPasswordEncoding::Cp950, "繁體密碼測試+!1416"),
+        ] {
+            for split in [false, true] {
+                let temp = tempfile::tempdir().unwrap();
+                let source = temp.path().join("source.bin");
+                let payload = vec![42u8; 8192];
+                std::fs::write(&source, &payload).unwrap();
+                let output = temp.path().join("existing.zip");
+                let existing = if split { output.with_extension("zip.001") } else { output.clone() };
+                std::fs::write(&existing, b"existing user archive").unwrap();
+                let service = CompressionService::for_testing();
+                let staged = CompressionService::temporary_compression_output(&output).unwrap();
+                native_compression::zip::compress(&service, None, "1416-errors", &[source.to_string_lossy().into()],
+                    &staged.to_string_lossy(), CompressionOptions {
+                        password: Some(password.into()), zip_password_encoding: encoding,
+                        zip_encryption: ZipEncryption::Aes256, level: 0,
+                        split_size: split.then_some(1024), ..Default::default()
+                    }).unwrap();
+                let input = if split { crate::services::archive_volumes::first_volume_path(&staged) } else { staged.clone() };
+                let encoding_error = service.verify_compression_output(CompressionRoute::Zip, &input,
+                    Some("🔑"), Some(encoding), split).unwrap_err();
+                assert!(matches!(encoding_error.downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))));
+                assert!(encoding_error.chain().filter_map(|error| error.downcast_ref::<std::io::Error>())
+                    .any(|error| error.get_ref().is_some_and(|error| error.is::<crate::services::zip_password::ZipPasswordEncodingError>())));
+                service.cancellation_flag.store(true, Ordering::SeqCst);
+                let cancelled = service.verify_compression_output(CompressionRoute::Zip, &input,
+                    Some(password), Some(encoding), split).unwrap_err();
+                assert!(matches!(cancelled.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+                service.cancellation_flag.store(false, Ordering::SeqCst);
+                // The ciphertext must still be authenticated after the short
+                // password check; target encoding is not permission to skip CRC.
+                let mut bytes = std::fs::read(&input).unwrap();
+                bytes[512] ^= 1;
+                std::fs::write(&input, bytes).unwrap();
+                let result = service.verify_compression_output(CompressionRoute::Zip, &input,
+                    Some(password), Some(encoding), split);
+                assert!(matches!(result.as_ref().unwrap_err().downcast_ref::<CompressionError>(), Some(CompressionError::VerificationFailed(_))));
+                CompressionService::cleanup_unverified_compression_output(&staged, &output, split, true);
+                assert_eq!(std::fs::read(&existing).unwrap(), b"existing user archive");
+                assert_eq!(std::fs::read(&source).unwrap(), payload);
+                assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 2, "only original source and target remain");
+            }
+        }
+    }
+
     #[tokio::test]
     async fn encrypted_zip_split_creation_publication_and_extraction_roundtrip() {
         use crate::services::zip_password::{encode, ZipPasswordEncoding};
@@ -4845,7 +5007,7 @@ mod tests_continued {
             let staged = CompressionService::temporary_compression_output(&output).unwrap();
             native_compression::zip::compress(&service, None, "encrypted-split", &sources, &staged.to_string_lossy(), options).unwrap();
             let staged_first = PathBuf::from(format!("{}.001", staged.display()));
-            service.verify_compression_output_inner(CompressionRoute::Zip, &staged_first, Some(password), true).unwrap();
+            service.verify_compression_output_inner(CompressionRoute::Zip, &staged_first, Some(password), Some(encoding), true).unwrap();
             CompressionService::finalize_compression_output(Ok(()), &staged, &output, true, false).unwrap();
             assert!(!staged_first.exists());
             let first = PathBuf::from(format!("{}.001", output.display()));
@@ -4911,9 +5073,9 @@ mod tests_continued {
                         split_size: Some(37), create_solid_archive: solid, encrypt_filenames, preserve_paths: Some(true), ..Default::default()
                     }).unwrap();
                 let staged_first = PathBuf::from(format!("{}.001", staged.display()));
-                service.verify_compression_output(CompressionRoute::SevenZip, &staged_first, password, true).unwrap();
+                service.verify_compression_output(CompressionRoute::SevenZip, &staged_first, password, None, true).unwrap();
                 if password.is_some() {
-                    assert!(service.verify_compression_output(CompressionRoute::SevenZip, &staged_first, Some("wrong"), true).is_err());
+                    assert!(service.verify_compression_output(CompressionRoute::SevenZip, &staged_first, Some("wrong"), None, true).is_err());
                 }
                 CompressionService::finalize_compression_output(Ok(()), &staged, &output, true, false).unwrap();
                 assert!(!staged_first.exists());

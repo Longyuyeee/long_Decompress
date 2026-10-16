@@ -4,7 +4,7 @@
 
 2026-10-17 从已发布 v1.4.15 的主线 `480d2d0` 接续，分支 `codex/v1.4.16-legacy-zip-passwords`。本版按[十二版本路线](ARCHIVE_ROADMAP_1.4.15_TO_1.5.5.md)补旧工具密码编码，不增加新格式或特殊卷；公开稳定版仍为 v1.4.15，尚未封板、升版或发布 v1.4.16。
 
-阶段一原始样本/基线已推送 `48f68d3`。阶段二已完成固定代码页和显式共享读取基础，以及后端模板/历史编码保存；相关 49 项不同 Rust 用例通过。服务、创建后校验、前端配置和真实用户页面还未贯通，不能将底层成功写成整个版本已完成。
+阶段一原始样本/基线已推送 `48f68d3`，阶段二无损固定编码及后端保存已推送 `a10147b`。阶段三已贯通创建后的完整校验，本轮 34 项相关 Rust 用例通过，66 种创建组合经独立 7-Zip 完整回解。输入服务、前端配置和真实用户页面还未贯通，不能将后端成功写成整个版本已完成。
 
 ## 范围和顺序
 
@@ -53,9 +53,44 @@
 
 本阶段未改 Vue/TypeScript 或提供新下拉选项，没有用代码文本替代页面验收，也没有执行新页面成功流程或安装器。当前编译身份仍为 1.4.15，仅代表开发分支定向用例，不是 v1.4.16 正式产品。
 
+## 阶段三 创建后的校验与发布
+
+`CompressionService::compress` 在消耗创建参数前保留目标密码编码，校验单包、ZIP 数字卷和标准卷时明确传入相同编码。`verify_native_with_zip_encoding` 与 `verify_numeric_zip_with_encoding` 使用共享显式读取入口，完整读完条目以校验 CRC/AES 认证；旧检查入口仍保持 UTF-8/本机兼容。转换输出也使用同一创建服务，但转换输入的编码仍待贯通。
+
+没有关闭 `verify_after`、强制删源前校验或转换的必需校验。校验失败不发布暂存产物、不清理源文件；编码错误保留类型及原始原因，取消仍为取消，不包装成校验失败。非 ZIP 路由和原来的输出事务没有改变。
+
+### 本轮结果
+
+- **34 项不同 Rust 用例通过，无 ignored**。包含新增的两个服务用例及相关密码、原生创建、完整校验和输出保护回归；与阶段二重叠的用例不累计相加。初次编译 53.99 秒，最终选择集执行 3.39 秒，只有已有 sevenz-rust 警告。
+- 新创建用例覆盖 **66 个有效组合**：CP932/936/950 × AES-256/ZipCrypto × ZIP Store/Deflate/Zstandard 或 ZIPX XZ × 单包/数字卷/标准卷，仍排除 ZIPX 标准卷。6 个 ZIPX 标准卷请求继续明确拒绝，不制造成功；140,000 字节跨卷载荷、中文目录、空文件及空目录均核对。
+- 每个有效组合分别拒绝显式 UTF-8 的错编码和错误密码，在暂存校验后才发布，再完整核对内容；另有三种代码页各自的单包/数字卷密文损坏、不可表示字符及取消检查，源文件和已有目标保留，只清理本任务暂存输出。
+- 开启独立验证环境后，66 个有效产物全部由 **7-Zip 26.04 x64** 实际回解并核对内容/空条目，不依赖本应用读取器或应用自己的回写结果。未改原始 Info-ZIP 样本、系统语言、正式 7-Zip 或本应用清单；本轮没有 UI 修改或桌面用户入口验收，不能替代后续页面流程。
+
+### 独立工具接续
+
+本机忽略目录 `test-results/zip-encoding-1416/independent-7zip/{cp932,cp936,cp950}` 各有 `7z.exe` 和原始 `7z.dll`。副本来自仓库 `src-tauri/resources/archive-engine/`，只给 CP932/950 的 EXE 嵌入样本目录内 `generator/ja-JP.manifest` / `zh-TW.manifest`，与阶段一同为进程代码页设置；CP936 使用本机原始 ACP936。7-Zip 的 [ZIP 读取源码](https://github.com/ip7z/7zip/blob/main/CPP/7zip/Archive/Zip/ZipHandler.cpp) 使用进程 ACP 转换密码，`-mcp` 文件名参数不能替代这一设置。三个副本都先以已知密码通过原始 Info-ZIP 包的 `t` 检查。
+
+本机工具 SHA256：原始/CP936 EXE `95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53`；CP932 EXE `19cef0d94c0dd2ae15aa35cd2773b2ab3a3501dc43b6686fd82f114724bee151`；CP950 EXE `e54b53efbe49f05f1c3ee5dffdbf89fc8fa616ae15c287bbd29704e3f7498c62`；三个 DLL 均为 `899CD73D7FC60E1C1C35C7DE0F5BED3DC69BFE2CECBD48014D868A347970A0B1`。
+
+换机器复用仓库工具及清单创建测试副本，不修改上游解码源码、不覆盖正式工具。可用 Windows SDK `mt.exe -manifest <上述清单> "-outputresource:<测试副本>/7z.exe;#1"` 嵌入；执行前分别用原始包确认实际代码页，不能仅根据目录名判断。工具和测试临时产物无需加入安装包。
+
+从应用目录运行 PowerShell，设置仅影响该次测试：
+
+```powershell
+$env:LONG_ZIP_1416_INTEROP_TOOLS = Join-Path (Get-Location) 'test-results/zip-encoding-1416/independent-7zip'
+try {
+    cargo test --manifest-path src-tauri/Cargo.toml --release --lib -- fixed_zip_encoding compression_verification::tests zip_password::tests native_compression::zip::tests verification_failure split_archive_verification_failure encrypted_zip_split_creation_publication_and_extraction_roundtrip
+    if ($LASTEXITCODE -ne 0) { throw 'ZIP verification selection failed' }
+} finally {
+    Remove-Item Env:LONG_ZIP_1416_INTEROP_TOOLS
+}
+```
+
+未设置环境变量时只执行应用侧验证，不可声称独立回解通过。测试密码来自公开自有样本，临时目录由测试创建和回收，不操作用户历史任务或安装数据。
+
 ## 接续点
 
 1. 将可选输入编码贯通 `DecompressOptions`、浏览/预览命令、预检/密码候选、实际解压、检查、转换和重试；参数必须跟随具体任务，不能用全局可变编码。区分不可表示候选与系统/源文件错误，不重开确认损坏的无效密码循环。
-2. **先接创建后校验，再开放创建新模式。** 当前 `compression_service.rs` 的最终 `verify_native` 还只传密码，没有传目标编码；默认入口无法读取外来代码页。因此不能仅因原生写入器能编码就宣称完整创建成功，也不能关闭完成后校验来通过。独立验证 AES、数字/标准卷及转换的新增组合。
+2. 创建后校验和独立 AES/数字/标准卷回解已完成，后续复用阶段三结果。输入参数接通后再补真实跨编码转换，不能将只有输出侧的成功算完整转换通过。
 3. 扩展前端类型、配置组转换器、批量、草稿、历史恢复及输入/目标分开的选择；现有前端仍是两值，不能跳过它们宣称配置链完成。
 4. 最后按真实顺序做错密码纠正、编码选择、所选/整包解压、转换、切页/再次执行和常用/窄窗口实看，完成本版范围后再封板升版发布。
