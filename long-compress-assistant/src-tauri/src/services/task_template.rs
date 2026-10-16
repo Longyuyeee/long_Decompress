@@ -242,8 +242,7 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             } else { None },
             zip_password_encoding: if matches!(profile.config.format.to_ascii_lowercase().as_str(), "zip" | "zipx") {
                 profile.config.extra_params.get("zip_password_encoding").map(|value|
-                    if value == "windows_local" { crate::services::zip_password::ZipPasswordEncoding::WindowsLocal }
-                    else { crate::services::zip_password::ZipPasswordEncoding::Utf8 })
+                    crate::services::zip_password::ZipPasswordEncoding::from_setting(value).unwrap_or_default())
             } else { None },
             zip_split_mode: if matches!(profile.config.format.to_ascii_lowercase().as_str(), "zip" | "zipx") {
                 profile.config.extra_params.get("zip_split_mode").map(|value| if value == "standard" {
@@ -842,10 +841,7 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
             filename_template: template.target_rule.filename_template,
             extra_params: {
               let mut params = template.compression.zip_password_encoding.map(|encoding| {
-                let value = match encoding {
-                    crate::services::zip_password::ZipPasswordEncoding::Utf8 => "utf8",
-                    crate::services::zip_password::ZipPasswordEncoding::WindowsLocal => "windows_local",
-                };
+                let value = encoding.as_str();
                 [("zip_password_encoding".to_string(), value.to_string())].into()
               }).unwrap_or_else(std::collections::HashMap::new);
               if let Some(method) = template.compression.zip_method {
@@ -1028,7 +1024,7 @@ mod tests {
         use crate::services::zip_password::ZipPasswordEncoding;
         let temp = tempfile::tempdir().unwrap();
         let path = temp.path().join("zip.longtask.json");
-        for encoding in [None, Some("utf8"), Some("windows_local")] {
+        for encoding in [None, Some("utf8"), Some("windows_local"), Some("cp932"), Some("cp936"), Some("cp950")] {
             let mut original = profile();
             original.config.format = "zip".into();
             original.config.create_solid_archive = false;
@@ -1051,8 +1047,8 @@ mod tests {
             assert_eq!(imported.config.extra_params.get("zip_split_mode").map(String::as_str), encoding.map(|_| "standard"));
             assert!(imported.config.password.is_none());
             assert!(!imported.config.extra_params.contains_key("unsafe"));
-            if encoding == Some("windows_local") {
-                assert_eq!(preview.template.compression.zip_password_encoding, Some(ZipPasswordEncoding::WindowsLocal));
+            if let Some(value) = encoding {
+                assert_eq!(preview.template.compression.zip_password_encoding, ZipPasswordEncoding::from_setting(value));
             }
             let text = std::fs::read_to_string(&path).unwrap();
             assert!(!text.contains("must-never-export"));
