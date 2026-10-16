@@ -19,7 +19,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
-| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 密码分卷、LZ4/Brotli 与 TAR 组合、智能体积分析、配置模板和归档转换 |
+| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 密码分卷、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、受支持预览与选择性解压 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
@@ -28,9 +28,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-当前稳定版为 **1.4.11**：ZIP/7Z/RAR 自解压包只读处理、好压论坛 ZIP 分卷及密码兼容、缺卷补回继续处理，保留单条展开和多选弹窗。真实生成物、实际桌面和常用/窄窗口记录见 [实施审计](docs/SFX_AND_VOLUME_COMPATIBILITY_1.4.11.md)、[封板记录](docs/SFX_AND_VOLUME_FREEZE_1.4.11.md)及 [中文更新说明](docs/RELEASE_NOTES_1.4.11.md)，安装器和应用内更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)。
-
-当前源码候选版为 **1.4.12**：新增 LZIP / TAR.LZIP 创建、读取、检查和转换，兼容 `.tlz` 与多成员 LZIP，接入原有多选弹窗配置，并保留浏览失败原因。实施与实际检查见 [本版记录](docs/LZIP_AND_TAR_LZIP_1.4.12.md)，范围见 [中文更新说明](docs/RELEASE_NOTES_1.4.12.md)；安装包尚未正式发布。
+当前稳定版为 **1.4.12**：新增 LZIP / TAR.LZIP 创建、读取、检查和转换，兼容 `.tlz` 与多成员 LZIP，接入原有多选弹窗配置，并保留浏览失败原因。单条展开、多选弹窗及等宽详情布局保持。实施与实际检查见 [本版记录](docs/LZIP_AND_TAR_LZIP_1.4.12.md)、[封板记录](docs/LZIP_AND_TAR_LZIP_FREEZE_1.4.12.md)及 [中文更新说明](docs/RELEASE_NOTES_1.4.12.md)，安装器和签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)。
 
 ## 本地开发
 
@@ -96,9 +94,7 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-候选版 **v1.4.12** 新增 LZIP / TAR.LZIP 的完整用户流程及错误提示改善，见 [更新说明](docs/RELEASE_NOTES_1.4.12.md)。
-
-当前正式版 **v1.4.11**，完整变化见 [中文更新说明](docs/RELEASE_NOTES_1.4.11.md)和 [封板记录](docs/SFX_AND_VOLUME_FREEZE_1.4.11.md)，下载以 [Release 页面](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)实际附件为准。
+**v1.4.12** 新增 LZIP / TAR.LZIP 的完整用户流程及错误提示改善，见 [更新说明](docs/RELEASE_NOTES_1.4.12.md)和 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)。这两种新格式不提供密码或分卷创建。
 
 v1.4.11 可以直接处理 ZIP/7Z/RAR 自解压包，增加好压论坛 ZIP 的明文与已核对的密码分卷读取，修正部分跨卷正确密码误判，并完善缺卷提示及补回重试；不创建 SFX，不新增好压 7Z 论坛卷支持。
 

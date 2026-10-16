@@ -1,10 +1,10 @@
 # 归档格式支持等级（当前权威口径）
 
-更新时间：2026-10-16（当前正式版 v1.4.11）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.11 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)，历次能力按对应实现和实际产物记录。
+更新时间：2026-10-16（当前正式版 v1.4.12）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.12 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)，历次能力按对应实现和实际产物记录。
 
 ## 当前边界速查（覆盖下方历次演变描述）
 
-- v1.4.12 候选新增 LZIP v1 / TAR.LZIP 的内置创建、浏览、解压、检查与转换，兼容 `.lz`、`.tar.lz`、`.tlz`，读取连续多成员 LZIP；不提供原生密码、分卷创建或损坏数据恢复。自有载荷由独立 GNU lzip 生成并由应用读取，应用创建/转换另经 GNU lzip / tar 回解；准确页面及安装包状态见 [本版记录](LZIP_AND_TAR_LZIP_1.4.12.md)。正式下载仍为 v1.4.11。
+- v1.4.12 已交付 LZIP v1 / TAR.LZIP 的内置创建、浏览、解压、检查与转换，兼容 `.lz`、`.tar.lz`、`.tlz`，读取连续多成员 LZIP；不提供原生密码、分卷创建或损坏数据恢复。自有载荷由独立 GNU lzip 生成并由应用读取，应用创建/转换另经 GNU lzip / tar 回解；准确页面及程序身份见 [本版记录](LZIP_AND_TAR_LZIP_1.4.12.md)，正式安装器和发布身份见 [封板记录](LZIP_AND_TAR_LZIP_FREEZE_1.4.12.md)。
 
 - v1.4.11 新增 ZIP/7Z/RAR SFX 只读识别、浏览、密码、解压、检查及转换，9 组外部单 EXE 样本与 6 组错密码通过；不创建或执行输入 EXE。好压论坛 ZIP 的公开明文原卷及 GUI 原生 ZipCrypto 三卷通过任意成员读取和完整回解，错误密码纠正、独立目录、转换及补卷重试均通过实际桌面链；不扩大到好压 AES/7Z 论坛卷、全部 RAR4 SFX 或外置数据卷。实现和来源见 [本版审计](SFX_AND_VOLUME_COMPATIBILITY_1.4.11.md)，原生加密卷现已补齐，下方旧“缺样本”文字为历史状态。
 - v1.4.10 ZIP 的所选条目、筛选、密码判断、候选校验、容量与读取统一；未选的不同密码/未知方法不阻挡本次任务。新增原生 Shrink（1）、Reduce factor 4（5）、Implode（6）固定只读样本，不扩大全部旧工具密码承诺。Zstandard 的 AES/ZipCrypto 各覆盖单包、数字卷和标准卷；真实 4,294,979,641 字节文件的 AES/ZipCrypto ZIP64 数字卷已独立创建、全量验证及应用回解，不代表所有 ZIP64 密码/卷型均完成。来源、结果与限制见 [本版审计](ARCHIVE_COMPATIBILITY_1.4.10.md)。下方“未有加密 Zstandard 样本”等是早期状态。
@@ -31,6 +31,7 @@
 - TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST；
 - GZ、BZ2、XZ、ZST/ZSTD、LZMA；
 - LZ4、Brotli、TAR.LZ4、TAR.BR（v1.4.3 新增，真实 Windows Release Tauri 逐字节回解通过）；
+- LZIP v1（单文件）与 TAR.LZIP（目录/多文件，含 `.tlz` 别名），v1.4.12 新增；原生命令、实际页面创建/转换与独立 GNU lzip / tar 回解已完成，不提供密码或分卷创建；
 - 加密 ZIP、加密 7Z；
 - TAR.AES、TAR.GZ.AES、TAR.BZ2.AES、TAR.XZ.AES、TAR.ZST.AES；
 - GZ.AES、BZ2.AES、XZ.AES、ZST.AES。

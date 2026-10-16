@@ -1,6 +1,6 @@
 # Long解压 v1.4.12
 
-> 候选版说明：本版功能与实际界面已收口，普通安装包以最终 PR 的 Windows package 结果为准，尚未正式发布。当前正式下载仍为 [v1.4.11](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)，见 [实施记录](LZIP_AND_TAR_LZIP_1.4.12.md)及 [封板记录](LZIP_AND_TAR_LZIP_FREEZE_1.4.12.md)。
+Windows x64 正式版：[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/download/v1.4.12/Long-Decompress_1.4.12_x64-setup.exe)，也可在设置中心检查更新。
 
 收到 `.lz`、`.tar.lz` 或 `.tlz` 文件后，可以从熟悉的入口浏览、解压、检查和转换；创建新包也可以选择 LZIP 或 TAR.LZIP。单条点击展开、多选弹窗配置保持原来的方式。
 

@@ -2,7 +2,7 @@
 
 ## 当前状态（2026-10-16）
 
-从已发布 v1.4.11 / 发布后文档提交 `0bc3779` 接续，分支 `codex/lzip-tar-lzip-1-4-12`。版本及 Shell 资源统一为 1.4.12，功能、原生命令与实际页面均已收口。最后只接续该分支 PR 最终提交的普通 Windows 安装包，见 [封板记录](LZIP_AND_TAR_LZIP_FREEZE_1.4.12.md)；尚未合入或正式发布。
+从已发布 v1.4.11 / 发布后文档提交 `0bc3779` 接续，分支 `codex/lzip-tar-lzip-1-4-12`。版本及 Shell 资源统一为 1.4.12，功能、原生命令与实际页面均已收口。[PR #166](https://github.com/Longyuyeee/long_Decompress/pull/166) 已合入，合并及正式标签提交为 `a231b643063b303f373ec58c24f78f75e603948d`；安装器及签名更新附件已正式发布，见 [v1.4.12 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)及 [封板记录](LZIP_AND_TAR_LZIP_FREEZE_1.4.12.md)。
 
 ## 用户能够完成的操作
 
@@ -53,4 +53,4 @@
 
 UI 自动化另修正了下拉列表不可见项的文本读取、切页时同名导入按钮的定位及展开动画中的即时文本断言。没有放松业务条件；已完成阶段保留结果，后续只从未完成的阶段接续。批量压缩配置自动核对停在抽屉动画的空文本，保留截图已能看到两条 TAR.LZ 待处理任务，人工确认后只接续批量转换，没有重新执行创建/解压矩阵。
 
-证据见 [最终页面与阶段接续 JSON](evidence/lzip-1.4.12/lzip-1412-results.json)、[首轮原生命令的保留输入/输出清单](evidence/lzip-1.4.12/native-output-inventory.json)及同目录截图、真实失败和接续日志。最终 JSON 明确标记阶段复用；原生命令首轮程序与修复后 UI 程序分别记账，旧 SHA 不冒充最终安装器。版本身份与 Shell DLL 已核对，普通安装包结果以 PR 最新 Windows package 为准，不为文档状态回写重复打包。
+证据见 [最终页面与阶段接续 JSON](evidence/lzip-1.4.12/lzip-1412-results.json)、[首轮原生命令的保留输入/输出清单](evidence/lzip-1.4.12/native-output-inventory.json)及同目录截图、真实失败和接续日志。最终 JSON 明确标记阶段复用；原生命令首轮程序与修复后 UI 程序分别记账，旧 SHA 不冒充最终安装器。版本身份与 Shell DLL 已核对，最终分支 `c704dac` 的 [Windows package](https://github.com/Longyuyeee/long_Decompress/actions/runs/38856433554) 已成功；合入后只执行 [正式发布打包](https://github.com/Longyuyeee/long_Decompress/actions/runs/38860840426)，未为文档状态回写重复运行功能检查。

@@ -1,5 +1,13 @@
 # 开发交接
 
+## 最新：v1.4.12 已合入并正式发布（2026-10-16）
+
+[PR #166](https://github.com/Longyuyeee/long_Decompress/pull/166) 已合入；合并及正式标签 `v1.4.12` 均指向 `a231b643063b303f373ec58c24f78f75e603948d`。本版交付 LZIP / TAR.LZIP 创建、浏览、所选解压、检查和转换，兼容 `.tlz` 与多成员，补齐批量配置、草稿旧密码状态清理及浏览失败持续中文提示；单条行内展开、多选弹窗、等宽详情和小窗口滚动保持。
+
+最终分支 `c704dac` 的 [Windows package](https://github.com/Longyuyeee/long_Decompress/actions/runs/38856433554) 已通过，合入后仅执行 [正式发布打包](https://github.com/Longyuyeee/long_Decompress/actions/runs/38860840426)。安装器、签名更新包及 `latest.json` 见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)；中文 Release 与应用内更新说明已同步。重复主线 CI `38860816519` 已取消，已通过的功能、桌面和安装生命周期检查没有重跑。
+
+两份 README、格式支持说明、文档导航和路线已同步。准确证据及发布身份见 [本版实施](LZIP_AND_TAR_LZIP_1.4.12.md)与 [封板记录](LZIP_AND_TAR_LZIP_FREEZE_1.4.12.md)。下一步仍按批准路线评估 v1.4.13 损坏包部分抢救，尚未启动；下方“接续安装器/尚未合入/公开 v1.4.11”等保留为历史状态。
+
 ## 最新：v1.4.12 功能与实际页面收口，接续普通安装器（2026-10-16）
 
 LZIP / TAR.LZIP 的原生创建、浏览、预览、所选解压、检查及转换已完成，`.tlz` 与多成员、中文目录、空文件/空目录通过外部原始样本及独立回解。多选压缩/转换仍使用原弹窗，单条配置仍行内展开；浏览失败持续中文原因、有效配置保持继承、恢复密码草稿改选 LZIP 不再索要密码。10 张最终常用/最小窗口截图均已查看。
