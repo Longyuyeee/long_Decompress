@@ -1,10 +1,10 @@
 # 开发交接
 
-## 最新：v1.4.15 已合入，接续正式资产（2026-10-17）
+## 最新：v1.4.15 已正式发布，接续旧密码编码（2026-10-17）
 
 v1.4.14 与 v1.4.15 按一次发布方案收口。[PR #169](https://github.com/Longyuyeee/long_Decompress/pull/169) 已合入，所含 PR #168 自动标为合入；不另发 v1.4.14，不删除旧分支或证据。合并及 `v1.4.15` 标签为 `138a07f71cf20e23034ea8d40b88ccd3973d7018`，文件树与通过普通安装包的最终候选 `d6ceb1e` 完全一致。
 
-候选 [Windows package / 38946306372](https://github.com/Longyuyeee/long_Decompress/actions/runs/38946306372) 已成功，下载后的安装器版本为 1.4.15，准确附件及文件哈希见[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)。正式 [Release / 38947945793](https://github.com/Longyuyeee/long_Decompress/actions/runs/38947945793) 正在运行；重复主线 CI 已请求取消。资产完成后同步中文 Release、latest.json 与两份 README，不能仅以标签已推送冒称安装包已发布。功能、页面与既有矩阵不重跑，个人安装和历史未改。
+候选 [Windows package / 38946306372](https://github.com/Longyuyeee/long_Decompress/actions/runs/38946306372) 已成功，下载后的安装器版本为 1.4.15，准确附件及文件哈希见[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)。正式 [Release / 38947945793](https://github.com/Longyuyeee/long_Decompress/actions/runs/38947945793) 完成安装器、签名更新 ZIP/签名及 latest.json，见 [v1.4.15 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)；中文正文、应用内更新说明、两份 README 和格式口径同步，原软件图标保持。重复主线 CI 已取消。功能、页面与既有矩阵不重跑，个人安装和历史未改。发布文档独立 PR 仅在真实资产齐全后合入，不改正式标签和安装器身份。
 
 下一版仍按路线做 v1.4.16 旧密码编码。已只读确认当前 ZIP 读取仅 UTF-8 加本机 ACP，创建/前端/模板/历史的编码白名单也只有两个值；具体接续见[十二版本路线](ARCHIVE_ROADMAP_1.4.15_TO_1.5.5.md)。没有把新编码或 UI 修改混入本次正式标签。下方“未合入/待确定发布顺序”保留为历史状态。
 

@@ -28,7 +28,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-当前稳定版为 **1.4.13**：目录可读的标准 ZIP 缺卷部分抢救，接通 AES / ZipCrypto 密码包，恢复文件和原因清单按需展开，新包可保留密码与目录继续解压。单条展开、多选弹窗及等宽详情布局保持。实施与实际检查见 [本版记录](docs/PARTIAL_ZIP_RECOVERY_1.4.13.md)、[封板记录](docs/PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)及 [中文更新说明](docs/RELEASE_NOTES_1.4.13.md)，安装器和签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。
+当前稳定版为 **1.4.15**：减少 ZIP 重复预检，TAR.LZ4 / TAR.BR 使用有界流式创建，改善 RAR 预检查暂停/取消及矮窗口归档浏览。合并交付 v1.4.14 候选的 ZIP Zstandard / ZIPX（XZ）创建、密码分卷与完整配置保存链，不单独发布 v1.4.14。单条展开、多选弹窗及等宽详情保持。实施与实际检查见 [本版记录](docs/ARCHIVE_PERFORMANCE_1.4.15.md)、[封板记录](docs/ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)及 [中文更新说明](docs/RELEASE_NOTES_1.4.15.md)，安装器和签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。
 
 ## 本地开发
 
@@ -94,9 +94,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.4.15 候选已封板**：减少 ZIP 重复预检，TAR.LZ4 / TAR.BR 流式创建，改善 RAR 预检查暂停/取消和矮窗口归档列表。保留完整校验，不承诺整条流程固定百分比提速；当前公开稳定版仍为 v1.4.13。见 [实施审计](docs/ARCHIVE_PERFORMANCE_1.4.15.md)、[封板记录](docs/ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)及 [中文更新草案](docs/RELEASE_NOTES_1.4.15.md)。
+**v1.4.15**：减少 ZIP 重复预检，TAR.LZ4 / TAR.BR 流式创建，改善 RAR 预检查暂停/取消和矮窗口归档列表。保留完整校验，不承诺整条流程固定百分比提速；见 [实施审计](docs/ARCHIVE_PERFORMANCE_1.4.15.md)、[封板记录](docs/ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)、[中文更新说明](docs/RELEASE_NOTES_1.4.15.md)及 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。
 
-**v1.4.14 候选** 增加 ZIP Zstandard 和 ZIPX（XZ）创建，接通密码、数字分卷和转换，保留批量、配置组、模板、预设、草稿及历史的方法。ZIP Zstandard 另支持标准分卷，ZIPX 标准分卷暂不提供。该轮尚未单独发布，能力已被 v1.4.15 候选继承，见 [实施记录](docs/ZIP_OUTPUT_METHODS_1.4.14.md)、[封板记录](docs/ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)及 [中文更新草案](docs/RELEASE_NOTES_1.4.14.md)。
+**原 v1.4.14 候选随 v1.4.15 交付**：ZIP Zstandard 和 ZIPX（XZ）创建接通密码、数字分卷和转换，保留批量、配置组、模板、预设、草稿及历史的方法。ZIP Zstandard 另支持标准分卷，ZIPX 标准分卷暂不提供。原始证据见 [实施记录](docs/ZIP_OUTPUT_METHODS_1.4.14.md)和 [封板记录](docs/ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)。
 
 **v1.4.13** 增加标准 ZIP 缺卷部分抢救、密码包救援与恢复清单，打通失败任务救援后继续解压，见 [更新说明](docs/RELEASE_NOTES_1.4.13.md)和 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。缺卷救援要求目录仍完整可读，不补造缺失数据。
 
