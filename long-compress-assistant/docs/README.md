@@ -1,5 +1,7 @@
 # 文档导航与维护规则
 
+- **当前开发：[v1.4.13 缺卷 ZIP 部分抢救](PARTIAL_ZIP_RECOVERY_1.4.13.md)**、[候选更新说明](RELEASE_NOTES_1.4.13.md)。按标准 ZIP 缺卷、密码组合和恢复结果接续顺序推进；单条展开、多选弹窗保持，尚未正式发布。
+
 - **当前正式版：[v1.4.12 LZIP / TAR.LZIP](LZIP_AND_TAR_LZIP_1.4.12.md)**、[封板与发布记录](LZIP_AND_TAR_LZIP_FREEZE_1.4.12.md)、[中文更新说明](RELEASE_NOTES_1.4.12.md)、[开发交接](DEVELOPMENT_HANDOFF.md)。[PR #166](https://github.com/Longyuyeee/long_Decompress/pull/166) 已合入；读取/创建、批量配置和转换已交付，安装器及签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)。v1.4.13 尚未启动。
 
 - **前版记录：[v1.4.11 自解压包与好压分卷](SFX_AND_VOLUME_COMPATIBILITY_1.4.11.md)**、[封板记录](SFX_AND_VOLUME_FREEZE_1.4.11.md)、[中文发布说明](RELEASE_NOTES_1.4.11.md)。[PR #165](https://github.com/Longyuyeee/long_Decompress/pull/165) 已合入，[v1.4.11](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11) 安装器及签名更新附件保留供追溯；下方旧版本记录不覆盖当前状态。

@@ -203,6 +203,7 @@ export interface ArchiveDiagnosticReport {
 }
 
 export interface ZipRepairResult {
+  recoveredEntries?: string[]
   format?: string
   outputFiles?: string[]
   outputPath: string

@@ -53,6 +53,7 @@ pub struct ArchiveDiagnosticReport {
 pub struct ZipRepairResult {
     pub output_path: String,
     pub recovered_files: usize,
+    pub recovered_entries: Vec<String>,
     pub recovered_directories: usize,
     pub skipped_entries: Vec<String>,
     pub verified: bool,
@@ -309,6 +310,45 @@ pub async fn diagnose_archive(
             title: "缺少分卷".to_string(),
             detail: format!("缺少：{}。请补齐到同一目录后重新检查，不必反复尝试密码。", report.missing_volumes.join("、")),
         });
+        if group.as_ref().is_some_and(|group| group.format == SplitFormat::ZipSplit) {
+            match super::zip_recovery_reader::RecoveryReader::open(path, &cancelled) {
+                Ok(mut local) => {
+                    report.issues[0].severity = "warning".into();
+                    report.actual_format = "ZIP".into();
+                    report.encrypted = local.encrypted;
+                    report.total_directories = local.names.iter().filter(|name| name.ends_with(['/', '\\'])).count();
+                    report.total_files = local.names.len() - report.total_directories;
+                    report.total_uncompressed_size = local.expanded_bytes;
+                    report.total_uncompressed_size_known = true;
+                    report.recoverability = "missing_volume_entries".into();
+                    report.status = "partial_recovery".into();
+                    report.can_repair = report.total_files > 0 && (!local.encrypted || password.is_some());
+                    report.issues[0].detail = format!("缺少：{}。目录仍可读取，已找到 {} 个可尝试救回的文件；涉及缺失卷或不完整的条目会跳过。补齐分卷后也可重新检查。", report.missing_volumes.join("、"), report.total_files);
+                    if local.encrypted {
+                        if let Some(password) = password {
+                            if let Err(error) = local.check_password_headers(password) {
+                                check_cancelled(&cancelled)?;
+                                report.can_repair = false;
+                                report.status = if matches!(error, zip_aes::result::ZipError::InvalidPassword) { "wrong_password" } else { "ambiguous_data" }.into();
+                                report.issues.push(DiagnosticIssue { code: report.status.clone(), severity: "warning".into(),
+                                    title: "暂不能打开现有卷中的加密文件".into(),
+                                    detail: "请确认密码；若可读取的加密条目也不完整，请补齐分卷后重试。未创建新文件。".into() });
+                            }
+                        } else {
+                            report.status = "password_required".into();
+                            report.issues.push(DiagnosticIssue { code: "password_required".into(), severity: "warning".into(),
+                                title: "需要原压缩包密码".into(), detail: "填写密码后重新诊断，可尝试救回现有卷中的完整文件。".into() });
+                        }
+                    }
+                    report.evidence.push(format!("Missing-disk recovery: {} candidate files; content will be checked during recovery", report.total_files));
+                }
+                Err(error) => {
+                    check_cancelled(&cancelled)?;
+                    report.issues.push(DiagnosticIssue { code: "partial_recovery_unavailable".into(), severity: "warning".into(),
+                        title: "本次暂不能部分救援".into(), detail: format!("{error:#}") });
+                }
+            }
+        }
         return Ok(report);
     }
 
@@ -512,8 +552,8 @@ pub fn repair_zip_with_password_to_new(
         anyhow::bail!("ZIP repair must write to a new file");
     }
     let group = SplitArchiveDetector::detect_split_archive(path)?;
-    if let Some(group) = &group { anyhow::ensure!(group.is_complete, "缺少分卷，补齐后再尝试恢复：{:?}", group.missing_parts); }
-    let input = group.as_ref().map(|group| group.first_part.as_path()).unwrap_or(path);
+    let input = group.as_ref().filter(|group| group.is_complete)
+        .map(|group| group.first_part.as_path()).unwrap_or(path);
     let mut source = super::zip_recovery_reader::RecoveryReader::open(input, cancelled)?;
     let output_encrypted = source.encrypted;
     let password = password.filter(|value| !value.is_empty());
@@ -522,7 +562,14 @@ pub fn repair_zip_with_password_to_new(
     let entry_count = source.names.len();
     let declared_expanded_bytes = source.expanded_bytes;
     let directory_rebuilt = source.directory_rebuilt;
-    extraction_transaction::validate_resource_limits(input, entry_count, declared_expanded_bytes)?;
+    let validate_limits = |count, bytes| {
+        if let Some(group) = group.as_ref().filter(|group| !group.is_complete) {
+            extraction_transaction::validate_resource_limits_for_size(group.total_size, count, bytes)
+        } else {
+            extraction_transaction::validate_resource_limits(input, count, bytes)
+        }
+    };
+    validate_limits(entry_count, declared_expanded_bytes)?;
 
     let parent = output.parent().unwrap_or_else(|| Path::new("."));
     std::fs::create_dir_all(parent)?;
@@ -539,6 +586,7 @@ pub fn repair_zip_with_password_to_new(
         .open(&temporary)?;
     let mut writer = zip_aes::ZipWriter::new(temp_file);
     let mut recovered_files = 0usize;
+    let mut recovered_entries = Vec::new();
     let mut recovered_directories = 0usize;
     let mut recovered_bytes = 0u64;
     let mut recovered_encrypted_files = 0usize;
@@ -621,16 +669,13 @@ pub fn repair_zip_with_password_to_new(
             continue;
         }
         let next_recovered_bytes = recovered_bytes.saturating_add(copied);
-        extraction_transaction::validate_resource_limits(
-            input,
-            recovered_files + recovered_directories + 1,
-            next_recovered_bytes,
-        )?;
+        validate_limits(recovered_files + recovered_directories + 1, next_recovered_bytes)?;
         spool.rewind()?;
-        writer.start_file(name, options)?;
+        writer.start_file(&name, options)?;
         copy_cancellable(&mut spool, &mut writer, cancelled)?;
         recovered_bytes = next_recovered_bytes;
         recovered_files += 1;
+        recovered_entries.push(name);
         if entry_encrypted { recovered_encrypted_files += 1; }
         std::fs::remove_file(&spool_path)?;
         spool_guard.0.take();
@@ -655,6 +700,7 @@ pub fn repair_zip_with_password_to_new(
     Ok(ZipRepairResult {
         output_path: output.to_string_lossy().to_string(),
         recovered_files,
+        recovered_entries,
         recovered_directories,
         skipped_entries,
         verified: true,

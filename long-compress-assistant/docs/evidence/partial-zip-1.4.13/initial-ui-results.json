@@ -1,0 +1,145 @@
+{
+  "root": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-fV82Cp\\partial-zip-1413",
+  "binarySha256": "96ae090322fb3d9f6bc43aaba1f984a6010008d29a7559288ae7de11b3c884f4",
+  "native": {
+    "binarySha256": "96ae090322fb3d9f6bc43aaba1f984a6010008d29a7559288ae7de11b3c884f4",
+    "results": [
+      {
+        "mode": "plain",
+        "missing": 1,
+        "recovered": [
+          "中文目录/2-资料.txt",
+          "中文目录/3-资料.txt",
+          "中文目录/4-资料.txt"
+        ],
+        "independentReadback": true,
+        "originalUnchanged": true
+      },
+      {
+        "mode": "plain",
+        "missing": 2,
+        "recovered": [
+          "中文目录/0-资料.txt",
+          "中文目录/3-资料.txt",
+          "中文目录/4-资料.txt"
+        ],
+        "independentReadback": true,
+        "originalUnchanged": true
+      },
+      {
+        "mode": "AES256",
+        "missing": 1,
+        "recovered": [
+          "中文目录/2-资料.txt",
+          "中文目录/3-资料.txt",
+          "中文目录/4-资料.txt"
+        ],
+        "independentReadback": true,
+        "originalUnchanged": true
+      },
+      {
+        "mode": "AES256",
+        "missing": 2,
+        "recovered": [
+          "中文目录/0-资料.txt",
+          "中文目录/3-资料.txt",
+          "中文目录/4-资料.txt"
+        ],
+        "independentReadback": true,
+        "originalUnchanged": true
+      },
+      {
+        "mode": "ZipCrypto",
+        "missing": 1,
+        "recovered": [
+          "中文目录/2-资料.txt",
+          "中文目录/3-资料.txt",
+          "中文目录/4-资料.txt"
+        ],
+        "independentReadback": true,
+        "originalUnchanged": true
+      },
+      {
+        "mode": "ZipCrypto",
+        "missing": 2,
+        "recovered": [
+          "中文目录/0-资料.txt",
+          "中文目录/3-资料.txt",
+          "中文目录/4-资料.txt"
+        ],
+        "independentReadback": true,
+        "originalUnchanged": true
+      }
+    ],
+    "missingTerminalRejected": true
+  },
+  "nativeReused": false,
+  "uiRescuedAndExtracted": true,
+  "passwordAndDestinationPreserved": true,
+  "batchModalAndRepair": true,
+  "screenshots": [
+    {
+      "name": "partial-zip-diagnosis-1100.png",
+      "bounds": {
+        "client": 824,
+        "page": 1100,
+        "scroll": 824,
+        "viewport": 1100
+      }
+    },
+    {
+      "name": "partial-zip-diagnosis-760.png",
+      "bounds": {
+        "client": 624,
+        "page": 760,
+        "scroll": 624,
+        "viewport": 760
+      }
+    },
+    {
+      "name": "partial-zip-result-folded-760.png",
+      "bounds": {
+        "client": 624,
+        "page": 760,
+        "scroll": 624,
+        "viewport": 760
+      }
+    },
+    {
+      "name": "partial-zip-result-details-760.png",
+      "bounds": {
+        "client": 595,
+        "page": 760,
+        "scroll": 595,
+        "viewport": 760
+      }
+    },
+    {
+      "name": "partial-zip-batch-modal-760.png",
+      "bounds": {
+        "client": 462,
+        "page": 933,
+        "scroll": 462,
+        "viewport": 933
+      }
+    },
+    {
+      "name": "partial-zip-batch-results-760.png",
+      "bounds": {
+        "client": 657,
+        "page": 933,
+        "scroll": 657,
+        "viewport": 933
+      }
+    },
+    {
+      "name": "partial-zip-batch-results-1100.png",
+      "bounds": {
+        "client": 824,
+        "page": 1100,
+        "scroll": 824,
+        "viewport": 1100
+      }
+    }
+  ]
+}

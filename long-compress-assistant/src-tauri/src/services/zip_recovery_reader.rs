@@ -61,7 +61,9 @@ mod streamed_tests {
 }
 impl RecoveryZipInput {
     fn original(path: &Path) -> Result<Self> {
-        let mut source = ZipInputReader::open(path)?;
+        Self::from_source(ZipInputReader::open(path)?)
+    }
+    fn from_source(mut source: ZipInputReader) -> Result<Self> {
         let prefix_len = source.seek(SeekFrom::End(0))?;
         source.rewind()?;
         Ok(Self { source, prefix_len, directory: Vec::new(), position: 0 })
@@ -262,6 +264,18 @@ impl RecoveryReader {
         Ok(Self { archive, names, expanded_bytes, encrypted, directory_rebuilt, notes })
     }
     pub fn open(path: &Path, cancelled: &AtomicBool) -> Result<Self> {
+        if super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?
+            .is_some_and(|group| !group.is_complete)
+        {
+            let mut partial = super::standard_zip_reader::StandardZipReader::try_open_recovery(path, cancelled)?
+                .context("此卷型暂不提供缺卷救援，请补齐原始分卷后重试")?;
+            let notes = std::mem::take(&mut partial.recovery_notes);
+            let encrypted = partial.recovery_encrypted;
+            let input = RecoveryZipInput::from_source(ZipInputReader::StandardZip(partial))?;
+            let mut result = Self::from_archive(zip_aes::ZipArchive::new(input)?, false, notes, cancelled)?;
+            result.encrypted |= encrypted;
+            return Ok(result);
+        }
         if let Ok(input) = RecoveryZipInput::original(path) {
             if let Ok(archive) = zip_aes::ZipArchive::new(input) {
                 return Self::from_archive(archive, false, Vec::new(), cancelled);

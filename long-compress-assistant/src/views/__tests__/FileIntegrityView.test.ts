@@ -37,6 +37,23 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('FileIntegrityView', () => {
+  it('offers missing-disk rescue and keeps recovery lists folded while queuing the original password', async () => {
+    const pinia = createPinia(); setActivePinia(pinia)
+    mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/parts.zip',fileSize:8000,actualFormat:'ZIP',status:'partial_recovery',encrypted:true,splitArchive:true,volumesFound:3,missingVolumes:['parts.z02'],totalFiles:3,totalDirectories:1,totalUncompressedSize:100,integrityTested:false,canRepair:true,recoverability:'missing_volume_entries',issues:[{code:'missing_volume',severity:'warning',title:'缺少分卷',detail:'缺少 parts.z02，可尝试救回 3 个文件'}],evidence:[]})
+    mocks.repairZip.mockResolvedValue({outputPath:'D:/rescued.zip',recoveredFiles:3,recoveredDirectories:1,recoveredEntries:['中文/文件0.txt','中文/文件3.txt','中文/文件4.txt'],skippedEntries:['中文/文件1.txt：涉及缺少的 parts.z02'],partial:true,verified:true,directoryRebuilt:false,outputEncrypted:true})
+    mocks.save.mockResolvedValue('D:/rescued.zip')
+    useAppStore().openArchiveForDiagnosis({path:'C:/parts.zip',password:'original password',outputPath:'D:/chosen',extractToSubfolder:false})
+    const wrapper = mount(FileIntegrityView,{global:{plugins:[pinia]}}); await flushPromises()
+    expect(wrapper.get('[data-testid="diagnostic-report"]').text()).toContain('缺少分卷，可尝试部分救援')
+    expect(wrapper.get('[data-testid="diagnostic-report"]').text()).toContain('可尝试文件 / 目录')
+    await wrapper.get('[data-testid="start-archive-repair"]').trigger('click'); await flushPromises()
+    expect(wrapper.get('[data-testid="recovery-file-details"]').attributes('open')).toBeUndefined()
+    expect(wrapper.get('[data-testid="recovery-skipped-details"]').text()).toContain('parts.z02')
+    expect(wrapper.text()).not.toContain('目录信息已重建')
+    await wrapper.get('[data-testid="queue-recovered-archive"]').trigger('click'); await flushPromises()
+    expect(useTaskStore().tasks[0]).toMatchObject({sourceFiles:['D:/rescued.zip'],password:'original password',outputPath:'D:/chosen',extractToSubfolder:false})
+    wrapper.unmount()
+  })
   it('creates recovery volumes for a healthy RAR group in a compact dialog', async () => {
     const pinia=createPinia(); setActivePinia(pinia)
     mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/parts.part1.rar',fileSize:8000,actualFormat:'RAR',status:'healthy',encrypted:true,splitArchive:true,volumesFound:3,missingVolumes:[],totalFiles:1,totalDirectories:0,totalUncompressedSize:100,integrityTested:true,canRepair:false,recoverability:'healthy',issues:[],evidence:[]})

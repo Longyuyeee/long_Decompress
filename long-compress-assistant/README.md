@@ -32,6 +32,8 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 ## 本地开发
 
+当前源码候选版为 **1.4.13**：目录可读的标准 ZIP 缺卷部分抢救、AES / ZipCrypto 密码包与恢复结果接续，保留单条展开和多选弹窗。实际进度见 [实施记录](docs/PARTIAL_ZIP_RECOVERY_1.4.13.md)和 [候选说明](docs/RELEASE_NOTES_1.4.13.md)，尚未正式发布，正式下载仍为 v1.4.12。
+
 Windows 构建需要受支持的 Node.js（20.19+、22.12+ 或 24）、npm、稳定版 Rust、MSVC C++ 构建工具及 WebView2。
 
 ```powershell
