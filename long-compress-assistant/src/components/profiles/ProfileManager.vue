@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ZipMethodField from '@/components/compression/ZipMethodField.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { open, save } from '@tauri-apps/api/dialog'
 import { useCompressionProfileStore } from '@/stores/compressionProfile'
@@ -200,7 +201,7 @@ const validateForm = () => {
     return '分卷大小必须大于 0 MB'
   }
   const includePatterns = parsePatternText(includePatternsText.value)
-  if (formData.value.config.format === 'zip' && formData.value.config.splitArchive && formData.value.config.zipSplitMode === 'standard' && Number(formData.value.config.splitSize) >= 4096) return '标准 ZIP 每卷大小必须小于 4 GiB'
+  if (['zip', 'zipx'].includes(formData.value.config.format) && formData.value.config.splitArchive && formData.value.config.zipSplitMode === 'standard' && Number(formData.value.config.splitSize) >= 4096) return '标准 ZIP 每卷大小必须小于 4 GiB'
   const excludePatterns = parsePatternText(excludePatternsText.value)
   if (includePatterns.length + excludePatterns.length > 32) return '包含与排除规则合计不能超过 32 条'
   if ([...includePatterns, ...excludePatterns].some(pattern => pattern.length > 128)) {
@@ -505,6 +506,7 @@ const formatBytes = (bytes: number) => {
 
 const formatDate = (timestamp: number | null) =>
   timestamp ? new Date(timestamp).toLocaleDateString() : '从未使用'
+watch(() => formData.value.config.format, format => { if (format === 'zipx') formData.value.config.zipSplitMode = 'numeric' })
 </script>
 
 <template>
@@ -627,6 +629,7 @@ const formatDate = (timestamp: number | null) =>
           </label>
         </div>
 
+        <ZipMethodField v-model="formData.config.zipMethod" :format="formData.config.format" test-id="profile-zip-method" />
         <label class="block">
           <span class="mb-2 block text-xs font-black text-muted">用途说明（可选）</span>
           <textarea v-model="formData.description" rows="2" maxlength="160" class="w-full resize-none rounded-xl border border-subtle bg-input px-3 py-2 text-sm text-content outline-none focus:border-primary" placeholder="说明这个配置组适合什么场景"></textarea>
@@ -698,7 +701,7 @@ const formatDate = (timestamp: number | null) =>
         </label>
         <label v-if="formData.config.splitArchive && formData.config.format === 'zip'" class="block">
           <span class="mb-2 block text-xs font-black text-muted">ZIP 卷型</span>
-          <ThemedSelect :model-value="formData.config.zipSplitMode ?? 'numeric'" :options="[{ value: 'numeric', label: '数字切卷 · .zip.001' }, { value: 'standard', label: '标准 ZIP · .z01/.zip' }]" test-id="profile-zip-split-mode" floating @update:model-value="formData.config.zipSplitMode = $event as 'numeric' | 'standard'" />
+          <ThemedSelect :model-value="formData.config.zipSplitMode ?? 'numeric'" :options="[{ value: 'numeric', label: `数字切卷 · .${formData.config.format}.001` }, { value: 'standard', label: `标准 ZIP · .z01/.${formData.config.format}` }]" test-id="profile-zip-split-mode" floating @update:model-value="formData.config.zipSplitMode = $event as 'numeric' | 'standard'" />
         </label>
 
         <p v-if="formError" role="alert" class="rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-400"><i class="pi pi-exclamation-circle mr-2"></i>{{ formError }}</p>
@@ -756,9 +759,10 @@ const formatDate = (timestamp: number | null) =>
               <span v-if="templatePreview.template.compression.createSolidArchive" class="rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-400">固实</span>
             </div>
             <dl class="mt-3 space-y-2 text-xs">
+              <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">压缩方法</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.format === 'zipx' ? 'XZ' : templatePreview.template.compression.zipMethod === 'zstd' ? 'Zstandard' : '兼容 ZIP · Deflate' }}</dd></div>
               <div data-testid="template-filename-encryption" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">文件名加密</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.encryptFilenames ? '开启' : '关闭' }}</dd></div>
-              <div v-if="templatePreview.template.compression.format === 'zip'" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 加密方式</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipEncryption === 'zipcrypto' ? 'ZipCrypto（传统兼容，较弱）' : 'AES-256' }}</dd></div>
-              <div v-if="templatePreview.template.compression.format === 'zip' && templatePreview.template.compression.splitArchive" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 卷型</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipSplitMode === 'standard' ? '标准 ZIP · .z01/.zip' : '数字切卷 · .zip.001' }}</dd></div>
+              <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 加密方式</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipEncryption === 'zipcrypto' ? 'ZipCrypto（传统兼容，较弱）' : 'AES-256' }}</dd></div>
+              <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format) && templatePreview.template.compression.splitArchive" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 卷型</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipSplitMode === 'standard' ? `标准 ZIP · .z01/.${templatePreview.template.compression.format}` : `数字切卷 · .${templatePreview.template.compression.format}.001` }}</dd></div>
               <div class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">完整性校验</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.verifyAfter ? '开启' : '关闭' }}</dd></div>
               <div class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">目录结构</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.keepStructure ? '保留' : '不保留' }}</dd></div>
             </dl>

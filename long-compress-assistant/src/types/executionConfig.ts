@@ -35,6 +35,7 @@ export interface PdfConfigV1 {
   allowLargerOutput: boolean
 }
 export interface ArchiveConversionConfigV1 {
+  zipMethod?: 'deflate' | 'zstd'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
   zipPasswordEncoding?: 'utf8' | 'windows_local'
@@ -56,6 +57,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
   if (!config || config.schemaVersion !== 1) return null
   switch (config.kind) {
     case 'archive-conversion': return { schemaVersion: 1, kind: config.kind,
+      zipMethod: config.zipMethod ?? 'deflate',
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
       ...(config.zipSplitMode ? { zipSplitMode: config.zipSplitMode } : {}),
       outputPath: config.outputPath, format: config.format, level: config.level,
@@ -75,6 +77,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
           ...(s.rarRecoveryVolumes !== undefined ? { rarRecoveryVolumes: s.rarRecoveryVolumes } : {}),
           ...(s.encryptFilenames !== undefined ? { encryptFilenames: s.encryptFilenames } : {}),
           ...(s.zipPasswordEncoding ? { zipPasswordEncoding: s.zipPasswordEncoding } : {}),
+          ...(s.zipMethod ? { zipMethod: s.zipMethod } : {}),
           ...(s.zipEncryption ? { zipEncryption: s.zipEncryption } : {}),
           ...(s.zipSplitMode ? { zipSplitMode: s.zipSplitMode } : {}),
         } }

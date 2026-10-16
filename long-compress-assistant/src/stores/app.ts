@@ -302,9 +302,9 @@ export const useAppStore = defineStore('app', () => {
   }
 
   // 压缩预设
-  const compressionPresets = ref<Array<{ name: string; format: string; level: number; password?: string }>>([])
-  const saveCompressionPreset = (name: string, format: string, level: number, password?: string) => {
-    compressionPresets.value = [{ name, format, level, password }, ...compressionPresets.value].slice(0, 8)
+  const compressionPresets = ref<Array<{ name: string; format: string; level: number; password?: string; zipMethod?: 'deflate' | 'zstd' }>>([])
+  const saveCompressionPreset = (name: string, format: string, level: number, password?: string, zipMethod?: 'deflate' | 'zstd') => {
+    compressionPresets.value = [{ name, format, level, password, zipMethod }, ...compressionPresets.value].slice(0, 8)
     try { localStorage.setItem('compression-presets', JSON.stringify(compressionPresets.value)) } catch { }
   }
   const deleteCompressionPreset = (index: number) => {

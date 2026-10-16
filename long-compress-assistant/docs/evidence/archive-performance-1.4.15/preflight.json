@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-16T17:25:04.480Z",
+  "git": {
+    "commit": "f2a22b23f925af540918f543ab23f5079c12e421",
+    "dirty_at_start": true,
+    "dirty_at_end": true
+  },
+  "source_sha256": {
+    "src-tauri/src/services/native_extraction/zip.rs": "9a3819f07791c6522708728460a5d5bdc6f0ed82863122824eccb557981a93ae",
+    "src-tauri/src/services/zip_selection.rs": "4c682e0ef195fe4e4425663bdaa69c2cca7737e242a5d19a8a8c9d0d675b0e6c",
+    "src-tauri/src/services/universal_engine.rs": "8c4035342689250563b682f1edfb388e8982f99fe275b0cd1f979549ed7048e1",
+    "scripts/measure-zip-preflight.mjs": "432c76410b7b7d8c1c22f9258b37281257acc1e4b492981986f0c748cd5dfe2d"
+  },
+  "machine": {
+    "platform": "win32",
+    "release": "10.0.22621",
+    "cpu": "AMD Ryzen 7 9700X 8-Core Processor             ",
+    "logical_processors": 16,
+    "memory_bytes": 50588549120
+  },
+  "rustc": "rustc 1.93.1 (01f6ddf75 2026-02-11)",
+  "profile": "release",
+  "scope": "Disk-backed password preflight only, after archive parsing and selection. Legacy function frozen from f2a22b2; same binary/file, alternating order, one warm-up and five measured rounds. OS cache not flushed. Logical seek/read calls are not physical I/O. No extraction/UI/memory improvement claim.",
+  "summary": {
+    "5000_plain": {
+      "legacy": {
+        "median_ms": 5.3553999999999995,
+        "min_ms": 3.3558,
+        "max_ms": 5.7549,
+        "logical_read_bytes": 0,
+        "read_calls": 0,
+        "seek_calls": 5000
+      },
+      "optimized": {
+        "median_ms": 0.0005,
+        "min_ms": 0.0005,
+        "max_ms": 0.0009,
+        "logical_read_bytes": 0,
+        "read_calls": 0,
+        "seek_calls": 0
+      }
+    },
+    "5000_plain_plus_one_zipcrypto": {
+      "legacy": {
+        "median_ms": 3.5065,
+        "min_ms": 3.081,
+        "max_ms": 4.485399999999999,
+        "logical_read_bytes": 63,
+        "read_calls": 2,
+        "seek_calls": 5001
+      },
+      "optimized": {
+        "median_ms": 0.017900000000000003,
+        "min_ms": 0.0167,
+        "max_ms": 0.027,
+        "logical_read_bytes": 63,
+        "read_calls": 2,
+        "seek_calls": 1
+      }
+    }
+  },
+  "records": [
+    {
+      "scenario": "5000_plain",
+      "legacy": false,
+      "round": 1,
+      "fixture_sha256": "52150dd4af6bdbd7ce0c4c4640c71ad0dccc0c6b6e47da1f551290476899a163",
+      "elapsed_ms": 0.0007999999999999999,
+      "logical_read_bytes": 0,
+      "read_calls": 0,
+      "seek_calls": 0
+    },
+    {
+      "scenario": "5000_plain",
+      "legacy": true,
+      "round": 1,
+      "fixture_sha256": "52150dd4af6bdbd7ce0c4c4640c71ad0dccc0c6b6e47da1f551290476899a163",
+      "elapsed_ms": 3.5559,
+      "logical_read_bytes": 0,
+      "read_calls": 0,
+      "seek_calls": 5000
+    },
+    {
+      "scenario": "5000_plain",
+      "legacy": true,
+      "round": 2,
+      "fixture_sha256": "52150dd4af6bdbd7ce0c4c4640c71ad0dccc0c6b6e47da1f551290476899a163",
+      "elapsed_ms": 3.3558,
+      "logical_read_bytes": 0,
+      "read_calls": 0,
+      "seek_calls": 5000
+    },
+    {
+      "scenario": "5000_plain",
+      "legacy": false,
+      "round": 2,
+      "fixture_sha256": "52150dd4af6bdbd7ce0c4c4640c71ad0dccc0c6b6e47da1f551290476899a163",
+      "elapsed_ms": 0.0005,
+      "logical_read_bytes": 0,
+      "read_calls": 0,
+      "seek_calls": 0
+    },
+    {
+      "scenario": "5000_plain",
+      "legacy": false,
+      "round": 3,
+      "fixture_sha256": "52150dd4af6bdbd7ce0c4c4640c71ad0dccc0c6b6e47da1f551290476899a163",
+      "elapsed_ms": 0.0005,
+      "logical_read_bytes": 0,
+      "read_calls": 0,
+      "seek_calls": 0
+    },
+    {
+      "scenario": "5000_plain",
+      "legacy": true,
+      "round": 3,
+      "fixture_sha256": "52150dd4af6bdbd7ce0c4c4640c71ad0dccc0c6b6e47da1f551290476899a163",
+      "elapsed_ms": 5.7549,
+      "logical_read_bytes": 0,
+      "read_calls": 0,
+      "seek_calls": 5000
+    },
+    {
+      "scenario": "5000_plain",
+      "legacy": true,
+      "round": 4,
+      "fixture_sha256": "52150dd4af6bdbd7ce0c4c4640c71ad0dccc0c6b6e47da1f551290476899a163",
+      "elapsed_ms": 5.3553999999999995,
+      "logical_read_bytes": 0,
+      "read_calls": 0,
+      "seek_calls": 5000
+    },
+    {
+      "scenario": "5000_plain",
+      "legacy": false,
+      "round": 4,
+      "fixture_sha256": "52150dd4af6bdbd7ce0c4c4640c71ad0dccc0c6b6e47da1f551290476899a163",
+      "elapsed_ms": 0.0009,
+      "logical_read_bytes": 0,
+      "read_calls": 0,
+      "seek_calls": 0
+    },
+    {
+      "scenario": "5000_plain",
+      "legacy": false,
+      "round": 5,
+      "fixture_sha256": "52150dd4af6bdbd7ce0c4c4640c71ad0dccc0c6b6e47da1f551290476899a163",
+      "elapsed_ms": 0.0005,
+      "logical_read_bytes": 0,
+      "read_calls": 0,
+      "seek_calls": 0
+    },
+    {
+      "scenario": "5000_plain",
+      "legacy": true,
+      "round": 5,
+      "fixture_sha256": "52150dd4af6bdbd7ce0c4c4640c71ad0dccc0c6b6e47da1f551290476899a163",
+      "elapsed_ms": 5.6229000000000005,
+      "logical_read_bytes": 0,
+      "read_calls": 0,
+      "seek_calls": 5000
+    },
+    {
+      "scenario": "5000_plain_plus_one_zipcrypto",
+      "legacy": false,
+      "round": 1,
+      "fixture_sha256": "f59881da2ffdf605dc23cb8e4d16bf26ecdac9da96938cdaeaeb252af041bdfe",
+      "elapsed_ms": 0.017900000000000003,
+      "logical_read_bytes": 63,
+      "read_calls": 2,
+      "seek_calls": 1
+    },
+    {
+      "scenario": "5000_plain_plus_one_zipcrypto",
+      "legacy": true,
+      "round": 1,
+      "fixture_sha256": "f59881da2ffdf605dc23cb8e4d16bf26ecdac9da96938cdaeaeb252af041bdfe",
+      "elapsed_ms": 3.081,
+      "logical_read_bytes": 63,
+      "read_calls": 2,
+      "seek_calls": 5001
+    },
+    {
+      "scenario": "5000_plain_plus_one_zipcrypto",
+      "legacy": true,
+      "round": 2,
+      "fixture_sha256": "f59881da2ffdf605dc23cb8e4d16bf26ecdac9da96938cdaeaeb252af041bdfe",
+      "elapsed_ms": 4.485399999999999,
+      "logical_read_bytes": 63,
+      "read_calls": 2,
+      "seek_calls": 5001
+    },
+    {
+      "scenario": "5000_plain_plus_one_zipcrypto",
+      "legacy": false,
+      "round": 2,
+      "fixture_sha256": "f59881da2ffdf605dc23cb8e4d16bf26ecdac9da96938cdaeaeb252af041bdfe",
+      "elapsed_ms": 0.027,
+      "logical_read_bytes": 63,
+      "read_calls": 2,
+      "seek_calls": 1
+    },
+    {
+      "scenario": "5000_plain_plus_one_zipcrypto",
+      "legacy": false,
+      "round": 3,
+      "fixture_sha256": "f59881da2ffdf605dc23cb8e4d16bf26ecdac9da96938cdaeaeb252af041bdfe",
+      "elapsed_ms": 0.0167,
+      "logical_read_bytes": 63,
+      "read_calls": 2,
+      "seek_calls": 1
+    },
+    {
+      "scenario": "5000_plain_plus_one_zipcrypto",
+      "legacy": true,
+      "round": 3,
+      "fixture_sha256": "f59881da2ffdf605dc23cb8e4d16bf26ecdac9da96938cdaeaeb252af041bdfe",
+      "elapsed_ms": 3.2141,
+      "logical_read_bytes": 63,
+      "read_calls": 2,
+      "seek_calls": 5001
+    },
+    {
+      "scenario": "5000_plain_plus_one_zipcrypto",
+      "legacy": true,
+      "round": 4,
+      "fixture_sha256": "f59881da2ffdf605dc23cb8e4d16bf26ecdac9da96938cdaeaeb252af041bdfe",
+      "elapsed_ms": 3.5065,
+      "logical_read_bytes": 63,
+      "read_calls": 2,
+      "seek_calls": 5001
+    },
+    {
+      "scenario": "5000_plain_plus_one_zipcrypto",
+      "legacy": false,
+      "round": 4,
+      "fixture_sha256": "f59881da2ffdf605dc23cb8e4d16bf26ecdac9da96938cdaeaeb252af041bdfe",
+      "elapsed_ms": 0.0269,
+      "logical_read_bytes": 63,
+      "read_calls": 2,
+      "seek_calls": 1
+    },
+    {
+      "scenario": "5000_plain_plus_one_zipcrypto",
+      "legacy": false,
+      "round": 5,
+      "fixture_sha256": "f59881da2ffdf605dc23cb8e4d16bf26ecdac9da96938cdaeaeb252af041bdfe",
+      "elapsed_ms": 0.016900000000000002,
+      "logical_read_bytes": 63,
+      "read_calls": 2,
+      "seek_calls": 1
+    },
+    {
+      "scenario": "5000_plain_plus_one_zipcrypto",
+      "legacy": true,
+      "round": 5,
+      "fixture_sha256": "f59881da2ffdf605dc23cb8e4d16bf26ecdac9da96938cdaeaeb252af041bdfe",
+      "elapsed_ms": 3.699,
+      "logical_read_bytes": 63,
+      "read_calls": 2,
+      "seek_calls": 5001
+    }
+  ]
+}

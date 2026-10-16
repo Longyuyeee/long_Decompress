@@ -1,0 +1,264 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[zip-output-1414] reuse zip-none-none
+[zip-output-1414] reuse zip-none-numeric
+[zip-output-1414] reuse zip-none-standard
+[zip-output-1414] reuse zip-aes256-none
+[zip-output-1414] reuse zip-aes256-numeric
+[zip-output-1414] reuse zip-aes256-standard
+[zip-output-1414] reuse zip-zipcrypto-none
+[zip-output-1414] reuse zip-zipcrypto-numeric
+[zip-output-1414] reuse zip-zipcrypto-standard
+[zip-output-1414] zipx-none-none passed
+[zip-output-1414] zipx-none-numeric passed
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: 
+
+7-Zip 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05
+
+
+
+Scanning the drive for archives:
+
+1 file, 64386 bytes (63 KiB)
+
+
+
+Listing archive: C:\Users\39633\AppData\Local\Temp\long-decompress-desktop-e2e-JrA5rB\zip-output-1414\zipx-none-standard.zipx
+
+
+
+--
+
+Path = C:\Users\39633\AppData\Local\Temp\long-decompress-desktop-e2e-JrA5rB\zip-output-1414\zipx-none-standard.zipx
+
+Warning: The archive is open with offset
+
+Type = zip
+
+ERRORS:
+
+Headers Error
+
+Physical Size = 64386
+
+Embedded Stub Size = 4
+
+64-bit = +
+
+Characteristics = Local Central Zip64
+
+
+
+----------
+
+Path = 原文件\空文件.txt
+
+Folder = -
+
+Size = 0
+
+Packed Size = 0
+
+Modified = 1980-01-01 00:00:00
+
+Created = 
+
+Accessed = 
+
+Attributes =  81A40000
+
+Encrypted = -
+
+Comment = 
+
+CRC = 00000000
+
+Method = Store
+
+Characteristics = Local : Central : UTF8
+
+Host OS = FAT
+
+Version = 10
+
+Volume Index = 3
+
+Offset = 63873
+
+
+
+Path = 原文件\中文目录
+
+Folder = +
+
+Size = 0
+
+Packed Size = 0
+
+Modified = 1980-01-01 00:00:00
+
+Created = 
+
+Accessed = 
+
+Attributes = DvPM 41A40000
+
+Encrypted = -
+
+Comment = 
+
+CRC = 
+
+Method = Store
+
+Characteristics = UTF8
+
+Host OS = FAT
+
+Version = 20
+
+Volume Index = 0
+
+Offset = 4
+
+
+
+Path = 原文件\中文目录\空目录
+
+Folder = +
+
+Size = 0
+
+Packed Size = 0
+
+Modified = 1980-01-01 00:00:00
+
+Created = 
+
+Accessed = 
+
+Attributes = DvPM 41A40000
+
+Encrypted = -
+
+Comment = 
+
+CRC = 
+
+Method = Store
+
+Characteristics = UTF8
+
+Host OS = FAT
+
+Version = 20
+
+Volume Index = 0
+
+Offset = 57
+
+
+
+Path = 原文件\中文目录\说明.txt
+
+Folder = -
+
+Size = 8400
+
+Packed Size = 176
+
+Modified = 1980-01-01 00:00:00
+
+Created = 
+
+Accessed = 
+
+Attributes =  81A40000
+
+Encrypted = -
+
+Comment = 
+
+CRC = 07B71AB3
+
+Method = xz
+
+Characteristics = UTF8
+
+Host OS = FAT
+
+Version = 63
+
+Volume Index = 0
+
+Offset = 120
+
+
+
+Path = 原文件\内容.bin
+
+Folder = -
+
+Size = 260000
+
+Packed Size = 260072
+
+Modified = 1980-01-01 00:00:00
+
+Created = 
+
+Accessed = 
+
+Attributes =  81A40000
+
+Encrypted = -
+
+Comment = 
+
+CRC = 1AC509B7
+
+Method = xz
+
+Characteristics = UTF8
+
+Host OS = FAT
+
+Version = 63
+
+Volume Index = 0
+
+Offset = 359
+
+
+
+
+
+Warnings: 1
+
+
+
+Errors: 1
+
+
+
+2 !== 0
+
+    at sevenZip (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/zip-output-1414-gate.mjs:21:42)
+    at verify (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/zip-output-1414-gate.mjs:34:21)
+    at runZipOutput1414Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/zip-output-1414-gate.mjs:73:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4883:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 2,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

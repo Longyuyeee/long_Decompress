@@ -36,7 +36,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             if !matches!(percent.as_u64(), Some(0 | 3 | 5 | 10)) { return None; }
             output.insert("rarRecoveryPercent".into(), percent.clone());
         }
-        for (key, default, allowed) in [("zipEncryption", "aes256", ["aes256", "zipcrypto"]),
+        for (key, default, allowed) in [("zipMethod", "deflate", ["deflate", "zstd"]), ("zipEncryption", "aes256", ["aes256", "zipcrypto"]),
             ("zipPasswordEncoding", "utf8", ["utf8", "windows_local"]),
             ("zipSplitMode", "numeric", ["numeric", "standard"])] {
             let selected = value.get(key).and_then(Value::as_str).unwrap_or(default);
@@ -65,6 +65,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             if let Some(mode) = value.get("settings")?.get("zipSplitMode") {
                 if !matches!(mode.as_str(), Some("numeric" | "standard")) { return None; }
                 settings.insert("zipSplitMode".into(), mode.clone());
+            }
+            if let Some(method) = value.get("settings")?.get("zipMethod") {
+                if !matches!(method.as_str(), Some("deflate" | "zstd")) { return None; }
+                settings.insert("zipMethod".into(), method.clone());
             }
             if let Some(encryption) = value.get("settings")?.get("zipEncryption") {
                 if !matches!(encryption.as_str(), Some("aes256" | "zipcrypto")) { return None; }
@@ -100,6 +104,17 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn zip_output_1414_history_keeps_method_for_compression_and_conversion() {
+        let mut conversion = serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/new.zip",
+            "format":"zip","level":6,"splitSize":1048576,"encryptFilenames":false,"passwordRequired":true,"zipMethod":"zstd"});
+        assert_eq!(super::sanitize(conversion.clone(), "compression", "archive").unwrap()["zipMethod"], "zstd");
+        conversion["zipMethod"] = "unknown".into(); assert!(super::sanitize(conversion, "compression", "archive").is_none());
+        let mut compression = serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,
+            "settings":{"format":"zip","level":6,"filename":"new","splitArchive":true,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":false,"zipMethod":"zstd"}});
+        assert_eq!(super::sanitize(compression.clone(), "compression", "archive").unwrap()["settings"]["zipMethod"], "zstd");
+        compression["settings"]["zipMethod"] = "unknown".into(); assert!(super::sanitize(compression, "compression", "archive").is_none());
+    }
     #[test]
     fn conversion_snapshot_keeps_its_identity_without_passwords() {
         let input = serde_json::json!({"schemaVersion": 1, "kind": "archive-conversion",

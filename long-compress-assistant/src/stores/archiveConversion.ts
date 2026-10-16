@@ -14,7 +14,7 @@ import { archiveGroupKey, archiveSourceFormat, detectArchiveGroup } from '@/util
 import { isPotentialSplitArchivePath, supportsNativePassword, supportsArchiveSplit, supportsFilenameEncryption } from '@/utils/compressionFormat'
 
 export const conversionFormats = [
-  ['zip', 'ZIP'], ['7z', '7Z'], ['rar', 'RAR（需要 WinRAR）'], ['tar', 'TAR'], ['tar.gz', 'TGZ'],
+  ['zip', 'ZIP'], ['zipx', 'ZIPX（XZ）'], ['7z', '7Z'], ['rar', 'RAR（需要 WinRAR）'], ['tar', 'TAR'], ['tar.gz', 'TGZ'],
   ['tar.bz2', 'TBZ'], ['tar.xz', 'TXZ'], ['tar.zst', 'TZST'],
   ['tar.lz4', 'TAR.LZ4（快速）'], ['tar.br', 'TAR.BR（Brotli）'],
   ['tar.lz', 'TAR.LZIP'],
@@ -163,12 +163,14 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   function show() { visible.value = true }
   function applySelected(patch: ConversionPatch) {
     if (busy.value) return '转换正在进行，请稍后修改。'
+    const methodOnly = patch.zipMethod !== undefined && Object.entries(patch).every(([field, value]) => field === 'zipMethod' || value === undefined)
+    if (methodOnly && !selected.value.some(item => effectiveSettings(item).format === 'zip')) return '所选任务中没有 ZIP 任务，请选择 ZIP 格式或保持各自方法。'
     if (patch.rarRecoveryPercent && selected.value.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复保护只适用于 RAR，请调整所选任务的目标格式。'
     if (patch.rarRecoveryVolumes && selected.value.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复卷只适用于 RAR 分包，请调整所选任务的目标格式。'
     if (patch.encryptFilenames && selected.value.some(item => !supportsFilenameEncryption(patch.format || effectiveSettings(item).format))) {
       return '文件名加密只支持 7Z/RAR，请调整所选任务的目标格式。'
     }
-    for (const item of selected.value) updateItem(item.id, patch)
+    for (const item of selected.value) if (!methodOnly || effectiveSettings(item).format === 'zip') updateItem(item.id, patch)
     return ''
   }
   function updateDefaults(patch: ConversionPatch) {
@@ -204,6 +206,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       intent: 'convert', expanded: true, selected: true, retryOfTaskId: record.id,
       targetPasswordRequired: config.passwordRequired, sourcePasswordRequired: false, passwordRequired: config.passwordRequired,
       settings: { ...defaultConversionSettings(), outputPath: '', format: config.format,
+      zipMethod: config.zipMethod ?? 'deflate',
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
       zipSplitMode: config.zipSplitMode ?? 'numeric', rarRecoveryPercent: config.rarRecoveryPercent ?? 0,
       rarRecoveryVolumes: config.rarRecoveryVolumes ?? 0,
@@ -230,7 +233,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     if (settings.format.endsWith('.aes') && !settings.password) return '此加密格式需要填写新包密码'
     if (settings.password && !supportsNativePassword(settings.format)) return '此格式不支持原生密码，请选择 ZIP、7Z、RAR 或加密包装格式'
     if (settings.splitMiB > 0 && !supportsArchiveSplit(settings.format)) return '此格式暂不支持分卷'
-    if (settings.format === 'zip' && settings.zipSplitMode === 'standard' && settings.splitMiB > 0 && (settings.splitMiB < 0.0625 || settings.splitMiB >= 4096)) return '标准 ZIP 每卷大小需要在 64 KiB 至 4 GiB（不含）之间'
+    if (['zip', 'zipx'].includes(settings.format) && settings.zipSplitMode === 'standard' && settings.splitMiB > 0 && (settings.splitMiB < 0.0625 || settings.splitMiB >= 4096)) return '标准 ZIP 每卷大小需要在 64 KiB 至 4 GiB（不含）之间'
     if (!output.toLowerCase().endsWith('.' + settings.format)) return '新包名称必须以 .' + settings.format + ' 结尾'
     if (pathKey(output) === pathKey(item.sourcePath)) return '请为新包设置不同的名称或保存位置'
     if (/[<>:"|?*]/.test(output.split(/[\\/]/).pop() || '')) return '新包名称包含不可用字符，请修改名称'
@@ -240,6 +243,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     let unlisten: UnlistenFn | undefined
     const id = 'conversion-' + crypto.randomUUID()
     const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
+      zipMethod: settings.zipMethod ?? 'deflate',
       zipEncryption: settings.zipEncryption, zipPasswordEncoding: settings.zipPasswordEncoding,
       zipSplitMode: settings.zipSplitMode ?? 'numeric',
       outputPath, format: settings.format, level: settings.level, splitSize: settings.splitMiB * 1048576,
@@ -259,7 +263,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
         const output = await invoke<PublishedArchiveOutput>('convert_archive', { taskId: id, sourcePath: item.sourcePath,
           sourcePassword: settings.sourcePassword || null, outputPath,
           options: { format: config.format, level: config.level, password: settings.password || null,
-            zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
+            zip_method: config.zipMethod ?? 'deflate', zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
             zip_split_mode: config.zipSplitMode, rar_recovery_percent: config.rarRecoveryPercent ?? 0,
             rar_recovery_volumes: config.splitSize > 0 ? (config.rarRecoveryVolumes ?? 0) : 0,
             split_size: config.splitSize || null, encrypt_filenames: config.encryptFilenames,

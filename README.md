@@ -227,6 +227,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.4.15 候选** | ZIP 重复预检优化、TAR.LZ4 / TAR.BR 流式创建、RAR 暂停取消及矮窗口列表修正 | [更新草案](long-compress-assistant/docs/RELEASE_NOTES_1.4.15.md) · [封板记录](long-compress-assistant/docs/ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md) |
+| **v1.4.14 候选** | ZIP Zstandard、ZIPX（XZ）创建、密码与分卷转换、配置与草稿保留方法 | [更新草案](long-compress-assistant/docs/RELEASE_NOTES_1.4.14.md) · [实施记录](long-compress-assistant/docs/ZIP_OUTPUT_METHODS_1.4.14.md) |
 | **v1.4.13** | 标准 ZIP 缺卷部分抢救、AES / ZipCrypto 密码包、按需展开的恢复文件与原因清单 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.13.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13) |
 | **v1.4.12** | LZIP / TAR.LZIP 创建与读取、`.tlz` 别名及多成员、批量配置和转换、浏览失败原因保留 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.12.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12) |
 | **v1.4.11** | 自解压包直接读取、好压论坛 ZIP 密码分卷、正确密码兼容与缺卷补回继续处理 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.11.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11) |

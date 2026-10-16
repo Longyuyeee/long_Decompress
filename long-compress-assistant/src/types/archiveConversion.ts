@@ -9,6 +9,7 @@ export interface ConversionSettings {
   encryptFilenames: boolean
   rarRecoveryPercent?: number
   rarRecoveryVolumes?: number
+  zipMethod?: 'deflate' | 'zstd'
   zipEncryption: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
   zipPasswordEncoding: 'utf8' | 'windows_local'

@@ -6,7 +6,14 @@ use std::io::{Read, Write};
 use std::path::Path;
 use tauri::Window;
 
-struct TarPreparation<'a, R>(&'a R);
+#[cfg(test)]
+#[path = "codec_stream_measurement.rs"]
+mod measurements;
+
+#[path = "tar_codec_stream.rs"]
+mod tar_stream;
+
+struct TarPreparation<'a, R>(&'a R, f32);
 impl<R: CompressionRuntime> CompressionRuntime for TarPreparation<'_, R> {
     fn check_cancellation(&self) -> Result<()> {
         self.0.check_cancellation()
@@ -36,7 +43,7 @@ impl<R: CompressionRuntime> CompressionRuntime for TarPreparation<'_, R> {
         total: u64,
     ) {
         self.0
-            .emit_progress(window, task_id, progress * 0.35, file, processed, total);
+            .emit_progress(window, task_id, progress * self.1, file, processed, total);
     }
 }
 
@@ -75,7 +82,7 @@ impl<R: CompressionRuntime, T: Read> Read for CheckedReader<'_, R, T> {
     }
 }
 
-pub(crate) fn compress<R: CompressionRuntime>(
+pub(crate) fn compress<R: CompressionRuntime + Sync>(
     runtime: &R,
     window: Option<&Window>,
     task_id: &str,
@@ -88,11 +95,23 @@ pub(crate) fn compress<R: CompressionRuntime>(
     let path = Path::new(output);
     let parent = path.parent().unwrap_or(Path::new("."));
     std::fs::create_dir_all(parent)?;
+    if matches!(format, "tar.lz4" | "tar.br") {
+        // Collect before creating the output; the producer uses the same TAR
+        // entry policy as every other TAR route, without a full TAR disk copy.
+        let entries = crate::services::compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), true)?;
+        runtime.check_cancellation()?;
+        let destination = File::create(path)?;
+        let destination = tar_stream::with_reader(runtime, window, task_id, entries, |input| {
+            encode_stream(runtime, input, destination, &options, format, None)
+        })?;
+        destination.sync_all()?;
+        return split_output(runtime, window, task_id, path, options.split_size);
+    }
     let tar_source = if format.starts_with("tar.") {
         let mut file = tempfile::NamedTempFile::new_in(parent)?;
         let mut builder = ::tar::Builder::new(file.as_file_mut());
         tar::write_entries(
-            &TarPreparation(runtime),
+            &TarPreparation(runtime, 0.35),
             window,
             task_id,
             sources,
@@ -126,34 +145,51 @@ pub(crate) fn compress<R: CompressionRuntime>(
         total,
         progress_start: if tar_source.is_some() { 0.35 } else { 0.0 },
     };
-    let destination = File::create(path)?;
+    encode_stream(runtime, &mut input, File::create(path)?, &options, format, Some(total))?.sync_all()?;
+    split_output(runtime, window, task_id, path, options.split_size)
+}
+
+fn encode_stream<R: CompressionRuntime, I: Read, W: Write>(
+    runtime: &R,
+    input: &mut I,
+    destination: W,
+    options: &CompressionOptions,
+    format: &str,
+    total: Option<u64>,
+) -> Result<W> {
     if format.ends_with("lz4") {
         let mut info = lz4_flex::frame::FrameInfo::new();
         info.content_checksum = true;
-        info.content_size = Some(total);
+        info.content_size = total;
         let mut encoder = lz4_flex::frame::FrameEncoder::with_frame_info(info, destination);
-        std::io::copy(&mut input, &mut encoder)?;
-        encoder.finish()?.sync_all()?;
+        std::io::copy(input, &mut encoder)?;
+        runtime.check_cancellation()?;
+        Ok(encoder.finish()?)
     } else if format.ends_with(".lz") || format == "lz" {
         let mut settings = lzma_rust2::LzipOptions::with_preset(options.level.clamp(0, 9) as u32);
+        let total = total.context("LZIP 编码需要已知的输入大小")?;
         // A small input should not allocate the preset's full dictionary.
         settings.lzma_options.dict_size = settings.lzma_options.dict_size
             .min(total.clamp(4096, 512 * 1024 * 1024).next_power_of_two() as u32);
         let mut encoder = lzma_rust2::LzipWriter::new(destination, settings);
-        std::io::copy(&mut input, &mut encoder)?;
+        std::io::copy(input, &mut encoder)?;
         runtime.check_cancellation()?;
-        encoder.finish()?.sync_all()?;
+        Ok(encoder.finish()?)
     } else {
         let mut destination = destination;
         let params = brotli::enc::BrotliEncoderParams {
             quality: options.level.clamp(0, 9) as i32,
             ..Default::default()
         };
-        brotli::BrotliCompress(&mut input, &mut destination, &params)?;
+        brotli::BrotliCompress(input, &mut destination, &params)?;
+        runtime.check_cancellation()?;
         destination.flush()?;
-        destination.sync_all()?;
+        Ok(destination)
     }
-    if let Some(size) = options.split_size.filter(|size| *size > 0) {
+}
+
+fn split_output<R: CompressionRuntime>(runtime: &R, window: Option<&Window>, task_id: &str, path: &Path, split_size: Option<u64>) -> Result<()> {
+    if let Some(size) = split_size.filter(|size| *size > 0) {
         super::split_compression::SplitCompressionService::split_archive_file_with_progress(
             path,
             path,
@@ -252,6 +288,24 @@ mod tests {
         }
         fn emit_log(&self, _: &Window, _: &str, _: &str, _: TaskLogSeverity) {}
         fn emit_progress(&self, _: &Window, _: &str, _: f32, _: Option<String>, _: u64, _: u64) {}
+    }
+
+    #[test]
+    fn streaming_encoders_report_final_write_errors() {
+        struct FullDestination;
+        impl Write for FullDestination {
+            fn write(&mut self, _: &[u8]) -> std::io::Result<usize> {
+                Err(std::io::Error::new(std::io::ErrorKind::StorageFull, "destination full at codec finish"))
+            }
+            fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+        }
+        for format in ["tar.lz4", "tar.br"] {
+            let mut input = std::io::Cursor::new(b"small payload buffered until finalization");
+            let error = encode_stream(&Runtime::default(), &mut input, FullDestination, &CompressionOptions::default(), format, None)
+                .err().expect("codec finish must return the real storage error");
+            assert!(error.chain().any(|cause| cause.downcast_ref::<std::io::Error>()
+                .is_some_and(|cause| cause.kind() == std::io::ErrorKind::StorageFull)), "{format}: {error:?}");
+        }
     }
 
     #[tokio::test]

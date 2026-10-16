@@ -18,7 +18,8 @@ const commands = useTauriCommands()
 const state = computed(() => store.compressionAnalysis[props.jobId])
 const result = computed(() => state.value?.result)
 const stale = computed(() => state.value?.status === 'completed' && (
-  state.value.format !== props.modelValue.format || state.value.level !== props.modelValue.level
+  state.value.format !== props.modelValue.format || state.value.level !== props.modelValue.level ||
+  (props.modelValue.format === 'zip' && (state.value.zipMethod ?? 'deflate') !== (props.modelValue.zipMethod ?? 'deflate'))
 ))
 
 const formatBytes = (value: number) => {
@@ -34,30 +35,34 @@ const confidenceLabel = (confidence?: string) => ({ low: '初步', medium: '中�
 
 const analyze = async () => {
   if (props.disabled || state.value?.status === 'running') return
+  const settings = { ...props.modelValue }
+  const analysisFormat = settings.format === 'zipx' ? 'xz' : settings.format === 'zip' && settings.zipMethod === 'zstd' ? 'zst' : settings.format
   const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).slice(2)}`
   store.setAnalysisState(props.jobId, {
-    status: 'running', analysisId, format: props.modelValue.format, level: props.modelValue.level,
+    status: 'running', analysisId, format: settings.format, level: settings.level, zipMethod: settings.zipMethod,
   })
   try {
     const analysis = await commands.analyzeCompressionSources(
-      analysisId, props.paths, props.modelValue.format, props.modelValue.level,
+      analysisId, props.paths, analysisFormat, settings.level,
     )
     if (store.compressionAnalysis[props.jobId]?.analysisId !== analysisId) return
     store.setAnalysisState(props.jobId, {
-      status: 'completed', analysisId, format: props.modelValue.format,
-      level: props.modelValue.level, result: analysis,
+      status: 'completed', analysisId, format: settings.format, zipMethod: settings.zipMethod,
+      level: settings.level, result: analysis,
     })
   } catch (error) {
     if (store.compressionAnalysis[props.jobId]?.analysisId !== analysisId) return
     if (store.compressionAnalysis[props.jobId]?.status === 'cancelled') return
     store.setAnalysisState(props.jobId, {
-      status: 'failed', analysisId, format: props.modelValue.format,
-      level: props.modelValue.level, error: extractErrorMessage(error),
+      status: 'failed', analysisId, format: settings.format, zipMethod: settings.zipMethod,
+      level: settings.level, error: extractErrorMessage(error),
     })
   }
 }
 
 const cancel = async () => {
+  const settings = { ...props.modelValue }
+  const analysisFormat = settings.format === 'zipx' ? 'xz' : settings.format === 'zip' && settings.zipMethod === 'zstd' ? 'zst' : settings.format
   const analysisId = state.value?.analysisId
   if (!analysisId || state.value?.status !== 'running') return
   store.setAnalysisState(props.jobId, { ...state.value, status: 'cancelled' })
@@ -70,6 +75,7 @@ const applyRecommendation = () => {
     ...props.modelValue,
     format: result.value.recommendedFormat as CompressionOptions['format'],
     level: result.value.recommendedLevel,
+    ...(result.value.recommendedFormat === 'zip' ? { zipMethod: 'deflate' as const } : {}),
     createSolidArchive: result.value.recommendedFormat === '7z' && result.value.recommendedSolid,
   })
 }
@@ -90,7 +96,7 @@ const applyRecommendation = () => {
     <div v-else-if="state?.status === 'cancelled'" class="mt-3 text-xs font-bold text-muted">分析已取消，不会影响压缩任务。</div>
 
     <div v-if="result" class="mt-4 space-y-3" :class="{ 'opacity-60': stale }">
-      <div v-if="stale" class="analysis-stale"><i class="pi pi-info-circle"></i>格式或等级已经改变，请重新分析后再参考结果。</div>
+      <div v-if="stale" class="analysis-stale"><i class="pi pi-info-circle"></i>格式、方法或等级已经改变，请重新分析后再参考结果。</div>
       <div class="analysis-metrics">
         <div><span>源数据</span><strong>{{ formatBytes(result.totalSize) }}</strong></div>
         <div><span>预计体积</span><strong>{{ formatBytes(result.estimatedSize) }}</strong></div>

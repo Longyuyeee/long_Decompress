@@ -1,0 +1,389 @@
+{
+  "results": [
+    {
+      "label": "zip-none-none",
+      "method": "ZSTD",
+      "files": [
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-none-none.zip",
+          "bytes": 260776,
+          "sha256": "9f40738b3cbb2e3155ab96d8c53a705c48b6027d22957fc679e571fc21d8a0e3"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true,
+      "reusedFrom": "zip-output-1414-desktop.log (before XZ empty-member fix)"
+    },
+    {
+      "label": "zip-none-numeric",
+      "method": "ZSTD",
+      "files": [
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-none-numeric.zip.001",
+          "bytes": 65536,
+          "sha256": "45f164aee39176e55ffe9ba5fc76e6ad648074f66901a17e0049272906224d7e"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-none-numeric.zip.002",
+          "bytes": 65536,
+          "sha256": "0464eac1583be4c4ec31fb69103d4bd2e36636f1a214a1e327ee54c090eee85b"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-none-numeric.zip.003",
+          "bytes": 65536,
+          "sha256": "4fefbe4125671e26a9b5160c60f8572880de59f1d44df1abaa655d19912152ce"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-none-numeric.zip.004",
+          "bytes": 64168,
+          "sha256": "24a430101b8627c849890f669fdb17dcf98c5868e11e918425f3a8cf2015b3d6"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true,
+      "reusedFrom": "zip-output-1414-desktop.log (before XZ empty-member fix)"
+    },
+    {
+      "label": "zip-none-standard",
+      "method": "ZSTD",
+      "files": [
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-none-standard.z01",
+          "bytes": 65536,
+          "sha256": "0bde6c1296c0ac00ec0df5712bb2058300925ee09f8b06efd10e3f558bdfb171"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-none-standard.z02",
+          "bytes": 65536,
+          "sha256": "3feda878946394c5727ba60a90240ccf051b16449ed3355f0c5ee81fdec192f0"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-none-standard.z03",
+          "bytes": 65536,
+          "sha256": "63511856ec630db0376e4b041a329ae306a78d61f5f973cc7979ae6a6da4a4c3"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-none-standard.zip",
+          "bytes": 64248,
+          "sha256": "c649f714a2a37a5cb7672d0ee8834f2e2a25e0d143d69424defe3b72c7380329"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true,
+      "reusedFrom": "zip-output-1414-desktop.log (before XZ empty-member fix)"
+    },
+    {
+      "label": "zip-aes256-none",
+      "method": "ZSTD",
+      "files": [
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-aes256-none.zip",
+          "bytes": 260926,
+          "sha256": "7fd392717c545cf539a94ebca09c858a189b8ae96393785b0af2b58738c79cc6"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true,
+      "reusedFrom": "zip-output-1414-desktop.log (before XZ empty-member fix)"
+    },
+    {
+      "label": "zip-aes256-numeric",
+      "method": "ZSTD",
+      "files": [
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-aes256-numeric.zip.001",
+          "bytes": 65536,
+          "sha256": "dc65a3d4ad51c3e37240d01e06156b80a7655b56c997fb209266ded897aab7c0"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-aes256-numeric.zip.002",
+          "bytes": 65536,
+          "sha256": "dae06531a4e3c56600e9c14ac2cbafb165f4c27bca774fc29c19572f903ffd78"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-aes256-numeric.zip.003",
+          "bytes": 65536,
+          "sha256": "3d256929e63377dea01cc05e7e1a7db0703f6e427bcc6207574552e9c15a4f79"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-aes256-numeric.zip.004",
+          "bytes": 64318,
+          "sha256": "6409771b60ee51959cd3bbf7e4813cdbd039501cb547496d2d287cfd40e8a4d8"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true,
+      "reusedFrom": "zip-output-1414-desktop.log (before XZ empty-member fix)"
+    },
+    {
+      "label": "zip-aes256-standard",
+      "method": "ZSTD",
+      "files": [
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-aes256-standard.z01",
+          "bytes": 65536,
+          "sha256": "32a1c33c041dbf6482c790872f57706862f89971bf1981629885cd191ced9c58"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-aes256-standard.z02",
+          "bytes": 65536,
+          "sha256": "1f3264666edec5a852299685e9bb56aa9ca80bd44854535ccf3af0eabcae6348"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-aes256-standard.z03",
+          "bytes": 65536,
+          "sha256": "96792163fabd7a9a64ac696429e88cd256ce2ff615531dccf126e10655d27874"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-aes256-standard.zip",
+          "bytes": 64398,
+          "sha256": "0c96353bfc67117c54de80550913a42d6eef12021f71fafbfaf37d5d6ee88f62"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true,
+      "reusedFrom": "zip-output-1414-desktop.log (before XZ empty-member fix)"
+    },
+    {
+      "label": "zip-zipcrypto-none",
+      "method": "ZSTD",
+      "files": [
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-zipcrypto-none.zip",
+          "bytes": 260860,
+          "sha256": "6574a7b4933eb06c4f7170000919e1763eddc7e25d279c901348ae41894c6adf"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true,
+      "reusedFrom": "zip-output-1414-desktop.log (before XZ empty-member fix)"
+    },
+    {
+      "label": "zip-zipcrypto-numeric",
+      "method": "ZSTD",
+      "files": [
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-zipcrypto-numeric.zip.001",
+          "bytes": 65536,
+          "sha256": "dc229b3186a9a5f753660a06c34654c3a863c122ad4a774a81357304f1ca5b38"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-zipcrypto-numeric.zip.002",
+          "bytes": 65536,
+          "sha256": "9ac4b51a9d71292a0e71d96fb6ffd3421eb83fa7822cf878d405fb1e284c5b69"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-zipcrypto-numeric.zip.003",
+          "bytes": 65536,
+          "sha256": "7424ebdf97534ce6bb238e60e17baf5b1d5138d87948557ee8a7b4398cbc3037"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-zipcrypto-numeric.zip.004",
+          "bytes": 64252,
+          "sha256": "65775765ad6e0263667dab2ff1f8c38028d1117bcac61f8ad93bab13b75b76ec"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true,
+      "reusedFrom": "zip-output-1414-desktop.log (before XZ empty-member fix)"
+    },
+    {
+      "label": "zip-zipcrypto-standard",
+      "method": "ZSTD",
+      "files": [
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-zipcrypto-standard.z01",
+          "bytes": 65536,
+          "sha256": "ee1d25c114849aa127dfee0aac4d44d0c163dcb6ce460de5ecb57d2650895670"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-zipcrypto-standard.z02",
+          "bytes": 65536,
+          "sha256": "929cde50241fb391f8986b18414c1adf361ef422a5d2cfbfaeac1f7ced890d7e"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-zipcrypto-standard.z03",
+          "bytes": 65536,
+          "sha256": "ee54f1a266b89024e38bcfdfa3a047517130f63aae3283a47bda835684d3dc53"
+        },
+        {
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zip-zipcrypto-standard.zip",
+          "bytes": 64332,
+          "sha256": "0f06f4d63f1edadf2c4d8be9865b08cdb51a25e3d5582af69c22b23e2fdd0b69"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true,
+      "reusedFrom": "zip-output-1414-desktop.log (before XZ empty-member fix)"
+    },
+    {
+      "label": "zipx-none-none",
+      "method": "XZ",
+      "files": [
+        {
+          "bytes": 260914,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-none-none.zipx",
+          "sha256": "135aa373c6dba9e00b9393be6ef243d265d0794f8beed3ab6349b805407bc5ea"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true
+    },
+    {
+      "label": "zipx-none-numeric",
+      "method": "XZ",
+      "files": [
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-none-numeric.zipx.001",
+          "sha256": "8867210965105d193fe2d12cf96eeb5ff31ac6a7a2f4ac1b41b3fba0ef663577"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-none-numeric.zipx.002",
+          "sha256": "c7448ced839de423e7b3186443e29f9f35e3138d1de85bbc725000f0f6d26e6a"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-none-numeric.zipx.003",
+          "sha256": "29314938babc8bccbca77e68ddbf9f09db3792155cd4d5c0459be136ae139764"
+        },
+        {
+          "bytes": 64306,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-none-numeric.zipx.004",
+          "sha256": "832ccfef4be385955532c3d9340262d346306beb029419aab11fc863c34124d5"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true
+    },
+    {
+      "label": "zipx-none-standard",
+      "explicitUnsupportedCombination": true,
+      "noPublishedOutput": true
+    },
+    {
+      "label": "zipx-aes256-none",
+      "method": "XZ",
+      "files": [
+        {
+          "bytes": 261064,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-aes256-none.zipx",
+          "sha256": "ef6fd32952413cd149f301c6fdc90de75b086a361783553daab83b89a2ce0a11"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true
+    },
+    {
+      "label": "zipx-aes256-numeric",
+      "method": "XZ",
+      "files": [
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-aes256-numeric.zipx.001",
+          "sha256": "3ad161e6d057bd2b5cd58a450ba49585089c8a09ffc992b84d03cc00fe551cda"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-aes256-numeric.zipx.002",
+          "sha256": "17d1e13602923765a132aa4ea9214898ef75b846568c9607837fa4cbe7cfcfdc"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-aes256-numeric.zipx.003",
+          "sha256": "31e2e5d50e106eda49a2c2c9d5a8e9b60f106913dfe97d797ef4bcf5f645bdf1"
+        },
+        {
+          "bytes": 64456,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-aes256-numeric.zipx.004",
+          "sha256": "73091710b4f1ad7d42599b48927a19d05dcbee4ce43e2e40f762c4acf4ea6690"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true
+    },
+    {
+      "label": "zipx-aes256-standard",
+      "explicitUnsupportedCombination": true,
+      "noPublishedOutput": true
+    },
+    {
+      "label": "zipx-zipcrypto-none",
+      "method": "XZ",
+      "files": [
+        {
+          "bytes": 260998,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-zipcrypto-none.zipx",
+          "sha256": "1ab3075f49249b893f1b35b6dab4de2f27688a9b876f82050aca136bc46104e5"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true
+    },
+    {
+      "label": "zipx-zipcrypto-numeric",
+      "method": "XZ",
+      "files": [
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-zipcrypto-numeric.zipx.001",
+          "sha256": "7a4f98ebf322c72ff6063cf00994f2011e5bb3960203ffd9256ce90b026b40fe"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-zipcrypto-numeric.zipx.002",
+          "sha256": "6f5a3f9d5e351348627d7c0b9c414238124a3e2d7859f59d78ca3a52bfcd4ff8"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-zipcrypto-numeric.zipx.003",
+          "sha256": "475baff1b4e6653596488712dce2c3c47aa34e8916b978d0f57f8a5ca6ae3411"
+        },
+        {
+          "bytes": 64390,
+          "path": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-JrA5rB\\zip-output-1414\\zipx-zipcrypto-numeric.zipx.004",
+          "sha256": "57870efb7d33f0e28254aa4b10c106fd9987da7c0159ed57201ecd58528430ed"
+        }
+      ],
+      "applicationReadback": true,
+      "independentReadback": true
+    },
+    {
+      "label": "zipx-zipcrypto-standard",
+      "explicitUnsupportedCombination": true,
+      "noPublishedOutput": true
+    },
+    {
+      "conversion": "AES ZIP → zip",
+      "changedPassword": true,
+      "split": "standard",
+      "independentReadback": true
+    },
+    {
+      "conversion": "AES ZIP → zipx",
+      "changedPassword": true,
+      "split": "numeric",
+      "independentReadback": true
+    },
+    {
+      "conversion": "AES XZ ZIPX 数字卷 → 7Z",
+      "independentReadback": true
+    }
+  ],
+  "original": [
+    {
+      "name": "空文件.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "内容.bin",
+      "sha256": "3e8160d5c014caa4d0894a8333cf46bb1d65bc60f6e2eefab15d7b2439e2d730"
+    },
+    {
+      "name": "中文目录/说明.txt",
+      "sha256": "f52ac92e7c139e7717f6d82cdfb637ed6aab219b912457a24959026556824376"
+    }
+  ],
+  "engine": "7-Zip 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05\r"
+}

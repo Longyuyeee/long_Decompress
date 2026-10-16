@@ -5,7 +5,7 @@ import { supportsNativePassword, supportsArchiveSplit, supportsFilenameEncryptio
 
 export function defaultConversionSettings(): ConversionSettings {
   return { format: '7z', level: 6, outputDirectory: '', outputPath: '', sourcePassword: '', password: '',
-    splitMiB: 0, encryptFilenames: false, zipEncryption: 'aes256', zipPasswordEncoding: 'utf8', zipSplitMode: 'numeric' }
+    splitMiB: 0, encryptFilenames: false, zipMethod: 'deflate', zipEncryption: 'aes256', zipPasswordEncoding: 'utf8', zipSplitMode: 'numeric' }
 }
 export function conversionOutputPath(source: string, settings: ConversionSettings, intent = 'convert'): string {
   if (settings.outputPath) return settings.outputPath
@@ -15,6 +15,8 @@ export function conversionOutputPath(source: string, settings: ConversionSetting
 }
 export function normalizeConversionSettings(settings: ConversionSettings, patch: Partial<ConversionSettings>): ConversionSettings {
   const next = { ...settings, ...patch }
+  if (next.format === 'zipx') next.zipSplitMode = 'numeric'
+  if (next.format !== 'zip') next.zipMethod = settings.zipMethod ?? 'deflate'
   if (patch.format && next.outputPath.toLowerCase().endsWith(`.${settings.format}`)) {
     next.outputPath = next.outputPath.slice(0, -settings.format.length) + patch.format
   }

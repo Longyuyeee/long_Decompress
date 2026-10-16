@@ -1,0 +1,40 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[xz-diagnostic] empty 2 
+7-Zip 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05
+
+Scanning the drive for archives:
+1 file, 156 bytes (1 KiB)
+
+Testing archive: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\desktop-e2e\xz-stream-diagnostic\empty.zipx
+--
+Path = E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\desktop-e2e\xz-stream-diagnostic\empty.zipx
+Type = zip
+Physical Size = 156
+
+
+Sub items Errors: 1
+
+Archives with Errors: 1
+
+Sub items Errors: 1
+ ERROR: Data Error : empty.txt
+
+[xz-diagnostic] small 0 
+7-Zip 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05
+
+Scanning the drive for archives:
+1 file, 204 bytes (1 KiB)
+
+Testing archive: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\desktop-e2e\xz-stream-diagnostic\small.zipx
+--
+Path = E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\desktop-e2e\xz-stream-diagnostic\small.zipx
+Type = zip
+Physical Size = 204
+
+Everything is Ok
+
+Size:       1200
+Compressed: 204
+ 

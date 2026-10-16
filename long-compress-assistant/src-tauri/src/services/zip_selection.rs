@@ -9,6 +9,9 @@ use zip_aes::ZipArchive;
 #[derive(Debug)]
 pub(crate) struct ZipSelection {
     pub indices: Vec<usize>,
+    // Collected in the same selection scan. Never borrow password requirements
+    // from unselected entries or keep them across archive/task lifetimes.
+    pub encrypted_indices: Vec<usize>,
     pub expanded_bytes: u64,
     pub password_required: bool,
 }
@@ -25,7 +28,7 @@ impl ZipSelection {
         mut check_control: impl FnMut() -> Result<()>,
     ) -> Result<Self> {
         let filter = extraction_transaction::compile_file_filter(options.file_filter.as_deref());
-        let mut selection = Self { indices: Vec::new(), expanded_bytes: 0, password_required: false };
+        let mut selection = Self { indices: Vec::new(), encrypted_indices: Vec::new(), expanded_bytes: 0, password_required: false };
         for index in 0..archive.len() {
             check_control()?;
             // Raw metadata does not initialize a codec or ask for the password
@@ -43,6 +46,9 @@ impl ZipSelection {
                 anyhow::bail!("[archive-inspection:unknown] ZIP 条目「{}」的压缩方法 {:?} 当前不受支持；不能据此判定文件损坏或密码错误", entry.name(), entry.compression());
             }
             selection.indices.push(index);
+            if entry.encrypted() {
+                selection.encrypted_indices.push(index);
+            }
             selection.password_required |= entry.encrypted();
             selection.expanded_bytes = selection.expanded_bytes.checked_add(entry.size())
                 .ok_or_else(|| anyhow::anyhow!("ZIP 所选内容的解压大小超出支持范围"))?;
@@ -80,13 +86,27 @@ mod tests {
         let options = DecompressOptions { selected_entries: vec!["资料/甲方".into()], preserve_paths: false, ..Default::default() };
         let plan = ZipSelection::read(&mut archive, &options, || Ok(())).unwrap();
         assert_eq!(plan.indices, vec![1]);
+        assert_eq!(plan.encrypted_indices, vec![1]);
         assert_eq!(plan.expanded_bytes, "甲方的合同".len() as u64);
         assert!(plan.password_required);
         let options = DecompressOptions { file_filter: Some("*.txt".into()), ..Default::default() };
         let plan = ZipSelection::read(&mut archive, &options, || Ok(())).unwrap();
         assert_eq!(plan.indices, vec![0]);
+        assert!(plan.encrypted_indices.is_empty());
         assert_eq!(plan.expanded_bytes, "公开".len() as u64);
         assert!(!plan.password_required);
+    }
+
+    #[test]
+    fn selected_zip_encrypted_indices_follow_the_actual_selection() {
+        let mut archive = ZipArchive::new(Cursor::new(fixture())).unwrap();
+        let plan = ZipSelection::read(&mut archive, &DecompressOptions::default(), || Ok(())).unwrap();
+        assert_eq!(plan.indices, vec![0, 1, 2]);
+        assert_eq!(plan.encrypted_indices, vec![1, 2]);
+        let options = DecompressOptions { selected_entries: vec!["资料/乙方".into()], ..Default::default() };
+        let plan = ZipSelection::read(&mut archive, &options, || Ok(())).unwrap();
+        assert_eq!(plan.indices, vec![2]);
+        assert_eq!(plan.encrypted_indices, vec![2]);
     }
 
     #[test]

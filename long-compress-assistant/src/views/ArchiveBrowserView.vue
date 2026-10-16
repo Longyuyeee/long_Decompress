@@ -1004,5 +1004,11 @@ const extractSelected = async () => {
 .archive-details-paths li { overflow-wrap: anywhere; padding: .55rem .7rem; border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 65%, transparent); color: var(--text-content); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .66rem; }
 .archive-details-paths li:last-child { border-bottom: 0; }
 @media (max-width: 1050px) { .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(8rem, 1fr) minmax(5rem, .28fr) minmax(7rem, .4fr); } }
+/* On short desktop windows, scroll the page instead of shrinking the file
+   list to a fraction of one row behind its navigation and search controls. */
+@media (min-width: 761px) and (max-height: 720px) {
+  .browser-page { overflow-y: auto; overflow-x: hidden; }
+  .browser-workspace { flex: 0 0 24rem; min-height: 24rem; }
+}
 @media (max-width: 760px) { .browser-page { padding: 1rem; overflow-y: auto; overflow-x: hidden; } .browser-workspace { flex: 0 0 34rem; min-height: 34rem; grid-template-columns: 1fr; grid-template-rows: minmax(7rem, 10rem) minmax(22rem, 1fr); } .browser-toolbar { grid-template-columns: 1fr; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } .output-target { max-width: 80vw; } .archive-details-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-details-grid { grid-template-columns: 1fr; } }
 </style>

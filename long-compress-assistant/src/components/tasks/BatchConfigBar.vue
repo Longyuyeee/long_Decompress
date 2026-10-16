@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { open } from '@tauri-apps/api/dialog'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import Modal from '@/components/ui/Modal.vue'
 import ThemedSelect from '@/components/ui/ThemedSelect.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
@@ -17,22 +18,23 @@ const applyError = ref('')
 let editingSession = 0
 const format = ref('keep')
 const level = ref('keep')
+const zipMethod = ref('keep')
 const recovery = ref('keep')
 const recoveryVolumes = ref('keep')
 const subfolder = ref('keep')
 const destination = ref<'keep' | 'source' | 'custom'>('keep')
 const outputDirectory = ref('')
 const keep = { value: 'keep', label: '保持各自设置' }
-const formats = [keep, { value: 'zip', label: 'ZIP' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }, { value: 'tar.lz', label: 'TAR.LZIP（无加密）' }]
-const levels = [keep, ...Array.from({ length: 10 }, (_, value) => ({ value: String(value), label: `${value}${value === 0 ? ' · 仅存储' : value === 9 ? ' · 最小体积' : value === 1 ? ' · 更快' : ''}` }))]
+const formats = [keep, { value: 'zip', label: 'ZIP' }, { value: 'zipx', label: 'ZIPX（XZ）' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }, { value: 'tar.lz', label: 'TAR.LZIP（无加密）' }]
+const levels = [keep, ...Array.from({ length: 10 }, (_, value) => ({ value: String(value), label: `${value}${value === 0 ? ' · 最低强度（兼容 ZIP 仅存储）' : value === 9 ? ' · 最小体积' : value === 1 ? ' · 更快' : ''}` }))]
 const subfolders = [keep, { value: 'yes', label: '创建同名子文件夹' }, { value: 'no', label: '直接放入输出目录' }]
 const hasChanges = computed(() => destination.value !== 'keep' || (props.mode === 'compression'
-  ? format.value !== 'keep' || level.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep' : subfolder.value !== 'keep'))
+  ? format.value !== 'keep' || zipMethod.value !== 'keep' || level.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep' : subfolder.value !== 'keep'))
 const canApply = computed(() => hasChanges.value && (destination.value !== 'custom' || !!outputDirectory.value.trim()))
 function openConfiguration() {
   editingSession++
   format.value = level.value = subfolder.value = recovery.value = 'keep'
-  recoveryVolumes.value = 'keep'
+  recoveryVolumes.value = zipMethod.value = 'keep'
   destination.value = 'keep'
   outputDirectory.value = applyError.value = ''
   visible.value = true
@@ -52,7 +54,8 @@ function apply() {
   const patch: BatchConfigPatch = {}
   if (destination.value !== 'keep') patch.outputDirectory = destination.value === 'source' ? '' : outputDirectory.value.trim()
   if (props.mode === 'compression') {
-    if (format.value === 'zip' || format.value === '7z' || format.value === 'rar' || format.value === 'tar.lz') patch.format = format.value
+    if (format.value === 'zip' || format.value === 'zipx' || format.value === '7z' || format.value === 'rar' || format.value === 'tar.lz') patch.format = format.value
+    if (zipMethod.value === 'zstd' || zipMethod.value === 'deflate') patch.zipMethod = zipMethod.value
     if (level.value !== 'keep') patch.level = Number(level.value)
     if (recovery.value !== 'keep') patch.rarRecoveryPercent = Number(recovery.value)
     if (recoveryVolumes.value !== 'keep') patch.rarRecoveryVolumes = Number(recoveryVolumes.value)
@@ -80,7 +83,7 @@ function apply() {
       <p v-if="format === 'tar.lz'" class="text-xs text-muted">TAR.LZIP 不提供密码和分卷，应用到所选任务时会关闭这些选项。</p>
       <p class="text-xs leading-relaxed text-muted">只修改下面指定的项目，其他配置保持各自原值。</p>
       <div class="grid min-w-0 gap-3 sm:grid-cols-2">
-        <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩格式
+        <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩格式 <HelpHint v-if="format === 'zipx'" label="ZIPX 分卷说明">ZIPX 使用 XZ，分卷采用 .zipx.001 数字卷；标准分卷可选择 ZIP。</HelpHint>
           <ThemedSelect v-model="format" :options="formats" aria-label="批量压缩格式" test-id="batch-format" floating />
         </label>
         <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩等级
@@ -90,6 +93,10 @@ function apply() {
           <ThemedSelect v-model="subfolder" :options="subfolders" aria-label="批量解压子文件夹" test-id="batch-subfolder" floating />
         </label>
       </div>
+      <label v-if="mode === 'compression' && (format === 'keep' || format === 'zip')" class="block min-w-0 space-y-1.5 text-xs text-muted">ZIP 压缩方法
+        <ThemedSelect v-model="zipMethod" :options="[keep, { value: 'deflate', label: '兼容 ZIP · Deflate' }, { value: 'zstd', label: 'Zstandard' }]" test-id="batch-zip-method" floating />
+        <span class="block leading-relaxed">只修改所选 ZIP 任务的方法；ZIPX 始终使用 XZ。</span>
+      </label>
       <label v-if="mode === 'compression'" class="block min-w-0 space-y-1.5 text-xs text-muted">RAR 分包恢复卷
         <ThemedSelect v-model="recoveryVolumes" :options="[keep, ...[0,1,2,3,5,10].map(value => ({value:String(value),label:value ? `${value} 个 .rev 恢复卷` : '不生成恢复卷'}))]" test-id="batch-rar-recovery-volumes" floating />
         <span class="block leading-relaxed">仅实际生成多个 RAR 分包时生效，分卷设置保持各自原值。</span>

@@ -10,7 +10,6 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 use tauri::Window;
-use zip::{write::FileOptions, CompressionMethod};
 
 fn copy_cancellable<R: CompressionRuntime, Rd: Read, Wr: Write>(
     runtime: &R,
@@ -30,6 +29,7 @@ fn copy_cancellable<R: CompressionRuntime, Rd: Read, Wr: Write>(
     }
 }
 
+#[cfg(test)]
 pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     runtime: &R,
     password: &str,
@@ -42,20 +42,37 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
     _legacy_fast_pack: bool,
     progress_context: Option<(&Window, &str)>,
 ) -> Result<u64> {
+    create_zip(runtime, Some(password), password_encoding, encryption, level, sources, output,
+        preserve_paths, crate::services::zip_method::ZipMethod::Deflate, false, progress_context)
+}
+
+fn create_zip<R: CompressionRuntime>(
+    runtime: &R,
+    password: Option<&str>,
+    password_encoding: crate::services::zip_password::ZipPasswordEncoding,
+    encryption: crate::services::zip_password::ZipEncryption,
+    level: u32,
+    sources: &[String],
+    output: &str,
+    preserve_paths: bool,
+    method: crate::services::zip_method::ZipMethod,
+    zipx: bool,
+    progress_context: Option<(&Window, &str)>,
+) -> Result<u64> {
     // Resolve before creating output so unrepresentable passwords leave no file.
-    let password_bytes = crate::services::zip_password::encode(password, password_encoding)?;
+    let password_bytes = password.map(|password| crate::services::zip_password::encode(password, password_encoding)).transpose()?;
     let file = File::create(output)?;
     let mut writer = zip_aes::ZipWriter::new(file);
-    let options = zip_aes::write::SimpleFileOptions::default()
-        .compression_method(if level == 0 { zip_aes::CompressionMethod::Stored } else { zip_aes::CompressionMethod::Deflated })
-        .compression_level(if level == 0 { None } else { Some(level.clamp(1, 9) as i64) });
-    let options = match encryption {
-        crate::services::zip_password::ZipEncryption::Aes256 => options.with_aes_encryption_bytes(zip_aes::AesMode::Aes256, &password_bytes),
-        crate::services::zip_password::ZipEncryption::Zipcrypto => {
-            use zip_aes::unstable::write::FileOptionsExt;
-            options.with_deprecated_encryption(&password_bytes)?
+    let options = crate::services::zip_method::file_options(zipx, method, level);
+    let options = if let Some(password_bytes) = &password_bytes {
+        match encryption {
+            crate::services::zip_password::ZipEncryption::Aes256 => options.with_aes_encryption_bytes(zip_aes::AesMode::Aes256, password_bytes),
+            crate::services::zip_password::ZipEncryption::Zipcrypto => {
+                use zip_aes::unstable::write::FileOptionsExt;
+                options.with_deprecated_encryption(password_bytes)?
+            }
         }
-    };
+    } else { options };
     let entries = compression_entries::collect(sources, preserve_paths, true)?;
     let total_bytes = source_total_bytes(&entries)?;
     let mut progress = ByteProgress::new(total_bytes);
@@ -69,7 +86,13 @@ pub(crate) fn create_encrypted_zip<R: CompressionRuntime>(
             writer.add_directory(archive_name, options)?;
         } else {
             let mut source = File::open(entry.path)?;
-            writer.start_file(archive_name, options.large_file(source.metadata()?.len() >= u32::MAX as u64))?;
+            let size = source.metadata()?.len();
+            // The current XZ encoder emits an invalid index for an untouched empty
+            // stream. Empty ZIP members need no compression; retain encryption.
+            let entry_options = if zipx && size == 0 {
+                options.compression_method(zip_aes::CompressionMethod::Stored).compression_level(None)
+            } else { options };
+            writer.start_file(archive_name, entry_options.large_file(size >= u32::MAX as u64))?;
             let current_name = entry.archive_name.clone();
             copy_cancellable(
                 runtime,
@@ -122,13 +145,17 @@ pub(crate) fn compress<R: CompressionRuntime>(
     output: &str,
     options: CompressionOptions,
 ) -> Result<()> {
-    if !output.to_ascii_lowercase().ends_with(".zip") {
+    if ![".zip", ".zipx"].iter().any(|extension| output.to_ascii_lowercase().ends_with(extension)) {
         return Err(CompressionError::CompressionFailed(
-            "ZIP compression output path must end with .zip".to_string(),
+            "ZIP 压缩输出路径需要以 .zip 或 .zipx 结尾".to_string(),
         )
         .into());
     }
 
+    if output.to_ascii_lowercase().ends_with(".zipx") && options.split_size.is_some_and(|size| size > 0)
+        && options.zip_split_mode == crate::services::standard_zip_writer::ZipSplitMode::Standard {
+        anyhow::bail!("本版 ZIPX 创建请使用数字分卷（.zipx.001）；标准分卷可选择 ZIP 格式。");
+    }
     if let Some(parent) = Path::new(output).parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -174,124 +201,96 @@ pub(crate) fn compress<R: CompressionRuntime>(
         return Ok(());
     }
 
-    if let Some(password) = options
-        .password
-        .as_deref()
-        .filter(|password| !password.is_empty())
-    {
-        if let Some(window) = window {
-            runtime.emit_log(
-                window,
-                task_id,
-                match options.zip_encryption {
-                    crate::services::zip_password::ZipEncryption::Aes256 => "使用原生引擎创建 AES-256 加密 ZIP...",
-                    crate::services::zip_password::ZipEncryption::Zipcrypto => "使用用户选择的传统 ZipCrypto 兼容加密（保护较弱）...",
-                },
-                TaskLogSeverity::Info,
-            );
-        }
-        let total_bytes = create_encrypted_zip(
-            runtime,
-            password,
-            options.zip_password_encoding,
-            options.zip_encryption,
-            options.level.min(9),
-            sources,
-            output,
-            options.preserve_paths.unwrap_or(true),
-            options.fast_pack,
-            window.map(|window| (window, task_id)),
-        )?;
-        if let Some(window) = window {
-            if total_bytes == 0 {
-                runtime.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0);
-            }
-            runtime.emit_log(
-                window,
-                task_id,
-                "加密 ZIP 创建完成",
-                TaskLogSeverity::Success,
-            );
-        }
-        return Ok(());
+    let zipx = output.to_ascii_lowercase().ends_with(".zipx");
+    let method_name = if zipx { "XZ" } else if options.zip_method == crate::services::zip_method::ZipMethod::Zstd { "Zstandard" }
+        else if options.level == 0 { "Store" } else { "Deflate" };
+    if let Some(window) = window {
+        runtime.emit_log(window, task_id, &format!("正在创建 {} · {}{}…",
+            if zipx { "ZIPX" } else { "ZIP" }, method_name,
+            if options.password.as_deref().is_some_and(|password| !password.is_empty()) { " · 密码保护" } else { "" }), TaskLogSeverity::Info);
     }
-
-    let file = File::create(output)?;
-    let mut writer = zip::ZipWriter::new(file);
-    let zip_options = FileOptions::default()
-        .compression_method(if options.level == 0 { CompressionMethod::Stored } else { CompressionMethod::Deflated })
-        .compression_level(if options.level == 0 { None } else { Some(options.level.clamp(1, 9) as i32) });
-    let entries =
-        compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), true)?;
-    let total_entries = entries.len().max(1);
-    let mut byte_progress = ByteProgress::new(source_total_bytes(&entries)?);
-    let mut progress_gate = ProgressGate::new();
-    let mut copy_buffer = vec![0u8; runtime.copy_buffer_size()];
-
-    for (index, entry) in entries.iter().enumerate() {
-        runtime.check_cancellation()?;
-        if entry.is_dir {
-            writer.add_directory(entry.archive_name.replace('\\', "/"), zip_options)?;
-            continue;
-        }
-        let mut source = File::open(&entry.path)?;
-        writer.start_file(&entry.archive_name, zip_options.large_file(source.metadata()?.len() >= u32::MAX as u64))?;
-        let current_name = entry.archive_name.clone();
-        copy_cancellable(
-            runtime,
-            &mut source,
-            &mut writer,
-            &mut copy_buffer,
-            |read| {
-                if let Some((ratio, processed, total)) = byte_progress.record(read, false) {
-                    if !progress_gate.allow(ratio >= 1.0) {
-                        return;
-                    }
-                    if let Some(window) = window {
-                        runtime.emit_progress(
-                            window,
-                            task_id,
-                            ratio,
-                            Some(current_name.clone()),
-                            processed,
-                            total,
-                        );
-                    }
-                }
-            },
-        )?;
-        if let Some((ratio, processed, total)) = byte_progress.record(0, true) {
-            if let Some(window) = window.filter(|_| progress_gate.allow(ratio >= 1.0)) {
-                runtime.emit_progress(
-                    window,
-                    task_id,
-                    ratio,
-                    Some(entry.archive_name.clone()),
-                    processed,
-                    total,
-                );
-            }
-        } else if byte_progress.total() == 0 {
-            if let Some(window) = window.filter(|_| progress_gate.allow(index + 1 == total_entries))
-            {
-                runtime.emit_progress(
-                    window,
-                    task_id,
-                    (index + 1) as f32 / total_entries as f32,
-                    Some(entry.archive_name.clone()),
-                    0,
-                    0,
-                );
-            }
-        }
+    let total_bytes = create_zip(runtime, options.password.as_deref().filter(|password| !password.is_empty()),
+        options.zip_password_encoding, options.zip_encryption, options.level,
+        sources, output, options.preserve_paths.unwrap_or(true), options.zip_method, zipx,
+        window.map(|window| (window, task_id)))?;
+    if let Some(window) = window {
+        if total_bytes == 0 { runtime.emit_progress(window, task_id, 1.0, Some(output.to_string()), 0, 0); }
+        runtime.emit_log(window, task_id, &format!("{} · {} 创建完成", if zipx { "ZIPX" } else { "ZIP" }, method_name), TaskLogSeverity::Success);
     }
-    writer.finish()?;
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn zip_output_1414_methods_passwords_and_both_volume_types_round_trip() {
+        use crate::services::{zip_method::ZipMethod, zip_password::ZipEncryption, standard_zip_writer::ZipSplitMode};
+        let mut seed = 1414u32;
+        let payload: Vec<u8> = (0..260_000).map(|_| { seed ^= seed << 13; seed ^= seed >> 17; seed ^= seed << 5; seed as u8 }).collect();
+        for format in ["zip", "zipx"] {
+            for password in [None, Some(ZipEncryption::Aes256), Some(ZipEncryption::Zipcrypto)] {
+                for split in [None, Some(ZipSplitMode::Numeric), Some(ZipSplitMode::Standard)] {
+                    let root = tempfile::tempdir().unwrap();
+                    let source = root.path().join("中文资料");
+                    std::fs::create_dir_all(source.join("空目录")).unwrap();
+                    std::fs::write(source.join("内容.bin"), &payload).unwrap();
+                    std::fs::write(source.join("空文件.txt"), []).unwrap();
+                    let output = root.path().join(format!("结果.{format}"));
+                    let options = CompressionOptions { format: Some(format.into()), level: 6,
+                        zip_method: ZipMethod::Zstd, password: password.map(|_| "测试 + password!".into()),
+                        zip_encryption: password.unwrap_or_default(),
+                        zip_split_mode: split.unwrap_or_default(), split_size: split.map(|_| 65_536),
+                        preserve_paths: Some(true), ..Default::default() };
+                    if format == "zipx" && split == Some(ZipSplitMode::Standard) {
+                        let error = compress(&TestRuntime::default(), None, "1414", &[source.to_string_lossy().into()], &output.to_string_lossy(), options).unwrap_err();
+                        assert!(error.to_string().contains("数字分卷")); assert!(!output.exists()); continue;
+                    }
+                    compress(&TestRuntime::default(), None, "1414", &[source.to_string_lossy().into()], &output.to_string_lossy(), options).unwrap();
+                    let input = if split.is_some() { crate::services::archive_volumes::first_volume_path(&output) } else { output.clone() };
+                    let reader = crate::services::numeric_volume_reader::ZipInputReader::open(&input).unwrap();
+                    let mut archive = zip_aes::ZipArchive::new(reader).unwrap();
+                    let mut content = Vec::new();
+                    let mut empty_dir = false;
+                    for index in 0..archive.len() {
+                        let mut file = if password.is_some() { archive.by_index_decrypt(index, "测试 + password!".as_bytes()).unwrap_or_else(|error| panic!("{format} {password:?} {split:?} index {index}: {error}")) }
+                            else { archive.by_index(index).unwrap_or_else(|error| panic!("{format} {password:?} {split:?} index {index}: {error}")) };
+                        if file.name().ends_with("空目录/") { empty_dir = true; }
+                        let is_payload = file.name().ends_with("内容.bin");
+                        let name = file.name().to_string();
+                        if !file.is_dir() {
+                            let mut restored = Vec::new(); file.read_to_end(&mut restored).unwrap_or_else(|error| panic!("{format} {password:?} {split:?} {name}: {error}"));
+                            if is_payload { content = restored; } else { assert!(restored.is_empty()); }
+                        }
+                        if is_payload {
+                            assert_eq!(file.compression(), if format == "zipx" { zip_aes::CompressionMethod::Xz } else { zip_aes::CompressionMethod::Zstd });
+                        }
+                    }
+                    assert_eq!(content, payload, "{format} {password:?} {split:?}");
+                    assert!(empty_dir);
+                    if split.is_some() {
+                        let parts = crate::services::archive_volumes::complete_volume_paths(&output).unwrap();
+                        assert!(parts.len() > 1);
+                        for part in &parts {
+                            let group = crate::services::split_archive_detector::SplitArchiveDetector::detect_split_archive(part).unwrap().unwrap();
+                            assert!(group.is_complete); assert_eq!(group.parts.len(), parts.len());
+                        }
+                    }
+                }
+            }
+        }
+        let legacy: CompressionOptions = serde_json::from_value(serde_json::json!({"level":0})).unwrap();
+        assert_eq!(legacy.zip_method, ZipMethod::Deflate);
+        let root = tempfile::tempdir().unwrap();
+        let source = root.path().join("source.txt"); std::fs::write(&source, b"legacy").unwrap();
+        let output = root.path().join("legacy.zip");
+        compress(&TestRuntime::default(), None, "legacy", &[source.to_string_lossy().into()], &output.to_string_lossy(), legacy).unwrap();
+        let mut archive = zip_aes::ZipArchive::new(File::open(output).unwrap()).unwrap();
+        assert_eq!(archive.by_index(0).unwrap().compression(), zip_aes::CompressionMethod::Stored);
+        assert!(serde_json::from_value::<CompressionOptions>(serde_json::json!({"level":6,"zip_method":"unknown"})).is_err());
+    }
+
     #[test]
     fn zipcrypto_is_explicit_and_roundtrips_with_both_password_encodings() {
         use crate::services::zip_password::{ZipEncryption, ZipPasswordEncoding, encode};
