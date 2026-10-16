@@ -1,0 +1,821 @@
+{
+  "git_commit": "6748fa24c1f9a31286d42181732b84cc4cc1f986",
+  "binary_sha256": "02bd530ea55057c4299ad4b77c52bcffdeb10a81ddd5a25366db45ca6d21aa5f",
+  "python": "3.13.12 (tags/v3.13.12:1cbe481, Feb  3 2026, 18:22:25) [MSC v.1944 64 bit (AMD64)]",
+  "machine": {
+    "os": "Windows-11-10.0.22621-SP0",
+    "cpu": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD",
+    "logical_cpus": 16,
+    "cpu_name": "AMD Ryzen 7 9700X 8-Core Processor             "
+  },
+  "scope": "Fresh isolated Release desktop E2E process per case; normal Shell actions, UI queue, final verification/publication and saved real history. Current implementation only, not A/B speedup evidence. OS cache unflushed; fixture preparation and output hash checks excluded from timings.",
+  "counter_boundaries": "100ms target samples; actual gaps reported. Simultaneous process-tree working-set sums double-count shared pages. Logical process I/O includes cache/IPC, not physical disk traffic. Exited/short-lived children may be undercounted. Temporary space sampled every 500ms is a lower bound, not a guaranteed peak. Observer overhead included in observed timing. No claim of memory reduction.",
+  "results": [
+    {
+      "kind": "large",
+      "round": 1,
+      "files": 1,
+      "input_bytes": 268435456,
+      "fixture_sha256": "c0c243d8a701400073c8e04f44d14e0b27968cdd587e8758a3ce3e1fa7c63eb4",
+      "compression": {
+        "activation_to_saved_history_ms": 8869.8973999999,
+        "task_duration_ms": 7643,
+        "status": "completed",
+        "processed_bytes": 268435456,
+        "total_bytes": 268435456,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\large-1",
+          "passwordRequired": false,
+          "settings": {
+            "format": "zip",
+            "level": 6,
+            "filename": "源资料",
+            "splitArchive": false,
+            "splitSize": "1024",
+            "keepStructure": true,
+            "verifyAfter": true,
+            "createSolidArchive": false,
+            "rarRecoveryVolumes": 0,
+            "rarRecoveryPercent": 0,
+            "zipSplitMode": "numeric",
+            "zipMethod": "deflate",
+            "zipEncryption": "aes256",
+            "fastPack": false,
+            "encryptFilenames": false,
+            "zipPasswordEncoding": "utf8"
+          }
+        },
+        "completion_logs": [
+          "ZIP · Deflate 创建完成",
+          "正在校验新压缩包的完整性",
+          "压缩包完整性校验通过",
+          "压缩完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 72822784,
+          "backend_private_bytes": 44433408,
+          "children_working_set_sum": 316383232,
+          "children_private_bytes_sum": 176291840,
+          "tree_working_set_sum": 389206016,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 250,
+          "read_bytes": 49245691,
+          "write_bytes": 2912721
+        },
+        "sampled_peak": {
+          "backend_working_set": 102862848,
+          "backend_private_bytes": 66752512,
+          "children_working_set_sum": 431169536,
+          "children_private_bytes_sum": 493535232,
+          "tree_working_set_sum": 532631552,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 5515.625,
+          "read_bytes": 554909386,
+          "write_bytes": 285990589
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 69,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 115.37350000071456,
+          "max_observed": 205.1212000005762
+        },
+        "unavailable_samples": 0
+      },
+      "extraction": {
+        "activation_to_saved_history_ms": 825.3186999972968,
+        "task_duration_ms": 429,
+        "status": "completed",
+        "processed_bytes": 268435456,
+        "total_bytes": 268435456,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\large-1\\下载",
+          "extractToSubfolder": true
+        },
+        "completion_logs": [
+          "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+          "解压数据统计完成：实际产出 268435456 字节",
+          "全部解压任务已完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 99606528,
+          "backend_private_bytes": 62558208,
+          "children_working_set_sum": 432517120,
+          "children_private_bytes_sum": 446115840,
+          "tree_working_set_sum": 532123648,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 5765.625,
+          "read_bytes": 604272589,
+          "write_bytes": 289020822
+        },
+        "sampled_peak": {
+          "backend_working_set": 101396480,
+          "backend_private_bytes": 64954368,
+          "children_working_set_sum": 467083264,
+          "children_private_bytes_sum": 557559808,
+          "tree_working_set_sum": 567988224,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 62.5,
+          "read_bytes": 270855168,
+          "write_bytes": 270213355
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 8,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 112.62539999734145,
+          "max_observed": 115.67439999998896
+        },
+        "unavailable_samples": 0
+      },
+      "payload_hashes_verified": true,
+      "source_unchanged": true,
+      "temporary_bytes_after": null
+    },
+    {
+      "kind": "large",
+      "round": 2,
+      "files": 1,
+      "input_bytes": 268435456,
+      "fixture_sha256": "c0c243d8a701400073c8e04f44d14e0b27968cdd587e8758a3ce3e1fa7c63eb4",
+      "compression": {
+        "activation_to_saved_history_ms": 7365.839199999755,
+        "task_duration_ms": 6683,
+        "status": "completed",
+        "processed_bytes": 268435456,
+        "total_bytes": 268435456,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\large-2",
+          "passwordRequired": false,
+          "settings": {
+            "format": "zip",
+            "level": 6,
+            "filename": "源资料",
+            "splitArchive": false,
+            "splitSize": "1024",
+            "keepStructure": true,
+            "verifyAfter": true,
+            "createSolidArchive": false,
+            "rarRecoveryVolumes": 0,
+            "rarRecoveryPercent": 0,
+            "zipSplitMode": "numeric",
+            "zipMethod": "deflate",
+            "zipEncryption": "aes256",
+            "fastPack": false,
+            "encryptFilenames": false,
+            "zipPasswordEncoding": "utf8"
+          }
+        },
+        "completion_logs": [
+          "ZIP · Deflate 创建完成",
+          "正在校验新压缩包的完整性",
+          "压缩包完整性校验通过",
+          "压缩完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 76861440,
+          "backend_private_bytes": 46542848,
+          "children_working_set_sum": 314175488,
+          "children_private_bytes_sum": 174235648,
+          "tree_working_set_sum": 391036928,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 250,
+          "read_bytes": 50577295,
+          "write_bytes": 4393646
+        },
+        "sampled_peak": {
+          "backend_working_set": 99028992,
+          "backend_private_bytes": 61603840,
+          "children_working_set_sum": 429625344,
+          "children_private_bytes_sum": 480141312,
+          "tree_working_set_sum": 528654336,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 1812.5,
+          "read_bytes": 552092830,
+          "write_bytes": 283187659
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 63,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 115.07315000017115,
+          "max_observed": 129.7653999972681
+        },
+        "unavailable_samples": 0
+      },
+      "extraction": {
+        "activation_to_saved_history_ms": 960.0477999993018,
+        "task_duration_ms": 528,
+        "status": "completed",
+        "processed_bytes": 268435456,
+        "total_bytes": 268435456,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\large-2\\下载",
+          "extractToSubfolder": true
+        },
+        "completion_logs": [
+          "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+          "解压数据统计完成：实际产出 268435456 字节",
+          "全部解压任务已完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 99028992,
+          "backend_private_bytes": 60813312,
+          "children_working_set_sum": 426508288,
+          "children_private_bytes_sum": 428126208,
+          "tree_working_set_sum": 525537280,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 2062.5,
+          "read_bytes": 602811117,
+          "write_bytes": 287722297
+        },
+        "sampled_peak": {
+          "backend_working_set": 101216256,
+          "backend_private_bytes": 63881216,
+          "children_working_set_sum": 463806464,
+          "children_private_bytes_sum": 548003840,
+          "tree_working_set_sum": 563548160,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 125,
+          "read_bytes": 271039964,
+          "write_bytes": 270426207
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 9,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 115.67470000045432,
+          "max_observed": 120.7749999994121
+        },
+        "unavailable_samples": 0
+      },
+      "payload_hashes_verified": true,
+      "source_unchanged": true,
+      "temporary_bytes_after": null
+    },
+    {
+      "kind": "large",
+      "round": 3,
+      "files": 1,
+      "input_bytes": 268435456,
+      "fixture_sha256": "c0c243d8a701400073c8e04f44d14e0b27968cdd587e8758a3ce3e1fa7c63eb4",
+      "compression": {
+        "activation_to_saved_history_ms": 6851.468900000327,
+        "task_duration_ms": 6396,
+        "status": "completed",
+        "processed_bytes": 268435456,
+        "total_bytes": 268435456,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\large-3",
+          "passwordRequired": false,
+          "settings": {
+            "format": "zip",
+            "level": 6,
+            "filename": "源资料",
+            "splitArchive": false,
+            "splitSize": "1024",
+            "keepStructure": true,
+            "verifyAfter": true,
+            "createSolidArchive": false,
+            "rarRecoveryVolumes": 0,
+            "rarRecoveryPercent": 0,
+            "zipSplitMode": "numeric",
+            "zipMethod": "deflate",
+            "zipEncryption": "aes256",
+            "fastPack": false,
+            "encryptFilenames": false,
+            "zipPasswordEncoding": "utf8"
+          }
+        },
+        "completion_logs": [
+          "ZIP · Deflate 创建完成",
+          "正在校验新压缩包的完整性",
+          "压缩包完整性校验通过",
+          "压缩完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 80666624,
+          "backend_private_bytes": 48402432,
+          "children_working_set_sum": 348770304,
+          "children_private_bytes_sum": 208220160,
+          "tree_working_set_sum": 429436928,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 125,
+          "read_bytes": 52449444,
+          "write_bytes": 6374395
+        },
+        "sampled_peak": {
+          "backend_working_set": 159014912,
+          "backend_private_bytes": 126672896,
+          "children_working_set_sum": 429473792,
+          "children_private_bytes_sum": 490008576,
+          "tree_working_set_sum": 539688960,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 2937.5,
+          "read_bytes": 549648553,
+          "write_bytes": 280634800
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 59,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 114.25909999888972,
+          "max_observed": 163.51470000154222
+        },
+        "unavailable_samples": 0
+      },
+      "extraction": {
+        "activation_to_saved_history_ms": 3124.2138000015984,
+        "task_duration_ms": 545,
+        "status": "completed",
+        "processed_bytes": 268435456,
+        "total_bytes": 268435456,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\large-3\\下载",
+          "extractToSubfolder": true
+        },
+        "completion_logs": [
+          "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+          "解压数据统计完成：实际产出 268435456 字节",
+          "全部解压任务已完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 97882112,
+          "backend_private_bytes": 63053824,
+          "children_working_set_sum": 428257280,
+          "children_private_bytes_sum": 448290816,
+          "tree_working_set_sum": 526139392,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 3078.125,
+          "read_bytes": 602215509,
+          "write_bytes": 287126707
+        },
+        "sampled_peak": {
+          "backend_working_set": 100646912,
+          "backend_private_bytes": 64184320,
+          "children_working_set_sum": 461197312,
+          "children_private_bytes_sum": 543121408,
+          "tree_working_set_sum": 561844224,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 93.75,
+          "read_bytes": 273946340,
+          "write_bytes": 273468130
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 9,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 115.9851999982493,
+          "max_observed": 120.59009999939008
+        },
+        "unavailable_samples": 0
+      },
+      "payload_hashes_verified": true,
+      "source_unchanged": true,
+      "temporary_bytes_after": null
+    },
+    {
+      "kind": "small",
+      "round": 1,
+      "files": 5000,
+      "input_bytes": 20480000,
+      "fixture_sha256": "272296322f99ae5ccc2e7cbe4c00ca20fa74541b193e4125c9790f84653610b8",
+      "compression": {
+        "activation_to_saved_history_ms": 1655.4850000029546,
+        "task_duration_ms": 971,
+        "status": "completed",
+        "processed_bytes": 20480000,
+        "total_bytes": 20480000,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\small-1",
+          "passwordRequired": false,
+          "settings": {
+            "format": "zip",
+            "level": 6,
+            "filename": "源资料",
+            "splitArchive": false,
+            "splitSize": "1024",
+            "keepStructure": true,
+            "verifyAfter": true,
+            "createSolidArchive": false,
+            "rarRecoveryVolumes": 0,
+            "rarRecoveryPercent": 0,
+            "zipSplitMode": "numeric",
+            "zipMethod": "deflate",
+            "zipEncryption": "aes256",
+            "fastPack": false,
+            "encryptFilenames": false,
+            "zipPasswordEncoding": "utf8"
+          }
+        },
+        "completion_logs": [
+          "ZIP · Deflate 创建完成",
+          "正在校验新压缩包的完整性",
+          "压缩包完整性校验通过",
+          "压缩完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 76673024,
+          "backend_private_bytes": 47149056,
+          "children_working_set_sum": 314404864,
+          "children_private_bytes_sum": 174518272,
+          "tree_working_set_sum": 391077888,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 218.75,
+          "read_bytes": 51350375,
+          "write_bytes": 5151887
+        },
+        "sampled_peak": {
+          "backend_working_set": 160043008,
+          "backend_private_bytes": 125444096,
+          "children_working_set_sum": 400166912,
+          "children_private_bytes_sum": 493338624,
+          "tree_working_set_sum": 543404032,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 656.25,
+          "read_bytes": 46877103,
+          "write_bytes": 26239125
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 15,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 112.53690000194183,
+          "max_observed": 120.33460000020568
+        },
+        "unavailable_samples": 0
+      },
+      "extraction": {
+        "activation_to_saved_history_ms": 8079.147799999191,
+        "task_duration_ms": 7623,
+        "status": "completed",
+        "processed_bytes": 20480000,
+        "total_bytes": 20480000,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\small-1\\下载",
+          "extractToSubfolder": true
+        },
+        "completion_logs": [
+          "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+          "解压数据统计完成：实际产出 20480000 字节",
+          "全部解压任务已完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 94412800,
+          "backend_private_bytes": 58552320,
+          "children_working_set_sum": 400293888,
+          "children_private_bytes_sum": 496427008,
+          "tree_working_set_sum": 494706688,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 890.625,
+          "read_bytes": 98280390,
+          "write_bytes": 31443924
+        },
+        "sampled_peak": {
+          "backend_working_set": 108294144,
+          "backend_private_bytes": 69771264,
+          "children_working_set_sum": 460111872,
+          "children_private_bytes_sum": 608354304,
+          "tree_working_set_sum": 561266688,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 2265.625,
+          "read_bytes": 36702281,
+          "write_bytes": 33255478
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 68,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 115.88829999891459,
+          "max_observed": 203.73599999948055
+        },
+        "unavailable_samples": 0
+      },
+      "payload_hashes_verified": true,
+      "source_unchanged": true,
+      "temporary_bytes_after": null
+    },
+    {
+      "kind": "small",
+      "round": 2,
+      "files": 5000,
+      "input_bytes": 20480000,
+      "fixture_sha256": "272296322f99ae5ccc2e7cbe4c00ca20fa74541b193e4125c9790f84653610b8",
+      "compression": {
+        "activation_to_saved_history_ms": 1158.354800001689,
+        "task_duration_ms": 729,
+        "status": "completed",
+        "processed_bytes": 20480000,
+        "total_bytes": 20480000,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\small-2",
+          "passwordRequired": false,
+          "settings": {
+            "format": "zip",
+            "level": 6,
+            "filename": "源资料",
+            "splitArchive": false,
+            "splitSize": "1024",
+            "keepStructure": true,
+            "verifyAfter": true,
+            "createSolidArchive": false,
+            "rarRecoveryVolumes": 0,
+            "rarRecoveryPercent": 0,
+            "zipSplitMode": "numeric",
+            "zipMethod": "deflate",
+            "zipEncryption": "aes256",
+            "fastPack": false,
+            "encryptFilenames": false,
+            "zipPasswordEncoding": "utf8"
+          }
+        },
+        "completion_logs": [
+          "ZIP · Deflate 创建完成",
+          "正在校验新压缩包的完整性",
+          "压缩包完整性校验通过",
+          "压缩完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 82169856,
+          "backend_private_bytes": 48603136,
+          "children_working_set_sum": 346370048,
+          "children_private_bytes_sum": 196898816,
+          "tree_working_set_sum": 428539904,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 156.25,
+          "read_bytes": 52419896,
+          "write_bytes": 6333524
+        },
+        "sampled_peak": {
+          "backend_working_set": 98050048,
+          "backend_private_bytes": 63283200,
+          "children_working_set_sum": 397058048,
+          "children_private_bytes_sum": 491589632,
+          "tree_working_set_sum": 492265472,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 234.375,
+          "read_bytes": 45442258,
+          "write_bytes": 24691950
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 11,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 112.70879999938188,
+          "max_observed": 115.16770000162069
+        },
+        "unavailable_samples": 0
+      },
+      "extraction": {
+        "activation_to_saved_history_ms": 6004.323700002715,
+        "task_duration_ms": 5579,
+        "status": "completed",
+        "processed_bytes": 20480000,
+        "total_bytes": 20480000,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\small-2\\下载",
+          "extractToSubfolder": true
+        },
+        "completion_logs": [
+          "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+          "解压数据统计完成：实际产出 20480000 字节",
+          "全部解压任务已完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 93937664,
+          "backend_private_bytes": 57950208,
+          "children_working_set_sum": 397103104,
+          "children_private_bytes_sum": 491630592,
+          "tree_working_set_sum": 491040768,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 390.625,
+          "read_bytes": 97888554,
+          "write_bytes": 31051874
+        },
+        "sampled_peak": {
+          "backend_working_set": 106242048,
+          "backend_private_bytes": 68804608,
+          "children_working_set_sum": 454922240,
+          "children_private_bytes_sum": 582475776,
+          "tree_working_set_sum": 556965888,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 500,
+          "read_bytes": 34161473,
+          "write_bytes": 30683985
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 54,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 112.09470000176225,
+          "max_observed": 120.7460000005085
+        },
+        "unavailable_samples": 0
+      },
+      "payload_hashes_verified": true,
+      "source_unchanged": true,
+      "temporary_bytes_after": null
+    },
+    {
+      "kind": "small",
+      "round": 3,
+      "files": 5000,
+      "input_bytes": 20480000,
+      "fixture_sha256": "272296322f99ae5ccc2e7cbe4c00ca20fa74541b193e4125c9790f84653610b8",
+      "compression": {
+        "activation_to_saved_history_ms": 1399.1635999991558,
+        "task_duration_ms": 786,
+        "status": "completed",
+        "processed_bytes": 20480000,
+        "total_bytes": 20480000,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\small-3",
+          "passwordRequired": false,
+          "settings": {
+            "format": "zip",
+            "level": 6,
+            "filename": "源资料",
+            "splitArchive": false,
+            "splitSize": "1024",
+            "keepStructure": true,
+            "verifyAfter": true,
+            "createSolidArchive": false,
+            "rarRecoveryVolumes": 0,
+            "rarRecoveryPercent": 0,
+            "zipSplitMode": "numeric",
+            "zipMethod": "deflate",
+            "zipEncryption": "aes256",
+            "fastPack": false,
+            "encryptFilenames": false,
+            "zipPasswordEncoding": "utf8"
+          }
+        },
+        "completion_logs": [
+          "ZIP · Deflate 创建完成",
+          "正在校验新压缩包的完整性",
+          "压缩包完整性校验通过",
+          "压缩完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 85397504,
+          "backend_private_bytes": 53100544,
+          "children_working_set_sum": 363040768,
+          "children_private_bytes_sum": 284684288,
+          "tree_working_set_sum": 448438272,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 203.125,
+          "read_bytes": 54205066,
+          "write_bytes": 7070086
+        },
+        "sampled_peak": {
+          "backend_working_set": 160272384,
+          "backend_private_bytes": 127483904,
+          "children_working_set_sum": 412270592,
+          "children_private_bytes_sum": 595517440,
+          "tree_working_set_sum": 561557504,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 375,
+          "read_bytes": 44426120,
+          "write_bytes": 24883590
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 13,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 113.16269999770157,
+          "max_observed": 121.83789999835426
+        },
+        "unavailable_samples": 0
+      },
+      "extraction": {
+        "activation_to_saved_history_ms": 5386.631900000793,
+        "task_duration_ms": 4949,
+        "status": "completed",
+        "processed_bytes": 20480000,
+        "total_bytes": 20480000,
+        "format": "zip",
+        "execution_config": {
+          "schemaVersion": 1,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\small-3\\下载",
+          "extractToSubfolder": true
+        },
+        "completion_logs": [
+          "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+          "解压数据统计完成：实际产出 20480000 字节",
+          "全部解压任务已完成"
+        ],
+        "idle_before": {
+          "backend_working_set": 92717056,
+          "backend_private_bytes": 58060800,
+          "children_working_set_sum": 413368320,
+          "children_private_bytes_sum": 595574784,
+          "tree_working_set_sum": 506085376,
+          "process_count": 7,
+          "unavailable": [],
+          "cpu_ms": 578.125,
+          "read_bytes": 98657586,
+          "write_bytes": 31980076
+        },
+        "sampled_peak": {
+          "backend_working_set": 105938944,
+          "backend_private_bytes": 68153344,
+          "children_working_set_sum": 459567104,
+          "children_private_bytes_sum": 656281600,
+          "tree_working_set_sum": 565501952,
+          "process_count": 7
+        },
+        "logical_process_counters_delta": {
+          "cpu_ms": 593.75,
+          "read_bytes": 33238045,
+          "write_bytes": 29717060
+        },
+        "temporary_bytes_sampled_peak": null,
+        "samples": 49,
+        "interval_ms": {
+          "requested": 100,
+          "median_observed": 111.43669999910344,
+          "max_observed": 115.34219999884954
+        },
+        "unavailable_samples": 0
+      },
+      "payload_hashes_verified": true,
+      "source_unchanged": true,
+      "temporary_bytes_after": null
+    }
+  ],
+  "kept_test_process": {
+    "pid": 21608,
+    "binary": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+    "case": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-performance-1415\\whole-app-001\\small-3"
+  },
+  "raw_report_sha256": "605e8b9c056d291ede316614fc79483bec63bb1c4e39f3d421bad65475c8d41e",
+  "observer_sha256": "2ee06ef06239c15434c1eb7c11d8aa0b154a64c1b69a8c789900d974ea7380e7",
+  "temporary_space_erratum": "Initial sampler excluded all directories named 源资料, including nested staging contents. Its temporary-space readings are invalid and are replaced with null, not interpreted as zero. CPU, process memory, timings and payload hashes are unaffected. Separate corrected space observations are required."
+}
