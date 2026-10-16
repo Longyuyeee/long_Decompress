@@ -1,6 +1,6 @@
 # 文档导航与维护规则
 
-- **当前入口：[v1.4.8 分卷救援与批量处理](ARCHIVE_RECOVERY_1.4.8.md)**、[封板记录](ARCHIVE_RECOVERY_FREEZE_1.4.8.md)、[中文发布说明](RELEASE_NOTES_1.4.8.md)、[发布交接](DEVELOPMENT_HANDOFF.md)。源码版本 1.4.8，功能已封板且用户已批准正式发布；准确合入/标签与构建结果见 [PR #162](https://github.com/Longyuyeee/long_Decompress/pull/162)，安装器和签名更新附件以 [v1.4.8 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.8)实际内容为准。
+- **当前入口：[v1.4.11 自解压包与好压分卷](SFX_AND_VOLUME_COMPATIBILITY_1.4.11.md)**、[封板记录](SFX_AND_VOLUME_FREEZE_1.4.11.md)、[中文发布说明](RELEASE_NOTES_1.4.11.md)、[开发交接](DEVELOPMENT_HANDOFF.md)。源码版本 1.4.11，原生加密论坛卷已补齐，接续 [PR #165](https://github.com/Longyuyeee/long_Decompress/pull/165)最终普通安装包构建；当前到可发版，不自动发布。公开正式版仍为 [v1.4.10](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.10)，下方旧版本记录仅供追溯。
 
 - [v1.4.3 归档升级收口](ARCHIVE_UPGRADE_FREEZE_1.4.3.md)、[更新说明](RELEASE_NOTES_1.4.3.md)：卷组一致性、RAR 分卷与 Unicode 密码、LZ4/Brotli 及通用数字分卷。
 

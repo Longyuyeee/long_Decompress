@@ -20,8 +20,6 @@
 
 Long解压把日常文件处理放在一个顺手的工作区里。收到一批压缩包，可以一起解压；只想找里面某个文件，可以直接浏览；需要分享资料，可以打包、加密和分卷。图片、视频与 PDF 的体积优化也有各自独立的入口。
 
-**v1.4.10** 改善 ZIP 按需提取：只选公开文件或同一密码的文件，不被其他条目阻挡；补强旧 ZIP 方法读取、Zstandard 密码分卷及 ZIP64 大包兼容。查看 [本版更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.10.md)、[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.10)或 [封板记录](long-compress-assistant/docs/ARCHIVE_COMPATIBILITY_FREEZE_1.4.10.md)；安装器及自动更新附件以 Release 页面实际内容为准。
-
 <a id="features"></a>
 
 ## ✨ 好用，从少做几步开始
@@ -132,7 +130,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 能力 | 主要格式与说明 |
 | --- | --- |
 | 创建归档 | ZIP、7Z、RAR（需要 WinRAR）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、WIM |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、TAR 系列、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、自解压 SFX、TAR 系列、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 支持密码数字切卷与标准 `.z01/.zip` 分卷；7Z 支持密码数字卷；RAR 支持原生密码分卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP、7Z、RAR、TAR 系列（含 LZ4/Brotli 组合和既有 AES 包装）、WIM，可配合更换密码和调整分卷 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
@@ -147,6 +145,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 - 还可读取已支持的应用包、传统归档、文件系统与安装容器，例如 APK、APPX、JAR、DEB、RPM、MSI、LZH、CPIO、XAR、APFS、EXT、HFS/HFSX。具体能力以应用的实际检测和 [格式支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)为准。
 - ZIP 默认保留 `.zip.001` 数字切卷，可主动选择标准 `.z01/…/.zip`（入口为 `.zip`）；7Z 创建 `.7z.001`，RAR 创建 `.partN.rar`。解压时把整组放在同一目录。普通 TAR/流格式数字切卷的外部兼容能力不同；它们使用密码时可改用 7Z 容器，既有 `.aes` 属于本应用包装。
 - ZIP/ZIPX 已验证常用 Store、Deflate、Deflate64、BZip2、LZMA、XZ、PPMd 及部分 Zstandard 读取组合；不等于支持所有 ZIPX 专有算法。
+- v1.4.11 候选版可直接浏览、解压和转换 ZIP/7Z/RAR 自解压 EXE；好压论坛 ZIP 分卷按整组读取，支持已核对的明文与 ZipCrypto 密码样本。收到多个分卷时，把整组放在同一目录即可。当前正式下载仍为 v1.4.10，候选版范围见下方更新说明。
 - ZIP 默认 AES-256，可主动选择 ZipCrypto；与 Windows 7-Zip 交换非 ASCII 密码的归档时，可显式选择匹配的 Windows 密码编码。
 - 密码 ZIP 可尝试救回完整文件：目录可读或丢目录后仍能确定本地文件边界时，提供密码救回通过校验的文件；新包沿用填写的密码，统一使用 AES-256 / UTF-8，并显示部分恢复及未恢复原因。
 - DOCX、XLSX、PPTX、ODT、ODS、EPUB 属于文档容器，不作为普通压缩包导入。
@@ -225,6 +224,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.4.11（待发布）** | 自解压包直接读取、好压论坛 ZIP 密码分卷、正确密码兼容与缺卷补回继续处理 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.11.md) · [封板与安装包准备](https://github.com/Longyuyeee/long_Decompress/pull/165) |
 | **v1.4.10** | ZIP 所选内容独立解锁与读取、旧 ZIP 方法兼容、Zstandard 密码分卷和真实 ZIP64 大包回解 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.10.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.10) |
 | **v1.4.9** | 批量检查修复切页/重启接续、RAR 管道密码兼容、大文件校验中途取消 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.9.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.9) |
 | **v1.4.8** | ZIP 分卷救援扩展、RAR 恢复卷创建、批量检查修复与统一入队，修正 RAR 结果体积统计 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.8.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.8) |
